@@ -1,0 +1,6 @@
+%all-tests.tree==<<
+x
+target\ with\ spaces
+
+x==(name\ with\ spaces.txt)
+target\ with\ spaces==x
