@@ -1,0 +1,185 @@
+
+
+- best way to debug:
+  odin -s
+    - starts server process
+  in another window ps -ef | grep odin
+    - shows one server process
+  in emacs, gdb attaching to that process
+  b Local_Get_OdinFile
+
+  in odin -s window:
+    dir=/data/xju/tmp
+    f1.x+a=1+b=2:y
+    ... should hit the breakpoint
+    
+- step/next to get to this point:
+#0  Do_Deriv (FilHdr=0x9469948, InhFilPrm=0x9468bc8, PrecFilPrm=0x946c8e0, ToFilTyp=0x9451cb8) at if-candrv.c:181
+#1  0x0804bd42 in Apply_OprNods (FilHdr=0x9469948, FilPrm=0x946c8e0, OprNod=0x946b3a8) at if-candrv.c:548
+#2  0x0804c123 in Nod_PrmFHdr (Nod=0x946b3c0) at if-candrv.c:641
+#3  0x0804c5d9 in Local_Get_OdinFile (OdinExpr=0xbf8a8fd8 "f1.x +a=1 +b=2 :y", NeedsData=0) at if-candrv.c:787
+
+- at this point:
+    FilHdr represents the host file f1.x
+    InhFilPrm is head of list of params
+    PrecFilPrm is tail of list of params
+    the list is ->Son->Son...
+
+  ... which can be seen by:
+(gdb) p (*(*(*RootFilPrm).Son).PrmTyp)
+$25 = {PTName = 0x9466480 "a", Desc = 0x9466490 "param a", HelpLevel = 2, FilTyp = 0x9451718, RootLocPVal = 3848, StrDirLocHdr = 3574, Mark = 0, IPrmTyp = 4}
+(gdb) p (*(*(*(*RootFilPrm).Son).Son).PrmTyp)
+$26 = {PTName = 0x94664a0 "b", Desc = 0x94664b0 "param b", HelpLevel = 2, FilTyp = 0x9451718, RootLocPVal = 4158, StrDirLocHdr = 3884, Mark = 0, IPrmTyp = 5}
+
+... and we can step through to:
+
+148			  DrvFilPrm = Strip_FilPrm(FilPrm, PrmTypLst); };}/*select*
+
+... and I reckon this will take a+b (in FilPrm) and reduce that to just a.
+
+... more interesting would be a bit before, where we get PrmTypLst:
+
+	    PrmTypLst = DrvPth_PrmTypLst(DrvPthElm);
+
+
+
+with map, derivations are much more complicated:
+
+=> f.x.sm+a=1+b=1:y.sm.list
+** Generating /data/xju/tmp/f.x.sm +a=1 +b=1 :x*y.sm.list
+** Generating /data/xju/tmp :odin*targets_ptr
+** Generating /data/xju/tmp/Odinfile :odin*targets_ptr
+** Generating /data/xju/tmp :odin*act_tgt.list
+** Generating /data/xju/tmp/f.x.sm :x*x.sm.list
+** Generating /data/xju/tmp/f.x.sm :x*x.sm.list +a=1 +b=1 :map=:y
+** Generating /data/xju/tmp/ocnopkg/xjutv/PKGS/x :odin*targets_ptr
+** Generating /data/xju/tmp/ocnopkg/xjutv/PKGS/x/Odinfile :odin*targets_ptr
+** Generating /data/xju/tmp/ocnopkg/xjutv/PKGS/x :odin*act_tgt.list
+** Generating /data/xju/tmp/ocnopkg/xjutv/PRM +a=1 :odin*prm_values
+** Generating /data/xju/tmp/ocnopkg/xjutv/PRM +a=1 :odin*prm_values :odin*ls
+** Generating /data/xju/tmp/f1.x +a=1 :x*y
+** Executing : '/data/xju/tmp/ocnopkg/xjutv/PKGS/x/y.sh' '/data/xju/tmp/f1.x' '/data/xju/tmp/ocnopkg/xjutv/FILES/PRM.6871.ls'
+=> f.x.sm+a=1+b=1:y.sm.list+depend=f.x.sm!:dpath
+=> f.x.sm+a=1+b=1:y.sm.list+depend=(f.x.sm)!:dpath
+2654    - /data/xju/tmp/f.x.sm
+   is an input of:
+3768    - /data/xju/tmp/f.x.sm :x*x.sm.list
+   is an input of:
+4136    - /data/xju/tmp/f.x.sm :x*x.sm.list +a=1 +b=1 :map=:y
+   is an element of:
+3932    - /data/xju/tmp/f.x.sm +a=1 +b=1 :x*y.sm.list
+
+
+... and the initial Do_Deriv is short, but it gets called again a few times
+
+eventually one has Make_MapLocElm in it, which might be interesting,
+
+(gdb) up
+#4  0x0804c574 in Make_MapLocElm (FilHdr=0x932cc18, ListFilHdr=0x932ce28) at if-candrv.c:764
+... but it has already spat out:
+** Generating /data/xju/tmp/f.x.sm :x*x.sm.list +a=1 +b=1 :map=:y
+... so has already decided that :map=:y needs both params
+
+
+- cpp.dg looks like might cause trouble, based on DG.log in the $ODIN cache,
+at least I will remove the gmc.cpp deriv since it uses +define in a
+derivation that produces a GENERIC ... but that doesn't fix the original problem (it might be part of the fix)
+
+In this stack trace:
+
+bt
+#0  Do_Deriv (FilHdr=0x99f7708, InhFilPrm=0x99f8328, PrecFilPrm=0x99f3f98, ToFilTyp=0x99dcf40) at if-candrv.c:181
+#1  0x0805ee48 in Do_InpSpc (BaseFilHdr=0x99f7708, InhFilPrm=0x99f8328, InpSpc=0x99e9970, Tool=0x99e38f8) at if-filinp.c:569
+#2  0x0805f0c4 in Get_LocInp (FilHdr=0x99f8358) at if-filinp.c:637
+#3  0x08059736 in Insert_FilHdr (BaseFilHdr=0x99f7708, FKind=8, FilTyp=0x99dcef8, FilPrm=0x99f8328, Ident=0x0) at if-fhnew.c:87
+#4  0x080599bf in Extend_FilHdr (BaseFilHdr=0x99f7708, FKind=8, FilTyp=0x99dcef8, FilPrm=0x99f8328, IdentStr=0x0) at if-fhnew.c:147
+#5  0x08059a3a in Get_Drv (BaseFilHdr=0x99f7708, FKind=8, FilTyp=0x99dcef8, FilPrm=0x99f8328, Ident=0x0) at if-fhnew.c:174
+#6  0x0804b0a9 in Do_DrvPth (FilHdr=0x99f7708, InhFilPrm=0x99f3f98, PrecFilPrm=0x99f8328, DrvPth=0x99f7648) at if-candrv.c:155
+#7  0x0804b1e5 in Do_Deriv (FilHdr=0x99f7708, InhFilPrm=0x99f3f98, PrecFilPrm=0x99f8328, ToFilTyp=0x99dcd90) at if-candrv.c:197
+#8  0x0804bd42 in Apply_OprNods (FilHdr=0x99f7708, FilPrm=0x99f8328, OprNod=0x99f8058) at if-candrv.c:548
+#9  0x0804c123 in Nod_PrmFHdr (Nod=0x99f8070) at if-candrv.c:641
+#10 0x0804c5d9 in Local_Get_OdinFile (OdinExpr=0xbfd67a68 "/data/xju/tmp/f.x.sm :x*x.sm.list +a=1 +b=2 :y.sm.list", NeedsData=0) at if-candrv.c:787
+#11 0x08074db3 in Get_OdinFile (FileName=0xbfd6799c "", StatusPtr=0xbfd67a64, ExecFlagPtr=0xbfd67998, OdinExpr=0xbfd67a68 "/data/xju/tmp/f.x.sm :x*x.sm.list +a=1 +b=2 :y.sm.list", NeedsData=0) at stub-out.c:529
+#12 0x0804e3ee in Do_ShowStatus (AbortPtr=0xbfd693d8, Root=0x99f62d0) at if-cmd.c:253
+#13 0x0804f1cd in Do_Command (AbortPtr=0xbfd693d8, Root=0x99f62d0, Interactive=1) at if-cmd.c:585
+#14 0x0804f3fa in CommandInterpreter (AbortPtr=0xbfd693d8, Root=0x99f62d0, Interactive=1) at if-cmd.c:646
+#15 0x08069770 in TopLevelCI (AbortPtr=0xbfd693d8, Str=0xbfd6870c "/data/xju/tmp/f.x.sm :x*x.sm.list +a=1+b=2:y.sm.list") at if-main.c:47
+#16 0x08067439 in IPC_Get_Commands (AbortPtr=0xbfd693d8, Prompt=0x807d3fe "=> ") at if-ipc.c:489
+#17 0x080697df in Get_Commands (AbortPtr=0xbfd693d8) at if-main.c:66
+#18 0x08069921 in main (argc=2, argv=0xbfd69494) at if-main.c:120
+(gdb) 
+
+at #1:
+
+	    FilHdr = Do_Deriv(FilHdr, InhFilPrm, PrecFilPrm, OpInpSpc->FilTyp);
+
+... we have InhFilPrm+PrecFilPrm is a list of +a=1+b=1
+OpInpSpc->FilTyp->FTName is "map"
+OpInpSpc->FilTyp->ArgFilTyp->FTName is "y"
+... that looks like what we're interested in (+a=1+b=1:map=:y)
+
+... we then do Get_DrvPth and then move on to Do_DrvPth:
+
+#0  Do_DrvPth (FilHdr=0x99f7708, InhFilPrm=0x99f8328, PrecFilPrm=0x99f3f98, DrvPth=0x99f7668) at if-candrv.c:140
+
+... and it does the usual and calls:
+DrvPth_PrmTypLst
+... which chooses:
+   if (DrvEdg != NIL) {
+      return DrvEdg_PrmTypLst(DrvEdg); }/*if*/;
+
+... but DrvEdg_PrmTypLst returns 0x0 as the PrmTypLst?
+
+... when we get back to Do_DrvPth we choose:
+	       if (IsGroupingInput_FilTyp(FilTyp)) {
+		  DrvFilPrm = FilPrm;
+
+... and we don't use the PrmTypLst, instead we go straight to:
+	    FilHdr = Get_Drv(FilHdr, FKind, FilTyp, DrvFilPrm, DfltIdent);
+... with:
+FilTyp is our :map=:y
+DrvFilPrm is end of our +a=1+b=1 list
+
+
+- alas there is no function to find all the drvpths that lead to y (such as would
+allow us to collect up all the applicable parameter types)
+
+- obviously the info is in the graph, but on the surface it would appear tricky
+  to build one... perhaps not: DG.log spits out all possible
+  derivations, which should allow us to build our own "reverse" graph, either
+  on-the-fly when loading DG or save to DG (or another file even)
+
+- in DG.log there is an explicit map=:xy entry (which shows what can
+  be derived from map=:xy)
+- in DG.log there is a OBJECT -> map=:xy listed, and it has
+  no attached params: we want to fill in the params
+- all -> map=* entries have OBJECT as their source type (I would have
+  expected LIST? Should not make any difference.)
+- can see in dg-filtyp.c where it prints 'Possible Derivations :' then
+  loops through each, and it will be the DrvEdg that has the -> map=:xy
+- DrvEdg.h has tps_DrvEdg which has:
+    tp_FilTyp FilTyp
+    tp_PrmTypLst PrmTypLst (0x0 for map FilTyp see above)
+
+  for map FilType.Tool->TClass==TC_Map
+
+  FilType ":xy" is represented as tp_FilTyp ArgFilTyp and so will always be
+  a single type (ie :xy never :z:xy) I think. And the ArgFilTyp.FTName should be
+  ":xy".
+
+  - want to adjust PrmTypLst just before writing out DG / DG.log (and before
+    dumping 'Possible Derivations):
+
+    dg-main.c calls a Make_PrmTypLsts, perhaps should adjust that?
+      it is in dg-analyze.c
+      - yes, add a step at the end, perhaps call it 
+        void Set_TC_Map_DrvEdg_PrmTypLst(tp_FilTyp FilTyp)
+        ... assuming that reverse mappings has been pre-built, eg by
+        Build_TC_Map_PrmTypLst_Info(tp_FilTyp begin)
+           - which would build from drv, eqv and cast edges (see dg-filtyp.c
+             Print_Info for how to go through those)
+
+  - then just need to adjust Do_DrvPth (see above)
+
+
+
