@@ -1,4 +1,4 @@
-%exe == %dg.c.sm +ignore=\\.hh\$ :exe
+%exe == %dg.cxx.sm +ignore=\\.hh\$ :exe
 
 %install! == <<
    %exe > $THORPKGS/dg/dg.exe
@@ -14,7 +14,8 @@
 %odin-install! == <<
    %exe > $ODINPKG/dg.exe
 
-%dg.c.sm == <<
+%dg.cxx.sm == <<
+   main.cxx
    dg-analyze.c; dg-build.c; dg-edg.c; dg-envvar.c; dg-filtyp.c
    dg-main.c; dg-prmtyp.c; dg-tool.c; dg-valid.c; dg-yylex.c
    dg-yacc.c; if-drvpth.c; if-ft.c; if-lvl.c

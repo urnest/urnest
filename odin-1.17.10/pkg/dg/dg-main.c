@@ -14,7 +14,7 @@ See the GNU General Public License for more details.
 
 geoff@boulder.colorado.edu
 */
-
+#include "inc/dg-main.h"
 #include <stdio.h>
 #include "inc/GMC.h"
 #include "inc/Str.h"
@@ -23,7 +23,7 @@ geoff@boulder.colorado.edu
 tp_Str		Author = "geoff@cs.colorado.edu";
 
 
-main(argc, argv)
+c_main(argc, argv)
    int argc;
    char **argv;
 {
