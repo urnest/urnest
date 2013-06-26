@@ -1,4 +1,4 @@
-#include "inc/test-tc-map-prm-info.h"
+#include "inc/tc-map-prm-info.h"
 #include "inc/assert.h"
 
 #include <iostream>
@@ -30,14 +30,14 @@ void test1()
   ToTyp j("j");
   ToTyp k("k");
   
-  PrmType p1("p1");
-  PrmType p2("p2");
-  PrmType p3("p3");
-  PrmType p4("p4");
-  PrmType p5("p5");
-  PrmType p6("p6");
-  PrmType p7("p7");
-  PrmType p8("p8");
+  PrmTyp p1("p1");
+  PrmTyp p2("p2");
+  PrmTyp p3("p3");
+  PrmTyp p4("p4");
+  PrmTyp p5("p5");
+  PrmTyp p6("p6");
+  PrmTyp p7("p7");
+  PrmTyp p8("p8");
   
   DG dg;
   dg.insert(std::make_pair(a, std::map<FromTyp, std::set<PrmTyp> >()));

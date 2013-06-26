@@ -6,7 +6,16 @@ extern "C"
 {
 #endif
 
+#include "inc/GMC.h"
+#include "inc/CastEdg.h"
+#include "inc/DPType_.h"
+#include "inc/DrvEdg.h"
+#include "inc/EqvEdg.h"
 #include "inc/FilTyp.h"
+
+#include "inc/PrmTypLst.h"
+#include "inc/PrmTyp.h"
+#include "inc/Var.hh"
 
   struct TcMapPrmInfo_;
   typedef struct TcMapPrmInfo_ TcMapPrmInfo;
@@ -52,7 +61,7 @@ typedef std::map<ToTyp, std::map<FromTyp, std::set<PrmTyp> > > DG;
 
 // only parameters that can ever be used in deriving to type t
 std::set<PrmTyp> getRelevantPrms(DG const& dg,
-                                 ToType const& t) throw();
+                                 ToTyp const& t) throw();
   
 }
 
