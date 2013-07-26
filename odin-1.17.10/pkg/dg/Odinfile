@@ -21,6 +21,8 @@
    dg-yacc.c; if-drvpth.c; if-ft.c; if-lvl.c
    ../odin/if-err.c +define=NO_IPC
    ../odin/if-file.c; ../odin/if-io.c; ../odin/if-nod.c; ../odin/if-symbol.c
+   tc-map-prm-info.cxx
+   assert.cxx
 
 %dg-lint.c.sm == <<
    dg-analyze.c; dg-build.c; dg-edg.c; dg-envvar.c; dg-filtyp.c

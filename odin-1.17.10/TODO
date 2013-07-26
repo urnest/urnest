@@ -167,7 +167,7 @@ allow us to collect up all the applicable parameter types)
   a single type (ie :xy never :z:xy) I think. And the ArgFilTyp.FTName should be
   ":xy".
 
-  - want to adjust PrmTypLst just before writing out DG / DG.log (and before
+  x want to adjust PrmTypLst just before writing out DG / DG.log (and before
     dumping 'Possible Derivations):
 
     dg-main.c calls a Make_PrmTypLsts, perhaps should adjust that?
@@ -178,6 +178,13 @@ allow us to collect up all the applicable parameter types)
         Build_TC_Map_PrmTypLst_Info(tp_FilTyp begin)
            - which would build from drv, eqv and cast edges (see dg-filtyp.c
              Print_Info for how to go through those)
+
+  - test that:
+    - figure out which dg.exe is used to create cache
+    - update it
+    - create cache
+    - step through above code and see if DrvEdg_PrmTypLst returns 0x0
+      (see above)
 
   - then just need to adjust Do_DrvPth (see above)
 

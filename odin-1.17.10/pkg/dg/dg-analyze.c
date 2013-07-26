@@ -32,6 +32,7 @@ geoff@boulder.colorado.edu
 #include "inc/Str.h"
 #include "inc/TClass_.h"
 #include "inc/Tool.h"
+#include "inc/tc-map-prm-info.h"
 
 extern tp_Tool		ToolS;
 
@@ -645,6 +646,7 @@ Make_PrmTypLsts()
    tp_FilTyp FilTyp;
    tp_Tool Tool;
    tp_PrmTypLst OldGenericMapPTL;
+   TcMapPrmInfo* x;
 
    GenericMapPrmTypLst = DfltPrmTypLst;
 
@@ -684,6 +686,9 @@ Make_PrmTypLsts()
       Clear_Flags();
       for (FilTyp = FilTypS; FilTyp != NIL; FilTyp = FilTyp->Link) {
 	 Set_MapPrmTypLst(&ReDo, FilTyp); }/*for*/; }/*while*/;
+
+   x=Build_TC_Map_PrmTypLst_Info(FilTypS);
+   Set_TC_Map_DrvEdg_PrmTypLsts(x, FilTypS);   
    }/*Make_PrmTypLsts*/
 
 
