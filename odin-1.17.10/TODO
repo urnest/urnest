@@ -188,5 +188,20 @@ allow us to collect up all the applicable parameter types)
 
   - then just need to adjust Do_DrvPth (see above)
 
+... after adjustment, get following, note difference in Generating...:map=:xy line, it now does not mention b, so I think we've won:
 
-
+=>  f.x.sm+a=1+b=2:xy.sm.list
+** Generating /data/xju/tmp/f.x.sm +a=1 +b=2 :x*xy.sm.list
+** Generating /data/xju/tmp :odin*targets_ptr
+** Generating /data/xju/tmp/Odinfile :odin*targets_ptr
+** Generating /data/xju/tmp :odin*act_tgt.list
+** Generating /data/xju/tmp/f.x.sm :x*x.sm.list
+** Generating /data/xju/tmp/f.x.sm :x*x.sm.list +a=1 :map=:xy
+** Generating /data/xju/tmp/ocnopkg/xjutv/PKGS/x :odin*targets_ptr
+** Generating /data/xju/tmp/ocnopkg/xjutv/PKGS/x/Odinfile :odin*targets_ptr
+** Generating /data/xju/tmp/ocnopkg/xjutv/PKGS/x :odin*act_tgt.list
+** Generating /data/xju/tmp/ocnopkg/xjutv/PRM +a=1 :odin*prm_values
+** Generating /data/xju/tmp/ocnopkg/xjutv/PRM +a=1 :odin*prm_values :odin*ls
+** Generating /data/xju/tmp/f1.x +a=1 :x*xy
+** Executing : '/data/xju/tmp/ocnopkg/xjutv/PKGS/x/y.sh' '/data/xju/tmp/f1.x' '/data/xju/tmp/ocnopkg/xjutv/FILES/PRM.6871.ls'
+=> 

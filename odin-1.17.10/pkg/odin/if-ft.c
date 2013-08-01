@@ -107,9 +107,8 @@ IsMap_Tool(
    )
    GMC_DCL(tp_Tool, Tool)
 {
-   FORBIDDEN(Tool == ERROR);
-   return (Tool->TClass == TC_Map);
-   }/*IsExternal_Tool*/
+  return (Tool != ERROR) && (Tool->TClass == TC_Map);
+}/*IsExternal_Tool*/
 
 
 tp_MemEdg
