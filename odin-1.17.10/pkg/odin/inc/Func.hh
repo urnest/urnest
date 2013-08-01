@@ -465,6 +465,7 @@ extern boolean IsVTgt_FKind(GMC_P1(tp_FKind));
 extern boolean IsATgtText_FKind(GMC_P1(tp_FKind));
 extern boolean IsVTgtText_FKind(GMC_P1(tp_FKind));
 extern boolean IsExternal_Tool(GMC_P1(tp_Tool));
+extern boolean IsMap_Tool(GMC_P1(tp_Tool));
 extern tp_FTName FilTyp_ShortFTName(GMC_P1(tp_FilTyp));
 extern tp_FTName FilTyp_FTName(GMC_P1(tp_FilTyp));
 extern tp_MemEdg FilTyp_MemEdg(GMC_P1(tp_FilTyp));

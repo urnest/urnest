@@ -139,7 +139,10 @@ Do_DrvPth(
 	    FKind = DrvPth_FKind(DrvPthElm);
 	    PrmTypLst = DrvPth_PrmTypLst(DrvPthElm);
 	    /*select*/{
-	       if (IsGroupingInput_FilTyp(FilTyp)) {
+              if (IsMap_Tool(FilTyp_Tool(FilTyp))) {
+                DrvFilPrm = Strip_FilPrm(FilPrm, PrmTypLst);
+              }
+              else if (IsGroupingInput_FilTyp(FilTyp)) {
 		  DrvFilPrm = FilPrm;
 	       }else if (DrvPthElm == GroupingDrvPthElm) {
 		  DrvFilPrm = Strip_FilPrm(InhFilPrm, PrmTypLst);

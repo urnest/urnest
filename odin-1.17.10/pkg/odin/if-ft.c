@@ -101,6 +101,17 @@ IsExternal_Tool(
    }/*IsExternal_Tool*/
 
 
+boolean
+IsMap_Tool(
+   GMC_ARG(tp_Tool, Tool)
+   )
+   GMC_DCL(tp_Tool, Tool)
+{
+   FORBIDDEN(Tool == ERROR);
+   return (Tool->TClass == TC_Map);
+   }/*IsExternal_Tool*/
+
+
 tp_MemEdg
 FilTyp_MemEdg(
    GMC_ARG(tp_FilTyp, FilTyp)
