@@ -1,0 +1,142 @@
+#
+# An entry for each header, specifying what its implementation
+# files are (if any).
+#
+%AutoFd.hh.cxx.sm == AutoFd.hh+(..%cxx-opts):impl.cxx.sm
+%Event.hh.cxx.sm == Event.hh+(..%cxx-opts):impl.cxx.sm
+%EventClient.hh.cxx.sm == EventClient.hh+(..%cxx-opts):impl.cxx.sm
+%EventP.hh.cxx.sm == EventP.hh+(..%cxx-opts):impl.cxx.sm
+%Exception.hh.cxx.sm == Exception.hh+(..%cxx-opts)+impl=(Exception.cc):impl.cxx.sm
+%functional.hh.cxx.sm == functional.hh+(..%cxx-opts)+impl=(functional.cc):impl.cxx.sm
+%ios_base.hh.cxx.sm == ios_base.hh+(..%cxx-opts):impl.cxx.sm
+%Int.hh.cxx.sm == Int.hh+(..%cxx-opts):impl.cxx.sm
+%JoiningIterator.hh.cxx.sm == JoiningIterator.hh+(..%cxx-opts):impl.cxx.sm
+%MethodTrigger.hh.cxx.sm == MethodTrigger.hh+(..%cxx-opts):impl.cxx.sm
+%MethodTriggerP.hh.cxx.sm == MethodTriggerP.hh+(..%cxx-opts):impl.cxx.sm
+%MicroSeconds.hh.cxx.sm == MicroSeconds.hh+(..%cxx-opts):impl.cxx.sm
+%Notifying.hh.cxx.sm == Notifying.hh+(..%cxx-opts):impl.cxx.sm
+%NotifyingList.hh.cxx.sm == NotifyingList.hh+(..%cxx-opts):impl.cxx.sm
+%Observer.hh.cxx.sm == Observer.hh+(..%cxx-opts):impl.cxx.sm
+%ObserverP.hh.cxx.sm == ObserverP.hh+(..%cxx-opts):impl.cxx.sm
+%Optional.hh.cxx.sm == Optional.hh+(..%cxx-opts):impl.cxx.sm
+%Ring.hh.cxx.sm == Ring.hh+(..%cxx-opts):impl.cxx.sm
+%RingLink.hh.cxx.sm == RingLink.hh+(..%cxx-opts):impl.cxx.sm
+%SafeTriggerIf.hh.cxx.sm == SafeTriggerIf.hh+(..%cxx-opts):impl.cxx.sm
+%SafeTriggerPIf.hh.cxx.sm == SafeTriggerPIf.hh+(..%cxx-opts):impl.cxx.sm
+%Shared.hh.cxx.sm == Shared.hh+(..%cxx-opts):impl.cxx.sm
+%Time.hh.cxx.sm == Time.hh+(..%cxx-opts)+impl=(Time.cc):impl.cxx.sm
+%Traced.hh.cxx.sm == Traced.hh+(..%cxx-opts):impl.cxx.sm
+%assert.hh.cxx.sm == assert.hh+(..%cxx-opts)+impl=(assert.cc):impl.cxx.sm
+%fcntl.hh.cxx.sm == fcntl.hh+(..%cxx-opts)+impl=(fcntl.cc):impl.cxx.sm
+%fcntl.hh.cxx.sm == fcntl.hh+(..%cxx-opts)+impl=(fcntl.cc):impl.cxx.sm
+%format.hh.cxx.sm == format.hh+(..%cxx-opts)+impl=(format.cc):impl.cxx.sm
+%formatTime.hh.cxx.sm == formatTime.hh+(..%cxx-opts)+impl=(formatTime.cc):impl.cxx.sm
+%isnan.hh.cxx.sm == isnan.hh+(..%cxx-opts)+impl=(isnan.cc):impl.cxx.sm
+%mt.hh.cxx.sm == mt.hh+(..%cxx-opts)+impl=(mt.cc):impl.cxx.sm
+%netdb.hh.cxx.sm == netdb.hh+(..%cxx-opts)+impl=(netdb.cc):impl.cxx.sm
+%next.hh.cxx.sm == next.hh+(..%cxx-opts):impl.cxx.sm
+%readFile.hh.cxx.sm == readFile.hh+(..%cxx-opts)+impl=(readFile.cc):impl.cxx.sm
+%serialisation.hh.cxx.sm == serialisation.hh+(..%cxx-opts)+impl=(serialisation.cc):impl.cxx.sm
+%socket.hh.cxx.sm == socket.hh+(..%cxx-opts)+impl=(socket.cc):impl.cxx.sm
+%stat.hh.cxx.sm == stat.hh+(..%cxx-opts)+impl=(stat.cc):impl.cxx.sm
+%stdio.hh.cxx.sm == stdio.hh+(..%cxx-opts)+impl=(stdio.cc):impl.cxx.sm
+%parse.hh.cxx.sm == parse.hh+(..%cxx-opts):impl.cxx.sm
+%path.hh.cxx.sm == path.hh+(..%cxx-opts)+impl=(path.cc):impl.cxx.sm
+%str.hh.cxx.sm == str.hh+(..%cxx-opts):impl.cxx.sm
+%stringToDouble.hh.cxx.sm == stringToDouble.hh+(..%cxx-opts)+impl=(stringToDouble.cc):impl.cxx.sm
+%stringToInt.hh.cxx.sm == stringToInt.hh+(..%cxx-opts)+impl=(stringToInt.cc):impl.cxx.sm
+%stringToUInt.hh.cxx.sm == stringToUInt.hh+(..%cxx-opts)+impl=(stringToUInt.cc):impl.cxx.sm
+%stringToTime.hh.cxx.sm == stringToTime.hh+(..%cxx-opts)+impl=(stringToTime.cc):impl.cxx.sm
+%syscall.hh.cxx.sm == syscall.hh+(..%cxx-opts)+impl=(syscall.cc):impl.cxx.sm
+%Tagged.hh.cxx.sm == Tagged.hh+(..%cxx-opts):impl.cxx.sm
+%unistd.hh.cxx.sm == unistd.hh+(..%cxx-opts)+impl=(unistd.cc):impl.cxx.sm
+%xml.hh.cxx.sm == xml.hh+(..%cxx-opts)+impl=(xml.cc):impl.cxx.sm
+
+%empty == <<
+
+%none.hh == <<
+
+%test-functional.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-functional.cc):impl.cxx.sm
+%test-Int.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-Int.cc):impl.cxx.sm
+%test-JoiningIterator.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-JoiningIterator.cc):impl.cxx.sm
+%test-Exception.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-Exception.cc):impl.cxx.sm
+%test-format.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-format.cc):impl.cxx.sm
+%test-Traced.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-Traced.cc):impl.cxx.sm
+%test-Ring.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-Ring.cxx):impl.cxx.sm
+%test-EventClient.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-EventClient.cc):impl.cxx.sm
+%test-Notifying.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-Notifying.cc):impl.cxx.sm
+%test-NotifyingList.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-NotifyingList.cc):impl.cxx.sm
+%test-Observer.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-Observer.cc):impl.cxx.sm
+%test-ObserverP.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-ObserverP.cc):impl.cxx.sm
+%test-path.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-path.cc):impl.cxx.sm
+%test-Time.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-Time.cc):impl.cxx.sm
+%test-stringToInt.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-stringToInt.cc):impl.cxx.sm
+%test-stringToUInt.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-stringToUInt.cc):impl.cxx.sm
+%test-stringToTime.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-stringToTime.cc):impl.cxx.sm
+%test-serialisation.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-serialisation.cc):impl.cxx.sm
+%test-stringToDouble.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-stringToDouble.cc):impl.cxx.sm
+%test-mt.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-mt.cc):impl.cxx.sm
+%test-xml.cxx.sm == %none.hh+(..%cxx-opts)+impl=(test-xml.cc):impl.cxx.sm
+
+%basic-tests.tree == <<
+()+cmd=(%test-functional.cxx.sm+(..%cxx-opts):exe):stdout
+()+cmd=(%test-stringToDouble.cxx.sm+(..%cxx-opts):exe):stdout
+()+cmd=(%test-Int.cxx.sm+(..%cxx-opts):exe):stdout
+()+cmd=(%test-JoiningIterator.cxx.sm+(..%cxx-opts):exe):stdout
+()+cmd=(%test-Exception.cxx.sm+(..%cxx-opts):exe):stdout
+()+cmd=(%test-format.cxx.sm+(..%cxx-opts):exe):stdout
+()+cmd=(%test-Traced.cxx.sm+(..%cxx-opts):exe):stdout
+()+cmd=(%test-Ring.cxx.sm+(..%cxx-opts):exe):stdout
+()+cmd=(%test-EventClient.cxx.sm+(..%cxx-opts):exe):stdout
+()+cmd=(%test-Notifying.cxx.sm+(..%cxx-opts):exe):stdout
+()+cmd=(%test-NotifyingList.cxx.sm+(..%cxx-opts):exe):stdout
+()+cmd=(%test-Observer.cxx.sm+(..%cxx-opts):exe):stdout
+()+cmd=(%test-ObserverP.cxx.sm+(..%cxx-opts):exe):stdout
+()+cmd=(%test-path.cxx.sm+(..%cxx-opts):exe):stdout
+()+cmd=(%test-Time.cxx.sm+(..%cxx-opts):exe):stdout
+()+cmd=(%test-stringToInt.cxx.sm+(..%cxx-opts):exe):stdout
+()+cmd=(%test-stringToUInt.cxx.sm+(..%cxx-opts):exe):stdout
+()+cmd=(%test-stringToDouble.cxx.sm+(..%cxx-opts):exe):stdout
+()+cmd=(%test-stringToTime.cxx.sm+(..%cxx-opts):exe):stdout
+#()+cmd=(%test-serialisation.cxx.sm+(..%cxx-opts):exe):stdout
+#()+cmd=(%test-mt.cxx.sm+(..%cxx-opts)+ld_flags=-lpthread:exe):stdout
+()+cmd=(%test-xml.cxx.sm+(..%cxx-opts):exe):stdout
+
+%basic-test-results == %basic-tests.tree:leaves
+
+%standalone-tests.tree == <<
+%basic-tests.tree
+
+%run-standalone-tests == %standalone-tests.tree:leaves
+
+%basic.cxx.sm == <<
+%isnan.hh.cxx.sm
+%JoiningIterator.hh.cxx.sm
+%Exception.hh.cxx.sm
+%format.hh.cxx.sm
+%Traced.hh.cxx.sm
+%Ring.hh.cxx.sm
+%AutoFd.hh.cxx.sm
+%EventClient.hh.cxx.sm
+%formatTime.hh.cxx.sm
+%netdb.hh.cxx.sm
+%Notifying.hh.cxx.sm
+%NotifyingList.hh.cxx.sm
+%Observer.hh.cxx.sm
+%ObserverP.hh.cxx.sm
+%Optional.hh.cxx.sm
+%path.hh.cxx.sm
+%Time.hh.cxx.sm
+%readFile.hh.cxx.sm
+%socket.hh.cxx.sm
+%stringToInt.hh.cxx.sm
+%stringToUInt.hh.cxx.sm
+%stringToDouble.hh.cxx.sm
+%stringToTime.hh.cxx.sm
+%unistd.hh.cxx.sm
+%fcntl.hh.cxx.sm
+%stat.hh.cxx.sm
+%stdio.hh.cxx.sm
+%xml.hh.cxx.sm
+
+%lib-basic == %basic.cxx.sm+(..%cxx-opts):a

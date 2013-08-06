@@ -1,0 +1,55 @@
+#!/bin/sh
+#
+# Wrapper to create Odin cache after first checking for necessary
+# environment.
+#
+d=`dirname $0`
+
+if [ -z "$QT_HOME" ]
+then
+   QT_HOME=/cygdrive/c/Qt/qt-2.3.2
+fi
+#if [ ! -r "$QT_HOME/include" ]
+#then
+#   echo "Error: $QT_HOME/include does not exist" >&2
+#   echo "set QT_HOME so that \$QT_HOME/include exists" >&2
+#   return 1
+#fi
+if [ -z "$XERCES_HOME" ]
+then
+   XERCES_HOME=$HOME/xerces-c_2_7_0-MinGW-3.1.0-1
+fi
+if [ ! -r "$XERCES_HOME/include" ]
+then
+   echo "Error: $XERCES_HOME/include does not exist" >&2
+   echo "Info: set XERCES_HOME so that \$XERCES_HOME/include exists" >&2
+   return 1
+fi
+if [ -z "$ODIN" ]
+then
+   echo "Error: \$ODIN not set" >&2
+   echo "Info: set \$ODIN to desired cache location" >&2
+   return 1
+fi
+
+x=`which odin`
+if [ $? != 0 ]
+then
+   echo "Error: odin not on path" >&2
+   echo "Info: ensure odin is on \$PATH" >&2
+   return 1
+fi
+
+XERCES_C_2_7_0_CXX_FLAGS="-DNDEBUG -DPROJ_XMLPARSER -DPROJ_XMLUTIL -DPROJ_PARSERS -DPROJ_SAX4C -DPROJ_SAX2 -DPROJ_DOM -DPROJ_DEPRECATED_DOM -DPROJ_VALIDATORS -DXML_USE_WIN32_TRANSCODER -DXML_USE_INMEM_MESSAGELOADER"
+ODINPATH=$d/../bal/odin/pkg \
+ODIN_CXX=mingw-g++ \
+ODIN_CXX_FLAGS="-mno-cygwin -g -DXJU_WIN32_MINGW $XERCES_C_2_7_0_CXX_FLAGS" \
+ODIN_CXX_PATH=$d/../bal/odin/util:/usr/i686-pc-mingw32/bin:/usr/bin \
+ODIN_CXX_AR_PATH=/usr/i686-pc-mingw32/bin \
+ODIN_QT_MOC_PATH=$d/../bal/odin/util:$QT_HOME/bin \
+ODIN_QT_MOC=qt-moc-windows \
+ODIN_QTDIR=$QT_HOME \
+ODIN_CXX_LD_LIBRARY_PATH="$QT_HOME/lib $XERCES_HOME/lib" \
+ODIN_CXX_I="$QT_HOME/include $XERCES_HOME/src" \
+ODIN_IGNORE="$QT_HOME $XERCES_HOME" \
+odin -R </dev/null

@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# Wrapper to create Odin cache at work (Boeing)
+#
+export QT_HOME="/cygdrive/m/SOFTWARE/btt-devel/qt-2.3.2-MinGW-3.1.0-1"
+export XERCES_HOME="/cygdrive/m/SOFTWARE/btt-devel/xerces-c_2_7_0-MinGW-3.1.0-1"
+export MINGW="/cygdrive/m/SOFTWARE/MinGW-3.1.0-1"
+
+d=`dirname $0`
+/bin/sh "$d/create-mingw-odin-cache"

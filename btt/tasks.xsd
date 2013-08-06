@@ -1,0 +1,32 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:btt="http://v1.timetracker.hfmpmobiles.australia.boeing.com"
+            targetNamespace="http://v1.timetracker.hfmpmobiles.australia.boeing.com">
+
+ <xsd:annotation>
+  <xsd:documentation xml:lang="en">
+   Schema for tasks document of boeing time tracker application.
+  </xsd:documentation>
+ </xsd:annotation>
+
+ <xsd:element name="tasks" type="btt:Tasks">
+ </xsd:element>
+
+ <xsd:complexType name="Tasks">
+  <xsd:sequence>
+   <xsd:element name="task"
+                type="btt:Task"
+                minOccurs="0"
+                maxOccurs="unbounded">
+   </xsd:element>
+  </xsd:sequence>
+ </xsd:complexType>
+
+ <xsd:complexType name="Task">
+  <xsd:attribute name="id" type="xsd:nonNegativeInteger" use="required"/>
+  <xsd:attribute name="description" type="xsd:string" use="required"/>
+  <xsd:attribute name="secondsSpentOnThisTask"
+                 type="xsd:nonNegativeInteger"
+		 use="required"/>
+  <xsd:attribute name="started" type="xsd:nonNegativeInteger"/>
+ </xsd:complexType>
+</xsd:schema>

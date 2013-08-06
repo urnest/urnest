@@ -1,0 +1,6 @@
+namespace 
+{
+class X
+{
+};
+}

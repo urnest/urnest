@@ -1,0 +1,88 @@
+%Callback.hh.cxx.sm == <<
+Callback.hh+impl=(Callback.cc)+(..%cxx-opts):impl.cxx.sm
+
+%EditMenu.hh.cxx.sm == <<
+EditMenu.hh+(..%cxx-opts)\
++impl=(EditMenu.cc)\
++impl=(EditMenu.hh+moc_inc_prefix=btt\/view:moc.cxx):impl.cxx.sm
+
+%MenuItem.hh.cxx.sm == <<
+MenuItem.hh+impl=(MenuItem.cc)+(..%cxx-opts):impl.cxx.sm
+
+%Tasks.hh.cxx.sm == <<
+Tasks.hh+(..%cxx-opts)\
++impl=(Tasks.cc)
+
+%TaskPopup.hh.cxx.sm == <<
+TaskPopup.hh+(..%cxx-opts)\
++impl=(TaskPopup.cc)\
++impl=(TaskPopup.hh+moc_inc_prefix=btt\/view:moc.cxx):impl.cxx.sm
+
+%CurrentTask.hh.cxx.sm == <<
+CurrentTask.hh+(..%cxx-opts)+impl=(CurrentTask.cc):impl.cxx.sm
+
+%TimeSheetReport.hh.cxx.sm == <<
+TimeSheetReport.hh+(..%cxx-opts)+impl=(TimeSheetReport.cc):impl.cxx.sm
+
+%Last2WeeksReport.hh.cxx.sm == <<
+Last2WeeksReport.hh+(..%cxx-opts)+impl=(Last2WeeksReport.cc):impl.cxx.sm
+
+%TrackingReport.hh.cxx.sm == <<
+TrackingReport.hh+(..%cxx-opts)+impl=(TrackingReport.cc):impl.cxx.sm
+
+%ReportWindow.hh.cxx.sm == <<
+ReportWindow.hh+(..%cxx-opts):impl.cxx.sm
+
+%InsertNewTask.hh.cxx.sm == <<
+InsertNewTask.hh+(..%cxx-opts)+impl=(InsertNewTask.cc):impl.cxx.sm
+
+%AddTask.hh.cxx.sm == <<
+AddTask.hh+(..%cxx-opts)+impl=(AddTask.cc):impl.cxx.sm
+
+%ReportMenu.hh.cxx.sm == <<
+ReportMenu.hh+(..%cxx-opts)\
++impl=(ReportMenu.cc)\
++impl=(ReportMenu.hh+moc_inc_prefix=btt\/view:moc.cxx):impl.cxx.sm
+
+%TaskMenu.hh.cxx.sm == <<
+TaskMenu.hh+(..%cxx-opts)\
++impl=(TaskMenu.cc)\
++impl=(TaskMenu.hh+moc_inc_prefix=btt\/view:moc.cxx):impl.cxx.sm
+
+%TaskEditor.hh.cxx.sm == <<
+TaskEditor.hh+(..%cxx-opts)+impl=(TaskEditor.cc):impl.cxx.sm
+
+%all.cxx.sm == <<
+%Tasks.hh.cxx.sm
+%CurrentTask.hh.cxx.sm
+BttLayout.cxx
+
+%none.hh == <<
+
+%test-QListView.cxx.sm == <<
+%none.hh+impl=(test-QListView.cc)+(..%cxx-opts):impl.cxx.sm
+
+%test-CurrentTask.cxx.sm == <<
+%none.hh+impl=(test-CurrentTask.cc)+(..%cxx-opts):impl.cxx.sm
+..%XmlStore.hh.cxx.sm
+..%WorkLog.hh.cxx.sm
+
+%test-Tasks.cxx.sm == <<
+%none.hh+impl=(test-Tasks.cc)+(..%cxx-opts):impl.cxx.sm
+..%TaskId.hh.cxx.sm
+
+%test-TaskPopup.cxx.sm == <<
+%none.hh+impl=(test-TaskPopup.cc)+(..%cxx-opts):impl.cxx.sm
+
+%test-ReportWindow.cxx.sm == <<
+%none.hh+impl=(test-ReportWindow.cc)+(..%cxx-opts):impl.cxx.sm
+
+%all.tree == <<
+%test-CurrentTask.cxx.sm+(..%cxx-opts)+(%fltk-libs)+(..%model-libs):exe
+%test-Tasks.cxx.sm+(..%cxx-opts)+(%fltk-libs)+(..%model-libs):exe
+
+%fltk-libs == <<
++lib=(../../fltk/src%lib)+(../../fltk%exe-opts)
+
+BttLayout.h == BttLayout.fld+fluid=(../../fltk/fluid%fluid):h
+BttLayout.cxx == BttLayout.fld+fluid=(../../fltk/fluid%fluid):cxx
