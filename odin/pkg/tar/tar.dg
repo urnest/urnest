@@ -6,8 +6,12 @@
 
 :extract 'single file extracted from a tar file'? => :FILE;
 
+:extract_dir 'directory extracted from a tar file'? => :DERIVED-DIRECTORY;
+
 +member 'name of tar file member'? => :first;
 
 $ODIN_TAR_PATH 'path covering tar command (colon separated)' = '/usr/bin';
 
 EXEC (extract.sh) (:tar) (+member) 'extract' => (:extract);
+
+EXEC (extract_dir.sh) (:tar) (+member) 'extract_dir' => (:extract_dir);
