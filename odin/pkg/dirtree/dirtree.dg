@@ -1,0 +1,11 @@
+#
+# Directory tree, building a list that contains directory x and all its
+# subdirectories (recursively)
+#
+
+# <> - see base subtype in odin manual
+:dirtree 'Directory tree'? => <:tree>;
+
+# Environment Variables
+
+EXEC (dirtree.py) (:FILE) NEEDS (:FILE:list) => (:dirtree);

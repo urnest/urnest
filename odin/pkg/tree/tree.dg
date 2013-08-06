@@ -1,0 +1,19 @@
+#
+# Abstract
+#
+#   Tree (ordered hierarchy)
+#
+
+*.tree => :tree;
+
+:tree 'ordered hierarchy of files'? => :FILE;
+
+:leaves 'list of leaves of tree'? => :LIST;
+
+# intermediate object types
+
+:_tree 'ordered hierarchy of files (LIST representation)' => :LIST;
+
+READ-LIST (:tree) => (:_tree);
+
+COLLECT (:_tree :recurse=:_tree) => (:leaves);

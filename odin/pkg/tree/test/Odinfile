@@ -1,0 +1,51 @@
+#
+# Test tree package.
+#
+# Invoking...
+#    odin '%all' || echo NO
+# ... should not print NO
+#
+
+#
+# all builds and runs all tests: it should not fail
+#
+%all == %all_tests:list
+
+%all_tests == <<
+%test1
+
+%test1 == ()+cmd=diff (%a.tree:leaves:cat) (%expect1):stdout
+%expect1 == <<
+a
+b
+e
+d
+g
+
+%a.tree == <<
+%a
+%b
+%c.tree
+
+%c.tree == <<
+%e
+%d
+%f.tree
+
+%f.tree == <<
+%g
+
+%a == <<
+a
+
+%b == <<
+b
+
+%d == <<
+d
+
+%e == <<
+e
+
+%g == <<
+g

@@ -1,0 +1,331 @@
+%run-all-tests==%tests.tree:leaves
+
+# classes d.{ax,bx} depend on each other; we need to explicitly specify this
+%cyclic.java.sm==<<
+more/d/ax.java
+more/d/bx.java
+
+# compile options used for all java compiles
+%j-opts==<<
++source_group=(%cyclic.java.sm)
++source_group=(%Q.cyclic.java.sm)
++sp=(src)
++sp=(more)
++sp=(%Q.untarred)
++jar=(jars_a/1.jar) (jars_b)
+
+
+%tests.tree==<<
+%a.stdout
+%test1
+%test2
+%test3.tree
+%test4.tree
+%test5.tree
+%test6
+%test7
+%test8
+%Q.class
+%test-sym-option.tree
+%test-symbol
+%test-symbol-2
+%test-symbol-3
+%a1.stdout+cmd=cmp (%a1.output):stdout
+%a1-2.stdout+cmd=cmp (%a1-2.output):stdout
+%a.stdout+cmd=cmp (%a.output):stdout
+%a.stdout+cmd=cmp (%a.output.2):stdout
+%DriverTest.stdout+cmd=cmp (%DriverTest.output):stdout
+%test-sym-option-run+cmd=cmp (%test-sym-option-output):stdout
+%test-sym-option-2
+%test-stdin
+%fail.test1
+%fail.test2
+%test-stdin2
+
+# test1 - can we correctly figure out what a.java depends on?
+%test1==(%test1-s+cmd=sort -u:stdout)+cmd=cmp (%test1-expect:list:ls+cmd=sort -u:stdout):stdout
+
+%a.class==src/f/a.java+(%j-opts):class
+%ej==()+classpath=(.):jar
+
+#
+#standard output of run of class f.a
+#- note that just +need=(%a.class) is not enough since f.a won't be rerun if
+#  some class a depends on changes but a is unchanged after recompiling
+#
+%a.stdout==()+cmd=f.a+need=(%a.class) (src/f/a.java+(%j-opts):java.dep):java.stdout
+%a.output==src/f/a.java+(%j-opts):java.exec/output
+
+%a1.stdout==()+symbol=(src/f/a.java+(%j-opts)):java.stdout
+%a1.output==src/f/a.java+(%j-opts):java.exec/output
+
+%a1-2.stdout==()+driver=(%a.driver.sh)+cmd=f.a+need=(%a.class) (src/f/a.java+(%j-opts):java.dep):java.stdout
+%a1-2.output==src/f/a.java+(%j-opts)+driver=(%a.driver.sh):java.exec/output
+
+%a.java.syms==<<
+f.a
+
+%a.output.2==%a.java.syms+(%j-opts):java.exec/output
+
+
+%a.driver.sh == !<<
+#!/bin/sh
+echo "a=`$@`"
+
+%test1-s==(%a.stdout:depend:ls)+cmd=egrep '[.]java$' +need=(%a.stdout:depend):stdout
+
+%test1-expect==<<
+(src/f/a.java)
+(src/d/c.java)
+(src/d/A1.java)
+(src/f/A2.java)
+(src/f/b.java)
+(src/d/e.java)
+(more/d/i/h.java)
+(more/d/f.java)
+(more/d/g.java)
+(more/d/ax.java)
+(more/d/bx.java)
+(more/d/abutil.java)
+
+
+# test2 - can we correctly figure out what gb.java depends on?
+%test2==(%test2-expect:list:ls)+cmd=cmp (%test2-s):stdout
+
+%gb.class==more/d/gb.java+(%j-opts):class
+%test2-s==(%gb.class:depend:ls)+cmd=egrep '[.]java$':stdout
+
+%test2-expect==<<
+(more/d/gb.java)
+(more/d/g.java)
+
+# src/e/g.java depends on d.{ax,bx} via implicit absolute reference to d.ax
+%test3.tree==<<
+(src/e/g.java+(%j-opts):class:depend:ls)+cmd=fgrep (more/d/ax.java):stdout
+(src/e/g.java+(%j-opts):class:depend:ls)+cmd=fgrep (more/d/bx.java):stdout
+
+# src/e/k.java depends on d.{ax,bx} via packge import
+%test4.tree==<<
+(src/e/k.java+(%j-opts):class:depend:ls)+cmd=fgrep (more/d/ax.java):stdout
+(src/e/k.java+(%j-opts):class:depend:ls)+cmd=fgrep (more/d/bx.java):stdout
+
+
+%test5.tree==<<
+()+cmd=cmp (more/d/abutil.java+(%j-opts):symbols) :stdout
+(%e2)+cmd=cmp (%cyclic.java.sm+(%j-opts):symbols) :stdout
+(%e3)+cmd=cmp (more/d/f.java+(%j-opts):symbols) :stdout
+()+cmd=cmp (more/d/g.java+(%j-opts):symbols) :stdout
+(%e4)+cmd=cmp (more/d/gb.java+(%j-opts):symbols) :stdout
+()+cmd=cmp (more/d/i/h.java+(%j-opts):symbols) :stdout
+()+cmd=cmp (src/f/A2.java+(%j-opts):symbols) :stdout
+(%e5)+cmd=cmp (src/f/a.java+(%j-opts):symbols) :stdout
+(%e6)+cmd=cmp (src/f/b.java+(%j-opts):symbols) :stdout
+()+cmd=cmp (src/f/c1.java+(%j-opts):symbols) :stdout
+()+cmd=cmp (src/d/A1.java+(%j-opts):symbols) :stdout
+(%e7)+cmd=cmp (src/d/c.java+(%j-opts):symbols) :stdout
+(%e8)+cmd=cmp (src/d/e.java+(%j-opts):symbols) :stdout
+(%e9)+cmd=cmp (src/e/g.java+(%j-opts):symbols) :stdout
+(%e10)+cmd=cmp (src/e/k.java+(%j-opts):symbols) :stdout
+(%e11)+cmd=cmp (src/f/x.java+(%j-opts):symbols) :stdout
+()+cmd=cmp (src/f/yy.java+(%j-opts):symbols) :stdout
+
+%e2==<<
+d.abutil
+
+%e3==<<
+d.g
+g.G
+
+%e4==<<
+d.g
+d.g.G
+
+%e5==<<
+d.A1
+d.ax
+d.c
+d.i
+d.i.h
+f.A2
+f.b
+f.d
+
+%e6==<<
+d.c
+
+%e7==<<
+d.e
+
+%e8==<<
+d.f
+
+%e9==<<
+d.ax
+d.ax.s
+e.d
+
+%e10==<<
+ax.s
+d.ax
+e.ax
+
+%e11==<<
+f.y
+
+%test6==(%test6.want)+cmd=diff -b - (%DriverTest.stdout):stdout
+
+%test6.want==<<
+PASS
+
+%DriverTest.stdout==()\
+ +driver=((%DriverTest.driver.sh) +cmd=(%DriverTest.config) :run2)\
+ +vmopt='-ea'\
+ +cmd='f.DriverTest'\
+ +cmd='config'\
+ +need=(%DriverTest.required)\
+       (src/f/DriverTest.java+(%j-opts):java.dep)\
+       (%DriverTest.driver.sh)\
+       (%DriverTest.config:dirtree:leaves)\
+:java.stdout
+
+%DriverTest.output==src/f/DriverTest.java+(%j-opts)\
+ +driver=((%DriverTest.driver.sh) +cmd=(%DriverTest.config) :run2)\
+ +vmopt='-ea'\
+ +cmd='f.DriverTest'\
+ +cmd='config'\
+ +need=(%DriverTest.required)\
+       (%DriverTest.config:dirtree:leaves)\
+:java.stdout
+
+%DriverTest.required==src/f/DriverTest.java:symbol+(%j-opts):required_classes
+%DriverTest.config==%DriverTest.config.vir_tree_spec:vir_tree
+
+%DriverTest.config.vir_tree_spec==<<
+config/files/x.txt==Odinfile%DriverTest.x.txt
+
+%DriverTest.x.txt==<<
+x
+
+%DriverTest.driver==<<
+%DriverTest.driver.sh
+%DriverTest.config:filename
+
+%DriverTest.driver.sh == !<<
+#!/bin/sh
+/bin/cp -R -L "$1" config &&
+shift &&
+"$@"
+x=$?
+/bin/rm -rf config
+exit $x
+
+%test7==()+cmd=(../test_jdep.py):stdout
+
+%test8==()+cmd=diff (src/f/a.java:symbol+(%j-opts):required_classes:ls) (src/f/a.java+(%j-opts):required_classes:ls):stdout
+
+# misc. targets to check various intermediate steps in case things go wrong...
+
+%a.java.view_desc==src/f/a.java+(%j-opts):java.view_desc
+%a.java.view==%a.java.view_desc:view
+%a.java.dep==src/f/a.java+(%j-opts):java.dep
+%e.java.view_desc==src/d/e.java+(%j-opts):java.view_desc
+%c.java.view_desc==src/d/c.java+(%j-opts):java.view_desc
+
+%cyclic.source_group==%cyclic.java.sm+(%j-opts):java.source_group
+
+%d.ax==%cyclic.java.sm+(%j-opts):java.source_group:vir_dir/d.ax
+%d.bx==%cyclic.java.sm+(%j-opts):java.source_group:vir_dir/d.ax
+
+%g.java.view_desc==(src/e/g.java+(%j-opts):java.view_desc)
+
+%k.java.view_desc==(src/e/k.java+(%j-opts):java.view_desc)
+
+%k.raw_errors==(src/e/k.java:raw_errors)
+%cyclic.raw_errors==(%cyclic.java.sm:raw_errors)
+
+#if something implicitly uses f.a, we can use +need=(%a.required) where 
+#it is defined as...
+%a.required==(src/f/a.java+(%j-opts):required_classes)
+
+%Q.vir_tree_spec==<<
+q/Q.java==(q.tar+member='q/Q.java':extract:cast.java)
+q/Qa.java==(q.tar+member='q/Qa.java':extract:cast.java)
+q/Qb.java==(q.tar+member='q/Qb.java':extract:cast.java)
+q/Qc.java==(q.tar+member='q/Qc.java':extract:cast.java)
+
+%Q.untarred==%Q.vir_tree_spec:vir_tree
+
+%Q.class==(%Q.untarred/q/Q.java+(%j-opts):class)
+%Q.raw_errors==(%Q.untarred/q/Q.java+(%j-opts):raw_errors)
+
+%Q.cyclic.java.sm==<<
+%Q.untarred/q/Qa.java
+%Q.untarred/q/Qb.java
+
+%test-sym-option-got==src/f/SymA.java+sym='f.SymB':symbol+(%j-opts):java.view_desc:view
+
+%test-sym-option-want==<<
+(src/f/SymA.java)
+(src/f/SymB.java)
+
+%test-sym-option-build==src/f/SymA.java+sym='f.SymB':symbol+(%j-opts):required_classes
+
+%test-sym-option-run==\
+()+symbol=(src/f/SymA.java+sym=f.SymB:symbol)+(%j-opts):java.stdout
+
+%test-sym-option-output==\
+src/f/SymA.java+sym=f.SymB+(%j-opts):java.exec/output
+
+%test-sym-option-2==(%test-sym-option-output:depend:ls+cmd=grep f.SymB:stdout)
+
+%test-sym-option-syms==<<
+f.SymB
+
+%test-sym-option-got-2==src/f/SymA.java+syms=(%test-sym-option-syms):symbol+(%j-opts):java.view_desc:view
+
+%test-sym-option.tree==<<
+%test-sym-option-want:list:ls+cmd=cmp (%test-sym-option-got:ls):stdout
+%test-sym-option-want:list:ls+cmd=cmp (%test-sym-option-got-2:ls):stdout
+%test-sym-option-build
+%test-sym-option-run
+
+%test-symbol-got==src/f/wrong-name.1.java:symbol
+%test-symbol-expect==<<
+f.WrongName
+
+%test-symbol==%test-symbol-expect+cmd=cmp (%test-symbol-got):stdout
+
+%test-symbol-got-2==src/f/SymA.java:symbol
+%test-symbol-expect-2==<<
+f.SymA
+
+%test-symbol-2==%test-symbol-expect-2+cmd=cmp (%test-symbol-got-2):stdout
+
+%test-symbol-3-want==<<
+f.non_public
+
+%test-symbol-3-got==src/f/non_public.java:symbol
+%test-symbol-3==%test-symbol-3-want+cmd=cmp (%test-symbol-3-got):stdout
+
+%fred==<<
+Fred.
+
+%stdin.output==src/f/stdin.java+(%j-opts)+stdin=(%fred):exec/output
+
+%test-stdin==%fred+cmd=cmp (%stdin.output):stdout
+
+%stdin.launcher==src/f/stdin.java+(%j-opts):java.launcher
+
+%test-stdin2==%fred+cmd=cmp (%fred+cmd=(%stdin.launcher):stdout):stdout
+
+%fail==src/f/fail.java+(%j-opts):exec
+
+%fail.status==<<
+3
+
+%fail.err==<<
+out
+err
+
+%fail.test1==%fail.status+cmd=cmp (%fail/status):stdout
+%fail.test2==%fail.err+cmd=cmp (%fail/errors):stdout

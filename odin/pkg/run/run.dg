@@ -1,0 +1,48 @@
+# Output Object Types
+
+:run 'a script that runs a specified command line from a specified directory' => :EXECUTABLE;
+:run2 'a script that runs a specified file with specified arguments' => :EXECUTABLE;
+
+:stdout 'standard output from a test run'? => :PIPE;
+
+:output 'output files from a test run'? => :DERIVED-DIRECTORY;
+
+:env 'environment in shell format'? => :FILE;
+
+#
+# :exec is created regardless of exit status of test run, with:
+#   :exec/files.tar the files produced by the run, and either
+#   :exec/output - the stdout+stderr if command exits with 0 status, or
+#   :exec/errors - the stdout+stderr if command exits with non-0 status
+#
+:exec 'results of a test run'? => :DERIVED-DIRECTORY;
+
+# Parameter Types
+
++cmd 'host command'? => :LIST;
+
++need 'run dependency'? => :LIST;
+
+
+# Environment Variables
+
+$ODIN_LD_LIBRARY_PATH 'shared library load path, space separated' = '';
+$ODIN_EXEC_PATH 'PATH to :exec commands under, colon separated' = '/bin:/usr/bin';
+
+# Tools
+
+# FILE here is directory to change to before running (+cmd) command
+EXEC (run.sh) (:FILE) (+cmd :ls) NEEDS (+cmd)& (+need)
+   => (:run);
+
+# FILE here is an executable file; (+cmd) supplies the arguments
+EXEC (run2.sh) (:FILE) (+cmd :ls) NEEDS (+cmd)& (+need)
+   => (:run2);
+
+EXEC (pipe.run.sh) (:FILE) (+cmd :ls) NEEDS (+cmd) (+need)
+   => (:stdout) (:output);
+
+EXEC (exec.sh) (:FILE) (+cmd :ls) (:env) NEEDS (+cmd) (+need)
+  => (:exec);
+
+EXEC (env.sh) ($ODINCACHE/ENV) => (:env);

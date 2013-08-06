@@ -1,0 +1,121 @@
+#
+# Abstract
+#
+#    Package for managing C++ compilation, library building and linking
+#    to executable.
+#    
+#    Sources are normally specified as either a single C++ source file, or
+#    as a C++ "system model" (a list of source files and system models).
+#
+#    Typically either archive library or executable are derived from these.
+#
+# Source Types
+
+*.cxx => :cxx;
+
+*.cpp => :cxx;
+
+*.C => :cxx;
+
+*.cc => :cxx;
+
+*.c\+\+ => :cxx;
+
+*.cxx.sm  => :cxx.sm;
+
+*.C.sm => :cxx.sm;
+
+*.cc.sm => :cxx.sm;
+
+*.c\+\+.sm => :cxx.sm;
+
+*.SM => :cxx.sm;
+
+*.a => :a;
+
+# Input Object Types
+
+:cxx 'C++ source code'? => :o_src;
+
+:cxx.sm 'system model for a C++ program'? => :FILE;
+
+# Intermediate Object Types
+
+:cxx.one.list 'list of a single C++ file' => :code.list :cxx.exe.list;
+
+:cxx.sm.list 'list of files in a C++ system model' => :sm.list :cxx.exe.list;
+
+:cxx.exe.list 'list of files in a C++ system' => :LIST;
+
+# Output Object Types
+
+:exe 'executable binary'? => :FILE;
+
+:a 'object library archive'? => :FILE;
+
+# Parameter Types
+
++define 'macro definition'? => :cat;
+
++debug 'debug switch'? => :first;
+
++optimize 'optimization flag'? => :first;
+
++cxx 'name of the C++ compiler'? => :first;
+
++cxx_flags 'flags for C++ compilation'? => :cat;
+
++ld_flags 'flags for ld'? => :cat;
+
++inc_sp 'name of a directory in an include search path'? => :ls;
+
+
+# Environment Variables
+
+$ODIN_CXX_PATH 'PATH to set when running C++ compiler' = '';
+
+$ODIN_CXX 'name of the C++ compiler' = 'g++';
+
+$ODIN_CXX_FLAGS 'C++ compiler flags to always include' = '';
+
+$ODIN_CXX_DEBUGF 'debug flag for C++ compiler' = '-g';
+
+$ODIN_CXX_I 'space-separated list of directories containing default C++ include files (these directories are added as -I options when compiling)' = '';
+
+$ODIN_CXX_AR_PATH 'PATH to set when running archiver' = '';
+
+$ODIN_CXX_AR 'name of the archiver executable' = 'ar';
+
+$ODIN_CXX_AR_FLAGS 'archiver flags' = 'r';
+
+$ODIN_CXX_LD_DEBUGF 'debug flag for C++ linker' = '-g';
+
+$ODIN_CXX_LD_LIBRARY_PATH 'load library path for C++' = '';
+
+$ODIN_CXX_IGNORE_ERR 'egrep expression for compile/link errors to ignore' = '';
+
+$ODIN_CXX_LD_EXTRA_LIBS 'extra library flags to add to every ld command (at the end)' = '';
+
+
+# Tools
+
+COLLECT (:cxx)
+   => (:cxx.one.list);
+
+READ-LIST (:cxx.sm)
+   => (:cxx.sm.list);
+
+EXEC (CC.sh) (:cxx) (+inc_sp)
+ (+debug) (+optimize) (+define) (+cxx) (+cxx_flags) (abort_msgs)
+ NEEDS (:cxx:lookup=:hash_inc_all)
+   => (:o);
+
+EXEC (ld.sh) (:o_of :vir_dir) (:library_flags)
+ (+define) (+inc_sp) (+debug)
+ (+cxx) (+ld_flags)
+ NEEDS (:o_of :vir_tgt.list) (:libraries) (:cxx.exe.list)@
+   => (:exe);
+
+EXEC (ar.sh) (:o_of :vir_dir)
+ NEEDS (:o_of :vir_tgt.list)
+   => (:a);

@@ -1,0 +1,14 @@
+#
+# To run all the tests from this directory:
+#
+#   odin 'Odinfile.test%all' || echo NO
+#
+#   (Should not print NO.)
+#
+%all == %all_tests:list
+
+%all_tests == <<
+tree/test%all
+cxx/test%all_tests.tree:leaves
+qt/test%all_tests.tree:leaves
+cxx_impl/test%all_tests.tree:leaves

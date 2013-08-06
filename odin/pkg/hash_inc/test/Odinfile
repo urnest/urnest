@@ -1,0 +1,38 @@
+%abstract == << EOF
+
+Tests for hash_inc package.
+
+EOF
+
+%all_tests == (%all_tests.tree:leaves)
+
+%all_tests.tree == <<
+%test1
+%test2
+%test3
+
+%test1 == ()+cmd=diff (%all1:ls) (%expect1:list:ls):output
+%test2 == ()+cmd=diff (%all2:ls) (%expect2:list:ls):output
+%test3 == ()+cmd=diff (%all3:ls) (%expect3:list:ls):output
+
+%all1 == (1/a+inc_sp=(1)+inc_sp=(2):hash_inc_all)
+
+%expect1 == <<
+(2/d)
+(1/b)
+(2/c)
+
+
+%all2 == (1/a+inc_sp=(2)+inc_sp=(1):hash_inc_all)
+
+%expect2 == <<
+(2/d)
+(2/d)
+(2/b)
+(2/c)
+
+%all3 == (1/x+inc_sp=(.):hash_inc_all)
+
+%expect3 == <<
+(2/z)
+(2/y)

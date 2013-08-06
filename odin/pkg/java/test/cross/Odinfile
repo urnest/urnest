@@ -1,0 +1,8 @@
+%j-opts==<<
++sp=(.)
+
+%a.java.view_desc==a.java+(%j-opts):java.view_desc
+%a.java.dep==a.java+(%j-opts):java.dep
+%a.class==a.java+(%j-opts):class:err
+
+%b.class==b.java+(%j-opts):class:err

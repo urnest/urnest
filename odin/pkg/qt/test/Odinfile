@@ -1,0 +1,11 @@
+#
+# Test qt package.
+#
+#    odin '%all_tests.tree:leaves' || echo NO
+# ... should not print NO
+#
+
+%all_tests.tree == <<
+%test1
+
+%test1 == X.h+moc_inc_prefix=(..):moc.cxx

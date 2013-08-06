@@ -1,0 +1,26 @@
+# Source Types
+
+*.fld => :fld;
+
+# Input Object Types
+
+:fld 'source code for object module' => :FILE;
+
+# Intermediate Object Types
+
+# Output Object Types
+
+# Parameter Types
+
++fluid 'fluid executable' => :first;
+
+# Environment Variables
+
+$ODIN_FLUID 'default for +fluid' = 'fluid';
+
+$ODIND_FLUID_PATH 'path to install when running fluid' = '';
+
+
+# Tools
+
+EXEC (fluid.sh) (:fld) (+fluid) => (:h) (:cxx);

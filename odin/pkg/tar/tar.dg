@@ -1,0 +1,13 @@
+# tar file handling
+
+*.tar => :tar;
+
+:tar 'tar file'? => :FILE;
+
+:extract 'single file extracted from a tar file'? => :FILE;
+
++member 'name of tar file member'? => :first;
+
+$ODIN_TAR_PATH 'path covering tar command (colon separated)' = '/usr/bin';
+
+EXEC (extract.sh) (:tar) (+member) 'extract' => (:extract);

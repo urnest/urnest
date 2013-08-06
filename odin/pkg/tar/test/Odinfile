@@ -1,0 +1,2 @@
+%test1==(x.tar+member='a.txt':extract)+cmd=cmp (a.txt):stdout
+

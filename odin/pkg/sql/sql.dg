@@ -1,0 +1,43 @@
+#
+# sql database stuff
+#
+
+# Source Types
+*.sql => :sql;
+
+# Input Object Types
+:sql 'file containing SQL statements'? => :FILE;
+
+# Intermediate
+
+# Output Object Types
+
+:load 'load sql script into database' => :FILE;
+
+:sql.run 'command that loads an sql script'? => :run;
+
+:sql.stdout 'output of sql script'? => :stdout;
+
+
+# Parameter Types
+
++pre ':load to do before loading a sql file' => :LIST;
+
+# Environment Variables
+
+$ODIN_SQL_CLIENT 'sql command-line client, taking database name, username and password params, reading statements from stdin and writing info/warnings/errors to stdout and/or stderr' = '';
+
+$ODIN_SQL_PATH 'path covering $ODIN_SQL_CLIENT and anything it needs to run' ='';
+
+$ODIN_SQL_USER 'database username' = '';
+$ODIN_SQL_PASSWORD 'database password' = '';
+$ODIN_SQL_DB 'database name' = '';
+
+# Derivations
+
+# Can't pass +pre, which is a list, directly to EXEC'd tool, as can only pass
+# files. So make a file listing the filenames specified by +pre (by :ls). But
+# this then leaves the command depending only on the file names of the things
+# specified by +pre, so add (+pre) to NEEDS so that the command depends on
+# the files themselves, not just their names.
+EXEC (load.sh) (:sql) (+pre :ls) NEEDS (+need) (+pre) => (:sql.stdout) (:load);

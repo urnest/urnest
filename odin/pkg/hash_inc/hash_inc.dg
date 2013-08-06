@@ -1,0 +1,31 @@
+#
+# Abstract
+#
+#   Package for building dependencies created by C-style #include
+#   directives
+#
+#    Notes:
+#
+#    - The package is implemented to handle #include "" statements
+#      like gcc 2.95, i.e. "" search in the directory containing
+#      the file with the #include in it, not the directory of the
+#      source file specified on the command line (see 
+#      test/Odinfile%test3).
+#
+#      (Some compilers implement the other behaviour. The C++ standard
+#      doesn't specify this behaviour: it is "implementation defined".)
+#      
+:hash_inc.view_desc 'view description of C++ style included files' => :FILE;
+
+:hash_inc 'list of directly hash-included files'? => :LIST;
+
+:hash_inc_all 'list of transitively hash-included files'? => :LIST;
+
+EXEC (hash_inc.sh) (:FILE) (:FILE:dir)@ (+inc_sp) (+ignore)
+   => (:hash_inc.view_desc);
+
+COLLECT (:hash_inc.view_desc :view)
+   => (:hash_inc);
+
+COLLECT (:hash_inc :map=:hash_inc_all) (:hash_inc)
+   => (:hash_inc_all);

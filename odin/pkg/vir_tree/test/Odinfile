@@ -1,0 +1,26 @@
+%run-all-tests==(%all-tests.tree:leaves)
+
+%all-tests.tree==<<
+%test1
+
+%test1==(%test1.want)+cmd=cmp (%test1.got):stdout
+
+
+%config.vir_tree_spec==<<
+Odinfile==(../../java/test/Odinfile)
+src/d/c.java==(../../java/test/src/d/c.java)
+src/d/e.java==(../../java/test/src/d/e.java)
+
+%config==%config.vir_tree_spec:vir_tree
+
+%script == !<<
+#!/bin/sh
+cp -R -L "$1" config &&
+find config -type f
+rm -rf config
+
+%test1.got==()+cmd=(%script) (%config) +need=(%config:dirtree:leaves):stdout
+%test1.want==<<
+config/Odinfile
+config/src/d/c.java
+config/src/d/e.java

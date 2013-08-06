@@ -1,0 +1,50 @@
+#!/bin/bash
+#
+# Wrapper for Qt's moc so that we can call it from cygwin
+# (the wrapper translates file names to windows paths)
+#
+# REVISIT: how to handle -f option to moc?
+#
+declare -a translated_args
+
+while [ $# -gt 0 ]
+do
+  case "$1" in
+      -o)
+	  translated_args[${#translated_args[@]}]="-o"
+          shift
+	  cygoutput="$1"
+	  output=`/usr/bin/cygpath --windows "$1"`
+	  translated_args[${#translated_args[@]}]="$output"
+	  ;;
+      -p)
+	  shift
+          prefix="$1"
+	  ;;
+      -*)
+	  translated_args[${#translated_args[@]}]="$1"
+          shift
+	  translated_args[${#translated_args[@]}]="$1"
+	  ;;
+      *)
+	  cyginput=`/usr/bin/basename "$1"`
+	  input=`/usr/bin/cygpath --windows "$1"`
+	  translated_args[${#translated_args[@]}]="$input"
+	  ;;
+  esac
+  shift
+done
+
+set -f
+moc="$QTDIR/bin/moc"
+export QTDIR=`/usr/bin/cygpath --windows "$QTDIR"`
+echo "$moc" "${translated_args[@]}"
+"$moc" "${translated_args[@]}"
+status=$?
+if [ -r "$cygoutput" ]
+then
+  /bin/cat "$cygoutput" |
+  /bin/sed "s=#include.*$cyginput[\">]=#include <$prefix/$cyginput>=g" > "$cygoutput.new" &&
+  /bin/mv -f "$cygoutput.new" "$cygoutput"
+fi
+exit $status

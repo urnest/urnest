@@ -1,0 +1,16 @@
+# Searching for files on a path (list of directories)
+
+:search_desc 'search view description' => :FILE;
+
+:search 'resolved (found) files'? => :REFERENCE;
+
++name 'names of files to search for'? => :ls;
++require 'all files must exist somewhere on path'? => :first;
+
+#
+# search for the names listed (one per line) in the specified file,
+# looking for them in the directories specified in the list
+#
+EXEC (scan.sh) (:list:ls) (+name:ls) (+require) => (:search_desc);
+
+COLLECT (:search_desc:view) => (:search);

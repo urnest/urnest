@@ -1,0 +1,36 @@
+#
+# Abstract
+#
+#   Package for building dependencies on C++ implementation files.
+#
+#   test/1/Odinfile shows an example use of this package:
+#
+#      - an auto-generated .cxx.sm is specified for each header
+#        and the main program (a.cc)
+#      - the exe can then be built without an explicit list of sources
+#        to compile into it
+#
+
+# Source Types
+
+*.hh => :h;
+
+*.h => :h;
+
+*.H => :h;
+
+*.hpp => :h;
+
+
+# Output Object Types
+
+:impl.cxx.sm 'auto-generated cxx.sm'? => :cxx.sm;
+
+# Parameter Types
+
++impl 'implementation file of a cxx header file'? => :LIST;
+
+# Tools
+
+EXEC (cxx_impl.sh) (:h) (:FILE:dir)@ (+inc_sp) (+impl:ls) NEEDS (+impl)
+   => (:impl.cxx.sm);

@@ -1,0 +1,23 @@
+%run-all-tests==%all-tests.tree:leaves
+
+%all-tests.tree==<<
+%test1
+
+%path==<<
+(x)
+(y)
+
+%want==<<
+(x/a)
+(y/b)
+(y/c\$1)
+
+%got==(%path:list) +name=a b c\$1:search
+
+%test1.script== !<<
+#!/bin/sh
+sort $1 > got
+sort $2 > want
+diff got want
+
+%test1==()+cmd=(%test1.script) (%got:ls) (%want:list:ls):stdout

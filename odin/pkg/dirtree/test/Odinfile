@@ -1,0 +1,16 @@
+%java-dirs==(../../java/test:dirtree:leaves)
+
+%java.sh==<<
+cat "$1" | while read n ; do
+  ls -1 "$n"  | egrep '[.]java$' |
+  while read m ; do
+    echo "$n/$m"
+  done
+done
+
+%java-files==()+cmd=sh (%java.sh) (%java-dirs:ls)+need=(%java-dirs):stdout:list
+
+%all-files.sh== !<<
+find `cat` -mindepth 1 -maxdepth 1 -type d -o -print
+
+%all-files==(%java-dirs:ls)+cmd=(%all-files.sh)+need=(%java-dirs):stdout:list
