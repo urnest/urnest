@@ -1,10 +1,21 @@
+- update vanilla odin packages:
+  - add hash_inc
+  - find all the vanilla packages
+    that use :all_c_inc and its clones (eg cpp.dg) and point them
+    at :hash_inc_all
+  - delete :all_c_inc and its clones
 
+- update odin manual
 
-- best way to debug:
+- odin packages are self-documenting but need cookbook/tutorial/example
+  information somewhere (odin/example directory?), needs to be searchable
+  ie indexed by google (eg blog posts)
+
+x best way to debug:
   odin -s
-    - starts server process
+    x starts server process
   in another window ps -ef | grep odin
-    - shows one server process
+    x shows one server process
   in emacs, gdb attaching to that process
   b Local_Get_OdinFile
 
@@ -13,13 +24,13 @@
     f1.x+a=1+b=2:y
     ... should hit the breakpoint
     
-- step/next to get to this point:
+x step/next to get to this point:
 #0  Do_Deriv (FilHdr=0x9469948, InhFilPrm=0x9468bc8, PrecFilPrm=0x946c8e0, ToFilTyp=0x9451cb8) at if-candrv.c:181
 #1  0x0804bd42 in Apply_OprNods (FilHdr=0x9469948, FilPrm=0x946c8e0, OprNod=0x946b3a8) at if-candrv.c:548
 #2  0x0804c123 in Nod_PrmFHdr (Nod=0x946b3c0) at if-candrv.c:641
 #3  0x0804c5d9 in Local_Get_OdinFile (OdinExpr=0xbf8a8fd8 "f1.x +a=1 +b=2 :y", NeedsData=0) at if-candrv.c:787
 
-- at this point:
+x at this point:
     FilHdr represents the host file f1.x
     InhFilPrm is head of list of params
     PrecFilPrm is tail of list of params
@@ -81,7 +92,7 @@ eventually one has Make_MapLocElm in it, which might be interesting,
 ... so has already decided that :map=:y needs both params
 
 
-- cpp.dg looks like might cause trouble, based on DG.log in the $ODIN cache,
+x cpp.dg looks like might cause trouble, based on DG.log in the $ODIN cache,
 at least I will remove the gmc.cpp deriv since it uses +define in a
 derivation that produces a GENERIC ... but that doesn't fix the original problem (it might be part of the fix)
 
@@ -141,23 +152,23 @@ FilTyp is our :map=:y
 DrvFilPrm is end of our +a=1+b=1 list
 
 
-- alas there is no function to find all the drvpths that lead to y (such as would
+x alas there is no function to find all the drvpths that lead to y (such as would
 allow us to collect up all the applicable parameter types)
 
-- obviously the info is in the graph, but on the surface it would appear tricky
+x obviously the info is in the graph, but on the surface it would appear tricky
   to build one... perhaps not: DG.log spits out all possible
   derivations, which should allow us to build our own "reverse" graph, either
   on-the-fly when loading DG or save to DG (or another file even)
 
-- in DG.log there is an explicit map=:xy entry (which shows what can
+x in DG.log there is an explicit map=:xy entry (which shows what can
   be derived from map=:xy)
-- in DG.log there is a OBJECT -> map=:xy listed, and it has
+x in DG.log there is a OBJECT -> map=:xy listed, and it has
   no attached params: we want to fill in the params
-- all -> map=* entries have OBJECT as their source type (I would have
+x all -> map=* entries have OBJECT as their source type (I would have
   expected LIST? Should not make any difference.)
-- can see in dg-filtyp.c where it prints 'Possible Derivations :' then
+x can see in dg-filtyp.c where it prints 'Possible Derivations :' then
   loops through each, and it will be the DrvEdg that has the -> map=:xy
-- DrvEdg.h has tps_DrvEdg which has:
+x DrvEdg.h has tps_DrvEdg which has:
     tp_FilTyp FilTyp
     tp_PrmTypLst PrmTypLst (0x0 for map FilTyp see above)
 
@@ -179,14 +190,14 @@ allow us to collect up all the applicable parameter types)
            - which would build from drv, eqv and cast edges (see dg-filtyp.c
              Print_Info for how to go through those)
 
-  - test that:
-    - figure out which dg.exe is used to create cache
-    - update it
-    - create cache
-    - step through above code and see if DrvEdg_PrmTypLst returns 0x0
+  x test that:
+    x figure out which dg.exe is used to create cache
+    x update it
+    x create cache
+    x step through above code and see if DrvEdg_PrmTypLst returns 0x0
       (see above)
 
-  - then just need to adjust Do_DrvPth (see above)
+  x then just need to adjust Do_DrvPth (see above)
 
 ... after adjustment, get following, note difference in Generating...:map=:xy line, it now does not mention b, so I think we've won:
 
