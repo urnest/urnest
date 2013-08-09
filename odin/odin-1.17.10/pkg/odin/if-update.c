@@ -19,6 +19,7 @@ geoff@boulder.colorado.edu
 #include "inc/Job.h"
 #include "inc/Status_.h"
 #include "inc/Str.h"
+#include "inc/SKind_.h"
 
 
 static void
@@ -55,6 +56,8 @@ Update_File(
    boolean Abort, Changed;
    tps_FileName DataFileName;
    tp_FilDsc WorkFD, DataFD;
+   tp_SKind k;
+   int modTime;
 
    FORBIDDEN(Status < STAT_Busy);
    NewStatus = Status;
@@ -94,7 +97,16 @@ Update_File(
 	 MakeReadOnly(&Abort, DataFileName);
 	 if (Abort) Do_MakeReadOnly(DataFileName);
       }else{
-	 Remove(WorkFileName); };}/*select*/;
+        Get_FileInfo(&k, &modTime, WorkFileName);
+        if (k==SK_Dir){
+          ClearDir(WorkFileName);
+          RemoveDir(WorkFileName);         
+        }
+        else{
+          Remove(WorkFileName);
+        } 
+      }
+   }/*select*/;
 
 done:;
    Set_UpToDate(FilHdr, NewStatus, DepModDate);
@@ -171,6 +183,7 @@ Do_DrvDir(
 	 FORBIDDEN(Abort);
 	 Ret_FilHdr(ElmFilHdr); }/*for*/;
       CloseDir(WorkDirFilDsc);
+      ClearDir(WorkFileName);
       RemoveDir(WorkFileName); }/*if*/;
    Set_LocElm(FilHdr, FirstLE);
    }/*Do_DrvDir*/

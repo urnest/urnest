@@ -24,7 +24,7 @@ geoff@boulder.colorado.edu
 #include "inc/GMC.h"
 #include "inc/FileName.h"
 #include "inc/Str.h"
-
+#include "inc/SKind_.h"
 
 tp_FilDsc
 OpenDir(
@@ -112,6 +112,8 @@ ClearDir(
    boolean End;
    tps_FileName FileName;
    size_t sz;
+   tp_SKind k;
+   int modTime;
 
    FORBIDDEN(DirName == NIL);
    FilDsc = OpenDir(DirName);
@@ -123,7 +125,15 @@ ClearDir(
          (void)fprintf(stderr, "File name too long (MAX_FileName=%d): %s/%s\n",
 	             MAX_FileName, DirName, Str);
 	 exit(1); }/*if*/;
-      Remove(FileName); }/*for*/;
+      Get_FileInfo(&k, &modTime, FileName);
+      if (k==SK_Dir){
+        ClearDir(FileName);
+        RemoveDir(FileName);
+      }
+      else{
+        Remove(FileName); 
+      } 
+   }/*for*/;
    CloseDir(FilDsc);
    }/*ClearDir*/
 

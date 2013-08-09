@@ -385,7 +385,8 @@ Remove(
 
    FORBIDDEN(FileName == ERROR);
    status = unlink(FileName);
-   if (status != 0) SystemError("\"%s\": rm failed.\n", FileName);
+   if (status != 0) 
+     SystemError("\"%s\": rm failed.\n", FileName);
    }/*Remove*/
 
 
