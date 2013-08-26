@@ -9,7 +9,9 @@
 
 # Input Object Types
 
-:o 'object module' => <:o_src>;
+#:o 'object module' => <:o_src>;
+
+:o 'object module' => :FILE;
 
 :o_src 'source code for object module' => :FILE;
 

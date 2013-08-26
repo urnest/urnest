@@ -1,7 +1,6 @@
 hash_inc
 tree
 cxx
-qt
 odi
 run
 cxx_impl
@@ -13,3 +12,4 @@ dirtree
 path
 vir_tree
 tar
+yacc

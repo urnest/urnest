@@ -35,7 +35,7 @@
 
 # Input Object Types
 
-:cxx 'C++ source code'? => :o_src;
+:cxx 'C++ source code'? => :o_src :hash_incable;
 
 :cxx.sm 'system model for a C++ program'? => :FILE;
 

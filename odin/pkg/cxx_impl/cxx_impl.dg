@@ -21,7 +21,6 @@
 
 *.hpp => :h;
 
-
 # Output Object Types
 
 :impl.cxx.sm 'auto-generated cxx.sm'? => :cxx.sm;

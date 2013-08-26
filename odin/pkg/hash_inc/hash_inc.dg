@@ -21,7 +21,9 @@
 
 :hash_inc_all 'list of transitively hash-included files'? => :LIST;
 
-EXEC (hash_inc.sh) (:FILE) (:FILE:dir)@ (+inc_sp) (+ignore)
+:hash_incable 'file that C preprocessor can run on'? => :FILE;
+
+EXEC (hash_inc.sh) (:hash_incable) (:hash_incable:dir)@ (+inc_sp) (+ignore)
    => (:hash_inc.view_desc);
 
 COLLECT (:hash_inc.view_desc :view)

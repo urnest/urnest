@@ -132,7 +132,8 @@ namespace
 void getRelevantPrms_(DG const& dg,
                       ToTyp const& t,
                       std::set<ToTyp>& seen,
-                      std::insert_iterator<std::set<PrmTyp> > result)
+                      std::insert_iterator<std::set<PrmTyp> > result,
+                      std::string const& logPrefix)
   throw() {
   dg::assert_equal(seen.find(t), seen.end());
   dg::assert_not_equal(dg.find(t), dg.end());
@@ -145,8 +146,15 @@ void getRelevantPrms_(DG const& dg,
       ++i) {
     std::copy((*i).second.begin(), (*i).second.end(), result);
     ToTyp const tt((*i).first._);
+    std::cout << logPrefix << tt._ << " ";
+    for(std::set<PrmTyp>::const_iterator j=(*i).second.begin();
+        j!=(*i).second.end();
+        ++j) {
+      std::cout << "+(" << (*j)._ << ")";
+    }
+    std::cout << std::endl;
     if (seen.find(tt)==seen.end() && dg.find(tt) != dg.end()) {
-      getRelevantPrms_(dg, tt, seen, result);
+      getRelevantPrms_(dg, tt, seen, result, logPrefix+"  ");
     }
   }
 }
@@ -160,7 +168,8 @@ std::set<PrmTyp> getRelevantPrms(DG const& dg,
   std::set<ToTyp> seen;
   std::set<PrmTyp> result;
   getRelevantPrms_(dg, t, seen,
-                   std::inserter(result, result.begin()));
+                   std::inserter(result, result.begin()),
+                   "  ");
   return result;
 }
 
