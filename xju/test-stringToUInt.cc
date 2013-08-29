@@ -17,6 +17,7 @@
 #include <string>
 #include <xju/assert.hh>
 #include <sstream>
+#include <limits.h>
 
 // good
 void test1()

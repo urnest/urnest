@@ -13,6 +13,8 @@
 #ifndef _XJU_OPTIONAL_HH_
 #define _XJU_OPTIONAL_HH_
 
+#include <memory>
+
 namespace xju
 {
     template<class T>

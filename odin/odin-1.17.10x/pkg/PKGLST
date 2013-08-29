@@ -1,5 +1,6 @@
 config
 odin
+hash_inc
 code
 cc
 cpp
