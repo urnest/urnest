@@ -72,9 +72,9 @@
 
 # Environment Variables
 
-$ODIN_CXX_PATH 'PATH to set when running C++ compiler' = '';
+$ODIN_CXX_PATH 'PATH to set when running C++ compiler' = '/usr/bin:/bin';
 
-$ODIN_CXX 'name of the C++ compiler' = 'g++';
+$ODIN_CXX 'name of the C++ compiler' = 'gcc';
 
 $ODIN_CXX_FLAGS 'C++ compiler flags to always include' = '';
 

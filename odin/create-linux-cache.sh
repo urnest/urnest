@@ -22,5 +22,6 @@ ODIN_SQL_PASSWORD=wirephone \
 ODIN_SQL_PATH=/usr/bin:"$d/pkg/sql" \
 ODIN_SQL_CLIENT=mysql_client.sh \
 ODIN_TAR_PATH=/bin \
+ODIN_FLUID_PATH=/usr/local/bin \
 odin -R </dev/null &&
 mkdir "$ODIN_JAVA_OUTPUT_DIRECTORY"

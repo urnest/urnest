@@ -1,4 +1,4 @@
-* can't have :hash_inc work of FILE, because everything is a file, eg
+x can't have :hash_inc work of FILE, because everything is a file, eg
   cxx*:exe which uses +define etc
   - define a :hash_incable and make selected file types hash_incable, eg:
     :cxx :c :h :idl

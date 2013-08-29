@@ -18,7 +18,7 @@
 
 $ODIN_FLUID 'default for +fluid' = 'fluid';
 
-$ODIND_FLUID_PATH 'path to install when running fluid' = '';
+$ODIN_FLUID_PATH 'path to install when running fluid' = '';
 
 
 # Tools

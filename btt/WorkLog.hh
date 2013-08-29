@@ -34,6 +34,7 @@
 #include <string>
 #include <xju/Exception.hh>
 #include <utility>
+#include <memory>
 #include <xju/Time.hh>
 #include <btt/TaskId.hh>
 #include <xju/Event.hh>

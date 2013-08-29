@@ -16,6 +16,7 @@
 #include "xju/Int.hh"
 #include <sstream>
 #include "xju/format.hh"
+#include <boost/cstdint.hpp>
 
 namespace xju
 {
