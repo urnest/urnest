@@ -6,11 +6,11 @@ x can't have :hash_inc work of FILE, because everything is a file, eg
     :idl not defined
 
 - update vanilla odin packages:
-  - add hash_inc
+  x add hash_inc
+  x make :IDL and :h hash_incable
   - find all the vanilla packages
     that use :all_c_inc and its clones (eg cpp.dg) and point them
-    at :hash_inc_all
-  - delete :all_c_inc and its clones
+    at :hash_inc_all, or replace them with xju packages
 
 - update odin manual
 

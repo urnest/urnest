@@ -15,8 +15,16 @@ C++ and odin build bits and pieces to share
 		 would cause (unnecessary) generation of odin :map 
 		 deriviations for #include dependencies, causing long
 		 delays in building
+
         - allow odin to clean up subdirectories eg JOB temporary directories
           when build is aborted via Ctrl-C
+
+        - add generalised hash_inc package to avoid duplicating it 
+          in C, C++, IDL etc.
+
+          This also makes it unnecessary to write a package for eg
+	  idl compile.
+    
 
     -   odin/pkg has my odin packages.
 
@@ -26,12 +34,6 @@ C++ and odin build bits and pieces to share
         backward compatible with the standard odin packages.
     
         Highlights:
-    
-        - generalised hash_inc package to avoid duplicating it 
-          in C, C++, IDL etc.
-
-          This also makes it unnecessary to write a package for eg
-	  idl compile.
     
         - simulation of derived directory trees via tar files
     
