@@ -7,7 +7,7 @@ C++ and odin build bits and pieces to share
     from [sourceforge/projects/odin-build] 
     (http://sourceforge.net/projects/odin-build/)
 
-    -	odin/odin-1.17.10 has my customisations:
+    -	odin/odin-1.17.10x has my customisations:
         - optimise :map=:xy to only propogate relevant param types, in
  	  order to scale well in some scenarios eg:
 	       - building windows C++ software that uses different
@@ -15,6 +15,9 @@ C++ and odin build bits and pieces to share
 		 would cause (unnecessary) generation of odin :map 
 		 deriviations for #include dependencies, causing long
 		 delays in building
+        - allow odin to clean up subdirectories eg JOB temporary directories
+          when build is aborted via Ctrl-C
+
     -   odin/pkg has my odin packages.
 
         Some of these are extended/adjusted versions of the standard odin packages
