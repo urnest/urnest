@@ -1,1 +1,1 @@
-../../odin/inc/config.hh
+../../inc/config.hh
