@@ -11,6 +11,26 @@ x can't have :hash_inc work of FILE, because everything is a file, eg
   - find all the vanilla packages
     that use :all_c_inc and its clones (eg cpp.dg) and point them
     at :hash_inc_all, or replace them with xju packages
+        x code
+        cc
+        cpp
+        cxx
+        odi
+        f77
+        lex
+        yacc
+        tregrm
+        dg
+        idl
+        prof
+        lint
+        misc
+        roff
+        tex
+        dbx
+        run
+
+- add x to all package versions where package is now non-vanilla
 
 - update odin manual
 
