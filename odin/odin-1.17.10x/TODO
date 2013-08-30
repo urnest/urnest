@@ -29,6 +29,7 @@ x can't have :hash_inc work of FILE, because everything is a file, eg
         tex
         dbx
         run
+  - make cc package link via .a to avoid name shortening silliness
 
 - add x to all package versions where package is now non-vanilla
 

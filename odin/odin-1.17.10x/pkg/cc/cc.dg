@@ -9,7 +9,7 @@
 
 # Input Object Types
 
-:c 'C source code'? => :o_src;
+:c 'C source code'? => :o_src :hash_incable;
 
 :c.sm 'system model for a C program'? => :FILE;
 
@@ -21,13 +21,6 @@
 :c.sm.list 'list of files in a C system model' => :sm.list :c.exe.list;
 
 :c.exe.list 'list of files in a C system' => :LIST;
-
-:c_inc.view_desc 'view description of C-style included files' => :FILE;
-
-:c_inc 'list of potential C-style included files' => :LIST;
-
-:all_c_inc 'list of C-style transitively included files' => :LIST;
-
 
 # Output Object Types
 
@@ -84,18 +77,9 @@ COLLECT (:c)
 READ-LIST (:c.sm)
    => (:c.sm.list);
 
-EXEC (c_inc.sh) (:FILE) (:FILE :dir)@ (+home)@ (+inc_sp) (+ignore)
-   => (:c_inc.view_desc);
-
-COLLECT (:c_inc.view_desc :view)
-   => (:c_inc);
-
-COLLECT (:c_inc :map=:all_c_inc) (:c_inc)
-   => (:all_c_inc);
-
 EXEC (cc.sh) (:c) (:c :dir)@ (+inc_sp) (+cc_home)@ (+gnu) (+debug) (+prof)
  (+optimize) (+define) (+cc) (+cc_flags)
- NEEDS (:c +home=(:c :dir) :lookup=:all_c_inc)
+ NEEDS (:c:lookup=:hash_inc_all)
    => (:o);
 
 EXEC (ld.sh) (:o_of :vir_dir) (:library_flags)
@@ -108,4 +92,23 @@ EXEC (fmt.c.sh) (:c)
 
 EXEC (c.h.sh) (:c) (:c :dir)@ (header_c.sed)
    => (:c.h);
+
+
+# although we have general hash_inc package, we keep :all_c_inc because it
+# is part of the built-in derivation graph
+#
+:c_inc.view_desc 'view description of C-style included files' => :FILE;
+
+:c_inc 'list of potential C-style included files' => :LIST;
+
+:all_c_inc 'list of C-style transitively included files' => :LIST;
+
+EXEC (c_inc.sh) (:FILE) (:FILE :dir)@ (+home)@ (+inc_sp) (+ignore)
+   => (:c_inc.view_desc);
+
+COLLECT (:c_inc.view_desc :view)
+   => (:c_inc);
+
+COLLECT (:c_inc :map=:all_c_inc) (:c_inc)
+   => (:all_c_inc);
 
