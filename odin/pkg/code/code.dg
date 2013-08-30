@@ -9,8 +9,12 @@
 
 # Input Object Types
 
-#:o 'object module' => <:o_src>;
-
+# odin-1.17.10 has:
+#  :o 'object module' => <:o_src>;
+# ... but this causes :map=hash_inc_all picks up +define, which
+# we don't want because it wrecks scalability by causing
+# :hash_inc_all to be separately generated for each different +define
+# combination. So instead we do:
 :o 'object module' => :FILE;
 
 :o_src 'source code for object module' => :FILE;
