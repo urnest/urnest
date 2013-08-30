@@ -12,8 +12,8 @@ x can't have :hash_inc work of FILE, because everything is a file, eg
     that use :all_c_inc and its clones (eg cpp.dg) and point them
     at :hash_inc_all, or replace them with xju packages
         x code
-        cc
-        cpp
+        x cc
+        x cpp
         cxx
         odi
         f77
@@ -244,3 +244,7 @@ x DrvEdg.h has tps_DrvEdg which has:
 ** Generating /data/xju/tmp/f1.x +a=1 :x*xy
 ** Executing : '/data/xju/tmp/ocnopkg/xjutv/PKGS/x/y.sh' '/data/xju/tmp/f1.x' '/data/xju/tmp/ocnopkg/xjutv/FILES/PRM.6871.ls'
 => 
+
+- a confidence check:
+
+./configure  && ./CLEAN && ./INSTALL /data/xju/u1 && PATH=/data/xju/u1/bin:$PATH ../create-linux-cache.sh /data/xju/tmp/u1c && ODIN=/data/xju/tmp/u1c /data/xju/u1/bin/odin pkg/cpp%test1 ../../xju%run-standalone-tests

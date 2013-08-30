@@ -1,0 +1,8 @@
+%test1==()+cmd=sh (%a.sh.in+define='X':cpp):output
+
+%a.sh.in==<<
+#ifdef X
+exit 0
+#else
+exit 2
+#endif

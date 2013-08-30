@@ -23,5 +23,5 @@ $ODIN_CPP_FLAGS 'cpp flags' = '';
 # Tools
 
 EXEC (cpp.sh) cpp (:FILE) (:FILE :dir)@ (+inc_sp) (+define)
- NEEDS (:FILE +home=(:FILE :dir) :lookup=:all_c_inc)
+ NEEDS (:FILE:cast_hash_incable:lookup=:hash_inc_all)
    => (:cpp);
