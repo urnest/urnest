@@ -23,8 +23,6 @@
 
 :hash_incable 'file that C preprocessor can run on'? => :FILE;
 
-:cast_hash_incable 'explicit cast of file to hash_incable'? => <:hash_incable>;
-
 # vanilla odin allows eg c_inc on any FILE. Not only does this not make
 # sense - eg :o files - it means :map=:all_c_inc picks up
 # just about every parameter type, including +define because we've then
@@ -43,11 +41,3 @@ COLLECT (:hash_inc.view_desc :view)
 COLLECT (:hash_inc :map=:hash_inc_all) (:hash_inc)
    => (:hash_inc_all);
 
-# sometimes the above narrowing is incovenient, so the following cast
-# allows us explicitly hash_inc_all on any file (see cpp package, for
-# example)
-#
-# note that odin doesn't have a built-in 'cast' facility, so we
-# simulate at the expense of a file copy
-#
-EXEC (/bin/cp) (:FILE) cast_hash_incable => (:cast_hash_incable);

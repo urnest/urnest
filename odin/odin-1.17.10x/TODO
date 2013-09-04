@@ -1,3 +1,79 @@
+x what does <:src> mean? doc is incomprehensible to me
+  - 1 for source types, eg:
+      :x => :FILE;
+      :xa => :x;
+      :xb => :x;
+      *.xa => :xa;
+      *.xb => :xb;
+      :y => :FILE;
+      :ya => :y;
+      :yb => :y;
+
+      EXEC /bin/cp (:xa) 'ya' => (:ya);
+      EXEC /bin/cp (:xb) 'yb' => (:yb);
+
+      - what does DG look like?
+        equiv from xa to x
+        equiv from x to xa
+        equiv from xb to x
+        equiv from x to xb
+        equiv from ya to y
+        equiv from y to ya
+        equiv from yb to y
+        equiv from y to yb
+
+      - can I do 1.xa :yb (which would be the case if :xa is really
+        equivalent to :xb)?
+
+       NO. equiv is one-way, like cast, see DG.log bottom
+
+  - 2 slight diff, eg:
+      :x => :FILE;
+      :xb => :x;
+      *.x => :x;
+      *.xb => :xb;
+      :y => :FILE;
+      :yb => :y;
+
+      EXEC /bin/cp (:x) 'y' => (:y);
+      EXEC /bin/cp (:xb) 'yb' => (:yb);
+
+      - what does DG look like?
+      - can I do 1.x :yb (which would be the case if :x is really
+        equivalent to :xb)?
+
+  - 3 2 with <>, eg:
+      :x => :FILE;
+      :xb => <:x>;
+      *.x => :x;
+      *.xb => :xb;
+      :y => :FILE;
+      :yb => :y;
+
+      EXEC /bin/cp (:x) 'y' => (:y);
+      EXEC /bin/cp (:xb) 'yb' => (:yb);
+
+      - what does DG look like?
+      - can I do 1.x :yb (which would be the case if :x is really
+        equivalent to :xb)?
+
+  - 2 slight diff, eg:
+      :x => :FILE;
+      :xb => :x;
+      *.x => :x;
+      *.xb => :xb;
+      :y => :FILE;
+      :yb => <:y>;
+
+      EXEC /bin/cp (:x) 'y' => (:y);
+      EXEC /bin/cp (:xb) 'yb' => (:yb);
+
+      - what does DG look like?
+      - can I do 1.x :yb (which would be the case if :x is really
+        equivalent to :xb)?
+
+- might be able to put back :cast_hash_incable
+
 x can't have :hash_inc work of FILE, because everything is a file, eg
   cxx*:exe which uses +define etc
   - define a :hash_incable and make selected file types hash_incable, eg:
@@ -29,15 +105,42 @@ x can't have :hash_inc work of FILE, because everything is a file, eg
         tex
         dbx
         run
+  - move my "stable" packages into odin-1.17.10x/pkg and document
+    them in the manual
+
   - make cc package link via .a to avoid name shortening silliness
+    (like cxx)
+
+  - adjust cpp use of all_c_inc - no +home
 
 - add x to all package versions where package is now non-vanilla
+
+- odin shell script:
+  - say "installing Tool Package x/y/y.dg" to tie in with odin manual and
+    lead user to the .dg file rather than just a directory full of files
+  - allow finer control over package list, eg explicitly list .dg files
+    to load
+  - group packages into "boot" (those needed to INSTALL), "core" (those
+    needed to run) and the rest
 
 - update odin manual
 
 - odin packages are self-documenting but need cookbook/tutorial/example
   information somewhere (odin/example directory?), needs to be searchable
   ie indexed by google (eg blog posts)
+
+- add scp to misc package
+- add gdb package like dbx? Just delete dbx - can do
+  (.)+cmd=gdb (%exe) :run!
+- rewrite idl to allow a idl.sm :cxx.sm and idl.sm :cxxheaders (which 
+  produces a vir_dir with all headers generated from idl compile)
+  - and idl.sm :py.sm, :c.sm
+  .. or maybe write an omniorb package, since that is direct and would
+     allow anyone to use as basis for their own
+  (in fact that might be a good way to go in general, instead of
+   cxx trying to cope with all compilers, just have a gcc package,
+   a vc package etc... downside it would hard to use them both in
+   same cache - unless perhaps have .vcxx.sm, .gcxx.sm etc
 
 x best way to debug:
   odin -s

@@ -44,28 +44,13 @@ const TcMapPrmInfo* Build_TC_Map_PrmTypLst_Info(tp_FilTyp odg)
 
   for (tp_FilTyp FilTyp = odg; FilTyp != NIL; FilTyp = FilTyp->Link) {
     if (FilTyp->EqvEdg != 0) {
-      std::set<tc_map_prm_info::ToTyp> x;
-      x.insert(tc_map_prm_info::ToTyp(FilTyp->FTName));
+      tc_map_prm_info::FromTyp const from(FilTyp->FTName);
       
       for (tp_EqvEdg EqvEdg = FilTyp->EqvEdg;
            EqvEdg != 0;
            EqvEdg = EqvEdg_Next(EqvEdg)) {
-        x.insert(tc_map_prm_info::ToTyp(EqvEdg_FilTyp(EqvEdg)->FTName));
-      }
-      
-      for(std::set<tc_map_prm_info::ToTyp>::const_iterator i=x.begin();
-          i != x.end();
-          ++i) {
-        for(std::set<tc_map_prm_info::ToTyp>::const_iterator j=x.begin();
-            j != x.end();
-            ++j) {
-          if (i != j) {
-            tc_map_prm_info::FromTyp from((*j)._);
-            std::cout << "equiv from " << from._
-                      << " to " << (*i)._ << std::endl;
-            dg[*i][from]=std::set<tc_map_prm_info::PrmTyp>();
-          }
-        }
+        tc_map_prm_info::ToTyp const to(EqvEdg_FilTyp(EqvEdg)->FTName);
+        dg[to][from]=std::set<tc_map_prm_info::PrmTyp>();
       }
     }
   }
