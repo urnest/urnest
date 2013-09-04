@@ -1,0 +1,13 @@
+
+      :x 'x' => :FILE;
+      :xa 'xa' => :x;
+      :xb 'xb' => :x;
+      *.xa => :xa;
+      *.xb => :xb;
+      :y 'y' => :FILE;
+      :ya 'ya' => :y;
+      :yb 'yb' => :y;
+
+      EXEC (/bin/cp) (:xa) 'ya' => (:ya);
+      EXEC (/bin/cp) (:xb) 'yb' => (:yb);
+
