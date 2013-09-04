@@ -27,54 +27,9 @@ x what does <:src> mean? doc is incomprehensible to me
 
        NO. equiv is one-way, like cast, see DG.log bottom
 
-  - 2 slight diff, eg:
-      :x => :FILE;
-      :xb => :x;
-      *.x => :x;
-      *.xb => :xb;
-      :y => :FILE;
-      :yb => :y;
-
-      EXEC /bin/cp (:x) 'y' => (:y);
-      EXEC /bin/cp (:xb) 'yb' => (:yb);
-
-      - what does DG look like?
-      - can I do 1.x :yb (which would be the case if :x is really
-        equivalent to :xb)?
-
-  - 3 2 with <>, eg:
-      :x => :FILE;
-      :xb => <:x>;
-      *.x => :x;
-      *.xb => :xb;
-      :y => :FILE;
-      :yb => :y;
-
-      EXEC /bin/cp (:x) 'y' => (:y);
-      EXEC /bin/cp (:xb) 'yb' => (:yb);
-
-      - what does DG look like?
-      - can I do 1.x :yb (which would be the case if :x is really
-        equivalent to :xb)?
-
-  - 2 slight diff, eg:
-      :x => :FILE;
-      :xb => :x;
-      *.x => :x;
-      *.xb => :xb;
-      :y => :FILE;
-      :yb => <:y>;
-
-      EXEC /bin/cp (:x) 'y' => (:y);
-      EXEC /bin/cp (:xb) 'yb' => (:yb);
-
-      - what does DG look like?
-      - can I do 1.x :yb (which would be the case if :x is really
-        equivalent to :xb)?
-
 - might be able to put back :cast_hash_incable
 
-x can't have :hash_inc work of FILE, because everything is a file, eg
+x can't have :hash_inc work off FILE, because everything is a file, eg
   cxx*:exe which uses +define etc
   - define a :hash_incable and make selected file types hash_incable, eg:
     :cxx :c :h :idl
