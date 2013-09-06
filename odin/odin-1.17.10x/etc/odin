@@ -89,7 +89,7 @@ if [ "$reset" != "" ] ; then
    echo "Cache at $cache has been reset."; fi
 
 if [ "$preset" != "" ] ; then
-   echo "Clearing packages for $cache."
+   echo "Clearing Tool Packages for $cache."
    rm -f $cache/DG $cache/ENV $cache/ENV2 $cache/DG.log $cache/PKGS/*
    if [ ! -f $cache/EMPTY ] ; then
       touch $cache/EMPTY; chmod a-wx $cache/EMPTY; fi
@@ -122,23 +122,23 @@ if [ "$preset" != "" ] ; then
 	       version=$version/`cat $version/PKGVER`; fi
 	 #select
 	    if [ ! -f $version/$pkg.dg ] ; then
-	       echo "Skipping bad package $version."
+	       echo "Skipping bad Tool Package $version (file $version/$pkg.dg not found)"
 	    elif [ ! -r $cache/PKGS/$pkg ] ; then
 	       ln -s $version $cache/PKGS/$pkg
 	       echo "$pkg" >>$cache/PKGS/PKGLST
-	       echo "Installing package $version".; fi; done; done
+	       echo "Installing Tool Package $version/$pkg.dg".; fi; done; done
 
    if [ "$quick" = "" ] ; then
       dg_exe=$cache/PKGS/dg/dg.exe
       if [ ! -f $dg_exe ] ; then
-	 echo "$dg_exe not found - cannot compile packages in $cache."
+	 echo "$dg_exe not found - cannot compile Tool Packages in $cache."
 	 exit 1; fi
       if [ "$pkgpath" = "$dfltlib" ] ; then skip=1; else skip=0; fi
       (cd $cache; $dg_exe PKGS/PKGLST PKGS $skip >DG.log) || {
-	 echo "Error compiling packages in $cache."
+	 echo "Error compiling Tool Packages in $cache."
 	 exit 1; }
       rm -f $cache/DG.c
-      echo "$cache packages compiled."; fi; fi
+      echo "$cache Tool Packages compiled."; fi; fi
 
 if [ -s $cache/ERR ] && egrep -sv arning $cache/ERR; then
    cat $cache/ERR
