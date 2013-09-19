@@ -27,6 +27,7 @@ geoff@boulder.colorado.edu
 #include "inc/Outputs.h"
 #include "inc/Status_.h"
 #include "inc/Str.h"
+#include <sys/time.h>
 
 
 extern int	num_FHLstS;
@@ -160,10 +161,12 @@ Do_Log(
    GMC_DCL(tp_LogLevel, LogLevel)
 {
    tps_Str StrBuf;
+   struct timeval now;
 
    if (Client_LogLevel(CurrentClient) < LogLevel) {
       return; }/*if*/;
-   (void)sprintf(StrBuf, "** %s ", Message);
+   gettimeofday(&now, 0);
+   (void)sprintf(StrBuf, "** %d.%03d %s ", now.tv_sec, now.tv_usec/1000, Message);
    SPrint_FilHdr(Tail(StrBuf), FilHdr);
    LogMessage(StrBuf);
    }/*Do_Log*/

@@ -76,10 +76,11 @@ Exec(
    for (i=0; i<ExecSpc->NumInps; i++) {
       FilHdr_DataFileName(FileName, ExecSpc->InpFilHdrs[i]);
       Add_BuildArg(FileName); }/*for*/;
-   Do_Log("Generating", FilHdr, LOGLEVEL_Generate);
+   Do_Log("{Generating Ext", FilHdr, LOGLEVEL_Generate);
    JobID_LogFileName(FileName, Job->JobID);
    Do_Build(Job->JobID, Job->JobDirName, FileName);
    Ret_ExecSpc(ExecSpc);
+   Do_Log("}Generating Ext", FilHdr, LOGLEVEL_Generate);
    }/*Exec*/
 
 

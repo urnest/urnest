@@ -51,7 +51,7 @@ ExecInternal(
    int i;
    boolean ErrFlag, OldIsIPC;
 
-   Do_Log("Generating", FilHdr, LOGLEVEL_IntGenerate);
+   Do_Log("{Generating", FilHdr, LOGLEVEL_IntGenerate);
    MinStatus = DepStatus;
 
    Tool = FilHdr_Tool(FilHdr);
@@ -132,8 +132,12 @@ ExecInternal(
 	 break;}/*case*/;
       case TC_ViewSpec: {
 	 FORBIDDEN(ExecSpc->NumInps != 1 || ExecSpc->NumOuts != 1);
+         Do_Log("{Exec_List(View_Spec)", FilHdr, LOGLEVEL_IntGenerate);
 	 Exec_List(FilHdr, Inputs[0], RootFilPrm, FALSE);
+         Do_Log("}Exec_List(View_Spec)", FilHdr, LOGLEVEL_IntGenerate);
+         Do_Log("{Validate_ViewSpec", FilHdr, LOGLEVEL_IntGenerate);
 	 Validate_ViewSpec(FilHdr);
+         Do_Log("}Validate_ViewSpec", FilHdr, LOGLEVEL_IntGenerate);
 	 break;}/*case*/;
       case TC_CmptView: {
 	 FORBIDDEN(ExecSpc->NumInps != 1 || ExecSpc->NumOuts != 1);
@@ -379,11 +383,14 @@ ExecInternal(
    if (MinStatus == STAT_Error && IsTargets(FilHdr)) {
       MinStatus = STAT_TgtValError; }/*if*/;
 
+   Do_Log("{Do_Update", FilHdr, LOGLEVEL_IntGenerate);
    Do_Update(FilHdr, ExecSpc->OutFilHdrs, ExecSpc->NumOuts, Job,
 	     MinStatus, DepModDate, TRUE);
+   Do_Log("}Do_Update", FilHdr, LOGLEVEL_IntGenerate);
 
    Ret_Job(Job);
    Ret_ExecSpc(ExecSpc);
+   Do_Log("}Generating", FilHdr, LOGLEVEL_IntGenerate);
    }/*ExecInternal*/
 
 

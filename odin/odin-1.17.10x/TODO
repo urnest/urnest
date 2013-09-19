@@ -1,9 +1,14 @@
+- :dirtree:allfiles
+  - seem to use that quite often and it is not obvious how it works
+    doing it in the Odinfile
+
 ~ might be able to put back :cast_hash_incable (not worth it)
-  - instead, discuss :cpp scalability issue; actually probably
-    not an issue since context of its use probably doesn't have
-    any cc/cxx options like +define
+  - instead, discuss :cpp scalability issue
 
 - remove ar stuff from cxx, make cxx.sm an sm
+  .cxx.sm => .cxx.exe derivation to distinguish
+  .c.sm => .c.exe 
+  - no .sm => .exe
 
 - don't hard-code which path, and test for which separately, eg ld.sh
 
@@ -34,6 +39,15 @@
 
 - cxx/cc link via .ar to handle long lists
 
+- :LIST +path=(x/y/z):subdir => vir_tree.spec
+  ie make a vir_tree.spec placing listed files in the x/y/z subdirectory
+  (produces a spec so that can combine multiple of these statements via :cat)
+
+- :DIRECTORY :find deriv could take a real find expression and
+  apply it recursively (adding maxdepth=1 at each level)
+  only need to note that nested virtual directories tend to be soft
+  links rather than actual directories (could translate the find
+  expression to account for this?)
 
 x what does <:src> mean? doc is incomprehensible to me
   - 1 for source types, eg:
@@ -97,13 +111,49 @@ x can't have :hash_inc work off FILE, because everything is a file, eg
         run
   ~ move my "stable" packages into odin-1.17.10x/pkg and document
     them in the manual
-    - actually, put my packages in pkg-xju and have doc point to
-      where they are documented, add --xjupkg option to use those,
-      adjust INSTALL to install them; add a configure option to make
-      them the default
+    * actually, put my packages in xjupkg and have doc point to
+      where they are documented (eg Annex of manual), 
+      x move pkg to xjupkg
+      - reinstate vanilla pkg, careful not to clobber my necessary
+        changes eg to odin package, dg package, others?
+
+x cc
+x code
+x config (not copied to xjupkg)
+cpp
+cxx
+dbx
+dg
+f77
+hash_inc
+idl
+lex
+lint
+misc
+odi
+odin
+PKGLST
+prof
+roff
+run
+tex
+tregrm
+vc
+yacc
+PKGLST
+        
+      - test configure and INSTALL
+      - adjust INSTALL to install xjupkg, add odin --xjupkg option
+        to use those instead of vanilla
+      - confidence check
+      - add a configure option to make them the default
+      - continue with list of merges above (to eventualy get rid of
+        my odin/pkg directory
+      - add -ptr check to configure
     - put vanilla odin packages back to retain compatibility
       with existing users (then my changes are more likely to be
       merged back into vanilla odin)
+    - note in odin manual tutorial any differences
 
   - make cxx/cc package link via .a to avoid name shortening silliness
     (like cxx)
@@ -112,15 +162,27 @@ x can't have :hash_inc work off FILE, because everything is a file, eg
 
 ~ add x to all package versions where package is now non-vanilla
 
+- idl package:
+  .idl.sm -> .idl.h.list or virdir or something
+  .idl.sm -> .idl.cxx.sm
+  ... so that can generate all headers then
+  put them into a virtual subtree for relative path includes
+  - this aligns with having several .idl files in each directory
+- separate omniidl / taoidl packages that know about the generation
+  style? Yes I think so.
+
 - odin shell script:
   x say "installing Tool Package x/y/y.dg" to tie in with odin manual and
     lead user to the .dg file rather than just a directory full of files
   - allow finer control over package list, eg explicitly list .dg files
-    to load (ODINPKGLIST)
+    to load (ODINPKGLIST) and/or explicitly exclude packages by name
+    ODINPKGSKIP
   - group packages into "boot" (those needed to INSTALL), "core" (those
     needed to run) and the rest (perhaps just as documentation alongside
     ODINPKGLIST)
   - update emacs integration, and give a discussion (files in etc)
+    - note emacs integration has a deadlock when saving file while
+      compiling
 
 - update odin manual
 

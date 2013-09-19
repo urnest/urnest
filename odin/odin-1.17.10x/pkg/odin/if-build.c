@@ -179,6 +179,7 @@ Local_Do_Build(
    tps_Str OldCWD;
    boolean Abort;
    tp_FileName FileName;
+   struct timeval now;
 
    if (BuildArgV[Num_BuildArgV] != NIL) free(BuildArgV[Num_BuildArgV]);
    BuildArgV[Num_BuildArgV] = 0;
@@ -191,7 +192,9 @@ Local_Do_Build(
    FORBIDDEN(Build->BuildID != NIL);
    Build->JobID = JobID;
    if (LogLevel >= LOGLEVEL_ExecLine) {
-      (void)fprintf((FILE *)StdOutFD, "** Executing :");
+      gettimeofday(&now, 0);
+      (void)fprintf((FILE *)StdOutFD, "** %d.%03d {Executing :", 
+                    now.tv_sec, now.tv_usec/1000);
       for (i=0; BuildArgV[i] != NIL; i+=1) {
 	 (void)fprintf((FILE *)StdOutFD, " '%s'", BuildArgV[i]); }/*for*/;
       (void)fprintf((FILE *)StdOutFD, "\n"); }/*if*/;
@@ -206,6 +209,13 @@ Local_Do_Build(
    Build->BuildID = SystemExec(BuildArgV[0], BuildArgV, FileName);
    ChangeDir(&Abort, OldCWD);
    FORBIDDEN(Abort);
+   if (LogLevel >= LOGLEVEL_ExecLine) {
+      gettimeofday(&now, 0);
+      (void)fprintf((FILE *)StdOutFD, "** %d.%03d }Executing :", 
+                    now.tv_sec, now.tv_usec/1000);
+      for (i=0; BuildArgV[i] != NIL; i+=1) {
+	 (void)fprintf((FILE *)StdOutFD, " '%s'", BuildArgV[i]); }/*for*/;
+      (void)fprintf((FILE *)StdOutFD, "\n"); }/*if*/;
    }/*Local_Do_Build*/
 
 
