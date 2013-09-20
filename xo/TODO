@@ -1,0 +1,21 @@
+odin is good but has some limitations, eg:
+  scalability - gets bogged down with 15000 C++ files across many
+                directories with many different -I sets
+  terse error messages
+  can't pass list directly as tool input
+  lack of typed-list (eg list<cxx> rather than just list<object>)
+  won't work on windows native
+
+... and I can't understand the internals (it is written in C with
+no commentary and very short variable names etc), so I can't improve
+it, extend it or fix it.
+
+So I'd like to re-write it, more simply, in C++, in such a way that
+it would be easy for someone else to understand how it worked.
+
+multi-tool interface:
+  xo - updates specified targets
+  xocp - copies specified target to specified file
+  xotest - tests whether specified target is up-to-date
+  xoredo - mark specified target for redo
+
