@@ -414,3 +414,23 @@ x DrvEdg.h has tps_DrvEdg which has:
 - a confidence check:
 
 ./configure  && ./CLEAN && ./INSTALL /data/xju/u1 && PATH=/data/xju/u1/bin:$PATH ../create-linux-cache.sh /data/xju/tmp/u1c && ODIN=/data/xju/tmp/u1c /data/xju/u1/bin/odin pkg/cpp%test1 ../../xju%run-standalone-tests
+
+
+- before I did:
+
+xju@xjutv:/data/xju/u1/urnest/odin/odin-1.17.10x$ git commit -m 'avoid inappropriate use of java :output' -a
+[master 5f21a62] avoid inappropriate use of java :output
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+... why did it:
+
+--- <() +cmd=(/data/xju/u1/urnest/xju/Odinfile%test-stringToTime.cxx.sm +(/data/xju/u1/urnest%cxx-opts) :exe) :java*java.stdout*composite> generated errors ---
+Exception in thread "main" java.lang.NoClassDefFoundError: .data.xju.tmp.u1c.xjutv.FILES.a.none.hh.205404.exe
+   at gnu.java.lang.MainThread.run(libgcj.so.10)
+Caused by: java.lang.ClassNotFoundException: .data.xju.tmp.u1c.xjutv.FILES.a.none.hh.205404.exe not found in gnu.gcj.runtime.SystemClassLoader{urls=[file:/data/xju/tmp/u1c/classes/], parent=gnu.gcj.runtime.ExtensionClassLoader{urls=[], parent=null}}
+   at java.net.URLClassLoader.findClass(libgcj.so.10)
+   at gnu.gcj.runtime.SystemClassLoader.findClass(libgcj.so.10)
+   at java.lang.ClassLoader.loadClass(libgcj.so.10)
+   at java.lang.ClassLoader.loadClass(libgcj.so.10)
+   at gnu.java.lang.MainThread.run(libgcj.so.10)
+java -cp /data/xju/tmp/u1c/classes /data/xju/tmp/u1c/xjutv/FILES/a/none.hh.205404.exe failed.
