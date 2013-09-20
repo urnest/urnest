@@ -111,11 +111,14 @@ x can't have :hash_inc work off FILE, because everything is a file, eg
         run
   ~ move my "stable" packages into odin-1.17.10x/pkg and document
     them in the manual
-    * actually, put my packages in xjupkg and have doc point to
+    - actually, put my packages in xjupkg and have doc point to
       where they are documented (eg Annex of manual), 
-      x move pkg to xjupkg
+      - move pkg to xjupkg
       - reinstate vanilla pkg, careful not to clobber my necessary
         changes eg to odin package, dg package, others?
+      (that turned out to be too much effort, better to just
+       put a forked odin up on the net... nobody will ever use it
+       anyway)
 
 x cc
 x code
