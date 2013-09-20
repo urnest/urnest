@@ -14,7 +14,7 @@ fi
 export ODIN_JAVA_OUTPUT_DIRECTORY="$1/classes"
 rm -rf "$ODIN_JAVA_OUTPUT_DIRECTORY" &&
 ODIN="$1" \
-ODINPATH="$d/pkg" \
+ODINPATH="$d/pkg:$d/odin-1.17.10x/xjupkg" \
 ODIN_JAVA_PATH=/usr/bin \
 ODIN_SQL_DB=xxx \
 ODIN_SQL_USER=root \
