@@ -81,7 +81,7 @@ $ODIN_CXX_DEBUGF 'debug flag for C++ compiler' = '-g';
 
 $ODIN_CXX_I 'directory containing default C++ include files' = '/usr/lib/CC/include';
 
-$ODIN_CXX_PTR 'template repository directory' = '0';
+$ODIN_CXX_PTR 'template repository directory' = '1';
 
 $ODIN_CXX_LD_DEBUGF 'debug flag for C++ linker' = '-g';
 

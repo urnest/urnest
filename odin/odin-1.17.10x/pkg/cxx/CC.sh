@@ -1,7 +1,5 @@
 #! /bin/sh
 
-set -x
-
 ODIN_source=$1;shift; ODIN_ptr=$1;shift;
 ODIN_dir=$1;shift; ODIN_incsp=$1;shift; ODIN_gnu=$1;shift;
 ODIN_debug=$1;shift; ODIN_prof=$1;shift; ODIN_optimize=$1;shift;

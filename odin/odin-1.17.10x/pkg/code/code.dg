@@ -49,8 +49,6 @@ $ODIN_IGNORE 'egrep expression for includes to ignore' = '/usr/include';
 
 $ODIN_LIB_SP 'default library search path' = '/lib /usr/lib';
 
-$ODIN_RANLIB 'archive symbol table program' = '';
-
 
 # Tools
 

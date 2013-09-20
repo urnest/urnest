@@ -7,7 +7,7 @@
 
 # Source Object Types
 
-:IDL 'C++ Interface Definition Language file' => :FILE :hash_incable;
+:IDL 'C++ Interface Definition Language file' => :FILE;
 
 # Intermediate Object Types
 

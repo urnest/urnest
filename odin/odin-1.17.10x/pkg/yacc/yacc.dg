@@ -10,9 +10,9 @@
 
 # Output Object Types
 
-:c 'C source code'? => :FILE :hash_incable;
+:c 'C source code'? => :FILE;
 
-:h 'header file'? => :FILE :hash_incable;
+:h 'header file'? => :FILE;
 
 :yacc.log 'yacc table listing' => :log;
 
