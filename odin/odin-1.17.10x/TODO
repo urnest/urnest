@@ -1,3 +1,5 @@
+* test cc.dg changes (link via :a)
+
 - :dirtree:allfiles
   - seem to use that quite often and it is not obvious how it works
     doing it in the Odinfile

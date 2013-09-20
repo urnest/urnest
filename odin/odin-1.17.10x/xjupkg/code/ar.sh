@@ -1,19 +1,16 @@
 #!/bin/sh
+V="$ODINVERBOSE" &&
 
-ln -s $1 o
-objs=`ls o/*`
+ols="$1" &&
+{ which which || { echo "which not on PATH ($PATH)" && false; }; } &&
+{ xargs=`which xargs` || { echo "xargs not on PATH ($PATH)" && false; }; } &&
 
-if [ "$ODINVERBOSE" != "" ] ; then
-   echo ${ODINRBSHOST}ar qcv out.a $objs; fi
+{ test -z "$V" || echo "${ODINRBSHOST}cat \"$ols\" | PATH=\"$ODIN_AR_PATH\" \"$xargs\" \"$ODIN_AR\" qcs a"; } &&
 
-ar qcv a $objs >STDOUT 2>WARNINGS \
- || { mv WARNINGS ERRORS; echo 'ar failed' >>ERRORS; }
-
-if [ "$ODIN_RANLIB" != "" ] ; then
-   if [ "$ODINVERBOSE" != "" ] ; then
-      echo ${ODINRBSHOST}$ODIN_RANLIB out.a; fi
-   $ODIN_RANLIB a >>STDOUT 2>>WARNINGS \
-    || { mv WARNINGS ERRORS; echo 'ranlib failed' >>ERRORS; }; fi
-
-cat STDOUT
-exit 0
+cat "$ols" | PATH="$ODIN_AR_PATH" "$xargs" "$ODIN_AR" qcsv a 2>ERRORS &&
+if [ "$ODIN_RANLIB" != "" ] ; 
+then
+   { test -z "$V" || echo "${ODINRBSHOST}\"$ODIN_RANLIB\" a"; } &&
+   "$ODIN_RANLIB" a 2>>ERRORS
+fi &&
+mv ERRORS WARNINGS

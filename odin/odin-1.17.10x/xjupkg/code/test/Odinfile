@@ -7,8 +7,4 @@
 %run-all-tests==%all-tests.tree:leaves
 
 %all-tests.tree == <<
-%test1
-%test2
-
-%test1 == simple.cc:exe
-%test2 == simple.cc:a
+../../../pkg/dg/Odinfile%dg.cxx.sm+inc_sp=(../../../pkg/dg):a

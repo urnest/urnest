@@ -16,11 +16,11 @@
 
 # Intermediate Object Types
 
-:c.one.list 'list of a single C file' => :code.list :c.exe.list;
+:c.one.list 'list of a single C file' => :c.code.list;
 
-:c.sm.list 'list of files in a C system model' => :sm.list :c.exe.list;
+:c.sm.list 'list of files in a C system model' => :sm.list;
 
-:c.exe.list 'list of files in a C system' => :LIST;
+:c.code.list 'list of :o from c.sm / .c' => :LIST;
 
 # Output Object Types
 
@@ -77,14 +77,17 @@ COLLECT (:c)
 READ-LIST (:c.sm)
    => (:c.sm.list);
 
+COLLECT (:c.sm.list :recurse=:c.sm.list)
+   => (:c.code.list);
+
 EXEC (cc.sh) (:c) (:c :dir)@ (+inc_sp) (+cc_home)@ (+gnu) (+debug) (+prof)
  (+optimize) (+define) (+cc) (+cc_flags)
  NEEDS (:c:lookup=:hash_inc_all)
    => (:o);
 
-EXEC (ld.sh) (:o_of :vir_dir) (:library_flags)
+EXEC (ld.sh) (:c.code.list:a) (:library_flags)
  (+cc_home)@ (+gnu) (+purify) (+debug) (+prof) (+eprof) (+cc) (+ld_flags)
- NEEDS (:o_of :vir_tgt.list) (:libraries) (:c.exe.list)@
+ NEEDS (:libraries) (:c.exe.list)@
    => (:exe);
 
 EXEC (fmt.c.sh) (:c)

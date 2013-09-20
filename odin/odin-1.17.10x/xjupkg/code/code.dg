@@ -51,6 +51,9 @@ $ODIN_LIB_SP 'default library search path' = '/lib /usr/lib';
 
 $ODIN_RANLIB 'archive symbol table program' = '';
 
+$ODIN_AR 'ar program' = 'ar';
+
+$ODIN_AR_PATH 'path to set when invoking ar' = '/usr/bin:/bin';
 
 # Tools
 
@@ -63,7 +66,7 @@ COLLECT (:sm.list :recurse=:sm.list)
 EXEC (o_of.sh) (:code.list :map=:o_src :ls) (:code.list :map=:o :ls)
    => (:o_of);
 
-EXEC (ar.sh) (:o_of :vir_dir) NEEDS (:o_of :vir_tgt.list)
+EXEC (ar.sh) (:code.list :map=:o :ls) NEEDS (:code.list :map=:o)
    => (:a);
 
 EXEC (libraries.sh) (+lib) (+lib_sp) NEEDS (:libraries.view_desc :libraries)&

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ODIN_o=$1;shift; ODIN_lib=$1;shift; ODIN_home=$1;shift;
+ODIN_a=$1;shift; ODIN_lib=$1;shift; ODIN_home=$1;shift;
 ODIN_gnu=$1;shift; ODIN_purify=$1;shift; ODIN_debug=$1;shift;
 ODIN_prof=$1;shift; ODIN_eprof=$1;shift; ODIN_cc=$1;shift; ODIN_flags=$1;shift;
 
@@ -25,10 +25,10 @@ libs=""
 if [ "$ODIN_lib" != "" ] ; then libs=`cat $ODIN_lib`; fi
 
 if [ "$ODINVERBOSE" != "" ] ; then
-   echo ${ODINRBSHOST}$compiler $flags $objs $libs; fi
+   echo ${ODINRBSHOST}$compiler $flags $ODIN_a $libs; fi
 
 exe=`pwd`/exe
-(cd $ODIN_o; $compiler $flags * $libs -o $exe) >MESSAGES 2>WARNINGS \
+($compiler $flags $ODIN_a $libs -o $exe) >MESSAGES 2>WARNINGS \
  || { cat MESSAGES WARNINGS >ERRORS; rm MESSAGES WARNINGS;
       echo "$compiler failed" >>ERRORS; }
 if [ -f MESSAGES ] ; then cat MESSAGES; fi

@@ -31,8 +31,6 @@
 
 *.SM => :cxx.sm;
 
-*.a => :a;
-
 # Input Object Types
 
 :cxx 'C++ source code'? => :o_src :hash_incable;
@@ -41,11 +39,11 @@
 
 # Intermediate Object Types
 
-:cxx.one.list 'list of a single C++ file' => :code.list :cxx.exe.list;
+:cxx.one.list 'list of a single C++ file' => :cxx.code.list;
 
-:cxx.sm.list 'list of files in a C++ system model' => :sm.list :cxx.exe.list;
+:cxx.sm.list 'list of files in a C++ system' => :sm.list;
 
-:cxx.exe.list 'list of files in a C++ system' => :LIST;
+:cxx.code.list 'list of :o from cxx.sm' => :code.list;
 
 # Output Object Types
 
@@ -105,17 +103,20 @@ COLLECT (:cxx)
 READ-LIST (:cxx.sm)
    => (:cxx.sm.list);
 
+COLLECT (:cxx.sm.list :recurse=:cxx.sm.list)
+   => (:cxx.code.list);
+
 EXEC (CC.sh) (:cxx) (+inc_sp)
  (+debug) (+optimize) (+define) (+cxx) (+cxx_flags) (abort_msgs)
  NEEDS (:cxx:lookup=:hash_inc_all)
    => (:o);
 
-EXEC (ld.sh) (:o_of :vir_dir) (:library_flags)
+# note we go via :a in case we have lots of files - it avoids
+# "command too long" when trying to pass all the .o files on the
+# command line and makes no significant difference to build times
+#
+EXEC (ld.sh) (:cxx.code.list:a) (:library_flags)
  (+define) (+inc_sp) (+debug)
  (+cxx) (+ld_flags)
- NEEDS (:o_of :vir_tgt.list) (:libraries) (:cxx.exe.list)@
+ NEEDS (:libraries)
    => (:exe);
-
-EXEC (ar.sh) (:o_of :vir_dir)
- NEEDS (:o_of :vir_tgt.list)
-   => (:a);

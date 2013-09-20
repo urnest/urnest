@@ -1,6 +1,7 @@
 #!/bin/sh
 #
-ODIN_o=$1;shift; ODIN_lib=$1;shift;
+ODIN_a=$1 && shift &&
+ODIN_lib=$1 && shift &&
 ODIN_define=$1;shift; ODIN_incsp=$1;shift;
 ODIN_debug=$1;shift; ODIN_cxx=$1;shift; ODIN_flags=$1;shift;
 
@@ -21,13 +22,11 @@ if [ "$ODIN_debug" != "" ] ; then flags="$flags $ODIN_CXX_LD_DEBUGF"; fi
 if [ "$ODIN_flags" != "" ] ; then flags="$flags `cat $ODIN_flags`"; fi
 flags="$flags $ODIN_CXX_FLAGS"
 
-objs=`ls $ODIN_o/*`
-
 libs=""
 if [ "$ODIN_lib" != "" ] ; then libs=`cat $ODIN_lib`; fi
 
 if [ "$ODINVERBOSE" != "" ] ; then
-   echo ${ODINRBSHOST}$compiler $flags $objs $libs; fi
+   echo ${ODINRBSHOST}$compiler $flags $ODIN_a $libs; fi
 
 x=`PATH="$ODIN_CXX_PATH" /usr/bin/which "$compiler" 2>&1`
 if [ $? != 0 ] ; then
@@ -35,13 +34,9 @@ if [ $? != 0 ] ; then
       echo "$x" ) >&2
     exit 1
 fi
-#
-# do the compile in the directory containing the .o's in order
-# to shorten the command line.
-#
 exe=`pwd`/exe
 (
-   cd $ODIN_o; PATH="$ODIN_CXX_PATH" $compiler $flags * $libs $ODIN_CXX_LD_EXTRA_LIBS -o $exe &&
+   PATH="$ODIN_CXX_PATH" $compiler $flags $ODIN_a $libs $ODIN_CXX_LD_EXTRA_LIBS -o $exe &&
    #
    # for windows, e.g. mingw
    #
