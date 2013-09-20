@@ -134,10 +134,10 @@
 :jar 'Java class archive'? => :FILE;
 :class 'Java class file'? => :FILE;
 :sm.class '"class file" of multiple source files'? => :class;
-:java.runner 'script to run a java class'? => :run;
-:java.stdout 'standard output from running a java class'? => :stdout;
-:java.output 'output files from running a java class'? => :tar;
-:java.exec 'directory containing output or errors, files.tar and status'? => :exec;
+:java.runner 'script to run a java class'? => <:run>;
+:java.stdout 'standard output from running a java class'? => <:stdout>;
+:java.output 'output files from running a java class'? => <:tar>;
+:java.exec 'directory containing output or errors, files.tar and status'? => <:exec>;
 :java.launcher 'script to defer run'? => :EXECUTABLE;
 
 # Parameter Types
