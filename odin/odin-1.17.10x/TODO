@@ -95,12 +95,10 @@ x can't have :hash_inc work off FILE, because everything is a file, eg
         x cc
         x cpp
         cxx
-        odi
+        x odi
         f77
         lex
         yacc
-        tregrm
-        dg
         idl
         prof
         lint
@@ -109,6 +107,7 @@ x can't have :hash_inc work off FILE, because everything is a file, eg
         tex
         dbx
         run
+  - update cpp hash_inc to current behaviour (no +home)
   ~ move my "stable" packages into odin-1.17.10x/pkg and document
     them in the manual
     - actually, put my packages in xjupkg and have doc point to
