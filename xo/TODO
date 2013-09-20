@@ -5,6 +5,10 @@ odin is good but has some limitations, eg:
   can't pass list directly as tool input
   lack of typed-list (eg list<cxx> rather than just list<object>)
   won't work on windows native
+  directories are files (makes no sense)
+  surprising directory dependency handling
+  no "tree" handling
+  difficult to copy many generated files into non-cache directory
 
 ... and I can't understand the internals (it is written in C with
 no commentary and very short variable names etc), so I can't improve
@@ -18,4 +22,15 @@ multi-tool interface:
   xocp - copies specified target to specified file
   xotest - tests whether specified target is up-to-date
   xoredo - mark specified target for redo
+  xodpath - find path to dependency
+  xodeptree - show dependency tree
+  xodepend - show source dependencies without tree
+    - use separate server SOCKETS for each to avoid the odin complication
+      of extended syntax on client
 
+
+- use bitmaps to detect cycles when doing updates
+- drop pre-allocated filenames, ie can get filename without being able to 
+  build file
+- intern lots of things for scalability, eg paramlist
+- write dgs in C++ for code-readability/debugability
