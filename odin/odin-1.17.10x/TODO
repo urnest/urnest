@@ -1,6 +1,3 @@
-* test cc.dg changes (link via :a)
-* remove code*o_of
-
 - :dirtree:allfiles
   - seem to use that quite often and it is not obvious how it works
     doing it in the Odinfile
@@ -38,9 +35,9 @@
 - add ODINPKGLIST allowing explicit list of package names to load,
   as list of directories (allowing bash expansion)
 
-- code package: append to archive
+x code package: append to archive
 
-- cxx/cc link via .ar to handle long lists
+x cxx/cc link via .ar to handle long lists
 
 - :LIST +path=(x/y/z):subdir => vir_tree.spec
   ie make a vir_tree.spec placing listed files in the x/y/z subdirectory
@@ -91,36 +88,34 @@ x can't have :hash_inc work off FILE, because everything is a file, eg
 - update vanilla odin packages:
   x add hash_inc
   x make :IDL and :h hash_incable
-  - find all the vanilla packages
+  x find all the vanilla packages
     that use :all_c_inc and its clones (eg cpp.dg) and point them
     at :hash_inc_all, or replace them with xju packages
         x code
         x cc
         x cpp
-        cxx
+        x cxx
         x odi
-        f77
-        lex
-        yacc
-        idl
-        prof
-        lint
-        misc
-        roff
-        tex
-        dbx
-        run
+        x f77
+        x lex
+        x yacc
+        * idl
+        x prof
+        x lint
+        x misc
+        x roff
+        x tex
+        x dbx
+        x run
   - update cpp hash_inc to current behaviour (no +home)
   ~ move my "stable" packages into odin-1.17.10x/pkg and document
     them in the manual
     - actually, put my packages in xjupkg and have doc point to
       where they are documented (eg Annex of manual), 
-      - move pkg to xjupkg
-      - reinstate vanilla pkg, careful not to clobber my necessary
+      x move pkg to xjupkg
+      x reinstate vanilla pkg, careful not to clobber my necessary
         changes eg to odin package, dg package, others?
-      (that turned out to be too much effort, better to just
-       put a forked odin up on the net... nobody will ever use it
-       anyway)
+      - update odin.tex
 
 x cc
 x code
