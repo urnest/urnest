@@ -20,7 +20,7 @@
 
 :c.sm.list 'list of files in a C system model' => :sm.list;
 
-:c.code.list 'list of :o from c.sm / .c' => :LIST;
+:c.code.list 'list of :o from c.sm / .c' => :code.list;
 
 # Output Object Types
 
@@ -87,7 +87,7 @@ EXEC (cc.sh) (:c) (:c :dir)@ (+inc_sp) (+cc_home)@ (+gnu) (+debug) (+prof)
 
 EXEC (ld.sh) (:c.code.list:a) (:library_flags)
  (+cc_home)@ (+gnu) (+purify) (+debug) (+prof) (+eprof) (+cc) (+ld_flags)
- NEEDS (:libraries) (:c.exe.list)@
+ NEEDS (:libraries)
    => (:exe);
 
 EXEC (fmt.c.sh) (:c)

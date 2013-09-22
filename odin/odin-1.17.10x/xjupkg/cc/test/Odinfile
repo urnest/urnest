@@ -1,0 +1,14 @@
+#
+# Test cxx package.
+#
+#    odin '%all_tests.tree:leaves' || echo NO
+# ... should not print NO
+#
+%run-all-tests==%all-tests.tree:leaves
+
+%all-tests.tree == <<
+%test1
+%test2
+
+%test1 == simple.c:exe
+%test2 == simple.c:a

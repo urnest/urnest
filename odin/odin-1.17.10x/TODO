@@ -1,4 +1,5 @@
 * test cc.dg changes (link via :a)
+* remove code*o_of
 
 - :dirtree:allfiles
   - seem to use that quite often and it is not obvious how it works

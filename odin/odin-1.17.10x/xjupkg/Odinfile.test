@@ -9,6 +9,6 @@
 
 %all_tests == <<
 tree/test%all
-cxx/test%all_tests.tree:leaves
-qt/test%all_tests.tree:leaves
+cxx/test%all-tests.tree:leaves
+cc/test%all-tests.tree:leaves
 cxx_impl/test%all_tests.tree:leaves

@@ -27,8 +27,6 @@
 
 # Output Object Types
 
-:o_of 'odinfile containing the object modules' => :FILE;
-
 :a 'object library archive'? => :FILE;
 
 :library_flags 'library command line flags' => :FILE;
@@ -62,9 +60,6 @@ READ-LIST (:sm)
 
 COLLECT (:sm.list :recurse=:sm.list)
    => (:code.list);
-
-EXEC (o_of.sh) (:code.list :map=:o_src :ls) (:code.list :map=:o :ls)
-   => (:o_of);
 
 EXEC (ar.sh) (:code.list :map=:o :ls) NEEDS (:code.list :map=:o)
    => (:a);
