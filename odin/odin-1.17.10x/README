@@ -1,5 +1,6 @@
-This directory contains the Odin software build system.  Users upgrading
-from older Odin versions should consult the file "etc/CHANGES".
+This directory contains the Odin software build system, which is
+documented in ./doc/odin.html.  Users upgrading from older Odin
+versions should consult the file "etc/CHANGES".
 
 For most machines and configurations, the following sequence of two
 commands will build an executable version (both commands should be given
