@@ -28,9 +28,43 @@
 
 - sm.hash_inc_all
 
+- doc, specific:
+  - 2.2.3 ref to xjupkg tree support
+  - replace 3.4:
+    - much simpler to just use odin 'test-hello!gdb'
+    - provide a reference to using xjupkg to run and debug unit tests,
+      including a discussion of environments
+  - 4.3 add %stuff.tar!tar tf
+  - 4.4 ~ name -> ~name
+  - A.3 "the dependency path" -> "a dependency path"
+  - B.1 described in Section . -> described below
+  - B.1 explain how package loading works:
+    - odin -R installs tool packages into the cache that creates, and
+      listing the packages that it loads. By default, odin -R loads
+      packages from its install directory, but you can load packages
+      from other directories using ODINPKG environment variable.
+      ODINPKG is a colon-separated list of directories to search, and
+      odin looks for a PKGLST file in each of these in turn. From each
+      directory it loads the packages listed for that directory, but
+      it does not load "duplicate" packages, eg where a PKGLST file specifies
+      package X, but package X has already been loaded via a PKGLST from
+      a directory earlier in the ODINPKG directory.
+      You can therefor "replace" standard odin packages with your own
+      package of the same name.
+      Note that although you cannot tell odin not to load a particular
+      standard package, you can achieve the affect by creating your
+      own package of the same name with an empty .dg file.
+  - B.1 note that the standard odin packages are not documented here,
+      even though the tutorial makes use of them; browse the .dg files
+      to see the capabilities of the standard odin packages. Also look
+      for others' Odinfile use (including in the odin distribution).
+  - B.4 "rare circumstance" example (use FILE:exec.output v 
+      FILE:java.exec.output)
+  - B.7.7 provide some discussion: when is this useful for example?
+
 - add more explanations/examples in doc, doc more of the semantics
   of eg param handling (ordering, propogation); include more
-  examples
+  examples (actually it is in the doc already)
 
 - add ODINPKGLIST allowing explicit list of package names to load,
   as list of directories (allowing bash expansion)
@@ -99,7 +133,7 @@ x can't have :hash_inc work off FILE, because everything is a file, eg
         x f77
         x lex
         x yacc
-        * idl
+        x idl
         x prof
         x lint
         x misc

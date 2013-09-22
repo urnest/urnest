@@ -10,5 +10,5 @@
 %test1
 %test2
 
-%test1 == simple.c:exe
+%test1 == simple.c+debug:exe
 %test2 == simple.c:a
