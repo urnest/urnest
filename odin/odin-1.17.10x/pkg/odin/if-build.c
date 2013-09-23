@@ -18,7 +18,7 @@ geoff@boulder.colorado.edu
 #include "inc/LogLevel_.h"
 #include "inc/OC_NodTyp_.h"
 #include "inc/Str.h"
-
+#include <sys/time.h>
 
 static tp_Build	FirstBuild = NIL;
 int		MaxBuilds;
