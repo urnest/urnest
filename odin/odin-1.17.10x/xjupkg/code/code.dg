@@ -49,7 +49,7 @@ $ODIN_RANLIB 'archive symbol table program' = '';
 
 $ODIN_AR 'ar program' = 'ar';
 
-$ODIN_AR_PATH 'path to set when invoking ar' = '/usr/bin:/bin';
+$ODIN_AR_PATH 'path to set when invoking ar (and ranlib)' = '/usr/bin:/bin';
 
 # Tools
 
