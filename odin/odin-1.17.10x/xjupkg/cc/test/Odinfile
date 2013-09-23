@@ -1,5 +1,5 @@
 #
-# Test cxx package.
+# Test cc package.
 #
 #    odin '%all_tests.tree:leaves' || echo NO
 # ... should not print NO
@@ -9,6 +9,21 @@
 %all-tests.tree == <<
 %test1
 %test2
+%test3
+inc_sp_semantics%all-tests.tree
 
+# here we build an executable from a single .c source file:
 %test1 == simple.c+debug:exe
+
+# ... note we can compile a single .c source file and put it
+# into a .a, like this:
 %test2 == simple.c:a
+
+# here we build an executable from multiple explicitly listed
+# c source files:
+%test3 == %twofile.c.sm:exe
+
+#... where this is the explicit list of source files:
+%twofile.c.sm==<<
+twofile_1.c
+twofile_2.c

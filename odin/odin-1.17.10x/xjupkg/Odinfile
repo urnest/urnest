@@ -1,11 +1,11 @@
 #
 # To run all the tests from this directory:
 #
-#   odin 'Odinfile.test%all' || echo NO
+#   odin '%run-all-tests' || echo NO
 #
 #   (Should not print NO.)
 #
-%all == %all_tests:list
+%run-all-tests == %all_tests:list
 
 %all_tests == <<
 tree/test%all

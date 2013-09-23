@@ -1,8 +1,8 @@
 #!/bin/sh
 
 ODIN_a=$1;shift; ODIN_lib=$1;shift; ODIN_home=$1;shift;
-ODIN_gnu=$1;shift; ODIN_purify=$1;shift; ODIN_debug=$1;shift;
-ODIN_prof=$1;shift; ODIN_eprof=$1;shift; ODIN_cc=$1;shift; ODIN_flags=$1;shift;
+ODIN_gnu=$1;shift; ODIN_debug=$1;shift;
+ODIN_prof=$1;shift; ODIN_cc=$1;shift; ODIN_flags=$1;shift;
 
 if [ "$ODIN_CC_HOME" != "" ] ; then
    PATH="$ODIN_CC_HOME:$PATH"; export PATH; fi
@@ -12,8 +12,6 @@ if [ "$ODIN_home" != "" ] ; then
 compiler=$ODIN_CC
 if [ "$ODIN_cc" != "" ] ; then compiler=$ODIN_cc; fi
 if [ "$ODIN_gnu" != "" ] ; then compiler='gcc'; fi
-if [ "$ODIN_purify" != "" ] ; then
-   compiler="purify `cat $ODIN_purify` $compiler"; fi
    
 flags=""
 if [ "$ODIN_debug" != "" ] ; then flags="$flags $ODIN_CC_DEBUGF"; fi

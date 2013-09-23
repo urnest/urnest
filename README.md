@@ -26,25 +26,32 @@ C++ and odin build bits and pieces to share
 	  idl compile.
     
 
-    -   odin/pkg has my odin packages.
+    -   odin/odin-1.17.10x/xjupkg has my odin packages.
 
-        Some of these are extended/adjusted versions of the standard odin packages
+        Some of these are extended/adjusted versions of the standard 
+        odin packages
         (and these have the same names as the standard odin packages in
-        [odin-1.17.10/pkg] (odin-1.17.10/pkg)). They are not guarenteed to be
-        backward compatible with the standard odin packages.
+        [odin-1.17.10x/pkg] (odin-1.17.10x/pkg)). They are not guarenteed
+        to be backward compatible with the standard odin packages.
     
         Highlights:
     
         - simulation of derived directory trees via tar files
+
+        - virtree - like virdir but can create a multi-level hierarchy,
+          useful for eg creating installation packages like RPMs
     
         - :exec package allows failed test runs to keep core dumps, log 
 	  files etc for analysis
+
+        - adjustments to standard package type hierarchy to realise
+          :map=:xy optimisation noted above
     
-        See the REVISIT: odin/pkg/README.md for more.
+        See the REVISIT: odin/odin-1.17.10x/xjupkg/README.md for more.
 	
     -   odin/test has various tests of odin itself
 
--   xju has my preferred C++ classes for things like posix threads,
+-   xju has my C++ classes for things like posix threads,
     exception handling, assertions, unit testing
 
 -   btt is a simple time tracker

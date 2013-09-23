@@ -1,0 +1,9 @@
+%run-all-tests==%all-tests.tree:leaves
+
+%all-tests.tree==<<
+%x
+
+#vanilla odin gets this wrong, because it incorrectly adds a
+#-I(x.c:dir) to the compilation
+#
+%x==x.c+inc_sp=(inc):o

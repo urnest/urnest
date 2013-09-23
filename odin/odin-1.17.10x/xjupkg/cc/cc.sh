@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ODIN_c=$1;shift; ODIN_dir=$1;shift; ODIN_incsp=$1;shift;
+ODIN_c=$1;shift; ODIN_incsp=$1;shift;
 ODIN_home=$1;shift; ODIN_gnu=$1;shift; ODIN_debug=$1;shift;
 ODIN_prof=$1;shift; ODIN_optimize=$1;shift; ODIN_define=$1;shift;
 ODIN_cc=$1;shift; ODIN_flags=$1;shift;
@@ -21,7 +21,6 @@ if [ "$ODIN_optimize" != "" ] ; then flags="$flags -O$ODIN_optimize"; fi
 if [ "$ODIN_define" != "" ] ; then
    for def in `cat $ODIN_define`; do
       flags="$flags -D$def"; done; fi
-flags="$flags -I$ODIN_dir"
 if [ "$ODIN_incsp" != "" ] ; then
    for sp in `cat $ODIN_incsp`; do
       flags="$flags -I$sp"; done; fi
