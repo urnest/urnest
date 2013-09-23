@@ -23,6 +23,10 @@
 
 :hash_incable 'file that C preprocessor can run on'? => :FILE;
 
++inc_sp 'name of a directory in an include search path'? => :ls;
+
++ignore 'egrep expression for includes to ignore'? => :ls;
+
 # vanilla odin allows eg c_inc on any FILE. Not only does this not make
 # sense - eg :o files - it means :map=:all_c_inc picks up
 # just about every parameter type, including +define because we've then
