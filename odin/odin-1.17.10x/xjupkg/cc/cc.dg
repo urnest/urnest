@@ -9,7 +9,7 @@
 
 # Input Object Types
 
-:c 'C source code'? => :o_src :hash_incable;
+:c 'C source code'? => :hash_incable;
 
 :c.sm 'system model for a C program'? => :FILE;
 
