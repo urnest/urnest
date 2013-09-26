@@ -13,9 +13,13 @@
 # :exec is created regardless of exit status of test run, with:
 #   :exec/files.tar the files produced by the run, and either
 #   :exec/output - the stdout+stderr if command exits with 0 status, or
-#   :exec/errors - the stdout+stderr if command exits with non-0 status
+#   :exec/status - file containing status as single line, eg 0
 #
 :exec 'results of a test run'? => :DERIVED-DIRECTORY;
+
+:exec.output ':exec/output where :exec/status is 0'? => :REFERENCE;
+
+:exec.files ':exec/files.tar where :exec/status is 0'? => :REFERENCE;
 
 # Parameter Types
 
@@ -42,7 +46,21 @@ EXEC (run2.sh) (:FILE) (+cmd :ls) NEEDS (+cmd)& (+need)
 EXEC (pipe.run.sh) (:FILE) (+cmd :ls) NEEDS (+cmd) (+need)
    => (:stdout) (:output);
 
+# :FILE is stdin to command
 EXEC (exec.sh) (:FILE) (+cmd :ls) (:env) NEEDS (+cmd) (+need)
   => (:exec);
+
+:exec.output.ref ':exec.output ref' => :FILE;
+:exec.files.ref ':exec.files ref' => :FILE;
+
+EXEC (exec.output.sh) (:exec/output) (:exec/status) (:exec:name)
+  => (:exec.output.ref);
+
+READ-REFERENCE (:exec.output.ref) => (:exec.output);
+
+EXEC (exec.files.sh) (:exec/files.tar) (:exec/status) (:exec:name) (:exec/output)
+  => (:exec.files.ref);
+
+READ-REFERENCE (:exec.files.ref) => (:exec.files);
 
 EXEC (env.sh) ($ODINCACHE/ENV) => (:env);

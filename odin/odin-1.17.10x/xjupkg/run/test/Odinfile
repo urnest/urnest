@@ -1,0 +1,33 @@
+%all-tests.tree==<<
+%test1a
+%test1b
+%test2a
+
+%test1a==()+cmd=cmp (%test.output) (%test1.output):stdout
+%test1b==()+cmd=cmp (%test.ls) (%test1.ls):stdout
+
+%test2a==()+cmd=test -s (%test2:err):stdout
+
+%test1.output==()+cmd=(%test1.sh) 'true':exec.output
+%test1.files==()+cmd=(%test1.sh) 'true':exec.files
+
+%test1.ls==()+cmd=tar tf (%test1.files):stdout
+%test.ls==<<
+a
+b/
+b/c
+
+%test.output==<<
+test1 output
+test1 stderr
+
+%test1.sh== !<<
+#!/bin/sh
+touch a &&
+mkdir b &&
+touch b/c &&
+echo "test1 output" &&
+echo "test1 stderr" >&2 &&
+eval "$1"
+
+%test2==()+cmd=(%test1.sh) 'false':exec.output

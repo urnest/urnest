@@ -34,3 +34,24 @@ multi-tool interface:
   build file
 - intern lots of things for scalability, eg paramlist
 - write dgs in C++ for code-readability/debugability
+- don't worry too much about stat efficiency because at large scale
+  will always use external "notify"; note that can stat by index
+  until dir itself changes (seekdir/telldir)
+- so key for scalability is traversal to source from /?
+- perhaps use an incremental parsing approach so that we can mark
+  path non-exist at earliest opportunity? Is that compatible with subsequent
+  ..? Probably yes.
+- have a single global FsDir derivation that represents / 
+  update method:
+  - note a parsed Odinfile would have maps:
+     real-name : CopyOut(expr || here-doc)
+     vir-name : Equiv(expr || here-doc || string)
+     and a list of nested (Nested deriv)
+  - so looking up a name would be:
+    - update dirlist (FsDirList deriv) => set<DirName> set<FileName>
+    - update parsed Odinfile (Odinfile deriv) + look for name there
+      (including in nested)
+      - careful when a name changes from expr <-> here-doc and careful
+        when name is removed
+    - otherwise name is a source file or dir (according to dirlist)
+      so find it/replace it/create it

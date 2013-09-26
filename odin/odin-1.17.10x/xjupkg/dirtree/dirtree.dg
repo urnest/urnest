@@ -6,6 +6,11 @@
 # <> - see base subtype in odin manual
 :dirtree 'Directory tree'? => <:tree>;
 
+:allfiles 'list covering all files in :dirtree'? => <:LIST>;
+
 # Environment Variables
 
+#:FILE here is a directory (or virtual directory)
 EXEC (dirtree.py) (:FILE) NEEDS (:FILE:list) => (:dirtree);
+
+COLLECT (:dirtree:leaves:map=:list) => (:allfiles);

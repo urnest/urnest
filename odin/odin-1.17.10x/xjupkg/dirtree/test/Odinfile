@@ -1,3 +1,6 @@
+%all-test.tree==<<
+%test1
+
 %java-dirs==(../../java/test:dirtree:leaves)
 
 %java.sh==<<
@@ -11,6 +14,23 @@ done
 %java-files==()+cmd=sh (%java.sh) (%java-dirs:ls)+need=(%java-dirs):stdout:list
 
 %all-files.sh== !<<
+#/bin/sh
 find `cat` -mindepth 1 -maxdepth 1 -type d -o -print
 
 %all-files==(%java-dirs:ls)+cmd=(%all-files.sh)+need=(%java-dirs):stdout:list
+
+%all-files-2==(../../java/test:dirtree:allfiles)
+
+%test1==()+cmd=(%test1.sh) (%all-files-2-expect) (%all-files-2:ls)+need=(%all-files) (%all-files-2):exec.output
+
+%all-files-2-expect==()+cmd=(%all-files-2-expect.sh) (../../java/test) -print +need=(%java-dirs):stdout
+
+%all-files-2-expect.sh == !<<
+#!/bin/sh
+find $1/* -print
+
+%test1.sh== !<<
+#/bin/sh
+sort "$1" > manual &&
+sort "$2" > allfiles &&
+diff manual allfiles

@@ -30,9 +30,9 @@ done
   {
     (
       cd files &&
-      eval env - LD_LIBRARY_PATH="$L" PATH="$ODIN_EXEC_PATH" `cat "$ODIN_env"` $cmd;
-    ) >output 2>&1 ||
-    mv output errors
+      eval env - LD_LIBRARY_PATH="$L" PATH="$ODIN_EXEC_PATH" `cat "$ODIN_env"` $cmd 2>&1
+    ) >output
+    echo $? > status
   } &&
   if [ -z "`ls files`" ]
   then
