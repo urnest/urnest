@@ -13,3 +13,4 @@ cxx/test%all-tests.tree:leaves
 cc/test%all-tests.tree:leaves
 cxx_impl/test%all_tests.tree:leaves
 run/test%all-tests.tree:leaves
+tar/test%all-tests.tree:leaves

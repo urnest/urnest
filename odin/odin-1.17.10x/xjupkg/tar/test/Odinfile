@@ -1,3 +1,7 @@
+%all-tests.tree==<<
+%test1
+%test2
+
 %test1==(x.tar+member='a.txt':extract)+cmd=cmp (a.txt):stdout
 
 %test2==(%test2.expect)+cmd=cmp (%test2.got):stdout

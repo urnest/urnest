@@ -7,7 +7,10 @@ if [ -z "$ODIN_member" ]
 then
   files=`tar tf "$ODIN_tar_file" | egrep "^[^/][^/]*$"`
 else
-  files=`tar tf "$ODIN_tar_file" | egrep "^${ODIN_member}/[^/][^/]*$"`
+  files=`tar tf "$ODIN_tar_file" | egrep "^${ODIN_member}/[^/][^/]*$"` &&
+  test -n "$files" || (
+    echo "$ODIN_member does not match any directory in $1" ; exit 0
+  )
 fi
 
 w=`which which`

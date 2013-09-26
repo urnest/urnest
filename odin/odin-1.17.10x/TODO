@@ -1,11 +1,11 @@
-- :dirtree:allfiles
-  - seem to use that quite often and it is not obvious how it works
+x :dirtree:allfiles
+  x seem to use that quite often and it is not obvious how it works
     doing it in the Odinfile
 
 ~ might be able to put back :cast_hash_incable (not worth it)
   - instead, discuss :cpp scalability issue
 
-- remove ar stuff from cxx, make cxx.sm an sm
+x remove ar stuff from cxx, make cxx.sm an sm
   .cxx.sm => .cxx.exe derivation to distinguish
   .c.sm => .c.exe 
   - no .sm => .exe
@@ -18,7 +18,7 @@
   - extracted is soft-link -> warning+ignore
 - add :cast.tree
 
-- fix example in vir_tree.dg comments
+x fix example in vir_tree.dg comments
 
 - catch malformed in vir_tree.py (eg leading /)
 

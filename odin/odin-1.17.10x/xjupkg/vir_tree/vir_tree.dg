@@ -1,21 +1,21 @@
 # like vir_dir: but makes a tree of virtual directories from a single input
 # file:
 #
-# %config.vir_tree==<<
+# %config.vir_tree_spec==<<
 #  x/y/z==Odinfile%root/config/x/y/z
 #  x/p==Odinfile%root/x/p
 #  a/q==Odinfile%root/config/a/q
 #  b==Odinfile%root/config/b
 #
-# %config==(%config.vir_tree:vir_tree)
+# %config==(%config.vir_tree_spec:vir_tree)
 #
 # produces:
-#  %x==(%config.vir_tree+select='x':vir_tree)
-#  %a==(%config.vir_tree+select='a':vir_tree)
+#  %x==(%config.vir_tree_spec+select='x':vir_tree)
+#  %a==(%config.vir_tree_spec+select='a':vir_tree)
 #  %b==Odinfile%root/config/b
 #
-# ... where (%config.vir_tree+select='x':vir_tree) produces
-#  %y==(%config.vir_tree+select='x/y':vir_tree)
+# ... where (%config.vir_tree_spec+select='x':vir_tree) produces
+#  %y==(%config.vir_tree_spec+select='x/y':vir_tree)
 #  %p==(Odinfile%root/p)
 #
 # Note that the Odinfile before the % is necessary where the target
