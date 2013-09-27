@@ -9,7 +9,7 @@
 
 # Input Object Types
 
-:c 'C source code'? => :hash_incable;
+:c 'C source code'? => :hash_incable :o_src;
 
 :c.sm 'system model for a C program'? => :FILE;
 
@@ -30,6 +30,10 @@
 :fmt 'formatted version' => :PIPE;
 
 :c.h 'C function declarations' => :FILE;
+
+:auto.c.sm 'sm calculated from #includes'? => <:c.sm.list>;
+
+:auto.c.exe 'exe from :auto.c.sm'? => :REFERENCE;
 
 
 # Parameter Types
@@ -118,3 +122,7 @@ COLLECT (:c_inc.view_desc :view)
 COLLECT (:c_inc :map=:all_c_inc) (:c_inc)
    => (:all_c_inc);
 
+
+COLLECT (:c:hash_impl_all:extract=:o_src) => (:auto.c.sm);
+
+COLLECT (:c+lib=(:c:auto.c.sm:a):exe) => (:auto.c.exe);

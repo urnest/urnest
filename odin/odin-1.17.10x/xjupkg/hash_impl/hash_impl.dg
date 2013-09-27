@@ -1,0 +1,34 @@
+# calcuate .cc/.cpp/.cxx/.c etc files needed based on 
+# #included files and implied corresponding .cc/.cpp/.cxx/.c etc files
+#
+# see test/Odinfile for examples
+# - assumes that x.h is implemented by x<suffix> where <suffix> is one
+#   of +o_src_suffix (default $ODIN_O_SRC_SUFFIX); searches for
+#   x<suffix> in all dirs that x.h is searched for (ie x.h and x<suffix>
+#   need not be in the same directory)
+# - note :hash_impl_all does not include self
+#
+:hash_impl_all 'list of transitively included files and implied :o_src files'? => :LIST;
+
++o_src_suffix 'suffixes to form X.cxx/.c etc from X.h'? => :ls;
+
+#+impl_sp is used to ignore .cxx/.c files found via the usual +inc_sp
+#+o_src_suffix lookup unless they are in one of the +impl_sp directories
++impl_sp 'only take .cxx/.c etc from these directories (defaults to all +inc_sp directories)' => :ls;
+
+$ODIN_O_SRC_SUFFIXES 'default +o_src_suffix' = '.cc';
+
+:hash_impl.view_desc 'view description of included files and implied :o_src files' => :FILE;
+
+:hash_impl 'list of included files and implied :o_src files' => :LIST;
+
+EXEC (hash_impl.sh) (:hash_incable) (:hash_incable:dir)@ (+inc_sp) (+impl_sp) (+ignore)
+      (+o_src_suffix) => (:hash_impl.view_desc);
+
+COLLECT (:hash_impl.view_desc :view)
+   => (:hash_impl);
+
+COLLECT (:hash_impl :map=:hash_impl_all) (:hash_impl)
+   => (:hash_impl_all);
+
+

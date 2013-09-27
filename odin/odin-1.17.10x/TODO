@@ -1,3 +1,12 @@
+- fix +ignore handling in hash_inc.sh
+
+x :cxx.impl redo to make it correct, scan_for_impls would
+  give .h and .cpp at once, then recurse on that and then
+  hmm, need o_src back again
+
+x add to hash_impl +impl_sp - if any specified, take impls
+  only from those dirs
+
 x :dirtree:allfiles
   x seem to use that quite often and it is not obvious how it works
     doing it in the Odinfile
@@ -26,7 +35,7 @@ x fix example in vir_tree.dg comments
 
 - resource temporarily unavailable
 
-- sm.hash_inc_all
+- :sm.hash_inc_all (?)
 
 - doc, specific:
   - 2.2.3 ref to xjupkg tree support

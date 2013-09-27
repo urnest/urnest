@@ -9,6 +9,79 @@
 %all-tests.tree == <<
 %test1
 %test2
+%test3
+%test4
+%test5
+%test6
+%test7
 
+# build an exe from a single C++ file
 %test1 == simple.cc:exe
+
+# build an archive from a single C++ file
 %test2 == simple.cc:a
+
+%opts==<<
++inc_sp=(.)
++ignore='stdio'
++ignore='string'
+
+# we can build exe picking up required implementation files, eg
+%a==a.cc+(%opts):auto.cxx.exe
+
+# we can build an archive with all implementation files behind b.h
+%b.a==b/b.h+(%opts):auto.a
+
+# we can build exe picking up source files from only some of the +inc_sp
+# dirs, eg so that we can link against a library for others
+%a2==a.cc+(%opts)+impl_sp=(.)+lib=(%b.a):auto.cxx.exe
+
+# what files do we need to compile, as well as a.cc, to get a.exe?
+%a.impl==a.cc+(%opts):hash_impl_all
+
+# what files do we need to compile, to link something that uses b.h?
+%b.impl==b/b.h+o_src_suffix=_win.cxx+o_src_suffix=.cc+(%opts):hash_impl_all
+
+# perhaps we are building a variant that uses c_win.cxx rather than c.cc
+%b2.impl==b/b.h+o_src_suffix=_win.cxx .cc+(%opts):hash_impl_all
+
+# perhaps for some reason we don't want to depend on c.h (or
+# pick up its implementation) - note in practice we'd be more
+# likely to ignore standard headers like "string"
+%b3.impl==b/b.h+o_src_suffix=_win.cxx .cc+(%opts)+ignore=c.h:hash_impl_all
+
+%a.impl.expect==<<
+b/c.h
+b/c.cc
+b/d.h
+b/d.cc
+b/b.h
+aa.h
+aa.cc
+
+%b.impl.expect==<<
+b/c.h
+b/c_win.cxx
+b/d.h
+b/d.cc
+
+%b3.impl.expect==<<
+b/d.h
+b/d.cc
+
+%test3==()+cmd=(%sortandcmp) (%a.impl:ls) (%a.impl.expect:list:ls)+need=(%a.impl) (%a.impl.expect):stdout
+%test4==()+cmd=(%sortandcmp) (%b.impl:ls) (%b.impl.expect:list:ls)+need=(%b.impl) (%b.impl.expect):stdout
+%test5==()+cmd=(%sortandcmp) (%b2.impl:ls) (%b.impl.expect:list:ls)+need=(%b.impl) (%b.impl.expect):stdout
+%test6==()+cmd=(%sortandcmp) (%b3.impl:ls) (%b3.impl.expect:list:ls)+need=(%b.impl) (%b.impl.expect):stdout
+
+%test7==()+cmd=cmp (%a.stdout) (%a.stdout.expect):stdout
+
+%a.stdout==()+cmd=(%a):stdout
+%a.stdout.expect==<<
+abcd
+
+%sortandcmp== !<<
+#!/bin/sh
+sort "$1" > a &&
+sort "$2" > b &&
+cmp a b

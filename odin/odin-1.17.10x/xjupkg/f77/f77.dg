@@ -5,7 +5,7 @@
 
 # Input Object Types
 
-:f 'Fortran77 source code'? => :FILE;
+:f 'Fortran77 source code'? => :o_src;
 
 
 # Parameter Types

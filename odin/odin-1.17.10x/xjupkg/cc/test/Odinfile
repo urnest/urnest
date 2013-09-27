@@ -10,6 +10,7 @@
 %test1
 %test2
 %test3
+%test4
 inc_sp_semantics%all-tests.tree
 
 # here we build an executable from a single .c source file:
@@ -27,3 +28,6 @@ inc_sp_semantics%all-tests.tree
 %twofile.c.sm==<<
 twofile_1.c
 twofile_2.c
+
+# we can also pick up c source files automatically via :hash_impl_all
+%test4 == twofile_1.c+o_src_suffix=.c:auto.c.exe

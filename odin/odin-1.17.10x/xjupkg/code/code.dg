@@ -9,6 +9,8 @@
 
 # Input Object Types
 
+:o_src 'file that :o can be derived from' => :FILE;
+
 :o 'object module' => :FILE;
 
 :sm 'system model of source code files'? => :FILE;
@@ -67,3 +69,15 @@ EXEC (libraries.sh) (+lib) (+lib_sp) NEEDS (:libraries.view_desc :libraries)&
 
 COLLECT (:libraries.view_desc :view)
    => (:libraries);
+
+
+# build :a from set of files calculated via :hash_impl_all
+# see ../cxx/test/Odinfile for example use
+#
+:auto.a 'object library archive, with files calculated by :hash_impl_all)'? => :REFERENCE;
+
+:auto.sm 'sm calculated from #includes' => <:sm.list>;
+
+COLLECT (:hash_incable:hash_impl_all:extract=:o_src) => (:auto.sm);
+
+COLLECT (:auto.sm:a) => (:auto.a);
