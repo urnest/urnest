@@ -1,21 +1,7 @@
-%btt-fltk == %btt-fltk.cxx.sm+(%opts-fltk):exe
-%btt-fltk1.3 == %btt-fltk1.3.cxx.sm+(%opts-fltk1.3):exe
+%btt-fltk1.3 == btt-fltk1.3.cc+(%opts-fltk1.3):auto.cxx.exe
 %run-standalone-tests == %standalone-tests.tree:leaves
 
 %none.hh == <<
-
-#
-# Entry for each header file specifying its implementation file (if
-# any)
-#
-%TaskId.hh.cxx.sm == TaskId.hh+inc_sp=(..)+impl=(TaskId.cc):impl.cxx.sm
-%Task.hh.cxx.sm == Task.hh+inc_sp=(..):impl.cxx.sm
-%Tasks.hh.cxx.sm == Tasks.hh+inc_sp=(..):impl.cxx.sm
-%XmlStore.hh.cxx.sm == XmlStore.hh+inc_sp=(..)+impl=(XjuXmlStore.cc):impl.cxx.sm
-%WorkLog.hh.cxx.sm == WorkLog.hh+inc_sp=(..)+impl=(WorkLog.cc):impl.cxx.sm
-%Controller.hh.cxx.sm == Controller.hh+inc_sp=(..)+impl=(Controller.cc):impl.cxx.sm
-%workDone.hh.cxx.sm == workDone.hh+inc_sp=(..)+impl=(workDone.cc):impl.cxx.sm
-%RollUpReport.hh.cxx.sm == RollUpReport.hh+inc_sp=(..):impl.cxx.sm
 
 %cxx-opts == <<
 +(..%cxx-opts)
@@ -24,55 +10,17 @@
 +(%cxx-opts)
 +lib=(../xju%basic.cxx.sm+(%cxx-opts):a)
 
-%opts-fltk == <<
-+(%cxx-opts)
-+lib=(fltk-view%all.cxx.sm+(%cxx-opts):a)
-+lib=(../xju%basic.cxx.sm+(%cxx-opts):a)
-+(fltk-view%fltk-libs)+(%model-libs)
-
 %opts-fltk1.3 == <<
 +(%cxx-opts)
 +inc_sp=(/usr/local/include)
-+lib=(fltk1.3-view%all.cxx.sm+(%cxx-opts):a)
-+lib=(../xju%basic.cxx.sm+(%cxx-opts):a)
-+(fltk1.3-view%fltk-libs)+(%model-libs)
-
-%model-libs == <<
-+lib=(../xju%basic.cxx.sm+(%cxx-opts):a)
-
-%controller-libs == <<
-+(%model-libs)
-
-%test-XmlStore.cxx.sm == %none.hh+inc_sp=(..)+impl=(test-XmlStore.cc):impl.cxx.sm
-%test-WorkLog.cxx.sm == %none.hh+inc_sp=(..)+impl=(test-WorkLog.cc):impl.cxx.sm
-%test-Controller.cxx.sm == %none.hh+inc_sp=(..)+impl=(test-Controller.cc):impl.cxx.sm
-
++(fltk1.3-view%fltk-libs)
++lib=-lfltk -lXext -lXinerama -lpthread -ldl -lm  -lX11 
 
 %standalone-tests.tree == <<
 (../xju%standalone-tests.tree)
 (%test-XmlStore)
-()+cmd=(%test-WorkLog.cxx.sm+(%opts):exe):stdout
+()+cmd=(test-WorkLog.cc+(%opts):auto.cxx.exe):stdout
 (%test-Controller)
-
-%btt-fltk.cxx.sm == <<
-%none.hh+inc_sp=(..)+impl=(btt-fltk.cc):impl.cxx.sm
-%TaskId.hh.cxx.sm
-%Task.hh.cxx.sm
-%Tasks.hh.cxx.sm
-%XmlStore.hh.cxx.sm
-%WorkLog.hh.cxx.sm
-%Controller.hh.cxx.sm
-%workDone.hh.cxx.sm
-
-%btt-fltk1.3.cxx.sm == <<
-%none.hh+inc_sp=(..)+impl=(btt-fltk1.3.cc):impl.cxx.sm
-%TaskId.hh.cxx.sm
-%Task.hh.cxx.sm
-%Tasks.hh.cxx.sm
-%XmlStore.hh.cxx.sm
-%WorkLog.hh.cxx.sm
-%Controller.hh.cxx.sm
-%workDone.hh.cxx.sm
 
 #
 # Below is some stuff to translate path name supplied as command line
@@ -104,11 +52,11 @@ a=`cat "$2"`
 "$1" "$a"
 
 %test-XmlStore == \
-()+cmd=(%test-XmlStore.cxx.sm+(%cxx-opts)+(%model-libs):exe)\
+()+cmd=(test-XmlStore.cc+(%cxx-opts):auto.cxx.exe)\
   +cmd=(tasks.xsd)\
   +cmd=(bad-tasks-1.xml):stdout
 
 %test-Controller == \
 ()+cmd=(/bin/sh) +cmd=(%test-Controller.script)\
-  +cmd=(%test-Controller.cxx.sm+(%cxx-opts)+(%controller-libs):exe)\
+  +cmd=(test-Controller.cc+(%cxx-opts):auto.cxx.exe)\
   +cmd=(%tasks.xsd.file)+need=(tasks.xsd):stdout

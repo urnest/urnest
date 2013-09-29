@@ -10,9 +10,9 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include "btt/fltk-view/Callback.hh"
+#include "btt/fltk1.3-view/Callback.hh"
 
-#include <fltk/ask.h>
+#include <FL/fl_ask.H>
 
 namespace btt
 {
@@ -20,7 +20,7 @@ namespace btt
     {
         void Callback_handle(xju::Exception const& e) throw()
         {
-            fltk::alert("%s", readableRepr(e).c_str());
+            fl_alert("%s", readableRepr(e).c_str());
         }
     }
 }

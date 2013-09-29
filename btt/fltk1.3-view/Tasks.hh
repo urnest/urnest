@@ -39,7 +39,7 @@ namespace btt
 		  const btt::Tasks& tasks) throw();
 
             // popup action menu for selectedTask_
-	    xju::Event popupMenu_;
+	    //xju::Event popupMenu_;
 
             // edit selectedTask_
 	    xju::Event editTask_;
@@ -76,10 +76,8 @@ namespace btt
 		    task_(task),
 		    browser_(browser),
 		    reg_(this),
-                    widget_((reg_.splice(successor),
-                             browser.insert(index(), ""))),
 		    startedChanged_(
-			*this,
+			(reg_.splice(successor),*this),
 			&Task::changed,
 			(*task).started_.m_changed),
 		    secondsSpentOnThisTaskChanged_(
@@ -90,21 +88,27 @@ namespace btt
 			*this,
 			&Task::changed,
 			(*task).description_.m_changed),
-		    removing_(*this,
-			      &Task::removing,
-			      parent->tasks_.removing(task)),
 		    newPredecessor_(*this,
 				    &Task::newPredecessor,
 				    parent->tasks_.newPredecessor(task)),
-                    callback_(*widget_, *this, &Task::callback)
+		    removing_(*this,
+			      &Task::removing,
+			      parent->tasks_.removing(task))
 		{
-		    changed();
-                    browser.select(index(), true);
+                    int const i(index());
+                    browser.insert(i+1, "", this);
+		    changed_(i);
+                    browser.select(i+1, true);
                     browser.redraw();
                     parent_->selectedTask_ = task_;
 		}
 
                 void changed() throw()
+                {
+                    changed_(index());
+                }
+                
+                void changed_(int i) throw()
                 {
 		    const std::string id((*task_).id_.readableRepr());
 
@@ -123,18 +127,16 @@ namespace btt
 		    const std::string desc((*task_).description_.value());
                     
                     std::ostringstream s;
-                    s << id << "\t" 
+                    s << "@."
+                      << id << "\t" 
                       << started << "\t" 
                       << spentHrs << "\t" 
                       << desc;
-                    
-                    widget_->copy_label(s.str().c_str());
-                    widget_->redraw();
+                    browser_.text(i+1,s.str().c_str());
 		}
 
 	    private:
 		xju::Ring<Task*> reg_;
-                std::auto_ptr<Fl_Widget> const widget_;
 
 		xju::Observer<Task> startedChanged_;
 		xju::Observer<Task> secondsSpentOnThisTaskChanged_;
@@ -143,8 +145,6 @@ namespace btt
 		xju::Observer<Task> removing_;
 		xju::Observer<Task> newPredecessor_;
 
-                Callback<Task> callback_;
-                
                 // zero-based index of this Task w.r.t. first task.
                 unsigned int index() const throw()
                 {
@@ -160,8 +160,12 @@ namespace btt
                 
 		void removing() throw()
 		{
-                    parent_->selectedTask_ = parent_->tasks_.end();
-                    parent_->widget_.deselect(0);
+                    int const i=index();
+                    if (browser_.value()==i+1) {
+                        parent_->selectedTask_ = parent_->tasks_.end();
+                        browser_.value(0);
+                    }
+                    browser_.remove(i+1);
 		    delete this;
 		}
 		
@@ -170,20 +174,6 @@ namespace btt
 		    new Task(parent_, boost::prior(task_), reg_, browser_);
 		}
 
-                void callback() throw()
-                {
-                    parent_->selectedTask_ = task_;
-                    if (Fl::event_button() == 3)
-                    {
-                        parent_->popupMenu_();
-                    }
-                    else if (Fl::event_button() == 1 &&
-                             Fl::event_clicks() == 1)
-                    {
-                        parent_->editTask_();
-                    }
-                }
-                
 	    };
 
 	    void taskAddedAtEnd() throw()
@@ -194,11 +184,23 @@ namespace btt
                          widget_);
 	    }
 
+            // void tasksCallback() throw()
+            // {
+            //     if (widget_.item())
+            //     {
+            //         widget_.item()->do_callback();
+            //     }
+            //     else
+            //     {
+            //         selectedTask_ = tasks_.end();
+            //     }
+            // }
             void tasksCallback() throw()
             {
-                if (widget_.item())
-                {
-                    widget_.item()->do_callback();
+                if (widget_.value()) {
+                    int const index(widget_.value()-1);
+                    Task* t = (Task*)widget_.data(index+1);
+                    selectedTask_ = t->task_;
                 }
                 else
                 {

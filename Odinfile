@@ -1,4 +1,4 @@
 %cxx-opts==<<
++debug
 +inc_sp=(.)
-+inc_sp=(fltk)
 +inc_sp=(/usr/include/freetype2)

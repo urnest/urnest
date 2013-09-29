@@ -67,7 +67,7 @@ namespace xju
 #endif
 
 #include <unistd.h>
-
+#include <stdlib.h>
 
 namespace xju
 {
@@ -120,7 +120,7 @@ namespace xju
     {
         char* x = syscall(getcwd, XJU_TRACED, false, (char*)0)(0, 0);
         std::string result(x);
-        free(x);
+        ::free(x);
         return result;
     }
 }

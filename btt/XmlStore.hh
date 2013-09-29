@@ -20,7 +20,7 @@
 #include <string>
 #include <xju/Exception.hh>
 #include <utility>
-
+#include <memory>
 
 namespace btt
 {

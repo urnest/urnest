@@ -25,22 +25,22 @@ namespace btt
     {
         void Callback_handle(xju::Exception const& e) throw();
         
-        template<class T>
+        template<class T, class F=Fl_Widget>
         class Callback : boost::noncopyable
         {
         public:
-            Fl_Widget& widget_;
+            F& widget_;
             T& target_;
             void (T::*method_)();
 
-            Callback(Fl_Widget& widget,
+            Callback(F& widget,
                      T& target,
                      void (T::*method)()) throw():
                 widget_(widget),
                 target_(target),
                 method_(method)
             {
-                widget.callback(&Callback<T>::callback, this);
+                widget.callback(&Callback<T, F>::callback, this);
             }
             ~Callback() throw()
             {
@@ -61,7 +61,7 @@ namespace btt
         private:
             static void callback(Fl_Widget*, void* x) throw()
             {
-                Callback<T>& c = *(Callback<T>*)x;
+                Callback<T, F>& c = *(Callback<T, F>*)x;
                 c.trigger();
             }
         };

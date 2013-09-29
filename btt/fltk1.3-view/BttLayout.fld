@@ -1,5 +1,5 @@
 # data file for the Fltk User Interface Designer (fluid)
-version 1.0110 
+version 1.0302 
 header_name {.h} 
 code_name {.cxx}
 class BttLayout {open
@@ -7,7 +7,7 @@ class BttLayout {open
   Function {BttLayout()} {open
   } {
     Fl_Window window {open
-      xywh {464 283 395 180} type Single visible
+      xywh {464 283 395 185} type Single visible
     } {
       Fl_Menu_Bar menubar {open
         xywh {0 0 395 20}
@@ -60,8 +60,36 @@ class BttLayout {open
           xywh {0 0 70 21}
         } {
           MenuItem startNow {
-            label Now selected
+            label Now
             xywh {0 0 36 21}
+          }
+          MenuItem start5 {
+            label {5 Minutes Ago}
+            xywh {10 10 36 21}
+          }
+          MenuItem start10 {
+            label {10 Minutes Ago}
+            xywh {20 20 36 21}
+          }
+          MenuItem start15 {
+            label {15 Minutes Ago}
+            xywh {30 30 36 21}
+          }
+          MenuItem start30 {
+            label {30 Minutes Ago}
+            xywh {40 40 36 21}
+          }
+          MenuItem start60 {
+            label {1 Hour Ago}
+            xywh {50 50 36 21}
+          }
+          MenuItem start90 {
+            label {90 Minutes Ago}
+            xywh {60 60 36 21}
+          }
+          MenuItem startAt {
+            label {At...} selected
+            xywh {70 70 36 21}
           }
         }
       }
@@ -69,7 +97,7 @@ class BttLayout {open
         xywh {0 20 395 25}
       }
       Fl_Browser tasks {
-        xywh {0 45 393 136}
+        xywh {0 45 393 136} type Hold
       }
     }
   }

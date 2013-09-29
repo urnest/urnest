@@ -24,7 +24,7 @@ namespace btt
 {
     namespace view
     {
-	Tasks::Tasks(fltk::Browser& widget,
+	Tasks::Tasks(Fl_Browser& widget,
                      const btt::Tasks& tasks) throw():
 	    selectedTask_(tasks.end()),
             widget_(widget),
@@ -35,15 +35,15 @@ namespace btt
 			    tasks.newPredecessor(tasks.end())),
             tasksCallback_(widget, *this, &Tasks::tasksCallback)
 	{
-            const char *labels[] = {"Id",
-                                    "Started",
-                                    "Spent Hrs",
-                                    "Description",
-                                    0};
-            int const widths[]   = {30, 70, 70, -1, 0};
-
-	    widget.column_labels(labels);
+            // const char *labels[] = {"Id",
+            //                         "Started",
+            //                         "Spent Hrs",
+            //                         "Description",
+            //                         0};
+	    //widget.column_labels(labels);
+            static int const widths[]   = {30, 70, 70, 0};
             widget.column_widths(widths);
+
             
 	    btt::Tasks::const_iterator i;
 	    xju::Ring<Task*>* successor(&registry_);
@@ -54,7 +54,7 @@ namespace btt
 		new Task(this, j, *successor, widget_);
 		successor = &successor->prev();
 	    }
-            widget_.when(fltk::WHEN_RELEASE|fltk::WHEN_NOT_CHANGED);
+            widget_.when(FL_WHEN_RELEASE|FL_WHEN_NOT_CHANGED);
 	}
 
     }

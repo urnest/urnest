@@ -11,6 +11,7 @@
 // implied warranty.
 //
 
+#include <FL/Fl_Hold_Browser.H>
 #include <iostream>
 #include <string>
 #include <btt/Controller.hh>
@@ -233,26 +234,23 @@ public:
     btt::Controller& controller_;
     btt::Tasks::const_iterator end_;
     btt::Tasks::const_iterator const& selectedTask_;
-    Fl_Menu& popupMenu_;
-    Fl_Item& undo_;
-    Fl_Item& redo_;
-    Fl_Item& newTask_;
-    Fl_Item& editSelected_;
+    Fl_Menu_Item& undo_;
+    Fl_Menu_Item& redo_;
+    Fl_Menu_Item& newTask_;
+    Fl_Menu_Item& editSelected_;
     
-    Actions(fltk::Window& window,
+    Actions(Fl_Window& window,
             btt::Controller& controller,
             btt::Tasks::const_iterator end,
             btt::Tasks::const_iterator const& selectedTask,
-            fltk::PopupMenu& popupMenu,
-            fltk::Item& undo,
-            fltk::Item& redo,
-            fltk::Item& newTask,
-            fltk::Item& editSelected) throw():
+            Fl_Menu_Item& undo,
+            Fl_Menu_Item& redo,
+            Fl_Menu_Item& newTask,
+            Fl_Menu_Item& editSelected) throw():
         window_(window),
         controller_(controller),
         end_(end),
         selectedTask_(selectedTask),
-        popupMenu_(popupMenu),
         undo_(undo),
         redo_(redo),
         newTask_(newTask),
@@ -288,7 +286,7 @@ public:
     {
         if (selectedTask_ != controller_.tasks().end())
         {
-            const char* x = fltk::input(
+            const char* x = fl_input(
                 "Description:",
                 (*selectedTask_).description_.value().c_str());
             if (x)
@@ -297,15 +295,12 @@ public:
             }
         }
     }
-    void popupMenu() throw(xju::Exception)
+    void startNow() throw(xju::Exception)
     {
         if (selectedTask_ != controller_.tasks().end())
         {
-            popupMenu_.value(-1);
-            popupMenu_.popup(fltk::Rectangle(fltk::event_x(),
-                                             fltk::event_y(),
-                                             0,
-                                             0));
+            const xju::Time x(xju::Time::now());
+            controller_.recordWorkingOnTask(selectedTask_, x);
         }
     }
     void canUndoChanged() throw(xju::Exception)
@@ -353,7 +348,7 @@ public:
             {
                 try
                 {
-                    const char* x = fltk::input(
+                    const char* x = fl_input(
                         "%s", 
                         prev.c_str(),
                         "Working on task since, e.g. "
@@ -368,40 +363,13 @@ public:
                 }
                 catch(xju::Exception const& e)
                 {
-                    fltk::alert("%s", readableRepr(e).c_str());
+                    fl_alert("%s", readableRepr(e).c_str());
                 }
             }
         }
     }
     
 };
-
-class StartTask : public btt::view::Callback<StartTask>
-{
-public:
-    btt::Controller& controller_;
-    btt::Tasks::const_iterator const& task_;
-    xju::MicroSeconds const offset_;
-    
-    StartTask(fltk::Item& menuItem,
-              btt::Controller& controller,
-              btt::Tasks::const_iterator const& task,
-              xju::MicroSeconds offset) throw():
-        btt::view::Callback<StartTask>(menuItem,
-                                       *this,
-                                       &StartTask::start),
-        controller_(controller),
-        task_(task),
-        offset_(offset)
-    {
-    }
-    void start() throw(xju::Exception)
-    {
-        const xju::Time x(xju::Time::now() - offset_);
-        controller_.recordWorkingOnTask(task_, x);
-    }
-};
-
 
 int main(int argc, char* argv[])
 {
@@ -432,88 +400,47 @@ int main(int argc, char* argv[])
                         controller,
                         controller.tasks().end(),
                         tasks.selectedTask_.value(),
-                        *ui.startMenu,
                         *ui.undo,
                         *ui.redo,
                         *ui.newTask,
                         *ui.editSelected);
-        btt::view::Callback<Actions> newTaskAction(
+        btt::view::Callback<Actions, Fl_Menu_Item> newTaskAction(
             *ui.newTask, actions, &Actions::newTask);
-        btt::view::Callback<Actions> newTaskAtEndAction(
+        btt::view::Callback<Actions, Fl_Menu_Item> newTaskAtEndAction(
             *ui.newTaskAtEnd, actions, &Actions::newTaskAtEnd);
 
-        btt::view::Callback<Actions> editSelectedAction(
+        btt::view::Callback<Actions, Fl_Menu_Item> editSelectedAction(
             *ui.editSelected, actions, &Actions::editSelected);
-        xju::Observer<btt::view::Callback<Actions> > editSelectedObserver(
+        xju::Observer<btt::view::Callback<Actions, Fl_Menu_Item> > editSelectedObserver(
             editSelectedAction,
-            &btt::view::Callback<Actions>::trigger,
+            &btt::view::Callback<Actions, Fl_Menu_Item>::trigger,
             tasks.editTask_);
-        btt::view::Callback<Actions> undoAction(
+        btt::view::Callback<Actions, Fl_Menu_Item> undoAction(
             *ui.undo, actions, &Actions::undo);
-        btt::view::Callback<Actions> redoAction(
+        btt::view::Callback<Actions, Fl_Menu_Item> redoAction(
             *ui.redo, actions, &Actions::redo);
 
-        xju::Observer<Actions> popupMenu(
-            actions,
-            &Actions::popupMenu,
-            tasks.popupMenu_);
+        btt::view::Callback<Actions, Fl_Menu_Item> startNow(
+            *ui.startNow, actions, &Actions::startNow);
         
-        StartTask startNow(*ui.startNow,
-                           controller,
-                           tasks.selectedTask_.value(),
-                           xju::MicroSeconds(0U));
-        
-        StartTask startMinus5(*ui.startMinus5,
-                              controller,
-                              tasks.selectedTask_.value(),
-                              xju::MicroSeconds(5*60*1000000));
-        
-        StartTask startMinus15(*ui.startMinus15,
-                               controller,
-                               tasks.selectedTask_.value(),
-                               xju::MicroSeconds(15*60*1000000));
-        
-        StartTask startMinus30(*ui.startMinus30,
-                               controller,
-                               tasks.selectedTask_.value(),
-                               xju::MicroSeconds(30*60*1000000));
-        
-        StartTask startMinus45(*ui.startMinus45,
-                               controller,
-                               tasks.selectedTask_.value(),
-                               xju::MicroSeconds(45*60*1000000UL));
-        
-        StartTask startMinus60(*ui.startMinus60,
-                               controller,
-                               tasks.selectedTask_.value(),
-                               xju::MicroSeconds(60*60*1000000UL));
-        
-        StartTask startMinus90(*ui.startMinus90,
-                               controller,
-                               tasks.selectedTask_.value(),
-                               xju::MicroSeconds(90*60*1000000UL));
-        
-        StartTask startMinus120(*ui.startMinus120,
-                                controller,
-                                tasks.selectedTask_.value(),
-                                xju::MicroSeconds(120*60*1000000UL));
-
-        btt::view::Callback<Actions> startAt(
+        btt::view::Callback<Actions, Fl_Menu_Item> startAt(
             *ui.startAt, actions, &Actions::startSelectedTaskAt);
         
         TimeSheetReport timeSheetReport(controller.workLog(),
                                         controller.tasks());
 
-        btt::view::Callback<TimeSheetReport> timeSheetReportAction(
-            *ui.timeSheet, timeSheetReport, &TimeSheetReport::trigger);
+        btt::view::Callback<TimeSheetReport, Fl_Menu_Item>
+            timeSheetReportAction(
+                *ui.timeSheet, timeSheetReport, &TimeSheetReport::trigger);
 
         RollupTimeSheetReport rollupTimeSheetReport(controller.workLog(),
                                                     controller.tasks());
 
-        btt::view::Callback<RollupTimeSheetReport> rollupTimeSheetReportAction(
-            *ui.rollupTimeSheet, 
-            rollupTimeSheetReport, 
-            &RollupTimeSheetReport::trigger);
+        btt::view::Callback<RollupTimeSheetReport, Fl_Menu_Item>
+            rollupTimeSheetReportAction(
+                *ui.rollupTimeSheet, 
+                rollupTimeSheetReport, 
+                &RollupTimeSheetReport::trigger);
 
         xju::Observer<Actions> canUndo(actions,
                                        &Actions::canUndoChanged,
@@ -528,7 +455,7 @@ int main(int argc, char* argv[])
             tasks.selectedTask_.m_changed);
         
         ui.window->show();
-        fltk::run();
+        Fl::run();
         
 	return 0;
     }
