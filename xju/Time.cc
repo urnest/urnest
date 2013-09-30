@@ -106,6 +106,7 @@ xju::Time operator-(xju::Time const& t,
                     xju::MicroSeconds const& d) throw()
 {
     xju::MicroSeconds const a(t - xju::Time(0, 0));
+    xju::assert_(a, std::greater_equal<xju::MicroSeconds>(), d);
     xju::MicroSeconds const b(a - d);
     return xju::Time(b.value() / 1000000, b.value() % 1000000);
 }

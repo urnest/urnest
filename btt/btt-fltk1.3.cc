@@ -295,14 +295,6 @@ public:
             }
         }
     }
-    void startNow() throw(xju::Exception)
-    {
-        if (selectedTask_ != controller_.tasks().end())
-        {
-            const xju::Time x(xju::Time::now());
-            controller_.recordWorkingOnTask(selectedTask_, x);
-        }
-    }
     void canUndoChanged() throw(xju::Exception)
     {
         if (controller_.canUndo())
@@ -371,6 +363,35 @@ public:
     
 };
 
+class Starter
+{
+public:
+    Starter(Fl_Menu_Item& menuItem,
+            btt::Controller& controller,
+            btt::Tasks::const_iterator const& selectedTask,
+            xju::MicroSeconds const& ago) throw():
+        controller_(controller),
+        selectedTask_(selectedTask),
+        ago_(ago),
+        callback_(menuItem, *this, &Starter::start) {
+    }
+    btt::Controller& controller_;
+    btt::Tasks::const_iterator const& selectedTask_;
+    xju::MicroSeconds const ago_;
+    
+    btt::view::Callback<Starter, Fl_Menu_Item> const callback_;
+    
+    void start() throw(xju::Exception)
+    {
+        if (selectedTask_ != controller_.tasks().end())
+        {
+            const xju::Time x(xju::Time::now()-ago_);
+            controller_.recordWorkingOnTask(selectedTask_, x);
+        }
+    }
+};
+
+
 int main(int argc, char* argv[])
 {
     if (argc < 4)
@@ -420,8 +441,52 @@ int main(int argc, char* argv[])
         btt::view::Callback<Actions, Fl_Menu_Item> redoAction(
             *ui.redo, actions, &Actions::redo);
 
-        btt::view::Callback<Actions, Fl_Menu_Item> startNow(
-            *ui.startNow, actions, &Actions::startNow);
+        Starter startNow(*ui.startNow,
+                         controller,
+                         tasks.selectedTask_.value(),
+                         xju::MicroSeconds(0U));
+
+        Starter startMinus5(*ui.start5,
+                            controller,
+                            tasks.selectedTask_.value(),
+                            xju::MicroSeconds(5*60*1000000));
+        
+        Starter startMinus10(*ui.start10,
+                             controller,
+                             tasks.selectedTask_.value(),
+                             xju::MicroSeconds(5*60*1000000));
+        
+        Starter startMinus15(*ui.start15,
+                             controller,
+                             tasks.selectedTask_.value(),
+                             xju::MicroSeconds(15*60*1000000));
+        
+        Starter startMinus30(*ui.start30,
+                             controller,
+                             tasks.selectedTask_.value(),
+                             xju::MicroSeconds(30*60*1000000));
+        
+        Starter startMinus45(*ui.start45,
+                             controller,
+                             tasks.selectedTask_.value(),
+                             xju::MicroSeconds(45*60*1000000UL));
+        
+        Starter startMinus60(*ui.start60,
+                             controller,
+                             tasks.selectedTask_.value(),
+                             xju::MicroSeconds(60*60*1000000UL));
+        
+        Starter startMinus90(*ui.start90,
+                             controller,
+                             tasks.selectedTask_.value(),
+                             xju::MicroSeconds(90*60*1000000UL));
+        
+        Starter startMinus120(*ui.start120,
+                              controller,
+                              tasks.selectedTask_.value(),
+                              xju::MicroSeconds(120*60*1000000UL));
+        
+        
         
         btt::view::Callback<Actions, Fl_Menu_Item> startAt(
             *ui.startAt, actions, &Actions::startSelectedTaskAt);

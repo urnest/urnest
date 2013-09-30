@@ -57,8 +57,9 @@ namespace xju
 xju::Time operator+(xju::Time const& t, 
                     xju::MicroSeconds const& d) throw(); // REVISIT: overflow?
 
+// pre: t >= d
 xju::Time operator-(xju::Time const& t, 
-                    xju::MicroSeconds const& d) throw(); // REVISIT: underflow?
+                    xju::MicroSeconds const& d) throw();
 
 // pre: t1 >= t2
 xju::MicroSeconds operator-(const xju::Time &t1, const xju::Time &t2) throw();

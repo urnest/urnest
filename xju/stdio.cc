@@ -54,7 +54,4 @@ namespace xju
 	::rename);
 #endif
 
-    const SyscallF2<char*, const char*, const char*> tempnam(
-        "tempnam",
-        ::tempnam);
 }

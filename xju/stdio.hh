@@ -24,7 +24,6 @@
 namespace xju
 {
     extern const SyscallF2<int, const char*, const char*> rename;
-    extern const SyscallF2<char*, const char*, const char*> tempnam;
 }
 
 

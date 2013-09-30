@@ -46,31 +46,44 @@ void test2()
 }
 
 
+struct Test3
+{
+    template<int X>
+    void t()
+    {
+        try
+        {
+            std::ostringstream s;
+            const long x(INT_MAX);
+            s << (x+1L);
+            
+            xju::stringToInt(s.str());
+            abort();
+        }
+        catch(const xju::Exception& e)
+        {
+            std::cerr << e << std::endl;
+            std::ostringstream s;
+            s << e;
+            xju::assert_equal(
+                s.str(),
+                "");
+        }
+    }
+};
+
+template<>
+void Test3::t<0>()
+{
+}
+
 // overflow - can't do unless sizeof(long) > sizeof(int)
 void test3()
 {
-    if (LONG_MAX <= INT_MAX)
-    {
-	return;
-    }
-    try
-    {
-	std::ostringstream s;
-	const long x(INT_MAX);
-	s << (x+1L);
-	
-	xju::stringToInt(s.str());
-	abort();
-    }
-    catch(const xju::Exception& e)
-    {
-	std::cerr << e << std::endl;
-	std::ostringstream s;
-	s << e;
-	xju::assert_equal(
-	    s.str(),
-	    "");
-    }
+    // avoid compiler warning by not instatiating code unless
+    // sizeof(long) > sizeof(int)
+    Test3 t3;
+    t3.t<sizeof(long)-sizeof(int)>();
 }
 
 

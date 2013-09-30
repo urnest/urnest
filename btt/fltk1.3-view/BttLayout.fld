@@ -79,6 +79,10 @@ class BttLayout {open
             label {30 Minutes Ago}
             xywh {40 40 36 21}
           }
+          MenuItem start45 {
+            label {45 Minutes Ago}
+            xywh {50 50 36 21}
+          }
           MenuItem start60 {
             label {1 Hour Ago}
             xywh {50 50 36 21}
@@ -87,8 +91,12 @@ class BttLayout {open
             label {90 Minutes Ago}
             xywh {60 60 36 21}
           }
+          MenuItem start120 {
+            label {2 Hours Ago} selected
+            xywh {70 70 36 21}
+          }
           MenuItem startAt {
-            label {At...} selected
+            label {At...}
             xywh {70 70 36 21}
           }
         }

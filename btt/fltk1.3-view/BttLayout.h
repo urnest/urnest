@@ -30,8 +30,10 @@ public:
   static Fl_Menu_Item *start10;
   static Fl_Menu_Item *start15;
   static Fl_Menu_Item *start30;
+  static Fl_Menu_Item *start45;
   static Fl_Menu_Item *start60;
   static Fl_Menu_Item *start90;
+  static Fl_Menu_Item *start120;
   static Fl_Menu_Item *startAt;
   Fl_Output *currentTask;
   Fl_Browser *tasks;
