@@ -1,27 +1,15 @@
 %run-standalone-tests == %standalone-tests.tree:leaves
 
-%none.hh == <<
-
-#
-# Entry for each header file specifying its implementation file (if
-# any)
-#
-%parser.hh.cxx.sm == parser.hh+inc_sp=(..)+impl=(parser.cc):impl.cxx.sm
-%ast.hh.cxx.sm == ast.hh+inc_sp=(..)+impl=(ast.cc):impl.cxx.sm
-%getOptionValue.hh.cxx.sm == getOptionValue.hh+inc_sp=(..)+impl=(getOptionValue.cc):impl.cxx.sm
-%trace.hh.cxx.sm == trace.hh+inc_sp=(..)+impl=(trace.cc):impl.cxx.sm
-
 %cxx-opts == <<
 +(..%cxx-opts)
 
 %opts == <<
 +(%cxx-opts)
-+lib=(../xju%basic.cxx.sm+(%cxx-opts):a)
 
-%test-parser.cxx.sm == %none.hh+inc_sp=(..)+impl=(test-parser.cc):impl.cxx.sm
+%test-parser == test-parser.cc+(%opts):auto.cxx.exe
 
 %test-parser-cmd==<<
-+cmd=(%test-parser.cxx.sm+(%opts):exe) \
++cmd=(%test-parser) \
   (test-parser-class-1.h) \
   (test-parser-class-2.h) \
   (test-parser-namespace-1.h) \
@@ -35,17 +23,7 @@
 (../xju%standalone-tests.tree)
 ()+(%test-parser-cmd):stdout
 
-%hcp-split.cxx.sm == <<
-%none.hh+inc_sp=(..)+impl=(hcp-split.cc):impl.cxx.sm
-%parser.hh.cxx.sm
-%ast.hh.cxx.sm
+hcp-split == hcp-split.cc+(%opts):auto.cxx.exe
+hcp-parse-file == hcp-parse-file.cc+(%opts):auto.cxx.exe
 
-hcp-split == %hcp-split.cxx.sm+(%opts):exe
-
-%hcp-parse-file.cxx.sm == <<
-%none.hh+inc_sp=(..)+impl=(hcp-parse-file.cc):impl.cxx.sm
-%parser.hh.cxx.sm
-%ast.hh.cxx.sm
-
-hcp-parse-file == %hcp-parse-file.cxx.sm+(%opts):exe
 

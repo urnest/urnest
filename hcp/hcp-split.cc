@@ -267,14 +267,14 @@ int main(int argc, char* argv[])
 
     fh << "#ifndef " << guard << std::endl
        << "#define " << guard << std::endl
-       << "#file " << xju::path::str(
+       << "#line 1 \"" << xju::path::str(
          std::make_pair(
            xju::path::RelativePath(
              std::vector<xju::path::DirName>(
                inputFile.first.end()-cmd_line.first.dir_levels_,
                inputFile.first.end())),
-           inputFile.second)) << std::endl;
-    fh << "#line 1\n";
+           inputFile.second)) << "\"" << std::endl;
+    fh << "\n";
     
     xju::path::RelativePath const hhinc(
       std::vector<xju::path::DirName>(
