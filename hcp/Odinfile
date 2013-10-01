@@ -1,3 +1,10 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+%standalone-tests.tree
+hcp-split
+hcp-parse-file
+
 %run-standalone-tests == %standalone-tests.tree:leaves
 
 %cxx-opts == <<
@@ -21,7 +28,8 @@
 
 %standalone-tests.tree == <<
 (../xju%standalone-tests.tree)
-()+(%test-parser-cmd):stdout
+()+(%test-parser-cmd):exec.output
+test%all-tests.tree
 
 hcp-split == hcp-split.cc+(%opts):auto.cxx.exe
 hcp-parse-file == hcp-parse-file.cc+(%opts):auto.cxx.exe

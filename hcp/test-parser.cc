@@ -606,6 +606,17 @@ void test17()
     xju::assert_equal(reconstruct(root), "fred[jock]");
     xju::assert_equal((++at).atEnd(), true);
   }
+  {
+    hcp_parser::Options const options(false, true);
+    std::string const x("{a}(b);}");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    at = hcp_parser::balanced(hcp_parser::parseOneOfChars("}"))->parse(
+      root, at, options);
+    xju::assert_equal(reconstruct(root), "{a}(b);");
+    xju::assert_equal((++at).atEnd(), true);
+  }
   try
   {
     hcp_parser::Options const options(false, true);

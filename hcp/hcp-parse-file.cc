@@ -105,6 +105,7 @@ int main(int argc, char* argv[])
     parsers.insert(std::make_pair("function decl", hcp_parser::function_decl));
     parsers.insert(std::make_pair("template function def", hcp_parser::template_function_def));
     parsers.insert(std::make_pair("function def", hcp_parser::function_def));
+    parsers.insert(std::make_pair("attr decl", hcp_parser::attr_decl));
     parsers.insert(std::make_pair("class decl", hcp_parser::class_decl));
     parsers.insert(std::make_pair("class def", hcp_parser::class_def));
     parsers.insert(std::make_pair("anonymous namespace", hcp_parser::anonymous_namespace));
@@ -147,6 +148,7 @@ int main(int argc, char* argv[])
     hcp_parser::I at(x.begin(), x.end());
     for(size_t i=0; i != options.offset_; ++i, ++at);
     hcp_parser::PV const y((*i).second->parse_(at, options.parser_options_));
+    std::cout << "end at " << y.second << std::endl;
   }
   catch(xju::Exception& e) {
     std::ostringstream s;

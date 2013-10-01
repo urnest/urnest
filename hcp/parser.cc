@@ -393,10 +393,12 @@ public:
         break;
       case '{':
         end=ParseBalanced(parseOneOfChars("}"), angles_).parse_(xju::next(end),o).second;
+        ++end;
         break;
       case '<':
         if (angles_) {
           end=ParseBalanced(parseOneOfChars(">"), angles_).parse_(xju::next(end),o).second;
+          ++end;
         }
         else {
           ++end;
@@ -404,9 +406,11 @@ public:
         break;
       case '[':
         end=ParseBalanced(parseOneOfChars("]"), angles_).parse_(xju::next(end),o).second;
+        ++end;
         break;
       case '(':
         end=ParseBalanced(parseOneOfChars(")"), angles_).parse_(xju::next(end),o).second;
+        ++end;
         break;
       case '/':
         try {
@@ -652,7 +656,9 @@ PR operator_name(
    parseLiteral("[]")|
    parseLiteral("!")|
    parseLiteral("%=")|
-   parseLiteral("%"))+
+   parseLiteral("%")|
+   parseLiteral("=")|
+   parseLiteral("*"))+
   eatWhite);
    
 PR name(
