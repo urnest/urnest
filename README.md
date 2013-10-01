@@ -46,7 +46,7 @@ C++ and odin build bits and pieces to share
         - simulation of derived directory trees via tar files
           (see run.dg exec.* derivations)
 
-	- tree - like sm but does not imply source files; I use it
+        - tree - like sm but does not imply source files; I use it
 	  to collect up hierarchies of unit test runs
 
         - vir_tree - like vir_dir but can create a multi-level hierarchy,
@@ -60,7 +60,7 @@ C++ and odin build bits and pieces to share
         - adjustments to standard package type hierarchy to realise
           :map=:xy optimisation noted above
 
-	- dirtree - builds a list that contains directory and (recursively)
+        - dirtree - builds a list that contains directory and (recursively)
 	  all its subdirectories. Useful for building packages
 
         - removed the subtle :o_of derivation, which seemed to be a hack
@@ -68,7 +68,7 @@ C++ and odin build bits and pieces to share
 	  the .o files into an archive, allowing unlimited numbers of
           input files (making use of ar append function)
 
-	- a java package that does dependency based java compiles
+        - a java package that does dependency based java compiles
 	  (unbelievably, there *are no dependency based compile tools for
 	  java* on the net that I can find). I shelved this package
 	  when I stopped working on java stuff, but it did allow me
