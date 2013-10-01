@@ -114,8 +114,8 @@ int main(int argc, char* argv[])
     if (cmd_line.second.size() != 1) {
       std::cout << "usage: " << argv[0] 
                 << " [-v] [-t] <input-file>" << std::endl;
-      std::cout << "-v, trace " << std::endl
-                << "-t, verbose" << std::endl
+      std::cout << "-t, trace " << std::endl
+                << "-v, verbose" << std::endl
                 << "-o <offset>, start parsing at offset (default 0)\n"
                 << "-p <type>, attempt to parse <type>, one of:\n"
                 << xju::format::join(parsers.begin(), parsers.end(),
