@@ -24,7 +24,7 @@ C++ and odin build bits and pieces to share
         - allow odin to clean up subdirectories eg JOB temporary directories
           when build is aborted via Ctrl-C
 
-	- message adjustments in odin shell script output to align with
+        - message adjustments in odin shell script output to align with
 	  naming used in the Odin reference manual
 
     -   odin/odin-1.17.10x/xjupkg has my odin packages.
