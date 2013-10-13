@@ -70,9 +70,10 @@ do
   #use first matching suffix so eg suffix list _win.cxx .cxx
   #turns x_win.cxx into x
   #
-  if [ -z "$impl_base" ] && expr $file_base : ".*$suffix" >/dev/null
+  if [ -z "$impl_base" ] && 
+     [ $(basename "$file_base" "$suffix") != $(basename "$file_base") ]
   then
-    impl_base=$(expr $file_base : "\(.*\)$suffix")
+    impl_base=$(basename "$file_base" "$suffix")
   fi
 done &&
 
