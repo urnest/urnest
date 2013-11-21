@@ -17,7 +17,8 @@ static const char rcsid[] = "$RCSfile: twt_cxx.el,v $ $Revision: 1.2 $";
 
 void test1()
 {
-  hcp_parser::Options const options(false, true);
+  hcp_parser::Cache cache(new hcp_parser::CacheVal());
+  hcp_parser::Options const options(false, true, cache);
   std::string const x("ab");
   hcp_parser::PV const y(hcp_parser::parseAnyChar->parse_(
     hcp_parser::I(x.begin(), x.end()),
@@ -65,7 +66,8 @@ void test1()
 
 void test2()
 {
-  hcp_parser::Options const options(false, true);
+  hcp_parser::Cache cache(new hcp_parser::CacheVal());
+  hcp_parser::Options const options(false, true, cache);
   std::string const x("ab");
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
@@ -76,7 +78,9 @@ void test2()
 
 void test3()
 {
-  hcp_parser::Options const options(false, true);
+  hcp_parser::Cache cache(new hcp_parser::CacheVal());
+
+  hcp_parser::Options const options(false, true, cache);
   
   std::string const x("ab");
   hcp_ast::CompositeItem root;
@@ -103,7 +107,8 @@ void test3()
 
 void test4()
 {
-  hcp_parser::Options const options(false, true);
+  hcp_parser::Cache cache(new hcp_parser::CacheVal());
+  hcp_parser::Options const options(false, true, cache);
   std::string const x("abcd");
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
@@ -124,8 +129,9 @@ void test4()
 void test5()
 {
   {
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
     
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("abcad");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -149,7 +155,8 @@ void test5()
   
   {
     
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("abcad");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -166,7 +173,8 @@ void test5()
   }
   
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("abcad");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -182,7 +190,8 @@ void test5()
 
 void test6()
 {
-  hcp_parser::Options const options(false, true);
+  hcp_parser::Cache cache(new hcp_parser::CacheVal());
+  hcp_parser::Options const options(false, true, cache);
   std::string const x("abcd");
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
@@ -193,7 +202,8 @@ void test6()
 
 void test7()
 {
-  hcp_parser::Options const options(false, true);
+  hcp_parser::Cache cache(new hcp_parser::CacheVal());
+  hcp_parser::Options const options(false, true, cache);
   std::string const x("abcd");
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
@@ -208,7 +218,8 @@ void test7()
 
 void test8()
 {
-  hcp_parser::Options const options(false, true);
+  hcp_parser::Cache cache(new hcp_parser::CacheVal());
+  hcp_parser::Options const options(false, true, cache);
   std::string const x("abcdefg");
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
@@ -220,7 +231,8 @@ void test8()
 
 void test9()
 {
-  hcp_parser::Options const options(false, true);
+  hcp_parser::Cache cache(new hcp_parser::CacheVal());
+  hcp_parser::Options const options(false, true, cache);
   std::string const x("abcdefg");
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
@@ -236,7 +248,8 @@ void test9()
 
 void test10()
 {
-  hcp_parser::Options const options(false, true);
+  hcp_parser::Cache cache(new hcp_parser::CacheVal());
+  hcp_parser::Options const options(false, true, cache);
   std::string const x("abcd");
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
@@ -255,7 +268,8 @@ void test10()
 void test11()
 {
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("\"abcd\"");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -265,7 +279,8 @@ void test11()
     xju::assert_equal(at.atEnd(), true);
   }
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("\"\"");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -276,7 +291,8 @@ void test11()
   }
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("\"\\\"\"");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -290,7 +306,8 @@ void test11()
   }
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("\"\\\"de\"");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -304,7 +321,8 @@ void test11()
   }
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("\"ab\\\"de\"");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -318,7 +336,8 @@ void test11()
   }
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("\"ab\\\"d\ne\"");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -332,7 +351,8 @@ void test11()
   }
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("\"ab\\\"d\ne\"   ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -346,7 +366,8 @@ void test11()
   }
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("\"abcde\"  \n \"fred\"  ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -360,7 +381,8 @@ void test11()
   }
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("\"abcde\"  \n \"fred\"\n\"jock\"  ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -374,7 +396,8 @@ void test11()
   }
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("\"abcde\" \"fred\"");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -387,7 +410,8 @@ void test11()
   }
   try
   {
-    hcp_parser::Options const options(false, false);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, false, cache);
     std::string const x("\"abcde");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -403,7 +427,8 @@ void test11()
 void test12()
 {
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("abcd");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -415,7 +440,8 @@ void test12()
   }
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("abcd");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -433,7 +459,8 @@ void test12()
 void test13()
 {
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("// comment \n   ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -445,7 +472,8 @@ void test13()
   }
   try
   {
-    hcp_parser::Options const options(false, false);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, false, cache);
     std::string const x("/ / comment \n   ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -462,7 +490,8 @@ void test13()
 void test14()
 {
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("#if\n  ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -474,7 +503,8 @@ void test14()
   }
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x(" #if");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -492,7 +522,8 @@ void test14()
 void test15()
 {
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("#include <string>\n  ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -503,7 +534,8 @@ void test15()
     xju::assert_equal(at.atEnd(), true);
   }
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("#  include <string>\n  ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -515,7 +547,8 @@ void test15()
   }
   try
   {
-    hcp_parser::Options const options(false, false);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, false, cache);
     std::string const x("#if");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -533,7 +566,8 @@ void test15()
 void test16()
 {
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("#include <string> // impl \n  ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -544,7 +578,8 @@ void test16()
     xju::assert_equal(at.atEnd(), true);
   }
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("#  include <string>//impl\n  ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -556,7 +591,8 @@ void test16()
   }
   try
   {
-    hcp_parser::Options const options(false, false);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, false, cache);
     std::string const x("#include <string> //implementation defines\n");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -574,7 +610,8 @@ void test16()
 void test17()
 {
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("(");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -585,7 +622,8 @@ void test17()
     xju::assert_equal((++at).atEnd(), true);
   }
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("fred(");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -596,7 +634,8 @@ void test17()
     xju::assert_equal((++at).atEnd(), true);
   }
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("fred[jock](");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -607,7 +646,8 @@ void test17()
     xju::assert_equal((++at).atEnd(), true);
   }
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("{a}(b);}");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -619,7 +659,8 @@ void test17()
   }
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("fred[\"jock(\"](");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -634,7 +675,8 @@ void test17()
   }
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("template<fred, jock> fred[\"jock(\"](");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -650,7 +692,8 @@ void test17()
   }
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("template<fred, jock> fred[// john(fred)\n\"jock(\"](");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -665,7 +708,8 @@ void test17()
   }
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("[]");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -683,7 +727,8 @@ void test17()
 void test18()
 {
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("typedef std::vector<int> Ints;");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -693,7 +738,8 @@ void test18()
     xju::assert_equal(at.atEnd(), true);
   }
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("typedef\nstd::vector<int>\nInts;");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -704,7 +750,8 @@ void test18()
   }
   try
   {
-    hcp_parser::Options const options(false, false);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, false, cache);
     std::string const x("typedefine std::vector<int>\nInts;");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -721,7 +768,8 @@ void test18()
 void test19()
 {
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("using namespace std;");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -731,7 +779,8 @@ void test19()
     xju::assert_equal(at.atEnd(), true);
   }
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x("using\nnamespace\nstd;");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -742,7 +791,8 @@ void test19()
   }
   try
   {
-    hcp_parser::Options const options(false, false);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, false, cache);
     std::string const x("usingme as something;");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -759,7 +809,8 @@ void test19()
 void test20()
 {
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x(
       "enum Lateness {\n"
       "  LITTLE,\n"
@@ -774,7 +825,8 @@ void test20()
   }
   try
   {
-    hcp_parser::Options const options(false, false);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, false, cache);
     std::string const x("enumy { FRED, JOCK };");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -792,7 +844,8 @@ void test20()
 void test21()
 {
   try {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x(
       "template<class T>\n"
       "void fred() const throw();\n");
@@ -807,7 +860,8 @@ void test21()
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x(
       "std::ostream& operator<<(std::ostream& s, const TaskId& x) throw();");
     hcp_ast::CompositeItem root;
@@ -822,7 +876,8 @@ void test21()
   }
   try
   {
-    hcp_parser::Options const options(false, false);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, false, cache);
     std::string const x(
       "template<class T>\n"
       "void fred() const throw() { fred(); }");
@@ -842,7 +897,8 @@ void test21()
 void test22()
 {
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x(
       "void fred() const throw()\n"
       "{\n"
@@ -857,7 +913,8 @@ void test22()
     xju::assert_equal(at.atEnd(), true);
   }
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x(
       "virtual void fred() throw() try:\n"
       "  x_(3)\n"
@@ -878,7 +935,8 @@ void test22()
                        begin())->isA<hcp_ast::FunctionQualifiers>(), true);
   }
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x(
       "void fred() throw() try\n"
       "{\n"
@@ -897,7 +955,8 @@ void test22()
   }
   try
   {
-    hcp_parser::Options const options(false, false);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, false, cache);
     std::string const x(
       "void fred() const throw();");
     hcp_ast::CompositeItem root;
@@ -914,7 +973,8 @@ void test22()
     
   try
   {
-    hcp_parser::Options const options(false, false);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, false, cache);
     std::string const x(
       "template<class T>\n"
       "void fred() const throw();");
@@ -934,7 +994,8 @@ void test22()
 void test23()
 {
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x(
       "template<class T>\n"
       "void fred() const throw()\n"
@@ -950,7 +1011,8 @@ void test23()
     xju::assert_equal(at.atEnd(), true);
   }
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x(
       "template<class T>\n"
       "void fred() throw() try:\n"
@@ -971,7 +1033,8 @@ void test23()
   }
   try
   {
-    hcp_parser::Options const options(false, false);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, false, cache);
     std::string const x(
       "void fred() const throw()\n"
       "{\n"
@@ -995,7 +1058,8 @@ void test24(std::vector<std::string> const& f)
 {
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x(xju::readFile(f[0]));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -1011,7 +1075,8 @@ void test24(std::vector<std::string> const& f)
   }
   try
   {
-    hcp_parser::Options const options(false, false);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, false, cache);
     std::string const x(
       "void fred() const throw()\n"
       "{\n"
@@ -1029,7 +1094,8 @@ void test24(std::vector<std::string> const& f)
   }
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x(xju::readFile(f[1]));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -1049,7 +1115,8 @@ void test25(std::vector<std::string> const& f)
 {
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x(xju::readFile(f[2]));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -1063,7 +1130,8 @@ void test25(std::vector<std::string> const& f)
   }
   try
   {
-    hcp_parser::Options const options(false, false);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, false, cache);
     std::string const x(
       "void fred() const throw()\n"
       "{\n"
@@ -1081,7 +1149,8 @@ void test25(std::vector<std::string> const& f)
   }
   try
   {
-    hcp_parser::Options const options(false, false);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, false, cache);
     std::string const x(xju::readFile(f[3]));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -1100,7 +1169,8 @@ void test26(std::vector<std::string> const& f)
 {
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x(xju::readFile(f[3]));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -1114,7 +1184,8 @@ void test26(std::vector<std::string> const& f)
   }
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x(xju::readFile(f[4]));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -1128,7 +1199,8 @@ void test26(std::vector<std::string> const& f)
   }
   try
   {
-    hcp_parser::Options const options(false, false);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, false, cache);
     std::string const x(
       "void fred() const throw()\n"
       "{\n"
@@ -1152,7 +1224,8 @@ void test27(std::vector<std::string> const& f)
 {
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x(xju::readFile(f[3]));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -1166,7 +1239,8 @@ void test27(std::vector<std::string> const& f)
   }
   try
   {
-    hcp_parser::Options const options(false, false);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, false, cache);
     std::string const x(xju::readFile(f[3])+"xxx");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -1184,7 +1258,8 @@ void test28(std::vector<std::string> const& f)
 {
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x(xju::readFile(f[4]));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -1198,7 +1273,8 @@ void test28(std::vector<std::string> const& f)
   }
   try
   {
-    hcp_parser::Options const options(false, true);
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, true, cache);
     std::string const x(xju::readFile(f[5]));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());

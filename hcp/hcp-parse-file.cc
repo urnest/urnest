@@ -86,7 +86,8 @@ std::pair<Options, std::vector<std::string> > parseCommandLine(
     Options(
       offset,
       target,
-      hcp_parser::Options(trace, includeAllExceptionContext)), 
+      hcp_parser::Options(trace, includeAllExceptionContext,
+                          hcp_parser::Cache(new hcp_parser::CacheVal()))), 
     std::vector<std::string>(i, x.end()));
 }
 

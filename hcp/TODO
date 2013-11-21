@@ -1,6 +1,10 @@
 x test-JoiningIterator
 
 - on parse failure, output the branch that got furthest
+  - note that only exceptions are xju::Exception thrown explicitly in
+    parser.cc/hh
+  - replace with Malfomed exception that has at and can carry
+    other fail branches
 
 - speed parsing by caching results <at,parser> => PV or exception
   stats:
@@ -17,3 +21,24 @@ xju@xjutv:/data/xju/u1/urnest/hcp$ ./hcp-parse-file -t test/xju/JoiningIterator.
 xju@xjutv:/data/xju/u1/urnest/hcp$ ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | fgrep '[ parse comments at line 139 column 22' | wc -l
 40
 
+... after adding cache...
+
+xju@xjutv:/data/xju/u1/urnest/hcp$ time ./hcp-parse-file test/xju/JoiningIterator.hcp 
+end at line 146 column 1
+
+real    0m0.926s
+user    0m0.908s
+sys     0m0.008s
+xju@xjutv:/data/xju/u1/urnest/hcp$ ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l
+2055
+xju@xjutv:/data/xju/u1/urnest/hcp$ ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | fgrep '[ parse comments at line 139 column 22' | wc -l
+1
+
+- still very slow, need to profile or at least look through the output
+  to see why
+    - need an overall parsePreprocessorDirective that has has sub-parsers
+      for the different types
+    - parse namespace and anon-namespace before function, object as
+      namespace starts with keyword
+    - group keywords together? That would make it harder to read the
+      code

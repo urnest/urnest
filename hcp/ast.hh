@@ -49,7 +49,7 @@ inline std::string reconstruct(Item const& x) throw() {
   return std::string(x.begin().x_, x.end().x_);
 }
 
-typedef xju::Shared<Item> IR;
+typedef xju::Shared<Item const> IR;
 typedef std::vector<IR> IRs;
 
 template<class T>

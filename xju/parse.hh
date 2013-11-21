@@ -153,6 +153,20 @@ namespace xju
             {
                 return !(x==y);
             }
+            friend bool operator<(IteratorAdaptor const& x,
+                                  IteratorAdaptor const& y) throw()
+            {
+                if (x.x_<y.x_) return true;
+                if (y.x_<x.x_) return false;
+                if (x.end_<y.end_) return true;
+                if (y.end_<x.end_) return false;
+                return false;
+            }
+            friend bool operator>(IteratorAdaptor const& x,
+                                  IteratorAdaptor const& y) throw()
+            {
+                return y<x;
+            }
         };
 
         template<class iterator>

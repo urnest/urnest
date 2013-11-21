@@ -23,6 +23,8 @@
 #include <set>
 #include <algorithm>
 #include <hcp/trace.hh>
+#include "xju/Optional.hh"
+#include <map>
 
 namespace hcp_parser
 {
@@ -31,16 +33,55 @@ typedef hcp_ast::IR IR;
 typedef std::vector<IR> IRs;
 typedef std::pair<IRs, I> PV;
 
+class CachedResult
+{
+public:
+    explicit CachedResult(xju::Exception const& e) throw():
+        e_(e)
+    {
+    }
+    explicit CachedResult(PV v) throw():
+        v_(v)
+    {
+    }
+    PV operator*() const throw(
+        xju::Exception)
+    {
+        if (e_.valid()) {
+            throw e_.value();
+        }
+        return v_.value();
+    }
+private:
+    xju::Optional<xju::Exception> e_;
+    xju::Optional<PV> v_;
+};
+
+class Parser;
+typedef std::pair<I, Parser*const> CacheKey;
+typedef std::map<CacheKey, CachedResult> CacheVal;
+    
+typedef xju::Shared<CacheVal> Cache;
+    
 class Options
 {
 public:
   explicit Options(bool trace,
-                   bool includeAllExceptionContext) throw():
+                   bool includeAllExceptionContext,
+                   Cache cache) throw():
     trace_(trace),
-    includeAllExceptionContext_(includeAllExceptionContext) {
+    includeAllExceptionContext_(includeAllExceptionContext),
+    cache_(cache) {
   }
+  Options(Options const& y) throw():
+      trace_(y.trace_),
+      includeAllExceptionContext_(y.includeAllExceptionContext_),
+      cache_(y.cache_) {
+  }
+    
   bool trace_;
   bool includeAllExceptionContext_;
+  mutable xju::Shared<std::map<std::pair<I, Parser*const>, CachedResult> > cache_;
 };
 
 class Parser
@@ -63,13 +104,21 @@ public:
     // post: items unmodified
     xju::Exception) 
   {
+    CacheKey const k(at, this);
     try {
-      return parse_(at, options);
+      CacheVal::const_iterator i((*options.cache_).find(k));
+      if (i != (*options.cache_).end()) {
+          return *(*i).second;
+      }
+      PV const result(parse_(at, options));
+      (*options.cache_).insert(std::make_pair(k, CachedResult(result)));
+      return result;
     }
     catch(xju::Exception& e) {
       std::ostringstream s;
       s << "parse " << target() << " at " << at;
       e.addContext(s.str(), XJU_TRACED);
+      (*options.cache_).insert(std::make_pair(k, CachedResult(e)));
       throw;
     }
   }
