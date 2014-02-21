@@ -6,7 +6,15 @@ x test-JoiningIterator
   - replace with Malfomed exception that has at and can carry
     other fail branches
 
-- speed parsing by caching results <at,parser> => PV or exception
+- also to get better errors need to make use of keywords, eg
+  if have "class" but what follows is not a class, want that error
+  message, not the error message that tries to parse eg function at
+  that point. ie fail parseFunction because function cannot start with
+  keyword class (or template, namespace, enum etc)
+  - try using above "longest branch" combines with prepending
+    ! parseKeyword() to parseFunction
+
+x speed parsing by caching results <at,parser> => PV or exception
   stats:
 xju@xjutv:/data/xju/u1/urnest/hcp$ time ./hcp-parse-file test/xju/JoiningIterator.hcp 
 end at line 146 column 1
@@ -36,9 +44,21 @@ xju@xjutv:/data/xju/u1/urnest/hcp$ ./hcp-parse-file -t test/xju/JoiningIterator.
 
 - still very slow, need to profile or at least look through the output
   to see why
-    - need an overall parsePreprocessorDirective that has has sub-parsers
+    - need an overall parsePreprocessorDirective that has sub-parsers
       for the different types
     - parse namespace and anon-namespace before function, object as
       namespace starts with keyword
     - group keywords together? That would make it harder to read the
       code
+    - create parsers for such keywords as namespace, template, class
+      so can cache results
+
+    - probably slow through use of C++ exceptions, could switch to using
+      return types, noting that at the moment we only have a single
+      exception type (xju::Exception)... note to support tools eg
+      context-at-point we probably need something more sophisticated
+      than xju::Exception but worry about that later (actually above
+      proposes to replace with Malformed)
+      - think just need to redefine Praser methods to throw() and
+        return the CachedResult type? Could rename it to ParseResult?
+      - perhaps fork a version to test performance difference
