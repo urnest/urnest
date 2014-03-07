@@ -164,6 +164,10 @@ PR operator+(PR a, PR b) throw();
 // result parses an a or a b
 PR operator|(PR a, PR b) throw();
 
+// result throws if x succeeds; otherwise does
+// not consume anything
+PR operator!(PR x) throw();
+
 class AtLeastOne{};
 
 PR operator*(AtLeastOne a, PR b) throw();

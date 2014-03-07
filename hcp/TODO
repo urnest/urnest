@@ -44,21 +44,29 @@ xju@xjutv:/data/xju/u1/urnest/hcp$ ./hcp-parse-file -t test/xju/JoiningIterator.
 
 - still very slow, need to profile or at least look through the output
   to see why
-    - need an overall parsePreprocessorDirective that has sub-parsers
-      for the different types
-    - parse namespace and anon-namespace before function, object as
+    x parse namespace and anon-namespace before function, object as
       namespace starts with keyword
-    - group keywords together? That would make it harder to read the
+         ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l
+         end at line 146 column 1
+
+         real	0m0.891s
+         user	0m0.864s
+         sys	0m0.016s
+         2001
+
+    ~ group keywords together? That would make it harder to read the
       code
     - create parsers for such keywords as namespace, template, class
       so can cache results
-
+      - bundle them up into parseKeyword, and add a operator!()
+        then make parseFunction start with !parseKeyword
+       
     - probably slow through use of C++ exceptions, could switch to using
       return types, noting that at the moment we only have a single
       exception type (xju::Exception)... note to support tools eg
       context-at-point we probably need something more sophisticated
       than xju::Exception but worry about that later (actually above
       proposes to replace with Malformed)
-      - think just need to redefine Praser methods to throw() and
+      - think just need to redefine Parser methods to throw() and
         return the CachedResult type? Could rename it to ParseResult?
       - perhaps fork a version to test performance difference

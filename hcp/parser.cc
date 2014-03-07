@@ -124,6 +124,40 @@ public:
   
 };
 
+class ParseNot : public Parser
+{
+public:
+  explicit ParseNot(PR term) throw():
+    term_(term)
+  {
+  }
+  PR term_;
+  
+  virtual ~ParseNot() throw() {
+  }
+
+  // Parser::
+  virtual PV parse_(I const at, Options const& options) throw(
+    // no match, including end-of-file
+    xju::Exception) 
+  {
+    I end(at);
+    try {
+      end=term_->parse(at, options).second;
+    }
+    catch(xju::Exception& e) {
+      return PV(IRs(), at);
+    }
+    std::ostringstream s;
+    s << "parsed " << term_->target() << " at " << at << ".." << end;
+    throw xju::Exception(s, XJU_TRACED);
+  }
+
+  // Parser::
+  virtual std::string target() const throw();
+  
+};
+
 std::string ParseZeroOrMore::target() const throw() 
 {
   // bracket lhs/rhs if ambiguous (and/or/times)
@@ -168,6 +202,10 @@ std::string ParseOr::target() const throw() {
     x.push_back(s.str());
   }
   return xju::format::join(x.begin(), x.end(), " or ");
+}
+
+std::string ParseNot::target() const throw() {
+  return "!"+term_->target();
 }
 
 class ParseAnyChar : public Parser
@@ -511,6 +549,11 @@ PR operator|(PR a, PR b) throw()
   return result;
 }
 
+PR operator!(PR x) throw()
+{
+  return xju::Shared<ParseNot>(new ParseNot(x));
+}
+
 PR operator*(AtLeastOne a, PR b) throw()
 {
   std::ostringstream s;
@@ -568,34 +611,43 @@ PR stringLiteral(new NamedParser<hcp_ast::StringLiteral>(
   zeroOrMore*stringLiteralContinuation+
   eatWhite));
 
-PR hashInclude(new NamedParser<hcp_ast::HashInclude>(
-  "#include",
-  parseHash+
-  (zeroOrMore*parseOneOfChars(" \t"))+
-  parseLiteral("include")+
-  parseUntil(parseOneOfChars("\n"))+
-  eatWhite));
-  
-PR hash(new NamedParser<hcp_ast::OtherPreprocessor>(
-  "other preprocessor directive",
-  parseHash+
-  parseUntil(parseOneOfChars("\n"))+
-  eatWhite));
-
-PR implMarker(
+//
+// to be able to split a combined .h and .cpp (ie a .hcp) file into
+// .h and .cpp parts, we need to choose whether each #include goes
+// into the .h or the .cpp; we use a simple convention of 
+// adding //impl to the #include line, eg
+//   #include <x.h> //impl
+// ... which indicates #include <x.h> should go in the .cpp not the .h
+//
+PR hashIncludeImplMarker(
   parseLiteral("//")+
   (zeroOrMore*parseOneOfChars(" \t"))+
   parseLiteral("impl")+
   (zeroOrMore*parseOneOfChars(" \t"))+
   parseLiteral("\n"));
 
+PR hashIncludeCommon(
+    parseHash+
+    (zeroOrMore*parseOneOfChars(" \t"))+
+    parseLiteral("include")+
+    parseUntil(parseLiteral("\n")|hashIncludeImplMarker));
+
+PR hashInclude(new NamedParser<hcp_ast::HashInclude>(
+  "#include",
+  hashIncludeCommon+
+  parseOneOfChars("\n")+
+  eatWhite));
+  
 PR hashIncludeImpl(new NamedParser<hcp_ast::HashIncludeImpl>(
   "#include with //impl marker",
+  hashIncludeCommon+
+  hashIncludeImplMarker+
+  eatWhite));
+
+PR hash(new NamedParser<hcp_ast::OtherPreprocessor>(
+  "other preprocessor directive",
   parseHash+
-  (zeroOrMore*parseOneOfChars(" \t"))+
-  parseLiteral("include")+
-  parseUntil(parseLiteral("\n")|implMarker)+
-  implMarker+
+  parseUntil(parseOneOfChars("\n"))+
   eatWhite));
 
 PR whitespace(new NamedParser<hcp_ast::Whitespace>(
@@ -934,9 +986,9 @@ PR endOfFile(new ParseEndOfFile);
 PR file(new NamedParser<hcp_ast::File>(
   "file",
   eatWhite+
-  zeroOrMore*(namespace_leaf|
-              anonymous_namespace|
-              namespace_def)+
+  zeroOrMore*(anonymous_namespace|
+              namespace_def|
+              namespace_leaf)+
   endOfFile));
 
 /*
