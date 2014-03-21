@@ -12,7 +12,7 @@
    %rbs-exe > $ODINPKG/rbs.exe
 
 %lint! == <<
-   %odin.c.sm +debug +ignore=\\.hh\$ +stub=(extra.c) :lint >
+   %odin.cxx.sm +debug +ignore=\\.hh\$ +stub=(extra.c) :lint >
 
 %etags! == !<<
 #!/bin/csh
@@ -22,7 +22,7 @@
 
 %src-files == %exe :depend :ls +cmd=egrep -v "ODIN|os9|boot|dg\/if|h\$" :stdout
 
-%exe == %odin.c.sm +ignore=\\.hh\$ +(%extra-lib) :exe
+%exe == %odin.cxx.sm +ignore=\\.hh\$ +lib=(%odin.c.sm:a)+(%extra-lib) :exe
 
 %rbs-exe == %rbs.c.sm +ignore=\\.hh\$ +(%extra-lib) :exe
 
@@ -32,6 +32,9 @@
    if [ $ODINBOOT_CONFIG ] ; then echo $ODINBOOT_SOCKET_LIBS_PRM;
       elif [ -f /usr/lib/libsocket.* ] ; then echo '+lib=socket +lib=nsl';
       else true; fi
+
+%odin.cxx.sm == <<
+main.cc
 
 %odin.c.sm == <<
    if-bcast.c; if-candrv.c; if-build.c; if-client.c; if-cmd.c;

@@ -70,7 +70,7 @@ Get_Commands(
 
 
 int
-main(
+c_main(
    GMC_ARG(int, argc),
    GMC_ARG(char**, argv)
    )

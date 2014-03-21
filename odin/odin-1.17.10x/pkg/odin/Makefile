@@ -1,4 +1,4 @@
-FILES = if-bcast.o if-build.o if-candrv.o if-client.o if-cmd.o \
+FILES = main.o if-bcast.o if-build.o if-candrv.o if-client.o if-cmd.o \
   if-depend.o if-drvgrf.o if-dir.o if-drvpth.o if-drvspc.o \
   if-edg.o if-env.o if-err.o if-exec.o if-execint.o if-execspc.o \
   if-fhacc.o if-fhnam.o if-fhnew.o if-fhsrc.o if-fhstat.o \
@@ -19,7 +19,7 @@ nested:
 	(cd editline; make CC=$(CC) CFLAGS='$(CFLAGS)')
 
 odin.exe: $(FILES)
-	- $(CC) $(CFLAGS) $(LDFLAGS) -o odin.exe $(FILES) \
+	- $(CXX) $(CXXFLAGS) $(LDFLAGS) -o odin.exe $(FILES) \
          `if [ $$ODINBOOT_CONFIG ] ; then echo $$ODINBOOT_SOCKET_LIBS; \
 	  elif [ -f /usr/lib/libsocket.* ] ; then echo '-lsocket -lnsl'; \
 	  else true; fi`

@@ -70,3 +70,4 @@ odin-test/target with spaces
 odin-test/x
 TAGS
 btt/fltk1.3-view/BttLayout.cc
+*.o
