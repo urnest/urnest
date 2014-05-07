@@ -20,20 +20,20 @@ void test1()
   hcp_parser::Cache cache(new hcp_parser::CacheVal());
   hcp_parser::Options const options(false, true, cache);
   std::string const x("ab");
-  hcp_parser::PV const y(hcp_parser::parseAnyChar->parse_(
+  hcp_parser::PV const y(*hcp_parser::parseAnyChar->parse_(
     hcp_parser::I(x.begin(), x.end()),
     options));
   xju::assert_equal(reconstruct(y.first), "a");
   xju::assert_equal(y.second.x_, x.begin()+1);
 
-  hcp_parser::PV const y2(hcp_parser::parseAnyChar->parse_(
+  hcp_parser::PV const y2(*hcp_parser::parseAnyChar->parse_(
     y.second,
     options));
   xju::assert_equal(reconstruct(y2.first), "b");
   xju::assert_equal(y2.second.x_, x.begin()+2);
   
   try {
-    hcp_parser::PV const y3(hcp_parser::parseAnyChar->parse_(
+    hcp_parser::PV const y3(*hcp_parser::parseAnyChar->parse_(
       y2.second,
       options));
     xju::assert_not_equal(y3, y3);
@@ -927,7 +927,7 @@ void test22()
       "}");
     hcp_parser::I at(x.begin(), x.end());
     
-    hcp_parser::PV const y = hcp_parser::function_def->parse(at, options);
+    hcp_parser::PV const y = *hcp_parser::function_def->parse(at, options);
     xju::assert_equal(reconstruct(y.first), x);
     xju::assert_equal(y.second.atEnd(), true);
     xju::assert_equal(y.first.front()->isA<hcp_ast::FunctionDef>(), true);

@@ -148,7 +148,7 @@ int main(int argc, char* argv[])
     
     hcp_parser::I at(x.begin(), x.end());
     for(size_t i=0; i != options.offset_; ++i, ++at);
-    hcp_parser::PV const y((*i).second->parse_(at, options.parser_options_));
+    hcp_parser::PV const y(*(*i).second->parse_(at, options.parser_options_));
     std::cout << "end at " << y.second << std::endl;
   }
   catch(xju::Exception& e) {

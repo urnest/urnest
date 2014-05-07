@@ -33,14 +33,14 @@ typedef hcp_ast::IR IR;
 typedef std::vector<IR> IRs;
 typedef std::pair<IRs, I> PV;
 
-class CachedResult
+class ParseResult
 {
 public:
-    explicit CachedResult(xju::Exception const& e) throw():
+    explicit ParseResult(xju::Exception const& e) throw():
         e_(e)
     {
     }
-    explicit CachedResult(PV v) throw():
+    explicit ParseResult(PV v) throw():
         v_(v)
     {
     }
@@ -52,14 +52,13 @@ public:
         }
         return v_.value();
     }
-private:
     xju::Optional<xju::Exception> e_;
     xju::Optional<PV> v_;
 };
 
 class Parser;
 typedef std::pair<I, Parser*const> CacheKey;
-typedef std::map<CacheKey, CachedResult> CacheVal;
+typedef std::map<CacheKey, ParseResult> CacheVal;
     
 typedef xju::Shared<CacheVal> Cache;
     
@@ -81,7 +80,7 @@ public:
     
   bool trace_;
   bool includeAllExceptionContext_;
-  mutable xju::Shared<std::map<std::pair<I, Parser*const>, CachedResult> > cache_;
+  mutable xju::Shared<std::map<std::pair<I, Parser*const>, ParseResult> > cache_;
 };
 
 class Parser
@@ -91,36 +90,28 @@ public:
   }
   
   // post: 
-  virtual PV parse_(
+  virtual ParseResult parse_(
     I const at, 
-    Options const& options) throw(
-      // no match, including end-of-file
-      xju::Exception) = 0;
+    Options const& options) throw() = 0;
 
   // What the parser matches, e.g. "string literal", "typedef", "class"
   virtual std::string target() const throw() = 0;
 
-  PV parse(I const at, Options const& options) throw(
-    // post: items unmodified
-    xju::Exception) 
+  ParseResult parse(I const at, Options const& options) throw() 
   {
     CacheKey const k(at, this);
-    try {
-      CacheVal::const_iterator i((*options.cache_).find(k));
-      if (i != (*options.cache_).end()) {
-          return *(*i).second;
-      }
-      PV const result(parse_(at, options));
-      (*options.cache_).insert(std::make_pair(k, CachedResult(result)));
-      return result;
+    CacheVal::const_iterator i((*options.cache_).find(k));
+    if (i == (*options.cache_).end()) {
+        ParseResult result(parse_(at, options));
+        if (result.e_.valid()) {
+            std::ostringstream s;
+            s << "parse " << target() << " at " << at;
+            result.e_.value().addContext(s.str(), XJU_TRACED);
+        }
+        CacheVal::value_type v(k, result);
+        i=(*options.cache_).insert(v).first;
     }
-    catch(xju::Exception& e) {
-      std::ostringstream s;
-      s << "parse " << target() << " at " << at;
-      e.addContext(s.str(), XJU_TRACED);
-      (*options.cache_).insert(std::make_pair(k, CachedResult(e)));
-      throw;
-    }
+    return (*i).second;
   }
 
   I parse(hcp_ast::CompositeItem& parent, I const at, Options const& options)
@@ -128,7 +119,8 @@ public:
       // post: parent unmodified
       xju::Exception)
   {
-    PV x(parse(at, options));
+    ParseResult const r(parse(at, options));
+    PV const x(*r);
     std::copy(x.first.begin(), 
               x.first.end(), 
               std::back_inserter(parent.items_));
@@ -189,8 +181,7 @@ public:
   }
 
   // Parser::
-  virtual PV parse_(I const at, Options const& o) throw(
-    xju::Exception) 
+  virtual ParseResult parse_(I const at, Options const& o) throw() 
   {
     std::auto_ptr<hcp_trace::Scope> scope;
     if (o.trace_) {
@@ -199,19 +190,22 @@ public:
       scope = std::auto_ptr<hcp_trace::Scope>(
         new hcp_trace::Scope(s.str(), XJU_TRACED));
     }
-    try {
-      PV a(x_->parse(at, o));
+    ParseResult r(x_->parse(at, o));
+    if (r.v_.valid()) {
+      PV& a(r.v_.value());
       if (!a.first.size()) {
         // composite needs an item
         a.first.push_back(IR(new hcp_ast::String(at, at)));
       }
-      return PV(IRs(1U, new ItemType(a.first)), a.second);
+      return ParseResult(PV(IRs(1U, new ItemType(a.first)), a.second));
     }
-    catch(xju::Exception& e) {
+    else {
       if (o.includeAllExceptionContext_) {
-        throw;
+        return r;
       }
-      throw xju::Exception(e.cause().first, e.cause().second);
+      xju::Exception const& e(r.e_.value());
+      return ParseResult(
+        xju::Exception(e.cause().first, e.cause().second));
     }
   }
   // Parser::

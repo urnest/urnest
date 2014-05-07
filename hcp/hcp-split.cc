@@ -258,7 +258,7 @@ int main(int argc, char* argv[])
     hcp_parser::Options const options(false, false, cache);
     
     hcp_parser::I at(x.begin(), x.end());
-    hcp_parser::PV const y(hcp_parser::file->parse_(at, options));
+    hcp_parser::PV const y(*hcp_parser::file->parse_(at, options));
     xju::assert_equal(y.first.size(), 1U);
     
     std::ofstream fh(xju::path::str(outputHH).c_str(), 
