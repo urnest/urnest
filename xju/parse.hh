@@ -103,7 +103,7 @@ namespace xju
             typename std::iterator_traits<iterator>::reference const operator*() const
                 throw(xju::Exception);
             
-            IteratorAdaptor operator++(int) throw()
+            IteratorAdaptor operator++(int) throw(xju::Exception)
             {
                 IteratorAdaptor result(*this);
                 operator++();
