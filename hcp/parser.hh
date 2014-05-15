@@ -36,24 +36,40 @@ typedef std::pair<IRs, I> PV;
 class ParseResult
 {
 public:
-    explicit ParseResult(xju::Exception const& e) throw():
-        e_(e)
-    {
+  //post: failed()
+  explicit ParseResult(xju::Exception const& e) throw():
+      e_(e)
+  {
+  }
+  //post: !failed()
+  explicit ParseResult(PV v) throw():
+      v_(v)
+  {
+  }
+  bool failed() const throw()
+  {
+    return !v_.valid();
+  }
+
+  PV const& operator*() const throw(
+    //pre: failed()
+    xju::Exception)
+  {
+    if (failed()) {
+      throw e();
     }
-    explicit ParseResult(PV v) throw():
-        v_(v)
-    {
-    }
-    PV operator*() const throw(
-        xju::Exception)
-    {
-        if (e_.valid()) {
-            throw e_.value();
-        }
-        return v_.value();
-    }
-    xju::Optional<xju::Exception> e_;
-    xju::Optional<PV> v_;
+    return v_.value();
+  }
+  
+  //pre: failed()
+  xju::Exception const& e() const throw()
+  {
+    return e_.value();
+  }
+  
+private:
+  xju::Optional<xju::Exception> e_;
+  xju::Optional<PV> v_;
 };
 
 class Parser;
@@ -103,10 +119,12 @@ public:
     CacheVal::const_iterator i((*options.cache_).find(k));
     if (i == (*options.cache_).end()) {
         ParseResult result(parse_(at, options));
-        if (result.e_.valid()) {
+        if (result.failed()) {
             std::ostringstream s;
             s << "parse " << target() << " at " << at;
-            result.e_.value().addContext(s.str(), XJU_TRACED);
+            xju::Exception e(result.e());
+            e.addContext(s, XJU_TRACED);
+            result=ParseResult(e);
         }
         CacheVal::value_type v(k, result);
         i=(*options.cache_).insert(v).first;
@@ -191,8 +209,8 @@ public:
         new hcp_trace::Scope(s.str(), XJU_TRACED));
     }
     ParseResult r(x_->parse(at, o));
-    if (r.v_.valid()) {
-      PV& a(r.v_.value());
+    if (!r.failed()) {
+      PV a(*r);
       if (!a.first.size()) {
         // composite needs an item
         a.first.push_back(IR(new hcp_ast::String(at, at)));
@@ -203,7 +221,7 @@ public:
       if (o.includeAllExceptionContext_) {
         return r;
       }
-      xju::Exception const& e(r.e_.value());
+      xju::Exception const& e(r.e());
       return ParseResult(
         xju::Exception(e.cause().first, e.cause().second));
     }

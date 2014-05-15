@@ -44,7 +44,7 @@ public:
     PV result(IRs(), at);
     while(true) {
       ParseResult const r(x_->parse(result.second, options));
-      if (r.v_.valid()) {
+      if (!r.failed()) {
         PV const x(*r);
         std::copy(x.first.begin(), x.first.end(),
                   std::back_inserter(result.first));
@@ -70,21 +70,25 @@ public:
   // Parser::
   virtual ParseResult parse_(I const at, Options const& options) throw() 
   {
-    ParseResult result(terms_.front()->parse(at, options));
+    ParseResult first(terms_.front()->parse(at, options));
+    if (first.failed()) {
+      return first;
+    }
+    PV result(*first);
     for(std::vector<PR>::iterator i = xju::next(terms_.begin()); 
-        !result.e_.valid() && i != terms_.end();
+        i != terms_.end();
         ++i) {
-      ParseResult const br((*i)->parse(result.v_.value().second, options));
-      if (br.e_.valid()) {
-        result=ParseResult(br.e_.value());
+      ParseResult const br((*i)->parse(result.second, options));
+      if (br.failed()) {
+        return br;
       }
       else {
-        std::copy(br.v_.value().first.begin(), br.v_.value().first.end(),
-                  std::back_inserter(result.v_.value().first));
-        result.v_.value().second=br.v_.value().second;
+        std::copy((*br).first.begin(), (*br).first.end(),
+                  std::back_inserter(result.first));
+        result.second=(*br).second;
       }
     }
-    return result;
+    return ParseResult(result);
   }
 
   // Parser::
@@ -105,12 +109,12 @@ public:
     std::vector<std::string> failures;
     for(std::vector<PR>::iterator i = terms_.begin(); i != terms_.end(); ++i) {
       ParseResult r((*i)->parse(at, options));
-      if (r.v_.valid()) {
-        return r;
+      if (r.failed()) {
+        failures.push_back(readableRepr(r.e(), false, true));
       }
       else
       {
-        failures.push_back(readableRepr(r.e_.value(), false, true));
+        return r;
       }
     }
     return ParseResult(
@@ -140,12 +144,12 @@ public:
   virtual ParseResult parse_(I const at, Options const& options) throw() 
   {
     ParseResult const r(term_->parse(at, options));
-    if (r.e_.valid()) {
+    if (r.failed()) {
       return ParseResult(PV(IRs(), at));
     }
     std::ostringstream s;
     s << "parsed " << term_->target() 
-      << " at " << at << ".." << r.v_.value().second;
+      << " at " << at << ".." << (*r).second;
     return ParseResult(xju::Exception(s, XJU_TRACED));
   }
 
@@ -335,7 +339,7 @@ public:
     I end(at);
     for(; !end.atEnd(); ++end) {
       ParseResult const r(x_->parse_(end, o));
-      if (r.v_.valid()) {
+      if (!r.failed()) {
         xju::Shared<hcp_ast::String> item(new hcp_ast::String(at, end));
         return ParseResult(std::make_pair(IRs(1U, item), end));
       }
@@ -446,8 +450,7 @@ public:
     I end(at);
     while(true) {
       ParseResult const r1(until_->parse_(end, o));
-      if (r1.v_.valid()) {
-        PV const a(r1.v_.value());
+      if (!r1.failed()) {
         item->end_=end;
         return ParseResult(std::make_pair(IRs(1U, item), end));
       }
@@ -461,19 +464,19 @@ public:
       case '"':
       {
         ParseResult const r2(stringLiteral->parse_(end, o));
-        if (r2.e_.valid()) {
+        if (r2.failed()) {
           return r2;
         }
-        end=r2.v_.value().second;
+        end=(*r2).second;
       }
       break;
       case '{':
       {
         ParseResult const r2(ParseBalanced(parseOneOfChars("}"), angles_).parse_(xju::next(end),o));
-        if (r2.e_.valid()) {
+        if (r2.failed()) {
           return r2;
         }
-        end=xju::next(r2.v_.value().second);
+        end=xju::next((*r2).second);
       }
       break;
       case '<':
@@ -481,10 +484,10 @@ public:
           ParseResult const r2(
             ParseBalanced(parseOneOfChars(">"), angles_).parse_(
               xju::next(end),o));
-          if (r2.e_.valid()) {
+          if (r2.failed()) {
             return r2;
           }
-          end=xju::next(r2.v_.value().second);
+          end=xju::next((*r2).second);
         }
         else {
           ++end;
@@ -495,10 +498,10 @@ public:
         ParseResult const r2(
           ParseBalanced(parseOneOfChars("]"), angles_).parse_(
             xju::next(end),o));
-        if (r2.e_.valid()) {
+        if (r2.failed()) {
           return r2;
         }
-        end=xju::next(r2.v_.value().second);
+        end=xju::next((*r2).second);
       }
       break;
       case '(':
@@ -506,18 +509,18 @@ public:
         ParseResult const r2(
           ParseBalanced(parseOneOfChars(")"), angles_).parse_(
             xju::next(end),o));
-        if (r2.e_.valid()) {
+        if (r2.failed()) {
           return r2;
         }
-        end=xju::next(r2.v_.value().second);
+        end=xju::next((*r2).second);
       }
       break;
       case '/':
       {
         ParseResult const r2(
           comments->parse_(end,o));
-        if (r2.v_.valid()) {
-          end=r2.v_.value().second;
+        if (!r2.failed()) {
+          end=(*r2).second;
         }
         else
         {
