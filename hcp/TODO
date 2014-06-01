@@ -11,7 +11,7 @@ x test-JoiningIterator
   message, not the error message that tries to parse eg function at
   that point. ie fail parseFunction because function cannot start with
   keyword class (or template, namespace, enum etc)
-  - try using above "longest branch" combines with prepending
+  - try using "longest branch" as error, combined with prepending
     ! parseKeyword() to parseFunction
 
 x speed parsing by caching results <at,parser> => PV or exception
@@ -80,10 +80,15 @@ user    0m0.700s
 sys     0m0.004s
 1951
 
-    - perhaps also look at deferring creation of exception strings until
+    ~ perhaps also look at deferring creation of exception strings until
       actually needed... but first get profiling data, might need to
       parse many times to get decent stats
 
-    - instead, do first pass without creating any exception detail, then
-      comeback and reparse from where we went wrong in order to get
+    x saved lots of time by reworking the -v (includeAllExceptionContext)
+      handling, since it was adding and discarding lots of context
+
+    - do first pass without creating any exception detail, then
+      come back and reparse from where we went wrong in order to get
       exception detail
+
+    

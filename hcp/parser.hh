@@ -66,7 +66,12 @@ public:
   {
     return e_.value();
   }
-  
+
+  //pre: failed()
+  void addContext(std::ostringstream& s, const xju::Traced& trace) throw()
+  {
+    e_.value().addContext(s, trace);
+  }
 private:
   xju::Optional<xju::Exception> e_;
   xju::Optional<PV> v_;
@@ -119,12 +124,10 @@ public:
     CacheVal::const_iterator i((*options.cache_).find(k));
     if (i == (*options.cache_).end()) {
         ParseResult result(parse_(at, options));
-        if (result.failed()) {
+        if (result.failed() && options.includeAllExceptionContext_) {
             std::ostringstream s;
             s << "parse " << target() << " at " << at;
-            xju::Exception e(result.e());
-            e.addContext(s, XJU_TRACED);
-            result=ParseResult(e);
+            result.addContext(s, XJU_TRACED);
         }
         CacheVal::value_type v(k, result);
         i=(*options.cache_).insert(v).first;
@@ -219,11 +222,13 @@ public:
     }
     else {
       if (o.includeAllExceptionContext_) {
+        // Parser::parse will add our context
         return r;
       }
-      xju::Exception const& e(r.e());
-      return ParseResult(
-        xju::Exception(e.cause().first, e.cause().second));
+      std::ostringstream s;
+      s << "parse " << target() << " at " << at;
+      r.addContext(s, XJU_TRACED);
+      return r;
     }
   }
   // Parser::
