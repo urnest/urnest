@@ -50,14 +50,10 @@ public:
   {
     return !v_.valid();
   }
-
-  PV const& operator*() const throw(
-    //pre: failed()
-    xju::Exception)
+  
+  //pre: !failed()
+  PV const& operator*() const throw()
   {
-    if (failed()) {
-      throw e();
-    }
     return v_.value();
   }
   
@@ -141,6 +137,9 @@ public:
       xju::Exception)
   {
     ParseResult const r(parse(at, options));
+    if (r.failed()) {
+      throw r.e();
+    }
     PV const x(*r);
     std::copy(x.first.begin(), 
               x.first.end(), 

@@ -32,15 +32,12 @@ void test1()
   xju::assert_equal(reconstruct(y2.first), "b");
   xju::assert_equal(y2.second.x_, x.begin()+2);
   
-  try {
-    hcp_parser::PV const y3(*hcp_parser::parseAnyChar->parse_(
+  hcp_parser::ParseResult const r(
+    hcp_parser::parseAnyChar->parse_(
       y2.second,
       options));
-    xju::assert_not_equal(y3, y3);
-  }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to  because\nend of input at line 1 column 3.");
-  }
+  xju::assert_equal(r.failed(), true);
+  xju::assert_equal(readableRepr(r.e()), "Failed to  because\nend of input at line 1 column 3.");
 
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
@@ -482,7 +479,7 @@ void test13()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse comments at line 1 column 1 because\nfailed to parse line comment at line 1 column 1 because\nmismatch at line 1 column 2: got ' ' instead of '/', and failed to parse block comment at line 1 column 1 because\nmismatch at line 1 column 2: got ' ' instead of '*'.");
+    xju::assert_equal(readableRepr(e), "Failed to parse comments at line 1 column 1 because\nfailed to parse at least one occurrance of line comment or block comment at line 1 column 1 because\nfailed to parse line comment at line 1 column 1 because\nmismatch at line 1 column 2: got ' ' instead of '/', and failed to parse block comment at line 1 column 1 because\nmismatch at line 1 column 2: got ' ' instead of '*'.");
   }
 }
 
@@ -760,7 +757,7 @@ void test18()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse typedef statement at line 1 column 1 because\n'i' is not one of chars [\\t\\n ] at line 1 column 8.");
+    xju::assert_equal(readableRepr(e), "Failed to parse typedef statement at line 1 column 1 because\nfailed to parse some whitespace at line 1 column 8 because\nfailed to parse at least one occurrance of one of chars [\\t\\n ] at line 1 column 8 because\n'i' is not one of chars [\\t\\n ] at line 1 column 8.");
   }
 }
 
@@ -801,7 +798,7 @@ void test19()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse using statement at line 1 column 1 because\n'm' is not one of chars [\\t\\n ] at line 1 column 6.");
+    xju::assert_equal(readableRepr(e), "Failed to parse using statement at line 1 column 1 because\nfailed to parse some whitespace at line 1 column 6 because\nfailed to parse at least one occurrance of one of chars [\\t\\n ] at line 1 column 6 because\n'm' is not one of chars [\\t\\n ] at line 1 column 6.");
   }
 }
 
@@ -835,7 +832,7 @@ void test20()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse enum definition at line 1 column 1 because\n'y' is not one of chars [\\t\\n ] at line 1 column 5.");
+    xju::assert_equal(readableRepr(e), "Failed to parse enum definition at line 1 column 1 because\nfailed to parse some whitespace at line 1 column 5 because\nfailed to parse at least one occurrance of one of chars [\\t\\n ] at line 1 column 5 because\n'y' is not one of chars [\\t\\n ] at line 1 column 5.");
   }
 }
 
@@ -956,7 +953,7 @@ void test22()
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, false, cache);
+    hcp_parser::Options const options(false, true, cache);
     std::string const x(
       "void fred() const throw();");
     hcp_ast::CompositeItem root;
@@ -985,7 +982,7 @@ void test22()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse function definition at line 1 column 1 because\nmismatch at line 2 column 26: got ';' instead of '{'.");
+    xju::assert_equal(readableRepr(e), "Failed to parse function definition at line 1 column 1 because\nfailed to parse function implementation at line 2 column 26 because\nfailed to parse block at line 2 column 26 because\nmismatch at line 2 column 26: got ';' instead of '{'.");
   }
 }
 
@@ -1048,7 +1045,7 @@ void test23()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse template function definition at line 1 column 1 because\nmismatch at line 1 column 1: got 'v' instead of 't'.");
+    xju::assert_equal(readableRepr(e), "Failed to parse template function definition at line 1 column 1 because\nfailed to parse at least one occurrance of \"template\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [<] then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [>] then one of chars [>] then zero or more occurrances of (one of chars [\\t\\n ] or comments) at line 1 column 1 because\nmismatch at line 1 column 1: got 'v' instead of 't'.");
   }
 }
 
@@ -1086,11 +1083,12 @@ void test24(std::vector<std::string> const& f)
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
+
     at = hcp_parser::class_def->parse(root, at, options);
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse class definition at line 1 column 1 because\nfailed to parse template class definition at line 1 column 1 because\nmismatch at line 1 column 1: got 'v' instead of 't', and failed to parse class definition at line 1 column 1 because\nfailed to parse \"class\" at line 1 column 1 because\nmismatch at line 1 column 1: got 'v' instead of 'c', and failed to parse \"struct\" at line 1 column 1 because\nmismatch at line 1 column 1: got 'v' instead of 's', and failed to parse \"union\" at line 1 column 1 because\nmismatch at line 1 column 1: got 'v' instead of 'u'.");
+    xju::assert_equal(readableRepr(e), "Failed to  because\nfailed to parse template class definition at line 1 column 1 because\nmismatch at line 1 column 1: got 'v' instead of 't', and failed to parse non-template class definition at line 1 column 1 because\nfailed to  because\nmismatch at line 1 column 1: got 'v' instead of 'c', and failed to  because\nmismatch at line 1 column 1: got 'v' instead of 's', and failed to  because\nmismatch at line 1 column 1: got 'v' instead of 'u'.");
   }
   try
   {

@@ -22,7 +22,7 @@
 #include <list>
 #include <xju/Event.hh>
 #include <xju/EventP.hh>
-
+#include <stddef.h>
 
 namespace xju
 {

@@ -15,6 +15,7 @@ static const char rcsid[] = "$RCSfile: twt_cxx.el,v $ $Revision: 1.2 $";
 
 #include <xju/next.hh>
 #include <xju/format.hh>
+#include <unistd.h>
 
 namespace xju
 {
@@ -156,7 +157,7 @@ AbsolutePath root() throw()
 AbsolutePath working_dir() throw()
 {
   char b[5000];
-  return AbsolutePath(getcwd(b, sizeof(b)));
+  return AbsolutePath(::getcwd(b, sizeof(b)));
 }
 
 std::string str(AbsolutePath const& x) throw()

@@ -932,7 +932,7 @@ public:
       template_preamble+
       x_)),
     p_(new NamedParser<hcp_ast::ClassDef>(
-      "class definition",
+      "non-template class definition",
       x_))
   {
   }
