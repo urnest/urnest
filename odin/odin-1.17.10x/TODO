@@ -454,8 +454,7 @@ x DrvEdg.h has tps_DrvEdg which has:
 
 - a confidence check:
 
-xju@xjutv:/data/xju/u1/urnest/odin/odin-1.17.10x$ ./configure  && ./CLEAN && ./INSTALL /data/xju/u1 && PATH=/data/xju/u1/bin:$PATH ../create-linux-cache.sh /data/xju/tmp/u1c && ODIN=/data/xju/tmp/u1c /data/xju/u1/bin/odin pkg/cpp%test1 ../../xju%run-standalone-tests  xjupkg%run-all-tests
-
+xju@xjutv:~/urnest/odin/odin-1.17.10x$ ./configure  && ./CLEAN && ./INSTALL ~/u1 && PATH=~/u1/bin:$PATH ../create-linux-cache.sh ~/tmp/u1c && ODIN=~/tmp/u1c ~/u1/bin/odin pkg/cpp%test1 && ODIN=~/tmp/u1c ~/u1/bin/odin ../../xju%run-standalone-tests && ODIN=~/tmp/u1c ~/u1/bin/odin xjupkg%run-all-tests
 
 - before I did:
 
