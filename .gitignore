@@ -71,3 +71,4 @@ odin-test/x
 TAGS
 btt/fltk1.3-view/BttLayout.cc
 *.o
+odin/odin-1.17.10x/pkg/odin/main.o
