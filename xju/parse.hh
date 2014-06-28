@@ -93,6 +93,20 @@ namespace xju
         class IteratorAdaptor
         {
         public:
+            class EndOfInput : public xju::Exception
+            {
+            public:
+                IteratorAdaptor at_;
+                EndOfInput(IteratorAdaptor at,
+                           std::ostringstream const& s, 
+                           xju::Traced const& t) throw():
+                    at_(at),
+                    xju::Exception(s, t)
+                {
+                }
+            };
+            
+            
             IteratorAdaptor(iterator x, iterator end) throw():
                 line_(1),
                 column_(1),
@@ -116,7 +130,7 @@ namespace xju
                     std::ostringstream s;
                     s << "end of input at line " 
                       << line_ << " column " << column_;
-                    throw xju::Exception(s, XJU_TRACED);
+                    throw EndOfInput(*this, s, XJU_TRACED);
                 }
                 ++column_;
                 if (*x_ == '\n')
@@ -178,7 +192,7 @@ namespace xju
             {
                 std::ostringstream s;
                 s << "end of input at line " << line_ << " column " << column_;
-                throw xju::Exception(s, XJU_TRACED);
+                throw EndOfInput(*this, s, XJU_TRACED);
             }
             return (*x_);
         }

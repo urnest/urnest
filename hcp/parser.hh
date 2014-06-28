@@ -25,19 +25,45 @@
 #include <hcp/trace.hh>
 #include "xju/Optional.hh"
 #include <map>
+#include <vector>
 
 namespace hcp_parser
 {
+
 typedef hcp_ast::I I;
 typedef hcp_ast::IR IR;
 typedef std::vector<IR> IRs;
 typedef std::pair<IRs, I> PV;
 
+class Parser;
+    
+class Exception
+{
+public:
+  Exception(std::string const& cause, I at, xju::Traced const& trace) throw():
+    cause_(cause),
+    at_(at),
+    trace_(trace) {
+  }
+  void addContext(Parser const& parser, I at, xju::Traced const& trace) throw()
+  {
+    context_.push_back(std::make_pair(std::make_pair(&parser, at), trace));
+  }
+  std::vector<std::pair<std::pair<Parser const*, I>, xju::Traced> > context_;
+
+  std::string const cause_;
+  I const at_;
+  xju::Traced const trace_;
+};
+std::string readableRepr(Exception const& e) throw();
+  
+  
+
 class ParseResult
 {
 public:
   //post: failed()
-  explicit ParseResult(xju::Exception const& e) throw():
+  explicit ParseResult(Exception const& e) throw():
       e_(e)
   {
   }
@@ -58,18 +84,18 @@ public:
   }
   
   //pre: failed()
-  xju::Exception const& e() const throw()
+  Exception const& e() const throw()
   {
     return e_.value();
   }
 
   //pre: failed()
-  void addContext(std::ostringstream& s, const xju::Traced& trace) throw()
+  void addContext(Parser const& p, I at, const xju::Traced& trace) throw()
   {
-    e_.value().addContext(s, trace);
+    e_.value().addContext(p, at, trace);
   }
 private:
-  xju::Optional<xju::Exception> e_;
+  xju::Optional<Exception> e_;
   xju::Optional<PV> v_;
 };
 
@@ -83,20 +109,16 @@ class Options
 {
 public:
   explicit Options(bool trace,
-                   bool includeAllExceptionContext,
                    Cache cache) throw():
     trace_(trace),
-    includeAllExceptionContext_(includeAllExceptionContext),
     cache_(cache) {
   }
   Options(Options const& y) throw():
       trace_(y.trace_),
-      includeAllExceptionContext_(y.includeAllExceptionContext_),
       cache_(y.cache_) {
   }
     
   bool trace_;
-  bool includeAllExceptionContext_;
   mutable xju::Shared<std::map<std::pair<I, Parser*const>, ParseResult> > cache_;
 };
 
@@ -119,11 +141,9 @@ public:
     CacheKey const k(at, this);
     CacheVal::const_iterator i((*options.cache_).find(k));
     if (i == (*options.cache_).end()) {
-        ParseResult result(parse_(at, options));
-        if (result.failed() && options.includeAllExceptionContext_) {
-            std::ostringstream s;
-            s << "parse " << target() << " at " << at;
-            result.addContext(s, XJU_TRACED);
+      ParseResult result(parse_(at, options));
+      if (result.failed()) {
+        result.addContext(*this, at, XJU_TRACED);
         }
         CacheVal::value_type v(k, result);
         i=(*options.cache_).insert(v).first;
@@ -134,7 +154,7 @@ public:
   I parse(hcp_ast::CompositeItem& parent, I const at, Options const& options)
     throw(
       // post: parent unmodified
-      xju::Exception)
+      Exception)
   {
     ParseResult const r(parse(at, options));
     if (r.failed()) {
@@ -219,16 +239,7 @@ public:
       }
       return ParseResult(PV(IRs(1U, new ItemType(a.first)), a.second));
     }
-    else {
-      if (o.includeAllExceptionContext_) {
-        // Parser::parse will add our context
-        return r;
-      }
-      std::ostringstream s;
-      s << "parse " << target() << " at " << at;
-      r.addContext(s, XJU_TRACED);
-      return r;
-    }
+    return r;
   }
   // Parser::
   virtual std::string target() const throw() {

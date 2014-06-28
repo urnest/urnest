@@ -17,9 +17,40 @@ static const char rcsid[] = "$RCSfile: twt_cxx.el,v $ $Revision: 1.2 $";
 #include <algorithm>
 #include <sstream>
 #include "xju/format.hh"
+#include "xju/JoiningIterator.hh"
 
 namespace hcp_parser
 {
+
+namespace
+{
+  std::string contextReadableRepr(
+    std::pair<std::pair<Parser const*, I>, xju::Traced> const& c) throw()
+  {
+    std::ostringstream s;
+    s << c.first.second << ": failed to parse " << c.first.first->target();
+    return s.str();
+  }
+}
+  
+std::string readableRepr(Exception const& e) throw()
+{
+  std::ostringstream s;
+  if (e.context_.size()==0) {
+    s << e.at_ << ": " << e.cause_;
+  }
+  else {
+    std::vector<std::string> context;
+    std::transform(e.context_.rbegin(), e.context_.rend(),
+                   xju::JoiningIterator<std::string, std::string>(
+                     s,
+                     " because\n  "),
+                   std::ptr_fun(contextReadableRepr));
+    s << " because\n  "
+      << e.at_ << ": " << e.cause_;
+  }
+  return s.str();
+}
 
 namespace
 {
@@ -106,22 +137,18 @@ public:
   // Parser::
   virtual ParseResult parse_(I const at, Options const& options) throw() 
   {
-    std::vector<std::string> failures;
+    std::multimap<I, Exception> failures;
     for(std::vector<PR>::iterator i = terms_.begin(); i != terms_.end(); ++i) {
       ParseResult r((*i)->parse(at, options));
       if (r.failed()) {
-        failures.push_back(readableRepr(r.e(), false, true));
+        failures.insert(std::make_pair(r.e().at_, r.e()));
       }
       else
       {
         return r;
       }
     }
-    return ParseResult(
-      xju::Exception(xju::format::join(
-                       failures.begin(),
-                       failures.end(),
-                       ", and "), XJU_TRACED));
+    return ParseResult((*failures.rbegin()).second);
   }
 
   // Parser::
@@ -130,6 +157,7 @@ public:
 
 class ParseNot : public Parser
 {
+  static std::string const expected_parse_failure;
 public:
   explicit ParseNot(PR term) throw():
     term_(term)
@@ -147,15 +175,15 @@ public:
     if (r.failed()) {
       return ParseResult(PV(IRs(), at));
     }
-    std::ostringstream s;
-    s << "parsed " << term_->target() 
-      << " at " << at << ".." << (*r).second;
-    return ParseResult(xju::Exception(s, XJU_TRACED));
+    return ParseResult(
+      Exception(ParseNot::expected_parse_failure, at, XJU_TRACED));
   }
 
   // Parser::
   virtual std::string target() const throw();
+
 };
+std::string const ParseNot::expected_parse_failure("expected parse failure");
 
 std::string ParseZeroOrMore::target() const throw() 
 {
@@ -207,6 +235,15 @@ std::string ParseNot::target() const throw() {
   return "!"+term_->target();
 }
 
+namespace
+{
+  std::string const end_of_input("end of input");
+  Exception EndOfInput(I at, xju::Traced const& trace) throw()
+  {
+    return Exception(end_of_input, at, trace);
+  }
+}
+
 class ParseAnyChar : public Parser
 {
 public:
@@ -214,19 +251,14 @@ public:
   virtual ParseResult parse_(I const at, Options const& o) throw() 
   {
     if (at.atEnd()) {
-      std::ostringstream s;
-      s << "end of input at line " 
-        << at.line_ << " column " << at.column_;
-      return ParseResult(xju::Exception(s, XJU_TRACED));
+      return ParseResult(EndOfInput(at, XJU_TRACED));
     }
     return ParseResult(
       std::make_pair(IRs(1U, IR(new hcp_ast::String(at, xju::next(at)))), 
                      xju::next(at)));
   }
   virtual std::string target() const throw() {
-    std::ostringstream s;
-    s << "any char";
-    return s.str();
+    return "any char";
   }
 };
 
@@ -259,15 +291,11 @@ public:
   virtual ParseResult parse_(I const at, Options const& o) throw()
   {
     if (at.atEnd()) {
-      std::ostringstream s;
-      s << "end of input at line " 
-        << at.line_ << " column " << at.column_;
-      return ParseResult(xju::Exception(s, XJU_TRACED));
+      return ParseResult(EndOfInput(at, XJU_TRACED));
     }
     if (chars_.find(*at) == chars_.end()) {
-      std::ostringstream s;
-      s << "'" << printChar(*at) << "' is not " << target() << " at " << at;
-      return ParseResult(xju::Exception(s.str(), XJU_TRACED));
+      return ParseResult(
+        Exception(ParseOneOfChars::unexpected_char, at, XJU_TRACED));
     }
     return ParseResult(
       std::make_pair(
@@ -284,10 +312,14 @@ public:
     s << "one of chars [" << xju::format::join(x.begin(), x.end(), "") << "]";
     return s.str();
   }
+
+  static std::string const unexpected_char;
 };
+std::string const ParseOneOfChars::unexpected_char("unexpected character");
 
 class ParseCharInRange : public Parser
 {
+  static std::string const not_in_range;
 public:
   char const min_;
   char const max_;
@@ -300,16 +332,11 @@ public:
   virtual ParseResult parse_(I const at, Options const& o) throw() 
   {
     if (at.atEnd()) {
-      std::ostringstream s;
-      s << "end of input at line " 
-        << at.line_ << " column " << at.column_;
-      return ParseResult(xju::Exception(s, XJU_TRACED));
+      return ParseResult(EndOfInput(at, XJU_TRACED));
     }
     if (((*at) < min_) || ((*at) > max_)) {
-      std::ostringstream s;
-      s << "'" << printChar(*at) << "' is not in range '" << printChar(min_)
-        << "'..'" << printChar(max_) << "' at " << at;
-      return ParseResult(xju::Exception(s.str(), XJU_TRACED));
+      return ParseResult(
+        Exception(ParseCharInRange::not_in_range, at, XJU_TRACED));
     }
     return ParseResult(
       std::make_pair(
@@ -323,6 +350,7 @@ public:
     return s.str();
   }
 };
+std::string const ParseCharInRange::not_in_range("character not in range");
 
 class ParseUntil : public Parser
 {
@@ -344,10 +372,7 @@ public:
         return ParseResult(std::make_pair(IRs(1U, item), end));
       }
     }
-    std::ostringstream s;
-    s << "end of input at line " 
-      << end.line_ << " column " << end.column_;
-    return ParseResult(xju::Exception(s, XJU_TRACED));
+    return ParseResult(EndOfInput(end, XJU_TRACED));
   }
   virtual std::string target() const throw() {
     std::ostringstream s;
@@ -358,6 +383,7 @@ public:
 
 class ParseLiteral : public Parser
 {
+  static std::string const mismatch;
 public:
   std::string const x_;
   
@@ -375,17 +401,15 @@ public:
       std::pair<std::string::const_iterator, I> x(
         std::mismatch(x_.begin(), x_.end(), at));
       if (x.first != x_.end()) {
-        std::ostringstream s;
-        s << "mismatch at " << x.second
-          << ": got '" << (*x.second) << "' instead of '" << (*x.first) << "'";
-        return ParseResult(xju::Exception(s.str(), XJU_TRACED));
+        return ParseResult(
+          Exception(ParseLiteral::mismatch, x.second, XJU_TRACED));
       }
       return ParseResult(
         std::make_pair(IRs(1U, IR(new hcp_ast::String(at, x.second))),
                        x.second));
     }
-    catch(xju::Exception const& e) {
-      return ParseResult(e);
+    catch(I::EndOfInput const& e) {
+      return ParseResult(EndOfInput(e.at_, XJU_TRACED));
     }
   }
   
@@ -396,29 +420,30 @@ public:
     return s.str();
   }
 };
+std::string const ParseLiteral::mismatch("mismatch");
 
 class ParseHash : public Parser
 {
 public:
+  static std::string not_at_column_1;
+  static std::string line_does_not_start_with_hash;
+  
   virtual ~ParseHash() throw() {
   }
   
   // Parser::
   virtual ParseResult parse_(I const at, Options const& o) throw()
   {
-    if (at.column_ != 1) {
-      return ParseResult(xju::Exception("not at column 1", XJU_TRACED));
-    }
     if (at.atEnd()) {
-      std::ostringstream s;
-      s << "end of input at line " 
-        << at.line_ << " column " << at.column_;
-      return ParseResult(xju::Exception(s, XJU_TRACED));
+      return ParseResult(EndOfInput(at, XJU_TRACED));
+    }
+    if (at.column_ != 1) {
+      return ParseResult(
+        Exception(ParseHash::not_at_column_1, at, XJU_TRACED));
     }
     if ((*at) != '#') {
-      std::ostringstream s;
-      s << "line begins with '" << printChar(*at) << "', not '#'";
-      return ParseResult(xju::Exception(s.str(), XJU_TRACED));
+      return ParseResult(
+        Exception(ParseHash::line_does_not_start_with_hash, at, XJU_TRACED));
     }
     I const nowAt(xju::next(at));
     return ParseResult(
@@ -431,6 +456,8 @@ public:
     return s.str();
   }
 };
+std::string ParseHash::not_at_column_1("not at column 1");
+std::string ParseHash::line_does_not_start_with_hash("line does not start with '#'");
 
 class ParseBalanced : public Parser
 {
@@ -455,10 +482,7 @@ public:
         return ParseResult(std::make_pair(IRs(1U, item), end));
       }
       if (end.atEnd()) {
-        std::ostringstream s;
-        s << "end of input at line " 
-          << end.line_ << " column " << end.column_;
-        return ParseResult(xju::Exception(s, XJU_TRACED));
+        return ParseResult(EndOfInput(at, XJU_TRACED));
       }
       switch(*end) {
       case '"':
@@ -664,6 +688,7 @@ PR doubleQuote(parseOneOfChars("\""));
 PR backslash(parseOneOfChars("\\"));
 PR oneChar(new ParseAnyChar);
 
+// REVISIT: rework to make more sense
 // string literal up to first double quote (does not include
 // next-line continuations)
 PR stringLiteralAtom(
@@ -1026,13 +1051,14 @@ namespace
 class ParseEndOfFile : public Parser
 {
 public:
+  static std::string const expected_end_of_input;
+  
   // Parser::
   virtual ParseResult parse_(I const at, Options const& o) throw() 
   {
     if (!at.atEnd()) {
-      std::ostringstream s;
-      s << "expected end of file at " << at;
-      return ParseResult(xju::Exception(s.str(), XJU_TRACED));
+      return ParseResult(
+        Exception(ParseEndOfFile::expected_end_of_input, at, XJU_TRACED));
     }
     return ParseResult(
       std::make_pair(
@@ -1046,7 +1072,7 @@ public:
     return "end of file";
   }
 };
-
+std::string const ParseEndOfFile::expected_end_of_input("expected end of input");
 }
 
 PR endOfFile(new ParseEndOfFile);

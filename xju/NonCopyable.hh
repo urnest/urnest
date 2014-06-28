@@ -1,6 +1,6 @@
 //     -*- mode: c++ ; c-file-style: "osse" ; -*-
 //
-// Copyright (c) 2007
+// Copyright (c) 2014
 // Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -10,26 +10,24 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef XJU_AUTOFD_HH_
-#define XJU_AUTOFD_HH_
-
-#include <unistd.h>
-#include "xju/NonCopyable.hh"
+#ifndef XJU_NONCOPYABLE_HH_
+#define XJU_NONCOPYABLE_HH_
 
 namespace xju
 {
-    struct AutoFd : NonCopyable
-    {
-        AutoFd(int fd) throw():
-            value_(fd)
-        {
-        }
-        ~AutoFd() throw()
-        {
-            ::close(value_);
-        }
-        const int value_;
-    };
+class NonCopyable
+{
+private:
+  // not implemented
+  NonCopyable(NonCopyable const&);                               
+  NonCopyable& operator=(NonCopyable const&);
+
+public:
+  NonCopyable() throw()
+  {
+  }
+};
+  
 }
 
 #endif

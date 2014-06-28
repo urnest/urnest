@@ -1,5 +1,10 @@
 x test-JoiningIterator
 
+- replace xju::Exception with parser specific exception, that
+  uses Parser* as context, to defer string creation until exception
+  is actually formatted
+- get rid of includeAllExceptionContext (make it always true)
+
 - on parse failure, output the branch that got furthest
   - note that only exceptions are xju::Exception thrown explicitly in
     parser.cc/hh
@@ -87,8 +92,33 @@ sys     0m0.004s
     x saved lots of time by reworking the -v (includeAllExceptionContext)
       handling, since it was adding and discarding lots of context
 
+    x reworked to defer generating context strings until exception
+      printed:
+
+-*- mode: compilation; default-directory: "/home/xju/urnest/hcp/" -*-
+Compilation started at Sat Jun 28 23:11:00
+
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l
+end at line 146 column 1
+
+real	0m0.160s
+user	0m0.124s
+sys	0m0.008s
+1951
+
+    - above includes all exception detail, except that "or" only keeps
+      the term that got furthest, alas the resulting error messages
+      are too verbose (see test-parser.cc), ideas:
+        - context given for "and" should not go past the term where we
+          actually failed
+          - if exception context was a PR we could dynamically make
+            one that included just the relevant part; we could also
+            do better with the "or" case
+          - perhaps revisit which parsers add context, perhaps go back
+            to having just named parsers add context; but also keep
+            the "leaf" context
     - do first pass without creating any exception detail, then
       come back and reparse from where we went wrong in order to get
-      exception detail
+      exception detail... maybe
 
     

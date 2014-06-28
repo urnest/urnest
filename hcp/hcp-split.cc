@@ -255,7 +255,7 @@ int main(int argc, char* argv[])
     std::string const x(xju::readFile(xju::path::str(inputFile)));
 
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, false, cache);
+    hcp_parser::Options const options(false, cache);
     
     hcp_parser::I at(x.begin(), x.end());
     hcp_parser::PV const y(*hcp_parser::file->parse_(at, options));

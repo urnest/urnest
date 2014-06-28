@@ -18,7 +18,7 @@ static const char rcsid[] = "$RCSfile: twt_cxx.el,v $ $Revision: 1.2 $";
 void test1()
 {
   hcp_parser::Cache cache(new hcp_parser::CacheVal());
-  hcp_parser::Options const options(false, true, cache);
+  hcp_parser::Options const options(false, cache);
   std::string const x("ab");
   hcp_parser::PV const y(*hcp_parser::parseAnyChar->parse_(
     hcp_parser::I(x.begin(), x.end()),
@@ -37,7 +37,7 @@ void test1()
       y2.second,
       options));
   xju::assert_equal(r.failed(), true);
-  xju::assert_equal(readableRepr(r.e()), "Failed to  because\nend of input at line 1 column 3.");
+  xju::assert_equal(readableRepr(r.e()), "line 1 column 3: end of input");
 
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
@@ -55,8 +55,8 @@ void test1()
       options));
     xju::assert_not_equal(y3, y3);
   }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse any char at line 1 column 3 because\nend of input at line 1 column 3.");
+  catch(hcp_parser::Exception const& e) {
+    xju::assert_equal(readableRepr(e), "line 1 column 3: failed to parse any char because\n  line 1 column 3: end of input");
   }
 
 }
@@ -64,7 +64,7 @@ void test1()
 void test2()
 {
   hcp_parser::Cache cache(new hcp_parser::CacheVal());
-  hcp_parser::Options const options(false, true, cache);
+  hcp_parser::Options const options(false, cache);
   std::string const x("ab");
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
@@ -77,7 +77,7 @@ void test3()
 {
   hcp_parser::Cache cache(new hcp_parser::CacheVal());
 
-  hcp_parser::Options const options(false, true, cache);
+  hcp_parser::Options const options(false, cache);
   
   std::string const x("ab");
   hcp_ast::CompositeItem root;
@@ -88,38 +88,43 @@ void test3()
           root, at, options);
   xju::assert_equal(reconstruct(root), "ab");
   xju::assert_equal(at.atEnd(), true);
-  
-  try {
-    at = (hcp_parser::parseAnyChar+
-          hcp_parser::parseAnyChar+
-          hcp_parser::parseAnyChar)->parse(
-            root, at, options);
-    xju::assert_not_equal(at, at);
-  }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse any char then any char then any char at line 1 column 3 because\nfailed to parse any char at line 1 column 3 because\nend of input at line 1 column 3.");
-  }
-  
+
+ {
+   hcp_parser::PR p(hcp_parser::parseAnyChar+
+                    hcp_parser::parseAnyChar+
+                    hcp_parser::parseAnyChar);
+   try {
+     at = p->parse(
+             root, at, options);
+     xju::assert_not_equal(at, at);
+   }
+   catch(hcp_parser::Exception const& e) {
+     xju::assert_equal(readableRepr(e), "line 1 column 3: failed to parse any char then any char then any char because\n  line 1 column 3: failed to parse any char because\n  line 1 column 3: end of input");
+   }
+ }
 }
 
 void test4()
 {
   hcp_parser::Cache cache(new hcp_parser::CacheVal());
-  hcp_parser::Options const options(false, true, cache);
+  hcp_parser::Options const options(false, cache);
   std::string const x("abcd");
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
   at = (hcp_parser::zeroOrMore*hcp_parser::parseOneOfChars("abc"))->parse(root, at, options);
   xju::assert_equal(reconstruct(root), "abc");
   xju::assert_equal(at.atEnd(), false);
-  
-  try {
-    at = hcp_parser::parseOneOfChars("abc")->parse(
-      root, at, options);
-    xju::assert_abort();
-  }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse one of chars [abc] at line 1 column 4 because\n'd' is not one of chars [abc] at line 1 column 4.");
+
+  {
+    hcp_parser::PR p(hcp_parser::parseOneOfChars("abc"));
+    try {
+      at = p->parse(
+        root, at, options);
+      xju::assert_abort();
+    }
+    catch(hcp_parser::Exception const& e) {
+      xju::assert_equal(readableRepr(e), "line 1 column 4: failed to parse one of chars [abc] because\n  line 1 column 4: unexpected character");
+    }
   }
 }
 
@@ -128,7 +133,7 @@ void test5()
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("abcad");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -138,40 +143,46 @@ void test5()
              root, at, options);
     xju::assert_equal(reconstruct(root), "abca");
     xju::assert_equal(at.atEnd(), false);
-    
-    try {
-      at = (hcp_parser::parseOneOfChars("ab")|
-            hcp_parser::parseOneOfChars("c"))->parse(
-              root, at, options);
-      xju::assert_abort();
-    }
-    catch(xju::Exception const& e) {
-      xju::assert_equal(readableRepr(e), "Failed to parse one of chars [ab] or one of chars [c] at line 1 column 5 because\nfailed to parse one of chars [ab] at line 1 column 5 because\n'd' is not one of chars [ab] at line 1 column 5, and failed to parse one of chars [c] at line 1 column 5 because\n'd' is not one of chars [c] at line 1 column 5.");
+
+    {
+      hcp_parser::PR p(hcp_parser::parseOneOfChars("ab")|
+                       hcp_parser::parseOneOfChars("c"));
+      try {
+        at = p->parse(
+          root, at, options);
+        xju::assert_abort();
+      }
+      catch(hcp_parser::Exception const& e) {
+        xju::assert_equal(readableRepr(e), "line 1 column 5: failed to parse one of chars [ab] or one of chars [c] because\n  line 1 column 5: failed to parse one of chars [c] because\n  line 1 column 5: unexpected character");
+      }
     }
   }
   
   {
     
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("abcad");
     hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    try {
-      at = (hcp_parser::parseOneOfChars("b")|
-            hcp_parser::parseOneOfChars("c")|
-            hcp_parser::parseOneOfChars("e"))->parse(
-              root, at, options);
-      xju::assert_abort();
-    }
-    catch(xju::Exception const& e) {
-      xju::assert_equal(readableRepr(e), "Failed to parse one of chars [b] or one of chars [c] or one of chars [e] at line 1 column 1 because\nfailed to parse one of chars [b] at line 1 column 1 because\n'a' is not one of chars [b] at line 1 column 1, and failed to parse one of chars [c] at line 1 column 1 because\n'a' is not one of chars [c] at line 1 column 1, and failed to parse one of chars [e] at line 1 column 1 because\n'a' is not one of chars [e] at line 1 column 1.");
+    hcp_parser::I at(x.begin(), x.end()); 
+    {
+      hcp_parser::PR p(hcp_parser::parseOneOfChars("b")|
+                       hcp_parser::parseOneOfChars("c")|
+                       hcp_parser::parseOneOfChars("e"));
+      try {
+        at = p->parse(
+          root, at, options);
+        xju::assert_abort();
+      }
+      catch(hcp_parser::Exception const& e) {
+        xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse one of chars [b] or one of chars [c] or one of chars [e] because\n  line 1 column 1: failed to parse one of chars [e] because\n  line 1 column 1: unexpected character");
+      }
     }
   }
   
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("abcad");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -188,7 +199,7 @@ void test5()
 void test6()
 {
   hcp_parser::Cache cache(new hcp_parser::CacheVal());
-  hcp_parser::Options const options(false, true, cache);
+  hcp_parser::Options const options(false, cache);
   std::string const x("abcd");
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
@@ -200,23 +211,27 @@ void test6()
 void test7()
 {
   hcp_parser::Cache cache(new hcp_parser::CacheVal());
-  hcp_parser::Options const options(false, true, cache);
+  hcp_parser::Options const options(false, cache);
   std::string const x("abcd");
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
-  try {
-    at = (hcp_parser::atLeastOne*hcp_parser::parseOneOfChars("e"))->parse(root, at, options);
-    xju::assert_abort();
-  }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse at least one occurrance of one of chars [e] at line 1 column 1 because\nfailed to parse one of chars [e] then zero or more occurrances of one of chars [e] at line 1 column 1 because\nfailed to parse one of chars [e] at line 1 column 1 because\n'a' is not one of chars [e] at line 1 column 1.");
+  {
+    hcp_parser::PR p(hcp_parser::atLeastOne*hcp_parser::parseOneOfChars("e"));
+    
+    try {
+      at = p->parse(root, at, options);
+      xju::assert_abort();
+    }
+    catch(hcp_parser::Exception const& e) {
+      xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse at least one occurrance of one of chars [e] because\n  line 1 column 1: failed to parse one of chars [e] then zero or more occurrances of one of chars [e] because\n  line 1 column 1: failed to parse one of chars [e] because\n  line 1 column 1: unexpected character");
+    }
   }
 }
 
 void test8()
 {
   hcp_parser::Cache cache(new hcp_parser::CacheVal());
-  hcp_parser::Options const options(false, true, cache);
+  hcp_parser::Options const options(false, cache);
   std::string const x("abcdefg");
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
@@ -229,24 +244,27 @@ void test8()
 void test9()
 {
   hcp_parser::Cache cache(new hcp_parser::CacheVal());
-  hcp_parser::Options const options(false, true, cache);
+  hcp_parser::Options const options(false, cache);
   std::string const x("abcdefg");
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
-  try {
-    at = (hcp_parser::parseUntil(
-      hcp_parser::parseOneOfChars("h")))->parse(root, at, options);
-    xju::assert_abort();
-  }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse up to but not including one of chars [h] at line 1 column 1 because\nend of input at line 1 column 8.");
+  {
+    hcp_parser::PR p(hcp_parser::parseUntil(
+                       hcp_parser::parseOneOfChars("h")));
+    try {
+      at = p->parse(root, at, options);
+      xju::assert_abort();
+    }
+    catch(hcp_parser::Exception const& e) {
+      xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse up to but not including one of chars [h] because\n  line 1 column 8: end of input");
+    }
   }
 }
 
 void test10()
 {
   hcp_parser::Cache cache(new hcp_parser::CacheVal());
-  hcp_parser::Options const options(false, true, cache);
+  hcp_parser::Options const options(false, cache);
   std::string const x("abcd");
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
@@ -256,8 +274,8 @@ void test10()
       root, at, options);
     xju::assert_abort();
   }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse one of chars [\\t\\n ] at line 1 column 1 because\n'a' is not one of chars [\\t\\n ] at line 1 column 1.");
+  catch(hcp_parser::Exception const& e) {
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse one of chars [\\t\\n ] because\n  line 1 column 1: unexpected character");
   }
 }
 
@@ -266,7 +284,7 @@ void test11()
 {
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("\"abcd\"");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -277,7 +295,7 @@ void test11()
   }
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("\"\"");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -289,7 +307,7 @@ void test11()
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("\"\\\"\"");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -298,13 +316,13 @@ void test11()
     xju::assert_equal(reconstruct(root), "\"\\\"\"");
     xju::assert_equal(at.atEnd(), true);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("\"\\\"de\"");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -313,13 +331,13 @@ void test11()
     xju::assert_equal(reconstruct(root), "\"\\\"de\"");
     xju::assert_equal(at.atEnd(), true);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("\"ab\\\"de\"");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -328,13 +346,13 @@ void test11()
     xju::assert_equal(reconstruct(root), "\"ab\\\"de\"");
     xju::assert_equal(at.atEnd(), true);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("\"ab\\\"d\ne\"");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -343,13 +361,13 @@ void test11()
     xju::assert_equal(reconstruct(root), "\"ab\\\"d\ne\"");
     xju::assert_equal(at.atEnd(), true);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("\"ab\\\"d\ne\"   ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -358,13 +376,13 @@ void test11()
     xju::assert_equal(reconstruct(root), "\"ab\\\"d\ne\"   ");
     xju::assert_equal(at.atEnd(), true);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("\"abcde\"  \n \"fred\"  ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -373,13 +391,13 @@ void test11()
     xju::assert_equal(reconstruct(root), "\"abcde\"  \n \"fred\"  ");
     xju::assert_equal(at.atEnd(), true);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("\"abcde\"  \n \"fred\"\n\"jock\"  ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -388,13 +406,13 @@ void test11()
     xju::assert_equal(reconstruct(root), "\"abcde\"  \n \"fred\"\n\"jock\"  ");
     xju::assert_equal(at.atEnd(), true);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("\"abcde\" \"fred\"");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -402,21 +420,22 @@ void test11()
     xju::assert_equal(reconstruct(root), "\"abcde\" ");
     xju::assert_equal(at.atEnd(), false);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, false, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("\"abcde");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     at = hcp_parser::stringLiteral->parse(root, at, options);
     xju::assert_abort();
   }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse string literal at line 1 column 1 because\nend of input at line 1 column 7.");
+  catch(hcp_parser::Exception const& e) {
+    // REVISIT: indecipherable error message
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse string literal because\n  line 1 column 1: failed to parse one of chars [\"] then (zero or more occurrances of (up to but not including one of chars [\"\\] then one of chars [\\] then one of chars [\"])) then up to but not including one of chars [\"] then one of chars [\"] then (zero or more occurrances of ((zero or more occurrances of one of chars [\\t ]) then one of chars [\\n] then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [\"] then (zero or more occurrances of (up to but not including one of chars [\"\\] then one of chars [\\] then one of chars [\"])) then up to but not including one of chars [\"] then one of chars [\"])) then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 2: failed to parse up to but not including one of chars [\"] because\n  line 1 column 7: end of input");
   }
 }
 
@@ -425,7 +444,7 @@ void test12()
 {
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("abcd");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -435,20 +454,22 @@ void test12()
     xju::assert_equal(reconstruct(root), "abcd");
     xju::assert_equal(at.atEnd(), true);
   }
-  try
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
-    std::string const x("abcd");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = hcp_parser::parseLiteral("abed")->parse(
-      root, at, options);
-    xju::assert_abort();
-  }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse \"abed\" at line 1 column 1 because\nmismatch at line 1 column 3: got 'c' instead of 'e'.");
+    hcp_parser::PR p(hcp_parser::parseLiteral("abed"));
+    try {
+      hcp_parser::Cache cache(new hcp_parser::CacheVal());
+      hcp_parser::Options const options(false, cache);
+      std::string const x("abcd");
+      hcp_ast::CompositeItem root;
+      hcp_parser::I at(x.begin(), x.end());
+      
+      at = p->parse(
+        root, at, options);
+      xju::assert_abort();
+    }
+    catch(hcp_parser::Exception const& e) {
+      xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse \"abed\" because\n  line 1 column 3: mismatch");
+    }
   }
 }
 
@@ -457,7 +478,7 @@ void test13()
 {
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("// comment \n   ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -467,10 +488,9 @@ void test13()
     xju::assert_equal(reconstruct(root), "// comment \n   ");
     xju::assert_equal(at.atEnd(), true);
   }
-  try
-  {
+  try {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, false, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("/ / comment \n   ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -478,8 +498,9 @@ void test13()
     at = hcp_parser::comments->parse(root, at, options);
     xju::assert_abort();
   }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse comments at line 1 column 1 because\nfailed to parse at least one occurrance of line comment or block comment at line 1 column 1 because\nfailed to parse line comment at line 1 column 1 because\nmismatch at line 1 column 2: got ' ' instead of '/', and failed to parse block comment at line 1 column 1 because\nmismatch at line 1 column 2: got ' ' instead of '*'.");
+  catch(hcp_parser::Exception const& e) {
+    // REVISIT: error message too verbose
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse comments because\n  line 1 column 1: failed to parse at least one occurrance of line comment or block comment because\n  line 1 column 1: failed to parse (line comment or block comment) then zero or more occurrances of (line comment or block comment) because\n  line 1 column 1: failed to parse line comment or block comment because\n  line 1 column 1: failed to parse block comment because\n  line 1 column 1: failed to parse \"/*\" then up to but not including \"*/\" then zero or more occurrances of one of chars [\\t\\n ] because\n  line 1 column 1: failed to parse \"/*\" because\n  line 1 column 2: mismatch");
   }
 }
 
@@ -488,7 +509,7 @@ void test14()
 {
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("#if\n  ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -501,7 +522,7 @@ void test14()
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(" #if");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -510,8 +531,8 @@ void test14()
       root, at, options);
     xju::assert_abort();
   }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse other preprocessor directive at line 1 column 1 because\nfailed to parse '#' at start of line then up to but not including one of chars [\\n] then zero or more occurrances of (one of chars [\\t\\n ] or comments) at line 1 column 1 because\nfailed to parse '#' at start of line at line 1 column 1 because\nline begins with ' ', not '#'.");
+  catch(hcp_parser::Exception const& e) {
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse other preprocessor directive because\n  line 1 column 1: failed to parse '#' at start of line then up to but not including one of chars [\\n] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 1: failed to parse '#' at start of line because\n  line 1 column 1: line does not start with '#'");
   }
 }
 
@@ -520,7 +541,7 @@ void test15()
 {
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("#include <string>\n  ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -532,7 +553,7 @@ void test15()
   }
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("#  include <string>\n  ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -545,7 +566,7 @@ void test15()
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, false, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("#if");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -554,8 +575,9 @@ void test15()
       root, at, options);
     xju::assert_abort();
   }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse #include at line 1 column 1 because\nmismatch at line 1 column 3: got 'f' instead of 'n'.");
+  catch(hcp_parser::Exception const& e) {
+    // REVISIT: too verbose
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse #include because\n  line 1 column 1: failed to parse '#' at start of line then (zero or more occurrances of one of chars [\\t ]) then \"include\" then up to but not including \"\n\" or (\"//\" then (zero or more occurrances of one of chars [\\t ]) then \"impl\" then (zero or more occurrances of one of chars [\\t ]) then \"\n\") then one of chars [\\n] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 2: failed to parse \"include\" because\n  line 1 column 3: mismatch");
   }
 }
 
@@ -564,7 +586,7 @@ void test16()
 {
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("#include <string> // impl \n  ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -576,7 +598,7 @@ void test16()
   }
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("#  include <string>//impl\n  ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -589,7 +611,7 @@ void test16()
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, false, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("#include <string> //implementation defines\n");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -598,8 +620,9 @@ void test16()
       root, at, options);
     xju::assert_abort();
   }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse #include with //impl marker at line 1 column 1 because\nmismatch at line 1 column 43: got '\n' instead of '/'.");
+  catch(hcp_parser::Exception const& e) {
+    // REVISIT: too verbose
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse #include with //impl marker because\n  line 1 column 1: failed to parse '#' at start of line then (zero or more occurrances of one of chars [\\t ]) then \"include\" then up to but not including \"\n\" or (\"//\" then (zero or more occurrances of one of chars [\\t ]) then \"impl\" then (zero or more occurrances of one of chars [\\t ]) then \"\n\") then \"//\" then (zero or more occurrances of one of chars [\\t ]) then \"impl\" then (zero or more occurrances of one of chars [\\t ]) then \"\n\" then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 43: failed to parse \"//\" because\n  line 1 column 43: mismatch");
   }
 }
 
@@ -608,7 +631,7 @@ void test17()
 {
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("(");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -620,7 +643,7 @@ void test17()
   }
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("fred(");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -632,7 +655,7 @@ void test17()
   }
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("fred[jock](");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -644,7 +667,7 @@ void test17()
   }
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("{a}(b);}");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -657,7 +680,7 @@ void test17()
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("fred[\"jock(\"](");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -667,13 +690,13 @@ void test17()
     xju::assert_equal(reconstruct(root), "fred[\"jock(\"]");
     xju::assert_equal((++at).atEnd(), true);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("template<fred, jock> fred[\"jock(\"](");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -684,13 +707,13 @@ void test17()
                       "template<fred, jock> fred[\"jock(\"]");
     xju::assert_equal((++at).atEnd(), true);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("template<fred, jock> fred[// john(fred)\n\"jock(\"](");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -700,23 +723,26 @@ void test17()
     xju::assert_equal(reconstruct(root), std::string(x.begin(), x.end()-1));
     xju::assert_equal((++at).atEnd(), true);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
-  try
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
-    std::string const x("[]");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = hcp_parser::balanced(hcp_parser::parseOneOfChars("("))->parse(
-      root, at, options);
-    xju::assert_abort();
-  }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [(] at line 1 column 1 because\nend of input at line 1 column 3.");
+    hcp_parser::PR p(hcp_parser::balanced(hcp_parser::parseOneOfChars("(")));
+    try
+      {
+        hcp_parser::Cache cache(new hcp_parser::CacheVal());
+        hcp_parser::Options const options(false, cache);
+        std::string const x("[]");
+        hcp_ast::CompositeItem root;
+        hcp_parser::I at(x.begin(), x.end());
+        
+        at = p->parse(
+          root, at, options);
+        xju::assert_abort();
+      }
+    catch(hcp_parser::Exception const& e) {
+      xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [(] because\n  line 1 column 1: end of input");
+    }
   }
 }
 
@@ -725,7 +751,7 @@ void test18()
 {
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("typedef std::vector<int> Ints;");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -736,7 +762,7 @@ void test18()
   }
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("typedef\nstd::vector<int>\nInts;");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -748,7 +774,7 @@ void test18()
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, false, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("typedefine std::vector<int>\nInts;");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -756,8 +782,8 @@ void test18()
     at = hcp_parser::typedef_statement->parse(root, at, options);
     xju::assert_abort();
   }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse typedef statement at line 1 column 1 because\nfailed to parse some whitespace at line 1 column 8 because\nfailed to parse at least one occurrance of one of chars [\\t\\n ] at line 1 column 8 because\n'i' is not one of chars [\\t\\n ] at line 1 column 8.");
+  catch(hcp_parser::Exception const& e) {
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse typedef statement because\n  line 1 column 1: failed to parse \"typedef\" then some whitespace then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [;] then one of chars [;] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 8: failed to parse some whitespace because\n  line 1 column 8: failed to parse at least one occurrance of one of chars [\\t\\n ] because\n  line 1 column 8: failed to parse one of chars [\\t\\n ] then zero or more occurrances of one of chars [\\t\\n ] because\n  line 1 column 8: failed to parse one of chars [\\t\\n ] because\n  line 1 column 8: unexpected character");
   }
 }
 
@@ -766,7 +792,7 @@ void test19()
 {
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("using namespace std;");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -777,7 +803,7 @@ void test19()
   }
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("using\nnamespace\nstd;");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -789,7 +815,7 @@ void test19()
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, false, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("usingme as something;");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -797,8 +823,8 @@ void test19()
     at = hcp_parser::using_statement->parse(root, at, options);
     xju::assert_abort();
   }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse using statement at line 1 column 1 because\nfailed to parse some whitespace at line 1 column 6 because\nfailed to parse at least one occurrance of one of chars [\\t\\n ] at line 1 column 6 because\n'm' is not one of chars [\\t\\n ] at line 1 column 6.");
+  catch(hcp_parser::Exception const& e) {
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse using statement because\n  line 1 column 1: failed to parse \"using\" then some whitespace then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [;] then one of chars [;] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 6: failed to parse some whitespace because\n  line 1 column 6: failed to parse at least one occurrance of one of chars [\\t\\n ] because\n  line 1 column 6: failed to parse one of chars [\\t\\n ] then zero or more occurrances of one of chars [\\t\\n ] because\n  line 1 column 6: failed to parse one of chars [\\t\\n ] because\n  line 1 column 6: unexpected character");
   }
 }
 
@@ -807,7 +833,7 @@ void test20()
 {
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(
       "enum Lateness {\n"
       "  LITTLE,\n"
@@ -823,7 +849,7 @@ void test20()
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, false, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x("enumy { FRED, JOCK };");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -831,8 +857,8 @@ void test20()
     at = hcp_parser::enum_def->parse(root, at, options);
     xju::assert_abort();
   }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse enum definition at line 1 column 1 because\nfailed to parse some whitespace at line 1 column 5 because\nfailed to parse at least one occurrance of one of chars [\\t\\n ] at line 1 column 5 because\n'y' is not one of chars [\\t\\n ] at line 1 column 5.");
+  catch(hcp_parser::Exception const& e) {
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse enum definition because\n  line 1 column 1: failed to parse \"enum\" then some whitespace then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [;] then one of chars [;] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 5: failed to parse some whitespace because\n  line 1 column 5: failed to parse at least one occurrance of one of chars [\\t\\n ] because\n  line 1 column 5: failed to parse one of chars [\\t\\n ] then zero or more occurrances of one of chars [\\t\\n ] because\n  line 1 column 5: failed to parse one of chars [\\t\\n ] because\n  line 1 column 5: unexpected character");
   }
 }
 
@@ -842,7 +868,7 @@ void test21()
 {
   try {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(
       "template<class T>\n"
       "void fred() const throw();\n");
@@ -853,12 +879,12 @@ void test21()
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(
       "std::ostream& operator<<(std::ostream& s, const TaskId& x) throw();");
     hcp_ast::CompositeItem root;
@@ -868,13 +894,13 @@ void test21()
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, false, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(
       "template<class T>\n"
       "void fred() const throw() { fred(); }");
@@ -884,8 +910,8 @@ void test21()
     at = hcp_parser::function_decl->parse(root, at, options);
     xju::assert_abort();
   }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse function declaration at line 1 column 1 because\n'{' is not one of chars [;] at line 2 column 27.");
+  catch(hcp_parser::Exception const& e) {
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse function declaration because\n  line 1 column 1: failed to parse function qualifiers then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [();[]{}] or (((\"operator\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then (\"<<\" or \">>\" or \"==\" or \"<=\" or \">=\" or \"<\" or \">\" or \"++\" or \"--\" or \"->\" or \"+\" or \"-\" or \"|=\" or \"&=\" or \"|\" or \"&\" or \"[]\" or \"!\" or \"%=\" or \"%\" or \"=\" or \"*\") then zero or more occurrances of (one of chars [\\t\\n ] or comments)) or ((zero or more occurrances of (at least one occurrance of one of chars 'a'..'z' or one of chars 'A'..'Z' or one of chars '0'..'9' or one of chars [_] then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then \"::\" then zero or more occurrances of (one of chars [\\t\\n ] or comments))) then at least one occurrance of one of chars 'a'..'z' or one of chars 'A'..'Z' or one of chars '0'..'9' or one of chars [_] then zero or more occurrances of (one of chars [\\t\\n ] or comments))) then one of chars [(]) then function name then \"(\" then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including \")\" then \")\" then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [:;{] or (\"try\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [:]) then one of chars [;] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 2 column 27: failed to parse one of chars [;] because\n  line 2 column 27: unexpected character");
   }
 }
 
@@ -895,7 +921,7 @@ void test22()
 {
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(
       "void fred() const throw()\n"
       "{\n"
@@ -911,7 +937,7 @@ void test22()
   }
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(
       "virtual void fred() throw() try:\n"
       "  x_(3)\n"
@@ -933,7 +959,7 @@ void test22()
   }
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(
       "void fred() throw() try\n"
       "{\n"
@@ -950,28 +976,30 @@ void test22()
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
+  {
+    hcp_parser::PR p(hcp_parser::parseLiteral("class")|
+                     hcp_parser::parseLiteral("struct")|
+                     hcp_parser::parseLiteral("union"));
+    try
+      {
+        hcp_parser::Cache cache(new hcp_parser::CacheVal());
+        hcp_parser::Options const options(false, cache);
+        std::string const x(
+          "void fred() const throw();");
+        hcp_ast::CompositeItem root;
+        hcp_parser::I at(x.begin(), x.end());
+        
+        at = p->parse(root, at, options);
+        xju::assert_abort();
+      }
+    catch(hcp_parser::Exception const& e) {
+      xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse \"class\" or \"struct\" or \"union\" because\n  line 1 column 1: failed to parse \"union\" because\n  line 1 column 1: mismatch");
+    }
+  }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
-    std::string const x(
-      "void fred() const throw();");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = (hcp_parser::parseLiteral("class")|
-          hcp_parser::parseLiteral("struct")|
-          hcp_parser::parseLiteral("union"))->parse(root, at, options);
-    xju::assert_abort();
-  }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse \"class\" or \"struct\" or \"union\" at line 1 column 1 because\nfailed to parse \"class\" at line 1 column 1 because\nmismatch at line 1 column 1: got 'v' instead of 'c', and failed to parse \"struct\" at line 1 column 1 because\nmismatch at line 1 column 1: got 'v' instead of 's', and failed to parse \"union\" at line 1 column 1 because\nmismatch at line 1 column 1: got 'v' instead of 'u'.");
-  }
-    
-  try
-  {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, false, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(
       "template<class T>\n"
       "void fred() const throw();");
@@ -981,8 +1009,8 @@ void test22()
     at = hcp_parser::function_def->parse(root, at, options);
     xju::assert_abort();
   }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse function definition at line 1 column 1 because\nfailed to parse function implementation at line 2 column 26 because\nfailed to parse block at line 2 column 26 because\nmismatch at line 2 column 26: got ';' instead of '{'.");
+  catch(hcp_parser::Exception const& e) {
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse function definition because\n  line 1 column 1: failed to parse function qualifiers then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [();[]{}] or (((\"operator\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then (\"<<\" or \">>\" or \"==\" or \"<=\" or \">=\" or \"<\" or \">\" or \"++\" or \"--\" or \"->\" or \"+\" or \"-\" or \"|=\" or \"&=\" or \"|\" or \"&\" or \"[]\" or \"!\" or \"%=\" or \"%\" or \"=\" or \"*\") then zero or more occurrances of (one of chars [\\t\\n ] or comments)) or ((zero or more occurrances of (at least one occurrance of one of chars 'a'..'z' or one of chars 'A'..'Z' or one of chars '0'..'9' or one of chars [_] then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then \"::\" then zero or more occurrances of (one of chars [\\t\\n ] or comments))) then at least one occurrance of one of chars 'a'..'z' or one of chars 'A'..'Z' or one of chars '0'..'9' or one of chars [_] then zero or more occurrances of (one of chars [\\t\\n ] or comments))) then one of chars [(]) then function name then \"(\" then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including \")\" then \")\" then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [:;{] or (\"try\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [:]) then function implementation because\n  line 2 column 26: failed to parse function implementation because\n  line 2 column 26: failed to parse (zero or more occurrances of (\"try\" then zero or more occurrances of (one of chars [\\t\\n ] or comments))) then (zero or more occurrances of (initialiser list then zero or more occurrances of (one of chars [\\t\\n ] or comments))) then block then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then zero or more occurrances of (\"catch\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then \"(\" then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including \")\" then \")\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then block then zero or more occurrances of (one of chars [\\t\\n ] or comments)) because\n  line 2 column 26: failed to parse block because\n  line 2 column 26: failed to parse \"{\" then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [}] then \"}\" because\n  line 2 column 26: failed to parse \"{\" because\n  line 2 column 26: mismatch");
   }
 }
 
@@ -992,7 +1020,7 @@ void test23()
 {
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(
       "template<class T>\n"
       "void fred() const throw()\n"
@@ -1009,7 +1037,7 @@ void test23()
   }
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(
       "template<class T>\n"
       "void fred() throw() try:\n"
@@ -1031,7 +1059,7 @@ void test23()
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, false, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(
       "void fred() const throw()\n"
       "{\n"
@@ -1044,8 +1072,8 @@ void test23()
     at = hcp_parser::template_function_def->parse(root, at, options);
     xju::assert_abort();
   }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse template function definition at line 1 column 1 because\nfailed to parse at least one occurrance of \"template\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [<] then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [>] then one of chars [>] then zero or more occurrances of (one of chars [\\t\\n ] or comments) at line 1 column 1 because\nmismatch at line 1 column 1: got 'v' instead of 't'.");
+  catch(hcp_parser::Exception const& e) {
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse template function definition because\n  line 1 column 1: failed to parse at least one occurrance of \"template\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [<] then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [>] then one of chars [>] then zero or more occurrances of (one of chars [\\t\\n ] or comments) then function definition because\n  line 1 column 1: failed to parse at least one occurrance of \"template\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [<] then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [>] then one of chars [>] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 1: failed to parse \"template\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [<] then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [>] then one of chars [>] then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then zero or more occurrances of (\"template\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [<] then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [>] then one of chars [>] then zero or more occurrances of (one of chars [\\t\\n ] or comments)) because\n  line 1 column 1: failed to parse \"template\" because\n  line 1 column 1: mismatch");
   }
 }
 
@@ -1056,7 +1084,7 @@ void test24(std::vector<std::string> const& f)
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(xju::readFile(f[0]));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -1067,13 +1095,13 @@ void test24(std::vector<std::string> const& f)
     xju::assert_equal(root.items_[0]->isA<hcp_ast::ClassDef>(), true);
     xju::assert_equal(root.items_[0]->asA<hcp_ast::ClassDef>().className_, "X");
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, false, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(
       "void fred() const throw()\n"
       "{\n"
@@ -1087,13 +1115,13 @@ void test24(std::vector<std::string> const& f)
     at = hcp_parser::class_def->parse(root, at, options);
     xju::assert_abort();
   }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to  because\nfailed to parse template class definition at line 1 column 1 because\nmismatch at line 1 column 1: got 'v' instead of 't', and failed to parse non-template class definition at line 1 column 1 because\nfailed to  because\nmismatch at line 1 column 1: got 'v' instead of 'c', and failed to  because\nmismatch at line 1 column 1: got 'v' instead of 's', and failed to  because\nmismatch at line 1 column 1: got 'v' instead of 'u'.");
+  catch(hcp_parser::Exception const& e) {
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse class definition because\n  line 1 column 1: failed to parse non-template class definition because\n  line 1 column 1: failed to parse (zero or more occurrances of (\"template\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [<] then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [>] then one of chars [>] then zero or more occurrances of (one of chars [\\t\\n ] or comments))) then (\"class\" or \"struct\" or \"union\") then some whitespace then class name then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [;{] then one of chars [{] then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then (zero or more occurrances of (comments or function declaration or template function definition or public/private/protected: marker or class forward-declaration or enum definition or typedef statement or class definition or function definition or object declaration)) then one of chars [}] then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [;] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 1: failed to parse \"class\" or \"struct\" or \"union\" because\n  line 1 column 1: failed to parse \"union\" because\n  line 1 column 1: mismatch");
   }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(xju::readFile(f[1]));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -1102,7 +1130,7 @@ void test24(std::vector<std::string> const& f)
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
 }
@@ -1114,7 +1142,7 @@ void test25(std::vector<std::string> const& f)
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(xju::readFile(f[2]));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -1123,13 +1151,13 @@ void test25(std::vector<std::string> const& f)
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, false, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(
       "void fred() const throw()\n"
       "{\n"
@@ -1142,13 +1170,13 @@ void test25(std::vector<std::string> const& f)
     at = hcp_parser::anonymous_namespace->parse(root, at, options);
     xju::assert_abort();
   }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse anonymous namespace at line 1 column 1 because\nmismatch at line 1 column 1: got 'v' instead of 'n'.");
+  catch(hcp_parser::Exception const& e) {
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse anonymous namespace because\n  line 1 column 1: failed to parse \"namespace\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [{] then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then (zero or more occurrances of (comments or #include with //impl marker or #include or other preprocessor directive or class definition or typedef statement or using statement or enum definition or some whitespace or function declaration or template function definition or function definition or object declaration)) then one of chars [}] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 1: failed to parse \"namespace\" because\n  line 1 column 1: mismatch");
   }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, false, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(xju::readFile(f[3]));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -1156,8 +1184,8 @@ void test25(std::vector<std::string> const& f)
     at = hcp_parser::anonymous_namespace->parse(root, at, options);
     xju::assert_abort();
   }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse anonymous namespace at line 1 column 1 because\n'h' is not one of chars [{] at line 1 column 11.");
+  catch(hcp_parser::Exception const& e) {
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse anonymous namespace because\n  line 1 column 1: failed to parse \"namespace\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [{] then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then (zero or more occurrances of (comments or #include with //impl marker or #include or other preprocessor directive or class definition or typedef statement or using statement or enum definition or some whitespace or function declaration or template function definition or function definition or object declaration)) then one of chars [}] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 11: failed to parse one of chars [{] because\n  line 1 column 11: unexpected character");
   }
 }
 
@@ -1168,7 +1196,7 @@ void test26(std::vector<std::string> const& f)
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(xju::readFile(f[3]));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -1177,13 +1205,13 @@ void test26(std::vector<std::string> const& f)
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(xju::readFile(f[4]));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -1192,13 +1220,13 @@ void test26(std::vector<std::string> const& f)
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, false, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(
       "void fred() const throw()\n"
       "{\n"
@@ -1211,8 +1239,8 @@ void test26(std::vector<std::string> const& f)
     at = hcp_parser::anonymous_namespace->parse(root, at, options);
     xju::assert_abort();
   }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse anonymous namespace at line 1 column 1 because\nmismatch at line 1 column 1: got 'v' instead of 'n'.");
+  catch(hcp_parser::Exception const& e) {
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse anonymous namespace because\n  line 1 column 1: failed to parse \"namespace\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [{] then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then (zero or more occurrances of (comments or #include with //impl marker or #include or other preprocessor directive or class definition or typedef statement or using statement or enum definition or some whitespace or function declaration or template function definition or function definition or object declaration)) then one of chars [}] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 1: failed to parse \"namespace\" because\n  line 1 column 1: mismatch");
   }
 }
 
@@ -1223,7 +1251,7 @@ void test27(std::vector<std::string> const& f)
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(xju::readFile(f[3]));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -1232,13 +1260,13 @@ void test27(std::vector<std::string> const& f)
     xju::assert_equal(at.atEnd(), true);
     xju::assert_equal(reconstruct(root), x);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, false, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(xju::readFile(f[3])+"xxx");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -1246,8 +1274,8 @@ void test27(std::vector<std::string> const& f)
     at = hcp_parser::file->parse(root, at, options);
     xju::assert_abort();
   }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse file at line 1 column 1 because\nexpected end of file at line 22 column 1.");
+  catch(hcp_parser::Exception const& e) {
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse file because\n  line 1 column 1: failed to parse (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then (zero or more occurrances of (anonymous namespace or namespace or comments or #include with //impl marker or #include or other preprocessor directive or class definition or typedef statement or using statement or enum definition or some whitespace or function declaration or template function definition or function definition or object declaration)) then end of file because\n  line 22 column 1: failed to parse end of file because\n  line 22 column 1: expected end of input");
   }
 }
 
@@ -1257,7 +1285,7 @@ void test28(std::vector<std::string> const& f)
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(xju::readFile(f[4]));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -1266,13 +1294,13 @@ void test28(std::vector<std::string> const& f)
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, true, cache);
+    hcp_parser::Options const options(false, cache);
     std::string const x(xju::readFile(f[5]));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -1281,7 +1309,7 @@ void test28(std::vector<std::string> const& f)
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
-  catch(xju::Exception const& e) {
+  catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
 }

@@ -30,7 +30,9 @@ namespace xju
         }
         Optional(const Optional<T>& x)
         {
-            *this = x;
+            if (x.valid()) {
+                m_x = std::auto_ptr<T>(new T(*x.m_x));
+            }
         }
         bool valid() const throw()
         {
