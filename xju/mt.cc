@@ -54,7 +54,7 @@ namespace xju
 	Time Seq::next() throw()
 	{
 	    Lock l(_guard);
-	    _last = _last + Time(0, 1);
+	    _last = _last + xju::MicroSeconds(1);
 	    return _last;
 	}
 	

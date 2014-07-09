@@ -114,7 +114,7 @@
 //      The design aims to make it as hard as possible to introduce
 //      thread-safety bugs. For example, signalling a condition variable
 //      checks that the caller holds the relevant lock (not holding the
-//      relevant lock is a very commonly made and an expensive mistake).
+//      relevant lock is a very commonly made and hard to find mistake).
 //      The utility method used for such checks also make specifications
 //      simple and clear.
 //
@@ -124,7 +124,7 @@
 //      The ability to run a static function (i.e. a non-method) was not
 //      provided as it does not allow any data to be passed to the thread,
 //      and in practice such a thread is not useful without global shared
-//      data (which is bad design).
+//      data (which is invariably bad design).
 //
 //      The thread class deliberately has no "return value" mechanism.
 //      Such a mechanism would unnecessarily complicate the Thread class,
@@ -316,6 +316,18 @@ namespace xju
 	    Thread(T& t, void (T::*f)() throw());
 	    
 	    //
+	    // creates and starts thread, which will
+	    // call (t.*f)() once before returning 0.
+	    //
+	    // pre: lifetime(t) > lifetime(this)
+	    //
+	    Thread(T& t, 
+                   void (T::*start)() throw(), 
+                   void (T::*stop)() throw());
+	    
+	    //
+            // if stop was specified, call (t.*stop)(), then...
+            //
 	    // waits for and joins with thread (i.e.
 	    // waits for (t.*f)() to return).
 	    //
@@ -328,6 +340,7 @@ namespace xju
 	private:
 	    T& _t;
 	    void (T::*_f)() throw();
+	    void (T::*_stop)() throw();
 	    
 	    pthread_t _impl;
 	    
@@ -486,7 +499,23 @@ namespace xju
 	template<class T>
 	Thread<T>::Thread(T& t, void (T::*f)() throw()):
 	    _t(t),
-	    _f(f)
+	    _f(f),
+            _stop(0)
+	{
+	    if (pthread_create(&_impl, 0, main, this) == -1)
+	    {
+		int error = errno;
+		abort();
+	    }
+	}
+	
+	template<class T>
+	Thread<T>::Thread(T& t, 
+                          void (T::*start)() throw(), 
+                          void (T::*stop)() throw()):
+	    _t(t),
+	    _f(start),
+            _stop(stop)
 	{
 	    if (pthread_create(&_impl, 0, main, this) == -1)
 	    {
@@ -498,6 +527,9 @@ namespace xju
 	template<class T>
 	Thread<T>::~Thread() throw()
 	{
+            if (_stop) {
+                (_t.*_stop)();
+            }
 	    void* status;
 	    
 	    pthread_join(_impl, &status);
