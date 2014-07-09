@@ -1,0 +1,6 @@
+%dummy.hh==<<
+
+p1.hh==(%dummy.hh)+cmd=cat (..%p1.cxx.files+member='p1.hh':extract_file):stdout
+p1.cc==(%dummy.hh)+cmd=cat (..%p1.cxx.files+member='p1SK.cc':extract_file):stdout
+
+%p1==p1-main.cc+(../../..%cxx-opts)+inc_sp=(/usr/local/omniORB-4.2.0/include)+lib_sp=(/usr/local/omniORB-4.2.0/lib)+lib='omniORB4' 'omnithread':auto.cxx.exe

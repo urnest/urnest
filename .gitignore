@@ -72,3 +72,5 @@ TAGS
 btt/fltk1.3-view/BttLayout.cc
 *.o
 odin/odin-1.17.10x/pkg/odin/main.o
+omnicxy/proto/cxx/p1.cc
+omnicxy/proto/cxx/p1.hh

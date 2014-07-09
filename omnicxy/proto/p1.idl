@@ -1,0 +1,7 @@
+module p1
+{
+  interface F
+  {
+    void f1();
+  };
+};
