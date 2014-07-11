@@ -1,0 +1,4 @@
+%ORBImpl==()+cmd=(../../hcp/hcp-split) -l 1 (ORBImpl.hcp) 'ORBImpl.hh' 'ORBImpl.cc':output
+
+ORBImpl.hh==%ORBImpl/ORBImpl.hh
+ORBImpl.cc==%ORBImpl/ORBImpl.cc

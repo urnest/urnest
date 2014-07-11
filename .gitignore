@@ -74,3 +74,6 @@ btt/fltk1.3-view/BttLayout.cc
 odin/odin-1.17.10x/pkg/odin/main.o
 omnicxy/proto/cxx/p1.cc
 omnicxy/proto/cxx/p1.hh
+omnicxy/cxy/ORBImpl.cc
+omnicxy/cxy/ORBImpl.hh
+hcp/hcp-split

@@ -1,0 +1,88 @@
+// Copyright (c) 2014 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#ifndef CXY_ORBIMPL_H
+#define CXY_ORBIMPL_H
+
+#include "xju/Exception.hh"
+#include <string>
+#include <typeinfo> // impl
+#include <omniORB4/CORBA.h> // impl
+#include <iostream> // impl
+
+class CORBA::ORB;
+
+namespace cxy
+{
+namespace
+{
+xju::Exception translate(CORBA::Exception const& e) throw()
+{
+  std::ostringstream s;
+  s << typeid(e).name();
+  {
+    CORBA::SystemException const* ee=
+      dynamic_cast<CORBA::SystemException const*>(&e);
+    if(ee) {
+#ifdef minor
+  // Digital Unix 3.2, and may be others as well, defines minor() as
+  // a macro in its sys/types.h. Get rid of it!
+#undef minor
+#endif
+      s << " minor " << ee->minor();
+    }
+  }
+  {
+    CORBA::PolicyError const* ee=
+      dynamic_cast<CORBA::PolicyError const*>(&e);
+    if(ee) {
+      s << " reason " << ee->reason;
+    }
+  }
+  return xju::Exception(s.str(), XJU_TRACED);
+}
+
+CORBA::ORB* orbInit(std::string const& orbEndPoint) throw(
+  xju::Exception)
+{
+  try {
+    char const* argv[]={
+      "",
+      "-orbEndPoint", orbEndPoint.c_str()
+    };
+    int argc=sizeof(argv)/sizeof(argv[0]);
+    return CORBA::ORB_init(argc, argv).retn();
+  }
+  catch (CORBA::Exception& ex) {
+    throw translate(ex);
+  }
+}
+}
+
+class ORBImpl
+{
+public:
+  explicit ORBImpl(std::string const& orbEndPoint) throw(
+    xju::Exception):
+      orb_(orbInit(orbEndPoint))
+  {
+  }
+  ~ORBImpl() throw()
+  {
+    delete orb_;
+  }
+private:
+  ::CORBA::ORB* orb_;
+};
+
+  
+}
+
+#endif
+
