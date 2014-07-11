@@ -15,12 +15,15 @@
 //
 //    std c++ doesn't really cut it; boost is much better but
 //    bloated
+//    REVISIT: is newer C++ 11 better
 //
 #ifndef _XJU_FUNCTIONAL_H_
 #define _XJU_FUNCTIONAL_H_
 
 #include <functional>
 #include <utility>
+#include "bits/method1.hh"
+#include "bits/constmethod1.hh"
 
 namespace xju
 {
@@ -38,37 +41,6 @@ namespace xju
         //          derive result type
 
         template<class T, class R>
-        class ConstMethod : public std::unary_function<T, R>
-        {
-        public:
-            ConstMethod(R (T::*method)() const) throw():
-                m_method(method)
-            {
-            }
-            R operator()(const T& x) const
-            {
-                return (x.*m_method)();
-            }
-        private:
-            R (T::*const m_method)() const;
-        };
-        template<class T, class R>
-        class Method : public std::unary_function<T, R>
-        {
-        public:
-            Method(R (T::*method)()) throw():
-                m_method(method)
-            {
-            }
-            R operator()(T& x) const
-            {
-                return (x.*m_method)();
-            }
-        private:
-            R (T::*const m_method)();
-        };
-
-        template<class T, class R>
         ConstMethod<T, R> method(R (T::*method)() const) throw()
         {
             return ConstMethod<T, R>(method);
@@ -77,6 +49,16 @@ namespace xju
         Method<T, R> method(R (T::*method)()) throw()
         {
             return Method<T, R>(method);
+        }
+        template<class T, class R, class P>
+        ConstMethod2<T, R, P> method(R (T::*method)(P) const) throw()
+        {
+            return ConstMethod2<T, R, P>(method);
+        }
+        template<class T, class R, class P>
+        Method2<T, R, P> method(R (T::*method)(P)) throw()
+        {
+            return Method2<T, R, P>(method);
         }
 
         template<class F>
