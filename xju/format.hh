@@ -1,4 +1,4 @@
-//     -*- mode: c++ ; c-file-style: "xju" ; -*-
+//     -*- c-file-style: "xju" ; -*-
 //
 // Copyright (c) 1997-2008 Trevor Taylor
 //
@@ -32,9 +32,8 @@
 //    (i.e. operator<<(ostream&, T)) since that is the C++ way, and
 //    such operators are supplied by the compiler for the basic types.
 //
-//    Note that we explicitly provide our own operator<<(ostream&, bool)
-//    as aCC A.01.21 produces "1" and "0": we produce "true" and "false",
-//    which are clearer.
+//    We avoid the default operator<< for bool, which typically produces
+//    "0" and "1", we produce "false" and "true" which are clearer.
 //
 //    The formatting utilities never raise exceptions, reflecting that
 //    all valid values should have a human readable representation (if
@@ -46,7 +45,6 @@
 //    ...                    hex()
 //    ... format a float?    See float_(), double_(), Float and Double
 //    ... format your type T? See Str<T>, str<T>()
-//    ... format a xju::Time? operator << for xju::Time is defined in this file
 //    ... quote a string? See quote(), class Quote
 //    ... format a set of values? See set(), join()
 // 
@@ -501,7 +499,7 @@ std::string set(const ConstIterator begin,
                           makeConverter(*begin));
 }
 
-// format as fixed with hexadecimal with leading '0x'
+// format as fixed width hexadecimal with leading '0x'
 std::string hex(char x, const std::string& leader = "0x") 
   throw(std::bad_alloc);
 std::string hex(unsigned char x, const std::string& leader = "0x") 
