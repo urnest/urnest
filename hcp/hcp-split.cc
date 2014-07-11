@@ -145,6 +145,11 @@ void genNamespaceContent(hcp_ast::IRs const& x,
       genClass((*i)->asA<hcp_ast::ClassDef>(), h, c, 
                std::vector<hcp_ast::ClassDef const*>());
     }
+    else if ((*i)->isA<hcp_ast::HashIncludeImpl>())
+    {
+      c << "\n#line " << (**i).begin().line_ << std::endl;
+      c << hcp_ast::reconstruct(**i);
+    }
     else {
       h << hcp_ast::reconstruct(**i);
     }
@@ -268,13 +273,7 @@ int main(int argc, char* argv[])
 
     fh << "#ifndef " << guard << std::endl
        << "#define " << guard << std::endl
-       << "#line 1 \"" << xju::path::str(
-         std::make_pair(
-           xju::path::RelativePath(
-             std::vector<xju::path::DirName>(
-               inputFile.first.end()-cmd_line.first.dir_levels_,
-               inputFile.first.end())),
-           inputFile.second)) << "\"" << std::endl;
+       << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
     fh << "\n";
     
     xju::path::RelativePath const hhinc(
@@ -284,7 +283,8 @@ int main(int argc, char* argv[])
     
     fc << "#include <" 
        << xju::path::str(hhinc, outputHH.second)
-       << ">" << std::endl;
+       << ">" << std::endl
+       << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
     
     genNamespaceContent(y.first.front()->asA<hcp_ast::File>().items_, fh, fc);
     
