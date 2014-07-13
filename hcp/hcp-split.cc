@@ -64,7 +64,7 @@ void genClassMemberFunctionDef(
                          getClassName,
                          "::")
     << "::"
-    << std::string((*j)->begin().x_, x.end().x_);
+    << std::string((*j)->begin().x_, x.end().x_) << std::endl;
   h << "\n#line " << x.end().line_ << std::endl;
 }
 
