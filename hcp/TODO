@@ -1,14 +1,24 @@
 x test-JoiningIterator
 
-- replace xju::Exception with parser specific exception, that
+x replace xju::Exception with parser specific exception, that
   uses Parser* as context, to defer string creation until exception
   is actually formatted
-- get rid of includeAllExceptionContext (make it always true)
+- defer cause creation, resurrect specific cause strings
+- fix string literal parsing:
+  - no need to do continuations
+  - do it character-based with specials as per c++ standard
 
-- on parse failure, output the branch that got furthest
-  - note that only exceptions are xju::Exception thrown explicitly in
+- make readableRepr smarter to get better error messages, so that
+  other tools get the full exception context to work with:
+  - only show named parsers, except always show the last parser
+    context
+
+x get rid of includeAllExceptionContext (make it always true)
+
+x on parse failure, output the branch that got furthest
+  x note that only exceptions are xju::Exception thrown explicitly in
     parser.cc/hh
-  - replace with Malfomed exception that has at and can carry
+  x replace with Malfomed exception that has at and can carry
     other fail branches
 
 - also to get better errors need to make use of keywords, eg
