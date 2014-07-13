@@ -1,0 +1,15 @@
+client side:
+
+- can get (CORBA_Object.h class Object) CORBA::Object* from 
+  ORB::string_to_object
+- then generated code calls CORBA::Object::_PR_getobj()->_realNarrow(
+   _PD_repoId), which is just 
+    (omniObjRef.h) omniObjRef* CORBA::Object::pd_obj
+- ... generated code has a static _pof_F which is a
+  proxyObjectFactory and it has a omniObjRef* newObjRef that
+  returns a generated class p1::_objref_F : omniObjRef
+    which has an implementation of each method
+
+
+x allow "unchecked narrow"? Na
+

@@ -1,0 +1,9 @@
+%dummy.hh==<<
+
+p1.hh==%p1/p1.hh
+p1.cc==%p1/p1.cc
+
+%p1-main==p1-main.cc+(../../..%cxx-opts)+inc_sp=(/usr/local/omniORB-4.2.0/include)+lib_sp=(/usr/local/omniORB-4.2.0/lib)+lib='omniORB4' 'omnithread':auto.cxx.exe
+
+
+%p1==()+cmd=(../../../hcp/hcp-split) -l 1 (p1.hcp) 'p1.hh' 'p1.cc':output

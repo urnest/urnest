@@ -48,22 +48,31 @@ xju::Exception translate(CORBA::Exception const& e) throw()
   return xju::Exception(s.str(), XJU_TRACED);
 }
 
-CORBA::ORB* orbInit(std::string const& orbEndPoint) throw(
-  xju::Exception)
+CORBA::ORB* orbInit(
+  std::string const& orbEndPoint) throw(
+    xju::Exception)
 {
+  char const* argv[]={
+    "",
+    "-orbEndPoint", orbEndPoint.c_str()
+  };
+  int argc=sizeof(argv)/sizeof(argv[0]);
   try {
-    char const* argv[]={
-      "",
-      "-orbEndPoint", orbEndPoint.c_str()
-    };
-    int argc=sizeof(argv)/sizeof(argv[0]);
     return CORBA::ORB_init(argc, argv).retn();
   }
   catch (CORBA::Exception& ex) {
-    throw translate(ex);
+    xju::Exception e(translate(ex));
+    std::ostringstream s;
+    s << "CORBA::ORB_init with args "
+      << xju::format::join(argv, argv+argc, ", ");
+    e.addContext(s.str(), XJU_TRACED);
+    throw e;
   }
 }
 }
+
+template<class T>
+class cref;
 
 class ORBImpl
 {
@@ -79,10 +88,12 @@ public:
   }
 private:
   ::CORBA::ORB* orb_;
+
+  template<class T>
+  friend class cref;
 };
 
   
 }
 
 #endif
-

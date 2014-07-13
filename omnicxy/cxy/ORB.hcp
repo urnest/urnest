@@ -19,6 +19,9 @@ namespace cxy
 {
 class ORBImpl;
 
+template<class T>
+class cref;
+
 template<class BaseException>
 class ORB
 {
@@ -39,6 +42,9 @@ public:
   }
 private:
   ORBImpl impl_;
+
+  template<class T>
+  friend class cref;
 };
   
 }

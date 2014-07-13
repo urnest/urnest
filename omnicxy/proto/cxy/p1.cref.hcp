@@ -1,0 +1,88 @@
+// generated from p1.idl by omni cxy_cref idl backend specifying 
+// xju::Exception from "xju/Exception.hh" as base class for all exceptions
+#include "cxy/cref.hh"
+#include "cxy/exceptions.hh"
+#include "p1.hh"
+
+namespace cxy
+{
+template<class T>
+class objref;
+}
+
+template<>
+class cxy::cref<p1::F>
+{
+public:
+  explicit cref(cxy::ORB& orb, std::string const& uri) throw(
+    // no object with specified uri, including server
+    // not reachable and server does not know name
+    cxy::Exceptions<xju::Exception>::NoSuchObject,
+    // object with specified uri is not a p1::F
+    cxy::Exceptions<xju::Exception>::WrongType,
+    // other failure, eg communication failure
+    xju::Exception):
+      uri_(uri),
+      obj_(0)
+  {
+    try {
+      CORBA::Object_var x(orb.impl_.orb_.string_to_object(uri.c_str()));
+      REVISIT narrow;
+    }
+    catch(CORBA::Exception const& ee) {
+      xju::Exception e(cxy::translateException(ee));
+      std::ostringstream s;
+      s << "locate object "
+        << xju::format::quote(uri)
+        << " of type "
+        << cxy::cdr<p1::F>::repoId;
+      e.addContext(s.str(), std::make_pair(__FILE__, __LINE__));
+      throw e;
+    }
+  }
+  
+  cref(cref const& b) throw():
+      uri_(b.uri_),
+      obj_(obj)
+  {
+    if (obj_ && !obj_->_NP_is_nil())  omni::duplicateObjRef(obj_);
+  }
+
+  cref& operator=(cref const& b) throw()
+  {
+    if (this != &b) {
+      ::CORBA::release(obj_);
+      uri_= b.uri_;
+      obj_ = b.obj_;
+      if (obj_ && !obj_->_NP_is_nil())  omni::duplicateObjRef(obj_);
+    }
+    return *this;
+  }
+
+  ~cref() throw()
+  {
+    ::CORBA::release(p);
+  }
+  
+  void f1() throw(
+    // ipc failure
+    xju::Exception)
+  {
+    xju::assert_(obj_);
+    xju::assert_equal(true, obj_->_NP_is_nil());
+    obj_->f1();
+  }
+
+  p1::F* operator->() throw()
+  {
+    return obj_;
+  }
+  p1::F const* operator->() const throw()
+  {
+    return obj_;
+  }
+  
+private:
+  std::string uri_;
+  cxy::objref<p1::F>* obj_;
+};

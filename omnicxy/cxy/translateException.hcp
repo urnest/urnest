@@ -1,0 +1,44 @@
+// Copyright (c) 2014 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <omniORB4/CORBA.h>
+
+#include <iostream> // impl
+#include <typeinfo> // impl
+
+namespace cxy
+{
+template<class E>
+E translateException(CORBA::Exception const& e) throw()
+{
+  std::ostringstream s;
+  s << typeid(e).name();
+  {
+    CORBA::SystemException const* ee=
+      dynamic_cast<CORBA::SystemException const*>(&e);
+    if(ee) {
+#ifdef minor
+  // Digital Unix 3.2, and may be others as well, defines minor() as
+  // a macro in its sys/types.h. Get rid of it!
+#undef minor
+#endif
+      s << " minor " << ee->minor();
+    }
+  }
+  {
+    CORBA::PolicyError const* ee=
+      dynamic_cast<CORBA::PolicyError const*>(&e);
+    if(ee) {
+      s << " reason " << ee->reason;
+    }
+  }
+  return E(s.str(), std::make_pair(__FILE__,__LINE__));
+}
+
+}

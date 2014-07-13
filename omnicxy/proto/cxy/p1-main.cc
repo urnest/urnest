@@ -31,7 +31,7 @@ std::string makeURI(int port, std::string const& objectName) throw()
 class F_impl : public p1::F
 {
 public:
-  virtual void f1()
+  virtual void f1() throw(xju::Exception)
   {
     std::cout << "F::f1()" << std::endl;
   }
@@ -58,31 +58,31 @@ int main(int argc, char* argv[])
       cxy::cref<p1::F> ref(orb, makeURI(port, OBJECT_NAME));
       ref->f();
     }
-    else if (argv[2]==std::string("server")) {
-      std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
-      cxy::ORB orb(orbEndPoint);
+    // else if (argv[2]==std::string("server")) {
+    //   std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
+    //   cxy::ORB orb(orbEndPoint);
 
-      F_impl x;
+    //   F_impl x;
       
-      cxy::sref<F> const xa(orb, x);
+    //   cxy::sref<F> const xa(orb, x);
       
-      orb.run();
-    }
-    else
-    {
-      cxy::ORB<xju::Exception> orb(orbEndPoint);
+    //   orb.run();
+    // }
+    // else
+    // {
+    //   cxy::ORB<xju::Exception> orb(orbEndPoint);
 
-      F_impl x;
+    //   F_impl x;
       
-      cxy::sref<F> const xa(orb, x);
+    //   cxy::sref<F> const xa(orb, x);
       
-      xju::mt::Thread<cxy::ORB> server_t(orb, 
-                                         &cxy::ORB::run, // exceptions?
-                                         &cxy::ORB::stop);
+    //   xju::mt::Thread<cxy::ORB> server_t(orb, 
+    //                                      &cxy::ORB::run, // exceptions?
+    //                                      &cxy::ORB::stop);
       
-      cxy::cref<p1::F> ref(orb, makeURI(port, OBJECT_NAME));
-      ref->f();
-    }
+    //   cxy::cref<p1::F> ref(orb, makeURI(port, OBJECT_NAME));
+    //   ref->f();
+    // }
     
     return 0;
   }

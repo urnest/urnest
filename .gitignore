@@ -77,3 +77,5 @@ omnicxy/proto/cxx/p1.hh
 omnicxy/cxy/ORBImpl.cc
 omnicxy/cxy/ORBImpl.hh
 hcp/hcp-split
+omnicxy/proto/cxy/p1.cc
+omnicxy/proto/cxy/p1.hh
