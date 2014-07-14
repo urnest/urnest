@@ -24,6 +24,8 @@
 #include <utility>
 #include "bits/method1.hh"
 #include "bits/constmethod1.hh"
+#include "bits/method2.hh"
+#include "bits/constmethod2.hh"
 
 namespace xju
 {
