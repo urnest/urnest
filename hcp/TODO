@@ -13,6 +13,8 @@ x replace xju::Exception with parser specific exception, that
   - only show named parsers, except always show the last parser
     context
 
+- rework atLeastOne for saner error message - see REVISIT in test-parse.cc
+
 x get rid of includeAllExceptionContext (make it always true)
 
 x on parse failure, output the branch that got furthest
@@ -116,6 +118,16 @@ user	0m0.124s
 sys	0m0.008s
 1951
 
+... some work toward delays exception cause strings:
+
+xju@xjutv:~/urnest/hcp$ ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l
+end at line 146 column 1
+
+real    0m0.149s
+user    0m0.132s
+sys     0m0.008s
+1951
+
     - above includes all exception detail, except that "or" only keeps
       the term that got furthest, alas the resulting error messages
       are too verbose (see test-parser.cc), ideas:
@@ -127,8 +139,7 @@ sys	0m0.008s
           - perhaps revisit which parsers add context, perhaps go back
             to having just named parsers add context; but also keep
             the "leaf" context
-    - do first pass without creating any exception detail, then
+    ~ do first pass without creating any exception detail, then
       come back and reparse from where we went wrong in order to get
-      exception detail... maybe
-
-    
+      exception detail... no don't need that complex, just delay
+      string creation, always add context and make readableRepr smart

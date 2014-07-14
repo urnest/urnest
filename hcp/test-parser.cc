@@ -123,7 +123,7 @@ void test4()
       xju::assert_abort();
     }
     catch(hcp_parser::Exception const& e) {
-      xju::assert_equal(readableRepr(e), "line 1 column 4: failed to parse one of chars [abc] because\n  line 1 column 4: unexpected character");
+      xju::assert_equal(readableRepr(e), "line 1 column 4: failed to parse one of chars [abc] because\n  line 1 column 4: 'd' is not one of chars [abc]");
     }
   }
 }
@@ -153,7 +153,7 @@ void test5()
         xju::assert_abort();
       }
       catch(hcp_parser::Exception const& e) {
-        xju::assert_equal(readableRepr(e), "line 1 column 5: failed to parse one of chars [ab] or one of chars [c] because\n  line 1 column 5: failed to parse one of chars [c] because\n  line 1 column 5: unexpected character");
+        xju::assert_equal(readableRepr(e), "line 1 column 5: failed to parse one of chars [ab] or one of chars [c] because\n  line 1 column 5: failed to parse one of chars [c] because\n  line 1 column 5: 'd' is not one of chars [c]");
       }
     }
   }
@@ -175,7 +175,7 @@ void test5()
         xju::assert_abort();
       }
       catch(hcp_parser::Exception const& e) {
-        xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse one of chars [b] or one of chars [c] or one of chars [e] because\n  line 1 column 1: failed to parse one of chars [e] because\n  line 1 column 1: unexpected character");
+        xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse one of chars [b] or one of chars [c] or one of chars [e] because\n  line 1 column 1: failed to parse one of chars [e] because\n  line 1 column 1: 'a' is not one of chars [e]");
       }
     }
   }
@@ -223,7 +223,7 @@ void test7()
       xju::assert_abort();
     }
     catch(hcp_parser::Exception const& e) {
-      xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse at least one occurrance of one of chars [e] because\n  line 1 column 1: failed to parse one of chars [e] then zero or more occurrances of one of chars [e] because\n  line 1 column 1: failed to parse one of chars [e] because\n  line 1 column 1: unexpected character");
+      xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse at least one occurrance of one of chars [e] because\n  line 1 column 1: failed to parse one of chars [e] then zero or more occurrances of one of chars [e] because\n  line 1 column 1: failed to parse one of chars [e] because\n  line 1 column 1: 'a' is not one of chars [e]");
     }
   }
 }
@@ -275,7 +275,7 @@ void test10()
     xju::assert_abort();
   }
   catch(hcp_parser::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse one of chars [\\t\\n ] because\n  line 1 column 1: unexpected character");
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse one of chars [\\t\\n ] because\n  line 1 column 1: 'a' is not one of chars [\t\n ]");
   }
 }
 
@@ -353,12 +353,12 @@ void test11()
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache);
-    std::string const x("\"ab\\\"d\ne\"");
+    std::string const x("\"ab\\\"d\\ne\"");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
     at = hcp_parser::stringLiteral->parse(root, at, options);
-    xju::assert_equal(reconstruct(root), "\"ab\\\"d\ne\"");
+    xju::assert_equal(reconstruct(root), "\"ab\\\"d\\ne\"");
     xju::assert_equal(at.atEnd(), true);
   }
   catch(hcp_parser::Exception const& e) {
@@ -368,12 +368,12 @@ void test11()
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache);
-    std::string const x("\"ab\\\"d\ne\"   ");
+    std::string const x("\"ab\\\\d\\ne\"   ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
     at = hcp_parser::stringLiteral->parse(root, at, options);
-    xju::assert_equal(reconstruct(root), "\"ab\\\"d\ne\"   ");
+    xju::assert_equal(reconstruct(root), "\"ab\\\\d\\ne\"   ");
     xju::assert_equal(at.atEnd(), true);
   }
   catch(hcp_parser::Exception const& e) {
@@ -413,12 +413,13 @@ void test11()
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache);
+    // adjacent string literals combine
     std::string const x("\"abcde\" \"fred\"");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     at = hcp_parser::stringLiteral->parse(root, at, options);
-    xju::assert_equal(reconstruct(root), "\"abcde\" ");
-    xju::assert_equal(at.atEnd(), false);
+    xju::assert_equal(reconstruct(root), "\"abcde\" \"fred\"");
+    xju::assert_equal(at.atEnd(), true);
   }
   catch(hcp_parser::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
@@ -434,8 +435,11 @@ void test11()
     xju::assert_abort();
   }
   catch(hcp_parser::Exception const& e) {
-    // REVISIT: indecipherable error message
-    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse string literal because\n  line 1 column 1: failed to parse one of chars [\"] then (zero or more occurrances of (up to but not including one of chars [\"\\] then one of chars [\\] then one of chars [\"])) then up to but not including one of chars [\"] then one of chars [\"] then (zero or more occurrances of ((zero or more occurrances of one of chars [\\t ]) then one of chars [\\n] then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [\"] then (zero or more occurrances of (up to but not including one of chars [\"\\] then one of chars [\\] then one of chars [\"])) then up to but not including one of chars [\"] then one of chars [\"])) then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 2: failed to parse up to but not including one of chars [\"] because\n  line 1 column 7: end of input");
+    // REVISIT: error message contains irrelevant stuff, since it is the
+    // first x of atLeastOneOf*x that fails to parse but the error message
+    // waffles about the optional extras; for "at least one" it will only
+    // ever fail on the first one
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse string literal because\n  line 1 column 1: failed to parse at least one occurrance of one of chars [\"] then string literal characters then one of chars [\"] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 1: failed to parse one of chars [\"] then string literal characters then one of chars [\"] then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then zero or more occurrances of (one of chars [\"] then string literal characters then one of chars [\"] then zero or more occurrances of (one of chars [\\t\\n ] or comments)) because\n  line 1 column 7: failed to parse one of chars [\"] because\n  line 1 column 7: end of input");
   }
 }
 
@@ -783,7 +787,7 @@ void test18()
     xju::assert_abort();
   }
   catch(hcp_parser::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse typedef statement because\n  line 1 column 1: failed to parse \"typedef\" then some whitespace then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [;] then one of chars [;] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 8: failed to parse some whitespace because\n  line 1 column 8: failed to parse at least one occurrance of one of chars [\\t\\n ] because\n  line 1 column 8: failed to parse one of chars [\\t\\n ] then zero or more occurrances of one of chars [\\t\\n ] because\n  line 1 column 8: failed to parse one of chars [\\t\\n ] because\n  line 1 column 8: unexpected character");
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse typedef statement because\n  line 1 column 1: failed to parse \"typedef\" then some whitespace then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [;] then one of chars [;] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 8: failed to parse some whitespace because\n  line 1 column 8: failed to parse at least one occurrance of one of chars [\\t\\n ] because\n  line 1 column 8: failed to parse one of chars [\\t\\n ] then zero or more occurrances of one of chars [\\t\\n ] because\n  line 1 column 8: failed to parse one of chars [\\t\\n ] because\n  line 1 column 8: 'i' is not one of chars [\t\n ]");
   }
 }
 
@@ -824,7 +828,7 @@ void test19()
     xju::assert_abort();
   }
   catch(hcp_parser::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse using statement because\n  line 1 column 1: failed to parse \"using\" then some whitespace then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [;] then one of chars [;] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 6: failed to parse some whitespace because\n  line 1 column 6: failed to parse at least one occurrance of one of chars [\\t\\n ] because\n  line 1 column 6: failed to parse one of chars [\\t\\n ] then zero or more occurrances of one of chars [\\t\\n ] because\n  line 1 column 6: failed to parse one of chars [\\t\\n ] because\n  line 1 column 6: unexpected character");
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse using statement because\n  line 1 column 1: failed to parse \"using\" then some whitespace then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [;] then one of chars [;] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 6: failed to parse some whitespace because\n  line 1 column 6: failed to parse at least one occurrance of one of chars [\\t\\n ] because\n  line 1 column 6: failed to parse one of chars [\\t\\n ] then zero or more occurrances of one of chars [\\t\\n ] because\n  line 1 column 6: failed to parse one of chars [\\t\\n ] because\n  line 1 column 6: 'm' is not one of chars [\t\n ]");
   }
 }
 
@@ -858,7 +862,7 @@ void test20()
     xju::assert_abort();
   }
   catch(hcp_parser::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse enum definition because\n  line 1 column 1: failed to parse \"enum\" then some whitespace then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [;] then one of chars [;] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 5: failed to parse some whitespace because\n  line 1 column 5: failed to parse at least one occurrance of one of chars [\\t\\n ] because\n  line 1 column 5: failed to parse one of chars [\\t\\n ] then zero or more occurrances of one of chars [\\t\\n ] because\n  line 1 column 5: failed to parse one of chars [\\t\\n ] because\n  line 1 column 5: unexpected character");
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse enum definition because\n  line 1 column 1: failed to parse \"enum\" then some whitespace then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [;] then one of chars [;] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 5: failed to parse some whitespace because\n  line 1 column 5: failed to parse at least one occurrance of one of chars [\\t\\n ] because\n  line 1 column 5: failed to parse one of chars [\\t\\n ] then zero or more occurrances of one of chars [\\t\\n ] because\n  line 1 column 5: failed to parse one of chars [\\t\\n ] because\n  line 1 column 5: '\340' is not one of chars [\t\n ]");
   }
 }
 
@@ -911,7 +915,7 @@ void test21()
     xju::assert_abort();
   }
   catch(hcp_parser::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse function declaration because\n  line 1 column 1: failed to parse function qualifiers then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [();[]{}] or (((\"operator\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then (\"<<\" or \">>\" or \"==\" or \"<=\" or \">=\" or \"<\" or \">\" or \"++\" or \"--\" or \"->\" or \"+\" or \"-\" or \"|=\" or \"&=\" or \"|\" or \"&\" or \"[]\" or \"!\" or \"%=\" or \"%\" or \"=\" or \"*\") then zero or more occurrances of (one of chars [\\t\\n ] or comments)) or ((zero or more occurrances of (at least one occurrance of one of chars 'a'..'z' or one of chars 'A'..'Z' or one of chars '0'..'9' or one of chars [_] then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then \"::\" then zero or more occurrances of (one of chars [\\t\\n ] or comments))) then at least one occurrance of one of chars 'a'..'z' or one of chars 'A'..'Z' or one of chars '0'..'9' or one of chars [_] then zero or more occurrances of (one of chars [\\t\\n ] or comments))) then one of chars [(]) then function name then \"(\" then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including \")\" then \")\" then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [:;{] or (\"try\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [:]) then one of chars [;] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 2 column 27: failed to parse one of chars [;] because\n  line 2 column 27: unexpected character");
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse function declaration because\n  line 1 column 1: failed to parse function qualifiers then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [();[]{}] or (((\"operator\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then (\"<<\" or \">>\" or \"==\" or \"<=\" or \">=\" or \"<\" or \">\" or \"++\" or \"--\" or \"->\" or \"+\" or \"-\" or \"|=\" or \"&=\" or \"|\" or \"&\" or \"[]\" or \"!\" or \"%=\" or \"%\" or \"=\" or \"*\") then zero or more occurrances of (one of chars [\\t\\n ] or comments)) or ((zero or more occurrances of (at least one occurrance of one of chars 'a'..'z' or one of chars 'A'..'Z' or one of chars '0'..'9' or one of chars [_] then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then \"::\" then zero or more occurrances of (one of chars [\\t\\n ] or comments))) then at least one occurrance of one of chars 'a'..'z' or one of chars 'A'..'Z' or one of chars '0'..'9' or one of chars [_] then zero or more occurrances of (one of chars [\\t\\n ] or comments))) then one of chars [(]) then function name then \"(\" then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including \")\" then \")\" then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [:;{] or (\"try\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [:]) then one of chars [;] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 2 column 27: failed to parse one of chars [;] because\n  line 2 column 27: '{' is not one of chars [;]");
   }
 }
 
@@ -1185,7 +1189,7 @@ void test25(std::vector<std::string> const& f)
     xju::assert_abort();
   }
   catch(hcp_parser::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse anonymous namespace because\n  line 1 column 1: failed to parse \"namespace\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [{] then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then (zero or more occurrances of (comments or #include with //impl marker or #include or other preprocessor directive or class definition or typedef statement or using statement or enum definition or some whitespace or function declaration or template function definition or function definition or object declaration)) then one of chars [}] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 11: failed to parse one of chars [{] because\n  line 1 column 11: unexpected character");
+    xju::assert_equal(readableRepr(e), "line 1 column 1: failed to parse anonymous namespace because\n  line 1 column 1: failed to parse \"namespace\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [{] then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then (zero or more occurrances of (comments or #include with //impl marker or #include or other preprocessor directive or class definition or typedef statement or using statement or enum definition or some whitespace or function declaration or template function definition or function definition or object declaration)) then one of chars [}] then zero or more occurrances of (one of chars [\\t\\n ] or comments) because\n  line 1 column 11: failed to parse one of chars [{] because\n  line 1 column 11: 'r' is not one of chars [{]");
   }
 }
 

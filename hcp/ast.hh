@@ -125,12 +125,14 @@ class LineCommentTag{};
 class BlockCommentTag{};
 class CommentsTag{};
 class StringLiteralTag{};
+class S_CharsTag{};
 class HashIncludeTag{};
 
 typedef TaggedCompositeItem<LineCommentTag> LineComment;
 typedef TaggedCompositeItem<BlockCommentTag> BlockComment;
 typedef TaggedCompositeItem<CommentsTag> Comments;
 typedef TaggedCompositeItem<StringLiteralTag> StringLiteral;
+typedef TaggedCompositeItem<S_CharsTag> S_Chars;
 typedef TaggedCompositeItem<HashIncludeTag> HashInclude;
 
 class HashIncludeImplTag{};

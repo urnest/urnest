@@ -40,18 +40,35 @@ class Parser;
 class Exception
 {
 public:
-  Exception(std::string const& cause, I at, xju::Traced const& trace) throw():
+  class Cause
+  {
+  public:
+    virtual ~Cause() throw()
+    {
+    }
+    virtual std::string str() const throw() = 0;
+  };
+    
+  Exception(xju::Shared<Cause const> cause, I at, xju::Traced const& trace) throw():
     cause_(cause),
     at_(at),
     trace_(trace) {
   }
+  // gcc 4.7.2 refuses to generate the copy constructor
+  Exception(Exception const& b) throw():
+      cause_(b.cause_),
+      at_(b.at_),
+      trace_(b.trace_),
+      context_(b.context_) {
+  }
+  
   void addContext(Parser const& parser, I at, xju::Traced const& trace) throw()
   {
     context_.push_back(std::make_pair(std::make_pair(&parser, at), trace));
   }
   std::vector<std::pair<std::pair<Parser const*, I>, xju::Traced> > context_;
 
-  std::string const cause_;
+  xju::Shared<Cause const> const cause_;
   I const at_;
   xju::Traced const trace_;
 };

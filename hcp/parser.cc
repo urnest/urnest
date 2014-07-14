@@ -24,20 +24,38 @@ namespace hcp_parser
 
 namespace
 {
-  std::string contextReadableRepr(
-    std::pair<std::pair<Parser const*, I>, xju::Traced> const& c) throw()
+class FixedCause : public hcp_parser::Exception::Cause
+{
+public:
+  ~FixedCause() throw()
   {
-    std::ostringstream s;
-    s << c.first.second << ": failed to parse " << c.first.first->target();
-    return s.str();
   }
+  explicit FixedCause(std::string const& cause) throw():
+      cause_(cause)
+  {
+  }
+  virtual std::string str() const throw()
+  {
+    return cause_;
+  }
+  std::string const cause_;
+};
+
+    
+std::string contextReadableRepr(
+  std::pair<std::pair<Parser const*, I>, xju::Traced> const& c) throw()
+{
+  std::ostringstream s;
+  s << c.first.second << ": failed to parse " << c.first.first->target();
+  return s.str();
+}
 }
   
 std::string readableRepr(Exception const& e) throw()
 {
   std::ostringstream s;
   if (e.context_.size()==0) {
-    s << e.at_ << ": " << e.cause_;
+    s << e.at_ << ": " << e.cause_->str();
   }
   else {
     std::vector<std::string> context;
@@ -47,7 +65,7 @@ std::string readableRepr(Exception const& e) throw()
                      " because\n  "),
                    std::ptr_fun(contextReadableRepr));
     s << " because\n  "
-      << e.at_ << ": " << e.cause_;
+      << e.at_ << ": " << e.cause_->str();
   }
   return s.str();
 }
@@ -157,7 +175,7 @@ public:
 
 class ParseNot : public Parser
 {
-  static std::string const expected_parse_failure;
+  static xju::Shared<Exception::Cause const> const expected_parse_failure;
 public:
   explicit ParseNot(PR term) throw():
     term_(term)
@@ -183,7 +201,8 @@ public:
   virtual std::string target() const throw();
 
 };
-std::string const ParseNot::expected_parse_failure("expected parse failure");
+xju::Shared<Exception::Cause const> const ParseNot::expected_parse_failure(
+  new FixedCause("expected parse failure"));
 
 std::string ParseZeroOrMore::target() const throw() 
 {
@@ -237,7 +256,8 @@ std::string ParseNot::target() const throw() {
 
 namespace
 {
-  std::string const end_of_input("end of input");
+  xju::Shared<Exception::Cause const> const end_of_input(
+    new FixedCause("end of input"));
   Exception EndOfInput(I at, xju::Traced const& trace) throw()
   {
     return Exception(end_of_input, at, trace);
@@ -295,7 +315,9 @@ public:
     }
     if (chars_.find(*at) == chars_.end()) {
       return ParseResult(
-        Exception(ParseOneOfChars::unexpected_char, at, XJU_TRACED));
+        Exception(
+          xju::Shared<Exception::Cause const>(new UnexpectedChar(at, chars_)), 
+          at, XJU_TRACED));
     }
     return ParseResult(
       std::make_pair(
@@ -313,13 +335,75 @@ public:
     return s.str();
   }
 
-  static std::string const unexpected_char;
+  class UnexpectedChar : public Exception::Cause
+  {
+  public:
+    UnexpectedChar(I const at, std::set<char> const& chars) throw():
+        at_(at),
+        chars_(chars) {
+    }
+    ~UnexpectedChar() throw()
+    {
+    }
+    std::string str() const throw()
+    {
+      std::ostringstream s;
+      s << "'" << (*at_) << "'" << " is not one of chars [" 
+        << xju::format::join(chars_.begin(), chars_.end(), "") << "]";
+      return s.str();
+    }
+    I const at_;
+    std::set<char> const chars_;
+  };
+
 };
-std::string const ParseOneOfChars::unexpected_char("unexpected character");
+
+class ParseAnyCharExcept : public Parser
+{
+public:
+  std::set<char> const chars_;
+  
+  ~ParseAnyCharExcept() throw()
+  {
+  }
+  
+  explicit ParseAnyCharExcept(std::string const& chars) throw():
+    chars_(chars.begin(), chars.end()) {
+  }
+  // Parser::
+  virtual ParseResult parse_(I const at, Options const& o) throw()
+  {
+    if (at.atEnd()) {
+      return ParseResult(EndOfInput(at, XJU_TRACED));
+    }
+    if (chars_.find(*at) != chars_.end()) {
+      return ParseResult(
+        Exception(ParseAnyCharExcept::unexpected_char, at, XJU_TRACED));
+    }
+    return ParseResult(
+      std::make_pair(
+        IRs(1U, new hcp_ast::String(at, xju::next(at))), xju::next(at)));
+  }
+  // Parser::
+  virtual std::string target() const throw()
+  {
+    std::vector<std::string> x;
+    std::transform(chars_.begin(), chars_.end(), 
+                   std::back_inserter(x), 
+                   printChar);
+    std::ostringstream s;
+    s << "one of chars [" << xju::format::join(x.begin(), x.end(), "") << "]";
+    return s.str();
+  }
+
+  static xju::Shared<Exception::Cause const> const unexpected_char;
+};
+xju::Shared<Exception::Cause const> const ParseAnyCharExcept::unexpected_char(
+  new FixedCause("unexpected character"));
 
 class ParseCharInRange : public Parser
 {
-  static std::string const not_in_range;
+  static xju::Shared<Exception::Cause const> const not_in_range;
 public:
   char const min_;
   char const max_;
@@ -350,7 +434,8 @@ public:
     return s.str();
   }
 };
-std::string const ParseCharInRange::not_in_range("character not in range");
+xju::Shared<Exception::Cause const> const ParseCharInRange::not_in_range(
+  new FixedCause("character not in range"));
 
 class ParseUntil : public Parser
 {
@@ -383,7 +468,7 @@ public:
 
 class ParseLiteral : public Parser
 {
-  static std::string const mismatch;
+  static xju::Shared<Exception::Cause const> const mismatch;
 public:
   std::string const x_;
   
@@ -420,13 +505,14 @@ public:
     return s.str();
   }
 };
-std::string const ParseLiteral::mismatch("mismatch");
+xju::Shared<Exception::Cause const> const ParseLiteral::mismatch(
+  new FixedCause("mismatch"));
 
 class ParseHash : public Parser
 {
 public:
-  static std::string not_at_column_1;
-  static std::string line_does_not_start_with_hash;
+  static xju::Shared<Exception::Cause const> not_at_column_1;
+  static xju::Shared<Exception::Cause const> line_does_not_start_with_hash;
   
   virtual ~ParseHash() throw() {
   }
@@ -456,8 +542,10 @@ public:
     return s.str();
   }
 };
-std::string ParseHash::not_at_column_1("not at column 1");
-std::string ParseHash::line_does_not_start_with_hash("line does not start with '#'");
+xju::Shared<Exception::Cause const> ParseHash::not_at_column_1(
+  new FixedCause("not at column 1"));
+xju::Shared<Exception::Cause const> ParseHash::line_does_not_start_with_hash(
+  new FixedCause("line does not start with '#'"));
 
 class ParseBalanced : public Parser
 {
@@ -571,6 +659,11 @@ public:
 PR parseOneOfChars(std::string const& chars) throw()
 {
   return PR(new ParseOneOfChars(chars));
+}
+
+PR parseAnyCharExcept(std::string const& chars) throw()
+{
+  return PR(new ParseAnyCharExcept(chars));
 }
 
 PR charInRange(char const min, char const max) throw()
@@ -688,24 +781,31 @@ PR doubleQuote(parseOneOfChars("\""));
 PR backslash(parseOneOfChars("\\"));
 PR oneChar(new ParseAnyChar);
 
-// REVISIT: rework to make more sense
-// string literal up to first double quote (does not include
-// next-line continuations)
-PR stringLiteralAtom(
-  doubleQuote+
-  (zeroOrMore*(nonBackslashDoubleQuote+backslash+doubleQuote))+
-  nonDoubleQuote+
-  doubleQuote);
+PR octalDigit=charInRange('0', '7');
 
-PR stringLiteralContinuation(
-  (zeroOrMore*parseOneOfChars(" \t"))+parseOneOfChars("\n")+
-  eatWhite+stringLiteralAtom);
+PR hexDigit=charInRange('0','9')|
+       charInRange('a','f')|
+       charInRange('A','F');
+
+PR stringEscapeSequence(
+  parseLiteral("\\")+(
+    parseOneOfChars("'\"?\\abfnrtv")|
+    (octalDigit+octalDigit+octalDigit)|
+    (octalDigit+octalDigit)|
+    octalDigit|
+    (parseLiteral("x")+atLeastOne*hexDigit)));
+
+PR s_char(
+  parseAnyCharExcept("\\\"\n")|
+  stringEscapeSequence);
+
+PR s_chars(new NamedParser<hcp_ast::S_Chars>(
+             "string literal characters",
+             zeroOrMore*s_char));
 
 PR stringLiteral(new NamedParser<hcp_ast::StringLiteral>(
   "string literal",
-  stringLiteralAtom+
-  zeroOrMore*stringLiteralContinuation+
-  eatWhite));
+  atLeastOne*(doubleQuote+s_chars+doubleQuote+eatWhite)));
 
 //
 // to be able to split a combined .h and .cpp (ie a .hcp) file into
@@ -1051,7 +1151,7 @@ namespace
 class ParseEndOfFile : public Parser
 {
 public:
-  static std::string const expected_end_of_input;
+  static xju::Shared<Exception::Cause const> const expected_end_of_input;
   
   // Parser::
   virtual ParseResult parse_(I const at, Options const& o) throw() 
@@ -1072,7 +1172,9 @@ public:
     return "end of file";
   }
 };
-std::string const ParseEndOfFile::expected_end_of_input("expected end of input");
+xju::Shared<Exception::Cause const> const 
+ParseEndOfFile::expected_end_of_input(
+  new FixedCause("expected end of input"));
 }
 
 PR endOfFile(new ParseEndOfFile);
