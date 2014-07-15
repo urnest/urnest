@@ -378,7 +378,9 @@ public:
     }
     if (chars_.find(*at) != chars_.end()) {
       return ParseResult(
-        Exception(ParseAnyCharExcept::unexpected_char, at, XJU_TRACED));
+        Exception(
+          xju::Shared<Exception::Cause const>(new UnexpectedChar(at,chars_)), 
+          at, XJU_TRACED));
     }
     return ParseResult(
       std::make_pair(
@@ -392,18 +394,36 @@ public:
                    std::back_inserter(x), 
                    printChar);
     std::ostringstream s;
-    s << "one of chars [" << xju::format::join(x.begin(), x.end(), "") << "]";
+    s << "any char except [" 
+      << xju::format::join(x.begin(), x.end(), "") << "]";
     return s.str();
   }
 
-  static xju::Shared<Exception::Cause const> const unexpected_char;
+  class UnexpectedChar : public Exception::Cause
+  {
+  public:
+    UnexpectedChar(I const at, std::set<char> const& chars) throw():
+        at_(at),
+        chars_(chars) {
+    }
+    ~UnexpectedChar() throw()
+    {
+    }
+    std::string str() const throw()
+    {
+      std::ostringstream s;
+      s << "'" << (*at_) << "'" << " is one of [" 
+        << xju::format::join(chars_.begin(), chars_.end(), "") << "]";
+      return s.str();
+    }
+    I const at_;
+    std::set<char> const chars_;
+  };
+
 };
-xju::Shared<Exception::Cause const> const ParseAnyCharExcept::unexpected_char(
-  new FixedCause("unexpected character"));
 
 class ParseCharInRange : public Parser
 {
-  static xju::Shared<Exception::Cause const> const not_in_range;
 public:
   char const min_;
   char const max_;
@@ -420,7 +440,10 @@ public:
     }
     if (((*at) < min_) || ((*at) > max_)) {
       return ParseResult(
-        Exception(ParseCharInRange::not_in_range, at, XJU_TRACED));
+        Exception(
+          xju::Shared<Exception::Cause const>(
+            new CharNotInRange(at, min_, max_)),
+          at, XJU_TRACED));
     }
     return ParseResult(
       std::make_pair(
@@ -433,9 +456,30 @@ public:
     s << "one of chars '" << printChar(min_) <<"'..'" << printChar(max_) <<"'";
     return s.str();
   }
+  class CharNotInRange : public Exception::Cause
+  {
+  public:
+    CharNotInRange(I const at, char const min, char const max) throw():
+        at_(at),
+        min_(min),
+        max_(max) {
+    }
+    ~CharNotInRange() throw()
+    {
+    }
+    std::string str() const throw()
+    {
+      std::ostringstream s;
+      s << "'" << printChar(*at_) << "'" << " is not one of chars '" 
+        << printChar(min_) <<"'..'" << printChar(max_) <<"'";
+      return s.str();
+    }
+    I const at_;
+    char const min_;
+    char const max_;
+  };
+
 };
-xju::Shared<Exception::Cause const> const ParseCharInRange::not_in_range(
-  new FixedCause("character not in range"));
 
 class ParseUntil : public Parser
 {
@@ -468,7 +512,6 @@ public:
 
 class ParseLiteral : public Parser
 {
-  static xju::Shared<Exception::Cause const> const mismatch;
 public:
   std::string const x_;
   
@@ -487,7 +530,10 @@ public:
         std::mismatch(x_.begin(), x_.end(), at));
       if (x.first != x_.end()) {
         return ParseResult(
-          Exception(ParseLiteral::mismatch, x.second, XJU_TRACED));
+          Exception(
+            xju::Shared<Exception::Cause const>(
+              new Mismatch(*x.second, *x.first)),
+            x.second, XJU_TRACED));
       }
       return ParseResult(
         std::make_pair(IRs(1U, IR(new hcp_ast::String(at, x.second))),
@@ -504,15 +550,35 @@ public:
     s << "\"" << x_ << "\"";
     return s.str();
   }
+
+  class Mismatch : public Exception::Cause
+  {
+  public:
+    Mismatch(char const got, char const wanted) throw():
+        got_(got),
+        wanted_(wanted)
+    {
+    }
+    ~Mismatch() throw()
+    {
+    }
+    std::string str() const throw()
+    {
+      std::ostringstream s;
+      s << "expected '" << printChar(wanted_) << "'" 
+        << " but found '" << printChar(got_) << "'";
+      return s.str();
+    }
+    char const got_;
+    char const wanted_;
+  };
+
 };
-xju::Shared<Exception::Cause const> const ParseLiteral::mismatch(
-  new FixedCause("mismatch"));
 
 class ParseHash : public Parser
 {
 public:
   static xju::Shared<Exception::Cause const> not_at_column_1;
-  static xju::Shared<Exception::Cause const> line_does_not_start_with_hash;
   
   virtual ~ParseHash() throw() {
   }
@@ -529,7 +595,9 @@ public:
     }
     if ((*at) != '#') {
       return ParseResult(
-        Exception(ParseHash::line_does_not_start_with_hash, at, XJU_TRACED));
+        Exception(
+          xju::Shared<Exception::Cause>(
+            new NotHash(*at)), at, XJU_TRACED));
     }
     I const nowAt(xju::next(at));
     return ParseResult(
@@ -541,11 +609,30 @@ public:
     s << "'#' at start of line";
     return s.str();
   }
+
+  class NotHash : public Exception::Cause
+  {
+  public:
+    NotHash(char const got) throw():
+        got_(got)
+    {
+    }
+    ~NotHash() throw()
+    {
+    }
+    std::string str() const throw()
+    {
+      std::ostringstream s;
+      s << "line starts with '" << printChar(got_) << "', not '#'";
+      return s.str();
+    }
+    char const got_;
+  };
+    
+
 };
 xju::Shared<Exception::Cause const> ParseHash::not_at_column_1(
   new FixedCause("not at column 1"));
-xju::Shared<Exception::Cause const> ParseHash::line_does_not_start_with_hash(
-  new FixedCause("line does not start with '#'"));
 
 class ParseBalanced : public Parser
 {
@@ -1151,14 +1238,14 @@ namespace
 class ParseEndOfFile : public Parser
 {
 public:
-  static xju::Shared<Exception::Cause const> const expected_end_of_input;
-  
   // Parser::
   virtual ParseResult parse_(I const at, Options const& o) throw() 
   {
     if (!at.atEnd()) {
       return ParseResult(
-        Exception(ParseEndOfFile::expected_end_of_input, at, XJU_TRACED));
+        Exception(
+          xju::Shared<Exception::Cause>(
+            new NotEndOfInput(*at)), at, XJU_TRACED));
     }
     return ParseResult(
       std::make_pair(
@@ -1171,10 +1258,27 @@ public:
   virtual std::string target() const throw() {
     return "end of file";
   }
+
+  class NotEndOfInput : public Exception::Cause
+  {
+  public:
+    NotEndOfInput(char const got) throw():
+        got_(got)
+    {
+    }
+    ~NotEndOfInput() throw()
+    {
+    }
+    std::string str() const throw()
+    {
+      std::ostringstream s;
+      s << "expected end of input, not '" << printChar(got_) << "'";
+      return s.str();
+    }
+    char const got_;
+  };
+
 };
-xju::Shared<Exception::Cause const> const 
-ParseEndOfFile::expected_end_of_input(
-  new FixedCause("expected end of input"));
 }
 
 PR endOfFile(new ParseEndOfFile);

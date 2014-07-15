@@ -153,6 +153,8 @@ public:
   // What the parser matches, e.g. "string literal", "typedef", "class"
   virtual std::string target() const throw() = 0;
 
+  // post: result contains references to at or beyond, even if parsing
+  //       fails (ie if result.failed())
   ParseResult parse(I const at, Options const& options) throw() 
   {
     CacheKey const k(at, this);
@@ -171,6 +173,7 @@ public:
   I parse(hcp_ast::CompositeItem& parent, I const at, Options const& options)
     throw(
       // post: parent unmodified
+      // post: exception contains refererences to this and at
       Exception)
   {
     ParseResult const r(parse(at, options));

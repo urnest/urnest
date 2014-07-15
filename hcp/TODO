@@ -3,10 +3,12 @@ x test-JoiningIterator
 x replace xju::Exception with parser specific exception, that
   uses Parser* as context, to defer string creation until exception
   is actually formatted
-- defer cause creation, resurrect specific cause strings
-- fix string literal parsing:
-  - no need to do continuations
-  - do it character-based with specials as per c++ standard
+x defer cause creation, resurrect specific cause strings
+x fix string literal parsing:
+  x no need to do continuations
+  x do it character-based with specials as per c++ standard
+
+- add charLiteral(char) and use it instead of oneOfChars("x")
 
 - make readableRepr smarter to get better error messages, so that
   other tools get the full exception context to work with:
@@ -30,6 +32,8 @@ x on parse failure, output the branch that got furthest
   keyword class (or template, namespace, enum etc)
   - try using "longest branch" as error, combined with prepending
     ! parseKeyword() to parseFunction
+
+- also consider adding lookingAt() to see if that gives better errors
 
 x speed parsing by caching results <at,parser> => PV or exception
   stats:
