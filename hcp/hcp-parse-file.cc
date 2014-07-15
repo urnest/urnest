@@ -145,11 +145,17 @@ int main(int argc, char* argv[])
         << ")";
       throw xju::Exception(s.str(), XJU_TRACED);
     }
-    
-    hcp_parser::I at(x.begin(), x.end());
-    for(size_t i=0; i != options.offset_; ++i, ++at);
-    hcp_parser::PV const y(*(*i).second->parse_(at, options.parser_options_));
-    std::cout << "end at " << y.second << std::endl;
+
+    try {
+      hcp_parser::I at(x.begin(), x.end());
+      size_t u;
+      for(u=0; u != options.offset_; ++u, ++at);
+      hcp_parser::PV const y(*(*i).second->parse_(at, options.parser_options_));
+      std::cout << "end at " << y.second << std::endl;
+    }
+    catch(hcp_parser::Exception const& e) {
+      throw xju::Exception(readableRepr(e), XJU_TRACED);
+    }
   }
   catch(xju::Exception& e) {
     std::ostringstream s;

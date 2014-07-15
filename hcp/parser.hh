@@ -10,6 +10,11 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
+// C++ syntax parsing, for example usage, see:
+//  - hcp-parse-file.cc
+//  - hcp-split.cc
+//  - test-parser.cc
+//
 #ifndef HCP_PARSER_H_
 #define HCP_PARSER_H_
 
@@ -170,6 +175,7 @@ public:
     return (*i).second;
   }
 
+  // Parse target() at specified I, appending parsed (ie ast) items to parent.
   I parse(hcp_ast::CompositeItem& parent, I const at, Options const& options)
     throw(
       // post: parent unmodified
@@ -224,7 +230,7 @@ class AtLeastOne{};
 
 PR operator*(AtLeastOne a, PR b) throw();
 
-// pre: ItemType is a CompositeItem
+// pre: ItemType is a ast::CompositeItem
 template<class ItemType>
 class NamedParser : public Parser
 {
