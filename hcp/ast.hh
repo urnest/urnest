@@ -10,8 +10,13 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef HCP_AST_HH_
-#define HCP_AST_HH_
+// AST produced by parsing C++, note that the tree defined
+// here is unconstrained, eg a StringLiteral node could contain
+// a ClassDef node (which is obviously not valid C++). Constraints
+// are imposed by the parser (see parser.hh)
+//
+#ifndef HCP_AST_HH
+#define HCP_AST_HH
 
 #include <xju/parse.hh>
 #include "xju/Shared.hh"
@@ -82,10 +87,14 @@ public:
   virtual I end() const throw() {
     return items_.back()->end();
   }
-  
+
+  // The items that make up this composite item, ie the
+  // children of this AST node.
   std::vector<IR> items_;
 };
 
+// A convenient way to create CompositeItem subclasses
+// (see below for subclasses that the parser creates).
 template<class Tag>
 class TaggedCompositeItem : public CompositeItem
 {

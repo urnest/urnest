@@ -41,7 +41,22 @@ typedef std::vector<IR> IRs;
 typedef std::pair<IRs, I> PV;
 
 class Parser;
-    
+extern xju::Shared<Parser> file; // reference to whole-file parser
+
+// The simplest parsing interface, which parses the specified
+// type of C++ element (default is "whole file") assumed to
+// appear at the specified startOfElement, appending ast Items
+// to the specified parent.items_, and returning the position
+// just after the parsed element.
+// 
+I parse(hcp_ast::CompositeItem& parent,
+        I const startOfElement,
+        xju::Shared<Parser> = file,
+        bool traceToStdout = false)
+  throw(
+    // post: parent unmodified
+    xju::Exception);
+
 class Exception
 {
 public:
@@ -175,24 +190,6 @@ public:
     return (*i).second;
   }
 
-  // Parse target() at specified I, appending parsed (ie ast) items to parent.
-  I parse(hcp_ast::CompositeItem& parent, I const at, Options const& options)
-    throw(
-      // post: parent unmodified
-      // post: exception contains refererences to this and at
-      Exception)
-  {
-    ParseResult const r(parse(at, options));
-    if (r.failed()) {
-      throw r.e();
-    }
-    PV const x(*r);
-    std::copy(x.first.begin(), 
-              x.first.end(), 
-              std::back_inserter(parent.items_));
-    return x.second;
-  }
-
   template<class T>
   bool isA() const throw() {
     return dynamic_cast<T const*>(this);
@@ -230,9 +227,17 @@ class AtLeastOne{};
 
 PR operator*(AtLeastOne a, PR b) throw();
 
+class NamedParser_ : public Parser
+{
+public:
+  virtual ~NamedParser_() throw()
+  {
+  }
+};
+  
 // pre: ItemType is a ast::CompositeItem
 template<class ItemType>
-class NamedParser : public Parser
+class NamedParser : public NamedParser_
 {
 public:
   std::string const name_;

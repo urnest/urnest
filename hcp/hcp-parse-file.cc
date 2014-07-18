@@ -146,16 +146,13 @@ int main(int argc, char* argv[])
       throw xju::Exception(s.str(), XJU_TRACED);
     }
 
-    try {
-      hcp_parser::I at(x.begin(), x.end());
-      size_t u;
-      for(u=0; u != options.offset_; ++u, ++at);
-      hcp_parser::PV const y(*(*i).second->parse_(at, options.parser_options_));
-      std::cout << "end at " << y.second << std::endl;
-    }
-    catch(hcp_parser::Exception const& e) {
-      throw xju::Exception(readableRepr(e), XJU_TRACED);
-    }
+    hcp_parser::I at(x.begin(), x.end());
+    size_t u;
+    for(u=0; u != options.offset_; ++u, ++at);
+    hcp_ast::CompositeItem root;
+    at = hcp_parser::parse(root, at, (*i).second, 
+                           options.parser_options_.trace_);
+    std::cout << "end at " << at << std::endl;
   }
   catch(xju::Exception& e) {
     std::ostringstream s;

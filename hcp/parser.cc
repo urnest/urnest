@@ -22,6 +22,7 @@ static const char rcsid[] = "$RCSfile: twt_cxx.el,v $ $Revision: 1.2 $";
 namespace hcp_parser
 {
 
+
 namespace
 {
 class FixedCause : public hcp_parser::Exception::Cause
@@ -1291,13 +1292,51 @@ PR file(new NamedParser<hcp_ast::File>(
               namespace_leaf)+
   endOfFile));
 
-/*
-splitting:
-- anon namespace moves to .cc
-- extern marks global object
-- template class/fn stays in .hh
-- generate include guard from nr levels, generate .cc include using same
-  nr levels
+I parse(hcp_ast::CompositeItem& parent,
+        I const startOfElement,
+        xju::Shared<Parser> elementType,
+        bool traceToStdout)
+  throw(
+    // post: parent unmodified
+    xju::Exception)
+{
+  try {
+    Options options(traceToStdout, Cache(new hcp_parser::CacheVal()));
+    ParseResult const r(elementType->parse(startOfElement, options));
+    if (r.failed()) {
+      throw r.e();
+    }
+    PV const x(*r);
+    std::copy(x.first.begin(), 
+              x.first.end(), 
+              std::back_inserter(parent.items_));
+    return x.second;
+  }
+  catch(Exception const& e) {
+    std::ostringstream s;
+    s << e.at_ << ": " << e.cause_->str();
 
-*/
+    std::vector<std::pair<std::string, xju::Traced> > context;
+    xju::Exception ee(s.str(), XJU_TRACED);
+    typedef std::pair<std::pair<Parser const*, I>, xju::Traced> C;
+    std::vector<C>::const_iterator i;
+    
+    for(i=e.context_.begin(); i!=e.context_.end(); ++i) {
+      // to get a less verbose but hopefully detailed enough
+      // error message, we only add context from NamedParsers
+      // and from the root-cause parser (whether it is a NamedParser
+      // or not)
+      if (i==e.context_.end()-1 ||
+          dynamic_cast<NamedParser_ const*>((*i).first.first)) {
+        std::ostringstream s;
+        s << "parse " << (*i).first.first->target() 
+          << " at " << (*i).first.second;
+        ee.addContext(s.str(), (*i).second);
+      }
+    }
+    throw ee;
+  }
+}
+
+
 }

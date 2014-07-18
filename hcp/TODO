@@ -10,9 +10,9 @@ x fix string literal parsing:
 
 - add charLiteral(char) and use it instead of oneOfChars("x")
 
-- make readableRepr smarter to get better error messages, so that
+x make readableRepr smarter to get better error messages, so that
   other tools get the full exception context to work with:
-  - only show named parsers, except always show the last parser
+  x only show named parsers, except always show the last parser
     context
 
 - rework atLeastOne for saner error message - see REVISIT in test-parse.cc
@@ -35,6 +35,15 @@ x on parse failure, output the branch that got furthest
 
 - also consider adding lookingAt() to see if that gives better errors
 
+- I -> hcp::I in I.h
+
+- hcp_ast::String -> Tagged..<StringTag>?
+
+- align ast names with C++ standard
+
+- add more profiling, then go back to using throw for exceptions
+  and see what the penalty
+
 x speed parsing by caching results <at,parser> => PV or exception
   stats:
 xju@xjutv:/data/xju/u1/urnest/hcp$ time ./hcp-parse-file test/xju/JoiningIterator.hcp 
@@ -43,6 +52,9 @@ end at line 146 column 1
 real    0m2.320s
 user    0m2.100s
 sys     0m0.024s
+
+- see if using std::vector<std::set<Parser*> > as Cache improves
+  performance
 
 xju@xjutv:/data/xju/u1/urnest/hcp$ ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l
 10391
@@ -132,18 +144,29 @@ user    0m0.132s
 sys     0m0.008s
 1951
 
-    - above includes all exception detail, except that "or" only keeps
+    x above includes all exception detail, except that "or" only keeps
       the term that got furthest, alas the resulting error messages
       are too verbose (see test-parser.cc), ideas:
         - context given for "and" should not go past the term where we
           actually failed
-          - if exception context was a PR we could dynamically make
+          ~ if exception context was a PR we could dynamically make
             one that included just the relevant part; we could also
             do better with the "or" case
-          - perhaps revisit which parsers add context, perhaps go back
+          ~ perhaps revisit which parsers add context, perhaps go back
             to having just named parsers add context; but also keep
             the "leaf" context
     ~ do first pass without creating any exception detail, then
       come back and reparse from where we went wrong in order to get
       exception detail... no don't need that complex, just delay
       string creation, always add context and make readableRepr smart
+
+
+latest performance check:
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l
+end at line 146 column 1
+
+real	0m0.147s
+user	0m0.132s
+sys	0m0.004s
+1951
+
