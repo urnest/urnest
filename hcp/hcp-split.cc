@@ -259,42 +259,35 @@ int main(int argc, char* argv[])
     
     std::string const x(xju::readFile(xju::path::str(inputFile)));
 
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache);
-    
     hcp_parser::I at(x.begin(), x.end());
-    try {
-      hcp_parser::PV const y(*hcp_parser::file->parse_(at, options));
-      xju::assert_equal(y.first.size(), 1U);
-      
-      std::ofstream fh(xju::path::str(outputHH).c_str(), 
-                       std::ios_base::out|std::ios_base::trunc);
-      std::ofstream fc(xju::path::str(outputCC).c_str(), 
-                       std::ios_base::out|std::ios_base::trunc);
-      
-      fh << "#ifndef " << guard << std::endl
-         << "#define " << guard << std::endl
-         << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
-      fh << "\n";
-      
-      xju::path::RelativePath const hhinc(
-        std::vector<xju::path::DirName>(
-          inputFile.first.end()-cmd_line.first.dir_levels_,
-          inputFile.first.end()));
-      
-      fc << "#include <" 
-         << xju::path::str(hhinc, outputHH.second)
-         << ">" << std::endl
-         << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
-      
-      genNamespaceContent(
-        y.first.front()->asA<hcp_ast::File>().items_, fh, fc);
-      
-      fh << "#endif" << std::endl;
-    }
-    catch(hcp_parser::Exception const& e) {
-      throw xju::Exception(readableRepr(e), XJU_TRACED);
-    }
+    hcp_ast::CompositeItem root;
+    at = parse(root, at, hcp_parser::file);
+    xju::assert_equal(root.items_.size(), 1U);
+    
+    std::ofstream fh(xju::path::str(outputHH).c_str(), 
+                     std::ios_base::out|std::ios_base::trunc);
+    std::ofstream fc(xju::path::str(outputCC).c_str(), 
+                     std::ios_base::out|std::ios_base::trunc);
+    
+    fh << "#ifndef " << guard << std::endl
+       << "#define " << guard << std::endl
+       << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
+    fh << "\n";
+    
+    xju::path::RelativePath const hhinc(
+      std::vector<xju::path::DirName>(
+        inputFile.first.end()-cmd_line.first.dir_levels_,
+        inputFile.first.end()));
+    
+    fc << "#include <" 
+       << xju::path::str(hhinc, outputHH.second)
+       << ">" << std::endl
+       << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
+    
+    genNamespaceContent(
+      root.items_.front()->asA<hcp_ast::File>().items_, fh, fc);
+    
+    fh << "#endif" << std::endl;
   }
   catch(xju::Exception& e) {
     std::ostringstream s;
