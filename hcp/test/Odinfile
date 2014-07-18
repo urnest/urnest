@@ -3,7 +3,7 @@
 %all-tests.tree==<<
 ()+cmd=(../../xju/test-Traced.cc+(%opts):auto.cxx.exe):stdout
 ()+cmd=(../../xju/test-JoiningIterator.cc+(%opts):auto.cxx.exe):stdout
-
+classpecialize%all-tests.tree
 
 %opts==<<
 +inc_sp=(%gendir)
@@ -19,3 +19,4 @@ xju/JoiningIterator.cc==.%JoiningIterator/JoiningIterator.cc
 
 %Traced==()+cmd=(../hcp-split) -l 1 (xju/Traced.hcp) 'Traced.hh' 'Traced.cc':output
 %JoiningIterator==()+cmd=(../hcp-split) -l 1 (xju/JoiningIterator.hcp) 'JoiningIterator.hh' 'JoiningIterator.cc':output
+
