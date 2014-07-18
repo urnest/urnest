@@ -234,6 +234,14 @@ void test7()
     xju::assert_equal(xju::format::hex((unsigned long)0x33fc2143), "0x33fc2143");
 }
 
+// cEscapeChar, cEscapeString
+void test8()
+{
+    xju::assert_equal(xju::format::cEscapeChar('\n'), std::string("\\n"));
+    xju::assert_equal(xju::format::cEscapeString("fred\njock"),
+                      std::string("fred\\njock"));
+}
+
 int main(int argc, char* argv[])
 {
     int n = 0;
@@ -244,6 +252,7 @@ int main(int argc, char* argv[])
     test5(); ++n;
     test6(); ++n;
     test7(); ++n;
+    test8(); ++n;
     
     std::cout << "PASS - " << n << " steps" << std::endl;
     return 0;

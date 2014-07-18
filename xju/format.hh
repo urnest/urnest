@@ -284,6 +284,19 @@ public:
 //
 template<class T>
 std::string str(const T& x) throw();
+
+//
+// C char-literal string of c
+// eg cEscapeChar('\n') == std::string("\\n")
+//
+std::string cEscapeChar(char const c) throw();
+
+//
+// C string-literal string of s
+// eg cEscapeString("fred\njock")==std::string("fred\\njock")
+//
+std::string cEscapeString(std::string const& s) throw();
+
 }
 }
 
