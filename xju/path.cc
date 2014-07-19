@@ -182,7 +182,13 @@ std::string str(std::pair<AbsolutePath, FileName> const& x) throw()
 
 std::string str(RelativePath const& x, FileName const& y) throw()
 {
-  return str(x)+"/"+y._;
+  if (x.size()) {
+    return str(x)+"/"+y._;
+  }
+  else
+  {
+    return y._;
+  }
 }
 std::string str(std::pair<RelativePath, FileName> const& x) throw()
 {
