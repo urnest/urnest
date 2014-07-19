@@ -22,6 +22,8 @@
 #include "xju/Shared.hh"
 #include <string>
 #include <vector>
+#include "xju/assert.hh"
+#include <typeinfo>
 
 namespace hcp_ast
 {
@@ -42,11 +44,19 @@ public:
   }
   template<class T>
   T const& asA() const throw() {
-    return *dynamic_cast<T const*>(this);
+    T const* result=dynamic_cast<T const*>(this);
+    if (!result) {
+      xju::assert_equal(typeid(*this).name(), typeid(T).name());
+    }
+    return *result;
   }
   template<class T>
   T& asA() throw() {
-    return *dynamic_cast<T*>(this);
+    T* result=dynamic_cast<T*>(this);
+    if (!result) {
+      xju::assert_equal(typeid(*this).name(), typeid(T).name());
+    }
+    return *result;
   }
 };
 
@@ -183,6 +193,9 @@ typedef TaggedCompositeItem<FunctionImplTag> FunctionImpl;
 class TemplateFunctionDefTag{};
 typedef TaggedCompositeItem<TemplateFunctionDefTag> TemplateFunctionDef;
 
+class TemplateEmptyPreambleTag{};
+typedef TaggedCompositeItem<TemplateEmptyPreambleTag> TemplateEmptyPreamble;
+  
 class ClassNameTag{};
 typedef TaggedCompositeItem<ClassNameTag> ClassName;
 
@@ -190,15 +203,18 @@ class ClassDef : public CompositeItem
 {
 public:
   std::string const className_;
+  bool const isTemplateSpecialisation_;
   
   explicit ClassDef(std::vector<IR> const& items) throw():
     CompositeItem(items),
-    className_(getClassName(items))
+    className_(getClassName(items)),
+    isTemplateSpecialisation_(getIsTemplateSpeicialisation(items))
   {
   }
   virtual ~ClassDef() throw() {
   }
   static std::string getClassName(std::vector<IR> const& items) throw();
+  static bool getIsTemplateSpeicialisation(std::vector<IR> const& items) throw();
 };
 
 class AttrDeclTag{};

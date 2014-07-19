@@ -1,3 +1,9 @@
+x recognise template specialisation class
+- split it properly
+
+- recognise template specialisation function
+- split it properly
+
 x test-JoiningIterator
 
 x replace xju::Exception with parser specific exception, that
@@ -30,9 +36,10 @@ x on parse failure, output the branch that got furthest
   message, not the error message that tries to parse eg function at
   that point. ie fail parseFunction because function cannot start with
   keyword class (or template, namespace, enum etc)
-  - try using "longest branch" as error, combined with prepending
-    ! parseKeyword() to parseFunction
-
+  x try using "longest branch" as error
+  - where multiple longest branches, combine their causes
+  - combine with prepending ! parseKeyword() to parseFunction
+  
 - also consider adding lookingAt() to see if that gives better errors
 
 - I -> hcp::I in I.h
@@ -43,6 +50,9 @@ x on parse failure, output the branch that got furthest
 
 - add more profiling, then go back to using throw for exceptions
   and see what the penalty
+
+- function_proto looks like it would be slow as it does a long
+  lookahead, is there another way? Might need a hand-coded parser?
 
 x speed parsing by caching results <at,parser> => PV or exception
   stats:

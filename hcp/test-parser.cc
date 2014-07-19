@@ -15,6 +15,8 @@ static const char rcsid[] = "$RCSfile: twt_cxx.el,v $ $Revision: 1.2 $";
 #include "xju/assert.hh"
 #include <xju/readFile.hh>
 
+bool atLeastOneReadableReprFailed=false;
+
 void assert_readableRepr_equal(std::string const& rr,
                                std::string const& expect,
                                xju::Traced const& t) throw() {
@@ -27,7 +29,7 @@ void assert_readableRepr_equal(std::string const& rr,
               << "expected: " << std::endl
               << xju::format::quote(xju::format::cEscapeString(expect))
               << std::endl;
-    xju::assert_equal(rr, expect);
+    atLeastOneReadableReprFailed=true;
   }
 }
 
@@ -124,7 +126,7 @@ void test3()
     xju::assert_not_equal(at, at);
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse any char then any char then any char at line 1 column 3 because\nline 1 column 3: end of input.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse any char at line 1 column 3 because\nline 1 column 3: end of input.", XJU_TRACED);
  }
 }
 
@@ -172,7 +174,7 @@ void test5()
       xju::assert_abort();
     }
     catch(xju::Exception const& e) {
-      assert_readableRepr_equal(e, "Failed to parse one of chars [ab] or one of chars [c] at line 1 column 5 because\nline 1 column 5: \'d\' is not one of chars [c].", XJU_TRACED);
+      assert_readableRepr_equal(e, "Failed to parse one of chars [c] at line 1 column 5 because\nline 1 column 5: \'d\' is not one of chars [c].", XJU_TRACED);
     }
   }
   
@@ -189,7 +191,7 @@ void test5()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse one of chars [b] or one of chars [c] or one of chars [e] at line 1 column 1 because\nline 1 column 1: \'a\' is not one of chars [e].", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse one of chars [e] at line 1 column 1 because\nline 1 column 1: \'a\' is not one of chars [e].", XJU_TRACED);
   }
   
   {
@@ -234,7 +236,7 @@ void test7()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse at least one occurrance of one of chars [e] at line 1 column 1 because\nline 1 column 1: \'a\' is not one of chars [e].", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse at least one occurrance of one of chars [e] at line 1 column 1 because\nfailed to parse one of chars [e] at line 1 column 1 because\nline 1 column 1: \'a\' is not one of chars [e].", XJU_TRACED);
   }
 }
 
@@ -447,7 +449,7 @@ void test11()
     // first x of atLeastOneOf*x that fails to parse but the error message
     // waffles about the optional extras; for "at least one" it will only
     // ever fail on the first one
-    assert_readableRepr_equal(e, "Failed to parse string literal at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars [\"] then string literal characters then one of chars [\"] then zero or more occurrances of (one of chars [\\t\\n ] or comments) at line 1 column 1 because\nline 1 column 7: end of input.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse string literal at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars [\"] then string literal characters then one of chars [\"] then zero or more occurrances of (one of chars [\\t\\n ] or comments) at line 1 column 1 because\nfailed to parse one of chars [\"] at line 1 column 7 because\nline 1 column 7: end of input.", XJU_TRACED);
   }
   try
   {
@@ -464,7 +466,7 @@ void test11()
     // first x of atLeastOneOf*x that fails to parse but the error message
     // waffles about the optional extras; for "at least one" it will only
     // ever fail on the first one
-    assert_readableRepr_equal(e, "Failed to parse string literal at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars [\"] then string literal characters then one of chars [\"] then zero or more occurrances of (one of chars [\\t\\n ] or comments) at line 1 column 1 because\nline 1 column 5: \'\n\' is not one of chars [\"].", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse string literal at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars [\"] then string literal characters then one of chars [\"] then zero or more occurrances of (one of chars [\\t\\n ] or comments) at line 1 column 1 because\nfailed to parse one of chars [\"] at line 1 column 5 because\nline 1 column 5: \'\n\' is not one of chars [\"].", XJU_TRACED);
   }
   try
   {
@@ -481,7 +483,7 @@ void test11()
     // first x of atLeastOneOf*x that fails to parse but the error message
     // waffles about the optional extras; for "at least one" it will only
     // ever fail on the first one
-    assert_readableRepr_equal(e, "Failed to parse string literal at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars [\"] then string literal characters then one of chars [\"] then zero or more occurrances of (one of chars [\\t\\n ] or comments) at line 1 column 1 because\nline 1 column 5: \'\\\' is not one of chars [\"].", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse string literal at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars [\"] then string literal characters then one of chars [\"] then zero or more occurrances of (one of chars [\\t\\n ] or comments) at line 1 column 1 because\nfailed to parse one of chars [\"] at line 1 column 5 because\nline 1 column 5: \'\\\' is not one of chars [\"].", XJU_TRACED);
   }
 }
 
@@ -541,7 +543,7 @@ void test13()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse comments at line 1 column 1 because\nfailed to parse at least one occurrance of line comment or block comment at line 1 column 1 because\nfailed to parse block comment at line 1 column 1 because\nline 1 column 2: expected \'*\' but found \' \'.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse comments at line 1 column 1 because\nfailed to parse at least one occurrance of line comment or block comment at line 1 column 1 because\nfailed to parse block comment at line 1 column 1 because\nfailed to parse \"/*\" at line 1 column 1 because\nline 1 column 2: expected \'*\' but found \' \'.", XJU_TRACED);
   }
 }
 
@@ -573,7 +575,7 @@ void test14()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse other preprocessor directive at line 1 column 1 because\nline 1 column 1: line starts with \' \', not \'#\'.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse other preprocessor directive at line 1 column 1 because\nfailed to parse \'#\' at start of line at line 1 column 1 because\nline 1 column 1: line starts with \' \', not \'#\'.", XJU_TRACED);
   }
 }
 
@@ -619,7 +621,7 @@ void test15()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse #include at line 1 column 1 because\nline 1 column 3: expected \'n\' but found \'f\'.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse #include at line 1 column 1 because\nfailed to parse \"include\" at line 1 column 2 because\nline 1 column 3: expected \'n\' but found \'f\'.", XJU_TRACED);
   }
   
 }
@@ -665,7 +667,7 @@ void test16()
   }
   catch(xju::Exception const& e) {
     // REVISIT: unhelpful
-    assert_readableRepr_equal(e, "Failed to parse #include with //impl marker at line 1 column 1 because\nline 1 column 43: expected \'/\' but found \'\\n\'.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse #include with //impl marker at line 1 column 1 because\nfailed to parse \"//\" at line 1 column 43 because\nline 1 column 43: expected \'/\' but found \'\\n\'.", XJU_TRACED);
   }
 }
 
@@ -824,7 +826,7 @@ void test18()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse typedef statement at line 1 column 1 because\nfailed to parse some whitespace at line 1 column 8 because\nfailed to parse at least one occurrance of one of chars [\\t\\n ] at line 1 column 8 because\nline 1 column 8: \'i\' is not one of chars [\t\n ].", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse typedef statement at line 1 column 1 because\nfailed to parse some whitespace at line 1 column 8 because\nfailed to parse at least one occurrance of one of chars [\\t\\n ] at line 1 column 8 because\nfailed to parse one of chars [\\t\\n ] at line 1 column 8 because\nline 1 column 8: \'i\' is not one of chars [\t\n ].", XJU_TRACED);
   }
 }
 
@@ -865,7 +867,7 @@ void test19()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse using statement at line 1 column 1 because\nfailed to parse some whitespace at line 1 column 6 because\nfailed to parse at least one occurrance of one of chars [\\t\\n ] at line 1 column 6 because\nline 1 column 6: \'m\' is not one of chars [\t\n ].", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse using statement at line 1 column 1 because\nfailed to parse some whitespace at line 1 column 6 because\nfailed to parse at least one occurrance of one of chars [\\t\\n ] at line 1 column 6 because\nfailed to parse one of chars [\\t\\n ] at line 1 column 6 because\nline 1 column 6: \'m\' is not one of chars [\t\n ].", XJU_TRACED);
   }
 }
 
@@ -900,7 +902,7 @@ void test20()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse enum definition at line 1 column 1 because\nfailed to parse some whitespace at line 1 column 5 because\nfailed to parse at least one occurrance of one of chars [\\t\\n ] at line 1 column 5 because\nline 1 column 5: \'y\' is not one of chars [\t\n ].", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse enum definition at line 1 column 1 because\nfailed to parse some whitespace at line 1 column 5 because\nfailed to parse at least one occurrance of one of chars [\\t\\n ] at line 1 column 5 because\nfailed to parse one of chars [\\t\\n ] at line 1 column 5 because\nline 1 column 5: \'y\' is not one of chars [\t\n ].", XJU_TRACED);
   }
 }
 
@@ -953,7 +955,7 @@ void test21()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse function declaration at line 1 column 1 because\nline 2 column 27: \'{\' is not one of chars [;].", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse function declaration at line 1 column 1 because\nfailed to parse one of chars [;] at line 2 column 27 because\nline 2 column 27: \'{\' is not one of chars [;].", XJU_TRACED);
   }
 }
 
@@ -1035,7 +1037,7 @@ void test22()
   }
   catch(xju::Exception const& e) {
     // REVISIT: the "longest match" doesn't work that well here
-    assert_readableRepr_equal(e, "Failed to parse \"class\" or \"struct\" or \"union\" at line 1 column 1 because\nline 1 column 1: expected \'u\' but found \'v\'.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse \"union\" at line 1 column 1 because\nline 1 column 1: expected \'u\' but found \'v\'.", XJU_TRACED);
   }
   try
   {
@@ -1051,7 +1053,7 @@ void test22()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse function definition at line 1 column 1 because\nfailed to parse function implementation at line 2 column 26 because\nfailed to parse block at line 2 column 26 because\nline 2 column 26: expected \'{\' but found \';\'.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse function definition at line 1 column 1 because\nfailed to parse function implementation at line 2 column 26 because\nfailed to parse block at line 2 column 26 because\nfailed to parse \"{\" at line 2 column 26 because\nline 2 column 26: expected \'{\' but found \';\'.", XJU_TRACED);
   }
 }
 
@@ -1114,7 +1116,7 @@ void test23()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse template function definition at line 1 column 1 because\nfailed to parse at least one occurrance of \"template\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [<] then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [>] then one of chars [>] then zero or more occurrances of (one of chars [\\t\\n ] or comments) at line 1 column 1 because\nline 1 column 1: expected \'t\' but found \'v\'.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse template function definition at line 1 column 1 because\nfailed to parse at least one occurrance of !template empty preamble then \"template\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [<] then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [>] then one of chars [>] then zero or more occurrances of (one of chars [\\t\\n ] or comments) at line 1 column 1 because\nfailed to parse \"template\" at line 1 column 1 because\nline 1 column 1: expected \'t\' but found \'v\'.", XJU_TRACED);
   }
 }
 
@@ -1135,6 +1137,7 @@ void test24(std::vector<std::string> const& f)
     xju::assert_equal(at.atEnd(), true);
     xju::assert_equal(root.items_[0]->isA<hcp_ast::ClassDef>(), true);
     xju::assert_equal(root.items_[0]->asA<hcp_ast::ClassDef>().className_, "X");
+    xju::assert_equal(root.items_[0]->asA<hcp_ast::ClassDef>().isTemplateSpecialisation_, false);
   }
   catch(xju::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
@@ -1159,7 +1162,7 @@ void test24(std::vector<std::string> const& f)
   }
   catch(xju::Exception const& e) {
     // REVISIT: unhelpful
-    assert_readableRepr_equal(e, "Failed to parse class definition at line 1 column 1 because\nfailed to parse non-template class definition at line 1 column 1 because\nline 1 column 1: expected \'u\' but found \'v\'.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse non-template class definition at line 1 column 1 because\nfailed to parse \"union\" at line 1 column 1 because\nline 1 column 1: expected \'u\' but found \'v\'.", XJU_TRACED);
   }
   try
   {
@@ -1214,7 +1217,7 @@ void test25(std::vector<std::string> const& f)
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse anonymous namespace at line 1 column 1 because\nline 1 column 1: expected \'n\' but found \'v\'.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse anonymous namespace at line 1 column 1 because\nfailed to parse \"namespace\" at line 1 column 1 because\nline 1 column 1: expected \'n\' but found \'v\'.", XJU_TRACED);
   }
   try
   {
@@ -1228,7 +1231,7 @@ void test25(std::vector<std::string> const& f)
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse anonymous namespace at line 1 column 1 because\nline 1 column 11: \'h\' is not one of chars [{].", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse anonymous namespace at line 1 column 1 because\nfailed to parse one of chars [{] at line 1 column 11 because\nline 1 column 11: \'h\' is not one of chars [{].", XJU_TRACED);
   }
 }
 
@@ -1283,7 +1286,7 @@ void test26(std::vector<std::string> const& f)
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse anonymous namespace at line 1 column 1 because\nline 1 column 1: expected \'n\' but found \'v\'.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse anonymous namespace at line 1 column 1 because\nfailed to parse \"namespace\" at line 1 column 1 because\nline 1 column 1: expected \'n\' but found \'v\'.", XJU_TRACED);
   }
 }
 
@@ -1319,7 +1322,7 @@ void test27(std::vector<std::string> const& f)
   }
   catch(xju::Exception const& e) {
     // REVISIT: not that helpful
-    assert_readableRepr_equal(e, "Failed to parse file at line 1 column 1 because\nline 22 column 1: expected end of input, not \'x\'.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse file at line 1 column 1 because\nfailed to parse end of file at line 22 column 1 because\nline 22 column 1: expected end of input, not \'x\'.", XJU_TRACED);
   }
 }
 
@@ -1358,6 +1361,35 @@ void test28(std::vector<std::string> const& f)
   }
 }
 
+void test29(std::vector<std::string> const& f)
+{
+  try
+  {
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, cache);
+    std::string const x(
+      "template<>\n"
+      "class X<int> : std::vector<int>\n"
+      "{\n"
+      "public:\n"
+      "  int f() const throw()\n"
+      "  {\n"
+      "    return 1;\n"
+      "  }\n"
+      "};\n");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    at = parse(root, at, hcp_parser::class_def);
+    xju::assert_equal(reconstruct(root), x);
+    xju::assert_equal(at.atEnd(), true);
+    xju::assert_equal(root.items_[0]->asA<hcp_ast::ClassDef>().className_, "X<int>");
+    xju::assert_equal(root.items_[0]->asA<hcp_ast::ClassDef>().isTemplateSpecialisation_, true);
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e), readableRepr(e));
+  }
+}
 
 int main(int argc, char* argv[])
 {
@@ -1390,7 +1422,8 @@ int main(int argc, char* argv[])
   test26(std::vector<std::string>(&argv[1], &argv[argc])), ++n;
   test27(std::vector<std::string>(&argv[1], &argv[argc])), ++n;
   test28(std::vector<std::string>(&argv[1], &argv[argc])), ++n;
-
+  test29(std::vector<std::string>(&argv[1], &argv[argc])), ++n;
+  xju::assert_equal(atLeastOneReadableReprFailed, false);
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-
+#include <vector>
 
 
 template<class T>
@@ -18,8 +18,10 @@ class X
 template<>
 class X<int> : std::vector<int>
 {
+public:
   int f() const throw()
   {
     return 1;
   }
-}
+};
+

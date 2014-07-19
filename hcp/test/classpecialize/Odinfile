@@ -9,7 +9,7 @@
 +(../..%cxx-opts)
 
 
-%x==()+cmd=(../../hcp-split) -l 1 (x.hcp) 'x.hh' 'x.cc':output
+%x==()+cmd=(../../hcp-split) (x.hcp) 'x.hh' 'x.cc':output
 
 %gendir==%gen.vir_tree_spec:vir_tree
 

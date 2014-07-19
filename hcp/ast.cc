@@ -42,6 +42,14 @@ std::string ClassDef::getClassName(std::vector<IR> const& items) throw()
   return result;
 }
 
+bool ClassDef::getIsTemplateSpeicialisation(std::vector<IR> const& items) throw()
+{
+  std::vector<IR>::const_iterator i(
+    std::find_if(items.begin(), items.end(),
+                 isA_<TemplateEmptyPreamble>));
+  return i!=items.end();
+}
+
 std::string NamespaceDef::getNamespaceName(
   std::vector<IR> const& items) throw()
 {

@@ -970,6 +970,12 @@ PR unqualifiedName(
               charInRange('0', '9')|
               parseOneOfChars("_")));
 
+PR unqualifiedTypeName(
+  unqualifiedName+
+  zeroOrMore*(parseOneOfChars("<")+
+              balanced(parseOneOfChars(">"), true)+
+              parseOneOfChars(">")));
+  
 PR operator_name(
   parseLiteral("operator")+
   eatWhite+
@@ -1002,6 +1008,11 @@ PR name(
   unqualifiedName+
   eatWhite);
 
+PR type_name(
+  zeroOrMore*(unqualifiedName+eatWhite+parseLiteral("::")+eatWhite)+
+  unqualifiedTypeName+
+  eatWhite);
+
 PR function_qualifiers(
   new NamedParser<hcp_ast::FunctionQualifiers>(
     "function qualifiers",
@@ -1012,10 +1023,10 @@ PR function_qualifiers(
 PR function_proto(
   function_qualifiers+
   balanced(parseOneOfChars("();{}[]")|
-           ((operator_name|name)+parseOneOfChars("(")))+
+           ((operator_name|type_name)+parseOneOfChars("(")))+
   new NamedParser<hcp_ast::FunctionName>(
   "function name",
-  (operator_name|name))+
+  (operator_name|type_name))+
   bracketed+
   balanced(parseOneOfChars("{;:")|
            (parseLiteral("try")+eatWhite+parseOneOfChars(":"))));
@@ -1026,13 +1037,26 @@ PR function_decl(new NamedParser<hcp_ast::FunctionDecl>(
   parseOneOfChars(";")+
   eatWhite));
 
+PR templateKeyword(parseLiteral("template"));
+
+PR template_empty_preamble(
+  new NamedParser<hcp_ast::TemplateEmptyPreamble>(
+    "template empty preamble",
+    templateKeyword+
+    eatWhite+
+    parseOneOfChars("<")+
+    eatWhite+
+    parseOneOfChars(">")+
+    eatWhite));
+
 PR template_preamble(
-  parseLiteral("template")+
-  eatWhite+
-  parseOneOfChars("<")+
-  balanced(parseOneOfChars(">"), true)+
-  parseOneOfChars(">")+
-  eatWhite);
+  !template_empty_preamble+(
+    templateKeyword+
+    eatWhite+
+    parseOneOfChars("<")+
+    balanced(parseOneOfChars(">"), true)+
+    parseOneOfChars(">")+
+    eatWhite));
 
 PR block(new NamedParser<hcp_ast::Block>(
   "block",
@@ -1064,12 +1088,12 @@ PR template_function_def(new NamedParser<hcp_ast::TemplateFunctionDef>(
   function_def));
 
 PR class_proto(
-  zeroOrMore*template_preamble+
+  zeroOrMore*(template_preamble|template_empty_preamble)+
   (parseLiteral("class")|parseLiteral("struct")|parseLiteral("union"))+
   whitespace+
   new NamedParser<hcp_ast::ClassName>(
   "class name",
-  name)+
+  type_name)+
   balanced(parseOneOfChars("{;")));
 
 PR class_decl(new NamedParser<hcp_ast::ClassForwardDecl>(
@@ -1326,7 +1350,7 @@ I parse(hcp_ast::CompositeItem& parent,
       // error message, we only add context from NamedParsers
       // and from the root-cause parser (whether it is a NamedParser
       // or not)
-      if (i==e.context_.end()-1 ||
+      if (i==e.context_.begin() ||
           dynamic_cast<NamedParser_ const*>((*i).first.first)) {
         std::ostringstream s;
         s << "parse " << (*i).first.first->target() 
