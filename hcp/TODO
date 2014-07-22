@@ -1,5 +1,5 @@
 x recognise template specialisation class
-- split it properly
+x split it properly
 
 - recognise template specialisation function
 - split it properly
@@ -22,6 +22,9 @@ x make readableRepr smarter to get better error messages, so that
     context
 
 - rework atLeastOne for saner error message - see REVISIT in test-parse.cc
+
+- add zeroOrOne (perhaps call it optional?) and use review where to
+  use it
 
 x get rid of includeAllExceptionContext (make it always true)
 

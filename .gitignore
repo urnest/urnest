@@ -79,3 +79,4 @@ omnicxy/cxy/ORBImpl.hh
 hcp/hcp-split
 omnicxy/proto/cxy/p1.cc
 omnicxy/proto/cxy/p1.hh
+*.pyc
