@@ -1,3 +1,8 @@
+object:
+    static const char* const _user_exns[] = {
+      0
+    };
+
 x recognise template specialisation class
 x split it properly
 

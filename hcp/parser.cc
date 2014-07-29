@@ -167,6 +167,13 @@ public:
         return r;
       }
     }
+    if (options.trace_) {
+      std::ostringstream s;
+      s << "ParseOr choosing " 
+        << (*(*failures.rbegin()).second.context_.rbegin()).first.first->target()
+        << " which got to " << (*failures.rbegin()).first;
+      hcp_trace::milestone(s.str(), XJU_TRACED);
+    }
     return ParseResult((*failures.rbegin()).second);
   }
 
@@ -511,6 +518,43 @@ public:
   }
 };
 
+class ParseSpecificUntil : public Parser
+{
+public:
+  PR const match_;
+  PR const x_;
+  
+  explicit ParseSpecificUntil(PR match, PR const x) throw():
+    match_(match),
+    x_(x) {
+  }
+  
+  // Parser::
+  virtual ParseResult parse_(I const at, Options const& o) throw() 
+  {
+    PV result(IRs(), at);
+    while(true) {
+      ParseResult const re(x_->parse_(result.second, o));
+      if (!re.failed()) {
+        return ParseResult(result);
+      }
+      ParseResult const r(match_->parse_(result.second, o));
+      if (r.failed()) {
+        return r;
+      }
+      PV const x(*r);
+      std::copy(x.first.begin(), x.first.end(),
+                std::back_inserter(result.first));
+      result.second=x.second;
+    }
+  }
+  virtual std::string target() const throw() {
+    std::ostringstream s;
+    s << match_->target() << "'s up to but not including " << x_->target();
+    return s.str();
+  }
+};
+
 class ParseLiteral : public Parser
 {
 public:
@@ -762,6 +806,11 @@ PR charInRange(char const min, char const max) throw()
 PR parseUntil(PR const x) throw()
 {
   return PR(new ParseUntil(x));
+}
+
+PR parseUntil(PR match, PR const x) throw()
+{
+  return PR(new ParseSpecificUntil(match, x));
 }
 
 PR parseLiteral(std::string const& x) throw()
@@ -1150,16 +1199,17 @@ public:
     x_(class_proto+
        parseOneOfChars("{")+
        eatWhite+
-       zeroOrMore*(comments|
-                   function_decl|
-                   template_function_def|
-                   access_modifier|
-                   class_decl|
-                   enum_def|
-                   typedef_statement|
-                   PR(new SelfParser(*this))|
-                   function_def|
-                   attr_decl)+
+       parseUntil(comments|
+                  function_decl|
+                  template_function_def|
+                  access_modifier|
+                  class_decl|
+                  enum_def|
+                  typedef_statement|
+                  PR(new SelfParser(*this))|
+                  function_def|
+                  attr_decl,
+                  parseOneOfChars("}"))+
        parseOneOfChars("}")+
        eatWhite+
        parseOneOfChars(";")+

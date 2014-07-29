@@ -29,6 +29,8 @@ public:
   ~Scope() throw();
 };
 
+void milestone(std::string const& message, xju::Traced const& t) throw();
+
 }
 
 #endif

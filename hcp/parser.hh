@@ -283,6 +283,9 @@ extern PR parseAnyChar;
 PR parseOneOfChars(std::string const& chars) throw();
 
 PR parseUntil(PR const x) throw();
+
+PR parseUntil(PR const match, PR const until) throw();
+
 PR parseLiteral(std::string const& x) throw();
 extern PR whitespaceChar;
 extern PR eatWhite;             // matches nothing

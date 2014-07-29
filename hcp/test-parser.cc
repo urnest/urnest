@@ -251,6 +251,19 @@ void test8()
                           hcp_parser::parseOneOfChars("e"))));
   xju::assert_equal(reconstruct(root), "abcd");
   xju::assert_equal(at.atEnd(), false);
+
+  {
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, cache);
+    std::string const x("abcdefg");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    at = parse(root, at, (hcp_parser::parseUntil(
+                            hcp_parser::parseOneOfChars("abcd"),
+                            hcp_parser::parseOneOfChars("e"))));
+    xju::assert_equal(reconstruct(root), "abcd");
+    xju::assert_equal(at.atEnd(), false);
+  }
 }
 
 void test9()
@@ -268,6 +281,25 @@ void test9()
   }
   catch(xju::Exception const& e) {
     assert_readableRepr_equal(e, "Failed to parse up to but not including one of chars [h] at line 1 column 1 because\nline 1 column 8: end of input.", XJU_TRACED);
+  }
+  {
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, cache);
+    try {
+      std::string const x("fredjockalicealan");
+      hcp_ast::CompositeItem root;
+      hcp_parser::I at(x.begin(), x.end());
+      hcp_parser::PR p(hcp_parser::parseUntil(
+                         hcp_parser::parseLiteral("fred")|
+                         hcp_parser::parseLiteral("jock")|
+                         hcp_parser::parseLiteral("alice"),
+                         hcp_parser::parseLiteral("peter")));
+      at = parse(root, at, p);
+      xju::assert_abort();
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "Failed to parse \"alice\" at line 1 column 14 because\nline 1 column 16: expected \'i\' but found \'a\'.", XJU_TRACED);
+    }
   }
 }
 

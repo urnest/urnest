@@ -33,5 +33,11 @@ Scope::~Scope() throw()
             << std::endl;
 }
 
+void milestone(std::string const& message, xju::Traced const& t) throw()
+{
+  std::cout << "= " << message << " " << t.file() << ":" << t.line()
+            << std::endl;
+}
+
 
 }
