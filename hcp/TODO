@@ -28,8 +28,9 @@ x make readableRepr smarter to get better error messages, so that
 
 - rework atLeastOne for saner error message - see REVISIT in test-parse.cc
 
-- add zeroOrOne (perhaps call it optional?) and use review where to
-  use it
+- add zeroOrOne (perhaps call it optional?) and review where to use it
+
+- replace more zeroOrMore with parseUntil(match,x)
 
 x get rid of includeAllExceptionContext (make it always true)
 

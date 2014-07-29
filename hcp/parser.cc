@@ -938,11 +938,13 @@ PR s_char(
 
 PR s_chars(new NamedParser<hcp_ast::S_Chars>(
              "string literal characters",
-             zeroOrMore*s_char));
+             parseUntil(s_char, doubleQuote)));
 
 PR stringLiteral(new NamedParser<hcp_ast::StringLiteral>(
   "string literal",
-  atLeastOne*(doubleQuote+s_chars+doubleQuote+eatWhite)));
+  atLeastOne*(doubleQuote+
+              s_chars+
+              doubleQuote+eatWhite)));
 
 //
 // to be able to split a combined .h and .cpp (ie a .hcp) file into
