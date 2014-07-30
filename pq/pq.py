@@ -14,20 +14,32 @@ import HTMLParser
 import htmlentitydefs
 import sys
 import traceback
+import types
+
+class Pos:
+    def __init__(self, file, line, col):
+        self.file=file
+        self.line=line
+        self.col=col
+        return
+    def __str__(self):
+        return '%(file)s:%(line)s:%(col)s' % self.__dict__
+    pass
 
 class ParseFailed:
     def __init__(self, cause, pos):
         self.cause=cause
-        self.line, self.col=pos
+        self.pos=pos
         return
     def __str__(self):
-        return 'failed to parse html at line %(line)s col %(col)s because\n%(cause)s'%self.__dict__
+        return 'failed to parse html at %(pos)s because\n%(cause)s'%self.__dict__
     pass
 
 entities=htmlentitydefs.entitydefs
-reverseentities=dict((_[1],_[0]) for _ in entities.items())
+reverseentities=dict((_[1],'&'+_[0]+';') for _ in entities.items())
 
 def encodeEntities(s):
+    if s is None: return ''
     x=''.join([reverseentities.get(_,_) for _ in s])
     return x
 
@@ -96,7 +108,7 @@ emptyTags=frozenset([
 class Tag(Node):
     def __init__(self, tagName, attrs, parent, pos):
         Node.__init__(self, parent)
-        self.line, self.col=pos
+        self.pos=pos
         self.tagName=tagName
         self.attrs=dict(attrs)
         self.children=[]
@@ -104,7 +116,7 @@ class Tag(Node):
         self.classes=set(self.attrs.get('class','').split())
         return
     def __repr__(self):
-        return '%(tagName)s at line %(line):%(col)s' % self.__dict__
+        return '%(tagName)s at %(pos)s' % self.__dict__
     def __str__(self):
         encodedAttrs=['%s="%s"' % (_[0],encodeEntities(_[1])) for 
                       _ in self.attrs.items()]
@@ -143,90 +155,118 @@ class Tag(Node):
         self.children[self.indexOf(node)]=newNode
         newNode.parent=self
         return self
+    def clone(self, newParent):
+        result=Tag(self.tagName, self.attrs.items(), newParent, self.pos)
+        result.end=self.end
+        result.classes=set(self.classes)
+        for c in self.children:
+            c.clone(result)
+        return result
     pass
 
 class Data(Node):
     '''CData, including <script> and <style> content'''
     def __init__(self, data, parent, pos):
         Node.__init__(self, parent)
-        self.line, self.col=pos
-        self. data=data
+        self.pos=pos
+        self.data=data
         pass
     def __str__(self):
         return self.data
     def __repr__(self):
-        return 'data at line %(line):%(col)s' % self.__dict__
+        return 'data at %(pos)s' % self.__dict__
+    def clone(self, newParent):
+        result=Data(self.data, newParent, self.pos)
+        return result
     pass
 
 class EntityRef(Node):
     '''Entity ref'''
     def __init__(self, name, parent, pos):
         Node.__init__(self, parent)
-        self.line, self.col=pos
+        self.pos=pos
         self.name=name
     def __str__(self):
         return '&%(name)s;' % self.__dict__
     def __repr__(self):
-        return 'entity ref at line %(line):%(col)s' % self.__dict__
+        return 'entity ref at %(pos)s' % self.__dict__
+    def clone(self, newParent):
+        result=EntityRef(self.name, newParent, self.pos)
+        return result
     pass
 
 class CharRef(Node):
     '''Char ref'''
     def __init__(self, name, parent, pos):
         Node.__init__(self, parent)
-        self.line, self.col=pos
+        self.pos=pos
         self.name=name
     def __str__(self):
         return '&#%(name)s;' % self.__dict__
     def __repr__(self):
-        return 'char ref at line %(line):%(col)s' % self.__dict__
+        return 'char ref at %(pos)s' % self.__dict__
+    def clone(self, newParent):
+        result=CharRef(self.name, newParent, self.pos)
+        return result
     pass
 
 class Comment(Node):
     '''Comment'''
     def __init__(self, comment, parent, pos):
         Node.__init__(self, parent)
-        self.line, self.col=pos
+        self.pos=pos
         self.comment=comment
     def __str__(self):
         return '<!-- %(comment)s -->' % self.__dict__
     def __repr__(self):
-        return 'comment at line %(line):%(col)s' % self.__dict__
+        return 'comment at %(pos)s' % self.__dict__
+    def clone(self, newParent):
+        result=Comment(self.comment, newParent, self.pos)
+        return result
     pass
 
 class Decl(Node):
     '''Comment'''
     def __init__(self, decl, parent, pos):
         Node.__init__(self, parent)
-        self.line, self.col=pos
+        self.pos=pos
         self.decl=decl
     def __str__(self):
         return '<!%(decl)s>' % self.__dict__
     def __repr__(self):
-        return 'decl at line %(line):%(col)s' % self.__dict__
+        return 'decl at %(pos)s' % self.__dict__
+    def clone(self, newParent):
+        result=Decl(self.decl, newParent, self.pos)
+        return result
     pass
 
 class PI(Node):
     '''Processing Instruction'''
     def __init__(self, pi, parent, pos):
         Node.__init__(self, parent)
-        self.line, self.col=pos
+        self.pos=pos
         self.pi=pi
     def __str__(self):
         return '<?%(pi)s>' % self.__dict__
     def __repr__(self):
-        return 'processing instruction at line %(line):%(col)s' % self.__dict__
+        return 'processing instruction at %(pos)s' % self.__dict__
+    def clone(self, newParent):
+        result=PI(self.pi, newParent, self.pos)
+        return result
     pass
 
 class Parser(HTMLParser.HTMLParser):
-    def __init__(self):
+    def __init__(self, fileName):
         HTMLParser.HTMLParser.__init__(self)
+        self.fileName=fileName
         self.root=Root()
         self.current=self.root
         return
+    def pos(self):
+        return Pos(self.fileName, *self.getpos())
     def handle_starttag(self, tag, attrs):
         if tag in emptyTags:
-            Tag(tag, attrs, self.current, self.getpos())
+            Tag(tag, attrs, self.current, self.pos())
         else:
             #end-optional tag ends current tag of same name, eg
             #<li>x
@@ -235,7 +275,7 @@ class Parser(HTMLParser.HTMLParser):
                     tag in endOptional and \
                     self.current.tagName == tag:
                 self.current=self.current.parent
-            self.current=Tag(tag, attrs, self.current, self.getpos())
+            self.current=Tag(tag, attrs, self.current, self.pos())
         return
     def handle_endtag(self, tag):
         while self.current.tagName != tag:
@@ -244,22 +284,22 @@ class Parser(HTMLParser.HTMLParser):
         self.current=self.current.parent
         return
     def handle_data(self,data):
-        Data(data, self.current, self.getpos())
+        Data(data, self.current, self.pos())
         return
     def handle_entityref(self,name):
-        EntityRef(name, self.current, self.getpos())
+        EntityRef(name, self.current, self.pos())
         return
     def handle_charref(self,name):
-        CharRef(name, self.current, self.getpos())
+        CharRef(name, self.current, self.pos())
         return
     def handle_comment(self,comment):
-        Comment(comment, self.current, self.getpos())
+        Comment(comment, self.current, self.pos())
         return
     def handle_decl(self,decl):
-        Decl(decl,self.current, self.getpos())
+        Decl(decl,self.current, self.pos())
         return
     def handle_pi(self,pi):
-        PI(pi,self.current, self.getpos())
+        PI(pi,self.current, self.pos())
         return
 
 def filter(node, predicate):
@@ -284,16 +324,24 @@ class Selection:
         '''nodes of ours that match predicate'''
         return Selection([_ for _ in nodeList if predicate(_)])
     def html(self, nodes):
-        '''replace our first nodes content with the specified list of nodes'''
+        '''replace our first node's children with the specified list of nodes/html string'''
+        if type(nodes)==types.StringType:
+            nodes=parse(nodes)
+            pass
         if isinstance(nodes, Selection):
             nodes=nodes.nodeList
+            pass
         for n in nodes:
-            if n.parent:
-                n.parent.remove(n)
+            if n.parent: n.parent.remove(n)
         for n in self.nodeList[0:1]:
             n.children=nodes
             for c in n.children:
                 c.parent=n
+        return self
+    def text(self, s):
+        '''replace our first node's children with the specified text string'''
+        for n in self.nodeList:
+            Selection([n]).html(parse(encodeEntities(s)))
         return self
     def replace(self, nodes):
         '''replace first of specified nodes with first of our nodes'''
@@ -301,6 +349,57 @@ class Selection:
             nodes=nodes.nodeList
         nodes[0].parent.replace(nodes[0],self.nodeList[0])
         return self
+    def appendTo(self, nodes):
+        '''append our nodes to children of first of specified nodes'''
+        if isinstance(nodes, Selection):
+            nodes=nodes.nodeList
+        for n in self.nodeList:
+            n.parent=nodes[0]
+            nodes[0].children.append(n)
+        return self
+    def addAfter(self, nodes):
+        '''add our nodes after first of specified nodes'''
+        if isinstance(nodes, Selection):
+            nodes=nodes.nodeList
+        parent=nodes[0].parent
+        index=parent.indexOf(nodes[0])
+        for n in self.nodeList:
+            n.parent=parent
+        parent.children[index:index]=self.nodeList
+        return self
+    def detach(self):
+        '''remove each of our nodes from its parent'''
+        for n in self.nodeList:
+            if n.parent:
+                n.parent.remove(n)
+        return self
+    def remove(self):
+        return self.detach()
+    def empty(self):
+        '''remove all children from each of our nodes'''
+        for n in self.nodeList:
+            for c in n.children:
+                c.parent=None
+                pass
+            n.children=[]
+            pass
+        return self
+    def first(self):
+        '''return Selection containing first of our nodes'''
+        return Selection(self.nodeList[0:1])
+    def clone(self):
+        '''return Selection containing a copy of our nodes'''
+        return Selection([_.clone(None) for _ in self.nodeList])
+    def addClass(self, name):
+        '''add class %(name)s to each of our children'''
+        for n in self.nodeList:
+            n.addClass(name)
+        return self
+    def attr(self, name, value):
+        result=[_.attr(name, value) for _ in self.nodeList]
+        if len(result):
+            return result[0]
+        return None
     def __str__(self):
         return ''.join([str(_) for _ in self.nodeList])
     def __len__(self):
@@ -313,14 +412,17 @@ def hasClass(c):
 def tagName(t):
     return lambda node: isinstance(node, Tag) and node.tagName==t
 
-def parse(s):
-    parser=Parser()
+def parse(s, origin='unknown'):
+    '''parse HTML string "%(origin)s"'''
+    parser=Parser(origin)
     try:
         parser.feed(s)
         parser.close()
-        return Selection(parser.root.children)
+        result=Selection(parser.root.children)
+        result.detach()
+        return result
     except:
-        raise ParseFailed(str(''.join(traceback.format_tb(sys.exc_info()[2])))+'\n'+str(sys.exc_info()[1]), parser.getpos())
+        raise ParseFailed(str(''.join(traceback.format_tb(sys.exc_info()[2])))+'\n'+str(sys.exc_info()[1]), parser.pos())
     pass
 
 def assert_equal(a, b):
@@ -370,18 +472,63 @@ newitem5='''<li>item &lt;b&gt;
 '''
 
 def test1():
-    s=parse(html1)
+    s=parse(html1, 'html1')
     assert_equal(str(s), html1)
     s2=s.find(hasClass('list'))
-    s2.html(parse(newitems))
+    s2.html(parse(newitems, 'newitems'))
+    assert_equal(str(s), html2)
+    s2.html(newitems)
     assert_equal(str(s), html2)
     s3=s.find(hasClass('item5'))
-    parse(newitem5).replace(s3)
+    parse(newitem5, 'newitem5').replace(s3)
     assert_equal(str(s), html3)
+
+html4='''<html>
+<body>
+<p>The best thing about html is simplicity
+
+</body>
+</html>'''
+
+def test2():
+    s=parse(html1, 'html1')
+    sc=s.clone()
+    sc.find(hasClass('list')).detach()
+    assert_equal(str(s), html1)
+    assert_equal(str(sc), html4)
+
+html5='''<html>
+<body>
+<p>The best thing about html is simplicity
+<ul class="list">
+<li class="i">item 1
+<li class="i">item 2</li>
+<li>item &lt;b&gt;
+</ul>
+</body>
+</html>'''
+
+def test3():
+    s=parse(html1, 'html1')
+    s2=parse(newitem5, 'newitem5')
+    assert_equal(str(s2.appendTo(s.find(hasClass('list')))),newitem5)
+    assert_equal(str(s), html5)
+
+script='''
+$(document).ready(function(){
+});
+'''
+def test4():
+    a=parse('<head></head>')
+    parse(encodeEntities(script)).appendTo(a)
+    assert_equal(str(a), '<head>'+script+'</head>')
 
 if __name__=='__main__':
     try:
         test1()
+        test2()
+        test3()
+        test4()
     except:
         print >>sys.stderr, sys.exc_info()[1]
         sys.exit(1)
