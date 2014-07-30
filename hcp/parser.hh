@@ -306,6 +306,8 @@ extern PR function_decl;
 extern PR template_function_def;
 extern PR function_def; // matches template, so try template_function_def first
 extern PR attr_decl;
+extern PR static_var_decl;
+extern PR static_var_def;
 extern PR class_decl;
 extern PR class_def;    // template/non-template
 extern PR anonymous_namespace;

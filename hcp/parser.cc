@@ -73,9 +73,43 @@ std::string readableRepr(Exception const& e) throw()
 
 namespace
 {
+class Optional;
 class ParseOr;
 class ParseAnd;
 class ParseZeroOrMore;
+
+class Optional : public Parser
+{
+public:
+  PR x_;
+  
+  virtual ~Optional() throw() {
+  }
+  explicit Optional(PR x) throw():
+    x_(x) {
+  }
+  
+  // Parser::
+  virtual ParseResult parse_(I const at, Options const& options) throw() 
+  {
+    PV result(IRs(), at);
+    ParseResult const r(x_->parse(result.second, options));
+    if (!r.failed()) {
+      PV const x(*r);
+      std::copy(x.first.begin(), x.first.end(),
+                std::back_inserter(result.first));
+      result.second=x.second;
+    }
+    return ParseResult(result);
+  }
+
+  // Parser::
+  virtual std::string target() const throw();
+};
+PR optional(PR x) throw()
+{
+  return PR(new Optional(x));
+}
 
 class ParseZeroOrMore : public Parser
 {
@@ -211,6 +245,19 @@ public:
 };
 xju::Shared<Exception::Cause const> const ParseNot::expected_parse_failure(
   new FixedCause("expected parse failure"));
+
+std::string Optional::target() const throw()
+{
+  // bracket lhs/rhs if ambiguous (and/or/times)
+  std::string const xt(x_->target());
+  std::ostringstream s;
+  s << "optional " 
+    << ((dynamic_cast<ParseOr const*>(&*x_)||
+         dynamic_cast<ParseAnd const*>(&*x_))?
+        std::string("(")+xt+std::string(")"):
+        xt);
+  return s.str();
+}
 
 std::string ParseZeroOrMore::target() const throw() 
 {
@@ -1153,9 +1200,44 @@ PR class_decl(new NamedParser<hcp_ast::ClassForwardDecl>(
   parseOneOfChars(";")));
 
 PR attr_decl(new NamedParser<hcp_ast::AttrDecl>(
-  "object declaration",
+  "attr declaration",
   balanced(parseOneOfChars("{}();"))+
   parseOneOfChars(";")+
+  eatWhite));
+
+PR var_name(new NamedParser<hcp_ast::VarName>(
+              "var name",
+              name));
+
+PR array_decl(
+  parseOneOfChars("[")+
+  balanced(parseOneOfChars("]"))+
+  parseOneOfChars("]")+
+  eatWhite);
+
+PR var_intro(
+  balanced(whitespaceChar+var_name+eatWhite+optional(array_decl)+eatWhite+
+           parseOneOfChars("(="))+
+  whitespaceChar+var_name+eatWhite+optional(array_decl)+eatWhite);
+
+PR static_var_intro(
+  parseLiteral("static")+
+  whitespaceChar+
+  eatWhite+
+  var_intro);
+  
+PR static_var_decl(new NamedParser<hcp_ast::StaticVarDecl>(
+  "static variable decl",
+  static_var_intro+
+  parseOneOfChars(";")+
+  eatWhite));
+
+PR static_var_def(new NamedParser<hcp_ast::StaticVarDef>(
+  "static variable definition",
+  static_var_intro+
+  ((parseOneOfChars("=")+balanced(parseOneOfChars(";")))|
+   (parseOneOfChars("(")+
+    balanced(parseOneOfChars(")"))+eatWhite))+parseOneOfChars(";")+
   eatWhite));
 
 PR access_modifier(new NamedParser<hcp_ast::AccessModifier>(

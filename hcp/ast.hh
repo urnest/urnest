@@ -220,6 +220,15 @@ public:
 class AttrDeclTag{};
 typedef TaggedCompositeItem<AttrDeclTag> AttrDecl;
 
+class VarNameTag{};
+typedef TaggedCompositeItem<VarNameTag> VarName;
+
+class StaticVarDeclTag{};
+typedef TaggedCompositeItem<StaticVarDeclTag> StaticVarDecl;
+
+class StaticVarDefTag{};
+typedef TaggedCompositeItem<StaticVarDefTag> StaticVarDef;
+
 class AccessModifierTag{};
 typedef TaggedCompositeItem<AccessModifierTag> AccessModifier;
 

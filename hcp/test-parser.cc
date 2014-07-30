@@ -1423,6 +1423,44 @@ void test29(std::vector<std::string> const& f)
   }
 }
 
+void test30()
+{
+  std::string const x("static const char* const _user_exns[] = {\n"
+                      "  0\n"
+                      "};  ");
+
+  hcp_ast::CompositeItem root;
+  hcp_parser::I at(x.begin(), x.end());
+
+  try {
+    at = parse(root, at, hcp_parser::static_var_def);
+    xju::assert_equal(reconstruct(root), x);
+    xju::assert_equal(at.atEnd(), true);
+    xju::assert_equal(root.items_[0]->isA<hcp_ast::StaticVarDef>(),true);
+    std::vector<hcp_ast::IR>::const_iterator j(
+      std::find_if(root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.begin(),
+                   root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end(),
+                   hcp_ast::isA_<hcp_ast::VarName>));
+    xju::assert_not_equal(
+      j, 
+      root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end());
+    xju::assert_equal(reconstruct(*j), "_user_exns");
+  }
+  catch(xju::Exception const& e) {
+    assert_readableRepr_equal(e, "", XJU_TRACED);
+    xju::assert_equal(true,false);
+  }
+  try {
+    at = parse(root, hcp_parser::I(x.begin(), x.end()),
+               hcp_parser::static_var_decl);
+    xju::assert_not_equal(at, at);
+  }
+  catch(xju::Exception const& e) {
+    assert_readableRepr_equal(e, "Failed to parse static variable decl at line 1 column 1 because\nfailed to parse one of chars [;] at line 1 column 39 because\nline 1 column 39: \'=\' is not one of chars [;].", XJU_TRACED);
+ }
+}
+
+
 int main(int argc, char* argv[])
 {
   unsigned int n(0);
@@ -1455,6 +1493,8 @@ int main(int argc, char* argv[])
   test27(std::vector<std::string>(&argv[1], &argv[argc])), ++n;
   test28(std::vector<std::string>(&argv[1], &argv[argc])), ++n;
   test29(std::vector<std::string>(&argv[1], &argv[argc])), ++n;
+  test30(), ++n;
+  
   xju::assert_equal(atLeastOneReadableReprFailed, false);
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;

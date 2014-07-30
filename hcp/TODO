@@ -1,7 +1,9 @@
-object:
+static member object:
     static const char* const _user_exns[] = {
       0
     };
+global (variant of above, or same? could just do "object decl") and
+let context show whether it is a class member or global?
 
 x recognise template specialisation class
 x split it properly
