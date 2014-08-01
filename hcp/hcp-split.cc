@@ -68,6 +68,36 @@ void genClassMemberFunctionDef(
   h << "\n#line " << x.end().line_ << std::endl;
 }
 
+void genClassStaticVarDef(
+  hcp_ast::StaticVarDef const& x,
+  std::ostream& h,
+  std::ostream& c,
+  std::vector<hcp_ast::ClassDef const*> const& scope) throw(
+    xju::Exception)
+{
+  std::vector<hcp_ast::IR>::const_iterator i(
+    hcp_ast::find1stInTree(x.items_.begin(), x.items_.end(),
+                           hcp_ast::isA_<hcp_ast::StaticVarInitialiser>));
+  xju::assert_not_equal(i, x.items_.end());
+  h << std::string(x.begin().x_, (*i)->begin().x_) << ";" << std::endl;
+  
+  c << "\n#line " << x.begin().line_ << std::endl;
+  std::vector<hcp_ast::IR>::const_iterator j(
+    std::find_if(x.items_.begin(), x.items_.end(),
+                 hcp_ast::isA_<hcp_ast::VarName>));
+  xju::assert_not_equal(j, x.items_.end());
+
+  std::vector<hcp_ast::IR>::const_iterator k(x.items_.begin());
+  c << std::string((*k)->begin().x_, (*j)->begin().x_)
+    << xju::format::join(scope.begin(),
+                         scope.end(),
+                         getClassName,
+                         "::")
+    << "::"
+    << std::string((*j)->begin().x_, x.end().x_) << std::endl;
+  h << "\n#line " << x.end().line_ << std::endl;
+}
+
 void genClass(hcp_ast::ClassDef const& x,
               std::ostream& h,
               std::ostream& c,
@@ -79,6 +109,11 @@ void genClass(hcp_ast::ClassDef const& x,
       std::vector<hcp_ast::ClassDef const*> scope(outerClasses);
       scope.push_back(&x);
       genClassMemberFunctionDef((*i)->asA<hcp_ast::FunctionDef>(), h, c, scope);
+    }
+    else if ((*i)->isA<hcp_ast::StaticVarDef>()) {
+      std::vector<hcp_ast::ClassDef const*> scope(outerClasses);
+      scope.push_back(&x);
+      genClassStaticVarDef((*i)->asA<hcp_ast::StaticVarDef>(), h, c, scope);
     }
     else if ((*i)->isA<hcp_ast::ClassDef>()) {
       std::vector<hcp_ast::ClassDef const*> outer(outerClasses);

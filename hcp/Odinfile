@@ -4,6 +4,7 @@
 %standalone-tests.tree
 hcp-split
 hcp-parse-file
+hcp-what-is-at
 
 %run-standalone-tests == %standalone-tests.tree:leaves
 
@@ -33,5 +34,6 @@ test%all-tests.tree
 
 hcp-split == hcp-split.cc+(%opts):auto.cxx.exe
 hcp-parse-file == hcp-parse-file.cc+(%opts):auto.cxx.exe
+hcp-what-is-at == hcp-what-is-at.cc+(%opts):auto.cxx.exe
 
 

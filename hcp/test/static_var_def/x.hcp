@@ -1,0 +1,22 @@
+class F
+{
+public:
+  static const int* x = 3;
+  static int y[3]=
+  {
+    3,4
+  };
+  static int z[]=
+  {
+    8,9
+  };
+};
+
+namespace N
+{
+class G
+{
+public:  
+  static int q=3*4;
+};
+}

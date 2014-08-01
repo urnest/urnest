@@ -29,19 +29,17 @@ static const char rcsid[] = "$RCSfile: twt_cxx.el,v $ $Revision: 1.2 $";
 #include <xju/stringToUInt.hh>
 #include <hcp/getOptionValue.hh>
 #include <map>
+#include <typeinfo>
 
 class Options
 {
 public:
   Options(size_t offset, 
-          std::string const& target, 
           hcp_parser::Options const& parser_options) throw():
     offset_(offset),
-    target_(target),
     parser_options_(parser_options) {
   }
   size_t offset_;
-  std::string target_;
   hcp_parser::Options parser_options_;
 };
 
@@ -52,7 +50,6 @@ std::pair<Options, std::vector<std::string> > parseCommandLine(
 {
   std::vector<std::string>::const_iterator i(x.begin());
   size_t offset=0;
-  std::string target="file";
   bool trace=false;
   bool includeAllExceptionContext=false;
   
@@ -70,22 +67,16 @@ std::pair<Options, std::vector<std::string> > parseCommandLine(
       offset=xju::stringToUInt(hcp::getOptionValue("-o", i, x.end()));
       ++i;
     }
-    else if ((*i)=="-p") {
-      ++i;
-      target=hcp::getOptionValue("-p", i, x.end());
-      ++i;
-    }
     else {
       std::ostringstream s;
       s << "unknown option " << (*i)
-        << " (only know -v, -t, -o, -p)";
+        << " (only know -v, -t, -o)";
       throw xju::Exception(s.str(), XJU_TRACED);
     }
   }
   return std::make_pair(
     Options(
       offset,
-      target,
       hcp_parser::Options(trace,
                           hcp_parser::Cache(new hcp_parser::CacheVal()))), 
     std::vector<std::string>(i, x.end()));
@@ -97,32 +88,13 @@ int main(int argc, char* argv[])
     std::pair<Options, std::vector<std::string> > const cmd_line(
       parseCommandLine(std::vector<std::string>(argv+1, argv+argc)));
 
-    std::map<std::string, hcp_parser::PR> parsers;
-    parsers.insert(std::make_pair("string literal", hcp_parser::stringLiteral));
-    parsers.insert(std::make_pair("comments", hcp_parser::comments));
-    parsers.insert(std::make_pair("typedef", hcp_parser::typedef_statement));
-    parsers.insert(std::make_pair("using", hcp_parser::using_statement));
-    parsers.insert(std::make_pair("enum definition", hcp_parser::enum_def));
-    parsers.insert(std::make_pair("function decl", hcp_parser::function_decl));
-    parsers.insert(std::make_pair("template function def", hcp_parser::template_function_def));
-    parsers.insert(std::make_pair("function def", hcp_parser::function_def));
-    parsers.insert(std::make_pair("attr decl", hcp_parser::attr_decl));
-    parsers.insert(std::make_pair("class decl", hcp_parser::class_decl));
-    parsers.insert(std::make_pair("class def", hcp_parser::class_def));
-    parsers.insert(std::make_pair("anonymous namespace", hcp_parser::anonymous_namespace));
-    parsers.insert(std::make_pair("namespace def", hcp_parser::namespace_def));
-    parsers.insert(std::make_pair("file", hcp_parser::file));
-
     if (cmd_line.second.size() != 1) {
       std::cout << "usage: " << argv[0] 
                 << " [-v] [-t] <input-file>" << std::endl;
       std::cout << "-t, trace " << std::endl
                 << "-v, verbose" << std::endl
-                << "-o <offset>, start parsing at offset (default 0)\n"
-                << "-p <type>, attempt to parse <type>, one of:\n"
-                << xju::format::join(parsers.begin(), parsers.end(),
-                                     xju::functional::first,
-                                     ", ") << "\n";
+                << "-o <offset>, start parsing at offset (default 0)"
+                << "\n";
       return 1;
     }
 
@@ -133,26 +105,20 @@ int main(int argc, char* argv[])
 
     Options const options(cmd_line.first);
 
-    std::map<std::string, hcp_parser::PR>::iterator const i(
-      parsers.find(options.target_));
-    if (i == parsers.end()) {
-      std::ostringstream s;
-      s << "unknown target type " << options.target_
-        << " (only know "
-        << xju::format::join(parsers.begin(), parsers.end(),
-                             xju::functional::first,
-                             ", ")
-        << ")";
-      throw xju::Exception(s.str(), XJU_TRACED);
-    }
-
-    hcp_parser::I at(x.begin(), x.end());
-    size_t u;
-    for(u=0; u != options.offset_; ++u, ++at);
     hcp_ast::CompositeItem root;
-    at = hcp_parser::parse(root, at, (*i).second, 
-                           options.parser_options_.trace_);
-    std::cout << "end at " << at << std::endl;
+    hcp_parser::parse(root, hcp_parser::I(x.begin(), x.end()),
+                      hcp_parser::file, 
+                      options.parser_options_.trace_);
+    hcp_parser::I at(x.begin(), x.end());
+    unsigned u;
+    for(u=0; u != options.offset_; ++u, ++at);
+    std::vector<hcp_ast::CompositeItem const*> context(getContextAt(at, root));
+    std::vector<hcp_ast::CompositeItem const*>::const_iterator j;
+    for(j=context.begin(); j!=context.end(); ++j) {
+      std::cout << (*j)->begin() << ": " << typeid(**j).name() << std::endl;
+    }
+    std::cout << at << std::endl;
+    return 0;
   }
   catch(xju::Exception& e) {
     std::ostringstream s;

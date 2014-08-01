@@ -29,6 +29,24 @@ std::string reconstruct(IRs const& x) throw() {
   return s.str();
 }
 
+std::vector<CompositeItem const*> getContextAt(
+  I i, CompositeItem const& within) throw()
+{
+  std::vector<CompositeItem const*> result;
+  for(IRs::const_iterator j = within.items_.begin();
+      j != within.items_.end();
+      ++j) {
+    if (((*j)->begin().x_ <= i.x_) && (i.x_ < (*j)->end().x_) &&
+        (*j)->isA<CompositeItem>()) {
+      result.push_back(&(*j)->asA<CompositeItem>());
+      std::vector<CompositeItem const*> children(
+        getContextAt(i, (*j)->asA<CompositeItem>()));
+      std::copy(children.begin(), children.end(), std::back_inserter(result));
+    }
+  }
+  return result;
+}
+
 std::string ClassDef::getClassName(std::vector<IR> const& items) throw()
 {
   std::vector<IR>::const_iterator i(

@@ -64,13 +64,19 @@ inline std::string reconstruct(Item const& x) throw() {
   return std::string(x.begin().x_, x.end().x_);
 }
 
-typedef xju::Shared<Item const> IR;
+typedef xju::Shared<Item> IR;
 typedef std::vector<IR> IRs;
 
 template<class T>
 bool isA_(IR const& x) throw()
 {
   return (*x).isA<T>();
+}
+
+template<class T>
+T& asA_(IR const& x) throw()
+{
+  return (*x).asA<T>();
 }
 
 std::string reconstruct(IRs const& x) throw();
@@ -101,7 +107,13 @@ public:
   // The items that make up this composite item, ie the
   // children of this AST node.
   std::vector<IR> items_;
+
 };
+
+// pre: begin() <= i < end()
+std::vector<CompositeItem const*> getContextAt(
+  I i, CompositeItem const& within) throw();
+  
 
 // A convenient way to create CompositeItem subclasses
 // (see below for subclasses that the parser creates).
@@ -116,6 +128,50 @@ public:
   virtual ~TaggedCompositeItem() throw() {
   }
 };
+
+// Find first item for which p is true, searching item, its 
+// CompositeItem children then next item.
+//   bool p(IR);
+template<class Predicate>
+IRs::const_iterator find1stInTree(IRs::const_iterator begin, 
+                                  IRs::const_iterator end,
+                                  Predicate p) throw() {
+  while(begin != end &&
+        !p(*begin)) {
+    if (isA_<CompositeItem>(*begin)) {
+      IRs::const_iterator const i(find1stInTree(
+                                    asA_<CompositeItem>(*begin).items_.begin(),
+                                    asA_<CompositeItem>(*begin).items_.end(),
+                                    p));
+      
+      if (i!=asA_<CompositeItem>(*begin).items_.end()) {
+        return i;
+      }
+    }
+    ++begin;
+  }
+  return begin;
+}
+template<class Predicate>
+IRs::iterator find1stInTree(IRs::iterator begin, 
+                                  IRs::iterator end,
+                                  Predicate p) throw() {
+  while(begin != end &&
+        !p(*begin)) {
+    if (isA_<CompositeItem>(*begin)) {
+      IRs::iterator const i(find1stInTree(
+                              asA_<CompositeItem>(*begin).items_.begin(),
+                              asA_<CompositeItem>(*begin).items_.end(),
+                              p));
+
+      if (i!=asA_<CompositeItem>(*begin).items_.end()) {
+        return i;
+      }
+    }
+    ++begin;
+  }
+  return begin;
+}
 
 class String : public Item
 {
@@ -228,6 +284,9 @@ typedef TaggedCompositeItem<StaticVarDeclTag> StaticVarDecl;
 
 class StaticVarDefTag{};
 typedef TaggedCompositeItem<StaticVarDefTag> StaticVarDef;
+
+class StaticVarInitialiserTag{};
+typedef TaggedCompositeItem<StaticVarInitialiserTag> StaticVarInitialiser;
 
 class AccessModifierTag{};
 typedef TaggedCompositeItem<AccessModifierTag> AccessModifier;

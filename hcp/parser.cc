@@ -1226,18 +1226,25 @@ PR static_var_intro(
   eatWhite+
   var_intro);
   
-PR static_var_decl(new NamedParser<hcp_ast::StaticVarDecl>(
-  "static variable decl",
-  static_var_intro+
-  parseOneOfChars(";")+
-  eatWhite));
+PR static_var_decl(
+  new NamedParser<hcp_ast::StaticVarDecl>(
+    "static variable decl",
+    static_var_intro+
+    parseOneOfChars(";")+
+    eatWhite));
+
+PR static_var_initialiser(
+  new NamedParser<hcp_ast::StaticVarInitialiser>(
+    "static variable initialiser",
+    
+    (parseOneOfChars("=")+balanced(parseOneOfChars(";")))+
+    parseOneOfChars(";")+
+    eatWhite));
 
 PR static_var_def(new NamedParser<hcp_ast::StaticVarDef>(
   "static variable definition",
   static_var_intro+
-  ((parseOneOfChars("=")+balanced(parseOneOfChars(";")))|
-   (parseOneOfChars("(")+
-    balanced(parseOneOfChars(")"))+eatWhite))+parseOneOfChars(";")+
+  static_var_initialiser+
   eatWhite));
 
 PR access_modifier(new NamedParser<hcp_ast::AccessModifier>(
@@ -1292,6 +1299,7 @@ public:
                   typedef_statement|
                   PR(new SelfParser(*this))|
                   function_def|
+                  static_var_def|
                   attr_decl,
                   parseOneOfChars("}"))+
        parseOneOfChars("}")+
