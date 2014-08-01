@@ -3,7 +3,7 @@ client side:
 - can get (CORBA_Object.h class Object) CORBA::Object* from 
   ORB::string_to_object
 - then generated code calls CORBA::Object::_PR_getobj()->_realNarrow(
-   _PD_repoId), which is just 
+   _PD_repoId), _PR_getobj() is just 
     (omniObjRef.h) omniObjRef* CORBA::Object::pd_obj
 - ... generated code has a static _pof_F which is a
   proxyObjectFactory and it has a omniObjRef* newObjRef that

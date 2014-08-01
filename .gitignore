@@ -80,3 +80,5 @@ hcp/hcp-split
 omnicxy/proto/cxy/p1.cc
 omnicxy/proto/cxy/p1.hh
 *.pyc
+hcp/hcp-what-is-at
+omnicxy/proto/cxy/p1.cref.hh

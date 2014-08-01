@@ -4,6 +4,8 @@
 #include "cxy/exceptions.hh"
 #include "p1.hh"
 
+#include "p1.objref.hh" // impl
+
 namespace cxy
 {
 template<class T>
@@ -26,11 +28,23 @@ public:
       obj_(0)
   {
     try {
-      CORBA::Object_var x(orb.impl_.orb_.string_to_object(uri.c_str()));
-      REVISIT narrow;
+      try {
+        CORBA::Object_var x(orb.impl_.orb_.string_to_object(uri.c_str()));
+        cxy::objref<p1::F>* e = 
+          dynamic_cast<cxy::objref<p1::F>*>(
+            obj->_PR_getobj()->_realNarrow(_PD_repoId));
+        if (e==0) {
+          std::ostringstream s;
+          s << xju::format::quote(uri) << " is not a " << _PD_reporId;
+          throw cxy::Exceptions<xju::Exception>::WrongType(
+            s.str(), std::make_pair(__FILE__, __LINE__));
+        }
+      }
+      catch(CORBA::Exception const& ee) {
+        throw cxy::translateException(ee);
+      }
     }
-    catch(CORBA::Exception const& ee) {
-      xju::Exception e(cxy::translateException(ee));
+    catch(xju::Exception const& e) {
       std::ostringstream s;
       s << "locate object "
         << xju::format::quote(uri)

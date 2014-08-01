@@ -3,7 +3,14 @@
 p1.hh==%p1/p1.hh
 p1.cc==%p1/p1.cc
 
+p1.cref.hh==%p1.cref/p1.cref.hh
+p1.cref.cc==%p1.cref/p1.cref.cc
+
+p1.objref.hh==%p1.objref/p1.objref.hh
+p1.objref.cc==%p1.objref/p1.objref.cc
+
 %p1-main==p1-main.cc+(../../..%cxx-opts)+inc_sp=(/usr/local/omniORB-4.2.0/include)+lib_sp=(/usr/local/omniORB-4.2.0/lib)+lib='omniORB4' 'omnithread':auto.cxx.exe
 
-
 %p1==()+cmd=(../../../hcp/hcp-split) -l 1 (p1.hcp) 'p1.hh' 'p1.cc':output
+%p1.cref==()+cmd=(../../../hcp/hcp-split) -l 1 (p1.cref.hcp) 'p1.cref.hh' 'p1.cref.cc':output
+%p1.objref==()+cmd=(../../../hcp/hcp-split) -l 1 (p1.objref.hcp) 'p1.objref.hh' 'p1.objref.cc':output
