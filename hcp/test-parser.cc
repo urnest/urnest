@@ -817,7 +817,7 @@ void test17()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [(] at line 1 column 1 because\nline 1 column 1: end of input.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [(] at line 1 column 1 because\nline 1 column 3: end of input.", XJU_TRACED);
   }
 }
 
@@ -1341,9 +1341,23 @@ void test27(std::vector<std::string> const& f)
   catch(xju::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
-  std::string const x(xju::readFile(f[3])+"xxx");
   try
   {
+    std::string const x("xxx");
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, cache);
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    at = parse(root, at, hcp_parser::attr_decl);
+    xju::assert_abort();
+  }
+  catch(xju::Exception const& e) {
+    assert_readableRepr_equal(e, "Failed to parse attr declaration at line 1 column 1 because\nfailed to parse parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [();{}] at line 1 column 1 because\nline 1 column 4: end of input.", XJU_TRACED);
+  }
+  try
+  {
+    std::string const x(xju::readFile(f[3])+"xxx");
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache);
     hcp_ast::CompositeItem root;
@@ -1354,7 +1368,7 @@ void test27(std::vector<std::string> const& f)
   }
   catch(xju::Exception const& e) {
     // REVISIT: not that helpful
-    assert_readableRepr_equal(e, "Failed to parse file at line 1 column 1 because\nfailed to parse end of file at line 22 column 1 because\nline 22 column 1: expected end of input, not \'x\'.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse file at line 1 column 1 because\nfailed to parse attr declaration at line 22 column 1 because\nfailed to parse parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [();{}] at line 22 column 1 because\nline 22 column 4: end of input.", XJU_TRACED);
   }
 }
 

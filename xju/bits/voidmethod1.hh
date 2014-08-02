@@ -7,15 +7,32 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
+#ifndef XJU_BITS_VOIDMETHOD1_H
+#define XJU_BITS_VOIDMETHOD1_H
 
-
-namespace cxy
+namespace xju
 {
-// generated code specialises to contain omniCallDescriptors
-// for each of T's functions
+namespace functional
+{
+
 template<class T>
-class calldesc
+class VoidMethod : public std::unary_function<T, bool>
 {
+public:
+  VoidMethod(void (T::*method)()) throw():
+  m_method(method)
+  {
+  }
+  bool operator()(T& x) const
+  {
+    return (x.*m_method)(), true;
+  }
+private:
+  void (T::*const m_method)();
 };
 
 }
+}
+
+#endif
+

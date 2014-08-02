@@ -47,17 +47,39 @@ std::vector<CompositeItem const*> getContextAt(
   return result;
 }
 
+namespace
+{
+bool isNewline(char c) throw()
+{
+  switch(c) {
+  case '\n':
+  case '\r':
+    return true;
+  }
+  return false;
+}
+}
+
 std::string ClassDef::getClassName(std::vector<IR> const& items) throw()
 {
   std::vector<IR>::const_iterator i(
     std::find_if(items.begin(), items.end(),
                  isA_<ClassName>));
   xju::assert_not_equal(i, items.end());
+
   std::string result;
+  // REVISIT: looks nice but give X<::Y> which is invalid
+  // std::remove_copy_if((**i).begin(), (**i).end(),
+  //                     std::back_inserter(result),
+  //                     ::isspace);
   std::remove_copy_if((**i).begin(), (**i).end(),
                       std::back_inserter(result),
-                      ::isspace);
-  return result;
+                      isNewline);
+  std::string::iterator e(result.end());
+  while((e != result.begin()) && ::isspace(*(e-1))) {
+    --e;
+  }
+  return std::string(result.begin(), e);
 }
 
 bool ClassDef::getIsTemplateSpeicialisation(std::vector<IR> const& items) throw()

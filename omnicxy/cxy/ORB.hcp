@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <functional>
 #include <typeinfo>
+#include <xju/functional.hh>
 
 namespace cxy
 {
@@ -21,6 +22,14 @@ class ORBImpl;
 
 template<class T>
 class cref;
+
+template<class BaseException, class I>
+void copyContext(I begin, I end, BaseException& e) throw()
+{
+  for(; begin != end; ++begin) {
+    e.addContext(*begin);
+  }
+}
 
 template<class BaseException>
 class ORB
@@ -34,11 +43,11 @@ public:
     if (&typeid(xju::Exception)==&typeid(BaseException)) {
       throw;
     }
-    BaseException x(e.cause.first, e.cause.second);
-    std::copy(e.context.begin(), 
-              e.context.end(),
-              std::bind1st(xju::functional::method(&BaseException::addContext),
-                           x));
+    BaseException x(e.cause().first, e.cause().second);
+    copyContext(e.context().begin(), 
+                e.context().end(),
+                x);
+    throw x;
   }
 private:
   ORBImpl impl_;

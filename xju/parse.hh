@@ -93,6 +93,12 @@ namespace xju
         class IteratorAdaptor
         {
         public:
+            typedef typename std::iterator_traits<iterator>::iterator_category iterator_category;
+            typedef typename std::iterator_traits<iterator>::value_type value_type;
+            typedef typename std::iterator_traits<iterator>::difference_type difference_type;
+            typedef typename std::iterator_traits<iterator>::pointer pointer;
+            typedef typename std::iterator_traits<iterator>::reference reference;
+            
             class EndOfInput : public xju::Exception
             {
             public:
@@ -180,6 +186,12 @@ namespace xju
                                   IteratorAdaptor const& y) throw()
             {
                 return y<x;
+            }
+            friend difference_type operator-(
+                IteratorAdaptor const& x,
+                IteratorAdaptor const& y) throw()
+            {
+                return x.x_ - y.x_;
             }
         };
 

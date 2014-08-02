@@ -7,21 +7,21 @@
 #include <cxy/calldesc.hh>
 #include <cxy/translateException.hh>
 
-#include <xju/NotCopyable.hh>
+#include <xju/NonCopyable.hh>
 
 #include <omniORB4/CORBA.h>
 
-#include <omniORB4/callDescriptor.h> // impl
-#include <cxy/pof.hh> // impl
+#include <omniORB4/callDescriptor.h>
+#include <cxy/pof.hh>
 
-namespace
+namespace cxy
 {
 
 template<>
-class cxy::calldesc<p1::F>
+class calldesc<p1::F>
 {
 public:
-  class f1 : public omniORB4::omniCallDescriptor
+  class f1 : public omniCallDescriptor
   {
   public:
     static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt)
@@ -32,7 +32,7 @@ public:
     
     f1(const char* op_,
        size_t oplen,
-       CORBA_Boolean upcall=0):
+       _CORBA_Boolean upcall=0):
         omniORB4::omniCallDescriptor(
           &f1::lcfn, op_, oplen, 0, _user_exns, 0, upcall)
     {
@@ -43,14 +43,12 @@ public:
   };
 };
 
-}
-  
 template<>
-class cxy::objref<p1::F>:
+class objref<p1::F>:
   public virtual p1::F,
   public virtual ::CORBA::Object,
   public virtual omniObjRef,
-  public xju::NotCopyable
+  public xju::NonCopyable
 {
 public:
   inline objref()  { _PR_setobj(0); }  // nil
@@ -75,7 +73,7 @@ public:
   }
   
 protected:
-  virtual ~objref_F() throw(){
+  virtual ~objref() throw(){
   }
   
 private:
@@ -95,14 +93,13 @@ private:
       return (::CORBA::Object_ptr) this;
     
     return 0;
+  }
 };
 
-namespace
-{
 template<>
-class cxy::pof<p1::F> : public omniORB4::proxyObjectFactory {
+class pof<p1::F> : public omni::proxyObjectFactory {
 public:
-  pof() : omniORB4::proxyObjectFactory(cxy::cdr<p1::F>::repoId){
+  pof() : omni::proxyObjectFactory(cxy::cdr<p1::F>::repoId){
   }
   virtual ~pof();
   
@@ -123,4 +120,3 @@ public:
   static pof me;
 };
 }
-

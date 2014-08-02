@@ -279,6 +279,9 @@ typedef TaggedCompositeItem<AttrDeclTag> AttrDecl;
 class VarNameTag{};
 typedef TaggedCompositeItem<VarNameTag> VarName;
 
+class KeywordStaticTag{};
+typedef TaggedCompositeItem<KeywordStaticTag> KeywordStatic;
+
 class StaticVarDeclTag{};
 typedef TaggedCompositeItem<StaticVarDeclTag> StaticVarDecl;
 

@@ -16,7 +16,10 @@
 #include <omniORB4/CORBA.h> // impl
 #include <iostream> // impl
 
-class CORBA::ORB;
+namespace CORBA
+{
+class ORB;
+}
 
 namespace cxy
 {
@@ -52,13 +55,13 @@ CORBA::ORB* orbInit(
   std::string const& orbEndPoint) throw(
     xju::Exception)
 {
-  char const* argv[]={
+  char** argv={
     "",
     "-orbEndPoint", orbEndPoint.c_str()
   };
   int argc=sizeof(argv)/sizeof(argv[0]);
   try {
-    return CORBA::ORB_init(argc, argv).retn();
+    return CORBA::ORB_init(argc, argv)->retn();
   }
   catch (CORBA::Exception& ex) {
     xju::Exception e(translate(ex));

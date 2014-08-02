@@ -1,7 +1,9 @@
 // generated from p1.idl by omni cxy_cref idl backend specifying 
 // xju::Exception from "xju/Exception.hh" as base class for all exceptions
-#include "cxy/cref.hh"
-#include "cxy/exceptions.hh"
+#include <cxy/cref.hh>
+#include <cxy/exceptions.hh>
+#include <cxy/ORB.hh>
+
 #include "p1.hh"
 
 #include "p1.objref.hh" // impl
@@ -10,13 +12,12 @@ namespace cxy
 {
 template<class T>
 class objref;
-}
 
 template<>
-class cxy::cref<p1::F>
+class cref< ::p1::F>
 {
 public:
-  explicit cref(cxy::ORB& orb, std::string const& uri) throw(
+  explicit cref(cxy::ORB<xju::Exception>& orb, std::string const& uri) throw(
     // no object with specified uri, including server
     // not reachable and server does not know name
     cxy::Exceptions<xju::Exception>::NoSuchObject,
@@ -100,3 +101,4 @@ private:
   std::string uri_;
   cxy::objref<p1::F>* obj_;
 };
+}

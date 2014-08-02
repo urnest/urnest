@@ -749,7 +749,7 @@ public:
         return ParseResult(std::make_pair(IRs(1U, item), end));
       }
       if (end.atEnd()) {
-        return ParseResult(EndOfInput(at, XJU_TRACED));
+        return ParseResult(EndOfInput(end, XJU_TRACED));
       }
       switch(*end) {
       case '"':
@@ -1100,7 +1100,10 @@ PR operator_name(
    parseLiteral("=")|
    parseLiteral("*"))+
   eatWhite);
-   
+
+PR destructor_name(
+  parseLiteral("~")+eatWhite+unqualifiedName);
+
 PR name(
   zeroOrMore*(unqualifiedName+eatWhite+parseLiteral("::")+eatWhite)+
   unqualifiedName+
@@ -1111,17 +1114,23 @@ PR type_name(
   unqualifiedTypeName+
   eatWhite);
 
+PR keyword_static(
+  new NamedParser<hcp_ast::KeywordStatic>(
+    "\"static\"",
+    parseLiteral("static")));
+
 PR function_qualifiers(
   new NamedParser<hcp_ast::FunctionQualifiers>(
     "function qualifiers",
     zeroOrMore*((parseLiteral("virtual")|
                  parseLiteral("explicit")|
-                 parseLiteral("friend"))+eatWhite)));
+                 parseLiteral("friend")|
+                 keyword_static)+eatWhite)));
                 
 PR function_proto(
   function_qualifiers+
   balanced(parseOneOfChars("();{}[]")|
-           ((operator_name|type_name)+parseOneOfChars("(")))+
+           ((operator_name|destructor_name|type_name)+parseOneOfChars("(")))+
   new NamedParser<hcp_ast::FunctionName>(
   "function name",
   (operator_name|type_name))+
@@ -1221,7 +1230,7 @@ PR var_intro(
   whitespaceChar+var_name+eatWhite+optional(array_decl)+eatWhite);
 
 PR static_var_intro(
-  parseLiteral("static")+
+  keyword_static+
   whitespaceChar+
   eatWhite+
   var_intro);
@@ -1453,9 +1462,10 @@ PR endOfFile(new ParseEndOfFile);
 PR file(new NamedParser<hcp_ast::File>(
   "file",
   eatWhite+
-  zeroOrMore*(anonymous_namespace|
-              namespace_def|
-              namespace_leaf)+
+  parseUntil(anonymous_namespace|
+             namespace_def|
+             namespace_leaf,
+             endOfFile)+
   endOfFile));
 
 I parse(hcp_ast::CompositeItem& parent,

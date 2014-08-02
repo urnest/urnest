@@ -16,6 +16,7 @@
 
 
 #include <string>
+#include <utility>
 
 
 //
@@ -42,7 +43,12 @@ namespace xju
 	    _line(line)
 	{
 	}
-	
+        Traced(std::pair<std::string,unsigned int> const& x) throw():
+	    _file(x.first),
+	    _line(x.second)
+	{
+	}
+        
 	const std::string& file() const throw()
 	{
 	    return _file;
@@ -51,7 +57,11 @@ namespace xju
 	{
 	    return _line;
 	}
-	
+
+        operator std::pair<std::string,unsigned int>() const throw()
+        {
+            return std::make_pair(_file, _line);
+        }
     private:		
 	std::string       _file;
 	unsigned int _line;

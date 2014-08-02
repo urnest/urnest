@@ -64,6 +64,12 @@ namespace xju
     {
 	_context.push_back(std::make_pair(c.str(), t));
     }
+    void Exception::addContext(
+        std::pair<std::string, xju::Traced> const& c) throw()
+    {
+        _context.push_back(c);
+    }
+    
 
 std::ostream& operator<<(std::ostream& s, const xju::Exception& e) throw()
 {

@@ -9,8 +9,8 @@
 //
 #include <omniORB4/CORBA.h>
 
-#include <iostream> // impl
-#include <typeinfo> // impl
+#include <sstream>
+#include <typeinfo>
 
 namespace cxy
 {

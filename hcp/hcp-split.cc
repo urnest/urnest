@@ -88,6 +88,8 @@ void genClassStaticVarDef(
   xju::assert_not_equal(j, x.items_.end());
 
   std::vector<hcp_ast::IR>::const_iterator k(x.items_.begin());
+  xju::assert_(*k, hcp_ast::isA_<hcp_ast::KeywordStatic>);
+  ++k;
   c << std::string((*k)->begin().x_, (*j)->begin().x_)
     << xju::format::join(scope.begin(),
                          scope.end(),
@@ -307,17 +309,25 @@ int main(int argc, char* argv[])
     fh << "#ifndef " << guard << std::endl
        << "#define " << guard << std::endl
        << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
-    fh << "\n";
     
     xju::path::RelativePath const hhinc(
       std::vector<xju::path::DirName>(
         inputFile.first.end()-cmd_line.first.dir_levels_,
         inputFile.first.end()));
     
-    fc << "#include <" 
-       << xju::path::str(hhinc, outputHH.second)
-       << ">" << std::endl
-       << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
+    if (hhinc.size()) {
+      fc << "#include <" 
+         << xju::path::str(hhinc, outputHH.second)
+         << ">" << std::endl
+         << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
+    }
+    else
+    {
+      fc << "#include \"" 
+         << xju::path::str(hhinc, outputHH.second)
+         << "\"" << std::endl
+         << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
+    }
     
     genNamespaceContent(
       root.items_.front()->asA<hcp_ast::File>().items_, fh, fc);

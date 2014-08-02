@@ -7,6 +7,7 @@ namespace p1
 {
 class F
 {
+public:
   virtual ~F() throw()
   {
   }

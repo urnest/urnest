@@ -2,3 +2,39 @@
 
 ORBImpl.hh==%ORBImpl/ORBImpl.hh
 ORBImpl.cc==%ORBImpl/ORBImpl.cc
+
+cref.hh==%cref/cref.hh
+cref.cc==%cref/cref.cc
+
+%cref==()+cmd=(../../hcp/hcp-split) -l 1 (cref.hcp) 'cref.hh' 'cref.cc':output
+
+objref.hh==%objref/objref.hh
+objref.cc==%objref/objref.cc
+
+%objref==()+cmd=(../../hcp/hcp-split) -l 1 (objref.hcp) 'objref.hh' 'objref.cc':output
+
+calldesc.hh==%calldesc/calldesc.hh
+calldesc.cc==%calldesc/calldesc.cc
+
+%calldesc==()+cmd=(../../hcp/hcp-split) -l 1 (calldesc.hcp) 'calldesc.hh' 'calldesc.cc':output
+
+translateException.hh==%translateException/translateException.hh
+translateException.cc==%translateException/translateException.cc
+
+%translateException==()+cmd=(../../hcp/hcp-split) -l 1 (translateException.hcp) 'translateException.hh' 'translateException.cc':output
+
+pof.hh==%pof/pof.hh
+pof.cc==%pof/pof.cc
+
+%pof==()+cmd=(../../hcp/hcp-split) -l 1 (pof.hcp) 'pof.hh' 'pof.cc':output
+
+cdr.hh==%cdr/cdr.hh
+cdr.cc==%cdr/cdr.cc
+
+%cdr==()+cmd=(../../hcp/hcp-split) -l 1 (cdr.hcp) 'cdr.hh' 'cdr.cc':output
+
+ORB.hh==%ORB/ORB.hh
+ORB.cc==%ORB/ORB.cc
+
+%ORB==()+cmd=(../../hcp/hcp-split) -l 1 (ORB.hcp) 'ORB.hh' 'ORB.cc':output
+

@@ -1,10 +1,14 @@
 // generated from p1.idl by cxy.misc idl backend
 
 #include "p1.hh"
+#include <cxy/cdr.hh>
 
+namespace cxy
+{
 template<>
-class cxy::cdr<p1::F>
+class cdr< ::p1::F>
 {
 public:
   static const char repoId[]="IDL:p1/F:1.0";
 };
+}

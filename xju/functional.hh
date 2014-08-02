@@ -23,9 +23,13 @@
 #include <functional>
 #include <utility>
 #include "bits/method1.hh"
+#include "bits/voidmethod1.hh"
 #include "bits/constmethod1.hh"
+#include "bits/voidconstmethod1.hh"
 #include "bits/method2.hh"
+#include "bits/voidmethod2.hh"
 #include "bits/constmethod2.hh"
+#include "bits/voidconstmethod2.hh"
 
 namespace xju
 {
@@ -47,20 +51,40 @@ namespace xju
         {
             return ConstMethod<T, R>(method);
         }
+        template<class T>
+        VoidConstMethod<T> method(void (T::*method)() const) throw()
+        {
+            return VoidConstMethod<T>(method);
+        }
         template<class T, class R>
         Method<T, R> method(R (T::*method)()) throw()
         {
             return Method<T, R>(method);
+        }
+        template<class T>
+        VoidMethod<T> method(void (T::*method)()) throw()
+        {
+            return VoidMethod<T>(method);
         }
         template<class T, class R, class P>
         ConstMethod2<T, R, P> method(R (T::*method)(P) const) throw()
         {
             return ConstMethod2<T, R, P>(method);
         }
+        template<class T, class P>
+        VoidConstMethod2<T, P> method(void (T::*method)(P) const) throw()
+        {
+            return VoidConstMethod2<T, P>(method);
+        }
         template<class T, class R, class P>
         Method2<T, R, P> method(R (T::*method)(P)) throw()
         {
             return Method2<T, R, P>(method);
+        }
+        template<class T, class P>
+        VoidMethod2<T, P> method(void (T::*method)(P)) throw()
+        {
+            return VoidMethod2<T, P>(method);
         }
 
         template<class F>

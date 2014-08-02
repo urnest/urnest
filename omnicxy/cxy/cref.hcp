@@ -11,11 +11,10 @@
 
 namespace cxy
 {
-// generated code specialises to contain omniCallDescriptors
-// for each of T's functions
+// generated code specialises
 template<class T>
-class calldesc
+class cref
 {
 };
-
+  
 }
