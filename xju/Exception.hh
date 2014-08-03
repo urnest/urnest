@@ -95,6 +95,11 @@ namespace xju
 	//
 	void addContext(const std::string& c,
                         const xju::Traced& trace) throw();
+	void addContext(const std::string& c,
+                        std::string const& file,
+                        unsigned int const line) throw() {
+            addContext(c, xju::Traced(file, line));
+        }
 	void addContext(const std::ostringstream& c,
                         const xju::Traced& trace) throw();
 	void addContext(std::pair<std::string, xju::Traced> const& trace) 
