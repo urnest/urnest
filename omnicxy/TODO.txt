@@ -13,3 +13,5 @@ client side:
 
 x allow "unchecked narrow"? Na
 
+- clean up xju::Exceptions, get it back to a minimum of function
+  variants

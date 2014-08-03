@@ -15,6 +15,7 @@
 #include <typeinfo> // impl
 #include <omniORB4/CORBA.h> // impl
 #include <iostream> // impl
+#include <xju/format.hh>
 
 namespace CORBA
 {
@@ -55,13 +56,17 @@ CORBA::ORB* orbInit(
   std::string const& orbEndPoint) throw(
     xju::Exception)
 {
-  char** argv={
-    "",
-    "-orbEndPoint", orbEndPoint.c_str()
+  char* argv_[]={
+    ::strdup(""),
+    ::strdup("-orbEndPoint"), ::strdup(orbEndPoint.c_str())
   };
+  char** argv=argv_;
+  
   int argc=sizeof(argv)/sizeof(argv[0]);
   try {
-    return CORBA::ORB_init(argc, argv)->retn();
+    CORBA::ORB* result(
+      CORBA::ORB_init(argc, argv));
+    return result;
   }
   catch (CORBA::Exception& ex) {
     xju::Exception e(translate(ex));
