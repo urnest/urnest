@@ -1133,7 +1133,7 @@ PR function_proto(
            ((operator_name|destructor_name|type_name)+parseOneOfChars("(")))+
   new NamedParser<hcp_ast::FunctionName>(
   "function name",
-  (operator_name|type_name))+
+  (operator_name|destructor_name|type_name))+
   bracketed+
   balanced(parseOneOfChars("{;:")|
            (parseLiteral("try")+eatWhite+parseOneOfChars(":"))));
@@ -1226,7 +1226,7 @@ PR array_decl(
 
 PR var_intro(
   balanced(whitespaceChar+var_name+eatWhite+optional(array_decl)+eatWhite+
-           parseOneOfChars("(="))+
+           parseOneOfChars("=;"))+
   whitespaceChar+var_name+eatWhite+optional(array_decl)+eatWhite);
 
 PR static_var_intro(
@@ -1235,25 +1235,17 @@ PR static_var_intro(
   eatWhite+
   var_intro);
   
-PR static_var_decl(
-  new NamedParser<hcp_ast::StaticVarDecl>(
-    "static variable decl",
-    static_var_intro+
-    parseOneOfChars(";")+
-    eatWhite));
-
 PR static_var_initialiser(
   new NamedParser<hcp_ast::StaticVarInitialiser>(
     "static variable initialiser",
     
-    (parseOneOfChars("=")+balanced(parseOneOfChars(";")))+
-    parseOneOfChars(";")+
-    eatWhite));
+    (parseOneOfChars("=")+balanced(parseOneOfChars(";")))));
 
 PR static_var_def(new NamedParser<hcp_ast::StaticVarDef>(
   "static variable definition",
   static_var_intro+
-  static_var_initialiser+
+  optional(static_var_initialiser)+
+  parseOneOfChars(";")+
   eatWhite));
 
 PR access_modifier(new NamedParser<hcp_ast::AccessModifier>(
@@ -1362,7 +1354,7 @@ PR anonymous_namespace(new NamedParser<hcp_ast::AnonymousNamespace>(
   eatWhite+
   parseOneOfChars("{")+
   eatWhite+
-  (zeroOrMore*namespace_leaf)+
+  parseUntil(namespace_leaf, parseOneOfChars("}"))+
   parseOneOfChars("}")+
   eatWhite));
 
@@ -1383,10 +1375,11 @@ public:
        eatWhite+
        new NamedParser<hcp_ast::NamespaceMembers>(
          "namespace members",
-         zeroOrMore*(namespace_leaf|
+         parseUntil((namespace_leaf|
                      anonymous_namespace|
-                     PR(new SelfParser(*this))))+
-       eatWhite+
+                     PR(new SelfParser(*this)))+
+                    eatWhite,
+                    parseOneOfChars("}")))+
        parseOneOfChars("}")+
        eatWhite) {
   }

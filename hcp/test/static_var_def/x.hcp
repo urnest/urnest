@@ -1,7 +1,9 @@
+#include <string>
+
 class F
 {
 public:
-  static const int* x = 3;
+  static const int x = 3;
   static int y[3]=
   {
     3,4
@@ -10,6 +12,7 @@ public:
   {
     8,9
   };
+  static std::string a;
 };
 
 namespace N

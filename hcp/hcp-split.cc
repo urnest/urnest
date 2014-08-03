@@ -78,8 +78,13 @@ void genClassStaticVarDef(
   std::vector<hcp_ast::IR>::const_iterator i(
     hcp_ast::find1stInTree(x.items_.begin(), x.items_.end(),
                            hcp_ast::isA_<hcp_ast::StaticVarInitialiser>));
-  xju::assert_not_equal(i, x.items_.end());
-  h << std::string(x.begin().x_, (*i)->begin().x_) << ";" << std::endl;
+  if (i != x.items_.end()) {
+    h << std::string(x.begin().x_, (*i)->begin().x_) << ";" << std::endl;
+  }
+  else
+  {
+    h << std::string(x.begin().x_, x.end().x_) << std::endl;
+  }
   
   c << "\n#line " << x.begin().line_ << std::endl;
   std::vector<hcp_ast::IR>::const_iterator j(

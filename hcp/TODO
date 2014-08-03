@@ -1,15 +1,19 @@
-static member object:
+* no such thing as static var decl, it is a def
+
+- param default values
+
+x static member object:
     static const char* const _user_exns[] = {
       0
     };
-global (variant of above, or same? could just do "object decl") and
-let context show whether it is a class member or global?
+- global (variant of above, or same? could just do "object decl") and
+  let context show whether it is a class member or global?
 
 x recognise template specialisation class
 x split it properly
 
-- recognise template specialisation function
-- split it properly
+x recognise template specialisation function
+x split it properly
 
 x test-JoiningIterator
 
@@ -191,3 +195,24 @@ user	0m0.132s
 sys	0m0.004s
 1951
 
+... hmm it has gone up a bit:
+
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "%all" && ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l
+end at line 146 column 1
+
+real	0m0.160s
+user	0m0.148s
+sys	0m0.000s
+2659
+
+
+
+empty file overhead:
+
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "%all" && ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file /dev/null && ./hcp-parse-file -t /dev/null  | wc -l
+end at line 1 column 1
+
+real	0m0.010s
+user	0m0.004s
+sys	0m0.000s
+13
