@@ -30,6 +30,7 @@ public:
     // other failure, eg communication failure
     xju::Exception):
       uri_(uri),
+      pof_(&cxy::pof< ::p1::F>::me_()), // force init of static var
       obj_(0)
   {
     try {
@@ -41,10 +42,10 @@ public:
           throw cxy::Exceptions<xju::Exception>::NoSuchObject(
             s.str(), std::make_pair(__FILE__, __LINE__));
         }
-        cxy::objref< ::p1::F>* e = 
+        obj_ = 
           (cxy::objref< ::p1::F>*)
           x->_PR_getobj()->_realNarrow(cxy::cdr< ::p1::F>::repoId);
-        if (e==0) {
+        if (obj_==0) {
           std::ostringstream s;
           s << xju::format::quote(uri) << " is not a "
             << cxy::cdr< ::p1::F>::repoId;
@@ -110,6 +111,7 @@ public:
   
 private:
   std::string uri_;
+  void* pof_;
   cxy::objref< ::p1::F>* obj_;
 };
 }

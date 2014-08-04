@@ -101,7 +101,9 @@ class pof< ::p1::F> : public omni::proxyObjectFactory {
 public:
   pof() : omni::proxyObjectFactory(cxy::cdr< ::p1::F>::repoId){
   }
-  virtual ~pof();
+  virtual ~pof()
+  {
+  }
   
   virtual omniObjRef* newObjRef(omniIOR* ior,omniIdentity* id)
   {
@@ -117,6 +119,10 @@ public:
     return 0;
   }
 
+  static pof< ::p1::F>& me_() throw()
+  {
+    return me;
+  }
   static pof< ::p1::F> me;
 };
 }
