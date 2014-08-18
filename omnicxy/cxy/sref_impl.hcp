@@ -1,0 +1,93 @@
+// Copyright (c) 2014 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <omniORB4/poa.h>
+#include <omniORB4/omniServant.h>
+#include <cxy/ORBImpl.hh>
+#include <string>
+#include <cxy/sref_if.hh>
+#include <cxy/Exceptions.hh>
+
+namespace cxy
+{
+
+class sref_impl : public virtual ::PortableServer::ServantBase,
+                  public virtual omniServant
+{
+public:
+  // pre: lifetime(orb) includes lifetime(this)
+  // pre: lifetime(repoId) includes lifetime(this)
+  // pre: lifetime(sref) includes lifetime(this)
+  sref_impl(cxy::ORBImpl& orb, 
+            std::string const& name,
+            const char* repoId,
+            sref_if& sref,
+            void* ptrToInterface) throw(
+              cxy::Exceptions<cxy::Exception>::DuplicateName):
+      orb_(orb),
+      repoId_(repoId),
+      sref_(sref),
+      ptrToInterface_(ptrToInterface)
+  {
+    try {
+      PortableServer::ObjectId_var oid =
+        PortableServer::string_to_ObjectId(name.c_str());
+      orb.insPOA().activate_object_with_id(oid, *this);
+      _remove_ref();
+    }
+    catch(PortableServer::POA::ObjectAlreadyActive const& e) {
+      std::ostringstream s;
+      s << xju::format::quote(name) << " is already in use";
+      throw cxy::Exceptions<cxy::Exception>::DuplicateName(s.str(), std::make_pair(__FILE__, __LINE));
+    }
+  }
+  ~sref_impl() throw()
+  {
+    sref_.impl_deleted();
+  }
+  void deactivate() throw()
+  {
+    orb_.insPOA().deactivate_object(*this);
+  }
+  
+  // omniServant::
+  virtual void* _ptrToInterface(const char* id) throw()
+  {
+    if (id == cxy::cdr< ::p1::F>::repoId) {
+      return ptrToInterface_;
+    }
+    if (id == ::CORBA::Object::_PD_repoId) {
+      return (void*) 1;
+    }
+    if (omni::strMatch(id, cxy::cdr< ::p1::F>::repoId)) {
+      return ptrToInterface_;
+    }
+    if (omni::strMatch(id, ::CORBA::Object::_PD_repoId)) {
+      return (void*) 1;
+    }
+    return 0;
+  }
+  // omniServant::
+  virtual const char* _mostDerivedRepoId() throw()
+  {
+    repoId_;
+  }
+
+private:
+  cxy::ORBImpl& orb_;
+  const char* repoId_;
+  sref_if& sref_;
+  void* ptrToInterface_;
+};
+
+  
+}
+
+

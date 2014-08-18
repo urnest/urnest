@@ -1,0 +1,112 @@
+// generated from p1.idl by omni cxy_sref idl backend specifying 
+// cxy::Exception from "cxy/Exception.hh" as base class for all exceptions
+#include <cxy/sref.hh>
+#include <cxy/sref_if.hh>
+
+#include "p1.hh"
+
+#include <cxy/ORB.hh> // impl
+#include <cxy/Exceptions.hh> // impl
+#include <cxy/sref_impl.hh> // impl
+#include "p1.cdr.hh" // impl
+#include <omniORB4/callDescriptor.h> // impl
+#include <omniORB4/callHandle.h> // impl
+#include <omniORB4/omniServant.h> // impl
+
+#include "xju/mt.hh"
+#include <string>
+
+class omniCallHandle;
+class omniCallDescriptor;
+class omniServant;
+
+namespace cxy
+{
+
+template<class BaseException>
+class ORB;
+
+template<>
+class sref< ::p1::F> :  private sref_if
+{
+public:
+  // pre: lifetime(x) includes lifetime(this)
+  // pre: lifetime(orb) includes lifetime(this)
+  sref(cxy::ORB<cxy::Exception>& orb, 
+       std::string const& name,
+       ::p1::F& x) throw(
+         cxy::Exceptions<cxy::Exception>::DuplicateName):
+      name_(name),
+      x_(x),
+      c_(guard_),
+      impl_deleted(false),
+      impl_(new cxy::sref_impl(orb, 
+                               name, 
+                               cxy::cdr< ::p1::F>::repoId, 
+                               *this,
+                               &x))
+  {
+  }
+  ~sref() throw()
+  {
+    xju::Lock l(guard_);
+    xju::Thread<sref_impl> t(*impl, &sref_impl::deactivate);
+    while(!impl_deleted) {
+      c_.wait(l);
+    }
+  }
+
+  std::string const name_;
+  ::p1::F& x_;
+  
+private:
+  class f1 
+  {
+  public:
+    f1(const char* op_, size_t oplen, bool upcall)
+        : m_c(lcfn, op_, oplen, 0, _user_exns, 0, upcall)
+    {
+    }
+    omniCallDescriptor m_c;
+    
+    static void lcfn(omniCallDescriptor*, omniServant* svnt) throw()
+    {
+      p1::F* impl = (p1::F*) svnt->_ptrToInterface(cxy::cdr< ::p1::F>::repoId);
+      impl->f1();
+    }
+    static const char* const _user_exns[] = {
+      0
+    };
+  };
+
+  // sref_if::
+  virtual bool dispatch(omniCallHandle& _handle) throw()
+  {
+    const char* op = _handle.operation_name();
+    
+    if (omni::strMatch(op, "f1")) {
+      f1 _call_desc("f1", 3, 1);
+      _handle.upcall(this,_call_desc);
+      return 1;
+    }
+    return 0;
+  }
+
+  // sref_if::
+  virtual void impl_deleted() throw()
+  {
+    xju::Lock l(guard_);
+    impl_deleted=true;
+    c_.changed(l);
+  }
+
+  xju::mt::Mutex guard_;
+  xju::mt::Condition c_;
+  bool impl_deleted;
+  cxy::sref_impl* impl_;
+  
+};
+
+}
+
+  

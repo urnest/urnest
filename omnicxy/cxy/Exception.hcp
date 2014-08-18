@@ -1,0 +1,128 @@
+// Copyright (c) 2014 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <utility>
+#include <string>
+#include <vector>
+#include <iostream>
+
+#include <sstream> // impl
+#include <algorithm> // impl
+#include <iterator> // impl
+#include <ctype.h> // impl
+
+namespace cxy
+{
+class Exception
+{
+public:
+  typedef std::pair<std::string, unsigned int> FileAndLine;
+
+  // cause is string describing exception cause, eg "file x does not exist"
+  Exception(std::string const& cause, 
+            std::pair<std::string, unsigned int> const& fileAndLine) throw():
+      cause_(std::make_pair(cause, fileAndLine))
+  {
+  }
+
+  std::pair<std::string, FileAndLine> cause_;
+  
+  std::vector<std::pair<std::string, FileAndLine> > context_;
+  
+  // context states the goal we failed to achieve (due to cause) eg "read 
+  // contents of file x"
+  void addContext(std::string context, FileAndLine const& fileAndLine) throw()
+  {
+    contest_.push_back(std::make_pair(context, fileAndLine));
+  }
+};
+
+namespace
+{
+struct FormatContext
+{
+  bool includeTrace_;
+  bool asPhrase_;
+
+  explicit FormatContext(bool includeTrace) throw():
+      includeTrace_(includeTrace),
+      asPhrase_(asPhrase) {
+  }
+  std::string operator()(
+    const std::pair<std::string, Exception::FileAndLine>& x) throw()
+  {
+    std::ostringstream s;
+    if (includeTrace_) {
+      s << x.second.first << ":" << x.second.second << ": ";
+    }
+    s << "failed to " << x.first;
+    return s.str();
+  }
+};
+}
+
+
+//
+// Format as above where !includeTrace and !asPhrase, otherwise:
+// - include trace (files and line numbers) where includeTrace
+// - format as a phrase (initial lower-case, no trailing full-stop) where
+//   asPhrase
+std::string readableRepr(const Exception& e,
+                         const bool includeTrace = false,
+                         const bool asPhrase = false) throw()
+{
+  std::vector<std::string> r;
+  std::transform(
+    e.context_.rbegin(),
+    e.context_.rend(),
+    std::back_inserter(r),
+    FormatContext(includeTrace));
+  std::ostringstream s;
+  std::copy(r.begin(), r.end(),
+            xju::JoiningIterator<std::string, std::string>(
+              s,
+              " because\n"));
+  if (includeTrace) {
+    s << e.cause_.second.first << ":" << e.cause_.second.second << ": ";
+  }
+  s << e.cause_.first;
+  if (asPhrase) {
+    s << ".";
+  }
+  std::string result(s.str());
+  if (asPhrase && result.size()) {
+    *result.begin()=::toupper(*result.begin());
+  }
+  return result;
+}
+
+//
+// A human readable representation:
+//
+//   - multi-line
+//   - last line not terminated by new-line
+//   - contains cause and context strings, but not file and line number
+//     information
+//   - forms an english sentence
+//
+// (This could be used to present the exception to non-programmers, for
+// whom the file and line number information is not useful. It should
+// not be used for logging, since it omits file and line number information.)
+//
+// pre: e.context().size() > 0
+//
+std::ostream& operator<<(std::ostream& s, const Exception& e) throw()
+{
+  s << readableRepr(e, false, false);
+  return s;
+}
+
+
+}
