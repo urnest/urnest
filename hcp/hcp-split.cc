@@ -35,10 +35,75 @@ std::string getClassName(hcp_ast::ClassDef const* x) throw()
   return x->className_;
 }
 
+class OStream
+{
+public:
+  // pre: lifetime(s) includes lifetime(this)
+  explicit OStream(std::ostream& s) throw():
+      s_(s),
+      line_(1),
+      column_(1)
+  {
+  }
+  template<class T>
+  void copy(T const& x) throw()
+  {
+    std::ostringstream s;
+    s << x;
+    std::string ss(s.str());
+    hcp_ast::I i(ss.begin(), ss.end());
+    while(!i.atEnd()) {
+      ++i;
+    }
+    s_ << ss;
+    if (i.line_ != 1) {
+      line_+=i.line_-1;
+      column_=i.column_;
+    }
+    else
+    {
+      column_+=i.column_-1;
+    }
+  }
+  void copy(hcp_ast::I begin, hcp_ast::I end)
+  {
+    if(line_ != begin.line_) {
+      if (column_!=1) {
+        s_ << std::endl;
+      }
+      s_ << "#line " << begin.line_ << std::endl;
+    }
+    while(begin != end) {
+      s_ << (*begin++);
+    }
+    line_=end.line_;
+    column_=end.column_;
+  }
+  void copy(hcp_ast::IRs const& irs)
+  {
+    for(hcp_ast::IRs::const_iterator i=irs.begin();
+        i != irs.end();
+        ++i) {
+      copy((*i)->begin(), (*i)->end());
+    }
+  }
+  
+private:
+  std::ostream& s_;
+  int line_;
+  int column_;
+};
+template<class T>
+OStream& operator<<(OStream& s, T const& x)
+{
+  s.copy(x);
+  return s;
+}
+  
 void genClassMemberFunctionDef(
   hcp_ast::FunctionDef const& x,
-  std::ostream& h,
-  std::ostream& c,
+  OStream& h,
+  OStream& c,
   std::vector<hcp_ast::ClassDef const*> const& scope) throw(
     xju::Exception)
 {
@@ -46,9 +111,9 @@ void genClassMemberFunctionDef(
     std::find_if(x.items_.begin(), x.items_.end(),
                  hcp_ast::isA_<hcp_ast::FunctionImpl>));
   xju::assert_not_equal(i, x.items_.end());
-  h << std::string(x.begin().x_, (*i)->begin().x_) << ";" << std::endl;
+  h.copy(x.begin(), (*i)->begin());
+  h << ";\n";
   
-  c << "\n#line " << x.begin().line_ << std::endl;
   std::vector<hcp_ast::IR>::const_iterator j(
     std::find_if(x.items_.begin(), x.items_.end(),
                  hcp_ast::isA_<hcp_ast::FunctionName>));
@@ -58,20 +123,20 @@ void genClassMemberFunctionDef(
   if ((*k)->isA<hcp_ast::FunctionQualifiers>()) {
     k=xju::next(k);
   }
-  c << std::string((*k)->begin().x_, (*j)->begin().x_)
-    << xju::format::join(scope.begin(),
+  c.copy((*k)->begin(), (*j)->begin());
+  c << xju::format::join(scope.begin(),
                          scope.end(),
                          getClassName,
                          "::")
-    << "::"
-    << std::string((*j)->begin().x_, x.end().x_) << std::endl;
-  h << "\n#line " << x.end().line_ << std::endl;
+    << "::";
+  c .copy((*j)->begin(), x.end());
+  c << "\n";
 }
 
 void genClassStaticVarDef(
   hcp_ast::StaticVarDef const& x,
-  std::ostream& h,
-  std::ostream& c,
+  OStream& h,
+  OStream& c,
   std::vector<hcp_ast::ClassDef const*> const& scope) throw(
     xju::Exception)
 {
@@ -79,14 +144,15 @@ void genClassStaticVarDef(
     hcp_ast::find1stInTree(x.items_.begin(), x.items_.end(),
                            hcp_ast::isA_<hcp_ast::StaticVarInitialiser>));
   if (i != x.items_.end()) {
-    h << std::string(x.begin().x_, (*i)->begin().x_) << ";" << std::endl;
+    h.copy(x.begin(), (*i)->begin());
+    h << ";\n";
   }
   else
   {
-    h << std::string(x.begin().x_, x.end().x_) << std::endl;
+    h.copy(x.begin(), x.end());
+    h << "\n";
   }
   
-  c << "\n#line " << x.begin().line_ << std::endl;
   std::vector<hcp_ast::IR>::const_iterator j(
     std::find_if(x.items_.begin(), x.items_.end(),
                  hcp_ast::isA_<hcp_ast::VarName>));
@@ -95,19 +161,19 @@ void genClassStaticVarDef(
   std::vector<hcp_ast::IR>::const_iterator k(x.items_.begin());
   xju::assert_(*k, hcp_ast::isA_<hcp_ast::KeywordStatic>);
   ++k;
-  c << std::string((*k)->begin().x_, (*j)->begin().x_)
-    << xju::format::join(scope.begin(),
+  c.copy((*k)->begin(), (*j)->begin());
+  c << xju::format::join(scope.begin(),
                          scope.end(),
                          getClassName,
                          "::")
-    << "::"
-    << std::string((*j)->begin().x_, x.end().x_) << std::endl;
-  h << "\n#line " << x.end().line_ << std::endl;
+    << "::";
+  c.copy((*j)->begin(), x.end());
+  c << "\n";
 }
 
 void genClass(hcp_ast::ClassDef const& x,
-              std::ostream& h,
-              std::ostream& c,
+              OStream& h,
+              OStream& c,
               std::vector<hcp_ast::ClassDef const*> const& outerClasses) throw(
                 xju::Exception)
 {
@@ -128,29 +194,28 @@ void genClass(hcp_ast::ClassDef const& x,
       genClass((*i)->asA<hcp_ast::ClassDef>(), h, c, outer);
     }
     else {
-      h << hcp_ast::reconstruct(**i);
+      h.copy((*i)->begin(), (*i)->end());
     }
   }
 }
 
 void genAnonymousNamespace(hcp_ast::AnonymousNamespace const& x,
-                           std::ostream& h,
-                           std::ostream& c) throw(
+                           OStream& h,
+                           OStream& c) throw(
                              xju::Exception)
 {
-  c << "\n#line " << x.begin().line_ << std::endl;
-  c << hcp_ast::reconstruct(x);
+  c.copy(x.begin(), x.end());
 }
 
 
 void genNamespaceContent(hcp_ast::IRs const& x,
-                         std::ostream& h,
-                         std::ostream& c) throw(
+                         OStream& h,
+                         OStream& c) throw(
                            xju::Exception);
 
 void genNamespace(hcp_ast::NamespaceDef const& x,
-                  std::ostream& h,
-                  std::ostream& c) throw(
+                  OStream& h,
+                  OStream& c) throw(
                     xju::Exception)
 {
   std::vector<hcp_ast::IR>::const_iterator i(
@@ -158,22 +223,21 @@ void genNamespace(hcp_ast::NamespaceDef const& x,
                  hcp_ast::isA_<hcp_ast::NamespaceMembers>));
   xju::assert_not_equal(i, x.items_.end());
 
-  c << "\n#line " << x.begin().line_ << std::endl;
-  c << "namespace " << x.namespaceName_ << std::endl
-    << "{" << std::endl;
+  c << "namespace " << x.namespaceName_ << "\n"
+    << "{\n";
 
-  h << hcp_ast::reconstruct(hcp_ast::IRs(x.items_.begin(), i));
+  h.copy(hcp_ast::IRs(x.items_.begin(), i));
   
   genNamespaceContent((*i)->asA<hcp_ast::NamespaceMembers>().items_, h, c);
   
-  h << hcp_ast::reconstruct(hcp_ast::IRs(xju::next(i), x.items_.end()));
-  c << "}" << std::endl;
+  h.copy(hcp_ast::IRs(xju::next(i), x.items_.end()));
+  c << "}\n";
 }
 
 
 void genNamespaceContent(hcp_ast::IRs const& x,
-                         std::ostream& h,
-                         std::ostream& c) throw(
+                         OStream& h,
+                         OStream& c) throw(
                            xju::Exception)
 {
   for(hcp_ast::IRs::const_iterator i=x.begin(); i!=x.end(); ++i) {
@@ -189,11 +253,10 @@ void genNamespaceContent(hcp_ast::IRs const& x,
     }
     else if ((*i)->isA<hcp_ast::HashIncludeImpl>())
     {
-      c << "\n#line " << (**i).begin().line_ << std::endl;
-      c << hcp_ast::reconstruct(**i);
+      c.copy((*i)->begin(), (*i)->end());
     }
     else {
-      h << hcp_ast::reconstruct(**i);
+      h.copy((*i)->begin(), (*i)->end());
     }
   }
 }
@@ -333,9 +396,11 @@ int main(int argc, char* argv[])
          << "\"" << std::endl
          << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
     }
+    OStream oh(fh);
+    OStream oc(fc);
     
     genNamespaceContent(
-      root.items_.front()->asA<hcp_ast::File>().items_, fh, fc);
+      root.items_.front()->asA<hcp_ast::File>().items_, oh, oc);
     
     fh << "#endif" << std::endl;
   }
