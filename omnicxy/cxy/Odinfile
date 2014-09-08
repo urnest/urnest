@@ -1,3 +1,8 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+%tests.tree
+
 %ORBImpl==()+cmd=(../../hcp/hcp-split) -l 1 (ORBImpl.hcp) 'ORBImpl.hh' 'ORBImpl.cc':output
 
 ORBImpl.hh==%ORBImpl/ORBImpl.hh
@@ -38,3 +43,15 @@ ORB.cc==%ORB/ORB.cc
 
 %ORB==()+cmd=(../../hcp/hcp-split) -l 1 (ORB.hcp) 'ORB.hh' 'ORB.cc':output
 
+Exception.hh==%Exception/Exception.hh
+Exception.cc==%Exception/Exception.cc
+
+%Exception==()+cmd=(../../hcp/hcp-split) -l 1 (Exception.hcp) 'Exception.hh' 'Exception.cc':output
+
+%tests.tree==<<
+()+cmd=(test-Exception.cc+(%cxx-opts):auto.cxx.exe):stdout
+
+
+%cxx-opts==<<
++inc_sp=(..)
++(../..%cxx-opts)

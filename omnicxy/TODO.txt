@@ -1,17 +1,50 @@
-client side:
+- hand-code p1 server
 
-- can get (CORBA_Object.h class Object) CORBA::Object* from 
+    root_poa->activate_object_with_id(oid, f);
+
+    f : PortableServer::Servant
+
+    .. do we really need to use poa? No but seems like
+    lots of work to bypass... but alas it assumes that
+    the object will hang around post-deativate (deativate
+    is not synchronous), based on reference counting :-(
+
+    ... but can use a reference counted servant and wait for
+    its deletion
+    
+- test client wrong type exception
+- generate client idl
+
+- translate the various system exceptions eg Transient
+  separately in translateException.hcp
+
+x client side:
+
+x can get (CORBA_Object.h class Object) CORBA::Object* from 
   ORB::string_to_object
-- then generated code calls CORBA::Object::_PR_getobj()->_realNarrow(
+x then generated code calls CORBA::Object::_PR_getobj()->_realNarrow(
    _PD_repoId), _PR_getobj() is just 
     (omniObjRef.h) omniObjRef* CORBA::Object::pd_obj
-- ... generated code has a static _pof_F which is a
+x ... generated code has a static _pof_F which is a
   proxyObjectFactory and it has a omniObjRef* newObjRef that
   returns a generated class p1::_objref_F : omniObjRef
-    which has an implementation of each method
+x   which has an implementation of each method
 
 
 x allow "unchecked narrow"? Na
 
-- clean up xju::Exceptions, get it back to a minimum of function
-  variants
+x clean up xju::Exceptions, get it back to a minimum of function
+  variants:
+    x add cxy::Exception which uses xju::Exception as its implementation
+    x change xju::Exception back
+    x have cxy/* throw cxy::Exceptions<cxy::Exception>::X and
+      provide translate of all those to cxy::Exceptions<Y>::X with
+      null-translation overrides
+
+- do a cxy/p1-main.cc that uses exception class derived
+  from xju::Exception as its base exception type instead of
+  cxy::Exception
+
+- make p1.hh // impl in p1.sref.hcp
+
+- allow servant to throw base exception

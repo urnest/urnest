@@ -17,6 +17,8 @@
 #include <algorithm> // impl
 #include <iterator> // impl
 #include <ctype.h> // impl
+#include "xju/JoiningIterator.hh" // impl
+#include "xju/next.hh" // impl
 
 namespace cxy
 {
@@ -40,7 +42,7 @@ public:
   // contents of file x"
   void addContext(std::string context, FileAndLine const& fileAndLine) throw()
   {
-    contest_.push_back(std::make_pair(context, fileAndLine));
+    context_.push_back(std::make_pair(context, fileAndLine));
   }
 };
 
@@ -51,7 +53,8 @@ struct FormatContext
   bool includeTrace_;
   bool asPhrase_;
 
-  explicit FormatContext(bool includeTrace) throw():
+  explicit FormatContext(bool includeTrace,
+                         bool asPhrase) throw():
       includeTrace_(includeTrace),
       asPhrase_(asPhrase) {
   }
@@ -62,7 +65,7 @@ struct FormatContext
     if (includeTrace_) {
       s << x.second.first << ":" << x.second.second << ": ";
     }
-    s << "failed to " << x.first;
+    s << (asPhrase_?"f":"F") << "ailed to " << x.first << " because\n";
     return s.str();
   }
 };
@@ -75,33 +78,50 @@ struct FormatContext
 // - format as a phrase (initial lower-case, no trailing full-stop) where
 //   asPhrase
 std::string readableRepr(const Exception& e,
-                         const bool includeTrace = false,
-                         const bool asPhrase = false) throw()
+                         const bool includeTrace,
+                         const bool asPhrase) throw()
 {
   std::vector<std::string> r;
-  std::transform(
-    e.context_.rbegin(),
-    e.context_.rend(),
-    std::back_inserter(r),
-    FormatContext(includeTrace));
+  if (e.context_.size()) {
+    std::transform(
+      e.context_.rbegin(),
+      xju::next(e.context_.rbegin()),
+      std::back_inserter(r),
+      FormatContext(includeTrace, asPhrase));
+    std::transform(
+      xju::next(e.context_.rbegin()),
+      e.context_.rend(),
+      std::back_inserter(r),
+      FormatContext(includeTrace, true));
+  }
   std::ostringstream s;
   std::copy(r.begin(), r.end(),
             xju::JoiningIterator<std::string, std::string>(
               s,
-              " because\n"));
+              ""));
   if (includeTrace) {
     s << e.cause_.second.first << ":" << e.cause_.second.second << ": ";
   }
   s << e.cause_.first;
-  if (asPhrase) {
+  if (!asPhrase) {
     s << ".";
   }
   std::string result(s.str());
-  if (asPhrase && result.size()) {
+  if (!asPhrase && result.size()) {
     *result.begin()=::toupper(*result.begin());
   }
   return result;
 }
+
+std::string readableRepr(const Exception& e,
+                         const bool includeTrace) throw() {
+  return readableRepr(e, includeTrace, false);
+}
+
+std::string readableRepr(const Exception& e) throw() {
+  return readableRepr(e, false, false);
+}
+
 
 //
 // A human readable representation:

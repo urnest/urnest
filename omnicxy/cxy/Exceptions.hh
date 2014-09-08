@@ -37,6 +37,15 @@ public:
     {
     }
   };
+  class DuplicateName : public ExceptionBaseClass
+  {
+  public:
+    DuplicateName(std::string const& s,
+                  std::pair<std::string, unsigned int> const& src) throw():
+        ExceptionBaseClass(s, src)
+    {
+    }
+  };
 };
 
   

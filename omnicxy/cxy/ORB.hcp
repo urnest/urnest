@@ -22,12 +22,14 @@ class ORBImpl;
 
 template<class T>
 class cref;
+template<class T>
+class sref;
 
 template<class BaseException, class I>
 void copyContext(I begin, I end, BaseException& e) throw()
 {
   for(; begin != end; ++begin) {
-    e.addContext(*begin);
+    e.addContext((*begin).first, (*begin).second);
   }
 }
 
@@ -38,14 +40,14 @@ public:
   explicit ORB(std::string const& orbEndPoint) throw(BaseException) try:
     impl_(orbEndPoint) {
   }
-  catch(xju::Exception& e)
+  catch(cxy::Exception& e)
   {
-    if (&typeid(xju::Exception)==&typeid(BaseException)) {
+    if (&typeid(cxy::Exception)==&typeid(BaseException)) {
       throw;
     }
-    BaseException x(e.cause().first, e.cause().second);
-    copyContext(e.context().begin(), 
-                e.context().end(),
+    BaseException x(e.cause_.first, e.cause_.second);
+    copyContext(e.context_.begin(), 
+                e.context_.end(),
                 x);
     throw x;
   }
@@ -54,6 +56,9 @@ private:
 
   template<class T>
   friend class cref;
+
+  template<class T>
+  friend class sref;
 };
   
 }

@@ -425,6 +425,9 @@ def parse(s, origin='unknown'):
         raise ParseFailed(str(''.join(traceback.format_tb(sys.exc_info()[2])))+'\n'+str(sys.exc_info()[1]), parser.pos())
     pass
 
+def parseFile(fileName):
+    return parse(file(fileName).read(),fileName)
+
 def assert_equal(a, b):
     assert a==b, ('%(a)s\n!=\n%(b)s' % vars())
 

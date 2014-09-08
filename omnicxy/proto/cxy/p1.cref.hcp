@@ -1,7 +1,7 @@
 // generated from p1.idl by omni cxy_cref idl backend specifying 
-// xju::Exception from "xju/Exception.hh" as base class for all exceptions
+// cxy::Exception from "cxy/Exception.hh" as base class for all exceptions
 #include <cxy/cref.hh>
-#include <cxy/exceptions.hh>
+#include <cxy/Exceptions.hh>
 #include <cxy/ORB.hh>
 
 #include "p1.hh"
@@ -21,14 +21,14 @@ template<>
 class cref< ::p1::F>
 {
 public:
-  explicit cref(cxy::ORB<xju::Exception>& orb, std::string const& uri) throw(
+  explicit cref(cxy::ORB<cxy::Exception>& orb, std::string const& uri) throw(
     // no object with specified uri, including server
     // not reachable and server does not know name
-    cxy::Exceptions<xju::Exception>::NoSuchObject,
+    cxy::Exceptions<cxy::Exception>::NoSuchObject,
     // object with specified uri is not a p1::F
-    cxy::Exceptions<xju::Exception>::WrongType,
+    cxy::Exceptions<cxy::Exception>::WrongType,
     // other failure, eg communication failure
-    xju::Exception):
+    cxy::Exception):
       uri_(uri),
       pof_(&cxy::pof< ::p1::F>::me_()), // force init of static var
       obj_(0)
@@ -39,7 +39,7 @@ public:
         if (CORBA::is_nil(x)) {
           std::ostringstream s;
           s << xju::format::quote(uri) << " is nil";
-          throw cxy::Exceptions<xju::Exception>::NoSuchObject(
+          throw cxy::Exceptions<cxy::Exception>::NoSuchObject(
             s.str(), std::make_pair(__FILE__, __LINE__));
         }
         obj_ = 
@@ -49,21 +49,21 @@ public:
           std::ostringstream s;
           s << xju::format::quote(uri) << " is not a "
             << cxy::cdr< ::p1::F>::repoId;
-          throw cxy::Exceptions<xju::Exception>::WrongType(
+          throw cxy::Exceptions<cxy::Exception>::WrongType(
             s.str(), std::make_pair(__FILE__, __LINE__));
         }
       }
       catch(CORBA::Exception const& ee) {
-        throw cxy::translateException<xju::Exception>(ee);
+        throw cxy::translateException<cxy::Exception>(ee);
       }
     }
-    catch(xju::Exception& e) {
+    catch(cxy::Exception& e) {
       std::ostringstream s;
       s << "locate object "
         << xju::format::quote(uri)
         << " of type "
         << cxy::cdr< ::p1::F>::repoId;
-      e.addContext(s.str(), __FILE__, __LINE__);
+      e.addContext(s.str(), std::make_pair(__FILE__, __LINE__));
       throw e;
     }
   }
@@ -93,7 +93,7 @@ public:
   
   void f1() throw(
     // ipc failure
-    xju::Exception)
+    cxy::Exception)
   {
     xju::assert_not_equal(obj_, (void*)0);
     xju::assert_not_equal(true, obj_->_NP_is_nil());

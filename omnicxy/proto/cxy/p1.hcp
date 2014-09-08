@@ -1,7 +1,7 @@
 // generated from p1.idl by omni cxy idl backend specifying 
-// xju::Exception from "xju/Exception.hh" as base class for all ipc exceptions
+// cxy::Exception from "cxy/Exception.hh" as base class for all ipc exceptions
 
-#include "xju/Exception.hh"
+#include "cxy/Exception.hh"
 
 namespace p1
 {
@@ -13,7 +13,8 @@ public:
   }
   virtual void f1() throw(
     // ipc failure
-    xju::Exception) = 0;
+    // - note servant may not throw
+    cxy::Exception) = 0;
 };
 
 }

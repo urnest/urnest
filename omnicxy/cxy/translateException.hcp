@@ -20,6 +20,17 @@ E translateException(CORBA::Exception const& e) throw()
   std::ostringstream s;
   s << typeid(e).name();
   {
+    CORBA::PolicyError const* ee=
+      dynamic_cast<CORBA::PolicyError const*>(&e);
+    if(ee) {
+      s << " reason " << ee->reason;
+    }
+  }
+  {
+    ::PortableServer::POA::ObjectAlreadyActive const* ee=
+      dynamic_cast< ::PortableServer::POA::ObjectAlreadyActive const*>(&e);
+  }
+  {
     CORBA::SystemException const* ee=
       dynamic_cast<CORBA::SystemException const*>(&e);
     if(ee) {
@@ -29,13 +40,6 @@ E translateException(CORBA::Exception const& e) throw()
 #undef minor
 #endif
       s << " minor " << ee->minor();
-    }
-  }
-  {
-    CORBA::PolicyError const* ee=
-      dynamic_cast<CORBA::PolicyError const*>(&e);
-    if(ee) {
-      s << " reason " << ee->reason;
     }
   }
   return E(s.str(), std::pair<std::string, unsigned int>(__FILE__,__LINE__));

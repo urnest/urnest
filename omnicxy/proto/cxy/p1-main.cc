@@ -31,7 +31,11 @@ std::string makeURI(int port, std::string const& objectName) throw()
 class F_impl : public p1::F
 {
 public:
-  virtual void f1() throw(xju::Exception)
+  ~F_impl() throw()
+  {
+  }
+  
+  virtual void f1() throw(cxy::Exception)
   {
     std::cout << "F::f1()" << std::endl;
   }
@@ -54,7 +58,7 @@ int main(int argc, char* argv[])
     int const port(xju::stringToInt(argv[1]));
     
     if (argv[2]==std::string("client")) {
-      cxy::ORB<xju::Exception> orb("giop:tcp::");
+      cxy::ORB<cxy::Exception> orb("giop:tcp::");
       cxy::cref<p1::F> ref(orb, makeURI(port, OBJECT_NAME));
       ref->f1();
     }
@@ -89,6 +93,12 @@ int main(int argc, char* argv[])
   catch(xju::Exception& e) {
     e.addContext(xju::format::join(argv, argv+argc, " "), XJU_TRACED);
     std::cerr << readableRepr(e) << std::endl;
+    return 1;
+  }
+  catch(cxy::Exception& e) {
+    e.addContext(xju::format::join(argv, argv+argc, " "), 
+                 std::make_pair(__FILE__, __LINE__));
+    std::cerr << readableRepr(e, true, false) << std::endl;
     return 1;
   }
 }

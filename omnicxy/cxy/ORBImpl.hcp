@@ -10,12 +10,13 @@
 #ifndef CXY_ORBIMPL_H
 #define CXY_ORBIMPL_H
 
-#include "xju/Exception.hh"
+#include "cxy/Exception.hh"
 #include <string>
 #include <typeinfo> // impl
-#include <omniORB4/CORBA.h> // impl
+#include <omniORB4/CORBA.h>
 #include <iostream> // impl
 #include <xju/format.hh>
+#include <xju/mt.hh>
 
 namespace CORBA
 {
@@ -26,7 +27,7 @@ namespace cxy
 {
 namespace
 {
-xju::Exception translate(CORBA::Exception const& e) throw()
+cxy::Exception translate(CORBA::Exception const& e) throw()
 {
   std::ostringstream s;
   s << typeid(e).name();
@@ -49,12 +50,12 @@ xju::Exception translate(CORBA::Exception const& e) throw()
       s << " reason " << ee->reason;
     }
   }
-  return xju::Exception(s.str(), XJU_TRACED);
+  return cxy::Exception(s.str(), XJU_TRACED);
 }
 
 CORBA::ORB* orbInit(
   std::string const& orbEndPoint) throw(
-    xju::Exception)
+    cxy::Exception)
 {
   char* argv_[]={
     ::strdup(""),
@@ -69,7 +70,7 @@ CORBA::ORB* orbInit(
     return result;
   }
   catch (CORBA::Exception& ex) {
-    xju::Exception e(translate(ex));
+    cxy::Exception e(translate(ex));
     std::ostringstream s;
     s << "CORBA::ORB_init with args "
       << xju::format::join(argv, argv+argc, ", ");
@@ -86,17 +87,43 @@ class ORBImpl
 {
 public:
   explicit ORBImpl(std::string const& orbEndPoint) throw(
-    xju::Exception):
-      orb_(orbInit(orbEndPoint))
+    cxy::Exception):
+      orb_(orbInit(orbEndPoint)),
+      insPOA_(0),
+      insPOA_Manager_(0)
   {
   }
   ~ORBImpl() throw()
   {
+    if (insPOA_Manager_) {
+      insPOA_Manager_->deactivate(false, true);
+      CORBA::release(insPOA_Manager_);
+    }
+    if (insPOA_) {
+      CORBA::release(insPOA_);
+    }
     delete orb_;
   }
+  // post: lifetime(result) includes lifetime(this)
+  ::PortableServer::POA& insPOA() throw()
+  {
+    xju::mt::Lock l(guard_);
+    if (!insPOA_) {
+      insPOA_ = PortableServer::POA::_narrow(
+        orb_->resolve_initial_references("omniINSPOA"));
+      insPOA_Manager_ = insPOA_->the_POAManager();
+      insPOA_Manager_->activate();
+    }
+    return *insPOA_;
+  }
+      
 private:
   ::CORBA::ORB* orb_;
-
+  xju::mt::Mutex guard_;
+  ::PortableServer::POA* insPOA_;
+  ::PortableServer::POAManager* insPOA_Manager_;
+  
+  //REVISIT: get rid of these
   template<class T>
   friend class cref;
 };
