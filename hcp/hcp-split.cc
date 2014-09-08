@@ -199,6 +199,30 @@ void genClass(hcp_ast::ClassDef const& x,
   }
 }
 
+void genFunction(hcp_ast::FunctionDef const& x,
+                 OStream& h,
+                 OStream& c) throw(
+                   xju::Exception)
+{
+  std::vector<hcp_ast::IR>::const_iterator i(
+    std::find_if(x.items_.begin(), x.items_.end(),
+                 hcp_ast::isA_<hcp_ast::FunctionImpl>));
+  xju::assert_not_equal(i, x.items_.end());
+  h.copy(x.begin(), (*i)->begin());
+  h << ";\n";
+  
+  std::vector<hcp_ast::IR>::const_iterator j(
+    std::find_if(x.items_.begin(), x.items_.end(),
+                 hcp_ast::isA_<hcp_ast::FunctionName>));
+  xju::assert_not_equal(j, x.items_.end());
+
+  std::vector<hcp_ast::IR>::const_iterator k(x.items_.begin());
+  if ((*k)->isA<hcp_ast::FunctionQualifiers>()) {
+    k=xju::next(k);
+  }
+  c.copy(x.begin(), x.end());
+}
+
 void genAnonymousNamespace(hcp_ast::AnonymousNamespace const& x,
                            OStream& h,
                            OStream& c) throw(
@@ -254,6 +278,10 @@ void genNamespaceContent(hcp_ast::IRs const& x,
     else if ((*i)->isA<hcp_ast::HashIncludeImpl>())
     {
       c.copy((*i)->begin(), (*i)->end());
+    }
+    else if ((*i)->isA<hcp_ast::FunctionDef>())
+    {
+      genFunction((*i)->asA<hcp_ast::FunctionDef>(), h, c);
     }
     else {
       h.copy((*i)->begin(), (*i)->end());
