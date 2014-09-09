@@ -11,7 +11,7 @@
 
 #include "p1.hh"
 #include "p1.cref.hh"
-//#include "p1.sref.hh"
+#include "p1.sref.hh"
 
 #include <xju/Exception.hh>
 #include <iostream>
@@ -62,16 +62,16 @@ int main(int argc, char* argv[])
       cxy::cref<p1::F> ref(orb, makeURI(port, OBJECT_NAME));
       ref->f1();
     }
-    // else if (argv[2]==std::string("server")) {
-    //   std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
-    //   cxy::ORB orb(orbEndPoint);
+    else if (argv[2]==std::string("server")) {
+      std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
+      cxy::ORB<cxy::Exception> orb(orbEndPoint);
 
-    //   F_impl x;
+      F_impl x;
       
-    //   cxy::sref<F> const xa(orb, x);
+      cxy::sref<p1::F> const xa(orb, "p1", x);
       
-    //   orb.run();
-    // }
+      orb.run();
+    }
     // else
     // {
     //   cxy::ORB<xju::Exception> orb(orbEndPoint);

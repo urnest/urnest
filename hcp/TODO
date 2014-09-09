@@ -6,6 +6,7 @@ x static member object:
     static const char* const _user_exns[] = {
       0
     };
+
 - global (variant of above, or same? could just do "object decl") and
   let context show whether it is a class member or global?
 
@@ -68,6 +69,8 @@ x on parse failure, output the branch that got furthest
 
 - function_proto looks like it would be slow as it does a long
   lookahead, is there another way? Might need a hand-coded parser?
+  - perhaps commonality between function and object decl? both start
+    with type and name? what is difference to function pointer?
 
 x speed parsing by caching results <at,parser> => PV or exception
   stats:

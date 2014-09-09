@@ -2,11 +2,11 @@
 // cxy::Exception from "cxy/Exception.hh" as base class for all exceptions
 #include <cxy/sref.hh>
 #include <cxy/sref_if.hh>
+#include <cxy/Exceptions.hh>
 
 #include "p1.hh"
 
 #include <cxy/ORB.hh> // impl
-#include <cxy/Exceptions.hh> // impl
 #include <cxy/sref_impl.hh> // impl
 #include "p1.cdr.hh" // impl
 #include <omniORB4/callDescriptor.h> // impl
@@ -22,6 +22,7 @@ class omniServant;
 
 namespace cxy
 {
+class sref_impl;
 
 template<class BaseException>
 class ORB;
@@ -39,19 +40,18 @@ public:
       name_(name),
       x_(x),
       c_(guard_),
-      impl_deleted(false),
-      impl_(new cxy::sref_impl(orb, 
+      impl_deleted_(false),
+      impl_(new cxy::sref_impl(orb.impl_, 
                                name, 
                                cxy::cdr< ::p1::F>::repoId, 
-                               *this,
-                               &x))
+                               *this))
   {
   }
   ~sref() throw()
   {
-    xju::Lock l(guard_);
-    xju::Thread<sref_impl> t(*impl, &sref_impl::deactivate);
-    while(!impl_deleted) {
+    xju::mt::Lock l(guard_);
+    xju::mt::Thread<sref_impl> t(*impl_, &sref_impl::deactivate);
+    while(!impl_deleted_) {
       c_.wait(l);
     }
   }
@@ -64,10 +64,14 @@ private:
   {
   public:
     f1(const char* op_, size_t oplen, bool upcall)
-        : m_c(lcfn, op_, oplen, 0, _user_exns, 0, upcall)
+        : m_c(new omniCallDescriptor(lcfn, op_, oplen, 0, _user_exns, 0, upcall))
     {
     }
-    omniCallDescriptor m_c;
+    ~f1()
+    {
+      delete m_c;
+    }
+    omniCallDescriptor* m_c;
     
     static void lcfn(omniCallDescriptor*, omniServant* svnt) throw()
     {
@@ -80,29 +84,48 @@ private:
   };
 
   // sref_if::
-  virtual bool dispatch(omniCallHandle& _handle) throw()
+  virtual bool _dispatch(omniCallHandle& _handle) throw()
   {
     const char* op = _handle.operation_name();
     
     if (omni::strMatch(op, "f1")) {
       f1 _call_desc("f1", 3, 1);
-      _handle.upcall(this,_call_desc);
+      _handle.upcall(impl_,*_call_desc.m_c);
       return 1;
     }
     return 0;
   }
 
   // sref_if::
+  virtual void* _ptrToInterface(const char* id) throw()
+  {
+    if (id == cxy::cdr< ::p1::F>::repoId) {
+      return &x_;
+    }
+    if (id == ::CORBA::Object::_PD_repoId) {
+      return (void*) 1;
+    }
+    if (omni::strMatch(id, cxy::cdr< ::p1::F>::repoId)) {
+      return &x_;
+    }
+    if (omni::strMatch(id, ::CORBA::Object::_PD_repoId)) {
+      return (void*) 1;
+    }
+    return 0;
+  }
+  
+
+  // sref_if::
   virtual void impl_deleted() throw()
   {
-    xju::Lock l(guard_);
-    impl_deleted=true;
-    c_.changed(l);
+    xju::mt::Lock l(guard_);
+    impl_deleted_=true;
+    c_.signal(l);
   }
 
   xju::mt::Mutex guard_;
   xju::mt::Condition c_;
-  bool impl_deleted;
+  bool impl_deleted_;
   cxy::sref_impl* impl_;
   
 };

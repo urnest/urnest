@@ -51,6 +51,24 @@ public:
                 x);
     throw x;
   }
+  void run() throw(
+    BaseException)
+  {
+    try {
+      impl_.run();
+    }
+    catch(cxy::Exception& e) {
+      if (&typeid(cxy::Exception)==&typeid(BaseException)) {
+        throw;
+      }
+      BaseException x(e.cause_.first, e.cause_.second);
+      copyContext(e.context_.begin(), 
+                  e.context_.end(),
+                  x);
+      throw x;
+    }
+  }
+  
 private:
   ORBImpl impl_;
 

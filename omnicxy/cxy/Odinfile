@@ -48,6 +48,22 @@ Exception.cc==%Exception/Exception.cc
 
 %Exception==()+cmd=(../../hcp/hcp-split) -l 1 (Exception.hcp) 'Exception.hh' 'Exception.cc':output
 
+sref.hh==%sref/sref.hh
+sref.cc==%sref/sref.cc
+
+%sref==()+cmd=(../../hcp/hcp-split) -l 1 (sref.hcp) 'sref.hh' 'sref.cc':output
+
+sref_if.hh==%sref_if/sref_if.hh
+sref_if.cc==%sref_if/sref_if.cc
+
+%sref_if==()+cmd=(../../hcp/hcp-split) -l 1 (sref_if.hcp) 'sref_if.hh' 'sref_if.cc':output
+
+sref_impl.hh==%sref_impl/sref_impl.hh
+sref_impl.cc==%sref_impl/sref_impl.cc
+
+%sref_impl==()+cmd=(../../hcp/hcp-split) -l 1 (sref_impl.hcp) 'sref_impl.hh' 'sref_impl.cc':output
+
+
 %tests.tree==<<
 ()+cmd=(test-Exception.cc+(%cxx-opts):auto.cxx.exe):stdout
 

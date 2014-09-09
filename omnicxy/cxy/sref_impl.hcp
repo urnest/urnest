@@ -8,6 +8,8 @@
 // implied warranty.
 //
 
+#include <unistd.h> // for size_t
+#include <omniORB4/CORBA.h>
 #include <omniORB4/poa.h>
 #include <omniORB4/omniServant.h>
 #include <cxy/ORBImpl.hh>
@@ -28,24 +30,22 @@ public:
   sref_impl(cxy::ORBImpl& orb, 
             std::string const& name,
             const char* repoId,
-            sref_if& sref,
-            void* ptrToInterface) throw(
+            sref_if& sref) throw(
               cxy::Exceptions<cxy::Exception>::DuplicateName):
       orb_(orb),
       repoId_(repoId),
-      sref_(sref),
-      ptrToInterface_(ptrToInterface)
+      sref_(sref)
   {
     try {
-      PortableServer::ObjectId_var oid =
+      oid_ =
         PortableServer::string_to_ObjectId(name.c_str());
-      orb.insPOA().activate_object_with_id(oid, *this);
+      orb.insPOA().activate_object_with_id(oid_, *this);
       _remove_ref();
     }
     catch(PortableServer::POA::ObjectAlreadyActive const& e) {
       std::ostringstream s;
       s << xju::format::quote(name) << " is already in use";
-      throw cxy::Exceptions<cxy::Exception>::DuplicateName(s.str(), std::make_pair(__FILE__, __LINE));
+      throw cxy::Exceptions<cxy::Exception>::DuplicateName(s.str(), std::make_pair(__FILE__, __LINE__));
     }
   }
   ~sref_impl() throw()
@@ -54,25 +54,13 @@ public:
   }
   void deactivate() throw()
   {
-    orb_.insPOA().deactivate_object(*this);
+    orb_.insPOA().deactivate_object(oid_);
   }
   
   // omniServant::
   virtual void* _ptrToInterface(const char* id) throw()
   {
-    if (id == cxy::cdr< ::p1::F>::repoId) {
-      return ptrToInterface_;
-    }
-    if (id == ::CORBA::Object::_PD_repoId) {
-      return (void*) 1;
-    }
-    if (omni::strMatch(id, cxy::cdr< ::p1::F>::repoId)) {
-      return ptrToInterface_;
-    }
-    if (omni::strMatch(id, ::CORBA::Object::_PD_repoId)) {
-      return (void*) 1;
-    }
-    return 0;
+    return sref_._ptrToInterface(id);
   }
   // omniServant::
   virtual const char* _mostDerivedRepoId() throw()
@@ -84,7 +72,7 @@ private:
   cxy::ORBImpl& orb_;
   const char* repoId_;
   sref_if& sref_;
-  void* ptrToInterface_;
+  PortableServer::ObjectId_var oid_;
 };
 
   

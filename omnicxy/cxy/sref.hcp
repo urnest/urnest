@@ -7,23 +7,14 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-// This interface allows callbacks from sref_impl to its
-// generated cxy::sref<X>.
-//
-class omniCallHandle;
+
 
 namespace cxy
 {
-class sref_if
+// generated code specialises
+template<class T>
+class sref
 {
-public:
-  virtual ~sref_if() {}
-
-  virtual bool _dispatch(omniCallHandle& _handle) throw()=0;
-  virtual void* _ptrToInterface(const char* id) throw()=0;
-  
-  // deativated object has become idle and is being deleted
-  virtual void impl_deleted() throw()=0;
 };
   
 }

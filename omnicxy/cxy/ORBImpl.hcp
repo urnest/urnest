@@ -116,7 +116,21 @@ public:
     }
     return *insPOA_;
   }
-      
+  void run() throw(
+    cxy::Exception)
+  {
+    try {
+      orb_->run();
+    }
+    catch(CORBA::Exception& ex) {
+      cxy::Exception e(translate(ex));
+      std::ostringstream s;
+      s << "cxy::ORBImpl::run";
+      e.addContext(s.str(), std::make_pair(__FILE__,__LINE__));
+      throw e;
+    }
+  }
+  
 private:
   ::CORBA::ORB* orb_;
   xju::mt::Mutex guard_;
