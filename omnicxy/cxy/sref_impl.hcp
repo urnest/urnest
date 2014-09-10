@@ -37,9 +37,8 @@ public:
       sref_(sref)
   {
     try {
-      oid_ =
-        PortableServer::string_to_ObjectId(name.c_str());
-      orb.insPOA().activate_object_with_id(oid_, *this);
+      oid_ = PortableServer::string_to_ObjectId(name.c_str());
+      orb.insPOA().activate_object_with_id(oid_, this);
       _remove_ref();
     }
     catch(PortableServer::POA::ObjectAlreadyActive const& e) {

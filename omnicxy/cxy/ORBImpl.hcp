@@ -58,15 +58,15 @@ CORBA::ORB* orbInit(
     cxy::Exception)
 {
   char* argv_[]={
-    ::strdup(""),
-    ::strdup("-orbEndPoint"), ::strdup(orbEndPoint.c_str())
+    ::strdup("")
   };
   char** argv=argv_;
   
   int argc=sizeof(argv)/sizeof(argv[0]);
   try {
+    const char* options[][2] = {{ "endPoint", orbEndPoint.c_str() },{ 0, 0 }};
     CORBA::ORB* result(
-      CORBA::ORB_init(argc, argv));
+      CORBA::ORB_init(argc, argv, "omniORB4", options));
     return result;
   }
   catch (CORBA::Exception& ex) {

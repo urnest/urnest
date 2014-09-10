@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
 
       F_impl x;
       
-      cxy::sref<p1::F> const xa(orb, "p1", x);
+      cxy::sref<p1::F> const xa(orb, OBJECT_NAME, x);
       
       orb.run();
     }

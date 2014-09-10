@@ -11,7 +11,10 @@
 
     ... but can use a reference counted servant and wait for
     its deletion
-    
+
+- move m_c out of sref< ::p1::F>::f1 and into _dispatch to avoid
+  malloc/free on every call
+
 - test client wrong type exception
 - generate client idl
 
