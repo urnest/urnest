@@ -57,6 +57,12 @@ public:
   }
   
   // omniServant::
+  ::CORBA::Boolean _dispatch(omniCallHandle& _handle)
+  {
+    return sref_._dispatch(_handle);
+  }
+  
+  // omniServant::
   virtual void* _ptrToInterface(const char* id) throw()
   {
     return sref_._ptrToInterface(id);
