@@ -39,7 +39,7 @@ class OStream
 {
 public:
   // pre: lifetime(s) includes lifetime(this)
-  explicit OStream(std::ostream& s) throw():
+  explicit OStream(std::ostream& s, bool mapFileAndLine) throw():
       s_(s),
       line_(1),
       column_(1)
@@ -292,11 +292,13 @@ void genNamespaceContent(hcp_ast::IRs const& x,
 class CommandLineOptions
 {
 public:
-  explicit CommandLineOptions(unsigned int dir_levels) throw():
-    dir_levels_(dir_levels)
+  explicit CommandLineOptions(unsigned int dir_levels, bool th) throw():
+      dir_levels_(dir_levels),
+      th_(th)
   {
   }
   unsigned int dir_levels_;
+  bool th_;
 };
 
 // result.second are remaining arguments
@@ -306,11 +308,16 @@ std::pair<CommandLineOptions, std::vector<std::string> > parseCommandLine(
 {
   std::vector<std::string>::const_iterator i(x.begin());
   unsigned int dir_levels=0;
+  bool th=false;
   
   while((i != x.end()) && ((*i)[0]=='-')) {
     if ((*i)=="-l") {
       ++i;
       dir_levels=xju::stringToUInt(hcp::getOptionValue("-l", i, x.end()));
+      ++i;
+    }
+    else if ((*i)=="-th") {
+      th=true;
       ++i;
     }
     else {
@@ -320,7 +327,7 @@ std::pair<CommandLineOptions, std::vector<std::string> > parseCommandLine(
       throw xju::Exception(s.str(), XJU_TRACED);
     }
   }
-  return std::make_pair(CommandLineOptions(dir_levels), 
+  return std::make_pair(CommandLineOptions(dir_levels, th), 
                         std::vector<std::string>(i, x.end()));
 }
 
@@ -371,10 +378,12 @@ int main(int argc, char* argv[])
     
     if (cmd_line.second.size() != 3) {
       std::cout << "usage: " << argv[0] 
-                << " [-l <levels>] <input-file> <output-header-file>"
+                << " [-th] [-l <levels>] <input-file> <output-header-file>"
                 << " <output-cpp-file>" << std::endl;
       std::cout << "-l default to 0, which generates #includes without "
                 << "any directory part" << std::endl;
+      std::cout << "-th tracks source file and line in generated header file"
+                << std::endl;
       return 1;
     }
 
@@ -424,8 +433,8 @@ int main(int argc, char* argv[])
          << "\"" << std::endl
          << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
     }
-    OStream oh(fh);
-    OStream oc(fc);
+    OStream oh(fh, cmd_line.first.th_);
+    OStream oc(fc, true);
     
     genNamespaceContent(
       root.items_.front()->asA<hcp_ast::File>().items_, oh, oc);

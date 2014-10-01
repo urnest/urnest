@@ -1,3 +1,8 @@
+- add option to turn off file+line tracking for generated .hh as it
+  causes unnecessary recompilation of dependencies (could generate a
+  separate map, but would then need editor or compiler to recognise and
+  map errors)
+
 * no such thing as static var decl, it is a def
 
 - param default values
@@ -162,7 +167,7 @@ user	0m0.124s
 sys	0m0.008s
 1951
 
-... some work toward delays exception cause strings:
+... some work toward delayed exception cause strings:
 
 xju@xjutv:~/urnest/hcp$ ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l
 end at line 146 column 1
