@@ -278,10 +278,14 @@ class Parser(HTMLParser.HTMLParser):
             self.current=Tag(tag, attrs, self.current, self.pos())
         return
     def handle_endtag(self, tag):
-        while self.current.tagName != tag:
+        current=self.current
+        while not current is self.root and current.tagName != tag:
+            current=current.parent
+            pass
+        if not current is self.root:
+            self.current=current
+            self.current.end='</%(tag)s>'%vars()
             self.current=self.current.parent
-        self.current.end='</%(tag)s>'%vars()
-        self.current=self.current.parent
         return
     def handle_data(self,data):
         Data(data, self.current, self.pos())
