@@ -1,5 +1,5 @@
 // generated from p1.idl by omni cxy_sref idl backend specifying 
-// cxy::Exception from "cxy/Exception.hh" as base class for all exceptions
+// E from "E.hh" as base class for all exceptions
 #include <cxy/sref.hh>
 #include <cxy/sref_if.hh>
 #include <cxy/Exceptions.hh>
@@ -33,10 +33,10 @@ class sref< ::p1::F> :  private sref_if
 public:
   // pre: lifetime(x) includes lifetime(this)
   // pre: lifetime(orb) includes lifetime(this)
-  sref(cxy::ORB<cxy::Exception>& orb, 
+  sref(cxy::ORB<E>& orb, 
        std::string const& name,
        ::p1::F& x) throw(
-         cxy::Exceptions<cxy::Exception>::DuplicateName) try:
+         cxy::Exceptions<E>::DuplicateName) try:
       name_(name),
       x_(x),
       c_(guard_),
@@ -49,10 +49,10 @@ public:
   }
   catch(cxy::Exceptions<cxy::Exception>::DuplicateName& e)
   {
-    if (typeid(e)==typeid(cxy::Exception)) {
+    if (typeid(e)==typeid(E)) {
       throw;
     }
-    cxy::Exceptions<cxy::Exception>::DuplicateName ee(
+    cxy::Exceptions<E>::DuplicateName ee(
       e.cause_.first, e.cause_.second);
     for (std::vector<std::pair<std::string, cxy::Exception::FileAndLine> >::const_iterator i=
            e.context_.begin();
@@ -62,6 +62,7 @@ public:
     }
     throw ee;
   }
+  
   ~sref() throw()
   {
     xju::mt::Lock l(guard_);

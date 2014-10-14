@@ -1,3 +1,8 @@
+%run-all-tests==%all-tests.tree:leaves
+
+%all-tests.tree==<<
+()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p1-main) '3733' 'both':exec.output
+
 %p1-main==p1-main.cc+(../../..%cxx-opts)+inc_sp=(../..)+inc_sp=(/usr/local/omniORB-4.2.0/include)+lib_sp=(/usr/local/omniORB-4.2.0/lib)+lib='omniORB4' 'omnithread':auto.cxx.exe
 
 %dummy.hh==<<

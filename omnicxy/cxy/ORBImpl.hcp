@@ -130,6 +130,20 @@ public:
       throw e;
     }
   }
+  void stop() throw(
+    cxy::Exception)
+  {
+    try {
+      orb_->shutdown(true);
+    }
+    catch(CORBA::Exception& ex) {
+      cxy::Exception e(translate(ex));
+      std::ostringstream s;
+      s << "cxy::ORBImpl::stop";
+      e.addContext(s.str(), std::make_pair(__FILE__,__LINE__));
+      throw e;
+    }
+  }
   
 private:
   ::CORBA::ORB* orb_;

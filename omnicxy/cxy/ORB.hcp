@@ -33,6 +33,11 @@ void copyContext(I begin, I end, BaseException& e) throw()
   }
 }
 
+//
+// BaseException needs the following functions (see Exception.hcp)
+//   BaseException(std::string cause, Exception::FileAndLine fileAndLine)
+//   addContext(std::string context, Exception::FileAndLine fileAndLine)
+//
 template<class BaseException>
 class ORB
 {
@@ -56,6 +61,23 @@ public:
   {
     try {
       impl_.run();
+    }
+    catch(cxy::Exception& e) {
+      if (&typeid(cxy::Exception)==&typeid(BaseException)) {
+        throw;
+      }
+      BaseException x(e.cause_.first, e.cause_.second);
+      copyContext(e.context_.begin(), 
+                  e.context_.end(),
+                  x);
+      throw x;
+    }
+  }
+  void stop() throw(
+    BaseException)
+  {
+    try {
+      impl_.stop();
     }
     catch(cxy::Exception& e) {
       if (&typeid(cxy::Exception)==&typeid(BaseException)) {

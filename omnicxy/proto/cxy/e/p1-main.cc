@@ -13,7 +13,7 @@
 #include "p1.cref.hh"
 #include "p1.sref.hh"
 
-#include <xju/Exception.hh>
+#include "E.hh"
 #include <iostream>
 #include <string>
 #include "xju/format.hh"
@@ -35,7 +35,7 @@ public:
   {
   }
   
-  virtual void f1() throw(cxy::Exception)
+  virtual void f1() throw(E)
   {
     std::cout << "F::f1()" << std::endl;
   }
@@ -58,13 +58,13 @@ int main(int argc, char* argv[])
     int const port(xju::stringToInt(argv[1]));
     
     if (argv[2]==std::string("client")) {
-      cxy::ORB<cxy::Exception> orb("giop:tcp::");
+      cxy::ORB<E> orb("giop:tcp::");
       cxy::cref<p1::F> ref(orb, makeURI(port, OBJECT_NAME));
       ref->f1();
     }
     else if (argv[2]==std::string("server")) {
       std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
-      cxy::ORB<cxy::Exception> orb(orbEndPoint);
+      cxy::ORB<E> orb(orbEndPoint);
 
       F_impl x;
       
@@ -75,17 +75,17 @@ int main(int argc, char* argv[])
     else
     {
       std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
-      cxy::ORB<cxy::Exception> orb(orbEndPoint);
+      cxy::ORB<E> orb(orbEndPoint);
 
       // REVISIT: if we do these here we crash - why can't
       // we do ORB::stop before deleting the sref?
       // F_impl x;
       // cxy::sref<p1::F> const xa(orb, OBJECT_NAME, x);
       
-      xju::mt::Thread<cxy::ORB<cxy::Exception> > server_t(
+      xju::mt::Thread<cxy::ORB<E> > server_t(
         orb, 
-        &cxy::ORB<cxy::Exception>::run, // exceptions?
-        &cxy::ORB<cxy::Exception>::stop);
+        &cxy::ORB<E>::run, // exceptions?
+        &cxy::ORB<E>::stop);
       
       F_impl x;
       
@@ -100,12 +100,6 @@ int main(int argc, char* argv[])
   catch(xju::Exception& e) {
     e.addContext(xju::format::join(argv, argv+argc, " "), XJU_TRACED);
     std::cerr << readableRepr(e) << std::endl;
-    return 1;
-  }
-  catch(cxy::Exception& e) {
-    e.addContext(xju::format::join(argv, argv+argc, " "), 
-                 std::make_pair(__FILE__, __LINE__));
-    std::cerr << readableRepr(e, true, false) << std::endl;
     return 1;
   }
 }

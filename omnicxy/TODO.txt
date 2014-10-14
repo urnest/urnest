@@ -15,11 +15,14 @@ x hand-code p1 server
 x move m_c out of sref< ::p1::F>::f1 and into _dispatch to avoid
   malloc/free on every call
 
-- test client wrong type exception
+- do a cxy/p1-main.cc that uses exception class derived
+  from xju::Exception as its base exception type instead of
+  cxy::Exception (p1-main-e.cc) but need variants of generated files
+  (subdirectory e?)
+
 - generate client idl
 
-- translate the various system exceptions eg Transient
-  separately in translateException.hcp
+- test client wrong type exception
 
 x client side:
 
@@ -44,9 +47,10 @@ x clean up xju::Exceptions, get it back to a minimum of function
       provide translate of all those to cxy::Exceptions<Y>::X with
       null-translation overrides
 
-- do a cxy/p1-main.cc that uses exception class derived
-  from xju::Exception as its base exception type instead of
-  cxy::Exception
+- REVISIT in p1-main.cc
+
+- translate the various system exceptions eg Transient
+  separately in translateException.hcp
 
 - make p1.hh // impl in p1.sref.hcp
 

@@ -102,6 +102,8 @@ omnicxy/cxy/translateException.hh
 *.cdr.cc
 *.cref.cc
 *.cref.hh
+*.sref.hh
+*.sref.cc
 hcp/hcp-parse-file
 omnicxy/cxy/Exception.cc
 omnicxy/cxy/Exception.hh
@@ -113,3 +115,7 @@ omnicxy/cxy/sref_impl.cc
 omnicxy/cxy/sref_impl.hh
 omnicxy/proto/cxy/p1.sref.cc
 omnicxy/proto/cxy/p1.sref.hh
+omnicxy/proto/cxy/e/p1.cc
+omnicxy/proto/cxy/e/p1.hh
+omnicxy/proto/cxy/e/E.cc
+omnicxy/proto/cxy/e/E.hh
