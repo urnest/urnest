@@ -23,7 +23,7 @@ using namespace xju;
 
 namespace
 {
-std::string getFirst(const std::pair<std::string, xju::Traced>& x) throw()
+    std::string getFirst(const std::pair<std::string, cxy::Exception::FileAndLine>& x) throw()
 {
   return x.first;
 }
@@ -37,32 +37,32 @@ std::string getFirst(const std::pair<std::string, xju::Traced>& x) throw()
 //
 void test1()
 {
-  cxy::Exception e("cause", xju::Traced("FA", 100U));
-  assert_equal(e.cause().first, std::string("cause"));
-  assert_equal(e.cause().second.file(), std::string("FA"));
-  assert_equal(e.cause().second.line(), 100U);
+  cxy::Exception e("cause", cxy::Exception::FileAndLine("FA", 100U));
+  assert_equal(e.cause_.first, std::string("cause"));
+  assert_equal(e.cause_.second.first, std::string("FA"));
+  assert_equal(e.cause_.second.second, 100U);
   
-  assert_equal(e.context().size(), 0U);
+  assert_equal(e.context_.size(), 0U);
   
-  e.addContext("context", xju::Traced("FBB", 8U));
-  assert_equal(e.context().size(), 1U);
-  assert_equal(e.context()[0].first, std::string("context"));
-  assert_equal(e.context()[0].second.file(), std::string("FBB"));
-  assert_equal(e.context()[0].second.line(), 8U);
+  e.addContext("context", cxy::Exception::FileAndLine("FBB", 8U));
+  assert_equal(e.context_.size(), 1U);
+  assert_equal(e.context_[0].first, std::string("context"));
+  assert_equal(e.context_[0].second.first, std::string("FBB"));
+  assert_equal(e.context_[0].second.second, 8U);
   
-  e.addContext("c2", XJU_TRACED);
-  assert_equal(e.cause().first, std::string("cause"));
-  assert_equal(e.context().size(), 2U);
-  assert_equal(e.context()[0].first, std::string("context"));
-  assert_equal(e.context()[1].first, std::string("c2"));
+  e.addContext("c2", std::make_pair(__FILE__, __LINE__));
+  assert_equal(e.cause_.first, std::string("cause"));
+  assert_equal(e.context_.size(), 2U);
+  assert_equal(e.context_[0].first, std::string("context"));
+  assert_equal(e.context_[1].first, std::string("c2"));
 }
 
 // success - subtyping
-class E : public Exception
+class E : public cxy::Exception
 {
 public:
   E(const std::string& cause) throw():
-      Exception(cause, XJU_TRACED)
+      Exception(cause, std::make_pair(__FILE__, __LINE__))
   {
   }
   ~E() throw()
@@ -92,18 +92,18 @@ void test2()
     try
     {
       E e("cause");
-      e.addContext("context", XJU_TRACED);
+      e.addContext("context", std::make_pair(__FILE__, __LINE__));
       throw e;
     }
-    catch(Exception& e2)
+    catch(cxy::Exception& e2)
     {
-      assert_equal(e2.cause().first, std::string("cause"));
+      assert_equal(e2.cause_.first, std::string("cause"));
       
-      assert_equal(e2.context().size(), vl(expect2));
+      assert_equal(e2.context_.size(), vl(expect2));
       
       std::vector<std::string> context;
-      transform(e2.context().begin(), 
-                e2.context().end(),
+      transform(e2.context_.begin(), 
+                e2.context_.end(),
                 std::back_inserter(context),
                 getFirst);
       
@@ -112,18 +112,18 @@ void test2()
                  expect2,
                  assert_equal<std::string, std::string>);
       
-      e2.addContext("cc", XJU_TRACED);
+      e2.addContext("cc", std::make_pair(__FILE__, __LINE__));
       throw;
     }
   }
   catch(const E& e3)
   {
-    assert_equal(e3.cause().first, std::string("cause"));
-    assert_equal(e3.context().size(), vl(expect3));
+    assert_equal(e3.cause_.first, std::string("cause"));
+    assert_equal(e3.context_.size(), vl(expect3));
     
     std::vector<std::string> context;
-    transform(e3.context().begin(), 
-              e3.context().end(),
+    transform(e3.context_.begin(), 
+              e3.context_.end(),
               std::back_inserter(context),
               getFirst);
     
@@ -140,8 +140,8 @@ void test2()
 void test3()
 {
   {
-    Exception e("power failed", XJU_TRACED);
-    e.addContext("watch the football", XJU_TRACED);
+    cxy::Exception e("power failed", std::make_pair(__FILE__, __LINE__));
+    e.addContext("watch the football", std::make_pair(__FILE__, __LINE__));
     
     std::ostringstream s;
     s << e;
@@ -151,9 +151,9 @@ void test3()
     
   }
   {
-    Exception e("power failed", XJU_TRACED);
-    e.addContext("watch the football", XJU_TRACED);
-    e.addContext("find out who won", XJU_TRACED);
+    cxy::Exception e("power failed", std::make_pair(__FILE__, __LINE__));
+    e.addContext("watch the football", std::make_pair(__FILE__, __LINE__));
+    e.addContext("find out who won", std::make_pair(__FILE__, __LINE__));
     std::ostringstream s;
     s << e;
     assert_equal(s.str(),
@@ -169,21 +169,21 @@ void test4()
   std::ostringstream cause;
   cause << "cause";
   
-  Exception e(cause, xju::Traced("FA", 100U));
-  assert_equal(e.cause().first, std::string("cause"));
-  assert_equal(e.cause().second.file(), std::string("FA"));
-  assert_equal(e.cause().second.line(), 100U);
+  cxy::Exception e(cause.str(), cxy::Exception::FileAndLine("FA", 100U));
+  assert_equal(e.cause_.first, std::string("cause"));
+  assert_equal(e.cause_.second.first, std::string("FA"));
+  assert_equal(e.cause_.second.second, 100U);
   
-  assert_equal(e.context().size(), 0U);
+  assert_equal(e.context_.size(), 0U);
   
   std::ostringstream context;
   context << "context";
   
-  e.addContext(context, xju::Traced("FBB", 8U));
-  assert_equal(e.context().size(), 1U);
-  assert_equal(e.context()[0].first, std::string("context"));
-  assert_equal(e.context()[0].second.file(), std::string("FBB"));
-  assert_equal(e.context()[0].second.line(), 8U);
+  e.addContext(context.str(), cxy::Exception::FileAndLine("FBB", 8U));
+  assert_equal(e.context_.size(), 1U);
+  assert_equal(e.context_[0].first, std::string("context"));
+  assert_equal(e.context_[0].second.first, std::string("FBB"));
+  assert_equal(e.context_[0].second.second, 8U);
 }
 
 //

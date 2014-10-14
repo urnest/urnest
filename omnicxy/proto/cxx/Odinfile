@@ -1,3 +1,6 @@
+%all.tree==<<
+%p1
+
 %dummy.hh==<<
 
 p1.hh==(%dummy.hh)+cmd=cat (..%p1.cxx.files+member='p1.hh':extract_file):stdout

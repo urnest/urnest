@@ -4,7 +4,9 @@
 #include <cxy/sref_if.hh>
 #include <cxy/Exceptions.hh>
 
-#include "p1.hh"
+#include "E.hh"
+
+#include "p1.hh" // impl
 
 #include <cxy/ORB.hh> // impl
 #include <cxy/sref_impl.hh> // impl
@@ -19,6 +21,11 @@
 class omniCallHandle;
 class omniCallDescriptor;
 class omniServant;
+
+namespace p1
+{
+class F;
+}
 
 namespace cxy
 {

@@ -1,3 +1,6 @@
+%all.tree==<<
+%all-tests.tree
+
 %run-all-tests==%all-tests.tree:leaves
 
 %all-tests.tree==<<

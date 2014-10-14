@@ -1,10 +1,12 @@
 // generated from p1.idl by omni cxy_sref idl backend specifying 
-// cxy::Exception from "cxy/Exception.hh" as base class for all exceptions
+// cxy::Exception from <cxy/Exception.hh> as base class for all exceptions
 #include <cxy/sref.hh>
 #include <cxy/sref_if.hh>
 #include <cxy/Exceptions.hh>
 
-#include "p1.hh"
+#include <cxy/Exception.hh>
+
+#include "p1.hh" // impl
 
 #include <cxy/ORB.hh> // impl
 #include <cxy/sref_impl.hh> // impl
@@ -19,6 +21,11 @@
 class omniCallHandle;
 class omniCallDescriptor;
 class omniServant;
+
+namespace p1
+{
+class F;
+}
 
 namespace cxy
 {

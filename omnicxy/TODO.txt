@@ -21,6 +21,11 @@ x do a cxy/p1-main.cc that uses exception class derived
   (subdirectory e?)
 
 - generate client idl
+  p1.hcp
+  p1.cdr.hcp
+  p1.cref.hcp
+  p1.objref.hcp
+  p1.sref.hcp
 
 - test client wrong type exception
 
