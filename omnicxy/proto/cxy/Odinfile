@@ -2,6 +2,7 @@
 
 %all-tests.tree==<<
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p1-main) '3733' 'both':exec.output
+%test-transient
 
 %p1-main==p1-main.cc+(../../..%cxx-opts)+inc_sp=(../..)+inc_sp=(/usr/local/omniORB-4.2.0/include)+lib_sp=(/usr/local/omniORB-4.2.0/lib)+lib='omniORB4' 'omnithread':auto.cxx.exe
 
@@ -27,3 +28,13 @@ p1.cdr.cc==%p1.cdr/p1.cdr.cc
 %p1.objref==()+cmd=(../../../hcp/hcp-split) -l 0 (p1.objref.hcp) 'p1.objref.hh' 'p1.objref.cc':output
 %p1.cdr==()+cmd=(../../../hcp/hcp-split) -l 0 (p1.cdr.hcp) 'p1.cdr.hh' 'p1.cdr.cc':output
 %p1.sref==()+cmd=(../../../hcp/hcp-split) -l 0 (p1.sref.hcp) 'p1.sref.hh' 'p1.sref.cc':output
+
+%test-transient==()+cmd=(%test-transient.sh) (%p1-main):exec.output
+
+%test-transient.sh == ! <<
+#!/bin/sh
+set -x &&
+export LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib &&
+p1main="$1" &&
+{ x=$($p1main 3734 client 2>&1) ; test $? = 1 ; } &&
+echo "$x" | fgrep TRANSIENT

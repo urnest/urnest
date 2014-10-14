@@ -15,7 +15,7 @@ x hand-code p1 server
 x move m_c out of sref< ::p1::F>::f1 and into _dispatch to avoid
   malloc/free on every call
 
-- do a cxy/p1-main.cc that uses exception class derived
+x do a cxy/p1-main.cc that uses exception class derived
   from xju::Exception as its base exception type instead of
   cxy::Exception (p1-main-e.cc) but need variants of generated files
   (subdirectory e?)

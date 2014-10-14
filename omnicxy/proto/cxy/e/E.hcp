@@ -24,7 +24,8 @@ public:
   void addContext(std::string const& context,
                   FileAndLine const& fileAndLine) throw()
   {
-    addContext(context, xju::Traced(fileAndLine.first, fileAndLine.second));
+    xju::Exception::addContext(
+      context, xju::Traced(fileAndLine.first, fileAndLine.second));
   }
 };
 
