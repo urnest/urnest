@@ -12,6 +12,7 @@
 %dummy.hcp==<<
 
 p1.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxy.py) (../p1.idl):stdout
+p1.cdr.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycdr.py) (../p1.idl):stdout
 
 %dummy.hh==<<
 

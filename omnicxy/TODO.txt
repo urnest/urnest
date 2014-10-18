@@ -20,7 +20,14 @@ x do a cxy/p1-main.cc that uses exception class derived
   cxy::Exception (p1-main-e.cc) but need variants of generated files
   (subdirectory e?)
 
-- generate client idl
+- generate proto/cxy code from p1.idl
+  x p1.hcp
+  x p1.cdr.hcp
+  p1.cref.hcp
+  p1.objref.hcp
+  p1.sref.hcp
+
+- generate proto/cxy/e code from p1.idl
   p1.hcp
   p1.cdr.hcp
   p1.cref.hcp
@@ -52,11 +59,9 @@ x clean up xju::Exceptions, get it back to a minimum of function
       provide translate of all those to cxy::Exceptions<Y>::X with
       null-translation overrides
 
-- REVISIT in p1-main.cc
-
 - translate the various system exceptions eg Transient
   separately in translateException.hcp
 
-- make p1.hh // impl in p1.sref.hcp
+x make p1.hh // impl in p1.sref.hcp
 
 - allow servant to throw base exception

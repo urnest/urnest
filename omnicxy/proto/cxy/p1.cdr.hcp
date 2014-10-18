@@ -1,7 +1,8 @@
 // generated from p1.idl by cxy.misc idl backend
 
-#include "p1.hh"
 #include <cxy/cdr.hh>
+
+#include "p1.hh"
 
 namespace cxy
 {
@@ -11,4 +12,6 @@ class cdr< ::p1::F>
 public:
   static const char repoId[]="IDL:p1/F:1.0";
 };
+
 }
+

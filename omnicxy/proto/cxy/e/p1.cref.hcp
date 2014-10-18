@@ -32,8 +32,8 @@ public:
     // other failure, eg communication failure
     E):
       uri_(uri),
-      pof_(&cxy::pof< ::p1::F>::me_()), // force init of static var
-      obj_(0)
+      obj_((&cxy::pof< ::p1::F>::me_(), // force init of static var,
+            (cxy::objref< ::p1::F>*)0))
   {
     try {
       try {
@@ -113,7 +113,6 @@ public:
   
 private:
   std::string uri_;
-  void* pof_;
   cxy::objref< ::p1::F>* obj_;
 };
 }
