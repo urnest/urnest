@@ -18,6 +18,7 @@
 #include <vector>
 #include <set>
 #include <algorithm>
+#include "xju/MicroSeconds.hh"
 
 
 namespace t=xju::mt;
@@ -34,12 +35,12 @@ void test7(); // Seq multi-thread uniqueness
 class T1
 {
 public:
-	 T1() throw():
-		  _duration(xju::Time(5, 0)),
-		  _targetIterations(100000),
-		  _value(1, 1)
-	 {
-	 }
+    T1() throw():
+      _duration(5000000),
+      _targetIterations(100000),
+      _value(1, 1)
+    {
+    }
 	 
 	 void run1() throw()
 	 {
@@ -56,9 +57,9 @@ public:
 		  if (n < _targetIterations)
 		  {
 				std::cout << "Warning: T1 thread 2 only did " << n
-							 << "of " << _targetIterations
-							 << " iterations in " << _duration.getSecs()
-							 << " seconds" << std::endl;
+                  << "of " << _targetIterations
+                  << " iterations in " << _duration.value()/1000000
+                  << " seconds" << std::endl;
 		  }
 	 }
 	 
@@ -77,14 +78,14 @@ public:
 		  if (n < _targetIterations)
 		  {
 				std::cout << "Warning: T1 thread 2 only did " << n
-							 << "of " << _targetIterations
-							 << " iterations in " << _duration.getSecs()
-							 << " seconds" << std::endl;
+                  << "of " << _targetIterations
+                  << " iterations in " << _duration.value()/1000000
+                  << " seconds" << std::endl;
 		  }
 	 }
 	 
 private:
-	 const xju::Time _duration;
+	 const xju::MicroSeconds _duration;
 	 const unsigned int _targetIterations;
 	 
 	 t::Mutex _guard;
@@ -104,7 +105,7 @@ class T2
 {
 public:
 	 T2() throw():
-		  _duration(xju::Time(5, 0)),
+		  _duration(xju::MicroSeconds(5000000)),
 		  _targetIterations(100000),
 		  _value(1, 1)
 	 {
@@ -131,9 +132,9 @@ public:
 		  if (n < _targetIterations)
 		  {
 				std::cout << "Warning: T2 thread 2 only did " << n
-							 << "of " << _targetIterations
-							 << " iterations in " << _duration.getSecs()
-							 << " seconds" << std::endl;
+                  << "of " << _targetIterations
+                  << " iterations in " << _duration.value()/1000000
+                  << " seconds" << std::endl;
 		  }
 	 }
 	 
@@ -158,14 +159,14 @@ public:
 		  if (n < _targetIterations)
 		  {
 				std::cout << "Warning: T5 thread 2 only did " << n
-							 << "of " << _targetIterations
-							 << " iterations in " << _duration.getSecs()
-							 << " seconds" << std::endl;
+                  << "of " << _targetIterations
+                  << " iterations in " << _duration.value()/1000000
+                  << " seconds" << std::endl;
 		  }
 	 }
 	 
 private:
-	 const xju::Time _duration;
+	 const xju::MicroSeconds _duration;
 	 const unsigned int _targetIterations;
 	 
 	 t::Mutex _guard;
@@ -221,10 +222,10 @@ void test3()
 	 t4.wait();
 	 const xju::Time end(xju::Time::now());
 	 
-	 const xju::Time diff(end - begin);
+	 const xju::MicroSeconds diff(end - begin);
 	 
-	 xju::assert_(diff, std::greater_equal<xju::Time>(), xju::Time(1, 0));
-	 xju::assert_(diff, std::less<xju::Time>(), xju::Time(1, 500000));
+	 xju::assert_(diff, std::greater_equal<xju::MicroSeconds>(), xju::MicroSeconds(1000000));
+	 xju::assert_(diff, std::less<xju::MicroSeconds>(), xju::MicroSeconds(1500000));
 }
 
 
@@ -267,18 +268,18 @@ void test4()
 	 
 	 t::Lock l(m);
 	 
-	 while(xju::Time::now() < n+xju::Time(2, 0))
+	 while(xju::Time::now() < n+xju::MicroSeconds(2000000))
 	 {
-		  c.wait(l, n+xju::Time(2, 0));
+		  c.wait(l, n+xju::MicroSeconds(2000000));
 	 }
 	 xju::assert_equal(flag, false);
 	 
-	 while(!flag && xju::Time::now() < n+xju::Time(20, 0))
+	 while(!flag && xju::Time::now() < n+xju::MicroSeconds(20000000))
 	 {
-		  c.wait(l, n+xju::Time(20, 0));
+		  c.wait(l, n+xju::MicroSeconds(20000000));
 	 }
 	 xju::assert_equal(flag, true);
-	 xju::assert_(xju::Time::now() - n, std::less<xju::Time>(), xju::Time(6, 0));
+	 xju::assert_(xju::Time::now() - n, std::less<xju::MicroSeconds>(), xju::MicroSeconds(6000000));
 }
 
 
@@ -337,7 +338,7 @@ void test6()
 {
 	 const unsigned int duration(10);
 	 
-	 const xju::Time until(xju::Time::now()+xju::Time(duration, 0));
+	 const xju::Time until(xju::Time::now()+xju::MicroSeconds(duration*1000000));
 	 const unsigned int targetIterations(10000);
 	 
 	 unsigned int n(0);
@@ -360,7 +361,7 @@ class T7
 {
 public:
 	 T7() throw():
-		  _duration(5, 0),
+		  _duration(5000000),
 		  _targetIterations(25000)
 	 {
 	 }
@@ -378,10 +379,10 @@ public:
 		  if (n < _targetIterations)
 		  {
 				std::cout << "Warning: T7::run1() only did " << n
-							 << " of " << _targetIterations
-							 << " iterations in " << _duration.getSecs()
-							 << " seconds"
-							 << std::endl;
+                  << " of " << _targetIterations
+                  << " iterations in " << _duration.value()/1000000
+                  << " seconds"
+                  << std::endl;
 		  }
 	 }
 	 void run2() throw()
@@ -397,10 +398,10 @@ public:
 		  if (n < _targetIterations)
 		  {
 				std::cout << "Warning: T7::run2() only did " << n
-							 << " of " << _targetIterations
-							 << " iterations in " << _duration.getSecs()
-							 << " seconds"
-							 << std::endl;
+                  << " of " << _targetIterations
+                  << " iterations in " << _duration.value()/1000000
+                  << " seconds"
+                  << std::endl;
 		  }
 	 }
 	 
@@ -413,7 +414,7 @@ public:
 	 }
 	 
 private:
-	 const xju::Time _duration;
+	 const xju::MicroSeconds _duration;
 	 const unsigned int _targetIterations;
 	 
 	 t::Seq _seq;

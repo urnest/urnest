@@ -1,62 +1,28 @@
-%run-standalone-tests == %standalone-tests.tree:leaves
+%all==%all.tree:leaves
 
-%basic-test-results == %basic-tests.tree:leaves
+%all.tree==<<
+%tests.tree
 
-%standalone-tests.tree == <<
-%basic-tests.tree
-
-%basic-tests.tree == <<
-()+cmd=(test-functional.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-stringToDouble.cc+(..%cxx-opts):auto.cxx.exe):stdout
+%tests.tree == <<
+#()+cmd=(%test-serialisation.cxx.sm+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-EventClient.cc+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-Exception.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Int.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-JoiningIterator.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-Exception.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-format.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-Traced.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-Ring.cxx+(..%cxx-opts)+o_src_suffix=.cc .cxx:auto.cxx.exe):stdout
-()+cmd=(test-EventClient.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Notifying.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-NotifyingList.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Observer.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-ObserverP.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-path.cc+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-Ring.cxx+(..%cxx-opts)+o_src_suffix=.cc .cxx:auto.cxx.exe):stdout
 ()+cmd=(test-Time.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-stringToInt.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-stringToUInt.cc+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-Traced.cc+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-format.cc+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-functional.cc+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-mt.cc+(..%cxx-opts)+ld_flags=-lpthread:auto.cxx.exe):stdout
+()+cmd=(test-path.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-stringToDouble.cc+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-stringToInt.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-stringToTime.cc+(..%cxx-opts):auto.cxx.exe):stdout
-#()+cmd=(%test-serialisation.cxx.sm+(..%cxx-opts):auto.cxx.exe):stdout
-#()+cmd=(%test-mt.cxx.sm+(..%cxx-opts)+ld_flags=-lpthread:auto.cxx.exe):stdout
+()+cmd=(test-stringToUInt.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-xml.cc+(..%cxx-opts):auto.cxx.exe):stdout
 
-%basic.cxx.sm == <<
-isnan.hh+(..%cxx-opts):auto.sm
-JoiningIterator.hh+(..%cxx-opts):auto.sm
-Exception.hh+(..%cxx-opts):auto.sm
-format.hh+(..%cxx-opts):auto.sm
-Traced.hh+(..%cxx-opts):auto.sm
-Ring.hh+(..%cxx-opts):auto.sm
-AutoFd.hh+(..%cxx-opts):auto.sm
-EventClient.hh+(..%cxx-opts):auto.sm
-formatTime.hh+(..%cxx-opts):auto.sm
-netdb.hh+(..%cxx-opts):auto.sm
-Notifying.hh+(..%cxx-opts):auto.sm
-NotifyingList.hh+(..%cxx-opts):auto.sm
-Observer.hh+(..%cxx-opts):auto.sm
-ObserverP.hh+(..%cxx-opts):auto.sm
-Optional.hh+(..%cxx-opts):auto.sm
-path.hh+(..%cxx-opts):auto.sm
-Time.hh+(..%cxx-opts):auto.sm
-readFile.hh+(..%cxx-opts):auto.sm
-socket.hh+(..%cxx-opts):auto.sm
-stringToInt.hh+(..%cxx-opts):auto.sm
-stringToUInt.hh+(..%cxx-opts):auto.sm
-stringToDouble.hh+(..%cxx-opts):auto.sm
-stringToTime.hh+(..%cxx-opts):auto.sm
-unistd.hh+(..%cxx-opts):auto.sm
-fcntl.hh+(..%cxx-opts):auto.sm
-stat.hh+(..%cxx-opts):auto.sm
-stdio.hh+(..%cxx-opts):auto.sm
-xml.hh+(..%cxx-opts):auto.sm
-
-%lib-basic == %basic.cxx.sm+(..%cxx-opts):a

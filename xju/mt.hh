@@ -417,11 +417,7 @@ namespace xju
 	inline Mutex::Mutex() throw():
 	    _holder(0)
 	{
-	    if (pthread_mutex_init(&_impl, 0) == -1)
-	    {
-		int error = errno;
-		abort();
-	    }
+            pthread_mutex_init(&_impl, 0);
 	}
 	
 	inline Mutex::~Mutex() throw()
@@ -440,15 +436,14 @@ namespace xju
 	    _mutex(0)
 	{
 	    int i = pthread_mutex_trylock(&(mutex._impl));
-	    if (i == 1)
+	    if (i == 0)
 	    {
 		_mutex = &mutex;
 		mutex._holder = this;
 	    }
-	    else if (i == -1)
+	    else
 	    {
-		int error = errno;
-		abort();
+		assert_equal(i, EBUSY);
 	    }
 	}
 	
@@ -468,11 +463,7 @@ namespace xju
 	inline Lock::Lock(Mutex& mutex) throw():
 	    _mutex(mutex)
 	{
-	    if (pthread_mutex_lock(&mutex._impl) == -1)
-	    {
-		int error = errno;
-		abort();
-	    }
+	    assert_equal(pthread_mutex_lock(&mutex._impl),0);
 	    _mutex._holder = this;
 	}
 	
@@ -502,11 +493,7 @@ namespace xju
 	    _f(f),
             _stop(0)
 	{
-	    if (pthread_create(&_impl, 0, main, this) == -1)
-	    {
-		int error = errno;
-		abort();
-	    }
+            assert_equal(pthread_create(&_impl, 0, main, this),0);
 	}
 	
 	template<class T>
@@ -517,11 +504,7 @@ namespace xju
 	    _f(start),
             _stop(stop)
 	{
-	    if (pthread_create(&_impl, 0, main, this) == -1)
-	    {
-		int error = errno;
-		abort();
-	    }
+            assert_equal(pthread_create(&_impl, 0, main, this),0);
 	}
 	
 	template<class T>
@@ -533,7 +516,6 @@ namespace xju
 	    void* status;
 	    
 	    pthread_join(_impl, &status);
-	    pthread_detach(_impl);
 	}
 	
 	
