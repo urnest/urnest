@@ -10,7 +10,9 @@
 #ifndef CXY_ORBIMPL_H
 #define CXY_ORBIMPL_H
 
-#include "cxy/Exception.hh"
+#include "Exception.hh"
+#include "Exceptions.hh"
+#include "translateException.hh"
 #include <string>
 #include <typeinfo> // impl
 #include <omniORB4/CORBA.h>
@@ -142,6 +144,44 @@ public:
       s << "cxy::ORBImpl::stop";
       e.addContext(s.str(), std::make_pair(__FILE__,__LINE__));
       throw e;
+    }
+  }
+  void* locate(std::string const& uri, std::string const& repoId) throw(
+    cxy::Exceptions<cxy::Exception>::WrongType,
+    cxy::Exceptions<cxy::Exception>::NoSuchObject,
+    cxy::Exception)
+  {
+    try {
+      try {
+        CORBA::Object_var x(orb_->string_to_object(uri.c_str()));
+        if (CORBA::is_nil(x)) {
+          std::ostringstream s;
+          s << xju::format::quote(uri) << " is nil";
+          throw cxy::Exceptions<cxy::Exception>::NoSuchObject(
+            s.str(), std::make_pair(__FILE__, __LINE__));
+        }
+        void* result=x->_PR_getobj()->_realNarrow(repoId.c_str());
+        if (result==0) {
+          std::ostringstream s;
+          s << xju::format::quote(uri) << " is not a "
+            << repoId;
+          throw cxy::Exceptions<cxy::Exception>::WrongType(
+            s.str(), std::make_pair(__FILE__, __LINE__));
+        }
+        return result;
+      }
+      catch(CORBA::Exception const& ee) {
+        throw cxy::translateException<cxy::Exception>(ee);
+      }
+    }
+    catch(cxy::Exception& e) {
+      std::ostringstream s;
+      s << "locate object "
+        << xju::format::quote(uri)
+        << " of type "
+        << repoId;
+      e.addContext(s.str(), std::make_pair(__FILE__, __LINE__));
+      throw;
     }
   }
   

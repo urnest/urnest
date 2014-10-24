@@ -11,6 +11,7 @@
 #include <cxy/translateException.hh> // impl
 #include <xju/format.hh> // impl
 #include <xju/assert.hh> // impl
+#include <typeinfo>
 
 namespace cxy
 {
@@ -31,41 +32,9 @@ public:
     cxy::Exception):
       uri_(uri),
       obj_((&cxy::pof< ::p1::F>::me_(), // force init of static var,
-            (cxy::objref< ::p1::F>*)0))
+            (cxy::objref< ::p1::F>*)orb.locate(
+              uri, cxy::cdr< ::p1::F>::repoId)))
   {
-    try {
-      try {
-        CORBA::Object_var x(orb.impl_.orb_->string_to_object(uri.c_str()));
-        if (CORBA::is_nil(x)) {
-          std::ostringstream s;
-          s << xju::format::quote(uri) << " is nil";
-          throw cxy::Exceptions<cxy::Exception>::NoSuchObject(
-            s.str(), std::make_pair(__FILE__, __LINE__));
-        }
-        obj_ = 
-          (cxy::objref< ::p1::F>*)
-          x->_PR_getobj()->_realNarrow(cxy::cdr< ::p1::F>::repoId);
-        if (obj_==0) {
-          std::ostringstream s;
-          s << xju::format::quote(uri) << " is not a "
-            << cxy::cdr< ::p1::F>::repoId;
-          throw cxy::Exceptions<cxy::Exception>::WrongType(
-            s.str(), std::make_pair(__FILE__, __LINE__));
-        }
-      }
-      catch(CORBA::Exception const& ee) {
-        throw cxy::translateException<cxy::Exception>(ee);
-      }
-    }
-    catch(cxy::Exception& e) {
-      std::ostringstream s;
-      s << "locate object "
-        << xju::format::quote(uri)
-        << " of type "
-        << cxy::cdr< ::p1::F>::repoId;
-      e.addContext(s.str(), std::make_pair(__FILE__, __LINE__));
-      throw;
-    }
   }
   
   cref(cref const& b) throw():

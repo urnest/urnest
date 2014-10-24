@@ -20,6 +20,13 @@ x do a cxy/p1-main.cc that uses exception class derived
   cxy::Exception (p1-main-e.cc) but need variants of generated files
   (subdirectory e?)
 
+x move server_t thread into ORB (Impl)
+
+x move generic code from cref to ORBImpl, and add translation functions
+  for cxy::Exception base to other
+
+- test port-in-use
+
 - generate proto/cxy code from p1.idl
   x p1.hcp
   x p1.cdr.hcp
@@ -35,6 +42,8 @@ x do a cxy/p1-main.cc that uses exception class derived
   p1.sref.hcp
 
 - test client wrong type exception
+
+- allow cref cons/assign from super-class-cref
 
 x client side:
 

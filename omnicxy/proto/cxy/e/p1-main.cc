@@ -70,23 +70,13 @@ int main(int argc, char* argv[])
       
       cxy::sref<p1::F> const xa(orb, OBJECT_NAME, x);
       
-      orb.run();
+      orb.monitorUntil(xju::Time::now()+xju::MicroSeconds(30*1000000));
     }
     else
     {
       std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
       cxy::ORB<E> orb(orbEndPoint);
 
-      // REVISIT: if we do these here we crash - why can't
-      // we do ORB::stop before deleting the sref?
-      // F_impl x;
-      // cxy::sref<p1::F> const xa(orb, OBJECT_NAME, x);
-      
-      xju::mt::Thread<cxy::ORB<E> > server_t(
-        orb, 
-        &cxy::ORB<E>::run, // exceptions?
-        &cxy::ORB<E>::stop);
-      
       F_impl x;
       
       cxy::sref<p1::F> const xa(orb, OBJECT_NAME, x);

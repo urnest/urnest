@@ -20,6 +20,7 @@
 #include "xju/stringToInt.hh"
 #include <stdlib.h>
 #include "xju/mt.hh"
+#include "xju/Time.hh"
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {
@@ -70,23 +71,12 @@ int main(int argc, char* argv[])
       
       cxy::sref<p1::F> const xa(orb, OBJECT_NAME, x);
       
-      orb.run();
+      orb.monitorUntil(xju::Time::now()+xju::MicroSeconds(30*1000000));
     }
     else
     {
       std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
       cxy::ORB<cxy::Exception> orb(orbEndPoint);
-
-      // REVISIT: if we do these here we crash - why can't
-      // we do ORB::stop before deleting the sref?
-      // F_impl x;
-      // cxy::sref<p1::F> const xa(orb, OBJECT_NAME, x);
-      
-      xju::mt::Thread<cxy::ORB<cxy::Exception> > server_t(
-        orb, 
-        &cxy::ORB<cxy::Exception>::run, // exceptions?
-        &cxy::ORB<cxy::Exception>::stop);
-      
       F_impl x;
       
       cxy::sref<p1::F> const xa(orb, OBJECT_NAME, x);

@@ -2,3 +2,4 @@
 +debug
 +inc_sp=(.)
 +inc_sp=(/usr/include/freetype2)
++ld_flags=-lpthread

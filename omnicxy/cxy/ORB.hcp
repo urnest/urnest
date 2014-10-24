@@ -7,14 +7,18 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef CXY_ORB_H
-#define CXY_ORB_H
 
 #include "ORBImpl.hh"
 #include <algorithm>
 #include <functional>
 #include <typeinfo>
 #include <xju/functional.hh>
+#include "copyContext.hh"
+#include "Exceptions.hh"
+#include "translateException.hh"
+#include "xju/mt.hh"
+#include "xju/Time.hh"
+#include "xju/Optional.hh"
 
 namespace cxy
 {
@@ -24,14 +28,6 @@ template<class T>
 class cref;
 template<class T>
 class sref;
-
-template<class BaseException, class I>
-void copyContext(I begin, I end, BaseException& e) throw()
-{
-  for(; begin != end; ++begin) {
-    e.addContext((*begin).first, (*begin).second);
-  }
-}
 
 //
 // BaseException needs the following functions (see Exception.hcp)
@@ -43,7 +39,11 @@ class ORB
 {
 public:
   explicit ORB(std::string const& orbEndPoint) throw(BaseException) try:
-    impl_(orbEndPoint) {
+    impl_(orbEndPoint),
+    e_changed_(guard_),
+    t_(*this, 
+       &cxy::ORB<BaseException>::run, // exceptions?
+       &cxy::ORB<BaseException>::stop){
   }
   catch(cxy::Exception& e)
   {
@@ -56,25 +56,90 @@ public:
                 x);
     throw x;
   }
-  void run() throw(
+  // monitor ORB until the specified time
+  void monitorUntil(xju::Time const& t) throw(
+    // ORB exception
+    BaseException)
+  {
+    xju::mt::Lock l(guard_);
+    while(!e_.valid() && xju::Time::now()<t) {
+      e_changed_.wait(l, t);
+    }
+    if (e_.valid()) {
+      throw e_.value();
+    }
+  }
+  
+private:
+  ORBImpl impl_;
+  xju::mt::Mutex guard_;
+  xju::Optional<BaseException> e_;
+  xju::mt::Condition e_changed_;
+  
+  xju::mt::Thread<cxy::ORB<BaseException> > t_;
+  
+  template<class T>
+  friend class cref;
+
+  template<class T>
+  friend class sref;
+
+  void* locate(std::string const& uri, std::string const& repoId) throw(
+    // no object with specified uri, including server
+    // not reachable and server does not know name
+    typename cxy::Exceptions<BaseException>::NoSuchObject,
+    // object with specified uri is not a p1::F
+    typename cxy::Exceptions<BaseException>::WrongType,
+    // other failure, eg communication failure
     BaseException)
   {
     try {
-      impl_.run();
+      return impl_.locate(uri, repoId);
     }
-    catch(cxy::Exception& e) {
-      if (&typeid(cxy::Exception)==&typeid(BaseException)) {
+    catch(cxy::Exceptions<cxy::Exception>::NoSuchObject const& ee) {
+      if (typeid(cxy::Exception)==typeid(cxy::Exception)) {
         throw;
       }
-      BaseException x(e.cause_.first, e.cause_.second);
-      copyContext(e.context_.begin(), 
-                  e.context_.end(),
-                  x);
-      throw x;
+      throw cxy::translateException<cxy::Exception>(ee);
+    }
+    catch(cxy::Exceptions<cxy::Exception>::WrongType const& ee) {
+      if (typeid(cxy::Exception)==typeid(cxy::Exception)) {
+        throw;
+      }
+      throw cxy::translateException<cxy::Exception>(ee);
+    }
+    catch(cxy::Exception& ee) {
+      if (typeid(cxy::Exception)==typeid(cxy::Exception)) {
+        throw;
+      }
+      throw cxy::translateException<cxy::Exception>(ee);
     }
   }
-  void stop() throw(
-    BaseException)
+
+  void run() throw()
+  {
+    try {
+      try {
+        impl_.run();
+      }
+      catch(cxy::Exception& e) {
+        if (&typeid(cxy::Exception)==&typeid(BaseException)) {
+          throw;
+        }
+        BaseException x(e.cause_.first, e.cause_.second);
+        copyContext(e.context_.begin(), 
+                    e.context_.end(),
+                    x);
+        throw x;
+      }
+    }
+    catch(BaseException& e) {
+      xju::mt::Lock l(guard_);
+      e_=e;
+      e_changed_.signal(l);
+    }
+  }
+  void stop() throw()
   {
     try {
       impl_.stop();
@@ -87,20 +152,11 @@ public:
       copyContext(e.context_.begin(), 
                   e.context_.end(),
                   x);
-      throw x;
+      throw x; // deliberate crash
     }
   }
-  
-private:
-  ORBImpl impl_;
 
-  template<class T>
-  friend class cref;
-
-  template<class T>
-  friend class sref;
 };
   
 }
 
-#endif

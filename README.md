@@ -86,13 +86,21 @@ C++ and odin build bits and pieces to share
 -   xju has my C++ classes for things like posix threads,
     exception handling, assertions; if there is a theme it is
     providing classes that are hard to misuse
+      status: usable
 
 -   btt is a simple time tracker, it uses fltk1.3 for UI
+      status: usable
 
 -   hcp is progress towards a utility to split C++-in-single-source-file
     into .h and .cpp files (to make coding more efficient); part of
     this utility is a (partial) C++ parser that I hope to use to write
     other C++ source code handling tools
+      status: usable but room for improvement (see hcp/TODO)
+
+-   omnicxy is progress towards a CORBA C++ language mapping that
+    uses standard C++ classes like string, vector
+    status: omniORB implementation early days (see omnicxy/TODO)
 
 -   xo is my notes on how I would re-write odin so that I could
     understand how it works and therefor fix and improve it :-)
+      status: planning

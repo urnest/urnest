@@ -11,6 +11,9 @@
 
 #include <sstream>
 #include <typeinfo>
+#include "Exceptions.hh"
+#include "Exception.hh"
+#include "copyContext.hh"
 
 namespace cxy
 {
@@ -43,6 +46,35 @@ E translateException(CORBA::Exception const& e) throw()
     }
   }
   return E(s.str(), std::pair<std::string, unsigned int>(__FILE__,__LINE__));
+}
+
+template<class E>
+typename cxy::Exceptions<E>::NoSuchObject translateException(
+  cxy::Exceptions<cxy::Exception>::NoSuchObject const& e)
+{
+  typename cxy::Exceptions<E>::NoSuchObject result(
+    e.cause_.first, e.cause_.second);
+  copyContext(e.context_.begin(), e.context_.end(), result);
+  return result;
+}
+
+template<class E>
+typename cxy::Exceptions<E>::WrongType translateException(
+  cxy::Exceptions<cxy::Exception>::WrongType const& e)
+{
+  typename cxy::Exceptions<E>::WrongType result(
+    e.cause_.first, e.cause_.second);
+  copyContext(e.context_.begin(), e.context_.end(), result);
+  return result;
+}
+
+template<class E>
+E translateException(
+  cxy::Exception const& e)
+{
+  E result(e.cause_.first, e.cause_.second);
+  copyContext(e.context_.begin(), e.context_.end(), result);
+  return result;
 }
 
 }

@@ -23,6 +23,11 @@ calldesc.cc==%calldesc/calldesc.cc
 
 %calldesc==()+cmd=(../../hcp/hcp-split) -l 1 (calldesc.hcp) 'calldesc.hh' 'calldesc.cc':output
 
+copyContext.hh==%copyContext/copyContext.hh
+copyContext.cc==%copyContext/copyContext.cc
+
+%copyContext==()+cmd=(../../hcp/hcp-split) -l 1 (copyContext.hcp) 'copyContext.hh' 'copyContext.cc':output
+
 translateException.hh==%translateException/translateException.hh
 translateException.cc==%translateException/translateException.cc
 
