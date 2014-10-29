@@ -3,3 +3,7 @@
 %all.tree==<<
 cxy%all.tree
 proto%all.tree
+
+
+%cxx-opts==<<
++(..%cxx-opts)+inc_sp=(.)+inc_sp=(/usr/local/omniORB-4.2.0/include)+lib_sp=(/usr/local/omniORB-4.2.0/lib)+lib='omniORB4' 'omnithread'

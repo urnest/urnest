@@ -25,7 +25,10 @@ x move server_t thread into ORB (Impl)
 x move generic code from cref to ORBImpl, and add translation functions
   for cxy::Exception base to other
 
-- test port-in-use
+x test port-in-use
+x test port-in-use - E
+x test no-such-object
+x test no-such-object - E
 
 - generate proto/cxy code from p1.idl
   x p1.hcp

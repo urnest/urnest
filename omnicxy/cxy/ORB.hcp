@@ -97,19 +97,19 @@ private:
       return impl_.locate(uri, repoId);
     }
     catch(cxy::Exceptions<cxy::Exception>::NoSuchObject const& ee) {
-      if (typeid(cxy::Exception)==typeid(cxy::Exception)) {
+      if (typeid(cxy::Exception)==typeid(BaseException)) {
         throw;
       }
       throw cxy::translateException<cxy::Exception>(ee);
     }
     catch(cxy::Exceptions<cxy::Exception>::WrongType const& ee) {
-      if (typeid(cxy::Exception)==typeid(cxy::Exception)) {
+      if (typeid(cxy::Exception)==typeid(BaseException)) {
         throw;
       }
       throw cxy::translateException<cxy::Exception>(ee);
     }
     catch(cxy::Exception& ee) {
-      if (typeid(cxy::Exception)==typeid(cxy::Exception)) {
+      if (typeid(cxy::Exception)==typeid(BaseException)) {
         throw;
       }
       throw cxy::translateException<cxy::Exception>(ee);
