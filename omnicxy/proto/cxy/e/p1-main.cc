@@ -16,10 +16,11 @@
 #include "E.hh"
 #include <iostream>
 #include <string>
-#include "xju/format.hh"
-#include "xju/stringToInt.hh"
+#include<xju/format.hh>
+#include<xju/stringToInt.hh>
 #include <stdlib.h>
-#include "xju/mt.hh"
+#include<xju/mt.hh>
+#include <cxy/ORB.hh>
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {

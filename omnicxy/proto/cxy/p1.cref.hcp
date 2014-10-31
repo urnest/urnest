@@ -2,12 +2,12 @@
 // cxy::Exception from "cxy/Exception.hh" as base class for all exceptions
 #include <cxy/cref.hh>
 #include <cxy/Exceptions.hh>
-#include <cxy/ORB.hh>
 
 #include "p1.hh"
 
 #include "p1.objref.hh" // impl
 #include "p1.cdr.hh" // impl
+#include <cxy/ORB.hh> // impl
 #include <cxy/translateException.hh> // impl
 #include <xju/format.hh> // impl
 #include <xju/assert.hh> // impl
@@ -15,6 +15,9 @@
 
 namespace cxy
 {
+template<class E>
+class ORB;
+
 template<class T>
 class objref;
 

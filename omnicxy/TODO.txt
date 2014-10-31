@@ -30,6 +30,13 @@ x test port-in-use - E
 x test no-such-object
 x test no-such-object - E
 
+x make sure no generated headers that would be included in
+  application code include any omniORB headers (to keep
+  compilation dependencies minimal)
+
+- try to remove all omniORB headers from generated .cc too
+- try to remove all omniORB headers from cxy/*.hh too
+
 - generate proto/cxy code from p1.idl
   x p1.hcp
   x p1.cdr.hcp

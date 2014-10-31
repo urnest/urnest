@@ -1,6 +1,5 @@
 #ifndef CXY_COPYCONTEXT_HCP
 #define CXY_COPYCONTEXT_HCP
-#line 1 "/home/xju/urnest/omnicxy/cxy/copyContext.hcp"
 // Copyright (c) 2014 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
