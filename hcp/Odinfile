@@ -28,7 +28,7 @@ hcp-what-is-at
 %test-parser-run==(.)+(%test-parser-cmd):run
 
 %standalone-tests.tree == <<
-(../xju%standalone-tests.tree)
+(../xju%tests.tree)
 ()+(%test-parser-cmd):exec.output
 test%all-tests.tree
 

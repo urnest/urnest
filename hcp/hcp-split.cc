@@ -42,7 +42,8 @@ public:
   explicit OStream(std::ostream& s, bool mapFileAndLine) throw():
       s_(s),
       line_(1),
-      column_(1)
+      column_(1),
+      mapFileAndLine_(mapFileAndLine)
   {
   }
   template<class T>
@@ -71,7 +72,9 @@ public:
       if (column_!=1) {
         s_ << std::endl;
       }
-      s_ << "#line " << begin.line_ << std::endl;
+      if (mapFileAndLine_) {
+        s_ << "#line " << begin.line_ << std::endl;
+      }
     }
     while(begin != end) {
       s_ << (*begin++);
@@ -92,6 +95,7 @@ private:
   std::ostream& s_;
   int line_;
   int column_;
+  bool mapFileAndLine_;
 };
 template<class T>
 OStream& operator<<(OStream& s, T const& x)
@@ -412,8 +416,10 @@ int main(int argc, char* argv[])
                      std::ios_base::out|std::ios_base::trunc);
     
     fh << "#ifndef " << guard << std::endl
-       << "#define " << guard << std::endl
-       << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
+       << "#define " << guard << std::endl;
+    if (cmd_line.first.th_) {
+      fh << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
+    }
     
     xju::path::RelativePath const hhinc(
       std::vector<xju::path::DirName>(
