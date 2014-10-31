@@ -18,7 +18,6 @@
 #include <omniORB4/CORBA.h>
 #include <iostream> // impl
 #include <xju/format.hh>
-#include <xju/mt.hh>
 
 namespace CORBA
 {
@@ -52,33 +51,50 @@ cxy::Exception translate(CORBA::Exception const& e) throw()
       s << " reason " << ee->reason;
     }
   }
-  return cxy::Exception(s.str(), XJU_TRACED);
+  return cxy::Exception(s.str(), std::make_pair(__FILE__,__LINE__));
 }
 
-CORBA::ORB* orbInit(
+// post: result.second.first is omniORB insPOA
+//       result.second.second is its manager, which is activated
+std::pair< ::CORBA::ORB*, std::pair< ::PortableServer::POA*, ::PortableServer::POAManager*> > orbInit(
   std::string const& orbEndPoint) throw(
     cxy::Exception)
 {
-  char* argv_[]={
-    ::strdup("")
-  };
+  char emptyString[]= { 0 };
+  char* argv_[]={ emptyString };
   char** argv=argv_;
   
   int argc=sizeof(argv)/sizeof(argv[0]);
+
+  CORBA::ORB_var orb;
   try {
     const char* options[][2] = {{ "endPoint", orbEndPoint.c_str() },{ 0, 0 }};
-    CORBA::ORB* result(
-      CORBA::ORB_init(argc, argv, "omniORB4", options));
-    return result;
+    orb=CORBA::ORB_init(argc, argv, "omniORB4", options);
   }
   catch (CORBA::Exception& ex) {
     cxy::Exception e(translate(ex));
     std::ostringstream s;
     s << "CORBA::ORB_init with args "
       << xju::format::join(argv, argv+argc, ", ");
-    e.addContext(s.str(), XJU_TRACED);
+    e.addContext(s.str(), std::make_pair(__FILE__,__LINE__));
     throw e;
   }
+  ::PortableServer::POA_var insPOA;
+  ::PortableServer::POAManager_var insPOA_Manager;
+  try {
+    insPOA = PortableServer::POA::_narrow(
+      orb->resolve_initial_references("omniINSPOA"));
+    insPOA_Manager = insPOA->the_POAManager();
+    insPOA_Manager->activate();
+  }
+  catch (CORBA::Exception& ex) {
+    cxy::Exception e(translate(ex));
+    std::ostringstream s;
+    s << "get omniORB insPOA at endpoint " << orbEndPoint;
+    e.addContext(s.str(), std::make_pair(__FILE__,__LINE__));
+    throw e;
+  }
+  return std::make_pair(orb._retn(), std::make_pair(insPOA._retn(), insPOA_Manager._retn()));
 }
 }
 
@@ -91,21 +107,17 @@ public:
   explicit ORBImpl(std::string const& orbEndPoint) throw(
     cxy::Exception):
       orbEndPoint_(orbEndPoint),
-      orb_(orbInit(orbEndPoint)),
-      insPOA_(0),
-      insPOA_Manager_(0)
+      orb_etc_(orbInit(orbEndPoint)),
+      orb_(orb_etc_.first),
+      insPOA_(orb_etc_.second.first),
+      insPOA_Manager_(orb_etc_.second.second)
   {
-    insPOA();
   }
   ~ORBImpl() throw()
   {
-    if (insPOA_Manager_) {
-      insPOA_Manager_->deactivate(false, true);
-      CORBA::release(insPOA_Manager_);
-    }
-    if (insPOA_) {
-      CORBA::release(insPOA_);
-    }
+    insPOA_Manager_->deactivate(false, true);
+    CORBA::release(insPOA_Manager_);
+    CORBA::release(insPOA_);
     delete orb_;
   }
   // post: lifetime(result) includes lifetime(this)
@@ -113,22 +125,6 @@ public:
     // eg port in use
     cxy::Exception)
   {
-    xju::mt::Lock l(guard_);
-    if (!insPOA_) {
-      try {
-        insPOA_ = PortableServer::POA::_narrow(
-          orb_->resolve_initial_references("omniINSPOA"));
-        insPOA_Manager_ = insPOA_->the_POAManager();
-        insPOA_Manager_->activate();
-      }
-      catch (CORBA::Exception& ex) {
-        cxy::Exception e(translate(ex));
-        std::ostringstream s;
-        s << "get omniORB insPOA at endpoint " << orbEndPoint_;
-        e.addContext(s.str(), XJU_TRACED);
-        throw e;
-      }
-    }
     return *insPOA_;
   }
   void run() throw(
@@ -206,8 +202,8 @@ public:
   
 private:
   std::string const orbEndPoint_;
+  std::pair< ::CORBA::ORB*, std::pair< ::PortableServer::POA*, ::PortableServer::POAManager*> > orb_etc_;
   ::CORBA::ORB* orb_;
-  xju::mt::Mutex guard_;
   ::PortableServer::POA* insPOA_;
   ::PortableServer::POAManager* insPOA_Manager_;
   
