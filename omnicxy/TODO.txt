@@ -34,7 +34,10 @@ x make sure no generated headers that would be included in
   application code include any omniORB headers (to keep
   compilation dependencies minimal)
 
-- try to remove all omniORB headers from generated .cc too
+- try to remove all omniORB headers from all other generated:
+  - .cc
+  - objeref.hcp
+
 - try to remove all omniORB headers from cxy/*.hh too
 
 - generate proto/cxy code from p1.idl
@@ -52,6 +55,8 @@ x make sure no generated headers that would be included in
   p1.sref.hcp
 
 - test client wrong type exception
+
+- add a two-process client server test
 
 - allow cref cons/assign from super-class-cref
 

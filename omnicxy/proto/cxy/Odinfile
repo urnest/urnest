@@ -7,12 +7,14 @@
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p1-main) '3735' 'both':exec.output
 %test-transient
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%test-no-such-object) '3740':exec.output
+()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%test-duplicate-name) '3741':exec.output
 
 %cxx-opts==<<
 +(../..%cxx-opts)
 
 %p1-main==p1-main.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
+%test-duplicate-name==test-duplicate-name.cc+(%cxx-opts):auto.cxx.exe
 
 %dummy.hcp==<<
 

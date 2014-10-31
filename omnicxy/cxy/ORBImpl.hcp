@@ -200,8 +200,8 @@ public:
     }
   }
   
-private:
   std::string const orbEndPoint_;
+private:
   std::pair< ::CORBA::ORB*, std::pair< ::PortableServer::POA*, ::PortableServer::POAManager*> > orb_etc_;
   ::CORBA::ORB* orb_;
   ::PortableServer::POA* insPOA_;

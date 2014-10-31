@@ -31,7 +31,7 @@ public:
             std::string const& name,
             const char* repoId,
             sref_if& sref) throw(
-              cxy::Exceptions<cxy::Exception>::DuplicateName):
+              cxy::Exceptions<cxy::Exception>::DuplicateName) try:
       orb_(orb),
       repoId_(repoId),
       sref_(sref)
@@ -42,11 +42,21 @@ public:
       _remove_ref();
     }
     catch(PortableServer::POA::ObjectAlreadyActive const& e) {
+      sref_.impl_deleted();
       std::ostringstream s;
       s << xju::format::quote(name) << " is already in use";
       throw cxy::Exceptions<cxy::Exception>::DuplicateName(s.str(), std::make_pair(__FILE__, __LINE__));
     }
   }
+  catch(cxy::Exceptions<cxy::Exception>::DuplicateName& e)
+  {
+    std::ostringstream s;
+    s << "create CORBA servant with corbaloc name " << xju::format::quote(name)
+      << " in ORB at " << orb.orbEndPoint_;
+    e.addContext(s.str(), std::make_pair(__FILE__,__LINE__));
+    throw;
+  }
+  
   ~sref_impl() throw()
   {
     sref_.impl_deleted();
