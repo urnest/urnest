@@ -86,15 +86,6 @@ public:
     ::CORBA::release(obj_);
   }
   
-  void f1() throw(
-    // ipc failure
-    E)
-  {
-    xju::assert_not_equal(obj_, (void*)0);
-    xju::assert_not_equal(true, obj_->_NP_is_nil());
-    obj_->f1();
-  }
-
   p1::F* operator->() throw()
   {
     return obj_;
@@ -104,6 +95,15 @@ public:
     return obj_;
   }
   
+  void f1() throw(
+    // ipc failure
+    E)
+  {
+    xju::assert_not_equal(obj_, (void*)0);
+    xju::assert_not_equal(true, obj_->_NP_is_nil());
+    obj_->f1();
+  }
+
 private:
   std::string uri_;
   cxy::objref< ::p1::F>* obj_;

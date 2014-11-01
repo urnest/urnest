@@ -43,7 +43,7 @@ x make sure no generated headers that would be included in
 - generate proto/cxy code from p1.idl
   x p1.hcp
   x p1.cdr.hcp
-  p1.cref.hcp
+  x p1.cref.hcp
   p1.objref.hcp
   p1.sref.hcp
 
@@ -54,7 +54,11 @@ x make sure no generated headers that would be included in
   p1.objref.hcp
   p1.sref.hcp
 
+- omnicxy odin package
+
 - test client wrong type exception
+
+x test duplicate object name exception
 
 - add a two-process client server test
 
