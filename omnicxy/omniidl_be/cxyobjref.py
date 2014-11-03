@@ -127,35 +127,27 @@ def reindent(indent, s):
     return '\n'.join([indent+_ for _ in s.split('\n')])
 
 def genCalldesc(decl,indent,fqn):
-    result=''
-    if isinstance(decl, idlast.Operation):
-        name=decl.identifier()
-        assert not decl.oneway(), 'oneway not yet implemented'
-        assert len(decl.parameters())==0, 'parameters not yet implemented'
-        assert len(decl.raises())==0, 'raises not yet implemented'
-        assert len(decl.contexts())==0, 'contexts not yet implemented'
-        assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
-        
-        result=reindent(indent,calldesc_operation_t%vars())
-    else:
-        assert False, repr(decl)
-        pass
+    assert isinstance(decl, idlast.Operation),repr(decl)
+    name=decl.identifier()
+    assert not decl.oneway(), 'oneway not yet implemented'
+    assert len(decl.parameters())==0, 'parameters not yet implemented'
+    assert len(decl.raises())==0, 'raises not yet implemented'
+    assert len(decl.contexts())==0, 'contexts not yet implemented'
+    assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
+    
+    result=reindent(indent,calldesc_operation_t%vars())
     return result
 
 def genObjref(decl,indent,fqn):
-    result=''
-    if isinstance(decl, idlast.Operation):
-        name=decl.identifier()
-        assert not decl.oneway(), 'oneway not yet implemented'
-        assert len(decl.parameters())==0, 'parameters not yet implemented'
-        assert len(decl.raises())==0, 'raises not yet implemented'
-        assert len(decl.contexts())==0, 'contexts not yet implemented'
-        assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
-        
-        result=reindent(indent,objref_operation_t%vars())
-    else:
-        assert False, repr(decl)
-        pass
+    assert isinstance(decl, idlast.Operation), repr(decl)
+    name=decl.identifier()
+    assert not decl.oneway(), 'oneway not yet implemented'
+    assert len(decl.parameters())==0, 'parameters not yet implemented'
+    assert len(decl.raises())==0, 'raises not yet implemented'
+    assert len(decl.contexts())==0, 'contexts not yet implemented'
+    assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
+    
+    result=reindent(indent,objref_operation_t%vars())
     return result
 
 def gen(decl,indent=''):
@@ -165,8 +157,12 @@ def gen(decl,indent=''):
     elif isinstance(decl, idlast.Interface):
         fqn='::'.join(decl.scopedName())
         repoId=decl.repoId()
-        calldesc_content=''.join([genCalldesc(_,indent+'  ',fqn) for _ in decl.contents()])
-        objref_content=''.join([genObjref(_,indent+'  ',fqn) for _ in decl.contents()])
+        calldesc_content=''.join([genCalldesc(_,indent+'  ',fqn) \
+                                      for _ in decl.contents()\
+                                      if isinstance(_,idlast.Operation)])
+        objref_content=''.join([genObjref(_,indent+'  ',fqn)\
+                                    for _ in decl.contents()\
+                                    if isinstance(_,idlast.Operation)])
         result=interface_t%vars()
     else:
         assert False, repr(decl)

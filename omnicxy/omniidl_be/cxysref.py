@@ -138,34 +138,27 @@ def reindent(indent, s):
 
 def genOperation(decl,indent,fqn):
     result=''
-    if isinstance(decl, idlast.Operation):
-        name=decl.identifier()
-        assert not decl.oneway(), 'oneway not yet implemented'
-        assert len(decl.parameters())==0, 'parameters not yet implemented'
-        assert len(decl.raises())==0, 'raises not yet implemented'
-        assert len(decl.contexts())==0, 'contexts not yet implemented'
-        assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
-        
-        result=reindent(indent,operation_t%vars())
-    else:
-        assert False, repr(decl)
-        pass
+    assert isinstance(decl, idlast.Operation), repr(decl)
+    name=decl.identifier()
+    assert not decl.oneway(), 'oneway not yet implemented'
+    assert len(decl.parameters())==0, 'parameters not yet implemented'
+    assert len(decl.raises())==0, 'raises not yet implemented'
+    assert len(decl.contexts())==0, 'contexts not yet implemented'
+    assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
+    
+    result=reindent(indent,operation_t%vars())
     return result
 
 def genDispatcher(decl,indent,fqn):
-    result=''
-    if isinstance(decl, idlast.Operation):
-        name=decl.identifier()
-        assert not decl.oneway(), 'oneway not yet implemented'
-        assert len(decl.parameters())==0, 'parameters not yet implemented'
-        assert len(decl.raises())==0, 'raises not yet implemented'
-        assert len(decl.contexts())==0, 'contexts not yet implemented'
-        assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
-        
-        result=reindent(indent,dispatcher_t%vars())
-    else:
-        assert False, repr(decl)
-        pass
+    assert isinstance(decl, idlast.Operation), repr(decl)
+    name=decl.identifier()
+    assert not decl.oneway(), 'oneway not yet implemented'
+    assert len(decl.parameters())==0, 'parameters not yet implemented'
+    assert len(decl.raises())==0, 'raises not yet implemented'
+    assert len(decl.contexts())==0, 'contexts not yet implemented'
+    assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
+    
+    result=reindent(indent,dispatcher_t%vars())
     return result
 
 def genForward(scopedName):
@@ -183,8 +176,12 @@ def gen(decl,indent=''):
         fqn='::'.join(decl.scopedName())
         repoId=decl.repoId()
         forward=genForward(decl.scopedName())
-        operations=''.join([genOperation(_,indent+'  ',fqn) for _ in decl.contents()])
-        dispatchers=''.join([genDispatcher(_,indent+'  ',fqn) for _ in decl.contents()])
+        operations=''.join([genOperation(_,indent+'  ',fqn) \
+                                for _ in decl.contents() \
+                                if isinstance(_,idlast.Operation)])
+        dispatchers=''.join([genDispatcher(_,indent+'  ',fqn) \
+                                 for _ in decl.contents()\
+                                 if isinstance(_,idlast.Operation)])
         result=interface_t%vars()
     else:
         assert False, repr(decl)
