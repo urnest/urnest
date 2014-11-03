@@ -1,31 +1,30 @@
-// generated from p1.idl by omni cxy_sref idl backend specifying 
+// generated from p1.idl by omnicxy cxysref idl backend specifying 
 // cxy::Exception from <cxy/Exception.hh> as base class for all exceptions
 #include <cxy/sref.hh>
 #include <cxy/sref_if.hh>
 #include <cxy/Exceptions.hh>
-
 #include <cxy/Exception.hh>
 
 #include "p1.hh" // impl
+#include "p1.cdr.hh" // impl
 
 #include <cxy/ORB.hh> // impl
 #include <cxy/sref_impl.hh> // impl
-#include "p1.cdr.hh" // impl
 #include <omniORB4/callDescriptor.h> // impl
 #include <omniORB4/callHandle.h> // impl
 #include <omniORB4/omniServant.h> // impl
 
-#include "xju/mt.hh"
+#include <xju/mt.hh>
 #include <string>
 
 class omniCallHandle;
 class omniCallDescriptor;
 class omniServant;
 
-namespace p1
-{
+namespace p1 {
 class F;
 }
+
 
 namespace cxy
 {
@@ -72,6 +71,8 @@ public:
   ~sref() throw()
   {
     xju::mt::Lock l(guard_);
+    // impl might be deleted during deactivate or sometime after, which
+    // is why we use a separate thread
     xju::mt::Thread<sref_impl> t(*impl_, &sref_impl::deactivate);
     while(!impl_deleted_) {
       c_.wait(l);
@@ -82,6 +83,7 @@ public:
   ::p1::F& x_;
   
 private:
+    
   class f1 
   {
   public:
@@ -94,17 +96,20 @@ private:
       0
     };
   };
+  
 
   // sref_if::
   virtual bool _dispatch(omniCallHandle& _handle) throw()
   {
     const char* op = _handle.operation_name();
     
+      
     if (omni::strMatch(op, "f1")) {
       omniCallDescriptor c(f1::lcfn, "f1", 3, 0, f1::_user_exns, 0, 1);
       _handle.upcall(impl_, c);
       return 1;
     }
+  
     return 0;
   }
 
@@ -126,7 +131,6 @@ private:
     return 0;
   }
   
-
   // sref_if::
   virtual void impl_deleted() throw()
   {
@@ -141,7 +145,5 @@ private:
   cxy::sref_impl* impl_;
   
 };
-
 }
 
-  

@@ -44,8 +44,8 @@ x make sure no generated headers that would be included in
   x p1.hcp
   x p1.cdr.hcp
   x p1.cref.hcp
-  p1.objref.hcp
-  p1.sref.hcp
+  x p1.objref.hcp
+  x p1.sref.hcp
 
 - generate proto/cxy/e code from p1.idl
   p1.hcp
