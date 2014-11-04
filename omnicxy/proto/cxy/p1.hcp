@@ -1,7 +1,7 @@
 // generated from p1.idl by omni cxy idl backend specifying 
-// cxy::Exception from "cxy/Exception.hh" as base class for all ipc exceptions
+// cxy::Exception from <cxy/Exception.hh> as base class for all ipc exceptions
 
-#include "cxy/Exception.hh"
+#include <cxy/Exception.hh>
 
 namespace p1
 {

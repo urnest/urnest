@@ -16,6 +16,12 @@
 %p1-main==p1-main.cc+(../../..%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 
+%dummy.hcp==<<
+
+p1.hcp==(%dummy.hcp)+cmd=(../../../omniidl_be/omniidl.sh) (../../../omniidl_be/cxy.py) '-Wb-eE=./E.hh' (../../p1.idl):stdout
+
+p1.cref.hcp==(%dummy.hcp)+cmd=(../../../omniidl_be/omniidl.sh) (../../../omniidl_be/cxycref.py) '-Wb-eE=./E.hh' (../../p1.idl):stdout
+
 %dummy.hh==<<
 
 p1.hh==%p1/p1.hh

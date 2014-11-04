@@ -1,7 +1,8 @@
-// generated from p1.idl by omni cxy_cref idl backend specifying 
+// generated from p1.idl by omnicxy cxycref idl backend specifying 
 // E from "E.hh" as base class for all exceptions
 #include <cxy/cref.hh>
 #include <cxy/Exceptions.hh>
+#include "E.hh"
 
 #include "p1.hh"
 
@@ -11,8 +12,7 @@
 #include <cxy/translateException.hh> // impl
 #include <xju/format.hh> // impl
 #include <xju/assert.hh> // impl
-
-#include "E.hh"
+#include <string>
 
 namespace cxy
 {
@@ -36,31 +36,9 @@ public:
     E):
       uri_(uri),
       obj_((&cxy::pof< ::p1::F>::me_(), // force init of static var,
-            (cxy::objref< ::p1::F>*)0))
+            (cxy::objref< ::p1::F>*)orb.locate(
+              uri, cxy::cdr< ::p1::F>::repoId)))
   {
-    try {
-      obj_ = (cxy::objref< ::p1::F>*)orb.impl_.locate(
-        uri, 
-        cxy::cdr< ::p1::F>::repoId);
-    }
-    catch(cxy::Exceptions<cxy::Exception>::NoSuchObject const& ee) {
-      if (typeid(E)==typeid(cxy::Exception)) {
-        throw;
-      }
-      throw cxy::translateException<E>(ee);
-    }
-    catch(cxy::Exceptions<cxy::Exception>::WrongType const& ee) {
-      if (typeid(E)==typeid(cxy::Exception)) {
-        throw;
-      }
-      throw cxy::translateException<E>(ee);
-    }
-    catch(cxy::Exception const& ee) {
-      if (typeid(E)==typeid(cxy::Exception)) {
-        throw;
-      }
-      throw cxy::translateException<E>(ee);
-    }
   }
   
   cref(cref const& b) throw():
@@ -94,7 +72,7 @@ public:
   {
     return obj_;
   }
-  
+    
   void f1() throw(
     // ipc failure
     E)
@@ -103,9 +81,11 @@ public:
     xju::assert_not_equal(true, obj_->_NP_is_nil());
     obj_->f1();
   }
-
+  
 private:
   std::string uri_;
   cxy::objref< ::p1::F>* obj_;
 };
+
 }
+

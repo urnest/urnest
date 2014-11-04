@@ -1,7 +1,8 @@
 // generated from p1.idl by omnicxy cxycref idl backend specifying 
-// cxy::Exception from "cxy/Exception.hh" as base class for all exceptions
+// cxy::Exception from <cxy/Exception.hh> as base class for all exceptions
 #include <cxy/cref.hh>
 #include <cxy/Exceptions.hh>
+#include <cxy/Exception.hh>
 
 #include "p1.hh"
 

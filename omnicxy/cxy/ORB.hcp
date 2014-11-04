@@ -100,19 +100,19 @@ private:
       if (typeid(cxy::Exception)==typeid(BaseException)) {
         throw;
       }
-      throw cxy::translateException<cxy::Exception>(ee);
+      throw cxy::translateException<BaseException>(ee);
     }
     catch(cxy::Exceptions<cxy::Exception>::WrongType const& ee) {
       if (typeid(cxy::Exception)==typeid(BaseException)) {
         throw;
       }
-      throw cxy::translateException<cxy::Exception>(ee);
+      throw cxy::translateException<BaseException>(ee);
     }
     catch(cxy::Exception& ee) {
       if (typeid(cxy::Exception)==typeid(BaseException)) {
         throw;
       }
-      throw cxy::translateException<cxy::Exception>(ee);
+      throw cxy::translateException<BaseException>(ee);
     }
   }
 

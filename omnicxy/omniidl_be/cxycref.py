@@ -7,7 +7,7 @@ import os.path
 operation_t='''
 void %(name)s() throw(
   // ipc failure
-  cxy::Exception)
+  %(eclass)s)
 {
   xju::assert_not_equal(obj_, (void*)0);
   xju::assert_not_equal(true, obj_->_NP_is_nil());
@@ -20,14 +20,14 @@ template<>
 class cref< ::%(fqn)s>
 {
 public:
-  explicit cref(cxy::ORB<cxy::Exception>& orb, std::string const& uri) throw(
+  explicit cref(cxy::ORB<%(eclass)s>& orb, std::string const& uri) throw(
     // no object with specified uri, including server
     // not reachable and server does not know name
-    cxy::Exceptions<cxy::Exception>::NoSuchObject,
+    cxy::Exceptions<%(eclass)s>::NoSuchObject,
     // object with specified uri is not a %(fqn)s
-    cxy::Exceptions<cxy::Exception>::WrongType,
+    cxy::Exceptions<%(eclass)s>::WrongType,
     // other failure, eg communication failure
-    cxy::Exception):
+    %(eclass)s):
       uri_(uri),
       obj_((&cxy::pof< ::%(fqn)s>::me_(), // force init of static var,
             (cxy::objref< ::%(fqn)s>*)orb.locate(
@@ -77,14 +77,14 @@ def reindent(indent, s):
     '''prepend %(indent)r to each line of %(s)r'''
     return '\n'.join([indent+_ for _ in s.split('\n')])
 
-def gen(decl,indent=''):
+def gen(decl,eclass,eheader,indent=''):
     result=''
     if isinstance(decl, idlast.Module):
-        result=''.join(gen(_) for _ in decl.definitions())
+        result=''.join(gen(_,eclass,eheader) for _ in decl.definitions())
     elif isinstance(decl, idlast.Interface):
         fqn='::'.join(decl.scopedName())
         repoId=decl.repoId()
-        content=''.join([gen(_,indent+'  ') for _ in decl.contents()])
+        content=''.join([gen(_,eclass,eheader,indent+'  ') for _ in decl.contents()])
         result=interface_t%vars()
     elif isinstance(decl, idlast.Operation):
         name=decl.identifier()
@@ -101,9 +101,10 @@ def gen(decl,indent=''):
 
 template='''\
 // generated from %(fileName)s by omnicxy cxycref idl backend specifying 
-// cxy::Exception from "cxy/Exception.hh" as base class for all exceptions
+// %(eclass)s from %(eheader)s as base class for all exceptions
 #include <cxy/cref.hh>
 #include <cxy/Exceptions.hh>
+#include %(eheader)s
 
 #include "%(baseName)s.hh"
 
@@ -128,9 +129,14 @@ class objref;
 '''
 
 def run(tree, args):
+    eclass,eheader=([_.split('-e',1)[1].split('=',1) for _ in args if _.startswith('-e')]+[('cxy::Exception','cxy/Exception.hh')])[0]
+    if eheader.startswith('./'):
+        eheader='"%s"'%eheader[2:]
+    else:
+        eheader='<%s>'%eheader
     assert tree.file().endswith('.idl'), tree.file()
     fileName=os.path.basename(tree.file())
     baseName=fileName[0:-4]
-    items=''.join([gen(_) for _ in tree.declarations() if _.mainFile()])
+    items=''.join([gen(_,eclass,eheader) for _ in tree.declarations() if _.mainFile()])
     print template % vars()
     pass

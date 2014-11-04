@@ -40,7 +40,7 @@ x make sure no generated headers that would be included in
 
 - try to remove all omniORB headers from cxy/*.hh too
 
-- generate proto/cxy code from p1.idl
+x generate proto/cxy code from p1.idl
   x p1.hcp
   x p1.cdr.hcp
   x p1.cref.hcp
@@ -48,11 +48,14 @@ x make sure no generated headers that would be included in
   x p1.sref.hcp
 
 - generate proto/cxy/e code from p1.idl
-  p1.hcp
+  ... via eg -Wb-eE=E.hh
+  x p1.hcp
   p1.cdr.hcp
-  p1.cref.hcp
+  x p1.cref.hcp
   p1.objref.hcp
   p1.sref.hcp
+
+- allow "" v <> control for -e eg ./x/E.hh -> "x/E.hh"; x/E.hh -> <x/E.hh>
 
 - omnicxy odin package
 

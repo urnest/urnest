@@ -19,22 +19,22 @@ operation_t='''\
 virtual void %(name)s() throw(
   // ipc failure
   // - note servant may not throw
-  cxy::Exception) = 0;'''
+  %(eclass)s) = 0;'''
 
 def reindent(indent, s):
     '''prepend %(indent)r to each line of %(s)r'''
     return '\n'.join([indent+_ for _ in s.split('\n')])
 
-def gen(decl,indent=''):
+def gen(decl,eclass,eheader,indent=''):
     result=''
     if isinstance(decl, idlast.Module):
         ns=decl.identifier()
         result='%(indent)snamespace %(ns)s\n%(indent)s{\n'%vars()
-        result=result+''.join([gen(_,indent)+'\n' for _ in decl.definitions()])
+        result=result+''.join([gen(_,eclass,eheader,indent)+'\n' for _ in decl.definitions()])
         result=result+'%(indent)s}'%vars()
     elif isinstance(decl, idlast.Interface):
         name=decl.identifier()
-        content='\n'.join([gen(_,indent+'  ') for _ in decl.contents()])
+        content='\n'.join([gen(_,eclass,eheader,indent+'  ') for _ in decl.contents()])
         result=reindent(indent,interface_t%vars())
     elif isinstance(decl, idlast.Operation):
         name=decl.identifier()
@@ -51,13 +51,18 @@ def gen(decl,indent=''):
 
 head='''\
 // generated from %(fileName)s by omni cxy idl backend specifying 
-// cxy::Exception from "cxy/Exception.hh" as base class for all ipc exceptions
+// %(eclass)s from %(eheader)s as base class for all ipc exceptions
 
-#include "cxy/Exception.hh"
+#include %(eheader)s
 '''
 
 def run(tree, args):
+    eclass,eheader=([_.split('-e',1)[1].split('=',1) for _ in args if _.startswith('-e')]+[('cxy::Exception','cxy/Exception.hh')])[0]
+    if eheader.startswith('./'):
+        eheader='"%s"'%eheader[2:]
+    else:
+        eheader='<%s>'%eheader
     fileName=os.path.basename(tree.file())
     print head % vars()
-    print '\n'.join([gen(_) for _ in tree.declarations() if _.mainFile()])
+    print '\n'.join([gen(_,eclass,eheader) for _ in tree.declarations() if _.mainFile()])
     pass
