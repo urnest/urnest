@@ -8,6 +8,11 @@
 ORBImpl.hh==%ORBImpl/ORBImpl.hh
 ORBImpl.cc==%ORBImpl/ORBImpl.cc
 
+WrongType.hh==%WrongType/WrongType.hh
+WrongType.cc==%WrongType/WrongType.cc
+
+%WrongType==()+cmd=(../../hcp/hcp-split) -l 1 (WrongType.hcp) 'WrongType.hh' 'WrongType.cc':output
+
 cref.hh==%cref/cref.hh
 cref.cc==%cref/cref.cc
 

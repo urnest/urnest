@@ -18,6 +18,7 @@
 #include <omniORB4/CORBA.h>
 #include <iostream> // impl
 #include <xju/format.hh>
+#include "WrongType.hh"
 
 namespace CORBA
 {
@@ -156,7 +157,7 @@ public:
     }
   }
   void* locate(std::string const& uri, std::string const& repoId) throw(
-    cxy::Exceptions<cxy::Exception>::WrongType,
+    cxy::WrongType,
     cxy::Exceptions<cxy::Exception>::NoSuchObject,
     cxy::Exception)
   {
@@ -174,7 +175,7 @@ public:
           std::ostringstream s;
           s << xju::format::quote(uri) << " is not a "
             << repoId;
-          throw cxy::Exceptions<cxy::Exception>::WrongType(
+          throw cxy::WrongType(
             s.str(), std::make_pair(__FILE__, __LINE__));
         }
         return result;

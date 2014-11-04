@@ -14,6 +14,7 @@
 #include "Exceptions.hh"
 #include "Exception.hh"
 #include "copyContext.hh"
+#include "WrongType.hh"
 
 namespace cxy
 {
@@ -60,7 +61,7 @@ typename cxy::Exceptions<E>::NoSuchObject translateException(
 
 template<class E>
 typename cxy::Exceptions<E>::WrongType translateException(
-  cxy::Exceptions<cxy::Exception>::WrongType const& e)
+  cxy::WrongType const& e)
 {
   typename cxy::Exceptions<E>::WrongType result(
     e.cause_.first, e.cause_.second);
