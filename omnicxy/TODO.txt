@@ -47,13 +47,13 @@ x generate proto/cxy code from p1.idl
   x p1.objref.hcp
   x p1.sref.hcp
 
-- generate proto/cxy/e code from p1.idl
+x generate proto/cxy/e code from p1.idl
   ... via eg -Wb-eE=E.hh
   x p1.hcp
-  p1.cdr.hcp
+  x p1.cdr.hcp
   x p1.cref.hcp
-  p1.objref.hcp
-  p1.sref.hcp
+  x p1.objref.hcp
+  x p1.sref.hcp
 
 - allow "" v <> control for -e eg ./x/E.hh -> "x/E.hh"; x/E.hh -> <x/E.hh>
 

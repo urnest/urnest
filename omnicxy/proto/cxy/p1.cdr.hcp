@@ -1,4 +1,4 @@
-// generated from p1.idl by cxy.misc idl backend
+// generated from p1.idl by omnicxy cxycdr idl backend
 
 #include <cxy/cdr.hh>
 

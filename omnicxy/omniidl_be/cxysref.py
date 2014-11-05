@@ -43,10 +43,10 @@ class sref< ::%(fqn)s> :  private sref_if
 public:
   // pre: lifetime(x) includes lifetime(this)
   // pre: lifetime(orb) includes lifetime(this)
-  sref(cxy::ORB<cxy::Exception>& orb, 
+  sref(cxy::ORB<%(eclass)s>& orb, 
        std::string const& name,
        ::%(fqn)s& x) throw(
-         cxy::Exceptions<cxy::Exception>::DuplicateName) try:
+         cxy::Exceptions<%(eclass)s>::DuplicateName) try:
       name_(name),
       x_(x),
       c_(guard_),
@@ -59,10 +59,10 @@ public:
   }
   catch(cxy::Exceptions<cxy::Exception>::DuplicateName& e)
   {
-    if (typeid(e)==typeid(cxy::Exception)) {
+    if (typeid(%(eclass)s)==typeid(cxy::Exception)) {
       throw;
     }
-    cxy::Exceptions<cxy::Exception>::DuplicateName ee(
+    cxy::Exceptions<%(eclass)s>::DuplicateName ee(
       e.cause_.first, e.cause_.second);
     for (std::vector<std::pair<std::string, cxy::Exception::FileAndLine> >::const_iterator i=
            e.context_.begin();
@@ -136,7 +136,7 @@ def reindent(indent, s):
     '''prepend %(indent)r to each line of %(s)r'''
     return '\n'.join([indent+_ for _ in s.split('\n')])
 
-def genOperation(decl,indent,fqn):
+def genOperation(decl,eclass,eheader,indent,fqn):
     result=''
     assert isinstance(decl, idlast.Operation), repr(decl)
     name=decl.identifier()
@@ -149,7 +149,7 @@ def genOperation(decl,indent,fqn):
     result=reindent(indent,operation_t%vars())
     return result
 
-def genDispatcher(decl,indent,fqn):
+def genDispatcher(decl,eclass,eheader,indent,fqn):
     assert isinstance(decl, idlast.Operation), repr(decl)
     name=decl.identifier()
     assert not decl.oneway(), 'oneway not yet implemented'
@@ -168,20 +168,23 @@ def genForward(scopedName):
         genForward(scopedName[1:])+\
         '}\n'
 
-def gen(decl,indent=''):
+def gen(decl,eclass,eheader,indent=''):
     result=''
     if isinstance(decl, idlast.Module):
-        result=''.join(gen(_) for _ in decl.definitions())
+        result=''.join(
+            gen(_,eclass,eheader,indent) for _ in decl.definitions())
     elif isinstance(decl, idlast.Interface):
         fqn='::'.join(decl.scopedName())
         repoId=decl.repoId()
         forward=genForward(decl.scopedName())
-        operations=''.join([genOperation(_,indent+'  ',fqn) \
-                                for _ in decl.contents() \
-                                if isinstance(_,idlast.Operation)])
-        dispatchers=''.join([genDispatcher(_,indent+'  ',fqn) \
-                                 for _ in decl.contents()\
-                                 if isinstance(_,idlast.Operation)])
+        operations=''.join(
+            [genOperation(_,eclass,eheader,indent+'  ',fqn) \
+                 for _ in decl.contents() \
+                 if isinstance(_,idlast.Operation)])
+        dispatchers=''.join(
+            [genDispatcher(_,eclass,eheader,indent+'  ',fqn) \
+                 for _ in decl.contents()\
+                 if isinstance(_,idlast.Operation)])
         result=interface_t%vars()
     else:
         assert False, repr(decl)
@@ -190,11 +193,11 @@ def gen(decl,indent=''):
 
 template='''\
 // generated from %(fileName)s by omnicxy cxysref idl backend specifying 
-// cxy::Exception from <cxy/Exception.hh> as base class for all exceptions
+// %(eclass)s from %(eheader)s as base class for all exceptions
 #include <cxy/sref.hh>
 #include <cxy/sref_if.hh>
 #include <cxy/Exceptions.hh>
-#include <cxy/Exception.hh>
+#include %(eheader)s
 
 #include "p1.hh" // impl
 #include "p1.cdr.hh" // impl
@@ -216,9 +219,15 @@ class omniServant;
 '''
 
 def run(tree, args):
+    eclass,eheader=([_.split('-e',1)[1].split('=',1) for _ in args if _.startswith('-e')]+[('cxy::Exception','cxy/Exception.hh')])[0]
+    if eheader.startswith('./'):
+        eheader='"%s"'%eheader[2:]
+    else:
+        eheader='<%s>'%eheader
     assert tree.file().endswith('.idl'), tree.file()
     fileName=os.path.basename(tree.file())
     baseName=fileName[0:-4]
-    items=''.join([gen(_) for _ in tree.declarations() if _.mainFile()])
+    items=''.join(
+        [gen(_,eclass,eheader) for _ in tree.declarations() if _.mainFile()])
     print template % vars()
     pass

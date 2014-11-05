@@ -55,7 +55,7 @@ public:
   }
   catch(cxy::Exceptions<cxy::Exception>::DuplicateName& e)
   {
-    if (typeid(e)==typeid(cxy::Exception)) {
+    if (typeid(cxy::Exception)==typeid(cxy::Exception)) {
       throw;
     }
     cxy::Exceptions<cxy::Exception>::DuplicateName ee(

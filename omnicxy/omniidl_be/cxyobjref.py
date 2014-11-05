@@ -30,14 +30,14 @@ public:
 objref_operation_t='''
 // %(fqn)s::
 void %(name)s() throw(
-  cxy::Exception)
+  %(eclass)s)
 {
   try {
     cxy::calldesc< ::%(fqn)s>::%(name)s c("%(name)s", 3, 0);
     _invoke(c);
   }
   catch(CORBA::Exception const& ee) {
-    cxy::Exception e(cxy::translateException<cxy::Exception>(ee));
+    %(eclass)s e(cxy::translateException<%(eclass)s>(ee));
     e.addContext("%(fqn)s::%(name)s()", std::make_pair(__FILE__, __LINE__)); // REVISIT: add ior / id
     throw e;
   }
@@ -126,7 +126,7 @@ def reindent(indent, s):
     '''prepend %(indent)r to each line of %(s)r'''
     return '\n'.join([indent+_ for _ in s.split('\n')])
 
-def genCalldesc(decl,indent,fqn):
+def genCalldesc(decl,eclass,eheader,indent,fqn):
     assert isinstance(decl, idlast.Operation),repr(decl)
     name=decl.identifier()
     assert not decl.oneway(), 'oneway not yet implemented'
@@ -138,7 +138,7 @@ def genCalldesc(decl,indent,fqn):
     result=reindent(indent,calldesc_operation_t%vars())
     return result
 
-def genObjref(decl,indent,fqn):
+def genObjref(decl,eclass,eheader,indent,fqn):
     assert isinstance(decl, idlast.Operation), repr(decl)
     name=decl.identifier()
     assert not decl.oneway(), 'oneway not yet implemented'
@@ -150,19 +150,21 @@ def genObjref(decl,indent,fqn):
     result=reindent(indent,objref_operation_t%vars())
     return result
 
-def gen(decl,indent=''):
+def gen(decl,eclass,eheader,indent=''):
     result=''
     if isinstance(decl, idlast.Module):
-        result=''.join(gen(_) for _ in decl.definitions())
+        result=''.join(gen(_,eclass,eheader,indent) for _ in decl.definitions())
     elif isinstance(decl, idlast.Interface):
         fqn='::'.join(decl.scopedName())
         repoId=decl.repoId()
-        calldesc_content=''.join([genCalldesc(_,indent+'  ',fqn) \
-                                      for _ in decl.contents()\
-                                      if isinstance(_,idlast.Operation)])
-        objref_content=''.join([genObjref(_,indent+'  ',fqn)\
-                                    for _ in decl.contents()\
-                                    if isinstance(_,idlast.Operation)])
+        calldesc_content=''.join(
+            [genCalldesc(_,eclass,eheader,indent+'  ',fqn) \
+                 for _ in decl.contents()\
+                 if isinstance(_,idlast.Operation)])
+        objref_content=''.join(
+            [genObjref(_,eclass,eheader,indent+'  ',fqn)\
+                 for _ in decl.contents()\
+                 if isinstance(_,idlast.Operation)])
         result=interface_t%vars()
     else:
         assert False, repr(decl)
@@ -171,7 +173,7 @@ def gen(decl,indent=''):
 
 template='''\
 // generated from %(fileName)s by omnicxy cxyobjref idl backend specifying 
-// cxy::Exception from "cxy/Exception.hh" as base class for all ipc exceptions
+// %(eclass)s from %(eheader)s as base class for all ipc exceptions
 #include "%(baseName)s.hh"
 #include "%(baseName)s.cdr.hh"
 
@@ -193,9 +195,14 @@ namespace cxy
 '''
 
 def run(tree, args):
+    eclass,eheader=([_.split('-e',1)[1].split('=',1) for _ in args if _.startswith('-e')]+[('cxy::Exception','cxy/Exception.hh')])[0]
+    if eheader.startswith('./'):
+        eheader='"%s"'%eheader[2:]
+    else:
+        eheader='<%s>'%eheader
     assert tree.file().endswith('.idl'), tree.file()
     fileName=os.path.basename(tree.file())
     baseName=fileName[0:-4]
-    items=''.join([gen(_) for _ in tree.declarations() if _.mainFile()])
+    items=''.join([gen(_,eclass,eheader) for _ in tree.declarations() if _.mainFile()])
     print template % vars()
     pass

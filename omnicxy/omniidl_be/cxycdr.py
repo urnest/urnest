@@ -13,10 +13,10 @@ public:
 };
 '''
 
-def gen(decl,indent=''):
+def gen(decl,eclass,eheader,indent=''):
     result=''
     if isinstance(decl, idlast.Module):
-        result=''.join(gen(_) for _ in decl.definitions())
+        result=''.join(gen(_,eclass,eheader) for _ in decl.definitions())
     elif isinstance(decl, idlast.Interface):
         fqn='::'.join(decl.scopedName())
         repoId=decl.repoId()
@@ -29,7 +29,7 @@ def gen(decl,indent=''):
     return result
 
 template='''\
-// generated from %(fileName)s by cxy.misc idl backend
+// generated from %(fileName)s by omnicxy cxycdr idl backend
 
 #include <cxy/cdr.hh>
 
@@ -42,9 +42,14 @@ namespace cxy
 '''
 
 def run(tree, args):
+    eclass,eheader=([_.split('-e',1)[1].split('=',1) for _ in args if _.startswith('-e')]+[('cxy::Exception','cxy/Exception.hh')])[0]
+    if eheader.startswith('./'):
+        eheader='"%s"'%eheader[2:]
+    else:
+        eheader='<%s>'%eheader
     assert tree.file().endswith('.idl'), tree.file()
     fileName=os.path.basename(tree.file())
     baseName=fileName[0:-4]
-    items=''.join([gen(_) for _ in tree.declarations() if _.mainFile()])
+    items=''.join([gen(_,eclass,eheader) for _ in tree.declarations() if _.mainFile()])
     print template % vars()
     pass
