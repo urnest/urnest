@@ -220,7 +220,7 @@ class omniServant;
 
 def run(tree, args):
     eclass,eheader=([_.split('-e',1)[1].split('=',1) for _ in args if _.startswith('-e')]+[('cxy::Exception','cxy/Exception.hh')])[0]
-    if eheader.startswith('./'):
+    if eheader.startswith('./') or os.path.dirname(eheader)=='':
         eheader='"%s"'%eheader[2:]
     else:
         eheader='<%s>'%eheader

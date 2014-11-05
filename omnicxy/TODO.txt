@@ -55,7 +55,11 @@ x generate proto/cxy/e code from p1.idl
   x p1.objref.hcp
   x p1.sref.hcp
 
-- allow "" v <> control for -e eg ./x/E.hh -> "x/E.hh"; x/E.hh -> <x/E.hh>
+x allow "" v <> control for -e eg:
+   ./x/E.hh -> "x/E.hh"
+   x/E.hh -> <x/E.hh>
+   ./E.hh -> "E.hh"
+   E.hh -> "E.hh"
 
 - omnicxy odin package
 
