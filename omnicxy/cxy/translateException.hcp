@@ -15,6 +15,7 @@
 #include "Exception.hh"
 #include "copyContext.hh"
 #include "WrongType.hh"
+#include "NoSuchObject.hh"
 
 namespace cxy
 {
@@ -51,7 +52,7 @@ E translateException(CORBA::Exception const& e) throw()
 
 template<class E>
 typename cxy::Exceptions<E>::NoSuchObject translateException(
-  cxy::Exceptions<cxy::Exception>::NoSuchObject const& e)
+  cxy::NoSuchObject const& e)
 {
   typename cxy::Exceptions<E>::NoSuchObject result(
     e.cause_.first, e.cause_.second);

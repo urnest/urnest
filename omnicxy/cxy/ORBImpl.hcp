@@ -19,6 +19,7 @@
 #include <iostream> // impl
 #include <xju/format.hh>
 #include "WrongType.hh"
+#include "NoSuchObject.hh"
 
 namespace CORBA
 {
@@ -158,7 +159,7 @@ public:
   }
   void* locate(std::string const& uri, std::string const& repoId) throw(
     cxy::WrongType,
-    cxy::Exceptions<cxy::Exception>::NoSuchObject,
+    cxy::NoSuchObject,
     cxy::Exception)
   {
     try {
@@ -167,7 +168,7 @@ public:
         if (CORBA::is_nil(x)) {
           std::ostringstream s;
           s << xju::format::quote(uri) << " is nil";
-          throw cxy::Exceptions<cxy::Exception>::NoSuchObject(
+          throw cxy::NoSuchObject(
             s.str(), std::make_pair(__FILE__, __LINE__));
         }
         void* result=x->_PR_getobj()->_realNarrow(repoId.c_str());
@@ -183,7 +184,7 @@ public:
       catch(CORBA::OBJECT_NOT_EXIST& ee) {
         std::ostringstream s;
         s << xju::format::quote(uri) << " is nil";
-        throw cxy::Exceptions<cxy::Exception>::NoSuchObject(
+        throw cxy::NoSuchObject(
           s.str(), std::make_pair(__FILE__, __LINE__));
       }
       catch(CORBA::Exception const& ee) {

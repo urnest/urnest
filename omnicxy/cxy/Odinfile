@@ -13,6 +13,11 @@ WrongType.cc==%WrongType/WrongType.cc
 
 %WrongType==()+cmd=(../../hcp/hcp-split) -l 1 (WrongType.hcp) 'WrongType.hh' 'WrongType.cc':output
 
+NoSuchObject.hh==%NoSuchObject/NoSuchObject.hh
+NoSuchObject.cc==%NoSuchObject/NoSuchObject.cc
+
+%NoSuchObject==()+cmd=(../../hcp/hcp-split) -l 1 (NoSuchObject.hcp) 'NoSuchObject.hh' 'NoSuchObject.cc':output
+
 cref.hh==%cref/cref.hh
 cref.cc==%cref/cref.cc
 

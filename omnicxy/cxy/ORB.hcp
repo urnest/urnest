@@ -16,9 +16,10 @@
 #include "copyContext.hh"
 #include "Exceptions.hh"
 #include "translateException.hh"
-#include "xju/mt.hh"
-#include "xju/Time.hh"
-#include "xju/Optional.hh"
+#include <xju/mt.hh>
+#include <xju/Time.hh>
+#include <xju/Optional.hh>
+#include "WrongType.hh"
 
 namespace cxy
 {
@@ -96,13 +97,13 @@ private:
     try {
       return impl_.locate(uri, repoId);
     }
-    catch(cxy::Exceptions<cxy::Exception>::NoSuchObject const& ee) {
+    catch(cxy::NoSuchObject const& ee) {
       if (typeid(cxy::Exception)==typeid(BaseException)) {
         throw;
       }
       throw cxy::translateException<BaseException>(ee);
     }
-    catch(cxy::Exceptions<cxy::Exception>::WrongType const& ee) {
+    catch(cxy::WrongType const& ee) {
       if (typeid(cxy::Exception)==typeid(BaseException)) {
         throw;
       }
