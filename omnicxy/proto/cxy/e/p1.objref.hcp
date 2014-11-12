@@ -4,7 +4,6 @@
 #include "p1.cdr.hh"
 
 #include <cxy/objref.hh>
-#include <cxy/calldesc.hh>
 #include <cxy/translateException.hh>
 #include <cxy/pof.hh>
 
@@ -15,34 +14,6 @@
 
 namespace cxy
 {
-
-template<>
-class calldesc< ::p1::F>
-{
-public:
-    
-  class f1 : public omniCallDescriptor
-  {
-  public:
-    static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt)
-    {
-      ::p1::F* impl=(::p1::F*)svnt->_ptrToInterface(cxy::cdr< ::p1::F>::repoId);
-      impl->f1();
-    }
-    
-    f1(const char* op_,
-       size_t oplen,
-       _CORBA_Boolean upcall):
-        omniCallDescriptor(
-          &f1::lcfn, op_, oplen, 0, _user_exns, 0, upcall)
-    {
-    }
-    static const char* const _user_exns[] = {
-      0
-    };
-  };
-  
-};
 
 template<>
 class objref< ::p1::F>:
@@ -63,7 +34,7 @@ public:
     E)
   {
     try {
-      cxy::calldesc< ::p1::F>::f1 c("f1", 3, 0);
+      calldesc::f1 c("f1", 3, 0);
       _invoke(c);
     }
     catch(CORBA::Exception const& ee) {
@@ -79,6 +50,31 @@ protected:
   }
   
 private:
+  class calldesc
+  {
+  public:
+        
+    class f1 : public omniCallDescriptor
+    {
+    public:
+      static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt)
+      {
+        ::p1::F* impl=(::p1::F*)svnt->_ptrToInterface(cxy::cdr< ::p1::F>::repoId);
+        impl->f1();
+      }
+      f1(const char* op_,
+         size_t oplen,
+         _CORBA_Boolean upcall):
+          omniCallDescriptor(
+            &f1::lcfn, op_, oplen, 0, _user_exns, 0, upcall)
+      {
+      }
+      static const char* const _user_exns[] = {
+        0
+      };
+    };
+    
+  };
   // CORBA::Object::
   virtual void* _ptrToObjRef(const char* repoId)
   {

@@ -21,7 +21,7 @@
 p1.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxy.py) (../p1.idl):stdout
 p1.cdr.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycdr.py) (../p1.idl):stdout
 p1.cref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycref.py) (../p1.idl):stdout
-#p1.objref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxyobjref.py) (../p1.idl):stdout
+p1.objref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxyobjref.py) (../p1.idl):stdout
 p1.sref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxysref.py) (../p1.idl):stdout
 
 %dummy.hh==<<

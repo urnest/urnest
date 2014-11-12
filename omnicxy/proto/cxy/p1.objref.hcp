@@ -53,6 +53,7 @@ private:
   class calldesc
   {
   public:
+        
     class f1 : public omniCallDescriptor
     {
     public:
@@ -61,7 +62,6 @@ private:
         ::p1::F* impl=(::p1::F*)svnt->_ptrToInterface(cxy::cdr< ::p1::F>::repoId);
         impl->f1();
       }
-      
       f1(const char* op_,
          size_t oplen,
          _CORBA_Boolean upcall):
@@ -73,8 +73,8 @@ private:
         0
       };
     };
+    
   };
-  
   // CORBA::Object::
   virtual void* _ptrToObjRef(const char* repoId)
   {

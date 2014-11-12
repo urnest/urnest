@@ -13,7 +13,6 @@ public:
     ::%(fqn)s* impl=(::%(fqn)s*)svnt->_ptrToInterface(cxy::cdr< ::%(fqn)s>::repoId);
     impl->%(name)s();
   }
-  
   %(name)s(const char* op_,
      size_t oplen,
      _CORBA_Boolean upcall):
@@ -33,7 +32,7 @@ void %(name)s() throw(
   %(eclass)s)
 {
   try {
-    cxy::calldesc< ::%(fqn)s>::%(name)s c("%(name)s", 3, 0);
+    calldesc::%(name)s c("%(name)s", 3, 0);
     _invoke(c);
   }
   catch(CORBA::Exception const& ee) {
@@ -45,13 +44,6 @@ void %(name)s() throw(
 '''
 
 interface_t='''\
-template<>
-class calldesc< ::%(fqn)s>
-{
-public:
-  %(calldesc_content)s
-};
-
 template<>
 class objref< ::%(fqn)s>:
   public virtual ::%(fqn)s,
@@ -72,6 +64,11 @@ protected:
   }
   
 private:
+  class calldesc
+  {
+  public:
+    %(calldesc_content)s
+  };
   // CORBA::Object::
   virtual void* _ptrToObjRef(const char* repoId)
   {
@@ -158,7 +155,7 @@ def gen(decl,eclass,eheader,indent=''):
         fqn='::'.join(decl.scopedName())
         repoId=decl.repoId()
         calldesc_content=''.join(
-            [genCalldesc(_,eclass,eheader,indent+'  ',fqn) \
+            [genCalldesc(_,eclass,eheader,indent+'    ',fqn) \
                  for _ in decl.contents()\
                  if isinstance(_,idlast.Operation)])
         objref_content=''.join(
@@ -178,7 +175,6 @@ template='''\
 #include "%(baseName)s.cdr.hh"
 
 #include <cxy/objref.hh>
-#include <cxy/calldesc.hh>
 #include <cxy/translateException.hh>
 #include <cxy/pof.hh>
 
