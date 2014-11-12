@@ -28,11 +28,6 @@ objref.cc==%objref/objref.cc
 
 %objref==()+cmd=(../../hcp/hcp-split) -l 1 (objref.hcp) 'objref.hh' 'objref.cc':output
 
-calldesc.hh==%calldesc/calldesc.hh
-calldesc.cc==%calldesc/calldesc.cc
-
-%calldesc==()+cmd=(../../hcp/hcp-split) -l 1 (calldesc.hcp) 'calldesc.hh' 'calldesc.cc':output
-
 copyContext.hh==%copyContext/copyContext.hh
 copyContext.cc==%copyContext/copyContext.cc
 
