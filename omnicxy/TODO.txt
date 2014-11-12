@@ -63,7 +63,42 @@ x allow "" v <> control for -e eg:
 
 - omnicxy odin package
 
+- p2.idl:
+  - include p1.idl
+  - basic types in params
+
 - test client wrong type exception
+
+- p3.idl:
+  - basic types returned
+
+- p4.idl:
+  - typedef basic type -> distinct
+
+- p5.idl:
+  - struct in param
+
+- p6.idl:
+  - struct return
+
+- p7.idl:
+  - sequence in param
+
+- p8.idl:
+  - sequence return
+
+- p9.idl:
+  - enum in param
+
+- p10.idl:
+  - enum return
+
+- p11.idl:
+  - exception
+
+- p12.idl:
+  - inherit interface
+
 
 x test duplicate object name exception
 

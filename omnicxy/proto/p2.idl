@@ -1,0 +1,9 @@
+#include "p1.idl"
+
+module p2
+{
+  interface F
+  {
+    void f1(in short a, in long b, in double c, in string d);
+  };
+};

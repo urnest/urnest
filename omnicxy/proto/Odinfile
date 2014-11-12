@@ -3,5 +3,3 @@ cxx%all.tree
 cxy%all.tree
 cxy/e%all.tree
 
-%p1.cxx.files==p1.idl+cmd=(/usr/local/omniORB-4.2.0/bin/omniidl) '-bcxx' (p1.idl)+need=(p1.idl:hash_inc_all):exec.files
-
