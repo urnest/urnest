@@ -1,0 +1,19 @@
+// generated from p2.idl by omnicxy cxycdr idl backend
+
+#include <cxy/cdr.hh>
+
+#include "p2.hh"
+
+#include "p1.cdr.hh"
+
+namespace cxy
+{
+template<>
+class cdr< ::p2::F>
+{
+public:
+  static const char repoId[]="IDL:p2/F:1.0";
+};
+
+}
+
