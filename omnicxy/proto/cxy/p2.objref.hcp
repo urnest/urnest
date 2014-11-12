@@ -33,18 +33,18 @@ public:
     
   // p2::F::
   void f1(
-    uint16_t const& a, 
-    uint32_t const& b, 
-    double const& c, 
-    std::string const& d) throw(
+    uint16_t const& p1, 
+    uint32_t const& p2, 
+    double const& p3, 
+    std::string const& p4) throw(
     cxy::Exception)
   {
     try {
       calldesc::f1 c("f1", 3, 0, 
-                     a, 
-                     b, 
-                     c, 
-                     d);
+                     p1, 
+                     p2, 
+                     p3, 
+                     p4);
       _invoke(c);
     }
     catch(CORBA::Exception const& ee) {
@@ -72,30 +72,30 @@ private:
         ::p2::F* impl=(::p2::F*)svnt->_ptrToInterface(cxy::cdr< ::p2::F>::repoId);
         f1* cd((f1*)calldesc);
         impl->f1(
-          cd->a_,
-          cd->b_,
-          cd->c_,
-          cd->d_);
+          cd->p1_,
+          cd->p2_,
+          cd->p3_,
+          cd->p4_);
       }
       f1(const char* op_,
          size_t oplen,
-         _CORBA_Boolean upcall
-         uint16_t const& a, 
-         uint32_t const& b, 
-         double const& c, 
-         std::string const& d) throw():
+         _CORBA_Boolean upcall,
+         uint16_t const& p1, 
+         uint32_t const& p2, 
+         double const& p3, 
+         std::string const& p4) throw():
           omniCallDescriptor(
             &f1::lcfn, op_, oplen, 0, _user_exns, 0, upcall),
-          a_(a),
-          b_(b),
-          c_(c),
-          d_(d)
+          p1_(p1),
+          p2_(p2),
+          p3_(p3),
+          p4_(p4)
       {
       }
-      uint16_t const a_;
-      uint32_t const b_;
-      double const c_;
-      std::string const d_;
+      uint16_t const p1_;
+      uint32_t const p2_;
+      double const p3_;
+      std::string const p4_;
 
       static const char* const _user_exns[] = {
         0

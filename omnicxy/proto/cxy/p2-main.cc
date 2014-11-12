@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
     if (argv[2]==std::string("client")) {
       cxy::ORB<cxy::Exception> orb("giop:tcp::");
       cxy::cref<p2::F> ref(orb, makeURI(port, OBJECT_NAME));
-      ref->f1();
+      ref->f1(1, 2, 3.4, "fred");
     }
 /*
     else if (argv[2]==std::string("server")) {
