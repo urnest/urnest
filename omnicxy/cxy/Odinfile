@@ -48,6 +48,11 @@ cdr.cc==%cdr/cdr.cc
 
 %cdr==()+cmd=(../../hcp/hcp-split) -l 1 (cdr.hcp) 'cdr.hh' 'cdr.cc':output
 
+marshal.hh==%marshal/marshal.hh
+marshal.cc==%marshal/marshal.cc
+
+%marshal==()+cmd=(../../hcp/hcp-split) -l 1 (marshal.hcp) 'marshal.hh' 'marshal.cc':output
+
 ORB.hh==%ORB/ORB.hh
 ORB.cc==%ORB/ORB.cc
 

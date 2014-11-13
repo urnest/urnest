@@ -63,9 +63,24 @@ x allow "" v <> control for -e eg:
 
 - omnicxy odin package
 
+- adjust sref.hcp need to derive from omniCallDescriptor to override
+  unmarshalArguments
+
 - p2.idl:
   - include p1.idl
   - basic types in params
+  - proto
+    x .hcp
+    x .cdr.hcp
+    x .cref.hcp
+    x .objref.hcp
+    .sref.hcp
+  - gen
+    .hcp
+    .cdr.hcp
+    .cref.hcp
+    .objref.hcp
+    .sref.hcp
 
 - test client wrong type exception
 
@@ -99,6 +114,8 @@ x allow "" v <> control for -e eg:
 - p12.idl:
   - inherit interface
 
+- bounded strings
+- bounded sequences
 
 x test duplicate object name exception
 
