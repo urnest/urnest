@@ -27,16 +27,28 @@ dispatcher_t='''
   }
 '''
 
+calldesc_t='''
+template<>
+class calldesc< ::%(fqn)s>
+{
+public:
+  class %(name)s
+  {
+  public:
+  };
+
+};'''
+
 interface_t='''\
 %(forward)s
 
+namespace
+{
+%(calldescs)s
+}
+
 namespace cxy
 {
-class sref_impl;
-
-template<class BaseException>
-class ORB;
-
 template<>
 class sref< ::%(fqn)s> :  private sref_if
 {
@@ -161,6 +173,18 @@ def genDispatcher(decl,eclass,eheader,indent,fqn):
     result=reindent(indent,dispatcher_t%vars())
     return result
 
+def genCalldesc(decl,eclass,eheader,indent,fqn):
+    assert isinstance(decl, idlast.Operation), repr(decl)
+    name=decl.identifier()
+    assert not decl.oneway(), 'oneway not yet implemented'
+    assert len(decl.parameters())==0, 'parameters not yet implemented'
+    assert len(decl.raises())==0, 'raises not yet implemented'
+    assert len(decl.contexts())==0, 'contexts not yet implemented'
+    assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
+    
+    result=calldesc_t%vars()
+    return result
+
 def genForward(scopedName):
     if len(scopedName)==1:
         return 'class %s;\n' % scopedName[0]
@@ -183,6 +207,10 @@ def gen(decl,eclass,eheader,indent=''):
                  if isinstance(_,idlast.Operation)])
         dispatchers=''.join(
             [genDispatcher(_,eclass,eheader,indent+'  ',fqn) \
+                 for _ in decl.contents()\
+                 if isinstance(_,idlast.Operation)])
+        calldescs=''.join(
+            [genCalldesc(_,eclass,eheader,indent+'  ',fqn) \
                  for _ in decl.contents()\
                  if isinstance(_,idlast.Operation)])
         result=interface_t%vars()
@@ -211,10 +239,26 @@ template='''\
 #include <xju/mt.hh>
 #include <string>
 
+// included idl
+
 class omniCallHandle;
 class omniCallDescriptor;
 class omniServant;
 
+namespace
+{
+template<class T>
+class calldesc
+{
+};
+}
+namespace cxy
+{
+class sref_impl;
+
+template<class BaseException>
+class ORB;
+}
 %(items)s
 '''
 
