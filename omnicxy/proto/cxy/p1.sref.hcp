@@ -17,15 +17,11 @@
 #include <xju/mt.hh>
 #include <string>
 
+// included idl
+
 class omniCallHandle;
 class omniCallDescriptor;
 class omniServant;
-
-// included idl
-
-namespace p1 {
-class F;
-}
 
 namespace
 {
@@ -33,26 +29,36 @@ template<class T>
 class calldesc
 {
 };
-
-template<>
-class calldesc< ::p1::F>
-{
-public:
-class f1 
-{
-public:
-};
-
-};
 }
-
 namespace cxy
 {
 class sref_impl;
 
 template<class BaseException>
 class ORB;
+}
 
+
+namespace p1 {
+class F;
+}
+
+namespace
+{
+  template<>
+  class calldesc< ::p1::F>
+  {
+  public:
+  class f1
+  {
+  public:
+  };
+  
+  };
+}
+
+namespace cxy
+{
 template<>
 class sref< ::p1::F> :  private sref_if
 {
@@ -103,7 +109,8 @@ public:
   ::p1::F& x_;
   
 private:
-  class f1
+    
+  class f1 
   {
   public:
     static void lcfn(omniCallDescriptor*, omniServant* svnt) throw()
@@ -115,6 +122,7 @@ private:
       0
     };
   };
+  
 
   // sref_if::
   virtual bool _dispatch(omniCallHandle& _handle) throw()
@@ -123,14 +131,7 @@ private:
     
       
     if (omni::strMatch(op, "f1")) {
-      omniCallDescriptor c(
-        f1::lcfn, 
-        "f1", 
-        3, 
-        0, 
-        f1::_user_exns, 
-        0, 
-        1);
+      omniCallDescriptor c(f1::lcfn, "f1", 3, 0, f1::_user_exns, 0, 1);
       _handle.upcall(impl_, c);
       return 1;
     }
