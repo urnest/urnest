@@ -21,6 +21,8 @@ class omniCallHandle;
 class omniCallDescriptor;
 class omniServant;
 
+// included idl
+
 namespace p1 {
 class F;
 }
