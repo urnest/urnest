@@ -129,7 +129,7 @@ private:
   public:
     static void lcfn(omniCallDescriptor*, omniServant* svnt) throw()
     {
-      p1::F* impl = (p1::F*) svnt->_ptrToInterface(cxy::cdr< ::p1::F>::repoId);
+      ::p1::F* impl = (::p1::F*) svnt->_ptrToInterface(cxy::cdr< ::p1::F>::repoId);
       impl->f1();
     }
     static const char* const _user_exns[] = {
