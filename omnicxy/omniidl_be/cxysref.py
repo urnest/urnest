@@ -10,7 +10,7 @@ class %(name)s
 public:
   static void lcfn(omniCallDescriptor*, omniServant* svnt) throw()
   {
-    %(fqn)s* impl = (%(fqn)s*) svnt->_ptrToInterface(cxy::cdr< ::%(fqn)s>::repoId);
+    ::%(fqn)s* impl = (::%(fqn)s*) svnt->_ptrToInterface(cxy::cdr< ::%(fqn)s>::repoId);
     impl->%(name)s();
   }
   static const char* const _user_exns[] = {
@@ -21,7 +21,7 @@ public:
 
 dispatcher_t='''
   if (omni::strMatch(op, "%(name)s")) {
-    omniCallDescriptor c(%(name)s::lcfn, "%(name)s", 3, 0, %(name)s::_user_exns, 0, 1);
+    calldesc< ::%(fqn)s>::%(name)s c(%(name)s::lcfn, "%(name)s", 3, 0, %(name)s::_user_exns, 0, 1);
     _handle.upcall(impl_, c);
     return 1;
   }
@@ -32,9 +32,23 @@ template<>
 class calldesc< ::%(fqn)s>
 {
 public:
-  class %(name)s
+  class %(name)s : public omniCallDescriptor
   {
   public:
+    %(name)s(void (*lcfn)(omniCallDescriptor*, omniServant*),
+       char const* op_,
+       int op_len_,
+       _CORBA_Boolean oneway,
+       const char*const* user_excns_,
+       int n_user_excns_,
+       _CORBA_Boolean is_upcall_) throw():
+        omniCallDescriptor(lcfn,
+                           op_,op_len_,
+                           oneway,
+                           user_excns_,n_user_excns_,
+                           is_upcall_)
+    {
+    }
   };
 
 };'''
