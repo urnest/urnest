@@ -8,6 +8,13 @@
 // implied warranty.
 //
 
+#include <omniORB4/CORBA.h> //impl
+#include <omniORB4/cdrStream.h> //impl
+#include <stdint.h>
+#include <string>
+
+class cdrStream;
+
 namespace cxy
 {
 
@@ -16,6 +23,86 @@ class cdr
 {
 };
 
+template<>
+class cdr<uint16_t>
+{
+public:
+  static uint16_t unmarshalFrom(cdrStream& s) throw(
+    //REVISIT
+    )
+  {
+    uint16_t result;
+    (::CORBA::Short&)result <<= s;
+    return result;
+  }
+  static void marshal(uint16_t const x, cdrStream& s) throw()
+  {
+    x >>= s;
+  }
+};
+
+  
+template<>
+class cdr<uint32_t>
+{
+public:
+  static uint32_t unmarshalFrom(cdrStream& s) throw(
+    //REVISIT
+    )
+  {
+    uint32_t result;
+    (::CORBA::Long&)result <<= s;
+    return result;
+  }
+  static void marshal(uint32_t const x, cdrStream& s) throw()
+  {
+    ((CORBA::ULong)x) >>= s;
+  }
+  
+};
+
+  
+template<>
+class cdr<double>
+{
+public:
+  static double unmarshalFrom(cdrStream& s) throw(
+    //REVISIT
+    )
+  {
+    double result;
+    (::CORBA::Double&)result <<= s;
+    return result;
+  }
+  static void marshal(double const x, cdrStream& s) throw()
+  {
+    x >>= s;
+  }
+  
+};
+
+  
+template<>
+class cdr<std::string>
+{
+public:
+  static std::string unmarshalFrom(cdrStream& s) throw(
+    //REVISIT
+    )
+  {
+    char* r(s.unmarshalString(0));
+    std::string result(r);
+    CORBA::string_free(r);
+    return result;
+  }
+  static void marshal(std::string const& x, cdrStream& s) throw()
+  {
+    s.marshalString(x.c_str(),0);
+  }
+  
+};
+
+  
 }
 
 

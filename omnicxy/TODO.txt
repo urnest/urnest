@@ -63,18 +63,18 @@ x allow "" v <> control for -e eg:
 
 - omnicxy odin package
 
-- adjust sref.hcp need to derive from omniCallDescriptor to override
+x adjust sref.hcp need to derive from omniCallDescriptor to override
   unmarshalArguments
 
 - p2.idl:
   - include p1.idl
   - basic types in params
-  - proto
+  x proto
     x .hcp
     x .cdr.hcp
     x .cref.hcp
     x .objref.hcp
-    .sref.hcp
+    x .sref.hcp
   - gen
     .hcp
     .cdr.hcp

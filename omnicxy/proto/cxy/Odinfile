@@ -5,6 +5,7 @@
 
 %all-tests.tree==<<
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p1-main) '3735' 'both':exec.output
+()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p2-main) '3736' 'both':exec.output
 %test-transient
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%test-no-such-object) '3740':exec.output
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%test-duplicate-name) '3741':exec.output
@@ -60,14 +61,14 @@ p2.objref.cc==%p2.objref/p2.objref.cc
 p2.cdr.hh==%p2.cdr/p2.cdr.hh
 p2.cdr.cc==%p2.cdr/p2.cdr.cc
 
-#p2.sref.hh==%p2.sref/p2.sref.hh
-#p2.sref.cc==%p2.sref/p2.sref.cc
+p2.sref.hh==%p2.sref/p2.sref.hh
+p2.sref.cc==%p2.sref/p2.sref.cc
 
 %p2==()+cmd=(../../../hcp/hcp-split) -l 0 (p2.hcp) 'p2.hh' 'p2.cc':output
 %p2.cref==()+cmd=(../../../hcp/hcp-split) -l 0 (p2.cref.hcp) 'p2.cref.hh' 'p2.cref.cc':output
 %p2.objref==()+cmd=(../../../hcp/hcp-split) -l 0 (p2.objref.hcp) 'p2.objref.hh' 'p2.objref.cc':output
 %p2.cdr==()+cmd=(../../../hcp/hcp-split) -l 0 (p2.cdr.hcp) 'p2.cdr.hh' 'p2.cdr.cc':output
-#%p2.sref==()+cmd=(../../../hcp/hcp-split) -l 0 (p2.sref.hcp) 'p2.sref.hh' 'p2.sref.cc':output
+%p2.sref==()+cmd=(../../../hcp/hcp-split) -l 0 (p2.sref.hcp) 'p2.sref.hh' 'p2.sref.cc':output
 
 %test-transient==()+cmd=(%test-transient.sh) (%p1-main):exec.output
 

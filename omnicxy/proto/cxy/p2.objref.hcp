@@ -12,9 +12,6 @@
 #include <omniORB4/CORBA.h>
 #include <omniORB4/callDescriptor.h>
 
-// param/return/exception marshalling
-#include <cxy/marshal.hh>
-
 // included idl
 #include "p1.objref.hh"
 
@@ -104,10 +101,10 @@ private:
       // omniCallDescriptor::
       void marshalArguments(cdrStream& s)
       {
-        cxy::marshal(p1_, s);
-        cxy::marshal(p2_, s);
-        cxy::marshal(p3_, s);
-        cxy::marshal(p4_, s);
+        cxy::cdr<uint16_t>::marshal(p1_, s);
+        cxy::cdr<uint32_t>::marshal(p2_, s);
+        cxy::cdr<double>::marshal(p3_, s);
+        cxy::cdr<std::string>::marshal(p4_, s);
       }
 
       static const char* const _user_exns[] = {

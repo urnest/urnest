@@ -16,6 +16,8 @@
 
 #include <xju/mt.hh>
 #include <string>
+#include <xju/Optional.hh> //impl
+#include <cxy/cdr.hh> //impl
 
 // included idl
 #include "p1.sref.hh"
@@ -64,6 +66,21 @@ public:
                            user_excns_,n_user_excns_,
                            is_upcall_)
     {
+    }
+    xju::Optional<uint16_t> p1_;
+    xju::Optional<uint32_t> p2_;
+    xju::Optional<double> p3_;
+    xju::Optional<std::string> p4_;
+
+    // omniCallDescriptor::
+    void unmarshalArguments(cdrStream& s) throw(
+      //REVISIT
+      )
+    {
+      p1_=cxy::cdr<uint16_t>::unmarshalFrom(s);
+      p2_=cxy::cdr<uint32_t>::unmarshalFrom(s);
+      p3_=cxy::cdr<double>::unmarshalFrom(s);
+      p4_=cxy::cdr<std::string>::unmarshalFrom(s);
     }
   };
   
@@ -131,10 +148,16 @@ private:
   class f1 
   {
   public:
-    static void lcfn(omniCallDescriptor*, omniServant* svnt) throw()
+    static void lcfn(omniCallDescriptor* vc, omniServant* svnt) throw()
     {
-      ::p1::F* impl = (::p1::F*) svnt->_ptrToInterface(cxy::cdr< ::p1::F>::repoId);
-      impl->f1();
+      ::p2::F* impl = (::p2::F*) svnt->_ptrToInterface(cxy::cdr< ::p2::F>::repoId);
+      calldesc< ::p2::F>::f1* c=(calldesc< ::p2::F>::f1*)vc;
+      
+      impl->f1(
+        c->p1_.value(),
+        c->p2_.value(),
+        c->p3_.value(),
+        c->p4_.value());
     }
     static const char* const _user_exns[] = {
       0
@@ -150,7 +173,7 @@ private:
     
       
     if (omni::strMatch(op, "f1")) {
-      calldesc< ::p1::F>::f1 c(f1::lcfn, "f1", 3, 0, f1::_user_exns, 0, 1);
+      calldesc< ::p2::F>::f1 c(f1::lcfn, "f1", 3, 0, f1::_user_exns, 0, 1);
       _handle.upcall(impl_, c);
       return 1;
     }

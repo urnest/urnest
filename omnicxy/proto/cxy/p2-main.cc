@@ -11,7 +11,7 @@
 
 #include "p2.hh"
 #include "p2.cref.hh"
-//#include "p2.sref.hh"
+#include "p2.sref.hh"
 
 #include <xju/Exception.hh>
 #include <iostream>
@@ -37,9 +37,17 @@ public:
   {
   }
   
-  virtual void f1() throw(cxy::Exception)
+  virtual void f1(
+    uint16_t const& a, 
+    uint32_t const& b, 
+    double const& c, 
+    std::string const& d) throw(cxy::Exception)
   {
-    std::cout << "F::f1()" << std::endl;
+    std::cout << "F::f1(" 
+              << a << ", "
+              << b << ", "
+              << c << ", "
+              << d << ")" << std::endl;
   }
 };
 
@@ -64,7 +72,6 @@ int main(int argc, char* argv[])
       cxy::cref<p2::F> ref(orb, makeURI(port, OBJECT_NAME));
       ref->f1(1, 2, 3.4, "fred");
     }
-/*
     else if (argv[2]==std::string("server")) {
       std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
       cxy::ORB<cxy::Exception> orb(orbEndPoint);
@@ -84,9 +91,8 @@ int main(int argc, char* argv[])
       cxy::sref<p2::F> const xa(orb, OBJECT_NAME, x);
       
       cxy::cref<p2::F> ref(orb, makeURI(port, OBJECT_NAME));
-      ref->f1();
+      ref->f1(1, 2, 3.4, "fred");
     }
-*/    
     return 0;
   }
   catch(xju::Exception& e) {
