@@ -34,8 +34,8 @@ public:
     
   // p2::F::
   void f1(
-    uint16_t const& p1, 
-    uint32_t const& p2, 
+    int16_t const& p1, 
+    int32_t const& p2, 
     double const& p3, 
     std::string const& p4) throw(
     cxy::Exception)
@@ -81,8 +81,8 @@ private:
       f1(const char* op_,
          size_t oplen,
          _CORBA_Boolean upcall,
-         uint16_t const& p1, 
-         uint32_t const& p2, 
+         int16_t const& p1, 
+         int32_t const& p2, 
          double const& p3, 
          std::string const& p4) throw():
           omniCallDescriptor(
@@ -93,16 +93,16 @@ private:
           p4_(p4)
       {
       }
-      uint16_t const p1_;
-      uint32_t const p2_;
+      int16_t const p1_;
+      int32_t const p2_;
       double const p3_;
       std::string const p4_;
 
       // omniCallDescriptor::
       void marshalArguments(cdrStream& s)
       {
-        cxy::cdr<uint16_t>::marshal(p1_, s);
-        cxy::cdr<uint32_t>::marshal(p2_, s);
+        cxy::cdr<int16_t>::marshal(p1_, s);
+        cxy::cdr<int32_t>::marshal(p2_, s);
         cxy::cdr<double>::marshal(p3_, s);
         cxy::cdr<std::string>::marshal(p4_, s);
       }

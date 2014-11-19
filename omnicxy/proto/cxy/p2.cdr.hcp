@@ -4,6 +4,7 @@
 
 #include "p2.hh"
 
+// included idl
 #include "p1.cdr.hh"
 
 namespace cxy

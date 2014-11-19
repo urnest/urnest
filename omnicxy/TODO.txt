@@ -67,8 +67,8 @@ x adjust sref.hcp need to derive from omniCallDescriptor to override
   unmarshalArguments
 
 - p2.idl:
-  - include p1.idl
-  - basic types in params
+  x include p1.idl
+  x basic types in params
   x proto
     x .hcp
     x .cdr.hcp
@@ -76,11 +76,12 @@ x adjust sref.hcp need to derive from omniCallDescriptor to override
     x .objref.hcp
     x .sref.hcp
   - gen
-    .hcp
-    .cdr.hcp
-    .cref.hcp
+    x .hcp
+    x .cdr.hcp
+    x .cref.hcp
     .objref.hcp
     .sref.hcp
+  - cxy/e
 
 - test client wrong type exception
 

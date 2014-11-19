@@ -70,6 +70,10 @@ p2.sref.cc==%p2.sref/p2.sref.cc
 %p2.cdr==()+cmd=(../../../hcp/hcp-split) -l 0 (p2.cdr.hcp) 'p2.cdr.hh' 'p2.cdr.cc':output
 %p2.sref==()+cmd=(../../../hcp/hcp-split) -l 0 (p2.sref.hcp) 'p2.sref.hh' 'p2.sref.cc':output
 
+p2.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxy.py) (../p2.idl):stdout
+p2.cdr.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycdr.py) (../p2.idl):stdout
+p2.cref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycref.py) (../p2.idl):stdout
+
 %test-transient==()+cmd=(%test-transient.sh) (%p1-main):exec.output
 
 %test-transient.sh == ! <<

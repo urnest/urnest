@@ -32,12 +32,12 @@ public:
     )
   {
     uint16_t result;
-    (::CORBA::Short&)result <<= s;
+    (::CORBA::UShort&)result <<= s;
     return result;
   }
   static void marshal(uint16_t const x, cdrStream& s) throw()
   {
-    x >>= s;
+    ((::CORBA::UShort)x) >>= s;
   }
 };
 
@@ -51,10 +51,49 @@ public:
     )
   {
     uint32_t result;
-    (::CORBA::Long&)result <<= s;
+    (::CORBA::ULong&)result <<= s;
     return result;
   }
   static void marshal(uint32_t const x, cdrStream& s) throw()
+  {
+    ((CORBA::ULong)x) >>= s;
+  }
+  
+};
+
+  
+template<>
+class cdr<int16_t>
+{
+public:
+  static int16_t unmarshalFrom(cdrStream& s) throw(
+    //REVISIT
+    )
+  {
+    int16_t result;
+    (::CORBA::Short&)result <<= s;
+    return result;
+  }
+  static void marshal(int16_t const x, cdrStream& s) throw()
+  {
+    x >>= s;
+  }
+};
+
+  
+template<>
+class cdr<int32_t>
+{
+public:
+  static int32_t unmarshalFrom(cdrStream& s) throw(
+    //REVISIT
+    )
+  {
+    int32_t result;
+    (::CORBA::Long&)result <<= s;
+    return result;
+  }
+  static void marshal(int32_t const x, cdrStream& s) throw()
   {
     ((CORBA::ULong)x) >>= s;
   }

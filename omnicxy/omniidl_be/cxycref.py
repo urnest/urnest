@@ -4,14 +4,16 @@ from omniidl import idltype
 import sys
 import os.path
 
+from cxy import ptype
+
 operation_t='''
-void %(name)s() throw(
-  // ipc failure
-  %(eclass)s)
+void %(name)s(%(params)s) throw(
+    // ipc failure
+    %(eclass)s)
 {
   xju::assert_not_equal(obj_, (void*)0);
   xju::assert_not_equal(true, obj_->_NP_is_nil());
-  obj_->%(name)s();
+  obj_->%(name)s(%(paramNames)s);
 }
 '''
 
@@ -88,8 +90,9 @@ def gen(decl,eclass,eheader,indent=''):
         result=interface_t%vars()
     elif isinstance(decl, idlast.Operation):
         name=decl.identifier()
+        params=','.join(['\n  %s'%ptype(p) for p in decl.parameters()])
+        paramNames=','.join(['\n    %s'%p.identifier() for p in decl.parameters()])
         assert not decl.oneway(), 'oneway not yet implemented'
-        assert len(decl.parameters())==0, 'parameters not yet implemented'
         assert len(decl.raises())==0, 'raises not yet implemented'
         assert len(decl.contexts())==0, 'contexts not yet implemented'
         assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'

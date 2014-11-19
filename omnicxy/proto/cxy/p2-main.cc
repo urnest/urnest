@@ -38,8 +38,8 @@ public:
   }
   
   virtual void f1(
-    uint16_t const& a, 
-    uint32_t const& b, 
+    int16_t const& a, 
+    int32_t const& b, 
     double const& c, 
     std::string const& d) throw(cxy::Exception)
   {
@@ -48,7 +48,33 @@ public:
               << b << ", "
               << c << ", "
               << d << ")" << std::endl;
+    calls_.push_back(Call(a,b,c,d));
   }
+  struct Call
+  {
+    Call(int16_t const& a, 
+         int32_t const& b, 
+         double const& c, 
+         std::string const& d) throw():
+        a_(a),
+        b_(b),
+        c_(c),
+        d_(d) {
+    }
+    int16_t a_;
+    int32_t b_;
+    double  c_;
+    std::string  d_;
+
+    friend bool operator==(Call const& x, Call const& y) throw()
+    {
+      return std::make_pair(std::make_pair(x.a_,x.b_),
+                            std::make_pair(x.c_,x.d_))==
+        std::make_pair(std::make_pair(y.a_,y.b_),
+                       std::make_pair(y.c_,y.d_));
+    }
+  };
+  std::vector<Call> calls_;
 };
 
   
@@ -92,6 +118,8 @@ int main(int argc, char* argv[])
       
       cxy::cref<p2::F> ref(orb, makeURI(port, OBJECT_NAME));
       ref->f1(1, 2, 3.4, "fred");
+      xju::assert_equal(x.calls_.size(),1U);
+      xju::assert_equal(x.calls_[0], F_impl::Call(1,2,3.4,"fred"));
     }
     return 0;
   }
