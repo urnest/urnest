@@ -4,35 +4,15 @@ from omniidl import idltype
 import sys
 import os.path
 
-calldesc_operation_t='''
-class %(name)s : public omniCallDescriptor
-{
-public:
-  static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt)
-  {
-    ::%(fqn)s* impl=(::%(fqn)s*)svnt->_ptrToInterface(cxy::cdr< ::%(fqn)s>::repoId);
-    impl->%(name)s();
-  }
-  %(name)s(const char* op_,
-     size_t oplen,
-     _CORBA_Boolean upcall):
-      omniCallDescriptor(
-        &%(name)s::lcfn, op_, oplen, 0, _user_exns, 0, upcall)
-  {
-  }
-  static const char* const _user_exns[] = {
-    0
-  };
-};
-'''
+from cxy import ptype
 
 objref_operation_t='''
 // %(fqn)s::
-void %(name)s() throw(
+void %(name)s(%(params)s) throw(
   %(eclass)s)
 {
   try {
-    calldesc::%(name)s c("%(name)s", 3, 0);
+    calldesc::%(name)s c("%(name)s", 3, 0%(paramNames)s);
     _invoke(c);
   }
   catch(CORBA::Exception const& ee) {
@@ -41,6 +21,35 @@ void %(name)s() throw(
     throw e;
   }
 }
+'''
+
+calldesc_operation_t='''
+class %(name)s : public omniCallDescriptor
+{
+public:
+  %(name)s(const char* op_,
+     size_t oplen,
+     _CORBA_Boolean upcall%(params)s):
+      omniCallDescriptor(
+        &%(name)s::lcfn, op_, oplen, 0, _user_exns, 0, upcall)%(paramInits)s
+  {
+  }
+  %(paramMembers)s
+  // omniCallDescriptor::
+  void marshalArguments(cdrStream& s)
+  {
+    %(paramMarshals)s
+  }
+
+  static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt)
+  {
+    ::%(fqn)s* impl=(::%(fqn)s*)svnt->_ptrToInterface(cxy::cdr< ::%(fqn)s>::repoId);
+    impl->%(name)s();
+  }
+  static const char* const _user_exns[] = {
+    0
+  };
+};
 '''
 
 interface_t='''\
@@ -126,8 +135,12 @@ def reindent(indent, s):
 def genCalldesc(decl,eclass,eheader,indent,fqn):
     assert isinstance(decl, idlast.Operation),repr(decl)
     name=decl.identifier()
+    pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
+    params=','.join(['\n  %s& %s'%(ptype(p),n) for p,n in zip(decl.parameters(),pns)])
+    paramInits=','.join(['\n    %s_(%s)'%(n,n) for n in pns])
+    paramMembers=''.join(['\n  %s;'%pmembertype(p,n) for p,n in zip(decl.parameters(),pns)])
+    paramMarshals=''.join(['\n  %s;'%pmarshal(p,n) for p,n in zip(decl.parameters(),pns)])
     assert not decl.oneway(), 'oneway not yet implemented'
-    assert len(decl.parameters())==0, 'parameters not yet implemented'
     assert len(decl.raises())==0, 'raises not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
@@ -138,8 +151,10 @@ def genCalldesc(decl,eclass,eheader,indent,fqn):
 def genObjref(decl,eclass,eheader,indent,fqn):
     assert isinstance(decl, idlast.Operation), repr(decl)
     name=decl.identifier()
+    pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
+    params=','.join(['\n  %s& %s'%(ptype(p),n) for p,n in zip(decl.parameters(),pns)])
+    paramNames=','.join(['\n    %s'%n for n in pns])
     assert not decl.oneway(), 'oneway not yet implemented'
-    assert len(decl.parameters())==0, 'parameters not yet implemented'
     assert len(decl.raises())==0, 'raises not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'

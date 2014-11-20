@@ -38,7 +38,7 @@ def ptype(p):
     assert isinstance(p,idlast.Parameter),p
     if p.dirtext()=='in':
         assert p.paramType().kind() in basicParamTypes, '%s not implemented, only basic types %s implemented' % (p.paramType().kind(),basicParamTypes.keys())
-        return basicParamTypes.get(p.paramType().kind()).typename+' const& '+p.identifier()
+        return basicParamTypes.get(p.paramType().kind()).typename+' const'
     assert p.dirtext()+' params not yet implemented'
 
 def tincludes(p):
@@ -62,7 +62,7 @@ def gen(decl,eclass,eheader,indent=''):
         result=reindent(indent,interface_t%vars())
     elif isinstance(decl, idlast.Operation):
         name=decl.identifier()
-        params=','.join(['\n  %s'%ptype(p) for p in decl.parameters()])
+        params=','.join(['\n  %s& %s'%(ptype(p),p.identifier()) for p in decl.parameters()])
         assert not decl.oneway(), 'oneway not yet implemented'
         assert len(decl.raises())==0, 'raises not yet implemented'
         assert len(decl.contexts())==0, 'contexts not yet implemented'

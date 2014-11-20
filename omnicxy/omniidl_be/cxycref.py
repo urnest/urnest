@@ -90,7 +90,7 @@ def gen(decl,eclass,eheader,indent=''):
         result=interface_t%vars()
     elif isinstance(decl, idlast.Operation):
         name=decl.identifier()
-        params=','.join(['\n  %s'%ptype(p) for p in decl.parameters()])
+        params=','.join(['\n  %s& %s'%(ptype(p),p.identifier()) for p in decl.parameters()])
         paramNames=','.join(['\n    %s'%p.identifier() for p in decl.parameters()])
         assert not decl.oneway(), 'oneway not yet implemented'
         assert len(decl.raises())==0, 'raises not yet implemented'

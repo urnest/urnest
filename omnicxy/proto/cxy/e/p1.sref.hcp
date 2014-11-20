@@ -17,22 +17,62 @@
 #include <xju/mt.hh>
 #include <string>
 
+// included idl
+
 class omniCallHandle;
 class omniCallDescriptor;
 class omniServant;
 
-namespace p1 {
-class F;
+namespace
+{
+template<class T>
+class calldesc
+{
+};
 }
-
-
 namespace cxy
 {
 class sref_impl;
 
 template<class BaseException>
 class ORB;
+}
+namespace p1 {
+class F;
+}
 
+
+namespace
+{
+
+template<>
+class calldesc< ::p1::F>
+{
+public:
+  class f1 : public omniCallDescriptor
+  {
+  public:
+    f1(void (*lcfn)(omniCallDescriptor*, omniServant*),
+       char const* op_,
+       int op_len_,
+       _CORBA_Boolean oneway,
+       const char*const* user_excns_,
+       int n_user_excns_,
+       _CORBA_Boolean is_upcall_) throw():
+        omniCallDescriptor(lcfn,
+                           op_,op_len_,
+                           oneway,
+                           user_excns_,n_user_excns_,
+                           is_upcall_)
+    {
+    }
+  };
+
+};
+}
+
+namespace cxy
+{
 template<>
 class sref< ::p1::F> :  private sref_if
 {
@@ -89,7 +129,7 @@ private:
   public:
     static void lcfn(omniCallDescriptor*, omniServant* svnt) throw()
     {
-      p1::F* impl = (p1::F*) svnt->_ptrToInterface(cxy::cdr< ::p1::F>::repoId);
+      ::p1::F* impl = (::p1::F*) svnt->_ptrToInterface(cxy::cdr< ::p1::F>::repoId);
       impl->f1();
     }
     static const char* const _user_exns[] = {
@@ -105,7 +145,7 @@ private:
     
       
     if (omni::strMatch(op, "f1")) {
-      omniCallDescriptor c(f1::lcfn, "f1", 3, 0, f1::_user_exns, 0, 1);
+      calldesc< ::p1::F>::f1 c(f1::lcfn, "f1", 3, 0, f1::_user_exns, 0, 1);
       _handle.upcall(impl_, c);
       return 1;
     }
