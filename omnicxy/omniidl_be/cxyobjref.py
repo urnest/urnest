@@ -4,7 +4,7 @@ from omniidl import idltype
 import sys
 import os.path
 
-from cxy import ptype
+from cxy import ptype, unqualifiedType
 
 objref_operation_t='''
 // %(fqn)s::
@@ -12,7 +12,7 @@ void %(name)s(%(params)s) throw(
   %(eclass)s)
 {
   try {
-    calldesc::%(name)s c("%(name)s", 3, 0%(paramNames)s);
+    calldesc::%(name)s c("%(name)s", %(nameLen)s+1, 0%(paramNames)s);
     _invoke(c);
   }
   catch(CORBA::Exception const& ee) {
@@ -27,24 +27,26 @@ calldesc_operation_t='''
 class %(name)s : public omniCallDescriptor
 {
 public:
-  %(name)s(const char* op_,
-     size_t oplen,
-     _CORBA_Boolean upcall%(params)s):
+  %(name)s(
+    const char* op_,
+    size_t oplen,
+    _CORBA_Boolean upcall%(params)s) throw():
       omniCallDescriptor(
         &%(name)s::lcfn, op_, oplen, 0, _user_exns, 0, upcall)%(paramInits)s
   {
   }
   %(paramMembers)s
+
   // omniCallDescriptor::
   void marshalArguments(cdrStream& s)
-  {
-    %(paramMarshals)s
+  {%(paramMarshals)s
   }
 
   static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt)
   {
     ::%(fqn)s* impl=(::%(fqn)s*)svnt->_ptrToInterface(cxy::cdr< ::%(fqn)s>::repoId);
-    impl->%(name)s();
+    %(name)s* cd((%(name)s*)calldesc);
+    impl->%(name)s(%(callDescInvocationParams)s);
   }
   static const char* const _user_exns[] = {
     0
@@ -135,11 +137,13 @@ def reindent(indent, s):
 def genCalldesc(decl,eclass,eheader,indent,fqn):
     assert isinstance(decl, idlast.Operation),repr(decl)
     name=decl.identifier()
+    nameLen=len(name)
     pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
-    params=','.join(['\n  %s& %s'%(ptype(p),n) for p,n in zip(decl.parameters(),pns)])
-    paramInits=','.join(['\n    %s_(%s)'%(n,n) for n in pns])
-    paramMembers=''.join(['\n  %s;'%pmembertype(p,n) for p,n in zip(decl.parameters(),pns)])
-    paramMarshals=''.join(['\n  %s;'%pmarshal(p,n) for p,n in zip(decl.parameters(),pns)])
+    params=''.join([',\n    %s& %s'%(ptype(p),n) for p,n in zip(decl.parameters(),pns)])
+    callDescInvocationParams=','.join(['\n      cd->%s_'%n for n in pns])
+    paramInits=''.join([',\n      %s_(%s)'%(n,n) for n in pns])
+    paramMembers=''.join(['\n  %s %s_;'%(ptype(p),n) for p,n in zip(decl.parameters(),pns)])
+    paramMarshals=''.join(['\n    cxy::cdr<%s>::marshal(%s_, s);'%(unqualifiedType(p),n) for p,n in zip(decl.parameters(),pns)])
     assert not decl.oneway(), 'oneway not yet implemented'
     assert len(decl.raises())==0, 'raises not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
@@ -151,9 +155,10 @@ def genCalldesc(decl,eclass,eheader,indent,fqn):
 def genObjref(decl,eclass,eheader,indent,fqn):
     assert isinstance(decl, idlast.Operation), repr(decl)
     name=decl.identifier()
+    nameLen=len(name)
     pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
     params=','.join(['\n  %s& %s'%(ptype(p),n) for p,n in zip(decl.parameters(),pns)])
-    paramNames=','.join(['\n    %s'%n for n in pns])
+    paramNames=''.join([',\n      %s'%n for n in pns])
     assert not decl.oneway(), 'oneway not yet implemented'
     assert len(decl.raises())==0, 'raises not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
@@ -197,6 +202,7 @@ template='''\
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/callDescriptor.h>
+%(idlincludes)s
 
 namespace cxy
 {
@@ -204,6 +210,16 @@ namespace cxy
 %(items)s
 }
 '''
+
+def includeSpec(fileName):
+    if os.path.dirname(fileName)=='':
+        return '"%s"'%(os.path.splitext(fileName)[0]+'.objref.hh')
+    return '<%s>'%(os.path.splitext(fileName)[0]+'.objref.hh')
+
+def gen_idlincludes(fileNames):
+    if not len(fileNames):
+        return ''
+    return '\n// included idl'+''.join(['\n#include %s'%includeSpec(_) for _ in fileNames])
 
 def run(tree, args):
     eclass,eheader=([_.split('-e',1)[1].split('=',1) for _ in args if _.startswith('-e')]+[('cxy::Exception','cxy/Exception.hh')])[0]
@@ -215,5 +231,6 @@ def run(tree, args):
     fileName=os.path.basename(tree.file())
     baseName=fileName[0:-4]
     items=''.join([gen(_,eclass,eheader) for _ in tree.declarations() if _.mainFile()])
+    idlincludes=gen_idlincludes(set([_.file() for _ in tree.declarations() if not _.mainFile()]))
     print template % vars()
     pass

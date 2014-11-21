@@ -34,18 +34,18 @@ public:
     
   // p2::F::
   void f1(
-    int16_t const& p1, 
-    int32_t const& p2, 
-    double const& p3, 
+    int16_t const& p1,
+    int32_t const& p2,
+    double const& p3,
     std::string const& p4) throw(
     cxy::Exception)
   {
     try {
-      calldesc::f1 c("f1", 3, 0, 
-                     p1, 
-                     p2, 
-                     p3, 
-                     p4);
+      calldesc::f1 c("f1", 2+1, 0,
+        p1,
+        p2,
+        p3,
+        p4);
       _invoke(c);
     }
     catch(CORBA::Exception const& ee) {
@@ -68,6 +68,37 @@ private:
     class f1 : public omniCallDescriptor
     {
     public:
+      f1(
+        const char* op_,
+        size_t oplen,
+        _CORBA_Boolean upcall,
+        int16_t const& p1,
+        int32_t const& p2,
+        double const& p3,
+        std::string const& p4) throw():
+          omniCallDescriptor(
+            &f1::lcfn, op_, oplen, 0, _user_exns, 0, upcall),
+          p1_(p1),
+          p2_(p2),
+          p3_(p3),
+          p4_(p4)
+      {
+      }
+      
+      int16_t const p1_;
+      int32_t const p2_;
+      double const p3_;
+      std::string const p4_;
+    
+      // omniCallDescriptor::
+      void marshalArguments(cdrStream& s)
+      {
+        cxy::cdr<int16_t>::marshal(p1_, s);
+        cxy::cdr<int32_t>::marshal(p2_, s);
+        cxy::cdr<double>::marshal(p3_, s);
+        cxy::cdr<std::string>::marshal(p4_, s);
+      }
+    
       static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt)
       {
         ::p2::F* impl=(::p2::F*)svnt->_ptrToInterface(cxy::cdr< ::p2::F>::repoId);
@@ -78,35 +109,6 @@ private:
           cd->p3_,
           cd->p4_);
       }
-      f1(const char* op_,
-         size_t oplen,
-         _CORBA_Boolean upcall,
-         int16_t const& p1, 
-         int32_t const& p2, 
-         double const& p3, 
-         std::string const& p4) throw():
-          omniCallDescriptor(
-            &f1::lcfn, op_, oplen, 0, _user_exns, 0, upcall),
-          p1_(p1),
-          p2_(p2),
-          p3_(p3),
-          p4_(p4)
-      {
-      }
-      int16_t const p1_;
-      int32_t const p2_;
-      double const p3_;
-      std::string const p4_;
-
-      // omniCallDescriptor::
-      void marshalArguments(cdrStream& s)
-      {
-        cxy::cdr<int16_t>::marshal(p1_, s);
-        cxy::cdr<int32_t>::marshal(p2_, s);
-        cxy::cdr<double>::marshal(p3_, s);
-        cxy::cdr<std::string>::marshal(p4_, s);
-      }
-
       static const char* const _user_exns[] = {
         0
       };

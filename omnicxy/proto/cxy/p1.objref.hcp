@@ -12,6 +12,7 @@
 #include <omniORB4/CORBA.h>
 #include <omniORB4/callDescriptor.h>
 
+
 namespace cxy
 {
 
@@ -34,7 +35,7 @@ public:
     cxy::Exception)
   {
     try {
-      calldesc::f1 c("f1", 3, 0);
+      calldesc::f1 c("f1", 2+1, 0);
       _invoke(c);
     }
     catch(CORBA::Exception const& ee) {
@@ -57,23 +58,25 @@ private:
     class f1 : public omniCallDescriptor
     {
     public:
-      f1(const char* op_,
-         size_t oplen,
-         _CORBA_Boolean upcall):
+      f1(
+        const char* op_,
+        size_t oplen,
+        _CORBA_Boolean upcall) throw():
           omniCallDescriptor(
             &f1::lcfn, op_, oplen, 0, _user_exns, 0, upcall)
       {
       }
       
+    
       // omniCallDescriptor::
       void marshalArguments(cdrStream& s)
       {
-        
       }
     
       static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt)
       {
         ::p1::F* impl=(::p1::F*)svnt->_ptrToInterface(cxy::cdr< ::p1::F>::repoId);
+        f1* cd((f1*)calldesc);
         impl->f1();
       }
       static const char* const _user_exns[] = {

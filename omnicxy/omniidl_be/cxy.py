@@ -34,6 +34,11 @@ basicParamTypes={
     idltype.tk_double: TypeInfo('double',[]),
     idltype.tk_string: TypeInfo('std::string',['<string>'])
 }
+def unqualifiedType(p):
+    assert isinstance(p,idlast.Parameter),p
+    assert p.paramType().kind() in basicParamTypes, '%s not implemented, only basic types %s implemented' % (p.paramType().kind(),basicParamTypes.keys())
+    return basicParamTypes.get(p.paramType().kind()).typename
+    
 def ptype(p):
     assert isinstance(p,idlast.Parameter),p
     if p.dirtext()=='in':
