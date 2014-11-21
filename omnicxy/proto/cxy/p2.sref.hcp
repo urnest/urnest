@@ -74,7 +74,7 @@ public:
 
     // omniCallDescriptor::
     void unmarshalArguments(cdrStream& s) throw(
-      //REVISIT
+      CORBA::SystemException
       )
     {
       p1_=cxy::cdr<uint16_t>::unmarshalFrom(s);

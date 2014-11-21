@@ -27,9 +27,11 @@ template<>
 class cdr<uint16_t>
 {
 public:
-  static uint16_t unmarshalFrom(cdrStream& s) throw(
-    //REVISIT
-    )
+  static uint16_t unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
   {
     uint16_t result;
     (::CORBA::UShort&)result <<= s;
@@ -46,9 +48,11 @@ template<>
 class cdr<uint32_t>
 {
 public:
-  static uint32_t unmarshalFrom(cdrStream& s) throw(
-    //REVISIT
-    )
+  static uint32_t unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
   {
     uint32_t result;
     (::CORBA::ULong&)result <<= s;
@@ -66,9 +70,11 @@ template<>
 class cdr<int16_t>
 {
 public:
-  static int16_t unmarshalFrom(cdrStream& s) throw(
-    //REVISIT
-    )
+  static int16_t unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
   {
     int16_t result;
     (::CORBA::Short&)result <<= s;
@@ -85,9 +91,11 @@ template<>
 class cdr<int32_t>
 {
 public:
-  static int32_t unmarshalFrom(cdrStream& s) throw(
-    //REVISIT
-    )
+  static int32_t unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
   {
     int32_t result;
     (::CORBA::Long&)result <<= s;
@@ -105,9 +113,11 @@ template<>
 class cdr<double>
 {
 public:
-  static double unmarshalFrom(cdrStream& s) throw(
-    //REVISIT
-    )
+  static double unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
   {
     double result;
     (::CORBA::Double&)result <<= s;
@@ -125,9 +135,11 @@ template<>
 class cdr<std::string>
 {
 public:
-  static std::string unmarshalFrom(cdrStream& s) throw(
-    //REVISIT
-    )
+  static std::string unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
   {
     char* r(s.unmarshalString(0));
     std::string result(r);
