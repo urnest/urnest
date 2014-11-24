@@ -8,12 +8,14 @@
 
 %all-tests.tree==<<
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p1-main) '3734' 'both':exec.output
+()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p2-main) '3735' 'both':exec.output
 %test-transient
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (test-port-in-use.cc+(%cxx-opts):auto.cxx.exe) '3736':stdout
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%test-no-such-object) '3742':exec.output
 
 
 %p1-main==p1-main.cc+(../../..%cxx-opts):auto.cxx.exe
+%p2-main==p2-main.cc+(../../..%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 
 %dummy.hcp==<<
@@ -27,6 +29,16 @@ p1.cdr.hcp==(%dummy.hcp)+cmd=(../../../omniidl_be/omniidl.sh) (../../../omniidl_
 p1.objref.hcp==(%dummy.hcp)+cmd=(../../../omniidl_be/omniidl.sh) (../../../omniidl_be/cxyobjref.py) '-Wb-eE=./E.hh' (../../p1.idl):stdout
 
 p1.sref.hcp==(%dummy.hcp)+cmd=(../../../omniidl_be/omniidl.sh) (../../../omniidl_be/cxysref.py) '-Wb-eE=./E.hh' (../../p1.idl):stdout
+
+p2.hcp==(%dummy.hcp)+cmd=(../../../omniidl_be/omniidl.sh) (../../../omniidl_be/cxy.py) '-Wb-eE=./E.hh' (../../p2.idl):stdout
+
+p2.cref.hcp==(%dummy.hcp)+cmd=(../../../omniidl_be/omniidl.sh) (../../../omniidl_be/cxycref.py) '-Wb-eE=./E.hh' (../../p2.idl):stdout
+
+p2.cdr.hcp==(%dummy.hcp)+cmd=(../../../omniidl_be/omniidl.sh) (../../../omniidl_be/cxycdr.py) '-Wb-eE=./E.hh' (../../p2.idl):stdout
+
+p2.objref.hcp==(%dummy.hcp)+cmd=(../../../omniidl_be/omniidl.sh) (../../../omniidl_be/cxyobjref.py) '-Wb-eE=./E.hh' (../../p2.idl):stdout
+
+p2.sref.hcp==(%dummy.hcp)+cmd=(../../../omniidl_be/omniidl.sh) (../../../omniidl_be/cxysref.py) '-Wb-eE=./E.hh' (../../p2.idl):stdout
 
 %dummy.hh==<<
 
@@ -45,6 +57,21 @@ p1.objref.cc==%p1.objref/p1.objref.cc
 p1.cdr.hh==%p1.cdr/p1.cdr.hh
 p1.cdr.cc==%p1.cdr/p1.cdr.cc
 
+p2.hh==%p2/p2.hh
+p2.cc==%p2/p2.cc
+
+p2.cref.hh==%p2.cref/p2.cref.hh
+p2.cref.cc==%p2.cref/p2.cref.cc
+
+p2.sref.hh==%p2.sref/p2.sref.hh
+p2.sref.cc==%p2.sref/p2.sref.cc
+
+p2.objref.hh==%p2.objref/p2.objref.hh
+p2.objref.cc==%p2.objref/p2.objref.cc
+
+p2.cdr.hh==%p2.cdr/p2.cdr.hh
+p2.cdr.cc==%p2.cdr/p2.cdr.cc
+
 E.hh==%E/E.hh
 E.cc==%E/E.cc
 
@@ -53,6 +80,11 @@ E.cc==%E/E.cc
 %p1.objref==()+cmd=(../../../../hcp/hcp-split) -l 0 (p1.objref.hcp) 'p1.objref.hh' 'p1.objref.cc':output
 %p1.cdr==()+cmd=(../../../../hcp/hcp-split) -l 0 (p1.cdr.hcp) 'p1.cdr.hh' 'p1.cdr.cc':output
 %p1.sref==()+cmd=(../../../../hcp/hcp-split) -l 0 (p1.sref.hcp) 'p1.sref.hh' 'p1.sref.cc':output
+%p2==()+cmd=(../../../../hcp/hcp-split) -l 0 (p2.hcp) 'p2.hh' 'p2.cc':output
+%p2.cref==()+cmd=(../../../../hcp/hcp-split) -l 0 (p2.cref.hcp) 'p2.cref.hh' 'p2.cref.cc':output
+%p2.objref==()+cmd=(../../../../hcp/hcp-split) -l 0 (p2.objref.hcp) 'p2.objref.hh' 'p2.objref.cc':output
+%p2.cdr==()+cmd=(../../../../hcp/hcp-split) -l 0 (p2.cdr.hcp) 'p2.cdr.hh' 'p2.cdr.cc':output
+%p2.sref==()+cmd=(../../../../hcp/hcp-split) -l 0 (p2.sref.hcp) 'p2.sref.hh' 'p2.sref.cc':output
 %E==()+cmd=(../../../../hcp/hcp-split) -l 0 (E.hcp) 'E.hh' 'E.cc':output
 
 %test-transient==()+cmd=(%test-transient.sh) (%p1-main):exec.output

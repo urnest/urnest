@@ -75,13 +75,13 @@ x adjust sref.hcp need to derive from omniCallDescriptor to override
     x .cref.hcp
     x .objref.hcp
     x .sref.hcp
-  - gen
+  x gen
     x .hcp
     x .cdr.hcp
     x .cref.hcp
     x .objref.hcp
-    .sref.hcp
-  - cxy/e
+    x .sref.hcp
+  x cxy/e
 
 - test client wrong type exception
 
