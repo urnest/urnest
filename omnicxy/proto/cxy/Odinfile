@@ -74,6 +74,7 @@ p2.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxy.py)
 p2.cdr.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycdr.py) (../p2.idl):stdout
 p2.cref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycref.py) (../p2.idl):stdout
 p2.objref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxyobjref.py) (../p2.idl):stdout
+p2.sref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxysref.py) (../p2.idl):stdout
 
 %test-transient==()+cmd=(%test-transient.sh) (%p1-main):exec.output
 

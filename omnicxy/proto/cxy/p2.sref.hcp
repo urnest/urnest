@@ -19,6 +19,7 @@
 #include <xju/Optional.hh> //impl
 #include <cxy/cdr.hh> //impl
 
+
 // included idl
 #include "p1.sref.hh"
 
@@ -44,8 +45,10 @@ namespace p2 {
 class F;
 }
 
+
 namespace
 {
+
 template<>
 class calldesc< ::p2::F>
 {
@@ -67,8 +70,9 @@ public:
                            is_upcall_)
     {
     }
-    xju::Optional<uint16_t> p1_;
-    xju::Optional<uint32_t> p2_;
+    
+    xju::Optional<int16_t> p1_;
+    xju::Optional<int32_t> p2_;
     xju::Optional<double> p3_;
     xju::Optional<std::string> p4_;
 
@@ -77,24 +81,18 @@ public:
       CORBA::SystemException
       )
     {
-      p1_=cxy::cdr<uint16_t>::unmarshalFrom(s);
-      p2_=cxy::cdr<uint32_t>::unmarshalFrom(s);
+      p1_=cxy::cdr<int16_t>::unmarshalFrom(s);
+      p2_=cxy::cdr<int32_t>::unmarshalFrom(s);
       p3_=cxy::cdr<double>::unmarshalFrom(s);
       p4_=cxy::cdr<std::string>::unmarshalFrom(s);
     }
   };
-  
+
 };
-  
 }
 
 namespace cxy
 {
-class sref_impl;
-
-template<class BaseException>
-class ORB;
-
 template<>
 class sref< ::p2::F> :  private sref_if
 {
@@ -145,14 +143,14 @@ public:
   ::p2::F& x_;
   
 private:
+    
   class f1 
   {
   public:
-    static void lcfn(omniCallDescriptor* vc, omniServant* svnt) throw()
+    static void lcfn(omniCallDescriptor* ocd, omniServant* svnt) throw()
     {
       ::p2::F* impl = (::p2::F*) svnt->_ptrToInterface(cxy::cdr< ::p2::F>::repoId);
-      calldesc< ::p2::F>::f1* c=(calldesc< ::p2::F>::f1*)vc;
-      
+      calldesc< ::p2::F>::f1* c=(calldesc< ::p2::F>::f1*)ocd;
       impl->f1(
         c->p1_.value(),
         c->p2_.value(),
@@ -165,7 +163,6 @@ private:
   };
   
 
-    
   // sref_if::
   virtual bool _dispatch(omniCallHandle& _handle) throw()
   {
@@ -173,7 +170,7 @@ private:
     
       
     if (omni::strMatch(op, "f1")) {
-      calldesc< ::p2::F>::f1 c(f1::lcfn, "f1", 3, 0, f1::_user_exns, 0, 1);
+      calldesc< ::p2::F>::f1 c(f1::lcfn, "f1", 2+1, 0, f1::_user_exns, 0, 1);
       _handle.upcall(impl_, c);
       return 1;
     }

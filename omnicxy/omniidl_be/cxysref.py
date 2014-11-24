@@ -4,28 +4,7 @@ from omniidl import idltype
 import sys
 import os.path
 
-operation_t='''
-class %(name)s 
-{
-public:
-  static void lcfn(omniCallDescriptor*, omniServant* svnt) throw()
-  {
-    ::%(fqn)s* impl = (::%(fqn)s*) svnt->_ptrToInterface(cxy::cdr< ::%(fqn)s>::repoId);
-    impl->%(name)s();
-  }
-  static const char* const _user_exns[] = {
-    0
-  };
-};
-'''
-
-dispatcher_t='''
-  if (omni::strMatch(op, "%(name)s")) {
-    calldesc< ::%(fqn)s>::%(name)s c(%(name)s::lcfn, "%(name)s", 3, 0, %(name)s::_user_exns, 0, 1);
-    _handle.upcall(impl_, c);
-    return 1;
-  }
-'''
+from cxy import ptype,unqualifiedType
 
 calldesc_t='''
 template<>
@@ -49,9 +28,41 @@ public:
                            is_upcall_)
     {
     }
+    %(paramMembers)s
+
+    // omniCallDescriptor::
+    void unmarshalArguments(cdrStream& s) throw(
+      CORBA::SystemException
+      )
+    {%(paramUnmarshals)s
+    }
   };
 
 };'''
+
+operation_t='''
+class %(name)s 
+{
+public:
+  static void lcfn(omniCallDescriptor* ocd, omniServant* svnt) throw()
+  {
+    ::%(fqn)s* impl = (::%(fqn)s*) svnt->_ptrToInterface(cxy::cdr< ::%(fqn)s>::repoId);
+    calldesc< ::%(fqn)s>::%(name)s* c=(calldesc< ::%(fqn)s>::%(name)s*)ocd;
+    impl->%(name)s(%(callDescInvocationParams)s);
+  }
+  static const char* const _user_exns[] = {
+    0
+  };
+};
+'''
+
+dispatcher_t='''
+  if (omni::strMatch(op, "%(name)s")) {
+    calldesc< ::%(fqn)s>::%(name)s c(%(name)s::lcfn, "%(name)s", %(nameLen)s+1, 0, %(name)s::_user_exns, 0, 1);
+    _handle.upcall(impl_, c);
+    return 1;
+  }
+'''
 
 interface_t='''\
 %(forward)s
@@ -166,8 +177,9 @@ def genOperation(decl,eclass,eheader,indent,fqn):
     result=''
     assert isinstance(decl, idlast.Operation), repr(decl)
     name=decl.identifier()
+    pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
+    callDescInvocationParams=','.join(['\n      c->%s_.value()'%n for n in pns])
     assert not decl.oneway(), 'oneway not yet implemented'
-    assert len(decl.parameters())==0, 'parameters not yet implemented'
     assert len(decl.raises())==0, 'raises not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
@@ -178,8 +190,8 @@ def genOperation(decl,eclass,eheader,indent,fqn):
 def genDispatcher(decl,eclass,eheader,indent,fqn):
     assert isinstance(decl, idlast.Operation), repr(decl)
     name=decl.identifier()
+    nameLen=len(name)
     assert not decl.oneway(), 'oneway not yet implemented'
-    assert len(decl.parameters())==0, 'parameters not yet implemented'
     assert len(decl.raises())==0, 'raises not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
@@ -190,8 +202,10 @@ def genDispatcher(decl,eclass,eheader,indent,fqn):
 def genCalldesc(decl,eclass,eheader,indent,fqn):
     assert isinstance(decl, idlast.Operation), repr(decl)
     name=decl.identifier()
+    pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
+    paramMembers=''.join(['\n    xju::Optional<%s> %s_;'%(unqualifiedType(p),n) for p,n in zip(decl.parameters(),pns)])
+    paramUnmarshals=''.join(['\n      %s_=cxy::cdr<%s>::unmarshalFrom(s);'%(n,unqualifiedType(p)) for p,n in zip(decl.parameters(),pns)])
     assert not decl.oneway(), 'oneway not yet implemented'
-    assert len(decl.parameters())==0, 'parameters not yet implemented'
     assert len(decl.raises())==0, 'raises not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
@@ -241,8 +255,8 @@ template='''\
 #include <cxy/Exceptions.hh>
 #include %(eheader)s
 
-#include "p1.hh" // impl
-#include "p1.cdr.hh" // impl
+#include "%(baseName)s.hh" // impl
+#include "%(baseName)s.cdr.hh" // impl
 
 #include <cxy/ORB.hh> // impl
 #include <cxy/sref_impl.hh> // impl
@@ -252,8 +266,10 @@ template='''\
 
 #include <xju/mt.hh>
 #include <string>
+#include <xju/Optional.hh> //impl
+#include <cxy/cdr.hh> //impl
 
-// included idl
+%(idlincludes)s
 
 class omniCallHandle;
 class omniCallDescriptor;
@@ -276,6 +292,16 @@ class ORB;
 %(items)s
 '''
 
+def includeSpec(fileName):
+    if os.path.dirname(fileName)=='':
+        return '"%s"'%(os.path.splitext(fileName)[0]+'.sref.hh')
+    return '<%s>'%(os.path.splitext(fileName)[0]+'.sref.hh')
+
+def gen_idlincludes(fileNames):
+    if not len(fileNames):
+        return ''
+    return '\n// included idl'+''.join(['\n#include %s'%includeSpec(_) for _ in fileNames])
+
 def run(tree, args):
     eclass,eheader=([_.split('-e',1)[1].split('=',1) for _ in args if _.startswith('-e')]+[('cxy::Exception','cxy/Exception.hh')])[0]
     if eheader.startswith('./') or os.path.dirname(eheader)=='':
@@ -285,6 +311,7 @@ def run(tree, args):
     assert tree.file().endswith('.idl'), tree.file()
     fileName=os.path.basename(tree.file())
     baseName=fileName[0:-4]
+    idlincludes=gen_idlincludes(set([_.file() for _ in tree.declarations() if not _.mainFile()]))
     items=''.join(
         [gen(_,eclass,eheader) for _ in tree.declarations() if _.mainFile()])
     print template % vars()
