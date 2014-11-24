@@ -83,13 +83,16 @@ x adjust sref.hcp need to derive from omniCallDescriptor to override
     x .sref.hcp
   x cxy/e
 
-- test client wrong type exception
+x test client wrong type exception
+  x e
 
 - p3.idl:
   - basic types returned
 
 - p4.idl:
   - typedef basic type -> distinct
+    - int
+    - string
 
 - p5.idl:
   - struct in param

@@ -12,11 +12,13 @@
 %test-transient
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (test-port-in-use.cc+(%cxx-opts):auto.cxx.exe) '3736':stdout
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%test-no-such-object) '3742':exec.output
+()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%test-wrong-type) '3743':exec.output
 
 
 %p1-main==p1-main.cc+(../../..%cxx-opts):auto.cxx.exe
 %p2-main==p2-main.cc+(../../..%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
+%test-wrong-type==test-wrong-type.cc+(%cxx-opts):auto.cxx.exe
 
 %dummy.hcp==<<
 
