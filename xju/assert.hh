@@ -57,6 +57,15 @@ namespace xju
 	}
 	return true;
     }
+    template<class A, class B>
+    bool assert_less(const A& a, const B& b)
+    {
+	if (!(a < b))
+	{
+	    assert_abort();
+	}
+	return true;
+    }
     template<class Operator, class A>
     bool assert_(const A& a, const Operator& o) // [2]
     {

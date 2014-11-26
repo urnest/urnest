@@ -20,6 +20,7 @@
 ()+cmd=(test-functional.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-mt.cc+(..%cxx-opts)+ld_flags=-lpthread:auto.cxx.exe):stdout
 ()+cmd=(test-path.cc+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-snmp.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-stringToDouble.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-stringToInt.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-stringToTime.cc+(..%cxx-opts):auto.cxx.exe):stdout

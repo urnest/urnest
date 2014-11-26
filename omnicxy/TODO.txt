@@ -68,21 +68,35 @@ x adjust sref.hcp need to derive from omniCallDescriptor to override
 
 - p2.idl:
   x include p1.idl
-  x basic types in params
-  x proto
-    x .hcp
-    x .cdr.hcp
-    x .cref.hcp
-    x .objref.hcp
-    x .sref.hcp
-  x gen
-    x .hcp
-    x .cdr.hcp
-    x .cref.hcp
-    x .objref.hcp
-    x .sref.hcp
-  x cxy/e
-
+  x basic types in params - short,long,double,string
+    x proto
+      x .hcp
+      x .cdr.hcp
+      x .cref.hcp
+      x .objref.hcp
+      x .sref.hcp
+    x gen
+      x .hcp
+      x .cdr.hcp
+      x .cref.hcp
+      x .objref.hcp
+      x .sref.hcp
+    x cxy/e
+  - return basic types - short,long,double,string
+    proto
+      .hcp
+      .cdr.hcp
+      .cref.hcp
+      .objref.hcp
+      .sref.hcp
+    gen
+      .hcp
+      .cdr.hcp
+      .cref.hcp
+      .objref.hcp
+      .sref.hcp
+    x cxy/e
+  
 x test client wrong type exception
   x e
 
