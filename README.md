@@ -83,9 +83,12 @@ C++ and odin build bits and pieces to share
 	
     -   odin/test a couple of tests of odin itself
 
--   xju has my C++ classes for things like posix threads,
+-   xju has my C++ classes etc for things like posix threads,
     exception handling, assertions; if there is a theme it is
-    providing classes that are hard to misuse
+    providing classes that are hard to misuse and that leverage
+    C++ strengths:
+        - type safety
+        - RAII
       status: usable
 
 -   btt is a simple time tracker, it uses fltk1.3 for UI
