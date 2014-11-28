@@ -22,6 +22,7 @@
 #include <xju/mt.hh>
 #include <xju/Time.hh>
 #include <cxy/ORB.hh>
+#include "xju/Shared.hh"
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {
@@ -48,14 +49,33 @@ public:
               << b << ", "
               << c << ", "
               << d << ")" << std::endl;
-    calls_.push_back(Call(a,b,c,d));
+    calls_.push_back(xju::Shared<Call>(
+                       new Call::f1(a,b,c,d)));
+  }
+  virtual int16_t f2() throw(cxy::Exception)
+  {
+    std::cout << "F::f2(" << std::endl;
+    calls_.push_back(xju::Shared<Call>(
+                       new Call::f2));
+    return 22;
   }
   struct Call
   {
-    Call(int16_t const& a, 
-         int32_t const& b, 
-         double const& c, 
-         std::string const& d) throw():
+    virtual ~Call() throw()
+    {
+    }
+    struct f1;
+    struct f2;
+  };
+  struct Call::f1 : Call
+  {
+    ~f1() throw()
+    {
+    }
+    f1(int16_t const& a, 
+       int32_t const& b, 
+       double const& c, 
+       std::string const& d) throw():
         a_(a),
         b_(b),
         c_(c),
@@ -65,8 +85,8 @@ public:
     int32_t b_;
     double  c_;
     std::string  d_;
-
-    friend bool operator==(Call const& x, Call const& y) throw()
+    
+    friend bool operator==(f1 const& x, f1 const& y) throw()
     {
       return std::make_pair(std::make_pair(x.a_,x.b_),
                             std::make_pair(x.c_,x.d_))==
@@ -74,7 +94,14 @@ public:
                        std::make_pair(y.c_,y.d_));
     }
   };
-  std::vector<Call> calls_;
+  struct Call::f2 : Call
+  {
+    ~f2() throw()
+    {
+    }
+  };
+  
+  std::vector<xju::Shared<Call> > calls_;
 };
 
   
@@ -97,6 +124,7 @@ int main(int argc, char* argv[])
       cxy::ORB<cxy::Exception> orb("giop:tcp::");
       cxy::cref<p2::F> ref(orb, makeURI(port, OBJECT_NAME));
       ref->f1(1, 2, 3.4, "fred");
+      std::cout << ref->f2() << std::endl;
     }
     else if (argv[2]==std::string("server")) {
       std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
@@ -119,7 +147,18 @@ int main(int argc, char* argv[])
       cxy::cref<p2::F> ref(orb, makeURI(port, OBJECT_NAME));
       ref->f1(1, 2, 3.4, "fred");
       xju::assert_equal(x.calls_.size(),1U);
-      xju::assert_equal(x.calls_[0], F_impl::Call(1,2,3.4,"fred"));
+      {
+        F_impl::Call::f1 const& c(
+          dynamic_cast<F_impl::Call::f1 const&>(*x.calls_[0]));
+        xju::assert_equal(c, F_impl::Call::f1(1,2,3.4,"fred"));
+      }
+      xju::assert_equal(ref->f2(),22);
+      xju::assert_equal(x.calls_.size(),2U);
+      {
+        F_impl::Call::f2 const& c(
+          dynamic_cast<F_impl::Call::f2 const&>(*x.calls_[1]));
+      }
+      
     }
     return 0;
   }

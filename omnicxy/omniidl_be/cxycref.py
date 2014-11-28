@@ -4,16 +4,16 @@ from omniidl import idltype
 import sys
 import os.path
 
-from cxy import ptype
+from cxy import ptype,unqualifiedType
 
 operation_t='''
-void %(name)s(%(params)s) throw(
+%(returnType)s %(name)s(%(params)s) throw(
     // ipc failure
     %(eclass)s)
 {
   xju::assert_not_equal(obj_, (void*)0);
   xju::assert_not_equal(true, obj_->_NP_is_nil());
-  obj_->%(name)s(%(paramNames)s);
+  %(returnStatement)s obj_->%(name)s(%(paramNames)s);
 }
 '''
 
@@ -95,7 +95,11 @@ def gen(decl,eclass,eheader,indent=''):
         assert not decl.oneway(), 'oneway not yet implemented'
         assert len(decl.raises())==0, 'raises not yet implemented'
         assert len(decl.contexts())==0, 'contexts not yet implemented'
-        assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
+        returnType=unqualifiedType(decl.returnType())
+        returnStatement=''
+        if returnType != 'void':
+            returnStatement='return'
+            pass
         result=reindent(indent,operation_t%vars())
     else:
         assert False, repr(decl)

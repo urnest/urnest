@@ -48,11 +48,11 @@ class F;
 
 namespace
 {
-
 template<>
 class calldesc< ::p2::F>
 {
 public:
+
   class f1 : public omniCallDescriptor
   {
   public:
@@ -86,8 +86,43 @@ public:
       p3_=cxy::cdr<double>::unmarshalFrom(s);
       p4_=cxy::cdr<std::string>::unmarshalFrom(s);
     }
+    // omniCallDescriptor::
+    void marshalReturnedValues(cdrStream& s) throw()
+    {
+    }
   };
+  class f2 : public omniCallDescriptor
+  {
+  public:
+    f2(void (*lcfn)(omniCallDescriptor*, omniServant*),
+       char const* op_,
+       int op_len_,
+       _CORBA_Boolean oneway,
+       const char*const* user_excns_,
+       int n_user_excns_,
+       _CORBA_Boolean is_upcall_) throw():
+        omniCallDescriptor(lcfn,
+                           op_,op_len_,
+                           oneway,
+                           user_excns_,n_user_excns_,
+                           is_upcall_)
+    {
+    }
+    
+    xju::Optional<int16_t> r_;
 
+    // omniCallDescriptor::
+    void unmarshalArguments(cdrStream& s) throw(
+      CORBA::SystemException
+      )
+    {
+    }
+    // omniCallDescriptor::
+    void marshalReturnedValues(cdrStream& s) throw()
+    {
+      cxy::cdr<int16_t>::marshal(r_.value(),s);
+    }
+  };
 };
 }
 
@@ -151,11 +186,25 @@ private:
     {
       ::p2::F* impl = (::p2::F*) svnt->_ptrToInterface(cxy::cdr< ::p2::F>::repoId);
       calldesc< ::p2::F>::f1* c=(calldesc< ::p2::F>::f1*)ocd;
-      impl->f1(
+       impl->f1(
         c->p1_.value(),
         c->p2_.value(),
         c->p3_.value(),
         c->p4_.value());
+    }
+    static const char* const _user_exns[] = {
+      0
+    };
+  };
+    
+  class f2 
+  {
+  public:
+    static void lcfn(omniCallDescriptor* ocd, omniServant* svnt) throw()
+    {
+      ::p2::F* impl = (::p2::F*) svnt->_ptrToInterface(cxy::cdr< ::p2::F>::repoId);
+      calldesc< ::p2::F>::f2* c=(calldesc< ::p2::F>::f2*)ocd;
+      c->r_ = impl->f2();
     }
     static const char* const _user_exns[] = {
       0
@@ -171,6 +220,12 @@ private:
       
     if (omni::strMatch(op, "f1")) {
       calldesc< ::p2::F>::f1 c(f1::lcfn, "f1", 2+1, 0, f1::_user_exns, 0, 1);
+      _handle.upcall(impl_, c);
+      return 1;
+    }
+    
+    if (omni::strMatch(op, "f2")) {
+      calldesc< ::p2::F>::f2 c(f2::lcfn, "f2", 2+1, 0, f2::_user_exns, 0, 1);
       _handle.upcall(impl_, c);
       return 1;
     }

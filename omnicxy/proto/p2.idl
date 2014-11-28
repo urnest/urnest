@@ -5,5 +5,6 @@ module p2
   interface F
   {
     void f1(in short a, in long b, in double c, in string d);
+    short f2();
   };
 };

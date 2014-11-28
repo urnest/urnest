@@ -8,6 +8,7 @@
 #include <cxy/pof.hh>
 
 #include <xju/NonCopyable.hh>
+#include <xju/Optional.hh>
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/callDescriptor.h>
@@ -69,7 +70,10 @@ private:
       
     
       // omniCallDescriptor::
-      void marshalArguments(cdrStream& s)
+      void marshalArguments(cdrStream& s) // REVISIT: throw
+      {
+      }
+      void unmarshalReturnedValues(cdrStream& s) // REVISIT: throw
       {
       }
     
@@ -77,7 +81,7 @@ private:
       {
         ::p1::F* impl=(::p1::F*)svnt->_ptrToInterface(cxy::cdr< ::p1::F>::repoId);
         f1* cd((f1*)calldesc);
-        impl->f1();
+         impl->f1();
       }
       static const char* const _user_exns[] = {
         0

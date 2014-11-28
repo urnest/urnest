@@ -24,6 +24,10 @@ public:
     // ipc failure
     // - note servant may not throw
     E) = 0;
+  virtual int16_t f2() throw(
+    // ipc failure
+    // - note servant may not throw
+    E) = 0;
 };
 
 }

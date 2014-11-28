@@ -82,19 +82,21 @@ x adjust sref.hcp need to derive from omniCallDescriptor to override
       x .objref.hcp
       x .sref.hcp
     x cxy/e
-  - return basic types - short,long,double,string
+  - return basic types:
+    x short
+    - long,double,string
     proto
-      .hcp
-      .cdr.hcp
-      .cref.hcp
-      .objref.hcp
-      .sref.hcp
+      x .hcp
+      x .cdr.hcp
+      x .cref.hcp
+      x .objref.hcp
+      x .sref.hcp
     gen
-      .hcp
-      .cdr.hcp
-      .cref.hcp
-      .objref.hcp
-      .sref.hcp
+      x .hcp
+      x .cdr.hcp
+      x .cref.hcp
+      x .objref.hcp
+      x .sref.hcp
     x cxy/e
   
 x test client wrong type exception

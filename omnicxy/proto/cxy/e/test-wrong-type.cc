@@ -48,33 +48,11 @@ public:
               << b << ", "
               << c << ", "
               << d << ")" << std::endl;
-    calls_.push_back(Call(a,b,c,d));
   }
-  struct Call
+  virtual int16_t f2() throw(E)
   {
-    Call(int16_t const& a, 
-         int32_t const& b, 
-         double const& c, 
-         std::string const& d) throw():
-        a_(a),
-        b_(b),
-        c_(c),
-        d_(d) {
-    }
-    int16_t a_;
-    int32_t b_;
-    double  c_;
-    std::string  d_;
-
-    friend bool operator==(Call const& x, Call const& y) throw()
-    {
-      return std::make_pair(std::make_pair(x.a_,x.b_),
-                            std::make_pair(x.c_,x.d_))==
-        std::make_pair(std::make_pair(y.a_,y.b_),
-                       std::make_pair(y.c_,y.d_));
-    }
-  };
-  std::vector<Call> calls_;
+    return 22;
+  }
 };
 
   

@@ -7,10 +7,6 @@ import os.path
 from cxy import ptype,unqualifiedType
 
 calldesc_t='''
-template<>
-class calldesc< ::%(fqn)s>
-{
-public:
   class %(name)s : public omniCallDescriptor
   {
   public:
@@ -28,7 +24,7 @@ public:
                            is_upcall_)
     {
     }
-    %(paramMembers)s
+    %(paramMembers)s%(returnMember)s
 
     // omniCallDescriptor::
     void unmarshalArguments(cdrStream& s) throw(
@@ -36,9 +32,11 @@ public:
       )
     {%(paramUnmarshals)s
     }
-  };
-
-};'''
+    // omniCallDescriptor::
+    void marshalReturnedValues(cdrStream& s) throw()
+    {%(returnMarshal)s
+    }
+  };'''
 
 operation_t='''
 class %(name)s 
@@ -48,7 +46,7 @@ public:
   {
     ::%(fqn)s* impl = (::%(fqn)s*) svnt->_ptrToInterface(cxy::cdr< ::%(fqn)s>::repoId);
     calldesc< ::%(fqn)s>::%(name)s* c=(calldesc< ::%(fqn)s>::%(name)s*)ocd;
-    impl->%(name)s(%(callDescInvocationParams)s);
+    %(callDescReturnValue)s impl->%(name)s(%(callDescInvocationParams)s);
   }
   static const char* const _user_exns[] = {
     0
@@ -69,7 +67,12 @@ interface_t='''\
 
 namespace
 {
+template<>
+class calldesc< ::%(fqn)s>
+{
+public:
 %(calldescs)s
+};
 }
 
 namespace cxy
@@ -179,10 +182,14 @@ def genOperation(decl,eclass,eheader,indent,fqn):
     name=decl.identifier()
     pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
     callDescInvocationParams=','.join(['\n      c->%s_.value()'%n for n in pns])
+    returnType=unqualifiedType(decl.returnType())
+    callDescReturnValue=''
+    if returnType != 'void':
+        callDescReturnValue='c->r_ ='
+        pass
     assert not decl.oneway(), 'oneway not yet implemented'
     assert len(decl.raises())==0, 'raises not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
-    assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
     
     result=reindent(indent,operation_t%vars())
     return result
@@ -194,7 +201,6 @@ def genDispatcher(decl,eclass,eheader,indent,fqn):
     assert not decl.oneway(), 'oneway not yet implemented'
     assert len(decl.raises())==0, 'raises not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
-    assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
     
     result=reindent(indent,dispatcher_t%vars())
     return result
@@ -203,12 +209,18 @@ def genCalldesc(decl,eclass,eheader,indent,fqn):
     assert isinstance(decl, idlast.Operation), repr(decl)
     name=decl.identifier()
     pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
-    paramMembers=''.join(['\n    xju::Optional<%s> %s_;'%(unqualifiedType(p),n) for p,n in zip(decl.parameters(),pns)])
-    paramUnmarshals=''.join(['\n      %s_=cxy::cdr<%s>::unmarshalFrom(s);'%(n,unqualifiedType(p)) for p,n in zip(decl.parameters(),pns)])
+    paramMembers=''.join(['\n    xju::Optional<%s> %s_;'%(unqualifiedType(p.paramType()),n) for p,n in zip(decl.parameters(),pns)])
+    paramUnmarshals=''.join(['\n      %s_=cxy::cdr<%s>::unmarshalFrom(s);'%(n,unqualifiedType(p.paramType())) for p,n in zip(decl.parameters(),pns)])
+    returnType=unqualifiedType(decl.returnType())
+    returnMember=''
+    returnMarshal=''
+    if returnType != 'void':
+        returnMember= '\n    xju::Optional<%(returnType)s> r_;'%vars()
+        returnMarshal='\n      cxy::cdr<%(returnType)s>::marshal(r_.value(),s);'%vars()
+        pass
     assert not decl.oneway(), 'oneway not yet implemented'
     assert len(decl.raises())==0, 'raises not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
-    assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
     
     result=calldesc_t%vars()
     return result

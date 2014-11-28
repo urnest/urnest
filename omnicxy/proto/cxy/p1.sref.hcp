@@ -46,11 +46,11 @@ class F;
 
 namespace
 {
-
 template<>
 class calldesc< ::p1::F>
 {
 public:
+
   class f1 : public omniCallDescriptor
   {
   public:
@@ -76,8 +76,11 @@ public:
       )
     {
     }
+    // omniCallDescriptor::
+    void marshalReturnedValues(cdrStream& s) throw()
+    {
+    }
   };
-
 };
 }
 
@@ -141,7 +144,7 @@ private:
     {
       ::p1::F* impl = (::p1::F*) svnt->_ptrToInterface(cxy::cdr< ::p1::F>::repoId);
       calldesc< ::p1::F>::f1* c=(calldesc< ::p1::F>::f1*)ocd;
-      impl->f1();
+       impl->f1();
     }
     static const char* const _user_exns[] = {
       0

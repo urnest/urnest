@@ -16,7 +16,7 @@ public:
 '''
 
 operation_t='''\
-virtual void %(name)s(%(params)s) throw(
+virtual %(returnType)s %(name)s(%(params)s) throw(
   // ipc failure
   // - note servant may not throw
   %(eclass)s) = 0;'''
@@ -32,12 +32,13 @@ basicParamTypes={
     idltype.tk_short:  TypeInfo('int16_t',['<stdint.h>']),
     idltype.tk_long:   TypeInfo('int32_t',['<stdint.h>']),
     idltype.tk_double: TypeInfo('double',[]),
-    idltype.tk_string: TypeInfo('std::string',['<string>'])
+    idltype.tk_string: TypeInfo('std::string',['<string>']),
+    idltype.tk_void:   TypeInfo('void',[])
 }
-def unqualifiedType(p):
-    assert isinstance(p,idlast.Parameter),p
-    assert p.paramType().kind() in basicParamTypes, '%s not implemented, only basic types %s implemented' % (p.paramType().kind(),basicParamTypes.keys())
-    return basicParamTypes.get(p.paramType().kind()).typename
+def unqualifiedType(t):
+    assert isinstance(t,idltype.Type),t
+    assert t.kind() in basicParamTypes, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
+    return basicParamTypes.get(t.kind()).typename
     
 def ptype(p):
     assert isinstance(p,idlast.Parameter),p
@@ -46,9 +47,9 @@ def ptype(p):
         return basicParamTypes.get(p.paramType().kind()).typename+' const'
     assert p.dirtext()+' params not yet implemented'
 
-def tincludes(p):
-    assert p.paramType().kind() in basicParamTypes, '%s not implemented, only basic types %s implemented' % (p.paramType().kind(),basicParamTypes.keys())
-    return basicParamTypes.get(p.paramType().kind()).includeFiles
+def tincludes(t):
+    assert t.kind() in basicParamTypes, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
+    return basicParamTypes.get(t.kind()).includeFiles
     
 def reindent(indent, s):
     '''prepend %(indent)r to each line of %(s)r'''
@@ -71,7 +72,7 @@ def gen(decl,eclass,eheader,indent=''):
         assert not decl.oneway(), 'oneway not yet implemented'
         assert len(decl.raises())==0, 'raises not yet implemented'
         assert len(decl.contexts())==0, 'contexts not yet implemented'
-        assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
+        returnType=unqualifiedType(decl.returnType())
         result=reindent(indent,operation_t%vars())
     else:
         assert False, repr(decl)
@@ -85,7 +86,8 @@ def gen_tincludes(decl):
     elif isinstance(decl, idlast.Interface):
         result=result+sum([gen_tincludes(_) for _ in decl.contents()],[])
     elif isinstance(decl, idlast.Operation):
-        result=result+sum([tincludes(p) for p in decl.parameters()],[])
+        result=result+sum([tincludes(p.paramType()) for p in decl.parameters()],[])
+        result=result+tincludes(decl.returnType())
     else:
         assert False, repr(decl)
         pass

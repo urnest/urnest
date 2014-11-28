@@ -85,6 +85,7 @@ void client(int argc, char* argv[],
       }
       
       ref->f1(1, 2, 3.4, "fred");
+      std::cout << ref->f2() << std::endl;
     }
     catch(CORBA::Exception& e) {
       throw translate(e);
@@ -106,6 +107,11 @@ public:
               << b << ", "
               << c << ", "
               << d << ")" << std::endl;
+  }
+  virtual CORBA::Short f2()
+  {
+    std::cout << "F::f2(" << std::endl;
+    return 22;
   }
 };
 

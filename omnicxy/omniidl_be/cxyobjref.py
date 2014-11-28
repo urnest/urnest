@@ -8,12 +8,12 @@ from cxy import ptype, unqualifiedType
 
 objref_operation_t='''
 // %(fqn)s::
-void %(name)s(%(params)s) throw(
+%(returnType)s %(name)s(%(params)s) throw(
   %(eclass)s)
 {
   try {
     calldesc::%(name)s c("%(name)s", %(nameLen)s+1, 0%(paramNames)s);
-    _invoke(c);
+    _invoke(c);%(returnValue)s
   }
   catch(CORBA::Exception const& ee) {
     %(eclass)s e(cxy::translateException<%(eclass)s>(ee));
@@ -35,18 +35,21 @@ public:
         &%(name)s::lcfn, op_, oplen, 0, _user_exns, 0, upcall)%(paramInits)s
   {
   }
-  %(paramMembers)s
+  %(paramMembers)s%(returnMember)s
 
   // omniCallDescriptor::
-  void marshalArguments(cdrStream& s)
+  void marshalArguments(cdrStream& s) // REVISIT: throw
   {%(paramMarshals)s
+  }
+  void unmarshalReturnedValues(cdrStream& s) // REVISIT: throw
+  {%(returnUnmarshal)s
   }
 
   static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt)
   {
     ::%(fqn)s* impl=(::%(fqn)s*)svnt->_ptrToInterface(cxy::cdr< ::%(fqn)s>::repoId);
     %(name)s* cd((%(name)s*)calldesc);
-    impl->%(name)s(%(callDescInvocationParams)s);
+    %(callDescReturnValue)s impl->%(name)s(%(callDescInvocationParams)s);
   }
   static const char* const _user_exns[] = {
     0
@@ -143,12 +146,19 @@ def genCalldesc(decl,eclass,eheader,indent,fqn):
     callDescInvocationParams=','.join(['\n      cd->%s_'%n for n in pns])
     paramInits=''.join([',\n      %s_(%s)'%(n,n) for n in pns])
     paramMembers=''.join(['\n  %s %s_;'%(ptype(p),n) for p,n in zip(decl.parameters(),pns)])
-    paramMarshals=''.join(['\n    cxy::cdr<%s>::marshal(%s_, s);'%(unqualifiedType(p),n) for p,n in zip(decl.parameters(),pns)])
+    paramMarshals=''.join(['\n    cxy::cdr<%s>::marshal(%s_, s);'%(unqualifiedType(p.paramType()),n) for p,n in zip(decl.parameters(),pns)])
+    returnType=unqualifiedType(decl.returnType())
+    returnMember=''
+    returnUnmarshal=''
+    callDescReturnValue=''
+    if returnType != 'void':
+        returnMember='\n  xju::Optional<%(returnType)s> r_;'%vars()
+        returnUnmarshal='\n    r_=cxy::cdr<%(returnType)s>::unmarshalFrom(s);'%vars()
+        callDescReturnValue='\n    cd->r_='
+        pass
     assert not decl.oneway(), 'oneway not yet implemented'
     assert len(decl.raises())==0, 'raises not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
-    assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
-    
     result=reindent(indent,calldesc_operation_t%vars())
     return result
 
@@ -162,8 +172,11 @@ def genObjref(decl,eclass,eheader,indent,fqn):
     assert not decl.oneway(), 'oneway not yet implemented'
     assert len(decl.raises())==0, 'raises not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
-    assert isinstance(decl.returnType(),idltype.Base) and decl.returnType().kind()==idltype.tk_void, 'returns not yet implemented'
-    
+    returnType=unqualifiedType(decl.returnType())
+    returnValue=''
+    if returnType != 'void':
+        returnValue='\n    return c.r_.value();'
+        pass
     result=reindent(indent,objref_operation_t%vars())
     return result
 
@@ -199,6 +212,7 @@ template='''\
 #include <cxy/pof.hh>
 
 #include <xju/NonCopyable.hh>
+#include <xju/Optional.hh>
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/callDescriptor.h>
