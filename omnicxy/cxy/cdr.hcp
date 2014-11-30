@@ -12,6 +12,8 @@
 #include <omniORB4/cdrStream.h> //impl
 #include <stdint.h>
 #include <string>
+#include "xju/Tagged.hh"
+#include "xju/Int.hh"
 
 class cdrStream;
 
@@ -153,7 +155,44 @@ public:
   
 };
 
+template<class Tag, class Impl>
+class cdr<xju::Int<Tag, Impl> >
+{
+public:
+  static xju::Int<Tag, Impl> unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
+  {
+    return xju::Int<Tag, Impl>(cdr<Impl>::unmarshalFrom(s));
+  }
+  static void marshal(xju::Int<Tag, Impl> const& x, cdrStream& s) throw()
+  {
+    cdr<Impl>::marshal(x.value(), s);
+  }
+
+};
+
+  
+template<class Impl, class Tag>
+class cdr<xju::Tagged<Impl, Tag> >
+{
+public:
+  static xju::Tagged<Impl, Tag> unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
+  {
+    return xju::Tagged<Impl, Tag>(cdr<Impl>::unmarshalFrom(s));
+  }
+  static void marshal(xju::Tagged<Impl, Tag> const& x, cdrStream& s) throw()
+  {
+    cdr<Impl>::marshal(x._, s);
+  }
+
+};
+
   
 }
-
-

@@ -71,20 +71,20 @@ public:
     {
     }
     
-    xju::Optional<int16_t> p1_;
-    xju::Optional<int32_t> p2_;
-    xju::Optional<double> p3_;
-    xju::Optional<std::string> p4_;
+    xju::Optional< int16_t> p1_;
+    xju::Optional< int32_t> p2_;
+    xju::Optional< double> p3_;
+    xju::Optional< std::string> p4_;
 
     // omniCallDescriptor::
     void unmarshalArguments(cdrStream& s) throw(
       CORBA::SystemException
       )
     {
-      p1_=cxy::cdr<int16_t>::unmarshalFrom(s);
-      p2_=cxy::cdr<int32_t>::unmarshalFrom(s);
-      p3_=cxy::cdr<double>::unmarshalFrom(s);
-      p4_=cxy::cdr<std::string>::unmarshalFrom(s);
+      p1_=cxy::cdr< int16_t>::unmarshalFrom(s);
+      p2_=cxy::cdr< int32_t>::unmarshalFrom(s);
+      p3_=cxy::cdr< double>::unmarshalFrom(s);
+      p4_=cxy::cdr< std::string>::unmarshalFrom(s);
     }
     // omniCallDescriptor::
     void marshalReturnedValues(cdrStream& s) throw()
@@ -109,7 +109,7 @@ public:
     {
     }
     
-    xju::Optional<int16_t> r_;
+    xju::Optional< int16_t> r_;
 
     // omniCallDescriptor::
     void unmarshalArguments(cdrStream& s) throw(
@@ -120,7 +120,7 @@ public:
     // omniCallDescriptor::
     void marshalReturnedValues(cdrStream& s) throw()
     {
-      cxy::cdr<int16_t>::marshal(r_.value(),s);
+      cxy::cdr< int16_t>::marshal(r_.value(),s);
     }
   };
 };
@@ -134,10 +134,10 @@ class sref< ::p2::F> :  private sref_if
 public:
   // pre: lifetime(x) includes lifetime(this)
   // pre: lifetime(orb) includes lifetime(this)
-  sref(cxy::ORB<cxy::Exception>& orb, 
+  sref(cxy::ORB< cxy::Exception>& orb, 
        std::string const& name,
        ::p2::F& x) throw(
-         cxy::Exceptions<cxy::Exception>::DuplicateName) try:
+         cxy::Exceptions< cxy::Exception>::DuplicateName) try:
       name_(name),
       x_(x),
       c_(guard_),
@@ -153,7 +153,7 @@ public:
     if (typeid(cxy::Exception)==typeid(cxy::Exception)) {
       throw;
     }
-    cxy::Exceptions<cxy::Exception>::DuplicateName ee(
+    cxy::Exceptions< cxy::Exception>::DuplicateName ee(
       e.cause_.first, e.cause_.second);
     for (std::vector<std::pair<std::string, cxy::Exception::FileAndLine> >::const_iterator i=
            e.context_.begin();

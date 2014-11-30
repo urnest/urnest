@@ -127,3 +127,5 @@ omnicxy/cxy/marshal.cc
 omnicxy/cxy/marshal.hh
 omnicxy/proto/cxy/e/p2.cc
 omnicxy/proto/cxy/e/p2.hh
+omnicxy/proto/cxy/p3.cc
+omnicxy/proto/cxy/p3.hh

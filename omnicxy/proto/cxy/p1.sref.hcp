@@ -92,10 +92,10 @@ class sref< ::p1::F> :  private sref_if
 public:
   // pre: lifetime(x) includes lifetime(this)
   // pre: lifetime(orb) includes lifetime(this)
-  sref(cxy::ORB<cxy::Exception>& orb, 
+  sref(cxy::ORB< cxy::Exception>& orb, 
        std::string const& name,
        ::p1::F& x) throw(
-         cxy::Exceptions<cxy::Exception>::DuplicateName) try:
+         cxy::Exceptions< cxy::Exception>::DuplicateName) try:
       name_(name),
       x_(x),
       c_(guard_),
@@ -111,7 +111,7 @@ public:
     if (typeid(cxy::Exception)==typeid(cxy::Exception)) {
       throw;
     }
-    cxy::Exceptions<cxy::Exception>::DuplicateName ee(
+    cxy::Exceptions< cxy::Exception>::DuplicateName ee(
       e.cause_.first, e.cause_.second);
     for (std::vector<std::pair<std::string, cxy::Exception::FileAndLine> >::const_iterator i=
            e.context_.begin();

@@ -83,10 +83,10 @@ class sref< ::%(fqn)s> :  private sref_if
 public:
   // pre: lifetime(x) includes lifetime(this)
   // pre: lifetime(orb) includes lifetime(this)
-  sref(cxy::ORB<%(eclass)s>& orb, 
+  sref(cxy::ORB< %(eclass)s>& orb, 
        std::string const& name,
        ::%(fqn)s& x) throw(
-         cxy::Exceptions<%(eclass)s>::DuplicateName) try:
+         cxy::Exceptions< %(eclass)s>::DuplicateName) try:
       name_(name),
       x_(x),
       c_(guard_),
@@ -102,7 +102,7 @@ public:
     if (typeid(%(eclass)s)==typeid(cxy::Exception)) {
       throw;
     }
-    cxy::Exceptions<%(eclass)s>::DuplicateName ee(
+    cxy::Exceptions< %(eclass)s>::DuplicateName ee(
       e.cause_.first, e.cause_.second);
     for (std::vector<std::pair<std::string, cxy::Exception::FileAndLine> >::const_iterator i=
            e.context_.begin();
@@ -209,14 +209,14 @@ def genCalldesc(decl,eclass,eheader,indent,fqn):
     assert isinstance(decl, idlast.Operation), repr(decl)
     name=decl.identifier()
     pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
-    paramMembers=''.join(['\n    xju::Optional<%s> %s_;'%(unqualifiedType(p.paramType()),n) for p,n in zip(decl.parameters(),pns)])
-    paramUnmarshals=''.join(['\n      %s_=cxy::cdr<%s>::unmarshalFrom(s);'%(n,unqualifiedType(p.paramType())) for p,n in zip(decl.parameters(),pns)])
+    paramMembers=''.join(['\n    xju::Optional< %s> %s_;'%(unqualifiedType(p.paramType()),n) for p,n in zip(decl.parameters(),pns)])
+    paramUnmarshals=''.join(['\n      %s_=cxy::cdr< %s>::unmarshalFrom(s);'%(n,unqualifiedType(p.paramType())) for p,n in zip(decl.parameters(),pns)])
     returnType=unqualifiedType(decl.returnType())
     returnMember=''
     returnMarshal=''
     if returnType != 'void':
-        returnMember= '\n    xju::Optional<%(returnType)s> r_;'%vars()
-        returnMarshal='\n      cxy::cdr<%(returnType)s>::marshal(r_.value(),s);'%vars()
+        returnMember= '\n    xju::Optional< %(returnType)s> r_;'%vars()
+        returnMarshal='\n      cxy::cdr< %(returnType)s>::marshal(r_.value(),s);'%vars()
         pass
     assert not decl.oneway(), 'oneway not yet implemented'
     assert len(decl.raises())==0, 'raises not yet implemented'
@@ -254,6 +254,8 @@ def gen(decl,eclass,eheader,indent=''):
                  for _ in decl.contents()\
                  if isinstance(_,idlast.Operation)])
         result=interface_t%vars()
+    elif isinstance(decl, idlast.Typedef):
+        pass
     else:
         assert False, repr(decl)
         pass

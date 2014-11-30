@@ -101,6 +101,8 @@ def gen(decl,eclass,eheader,indent=''):
             returnStatement='return'
             pass
         result=reindent(indent,operation_t%vars())
+    elif isinstance(decl, idlast.Typedef):
+        pass
     else:
         assert False, repr(decl)
         pass

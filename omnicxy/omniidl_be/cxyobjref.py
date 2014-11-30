@@ -16,7 +16,7 @@ objref_operation_t='''
     _invoke(c);%(returnValue)s
   }
   catch(CORBA::Exception const& ee) {
-    %(eclass)s e(cxy::translateException<%(eclass)s>(ee));
+    %(eclass)s e(cxy::translateException< %(eclass)s>(ee));
     e.addContext("%(fqn)s::%(name)s()", std::make_pair(__FILE__, __LINE__)); // REVISIT: add ior / id
     throw e;
   }
@@ -146,14 +146,14 @@ def genCalldesc(decl,eclass,eheader,indent,fqn):
     callDescInvocationParams=','.join(['\n      cd->%s_'%n for n in pns])
     paramInits=''.join([',\n      %s_(%s)'%(n,n) for n in pns])
     paramMembers=''.join(['\n  %s %s_;'%(ptype(p),n) for p,n in zip(decl.parameters(),pns)])
-    paramMarshals=''.join(['\n    cxy::cdr<%s>::marshal(%s_, s);'%(unqualifiedType(p.paramType()),n) for p,n in zip(decl.parameters(),pns)])
+    paramMarshals=''.join(['\n    cxy::cdr< %s>::marshal(%s_, s);'%(unqualifiedType(p.paramType()),n) for p,n in zip(decl.parameters(),pns)])
     returnType=unqualifiedType(decl.returnType())
     returnMember=''
     returnUnmarshal=''
     callDescReturnValue=''
     if returnType != 'void':
-        returnMember='\n  xju::Optional<%(returnType)s> r_;'%vars()
-        returnUnmarshal='\n    r_=cxy::cdr<%(returnType)s>::unmarshalFrom(s);'%vars()
+        returnMember='\n  xju::Optional< %(returnType)s> r_;'%vars()
+        returnUnmarshal='\n    r_=cxy::cdr< %(returnType)s>::unmarshalFrom(s);'%vars()
         callDescReturnValue='\n    cd->r_='
         pass
     assert not decl.oneway(), 'oneway not yet implemented'
@@ -196,6 +196,8 @@ def gen(decl,eclass,eheader,indent=''):
                  for _ in decl.contents()\
                  if isinstance(_,idlast.Operation)])
         result=interface_t%vars()
+    elif isinstance(decl, idlast.Typedef):
+        pass
     else:
         assert False, repr(decl)
         pass

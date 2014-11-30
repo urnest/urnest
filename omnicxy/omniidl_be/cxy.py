@@ -3,6 +3,7 @@ from omniidl import idltype
 
 import sys
 import os.path
+import types
 
 interface_t='''\
 class %(name)s
@@ -28,29 +29,55 @@ class TypeInfo:
         pass
     pass
 
-basicParamTypes={
+basicIntTypes={
     idltype.tk_short:  TypeInfo('int16_t',['<stdint.h>']),
     idltype.tk_long:   TypeInfo('int32_t',['<stdint.h>']),
-    idltype.tk_double: TypeInfo('double',[]),
-    idltype.tk_string: TypeInfo('std::string',['<string>']),
-    idltype.tk_void:   TypeInfo('void',[])
 }
+basicFloatTypes={
+    idltype.tk_double: TypeInfo('double',[]),
+}
+basicStringTypes={
+    idltype.tk_string: TypeInfo('std::string',['<string>']),
+}
+basicParamTypes=dict(
+    basicIntTypes.items()+
+    basicFloatTypes.items()+
+    basicStringTypes.items()+{
+    idltype.tk_void:   TypeInfo('void',[])
+    }.items()
+)
 def unqualifiedType(t):
     assert isinstance(t,idltype.Type),t
-    assert t.kind() in basicParamTypes, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
-    return basicParamTypes.get(t.kind()).typename
-    
+    if t.kind() in basicParamTypes:
+        return basicParamTypes.get(t.kind()).typename
+    elif t.kind()==idltype.tk_alias:
+        return ''.join(['::'+_ for _ in t.scopedName()])
+    assert False, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
+    pass
+
 def ptype(p):
     assert isinstance(p,idlast.Parameter),p
     if p.dirtext()=='in':
-        assert p.paramType().kind() in basicParamTypes, '%s not implemented, only basic types %s implemented' % (p.paramType().kind(),basicParamTypes.keys())
-        return basicParamTypes.get(p.paramType().kind()).typename+' const'
+        if p.paramType().kind() in basicParamTypes:
+            return basicParamTypes.get(p.paramType().kind()).typename+' const'
+        elif p.paramType().kind()==idltype.tk_alias:
+            return ''.join(['::'+_ for _ in p.paramType().scopedName()])+' const'
+        assert False, '%s not implemented, only basic types %s implemented' % (p.paramType().kind(),basicParamTypes.keys())
+
     assert p.dirtext()+' params not yet implemented'
 
-def tincludes(t):
-    assert t.kind() in basicParamTypes, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
-    return basicParamTypes.get(t.kind()).includeFiles
+def tn(t):
+    if type(t) is types.InstanceType:
+        return t.__class__
+    return type(t)
     
+def tincludes(t):
+    if t.kind() in basicParamTypes:
+        return basicParamTypes.get(t.kind()).includeFiles
+    elif t.kind() in [idltype.tk_alias]:
+        return []
+    assert False, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
+
 def reindent(indent, s):
     '''prepend %(indent)r to each line of %(s)r'''
     return '\n'.join([indent+_ for _ in s.split('\n')])
@@ -74,6 +101,32 @@ def gen(decl,eclass,eheader,indent=''):
         assert len(decl.contexts())==0, 'contexts not yet implemented'
         returnType=unqualifiedType(decl.returnType())
         result=reindent(indent,operation_t%vars())
+    elif isinstance(decl, idlast.Typedef):
+        name=decl.declarators()[0].identifier()
+        tagClass=''
+        aliasOf=decl.aliasType()
+        if aliasOf.kind() in basicIntTypes:
+            aliasOf=unqualifiedType(aliasOf)
+            result=reindent(
+                indent,
+                ('class %(name)s_tag {};\n'+
+                 'typedef ::xju::Int<%(name)s_tag,%(aliasOf)s> %(name)s;')%vars())
+        elif aliasOf.kind() in basicFloatTypes:
+            aliasOf=unqualifiedType(aliasOf)
+            result=reindent(
+                indent,
+                ('class %(name)s_tag {};\n'+
+                 'typedef ::xju::Float<%(aliasOf)s,%(name)s_tag> %(name)s;')%vars())
+        elif aliasOf.kind() in basicStringTypes:
+            result=reindent(
+                indent,
+                ('class %(name)s_tag {};\n'+
+                 'typedef ::xju::Tagged<std::string,%(name)s_tag> %(name)s;')%vars())
+        else:
+            result=reindent(
+                indent,
+                ('typedef %(aliasOf)s %(name)s;')%vars())
+            pass
     else:
         assert False, repr(decl)
         pass
@@ -88,6 +141,15 @@ def gen_tincludes(decl):
     elif isinstance(decl, idlast.Operation):
         result=result+sum([tincludes(p.paramType()) for p in decl.parameters()],[])
         result=result+tincludes(decl.returnType())
+    elif isinstance(decl, idlast.Typedef):
+        aliasOf=decl.aliasType()
+        if aliasOf.kind() in basicIntTypes:
+            result=result+['<xju/Int.hh>']+tincludes(aliasOf)
+        elif aliasOf.kind() in basicFloatTypes:
+            result=result+['<xju/Float.hh>']+tincludes(aliasOf)
+        elif aliasOf.kind() in basicStringTypes:
+            result=result+['<xju/Tagged.hh>','<string>']
+            pass
     else:
         assert False, repr(decl)
         pass

@@ -1,0 +1,18 @@
+// generated from p3.idl by omnicxy cxycdr idl backend
+
+#include <cxy/cdr.hh>
+
+#include "p3.hh"
+
+
+namespace cxy
+{
+template<>
+class cdr< ::p3::F>
+{
+public:
+  static const char repoId[]="IDL:p3/F:1.0";
+};
+
+}
+

@@ -16,6 +16,7 @@
 #include "xju/Exception.hh"
 #include <sstream>
 #include <limits>
+#include <iosfwd>
 
 namespace xju
 {
@@ -98,6 +99,12 @@ public:
 private:
     Impl value_;
 };
+template<class Tag, class Impl>
+std::ostream& operator<<(std::ostream& s, Int<Tag,Impl> const& x) throw()
+{
+  return s << x.value();
+}
+
 }
 
 #endif

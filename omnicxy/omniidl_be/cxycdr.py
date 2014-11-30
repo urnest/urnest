@@ -23,6 +23,8 @@ def gen(decl,eclass,eheader,indent=''):
         result=interface_t%vars()
     elif isinstance(decl, idlast.Operation):
         pass
+    elif isinstance(decl, idlast.Typedef):
+        pass
     else:
         assert False, repr(decl)
         pass

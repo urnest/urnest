@@ -103,35 +103,24 @@ x test client wrong type exception
   x e
 
 - p3.idl:
-  - basic types returned
+  x typedef basic type -> distinct
+    x int
+    x string
+    - float
 
 - p4.idl:
-  - typedef basic type -> distinct
-    - int
-    - string
+  - struct in param, return
 
 - p5.idl:
-  - struct in param
+  - sequence param, return
 
 - p6.idl:
-  - struct return
-
-- p7.idl:
-  - sequence in param
-
-- p8.idl:
-  - sequence return
-
-- p9.idl:
-  - enum in param
-
-- p10.idl:
-  - enum return
-
-- p11.idl:
   - exception
 
-- p12.idl:
+- p7.idl:
+  - enum param, return
+
+- p8.idl:
   - inherit interface
 
 - bounded strings

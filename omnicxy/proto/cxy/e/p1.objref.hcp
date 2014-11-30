@@ -40,7 +40,7 @@ public:
       _invoke(c);
     }
     catch(CORBA::Exception const& ee) {
-      E e(cxy::translateException<E>(ee));
+      E e(cxy::translateException< E>(ee));
       e.addContext("p1::F::f1()", std::make_pair(__FILE__, __LINE__)); // REVISIT: add ior / id
       throw e;
     }

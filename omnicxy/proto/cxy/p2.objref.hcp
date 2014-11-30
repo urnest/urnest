@@ -50,7 +50,7 @@ public:
       _invoke(c);
     }
     catch(CORBA::Exception const& ee) {
-      cxy::Exception e(cxy::translateException<cxy::Exception>(ee));
+      cxy::Exception e(cxy::translateException< cxy::Exception>(ee));
       e.addContext("p2::F::f1()", std::make_pair(__FILE__, __LINE__)); // REVISIT: add ior / id
       throw e;
     }
@@ -66,7 +66,7 @@ public:
       return c.r_.value();
     }
     catch(CORBA::Exception const& ee) {
-      cxy::Exception e(cxy::translateException<cxy::Exception>(ee));
+      cxy::Exception e(cxy::translateException< cxy::Exception>(ee));
       e.addContext("p2::F::f2()", std::make_pair(__FILE__, __LINE__)); // REVISIT: add ior / id
       throw e;
     }
@@ -110,10 +110,10 @@ private:
       // omniCallDescriptor::
       void marshalArguments(cdrStream& s) // REVISIT: throw
       {
-        cxy::cdr<int16_t>::marshal(p1_, s);
-        cxy::cdr<int32_t>::marshal(p2_, s);
-        cxy::cdr<double>::marshal(p3_, s);
-        cxy::cdr<std::string>::marshal(p4_, s);
+        cxy::cdr< int16_t>::marshal(p1_, s);
+        cxy::cdr< int32_t>::marshal(p2_, s);
+        cxy::cdr< double>::marshal(p3_, s);
+        cxy::cdr< std::string>::marshal(p4_, s);
       }
       void unmarshalReturnedValues(cdrStream& s) // REVISIT: throw
       {
@@ -146,7 +146,7 @@ private:
       {
       }
       
-      xju::Optional<int16_t> r_;
+      xju::Optional< int16_t> r_;
     
       // omniCallDescriptor::
       void marshalArguments(cdrStream& s) // REVISIT: throw
@@ -154,7 +154,7 @@ private:
       }
       void unmarshalReturnedValues(cdrStream& s) // REVISIT: throw
       {
-        r_=cxy::cdr<int16_t>::unmarshalFrom(s);
+        r_=cxy::cdr< int16_t>::unmarshalFrom(s);
       }
     
       static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt)

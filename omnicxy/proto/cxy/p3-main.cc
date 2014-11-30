@@ -9,9 +9,9 @@
 //
 
 
-#include "p2.hh"
-#include "p2.cref.hh"
-#include "p2.sref.hh"
+#include "p3.hh"
+#include "p3.cref.hh"
+#include "p3.sref.hh"
 
 #include <xju/Exception.hh>
 #include <iostream>
@@ -31,33 +31,29 @@ std::string makeURI(int port, std::string const& objectName) throw()
   return s.str();
 }
 
-class F_impl : public p2::F
+class F_impl : public p3::F
 {
 public:
   ~F_impl() throw()
   {
   }
   
-  virtual void f1(
-    int16_t const& a, 
-    int32_t const& b, 
-    double const& c, 
-    std::string const& d) throw(cxy::Exception)
+  virtual ::p3::MyInt f1(
+    ::p3::MyInt const& a) throw(cxy::Exception)
   {
-    std::cout << "F::f1(" 
-              << a << ", "
-              << b << ", "
-              << c << ", "
-              << d << ")" << std::endl;
+    std::cout << "::p3::f1(" 
+              << a << ") -> MyInt(33)" << std::endl;
     calls_.push_back(xju::Shared<Call>(
-                       new Call::f1(a,b,c,d)));
+                       new Call::f1(a)));
+    return ::p3::MyInt(33);
   }
-  virtual int16_t f2() throw(cxy::Exception)
+  virtual ::p3::MyString f2(::p3::MyString const& a) throw(cxy::Exception)
   {
-    std::cout << "F::f2() -> 22" << std::endl;
+    std::cout << "::p3::f2("
+              << a << ") -> returning p3::f2" << std::endl;
     calls_.push_back(xju::Shared<Call>(
-                       new Call::f2));
-    return 22;
+                       new Call::f2(a)));
+    return ::p3::MyString("returning p3::f2");
   }
   struct Call
   {
@@ -72,32 +68,29 @@ public:
     ~f1() throw()
     {
     }
-    f1(int16_t const& a, 
-       int32_t const& b, 
-       double const& c, 
-       std::string const& d) throw():
-        a_(a),
-        b_(b),
-        c_(c),
-        d_(d) {
+    f1(::p3::MyInt const& a) throw():
+        a_(a) {
     }
-    int16_t a_;
-    int32_t b_;
-    double  c_;
-    std::string  d_;
+    ::p3::MyInt a_;
     
     friend bool operator==(f1 const& x, f1 const& y) throw()
     {
-      return std::make_pair(std::make_pair(x.a_,x.b_),
-                            std::make_pair(x.c_,x.d_))==
-        std::make_pair(std::make_pair(y.a_,y.b_),
-                       std::make_pair(y.c_,y.d_));
+      return x.a_ == y.a_;
     }
   };
   struct Call::f2 : Call
   {
     ~f2() throw()
     {
+    }
+    f2(::p3::MyString const& a) throw():
+        a_(a) {
+    }
+    ::p3::MyString a_;
+    
+    friend bool operator==(f2 const& x, f2 const& y) throw()
+    {
+      return x.a_ == y.a_;
     }
   };
   
@@ -116,15 +109,15 @@ int main(int argc, char* argv[])
       return 1;
     }
     
-    std::string const OBJECT_NAME("p2");
+    std::string const OBJECT_NAME("p3");
     
     int const port(xju::stringToInt(argv[1]));
     
     if (argv[2]==std::string("client")) {
       cxy::ORB<cxy::Exception> orb("giop:tcp::");
-      cxy::cref<p2::F> ref(orb, makeURI(port, OBJECT_NAME));
-      ref->f1(1, 2, 3.4, "fred");
-      std::cout << ref->f2() << std::endl;
+      cxy::cref<p3::F> ref(orb, makeURI(port, OBJECT_NAME));
+      std::cout << ref->f1(::p3::MyInt(8)) << std::endl;
+      std::cout << ref->f2(::p3::MyString("fred")) << std::endl;
     }
     else if (argv[2]==std::string("server")) {
       std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
@@ -132,7 +125,7 @@ int main(int argc, char* argv[])
 
       F_impl x;
       
-      cxy::sref<p2::F> const xa(orb, OBJECT_NAME, x);
+      cxy::sref<p3::F> const xa(orb, OBJECT_NAME, x);
       
       orb.monitorUntil(xju::Time::now()+xju::MicroSeconds(30*1000000));
     }
@@ -142,23 +135,24 @@ int main(int argc, char* argv[])
       cxy::ORB<cxy::Exception> orb(orbEndPoint);
       F_impl x;
       
-      cxy::sref<p2::F> const xa(orb, OBJECT_NAME, x);
+      cxy::sref<p3::F> const xa(orb, OBJECT_NAME, x);
       
-      cxy::cref<p2::F> ref(orb, makeURI(port, OBJECT_NAME));
-      ref->f1(1, 2, 3.4, "fred");
+      cxy::cref<p3::F> ref(orb, makeURI(port, OBJECT_NAME));
+      xju::assert_equal(ref->f1(::p3::MyInt(1)),::p3::MyInt(33));
       xju::assert_equal(x.calls_.size(),1U);
       {
         F_impl::Call::f1 const& c(
           dynamic_cast<F_impl::Call::f1 const&>(*x.calls_[0]));
-        xju::assert_equal(c, F_impl::Call::f1(1,2,3.4,"fred"));
+        xju::assert_equal(c, F_impl::Call::f1(::p3::MyInt(1)));
       }
-      xju::assert_equal(ref->f2(),22);
+      xju::assert_equal(ref->f2(::p3::MyString("fred")),
+                        ::p3::MyString("returning p3::f2"));
       xju::assert_equal(x.calls_.size(),2U);
       {
         F_impl::Call::f2 const& c(
           dynamic_cast<F_impl::Call::f2 const&>(*x.calls_[1]));
+        xju::assert_equal(c, F_impl::Call::f2(::p3::MyString("fred")));
       }
-      
     }
     return 0;
   }

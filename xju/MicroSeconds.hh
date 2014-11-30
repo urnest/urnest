@@ -25,14 +25,15 @@ class MicroSecondsTag{};
 // Integral non-negative number of microseconds.
 typedef xju::Int<MicroSecondsTag, uint64_t> MicroSeconds;
 
-inline std::ostream& operator<<(std::ostream& s, 
-                                MicroSeconds const& x) throw() {
+template<>
+inline std::ostream& operator<<(
+    std::ostream& s, 
+    xju::Int<MicroSecondsTag, uint64_t> const& x) throw() {
   return s << xju::format::int_(x.value()/1000000)
            << "."
            << xju::format::int_(x.value()%1000000, 8)
            << " seconds";
 }
-    
 }
 
 #endif

@@ -1,0 +1,11 @@
+module p3
+{
+  typedef long MyInt;
+  typedef string MyString;
+  
+  interface F
+  {
+    MyInt f1(in MyInt a);
+    MyString f2(in MyString a);
+  };
+};

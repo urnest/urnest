@@ -6,6 +6,7 @@
 %all-tests.tree==<<
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p1-main) '3735' 'both':exec.output
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p2-main) '3736' 'both':exec.output
+()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p3-main) '3737' 'both':exec.output
 %test-transient
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%test-no-such-object) '3740':exec.output
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%test-duplicate-name) '3741':exec.output
@@ -15,6 +16,7 @@
 
 %p1-main==p1-main.cc+(%cxx-opts):auto.cxx.exe
 %p2-main==p2-main.cc+(%cxx-opts):auto.cxx.exe
+%p3-main==p3-main.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-duplicate-name==test-duplicate-name.cc+(%cxx-opts):auto.cxx.exe
 
@@ -75,6 +77,33 @@ p2.cdr.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxy
 p2.cref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycref.py) (../p2.idl):stdout
 p2.objref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxyobjref.py) (../p2.idl):stdout
 p2.sref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxysref.py) (../p2.idl):stdout
+
+p3.hh==%p3/p3.hh
+p3.cc==%p3/p3.cc
+
+p3.cref.hh==%p3.cref/p3.cref.hh
+p3.cref.cc==%p3.cref/p3.cref.cc
+
+p3.objref.hh==%p3.objref/p3.objref.hh
+p3.objref.cc==%p3.objref/p3.objref.cc
+
+p3.cdr.hh==%p3.cdr/p3.cdr.hh
+p3.cdr.cc==%p3.cdr/p3.cdr.cc
+
+p3.sref.hh==%p3.sref/p3.sref.hh
+p3.sref.cc==%p3.sref/p3.sref.cc
+
+%p3==()+cmd=(../../../hcp/hcp-split) -l 0 (p3.hcp) 'p3.hh' 'p3.cc':output
+%p3.cref==()+cmd=(../../../hcp/hcp-split) -l 0 (p3.cref.hcp) 'p3.cref.hh' 'p3.cref.cc':output
+%p3.objref==()+cmd=(../../../hcp/hcp-split) -l 0 (p3.objref.hcp) 'p3.objref.hh' 'p3.objref.cc':output
+%p3.cdr==()+cmd=(../../../hcp/hcp-split) -l 0 (p3.cdr.hcp) 'p3.cdr.hh' 'p3.cdr.cc':output
+%p3.sref==()+cmd=(../../../hcp/hcp-split) -l 0 (p3.sref.hcp) 'p3.sref.hh' 'p3.sref.cc':output
+
+p3.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxy.py) (../p3.idl):stdout
+p3.cdr.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycdr.py) (../p3.idl):stdout
+p3.cref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycref.py) (../p3.idl):stdout
+p3.objref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxyobjref.py) (../p3.idl):stdout
+p3.sref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxysref.py) (../p3.idl):stdout
 
 %test-transient==()+cmd=(%test-transient.sh) (%p1-main):exec.output
 
