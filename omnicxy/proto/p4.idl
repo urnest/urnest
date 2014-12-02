@@ -1,0 +1,15 @@
+#include "p3.idl"
+
+module p4
+{
+  struct XS1 
+  {
+    p3::MyInt a_;
+    string b_;
+  };
+  
+  interface F
+  {
+    XS1 f1(in XS1 y);
+  };
+};

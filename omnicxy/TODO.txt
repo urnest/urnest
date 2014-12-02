@@ -108,11 +108,11 @@ x test client wrong type exception
     x string
     - float
 
-- p4.idl:
-  - struct in param, return
+x p4.idl:
+  x struct in param, return
 
 - p5.idl:
-  - sequence param, return
+  - sequence param, return, struct
 
 - p6.idl:
   - exception

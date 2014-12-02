@@ -1,0 +1,40 @@
+// generated from p4.idl by omnicxy cxycdr idl backend
+
+#include <cxy/cdr.hh>
+
+#include "p4.hh"
+
+// included idl
+#include "p3.cdr.hh"
+
+namespace cxy
+{
+template<>
+class cdr< ::p4::XS1>
+{
+public:
+  static ::p4::XS1 unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
+  {
+    ::p3::MyInt const p1(cdr< ::p3::MyInt>::unmarshalFrom(s));
+    std::string const p2(cdr< std::string>::unmarshalFrom(s));
+    return ::p4::XS1(p1, p2);
+  }  
+  static void marshal(p4::XS1 const& x, cdrStream& s) throw()
+  {
+    cdr< ::p3::MyInt>::marshal(x.a_,s);
+    cdr< std::string>::marshal(x.b_,s);
+  }
+};
+template<>
+class cdr< ::p4::F>
+{
+public:
+  static const char repoId[]="IDL:p4/F:1.0";
+};
+
+}
+

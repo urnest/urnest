@@ -1080,6 +1080,7 @@ PR operator_name(
   (parseLiteral("<<")|
    parseLiteral(">>")|
    parseLiteral("==")|
+   parseLiteral("!=")|
    parseLiteral("<=")|
    parseLiteral(">=")|
    parseLiteral("<")|

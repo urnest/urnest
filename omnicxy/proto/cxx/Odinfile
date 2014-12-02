@@ -28,10 +28,13 @@ p1.cc==(%dummy.hh)+cmd=cat (%p1.cxx.files+member='p1SK.cc':extract_file):stdout
 p2.hh==(%dummy.hh)+cmd=cat (%p2.cxx.files+member='p2.hh':extract_file):stdout
 p2.cc==(%dummy.hh)+cmd=cat (%p2.cxx.files+member='p2SK.cc':extract_file):stdout
 
-%p3-main==p3-main.cc+(%cxx-opts)+inc_sp=(/usr/local/omniORB-4.2.0/include)+lib_sp=(/usr/local/omniORB-4.2.0/lib)+lib='omniORB4' 'omnithread':auto.cxx.exe
-
 %p3.cxx.files==../p3.idl+cmd=(/usr/local/omniORB-4.2.0/bin/omniidl) '-bcxx' (../p3.idl)+need=(../p3.idl:hash_inc_all):exec.files
 
 p3.hh==(%dummy.hh)+cmd=cat (%p3.cxx.files+member='p3.hh':extract_file):stdout
 p3.cc==(%dummy.hh)+cmd=cat (%p3.cxx.files+member='p3SK.cc':extract_file):stdout
+
+%p4.cxx.files==../p4.idl+cmd=(/usr/local/omniORB-4.2.0/bin/omniidl) '-bcxx' (../p4.idl)+need=(../p4.idl:hash_inc_all):exec.files
+
+p4.hh==(%dummy.hh)+cmd=cat (%p4.cxx.files+member='p4.hh':extract_file):stdout
+p4.cc==(%dummy.hh)+cmd=cat (%p4.cxx.files+member='p4SK.cc':extract_file):stdout
 

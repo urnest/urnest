@@ -103,6 +103,8 @@ def gen(decl,eclass,eheader,indent=''):
         result=reindent(indent,operation_t%vars())
     elif isinstance(decl, idlast.Typedef):
         pass
+    elif isinstance(decl, idlast.Struct):
+        pass
     else:
         assert False, repr(decl)
         pass

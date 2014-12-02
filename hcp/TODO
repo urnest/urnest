@@ -1,7 +1,9 @@
-- add option to turn off file+line tracking for generated .hh as it
+x add option to turn off file+line tracking for generated .hh as it
   causes unnecessary recompilation of dependencies (could generate a
   separate map, but would then need editor or compiler to recognise and
-  map errors)
+  map errors) - note no file+line tracking is defualt .hh
+
+* fix generation of friend functions
 
 * no such thing as static var decl, it is a def
 

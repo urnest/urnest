@@ -1,0 +1,74 @@
+// generated from p4.idl by omni cxy idl backend specifying 
+// cxy::Exception from <cxy/Exception.hh> as base class for all ipc exceptions
+
+#include <cxy/Exception.hh>
+#include <string>
+#include <xju/Tagged.hh>
+
+// included idl
+#include "p3.hh"
+
+namespace p4
+{
+struct XS1
+{
+  XS1(
+    ::p3::MyInt const& p1,
+    std::string const& p2) throw():
+      a_(p1),
+      b_(p2) {
+  }
+  
+  ::p3::MyInt a_;
+  std::string b_;
+
+};
+bool operator<(
+    XS1 const& x, 
+    XS1 const& y) throw() {
+    if (x.a_<y.a_) return true;
+    if (y.a_<x.a_) return false;
+    if (x.b_<y.b_) return true;
+    if (y.b_<x.b_) return false;
+    return false;
+  }
+bool operator>(
+    XS1 const& x, 
+    XS1 const& y) throw() {
+    return y<x;
+  }
+bool operator!=(
+    XS1 const& x, 
+    XS1 const& y) throw() {
+    return (x<y)||(y<x);
+  }
+bool operator==(
+    XS1 const& x, 
+    XS1 const& y) throw() {
+    return !(x!=y);
+  }
+bool operator<=(
+    XS1 const& x, 
+    XS1 const& y) throw() {
+    return (x<y)||(x==y);
+  }
+bool operator>=(
+    XS1 const& x, 
+    XS1 const& y) throw() {
+    return (x>y)||(x==y);
+  }
+
+class F
+{
+public:
+  virtual ~F() throw()
+  {
+  }
+  virtual ::p4::XS1 f1(
+    ::p4::XS1 const& y) throw(
+    // ipc failure
+    // - note servant may not throw
+    cxy::Exception) = 0;
+};
+
+}

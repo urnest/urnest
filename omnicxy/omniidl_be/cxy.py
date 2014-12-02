@@ -52,6 +52,8 @@ def unqualifiedType(t):
         return basicParamTypes.get(t.kind()).typename
     elif t.kind()==idltype.tk_alias:
         return ''.join(['::'+_ for _ in t.scopedName()])
+    elif t.kind()==idltype.tk_struct:
+        return ''.join(['::'+_ for _ in t.scopedName()])
     assert False, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
     pass
 
@@ -61,6 +63,8 @@ def ptype(p):
         if p.paramType().kind() in basicParamTypes:
             return basicParamTypes.get(p.paramType().kind()).typename+' const'
         elif p.paramType().kind()==idltype.tk_alias:
+            return ''.join(['::'+_ for _ in p.paramType().scopedName()])+' const'
+        elif p.paramType().kind()==idltype.tk_struct:
             return ''.join(['::'+_ for _ in p.paramType().scopedName()])+' const'
         assert False, '%s not implemented, only basic types %s implemented' % (p.paramType().kind(),basicParamTypes.keys())
 
@@ -74,13 +78,68 @@ def tn(t):
 def tincludes(t):
     if t.kind() in basicParamTypes:
         return basicParamTypes.get(t.kind()).includeFiles
-    elif t.kind() in [idltype.tk_alias]:
+    elif t.kind() in [idltype.tk_alias,idltype.tk_struct]:
         return []
     assert False, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
 
 def reindent(indent, s):
     '''prepend %(indent)r to each line of %(s)r'''
     return '\n'.join([indent+_ for _ in s.split('\n')])
+
+struct_t='''\
+struct %(name)s
+{
+  %(name)s(%(consparams)s) throw():%(consinitialisers)s {
+  }
+  %(members)s
+
+};
+bool operator<(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {%(lessMembers)s
+    return false;
+  }
+bool operator>(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return y<x;
+  }
+bool operator!=(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return (x<y)||(y<x);
+  }
+bool operator==(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return !(x!=y);
+  }
+bool operator<=(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return (x<y)||(x==y);
+  }
+bool operator>=(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return (x>y)||(x==y);
+  }
+'''
+
+
+def gen_struct(name,memberTypesAndNames):
+    assert len(memberTypesAndNames)>0, name
+    memberNames=[_[1] for _ in memberTypesAndNames]
+    memberTypes=[_[0] for _ in memberTypesAndNames]
+    paramNames=['p%s'%i for i in range(1,len(memberTypesAndNames)+1)]
+    
+    members=''.join(['\n  %s %s;'%_ for _ in memberTypesAndNames])
+    consparams=','.join(['\n    %s const& %s'%_ for _ in zip(memberTypes,paramNames)])
+    consinitialisers=','.join(['\n      %s(%s)'%_ for _ in zip(memberNames,paramNames)])
+    lessMembers=''.join([('\n    if (x.%(_)s<y.%(_)s) return true;'+
+                          '\n    if (y.%(_)s<x.%(_)s) return false;')%vars()\
+                             for _ in memberNames])
+    return struct_t%vars()
 
 def gen(decl,eclass,eheader,indent=''):
     result=''
@@ -127,6 +186,13 @@ def gen(decl,eclass,eheader,indent=''):
                 indent,
                 ('typedef %(aliasOf)s %(name)s;')%vars())
             pass
+    elif isinstance(decl, idlast.Struct):
+        name=decl.identifier()
+        memberTypesAndNames=[(unqualifiedType(_.memberType()),_.declarators()[0].identifier()) for _ in decl.members()];
+        result=reindent(
+            indent,
+            gen_struct(name,memberTypesAndNames))
+        pass
     else:
         assert False, repr(decl)
         pass
@@ -150,6 +216,18 @@ def gen_tincludes(decl):
         elif aliasOf.kind() in basicStringTypes:
             result=result+['<xju/Tagged.hh>','<string>']
             pass
+        pass
+    elif isinstance(decl, idlast.Struct):
+        for m in decl.members():
+            if m.memberType().kind() in basicIntTypes:
+                result=result+['<xju/Int.hh>']+tincludes(m.memberType())
+            elif m.memberType().kind() in basicFloatTypes:
+                result=result+['<xju/Float.hh>']+tincludes(m.memberType())
+            elif m.memberType().kind() in basicStringTypes:
+                result=result+['<xju/Tagged.hh>','<string>']
+                pass
+            pass
+        pass
     else:
         assert False, repr(decl)
         pass

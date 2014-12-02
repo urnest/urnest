@@ -1,0 +1,93 @@
+// generated from p4.idl by omnicxy cxycref idl backend specifying 
+// cxy::Exception from <cxy/Exception.hh> as base class for all exceptions
+#include <cxy/cref.hh>
+#include <cxy/Exceptions.hh>
+#include <cxy/Exception.hh>
+
+#include "p4.hh"
+
+#include "p4.objref.hh" // impl
+#include "p4.cdr.hh" // impl
+#include <cxy/ORB.hh> // impl
+#include <cxy/translateException.hh> // impl
+#include <xju/format.hh> // impl
+#include <xju/assert.hh> // impl
+#include <string>
+
+namespace cxy
+{
+template<class E>
+class ORB;
+
+template<class T>
+class objref;
+
+template<>
+class cref< ::p4::F>
+{
+public:
+  explicit cref(cxy::ORB<cxy::Exception>& orb, std::string const& uri) throw(
+    // no object with specified uri, including server
+    // not reachable and server does not know name
+    cxy::Exceptions<cxy::Exception>::NoSuchObject,
+    // object with specified uri is not a p4::F
+    cxy::Exceptions<cxy::Exception>::WrongType,
+    // other failure, eg communication failure
+    cxy::Exception):
+      uri_(uri),
+      obj_((&cxy::pof< ::p4::F>::me_(), // force init of static var,
+            (cxy::objref< ::p4::F>*)orb.locate(
+              uri, cxy::cdr< ::p4::F>::repoId)))
+  {
+  }
+  
+  cref(cref const& b) throw():
+      uri_(b.uri_),
+      obj_(b.obj_)
+  {
+    if (obj_ && !obj_->_NP_is_nil())  omni::duplicateObjRef(obj_);
+  }
+
+  cref< ::p4::F>& operator=(cref< ::p4::F> const& b) throw()
+  {
+    if (this != &b) {
+      ::CORBA::release(obj_);
+      uri_= b.uri_;
+      obj_ = b.obj_;
+      if (obj_ && !obj_->_NP_is_nil())  omni::duplicateObjRef(obj_);
+    }
+    return *this;
+  }
+
+  ~cref() throw()
+  {
+    ::CORBA::release(obj_);
+  }
+  
+  p4::F* operator->() throw()
+  {
+    return obj_;
+  }
+  p4::F const* operator->() const throw()
+  {
+    return obj_;
+  }
+    
+  ::p4::XS1 f1(
+    ::p4::XS1 const& y) throw(
+      // ipc failure
+      cxy::Exception)
+  {
+    xju::assert_not_equal(obj_, (void*)0);
+    xju::assert_not_equal(true, obj_->_NP_is_nil());
+    return obj_->f1(
+      y);
+  }
+  
+private:
+  std::string uri_;
+  cxy::objref< ::p4::F>* obj_;
+};
+
+}
+
