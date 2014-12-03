@@ -1,3 +1,5 @@
+- how to get just direct includes? currently picks up nested
+
 x hand-code p1 server
 
     root_poa->activate_object_with_id(oid, f);
@@ -111,20 +113,21 @@ x test client wrong type exception
 x p4.idl:
   x struct in param, return
 
-- p5.idl:
-  - sequence param, return, struct
-
-- p6.idl:
+x p5.idl:
+  x sequence param, return, struct
   - exception
 
-- p7.idl:
+- p6.idl:
   - enum param, return
 
-- p8.idl:
+- p7.idl:
   - inherit interface
 
 - bounded strings
 - bounded sequences
+- arrays
+- objref param/return
+- any
 
 x test duplicate object name exception
 

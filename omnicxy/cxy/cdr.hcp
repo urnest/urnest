@@ -12,6 +12,7 @@
 #include <omniORB4/cdrStream.h> //impl
 #include <stdint.h>
 #include <string>
+#include <vector>
 #include "xju/Tagged.hh"
 #include "xju/Int.hh"
 
@@ -194,5 +195,30 @@ public:
 
 };
 
+template<class T>
+class cdr<std::vector<T> >
+{
+public:
+  static std::vector<T> unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
+  {
+    uint32_t const length(cdr<uint32_t>::unmarshalFrom(s));
+    std::vector<T> result;
+    for(uint32_t i=0; i!=length; ++i) {
+      result.push_back(cdr<T>::unmarshalFrom(s));
+    }
+    return result;
+  }
+  static void marshal(std::vector<T> const& x, cdrStream& s) throw()
+  {
+    cdr<uint32_t>::marshal(x.size(),s);
+    for(typename std::vector<T>::const_iterator i=x.begin(); i!=x.end(); ++i) {
+      cdr<T>::marshal(*i, s);
+    }
+  }
+};
   
 }

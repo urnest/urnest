@@ -9,6 +9,7 @@
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p3-main) '3737' 'both':exec.output
 %test-transient
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p4-main) '3738' 'both':exec.output
+()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p5-main) '3739' 'both':exec.output
 %test-transient
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%test-no-such-object) '3740':exec.output
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%test-duplicate-name) '3741':exec.output
@@ -20,6 +21,7 @@
 %p2-main==p2-main.cc+(%cxx-opts):auto.cxx.exe
 %p3-main==p3-main.cc+(%cxx-opts):auto.cxx.exe
 %p4-main==p4-main.cc+(%cxx-opts):auto.cxx.exe
+%p5-main==p5-main.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-duplicate-name==test-duplicate-name.cc+(%cxx-opts):auto.cxx.exe
 
@@ -134,6 +136,33 @@ p4.cdr.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxy
 p4.cref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycref.py) (../p4.idl):stdout
 p4.objref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxyobjref.py) (../p4.idl):stdout
 p4.sref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxysref.py) (../p4.idl):stdout
+
+p5.hh==%p5/p5.hh
+p5.cc==%p5/p5.cc
+
+p5.cref.hh==%p5.cref/p5.cref.hh
+p5.cref.cc==%p5.cref/p5.cref.cc
+
+p5.objref.hh==%p5.objref/p5.objref.hh
+p5.objref.cc==%p5.objref/p5.objref.cc
+
+p5.cdr.hh==%p5.cdr/p5.cdr.hh
+p5.cdr.cc==%p5.cdr/p5.cdr.cc
+
+p5.sref.hh==%p5.sref/p5.sref.hh
+p5.sref.cc==%p5.sref/p5.sref.cc
+
+%p5==()+cmd=(../../../hcp/hcp-split) -l 0 (p5.hcp) 'p5.hh' 'p5.cc':output
+%p5.cref==()+cmd=(../../../hcp/hcp-split) -l 0 (p5.cref.hcp) 'p5.cref.hh' 'p5.cref.cc':output
+%p5.objref==()+cmd=(../../../hcp/hcp-split) -l 0 (p5.objref.hcp) 'p5.objref.hh' 'p5.objref.cc':output
+%p5.cdr==()+cmd=(../../../hcp/hcp-split) -l 0 (p5.cdr.hcp) 'p5.cdr.hh' 'p5.cdr.cc':output
+%p5.sref==()+cmd=(../../../hcp/hcp-split) -l 0 (p5.sref.hcp) 'p5.sref.hh' 'p5.sref.cc':output
+
+p5.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxy.py) (../p5.idl):stdout
+p5.cdr.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycdr.py) (../p5.idl):stdout
+p5.cref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycref.py) (../p5.idl):stdout
+p5.objref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxyobjref.py) (../p5.idl):stdout
+p5.sref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxysref.py) (../p5.idl):stdout
 
 %test-transient==()+cmd=(%test-transient.sh) (%p1-main):exec.output
 

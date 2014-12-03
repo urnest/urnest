@@ -30,8 +30,10 @@ class TypeInfo:
     pass
 
 basicIntTypes={
-    idltype.tk_short:  TypeInfo('int16_t',['<stdint.h>']),
-    idltype.tk_long:   TypeInfo('int32_t',['<stdint.h>']),
+    idltype.tk_short:   TypeInfo('int16_t',['<stdint.h>']),
+    idltype.tk_long:    TypeInfo('int32_t',['<stdint.h>']),
+    idltype.tk_ushort:  TypeInfo('uint16_t',['<stdint.h>']),
+    idltype.tk_ulong:   TypeInfo('uint32_t',['<stdint.h>']),
 }
 basicFloatTypes={
     idltype.tk_double: TypeInfo('double',[]),
@@ -54,6 +56,10 @@ def unqualifiedType(t):
         return ''.join(['::'+_ for _ in t.scopedName()])
     elif t.kind()==idltype.tk_struct:
         return ''.join(['::'+_ for _ in t.scopedName()])
+    elif t.kind()==idltype.tk_sequence:
+        assert t.bound()==0, 'bounded sequences not yet implemented'
+        itemType=unqualifiedType(t.seqType())
+        return 'std::vector< %(itemType)s>'%vars()
     assert False, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
     pass
 
@@ -78,8 +84,12 @@ def tn(t):
 def tincludes(t):
     if t.kind() in basicParamTypes:
         return basicParamTypes.get(t.kind()).includeFiles
-    elif t.kind() in [idltype.tk_alias,idltype.tk_struct]:
+    elif t.kind() in [idltype.tk_alias]:
         return []
+    elif t.kind() in [idltype.tk_struct]:
+        return []
+    elif t.kind() in [idltype.tk_sequence]:
+        return tincludes(t.seqType())
     assert False, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
 
 def reindent(indent, s):
@@ -182,6 +192,7 @@ def gen(decl,eclass,eheader,indent=''):
                 ('class %(name)s_tag {};\n'+
                  'typedef ::xju::Tagged<std::string,%(name)s_tag> %(name)s;')%vars())
         else:
+            aliasOf=unqualifiedType(aliasOf)
             result=reindent(
                 indent,
                 ('typedef %(aliasOf)s %(name)s;')%vars())
@@ -216,6 +227,8 @@ def gen_tincludes(decl):
         elif aliasOf.kind() in basicStringTypes:
             result=result+['<xju/Tagged.hh>','<string>']
             pass
+        else:
+            result=tincludes(aliasOf)
         pass
     elif isinstance(decl, idlast.Struct):
         for m in decl.members():

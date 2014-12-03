@@ -1,0 +1,12 @@
+#include "p4.idl"
+
+module p5
+{
+  typedef sequence<p4::XS1> JW2s;
+  typedef sequence<unsigned long> LS;
+  
+  interface F
+  {
+    JW2s f1(in JW2s p1);
+  };
+};
