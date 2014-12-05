@@ -1,0 +1,11 @@
+module p6
+{
+  exception EEE
+  {
+  };
+  interface F
+  {
+    void f1() raises(EEE);
+  };
+};
+
