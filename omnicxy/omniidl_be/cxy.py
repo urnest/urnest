@@ -17,7 +17,7 @@ public:
 '''
 
 operation_t='''\
-virtual %(returnType)s %(name)s(%(params)s) throw(
+virtual %(returnType)s %(name)s(%(params)s) throw(%(exceptions)s
   // ipc failure
   // - note servant may not throw
   %(eclass)s) = 0;'''
@@ -105,35 +105,35 @@ struct %(name)s
 
 };
 bool operator<(
-    %(name)s const& x, 
-    %(name)s const& y) throw() {%(lessMembers)s
-    return false;
-  }
+  %(name)s const& x, 
+  %(name)s const& y) throw() {%(lessMembers)s
+  return false;
+}
 bool operator>(
-    %(name)s const& x, 
-    %(name)s const& y) throw() {
-    return y<x;
-  }
+  %(name)s const& x, 
+  %(name)s const& y) throw() {
+  return y<x;
+}
 bool operator!=(
-    %(name)s const& x, 
-    %(name)s const& y) throw() {
-    return (x<y)||(y<x);
-  }
+  %(name)s const& x, 
+  %(name)s const& y) throw() {
+  return (x<y)||(y<x);
+}
 bool operator==(
-    %(name)s const& x, 
-    %(name)s const& y) throw() {
-    return !(x!=y);
-  }
+  %(name)s const& x, 
+  %(name)s const& y) throw() {
+  return !(x!=y);
+}
 bool operator<=(
-    %(name)s const& x, 
-    %(name)s const& y) throw() {
-    return (x<y)||(x==y);
-  }
+  %(name)s const& x, 
+  %(name)s const& y) throw() {
+  return (x<y)||(x==y);
+}
 bool operator>=(
-    %(name)s const& x, 
-    %(name)s const& y) throw() {
-    return (x>y)||(x==y);
-  }
+  %(name)s const& x, 
+  %(name)s const& y) throw() {
+  return (x>y)||(x==y);
+}
 '''
 
 
@@ -151,6 +151,63 @@ def gen_struct(name,memberTypesAndNames):
                              for _ in memberNames])
     return struct_t%vars()
 
+exception_t='''\
+struct %(name)s : %(eclass)s
+{
+  %(name)s(%(consparams)s
+    // %(eclass)s params
+    std::string const& cause, 
+    std::pair<std::string, unsigned int> const& fileAndLine) throw():
+      %(eclass)s(std::make_pair(cause, fileAndLine))%(consinitialisers)s {
+  }
+  %(members)s
+};
+bool operator<(
+  %(name)s const& x, 
+  %(name)s const& y) throw() {%(lessMembers)s
+  return (%(eclass)s const&)x < (%(eclass)s const&)y;
+}
+bool operator>(
+  %(name)s const& x, 
+  %(name)s const& y) throw() {
+  return y<x;
+}
+bool operator!=(
+  %(name)s const& x, 
+  %(name)s const& y) throw() {
+  return (x<y)||(y<x);
+}
+bool operator==(
+  %(name)s const& x, 
+  %(name)s const& y) throw() {
+  return !(x!=y);
+}
+bool operator<=(
+  %(name)s const& x, 
+  %(name)s const& y) throw() {
+  return (x<y)||(x==y);
+}
+bool operator>=(
+  %(name)s const& x, 
+  %(name)s const& y) throw() {
+  return (x>y)||(x==y);
+}
+'''
+
+
+def gen_exception(name,memberTypesAndNames,eclass):
+    memberNames=[_[1] for _ in memberTypesAndNames]
+    memberTypes=[_[0] for _ in memberTypesAndNames]
+    paramNames=['p%s'%i for i in range(1,len(memberTypesAndNames)+1)]
+    
+    members=''.join(['\n  %s %s;'%_ for _ in memberTypesAndNames])
+    consparams=''.join(['\n    %s const& %s,'%_ for _ in zip(memberTypes,paramNames)])
+    consinitialisers=''.join([',\n      %s(%s)'%_ for _ in zip(memberNames,paramNames)])
+    lessMembers=''.join([('\n    if (x.%(_)s<y.%(_)s) return true;'+
+                          '\n    if (y.%(_)s<x.%(_)s) return false;')%vars()\
+                             for _ in memberNames])
+    return exception_t%vars()
+
 def gen(decl,eclass,eheader,indent=''):
     result=''
     if isinstance(decl, idlast.Module):
@@ -166,8 +223,9 @@ def gen(decl,eclass,eheader,indent=''):
         name=decl.identifier()
         params=','.join(['\n  %s& %s'%(ptype(p),p.identifier()) for p in decl.parameters()])
         assert not decl.oneway(), 'oneway not yet implemented'
-        assert len(decl.raises())==0, 'raises not yet implemented'
         assert len(decl.contexts())==0, 'contexts not yet implemented'
+        exceptionTypes=['::'.join(_.scopedName()) for _ in decl.raises()]
+        exceptions=''.join(['\n  %(_)s,'%vars() for _ in exceptionTypes])
         returnType=unqualifiedType(decl.returnType())
         result=reindent(indent,operation_t%vars())
     elif isinstance(decl, idlast.Typedef):
@@ -204,6 +262,15 @@ def gen(decl,eclass,eheader,indent=''):
             indent,
             gen_struct(name,memberTypesAndNames))
         pass
+    elif isinstance(decl, idlast.Exception):
+        name=decl.identifier()
+        memberTypesAndNames=[
+            (unqualifiedType(_.memberType()),_.declarators()[0].identifier()) \
+                for _ in decl.members()];
+        result=reindent(
+            indent,
+            gen_exception(name,memberTypesAndNames,eclass))
+        pass
     else:
         assert False, repr(decl)
         pass
@@ -231,6 +298,17 @@ def gen_tincludes(decl):
             result=tincludes(aliasOf)
         pass
     elif isinstance(decl, idlast.Struct):
+        for m in decl.members():
+            if m.memberType().kind() in basicIntTypes:
+                result=result+['<xju/Int.hh>']+tincludes(m.memberType())
+            elif m.memberType().kind() in basicFloatTypes:
+                result=result+['<xju/Float.hh>']+tincludes(m.memberType())
+            elif m.memberType().kind() in basicStringTypes:
+                result=result+['<xju/Tagged.hh>','<string>']
+                pass
+            pass
+        pass
+    elif isinstance(decl, idlast.Exception):
         for m in decl.members():
             if m.memberType().kind() in basicIntTypes:
                 result=result+['<xju/Int.hh>']+tincludes(m.memberType())

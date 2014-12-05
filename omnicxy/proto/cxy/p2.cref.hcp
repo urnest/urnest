@@ -72,32 +72,6 @@ public:
   {
     return obj_;
   }
-    
-  void f1(
-    int16_t const& a,
-    int32_t const& b,
-    double const& c,
-    std::string const& d) throw(
-      // ipc failure
-      cxy::Exception)
-  {
-    xju::assert_not_equal(obj_, (void*)0);
-    xju::assert_not_equal(true, obj_->_NP_is_nil());
-     obj_->f1(
-      a,
-      b,
-      c,
-      d);
-  }
-    
-  int16_t f2() throw(
-      // ipc failure
-      cxy::Exception)
-  {
-    xju::assert_not_equal(obj_, (void*)0);
-    xju::assert_not_equal(true, obj_->_NP_is_nil());
-    return obj_->f2();
-  }
   
 private:
   std::string uri_;

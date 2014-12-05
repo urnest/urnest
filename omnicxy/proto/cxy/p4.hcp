@@ -24,39 +24,39 @@ struct XS1
 
 };
 bool operator<(
-    XS1 const& x, 
-    XS1 const& y) throw() {
+  XS1 const& x, 
+  XS1 const& y) throw() {
     if (x.a_<y.a_) return true;
     if (y.a_<x.a_) return false;
     if (x.b_<y.b_) return true;
     if (y.b_<x.b_) return false;
-    return false;
-  }
+  return false;
+}
 bool operator>(
-    XS1 const& x, 
-    XS1 const& y) throw() {
-    return y<x;
-  }
+  XS1 const& x, 
+  XS1 const& y) throw() {
+  return y<x;
+}
 bool operator!=(
-    XS1 const& x, 
-    XS1 const& y) throw() {
-    return (x<y)||(y<x);
-  }
+  XS1 const& x, 
+  XS1 const& y) throw() {
+  return (x<y)||(y<x);
+}
 bool operator==(
-    XS1 const& x, 
-    XS1 const& y) throw() {
-    return !(x!=y);
-  }
+  XS1 const& x, 
+  XS1 const& y) throw() {
+  return !(x!=y);
+}
 bool operator<=(
-    XS1 const& x, 
-    XS1 const& y) throw() {
-    return (x<y)||(x==y);
-  }
+  XS1 const& x, 
+  XS1 const& y) throw() {
+  return (x<y)||(x==y);
+}
 bool operator>=(
-    XS1 const& x, 
-    XS1 const& y) throw() {
-    return (x>y)||(x==y);
-  }
+  XS1 const& x, 
+  XS1 const& y) throw() {
+  return (x>y)||(x==y);
+}
 
 class F
 {

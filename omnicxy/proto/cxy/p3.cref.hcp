@@ -72,28 +72,6 @@ public:
   {
     return obj_;
   }
-    
-  ::p3::MyInt f1(
-    ::p3::MyInt const& a) throw(
-      // ipc failure
-      cxy::Exception)
-  {
-    xju::assert_not_equal(obj_, (void*)0);
-    xju::assert_not_equal(true, obj_->_NP_is_nil());
-    return obj_->f1(
-      a);
-  }
-    
-  ::p3::MyString f2(
-    ::p3::MyString const& a) throw(
-      // ipc failure
-      cxy::Exception)
-  {
-    xju::assert_not_equal(obj_, (void*)0);
-    xju::assert_not_equal(true, obj_->_NP_is_nil());
-    return obj_->f2(
-      a);
-  }
   
 private:
   std::string uri_;

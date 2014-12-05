@@ -1,11 +1,15 @@
+%all==%all.tree:leaves
+
 %all.tree==<<
 %p1-main
 %p2-main
+%p6-main
 %all-tests.tree
 
 %all-tests.tree==<<
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p1-main) '6735' 'both':exec.output
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p2-main) '6736' 'both':exec.output
+()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p6-main) '6740' 'both':exec.output
 
 %dummy.hh==<<
 
@@ -42,4 +46,11 @@ p4.cc==(%dummy.hh)+cmd=cat (%p4.cxx.files+member='p4SK.cc':extract_file):stdout
 
 p5.hh==(%dummy.hh)+cmd=cat (%p5.cxx.files+member='p5.hh':extract_file):stdout
 p5.cc==(%dummy.hh)+cmd=cat (%p5.cxx.files+member='p5SK.cc':extract_file):stdout
+
+%p6-main==p6-main.cc+(%cxx-opts)+inc_sp=(/usr/local/omniORB-4.2.0/include)+lib_sp=(/usr/local/omniORB-4.2.0/lib)+lib='omniORB4' 'omnithread':auto.cxx.exe
+
+%p6.cxx.files==../p6.idl+cmd=(/usr/local/omniORB-4.2.0/bin/omniidl) '-bcxx' (../p6.idl)+need=(../p6.idl:hash_inc_all):exec.files
+
+p6.hh==(%dummy.hh)+cmd=cat (%p6.cxx.files+member='p6.hh':extract_file):stdout
+p6.cc==(%dummy.hh)+cmd=cat (%p6.cxx.files+member='p6SK.cc':extract_file):stdout
 

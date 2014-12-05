@@ -157,7 +157,7 @@ def genCalldesc(decl,eclass,eheader,indent,fqn):
         callDescReturnValue='\n    cd->r_='
         pass
     assert not decl.oneway(), 'oneway not yet implemented'
-    assert len(decl.raises())==0, 'raises not yet implemented'
+    assert len(decl.raises())==0,repr(decl.raises())+': raises not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     result=reindent(indent,calldesc_operation_t%vars())
     return result
@@ -170,7 +170,7 @@ def genObjref(decl,eclass,eheader,indent,fqn):
     params=','.join(['\n  %s& %s'%(ptype(p),n) for p,n in zip(decl.parameters(),pns)])
     paramNames=''.join([',\n      %s'%n for n in pns])
     assert not decl.oneway(), 'oneway not yet implemented'
-    assert len(decl.raises())==0, 'raises not yet implemented'
+    assert len(decl.raises())==0,repr(decl.raises())+': raises not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     returnType=unqualifiedType(decl.returnType())
     returnValue=''
@@ -199,6 +199,8 @@ def gen(decl,eclass,eheader,indent=''):
     elif isinstance(decl, idlast.Typedef):
         pass
     elif isinstance(decl, idlast.Struct):
+        pass
+    elif isinstance(decl, idlast.Exception):
         pass
     else:
         assert False, repr(decl)

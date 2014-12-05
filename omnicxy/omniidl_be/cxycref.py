@@ -6,17 +6,6 @@ import os.path
 
 from cxy import ptype,unqualifiedType
 
-operation_t='''
-%(returnType)s %(name)s(%(params)s) throw(
-    // ipc failure
-    %(eclass)s)
-{
-  xju::assert_not_equal(obj_, (void*)0);
-  xju::assert_not_equal(true, obj_->_NP_is_nil());
-  %(returnStatement)s obj_->%(name)s(%(paramNames)s);
-}
-'''
-
 interface_t='''\
 template<>
 class cref< ::%(fqn)s>
@@ -89,21 +78,12 @@ def gen(decl,eclass,eheader,indent=''):
         content=''.join([gen(_,eclass,eheader,indent+'  ') for _ in decl.contents()])
         result=interface_t%vars()
     elif isinstance(decl, idlast.Operation):
-        name=decl.identifier()
-        params=','.join(['\n  %s& %s'%(ptype(p),p.identifier()) for p in decl.parameters()])
-        paramNames=','.join(['\n    %s'%p.identifier() for p in decl.parameters()])
-        assert not decl.oneway(), 'oneway not yet implemented'
-        assert len(decl.raises())==0, 'raises not yet implemented'
-        assert len(decl.contexts())==0, 'contexts not yet implemented'
-        returnType=unqualifiedType(decl.returnType())
-        returnStatement=''
-        if returnType != 'void':
-            returnStatement='return'
-            pass
-        result=reindent(indent,operation_t%vars())
+        pass
     elif isinstance(decl, idlast.Typedef):
         pass
     elif isinstance(decl, idlast.Struct):
+        pass
+    elif isinstance(decl, idlast.Exception):
         pass
     else:
         assert False, repr(decl)

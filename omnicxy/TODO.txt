@@ -84,9 +84,9 @@ x adjust sref.hcp need to derive from omniCallDescriptor to override
       x .objref.hcp
       x .sref.hcp
     x cxy/e
-  - return basic types:
+  x return basic types:
     x short
-    - long,double,string
+    x long,double,string
     proto
       x .hcp
       x .cdr.hcp
@@ -109,13 +109,33 @@ x test client wrong type exception
     x int
     x string
     - float
+    - octet
 
 x p4.idl:
   x struct in param, return
 
 x p5.idl:
   x sequence param, return, struct
-  - exception
+
+- p6.idl
+  - exception EEE
+    - want to seamlessly handle BaseException, which
+      has cause and context:
+      - (p7.idl) allow ExceptionCause and ExceptionContext types on omniidl
+        command line
+      - (p7.idl) if EEE has those:
+        - defer to the base class members
+          - via refs where names are not cause_ and context_
+        - the info will propogate back to client
+      ~ if EEE does not have:
+        ~ when server marshals, write them to stderr if they contain
+        ~ (no: cause_ and context_ are not required in BaseException)
+      - (p7.idl) what if using own exception type? allow attr names to be
+        specified on omniidl command line and if not don't treat them
+        specially?
+      - (p7.idl) if servant throws plain BaseException allow mapping to be
+        specified on command line; if no mapping abort (with stderr
+        message)
 
 - p6.idl:
   - enum param, return
