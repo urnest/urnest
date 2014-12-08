@@ -61,9 +61,10 @@ public:
   static void marshal(%(name)s const& x, cdrStream& s) throw()
   {%(memberMarshals)s
   }
+  static const char repoId[]="%(repoId)s";
 };
 '''
-def gen_exception(name,memberTypesAndNames,eclass):
+def gen_exception(name,repoId,memberTypesAndNames,eclass):
     memberNames=[_[1] for _ in memberTypesAndNames]
     memberTypes=[_[0] for _ in memberTypesAndNames]
     paramNames=['p%s'%i for i in range(1,len(memberTypesAndNames)+1)]
@@ -91,10 +92,11 @@ def gen(decl,eclass,eheader,indent=''):
         pass
     elif isinstance(decl, idlast.Exception):
         name='::'.join(decl.scopedName())
+        repoId=decl.repoId()
         memberTypesAndNames=[
             (unqualifiedType(_.memberType()),_.declarators()[0].identifier()) \
                 for _ in decl.members()];
-        result=gen_exception(name,memberTypesAndNames,eclass)
+        result=gen_exception(name,repoId,memberTypesAndNames,eclass)
         pass
     else:
         assert False, repr(decl)

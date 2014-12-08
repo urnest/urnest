@@ -18,6 +18,11 @@ NoSuchObject.cc==%NoSuchObject/NoSuchObject.cc
 
 %NoSuchObject==()+cmd=(../../hcp/hcp-split) -l 1 (NoSuchObject.hcp) 'NoSuchObject.hh' 'NoSuchObject.cc':output
 
+StubUserException.hh==%StubUserException/StubUserException.hh
+StubUserException.cc==%StubUserException/StubUserException.cc
+
+%StubUserException==()+cmd=(../../hcp/hcp-split) -l 1 (StubUserException.hcp) 'StubUserException.hh' 'StubUserException.cc':output
+
 cref.hh==%cref/cref.hh
 cref.cc==%cref/cref.cc
 

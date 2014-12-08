@@ -133,3 +133,9 @@ omnicxy/proto/cxy/p4.cc
 omnicxy/proto/cxy/p4.hh
 omnicxy/proto/cxx/p5.hh
 omnicxy/proto/cxy/p5.cc
+omnicxy/cxy/StubUserException.cc
+omnicxy/cxy/StubUserException.hh
+omnicxy/proto/cxx/p6.cc
+omnicxy/proto/cxx/p6.hh
+omnicxy/proto/cxy/p6.cc
+omnicxy/proto/cxy/p6.hh

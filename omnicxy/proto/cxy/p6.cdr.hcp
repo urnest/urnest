@@ -1,0 +1,37 @@
+// generated from p6.idl by omnicxy cxycdr idl backend
+
+#include <cxy/cdr.hh>
+
+#include "p6.hh"
+
+
+namespace cxy
+{
+template<>
+class cdr< ::p6::EEE>
+{
+public:
+  static ::p6::EEE unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
+  {
+    return ::p6::EEE(
+             //cxy::Exception params
+             std::string(), std::make_pair(__FILE__,__LINE__));
+  }  
+  static void marshal(p6::EEE const& x, cdrStream& s) throw()
+  {
+  }
+  static const char repoId[]="IDL:p6/EEE:1.0";
+};
+template<>
+class cdr< ::p6::F>
+{
+public:
+  static const char repoId[]="IDL:p6/F:1.0";
+};
+
+}
+

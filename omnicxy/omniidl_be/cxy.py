@@ -158,7 +158,7 @@ struct %(name)s : %(eclass)s
     // %(eclass)s params
     std::string const& cause, 
     std::pair<std::string, unsigned int> const& fileAndLine) throw():
-      %(eclass)s(std::make_pair(cause, fileAndLine))%(consinitialisers)s {
+      %(eclass)s(cause, fileAndLine)%(consinitialisers)s {
   }
   %(members)s
 };

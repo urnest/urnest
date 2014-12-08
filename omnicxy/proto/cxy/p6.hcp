@@ -1,0 +1,64 @@
+// generated from p6.idl by omni cxy idl backend specifying 
+// cxy::Exception from <cxy/Exception.hh> as base class for all ipc exceptions
+
+#include <cxy/Exception.hh>
+
+
+
+namespace p6
+{
+struct EEE : cxy::Exception
+{
+  EEE(
+    // cxy::Exception params
+    std::string const& cause, 
+    std::pair<std::string, unsigned int> const& fileAndLine) throw():
+      cxy::Exception(cause, fileAndLine) {
+  }
+  
+};
+bool operator<(
+  EEE const& x, 
+  EEE const& y) throw() {
+  return (cxy::Exception const&)x < (cxy::Exception const&)y;
+}
+bool operator>(
+  EEE const& x, 
+  EEE const& y) throw() {
+  return y<x;
+}
+bool operator!=(
+  EEE const& x, 
+  EEE const& y) throw() {
+  return (x<y)||(y<x);
+}
+bool operator==(
+  EEE const& x, 
+  EEE const& y) throw() {
+  return !(x!=y);
+}
+bool operator<=(
+  EEE const& x, 
+  EEE const& y) throw() {
+  return (x<y)||(x==y);
+}
+bool operator>=(
+  EEE const& x, 
+  EEE const& y) throw() {
+  return (x>y)||(x==y);
+}
+
+class F
+{
+public:
+  virtual ~F() throw()
+  {
+  }
+  virtual void f1() throw(
+    p6::EEE,
+    // ipc failure
+    // - note servant may not throw
+    cxy::Exception) = 0;
+};
+
+}

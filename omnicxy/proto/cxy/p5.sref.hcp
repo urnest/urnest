@@ -10,6 +10,7 @@
 
 #include <cxy/ORB.hh> // impl
 #include <cxy/sref_impl.hh> // impl
+#include <cxy/StubUserException.hh> // impl
 #include <omniORB4/callDescriptor.h> // impl
 #include <omniORB4/callHandle.h> // impl
 #include <omniORB4/omniServant.h> // impl
@@ -147,12 +148,25 @@ private:
   class f1 
   {
   public:
-    static void lcfn(omniCallDescriptor* ocd, omniServant* svnt) throw()
+    static void lcfn(omniCallDescriptor* ocd, omniServant* svnt) 
+      //exception spec commented to avoid header dependency on omniORB headers
+      //throw(CORBA::UserException)
     {
       ::p5::F* impl = (::p5::F*) svnt->_ptrToInterface(cxy::cdr< ::p5::F>::repoId);
       calldesc< ::p5::F>::f1* c=(calldesc< ::p5::F>::f1*)ocd;
-      c->r_ = impl->f1(
+      if (!c->is_upcall()){
+        c->r_ = impl->f1(
         c->p1_.value());
+      }
+      else {
+        try {
+          c->r_ = impl->f1(
+        c->p1_.value());
+        }
+        catch(cxy::Exception const&) {
+          throw; // REVISIT: support translation to a specified idl exception
+        }
+      }
     }
     static const char* const _user_exns[] = {
       0

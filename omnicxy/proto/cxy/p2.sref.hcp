@@ -10,6 +10,7 @@
 
 #include <cxy/ORB.hh> // impl
 #include <cxy/sref_impl.hh> // impl
+#include <cxy/StubUserException.hh> // impl
 #include <omniORB4/callDescriptor.h> // impl
 #include <omniORB4/callHandle.h> // impl
 #include <omniORB4/omniServant.h> // impl
@@ -182,15 +183,31 @@ private:
   class f1 
   {
   public:
-    static void lcfn(omniCallDescriptor* ocd, omniServant* svnt) throw()
+    static void lcfn(omniCallDescriptor* ocd, omniServant* svnt) 
+      //exception spec commented to avoid header dependency on omniORB headers
+      //throw(CORBA::UserException)
     {
       ::p2::F* impl = (::p2::F*) svnt->_ptrToInterface(cxy::cdr< ::p2::F>::repoId);
       calldesc< ::p2::F>::f1* c=(calldesc< ::p2::F>::f1*)ocd;
-       impl->f1(
+      if (!c->is_upcall()){
+         impl->f1(
         c->p1_.value(),
         c->p2_.value(),
         c->p3_.value(),
         c->p4_.value());
+      }
+      else {
+        try {
+           impl->f1(
+        c->p1_.value(),
+        c->p2_.value(),
+        c->p3_.value(),
+        c->p4_.value());
+        }
+        catch(cxy::Exception const&) {
+          throw; // REVISIT: support translation to a specified idl exception
+        }
+      }
     }
     static const char* const _user_exns[] = {
       0
@@ -200,11 +217,23 @@ private:
   class f2 
   {
   public:
-    static void lcfn(omniCallDescriptor* ocd, omniServant* svnt) throw()
+    static void lcfn(omniCallDescriptor* ocd, omniServant* svnt) 
+      //exception spec commented to avoid header dependency on omniORB headers
+      //throw(CORBA::UserException)
     {
       ::p2::F* impl = (::p2::F*) svnt->_ptrToInterface(cxy::cdr< ::p2::F>::repoId);
       calldesc< ::p2::F>::f2* c=(calldesc< ::p2::F>::f2*)ocd;
-      c->r_ = impl->f2();
+      if (!c->is_upcall()){
+        c->r_ = impl->f2();
+      }
+      else {
+        try {
+          c->r_ = impl->f2();
+        }
+        catch(cxy::Exception const&) {
+          throw; // REVISIT: support translation to a specified idl exception
+        }
+      }
     }
     static const char* const _user_exns[] = {
       0

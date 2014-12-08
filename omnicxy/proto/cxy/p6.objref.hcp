@@ -1,7 +1,7 @@
-// generated from p5.idl by omnicxy cxyobjref idl backend specifying 
+// generated from p6.idl by omnicxy cxyobjref idl backend specifying 
 // cxy::Exception from <cxy/Exception.hh> as base class for all ipc exceptions
-#include "p5.hh"
-#include "p5.cdr.hh"
+#include "p6.hh"
+#include "p6.cdr.hh"
 
 #include <cxy/objref.hh>
 #include <cxy/translateException.hh>
@@ -14,16 +14,13 @@
 #include <omniORB4/callDescriptor.h>
 #include <omniORB4/IOP_C.h>
 
-// included idl
-#include "p4.objref.hh"
-#include "p3.objref.hh"
 
 namespace cxy
 {
 
 template<>
-class objref< ::p5::F>:
-  public virtual ::p5::F,
+class objref< ::p6::F>:
+  public virtual ::p6::F,
   public virtual ::CORBA::Object,
   public virtual omniObjRef,
   public xju::NonCopyable
@@ -31,24 +28,21 @@ class objref< ::p5::F>:
 public:
   inline objref()  { _PR_setobj(0); }  // nil
   objref(omniIOR* ior, omniIdentity* id) throw() :
-      omniObjRef(cxy::cdr< ::p5::F>::repoId, ior, id, 1) {
+      omniObjRef(cxy::cdr< ::p6::F>::repoId, ior, id, 1) {
     _PR_setobj(this);
   }
     
-  // p5::F::
-  ::p5::JW2s f1(
-    ::p5::JW2s const& p1) throw(
+  // p6::F::
+  void f1() throw(
     cxy::Exception)
   {
     try {
-      calldesc::f1 c("f1", 2+1, 0,
-        p1);
+      calldesc::f1 c("f1", 2+1, 0);
       _invoke(c);
-      return c.r_.value();
     }
     catch(CORBA::Exception const& ee) {
       cxy::Exception e(cxy::translateException< cxy::Exception>(ee));
-      e.addContext("p5::F::f1()", std::make_pair(__FILE__, __LINE__)); // REVISIT: add ior / id
+      e.addContext("p6::F::f1()", std::make_pair(__FILE__, __LINE__)); // REVISIT: add ior / id
       throw e;
     }
   }
@@ -69,30 +63,32 @@ private:
       f1(
         const char* op_,
         size_t oplen,
-        _CORBA_Boolean upcall,
-        ::p5::JW2s const& p1) throw():
+        _CORBA_Boolean upcall) throw():
           omniCallDescriptor(
-            &f1::lcfn, op_, oplen, 0, _user_exns, 0, upcall),
-          p1_(p1)
+            &f1::lcfn, op_, oplen, 0, _user_exns, 0, upcall)
       {
       }
       
-      ::p5::JW2s const p1_;
-      xju::Optional< ::p5::JW2s> r_;
     
       // omniCallDescriptor::
       void marshalArguments(cdrStream& s) // REVISIT: throw
       {
-        cxy::cdr< ::p5::JW2s>::marshal(p1_, s);
       }
       void unmarshalReturnedValues(cdrStream& s) // REVISIT: throw
       {
-        r_=cxy::cdr< ::p5::JW2s>::unmarshalFrom(s);
       }
       void userException(cdrStream& s,
                          omni::IOP_C* iop_client,
                          const char* repoId)//REVISIT: throw
       {
+        if (omni::strMatch(repoId, cxy::cdr< ::p6::EEE>::repoId)) {
+          ::p6::EEE _ex(cxy::cdr< ::p6::EEE>::unmarshalFrom(s));
+          if (iop_client){
+            iop_client->RequestCompleted();
+          }
+          throw _ex;
+        }
+    
         if (iop_client) iop_client->RequestCompleted(1);
         OMNIORB_THROW(UNKNOWN,omni::UNKNOWN_UserException,
                       (::CORBA::CompletionStatus)s.completion());
@@ -100,13 +96,12 @@ private:
     
       static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt)
       {
-        ::p5::F* impl=(::p5::F*)svnt->_ptrToInterface(cxy::cdr< ::p5::F>::repoId);
+        ::p6::F* impl=(::p6::F*)svnt->_ptrToInterface(cxy::cdr< ::p6::F>::repoId);
         f1* cd((f1*)calldesc);
-        
-        cd->r_= impl->f1(
-          cd->p1_);
+         impl->f1();
       }
       static const char* const _user_exns[] = {
+        "IDL:p6/EEE:1.0",
         0
       };
     };
@@ -115,10 +110,10 @@ private:
   // CORBA::Object::
   virtual void* _ptrToObjRef(const char* repoId)
   {
-    if (repoId == cxy::cdr< ::p5::F>::repoId)
+    if (repoId == cxy::cdr< ::p6::F>::repoId)
       return this;
     
-    if (omni::strMatch(repoId, cxy::cdr< ::p5::F>::repoId))
+    if (omni::strMatch(repoId, cxy::cdr< ::p6::F>::repoId))
       return this;
     
     if (repoId == ::CORBA::Object::_PD_repoId)
@@ -132,9 +127,9 @@ private:
 };
 
 template<>
-class pof< ::p5::F> : public omni::proxyObjectFactory {
+class pof< ::p6::F> : public omni::proxyObjectFactory {
 public:
-  pof() : omni::proxyObjectFactory(cxy::cdr< ::p5::F>::repoId){
+  pof() : omni::proxyObjectFactory(cxy::cdr< ::p6::F>::repoId){
   }
   virtual ~pof()
   {
@@ -142,23 +137,23 @@ public:
   
   virtual omniObjRef* newObjRef(omniIOR* ior,omniIdentity* id)
   {
-    return new cxy::objref< ::p5::F>(ior, id);
+    return new cxy::objref< ::p6::F>(ior, id);
   }
   
   virtual _CORBA_Boolean is_a(const char* repoId) const
   {
-    if (repoId==cxy::cdr< ::p5::F>::repoId ||
-        omni::ptrStrMatch(repoId, cxy::cdr< ::p5::F>::repoId)) {
+    if (repoId==cxy::cdr< ::p6::F>::repoId ||
+        omni::ptrStrMatch(repoId, cxy::cdr< ::p6::F>::repoId)) {
       return 1;
     }
     return 0;
   }
 
-  static pof< ::p5::F>& me_() throw()
+  static pof< ::p6::F>& me_() throw()
   {
     return me;
   }
-  static pof< ::p5::F> me;
+  static pof< ::p6::F> me;
 };
 
 }

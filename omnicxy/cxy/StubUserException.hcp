@@ -1,0 +1,79 @@
+// Copyright (c) 2014 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <cxy/cdr.hh>
+#include <omniORB4/CORBA.h>
+#include <stdlib.h>
+
+namespace cxy
+{
+template<class T>
+class StubUserException : public CORBA::UserException
+{
+public:
+  T e_;
+  
+  StubUserException(T const& e) throw():
+      e_(e)
+  {
+  }
+  // CORBA::Exception::
+  virtual void _raise() const throw(CORBA::UserException)
+  {
+    ::abort();
+  }
+
+  // CORBA::Exception::
+  static inline StubUserException<T>* _downcast(::CORBA::Exception* e) 
+  {
+    ::abort();
+    return 0;
+  }
+  // CORBA::Exception::
+  static inline const StubUserException<T>* _downcast(
+    const ::CORBA::Exception* e) 
+  {
+    ::abort();
+    return 0;
+  }
+  
+  // CORBA::Exception::
+  static inline StubUserException<T>* _narrow(::CORBA::Exception* e) 
+  {
+    return StubUserException<T>::_downcast(e);
+  }
+  // CORBA::Exception::
+  virtual ::CORBA::Exception* _NP_duplicate() const
+  {
+    ::abort();
+    return 0;
+  }
+  // CORBA::Exception::
+  virtual const char* _NP_typeId() const
+  {
+    ::abort();
+    return 0;
+  }
+  // CORBA::Exception::
+  const char* _NP_repoId(int* size) const {
+    *size = strlen(cxy::cdr<T>::repoId);
+    return cxy::cdr<T>::repoId;
+  }
+  // CORBA::Exception::
+  void _NP_marshal(cdrStream& s) const {
+    ::cxy::cdr<T>::marshal(e_, s);
+  }
+  
+};
+
+  
+}
+
+
+

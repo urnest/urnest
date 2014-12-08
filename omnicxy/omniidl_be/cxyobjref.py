@@ -23,6 +23,15 @@ objref_operation_t='''
 }
 '''
 
+calldesc_userException_t='''
+    if (omni::strMatch(repoId, cxy::cdr< ::%(fqn)s>::repoId)) {
+      ::%(fqn)s _ex(cxy::cdr< ::%(fqn)s>::unmarshalFrom(s));
+      if (iop_client){
+        iop_client->RequestCompleted();
+      }
+      throw _ex;
+    }
+'''
 calldesc_operation_t='''
 class %(name)s : public omniCallDescriptor
 {
@@ -44,6 +53,14 @@ public:
   void unmarshalReturnedValues(cdrStream& s) // REVISIT: throw
   {%(returnUnmarshal)s
   }
+  void userException(cdrStream& s,
+                     omni::IOP_C* iop_client,
+                     const char* repoId)//REVISIT: throw
+  {%(userExceptions)s
+    if (iop_client) iop_client->RequestCompleted(1);
+    OMNIORB_THROW(UNKNOWN,omni::UNKNOWN_UserException,
+                  (::CORBA::CompletionStatus)s.completion());
+  }
 
   static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt)
   {
@@ -51,7 +68,7 @@ public:
     %(name)s* cd((%(name)s*)calldesc);
     %(callDescReturnValue)s impl->%(name)s(%(callDescInvocationParams)s);
   }
-  static const char* const _user_exns[] = {
+  static const char* const _user_exns[] = {%(user_exns)s
     0
   };
 };
@@ -137,6 +154,11 @@ def reindent(indent, s):
     '''prepend %(indent)r to each line of %(s)r'''
     return '\n'.join([indent+_ for _ in s.split('\n')])
 
+def genCalldescUserException(decl):
+    assert isinstance(decl, idlast.Exception),repr(decl)
+    fqn='::'.join(decl.scopedName())
+    return calldesc_userException_t%vars()
+
 def genCalldesc(decl,eclass,eheader,indent,fqn):
     assert isinstance(decl, idlast.Operation),repr(decl)
     name=decl.identifier()
@@ -157,8 +179,9 @@ def genCalldesc(decl,eclass,eheader,indent,fqn):
         callDescReturnValue='\n    cd->r_='
         pass
     assert not decl.oneway(), 'oneway not yet implemented'
-    assert len(decl.raises())==0,repr(decl.raises())+': raises not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
+    user_exns=''.join(['\n    "%s",'%_.repoId() for _ in decl.raises()])
+    userExceptions=''.join([genCalldescUserException(_) for _ in decl.raises()])
     result=reindent(indent,calldesc_operation_t%vars())
     return result
 
@@ -170,7 +193,6 @@ def genObjref(decl,eclass,eheader,indent,fqn):
     params=','.join(['\n  %s& %s'%(ptype(p),n) for p,n in zip(decl.parameters(),pns)])
     paramNames=''.join([',\n      %s'%n for n in pns])
     assert not decl.oneway(), 'oneway not yet implemented'
-    assert len(decl.raises())==0,repr(decl.raises())+': raises not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     returnType=unqualifiedType(decl.returnType())
     returnValue=''
@@ -222,6 +244,7 @@ template='''\
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/callDescriptor.h>
+#include <omniORB4/IOP_C.h>
 %(idlincludes)s
 
 namespace cxy

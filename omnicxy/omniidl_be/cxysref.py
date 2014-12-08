@@ -38,15 +38,32 @@ calldesc_t='''
     }
   };'''
 
+catch_t='''
+      catch(::%(fqn)s const& e) {
+        throw cxy::StubUserException< ::%(fqn)s>(e);
+      }'''
+
 operation_t='''
 class %(name)s 
 {
 public:
-  static void lcfn(omniCallDescriptor* ocd, omniServant* svnt) throw()
+  static void lcfn(omniCallDescriptor* ocd, omniServant* svnt) 
+    //exception spec commented to avoid header dependency on omniORB headers
+    //throw(CORBA::UserException)
   {
     ::%(fqn)s* impl = (::%(fqn)s*) svnt->_ptrToInterface(cxy::cdr< ::%(fqn)s>::repoId);
     calldesc< ::%(fqn)s>::%(name)s* c=(calldesc< ::%(fqn)s>::%(name)s*)ocd;
-    %(callDescReturnValue)s impl->%(name)s(%(callDescInvocationParams)s);
+    if (!c->is_upcall()){
+      %(callDescReturnValue)s impl->%(name)s(%(callDescInvocationParams)s);
+    }
+    else {
+      try {
+        %(callDescReturnValue)s impl->%(name)s(%(callDescInvocationParams)s);
+      }%(catches)s
+      catch(%(eclass)s const&) {
+        throw; // REVISIT: support translation to a specified idl exception
+      }
+    }
   }
   static const char* const _user_exns[] = {
     0
@@ -176,6 +193,9 @@ def reindent(indent, s):
     '''prepend %(indent)r to each line of %(s)r'''
     return '\n'.join([indent+_ for _ in s.split('\n')])
 
+def genCatch(fqn):
+    return catch_t%vars()
+
 def genOperation(decl,eclass,eheader,indent,fqn):
     result=''
     assert isinstance(decl, idlast.Operation), repr(decl)
@@ -188,9 +208,9 @@ def genOperation(decl,eclass,eheader,indent,fqn):
         callDescReturnValue='c->r_ ='
         pass
     assert not decl.oneway(), 'oneway not yet implemented'
-    assert len(decl.raises())==0, 'raises not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
-    
+    catches=''.join([genCatch('::'.join(_.scopedName())) \
+                                  for _ in decl.raises()])
     result=reindent(indent,operation_t%vars())
     return result
 
@@ -199,7 +219,6 @@ def genDispatcher(decl,eclass,eheader,indent,fqn):
     name=decl.identifier()
     nameLen=len(name)
     assert not decl.oneway(), 'oneway not yet implemented'
-    assert len(decl.raises())==0, 'raises not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     
     result=reindent(indent,dispatcher_t%vars())
@@ -219,7 +238,6 @@ def genCalldesc(decl,eclass,eheader,indent,fqn):
         returnMarshal='\n      cxy::cdr< %(returnType)s>::marshal(r_.value(),s);'%vars()
         pass
     assert not decl.oneway(), 'oneway not yet implemented'
-    assert len(decl.raises())==0, 'raises not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     
     result=calldesc_t%vars()
@@ -258,6 +276,8 @@ def gen(decl,eclass,eheader,indent=''):
         pass
     elif isinstance(decl, idlast.Struct):
         pass
+    elif isinstance(decl, idlast.Exception):
+        pass
     else:
         assert False, repr(decl)
         pass
@@ -276,6 +296,7 @@ template='''\
 
 #include <cxy/ORB.hh> // impl
 #include <cxy/sref_impl.hh> // impl
+#include <cxy/StubUserException.hh> // impl
 #include <omniORB4/callDescriptor.h> // impl
 #include <omniORB4/callHandle.h> // impl
 #include <omniORB4/omniServant.h> // impl

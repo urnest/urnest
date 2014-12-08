@@ -45,6 +45,11 @@ public:
     context_.push_back(std::make_pair(context, fileAndLine));
   }
 };
+bool operator<(Exception const& x, Exception const& y) throw()
+{
+  return std::make_pair(x.cause_, x.context_) < 
+         std::make_pair(y.cause_, y.context_);
+}
 
 namespace
 {

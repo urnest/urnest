@@ -1,12 +1,12 @@
-// generated from p3.idl by omnicxy cxysref idl backend specifying 
+// generated from p6.idl by omnicxy cxysref idl backend specifying 
 // cxy::Exception from <cxy/Exception.hh> as base class for all exceptions
 #include <cxy/sref.hh>
 #include <cxy/sref_if.hh>
 #include <cxy/Exceptions.hh>
 #include <cxy/Exception.hh>
 
-#include "p3.hh" // impl
-#include "p3.cdr.hh" // impl
+#include "p6.hh" // impl
+#include "p6.cdr.hh" // impl
 
 #include <cxy/ORB.hh> // impl
 #include <cxy/sref_impl.hh> // impl
@@ -40,7 +40,7 @@ class sref_impl;
 template<class BaseException>
 class ORB;
 }
-namespace p3 {
+namespace p6 {
 class F;
 }
 
@@ -48,7 +48,7 @@ class F;
 namespace
 {
 template<>
-class calldesc< ::p3::F>
+class calldesc< ::p6::F>
 {
 public:
 
@@ -70,54 +70,16 @@ public:
     {
     }
     
-    xju::Optional< ::p3::MyInt> p1_;
-    xju::Optional< ::p3::MyInt> r_;
 
     // omniCallDescriptor::
     void unmarshalArguments(cdrStream& s) throw(
       CORBA::SystemException
       )
     {
-      p1_=cxy::cdr< ::p3::MyInt>::unmarshalFrom(s);
     }
     // omniCallDescriptor::
     void marshalReturnedValues(cdrStream& s) throw()
     {
-      cxy::cdr< ::p3::MyInt>::marshal(r_.value(),s);
-    }
-  };
-  class f2 : public omniCallDescriptor
-  {
-  public:
-    f2(void (*lcfn)(omniCallDescriptor*, omniServant*),
-       char const* op_,
-       int op_len_,
-       _CORBA_Boolean oneway,
-       const char*const* user_excns_,
-       int n_user_excns_,
-       _CORBA_Boolean is_upcall_) throw():
-        omniCallDescriptor(lcfn,
-                           op_,op_len_,
-                           oneway,
-                           user_excns_,n_user_excns_,
-                           is_upcall_)
-    {
-    }
-    
-    xju::Optional< ::p3::MyString> p1_;
-    xju::Optional< ::p3::MyString> r_;
-
-    // omniCallDescriptor::
-    void unmarshalArguments(cdrStream& s) throw(
-      CORBA::SystemException
-      )
-    {
-      p1_=cxy::cdr< ::p3::MyString>::unmarshalFrom(s);
-    }
-    // omniCallDescriptor::
-    void marshalReturnedValues(cdrStream& s) throw()
-    {
-      cxy::cdr< ::p3::MyString>::marshal(r_.value(),s);
     }
   };
 };
@@ -126,14 +88,14 @@ public:
 namespace cxy
 {
 template<>
-class sref< ::p3::F> :  private sref_if
+class sref< ::p6::F> :  private sref_if
 {
 public:
   // pre: lifetime(x) includes lifetime(this)
   // pre: lifetime(orb) includes lifetime(this)
   sref(cxy::ORB< cxy::Exception>& orb, 
        std::string const& name,
-       ::p3::F& x) throw(
+       ::p6::F& x) throw(
          cxy::Exceptions< cxy::Exception>::DuplicateName) try:
       name_(name),
       x_(x),
@@ -141,7 +103,7 @@ public:
       impl_deleted_(false),
       impl_(new cxy::sref_impl(orb.impl_, 
                                name, 
-                               cxy::cdr< ::p3::F>::repoId, 
+                               cxy::cdr< ::p6::F>::repoId, 
                                *this))
   {
   }
@@ -172,7 +134,7 @@ public:
   }
 
   std::string const name_;
-  ::p3::F& x_;
+  ::p6::F& x_;
   
 private:
     
@@ -183,44 +145,17 @@ private:
       //exception spec commented to avoid header dependency on omniORB headers
       //throw(CORBA::UserException)
     {
-      ::p3::F* impl = (::p3::F*) svnt->_ptrToInterface(cxy::cdr< ::p3::F>::repoId);
-      calldesc< ::p3::F>::f1* c=(calldesc< ::p3::F>::f1*)ocd;
+      ::p6::F* impl = (::p6::F*) svnt->_ptrToInterface(cxy::cdr< ::p6::F>::repoId);
+      calldesc< ::p6::F>::f1* c=(calldesc< ::p6::F>::f1*)ocd;
       if (!c->is_upcall()){
-        c->r_ = impl->f1(
-        c->p1_.value());
+         impl->f1();
       }
       else {
         try {
-          c->r_ = impl->f1(
-        c->p1_.value());
+           impl->f1();
         }
-        catch(cxy::Exception const&) {
-          throw; // REVISIT: support translation to a specified idl exception
-        }
-      }
-    }
-    static const char* const _user_exns[] = {
-      0
-    };
-  };
-    
-  class f2 
-  {
-  public:
-    static void lcfn(omniCallDescriptor* ocd, omniServant* svnt) 
-      //exception spec commented to avoid header dependency on omniORB headers
-      //throw(CORBA::UserException)
-    {
-      ::p3::F* impl = (::p3::F*) svnt->_ptrToInterface(cxy::cdr< ::p3::F>::repoId);
-      calldesc< ::p3::F>::f2* c=(calldesc< ::p3::F>::f2*)ocd;
-      if (!c->is_upcall()){
-        c->r_ = impl->f2(
-        c->p1_.value());
-      }
-      else {
-        try {
-          c->r_ = impl->f2(
-        c->p1_.value());
+        catch(::p6::EEE const& e) {
+          throw cxy::StubUserException< ::p6::EEE>(e);
         }
         catch(cxy::Exception const&) {
           throw; // REVISIT: support translation to a specified idl exception
@@ -240,13 +175,7 @@ private:
     
       
     if (omni::strMatch(op, "f1")) {
-      calldesc< ::p3::F>::f1 c(f1::lcfn, "f1", 2+1, 0, f1::_user_exns, 0, 1);
-      _handle.upcall(impl_, c);
-      return 1;
-    }
-    
-    if (omni::strMatch(op, "f2")) {
-      calldesc< ::p3::F>::f2 c(f2::lcfn, "f2", 2+1, 0, f2::_user_exns, 0, 1);
+      calldesc< ::p6::F>::f1 c(f1::lcfn, "f1", 2+1, 0, f1::_user_exns, 0, 1);
       _handle.upcall(impl_, c);
       return 1;
     }
@@ -257,13 +186,13 @@ private:
   // sref_if::
   virtual void* _ptrToInterface(const char* id) throw()
   {
-    if (id == cxy::cdr< ::p3::F>::repoId) {
+    if (id == cxy::cdr< ::p6::F>::repoId) {
       return &x_;
     }
     if (id == ::CORBA::Object::_PD_repoId) {
       return (void*) 1;
     }
-    if (omni::strMatch(id, cxy::cdr< ::p3::F>::repoId)) {
+    if (omni::strMatch(id, cxy::cdr< ::p6::F>::repoId)) {
       return &x_;
     }
     if (omni::strMatch(id, ::CORBA::Object::_PD_repoId)) {

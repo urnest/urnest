@@ -12,6 +12,7 @@
 
 #include <omniORB4/CORBA.h>
 #include <omniORB4/callDescriptor.h>
+#include <omniORB4/IOP_C.h>
 
 
 namespace cxy
@@ -103,6 +104,14 @@ private:
       {
         r_=cxy::cdr< ::p3::MyInt>::unmarshalFrom(s);
       }
+      void userException(cdrStream& s,
+                         omni::IOP_C* iop_client,
+                         const char* repoId)//REVISIT: throw
+      {
+        if (iop_client) iop_client->RequestCompleted(1);
+        OMNIORB_THROW(UNKNOWN,omni::UNKNOWN_UserException,
+                      (::CORBA::CompletionStatus)s.completion());
+      }
     
       static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt)
       {
@@ -142,6 +151,14 @@ private:
       void unmarshalReturnedValues(cdrStream& s) // REVISIT: throw
       {
         r_=cxy::cdr< ::p3::MyString>::unmarshalFrom(s);
+      }
+      void userException(cdrStream& s,
+                         omni::IOP_C* iop_client,
+                         const char* repoId)//REVISIT: throw
+      {
+        if (iop_client) iop_client->RequestCompleted(1);
+        OMNIORB_THROW(UNKNOWN,omni::UNKNOWN_UserException,
+                      (::CORBA::CompletionStatus)s.completion());
       }
     
       static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt)
