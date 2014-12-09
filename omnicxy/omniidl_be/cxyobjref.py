@@ -12,13 +12,17 @@ objref_operation_t='''
   %(eclass)s)
 {
   try {
-    calldesc::%(name)s c("%(name)s", %(nameLen)s+1, 0%(paramNames)s);
-    _invoke(c);%(returnValue)s
+    try {
+      calldesc::%(name)s c("%(name)s", %(nameLen)s+1, 0%(paramNames)s);
+      _invoke(c);%(returnValue)s
+    }
+    catch(CORBA::Exception const& ee) {
+      throw cxy::translateException< %(eclass)s>(ee);
+    }
   }
-  catch(CORBA::Exception const& ee) {
-    %(eclass)s e(cxy::translateException< %(eclass)s>(ee));
-    e.addContext("%(fqn)s::%(name)s()", std::make_pair(__FILE__, __LINE__)); // REVISIT: add ior / id
-    throw e;
+  catch(%(eclass)s& e) {
+    e.addContext(uri_+"->%(fqn)s::%(name)s()", std::make_pair(__FILE__, __LINE__));
+    throw;
   }
 }
 '''
@@ -88,6 +92,8 @@ public:
       omniObjRef(cxy::cdr< ::%(fqn)s>::repoId, ior, id, 1) {
     _PR_setobj(this);
   }
+  std::string uri_;
+
   %(objref_content)s
 
 protected:

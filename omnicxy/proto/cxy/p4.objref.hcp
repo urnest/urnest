@@ -33,6 +33,8 @@ public:
       omniObjRef(cxy::cdr< ::p4::F>::repoId, ior, id, 1) {
     _PR_setobj(this);
   }
+  std::string uri_;
+
     
   // p4::F::
   ::p4::XS1 f1(
@@ -40,15 +42,19 @@ public:
     cxy::Exception)
   {
     try {
-      calldesc::f1 c("f1", 2+1, 0,
+      try {
+        calldesc::f1 c("f1", 2+1, 0,
         p1);
-      _invoke(c);
+        _invoke(c);
       return c.r_.value();
+      }
+      catch(CORBA::Exception const& ee) {
+        throw cxy::translateException< cxy::Exception>(ee);
+      }
     }
-    catch(CORBA::Exception const& ee) {
-      cxy::Exception e(cxy::translateException< cxy::Exception>(ee));
-      e.addContext("p4::F::f1()", std::make_pair(__FILE__, __LINE__)); // REVISIT: add ior / id
-      throw e;
+    catch(cxy::Exception& e) {
+      e.addContext(uri_+"->p4::F::f1()", std::make_pair(__FILE__, __LINE__));
+      throw;
     }
   }
   

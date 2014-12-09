@@ -24,6 +24,7 @@ public:
             (cxy::objref< ::%(fqn)s>*)orb.locate(
               uri, cxy::cdr< ::%(fqn)s>::repoId)))
   {
+    obj_->uri_=uri;
   }
   
   cref(cref const& b) throw():
