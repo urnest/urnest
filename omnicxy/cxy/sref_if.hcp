@@ -19,7 +19,10 @@ class sref_if
 public:
   virtual ~sref_if() {}
 
-  virtual bool _dispatch(omniCallHandle& _handle) throw()=0;
+  virtual bool _dispatch(omniCallHandle& _handle) 
+    //exception spec commented to avoid header dependency on omniORB headers
+    //throw()
+    =0;
   virtual void* _ptrToInterface(const char* id) throw()=0;
   
   // deativated object has become idle and is being deleted

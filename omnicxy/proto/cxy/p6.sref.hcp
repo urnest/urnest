@@ -163,19 +163,22 @@ private:
       }
     }
     static const char* const _user_exns[] = {
+      "IDL:p6/EEE:1.0",
       0
     };
   };
   
 
   // sref_if::
-  virtual bool _dispatch(omniCallHandle& _handle) throw()
+  virtual bool _dispatch(omniCallHandle& _handle)
+    //exception spec commented to avoid header dependency on omniORB headers
+    // throw(CORBA::Exception)
   {
     const char* op = _handle.operation_name();
     
       
     if (omni::strMatch(op, "f1")) {
-      calldesc< ::p6::F>::f1 c(f1::lcfn, "f1", 2+1, 0, f1::_user_exns, 0, 1);
+      calldesc< ::p6::F>::f1 c(f1::lcfn, "f1", 2+1, 0, f1::_user_exns, 1, 1);
       _handle.upcall(impl_, c);
       return 1;
     }

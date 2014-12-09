@@ -41,7 +41,7 @@ public:
     size_t oplen,
     _CORBA_Boolean upcall%(params)s) throw():
       omniCallDescriptor(
-        &%(name)s::lcfn, op_, oplen, 0, _user_exns, 0, upcall)%(paramInits)s
+        &%(name)s::lcfn, op_, oplen, 0, _user_exns, %(user_exns_size)s, upcall)%(paramInits)s
   {
   }
   %(paramMembers)s%(returnMember)s
@@ -182,6 +182,7 @@ def genCalldesc(decl,eclass,eheader,indent,fqn):
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     user_exns=''.join(['\n    "%s",'%_.repoId() for _ in decl.raises()])
     userExceptions=''.join([genCalldescUserException(_) for _ in decl.raises()])
+    user_exns_size=len(decl.raises())
     result=reindent(indent,calldesc_operation_t%vars())
     return result
 

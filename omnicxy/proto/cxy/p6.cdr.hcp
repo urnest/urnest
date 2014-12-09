@@ -17,12 +17,16 @@ public:
   //  CORBA::SystemException
   //  )
   {
-    return ::p6::EEE(
+    int32_t const p1(cdr< int32_t>::unmarshalFrom(s));
+    std::string const p2(cdr< std::string>::unmarshalFrom(s));
+    return ::p6::EEE(p1,p2,
              //cxy::Exception params
-             std::string(), std::make_pair(__FILE__,__LINE__));
+             std::string("IDL:p6/EEE:1.0"), std::make_pair(__FILE__,__LINE__));
   }  
   static void marshal(p6::EEE const& x, cdrStream& s) throw()
   {
+    cdr< int32_t>::marshal(x.a_,s);
+    cdr< std::string>::marshal(x.b_,s);
   }
   static const char repoId[]="IDL:p6/EEE:1.0";
 };

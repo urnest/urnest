@@ -39,7 +39,8 @@ public:
   
   virtual void f1() throw(::p6::EEE)
   {
-    throw ::p6::EEE("p6 f1 error", std::make_pair(__FILE__,__LINE__));
+    throw ::p6::EEE(32, "error 32", 
+                    "p6 f1 error", std::make_pair(__FILE__,__LINE__));
   }
 };
 
@@ -62,7 +63,13 @@ int main(int argc, char* argv[])
     if (argv[2]==std::string("client")) {
       cxy::ORB<cxy::Exception> orb("giop:tcp::");
       cxy::cref<p6::F> ref(orb, makeURI(port, OBJECT_NAME));
-      ref->f1();
+      try {
+        ref->f1();
+        xju::assert_abort();
+      }
+      catch(::p6::EEE const& e) {
+        std::cout << readableRepr(e) << std::endl;
+      }
     }
     else if (argv[2]==std::string("server")) {
       std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);

@@ -56,7 +56,7 @@ public:
   {%(memberUnmarshals)s
     return ::%(name)s(%(consparams)s
              //%(eclass)s params
-             std::string(), std::make_pair(__FILE__,__LINE__));
+             std::string("%(repoId)s"), std::make_pair(__FILE__,__LINE__));
   }  
   static void marshal(%(name)s const& x, cdrStream& s) throw()
   {%(memberMarshals)s
@@ -69,7 +69,7 @@ def gen_exception(name,repoId,memberTypesAndNames,eclass):
     memberTypes=[_[0] for _ in memberTypesAndNames]
     paramNames=['p%s'%i for i in range(1,len(memberTypesAndNames)+1)]
     memberUnmarshals=''.join(['\n    %(t)s const %(pn)s(cdr< %(t)s>::unmarshalFrom(s));'%vars() for t,pn in zip(memberTypes,paramNames)])
-    consparams=', '.join([pn for pn in paramNames])
+    consparams=''.join([pn+',' for pn in paramNames])
     memberMarshals=''.join(['\n    cdr< %(t)s>::marshal(x.%(n)s,s);'%vars() for t,n in zip(memberTypes,memberNames)])
     return exception_t%vars()
 

@@ -2,6 +2,8 @@ module p6
 {
   exception EEE
   {
+    long a_;
+    string b_;
   };
   interface F
   {

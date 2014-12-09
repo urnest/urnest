@@ -85,6 +85,7 @@ void client(int argc, char* argv[],
       }
       
       ref->f1();
+      ::abort();
     }
     catch(::p6::EEE const& e) {
       std::cout << "EEE" << std::endl;
@@ -104,6 +105,7 @@ class F_impl : public POA_p6::F
 public:
   virtual void f1() throw(::p6::EEE)
   {
+    std::cout << "F_impl::f1 raise ::p6::EEE" << std::endl;
     throw ::p6::EEE();
   }
 };

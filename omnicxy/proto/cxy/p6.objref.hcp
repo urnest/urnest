@@ -65,7 +65,7 @@ private:
         size_t oplen,
         _CORBA_Boolean upcall) throw():
           omniCallDescriptor(
-            &f1::lcfn, op_, oplen, 0, _user_exns, 0, upcall)
+            &f1::lcfn, op_, oplen, 0, _user_exns, 1, upcall)
       {
       }
       

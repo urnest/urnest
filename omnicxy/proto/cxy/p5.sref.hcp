@@ -175,7 +175,9 @@ private:
   
 
   // sref_if::
-  virtual bool _dispatch(omniCallHandle& _handle) throw()
+  virtual bool _dispatch(omniCallHandle& _handle)
+    //exception spec commented to avoid header dependency on omniORB headers
+    // throw(CORBA::Exception)
   {
     const char* op = _handle.operation_name();
     

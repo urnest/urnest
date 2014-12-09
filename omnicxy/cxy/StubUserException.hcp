@@ -62,7 +62,7 @@ public:
   }
   // CORBA::Exception::
   const char* _NP_repoId(int* size) const {
-    *size = strlen(cxy::cdr<T>::repoId);
+    *size = strlen(cxy::cdr<T>::repoId)+1;//omniORB needs the null terminator
     return cxy::cdr<T>::repoId;
   }
   // CORBA::Exception::

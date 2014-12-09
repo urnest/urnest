@@ -65,7 +65,7 @@ public:
       }
     }
   }
-  static const char* const _user_exns[] = {
+  static const char* const _user_exns[] = {%(user_exns)s
     0
   };
 };
@@ -73,7 +73,7 @@ public:
 
 dispatcher_t='''
   if (omni::strMatch(op, "%(name)s")) {
-    calldesc< ::%(fqn)s>::%(name)s c(%(name)s::lcfn, "%(name)s", %(nameLen)s+1, 0, %(name)s::_user_exns, 0, 1);
+    calldesc< ::%(fqn)s>::%(name)s c(%(name)s::lcfn, "%(name)s", %(nameLen)s+1, 0, %(name)s::_user_exns, %(user_exns_size)s, 1);
     _handle.upcall(impl_, c);
     return 1;
   }
@@ -147,7 +147,9 @@ private:
   %(operations)s
 
   // sref_if::
-  virtual bool _dispatch(omniCallHandle& _handle) throw()
+  virtual bool _dispatch(omniCallHandle& _handle)
+    //exception spec commented to avoid header dependency on omniORB headers
+    // throw(CORBA::Exception)
   {
     const char* op = _handle.operation_name();
     
@@ -211,6 +213,7 @@ def genOperation(decl,eclass,eheader,indent,fqn):
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     catches=''.join([genCatch('::'.join(_.scopedName())) \
                                   for _ in decl.raises()])
+    user_exns=''.join(['\n    "%s",'%_.repoId() for _ in decl.raises()])
     result=reindent(indent,operation_t%vars())
     return result
 
@@ -220,7 +223,7 @@ def genDispatcher(decl,eclass,eheader,indent,fqn):
     nameLen=len(name)
     assert not decl.oneway(), 'oneway not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
-    
+    user_exns_size=len(decl.raises())
     result=reindent(indent,dispatcher_t%vars())
     return result
 
