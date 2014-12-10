@@ -1,0 +1,19 @@
+%run-all-tests==%all-tests.tree:leaves
+
+%all-tests.tree==<<
+()+cmd=(main.cc+(%opts):auto.cxx.exe):stdout
+
+
+%opts==<<
++inc_sp=(%gendir)
++(../..%cxx-opts)
+
+
+%x==()+cmd=(../../hcp-split) (x.hcp) 'x.hh' 'x.cc':output
+
+%gendir==%gen.vir_tree_spec:vir_tree
+
+%gen.vir_tree_spec==<<
+x.hh==.%x/x.hh
+x.cc==.%x/x.cc
+

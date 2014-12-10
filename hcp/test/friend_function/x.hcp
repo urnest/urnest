@@ -1,0 +1,22 @@
+class A
+{
+public:
+  class B
+  {
+  public:
+    B() throw():
+      b_(2)
+    {
+    }
+    int get() const throw()
+    {
+      return b_;
+    }
+  private:
+    int b_;
+    friend int get(B const& b)
+    {
+      return b.b_;
+    }
+  };
+};
