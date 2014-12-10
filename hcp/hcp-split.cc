@@ -175,6 +175,30 @@ void genClassStaticVarDef(
   c << "\n";
 }
 
+class isLiteral
+{
+public:
+  isLiteral(std::string const& literal) throw():
+      literal_(literal)
+  {
+  }
+  bool operator()(hcp_ast::IR const& x) const throw()
+  {
+    return literal_==hcp_ast::reconstruct(*x);
+  }
+  std::string literal_;
+};
+
+  
+bool isFriendFunction(hcp_ast::FunctionDef const& x) throw(
+  xju::Exception)
+{
+  hcp_ast::FunctionQualifiers const& q(
+    (*x.items_.begin())->asA<hcp_ast::FunctionQualifiers>());
+  return (std::find_if(q.items_.begin(), q.items_.end(),
+                       isLiteral("friend"))!=q.items_.end());
+}
+
 void genClass(hcp_ast::ClassDef const& x,
               OStream& h,
               OStream& c,
@@ -182,7 +206,8 @@ void genClass(hcp_ast::ClassDef const& x,
                 xju::Exception)
 {
   for(hcp_ast::IRs::const_iterator i=x.items_.begin(); i!=x.items_.end(); ++i) {
-    if ((*i)->isA<hcp_ast::FunctionDef>()) {
+    if ((*i)->isA<hcp_ast::FunctionDef>() &&
+        !isFriendFunction((*i)->asA<hcp_ast::FunctionDef>())) {
       std::vector<hcp_ast::ClassDef const*> scope(outerClasses);
       scope.push_back(&x);
       genClassMemberFunctionDef((*i)->asA<hcp_ast::FunctionDef>(), h, c, scope);

@@ -3,7 +3,11 @@ x add option to turn off file+line tracking for generated .hh as it
   separate map, but would then need editor or compiler to recognise and
   map errors) - note no file+line tracking is defualt .hh
 
-* fix generation of friend functions
+x fix generation of friend functions
+  x generate them always inline
+  - later split them, but that is perhaps impossible since it
+    means re-qualifying param types and it is not possible to tell how much
+    to add to each param type?
 
 * no such thing as static var decl, it is a def
 

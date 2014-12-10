@@ -5,6 +5,7 @@
 ()+cmd=(../../xju/test-JoiningIterator.cc+(%opts):auto.cxx.exe):stdout
 classpecialize%all-tests.tree
 static_var_def%all-tests.tree
+friend_function%all-tests.tree
 
 %opts==<<
 +inc_sp=(%gendir)
