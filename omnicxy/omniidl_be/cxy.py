@@ -102,45 +102,94 @@ struct %(name)s
   %(name)s(%(consparams)s) throw():%(consinitialisers)s {
   }
   %(members)s
-
+  friend bool operator<(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {%(lessMembers)s
+    return false;
+  }
+  friend bool operator>(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return y<x;
+  }
+  friend bool operator!=(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return (x<y)||(y<x);
+  }
+  friend bool operator==(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return !(x!=y);
+  }
+  friend bool operator<=(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return (x<y)||(x==y);
+  }
+  friend bool operator>=(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return (x>y)||(x==y);
+  }
 };
-bool operator<(
-  %(name)s const& x, 
-  %(name)s const& y) throw() {%(lessMembers)s
-  return false;
-}
-bool operator>(
-  %(name)s const& x, 
-  %(name)s const& y) throw() {
-  return y<x;
-}
-bool operator!=(
-  %(name)s const& x, 
-  %(name)s const& y) throw() {
-  return (x<y)||(y<x);
-}
-bool operator==(
-  %(name)s const& x, 
-  %(name)s const& y) throw() {
-  return !(x!=y);
-}
-bool operator<=(
-  %(name)s const& x, 
-  %(name)s const& y) throw() {
-  return (x<y)||(x==y);
-}
-bool operator>=(
-  %(name)s const& x, 
-  %(name)s const& y) throw() {
-  return (x>y)||(x==y);
-}
 '''
 
+pair_t='''\
+struct %(name)s : public std::pair< %(t1)s, %(t2)s>
+{
+  %(name)s(%(t1)s const& p1, %(t2)s const& p2) throw():
+     std::pair< %(t1)s, %(t2)s>(p1, p2) {
+  }
+  template<class T1, class T2>
+  explicit %(name)s(std::pair<T1, T2> const& x) throw():
+     std::pair< %(t1)s, %(t2)s>(x) {
+  }
+  friend bool operator<(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    if (x.first < y.first) return true;
+    if (y.first < x.first) return false;
+    return false;
+  }
+  friend bool operator>(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return y<x;
+  }
+  friend bool operator!=(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return (x<y)||(y<x);
+  }
+  friend bool operator==(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return !(x!=y);
+  }
+  friend bool operator<=(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return (x<y)||(x==y);
+  }
+  friend bool operator>=(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return (x>y)||(x==y);
+  }
+};
+'''
+
+def gen_pair(name, t1, t2):
+    return pair_t%vars()
 
 def gen_struct(name,memberTypesAndNames):
     assert len(memberTypesAndNames)>0, name
     memberNames=[_[1] for _ in memberTypesAndNames]
     memberTypes=[_[0] for _ in memberTypesAndNames]
+    if name.endswith('Pair') and \
+            tuple(memberNames)==tuple(['first','second']):
+        return gen_pair(name, memberTypes[0], memberTypes[1])
     paramNames=['p%s'%i for i in range(1,len(memberTypesAndNames)+1)]
     
     members=''.join(['\n  %s %s;'%_ for _ in memberTypesAndNames])
@@ -161,37 +210,37 @@ struct %(name)s : %(eclass)s
       %(eclass)s(cause, fileAndLine)%(consinitialisers)s {
   }
   %(members)s
+  friend bool operator<(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {%(lessMembers)s
+    return (%(eclass)s const&)x < (%(eclass)s const&)y;
+  }
+  friend bool operator>(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return y<x;
+  }
+  friend bool operator!=(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return (x<y)||(y<x);
+  }
+  friend bool operator==(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return !(x!=y);
+  }
+  friend bool operator<=(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return (x<y)||(x==y);
+  }
+  friend bool operator>=(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return (x>y)||(x==y);
+  }
 };
-bool operator<(
-  %(name)s const& x, 
-  %(name)s const& y) throw() {%(lessMembers)s
-  return (%(eclass)s const&)x < (%(eclass)s const&)y;
-}
-bool operator>(
-  %(name)s const& x, 
-  %(name)s const& y) throw() {
-  return y<x;
-}
-bool operator!=(
-  %(name)s const& x, 
-  %(name)s const& y) throw() {
-  return (x<y)||(y<x);
-}
-bool operator==(
-  %(name)s const& x, 
-  %(name)s const& y) throw() {
-  return !(x!=y);
-}
-bool operator<=(
-  %(name)s const& x, 
-  %(name)s const& y) throw() {
-  return (x<y)||(x==y);
-}
-bool operator>=(
-  %(name)s const& x, 
-  %(name)s const& y) throw() {
-  return (x>y)||(x==y);
-}
 '''
 
 

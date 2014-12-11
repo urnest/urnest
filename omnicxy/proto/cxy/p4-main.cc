@@ -38,6 +38,7 @@ public:
   {
   }
   
+  // p4::F::
   virtual ::p4::XS1 f1(
     ::p4::XS1 const& y) throw(cxy::Exception)
   {
@@ -50,6 +51,19 @@ public:
                        new Call::f1(y)));
     return ::p4::XS1(::p3::MyInt(62), std::string("jock"));
   }
+
+  // p4::F::
+  virtual ::p4::F::XxPair f2(
+    ::p4::F::XxPair const& z) throw()
+  {
+    std::cout << "::p4::f2(XxPair("
+              << z.first << ", "
+              << z.second << ") -> XxPair(-3, \"f2\")" << std::endl;
+    calls_.push_back(xju::Shared<Call>(
+                       new Call::f2(z)));
+    return XxPair(-3, "f2");
+  }
+
   struct Call
   {
     virtual ~Call() throw()
@@ -69,6 +83,21 @@ public:
     ::p4::XS1 a_;
     
     friend bool operator==(f1 const& x, f1 const& y) throw()
+    {
+      return x.a_ == y.a_;
+    }
+  };
+  struct Call::f2 : Call
+  {
+    ~f2() throw()
+    {
+    }
+    f2(::p4::F::XxPair const& a) throw():
+        a_(a) {
+    }
+    ::p4::F::XxPair a_;
+    
+    friend bool operator==(f2 const& x, f2 const& y) throw()
     {
       return x.a_ == y.a_;
     }
@@ -98,6 +127,12 @@ int main(int argc, char* argv[])
         ref->f1(::p4::XS1(::p3::MyInt(77),std::string("argy"))));
       std::cout << "::p4::XS1(::p3::MyInt("<<r.a_<<"), "<<r.b_<<")"
                 << std::endl;
+      {
+        ::p4::F::XxPair const r(
+          ref->f2(::p4::F::XxPair(18,std::string("argz"))));
+        std::cout << "::p4::F::XxPair("<<r.first<<"), "<<r.second<<")"
+                  << std::endl;
+      }
     }
     else if (argv[2]==std::string("server")) {
       std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
@@ -127,6 +162,16 @@ int main(int argc, char* argv[])
         xju::assert_equal(c,
                           F_impl::Call::f1(
                             ::p4::XS1(::p3::MyInt(19),std::string("al"))));
+      }
+      xju::assert_equal(ref->f2(::p4::F::XxPair(18,std::string("argz"))),
+                        ::p4::F::XxPair(-3,std::string("f2")));
+      xju::assert_equal(x.calls_.size(),2U);
+      {
+        F_impl::Call::f2 const& c(
+          dynamic_cast<F_impl::Call::f2 const&>(*x.calls_[1]));
+        xju::assert_equal(c,
+                          F_impl::Call::f2(
+                            ::p4::F::XxPair(18,std::string("argz"))));
       }
     }
     return 0;

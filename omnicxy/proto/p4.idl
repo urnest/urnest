@@ -11,5 +11,13 @@ module p4
   interface F
   {
     XS1 f1(in XS1 y);
+
+    struct XxPair
+    {
+      long first;
+      string second;
+    };
+
+    XxPair f2(in XxPair z);
   };
 };

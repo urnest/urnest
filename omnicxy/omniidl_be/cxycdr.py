@@ -80,7 +80,8 @@ def gen(decl,eclass,eheader,indent=''):
     elif isinstance(decl, idlast.Interface):
         fqn='::'.join(decl.scopedName())
         repoId=decl.repoId()
-        result=interface_t%vars()
+        result=interface_t%vars()+\
+            ''.join(gen(_,eclass,eheader) for _ in decl.contents())
     elif isinstance(decl, idlast.Operation):
         pass
     elif isinstance(decl, idlast.Typedef):

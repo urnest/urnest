@@ -113,27 +113,41 @@ x test client wrong type exception
 
 x p4.idl:
   x struct in param, return
+  - struct declared in class (need hcp-split "friend" support)
+  - translate struct XxPair { Y first; Z second; } into 
+    struct XxPair : std::pair<Y,Z> XxPair { ... };
 
 x p5.idl:
   x sequence param, return, struct
 
-- p6.idl
-  - exception EEE
+x p6.idl
+  x exception EEE
+
+- p7.idl:
+
+- p8.idl:
     - want to seamlessly handle BaseException, which
       has cause and context:
-      - (p7.idl) allow ExceptionCause and ExceptionContext types on omniidl
+      - make use of XxPair above, specify cxy backend params
+        cause=cause_,context=context_ which says to treat
+        idl exception attributes cause_ and context_ as the
+        BaseException cause and context attributes (so they get
+        marshaled); they must have type pair<string,int> and 
+        sequence<pair<string, int> >; assume they are BaseException
+        members?
+      - allow ExceptionCause and ExceptionContext types on omniidl
         command line
-      - (p7.idl) if EEE has those:
+      - if EEE has those:
         - defer to the base class members
           - via refs where names are not cause_ and context_
         - the info will propogate back to client
       ~ if EEE does not have:
         ~ when server marshals, write them to stderr if they contain
         ~ (no: cause_ and context_ are not required in BaseException)
-      - (p7.idl) what if using own exception type? allow attr names to be
+      - what if using own exception type? allow attr names to be
         specified on omniidl command line and if not don't treat them
         specially?
-      - (p7.idl) if servant throws plain BaseException allow mapping to be
+      - if servant throws plain BaseException allow mapping to be
         specified on command line; if no mapping abort (with stderr
         message)
 
@@ -152,6 +166,8 @@ x p5.idl:
 x test duplicate object name exception
 
 - add a two-process client server test
+  - cxx->cxy, for each single-process test
+  - cxy->cxx, for each single-process test
 
 - allow cref cons/assign from super-class-cref
 

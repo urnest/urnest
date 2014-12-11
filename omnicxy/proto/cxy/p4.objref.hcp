@@ -57,6 +57,28 @@ public:
       throw;
     }
   }
+    
+  // p4::F::
+  ::p4::F::XxPair f2(
+    ::p4::F::XxPair const& p1) throw(
+    cxy::Exception)
+  {
+    try {
+      try {
+        calldesc::f2 c("f2", 2+1, 0,
+        p1);
+        _invoke(c);
+      return c.r_.value();
+      }
+      catch(CORBA::Exception const& ee) {
+        throw cxy::translateException< cxy::Exception>(ee);
+      }
+    }
+    catch(cxy::Exception& e) {
+      e.addContext(uri_+"->p4::F::f2()", std::make_pair(__FILE__, __LINE__));
+      throw;
+    }
+  }
   
 
 protected:
@@ -109,6 +131,54 @@ private:
         f1* cd((f1*)calldesc);
         
         cd->r_= impl->f1(
+          cd->p1_);
+      }
+      static const char* const _user_exns[] = {
+        0
+      };
+    };
+        
+    class f2 : public omniCallDescriptor
+    {
+    public:
+      f2(
+        const char* op_,
+        size_t oplen,
+        _CORBA_Boolean upcall,
+        ::p4::F::XxPair const& p1) throw():
+          omniCallDescriptor(
+            &f2::lcfn, op_, oplen, 0, _user_exns, 0, upcall),
+          p1_(p1)
+      {
+      }
+      
+      ::p4::F::XxPair const p1_;
+      xju::Optional< ::p4::F::XxPair> r_;
+    
+      // omniCallDescriptor::
+      void marshalArguments(cdrStream& s) // REVISIT: throw
+      {
+        cxy::cdr< ::p4::F::XxPair>::marshal(p1_, s);
+      }
+      void unmarshalReturnedValues(cdrStream& s) // REVISIT: throw
+      {
+        r_=cxy::cdr< ::p4::F::XxPair>::unmarshalFrom(s);
+      }
+      void userException(cdrStream& s,
+                         omni::IOP_C* iop_client,
+                         const char* repoId)//REVISIT: throw
+      {
+        if (iop_client) iop_client->RequestCompleted(1);
+        OMNIORB_THROW(UNKNOWN,omni::UNKNOWN_UserException,
+                      (::CORBA::CompletionStatus)s.completion());
+      }
+    
+      static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt)
+      {
+        ::p4::F* impl=(::p4::F*)svnt->_ptrToInterface(cxy::cdr< ::p4::F>::repoId);
+        f2* cd((f2*)calldesc);
+        
+        cd->r_= impl->f2(
           cd->p1_);
       }
       static const char* const _user_exns[] = {

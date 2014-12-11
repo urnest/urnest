@@ -25,41 +25,41 @@ struct EEE : cxy::Exception
   
   int32_t a_;
   std::string b_;
-};
-bool operator<(
-  EEE const& x, 
-  EEE const& y) throw() {
+  friend bool operator<(
+    EEE const& x, 
+    EEE const& y) throw() {
     if (x.a_<y.a_) return true;
     if (y.a_<x.a_) return false;
     if (x.b_<y.b_) return true;
     if (y.b_<x.b_) return false;
-  return (cxy::Exception const&)x < (cxy::Exception const&)y;
-}
-bool operator>(
-  EEE const& x, 
-  EEE const& y) throw() {
-  return y<x;
-}
-bool operator!=(
-  EEE const& x, 
-  EEE const& y) throw() {
-  return (x<y)||(y<x);
-}
-bool operator==(
-  EEE const& x, 
-  EEE const& y) throw() {
-  return !(x!=y);
-}
-bool operator<=(
-  EEE const& x, 
-  EEE const& y) throw() {
-  return (x<y)||(x==y);
-}
-bool operator>=(
-  EEE const& x, 
-  EEE const& y) throw() {
-  return (x>y)||(x==y);
-}
+    return (cxy::Exception const&)x < (cxy::Exception const&)y;
+  }
+  friend bool operator>(
+    EEE const& x, 
+    EEE const& y) throw() {
+    return y<x;
+  }
+  friend bool operator!=(
+    EEE const& x, 
+    EEE const& y) throw() {
+    return (x<y)||(y<x);
+  }
+  friend bool operator==(
+    EEE const& x, 
+    EEE const& y) throw() {
+    return !(x!=y);
+  }
+  friend bool operator<=(
+    EEE const& x, 
+    EEE const& y) throw() {
+    return (x<y)||(x==y);
+  }
+  friend bool operator>=(
+    EEE const& x, 
+    EEE const& y) throw() {
+    return (x>y)||(x==y);
+  }
+};
 
 class F
 {
