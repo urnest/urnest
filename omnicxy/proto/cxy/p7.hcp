@@ -6,7 +6,7 @@
 #include <string>
 #include <stdint.h>
 #include <xju/Tagged.hh>
-
+#include <cxy/copyContext.hh> //impl
 
 namespace p7
 {
@@ -59,7 +59,7 @@ struct CausePair : public std::pair< std::string, ::p7::SourceRefPair>
      std::pair< std::string, ::p7::SourceRefPair>(p1, p2) {
   }
   template<class T1, class T2>
-  explicit CausePair(std::pair<T1, T2> const& x) throw():
+  CausePair(std::pair<T1, T2> const& x) throw():
      std::pair< std::string, ::p7::SourceRefPair>(x) {
   }
   friend bool operator<(
@@ -141,53 +141,58 @@ struct ContextPair : public std::pair< std::string, ::p7::SourceRefPair>
 
 typedef ::p7::CausePair ExceptionCause;
 typedef std::vector< ::p7::ContextPair> ExceptionContext;
-struct E : cxy::Exception
+struct E1 : cxy::Exception
 {
-  E(
-    ::p7::ExceptionCause const& p1,
-    ::p7::ExceptionContext const& p2,
-    // cxy::Exception params
-    std::string const& cause, 
-    std::pair<std::string, unsigned int> const& fileAndLine) throw():
-      cxy::Exception(cause, fileAndLine),
-      cause_(p1),
-      context_(p2) {
+  E1(
+    ::p7::CausePair const& p1,
+    std::vector< ::p7::ContextPair> const& p2) throw():
+      cxy::Exception(p1.first,p1.second) {
+    cxy::copyContext(p2.begin(), p2.end(), *this);
+  }
+
+  // pre: cxy::Exception(T) constructs a cxy::Exception
+  template<class T>
+  explicit E1(
+    T const& p) throw():
+      cxy::Exception(p) {
   }
   
-  ::p7::ExceptionCause cause_;
-  ::p7::ExceptionContext context_;
+  // pre: cxy::Exception(T1,T2) constructs a cxy::Exception
+  template<class T1, class T2>
+  explicit E1(
+    T1 const& p1,
+    T2 const& p2) throw():
+      cxy::Exception(p1,p2) {
+  }
+  
   friend bool operator<(
-    E const& x, 
-    E const& y) throw() {
-    if (x.cause_<y.cause_) return true;
-    if (y.cause_<x.cause_) return false;
-    if (x.context_<y.context_) return true;
-    if (y.context_<x.context_) return false;
+    E1 const& x, 
+    E1 const& y) throw() {
     return (cxy::Exception const&)x < (cxy::Exception const&)y;
   }
   friend bool operator>(
-    E const& x, 
-    E const& y) throw() {
+    E1 const& x, 
+    E1 const& y) throw() {
     return y<x;
   }
   friend bool operator!=(
-    E const& x, 
-    E const& y) throw() {
+    E1 const& x, 
+    E1 const& y) throw() {
     return (x<y)||(y<x);
   }
   friend bool operator==(
-    E const& x, 
-    E const& y) throw() {
+    E1 const& x, 
+    E1 const& y) throw() {
     return !(x!=y);
   }
   friend bool operator<=(
-    E const& x, 
-    E const& y) throw() {
+    E1 const& x, 
+    E1 const& y) throw() {
     return (x<y)||(x==y);
   }
   friend bool operator>=(
-    E const& x, 
-    E const& y) throw() {
+    E1 const& x, 
+    E1 const& y) throw() {
     return (x>y)||(x==y);
   }
 };
@@ -199,7 +204,12 @@ public:
   {
   }
   virtual void f1() throw(
-    p7::E,
+    p7::E1,
+    // ipc failure
+    // - note servant may not throw
+    cxy::Exception) = 0;
+  virtual void f2() throw(
+    p7::E1,
     // ipc failure
     // - note servant may not throw
     cxy::Exception) = 0;

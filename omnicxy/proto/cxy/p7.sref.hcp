@@ -82,6 +82,36 @@ public:
     {
     }
   };
+  class f2 : public omniCallDescriptor
+  {
+  public:
+    f2(void (*lcfn)(omniCallDescriptor*, omniServant*),
+       char const* op_,
+       int op_len_,
+       _CORBA_Boolean oneway,
+       const char*const* user_excns_,
+       int n_user_excns_,
+       _CORBA_Boolean is_upcall_) throw():
+        omniCallDescriptor(lcfn,
+                           op_,op_len_,
+                           oneway,
+                           user_excns_,n_user_excns_,
+                           is_upcall_)
+    {
+    }
+    
+
+    // omniCallDescriptor::
+    void unmarshalArguments(cdrStream& s) throw(
+      CORBA::SystemException
+      )
+    {
+    }
+    // omniCallDescriptor::
+    void marshalReturnedValues(cdrStream& s) throw()
+    {
+    }
+  };
 };
 }
 
@@ -154,8 +184,8 @@ private:
         try {
            impl->f1();
         }
-        catch(::p7::E const& e) {
-          throw cxy::StubUserException< ::p7::E>(e);
+        catch(::p7::E1 const& e) {
+          throw cxy::StubUserException< ::p7::E1>(e);
         }
         catch(cxy::Exception const&) {
           throw; // REVISIT: support translation to a specified idl exception
@@ -163,7 +193,37 @@ private:
       }
     }
     static const char* const _user_exns[] = {
-      "IDL:p7/E:1.0",
+      "IDL:p7/E1:1.0",
+      0
+    };
+  };
+    
+  class f2 
+  {
+  public:
+    static void lcfn(omniCallDescriptor* ocd, omniServant* svnt) 
+      //exception spec commented to avoid header dependency on omniORB headers
+      //throw(CORBA::UserException)
+    {
+      ::p7::F* impl = (::p7::F*) svnt->_ptrToInterface(cxy::cdr< ::p7::F>::repoId);
+      calldesc< ::p7::F>::f2* c=(calldesc< ::p7::F>::f2*)ocd;
+      if (!c->is_upcall()){
+         impl->f2();
+      }
+      else {
+        try {
+           impl->f2();
+        }
+        catch(::p7::E1 const& e) {
+          throw cxy::StubUserException< ::p7::E1>(e);
+        }
+        catch(cxy::Exception const&) {
+          throw; // REVISIT: support translation to a specified idl exception
+        }
+      }
+    }
+    static const char* const _user_exns[] = {
+      "IDL:p7/E1:1.0",
       0
     };
   };
@@ -179,6 +239,12 @@ private:
       
     if (omni::strMatch(op, "f1")) {
       calldesc< ::p7::F>::f1 c(f1::lcfn, "f1", 2+1, 0, f1::_user_exns, 1, 1);
+      _handle.upcall(impl_, c);
+      return 1;
+    }
+    
+    if (omni::strMatch(op, "f2")) {
+      calldesc< ::p7::F>::f2 c(f2::lcfn, "f2", 2+1, 0, f2::_user_exns, 1, 1);
       _handle.upcall(impl_, c);
       return 1;
     }

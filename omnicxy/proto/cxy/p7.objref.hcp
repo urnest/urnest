@@ -52,6 +52,25 @@ public:
       throw;
     }
   }
+    
+  // p7::F::
+  void f2() throw(
+    cxy::Exception)
+  {
+    try {
+      try {
+        calldesc::f2 c("f2", 2+1, 0);
+        _invoke(c);
+      }
+      catch(CORBA::Exception const& ee) {
+        throw cxy::translateException< cxy::Exception>(ee);
+      }
+    }
+    catch(cxy::Exception& e) {
+      e.addContext(uri_+"->p7::F::f2()", std::make_pair(__FILE__, __LINE__));
+      throw;
+    }
+  }
   
 
 protected:
@@ -87,8 +106,8 @@ private:
                          omni::IOP_C* iop_client,
                          const char* repoId)//REVISIT: throw
       {
-        if (omni::strMatch(repoId, cxy::cdr< ::p7::E>::repoId)) {
-          ::p7::E _ex(cxy::cdr< ::p7::E>::unmarshalFrom(s));
+        if (omni::strMatch(repoId, cxy::cdr< ::p7::E1>::repoId)) {
+          ::p7::E1 _ex(cxy::cdr< ::p7::E1>::unmarshalFrom(s));
           if (iop_client){
             iop_client->RequestCompleted();
           }
@@ -107,7 +126,56 @@ private:
          impl->f1();
       }
       static const char* const _user_exns[] = {
-        "IDL:p7/E:1.0",
+        "IDL:p7/E1:1.0",
+        0
+      };
+    };
+        
+    class f2 : public omniCallDescriptor
+    {
+    public:
+      f2(
+        const char* op_,
+        size_t oplen,
+        _CORBA_Boolean upcall) throw():
+          omniCallDescriptor(
+            &f2::lcfn, op_, oplen, 0, _user_exns, 1, upcall)
+      {
+      }
+      
+    
+      // omniCallDescriptor::
+      void marshalArguments(cdrStream& s) // REVISIT: throw
+      {
+      }
+      void unmarshalReturnedValues(cdrStream& s) // REVISIT: throw
+      {
+      }
+      void userException(cdrStream& s,
+                         omni::IOP_C* iop_client,
+                         const char* repoId)//REVISIT: throw
+      {
+        if (omni::strMatch(repoId, cxy::cdr< ::p7::E1>::repoId)) {
+          ::p7::E1 _ex(cxy::cdr< ::p7::E1>::unmarshalFrom(s));
+          if (iop_client){
+            iop_client->RequestCompleted();
+          }
+          throw _ex;
+        }
+    
+        if (iop_client) iop_client->RequestCompleted(1);
+        OMNIORB_THROW(UNKNOWN,omni::UNKNOWN_UserException,
+                      (::CORBA::CompletionStatus)s.completion());
+      }
+    
+      static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt)
+      {
+        ::p7::F* impl=(::p7::F*)svnt->_ptrToInterface(cxy::cdr< ::p7::F>::repoId);
+        f2* cd((f2*)calldesc);
+         impl->f2();
+      }
+      static const char* const _user_exns[] = {
+        "IDL:p7/E1:1.0",
         0
       };
     };

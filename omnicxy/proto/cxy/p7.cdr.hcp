@@ -68,10 +68,10 @@ public:
   }
 };
 template<>
-class cdr< ::p7::E>
+class cdr< ::p7::E1>
 {
 public:
-  static ::p7::E unmarshalFrom(cdrStream& s) 
+  static ::p7::E1 unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
   //  CORBA::SystemException
@@ -79,16 +79,16 @@ public:
   {
     ::p7::ExceptionCause const p1(cdr< ::p7::ExceptionCause>::unmarshalFrom(s));
     ::p7::ExceptionContext const p2(cdr< ::p7::ExceptionContext>::unmarshalFrom(s));
-    return ::p7::E(p1,p2,
-             //cxy::Exception params
-             std::string("IDL:p7/E:1.0"), std::make_pair(__FILE__,__LINE__));
+    return ::p7::E1(p1,p2);
   }  
-  static void marshal(p7::E const& x, cdrStream& s) throw()
+  static void marshal(p7::E1 const& x, cdrStream& s) throw()
   {
-    cdr< ::p7::ExceptionCause>::marshal(x.cause_,s);
-    cdr< ::p7::ExceptionContext>::marshal(x.context_,s);
+    ::p7::ExceptionCause const cause(x.cause_);
+    ::p7::ExceptionContext const context(x.context_.begin(),x.context_.end());
+    cdr< ::p7::ExceptionCause>::marshal(cause,s);
+    cdr< ::p7::ExceptionContext>::marshal(context,s);
   }
-  static const char repoId[]="IDL:p7/E:1.0";
+  static const char repoId[]="IDL:p7/E1:1.0";
 };
 template<>
 class cdr< ::p7::F>

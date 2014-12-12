@@ -36,7 +36,8 @@ public:
   ~F_impl() throw()
   {
   }
-  
+  // a way to use BaseException mapping to an idl exception
+  // (f2 below shows another way)
   virtual void f1() throw(::p7::E1)
   {
     try {
@@ -46,16 +47,17 @@ public:
     catch(cxy::Exception& e) {
       e.addContext("F_impl::f1", std::make_pair(__FILE__, __LINE__));
       exceptions_.push_back(e);
-      throw ::p7::E(e);
+      throw ::p7::E1(e);
     }
   }
-  virtual void f2() throw(::p7::E2)
+  // another way to use BaseException mapping to an idl exception
+  // (see also f1 above)
+  virtual void f2() throw(::p7::E1)
   {
     try {
-      throw ::p7::E2(
-        "file not readable", std::make_pair(__FILE__,__LINE__));
+      throw ::p7::E1("file not readable", std::make_pair(__FILE__,__LINE__));
     }
-    catch(::p7::E2& e) {
+    catch(::p7::E1& e) {
       e.addContext("F_impl::f1", std::make_pair(__FILE__, __LINE__));
       exceptions_.push_back(e);
       throw;
@@ -87,7 +89,7 @@ int main(int argc, char* argv[])
         ref->f1();
         xju::assert_abort();
       }
-      catch(::p7::E const& e) {
+      catch(::p7::E1 const& e) {
         std::cout << readableRepr(e) << std::endl;
       }
     }
@@ -115,16 +117,16 @@ int main(int argc, char* argv[])
         xju::assert_abort();
       }
       catch(::p7::E1 const& e) {
-        xju::assert_(e.context.size(), std::greater_equal<size_t>(),1U);
-        xju::assert_equal(e.context[0], f1.exceptions_[0].context(0))
+        xju::assert_(e.context_.size(), std::greater_equal<size_t>(),1U);
+        xju::assert_equal(e.context_[0], x.exceptions_[0].context_[0]);
       }
       try {
         ref->f2();
         xju::assert_abort();
       }
-      catch(::p7::E2 const& e) {
-        xju::assert_(e.context.size(), std::greater_equal<size_t>(),1U);
-        xju::assert_equal(e.context[0], xa.exceptions_[1].context(0))
+      catch(::p7::E1 const& e) {
+        xju::assert_(e.context_.size(), std::greater_equal<size_t>(),1U);
+        xju::assert_equal(e.context_[0], x.exceptions_[1].context_[0]);
       }
     }
     

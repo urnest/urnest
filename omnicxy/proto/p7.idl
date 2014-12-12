@@ -27,6 +27,6 @@ module p7
   interface F
   {
     void f1() raises(E1);
-    void f2() raises(E2);
+    void f2() raises(E1);
   };
 };
