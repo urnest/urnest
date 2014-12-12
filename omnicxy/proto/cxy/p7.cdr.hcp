@@ -1,0 +1,101 @@
+// generated from p7.idl by omnicxy cxycdr idl backend
+
+#include <cxy/cdr.hh>
+
+#include "p7.hh"
+
+
+namespace cxy
+{
+template<>
+class cdr< ::p7::SourceRefPair>
+{
+public:
+  static ::p7::SourceRefPair unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
+  {
+    std::string const p1(cdr< std::string>::unmarshalFrom(s));
+    uint32_t const p2(cdr< uint32_t>::unmarshalFrom(s));
+    return ::p7::SourceRefPair(p1, p2);
+  }  
+  static void marshal(p7::SourceRefPair const& x, cdrStream& s) throw()
+  {
+    cdr< std::string>::marshal(x.first,s);
+    cdr< uint32_t>::marshal(x.second,s);
+  }
+};
+template<>
+class cdr< ::p7::CausePair>
+{
+public:
+  static ::p7::CausePair unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
+  {
+    std::string const p1(cdr< std::string>::unmarshalFrom(s));
+    ::p7::SourceRefPair const p2(cdr< ::p7::SourceRefPair>::unmarshalFrom(s));
+    return ::p7::CausePair(p1, p2);
+  }  
+  static void marshal(p7::CausePair const& x, cdrStream& s) throw()
+  {
+    cdr< std::string>::marshal(x.first,s);
+    cdr< ::p7::SourceRefPair>::marshal(x.second,s);
+  }
+};
+template<>
+class cdr< ::p7::ContextPair>
+{
+public:
+  static ::p7::ContextPair unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
+  {
+    std::string const p1(cdr< std::string>::unmarshalFrom(s));
+    ::p7::SourceRefPair const p2(cdr< ::p7::SourceRefPair>::unmarshalFrom(s));
+    return ::p7::ContextPair(p1, p2);
+  }  
+  static void marshal(p7::ContextPair const& x, cdrStream& s) throw()
+  {
+    cdr< std::string>::marshal(x.first,s);
+    cdr< ::p7::SourceRefPair>::marshal(x.second,s);
+  }
+};
+template<>
+class cdr< ::p7::E>
+{
+public:
+  static ::p7::E unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
+  {
+    ::p7::ExceptionCause const p1(cdr< ::p7::ExceptionCause>::unmarshalFrom(s));
+    ::p7::ExceptionContext const p2(cdr< ::p7::ExceptionContext>::unmarshalFrom(s));
+    return ::p7::E(p1,p2,
+             //cxy::Exception params
+             std::string("IDL:p7/E:1.0"), std::make_pair(__FILE__,__LINE__));
+  }  
+  static void marshal(p7::E const& x, cdrStream& s) throw()
+  {
+    cdr< ::p7::ExceptionCause>::marshal(x.cause_,s);
+    cdr< ::p7::ExceptionContext>::marshal(x.context_,s);
+  }
+  static const char repoId[]="IDL:p7/E:1.0";
+};
+template<>
+class cdr< ::p7::F>
+{
+public:
+  static const char repoId[]="IDL:p7/F:1.0";
+};
+
+}
+

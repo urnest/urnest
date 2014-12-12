@@ -1,0 +1,32 @@
+module p7
+{
+  struct SourceRefPair
+  {
+    string first; // source file name
+    unsigned long second; // line number
+  };
+  struct CausePair
+  {
+    string first;
+    SourceRefPair second;
+  };
+  struct ContextPair
+  {
+    string first;
+    SourceRefPair second;
+  };
+  typedef CausePair ExceptionCause;
+  typedef sequence<ContextPair> ExceptionContext;
+  
+  exception E1
+  {
+    ExceptionCause cause_;
+    ExceptionContext context_;
+  };
+
+  interface F
+  {
+    void f1() raises(E1);
+    void f2() raises(E2);
+  };
+};

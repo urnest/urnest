@@ -113,9 +113,10 @@ x test client wrong type exception
 
 x p4.idl:
   x struct in param, return
-  - struct declared in class (need hcp-split "friend" support)
-  - translate struct XxPair { Y first; Z second; } into 
+  x struct declared in class (need hcp-split "friend" support)
+  x translate struct XxPair { Y first; Z second; } into 
     struct XxPair : std::pair<Y,Z> XxPair { ... };
+    - perhaps that should be a typedef?
 
 x p5.idl:
   x sequence param, return, struct
@@ -124,8 +125,6 @@ x p6.idl
   x exception EEE
 
 - p7.idl:
-
-- p8.idl:
     - want to seamlessly handle BaseException, which
       has cause and context:
       - make use of XxPair above, specify cxy backend params
