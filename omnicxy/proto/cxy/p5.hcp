@@ -8,6 +8,8 @@
 #include "p4.hh"
 #include "p3.hh"
 
+#include <cxy/copyContext.hh> //impl
+
 namespace p5
 {
 typedef std::vector< ::p4::XS1> JW2s;

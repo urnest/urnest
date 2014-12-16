@@ -43,6 +43,7 @@ def gen_struct(name,memberTypesAndNames):
     memberMarshals=''.join(['\n    cdr< %(t)s>::marshal(x.%(n)s,s);'%vars() for t,n in zip(memberTypes,memberNames)])
     return struct_t%vars()
 
+#see also mapped_exception_t below
 exception_t='''\
 template<>
 class cdr< ::%(name)s>
@@ -73,15 +74,54 @@ def gen_exception(name,repoId,memberTypesAndNames,eclass):
     memberMarshals=''.join(['\n    cdr< %(t)s>::marshal(x.%(n)s,s);'%vars() for t,n in zip(memberTypes,memberNames)])
     return exception_t%vars()
 
-def gen(decl,eclass,eheader,indent=''):
+#see also exception_t above
+mapped_exception_t='''\
+template<>
+class cdr< ::%(name)s>
+{
+public:
+  static ::%(name)s unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
+  {%(memberUnmarshals)s
+    return ::%(name)s(%(consparams)s);
+  }  
+  static void marshal(%(name)s const& x, cdrStream& s) throw()
+  {%(memberMarshals)s
+  }
+  static const char repoId[]="%(repoId)s";
+};
+'''
+def mapped_marshal(t,n,causeType,contextType):
+    if t==causeType:
+        return '\n    cdr< %(t)s>::marshal(%(t)s(x.%(n)s),s);'%vars()
+    elif t==contextType:
+        return '\n    cdr< %(t)s>::marshal(%(t)s(x.%(n)s.begin(),x.%(n)s.end()),s);'%vars()
+    return '\n    cdr< %(t)s>::marshal(x.%(n)s,s);'%vars() 
+    
+def gen_mapped_exception(name,repoId,memberTypesAndNames,eclass,causeType,contextType):
+    memberNames=[_[1] for _ in memberTypesAndNames]
+    memberTypes=[_[0] for _ in memberTypesAndNames]
+    paramNames=['p%s'%i for i in range(1,len(memberTypesAndNames)+1)]
+    memberUnmarshals=''.join(['\n    %(t)s const %(pn)s(cdr< %(t)s>::unmarshalFrom(s));'%vars() for t,pn in zip(memberTypes,paramNames)])
+    consparams=','.join(paramNames)
+    memberMarshals=''.join([mapped_marshal(t,n,causeType,contextType) \
+                                for t,n in zip(memberTypes,memberNames)])
+    return mapped_exception_t%vars()
+
+def gen(decl,eclass,eheader,causeType,contextType,indent=''):
     result=''
     if isinstance(decl, idlast.Module):
-        result=''.join(gen(_,eclass,eheader) for _ in decl.definitions())
+        result=''.join(gen(_,eclass,eheader,causeType,contextType) \
+                           for _ in decl.definitions())
     elif isinstance(decl, idlast.Interface):
         fqn='::'.join(decl.scopedName())
         repoId=decl.repoId()
         result=interface_t%vars()+\
-            ''.join(gen(_,eclass,eheader) for _ in decl.contents())
+            ''.join(gen(_,eclass,eheader,causeType,contextType) \
+                        for _ in decl.contents())
     elif isinstance(decl, idlast.Operation):
         pass
     elif isinstance(decl, idlast.Typedef):
@@ -97,7 +137,13 @@ def gen(decl,eclass,eheader,indent=''):
         memberTypesAndNames=[
             (unqualifiedType(_.memberType()),_.declarators()[0].identifier()) \
                 for _ in decl.members()];
-        result=gen_exception(name,repoId,memberTypesAndNames,eclass)
+        memberTypes=[_[0] for _ in memberTypesAndNames]
+        if causeType in memberTypes and contextType in memberTypes:
+            result=gen_mapped_exception(name,repoId,memberTypesAndNames,
+                                        eclass,causeType,contextType)
+        else:
+            result=gen_exception(name,repoId,memberTypesAndNames,eclass)
+            pass
         pass
     else:
         assert False, repr(decl)
@@ -130,6 +176,12 @@ def gen_idlincludes(fileNames):
 
 def run(tree, args):
     eclass,eheader=([_.split('-e',1)[1].split('=',1) for _ in args if _.startswith('-e')]+[('cxy::Exception','cxy/Exception.hh')])[0]
+    causeType=([_.split('-causeType=',1)[1] for _ in args \
+                                if _.startswith('-causeType')]+\
+                               [None])[0]
+    contextType=([_.split('-contextType=',1)[1] for _ in args \
+                                if _.startswith('-contextType')]+\
+                               [None])[0]
     if eheader.startswith('./') or os.path.dirname(eheader)=='':
         eheader='"%s"'%eheader[2:]
     else:
@@ -137,7 +189,9 @@ def run(tree, args):
     assert tree.file().endswith('.idl'), tree.file()
     fileName=os.path.basename(tree.file())
     baseName=fileName[0:-4]
-    items=''.join([gen(_,eclass,eheader) for _ in tree.declarations() if _.mainFile()])
+    items=''.join([gen(_,eclass,eheader,causeType,contextType) \
+                       for _ in tree.declarations() \
+                       if _.mainFile()])
     idlincludes=gen_idlincludes(set([_.file() for _ in tree.declarations() if not _.mainFile()]))
     print template % vars()
     pass

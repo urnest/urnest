@@ -6,6 +6,8 @@
 #include <string>
 #include <stdint.h>
 #include <xju/Tagged.hh>
+
+
 #include <cxy/copyContext.hh> //impl
 
 namespace p7
@@ -59,7 +61,7 @@ struct CausePair : public std::pair< std::string, ::p7::SourceRefPair>
      std::pair< std::string, ::p7::SourceRefPair>(p1, p2) {
   }
   template<class T1, class T2>
-  CausePair(std::pair<T1, T2> const& x) throw():
+  explicit CausePair(std::pair<T1, T2> const& x) throw():
      std::pair< std::string, ::p7::SourceRefPair>(x) {
   }
   friend bool operator<(
@@ -144,10 +146,14 @@ typedef std::vector< ::p7::ContextPair> ExceptionContext;
 struct E1 : cxy::Exception
 {
   E1(
-    ::p7::CausePair const& p1,
-    std::vector< ::p7::ContextPair> const& p2) throw():
-      cxy::Exception(p1.first,p1.second) {
-    cxy::copyContext(p2.begin(), p2.end(), *this);
+    ::p7::ExceptionCause const& p1,
+    ::p7::ExceptionContext const& p2) throw():
+      cxy::Exception(
+        p1.first, 
+        p1.second) {
+    cxy::copyContext(p2.begin(), 
+                     p2.end(), 
+                     *this);
   }
 
   // pre: cxy::Exception(T) constructs a cxy::Exception

@@ -8,6 +8,8 @@
 // included idl
 #include "p1.hh"
 
+#include <cxy/copyContext.hh> //impl
+
 namespace p2
 {
 class F

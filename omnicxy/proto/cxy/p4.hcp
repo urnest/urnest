@@ -10,6 +10,8 @@
 // included idl
 #include "p3.hh"
 
+#include <cxy/copyContext.hh> //impl
+
 namespace p4
 {
 struct XS1

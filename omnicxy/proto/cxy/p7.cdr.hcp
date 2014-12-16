@@ -83,10 +83,8 @@ public:
   }  
   static void marshal(p7::E1 const& x, cdrStream& s) throw()
   {
-    ::p7::ExceptionCause const cause(x.cause_);
-    ::p7::ExceptionContext const context(x.context_.begin(),x.context_.end());
-    cdr< ::p7::ExceptionCause>::marshal(cause,s);
-    cdr< ::p7::ExceptionContext>::marshal(context,s);
+    cdr< ::p7::ExceptionCause>::marshal(::p7::ExceptionCause(x.cause_),s);
+    cdr< ::p7::ExceptionContext>::marshal(::p7::ExceptionContext(x.context_.begin(),x.context_.end()),s);
   }
   static const char repoId[]="IDL:p7/E1:1.0";
 };

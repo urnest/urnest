@@ -8,6 +8,8 @@
 #include <xju/Tagged.hh>
 
 
+#include <cxy/copyContext.hh> //impl
+
 namespace p6
 {
 struct EEE : cxy::Exception

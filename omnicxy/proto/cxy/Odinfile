@@ -216,8 +216,8 @@ p7.sref.cc==%p7.sref/p7.sref.cc
 %p7.cdr==()+cmd=(../../../hcp/hcp-split) -l 0 (p7.cdr.hcp) 'p7.cdr.hh' 'p7.cdr.cc':output
 %p7.sref==()+cmd=(../../../hcp/hcp-split) -l 0 (p7.sref.hcp) 'p7.sref.hh' 'p7.sref.cc':output
 
-#p7.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxy.py) (../p7.idl) '-Wb-c=p7::ExceptionCause,p7::ExceptionContext':stdout
-#p7.cdr.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycdr.py) (../p7.idl) '-Wb-c=p7::ExceptionCause,p7::ExceptionContext':stdout
+p7.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxy.py) '-Wb-causeType=::p7::ExceptionCause,-contextType=::p7::ExceptionContext' (../p7.idl):stdout
+p7.cdr.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycdr.py) '-Wb-causeType=::p7::ExceptionCause,-contextType=::p7::ExceptionContext' (../p7.idl):stdout
 p7.cref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycref.py) (../p7.idl):stdout
 p7.objref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxyobjref.py) (../p7.idl):stdout
 p7.sref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxysref.py) (../p7.idl):stdout

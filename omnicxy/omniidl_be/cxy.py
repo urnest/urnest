@@ -200,6 +200,7 @@ def gen_struct(name,memberTypesAndNames):
                              for _ in memberNames])
     return struct_t%vars()
 
+#see also mapped_exception_t below
 exception_t='''\
 struct %(name)s : %(eclass)s
 {
@@ -257,20 +258,119 @@ def gen_exception(name,memberTypesAndNames,eclass):
                              for _ in memberNames])
     return exception_t%vars()
 
-def gen(decl,eclass,eheader,indent=''):
+#see also exception_t above
+mapped_exception_t='''\
+struct %(name)s : %(eclass)s
+{
+  %(name)s(%(consparams)s) throw():
+      %(eclass)s(
+        %(causeParamName)s.first, 
+        %(causeParamName)s.second)%(consinitialisers)s {
+    cxy::copyContext(%(contextParamName)s.begin(), 
+                     %(contextParamName)s.end(), 
+                     *this);
+  }
+
+  // pre: %(eclass)s(T) constructs a %(eclass)s
+  template<class T>
+  explicit E1(
+    T const& p) throw():
+      %(eclass)s(p) {
+  }
+  
+  // pre: %(eclass)s(T1,T2) constructs a %(eclass)s
+  template<class T1, class T2>
+  explicit E1(
+    T1 const& p1,
+    T2 const& p2) throw():
+      %(eclass)s(p1,p2) {
+  }
+  %(members)s
+  friend bool operator<(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {%(lessMembers)s
+    return (%(eclass)s const&)x < (%(eclass)s const&)y;
+  }
+  friend bool operator>(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return y<x;
+  }
+  friend bool operator!=(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return (x<y)||(y<x);
+  }
+  friend bool operator==(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return !(x!=y);
+  }
+  friend bool operator<=(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return (x<y)||(x==y);
+  }
+  friend bool operator>=(
+    %(name)s const& x, 
+    %(name)s const& y) throw() {
+    return (x>y)||(x==y);
+  }
+};
+'''
+
+def gen_mapped_exception(name,
+                         memberTypesAndNames,
+                         eclass,
+                         causeType,
+                         contextType):
+    memberNames=[_[1] for _ in memberTypesAndNames]
+    memberTypes=[_[0] for _ in memberTypesAndNames]
+    causeIndex=memberTypes.index(causeType)
+    contextIndex=memberTypes.index(contextType)
+    paramNames=['p%s'%i for i in range(1,len(memberTypesAndNames)+1)]
+    causeParamName=paramNames[causeIndex]
+    contextParamName=paramNames[contextIndex]
+    members=['\n  %s %s;'%_ for _ in memberTypesAndNames]
+    consparams=','.join(['\n    %s const& %s'%_ for _ in zip(memberTypes,paramNames)])
+    consinitialisers=[',\n      %s(%s)'%_ \
+                          for _ in zip(memberNames,paramNames)]
+    i=[causeIndex,contextIndex]
+    i.sort()
+    del consinitialisers[i[1]]
+    del consinitialisers[i[0]]
+    consinitialisers=''.join(consinitialisers)
+    del members[i[1]]
+    del members[i[0]]
+    members=''.join(members)
+    del memberNames[i[1]]
+    del memberNames[i[0]]
+    lessMembers=''.join(\
+        [('\n    if (x.%(_)s<y.%(_)s) return true;'+\
+              '\n    if (y.%(_)s<x.%(_)s) return false;')%vars()\
+             for _ in memberNames])
+
+    return mapped_exception_t%vars()
+
+def gen(decl,eclass,eheader,causeType,contextType,indent=''):
     result=''
     if isinstance(decl, idlast.Module):
         ns=decl.identifier()
         result='%(indent)snamespace %(ns)s\n%(indent)s{\n'%vars()
-        result=result+''.join([gen(_,eclass,eheader,indent)+'\n' for _ in decl.definitions()])
+        result=result+''.join(
+            [gen(_,eclass,eheader,causeType,contextType,indent)+'\n' \
+                 for _ in decl.definitions()])
         result=result+'%(indent)s}'%vars()
     elif isinstance(decl, idlast.Interface):
         name=decl.identifier()
-        content='\n'.join([gen(_,eclass,eheader,indent+'  ') for _ in decl.contents()])
+        content='\n'.join(
+            [gen(_,eclass,eheader,causeType,contextType,indent+'  ') \
+                 for _ in decl.contents()])
         result=reindent(indent,interface_t%vars())
     elif isinstance(decl, idlast.Operation):
         name=decl.identifier()
-        params=','.join(['\n  %s& %s'%(ptype(p),p.identifier()) for p in decl.parameters()])
+        params=','.join(['\n  %s& %s'%(ptype(p),p.identifier()) \
+                             for p in decl.parameters()])
         assert not decl.oneway(), 'oneway not yet implemented'
         assert len(decl.contexts())==0, 'contexts not yet implemented'
         exceptionTypes=['::'.join(_.scopedName()) for _ in decl.raises()]
@@ -313,12 +413,19 @@ def gen(decl,eclass,eheader,indent=''):
         pass
     elif isinstance(decl, idlast.Exception):
         name=decl.identifier()
-        memberTypesAndNames=[
+        memberTypesAndNames=[\
             (unqualifiedType(_.memberType()),_.declarators()[0].identifier()) \
                 for _ in decl.members()];
-        result=reindent(
-            indent,
-            gen_exception(name,memberTypesAndNames,eclass))
+        memberTypes=[_[0] for _ in memberTypesAndNames]
+        if causeType in memberTypes and contextType in memberTypes:
+            result=reindent(
+                indent,
+                gen_mapped_exception(name,memberTypesAndNames,
+                                     eclass,causeType,contextType))
+        else:
+            result=reindent(
+                indent,
+                gen_exception(name,memberTypesAndNames,eclass))
         pass
     else:
         assert False, repr(decl)
@@ -380,6 +487,8 @@ head='''\
 #include %(eheader)s
 %(tincludes)s
 %(idlincludes)s
+
+#include <cxy/copyContext.hh> //impl
 '''
 
 def includeSpec(fileName):
@@ -393,7 +502,15 @@ def gen_idlincludes(fileNames):
     return '\n// included idl'+''.join(['\n#include %s'%includeSpec(_) for _ in fileNames])
 
 def run(tree, args):
-    eclass,eheader=([_.split('-e',1)[1].split('=',1) for _ in args if _.startswith('-e')]+[('cxy::Exception','cxy/Exception.hh')])[0]
+    eclass,eheader=([_.split('-e',1)[1].split('=',1) for _ in args \
+                         if _.startswith('-e')]+\
+                        [('cxy::Exception','cxy/Exception.hh')])[0]
+    causeType=([_.split('-causeType=',1)[1] for _ in args \
+                                if _.startswith('-causeType')]+\
+                               [None])[0]
+    contextType=([_.split('-contextType=',1)[1] for _ in args \
+                                if _.startswith('-contextType')]+\
+                               [None])[0]
     if eheader.startswith('./') or os.path.dirname(eheader)=='':
         eheader='"%s"'%eheader[2:]
     else:
@@ -403,5 +520,6 @@ def run(tree, args):
     idlincludes=gen_idlincludes(set([_.file() for _ in tree.declarations() if not _.mainFile()]))
     
     print head % vars()
-    print '\n'.join([gen(_,eclass,eheader) for _ in tree.declarations() if _.mainFile()])
+    print '\n'.join([gen(_,eclass,eheader,causeType,contextType) \
+                         for _ in tree.declarations() if _.mainFile()])
     pass
