@@ -1,0 +1,52 @@
+#
+#    Package for managing omniORB "cxy" backend idl compilation.
+#    (cxy is an alternate, modern, C++ mapping for CORBA IDL)
+#
+
+*.idl.sm => :idl.sm;
+
+:idl.sm '.idl files and nested .idl.sm' ? => :FILE;
+
+:idl.sm.list 'list from :idl.sm' ? => :LIST;
+
+:idl.list 'list of idl files' ? => :LIST;
+
+:idl.list.m ':idl.list from :idl.sm' => :idl.list;
+
+:idl.list.s ':idl.list from .idl' => :idl.list;
+
+:omnicxy 'vir-dir of files generated from .idl files' ? => :REFERENCE;
+
+:omnicxy.output 'directory of files generated from a .idl file' ? => :DERIVED-DIRECTORY;
+
+:omnicxy.vir_dir_spec 'vir dir spec with all files in :omnicxy.output directory' ? => :FILE;
+
+:omnicxy.vir_dir_spec.s ':omnicxy.vir_dir_spec from single .idl file' ? => :omnicxy.vir_dir_spec;
+
+#:omnicxy.vir_dir_spec.m ':omnicxy.vir_dir_spec from .idl.sm' ? => :omnicxy.vir_dir_spec;
+
+#:omnicxy.output.m 'list of :omnicxy.output directories' ? => :LIST;
+
++hcp-split 'hcp-split exe, default to hcp-split on PATH' ? => :first;
+
++cxy-be-dir 'directories containing omniidl cxy backend .py files, eg cxy.py, default assumes files are on omniidl default search path' ? => :ls;
+
+$ODIN_OMNICXY_PATH 'PATH to set when running omniidl with cxy backend' = '/usr/bin:/bin';
+
+$ODIN_OMNICXY_OMNIIDL 'name of omniidl program' = 'omniidl';
+
++cxy 'flags to pass to omniidl cxy backend (omit the -Wb)' ? => :cat;
+
+EXEC (omniidl.sh) (:IDL) (+hcp-split) (+cxy-be-dir) (+cxy)
+  NEEDS (+cxy-be-dir:list:map=:list) (:IDL:lookup=:hash_inc_all)
+  => (:omnicxy.output);
+
+EXEC (vir_dir_spec.sh) (:omnicxy.output) => (:omnicxy.vir_dir_spec.s);
+
+COLLECT (:IDL) => (:idl.list.s);
+
+READ-LIST (:idl.sm) => (:idl.sm.list);
+
+COLLECT (:idl.sm.list :recurse=:idl.sm.list) => (:idl.list.m);
+
+COLLECT (:idl.list :map=:omnicxy.vir_dir_spec.s :cat:vir_dir) => (:omnicxy);

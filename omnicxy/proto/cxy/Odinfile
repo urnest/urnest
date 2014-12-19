@@ -3,6 +3,8 @@
 
 %run-all-tests==%all-tests.tree:leaves
 
+%gen==(..%all.idl.sm)+hcp-split=(../../../hcp/hcp-split)+cxy-be-dir=(../../omniidl_be)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy
+
 %all-tests.tree==<<
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p1-main) '3735' 'both':exec.output
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p2-main) '3736' 'both':exec.output
@@ -18,6 +20,7 @@
 
 %cxx-opts==<<
 +(../..%cxx-opts)
++inc_sp=(%gen)
 
 %p1-main==p1-main.cc+(%cxx-opts):auto.cxx.exe
 %p2-main==p2-main.cc+(%cxx-opts):auto.cxx.exe
@@ -31,196 +34,8 @@
 
 %dummy.hcp==<<
 
-p1.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxy.py) (../p1.idl):stdout
-p1.cdr.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycdr.py) (../p1.idl):stdout
-p1.cref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycref.py) (../p1.idl):stdout
-p1.objref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxyobjref.py) (../p1.idl):stdout
-p1.sref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxysref.py) (../p1.idl):stdout
-
 %dummy.hh==<<
 
-p1.hh==%p1/p1.hh
-p1.cc==%p1/p1.cc
-
-p1.cref.hh==%p1.cref/p1.cref.hh
-p1.cref.cc==%p1.cref/p1.cref.cc
-
-p1.objref.hh==%p1.objref/p1.objref.hh
-p1.objref.cc==%p1.objref/p1.objref.cc
-
-p1.cdr.hh==%p1.cdr/p1.cdr.hh
-p1.cdr.cc==%p1.cdr/p1.cdr.cc
-
-p1.sref.hh==%p1.sref/p1.sref.hh
-p1.sref.cc==%p1.sref/p1.sref.cc
-
-%p1==()+cmd=(../../../hcp/hcp-split) -l 0 (p1.hcp) 'p1.hh' 'p1.cc':output
-%p1.cref==()+cmd=(../../../hcp/hcp-split) -l 0 (p1.cref.hcp) 'p1.cref.hh' 'p1.cref.cc':output
-%p1.objref==()+cmd=(../../../hcp/hcp-split) -l 0 (p1.objref.hcp) 'p1.objref.hh' 'p1.objref.cc':output
-%p1.cdr==()+cmd=(../../../hcp/hcp-split) -l 0 (p1.cdr.hcp) 'p1.cdr.hh' 'p1.cdr.cc':output
-%p1.sref==()+cmd=(../../../hcp/hcp-split) -l 0 (p1.sref.hcp) 'p1.sref.hh' 'p1.sref.cc':output
-
-p2.hh==%p2/p2.hh
-p2.cc==%p2/p2.cc
-
-p2.cref.hh==%p2.cref/p2.cref.hh
-p2.cref.cc==%p2.cref/p2.cref.cc
-
-p2.objref.hh==%p2.objref/p2.objref.hh
-p2.objref.cc==%p2.objref/p2.objref.cc
-
-p2.cdr.hh==%p2.cdr/p2.cdr.hh
-p2.cdr.cc==%p2.cdr/p2.cdr.cc
-
-p2.sref.hh==%p2.sref/p2.sref.hh
-p2.sref.cc==%p2.sref/p2.sref.cc
-
-%p2==()+cmd=(../../../hcp/hcp-split) -l 0 (p2.hcp) 'p2.hh' 'p2.cc':output
-%p2.cref==()+cmd=(../../../hcp/hcp-split) -l 0 (p2.cref.hcp) 'p2.cref.hh' 'p2.cref.cc':output
-%p2.objref==()+cmd=(../../../hcp/hcp-split) -l 0 (p2.objref.hcp) 'p2.objref.hh' 'p2.objref.cc':output
-%p2.cdr==()+cmd=(../../../hcp/hcp-split) -l 0 (p2.cdr.hcp) 'p2.cdr.hh' 'p2.cdr.cc':output
-%p2.sref==()+cmd=(../../../hcp/hcp-split) -l 0 (p2.sref.hcp) 'p2.sref.hh' 'p2.sref.cc':output
-
-p2.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxy.py) (../p2.idl):stdout
-p2.cdr.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycdr.py) (../p2.idl):stdout
-p2.cref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycref.py) (../p2.idl):stdout
-p2.objref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxyobjref.py) (../p2.idl):stdout
-p2.sref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxysref.py) (../p2.idl):stdout
-
-p3.hh==%p3/p3.hh
-p3.cc==%p3/p3.cc
-
-p3.cref.hh==%p3.cref/p3.cref.hh
-p3.cref.cc==%p3.cref/p3.cref.cc
-
-p3.objref.hh==%p3.objref/p3.objref.hh
-p3.objref.cc==%p3.objref/p3.objref.cc
-
-p3.cdr.hh==%p3.cdr/p3.cdr.hh
-p3.cdr.cc==%p3.cdr/p3.cdr.cc
-
-p3.sref.hh==%p3.sref/p3.sref.hh
-p3.sref.cc==%p3.sref/p3.sref.cc
-
-%p3==()+cmd=(../../../hcp/hcp-split) -l 0 (p3.hcp) 'p3.hh' 'p3.cc':output
-%p3.cref==()+cmd=(../../../hcp/hcp-split) -l 0 (p3.cref.hcp) 'p3.cref.hh' 'p3.cref.cc':output
-%p3.objref==()+cmd=(../../../hcp/hcp-split) -l 0 (p3.objref.hcp) 'p3.objref.hh' 'p3.objref.cc':output
-%p3.cdr==()+cmd=(../../../hcp/hcp-split) -l 0 (p3.cdr.hcp) 'p3.cdr.hh' 'p3.cdr.cc':output
-%p3.sref==()+cmd=(../../../hcp/hcp-split) -l 0 (p3.sref.hcp) 'p3.sref.hh' 'p3.sref.cc':output
-
-p3.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxy.py) (../p3.idl):stdout
-p3.cdr.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycdr.py) (../p3.idl):stdout
-p3.cref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycref.py) (../p3.idl):stdout
-p3.objref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxyobjref.py) (../p3.idl):stdout
-p3.sref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxysref.py) (../p3.idl):stdout
-
-p4.hh==%p4/p4.hh
-p4.cc==%p4/p4.cc
-
-p4.cref.hh==%p4.cref/p4.cref.hh
-p4.cref.cc==%p4.cref/p4.cref.cc
-
-p4.objref.hh==%p4.objref/p4.objref.hh
-p4.objref.cc==%p4.objref/p4.objref.cc
-
-p4.cdr.hh==%p4.cdr/p4.cdr.hh
-p4.cdr.cc==%p4.cdr/p4.cdr.cc
-
-p4.sref.hh==%p4.sref/p4.sref.hh
-p4.sref.cc==%p4.sref/p4.sref.cc
-
-%p4==()+cmd=(../../../hcp/hcp-split) -l 0 (p4.hcp) 'p4.hh' 'p4.cc':output
-%p4.cref==()+cmd=(../../../hcp/hcp-split) -l 0 (p4.cref.hcp) 'p4.cref.hh' 'p4.cref.cc':output
-%p4.objref==()+cmd=(../../../hcp/hcp-split) -l 0 (p4.objref.hcp) 'p4.objref.hh' 'p4.objref.cc':output
-%p4.cdr==()+cmd=(../../../hcp/hcp-split) -l 0 (p4.cdr.hcp) 'p4.cdr.hh' 'p4.cdr.cc':output
-%p4.sref==()+cmd=(../../../hcp/hcp-split) -l 0 (p4.sref.hcp) 'p4.sref.hh' 'p4.sref.cc':output
-
-p4.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxy.py) (../p4.idl):stdout
-p4.cdr.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycdr.py) (../p4.idl):stdout
-p4.cref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycref.py) (../p4.idl):stdout
-p4.objref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxyobjref.py) (../p4.idl):stdout
-p4.sref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxysref.py) (../p4.idl):stdout
-
-p5.hh==%p5/p5.hh
-p5.cc==%p5/p5.cc
-
-p5.cref.hh==%p5.cref/p5.cref.hh
-p5.cref.cc==%p5.cref/p5.cref.cc
-
-p5.objref.hh==%p5.objref/p5.objref.hh
-p5.objref.cc==%p5.objref/p5.objref.cc
-
-p5.cdr.hh==%p5.cdr/p5.cdr.hh
-p5.cdr.cc==%p5.cdr/p5.cdr.cc
-
-p5.sref.hh==%p5.sref/p5.sref.hh
-p5.sref.cc==%p5.sref/p5.sref.cc
-
-%p5==()+cmd=(../../../hcp/hcp-split) -l 0 (p5.hcp) 'p5.hh' 'p5.cc':output
-%p5.cref==()+cmd=(../../../hcp/hcp-split) -l 0 (p5.cref.hcp) 'p5.cref.hh' 'p5.cref.cc':output
-%p5.objref==()+cmd=(../../../hcp/hcp-split) -l 0 (p5.objref.hcp) 'p5.objref.hh' 'p5.objref.cc':output
-%p5.cdr==()+cmd=(../../../hcp/hcp-split) -l 0 (p5.cdr.hcp) 'p5.cdr.hh' 'p5.cdr.cc':output
-%p5.sref==()+cmd=(../../../hcp/hcp-split) -l 0 (p5.sref.hcp) 'p5.sref.hh' 'p5.sref.cc':output
-
-p5.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxy.py) (../p5.idl):stdout
-p5.cdr.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycdr.py) (../p5.idl):stdout
-p5.cref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycref.py) (../p5.idl):stdout
-p5.objref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxyobjref.py) (../p5.idl):stdout
-p5.sref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxysref.py) (../p5.idl):stdout
-
-p6.hh==%p6/p6.hh
-p6.cc==%p6/p6.cc
-
-p6.cref.hh==%p6.cref/p6.cref.hh
-p6.cref.cc==%p6.cref/p6.cref.cc
-
-p6.objref.hh==%p6.objref/p6.objref.hh
-p6.objref.cc==%p6.objref/p6.objref.cc
-
-p6.cdr.hh==%p6.cdr/p6.cdr.hh
-p6.cdr.cc==%p6.cdr/p6.cdr.cc
-
-p6.sref.hh==%p6.sref/p6.sref.hh
-p6.sref.cc==%p6.sref/p6.sref.cc
-
-%p6==()+cmd=(../../../hcp/hcp-split) -l 0 (p6.hcp) 'p6.hh' 'p6.cc':output
-%p6.cref==()+cmd=(../../../hcp/hcp-split) -l 0 (p6.cref.hcp) 'p6.cref.hh' 'p6.cref.cc':output
-%p6.objref==()+cmd=(../../../hcp/hcp-split) -l 0 (p6.objref.hcp) 'p6.objref.hh' 'p6.objref.cc':output
-%p6.cdr==()+cmd=(../../../hcp/hcp-split) -l 0 (p6.cdr.hcp) 'p6.cdr.hh' 'p6.cdr.cc':output
-%p6.sref==()+cmd=(../../../hcp/hcp-split) -l 0 (p6.sref.hcp) 'p6.sref.hh' 'p6.sref.cc':output
-
-p6.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxy.py) (../p6.idl):stdout
-p6.cdr.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycdr.py) (../p6.idl):stdout
-p6.cref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycref.py) (../p6.idl):stdout
-p6.objref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxyobjref.py) (../p6.idl):stdout
-p6.sref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxysref.py) (../p6.idl):stdout
-
-p7.hh==%p7/p7.hh
-p7.cc==%p7/p7.cc
-
-p7.cref.hh==%p7.cref/p7.cref.hh
-p7.cref.cc==%p7.cref/p7.cref.cc
-
-p7.objref.hh==%p7.objref/p7.objref.hh
-p7.objref.cc==%p7.objref/p7.objref.cc
-
-p7.cdr.hh==%p7.cdr/p7.cdr.hh
-p7.cdr.cc==%p7.cdr/p7.cdr.cc
-
-p7.sref.hh==%p7.sref/p7.sref.hh
-p7.sref.cc==%p7.sref/p7.sref.cc
-
-%p7==()+cmd=(../../../hcp/hcp-split) -l 0 (p7.hcp) 'p7.hh' 'p7.cc':output
-%p7.cref==()+cmd=(../../../hcp/hcp-split) -l 0 (p7.cref.hcp) 'p7.cref.hh' 'p7.cref.cc':output
-%p7.objref==()+cmd=(../../../hcp/hcp-split) -l 0 (p7.objref.hcp) 'p7.objref.hh' 'p7.objref.cc':output
-%p7.cdr==()+cmd=(../../../hcp/hcp-split) -l 0 (p7.cdr.hcp) 'p7.cdr.hh' 'p7.cdr.cc':output
-%p7.sref==()+cmd=(../../../hcp/hcp-split) -l 0 (p7.sref.hcp) 'p7.sref.hh' 'p7.sref.cc':output
-
-p7.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxy.py) '-Wb-causeType=::p7::ExceptionCause,-contextType=::p7::ExceptionContext' (../p7.idl):stdout
-p7.cdr.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycdr.py) '-Wb-causeType=::p7::ExceptionCause,-contextType=::p7::ExceptionContext' (../p7.idl):stdout
-p7.cref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxycref.py) (../p7.idl):stdout
-p7.objref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxyobjref.py) (../p7.idl):stdout
-p7.sref.hcp==(%dummy.hcp)+cmd=(../../omniidl_be/omniidl.sh) (../../omniidl_be/cxysref.py) (../p7.idl):stdout
 
 %test-transient==()+cmd=(%test-transient.sh) (%p1-main):exec.output
 

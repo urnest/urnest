@@ -19,6 +19,9 @@ x remove ar stuff from cxx, make cxx.sm an sm
   .c.sm => .c.exe 
   - no .sm => .exe
 
+- add pyimport package and py-exec to support python scripts with
+  auto dependencies
+
 - don't hard-code which path, and test for which separately, eg ld.sh
 
 - extract_dir:
@@ -33,7 +36,7 @@ x fix example in vir_tree.dg comments
 
 - too many files executable
 
-- resource temporarily unavailable
+- resource temporarily unavailable (cygwin)
 
 - :sm.hash_inc_all (?)
 

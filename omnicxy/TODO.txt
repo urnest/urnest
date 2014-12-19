@@ -64,7 +64,13 @@ x allow "" v <> control for -e eg:
    E.hh -> "E.hh"
 
 - omnicxy odin package
-
+  idl.sm+omnicxy-be-dir=(cxy-be-dir)+hcp-split=(xxx):omnicxy
+    :omnicxy is a virdir containing all generated files for the .idl
+    files in idl.cxx.sm
+    +hcpsplit 'hcp-split'
+    +omnicxy-be-dir '' (default assumes in omniidl default search path)
+    OMNICXY_PATH - enough path to run omniidl and hcpsplit if not explicit
+    
 x adjust sref.hcp need to derive from omniCallDescriptor to override
   unmarshalArguments
 
@@ -108,8 +114,8 @@ x test client wrong type exception
   x typedef basic type -> distinct
     x int
     x string
-    - float
     - octet
+    - float
 
 x p4.idl:
   x struct in param, return
@@ -127,40 +133,44 @@ x p6.idl
 - p7.idl:
     - want to seamlessly handle BaseException, which
       has cause and context:
-      - make use of XxPair above, specify cxy backend params
+      x make use of XxPair above, specify cxy backend params
         cause=cause_,context=context_ which says to treat
         idl exception attributes cause_ and context_ as the
         BaseException cause and context attributes (so they get
         marshaled); they must have type pair<string,int> and 
         sequence<pair<string, int> >; assume they are BaseException
         members?
-      - allow ExceptionCause and ExceptionContext types on omniidl
+      x allow ExceptionCause and ExceptionContext types on omniidl
         command line
-      - if EEE has those:
-        - defer to the base class members
-          - via refs where names are not cause_ and context_
-        - the info will propogate back to client
+      x if EEE has those:
+        x defer to the base class members
+          ~ via refs where names are not cause_ and context_
+        x the info will propogate back to client
       ~ if EEE does not have:
         ~ when server marshals, write them to stderr if they contain
         ~ (no: cause_ and context_ are not required in BaseException)
-      - what if using own exception type? allow attr names to be
-        specified on omniidl command line and if not don't treat them
-        specially?
+      x what if using own exception type? allow attr names to be
+        specified on omniidl command line, as well as attr types
+        specially? (e/p7-main.cc)
       - if servant throws plain BaseException allow mapping to be
         specified on command line; if no mapping abort (with stderr
         message)
 
-- p6.idl:
+- p8.idl
+  - exception with cause and context mapped to BaseException and
+    with extra attributes
+
+- p9.idl:
   - enum param, return
 
-- p7.idl:
-  - inherit interface
-
+- inherit interface
+- union
 - bounded strings
 - bounded sequences
 - arrays
 - objref param/return
 - any
+- other stuff (see omniidl idltypes.py)
 
 x test duplicate object name exception
 

@@ -3,3 +3,11 @@ cxx%all.tree
 cxy%all.tree
 cxy/e%all.tree
 
+%all.idl.sm==<<
+p1.idl
+p2.idl
+p3.idl
+p4.idl
+p5.idl
+p6.idl
+p7.idl
