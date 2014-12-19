@@ -28,7 +28,7 @@
 
 namespace xju
 {
-    class Traced
+    class Traced : public std::pair<std::string, unsigned int>
     {
     public:
 	//
@@ -39,32 +39,49 @@ namespace xju
 	//
 	Traced(const std::string& file,
 	       const unsigned int line) throw():
-	    _file(file),
-	    _line(line)
+            std::pair<std::string, unsigned int>(file,line)
 	{
 	}
-        Traced(std::pair<std::string,unsigned int> const& x) throw():
-	    _file(x.first),
-	    _line(x.second)
+        explicit Traced(std::pair<std::string,unsigned int> const& x) throw():
+            std::pair<std::string, unsigned int>(x)
 	{
 	}
         
 	const std::string& file() const throw()
 	{
-	    return _file;
+	    return first;
 	}
 	unsigned int line() const throw()
 	{
-	    return _line;
+	    return second;
 	}
 
-        operator std::pair<std::string,unsigned int>() const throw()
-        {
-            return std::make_pair(_file, _line);
-        }
     private:		
-	std::string       _file;
-	unsigned int _line;
+        friend bool operator<(Traced const& x, Traced const& y) throw()
+        {
+            return std::make_pair(x.file(), x.line()) <
+                std::make_pair(y.file(), y.line());
+        }
+        friend bool operator==(Traced const& x, Traced const& y) throw()
+        {
+            return !(x<y||y<x);
+        }
+        friend bool operator!=(Traced const& x, Traced const& y) throw()
+        {
+            return !(x==y);
+        }
+        friend bool operator>(Traced const& x, Traced const& y) throw()
+        {
+            return y<x;
+        }
+        friend bool operator>=(Traced const& x, Traced const& y) throw()
+        {
+            return x>y || x==y;
+        }
+        friend bool operator<=(Traced const& x, Traced const& y) throw()
+        {
+            return x<y || x==y;
+        }
     };
 }
 
