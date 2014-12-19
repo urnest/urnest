@@ -1,3 +1,10 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+xju%all.tree
+omnicxy%all.tree
+hcp%all.tree
+
 %cxx-opts==<<
 +debug
 +inc_sp=(.)
