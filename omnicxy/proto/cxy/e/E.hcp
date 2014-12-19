@@ -27,5 +27,11 @@ public:
     xju::Exception::addContext(
       context, xju::Traced(fileAndLine.first, fileAndLine.second));
   }
+  friend bool operator<(E const& x, E const& y) throw()
+  {
+    return 
+      std::make_pair(x.cause(), x.context()) <
+      std::make_pair(y.cause(), y.context());
+  }
 };
 

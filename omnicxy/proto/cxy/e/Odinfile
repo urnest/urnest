@@ -7,16 +7,18 @@
 +(..%cxx-opts)
 
 %all-tests.tree==<<
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p1-main) '3734' 'both':exec.output
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p2-main) '3735' 'both':exec.output
+()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p1-main) '4734' 'both':exec.output
+()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p2-main) '4735' 'both':exec.output
+()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p7-main) '4741' 'both':exec.output
 %test-transient
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (test-port-in-use.cc+(%cxx-opts):auto.cxx.exe) '3736':stdout
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%test-no-such-object) '3742':exec.output
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%test-wrong-type) '3743':exec.output
+()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (test-port-in-use.cc+(%cxx-opts):auto.cxx.exe) '4736':stdout
+()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%test-no-such-object) '4742':exec.output
+()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%test-wrong-type) '4743':exec.output
 
 
 %p1-main==p1-main.cc+(../../..%cxx-opts):auto.cxx.exe
 %p2-main==p2-main.cc+(../../..%cxx-opts):auto.cxx.exe
+%p7-main==p7-main.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-wrong-type==test-wrong-type.cc+(%cxx-opts):auto.cxx.exe
 
@@ -88,6 +90,33 @@ E.cc==%E/E.cc
 %p2.cdr==()+cmd=(../../../../hcp/hcp-split) -l 0 (p2.cdr.hcp) 'p2.cdr.hh' 'p2.cdr.cc':output
 %p2.sref==()+cmd=(../../../../hcp/hcp-split) -l 0 (p2.sref.hcp) 'p2.sref.hh' 'p2.sref.cc':output
 %E==()+cmd=(../../../../hcp/hcp-split) -l 0 (E.hcp) 'E.hh' 'E.cc':output
+
+p7.hh==%p7/p7.hh
+p7.cc==%p7/p7.cc
+
+p7.cref.hh==%p7.cref/p7.cref.hh
+p7.cref.cc==%p7.cref/p7.cref.cc
+
+p7.objref.hh==%p7.objref/p7.objref.hh
+p7.objref.cc==%p7.objref/p7.objref.cc
+
+p7.cdr.hh==%p7.cdr/p7.cdr.hh
+p7.cdr.cc==%p7.cdr/p7.cdr.cc
+
+p7.sref.hh==%p7.sref/p7.sref.hh
+p7.sref.cc==%p7.sref/p7.sref.cc
+
+%p7==()+cmd=(../../../../hcp/hcp-split) -l 0 (p7.hcp) 'p7.hh' 'p7.cc':output
+%p7.cref==()+cmd=(../../../../hcp/hcp-split) -l 0 (p7.cref.hcp) 'p7.cref.hh' 'p7.cref.cc':output
+%p7.objref==()+cmd=(../../../../hcp/hcp-split) -l 0 (p7.objref.hcp) 'p7.objref.hh' 'p7.objref.cc':output
+%p7.cdr==()+cmd=(../../../../hcp/hcp-split) -l 0 (p7.cdr.hcp) 'p7.cdr.hh' 'p7.cdr.cc':output
+%p7.sref==()+cmd=(../../../../hcp/hcp-split) -l 0 (p7.sref.hcp) 'p7.sref.hh' 'p7.sref.cc':output
+
+p7.hcp==(%dummy.hcp)+cmd=(../../../omniidl_be/omniidl.sh) (../../../omniidl_be/cxy.py) '-Wb-eE=./E.hh' '-Wb-causeType=::p7::ExceptionCause,-contextType=::p7::ExceptionContext' (../../p7.idl):stdout
+p7.cdr.hcp==(%dummy.hcp)+cmd=(../../../omniidl_be/omniidl.sh) (../../../omniidl_be/cxycdr.py) '-Wb-eE=./E.hh' '-Wb-causeType=::p7::ExceptionCause,-contextType=::p7::ExceptionContext,-causeMemberExpression=cause\\(\\),-contextMemberExpression=context\\(\\)' (../../p7.idl):stdout
+p7.cref.hcp==(%dummy.hcp)+cmd=(../../../omniidl_be/omniidl.sh) (../../../omniidl_be/cxycref.py) '-Wb-eE=./E.hh' (../../p7.idl):stdout
+p7.objref.hcp==(%dummy.hcp)+cmd=(../../../omniidl_be/omniidl.sh) (../../../omniidl_be/cxyobjref.py) '-Wb-eE=./E.hh' (../../p7.idl):stdout
+p7.sref.hcp==(%dummy.hcp)+cmd=(../../../omniidl_be/omniidl.sh) (../../../omniidl_be/cxysref.py) '-Wb-eE=./E.hh' (../../p7.idl):stdout
 
 %test-transient==()+cmd=(%test-transient.sh) (%p1-main):exec.output
 
