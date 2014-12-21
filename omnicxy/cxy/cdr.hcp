@@ -27,6 +27,26 @@ class cdr
 };
 
 template<>
+class cdr<uint8_t>
+{
+public:
+  static uint8_t unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
+  {
+    uint8_t result(s.unmarshalOctet());
+    return result;
+  }
+  static void marshal(uint8_t const x, cdrStream& s) throw()
+  {
+    s.marshalOctet(x);
+  }
+};
+
+  
+template<>
 class cdr<uint16_t>
 {
 public:

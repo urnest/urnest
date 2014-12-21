@@ -32,11 +32,6 @@
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-duplicate-name==test-duplicate-name.cc+(%cxx-opts):auto.cxx.exe
 
-%dummy.hcp==<<
-
-%dummy.hh==<<
-
-
 %test-transient==()+cmd=(%test-transient.sh) (%p1-main):exec.output
 
 %test-transient.sh == ! <<

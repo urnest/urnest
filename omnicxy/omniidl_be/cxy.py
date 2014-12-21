@@ -30,6 +30,7 @@ class TypeInfo:
     pass
 
 basicIntTypes={
+    idltype.tk_octet:   TypeInfo('uint8_t',['<stdint.h>']),
     idltype.tk_short:   TypeInfo('int16_t',['<stdint.h>']),
     idltype.tk_long:    TypeInfo('int32_t',['<stdint.h>']),
     idltype.tk_ushort:  TypeInfo('uint16_t',['<stdint.h>']),
