@@ -3,7 +3,12 @@
 
 %run-all-tests==%all-tests.tree:leaves
 
-%gen==(..%all.idl.sm)+hcp-split=(../../../hcp/hcp-split)+cxy-be-dir=(../../omniidl_be)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy
+%gen==(..%all.idl.sm)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy
+
+#above %gen assumes OMNICXY_BE_DIR environment variable passed to cache
+#creation, otherwise could use
+#%gen==(..%all.idl.sm)+hcp-split=(../../../hcp/hcp-split)+cxy-be-dir=(../../omniidl_be)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy
+
 
 %all-tests.tree==<<
 ()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p1-main) '3735' 'both':exec.output

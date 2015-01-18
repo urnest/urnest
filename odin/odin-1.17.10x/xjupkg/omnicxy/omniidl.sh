@@ -2,12 +2,14 @@
 
 source="$1" && shift &&
 hcpsplit="$1" && shift &&
+bedirs="$ODIN_OMNICXY_BE_DIR" &&
 if [ -z "$1" ]
 then
-  bedirs=""
+  bedirs="$ODIN_OMNICXY_BE_DIR"
 else
-  bedirs=$(cat "$1") 
+  bedirs=$(echo $ODIN_OMNICXY_BE_DIR && cat "$1") 
 fi && shift &&
+
 if [ -z "$1" ]
 then
   beopts=""
