@@ -39,7 +39,7 @@ $ODIN_OMNICXY_OMNIIDL 'name of omniidl program' = 'omniidl';
 
 +cxy 'flags to pass to omniidl cxy backend (omit the -Wb)' ? => :cat;
 
-EXEC (omniidl.sh) (:IDL) (+hcp-split) (+cxy-be-dir) (+cxy)
+EXEC (omniidl.sh) (:IDL) (+hcp-split) (+cxy-be-dir) (+cxy) (+inc_sp)
   NEEDS (+cxy-be-dir:list:map=:list) (:IDL:lookup=:hash_inc_all)
   => (:omnicxy.output);
 

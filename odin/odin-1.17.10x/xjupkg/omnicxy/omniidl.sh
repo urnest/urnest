@@ -17,8 +17,15 @@ else
   beopts=$(cat "$1") 
 fi && shift &&
 
+if [ -n "$1" ]
+then
+  incsp=$(cat "$1")
+fi && shift &&
+
 pflags=$(for x in $bedirs ; do echo "-p$x"; done) &&
 beflags=$(for x in $beopts ; do echo "-Wb$x"; done) &&
+iflags=$(for x in $incsp ; do echo "-I$x"; done) &&
+flags="$pflags $iflags" &&
 
 if [ -z "$hcpsplit" ]
 then
@@ -49,16 +56,16 @@ mkdir omnicxy.output &&
   b=$(basename "$source" .idl) &&
   
   omniidl=$ODIN_OMNICXY_OMNIIDL &&
-  verbose "$omniidl $pflags -b cxy $beflags $source" &&
-  "$omniidl" $pflags -b cxy $beflags "$source" > "$b.hcp" &&
-  verbose "$omniidl $pflags -b cxycdr $beflags $source" &&
-  "$omniidl" $pflags -b cxycdr $beflags "$source" > "$b.cdr.hcp" &&
-  verbose "$omniidl $pflags -b cxycref $beflags $source" &&
-  "$omniidl" $pflags -b cxycref $beflags "$source" > "$b.cref.hcp" &&
-  verbose "$omniidl $pflags -b cxyobjref $beflags $source" &&
-  "$omniidl" $pflags -b cxyobjref $beflags "$source" > "$b.objref.hcp" &&
-  verbose "$omniidl $pflags -b cxysref $beflags $source" &&
-  "$omniidl" $pflags -b cxysref $beflags "$source" > "$b.sref.hcp" &&
+  verbose "$omniidl $flags -b cxy $beflags $source" &&
+  "$omniidl" $flags -b cxy $beflags "$source" > "$b.hcp" &&
+  verbose "$omniidl $flags -b cxycdr $beflags $source" &&
+  "$omniidl" $flags -b cxycdr $beflags "$source" > "$b.cdr.hcp" &&
+  verbose "$omniidl $flags -b cxycref $beflags $source" &&
+  "$omniidl" $flags -b cxycref $beflags "$source" > "$b.cref.hcp" &&
+  verbose "$omniidl $flags -b cxyobjref $beflags $source" &&
+  "$omniidl" $flags -b cxyobjref $beflags "$source" > "$b.objref.hcp" &&
+  verbose "$omniidl $flags -b cxysref $beflags $source" &&
+  "$omniidl" $flags -b cxysref $beflags "$source" > "$b.sref.hcp" &&
   
   verbose "$hcpsplit -l 0 $b.hcp $b.hh $b.cc" &&
   "$hcpsplit" -l 0 "$b.hcp" "$b.hh" "$b.cc" &&

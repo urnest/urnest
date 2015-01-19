@@ -3,7 +3,7 @@
 
 %run-all-tests==%all-tests.tree:leaves
 
-%gen==(..%all.idl.sm)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy
+%gen==(..%all.idl.sm)+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy
 
 #above %gen assumes OMNICXY_BE_DIR environment variable passed to cache
 #creation, otherwise could use
@@ -26,6 +26,7 @@
 %cxx-opts==<<
 +(../..%cxx-opts)
 +inc_sp=(%gen)
++inc_sp=(%genroot.v:vir_dir)
 
 %p1-main==p1-main.cc+(%cxx-opts):auto.cxx.exe
 %p2-main==p2-main.cc+(%cxx-opts):auto.cxx.exe
@@ -46,4 +47,10 @@ export LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib &&
 p1main="$1" &&
 { x=$($p1main 3733 client 2>&1) ; test $? = 1 ; } &&
 echo "$x" | fgrep TRANSIENT
+
+%genroot.v==<<
+%omnicxy==.%omnicxy.v:vir_dir
+
+%omnicxy.v==<<
+%proto==.%gen
 
