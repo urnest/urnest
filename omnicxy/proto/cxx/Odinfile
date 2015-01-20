@@ -4,12 +4,14 @@
 %p1-main
 %p2-main
 %p6-main
+%p9-main
 %all-tests.tree
 
 %all-tests.tree==<<
 ()+cmd=(%p1-main) '6735' 'both':exec.output
 ()+cmd=(%p2-main) '6736' 'both':exec.output
 ()+cmd=(%p6-main) '6740' 'both':exec.output
+()+cmd=(%p9-main) '6740' 'both':exec.output
 
 %dummy.hh==<<
 
@@ -53,4 +55,11 @@ p5.cc==(%dummy.hh)+cmd=cat (%p5.cxx.files+member='p5SK.cc':extract_file):stdout
 
 p6.hh==(%dummy.hh)+cmd=cat (%p6.cxx.files+member='p6.hh':extract_file):stdout
 p6.cc==(%dummy.hh)+cmd=cat (%p6.cxx.files+member='p6SK.cc':extract_file):stdout
+
+%p9-main==p9-main.cc+(%cxx-opts)+inc_sp=(/usr/local/omniORB-4.2.0/include)+lib_sp=(/usr/local/omniORB-4.2.0/lib)+lib='omniORB4' 'omnithread':auto.cxx.exe
+
+%p9.cxx.files==../p9.idl+cmd=(/usr/local/omniORB-4.2.0/bin/omniidl) '-bcxx' (../p9.idl)+need=(../p9.idl:hash_inc_all):exec.files
+
+p9.hh==(%dummy.hh)+cmd=cat (%p9.cxx.files+member='p9.hh':extract_file):stdout
+p9.cc==(%dummy.hh)+cmd=cat (%p9.cxx.files+member='p9SK.cc':extract_file):stdout
 
