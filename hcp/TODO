@@ -1,3 +1,15 @@
+* hcp split does not work for:
+
+namespace s {
+struct X : ::X
+{
+  X(P p):
+   ::X(p) {
+  }
+};
+}
+... cons is not put in .cpp
+
 x add option to turn off file+line tracking for generated .hh as it
   causes unnecessary recompilation of dependencies (could generate a
   separate map, but would then need editor or compiler to recognise and
