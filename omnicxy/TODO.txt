@@ -209,3 +209,8 @@ x clean up xju::Exceptions, get it back to a minimum of function
 x make p1.hh // impl in p1.sref.hcp
 
 - allow servant to throw base exception
+
+
+---------------------------------------------
+
+xju@xjutv:~/urnest$ ODIN_OMNICXY_PATH=/usr/local/omniORB-4.2.0/bin:/usr/bin:/bin ODIN_OMNICXY_BE_DIR=~/urnest/omnicxy/omniidl_be  ODIN_CXX_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib ODIN_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib ODIN_CXX_I=/usr/local/omniORB-4.2.0/include odin/create-linux-cache.sh $ODIN

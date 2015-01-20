@@ -11,17 +11,17 @@
 
 
 %all-tests.tree==<<
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p1-main) '3735' 'both':exec.output
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p2-main) '3736' 'both':exec.output
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p3-main) '3737' 'both':exec.output
+()+cmd=(%p1-main) '3735' 'both':exec.output
+()+cmd=(%p2-main) '3736' 'both':exec.output
+()+cmd=(%p3-main) '3737' 'both':exec.output
 %test-transient
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p4-main) '3738' 'both':exec.output
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p5-main) '3739' 'both':exec.output
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p6-main) '3740' 'both':exec.output
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p7-main) '3741' 'both':exec.output
+()+cmd=(%p4-main) '3738' 'both':exec.output
+()+cmd=(%p5-main) '3739' 'both':exec.output
+()+cmd=(%p6-main) '3740' 'both':exec.output
+()+cmd=(%p7-main) '3741' 'both':exec.output
 %test-transient
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%test-no-such-object) '3750':exec.output
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%test-duplicate-name) '3751':exec.output
+()+cmd=(%test-no-such-object) '3750':exec.output
+()+cmd=(%test-duplicate-name) '3751':exec.output
 
 %cxx-opts==<<
 +(../..%cxx-opts)

@@ -85,8 +85,8 @@ sref_impl.cc==%sref_impl/sref_impl.cc
 
 
 %tests.tree==<<
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (test-Exception.cc+(%cxx-opts):auto.cxx.exe):stdout
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (test-port-in-use.cc+(%cxx-opts):auto.cxx.exe) '3736':stdout
+()+cmd=(test-Exception.cc+(%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-port-in-use.cc+(%cxx-opts):auto.cxx.exe) '3736':stdout
 
 %cxx-opts==<<
 +(..%cxx-opts)

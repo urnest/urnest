@@ -7,9 +7,9 @@
 %all-tests.tree
 
 %all-tests.tree==<<
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p1-main) '6735' 'both':exec.output
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p2-main) '6736' 'both':exec.output
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p6-main) '6740' 'both':exec.output
+()+cmd=(%p1-main) '6735' 'both':exec.output
+()+cmd=(%p2-main) '6736' 'both':exec.output
+()+cmd=(%p6-main) '6740' 'both':exec.output
 
 %dummy.hh==<<
 

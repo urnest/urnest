@@ -11,13 +11,13 @@
 +inc_sp=(%genroot.v:vir_dir)
 
 %all-tests.tree==<<
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p1-main) '4734' 'both':exec.output
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p2-main) '4735' 'both':exec.output
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%p7-main) '4741' 'both':exec.output
+()+cmd=(%p1-main) '4734' 'both':exec.output
+()+cmd=(%p2-main) '4735' 'both':exec.output
+()+cmd=(%p7-main) '4741' 'both':exec.output
 %test-transient
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (test-port-in-use.cc+(%cxx-opts):auto.cxx.exe) '4736':stdout
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%test-no-such-object) '4742':exec.output
-()+cmd=env 'LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib' (%test-wrong-type) '4743':exec.output
+()+cmd=(test-port-in-use.cc+(%cxx-opts):auto.cxx.exe) '4736':stdout
+()+cmd=(%test-no-such-object) '4742':exec.output
+()+cmd=(%test-wrong-type) '4743':exec.output
 
 
 %p1-main==p1-main.cc+(%cxx-opts):auto.cxx.exe
