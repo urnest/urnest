@@ -1,0 +1,7 @@
+module p9
+{
+  interface F
+  {
+    void f1();
+  };
+};

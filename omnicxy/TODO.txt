@@ -161,6 +161,9 @@ x p6.idl
     with extra attributes
 
 - p9.idl:
+  - oneway
+
+- p10.idl:
   - enum param, return
 
 - inherit interface
