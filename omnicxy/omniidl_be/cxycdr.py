@@ -8,7 +8,7 @@ from cxy import unqualifiedType
 
 interface_t='''\
 template<>
-class cdr< ::%(fqn)s>
+class cdr< ::%(fqn)s >
 {
 public:
   static const char repoId[]="%(repoId)s";
@@ -17,7 +17,7 @@ public:
 
 struct_t='''\
 template<>
-class cdr< ::%(name)s>
+class cdr< ::%(name)s >
 {
 public:
   static ::%(name)s unmarshalFrom(cdrStream& s) 
@@ -38,15 +38,15 @@ def gen_struct(name,memberTypesAndNames):
     memberNames=[_[1] for _ in memberTypesAndNames]
     memberTypes=[_[0] for _ in memberTypesAndNames]
     paramNames=['p%s'%i for i in range(1,len(memberTypesAndNames)+1)]
-    memberUnmarshals=''.join(['\n    %(t)s const %(pn)s(cdr< %(t)s>::unmarshalFrom(s));'%vars() for t,pn in zip(memberTypes,paramNames)])
+    memberUnmarshals=''.join(['\n    %(t)s const %(pn)s(cdr< %(t)s >::unmarshalFrom(s));'%vars() for t,pn in zip(memberTypes,paramNames)])
     consparams=', '.join([pn for pn in paramNames])
-    memberMarshals=''.join(['\n    cdr< %(t)s>::marshal(x.%(n)s,s);'%vars() for t,n in zip(memberTypes,memberNames)])
+    memberMarshals=''.join(['\n    cdr< %(t)s >::marshal(x.%(n)s,s);'%vars() for t,n in zip(memberTypes,memberNames)])
     return struct_t%vars()
 
 #see also mapped_exception_t below
 exception_t='''\
 template<>
-class cdr< ::%(name)s>
+class cdr< ::%(name)s >
 {
 public:
   static ::%(name)s unmarshalFrom(cdrStream& s) 
@@ -69,15 +69,15 @@ def gen_exception(name,repoId,memberTypesAndNames,eclass):
     memberNames=[_[1] for _ in memberTypesAndNames]
     memberTypes=[_[0] for _ in memberTypesAndNames]
     paramNames=['p%s'%i for i in range(1,len(memberTypesAndNames)+1)]
-    memberUnmarshals=''.join(['\n    %(t)s const %(pn)s(cdr< %(t)s>::unmarshalFrom(s));'%vars() for t,pn in zip(memberTypes,paramNames)])
+    memberUnmarshals=''.join(['\n    %(t)s const %(pn)s(cdr< %(t)s >::unmarshalFrom(s));'%vars() for t,pn in zip(memberTypes,paramNames)])
     consparams=''.join([pn+',' for pn in paramNames])
-    memberMarshals=''.join(['\n    cdr< %(t)s>::marshal(x.%(n)s,s);'%vars() for t,n in zip(memberTypes,memberNames)])
+    memberMarshals=''.join(['\n    cdr< %(t)s >::marshal(x.%(n)s,s);'%vars() for t,n in zip(memberTypes,memberNames)])
     return exception_t%vars()
 
 #see also exception_t above
 mapped_exception_t='''\
 template<>
-class cdr< ::%(name)s>
+class cdr< ::%(name)s >
 {
 public:
   static ::%(name)s unmarshalFrom(cdrStream& s) 
@@ -101,11 +101,11 @@ def mapped_marshal(t,n,
                    contextMemberExpression):
     if t==causeType:
         causeMemberExpression=causeMemberExpression or n
-        return '\n    cdr< %(t)s>::marshal(%(t)s(x.%(causeMemberExpression)s),s);'%vars()
+        return '\n    cdr< %(t)s >::marshal(%(t)s(x.%(causeMemberExpression)s),s);'%vars()
     elif t==contextType:
         contextMemberExpression=contextMemberExpression or n
-        return '\n    cdr< %(t)s>::marshal(%(t)s(x.%(contextMemberExpression)s.begin(),x.%(contextMemberExpression)s.end()),s);'%vars()
-    return '\n    cdr< %(t)s>::marshal(x.%(n)s,s);'%vars() 
+        return '\n    cdr< %(t)s >::marshal(%(t)s(x.%(contextMemberExpression)s.begin(),x.%(contextMemberExpression)s.end()),s);'%vars()
+    return '\n    cdr< %(t)s >::marshal(x.%(n)s,s);'%vars() 
     
 def gen_mapped_exception(name,repoId,memberTypesAndNames,
                          eclass,causeType,contextType,
@@ -113,7 +113,7 @@ def gen_mapped_exception(name,repoId,memberTypesAndNames,
     memberNames=[_[1] for _ in memberTypesAndNames]
     memberTypes=[_[0] for _ in memberTypesAndNames]
     paramNames=['p%s'%i for i in range(1,len(memberTypesAndNames)+1)]
-    memberUnmarshals=''.join(['\n    %(t)s const %(pn)s(cdr< %(t)s>::unmarshalFrom(s));'%vars() for t,pn in zip(memberTypes,paramNames)])
+    memberUnmarshals=''.join(['\n    %(t)s const %(pn)s(cdr< %(t)s >::unmarshalFrom(s));'%vars() for t,pn in zip(memberTypes,paramNames)])
     consparams=','.join(paramNames)
     memberMarshals=''.join([mapped_marshal(t,n,
                                            causeType,contextType,
