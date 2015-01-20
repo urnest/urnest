@@ -378,7 +378,6 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
         name=decl.identifier()
         params=','.join(['\n  %s& %s'%(ptype(p),p.identifier()) \
                              for p in decl.parameters()])
-        assert not decl.oneway(), 'oneway not yet implemented'
         assert len(decl.contexts())==0, 'contexts not yet implemented'
         exceptionTypes=['::'.join(_.scopedName()) for _ in decl.raises()]
         exceptions=''.join(['\n  %(_)s,'%vars() for _ in exceptionTypes])

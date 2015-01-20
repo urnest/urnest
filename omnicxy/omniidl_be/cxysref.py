@@ -73,7 +73,7 @@ public:
 
 dispatcher_t='''
   if (omni::strMatch(op, "%(name)s")) {
-    calldesc< ::%(fqn)s>::%(name)s c(%(name)s::lcfn, "%(name)s", %(nameLen)s+1, 0, %(name)s::_user_exns, %(user_exns_size)s, 1);
+    calldesc< ::%(fqn)s>::%(name)s c(%(name)s::lcfn, "%(name)s", %(nameLen)s+1, %(oneway)s, %(name)s::_user_exns, %(user_exns_size)s, 1);
     _handle.upcall(impl_, c);
     return 1;
   }
@@ -209,7 +209,6 @@ def genOperation(decl,eclass,eheader,indent,fqn):
     if returnType != 'void':
         callDescReturnValue='c->r_ ='
         pass
-    assert not decl.oneway(), 'oneway not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     catches=''.join([genCatch('::'.join(_.scopedName())) \
                                   for _ in decl.raises()])
@@ -221,7 +220,8 @@ def genDispatcher(decl,eclass,eheader,indent,fqn):
     assert isinstance(decl, idlast.Operation), repr(decl)
     name=decl.identifier()
     nameLen=len(name)
-    assert not decl.oneway(), 'oneway not yet implemented'
+    oneway=0
+    if decl.oneway(): oneway=1
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     user_exns_size=len(decl.raises())
     result=reindent(indent,dispatcher_t%vars())
@@ -240,7 +240,6 @@ def genCalldesc(decl,eclass,eheader,indent,fqn):
         returnMember= '\n    xju::Optional< %(returnType)s> r_;'%vars()
         returnMarshal='\n      cxy::cdr< %(returnType)s>::marshal(r_.value(),s);'%vars()
         pass
-    assert not decl.oneway(), 'oneway not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     
     result=calldesc_t%vars()

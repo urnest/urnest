@@ -122,13 +122,13 @@ p9::_objref_F::_ptrToObjRef(const char* id)
 // Code for p9::F::f1
 
 // Proxy call descriptor class. Mangled signature:
-//  void
+//  _wvoid
 class _0RL_cd_c6f737071337bfb6_00000000
   : public omniCallDescriptor
 {
 public:
   inline _0RL_cd_c6f737071337bfb6_00000000(LocalCallFn lcfn, const char* op_, size_t oplen, _CORBA_Boolean upcall=0)
-    : omniCallDescriptor(lcfn, op_, oplen, 0, _user_exns, 0, upcall)
+    : omniCallDescriptor(lcfn, op_, oplen, 1, _user_exns, 0, upcall)
   {
     
   }

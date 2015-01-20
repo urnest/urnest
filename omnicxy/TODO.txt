@@ -160,8 +160,8 @@ x p6.idl
   - exception with cause and context mapped to BaseException and
     with extra attributes
 
-- p9.idl:
-  - oneway
+x p9.idl:
+  x oneway
 
 - p10.idl:
   - enum param, return
@@ -180,6 +180,7 @@ x test duplicate object name exception
 - add a two-process client server test
   - cxx->cxy, for each single-process test
   - cxy->cxx, for each single-process test
+  - p9 test should verify oneway is asynchronous
 
 - allow cref cons/assign from super-class-cref
 

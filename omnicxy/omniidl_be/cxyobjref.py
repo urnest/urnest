@@ -45,7 +45,7 @@ public:
     size_t oplen,
     _CORBA_Boolean upcall%(params)s) throw():
       omniCallDescriptor(
-        &%(name)s::lcfn, op_, oplen, 0, _user_exns, %(user_exns_size)s, upcall)%(paramInits)s
+        &%(name)s::lcfn, op_, oplen, %(oneway)s, _user_exns, %(user_exns_size)s, upcall)%(paramInits)s
   {
   }
   %(paramMembers)s%(returnMember)s
@@ -184,7 +184,8 @@ def genCalldesc(decl,eclass,eheader,indent,fqn):
         returnUnmarshal='\n    r_=cxy::cdr< %(returnType)s>::unmarshalFrom(s);'%vars()
         callDescReturnValue='\n    cd->r_='
         pass
-    assert not decl.oneway(), 'oneway not yet implemented'
+    oneway=0
+    if decl.oneway(): oneway=1
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     user_exns=''.join(['\n    "%s",'%_.repoId() for _ in decl.raises()])
     userExceptions=''.join([genCalldescUserException(_) for _ in decl.raises()])
@@ -199,7 +200,6 @@ def genObjref(decl,eclass,eheader,indent,fqn):
     pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
     params=','.join(['\n  %s& %s'%(ptype(p),n) for p,n in zip(decl.parameters(),pns)])
     paramNames=''.join([',\n      %s'%n for n in pns])
-    assert not decl.oneway(), 'oneway not yet implemented'
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     returnType=unqualifiedType(decl.returnType())
     returnValue=''
