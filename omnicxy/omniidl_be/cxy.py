@@ -205,6 +205,8 @@ def gen_struct(name,memberTypesAndNames):
 exception_t='''\
 struct %(name)s : %(eclass)s
 {
+  ~%(name)s() throw(){}
+
   %(name)s(%(consparams)s
     // %(eclass)s params
     std::string const& cause, 
@@ -263,6 +265,8 @@ def gen_exception(name,memberTypesAndNames,eclass):
 mapped_exception_t='''\
 struct %(name)s : %(eclass)s
 {
+  ~%(name)s() throw(){}
+
   %(name)s(%(consparams)s) throw():
       %(eclass)s(
         %(causeParamName)s.first, 
