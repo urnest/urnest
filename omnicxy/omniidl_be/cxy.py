@@ -9,7 +9,7 @@ interface_t='''\
 class %(name)s
 {
 public:
-  virtual ~F() throw()
+  virtual ~%(name)s() throw()
   {
   }
 %(content)s
