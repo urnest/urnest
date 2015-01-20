@@ -278,14 +278,14 @@ struct %(name)s : %(eclass)s
 
   // pre: %(eclass)s(T) constructs a %(eclass)s
   template<class T>
-  explicit E1(
+  explicit %(name)s(
     T const& p) throw():
       %(eclass)s(p) {
   }
   
   // pre: %(eclass)s(T1,T2) constructs a %(eclass)s
   template<class T1, class T2>
-  explicit E1(
+  explicit %(name)s(
     T1 const& p1,
     T2 const& p2) throw():
       %(eclass)s(p1,p2) {
