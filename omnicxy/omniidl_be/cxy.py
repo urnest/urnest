@@ -33,8 +33,10 @@ basicIntTypes={
     idltype.tk_octet:   TypeInfo('uint8_t',['<stdint.h>']),
     idltype.tk_short:   TypeInfo('int16_t',['<stdint.h>']),
     idltype.tk_long:    TypeInfo('int32_t',['<stdint.h>']),
+    idltype.tk_longlong:    TypeInfo('int64_t',['<stdint.h>']),
     idltype.tk_ushort:  TypeInfo('uint16_t',['<stdint.h>']),
     idltype.tk_ulong:   TypeInfo('uint32_t',['<stdint.h>']),
+    idltype.tk_ulonglong:   TypeInfo('uint64_t',['<stdint.h>']),
 }
 basicFloatTypes={
     idltype.tk_double: TypeInfo('double',[]),

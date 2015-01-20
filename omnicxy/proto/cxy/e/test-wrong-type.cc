@@ -42,14 +42,16 @@ public:
     int32_t const& b, 
     double const& c, 
     std::string const& d,
-    uint8_t const& e) throw(E)
+    uint8_t const& e,
+    uint64_t const& f) throw(E)
   {
     std::cout << "F::f1(" 
               << a << ", "
               << b << ", "
               << c << ", "
               << d << ", "
-              << e << ")" << std::endl;
+              << e << ", "
+              << f << ")" << std::endl;
   }
   virtual int16_t f2() throw(E)
   {

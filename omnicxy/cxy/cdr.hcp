@@ -90,6 +90,28 @@ public:
 
   
 template<>
+class cdr<uint64_t>
+{
+public:
+  static uint64_t unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
+  {
+    uint64_t result;
+    (::CORBA::ULongLong&)result <<= s;
+    return result;
+  }
+  static void marshal(uint64_t const x, cdrStream& s) throw()
+  {
+    ((CORBA::ULongLong)x) >>= s;
+  }
+  
+};
+
+  
+template<>
 class cdr<int16_t>
 {
 public:
@@ -127,6 +149,28 @@ public:
   static void marshal(int32_t const x, cdrStream& s) throw()
   {
     ((CORBA::ULong)x) >>= s;
+  }
+  
+};
+
+  
+template<>
+class cdr<int64_t>
+{
+public:
+  static int64_t unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
+  {
+    int64_t result;
+    (::CORBA::LongLong&)result <<= s;
+    return result;
+  }
+  static void marshal(int64_t const x, cdrStream& s) throw()
+  {
+    ((CORBA::ULongLong)x) >>= s;
   }
   
 };
