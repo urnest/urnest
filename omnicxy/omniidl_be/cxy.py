@@ -66,7 +66,7 @@ def unqualifiedType(t):
 
 def ptype(p):
     assert isinstance(p,idlast.Parameter),p
-    if p.dirtext()=='in':
+    if p.direction()==0: #in
         if p.paramType().kind() in basicParamTypes:
             return basicParamTypes.get(p.paramType().kind()).typename+' const'
         elif p.paramType().kind()==idltype.tk_alias:
