@@ -11,7 +11,7 @@
 ()+cmd=(%p1-main) '6735' 'both':exec.output
 ()+cmd=(%p2-main) '6736' 'both':exec.output
 ()+cmd=(%p6-main) '6740' 'both':exec.output
-()+cmd=(%p9-main) '6740' 'both':exec.output
+()+cmd=(%p9-main) '6743' 'both':exec.output
 
 %dummy.hh==<<
 
@@ -62,4 +62,11 @@ p6.cc==(%dummy.hh)+cmd=cat (%p6.cxx.files+member='p6SK.cc':extract_file):stdout
 
 p9.hh==(%dummy.hh)+cmd=cat (%p9.cxx.files+member='p9.hh':extract_file):stdout
 p9.cc==(%dummy.hh)+cmd=cat (%p9.cxx.files+member='p9SK.cc':extract_file):stdout
+
+%p10-main==p10-main.cc+(%cxx-opts)+inc_sp=(/usr/local/omniORB-4.2.0/include)+lib_sp=(/usr/local/omniORB-4.2.0/lib)+lib='omniORB4' 'omnithread':auto.cxx.exe
+
+%p10.cxx.files==../p10.idl+cmd=(/usr/local/omniORB-4.2.0/bin/omniidl) '-bcxx' (../p10.idl)+need=(../p10.idl:hash_inc_all):exec.files
+
+p10.hh==(%dummy.hh)+cmd=cat (%p10.cxx.files+member='p10.hh':extract_file):stdout
+p10.cc==(%dummy.hh)+cmd=cat (%p10.cxx.files+member='p10SK.cc':extract_file):stdout
 

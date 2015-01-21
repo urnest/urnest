@@ -63,6 +63,8 @@ def unqualifiedType(t):
         assert t.bound()==0, 'bounded sequences not yet implemented'
         itemType=unqualifiedType(t.seqType())
         return 'std::vector< %(itemType)s>'%vars()
+    elif t.kind()==idltype.tk_enum:
+        return ''.join(['::'+_ for _ in t.scopedName()])
     assert False, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
     pass
 
@@ -74,6 +76,8 @@ def ptype(p):
         elif p.paramType().kind()==idltype.tk_alias:
             return ''.join(['::'+_ for _ in p.paramType().scopedName()])+' const'
         elif p.paramType().kind()==idltype.tk_struct:
+            return ''.join(['::'+_ for _ in p.paramType().scopedName()])+' const'
+        elif p.paramType().kind()==idltype.tk_enum:
             return ''.join(['::'+_ for _ in p.paramType().scopedName()])+' const'
         assert False, '%s not implemented, only basic types %s implemented' % (p.paramType().kind(),basicParamTypes.keys())
 
@@ -93,6 +97,8 @@ def tincludes(t):
         return []
     elif t.kind() in [idltype.tk_sequence]:
         return tincludes(t.seqType())
+    elif t.kind() in [idltype.tk_enum]:
+        return []
     assert False, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
 
 def reindent(indent, s):
@@ -359,6 +365,56 @@ def gen_mapped_exception(name,
 
     return mapped_exception_t%vars()
 
+enum_t='''\
+class %(name)s
+{
+public:
+  enum Value {%(valdecls)s
+  };
+  %(name)s(Value v) throw(%(eclass)s):
+    v_(v) {
+    if ((v < %(minValue)s)||(v > %(maxValue)s)){
+      std::ostringstream s;
+      s << v << " is outside allowed range %(minValue)s..%(maxValue)s";
+      throw %(eclass)s(s.str(), std::make_pair(__FILE__,__LINE__));
+    }
+  }
+  friend Value valueOf(%(name)s const& x) throw(){ return x.v_; }
+private:
+  Value v_;
+  friend bool operator<(%(name)s const& x, %(name)s const& y) throw(){
+    return x.v_ < y.v_;
+  }
+  friend bool operator>(%(name)s const& x, %(name)s const& y) throw(){
+    return x.v_ > y.v_;
+  }
+  friend bool operator==(%(name)s const& x, %(name)s const& y) throw(){
+    return x.v_ == y.v_;
+  }
+  friend bool operator!=(%(name)s const& x, %(name)s const& y) throw(){
+    return x.v_ != y.v_;
+  }
+  friend bool operator<=(%(name)s const& x, %(name)s const& y) throw(){
+    return x.v_ <= y.v_;
+  }
+  friend bool operator>=(%(name)s const& x, %(name)s const& y) throw(){
+    return x.v_ >= y.v_;
+  }
+  friend std::ostream& operator<<(std::ostream& s, %(name)s const& x) throw(){
+    switch(x.v_){%(oscases)s
+    }
+    return s << (x.v_);
+  }
+};
+'''
+def gen_enum(name,values,eclass):
+    minValue=0
+    maxValue=len(values)
+    valdecls=','.join(['\n    %s'%_ for _ in values])
+    oscases=''.join(['\n    case %(_)s: return s << "%(_)s";'%vars() \
+                         for _ in values])
+    return enum_t%vars()
+
 def gen(decl,eclass,eheader,causeType,contextType,indent=''):
     result=''
     if isinstance(decl, idlast.Module):
@@ -433,6 +489,12 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
                 indent,
                 gen_exception(name,memberTypesAndNames,eclass))
         pass
+    elif isinstance(decl, idlast.Enum):
+        name=decl.identifier()
+        values=[_.identifier() for _ in decl.enumerators()]
+        result=reindent(
+            indent,
+            gen_enum(name,values,eclass))
     else:
         assert False, repr(decl)
         pass
@@ -481,8 +543,11 @@ def gen_tincludes(decl):
                 pass
             pass
         pass
+    elif isinstance(decl, idlast.Enum):
+        result=['<sstream> // impl','<iostream>']
+        pass
     else:
-        assert False, repr(decl)
+        assert False, (str(decl.__class__),repr(decl))
         pass
     return result
 

@@ -1,4 +1,4 @@
-* hcp split does not work for:
+* hcp split does not work for something like:
 
 namespace s {
 struct X : ::X
@@ -8,7 +8,16 @@ struct X : ::X
   }
 };
 }
-... cons is not put in .cpp
+... cons is not put in .cpp?
+
+* handle class "operator X()" functions
+
+* when generating .cc for class member function, qualify return type
+  if it was defined by the class, eg:
+  struct X{
+    struct Y{};
+    Y f();
+  };
 
 x add option to turn off file+line tracking for generated .hh as it
   causes unnecessary recompilation of dependencies (could generate a

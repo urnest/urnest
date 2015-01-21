@@ -1,0 +1,24 @@
+#include <iostream> // impl
+
+namespace x
+{
+class X
+{
+};
+}
+
+class Y : public ::X
+{
+public:
+  int x_;
+  
+  Y():
+      ::x::X(),
+      x_(2)
+  {
+    std::cout << "OK" << std::endl;
+  }
+};
+
+  
+  

@@ -280,6 +280,8 @@ def gen(decl,eclass,eheader,indent=''):
         pass
     elif isinstance(decl, idlast.Exception):
         pass
+    elif isinstance(decl, idlast.Enum):
+        pass
     else:
         assert False, repr(decl)
         pass

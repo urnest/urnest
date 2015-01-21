@@ -1,0 +1,14 @@
+module p10
+{
+  enum EN
+  {
+    AA,
+    BB,
+    CC
+  };
+  
+  interface F
+  {
+    void f1(in EN a);
+  };
+};

@@ -41,6 +41,11 @@ $ODIN_OMNICXY_OMNIIDL 'name of omniidl program' = 'omniidl';
 
 EXEC (omniidl.sh) (:IDL) (+hcp-split) (+cxy-be-dir) (+cxy) (+inc_sp)
   NEEDS (+cxy-be-dir:list:map=:list) (:IDL:lookup=:hash_inc_all)
+        ($ODIN_OMNICXY_BE_DIR/cxy.py)
+        ($ODIN_OMNICXY_BE_DIR/cxycref.py)
+        ($ODIN_OMNICXY_BE_DIR/cxyobjref.py)
+        ($ODIN_OMNICXY_BE_DIR/cxycdr.py)
+        ($ODIN_OMNICXY_BE_DIR/cxysref.py)
   => (:omnicxy.output);
 
 EXEC (vir_dir_spec.sh) (:omnicxy.output) => (:omnicxy.vir_dir_spec.s);

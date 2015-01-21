@@ -122,6 +122,27 @@ def gen_mapped_exception(name,repoId,memberTypesAndNames,
                                 for t,n in zip(memberTypes,memberNames)])
     return mapped_exception_t%vars()
 
+enum_t='''\
+template<>
+class cdr< ::%(name)s >
+{
+public:
+  static ::%(name)s unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
+  {
+    ::%(name)s::Value v=(::%(name)s::Value)cdr< int32_t >::unmarshalFrom(s);
+    return ::%(name)s(v);
+  }  
+  static void marshal(%(name)s const& x, cdrStream& s) throw()
+  {
+    cdr< int32_t >::marshal(valueOf(x), s);
+  }
+  static const char repoId[]="%(repoId)s";
+};
+'''
 def gen(decl,eclass,eheader,causeType,contextType,
         causeMemberExpression,contextMemberExpression,indent=''):
     result=''
@@ -161,6 +182,10 @@ def gen(decl,eclass,eheader,causeType,contextType,
             result=gen_exception(name,repoId,memberTypesAndNames,eclass)
             pass
         pass
+    elif isinstance(decl, idlast.Enum):
+        name='::'.join(decl.scopedName())
+        repoId=decl.repoId()
+        result=enum_t%vars()
     else:
         assert False, repr(decl)
         pass

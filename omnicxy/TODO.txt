@@ -163,8 +163,8 @@ x p6.idl
 x p9.idl:
   x oneway
 
-- p10.idl:
-  - enum param, return
+x p10.idl:
+  x enum
 
 - inherit interface
 - union
