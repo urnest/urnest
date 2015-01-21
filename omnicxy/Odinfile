@@ -6,4 +6,4 @@ proto%all.tree
 
 
 %cxx-opts==<<
-+(..%cxx-opts)+inc_sp=(.)+lib_sp=(/usr/local/omniORB-4.2.0/lib)+lib='omniORB4' 'omnithread'
++(..%cxx-opts)+inc_sp=(.)+lib='omniORB4' 'omnithread'

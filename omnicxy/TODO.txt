@@ -217,4 +217,4 @@ x make p1.hh // impl in p1.sref.hcp
 
 ---------------------------------------------
 
-xju@xjutv:~/urnest$ ODIN_OMNICXY_PATH=/usr/local/omniORB-4.2.0/bin:/usr/bin:/bin ODIN_OMNICXY_BE_DIR=~/urnest/omnicxy/omniidl_be  ODIN_CXX_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib ODIN_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib ODIN_CXX_I=/usr/local/omniORB-4.2.0/include odin/create-linux-cache.sh $ODIN
+xju@xjutv:~/urnest$ ODIN_LIB_SP="/usr/local/omniORB-4.2.0/lib /lib /usr/lib" ODIN_EXEC_PATH=/usr/local/omniORB-4.2.0/bin:/usr/bin:/bin ODIN_OMNICXY_PATH=/usr/local/omniORB-4.2.0/bin:/usr/bin:/bin ODIN_OMNICXY_BE_DIR=~/urnest/omnicxy/omniidl_be  ODIN_CXX_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib ODIN_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib ODIN_CXX_I=/usr/local/omniORB-4.2.0/include odin/create-linux-cache.sh $ODIN
