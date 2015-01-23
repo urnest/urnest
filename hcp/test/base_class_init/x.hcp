@@ -7,7 +7,7 @@ class X
 };
 }
 
-class Y : public ::X
+class Y : public ::x::X
 {
 public:
   int x_;

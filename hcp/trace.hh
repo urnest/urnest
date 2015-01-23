@@ -23,7 +23,9 @@ class Scope
 public:
   std::string message_;
   xju::Traced t_;
-  
+  bool failed_;
+  void fail() throw(){ failed_=true; }
+
   Scope(std::string const& message, xju::Traced const& t) throw();
   
   ~Scope() throw();

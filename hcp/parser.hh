@@ -270,6 +270,9 @@ public:
       }
       return ParseResult(PV(IRs(1U, new ItemType(a.first)), a.second));
     }
+    if (o.trace_) {
+      scope->fail();
+    }
     return r;
   }
   // Parser::

@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
                 << " [-v] [-t] <input-file>" << std::endl;
       std::cout << "-t, trace " << std::endl
                 << "-v, verbose" << std::endl
-                << "-o <offset>, start parsing at offset (default 0)"
+                << "-o <offset>, report what is at offset (default 0)"
                 << "\n";
       return 1;
     }

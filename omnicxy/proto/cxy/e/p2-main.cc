@@ -43,7 +43,8 @@ public:
     double const& c, 
     std::string const& d,
     uint8_t const& e,
-    uint64_t const& f) throw(E)
+    uint64_t const& f,
+    bool const& g) throw(E)
   {
     std::cout << "F::f1(" 
               << a << ", "
@@ -51,9 +52,10 @@ public:
               << c << ", "
               << d << ", "
               << e << ", "
-              << f << ")" << std::endl;
+              << f << ", "
+              << g << ")" << std::endl;
     calls_.push_back(xju::Shared<Call>(
-                       new Call::f1(a,b,c,d,e,f)));
+                       new Call::f1(a,b,c,d,e,f,g)));
   }
   virtual int16_t f2() throw(E)
   {
@@ -80,13 +82,15 @@ public:
        double const& c, 
        std::string const& d,
        uint8_t const& e,
-       uint64_t const& f) throw():
+       uint64_t const& f,
+       bool const& g) throw():
         a_(a),
         b_(b),
         c_(c),
         d_(d),
         e_(e),
-        f_(f) {
+        f_(f),
+        g_(g) {
     }
     int16_t a_;
     int32_t b_;
@@ -94,6 +98,7 @@ public:
     std::string  d_;
     uint8_t e_;
     uint64_t f_;
+    bool g_;
     
     friend bool operator==(f1 const& x, f1 const& y) throw()
     {
@@ -103,13 +108,21 @@ public:
                          x.c_,
                          std::make_pair(
                            x.d_,
-                           std::make_pair(x.e_, x.f_))))==
+                           std::make_pair(
+                             x.e_, 
+                             std::make_pair(
+                               x.f_,
+                               x.g_)))))==
         std::make_pair(std::make_pair(y.a_,y.b_),
                        std::make_pair(
                          y.c_,
                          std::make_pair(
                            y.d_,
-                           std::make_pair(y.e_, y.f_))));
+                           std::make_pair(
+                             y.e_, 
+                             std::make_pair(
+                               y.f_,
+                               y.g_)))));
     }
   };
   struct Call::f2 : Call
@@ -141,7 +154,7 @@ int main(int argc, char* argv[])
     if (argv[2]==std::string("client")) {
       cxy::ORB<E> orb("giop:tcp::");
       cxy::cref<p2::F> ref(orb, makeURI(port, OBJECT_NAME));
-      ref->f1(1, 2, 3.4, "fred",'k',82);
+      ref->f1(1, 2, 3.4, "fred",'k',82,true);
       std::cout << ref->f2() << std::endl;
     }
     else if (argv[2]==std::string("server")) {
@@ -164,12 +177,12 @@ int main(int argc, char* argv[])
       cxy::sref<p2::F> const xa(orb, OBJECT_NAME, x);
       
       cxy::cref<p2::F> ref(orb, makeURI(port, OBJECT_NAME));
-      ref->f1(1, 2, 3.4, "fred",'k',82);
+      ref->f1(1, 2, 3.4, "fred",'k',82,true);
       xju::assert_equal(x.calls_.size(),1U);
       {
         F_impl::Call::f1 const& c(
           dynamic_cast<F_impl::Call::f1 const&>(*x.calls_[0]));
-        xju::assert_equal(c, F_impl::Call::f1(1,2,3.4,"fred",'k',82));
+        xju::assert_equal(c, F_impl::Call::f1(1,2,3.4,"fred",'k',82,true));
       }
       xju::assert_equal(ref->f2(),22);
       xju::assert_equal(x.calls_.size(),2U);

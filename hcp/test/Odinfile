@@ -6,6 +6,8 @@
 classpecialize%all-tests.tree
 static_var_def%all-tests.tree
 friend_function%all-tests.tree
+base_class_init%all-tests.tree
+nested_namespace%all-tests.tree
 
 %opts==<<
 +inc_sp=(%gendir)

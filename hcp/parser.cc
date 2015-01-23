@@ -1361,47 +1361,36 @@ PR anonymous_namespace(new NamedParser<hcp_ast::AnonymousNamespace>(
 
 namespace
 {
-class ParseNamespace : public Parser
+class ParseNamespace : public NamedParser<hcp_ast::NamespaceDef>
 {
 public:
   PR x_;
   
   ParseNamespace() throw():
-    x_(parseLiteral("namespace")+
-       whitespace+
-       new NamedParser<hcp_ast::NamespaceName>(
-         "namespace name",
-         parseUntil(parseOneOfChars("(){};")))+
-       parseOneOfChars("{")+
-       eatWhite+
-       new NamedParser<hcp_ast::NamespaceMembers>(
-         "namespace members",
-         parseUntil((namespace_leaf|
-                     anonymous_namespace|
-                     PR(new SelfParser(*this)))+
-                    eatWhite,
-                    parseOneOfChars("}")))+
-       parseOneOfChars("}")+
-       eatWhite) {
-  }
-
-  // Parser::
-  virtual ParseResult parse_(I const at, Options const& o) throw() 
-  {
-    return x_->parse_(at, o);
-  }
-
-  // Parser::
-  virtual std::string target() const throw() {
-    return "namespace";
+    NamedParser<hcp_ast::NamespaceDef>(
+      "namespace",(
+        parseLiteral("namespace")+
+        whitespace+
+        new NamedParser<hcp_ast::NamespaceName>(
+          "namespace name",
+          parseUntil(parseOneOfChars("(){};")))+
+        parseOneOfChars("{")+
+        eatWhite+
+        new NamedParser<hcp_ast::NamespaceMembers>(
+          "namespace members",
+          parseUntil((namespace_leaf|
+                      anonymous_namespace|
+                      PR(new SelfParser(*this)))+
+                     eatWhite,
+                     parseOneOfChars("}")))+
+        parseOneOfChars("}")+
+        eatWhite)) {
   }
 };
 
 }
 
-PR namespace_def(new NamedParser<hcp_ast::NamespaceDef>(
-  "namespace",
-  new ParseNamespace));
+PR namespace_def(new ParseNamespace);
 
 namespace
 {

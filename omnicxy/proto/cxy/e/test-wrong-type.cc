@@ -43,7 +43,8 @@ public:
     double const& c, 
     std::string const& d,
     uint8_t const& e,
-    uint64_t const& f) throw(E)
+    uint64_t const& f,
+    bool const& g) throw(E)
   {
     std::cout << "F::f1(" 
               << a << ", "
@@ -51,7 +52,8 @@ public:
               << c << ", "
               << d << ", "
               << e << ", "
-              << f << ")" << std::endl;
+              << f << ", "
+              << g << ")" << std::endl;
   }
   virtual int16_t f2() throw(E)
   {

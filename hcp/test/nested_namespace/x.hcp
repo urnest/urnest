@@ -1,0 +1,16 @@
+#include <iostream> // impl
+
+namespace a
+{
+namespace b
+{
+class Y
+{
+public:
+  void f()
+  {
+    std::cout << "OK" << std::endl;
+  }
+};
+}
+}

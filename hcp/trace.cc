@@ -20,7 +20,8 @@ namespace hcp_trace
 {
 Scope::Scope(std::string const& message, xju::Traced const& t) throw():
   message_(message),
-  t_(t) 
+  t_(t),
+  failed_(false)
 {
   std::cout << "[ " << message_ << " " << t_.file() << ":" << t_.line()
             << std::endl;
@@ -28,7 +29,7 @@ Scope::Scope(std::string const& message, xju::Traced const& t) throw():
 
 Scope::~Scope() throw()
 {
-  std::cout << "]" << (std::uncaught_exception()?"*":" ")
+  std::cout << "]" << ((std::uncaught_exception()||failed_)?"*":" ")
             << message_ << " " << t_.file() << ":" << t_.line()
             << std::endl;
 }
