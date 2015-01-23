@@ -177,6 +177,27 @@ public:
 
   
 template<>
+class cdr<bool>
+{
+public:
+  static bool unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
+  {
+    bool result(s.unmarshalBoolean());
+    return result;
+  }
+  static void marshal(bool const x, cdrStream& s) throw()
+  {
+    s.marshalBoolean(x);
+  }
+  
+};
+
+  
+template<>
 class cdr<double>
 {
 public:

@@ -84,7 +84,7 @@ void client(int argc, char* argv[],
           XJU_TRACED);
       }
       
-      ref->f1(1, 2, 3.4, "fred",'k',82);
+      ref->f1(1, 2, 3.4, "fred",'k',82,true);
       std::cout << ref->f2() << std::endl;
     }
     catch(CORBA::Exception& e) {
@@ -100,7 +100,7 @@ void client(int argc, char* argv[],
 class F_impl : public POA_p2::F
 {
 public:
-  virtual void f1(CORBA::Short a, CORBA::Long b, CORBA::Double c, const char* d, CORBA::Octet e, CORBA::ULongLong f)
+  virtual void f1(CORBA::Short a, CORBA::Long b, CORBA::Double c, const char* d, CORBA::Octet e, CORBA::ULongLong f, CORBA::Boolean g)
   {
     std::cout << "F::f1(" 
               << a << ", "
@@ -108,7 +108,8 @@ public:
               << c << ", "
               << d << ", "
               << e << ", "
-              << f << ")" << std::endl;
+              << f << ", "
+              << g << ")" << std::endl;
   }
   virtual CORBA::Short f2()
   {

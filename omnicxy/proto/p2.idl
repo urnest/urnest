@@ -4,7 +4,7 @@ module p2
 {
   interface F
   {
-    void f1(in short a, in long b, in double c, in string d, in octet e, in unsigned long long f);
+    void f1(in short a, in long b, in double c, in string d, in octet e, in unsigned long long f, in boolean g);
     short f2();
   };
 };
