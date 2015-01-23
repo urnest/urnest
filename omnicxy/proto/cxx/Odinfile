@@ -3,8 +3,12 @@
 %all.tree==<<
 %p1-main
 %p2-main
+%p3.cxx.files
+%p4.cxx.files
+%p5.cxx.files
 %p6-main
 %p9-main
+%p10.cxx.files
 %all-tests.tree
 
 %all-tests.tree==<<
@@ -39,12 +43,12 @@ p2.cc==(%dummy.hh)+cmd=cat (%p2.cxx.files+member='p2SK.cc':extract_file):stdout
 p3.hh==(%dummy.hh)+cmd=cat (%p3.cxx.files+member='p3.hh':extract_file):stdout
 p3.cc==(%dummy.hh)+cmd=cat (%p3.cxx.files+member='p3SK.cc':extract_file):stdout
 
-%p4.cxx.files==../p4.idl+cmd='omniidl' '-bcxx' (../p4.idl)+need=(../p4.idl:hash_inc_all):exec.files
+%p4.cxx.files==../p4.idl+cmd='omniidl' -I (../../..) '-bcxx' (../p4.idl)+need=(../p4.idl:hash_inc_all):exec.files
 
 p4.hh==(%dummy.hh)+cmd=cat (%p4.cxx.files+member='p4.hh':extract_file):stdout
 p4.cc==(%dummy.hh)+cmd=cat (%p4.cxx.files+member='p4SK.cc':extract_file):stdout
 
-%p5.cxx.files==../p5.idl+cmd='omniidl' '-bcxx' (../p5.idl)+need=(../p5.idl:hash_inc_all):exec.files
+%p5.cxx.files==../p5.idl+cmd='omniidl' -I (../../..) '-bcxx' (../p5.idl)+need=(../p5.idl:hash_inc_all):exec.files
 
 p5.hh==(%dummy.hh)+cmd=cat (%p5.cxx.files+member='p5.hh':extract_file):stdout
 p5.cc==(%dummy.hh)+cmd=cat (%p5.cxx.files+member='p5SK.cc':extract_file):stdout
@@ -62,8 +66,6 @@ p6.cc==(%dummy.hh)+cmd=cat (%p6.cxx.files+member='p6SK.cc':extract_file):stdout
 
 p9.hh==(%dummy.hh)+cmd=cat (%p9.cxx.files+member='p9.hh':extract_file):stdout
 p9.cc==(%dummy.hh)+cmd=cat (%p9.cxx.files+member='p9SK.cc':extract_file):stdout
-
-%p10-main==p10-main.cc+(%cxx-opts)+lib='omniORB4' 'omnithread':auto.cxx.exe
 
 %p10.cxx.files==../p10.idl+cmd='omniidl' '-bcxx' (../p10.idl)+need=(../p10.idl:hash_inc_all):exec.files
 
