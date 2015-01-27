@@ -409,8 +409,9 @@ int main(int argc, char* argv[])
       std::cout << "usage: " << argv[0] 
                 << " [-th] [-l <levels>] <input-file> <output-header-file>"
                 << " <output-cpp-file>" << std::endl;
-      std::cout << "-l default to 0, which generates #includes without "
-                << "any directory part" << std::endl;
+      std::cout << "-l defaults to 0, which generates #includes without "
+                << "any directory part; non-zero generates that many levels of relative path in output-cpp-file's include statement for output-header-file"
+                << std::endl;
       std::cout << "-th tracks source file and line in generated header file"
                 << std::endl;
       return 1;
