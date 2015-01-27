@@ -17,7 +17,7 @@ objref_operation_t='''
       _invoke(c);%(returnValue)s
     }
     catch(CORBA::Exception const& ee) {
-      throw cxy::translateException< %(eclass)s>(ee);
+      throw cxy::translateException< %(eclass)s >(ee);
     }
   }
   catch(%(eclass)s& e) {
@@ -28,8 +28,8 @@ objref_operation_t='''
 '''
 
 calldesc_userException_t='''
-    if (omni::strMatch(repoId, cxy::cdr< ::%(fqn)s>::repoId)) {
-      ::%(fqn)s _ex(cxy::cdr< ::%(fqn)s>::unmarshalFrom(s));
+    if (omni::strMatch(repoId, cxy::cdr< ::%(fqn)s >::repoId)) {
+      ::%(fqn)s _ex(cxy::cdr< ::%(fqn)s >::unmarshalFrom(s));
       if (iop_client){
         iop_client->RequestCompleted();
       }
@@ -68,7 +68,7 @@ public:
 
   static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt)
   {
-    ::%(fqn)s* impl=(::%(fqn)s*)svnt->_ptrToInterface(cxy::cdr< ::%(fqn)s>::repoId);
+    ::%(fqn)s* impl=(::%(fqn)s*)svnt->_ptrToInterface(cxy::cdr< ::%(fqn)s >::repoId);
     %(name)s* cd((%(name)s*)calldesc);
     %(callDescReturnValue)s impl->%(name)s(%(callDescInvocationParams)s);
   }
@@ -80,7 +80,7 @@ public:
 
 interface_t='''\
 template<>
-class objref< ::%(fqn)s>:
+class objref< ::%(fqn)s >:
   public virtual ::%(fqn)s,
   public virtual ::CORBA::Object,
   public virtual omniObjRef,
@@ -89,7 +89,7 @@ class objref< ::%(fqn)s>:
 public:
   inline objref()  { _PR_setobj(0); }  // nil
   objref(omniIOR* ior, omniIdentity* id) throw() :
-      omniObjRef(cxy::cdr< ::%(fqn)s>::repoId, ior, id, 1) {
+      omniObjRef(cxy::cdr< ::%(fqn)s >::repoId, ior, id, 1) {
     _PR_setobj(this);
   }
   std::string uri_;
@@ -109,10 +109,10 @@ private:
   // CORBA::Object::
   virtual void* _ptrToObjRef(const char* repoId)
   {
-    if (repoId == cxy::cdr< ::%(fqn)s>::repoId)
+    if (repoId == cxy::cdr< ::%(fqn)s >::repoId)
       return this;
     
-    if (omni::strMatch(repoId, cxy::cdr< ::%(fqn)s>::repoId))
+    if (omni::strMatch(repoId, cxy::cdr< ::%(fqn)s >::repoId))
       return this;
     
     if (repoId == ::CORBA::Object::_PD_repoId)
@@ -126,9 +126,9 @@ private:
 };
 
 template<>
-class pof< ::%(fqn)s> : public omni::proxyObjectFactory {
+class pof< ::%(fqn)s > : public omni::proxyObjectFactory {
 public:
-  pof() : omni::proxyObjectFactory(cxy::cdr< ::%(fqn)s>::repoId){
+  pof() : omni::proxyObjectFactory(cxy::cdr< ::%(fqn)s >::repoId){
   }
   virtual ~pof()
   {
@@ -136,23 +136,23 @@ public:
   
   virtual omniObjRef* newObjRef(omniIOR* ior,omniIdentity* id)
   {
-    return new cxy::objref< ::%(fqn)s>(ior, id);
+    return new cxy::objref< ::%(fqn)s >(ior, id);
   }
   
   virtual _CORBA_Boolean is_a(const char* repoId) const
   {
-    if (repoId==cxy::cdr< ::%(fqn)s>::repoId ||
-        omni::ptrStrMatch(repoId, cxy::cdr< ::%(fqn)s>::repoId)) {
+    if (repoId==cxy::cdr< ::%(fqn)s >::repoId ||
+        omni::ptrStrMatch(repoId, cxy::cdr< ::%(fqn)s >::repoId)) {
       return 1;
     }
     return 0;
   }
 
-  static pof< ::%(fqn)s>& me_() throw()
+  static pof< ::%(fqn)s >& me_() throw()
   {
     return me;
   }
-  static pof< ::%(fqn)s> me;
+  static pof< ::%(fqn)s > me;
 };
 '''
 
@@ -174,14 +174,14 @@ def genCalldesc(decl,eclass,eheader,indent,fqn):
     callDescInvocationParams=','.join(['\n      cd->%s_'%n for n in pns])
     paramInits=''.join([',\n      %s_(%s)'%(n,n) for n in pns])
     paramMembers=''.join(['\n  %s %s_;'%(ptype(p),n) for p,n in zip(decl.parameters(),pns)])
-    paramMarshals=''.join(['\n    cxy::cdr< %s>::marshal(%s_, s);'%(unqualifiedType(p.paramType()),n) for p,n in zip(decl.parameters(),pns)])
+    paramMarshals=''.join(['\n    cxy::cdr< %s >::marshal(%s_, s);'%(unqualifiedType(p.paramType()),n) for p,n in zip(decl.parameters(),pns)])
     returnType=unqualifiedType(decl.returnType())
     returnMember=''
     returnUnmarshal=''
     callDescReturnValue=''
     if returnType != 'void':
-        returnMember='\n  xju::Optional< %(returnType)s> r_;'%vars()
-        returnUnmarshal='\n    r_=cxy::cdr< %(returnType)s>::unmarshalFrom(s);'%vars()
+        returnMember='\n  xju::Optional< %(returnType)s > r_;'%vars()
+        returnUnmarshal='\n    r_=cxy::cdr< %(returnType)s >::unmarshalFrom(s);'%vars()
         callDescReturnValue='\n    cd->r_='
         pass
     oneway=0

@@ -63,7 +63,7 @@ def unqualifiedType(t):
     elif t.kind()==idltype.tk_sequence:
         assert t.bound()==0, 'bounded sequences not yet implemented'
         itemType=unqualifiedType(t.seqType())
-        return 'std::vector< %(itemType)s>'%vars()
+        return 'std::vector< %(itemType)s >'%vars()
     elif t.kind()==idltype.tk_enum:
         return ''.join(['::'+_ for _ in t.scopedName()])
     assert False, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
@@ -146,14 +146,14 @@ struct %(name)s
 '''
 
 pair_t='''\
-struct %(name)s : public std::pair< %(t1)s, %(t2)s>
+struct %(name)s : public std::pair< %(t1)s, %(t2)s >
 {
   %(name)s(%(t1)s const& p1, %(t2)s const& p2) throw():
-     std::pair< %(t1)s, %(t2)s>(p1, p2) {
+     std::pair< %(t1)s, %(t2)s >(p1, p2) {
   }
   template<class T1, class T2>
   explicit %(name)s(std::pair<T1, T2> const& x) throw():
-     std::pair< %(t1)s, %(t2)s>(x) {
+     std::pair< %(t1)s, %(t2)s >(x) {
   }
   friend bool operator<(
     %(name)s const& x, 
@@ -449,18 +449,18 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
             result=reindent(
                 indent,
                 ('class %(name)s_tag {};\n'+
-                 'typedef ::xju::Int<%(name)s_tag,%(aliasOf)s> %(name)s;')%vars())
+                 'typedef ::xju::Int< %(name)s_tag,%(aliasOf)s > %(name)s;')%vars())
         elif aliasOf.kind() in basicFloatTypes:
             aliasOf=unqualifiedType(aliasOf)
             result=reindent(
                 indent,
                 ('class %(name)s_tag {};\n'+
-                 'typedef ::xju::Float<%(aliasOf)s,%(name)s_tag> %(name)s;')%vars())
+                 'typedef ::xju::Float< %(aliasOf)s,%(name)s_tag > %(name)s;')%vars())
         elif aliasOf.kind() in basicStringTypes:
             result=reindent(
                 indent,
                 ('class %(name)s_tag {};\n'+
-                 'typedef ::xju::Tagged<std::string,%(name)s_tag> %(name)s;')%vars())
+                 'typedef ::xju::Tagged<std::string,%(name)s_tag > %(name)s;')%vars())
         else:
             aliasOf=unqualifiedType(aliasOf)
             result=reindent(

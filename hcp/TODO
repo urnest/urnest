@@ -1,15 +1,3 @@
-* hcp split does not work for something like:
-
-namespace s {
-struct X : ::X
-{
-  X(P p):
-   ::X(p) {
-  }
-};
-}
-... cons is not put in .cpp?
-
 * handle class "operator X()" functions
 
 * when generating .cc for class member function, qualify return type

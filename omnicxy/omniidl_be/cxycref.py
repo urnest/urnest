@@ -8,21 +8,21 @@ from cxy import ptype,unqualifiedType
 
 interface_t='''\
 template<>
-class cref< ::%(fqn)s>
+class cref< ::%(fqn)s >
 {
 public:
-  explicit cref(cxy::ORB<%(eclass)s>& orb, std::string const& uri) throw(
+  explicit cref(cxy::ORB< %(eclass)s >& orb, std::string const& uri) throw(
     // no object with specified uri, including server
     // not reachable and server does not know name
-    cxy::Exceptions<%(eclass)s>::NoSuchObject,
+    cxy::Exceptions< %(eclass)s >::NoSuchObject,
     // object with specified uri is not a %(fqn)s
-    cxy::Exceptions<%(eclass)s>::WrongType,
+    cxy::Exceptions< %(eclass)s >::WrongType,
     // other failure, eg communication failure
     %(eclass)s):
       uri_(uri),
-      obj_((&cxy::pof< ::%(fqn)s>::me_(), // force init of static var,
-            (cxy::objref< ::%(fqn)s>*)orb.locate(
-              uri, cxy::cdr< ::%(fqn)s>::repoId)))
+      obj_((&cxy::pof< ::%(fqn)s >::me_(), // force init of static var,
+            (cxy::objref< ::%(fqn)s >*)orb.locate(
+              uri, cxy::cdr< ::%(fqn)s >::repoId)))
   {
     obj_->uri_=uri;
   }
@@ -34,7 +34,7 @@ public:
     if (obj_ && !obj_->_NP_is_nil())  omni::duplicateObjRef(obj_);
   }
 
-  cref< ::%(fqn)s>& operator=(cref< ::%(fqn)s> const& b) throw()
+  cref< ::%(fqn)s >& operator=(cref< ::%(fqn)s > const& b) throw()
   {
     if (this != &b) {
       ::CORBA::release(obj_);
@@ -58,10 +58,18 @@ public:
   {
     return obj_;
   }
+  %(fqn)s& operator*() throw()
+  {
+    return *obj_;
+  }
+  %(fqn)s const& operator*() const throw()
+  {
+    return *obj_;
+  }
   %(content)s
 private:
   std::string uri_;
-  cxy::objref< ::%(fqn)s>* obj_;
+  cxy::objref< ::%(fqn)s >* obj_;
 };
 '''
 

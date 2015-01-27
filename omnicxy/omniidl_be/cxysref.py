@@ -40,7 +40,7 @@ calldesc_t='''
 
 catch_t='''
       catch(::%(fqn)s const& e) {
-        throw cxy::StubUserException< ::%(fqn)s>(e);
+        throw cxy::StubUserException< ::%(fqn)s >(e);
       }'''
 
 operation_t='''
@@ -51,8 +51,8 @@ public:
     //exception spec commented to avoid header dependency on omniORB headers
     //throw(CORBA::UserException)
   {
-    ::%(fqn)s* impl = (::%(fqn)s*) svnt->_ptrToInterface(cxy::cdr< ::%(fqn)s>::repoId);
-    calldesc< ::%(fqn)s>::%(name)s* c=(calldesc< ::%(fqn)s>::%(name)s*)ocd;
+    ::%(fqn)s* impl = (::%(fqn)s*) svnt->_ptrToInterface(cxy::cdr< ::%(fqn)s >::repoId);
+    calldesc< ::%(fqn)s >::%(name)s* c=(calldesc< ::%(fqn)s >::%(name)s*)ocd;
     if (!c->is_upcall()){
       %(callDescReturnValue)s impl->%(name)s(%(callDescInvocationParams)s);
     }
@@ -73,7 +73,7 @@ public:
 
 dispatcher_t='''
   if (omni::strMatch(op, "%(name)s")) {
-    calldesc< ::%(fqn)s>::%(name)s c(%(name)s::lcfn, "%(name)s", %(nameLen)s+1, %(oneway)s, %(name)s::_user_exns, %(user_exns_size)s, 1);
+    calldesc< ::%(fqn)s >::%(name)s c(%(name)s::lcfn, "%(name)s", %(nameLen)s+1, %(oneway)s, %(name)s::_user_exns, %(user_exns_size)s, 1);
     _handle.upcall(impl_, c);
     return 1;
   }
@@ -85,7 +85,7 @@ interface_t='''\
 namespace
 {
 template<>
-class calldesc< ::%(fqn)s>
+class calldesc< ::%(fqn)s >
 {
 public:
 %(calldescs)s
@@ -95,22 +95,22 @@ public:
 namespace cxy
 {
 template<>
-class sref< ::%(fqn)s> :  private sref_if
+class sref< ::%(fqn)s > :  private sref_if
 {
 public:
   // pre: lifetime(x) includes lifetime(this)
   // pre: lifetime(orb) includes lifetime(this)
-  sref(cxy::ORB< %(eclass)s>& orb, 
+  sref(cxy::ORB< %(eclass)s >& orb, 
        std::string const& name,
        ::%(fqn)s& x) throw(
-         cxy::Exceptions< %(eclass)s>::DuplicateName) try:
+         cxy::Exceptions< %(eclass)s >::DuplicateName) try:
       name_(name),
       x_(x),
       c_(guard_),
       impl_deleted_(false),
       impl_(new cxy::sref_impl(orb.impl_, 
                                name, 
-                               cxy::cdr< ::%(fqn)s>::repoId, 
+                               cxy::cdr< ::%(fqn)s >::repoId, 
                                *this))
   {
   }
@@ -119,7 +119,7 @@ public:
     if (typeid(%(eclass)s)==typeid(cxy::Exception)) {
       throw;
     }
-    cxy::Exceptions< %(eclass)s>::DuplicateName ee(
+    cxy::Exceptions< %(eclass)s >::DuplicateName ee(
       e.cause_.first, e.cause_.second);
     for (std::vector<std::pair<std::string, cxy::Exception::FileAndLine> >::const_iterator i=
            e.context_.begin();
@@ -160,13 +160,13 @@ private:
   // sref_if::
   virtual void* _ptrToInterface(const char* id) throw()
   {
-    if (id == cxy::cdr< ::%(fqn)s>::repoId) {
+    if (id == cxy::cdr< ::%(fqn)s >::repoId) {
       return &x_;
     }
     if (id == ::CORBA::Object::_PD_repoId) {
       return (void*) 1;
     }
-    if (omni::strMatch(id, cxy::cdr< ::%(fqn)s>::repoId)) {
+    if (omni::strMatch(id, cxy::cdr< ::%(fqn)s >::repoId)) {
       return &x_;
     }
     if (omni::strMatch(id, ::CORBA::Object::_PD_repoId)) {
@@ -231,14 +231,14 @@ def genCalldesc(decl,eclass,eheader,indent,fqn):
     assert isinstance(decl, idlast.Operation), repr(decl)
     name=decl.identifier()
     pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
-    paramMembers=''.join(['\n    xju::Optional< %s> %s_;'%(unqualifiedType(p.paramType()),n) for p,n in zip(decl.parameters(),pns)])
-    paramUnmarshals=''.join(['\n      %s_=cxy::cdr< %s>::unmarshalFrom(s);'%(n,unqualifiedType(p.paramType())) for p,n in zip(decl.parameters(),pns)])
+    paramMembers=''.join(['\n    xju::Optional< %s > %s_;'%(unqualifiedType(p.paramType()),n) for p,n in zip(decl.parameters(),pns)])
+    paramUnmarshals=''.join(['\n      %s_=cxy::cdr< %s >::unmarshalFrom(s);'%(n,unqualifiedType(p.paramType())) for p,n in zip(decl.parameters(),pns)])
     returnType=unqualifiedType(decl.returnType())
     returnMember=''
     returnMarshal=''
     if returnType != 'void':
-        returnMember= '\n    xju::Optional< %(returnType)s> r_;'%vars()
-        returnMarshal='\n      cxy::cdr< %(returnType)s>::marshal(r_.value(),s);'%vars()
+        returnMember= '\n    xju::Optional< %(returnType)s > r_;'%vars()
+        returnMarshal='\n      cxy::cdr< %(returnType)s >::marshal(r_.value(),s);'%vars()
         pass
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     
