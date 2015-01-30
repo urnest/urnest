@@ -321,13 +321,17 @@ void genNamespaceContent(hcp_ast::IRs const& x,
 class CommandLineOptions
 {
 public:
-  explicit CommandLineOptions(unsigned int dir_levels, bool th) throw():
+  explicit CommandLineOptions(unsigned int dir_levels, 
+                              bool th,
+                              std::string hpath) throw():
       dir_levels_(dir_levels),
-      th_(th)
+      th_(th),
+      hpath_(hpath)
   {
   }
   unsigned int dir_levels_;
   bool th_;
+  std::string hpath_;
 };
 
 // result.second are remaining arguments
@@ -338,6 +342,7 @@ std::pair<CommandLineOptions, std::vector<std::string> > parseCommandLine(
   std::vector<std::string>::const_iterator i(x.begin());
   unsigned int dir_levels=0;
   bool th=false;
+  std::string hpath="";
   
   while((i != x.end()) && ((*i)[0]=='-')) {
     if ((*i)=="-l") {
@@ -349,14 +354,22 @@ std::pair<CommandLineOptions, std::vector<std::string> > parseCommandLine(
       th=true;
       ++i;
     }
+    else if ((*i)=="-hpath") {
+      ++i;
+      hpath=hcp::getOptionValue("-hpath", i, x.end());
+      ++i;
+      if (hpath.size()==0 || (*hpath.rend())!='/') {
+        hpath=hpath+"/";
+      }
+    }
     else {
       std::ostringstream s;
       s << "unknown option " << (*i)
-        << " (only know -l)";
+        << " (only know -l, -th, -hpath)";
       throw xju::Exception(s.str(), XJU_TRACED);
     }
   }
-  return std::make_pair(CommandLineOptions(dir_levels, th), 
+  return std::make_pair(CommandLineOptions(dir_levels, th, hpath), 
                         std::vector<std::string>(i, x.end()));
 }
 
@@ -398,6 +411,13 @@ std::string make_guard(xju::path::AbsolutePath const& pathToInputFile,
     throw;
   }
 }
+std::string make_guard(std::string x) throw()
+{
+  std::transform(x.begin(), x.end(),
+                 x.begin(),
+                 make_guard_char);
+  return x;
+}
 
 int main(int argc, char* argv[])
 {
@@ -407,10 +427,15 @@ int main(int argc, char* argv[])
     
     if (cmd_line.second.size() != 3) {
       std::cout << "usage: " << argv[0] 
-                << " [-th] [-l <levels>] <input-file> <output-header-file>"
+                << " [-th] [-l <levels> | -hpath <path>] <input-file>"
+                << " <output-header-file>"
                 << " <output-cpp-file>" << std::endl;
       std::cout << "-l defaults to 0, which generates #includes without "
                 << "any directory part; non-zero generates that many levels of relative path in output-cpp-file's include statement for output-header-file"
+                << std::endl;
+      std::cout << "-hpath overrides -l, and uses the specified path in"
+                << " output-cpp-file's include statement for"
+                << " output-header-file"
                 << std::endl;
       std::cout << "-th tracks source file and line in generated header file"
                 << std::endl;
@@ -425,9 +450,13 @@ int main(int argc, char* argv[])
     std::pair<xju::path::AbsolutePath, xju::path::FileName> const outputCC(
       xju::path::split(cmd_line.second[2]));
     
-    std::string const guard(make_guard(inputFile.first,
-                                       inputFile.second,
-                                       cmd_line.first.dir_levels_));
+    std::string const guard(
+      cmd_line.first.hpath_.size()?
+        make_guard(cmd_line.first.hpath_+inputFile.second._)
+      : 
+        make_guard(inputFile.first,
+                   inputFile.second,
+                   cmd_line.first.dir_levels_));
     
     std::string const x(xju::readFile(xju::path::str(inputFile)));
 
@@ -454,7 +483,10 @@ int main(int argc, char* argv[])
     
     if (hhinc.size()) {
       fc << "#include <" 
-         << xju::path::str(hhinc, outputHH.second)
+         << (cmd_line.first.hpath_.size()?
+             (cmd_line.first.hpath_+outputHH.second._)
+             :
+             xju::path::str(hhinc, outputHH.second))
          << ">" << std::endl
          << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
     }
@@ -472,6 +504,7 @@ int main(int argc, char* argv[])
       root.items_.front()->asA<hcp_ast::File>().items_, oh, oc);
     
     fh << "#endif" << std::endl;
+    return 0;
   }
   catch(xju::Exception& e) {
     std::ostringstream s;

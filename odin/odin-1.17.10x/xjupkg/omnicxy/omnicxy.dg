@@ -29,6 +29,8 @@
 
 +hcp-split 'hcp-split exe, default to hcp-split on PATH' ? => :first;
 
++hpath 'hcp-split -hpath option' ? => :first;
+
 +cxy-be-dir 'directories containing omniidl cxy backend .py files, eg cxy.py, default assumes files are on omniidl default search path (see also $ODIN_OMNICXY_BE_DIR environment variable in omnicxy.dg)' ? => :ls;
 
 $ODIN_OMNICXY_PATH 'PATH to set when running omniidl with cxy backend' = '/usr/bin:/bin';
@@ -39,7 +41,7 @@ $ODIN_OMNICXY_OMNIIDL 'name of omniidl program' = 'omniidl';
 
 +cxy 'flags to pass to omniidl cxy backend (omit the -Wb)' ? => :cat;
 
-EXEC (omniidl.sh) (:IDL) (+hcp-split) (+cxy-be-dir) (+cxy) (+inc_sp)
+EXEC (omniidl.sh) (:IDL) (+hcp-split) (+hpath) (+cxy-be-dir) (+cxy) (+inc_sp)
   NEEDS (+cxy-be-dir:list:map=:list) (:IDL:lookup=:hash_inc_all)
         ($ODIN_OMNICXY_BE_DIR/cxy.py)
         ($ODIN_OMNICXY_BE_DIR/cxycref.py)

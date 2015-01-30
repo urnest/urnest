@@ -1,0 +1,15 @@
+%run-all-tests==%all-tests.tree:leaves
+
+%all-tests.tree==<<
+()+cmd=(main.cc+(%opts):auto.cxx.exe):stdout
+
+
+%opts==<<
++(../..%cxx-opts)
+
+
+%x==()+cmd=(../../hcp-split) '-hpath' 'hcp/test/hpath_option' (x.hcp) 'x.hh' 'x.cc':exec.files
+
+x.hh==%x+member='x.hh':extract_file
+x.cc==%x+member='x.cc':extract_file
+

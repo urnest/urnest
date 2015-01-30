@@ -2,6 +2,7 @@
 
 source="$1" && shift &&
 hcpsplit="$1" && shift &&
+hpath="$1" && shift &&
 bedirs="$ODIN_OMNICXY_BE_DIR" &&
 if [ -z "$1" ]
 then
@@ -26,12 +27,15 @@ pflags=$(for x in $bedirs ; do echo "-p$x"; done) &&
 beflags=$(for x in $beopts ; do echo "-Wb$x"; done) &&
 iflags=$(for x in $incsp ; do echo "-I$x"; done) &&
 flags="$pflags $iflags" &&
-
 if [ -z "$hcpsplit" ]
 then
   hcpsplit='hcp-split'
 fi &&
-
+hcpflags="" &&
+if [ -n "$hpath" ]
+then
+  hcpflags="-hpath $hpath"
+fi &&
 (
 PATH=$ODIN_OMNICXY_PATH &&
 { x=`/usr/bin/which "$hcpsplit" 2>&1` 
@@ -67,16 +71,16 @@ mkdir omnicxy.output &&
   verbose "$omniidl $flags -b cxysref $beflags $source" &&
   "$omniidl" $flags -b cxysref $beflags "$source" > "$b.sref.hcp" &&
   
-  verbose "$hcpsplit -l 0 $b.hcp $b.hh $b.cc" &&
-  "$hcpsplit" -l 0 "$b.hcp" "$b.hh" "$b.cc" &&
-  verbose "$hcpsplit -l 0 $b.cdr.hcp $b.cdr.hh $b.cdr.cc" &&
-  "$hcpsplit" -l 0 "$b.cdr.hcp" "$b.cdr.hh" "$b.cdr.cc" &&
-  verbose "$hcpsplit -l 0 $b.cref.hcp $b.cref.hh $b.cref.cc" &&
-  "$hcpsplit" -l 0 "$b.cref.hcp" "$b.cref.hh" "$b.cref.cc" &&
-  verbose "$hcpsplit -l 0 $b.objref.hcp $b.objref.hh $b.objref.cc" &&
-  "$hcpsplit" -l 0 "$b.objref.hcp" "$b.objref.hh" "$b.objref.cc" &&
-  verbose "$hcpsplit -l 0 $b.sref.hcp $b.sref.hh $b.sref.cc" &&
-  "$hcpsplit" -l 0 "$b.sref.hcp" "$b.sref.hh" "$b.sref.cc" &&
+  verbose "$hcpsplit $hcpflags $b.hcp $b.hh $b.cc" &&
+  "$hcpsplit" $hcpflags "$b.hcp" "$b.hh" "$b.cc" &&
+  verbose "$hcpsplit $hcpflags $b.cdr.hcp $b.cdr.hh $b.cdr.cc" &&
+  "$hcpsplit" $hcpflags "$b.cdr.hcp" "$b.cdr.hh" "$b.cdr.cc" &&
+  verbose "$hcpsplit $hcpflags $b.cref.hcp $b.cref.hh $b.cref.cc" &&
+  "$hcpsplit" $hcpflags "$b.cref.hcp" "$b.cref.hh" "$b.cref.cc" &&
+  verbose "$hcpsplit $hcpflags $b.objref.hcp $b.objref.hh $b.objref.cc" &&
+  "$hcpsplit" $hcpflags "$b.objref.hcp" "$b.objref.hh" "$b.objref.cc" &&
+  verbose "$hcpsplit $hcpflags $b.sref.hcp $b.sref.hh $b.sref.cc" &&
+  "$hcpsplit" $hcpflags "$b.sref.hcp" "$b.sref.hh" "$b.sref.cc" &&
 
   true
 ) 2>> WARNINGS || mv WARNINGS ERRORS )
