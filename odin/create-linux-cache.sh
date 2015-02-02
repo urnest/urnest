@@ -24,5 +24,6 @@ ODIN_SQL_CLIENT=mysql_client.sh \
 ODIN_TAR_PATH=/bin \
 ODIN_FLUID_PATH=/usr/local/bin \
 ODIN_RANLIB=ranlib \
+ODIN_CC_FLAGS=-g \
 odin -R </dev/null &&
 mkdir "$ODIN_JAVA_OUTPUT_DIRECTORY"
