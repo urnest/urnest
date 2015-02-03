@@ -480,22 +480,28 @@ int main(int argc, char* argv[])
       std::vector<xju::path::DirName>(
         inputFile.first.end()-cmd_line.first.dir_levels_,
         inputFile.first.end()));
-    
-    if (hhinc.size()) {
+
+    if (cmd_line.first.hpath_.size()) {
       fc << "#include <" 
-         << (cmd_line.first.hpath_.size()?
-             (cmd_line.first.hpath_+outputHH.second._)
-             :
-             xju::path::str(hhinc, outputHH.second))
+         << (cmd_line.first.hpath_+outputHH.second._)
          << ">" << std::endl
          << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
     }
     else
     {
-      fc << "#include \"" 
-         << xju::path::str(hhinc, outputHH.second)
-         << "\"" << std::endl
-         << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
+      if (hhinc.size()) {
+        fc << "#include <" 
+           << xju::path::str(hhinc, outputHH.second)
+           << ">" << std::endl
+           << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
+      }
+      else
+      {
+        fc << "#include \"" 
+           << xju::path::str(hhinc, outputHH.second)
+           << "\"" << std::endl
+           << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
+      }
     }
     OStream oh(fh, cmd_line.first.th_);
     OStream oc(fc, true);
