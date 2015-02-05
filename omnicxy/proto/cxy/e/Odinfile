@@ -5,6 +5,18 @@
 
 %gen==(../..%all.idl.sm)+inc_sp=(../../../..)+hcp-split=(../../../../hcp/hcp-split)+cxy-be-dir=(../../../omniidl_be)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext'+cxy='-causeMemberExpression=cause\(\)'+cxy='-contextMemberExpression=context\(\)'+cxy='-e::E=proto/cxy/e/E.hh' :omnicxy
 
+#generated code for reference
+%p1.hcp==%gen/p1.hcp
+%p2.hcp==%gen/p2.hcp
+%p3.hcp==%gen/p3.hcp
+%p4.hcp==%gen/p4.hcp
+%p5.hcp==%gen/p5.hcp
+%p6.hcp==%gen/p6.hcp
+%p7.hcp==%gen/p7.hcp
+%p9.hcp==%gen/p9.hcp
+%p10.hcp==%gen/p10.hcp
+
+
 %cxx-opts==<<
 +(../../..%cxx-opts)
 +inc_sp=(%gen)

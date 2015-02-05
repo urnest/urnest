@@ -9,6 +9,16 @@
 #creation, otherwise could use
 #%gen==(..%all.idl.sm)+hcp-split=(../../../hcp/hcp-split)+cxy-be-dir=(../../omniidl_be)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy
 
+#generated code for reference
+%p1.hcp==%gen/p1.hcp
+%p2.hcp==%gen/p2.hcp
+%p3.hcp==%gen/p3.hcp
+%p4.hcp==%gen/p4.hcp
+%p5.hcp==%gen/p5.hcp
+%p6.hcp==%gen/p6.hcp
+%p7.hcp==%gen/p7.hcp
+%p9.hcp==%gen/p9.hcp
+%p10.hcp==%gen/p10.hcp
 
 %all-tests.tree==<<
 ()+cmd=(%p1-main) '3735' 'both':exec.output
@@ -56,3 +66,25 @@ echo "$x" | fgrep TRANSIENT
 
 %omnicxy.v==<<
 %proto==.%gen
+
+
+#test hpath option
+%all-2.idl.sm==<<
+../p1.idl
+../p2.idl
+
+%p1-main-2==p1-main.cc+(%cxx-opts-2):auto.cxx.exe
+
+%cxx-opts-2==<<
++(../..%cxx-opts)
++inc_sp=(%genroot-2.v:vir_dir)
+
+%genroot-2.v==<<
+%omnicxy==.%omnicxy-2.v:vir_dir
+
+%omnicxy-2.v==<<
+%proto==.%gen-2
+
+%gen-2==(%all-2.idl.sm)+hpath='omnicxy/proto'+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy
+
+

@@ -109,9 +109,10 @@ def reindent(indent, s):
 struct_t='''\
 struct %(name)s
 {
+  %(members)s
+
   %(name)s(%(consparams)s) throw():%(consinitialisers)s {
   }
-  %(members)s
   friend bool operator<(
     %(name)s const& x, 
     %(name)s const& y) throw() {%(lessMembers)s
@@ -214,6 +215,8 @@ def gen_struct(name,memberTypesAndNames):
 exception_t='''\
 struct %(name)s : %(eclass)s
 {
+  %(members)s
+
   ~%(name)s() throw(){}
 
   %(name)s(%(consparams)s
@@ -222,7 +225,6 @@ struct %(name)s : %(eclass)s
     std::pair<std::string, unsigned int> const& fileAndLine) throw():
       %(eclass)s(cause, fileAndLine)%(consinitialisers)s {
   }
-  %(members)s
   friend bool operator<(
     %(name)s const& x, 
     %(name)s const& y) throw() {%(lessMembers)s
@@ -274,6 +276,8 @@ def gen_exception(name,memberTypesAndNames,eclass):
 mapped_exception_t='''\
 struct %(name)s : %(eclass)s
 {
+  %(members)s
+
   ~%(name)s() throw(){}
 
   %(name)s(%(consparams)s) throw():
@@ -299,7 +303,6 @@ struct %(name)s : %(eclass)s
     T2 const& p2) throw():
       %(eclass)s(p1,p2) {
   }
-  %(members)s
   friend bool operator<(
     %(name)s const& x, 
     %(name)s const& y) throw() {%(lessMembers)s

@@ -34,7 +34,8 @@ fi &&
 hcpflags="" &&
 if [ -n "$hpath" ]
 then
-  hcpflags="-hpath $hpath"
+  hcpflags="-hpath $hpath" &&
+  beflags="$beflags -Wb-hpath=$hpath"
 fi &&
 (
 PATH=$ODIN_OMNICXY_PATH &&

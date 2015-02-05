@@ -241,8 +241,9 @@ def gen(decl,eclass,eheader,indent=''):
 template='''\
 // generated from %(fileName)s by omnicxy cxyobjref idl backend specifying 
 // %(eclass)s from %(eheader)s as base class for all ipc exceptions
-#include "%(baseName)s.hh"
-#include "%(baseName)s.cdr.hh"
+
+#include %(hhinc)s
+#include %(cdrhhinc)s
 
 #include <cxy/objref.hh>
 #include <cxy/translateException.hh>
@@ -284,5 +285,16 @@ def run(tree, args):
     baseName=fileName[0:-4]
     items=''.join([gen(_,eclass,eheader) for _ in tree.declarations() if _.mainFile()])
     idlincludes=gen_idlincludes(set([_.file() for _ in tree.declarations() if not _.mainFile()]))
+    hpath=([_.split('-hpath=',1)[1] for _ in args \
+                if _.startswith('-hpath')]+\
+               [''])[0]
+    if len(hpath)>0 and not hpath.endswith('/'):
+        hpath=hpath+'/'
+    if len(hpath):
+        hhinc='<%(hpath)s%(baseName)s.hh>'%vars()
+        cdrhhinc='<%(hpath)s%(baseName)s.cdr.hh>'%vars()
+    else:
+        hhinc='"%(baseName)s.hh"'%vars()
+        cdrhhinc='"%(baseName)s.cdr.hh"'%vars()
     print template % vars()
     pass

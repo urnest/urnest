@@ -110,8 +110,9 @@ template='''\
 
 #include "%(baseName)s.hh"
 
-#include "%(baseName)s.objref.hh" // impl
-#include "%(baseName)s.cdr.hh" // impl
+#include %(objrefhhinc)s // impl
+#include %(cdrhhinc)s // impl
+
 #include <cxy/ORB.hh> // impl
 #include <cxy/translateException.hh> // impl
 #include <xju/format.hh> // impl
@@ -140,5 +141,16 @@ def run(tree, args):
     fileName=os.path.basename(tree.file())
     baseName=fileName[0:-4]
     items=''.join([gen(_,eclass,eheader) for _ in tree.declarations() if _.mainFile()])
+    hpath=([_.split('-hpath=',1)[1] for _ in args \
+                if _.startswith('-hpath')]+\
+               [''])[0]
+    if len(hpath)>0 and not hpath.endswith('/'):
+        hpath=hpath+'/'
+    if len(hpath):
+        objrefhhinc='<%(hpath)s%(baseName)s.objref.hh>'%vars()
+        cdrhhinc='<%(hpath)s%(baseName)s.cdr.hh>'%vars()
+    else:
+        objrefhhinc='"%(baseName)s.objref.hh"'%vars()
+        cdrhhinc='"%(baseName)s.cdr.hh"'%vars()
     print template % vars()
     pass

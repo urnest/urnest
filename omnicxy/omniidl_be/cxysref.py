@@ -295,8 +295,8 @@ template='''\
 #include <cxy/Exceptions.hh>
 #include %(eheader)s
 
-#include "%(baseName)s.hh" // impl
-#include "%(baseName)s.cdr.hh" // impl
+#include %(hhinc)s // impl
+#include %(cdrhhinc)s // impl
 
 #include <cxy/ORB.hh> // impl
 #include <cxy/sref_impl.hh> // impl
@@ -355,5 +355,16 @@ def run(tree, args):
     idlincludes=gen_idlincludes(set([_.file() for _ in tree.declarations() if not _.mainFile()]))
     items=''.join(
         [gen(_,eclass,eheader) for _ in tree.declarations() if _.mainFile()])
+    hpath=([_.split('-hpath=',1)[1] for _ in args \
+                if _.startswith('-hpath')]+\
+               [''])[0]
+    if len(hpath)>0 and not hpath.endswith('/'):
+        hpath=hpath+'/'
+    if len(hpath):
+        hhinc='<%(hpath)s%(baseName)s.hh>'%vars()
+        cdrhhinc='<%(hpath)s%(baseName)s.cdr.hh>'%vars()
+    else:
+        hhinc='"%(baseName)s.hh"'%vars()
+        cdrhhinc='"%(baseName)s.cdr.hh"'%vars()
     print template % vars()
     pass
