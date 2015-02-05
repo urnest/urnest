@@ -29,7 +29,7 @@
 
 +hcp-split 'hcp-split exe, default to hcp-split on PATH' ? => :first;
 
-+hpath 'hcp-split -hpath option' ? => :first;
++hpath 'path to locate all generated headers, in generated #include statements (see hcp-split -hpath option), eg x/y generates #include <x/y/idl.hh>' ? => :first;
 
 +cxy-be-dir 'directories containing omniidl cxy backend .py files, eg cxy.py, default assumes files are on omniidl default search path (see also $ODIN_OMNICXY_BE_DIR environment variable in omnicxy.dg)' ? => :ls;
 

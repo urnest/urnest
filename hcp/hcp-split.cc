@@ -374,13 +374,13 @@ std::pair<CommandLineOptions, std::vector<std::string> > parseCommandLine(
 
 char make_guard_char(char c) throw()
 {
-  if (c=='/') {
-    c='_';
+  if (('a'<=c && c<='z') ||
+      ('A'<=c && c<='Z') ||
+      ('0'<=c && c<='9') ||
+      (c=='_')) {
+    return ::toupper(c);
   }
-  else if (c=='.') {
-    c='_';
-  }
-  return ::toupper(c);
+  return '_';
 }
 
 std::string make_guard(xju::path::AbsolutePath const& pathToInputFile,
@@ -403,7 +403,7 @@ std::string make_guard(xju::path::AbsolutePath const& pathToInputFile,
     std::transform(x.begin(), x.end(),
                    x.begin(),
                    make_guard_char);
-    return x;
+    return "_"+x;
   }
   catch(xju::Exception& e) {
     e.addContext(s.str(), XJU_TRACED);
@@ -415,7 +415,7 @@ std::string make_guard(std::string x) throw()
   std::transform(x.begin(), x.end(),
                  x.begin(),
                  make_guard_char);
-  return x;
+  return "_"+x;
 }
 
 int main(int argc, char* argv[])

@@ -1,5 +1,5 @@
-#ifndef CXY_NOSUCHOBJECT_HCP
-#define CXY_NOSUCHOBJECT_HCP
+#ifndef _CXY_NOSUCHOBJECT_HCP
+#define _CXY_NOSUCHOBJECT_HCP
 // Copyright (c) 2014 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
