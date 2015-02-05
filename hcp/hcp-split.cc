@@ -434,7 +434,8 @@ int main(int argc, char* argv[])
                 << std::endl;
       std::cout << "-hpath overrides -l, and uses the specified path in"
                 << " output-cpp-file's include statement for"
-                << " output-header-file"
+                << " output-header-file, eg -hpath x/y generates"
+                << " #include <x/y/idl.hh>"
                 << std::endl;
       std::cout << "-th tracks source file and line in generated header file"
                 << std::endl;
