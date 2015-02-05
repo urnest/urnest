@@ -11,7 +11,6 @@
 //
 //    Implementation for st_Exception.hh
 //
-static const char rcsid[] = "$RCSfile: Exception.cc,v $ $Revision: 1.7 $";
 #include <xju/Exception.hh>
 
 

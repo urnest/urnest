@@ -1,5 +1,4 @@
-/*  $Revision: 1.2 $
-**
+/*  
 **  Unix system-dependant routines for editline library.
 */
 #include "editline.h"

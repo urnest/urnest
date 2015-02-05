@@ -1,5 +1,4 @@
-/*  $Revision: 1.1 $
-**
+/*  
 **  Internal header file for editline library.
 */
 

@@ -10,7 +10,6 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-static const char rcsid[] = "$RCSfile: twt_cxx.el,v $ $Revision: 1.2 $";
 #include <xju/readFile.hh>
 #include "xju/AutoFd.hh"
 #include "xju/syscall.hh"

@@ -56,4 +56,3 @@ echo "$x" | fgrep TRANSIENT
 
 %omnicxy.v==<<
 %proto==.%gen
-
