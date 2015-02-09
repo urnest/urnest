@@ -264,15 +264,19 @@ namespace cxy
 }
 '''
 
-def includeSpec(fileName):
+def includeSpec(fileName,hpath):
     if os.path.dirname(fileName)=='':
-        return '"%s"'%(os.path.splitext(fileName)[0]+'.objref.hh')
+        if hpath=='':
+            return '"%s"'%(os.path.splitext(fileName)[0]+'.objref.hh')
+        else:
+            return '<%s%s>'%(hpath,os.path.splitext(fileName)[0]+'.objref.hh')
     return '<%s>'%(os.path.splitext(fileName)[0]+'.objref.hh')
 
-def gen_idlincludes(fileNames):
+def gen_idlincludes(fileNames,hpath):
     if not len(fileNames):
         return ''
-    return '\n// included idl'+''.join(['\n#include %s'%includeSpec(_) for _ in fileNames])
+    return '\n// included idl'+''.join(['\n#include %s'%includeSpec(_,hpath) \
+                                            for _ in fileNames])
 
 def run(tree, args):
     eclass,eheader=([_.split('-e',1)[1].split('=',1) for _ in args if _.startswith('-e')]+[('cxy::Exception','cxy/Exception.hh')])[0]
@@ -284,7 +288,6 @@ def run(tree, args):
     fileName=os.path.basename(tree.file())
     baseName=fileName[0:-4]
     items=''.join([gen(_,eclass,eheader) for _ in tree.declarations() if _.mainFile()])
-    idlincludes=gen_idlincludes(set([_.file() for _ in tree.declarations() if not _.mainFile()]))
     hpath=([_.split('-hpath=',1)[1] for _ in args \
                 if _.startswith('-hpath')]+\
                [''])[0]
@@ -296,5 +299,8 @@ def run(tree, args):
     else:
         hhinc='"%(baseName)s.hh"'%vars()
         cdrhhinc='"%(baseName)s.cdr.hh"'%vars()
+    idlincludes=gen_idlincludes(set([_.file() for _ in tree.declarations() \
+                                         if not _.mainFile()]),
+                                hpath)
     print template % vars()
     pass

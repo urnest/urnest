@@ -566,15 +566,19 @@ head='''\
 #include <cxy/copyContext.hh> //impl
 '''
 
-def includeSpec(fileName):
+def includeSpec(fileName,hpath):
     if os.path.dirname(fileName)=='':
-        return '"%s"'%(os.path.splitext(fileName)[0]+'.hh')
+        if hpath=='':
+            return '"%s"'%(os.path.splitext(fileName)[0]+'.hh')
+        else:
+            return '<%s%s>'%(hpath,os.path.splitext(fileName)[0]+'.hh')
     return '<%s>'%(os.path.splitext(fileName)[0]+'.hh')
 
-def gen_idlincludes(fileNames):
+def gen_idlincludes(fileNames,hpath):
     if not len(fileNames):
         return ''
-    return '\n// included idl'+''.join(['\n#include %s'%includeSpec(_) for _ in fileNames])
+    return '\n// included idl'+''.join(['\n#include %s'%includeSpec(_,hpath) \
+                                            for _ in fileNames])
 
 def run(tree, args):
     eclass,eheader=([_.split('-e',1)[1].split('=',1) for _ in args \
@@ -592,7 +596,14 @@ def run(tree, args):
         eheader='<%s>'%eheader
     fileName=os.path.basename(tree.file())
     tincludes='\n'.join(['#include '+_ for _ in set(sum([gen_tincludes(_) for _ in tree.declarations() if _.mainFile()],[]))])
-    idlincludes=gen_idlincludes(set([_.file() for _ in tree.declarations() if not _.mainFile()]))
+    hpath=([_.split('-hpath=',1)[1] for _ in args \
+                if _.startswith('-hpath')]+\
+               [''])[0]
+    if len(hpath)>0 and not hpath.endswith('/'):
+        hpath=hpath+'/'
+    idlincludes=gen_idlincludes(set([_.file() for _ in tree.declarations() \
+                                         if not _.mainFile()]),
+                                hpath)
     
     print head % vars()
     print '\n'.join([gen(_,eclass,eheader,causeType,contextType) \

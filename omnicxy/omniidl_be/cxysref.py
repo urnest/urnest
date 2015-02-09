@@ -333,15 +333,19 @@ class ORB;
 %(items)s
 '''
 
-def includeSpec(fileName):
+def includeSpec(fileName,hpath):
     if os.path.dirname(fileName)=='':
-        return '"%s"'%(os.path.splitext(fileName)[0]+'.sref.hh')
+        if hpath=='':
+            return '"%s"'%(os.path.splitext(fileName)[0]+'.sref.hh')
+        else:
+            return '<%s%s>'%(hpath,os.path.splitext(fileName)[0]+'.sref.hh')
     return '<%s>'%(os.path.splitext(fileName)[0]+'.sref.hh')
 
-def gen_idlincludes(fileNames):
+def gen_idlincludes(fileNames,hpath):
     if not len(fileNames):
         return ''
-    return '\n// included idl'+''.join(['\n#include %s'%includeSpec(_) for _ in fileNames])
+    return '\n// included idl'+''.join(['\n#include %s'%includeSpec(_,hpath) \
+                                            for _ in fileNames])
 
 def run(tree, args):
     eclass,eheader=([_.split('-e',1)[1].split('=',1) for _ in args if _.startswith('-e')]+[('cxy::Exception','cxy/Exception.hh')])[0]
@@ -352,7 +356,6 @@ def run(tree, args):
     assert tree.file().endswith('.idl'), tree.file()
     fileName=os.path.basename(tree.file())
     baseName=fileName[0:-4]
-    idlincludes=gen_idlincludes(set([_.file() for _ in tree.declarations() if not _.mainFile()]))
     items=''.join(
         [gen(_,eclass,eheader) for _ in tree.declarations() if _.mainFile()])
     hpath=([_.split('-hpath=',1)[1] for _ in args \
@@ -360,6 +363,9 @@ def run(tree, args):
                [''])[0]
     if len(hpath)>0 and not hpath.endswith('/'):
         hpath=hpath+'/'
+    idlincludes=gen_idlincludes(set([_.file() for _ in tree.declarations() \
+                                         if not _.mainFile()]),
+                                hpath)
     if len(hpath):
         hhinc='<%(hpath)s%(baseName)s.hh>'%vars()
         cdrhhinc='<%(hpath)s%(baseName)s.cdr.hh>'%vars()

@@ -34,6 +34,7 @@
 %test-transient
 ()+cmd=(%test-no-such-object) '3750':exec.output
 ()+cmd=(%test-duplicate-name) '3751':exec.output
+()+cmd=(%p2-main-2) '3752' 'both':exec.output
 
 %cxx-opts==<<
 +(../..%cxx-opts)
@@ -73,7 +74,7 @@ echo "$x" | fgrep TRANSIENT
 ../p1.idl
 ../p2.idl
 
-%p1-main-2==p1-main.cc+(%cxx-opts-2):auto.cxx.exe
+%p2-main-2==p2-main.cc+(%cxx-opts-2):auto.cxx.exe
 
 %cxx-opts-2==<<
 +(../..%cxx-opts)

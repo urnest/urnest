@@ -108,7 +108,7 @@ template='''\
 #include <cxy/Exceptions.hh>
 #include %(eheader)s
 
-#include "%(baseName)s.hh"
+#include %(hhinc)s
 
 #include %(objrefhhinc)s // impl
 #include %(cdrhhinc)s // impl
@@ -147,9 +147,11 @@ def run(tree, args):
     if len(hpath)>0 and not hpath.endswith('/'):
         hpath=hpath+'/'
     if len(hpath):
+        hhinc='<%(hpath)s%(baseName)s.hh>'%vars()
         objrefhhinc='<%(hpath)s%(baseName)s.objref.hh>'%vars()
         cdrhhinc='<%(hpath)s%(baseName)s.cdr.hh>'%vars()
     else:
+        hhinc='"%(baseName)s.hh"'%vars()
         objrefhhinc='"%(baseName)s.objref.hh"'%vars()
         cdrhhinc='"%(baseName)s.cdr.hh"'%vars()
     print template % vars()
