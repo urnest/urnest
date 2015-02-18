@@ -1,7 +1,19 @@
+Int,Float add operator* operator/
+Float add math functions exp, sqrt, log, floor, ceiling etc
+
+io::Input
+io::Output
+  - pure interfaces
+  - io::select, function
+
 - io
   - File
   - Socket
   - TCP
   - UDP
   - Pipe
-  - select
+
+subprocess
+  - start function object,
+  - optional stop function object (pass pid)
+  - exit status

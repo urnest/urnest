@@ -30,6 +30,7 @@ class TypeInfo:
     pass
 
 basicIntTypes={
+    idltype.tk_char:   TypeInfo('char',[]),
     idltype.tk_octet:   TypeInfo('uint8_t',['<stdint.h>']),
     idltype.tk_short:   TypeInfo('int16_t',['<stdint.h>']),
     idltype.tk_long:    TypeInfo('int32_t',['<stdint.h>']),
@@ -40,6 +41,7 @@ basicIntTypes={
     idltype.tk_boolean:   TypeInfo('bool',[]),
 }
 basicFloatTypes={
+    idltype.tk_float: TypeInfo('float',[]),
     idltype.tk_double: TypeInfo('double',[]),
 }
 basicStringTypes={

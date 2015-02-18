@@ -96,6 +96,14 @@ std::string readableRepr(const xju::Exception& e,
                          const bool includeTrace,
                          const bool asPhrase) throw()
 {
+    if (e.context().size()==0) {
+        std::string x(e.cause().first+(asPhrase?"":"."));
+        if (!asPhrase) {
+            std::toupper(x[0]);
+        }
+        return (includeTrace?formatContext:getText)(
+            std::make_pair(x,e.cause().second));
+    }
     std::ostringstream s;
     s << (asPhrase?"failed to ":"Failed to ");
     

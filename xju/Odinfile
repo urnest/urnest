@@ -7,6 +7,7 @@
 #()+cmd=(%test-serialisation.cxx.sm+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-EventClient.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Exception.cc+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-Float.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Int.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-JoiningIterator.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Notifying.cc+(..%cxx-opts):auto.cxx.exe):stdout

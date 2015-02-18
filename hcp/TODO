@@ -1,5 +1,8 @@
 * handle class "operator X()" functions
 
+- add trailing blank lines to end of entities, but add inline leading blanks
+  to start of entities, to get nicer split code formatting
+
 * when generating .cc for class member function, qualify return type
   if it was defined by the class, eg:
   struct X{
@@ -18,7 +21,8 @@ x fix generation of friend functions
     means re-qualifying param types and it is not possible to tell how much
     to add to each param type?
 
-* no such thing as static var decl, it is a def
+* no such thing as static var decl, it is a def? for hcp-split, yet, but
+  want to be able to parse .hh too
 
 - param default values
 

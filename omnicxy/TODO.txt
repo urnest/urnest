@@ -1,3 +1,5 @@
+- documentation / tutorial
+
 - how to get just direct includes? currently picks up nested
 
 x hand-code p1 server
@@ -63,7 +65,7 @@ x allow "" v <> control for -e eg:
    ./E.hh -> "E.hh"
    E.hh -> "E.hh"
 
-- omnicxy odin package
+x omnicxy odin package
   idl.sm+omnicxy-be-dir=(cxy-be-dir)+hcp-split=(xxx):omnicxy
     :omnicxy is a virdir containing all generated files for the .idl
     files in idl.cxx.sm
@@ -76,7 +78,7 @@ x adjust sref.hcp need to derive from omniCallDescriptor to override
 
 - p2.idl:
   x include p1.idl
-  x basic types in params - short,long,double,string
+  x basic types in params - short,long,double,string,long long,boolean
     x proto
       x .hcp
       x .cdr.hcp
@@ -112,10 +114,20 @@ x test client wrong type exception
 
 - p3.idl:
   x typedef basic type -> distinct
-    x int
+    x short
     x string
-    - octet
-    - float
+    x octet
+    x float
+    x double
+    x long
+    x long long
+    x unsigned short
+    x unsigned long
+    x unsigned long long
+    x boolean
+    - wchar
+    - wstring
+    - long double
 
 x p4.idl:
   x struct in param, return
@@ -166,8 +178,10 @@ x p9.idl:
 x p10.idl:
   x enum
 
+- p11.idl:
+  - union, constant
+
 - inherit interface
-- union
 - bounded strings
 - bounded sequences
 - arrays

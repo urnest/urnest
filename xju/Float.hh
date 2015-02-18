@@ -10,31 +10,32 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef XJU_INT_H_
-#define XJU_INT_H_
+#ifndef XJU_FLOAT_H_
+#define XJU_FLOAT_H_
 
 #include "xju/Exception.hh"
 #include <sstream>
 #include <limits>
 #include <iosfwd>
+#include <xju/isnan.hh>
 
 namespace xju
 {
-template<class Tag, class Impl = int>
-class Int
+template<class Tag, class Impl = float>
+class Float
 {
 public:
-  explicit Int(Impl x) throw():
+  explicit Float(Impl x) throw():
     value_(x) {
   }
   Impl value() const throw() {
     return value_;
   }
-  Int& operator+=(Int const& y) throw(
+  Float& operator+=(Float const& y) throw(
     xju::Exception)
   {
     if (y.value_<0) {
-      return (*this)-=Int(-y.value_);
+      return (*this)-=Float(-y.value_);
     }
     if (std::numeric_limits<Impl>::max() - value_ < y.value()) {
       std::ostringstream s;
@@ -45,11 +46,11 @@ public:
     return *this;
   }
   
-  Int& operator-=(Int const& y) throw(
+  Float& operator-=(Float const& y) throw(
     xju::Exception)
   {
     if (y.value_<0) {
-      return (*this)+=Int(-y.value_);
+      return (*this)+=Float(-y.value_);
     }
     if (value_ < y.value() + std::numeric_limits<Impl>::min()) {
       std::ostringstream s;
@@ -60,45 +61,48 @@ public:
     return *this;
   }
   
-  friend Int operator+(Int const& x, Int const& y) throw(
+  friend Float operator+(Float const& x, Float const& y) throw(
     // overflow
     xju::Exception) 
   {
-      Int result(x);
+      Float result(x);
       result+=y;
       return result;
   }
   
-  friend Int operator-(Int const& x, Int const& y) throw(
+  friend Float operator-(Float const& x, Float const& y) throw(
     // underflow
     xju::Exception) 
   {
-      Int result(x);
+      Float result(x);
       result-=y;
       return result;
   }
-  
-  friend bool operator<(Int const& x, Int const& y) throw() 
+  friend bool isnan(Float const& x) throw()
+  {
+    return xju_isnan(x.value());
+  }
+  friend bool operator<(Float const& x, Float const& y) throw() 
   {
     return x.value_ < y.value_;
   }
-  friend bool operator>(Int const& x, Int const& y) throw() 
+  friend bool operator>(Float const& x, Float const& y) throw() 
   {
     return y < x;
   }
-  friend bool operator!=(Int const& x, Int const& y) throw() 
+  friend bool operator!=(Float const& x, Float const& y) throw() 
   {
     return y < x || x < y;
   }
-  friend bool operator==(Int const& x, Int const& y) throw() 
+  friend bool operator==(Float const& x, Float const& y) throw() 
   {
     return !(x != y);
   }
-  friend bool operator<=(Int const& x, Int const& y) throw() 
+  friend bool operator<=(Float const& x, Float const& y) throw() 
   {
     return (x < y) || (x == y);
   }
-  friend bool operator>=(Int const& x, Int const& y) throw() 
+  friend bool operator>=(Float const& x, Float const& y) throw() 
   {
     return (x > y) || (x == y);
   }
@@ -106,7 +110,7 @@ private:
     Impl value_;
 };
 template<class Tag, class Impl>
-std::ostream& operator<<(std::ostream& s, Int<Tag,Impl> const& x) throw()
+std::ostream& operator<<(std::ostream& s, Float<Tag,Impl> const& x) throw()
 {
   return s << x.value();
 }

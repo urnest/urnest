@@ -1,7 +1,17 @@
 module p3
 {
+  typedef boolean MyBoolean;
+  typedef char MyChar;
+  typedef double MyDouble;
+  typedef float MyFloat;
   typedef long MyInt;
+  typedef long long MyLongLong;
+  typedef octet MyOctet;
+  typedef short MyShort;
   typedef string MyString;
+  typedef unsigned long MyULong;
+  typedef unsigned long long MyULongLong;
+  typedef unsigned short MyUShort;
   
   interface F
   {

@@ -10,7 +10,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include "xju/Int.hh"
+#include "xju/Float.hh"
 
 #include "xju/assert.hh"
 #include <iostream>
@@ -19,7 +19,7 @@ class Tag
 {
 };
 
-typedef xju::Int<Tag, int64_t> T;
+typedef xju::Float<Tag, double> T;
 
 std::ostream& operator<<(std::ostream& s, T const& x) throw()
 {
@@ -30,53 +30,59 @@ void test1()
 {
    T x(0);
    xju::assert_equal(T(0), T(0));
-   xju::assert_equal(T(0)+T(1), T(1));
-   xju::assert_equal(T(1)-T(1), T(0));
-   xju::assert_not_equal(T(0), T(1));
-   xju::assert_(T(0), std::less<T>(), T(1));
-   xju::assert_(T(0), std::less_equal<T>(), T(1));
-   xju::assert_(T(1), std::less_equal<T>(), T(1));
-   xju::assert_(T(1), std::greater<T>(), T(0));
+   xju::assert_equal(T(0)+T(1.2), T(1.2));
+   xju::assert_equal(T(1.2)-T(1.2), T(0));
+   xju::assert_not_equal(T(0), T(1.2));
+   xju::assert_(T(0), std::less<T>(), T(1.2));
+   xju::assert_(T(0), std::less_equal<T>(), T(1.2));
+   xju::assert_(T(1), std::less_equal<T>(), T(1.2));
+   xju::assert_(T(1.2), std::greater<T>(), T(0));
    xju::assert_(T(0), std::greater_equal<T>(), T(0));
-   xju::assert_(T(1), std::greater_equal<T>(), T(0));
+   xju::assert_(T(1.2), std::greater_equal<T>(), T(0));
    
 }
 void test2()
 {
-  T x(std::numeric_limits<int64_t>::max());
+  T x(std::numeric_limits<double>::max());
   try {
-    x=x+T(1);
+    x=x+T(0.1);
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e),"9223372036854775807 + 1 would overflow.");
+    xju::assert_equal(readableRepr(e),"1.79769e+308 + 0.1 would overflow.");
   }
   try {
-    x=x-T(-1);
+    x=x-T(-0.1);
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e),"9223372036854775807 + 1 would overflow.");
+    xju::assert_equal(readableRepr(e),"1.79769e+308 + 0.1 would overflow.");
   }
 }
 
 void test3()
 {
-  T x(std::numeric_limits<int64_t>::min());
+  T x(std::numeric_limits<double>::min());
   try {
-    x=x-T(1);
+    x=x-T(0.1);
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e),"-9223372036854775808 - 1 would underflow.");
+    xju::assert_equal(readableRepr(e),"2.22507e-308 - 0.1 would underflow.");
   }
   try {
-    x=x+T(-1);
+    x=x+T(-0.1);
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e),"-9223372036854775808 - 1 would underflow.");
+    xju::assert_equal(readableRepr(e),"2.22507e-308 - 0.1 would underflow.");
   }
+}
+
+void test4()
+{
+  T x(std::numeric_limits<double>::min());
+  xju::assert_equal(isnan(x),false);
 }
 
 int main(int argc, char* argv[])
@@ -85,6 +91,7 @@ int main(int argc, char* argv[])
    test1(); ++n;
    test2(); ++n;
    test3(); ++n;
+   test4(); ++n;
    std::cout << "PASS " << n << " steps" << std::endl;
    return 0;
 }
