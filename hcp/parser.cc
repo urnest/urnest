@@ -1235,8 +1235,8 @@ PR static_var_intro(
   eatWhite+
   var_intro);
   
-PR static_var_initialiser(
-  new NamedParser<hcp_ast::StaticVarInitialiser>(
+PR var_initialiser(
+  new NamedParser<hcp_ast::VarInitialiser>(
     "static variable initialiser",
     
     (parseOneOfChars("=")+balanced(parseOneOfChars(";")))));
@@ -1244,7 +1244,14 @@ PR static_var_initialiser(
 PR static_var_def(new NamedParser<hcp_ast::StaticVarDef>(
   "static variable definition",
   static_var_intro+
-  optional(static_var_initialiser)+
+  optional(var_initialiser)+
+  parseOneOfChars(";")+
+  eatWhite));
+
+PR global_var_def(new NamedParser<hcp_ast::GlobalVarDef>(
+  "global variable definition",
+  var_intro+
+  optional(var_initialiser)+
   parseOneOfChars(";")+
   eatWhite));
 
@@ -1295,10 +1302,10 @@ public:
                   function_decl|
                   template_function_def|
                   access_modifier|
+                  PR(new SelfParser(*this))|
                   class_decl|
                   enum_def|
                   typedef_statement|
-                  PR(new SelfParser(*this))|
                   function_def|
                   static_var_def|
                   attr_decl,
@@ -1339,6 +1346,7 @@ PR namespace_leaf(
   hashInclude|
   hash|
   class_def| // note recursive
+  class_decl|
   typedef_statement|
   using_statement|
   enum_def|
@@ -1346,6 +1354,7 @@ PR namespace_leaf(
   function_decl| // inc. template
   template_function_def|
   function_def|
+  global_var_def|
   attr_decl);
 
 PR anonymous_namespace(new NamedParser<hcp_ast::AnonymousNamespace>(
@@ -1377,9 +1386,9 @@ public:
         eatWhite+
         new NamedParser<hcp_ast::NamespaceMembers>(
           "namespace members",
-          parseUntil((namespace_leaf|
-                      anonymous_namespace|
-                      PR(new SelfParser(*this)))+
+          parseUntil((anonymous_namespace|
+                      PR(new SelfParser(*this))|
+                      namespace_leaf)+
                      eatWhite,
                      parseOneOfChars("}")))+
         parseOneOfChars("}")+

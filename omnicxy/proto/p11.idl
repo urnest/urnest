@@ -1,11 +1,14 @@
 const string Z = "z";
 const short Q = 10;
 
+/*
 enum X {
   A, B, C
 };
 
 union Y switch(X) {
-  case A: int a_;
+  case A: long a_;
   case C: float c_;
 };
+*/
+

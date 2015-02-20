@@ -285,8 +285,11 @@ typedef TaggedCompositeItem<KeywordStaticTag> KeywordStatic;
 class StaticVarDefTag{};
 typedef TaggedCompositeItem<StaticVarDefTag> StaticVarDef;
 
-class StaticVarInitialiserTag{};
-typedef TaggedCompositeItem<StaticVarInitialiserTag> StaticVarInitialiser;
+class GlobalVarDefTag{};
+typedef TaggedCompositeItem<GlobalVarDefTag> GlobalVarDef;
+
+class VarInitialiserTag{};
+typedef TaggedCompositeItem<VarInitialiserTag> VarInitialiser;
 
 class AccessModifierTag{};
 typedef TaggedCompositeItem<AccessModifierTag> AccessModifier;

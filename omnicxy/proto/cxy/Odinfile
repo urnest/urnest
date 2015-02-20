@@ -31,6 +31,7 @@
 ()+cmd=(%p7-main) '3741' 'both':exec.output
 ()+cmd=(%p9-main) '3743' 'both':exec.output
 ()+cmd=(%p10-main) '3744' 'both':exec.output
+()+cmd=(%p11-main) '3745' 'both':exec.output
 %test-transient
 ()+cmd=(%test-no-such-object) '3750':exec.output
 ()+cmd=(%test-duplicate-name) '3751':exec.output
@@ -50,6 +51,7 @@
 %p7-main==p7-main.cc+(%cxx-opts):auto.cxx.exe
 %p9-main==p9-main.cc+(%cxx-opts):auto.cxx.exe
 %p10-main==p10-main.cc+(%cxx-opts):auto.cxx.exe
+%p11-main==p11-main.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-duplicate-name==test-duplicate-name.cc+(%cxx-opts):auto.cxx.exe
 
@@ -87,5 +89,4 @@ echo "$x" | fgrep TRANSIENT
 %proto==.%gen-2
 
 %gen-2==(%all-2.idl.sm)+hpath='omnicxy/proto'+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy
-
 

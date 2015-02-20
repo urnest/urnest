@@ -501,6 +501,17 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
         result=reindent(
             indent,
             gen_enum(name,values,eclass))
+    elif isinstance(decl, idlast.Const):
+        name=decl.identifier()
+        type_=unqualifiedType(decl.constType())
+        if type_=='std::string':
+            value='"%s"'%decl.value()
+        else:
+            value=repr(decl.value())
+            pass
+        result=reindent(
+            indent,
+            '%(type_)s const %(name)s = %(value)s;'%vars())
     else:
         assert False, repr(decl)
         pass
@@ -530,28 +541,38 @@ def gen_tincludes(decl):
     elif isinstance(decl, idlast.Struct):
         for m in decl.members():
             if m.memberType().kind() in basicIntTypes:
-                result=result+['<xju/Int.hh>']+tincludes(m.memberType())
+                result=result+tincludes(m.memberType())
             elif m.memberType().kind() in basicFloatTypes:
-                result=result+['<xju/Float.hh>']+tincludes(m.memberType())
+                result=result+tincludes(m.memberType())
             elif m.memberType().kind() in basicStringTypes:
-                result=result+['<xju/Tagged.hh>','<string>']
+                result=result+['<string>']
                 pass
             pass
         pass
     elif isinstance(decl, idlast.Exception):
         for m in decl.members():
             if m.memberType().kind() in basicIntTypes:
-                result=result+['<xju/Int.hh>']+tincludes(m.memberType())
+                result=result+tincludes(m.memberType())
             elif m.memberType().kind() in basicFloatTypes:
-                result=result+['<xju/Float.hh>']+tincludes(m.memberType())
+                result=result+tincludes(m.memberType())
             elif m.memberType().kind() in basicStringTypes:
-                result=result+['<xju/Tagged.hh>','<string>']
+                result=result+['<string>']
                 pass
             pass
         pass
     elif isinstance(decl, idlast.Enum):
         result=['<sstream> // impl','<iostream>']
         pass
+    elif isinstance(decl, idlast.Const):
+        if decl.constType().kind() in basicIntTypes:
+            result=result+tincludes(decl.constType())
+        elif decl.constType().kind() in basicFloatTypes:
+            result=result+tincludes(decl.constType())
+        elif decl.constType().kind() in basicStringTypes:
+            result=result+['<string>']
+        else:
+            result=[]
+            pass
     else:
         assert False, (str(decl.__class__),repr(decl))
         pass

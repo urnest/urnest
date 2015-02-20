@@ -145,7 +145,7 @@ void genClassStaticVarDef(
 {
   std::vector<hcp_ast::IR>::const_iterator i(
     hcp_ast::find1stInTree(x.items_.begin(), x.items_.end(),
-                           hcp_ast::isA_<hcp_ast::StaticVarInitialiser>));
+                           hcp_ast::isA_<hcp_ast::VarInitialiser>));
   if (i != x.items_.end()) {
     h.copy(x.begin(), (*i)->begin());
     h << ";\n";
@@ -251,6 +251,22 @@ void genFunction(hcp_ast::FunctionDef const& x,
   c.copy(x.begin(), x.end());
 }
 
+void genGlobalVar(hcp_ast::GlobalVarDef const& x,
+                  OStream& h,
+                  OStream& c) throw(
+                    xju::Exception)
+{
+  std::vector<hcp_ast::IR>::const_iterator i(
+    std::find_if(x.items_.begin(), x.items_.end(),
+                 hcp_ast::isA_<hcp_ast::VarInitialiser>));
+  xju::assert_not_equal(i, x.items_.end());
+  h << "extern ";
+  h.copy(x.begin(), (*i)->begin());
+  h << ";\n";
+  
+  c.copy(x.begin(), x.end());
+}
+
 void genAnonymousNamespace(hcp_ast::AnonymousNamespace const& x,
                            OStream& h,
                            OStream& c) throw(
@@ -310,6 +326,10 @@ void genNamespaceContent(hcp_ast::IRs const& x,
     else if ((*i)->isA<hcp_ast::FunctionDef>())
     {
       genFunction((*i)->asA<hcp_ast::FunctionDef>(), h, c);
+    }
+    else if ((*i)->isA<hcp_ast::GlobalVarDef>())
+    {
+      genGlobalVar((*i)->asA<hcp_ast::GlobalVarDef>(), h, c);
     }
     else {
       h.copy((*i)->begin(), (*i)->end());

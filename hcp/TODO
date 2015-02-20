@@ -1,3 +1,7 @@
+- test nested class defs v parse.cc line 85
+  class A{
+    class B{};
+  };
 * handle class "operator X()" functions
 
 - add trailing blank lines to end of entities, but add inline leading blanks

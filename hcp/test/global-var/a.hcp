@@ -1,0 +1,12 @@
+#include <string>
+
+#include "x.hh" //impl
+
+std::string az() throw()
+{
+  return Z;
+}
+int aq() throw()
+{
+  return Q;
+}

@@ -186,6 +186,8 @@ def gen(decl,eclass,eheader,causeType,contextType,
         name='::'.join(decl.scopedName())
         repoId=decl.repoId()
         result=enum_t%vars()
+    elif isinstance(decl, idlast.Const):
+        pass
     else:
         assert False, repr(decl)
         pass

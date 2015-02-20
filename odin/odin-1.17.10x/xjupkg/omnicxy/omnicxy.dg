@@ -19,13 +19,13 @@
 
 :omnicxy.output 'directory of files generated from a .idl file' ? => :DERIVED-DIRECTORY;
 
-:omnicxy.vir_dir_spec 'vir dir spec with all files in :omnicxy.output directory' ? => :FILE;
+:hcpsplit.output 'directory of files generated from a .idl file' ? => :DERIVED-DIRECTORY;
+
+:omnicxy.vir_dir_spec 'vir dir spec with all files in :hcpsplit.output directory' ? => :FILE;
 
 :omnicxy.vir_dir_spec.s ':omnicxy.vir_dir_spec from single .idl file' ? => :omnicxy.vir_dir_spec;
 
 #:omnicxy.vir_dir_spec.m ':omnicxy.vir_dir_spec from .idl.sm' ? => :omnicxy.vir_dir_spec;
-
-#:omnicxy.output.m 'list of :omnicxy.output directories' ? => :LIST;
 
 +hcp-split 'hcp-split exe, default to hcp-split on PATH' ? => :first;
 
@@ -41,7 +41,7 @@ $ODIN_OMNICXY_OMNIIDL 'name of omniidl program' = 'omniidl';
 
 +cxy 'flags to pass to omniidl cxy backend (omit the -Wb)' ? => :cat;
 
-EXEC (omniidl.sh) (:IDL) (+hcp-split) (+hpath) (+cxy-be-dir) (+cxy) (+inc_sp)
+EXEC (omniidl.sh) (:IDL) (+hpath) (+cxy-be-dir) (+cxy) (+inc_sp)
   NEEDS (+cxy-be-dir:list:map=:list) (:IDL:lookup=:hash_inc_all)
         ($ODIN_OMNICXY_BE_DIR/cxy.py)
         ($ODIN_OMNICXY_BE_DIR/cxycref.py)
@@ -50,7 +50,11 @@ EXEC (omniidl.sh) (:IDL) (+hcp-split) (+hpath) (+cxy-be-dir) (+cxy) (+inc_sp)
         ($ODIN_OMNICXY_BE_DIR/cxysref.py)
   => (:omnicxy.output);
 
-EXEC (vir_dir_spec.sh) (:omnicxy.output) => (:omnicxy.vir_dir_spec.s);
+EXEC (hcpsplit.sh) (:omnicxy.output) (+hcp-split) (+hpath) 
+  NEEDS (:omnicxy.output:list)
+  => (:hcpsplit.output);
+
+EXEC (vir_dir_spec.sh) (:hcpsplit.output) => (:omnicxy.vir_dir_spec.s);
 
 COLLECT (:IDL) => (:idl.list.s);
 

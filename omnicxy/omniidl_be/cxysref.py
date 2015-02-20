@@ -282,6 +282,8 @@ def gen(decl,eclass,eheader,indent=''):
         pass
     elif isinstance(decl, idlast.Enum):
         pass
+    elif isinstance(decl, idlast.Const):
+        pass
     else:
         assert False, repr(decl)
         pass

@@ -1,0 +1,5 @@
+#include <string>
+#include <inttypes.h>
+
+std::string const Z = "z";
+int16_t const Q = 10;

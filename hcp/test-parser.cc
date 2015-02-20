@@ -1507,7 +1507,7 @@ void test31()
     xju::assert_equal(k, j);
     k=hcp_ast::find1stInTree(root.items_.begin(),
                              root.items_.end(),
-                             hcp_ast::isA_<hcp_ast::StaticVarInitialiser>);
+                             hcp_ast::isA_<hcp_ast::VarInitialiser>);
     xju::assert_equal(std::string(root.begin().x_, (**k).begin().x_), 
                       "static const int* x ");
   }
@@ -1550,7 +1550,7 @@ void test32()
     xju::assert_equal(k, j);
     k=hcp_ast::find1stInTree(root.items_.begin(),
                              root.items_.end(),
-                             hcp_ast::isA_<hcp_ast::StaticVarInitialiser>);
+                             hcp_ast::isA_<hcp_ast::VarInitialiser>);
     xju::assert_equal(k, root.items_.end());
   }
   catch(xju::Exception const& e) {

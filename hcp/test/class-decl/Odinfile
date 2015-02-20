@@ -1,0 +1,6 @@
+%run-all-tests==%all-tests.tree:leaves
+
+%all-tests.tree==<<
+(%w)+cmd=grep -q '"line 1 column 1: .*ClassForwardDeclTag.*"':stdout
+
+%w==(x.hcp)+cmd=(../../hcp-what-is-at) -o 0 (x.hcp):stdout
