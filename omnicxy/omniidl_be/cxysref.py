@@ -4,7 +4,7 @@ from omniidl import idltype
 import sys
 import os.path
 
-from cxy import ptype,unqualifiedType
+from cxy import ptype,unqualifiedType,GenerateFailed
 
 calldesc_t='''
   class %(name)s : public omniCallDescriptor
@@ -253,41 +253,47 @@ def genForward(scopedName):
         '}\n'
 
 def gen(decl,eclass,eheader,indent=''):
-    result=''
-    if isinstance(decl, idlast.Module):
-        result=''.join(
-            gen(_,eclass,eheader,indent) for _ in decl.definitions())
-    elif isinstance(decl, idlast.Interface):
-        fqn='::'.join(decl.scopedName())
-        repoId=decl.repoId()
-        forward=genForward(decl.scopedName())
-        operations=''.join(
-            [genOperation(_,eclass,eheader,indent+'  ',fqn) \
-                 for _ in decl.contents() \
-                 if isinstance(_,idlast.Operation)])
-        dispatchers=''.join(
-            [genDispatcher(_,eclass,eheader,indent+'  ',fqn) \
-                 for _ in decl.contents()\
-                 if isinstance(_,idlast.Operation)])
-        calldescs=''.join(
-            [genCalldesc(_,eclass,eheader,indent+'  ',fqn) \
-                 for _ in decl.contents()\
-                 if isinstance(_,idlast.Operation)])
-        result=interface_t%vars()
-    elif isinstance(decl, idlast.Typedef):
-        pass
-    elif isinstance(decl, idlast.Struct):
-        pass
-    elif isinstance(decl, idlast.Exception):
-        pass
-    elif isinstance(decl, idlast.Enum):
-        pass
-    elif isinstance(decl, idlast.Const):
-        pass
-    else:
-        assert False, repr(decl)
-        pass
-    return result
+    try:
+        result=''
+        if isinstance(decl, idlast.Module):
+            result=''.join(
+                gen(_,eclass,eheader,indent) for _ in decl.definitions())
+        elif isinstance(decl, idlast.Interface):
+            fqn='::'.join(decl.scopedName())
+            repoId=decl.repoId()
+            forward=genForward(decl.scopedName())
+            operations=''.join(
+                [genOperation(_,eclass,eheader,indent+'  ',fqn) \
+                     for _ in decl.contents() \
+                     if isinstance(_,idlast.Operation)])
+            dispatchers=''.join(
+                [genDispatcher(_,eclass,eheader,indent+'  ',fqn) \
+                     for _ in decl.contents()\
+                     if isinstance(_,idlast.Operation)])
+            calldescs=''.join(
+                [genCalldesc(_,eclass,eheader,indent+'  ',fqn) \
+                     for _ in decl.contents()\
+                     if isinstance(_,idlast.Operation)])
+            result=interface_t%vars()
+        elif isinstance(decl, idlast.Typedef):
+            pass
+        elif isinstance(decl, idlast.Struct):
+            pass
+        elif isinstance(decl, idlast.Exception):
+            pass
+        elif isinstance(decl, idlast.Enum):
+            pass
+        elif isinstance(decl, idlast.Const):
+            pass
+        elif isinstance(decl, idlast.Union):
+            pass
+        else:
+            assert False, repr(decl)
+            pass
+        return result
+    except:
+        raise GenerateFailed(decl,sys.exc_info())
+    pass
 
 template='''\
 // generated from %(fileName)s by omnicxy cxysref idl backend specifying 

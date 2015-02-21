@@ -15,7 +15,7 @@
 
 int main(int argc, char* argv[])
 {
-  xju::assert_equal(Z, "z");
-  xju::assert_equal(Q, 10);
+  xju::assert_equal(p11_Z, "z");
+  xju::assert_equal(p11_Q, 10);
   return 0;
 }

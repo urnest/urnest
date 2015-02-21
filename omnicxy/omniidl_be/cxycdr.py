@@ -4,7 +4,7 @@ from omniidl import idltype
 import sys
 import os.path
 
-from cxy import unqualifiedType
+from cxy import unqualifiedType,GenerateFailed
 
 interface_t='''\
 template<>
@@ -143,55 +143,147 @@ public:
   static const char repoId[]="%(repoId)s";
 };
 '''
+
+union_case_unmarshal_t='''\
+    case %(d)s:
+    {%(memberUnmarshals)s
+      return xju::Shared< ::%(unionFqn)s::%(caseName)s const>(
+        new ::%(unionFqn)s::%(caseName)s(%(consParams)s));
+    }
+'''
+def gen_union_case_unmarshal(unionFqn,caseName,memberTypesAndNames,d):
+    memberNames=[_[1] for _ in memberTypesAndNames]
+    memberTypes=[_[0] for _ in memberTypesAndNames]
+    paramNames=['p%s'%i for i in range(1,len(memberTypesAndNames)+1)]
+    memberUnmarshals=''.join(['\n      %(t)s const %(pn)s(cdr< %(t)s >::unmarshalFrom(s));'%vars() for t,pn in zip(memberTypes,paramNames)])
+    consParams=', '.join([pn for pn in paramNames])
+    return union_case_unmarshal_t%vars()
+
+union_case_marshal_t='''\
+  if (dynamic_cast< ::%(unionFqn)s::%(caseName)s const*>(&*x)){
+    cdr< ::%(switchTypeName)s >::marshal(d,s);
+    ::%(unionFqn)s::%(caseName)s const& c(
+      dynamic_cast< ::%(unionFqn)s::%(caseName)s const&>(*x));
+    %(memberMarshals)s    
+  }
+'''
+def gen_union_case_marshal(unionFqn,
+                           caseName,
+                           memberTypesAndNames,
+                           switchTypeName,
+                           d):
+    memberNames=[_[1] for _ in memberTypesAndNames]
+    memberTypes=[_[0] for _ in memberTypesAndNames]
+    memberMarshals=''.join(['\n    cdr< %(t)s >::marshal(y.%(n)s,s);'%vars() for t,n in zip(memberTypes,memberNames)])
+    return union_case_marshal_t%vars()
+
+union_t='''\
+template<>
+class cdr< ::xju::Shared< ::%(name)s const> >
+{
+public:
+  static xju::Shared< ::%(name)s const> unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
+  {
+    ::%(switchTypeName)s const d(cdr< ::%(switchTypeName)s >::unmarshalFrom(s));
+    switch(d){%(unmarshal_cases)s
+    default:
+      OMNIORB_THROW(BAD_PARAM,_OMNI_NS(BAD_PARAM_InvalidUnionDiscValue),::CORBA::COMPLETED_NO);
+    }
+  }  
+  static void marshal(xju::Shared< ::%(name)s const> const& x, cdrStream& s) throw()
+  {%(marshal_cases)s
+  }
+  static const char repoId[]="%(repoId)s";
+};
+'''
+
+def gen_union(decl):
+    name=decl.identifier()
+    repoId=decl.repoId()
+    switchTypeName='::'.join(decl.switchType().scopedName())
+    assert decl.switchType().kind()==idltype.tk_enum, decl.switchType()
+    cases=dict([(_.identifier(),[]) for _ in \
+                    decl.switchType().decl().enumerators()])
+    for c in decl.cases():
+        assert c.constrType()==False,c
+        for l in c.labels():
+            assert isinstance(l.value(),idlast.Enumerator),l.value()
+            cases[l.value().identifier()].append(
+                (unqualifiedType(c.caseType()),#type
+                c.declarator().identifier()))    #name
+        pass
+    ds=dict([(_.identifier(),'::%(switchTypeName)s::'%vars()+_.identifier())\
+                 for _ in decl.switchType().decl().enumerators()])
+    #cases is like [('A', [('int32_t','a_')]), ('B', [])]
+    unmarshal_cases=''.join([\
+            gen_union_case_unmarshal(\
+                name,caseName,memberTypesAndNames,ds[caseName]) \
+                for caseName,memberTypesAndNames in cases.items()])
+    marshal_cases=''.join([\
+            gen_union_case_marshal(\
+                name,caseName,memberTypesAndNames,switchTypeName,ds[caseName]) \
+                for caseName,memberTypesAndNames in cases.items()])
+    return union_t%vars()
+
 def gen(decl,eclass,eheader,causeType,contextType,
         causeMemberExpression,contextMemberExpression,indent=''):
-    result=''
-    if isinstance(decl, idlast.Module):
-        result=''.join(gen(_,eclass,eheader,causeType,contextType,
-                           causeMemberExpression,contextMemberExpression) \
-                           for _ in decl.definitions())
-    elif isinstance(decl, idlast.Interface):
-        fqn='::'.join(decl.scopedName())
-        repoId=decl.repoId()
-        result=interface_t%vars()+\
-            ''.join(gen(_,eclass,eheader,causeType,contextType,
-                        causeMemberExpression,contextMemberExpression) \
-                        for _ in decl.contents())
-    elif isinstance(decl, idlast.Operation):
-        pass
-    elif isinstance(decl, idlast.Typedef):
-        pass
-    elif isinstance(decl, idlast.Struct):
-        name='::'.join(decl.scopedName())
-        memberTypesAndNames=[(unqualifiedType(_.memberType()),_.declarators()[0].identifier()) for _ in decl.members()];
-        result=gen_struct(name,memberTypesAndNames)
-        pass
-    elif isinstance(decl, idlast.Exception):
-        name='::'.join(decl.scopedName())
-        repoId=decl.repoId()
-        memberTypesAndNames=[
-            (unqualifiedType(_.memberType()),_.declarators()[0].identifier()) \
-                for _ in decl.members()];
-        memberTypes=[_[0] for _ in memberTypesAndNames]
-        if causeType in memberTypes and contextType in memberTypes:
-            result=gen_mapped_exception(
-                name,repoId,memberTypesAndNames,
-                eclass,causeType,contextType,
-                causeMemberExpression,contextMemberExpression)
-        else:
-            result=gen_exception(name,repoId,memberTypesAndNames,eclass)
+    try:
+        result=''
+        if isinstance(decl, idlast.Module):
+            result=''.join(gen(_,eclass,eheader,causeType,contextType,
+                               causeMemberExpression,contextMemberExpression) \
+                               for _ in decl.definitions())
+        elif isinstance(decl, idlast.Interface):
+            fqn='::'.join(decl.scopedName())
+            repoId=decl.repoId()
+            result=interface_t%vars()+\
+                ''.join(gen(_,eclass,eheader,causeType,contextType,
+                            causeMemberExpression,contextMemberExpression) \
+                            for _ in decl.contents())
+        elif isinstance(decl, idlast.Operation):
             pass
-        pass
-    elif isinstance(decl, idlast.Enum):
-        name='::'.join(decl.scopedName())
-        repoId=decl.repoId()
-        result=enum_t%vars()
-    elif isinstance(decl, idlast.Const):
-        pass
-    else:
-        assert False, repr(decl)
-        pass
-    return result
+        elif isinstance(decl, idlast.Typedef):
+            pass
+        elif isinstance(decl, idlast.Struct):
+            name='::'.join(decl.scopedName())
+            memberTypesAndNames=[(unqualifiedType(_.memberType()),_.declarators()[0].identifier()) for _ in decl.members()];
+            result=gen_struct(name,memberTypesAndNames)
+            pass
+        elif isinstance(decl, idlast.Exception):
+            name='::'.join(decl.scopedName())
+            repoId=decl.repoId()
+            memberTypesAndNames=[
+                (unqualifiedType(_.memberType()),_.declarators()[0].identifier()) \
+                    for _ in decl.members()];
+            memberTypes=[_[0] for _ in memberTypesAndNames]
+            if causeType in memberTypes and contextType in memberTypes:
+                result=gen_mapped_exception(
+                    name,repoId,memberTypesAndNames,
+                    eclass,causeType,contextType,
+                    causeMemberExpression,contextMemberExpression)
+            else:
+                result=gen_exception(name,repoId,memberTypesAndNames,eclass)
+                pass
+            pass
+        elif isinstance(decl, idlast.Enum):
+            name='::'.join(decl.scopedName())
+            repoId=decl.repoId()
+            result=enum_t%vars()
+        elif isinstance(decl, idlast.Const):
+            pass
+        elif isinstance(decl, idlast.Union):
+            result=gen_union(decl)
+        else:
+            assert False, repr(decl)
+            pass
+        return result
+    except:
+        raise GenerateFailed(decl,sys.exc_info())
+    pass
 
 template='''\
 // generated from %(fileName)s by omnicxy cxycdr idl backend

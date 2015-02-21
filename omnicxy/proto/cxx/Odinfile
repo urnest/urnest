@@ -72,3 +72,8 @@ p9.cc==(%dummy.hh)+cmd=cat (%p9.cxx.files+member='p9SK.cc':extract_file):stdout
 p10.hh==(%dummy.hh)+cmd=cat (%p10.cxx.files+member='p10.hh':extract_file):stdout
 p10.cc==(%dummy.hh)+cmd=cat (%p10.cxx.files+member='p10SK.cc':extract_file):stdout
 
+%p11.cxx.files==../p11.idl+cmd='omniidl' '-bcxx' (../p11.idl)+need=(../p11.idl:hash_inc_all):exec.files
+
+p11.hh==(%dummy.hh)+cmd=cat (%p11.cxx.files+member='p11.hh':extract_file):stdout
+p11.cc==(%dummy.hh)+cmd=cat (%p11.cxx.files+member='p11SK.cc':extract_file):stdout
+

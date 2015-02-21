@@ -1,14 +1,18 @@
-const string Z = "z";
-const short Q = 10;
+const string p11_Z = "z";
+const short p11_Q = 10;
 
-/*
 enum X {
   A, B, C
 };
-
-union Y switch(X) {
+union U1 switch(X) {
   case A: long a_;
   case C: float c_;
 };
-*/
 
+module p11
+{
+  interface F
+  {
+    void f1(in U1 a);
+  };
+};

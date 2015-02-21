@@ -179,7 +179,11 @@ x p10.idl:
   x enum
 
 - p11.idl:
-  - union, constant
+  x constant
+  - enum X {A}; union(X) { A: X x_; };
+  - union(int) { 1: X x_; };
+  - union(enum {A}){ A: X x_; };
+  - recursive union
 
 - inherit interface
 - bounded strings

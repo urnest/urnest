@@ -4,7 +4,7 @@ from omniidl import idltype
 import sys
 import os.path
 
-from cxy import ptype,unqualifiedType
+from cxy import ptype,unqualifiedType,GenerateFailed
 
 interface_t='''\
 template<>
@@ -78,30 +78,36 @@ def reindent(indent, s):
     return '\n'.join([indent+_ for _ in s.split('\n')])
 
 def gen(decl,eclass,eheader,indent=''):
-    result=''
-    if isinstance(decl, idlast.Module):
-        result=''.join(gen(_,eclass,eheader) for _ in decl.definitions())
-    elif isinstance(decl, idlast.Interface):
-        fqn='::'.join(decl.scopedName())
-        repoId=decl.repoId()
-        content=''.join([gen(_,eclass,eheader,indent+'  ') for _ in decl.contents()])
-        result=interface_t%vars()
-    elif isinstance(decl, idlast.Operation):
-        pass
-    elif isinstance(decl, idlast.Typedef):
-        pass
-    elif isinstance(decl, idlast.Struct):
-        pass
-    elif isinstance(decl, idlast.Exception):
-        pass
-    elif isinstance(decl, idlast.Enum):
-        pass
-    elif isinstance(decl, idlast.Const):
-        pass
-    else:
-        assert False, repr(decl)
-        pass
-    return result
+    try:
+        result=''
+        if isinstance(decl, idlast.Module):
+            result=''.join(gen(_,eclass,eheader) for _ in decl.definitions())
+        elif isinstance(decl, idlast.Interface):
+            fqn='::'.join(decl.scopedName())
+            repoId=decl.repoId()
+            content=''.join([gen(_,eclass,eheader,indent+'  ') for _ in decl.contents()])
+            result=interface_t%vars()
+        elif isinstance(decl, idlast.Operation):
+            pass
+        elif isinstance(decl, idlast.Typedef):
+            pass
+        elif isinstance(decl, idlast.Struct):
+            pass
+        elif isinstance(decl, idlast.Exception):
+            pass
+        elif isinstance(decl, idlast.Enum):
+            pass
+        elif isinstance(decl, idlast.Const):
+            pass
+        elif isinstance(decl, idlast.Union):
+            pass
+        else:
+            assert False, repr(decl)
+            pass
+        return result
+    except:
+        raise GenerateFailed(decl,sys.exc_info())
+    pass
 
 template='''\
 // generated from %(fileName)s by omnicxy cxycref idl backend specifying 

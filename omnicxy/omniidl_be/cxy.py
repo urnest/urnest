@@ -4,6 +4,20 @@ from omniidl import idltype
 import sys
 import os.path
 import types
+import traceback
+
+class GenerateFailed(Exception):
+    def __init__(self,decl,cause):
+        self.decl=decl
+        self.cause=cause #sys.exc_info()
+        pass
+    def __str__(self):
+        decl=self.decl
+        file=self.decl.file()
+        line=self.decl.line()
+        cause=''.join(traceback.format_exception(*self.cause))
+        return 'failed to generate decl %(decl)r from file %(file)r line %(line)s because\n%(cause)s' %vars()
+    pass
 
 interface_t='''\
 class %(name)s
@@ -68,6 +82,9 @@ def unqualifiedType(t):
         return 'std::vector< %(itemType)s >'%vars()
     elif t.kind()==idltype.tk_enum:
         return ''.join(['::'+_ for _ in t.scopedName()])
+    elif t.kind()==idltype.tk_union:
+        t=''.join(['::'+_ for _ in t.scopedName()])
+        return '::xju::Shared< ::%(t)s const>'
     assert False, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
     pass
 
@@ -82,6 +99,9 @@ def ptype(p):
             return ''.join(['::'+_ for _ in p.paramType().scopedName()])+' const'
         elif p.paramType().kind()==idltype.tk_enum:
             return ''.join(['::'+_ for _ in p.paramType().scopedName()])+' const'
+        elif p.paramType().kind()==idltype.tk_union:
+            unionTypeName=''.join(['::'+_ for _ in p.paramType().scopedName()])
+            return '::xju::Shared< %(unionTypeName)s const> const'%vars()
         assert False, '%s not implemented, only basic types %s implemented' % (p.paramType().kind(),basicParamTypes.keys())
 
     assert p.dirtext()+' params not yet implemented'
@@ -98,11 +118,18 @@ def tincludes(t):
         return []
     elif t.kind() in [idltype.tk_struct]:
         return []
+    elif t.kind() in [idltype.tk_union]:
+        return []
     elif t.kind() in [idltype.tk_sequence]:
         return tincludes(t.seqType())
     elif t.kind() in [idltype.tk_enum]:
         return []
     assert False, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
+
+def pincludes(t):
+    if t.kind() in [idltype.tk_union]:
+        return ['<xju/Shared.hh>']
+    return tincludes(t)
 
 def reindent(indent, s):
     '''prepend %(indent)r to each line of %(s)r'''
@@ -421,101 +448,230 @@ def gen_enum(name,values,eclass):
                          for _ in values])
     return enum_t%vars()
 
+union_case_def_t='''
+class %(typeName)s::%(caseName)s : 
+  public %(typeName)s
+{
+public:
+  virtual ~%(caseName)s() throw() {
+  }
+  explicit %(caseName)s(%(consparams)s) throw():%(consinitialisers)s {
+  }
+  friend bool operator<(
+    %(caseName)s const& x, 
+    %(caseName)s const& y) throw() {%(lessMembers)s
+    return false;
+  }
+  friend bool operator>(
+    %(caseName)s const& x, 
+    %(caseName)s const& y) throw() {
+    return y<x;
+  }
+  friend bool operator!=(
+    %(caseName)s const& x, 
+    %(caseName)s const& y) throw() {
+    return (x<y)||(y<x);
+  }
+  friend bool operator==(
+    %(caseName)s const& x, 
+    %(caseName)s const& y) throw() {
+    return !(x!=y);
+  }
+  friend bool operator<=(
+    %(caseName)s const& x, 
+    %(caseName)s const& y) throw() {
+    return (x<y)||(x==y);
+  }
+  friend bool operator>=(
+    %(caseName)s const& x, 
+    %(caseName)s const& y) throw() {
+    return (x>y)||(x==y);
+  }
+};
+'''
+def gen_union_case_def(typeName,caseName,memberTypesAndNames):
+    memberNames=[_[1] for _ in memberTypesAndNames]
+    memberTypes=[_[0] for _ in memberTypesAndNames]
+    paramNames=['p%s'%i for i in range(1,len(memberTypesAndNames)+1)]
+    
+    members=''.join(['\n  %s %s;'%_ for _ in memberTypesAndNames])
+    consparams=','.join(['\n    %s const& %s'%_ for _ in zip(memberTypes,paramNames)])
+    consinitialisers=','.join(['\n      %s(%s)'%_ for _ in zip(memberNames,paramNames)])
+    lessMembers=''.join([('\n    if (x.%(_)s<y.%(_)s) return true;'+
+                          '\n    if (y.%(_)s<x.%(_)s) return false;')%vars()\
+                             for _ in memberNames])
+    return union_case_def_t%vars()
+
+union_latter_case_t='''
+  if (dynamic_cast<%(typeName)s::%(latterCaseName)s const* >(&b)) {
+    return true;
+  }'''
+def gen_union_latter_case(typeName,latterCaseName):
+    return union_latter_case_t%vars()
+
+union_case_less_operator_t='''
+bool operator<(%(typeName)s::%(caseName)s const& x, %(typeName)s const& b) throw()
+{
+  if (dynamic_cast<%(typeName)s::%(caseName)s const* >(&b)) {
+    return x < dynamic_cast< %(typeName)s::%(caseName)s const& >(b);
+  }%(latter_cases)s
+  return false;
+}'''
+def gen_union_case_less_operator(typeName,caseName,latterCaseNames):
+    latter_cases=''.join([gen_union_latter_case(typeName,_) \
+                              for _ in latterCaseNames])
+    return union_case_less_operator_t%vars()
+
+union_less_clause_t='''
+  if (dynamic_cast<%(typeName)s::%(caseName)s const* >(&a)) {
+    return dynamic_cast<%(typeName)s::%(caseName)s const&>(a)<b;
+  }'''
+def gen_union_less_clause(typeName,caseName):
+    return union_less_clause_t%vars()
+
+union_t='''\
+class %(typeName)s
+{
+public:
+  virtual ~%(typeName)s() throw() {
+  }
+  %(union_case_fwds)s
+};
+%(union_case_defs)s
+%(case_less_operators)s
+bool operator<(U1 const& a, U1 const& b) throw()
+{%(less_clauses)s
+}
+'''
+def gen_union(decl):
+    typeName=decl.identifier()
+    assert decl.switchType().kind()==idltype.tk_enum, decl.switchType()
+    cases=dict([(_.identifier(),[]) for _ in \
+                    decl.switchType().decl().enumerators()])
+    for c in decl.cases():
+        assert c.constrType()==False,c
+        for l in c.labels():
+            assert isinstance(l.value(),idlast.Enumerator),l.value()
+            cases[l.value().identifier()].append(
+                (unqualifiedType(c.caseType()),#type
+                c.declarator().identifier()))    #name
+        pass
+    #cases is like [('A', [('int32_t','a_')]), ('B', [])]
+    union_case_fwds='\n  '.join(['class %(_)s;'%vars() for _ in cases.keys()])
+    union_case_defs=''.join(
+        [gen_union_case_def(typeName,caseName,memberTypesAndNames)\
+             for caseName,memberTypesAndNames in cases.items()])
+    case_less_operators=''.join(\
+        [gen_union_case_less_operator(typeName,caseName,cases.items()[i+1:])\
+             for i,caseName in enumerate(cases.keys())])
+    less_clauses=''.join([gen_union_less_clause(typeName,caseName)\
+                              for caseName in cases.keys()])
+    return union_t%vars()
+
 def gen(decl,eclass,eheader,causeType,contextType,indent=''):
-    result=''
-    if isinstance(decl, idlast.Module):
-        ns=decl.identifier()
-        result='%(indent)snamespace %(ns)s\n%(indent)s{\n'%vars()
-        result=result+''.join(
-            [gen(_,eclass,eheader,causeType,contextType,indent)+'\n' \
-                 for _ in decl.definitions()])
-        result=result+'%(indent)s}'%vars()
-    elif isinstance(decl, idlast.Interface):
-        name=decl.identifier()
-        content='\n'.join(
-            [gen(_,eclass,eheader,causeType,contextType,indent+'  ') \
-                 for _ in decl.contents()])
-        result=reindent(indent,interface_t%vars())
-    elif isinstance(decl, idlast.Operation):
-        name=decl.identifier()
-        params=','.join(['\n  %s& %s'%(ptype(p),p.identifier()) \
-                             for p in decl.parameters()])
-        assert len(decl.contexts())==0, 'contexts not yet implemented'
-        exceptionTypes=['::'.join(_.scopedName()) for _ in decl.raises()]
-        exceptions=''.join(['\n  %(_)s,'%vars() for _ in exceptionTypes])
-        returnType=unqualifiedType(decl.returnType())
-        result=reindent(indent,operation_t%vars())
-    elif isinstance(decl, idlast.Typedef):
-        name=decl.declarators()[0].identifier()
-        tagClass=''
-        aliasOf=decl.aliasType()
-        if aliasOf.kind() in basicIntTypes:
-            aliasOf=unqualifiedType(aliasOf)
+    try:
+        result=''
+        if isinstance(decl, idlast.Module):
+            ns=decl.identifier()
+            result='%(indent)snamespace %(ns)s\n%(indent)s{\n'%vars()
+            result=result+''.join(
+                [gen(_,eclass,eheader,causeType,contextType,indent)+'\n' \
+                     for _ in decl.definitions()])
+            result=result+'%(indent)s}'%vars()
+        elif isinstance(decl, idlast.Interface):
+            name=decl.identifier()
+            content='\n'.join(
+                [gen(_,eclass,eheader,causeType,contextType,indent+'  ') \
+                     for _ in decl.contents()])
+            result=reindent(indent,interface_t%vars())
+        elif isinstance(decl, idlast.Operation):
+            name=decl.identifier()
+            params=','.join(['\n  %s& %s'%(ptype(p),p.identifier()) \
+                                 for p in decl.parameters()])
+            assert len(decl.contexts())==0, 'contexts not yet implemented'
+            exceptionTypes=['::'.join(_.scopedName()) for _ in decl.raises()]
+            exceptions=''.join(['\n  %(_)s,'%vars() for _ in exceptionTypes])
+            returnType=unqualifiedType(decl.returnType())
+            result=reindent(indent,operation_t%vars())
+        elif isinstance(decl, idlast.Typedef):
+            name=decl.declarators()[0].identifier()
+            tagClass=''
+            aliasOf=decl.aliasType()
+            if aliasOf.kind() in basicIntTypes:
+                aliasOf=unqualifiedType(aliasOf)
+                result=reindent(
+                    indent,
+                    ('class %(name)s_tag {};\n'+
+                     'typedef ::xju::Int< %(name)s_tag,%(aliasOf)s > %(name)s;')%vars())
+            elif aliasOf.kind() in basicFloatTypes:
+                aliasOf=unqualifiedType(aliasOf)
+                result=reindent(
+                    indent,
+                    ('class %(name)s_tag {};\n'+
+                     'typedef ::xju::Float< %(aliasOf)s,%(name)s_tag > %(name)s;')%vars())
+            elif aliasOf.kind() in basicStringTypes:
+                result=reindent(
+                    indent,
+                    ('class %(name)s_tag {};\n'+
+                     'typedef ::xju::Tagged<std::string,%(name)s_tag > %(name)s;')%vars())
+            else:
+                aliasOf=unqualifiedType(aliasOf)
+                result=reindent(
+                    indent,
+                    ('typedef %(aliasOf)s %(name)s;')%vars())
+                pass
+        elif isinstance(decl, idlast.Struct):
+            name=decl.identifier()
+            memberTypesAndNames=[(unqualifiedType(_.memberType()),_.declarators()[0].identifier()) for _ in decl.members()];
             result=reindent(
                 indent,
-                ('class %(name)s_tag {};\n'+
-                 'typedef ::xju::Int< %(name)s_tag,%(aliasOf)s > %(name)s;')%vars())
-        elif aliasOf.kind() in basicFloatTypes:
-            aliasOf=unqualifiedType(aliasOf)
-            result=reindent(
-                indent,
-                ('class %(name)s_tag {};\n'+
-                 'typedef ::xju::Float< %(aliasOf)s,%(name)s_tag > %(name)s;')%vars())
-        elif aliasOf.kind() in basicStringTypes:
-            result=reindent(
-                indent,
-                ('class %(name)s_tag {};\n'+
-                 'typedef ::xju::Tagged<std::string,%(name)s_tag > %(name)s;')%vars())
-        else:
-            aliasOf=unqualifiedType(aliasOf)
-            result=reindent(
-                indent,
-                ('typedef %(aliasOf)s %(name)s;')%vars())
+                gen_struct(name,memberTypesAndNames))
             pass
-    elif isinstance(decl, idlast.Struct):
-        name=decl.identifier()
-        memberTypesAndNames=[(unqualifiedType(_.memberType()),_.declarators()[0].identifier()) for _ in decl.members()];
-        result=reindent(
-            indent,
-            gen_struct(name,memberTypesAndNames))
-        pass
-    elif isinstance(decl, idlast.Exception):
-        name=decl.identifier()
-        memberTypesAndNames=[\
-            (unqualifiedType(_.memberType()),_.declarators()[0].identifier()) \
-                for _ in decl.members()];
-        memberTypes=[_[0] for _ in memberTypesAndNames]
-        if causeType in memberTypes and contextType in memberTypes:
-            result=reindent(
-                indent,
-                gen_mapped_exception(name,memberTypesAndNames,
-                                     eclass,causeType,contextType))
-        else:
-            result=reindent(
-                indent,
-                gen_exception(name,memberTypesAndNames,eclass))
-        pass
-    elif isinstance(decl, idlast.Enum):
-        name=decl.identifier()
-        values=[_.identifier() for _ in decl.enumerators()]
-        result=reindent(
-            indent,
-            gen_enum(name,values,eclass))
-    elif isinstance(decl, idlast.Const):
-        name=decl.identifier()
-        type_=unqualifiedType(decl.constType())
-        if type_=='std::string':
-            value='"%s"'%decl.value()
-        else:
-            value=repr(decl.value())
+        elif isinstance(decl, idlast.Exception):
+            name=decl.identifier()
+            memberTypesAndNames=[\
+                (unqualifiedType(_.memberType()),_.declarators()[0].identifier()) \
+                    for _ in decl.members()];
+            memberTypes=[_[0] for _ in memberTypesAndNames]
+            if causeType in memberTypes and contextType in memberTypes:
+                result=reindent(
+                    indent,
+                    gen_mapped_exception(name,memberTypesAndNames,
+                                         eclass,causeType,contextType))
+            else:
+                result=reindent(
+                    indent,
+                    gen_exception(name,memberTypesAndNames,eclass))
             pass
-        result=reindent(
-            indent,
-            '%(type_)s const %(name)s = %(value)s;'%vars())
-    else:
-        assert False, repr(decl)
-        pass
-    return result
+        elif isinstance(decl, idlast.Enum):
+            name=decl.identifier()
+            values=[_.identifier() for _ in decl.enumerators()]
+            result=reindent(
+                indent,
+                gen_enum(name,values,eclass))
+        elif isinstance(decl, idlast.Const):
+            name=decl.identifier()
+            type_=unqualifiedType(decl.constType())
+            if type_=='std::string':
+                value='"%s"'%decl.value()
+            else:
+                value=repr(decl.value())
+                pass
+            result=reindent(
+                indent,
+                '%(type_)s const %(name)s = %(value)s;'%vars())
+        elif isinstance(decl, idlast.Union):
+            result=reindent(
+                indent,
+                gen_union(decl))
+            pass
+        else:
+            assert False, repr(decl)
+            pass
+        return result
+    except:
+        raise GenerateFailed(decl,sys.exc_info())
+    pass
 
 def gen_tincludes(decl):
     result=[]
@@ -524,8 +680,9 @@ def gen_tincludes(decl):
     elif isinstance(decl, idlast.Interface):
         result=result+sum([gen_tincludes(_) for _ in decl.contents()],[])
     elif isinstance(decl, idlast.Operation):
-        result=result+sum([tincludes(p.paramType()) for p in decl.parameters()],[])
-        result=result+tincludes(decl.returnType())
+        result=result+sum(
+            [pincludes(p.paramType()) for p in decl.parameters()],[])
+        result=result+pincludes(decl.returnType())
     elif isinstance(decl, idlast.Typedef):
         aliasOf=decl.aliasType()
         if aliasOf.kind() in basicIntTypes:
@@ -572,6 +729,11 @@ def gen_tincludes(decl):
             result=result+['<string>']
         else:
             result=[]
+            pass
+    elif isinstance(decl, idlast.Union):
+        result=tincludes(decl.switchType())
+        for l in decl.cases():
+            result.extend(tincludes(l.caseType()))
             pass
     else:
         assert False, (str(decl.__class__),repr(decl))
