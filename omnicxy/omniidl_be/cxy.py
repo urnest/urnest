@@ -84,7 +84,7 @@ def unqualifiedType(t):
         return ''.join(['::'+_ for _ in t.scopedName()])
     elif t.kind()==idltype.tk_union:
         t=''.join(['::'+_ for _ in t.scopedName()])
-        return '::xju::Shared< ::%(t)s const>'
+        return '::xju::Shared< ::%(t)s const>'%vars()
     assert False, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
     pass
 
@@ -452,10 +452,11 @@ union_case_def_t='''
 class %(typeName)s::%(caseName)s : 
   public %(typeName)s
 {
-public:
+public:%(members)s
+
   virtual ~%(caseName)s() throw() {
   }
-  explicit %(caseName)s(%(consparams)s) throw():%(consinitialisers)s {
+  explicit %(caseName)s(%(consparams)s) throw()%(consinitialisers)s {
   }
   friend bool operator<(
     %(caseName)s const& x, 
@@ -497,6 +498,9 @@ def gen_union_case_def(typeName,caseName,memberTypesAndNames):
     members=''.join(['\n  %s %s;'%_ for _ in memberTypesAndNames])
     consparams=','.join(['\n    %s const& %s'%_ for _ in zip(memberTypes,paramNames)])
     consinitialisers=','.join(['\n      %s(%s)'%_ for _ in zip(memberNames,paramNames)])
+    if len(consinitialisers):
+        consinitialisers=':'+consinitialisers
+        pass
     lessMembers=''.join([('\n    if (x.%(_)s<y.%(_)s) return true;'+
                           '\n    if (y.%(_)s<x.%(_)s) return false;')%vars()\
                              for _ in memberNames])
@@ -562,7 +566,7 @@ def gen_union(decl):
         [gen_union_case_def(typeName,caseName,memberTypesAndNames)\
              for caseName,memberTypesAndNames in cases.items()])
     case_less_operators=''.join(\
-        [gen_union_case_less_operator(typeName,caseName,cases.items()[i+1:])\
+        [gen_union_case_less_operator(typeName,caseName,cases.keys()[i+1:])\
              for i,caseName in enumerate(cases.keys())])
     less_clauses=''.join([gen_union_less_clause(typeName,caseName)\
                               for caseName in cases.keys()])

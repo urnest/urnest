@@ -1206,7 +1206,8 @@ PR class_proto(
 PR class_decl(new NamedParser<hcp_ast::ClassForwardDecl>(
   "class forward-declaration",
   class_proto+
-  parseOneOfChars(";")));
+  parseOneOfChars(";")+
+  eatWhite));
 
 PR attr_decl(new NamedParser<hcp_ast::AttrDecl>(
   "attr declaration",

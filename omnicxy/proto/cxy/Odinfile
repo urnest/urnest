@@ -19,6 +19,7 @@
 %p7.hcp==%gen/p7.hcp
 %p9.hcp==%gen/p9.hcp
 %p10.hcp==%gen/p10.hcp
+%p11.hcp==%gen/p11.hcp
 
 %all-tests.tree==<<
 ()+cmd=(%p1-main) '3735' 'both':exec.output

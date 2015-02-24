@@ -1,0 +1,16 @@
+class C;
+
+class A 
+{
+  class B;
+};
+
+class A::B
+{
+public:
+  int x() throw()
+  {
+    reuturn 0;
+  }
+};
+

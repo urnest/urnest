@@ -3,12 +3,14 @@
 %all-tests.tree==<<
 ()+cmd=(../../xju/test-Traced.cc+(%opts):auto.cxx.exe):stdout
 ()+cmd=(../../xju/test-JoiningIterator.cc+(%opts):auto.cxx.exe):stdout
-classpecialize%all-tests.tree
-static_var_def%all-tests.tree
-friend_function%all-tests.tree
 base_class_init%all-tests.tree
-nested_namespace%all-tests.tree
+class-decl%all-tests.tree
+classpecialize%all-tests.tree
+friend_function%all-tests.tree
 global-var%all-tests.tree
+hpath_option%all-tests.tree
+nested_namespace%all-tests.tree
+static_var_def%all-tests.tree
 
 %opts==<<
 +inc_sp=(%gendir)
