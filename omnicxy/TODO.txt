@@ -180,7 +180,7 @@ x p10.idl:
 
 - p11.idl:
   x constant
-  - enum X {A}; union(X) { A: X x_; };
+  x enum X {A}; union(X) { A: X x_; };
   - union(int) { 1: X x_; };
   - union(enum {A}){ A: X x_; };
   - recursive union

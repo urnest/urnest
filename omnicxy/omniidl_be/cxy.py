@@ -84,7 +84,7 @@ def unqualifiedType(t):
         return ''.join(['::'+_ for _ in t.scopedName()])
     elif t.kind()==idltype.tk_union:
         t=''.join(['::'+_ for _ in t.scopedName()])
-        return '::xju::Shared< ::%(t)s const>'%vars()
+        return '::xju::Shared< %(t)s const>'%vars()
     assert False, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
     pass
 
@@ -534,6 +534,7 @@ def gen_union_less_clause(typeName,caseName):
     return union_less_clause_t%vars()
 
 union_t='''\
+ // IDL Union %(typeName)s
 class %(typeName)s
 {
 public:
@@ -543,15 +544,36 @@ public:
 };
 %(union_case_defs)s
 %(case_less_operators)s
-bool operator<(U1 const& a, U1 const& b) throw()
+bool operator<(%(typeName)s const& a, %(typeName)s const& b) throw()
 {%(less_clauses)s
+}
+bool operator>(%(typeName)s const& a, %(typeName)s const& b) throw()
+{
+  return b < a;
+}
+bool operator!=(%(typeName)s const& a, %(typeName)s const& b) throw()
+{
+  return (a<b)||(b<a);
+}
+bool operator==(%(typeName)s const& a, %(typeName)s const& b) throw()
+{
+  return !(a<b)&&!(b<a);
+}
+bool operator<=(%(typeName)s const& a, %(typeName)s const& b) throw()
+{
+  return (a<b)||(a==b);
+}
+bool operator>=(%(typeName)s const& a, %(typeName)s const& b) throw()
+{
+  return (a>b)||(a==b);
 }
 '''
 def gen_union(decl):
     typeName=decl.identifier()
     assert decl.switchType().kind()==idltype.tk_enum, decl.switchType()
-    cases=dict([(_.identifier(),[]) for _ in \
-                    decl.switchType().decl().enumerators()])
+    labels=[_.identifier() for _ in \
+                decl.switchType().decl().enumerators()]
+    cases=dict([(label,[]) for label in labels])
     for c in decl.cases():
         assert c.constrType()==False,c
         for l in c.labels():
@@ -561,15 +583,18 @@ def gen_union(decl):
                 c.declarator().identifier()))    #name
         pass
     #cases is like [('A', [('int32_t','a_')]), ('B', [])]
-    union_case_fwds='\n  '.join(['class %(_)s;'%vars() for _ in cases.keys()])
+    union_case_fwds='\n  '.join(['class %(_)s;'%vars() for _ in labels])
     union_case_defs=''.join(
         [gen_union_case_def(typeName,caseName,memberTypesAndNames)\
              for caseName,memberTypesAndNames in cases.items()])
+    union_case_defs=''.join(
+        [gen_union_case_def(typeName,caseName,cases[caseName])\
+             for caseName in labels])
     case_less_operators=''.join(\
-        [gen_union_case_less_operator(typeName,caseName,cases.keys()[i+1:])\
-             for i,caseName in enumerate(cases.keys())])
+        [gen_union_case_less_operator(typeName,caseName,labels[i+1:])\
+             for i,caseName in enumerate(labels)])
     less_clauses=''.join([gen_union_less_clause(typeName,caseName)\
-                              for caseName in cases.keys()])
+                              for caseName in labels])
     return union_t%vars()
 
 def gen(decl,eclass,eheader,causeType,contextType,indent=''):

@@ -161,7 +161,7 @@ def gen_union_case_unmarshal(unionFqn,caseName,memberTypesAndNames,d):
 
 union_case_marshal_t='''\
   if (dynamic_cast< ::%(unionFqn)s::%(caseName)s const*>(&*x)){
-    cdr< ::%(switchTypeName)s >::marshal(d,s);
+    cdr< ::%(switchTypeName)s >::marshal(::%(switchTypeName)s::%(caseName)s,s);
     ::%(unionFqn)s::%(caseName)s const& c(
       dynamic_cast< ::%(unionFqn)s::%(caseName)s const&>(*x));
     %(memberMarshals)s    
@@ -174,7 +174,7 @@ def gen_union_case_marshal(unionFqn,
                            d):
     memberNames=[_[1] for _ in memberTypesAndNames]
     memberTypes=[_[0] for _ in memberTypesAndNames]
-    memberMarshals=''.join(['\n    cdr< %(t)s >::marshal(y.%(n)s,s);'%vars() for t,n in zip(memberTypes,memberNames)])
+    memberMarshals=''.join(['\n    cdr< %(t)s >::marshal(c.%(n)s,s);'%vars() for t,n in zip(memberTypes,memberNames)])
     return union_case_marshal_t%vars()
 
 union_t='''\
@@ -189,9 +189,9 @@ public:
   //  )
   {
     ::%(switchTypeName)s const d(cdr< ::%(switchTypeName)s >::unmarshalFrom(s));
-    switch(d){%(unmarshal_cases)s
+    switch(valueOf(d)){%(unmarshal_cases)s
     default:
-      OMNIORB_THROW(BAD_PARAM,_OMNI_NS(BAD_PARAM_InvalidUnionDiscValue),::CORBA::COMPLETED_NO);
+      throw CORBA::BAD_PARAM(omni::BAD_PARAM_InvalidUnionDiscValue,::CORBA::COMPLETED_NO);
     }
   }  
   static void marshal(xju::Shared< ::%(name)s const> const& x, cdrStream& s) throw()
@@ -202,7 +202,7 @@ public:
 '''
 
 def gen_union(decl):
-    name=decl.identifier()
+    name='::'.join(decl.scopedName())
     repoId=decl.repoId()
     switchTypeName='::'.join(decl.switchType().scopedName())
     assert decl.switchType().kind()==idltype.tk_enum, decl.switchType()
@@ -292,6 +292,8 @@ template='''\
 
 #include %(hhinc)s
 %(idlincludes)s
+
+#include <omniORB4/CORBA.h> // impl
 
 namespace cxy
 {

@@ -1,9 +1,15 @@
-- handle forward-declared classes, eg:
+- handle // comments anywhere, eg:
+  class A  // comment
+  {
+  };
+
+x fix forward-declared classes, eg:
   class A {
     class B;
   }
   class A::B {
   }
+
 - test nested class defs v parse.cc line 85
   class A{
     class B{};
