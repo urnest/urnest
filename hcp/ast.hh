@@ -196,6 +196,7 @@ public:
   }
 };
 
+class WhiteSpaceTag{};
 class LineCommentTag{};
 class BlockCommentTag{};
 class CommentsTag{};
@@ -203,6 +204,7 @@ class StringLiteralTag{};
 class S_CharsTag{};
 class HashIncludeTag{};
 
+typedef TaggedCompositeItem<WhiteSpaceTag> WhiteSpace;
 typedef TaggedCompositeItem<LineCommentTag> LineComment;
 typedef TaggedCompositeItem<BlockCommentTag> BlockComment;
 typedef TaggedCompositeItem<CommentsTag> Comments;

@@ -1126,6 +1126,28 @@ PR function_qualifiers(
                  parseLiteral("explicit")|
                  parseLiteral("friend")|
                  keyword_static)+eatWhite)));
+
+PR block(new NamedParser<hcp_ast::Block>(
+  "block",
+  parseLiteral("{")+
+  balanced(parseOneOfChars("}"))+
+  parseLiteral("}")));
+
+PR init_list(new NamedParser<hcp_ast::InitList>(
+  "initialiser list",
+  parseLiteral(":")+
+  balanced(parseOneOfChars("{;:"))));
+
+PR catch_block(parseLiteral("catch")+eatWhite+bracketed+eatWhite+block);
+
+PR function_impl(
+  new NamedParser<hcp_ast::FunctionImpl>(
+    "function implementation",
+    eatWhite+
+    (zeroOrMore*(parseLiteral("try")+eatWhite)+
+     zeroOrMore*(init_list+eatWhite)+
+     block+
+     zeroOrMore*(eatWhite+catch_block))));
                 
 PR function_proto(
   function_qualifiers+
@@ -1135,13 +1157,12 @@ PR function_proto(
   "function name",
   (operator_name|destructor_name|type_name))+
   bracketed+
-  balanced(parseOneOfChars("{;:")|
-           (parseLiteral("try")+eatWhite+parseOneOfChars(":"))));
+  balanced((eatWhite+parseOneOfChars(";"))|function_impl));
 
 PR function_decl(new NamedParser<hcp_ast::FunctionDecl>(
   "function declaration",
   function_proto+
-  parseOneOfChars(";")+
+  (eatWhite+parseOneOfChars(";"))+
   eatWhite));
 
 PR templateKeyword(parseLiteral("template"));
@@ -1165,29 +1186,11 @@ PR template_preamble(
     parseOneOfChars(">")+
     eatWhite));
 
-PR block(new NamedParser<hcp_ast::Block>(
-  "block",
-  parseLiteral("{")+
-  balanced(parseOneOfChars("}"))+
-  parseLiteral("}")));
-
-PR init_list(new NamedParser<hcp_ast::InitList>(
-  "initialiser list",
-  parseLiteral(":")+
-  balanced(parseOneOfChars("{;:"))));
-
-PR catch_block(parseLiteral("catch")+eatWhite+bracketed+eatWhite+block+
-               eatWhite);
-
 PR function_def(new NamedParser<hcp_ast::FunctionDef>(
   "function definition",
   function_proto+
-  new NamedParser<hcp_ast::FunctionImpl>(
-    "function implementation",
-    (zeroOrMore*(parseLiteral("try")+eatWhite)+
-     zeroOrMore*(init_list+eatWhite)+
-     block+eatWhite+
-     zeroOrMore*catch_block))));
+  function_impl+
+  new NamedParser<hcp_ast::WhiteSpace>("whitespace",eatWhite)));
 
 PR template_function_def(new NamedParser<hcp_ast::TemplateFunctionDef>(
   "template function definition",

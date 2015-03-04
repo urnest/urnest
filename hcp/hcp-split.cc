@@ -115,7 +115,12 @@ void genClassMemberFunctionDef(
                  hcp_ast::isA_<hcp_ast::FunctionImpl>));
   xju::assert_not_equal(i, x.items_.end());
   h.copy(x.begin(), (*i)->begin());
-  h << ";\n";
+  h << ";";
+  std::vector<hcp_ast::IR>::const_iterator w(
+    xju::next(i));
+  xju::assert_not_equal(w, x.items_.end());
+  xju::assert_equal(hcp_ast::isA_<hcp_ast::WhiteSpace>(*w),true);
+  h.copy((*w)->begin(),(*w)->end()); //copy trailing whitespace
   
   std::vector<hcp_ast::IR>::const_iterator j(
     std::find_if(x.items_.begin(), x.items_.end(),
@@ -237,7 +242,12 @@ void genFunction(hcp_ast::FunctionDef const& x,
                  hcp_ast::isA_<hcp_ast::FunctionImpl>));
   xju::assert_not_equal(i, x.items_.end());
   h.copy(x.begin(), (*i)->begin());
-  h << ";\n";
+  h << ";";
+  std::vector<hcp_ast::IR>::const_iterator w(
+    xju::next(i));
+  xju::assert_not_equal(w, x.items_.end());
+  xju::assert_equal(hcp_ast::isA_<hcp_ast::WhiteSpace>(*w),true);
+  h.copy((*w)->begin(),(*w)->end()); //copy trailing whitespace
   
   std::vector<hcp_ast::IR>::const_iterator j(
     std::find_if(x.items_.begin(), x.items_.end(),
