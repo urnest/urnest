@@ -178,10 +178,16 @@ x p9.idl:
 x p10.idl:
   x enum
 
-- p11.idl:
+x p11.idl:
   x constant
   x enum X {A}; union(X) { A: X x_; };
+
+x p12.idl:
+  - union(X) { case A: X x_; default: Y y_; };
+
+x p13.idl:
   - union(int) { 1: X x_; };
+
   - union(enum {A}){ A: X x_; };
   - recursive union
 

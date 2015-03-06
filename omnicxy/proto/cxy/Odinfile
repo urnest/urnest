@@ -20,6 +20,18 @@
 %p9.hcp==%gen/p9.hcp
 %p10.hcp==%gen/p10.hcp
 %p11.hcp==%gen/p11.hcp
+%p12.hcp==%gen/p12.hcp
+%p1.hh==%gen/p1.hh
+%p2.hh==%gen/p2.hh
+%p3.hh==%gen/p3.hh
+%p4.hh==%gen/p4.hh
+%p5.hh==%gen/p5.hh
+%p6.hh==%gen/p6.hh
+%p7.hh==%gen/p7.hh
+%p9.hh==%gen/p9.hh
+%p10.hh==%gen/p10.hh
+%p11.hh==%gen/p11.hh
+%p12.hh==%gen/p12.hh
 
 %all-tests.tree==<<
 ()+cmd=(%p1-main) '3735' 'both':exec.output
@@ -33,6 +45,7 @@
 ()+cmd=(%p9-main) '3743' 'both':exec.output
 ()+cmd=(%p10-main) '3744' 'both':exec.output
 ()+cmd=(%p11-main) '3745' 'both':exec.output
+()+cmd=(%p12-main) '3746' 'both':exec.output
 %test-transient
 ()+cmd=(%test-no-such-object) '3750':exec.output
 ()+cmd=(%test-duplicate-name) '3751':exec.output
@@ -53,6 +66,7 @@
 %p9-main==p9-main.cc+(%cxx-opts):auto.cxx.exe
 %p10-main==p10-main.cc+(%cxx-opts):auto.cxx.exe
 %p11-main==p11-main.cc+(%cxx-opts):auto.cxx.exe
+%p12-main==p12-main.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-duplicate-name==test-duplicate-name.cc+(%cxx-opts):auto.cxx.exe
 

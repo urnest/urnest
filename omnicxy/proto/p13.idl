@@ -1,0 +1,13 @@
+module p13
+{
+  union U1 switch(short) {
+  case 1: long a_;
+  case 2: float c_;
+  default: string x_;
+  };
+
+  interface F
+  {
+    void f1(in U1 a);
+  };
+};

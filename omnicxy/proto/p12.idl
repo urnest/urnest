@@ -1,0 +1,16 @@
+enum X {
+  A, B, C
+};
+module p12
+{
+  union U1 switch(X) {
+  case A: long a_;
+  case C: float c_;
+  default: string x_;
+  };
+
+  interface F
+  {
+    void f1(in U1 a);
+  };
+};

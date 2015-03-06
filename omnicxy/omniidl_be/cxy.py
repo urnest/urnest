@@ -456,7 +456,8 @@ public:%(members)s
 
   virtual ~%(caseName)s() throw() {
   }
-  explicit %(caseName)s(%(consparams)s) throw()%(consinitialisers)s {
+  explicit %(caseName)s(%(consparams)s) throw():
+      %(typeName)s(%(descriminator)s)%(consinitialisers)s {
   }
   friend bool operator<(
     %(caseName)s const& x, 
@@ -490,7 +491,11 @@ public:%(members)s
   }
 };
 '''
-def gen_union_case_def(typeName,caseName,memberTypesAndNames):
+def gen_union_case_def(typeName,
+                       caseName,
+                       memberTypesAndNames,
+                       switchTypeName,
+                       descriminator):
     memberNames=[_[1] for _ in memberTypesAndNames]
     memberTypes=[_[0] for _ in memberTypesAndNames]
     paramNames=['p%s'%i for i in range(1,len(memberTypesAndNames)+1)]
@@ -499,7 +504,7 @@ def gen_union_case_def(typeName,caseName,memberTypesAndNames):
     consparams=','.join(['\n    %s const& %s'%_ for _ in zip(memberTypes,paramNames)])
     consinitialisers=','.join(['\n      %s(%s)'%_ for _ in zip(memberNames,paramNames)])
     if len(consinitialisers):
-        consinitialisers=':'+consinitialisers
+        consinitialisers=','+consinitialisers
         pass
     lessMembers=''.join([('\n    if (x.%(_)s<y.%(_)s) return true;'+
                           '\n    if (y.%(_)s<x.%(_)s) return false;')%vars()\
@@ -541,6 +546,15 @@ public:
   virtual ~%(typeName)s() throw() {
   }
   %(union_case_fwds)s
+protected:
+  explicit %(typeName)s(::%(switchTypeName)s d) throw():
+    d_(d){
+  }
+private:
+  ::%(switchTypeName)s d_;
+  friend ::%(switchTypeName)s discriminator(%(typeName)s const& x) throw() {
+    return x.d_;
+  }
 };
 %(union_case_defs)s
 %(case_less_operators)s
@@ -571,6 +585,7 @@ bool operator>=(%(typeName)s const& a, %(typeName)s const& b) throw()
 def gen_union(decl):
     typeName=decl.identifier()
     assert decl.switchType().kind()==idltype.tk_enum, decl.switchType()
+    switchTypeName='::'.join(decl.switchType().scopedName())
     labels=[_.identifier() for _ in \
                 decl.switchType().decl().enumerators()]
     cases=dict([(label,[]) for label in labels])
@@ -583,12 +598,11 @@ def gen_union(decl):
                 c.declarator().identifier()))    #name
         pass
     #cases is like [('A', [('int32_t','a_')]), ('B', [])]
+    ds=dict([(_.identifier(),'::%(switchTypeName)s::'%vars()+_.identifier())\
+                 for _ in decl.switchType().decl().enumerators()])
     union_case_fwds='\n  '.join(['class %(_)s;'%vars() for _ in labels])
     union_case_defs=''.join(
-        [gen_union_case_def(typeName,caseName,memberTypesAndNames)\
-             for caseName,memberTypesAndNames in cases.items()])
-    union_case_defs=''.join(
-        [gen_union_case_def(typeName,caseName,cases[caseName])\
+        [gen_union_case_def(typeName,caseName,cases[caseName],switchTypeName,ds[caseName])\
              for caseName in labels])
     case_less_operators=''.join(\
         [gen_union_case_less_operator(typeName,caseName,labels[i+1:])\

@@ -216,9 +216,9 @@ def gen_union(decl):
                 (unqualifiedType(c.caseType()),#type
                 c.declarator().identifier()))    #name
         pass
+    #cases is like [('A', [('int32_t','a_')]), ('B', [])]
     ds=dict([(_.identifier(),'::%(switchTypeName)s::'%vars()+_.identifier())\
                  for _ in decl.switchType().decl().enumerators()])
-    #cases is like [('A', [('int32_t','a_')]), ('B', [])]
     unmarshal_cases=''.join([\
             gen_union_case_unmarshal(\
                 name,caseName,memberTypesAndNames,ds[caseName]) \
