@@ -35,18 +35,19 @@ std::string makeURI(int port, std::string const& objectName) throw()
 
 std::ostream& operator<<(std::ostream& s, ::p13::U1 const& x) throw()
 {
-  if (dynamic_cast< ::p13::U1::V<1> const*>(&x)) {
+  switch(discriminator(x)) {
+  case 1:
+  {
     ::p13::U1::V<1> const& y(dynamic_cast< ::p13::U1::V<1> const&>(x));
     return s << "::p13::U1::V<1> " << y.a_;
   }
-  if (dynamic_cast< ::p13::U1::Default const*>(&x)) {
-    return s << "::p13::U1::Default " << y.x_;
-  }
-  if (dynamic_cast< ::p13::U1::V<2> const*>(&x)) {
+  case 2:
+  {
     ::p13::U1::V<2> const& y(dynamic_cast< ::p13::U1::V<2> const&>(x));
     return s << "::p13::U1::V<2> " << y.c_;
   }
-  
+  }
+  return s << "::p13::U1::Default(" << discriminator(x) << ") " << y.x_;
 }
 
 class F_impl : public p13::F

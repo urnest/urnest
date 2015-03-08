@@ -10,17 +10,6 @@
 #%gen==(..%all.idl.sm)+hcp-split=(../../../hcp/hcp-split)+cxy-be-dir=(../../omniidl_be)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy
 
 #generated code for reference
-%p1.hcp==%gen/p1.hcp
-%p2.hcp==%gen/p2.hcp
-%p3.hcp==%gen/p3.hcp
-%p4.hcp==%gen/p4.hcp
-%p5.hcp==%gen/p5.hcp
-%p6.hcp==%gen/p6.hcp
-%p7.hcp==%gen/p7.hcp
-%p9.hcp==%gen/p9.hcp
-%p10.hcp==%gen/p10.hcp
-%p11.hcp==%gen/p11.hcp
-%p12.hcp==%gen/p12.hcp
 %p1.hh==%gen/p1.hh
 %p2.hh==%gen/p2.hh
 %p3.hh==%gen/p3.hh
@@ -32,6 +21,19 @@
 %p10.hh==%gen/p10.hh
 %p11.hh==%gen/p11.hh
 %p12.hh==%gen/p12.hh
+%p13.hh==%gen/p13.hh
+%p1.hcp==%gen/p1.hcp
+%p2.hcp==%gen/p2.hcp
+%p3.hcp==%gen/p3.hcp
+%p4.hcp==%gen/p4.hcp
+%p5.hcp==%gen/p5.hcp
+%p6.hcp==%gen/p6.hcp
+%p7.hcp==%gen/p7.hcp
+%p9.hcp==%gen/p9.hcp
+%p10.hcp==%gen/p10.hcp
+%p11.hcp==%gen/p11.hcp
+%p12.hcp==%gen/p12.hcp
+%p13.hcp==%gen/p13.hcp
 
 %all-tests.tree==<<
 ()+cmd=(%p1-main) '3735' 'both':exec.output
@@ -46,6 +48,7 @@
 ()+cmd=(%p10-main) '3744' 'both':exec.output
 ()+cmd=(%p11-main) '3745' 'both':exec.output
 ()+cmd=(%p12-main) '3746' 'both':exec.output
+()+cmd=(%p13-main) '3747' 'both':exec.output
 %test-transient
 ()+cmd=(%test-no-such-object) '3750':exec.output
 ()+cmd=(%test-duplicate-name) '3751':exec.output
@@ -67,6 +70,7 @@
 %p10-main==p10-main.cc+(%cxx-opts):auto.cxx.exe
 %p11-main==p11-main.cc+(%cxx-opts):auto.cxx.exe
 %p12-main==p12-main.cc+(%cxx-opts):auto.cxx.exe
+%p13-main==p13-main.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-duplicate-name==test-duplicate-name.cc+(%cxx-opts):auto.cxx.exe
 

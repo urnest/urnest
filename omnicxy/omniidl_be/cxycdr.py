@@ -4,7 +4,7 @@ from omniidl import idltype
 import sys
 import os.path
 
-from cxy import unqualifiedType,GenerateFailed
+from cxy import unqualifiedType,GenerateFailed,basicIntTypes
 
 interface_t='''\
 template<>
@@ -201,7 +201,7 @@ public:
 };
 '''
 
-def gen_union(decl):
+def gen_enum_union(decl):
     name='::'.join(decl.scopedName())
     repoId=decl.repoId()
     switchTypeName='::'.join(decl.switchType().scopedName())
@@ -228,6 +228,80 @@ def gen_union(decl):
                 name,caseName,memberTypesAndNames,switchTypeName,ds[caseName]) \
                 for caseName,memberTypesAndNames in cases.items()])
     return union_t%vars()
+
+non_enum_union_t='''\
+template<>
+class cdr< ::xju::Shared< ::%(name)s const> >
+{
+public:
+  static xju::Shared< ::%(name)s const> unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException
+  //  )
+  {
+    ::%(switchTypeName)s const d(cdr< ::%(switchTypeName)s >::unmarshalFrom(s));
+    switch(valueOf(d)){%(unmarshal_cases)s
+    default:
+      {%(defaultMemberUnmarshals)s
+        return ::xju::Shared< ::%(name)s const>(
+          new ::%(name)s::Default(%(defaultConsParams)s));
+      }
+    }
+  }  
+  static void marshal(xju::Shared< ::%(name)s const> const& x, cdrStream& s) throw()
+  {%(marshal_cases)s
+    cdr< ::%(switchTypeName)s >::marshal(::%(switchTypeName)s::Default,s);
+    ::%(name)s::Default const& c(
+      dynamic_cast< ::%(name)s::Default const&>(*x));
+    %(defaultMemberMarshals)s    
+  }
+  static const char repoId[]="%(repoId)s";
+};
+'''
+
+def gen_non_enum_union(decl):
+    assert decl.switchType().kind() in basicIntTypes,decl
+    name='::'.join(decl.scopedName())
+    repoId=decl.repoId()
+    switchTypeName=unqualifiedType(decl.switchType())
+    cases={}
+    defaultCase=[]
+    labels=[]
+    ds={}
+    for c in decl.cases():
+        assert c.constrType()==False,c
+        for l in c.labels():
+            if l.default():
+                caseClass='Default'
+            else:
+                caseClass='V< %s >'%l.value()
+                labels.append(caseClass)
+                ds[caseClass]=l.value()
+                pass
+            cases.setdefault(caseClass,[]).append(
+                (unqualifiedType(c.caseType()),#type
+                 c.declarator().identifier())) #name
+            pass
+        pass
+    #cases is like {'Default': [('std::string', 'x_')], 'V< 2 >': [('float', 'c_')], 'V< 1 >': [('int32_t', 'a_')]}
+    unmarshal_cases=''.join([\
+            gen_union_case_unmarshal(\
+                name,caseName,cases[caseName],ds[caseName]) \
+                for caseName in labels])
+    marshal_cases=''.join([\
+            gen_union_case_marshal(\
+                name,caseName,cases[caseName],switchTypeName,ds[caseName]) \
+                for caseName in labels])
+    defaultMemberNames=[_[1] for _ in cases['Default']]
+    defaultMemberTypes=[_[0] for _ in cases['Default']]
+    defaultParamNames=['p%s'%i for i in range(1,len(cases['Default'])+1)]
+    defaultMemberUnmarshals=''.join(['\n      %(t)s const %(pn)s(cdr< %(t)s >::unmarshalFrom(s));'%vars() for t,pn in zip(defaultMemberTypes,defaultParamNames)])
+    defaultConsParams=', '.join([pn for pn in defaultParamNames])
+    defaultMemberMarshals=''.join(
+        ['\n    cdr< %(t)s >::marshal(c.%(n)s,s);'%vars()
+         for t,n in zip(defaultMemberTypes,defaultMemberNames)])
+    return non_enum_union_t%vars()
 
 def gen(decl,eclass,eheader,causeType,contextType,
         causeMemberExpression,contextMemberExpression,indent=''):
@@ -276,7 +350,11 @@ def gen(decl,eclass,eheader,causeType,contextType,
         elif isinstance(decl, idlast.Const):
             pass
         elif isinstance(decl, idlast.Union):
-            result=gen_union(decl)
+            if decl.switchType().kind()==idltype.tk_enum:
+                result=gen_enum_union(decl)
+            else:
+                result=gen_non_enum_union(decl)
+                pass
         else:
             assert False, repr(decl)
             pass

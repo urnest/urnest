@@ -449,7 +449,7 @@ def gen_enum(name,values,eclass):
     return enum_t%vars()
 
 union_case_def_t='''
-class %(typeName)s::%(caseName)s : 
+%(templateIntro)sclass %(typeName)s::%(caseName)s : 
   public %(typeName)s
 {
 public:%(members)s
@@ -495,7 +495,8 @@ def gen_union_case_def(typeName,
                        caseName,
                        memberTypesAndNames,
                        switchTypeName,
-                       descriminator):
+                       descriminator,
+                       templateIntro=''):
     memberNames=[_[1] for _ in memberTypesAndNames]
     memberTypes=[_[0] for _ in memberTypesAndNames]
     paramNames=['p%s'%i for i in range(1,len(memberTypesAndNames)+1)]
@@ -510,6 +511,71 @@ def gen_union_case_def(typeName,
                           '\n    if (y.%(_)s<x.%(_)s) return false;')%vars()\
                              for _ in memberNames])
     return union_case_def_t%vars()
+
+union_default_case_def_t='''
+class %(typeName)s::Default : 
+  public %(typeName)s
+{
+public:%(members)s
+
+  virtual ~Default() throw() {
+  }
+  explicit Default(%(switchTypeName)s d) throw():
+      %(typeName)s(d)%(consinitialisers)s {%(validateDiscriminator)s
+  }
+  friend bool operator<(
+    Default const& x, 
+    Default const& y) throw() {
+      if (discriminator(x) < discriminator(y)) return true;%(lessMembers)s
+      return false;
+  }
+  friend bool operator>(
+    Default const& x, 
+    Default const& y) throw() {
+    return y<x;
+  }
+  friend bool operator!=(
+    Default const& x, 
+    Default const& y) throw() {
+    return (x<y)||(y<x);
+  }
+  friend bool operator==(
+    Default const& x, 
+    Default const& y) throw() {
+    return !(x!=y);
+  }
+  friend bool operator<=(
+    Default const& x, 
+    Default const& y) throw() {
+    return (x<y)||(x==y);
+  }
+  friend bool operator>=(
+    Default const& x, 
+    Default const& y) throw() {
+    return (x>y)||(x==y);
+  }
+};
+'''
+def gen_union_default_case_def(typeName,
+                               memberTypesAndNames,
+                               switchTypeName,
+                               nonDefaultDiscriminators):
+    memberNames=[_[1] for _ in memberTypesAndNames]
+    memberTypes=[_[0] for _ in memberTypesAndNames]
+    paramNames=['p%s'%i for i in range(1,len(memberTypesAndNames)+1)]
+    
+    members=''.join(['\n  %s %s;'%_ for _ in memberTypesAndNames])
+    consparams=','.join(['\n    %s const& %s'%_ for _ in zip(memberTypes,paramNames)])
+    consinitialisers=','.join(['\n      %s(%s)'%_ for _ in zip(memberNames,paramNames)])
+    if len(consinitialisers):
+        consinitialisers=','+consinitialisers
+        pass
+    validateDiscriminator=''.join(['\n    xju::assert_not_equal(d,%(_)s);' \
+                                       for _ in nonDefaultDiscriminators])
+    lessMembers=''.join([('\n    if (x.%(_)s<y.%(_)s) return true;'+
+                          '\n    if (y.%(_)s<x.%(_)s) return false;')%vars()\
+                             for _ in memberNames])
+    return union_default_case_def_t%vars()
 
 union_latter_case_t='''
   if (dynamic_cast<%(typeName)s::%(latterCaseName)s const* >(&b)) {
@@ -538,7 +604,7 @@ union_less_clause_t='''
 def gen_union_less_clause(typeName,caseName):
     return union_less_clause_t%vars()
 
-union_t='''\
+enum_union_t='''\
  // IDL Union %(typeName)s
 class %(typeName)s
 {
@@ -560,6 +626,7 @@ private:
 %(case_less_operators)s
 bool operator<(%(typeName)s const& a, %(typeName)s const& b) throw()
 {%(less_clauses)s
+  return discriminator(a) < discriminator(b);
 }
 bool operator>(%(typeName)s const& a, %(typeName)s const& b) throw()
 {
@@ -582,7 +649,7 @@ bool operator>=(%(typeName)s const& a, %(typeName)s const& b) throw()
   return (a>b)||(a==b);
 }
 '''
-def gen_union(decl):
+def gen_enum_union(decl):
     typeName=decl.identifier()
     assert decl.switchType().kind()==idltype.tk_enum, decl.switchType()
     switchTypeName='::'.join(decl.switchType().scopedName())
@@ -609,7 +676,107 @@ def gen_union(decl):
              for i,caseName in enumerate(labels)])
     less_clauses=''.join([gen_union_less_clause(typeName,caseName)\
                               for caseName in labels])
-    return union_t%vars()
+    return enum_union_t%vars()
+
+non_enum_union_t='''\
+ // IDL Union %(typeName)s
+class %(typeName)s
+{
+public:
+  virtual ~%(typeName)s() throw() {
+  }
+  template< %(switchTypeName)s >
+  class V;
+/*
+  %(union_case_fwds)s
+*/
+  class Default;
+protected:
+  explicit %(typeName)s(::%(switchTypeName)s d) throw():
+    d_(d){
+  }
+private:
+  ::%(switchTypeName)s d_;
+  friend ::%(switchTypeName)s discriminator(%(typeName)s const& x) throw() {
+    return x.d_;
+  }
+};
+template< %(switchTypeName)s >
+class %(typeName)s::V
+{
+private:
+  V() throw(); // must specialise class
+};
+%(union_case_defs)s
+%(case_less_operators)s
+bool operator<(%(typeName)s const& a, %(typeName)s const& b) throw()
+{%(less_clauses)s
+  return discriminator(a) < discriminator(b);
+}
+bool operator>(%(typeName)s const& a, %(typeName)s const& b) throw()
+{
+  return b < a;
+}
+bool operator!=(%(typeName)s const& a, %(typeName)s const& b) throw()
+{
+  return (a<b)||(b<a);
+}
+bool operator==(%(typeName)s const& a, %(typeName)s const& b) throw()
+{
+  return !(a<b)&&!(b<a);
+}
+bool operator<=(%(typeName)s const& a, %(typeName)s const& b) throw()
+{
+  return (a<b)||(a==b);
+}
+bool operator>=(%(typeName)s const& a, %(typeName)s const& b) throw()
+{
+  return (a>b)||(a==b);
+}
+'''
+def gen_non_enum_union(decl):
+    assert decl.switchType().kind() in basicIntTypes,decl
+    typeName=decl.identifier()
+    switchTypeName=unqualifiedType(decl.switchType())
+    cases={}
+    labels=[]
+    ds={}
+    for c in decl.cases():
+        assert c.constrType()==False,c
+        for l in c.labels():
+            if l.default():
+                caseClass='Default'
+            else:
+                caseClass='V< %s >'%l.value()
+                labels.append(caseClass)
+                ds[caseClass]=l.value()
+                pass
+            cases.setdefault(caseClass,[]).append(
+                (unqualifiedType(c.caseType()),#type
+                 c.declarator().identifier())) #name
+            pass
+        pass
+    #cases is like {'Default': [('std::string', 'x_')], 'V< 2 >': [('float', 'c_')], 'V< 1 >': [('int32_t', 'a_')]}
+    union_case_fwds='\n  '.join(['template<> class V< %(_)s >;'%vars() \
+                                     for _ in labels]+
+                                ['class Default;'])
+    union_case_defs=''.join([gen_union_case_def(typeName,
+                                                caseClass,
+                                                cases[caseClass],
+                                                switchTypeName,
+                                                ds[caseClass],
+                                                'template<>\n')
+                             for caseClass in labels]+
+                            [gen_union_default_case_def(typeName,
+                                                        cases['Default'],
+                                                        switchTypeName,
+                                                        ds.values())])
+    case_less_operators=''.join(\
+        [gen_union_case_less_operator(typeName,caseName,labels[i+1:])\
+             for i,caseName in enumerate(labels)])
+    less_clauses=''.join([gen_union_less_clause(typeName,caseName)\
+                              for caseName in labels])
+    return non_enum_union_t%vars()
 
 def gen(decl,eclass,eheader,causeType,contextType,indent=''):
     try:
@@ -704,10 +871,10 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
                 indent,
                 '%(type_)s const %(name)s = %(value)s;'%vars())
         elif isinstance(decl, idlast.Union):
-            result=reindent(
-                indent,
-                gen_union(decl))
-            pass
+            if decl.switchType().kind()==idltype.tk_enum:
+                result=reindent(indent, gen_enum_union(decl))
+            else:
+                result=reindent(indent, gen_non_enum_union(decl))
         else:
             assert False, repr(decl)
             pass
