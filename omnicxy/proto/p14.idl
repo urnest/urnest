@@ -1,0 +1,15 @@
+module na
+{
+  interface A1
+  {
+    long f1(in long x);
+  };
+};
+
+module nb
+{
+  interface B1 : na::A1
+  {
+    long f2(in long x);
+  };
+};
