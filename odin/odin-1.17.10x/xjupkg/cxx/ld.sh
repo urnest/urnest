@@ -26,7 +26,7 @@ libs=""
 if [ "$ODIN_lib" != "" ] ; then libs=`cat $ODIN_lib`; fi
 
 if [ "$ODINVERBOSE" != "" ] ; then
-   echo ${ODINRBSHOST}$compiler $flags $ODIN_a $libs; fi
+   echo ${ODINRBSHOST}$compiler $flags $ODIN_a $libs  $ODIN_CXX_LD_EXTRA_LIBS; fi
 
 x=`PATH="$ODIN_CXX_PATH" /usr/bin/which "$compiler" 2>&1`
 if [ $? != 0 ] ; then
