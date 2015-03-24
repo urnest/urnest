@@ -1,0 +1,12 @@
+module p15
+{
+  interface AAA
+  {
+    long f(in long x);
+  };
+  interface BBB
+  {
+    AAA getA();
+  };
+};
+

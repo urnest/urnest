@@ -1,0 +1,61 @@
+// Copyright (c) 2014 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <string>
+#include <omniORB4/IOP.h> // impl
+
+class IOP;
+class IOP::TaggedProfileList;
+
+namespace cxy
+{
+template<class T>
+class IOR
+{
+public:
+  IOR(std::string const& repoID,
+      IOP::TaggedProfileList const& profiles) throw():
+      repoID_(repoID),
+      profiles_(new IOR::TaggedProfileList) {
+    *profiles_=profiles;
+  }
+  IOR(IOR const& x) throw():
+      repoID_(x.repoID),
+      profiles_(new IOR::TaggedProfileList) {
+    *profiles_=*x.profiles_;
+  }
+  ~IOR() throw()
+  {
+    delete profiles_;
+  }
+  IOR& operator=(IOR& x) throw()
+  {
+    if (this != &x) {
+      repoID_=x.repoID;
+      *profiles_=*x.profiles_;
+    }
+    return this;
+  }
+
+  std::string const& repoID() const throw()
+  {
+    return repoID_;
+  }
+  
+  IOP::TaggedProfileList const& profiles() const throw()
+  {
+    return *profiles_;
+  }
+  
+private:
+  std::string repoID_;
+  IOP::TaggedProfileList* profiles_;
+};
+  
+}
