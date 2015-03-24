@@ -81,15 +81,15 @@ public:
 interface_t='''\
 template<>
 class objref< ::%(fqn)s >:
-  public virtual ::%(fqn)s,
+  public virtual ::%(fqn)s,%(inherits)s
   public virtual ::CORBA::Object,
   public virtual omniObjRef,
-  public xju::NonCopyable
+  public virtual xju::NonCopyable
 {
 public:
   inline objref()  { _PR_setobj(0); }  // nil
   objref(omniIOR* ior, omniIdentity* id) throw() :
-      omniObjRef(cxy::cdr< ::%(fqn)s >::repoId, ior, id, 1) {
+      omniObjRef(cxy::cdr< ::%(fqn)s >::repoId, ior, id, 1)%(initinherits)s {
     _PR_setobj(this);
   }
   std::string uri_;
@@ -109,10 +109,10 @@ private:
   // CORBA::Object::
   virtual void* _ptrToObjRef(const char* repoId)
   {
-    if (repoId == cxy::cdr< ::%(fqn)s >::repoId)
+    if (repoId == cxy::cdr< ::%(fqn)s >::repoId%(inherit_equal_repoids)s)
       return this;
     
-    if (omni::strMatch(repoId, cxy::cdr< ::%(fqn)s >::repoId))
+    if (omni::strMatch(repoId, cxy::cdr< ::%(fqn)s >::repoId)%(inherit_equal_repoid_strs)s)
       return this;
     
     if (repoId == ::CORBA::Object::_PD_repoId)
@@ -141,8 +141,10 @@ public:
   
   virtual _CORBA_Boolean is_a(const char* repoId) const
   {
-    if (repoId==cxy::cdr< ::%(fqn)s >::repoId ||
-        omni::ptrStrMatch(repoId, cxy::cdr< ::%(fqn)s >::repoId)) {
+    if (repoId==cxy::cdr< ::%(fqn)s >::repoId%(inherit_equal_repoids)s) {
+      return 1;
+    }
+    if (omni::ptrStrMatch(repoId, cxy::cdr< ::%(fqn)s >::repoId)%(inherit_equal_repoid_strs)s) {
       return 1;
     }
     return 0;
@@ -222,9 +224,22 @@ def gen(decl,eclass,eheader,indent=''):
                      for _ in decl.contents()\
                      if isinstance(_,idlast.Operation)])
             objref_content=''.join(
-                [genObjref(_,eclass,eheader,indent+'  ',fqn)\
-                     for _ in decl.contents()\
-                     if isinstance(_,idlast.Operation)])
+                [genObjref(_,eclass,eheader,indent+'  ',fqn)
+                 for _ in decl.contents()
+                 if isinstance(_,idlast.Operation)])
+            inherit_fqns=['::'.join(_.scopedName()) for _ in decl.inherits()]
+            inherits=''.join(
+                ['\n  public virtual objref< ::%(_)s >,'%vars()
+                 for _ in inherit_fqns])
+            initinherits=''.join(
+                [',\n      objref< ::%(_)s >(ior,id)'%vars()
+                 for _ in inherit_fqns])
+            inherit_equal_repoids=''.join(
+                ['||\n        repoId == cxy::cdr< ::%(_)s >::repoId'%vars()
+                 for _ in inherit_fqns])
+            inherit_equal_repoid_strs=''.join(
+                ['||\n        omni::strMatch(repoId, cxy::cdr< ::%(_)s >::repoId)'%vars()
+                 for _ in inherit_fqns])
             result=interface_t%vars()
         elif isinstance(decl, idlast.Typedef):
             pass

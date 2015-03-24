@@ -153,20 +153,20 @@ private:
   {
     const char* op = _handle.operation_name();
     
-    %(dispatchers)s
+    %(dispatchers)s%(inherit_dispatchers)s
     return 0;
   }
 
   // sref_if::
   virtual void* _ptrToInterface(const char* id) throw()
   {
-    if (id == cxy::cdr< ::%(fqn)s >::repoId) {
+    if (id == cxy::cdr< ::%(fqn)s >::repoId%(inherit_equal_repoids)s) {
       return &x_;
     }
     if (id == ::CORBA::Object::_PD_repoId) {
       return (void*) 1;
     }
-    if (omni::strMatch(id, cxy::cdr< ::%(fqn)s >::repoId)) {
+    if (omni::strMatch(id, cxy::cdr< ::%(fqn)s >::repoId)%(inherit_equal_repoid_strs)s) {
       return &x_;
     }
     if (omni::strMatch(id, ::CORBA::Object::_PD_repoId)) {
@@ -252,6 +252,12 @@ def genForward(scopedName):
         genForward(scopedName[1:])+\
         '}\n'
 
+def getOperations(decl):
+    assert isinstance(decl,idlast.Interface),decl
+    result=[_ for _ in decl.contents() if isinstance(_,idlast.Operation)]
+    result.extend(sum([getOperations(_) for _ in decl.inherits()],[]))
+    return result
+
 def gen(decl,eclass,eheader,indent=''):
     try:
         result=''
@@ -264,16 +270,25 @@ def gen(decl,eclass,eheader,indent=''):
             forward=genForward(decl.scopedName())
             operations=''.join(
                 [genOperation(_,eclass,eheader,indent+'  ',fqn) \
-                     for _ in decl.contents() \
-                     if isinstance(_,idlast.Operation)])
+                     for _ in getOperations(decl)])
             dispatchers=''.join(
                 [genDispatcher(_,eclass,eheader,indent+'  ',fqn) \
-                     for _ in decl.contents()\
-                     if isinstance(_,idlast.Operation)])
+                     for _ in getOperations(decl)])
             calldescs=''.join(
                 [genCalldesc(_,eclass,eheader,indent+'  ',fqn) \
-                     for _ in decl.contents()\
-                     if isinstance(_,idlast.Operation)])
+                     for _ in getOperations(decl)])
+            inherit_fqns=['::'.join(_.scopedName()) for _ in decl.inherits()]
+            inherit_dispatchers=''.join(
+                ['\n    cxy::sref< %(_)s >::_dispatch(_handle);'%vars()
+                 for _ in inherit_fqns])
+            inherit_equal_repoids=''.join(
+                ['||\n        id == cxy::cdr< ::%(_)s >::repoId'%vars()
+                 for _ in inherit_fqns])
+            inherit_equal_repoid_strs=''.join(
+                ['||\n        omni::strMatch(id, cxy::cdr< ::%(_)s >::repoId)'%vars()
+                 for _ in inherit_fqns])
+            #REVISIT
+            inherit_dispatchers=''
             result=interface_t%vars()
         elif isinstance(decl, idlast.Typedef):
             pass

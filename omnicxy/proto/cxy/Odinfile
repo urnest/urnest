@@ -5,6 +5,8 @@
 
 %gen==(..%all.idl.sm)+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy
 
+%gen.1==(../p14.idl)+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy.output
+
 #above %gen assumes OMNICXY_BE_DIR environment variable passed to cache
 #creation, otherwise could use
 #%gen==(..%all.idl.sm)+hcp-split=(../../../hcp/hcp-split)+cxy-be-dir=(../../omniidl_be)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy
@@ -22,6 +24,7 @@
 %p11.hh==%gen/p11.hh
 %p12.hh==%gen/p12.hh
 %p13.hh==%gen/p13.hh
+%p14.hh==%gen/p14.hh
 %p1.hcp==%gen/p1.hcp
 %p2.hcp==%gen/p2.hcp
 %p3.hcp==%gen/p3.hcp
@@ -34,6 +37,11 @@
 %p11.hcp==%gen/p11.hcp
 %p12.hcp==%gen/p12.hcp
 %p13.hcp==%gen/p13.hcp
+%p14.hcp==%gen/p14.hcp
+%p14.cref.hcp==%gen.1/p14.cref.hcp
+%p14.cdr.hcp==%gen.1/p14.cdr.hcp
+%p14.objref.hcp==%gen.1/p14.objref.hcp
+%p14.sref.hcp==%gen.1/p14.sref.hcp
 
 %all-tests.tree==<<
 ()+cmd=(%p1-main) '3735' 'both':exec.output
@@ -49,6 +57,7 @@
 ()+cmd=(%p11-main) '3745' 'both':exec.output
 ()+cmd=(%p12-main) '3746' 'both':exec.output
 ()+cmd=(%p13-main) '3747' 'both':exec.output
+()+cmd=(%p14-main) '3748' 'both':exec.output
 %test-transient
 ()+cmd=(%test-no-such-object) '3750':exec.output
 ()+cmd=(%test-duplicate-name) '3751':exec.output
@@ -71,6 +80,7 @@
 %p11-main==p11-main.cc+(%cxx-opts):auto.cxx.exe
 %p12-main==p12-main.cc+(%cxx-opts):auto.cxx.exe
 %p13-main==p13-main.cc+(%cxx-opts):auto.cxx.exe
+%p14-main==p14-main.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-duplicate-name==test-duplicate-name.cc+(%cxx-opts):auto.cxx.exe
 

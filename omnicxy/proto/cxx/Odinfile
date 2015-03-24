@@ -9,6 +9,8 @@
 %p6-main
 %p9-main
 %p10.cxx.files
+%p11.cxx.files
+%p14.cxx.files
 %p15.cxx.files
 %all-tests.tree
 
@@ -78,8 +80,12 @@ p10.cc==(%dummy.hh)+cmd=cat (%p10.cxx.files+member='p10SK.cc':extract_file):stdo
 p11.hh==(%dummy.hh)+cmd=cat (%p11.cxx.files+member='p11.hh':extract_file):stdout
 p11.cc==(%dummy.hh)+cmd=cat (%p11.cxx.files+member='p11SK.cc':extract_file):stdout
 
+%p14.cxx.files==../p14.idl+cmd='omniidl' '-bcxx' (../p14.idl)+need=(../p14.idl:hash_inc_all):exec.files
+
+p14.hh==(%dummy.hh)+cmd=cat (%p14.cxx.files+member='p14.hh':extract_file):stdout
+p14.cc==(%dummy.hh)+cmd=cat (%p14.cxx.files+member='p14SK.cc':extract_file):stdout
+
 %p15.cxx.files==../p15.idl+cmd='omniidl' '-bcxx' (../p15.idl)+need=(../p15.idl:hash_inc_all):exec.files
 
 p15.hh==(%dummy.hh)+cmd=cat (%p15.cxx.files+member='p15.hh':extract_file):stdout
 p15.cc==(%dummy.hh)+cmd=cat (%p15.cxx.files+member='p15SK.cc':extract_file):stdout
-

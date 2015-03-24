@@ -1,4 +1,22 @@
 - documentation / tutorial
+  - follow outline of an existing doc (omniORB.pdf)
+    - echo.idl
+    - generating C++ code
+    - implementing the interface
+    - making the implementation accessible to clients
+      - object lifetimes
+      - omniORB configuration parameters
+    - calling the interface
+      - object lifetimes
+      - omniORB configuration parameters
+    - C++ mapping:
+      - in params, return type
+      - basic types
+      - ...
+      - exceptions
+      - exception mapping
+
+    - list examples from proto
 
 - how to get just direct includes? currently picks up nested
 
@@ -38,12 +56,6 @@ x make sure no generated headers that would be included in
   application code include any omniORB headers (to keep
   compilation dependencies minimal)
 
-- try to remove all omniORB headers from all other generated:
-  - .cc
-  - objeref.hcp
-
-- try to remove all omniORB headers from cxy/*.hh too
-
 x generate proto/cxy code from p1.idl
   x p1.hcp
   x p1.cdr.hcp
@@ -76,7 +88,7 @@ x omnicxy odin package
 x adjust sref.hcp need to derive from omniCallDescriptor to override
   unmarshalArguments
 
-- p2.idl:
+x p2.idl:
   x include p1.idl
   x basic types in params - short,long,double,string,long long,boolean
     x proto
@@ -183,19 +195,25 @@ x p11.idl:
   x enum X {A}; union(X) { A: X x_; };
 
 x p12.idl:
-  - union(X) { case A: X x_; default: Y y_; };
+  x union(X) { case A: X x_; default: Y y_; };
 
 x p13.idl:
-  - union(int) { 1: X x_; };
+  x union(int) { 1: X x_; };
 
-  - union(enum {A}){ A: X x_; };
-  - recursive union
-
-- inherit interface
+x p14.idl:
+  x inherit interface
+  
+- inherit interface multi-level
+- inherit interface diamond
+- objref param/return
+- cref casting
+- inherit multiple interfaces
+- untyped object ref plus casting
+- in-place struct union member union(short){ 1: struct X{ long a_;}; }
+- recursive union
 - bounded strings
 - bounded sequences
 - arrays
-- objref param/return
 - any
 - other stuff (see omniidl idltypes.py)
   cxy::IOR<X>;
@@ -210,6 +228,16 @@ x p13.idl:
   cxy::cref<T> dynamic_cast(
     cxy::cref<U> const& x) throw(
       cxy::BadDynamicCast);
+
+- cxysref.py generates dispatch code for all inherited operations, which
+  will result in lots of duplicate code, instead call the dispatch code
+  for the inherited interface
+
+- try to remove all omniORB headers from all other generated:
+  - .cc
+  - objeref.hcp
+
+- try to remove all omniORB headers from cxy/*.hh too
 
 x test duplicate object name exception
 

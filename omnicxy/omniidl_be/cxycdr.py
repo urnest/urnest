@@ -5,6 +5,7 @@ import sys
 import os.path
 
 from cxy import unqualifiedType,GenerateFailed,basicIntTypes
+from cxy import get_union_cases
 
 interface_t='''\
 template<>
@@ -144,12 +145,12 @@ public:
 };
 '''
 
-union_case_unmarshal_t='''\
+union_case_unmarshal_t='''
     case %(d)s:
     {%(memberUnmarshals)s
       return xju::Shared< ::%(unionFqn)s::%(caseName)s const>(
         new ::%(unionFqn)s::%(caseName)s(%(consParams)s));
-    }
+    }\
 '''
 def gen_union_case_unmarshal(unionFqn,caseName,memberTypesAndNames,d):
     memberNames=[_[1] for _ in memberTypesAndNames]
@@ -241,7 +242,7 @@ public:
   //  )
   {
     ::%(switchTypeName)s const d(cdr< ::%(switchTypeName)s >::unmarshalFrom(s));
-    switch(valueOf(d)){%(unmarshal_cases)s
+    switch(d){%(unmarshal_cases)s
     default:
       {%(defaultMemberUnmarshals)s
         return ::xju::Shared< ::%(name)s const>(
@@ -251,7 +252,7 @@ public:
   }  
   static void marshal(xju::Shared< ::%(name)s const> const& x, cdrStream& s) throw()
   {%(marshal_cases)s
-    cdr< ::%(switchTypeName)s >::marshal(::%(switchTypeName)s::Default,s);
+    cdr< ::%(switchTypeName)s >::marshal(discriminator(*x),s);
     ::%(name)s::Default const& c(
       dynamic_cast< ::%(name)s::Default const&>(*x));
     %(defaultMemberMarshals)s    
@@ -260,44 +261,50 @@ public:
 };
 '''
 
+non_enum_union_case_marshal_t='''
+    if (dynamic_cast< ::%(unionFqn)s::%(caseName)s const*>(&*x)){
+      cdr< ::%(switchTypeName)s >::marshal(%(d)s,s);
+      ::%(unionFqn)s::%(caseName)s const& c(
+        dynamic_cast< ::%(unionFqn)s::%(caseName)s const&>(*x));
+      %(memberMarshals)s
+      return;
+    }\
+'''
+def gen_non_enum_union_case_marshal(unionFqn,
+                                    caseName,
+                                    memberTypesAndNames,
+                                    switchTypeName,
+                                    d):
+    memberNames=[_[1] for _ in memberTypesAndNames]
+    memberTypes=[_[0] for _ in memberTypesAndNames]
+    memberMarshals=''.join(['\n      cdr< %(t)s >::marshal(c.%(n)s,s);'%vars() for t,n in zip(memberTypes,memberNames)])
+    return non_enum_union_case_marshal_t%vars()
+
+
 def gen_non_enum_union(decl):
     assert decl.switchType().kind() in basicIntTypes,decl
     name='::'.join(decl.scopedName())
     repoId=decl.repoId()
     switchTypeName=unqualifiedType(decl.switchType())
-    cases={}
-    defaultCase=[]
-    labels=[]
-    ds={}
-    for c in decl.cases():
-        assert c.constrType()==False,c
-        for l in c.labels():
-            if l.default():
-                caseClass='Default'
-            else:
-                caseClass='V< %s >'%l.value()
-                labels.append(caseClass)
-                ds[caseClass]=l.value()
-                pass
-            cases.setdefault(caseClass,[]).append(
-                (unqualifiedType(c.caseType()),#type
-                 c.declarator().identifier())) #name
-            pass
-        pass
-    #cases is like {'Default': [('std::string', 'x_')], 'V< 2 >': [('float', 'c_')], 'V< 1 >': [('int32_t', 'a_')]}
+    cases=get_union_cases(decl)
+    labels=[_[0] for _ in cases if not _[0] is None]
+    caseClasses=['V< %(_)s >'%vars() for _ in labels]
+    cases=dict(cases)
+    cases.setdefault(None,[]) #ensure a default case
+    #cases is like {None: [('std::string', 'x_')], 2: [('float', 'c_')], 1: [('int32_t', 'a_')]}
     unmarshal_cases=''.join([\
             gen_union_case_unmarshal(\
-                name,caseName,cases[caseName],ds[caseName]) \
-                for caseName in labels])
+                name,caseName,cases[label],label) \
+                for label,caseName in zip(labels,caseClasses)])
     marshal_cases=''.join([\
-            gen_union_case_marshal(\
-                name,caseName,cases[caseName],switchTypeName,ds[caseName]) \
-                for caseName in labels])
-    defaultMemberNames=[_[1] for _ in cases['Default']]
-    defaultMemberTypes=[_[0] for _ in cases['Default']]
-    defaultParamNames=['p%s'%i for i in range(1,len(cases['Default'])+1)]
+            gen_non_enum_union_case_marshal(\
+                name,caseName,cases[label],switchTypeName,label) \
+                for label,caseName in zip(labels,caseClasses)])
+    defaultMemberNames=[_[1] for _ in cases[None]]
+    defaultMemberTypes=[_[0] for _ in cases[None]]
+    defaultParamNames=['p%s'%i for i in range(1,len(cases[None])+1)]
     defaultMemberUnmarshals=''.join(['\n      %(t)s const %(pn)s(cdr< %(t)s >::unmarshalFrom(s));'%vars() for t,pn in zip(defaultMemberTypes,defaultParamNames)])
-    defaultConsParams=', '.join([pn for pn in defaultParamNames])
+    defaultConsParams=', '.join(['d']+defaultParamNames)
     defaultMemberMarshals=''.join(
         ['\n    cdr< %(t)s >::marshal(c.%(n)s,s);'%vars()
          for t,n in zip(defaultMemberTypes,defaultMemberNames)])
