@@ -25,5 +25,6 @@ ODIN_TAR_PATH=/bin \
 ODIN_FLUID_PATH=/usr/local/bin \
 ODIN_RANLIB=ranlib \
 ODIN_CC_FLAGS=-g \
+ODIN_CXX_LD_EXTRA_LIBS=-lpthread \
 odin -R </dev/null &&
 mkdir "$ODIN_JAVA_OUTPUT_DIRECTORY"
