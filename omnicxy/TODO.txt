@@ -198,6 +198,18 @@ x p13.idl:
 - objref param/return
 - any
 - other stuff (see omniidl idltypes.py)
+  cxy::IOR<X>;
+  cxy::IOR<X> cxy::sref<X>::ior() const;
+    cxy::IOR<X> constains omniIOR*, or omniIOR parts
+    by value? see src/lib/omniORB/orbcore/omniObjRef.cc
+    _marshal
+  cxy::cref<X>(cxy::IOR<X> const& ior) throw();
+    see omniObjRef::_unMarshal
+
+  template<class T, class U>
+  cxy::cref<T> dynamic_cast(
+    cxy::cref<U> const& x) throw(
+      cxy::BadDynamicCast);
 
 x test duplicate object name exception
 
@@ -242,3 +254,5 @@ x make p1.hh // impl in p1.sref.hcp
 ---------------------------------------------
 
 xju@xjutv:~/urnest$ ODIN_LIB_SP="/usr/local/omniORB-4.2.0/lib /lib /usr/lib" ODIN_EXEC_PATH=/usr/local/omniORB-4.2.0/bin:/usr/bin:/bin ODIN_OMNICXY_PATH=/usr/local/omniORB-4.2.0/bin:/usr/bin:/bin ODIN_OMNICXY_BE_DIR=~/urnest/omnicxy/omniidl_be  ODIN_CXX_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib ODIN_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib ODIN_CXX_I=/usr/local/omniORB-4.2.0/include odin/create-linux-cache.sh $ODIN
+
+ ODIN_LIB_SP="/home/xju/omniORB-4.2.0/lib /lib /usr/lib" ODIN_EXEC_PATH=/home/xju/omniORB-4.2.0/bin:/usr/bin:/bin ODIN_OMNICXY_PATH=/home/xju/omniORB-4.2.0/bin:/usr/bin:/bin ODIN_OMNICXY_BE_DIR=~/urnest/omnicxy/omniidl_be  ODIN_CXX_LD_LIBRARY_PATH=/home/xju/omniORB-4.2.0/lib ODIN_LD_LIBRARY_PATH=/home/xju/omniORB-4.2.0/lib ODIN_CXX_I=/home/xju/omniORB-4.2.0/include odin/create-linux-cache.sh $ODIN
