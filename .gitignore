@@ -144,3 +144,6 @@ omnicxy/proto/cxy/p7.hh
 omnicxy/proto/cxy/e/p7.hh
 omnicxy/proto/cxy/e/p7.cc
 omnicxy/proto/cxy/p11.hh
+omnicxy/proto/cxx/p14.cc omnicxy/proto/cxx/p14.hh
+omnicxy/proto/cxx/p14.cc
+omnicxy/proto/cxx/p14.hh

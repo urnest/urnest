@@ -47,6 +47,7 @@ std::ostream& operator<<(std::ostream& s, ::p13::U1 const& x) throw()
     return s << "::p13::U1::V<2> " << y.c_;
   }
   }
+  ::p13::U1::Default const& y(dynamic_cast< ::p13::U1::Default const&>(x));
   return s << "::p13::U1::Default(" << discriminator(x) << ") " << y.x_;
 }
 
@@ -135,7 +136,7 @@ int main(int argc, char* argv[])
       
       cxy::cref<p13::F> ref(orb, makeURI(port, OBJECT_NAME));
       ref->f1(::xju::Shared< ::p13::U1 const>(new ::p13::U1::V<1>(20L)));
-      ref->f1(::xju::Shared< ::p13::U1 const>(new ::p13::U1::Default("fred")));
+      ref->f1(::xju::Shared< ::p13::U1 const>(new ::p13::U1::Default(18,"fred")));
       xju::assert_equal(x.calls_.size(),2U);
       {
         F_impl::Call::f1 const& c(
@@ -147,7 +148,7 @@ int main(int argc, char* argv[])
         F_impl::Call::f1 const& c(
           dynamic_cast<F_impl::Call::f1 const&>(*x.calls_[1]));
         xju::assert_equal(c, F_impl::Call::f1(::xju::Shared< ::p13::U1 const>(
-                                                new ::p13::U1::Default("fred"))));
+                                                new ::p13::U1::Default(18,"fred"))));
       }
     }
     return 0;
