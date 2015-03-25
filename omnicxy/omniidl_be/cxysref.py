@@ -28,12 +28,15 @@ calldesc_t='''
 
     // omniCallDescriptor::
     void unmarshalArguments(cdrStream& s) throw(
-      CORBA::SystemException
+      CORBA::SystemException,
+      omni::giopStream::CommFailure
       )
     {%(paramUnmarshals)s
     }
     // omniCallDescriptor::
-    void marshalReturnedValues(cdrStream& s) throw()
+    void marshalReturnedValues(cdrStream& s) throw(
+      omni::giopStream::CommFailure
+      )
     {%(returnMarshal)s
     }
   };'''
@@ -327,6 +330,7 @@ template='''\
 #include <omniORB4/callDescriptor.h> // impl
 #include <omniORB4/callHandle.h> // impl
 #include <omniORB4/omniServant.h> // impl
+#include <omniORB4/internal/giopStream.h> // impl
 
 #include <xju/mt.hh>
 #include <string>

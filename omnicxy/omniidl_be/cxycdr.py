@@ -24,12 +24,17 @@ public:
   static ::%(name)s unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {%(memberUnmarshals)s
     return ::%(name)s(%(consparams)s);
   }  
-  static void marshal(%(name)s const& x, cdrStream& s) throw()
+  static void marshal(%(name)s const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {%(memberMarshals)s
   }
 };
@@ -53,14 +58,19 @@ public:
   static ::%(name)s unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {%(memberUnmarshals)s
     return ::%(name)s(%(consparams)s
              //%(eclass)s params
              std::string("%(repoId)s"), std::make_pair(__FILE__,__LINE__));
   }  
-  static void marshal(%(name)s const& x, cdrStream& s) throw()
+  static void marshal(%(name)s const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {%(memberMarshals)s
   }
   static const char repoId[]="%(repoId)s";
@@ -84,12 +94,17 @@ public:
   static ::%(name)s unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {%(memberUnmarshals)s
     return ::%(name)s(%(consparams)s);
   }  
-  static void marshal(%(name)s const& x, cdrStream& s) throw()
+  static void marshal(%(name)s const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {%(memberMarshals)s
   }
   static const char repoId[]="%(repoId)s";
@@ -131,13 +146,18 @@ public:
   static ::%(name)s unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {
     ::%(name)s::Value v=(::%(name)s::Value)cdr< int32_t >::unmarshalFrom(s);
     return ::%(name)s(v);
   }  
-  static void marshal(%(name)s const& x, cdrStream& s) throw()
+  static void marshal(%(name)s const& x, cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {
     cdr< int32_t >::marshal(valueOf(x), s);
   }
@@ -186,7 +206,8 @@ public:
   static xju::Shared< ::%(name)s const> unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {
     ::%(switchTypeName)s const d(cdr< ::%(switchTypeName)s >::unmarshalFrom(s));
@@ -195,7 +216,11 @@ public:
       throw CORBA::BAD_PARAM(omni::BAD_PARAM_InvalidUnionDiscValue,::CORBA::COMPLETED_NO);
     }
   }  
-  static void marshal(xju::Shared< ::%(name)s const> const& x, cdrStream& s) throw()
+  static void marshal(xju::Shared< ::%(name)s const> const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {%(marshal_cases)s
   }
   static const char repoId[]="%(repoId)s";
@@ -238,7 +263,8 @@ public:
   static xju::Shared< ::%(name)s const> unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {
     ::%(switchTypeName)s const d(cdr< ::%(switchTypeName)s >::unmarshalFrom(s));
@@ -250,7 +276,11 @@ public:
       }
     }
   }  
-  static void marshal(xju::Shared< ::%(name)s const> const& x, cdrStream& s) throw()
+  static void marshal(xju::Shared< ::%(name)s const> const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {%(marshal_cases)s
     cdr< ::%(switchTypeName)s >::marshal(discriminator(*x),s);
     ::%(name)s::Default const& c(

@@ -33,13 +33,18 @@ public:
   static uint8_t unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {
     uint8_t result(s.unmarshalOctet());
     return result;
   }
-  static void marshal(uint8_t const x, cdrStream& s) throw()
+  static void marshal(uint8_t const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {
     s.marshalOctet(x);
   }
@@ -53,14 +58,19 @@ public:
   static uint16_t unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {
     uint16_t result;
     (::CORBA::UShort&)result <<= s;
     return result;
   }
-  static void marshal(uint16_t const x, cdrStream& s) throw()
+  static void marshal(uint16_t const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {
     ((::CORBA::UShort)x) >>= s;
   }
@@ -74,14 +84,19 @@ public:
   static uint32_t unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {
     uint32_t result;
     (::CORBA::ULong&)result <<= s;
     return result;
   }
-  static void marshal(uint32_t const x, cdrStream& s) throw()
+  static void marshal(uint32_t const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {
     ((CORBA::ULong)x) >>= s;
   }
@@ -96,14 +111,19 @@ public:
   static uint64_t unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {
     uint64_t result;
     (::CORBA::ULongLong&)result <<= s;
     return result;
   }
-  static void marshal(uint64_t const x, cdrStream& s) throw()
+  static void marshal(uint64_t const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {
     ((CORBA::ULongLong)x) >>= s;
   }
@@ -118,14 +138,19 @@ public:
   static int16_t unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {
     int16_t result;
     (::CORBA::Short&)result <<= s;
     return result;
   }
-  static void marshal(int16_t const x, cdrStream& s) throw()
+  static void marshal(int16_t const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {
     x >>= s;
   }
@@ -139,14 +164,19 @@ public:
   static int32_t unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {
     int32_t result;
     (::CORBA::Long&)result <<= s;
     return result;
   }
-  static void marshal(int32_t const x, cdrStream& s) throw()
+  static void marshal(int32_t const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {
     ((CORBA::ULong)x) >>= s;
   }
@@ -161,14 +191,19 @@ public:
   static int64_t unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {
     int64_t result;
     (::CORBA::LongLong&)result <<= s;
     return result;
   }
-  static void marshal(int64_t const x, cdrStream& s) throw()
+  static void marshal(int64_t const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {
     ((CORBA::ULongLong)x) >>= s;
   }
@@ -183,13 +218,18 @@ public:
   static bool unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {
     bool result(s.unmarshalBoolean());
     return result;
   }
-  static void marshal(bool const x, cdrStream& s) throw()
+  static void marshal(bool const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {
     s.marshalBoolean(x);
   }
@@ -204,14 +244,19 @@ public:
   static double unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {
     double result;
     (::CORBA::Double&)result <<= s;
     return result;
   }
-  static void marshal(double const x, cdrStream& s) throw()
+  static void marshal(double const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {
     x >>= s;
   }
@@ -226,14 +271,19 @@ public:
   static float unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {
     float result;
     (::CORBA::Float&)result <<= s;
     return result;
   }
-  static void marshal(float const x, cdrStream& s) throw()
+  static void marshal(float const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {
     x >>= s;
   }
@@ -248,7 +298,8 @@ public:
   static std::string unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {
     char* r(s.unmarshalString(0));
@@ -256,7 +307,11 @@ public:
     CORBA::string_free(r);
     return result;
   }
-  static void marshal(std::string const& x, cdrStream& s) throw()
+  static void marshal(std::string const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {
     s.marshalString(x.c_str(),0);
   }
@@ -270,12 +325,17 @@ public:
   static xju::Int<Tag, Impl> unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {
     return xju::Int<Tag, Impl>(cdr<Impl>::unmarshalFrom(s));
   }
-  static void marshal(xju::Int<Tag, Impl> const& x, cdrStream& s) throw()
+  static void marshal(xju::Int<Tag, Impl> const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {
     cdr<Impl>::marshal(x.value(), s);
   }
@@ -290,12 +350,17 @@ public:
   static xju::Tagged<Impl, Tag> unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {
     return xju::Tagged<Impl, Tag>(cdr<Impl>::unmarshalFrom(s));
   }
-  static void marshal(xju::Tagged<Impl, Tag> const& x, cdrStream& s) throw()
+  static void marshal(xju::Tagged<Impl, Tag> const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {
     cdr<Impl>::marshal(x._, s);
   }
@@ -309,7 +374,8 @@ public:
   static std::vector<T> unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
-  //  CORBA::SystemException
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
   //  )
   {
     uint32_t const length(cdr<uint32_t>::unmarshalFrom(s));
@@ -319,7 +385,11 @@ public:
     }
     return result;
   }
-  static void marshal(std::vector<T> const& x, cdrStream& s) throw()
+  static void marshal(std::vector<T> const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
   {
     cdr<uint32_t>::marshal(x.size(),s);
     for(typename std::vector<T>::const_iterator i=x.begin(); i!=x.end(); ++i) {

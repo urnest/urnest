@@ -23,6 +23,7 @@
 #include <xju/Time.hh>
 #include <cxy/ORB.hh>
 #include "xju/Shared.hh"
+#include <unistd.h>
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {
@@ -109,6 +110,7 @@ int main(int argc, char* argv[])
 {
   try {
     if (argc != 3 || !(std::string("client")==argv[2]||
+                       std::string("loop-client")==argv[2]||
                        std::string("server")==argv[2]||
                        std::string("both")==argv[2])) {
       std::cerr << "usage:  " 
@@ -132,6 +134,22 @@ int main(int argc, char* argv[])
           ref->f2(::p4::F::XxPair(18,std::string("argz"))));
         std::cout << "::p4::F::XxPair("<<r.first<<"), "<<r.second<<")"
                   << std::endl;
+      }
+    }
+    else if (argv[2]==std::string("loop-client")) {
+      cxy::ORB<cxy::Exception> orb("giop:tcp::");
+      cxy::cref<p4::F> ref(orb, makeURI(port, OBJECT_NAME));
+      ::p4::XS1 const r(
+        ref->f1(::p4::XS1(::p3::MyInt(77),std::string("argy"))));
+      std::cout << "::p4::XS1(::p3::MyInt("<<r.a_<<"), "<<r.b_<<")"
+                << std::endl;
+      while(true)
+      {
+        ::p4::F::XxPair const r(
+          ref->f2(::p4::F::XxPair(18,std::string("argz"))));
+        std::cout << "::p4::F::XxPair("<<r.first<<"), "<<r.second<<")"
+                  << std::endl;
+        ::sleep(1);
       }
     }
     else if (argv[2]==std::string("server")) {
