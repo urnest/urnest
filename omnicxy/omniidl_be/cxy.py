@@ -85,6 +85,9 @@ def unqualifiedType(t):
     elif t.kind()==idltype.tk_union:
         t=''.join(['::'+_ for _ in t.scopedName()])
         return '::xju::Shared< %(t)s const>'%vars()
+    elif t.kind()==idltype.tk_objref:
+        t=''.join(['::'+_ for _ in t.scopedName()])
+        return '::cxy::IOR< %(t)s >'%vars()
     assert False, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
     pass
 
@@ -124,6 +127,8 @@ def tincludes(t):
         return tincludes(t.seqType())
     elif t.kind() in [idltype.tk_enum]:
         return []
+    elif t.kind() in [idltype.tk_objref]:
+        return ['<cxy/IOR.hh>']
     assert False, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
 
 def pincludes(t):

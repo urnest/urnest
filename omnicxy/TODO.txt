@@ -202,10 +202,41 @@ x p13.idl:
 
 x p14.idl:
   x inherit interface
+
+x p15.idl:
+  - objref param/return
+    cxy::IOR<X>:
+    x cxy::IOR<X> cxy::sref<X>::ior() const;
+      we have:
+        ::PortableServer::ServantBase
+        ::PortableServer::ObjectId
+        omniServant
+        CORBA::Object via orb.insPOA().id_to_reference(objectId)
+        omniObjRef* via CORBA::Object::_PR_getobj()
+        omniIOR* via omniObjRef::_getIOR()
+        ... but maybe we can store a bit more info in sref_impl
+        when we construct the sref_impl? Nope.
+      
+    x cxy::cref<X>(cxy::IOR<X> const& ior) throw();
+      see see src/lib/omniORB/orbcore/omniObjRef.cc
+      omniObjRef::_unMarshal
+      note current uri param is only stored in cxy::objref<X> so
+      x it can be added to exception context for a start use _toString(objRef) 
+      - but better to describe the IOR type and
+        tagged profile list (could use catior?) see REVISIT in cxy::IORImpl
+
+- IOR<T>::IOR(IOR<U> const& x); // only compiles if U is a T
+    x implement
+      - test
+
+- dynamic_cast
+    template<class T, class U>
+    cxy::cref<T> dynamic_cast(
+      cxy::cref<U> const& x) throw(
+        cxy::BadDynamicCast);
   
 - inherit interface multi-level
 - inherit interface diamond
-- objref param/return
 - cref casting
 - inherit multiple interfaces
 - untyped object ref plus casting
@@ -216,18 +247,6 @@ x p14.idl:
 - arrays
 - any
 - other stuff (see omniidl idltypes.py)
-  cxy::IOR<X>;
-  cxy::IOR<X> cxy::sref<X>::ior() const;
-    cxy::IOR<X> constains omniIOR*, or omniIOR parts
-    by value? see src/lib/omniORB/orbcore/omniObjRef.cc
-    _marshal
-  cxy::cref<X>(cxy::IOR<X> const& ior) throw();
-    see omniObjRef::_unMarshal
-
-  template<class T, class U>
-  cxy::cref<T> dynamic_cast(
-    cxy::cref<U> const& x) throw(
-      cxy::BadDynamicCast);
 
 - cxysref.py generates dispatch code for all inherited operations, which
   will result in lots of duplicate code, instead call the dispatch code
@@ -278,7 +297,7 @@ x make p1.hh // impl in p1.sref.hcp
 
 - allow servant to throw base exception
 
-
+- make uri cxy::objref<X> cons param
 ---------------------------------------------
 
 xju@xjutv:~/urnest$ ODIN_LIB_SP="/usr/local/omniORB-4.2.0/lib /lib /usr/lib" ODIN_EXEC_PATH=/usr/local/omniORB-4.2.0/bin:/usr/bin:/bin ODIN_OMNICXY_PATH=/usr/local/omniORB-4.2.0/bin:/usr/bin:/bin ODIN_OMNICXY_BE_DIR=~/urnest/omnicxy/omniidl_be  ODIN_CXX_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib ODIN_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib ODIN_CXX_I=/usr/local/omniORB-4.2.0/include odin/create-linux-cache.sh $ODIN

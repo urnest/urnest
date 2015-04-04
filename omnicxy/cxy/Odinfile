@@ -83,6 +83,21 @@ sref_impl.cc==%sref_impl/sref_impl.cc
 
 %sref_impl==()+cmd=(../../hcp/hcp-split) -l 1 (sref_impl.hcp) 'sref_impl.hh' 'sref_impl.cc':output
 
+IOR.hh==%IOR/IOR.hh
+IOR.cc==%IOR/IOR.cc
+
+%IOR==()+cmd=(../../hcp/hcp-split) -l 1 (IOR.hcp) 'IOR.hh' 'IOR.cc':output
+
+IORImpl.hh==%IORImpl/IORImpl.hh
+IORImpl.cc==%IORImpl/IORImpl.cc
+
+%IORImpl==()+cmd=(../../hcp/hcp-split) -l 1 (IORImpl.hcp) 'IORImpl.hh' 'IORImpl.cc':output
+
+TaggedProfileList.hh==%TaggedProfileList/TaggedProfileList.hh
+TaggedProfileList.cc==%TaggedProfileList/TaggedProfileList.cc
+
+%TaggedProfileList==()+cmd=(../../hcp/hcp-split) -l 1 (TaggedProfileList.hcp) 'TaggedProfileList.hh' 'TaggedProfileList.cc':output
+
 
 %tests.tree==<<
 ()+cmd=(test-Exception.cc+(%cxx-opts):auto.cxx.exe):stdout

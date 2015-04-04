@@ -20,6 +20,8 @@
 #include <xju/format.hh>
 #include "WrongType.hh"
 #include "NoSuchObject.hh"
+#include "IORImpl.hh"
+#include "TaggedProfileList.hh" // impl
 
 namespace CORBA
 {
@@ -195,6 +197,39 @@ public:
       std::ostringstream s;
       s << "locate object "
         << xju::format::quote(uri)
+        << " of type "
+        << repoId;
+      e.addContext(s.str(), std::make_pair(__FILE__, __LINE__));
+      throw;
+    }
+  }
+
+  // repoId is static type required (ior contains real type)
+  // returns omniObjRef*
+  void* locate(IORImpl const& ior, std::string const& repoId) throw(
+    cxy::WrongType,
+    cxy::NoSuchObject,
+    cxy::Exception)
+  {
+    try {
+      try {
+        std::string sior(ior.toString());
+        return locate(sior,repoId);
+      }
+      catch(CORBA::OBJECT_NOT_EXIST& ee) {
+        std::ostringstream s;
+        s << ior << " is nil";
+        throw cxy::NoSuchObject(
+          s.str(), std::make_pair(__FILE__, __LINE__));
+      }
+      catch(CORBA::Exception const& ee) {
+        throw cxy::translateException<cxy::Exception>(ee);
+      }
+    }
+    catch(cxy::Exception& e) {
+      std::ostringstream s;
+      s << "locate object "
+        << ior
         << " of type "
         << repoId;
       e.addContext(s.str(), std::make_pair(__FILE__, __LINE__));

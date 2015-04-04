@@ -7,11 +7,15 @@ import os.path
 from cxy import ptype,unqualifiedType,GenerateFailed
 
 interface_t='''\
+template<class T>
+class IOR;
+
 template<>
 class cref< ::%(fqn)s >
 {
 public:
-  explicit cref(cxy::ORB< %(eclass)s >& orb, std::string const& uri) throw(
+  explicit cref(cxy::ORB< %(eclass)s >& orb, 
+                std::string const& uri) throw(
     // no object with specified uri, including server
     // not reachable and server does not know name
     cxy::Exceptions< %(eclass)s >::NoSuchObject,
@@ -19,16 +23,29 @@ public:
     cxy::Exceptions< %(eclass)s >::WrongType,
     // other failure, eg communication failure
     %(eclass)s):
-      uri_(uri),
       obj_((&cxy::pof< ::%(fqn)s >::me_(), // force init of static var,
             (cxy::objref< ::%(fqn)s >*)orb.locate(
               uri, cxy::cdr< ::%(fqn)s >::repoId)))
   {
-    obj_->uri_=uri;
+    obj_->description_=uri;
   }
-  
+
+  explicit cref(cxy::ORB< %(eclass)s >& orb, 
+                cxy::IOR< ::%(fqn)s >const& ior) throw(
+    // no object with specified ior, including server
+    // not reachable and server does not know name
+    cxy::Exceptions< %(eclass)s >::NoSuchObject,
+    // other failure, eg communication failure
+    %(eclass)s):
+      obj_((&cxy::pof< ::%(fqn)s >::me_(), // force init of static var,
+            (cxy::objref< ::%(fqn)s >*)orb.locate(
+              ior, cxy::cdr< ::%(fqn)s >::repoId)))
+  {
+    CORBA::String_var description(omniObjRef::_toString(obj_));
+    obj_->description_=description.in();
+  }
+
   cref(cref const& b) throw():
-      uri_(b.uri_),
       obj_(b.obj_)
   {
     if (obj_ && !obj_->_NP_is_nil())  omni::duplicateObjRef(obj_);
@@ -38,7 +55,6 @@ public:
   {
     if (this != &b) {
       ::CORBA::release(obj_);
-      uri_= b.uri_;
       obj_ = b.obj_;
       if (obj_ && !obj_->_NP_is_nil())  omni::duplicateObjRef(obj_);
     }
@@ -68,7 +84,6 @@ public:
   }
   %(content)s
 private:
-  std::string uri_;
   cxy::objref< ::%(fqn)s >* obj_;
 };
 '''
@@ -123,6 +138,7 @@ template='''\
 
 #include <cxy/ORB.hh> // impl
 #include <cxy/translateException.hh> // impl
+#include <cxy/IOR.hh> // impl
 #include <xju/format.hh> // impl
 #include <xju/assert.hh> // impl
 #include <string>

@@ -144,6 +144,14 @@ omnicxy/proto/cxy/p7.hh
 omnicxy/proto/cxy/e/p7.hh
 omnicxy/proto/cxy/e/p7.cc
 omnicxy/proto/cxy/p11.hh
-omnicxy/proto/cxx/p14.cc omnicxy/proto/cxx/p14.hh
+omnicxy/proto/cxx/p14.cc 
+omnicxy/proto/cxx/p14.hh
 omnicxy/proto/cxx/p14.cc
 omnicxy/proto/cxx/p14.hh
+omnicxy/cxy/IOR.cc
+omnicxy/cxy/IOR.cdr.hcp
+omnicxy/cxy/IOR.hh
+omnicxy/cxy/IORImpl.cc
+omnicxy/cxy/IORImpl.hh
+omnicxy/cxy/TaggedProfileList.cc
+omnicxy/cxy/TaggedProfileList.hh

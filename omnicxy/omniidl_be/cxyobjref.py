@@ -21,7 +21,7 @@ objref_operation_t='''
     }
   }
   catch(%(eclass)s& e) {
-    e.addContext(uri_+"->%(fqn)s::%(name)s()", std::make_pair(__FILE__, __LINE__));
+    e.addContext(description_+"->%(fqn)s::%(name)s()", std::make_pair(__FILE__, __LINE__));
     throw;
   }
 }
@@ -87,12 +87,12 @@ class objref< ::%(fqn)s >:
   public virtual xju::NonCopyable
 {
 public:
-  inline objref()  { _PR_setobj(0); }  // nil
+  inline objref(): description_("nil") { _PR_setobj(0); }  // nil
   objref(omniIOR* ior, omniIdentity* id) throw() :
       omniObjRef(cxy::cdr< ::%(fqn)s >::repoId, ior, id, 1)%(initinherits)s {
     _PR_setobj(this);
   }
-  std::string uri_;
+  std::string description_;
 
   %(objref_content)s
 

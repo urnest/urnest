@@ -38,10 +38,15 @@
 %p12.hcp==%gen/p12.hcp
 %p13.hcp==%gen/p13.hcp
 %p14.hcp==%gen/p14.hcp
-%p14.cref.hcp==%gen.1/p14.cref.hcp
-%p14.cdr.hcp==%gen.1/p14.cdr.hcp
-%p14.objref.hcp==%gen.1/p14.objref.hcp
-%p14.sref.hcp==%gen.1/p14.sref.hcp
+%p14.cref.hcp==%gen/p14.cref.hcp
+%p14.cdr.hcp==%gen/p14.cdr.hcp
+%p14.objref.hcp==%gen/p14.objref.hcp
+%p14.sref.hcp==%gen/p14.sref.hcp
+%p15.hcp==%gen/p15.hcp
+%p15.cref.hcp==%gen/p15.cref.hcp
+%p15.cdr.hcp==%gen/p15.cdr.hcp
+%p15.objref.hcp==%gen/p15.objref.hcp
+%p15.sref.hcp==%gen/p15.sref.hcp
 
 %all-tests.tree==<<
 ()+cmd=(%p1-main) '3735' 'both':exec.output
@@ -58,6 +63,7 @@
 ()+cmd=(%p12-main) '3746' 'both':exec.output
 ()+cmd=(%p13-main) '3747' 'both':exec.output
 ()+cmd=(%p14-main) '3748' 'both':exec.output
+()+cmd=(%p15-main) '3749' 'both':exec.output
 %test-transient
 ()+cmd=(%test-no-such-object) '3750':exec.output
 ()+cmd=(%test-duplicate-name) '3751':exec.output
@@ -81,6 +87,7 @@
 %p12-main==p12-main.cc+(%cxx-opts):auto.cxx.exe
 %p13-main==p13-main.cc+(%cxx-opts):auto.cxx.exe
 %p14-main==p14-main.cc+(%cxx-opts):auto.cxx.exe
+%p15-main==p15-main.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-duplicate-name==test-duplicate-name.cc+(%cxx-opts):auto.cxx.exe
 

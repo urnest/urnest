@@ -117,6 +117,38 @@ private:
     }
   }
 
+  void* locate(IORImpl const& ior, std::string const& repoId) throw(
+    // no object with specified uri, including server
+    // not reachable and server does not know name
+    typename cxy::Exceptions<BaseException>::NoSuchObject,
+    // object with specified uri is not a p1::F
+    typename cxy::Exceptions<BaseException>::WrongType,
+    // other failure, eg communication failure
+    BaseException)
+  {
+    try {
+      return impl_.locate(ior, repoId);
+    }
+    catch(cxy::NoSuchObject const& ee) {
+      if (typeid(cxy::Exception)==typeid(BaseException)) {
+        throw;
+      }
+      throw cxy::translateException<BaseException>(ee);
+    }
+    catch(cxy::WrongType const& ee) {
+      if (typeid(cxy::Exception)==typeid(BaseException)) {
+        throw;
+      }
+      throw cxy::translateException<BaseException>(ee);
+    }
+    catch(cxy::Exception& ee) {
+      if (typeid(cxy::Exception)==typeid(BaseException)) {
+        throw;
+      }
+      throw cxy::translateException<BaseException>(ee);
+    }
+  }
+
   void run() throw()
   {
     try {

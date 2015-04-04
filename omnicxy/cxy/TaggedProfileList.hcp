@@ -7,30 +7,18 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <string>
-#include "IORImpl.hh"
+#include <omniORB4/CORBA.h>
+#include <omniORB4/IOP.h>
 
 namespace cxy
 {
-template<class T>
-class IOR : public IORImpl
+
+class TaggedProfileList : public IOP::TaggedProfileList
 {
 public:
-  IOR(IORImpl const& impl) throw():
-        IORImpl(impl) {
-  }
-  // nil IOR - see omniObjRef.cc _marshal / _unMarshal
-  IOR() throw(): IORImpl() {
-  }
-
-  IOR(IOR const& x) throw():
-      IORImpl(x) {
-  }
-
-  template<class U>
-  IOR(IOR<U> const& x) throw():
-      IORImpl(x) {
-    T const* U_must_be_a_T((U*)0);
+  TaggedProfileList(IOP::TaggedProfileList const& x):
+      IOP::TaggedProfileList(x)
+  {
   }
 };
 

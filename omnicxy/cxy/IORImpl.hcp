@@ -1,0 +1,99 @@
+// Copyright (c) 2014 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <string>
+#include "TaggedProfileList.hh" //impl
+#include <iosfwd>
+#include <iostream> //impl
+#include <cxy/cdr.hh> //impl
+#include <xju/format.hh>
+
+namespace cxy
+{
+// forward decl to avoid header dependency on omniORB headers, which
+// in turn drives us to use pointer members
+class TaggedProfileList;
+
+class IORImpl
+{
+public:
+  IORImpl(std::string const& repoID,
+          TaggedProfileList const& profiles) throw():
+      repoID_(repoID),
+      profiles_(new TaggedProfileList(profiles)) {
+  }
+  // nil IOR - see omniObjRef.cc _marshal / _unMarshal
+  IORImpl() throw():
+    repoID_(""),
+    profiles_(new TaggedProfileList(IOP::TaggedProfileList())) {
+  }
+  IORImpl(IORImpl const& x) throw():
+      repoID_(x.repoID_),
+      profiles_(new TaggedProfileList(*x.profiles_)) {
+  }
+  ~IORImpl() throw()
+  {
+    delete profiles_;
+  }
+  IORImpl& operator=(IORImpl const& x) throw()
+  {
+    if (this != &x) {
+      repoID_=x.repoID_;
+      *profiles_=*x.profiles_;
+    }
+    return *this;
+  }
+
+  std::string const& repoID() const throw()
+  {
+    return repoID_;
+  }
+  
+  TaggedProfileList const& profiles() const throw()
+  {
+    return *profiles_;
+  }
+
+  std::string toString() const throw()
+  {
+    cdrMemoryStream buf(CORBA::ULong(0),CORBA::Boolean(1));
+    buf.marshalOctet(omni::myByteOrder);
+    cxy::cdr<IORImpl>::marshal(*this,buf);
+    
+    // turn the encapsulation into a hex string with "IOR:" prepended
+    buf.rewindInputPtr();
+    std::ostringstream s;
+    s << "IOR:";
+    for(unsigned int i=0; i != buf.bufSize(); ++i) {
+      s << xju::format::hex(((unsigned char const*)buf.bufPtr())[i],"");
+    }
+    return s.str();
+  }
+  
+private:
+  std::string repoID_;
+  TaggedProfileList* profiles_;
+};
+
+std::ostream& operator<<(std::ostream& s,
+                         IORImpl const& x) throw() {
+  cdrMemoryStream buf(CORBA::ULong(0),CORBA::Boolean(1));
+  buf.marshalOctet(omni::myByteOrder);
+  cxy::cdr<IORImpl>::marshal(x,buf);
+
+  // turn the encapsulation into a hex string with "IOR:" prepended
+  buf.rewindInputPtr();
+  s << "IOR:";
+  for(unsigned int i=0; i != buf.bufSize(); ++i) {
+    s << xju::format::hex(((unsigned char const*)buf.bufPtr())[i],"");
+  }
+  return s;
+}
+
+}

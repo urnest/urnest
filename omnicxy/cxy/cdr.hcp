@@ -10,11 +10,14 @@
 
 #include <omniORB4/CORBA.h> //impl
 #include <omniORB4/cdrStream.h> //impl
+#include <omniORB4/IOP.h> //impl
 #include <stdint.h>
 #include <string>
 #include <vector>
 #include "xju/Tagged.hh"
 #include "xju/Int.hh"
+#include "IOR.hh"
+#include "TaggedProfileList.hh" //impl
 
 class cdrStream;
 
@@ -368,7 +371,7 @@ public:
 };
 
 template<class T>
-class cdr<std::vector<T> >
+class cdr< std::vector<T> >
 {
 public:
   static std::vector<T> unmarshalFrom(cdrStream& s) 
@@ -395,6 +398,57 @@ public:
     for(typename std::vector<T>::const_iterator i=x.begin(); i!=x.end(); ++i) {
       cdr<T>::marshal(*i, s);
     }
+  }
+};
+  
+template<>
+class cdr< IORImpl >
+{
+public:
+  static IORImpl unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    //from omniObjRef.cc omniObjRef::_unMarshal
+    std::string const repoId(cdr< std::string >::unmarshalFrom(s));
+    IOP::TaggedProfileList profiles;
+    (IOP::TaggedProfileList&)profiles <<= s;
+    return IORImpl(repoId,cxy::TaggedProfileList(profiles));
+  }
+  static void marshal(IORImpl const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    cdr< std::string >::marshal(x.repoID(),s);
+    (const IOP::TaggedProfileList&)x.profiles() >>= s;
+  }
+};
+  
+template<class T>
+class cdr< IOR<T> >
+{
+public:
+  static IOR<T> unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    return IOR<T>(IORImpl(cdr<IORImpl>::unmarshalFrom(s)));
+  }
+  static void marshal(IOR<T> const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    cdr<IORImpl>::marshal(x,s);
   }
 };
   

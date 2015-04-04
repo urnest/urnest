@@ -143,6 +143,11 @@ public:
     }
   }
 
+  cxy::IOR< ::%(fqn)s > ior() const throw()
+  {
+     return cxy::IOR< ::%(fqn)s >(impl_->ior());
+  }
+
   std::string const name_;
   ::%(fqn)s& x_;
   
@@ -319,6 +324,7 @@ template='''\
 #include <cxy/sref.hh>
 #include <cxy/sref_if.hh>
 #include <cxy/Exceptions.hh>
+#include <cxy/IOR.hh>
 #include %(eheader)s
 
 #include %(hhinc)s // impl

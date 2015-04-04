@@ -16,6 +16,8 @@
 #include <string>
 #include <cxy/sref_if.hh>
 #include <cxy/Exceptions.hh>
+#include <cxy/IORImpl.hh>
+#include <cxy/TaggedProfileList.hh>
 
 namespace cxy
 {
@@ -61,6 +63,16 @@ public:
   {
     sref_.impl_deleted();
   }
+  IORImpl ior() const throw()
+  {
+    CORBA::Object_var const o(
+      orb_.insPOA().id_to_reference(oid_));
+    omniObjRef& o2(*o->_PR_getobj());
+    omniIOR_var const ior(o2._getIOR());
+    return IORImpl(repoId_,
+                   cxy::TaggedProfileList(ior->iopProfiles()));
+  }
+  
   void deactivate() throw()
   {
     orb_.insPOA().deactivate_object(oid_);
