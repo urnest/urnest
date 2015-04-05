@@ -244,6 +244,7 @@ x p16.idl:
 - memory leaks:
   - allow a repeat count, and compare eg 1 repeat v 100 with
     eg valgrind
+    - p1-main (repeat the basic call)
 
 - inherit interface multi-level
 - inherit multiple interfaces

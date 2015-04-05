@@ -22,6 +22,7 @@
 #include <xju/mt.hh>
 #include <xju/Time.hh>
 #include <cxy/ORB.hh>
+#include <xju/stringToUInt.hh>
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {
@@ -83,7 +84,11 @@ int main(int argc, char* argv[])
       cxy::sref<p1::F> const xa(orb, OBJECT_NAME, x);
       
       cxy::cref<p1::F> ref(orb, makeURI(port, OBJECT_NAME));
-      ref->f1();
+      unsigned int const repeat(
+        xju::stringToUInt(::getenv("CXY_REPEAT")?::getenv("CXY_REPEAT"):"1"));
+      for(unsigned int i=0; i != repeat; ++i) {
+        ref->f1();
+      }
     }
     
     return 0;

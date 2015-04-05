@@ -23,6 +23,7 @@
 #include <xju/Time.hh>
 #include <cxy/ORB.hh>
 #include "xju/Shared.hh"
+#include <xju/stringToUInt.hh>
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {
@@ -175,22 +176,27 @@ int main(int argc, char* argv[])
       F_impl x;
       
       cxy::sref<p2::F> const xa(orb, OBJECT_NAME, x);
+
+      unsigned int const repeat(
+        xju::stringToUInt(::getenv("CXY_REPEAT")?::getenv("CXY_REPEAT"):"1"));
+      for(unsigned int i=0; i != repeat; ++i) {
       
-      cxy::cref<p2::F> ref(orb, makeURI(port, OBJECT_NAME));
-      ref->f1(1, 2, 3.4, "fred",'k',82,true);
-      xju::assert_equal(x.calls_.size(),1U);
-      {
-        F_impl::Call::f1 const& c(
-          dynamic_cast<F_impl::Call::f1 const&>(*x.calls_[0]));
-        xju::assert_equal(c, F_impl::Call::f1(1,2,3.4,"fred",'k',82,true));
+        cxy::cref<p2::F> ref(orb, makeURI(port, OBJECT_NAME));
+        ref->f1(1, 2, 3.4, "fred",'k',82,true);
+        xju::assert_equal(x.calls_.size(),1U);
+        {
+          F_impl::Call::f1 const& c(
+            dynamic_cast<F_impl::Call::f1 const&>(*x.calls_[0]));
+          xju::assert_equal(c, F_impl::Call::f1(1,2,3.4,"fred",'k',82,true));
+        }
+        xju::assert_equal(ref->f2(),22);
+        xju::assert_equal(x.calls_.size(),2U);
+        {
+          F_impl::Call::f2 const& c(
+            dynamic_cast<F_impl::Call::f2 const&>(*x.calls_[1]));
+        }
+        x.calls_=std::vector<xju::Shared<F_impl::Call> >();
       }
-      xju::assert_equal(ref->f2(),22);
-      xju::assert_equal(x.calls_.size(),2U);
-      {
-        F_impl::Call::f2 const& c(
-          dynamic_cast<F_impl::Call::f2 const&>(*x.calls_[1]));
-      }
-      
     }
     return 0;
   }

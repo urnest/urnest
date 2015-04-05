@@ -74,6 +74,7 @@
 ()+cmd=(%test-no-such-object) '3760':exec.output
 ()+cmd=(%test-duplicate-name) '3761':exec.output
 ()+cmd=(%p2-main-2) '3752' 'both':exec.output
+%leak-checks.tree
 
 %p15-malloc-trace==()+cmd=env 'MALLOC_TRACE=malloc-trace-report.txt' (%p15-main) '3749' 'both':exec.files
 %p15-malloc-trace-report.txt==()+cmd=(%mtrace) (%p15-main) (%p15-malloc-trace+member='malloc-trace-report.txt':extract_file):stdout
@@ -140,4 +141,31 @@ echo "$x" | fgrep TRANSIENT
 %proto==.%gen-2
 
 %gen-2==(%all-2.idl.sm)+hpath='omnicxy/proto'+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy
+
+%leak-checks.tree==<<
+%p1-leak-check
+%p2-leak-check
+%p16-leak-check
+
+%p1-leak-check==(%p1-10-leak-report.txt)+cmd=diff (%p1-100-leak-report.txt) -:stdout
+%p1-10-leak-report.txt==()+cmd=(%valgrind-leaks.sh) '10' (%p1-main) '13735' 'both':exec.output
+%p1-100-leak-report.txt==()+cmd=(%valgrind-leaks.sh) '100' (%p1-main) '23735' 'both':exec.output
+
+%p2-leak-check==(%p2-10-leak-report.txt)+cmd=diff (%p2-100-leak-report.txt) -:stdout
+%p2-10-leak-report.txt==()+cmd=(%valgrind-leaks.sh) '10' (%p2-main) '13736' 'both':exec.output
+%p2-100-leak-report.txt==()+cmd=(%valgrind-leaks.sh) '100' (%p2-main) '23736' 'both':exec.output
+
+%p16-leak-check==(%p16-10-leak-report.txt)+cmd=diff (%p16-100-leak-report.txt) -:stdout
+%p16-10-leak-report.txt==()+cmd=(%valgrind-leaks.sh) '10' (%p16-main) '13750' 'both':exec.output
+%p16-100-leak-report.txt==()+cmd=(%valgrind-leaks.sh) '100' (%p16-main) '23750' 'both':exec.output
+
+%valgrind-leaks.sh == ! <<
+#!/bin/sh
+REPEAT=$1 && shift &&
+valgrind --tool=memcheck "$@" 2>&1 |
+egrep 'definitely lost: |indirectly lost: |possibly lost: |still reachable: '|
+while read pid rest
+do
+  echo $rest
+done
 

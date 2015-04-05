@@ -23,6 +23,7 @@
 #include <xju/Time.hh>
 #include <cxy/ORB.hh>
 #include "xju/Shared.hh"
+#include <xju/stringToUInt.hh>
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {
@@ -169,23 +170,29 @@ int main(int argc, char* argv[])
       
       BBB_impl y(xa.ior());
       cxy::sref<p16::BBB> const xb(orb, OBJECT_NAME, y);
-      
-      cxy::cref<p16::BBB> ref(orb, makeURI(port, OBJECT_NAME));
-      cxy::cref<p16::AAA> a(orb, ref->getA());
-      a->f(11);
-      xju::assert_equal(x.calls_.size(),1U);
-      {
-        CCC_impl::Call::f1 const& c(
-          dynamic_cast<CCC_impl::Call::f1 const&>(*x.calls_[0]));
-        xju::assert_equal(c, CCC_impl::Call::f1(11));
-      }
-      cxy::cref<p16::CCC> c(a.narrow<p16::CCC>());
-      xju::assert_equal(c->f2(17),17);
-      xju::assert_equal(x.calls_.size(),2U);
-      {
-        CCC_impl::Call::f2 const& c(
-          dynamic_cast<CCC_impl::Call::f2 const&>(*x.calls_[1]));
-        xju::assert_equal(c, CCC_impl::Call::f2(17));
+
+      unsigned int const repeat(
+        xju::stringToUInt(::getenv("CXY_REPEAT")?::getenv("CXY_REPEAT"):"1"));
+      for(unsigned int i=0; i != repeat; ++i) {
+        
+        cxy::cref<p16::BBB> ref(orb, makeURI(port, OBJECT_NAME));
+        cxy::cref<p16::AAA> a(orb, ref->getA());
+        a->f(11);
+        xju::assert_equal(x.calls_.size(),1U);
+        {
+          CCC_impl::Call::f1 const& c(
+            dynamic_cast<CCC_impl::Call::f1 const&>(*x.calls_[0]));
+          xju::assert_equal(c, CCC_impl::Call::f1(11));
+        }
+        cxy::cref<p16::CCC> c(a.narrow<p16::CCC>());
+        xju::assert_equal(c->f2(17),17);
+        xju::assert_equal(x.calls_.size(),2U);
+        {
+          CCC_impl::Call::f2 const& c(
+            dynamic_cast<CCC_impl::Call::f2 const&>(*x.calls_[1]));
+          xju::assert_equal(c, CCC_impl::Call::f2(17));
+        }
+        x.calls_=std::vector<xju::Shared<CCC_impl::Call> >();
       }
     }
     return 0;
