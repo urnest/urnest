@@ -23,7 +23,6 @@
 #include <xju/Time.hh>
 #include <cxy/ORB.hh>
 #include "xju/Shared.hh"
-#include <mcheck.h>
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {
@@ -128,7 +127,6 @@ public:
 int main(int argc, char* argv[])
 {
   try {
-    mtrace();
     if (argc != 3 || !(std::string("client")==argv[2]||
                        std::string("server")==argv[2]||
                        std::string("both")==argv[2])) {
@@ -190,7 +188,6 @@ int main(int argc, char* argv[])
         xju::assert_equal(c, CCC_impl::Call::f2(17));
       }
     }
-    muntrace();
     return 0;
   }
   catch(xju::Exception& e) {

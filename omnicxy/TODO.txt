@@ -16,6 +16,8 @@
       - exceptions
       - exception mapping
 
+    - narrowing (would be covered in C++ mapping?)
+
     - list examples from proto
 
 - how to get just direct includes? currently picks up nested
@@ -204,7 +206,7 @@ x p14.idl:
   x inherit interface
 
 x p15.idl:
-  - objref param/return
+  x objref param/return
     cxy::IOR<X>:
     x cxy::IOR<X> cxy::sref<X>::ior() const;
       we have:
@@ -224,8 +226,6 @@ x p15.idl:
       ~ it can be added to exception context for a start use _toString(objRef) 
         (I don't think omniObjRef::_toString is valid on the client side)
       x use stringified IOR borrowing code from omniObjRef._toString()
-      - but better to describe the IOR type and
-        tagged profile list (could use catior?) see REVISIT in cxy::IORImpl
 
 x p16.idl:
   x IOR<T>::IOR(IOR<U> const& x); // only compiles if U is a T
@@ -241,11 +241,14 @@ x p16.idl:
       ~ return e ? e : _nil();
       x easier to go via stringified ior to start with
 
+- memory leaks:
+  - allow a repeat count, and compare eg 1 repeat v 100 with
+    eg valgrind
+
 - inherit interface multi-level
-- inherit interface diamond
-- cref casting
 - inherit multiple interfaces
-- untyped object ref plus casting
+- inherit interface diamond
+- untyped object ref (ie CORBA::Object) plus casting
 - in-place struct union member union(short){ 1: struct X{ long a_;}; }
 - recursive union
 - bounded strings
@@ -267,15 +270,14 @@ x p16.idl:
 - should not need cref at all, should be able to use standard pointer eg
   std::unique_ptr<T> cxy::cref<T>::locate(...)
 
-- memory leaks:
-  - allow a repeat count, and compare eg 1 repeat v 100 with
-    eg valgrind
-
 - compile errors:
   IOR conversion to unrelated type
   narrow to unrelated type
   use of cref<T> without including appropriate header
   use of sref<T> without including appropriate header
+
+- operator<<(std::ostream&,IORImpl) better to describe the IOR type and
+  tagged profile list (could use catior?) see REVISIT in cxy::IORImpl
 
 x test duplicate object name exception
 
