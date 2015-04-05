@@ -89,3 +89,8 @@ p14.cc==(%dummy.hh)+cmd=cat (%p14.cxx.files+member='p14SK.cc':extract_file):stdo
 
 p15.hh==(%dummy.hh)+cmd=cat (%p15.cxx.files+member='p15.hh':extract_file):stdout
 p15.cc==(%dummy.hh)+cmd=cat (%p15.cxx.files+member='p15SK.cc':extract_file):stdout
+
+%p16.cxx.files==../p16.idl+cmd='omniidl' '-bcxx' (../p16.idl)+need=(../p16.idl:hash_inc_all):exec.files
+
+p16.hh==(%dummy.hh)+cmd=cat (%p16.cxx.files+member='p16.hh':extract_file):stdout
+p16.cc==(%dummy.hh)+cmd=cat (%p16.cxx.files+member='p16SK.cc':extract_file):stdout

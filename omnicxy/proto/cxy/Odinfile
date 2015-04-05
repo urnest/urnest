@@ -47,6 +47,11 @@
 %p15.cdr.hcp==%gen/p15.cdr.hcp
 %p15.objref.hcp==%gen/p15.objref.hcp
 %p15.sref.hcp==%gen/p15.sref.hcp
+%p16.hcp==%gen/p16.hcp
+%p16.cref.hcp==%gen/p16.cref.hcp
+%p16.cdr.hcp==%gen/p16.cdr.hcp
+%p16.objref.hcp==%gen/p16.objref.hcp
+%p16.sref.hcp==%gen/p16.sref.hcp
 
 %all-tests.tree==<<
 ()+cmd=(%p1-main) '3735' 'both':exec.output
@@ -64,10 +69,19 @@
 ()+cmd=(%p13-main) '3747' 'both':exec.output
 ()+cmd=(%p14-main) '3748' 'both':exec.output
 ()+cmd=(%p15-main) '3749' 'both':exec.output
+()+cmd=(%p16-main) '3750' 'both':exec.output
 %test-transient
-()+cmd=(%test-no-such-object) '3750':exec.output
-()+cmd=(%test-duplicate-name) '3751':exec.output
+()+cmd=(%test-no-such-object) '3760':exec.output
+()+cmd=(%test-duplicate-name) '3761':exec.output
 ()+cmd=(%p2-main-2) '3752' 'both':exec.output
+
+%p15-malloc-trace==()+cmd=env 'MALLOC_TRACE=malloc-trace-report.txt' (%p15-main) '3749' 'both':exec.files
+%p15-malloc-trace-report.txt==()+cmd=(%mtrace) (%p15-main) (%p15-malloc-trace+member='malloc-trace-report.txt':extract_file):stdout
+
+%mtrace == ! <<
+#!/bin/sh
+# mtrace exits non-zero if it find memory leaks, which does not suit us
+mtrace "$@" || true
 
 %cxx-opts==<<
 +(../..%cxx-opts)
@@ -88,6 +102,7 @@
 %p13-main==p13-main.cc+(%cxx-opts):auto.cxx.exe
 %p14-main==p14-main.cc+(%cxx-opts):auto.cxx.exe
 %p15-main==p15-main.cc+(%cxx-opts):auto.cxx.exe
+%p16-main==p16-main.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-duplicate-name==test-duplicate-name.cc+(%cxx-opts):auto.cxx.exe
 

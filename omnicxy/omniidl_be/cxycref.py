@@ -23,11 +23,12 @@ public:
     cxy::Exceptions< %(eclass)s >::WrongType,
     // other failure, eg communication failure
     %(eclass)s):
+      orb_(&orb),
       obj_((&cxy::pof< ::%(fqn)s >::me_(), // force init of static var,
             (cxy::objref< ::%(fqn)s >*)orb.locate(
               uri, cxy::cdr< ::%(fqn)s >::repoId)))
   {
-    obj_->description_=uri;
+    obj_->uri_=uri;
   }
 
   explicit cref(cxy::ORB< %(eclass)s >& orb, 
@@ -37,15 +38,16 @@ public:
     cxy::Exceptions< %(eclass)s >::NoSuchObject,
     // other failure, eg communication failure
     %(eclass)s):
+      orb_(&orb),
       obj_((&cxy::pof< ::%(fqn)s >::me_(), // force init of static var,
             (cxy::objref< ::%(fqn)s >*)orb.locate(
-              ior, cxy::cdr< ::%(fqn)s >::repoId)))
+              ior.toString(), cxy::cdr< ::%(fqn)s >::repoId)))
   {
-    CORBA::String_var description(omniObjRef::_toString(obj_));
-    obj_->description_=description.in();
+    obj_->uri_=ior.toString();
   }
 
   cref(cref const& b) throw():
+      orb_(b.orb_),
       obj_(b.obj_)
   {
     if (obj_ && !obj_->_NP_is_nil())  omni::duplicateObjRef(obj_);
@@ -55,10 +57,20 @@ public:
   {
     if (this != &b) {
       ::CORBA::release(obj_);
+      orb_ = b.orb_;
       obj_ = b.obj_;
       if (obj_ && !obj_->_NP_is_nil())  omni::duplicateObjRef(obj_);
     }
     return *this;
+  }
+
+  // pre: T is a %(fqn)s 
+  template<class T>
+  cref<T> narrow() const throw(
+    // referenced server object is not a T
+    cxy::Exceptions< %(eclass)s >::WrongType) {
+    %(fqn)s const* T_must_be_a_((%(fqn)s*)0);
+    return cref<T>(*orb_, uri());
   }
 
   ~cref() throw()
@@ -84,7 +96,12 @@ public:
   }
   %(content)s
 private:
+  cxy::ORB< %(eclass)s >* orb_;
   cxy::objref< ::%(fqn)s >* obj_;
+
+  std::string uri() const throw(){
+    return obj_->uri_;
+  }
 };
 '''
 

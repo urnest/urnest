@@ -221,20 +221,26 @@ x p15.idl:
       see see src/lib/omniORB/orbcore/omniObjRef.cc
       omniObjRef::_unMarshal
       note current uri param is only stored in cxy::objref<X> so
-      x it can be added to exception context for a start use _toString(objRef) 
+      ~ it can be added to exception context for a start use _toString(objRef) 
+        (I don't think omniObjRef::_toString is valid on the client side)
+      x use stringified IOR borrowing code from omniObjRef._toString()
       - but better to describe the IOR type and
         tagged profile list (could use catior?) see REVISIT in cxy::IORImpl
 
-- IOR<T>::IOR(IOR<U> const& x); // only compiles if U is a T
-    x implement
-      - test
+x p16.idl:
+  x IOR<T>::IOR(IOR<U> const& x); // only compiles if U is a T
+      x implement
+        x test
 
-- dynamic_cast
-    template<class T, class U>
-    cxy::cref<T> dynamic_cast(
-      cxy::cref<U> const& x) throw(
-        cxy::BadDynamicCast);
-  
+  x dynamic_cast
+      template<class T, class U>
+      cxy::cref<U> cxy::cref<T>::dynamic_cast<U>() throw(cxy::BadDynamicCast);
+      x compile check U is a T
+      ~ if (!obj || obj->_NP_is_nil() || obj->_NP_is_pseudo()) return _nil();
+      ~ _ptr_type e = (_ptr_type) obj->_PR_getobj()->_realNarrow(_PD_repoId);
+      ~ return e ? e : _nil();
+      x easier to go via stringified ior to start with
+
 - inherit interface multi-level
 - inherit interface diamond
 - cref casting
@@ -257,6 +263,19 @@ x p15.idl:
   - objeref.hcp
 
 - try to remove all omniORB headers from cxy/*.hh too
+
+- should not need cref at all, should be able to use standard pointer eg
+  std::unique_ptr<T> cxy::cref<T>::locate(...)
+
+- memory leaks:
+  - allow a repeat count, and compare eg 1 repeat v 100 with
+    eg valgrind
+
+- compile errors:
+  IOR conversion to unrelated type
+  narrow to unrelated type
+  use of cref<T> without including appropriate header
+  use of sref<T> without including appropriate header
 
 x test duplicate object name exception
 

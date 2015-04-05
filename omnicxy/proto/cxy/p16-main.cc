@@ -9,9 +9,9 @@
 //
 
 
-#include "p15.hh"
-#include "p15.cref.hh"
-#include "p15.sref.hh"
+#include "p16.hh"
+#include "p16.cref.hh"
+#include "p16.sref.hh"
 
 #include <xju/Exception.hh>
 #include <iostream>
@@ -32,10 +32,10 @@ std::string makeURI(int port, std::string const& objectName) throw()
   return s.str();
 }
 
-class AAA_impl : public p15::AAA
+class CCC_impl : public p16::CCC
 {
 public:
-  ~AAA_impl() throw()
+  ~CCC_impl() throw()
   {
   }
 
@@ -50,12 +50,24 @@ public:
     return x;
   }
 
+  // CCC::
+  int32_t f2(
+    int32_t const& x) throw(cxy::Exception)
+  {
+    std::cout << "CCC::f2(" 
+              << x << ")" << std::endl;
+    calls_.push_back(xju::Shared<Call>(
+                       new Call::f2(x)));
+    return x;
+  }
+
   struct Call
   {
     virtual ~Call() throw()
     {
     }
     struct f1;
+    struct f2;
   };
   struct Call::f1 : Call
   {
@@ -72,14 +84,29 @@ public:
       return x.a_==y.a_;
     }
   };
+  struct Call::f2 : Call
+  {
+    ~f2() throw()
+    {
+    }
+    f2(::int32_t const& a) throw():
+        a_(a) {
+    }
+    ::int32_t a_;
+    
+    friend bool operator==(f2 const& x, f2 const& y) throw()
+    {
+      return x.a_==y.a_;
+    }
+  };
   std::vector<xju::Shared<Call> > calls_;
 };
 
   
-class BBB_impl : public p15::BBB
+class BBB_impl : public p16::BBB
 {
 public:
-  BBB_impl(::cxy::IOR< ::p15::AAA > const& aaa) throw():
+  BBB_impl(::cxy::IOR< ::p16::AAA > const& aaa) throw():
       aaa_(aaa)
   {
   }
@@ -88,10 +115,10 @@ public:
   {
   }
 
-  ::cxy::IOR< ::p15::AAA const> aaa_;
+  ::cxy::IOR< ::p16::AAA const> aaa_;
   
   // BBB::
-  virtual ::cxy::IOR< ::p15::AAA > getA() throw()
+  virtual ::cxy::IOR< ::p16::AAA > getA() throw()
   {
     return aaa_;
   }
@@ -110,15 +137,15 @@ int main(int argc, char* argv[])
       return 1;
     }
     
-    std::string const OBJECT_NAME("p15");
+    std::string const OBJECT_NAME("p16");
     
     int const port(xju::stringToInt(argv[1]));
     
     if (argv[2]==std::string("client")) {
       {
         cxy::ORB<cxy::Exception> orb("giop:tcp::");
-        cxy::cref<p15::BBB> ref(orb, makeURI(port, OBJECT_NAME));
-        cxy::cref<p15::AAA> a(orb, ref->getA());
+        cxy::cref<p16::BBB> ref(orb, makeURI(port, OBJECT_NAME));
+        cxy::cref<p16::AAA> a(orb, ref->getA());
         a->f(11);
       }
     }
@@ -126,11 +153,11 @@ int main(int argc, char* argv[])
       std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
       cxy::ORB<cxy::Exception> orb(orbEndPoint);
 
-      AAA_impl x;
-      cxy::sref<p15::AAA> const xa(orb, OBJECT_NAME+"aaa", x);
+      CCC_impl x;
+      cxy::sref<p16::CCC> const xa(orb, OBJECT_NAME+"aaa", x);
       
       BBB_impl y(xa.ior());
-      cxy::sref<p15::BBB> const xb(orb, OBJECT_NAME, y);
+      cxy::sref<p16::BBB> const xb(orb, OBJECT_NAME, y);
       
       orb.monitorUntil(xju::Time::now()+xju::MicroSeconds(30*1000000));
     }
@@ -139,20 +166,28 @@ int main(int argc, char* argv[])
       std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
       cxy::ORB<cxy::Exception> orb(orbEndPoint);
 
-      AAA_impl x;
-      cxy::sref<p15::AAA> const xa(orb, OBJECT_NAME+"aaa", x);
+      CCC_impl x;
+      cxy::sref<p16::CCC> const xa(orb, OBJECT_NAME+"aaa", x);
       
       BBB_impl y(xa.ior());
-      cxy::sref<p15::BBB> const xb(orb, OBJECT_NAME, y);
+      cxy::sref<p16::BBB> const xb(orb, OBJECT_NAME, y);
       
-      cxy::cref<p15::BBB> ref(orb, makeURI(port, OBJECT_NAME));
-      cxy::cref<p15::AAA> a(orb, ref->getA());
+      cxy::cref<p16::BBB> ref(orb, makeURI(port, OBJECT_NAME));
+      cxy::cref<p16::AAA> a(orb, ref->getA());
       a->f(11);
       xju::assert_equal(x.calls_.size(),1U);
       {
-        AAA_impl::Call::f1 const& c(
-          dynamic_cast<AAA_impl::Call::f1 const&>(*x.calls_[0]));
-        xju::assert_equal(c, AAA_impl::Call::f1(11));
+        CCC_impl::Call::f1 const& c(
+          dynamic_cast<CCC_impl::Call::f1 const&>(*x.calls_[0]));
+        xju::assert_equal(c, CCC_impl::Call::f1(11));
+      }
+      cxy::cref<p16::CCC> c(a.narrow<p16::CCC>());
+      xju::assert_equal(c->f2(17),17);
+      xju::assert_equal(x.calls_.size(),2U);
+      {
+        CCC_impl::Call::f2 const& c(
+          dynamic_cast<CCC_impl::Call::f2 const&>(*x.calls_[1]));
+        xju::assert_equal(c, CCC_impl::Call::f2(17));
       }
     }
     muntrace();
