@@ -241,10 +241,12 @@ x p16.idl:
       ~ return e ? e : _nil();
       x easier to go via stringified ior to start with
 
-- memory leaks:
-  - allow a repeat count, and compare eg 1 repeat v 100 with
+x memory leaks:
+  x allow a repeat count, and compare eg 1 repeat v 100 with
     eg valgrind
-    - p1-main (repeat the basic call)
+    x p1-main (repeat the basic call)
+    x p2-main (repeat "locate"+basic calls)
+    x p16-main (repeat "locate"+obj ref+basic calls)
 
 - inherit interface multi-level
 - inherit multiple interfaces
@@ -270,6 +272,9 @@ x p16.idl:
 
 - should not need cref at all, should be able to use standard pointer eg
   std::unique_ptr<T> cxy::cref<T>::locate(...)
+  ... but downside is not then able to narrow? Actually might be
+  able to narrow via a cxy::cref<T>::narrow(U), it can first narrow
+  to a objref<U> then do the usual stuff
 
 - compile errors:
   IOR conversion to unrelated type

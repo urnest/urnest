@@ -52,6 +52,8 @@
 %p16.cdr.hcp==%gen/p16.cdr.hcp
 %p16.objref.hcp==%gen/p16.objref.hcp
 %p16.sref.hcp==%gen/p16.sref.hcp
+%echo.hh==%gen/echo.hh
+%echo.cc==%gen/echo.cc
 
 %all-tests.tree==<<
 ()+cmd=(%p1-main) '3735' 'both':exec.output

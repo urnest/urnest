@@ -1,0 +1,5 @@
+interface echo
+{
+  string echoString(in string x);
+};
+
