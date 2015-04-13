@@ -8,7 +8,6 @@
 
 %opts == <<
 +(%cxx-opts)
-+lib=(../xju%basic.cxx.sm+(%cxx-opts):a)
 
 %opts-fltk1.3 == <<
 +(%cxx-opts)
@@ -16,7 +15,7 @@
 +lib=-lfltk
 
 %standalone-tests.tree == <<
-(../xju%standalone-tests.tree)
+(../xju%all.tree)
 (%test-XmlStore)
 ()+cmd=(test-WorkLog.cc+(%opts):auto.cxx.exe):stdout
 (%test-Controller)

@@ -18,6 +18,7 @@
 
 #include <string>
 #include <btt/Tasks.hh>
+#include <xju/Event.hh>
 #include <xju/Ring.hh>
 #include <xju/NonCopyable.hh>
 #include <xju/format.hh>
@@ -49,6 +50,8 @@ namespace btt
 	    //
 	    xju::Notifying<btt::Tasks::const_iterator> selectedTask_;
 	    
+            xju::Event callback_;
+
 	private:
             Fl_Browser& widget_;
 	    const btt::Tasks& tasks_;
@@ -206,12 +209,12 @@ namespace btt
                 {
                     selectedTask_ = tasks_.end();
                 }
+                callback_();
             }
             
 	    xju::Observer<Tasks> taskAddedAtEnd_;
 
             btt::view::Callback<Tasks> tasksCallback_;
-        
 	};
     }
 }

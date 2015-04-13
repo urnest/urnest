@@ -391,6 +391,114 @@ public:
     }
 };
 
+class TasksCallback
+{
+public:
+    explicit TasksCallback(
+        Fl_Menu_Item& startMenu,
+        Actions& actions,
+        Fl_Menu_Item& startNowItem, Starter& startNow,
+        Fl_Menu_Item& startMinus5Item, Starter& startMinus5,
+        Fl_Menu_Item& startMinus10Item, Starter& startMinus10,
+        Fl_Menu_Item& startMinus15Item, Starter& startMinus15,
+        Fl_Menu_Item& startMinus30Item, Starter& startMinus30,
+        Fl_Menu_Item& startMinus45Item, Starter& startMinus45,
+        Fl_Menu_Item& startMinus60Item, Starter& startMinus60,
+        Fl_Menu_Item& startMinus90Item, Starter& startMinus90,
+        Fl_Menu_Item& startMinus120Item, Starter& startMinus120,
+        Fl_Menu_Item& startAt) throw():
+        startMenu_(startMenu),
+        actions_(actions),
+        startNowItem_(startNowItem),
+        startNow_(startNow),
+        startMinus5Item_(startMinus5Item),
+        startMinus5_(startMinus5),
+        startMinus10Item_(startMinus10Item),
+        startMinus10_(startMinus10),
+        startMinus15Item_(startMinus15Item),
+        startMinus15_(startMinus15),
+        startMinus30Item_(startMinus30Item),
+        startMinus30_(startMinus30),
+        startMinus45Item_(startMinus45Item),
+        startMinus45_(startMinus45),
+        startMinus60Item_(startMinus60Item),
+        startMinus60_(startMinus60),
+        startMinus90Item_(startMinus90Item),
+        startMinus90_(startMinus90),
+        startMinus120Item_(startMinus120Item),
+        startMinus120_(startMinus120),
+        startAt_(startAt)
+    {
+    }
+    Fl_Menu_Item& startMenu_;
+
+    Fl_Menu_Item& startNowItem_;
+    Starter& startNow_;
+    Fl_Menu_Item& startMinus5Item_;
+    Starter& startMinus5_;
+    Fl_Menu_Item& startMinus10Item_;
+    Starter& startMinus10_;
+    Fl_Menu_Item& startMinus15Item_;
+    Starter& startMinus15_;
+    Fl_Menu_Item& startMinus30Item_;
+    Starter& startMinus30_;
+    Fl_Menu_Item& startMinus45Item_;
+    Starter& startMinus45_;
+    Fl_Menu_Item& startMinus60Item_;
+    Starter& startMinus60_;
+    Fl_Menu_Item& startMinus90Item_;
+    Starter& startMinus90_;
+    Fl_Menu_Item& startMinus120Item_;
+    Starter& startMinus120_;
+    Fl_Menu_Item& startAt_;
+
+    Actions& actions_;
+    
+    void trigger() throw()
+    {
+        if (Fl::event_clicks()) {
+            std::cout << "tasks double click" << std::endl;
+            actions_.editSelected();
+        }
+        else if (Fl::event()==FL_RELEASE &&
+                 Fl::event_button()==FL_RIGHT_MOUSE) {
+            std::cout << "tasks right click" << std::endl;
+            Fl_Menu_Item const* m(
+                startMenu_.popup(Fl::event_x(), Fl::event_y()));
+            if (m==&startNowItem_) {
+                startNow_.start();
+            }
+            else if (m==&startMinus5Item_) {
+                startMinus5_.start();
+            }
+            else if (m==&startMinus10Item_) {
+                startMinus10_.start();
+            }
+            else if (m==&startMinus15Item_) {
+                startMinus15_.start();
+            }
+            else if (m==&startMinus30Item_) {
+                startMinus30_.start();
+            }
+            else if (m==&startMinus45Item_) {
+                startMinus45_.start();
+            }
+            else if (m==&startMinus60Item_) {
+                startMinus60_.start();
+            }
+            else if (m==&startMinus90Item_) {
+                startMinus90_.start();
+            }
+            else if (m==&startMinus120Item_) {
+                startMinus120_.start();
+            }
+            else if (m==&startAt_) {
+                actions_.startSelectedTaskAt();
+            }
+        }
+    }
+};
+
 
 int main(int argc, char* argv[])
 {
@@ -432,10 +540,6 @@ int main(int argc, char* argv[])
 
         btt::view::Callback<Actions, Fl_Menu_Item> editSelectedAction(
             *ui.editSelected, actions, &Actions::editSelected);
-        xju::Observer<btt::view::Callback<Actions, Fl_Menu_Item> > editSelectedObserver(
-            editSelectedAction,
-            &btt::view::Callback<Actions, Fl_Menu_Item>::trigger,
-            tasks.editTask_);
         btt::view::Callback<Actions, Fl_Menu_Item> undoAction(
             *ui.undo, actions, &Actions::undo);
         btt::view::Callback<Actions, Fl_Menu_Item> redoAction(
@@ -486,10 +590,22 @@ int main(int argc, char* argv[])
                               tasks.selectedTask_.value(),
                               xju::MicroSeconds(120*60*1000000UL));
         
-        
-        
         btt::view::Callback<Actions, Fl_Menu_Item> startAt(
             *ui.startAt, actions, &Actions::startSelectedTaskAt);
+        
+        TasksCallback tcb(*ui.startNow, actions,
+                          *ui.startNow, startNow,
+                          *ui.start5, startMinus5,
+                          *ui.start10, startMinus10,
+                          *ui.start15, startMinus15,
+                          *ui.start30, startMinus30,
+                          *ui.start45, startMinus45,
+                          *ui.start60, startMinus60,
+                          *ui.start90, startMinus90,
+                          *ui.start120, startMinus120,
+                          *ui.startAt);
+        xju::Observer<TasksCallback> tcbl(
+            tcb, &TasksCallback::trigger, tasks.callback_);
         
         TimeSheetReport timeSheetReport(controller.workLog(),
                                         controller.tasks());

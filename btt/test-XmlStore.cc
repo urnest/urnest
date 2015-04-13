@@ -71,7 +71,7 @@ void test3(const std::string& schemaFileName,
 	Task(TaskId(1),
 	     "td!@#$%^&*()_-+=[]{}|\\\"':;<,>.?/~`",
 	     32,
-	     boost::optional<xju::Time>()));
+	     xju::Optional<xju::Time>()));
     
     XmlStore store;
     
@@ -84,7 +84,7 @@ void test3(const std::string& schemaFileName,
     xju::assert_equal((*x->begin()).description_.value(), 
                       std::string("td!@#$%^&*()_-+=[]{}|\\\"':;<,>.?/~`"));
     xju::assert_equal((*x->begin()).secondsSpentOnThisTask_.value(), 32U);
-    xju::assert_equal((*x->begin()).started_.value().is_initialized(), false);
+    xju::assert_equal((*x->begin()).started_.value().valid(), false);
 }
 
 
@@ -152,19 +152,19 @@ void test6(const std::string& schemaFileName,
 	Task(TaskId(1),
 	     "td",
 	     32,
-	     boost::optional<xju::Time>(xju::Time(1, 0))));
+	     xju::Optional<xju::Time>(xju::Time(1, 0))));
     tasks.insert(
 	tasks.end(),
 	Task(TaskId(3),
 	     "td 3",
 	     33,
-	     boost::optional<xju::Time>()));
+	     xju::Optional<xju::Time>()));
     tasks.insert(
 	tasks.end(),
 	Task(TaskId(5),
 	     "td \"5\"",
 	     35,
-	     boost::optional<xju::Time>()));
+	     xju::Optional<xju::Time>()));
     
     XmlStore store;
     
@@ -179,20 +179,20 @@ void test6(const std::string& schemaFileName,
     xju::assert_equal((*i).id_, TaskId(1U));
     xju::assert_equal((*i).description_.value(), "td");
     xju::assert_equal((*i).secondsSpentOnThisTask_.value(), 32U);
-    xju::assert_equal((*i).started_.value().is_initialized(), true);
+    xju::assert_equal((*i).started_.value().valid(), true);
     xju::assert_equal(*(*i).started_.value(), xju::Time(1, 0));
     
     ++i;
     xju::assert_equal((*i).id_, TaskId(3U));
     xju::assert_equal((*i).description_.value(), "td 3");
     xju::assert_equal((*i).secondsSpentOnThisTask_.value(), 33U);
-    xju::assert_equal((*i).started_.value().is_initialized(), false);
+    xju::assert_equal((*i).started_.value().valid(), false);
 
     ++i;
     xju::assert_equal((*i).id_, TaskId(5U));
     xju::assert_equal((*i).description_.value(), "td \"5\"");
     xju::assert_equal((*i).secondsSpentOnThisTask_.value(), 35U);
-    xju::assert_equal((*i).started_.value().is_initialized(), false);
+    xju::assert_equal((*i).started_.value().valid(), false);
 }
 
 

@@ -20,6 +20,7 @@
 #include <sstream>
 #include <xju/formatTime.hh>
 #include <xju/format.hh>
+#include <xju/next.hh>
 
 
 void test1(const std::string& schemaFileName,
@@ -76,14 +77,14 @@ void test2(const std::string& schemaFileName,
 		btt::TaskId(19),
 		"des1",
 		1,
-		boost::optional<xju::Time>()));
+		xju::Optional<xju::Time>()));
 	tasks.insert(
 	    tasks.end(),
 	    btt::Task(
 		btt::TaskId(1),
 		"des2",
 		2,
-		boost::optional<xju::Time>()));
+		xju::Optional<xju::Time>()));
 	
         btt::XmlStore store;
 	store.saveTasks(tasks, tasksFileName);
@@ -117,14 +118,14 @@ void test3(const std::string& schemaFileName,
 		btt::TaskId(19),
 		"des1",
 		1,
-		boost::optional<xju::Time>()));
+		xju::Optional<xju::Time>()));
 	tasks.insert(
 	    tasks.end(),
 	    btt::Task(
 		btt::TaskId(1),
 		"des2",
 		2,
-		boost::optional<xju::Time>(xju::Time(5, 0))));
+		xju::Optional<xju::Time>(xju::Time(5, 0))));
 	
         btt::XmlStore store;
 	store.saveTasks(tasks, tasksFileName);
@@ -137,7 +138,7 @@ void test3(const std::string& schemaFileName,
     btt::Controller controller(tasksFileName, schemaFileName, workLogFileName);
     xju::assert_equal(controller.tasks().size(), 2U);
     const btt::Task& t19(*controller.tasks().begin());
-    const btt::Task& t1(*boost::next(controller.tasks().begin()));
+    const btt::Task& t1(*xju::next(controller.tasks().begin()));
     xju::assert_equal(t19.id(), btt::TaskId(19U));
     xju::assert_equal(t1.id(), btt::TaskId(1U));
     
@@ -174,7 +175,7 @@ void test3(const std::string& schemaFileName,
     xju::assert_equal(
 	t1.secondsSpentOnThisTask_.value(),
 	3U);
-    xju::assert_equal(t19.started_.value().is_initialized(), true);
+    xju::assert_equal(t19.started_.value().valid(), true);
     xju::assert_equal(
 	t19.secondsSpentOnThisTask_.value(),
 	1U);
@@ -189,7 +190,7 @@ void test3(const std::string& schemaFileName,
     xju::assert_equal(
 	t1.secondsSpentOnThisTask_.value(),
 	2U);
-    xju::assert_equal(t19.started_.value().is_initialized(), false);
+    xju::assert_equal(t19.started_.value().valid(), false);
     xju::assert_equal(
 	t19.secondsSpentOnThisTask_.value(),
 	1U);
@@ -202,7 +203,7 @@ void test3(const std::string& schemaFileName,
     xju::assert_equal(
 	t1.secondsSpentOnThisTask_.value(),
 	3U);
-    xju::assert_equal(t19.started_.value().is_initialized(), true);
+    xju::assert_equal(t19.started_.value().valid(), true);
     xju::assert_equal(
 	t19.secondsSpentOnThisTask_.value(),
 	1U);
@@ -226,7 +227,7 @@ void test4(const std::string& schemaFileName,
 		btt::TaskId(1),
 		"des2",
 		0,
-		boost::optional<xju::Time>()));
+		xju::Optional<xju::Time>()));
 	
         btt::XmlStore store;
 	store.saveTasks(tasks, tasksFileName);
@@ -242,7 +243,7 @@ void test4(const std::string& schemaFileName,
 				   xju::Time(11, 0));
     xju::assert_not_equal(controller.workLog().rbegin(),
 			  controller.workLog().rend());
-    xju::assert_equal(t1.started_.value().is_initialized(), true);
+    xju::assert_equal(t1.started_.value().valid(), true);
     xju::assert_equal(t1.secondsSpentOnThisTask_.value(), 0U);
 
     xju::assert_equal(controller.canUndo(), true);
@@ -255,13 +256,13 @@ void test4(const std::string& schemaFileName,
     xju::assert_equal(controller.tasks().size(), 1U);
     xju::assert_equal(controller.workLog().rbegin(),
 			  controller.workLog().rend());
-    xju::assert_equal(t1.started_.value().is_initialized(), false);
+    xju::assert_equal(t1.started_.value().valid(), false);
     xju::assert_equal(t1.secondsSpentOnThisTask_.value(), 0U);
 
     controller.redo();
     xju::assert_not_equal(controller.workLog().rbegin(),
 			  controller.workLog().rend());
-    xju::assert_equal(t1.started_.value().is_initialized(), true);
+    xju::assert_equal(t1.started_.value().valid(), true);
     xju::assert_equal(t1.secondsSpentOnThisTask_.value(), 0U);
 
     xju::assert_equal(controller.canUndo(), true);
@@ -281,7 +282,7 @@ void test5(const std::string& schemaFileName,
 		btt::TaskId(1),
 		"des2",
 		0,
-		boost::optional<xju::Time>()));
+		xju::Optional<xju::Time>()));
 	
         btt::XmlStore store;
 	store.saveTasks(tasks, tasksFileName);
