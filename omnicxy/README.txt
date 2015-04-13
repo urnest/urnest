@@ -1,27 +1,15 @@
-omnicxy - a modern CORBA C++ language mapping implemented for omniORB 
+omnicxy - a modern CORBA C++ language mapping implementation for omniORB 
 
 Contents
 
   1. Introduction
   2. Echo example
-    x generating C++ code
-    x implementing the interface
-    x making the implementation accessible to clients
-      x object lifetimes
-      x omniORB configuration parameters
-    x calling the interface
-      x object lifetimes
-      x omniORB configuration parameters
   3. Mapping of Types
   4. Parameters and Results
   5. Exceptions
-      - in params, return type
-      - basic types
-      - ...
-      - exceptions
-      - exception mapping
   6. Building and installing omnicxy
   7. Invoking omniidl
+
 
 1. Introduction
 
@@ -34,10 +22,10 @@ Contents
     - use of modern C++ types eg std::string, std::vector
     - more readable generated code
 
-  It also puts some thought into build-time scalability, by reducing
+  It also aims for good build-time scalability by reducing
   application code dependencies on omniORB header files.
 
-  It is not (yet) a complete mapping, and it does not bother with the
+  It is not (yet) a complete mapping, and it does not (yet) bother with the
   plethora of esoteric POA stuff: it does make basic clients and
   servers easy to code, which makes CORBA usable as that small piece of
   IPC in your large system without requiring a disproportionate amount
@@ -46,6 +34,7 @@ Contents
   It currently exists only as an omniORB "backend". It is not a standard
   and and is not portable to other orbs. It is not a layer on top of
   the OMG C++ Language Mapping.
+
 
 2. Echo example
 
@@ -119,36 +108,43 @@ Contents
 
   Complete echo example code is in proto/cxy/echo*.{idl,hh,cc}.
 
+
 3. Mapping of Types
 
   short,long etc map to uint16_t, uint32_t etc - see proto/cxy/p2.hh
 
-  float, double map to float, double  - see REVISIT
+  float, double map to float, double  - see proto/cxy/p2.hh
 
-  string maps to std::string
+  string maps to std::string - see proto/cxy/p2.hh
 
-  sequence maps to std::vector
+  sequence maps to std::vector - see proto/cxy/p5.hh
 
-  struct maps to struct with same members and generated compare operators. Note
+  struct maps to struct with same members and generated compare 
+  operators - see proto/cxy/p4.hh. Note
   that the lack of default constructor is deliberate to reduce programming
-  errors - see REVISIT. REVISIT: describe mapping to std::pair.
+  errors. A struct whose name ends in "Pair" and which has two members
+  named first and second is mapped to a std::pair - see proto/cxy/p4.hh
 
-  enum maps to a type-safe class with inner C++ enum - see REVISIT
+  enum maps to a type-safe class with inner C++ enum - see proto/cxy/p10.hh
 
   union maps to a set of classes with a common base class, allowing
-  use of C++ dynamic_cast for discrimination
+  use of C++ dynamic_cast for discrimination - see proto/cxy/p11.hh
 
   exception maps to C++ class derived from the "default" exception class,
   which case be specified when invoking omniidl. More on this in 
   5. Exceptions.
 
   object reference, ie reference to interface T, maps to a cxy::IOR<T>, which
-  can be passed to cxy::cref<T> constructor
+  can be passed to cxy::cref<T> constructor - see proto/cxy/p15.hh and
+  proto/cxy/p16.hh
 
   typedef of basic type maps to a unique C++ type, such that for example
-  typedef short X; and typedef short Y result in distinct types X and Y.
+  typedef short X; and typedef short Y result in distinct types X 
+  and Y - see proto/cxy/p3.hh
 
-  typedef of struct, sequence, enum, union maps to C++ typedef
+  typedef of struct, sequence, enum, union maps to C++ typedef - see
+  proto/cxy/p5.hh
+
 
 4. Parameters and Results
 
@@ -156,12 +152,18 @@ Contents
   Returned values are always by value.
   "out" and "inout" param types are not yet implemented
 
+
 5. Exceptions
 
   All generated exception classes derive from the "base exception" type
   specified when invoking omniidl; the default is cxy::Exception.
 
-  A base exception type T must have the following members:
+  The proto/cxy/e directory shows how to use a non-default base exception
+  type. Compared to the corresponding examples in proto/cxy, using a
+  non-default exception type avoids try/catch blocks in application code.
+  
+  For class T to be used as the base exception type it must have the
+  following members:
 
     T(std::string const& cause, 
       std::pair<std::string, unsigned int> const& fileAndLine) throw()
@@ -169,4 +171,31 @@ Contents
     void T::addContext(std::string context, 
                        FileAndLine const& fileAndLine) throw()
     
-  ... omnicxy calls these 
+  ... omnicxy calls these with cause like "connect timed out after 10 seconds"
+  (cause) and "connect to host fred port 6253" so that they can be stitched
+  together to read "failed to connect to host fred port 6253 because 
+  connect timed out after 10 seconds". (cxy::Exception has a readableRepr
+  function that produces such a message)
+
+
+6. Building and installing omnicxy
+
+  Using Odin
+
+    - clone the git repository
+    - install its odin-1.17.10x (see the README.txt in that directory)
+    - create an odin cache, eg:
+        REVISIT
+      ... note the environment variables have defaults, see them using
+        REVISIT
+    - build omnicxy, including building all examples and running them
+      (from the directory containing this README.txt):
+        odin '%all'
+
+  Not using Odin
+
+    Your on your own, go for it. Note that hcp 
+    (see ../hcp/README.txt) is used for both omnicxy library code and 
+    generated code:
+      - if you see xxx.hcp, use hcp-split to produce xxx.hh and xxx.cc
+      - the omniidl backend scripts eg cxycref.py produce .hcp files
