@@ -18,12 +18,11 @@
 #include <set>
 #include <xju/Time.hh>
 #include <xju/formatTime.hh>
+#include <xju/next.hh>
 #include <algorithm>
 #include <xju/assert.hh>
-#include <boost/lambda/lambda.hpp>
 #include <sstream>
 #include <algorithm>
-#include <boost/next_prior.hpp>
 
 namespace btt
 {
@@ -89,7 +88,7 @@ namespace btt
 	    try
 	    {
 		std::auto_ptr<Controller::Cmd> result(
-		    new AddTask(tasks_, *task_, boost::next(task_)));
+		    new AddTask(tasks_, *task_, xju::next(task_)));
 		tasks_.erase(task_);
 		return result;
 	    }
@@ -129,7 +128,7 @@ namespace btt
 	    UndoRecordWorkingOnTask(
 		Tasks& tasks,
 		WorkLog& workLog,
-		boost::optional<xju::Time> oldStarted) throw():
+		xju::Optional<xju::Time> oldStarted) throw():
 		tasks_(tasks),
 		workLog_(workLog),
 		oldStarted_(oldStarted)
@@ -140,7 +139,7 @@ namespace btt
 	private:
 	    Tasks& tasks_;
 	    WorkLog& workLog_;
-	    const boost::optional<xju::Time> oldStarted_;
+	    const xju::Optional<xju::Time> oldStarted_;
 	};
 	class RecordWorkingOnTask : public Controller::Cmd
 	{
@@ -262,12 +261,12 @@ namespace btt
                 
                 workLog_.logWorkingOnTaskSince((*task).id_, since_);
                 
-                const boost::optional<xju::Time> oldStarted(
+                const xju::Optional<xju::Time> oldStarted(
                     (*task).started_.value());
-                boost::optional<xju::Time> xxx((*task).started_.value());
-                if (!xxx)
+                xju::Optional<xju::Time> xxx((*task).started_.value());
+                if (!xxx.valid())
                 {
-                    (*task).started_ = boost::optional<xju::Time>(since_);
+                    (*task).started_ = xju::Optional<xju::Time>(since_);
                 }
                 
                 std::auto_ptr<Controller::Undo> u(new UndoRecordWorkingOnTask(
@@ -390,7 +389,7 @@ namespace btt
 	    xju::Exception)
     {
         const TaskId id(getNextUnusedTaskId(*tasks_));
-        boost::optional<xju::Time> started;
+        xju::Optional<xju::Time> started;
         std::auto_ptr<Cmd> d(new AddTask(
             *tasks_,
             btt::Task(id, "", 0, started),
@@ -549,7 +548,7 @@ namespace btt
 	}
 	else
 	{
-	    std::copy(boost::next(undoList_.value().begin()),
+	    std::copy(xju::next(undoList_.value().begin()),
 		      undoList_.value().end(),
 		      std::back_inserter(l));
 	}

@@ -126,7 +126,7 @@ namespace btt
             }
         }
         
-        boost::optional<xju::Time> started(
+        xju::Optional<xju::Time> started(
             const xju::xml::Attributes& a) throw(
                 xju::Exception)
         {
@@ -136,7 +136,7 @@ namespace btt
             }
             catch(xju::Exception& e)
             {
-                return boost::optional<xju::Time>();
+                return xju::Optional<xju::Time>();
             }
         }
         
@@ -345,7 +345,7 @@ namespace btt
                        << xju::format::int_(task.secondsSpentOnThisTask_.value())
                        << "\"";
                     
-                    if (task.started_.value())
+                    if (task.started_.value().valid())
                     {
                         o_ << " btt:started=\""
                            << xju::format::int_(

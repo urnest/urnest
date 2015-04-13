@@ -18,12 +18,12 @@
 
 #include <string>
 #include <btt/Tasks.hh>
-#include <boost/noncopyable.hpp>
 #include <xju/Ring.hh>
+#include <xju/NonCopyable.hh>
 #include <xju/format.hh>
 #include <xju/Observer.hh>
-#include <boost/utility.hpp>
 #include <xju/formatTime.hh>
+#include <xju/prev.hh>
 #include <FL/Fl_Browser.H>
 #include <btt/fltk1.3-view/Callback.hh>
 #include <memory>
@@ -32,7 +32,7 @@ namespace btt
 {
     namespace view
     {
-	class Tasks : boost::noncopyable
+	class Tasks : xju::NonCopyable
 	{
 	public:
 	    Tasks(Fl_Browser& widget,
@@ -58,7 +58,7 @@ namespace btt
 	    xju::Ring<Task*>  registry_;
 
 
-	    class Task : boost::noncopyable
+	    class Task : xju::NonCopyable
 	    {
 	    public:
                 Tasks*const parent_;
@@ -113,8 +113,8 @@ namespace btt
 		    const std::string id((*task_).id_.readableRepr());
 
 		    const std::string started(
-			(*task_).started_.value() ?
-			xju::formatTime(*(*task_).started_.value(), "%x") :
+			(*task_).started_.value().valid() ?
+			xju::formatTime((*task_).started_.value().value(), "%x") :
 			std::string(""));
 
 		    double seconds((*task_).secondsSpentOnThisTask_.value());
@@ -171,7 +171,7 @@ namespace btt
 		
 		void newPredecessor() throw()
 		{
-		    new Task(parent_, boost::prior(task_), reg_, browser_);
+		    new Task(parent_, xju::prev(task_), reg_, browser_);
 		}
 
 	    };
@@ -179,7 +179,7 @@ namespace btt
 	    void taskAddedAtEnd() throw()
 	    {
 		new Task(this,
-                         boost::prior(tasks_.end()), 
+                         xju::prev(tasks_.end()), 
                          registry_,
                          widget_);
 	    }

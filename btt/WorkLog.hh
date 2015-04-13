@@ -30,9 +30,9 @@
 #define _BTT_WORKLOG_HH_
 
 
-#include <boost/utility.hpp>
 #include <string>
 #include <xju/Exception.hh>
+#include <xju/NonCopyable.hh>
 #include <utility>
 #include <memory>
 #include <xju/Time.hh>
@@ -44,7 +44,7 @@
 
 namespace btt
 {
-    class WorkLog : boost::noncopyable
+    class WorkLog : xju::NonCopyable
     {
     public:
 	

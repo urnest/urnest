@@ -12,9 +12,8 @@
 
 %opts-fltk1.3 == <<
 +(%cxx-opts)
-+inc_sp=(/usr/local/include)
 +(fltk1.3-view%fltk-libs)
-+lib=-lfltk -lXext -lXinerama -lpthread -ldl -lm  -lX11 
++lib=-lfltk
 
 %standalone-tests.tree == <<
 (../xju%standalone-tests.tree)

@@ -18,8 +18,8 @@
 
 
 #include <xju/Notifying.hh>
+#include <xju/Optional.hh>
 #include <btt/TaskId.hh>
-#include <boost/optional.hpp>
 #include <xju/Time.hh>
 #include <functional>
 
@@ -32,7 +32,7 @@ namespace btt
 	Task(const TaskId& id,
 	     const std::string description,
 	     const unsigned int secondsSpentOnThisTask,
-	     const boost::optional<xju::Time>& started) throw():
+	     const xju::Optional<xju::Time>& started) throw():
 	    id_(id),
 	    description_(description),
 	    secondsSpentOnThisTask_(secondsSpentOnThisTask),
@@ -48,7 +48,7 @@ namespace btt
 	
 	xju::Notifying<std::string> description_;
 	xju::Notifying<unsigned int> secondsSpentOnThisTask_;
-	xju::Notifying<boost::optional<xju::Time> > started_;
+	xju::Notifying<xju::Optional<xju::Time> > started_;
 
 	class HasId : public std::unary_function<Task, bool>
 	{

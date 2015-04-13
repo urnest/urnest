@@ -22,7 +22,6 @@ ODIN_SQL_PASSWORD=wirephone \
 ODIN_SQL_PATH=/usr/bin:"$d/pkg/sql" \
 ODIN_SQL_CLIENT=mysql_client.sh \
 ODIN_TAR_PATH=/bin \
-ODIN_FLUID_PATH=/usr/local/bin \
 ODIN_RANLIB=ranlib \
 ODIN_CC_FLAGS=-g \
 ODIN_CXX_LD_EXTRA_LIBS=-lpthread \

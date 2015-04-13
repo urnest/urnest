@@ -22,6 +22,5 @@ BttLayout.cc == BttLayout.fld:cxx
 %test-Tasks.cxx.sm+(..%cxx-opts)+(%fltk-libs)+(..%model-libs):exe
 
 %fltk-libs == <<
-+lib_sp=(/usr/local/lib)
 +lib=fltk
 

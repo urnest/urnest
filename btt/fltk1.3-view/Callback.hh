@@ -16,8 +16,8 @@
 #define _BTT_VIEW_CALLBACK_HH_
 
 #include <FL/Fl_Widget.H>
-#include <boost/noncopyable.hpp>
 #include <xju/Exception.hh>
+#include <xju/NonCopyable.hh>
 
 namespace btt
 {
@@ -26,7 +26,7 @@ namespace btt
         void Callback_handle(xju::Exception const& e) throw();
         
         template<class T, class F=Fl_Widget>
-        class Callback : boost::noncopyable
+        class Callback : xju::NonCopyable
         {
         public:
             F& widget_;

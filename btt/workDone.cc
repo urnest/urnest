@@ -15,16 +15,17 @@
 
 #include <sstream>
 #include <xju/formatTime.hh>
-#include <boost/optional.hpp>
 #include <utility>
 #include <xju/Time.hh>
 #include <map>
 #include "xju/MicroSeconds.hh"
+#include "xju/Optional.hh"
+#include "xju/next.hh"
 
 
 namespace
 {
-    boost::optional<xju::MicroSeconds> overlap(
+    xju::Optional<xju::MicroSeconds> overlap(
 	const std::pair<xju::Time, xju::Time>& a,
 	const std::pair<xju::Time, xju::Time>& b) throw()
     {
@@ -32,11 +33,11 @@ namespace
 	const xju::Time y(std::min(a.second, b.second));
 	if (x < y)
 	{
-	    return boost::optional<xju::MicroSeconds>(y - x);
+	    return xju::Optional<xju::MicroSeconds>(y - x);
 	}
 	else
 	{
-	    return boost::optional<xju::MicroSeconds>();
+	    return xju::Optional<xju::MicroSeconds>();
 	}
     }
 }
@@ -59,19 +60,19 @@ namespace btt
 		return result;
 	    }
 
-	    const boost::optional<xju::MicroSeconds> o(
+	    const xju::Optional<xju::MicroSeconds> o(
 		overlap(std::make_pair(from, to),
 			std::make_pair(
 			    (*begin).first,
 			    xju::Time::now())));
-	    if (o)
+	    if (o.valid())
 	    {
 		const std::map<btt::TaskId, unsigned int>::iterator j(
 		    result.insert(
 			std::pair<const btt::TaskId, unsigned int>(
 			    (*begin).second,
 			    0U)).first);
-		(*j).second += (*o).value()/1000000;
+		(*j).second += o.value().value()/1000000;
 	    }
 	    
 	    for(btt::WorkLog::const_reverse_iterator i(begin);
@@ -79,22 +80,22 @@ namespace btt
 		++i)
 	    {
 		btt::WorkLog::const_reverse_iterator next(
-		    boost::next(i));
+		    xju::next(i));
 		if (next != end)
 		{
-		    const boost::optional<xju::MicroSeconds> o(
+		    const xju::Optional<xju::MicroSeconds> o(
 			overlap(std::make_pair(from, to),
 				std::make_pair(
 				    (*next).first,
 				    (*i).first)));
-		    if (o)
+		    if (o.valid())
 		    {
 			const std::map<btt::TaskId, unsigned int>::iterator j(
 			    result.insert(
 				std::pair<const btt::TaskId, unsigned int>(
 				    (*next).second,
 				    0U)).first);
-			(*j).second += (*o).value()/1000000;
+			(*j).second += o.value().value()/1000000;
 		    }
 		}
 	    }

@@ -16,8 +16,8 @@
 #include <xju/Ring.hh>
 #include <xju/format.hh>
 #include <xju/Observer.hh>
-#include <boost/utility.hpp>
 #include <xju/formatTime.hh>
+#include <xju/prev.hh>
 
 
 namespace btt
@@ -50,7 +50,7 @@ namespace btt
 	    
 	    for(i = tasks.end(); i != tasks.begin(); --i)
 	    {
-		btt::Tasks::const_iterator j(boost::prior(i));
+		btt::Tasks::const_iterator j(xju::prev(i));
 		new Task(this, j, *successor, widget_);
 		successor = &successor->prev();
 	    }

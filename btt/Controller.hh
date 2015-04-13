@@ -16,7 +16,6 @@
 #define _BTT_CONTROLLER_HH_
 
 
-#include <boost/utility.hpp>
 #include <string>
 #include <xju/Exception.hh>
 #include <xju/Event.hh>
@@ -24,14 +23,13 @@
 #include <btt/WorkLog.hh>
 #include <xju/Notifying.hh>
 #include <btt/XmlStore.hh>
-#include <boost/scoped_ptr.hpp>
 #include <memory>
 #include <xju/Shared.hh>
 
 
 namespace btt
 {
-    class Controller : boost::noncopyable
+    class Controller : xju::NonCopyable
     {
     public:
 	Controller(const std::string& tasksFileName,
@@ -114,7 +112,7 @@ namespace btt
     private:
 	const std::string tasksFileName_;
 	XmlStore tasksStore_;
-	boost::scoped_ptr<Tasks> tasks_;
+        std::auto_ptr<Tasks> tasks_;
 	WorkLog workLog_;
 
 	void saveTasks() throw(xju::Exception);

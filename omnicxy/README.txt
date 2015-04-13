@@ -142,6 +142,14 @@ Contents
   which case be specified when invoking omniidl. More on this in 
   5. Exceptions.
 
+  object reference, ie reference to interface T, maps to a cxy::IOR<T>, which
+  can be passed to cxy::cref<T> constructor
+
+  typedef of basic type maps to a unique C++ type, such that for example
+  typedef short X; and typedef short Y result in distinct types X and Y.
+
+  typedef of struct, sequence, enum, union maps to C++ typedef
+
 4. Parameters and Results
 
   "in" params are always passed as const&.
@@ -150,3 +158,15 @@ Contents
 
 5. Exceptions
 
+  All generated exception classes derive from the "base exception" type
+  specified when invoking omniidl; the default is cxy::Exception.
+
+  A base exception type T must have the following members:
+
+    T(std::string const& cause, 
+      std::pair<std::string, unsigned int> const& fileAndLine) throw()
+
+    void T::addContext(std::string context, 
+                       FileAndLine const& fileAndLine) throw()
+    
+  ... omnicxy calls these 
