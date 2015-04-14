@@ -1,24 +1,11 @@
-- documentation / tutorial
-  - follow outline of an existing doc (omniORB.pdf)
-    - echo.idl
-    - generating C++ code
-    - implementing the interface
-    - making the implementation accessible to clients
-      - object lifetimes
-      - omniORB configuration parameters
-    - calling the interface
-      - object lifetimes
-      - omniORB configuration parameters
-    - C++ mapping:
-      - in params, return type
-      - basic types
-      - ...
-      - exceptions
-      - exception mapping
+key:
+  "x" means done
+  "-" means to-be-done
+  "~" means decided not to do
 
-    - narrowing (would be covered in C++ mapping?)
+x documentation / tutorial
 
-    - list examples from proto
+- proto/cxy/echo-main
 
 - how to get just direct includes? currently picks up nested
 

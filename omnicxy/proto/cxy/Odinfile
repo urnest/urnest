@@ -1,5 +1,13 @@
 %all.tree==<<
 %all-tests.tree
+p2.hh
+p3.hh
+p5.hh
+p4.hh
+p10.hh
+p11.hh
+p15.hh
+p16.hh
 
 %run-all-tests==%all-tests.tree:leaves
 
@@ -11,7 +19,27 @@
 #creation, otherwise could use
 #%gen==(..%all.idl.sm)+hcp-split=(../../../hcp/hcp-split)+cxy-be-dir=(../../omniidl_be)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy
 
-#generated code for reference
+#code referenced by ../../README.txt
+p2.hh==%gen/p2.hh
+p3.hh==%gen/p3.hh
+p5.hh==%gen/p5.hh
+p4.hh==%gen/p4.hh
+p10.hh==%gen/p10.hh
+p11.hh==%gen/p11.hh
+p15.hh==%gen/p15.hh
+p16.hh==%gen/p16.hh
+echo.hh==%gen/echo.hh
+echo.cc==%gen/echo.cc
+echo.cref.hh==%gen/echo.cref.hh
+echo.cref.cc==%gen/echo.cref.cc
+echo.objref.hh==%gen/echo.objref.hh
+echo.objref.cc==%gen/echo.objref.cc
+echo.cdr.hh==%gen/echo.cdr.hh
+echo.cdr.cc==%gen/echo.cdr.cc
+echo.sref.hh==%gen/echo.sref.hh
+echo.sref.cc==%gen/echo.sref.cc
+
+#lots more generated code for reference
 %p1.hh==%gen/p1.hh
 %p2.hh==%gen/p2.hh
 %p3.hh==%gen/p3.hh
@@ -52,8 +80,6 @@
 %p16.cdr.hcp==%gen/p16.cdr.hcp
 %p16.objref.hcp==%gen/p16.objref.hcp
 %p16.sref.hcp==%gen/p16.sref.hcp
-%echo.hh==%gen/echo.hh
-%echo.cc==%gen/echo.cc
 
 %all-tests.tree==<<
 ()+cmd=(%p1-main) '3735' 'both':exec.output
@@ -87,9 +113,9 @@
 mtrace "$@" || true
 
 %cxx-opts==<<
-+(../..%cxx-opts)
 +inc_sp=(%gen)
 +inc_sp=(%genroot.v:vir_dir)
++(../..%cxx-opts)
 
 %p1-main==p1-main.cc+(%cxx-opts):auto.cxx.exe
 %p2-main==p2-main.cc+(%cxx-opts):auto.cxx.exe
@@ -133,8 +159,8 @@ echo "$x" | fgrep TRANSIENT
 %p2-main-2==p2-main.cc+(%cxx-opts-2):auto.cxx.exe
 
 %cxx-opts-2==<<
-+(../..%cxx-opts)
 +inc_sp=(%genroot-2.v:vir_dir)
++(../..%cxx-opts)
 
 %genroot-2.v==<<
 %omnicxy==.%omnicxy-2.v:vir_dir

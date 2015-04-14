@@ -1,4 +1,4 @@
-omnicxy - a modern CORBA C++ language mapping implementation for omniORB 
+omnicxy - a modern CORBA C++ language mapping implementation for omniORB/linux
 
 Contents
 
@@ -31,9 +31,15 @@ Contents
   IPC in your large system without requiring a disproportionate amount
   of effort to implement and maintain.
   
-  It currently exists only as an omniORB "backend". It is not a standard
-  and and is not portable to other orbs. It is not a layer on top of
-  the OMG C++ Language Mapping.
+  It currently exists only as an omniORB "backend", and only compiles on
+  linux. It is not a standard and and is not portable to other orbs. It 
+  is not a layer on top of the OMG C++ Language Mapping. It should not
+  be hard to port to other OSs that omniORB supports.
+
+  TODO.txt has more info on what is/isn't covered.
+
+  The rest of this document assumes some knowledge of CORBA, if it doesn't
+  make any sense, read the omniORB manual first.
 
 
 2. Echo example
@@ -65,7 +71,7 @@ Contents
 
   ... notice that there are no CORBA-isms in this header file; nor are
   there any in any of its included header files. All CORBA-isms are 
-  relegated to other generated header files. (Later we will see that 
+  relegated to other generated header files. (Later we will also see that 
   we can use our own exception type, replacing the default "cxy::Exception"
   completely.)
 
@@ -92,7 +98,7 @@ Contents
     // assume server is at localhost port 33
     cxy::cref<echo_impl> cx(orb, "corbaloc:iiop:localhost:33/X");
 
-  ... cref is essentially a echo*:
+  ... cref is essentially an echo*:
 
     std::cout << cx->echoString("hello") << std::endl;
 
@@ -101,10 +107,11 @@ Contents
 
     cxy::ORB<cxy::Exception> orb("giop::tcp::33");
 
-  Other omniORB parameters can be set via environment variables. The "orb" 
-  object must outlive all sref and cref objects that use it. The "orb"
-  is "active" from the outset and it remains active until it is destroyed;
-  there are no "run", "activate", "stop" etc methods to (forget to) call.
+  Other omniORB parameters can be set via omniORB environment variables (see
+  the omniORB manual). The "orb" object must outlive all sref and cref 
+  objects that use it. The "orb" is "active" from the outset and it 
+  remains active until it is destroyed; there are no "run", "activate",
+  "stop" etc methods to (forget to) call.
 
   Complete echo example code is in proto/cxy/echo*.{idl,hh,cc}.
 
@@ -138,13 +145,17 @@ Contents
   can be passed to cxy::cref<T> constructor - see proto/cxy/p15.hh and
   proto/cxy/p16.hh
 
+  cxy::IOR<T> can construct cxy::IOR<U> if T is a U - see proto/cxy/p16-main.cc
+
+  cxy::cref<T> can be narrowed (via .narrow()) to cxy::cref<U> if U is a T
+  and the referenced object is a U - see proto/cxy/p16-main.cc
+
   typedef of basic type maps to a unique C++ type, such that for example
   typedef short X; and typedef short Y result in distinct types X 
   and Y - see proto/cxy/p3.hh
 
   typedef of struct, sequence, enum, union maps to C++ typedef - see
   proto/cxy/p5.hh
-
 
 4. Parameters and Results
 
@@ -183,16 +194,52 @@ Contents
   Using Odin
 
     - clone the git repository
-    - install its odin-1.17.10x (see the README.txt in that directory)
-    - create an odin cache, eg:
-        REVISIT
-      ... note the environment variables have defaults, see them using
-        REVISIT
-    - build omnicxy, including building all examples and running them
-      (from the directory containing this README.txt):
+    - install its odin/odin-1.17.10x (see the README.txt in that directory),
+      usually something like:
+
+         cd odin/odin-1.17.10x &&
+         ./configure &&
+         ./INSTALL ~/odin-1.17.10x
+
+    - create an odin cache, eg from the directory containing this README.txt
+      if omniORB is installed in $HOME/omniORB-4.2.0:
+
+        # ODIN is odin cache location
+        export ODIN=~/oc &&
+
+        ODINPATH=$(pwd)/../odin/odin-1.17.10x/xjupkg \
+        ODIN_LIB_SP="$HOME/omniORB-4.2.0/lib /lib /usr/lib" \
+        ODIN_EXEC_PATH=$HOME/omniORB-4.2.0/bin:/usr/bin:/bin \
+        ODIN_OMNICXY_PATH=$HOME/omniORB-4.2.0/bin:/usr/bin:/bin \
+        ODIN_OMNICXY_BE_DIR=$(pwd)/../omnicxy/omniidl_be \
+        ODIN_CXX_LD_LIBRARY_PATH=$HOME/omniORB-4.2.0/lib \
+        ODIN_LD_LIBRARY_PATH=$HOME/omniORB-4.2.0/lib \
+        ODIN_CXX_LD_EXTRA_LIBS=-lpthread \
+        ODIN_TAR_PATH=/bin \
+        ODIN_CXX_I=$HOME/omniORB-4.2.0/include \
+          odin -R </dev/null
+        
+      ... there are other environment variables that matter but they
+      are given default values. (To see the full environment that
+      will be used for building, see $ODIN/$(hostname)/ENV after cache
+      creation; for a brief description of an environment variable, find
+      it in one of the $ODIN/$(hostname)/PKGS/*/*.dg files.)
+
+    - build omnicxy, including building all examples and tests and running
+      them (from the directory containing this README.txt):
         odin '%all'
 
-  Not using Odin
+    - this full build does some memory leak checking using valgrind, so
+      you'll get some errors if that is not around
+
+    - there is nothing to install really
+
+    - if your application code lives in a separate tree, you might like
+      to add the omnicxy directory and its parent directory to
+      ODIN_CXX_I when creating the cache, eg:
+        ODIN_CXX_I="$HOME/xxx/omnicxy $HOME/xxx $HOME/omniORB-4.2.0/include"
+
+  Not using Odin, eg using make
 
     Your on your own, go for it. Note that hcp 
     (see ../hcp/README.txt) is used for both omnicxy library code and 
