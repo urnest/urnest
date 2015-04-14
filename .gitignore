@@ -122,15 +122,12 @@ omnicxy/proto/cxy/e/E.hh
 omnicxy/proto/cxx/p2.cc
 omnicxy/proto/cxx/p2.hh
 omnicxy/proto/cxy/p2.cc
-omnicxy/proto/cxy/p2.hh
 omnicxy/cxy/marshal.cc
 omnicxy/cxy/marshal.hh
 omnicxy/proto/cxy/e/p2.cc
 omnicxy/proto/cxy/e/p2.hh
 omnicxy/proto/cxy/p3.cc
-omnicxy/proto/cxy/p3.hh
 omnicxy/proto/cxy/p4.cc
-omnicxy/proto/cxy/p4.hh
 omnicxy/proto/cxx/p5.hh
 omnicxy/proto/cxy/p5.cc
 omnicxy/cxy/StubUserException.cc
@@ -143,7 +140,6 @@ omnicxy/proto/cxy/p7.cc
 omnicxy/proto/cxy/p7.hh
 omnicxy/proto/cxy/e/p7.hh
 omnicxy/proto/cxy/e/p7.cc
-omnicxy/proto/cxy/p11.hh
 omnicxy/proto/cxx/p14.cc 
 omnicxy/proto/cxx/p14.hh
 omnicxy/proto/cxx/p14.cc

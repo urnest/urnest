@@ -8,6 +8,16 @@ p10.hh
 p11.hh
 p15.hh
 p16.hh
+echo.hh
+echo.cc
+echo.cref.hh
+echo.cref.cc
+echo.objref.hh
+echo.objref.cc
+echo.cdr.hh
+echo.cdr.cc
+echo.sref.hh
+echo.sref.cc
 
 %run-all-tests==%all-tests.tree:leaves
 
