@@ -12,15 +12,25 @@
 #include <xju/format.hh>
 #include <cxy/ORB.hh>
 #include "E.hh"
+#include <sstream>
+
+std::ostringstream messages;
+void log(char const* message)
+{
+  messages << std::string(message) << std::endl;
+}
 
 void test1() {
   // assume sshd running (port 22)
   std::string const orbEndPoint="giop:tcp::22";
   try {
+    omniORB::setLogFunction(log);
     cxy::ORB<E> orb2(orbEndPoint);
+    std::cerr << messages.str() << std::endl;
     xju::assert_abort();
   }
   catch(E& e) {
+    std::string const m(messages.str());
     xju::assert_equal(readableRepr(e), "Failed to get omniORB insPOA at endpoint giop:tcp::22 because\nN5CORBA10INITIALIZEE minor 1096024077.");
   }
 }

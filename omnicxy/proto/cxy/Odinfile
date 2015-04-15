@@ -108,25 +108,19 @@ echo.sref.cc==%gen/echo.sref.cc
 ()+cmd=(%p14-main) '3748' 'both':exec.output
 ()+cmd=(%p15-main) '3749' 'both':exec.output
 ()+cmd=(%p16-main) '3750' 'both':exec.output
+()+cmd=(%echo-main) '3751' 'both':exec.output
 %test-transient
 ()+cmd=(%test-no-such-object) '3760':exec.output
 ()+cmd=(%test-duplicate-name) '3761':exec.output
 ()+cmd=(%p2-main-2) '3752' 'both':exec.output
 %leak-checks.tree
 
-%p15-malloc-trace==()+cmd=env 'MALLOC_TRACE=malloc-trace-report.txt' (%p15-main) '3749' 'both':exec.files
-%p15-malloc-trace-report.txt==()+cmd=(%mtrace) (%p15-main) (%p15-malloc-trace+member='malloc-trace-report.txt':extract_file):stdout
-
-%mtrace == ! <<
-#!/bin/sh
-# mtrace exits non-zero if it find memory leaks, which does not suit us
-mtrace "$@" || true
-
 %cxx-opts==<<
 +inc_sp=(%gen)
 +inc_sp=(%genroot.v:vir_dir)
 +(../..%cxx-opts)
 
+%echo-main==echo-main.cc+(%cxx-opts):auto.cxx.exe
 %p1-main==p1-main.cc+(%cxx-opts):auto.cxx.exe
 %p2-main==p2-main.cc+(%cxx-opts):auto.cxx.exe
 %p3-main==p3-main.cc+(%cxx-opts):auto.cxx.exe
