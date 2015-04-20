@@ -28,7 +28,7 @@ public:
       repoID_(repoID),
       profiles_(new TaggedProfileList(profiles)) {
   }
-  // nil IOR - see omniObjRef.cc _marshal / _unMarshal
+  // nil IOR
   IORImpl() throw():
     repoID_(""),
     profiles_(new TaggedProfileList(IOP::TaggedProfileList())) {

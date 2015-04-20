@@ -19,7 +19,7 @@ public:
   IOR(IORImpl const& impl) throw():
         IORImpl(impl) {
   }
-  // nil IOR - see omniObjRef.cc _marshal / _unMarshal
+  // nil IOR
   IOR() throw(): IORImpl() {
   }
 

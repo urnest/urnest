@@ -412,7 +412,6 @@ public:
   //  omni::giopStream::CommFailure
   //  )
   {
-    //from omniObjRef.cc omniObjRef::_unMarshal
     std::string const repoId(cdr< std::string >::unmarshalFrom(s));
     IOP::TaggedProfileList profiles;
     (IOP::TaggedProfileList&)profiles <<= s;
