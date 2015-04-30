@@ -58,6 +58,11 @@ marshal.cc==%marshal/marshal.cc
 
 %marshal==()+cmd=(../../hcp/hcp-split) -l 1 (marshal.hcp) 'marshal.hh' 'marshal.cc':output
 
+optional.hh==%optional/optional.hh
+optional.cc==%optional/optional.cc
+
+%optional==()+cmd=(../../hcp/hcp-split) -l 1 (optional.hcp) 'optional.hh' 'optional.cc':output
+
 ORB.hh==%ORB/ORB.hh
 ORB.cc==%ORB/ORB.cc
 

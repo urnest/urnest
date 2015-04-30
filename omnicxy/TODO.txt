@@ -228,6 +228,9 @@ x p16.idl:
       ~ return e ? e : _nil();
       x easier to go via stringified ior to start with
 
+x p17.idl:
+  sequence<X, 1> -> optional<X>
+
 x memory leaks:
   x allow a repeat count, and compare eg 1 repeat v 100 with
     eg valgrind
@@ -242,7 +245,7 @@ x memory leaks:
 - in-place struct union member union(short){ 1: struct X{ long a_;}; }
 - recursive union
 - bounded strings
-- bounded sequences
+- bounded sequences > 1
 - arrays
 - any
 - other stuff (see omniidl idltypes.py)

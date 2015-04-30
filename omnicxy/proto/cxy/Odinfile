@@ -1,3 +1,5 @@
+%all==%all.tree:leaves
+
 %all.tree==<<
 %all-tests.tree
 p2.hh
@@ -8,6 +10,7 @@ p10.hh
 p11.hh
 p15.hh
 p16.hh
+p17.hh
 echo.hh
 echo.cc
 echo.cref.hh
@@ -38,6 +41,7 @@ p10.hh==%gen/p10.hh
 p11.hh==%gen/p11.hh
 p15.hh==%gen/p15.hh
 p16.hh==%gen/p16.hh
+p17.hh==%gen/p17.hh
 echo.hh==%gen/echo.hh
 echo.cc==%gen/echo.cc
 echo.cref.hh==%gen/echo.cref.hh
@@ -90,6 +94,11 @@ echo.sref.cc==%gen/echo.sref.cc
 %p16.cdr.hcp==%gen/p16.cdr.hcp
 %p16.objref.hcp==%gen/p16.objref.hcp
 %p16.sref.hcp==%gen/p16.sref.hcp
+%p17.hcp==%gen/p17.hcp
+%p17.cref.hcp==%gen/p17.cref.hcp
+%p17.cdr.hcp==%gen/p17.cdr.hcp
+%p17.objref.hcp==%gen/p17.objref.hcp
+%p17.sref.hcp==%gen/p17.sref.hcp
 
 %all-tests.tree==<<
 ()+cmd=(%p1-main) '3735' 'both':exec.output
@@ -109,6 +118,7 @@ echo.sref.cc==%gen/echo.sref.cc
 ()+cmd=(%p15-main) '3749' 'both':exec.output
 ()+cmd=(%p16-main) '3750' 'both':exec.output
 ()+cmd=(%echo-main) '3751' 'both':exec.output
+()+cmd=(%p17-main) '3752' 'both':exec.output
 %test-transient
 ()+cmd=(%test-no-such-object) '3760':exec.output
 ()+cmd=(%test-duplicate-name) '3761':exec.output
@@ -136,6 +146,7 @@ echo.sref.cc==%gen/echo.sref.cc
 %p14-main==p14-main.cc+(%cxx-opts):auto.cxx.exe
 %p15-main==p15-main.cc+(%cxx-opts):auto.cxx.exe
 %p16-main==p16-main.cc+(%cxx-opts):auto.cxx.exe
+%p17-main==p17-main.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-duplicate-name==test-duplicate-name.cc+(%cxx-opts):auto.cxx.exe
 

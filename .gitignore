@@ -153,3 +153,5 @@ omnicxy/cxy/TaggedProfileList.cc
 omnicxy/cxy/TaggedProfileList.hh
 omnicxy/proto/cxx/p16.cc
 omnicxy/proto/cxx/p16.hh
+omnicxy/cxy/optional.cc
+omnicxy/cxy/optional.hh

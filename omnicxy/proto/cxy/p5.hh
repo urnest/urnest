@@ -5,6 +5,7 @@
 
 #include <cxy/Exception.hh>
 #include <stdint.h>
+#include <vector>
 
 // included idl
 #include "p4.hh"

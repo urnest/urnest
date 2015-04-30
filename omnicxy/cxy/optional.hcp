@@ -1,0 +1,136 @@
+//
+// Copyright (c) 2015
+// Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <memory>
+
+namespace cxy
+{
+template<class T>
+class optional
+{
+public:
+  optional() throw()
+  {
+  }
+  optional(T x):
+  m_x(new T(x))
+  {
+  }
+  optional(const optional<T>& x)
+  {
+    if (x.valid()) {
+      m_x = std::auto_ptr<T>(new T(*x.m_x));
+    }
+  }
+  bool valid() const throw()
+  {
+    return m_x.get() != 0;
+  }
+  T& value() throw()
+  {
+    return *m_x;
+  }
+  const T& value() const throw()
+  {
+    return *m_x;
+  }
+  const T* get() const throw()
+  {
+    return m_x.get();
+  }
+  T* get() throw()
+  {
+    return m_x.get();
+  }
+  const T& operator*() const throw()
+  {
+    return *m_x;
+  }
+  T& operator*() throw()
+  {
+    return *m_x;
+  }
+  
+  void clear() throw()
+  {
+    m_x.reset();
+  }
+  void reset() throw()
+  {
+    return m_x.reset();
+  }
+  optional& operator=(const T& x)
+  {
+    if (!valid())
+    {
+      m_x = std::auto_ptr<T>(new T(x));
+    }
+    else 
+    {
+      (*m_x) = x;
+    }
+    return *this;
+  }
+  optional& operator=(const optional<T>& x)
+  {
+    if (this != &x)
+    {
+      if (!x.valid())
+      {
+        clear();
+      }
+      else
+      {
+        (*this) = x.value();
+      }
+    }
+  }
+  
+private:
+  std::auto_ptr<T> m_x;
+};
+template<class T>
+bool operator<(const optional<T>& x, const optional<T>& y) 
+{
+  if (!x.valid())
+  {
+    return y.valid();
+  }
+  return y.valid() && (x.value() < y.value());
+}
+template<class T>
+bool operator>(const optional<T>& x, const optional<T>& y)
+{
+  return y < x;
+}
+template<class T>
+bool operator!=(const optional<T>& x, const optional<T>& y)
+{
+  return x < y || x > y;
+}
+template<class T>
+bool operator==(const optional<T>& x, const optional<T>& y)
+{
+  return !(x != y);
+}
+template<class T>
+bool operator>=(const optional<T>& x, const optional<T>& y)
+{
+  return !(x < y);
+}
+template<class T>
+bool operator<=(const optional<T>& x, const optional<T>& y)
+{
+  return !(x > y);
+}
+}
+

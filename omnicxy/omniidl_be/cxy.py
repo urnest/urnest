@@ -77,9 +77,16 @@ def unqualifiedType(t):
     elif t.kind()==idltype.tk_struct:
         return ''.join(['::'+_ for _ in t.scopedName()])
     elif t.kind()==idltype.tk_sequence:
-        assert t.bound()==0, 'bounded sequences not yet implemented'
-        itemType=unqualifiedType(t.seqType())
-        return 'std::vector< %(itemType)s >'%vars()
+        if t.bound()==0:
+            itemType=unqualifiedType(t.seqType())
+            return 'std::vector< %(itemType)s >'%vars()
+        elif t.bound()==1:
+            itemType=unqualifiedType(t.seqType())
+            return 'cxy::optional< %(itemType)s >'%vars()
+        else:
+            assert False,(t.bound(),'bounded sequences with bound > 1 not yet implemented')
+            pass
+        pass
     elif t.kind()==idltype.tk_enum:
         return ''.join(['::'+_ for _ in t.scopedName()])
     elif t.kind()==idltype.tk_union:
@@ -938,6 +945,14 @@ def gen_tincludes(decl):
         elif aliasOf.kind() in basicStringTypes:
             result=result+['<xju/Tagged.hh>','<string>']
             pass
+        elif aliasOf.kind()==idltype.tk_sequence:
+            if aliasOf.bound()==0:
+                result=result+['<vector>']+tincludes(aliasOf)
+            elif aliasOf.bound()==1:
+                result=result+['<cxy/optional.hh>']+tincludes(aliasOf)
+            else:
+                assert False,(aliasOf.bound(),'sequence with bound > 1 are not yet implemented')
+                pass
         else:
             result=tincludes(aliasOf)
         pass
@@ -950,6 +965,15 @@ def gen_tincludes(decl):
             elif m.memberType().kind() in basicStringTypes:
                 result=result+['<string>']
                 pass
+            elif m.memberType().kind()==idltype.tk_sequence:
+                if m.memberType().bound()==0:
+                    result=result+['<vector>']+tincludes(aliasOf)
+                elif m.memberType().bound()==1:
+                    result=result+['<cxy/optional.hh>']+tincludes(m.memberType())
+                else:
+                    assert False,(m.memberType().bound(),'sequence with bound > 1 are not yet implemented')
+                    pass
+                pass
             pass
         pass
     elif isinstance(decl, idlast.Exception):
@@ -960,6 +984,15 @@ def gen_tincludes(decl):
                 result=result+tincludes(m.memberType())
             elif m.memberType().kind() in basicStringTypes:
                 result=result+['<string>']
+                pass
+            elif m.memberType().kind()==idltype.tk_sequence:
+                if m.memberType().bound()==0:
+                    result=result+['<vector>']+tincludes(aliasOf)
+                elif m.memberType().bound()==1:
+                    result=result+['<cxy/optional.hh>']+tincludes(m.memberType())
+                else:
+                    assert False,(m.memberType().bound(),'sequence with bound > 1 are not yet implemented')
+                    pass
                 pass
             pass
         pass

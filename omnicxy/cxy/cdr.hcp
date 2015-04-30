@@ -14,10 +14,11 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include "xju/Tagged.hh"
-#include "xju/Int.hh"
+#include <xju/Tagged.hh>
+#include <xju/Int.hh>
 #include "IOR.hh"
 #include "TaggedProfileList.hh" //impl
+#include <cxy/optional.hh>
 
 class cdrStream;
 
@@ -449,6 +450,38 @@ public:
   {
     cdr<IORImpl>::marshal(x,s);
   }
+};
+
+template<class T>
+class cdr<cxy::optional<T> >
+{
+public:
+  static cxy::optional<T> unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    uint32_t const length(cdr<uint32_t>::unmarshalFrom(s));
+    if (!length) {
+      return cxy::optional<T>();
+    }
+    T result(cdr<T>::unmarshalFrom(s));
+    return cxy::optional<T>(result);
+  }
+  static void marshal(cxy::optional<T> const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    cdr<uint32_t>::marshal(x.valid(),s);
+    if (x.valid()) {
+      cdr<T>::marshal(x.value(), s);
+    }
+  }
+
 };
   
 }

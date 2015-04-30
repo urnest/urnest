@@ -1,0 +1,7 @@
+interface p17
+{
+  typedef string Name;
+  typedef sequence<Name, 1> OptionalName;
+  OptionalName echo(in OptionalName n);
+};
+
