@@ -94,6 +94,7 @@ def unqualifiedType(t):
         return '::xju::Shared< %(t)s const>'%vars()
     elif t.kind()==idltype.tk_objref:
         t=''.join(['::'+_ for _ in t.scopedName()])
+        if t=='::CORBA::Object': t='void'
         return '::cxy::IOR< %(t)s >'%vars()
     assert False, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
     pass

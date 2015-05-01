@@ -46,6 +46,23 @@ public:
     obj_->uri_=ior.toString();
   }
 
+  // note T must be a %(fqn)s or %(fqn)s must be a T
+  template<class T>
+  explicit cref(cxy::ORB< %(eclass)s >& orb, 
+                cxy::IOR< T >const& ior) throw(
+    // no object with specified ior, including server
+    // not reachable and server does not know name
+    cxy::Exceptions< %(eclass)s >::NoSuchObject,
+    // object with specified uri is not a %(fqn)s
+    cxy::Exceptions< %(eclass)s >::WrongType,
+    // other failure, eg communication failure
+    %(eclass)s):
+      orb_(&orb),
+      obj_(locate(orb, ior.toString()))
+  {
+    xju::check_types_related<T, %(fqn)s>();
+  }
+
   cref(cref const& b) throw():
       orb_(b.orb_),
       obj_(b.obj_)
@@ -69,7 +86,7 @@ public:
   cref<T> narrow() const throw(
     // referenced server object is not a T
     cxy::Exceptions< %(eclass)s >::WrongType) {
-    %(fqn)s const* T_must_be_a_((%(fqn)s*)0);
+    %(fqn)s const* T_must_be_a_((T const*)0);
     return cref<T>(*orb_, uri());
   }
 
@@ -101,6 +118,24 @@ private:
 
   std::string uri() const throw(){
     return obj_->uri_;
+  }
+
+  static cxy::objref< ::%(fqn)s >* locate(
+    cxy::ORB< %(eclass)s >& orb,
+    std::string ior) throw(
+      // no object with specified ior, including server
+      // not reachable and server does not know name
+      cxy::Exceptions< %(eclass)s >::NoSuchObject,
+      // object with specified uri is not a %(fqn)s
+      cxy::Exceptions< %(eclass)s >::WrongType,
+      // other failure, eg communication failure
+      %(eclass)s) {
+    cxy::pof< ::%(fqn)s >::me_(); // force init of static var
+    cxy::objref< ::%(fqn)s >* result(
+      (cxy::objref< ::%(fqn)s >*)orb.locate(
+        ior, cxy::cdr< ::%(fqn)s >::repoId));
+    result->uri_=ior;
+    return result;
   }
 };
 '''
@@ -159,6 +194,7 @@ template='''\
 #include <xju/format.hh> // impl
 #include <xju/assert.hh> // impl
 #include <string>
+#include <xju/check_types_related.hh>
 
 namespace cxy
 {

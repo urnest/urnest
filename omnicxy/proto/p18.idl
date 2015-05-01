@@ -1,0 +1,11 @@
+module p18
+{
+  interface AAA
+  {
+    long f(in long x);
+  };
+  interface BBB
+  {
+    Object get(); // an AAA
+  };
+};

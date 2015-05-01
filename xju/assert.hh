@@ -38,7 +38,8 @@
 namespace xju
 {
     void assert_abort() throw();
-
+    void assert_never_reached() throw();
+    
     template<class A, class B>
     bool assert_equal(const A& a, const B& b)
     {

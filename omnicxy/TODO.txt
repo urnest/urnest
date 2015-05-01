@@ -231,6 +231,9 @@ x p16.idl:
 x p17.idl:
   sequence<X, 1> -> optional<X>
 
+x p18.idl:
+  x untyped object ref (ie CORBA::Object) plus casting
+
 x memory leaks:
   x allow a repeat count, and compare eg 1 repeat v 100 with
     eg valgrind
@@ -241,7 +244,6 @@ x memory leaks:
 - inherit interface multi-level
 - inherit multiple interfaces
 - inherit interface diamond
-- untyped object ref (ie CORBA::Object) plus casting
 - in-place struct union member union(short){ 1: struct X{ long a_;}; }
 - recursive union
 - bounded strings

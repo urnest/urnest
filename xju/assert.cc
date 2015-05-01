@@ -15,4 +15,8 @@ namespace xju
   {
     ::abort();
   }
+  void assert_never_reached() throw()
+  { 
+    assert_abort(); 
+  }
 }

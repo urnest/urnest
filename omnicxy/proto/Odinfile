@@ -6,6 +6,9 @@ cxy%all.tree
 cxy/e%all.tree
 
 %all.idl.sm==<<
+p18.idl
+
+%x.all.idl.sm==<<
 p1.idl
 p2.idl
 p3.idl

@@ -5,6 +5,8 @@
 
 %tests.tree == <<
 #()+cmd=(%test-serialisation.cxx.sm+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-check_types_related.cc+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=test '-s' (%test-check_types_related_2_err):stdout
 ()+cmd=(test-EventClient.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Exception.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Float.cc+(..%cxx-opts):auto.cxx.exe):stdout
@@ -28,3 +30,4 @@
 ()+cmd=(test-stringToUInt.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-xml.cc+(..%cxx-opts):auto.cxx.exe):stdout
 
+%test-check_types_related_2_err==test-check_types_related_2.cc+(..%cxx-opts):auto.cxx.exe:err
