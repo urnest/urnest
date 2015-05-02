@@ -13,9 +13,9 @@ Contents
 
 1. Introduction
 
-  omnicxy is an alternative to the OMG CORBA C++ Language Mapping. It
-  is designed to be hard to misuse (where the OMG C++ mapping is both
-  hard to use and easy to misuse):
+  omnicxy is an modern alternative to the OMG CORBA C++ Language Mapping. It
+  is designed to be easy to use and hard to misuse (where the OMG C++ mapping
+  is hard to use and easy to misuse):
 
     - uniform parameter passing and member type rules
     - no explicit storage management
@@ -125,6 +125,7 @@ Contents
   string maps to std::string - see proto/cxy/p2.hh
 
   sequence maps to std::vector - see proto/cxy/p5.hh
+    - bounded sequence of length 1 maps to cxy::optional - see proto/cxy/p17.hh
 
   struct maps to struct with same members and generated compare 
   operators - see proto/cxy/p4.hh. Note
@@ -143,7 +144,11 @@ Contents
 
   object reference, ie reference to interface T, maps to a cxy::IOR<T>, which
   can be passed to cxy::cref<T> constructor - see proto/cxy/p15.hh and
-  proto/cxy/p16.hh
+  proto/cxy/p16.hh. cxy::IOR<T> can be passed to cxy::cref<U> constructor
+  if T is a U (widening), if U is a T (dynamically type-checked narrowing).
+
+  untyped object reference ie idl Object maps to cxy::IOR<void>, which
+  can be passed to cxy::cref<T> constructor - see proto/cxy/p18-main.cc.
 
   cxy::IOR<T> can construct cxy::IOR<U> if T is a U - see proto/cxy/p16-main.cc
 

@@ -100,9 +100,12 @@ C++ and odin build bits and pieces to share
     other C++ source code handling tools
       status: usable but room for improvement (see hcp/TODO)
 
--   omnicxy is progress towards a CORBA C++ language mapping that
-    uses standard C++ classes like string, vector
-    status: omniORB implementation early days (see omnicxy/TODO)
+-   omnicxy is progress towards a modern CORBA C++ language mapping 
+    (alternative to OMG C++ language mapping) that
+    uses standard C++ classes like string, vector. Fully documented in
+    omnicxy/README.txt with examples referenced.
+      status: usable, still some stuff unimplemented (see omncxy/TODO.txt)
+              currently omniORB linux only
 
 -   xo is my notes on how I would re-write odin so that I could
     understand how it works and therefor fix and improve it :-)
