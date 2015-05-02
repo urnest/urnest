@@ -3,10 +3,17 @@
 module p5
 {
   typedef sequence<p4::XS1> JW2s;
-  typedef sequence<unsigned long> LS;
-  
   interface F
   {
     JW2s f1(in JW2s p1);
+  };
+
+  //REVISIT: put these in separate test case(s) and actually use them
+  typedef sequence<unsigned long> LS;
+  typedef sequence<boolean, 1> LT;
+  struct X
+  {
+    sequence<boolean, 1> y;
+    LT z;
   };
 };

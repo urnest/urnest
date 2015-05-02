@@ -5,10 +5,10 @@ cxx%all.tree
 cxy%all.tree
 cxy/e%all.tree
 
-%all.idl.sm==<<
+%x.all.idl.sm==<<
 p18.idl
 
-%x.all.idl.sm==<<
+%all.idl.sm==<<
 p1.idl
 p2.idl
 p3.idl
@@ -25,4 +25,5 @@ p14.idl
 p15.idl
 p16.idl
 p17.idl
+p18.idl
 echo.idl
