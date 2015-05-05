@@ -968,7 +968,7 @@ def gen_tincludes(decl):
                 pass
             elif m.memberType().kind()==idltype.tk_sequence:
                 if m.memberType().bound()==0:
-                    result=result+['<vector>']+tincludes(m.memberType)
+                    result=result+['<vector>']+tincludes(m.memberType())
                 elif m.memberType().bound()==1:
                     result=result+['<cxy/optional.hh>']+tincludes(m.memberType())
                 else:
@@ -988,7 +988,7 @@ def gen_tincludes(decl):
                 pass
             elif m.memberType().kind()==idltype.tk_sequence:
                 if m.memberType().bound()==0:
-                    result=result+['<vector>']+tincludes(m.memberType)
+                    result=result+['<vector>']+tincludes(m.memberType())
                 elif m.memberType().bound()==1:
                     result=result+['<cxy/optional.hh>']+tincludes(m.memberType())
                 else:

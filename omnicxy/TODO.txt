@@ -234,6 +234,9 @@ x p17.idl:
 x p18.idl:
   x untyped object ref (ie CORBA::Object) plus casting
 
+- p19.idl:
+  - sequence test cases
+
 x memory leaks:
   x allow a repeat count, and compare eg 1 repeat v 100 with
     eg valgrind

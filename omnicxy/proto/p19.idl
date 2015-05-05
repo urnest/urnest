@@ -1,0 +1,12 @@
+exception E
+{
+  sequence<string> cause;
+  sequence<long, 1> optionalNumber;
+};
+
+struct F
+{
+  sequence<string> m;
+  sequence<long, 1> optionalNumber;
+};
+
