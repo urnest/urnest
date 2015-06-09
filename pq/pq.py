@@ -141,6 +141,8 @@ class Tag(Node):
         if not val is None:
             self.attrs[a]=val
         return self.attrs.get(a,'')
+    def attrEquals(self, a, val):
+        return self.attrs.get(a,None)==val
     def indexOf(self, child):
         return [ _[0] for _ in zip(range(0,len(self.children)),
                                    self.children) if _[1]==child][0]
@@ -326,7 +328,7 @@ class Selection:
         return Selection(result)
     def filter(self, predicate):
         '''nodes of ours that match predicate'''
-        return Selection([_ for _ in nodeList if predicate(_)])
+        return Selection([_ for _ in self.nodeList if predicate(_)])
     def html(self, nodes):
         '''replace our first node's children with the specified list of nodes/html string'''
         if type(nodes)==types.StringType:
@@ -399,15 +401,24 @@ class Selection:
         for n in self.nodeList:
             n.addClass(name)
         return self
-    def attr(self, name, value):
-        result=[_.attr(name, value) for _ in self.nodeList]
-        if len(result):
-            return result[0]
-        return None
+    def removeClass(self, name):
+        '''remove class %(name)s from each of our children'''
+        for n in self.nodeList:
+            n.removeClass(name)
+        return self
+    def attr(self, name, value=None):
+        if value is None:
+            return [_.attr(name, value) for _ in self.nodeList]
+        [_.attr(name, value) for _ in self.nodeList]
+        return self
     def __str__(self):
         return ''.join([str(_) for _ in self.nodeList])
     def __len__(self):
         return len(self.nodeList)
+    def __getitem__(self, key):
+        return self.nodeList[key]
+    def __getslice__(self, i, j):
+        return Selection(self.nodeList[i:j])
     pass
 
 # basic predicates
@@ -415,6 +426,8 @@ def hasClass(c):
     return lambda node: isinstance(node, Tag) and node.hasClass(c)
 def tagName(t):
     return lambda node: isinstance(node, Tag) and node.tagName==t
+def attrEquals(attr,value):
+    return lambda node: isinstance(node, Tag) and node.attrEquals(attr,value)
 
 def parse(s, origin='unknown'):
     '''parse HTML string "%(origin)s"'''
@@ -430,6 +443,9 @@ def parse(s, origin='unknown'):
     pass
 
 def parseFile(fileName):
+    return parse(file(fileName).read(),fileName)
+
+def loadFile(fileName):
     return parse(file(fileName).read(),fileName)
 
 def assert_equal(a, b):
