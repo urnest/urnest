@@ -242,6 +242,16 @@ void test8()
                       std::string("fred\\njock"));
 }
 
+// indent
+void test9()
+{
+    xju::assert_equal(xju::format::indent("", "---"),std::string(""));
+    xju::assert_equal(xju::format::indent("abc", "---"),std::string("abc"));
+    xju::assert_equal(xju::format::indent("abc\n", "---"),std::string("abc\n---"));
+    xju::assert_equal(xju::format::indent("abc\ndef", "---"),std::string("abc\n---def"));
+    
+}
+
 int main(int argc, char* argv[])
 {
     int n = 0;
@@ -253,6 +263,7 @@ int main(int argc, char* argv[])
     test6(); ++n;
     test7(); ++n;
     test8(); ++n;
+    test9(); ++n;
     
     std::cout << "PASS - " << n << " steps" << std::endl;
     return 0;

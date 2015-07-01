@@ -16,6 +16,7 @@
 #include <iterator>
 #include <algorithm>
 #include "xju/assert.hh"
+#include <xju/format.hh>
 
 namespace hcp_ast
 {
@@ -26,6 +27,17 @@ std::string reconstruct(IRs const& x) throw() {
     s << reconstruct(**i);
   }
   return s.str();
+}
+
+std::string CompositeItem::str() const throw()
+{
+  std::vector<std::string> ss;
+  for(std::vector<IR>::const_iterator i=items_.begin();
+      i!=items_.end();
+      ++i) {
+    ss.push_back("\n  "+xju::format::indent((*i)->str(),"  "));
+  }
+  return "[ "+xju::format::join(ss.begin(),ss.end(),",")+"]";
 }
 
 std::vector<CompositeItem const*> getContextAt(

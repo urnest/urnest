@@ -24,6 +24,7 @@
 #include <vector>
 #include "xju/assert.hh"
 #include <typeinfo>
+#include <iostream>
 
 namespace hcp_ast
 {
@@ -57,6 +58,16 @@ public:
       xju::assert_equal(typeid(*this).name(), typeid(T).name());
     }
     return *result;
+  }
+
+  virtual std::string str() const throw()
+  {
+    return std::string(begin().x_, end().x_);
+  }
+
+  friend std::ostream& operator<<(std::ostream& s, Item const& x) throw()
+  {
+    return s << x.str();
   }
 };
 
@@ -108,6 +119,8 @@ public:
   // children of this AST node.
   std::vector<IR> items_;
 
+  virtual std::string str() const throw();
+  
 };
 
 // pre: begin() <= i < end()
@@ -126,6 +139,11 @@ public:
   {
   }
   virtual ~TaggedCompositeItem() throw() {
+  }
+
+  virtual std::string str() const throw()
+  {
+    return typeid(Tag).name() + CompositeItem::str();
   }
 };
 
@@ -283,6 +301,9 @@ typedef TaggedCompositeItem<VarNameTag> VarName;
 
 class KeywordStaticTag{};
 typedef TaggedCompositeItem<KeywordStaticTag> KeywordStatic;
+
+class KeywordFriendTag{};
+typedef TaggedCompositeItem<KeywordFriendTag> KeywordFriend;
 
 class StaticVarDefTag{};
 typedef TaggedCompositeItem<StaticVarDefTag> StaticVarDef;

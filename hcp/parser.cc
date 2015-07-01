@@ -1119,6 +1119,11 @@ PR keyword_static(
     "\"static\"",
     parseLiteral("static")));
 
+PR keyword_friend(
+  new NamedParser<hcp_ast::KeywordFriend>(
+    "\"friend\"",
+    parseLiteral("friend")));
+
 PR function_qualifiers(
   new NamedParser<hcp_ast::FunctionQualifiers>(
     "function qualifiers",
@@ -1154,8 +1159,8 @@ PR function_proto(
   balanced(parseOneOfChars("();{}[]")|
            ((operator_name|destructor_name|type_name)+parseOneOfChars("(")))+
   new NamedParser<hcp_ast::FunctionName>(
-  "function name",
-  (operator_name|destructor_name|type_name))+
+    "function name",
+    (operator_name|destructor_name|type_name))+
   bracketed+
   balanced((eatWhite+parseOneOfChars(";"))|function_impl));
 

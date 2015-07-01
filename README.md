@@ -1,7 +1,16 @@
 urnest
 ======
 
-C++ and odin build bits and pieces to share
+C++ and odin build bits and pieces to share, all except odin 
+under free licence:
+
+
+    Copyright (c) 2015, Trevor Taylor
+
+    Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
 
 -   odin/ has my customisations to and extras for excellent build tool
     from [sourceforge/projects/odin-build] 
@@ -95,14 +104,13 @@ C++ and odin build bits and pieces to share
       status: usable
 
 -   hcp is progress towards a utility to split C++-in-single-source-file
-    into .h and .cpp files (to make coding more efficient); part of
+    into .h and .cpp files (to make hand-coding more efficient); part of
     this utility is a (partial) C++ parser that I hope to use to write
     other C++ source code handling tools
       status: usable but room for improvement (see hcp/TODO)
 
 -   omnicxy is progress towards a modern CORBA C++ language mapping 
-    (alternative to OMG C++ language mapping) that
-    uses standard C++ classes like string, vector. Fully documented in
+    (alternative to OMG C++ language mappings). Documented in
     omnicxy/README.txt with examples referenced.
       status: usable, still some stuff unimplemented (see omncxy/TODO.txt)
               currently omniORB linux only

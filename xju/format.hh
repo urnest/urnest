@@ -297,6 +297,11 @@ std::string cEscapeChar(char const c) throw();
 //
 std::string cEscapeString(std::string const& s) throw();
 
+//
+// Add specified prefix to each line of x (but not at start)
+//
+std::string indent(std::string const& s, std::string const& prefix) throw();
+
 }
 }
 

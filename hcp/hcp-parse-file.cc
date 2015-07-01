@@ -34,13 +34,16 @@ class Options
 public:
   Options(size_t offset, 
           std::string const& target, 
+          bool const dump,
           hcp_parser::Options const& parser_options) throw():
     offset_(offset),
     target_(target),
+    dump_(dump),
     parser_options_(parser_options) {
   }
   size_t offset_;
   std::string target_;
+  bool dump_;
   hcp_parser::Options parser_options_;
 };
 
@@ -54,6 +57,7 @@ std::pair<Options, std::vector<std::string> > parseCommandLine(
   std::string target="file";
   bool trace=false;
   bool includeAllExceptionContext=false;
+  bool dump=false;
   
   while((i != x.end()) && ((*i)[0]=='-')) {
     if ((*i)=="-v") {
@@ -62,6 +66,10 @@ std::pair<Options, std::vector<std::string> > parseCommandLine(
     }
     else if ((*i)=="-t") {
       trace=true;
+      ++i;
+    }
+    else if ((*i)=="-d") {
+      dump=true;
       ++i;
     }
     else if ((*i)=="-o") {
@@ -85,6 +93,7 @@ std::pair<Options, std::vector<std::string> > parseCommandLine(
     Options(
       offset,
       target,
+      dump,
       hcp_parser::Options(trace,
                           hcp_parser::Cache(new hcp_parser::CacheVal()))), 
     std::vector<std::string>(i, x.end()));
@@ -114,10 +123,12 @@ int main(int argc, char* argv[])
 
     if (cmd_line.second.size() != 1) {
       std::cout << "usage: " << argv[0] 
-                << " [-v] [-t] <input-file>" << std::endl;
+                << " [-v] [-t] [-o <offset>] [-p <type>] [-d] <input-file>" 
+                << std::endl;
       std::cout << "-t, trace " << std::endl
                 << "-v, verbose" << std::endl
                 << "-o <offset>, start parsing at offset (default 0)\n"
+                << "-d, dump parsed item(s)"
                 << "-p <type>, attempt to parse <type>, one of:\n"
                 << xju::format::join(parsers.begin(), parsers.end(),
                                      xju::functional::first,
@@ -151,6 +162,9 @@ int main(int argc, char* argv[])
     hcp_ast::CompositeItem root;
     at = hcp_parser::parse(root, at, (*i).second, 
                            options.parser_options_.trace_);
+    if (options.dump_) {
+      std::cout << root << std::endl;
+    }
     std::cout << "end at " << at << std::endl;
   }
   catch(xju::Exception& e) {

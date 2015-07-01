@@ -216,6 +216,36 @@ std::string cEscapeString(std::string const& s) throw()
   return result.str();
 }
 
+namespace
+{
+class IndentAfterNewline
+{
+public:
+  explicit IndentAfterNewline(std::string const& indent) throw():
+      indent_(indent)
+  {
+  }
+  std::string const indent_;
+  std::string operator()(char const c) throw()
+  {
+    switch(c) {
+    case '\n':
+      return "\n"+indent_;
+    }
+    return str(c);
+  }
+};
+}
+
+std::string indent(std::string const& s, std::string const& prefix) throw()
+{
+  std::ostringstream result;
+  std::transform(s.begin(), s.end(),
+                 std::ostream_iterator<std::string>(result),
+                 IndentAfterNewline(prefix));
+  return result.str();
+}
+
 
 }
 }
