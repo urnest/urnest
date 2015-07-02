@@ -14,6 +14,8 @@
          ... and all those replacing int by x::y<int const&>
          ... and also appending [], [3], [x::size]
 
+      ... watch out for int const_x;
+
   - need to better parse function proto to get param types
   - then look for friend operator< with 2x params of type = class name
     (possibly const/ref qualified)
