@@ -60,10 +60,7 @@ public:
     return *result;
   }
 
-  virtual std::string str() const throw()
-  {
-    return std::string(begin().x_, end().x_);
-  }
+  virtual std::string str() const throw() = 0;
 
   friend std::ostream& operator<<(std::ostream& s, Item const& x) throw()
   {
@@ -143,7 +140,7 @@ public:
 
   virtual std::string str() const throw()
   {
-    return typeid(Tag).name() + CompositeItem::str();
+    return typeid(Tag).name() + std::string(" ") + CompositeItem::str();
   }
 };
 
@@ -212,6 +209,12 @@ public:
   virtual I end() const throw() {
     return end_;
   }
+
+  virtual std::string str() const throw()
+  {
+    return xju::format::quote(std::string(begin().x_, end().x_));
+  }
+
 };
 
 class WhiteSpaceTag{};
@@ -291,6 +294,10 @@ public:
   }
   static std::string getClassName(std::vector<IR> const& items) throw();
   static bool getIsTemplateSpeicialisation(std::vector<IR> const& items) throw();
+  virtual std::string str() const throw()
+  {
+    return typeid(ClassDef).name() + std::string(" ") + CompositeItem::str();
+  }
 };
 
 class AttrDeclTag{};
@@ -339,6 +346,11 @@ public:
   virtual ~NamespaceDef() throw() {
   }
   static std::string getNamespaceName(std::vector<IR> const& items) throw();
+
+  virtual std::string str() const throw()
+  {
+    return typeid(NamespaceDef).name() + std::string(" ") + CompositeItem::str();
+  }
 };
 
 class NamespaceNameTag{};
