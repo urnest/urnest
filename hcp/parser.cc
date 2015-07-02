@@ -1110,7 +1110,7 @@ PR name(
   eatWhite);
 
 PR type_name(
-  zeroOrMore*(unqualifiedName+eatWhite+parseLiteral("::")+eatWhite)+
+  zeroOrMore*(unqualifiedTypeName+eatWhite+parseLiteral("::")+eatWhite)+
   unqualifiedTypeName+
   eatWhite);
 
@@ -1207,8 +1207,8 @@ PR class_proto(
   (parseLiteral("class")|parseLiteral("struct")|parseLiteral("union"))+
   whitespace+
   new NamedParser<hcp_ast::ClassName>(
-  "class name",
-  type_name)+
+    "class name",
+    type_name)+
   balanced(parseOneOfChars("{;")));
 
 PR class_decl(new NamedParser<hcp_ast::ClassForwardDecl>(

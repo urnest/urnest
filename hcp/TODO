@@ -1,7 +1,28 @@
+- hcp split generate operator< (and others) where there is an operator<
+  function prototype (ie no implementation)
+  - need to better parse attr decls to get attr names
+      attr decl is typeid unqualifiedName optional(array decl)
+      typeid is qualifiers (const, static) typename qualifiers (const & *)
+      type_name is ok as-is I think
+      eg int x;
+         const int x;
+         const int* x;
+         const int* const x;
+         int& x;
+         int const x;
+         int const& x;
+         ... and all those replacing int by x::y<int const&>
+         ... and also appending [], [3], [x::size]
+
+  - need to better parse function proto to get param types
+  - then look for friend operator< with 2x params of type = class name
+    (possibly const/ref qualified)
+
 - handle // comments anywhere, eg:
   class A  // comment
   {
   };
+  ... should already parse ok? split trouble?
 
 x fix forward-declared classes, eg:
   class A {

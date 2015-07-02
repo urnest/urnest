@@ -1559,7 +1559,24 @@ void test32()
   }
 }
 
+void test33()
+{
+  std::string const x("X<int>::Y");
 
+  hcp_ast::CompositeItem root;
+  hcp_parser::I at(x.begin(), x.end());
+
+  try {
+    at = parse(root, at, hcp_parser::type_name);
+    xju::assert_equal(reconstruct(root), x);
+    xju::assert_equal(at.atEnd(), true);
+  }
+  catch(xju::Exception const& e) {
+    assert_readableRepr_equal(e, "", XJU_TRACED);
+    xju::assert_equal(true,false);
+  }
+}
+  
 int main(int argc, char* argv[])
 {
   unsigned int n(0);
@@ -1595,6 +1612,7 @@ int main(int argc, char* argv[])
   test30(), ++n;
   test31(), ++n;
   test32(), ++n;
+  test33(), ++n;
   
   xju::assert_equal(atLeastOneReadableReprFailed, false);
   std::cout << "PASS - " << n << " steps" << std::endl;
