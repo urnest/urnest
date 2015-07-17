@@ -69,6 +69,8 @@ class Root(Node):
         return self
     def __str__(self):
         return ''.join([str(_) for _ in self.children])
+    def __unicode__(self):
+        return ''.join([unicode(_) for _ in self.children])
     def __repr__(self):
         return 'root node'
     pass
@@ -123,6 +125,14 @@ class Tag(Node):
         encodedAttrs.sort()
         start=' '.join([self.tagName]+encodedAttrs)
         content=''.join([str(_) for _ in self.children])
+        end=self.end
+        return '''<%(start)s>%(content)s%(end)s'''%vars()
+    def __unicode__(self):
+        encodedAttrs=['%s="%s"' % (_[0],encodeEntities(_[1])) for 
+                      _ in self.attrs.items()]
+        encodedAttrs.sort()
+        start=' '.join([self.tagName]+encodedAttrs)
+        content=''.join([unicode(_) for _ in self.children])
         end=self.end
         return '''<%(start)s>%(content)s%(end)s'''%vars()
     def hasClass(self,c):
@@ -413,6 +423,8 @@ class Selection:
         return self
     def __str__(self):
         return ''.join([str(_) for _ in self.nodeList])
+    def __unicode__(self):
+        return u''.join([unicode(_) for _ in self.nodeList])
     def __len__(self):
         return len(self.nodeList)
     def __getitem__(self, key):
@@ -429,11 +441,12 @@ def tagName(t):
 def attrEquals(attr,value):
     return lambda node: isinstance(node, Tag) and node.attrEquals(attr,value)
 
-def parse(s, origin='unknown'):
-    '''parse HTML string "%(origin)s"'''
+def parse(s, origin='unknown',encoding='utf-8'):
+    '''parse HTML string "%(origin)s" assuming it has %(encoding)r encoding (per python unicode() function)'''
     parser=Parser(origin)
     try:
-        parser.feed(s)
+        u=unicode(s,encoding,'strict')
+        parser.feed(u)
         parser.close()
         result=Selection(parser.root.children)
         result.detach()
@@ -442,11 +455,11 @@ def parse(s, origin='unknown'):
         raise ParseFailed(str(''.join(traceback.format_tb(sys.exc_info()[2])))+'\n'+str(sys.exc_info()[1]), parser.pos())
     pass
 
-def parseFile(fileName):
-    return parse(file(fileName).read(),fileName)
+def parseFile(fileName,encoding='utf-8'):
+    return parse(file(fileName).read(),fileName,encoding)
 
-def loadFile(fileName):
-    return parse(file(fileName).read(),fileName)
+def loadFile(fileName,encoding='utf-8'):
+    return parse(file(fileName).read(),fileName,encoding)
 
 def assert_equal(a, b):
     assert a==b, ('%(a)s\n!=\n%(b)s' % vars())
