@@ -17,6 +17,30 @@
 
 namespace xju
 {
+namespace snmp
+{
+
+// The intended use of this module for snmp-get is:
+//
+//   SnmpV1GetRequest request(...);
+//   std::vector<uint8_t> requestData(encode(request));
+//   ... send requestData to server
+//   ... receive responseData as std::vector<uint8_t>
+//   std::map<Oid, std::unique_ptr<Value> > values(
+//     validateResponse(request,decodeSnmpV1Response(responseData)));
+//   ... use values
+//
+// ... and for snmp-set is:
+//
+//   SnmpV1SetRequest request(...);
+//   std::vector<uint8_t> requestData(encode(request));
+//   ... send requestData to server
+//   ... receive responseData as std::vector<uint8_t>
+//   validateResponse(request,decodeSnmpV1Response(responseData));
+//
+
+
+// RFC 1157 OID
 class Oid
 {
 public:
@@ -51,8 +75,162 @@ private:
   friend Oid operator+(Oid const& a, Oid const& b) throw();
 };
 
+// RFC 1157 error-status
+enum ErrorStatus
+{
+  NO_ERROR,
+  TOO_BIG,
+  NO_SUCH_NAME,
+  BAD_VALUE,
+  READ_ONLY,
+  GEN_ERR
+};
+
+// RFC 1157 request-id
+class RequestIdTag{};
+typedef xju::Int<uint64_t> RequestId;
+
+// RFC 1157 error-index
+// note error-index of first oid is 1, not 0
+class ErrorIndexTag{};
+typedef xju::Int<uint64_t> ErrorIndex;
+
+// RFC 1157 community
+class CommunityTag{};
+typedef xju::Tagged<std::string> Community;
   
+struct SnmpV1GetRequest
+{
+  Community community_;
+  RequestId id_;
+  std::set<Oid> oids_;
+};
+  
+std::vector<uint8_t> encode(SnmpV1Request const& request) throw();
+
+class Value
+{
+public:
+  virtual ~Value() throw(){}
+  // convenience functions that do type and range checking
+  operator std::string() const throw(xju::Exception);
+  operator int() const throw(xju::Exception);
+  operator unsigned int() const throw(xju::Exception);
+  operator long() const throw(xju::Exception);
+  operator unsigned long() const throw(xju::Exception);
+};
+
+class IntegerValue : public Value
+{
+public:
+  explicit IntValue(uint64_t const& val) throw();
+  uint64_t val_;
+};
+
+class StringValue : public Value
+{
+public:
+  explicit StringValue(std::string const& val) throw();
+  std::string val_;
+};
+
+class OidValue : public Value
+{
+public:
+  explicit OidValue(Oid const& val) throw();
+  Oid val_;
+};
+
+class NullValue : public Value
+{
+public:
+  explicit NullValue() throw();
+};
+
+  
+struct SnmpV1Response
+{
+  ResponseType responseType_;
+  Community community_;
+  RequestId id_;
+  ErrorStatus error_;
+  // 1-based ie bad oid is values_[errorIndex_-1]; 
+  // (0 if error_ is a non-param-specific error)
+  ErrorIndex errorIndex_;
+  
+  std::vector<Oid, std::unique_ptr<Value const> > values_;
+};
+
+SnmpV1Response decodeSnmpV1Response(std::vector<uint8_t> const& data) throw(
+    // malformed
+    xju::Exception);
+
+// exceptions corresponding to RFC 1157 error-status
+class GenErr : public xju::Exception
+{
+public:
+  explicit GenErr(const xju::Traced& trace) throw();
+};
+class TooBig : public xju::Exception
+{
+public:
+  explicit TooBig(const xju::Traced& trace) throw();
+};
+class InvalidParam : public xju::Exception
+{
+public:
+  InvalidParam(Oid const& param, const xju::Traced& trace) throw();
+  Oid param_;
+};
+class NoSuchName : public InvalidParam
+{
+public:
+  NoSuchName(Oid const& param, const xju::Traced& trace) throw();
+};
+class BadValue : public InvalidParam
+{
+public:
+  BadValue(Oid const& param, const xju::Traced& trace) throw();
+};
+class ReadOnly : public InvalidParam
+{
+public:
+  ReadOnly(Oid const& param, const xju::Traced& trace) throw();
+};
+
+// validate reponse to specified request
+// - returns the requested values
+std::map<Oid, std::unique_ptr<Value const> > validateResponse(
+  SnmpV1GetRequest const& request,
+  SnmpV2Response const& response) throw(
+    ResponseTypeMismatch,
+    ResponseIdMismatch,
+    NoSuchName,
+    TooBig,
+    GenErr);
+
+struct SnmpV1SetRequest
+{
+  Community community_;
+  RequestId id_;
+  std::map<Oid, std::unique_ptr<Value const> > values_;
+};
+
+std::vector<uint8_t> encode(SnmpV1SetRequest const& request) throw();
+
+// validate reponse to specified request
+void validateResponse(
+  SnmpV1SetRequest const& request, 
+  SnmpV2Response const& response) throw(
+    ResponseTypeMismatch,
+    ResponseIdMismatch,
+    NoSuchName,
+    BadValue,
+    ReadOnly,
+    TooBig,
+    GenErr);
+
+}
 }
 
 #endif
-

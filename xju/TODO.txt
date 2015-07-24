@@ -1,3 +1,72 @@
+snmp
+  Value and sub-classes String, Null, List etc
+  std::vector<uint8_t> encodeSnmpGetRequest(//other params?
+                                            std::set<Oid> const& oids);
+  std::map<Oid, std::unique_ptr<Value const> > decodeSnmpGetResponse(
+    std::vector<uint8_t> const& ) throw(xju::Exception);
+
+  std::vector<uint8_t> encodeSnmpSetRequest(//other params?
+                  std::map<Oid, std::unique_ptr<Value const> > values);
+
+  void decodeSnmpSetResponse(
+    std::vector<uint8_t> const& ) throw(
+      // snmp-specific errors (set failure)
+      xju::Exception);
+
+  what is structure? v1 is:
+    list:
+      version:int
+      community:string
+      get/set/etc-list:
+        id:int
+        error:int  (0 good, other by code)
+        errorIndex:int (0 none, 1 etc point refer to values)
+        list:
+          n x list:
+            oid:oid
+            value (null for get)
+
+       some error codes:
+         0x01 -- Response message too large to transport
+	 0x02 -- The name of the requested object was not found
+	 0x03 -- A data type in the request did not match the data type in the SNMP agent
+	 0x04 -- The SNMP manager attempted to set a read-only parameter
+	 0x05 -- General Error (some error other than the ones listed above)
+
+      - see http://www.rane.com/note161.html
+     is v2 different?
+     
+  encoding type,length,data:
+    types (see http://www.rane.com/note161.html)
+      Integer 0x02 
+      Octet String 0x04
+      Null 0x05
+      Object Identifier 0x06
+      Sequence 0x30
+      GetRequest PDU 0xA0
+      GetResponse PDU 0xA2
+      SetRequest PDU 0xA3
+      ... does set respond.
+    
+    length encoding (https://en.wikipedia.org/wiki/X.690#BER_encoding)
+    use either:
+      n where 0 <= n < 128
+      0x80 & 1  n%8  where 128<=n<2**8
+      0x80 & 2  n/(256**1)%256 n%256  where 256<=n<2**16
+      0x80 & 3  n/(256**2)%256 n/(256**1)%256 n%256  where 2**16<=n<2**24
+         :
+
+    length decoding: above plus:
+      indef. 0x80 <data> 0x00 0x00
+
+    oid encoding:
+       0x2B (represents .1.3)
+       then words encoded as either:
+         n where 0 <= n < 128
+         0x80 & (n/128)%128  n % 128 where 128 <= n < 128*128
+         0x80 & (n/128**2)%128**2  0x80 & (n/128)%128  n % 128 where 128 <= n < 128*128
+             :
+
 Int,Float add operator* operator/
 Float add math functions exp, sqrt, log, floor, ceiling etc
 
@@ -17,3 +86,25 @@ subprocess
   - start function object,
   - optional stop function object (pass pid)
   - exit status
+
+
+
+gcc 5.2.0:
+
+  504  xzcat gmp-6.0.0a.tar.xz | tar xf -
+  505  xzcat mpfr-3.1.3.tar.xz | tar xf -
+  508  gunzip -c mpc-1.0.3.tar.gz | tar xf -
+  514  cd gmp-6.0.0
+  515  ./configure --prefix=/home/xju/gcc-5.2.0-run
+  516  make && make install
+  517  make check
+  521  cd ../mpfr-3.1.3
+  524  LD_LIBRARY_PATH=/home/xju/gcc-5.2.0-run/lib ./configure --with-gmp=/home/xju/gcc-5.2.0-run prefix=/home/xju/gcc-5.2.0-run
+  525  LD_LIBRARY_PATH=/home/xju/gcc-5.2.0-run/lib make && LD_LIBRARY_PATH=/home/xju/gcc-5.2.0-run/lib make install
+  526  cd ../mpc-1.0.3
+  528  LD_LIBRARY_PATH=/home/xju/gcc-5.2.0-run/lib ./configure --with-gmp=/home/xju/gcc-5.2.0-run --with-mpfr=/home/xju/gcc-5.2.0-run prefix=/home/xju/gcc-5.2.0-run
+  529  LD_LIBRARY_PATH=/home/xju/gcc-5.2.0-run/lib make && LD_LIBRARY_PATH=/home/xju/gcc-5.2.0-run/lib make install
+  530  cd ../gcc-5.2.0
+  531  LD_LIBRARY_PATH=/home/xju/gcc-5.2.0-run/lib ./configure --with-gmp=/home/xju/gcc-5.2.0-run --with-mpfr=/home/xju/gcc-5.2.0-run -with-mpc=/home/xju/gcc-5.2.0-run prefix=/home/xju/gcc-5.2.0-run
+  533  sudo aptitude install zip
+  536  LD_LIBRARY_PATH=/home/xju/gcc-5.2.0-run/lib make && LD_LIBRARY_PATH=/home/xju/gcc-5.2.0-run/lib make install

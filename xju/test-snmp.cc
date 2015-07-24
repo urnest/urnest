@@ -14,6 +14,8 @@
 
 namespace xju
 {
+namespace snmp
+{
 
 void test1() throw() {
   Oid x(".1.3.6.1.4.364");
@@ -73,8 +75,10 @@ void test2()
 }
 
 }
+}
 
-using namespace xju;
+
+using namespace xju::snmp;
 
 int main(int argc, char* argv[])
 {

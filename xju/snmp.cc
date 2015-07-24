@@ -15,6 +15,9 @@
 
 namespace xju
 {
+namespace snmp
+{
+
 namespace
 {
 // parse dotted assumed to be an SNMP OID in dotted notation, eg .1.3.6.1.4.364
@@ -84,5 +87,6 @@ Oid operator+(Oid const& a, Oid const& b) throw()
   return result;
 }
 
+}
 }
 
