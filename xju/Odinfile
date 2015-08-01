@@ -6,6 +6,7 @@
 %tests.tree == <<
 #()+cmd=(%test-serialisation.cxx.sm+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-check_types_related.cc+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-countSignificantBits.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=test '-s' (%test-check_types_related_2_err):stdout
 ()+cmd=(test-EventClient.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Exception.cc+(..%cxx-opts):auto.cxx.exe):stdout

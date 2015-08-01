@@ -74,7 +74,7 @@ public:
 
     template<class T1, class T2>
     explicit XxPair(std::pair<T1, T2> const& x) throw():
-       std::pair< int32_t, std::string >(x) {
+       std::pair< int32_t, std::string >(x.first,std::string(x.second)) {
     }
     friend bool operator<(
       XxPair const& x, 

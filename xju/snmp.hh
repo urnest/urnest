@@ -14,6 +14,11 @@
 #include "xju/Exception.hh"
 #include <vector>
 #include <stdint.h>
+#include <memory>
+#include <xju/Int.hh>
+#include "xju/Tagged.hh"
+#include <set>
+#include <map>
 
 namespace xju
 {
@@ -26,7 +31,7 @@ namespace snmp
 //   std::vector<uint8_t> requestData(encode(request));
 //   ... send requestData to server
 //   ... receive responseData as std::vector<uint8_t>
-//   std::map<Oid, std::unique_ptr<Value> > values(
+//   std::map<Oid, std::shared_ptr<Value> > values(
 //     validateResponse(request,decodeSnmpV1Response(responseData)));
 //   ... use values
 //
@@ -75,17 +80,6 @@ private:
   friend Oid operator+(Oid const& a, Oid const& b) throw();
 };
 
-// RFC 1157 error-status
-enum ErrorStatus
-{
-  NO_ERROR,
-  TOO_BIG,
-  NO_SUCH_NAME,
-  BAD_VALUE,
-  READ_ONLY,
-  GEN_ERR
-};
-
 // RFC 1157 request-id
 class RequestIdTag{};
 typedef xju::Int<uint64_t> RequestId;
@@ -97,16 +91,23 @@ typedef xju::Int<uint64_t> ErrorIndex;
 
 // RFC 1157 community
 class CommunityTag{};
-typedef xju::Tagged<std::string> Community;
+typedef xju::Tagged<std::string,CommunityTag> Community;
   
 struct SnmpV1GetRequest
 {
+  SnmpV1GetRequest(Community const& community,
+                   RequestId const id,
+                   std::set<Oid> const& oids) throw():
+      community_(community),
+      id_(id),
+      oids_(oids) {
+  }
   Community community_;
   RequestId id_;
   std::set<Oid> oids_;
 };
   
-std::vector<uint8_t> encode(SnmpV1Request const& request) throw();
+std::vector<uint8_t> encode(SnmpV1GetRequest const& request) throw();
 
 class Value
 {
@@ -118,38 +119,121 @@ public:
   operator unsigned int() const throw(xju::Exception);
   operator long() const throw(xju::Exception);
   operator unsigned long() const throw(xju::Exception);
+
+  // return length of encoded value
+  // ie return encodeTo(x)-x
+  virtual size_t encodedLength() const throw()=0;
+  // encode at begin, returning end of encoding
+  virtual std::vector<uint8_t>::iterator encodeTo(
+    std::vector<uint8_t>::iterator begin) const throw()=0;
 };
 
-class IntegerValue : public Value
+class IntValue : public Value
 {
 public:
-  explicit IntValue(uint64_t const& val) throw();
-  uint64_t val_;
+  ~IntValue() throw(){}
+  
+  explicit IntValue(int64_t const& val) throw():
+      val_(val)
+  {
+  }
+  int64_t const val_;
+
+  // Value::
+  size_t encodedLength() const throw() override;
+  // Value::
+  std::vector<uint8_t>::iterator encodeTo(
+    std::vector<uint8_t>::iterator begin) const throw() override;
 };
 
 class StringValue : public Value
 {
 public:
-  explicit StringValue(std::string const& val) throw();
-  std::string val_;
+  ~StringValue() throw(){}
+  
+  explicit StringValue(std::string const& val) throw():
+      val_(val)
+  {
+  }
+  std::string const val_;
+
+  // Value::
+  size_t encodedLength() const throw() override;
+  // Value::
+  std::vector<uint8_t>::iterator encodeTo(
+    std::vector<uint8_t>::iterator begin) const throw() override;
 };
 
 class OidValue : public Value
 {
 public:
-  explicit OidValue(Oid const& val) throw();
-  Oid val_;
+  ~OidValue() throw(){}
+  
+  explicit OidValue(Oid const& val) throw():
+      val_(val)
+  {
+  }
+  Oid const val_;
+
+  // Value::
+  size_t encodedLength() const throw() override;
+  // Value::
+  std::vector<uint8_t>::iterator encodeTo(
+    std::vector<uint8_t>::iterator begin) const throw() override;
 };
 
 class NullValue : public Value
 {
 public:
-  explicit NullValue() throw();
+  ~NullValue() throw(){}
+  
+  explicit NullValue() throw()
+  {
+  }
+
+  // Value::
+  size_t encodedLength() const throw() override;
+  // Value::
+  std::vector<uint8_t>::iterator encodeTo(
+    std::vector<uint8_t>::iterator begin) const throw() override;
 };
 
-  
 struct SnmpV1Response
 {
+  enum ResponseType
+  {
+    GetRequest=0xA0,
+    GetNextRequest=0xA1,
+    Response=0xA2,
+    SetRequest=0xA3  
+  };
+  
+  // RFC 1157 error-status
+  enum ErrorStatus
+  {
+    NO_ERROR,
+    TOO_BIG,
+    NO_SUCH_NAME,
+    BAD_VALUE,
+    READ_ONLY,
+    GEN_ERR
+  };
+  
+  SnmpV1Response(
+    ResponseType responseType,
+    Community community,
+    RequestId id,
+    ErrorStatus error,
+    ErrorIndex errorIndex,
+    std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values)
+      throw():
+      responseType_(responseType),
+      community_(community),
+      id_(id),
+      error_(error),
+      errorIndex_(errorIndex),
+      values_(values) {
+  }
   ResponseType responseType_;
   Community community_;
   RequestId id_;
@@ -158,7 +242,7 @@ struct SnmpV1Response
   // (0 if error_ is a non-param-specific error)
   ErrorIndex errorIndex_;
   
-  std::vector<Oid, std::unique_ptr<Value const> > values_;
+  std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values_;
 };
 
 SnmpV1Response decodeSnmpV1Response(std::vector<uint8_t> const& data) throw(
@@ -179,7 +263,7 @@ public:
 class InvalidParam : public xju::Exception
 {
 public:
-  InvalidParam(Oid const& param, const xju::Traced& trace) throw();
+  InvalidParam(std::string const& cause, Oid const& param, const xju::Traced& trace) throw();
   Oid param_;
 };
 class NoSuchName : public InvalidParam
@@ -198,11 +282,33 @@ public:
   ReadOnly(Oid const& param, const xju::Traced& trace) throw();
 };
 
+// other exceptions
+class ResponseTypeMismatch : public xju::Exception
+{
+public:
+  ResponseTypeMismatch(SnmpV1Response::ResponseType const got,
+                       SnmpV1Response::ResponseType const expected,
+                       xju::Traced const& trace) throw();
+  SnmpV1Response::ResponseType got_;
+  SnmpV1Response::ResponseType expected_;
+};
+class ResponseIdMismatch : public xju::Exception
+{
+public:
+  ResponseIdMismatch(RequestId const got,
+                     RequestId const expected,
+                     xju::Traced const& trace) throw();
+
+  RequestId got_;
+  RequestId expected_;
+};
+  
+
 // validate reponse to specified request
 // - returns the requested values
-std::map<Oid, std::unique_ptr<Value const> > validateResponse(
+std::map<Oid, std::shared_ptr<Value const> > validateResponse(
   SnmpV1GetRequest const& request,
-  SnmpV2Response const& response) throw(
+  SnmpV1Response const& response) throw(
     ResponseTypeMismatch,
     ResponseIdMismatch,
     NoSuchName,
@@ -213,7 +319,7 @@ struct SnmpV1SetRequest
 {
   Community community_;
   RequestId id_;
-  std::map<Oid, std::unique_ptr<Value const> > values_;
+  std::map<Oid, std::shared_ptr<Value const> > values_;
 };
 
 std::vector<uint8_t> encode(SnmpV1SetRequest const& request) throw();
@@ -221,7 +327,7 @@ std::vector<uint8_t> encode(SnmpV1SetRequest const& request) throw();
 // validate reponse to specified request
 void validateResponse(
   SnmpV1SetRequest const& request, 
-  SnmpV2Response const& response) throw(
+  SnmpV1Response const& response) throw(
     ResponseTypeMismatch,
     ResponseIdMismatch,
     NoSuchName,

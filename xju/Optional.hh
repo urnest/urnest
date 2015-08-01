@@ -31,7 +31,7 @@ namespace xju
         Optional(const Optional<T>& x)
         {
             if (x.valid()) {
-                m_x = std::auto_ptr<T>(new T(*x.m_x));
+                m_x = std::unique_ptr<T>(new T(*x.m_x));
             }
         }
         bool valid() const throw()
@@ -75,7 +75,7 @@ namespace xju
         {
             if (!valid())
             {
-                m_x = std::auto_ptr<T>(new T(x));
+                m_x = std::unique_ptr<T>(new T(x));
             }
             else 
             {
@@ -99,7 +99,7 @@ namespace xju
         }
         
     private:
-        std::auto_ptr<T> m_x;
+        std::unique_ptr<T> m_x;
     };
     template<class T>
     bool operator<(const Optional<T>& x, const Optional<T>& y) 

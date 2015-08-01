@@ -13,9 +13,25 @@
          int const& x;
          ... and all those replacing int by x::y<int const&>
          ... and also appending [], [3], [x::size]
-
       ... watch out for int const_x;
+      ... or function*, eg:
+         typeid (*unqualifiedName)(params);
+         typeid (* const unqualifiedName)(params);
+         typeid (const * unqualifiedName)(params);
+         typeid (*& unqualifiedName)(params);
+         ... is throw clause allowed?
 
+      attr_decl=(zeroOrMore*lqual + typename + zeroOrMore*rqual + unqualifiedName + zeroOrOne*arrayQual)|
+                (zeroOrMore*lqual + typename + zeroOrMore*rqual + literal("(")+eatwhite+zeroOrMore*rqual+ unqualifiedName + literal(")") + literal("(")+params+parseLiteral(")"))
+      lqual=cv_keyword+whitespace
+      rqual=((cv_keyword+oneOfChars("*&"))|
+             (cv_keyword+whitespace)|
+             oneOfChars("*&"))+eatwhite
+      cv_keyword=literal("const")|literal("volatile")
+      arrayqual=literal("[")+balanced(parseLiteral("]")
+      param_decl=attr_decl
+      params=(zeroOrMore(param_decl+literal(","))+param_decl)|param_decl
+             
   - need to better parse function proto to get param types
   - then look for friend operator< with 2x params of type = class name
     (possibly const/ref qualified)

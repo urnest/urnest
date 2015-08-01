@@ -197,7 +197,7 @@ struct %(name)s : public std::pair< %(t1)s, %(t2)s >
   }
   template<class T1, class T2>
   explicit %(name)s(std::pair<T1, T2> const& x) throw():
-     std::pair< %(t1)s, %(t2)s >(x) {
+     std::pair< %(t1)s, %(t2)s >(x.first,%(t2)s(x.second)) {
   }
   friend bool operator<(
     %(name)s const& x, 

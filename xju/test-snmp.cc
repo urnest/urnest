@@ -74,6 +74,39 @@ void test2()
   
 }
 
+void test3() throw()
+{
+  // NullValue encoding
+  {
+    NullValue const x;
+    std::vector<uint8_t> y(x.encodedLength(),0U);
+    xju::assert_equal(y.size(),2U);
+    xju::assert_equal(x.encodeTo(y.begin()),y.end());
+    xju::assert_equal(y,std::vector<uint8_t>{0x05,0});
+  }
+   
+  // IntValue encoding
+  // 0
+  // -1, 1
+  // -128,127
+  // -129,128
+  // -32768,32767
+  // INT32_MAX,INT32_MIN
+  // INT64_MAX,INT64_MIN
+
+  // StringValue encoding
+  // null string
+  // 127 byte string
+  // 128 byte string
+
+  // OidValue encoding
+  // .1.3
+  // .1.3.4
+  // .1.3.127
+  // .1.3.128
+
+}
+
 }
 }
 
@@ -85,6 +118,7 @@ int main(int argc, char* argv[])
   unsigned int n(0);
   test1(), ++n;
   test2(), ++n;
+  test3(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

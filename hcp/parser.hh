@@ -254,11 +254,11 @@ public:
   // Parser::
   virtual ParseResult parse_(I const at, Options const& o) throw() 
   {
-    std::auto_ptr<hcp_trace::Scope> scope;
+    std::unique_ptr<hcp_trace::Scope> scope;
     if (o.trace_) {
       std::ostringstream s;
       s << "parse " << target() << " at " << at;
-      scope = std::auto_ptr<hcp_trace::Scope>(
+      scope = std::unique_ptr<hcp_trace::Scope>(
         new hcp_trace::Scope(s.str(), XJU_TRACED));
     }
     ParseResult r(x_->parse(at, o));

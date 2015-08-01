@@ -106,7 +106,9 @@ int main(int argc, char* argv[])
       parseCommandLine(std::vector<std::string>(argv+1, argv+argc)));
 
     std::map<std::string, hcp_parser::PR> parsers;
-    parsers.insert(std::make_pair("string literal", hcp_parser::stringLiteral));
+    std::pair<char const*, xju::Shared<hcp_parser::Parser> > pp("string literal", hcp_parser::stringLiteral);
+    
+    parsers.insert(pp);
     parsers.insert(std::make_pair("comments", hcp_parser::comments));
     parsers.insert(std::make_pair("typedef", hcp_parser::typedef_statement));
     parsers.insert(std::make_pair("using", hcp_parser::using_statement));

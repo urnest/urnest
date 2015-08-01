@@ -67,7 +67,20 @@ namespace xju
 	Shared(T* x) throw();
 	
 	template<class U>
-	Shared(std::auto_ptr<U> x) throw();
+	Shared(std::unique_ptr<U> x) throw();
+	
+	
+	//
+	// Reference the same value as x
+	// 
+	// Postconditions:
+	//
+	//    valid()' == x.valid()
+	//    !valid()' || (value()' == x.value())
+	//    !valid()' || (count() = x.count() + 1)
+	//    !valid()' || (x.count()' = x.count() + 1)
+	//
+	Shared(const Shared& x) throw();
 	
 	
 	//
@@ -260,9 +273,17 @@ namespace xju
     
     
     template <class T> template<class U>
-    inline Shared<T>::Shared(std::auto_ptr<U> x) throw():
+    inline Shared<T>::Shared(std::unique_ptr<U> x) throw():
 	m_value(x.release())
     {
+    }
+    
+    
+    template <class T>
+    inline Shared<T>::Shared(const Shared& source) throw():
+	m_value(0)
+    {
+        constructShared(*this, source);
     }
     
     

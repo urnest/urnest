@@ -1072,9 +1072,8 @@ namespace xju
         std::pair<TagOpening, RewindableIterator> parseTagOpening(
             RewindableIterator const at,
             NamespaceDefinitions& namespaces,
-            const Attributes& attributeDefaults = Attributes(),
-            RewindableIterator (*skip)(RewindableIterator) = 
-              skipWhiteSpaceAndComments) throw(
+            const Attributes& attributeDefaults,
+            RewindableIterator (*skip)(RewindableIterator)) throw(
                   xju::Exception)
         {
             try
@@ -1117,8 +1116,7 @@ namespace xju
         std::pair<ExpandedName, RewindableIterator> parseTagEnd(
             RewindableIterator const at,
             NamespaceDefinitions const& namespaces,
-            RewindableIterator (*skip)(RewindableIterator) = 
-              skipWhiteSpaceAndComments) throw(
+            RewindableIterator (*skip)(RewindableIterator)) throw(
                   xju::Exception)
         {
             try
@@ -1219,8 +1217,7 @@ namespace xju
         template<class RewindableIterator>
         std::pair<XmlDecl, RewindableIterator> parseXmlDecl(
             RewindableIterator at,
-            RewindableIterator (*skip)(RewindableIterator) =
-            skipWhiteSpaceAndComments) throw(
+            RewindableIterator (*skip)(RewindableIterator)) throw(
                 xju::Exception)
         {
             try

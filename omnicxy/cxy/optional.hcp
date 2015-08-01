@@ -28,7 +28,7 @@ public:
   optional(const optional<T>& x)
   {
     if (x.valid()) {
-      m_x = std::auto_ptr<T>(new T(*x.m_x));
+      m_x = std::unique_ptr<T>(new T(*x.m_x));
     }
   }
   bool valid() const throw()
@@ -72,7 +72,7 @@ public:
   {
     if (!valid())
     {
-      m_x = std::auto_ptr<T>(new T(x));
+      m_x = std::unique_ptr<T>(new T(x));
     }
     else 
     {
@@ -96,7 +96,7 @@ public:
   }
   
 private:
-  std::auto_ptr<T> m_x;
+  std::unique_ptr<T> m_x;
 };
 template<class T>
 bool operator<(const optional<T>& x, const optional<T>& y) 
