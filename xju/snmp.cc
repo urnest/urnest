@@ -189,37 +189,27 @@ private:
 
 size_t intDataLength(int64_t val_) throw()
 {
-  int dataLength=1;
+  int dataLength=8;
   if (val_>0) {
     // for positive numbers, remove leading byte while have 9 leading 0 bits
-    dataLength=sizeof(val_);
-    auto mask=val_*0;
-    while(dataLength>1) {
-      mask |= 0xff80 << (dataLength*8-9);
-      if ((val_ & ~mask)==val_) {
-        --dataLength;
-      }
-      else
-      {
-        break;
-      }
+    int64_t mask=0xff80000000000000;
+    while(dataLength>1 && ((val_ & ~mask)==val_)) {
+      --dataLength;
+      mask = (mask >> 8) | 0xff00000000000000;
     }
   }
   else if (val_<0)
   {
     // for negative numbers, remove leading byte while have 9 leading 1 bits
-    dataLength=sizeof(val_);
-    auto mask=val_*0;
-    while(dataLength>1) {
-      mask |= 0xff80 << (dataLength*8-9);
-      if ((val_ & mask)==mask) {
-        --dataLength;
-      }
-      else
-      {
-        break;
-      }
+    int64_t mask=0xff80000000000000;
+    while(dataLength>1 && ((val_ & mask)==mask)) {
+      --dataLength;
+      mask = (mask >> 8) | 0xff00000000000000;
     }
+  }
+  else
+  {
+    dataLength=1; // 0 is encoded using a single 0 byte
   }
   return dataLength;
 }
@@ -237,11 +227,11 @@ std::vector<uint8_t>::iterator IntValue::encodeTo(
   std::vector<uint8_t>::iterator begin) const throw()
 {
   auto at(begin);
-  *at+=0x02;
+  *at++=0x02;
   auto const dataLength=intDataLength(val_);
   at=encodeLength(at, dataLength);
   for(int i=dataLength; i!=0; --i) {
-    uint8_t b=val_ & (0xff << ((i-1)*8));
+    uint8_t b=(val_ >> ((i-1)*8)) & 0xff;
     *at++=b;
   }
   return at;
@@ -298,11 +288,11 @@ std::vector<uint8_t>::iterator encodeOidComponent(
   uint32_t c) throw()
 {
   auto at(begin);
-  int byteCount{(countSignificantBits(c))/7+1};
+  int byteCount=encodedLengthOfOidComponent(c);
   at+=byteCount;
   std::vector<uint8_t>::reverse_iterator r(at);
   for(int i=0; i != byteCount; ++i) {
-    *r++=0x80|(c&0xff);
+    *r++=0x80|(c&0x7f);
     c=c>>7;
   }
   *(at-1) &= ~0x80; // clear top bit of last byte
@@ -315,7 +305,7 @@ size_t OidValue::encodedLength() const throw()
 {
   xju::assert_less(1U, val_.components().size());
   xju::assert_equal(val_.components()[0],1);
-  xju::assert_equal(val_.components()[0],3);
+  xju::assert_equal(val_.components()[1],3);
   uint64_t const dataLength{oidDataLength(*this)};
   return 1/*type*/+
     encodedLengthOfLength(dataLength)+
