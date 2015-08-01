@@ -147,27 +147,27 @@ uint64_t encodedLengthOfItems(
       return t+x->encodedLength();});
 }
 
+size_t encodedLengthOfValue(
+  std::vector<std::shared_ptr<Value const> > const& items) throw()
+{
+  size_t const dataLength(encodedLengthOfItems(items));
+  return 1/*type*/+
+    encodedLengthOfLength(dataLength)+
+    dataLength;
+}
+
 class Sequence : public Value
 {
 public:
   Sequence(std::vector<std::shared_ptr<Value const> > const& items,
            uint8_t sequenceType) throw():
+      Value(encodedLengthOfValue(items)),
       items_(items),
-      sequenceType_(sequenceType),
-      dataLength_(encodedLengthOfItems(items)),
-      encodedLength_(1/*type*/+
-                     encodedLengthOfLength(dataLength_)+
-                     dataLength_) {
+      sequenceType_(sequenceType) {
   }
-  uint8_t sequenceType_;
   std::vector<std::shared_ptr<Value const> > const items_;
+  uint8_t const sequenceType_;
 
-  // Value::
-  size_t encodedLength() const throw() override
-  {
-    return encodedLength_;
-  }
-  
   // Value::
   std::vector<uint8_t>::iterator encodeTo(
     std::vector<uint8_t>::iterator begin) const throw() override
@@ -181,10 +181,6 @@ public:
     xju::assert_equal(at-begin, encodedLength_);
     return at;
   }
-
-private:
-  size_t const dataLength_;
-  size_t const encodedLength_;
 };
 
 size_t intDataLength(int64_t val_) throw()
@@ -214,15 +210,31 @@ size_t intDataLength(int64_t val_) throw()
   return dataLength;
 }
 
-}
-
-size_t IntValue::encodedLength() const throw()
+size_t encodedLengthOfValue(int64_t val_) throw()
 {
   int const dataLength(intDataLength(val_));
   return 1/*type*/+
     encodedLengthOfLength(dataLength)+
     dataLength;
 }
+
+size_t encodedLengthOfValue(std::string const& val_) throw()
+{
+  // X.690 octetstring using primitive encoding
+  uint64_t const dataLength(val_.size());
+  return 1/*type*/+
+    encodedLengthOfLength(dataLength)+
+    dataLength;
+}
+
+}
+
+IntValue::IntValue(int64_t const& val) throw():
+    Value(encodedLengthOfValue(val)),
+    val_(val)
+{
+}
+
 std::vector<uint8_t>::iterator IntValue::encodeTo(
   std::vector<uint8_t>::iterator begin) const throw()
 {
@@ -237,14 +249,12 @@ std::vector<uint8_t>::iterator IntValue::encodeTo(
   return at;
 }
 
-size_t StringValue::encodedLength() const throw()
+StringValue::StringValue(std::string const& val) throw():
+    Value(encodedLengthOfValue(val)),
+    val_(val)
 {
-  // X.690 octetstring using primitive encoding
-  uint64_t const dataLength(val_.size());
-  return 1/*type*/+
-    encodedLengthOfLength(dataLength)+
-    dataLength;
 }
+
 std::vector<uint8_t>::iterator StringValue::encodeTo(
   std::vector<uint8_t>::iterator begin) const throw()
 {
@@ -272,11 +282,11 @@ uint64_t encodedLengthOfOidComponent(uint32_t const c) throw()
   return (bits-1)/7+1;
 }
 
-size_t oidDataLength(OidValue const& oid) throw()
+size_t oidDataLength(Oid const& oid) throw()
 {
   return std::accumulate(
-    oid.val_.components().begin()+2,
-    oid.val_.components().end(),
+    oid.components().begin()+2,
+    oid.components().end(),
     uint64_t{1U},/*for 1.3 encoded as 0x2B*/
     [](uint64_t t, uint32_t c)
     {
@@ -299,24 +309,30 @@ std::vector<uint8_t>::iterator encodeOidComponent(
   return at;
 }
 
-}
-
-size_t OidValue::encodedLength() const throw()
+size_t encodedLengthOfValue(Oid const& val_) throw()
 {
   xju::assert_less(1U, val_.components().size());
   xju::assert_equal(val_.components()[0],1);
   xju::assert_equal(val_.components()[1],3);
-  uint64_t const dataLength{oidDataLength(*this)};
+  uint64_t const dataLength{oidDataLength(val_)};
   return 1/*type*/+
     encodedLengthOfLength(dataLength)+
     dataLength;
 }
+}
+
+OidValue::OidValue(Oid const& val) throw():
+    Value(encodedLengthOfValue(val)),
+    val_(val)
+{
+}
+
 std::vector<uint8_t>::iterator OidValue::encodeTo(
   std::vector<uint8_t>::iterator begin) const throw()
 {
   auto at(begin);
   *at++=0x06;
-  at=encodeLength(at,oidDataLength(*this));
+  at=encodeLength(at,oidDataLength(val_));
   *at++=0x2b; //1.3
   for(auto i=val_.components().begin()+2;
       i!=val_.components().end();
@@ -326,13 +342,6 @@ std::vector<uint8_t>::iterator OidValue::encodeTo(
   return at;
 }
 
-size_t NullValue::encodedLength() const throw()
-{
-  uint64_t const dataLength(0);
-  return 1/*type*/+
-    encodedLengthOfLength(dataLength)+
-    dataLength;
-}
 std::vector<uint8_t>::iterator NullValue::encodeTo(
   std::vector<uint8_t>::iterator begin) const throw()
 {

@@ -113,6 +113,15 @@ class Value
 {
 public:
   virtual ~Value() throw(){}
+
+  explicit Value(size_t encodedLength) throw():
+      encodedLength_(encodedLength)
+  {
+  }
+  
+  // encodeTo(x)-x
+  size_t const encodedLength_;
+  
   // convenience functions that do type and range checking
   operator std::string() const throw(xju::Exception);
   operator int() const throw(xju::Exception);
@@ -122,7 +131,11 @@ public:
 
   // return length of encoded value
   // ie return encodeTo(x)-x
-  virtual size_t encodedLength() const throw()=0;
+  size_t encodedLength() const throw()
+  {
+    return encodedLength_;
+  }
+
   // encode at begin, returning end of encoding
   virtual std::vector<uint8_t>::iterator encodeTo(
     std::vector<uint8_t>::iterator begin) const throw()=0;
@@ -133,14 +146,10 @@ class IntValue : public Value
 public:
   ~IntValue() throw(){}
   
-  explicit IntValue(int64_t const& val) throw():
-      val_(val)
-  {
-  }
+  explicit IntValue(int64_t const& val) throw();
+  
   int64_t const val_;
 
-  // Value::
-  size_t encodedLength() const throw() override;
   // Value::
   std::vector<uint8_t>::iterator encodeTo(
     std::vector<uint8_t>::iterator begin) const throw() override;
@@ -151,14 +160,9 @@ class StringValue : public Value
 public:
   ~StringValue() throw(){}
   
-  explicit StringValue(std::string const& val) throw():
-      val_(val)
-  {
-  }
+  explicit StringValue(std::string const& val) throw();
   std::string const val_;
 
-  // Value::
-  size_t encodedLength() const throw() override;
   // Value::
   std::vector<uint8_t>::iterator encodeTo(
     std::vector<uint8_t>::iterator begin) const throw() override;
@@ -169,14 +173,9 @@ class OidValue : public Value
 public:
   ~OidValue() throw(){}
   
-  explicit OidValue(Oid const& val) throw():
-      val_(val)
-  {
-  }
+  explicit OidValue(Oid const& val) throw();
   Oid const val_;
 
-  // Value::
-  size_t encodedLength() const throw() override;
   // Value::
   std::vector<uint8_t>::iterator encodeTo(
     std::vector<uint8_t>::iterator begin) const throw() override;
@@ -187,12 +186,11 @@ class NullValue : public Value
 public:
   ~NullValue() throw(){}
   
-  explicit NullValue() throw()
+  explicit NullValue() throw():
+      Value(2)
   {
   }
 
-  // Value::
-  size_t encodedLength() const throw() override;
   // Value::
   std::vector<uint8_t>::iterator encodeTo(
     std::vector<uint8_t>::iterator begin) const throw() override;
