@@ -147,21 +147,16 @@ uint64_t encodedLengthOfItems(
       return t+x->encodedLength();});
 }
 
-size_t encodedLengthOfValue(
-  std::vector<std::shared_ptr<Value const> > const& items) throw()
-{
-  size_t const dataLength(encodedLengthOfItems(items));
-  return 1/*type*/+
-    encodedLengthOfLength(dataLength)+
-    dataLength;
-}
-
-class Sequence : public Value
+class Sequence : private Int<Sequence,size_t>, //encoded length of items
+                 public Value
 {
 public:
   Sequence(std::vector<std::shared_ptr<Value const> > const& items,
            uint8_t sequenceType) throw():
-      Value(encodedLengthOfValue(items)),
+      Int<Sequence,size_t>(encodedLengthOfItems(items)),
+      Value(1/*type*/+
+            encodedLengthOfLength(value())+
+            value()),
       items_(items),
       sequenceType_(sequenceType) {
   }
@@ -174,7 +169,7 @@ public:
   {
     auto at=begin;
     *at++=sequenceType_;
-    at=encodeLength(at,encodedLength_);
+    at=encodeLength(at,value());
     for(std::shared_ptr<Value const> x: items_) {
       at=x->encodeTo(at);
     }
@@ -351,7 +346,35 @@ std::vector<uint8_t>::iterator NullValue::encodeTo(
   return at;
 }
 
-std::vector<uint8_t> encode(SnmpV1GetRequest const& request) throw();
+std::vector<uint8_t> encode(SnmpV1GetRequest const& request) throw()
+{
+  typedef std::shared_ptr<Value const> vp;
+  
+  std::vector<vp > params;
+  std::transform(request.oids_.begin(),
+                 request.oids_.end(),
+                 std::back_inserter(params),
+                 [](Oid const& oid) {
+                   return vp(
+                     new Sequence({
+                         vp(new OidValue(oid)),
+                         vp(new NullValue)},
+                       0x30));
+                 });
+  Sequence s({
+      vp(new IntValue(0)), // SNMP version 1
+      vp(new StringValue(request.community_._)),
+      vp(new Sequence({
+            vp(new IntValue(request.id_.value())),
+            vp(new IntValue(0)),//error
+            vp(new IntValue(0)),//errorIndex
+            vp(new Sequence(params,0x30))},
+        0xA0))},
+    0x30);
+  std::vector<uint8_t> result(s.encodedLength());
+  xju::assert_equal(s.encodeTo(result.begin()),result.end());
+  return result;
+}
 
 
 GenErr::GenErr(const xju::Traced& trace) throw():
