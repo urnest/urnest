@@ -139,6 +139,14 @@ public:
   // encode at begin, returning end of encoding
   virtual std::vector<uint8_t>::iterator encodeTo(
     std::vector<uint8_t>::iterator begin) const throw()=0;
+
+  // human readable
+  virtual std::string str() const throw()=0;
+  
+  friend std::ostream& operator<<(std::ostream& s, Value const& x) throw()
+  {
+    return s << x.str();
+  }
 };
 
 class IntValue : public Value
@@ -153,6 +161,9 @@ public:
   // Value::
   std::vector<uint8_t>::iterator encodeTo(
     std::vector<uint8_t>::iterator begin) const throw() override;
+
+  // Value::
+  virtual std::string str() const throw() override;
 };
 
 class StringValue : public Value
@@ -166,6 +177,9 @@ public:
   // Value::
   std::vector<uint8_t>::iterator encodeTo(
     std::vector<uint8_t>::iterator begin) const throw() override;
+
+  // Value::
+  virtual std::string str() const throw() override;
 };
 
 class OidValue : public Value
@@ -179,6 +193,12 @@ public:
   // Value::
   std::vector<uint8_t>::iterator encodeTo(
     std::vector<uint8_t>::iterator begin) const throw() override;
+
+  // Value::
+  virtual std::string str() const throw() override
+  {
+    return val_.toString();
+  }
 };
 
 class NullValue : public Value
@@ -194,6 +214,12 @@ public:
   // Value::
   std::vector<uint8_t>::iterator encodeTo(
     std::vector<uint8_t>::iterator begin) const throw() override;
+
+  // Value::
+  virtual std::string str() const throw() override
+  {
+    return "null";
+  }
 };
 
 struct SnmpV1Response

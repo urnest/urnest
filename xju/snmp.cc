@@ -12,7 +12,6 @@
 #include <sstream>
 #include <xju/stringToUInt.hh>
 #include <xju/format.hh>
-#include "xju/format.hh"
 #include "xju/countSignificantBits.hh"
 #include "xju/assert.hh"
 
@@ -243,6 +242,11 @@ std::vector<uint8_t>::iterator IntValue::encodeTo(
   }
   return at;
 }
+std::string IntValue::str() const throw() override
+{
+  return xju::format::int_(val_);
+}
+
 
 StringValue::StringValue(std::string const& val) throw():
     Value(encodedLengthOfValue(val)),
@@ -259,6 +263,10 @@ std::vector<uint8_t>::iterator StringValue::encodeTo(
   at=encodeLength(at,val_.size());
   std::copy(val_.begin(),val_.end(),at);
   return at+val_.size();
+}
+std::string StringValue::str() const throw() override
+{
+  return xju::format::quote(xju::format::cEscapeString(val_));
 }
 
 namespace
@@ -374,6 +382,309 @@ std::vector<uint8_t> encode(SnmpV1GetRequest const& request) throw()
   std::vector<uint8_t> result(s.encodedLength());
   xju::assert_equal(s.encodeTo(result.begin()),result.end());
   return result;
+}
+
+namespace
+{
+class DecodeIterator
+{
+public:
+  explicit DecodeIterator(std::vector<uint8_t> const& data) throw():
+      data_(data),
+      at_(data.begin()) {
+  }
+  uint8_t const& operator*() const
+  {
+    if (atEnd()) {
+      std::ostringstream s;
+      s << "end of data at offset " << data_.size();
+      throw xju::Exception(s.str(), XJU_TRACED);
+    }
+    return *at_;
+  }
+  DecodeIterator operator++(int) throw(xju::Exception)
+  {
+    DecodeIterator result(*this);
+    operator++();
+    return result;
+  }
+  DecodeIterator& operator++() throw(xju::Exception)
+  {
+    if (atEnd()) {
+      std::ostringstream s;
+      s << "end of data at offset " << data_.size();
+      throw xju::Exception(s.str(), XJU_TRACED);
+    }
+    ++at_;
+    return *this;
+  }
+  bool atEnd() const throw()
+  {
+    return at_==data_.end();
+  }
+  std::vector<uint8_t> const& data_;
+  std::vector<uint8_t>::const_iterator at_;
+
+  friend std::ostream& operator<<(std::ostream& s, DecodeIterator i) throw()
+  {
+    return s << "at offset " << (at_-data_.begin());
+  }
+};
+
+// result.first is length, if not valid, length is X.690 indefinite form
+// result.second is just after decoded data
+std::pair<xju::Optional<size_t>,DecodeIterator> decodeLength(
+  DecodeIterator const at) throw(xju::Exception)
+{
+  try {
+    if ((*at)<0x80) {
+      // X.690 definite short encoding
+      return std::make_pair(xju::Optional<size_t>(*at),at+1);
+    }
+    else if ((*at)==0x80)
+    {
+      // X.690 indefinite form
+      return std::make_pair(xju::Optional<size_t>(),at+1);
+    }
+    else
+    {
+      // X.690 definite long form
+      uint64_t length=0;
+      int const byteCount(*at);
+      if (byteCount > 8) {
+        std::ostringstream s;
+        s << "can only handle 8-byte lengths, not " << byteCount;
+        throw xju::Exception(s.str(), XJU_TRACED);
+      }
+      for(auto i(at+1); i!=(at+1+byteCount); ++i) {
+        length|=((uint64_t)*at++)<<(8*(at+byteCount-i));
+      }
+      return std::make_pair(xju::Optional<size_t>(length),at+1);
+    }
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "decode length at " << at;
+    e.addContext(s.str(), XJU_TRACED);
+    throw;
+  }
+}
+
+// result.first.first is sequence type
+// result.first.second is length, if not valid, length is X.690 indefinite form
+// result.second is just after decoded data
+std::pair<std::pair<uint8_t,xju::Optional<size_t> >, DecodeIterator>
+decodeSequenceTypeAndLength(DecodeIterator const& at) throw(
+  xju::Exception)
+{
+  try {
+    uint8_t const sequenceType=*at++;
+    auto length=decodeLength(at);
+    return std::make_pair(std::make_pair(sequenceType,length.first),
+                          length.second);
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "decode sequence type and length at " << at;
+    e.addContext(s.str(), XJU_TRACED);
+    throw;
+  }
+}
+
+std::pair<IntValue,DecodeIterator> decodeIntValue(DecodeIterator const at)
+  throw(xju::Exception)
+{
+  try {
+    if ((*at) != 0x02) {
+      std::ostringstream s;
+      s << "type is " << xju::format::hex(at) << " not 0x02";
+      throw xju::Exception(s.str(), XJU_TRACED);
+    }
+    auto length(decodeLength(at+1));
+    if (!length.first.valid) {
+      std::ostringstream s;
+      s << "integers with indefinite length are illegal";
+      throw xju::Exception(s.str(), XJU_TRACED);
+    }
+    if (length.first.value()>8) {
+      std::ostringstream s;
+      s << "can only handle 8-byte integers, not " << length.first.value();
+      throw xju::Exception(s.str(), XJU_TRACED);
+    }
+    uint64_t result=0;
+    if ((*length.second)&0x80) {
+      // negative number
+      result=~result;
+    }
+    for(auto i=length.second; i!=length.second+length.first.value(); ++i) {
+      result&=~(((uint64_t)0xff)<<(length.second+length.first.value()-i-1));
+      result|=((uint64_t)*i)<<(length.second+length.first.value()-i-1);
+    }
+    return std::make_pair(result,i);
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "decode integer at " << at;
+    e.addContext(s.str(), XJU_TRACED);
+    throw;
+  }
+}
+
+}
+
+  
+SnmpV1Response decodeSnmpV1Response(std::vector<uint8_t> const& data) throw(
+    // malformed
+    xju::Exception)
+{
+  std::vector<std::string> ok;
+  try {
+    DecodeIterator const start(data);
+    auto const s1(decodeSequenceTypeAndLength(start));
+    if (s1.first.first!=0x30) {
+      std::ostringstream s;
+      s << "expected sequence type byte 0x30, got " 
+        << xju::format::hex(s1.first.first)
+        << " at offset 0";
+      throw xju::Exception(s.str(), XJU_TRACED);
+    }
+    try {
+      auto const snmpVersion(decodeIntValue(s1.second));
+      if (snmpVersion.first!=0) {
+        std::ostringstream s;
+        s << "expected version 0 (SNMP V1), got " 
+          << xju::format::hex(version.first)
+          << " at " << s1l.second;
+        throw xju::Exception(s.str(), XJU_TRACED);
+      }
+      try {
+        auto const community(decodeStringValue(snmpVersion.second)); try {
+          auto const s2(decodeSequenceTypeAndLength(community.second)); try {
+            auto const id(decodeIntValue(s2.second)); try {
+              auto const e(decodeIntValue(id.second)); try {
+                auto const ei(decodeIntValue(e.second)); try {
+                  auto const s3(decodeSequenceTypeAndLength(ei.second)); try {
+                    DecodeIterator at(s3.second);
+                    std::vector<
+                      std::pair<Oid, std::shared_ptr<Value const> > > values;
+                    auto atEnd=[&]() {
+                      if (s3.first.second.valid())
+                      {
+                       // X.690 definite length
+                       return at == s3.second.value()+s3.fist.second.value();
+                      }
+                      else
+                      {
+                       // X.690 indefinite length
+                        return (((*at)==0) && ((*at+1)==0)); 
+                      }
+                    };
+                    while(!atEnd()) {
+                      try {
+                        auto const s(decodeSequenceTypeAndLength(at.second));
+                        auto const oid(decodeOid(s.second));
+                        auto const value(decodeValue(oid.second));
+                        values.emplace_back(
+                          std::make_pair(oid.first,value.first));
+                        at=value.second;
+                      }
+                      catch(xju::Exception& e) {
+                        std::transform(values.begin(),values.end(),
+                                       std::back_inserter(ok),
+                                       [](decltype(values)::value_type x) {
+                                         std::ostringstream s;
+                                         s << x.first << ": " << (*x.second);
+                                         return s.str();
+                                       });
+                        std::ostringstream s;
+                        s << "decode param oid and value sequence at offset " 
+                          << at;
+                        e.addContext(s.str(), XJU_TRACED);
+                        throw;
+                      }
+                    }
+                    return SnmpV1Response(
+                      SnmpV1Response::ResponseType(s2.first),
+                      Community(community.first),
+                      RequestId(id.first),
+                      (ErrorStatus)e.first,
+                      ErrorIndex(ei.first),
+                      values);
+                  }
+                  catch(xju::Exception& e) {
+                    std::ostringstream s;
+                    s << "3rd sequence type " 
+                      << xju::format::hex(s3.first.first)
+                      << " and length " << s3.first.second
+                      << " at " << ei.second;
+                    ok.push_back(s.str());
+                    throw;
+                  }
+                }
+                catch(xju::Exception& e) {
+                  std::ostringstream s;
+                  s << "error index " << ei.first
+                    << " at " << e.second;
+                  ok.push_back(s.str());
+                  throw;
+                }
+              }
+              catch(xju::Exception& e) {
+                std::ostringstream s;
+                s << "error " << xju::format::hex(e.first)
+                  << " at " << id.second;
+                ok.push_back(s.str());
+                throw;
+              }
+            }
+            catch(xju::Exception& e) {
+              std::ostringstream s;
+              s << "request id " << id.first << " at " << s2.second;
+              ok.push_back(s.str());
+              throw;
+            }
+          }
+          catch(xju::Exception& e) {
+            std::ostringstream s;
+            s << "2nd sequence type " << xju::format::hex(s2.first.first)
+              << " and length " << s2.first.second
+              << " bytes at " << snmpVersion.second;
+            ok.push_back(s.str());
+            throw;
+          }
+        }
+        catch(xju::Exception& e) {
+          std::ostringstream s;
+          s << "community " << xju::format::quote(community.first)
+            << " at " << snmpVersion.second;
+          ok.push_back(s.str());
+          throw;
+        }
+      }
+      catch(xju::Exception& e) {
+        std::ostringstream s;
+        s << "snmp version 1 at " << s1.second;
+        ok.push_back(s.str());
+        throw;
+      }
+    }
+    catch(xju::Exception& e) {
+      std::ostringstream s;
+      s << "sequence type 0x30 and length " << s1.first.second << " bytes";
+      ok.push_back(s.str());
+      throw;
+    }
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "decode snmp v1 response from " << data.size() << " bytes of data";
+    if (ok.size()) {
+      s << ", having successfully decoded "
+        << xju::format::join(ok.rbegin(),ok.rend(),", ");
+    }
+    e.addContext(s.str(), XJU_TRACED);
+    throw;
+  }
 }
 
 
