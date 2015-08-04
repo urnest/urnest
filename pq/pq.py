@@ -445,7 +445,10 @@ def parse(s, origin='unknown',encoding='utf-8'):
     '''parse HTML string "%(origin)s" assuming it has %(encoding)r encoding (per python unicode() function)'''
     parser=Parser(origin)
     try:
-        u=unicode(s,encoding,'strict')
+        u=s
+        if type(s)=='str':
+            u=unicode(s,encoding,'strict')
+            pass
         parser.feed(u)
         parser.close()
         result=Selection(parser.root.children)
