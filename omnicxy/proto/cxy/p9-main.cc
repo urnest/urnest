@@ -22,25 +22,46 @@
 #include <xju/mt.hh>
 #include <xju/Time.hh>
 #include <cxy/ORB.hh>
+#include <unistd.h>
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {
-  std::ostringstream s;
-  s << "corbaloc:iiop:localhost:"<< port << "/" << objectName;
-  return s.str();
+  if(!getenv("P9_HOST")) {
+    std::ostringstream s;
+    s << "corbaloc:iiop:localhost:"<< port << "/" << objectName;
+    return s.str();
+  }
+  else
+  {
+    std::ostringstream s;
+    s << "corbaloc:iiop:" << getenv("P9_HOST")<< ":"<< port << "/" << objectName;
+    return s.str();
+  }
 }
 
 class F_impl : public p9::F
 {
 public:
+  F_impl() throw():
+    changed_(guard_)
+  {
+  }
+  
   ~F_impl() throw()
   {
   }
   
-  virtual void f1() throw(cxy::Exception)
+  virtual void f1(std::string const& x) throw(cxy::Exception)
   {
-    std::cout << "F::f1()" << std::endl;
+    std::cout << "F::f1(" << x.size() << ")" << std::endl;
+    xju::mt::Lock l(guard_);
+    calls_.push_back(x);
+    changed_.signal(l);
   }
+
+  xju::mt::Mutex guard_;
+  xju::mt::Condition changed_;
+  std::vector<std::string> calls_;
 };
 
   
@@ -48,6 +69,7 @@ int main(int argc, char* argv[])
 {
   try {
     if (argc != 3 || !(std::string("client")==argv[2]||
+                       std::string("client-rep")==argv[2]||
                        std::string("server")==argv[2]||
                        std::string("both")==argv[2])) {
       std::cerr << "usage:  " 
@@ -62,7 +84,16 @@ int main(int argc, char* argv[])
     if (argv[2]==std::string("client")) {
       cxy::ORB<cxy::Exception> orb("giop:tcp::");
       cxy::cref<p9::F> ref(orb, makeURI(port, OBJECT_NAME));
-      ref->f1();
+      ref->f1("fred");
+      ref->f1(std::string(10000,'a'));
+    }
+    else if (argv[2]==std::string("client-rep")) {
+      cxy::ORB<cxy::Exception> orb("giop:tcp::");
+      cxy::cref<p9::F> ref(orb, makeURI(port, OBJECT_NAME));
+      while(true) {
+        ref->f1(std::string(100,'a'));
+        ::sleep(2);
+      }
     }
     else if (argv[2]==std::string("server")) {
       std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
@@ -83,9 +114,22 @@ int main(int argc, char* argv[])
       cxy::sref<p9::F> const xa(orb, OBJECT_NAME, x);
       
       cxy::cref<p9::F> ref(orb, makeURI(port, OBJECT_NAME));
-      ref->f1();
+      ref->f1("fred");
+      ref->f1(std::string(6000,'a'));
+      ref->f1(std::string(10000,'a'));
+      xju::mt::Lock l(x.guard_);
+      xju::Time const onlyWaitUntil(xju::Time::now()+
+                                    xju::MicroSeconds(5000000));
+      
+      while((x.calls_.size()<3) && (xju::Time::now()<onlyWaitUntil)) {
+        x.changed_.wait(l,onlyWaitUntil);
+      }
+      xju::assert_equal(x.calls_.size(),3);
+      xju::assert_equal(x.calls_[0],"fred");
+      xju::assert_equal(x.calls_[1],std::string(6000,'a'));
+      xju::assert_equal(x.calls_[2],std::string(10000,'a'));
     }
-    
+
     return 0;
   }
   catch(xju::Exception& e) {

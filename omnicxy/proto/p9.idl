@@ -2,6 +2,6 @@ module p9
 {
   interface F
   {
-    oneway void f1();
+    oneway void f1(in string x);
   };
 };
