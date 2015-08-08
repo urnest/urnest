@@ -55,7 +55,7 @@ void test3()
     try
     {
 	std::ostringstream s;
-	const unsigned long x(INT_MAX);
+	const unsigned long x(UINT_MAX);
 	s << (x+1L);
 	
 	xju::stringToUInt(s.str());
@@ -68,7 +68,7 @@ void test3()
 	s << e;
 	xju::assert_equal(
 	    s.str(),
-	    "");
+	    "Failed to convert \"4294967296\" to a base-10 unsigned integer because\n4294967296 is too large (maximum allowed unsigned integer is 4294967295).");
     }
 }
 

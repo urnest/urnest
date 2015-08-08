@@ -41,7 +41,7 @@ namespace xju
 		      << " unexpected";
 		throw xju::Exception(cause, XJU_TRACED);
 	    }
-	    const int result(x);
+	    const unsigned int result(x);
 	    if ((long)result != x)
 	    {
 		std::ostringstream cause;
