@@ -534,6 +534,10 @@ std::string hex(long x, const std::string& leader = "0x")
   throw(std::bad_alloc);
 std::string hex(unsigned long x, const std::string& leader = "0x") 
   throw(std::bad_alloc);
+std::string hex(int64_t x, const std::string& leader = "0x") 
+  throw(std::bad_alloc);
+std::string hex(uint64_t x, const std::string& leader = "0x") 
+  throw(std::bad_alloc);
 }
 }
 

@@ -224,14 +224,6 @@ public:
 
 struct SnmpV1Response
 {
-  enum ResponseType
-  {
-    GetRequest=0xA0,
-    GetNextRequest=0xA1,
-    Response=0xA2,
-    SetRequest=0xA3  
-  };
-  
   // RFC 1157 error-status
   enum ErrorStatus
   {
@@ -244,7 +236,7 @@ struct SnmpV1Response
   };
   
   SnmpV1Response(
-    ResponseType responseType,
+    uint8_t responseType,
     Community community,
     RequestId id,
     ErrorStatus error,
@@ -258,7 +250,7 @@ struct SnmpV1Response
       errorIndex_(errorIndex),
       values_(values) {
   }
-  ResponseType responseType_;
+  uint8_t responseType_;
   Community community_;
   RequestId id_;
   ErrorStatus error_;
@@ -310,11 +302,11 @@ public:
 class ResponseTypeMismatch : public xju::Exception
 {
 public:
-  ResponseTypeMismatch(SnmpV1Response::ResponseType const got,
-                       SnmpV1Response::ResponseType const expected,
+  ResponseTypeMismatch(uint8_t const got,
+                       uint8_t const expected,
                        xju::Traced const& trace) throw();
-  SnmpV1Response::ResponseType got_;
-  SnmpV1Response::ResponseType expected_;
+  uint8_t got_;
+  uint8_t expected_;
 };
 class ResponseIdMismatch : public xju::Exception
 {
