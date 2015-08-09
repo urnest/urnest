@@ -105,6 +105,6 @@ gcc 5.2.0:
   528  LD_LIBRARY_PATH=/home/xju/gcc-5.2.0-run/lib ./configure --with-gmp=/home/xju/gcc-5.2.0-run --with-mpfr=/home/xju/gcc-5.2.0-run prefix=/home/xju/gcc-5.2.0-run
   529  LD_LIBRARY_PATH=/home/xju/gcc-5.2.0-run/lib make && LD_LIBRARY_PATH=/home/xju/gcc-5.2.0-run/lib make install
   530  cd ../gcc-5.2.0
-  531  LD_LIBRARY_PATH=/home/xju/gcc-5.2.0-run/lib ./configure --with-gmp=/home/xju/gcc-5.2.0-run --with-mpfr=/home/xju/gcc-5.2.0-run -with-mpc=/home/xju/gcc-5.2.0-run prefix=/home/xju/gcc-5.2.0-run
   533  sudo aptitude install zip
+  531  LD_LIBRARY_PATH=/home/xju/gcc-5.2.0-run/lib ./configure --with-gmp=/home/xju/gcc-5.2.0-run --with-mpfr=/home/xju/gcc-5.2.0-run -with-mpc=/home/xju/gcc-5.2.0-run prefix=/home/xju/gcc-5.2.0-run --disable-multilib
   536  LD_LIBRARY_PATH=/home/xju/gcc-5.2.0-run/lib make && LD_LIBRARY_PATH=/home/xju/gcc-5.2.0-run/lib make install
