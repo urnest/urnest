@@ -438,7 +438,7 @@ public:
   friend std::ostream& operator<<(std::ostream& s, 
                                   DecodeIterator const& i) throw()
   {
-    return s << "at offset " << (i.at_-i.data_->begin());
+    return s << "offset " << (i.at_-i.data_->begin());
   }
   friend DecodeIterator operator+(DecodeIterator const& i,
                                   int n) throw() {
@@ -499,7 +499,7 @@ std::pair<xju::Optional<size_t>,DecodeIterator> decodeLength(
     {
       // X.690 definite long form
       uint64_t length=0;
-      int const byteCount(*at);
+      int const byteCount((*at)&~0x80);
       if (byteCount > 8) {
         std::ostringstream s;
         s << "can only handle 8-byte lengths, not " << byteCount;
@@ -789,9 +789,9 @@ SnmpV1Response decodeSnmpV1Response(std::vector<uint8_t> const& data) throw(
       auto const snmpVersion(decodeIntValue(s1.second));
       if (snmpVersion.first!=0) {
         std::ostringstream s;
-        s << "expected version 0 (SNMP V1), got " 
-          << xju::format::hex(snmpVersion.first)
-          << " at " << s1.second;
+        s << "expected integer 0 (SNMP V1), got integer " 
+          << snmpVersion.first
+          << ", at " << s1.second;
         throw xju::Exception(s.str(), XJU_TRACED);
       }
       try {
@@ -813,7 +813,7 @@ SnmpV1Response decodeSnmpV1Response(std::vector<uint8_t> const& data) throw(
                       else
                       {
                        // X.690 indefinite length end in two zero bytes
-                        return (((*at)==0) && ((*at+1)==0)); 
+                        return (((*at)==0) && ((*(at+1))==0)); 
                       }
                     };
                     while(!atEnd()) {
@@ -890,7 +890,7 @@ SnmpV1Response decodeSnmpV1Response(std::vector<uint8_t> const& data) throw(
             std::ostringstream s;
             s << "2nd sequence type " << xju::format::hex(s2.first.first)
               << " and length " 
-              << formatLength(s2.first.second.valid())
+              << formatLength(s2.first.second)
               << " at " << community.second;
             ok.push_back(s.str());
             throw;
