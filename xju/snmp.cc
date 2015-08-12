@@ -15,6 +15,7 @@
 #include "xju/countSignificantBits.hh"
 #include "xju/assert.hh"
 #include "xju/Optional.hh"
+#include <limits.h>
 
 namespace xju
 {
@@ -24,7 +25,7 @@ namespace snmp
 // This implementation is based on the information in:
 //   https://en.wikipedia.org/wiki/X.690#BER_encoding
 //   http://www.rane.com/note161.html
-//   RFC 1157
+//   RFC 1157 https://www.ietf.org/rfc/rfc1157.txt
 //   http://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf
 //
 
@@ -95,6 +96,12 @@ Oid operator+(Oid const& a, Oid const& b) throw()
   std::copy(b.components_.begin(), b.components_.end(),
             std::back_inserter(result.components_));
   return result;
+}
+
+std::ostream& operator<<(std::ostream& s, SnmpV1GetRequest const& x) throw()
+{
+  return s << "community " << x.community_._ << ", id " << x.id_.value()
+           << "oids " << xju::format::join(x.oids_.begin(),x.oids_.end(),", ");
 }
 
 namespace
@@ -232,6 +239,104 @@ size_t encodedLengthOfValue(std::string const& val_) throw()
 }
 
 }
+
+Value::operator std::string() const throw(xju::Exception)
+{
+  StringValue const* v(dynamic_cast<StringValue const*>(this));
+  if (!v) {
+    std::ostringstream s;
+    s << (*this) << " is not a string";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  return v->val_;
+}
+Value::operator int() const throw(xju::Exception)
+{
+  IntValue const* v(dynamic_cast<IntValue const*>(this));
+  if (!v) {
+    std::ostringstream s;
+    s << (*this) << " is not an integer";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  if (v->val_ > INT_MAX) {
+    std::ostringstream s;
+    s << (*this) << " is too big to convert to an integer (INT_MAX = "
+      << INT_MAX << ")";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  if (v->val_ < INT_MIN) {
+    std::ostringstream s;
+    s << (*this) << " is too small to convert to an integer (INT_MIN = "
+      << INT_MIN << ")";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  return v->val_;
+}
+Value::operator unsigned int() const throw(xju::Exception)
+{
+  IntValue const* v(dynamic_cast<IntValue const*>(this));
+  if (!v) {
+    std::ostringstream s;
+    s << (*this) << " is not an integer";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  if (v->val_ > UINT_MAX) {
+    std::ostringstream s;
+    s << (*this) << " is too big to convert to an unsigned integer (UINT_MAX = "
+      << UINT_MAX << ")";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  if (v->val_ < 0) {
+    std::ostringstream s;
+    s << (*this) << " cannot be converted to an unsigned integer";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  return v->val_;
+}
+Value::operator long() const throw(xju::Exception)
+{
+  IntValue const* v(dynamic_cast<IntValue const*>(this));
+  if (!v) {
+    std::ostringstream s;
+    s << (*this) << " is not an integer";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  if (v->val_ > LONG_MAX) {
+    std::ostringstream s;
+    s << (*this) << " is too big to convert to a long integer (LONG_MAX = "
+      << LONG_MAX << ")";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  if (v->val_ < LONG_MIN) {
+    std::ostringstream s;
+    s << (*this) << " is too small to convert to a long integer (LONG_MIN = "
+      << LONG_MIN << ")";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  return v->val_;
+}
+Value::operator unsigned long() const throw(xju::Exception)
+{
+  IntValue const* v(dynamic_cast<IntValue const*>(this));
+  if (!v) {
+    std::ostringstream s;
+    s << (*this) << " is not an integer";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  if (v->val_ > ULONG_MAX) {
+    std::ostringstream s;
+    s << (*this) << " is too big to convert to an unsigned long (ULONG_MAX = "
+      << ULONG_MAX << ")";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  if (v->val_ < 0) {
+    std::ostringstream s;
+    s << (*this) << " cannot be converted to an unsigned long";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  return v->val_;
+}
+
 
 IntValue::IntValue(int64_t const& val) throw():
     Value(encodedLengthOfValue(val)),
@@ -394,6 +499,24 @@ std::vector<uint8_t> encode(SnmpV1GetRequest const& request) throw()
   return result;
 }
 
+std::ostream& operator<<(std::ostream& s, SnmpV1Response const& x) throw()
+{
+  return s << "type " << xju::format::hex(x.responseType_)
+           << " community " << x.community_._
+           << " id " << x.id_.value()
+           << " error status " << x.error_
+           << " error index " << x.errorIndex_.value()
+           << " values "
+           << xju::format::join(
+             x.values_.begin(), x.values_.end(),
+             [](std::pair<Oid, std::shared_ptr<Value const> > const& x) {
+               std::ostringstream s;
+               s << x.first << ": " << x.second;
+               return s.str();
+             },
+             ", ");
+}
+               
 namespace
 {
 class DecodeIterator
@@ -769,7 +892,7 @@ std::string formatLength(xju::Optional<size_t> const& length) throw()
 
 }
 
-  
+
 SnmpV1Response decodeSnmpV1Response(std::vector<uint8_t> const& data) throw(
     // malformed
     xju::Exception)
@@ -845,12 +968,19 @@ SnmpV1Response decodeSnmpV1Response(std::vector<uint8_t> const& data) throw(
                         throw;
                       }
                     }
+                    if (errorStatus.first > INT_MAX) {
+                      std::ostringstream s;
+                      s << "error status " << errorStatus.first 
+                        << " exceeds maximimum supported ("
+                        << INT_MAX << ")";
+                      throw xju::Exception(s.str(), XJU_TRACED);
+                    }
                     return SnmpV1Response(
                       s2.first.first,
                       Community(community.first),
                       RequestId(id.first),
                       (SnmpV1Response::ErrorStatus)errorStatus.first,
-                      ErrorIndex(ei.first),
+                      SnmpV1Response::ErrorIndex(ei.first),
                       values);
                   }
                   catch(xju::Exception& e) {
@@ -990,6 +1120,86 @@ ResponseIdMismatch::ResponseIdMismatch(RequestId const got,
     expected_(expected) 
 {
 }
+
+std::map<Oid, std::shared_ptr<Value const> > validateResponse(
+  SnmpV1GetRequest const& request,
+  SnmpV1Response const& response) throw(
+    ResponseTypeMismatch,
+    ResponseIdMismatch,
+    NoSuchName,
+    TooBig,
+    GenErr,
+    // response malformed eg not all requested oids present in response
+    xju::Exception)
+{
+  try {
+    if (request.id_ != response.id_) {
+      throw ResponseIdMismatch(response.id_,request.id_,XJU_TRACED);
+    }
+    if (response.responseType_!=0xA2) {
+      throw ResponseTypeMismatch(response.responseType_,0xA2,XJU_TRACED);
+    }
+    switch(response.error_) {
+    case 0: break;
+    case 0x01: throw TooBig(XJU_TRACED);
+    case 0x02:
+    {
+      if (response.errorIndex_==SnmpV1Response::ErrorIndex(0)) {
+        std::ostringstream s;
+        s << "response specifies NoSuchName (0x02) error but error index does "
+          << "not identify which oid was not found (index must be > 0)";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      auto const i(response.errorIndex_.value()-1);
+      if (i >= response.values_.size()) {
+        std::ostringstream s;
+        s << "response specifies NoSuchName (0x02) error but error index"
+          << " is beyond last oid in response";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      if (request.oids_.find(response.values_[i].first)==request.oids_.end()) {
+        std::ostringstream s;
+        s << "response error index indicates that oid "
+          << response.values_[i].first << " was not found, but that oid "
+          << "was not requested?";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      throw NoSuchName(response.values_[i].first,XJU_TRACED);
+    }
+    case 0x05:
+      throw GenErr(XJU_TRACED);
+    default:
+    {
+      std::ostringstream s;
+      s << "response has unknown error status " << response.error_;
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    }
+    std::map<Oid, std::shared_ptr<Value const> > result(
+      response.values_.begin(),
+      response.values_.end());
+    std::vector<std::string> missing;
+    for(auto i: request.oids_) {
+      if (result.find(i)==result.end()) {
+        missing.push_back((i).toString());
+      }
+    }
+    if (missing.size()) {
+      std::ostringstream s;
+      s << "value not reported for oid(s) "
+        << xju::format::join(missing.begin(),missing.end(), ", ");
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    return result;
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "validate response " << response << " to request " << request;
+    e.addContext(s.str(), XJU_TRACED);
+    throw;
+  }
+}
+
 
 }
 }

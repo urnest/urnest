@@ -315,7 +315,7 @@ void test5() throw()
   xju::assert_equal(y.community_,Community("private"));
   xju::assert_equal(y.id_,RequestId(1));
   xju::assert_equal(y.error_,SnmpV1Response::NO_ERROR);
-  xju::assert_equal(y.errorIndex_,ErrorIndex(0));
+  xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
   xju::assert_equal(y.values_.size(),1);
   xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
   xju::assert_not_equal(dynamic_cast<NullValue const*>(&*y.values_[0].second),(NullValue const*)0);
@@ -336,7 +336,7 @@ void test6() throw()
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
     xju::assert_equal(y.error_,SnmpV1Response::NO_ERROR);
-    xju::assert_equal(y.errorIndex_,ErrorIndex(0));
+    xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
     xju::assert_not_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second),(StringValue const*)0);
@@ -357,7 +357,7 @@ void test6() throw()
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
     xju::assert_equal(y.error_,SnmpV1Response::NO_ERROR);
-    xju::assert_equal(y.errorIndex_,ErrorIndex(0));
+    xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
     xju::assert_not_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second),(StringValue const*)0);
@@ -378,7 +378,7 @@ void test6() throw()
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
     xju::assert_equal(y.error_,SnmpV1Response::NO_ERROR);
-    xju::assert_equal(y.errorIndex_,ErrorIndex(0));
+    xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
     xju::assert_not_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second),(StringValue const*)0);
@@ -399,7 +399,7 @@ void test6() throw()
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
     xju::assert_equal(y.error_,SnmpV1Response::NO_ERROR);
-    xju::assert_equal(y.errorIndex_,ErrorIndex(0));
+    xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
     xju::assert_not_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second),(StringValue const*)0);
@@ -420,7 +420,7 @@ void test6() throw()
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
     xju::assert_equal(y.error_,SnmpV1Response::NO_ERROR);
-    xju::assert_equal(y.errorIndex_,ErrorIndex(0));
+    xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
     xju::assert_not_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second),(StringValue const*)0);
@@ -441,7 +441,7 @@ void test6() throw()
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
     xju::assert_equal(y.error_,SnmpV1Response::NO_ERROR);
-    xju::assert_equal(y.errorIndex_,ErrorIndex(0));
+    xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
     xju::assert_not_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second),(StringValue const*)0);
@@ -462,7 +462,7 @@ void test6() throw()
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(0x100));
     xju::assert_equal(y.error_,SnmpV1Response::NO_ERROR);
-    xju::assert_equal(y.errorIndex_,ErrorIndex(0));
+    xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
     xju::assert_not_equal(dynamic_cast<NullValue const*>(&*y.values_[0].second),(NullValue const*)0);
@@ -482,7 +482,7 @@ void test6() throw()
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
     xju::assert_equal(y.error_,SnmpV1Response::NO_ERROR);
-    xju::assert_equal(y.errorIndex_,ErrorIndex(0));
+    xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
     xju::assert_equal(y.values_.size(),2);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
     xju::assert_not_equal(dynamic_cast<NullValue const*>(&*y.values_[0].second),(NullValue const*)0);
@@ -535,16 +535,118 @@ void test7() throw()
   }
 
   try {
-    @@@ std::vector<uint8_t> x({
-        0x30,0x2c,0x02,0x01,0x00,0x04,0x07,0x70,0x72,0x69,0x76,0x61,0x74,0x65,0xA2,0x1E,0x02,0x01,0x01,0x02,0x01,0x00,0x02,0x01,0x00,0x30,0x13,0x30,0x11,0x06,0x0D,0x2B,0x06,0x01,0x04,0x01,0x94,0x78,0x01,0x02,0x07,0x03,0x02,0x00,0x05,0x00
+    std::vector<uint8_t> x({
+        0x30,0x2c,0x02,0x01,0x00,0x02,0x07,0x70,0x72,0x69,0x76,0x61,0x74,0x65,0xA2,0x1E,0x02,0x01,0x01,0x02,0x01,0x00,0x02,0x01,0x00,0x30,0x13,0x30,0x11,0x06,0x0D,0x2B,0x06,0x01,0x04,0x01,0x94,0x78,0x01,0x02,0x07,0x03,0x02,0x00,0x05,0x00
         });
     
     SnmpV1Response y(decodeSnmpV1Response(x));
   }
   catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e),"");
+    xju::assert_equal(readableRepr(e),"Failed to decode snmp v1 response from 46 bytes of data having successfully decoded sequence type 0x30 and length 44 bytes, snmp version 1 at offset 2 because\nfailed to decode string at offset 5 because\ntype is 0x02 not 0x04.");
   }
 
+  try {
+    std::vector<uint8_t> x({
+        0x30,0x2c,0x02,0x01,0x00,0x04,0x07,0x70,0x72,0x69,0x76,0x61,0x74,0x65,0xA2,0x1E,0xa2,0x01,0x01,0x02,0x01,0x00,0x02,0x01,0x00,0x30,0x13,0x30,0x11,0x06,0x0D,0x2B,0x06,0x01,0x04,0x01,0x94,0x78,0x01,0x02,0x07,0x03,0x02,0x00,0x05,0x00
+        });
+    
+    SnmpV1Response y(decodeSnmpV1Response(x));
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to decode snmp v1 response from 46 bytes of data having successfully decoded sequence type 0x30 and length 44 bytes, snmp version 1 at offset 2, community \"private\" at offset 5, 2nd sequence type 0xa2 and length 30 bytes at offset 14 because\nfailed to decode integer at offset 16 because\ntype is 0xa2 not 0x02.");
+  }
+
+  try {
+    std::vector<uint8_t> x({
+        0x30,0x2c,0x02,0x01,0x00,0x04,0x07,0x70,0x72,0x69,0x76,0x61,0x74,0x65,0xA2,0x1E,0x02,0x01,0x01,0x01,0x01,0x00,0x02,0x01,0x00,0x30,0x13,0x30,0x11,0x06,0x0D,0x2B,0x06,0x01,0x04,0x01,0x94,0x78,0x01,0x02,0x07,0x03,0x02,0x00,0x05,0x00
+        });
+    
+    SnmpV1Response y(decodeSnmpV1Response(x));
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to decode snmp v1 response from 46 bytes of data having successfully decoded sequence type 0x30 and length 44 bytes, snmp version 1 at offset 2, community \"private\" at offset 5, 2nd sequence type 0xa2 and length 30 bytes at offset 14, request id 1 at offset 16 because\nfailed to decode integer at offset 19 because\ntype is 0x01 not 0x02.");
+  }
+
+  try {
+    std::vector<uint8_t> x({
+        0x30,0x2c,0x02,0x01,0x00,0x04,0x07,0x70,0x72,0x69,0x76,0x61,0x74,0x65,0xA2,0x1E,0x02,0x01,0x01,0x02,0x01,0x00,0x02,0x09,0x00,0x30,0x13,0x30,0x11,0x06,0x0D,0x2B,0x06,0x01,0x04,0x01,0x94,0x78,0x01,0x02,0x07,0x03,0x02,0x00,0x05,0x00
+        });
+    
+    SnmpV1Response y(decodeSnmpV1Response(x));
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to decode snmp v1 response from 46 bytes of data having successfully decoded sequence type 0x30 and length 44 bytes, snmp version 1 at offset 2, community \"private\" at offset 5, 2nd sequence type 0xa2 and length 30 bytes at offset 14, request id 1 at offset 16, error 0x0000000000000000 at offset 19 because\nfailed to decode integer at offset 22 because\ncan only handle 8-byte integers, not 9.");
+  }
+
+  try {
+    std::vector<uint8_t> x({
+        0x30,0x30,0x02,0x01,0x00,0x04,0x07,0x70,0x72,0x69,0x76,0x61,0x74,0x65,0xA2,0x22,0x02,0x01,0x01,0x02,0x05,0x01,0x00,0x00,0x00,0x00,0x02,0x01,0x00,0x30,0x13,0x30,0x11,0x06,0x0D,0x2B,0x06,0x01,0x04,0x01,0x94,0x78,0x01,0x02,0x07,0x03,0x02,0x00,0x05,0x00
+        });
+    
+    SnmpV1Response y(decodeSnmpV1Response(x));
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to decode snmp v1 response from 50 bytes of data having successfully decoded sequence type 0x30 and length 48 bytes, snmp version 1 at offset 2, community \"private\" at offset 5, 2nd sequence type 0xa2 and length 34 bytes at offset 14, request id 1 at offset 16, error 0x0000000100000000 at offset 19, error index 0 at offset 26, 3rd sequence type 0x30 and length 19 bytes at offset 29 because\nerror status 4294967296 exceeds maximimum supported (2147483647).");
+  }
+
+  try {
+    std::vector<uint8_t> x({
+        0x30,0x2c,0x02,0x01,0x00,0x04,0x07,0x70,0x72,0x69,0x76,0x61,0x74,0x65,0xA2,0x1E,0x02,0x01,0x01,0x02,0x01,0x00,0x01,0x01,0x00,0x30,0x13,0x30,0x11,0x06,0x0D,0x2B,0x06,0x01,0x04,0x01,0x94,0x78,0x01,0x02,0x07,0x03,0x02,0x00,0x05,0x00
+        });
+    
+    SnmpV1Response y(decodeSnmpV1Response(x));
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to decode snmp v1 response from 46 bytes of data having successfully decoded sequence type 0x30 and length 44 bytes, snmp version 1 at offset 2, community \"private\" at offset 5, 2nd sequence type 0xa2 and length 30 bytes at offset 14, request id 1 at offset 16, error 0x0000000000000000 at offset 19 because\nfailed to decode integer at offset 22 because\ntype is 0x01 not 0x02.");
+  }
+
+  try {
+    std::vector<uint8_t> x({
+        0x30,0x2c,0x02,0x01,0x00,0x04,0x07,0x70,0x72,0x69,0x76,0x61,0x74,0x65,0xA2,0x1E,0x02,0x01,0x01,0x02,0x01,0x00,0x02,0x01,0x00,0x30,0x13,0x30,0x11,0x03,0x0D,0x2B,0x06,0x01,0x04,0x01,0x94,0x78,0x01,0x02,0x07,0x03,0x02,0x00,0x05,0x00
+        });
+    
+    SnmpV1Response y(decodeSnmpV1Response(x));
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to decode snmp v1 response from 46 bytes of data having successfully decoded sequence type 0x30 and length 44 bytes, snmp version 1 at offset 2, community \"private\" at offset 5, 2nd sequence type 0xa2 and length 30 bytes at offset 14, request id 1 at offset 16, error 0x0000000000000000 at offset 19, error index 0 at offset 22, 3rd sequence type 0x30 and length 19 bytes at offset 25 because\nfailed to decode param oid and value sequence at offset offset 27 because\nfailed to decode oid at offset 29 because\ntype is 0x03 not 0x06.");
+  }
+
+  try {
+    std::vector<uint8_t> x({
+        0x30,0x2c,0x02,0x01,0x00,0x04,0x07,0x70,0x72,0x69,0x76,0x61,0x74,0x65,0xA2,0x1E,0x02,0x01,0x01,0x02,0x01,0x00,0x02,0x01,0x00,0x30,0x13,0x30,0x11,0x06,0x0D,0x2B,0x06,0x01,0x04,0x01,0x94,0x78,0x01,0x02,0x07,0x03,0x02,0x00,0x30,0x00
+        });
+    
+    SnmpV1Response y(decodeSnmpV1Response(x));
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to decode snmp v1 response from 46 bytes of data having successfully decoded sequence type 0x30 and length 44 bytes, snmp version 1 at offset 2, community \"private\" at offset 5, 2nd sequence type 0xa2 and length 30 bytes at offset 14, request id 1 at offset 16, error 0x0000000000000000 at offset 19, error index 0 at offset 22, 3rd sequence type 0x30 and length 19 bytes at offset 25 because\nfailed to decode param oid and value sequence at offset offset 27 because\nfailed to decode one int/string/oid/null etc value at offset 44 because\ndecoding of type 0x30 is not implemented.");
+  }
+
+}
+
+void test8() throw()
+{
+  // validateResponse
+  std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
+    {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue("fred")}},
+    {Oid(".1.3.9.3333"),std::shared_ptr<Value const>{new IntValue(3)}}
+  };
+  auto x=validateResponse(
+    SnmpV1GetRequest(Community("dje"),
+                     RequestId(23),
+                     std::set<Oid>({Oid(".1.3.3"),Oid(".1.3.9.3333")})),
+    SnmpV1Response(0xA2,
+                   Community("dd2"),
+                   RequestId(23),
+                   SnmpV1Response::ErrorStatus(0),
+                   SnmpV1Response::ErrorIndex(0),
+                   values));
+    
+  xju::assert_equal(x.size(),2U);
+  xju::assert_equal(x[Oid(".1.3.3")]->operator std::string(),"fred");
+  xju::assert_equal(x[Oid(".1.3.9.3333")]->operator int(),3);
+
+  @@@;
 }
 
 }
@@ -563,6 +665,7 @@ int main(int argc, char* argv[])
   test5(), ++n;
   test6(), ++n;
   test7(), ++n;
+  test8(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

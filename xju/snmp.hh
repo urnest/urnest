@@ -78,16 +78,16 @@ private:
     return x.components_ < y.components_;
   }
   friend Oid operator+(Oid const& a, Oid const& b) throw();
+
+  friend std::ostream& operator<<(std::ostream& s, Oid const& x) throw()
+  {
+    return s << x.toString();
+  }
 };
 
 // RFC 1157 request-id
 class RequestIdTag{};
 typedef xju::Int<uint64_t> RequestId;
-
-// RFC 1157 error-index
-// note error-index of first oid is 1, not 0
-class ErrorIndexTag{};
-typedef xju::Int<uint64_t> ErrorIndex;
 
 // RFC 1157 community
 class CommunityTag{};
@@ -105,6 +105,11 @@ struct SnmpV1GetRequest
   Community community_;
   RequestId id_;
   std::set<Oid> oids_;
+
+  friend std::ostream& operator<<(std::ostream& s, 
+                                  SnmpV1GetRequest const& x) throw();
+  
+  
 };
   
 std::vector<uint8_t> encode(SnmpV1GetRequest const& request) throw();
@@ -235,6 +240,11 @@ struct SnmpV1Response
     GEN_ERR
   };
   
+  // RFC 1157 error-index
+  // note error-index of first oid is 1, not 0
+  class ErrorIndexTag{};
+  typedef xju::Int<uint64_t> ErrorIndex;
+
   SnmpV1Response(
     uint8_t responseType,
     Community community,
@@ -259,6 +269,10 @@ struct SnmpV1Response
   ErrorIndex errorIndex_;
   
   std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values_;
+
+  friend std::ostream& operator<<(std::ostream& s, SnmpV1Response const& x)
+    throw();
+  
 };
 
 SnmpV1Response decodeSnmpV1Response(std::vector<uint8_t> const& data) throw(
@@ -321,6 +335,7 @@ public:
   
 
 // validate reponse to specified request
+// post: *result[x] valid for all x in request.oids_
 // - returns the requested values
 std::map<Oid, std::shared_ptr<Value const> > validateResponse(
   SnmpV1GetRequest const& request,
@@ -329,7 +344,9 @@ std::map<Oid, std::shared_ptr<Value const> > validateResponse(
     ResponseIdMismatch,
     NoSuchName,
     TooBig,
-    GenErr);
+    GenErr,
+    // response malformed eg not all requested oids present in response
+    xju::Exception);
 
 struct SnmpV1SetRequest
 {
