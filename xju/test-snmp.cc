@@ -646,7 +646,135 @@ void test8() throw()
   xju::assert_equal(x[Oid(".1.3.3")]->operator std::string(),"fred");
   xju::assert_equal(x[Oid(".1.3.9.3333")]->operator int(),3);
 
-  @@@;
+  try {
+    std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
+      {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue("fred")}},
+      {Oid(".1.3.9.3333"),std::shared_ptr<Value const>{new IntValue(3)}}
+    };
+    auto x=validateResponse(
+      SnmpV1GetRequest(Community("dje"),
+                       RequestId(23),
+                       std::set<Oid>({Oid(".1.3.3"),Oid(".1.3.9.3333")})),
+      SnmpV1Response(0xA0,
+                     Community("dd2"),
+                     RequestId(23),
+                     SnmpV1Response::ErrorStatus(0),
+                     SnmpV1Response::ErrorIndex(0),
+                     values));
+    
+    xju::assert_never_reached();
+  }
+  catch(ResponseTypeMismatch const& e) {
+    xju::assert_equal(e.got_,0xa0);
+    xju::assert_equal(e.expected_,0xa2);
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa0, community dd2, id 23, error status 0, error index 0, values .1.3.3: \"fred\", .1.3.9.3333: 3 to request community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nexpected response of type 0xa2 but got response of type 0xa0.");
+  }
+
+  try {
+    std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
+      {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue("fred")}},
+      {Oid(".1.3.9.3333"),std::shared_ptr<Value const>{new IntValue(3)}}
+    };
+    auto x=validateResponse(
+      SnmpV1GetRequest(Community("dje"),
+                       RequestId(23),
+                       std::set<Oid>({Oid(".1.3.3"),Oid(".1.3.9.3333")})),
+      SnmpV1Response(0xA2,
+                     Community("dd2"),
+                     RequestId(24),
+                     SnmpV1Response::ErrorStatus(0),
+                     SnmpV1Response::ErrorIndex(0),
+                     values));
+    
+    xju::assert_never_reached();
+  }
+  catch(ResponseIdMismatch const& e) {
+    xju::assert_equal(e.got_,RequestId(24));
+    xju::assert_equal(e.expected_,RequestId(23));
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 24, error status 0, error index 0, values .1.3.3: \"fred\", .1.3.9.3333: 3 to request community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nexpected response with id 23 but got response of id 24.");
+  }
+
+  try {
+    std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
+      {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue("fred")}},
+      {Oid(".1.3.9.3333"),std::shared_ptr<Value const>{new NullValue}}
+    };
+    auto x=validateResponse(
+      SnmpV1GetRequest(Community("dje"),
+                       RequestId(23),
+                       std::set<Oid>({Oid(".1.3.3"),Oid(".1.3.9.3333")})),
+      SnmpV1Response(0xA2,
+                     Community("dd2"),
+                     RequestId(23),
+                     SnmpV1Response::ErrorStatus(2),
+                     SnmpV1Response::ErrorIndex(2),
+                     values));
+    
+    xju::assert_never_reached();
+  }
+  catch(NoSuchName const& e) {
+    xju::assert_equal(e.param_,Oid(".1.3.9.3333"));
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 2, error index 2, values .1.3.3: \"fred\", .1.3.9.3333: null to request community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nserver has no object with oid .1.3.9.3333.");
+  }
+
+  try {
+    std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
+    };
+    auto x=validateResponse(
+      SnmpV1GetRequest(Community("dje"),
+                       RequestId(23),
+                       std::set<Oid>({Oid(".1.3.3"),Oid(".1.3.9.3333")})),
+      SnmpV1Response(0xA2,
+                     Community("dd2"),
+                     RequestId(23),
+                     SnmpV1Response::ErrorStatus(1),
+                     SnmpV1Response::ErrorIndex(0),
+                     values));
+    
+    xju::assert_never_reached();
+  }
+  catch(TooBig const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 1, error index 0, values  to request community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nSNMP response would have exceeded server internal limit.");
+  }
+
+  try {
+    std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
+    };
+    auto x=validateResponse(
+      SnmpV1GetRequest(Community("dje"),
+                       RequestId(23),
+                       std::set<Oid>({Oid(".1.3.3"),Oid(".1.3.9.3333")})),
+      SnmpV1Response(0xA2,
+                     Community("dd2"),
+                     RequestId(23),
+                     SnmpV1Response::ErrorStatus(5),
+                     SnmpV1Response::ErrorIndex(0),
+                     values));
+    
+    xju::assert_never_reached();
+  }
+  catch(GenErr const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 5, error index 0, values  to request community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nSNMP General Error.");
+  }
+  try {
+    std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
+    };
+    auto x=validateResponse(
+      SnmpV1GetRequest(Community("dje"),
+                       RequestId(23),
+                       std::set<Oid>({Oid(".1.3.3"),Oid(".1.3.9.3333")})),
+      SnmpV1Response(0xA2,
+                     Community("dd2"),
+                     RequestId(23),
+                     SnmpV1Response::ErrorStatus(0),
+                     SnmpV1Response::ErrorIndex(0),
+                     values));
+    
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 0, error index 0, values  to request community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nvalue not reported for oid(s) .1.3.3, .1.3.9.3333.");
+  }
 }
 
 }

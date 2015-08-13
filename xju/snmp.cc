@@ -101,7 +101,8 @@ Oid operator+(Oid const& a, Oid const& b) throw()
 std::ostream& operator<<(std::ostream& s, SnmpV1GetRequest const& x) throw()
 {
   return s << "community " << x.community_._ << ", id " << x.id_.value()
-           << "oids " << xju::format::join(x.oids_.begin(),x.oids_.end(),", ");
+           << ", oids " 
+           << xju::format::join(x.oids_.begin(),x.oids_.end(),", ");
 }
 
 namespace
@@ -502,16 +503,16 @@ std::vector<uint8_t> encode(SnmpV1GetRequest const& request) throw()
 std::ostream& operator<<(std::ostream& s, SnmpV1Response const& x) throw()
 {
   return s << "type " << xju::format::hex(x.responseType_)
-           << " community " << x.community_._
-           << " id " << x.id_.value()
-           << " error status " << x.error_
-           << " error index " << x.errorIndex_.value()
-           << " values "
+           << ", community " << x.community_._
+           << ", id " << x.id_.value()
+           << ", error status " << x.error_
+           << ", error index " << x.errorIndex_.value()
+           << ", values "
            << xju::format::join(
              x.values_.begin(), x.values_.end(),
              [](std::pair<Oid, std::shared_ptr<Value const> > const& x) {
                std::ostringstream s;
-               s << x.first << ": " << x.second;
+               s << x.first << ": " << (*x.second);
                return s.str();
              },
              ", ");
@@ -1113,8 +1114,8 @@ ResponseTypeMismatch::ResponseTypeMismatch(
 ResponseIdMismatch::ResponseIdMismatch(RequestId const got,
                                        RequestId const expected,
                                        xju::Traced const& trace) throw():
-    xju::Exception("expected message with id "+xju::format::str(expected)+
-                   " but got message of id "+xju::format::str(got),
+    xju::Exception("expected response with id "+xju::format::str(expected)+
+                   " but got response of id "+xju::format::str(got),
                    trace),
     got_(got),
     expected_(expected) 
