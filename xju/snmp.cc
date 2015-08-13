@@ -1201,6 +1201,49 @@ std::map<Oid, std::shared_ptr<Value const> > validateResponse(
   }
 }
 
+std::ostream& operator<<(std::ostream& s, 
+                         SnmpV1SetRequest const& x) throw() {
+  return s << "community " << x.community_._ << ", id " << x.id_.value()
+           << ", values " 
+           << xju::format::join(
+             x.values_.begin(),x.values_.end(),
+             [](std::pair<Oid const, std::shared_ptr<Value const> > x) {
+               std::ostringstream s;
+               s << x.first << ": " << (*x.second);
+               return s.str();
+             },
+             ", ");
+}
+
+std::vector<uint8_t> encode(SnmpV1SetRequest const& request) throw()
+{
+  typedef std::shared_ptr<Value const> vp;
+  
+  std::vector<vp > params;
+  std::transform(request.values_.begin(),
+                 request.values_.end(),
+                 std::back_inserter(params),
+                 [](std::pair<Oid const,vp> const& x) {
+                   return vp(
+                     new Sequence({
+                         vp(new OidValue(x.first)),
+                         x.second},
+                       0x30));
+                 });
+  Sequence s({
+      vp(new IntValue(0)), // SNMP version 1
+      vp(new StringValue(request.community_._)),
+      vp(new Sequence({
+            vp(new IntValue(request.id_.value())),
+            vp(new IntValue(0)),//error
+            vp(new IntValue(0)),//errorIndex
+            vp(new Sequence(params,0x30))},
+          0xA3))}, // SNMP Get
+    0x30);
+  std::vector<uint8_t> result(s.encodedLength());
+  xju::assert_equal(s.encodeTo(result.begin()),result.end());
+  return result;
+}
 
 }
 }

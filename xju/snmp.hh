@@ -108,8 +108,6 @@ struct SnmpV1GetRequest
 
   friend std::ostream& operator<<(std::ostream& s, 
                                   SnmpV1GetRequest const& x) throw();
-  
-  
 };
   
 std::vector<uint8_t> encode(SnmpV1GetRequest const& request) throw();
@@ -350,9 +348,20 @@ std::map<Oid, std::shared_ptr<Value const> > validateResponse(
 
 struct SnmpV1SetRequest
 {
+  SnmpV1SetRequest(
+    Community community,
+    RequestId id,
+    std::map<Oid, std::shared_ptr<Value const> > values) throw():
+      community_(community),
+      id_(id),
+      values_(values) {
+  }
   Community community_;
   RequestId id_;
   std::map<Oid, std::shared_ptr<Value const> > values_;
+
+  friend std::ostream& operator<<(std::ostream& s, 
+                                  SnmpV1SetRequest const& x) throw();
 };
 
 std::vector<uint8_t> encode(SnmpV1SetRequest const& request) throw();
