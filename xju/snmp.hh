@@ -43,6 +43,20 @@ namespace snmp
 //   ... receive responseData as std::vector<uint8_t>
 //   validateResponse(request,decodeSnmpV1Response(responseData));
 //
+// ... and for snmp-get-next is:
+//   SnmpV1GetNextRequest request(..., { oid1,oid2,oid3});
+//   SnmpV1Table t(request)
+//   do {
+//     std::vector<uint8_t> requestData(encode(t.nextRequest()));
+//     ... send requestData to server
+//     ... receive responseData as std::vector<uint8_t>
+//     t.add(decodeSnmpV1Response(responseData);
+//   while(!t.atEnd());
+//   for(auto i=0; i!=t.size(); ++i)
+//   {
+//     ... do something with t[oid1][i], t[oid2][i], t[oid3][i]
+//   }
+//  
 
 
 // RFC 1157 OID
