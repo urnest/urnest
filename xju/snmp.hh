@@ -44,14 +44,14 @@ namespace snmp
 //   validateResponse(request,decodeSnmpV1Response(responseData));
 //
 // ... and for snmp-get-next is:
-//   SnmpV1GetNextRequest request(..., { oid1,oid2,oid3});
-//   SnmpV1Table t(request)
-//   do {
-//     std::vector<uint8_t> requestData(encode(t.nextRequest()));
+//   SnmpV1Table t{oid1,oid2,oid3};
+//   while(t.incomplete()) {
+//     SnmpV1GetNextRequest request(..., t.nextOids());
+//     std::vector<uint8_t> requestData(encode(request);
 //     ... send requestData to server
 //     ... receive responseData as std::vector<uint8_t>
-//     t.add(decodeSnmpV1Response(responseData);
-//   while(!t.atEnd());
+//     t.add(validateResponse(request,decodeSnmpV1Response(responseData));
+//   }
 //   for(auto i=0; i!=t.size(); ++i)
 //   {
 //     ... do something with t[oid1][i], t[oid2][i], t[oid3][i]
@@ -404,6 +404,69 @@ void validateResponse(
     // response malformed eg not all requested oids present in response
     xju::Exception);
 
+// validate reponse to specified request
+// - returns values suitable to pass to SnmpV1Table.add()
+//   (REVISIT: how to handle table end v error codes?)
+std::vector<std::pair<Oid, std::shared_ptr<Value const> > > validateResponse(
+  SnmpV1GetNextRequest const& request,
+  SnmpV1Response const& response) throw(
+    ResponseTypeMismatch,
+    ResponseIdMismatch,
+    NoSuchName,
+    TooBig,
+    GenErr,
+    // response malformed eg not all requested oids present in response
+    xju::Exception);
+
+class SnmpV1Table
+{
+public:
+  // post: size()==0
+  //       cols_==cols
+  //       !atEnd()
+  SnmpV1Table(std::set<Oid> cols) throw():
+      cols_(cols),
+      atEnd_(false)
+  {
+    std::transform(cols.begin(),cols.end(),
+                   std::inserter(data_,data_.end()),
+                   [](Oid x) throw() {
+                     retun std::make_pair(x, std::vector<Cell>());
+                   });
+  }
+  std::set<Oid> const cols_;
+
+  size_t size() const throw();
+
+  // pre: col in cols_
+  // post: result.size()==size()
+  std::vector<Cell> const& operator[](Oid const& col) const throw();
+  
+  bool atEnd() const throw();
+
+  // post: result.size()==cols_
+  std::vector<Oid> nextOids() const throw();
+  
+  // pre: row.size()==cols_.size()
+  void add(
+    std::vector<std::pair<Oid, std::shared_ptr<Value const> > > row) throw(
+      xju::Exception);
+  
+  struct Cell
+  {
+    Cell(std::pair<Oid const, std::shared_ptr<Value const> v) throw():
+        oid_(v.first),
+        value_(v.second) {
+    }
+    Oid oid_;
+    std::shared_ptr<Value const> value_;
+  };
+  
+  std::map<Oid, std::vector<Cell> > data_;
+  
+};
+
+  
 }
 }
 
