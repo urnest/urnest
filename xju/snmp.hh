@@ -381,16 +381,28 @@ struct SnmpV1SetRequest
 std::vector<uint8_t> encode(SnmpV1SetRequest const& request) throw();
 
 // validate reponse to specified request
+// - note that RFC 1157 says that no values are modified if an error
+//   is returned
 void validateResponse(
   SnmpV1SetRequest const& request, 
   SnmpV1Response const& response) throw(
+    // response.responseType_ != 0xA3
     ResponseTypeMismatch,
+    // response.id_ != request.id_
     ResponseIdMismatch,
+    // server does not know NoSuchName.oid_ 
     NoSuchName,
+    // server forbids request.values_[BadValue.oid] as value of BadValue.oid
     BadValue,
+    // ReadOnly.oid_ is read-only
     ReadOnly,
+    // request was too big to process or responsd to
+    // (note no values were set)
     TooBig,
-    GenErr);
+    // SNMP General Error
+    GenErr,
+    // response malformed eg not all requested oids present in response
+    xju::Exception);
 
 }
 }

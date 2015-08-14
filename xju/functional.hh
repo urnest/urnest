@@ -121,7 +121,12 @@ namespace xju
         {
         public:
             template<class T, class U>
-            T& operator()(std::pair<T, U> const& x) throw()
+            T const& operator()(std::pair<T, U> const& x) const throw()
+            {
+                return x.first;
+            }
+            template<class T, class U>
+            T& operator()(std::pair<T, U>& x) const throw()
             {
                 return x.first;
             }
@@ -130,7 +135,12 @@ namespace xju
         {
         public:
             template<class T, class U>
-            T& operator()(std::pair<T, U> const& x) throw()
+            T const& operator()(std::pair<T, U> const& x) const throw()
+            {
+                return x.second;
+            }
+            template<class T, class U>
+            T& operator()(std::pair<T, U>& x) const throw()
             {
                 return x.second;
             }
