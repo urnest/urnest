@@ -99,6 +99,13 @@ Oid operator+(Oid const& a, Oid const& b) throw()
   return result;
 }
 
+bool Oid::contains(Oid const& y) const throw()
+{
+  return (components_.size()<y.components_.size()) &&
+    (std::mismatch(components_.begin(),components_.end(),
+                   y.components_.begin()).first==components_.end());
+}
+
 std::ostream& operator<<(std::ostream& s, SnmpV1GetRequest const& x) throw()
 {
   return s << "community " << x.community_._ << ", id " << x.id_.value()
@@ -1505,6 +1512,44 @@ cols_(cols),
                    return std::make_pair(x, std::vector<Cell>());
                  });
 }
+
+std::vector<SnmpV1Table::Cell> const& SnmpV1Table::operator[](Oid const& col) const throw()
+{
+  auto const i(data_.find(col));
+  xju::assert_not_equal(i,data_.end());
+  return (*i).second;
+}
+
+std::vector<Oid> SnmpV1Table::nextOids() const throw()
+{
+  if (data_.size()==0) {
+    return std::vector<Oid>(cols_.begin(),cols_.end());
+  }
+  std::vector<Oid> result;
+  for(auto x: data_) {
+    result.push_back((*x.second.rbegin()).oid_);
+  }
+  return result;
+}
+
+void SnmpV1Table::add(
+  std::vector<std::pair<Oid, std::shared_ptr<Value const> > > const& row)
+throw()
+{
+  xju::assert_equal(row.size(),cols_.size());
+  auto i = cols_.begin();
+  for(auto x: row) {
+    if (!(*i).contains(x.first)) {
+      atEnd_=true;
+      return;
+    }
+  }
+  i = cols_.begin();
+  for(auto x: row) {
+    data_[*i++].push_back(Cell(x));
+  }
+}
+
 
 }
 }

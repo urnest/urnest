@@ -75,6 +75,7 @@ public:
   {
     return components_;
   }
+  bool contains(Oid const& y) const throw();
   
 private:
   std::vector<uint32_t> components_;
@@ -449,7 +450,7 @@ public:
 
   struct Cell
   {
-    Cell(std::pair<Oid, std::shared_ptr<Value const> > v) throw():
+    explicit Cell(std::pair<Oid, std::shared_ptr<Value const> > v) throw():
         oid_(v.first),
         value_(v.second) {
     }
@@ -462,7 +463,7 @@ public:
   std::vector<Cell> const& operator[](Oid const& col) const throw();
   size_t size() const throw() { return data_.size(); }
   
-  bool atEnd() const throw();
+  bool atEnd() const throw() { return atEnd_; }
 
   // post: result.size()==cols_
   std::vector<Oid> nextOids() const throw();
