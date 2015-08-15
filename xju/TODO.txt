@@ -34,8 +34,33 @@ snmp
 	 0x05 -- General Error (some error other than the ones listed above)
 
       - see http://www.rane.com/note161.html
-     is v2 different?
-     
+     is v2 different? RFC-1905 adds error codes and bulk-pdu:
+       bulk-list:
+         id:int
+         non-repeaters:int
+         max-repeaters:int
+         list:
+           n x list:
+             oid:oid
+             value (null for get)||(noSuchObject(0)|noSuchInstance(1)|endOfMibView(2)
+       value is slightly different but what does it mean? The exception codes
+       can be returned with overall error==0. (And in get-next, we can
+       have individual end-of-data for each column.) How are the exceptions
+       encoded? Same as null, with types 0x80,0x81,0x82 which is
+       CONTEXT|PRIMITIVE plus the choice number
+       v2 also distinguishes between object type and instance using the last
+       oid component: 0 means "the only instance", 1,2.3... means that instance
+         ... the .0 convention allows us to retrieve non-table variables
+             by specifying their type rather than figuring out their
+             predecessor (see the RFC example)
+         handling should be:
+           - for tables, always drop a trailing .0 when generating the next
+           oid list
+           - but also could add an SnmpV1Walk to use for straight walks
+        ... don't bother implementing get-bulk or SnmpV1Walk to start with
+        ... in fact since v2 agent should be able to handle v1 requests, don't
+        implement any v2 stuff yet
+
   encoding type,length,data:
     types (see http://www.rane.com/note161.html)
       Integer 0x02 
@@ -44,8 +69,10 @@ snmp
       Object Identifier 0x06
       Sequence 0x30
       GetRequest PDU 0xA0
+      GetNextRequest PDU 0xA1
       GetResponse PDU 0xA2
       SetRequest PDU 0xA3
+      GetBulkRequest PDU 0xA5 (SNMPv2c)
       ... does set respond? Yes.
     
     length encoding (https://en.wikipedia.org/wiki/X.690#BER_encoding)
