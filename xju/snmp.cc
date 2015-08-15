@@ -1392,6 +1392,119 @@ void validateResponse(
   }
 }
 
+std::ostream& operator<<(std::ostream& s, 
+                         SnmpV1GetNextRequest const& x) throw()
+{
+  return s << "community " << x.community_._ << ", id " << x.id_.value()
+           << ", oids " 
+           << xju::format::join(x.oids_.begin(),x.oids_.end(),", ");
+}
+
+std::vector<uint8_t> encode(SnmpV1GetNextRequest const& request) throw()
+{
+  typedef std::shared_ptr<Value const> vp;
+  
+  std::vector<vp > params;
+  std::transform(request.oids_.begin(),
+                 request.oids_.end(),
+                 std::back_inserter(params),
+                 [](Oid const& oid) {
+                   return vp(
+                     new Sequence({
+                         vp(new OidValue(oid)),
+                         vp(new NullValue)},
+                       0x30));
+                 });
+  Sequence s({
+      vp(new IntValue(0)), // SNMP version 1
+      vp(new StringValue(request.community_._)),
+      vp(new Sequence({
+            vp(new IntValue(request.id_.value())),
+            vp(new IntValue(0)),//error
+            vp(new IntValue(0)),//errorIndex
+            vp(new Sequence(params,0x30))},
+        0xA1))},
+    0x30);
+  std::vector<uint8_t> result(s.encodedLength());
+  xju::assert_equal(s.encodeTo(result.begin()),result.end());
+  return result;
+}
+
+std::vector<std::pair<Oid, std::shared_ptr<Value const> > > validateResponse(
+  SnmpV1GetNextRequest const& request,
+  SnmpV1Response const& response) throw(
+    ResponseTypeMismatch,
+    ResponseIdMismatch,
+    TooBig,
+    GenErr,
+    xju::Exception)
+{
+  try {
+    if (request.id_ != response.id_) {
+      throw ResponseIdMismatch(response.id_,request.id_,XJU_TRACED);
+    }
+    if (response.responseType_!=0xA2) {
+      throw ResponseTypeMismatch(response.responseType_,0xA2,XJU_TRACED);
+    }
+    switch(response.error_) {
+    case 0: break;
+    case 0x01: throw TooBig(XJU_TRACED);
+    case 0x02:
+    {
+      // translate NoSuchName to suit SnmpV1Table.add()
+      // note that RFC 1157 leaves an ambiguity where traversal
+      // reaches the end of the MIB - there are no subsequent
+      // OIDs to return, so we end up with NoSuchName, but we can't
+      // distinguish this from "requested oid not known to server"
+      std::vector<std::pair<Oid, std::shared_ptr<Value const> > > result;
+      std::transform(request.oids_.begin(),
+                     request.oids_.end(),
+                     std::inserter(result,result.end()),
+                     [](Oid const& x) throw() {
+                       return std::make_pair(
+                         Oid(".1.3"),
+                         std::shared_ptr<Value const>(
+                           new NullValue));
+                     });
+      return result;
+    }
+    case 0x05:
+      throw GenErr(XJU_TRACED);
+    default:
+    {
+      std::ostringstream s;
+      s << "response has unknown error status " << response.error_;
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    }
+    if (response.values_.size()<request.oids_.size()) {
+      throw xju::Exception("response has less values than request",XJU_TRACED);
+    }
+    else if (response.values_.size()>request.oids_.size()) {
+      throw xju::Exception("response has more values than request",XJU_TRACED);
+    }
+    return response.values_;
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "validate response " << response << " to SnmpV1GetNextRequest " 
+      << request;
+    e.addContext(s.str(), XJU_TRACED);
+    throw;
+  }
+}
+
+
+SnmpV1Table::SnmpV1Table(std::set<Oid> cols) throw():
+cols_(cols),
+              atEnd_(false)
+{
+  std::transform(cols.begin(),cols.end(),
+                 std::inserter(data_,data_.end()),
+                 [](Oid const& x) throw() {
+                   return std::make_pair(x, std::vector<Cell>());
+                 });
+}
 
 }
 }

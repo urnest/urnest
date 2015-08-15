@@ -987,6 +987,189 @@ void test10() throw()
   }
 }
 
+void test11() throw()
+{
+  // encode(SnmpV1GetNexRequest)
+  SnmpV1GetNextRequest r(
+    Community("private"),
+    RequestId(1),
+    {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")});
+  std::vector<uint8_t> x(encode(r));
+  xju::assert_equal(
+    x,
+    std::vector<uint8_t>({
+        0x30,0x2c,0x02,0x01,0x00,0x04,0x07,0x70,0x72,0x69,0x76,0x61,0x74,0x65,0xA1,0x1E,0x02,0x01,0x01,0x02,0x01,0x00,0x02,0x01,0x00,0x30,0x13,0x30,0x11,0x06,0x0D,0x2B,0x06,0x01,0x04,0x01,0x94,0x78,0x01,0x02,0x07,0x03,0x02,0x00,0x05,0x00
+          }));
+}
+
+void test12() throw()
+{
+  // validateResponse(SnmpV1GetNextRequest,SnmpV1Response)
+
+  std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
+    {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue("fred")}},
+    {Oid(".1.3.9.3333"),std::shared_ptr<Value const>{new IntValue(3)}}
+  };
+  std::vector<std::pair<Oid, std::shared_ptr<Value const> > > nextValues {
+    {Oid(".1.3.4"), std::shared_ptr<Value const>{new StringValue("jock")}},
+    {Oid(".1.3.9.3334"),std::shared_ptr<Value const>{new IntValue(5)}}
+  };
+  auto x=validateResponse(
+    SnmpV1GetNextRequest(Community("dje"),
+                         RequestId(23),
+                         std::vector<Oid>({Oid(".1.3.3"),Oid(".1.3.9.3333")})),
+    SnmpV1Response(0xA2,
+                   Community("dd2"),
+                   RequestId(23),
+                   SnmpV1Response::ErrorStatus(0),
+                   SnmpV1Response::ErrorIndex(0),
+                   nextValues));
+    
+  xju::assert_equal(x.size(),2U);
+  xju::assert_equal(x[0].first,Oid(".1.3.4"));
+  xju::assert_equal(x[0].second->operator std::string(),"jock");
+  xju::assert_equal(x[1].first,Oid(".1.3.9.3334"));
+  xju::assert_equal(x[1].second->operator int(),5);
+
+  try {
+    auto x=validateResponse(
+      SnmpV1GetNextRequest(Community("dje"),
+                       RequestId(23),
+                       std::vector<Oid>({Oid(".1.3.3"),Oid(".1.3.9.3333")})),
+      SnmpV1Response(0xA0,
+                     Community("dd2"),
+                     RequestId(23),
+                     SnmpV1Response::ErrorStatus(0),
+                     SnmpV1Response::ErrorIndex(0),
+                     nextValues));
+    
+    xju::assert_never_reached();
+  }
+  catch(ResponseTypeMismatch const& e) {
+    xju::assert_equal(e.got_,0xa0);
+    xju::assert_equal(e.expected_,0xa2);
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa0, community dd2, id 23, error status 0, error index 0, values .1.3.4: \"jock\", .1.3.9.3334: 5 to SnmpV1GetNextRequest community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nexpected response of type 0xa2 but got response of type 0xa0.");
+  }
+
+  try {
+    auto x=validateResponse(
+      SnmpV1GetNextRequest(Community("dje"),
+                       RequestId(23),
+                       std::vector<Oid>({Oid(".1.3.3"),Oid(".1.3.9.3333")})),
+      SnmpV1Response(0xA2,
+                     Community("dd2"),
+                     RequestId(24),
+                     SnmpV1Response::ErrorStatus(0),
+                     SnmpV1Response::ErrorIndex(0),
+                     nextValues));
+    
+    xju::assert_never_reached();
+  }
+  catch(ResponseIdMismatch const& e) {
+    xju::assert_equal(e.got_,RequestId(24));
+    xju::assert_equal(e.expected_,RequestId(23));
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 24, error status 0, error index 0, values .1.3.4: \"jock\", .1.3.9.3334: 5 to SnmpV1GetNextRequest community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nexpected response with id 23 but got response of id 24.");
+  }
+
+  try {
+    auto x=validateResponse(
+      SnmpV1GetNextRequest(Community("dje"),
+                       RequestId(23),
+                       std::vector<Oid>({Oid(".1.3.3"),Oid(".1.3.9.3333")})),
+      SnmpV1Response(0xA2,
+                     Community("dd2"),
+                     RequestId(23),
+                     SnmpV1Response::ErrorStatus(2),
+                     SnmpV1Response::ErrorIndex(2),
+                     nextValues));
+
+    xju::assert_equal(x.size(),2U);
+    xju::assert_equal(x[0].first,Oid(".1.3"));
+    xju::assert_equal(x[1].first,Oid(".1.3"));
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));//never reached
+  }
+
+  try {
+    auto x=validateResponse(
+      SnmpV1GetNextRequest(Community("dje"),
+                       RequestId(23),
+                       std::vector<Oid>({Oid(".1.3.3"),Oid(".1.3.9.3333")})),
+      SnmpV1Response(0xA2,
+                     Community("dd2"),
+                     RequestId(23),
+                     SnmpV1Response::ErrorStatus(1),
+                     SnmpV1Response::ErrorIndex(0),
+                     nextValues));
+    
+    xju::assert_never_reached();
+  }
+  catch(TooBig const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 1, error index 0, values .1.3.4: \"jock\", .1.3.9.3334: 5 to SnmpV1GetNextRequest community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nSNMP response would have exceeded server internal limit.");
+  }
+
+  try {
+    auto x=validateResponse(
+      SnmpV1GetNextRequest(Community("dje"),
+                       RequestId(23),
+                       std::vector<Oid>({Oid(".1.3.3"),Oid(".1.3.9.3333")})),
+      SnmpV1Response(0xA2,
+                     Community("dd2"),
+                     RequestId(23),
+                     SnmpV1Response::ErrorStatus(5),
+                     SnmpV1Response::ErrorIndex(0),
+                     nextValues));
+    
+    xju::assert_never_reached();
+  }
+  catch(GenErr const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 5, error index 0, values .1.3.4: \"jock\", .1.3.9.3334: 5 to SnmpV1GetNextRequest community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nSNMP General Error.");
+  }
+  try {
+    std::vector<std::pair<Oid, std::shared_ptr<Value const> > > nextValues {
+    };
+    auto x=validateResponse(
+      SnmpV1GetNextRequest(Community("dje"),
+                       RequestId(23),
+                       std::vector<Oid>({Oid(".1.3.3"),Oid(".1.3.9.3333")})),
+      SnmpV1Response(0xA2,
+                     Community("dd2"),
+                     RequestId(23),
+                     SnmpV1Response::ErrorStatus(0),
+                     SnmpV1Response::ErrorIndex(0),
+                     nextValues));
+    
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 0, error index 0, values  to SnmpV1GetNextRequest community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nresponse has less values than request.");
+  }
+  try {
+    std::vector<std::pair<Oid, std::shared_ptr<Value const> > > nextValues {
+      {Oid(".1.3.4"), std::shared_ptr<Value const>{new StringValue("jock")}},
+      {Oid(".1.3.4.1"), std::shared_ptr<Value const>{new StringValue("sal")}},
+      {Oid(".1.3.9.3334"),std::shared_ptr<Value const>{new IntValue(5)}}
+    };
+    auto x=validateResponse(
+      SnmpV1GetNextRequest(Community("dje"),
+                       RequestId(23),
+                       std::vector<Oid>({Oid(".1.3.3"),Oid(".1.3.9.3333")})),
+      SnmpV1Response(0xA2,
+                     Community("dd2"),
+                     RequestId(23),
+                     SnmpV1Response::ErrorStatus(0),
+                     SnmpV1Response::ErrorIndex(0),
+                     nextValues));
+    
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 0, error index 0, values .1.3.4: \"jock\", .1.3.4.1: \"sal\", .1.3.9.3334: 5 to SnmpV1GetNextRequest community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nresponse has more values than request.");
+  }
+}
+
+
 }
 }
 
@@ -1006,6 +1189,9 @@ int main(int argc, char* argv[])
   test8(), ++n;
   test9(), ++n;
   test10(), ++n;
+  test11(), ++n;
+  test12(), ++n;
+
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

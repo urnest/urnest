@@ -404,15 +404,34 @@ void validateResponse(
     // response malformed eg not all requested oids present in response
     xju::Exception);
 
+struct SnmpV1GetNextRequest
+{
+  SnmpV1GetNextRequest(Community const& community,
+                       RequestId const id,
+                       std::vector<Oid> const& oids) throw():
+      community_(community),
+      id_(id),
+      oids_(oids) {
+  }
+  Community community_;
+  RequestId id_;
+  std::vector<Oid> oids_;
+
+  friend std::ostream& operator<<(std::ostream& s, 
+                                  SnmpV1GetNextRequest const& x) throw();
+};
+  
+std::vector<uint8_t> encode(SnmpV1GetNextRequest const& request) throw();
+
 // validate reponse to specified request
-// - returns values suitable to pass to SnmpV1Table.add()
-//   (REVISIT: how to handle table end v error codes?)
+// - result suitable to pass to SnmpV1Table.add()
+//   note: NoSuchName error is translated to a result with all its oids
+//         set to 1.3, to signal end of table (see SnmpV1Table)
 std::vector<std::pair<Oid, std::shared_ptr<Value const> > > validateResponse(
   SnmpV1GetNextRequest const& request,
   SnmpV1Response const& response) throw(
     ResponseTypeMismatch,
     ResponseIdMismatch,
-    NoSuchName,
     TooBig,
     GenErr,
     // response malformed eg not all requested oids present in response
@@ -424,23 +443,24 @@ public:
   // post: size()==0
   //       cols_==cols
   //       !atEnd()
-  SnmpV1Table(std::set<Oid> cols) throw():
-      cols_(cols),
-      atEnd_(false)
-  {
-    std::transform(cols.begin(),cols.end(),
-                   std::inserter(data_,data_.end()),
-                   [](Oid x) throw() {
-                     retun std::make_pair(x, std::vector<Cell>());
-                   });
-  }
+  SnmpV1Table(std::set<Oid> cols) throw();
+  
   std::set<Oid> const cols_;
 
-  size_t size() const throw();
-
+  struct Cell
+  {
+    Cell(std::pair<Oid, std::shared_ptr<Value const> > v) throw():
+        oid_(v.first),
+        value_(v.second) {
+    }
+    Oid oid_;
+    std::shared_ptr<Value const> value_;
+  };
+  
   // pre: col in cols_
   // post: result.size()==size()
   std::vector<Cell> const& operator[](Oid const& col) const throw();
+  size_t size() const throw() { return data_.size(); }
   
   bool atEnd() const throw();
 
@@ -449,21 +469,12 @@ public:
   
   // pre: row.size()==cols_.size()
   void add(
-    std::vector<std::pair<Oid, std::shared_ptr<Value const> > > row) throw(
-      xju::Exception);
-  
-  struct Cell
-  {
-    Cell(std::pair<Oid const, std::shared_ptr<Value const> v) throw():
-        oid_(v.first),
-        value_(v.second) {
-    }
-    Oid oid_;
-    std::shared_ptr<Value const> value_;
-  };
-  
+    std::vector<std::pair<Oid, std::shared_ptr<Value const> > > const& row)
+  throw();
+
+private:
   std::map<Oid, std::vector<Cell> > data_;
-  
+  bool atEnd_;
 };
 
   
