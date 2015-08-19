@@ -6,22 +6,28 @@ ODIN_debug=$1;shift; ODIN_optimize=$1;shift;
 ODIN_define=$1;shift; ODIN_cxx=$1;shift; ODIN_flags=$1;shift;
 ODIN_abort=$1;shift;
 
-x=`PATH="$ODIN_CXX_PATH" /usr/bin/which "$ODIN_CXX" 2>&1`
-if [ $? != 0 ] ; then
+if [ -n "$ODIN_cxx" ]
+then
+  x=`PATH="$ODIN_CXX_PATH" /usr/bin/which "$ODIN_cxx" 2>&1`
+  if [ $? != 0 ] ; then
+    ( echo "Error: Failed to locate executable named by +cxx option '$ODIN_cc' on path specified by ODIN_CXX_PATH (specified when Odin cache was created as'$ODIN_CXX_PATH') because"
+      echo "$x" ) >&2
+    exit 1
+  fi
+  compiler="$ODIN_cxx"
+else
+  x=`PATH="$ODIN_CXX_PATH" /usr/bin/which "$ODIN_CXX" 2>&1`
+  if [ $? != 0 ] ; then
     ( echo "Error: Failed to locate executable named by ODIN_CXX on path specified by ODIN_CXX_PATH (specified when Odin cache was created as '$ODIN_CXX' and '$ODIN_CXX_PATH' respectively) because"
       echo "$x" ) >&2
     exit 1
+  fi
+  compiler="$ODIN_CXX"
 fi
 
 if [ "$ODIN_CXX_LD_LIBRARY_PATH" != "" ] ; then
    LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ODIN_CXX_LD_LIBRARY_PATH;
    export LD_LIBRARY_PATH; fi
-
-if [ -n "$ODIN_CXX" ]
-then
-   compiler=$ODIN_CXX
-fi
-if [ "$ODIN_cxx" != "" ] ; then compiler=$ODIN_cxx; fi
 
 flags=""
 if [ "$ODIN_debug" != "" ] ; then flags="$flags $ODIN_CXX_DEBUGF"; fi
@@ -41,18 +47,15 @@ flags="$flags $ODIN_CXX_FLAGS"
 if [ "$ODINVERBOSE" != "" ] ; then
    echo ${ODINRBSHOST}$compiler -c $flags $ODIN_source; fi
 
-PATH="$ODIN_CXX_PATH" $compiler -c $flags $ODIN_source 2>MSGS
-ok=$?
-test $ok = 0 || {
-  if egrep -s -f $ODIN_abort MSGS; then
-         cat MSGS
-         exit 1; fi
-       mv MSGS ERRORS  
-       echo "$compiler failed." >>ERRORS
-       exit 0; }
-
-egrep 'arning' MSGS | egrep -v '& before array or function: ignored' >>WARNINGS
-egrep -v 'arning' MSGS
+PATH="$ODIN_CXX_PATH" $compiler -c $flags $ODIN_source  \
+>MESSAGES 2>WARNINGS || {
+   cat MESSAGES WARNINGS >ERRORS; rm MESSAGES WARNINGS;
+   if [ ! -s ERRORS ] ; then 
+      echo "$compiler failed" >>ERRORS; fi;
+   if [ "$ODIN_CXX_IGNORE_ERR" != "" ] ; then
+      if egrep -s -e "$ODIN_CXX_IGNORE_ERR" ERRORS; then
+	 mv ERRORS WARNINGS; fi; fi; }
+if [ -f MESSAGES ] ; then cat MESSAGES; rm MESSAGES; fi
 
 input=`expr $ODIN_source : '.*/\([^/]*\)[.][^./]*'`
 if [ -f $input.o ] ; then mv $input.o o; fi

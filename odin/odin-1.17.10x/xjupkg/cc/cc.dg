@@ -61,11 +61,23 @@
 
 # Environment Variables
 
-$ODIN_CC_HOME 'directory containing the C compiler' = '';
+$ODIN_CC_PATH 'PATH to set when running C compiler' = '/usr/bin:/bin';
+
+$ODIN_CC 'name of the C++ compiler' = 'gcc';
+
+$ODIN_CC_FLAGS 'C compiler flags to always include' = '';
 
 $ODIN_CC_DEBUGF 'debug flag for C compiler' = '-g';
 
-$ODIN_CC_I 'directory containing default C include files' = '/usr/include';
+$ODIN_CC_I 'directory containing default C include files (these directories are added as -I options when compiling)' = '/usr/include';
+
+$ODIN_CC_LD_DEBUGF 'debug flag for C linker' = '-g';
+
+$ODIN_CC_LD_LIBRARY_PATH 'load library path for C compiler' = '';
+
+$ODIN_CC_IGNORE_ERR 'egrep expression for compile/link errors to ignore' = '';
+
+$ODIN_CC_LD_EXTRA_LIBS 'extra library flags to add to every ld command (at the end)' = '';
 
 
 # Tools
