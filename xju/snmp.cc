@@ -1522,13 +1522,14 @@ std::vector<SnmpV1Table::Cell> const& SnmpV1Table::operator[](Oid const& col) co
 
 std::vector<Oid> SnmpV1Table::nextOids() const throw()
 {
-  if (data_.size()==0) {
+  if ((*data_.begin()).second.size()==0) {
     return std::vector<Oid>(cols_.begin(),cols_.end());
   }
   std::vector<Oid> result;
   for(auto x: data_) {
     result.push_back((*x.second.rbegin()).oid_);
   }
+  xju::assert_equal(result.size(),cols_.size());
   return result;
 }
 
@@ -1539,7 +1540,7 @@ throw()
   xju::assert_equal(row.size(),cols_.size());
   auto i = cols_.begin();
   for(auto x: row) {
-    if (!(*i).contains(x.first)) {
+    if (!(*i++).contains(x.first)) {
       atEnd_=true;
       return;
     }

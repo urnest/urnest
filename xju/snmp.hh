@@ -441,8 +441,8 @@ std::vector<std::pair<Oid, std::shared_ptr<Value const> > > validateResponse(
 class SnmpV1Table
 {
 public:
-  // post: size()==0
-  //       cols_==cols
+  // pre: cols.size()>0
+  // post: cols_==cols
   //       !atEnd()
   SnmpV1Table(std::set<Oid> cols) throw();
   
@@ -459,13 +459,11 @@ public:
   };
   
   // pre: col in cols_
-  // post: result.size()==size()
   std::vector<Cell> const& operator[](Oid const& col) const throw();
-  size_t size() const throw() { return data_.size(); }
   
   bool atEnd() const throw() { return atEnd_; }
 
-  // post: result.size()==cols_
+  // post: result.size()==cols_.size()
   std::vector<Oid> nextOids() const throw();
   
   // pre: row.size()==cols_.size()
@@ -478,7 +476,6 @@ private:
   bool atEnd_;
 };
 
-  
 }
 }
 
