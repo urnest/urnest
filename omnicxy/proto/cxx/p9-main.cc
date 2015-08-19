@@ -84,7 +84,7 @@ void client(int argc, char* argv[],
           XJU_TRACED);
       }
       
-      ref->f1();
+      ref->f1("fred");
     }
     catch(CORBA::Exception& e) {
       throw translate(e);
@@ -99,9 +99,9 @@ void client(int argc, char* argv[],
 class F_impl : public POA_p9::F
 {
 public:
-  virtual void f1()
+  virtual void f1(const char* x)
   {
-    std::cout << "F::f1()" << std::endl;
+    std::cout << "F::f1(" << x << ")" << std::endl;
   }
 };
 

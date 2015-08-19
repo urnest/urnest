@@ -124,7 +124,7 @@ _CORBA_MODULE_BEG
   {
   public:
     // IDL operations
-    void f1();
+    void f1(const char* x);
 
     // Constructors
     inline _objref_F()  { _PR_setobj(0); }  // nil
@@ -159,7 +159,7 @@ _CORBA_MODULE_BEG
   public:
     virtual ~_impl_F();
 
-    virtual void f1() = 0;
+    virtual void f1(const char* x) = 0;
     
   public:  // Really protected, workaround for xlC
     virtual _CORBA_Boolean _dispatch(omniCallHandle&);

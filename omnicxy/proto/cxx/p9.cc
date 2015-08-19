@@ -122,7 +122,7 @@ p9::_objref_F::_ptrToObjRef(const char* id)
 // Code for p9::F::f1
 
 // Proxy call descriptor class. Mangled signature:
-//  _wvoid
+//  _wvoid_i_cstring
 class _0RL_cd_c6f737071337bfb6_00000000
   : public omniCallDescriptor
 {
@@ -133,13 +133,29 @@ public:
     
   }
   
-  
+  void marshalArguments(cdrStream&);
+  void unmarshalArguments(cdrStream&);
+
     
   
   static const char* const _user_exns[];
 
-  
+  ::CORBA::String_var arg_0_;
+  const char* arg_0;
 };
+
+void _0RL_cd_c6f737071337bfb6_00000000::marshalArguments(cdrStream& _n)
+{
+  _n.marshalString(arg_0,0);
+
+}
+
+void _0RL_cd_c6f737071337bfb6_00000000::unmarshalArguments(cdrStream& _n)
+{
+  arg_0_ = _n.unmarshalString(0);
+  arg_0 = arg_0_.in();
+
+}
 
 const char* const _0RL_cd_c6f737071337bfb6_00000000::_user_exns[] = {
   0
@@ -147,19 +163,19 @@ const char* const _0RL_cd_c6f737071337bfb6_00000000::_user_exns[] = {
 
 // Local call call-back function.
 static void
-_0RL_lcfn_c6f737071337bfb6_10000000(omniCallDescriptor*, omniServant* svnt)
+_0RL_lcfn_c6f737071337bfb6_10000000(omniCallDescriptor* cd, omniServant* svnt)
 {
-  
+  _0RL_cd_c6f737071337bfb6_00000000* tcd = (_0RL_cd_c6f737071337bfb6_00000000*)cd;
   p9::_impl_F* impl = (p9::_impl_F*) svnt->_ptrToInterface(p9::F::_PD_repoId);
-  impl->f1();
+  impl->f1(tcd->arg_0);
 
 
 }
 
-void p9::_objref_F::f1()
+void p9::_objref_F::f1(const char* x)
 {
   _0RL_cd_c6f737071337bfb6_00000000 _call_desc(_0RL_lcfn_c6f737071337bfb6_10000000, "f1", 3);
-
+  _call_desc.arg_0 = x;
 
   _invoke(_call_desc);
 
