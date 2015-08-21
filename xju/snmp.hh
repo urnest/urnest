@@ -11,6 +11,8 @@
 #define XJU_SNMP_HH
 
 /*
+Client-side SNMP functions (plus SNMP Trap encoding).
+
 The intended use of this module:
 
 snmp-get:
@@ -50,6 +52,10 @@ snmp-trap:
   SnmpV1Trap t(...);
   std::vector<uint8_t> requestData(xju::snmp::encode(request));
   ... send requestData somewhere
+
+
+See snmp/README.txt also.
+
 */
 
 #include "snmp/SnmpV1GetRequest.hh"
