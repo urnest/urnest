@@ -15,20 +15,6 @@ references:
   https://tools.ietf.org/html/rfc1157
 
 notes:
-  Value and sub-classes String, Null, List etc
-  std::vector<uint8_t> encodeSnmpGetRequest(//other params?
-                                            std::set<Oid> const& oids);
-  std::map<Oid, std::unique_ptr<Value const> > decodeSnmpGetResponse(
-    std::vector<uint8_t> const& ) throw(xju::Exception);
-
-  std::vector<uint8_t> encodeSnmpSetRequest(//other params?
-                  std::map<Oid, std::unique_ptr<Value const> > values);
-
-  void decodeSnmpSetResponse(
-    std::vector<uint8_t> const& ) throw(
-      // snmp-specific errors (set failure)
-      xju::Exception);
-
   what is structure? v1 is:
     list:
       version:int
@@ -96,8 +82,6 @@ notes:
            oid list
            - but also could add an SnmpV1Walk to use for straight walks
         ... don't bother implementing get-bulk or SnmpV1Walk to start with
-        ... in fact since v2 agent should be able to handle v1 requests, don't
-        implement any v2 stuff yet
 
   encoding type,length,data:
     types (see http://www.rane.com/note161.html)
