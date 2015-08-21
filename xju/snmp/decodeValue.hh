@@ -13,6 +13,8 @@
 #include <utility>
 #include "xju/snmp/Value.hh"
 #include "xju/snmp/DecodeIterator.hh"
+#include <memory>
+#include "xju/Exception.hh"
 
 namespace xju
 {

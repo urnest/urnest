@@ -7,23 +7,20 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef XJU_SNMP_DECODEOIDVALUE_H
-#define XJU_SNMP_DECODEOIDVALUE_H
-
-#include <utility>
-#include "xju/snmp/DecodeIterator.hh"
-#include "xju/Exception.hh"
-#include "xju/snmp/SnmpV1Table.hh"
+#include "ReadOnly.hh"
 
 namespace xju
 {
 namespace snmp
 {
-std::pair<Oid,DecodeIterator> decodeOidValue(
-  DecodeIterator const at) throw(xju::Exception);
+
+ReadOnly::ReadOnly(Oid const& param, const xju::Traced& trace) throw():
+    InvalidParam("object oid "+param.toString()+" is read-only",
+                 param,
+                 trace)
+{
+}
 
 }
 }
-
-#endif
 

@@ -35,11 +35,11 @@ public:
   size_t const encodedLength_;
   
   // convenience functions that do type and range checking
-  operator std::string() const throw(xju::Exception);
-  operator int() const throw(xju::Exception);
-  operator unsigned int() const throw(xju::Exception);
-  operator long() const throw(xju::Exception);
-  operator unsigned long() const throw(xju::Exception);
+  virtual operator std::string() const throw(xju::Exception);
+  virtual operator int() const throw(xju::Exception);
+  virtual operator unsigned int() const throw(xju::Exception);
+  virtual operator long() const throw(xju::Exception);
+  virtual operator unsigned long() const throw(xju::Exception);
 
   // return length of encoded value
   // ie return encodeTo(x)-x

@@ -10,6 +10,8 @@
 #include "StringValue.hh"
 
 #include "encodeOctetString.hh"
+#include "xju/snmp/encodedLengthOfValue.hh"
+#include <xju/format.hh>
 
 namespace xju
 {

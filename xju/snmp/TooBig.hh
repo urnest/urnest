@@ -7,20 +7,22 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef XJU_SNMP_DECODEOIDVALUE_H
-#define XJU_SNMP_DECODEOIDVALUE_H
+#ifndef XJU_SNMP_TOOBIG_H
+#define XJU_SNMP_TOOBIG_H
 
-#include <utility>
-#include "xju/snmp/DecodeIterator.hh"
 #include "xju/Exception.hh"
-#include "xju/snmp/SnmpV1Table.hh"
 
 namespace xju
 {
 namespace snmp
 {
-std::pair<Oid,DecodeIterator> decodeOidValue(
-  DecodeIterator const at) throw(xju::Exception);
+
+// exception corresponding to RFC 1157 error-status
+class TooBig : public xju::Exception
+{
+public:
+  explicit TooBig(const xju::Traced& trace) throw();
+};
 
 }
 }

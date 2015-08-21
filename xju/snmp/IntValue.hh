@@ -31,6 +31,12 @@ public:
   int64_t const val_;
 
   // Value::
+  operator int() const throw(xju::Exception) override;
+  operator unsigned int() const throw(xju::Exception) override;
+  operator long() const throw(xju::Exception) override;
+  operator unsigned long() const throw(xju::Exception) override;
+
+  // Value::
   std::vector<uint8_t>::iterator encodeTo(
     std::vector<uint8_t>::iterator begin) const throw() override;
 

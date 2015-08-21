@@ -12,17 +12,24 @@
 
 #include <vector>
 #include <stdint.h>
-#include "SnmpV1GetRequest.hh"
+
 
 namespace xju
 {
 namespace snmp
 {
 
+class SnmpV1GetRequest;
+class SnmpV1SetRequest;
+class SnmpV1GetNextRequest;
+class SnmpV1Trap;
+
 std::vector<uint8_t> encode(SnmpV1GetRequest const& request) throw();
+std::vector<uint8_t> encode(SnmpV1SetRequest const& request) throw();
+std::vector<uint8_t> encode(SnmpV1GetNextRequest const& request) throw();
+std::vector<uint8_t> encode(SnmpV1Trap const& trap) throw();
 
 }
 }
 
 #endif
-

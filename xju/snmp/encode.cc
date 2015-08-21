@@ -10,11 +10,27 @@
 #include "encode.hh"
 
 #include <xju/countSignificantBits.hh>
+#include "xju/snmp/SnmpV1GetNextRequest.hh"
+#include "xju/snmp/SnmpV1Trap.hh"
+#include "xju/assert.hh"
+#include <algorithm>
+#include <vector>
+#include "xju/snmp/encodedLengthOfLength.hh"
+#include "xju/snmp/encodeLength.hh"
+#include "xju/snmp/SnmpV1SetRequest.hh"
+#include "xju/snmp/OidValue.hh"
+#include "xju/snmp/IntValue.hh"
+#include "xju/snmp/StringValue.hh"
+#include "xju/snmp/NullValue.hh"
+#include "xju/snmp/IPv4AddressValue.hh"
+#include "xju/snmp/TimeTicksValue.hh"
+#include "xju/snmp/SnmpV1GetRequest.hh"
 
 namespace xju
 {
 namespace snmp
 {
+
 
 namespace
 {
@@ -72,6 +88,36 @@ public:
 
 }
 
+std::vector<uint8_t> encode(SnmpV1GetRequest const& request) throw()
+{
+  typedef std::shared_ptr<Value const> vp;
+  
+  std::vector<vp > params;
+  std::transform(request.oids_.begin(),
+                 request.oids_.end(),
+                 std::back_inserter(params),
+                 [](Oid const& oid) {
+                   return vp(
+                     new Sequence({
+                         vp(new OidValue(oid)),
+                         vp(new NullValue)},
+                       0x30));
+                 });
+  Sequence s({
+      vp(new IntValue(0)), // SNMP version 1
+      vp(new StringValue(request.community_._)),
+      vp(new Sequence({
+            vp(new IntValue(request.id_.value())),
+            vp(new IntValue(0)),//error
+            vp(new IntValue(0)),//errorIndex
+            vp(new Sequence(params,0x30))},
+        0xA0))},
+    0x30);
+  std::vector<uint8_t> result(s.encodedLength());
+  xju::assert_equal(s.encodeTo(result.begin()),result.end());
+  return result;
+}
+
 std::vector<uint8_t> encode(SnmpV1SetRequest const& request) throw()
 {
   typedef std::shared_ptr<Value const> vp;
@@ -96,6 +142,68 @@ std::vector<uint8_t> encode(SnmpV1SetRequest const& request) throw()
             vp(new IntValue(0)),//errorIndex
             vp(new Sequence(params,0x30))},
           0xA3))}, // SNMP Get
+    0x30);
+  std::vector<uint8_t> result(s.encodedLength());
+  xju::assert_equal(s.encodeTo(result.begin()),result.end());
+  return result;
+}
+
+std::vector<uint8_t> encode(SnmpV1GetNextRequest const& request) throw()
+{
+  typedef std::shared_ptr<Value const> vp;
+  
+  std::vector<vp > params;
+  std::transform(request.oids_.begin(),
+                 request.oids_.end(),
+                 std::back_inserter(params),
+                 [](Oid const& oid) {
+                   return vp(
+                     new Sequence({
+                         vp(new OidValue(oid)),
+                         vp(new NullValue)},
+                       0x30));
+                 });
+  Sequence s({
+      vp(new IntValue(0)), // SNMP version 1
+      vp(new StringValue(request.community_._)),
+      vp(new Sequence({
+            vp(new IntValue(request.id_.value())),
+            vp(new IntValue(0)),//error
+            vp(new IntValue(0)),//errorIndex
+            vp(new Sequence(params,0x30))},
+        0xA1))},
+    0x30);
+  std::vector<uint8_t> result(s.encodedLength());
+  xju::assert_equal(s.encodeTo(result.begin()),result.end());
+  return result;
+}
+
+std::vector<uint8_t> encode(SnmpV1Trap const& trap) throw()
+{
+  typedef std::shared_ptr<Value const> vp;
+  
+  std::vector<vp > params;
+  std::transform(trap.vars_.begin(),
+                 trap.vars_.end(),
+                 std::back_inserter(params),
+                 [](std::pair<Oid const,vp> const& x) {
+                   return vp(
+                     new Sequence({
+                         vp(new OidValue(x.first)),
+                         x.second},
+                       0x30));
+                 });
+  Sequence s({
+      vp(new IntValue(0)), // SNMP version 1
+      vp(new StringValue(trap.community_._)),
+      vp(new Sequence({
+            vp(new OidValue(trap.trapType_)),
+            vp(new IPv4AddressValue(trap.origin_)),//error
+            vp(new IntValue((int)trap.genericType_)),
+            vp(new IntValue(trap.specificType_.value())),
+            vp(new TimeTicksValue(trap.timestamp_)),
+            vp(new Sequence(params,0x30))},
+          0xA4))}, // SNMP Trap
     0x30);
   std::vector<uint8_t> result(s.encodedLength());
   xju::assert_equal(s.encodeTo(result.begin()),result.end());

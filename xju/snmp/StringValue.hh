@@ -27,6 +27,12 @@ public:
   std::string const val_;
 
   // Value::
+  operator std::string() const throw(xju::Exception) override
+  {
+    return val_;
+  }
+
+  // Value::
   std::vector<uint8_t>::iterator encodeTo(
     std::vector<uint8_t>::iterator begin) const throw() override;
 

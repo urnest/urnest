@@ -10,6 +10,8 @@
 #include "SnmpV1GetRequest.hh"
 #include <xju/format.hh>
 #include <algorithm>
+#include "xju/snmp/Value.hh"
+#include <memory>
 
 namespace xju
 {
@@ -22,37 +24,6 @@ std::ostream& operator<<(std::ostream& s, SnmpV1GetRequest const& x) throw()
            << ", oids " 
            << xju::format::join(x.oids_.begin(),x.oids_.end(),", ");
 }
-
-std::vector<uint8_t> encode(SnmpV1GetRequest const& request) throw()
-{
-  typedef std::shared_ptr<Value const> vp;
-  
-  std::vector<vp > params;
-  std::transform(request.oids_.begin(),
-                 request.oids_.end(),
-                 std::back_inserter(params),
-                 [](Oid const& oid) {
-                   return vp(
-                     new Sequence({
-                         vp(new OidValue(oid)),
-                         vp(new NullValue)},
-                       0x30));
-                 });
-  Sequence s({
-      vp(new IntValue(0)), // SNMP version 1
-      vp(new StringValue(request.community_._)),
-      vp(new Sequence({
-            vp(new IntValue(request.id_.value())),
-            vp(new IntValue(0)),//error
-            vp(new IntValue(0)),//errorIndex
-            vp(new Sequence(params,0x30))},
-        0xA0))},
-    0x30);
-  std::vector<uint8_t> result(s.encodedLength());
-  xju::assert_equal(s.encodeTo(result.begin()),result.end());
-  return result;
-}
-
 
 }
 }

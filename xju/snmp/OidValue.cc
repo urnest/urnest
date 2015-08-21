@@ -11,6 +11,9 @@
 #include "xju/snmp/encodedLengthOfValue.hh"
 #include "xju/snmp/encodeLength.hh"
 #include "xju/countSignificantBits.hh"
+#include <algorithm>
+#include "xju/snmp/encodedLengthOfOidComponent.hh"
+#include "xju/snmp/oidDataLength.hh"
 
 namespace xju
 {
@@ -19,31 +22,6 @@ namespace snmp
 
 namespace
 {
-uint64_t encodedLengthOfOidComponent(uint32_t const c) throw()
-{
-  int bits=xju::countSignificantBits(c);
-  // encoded in groups of 7 bits, but c==0 uses one byte
-  // bits     length
-  // 0        1
-  // <8       1
-  // <15      2
-  if(c==0) {
-    return 1;
-  }
-  return (bits-1)/7+1;
-}
-
-size_t oidDataLength(Oid const& oid) throw()
-{
-  return std::accumulate(
-    oid.components().begin()+2,
-    oid.components().end(),
-    uint64_t{1U},/*for 1.3 encoded as 0x2B*/
-    [](uint64_t t, uint32_t c)
-    {
-      return t+encodedLengthOfOidComponent(c);
-    });
-}
 std::vector<uint8_t>::iterator encodeOidComponent(
   std::vector<uint8_t>::iterator const begin,
   uint32_t c) throw()

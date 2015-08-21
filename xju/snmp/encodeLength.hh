@@ -11,6 +11,8 @@
 #define XJU_SNMP_ENCODELENGTH_H
 
 #include <vector>
+#include <stdint.h>
+#include <unistd.h>
 
 namespace xju
 {
@@ -19,7 +21,7 @@ namespace snmp
 
 std::vector<uint8_t>::iterator encodeLength(
   std::vector<uint8_t>::iterator const begin,
-  size_t length) throw()
+  size_t length) throw();
 
 }
 }

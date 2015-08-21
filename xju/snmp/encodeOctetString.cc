@@ -12,8 +12,11 @@
 #include <stdint.h>
 #include "encodeLength.hh"
 #include <algorithm>
+#include "xju/snmp/encodeLength.hh"
 
 namespace xju
+{
+namespace snmp
 {
 
 std::vector<uint8_t>::iterator encodeOctetString(
@@ -30,6 +33,6 @@ std::vector<uint8_t>::iterator encodeOctetString(
 }
 
   
-
+}
 }
 

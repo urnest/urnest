@@ -7,23 +7,23 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef XJU_SNMP_DECODEOIDVALUE_H
-#define XJU_SNMP_DECODEOIDVALUE_H
-
-#include <utility>
-#include "xju/snmp/DecodeIterator.hh"
-#include "xju/Exception.hh"
-#include "xju/snmp/SnmpV1Table.hh"
+#include "SnmpV1GetNextRequest.hh"
+#include <xju/format.hh>
 
 namespace xju
 {
 namespace snmp
 {
-std::pair<Oid,DecodeIterator> decodeOidValue(
-  DecodeIterator const at) throw(xju::Exception);
+
+std::ostream& operator<<(std::ostream& s, 
+                         SnmpV1GetNextRequest const& x) throw()
+{
+  return s << "community " << x.community_._ << ", id " << x.id_.value()
+           << ", oids " 
+           << xju::format::join(x.oids_.begin(),x.oids_.end(),", ");
+}
+
 
 }
 }
-
-#endif
 

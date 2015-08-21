@@ -10,7 +10,10 @@
 #include "encodedLengthOfValue.hh"
 
 #include <stdint.h>
-#include "encodedLengthOfLength.hh"
+#include "xju/snmp/encodedLengthOfLength.hh"
+#include "xju/snmp/intDataLength.hh"
+#include "xju/assert.hh"
+#include "xju/snmp/oidDataLength.hh"
 
 namespace xju
 {
@@ -43,7 +46,6 @@ size_t encodedLengthOfValue(Oid const& val_) throw()
   return 1/*type*/+
     encodedLengthOfLength(dataLength)+
     dataLength;
-}
 }
 
 

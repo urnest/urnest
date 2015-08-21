@@ -7,23 +7,21 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef XJU_SNMP_DECODEOIDVALUE_H
-#define XJU_SNMP_DECODEOIDVALUE_H
-
-#include <utility>
-#include "xju/snmp/DecodeIterator.hh"
-#include "xju/Exception.hh"
-#include "xju/snmp/SnmpV1Table.hh"
+#include "InvalidParam.hh"
 
 namespace xju
 {
 namespace snmp
 {
-std::pair<Oid,DecodeIterator> decodeOidValue(
-  DecodeIterator const at) throw(xju::Exception);
+
+InvalidParam::InvalidParam(std::string const& cause,
+                           Oid const& param, const xju::Traced& trace) throw():
+    xju::Exception(cause, trace),
+    param_(param) 
+{
+}
+
 
 }
 }
-
-#endif
 

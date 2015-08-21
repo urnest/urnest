@@ -7,23 +7,20 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef XJU_SNMP_DECODEOIDVALUE_H
-#define XJU_SNMP_DECODEOIDVALUE_H
-
-#include <utility>
-#include "xju/snmp/DecodeIterator.hh"
-#include "xju/Exception.hh"
-#include "xju/snmp/SnmpV1Table.hh"
+#include "TooBig.hh"
 
 namespace xju
 {
 namespace snmp
 {
-std::pair<Oid,DecodeIterator> decodeOidValue(
-  DecodeIterator const at) throw(xju::Exception);
+
+TooBig::TooBig(const xju::Traced& trace) throw():
+    xju::Exception("SNMP response would have exceeded server internal limit",
+                   trace) 
+{
+}
+
 
 }
 }
-
-#endif
 

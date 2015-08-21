@@ -21,7 +21,8 @@ namespace snmp
 std::vector<uint8_t>::iterator encodeOctetString(
   std::vector<uint8_t>::iterator const to,
   uint8_t const asn1Type,
-  std::vector<uint8_t> const& val) throw()
+  std::vector<uint8_t> const& val) throw();
+
 
 }
 }

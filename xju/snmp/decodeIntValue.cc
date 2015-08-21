@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include "xju/snmp/decodeIntValue.h"
+#include "decodeIntValue.hh"
 #include <sstream>
 #include <xju/format.hh>
 #include "xju/snmp/decodeLength.hh"

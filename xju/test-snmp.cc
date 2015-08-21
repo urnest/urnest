@@ -12,6 +12,10 @@
 #include <iostream>
 #include <xju/assert.hh>
 #include <typeinfo>
+#include "xju/snmp/NullValue.hh"
+#include "xju/snmp/IntValue.hh"
+#include "xju/snmp/StringValue.hh"
+#include "xju/snmp/OidValue.hh"
 
 namespace xju
 {
@@ -314,7 +318,7 @@ void test5() throw()
   xju::assert_equal(y.responseType_,0xA2);
   xju::assert_equal(y.community_,Community("private"));
   xju::assert_equal(y.id_,RequestId(1));
-  xju::assert_equal(y.error_,SnmpV1Response::NO_ERROR);
+  xju::assert_equal(y.error_,SnmpV1Response::ErrorStatus::NO_ERROR);
   xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
   xju::assert_equal(y.values_.size(),1);
   xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
@@ -335,7 +339,7 @@ void test6() throw()
     xju::assert_equal(y.responseType_,0xA2);
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
-    xju::assert_equal(y.error_,SnmpV1Response::NO_ERROR);
+    xju::assert_equal(y.error_,SnmpV1Response::ErrorStatus::NO_ERROR);
     xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
@@ -356,7 +360,7 @@ void test6() throw()
     xju::assert_equal(y.responseType_,0xA2);
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
-    xju::assert_equal(y.error_,SnmpV1Response::NO_ERROR);
+    xju::assert_equal(y.error_,SnmpV1Response::ErrorStatus::NO_ERROR);
     xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
@@ -377,7 +381,7 @@ void test6() throw()
     xju::assert_equal(y.responseType_,0xA2);
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
-    xju::assert_equal(y.error_,SnmpV1Response::NO_ERROR);
+    xju::assert_equal(y.error_,SnmpV1Response::ErrorStatus::NO_ERROR);
     xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
@@ -398,7 +402,7 @@ void test6() throw()
     xju::assert_equal(y.responseType_,0xA2);
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
-    xju::assert_equal(y.error_,SnmpV1Response::NO_ERROR);
+    xju::assert_equal(y.error_,SnmpV1Response::ErrorStatus::NO_ERROR);
     xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
@@ -419,7 +423,7 @@ void test6() throw()
     xju::assert_equal(y.responseType_,0xA2);
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
-    xju::assert_equal(y.error_,SnmpV1Response::NO_ERROR);
+    xju::assert_equal(y.error_,SnmpV1Response::ErrorStatus::NO_ERROR);
     xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
@@ -440,7 +444,7 @@ void test6() throw()
     xju::assert_equal(y.responseType_,0xA2);
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
-    xju::assert_equal(y.error_,SnmpV1Response::NO_ERROR);
+    xju::assert_equal(y.error_,SnmpV1Response::ErrorStatus::NO_ERROR);
     xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
@@ -461,7 +465,7 @@ void test6() throw()
     xju::assert_equal(y.responseType_,0xA2);
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(0x100));
-    xju::assert_equal(y.error_,SnmpV1Response::NO_ERROR);
+    xju::assert_equal(y.error_,SnmpV1Response::ErrorStatus::NO_ERROR);
     xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
@@ -481,7 +485,7 @@ void test6() throw()
     xju::assert_equal(y.responseType_,0xA2);
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
-    xju::assert_equal(y.error_,SnmpV1Response::NO_ERROR);
+    xju::assert_equal(y.error_,SnmpV1Response::ErrorStatus::NO_ERROR);
     xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
     xju::assert_equal(y.values_.size(),2);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
@@ -669,7 +673,10 @@ void test8() throw()
     xju::assert_equal(e.expected_,0xa2);
     xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa0, community dd2, id 23, error status 0, error index 0, values .1.3.3: \"fred\", .1.3.9.3333: 3 to request community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nexpected response of type 0xa2 but got response of type 0xa0.");
   }
-
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+  
   try {
     std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
       {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue("fred")}},
@@ -692,6 +699,9 @@ void test8() throw()
     xju::assert_equal(e.got_,RequestId(24));
     xju::assert_equal(e.expected_,RequestId(23));
     xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 24, error status 0, error index 0, values .1.3.3: \"fred\", .1.3.9.3333: 3 to request community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nexpected response with id 23 but got response of id 24.");
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
   }
 
   try {
@@ -716,6 +726,9 @@ void test8() throw()
     xju::assert_equal(e.param_,Oid(".1.3.9.3333"));
     xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 2, error index 2, values .1.3.3: \"fred\", .1.3.9.3333: null to request community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nserver has no object with oid .1.3.9.3333.");
   }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
 
   try {
     std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
@@ -735,6 +748,9 @@ void test8() throw()
   }
   catch(TooBig const& e) {
     xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 1, error index 0, values  to request community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nSNMP response would have exceeded server internal limit.");
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
   }
 
   try {
@@ -756,6 +772,10 @@ void test8() throw()
   catch(GenErr const& e) {
     xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 5, error index 0, values  to request community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nSNMP General Error.");
   }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+
   try {
     std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
     };

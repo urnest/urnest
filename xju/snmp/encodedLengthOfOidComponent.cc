@@ -7,23 +7,27 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef XJU_SNMP_DECODEOIDVALUE_H
-#define XJU_SNMP_DECODEOIDVALUE_H
-
-#include <utility>
-#include "xju/snmp/DecodeIterator.hh"
-#include "xju/Exception.hh"
-#include "xju/snmp/SnmpV1Table.hh"
+#include "encodedLengthOfOidComponent.hh"
+#include <xju/countSignificantBits.hh>
 
 namespace xju
 {
 namespace snmp
 {
-std::pair<Oid,DecodeIterator> decodeOidValue(
-  DecodeIterator const at) throw(xju::Exception);
+uint64_t encodedLengthOfOidComponent(uint32_t const c) throw()
+{
+  int bits=xju::countSignificantBits(c);
+  // encoded in groups of 7 bits, but c==0 uses one byte
+  // bits     length
+  // 0        1
+  // <8       1
+  // <15      2
+  if(c==0) {
+    return 1;
+  }
+  return (bits-1)/7+1;
+}
 
 }
 }
-
-#endif
 

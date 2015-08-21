@@ -19,7 +19,7 @@ namespace xju
 namespace snmp
 {
 std::pair<uint64_t,DecodeIterator> decodeIntValue(DecodeIterator const at)
-  throw(xju::Exception)
+  throw(xju::Exception);
 
 }
 }

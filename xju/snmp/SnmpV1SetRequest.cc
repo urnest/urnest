@@ -7,7 +7,8 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include "SnmpV1Response.hh"
+#include "SnmpV1SetRequest.hh"
+#include <sstream>
 #include <xju/format.hh>
 
 namespace xju
@@ -15,24 +16,20 @@ namespace xju
 namespace snmp
 {
 
-std::ostream& operator<<(std::ostream& s, SnmpV1Response const& x) throw()
-{
-  return s << "type " << xju::format::hex(x.responseType_)
-           << ", community " << x.community_._
-           << ", id " << x.id_.value()
-           << ", error status " << (int)x.error_
-           << ", error index " << x.errorIndex_.value()
-           << ", values "
+std::ostream& operator<<(std::ostream& s, 
+                         SnmpV1SetRequest const& x) throw() {
+  return s << "community " << x.community_._ << ", id " << x.id_.value()
+           << ", values " 
            << xju::format::join(
-             x.values_.begin(), x.values_.end(),
-             [](std::pair<Oid, std::shared_ptr<Value const> > const& x) {
+             x.values_.begin(),x.values_.end(),
+             [](std::pair<Oid const, std::shared_ptr<Value const> > x) {
                std::ostringstream s;
                s << x.first << ": " << (*x.second);
                return s.str();
              },
              ", ");
 }
-               
+
 
 }
 }

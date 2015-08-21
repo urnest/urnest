@@ -11,6 +11,15 @@
 #include <string>
 #include "xju/Optional.hh"
 #include "xju/format.hh"
+#include "xju/snmp/DecodeIterator.hh"
+#include "xju/snmp/decodeSequenceTypeAndLength.hh"
+#include "xju/snmp/decodeIntValue.hh"
+#include "xju/snmp/decodeStringValue.hh"
+#include "xju/snmp/decodeOidValue.hh"
+#include "xju/snmp/decodeValue.hh"
+#include <algorithm>
+#include <iterator>
+#include <limits.h>
 
 namespace xju
 {
