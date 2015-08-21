@@ -19,6 +19,7 @@
 #include "xju/Tagged.hh"
 #include <set>
 #include <map>
+#include "xju/MicroSeconds.hh"
 
 namespace xju
 {
@@ -102,12 +103,64 @@ private:
 
 // RFC 1157 request-id
 class RequestIdTag{};
-typedef xju::Int<uint64_t> RequestId;
+typedef xju::Int<RequestIdTag,uint64_t> RequestId;
 
 // RFC 1157 community
 class CommunityTag{};
 typedef xju::Tagged<std::string,CommunityTag> Community;
+
+struct IPv4Address
+{
+  // octets in host byte-order
+  explicit IPv4Address(uint32_t octets) throw():
+      _(octets)
+  {
+  }
+  //octets with octets[0] msb
+  //pre: octets.size()==4
+  explicit IPv4Address(std::vector<uint8_t> const& octets) throw():
+      _((octets[0]<<24)|(octets[1]<<16)|(octets[2]<<8)|(octets[3]))
+  {
+  }
   
+  uint32_t _;
+  
+  // i'th octet, i=0 gets msb
+  // pre: 0<=i<=3
+  uint8_t operator[](int i) const throw()
+  {
+    return (_ >> (8*(3-i)))&0xff;
+  }
+
+  friend std::ostream& operator<<(std::ostream& s, IPv4Address const& x) 
+    throw();
+  
+  friend bool operator<(IPv4Address const& x, IPv4Address const& y) throw()
+  {
+    return x._ < y._;
+  }
+  friend bool operator>(IPv4Address const& x, IPv4Address const& y) throw()
+  {
+    return y < x;
+  }
+  friend bool operator!=(IPv4Address const& x, IPv4Address const& y) throw()
+  {
+    return y < x || x < y;
+  }
+  friend bool operator==(IPv4Address const& x, IPv4Address const& y) throw()
+  {
+    return !(y!=x);
+  }
+  friend bool operator<=(IPv4Address const& x, IPv4Address const& y) throw()
+  {
+    return !(x>y);
+  }
+  friend bool operator>=(IPv4Address const& x, IPv4Address const& y) throw()
+  {
+    return !(x<y);
+  }
+};
+
 struct SnmpV1GetRequest
 {
   SnmpV1GetRequest(Community const& community,
@@ -240,6 +293,36 @@ public:
   }
 };
 
+class IPv4AddressValue : public Value
+{
+public:
+  explicit IPv4AddressValue(IPv4Address val) throw();
+
+  IPv4Address const val_;
+
+  // Value::
+  virtual std::vector<uint8_t>::iterator encodeTo(
+    std::vector<uint8_t>::iterator begin) const throw();
+  
+  // Value::
+  virtual std::string str() const throw();
+};
+  
+class TimeTicksValue : public Value
+{
+public:
+  explicit TimeTicksValue(xju::MicroSeconds val) throw();
+  xju::MicroSeconds val_;
+
+  // Value::
+  virtual std::vector<uint8_t>::iterator encodeTo(
+    std::vector<uint8_t>::iterator begin) const throw();
+
+  // Value::
+  virtual std::string str() const throw();
+};
+
+
 struct SnmpV1Response
 {
   // RFC 1157 error-status
@@ -256,7 +339,7 @@ struct SnmpV1Response
   // RFC 1157 error-index
   // note error-index of first oid is 1, not 0
   class ErrorIndexTag{};
-  typedef xju::Int<uint64_t> ErrorIndex;
+  typedef xju::Int<ErrorIndexTag,uint64_t> ErrorIndex;
 
   SnmpV1Response(
     uint8_t responseType,
@@ -476,6 +559,55 @@ private:
   bool atEnd_;
 };
 
+struct SnmpV1Trap
+{
+  enum class GenericType
+  {
+    COLDSTART,
+    WARMSTART,
+    LINKDOWN,
+    LINKUP,
+    AUTHENTICATIONFAILURE,
+    EGPNEIGHBORLOSS,
+    ENTERPRISESPECIFIC
+  };
+    
+  struct SpecificTypeTag{};
+  typedef xju::Int<SpecificTypeTag,uint32_t> SpecificType;
+  
+  SnmpV1Trap(
+    Community community,
+    Oid trapType,
+    IPv4Address origin,
+    GenericType genericType,
+    SpecificType specificType,
+    xju::MicroSeconds timestamp,
+    std::map<Oid, std::shared_ptr<Value const> > vars) throw():
+      community_(community),
+      trapType_(trapType),
+      origin_(origin),
+      genericType_(genericType),
+      specificType_(specificType),
+      timestamp_(timestamp),
+      vars_(vars) {
+  }
+
+  Community community_;
+  Oid trapType_;
+  IPv4Address origin_;
+  GenericType genericType_;
+  SpecificType specificType_;
+  xju::MicroSeconds timestamp_;
+
+  std::map<Oid, std::shared_ptr<Value const> > vars_;
+  
+  friend std::ostream& operator<<(std::ostream& s, SnmpV1Trap const& x) 
+    throw();
+};
+
+std::vector<uint8_t> encode(SnmpV1Trap const& trap) throw();
+
+  
 }
 }
 

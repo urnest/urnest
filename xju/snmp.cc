@@ -106,6 +106,15 @@ bool Oid::contains(Oid const& y) const throw()
                    y.components_.begin()).first==components_.end());
 }
 
+std::ostream& operator<<(std::ostream& s, IPv4Address const& x) 
+throw()
+{
+  return s << xju::format::int_(x[0]) << "." 
+           << xju::format::int_(x[1]) << "." 
+           << xju::format::int_(x[2]) << "." 
+           << xju::format::int_(x[3]);
+}
+
 std::ostream& operator<<(std::ostream& s, SnmpV1GetRequest const& x) throw()
 {
   return s << "community " << x.community_._ << ", id " << x.id_.value()
@@ -247,6 +256,36 @@ size_t encodedLengthOfValue(std::string const& val_) throw()
     dataLength;
 }
 
+std::vector<uint8_t>::iterator encodeInt(
+  std::vector<uint8_t>::iterator const to,
+  uint8_t const asn1Type,
+  int64_t const val) throw()
+{
+  auto at(to);
+  *at++=asn1Type;
+  auto const dataLength=intDataLength(val);
+  at=encodeLength(at, dataLength);
+  for(int i=dataLength; i!=0; --i) {
+    uint8_t b=(val >> ((i-1)*8)) & 0xff;
+    *at++=b;
+  }
+  return at;
+}
+
+std::vector<uint8_t>::iterator encodeOctetString(
+  std::vector<uint8_t>::iterator const to,
+  uint8_t const asn1Type,
+  std::vector<uint8_t> const& val) throw()
+{
+  // X.690 octetstring using primitive encoding
+  auto at(to);
+  *at++=asn1Type;
+  at=encodeLength(at,val.size());
+  std::copy(val.begin(),val.end(),at);
+  return at+val.size();
+}
+
+  
 }
 
 Value::operator std::string() const throw(xju::Exception)
@@ -356,15 +395,7 @@ IntValue::IntValue(int64_t const& val) throw():
 std::vector<uint8_t>::iterator IntValue::encodeTo(
   std::vector<uint8_t>::iterator begin) const throw()
 {
-  auto at(begin);
-  *at++=0x02;
-  auto const dataLength=intDataLength(val_);
-  at=encodeLength(at, dataLength);
-  for(int i=dataLength; i!=0; --i) {
-    uint8_t b=(val_ >> ((i-1)*8)) & 0xff;
-    *at++=b;
-  }
-  return at;
+  return encodeInt(begin,0x02,val_);
 }
 std::string IntValue::str() const throw()
 {
@@ -381,12 +412,8 @@ StringValue::StringValue(std::string const& val) throw():
 std::vector<uint8_t>::iterator StringValue::encodeTo(
   std::vector<uint8_t>::iterator begin) const throw()
 {
-  // X.690 octetstring using primitive encoding
-  auto at(begin);
-  *at++=0x04;
-  at=encodeLength(at,val_.size());
-  std::copy(val_.begin(),val_.end(),at);
-  return at+val_.size();
+  return encodeOctetString(begin,0x04,
+                           std::vector<uint8_t>(val_.begin(),val_.end()));
 }
 std::string StringValue::str() const throw()
 {
@@ -1551,6 +1578,70 @@ throw()
   }
 }
 
+IPv4AddressValue::IPv4AddressValue(IPv4Address val) throw():
+  Value(encodedLengthOfValue(std::string("    "))),
+  val_(val)
+{
+}
+
+std::vector<uint8_t>::iterator IPv4AddressValue::encodeTo(
+  std::vector<uint8_t>::iterator begin) const throw()
+{
+  return encodeOctetString(
+    begin,0x40,{val_[0],val_[1],val_[2],val_[3]});
+}
+
+std::string IPv4AddressValue::str() const throw()
+{
+  return xju::format::str(val_);
+}
+
+TimeTicksValue::TimeTicksValue(xju::MicroSeconds val) throw():
+    Value(encodedLengthOfValue(val.value()/10000)),
+    val_(val) {
+  }
+
+std::vector<uint8_t>::iterator TimeTicksValue::encodeTo(
+  std::vector<uint8_t>::iterator begin) const throw()
+{
+  return encodeInt(begin,0x43,val_.value()/10000);
+}
+std::string TimeTicksValue::str() const throw()
+{
+  return xju::format::str(val_);
+}
+
+std::vector<uint8_t> encode(SnmpV1Trap const& trap) throw()
+{
+  typedef std::shared_ptr<Value const> vp;
+  
+  std::vector<vp > params;
+  std::transform(trap.vars_.begin(),
+                 trap.vars_.end(),
+                 std::back_inserter(params),
+                 [](std::pair<Oid const,vp> const& x) {
+                   return vp(
+                     new Sequence({
+                         vp(new OidValue(x.first)),
+                         x.second},
+                       0x30));
+                 });
+  Sequence s({
+      vp(new IntValue(0)), // SNMP version 1
+      vp(new StringValue(trap.community_._)),
+      vp(new Sequence({
+            vp(new OidValue(trap.trapType_)),
+            vp(new IPv4AddressValue(trap.origin_)),//error
+            vp(new IntValue((int)trap.genericType_)),
+            vp(new IntValue(trap.specificType_.value())),
+            vp(new TimeTicksValue(trap.timestamp_)),
+            vp(new Sequence(params,0x30))},
+          0xA4))}, // SNMP Trap
+    0x30);
+  std::vector<uint8_t> result(s.encodedLength());
+  xju::assert_equal(s.encodeTo(result.begin()),result.end());
+  return result;
+}
 
 }
 }

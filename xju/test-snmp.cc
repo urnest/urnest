@@ -1233,6 +1233,50 @@ void test13() throw()
   xju::assert_equal(t.atEnd(),true);
 }
 
+void test14() throw()
+{
+  IPv4Address const a({192,168,0,3});
+  IPv4Address const b({192,168,0,4});
+  
+  xju::assert_less(a,b);
+  xju::assert_equal(a,a);
+  xju::assert_equal(xju::format::str(a),"192.168.0.3");
+  xju::assert_equal(a._,(192U<<24)+(168U<<16)+3);
+}
+
+void test15() throw()
+{
+  // encode(SnmpV1Trap)
+  SnmpV1Trap t(
+    Community("private"),
+    Oid(".1.3.6"),
+    IPv4Address({192,168,0,3}),
+    SnmpV1Trap::GenericType(6),
+    SnmpV1Trap::SpecificType(42),
+    xju::MicroSeconds(330000),
+    {{Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
+          std::shared_ptr<Value const>(new IntValue(2))}});
+  std::vector<uint8_t> x(encode(t));
+  xju::assert_equal(
+    x,
+    std::vector<uint8_t>({
+        0x30,55,
+          0x02,0x01,0x00,//snmp v1
+          0x04,0x07,'p','r','i','v','a','t','e',
+          0xA4,41,//trap-pdu
+          0x06,2,0x2B,6,//oid
+          0x40,4,192,168,0,3, //origin
+          0x02,1,6, //generic type
+          0x02,1,42, //specific type
+          0x43,1,33, //timestamp
+          0x30,20, // vars:
+          0x30,18, // var:
+          0x06,0x0D,0x2B,6,1,4,1,0x94,0x78,1,2,7,3,2,0,//oid
+          0x02,1,2 //value
+          }));
+}
+
+
 }
 }
 
@@ -1255,6 +1299,8 @@ int main(int argc, char* argv[])
   test11(), ++n;
   test12(), ++n;
   test13(), ++n;
+  test14(), ++n;
+  test15(), ++n;
 
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
