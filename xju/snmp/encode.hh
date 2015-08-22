@@ -29,6 +29,9 @@ std::vector<uint8_t> encode(SnmpV1SetRequest const& request) throw();
 std::vector<uint8_t> encode(SnmpV1GetNextRequest const& request) throw();
 std::vector<uint8_t> encode(SnmpV1Trap const& trap) throw();
 
+class SnmpV2cGetRequest;
+std::vector<uint8_t> encode(SnmpV2cGetRequest const& request) throw();
+
 }
 }
 

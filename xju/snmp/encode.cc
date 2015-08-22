@@ -25,6 +25,7 @@
 #include "xju/snmp/IPv4AddressValue.hh"
 #include "xju/snmp/TimeTicksValue.hh"
 #include "xju/snmp/SnmpV1GetRequest.hh"
+#include "xju/snmp/SnmpV2cGetRequest.hh"
 
 namespace xju
 {
@@ -204,6 +205,36 @@ std::vector<uint8_t> encode(SnmpV1Trap const& trap) throw()
             vp(new TimeTicksValue(trap.timestamp_)),
             vp(new Sequence(params,0x30))},
           0xA4))}, // SNMP Trap
+    0x30);
+  std::vector<uint8_t> result(s.encodedLength());
+  xju::assert_equal(s.encodeTo(result.begin()),result.end());
+  return result;
+}
+
+std::vector<uint8_t> encode(SnmpV2cGetRequest const& request) throw()
+{
+  typedef std::shared_ptr<Value const> vp;
+  
+  std::vector<vp > params;
+  std::transform(request.oids_.begin(),
+                 request.oids_.end(),
+                 std::back_inserter(params),
+                 [](Oid const& oid) {
+                   return vp(
+                     new Sequence({
+                         vp(new OidValue(oid)),
+                         vp(new NullValue)},
+                       0x30));
+                 });
+  Sequence s({
+      vp(new IntValue(1)), // SNMP version 2c - see RFC 1901
+      vp(new StringValue(request.community_._)),
+      vp(new Sequence({
+            vp(new IntValue(request.id_.value())),
+            vp(new IntValue(0)),//error
+            vp(new IntValue(0)),//errorIndex
+            vp(new Sequence(params,0x30))},
+        0xA0))},
     0x30);
   std::vector<uint8_t> result(s.encodedLength());
   xju::assert_equal(s.encodeTo(result.begin()),result.end());

@@ -1,0 +1,8 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+%tests.tree
+
+%tests.tree == <<
+()+cmd=(test-SnmpV2cGetRequest.cc+(../..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-decodeSnmpV2cResponse.cc+(../..%cxx-opts):auto.cxx.exe):stdout
