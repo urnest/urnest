@@ -4,9 +4,16 @@ have locking, but they have no surprise dependencies and so can easily
 be used eg with separate threads doing SNMP requests to the same or
 different servers, most easily by each thread using a distinct UDP port.)
 
+See ../snmp.hh for usage.
+
 TODO:
   - implement all var types
   - add snmp v2c
+    x SnmpV2cGetRequest, encode
+    x SnmpV2cResponse, decode
+    - validateResponse(SnmpV2cGetRequest,SnmpV2cResponse)
+    - SnmpV2cSetRequest, encode
+    - validateResponse(SnmpV2cSetRequest,SnmpV2cResponse)
 
 references:
   http://www.rane.com/note161.html
