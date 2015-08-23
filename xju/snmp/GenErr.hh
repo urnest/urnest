@@ -10,21 +10,20 @@
 #ifndef XJU_SNMP_GENERR_H
 #define XJU_SNMP_GENERR_H
 
-#include "xju/Exception.hh"
+#include "xju/snmp/InvalidParam.hh"
 
 namespace xju
 {
 namespace snmp
 {
 // exception corresponding to RFC 1157 error-status
-class GenErr : public xju::Exception
+class GenErr : public InvalidParam
 {
 public:
-  explicit GenErr(const xju::Traced& trace) throw();
+  explicit GenErr(Oid const& param, const xju::Traced& trace) throw();
 };
 
 }
 }
 
 #endif
-

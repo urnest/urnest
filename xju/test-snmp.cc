@@ -755,6 +755,8 @@ void test8() throw()
 
   try {
     std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
+      {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue("fred")}},
+      {Oid(".1.3.9.3333"),std::shared_ptr<Value const>{new NullValue}}
     };
     auto x=validateResponse(
       SnmpV1GetRequest(Community("dje"),
@@ -764,13 +766,13 @@ void test8() throw()
                      Community("dd2"),
                      RequestId(23),
                      SnmpV1Response::ErrorStatus(5),
-                     SnmpV1Response::ErrorIndex(0),
+                     SnmpV1Response::ErrorIndex(1),
                      values));
     
     xju::assert_never_reached();
   }
   catch(GenErr const& e) {
-    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 5, error index 0, values  to request community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nSNMP General Error.");
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 5, error index 1, values .1.3.3: \"fred\", .1.3.9.3333: null to request community dje, id 23, oids .1.3.3, .1.3.9.3333 because\ngeneral error for oid .1.3.3.");
   }
   catch(xju::Exception const& e) {
     xju::assert_not_equal(readableRepr(e),readableRepr(e));
@@ -958,13 +960,13 @@ void test10() throw()
                      Community("dd2"),
                      RequestId(23),
                      SnmpV1Response::ErrorStatus(5),
-                     SnmpV1Response::ErrorIndex(0),
+                     SnmpV1Response::ErrorIndex(1),
                      values));
     
     xju::assert_never_reached();
   }
   catch(GenErr const& e) {
-    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 5, error index 0, values .1.3.3: \"fred\", .1.3.9.3333: 3 to SnmpV1SetRequest community dje, id 23, values .1.3.3: \"fred\", .1.3.9.3333: 3 because\nSNMP General Error.");
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 5, error index 1, values .1.3.3: \"fred\", .1.3.9.3333: 3 to SnmpV1SetRequest community dje, id 23, values .1.3.3: \"fred\", .1.3.9.3333: 3 because\ngeneral error for oid .1.3.3.");
   }
   try {
     std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
@@ -1034,23 +1036,30 @@ void test12() throw()
     {Oid(".1.3.4"), std::shared_ptr<Value const>{new StringValue("jock")}},
     {Oid(".1.3.9.3334"),std::shared_ptr<Value const>{new IntValue(5)}}
   };
-  auto x=validateResponse(
-    SnmpV1GetNextRequest(Community("dje"),
-                         RequestId(23),
-                         std::vector<Oid>({Oid(".1.3.3"),Oid(".1.3.9.3333")})),
-    SnmpV1Response(0xA2,
-                   Community("dd2"),
-                   RequestId(23),
-                   SnmpV1Response::ErrorStatus(0),
-                   SnmpV1Response::ErrorIndex(0),
-                   nextValues));
-    
-  xju::assert_equal(x.size(),2U);
-  xju::assert_equal(x[0].first,Oid(".1.3.4"));
-  xju::assert_equal(x[0].second->operator std::string(),"jock");
-  xju::assert_equal(x[1].first,Oid(".1.3.9.3334"));
-  xju::assert_equal(x[1].second->operator int(),5);
-
+  try
+  {
+    auto x=validateResponse(
+      SnmpV1GetNextRequest(Community("dje"),
+                           RequestId(23),
+                           std::vector<Oid>({Oid(".1.3.3"),Oid(".1.3.9.3333")})),
+      SnmpV1Response(0xA2,
+                     Community("dd2"),
+                     RequestId(23),
+                     SnmpV1Response::ErrorStatus(0),
+                     SnmpV1Response::ErrorIndex(0),
+                     nextValues));
+  
+    xju::assert_equal(x.size(),2U);
+    xju::assert_equal(x[0].first,Oid(".1.3.4"));
+    xju::assert_equal(x[0].second->operator std::string(),"jock");
+    xju::assert_equal(x[1].first,Oid(".1.3.9.3334"));
+    xju::assert_equal(x[1].second->operator int(),5);
+  }
+  catch(xju::Exception const& e)
+  {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+  
   try {
     auto x=validateResponse(
       SnmpV1GetNextRequest(Community("dje"),
@@ -1138,13 +1147,13 @@ void test12() throw()
                      Community("dd2"),
                      RequestId(23),
                      SnmpV1Response::ErrorStatus(5),
-                     SnmpV1Response::ErrorIndex(0),
+                     SnmpV1Response::ErrorIndex(1),
                      nextValues));
     
     xju::assert_never_reached();
   }
   catch(GenErr const& e) {
-    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 5, error index 0, values .1.3.4: \"jock\", .1.3.9.3334: 5 to SnmpV1GetNextRequest community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nSNMP General Error.");
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 5, error index 1, values .1.3.4: \"jock\", .1.3.9.3334: 5 to SnmpV1GetNextRequest community dje, id 23, oids .1.3.3, .1.3.9.3333 because\ngeneral error for oid .1.3.3.");
   }
   try {
     std::vector<std::pair<Oid, std::shared_ptr<Value const> > > nextValues {

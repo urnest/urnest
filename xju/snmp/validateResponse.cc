@@ -67,7 +67,29 @@ std::map<Oid, std::shared_ptr<Value const> > validateResponse(
       throw NoSuchName(response.values_[i].first,XJU_TRACED);
     }
     case SnmpV1Response::ErrorStatus::GEN_ERR:
-      throw GenErr(XJU_TRACED);
+    {
+      if (response.errorIndex_==SnmpV1Response::ErrorIndex(0)) {
+        std::ostringstream s;
+        s << "response specifies GenErr (0x05) error but error index does "
+          << "not identify which oid was not found (index must be > 0)";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      auto const i(response.errorIndex_.value()-1);
+      if (i >= response.values_.size()) {
+        std::ostringstream s;
+        s << "response specifies GenErr (0x05) error but error index"
+          << " is beyond last oid in response";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      if (request.oids_.find(response.values_[i].first)==request.oids_.end()) {
+        std::ostringstream s;
+        s << "response error index indicates that general error for oid "
+          << response.values_[i].first << ", but that oid "
+          << "was not requested?";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      throw GenErr(response.values_[i].first,XJU_TRACED);
+    }
     default:
     {
       std::ostringstream s;
@@ -197,7 +219,29 @@ void validateResponse(
       throw ReadOnly(response.values_[i].first,XJU_TRACED);
     }
     case SnmpV1Response::ErrorStatus::GEN_ERR:
-      throw GenErr(XJU_TRACED);
+    {
+      if (response.errorIndex_==SnmpV1Response::ErrorIndex(0)) {
+        std::ostringstream s;
+        s << "response specifies GenErr (0x05) error but error index does "
+          << "not identify which oid was not found (index must be > 0)";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      auto const i(response.errorIndex_.value()-1);
+      if (i >= response.values_.size()) {
+        std::ostringstream s;
+        s << "response specifies GenErr (0x05) error but error index"
+          << " is beyond last oid in response";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      if (request.values_.find(response.values_[i].first)==request.values_.end()) {
+        std::ostringstream s;
+        s << "response error index indicates that general error for oid "
+          << response.values_[i].first << ", but that oid "
+          << "was not requested?";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      throw GenErr(response.values_[i].first,XJU_TRACED);
+    }
     default:
     {
       std::ostringstream s;
@@ -286,7 +330,28 @@ std::vector<std::pair<Oid, std::shared_ptr<Value const> > > validateResponse(
       return result;
     }
     case SnmpV1Response::ErrorStatus::GEN_ERR:
-      throw GenErr(XJU_TRACED);
+    {
+      if (response.errorIndex_==SnmpV1Response::ErrorIndex(0)) {
+        std::ostringstream s;
+        s << "response specifies GenErr (0x05) error but error index does "
+          << "not identify which oid was not found (index must be > 0)";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      auto const i(response.errorIndex_.value()-1);
+      if (i >= response.values_.size()) {
+        std::ostringstream s;
+        s << "response specifies GenErr (0x05) error but error index"
+          << " is beyond last oid in response";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      if (request.oids_.size()<=i) {
+        std::ostringstream s;
+        s << "response error index indicates that general error for oid "
+          << "with index " << i << ", but not that many oids were requested";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      throw GenErr(request.oids_[i],XJU_TRACED);
+    }
     default:
     {
       std::ostringstream s;

@@ -30,5 +30,6 @@
 ()+cmd=(test-stringToTime.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-stringToUInt.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-xml.cc+(..%cxx-opts):auto.cxx.exe):stdout
+snmp%tests.tree
 
 %test-check_types_related_2_err==test-check_types_related_2.cc+(..%cxx-opts):auto.cxx.exe:err

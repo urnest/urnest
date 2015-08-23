@@ -14,8 +14,8 @@ namespace xju
 namespace snmp
 {
 
-GenErr::GenErr(const xju::Traced& trace) throw():
-    xju::Exception("SNMP General Error", trace)
+GenErr::GenErr(Oid const& param, const xju::Traced& trace) throw():
+    InvalidParam("general error for oid "+param.toString(),param,trace)
 {
 }
 
