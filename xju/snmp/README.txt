@@ -12,8 +12,14 @@ TODO:
     x SnmpV2cGetRequest, encode
     x SnmpV2cResponse, decode
     - validateResponse(SnmpV2cGetRequest,SnmpV2cResponse)
+      only failures allowed:
+        nosuchinstance (var value)
+        nosuchobject (var value)
+        generr (whole request)
+
     - SnmpV2cSetRequest, encode
     - validateResponse(SnmpV2cSetRequest,SnmpV2cResponse)
+        only whole request failure
 
 references:
   http://www.rane.com/note161.html

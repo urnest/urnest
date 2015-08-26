@@ -72,7 +72,7 @@ SnmpV2cResponse decodeSnmpV2cResponse(std::vector<uint8_t> const& data) throw(
                   auto const s3(decodeSequenceTypeAndLength(ei.second)); try {
                     DecodeIterator at(s3.second);
                     std::vector<
-                      SnmpV2cResponse::VarResult> varResults;
+                      SnmpV2cVarResponse> varResults;
                     auto atEnd=[&]() {
                       if (s3.first.second.valid())
                       {
@@ -91,21 +91,56 @@ SnmpV2cResponse decodeSnmpV2cResponse(std::vector<uint8_t> const& data) throw(
                         auto const oid(decodeOidValue(s.second));
                         switch(*oid.second) {
                         case 0x80:
-                        case 0x81:
-                        case 0x82:
                         {
-                          SnmpV2cResponse::VarResult::E const e=
-                            (SnmpV2cResponse::VarResult::E)(*oid.second-0x80);
                           auto const n(decodeLength(at+1));
                           if (!n.first.valid()) {
                             std::ostringstream s;
                             s << "indefinite length is illegal for 'null' "
-                              << "value associated with exception " << e
-                              << " for oid " << oid.first;
+                              << "value associated with NoSuchObject "
+                              << "exception for oid " << oid.first;
                             throw xju::Exception(s.str(),XJU_TRACED);
                           }
                           varResults.push_back(
-                            SnmpV2cResponse::VarResult(oid.first,e));
+                            SnmpV2cVarResponse(
+                              oid.first, 
+                              SnmpV2cVarResponse::NoSuchObject(
+                                oid.first,XJU_TRACED)));
+                          at=n.second+n.first.value();
+                          break;
+                        }
+                        case 0x81:
+                        {
+                          auto const n(decodeLength(at+1));
+                          if (!n.first.valid()) {
+                            std::ostringstream s;
+                            s << "indefinite length is illegal for 'null' "
+                              << "value associated with NoSuchInstance "
+                              << "exception for oid " << oid.first;
+                            throw xju::Exception(s.str(),XJU_TRACED);
+                          }
+                          varResults.push_back(
+                            SnmpV2cVarResponse(
+                              oid.first, 
+                              SnmpV2cVarResponse::NoSuchInstance(
+                                oid.first,XJU_TRACED)));
+                          at=n.second+n.first.value();
+                          break;
+                        }
+                        case 0x82:
+                        {
+                          auto const n(decodeLength(at+1));
+                          if (!n.first.valid()) {
+                            std::ostringstream s;
+                            s << "indefinite length is illegal for 'null' "
+                              << "value associated with EndOfMibView "
+                              << "exception for oid " << oid.first;
+                            throw xju::Exception(s.str(),XJU_TRACED);
+                          }
+                          varResults.push_back(
+                            SnmpV2cVarResponse(
+                              oid.first, 
+                              SnmpV2cVarResponse::EndOfMibView(
+                                oid.first,XJU_TRACED)));
                           at=n.second+n.first.value();
                           break;
                         }
@@ -113,7 +148,7 @@ SnmpV2cResponse decodeSnmpV2cResponse(std::vector<uint8_t> const& data) throw(
                         {
                           auto const value(decodeValue(oid.second));
                           varResults.push_back(
-                            SnmpV2cResponse::VarResult(oid.first,value.first));
+                            SnmpV2cVarResponse(oid.first,value.first));
                           at=value.second;
                           if (!s.first.second.valid()) {
                             // X.690 indefinite length - skip 2x zero bytes
@@ -126,7 +161,7 @@ SnmpV2cResponse decodeSnmpV2cResponse(std::vector<uint8_t> const& data) throw(
                         std::transform(
                           varResults.rbegin(),varResults.rend(),
                           std::back_inserter(ok),
-                          xju::format::str<SnmpV2cResponse::VarResult>);
+                          xju::format::str<SnmpV2cVarResponse>);
                         std::ostringstream s;
                         s << "decode param oid and value sequence at offset " 
                           << at;
