@@ -23,6 +23,7 @@
 #include "xju/snmp/ReadOnly.hh"
 #include "xju/snmp/BadValue.hh"
 #include "xju/snmp/SnmpV1Response.hh"
+#include "xju/snmp/SnmpV2cVarResponse.hh"
 
 namespace xju
 {
@@ -32,6 +33,8 @@ class SnmpV1Response;
 class SnmpV1GetRequest;
 class SnmpV1SetRequest;
 class SnmpV1GetNextRequest;
+class SnmpV2cGetRequest;
+class SnmpV2cResponse;
 
 // validate reponse to specified request
 // post: *result[x] valid for all x in request.oids_
@@ -83,6 +86,26 @@ std::vector<std::pair<Oid, std::shared_ptr<Value const> > > validateResponse(
     TooBig,
     GenErr,
     // response malformed eg not all requested oids present in response
+    xju::Exception);
+
+
+// validate reponse to specified request
+// post: result[x] for all x in request.oids_
+// - returns the requested values
+std::map<Oid, SnmpV2cVarResponse> validateResponse(
+  SnmpV2cGetRequest const& request,
+  SnmpV2cResponse const& response) throw(
+    ResponseTypeMismatch,
+    ResponseIdMismatch,
+    NoSuchName,
+    TooBig,
+    GenErr,
+    // response malformed eg 
+    // - not all requested oids present in response
+    // - error code was other than those above (which are not explicitly
+    //   associated with SnmpV2cGetRequest in RFC 1905)
+    // - one or more var responses was END_OF_MIB_VIEW (which is not 
+    //   explicitly associated with SnmpV2cGetRequest in RFC 1905)
     xju::Exception);
 
 

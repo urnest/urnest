@@ -21,7 +21,6 @@
 #include <memory>
 #include <iostream>
 #include "xju/Optional.hh"
-#include "xju/snmp/SnmpV2cVarResponse.hh"
 
 namespace xju
 {
@@ -59,20 +58,47 @@ struct SnmpV2cResponse
   class ErrorIndexTag{};
   typedef xju::Int<ErrorIndexTag,uint64_t> ErrorIndex;
 
+  class VarResult
+  {
+  public:
+    enum E
+    {
+      NO_SUCH_OBJECT,
+      NO_SUCH_INSTANCE,
+      END_OF_MIB_VIEW
+    };
+    VarResult(Oid oid,E e) throw():
+        oid_(oid),
+        e_(e)
+    {
+    }
+    VarResult(Oid oid,std::shared_ptr<Value const> v) throw():
+        oid_(oid),
+        v_(v)
+    {
+    }
+    Oid oid_;
+    xju::Optional<E> e_;
+    std::shared_ptr<Value const> v_;
+
+    friend std::ostream& operator<<(std::ostream& s, VarResult const& x)
+      throw();
+  };
+    
   SnmpV2cResponse(
     uint8_t responseType,
     Community community,
     RequestId id,
     ErrorStatus error,
     ErrorIndex errorIndex,
-    std::vector<SnmpV2cVarResponse> varResponses)
+    std::vector<VarResult> varResults)
       throw():
       responseType_(responseType),
       community_(community),
       id_(id),
       error_(error),
       errorIndex_(errorIndex),
-      varResponses_(varResponses) {
+      varResults_(varResults) {
   }
   uint8_t responseType_;
   Community community_;
@@ -82,12 +108,14 @@ struct SnmpV2cResponse
   // (0 if error_ is a non-param-specific error)
   ErrorIndex errorIndex_;
 
-  std::vector<SnmpV2cVarResponse> varResponses_;
+  std::vector<VarResult> varResults_;
 
   friend std::ostream& operator<<(std::ostream& s, SnmpV2cResponse const& x)
     throw();
   
 };
+std::ostream& operator<<(std::ostream& s,
+                         SnmpV2cResponse::VarResult::E const x) throw();
 
 }
 }

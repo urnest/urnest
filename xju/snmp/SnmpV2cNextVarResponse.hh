@@ -7,8 +7,8 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef XJU_SNMP_SNMPV2CVARRESPONSE_H
-#define XJU_SNMP_SNMPV2CVARRESPONSE_H
+#ifndef XJU_SNMP_SNMPV2CNEXTVARRESPONSE_H
+#define XJU_SNMP_SNMPV2CNEXTVARRESPONSE_H
 
 #include <memory>
 #include "xju/snmp/Oid.hh"
@@ -20,32 +20,23 @@ namespace xju
 {
 namespace snmp
 {
-class SnmpV2cVarResponse
+class SnmpV2cNextVarResponse
 {
 public:
-  class NoSuchObject : public xju::Exception
+  class EndOfMibView : public xju::Exception
   {
   public:
-    NoSuchObject(Oid const& oid, const xju::Traced& trace) throw();
-  };
-  class NoSuchInstance : public xju::Exception
-  {
-  public:
-    NoSuchInstance(Oid const& oid, const xju::Traced& trace) throw();
+    EndOfMibView(Oid const& oid, const xju::Traced& trace) throw();
   };
 
-  SnmpV2cVarResponse(Oid oid, SnmpV2cVarResponse::NoSuchObject e) throw():
+  SnmpV2cNextVarResponse(Oid oid, SnmpV2cNextVarResponse::EndOfMibView e) 
+    throw():
       oid_(oid),
-      e_(new SnmpV2cVarResponse::NoSuchObject(e))
-  {
-  }
-  SnmpV2cVarResponse(Oid oid, SnmpV2cVarResponse::NoSuchInstance e) throw():
-      oid_(oid),
-      e_(new SnmpV2cVarResponse::NoSuchInstance(e))
+      e_(new SnmpV2cNextVarResponse::EndOfMibView(e))
   {
   }
   //pre: *v is valid
-  SnmpV2cVarResponse(Oid oid,std::shared_ptr<Value const> v) throw():
+  SnmpV2cNextVarResponse(Oid oid,std::shared_ptr<Value const> v) throw():
       oid_(oid),
       v_(v)
   {
@@ -56,18 +47,15 @@ public:
     return oid_;
   }
   xju::snmp::Value const& operator*() const throw(
-    NoSuchObject,
-    NoSuchInstance);
-  xju::snmp::Value const* operator->() const throw(
-    NoSuchObject,
-    NoSuchInstance);
+    EndOfMibView);
   
 private:
   Oid oid_;
   std::shared_ptr<xju::Exception const> e_;
   std::shared_ptr<Value const> v_;
   
-  friend std::ostream& operator<<(std::ostream& s, SnmpV2cVarResponse const& x)
+  friend std::ostream& operator<<(std::ostream& s, 
+                                  SnmpV2cNextVarResponse const& x)
     throw();
 };
 

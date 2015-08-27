@@ -12,9 +12,11 @@
 #include "xju/snmp/SnmpV1SetRequest.hh"
 #include "xju/snmp/SnmpV1GetNextRequest.hh"
 #include "xju/snmp/SnmpV1GetRequest.hh"
+#include "xju/snmp/SnmpV2cGetRequest.hh"
 #include <xju/format.hh>
 #include "xju/functional.hh"
 #include "xju/snmp/NullValue.hh"
+#include "xju/snmp/SnmpV2cResponse.hh"
 
 namespace xju
 {
@@ -376,6 +378,107 @@ std::vector<std::pair<Oid, std::shared_ptr<Value const> > > validateResponse(
   }
 }
 
+
+std::map<Oid, SnmpV2cVarResponse> validateResponse(
+  SnmpV2cGetRequest const& request,
+  SnmpV2cResponse const& response) throw(
+    ResponseTypeMismatch,
+    ResponseIdMismatch,
+    NoSuchName,
+    TooBig,
+    GenErr,
+    xju::Exception)
+{
+  try {
+    if (request.id_ != response.id_) {
+      throw ResponseIdMismatch(response.id_,request.id_,XJU_TRACED);
+    }
+    if (response.responseType_!=0xA2) {
+      throw ResponseTypeMismatch(response.responseType_,0xA2,XJU_TRACED);
+    }
+    switch(response.error_) {
+    case SnmpV2cResponse::ErrorStatus::NO_ERROR: break;
+    case SnmpV2cResponse::ErrorStatus::TOO_BIG: throw TooBig(XJU_TRACED);
+    case SnmpV2cResponse::ErrorStatus::NO_SUCH_NAME:
+    {
+      if (response.errorIndex_==SnmpV2cResponse::ErrorIndex(0)) {
+        std::ostringstream s;
+        s << "response specifies NoSuchName (0x02) error but error index does "
+          << "not identify which oid was not found (index must be > 0)";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      auto const i(response.errorIndex_.value()-1);
+      if (i >= response.varResults_.size()) {
+        std::ostringstream s;
+        s << "response specifies NoSuchName (0x02) error but error index"
+          << " is beyond last oid in response";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      if (request.oids_.find(response.varResults_[i].oid_)==request.oids_.end()) {
+        std::ostringstream s;
+        s << "response error index indicates that oid "
+          << response.varResults_[i].oid_ << " was not found, but that oid "
+          << "was not requested?";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      throw NoSuchName(response.varResults_[i].oid_,XJU_TRACED);
+    }
+    case SnmpV2cResponse::ErrorStatus::GEN_ERR:
+    {
+      if (response.errorIndex_==SnmpV2cResponse::ErrorIndex(0)) {
+        std::ostringstream s;
+        s << "response specifies GenErr (0x05) error but error index does "
+          << "not identify which oid was not found (index must be > 0)";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      auto const i(response.errorIndex_.value()-1);
+      if (i >= response.varResults_.size()) {
+        std::ostringstream s;
+        s << "response specifies GenErr (0x05) error but error index"
+          << " is beyond last oid in response";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      if (request.oids_.find(response.varResults_[i].oid_)==request.oids_.end()) {
+        std::ostringstream s;
+        s << "response error index indicates that general error for oid "
+          << response.varResults_[i].oid_ << ", but that oid "
+          << "was not requested?";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      throw GenErr(response.varResults_[i].oid_,XJU_TRACED);
+    }
+    default:
+    {
+      std::ostringstream s;
+      s << "response has unknown error status " << (int)response.error_;
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    }
+    std::map<Oid, std::shared_ptr<Value const> > result(
+      response.varResults_.begin(),
+      response.varResults_.end());
+    std::vector<std::string> missing;
+    for(auto i: request.oids_) {
+      if (result.find(i)==result.end()) {
+        missing.push_back((i).toString());
+      }
+    }
+    if (missing.size()) {
+      std::ostringstream s;
+      s << "value not reported for oid(s) "
+        << xju::format::join(missing.begin(),missing.end(), ", ");
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    return result;
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "validate SNMP V2c response " << response 
+      << " to SNMP V2c Get request " << request;
+    e.addContext(s.str(), XJU_TRACED);
+    throw;
+  }
+}
 
 
 }

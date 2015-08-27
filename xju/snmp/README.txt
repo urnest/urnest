@@ -11,6 +11,8 @@ TODO:
   - add snmp v2c
     x SnmpV2cGetRequest, encode
     x SnmpV2cResponse, decode
+    - oops revert decode(SnmpV2cResponse) and use separate
+      SnmpV2cVarResponse, SnmpV2cNextVarResponse
     - validateResponse(SnmpV2cGetRequest,SnmpV2cResponse)
       only failures allowed:
         nosuchinstance (var value)

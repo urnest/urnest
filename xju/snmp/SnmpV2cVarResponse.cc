@@ -24,27 +24,30 @@ SnmpV2cVarResponse::NoSuchInstance::NoSuchInstance(
 xju::Exception("no such instance " + xju::format::str(oid), trace)
 {
 }
-SnmpV2cVarResponse::EndOfMibView::EndOfMibView(
-  Oid const& oid, const xju::Traced& trace) throw():
-    xju::Exception("end of mib view at " + xju::format::str(oid), trace)
-{
-}
-
 xju::snmp::Value const& SnmpV2cVarResponse::operator*() const throw(
   NoSuchObject,
-  NoSuchInstance,
-  EndOfMibView)
+  NoSuchInstance)
 {
   if (e_.get()) {
     if (dynamic_cast<NoSuchObject const*>(e_.get())) {
       throw dynamic_cast<NoSuchObject const&>(*e_);
     }
-    if (dynamic_cast<NoSuchInstance const*>(e_.get())) {
-      throw dynamic_cast<NoSuchInstance const&>(*e_);
-    }
-    throw dynamic_cast<EndOfMibView const&>(*e_);
+    throw dynamic_cast<NoSuchInstance const&>(*e_);
   }
   return *v_;
+}
+
+xju::snmp::Value const* SnmpV2cVarResponse::operator->() const throw(
+  NoSuchObject,
+  NoSuchInstance)
+{
+  if (e_.get()) {
+    if (dynamic_cast<NoSuchObject const*>(e_.get())) {
+      throw dynamic_cast<NoSuchObject const&>(*e_);
+    }
+    throw dynamic_cast<NoSuchInstance const&>(*e_);
+  }
+  return v_.operator->();
 }
 
 std::ostream& operator<<(std::ostream& s, 
