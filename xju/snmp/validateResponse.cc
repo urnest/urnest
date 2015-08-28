@@ -454,9 +454,39 @@ std::map<Oid, SnmpV2cVarResponse> validateResponse(
       throw xju::Exception(s.str(),XJU_TRACED);
     }
     }
-    std::map<Oid, std::shared_ptr<Value const> > result(
+    std::map<Oid, SnmpV2cVarResponse> result;
+    std::transform(
       response.varResults_.begin(),
-      response.varResults_.end());
+      response.varResults_.end(),
+      std::inserter(result,result.end()),
+      [](SnmpV2cResponse::VarResult x)
+      {
+        if (x.e_.valid()) {
+          switch(x.e_.value()) {
+          case SnmpV2cResponse::VarResult::NO_SUCH_OBJECT:
+            return std::make_pair(
+              x.oid_,SnmpV2cVarResponse(
+                x.oid_,SnmpV2cVarResponse::NoSuchObject(x.oid_,XJU_TRACED)));
+          case SnmpV2cResponse::VarResult::NO_SUCH_INSTANCE:
+            return std::make_pair(
+              x.oid_,SnmpV2cVarResponse(
+                x.oid_,SnmpV2cVarResponse::NoSuchInstance(x.oid_,XJU_TRACED)));
+          }
+          std::ostringstream s;
+          s << x.e_.value() << " (" <<(int)x.e_.value() << ")"
+            << " (for oid " << x.oid_ << ") is not valid in response to "
+            << "SNMP V2c Get request, only NO_SUCH_OBJECT ("
+            << (int)SnmpV2cResponse::VarResult::NO_SUCH_OBJECT << ") and "
+            << "NO_SUCH_INSTANCE (" 
+            << (int)SnmpV2cResponse::VarResult::NO_SUCH_INSTANCE 
+            << ") are valid";
+          throw xju::Exception(s.str(),XJU_TRACED);
+        }
+        return std::make_pair(
+          x.oid_,SnmpV2cVarResponse(
+            x.oid_,x.v_));
+      });
+    
     std::vector<std::string> missing;
     for(auto i: request.oids_) {
       if (result.find(i)==result.end()) {
