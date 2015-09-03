@@ -18,6 +18,8 @@
 #include "xju/snmp/OidValue.hh"
 #include "xju/snmp/SnmpV2cResponse.hh"
 #include "xju/snmp/SnmpV2cGetRequest.hh"
+#include "xju/snmp/SnmpV2cSetRequest.hh"
+#include "xju/snmp/validateResponse.hh"
 
 namespace xju
 {
@@ -1579,6 +1581,207 @@ void test16() throw()
   }
 }
 
+void test17() throw()
+{
+  // validateResponse(SnmpV2cSetRequest)
+  std::vector<SnmpV2cResponse::VarResult> values {
+    SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+                                                 new StringValue("fred"))),
+      SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
+                                                     new IntValue(3)))
+  };
+  std::map<Oid, std::shared_ptr<Value const> > requestValues {
+    std::make_pair(Oid(".1.3.3"), std::shared_ptr<Value const>(
+                     new StringValue("fred"))),
+      std::make_pair(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
+                       new IntValue(3)))
+  };
+  
+  validateResponse(
+    SnmpV2cSetRequest(Community("dje"),
+                     RequestId(23),
+                     requestValues),
+    SnmpV2cResponse(0xA2,
+                    Community("dd2"),
+                    RequestId(23),
+                    SnmpV2cResponse::ErrorStatus(0),
+                    SnmpV2cResponse::ErrorIndex(0),
+                    values));
+    
+  try {
+    validateResponse(
+      SnmpV2cSetRequest(Community("dje"),
+                        RequestId(23),
+                        requestValues),
+      SnmpV2cResponse(0xA0,
+                      Community("dd2"),
+                      RequestId(23),
+                      SnmpV2cResponse::ErrorStatus(0),
+                      SnmpV2cResponse::ErrorIndex(0),
+                      values));
+    
+    xju::assert_never_reached();
+  }
+  catch(ResponseTypeMismatch const& e) {
+    xju::assert_equal(e.got_,0xa0);
+    xju::assert_equal(e.expected_,0xa2);
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa0, community dd2, id 23, error status 0, error index 0, values .1.3.3: \"fred\", .1.3.9.3333: 3 to SnmpV2cSetRequest community dje, id 23, values .1.3.3: \"fred\", .1.3.9.3333: 3 because\nexpected response of type 0xa2 but got response of type 0xa0.");
+  }
+
+  try {
+    validateResponse(
+      SnmpV2cSetRequest(Community("dje"),
+                        RequestId(23),
+                        requestValues),
+      SnmpV2cResponse(0xA2,
+                      Community("dd2"),
+                      RequestId(24),
+                      SnmpV2cResponse::ErrorStatus(0),
+                      SnmpV2cResponse::ErrorIndex(0),
+                      values));
+    
+    xju::assert_never_reached();
+  }
+  catch(ResponseIdMismatch const& e) {
+    xju::assert_equal(e.got_,RequestId(24));
+    xju::assert_equal(e.expected_,RequestId(23));
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 24, error status 0, error index 0, values .1.3.3: \"fred\", .1.3.9.3333: 3 to SnmpV2cSetRequest community dje, id 23, values .1.3.3: \"fred\", .1.3.9.3333: 3 because\nexpected response with id 23 but got response of id 24.");
+  }
+  
+  try {
+    validateResponse(
+      SnmpV2cSetRequest(Community("dje"),
+                        RequestId(23),
+                        requestValues),
+      SnmpV2cResponse(0xA2,
+                      Community("dd2"),
+                      RequestId(23),
+                      SnmpV2cResponse::ErrorStatus(2),
+                      SnmpV2cResponse::ErrorIndex(2),
+                      values));
+    
+    xju::assert_never_reached();
+  }
+  catch(NoSuchName const& e) {
+    xju::assert_equal(e.param_,Oid(".1.3.9.3333"));
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 2, error index 2, values .1.3.3: \"fred\", .1.3.9.3333: 3 to SnmpV2cSetRequest community dje, id 23, values .1.3.3: \"fred\", .1.3.9.3333: 3 because\nserver has no object with oid .1.3.9.3333.");
+  }
+  
+  try {
+    validateResponse(
+      SnmpV2cSetRequest(Community("dje"),
+                        RequestId(23),
+                        requestValues),
+      SnmpV2cResponse(0xA2,
+                      Community("dd2"),
+                      RequestId(23),
+                      SnmpV2cResponse::ErrorStatus(3),
+                      SnmpV2cResponse::ErrorIndex(2),
+                      values));
+    
+    xju::assert_never_reached();
+  }
+  catch(BadValue const& e) {
+    xju::assert_equal(e.param_,Oid(".1.3.9.3333"));
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 3, error index 2, values .1.3.3: \"fred\", .1.3.9.3333: 3 to SnmpV2cSetRequest community dje, id 23, values .1.3.3: \"fred\", .1.3.9.3333: 3 because\nvalue of .1.3.9.3333 is invalid.");
+  }
+  
+  try {
+    validateResponse(
+      SnmpV2cSetRequest(Community("dje"),
+                        RequestId(23),
+                        requestValues),
+      SnmpV2cResponse(0xA2,
+                      Community("dd2"),
+                      RequestId(23),
+                      SnmpV2cResponse::ErrorStatus(4),
+                      SnmpV2cResponse::ErrorIndex(2),
+                      values));
+    
+    xju::assert_never_reached();
+  }
+  catch(ReadOnly const& e) {
+    xju::assert_equal(e.param_,Oid(".1.3.9.3333"));
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 4, error index 2, values .1.3.3: \"fred\", .1.3.9.3333: 3 to SnmpV2cSetRequest community dje, id 23, values .1.3.3: \"fred\", .1.3.9.3333: 3 because\nobject oid .1.3.9.3333 is read-only.");
+  }
+  
+  try {
+    validateResponse(
+      SnmpV2cSetRequest(Community("dje"),
+                        RequestId(23),
+                        requestValues),
+      SnmpV2cResponse(0xA2,
+                      Community("dd2"),
+                      RequestId(23),
+                      SnmpV2cResponse::ErrorStatus(1),
+                      SnmpV2cResponse::ErrorIndex(0),
+                      values));
+    
+    xju::assert_never_reached();
+  }
+  catch(TooBig const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 1, error index 0, values .1.3.3: \"fred\", .1.3.9.3333: 3 to SnmpV2cSetRequest community dje, id 23, values .1.3.3: \"fred\", .1.3.9.3333: 3 because\nSNMP response would have exceeded server internal limit.");
+  }
+  
+  try {
+    validateResponse(
+      SnmpV2cSetRequest(Community("dje"),
+                        RequestId(23),
+                        requestValues),
+      SnmpV2cResponse(0xA2,
+                      Community("dd2"),
+                      RequestId(23),
+                      SnmpV2cResponse::ErrorStatus(5),
+                      SnmpV2cResponse::ErrorIndex(1),
+                      values));
+    
+    xju::assert_never_reached();
+  }
+  catch(GenErr const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 5, error index 1, values .1.3.3: \"fred\", .1.3.9.3333: 3 to SnmpV2cSetRequest community dje, id 23, values .1.3.3: \"fred\", .1.3.9.3333: 3 because\ngeneral error for oid .1.3.3.");
+  }
+  try {
+    std::vector<SnmpV2cResponse::VarResult> values {
+    };
+    validateResponse(
+      SnmpV2cSetRequest(Community("dje"),
+                        RequestId(23),
+                        requestValues),
+      SnmpV2cResponse(0xA2,
+                      Community("dd2"),
+                      RequestId(23),
+                      SnmpV2cResponse::ErrorStatus(0),
+                      SnmpV2cResponse::ErrorIndex(0),
+                      values));
+    
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 0, error index 0, values  to SnmpV2cSetRequest community dje, id 23, values .1.3.3: \"fred\", .1.3.9.3333: 3 because\nresponse did not return oids .1.3.3, .1.3.9.3333.");
+  }
+  try {
+    std::vector<SnmpV2cResponse::VarResult> values {
+      SnmpV2cResponse::VarResult(
+        Oid(".1.3.4"), std::shared_ptr<Value const>(new StringValue("fred")))
+        };
+    validateResponse(
+      SnmpV2cSetRequest(Community("dje"),
+                        RequestId(23),
+                        requestValues),
+      SnmpV2cResponse(0xA2,
+                      Community("dd2"),
+                      RequestId(23),
+                      SnmpV2cResponse::ErrorStatus(0),
+                      SnmpV2cResponse::ErrorIndex(0),
+                      values));
+    
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 0, error index 0, values .1.3.4: \"fred\" to SnmpV2cSetRequest community dje, id 23, values .1.3.3: \"fred\", .1.3.9.3333: 3 because\nresponse did not return oids .1.3.3, .1.3.9.3333 and response returned unrequested oids .1.3.4.");
+  }
+}
+
 
 
 }
@@ -1606,7 +1809,8 @@ int main(int argc, char* argv[])
   test14(), ++n;
   test15(), ++n;
   test16(), ++n;
-
+  test17(), ++n;
+  
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

@@ -8,3 +8,4 @@
 ()+cmd=(test-decodeSnmpV2cResponse.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-SnmpV2cVarResponse.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-SnmpV2cNextVarResponse.cc+(../..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-SnmpV2cSetRequest.cc+(../..%cxx-opts):auto.cxx.exe):stdout

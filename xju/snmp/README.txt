@@ -11,17 +11,17 @@ TODO:
   - add snmp v2c
     x SnmpV2cGetRequest, encode
     x SnmpV2cResponse, decode
-    - oops revert decode(SnmpV2cResponse) and use separate
+    x oops revert decode(SnmpV2cResponse) and use separate
       SnmpV2cVarResponse, SnmpV2cNextVarResponse
-    - validateResponse(SnmpV2cGetRequest,SnmpV2cResponse)
-      only failures allowed:
-        nosuchinstance (var value)
-        nosuchobject (var value)
-        generr (whole request)
+    x validateResponse(SnmpV2cGetRequest,SnmpV2cResponse)
 
-    - SnmpV2cSetRequest, encode
-    - validateResponse(SnmpV2cSetRequest,SnmpV2cResponse)
-        only whole request failure
+    x SnmpV2cSetRequest, encode
+    x validateResponse(SnmpV2cSetRequest,SnmpV2cResponse)
+        - test all exceptions
+    - SnmpV2cGetNextRequest plus validateResponse
+    - SnmpV2cTable
+    - SnmpV2cWalk(?)
+    - SnmpV2cGetBulk
 
 references:
   http://www.rane.com/note161.html
@@ -94,7 +94,7 @@ notes:
              predecessor (see the RFC example)
          handling should be:
            - for tables, always drop a trailing .0 when generating the next
-           oid list
+           oid list (but end table if all response cols end in .0)
            - but also could add an SnmpV1Walk to use for straight walks
         ... don't bother implementing get-bulk or SnmpV1Walk to start with
 

@@ -18,6 +18,7 @@
 #include "xju/snmp/encodedLengthOfLength.hh"
 #include "xju/snmp/encodeLength.hh"
 #include "xju/snmp/SnmpV1SetRequest.hh"
+#include "xju/snmp/SnmpV2cSetRequest.hh"
 #include "xju/snmp/OidValue.hh"
 #include "xju/snmp/IntValue.hh"
 #include "xju/snmp/StringValue.hh"
@@ -142,7 +143,7 @@ std::vector<uint8_t> encode(SnmpV1SetRequest const& request) throw()
             vp(new IntValue(0)),//error
             vp(new IntValue(0)),//errorIndex
             vp(new Sequence(params,0x30))},
-          0xA3))}, // SNMP Get
+          0xA3))}, // SNMP Set
     0x30);
   std::vector<uint8_t> result(s.encodedLength());
   xju::assert_equal(s.encodeTo(result.begin()),result.end());
@@ -240,6 +241,37 @@ std::vector<uint8_t> encode(SnmpV2cGetRequest const& request) throw()
   xju::assert_equal(s.encodeTo(result.begin()),result.end());
   return result;
 }
+
+std::vector<uint8_t> encode(SnmpV2cSetRequest const& request) throw()
+{
+  typedef std::shared_ptr<Value const> vp;
+  
+  std::vector<vp > params;
+  std::transform(request.values_.begin(),
+                 request.values_.end(),
+                 std::back_inserter(params),
+                 [](std::pair<Oid const,vp> const& x) {
+                   return vp(
+                     new Sequence({
+                         vp(new OidValue(x.first)),
+                         x.second},
+                       0x30));
+                 });
+  Sequence s({
+      vp(new IntValue(1)), // SNMP version 2c
+      vp(new StringValue(request.community_._)),
+      vp(new Sequence({
+            vp(new IntValue(request.id_.value())),
+            vp(new IntValue(0)),//error
+            vp(new IntValue(0)),//errorIndex
+            vp(new Sequence(params,0x30))},
+          0xA3))}, // SNMP Set
+    0x30);
+  std::vector<uint8_t> result(s.encodedLength());
+  xju::assert_equal(s.encodeTo(result.begin()),result.end());
+  return result;
+}
+
 
 
 }

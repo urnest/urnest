@@ -30,7 +30,9 @@ std::vector<uint8_t> encode(SnmpV1GetNextRequest const& request) throw();
 std::vector<uint8_t> encode(SnmpV1Trap const& trap) throw();
 
 class SnmpV2cGetRequest;
+class SnmpV2cSetRequest;
 std::vector<uint8_t> encode(SnmpV2cGetRequest const& request) throw();
+std::vector<uint8_t> encode(SnmpV2cSetRequest const& request) throw();
 
 }
 }
