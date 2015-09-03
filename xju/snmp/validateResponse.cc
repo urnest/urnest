@@ -64,7 +64,7 @@ std::map<Oid, std::shared_ptr<Value const> > validateResponse(
         std::ostringstream s;
         s << "response error index indicates that oid "
           << response.values_[i].first << " was not found, but that oid "
-          << "was not requested?";
+          << "was not requested";
         throw xju::Exception(s.str(),XJU_TRACED);
       }
       throw NoSuchName(response.values_[i].first,XJU_TRACED);
@@ -88,7 +88,7 @@ std::map<Oid, std::shared_ptr<Value const> > validateResponse(
         std::ostringstream s;
         s << "response error index indicates that general error for oid "
           << response.values_[i].first << ", but that oid "
-          << "was not requested?";
+          << "was not requested";
         throw xju::Exception(s.str(),XJU_TRACED);
       }
       throw GenErr(response.values_[i].first,XJU_TRACED);
@@ -123,6 +123,67 @@ std::map<Oid, std::shared_ptr<Value const> > validateResponse(
     e.addContext(s.str(), XJU_TRACED);
     throw;
   }
+}
+
+namespace
+{
+Oid getErrorOid(size_t const errorIndex,
+                std::vector<Oid> const& responseOids,
+                std::set<Oid> const& requestOids,
+                std::string const& error) throw(
+                  xju::Exception)
+{
+  if (errorIndex==0) {
+    std::ostringstream s;
+    s << "response specifies " << error << " error but error index does "
+      << "not identify which oid was not found (index must be > 0)";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  auto const i(errorIndex-1);
+  if (i >= responseOids.size()) {
+    std::ostringstream s;
+    s << "response specifies " << error << " error but error index"
+      << " is beyond last oid in response";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  if (requestOids.find(responseOids[i])==requestOids.end()) {
+    std::ostringstream s;
+    s << "response error index indicates " << error << " for oid "
+      << responseOids[i] << ", but that oid "
+      << "was not requested";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  return responseOids[i];
+}
+
+Oid getErrorOid(
+  SnmpV1Response::ErrorIndex const errorIndex,
+  std::vector<std::pair<Oid, std::shared_ptr<Value const> > > const& responseValues,
+  std::map<Oid, std::shared_ptr<Value const> > const& values,
+  std::string const& error) throw(
+    xju::Exception)
+{
+  std::vector<Oid> responseOids;
+  std::set<Oid> requestOids;
+                
+  std::transform(responseValues.begin(),responseValues.end(),
+                 std::back_inserter(responseOids),
+                 [](std::pair<Oid const, std::shared_ptr<Value const> > x) {
+                   return x.first;
+                 });
+                 
+  std::transform(values.begin(),values.end(),
+                 std::inserter(requestOids,requestOids.end()),
+                 [](std::pair<Oid const, std::shared_ptr<Value const> > x) {
+                   return x.first;
+                 });
+                 
+  return getErrorOid(errorIndex.value(),
+                     responseOids,
+                     requestOids,
+                     error);
+
+}
 }
 
 
@@ -167,7 +228,7 @@ void validateResponse(
         std::ostringstream s;
         s << "response error index indicates that oid "
           << response.values_[i].first << " was not found, but that oid "
-          << "was not requested?";
+          << "was not requested";
         throw xju::Exception(s.str(),XJU_TRACED);
       }
       throw NoSuchName(response.values_[i].first,XJU_TRACED);
@@ -192,10 +253,14 @@ void validateResponse(
         s << " specifies BadValue (0x03) error and response error index "
           << "indicates that oid "
           << response.values_[i].first 
-          << " was not found, but that oid was not requested to be set?";
+          << " was not found, but that oid was not requested to be set";
         throw xju::Exception(s.str(),XJU_TRACED);
       }
-      throw BadValue(response.values_[i].first,XJU_TRACED);
+      throw BadValue(getErrorOid(response.errorIndex_,
+                                 response.values_,
+                                 request.values_,
+                                 "BadValue (3)"),
+                     XJU_TRACED);
     }
     case SnmpV1Response::ErrorStatus::READ_ONLY:
     {
@@ -216,7 +281,7 @@ void validateResponse(
         std::ostringstream s;
         s << "response error index indicates that oid "
           << response.values_[i].first << " was not found, but that oid "
-          << "was not requested?";
+          << "was not requested";
         throw xju::Exception(s.str(),XJU_TRACED);
       }
       throw ReadOnly(response.values_[i].first,XJU_TRACED);
@@ -240,7 +305,7 @@ void validateResponse(
         std::ostringstream s;
         s << "response error index indicates that general error for oid "
           << response.values_[i].first << ", but that oid "
-          << "was not requested?";
+          << "was not requested";
         throw xju::Exception(s.str(),XJU_TRACED);
       }
       throw GenErr(response.values_[i].first,XJU_TRACED);
@@ -419,7 +484,7 @@ std::map<Oid, SnmpV2cVarResponse> validateResponse(
         std::ostringstream s;
         s << "response error index indicates that oid "
           << response.varResults_[i].oid_ << " was not found, but that oid "
-          << "was not requested?";
+          << "was not requested";
         throw xju::Exception(s.str(),XJU_TRACED);
       }
       throw NoSuchName(response.varResults_[i].oid_,XJU_TRACED);
@@ -443,7 +508,7 @@ std::map<Oid, SnmpV2cVarResponse> validateResponse(
         std::ostringstream s;
         s << "response error index indicates that general error for oid "
           << response.varResults_[i].oid_ << ", but that oid "
-          << "was not requested?";
+          << "was not requested";
         throw xju::Exception(s.str(),XJU_TRACED);
       }
       throw GenErr(response.varResults_[i].oid_,XJU_TRACED);
@@ -511,6 +576,37 @@ std::map<Oid, SnmpV2cVarResponse> validateResponse(
   }
 }
 
+namespace
+{
+Oid getErrorOid(SnmpV2cResponse::ErrorIndex const errorIndex,
+                std::vector<SnmpV2cResponse::VarResult> const& varResults,
+                std::map<Oid, std::shared_ptr<Value const> > const& values,
+                std::string const& error) throw(
+                  xju::Exception)
+{
+  std::vector<Oid> responseOids;
+  std::set<Oid> requestOids;
+                
+  std::transform(varResults.begin(),varResults.end(),
+                 std::back_inserter(responseOids),
+                 [](SnmpV2cResponse::VarResult x) {
+                   return x.oid_;
+                 });
+                 
+  std::transform(values.begin(),values.end(),
+                 std::inserter(requestOids,requestOids.end()),
+                 [](std::pair<Oid const, std::shared_ptr<Value const> > x) {
+                   return x.first;
+                 });
+                 
+  return getErrorOid(errorIndex.value(),
+                     responseOids,
+                     requestOids,
+                     error);
+  
+}
+}
+
 void validateResponse(
   SnmpV2cSetRequest const& request, 
   SnmpV2cResponse const& response) throw(
@@ -547,342 +643,119 @@ void validateResponse(
     case SnmpV2cResponse::ErrorStatus::TOO_BIG: throw TooBig(XJU_TRACED);
     case SnmpV2cResponse::ErrorStatus::NO_SUCH_NAME:
     {
-      if (response.errorIndex_==SnmpV2cResponse::ErrorIndex(0)) {
-        std::ostringstream s;
-        s << "response specifies NoSuchName (0x02) error but error index does "
-          << "not identify which oid was not found (index must be > 0)";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      auto const i(response.errorIndex_.value()-1);
-      if (i >= response.varResults_.size()) {
-        std::ostringstream s;
-        s << "response specifies NoSuchName (0x02) error but error index"
-          << " is beyond last oid in response";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      if (request.values_.find(response.varResults_[i].oid_)==request.values_.end()) {
-        std::ostringstream s;
-        s << "response error index indicates that oid "
-          << response.varResults_[i].oid_ << " was not found, but that oid "
-          << "was not requested?";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      throw NoSuchName(response.varResults_[i].oid_,XJU_TRACED);
+      throw NoSuchName(getErrorOid(response.errorIndex_,
+                                   response.varResults_,
+                                   request.values_,
+                                   "NoSuchName (2)"),
+                       XJU_TRACED);
     }
     case SnmpV2cResponse::ErrorStatus::BAD_VALUE:
     {
-      if (response.errorIndex_==SnmpV2cResponse::ErrorIndex(0)) {
-        std::ostringstream s;
-        s << "response specifies BadValue (0x03) error but error index does "
-          << "not identify which oid was not found (index must be > 0)";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      auto const i(response.errorIndex_.value()-1);
-      if (i >= response.varResults_.size()) {
-        std::ostringstream s;
-        s << "response specifies BadValue (0x03) error but error index"
-          << " is beyond last oid in response";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      if (request.values_.find(response.varResults_[i].oid_)==request.values_.end()) {
-        std::ostringstream s;
-        s << " specifies BadValue (0x03) error and response error index "
-          << "indicates that oid "
-          << response.varResults_[i].oid_ 
-          << " was not found, but that oid was not requested to be set?";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      throw BadValue(response.varResults_[i].oid_,XJU_TRACED);
+      throw BadValue(getErrorOid(response.errorIndex_,
+                                 response.varResults_,
+                                 request.values_,
+                                 "BadValue (3)"),
+                     XJU_TRACED);
     }
     case SnmpV2cResponse::ErrorStatus::READ_ONLY:
     {
-      if (response.errorIndex_==SnmpV2cResponse::ErrorIndex(0)) {
-        std::ostringstream s;
-        s << "response specifies ReadOnly (0x04) error but error index does "
-          << "not identify which oid was not found (index must be > 0)";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      auto const i(response.errorIndex_.value()-1);
-      if (i >= response.varResults_.size()) {
-        std::ostringstream s;
-        s << "response specifies ReadOnly (0x04) error but error index"
-          << " is beyond last oid in response";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      if (request.values_.find(response.varResults_[i].oid_)==request.values_.end()) {
-        std::ostringstream s;
-        s << "response error index indicates that oid "
-          << response.varResults_[i].oid_ << " was not found, but that oid "
-          << "was not requested?";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      throw ReadOnly(response.varResults_[i].oid_,XJU_TRACED);
+      throw ReadOnly(getErrorOid(response.errorIndex_,
+                                 response.varResults_,
+                                 request.values_,
+                                 "ReadOnly (4)"),
+                     XJU_TRACED);
     }
     case SnmpV2cResponse::ErrorStatus::GEN_ERR:
     {
-      if (response.errorIndex_==SnmpV2cResponse::ErrorIndex(0)) {
-        std::ostringstream s;
-        s << "response specifies GenErr (0x05) error but error index does "
-          << "not identify which oid was not found (index must be > 0)";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      auto const i(response.errorIndex_.value()-1);
-      if (i >= response.varResults_.size()) {
-        std::ostringstream s;
-        s << "response specifies GenErr (0x05) error but error index"
-          << " is beyond last oid in response";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      if (request.values_.find(response.varResults_[i].oid_)==request.values_.end()) {
-        std::ostringstream s;
-        s << "response error index indicates that general error for oid "
-          << response.varResults_[i].oid_ << ", but that oid "
-          << "was not requested?";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      throw GenErr(response.varResults_[i].oid_,XJU_TRACED);
+      throw GenErr(getErrorOid(response.errorIndex_,
+                               response.varResults_,
+                               request.values_,
+                               "GenErr (5)"),
+                   XJU_TRACED);
     }
     case SnmpV2cResponse::ErrorStatus::NO_ACCESS:
     {
-      if (response.errorIndex_==SnmpV2cResponse::ErrorIndex(0)) {
-        std::ostringstream s;
-        s << "response specifies NoAccess (6) error but error index does "
-          << "not identify which oid was not found (index must be > 0)";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      auto const i(response.errorIndex_.value()-1);
-      if (i >= response.varResults_.size()) {
-        std::ostringstream s;
-        s << "response specifies NoAccess (6) error but error index"
-          << " is beyond last oid in response";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      if (request.values_.find(response.varResults_[i].oid_)==request.values_.end()) {
-        std::ostringstream s;
-        s << "response error index indicates NoAccess (6) for oid "
-          << response.varResults_[i].oid_ << ", but that oid "
-          << "was not requested?";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      throw NoAccess(response.varResults_[i].oid_,XJU_TRACED);
+      throw NoAccess(getErrorOid(response.errorIndex_,
+                                 response.varResults_,
+                                 request.values_,
+                                 "NoAccess (6)"),
+                     XJU_TRACED);
     }
     case SnmpV2cResponse::ErrorStatus::WRONG_TYPE:
     {
-      if (response.errorIndex_==SnmpV2cResponse::ErrorIndex(0)) {
-        std::ostringstream s;
-        s << "response specifies WrongType (7) error but error index does "
-          << "not identify which oid was not found (index must be > 0)";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      auto const i(response.errorIndex_.value()-1);
-      if (i >= response.varResults_.size()) {
-        std::ostringstream s;
-        s << "response specifies WrongType (7) error but error index"
-          << " is beyond last oid in response";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      if (request.values_.find(response.varResults_[i].oid_)==request.values_.end()) {
-        std::ostringstream s;
-        s << "response error index indicates WrongType (7) for oid "
-          << response.varResults_[i].oid_ << ", but that oid "
-          << "was not requested?";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      throw NoAccess(response.varResults_[i].oid_,XJU_TRACED);
+      throw WrongType(getErrorOid(response.errorIndex_,
+                                  response.varResults_,
+                                  request.values_,
+                                  "WrongType (7)"),
+                      XJU_TRACED);
     }
     case SnmpV2cResponse::ErrorStatus::WRONG_LENGTH:
     {
-      if (response.errorIndex_==SnmpV2cResponse::ErrorIndex(0)) {
-        std::ostringstream s;
-        s << "response specifies WrongLength (8)error but error index does "
-          << "not identify which oid was not found (index must be > 0)";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      auto const i(response.errorIndex_.value()-1);
-      if (i >= response.varResults_.size()) {
-        std::ostringstream s;
-        s << "response specifies WrongLength (8)error but error index"
-          << " is beyond last oid in response";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      if (request.values_.find(response.varResults_[i].oid_)==request.values_.end()) {
-        std::ostringstream s;
-        s << "response error index indicates WrongLength (8)for oid "
-          << response.varResults_[i].oid_ << ", but that oid "
-          << "was not requested?";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      throw NoAccess(response.varResults_[i].oid_,XJU_TRACED);
+      throw WrongLength(getErrorOid(response.errorIndex_,
+                                      response.varResults_,
+                                      request.values_,
+                                      "WrongLength (8)"),
+                        XJU_TRACED);
     }
     case SnmpV2cResponse::ErrorStatus::WRONG_ENCODING:
     {
-      if (response.errorIndex_==SnmpV2cResponse::ErrorIndex(0)) {
-        std::ostringstream s;
-        s << "response specifies WrongEncoding (9)error but error index does "
-          << "not identify which oid was not found (index must be > 0)";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      auto const i(response.errorIndex_.value()-1);
-      if (i >= response.varResults_.size()) {
-        std::ostringstream s;
-        s << "response specifies WrongEncoding (9)error but error index"
-          << " is beyond last oid in response";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      if (request.values_.find(response.varResults_[i].oid_)==request.values_.end()) {
-        std::ostringstream s;
-        s << "response error index indicates WrongEncoding (9)for oid "
-          << response.varResults_[i].oid_ << ", but that oid "
-          << "was not requested?";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      throw NoAccess(response.varResults_[i].oid_,XJU_TRACED);
+      throw WrongEncoding(getErrorOid(response.errorIndex_,
+                                      response.varResults_,
+                                      request.values_,
+                                      "WrongEncoding (8)"),
+                          XJU_TRACED);
     }
     case SnmpV2cResponse::ErrorStatus::WRONG_VALUE:
     {
-      if (response.errorIndex_==SnmpV2cResponse::ErrorIndex(0)) {
-        std::ostringstream s;
-        s << "response specifies WrongValue (10)error but error index does "
-          << "not identify which oid was not found (index must be > 0)";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      auto const i(response.errorIndex_.value()-1);
-      if (i >= response.varResults_.size()) {
-        std::ostringstream s;
-        s << "response specifies WrongValue (10)error but error index"
-          << " is beyond last oid in response";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      if (request.values_.find(response.varResults_[i].oid_)==request.values_.end()) {
-        std::ostringstream s;
-        s << "response error index indicates WrongValue (10)for oid "
-          << response.varResults_[i].oid_ << ", but that oid "
-          << "was not requested?";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      throw NoAccess(response.varResults_[i].oid_,XJU_TRACED);
+      throw WrongValue(getErrorOid(response.errorIndex_,
+                                   response.varResults_,
+                                   request.values_,
+                                   "WrongValue (10)"),
+                       XJU_TRACED);
     }
     case SnmpV2cResponse::ErrorStatus::NO_CREATION:
     {
-      if (response.errorIndex_==SnmpV2cResponse::ErrorIndex(0)) {
-        std::ostringstream s;
-        s << "response specifies NoCreation (11)error but error index does "
-          << "not identify which oid was not found (index must be > 0)";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      auto const i(response.errorIndex_.value()-1);
-      if (i >= response.varResults_.size()) {
-        std::ostringstream s;
-        s << "response specifies NoCreation (11)error but error index"
-          << " is beyond last oid in response";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      if (request.values_.find(response.varResults_[i].oid_)==request.values_.end()) {
-        std::ostringstream s;
-        s << "response error index indicates NoCreation (11)for oid "
-          << response.varResults_[i].oid_ << ", but that oid "
-          << "was not requested?";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      throw NoAccess(response.varResults_[i].oid_,XJU_TRACED);
+      throw NoCreation(getErrorOid(response.errorIndex_,
+                                   response.varResults_,
+                                   request.values_,
+                                   "NoCreation (11)"),
+                       XJU_TRACED);
     }
     case SnmpV2cResponse::ErrorStatus::INCONSISTENT_VALUE:
     {
-      if (response.errorIndex_==SnmpV2cResponse::ErrorIndex(0)) {
-        std::ostringstream s;
-        s << "response specifies InconsistentValue (12)error but error index does "
-          << "not identify which oid was not found (index must be > 0)";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      auto const i(response.errorIndex_.value()-1);
-      if (i >= response.varResults_.size()) {
-        std::ostringstream s;
-        s << "response specifies InconsistentValue (12)error but error index"
-          << " is beyond last oid in response";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      if (request.values_.find(response.varResults_[i].oid_)==request.values_.end()) {
-        std::ostringstream s;
-        s << "response error index indicates InconsistentValue (12)for oid "
-          << response.varResults_[i].oid_ << ", but that oid "
-          << "was not requested?";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      throw NoAccess(response.varResults_[i].oid_,XJU_TRACED);
+      throw InconsistentValue(getErrorOid(response.errorIndex_,
+                                          response.varResults_,
+                                          request.values_,
+                                          "InconsistentValue (12)"),
+                              XJU_TRACED);
     }
     case SnmpV2cResponse::ErrorStatus::RESOURCE_UNAVAILABLE:
     {
-      if (response.errorIndex_==SnmpV2cResponse::ErrorIndex(0)) {
-        std::ostringstream s;
-        s << "response specifies ResourceUnavailable (13)error but error index does "
-          << "not identify which oid was not found (index must be > 0)";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      auto const i(response.errorIndex_.value()-1);
-      if (i >= response.varResults_.size()) {
-        std::ostringstream s;
-        s << "response specifies ResourceUnavailable (13)error but error index"
-          << " is beyond last oid in response";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      if (request.values_.find(response.varResults_[i].oid_)==request.values_.end()) {
-        std::ostringstream s;
-        s << "response error index indicates ResourceUnavailable (13)for oid "
-          << response.varResults_[i].oid_ << ", but that oid "
-          << "was not requested?";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      throw NoAccess(response.varResults_[i].oid_,XJU_TRACED);
+      throw ResourceUnavailable(getErrorOid(response.errorIndex_,
+                                            response.varResults_,
+                                            request.values_,
+                                            "ResourceUnavailable (11)"),
+                                XJU_TRACED);
     }
-    case SnmpV2cResponse::ErrorStatus::COMMIT_FAILED: throw CommitFailed(XJU_TRACED);
-    case SnmpV2cResponse::ErrorStatus::UNDO_FAILED: throw UndoFailed(XJU_TRACED);
+    case SnmpV2cResponse::ErrorStatus::COMMIT_FAILED: 
+      throw CommitFailed(XJU_TRACED);
+    case SnmpV2cResponse::ErrorStatus::UNDO_FAILED:
+      throw UndoFailed(XJU_TRACED);
     case SnmpV2cResponse::ErrorStatus::NOT_WRITABLE:
     {
-      if (response.errorIndex_==SnmpV2cResponse::ErrorIndex(0)) {
-        std::ostringstream s;
-        s << "response specifies NotWritable (17)error but error index does "
-          << "not identify which oid was not found (index must be > 0)";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      auto const i(response.errorIndex_.value()-1);
-      if (i >= response.varResults_.size()) {
-        std::ostringstream s;
-        s << "response specifies NotWritable (17)error but error index"
-          << " is beyond last oid in response";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      if (request.values_.find(response.varResults_[i].oid_)==request.values_.end()) {
-        std::ostringstream s;
-        s << "response error index indicates NotWritable (17)for oid "
-          << response.varResults_[i].oid_ << ", but that oid "
-          << "was not requested?";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      throw NoAccess(response.varResults_[i].oid_,XJU_TRACED);
+      throw NotWritable(getErrorOid(response.errorIndex_,
+                                    response.varResults_,
+                                    request.values_,
+                                    "NoWritable (17)"),
+                        XJU_TRACED);
     }
     case SnmpV2cResponse::ErrorStatus::INCONSISTENT_NAME:
     {
-      if (response.errorIndex_==SnmpV2cResponse::ErrorIndex(0)) {
-        std::ostringstream s;
-        s << "response specifies InconsistentName (18)error but error index does "
-          << "not identify which oid was not found (index must be > 0)";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      auto const i(response.errorIndex_.value()-1);
-      if (i >= response.varResults_.size()) {
-        std::ostringstream s;
-        s << "response specifies InconsistentName (18)error but error index"
-          << " is beyond last oid in response";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      if (request.values_.find(response.varResults_[i].oid_)==request.values_.end()) {
-        std::ostringstream s;
-        s << "response error index indicates InconsistentName (18)for oid "
-          << response.varResults_[i].oid_ << ", but that oid "
-          << "was not requested?";
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      throw NoAccess(response.varResults_[i].oid_,XJU_TRACED);
+      throw InconsistentName(getErrorOid(response.errorIndex_,
+                                         response.varResults_,
+                                         request.values_,
+                                         "InconsistentName (18)"),
+                             XJU_TRACED);
     }
     default:
     {
