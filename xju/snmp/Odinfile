@@ -9,3 +9,10 @@
 ()+cmd=(test-SnmpV2cVarResponse.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-SnmpV2cNextVarResponse.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-SnmpV2cSetRequest.cc+(../..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-Oid.cc+(../..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-Value.cc+(../..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-encode.cc+(../..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-decodeSnmpV1Response.cc+(../..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-validateResponse.cc+(../..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-SnmpV1Table.cc+(../..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-IPv4Address.cc+(../..%cxx-opts):auto.cxx.exe):stdout
