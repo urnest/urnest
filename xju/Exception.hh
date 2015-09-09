@@ -51,10 +51,12 @@
 #include <xju/Traced.hh>
 #include <iostream>
 #include <sstream>
+#include <xju/Mutex.hh>
+#include <exception>
 
 namespace xju
 {
-    class Exception
+    class Exception : public std::exception
     {
     public:
 	//
@@ -73,7 +75,20 @@ namespace xju
 	Exception(const std::string& cause, const xju::Traced& trace) throw();
 	Exception(const std::ostringstream& cause,
                   const xju::Traced& trace) throw();
-	
+	Exception(Exception const& x) throw():
+            _cause(x._cause),
+            _context(x._context) {
+        }
+        Exception& operator=(Exception const& x) throw()
+        {
+            if (this != &x) {
+                _cause=x._cause;
+                _context=x._context;
+                what_=std::string();
+            }
+            return *this;
+        }
+        
 	//
 	// Report cause.
 	//
@@ -101,10 +116,16 @@ namespace xju
           throw();
 	
 	virtual ~Exception() throw() {}
-	
+
+        // std::exception
+        virtual const char* what() const throw() override;
+        
+
     private:
 	std::pair<std::string, xju::Traced> _cause;
 	std::vector<std::pair<std::string, xju::Traced> > _context;
+        mutable xju::Mutex guard_;
+        mutable std::string what_;
     };
 //
 // A human readable representation:

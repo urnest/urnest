@@ -184,6 +184,8 @@ void test4()
     assert_equal(e.context()[0].first, std::string("context"));
     assert_equal(e.context()[0].second.file(), std::string("FBB"));
     assert_equal(e.context()[0].second.line(), 8U);
+
+    assert_equal(e.what(), readableRepr(e));
 }
 
 //

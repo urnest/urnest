@@ -2,6 +2,7 @@
 
 %all.tree==<<
 %tests.tree
+snmp%tests.tree
 
 %tests.tree == <<
 #()+cmd=(%test-serialisation.cxx.sm+(..%cxx-opts):auto.cxx.exe):stdout

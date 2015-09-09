@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <xju/JoiningIterator.hh>
 #include <sstream>
+#include "Lock.hh"
 
 namespace
 {
@@ -57,19 +58,30 @@ namespace xju
 			       const xju::Traced& t) throw()
     {
 	_context.push_back(std::make_pair(c, t));
+        what_=std::string();
     }
     void Exception::addContext(const std::ostringstream& c,
 			       const xju::Traced& t) throw()
     {
 	_context.push_back(std::make_pair(c.str(), t));
+        what_=std::string();
     }
     void Exception::addContext(
         std::pair<std::string, xju::Traced> const& c) throw()
     {
         _context.push_back(c);
+        what_=std::string();
     }
     
-
+    const char* Exception::what() const throw()
+    {
+        xju::Lock l(guard_);
+        if (!what_.size()) {
+            what_=readableRepr(*this);
+        }
+        return what_.c_str();
+    }
+    
 std::ostream& operator<<(std::ostream& s, const xju::Exception& e) throw()
 {
     s << readableRepr(e, false);
