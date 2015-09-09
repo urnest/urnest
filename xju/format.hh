@@ -60,6 +60,8 @@
 #ifndef _XJU_FORMAT_HH_
 #define _XJU_FORMAT_HH_
 
+#include <stdint.h>
+#include <limits.h>
 
 #include <iostream>
 #include <functional>
@@ -534,10 +536,12 @@ std::string hex(long x, const std::string& leader = "0x")
   throw(std::bad_alloc);
 std::string hex(unsigned long x, const std::string& leader = "0x") 
   throw(std::bad_alloc);
+#if UINT64_MAX - ULONG_MAX > 0
 std::string hex(int64_t x, const std::string& leader = "0x") 
   throw(std::bad_alloc);
 std::string hex(uint64_t x, const std::string& leader = "0x") 
   throw(std::bad_alloc);
+#endif
 }
 }
 

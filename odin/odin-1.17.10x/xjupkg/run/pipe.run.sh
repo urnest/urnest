@@ -7,20 +7,8 @@ if [ "$ODIN_cmd" != "" ] ; then
    cmd=`cat $ODIN_cmd`; fi
 
 if [ "$ODINVERBOSE" != "" ] ; then
-   echo ${ODINRBSHOST}$cmd; fi
-
-L=""
-for i in $ODIN_LD_LIBRARY_PATH
-do
-   if [ -z "$L" ]
-   then
-      L="$i"
-   else
-      L="$L:$i"
-   fi
-done
-
-(mkdir output; cd output; LD_LIBRARY_PATH="$L" eval $cmd) \
+   echo LD_LIBRARY_PATH="$ODIN_LD_LIBRARY_PATH" ${ODINRBSHOST}$cmd; fi
+(mkdir output; cd output; LD_LIBRARY_PATH="$ODIN_LD_LIBRARY_PATH" $cmd) \
  <$ODIN_FILE >stdout 2>WARNINGS ||
  { mv WARNINGS ERRORS; echo $cmd failed. >>ERRORS; }
 

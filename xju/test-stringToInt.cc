@@ -62,12 +62,12 @@ struct Test3
         }
         catch(const xju::Exception& e)
         {
-            std::cerr << e << std::endl;
+            std::cout << e << std::endl;
             std::ostringstream s;
             s << e;
             xju::assert_equal(
                 s.str(),
-                "");
+                "Failed to convert \"2147483648\" to an integer because\n2147483648 is too large (maximum allowed integer is 2147483647).");
         }
     }
 };

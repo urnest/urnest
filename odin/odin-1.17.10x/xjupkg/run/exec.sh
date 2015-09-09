@@ -9,20 +9,10 @@ if [ "$ODIN_cmd" != "" ] ; then
    cmd=`cat $ODIN_cmd`; fi
 
 if [ "$ODINVERBOSE" != "" ] ; then
-   echo ${ODINRBSHOST}env - LD_LIBRARY_PATH="$L" PATH="$ODIN_EXEC_PATH" \`cat "$ODIN_env"\` $cmd; 
+   echo ${ODINRBSHOST}env - LD_LIBRARY_PATH="$ODIN_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" \`cat "$ODIN_env"\` $cmd; 
 fi
 
 L=""
-for i in $ODIN_LD_LIBRARY_PATH
-do
-   if [ -z "$L" ]
-   then
-      L="$i"
-   else
-      L="$L:$i"
-   fi
-done
-
 (
   mkdir exec &&
   cd exec &&
@@ -30,7 +20,7 @@ done
   {
     (
       cd files &&
-      eval env - LD_LIBRARY_PATH="$L" PATH="$ODIN_EXEC_PATH" `cat "$ODIN_env"` $cmd 2>&1
+      eval env - LD_LIBRARY_PATH="$ODIN_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" `cat "$ODIN_env"` $cmd 2>&1
     ) >output
     echo $? > status
   } &&
