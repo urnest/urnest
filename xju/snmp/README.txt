@@ -7,7 +7,16 @@ different servers, most easily by each thread using a distinct UDP port.)
 See ../snmp.hh for usage.
 
 TODO:
-  - implement all var types
+  - implement all data types (from RFC 2578):
+    x Integer32==Integer
+    x IpAddress 0
+    - Counter32 1
+    x Gauge32==Unsigned32 2
+    x TimeTicks 3
+    - Opaque 4 -> std::vector<uint8_t>
+    - Counter64 6
+    x BITS... is an octet string interpreted implicitly?
+
   - add snmp v2c
     x SnmpV2cGetRequest, encode
     x SnmpV2cResponse, decode

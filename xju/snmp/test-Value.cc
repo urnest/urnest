@@ -13,6 +13,7 @@
 #include <xju/assert.hh>
 #include "xju/snmp/NullValue.hh"
 #include "xju/snmp/IntValue.hh"
+#include "xju/snmp/Counter32Value.hh"
 #include "xju/snmp/StringValue.hh"
 #include "xju/snmp/OidValue.hh"
 
@@ -230,6 +231,14 @@ void test1() throw()
     xju::assert_equal(y.size(),6U);
     xju::assert_equal(x.encodeTo(y.begin()),y.end());
     xju::assert_equal(y,std::vector<uint8_t>{0x06,4,40*1+3,0x81,0x00,0x04});
+  }
+  // Counter32
+  {
+    Counter32Value const x(0x7fffffff);
+    std::vector<uint8_t> y(x.encodedLength(),0U);
+    xju::assert_equal(y.size(),6U);
+    xju::assert_equal(x.encodeTo(y.begin()),y.end());
+    xju::assert_equal(y,std::vector<uint8_t>{0x41,4,0x7f,0xff,0xff,0xff});
   }
 
 }
