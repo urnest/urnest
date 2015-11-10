@@ -116,12 +116,33 @@ namespace xju
         "getcwd",
         ::getcwd);
 
+    const SyscallF0<pid_t> fork(
+        "fork",
+        ::fork);
+
     std::string getcwd_() throw(xju::SyscallFailed)
     {
         char* x = syscall(getcwd, XJU_TRACED, false, (char*)0)(0, 0);
         std::string result(x);
         ::free(x);
         return result;
+    }
+
+    void execvp(std::string const& file,
+                std::vector<std::string> const& argv) throw(
+                    xju::SyscallFailed) {
+        char* f(::strdup(file.c_str()));
+        std::vector<char*> a;
+        for(auto arg in argv) {
+            a.push_back(::strdup(arg.c_str()));
+        }
+        a.push_back(0);
+        ::execvp(f,&a[0]);
+        ::free(f);
+        for(auto s in a) {
+            ::free(s);
+        }
+        throw xju::SyscallFailed("execvp",errno,XJU_TRACED);
     }
 }
 

@@ -13,6 +13,7 @@
 ()+cmd=(test-Value.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-encode.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-decodeSnmpV1Response.cc+(../..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-decodeSnmpV1GetRequest.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-validateResponse.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-SnmpV1Table.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-IPv4Address.cc+(../..%cxx-opts):auto.cxx.exe):stdout

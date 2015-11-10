@@ -6,14 +6,30 @@ Float add math functions exp, sqrt, log, floor, ceiling etc
 io::Input
 io::Output
   - pure interfaces
-  - io::select, function
+  - pair<std::set<ref<Input>>,std::set<ref<Output>>> 
+      io::select(std::set<ref<Input>>,std::set<ref<Output>>,Time until)
+  - close on exec?
 
 - io
-  - File
-  - Socket
-  - TCP
+  - InputFile
+  - OutputFile
+  - TCPSocket
+      - InByteStream& input()
+        - size_t read(void* buffer, size_t bytes, Time until);
+      - OutByteStream& output()
+        - size_t write(void* buffer, size_t bytes, Time until);
   - UDP
+      Input& input();
+      Output& output();
+      - size_t readMessage(void* buffer, size_t bytes, Time until);
+      - void writeMessage(void* buffer, size_t bytes, Time until);
+
   - Pipe
+      - unique_ptr<InByteStream> input_;
+      - unique_ptr<OutByteStream> output_;
+  - SocketPair
+  - UnixSocket
+  - MessageQueue (linux allows select)
 
 subprocess
   - start function object,
