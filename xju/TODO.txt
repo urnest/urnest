@@ -8,34 +8,55 @@ io::Output
   - pure interfaces
   - pair<std::set<ref<Input>>,std::set<ref<Output>>> 
       io::select(std::set<ref<Input>>,std::set<ref<Output>>,Time until)
-  - close on exec?
+  - close on exec? only ever make stdin,stdout,stderr survive exec (and always)
+  - other fd and socket options? eg udp Don't Fragment, use constructed objects
+  - dup2, perhaps:
+    InByteStream::useAsStdin, OutByteStream::useAsStdout, OutByteStream::useAsStderr
 
 - io
-  - InputFile
-  - OutputFile
+  - InFile
+  - OutFile
+  - InOutFile?
+  - TCPListener
   - TCPSocket
-      - InByteStream& input()
+      - IStream& input()
+        - is a Input
         - size_t read(void* buffer, size_t bytes, Time until);
-      - OutByteStream& output()
+      - OStream& output()
+        - is a Output
         - size_t write(void* buffer, size_t bytes, Time until);
-  - UDP
-      Input& input();
-      Output& output();
-      - size_t readMessage(void* buffer, size_t bytes, Time until);
-      - void writeMessage(void* buffer, size_t bytes, Time until);
+  - UDPSocket
+      IQueue& input();
+        - is a Input
+        - size_t deque(void* message, size_t bytes, Time deadline);
+      OQueue& output();
+        - void enque(void const* message, size_t bytes, Time deadline);
+        - is a Output
 
   - Pipe
+      - shared_ptr<InByteStream> input_;
+      - shared_ptr<OutByteStream> output_;
+  - SocketPair
       - unique_ptr<InByteStream> input_;
       - unique_ptr<OutByteStream> output_;
-  - SocketPair
-  - UnixSocket
+  - UnixListener,UnixSocket - like TCPListener,TCPSocket
   - MessageQueue (linux allows select)
+      IQueue& input();
+      OQueue& input();
 
-subprocess
-  - start function object,
-  - optional stop function object (pass pid)
-  - exit status
+Subprocess
+  x start function object,
+  x optional stop function object (pass pid)
+  x exit status
+  - test
 
+unit testing
+  generic stub that captures calls, so can do test like:
+    Stub<Y> y;
+    X x(y);
+    auto call = ut.call(x,&X::f,3,2);
+    stub.calls_.awaitCall(y,&Y::g,Duration(3,0))->validateParams(3)->return_(6);
+    call.awaitResult(Duration(3))->verify(3*2-2);
 
 
 gcc 5.2.0:

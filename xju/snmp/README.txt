@@ -22,6 +22,16 @@ TODO:
     - SnmpV2cTable
     - SnmpV2cWalk(?)
     - SnmpV2cGetBulk
+  - server side:
+    x decodeSnmpV1GetRequest
+    x encodeResponse(SnmpV1GetRequest,std::vector<Value>)
+    - encodeResponse(SnmpV1GetRequest,<error>)
+    - decodeSnmpV1GetNextRequest
+    - encodeResponse(SnmpV1GetNextRequest,std::vector<Oid,Value>)
+    - encodeResponse(SnmpV1GetRequest,<error>)
+    - decodeSnmpV1SetRequest
+    - encodeResponse(SnmpV1SetRequest)
+    - encodeResponse(SnmpV1SetRequest,<error>)
 
 references:
   http://www.rane.com/note161.html

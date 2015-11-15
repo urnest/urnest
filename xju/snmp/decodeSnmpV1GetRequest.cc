@@ -38,7 +38,7 @@ std::string formatLength(xju::Optional<size_t> const& length) throw()
 }
 
 }
-SnmpV1GetRequest decodeSnmpV1GetRequest(
+std::pair<SnmpV1GetRequest,std::vector<Oid> > decodeSnmpV1GetRequest(
   std::vector<uint8_t> const& data) throw(
     // malformed
     xju::Exception)
@@ -134,10 +134,17 @@ SnmpV1GetRequest decodeSnmpV1GetRequest(
                                    values.end(),
                                    std::inserter(oids,oids.end()),
                                    xju::functional::First());
-                    return SnmpV1GetRequest(
-                      Community(community.first),
-                      RequestId(id.first),
-                      oids);
+                    std::vector<Oid> order;
+                    std::transform(values.begin(),
+                                   values.end(),
+                                   std::inserter(order,order.end()),
+                                   xju::functional::First());
+                    return std::make_pair(
+                      SnmpV1GetRequest(
+                        Community(community.first),
+                        RequestId(id.first),
+                        oids),
+                      order);
                   }
                   catch(xju::Exception& e) {
                     std::ostringstream s;

@@ -19,7 +19,11 @@ namespace xju
 {
 namespace snmp
 {
-SnmpV1GetRequest decodeSnmpV1GetRequest(
+// returns the request and the requested parameters in order
+// ie std::set(result.second.begin(),result.second.end())==result.first.oids_
+// note that if the request encoded in data contained duplicate oids then
+// result.second.size() != result.first.oids_.size()
+std::pair<SnmpV1GetRequest,std::vector<Oid> > decodeSnmpV1GetRequest(
   std::vector<uint8_t> const& data) throw(
     // malformed
     xju::Exception);

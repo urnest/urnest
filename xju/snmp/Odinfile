@@ -12,6 +12,7 @@
 ()+cmd=(test-Oid.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Value.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-encode.cc+(../..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-encodeResponse.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-decodeSnmpV1Response.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-decodeSnmpV1GetRequest.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-validateResponse.cc+(../..%cxx-opts):auto.cxx.exe):stdout
