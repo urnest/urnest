@@ -55,6 +55,8 @@ class SnmpV2cResponse;
 std::map<Oid, std::shared_ptr<Value const> > validateResponse(
   SnmpV1GetRequest const& request,
   SnmpV1Response const& response) throw(
+    // in priority order, eg if both type and id mismatch, ResponseTypeMismatch
+    // is thrown
     ResponseTypeMismatch,
     ResponseIdMismatch,
     NoSuchName,
@@ -94,6 +96,8 @@ void validateResponse(
 std::vector<std::pair<Oid, std::shared_ptr<Value const> > > validateResponse(
   SnmpV1GetNextRequest const& request,
   SnmpV1Response const& response) throw(
+    // in priority order, eg if both type and id mismatch, ResponseTypeMismatch
+    // is thrown
     ResponseTypeMismatch,
     ResponseIdMismatch,
     TooBig,
@@ -108,6 +112,8 @@ std::vector<std::pair<Oid, std::shared_ptr<Value const> > > validateResponse(
 std::map<Oid, SnmpV2cVarResponse> validateResponse(
   SnmpV2cGetRequest const& request,
   SnmpV2cResponse const& response) throw(
+    // in priority order, eg if both type and id mismatch, ResponseTypeMismatch
+    // is thrown
     ResponseTypeMismatch,
     ResponseIdMismatch,
     NoSuchName,
@@ -127,7 +133,14 @@ std::map<Oid, SnmpV2cVarResponse> validateResponse(
 void validateResponse(
   SnmpV2cSetRequest const& request, 
   SnmpV2cResponse const& response) throw(
-    // request was too big to process or responsd to
+    // note: exceptions are listed in priority order, eg if both type and 
+    // id mismatch, ResponseTypeMismatch is thrown
+    //
+    // response.responseType_ != 0xA3
+    ResponseTypeMismatch,
+    // response.id_ != request.id_
+    ResponseIdMismatch,
+    // request was too big to process or respond to
     // (note no values were set)
     TooBig,
     // server denies access to request.values_[NoAccess.oid_]
@@ -166,10 +179,6 @@ void validateResponse(
     CommitFailed,
     // Request was valid but could not be applied (some changes have been made)
     UndoFailed,
-    // response.responseType_ != 0xA3
-    ResponseTypeMismatch,
-    // response.id_ != request.id_
-    ResponseIdMismatch,
     // SNMP General Error
     GenErr,
     // response malformed eg not all requested oids present in response

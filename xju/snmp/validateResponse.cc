@@ -508,6 +508,8 @@ std::map<Oid, SnmpV2cVarResponse> validateResponse(
 void validateResponse(
   SnmpV2cSetRequest const& request, 
   SnmpV2cResponse const& response) throw(
+    ResponseTypeMismatch,
+    ResponseIdMismatch,
     TooBig,
     NoAccess,
     NotWritable,
@@ -524,8 +526,6 @@ void validateResponse(
     ResourceUnavailable,
     CommitFailed,
     UndoFailed,
-    ResponseTypeMismatch,
-    ResponseIdMismatch,
     GenErr,
     xju::Exception)
 {

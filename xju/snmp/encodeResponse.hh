@@ -21,8 +21,13 @@ namespace xju
 {
 namespace snmp
 {
-class SnmpV1GetRequest;
-class NoSuchName;
+class SnmpV1GetRequest; // see SnmpV1GetRequest.hh
+class NoSuchName;       // see NoSuchName.hh
+class TooBig;           // see TooBig.hh
+class GenErr;           // see GenErr.hh
+class SnmpV1SetRequest; // see SnmpV1SetRequest.hh
+class BadValue;         // see BadValue.hh
+class ReadOnly;         // see ReadOnly.hh
 
 // encode response with values for each of the oids in paramOrder, the
 // value for paramOrder[i] being results[i], and with
@@ -39,6 +44,58 @@ std::vector<uint8_t> encodeResponse(
   SnmpV1GetRequest const& request,
   std::vector<Oid> const& paramOrder,
   NoSuchName const& error) throw();
+
+// encode response indicating response would have been too big to encode
+std::vector<uint8_t> encodeResponse(
+  SnmpV1GetRequest const& request,
+  std::vector<Oid> const& paramOrder,
+  TooBig const& error) throw();
+
+// encode response indicating general server error related to
+// error.param_
+std::vector<uint8_t> encodeResponse(
+  SnmpV1GetRequest const& request,
+  std::vector<Oid> const& paramOrder,
+  GenErr const& error) throw();
+
+// encode response to successful snmp set request
+std::vector<uint8_t> encodeResponse(
+  SnmpV1SetRequest const& request,
+  std::vector<Oid> const& paramOrder) throw();
+
+// encode response indicating one of the requested Oids is unrecognised
+// pre: error.param_ in paramOrder
+std::vector<uint8_t> encodeResponse(
+  SnmpV1SetRequest const& request,
+  std::vector<Oid> const& paramOrder,
+  NoSuchName const& error) throw();
+
+// encode response indicating one of the requested Oid values is unacceptable
+// pre: error.param_ in paramOrder
+std::vector<uint8_t> encodeResponse(
+  SnmpV1SetRequest const& request,
+  std::vector<Oid> const& paramOrder,
+  BadValue const& error) throw();
+
+// encode response indicating one of the requested Oid values is read-only
+// pre: error.param_ in paramOrder
+std::vector<uint8_t> encodeResponse(
+  SnmpV1SetRequest const& request,
+  std::vector<Oid> const& paramOrder,
+  ReadOnly const& error) throw();
+
+// encode response indicating response would have been too big to encode
+std::vector<uint8_t> encodeResponse(
+  SnmpV1SetRequest const& request,
+  std::vector<Oid> const& paramOrder,
+  TooBig const& error) throw();
+
+// encode response indicating general server error related to
+// error.param_
+std::vector<uint8_t> encodeResponse(
+  SnmpV1SetRequest const& request,
+  std::vector<Oid> const& paramOrder,
+  GenErr const& error) throw();
 
 }
 }

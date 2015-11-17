@@ -30,8 +30,8 @@ TODO:
     - encodeResponse(SnmpV1GetNextRequest,std::vector<Oid,Value>)
     - encodeResponse(SnmpV1GetRequest,<error>)
     - decodeSnmpV1SetRequest
-    - encodeResponse(SnmpV1SetRequest)
-    - encodeResponse(SnmpV1SetRequest,<error>)
+    x encodeResponse(SnmpV1SetRequest)
+    x encodeResponse(SnmpV1SetRequest,<error>)
 
 references:
   http://www.rane.com/note161.html
