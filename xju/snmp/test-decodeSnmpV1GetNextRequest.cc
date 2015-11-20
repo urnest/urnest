@@ -199,8 +199,11 @@ void test3() throw()
     
     SnmpV1GetNextRequest y(decodeSnmpV1GetNextRequest(x));
   }
+  catch(SnmpVersionMismatch const& e) {
+    xju::assert_equal(e.cause().first,"expected snmp version 0 (SNMP V1) but got 1 (SNMP V2)");
+  }
   catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e),"Failed to decode snmp v1 get next request from 46 bytes of data having successfully decoded sequence type 0x30 and length 44 bytes because\nexpected integer 0 (SNMP V1), got integer 1, at offset 2.");
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
   }
 
   try {
@@ -290,7 +293,18 @@ void test3() throw()
   catch(xju::Exception const& e) {
     xju::assert_equal(readableRepr(e),"Failed to decode snmp v1 get next request from 46 bytes of data having successfully decoded sequence type 0x30 and length 44 bytes, snmp version 1 at offset 2, community \"private\" at offset 5, 2nd sequence type 0xa1 and length 30 bytes at offset 14, request id 1 at offset 16, error 0x0000000000000000 at offset 19, error index 0 at offset 22, 3rd sequence type 0x30 and length 19 bytes at offset 25 because\nfailed to decode param oid and value sequence at offset offset 27 because\nfailed to decode one int/string/oid/null etc value at offset 44 because\ndecoding of type 0x30 is not implemented.");
   }
-
+  try {
+    std::vector<uint8_t> x({
+        0x30,0x2c,0x02,0x01,0x00,0x04,0x07,0x70,0x72,0x69,0x76,0x61,0x74,0x65,0xA0,0x1E,0x02,0x01,0x01,0x02,0x01,0x00,0x02,0x01,0x00,0x30,0x13,0x30,0x11,0x06,0x0D,0x2B,0x06,0x01,0x04,0x01,0x94,0x78,0x01,0x02,0x07,0x03,0x02,0x00,0x05,0x00
+          });
+  }
+  catch(RequestTypeMismatch const& e) {
+    xju::assert_equal(e.cause().first,"expected request of type 0xa1 but got request of type 0xa0");
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+    
 }
 }
 }

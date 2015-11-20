@@ -40,7 +40,8 @@ std::string formatLength(xju::Optional<size_t> const& length) throw()
 }
 std::pair<SnmpV1GetRequest,std::vector<Oid> > decodeSnmpV1GetRequest(
   std::vector<uint8_t> const& data) throw(
-    // malformed
+    SnmpVersionMismatch,
+    RequestTypeMismatch,
     xju::Exception)
 {
   std::vector<std::string> ok;
@@ -57,21 +58,21 @@ std::pair<SnmpV1GetRequest,std::vector<Oid> > decodeSnmpV1GetRequest(
     try {
       auto const snmpVersion(decodeIntValue(s1.second));
       if (snmpVersion.first!=0) {
+        SnmpVersionMismatch e(snmpVersion.first,0,XJU_TRACED);
         std::ostringstream s;
-        s << "expected integer 0 (SNMP V1), got integer " 
-          << snmpVersion.first
-          << ", at " << s1.second;
-        throw xju::Exception(s.str(), XJU_TRACED);
+        s << "decode at " << s1.second;
+        e.addContext(s.str(),XJU_TRACED);
+        throw e;
       }
       try {
         auto const community(decodeStringValue(snmpVersion.second)); try {
           auto const s2(decodeSequenceTypeAndLength(community.second)); 
           if (s2.first.first!=0xA0) {
+            RequestTypeMismatch e(s2.first.first,0xA0,XJU_TRACED);
             std::ostringstream s;
-            s << "expected type 0xA0 (SNMP Get), got "
-              << xju::format::hex(s2.first.first)
-              << ", at " << community.second;
-            throw xju::Exception(s.str(), XJU_TRACED);
+            s << "decode at " << community.second;
+            e.addContext(s.str(),XJU_TRACED);
+            throw e;
           }
           try {
             auto const id(decodeIntValue(s2.second)); try {

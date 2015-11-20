@@ -14,6 +14,8 @@
 #include <vector>
 #include <stdint.h>
 #include "xju/Exception.hh"
+#include "xju/snmp/RequestTypeMismatch.hh"
+#include "xju/snmp/SnmpVersionMismatch.hh"
 
 namespace xju
 {
@@ -22,6 +24,10 @@ namespace snmp
 // returns the request
 SnmpV1GetNextRequest decodeSnmpV1GetNextRequest(
   std::vector<uint8_t> const& data) throw(
+    // not snmp v1
+    SnmpVersionMismatch,
+    // not a get next request
+    RequestTypeMismatch,
     // malformed
     xju::Exception);
 

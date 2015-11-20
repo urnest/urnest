@@ -14,6 +14,8 @@
 #include <vector>
 #include <stdint.h>
 #include "xju/Exception.hh"
+#include "xju/snmp/RequestTypeMismatch.hh"
+#include "xju/snmp/SnmpVersionMismatch.hh"
 
 namespace xju
 {
@@ -25,6 +27,10 @@ namespace snmp
 // result.second.size() != result.first.oids_.size()
 std::pair<SnmpV1GetRequest,std::vector<Oid> > decodeSnmpV1GetRequest(
   std::vector<uint8_t> const& data) throw(
+    // not snmp v1
+    SnmpVersionMismatch,
+    // not a get request
+    RequestTypeMismatch,
     // malformed
     xju::Exception);
 
@@ -32,4 +38,3 @@ std::pair<SnmpV1GetRequest,std::vector<Oid> > decodeSnmpV1GetRequest(
 }
 
 #endif
-
