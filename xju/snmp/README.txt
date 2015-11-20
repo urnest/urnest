@@ -25,13 +25,16 @@ TODO:
   - server side:
     x decodeSnmpV1GetRequest
     x encodeResponse(SnmpV1GetRequest,std::vector<Value>)
-    - encodeResponse(SnmpV1GetRequest,<error>)
-    - decodeSnmpV1GetNextRequest
-    - encodeResponse(SnmpV1GetNextRequest,std::vector<Oid,Value>)
-    - encodeResponse(SnmpV1GetRequest,<error>)
-    - decodeSnmpV1SetRequest
+    x encodeResponse(SnmpV1GetRequest,<error>)
+    x decodeSnmpV1GetNextRequest
+    x encodeResponse(SnmpV1GetNextRequest,std::vector<Oid,Value>)
+    x encodeResponse(SnmpV1GetNextRequest,<error>)
+    x decodeSnmpV1SetRequest
     x encodeResponse(SnmpV1SetRequest)
     x encodeResponse(SnmpV1SetRequest,<error>)
+    - SnmpV2c get, get next, set
+    - doc server side in ../snmp.hh
+    - includes in ../snmp.hh
 
 references:
   http://www.rane.com/note161.html

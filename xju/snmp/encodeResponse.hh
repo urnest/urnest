@@ -28,6 +28,7 @@ class GenErr;           // see GenErr.hh
 class SnmpV1SetRequest; // see SnmpV1SetRequest.hh
 class BadValue;         // see BadValue.hh
 class ReadOnly;         // see ReadOnly.hh
+class SnmpV1GetNextRequest; // see SnmpV1GetNextRequest.hh
 
 // encode response with values for each of the oids in paramOrder, the
 // value for paramOrder[i] being results[i], and with
@@ -95,6 +96,26 @@ std::vector<uint8_t> encodeResponse(
 std::vector<uint8_t> encodeResponse(
   SnmpV1SetRequest const& request,
   std::vector<Oid> const& paramOrder,
+  GenErr const& error) throw();
+
+// encode response with values for each of the request oids' successors
+// taken in order from results
+// pre: results.size()==request.oids_.size()
+std::vector<uint8_t> encodeResponse(
+  SnmpV1GetNextRequest const& request,
+  std::vector<std::pair<Oid,std::shared_ptr<xju::snmp::Value const> > > const& results)
+    throw();
+
+// encode response indicating response would have been too big to encode
+// pre: error.param_ is one of request.oids_
+std::vector<uint8_t> encodeResponse(
+  SnmpV1GetNextRequest const& request,
+  TooBig const& error) throw();
+
+// encode response indicating general server error related to error.param_
+// pre: error.param_ is one of request.oids_
+std::vector<uint8_t> encodeResponse(
+  SnmpV1GetNextRequest const& request,
   GenErr const& error) throw();
 
 }

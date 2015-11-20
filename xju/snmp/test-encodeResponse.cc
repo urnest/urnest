@@ -21,6 +21,7 @@
 #include "xju/snmp/decodeSnmpV1Response.hh"
 #include "xju/snmp/TooBig.hh"
 #include "xju/snmp/SnmpV1SetRequest.hh"
+#include "xju/snmp/SnmpV1GetNextRequest.hh"
 
 namespace xju
 {
@@ -263,6 +264,68 @@ void test10() {
   }
 }
 
+void test11() {
+  std::vector<uint8_t> const x(
+    encodeResponse(
+      SnmpV1GetNextRequest(
+        Community("private"),
+        xju::snmp::RequestId(1),
+        {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),Oid(".1.3")}),
+      {{Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.1"),
+            std::shared_ptr<Value const>(new NullValue)},
+       {Oid(".1.3.1"),std::shared_ptr<xju::snmp::Value const>(
+           new xju::snmp::OidValue(Oid(".1.3.7")))}}));
+        
+  xju::assert_equal(
+    x,
+    std::vector<uint8_t>({
+        0x30,54,0x02,0x01,0x00,0x04,0x07,0x70,0x72,0x69,0x76,0x61,0x74,0x65,0xA2,40,0x02,0x01,0x01,0x02,0x01,0x00,0x02,0x01,0x00,0x30,29,0x30,0x11,0x06,0x0D,0x2B,0x06,0x01,0x04,0x01,0x94,0x78,0x01,0x02,0x07,0x03,0x02,0x01,0x05,0x00,0x30,0x08,0x06,0x02,0x2B,0x01,0x06,0x02,0x2B,0x07
+          }));
+}
+
+void test12() {
+  SnmpV1GetNextRequest const request(
+    Community("private"),
+    xju::snmp::RequestId(1),
+    {Oid(".1.3"),Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")});
+  
+  std::vector<uint8_t> const x(
+    encodeResponse(
+      request,
+      TooBig(XJU_TRACED)));
+  try {
+    validateResponse(request,decodeSnmpV1Response(x));
+    xju::assert_never_reached();
+  }
+  catch(TooBig const& e) {
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+}
+
+void test13() {
+  SnmpV1GetNextRequest const request(
+    Community("private"),
+    xju::snmp::RequestId(1),
+    {Oid(".1.3"),Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")});
+  
+  std::vector<uint8_t> const x(
+    encodeResponse(
+      request,
+      GenErr(Oid(".1.3"),XJU_TRACED)));
+  try {
+    validateResponse(request,decodeSnmpV1Response(x));
+    xju::assert_never_reached();
+  }
+  catch(GenErr const& e) {
+    xju::assert_equal(e.param_,Oid(".1.3"));
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+}
+
 
 }
 }
@@ -282,6 +345,9 @@ int main(int argc, char* argv[])
   test8(), ++n;
   test9(), ++n;
   test10(), ++n;
+  test11(), ++n;
+  test12(), ++n;
+  test13(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }
