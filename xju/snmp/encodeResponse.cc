@@ -30,6 +30,9 @@
 #include "xju/snmp/BadValue.hh"
 #include "xju/snmp/ReadOnly.hh"
 #include "xju/snmp/SnmpV1GetNextRequest.hh"
+#include "xju/snmp/SnmpV2cVarResponse.hh"
+#include "xju/snmp/SnmpV2cGetRequest.hh"
+#include "xju/snmp/SnmpV2cResponse.hh"
 
 namespace xju
 {
@@ -90,6 +93,57 @@ public:
   
 };
 
+uint64_t encodedLengthOfItems(
+  std::vector<SnmpV2cVarResponse> const& items) throw()
+{
+  return std::accumulate(
+    items.begin(),
+    items.end(),
+    uint64_t{0},
+    [](uint64_t t, SnmpV2cVarResponse const& x){
+      return t+x.encodedLength();});
+}
+
+class V2cSequence : private xju::Int<V2cSequence,size_t>, //encoded length of items
+                    public Value
+{
+public:
+  V2cSequence(std::vector<SnmpV2cVarResponse> const& items,
+              uint8_t sequenceType) throw():
+      xju::Int<V2cSequence,size_t>(encodedLengthOfItems(items)),
+      Value(1/*type*/+
+            encodedLengthOfLength(value())+
+            value()),
+      items_(items),
+      sequenceType_(sequenceType) {
+  }
+  std::vector<SnmpV2cVarResponse> const items_;
+  uint8_t const sequenceType_;
+
+  // Value::
+  std::vector<uint8_t>::iterator encodeTo(
+    std::vector<uint8_t>::iterator begin) const throw() override
+  {
+    auto at=begin;
+    *at++=sequenceType_;
+    at=encodeLength(at,value());
+    for(SnmpV2cVarResponse x: items_) {
+      at=x.encodeTo(at);
+    }
+    xju::assert_equal(at-begin, encodedLength_);
+    return at;
+  }
+  // Value::
+  std::string str() const throw() override
+  {
+    return xju::format::join(items_.begin(),items_.end(),
+                             [](SnmpV2cVarResponse const& x) {
+                               return xju::format::str(x);
+                             },", ");
+  }
+  
+};
+
 typedef std::shared_ptr<Value const> vp;
 
 std::vector<uint8_t> encodePDU(
@@ -123,6 +177,30 @@ std::vector<uint8_t> encodePDU(
             vp(new IntValue(error)),//error
             vp(new IntValue(errorIndex)),//errorIndex
             vp(new Sequence(params,0x30))},
+        pduType))},
+    0x30);
+  std::vector<uint8_t> result(s.encodedLength());
+  xju::assert_equal(s.encodeTo(result.begin()),result.end());
+  return result;
+}
+
+std::vector<uint8_t> encodePDU(
+  Community const& community,
+  RequestId requestId,
+  uint64_t error,
+  uint64_t errorIndex,
+  std::vector<SnmpV2cVarResponse> const& vars,
+  uint8_t pduType // 0xA2 snmp v1 get etc
+  ) throw()
+{
+  Sequence s({
+      vp(new IntValue(1)), //SNMP V2c
+      vp(new StringValue(community._)),
+      vp(new Sequence({
+            vp(new IntValue(requestId.value())),
+            vp(new IntValue(error)),//error
+            vp(new IntValue(errorIndex)),//errorIndex
+            vp(new V2cSequence(vars,0x30))},
         pduType))},
     0x30);
   std::vector<uint8_t> result(s.encodedLength());
@@ -446,6 +524,101 @@ std::vector<uint8_t> encodeResponse(
                    0xA2);
 }
 
+
+std::vector<uint8_t> encodeResponse(
+  SnmpV2cGetRequest const& request,
+  std::vector<Oid> const& paramOrder,
+  std::map<Oid,SnmpV2cVarResponse> const& results)
+    throw()
+{
+  std::vector<SnmpV2cVarResponse> vars;
+  std::transform(paramOrder.begin(),
+                 paramOrder.end(),
+                 std::back_inserter(vars),
+                 [&](Oid const& oid) {
+                   return ((*results.find(oid)).second);
+                 });
+  return encodePDU(request.community_,
+                   request.id_,
+                   0,//error
+                   0,//errorIndex
+                   vars,
+                   0xA2);
+}
+
+std::vector<uint8_t> encodeResponse(
+  SnmpV2cGetRequest const& request,
+  std::vector<Oid> const& paramOrder,
+  NoSuchName const& error) throw()
+{
+  std::vector<SnmpV2cVarResponse> vars;
+  std::transform(paramOrder.begin(),
+                 paramOrder.end(),
+                 std::back_inserter(vars),
+                 [&](Oid const& oid) {
+                   return SnmpV2cVarResponse(
+                     oid,
+                     vp(new xju::snmp::NullValue));
+                 });
+  std::vector<Oid>::const_iterator const errorIndex(
+    std::find(paramOrder.begin(),paramOrder.end(),error.param_));
+  xju::assert_not_equal(errorIndex,paramOrder.end());
+
+  return encodePDU(request.community_,
+                   request.id_,
+                   (int)SnmpV2cResponse::ErrorStatus::NO_SUCH_NAME,//error
+                   errorIndex-paramOrder.begin()+1,//errorIndex
+                   vars,
+                   0xA2);
+}
+
+std::vector<uint8_t> encodeResponse(
+  SnmpV2cGetRequest const& request,
+  std::vector<Oid> const& paramOrder,
+  TooBig const& error) throw()
+{
+  std::vector<SnmpV2cVarResponse> vars;
+  std::transform(paramOrder.begin(),
+                 paramOrder.end(),
+                 std::back_inserter(vars),
+                 [&](Oid const& oid) {
+                   return SnmpV2cVarResponse(
+                     oid,
+                     vp(new xju::snmp::NullValue));
+                 });
+  return encodePDU(request.community_,
+                   request.id_,
+                   (int)SnmpV2cResponse::ErrorStatus::TOO_BIG,//error
+                   0,//errorIndex
+                   vars,
+                   0xA2);
+}
+
+std::vector<uint8_t> encodeResponse(
+  SnmpV2cGetRequest const& request,
+  std::vector<Oid> const& paramOrder,
+  GenErr const& error) throw()
+{
+  std::vector<SnmpV2cVarResponse> vars;
+  std::transform(paramOrder.begin(),
+                 paramOrder.end(),
+                 std::back_inserter(vars),
+                 [&](Oid const& oid) {
+                   return SnmpV2cVarResponse(
+                     oid,
+                     vp(new xju::snmp::NullValue));
+                 });
+  std::vector<Oid>::const_iterator const errorIndex(
+    std::find(paramOrder.begin(),paramOrder.end(),error.param_));
+  xju::assert_not_equal(errorIndex,paramOrder.end());
+
+  return encodePDU(request.community_,
+                   request.id_,
+                   (int)SnmpV2cResponse::ErrorStatus::GEN_ERR,//error
+                   errorIndex-paramOrder.begin()+1,//errorIndex
+                   vars,
+                   0xA2);
+}
 
 
 }

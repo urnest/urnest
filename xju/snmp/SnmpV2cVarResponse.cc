@@ -9,6 +9,10 @@
 //
 #include "xju/snmp/SnmpV2cVarResponse.hh"
 #include "xju/format.hh"
+#include "xju/snmp/OidValue.hh"
+#include "xju/snmp/encodedLengthOfLength.hh"
+#include "xju/snmp/encodeLength.hh"
+#include "xju/assert.hh"
 
 namespace xju
 {
@@ -49,6 +53,54 @@ xju::snmp::Value const* SnmpV2cVarResponse::operator->() const throw(
   }
   return v_.operator->();
 }
+
+size_t SnmpV2cVarResponse::encodedLength() const throw()
+{
+  size_t contentLength(OidValue(oid_).encodedLength()+
+                       (e_.get()?
+                        1+1: // type+length of encoded exception
+                        v_->encodedLength()));
+  return 1+//type
+    encodedLengthOfLength(contentLength)+
+    contentLength;
+}
+
+std::vector<uint8_t>::iterator SnmpV2cVarResponse::encodeTo(
+  std::vector<uint8_t>::iterator begin) const throw()
+{
+  // encoding is a sequence with 2 elements:
+  //   oid
+  //   value
+  auto at=begin;
+  *at++=0x30; // sequence
+  size_t contentLength(OidValue(oid_).encodedLength()+
+                       (e_.get()?
+                        1+1: // type+length of encoded exception
+                        v_->encodedLength()));
+  at=encodeLength(at,contentLength);
+  at=OidValue(oid_).encodeTo(at);
+  if (e_.get()) {
+    if(dynamic_cast<NoSuchObject const*>(e_.get())) {
+      *at++=0x80; // type
+    }
+    else if (dynamic_cast<NoSuchInstance const*>(e_.get()))
+    {
+      *at++=0x81; // type
+    }
+    else
+    {
+      // not handled
+      xju::assert_not_equal(readableRepr(*e_),readableRepr(*e_));
+    }
+    *at+=0; // length
+  }
+  else
+  {
+    at=v_->encodeTo(at);
+  }
+  return at;
+}
+
 
 std::ostream& operator<<(std::ostream& s, 
                          SnmpV2cVarResponse const& x) throw() {

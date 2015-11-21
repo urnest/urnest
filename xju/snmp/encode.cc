@@ -27,6 +27,7 @@
 #include "xju/snmp/TimeTicksValue.hh"
 #include "xju/snmp/SnmpV1GetRequest.hh"
 #include "xju/snmp/SnmpV2cGetRequest.hh"
+#include "xju/snmp/SnmpV2cGetNextRequest.hh"
 
 namespace xju
 {
@@ -106,7 +107,7 @@ std::vector<uint8_t> encode(SnmpV1GetRequest const& request) throw()
                        0x30));
                  });
   Sequence s({
-      vp(new IntValue(0)), // SNMP version 1
+      vp(new IntValue(0)), // SNMP version 1 -see RFC 1157
       vp(new StringValue(request.community_._)),
       vp(new Sequence({
             vp(new IntValue(request.id_.value())),
@@ -136,7 +137,7 @@ std::vector<uint8_t> encode(SnmpV1SetRequest const& request) throw()
                        0x30));
                  });
   Sequence s({
-      vp(new IntValue(0)), // SNMP version 1
+      vp(new IntValue(0)), // SNMP version 1 -see RFC 1157
       vp(new StringValue(request.community_._)),
       vp(new Sequence({
             vp(new IntValue(request.id_.value())),
@@ -166,7 +167,7 @@ std::vector<uint8_t> encode(SnmpV1GetNextRequest const& request) throw()
                        0x30));
                  });
   Sequence s({
-      vp(new IntValue(0)), // SNMP version 1
+      vp(new IntValue(0)), // SNMP version 1 -see RFC 1157
       vp(new StringValue(request.community_._)),
       vp(new Sequence({
             vp(new IntValue(request.id_.value())),
@@ -196,7 +197,7 @@ std::vector<uint8_t> encode(SnmpV1Trap const& trap) throw()
                        0x30));
                  });
   Sequence s({
-      vp(new IntValue(0)), // SNMP version 1
+      vp(new IntValue(0)), // SNMP version 1 -see RFC 1157
       vp(new StringValue(trap.community_._)),
       vp(new Sequence({
             vp(new OidValue(trap.trapType_)),
@@ -236,6 +237,36 @@ std::vector<uint8_t> encode(SnmpV2cGetRequest const& request) throw()
             vp(new IntValue(0)),//errorIndex
             vp(new Sequence(params,0x30))},
         0xA0))},
+    0x30);
+  std::vector<uint8_t> result(s.encodedLength());
+  xju::assert_equal(s.encodeTo(result.begin()),result.end());
+  return result;
+}
+
+std::vector<uint8_t> encode(SnmpV2cGetNextRequest const& request) throw()
+{
+  typedef std::shared_ptr<Value const> vp;
+  
+  std::vector<vp > params;
+  std::transform(request.oids_.begin(),
+                 request.oids_.end(),
+                 std::back_inserter(params),
+                 [](Oid const& oid) {
+                   return vp(
+                     new Sequence({
+                         vp(new OidValue(oid)),
+                         vp(new NullValue)},
+                       0x30));
+                 });
+  Sequence s({
+      vp(new IntValue(1)), // SNMP version 2c -see RFC 1901
+      vp(new StringValue(request.community_._)),
+      vp(new Sequence({
+            vp(new IntValue(request.id_.value())),
+            vp(new IntValue(0)),//error
+            vp(new IntValue(0)),//errorIndex
+            vp(new Sequence(params,0x30))},
+          0xA1))}, // SNMP Get Next
     0x30);
   std::vector<uint8_t> result(s.encodedLength());
   xju::assert_equal(s.encodeTo(result.begin()),result.end());

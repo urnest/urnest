@@ -18,7 +18,7 @@ TODO:
     x SnmpV2cSetRequest, encode
     x validateResponse(SnmpV2cSetRequest,SnmpV2cResponse)
         - test all exceptions
-    - SnmpV2cGetNextRequest plus validateResponse
+    - SnmpV2cGetNextRequest plus encode, validateResponse
     - SnmpV2cTable
     - SnmpV2cWalk(?)
     - SnmpV2cGetBulk
@@ -32,9 +32,10 @@ TODO:
     x decodeSnmpV1SetRequest
     x encodeResponse(SnmpV1SetRequest)
     x encodeResponse(SnmpV1SetRequest,<error>)
-    - SnmpV2c get, get next, set
-    - doc server side in ../snmp.hh
-    - includes in ../snmp.hh
+    x decode SnmpV2c get, get next, set request
+    x encodeResponse snmpv2c get
+    - encodeResponse snmpv2c set
+    x includes in ../snmp.hh
 
 references:
   http://www.rane.com/note161.html

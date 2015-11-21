@@ -20,8 +20,8 @@ namespace snmp
 {
 
 class SnmpV1GetRequest;
-class SnmpV1SetRequest;
 class SnmpV1GetNextRequest;
+class SnmpV1SetRequest;
 class SnmpV1Trap;
 
 std::vector<uint8_t> encode(SnmpV1GetRequest const& request) throw();
@@ -30,8 +30,10 @@ std::vector<uint8_t> encode(SnmpV1GetNextRequest const& request) throw();
 std::vector<uint8_t> encode(SnmpV1Trap const& trap) throw();
 
 class SnmpV2cGetRequest;
+class SnmpV2cGetNextRequest;
 class SnmpV2cSetRequest;
 std::vector<uint8_t> encode(SnmpV2cGetRequest const& request) throw();
+std::vector<uint8_t> encode(SnmpV2cGetNextRequest const& request) throw();
 std::vector<uint8_t> encode(SnmpV2cSetRequest const& request) throw();
 
 }

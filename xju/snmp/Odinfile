@@ -17,6 +17,8 @@
 ()+cmd=(test-decodeSnmpV1GetRequest.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-decodeSnmpV1GetNextRequest.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-decodeSnmpV1SetRequest.cc+(../..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-decodeSnmpV2cGetRequest.cc+(../..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-decodeSnmpV2cGetNextRequest.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-validateResponse.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-SnmpV1Table.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-IPv4Address.cc+(../..%cxx-opts):auto.cxx.exe):stdout

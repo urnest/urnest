@@ -22,13 +22,19 @@ namespace xju
 namespace snmp
 {
 class SnmpV1GetRequest; // see SnmpV1GetRequest.hh
+class SnmpV1SetRequest; // see SnmpV1SetRequest.hh
+class SnmpV1GetNextRequest; // see SnmpV1GetNextRequest.hh
+
+class SnmpV2cGetRequest; // see SnmpV2cGetRequest.hh
+class SnmpV2cSetRequest; // see SnmpV2cSetRequest.hh
+class SnmpV2cGetNextRequest; // see SnmpV2cGetNextRequest.hh
+class SnmpV2cVarResponse; // see SnmpV2cVarResponse.hh
+
 class NoSuchName;       // see NoSuchName.hh
 class TooBig;           // see TooBig.hh
 class GenErr;           // see GenErr.hh
-class SnmpV1SetRequest; // see SnmpV1SetRequest.hh
 class BadValue;         // see BadValue.hh
 class ReadOnly;         // see ReadOnly.hh
-class SnmpV1GetNextRequest; // see SnmpV1GetNextRequest.hh
 
 // encode response with values for each of the oids in paramOrder, the
 // value for paramOrder[i] being results[i], and with
@@ -117,6 +123,36 @@ std::vector<uint8_t> encodeResponse(
 std::vector<uint8_t> encodeResponse(
   SnmpV1GetNextRequest const& request,
   GenErr const& error) throw();
+
+// encode response with values for each of the oids in paramOrder, the
+// value for paramOrder[i] being results[i], and with
+// other info (community,id) copied from request
+std::vector<uint8_t> encodeResponse(
+  SnmpV2cGetRequest const& request,
+  std::vector<Oid> const& paramOrder,
+  std::map<Oid,SnmpV2cVarResponse> const& results)
+    throw();
+
+// encode response indicating one of the requested Oids is unrecognised
+// pre: error.param_ in paramOrder
+std::vector<uint8_t> encodeResponse(
+  SnmpV2cGetRequest const& request,
+  std::vector<Oid> const& paramOrder,
+  NoSuchName const& error) throw();
+
+// encode response indicating response would have been too big to encode
+std::vector<uint8_t> encodeResponse(
+  SnmpV2cGetRequest const& request,
+  std::vector<Oid> const& paramOrder,
+  TooBig const& error) throw();
+
+// encode response indicating general server error related to
+// error.param_
+std::vector<uint8_t> encodeResponse(
+  SnmpV2cGetRequest const& request,
+  std::vector<Oid> const& paramOrder,
+  GenErr const& error) throw();
+
 
 }
 }

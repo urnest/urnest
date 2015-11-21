@@ -22,6 +22,8 @@
 #include "xju/snmp/TooBig.hh"
 #include "xju/snmp/SnmpV1SetRequest.hh"
 #include "xju/snmp/SnmpV1GetNextRequest.hh"
+#include "xju/snmp/SnmpV2cGetRequest.hh"
+#include "xju/snmp/decodeSnmpV2cResponse.hh"
 
 namespace xju
 {
@@ -326,6 +328,99 @@ void test13() {
   }
 }
 
+void test14() {
+  std::vector<uint8_t> const x(
+    encodeResponse(
+      SnmpV2cGetRequest(
+        Community("private"),
+        xju::snmp::RequestId(1),
+        {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),Oid(".1.3")}),
+      {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),Oid(".1.3")},
+      {std::make_pair(
+          Oid(".1.3"),
+          SnmpV2cVarResponse(Oid(".1.3"),
+                             std::shared_ptr<xju::snmp::Value const>(
+                               new xju::snmp::OidValue(Oid(".1.3.7"))))),
+       std::make_pair(
+          Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
+          SnmpV2cVarResponse(Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
+                             std::shared_ptr<Value const>(new NullValue)))}));
+        
+  xju::assert_equal(
+    x,
+    std::vector<uint8_t>({
+        0x30,53,0x02,0x01,0x01,0x04,0x07,0x70,0x72,0x69,0x76,0x61,0x74,0x65,0xA2,39,0x02,0x01,0x01,0x02,0x01,0x00,0x02,0x01,0x00,0x30,28,0x30,0x11,0x06,0x0D,0x2B,0x06,0x01,0x04,0x01,0x94,0x78,0x01,0x02,0x07,0x03,0x02,0x00,0x05,0x00,0x30,0x07,0x06,0x01,0x2B,0x06,0x02,0x2B,0x07
+          }));
+}
+
+void test15() {
+  SnmpV2cGetRequest const request(
+    Community("private"),
+    xju::snmp::RequestId(1),
+    {Oid(".1.3"),Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")});
+  
+  std::vector<uint8_t> const x(
+    encodeResponse(
+      request,
+      std::vector<Oid>(request.oids_.begin(),request.oids_.end()),
+      NoSuchName(Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),XJU_TRACED)));
+  try {
+    validateResponse(request,decodeSnmpV2cResponse(x));
+    xju::assert_never_reached();
+  }
+  catch(NoSuchName const& e) {
+    xju::assert_equal(e.param_,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+}
+
+void test16() {
+  SnmpV2cGetRequest const request(
+    Community("private"),
+    xju::snmp::RequestId(1),
+    {Oid(".1.3"),Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")});
+  
+  std::vector<uint8_t> const x(
+    encodeResponse(
+      request,
+      std::vector<Oid>(request.oids_.begin(),request.oids_.end()),
+      TooBig(XJU_TRACED)));
+  try {
+    validateResponse(request,decodeSnmpV2cResponse(x));
+    xju::assert_never_reached();
+  }
+  catch(TooBig const& e) {
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+}
+
+void test17() {
+  SnmpV2cGetRequest const request(
+    Community("private"),
+    xju::snmp::RequestId(1),
+    {Oid(".1.3"),Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")});
+  
+  std::vector<uint8_t> const x(
+    encodeResponse(
+      request,
+      std::vector<Oid>(request.oids_.begin(),request.oids_.end()),
+      GenErr(Oid(".1.3"),XJU_TRACED)));
+  try {
+    validateResponse(request,decodeSnmpV2cResponse(x));
+    xju::assert_never_reached();
+  }
+  catch(GenErr const& e) {
+    xju::assert_equal(e.param_,Oid(".1.3"));
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+}
+
 
 }
 }
@@ -348,6 +443,10 @@ int main(int argc, char* argv[])
   test11(), ++n;
   test12(), ++n;
   test13(), ++n;
+  test14(), ++n;
+  test15(), ++n;
+  test16(), ++n;
+  test17(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }
