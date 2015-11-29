@@ -1,0 +1,12 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+%tests.tree
+
+%tests.tree == <<
+()+cmd=(test-v5.cc+(../..%cxx-opts):auto.cxx.exe):stdout
+
+%v5==()+cmd=(../../hcp/hcp-split) -l 2 (v5.hcp) 'v5.hh' 'v5.cc':output
+
+v5.hh==%v5/v5.hh
+v5.cc==%v5/v5.cc

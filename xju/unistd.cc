@@ -68,6 +68,7 @@ namespace xju
 
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 
 namespace xju
 {
@@ -133,13 +134,13 @@ namespace xju
                     xju::SyscallFailed) {
         char* f(::strdup(file.c_str()));
         std::vector<char*> a;
-        for(auto arg in argv) {
+        for(auto arg: argv) {
             a.push_back(::strdup(arg.c_str()));
         }
         a.push_back(0);
         ::execvp(f,&a[0]);
         ::free(f);
-        for(auto s in a) {
+        for(auto s: a) {
             ::free(s);
         }
         throw xju::SyscallFailed("execvp",errno,XJU_TRACED);

@@ -54,10 +54,123 @@ snmp-trap:
   ... send requestData somewhere
 
 
+Server-side SNMP functions:
+
+  ... receive requestData as std::vector<uint8_t>
+  std::vector<uint8_t> responseData(handleRequest(requestData));
+
+  ... where:
+  std::vector<uint8_t> handleRequest(std::vector<uint8_t> const& requestData)
+    throw(xju::Exception)
+  {
+    try
+    {
+      return handleV1Request(requestData);
+    }
+    catch(xju::snmp::SnmpVersionMismatch& e1)
+    {
+      try
+      {
+        return handleV2cRequest(requestData);
+      }
+      catch(xju::snmp::SnmpVersionMismatch& e2)
+      {
+        std::ostringstream s;
+        s << "request is not SNMP v1 (" << readableRepr(e1)
+          << ") and request is not SNMP v2 (" << readableRepr(e2) << ")";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+    }
+  }
+
+  std::vector<uint8_t> handleV1Request(std::vector<uint8_t> const& requestData)
+    throw(xju::Exception)
+  {
+    try {
+      // handle snmp v1 get request
+      std::pair<xju::snmp::SnmpV1GetRequest, std::vector<xju::snmp::Oid> > const request(
+        xju::snmp::decodeSnmpV1GetRequest(requestData));
+      verifyCommunity(request.community_);
+      std::map<xju::snmp::Oid, std::shared_ptr<xju::snmp::Value const> > values(...);
+      return xju::snmp::encodeResponse(request.first,request.second,values);
+    }
+    catch(xju::snmp::RequestTypeMismatch& e1) {
+      try {
+        // handle snmp v1 get next request
+        xju::snmp::SnmpV1GetNextRequest const request(
+          xju::snmp::decodeSnmpV1GetNextRequest(requestData));
+        verifyCommunity(request.community_);
+        std::vector<std::pair<xju::snmp::Oid, std::shared_ptr<xju::snmp::Value const> > > values(...);
+        return xju::snmp::encodeResponse(request,values);
+      }
+      catch(xju::snmp::RequestTypeMismatch& e2) 
+      {
+        try {
+          // handle snmp v1 set request
+          std::pair<xju::snmp::SnmpV1SetRequest, std::vector<xju::snmp::Oid> > const request(
+            xju::snmp::decodeSnmpV1SetRequest(requestData));
+          verifyCommunity(request.community_);
+          std::map<xju::snmp::Oid, std::shared_ptr<Value const> > values(...);
+          return xju::snmp::encodeResponse(request.first,request.second,values);
+        }
+        catch(xju::snmp::RequestTypeMismatch& e3)
+        {
+          std::ostringstream s;
+          s << readableRepr(e1) << " and " << readableRepr(e2)
+            << " and " << readableRepr(e3);
+          throw xju::Exception(s.str(),XJU_TRACED);
+        }
+      }
+    }
+  }
+
+  std::vector<uint8_t> handleV2cRequest(std::vector<uint8_t> const& requestData)
+    throw(xju::Exception)
+  {
+    try {
+      // handle snmp v2c get request
+      std::pair<xju::snmp::SnmpV2cGetRequest, std::vector<xju::snmp::Oid> > const request(
+        xju::snmp::decodeSnmpV2cGetRequest(requestData));
+      verifyCommunity(request.community_);
+      std::map<xju::snmp::Oid, std::shared_ptr<xju::snmp::Value const> > values(...);
+      return xju::snmp::encodeResponse(request.first,request.second,values);
+    }
+    catch(xju::snmp::RequestTypeMismatch& e1) {
+      try {
+        // handle snmp v2c get next request
+        xju::snmp::SnmpV2cGetNextRequest const request(
+          xju::snmp::decodeSnmpV2cGetNextRequest(requestData));
+        verifyCommunity(request.community_);
+        std::vector<std::pair<xju::snmp::Oid, std::shared_ptr<xju::snmp::Value const> > > values(...);
+        return xju::snmp::encodeResponse(request,values);
+      }
+      catch(xju::snmp::RequestTypeMismatch& e2) 
+      {
+        try {
+          // handle snmp v2c set request
+          std::pair<xju::snmp::SnmpV2cSetRequest, std::vector<xju::snmp::Oid> > const request(
+            xju::snmp::decodeSnmpV2cSetRequest(requestData));
+          verifyCommunity(request.community_);
+          std::map<xju::snmp::Oid, std::shared_ptr<Value const> > values(...);
+          return xju::snmp::encodeResponse(request.first,request.second,values);
+        }
+        catch(xju::snmp::RequestTypeMismatch& e3)
+        {
+          std::ostringstream s;
+          s << readableRepr(e1) << " and " << readableRepr(e2)
+            << " and " << readableRepr(e3);
+          throw xju::Exception(s.str(),XJU_TRACED);
+        }
+      }
+    }
+  }
+
+
 See snmp/README.txt also.
 
 */
 
+// client-side headers
 #include "snmp/SnmpV1GetRequest.hh"
 #include "snmp/SnmpV1SetRequest.hh"
 #include "snmp/SnmpV1GetNextRequest.hh"
@@ -67,5 +180,13 @@ See snmp/README.txt also.
 #include "snmp/SnmpV1Table.hh"
 #include "snmp/SnmpV1Trap.hh"
 
+// server-side headers
+#include "snmp/encodeResponse.hh"
+#include "snmp/decodeSnmpV1GetRequest.hh"
+#include "snmp/decodeSnmpV1GetNextRequest.hh"
+#include "snmp/decodeSnmpV1SetRequest.hh"
+#include "snmp/decodeSnmpV2cGetRequest.hh"
+#include "snmp/decodeSnmpV2cGetNextRequest.hh"
+#include "snmp/decodeSnmpV2cSetRequest.hh"
 
 #endif
