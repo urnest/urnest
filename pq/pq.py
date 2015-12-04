@@ -15,6 +15,56 @@ import htmlentitydefs
 import sys
 import traceback
 import types
+import string
+
+class PqE(Exception):
+    """Exception allowing capture of cause and context.
+    """
+    def __init__(self, cause):
+        self.cause = cause
+        self.context = []
+        pass
+
+    def addContext(self, context):
+        self.context.append(context)
+        pass
+    
+    def __str__(self):
+        result = ''
+        if len(self.context):
+            x = self.context[:]
+            x.reverse()
+            result = 'Failed to ' + \
+                     string.join(x,
+                                 ' because\nfailed to ') + \
+                                 ' because\n'
+        else:
+            result = 'Failed because\n'
+            pass
+        result = result + self.cause + '.'
+        return result
+
+def makeException(exceptionInfo, context):
+    e = PqE(' '.join(traceback.format_exception(
+        exceptionInfo[0],
+        exceptionInfo[1],
+        exceptionInfo[2])))
+    e.addContext(context)
+    return e
+
+
+def inContext(context, exceptionInfo=None):
+    """Make a PqE that includes exception info and context.
+    If exceptionInfo[1] is already a PqE just add context,
+    otherwise use exceptionInfo as cause for a new PqE.
+
+    exceptionInfo is as returned by sys.exc_info()
+    """
+    if exceptionInfo is None: exceptionInfo=sys.exc_info()
+    if (isinstance(exceptionInfo[1], PqE)):
+        exceptionInfo[1].addContext(context)
+        return exceptionInfo[1]
+    return makeException(exceptionInfo, context)
 
 class Pos:
     def __init__(self, file, line, col):
@@ -26,10 +76,11 @@ class Pos:
         return '%(file)s:%(line)s:%(col)s' % self.__dict__
     pass
 
-class ParseFailed:
+class ParseFailed(PqE):
     def __init__(self, cause, pos):
         self.cause=cause
         self.pos=pos
+        PqE.__init__(self.__str__)
         return
     def __str__(self):
         return 'failed to parse html at %(pos)s because\n%(cause)s'%self.__dict__
@@ -48,6 +99,19 @@ class Node:
         self.parent=parent
         if parent:
             parent.children.append(self)
+
+def unicodeOfElements(l):
+        result=[]
+        for i,c in enumerate(l):
+            try:
+                result.append(unicode(c))
+            except:
+                t=type(c).__name__
+                if t=='instance':
+                    t=c.__class__.__name__
+                raise inContext('get unicode representation of child %(i)r, %(c)r, which is of type %(t)s'%vars())
+            pass
+        return result
 
 class Root(Node):
     def __init__(self):
@@ -70,7 +134,7 @@ class Root(Node):
     def __str__(self):
         return ''.join([str(_) for _ in self.children])
     def __unicode__(self):
-        return ''.join([unicode(_) for _ in self.children])
+        return u''.join(unicodeOfElements(self.children))
     def __repr__(self):
         return 'root node'
     pass
@@ -128,13 +192,17 @@ class Tag(Node):
         end=self.end
         return '''<%(start)s>%(content)s%(end)s'''%vars()
     def __unicode__(self):
-        encodedAttrs=['%s="%s"' % (_[0],encodeEntities(_[1])) for 
-                      _ in self.attrs.items()]
-        encodedAttrs.sort()
-        start=' '.join([self.tagName]+encodedAttrs)
-        content=''.join([unicode(_) for _ in self.children])
-        end=self.end
-        return '''<%(start)s>%(content)s%(end)s'''%vars()
+        try:
+            encodedAttrs=[u'%s="%s"' % (_[0],encodeEntities(_[1])) for 
+                          _ in self.attrs.items()]
+            encodedAttrs.sort()
+            start=u' '.join([self.tagName]+encodedAttrs)
+            content=u''.join(unicodeOfElements(self.children))
+            end=self.end
+            return u'''<%(start)s>%(content)s%(end)s'''%vars()
+        except:
+            raise inContext('get unicode representation of %(self)r'%vars())
+        pass
     def hasClass(self,c):
         return c in self.classes
     def addClass(self,c):
@@ -185,8 +253,10 @@ class Data(Node):
         pass
     def __str__(self):
         return self.data
+    def __unicode__(self):
+        return unicode(self.data,'utf-8','strict')
     def __repr__(self):
-        return 'data at %(pos)s' % self.__dict__
+        return 'data at %(pos)s, %(data)r' % self.__dict__
     def clone(self, newParent):
         result=Data(self.data, newParent, self.pos)
         return result
@@ -200,6 +270,8 @@ class EntityRef(Node):
         self.name=name
     def __str__(self):
         return '&%(name)s;' % self.__dict__
+    def __unicode__(self):
+        return u'&%(name)s;' % self.__dict__
     def __repr__(self):
         return 'entity ref at %(pos)s' % self.__dict__
     def clone(self, newParent):
@@ -215,6 +287,8 @@ class CharRef(Node):
         self.name=name
     def __str__(self):
         return '&#%(name)s;' % self.__dict__
+    def __unicode__(self):
+        return u'&#%(name)s;' % self.__dict__
     def __repr__(self):
         return 'char ref at %(pos)s' % self.__dict__
     def clone(self, newParent):
@@ -230,6 +304,8 @@ class Comment(Node):
         self.comment=comment
     def __str__(self):
         return '<!-- %(comment)s -->' % self.__dict__
+    def __unicode__(self):
+        return u'<!-- %(comment)s -->' % self.__dict__
     def __repr__(self):
         return 'comment at %(pos)s' % self.__dict__
     def clone(self, newParent):
@@ -245,6 +321,8 @@ class Decl(Node):
         self.decl=decl
     def __str__(self):
         return '<!%(decl)s>' % self.__dict__
+    def __unicode__(self):
+        return u'<!%(decl)s>' % self.__dict__
     def __repr__(self):
         return 'decl at %(pos)s' % self.__dict__
     def clone(self, newParent):
@@ -260,6 +338,8 @@ class PI(Node):
         self.pi=pi
     def __str__(self):
         return '<?%(pi)s>' % self.__dict__
+    def __unicode__(self):
+        return u'<?%(pi)s>' % self.__dict__
     def __repr__(self):
         return 'processing instruction at %(pos)s' % self.__dict__
     def clone(self, newParent):
@@ -296,7 +376,7 @@ class Parser(HTMLParser.HTMLParser):
             pass
         if not current is self.root:
             self.current=current
-            self.current.end='</%(tag)s>'%vars()
+            self.current.end=u'</%(tag)s>'%vars()
             self.current=self.current.parent
         return
     def handle_data(self,data):
@@ -424,7 +504,7 @@ class Selection:
     def __str__(self):
         return ''.join([str(_) for _ in self.nodeList])
     def __unicode__(self):
-        return u''.join([unicode(_) for _ in self.nodeList])
+        return u''.join(unicodeOfElements(self.nodeList))
     def __len__(self):
         return len(self.nodeList)
     def __getitem__(self, key):
@@ -442,7 +522,7 @@ def attrEquals(attr,value):
     return lambda node: isinstance(node, Tag) and node.attrEquals(attr,value)
 
 def parse(s, origin='unknown',encoding='utf-8'):
-    '''parse HTML string "%(origin)s" assuming it has %(encoding)r encoding (per python unicode() function)'''
+    '''parse HTML string "%(origin)s" assuming it has %(encoding)r encoding (per python unicode() function), returns a Selection'''
     parser=Parser(origin)
     try:
         u=s
@@ -465,7 +545,7 @@ def loadFile(fileName,encoding='utf-8'):
     return parse(file(fileName).read(),fileName,encoding)
 
 def assert_equal(a, b):
-    assert a==b, ('%(a)s\n!=\n%(b)s' % vars())
+    assert a==b, (u'%(a)s\n!=\n%(b)s' % vars())
 
 html1='''<html>
 <body>
