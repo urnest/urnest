@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding: utf-8
 # jquery-like python library
 #
 # parse a HTML text into a tree, with search, manipulation
@@ -87,11 +88,11 @@ class ParseFailed(PqE):
     pass
 
 entities=htmlentitydefs.entitydefs
-reverseentities=dict((_[1],'&'+_[0]+';') for _ in entities.items())
+reverseentities=dict((_[1],u'&'+_[0]+';') for _ in entities.items())
 
 def encodeEntities(s):
-    if s is None: return ''
-    x=''.join([reverseentities.get(_,_) for _ in s])
+    if s is None: return u''
+    x=u''.join([reverseentities.get(_,_) for _ in s])
     return x
 
 class Node:
@@ -254,7 +255,11 @@ class Data(Node):
     def __str__(self):
         return self.data
     def __unicode__(self):
-        return unicode(self.data,'utf-8','strict')
+        if type(self.data) is types.UnicodeType:
+            return self.data
+        if type(self.data) is types.StringType:
+            return unicode(self.data,'utf-8','strict')
+        return unicode(self.data)
     def __repr__(self):
         return 'data at %(pos)s, %(data)r' % self.__dict__
     def clone(self, newParent):
@@ -436,6 +441,8 @@ class Selection:
         return self
     def text(self, s):
         '''replace our first node's children with the specified text string'''
+        if type(s) is types.StringType:
+            s=unicode(s,'utf-8','strict')
         for n in self.nodeList:
             Selection([n]).html(parse(encodeEntities(s)))
         return self
@@ -526,7 +533,7 @@ def parse(s, origin='unknown',encoding='utf-8'):
     parser=Parser(origin)
     try:
         u=s
-        if type(s)=='str':
+        if type(s) is types.StringType:
             u=unicode(s,encoding,'strict')
             pass
         parser.feed(u)
@@ -545,7 +552,7 @@ def loadFile(fileName,encoding='utf-8'):
     return parse(file(fileName).read(),fileName,encoding)
 
 def assert_equal(a, b):
-    assert a==b, (u'%(a)s\n!=\n%(b)s' % vars())
+    assert a==b, (u'%(a)r\n!=\n%(b)r' % vars())
 
 html1='''<html>
 <body>
@@ -642,12 +649,30 @@ def test4():
     parse(encodeEntities(script)).appendTo(a)
     assert_equal(str(a), '<head>'+script+'</head>')
 
+def test5():
+    s=parse('<p>fred</p>')
+    s.text('jock')
+    assert_equal(unicode(s),u'<p>jock</p>')
+
+def test6():
+    s=parse('<p>fred</p>')
+    s.text(u'30x40”')
+    assert_equal(unicode(s),u'<p>30x40”</p>')
+
+def test7():
+    s=parse('<p>fred</p>')
+    s.text('30x40”')
+    assert_equal(unicode(s),u'<p>30x40”</p>')
+
 if __name__=='__main__':
     try:
         test1()
         test2()
         test3()
         test4()
+        test5()
+        test6()
+        test7()
     except:
         print >>sys.stderr, sys.exc_info()[1]
         sys.exit(1)
