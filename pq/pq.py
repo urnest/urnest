@@ -17,55 +17,7 @@ import sys
 import traceback
 import types
 import string
-
-class PqE(Exception):
-    """Exception allowing capture of cause and context.
-    """
-    def __init__(self, cause):
-        self.cause = cause
-        self.context = []
-        pass
-
-    def addContext(self, context):
-        self.context.append(context)
-        pass
-    
-    def __str__(self):
-        result = ''
-        if len(self.context):
-            x = self.context[:]
-            x.reverse()
-            result = 'Failed to ' + \
-                     string.join(x,
-                                 ' because\nfailed to ') + \
-                                 ' because\n'
-        else:
-            result = 'Failed because\n'
-            pass
-        result = result + self.cause + '.'
-        return result
-
-def makeException(exceptionInfo, context):
-    e = PqE(' '.join(traceback.format_exception(
-        exceptionInfo[0],
-        exceptionInfo[1],
-        exceptionInfo[2])))
-    e.addContext(context)
-    return e
-
-
-def inContext(context, exceptionInfo=None):
-    """Make a PqE that includes exception info and context.
-    If exceptionInfo[1] is already a PqE just add context,
-    otherwise use exceptionInfo as cause for a new PqE.
-
-    exceptionInfo is as returned by sys.exc_info()
-    """
-    if exceptionInfo is None: exceptionInfo=sys.exc_info()
-    if (isinstance(exceptionInfo[1], PqE)):
-        exceptionInfo[1].addContext(context)
-        return exceptionInfo[1]
-    return makeException(exceptionInfo, context)
+from xn import Xn,inContext
 
 class Pos:
     def __init__(self, file, line, col):
@@ -77,11 +29,11 @@ class Pos:
         return '%(file)s:%(line)s:%(col)s' % self.__dict__
     pass
 
-class ParseFailed(PqE):
+class ParseFailed(Xn):
     def __init__(self, cause, pos):
         self.cause=cause
         self.pos=pos
-        PqE.__init__(self.__str__)
+        Xn.__init__(self.__str__)
         return
     def __str__(self):
         return 'failed to parse html at %(pos)s because\n%(cause)s'%self.__dict__
@@ -243,6 +195,14 @@ class Tag(Node):
         for c in self.children:
             c.clone(result)
         return result
+    def text(self):
+        if self.tagName=='br':
+            return u'\n'
+        if self.tagName=='p':
+            return u''.join([_.text() for _ in self.children])+u'\n'
+        if self.tagName=='li':
+            return u'\n'
+        return u''.join([_.text() for _ in self.children])
     pass
 
 class Data(Node):
@@ -265,6 +225,8 @@ class Data(Node):
     def clone(self, newParent):
         result=Data(self.data, newParent, self.pos)
         return result
+    def text(self):
+        return unicode(self)
     pass
 
 class EntityRef(Node):
@@ -282,6 +244,10 @@ class EntityRef(Node):
     def clone(self, newParent):
         result=EntityRef(self.name, newParent, self.pos)
         return result
+    def text(self):
+        if not self.name in entities:
+            raise Xn('unknown entity %(name)s'%self.__dict__)
+        return entities[self.name]
     pass
 
 class CharRef(Node):
@@ -299,6 +265,8 @@ class CharRef(Node):
     def clone(self, newParent):
         result=CharRef(self.name, newParent, self.pos)
         return result
+    def text(self):
+        assert 'text() not implemented for %(self)r' % vars()
     pass
 
 class Comment(Node):
@@ -316,6 +284,8 @@ class Comment(Node):
     def clone(self, newParent):
         result=Comment(self.comment, newParent, self.pos)
         return result
+    def text(self):
+        return ''
     pass
 
 class Decl(Node):
@@ -333,6 +303,8 @@ class Decl(Node):
     def clone(self, newParent):
         result=Decl(self.decl, newParent, self.pos)
         return result
+    def text(self):
+        return ''
     pass
 
 class PI(Node):
@@ -350,6 +322,8 @@ class PI(Node):
     def clone(self, newParent):
         result=PI(self.pi, newParent, self.pos)
         return result
+    def text(self):
+        return ''
     pass
 
 class Parser(HTMLParser.HTMLParser):
@@ -439,8 +413,11 @@ class Selection:
             for c in n.children:
                 c.parent=n
         return self
-    def text(self, s):
+    def text(self, s=None):
         '''replace our first node's children with the specified text string'''
+        '''or return unicode concatenation of text content of children'''
+        if s is None:
+            return u''.join([_.text() for _ in self.nodeList])
         if type(s) is types.StringType:
             s=unicode(s,'utf-8','strict')
         for n in self.nodeList:
@@ -490,6 +467,9 @@ class Selection:
     def first(self):
         '''return Selection containing first of our nodes'''
         return Selection(self.nodeList[0:1])
+    def children(self):
+        '''return Selection containing children of our nodes'''
+        return Selection(sum([_.children for _ in self.nodeList],[]))
     def clone(self):
         '''return Selection containing a copy of our nodes'''
         return Selection([_.clone(None) for _ in self.nodeList])
@@ -648,21 +628,37 @@ def test4():
     a=parse('<head></head>')
     parse(encodeEntities(script)).appendTo(a)
     assert_equal(str(a), '<head>'+script+'</head>')
+    pass
 
 def test5():
     s=parse('<p>fred</p>')
     s.text('jock')
     assert_equal(unicode(s),u'<p>jock</p>')
+    pass
 
 def test6():
     s=parse('<p>fred</p>')
     s.text(u'30x40”')
     assert_equal(unicode(s),u'<p>30x40”</p>')
+    pass
 
 def test7():
     s=parse('<p>fred</p>')
     s.text('30x40”')
     assert_equal(unicode(s),u'<p>30x40”</p>')
+    pass
+
+def test8():
+    s=parse('<html><p>fred</p><p>jock</p></html>')
+    s=s.children()
+    assert len(s)==2, unicode(s).encode('utf-8')
+    assert_equal(unicode(s.first()),u'<p>fred</p>')
+    pass
+
+def test9():
+    s=parse('<td><a href="fred">jock</a> and fred</td>')
+    assert_equal(s.text(), u'jock and fred')
+    pass
 
 if __name__=='__main__':
     try:
@@ -673,6 +669,8 @@ if __name__=='__main__':
         test5()
         test6()
         test7()
+        test8()
+        test9()
     except:
         print >>sys.stderr, sys.exc_info()[1]
         sys.exit(1)

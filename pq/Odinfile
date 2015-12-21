@@ -1,10 +1,10 @@
 %run-all-tests==(%tests.tree:leaves)
 
 %tests.tree==<<
-(t1.html)+cmd=(%parse-stdin) (pq.py):exec.output
-(t2.html)+cmd=(%parse-stdin) (pq.py):exec.output
-(t3.html)+cmd=(%parse-stdin) (pq.py):exec.output
-()+cmd=(pq.py):exec.output
+(t1.html)+cmd=(%parse-stdin) (pq.py)+need=(xn.py):exec.output
+(t2.html)+cmd=(%parse-stdin) (pq.py)+need=(xn.py):exec.output
+(t3.html)+cmd=(%parse-stdin) (pq.py)+need=(xn.py):exec.output
+()+cmd=(pq.py)+need=(xn.py):exec.output
 
 %parse-stdin== ! <<
 #!/usr/bin/env python
