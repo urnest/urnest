@@ -39,8 +39,8 @@ class ParseFailed(Xn):
         return 'failed to parse html at %(pos)s because\n%(cause)s'%self.__dict__
     pass
 
-entities=htmlentitydefs.entitydefs
-reverseentities=dict((_[1],u'&'+_[0]+';') for _ in entities.items())
+entities=htmlentitydefs.name2codepoint
+reverseentities=htmlentitydefs.codepoint2name
 
 def encodeEntities(s):
     if s is None: return u''
@@ -247,7 +247,7 @@ class EntityRef(Node):
     def text(self):
         if not self.name in entities:
             raise Xn('unknown entity %(name)s'%self.__dict__)
-        return entities[self.name]
+        return unichr(entities[self.name])
     pass
 
 class CharRef(Node):
@@ -285,7 +285,7 @@ class Comment(Node):
         result=Comment(self.comment, newParent, self.pos)
         return result
     def text(self):
-        return ''
+        return u''
     pass
 
 class Decl(Node):
@@ -304,7 +304,7 @@ class Decl(Node):
         result=Decl(self.decl, newParent, self.pos)
         return result
     def text(self):
-        return ''
+        return u''
     pass
 
 class PI(Node):
@@ -323,7 +323,7 @@ class PI(Node):
         result=PI(self.pi, newParent, self.pos)
         return result
     def text(self):
-        return ''
+        return u''
     pass
 
 class Parser(HTMLParser.HTMLParser):
@@ -484,6 +484,8 @@ class Selection:
             n.removeClass(name)
         return self
     def attr(self, name, value=None):
+        '''attr('src') lists the values of the src attributes of each of our nodes'''
+        """attr('src','fred.html') sets the src attribute of each of our nodes to 'html'"""
         if value is None:
             return [_.attr(name, value) for _ in self.nodeList]
         [_.attr(name, value) for _ in self.nodeList]
@@ -498,6 +500,9 @@ class Selection:
         return self.nodeList[key]
     def __getslice__(self, i, j):
         return Selection(self.nodeList[i:j])
+    def __add__(self, b):
+        assert isinstance(b,Selection), repr(b)
+        return Selection(self.nodeList+b.nodeList)
     pass
 
 # basic predicates
@@ -660,6 +665,14 @@ def test9():
     assert_equal(s.text(), u'jock and fred')
     pass
 
+def test10():
+    s=parse('<td><a href="fred">jock</a>&nbsp;and fred</td>')
+    assert_equal(s.text(), u'jock\xa0and fred')
+    s1=parse('<td><a href="fred">jock</a>&nbsp;')
+    s2=parse('and fred</td>')
+    assert_equal((s1+s2).text(), u'jock\xa0and fred')
+    pass
+
 if __name__=='__main__':
     try:
         test1()
@@ -671,6 +684,7 @@ if __name__=='__main__':
         test7()
         test8()
         test9()
+        test10()
     except:
         print >>sys.stderr, sys.exc_info()[1]
         sys.exit(1)
