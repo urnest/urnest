@@ -387,7 +387,11 @@ def filter(node, predicate):
         
 class Selection:
     def __init__(self, nodeList):
-        self.nodeList=nodeList
+        if isinstance(nodeList,Node):
+            self.nodeList=[nodeList,]
+        else:
+            self.nodeList=nodeList[:]
+            pass
         return
     def find(self, predicate):
         '''find all children of our nodes that match predicate'''
