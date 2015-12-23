@@ -33,7 +33,7 @@ class ParseFailed(Xn):
     def __init__(self, cause, pos):
         self.cause=cause
         self.pos=pos
-        Xn.__init__(self.__str__)
+        Xn.__init__(self,self.__str__())
         return
     def __str__(self):
         return 'failed to parse html at %(pos)s because\n%(cause)s'%self.__dict__
@@ -676,9 +676,7 @@ def test10():
     s2=parse('and fred</td>')
     assert_equal((s1+s2).text(), u'jock\xa0and fred')
     pass
-
 if __name__=='__main__':
-    try:
         test1()
         test2()
         test3()
@@ -689,6 +687,3 @@ if __name__=='__main__':
         test8()
         test9()
         test10()
-    except:
-        print >>sys.stderr, sys.exc_info()[1]
-        sys.exit(1)
