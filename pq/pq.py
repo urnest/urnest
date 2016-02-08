@@ -168,7 +168,7 @@ class Tag(Node):
         if len(self.classes)==0:
             del self.attrs['class']
         return self
-    def attr(self, a, val):
+    def attr(self, a, val=None):
         if not val is None:
             self.attrs[a]=val
         return self.attrs.get(a,'')
@@ -240,7 +240,7 @@ class EntityRef(Node):
     def __unicode__(self):
         return u'&%(name)s;' % self.__dict__
     def __repr__(self):
-        return 'entity ref at %(pos)s' % self.__dict__
+        return 'entity ref %(name)r at %(pos)s' % self.__dict__
     def clone(self, newParent):
         result=EntityRef(self.name, newParent, self.pos)
         return result
@@ -449,6 +449,16 @@ class Selection:
         index=parent.indexOf(nodes[0])
         for n in self.nodeList:
             n.parent=parent
+        parent.children[index+1:index+1]=self.nodeList
+        return self
+    def addBefore(self, nodes):
+        '''add our nodes before first of specified nodes'''
+        if isinstance(nodes, Selection):
+            nodes=nodes.nodeList
+        parent=nodes[0].parent
+        index=parent.indexOf(nodes[0])
+        for n in self.nodeList:
+            n.parent=parent
         parent.children[index:index]=self.nodeList
         return self
     def detach(self):
@@ -516,6 +526,8 @@ def tagName(t):
     return lambda node: isinstance(node, Tag) and node.tagName==t
 def attrEquals(attr,value):
     return lambda node: isinstance(node, Tag) and node.attrEquals(attr,value)
+def isEntityRef(name):
+    return lambda node: isinstance(node, EntityRef) and node.name==name
 
 def parse(s, origin='unknown',encoding='utf-8'):
     '''parse HTML string "%(origin)s" assuming it has %(encoding)r encoding (per python unicode() function), returns a Selection'''
@@ -676,6 +688,23 @@ def test10():
     s2=parse('and fred</td>')
     assert_equal((s1+s2).text(), u'jock\xa0and fred')
     pass
+
+def test11():
+    s=parse('<a href="fred">John&nbsp;Walker</a>')
+    s.find(isEntityRef('nbsp')).remove()
+    assert str(s)=='<a href="fred">JohnWalker</a>',s.text()
+    pass
+
+def test12():
+    s=parse('<ul><li class="a">1<li class="b">2</ul>')
+    parse('<li>1.5').addBefore(s.find(hasClass('b')))
+    assert_equal(unicode(s),u'<ul><li class="a">1<li>1.5<li class="b">2</ul>')
+    
+def test13():
+    s=parse('<ul><li class="a">1<li class="b">2</ul>')
+    parse('<li>0').addBefore(s.find(hasClass('a')))
+    assert_equal(unicode(s),u'<ul><li>0<li class="a">1<li class="b">2</ul>')
+
 if __name__=='__main__':
         test1()
         test2()
@@ -687,3 +716,6 @@ if __name__=='__main__':
         test8()
         test9()
         test10()
+        test11()
+        test12()
+        test13()
