@@ -46,9 +46,11 @@ io::Output
 
 Subprocess
   x start function object,
-  x optional stop function object (pass pid)
+  x optional stop function object (pass pid) - default kill 9
   x exit status
-  - test
+  - test scenarios
+    - process output before destroy -> wait exit
+    - exception processing -> kill
 
 unit testing
   generic stub that captures calls, so can do test like:

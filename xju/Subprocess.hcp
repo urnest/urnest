@@ -1,0 +1,104 @@
+// Copyright (c) 2015 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include "xju/Exception.hh"
+#include "xju/unistd.hh"
+#include "xju/signal.hh"
+#include "xju/wait.hh"
+#include <memory>
+#include <sys/types.h>
+
+
+namespace xju
+{
+
+class Subprocess: noncopyable
+{
+public:
+  // call start() in Subprocess with process id pid_, set exitStatus
+  // to exit status of Subprocess, which is result of start() unless
+  // Subprocess calls exec, is killed or aborts
+  // - exitStatus is not valid until destuctor completes
+  // - destructor issues kill(9) and waits until Subprocess exits
+  // - exitStatus must outlive Subprocess
+  // int start() throw()
+  template<class F>
+  Subprocess(int& exitStatus, F start) throw(
+    xju::Exception):
+      exitStatus_(exitStatus),
+      impl_(new stop),
+      pid_(xju::fork())
+  {
+    if (!pid_) {
+      start();
+    }
+  }
+  // as above, but destructor calls stop(pid_) before waiting for
+  // Subprocess to terminate
+  // 
+  // int start() throw()
+  // void stop(pid_t pid) throw()
+  template<class F1, class F2>
+  Subprocess(int& exitStatus, F1 start, F2 stop) throw(
+    xju::Exception):
+      exitStatus_(exitStatus),
+      impl_(new stop2(stop)),
+      pid_(xju::fork())
+  {
+    if (!pid_) {
+      ::exit(start());
+    }
+  }
+  void kill(int signal) throw(
+    xju::Exception)
+  {
+    xju::kill(pid_,signal);
+  }
+
+  ~Subprocess() throw()
+  {
+    impl_->stop(pid_);
+    xju::waitpid(pid_,&exitStatus_,0);
+  }
+  
+private:
+  int& exitStatus_;
+  std::unique_ptr<stop> impl_;
+  pid_t pid_;
+
+  class stop
+  {
+  public:
+    virtual ~stop() throw()
+    {
+    }
+    virtual void f(pid_t pid) throw()
+    {
+      xju::kill(pid, 9);
+    }
+  };
+  
+  template<class F>
+  class stop2: public stop
+  {
+  public:
+    stop2(F stop) throw()
+      stop_(stop)
+    {
+    }
+    virtual void f(pid_t pid) throw()
+    {
+      stop_(pid);
+    }
+    F stop_;
+  };
+};
+
+  
+}

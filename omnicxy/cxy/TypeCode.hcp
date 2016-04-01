@@ -1,0 +1,88 @@
+// Copyright (c) 2015 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace cxy
+{
+class TypeCode
+{
+public:
+  virtual ~TypeCode() throw(){}
+
+  virtual cxy::TypeKind kind() const throw()=0;
+  virtual std::string repoId() const throw()=0;
+  
+  virtual void copyValue(cdrStream& from, cdrStream& to)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  = 0;
+
+  virtual void marshal(cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  = 0;
+};
+
+class TypeCodeShort : public TypeCode
+{
+  virtual cxy::TypeKind kind() const throw()
+  {
+    return cxy::TypeKind::SHORT;
+  }
+  virtual std::string repoId() const throw()
+  {
+    return "";
+  }
+  
+  virtual void copyValue(cdrStream& from, cdrStream& to)
+  {
+    cxy::cdr<int16_t>::marshal(
+      cxy::cdr<int16_t>::unmarshalFrom(from),
+      to);
+  }
+
+  virtual void marshal(cdrStream& s)
+  {
+    cxy::typecode<int16_t>::encode(s);
+  }
+  
+};
+
+template<>
+class cxy::cdr<std::unique_ptr<TypeCode> >
+{
+public:
+  static std::unique_ptr<TypeCode> unmarshalFrom(cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    cxy::TypeKind const k(cxy::cdr<uint32_t>::unmarshalFrom(s));
+    switch(k) {
+    case cxy::TypeKind::SHORT:
+      return std::unique_ptr<TypeCode>(
+        new TypeCodeShort());
+    default:
+      std::ostringstream s;
+      s << "unimplemented type kind " << k;
+      throw cxy::Exception(s.str(),XJU_TRACED);
+    }
+  }
+  
+};
+  
+  
+}

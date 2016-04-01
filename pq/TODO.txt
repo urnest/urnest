@@ -1,0 +1,15 @@
+- get jsonschema
+- jsonschema:
+  - fix dict. handling to verify all elements supplied
+  - add HTML type, and query for HTML objects
+  - add some kind of pq.parse for parsing list returned by jsonschema query
+  - set(x) - set of x
+
+pq.py:
+  - css selector parsing
+    - tag name
+    - class
+    - attr
+
+- always stringify attr values
+

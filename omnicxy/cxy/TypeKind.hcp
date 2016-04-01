@@ -1,0 +1,56 @@
+// Copyright (c) 2015 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace cxy
+{
+enum class TypeKind
+{
+    NULL,
+    VOID,
+    SHORT,
+    LONG,
+    USHORT,
+    ULONG,
+    FLOAT,
+    DOUBLE,
+    BOOLEAN,
+    CHAR,
+    OCTET,
+    ANY,
+    TYPECODE,
+    PRINCIPAL,
+    OBJREF,
+    STRUCT,
+    UNION,
+    ENUM,
+    STRING,
+    SEQUENCE,
+    ARRAY,
+    ALIAS,
+    EXCEPT,
+    LONGLONG,
+    ULONGLONG,
+    LONGDOUBLE,
+    WCHAR,
+    WSTRING,
+    FIXED,
+    VALUE,
+    VALUE_BOX,
+    NATIVE,
+    ABSTRACT_INTERFACE,
+    LOCAL_INTERFACE,
+    COMPONENT,
+    HOME,
+    EVENT
+};
+
+
+}

@@ -1,0 +1,7 @@
+class X
+{
+public:
+  int a_;
+  std::string b_;
+  friend bool operator<(X const&, X const&) throw();
+};

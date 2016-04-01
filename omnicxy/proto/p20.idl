@@ -1,0 +1,12 @@
+module p20
+{
+  struct A
+  {
+    string a_;
+  };
+  
+  interface F{
+    // returns x
+    any f1(in any x);
+  };
+};

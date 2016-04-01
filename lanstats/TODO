@@ -1,0 +1,76 @@
+- parse tcpdump
+  show as bytes/s per source address per protocol
+  
+  xju@xjutv:~/urnest$ sudo /usr/sbin/tcpdump -i eth0 -e -tt -q -n
+  
+  1431069679.449539 00:13:d4:bd:fa:e8 > 14:cc:20:aa:51:48, IPv4, length
+  66: 192.168.0.3.54375 > 203.13.68.131.80: tcp 0
+  1431069672.714920 14:cc:20:aa:51:48 > 00:13:d4:bd:fa:e8, IPv4, length
+  140: 203.10.89.3.53 > 192.168.0.3.39928: UDP, length 98
+  
+  - use the lowest port number
+  - convert ipv4 addresses to 32bit numbers for fast lookup? Perhaps use
+    the last octet as a hash and compare others in reverse order for
+    fast lookup?
+  
+x idl
+ 
+- internal data structure:
+ 
+  map<pair<protocol,port>, map<source-ip, deque<tuple<timestamp, source-port, dest-ip, dest-port, length> > >
+
+x use fine-grained locking? (start with cource grain)
+
+- use corbaloc name "lanstats"
+
+- client
+  show-lanstats [--json] [--by-address|--by-proto-port] server-uri
+    - show totals unless --json
+
+- server
+  lanstats-server corba-service-port-number
+
+  parse line
+  add packet to corresponding deque
+  remove stale deque entries, adjust total
+
+  getCurrentStats()
+    - remove stale deque entries, report total
+
+  report parse failures to stderr... actuall should track and report
+  number/s with other stats
+
+-----------------
+
+tcpdump
+       -e     Print the link-level header on each dump line.
+*** just want that
+
+      -i     Listen on interface.  If unspecified, tcpdump searches the
+sys‐
+       -j     Set  the  time  stamp  type for the capture to
+tstamp_type.  The
+              names to use for the time stamp types are given in
+pcap-tstamp-
+              type(7);  not  all  the  types  listed there will
+necessarily be
+              valid for any given interface.
+
+      -J     List the supported time stamp types for the interface and
+exit.
+       -K     Don't attempt to verify IP, TCP, or UDP checksums.  This
+is use‐
+       -n     Don't  convert  addresses  (i.e.,  host addresses, port
+numbers,
+      -q     Quick (quiet?) output.  Print less protocol information so
+out‐
+        -s     Snarf snaplen bytes of data from each  packet  rather
+than  the
+              default  of 65535 bytes.  Packets truncated because of a
+limited
+       -tt    Print an unformatted timestamp on each dump line.
+       -t     Don't print a timestamp on each dump line.
+       -U     If the -w option is not specified, make the printed packet
+out‐
+
+
