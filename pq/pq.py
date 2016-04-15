@@ -163,7 +163,9 @@ class Tag(Node):
         self.attrs['class']=' '.join(self.classes)
         return self
     def removeClass(self,c):
-        self.classes.remove(c)
+        if c in self.classes:
+            self.classes.remove(c)
+            pass
         self.attrs['class']=' '.join(self.classes)
         if len(self.classes)==0:
             del self.attrs['class']
@@ -172,6 +174,9 @@ class Tag(Node):
         if not val is None:
             self.attrs[a]=val
         return self.attrs.get(a,'')
+    def removeAttr(self, a):
+        if a in self.attrs: del self.attrs[a]
+        return
     def attrEquals(self, a, val):
         return self.attrs.get(a,None)==val
     def indexOf(self, child):
@@ -503,6 +508,9 @@ class Selection:
         if value is None:
             return [_.attr(name, value) for _ in self.nodeList]
         [_.attr(name, value) for _ in self.nodeList]
+        return self
+    def removeAttr(self, name):
+        [_.removeAttr(name) for _ in self.nodeList]
         return self
     def __str__(self):
         return ''.join([str(_) for _ in self.nodeList])
