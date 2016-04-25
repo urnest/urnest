@@ -42,9 +42,14 @@ class ParseFailed(Xn):
 entities=htmlentitydefs.name2codepoint
 reverseentities=htmlentitydefs.codepoint2name
 
+def encodeEntity(c):
+    x=reverseentities.get(ord(c),None)
+    if x is None: return c
+    return '&%(x)s;'%vars()
+
 def encodeEntities(s):
     if s is None: return u''
-    x=u''.join([reverseentities.get(_,_) for _ in s])
+    x=u''.join([encodeEntity(_) for _ in s])
     return x
 
 class Node:
@@ -172,7 +177,7 @@ class Tag(Node):
         return self
     def attr(self, a, val=None):
         if not val is None:
-            self.attrs[a]=val
+            self.attrs[a]=unicode(val)
         return self.attrs.get(a,'')
     def removeAttr(self, a):
         if a in self.attrs: del self.attrs[a]
@@ -516,6 +521,8 @@ class Selection:
         return ''.join([str(_) for _ in self.nodeList])
     def __unicode__(self):
         return u''.join(unicodeOfElements(self.nodeList))
+    def utf8(self):
+        return unicode(self).encode('utf-8')
     def __len__(self):
         return len(self.nodeList)
     def __getitem__(self, key):
@@ -523,8 +530,9 @@ class Selection:
     def __getslice__(self, i, j):
         return Selection(self.nodeList[i:j])
     def __add__(self, b):
-        assert isinstance(b,Selection), repr(b)
-        return Selection(self.nodeList+b.nodeList)
+        if isinstance(b,Selection):
+            return Selection(self.nodeList+b.nodeList)
+        return NotImplemented
     pass
 
 # basic predicates
@@ -668,13 +676,13 @@ def test5():
 def test6():
     s=parse('<p>fred</p>')
     s.text(u'30x40”')
-    assert_equal(unicode(s),u'<p>30x40”</p>')
+    assert_equal(unicode(s),u'<p>30x40&rdquo;</p>')
     pass
 
 def test7():
     s=parse('<p>fred</p>')
     s.text('30x40”')
-    assert_equal(unicode(s),u'<p>30x40”</p>')
+    assert_equal(unicode(s),u'<p>30x40&rdquo;</p>')
     pass
 
 def test8():
@@ -713,6 +721,11 @@ def test13():
     parse('<li>0').addBefore(s.find(hasClass('a')))
     assert_equal(unicode(s),u'<ul><li>0<li class="a">1<li class="b">2</ul>')
 
+def test14():
+    s=parse('<li>')
+    s.attr('x','"fred&jock"')
+    assert_equal(unicode(s),u'<li x="&quot;fred&amp;jock&quot;">')
+
 if __name__=='__main__':
         test1()
         test2()
@@ -727,3 +740,4 @@ if __name__=='__main__':
         test11()
         test12()
         test13()
+        test14()
