@@ -25,10 +25,6 @@ else
   compiler="$ODIN_CXX"
 fi
 
-if [ "$ODIN_CXX_LD_LIBRARY_PATH" != "" ] ; then
-   LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ODIN_CXX_LD_LIBRARY_PATH;
-   export LD_LIBRARY_PATH; fi
-
 flags=""
 if [ "$ODIN_debug" != "" ] ; then flags="$flags $ODIN_CXX_DEBUGF"; fi
 if [ "$ODIN_optimize" != "" ] ; then flags="$flags -O$ODIN_optimize"; fi
@@ -47,12 +43,14 @@ flags="$flags $ODIN_CXX_FLAGS"
 if [ "$ODINVERBOSE" != "" ] ; then
    echo ${ODINRBSHOST}$compiler -c $flags $ODIN_source; fi
 
-PATH="$ODIN_CXX_PATH" $compiler -c $flags $ODIN_source  \
->MESSAGES 2>WARNINGS || {
-   cat MESSAGES WARNINGS >ERRORS; rm MESSAGES WARNINGS;
-   if [ ! -s ERRORS ] ; then 
+PATH="$ODIN_CXX_PATH" \
+LD_LIBRARY_PATH="$ODIN_CXX_LD_LIBRARY_PATH" \
+$compiler -c $flags $ODIN_source \
+  >MESSAGES 2>WARNINGS || {
+    cat MESSAGES WARNINGS >ERRORS; rm MESSAGES WARNINGS;
+    if [ ! -s ERRORS ] ; then 
       echo "$compiler failed" >>ERRORS; fi;
-   if [ "$ODIN_CXX_IGNORE_ERR" != "" ] ; then
+    if [ "$ODIN_CXX_IGNORE_ERR" != "" ] ; then
       if egrep -s -e "$ODIN_CXX_IGNORE_ERR" ERRORS; then
 	 mv ERRORS WARNINGS; fi; fi; }
 if [ -f MESSAGES ] ; then cat MESSAGES; rm MESSAGES; fi

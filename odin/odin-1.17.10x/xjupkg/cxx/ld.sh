@@ -24,10 +24,6 @@ else
   compiler="$ODIN_CXX"
 fi
 
-if [ "$ODIN_CXX_LD_LIBRARY_PATH" != "" ] ; then
-   LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ODIN_CXX_LD_LIBRARY_PATH;
-   export LD_LIBRARY_PATH; fi
-
 flags=""
 if [ "$ODIN_define" != "" ] ; then
    for def in `cat $ODIN_define`; do
@@ -47,7 +43,9 @@ if [ "$ODINVERBOSE" != "" ] ; then
 
 exe=`pwd`/exe
 (
-   PATH="$ODIN_CXX_PATH" $compiler $flags $ODIN_a $libs $ODIN_CXX_LD_EXTRA_LIBS -o $exe &&
+   PATH="$ODIN_CXX_PATH" \
+   LD_LIBRARY_PATH="$ODIN_CXX_LD_LIBRARY_PATH" \
+   $compiler $flags $ODIN_a $libs $ODIN_CXX_LD_EXTRA_LIBS -o $exe &&
    #
    # for windows, e.g. mingw
    #

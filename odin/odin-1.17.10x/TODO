@@ -229,6 +229,10 @@ PKGLST
   - update emacs integration, and give a discussion (files in etc)
     - note emacs integration has a deadlock when saving file while
       compiling
+  - check environment control, does odin pass through calling process'
+    eg PATH, LD_LIBRARY_PATH ... yes it does... what to do?
+    - idea is that environment is controlled, repeatable, predictable
+    - ! needs display, how to do that?
 
 - update odin manual
 

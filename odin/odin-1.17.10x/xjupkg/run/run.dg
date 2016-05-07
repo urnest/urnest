@@ -30,8 +30,8 @@
 
 # Environment Variables
 
-$ODIN_LD_LIBRARY_PATH 'shared library load path, space separated' = '';
-$ODIN_EXEC_PATH 'PATH to :exec commands under, colon separated' = '/bin:/usr/bin';
+$ODIN_EXEC_PATH 'PATH to install when executing command, colon separated' = '/bin:/usr/bin';
+$ODIN_EXEC_LD_LIBRARY_PATH 'shared library load path to install when executing command, colon separated' = '';
 
 # Tools
 

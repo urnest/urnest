@@ -24,11 +24,6 @@ else
   compiler="$ODIN_CC"
 fi
 
-if [ "$ODIN_CC_LD_LIBRARY_PATH" != "" ] ; then
-   LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ODIN_CC_LD_LIBRARY_PATH;
-   export LD_LIBRARY_PATH; fi
-
-
 flags=""
 if [ "$ODIN_debug" != "" ] ; then flags="$flags $ODIN_CC_DEBUGF"; fi
 if [ "$ODIN_prof" != "" ] ; then flags="$flags -pg"; fi
@@ -45,8 +40,9 @@ flags="$flags $ODIN_CC_FLAGS"
 if [ "$ODINVERBOSE" != "" ] ; then
    echo ${ODINRBSHOST}$compiler -c $flags $ODIN_source; fi
 
-PATH="$ODIN_CC_PATH" $compiler -c $flags $ODIN_source  \
->MESSAGES 2>WARNINGS || {
+PATH="$ODIN_CC_PATH" \
+LD_LIBRARY_PATH="$ODIN_CC_LD_LIBRARY_PATH" \
+$compiler -c $flags $ODIN_source  >MESSAGES 2>WARNINGS || {
    cat MESSAGES WARNINGS >ERRORS; rm MESSAGES WARNINGS;
    if [ ! -s ERRORS ] ; then 
       echo "$compiler failed" >>ERRORS; fi;
