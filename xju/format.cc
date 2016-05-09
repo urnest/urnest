@@ -174,6 +174,8 @@ std::string hex(unsigned long x, const std::string& leader)
     << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') << (unsigned long)x;
   return s.str();
 }
+
+#if ULONG_MAX != UINT64_MAX
 std::string hex(int64_t x, const std::string& leader) 
   throw(std::bad_alloc)
 {
@@ -190,7 +192,7 @@ std::string hex(uint64_t x, const std::string& leader)
     << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') << (uint64_t)x;
   return s.str();
 }
-
+#endif
 
 std::string cEscapeChar(char const c) throw()
 {

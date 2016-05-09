@@ -9,10 +9,6 @@ if [ "$ODIN_cmd" != "" ] ; then
 if [ "$ODINVERBOSE" != "" ] ; then
    echo ${ODINRBSHOST}$cmd; fi
 
-env
-
-
-
 (mkdir output; cd output; LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" eval $cmd) \
  <$ODIN_FILE >stdout 2>WARNINGS ||
  { mv WARNINGS ERRORS; echo $cmd failed. >>ERRORS; }
