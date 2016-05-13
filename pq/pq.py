@@ -256,7 +256,7 @@ class EntityRef(Node):
         return result
     def text(self):
         if not self.name in entities:
-            raise Xn('unknown entity %(name)s'%self.__dict__)
+            raise Xn('entity %(name)s is not in python htmlentitydefs.name2codepoint'%self.__dict__)
         return unichr(entities[self.name])
     pass
 
@@ -276,7 +276,7 @@ class CharRef(Node):
         result=CharRef(self.name, newParent, self.pos)
         return result
     def text(self):
-        assert 'text() not implemented for %(self)r' % vars()
+        return unichr(int(self.name))
     pass
 
 class Comment(Node):
@@ -726,6 +726,12 @@ def test14():
     s.attr('x','"fred&jock"')
     assert_equal(unicode(s),u'<li x="&quot;fred&amp;jock&quot;">')
 
+def test15():
+    s=parse('&lambda;')
+    assert s.text()==unichr(955), s.text()
+    s=parse('&#955;')
+    assert s.text()==unichr(955), s.text()
+
 if __name__=='__main__':
         test1()
         test2()
@@ -741,3 +747,4 @@ if __name__=='__main__':
         test12()
         test13()
         test14()
+        test15()
