@@ -139,6 +139,7 @@ extern boolean IsCopy_FilTyp(GMC_P1(tp_FilTyp));
 extern boolean IsGrouping_FilTyp(GMC_P1(tp_FilTyp));
 extern boolean IsGroupingInput_FilTyp(GMC_P1(tp_FilTyp));
 extern boolean IsSecOrd_FilTyp(GMC_P1(tp_FilTyp));
+extern boolean IsRecurse_FilTyp(GMC_P1(tp_FilTyp));
 extern boolean IsExec_FilTyp(GMC_P1(tp_FilTyp));
 extern boolean IsVoid_FilTyp(GMC_P1(tp_FilTyp));
 extern boolean IsAtmc_FilTyp(GMC_P1(tp_FilTyp));

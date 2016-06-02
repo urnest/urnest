@@ -646,7 +646,7 @@ Make_PrmTypLsts()
    tp_FilTyp FilTyp;
    tp_Tool Tool;
    tp_PrmTypLst OldGenericMapPTL;
-   TcMapPrmInfo* x;
+   const TcMapPrmInfo* x;
 
    GenericMapPrmTypLst = DfltPrmTypLst;
 

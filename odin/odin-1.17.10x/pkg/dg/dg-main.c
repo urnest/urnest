@@ -23,7 +23,7 @@ geoff@boulder.colorado.edu
 tp_Str		Author = "geoff@cs.colorado.edu";
 
 
-c_main(argc, argv)
+int c_main(argc, argv)
    int argc;
    char **argv;
 {

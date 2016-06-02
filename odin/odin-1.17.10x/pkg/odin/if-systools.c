@@ -21,7 +21,7 @@ geoff@boulder.colorado.edu
 #include "inc/NodTyp_.h"
 #include "inc/Status_.h"
 #include "inc/Str.h"
-
+#include "inc/LookupPlainAbsPath.h"
 
 void
 WriteCat(
@@ -284,6 +284,22 @@ Get_DefInfo(
    *TgtNodPtr = ValNod;
    }/*Get_DefInfo*/
 
+int IsPlainAbsPath(
+    GMC_ARG(tp_Nod,DS_Nod)
+  )
+   GMC_DCL(tp_Nod, DS_Nod)
+{
+  return
+    Nod_NodTyp(DS_Nod)==8 && //DRVFIL
+    Nod_Son(1,DS_Nod) &&
+    Nod_NodTyp(Nod_Son(1,DS_Nod))==23 &&
+    Nod_Brother(Nod_Son(1,DS_Nod))==0 &&
+    Nod_Son(1,Nod_Son(1,DS_Nod))==0 &&
+    Nod_Sym(Nod_Son(1,DS_Nod)) &&
+    Sym_Str(Nod_Sym(Nod_Son(1,DS_Nod))) &&
+    Sym_Str(Nod_Sym(Nod_Son(1,DS_Nod)))[0]=='/';
+}
+
 
 void
 Exec_List(
@@ -339,39 +355,60 @@ Exec_List(
       DS_Nod = Nod;
       NodTyp = Nod_NodTyp(DS_Nod);
       if (IsOdinfile && (NodTyp == FILDEF || NodTyp == SEGDEF)) {
-	 Get_DefInfo(&Name, &CmdFlag, &ExecFlag, &TagStr, &TgtNod, Nod);
-	 if (TagStr != NIL) {
-	    if (TagStr[0] == '\n') {
-	       TagStr = &TagStr[1]; }/*if*/;
-	    for (Str = Readln(StrBuf, InFD), LineNum += 1;
-		 Str != ERROR && TagStrCmp(Str, TagStr) != 0;
-		 Str = Readln(StrBuf, InFD), LineNum += 1) {
-	       }/*for*/;
-	    if (Str == ERROR && strlen(TagStr) != 0) {
-	       SystemError("Terminator \"%s\" not found for target \"%s\".\n",
-			   TagStr, Name); }/*if*/; }/*if*/;
-	 DS_Nod = ERROR; }/*if*/;
+        Get_DefInfo(&Name, &CmdFlag, &ExecFlag, &TagStr, &TgtNod, Nod);
+        if (TagStr != NIL) {
+          if (TagStr[0] == '\n') {
+            TagStr = &TagStr[1]; }/*if*/;
+          for (Str = Readln(StrBuf, InFD), LineNum += 1;
+               Str != ERROR && TagStrCmp(Str, TagStr) != 0;
+               Str = Readln(StrBuf, InFD), LineNum += 1) {
+          }/*for*/;
+          if (Str == ERROR && strlen(TagStr) != 0) {
+            SystemError("Terminator \"%s\" not found for target \"%s\".\n",
+                        TagStr, Name); }/*if*/; }/*if*/;
+        DS_Nod = ERROR; }/*if*/;
       if (IsOdinfile && Nod_NodTyp(DS_Nod) == NSTDEF) {
-	 DS_Nod = Nod_Son(1, DS_Nod); }/*if*/;
+        DS_Nod = Nod_Son(1, DS_Nod); }/*if*/;
       if (Nod_NodTyp(DS_Nod) == DRVFLS) {
-	 DS_Nod = Nod_Son(1, DS_Nod); }/*if*/;
-      while (DS_Nod != NIL) {
-	 PrmFHdr = Nod_PrmFHdr(DS_Nod);
-	 Use_PrmFHdr(&ElmFilHdr, &ElmFilPrm, PrmFHdr);
-	 /*select*/{
+        DS_Nod = Nod_Son(1, DS_Nod); }/*if*/;
+      if (!IsOdinfile &&
+          IsPlainAbsPath(DS_Nod) &&
+          FilPrm==RootFilPrm) {
+        tps_Str Remaining;
+        tp_FilHdr FilHdr;
+        FilHdr=LookupPlainAbsPath(Sym_Str(Nod_Sym(Nod_Son(1,DS_Nod))));
+        PrmFHdr=New_PrmFHdr(FilHdr, RootFilPrm);
+        Use_PrmFHdr(&ElmFilHdr,&ElmFilPrm,PrmFHdr);
+        if (ElmFilHdr == ERROR) {
+          SystemError("in odin expression at:\n");
+          FileError("\n");
+        }else{
+          NewLocElm = Make_LocElm(ElmFilHdr,
+                                  Append_FilPrm(ElmFilPrm, FilPrm),
+                                  ListFilHdr);
+          Ret_FilHdr(ElmFilHdr);
+          Chain_LocElms(&FirstLE, &LastLE, NewLocElm); 
+        }
+      }
+      else {
+        while (DS_Nod != NIL) {
+          PrmFHdr = Nod_PrmFHdr(DS_Nod);
+          Use_PrmFHdr(&ElmFilHdr, &ElmFilPrm, PrmFHdr);
+          /*select*/{
 	    if (ElmFilHdr == ERROR) {
-	       SystemError("in odin expression at:\n");
-	       FileError("\n");
+              SystemError("in odin expression at:\n");
+              FileError("\n");
 	    }else{
-	       NewLocElm = Make_LocElm(ElmFilHdr,
-				       Append_FilPrm(ElmFilPrm, FilPrm),
-				       ListFilHdr);
-	       Ret_FilHdr(ElmFilHdr);
-	       Chain_LocElms(&FirstLE, &LastLE, NewLocElm); };}/*select*/;
-	 DS_Nod = Nod_Brother(DS_Nod); }/*while*/;
+              NewLocElm = Make_LocElm(ElmFilHdr,
+                                      Append_FilPrm(ElmFilPrm, FilPrm),
+                                      ListFilHdr);
+              Ret_FilHdr(ElmFilHdr);
+              Chain_LocElms(&FirstLE, &LastLE, NewLocElm); };}/*select*/;
+          DS_Nod = Nod_Brother(DS_Nod); }/*while*/;
+      }
       Ret_Nod(Nod); }/*for*/;
    if (!EndOfFile(InFD)) {
-      FileError("Unexpected EOF\n"); }/*if*/;
+     FileError("Unexpected EOF\n"); }/*if*/;
 
    Pop_ContextFilHdr();
    Close(InFD);
