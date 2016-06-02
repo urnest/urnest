@@ -397,7 +397,9 @@ def filter(node, predicate):
         
 class Selection:
     def __init__(self, nodeList):
-        if isinstance(nodeList,Node):
+        if isinstance(nodeList,Selection):
+            self.nodeList=nodeList.nodeList
+        elif isinstance(nodeList,Node):
             self.nodeList=[nodeList,]
         else:
             self.nodeList=nodeList[:]
@@ -507,9 +509,20 @@ class Selection:
         for n in self.nodeList:
             n.removeClass(name)
         return self
-    def attr(self, name, value=None):
-        '''attr('src') lists the values of the src attributes of each of our nodes'''
-        """attr('src','fred.html') sets the src attribute of each of our nodes to 'html'"""
+    def hasClass(self,c):
+        '''True iff all our nodes have class c'''
+        each=[True for _ in self.nodeList if _.hasClass(c)]
+        return len(each)==len(self.nodeList)
+    def attr(self, name, value=None, joiner=u''):
+        '''attr('src') gets the values of the src attributes of our nodes and joins them with joiner, returning a single string'''
+        """attr('src','fred') sets the src attribute of our only node to 'fred'"""
+        if value is None:
+            return joiner.join([_.attr(name, value) for _ in self.nodeList])
+        [_.attr(name, value) for _ in self.nodeList]
+        return self
+    def attrs(self, name, value=None):
+        '''attrs('src') lists the values of the src attributes of each of our nodes'''
+        """attrs('src','fred.html') sets the src attribute of each of our nodes to 'html'"""
         if value is None:
             return [_.attr(name, value) for _ in self.nodeList]
         [_.attr(name, value) for _ in self.nodeList]
@@ -526,7 +539,7 @@ class Selection:
     def __len__(self):
         return len(self.nodeList)
     def __getitem__(self, key):
-        return self.nodeList[key]
+        return Selection(self.nodeList[key])
     def __getslice__(self, i, j):
         return Selection(self.nodeList[i:j])
     def __add__(self, b):
@@ -725,12 +738,25 @@ def test14():
     s=parse('<li>')
     s.attr('x','"fred&jock"')
     assert_equal(unicode(s),u'<li x="&quot;fred&amp;jock&quot;">')
+    assert_equal(s.attr('x'),'"fred&jock"')
+    s=parse('<div><p a="fred"><bold>a</bold>x</p><p a="jock">b</p></div>').find(tagName('p'))
+    assert len(s)==2, s.utf8()
+    assert_equal(s.attr('a'),'fredjock')
+    assert_equal(s.attrs('a'),['fred','jock'])
+    pass
 
 def test15():
     s=parse('&lambda;')
     assert s.text()==unichr(955), s.text()
     s=parse('&#955;')
     assert s.text()==unichr(955), s.text()
+
+def test16():
+    s=parse('<div><p><bold>a</bold>x</p><p>b</p></div>').find(tagName('p'))
+    assert len(s)==2, s.utf8()
+    assert Selection(s[0]).find(tagName('bold')).text()=='a'
+    assert s[0].find(tagName('bold')).text()=='a'
+    pass
 
 if __name__=='__main__':
         test1()
@@ -748,3 +774,4 @@ if __name__=='__main__':
         test13()
         test14()
         test15()
+        test16()
