@@ -10,19 +10,19 @@
 #ifndef XJU_SNMP_COMMITFAILED_H
 #define XJU_SNMP_COMMITFAILED_H
 
-#include "xju/Exception.hh"
+#include "xju/snmp/InvalidParam.hh"
 
 namespace xju
 {
 namespace snmp
 {
-
-// exception corresponding to RFC 1157 error-status
-class CommitFailed : public xju::Exception
+// exception corresponding to RFC 1905 error-status
+class CommitFailed : public InvalidParam
 {
 public:
-  explicit CommitFailed(const xju::Traced& trace) throw();
+  CommitFailed(Oid const& param, const xju::Traced& trace) throw();
 };
+
 
 }
 }

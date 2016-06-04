@@ -34,14 +34,17 @@ TODO:
     x encodeResponse(SnmpV1SetRequest,<error>)
     x decode SnmpV2c get, get next, set request
     x encodeResponse snmpv2c get
-    - encodeResponse snmpv2c set
+    x encodeResponse snmpv2c set
     x includes in ../snmp.hh
+  - does the snmpv1 "set" error handling say to return the original
+    values (like v2c says)? do we do that?
 
 references:
   http://www.rane.com/note161.html
   https://en.wikipedia.org/wiki/X.690#BER_encoding
   https://en.wikipedia.org/wiki/X.690
-  https://tools.ietf.org/html/rfc1157
+  https://tools.ietf.org/html/rfc1157 - V1
+  https://tools.ietf.org/html/rfc3416 - V2c
 
 notes:
   what is structure? v1 is:

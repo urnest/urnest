@@ -636,9 +636,17 @@ void validateResponse(
                                 XJU_TRACED);
     }
     case SnmpV2cResponse::ErrorStatus::COMMIT_FAILED: 
-      throw CommitFailed(XJU_TRACED);
+    {
+      throw CommitFailed(getErrorOid(response.errorIndex_,
+                                     response.varResults_,
+                                     request.values_,
+                                     "ResourceUnavailable (11)"),
+                         XJU_TRACED);
+    }
     case SnmpV2cResponse::ErrorStatus::UNDO_FAILED:
+    {
       throw UndoFailed(XJU_TRACED);
+    }
     case SnmpV2cResponse::ErrorStatus::NOT_WRITABLE:
     {
       throw NotWritable(getErrorOid(response.errorIndex_,

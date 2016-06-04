@@ -109,9 +109,15 @@ Server-side SNMP functions:
           // handle snmp v1 set request
           std::pair<xju::snmp::SnmpV1SetRequest, std::vector<xju::snmp::Oid> > const request(
             xju::snmp::decodeSnmpV1SetRequest(requestData));
-          verifyCommunity(request.community_);
-          std::map<xju::snmp::Oid, std::shared_ptr<Value const> > values(...);
-          return xju::snmp::encodeResponse(request.first,request.second,values);
+          try {
+            verifyCommunity(request.community_);
+            apply(request.values_);
+            return xju::snmp::encodeResponse(request.first,request.second);
+          }
+          catch(NoSuchName& e) {
+            return xju::snmp::encodeResponse(request.first,request.second.e);
+          }
+          ... translate other exceptions - see encodeResponse.hh
         }
         catch(xju::snmp::RequestTypeMismatch& e3)
         {
@@ -150,9 +156,14 @@ Server-side SNMP functions:
           // handle snmp v2c set request
           std::pair<xju::snmp::SnmpV2cSetRequest, std::vector<xju::snmp::Oid> > const request(
             xju::snmp::decodeSnmpV2cSetRequest(requestData));
-          verifyCommunity(request.community_);
-          std::map<xju::snmp::Oid, std::shared_ptr<Value const> > values(...);
-          return xju::snmp::encodeResponse(request.first,request.second,values);
+          try {
+            verifyCommunity(request.community_);
+            apply(request.values_);
+            return xju::snmp::encodeResponse(request.first,request.second);
+          catch(NoSuchName& e) {
+            return xju::snmp::encodeResponse(request.first,request.second.e);
+          }
+          ... translate other exceptions - see encodeResponse.hh
         }
         catch(xju::snmp::RequestTypeMismatch& e3)
         {
