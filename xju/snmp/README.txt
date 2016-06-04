@@ -36,8 +36,8 @@ TODO:
     x encodeResponse snmpv2c get
     x encodeResponse snmpv2c set
     x includes in ../snmp.hh
-  - does the snmpv1 "set" error handling say to return the original
-    values (like v2c says)? do we do that?
+  x does the snmpv1 "set" error handling say to return the original
+    values (like v2c says)? do we do that? Yes and yes.
 
 references:
   http://www.rane.com/note161.html
