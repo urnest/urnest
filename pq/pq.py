@@ -493,6 +493,9 @@ class Selection:
     def first(self):
         '''return Selection containing first of our nodes'''
         return Selection(self.nodeList[0:1])
+    def last(self):
+        '''return Selection containing first of our nodes'''
+        return Selection(self.nodeList[-1:])
     def children(self):
         '''return Selection containing children of our nodes'''
         return Selection(sum([_.children for _ in self.nodeList],[]))
