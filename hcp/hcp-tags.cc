@@ -28,132 +28,66 @@
 #include <xju/format.hh>
 #include <xju/stringToUInt.hh>
 #include "xju/assert.hh"
+#include <xju/Int.hh>
+#include "xju/Tagged.hh"
 
 class LineNumberTag{};
 typedef xju::Int<LineNumberTag,unsigned int> LineNumber;
 
 class SymbolTag{};
-typedef xju::Tagged<SymbolTag> Symbol;
+typedef xju::Tagged<std::string,SymbolTag> Symbol;
   
-std::string getClassName(hcp_ast::ClassDef const* x) throw()
-{
-  return x->className_;
-}
+// std::string getClassName(hcp_ast::ClassDef const* x) throw()
+// {
+//   return x->className_;
+// }
 
-void genClassMemberFunctionDef(
-  hcp_ast::FunctionDef const& x,
-  OStream& h,
-  OStream& c,
-  std::vector<hcp_ast::ClassDef const*> const& scope) throw(
-    xju::Exception)
-{
-  std::vector<hcp_ast::IR>::const_iterator i(
-    std::find_if(x.items_.begin(), x.items_.end(),
-                 hcp_ast::isA_<hcp_ast::FunctionImpl>));
-  xju::assert_not_equal(i, x.items_.end());
-  h.copy(x.begin(), (*i)->begin());
-  h << ";";
-  std::vector<hcp_ast::IR>::const_iterator w(
-    xju::next(i));
-  xju::assert_not_equal(w, x.items_.end());
-  xju::assert_equal(hcp_ast::isA_<hcp_ast::WhiteSpace>(*w),true);
-  h.copy((*w)->begin(),(*w)->end()); //copy trailing whitespace
+// void genClassStaticVarDef(
+//   hcp_ast::StaticVarDef const& x,
+//   OStream& h,
+//   OStream& c,
+//   std::vector<hcp_ast::ClassDef const*> const& scope) throw(
+//     xju::Exception)
+// {
+//   std::vector<hcp_ast::IR>::const_iterator i(
+//     hcp_ast::find1stInTree(x.items_.begin(), x.items_.end(),
+//                            hcp_ast::isA_<hcp_ast::VarInitialiser>));
+//   if (i != x.items_.end()) {
+//     h.copy(x.begin(), (*i)->begin());
+//     h << ";\n";
+//   }
+//   else
+//   {
+//     h.copy(x.begin(), x.end());
+//     h << "\n";
+//   }
   
-  std::vector<hcp_ast::IR>::const_iterator j(
-    std::find_if(x.items_.begin(), x.items_.end(),
-                 hcp_ast::isA_<hcp_ast::FunctionName>));
-  xju::assert_not_equal(j, x.items_.end());
+//   std::vector<hcp_ast::IR>::const_iterator j(
+//     std::find_if(x.items_.begin(), x.items_.end(),
+//                  hcp_ast::isA_<hcp_ast::VarName>));
+//   xju::assert_not_equal(j, x.items_.end());
 
-  std::vector<hcp_ast::IR>::const_iterator k(x.items_.begin());
-  if ((*k)->isA<hcp_ast::FunctionQualifiers>()) {
-    k=xju::next(k);
-  }
-  c.copy((*k)->begin(), (*j)->begin());
-  c << xju::format::join(scope.begin(),
-                         scope.end(),
-                         getClassName,
-                         "::")
-    << "::";
-  c .copy((*j)->begin(), x.end());
-  c << "\n";
-}
-
-void genClassStaticVarDef(
-  hcp_ast::StaticVarDef const& x,
-  OStream& h,
-  OStream& c,
-  std::vector<hcp_ast::ClassDef const*> const& scope) throw(
-    xju::Exception)
-{
-  std::vector<hcp_ast::IR>::const_iterator i(
-    hcp_ast::find1stInTree(x.items_.begin(), x.items_.end(),
-                           hcp_ast::isA_<hcp_ast::VarInitialiser>));
-  if (i != x.items_.end()) {
-    h.copy(x.begin(), (*i)->begin());
-    h << ";\n";
-  }
-  else
-  {
-    h.copy(x.begin(), x.end());
-    h << "\n";
-  }
-  
-  std::vector<hcp_ast::IR>::const_iterator j(
-    std::find_if(x.items_.begin(), x.items_.end(),
-                 hcp_ast::isA_<hcp_ast::VarName>));
-  xju::assert_not_equal(j, x.items_.end());
-
-  std::vector<hcp_ast::IR>::const_iterator k(x.items_.begin());
-  xju::assert_(*k, hcp_ast::isA_<hcp_ast::KeywordStatic>);
-  ++k;
-  c.copy((*k)->begin(), (*j)->begin());
-  c << xju::format::join(scope.begin(),
-                         scope.end(),
-                         getClassName,
-                         "::")
-    << "::";
-  c.copy((*j)->begin(), x.end());
-  c << "\n";
-}
-
-class isLiteral
-{
-public:
-  isLiteral(std::string const& literal) throw():
-      literal_(literal)
-  {
-  }
-  bool operator()(hcp_ast::IR const& x) const throw()
-  {
-    return literal_==hcp_ast::reconstruct(*x);
-  }
-  std::string literal_;
-};
-
-  
-bool isFriendFunction(hcp_ast::FunctionDef const& x) throw(
+//   std::vector<hcp_ast::IR>::const_iterator k(x.items_.begin());
+//   xju::assert_(*k, hcp_ast::isA_<hcp_ast::KeywordStatic>);
+//   ++k;
+//   c.copy((*k)->begin(), (*j)->begin());
+//   c << xju::format::join(scope.begin(),
+//                          scope.end(),
+//                          getClassName,
+//                          "::")
+//     << "::";
+//   c.copy((*j)->begin(), x.end());
+//   c << "\n";
+// }
+/*
+std::map<Symbol,LineNumber> genClass(hcp_ast::ClassDef const& x) throw(
   xju::Exception)
 {
-  hcp_ast::FunctionQualifiers const& q(
-    (*x.items_.begin())->asA<hcp_ast::FunctionQualifiers>());
-  return (std::find_if(q.items_.begin(), q.items_.end(),
-                       isLiteral("friend"))!=q.items_.end());
-}
-
-void genClass(hcp_ast::ClassDef const& x,
-              OStream& h,
-              OStream& c,
-              std::vector<hcp_ast::ClassDef const*> const& outerClasses) throw(
-                xju::Exception)
-{
+  std::map<Symbol,LineNumber> result;
+  result.insert(std::make(pair(x.className_,x.begin().line_)));
+  
   for(hcp_ast::IRs::const_iterator i=x.items_.begin(); i!=x.items_.end(); ++i) {
-    if ((*i)->isA<hcp_ast::FunctionDef>() &&
-        !isFriendFunction((*i)->asA<hcp_ast::FunctionDef>())) {
-      std::vector<hcp_ast::ClassDef const*> scope(outerClasses);
-      scope.push_back(&x);
-      genClassMemberFunctionDef((*i)->asA<hcp_ast::FunctionDef>(), h, c, scope);
-    }
-    else if ((*i)->isA<hcp_ast::StaticVarDef>()) {
+    if ((*i)->isA<hcp_ast::StaticVarDef>()) {
       std::vector<hcp_ast::ClassDef const*> scope(outerClasses);
       scope.push_back(&x);
       genClassStaticVarDef((*i)->asA<hcp_ast::StaticVarDef>(), h, c, scope);
@@ -168,53 +102,35 @@ void genClass(hcp_ast::ClassDef const& x,
     }
   }
 }
-
-void genFunction(hcp_ast::FunctionDef const& x,
-                 OStream& h,
-                 OStream& c) throw(
-                   xju::Exception)
-{
-  std::vector<hcp_ast::IR>::const_iterator i(
-    std::find_if(x.items_.begin(), x.items_.end(),
-                 hcp_ast::isA_<hcp_ast::FunctionImpl>));
-  xju::assert_not_equal(i, x.items_.end());
-  h.copy(x.begin(), (*i)->begin());
-  h << ";";
-  std::vector<hcp_ast::IR>::const_iterator w(
-    xju::next(i));
-  xju::assert_not_equal(w, x.items_.end());
-  xju::assert_equal(hcp_ast::isA_<hcp_ast::WhiteSpace>(*w),true);
-  h.copy((*w)->begin(),(*w)->end()); //copy trailing whitespace
-  
-  std::vector<hcp_ast::IR>::const_iterator j(
-    std::find_if(x.items_.begin(), x.items_.end(),
-                 hcp_ast::isA_<hcp_ast::FunctionName>));
-  xju::assert_not_equal(j, x.items_.end());
-
-  std::vector<hcp_ast::IR>::const_iterator k(x.items_.begin());
-  if ((*k)->isA<hcp_ast::FunctionQualifiers>()) {
-    k=xju::next(k);
-  }
-  c.copy(x.begin(), x.end());
-}
-
-std::pair<Symbol,LineNumber> genGlobalVar(hcp_ast::GlobalVarDef const& x) throw(
+*/
+std::pair<Symbol,LineNumber> genFunction(hcp_ast::FunctionDef const& x) throw(
   xju::Exception)
 {
   std::vector<hcp_ast::IR>::const_iterator i(
     std::find_if(x.items_.begin(), x.items_.end(),
-                 hcp_ast::isA_<hcp_ast::VarInitialiser>));
+                 hcp_ast::isA_<hcp_ast::FunctionName>));
   xju::assert_not_equal(i, x.items_.end());
-  h << "extern ";
-  h.copy(x.begin(), (*i)->begin());
-  h << ";\n";
+  Symbol symbol(reconstruct(**i));
+  LineNumber lineNumber((**i).begin().line_);
+  return std::make_pair(symbol,lineNumber);
+}
+std::pair<Symbol,LineNumber> genGlobalVar(hcp_ast::GlobalVarDef const& x) throw(
+  xju::Exception)
+{
   
-  c.copy(x.begin(), x.end());
+  std::vector<hcp_ast::IR>::const_iterator i(
+    std::find_if(x.items_.begin(), x.items_.end(),
+                 hcp_ast::isA_<hcp_ast::VarName>));
+  xju::assert_not_equal(i, x.items_.end());
+  Symbol symbol(reconstruct(**i));
+  LineNumber lineNumber((**i).begin().line_);
+  return std::make_pair(symbol,lineNumber);
 }
 
 std::map<Symbol,LineNumber> genNamespaceContent(hcp_ast::IRs const& x) throw(
   xju::Exception);
 
+/*
 std::map<Symbol,LineNumber> genNamespace(hcp_ast::NamespaceDef const& x) throw(
   xju::Exception)
 {
@@ -232,7 +148,7 @@ std::map<Symbol,LineNumber> genNamespace(hcp_ast::NamespaceDef const& x) throw(
   }
   return result;
 }
-
+*/
 
 std::map<Symbol,LineNumber> genNamespaceContent(hcp_ast::IRs const& x) throw(
   xju::Exception)
@@ -240,7 +156,7 @@ std::map<Symbol,LineNumber> genNamespaceContent(hcp_ast::IRs const& x) throw(
   std::map<Symbol,LineNumber> result;
   
   for(hcp_ast::IRs::const_iterator i=x.begin(); i!=x.end(); ++i) {
-    if ((*i)->isA<hcp_ast::NamespaceDef>()) {
+    /* if ((*i)->isA<hcp_ast::NamespaceDef>()) {
       auto symbols(genNamespace((*i)->asA<hcp_ast::NamespaceDef>()));
       for(s : symbols) {
         result.insert(s);
@@ -253,10 +169,10 @@ std::map<Symbol,LineNumber> genNamespaceContent(hcp_ast::IRs const& x) throw(
         result.insert(s);
       }
     }
-    else if ((*i)->isA<hcp_ast::FunctionDef>())
+    else */ if ((*i)->isA<hcp_ast::FunctionDef>())
     {
       result.insert(genFunction((*i)->asA<hcp_ast::FunctionDef>()));
-    }
+    } 
     else if ((*i)->isA<hcp_ast::GlobalVarDef>())
     {
       result.insert(genGlobalVar((*i)->asA<hcp_ast::GlobalVarDef>()));
@@ -265,11 +181,21 @@ std::map<Symbol,LineNumber> genNamespaceContent(hcp_ast::IRs const& x) throw(
   return result;
 }
 
+typedef std::pair<xju::path::AbsolutePath, xju::path::FileName> File;
+
+std::string formatSymbol(
+  std::pair<Symbol,std::pair<File,LineNumber> > const& symbol) throw()
+{
+  std::ostringstream s;
+  s << xju::format::quote("::"+symbol.first._) << ":" << "["
+    << xju::format::quote(str(symbol.second.first)) << ","
+    << symbol.second.second.value() << "]";
+  return s.str();
+}
 
 int main(int argc, char* argv[])
 {
   try {
-    typedef std::pair<xju::path::AbsolutePath, xju::path::FileName> File;
     
     std::map<Symbol, std::pair<File,LineNumber> > result;
 
@@ -278,19 +204,25 @@ int main(int argc, char* argv[])
       std::string const x(xju::readFile(xju::path::str(inputFile)));
       try {
         hcp_parser::I at(x.begin(), x.end());
-        at = hcp_parser::parse(root, at, hcp_parser::file);
         hcp_ast::CompositeItem root;
+        at = hcp_parser::parse(root, at, hcp_parser::file);
         xju::assert_equal(root.items_.size(), 1U);
         std::map<Symbol,LineNumber> const symbols(
           genNamespaceContent(
-            root.items_.front()->asA<hcp_ast::File>().items_, result));
+            root.items_.front()->asA<hcp_ast::File>().items_));
+        for(auto s: symbols) {
+          result.insert(std::make_pair(s.first,
+                                       std::make_pair(inputFile,s.second)));
+        }
       }
-      catch(mcom::it::Exception& e) {
+      catch(xju::Exception& e) {
         std::cerr << "Warning: " << readableRepr(e);
       }
     }
     std::cout << "{" << std::endl
-              << xju::join(formatSymbols(symbols,",\n"))
+              << xju::format::join(result.begin(),
+                                   result.end(),
+                                   formatSymbol,",\n")
               << "}" << std::endl;
     return 0;
   }

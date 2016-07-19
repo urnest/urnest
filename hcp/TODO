@@ -1,3 +1,15 @@
+- hcp-tags
+  - generate tags for:
+    class, template class (including nested)
+    global function, 
+    typedef, 
+    global var decl
+    x global var def
+  - test on .hh and .hcp file types
+
+- hcp-scope-at-offset
+    - need a way to capture scope at EndOfFile where partially parsed
+
 - hcp split generate operator< (and others) where there is an operator<
   function prototype (ie no implementation)
   - need to better parse attr decls to get attr names
@@ -299,3 +311,7 @@ real	0m0.010s
 user	0m0.004s
 sys	0m0.000s
 13
+
+
+--------- create gcc 5.2 linux cache --------------
+xju@xjutv:~/urnest$ ODIN_CXX_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib:/home/xju/gcc-5.2.0-run/lib  ODIN_CXX_PATH=/home/xju/gcc-5.2.0-run/bin:/usr/bin:/bin ODIN_CXX_FLAGS=-std=c++11 ODIN_EXEC_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib:/home/xju/gcc-5.2.0-run/lib ODIN_CXX_I=/usr/local/omniORB-4.2.0/include ODIN_LIB_SP="/usr/local/omniORB-4.2.0/lib /lib /usr/lib" ODIN_EXEC_PATH=/usr/local/omniORB-4.2.0/bin:/bin:/usr/bin ODIN_OMNICXY_PATH=/usr/local/omniORB-4.2.0/bin:/usr/bin:/bin ODIN_OMNICXY_BE_DIR=~/urnest/omnicxy/omniidl_be ./odin/create-linux-cache.sh $ODIN

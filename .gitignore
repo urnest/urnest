@@ -156,3 +156,4 @@ omnicxy/proto/cxx/p16.hh
 omnicxy/cxy/optional.cc
 omnicxy/cxy/optional.hh
 *.pyc
+hcp/hcp-tags
