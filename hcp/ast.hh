@@ -245,11 +245,17 @@ typedef TaggedCompositeItem<WhitespaceTag> Whitespace;
 class TypedefTag{};
 typedef TaggedCompositeItem<TypedefTag> Typedef;
 
+class DefinedTypeTag{};
+typedef TaggedCompositeItem<DefinedTypeTag> DefinedType;
+
 class UsingTag{};
 typedef TaggedCompositeItem<UsingTag> Using;
 
 class EnumDefTag{};
 typedef TaggedCompositeItem<EnumDefTag> EnumDef;
+
+class EnumNameTag{};
+typedef TaggedCompositeItem<EnumNameTag> EnumName;
 
 class FunctionNameTag{};
 typedef TaggedCompositeItem<FunctionNameTag> FunctionName;

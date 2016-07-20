@@ -1035,12 +1035,23 @@ PR whitespace(new NamedParser<hcp_ast::Whitespace>(
   "some whitespace",
   atLeastOne*whitespaceChar));
 
+PR unqualifiedName(
+  atLeastOne*(charInRange('a', 'z')|
+              charInRange('A', 'Z')|
+              charInRange('0', '9')|
+              parseOneOfChars("_")));
+
+PR defined_type(
+  new NamedParser<hcp_ast::DefinedType>(
+    "\"defined type\"",
+    unqualifiedName));
+
 PR typedef_statement(new NamedParser<hcp_ast::Typedef>(
   "typedef statement",
   parseLiteral("typedef")+
   whitespace+
-  balanced(parseOneOfChars(";"))+
-  parseOneOfChars(";")+
+  balanced(whitespace+defined_type+parseOneOfChars(";"))+
+  whitespace+defined_type+parseOneOfChars(";")+
   eatWhite));
 
 PR using_statement(new NamedParser<hcp_ast::Using>(
@@ -1051,21 +1062,22 @@ PR using_statement(new NamedParser<hcp_ast::Using>(
   parseOneOfChars(";")+
   eatWhite));
 
+PR enum_name(
+  new NamedParser<hcp_ast::EnumName>(
+    "\"enum name\"",
+    unqualifiedName));
+
 PR enum_def(new NamedParser<hcp_ast::EnumDef>(
   "enum definition",
   parseLiteral("enum")+
   whitespace+
-  balanced(parseOneOfChars(";"))+
+  optional(enum_name)+eatWhite+parseLiteral("{")+
+  balanced(parseOneOfChars("}"))+
+  parseOneOfChars("}")+eatWhite+
   parseOneOfChars(";")+
   eatWhite));
 
 PR bracketed(parseLiteral("(")+balanced(parseLiteral(")"))+parseLiteral(")"));
-
-PR unqualifiedName(
-  atLeastOne*(charInRange('a', 'z')|
-              charInRange('A', 'Z')|
-              charInRange('0', '9')|
-              parseOneOfChars("_")));
 
 PR unqualifiedTypeName(
   unqualifiedName+

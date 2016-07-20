@@ -1,10 +1,19 @@
 - hcp-tags
   - generate tags for:
     class, template class (including nested)
-    global function, 
-    typedef, 
-    global var decl
+    x global function
+    x simple typedef
+    x global var decl
     x global var def
+    x namespace
+    x enum X{ ... };
+    - class enum
+    - enum members
+    - hash define
+    - typedef + anon enum
+    - typedef + named enum
+    - typedef + anon struct/class
+    - typedef + named struct/class
   - test on .hh and .hcp file types
 
 - hcp-scope-at-offset

@@ -114,6 +114,46 @@ std::pair<Symbol,LineNumber> genFunction(hcp_ast::FunctionDef const& x) throw(
   LineNumber lineNumber((**i).begin().line_);
   return std::make_pair(symbol,lineNumber);
 }
+
+std::pair<Symbol,LineNumber> genFunctionDecl(
+  hcp_ast::FunctionDecl const& x) throw(
+    xju::Exception)
+{
+  std::vector<hcp_ast::IR>::const_iterator i(
+    std::find_if(x.items_.begin(), x.items_.end(),
+                 hcp_ast::isA_<hcp_ast::FunctionName>));
+  xju::assert_not_equal(i, x.items_.end());
+  Symbol symbol(reconstruct(**i));
+  LineNumber lineNumber((**i).begin().line_);
+  return std::make_pair(symbol,lineNumber);
+}
+
+std::pair<Symbol,LineNumber> genTypedef(
+  hcp_ast::Typedef const& x) throw(
+    xju::Exception)
+{
+  std::vector<hcp_ast::IR>::const_iterator i(
+    std::find_if(x.items_.begin(), x.items_.end(),
+                 hcp_ast::isA_<hcp_ast::DefinedType>));
+  xju::assert_not_equal(i, x.items_.end());
+  Symbol symbol(reconstruct(**i));
+  LineNumber lineNumber((**i).begin().line_);
+  return std::make_pair(symbol,lineNumber);
+}
+
+std::pair<Symbol,LineNumber> genEnumDef(
+  hcp_ast::EnumDef const& x) throw(
+    xju::Exception)
+{
+  std::vector<hcp_ast::IR>::const_iterator i(
+    std::find_if(x.items_.begin(), x.items_.end(),
+                 hcp_ast::isA_<hcp_ast::EnumName>));
+  xju::assert_not_equal(i, x.items_.end());
+  Symbol symbol(reconstruct(**i));
+  LineNumber lineNumber((**i).begin().line_);
+  return std::make_pair(symbol,lineNumber);
+}
+
 std::pair<Symbol,LineNumber> genGlobalVar(hcp_ast::GlobalVarDef const& x) throw(
   xju::Exception)
 {
@@ -130,7 +170,11 @@ std::pair<Symbol,LineNumber> genGlobalVar(hcp_ast::GlobalVarDef const& x) throw(
 std::map<Symbol,LineNumber> genNamespaceContent(hcp_ast::IRs const& x) throw(
   xju::Exception);
 
-/*
+Symbol qualify(Symbol const& x, std::string const& namespaceName) throw()
+{
+  return Symbol(namespaceName+"::"+x._);
+}
+
 std::map<Symbol,LineNumber> genNamespace(hcp_ast::NamespaceDef const& x) throw(
   xju::Exception)
 {
@@ -146,9 +190,10 @@ std::map<Symbol,LineNumber> genNamespace(hcp_ast::NamespaceDef const& x) throw(
   for(auto s: content) {
     result.insert(std::make_pair(qualify(s.first,x.namespaceName_),s.second));
   }
+  result.insert(std::make_pair(Symbol(x.namespaceName_),
+                               LineNumber(x.begin().line_)));
   return result;
 }
-*/
 
 std::map<Symbol,LineNumber> genNamespaceContent(hcp_ast::IRs const& x) throw(
   xju::Exception)
@@ -156,13 +201,13 @@ std::map<Symbol,LineNumber> genNamespaceContent(hcp_ast::IRs const& x) throw(
   std::map<Symbol,LineNumber> result;
   
   for(hcp_ast::IRs::const_iterator i=x.begin(); i!=x.end(); ++i) {
-    /* if ((*i)->isA<hcp_ast::NamespaceDef>()) {
+    if ((*i)->isA<hcp_ast::NamespaceDef>()) {
       auto symbols(genNamespace((*i)->asA<hcp_ast::NamespaceDef>()));
-      for(s : symbols) {
+      for(auto s : symbols) {
         result.insert(s);
       }
     }
-    else if ((*i)->isA<hcp_ast::ClassDef>()) {
+/*    else if ((*i)->isA<hcp_ast::ClassDef>()) {
       auto symbols(genClass((*i)->asA<hcp_ast::ClassDef>(), h, c, 
                             std::vector<hcp_ast::ClassDef const*>()));
       for(s : symbols) {
@@ -172,6 +217,18 @@ std::map<Symbol,LineNumber> genNamespaceContent(hcp_ast::IRs const& x) throw(
     else */ if ((*i)->isA<hcp_ast::FunctionDef>())
     {
       result.insert(genFunction((*i)->asA<hcp_ast::FunctionDef>()));
+    } 
+    else if ((*i)->isA<hcp_ast::FunctionDecl>())
+    {
+      result.insert(genFunctionDecl((*i)->asA<hcp_ast::FunctionDecl>()));
+    } 
+    else if ((*i)->isA<hcp_ast::Typedef>())
+    {
+      result.insert(genTypedef((*i)->asA<hcp_ast::Typedef>()));
+    } 
+    else if ((*i)->isA<hcp_ast::EnumDef>())
+    {
+      result.insert(genEnumDef((*i)->asA<hcp_ast::EnumDef>()));
     } 
     else if ((*i)->isA<hcp_ast::GlobalVarDef>())
     {
