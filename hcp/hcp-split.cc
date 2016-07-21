@@ -209,22 +209,33 @@ void genClass(hcp_ast::ClassDef const& x,
               std::vector<hcp_ast::ClassDef const*> const& outerClasses) throw(
                 xju::Exception)
 {
-  for(hcp_ast::IRs::const_iterator i=x.items_.begin(); i!=x.items_.end(); ++i) {
-    if ((*i)->isA<hcp_ast::FunctionDef>() &&
-        !isFriendFunction((*i)->asA<hcp_ast::FunctionDef>())) {
-      std::vector<hcp_ast::ClassDef const*> scope(outerClasses);
-      scope.push_back(&x);
-      genClassMemberFunctionDef((*i)->asA<hcp_ast::FunctionDef>(), h, c, scope);
-    }
-    else if ((*i)->isA<hcp_ast::StaticVarDef>()) {
-      std::vector<hcp_ast::ClassDef const*> scope(outerClasses);
-      scope.push_back(&x);
-      genClassStaticVarDef((*i)->asA<hcp_ast::StaticVarDef>(), h, c, scope);
-    }
-    else if ((*i)->isA<hcp_ast::ClassDef>()) {
-      std::vector<hcp_ast::ClassDef const*> outer(outerClasses);
-      outer.push_back(&x);
-      genClass((*i)->asA<hcp_ast::ClassDef>(), h, c, outer);
+  for(hcp_ast::IRs::const_iterator i=x.items_.begin(); 
+      i!=x.items_.end(); 
+      ++i) 
+  {
+    if ((*i)->isA<hcp_ast::ClassMembers>()) {
+      for(auto const m: (*i)->asA<hcp_ast::ClassMembers>().items_) {
+        if (m->isA<hcp_ast::FunctionDef>() &&
+            !isFriendFunction(m->asA<hcp_ast::FunctionDef>())) {
+          std::vector<hcp_ast::ClassDef const*> scope(outerClasses);
+          scope.push_back(&x);
+          genClassMemberFunctionDef(m->asA<hcp_ast::FunctionDef>(), h, c, 
+                                    scope);
+        }
+        else if (m->isA<hcp_ast::StaticVarDef>()) {
+          std::vector<hcp_ast::ClassDef const*> scope(outerClasses);
+          scope.push_back(&x);
+          genClassStaticVarDef(m->asA<hcp_ast::StaticVarDef>(), h, c, scope);
+        }
+        else if (m->isA<hcp_ast::ClassDef>()) {
+          std::vector<hcp_ast::ClassDef const*> outer(outerClasses);
+          outer.push_back(&x);
+          genClass(m->asA<hcp_ast::ClassDef>(), h, c, outer);
+        }
+        else {
+          h.copy(m->begin(), m->end());
+        }
+      }
     }
     else {
       h.copy((*i)->begin(), (*i)->end());

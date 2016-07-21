@@ -1319,18 +1319,20 @@ public:
     x_(class_proto+
        parseOneOfChars("{")+
        eatWhite+
-       parseUntil(comments|
-                  function_decl|
-                  template_function_def|
-                  access_modifier|
-                  PR(new SelfParser(*this))|
-                  class_decl|
-                  enum_def|
-                  typedef_statement|
-                  function_def|
-                  static_var_def|
-                  attr_decl,
-                  parseOneOfChars("}"))+
+       PR(new NamedParser<hcp_ast::ClassMembers>(
+            "class members",
+            parseUntil(comments|
+                       function_decl|
+                       template_function_def|
+                       access_modifier|
+                       PR(new SelfParser(*this))|
+                       class_decl|
+                       enum_def|
+                       typedef_statement|
+                       function_def|
+                       static_var_def|
+                       attr_decl,
+                       parseOneOfChars("}"))))+
        parseOneOfChars("}")+
        eatWhite+
        parseOneOfChars(";")+

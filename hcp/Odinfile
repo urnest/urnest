@@ -5,7 +5,7 @@
 hcp-split
 hcp-parse-file
 hcp-what-is-at
-%hcp-tags-test-1%all.tree
+test-hcp-tags%all.tree
 
 %run-standalone-tests == %standalone-tests.tree:leaves
 
@@ -30,6 +30,11 @@ hcp-what-is-at
 
 %standalone-tests.tree == <<
 (../xju%tests.tree)
+%local-standalone-tests.tree
+
+%local-standalone-tests==%local-standalone-test.tree:leaves
+
+%local-standalone-tests.tree == <<
 ()+(%test-parser-cmd):exec.output
 test%all-tests.tree
 

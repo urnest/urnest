@@ -306,6 +306,9 @@ public:
   }
 };
 
+class ClassMembersTag{};
+typedef TaggedCompositeItem<ClassMembersTag> ClassMembers;
+
 class AttrDeclTag{};
 typedef TaggedCompositeItem<AttrDeclTag> AttrDecl;
 

@@ -37,81 +37,78 @@ typedef xju::Int<LineNumberTag,unsigned int> LineNumber;
 class SymbolTag{};
 typedef xju::Tagged<std::string,SymbolTag> Symbol;
   
-// std::string getClassName(hcp_ast::ClassDef const* x) throw()
-// {
-//   return x->className_;
-// }
+std::string getClassName(hcp_ast::ClassDef const* x) throw()
+{
+  return x->className_;
+}
 
-// void genClassStaticVarDef(
-//   hcp_ast::StaticVarDef const& x,
-//   OStream& h,
-//   OStream& c,
-//   std::vector<hcp_ast::ClassDef const*> const& scope) throw(
-//     xju::Exception)
-// {
-//   std::vector<hcp_ast::IR>::const_iterator i(
-//     hcp_ast::find1stInTree(x.items_.begin(), x.items_.end(),
-//                            hcp_ast::isA_<hcp_ast::VarInitialiser>));
-//   if (i != x.items_.end()) {
-//     h.copy(x.begin(), (*i)->begin());
-//     h << ";\n";
-//   }
-//   else
-//   {
-//     h.copy(x.begin(), x.end());
-//     h << "\n";
-//   }
-  
-//   std::vector<hcp_ast::IR>::const_iterator j(
-//     std::find_if(x.items_.begin(), x.items_.end(),
-//                  hcp_ast::isA_<hcp_ast::VarName>));
-//   xju::assert_not_equal(j, x.items_.end());
+Symbol qualify(Symbol const& x, std::string const& namespaceName) throw()
+{
+  return Symbol(namespaceName+"::"+x._);
+}
 
-//   std::vector<hcp_ast::IR>::const_iterator k(x.items_.begin());
-//   xju::assert_(*k, hcp_ast::isA_<hcp_ast::KeywordStatic>);
-//   ++k;
-//   c.copy((*k)->begin(), (*j)->begin());
-//   c << xju::format::join(scope.begin(),
-//                          scope.end(),
-//                          getClassName,
-//                          "::")
-//     << "::";
-//   c.copy((*j)->begin(), x.end());
-//   c << "\n";
-// }
-/*
+template<class AstClass>
+AstClass const& findFirst(
+  std::vector<hcp_ast::IR>::const_iterator begin,
+  std::vector<hcp_ast::IR>::const_iterator end) throw() 
+{
+  std::vector<hcp_ast::IR>::const_iterator i(
+    std::find_if(begin, end, hcp_ast::isA_<AstClass>));
+  if (i==end) {
+    std::vector<std::string> have;
+    std::transform(begin,end,
+                   std::back_inserter(have),
+                   [](hcp_ast::IR x) { return x->str(); });
+    xju::assert_not_equal(have,have);
+  }
+  return (*i)->asA<AstClass>();
+}
+
+std::map<Symbol,LineNumber> genNamespaceContent(hcp_ast::IRs const& x) throw(
+  xju::Exception);
+
 std::map<Symbol,LineNumber> genClass(hcp_ast::ClassDef const& x) throw(
   xju::Exception)
 {
   std::map<Symbol,LineNumber> result;
-  result.insert(std::make(pair(x.className_,x.begin().line_)));
+  result.insert(std::make_pair(Symbol(x.className_),
+                               LineNumber(x.begin().line_)));
+
+  auto const members(findFirst<hcp_ast::ClassMembers>(
+                       x.items_.begin(),x.items_.end()));
+  auto const memberSymbols(genNamespaceContent(members.items_));
   
-  for(hcp_ast::IRs::const_iterator i=x.items_.begin(); i!=x.items_.end(); ++i) {
-    if ((*i)->isA<hcp_ast::StaticVarDef>()) {
-      std::vector<hcp_ast::ClassDef const*> scope(outerClasses);
-      scope.push_back(&x);
-      genClassStaticVarDef((*i)->asA<hcp_ast::StaticVarDef>(), h, c, scope);
-    }
-    else if ((*i)->isA<hcp_ast::ClassDef>()) {
-      std::vector<hcp_ast::ClassDef const*> outer(outerClasses);
-      outer.push_back(&x);
-      genClass((*i)->asA<hcp_ast::ClassDef>(), h, c, outer);
-    }
-    else {
-      h.copy((*i)->begin(), (*i)->end());
-    }
+  for(auto s: memberSymbols) {
+    result.insert(std::make_pair(qualify(s.first,x.className_),s.second));
   }
+  return result;
 }
-*/
+
+std::map<Symbol,LineNumber> genTemplateClass(
+  hcp_ast::TemplateClassDef const& x) throw(
+    xju::Exception)
+{
+  std::map<Symbol,LineNumber> result;
+  std::string const className(hcp_ast::ClassDef::getClassName(x.items_));
+  result.insert(std::make_pair(Symbol(className),
+                               LineNumber(x.begin().line_)));
+
+  auto const members(findFirst<hcp_ast::ClassMembers>(
+                       x.items_.begin(),x.items_.end()));
+  auto const memberSymbols(genNamespaceContent(members.items_));
+  
+  for(auto s: memberSymbols) {
+    result.insert(std::make_pair(qualify(s.first,className),s.second));
+  }
+  return result;
+}
+
 std::pair<Symbol,LineNumber> genFunction(hcp_ast::FunctionDef const& x) throw(
   xju::Exception)
 {
-  std::vector<hcp_ast::IR>::const_iterator i(
-    std::find_if(x.items_.begin(), x.items_.end(),
-                 hcp_ast::isA_<hcp_ast::FunctionName>));
-  xju::assert_not_equal(i, x.items_.end());
-  Symbol symbol(reconstruct(**i));
-  LineNumber lineNumber((**i).begin().line_);
+  auto y(findFirst<hcp_ast::FunctionName>(x.items_.begin(), x.items_.end()));
+  Symbol symbol(reconstruct(y));
+  LineNumber lineNumber(y.begin().line_);
   return std::make_pair(symbol,lineNumber);
 }
 
@@ -119,12 +116,10 @@ std::pair<Symbol,LineNumber> genFunctionDecl(
   hcp_ast::FunctionDecl const& x) throw(
     xju::Exception)
 {
-  std::vector<hcp_ast::IR>::const_iterator i(
-    std::find_if(x.items_.begin(), x.items_.end(),
-                 hcp_ast::isA_<hcp_ast::FunctionName>));
-  xju::assert_not_equal(i, x.items_.end());
-  Symbol symbol(reconstruct(**i));
-  LineNumber lineNumber((**i).begin().line_);
+  auto const y(findFirst<hcp_ast::FunctionName>(
+                 x.items_.begin(), x.items_.end()));
+  Symbol symbol(reconstruct(y));
+  LineNumber lineNumber(y.begin().line_);
   return std::make_pair(symbol,lineNumber);
 }
 
@@ -167,14 +162,6 @@ std::pair<Symbol,LineNumber> genGlobalVar(hcp_ast::GlobalVarDef const& x) throw(
   return std::make_pair(symbol,lineNumber);
 }
 
-std::map<Symbol,LineNumber> genNamespaceContent(hcp_ast::IRs const& x) throw(
-  xju::Exception);
-
-Symbol qualify(Symbol const& x, std::string const& namespaceName) throw()
-{
-  return Symbol(namespaceName+"::"+x._);
-}
-
 std::map<Symbol,LineNumber> genNamespace(hcp_ast::NamespaceDef const& x) throw(
   xju::Exception)
 {
@@ -207,14 +194,19 @@ std::map<Symbol,LineNumber> genNamespaceContent(hcp_ast::IRs const& x) throw(
         result.insert(s);
       }
     }
-/*    else if ((*i)->isA<hcp_ast::ClassDef>()) {
-      auto symbols(genClass((*i)->asA<hcp_ast::ClassDef>(), h, c, 
-                            std::vector<hcp_ast::ClassDef const*>()));
-      for(s : symbols) {
+    else if ((*i)->isA<hcp_ast::TemplateClassDef>()) {
+      auto const symbols(genTemplateClass((*i)->asA<hcp_ast::TemplateClassDef>()));
+      for(auto s : symbols) {
         result.insert(s);
       }
     }
-    else */ if ((*i)->isA<hcp_ast::FunctionDef>())
+    else if ((*i)->isA<hcp_ast::ClassDef>()) {
+      auto const symbols(genClass((*i)->asA<hcp_ast::ClassDef>()));
+      for(auto s : symbols) {
+        result.insert(s);
+      }
+    }
+    else if ((*i)->isA<hcp_ast::FunctionDef>())
     {
       result.insert(genFunction((*i)->asA<hcp_ast::FunctionDef>()));
     } 

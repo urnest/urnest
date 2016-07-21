@@ -1,6 +1,7 @@
 - hcp-tags
   - generate tags for:
-    class, template class (including nested)
+    x class
+    x template class
     x global function
     x simple typedef
     x global var decl

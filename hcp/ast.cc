@@ -79,7 +79,7 @@ std::string ClassDef::getClassName(std::vector<IR> const& items) throw()
   xju::assert_not_equal(i, items.end());
 
   std::string result;
-  // REVISIT: looks nice but give X<::Y> which is invalid
+  // REVISIT: looks nice but gives X<::Y> which is invalid
   // std::remove_copy_if((**i).begin(), (**i).end(),
   //                     std::back_inserter(result),
   //                     ::isspace);
