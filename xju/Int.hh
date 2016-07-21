@@ -30,6 +30,57 @@ public:
   Impl value() const throw() {
     return value_;
   }
+
+  Int& operator++() throw(
+    xju::Exception)
+  {
+    if (std::numeric_limits<Impl>::max()==value_) {
+      std::ostringstream s;
+      s << "++" << (*this) << " would overflow";
+      throw xju::Exception(s.str(), XJU_TRACED);
+    }
+    ++value_;
+    return *this;
+  }
+  
+  Int operator++(int) throw(
+    xju::Exception)
+  {
+    if (std::numeric_limits<Impl>::max()==value_) {
+      std::ostringstream s;
+      s << "++" << (*this) << " would overflow";
+      throw xju::Exception(s.str(), XJU_TRACED);
+    }
+    Int const result(*this);
+    ++value_;
+    return result;
+  }
+  
+  Int& operator--() throw(
+    xju::Exception)
+  {
+    if (std::numeric_limits<Impl>::min()==value_) {
+      std::ostringstream s;
+      s << "--" << (*this) << " would underflow";
+      throw xju::Exception(s.str(), XJU_TRACED);
+    }
+    --value_;
+    return *this;
+  }
+  
+  Int operator--(int) throw(
+    xju::Exception)
+  {
+    if (std::numeric_limits<Impl>::min()==value_) {
+      std::ostringstream s;
+      s << "--" << (*this) << " would underflow";
+      throw xju::Exception(s.str(), XJU_TRACED);
+    }
+    Int result(value_);
+    --value_;
+    return result;
+  }
+  
   Int& operator+=(Int const& y) throw(
     xju::Exception)
   {
