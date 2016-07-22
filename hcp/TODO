@@ -15,10 +15,20 @@
     - typedef + named enum
     - typedef + anon struct/class
     - typedef + named struct/class
+    - template specialisation v template
   - test on .hh and .hcp file types
 
 - hcp-scope-at-offset
     - need a way to capture scope at EndOfFile where partially parsed
+    - think we just need to capture a list of completed items when
+      we hit end of input eg as a std::vector<IR> - should be able to
+      capture in Exception
+    - only need to add to that in "and" parser? ie add all the ones we've
+      done already? (might also need zeroOrMore, parseUntil, atLeastOne?)
+    - we would end up with something like:
+           x, x, x, NamespaceName, x, ClassName, y, z, ClassName, x, x
+    - then hcp-scope-at-offset just runs through and collects the interesting
+      ones (NamespaceName, ClassName, EnumName, any others?)
 
 - hcp split generate operator< (and others) where there is an operator<
   function prototype (ie no implementation)
@@ -137,7 +147,8 @@ x make readableRepr smarter to get better error messages, so that
 
 - rework atLeastOne for saner error message - see REVISIT in test-parse.cc
 
-- add zeroOrOne (perhaps call it optional?) and review where to use it
+x add zeroOrOne (perhaps call it optional?) and review where to use it
+- rework Optional::parse_, should be to avoid copying the "good" result?
 
 - replace more zeroOrMore with parseUntil(match,x)
 
@@ -300,7 +311,7 @@ user	0m0.132s
 sys	0m0.004s
 1951
 
-... hmm it has gone up a bit:
+... hmm it has gone up a bit (commit e5166b14):
 
 ODINVERIFYLEVEL=0 odin maxbuilds=4 "%all" && ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l
 end at line 146 column 1
