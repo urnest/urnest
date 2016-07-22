@@ -311,6 +311,23 @@ sys	0m0.000s
 2659
 
 
+... gone up lots now (note this includes a switch from gcc 4 to gcc 5.2):
+
+-*- mode: compilation; default-directory: "/home/xju/urnest/hcp/" -*-
+Compilation started at Fri Jul 22 13:43:19
+
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "%all" && ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l && git log | head -1
+end at line 146 column 1
+
+real	0m0.268s
+user	0m0.232s
+sys	0m0.008s
+3099
+commit d98c65bdbdfd2f875d4b33935e92aab53db6ae18
+
+Compilation finished at Fri Jul 22 13:43:21
+
+
 
 empty file overhead:
 
