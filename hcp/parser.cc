@@ -314,7 +314,7 @@ namespace
     new FixedCause("end of input"));
   Exception EndOfInput(I at, xju::Traced const& trace) throw()
   {
-    return Exception(end_of_input, at, trace);
+    return Exception(end_of_input, at, trace, true);
   }
 }
 

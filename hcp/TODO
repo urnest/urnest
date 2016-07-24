@@ -19,7 +19,7 @@
   - test on .hh and .hcp file types
 
 - hcp-scope-at-offset
-    - need a way to capture scope at EndOfFile where partially parsed
+    x need a way to capture scope at EndOfFile where partially parsed
     - think we just need to capture a list of completed items when
       we hit end of input eg as a std::vector<IR> - should be able to
       capture in Exception
@@ -169,8 +169,6 @@ x on parse failure, output the branch that got furthest
   - where multiple longest branches, combine their causes
   - combine with prepending ! parseKeyword() to parseFunction
   
-- also consider adding lookingAt() to see if that gives better errors
-
 - I -> hcp::I in I.h
 
 - hcp_ast::String -> Tagged..<StringTag>?
@@ -184,6 +182,7 @@ x on parse failure, output the branch that got furthest
   lookahead, is there another way? Might need a hand-coded parser?
   - perhaps commonality between function and object decl? both start
     with type and name? what is difference to function pointer?
+  - how often is it tried (and failed) in practice?
 
 x speed parsing by caching results <at,parser> => PV or exception
   stats:
