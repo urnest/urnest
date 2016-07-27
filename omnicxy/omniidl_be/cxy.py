@@ -862,7 +862,7 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
                 result=reindent(
                     indent,
                     ('class %(name)s_tag {};\n'+
-                     'typedef ::xju::Float< %(aliasOf)s,%(name)s_tag > %(name)s;')%vars())
+                     'typedef ::xju::Float< %(name)s_tag,%(aliasOf)s > %(name)s;')%vars())
             elif aliasOf.kind() in basicStringTypes:
                 result=reindent(
                     indent,

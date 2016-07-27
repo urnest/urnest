@@ -18,9 +18,9 @@ typedef ::xju::Int< MyBoolean_tag,bool > MyBoolean;
 class MyChar_tag {};
 typedef ::xju::Int< MyChar_tag,char > MyChar;
 class MyDouble_tag {};
-typedef ::xju::Float< double,MyDouble_tag > MyDouble;
+typedef ::xju::Float< MyDouble_tag,double > MyDouble;
 class MyFloat_tag {};
-typedef ::xju::Float< float,MyFloat_tag > MyFloat;
+typedef ::xju::Float< MyFloat_tag,float > MyFloat;
 class MyInt_tag {};
 typedef ::xju::Int< MyInt_tag,int32_t > MyInt;
 class MyLongLong_tag {};
@@ -49,6 +49,16 @@ public:
     cxy::Exception) = 0;
   virtual ::p3::MyString f2(
     ::p3::MyString const& a) throw(
+    // ipc failure
+    // - note servant may not throw
+    cxy::Exception) = 0;
+  virtual ::p3::MyFloat f3(
+    ::p3::MyFloat const& a) throw(
+    // ipc failure
+    // - note servant may not throw
+    cxy::Exception) = 0;
+  virtual ::p3::MyDouble f4(
+    ::p3::MyDouble const& a) throw(
     // ipc failure
     // - note servant may not throw
     cxy::Exception) = 0;

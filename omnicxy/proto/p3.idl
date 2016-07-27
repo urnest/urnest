@@ -17,5 +17,7 @@ module p3
   {
     MyInt f1(in MyInt a);
     MyString f2(in MyString a);
+    MyFloat f3(in MyFloat a);
+    MyDouble f4(in MyDouble a);
   };
 };

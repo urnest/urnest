@@ -1,3 +1,8 @@
+- hcp-split handle inline constructor eg
+  struct X {
+    inline X() {...};
+  };
+
 - hcp-tags
   - generate tags for:
     x class

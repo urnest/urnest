@@ -16,6 +16,7 @@
 #include <vector>
 #include <xju/Tagged.hh>
 #include <xju/Int.hh>
+#include <xju/Float.hh>
 #include "IOR.hh"
 #include "TaggedProfileList.hh" //impl
 #include <cxy/optional.hh>
@@ -336,6 +337,31 @@ public:
     return xju::Int<Tag, Impl>(cdr<Impl>::unmarshalFrom(s));
   }
   static void marshal(xju::Int<Tag, Impl> const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    cdr<Impl>::marshal(x.value(), s);
+  }
+
+};
+
+  
+template<class Tag, class Impl>
+class cdr<xju::Float<Tag, Impl> >
+{
+public:
+  static xju::Float<Tag, Impl> unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    return xju::Float<Tag, Impl>(cdr<Impl>::unmarshalFrom(s));
+  }
+  static void marshal(xju::Float<Tag, Impl> const& x, cdrStream& s)
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
   //  omni::giopStream::CommFailure

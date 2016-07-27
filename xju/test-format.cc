@@ -211,11 +211,13 @@ void test7()
     xju::assert_equal(xju::format::hex((int)0x143), "0x00000143");
     xju::assert_equal(xju::format::hex((int)0x33fc2143), "0x33fc2143");
 
-    xju::assert_equal(xju::format::hex((long)0x3), "0x00000003");
-    xju::assert_equal(xju::format::hex((long)0x43), "0x00000043");
-    xju::assert_equal(xju::format::hex((long)0x143), "0x00000143");
-    xju::assert_equal(xju::format::hex((long)0x33fc2143), "0x33fc2143");
-
+    if (sizeof(long)==4) {
+        xju::assert_equal(xju::format::hex((long)0x3), "0x00000003");
+        xju::assert_equal(xju::format::hex((long)0x43), "0x00000043");
+        xju::assert_equal(xju::format::hex((long)0x143), "0x00000143");
+        xju::assert_equal(xju::format::hex((long)0x33fc2143), "0x33fc2143");
+    }
+    
     xju::assert_equal(xju::format::hex((unsigned char)0x3), "0x03");
     xju::assert_equal(xju::format::hex((unsigned char)0x43), "0x43");
 
@@ -228,10 +230,13 @@ void test7()
     xju::assert_equal(xju::format::hex((unsigned int)0x43), "0x00000043");
     xju::assert_equal(xju::format::hex((unsigned int)0x143), "0x00000143");
     xju::assert_equal(xju::format::hex((unsigned int)0x33fc2143), "0x33fc2143");
-    xju::assert_equal(xju::format::hex((unsigned long)0x3), "0x00000003");
-    xju::assert_equal(xju::format::hex((unsigned long)0x43), "0x00000043");
-    xju::assert_equal(xju::format::hex((unsigned long)0x143), "0x00000143");
-    xju::assert_equal(xju::format::hex((unsigned long)0x33fc2143), "0x33fc2143");
+    if (sizeof(long)==4) {
+        xju::assert_equal(xju::format::hex((unsigned long)0x3), "0x00000003");
+        xju::assert_equal(xju::format::hex((unsigned long)0x43), "0x00000043");
+        xju::assert_equal(xju::format::hex((unsigned long)0x143), "0x00000143");
+        xju::assert_equal(xju::format::hex((unsigned long)0x33fc2143), "0x33fc2143");
+    }
+    
 }
 
 // cEscapeChar, cEscapeString

@@ -87,7 +87,7 @@ class objref< ::%(fqn)s >:
   public virtual xju::NonCopyable
 {
 public:
-  inline objref(): uri_("nil") { _PR_setobj(0); }  // nil
+  objref(): uri_("nil") { _PR_setobj(0); }  // nil
   objref(omniIOR* ior, omniIdentity* id) throw() :
       omniObjRef(cxy::cdr< ::%(fqn)s >::repoId, ior, id, 1)%(initinherits)s {
     _PR_setobj(this);

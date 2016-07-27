@@ -28,6 +28,15 @@ public:
     {
     }
   };
+  class PortInUse : public ExceptionBaseClass
+  {
+  public:
+    PortInUse(std::string const& s,
+                 std::pair<std::string, unsigned int> const& src) throw():
+        ExceptionBaseClass(s, src)
+    {
+    }
+  };
   class WrongType : public ExceptionBaseClass
   {
   public:

@@ -16,6 +16,7 @@
 #include "copyContext.hh"
 #include "WrongType.hh"
 #include "NoSuchObject.hh"
+#include "PortInUse.hh"
 
 namespace cxy
 {
@@ -55,6 +56,16 @@ typename cxy::Exceptions<E>::NoSuchObject translateException(
   cxy::NoSuchObject const& e)
 {
   typename cxy::Exceptions<E>::NoSuchObject result(
+    e.cause_.first, e.cause_.second);
+  copyContext(e.context_.begin(), e.context_.end(), result);
+  return result;
+}
+
+template<class E>
+typename cxy::Exceptions<E>::PortInUse translateException(
+  cxy::PortInUse const& e)
+{
+  typename cxy::Exceptions<E>::PortInUse result(
     e.cause_.first, e.cause_.second);
   copyContext(e.context_.begin(), e.context_.end(), result);
   return result;

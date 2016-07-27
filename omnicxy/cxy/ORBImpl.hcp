@@ -70,11 +70,25 @@ std::pair< ::CORBA::ORB*, std::pair< ::PortableServer::POA*, ::PortableServer::P
 
   CORBA::ORB_var orb;
   try {
-    const char* options[][2] = {{ "endPoint", orbEndPoint.c_str() },{ 0, 0 }};
-    orb=CORBA::ORB_init(argc, argv, "omniORB4", options);
+    try {
+      const char* options[][2] = {{ "endPoint", orbEndPoint.c_str() },{ 0, 0 }};
+      orb=CORBA::ORB_init(argc, argv, "omniORB4", options);
+    }
+    catch (CORBA::INITIALIZE& ex) {
+#ifdef minor
+  // Digital Unix 3.2, and may be others as well, defines minor() as
+  // a macro in its sys/types.h. Get rid of it!
+#undef minor
+#endif
+      if (ex.minor()==1096024077/*INITIALIZE_TransportError*/) {
+        std::ostringstream s;
+        s << "endPoint \"" << orbEndPoint << "\" requests a port that is in use (or endPoint is malformed or invalid)";
+        throw cxy::PortInUse(s.str(),std::make_pair(__FILE__,__LINE__));
+      }
+      throw cxy::Exception(translate(ex));
+    }
   }
-  catch (CORBA::Exception& ex) {
-    cxy::Exception e(translate(ex));
+  catch (cxy::Exception& e) {
     std::ostringstream s;
     s << "CORBA::ORB_init with args "
       << xju::format::join(argv, argv+argc, ", ");
