@@ -39,12 +39,26 @@ template<class BaseException>
 class ORB
 {
 public:
-  explicit ORB(std::string const& orbEndPoint) throw(BaseException) try:
+  explicit ORB(std::string const& orbEndPoint) throw(
+    typename cxy::Exceptions<BaseException>::PortInUse,
+    BaseException) try:
     impl_(orbEndPoint),
     e_changed_(guard_),
     t_(*this, 
        &cxy::ORB<BaseException>::run, // exceptions?
        &cxy::ORB<BaseException>::stop){
+  }
+  catch(cxy::PortInUse& e)
+  {
+    if (&typeid(cxy::Exception)==&typeid(BaseException)) {
+      throw;
+    }
+    typename cxy::Exceptions<BaseException>::PortInUse x(
+      e.cause_.first, e.cause_.second);
+    copyContext(e.context_.begin(), 
+                e.context_.end(),
+                x);
+    throw x;
   }
   catch(cxy::Exception& e)
   {

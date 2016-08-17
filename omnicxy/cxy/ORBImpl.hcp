@@ -60,6 +60,7 @@ cxy::Exception translate(CORBA::Exception const& e) throw()
 //       result.second.second is its manager, which is activated
 std::pair< ::CORBA::ORB*, std::pair< ::PortableServer::POA*, ::PortableServer::POAManager*> > orbInit(
   std::string const& orbEndPoint) throw(
+    cxy::PortInUse,
     cxy::Exception)
 {
   char emptyString[]= { 0 };
@@ -103,6 +104,19 @@ std::pair< ::CORBA::ORB*, std::pair< ::PortableServer::POA*, ::PortableServer::P
     insPOA_Manager = insPOA->the_POAManager();
     insPOA_Manager->activate();
   }
+  catch (CORBA::INITIALIZE& ex) {
+#ifdef minor
+  // Digital Unix 3.2, and may be others as well, defines minor() as
+  // a macro in its sys/types.h. Get rid of it!
+#undef minor
+#endif
+    if (ex.minor()==1096024077/*INITIALIZE_TransportError*/) {
+      std::ostringstream s;
+      s << "endPoint \"" << orbEndPoint << "\" requests a port that is in use (or endPoint is malformed or invalid)";
+      throw cxy::PortInUse(s.str(),std::make_pair(__FILE__,__LINE__));
+    }
+    throw cxy::Exception(translate(ex));
+  }
   catch (CORBA::Exception& ex) {
     cxy::Exception e(translate(ex));
     std::ostringstream s;
@@ -121,6 +135,7 @@ class ORBImpl
 {
 public:
   explicit ORBImpl(std::string const& orbEndPoint) throw(
+    cxy::PortInUse,
     cxy::Exception):
       orbEndPoint_(orbEndPoint),
       orb_etc_(orbInit(orbEndPoint)),
