@@ -47,7 +47,7 @@ namespace btt
 		xju::assert_not_equal(i, tasks_.end());
 		
                 currentTaskModified_ = 
-                    std::auto_ptr<xju::Observer<CurrentTask> >(
+                    std::unique_ptr<xju::Observer<CurrentTask> >(
                         new xju::Observer<CurrentTask>(
                             *this,
                             &CurrentTask::update,

@@ -112,7 +112,7 @@ namespace btt
     private:
 	const std::string tasksFileName_;
 	XmlStore tasksStore_;
-        std::auto_ptr<Tasks> tasks_;
+        std::unique_ptr<Tasks> tasks_;
 	WorkLog workLog_;
 
 	void saveTasks() throw(xju::Exception);
@@ -125,7 +125,7 @@ namespace btt
 	    virtual ~Undo() throw()
 	    {
 	    }
-	    virtual std::auto_ptr<Cmd> operator()() throw(xju::Exception) = 0;
+	    virtual std::unique_ptr<Cmd> operator()() throw(xju::Exception) = 0;
 	};
 	class Cmd
 	{
@@ -133,7 +133,7 @@ namespace btt
 	    virtual ~Cmd() throw()
 	    {
 	    }
-	    virtual std::auto_ptr<Undo> operator()() throw(xju::Exception) = 0;
+	    virtual std::unique_ptr<Undo> operator()() throw(xju::Exception) = 0;
 	};
     private:
 	typedef std::vector<xju::Shared<Undo> > UndoList;
@@ -160,7 +160,7 @@ namespace btt
         // - saves changes
         // - registers undo item for command (via did)
         //
-        void doCmd(std::auto_ptr<Cmd> x) throw(xju::Exception);
+        void doCmd(xju::Shared<Cmd> x) throw(xju::Exception);
         
 	//
 	// Adjust our undo/redo lists assuming we just
@@ -170,7 +170,7 @@ namespace btt
 	// - append x to undo list
 	// - trim undo list if it is too long
 	//
-	void did(std::auto_ptr<Undo> x) throw();
+	void did(xju::Shared<Undo> x) throw();
     };
 }
 

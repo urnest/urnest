@@ -66,7 +66,7 @@ namespace btt
 	    
 	    xju::Observer<CurrentTask> entryAdded_;
 	    xju::Observer<CurrentTask> entryRemoved_;
-            std::auto_ptr<xju::Observer<CurrentTask> > currentTaskModified_;
+            std::unique_ptr<xju::Observer<CurrentTask> > currentTaskModified_;
 	};
     }
 }

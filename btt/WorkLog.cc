@@ -197,7 +197,7 @@ namespace btt
 	{
 	    if (!wfd_.get())
 	    {
-		wfd_ = std::auto_ptr<xju::AutoFd>(
+		wfd_ = std::unique_ptr<xju::AutoFd>(
 		    new xju::AutoFd(openWorkLogFileWritable(fileName_)));
 	    }
 	    if (rbegin() != rend() &&
@@ -304,7 +304,7 @@ namespace btt
 	{
 	    if (!wfd_.get())
 	    {
-		wfd_ = std::auto_ptr<xju::AutoFd>(
+		wfd_ = std::unique_ptr<xju::AutoFd>(
 		    new xju::AutoFd(openWorkLogFileWritable(fileName_)));
 	    }
 	    const_reverse_iterator i(rbegin());
@@ -318,7 +318,7 @@ namespace btt
 		    wfd_->value_,
 		    offset);
 #else
-		wfd_ = std::auto_ptr<xju::AutoFd>();
+		wfd_ = std::unique_ptr<xju::AutoFd>();
 		::close(fd_.value_);
 		ftruncate(fileName_, offset);
 		fd_.value_ = openWorkLogFileReadOnly(fileName_);
