@@ -31,7 +31,7 @@ void test1() {
   }
   catch(E& e) {
     std::string const m(messages.str());
-    xju::assert_equal(readableRepr(e), "Failed to get omniORB insPOA at endpoint giop:tcp::22 because\nN5CORBA10INITIALIZEE minor 1096024077.");
+    xju::assert_equal(readableRepr(e), "endPoint \"giop:tcp::22\" requests a port that is in use (or endPoint is malformed or invalid).");
   }
 }
 

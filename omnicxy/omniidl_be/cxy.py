@@ -856,13 +856,13 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
                 result=reindent(
                     indent,
                     ('class %(name)s_tag {};\n'+
-                     'typedef ::xju::Int< %(name)s_tag,%(aliasOf)s > %(name)s;')%vars())
+                     'typedef ::xju::Int< %(name)s_tag,%(aliasOf)s,%(eclass)s > %(name)s;')%vars())
             elif aliasOf.kind() in basicFloatTypes:
                 aliasOf=unqualifiedType(aliasOf)
                 result=reindent(
                     indent,
                     ('class %(name)s_tag {};\n'+
-                     'typedef ::xju::Float< %(name)s_tag,%(aliasOf)s > %(name)s;')%vars())
+                     'typedef ::xju::Float< %(name)s_tag,%(aliasOf)s,%(eclass)s > %(name)s;')%vars())
             elif aliasOf.kind() in basicStringTypes:
                 result=reindent(
                     indent,
