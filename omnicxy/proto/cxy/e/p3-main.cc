@@ -149,6 +149,7 @@ public:
 int main(int argc, char* argv[])
 {
   try {
+
     if (argc != 3 || !(std::string("client")==argv[2]||
                        std::string("server")==argv[2]||
                        std::string("both")==argv[2])) {
@@ -218,13 +219,13 @@ int main(int argc, char* argv[])
       }
 
       try {
-        ::p3::MyInt x(std::numeric_limits<uint32_t>::max());
+        ::p3::MyInt x(std::numeric_limits<int32_t>::max());
         ++x;
         xju::assert_never_reached();
       }
       catch(E const& e) {
         std::ostringstream s;
-        s << "++" << x << " would overflow";
+        s << "++" << std::numeric_limits<int32_t>::max() << " would overflow.";
         xju::assert_equal(readableRepr(e), s.str());
       }
 
@@ -235,7 +236,7 @@ int main(int argc, char* argv[])
       }
       catch(E const& e) {
         std::ostringstream s;
-        s << x << " + 1 would overflow";
+        s << std::numeric_limits<float>::max() << " + 1 would overflow.";
         xju::assert_equal(readableRepr(e), s.str());
       }
     }
