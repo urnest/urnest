@@ -258,7 +258,14 @@ x memory leaks:
     what is typecode? essentially parallels instance encoding
     - when generating cdr<X> also generate tc<X> with appropriate
       cdr functions
-
+        encoding:
+          tc<long> is cdr<uint32_t>::encode(3)
+            ... other basic types see corba.pdf Table 9.2 replace 0
+          tc<string>: cdr<uint32_t>::encode(18) + cdr<uint32_t>::encode(max-len||0)
+          tc<wstring>: cdr<uint32_t>::encode(27) + cdr<uint32_t>::encode(max-len||0)
+          tc<fixed>: cdr<uint32_t>::encode(28) + cdr<ushort_t>::encode(digits) + cdr<short_t>::encode(scale)
+          indirection: cdr<uint32_t>::encode(0xffffffff)+cdr<int32_t>::encode(offset)
+          
     - also then need extractAny, which parses the typecode and
       builds an extractor to copy the raw data following the typecode then
       extracts the raw data into a cdr memory stream, also keeps
