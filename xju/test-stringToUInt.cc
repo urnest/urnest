@@ -63,7 +63,6 @@ void test3()
     }
     catch(const xju::Exception& e)
     {
-	std::cerr << e << std::endl;
 	std::ostringstream s;
 	s << e;
 	xju::assert_equal(
