@@ -1,3 +1,9 @@
+* use cstdint for int64_t etc and figure out how to use its constants
+  to write code that compiles "everywhere" eg format.hh, test-stringToInt
+  test-stringToUnsignedInt
+  C++11 has long long at least 64 bits, use that in format.hh in place
+  of int64_t
+
 snmp/README.txt stuff
 
 Int,Float add operator* operator/
