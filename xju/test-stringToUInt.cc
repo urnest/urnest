@@ -45,33 +45,46 @@ void test2()
 }
 
 
-// overflow - can't do unless sizeof(long) > sizeof(int)
-void test3()
+// overflow - don't compile unless sizeof(long) > sizeof(int)
+struct Test3
 {
-    if (ULONG_MAX <= UINT_MAX)
+    template<int X>
+    void t()
     {
-	return;
-    }
-    try
-    {
-	std::ostringstream s;
-	const unsigned long x(UINT_MAX);
-	s << (x+1L);
-	
-	xju::stringToUInt(s.str());
-	abort();
-    }
-    catch(const xju::Exception& e)
-    {
-	std::cerr << e << std::endl;
-	std::ostringstream s;
-	s << e;
-	xju::assert_equal(
-	    s.str(),
-	    "Failed to convert \"4294967296\" to a base-10 unsigned integer because\n4294967296 is too large (maximum allowed unsigned integer is 4294967295).");
+        try
+        {
+            std::ostringstream s;
+            const unsigned long x(UINT_MAX);
+            s << (x+1L);
+            
+            xju::stringToUInt(s.str());
+            abort();
+        }
+        catch(const xju::Exception& e)
+        {
+            std::cerr << e << std::endl;
+            std::ostringstream s;
+            s << e;
+            xju::assert_equal(
+                s.str(),
+                "Failed to convert \"4294967296\" to a base-10 unsigned integer because\n4294967296 is too large (maximum allowed unsigned integer is 4294967295).");
+        }
     }
 }
 
+template<>
+void Test3::t<0>()
+{
+}
+
+// overflow - can't do unless sizeof(long) > sizeof(int)
+void test3()
+{
+    // avoid compiler warning by not instatiating code unless
+    // sizeof(long) > sizeof(int)
+    Test3 t3;
+    t3.t<sizeof(long)-sizeof(int)>();
+}
 
 int main(int argc, char* argv[])
 {
