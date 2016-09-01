@@ -28,10 +28,10 @@ namespace xju
     const SyscallF3<int, int, ::sockaddr*, socklen_t*> accept(
 	"accept",
 	::accept);
-    const SyscallF4<int, int, const void*, size_t, int> send(
+    const SyscallF4<ssize_t, int, const void*, size_t, int> send(
 	"send",
 	::send);
-    const SyscallF4<int, int, void*, size_t, int> recv(
+    const SyscallF4<ssize_t, int, void*, size_t, int> recv(
 	"recv",
 	::recv);
     const SyscallF5<int, int, int, int, void*, socklen_t*> getsockopt(

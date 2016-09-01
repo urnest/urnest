@@ -22,6 +22,7 @@ geoff@boulder.colorado.edu
 #include "inc/FileName.h"
 #include "inc/Job.h"
 #include "inc/Str.h"
+#include "inc/LookupPlainAbsPath.h"
 
 extern int		num_EnvVarS;
 extern tp_EnvVar	EnvVarS;
@@ -424,6 +425,7 @@ Exit(
       Ret_FilHdr(FlagPrmFilHdr);
       Ret_FilHdr(EmptyFilHdr);
       Update_Info();
+      RetAbsPaths();
       Free_FilHdrs();
       Free_FilInps();
       Free_FilElms();

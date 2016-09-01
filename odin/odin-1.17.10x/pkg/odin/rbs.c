@@ -204,7 +204,7 @@ Set_ODINRBSHOST(GMC_ARG_VOID)
    }/*Set_ODINRBSHOST*/
 
 
-main(
+int main(
    GMC_ARG(int, argc),
    GMC_ARG(char**, argv)
    )

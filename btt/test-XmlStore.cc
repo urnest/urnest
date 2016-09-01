@@ -55,7 +55,7 @@ void test2(const std::string& schemaFileName,
     
     store.saveTasks(tasks, f);
     
-    std::auto_ptr<Tasks> x(store.loadTasks(f, schemaFileName));
+    std::unique_ptr<Tasks> x(store.loadTasks(f, schemaFileName));
 
     xju::assert_equal(x->size(), 0U);
 }
@@ -77,7 +77,7 @@ void test3(const std::string& schemaFileName,
     
     store.saveTasks(tasks, f);
     
-    std::auto_ptr<Tasks> x(store.loadTasks(f, schemaFileName));
+    std::unique_ptr<Tasks> x(store.loadTasks(f, schemaFileName));
 
     xju::assert_equal(x->size(), 1U);
     xju::assert_equal((*x->begin()).id_, TaskId(1U));
@@ -170,7 +170,7 @@ void test6(const std::string& schemaFileName,
     
     store.saveTasks(tasks, f);
     
-    std::auto_ptr<Tasks> x(store.loadTasks(f, schemaFileName));
+    std::unique_ptr<Tasks> x(store.loadTasks(f, schemaFileName));
 
     xju::assert_equal(x->size(), 3U);
 

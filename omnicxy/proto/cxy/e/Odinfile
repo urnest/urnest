@@ -25,6 +25,7 @@
 %all-tests.tree==<<
 ()+cmd=(%p1-main) '4734' 'both':exec.output
 ()+cmd=(%p2-main) '4735' 'both':exec.output
+()+cmd=(%p3-main) '4736' 'both':exec.output
 ()+cmd=(%p7-main) '4741' 'both':exec.output
 %test-transient
 ()+cmd=(test-port-in-use.cc+(%cxx-opts):auto.cxx.exe) '4736':stdout
@@ -34,6 +35,7 @@
 
 %p1-main==p1-main.cc+(%cxx-opts):auto.cxx.exe
 %p2-main==p2-main.cc+(%cxx-opts):auto.cxx.exe
+%p3-main==p3-main.cc+(%cxx-opts):auto.cxx.exe
 %p7-main==p7-main.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-wrong-type==test-wrong-type.cc+(%cxx-opts):auto.cxx.exe

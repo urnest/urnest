@@ -217,7 +217,7 @@ SnmpV2cResponse decodeSnmpV2cResponse(std::vector<uint8_t> const& data) throw(
   }
   catch(xju::Exception& e) {
     std::ostringstream s;
-    s << "decode snmp v1 response from " << data.size() << " bytes of data";
+    s << "decode snmp v2c response from " << data.size() << " bytes of data";
     if (ok.size()) {
       s << " having successfully decoded "
         << xju::format::join(ok.rbegin(),ok.rend(),", ");

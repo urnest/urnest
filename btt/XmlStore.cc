@@ -243,7 +243,7 @@ namespace btt
         }
     }
     
-    std::auto_ptr<Tasks> XmlStore::loadTasks(
+    std::unique_ptr<Tasks> XmlStore::loadTasks(
         const std::string& fileName,
         const std::string& tasksSchemaFileName) throw(
             xju::Exception)
@@ -256,7 +256,7 @@ namespace btt
             namespaces.insert(std::make_pair(
                 xju::xml::NamePrefix(""),
                 xju::xml::URI(""))); // REVISIT: xml namespace spec default?
-            return std::auto_ptr<Tasks>(new Tasks(
+            return std::unique_ptr<Tasks>(new Tasks(
                 parseTasks(xju::xml::parseXmlDecl(
                     xju::xml::skipWhiteSpaceAndComments(i)).second,
                            namespaces).first));

@@ -15,6 +15,7 @@
 #include <vector>
 #include <stdint.h>
 #include <iostream>
+#include "xju/snmp/Oid.hh"
 
 namespace xju
 {
@@ -40,6 +41,7 @@ public:
   virtual operator unsigned int() const throw(xju::Exception);
   virtual operator long() const throw(xju::Exception);
   virtual operator unsigned long() const throw(xju::Exception);
+  virtual operator Oid() const throw(xju::Exception);
 
   // return length of encoded value
   // ie return encodeTo(x)-x

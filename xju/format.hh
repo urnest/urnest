@@ -70,6 +70,8 @@
 #include <string>
 #include <sstream>
 #include <xju/ios_base.hh>
+#include <cinttypes>
+#include <climits>
 
 namespace xju
 {

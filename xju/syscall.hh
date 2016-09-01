@@ -30,6 +30,8 @@ namespace xju
     class SyscallInterrupted;
     class SyscallFailed;
     
+    template<class R>
+    class Syscall0;
     template<class R, class P1>
     class Syscall1;
     template<class R, class P1, class P2>
@@ -51,6 +53,7 @@ namespace xju
     // Note: function name (e.g. "creat") must be valid for 
     // lifetime of object.
     //
+    template<class R> struct SyscallF0;
     template<class R, class P1> struct SyscallF1;
     template<class R, class P1, class P2> struct SyscallF2;
     template<class R, class P1, class P2, class P3> struct SyscallF3;
@@ -132,6 +135,33 @@ namespace xju
     //          }
     //       }
     //
+    template<class R>
+    Syscall0<R>
+    syscall(const SyscallF0<R>& f,
+	    const Traced& location, 
+	    bool retryIfInterrupted = true,
+	    const R errorIndicator = -1) throw(
+		//
+		// pre: !retryIfInterrupted &&
+		//      signal interrupted the system call
+		//
+		SyscallInterrupted,
+		SyscallFailed);
+    
+    template<class R>
+    Syscall0<R>
+    syscall(const char* name,
+	    R (*const f)(),
+	    const Traced& location, 
+	    bool retryIfInterrupted = true,
+	    const R errorIndicator = -1) throw(
+		//
+		// pre: !retryIfInterrupted &&
+		//      signal interrupted the system call
+		//
+		SyscallInterrupted,
+		SyscallFailed);
+    
     template<class R, class P1>
     Syscall1<R, P1>
     syscall(const SyscallF1<R, P1>& f,
@@ -287,6 +317,19 @@ namespace xju
     };
     
     
+    template<class R>
+    struct SyscallF0
+    {
+	SyscallF0(const char* name, R (*const f)()) throw():
+	    _name(name),
+	    _f(f)
+	{
+	}
+	const char* _name;
+	R (*const _f)();
+    };
+    
+    
     template<class R, class P1>
     struct SyscallF1
     {
@@ -349,6 +392,35 @@ namespace xju
 	}
 	const char* _name;
 	R (*const _f)(P1, P2, P3, P4, P5);
+    };
+    
+    
+    template<class R>
+    class Syscall0
+    {
+    public:
+	Syscall0(const SyscallF0<R>& f,
+		 const bool retryIfInterrupted,
+		 const Traced& location,
+		 const R errorIndicator = -1) throw():
+	    _f(f),
+	    _retryIfInterrupted(retryIfInterrupted),
+	    _location(location),
+	    _errorIndicator(errorIndicator)
+	{
+	}
+	R operator()() const throw(
+	    //
+	    // pre: !retryIfInterrupted &&
+	    //      signal interrupted the system call
+	    //
+	    SyscallInterrupted,
+	    SyscallFailed);
+    private:
+	const SyscallF0<R> _f;
+	const bool _retryIfInterrupted;
+	const Traced _location;
+	const R _errorIndicator;
     };
     
     
@@ -614,6 +686,46 @@ namespace xju
 	return status;
     }
     
+    
+    template<class R, class P1>
+    Syscall0<R>
+    syscall(const SyscallF0<R>& f,
+	    const Traced& location, 
+	    bool retryIfInterrupted,
+	    const R errorIndicator) throw(
+		//
+		// pre: !retryIfInterrupted &&
+		//      signal interrupted the system call
+		//
+		SyscallInterrupted,
+		SyscallFailed)
+    {
+	return Syscall0<R>(f,
+                           retryIfInterrupted,
+                           location,
+                           errorIndicator);
+    }
+    
+    template<class R>
+    Syscall0<R>
+    syscall(const char* name,
+	    R (*const f)(),
+	    const Traced& location, 
+	    bool retryIfInterrupted,
+	    const R errorIndicator) throw(
+		//
+		// pre: !retryIfInterrupted &&
+		//      signal interrupted the system call
+		//
+		SyscallInterrupted,
+		SyscallFailed)
+    {
+	return Syscall0<R>(
+	    SyscallF0<R>(name, f),
+	    retryIfInterrupted,
+	    location,
+	    errorIndicator);
+    }
     
     template<class R, class P1>
     Syscall1<R, P1>

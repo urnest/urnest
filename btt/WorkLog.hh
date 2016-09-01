@@ -179,7 +179,7 @@ namespace btt
 	xju::Event entryAdded_;
 	xju::Event lastEntryRemoved_;
 	
-	std::auto_ptr<xju::AutoFd> wfd_;
+	std::unique_ptr<xju::AutoFd> wfd_;
     };
 }
 

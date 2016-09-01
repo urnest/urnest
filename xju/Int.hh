@@ -20,7 +20,7 @@
 
 namespace xju
 {
-template<class Tag, class Impl = int>
+template<class Tag, class Impl = int, class E = xju::Exception>
 class Int
 {
 public:
@@ -30,8 +30,59 @@ public:
   Impl value() const throw() {
     return value_;
   }
+
+  Int& operator++() throw(
+    E)
+  {
+    if (std::numeric_limits<Impl>::max()==value_) {
+      std::ostringstream s;
+      s << "++" << (*this) << " would overflow";
+      throw E(s.str(), XJU_TRACED);
+    }
+    ++value_;
+    return *this;
+  }
+  
+  Int operator++(int) throw(
+    E)
+  {
+    if (std::numeric_limits<Impl>::max()==value_) {
+      std::ostringstream s;
+      s << "++" << (*this) << " would overflow";
+      throw E(s.str(), XJU_TRACED);
+    }
+    Int const result(*this);
+    ++value_;
+    return result;
+  }
+  
+  Int& operator--() throw(
+    E)
+  {
+    if (std::numeric_limits<Impl>::min()==value_) {
+      std::ostringstream s;
+      s << "--" << (*this) << " would underflow";
+      throw E(s.str(), XJU_TRACED);
+    }
+    --value_;
+    return *this;
+  }
+  
+  Int operator--(int) throw(
+    E)
+  {
+    if (std::numeric_limits<Impl>::min()==value_) {
+      std::ostringstream s;
+      s << "--" << (*this) << " would underflow";
+      throw E(s.str(), XJU_TRACED);
+    }
+    Int result(value_);
+    --value_;
+    return result;
+  }
+  
   Int& operator+=(Int const& y) throw(
-    xju::Exception)
+    E)
   {
     if (y.value_<0) {
       return (*this)-=Int(-y.value_);
@@ -39,14 +90,14 @@ public:
     if (std::numeric_limits<Impl>::max() - value_ < y.value()) {
       std::ostringstream s;
       s << (*this) << " + " << y << " would overflow";
-      throw xju::Exception(s.str(), XJU_TRACED);
+      throw E(s.str(), XJU_TRACED);
     }
     value_+=y.value();
     return *this;
   }
   
   Int& operator-=(Int const& y) throw(
-    xju::Exception)
+    E)
   {
     if (y.value_<0) {
       return (*this)+=Int(-y.value_);
@@ -54,7 +105,7 @@ public:
     if (value_ < y.value() + std::numeric_limits<Impl>::min()) {
       std::ostringstream s;
       s << (*this) << " - " << y << " would underflow";
-      throw xju::Exception(s.str(), XJU_TRACED);
+      throw E(s.str(), XJU_TRACED);
     }
     value_-=y.value();
     return *this;
@@ -62,7 +113,7 @@ public:
   
   friend Int operator+(Int const& x, Int const& y) throw(
     // overflow
-    xju::Exception) 
+    E) 
   {
       Int result(x);
       result+=y;
@@ -71,7 +122,7 @@ public:
   
   friend Int operator-(Int const& x, Int const& y) throw(
     // underflow
-    xju::Exception) 
+    E) 
   {
       Int result(x);
       result-=y;
@@ -105,8 +156,8 @@ public:
 private:
     Impl value_;
 };
-template<class Tag, class Impl>
-std::ostream& operator<<(std::ostream& s, Int<Tag,Impl> const& x) throw()
+template<class Tag, class Impl, class E>
+std::ostream& operator<<(std::ostream& s, Int<Tag,Impl,E> const& x) throw()
 {
   return s << x.value();
 }

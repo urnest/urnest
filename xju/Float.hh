@@ -21,7 +21,7 @@
 
 namespace xju
 {
-template<class Tag, class Impl = float>
+template<class Tag, class Impl = float, class E = xju::Exception>
 class Float
 {
 public:
@@ -32,7 +32,7 @@ public:
     return value_;
   }
   Float& operator+=(Float const& y) throw(
-    xju::Exception)
+    E)
   {
     if (y.value_<0) {
       return (*this)-=Float(-y.value_);
@@ -40,14 +40,14 @@ public:
     if (std::numeric_limits<Impl>::max() - value_ < y.value()) {
       std::ostringstream s;
       s << (*this) << " + " << y << " would overflow";
-      throw xju::Exception(s.str(), XJU_TRACED);
+      throw E(s.str(), XJU_TRACED);
     }
     value_+=y.value();
     return *this;
   }
   
   Float& operator-=(Float const& y) throw(
-    xju::Exception)
+    E)
   {
     if (y.value_<0) {
       return (*this)+=Float(-y.value_);
@@ -55,7 +55,7 @@ public:
     if (value_ < y.value() + std::numeric_limits<Impl>::min()) {
       std::ostringstream s;
       s << (*this) << " - " << y << " would underflow";
-      throw xju::Exception(s.str(), XJU_TRACED);
+      throw E(s.str(), XJU_TRACED);
     }
     value_-=y.value();
     return *this;
@@ -63,7 +63,7 @@ public:
   
   friend Float operator+(Float const& x, Float const& y) throw(
     // overflow
-    xju::Exception) 
+    E) 
   {
       Float result(x);
       result+=y;
@@ -72,7 +72,7 @@ public:
   
   friend Float operator-(Float const& x, Float const& y) throw(
     // underflow
-    xju::Exception) 
+    E) 
   {
       Float result(x);
       result-=y;
@@ -109,8 +109,8 @@ public:
 private:
     Impl value_;
 };
-template<class Tag, class Impl>
-std::ostream& operator<<(std::ostream& s, Float<Tag,Impl> const& x) throw()
+template<class Tag, class Impl, class E>
+std::ostream& operator<<(std::ostream& s, Float<Tag,Impl,E> const& x) throw()
 {
   return s << x.value();
 }

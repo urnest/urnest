@@ -18,6 +18,11 @@ NoSuchObject.cc==%NoSuchObject/NoSuchObject.cc
 
 %NoSuchObject==()+cmd=(../../hcp/hcp-split) -l 1 (NoSuchObject.hcp) 'NoSuchObject.hh' 'NoSuchObject.cc':output
 
+PortInUse.hh==%PortInUse/PortInUse.hh
+PortInUse.cc==%PortInUse/PortInUse.cc
+
+%PortInUse==()+cmd=(../../hcp/hcp-split) -l 1 (PortInUse.hcp) 'PortInUse.hh' 'PortInUse.cc':output
+
 StubUserException.hh==%StubUserException/StubUserException.hh
 StubUserException.cc==%StubUserException/StubUserException.cc
 

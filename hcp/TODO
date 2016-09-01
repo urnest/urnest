@@ -1,3 +1,40 @@
+- hcp-split handle inline constructor eg
+  struct X {
+    inline X() {...};
+  };
+
+- hcp-tags
+  - generate tags for:
+    x class
+    x template class
+    x global function
+    x simple typedef
+    x global var decl
+    x global var def
+    x namespace
+    x enum X{ ... };
+    - class enum
+    - enum members
+    - hash define
+    - typedef + anon enum
+    - typedef + named enum
+    - typedef + anon struct/class
+    - typedef + named struct/class
+    - template specialisation v template
+  - test on .hh and .hcp file types
+
+- hcp-scope-at-offset
+    x need a way to capture scope at EndOfFile where partially parsed
+    - think we just need to capture a list of completed items when
+      we hit end of input eg as a std::vector<IR> - should be able to
+      capture in Exception
+    - only need to add to that in "and" parser? ie add all the ones we've
+      done already? (might also need zeroOrMore, parseUntil, atLeastOne?)
+    - we would end up with something like:
+           x, x, x, NamespaceName, x, ClassName, y, z, ClassName, x, x
+    - then hcp-scope-at-offset just runs through and collects the interesting
+      ones (NamespaceName, ClassName, EnumName, any others?)
+
 - hcp split generate operator< (and others) where there is an operator<
   function prototype (ie no implementation)
   - need to better parse attr decls to get attr names
@@ -115,7 +152,8 @@ x make readableRepr smarter to get better error messages, so that
 
 - rework atLeastOne for saner error message - see REVISIT in test-parse.cc
 
-- add zeroOrOne (perhaps call it optional?) and review where to use it
+x add zeroOrOne (perhaps call it optional?) and review where to use it
+- rework Optional::parse_, should be to avoid copying the "good" result?
 
 - replace more zeroOrMore with parseUntil(match,x)
 
@@ -136,8 +174,6 @@ x on parse failure, output the branch that got furthest
   - where multiple longest branches, combine their causes
   - combine with prepending ! parseKeyword() to parseFunction
   
-- also consider adding lookingAt() to see if that gives better errors
-
 - I -> hcp::I in I.h
 
 - hcp_ast::String -> Tagged..<StringTag>?
@@ -151,6 +187,7 @@ x on parse failure, output the branch that got furthest
   lookahead, is there another way? Might need a hand-coded parser?
   - perhaps commonality between function and object decl? both start
     with type and name? what is difference to function pointer?
+  - how often is it tried (and failed) in practice?
 
 x speed parsing by caching results <at,parser> => PV or exception
   stats:
@@ -278,7 +315,7 @@ user	0m0.132s
 sys	0m0.004s
 1951
 
-... hmm it has gone up a bit:
+... hmm it has gone up a bit (commit e5166b14):
 
 ODINVERIFYLEVEL=0 odin maxbuilds=4 "%all" && ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l
 end at line 146 column 1
@@ -287,6 +324,23 @@ real	0m0.160s
 user	0m0.148s
 sys	0m0.000s
 2659
+
+
+... gone up lots now (note this includes a switch from gcc 4 to gcc 5.2):
+
+-*- mode: compilation; default-directory: "/home/xju/urnest/hcp/" -*-
+Compilation started at Fri Jul 22 13:43:19
+
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "%all" && ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l && git log | head -1
+end at line 146 column 1
+
+real	0m0.268s
+user	0m0.232s
+sys	0m0.008s
+3099
+commit d98c65bdbdfd2f875d4b33935e92aab53db6ae18
+
+Compilation finished at Fri Jul 22 13:43:21
 
 
 
@@ -299,3 +353,7 @@ real	0m0.010s
 user	0m0.004s
 sys	0m0.000s
 13
+
+
+--------- create gcc 5.2 linux cache --------------
+xju@xjutv:~/urnest$ ODIN_CXX_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib:/home/xju/gcc-5.2.0-run/lib  ODIN_CXX_PATH=/home/xju/gcc-5.2.0-run/bin:/usr/bin:/bin ODIN_CXX_FLAGS=-std=c++11 ODIN_EXEC_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib:/home/xju/gcc-5.2.0-run/lib ODIN_CXX_I=/usr/local/omniORB-4.2.0/include ODIN_LIB_SP="/usr/local/omniORB-4.2.0/lib /lib /usr/lib" ODIN_EXEC_PATH=/usr/local/omniORB-4.2.0/bin:/bin:/usr/bin ODIN_OMNICXY_PATH=/usr/local/omniORB-4.2.0/bin:/usr/bin:/bin ODIN_OMNICXY_BE_DIR=~/urnest/omnicxy/omniidl_be ./odin/create-linux-cache.sh $ODIN

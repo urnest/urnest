@@ -229,6 +229,10 @@ PKGLST
   - update emacs integration, and give a discussion (files in etc)
     - note emacs integration has a deadlock when saving file while
       compiling
+  - check environment control, does odin pass through calling process'
+    eg PATH, LD_LIBRARY_PATH ... yes it does... what to do?
+    - idea is that environment is controlled, repeatable, predictable
+    - ! needs display, how to do that?
 
 - update odin manual
 
@@ -249,6 +253,27 @@ PKGLST
    a vc package etc... downside it would hard to use them both in
    same cache - unless perhaps have .vcxx.sm, .gcxx.sm etc
 
+x some internals:
+  Get_OdinFile_Msg is where server side picks up the command to do.
+  For a basic derivation eg xxx:yyy, end up in Local_Get_Odinfile("xxx:yyy")
+    parses xxx:yyy into Nod, which is a tree:
+       type-8
+        |son
+       type-23 -brother- type-14
+        - sym "xxx"        |son
+                         type-23
+                          -sym "yyy"
+
+  Finds the corresponding PrmFHdr (node in derived/source file tree)
+    uses HostFN_FileHdr to find the tree node for "xxx" (starting with
+      the already-known current-working-drectory tree node then using
+      Do_Keys)
+    that gets us a tps_FilHdr, then Apply_OprNods, which uses
+      Do_Deriv
+        GetDrvPath
+        Do_DrvPath
+     (DrvPath stands for "derivation path")
+
 x best way to debug:
   odin -s
     x starts server process
@@ -261,6 +286,7 @@ x best way to debug:
     dir=/data/xju/tmp
     f1.x+a=1+b=2:y
     ... should hit the breakpoint
+
     
 x step/next to get to this point:
 #0  Do_Deriv (FilHdr=0x9469948, InhFilPrm=0x9468bc8, PrecFilPrm=0x946c8e0, ToFilTyp=0x9451cb8) at if-candrv.c:181
@@ -477,3 +503,68 @@ Caused by: java.lang.ClassNotFoundException: .data.xju.tmp.u1c.xjutv.FILES.a.non
    at java.lang.ClassLoader.loadClass(libgcj.so.10)
    at gnu.java.lang.MainThread.run(libgcj.so.10)
 java -cp /data/xju/tmp/u1c/classes /data/xju/tmp/u1c/xjutv/FILES/a/none.hh.205404.exe failed.
+
+
+x optimise Exec_List, because a view spec tends to have repeated/redundent
+info should be able to reduce recalculation
+  X eg for case of if-execint.c line 135:
+      case TC_ViewSpec: {
+	 FORBIDDEN(ExecSpc->NumInps != 1 || ExecSpc->NumOuts != 1);
+         Do_Log("{Exec_List(View_Spec)", FilHdr, LOGLEVEL_IntGenerate);
+	 Exec_List(FilHdr, Inputs[0], RootFilPrm, FALSE);
+         Do_Log("}Exec_List(View_Spec)", FilHdr, LOGLEVEL_IntGenerate);
+
+  x set up test view spec:
+
+    ODINVERIFYLEVEL=0 odin maxbuilds=4 'test.viewspec:view:ls>'
+    /home/xju/tmp/test-viewspec/a/p
+    /home/xju/tmp/test-viewspec/b/q
+    /home/xju/tmp/test-viewspec/c/r
+  
+  x use gdb to figure out what Exec_List is doing
+
+  x in Exec_List, parse first line to get DS_Nod = Nod:
+      p *DS_Nod
+  $8 = {NodTyp = 8, Sym = 0x0, Brother = 0x0, Son = 0x873ed90}
+  (gdb) p *(*DS_Nod).Son
+  $9 = {NodTyp = 23, Sym = 0x8742078, Brother = 0x0, Son = 0x0}
+  (gdb) p *(*DS_Nod).Son.Sym
+  $10 = {Str = 0x8742088 "a/p", Att = 0, Next = 0x0}
+  (gdb) ... then go into 	 PrmFHdr = Nod_PrmFHdr(DS_Nod);
+  
+  DS_Nod is:
+    Type DRVFIL
+    Brother nil
+    Son (RootNod):
+      Type WORD
+      Brother nil (OprNod)
+      Sym 'a/p'
+  
+  down
+  #0  Nod_PrmFHdr (Nod=0x8b7b188) at if-candrv.c:626
+  (gdb) 
+  
+        case WORD: {
+  	 FilHdr = HostFN_FilHdr(Sym_Str(Nod_Sym(RootNod)));
+  
+  -> if-fhnam.c 277
+  
+  	 FilHdr = Do_Keys(Top_CWDFilHdr(), strcpy(Key, FileName)); };}/*select*/;
+     return FilHdr;
+  
+  ... back in Nod_PrmFHdr:
+  
+     return Apply_OprNods(FilHdr, RootFilPrm, OprNod);
+     RootFilPrm is global
+  
+  for the "='xxx'" line:
+  p Str
+  $18 = (tp_Str) 0xbf9e0674 "=''"
+  (gdb) p DS_Nod
+  $19 = (tp_Nod) 0x8b7b1b0
+  (gdb) p (*DS_Nod)
+  $20 = {NodTyp = 8, Sym = 0x0, Brother = 0x0, Son = 0x8b7b150}
+  (gdb) p (*(*DS_Nod).Son)
+  $21 = {NodTyp = 21, Sym = 0x0, Brother = 0x0, Son = 0x8b7b188}
+  (gdb) 
+

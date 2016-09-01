@@ -1,0 +1,23 @@
+%run-all-tests==(%tests.tree:leaves)
+
+%tests.tree==<<
+(t1.html)+cmd=(%parse-stdin) (pq.py)+need=(xn.py):exec.output
+(t2.html)+cmd=(%parse-stdin) (pq.py)+need=(xn.py):exec.output
+(t3.html)+cmd=(%parse-stdin) (pq.py)+need=(xn.py):exec.output
+()+cmd=(pq.py)+need=(xn.py):exec.output
+
+%parse-stdin== ! <<
+#!/usr/bin/env python
+import sys
+import os.path
+sys.path.append(os.path.dirname(sys.argv[1]))
+import pq
+def main(fileName):
+    print unicode(pq.parseFile(fileName)).encode('utf-8')
+if __name__=='__main__':
+    try:
+        file('f','w').write(sys.stdin.read())
+        main('f')
+    except:
+        print>>sys.stderr,pq.inContext('parse stdin')
+        sys.exit(1)

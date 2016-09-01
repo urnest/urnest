@@ -152,11 +152,11 @@ Local_ID_LongOdinExpr(
 
 void
 Do_Log(
-   GMC_ARG(tp_Str, Message),
+   GMC_ARG(const char*, Message),
    GMC_ARG(tp_FilHdr, FilHdr),
    GMC_ARG(tp_LogLevel, LogLevel)
    )
-   GMC_DCL(tp_Str, Message)
+   GMC_DCL(const char*, Message)
    GMC_DCL(tp_FilHdr, FilHdr)
    GMC_DCL(tp_LogLevel, LogLevel)
 {

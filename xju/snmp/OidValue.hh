@@ -27,6 +27,12 @@ public:
   Oid const val_;
 
   // Value::
+  operator Oid() const throw(xju::Exception)
+  {
+    return val_;
+  }
+
+  // Value::
   std::vector<uint8_t>::iterator encodeTo(
     std::vector<uint8_t>::iterator begin) const throw() override;
 

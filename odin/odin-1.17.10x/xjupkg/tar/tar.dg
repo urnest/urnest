@@ -11,6 +11,7 @@
 +member 'name of tar file member'? => :first;
 
 $ODIN_TAR_PATH 'path covering tar command (colon separated)' = '/usr/bin';
+$ODIN_TAR_LD_LIBRARY_PATH 'LD_LIBRARY_PATH to install when running tar command (colon separated)' = '/usr/bin';
 
 EXEC (extract.sh) (:tar) (+member) 'extract_file' => (:extract_file);
 

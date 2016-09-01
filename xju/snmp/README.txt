@@ -27,16 +27,33 @@ TODO:
     x SnmpV2cSetRequest, encode
     x validateResponse(SnmpV2cSetRequest,SnmpV2cResponse)
         - test all exceptions
-    - SnmpV2cGetNextRequest plus validateResponse
+    - SnmpV2cGetNextRequest plus encode, validateResponse
     - SnmpV2cTable
     - SnmpV2cWalk(?)
     - SnmpV2cGetBulk
+  - server side:
+    x decodeSnmpV1GetRequest
+    x encodeResponse(SnmpV1GetRequest,std::vector<Value>)
+    x encodeResponse(SnmpV1GetRequest,<error>)
+    x decodeSnmpV1GetNextRequest
+    x encodeResponse(SnmpV1GetNextRequest,std::vector<Oid,Value>)
+    x encodeResponse(SnmpV1GetNextRequest,<error>)
+    x decodeSnmpV1SetRequest
+    x encodeResponse(SnmpV1SetRequest)
+    x encodeResponse(SnmpV1SetRequest,<error>)
+    x decode SnmpV2c get, get next, set request
+    x encodeResponse snmpv2c get
+    x encodeResponse snmpv2c set
+    x includes in ../snmp.hh
+  x does the snmpv1 "set" error handling say to return the original
+    values (like v2c says)? do we do that? Yes and yes.
 
 references:
   http://www.rane.com/note161.html
   https://en.wikipedia.org/wiki/X.690#BER_encoding
   https://en.wikipedia.org/wiki/X.690
-  https://tools.ietf.org/html/rfc1157
+  https://tools.ietf.org/html/rfc1157 - V1
+  https://tools.ietf.org/html/rfc3416 - V2c
 
 notes:
   what is structure? v1 is:

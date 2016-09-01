@@ -314,7 +314,7 @@ namespace
     new FixedCause("end of input"));
   Exception EndOfInput(I at, xju::Traced const& trace) throw()
   {
-    return Exception(end_of_input, at, trace);
+    return Exception(end_of_input, at, trace, true);
   }
 }
 
@@ -1035,12 +1035,23 @@ PR whitespace(new NamedParser<hcp_ast::Whitespace>(
   "some whitespace",
   atLeastOne*whitespaceChar));
 
+PR unqualifiedName(
+  atLeastOne*(charInRange('a', 'z')|
+              charInRange('A', 'Z')|
+              charInRange('0', '9')|
+              parseOneOfChars("_")));
+
+PR defined_type(
+  new NamedParser<hcp_ast::DefinedType>(
+    "\"defined type\"",
+    unqualifiedName));
+
 PR typedef_statement(new NamedParser<hcp_ast::Typedef>(
   "typedef statement",
   parseLiteral("typedef")+
   whitespace+
-  balanced(parseOneOfChars(";"))+
-  parseOneOfChars(";")+
+  balanced(whitespace+defined_type+parseOneOfChars(";"))+
+  whitespace+defined_type+parseOneOfChars(";")+
   eatWhite));
 
 PR using_statement(new NamedParser<hcp_ast::Using>(
@@ -1051,21 +1062,22 @@ PR using_statement(new NamedParser<hcp_ast::Using>(
   parseOneOfChars(";")+
   eatWhite));
 
+PR enum_name(
+  new NamedParser<hcp_ast::EnumName>(
+    "\"enum name\"",
+    unqualifiedName));
+
 PR enum_def(new NamedParser<hcp_ast::EnumDef>(
   "enum definition",
   parseLiteral("enum")+
   whitespace+
-  balanced(parseOneOfChars(";"))+
+  optional(enum_name)+eatWhite+parseLiteral("{")+
+  balanced(parseOneOfChars("}"))+
+  parseOneOfChars("}")+eatWhite+
   parseOneOfChars(";")+
   eatWhite));
 
 PR bracketed(parseLiteral("(")+balanced(parseLiteral(")"))+parseLiteral(")"));
-
-PR unqualifiedName(
-  atLeastOne*(charInRange('a', 'z')|
-              charInRange('A', 'Z')|
-              charInRange('0', '9')|
-              parseOneOfChars("_")));
 
 PR unqualifiedTypeName(
   unqualifiedName+
@@ -1307,18 +1319,20 @@ public:
     x_(class_proto+
        parseOneOfChars("{")+
        eatWhite+
-       parseUntil(comments|
-                  function_decl|
-                  template_function_def|
-                  access_modifier|
-                  PR(new SelfParser(*this))|
-                  class_decl|
-                  enum_def|
-                  typedef_statement|
-                  function_def|
-                  static_var_def|
-                  attr_decl,
-                  parseOneOfChars("}"))+
+       PR(new NamedParser<hcp_ast::ClassMembers>(
+            "class members",
+            parseUntil(comments|
+                       function_decl|
+                       template_function_def|
+                       access_modifier|
+                       PR(new SelfParser(*this))|
+                       class_decl|
+                       enum_def|
+                       typedef_statement|
+                       function_def|
+                       static_var_def|
+                       attr_decl,
+                       parseOneOfChars("}"))))+
        parseOneOfChars("}")+
        eatWhite+
        parseOneOfChars(";")+

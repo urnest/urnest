@@ -134,7 +134,7 @@ namespace btt
 
 	    private:
 		xju::Ring<Task*> reg_;
-                std::auto_ptr<fltk::Widget> const widget_;
+                std::unique_ptr<fltk::Widget> const widget_;
 
 		xju::Observer<Task> startedChanged_;
 		xju::Observer<Task> secondsSpentOnThisTaskChanged_;

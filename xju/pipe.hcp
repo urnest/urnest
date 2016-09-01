@@ -1,0 +1,50 @@
+// Copyright (c) 2015 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace
+{
+class inlet:public outputstream, noncopyable
+{
+public:
+  explicit inlet(int fd) throw():
+      fd_(fd)
+  {
+  }
+  ~inlet() throw()
+  {
+    ::close(fd_);
+  }
+};
+class outlet:public inputstream, noncopyable
+{
+public:
+  explicit outlet(int fd) throw():
+      fd_(fd)
+  {
+  }
+  ~inlet() throw()
+  {
+    ::close(fd_);
+  }
+};
+  
+}
+
+std::pair<std::auto_ptr<xju::inputstream>,
+          std::auto_ptr<xju::outputstream> pipe(
+            bool closeReadableEndOnExec=true,
+            bool closeWriteableEndOnExec=true) throw(
+    xju::Exception)
+  {
+  }
+}

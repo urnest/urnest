@@ -14,14 +14,14 @@ namespace xju
 namespace snmp
 {
 
-CommitFailed::CommitFailed(const xju::Traced& trace) throw():
-    xju::Exception("Request was valid but could not be applied "
-                   "(no changes have been made)",
-                   trace) 
+CommitFailed::CommitFailed(Oid const& param, 
+                           const xju::Traced& trace) throw():
+    InvalidParam("commit failed at object "+param.toString()+
+                 " (no changes have been made)",
+                 param,
+                 trace)
 {
 }
-
-
 }
 }
 

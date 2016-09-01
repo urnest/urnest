@@ -676,7 +676,7 @@ extern void Local_Redo(GMC_P1(tp_Str));
 extern void Local_OdinExpr_ID(GMC_P1(int *) GMC_PN(tp_Str));
 extern void Local_ID_OdinExpr(GMC_P1(tp_Str) GMC_PN(int));
 extern void Local_ID_LongOdinExpr(GMC_P1(tp_Str) GMC_PN(int));
-extern void Do_Log(GMC_P1(tp_Str) GMC_PN(tp_FilHdr) GMC_PN(tp_LogLevel));
+extern void Do_Log(GMC_P1(const char*) GMC_PN(tp_FilHdr) GMC_PN(tp_LogLevel));
 extern tp_FilHdr OdinExpr_FilHdr(GMC_P1(const char *));
 extern void WritePrmOdinExpr(GMC_P1(tp_FilDsc) GMC_PN(tp_FilHdr) GMC_PN(tp_FilPrm));
 extern void Local_Set_Debug(GMC_P1(tp_Str));

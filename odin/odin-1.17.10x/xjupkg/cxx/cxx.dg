@@ -91,15 +91,9 @@ $ODIN_CXX_DEBUGF 'debug flag for C++ compiler' = '-g';
 
 $ODIN_CXX_I 'space-separated list of directories containing default C++ include files (these directories are added as -I options when compiling)' = '';
 
-$ODIN_CXX_AR_PATH 'PATH to set when running archiver' = '';
-
-$ODIN_CXX_AR 'name of the archiver executable' = 'ar';
-
-$ODIN_CXX_AR_FLAGS 'archiver flags' = 'r';
-
 $ODIN_CXX_LD_DEBUGF 'debug flag for C++ linker' = '-g';
 
-$ODIN_CXX_LD_LIBRARY_PATH 'load library path for C++' = '';
+$ODIN_CXX_LD_LIBRARY_PATH 'load library path for C++ compiler, linker' = '';
 
 $ODIN_CXX_IGNORE_ERR 'egrep expression for compile/link errors to ignore' = '';
 

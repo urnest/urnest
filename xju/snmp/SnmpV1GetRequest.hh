@@ -37,6 +37,7 @@ struct SnmpV1GetRequest
 
   friend std::ostream& operator<<(std::ostream& s, 
                                   SnmpV1GetRequest const& x) throw();
+
 };
   
 }

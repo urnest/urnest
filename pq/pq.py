@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding: utf-8
 # jquery-like python library
 #
 # parse a HTML text into a tree, with search, manipulation
@@ -15,6 +16,8 @@ import htmlentitydefs
 import sys
 import traceback
 import types
+import string
+from xn import Xn,inContext
 
 class Pos:
     def __init__(self, file, line, col):
@@ -26,21 +29,27 @@ class Pos:
         return '%(file)s:%(line)s:%(col)s' % self.__dict__
     pass
 
-class ParseFailed:
+class ParseFailed(Xn):
     def __init__(self, cause, pos):
         self.cause=cause
         self.pos=pos
+        Xn.__init__(self,self.__str__())
         return
     def __str__(self):
         return 'failed to parse html at %(pos)s because\n%(cause)s'%self.__dict__
     pass
 
-entities=htmlentitydefs.entitydefs
-reverseentities=dict((_[1],'&'+_[0]+';') for _ in entities.items())
+entities=htmlentitydefs.name2codepoint
+reverseentities=htmlentitydefs.codepoint2name
+
+def encodeEntity(c):
+    x=reverseentities.get(ord(c),None)
+    if x is None: return c
+    return '&%(x)s;'%vars()
 
 def encodeEntities(s):
-    if s is None: return ''
-    x=''.join([reverseentities.get(_,_) for _ in s])
+    if s is None: return u''
+    x=u''.join([encodeEntity(_) for _ in s])
     return x
 
 class Node:
@@ -48,6 +57,19 @@ class Node:
         self.parent=parent
         if parent:
             parent.children.append(self)
+
+def unicodeOfElements(l):
+        result=[]
+        for i,c in enumerate(l):
+            try:
+                result.append(unicode(c))
+            except:
+                t=type(c).__name__
+                if t=='instance':
+                    t=c.__class__.__name__
+                raise inContext('get unicode representation of child %(i)r, %(c)r, which is of type %(t)s'%vars())
+            pass
+        return result
 
 class Root(Node):
     def __init__(self):
@@ -70,7 +92,7 @@ class Root(Node):
     def __str__(self):
         return ''.join([str(_) for _ in self.children])
     def __unicode__(self):
-        return ''.join([unicode(_) for _ in self.children])
+        return u''.join(unicodeOfElements(self.children))
     def __repr__(self):
         return 'root node'
     pass
@@ -128,13 +150,17 @@ class Tag(Node):
         end=self.end
         return '''<%(start)s>%(content)s%(end)s'''%vars()
     def __unicode__(self):
-        encodedAttrs=['%s="%s"' % (_[0],encodeEntities(_[1])) for 
-                      _ in self.attrs.items()]
-        encodedAttrs.sort()
-        start=' '.join([self.tagName]+encodedAttrs)
-        content=''.join([unicode(_) for _ in self.children])
-        end=self.end
-        return '''<%(start)s>%(content)s%(end)s'''%vars()
+        try:
+            encodedAttrs=[u'%s="%s"' % (_[0],encodeEntities(_[1])) for 
+                          _ in self.attrs.items()]
+            encodedAttrs.sort()
+            start=u' '.join([self.tagName]+encodedAttrs)
+            content=u''.join(unicodeOfElements(self.children))
+            end=self.end
+            return u'''<%(start)s>%(content)s%(end)s'''%vars()
+        except:
+            raise inContext('get unicode representation of %(self)r'%vars())
+        pass
     def hasClass(self,c):
         return c in self.classes
     def addClass(self,c):
@@ -142,15 +168,20 @@ class Tag(Node):
         self.attrs['class']=' '.join(self.classes)
         return self
     def removeClass(self,c):
-        self.classes.remove(c)
+        if c in self.classes:
+            self.classes.remove(c)
+            pass
         self.attrs['class']=' '.join(self.classes)
         if len(self.classes)==0:
             del self.attrs['class']
         return self
-    def attr(self, a, val):
+    def attr(self, a, val=None):
         if not val is None:
-            self.attrs[a]=val
+            self.attrs[a]=unicode(val)
         return self.attrs.get(a,'')
+    def removeAttr(self, a):
+        if a in self.attrs: del self.attrs[a]
+        return
     def attrEquals(self, a, val):
         return self.attrs.get(a,None)==val
     def indexOf(self, child):
@@ -174,6 +205,14 @@ class Tag(Node):
         for c in self.children:
             c.clone(result)
         return result
+    def text(self):
+        if self.tagName=='br':
+            return u'\n'
+        if self.tagName=='p':
+            return u''.join([_.text() for _ in self.children])+u'\n'
+        if self.tagName=='li':
+            return u'\n'
+        return u''.join([_.text() for _ in self.children])
     pass
 
 class Data(Node):
@@ -185,11 +224,19 @@ class Data(Node):
         pass
     def __str__(self):
         return self.data
+    def __unicode__(self):
+        if type(self.data) is types.UnicodeType:
+            return self.data
+        if type(self.data) is types.StringType:
+            return unicode(self.data,'utf-8','strict')
+        return unicode(self.data)
     def __repr__(self):
-        return 'data at %(pos)s' % self.__dict__
+        return 'data at %(pos)s, %(data)r' % self.__dict__
     def clone(self, newParent):
         result=Data(self.data, newParent, self.pos)
         return result
+    def text(self):
+        return unicode(self)
     pass
 
 class EntityRef(Node):
@@ -200,11 +247,17 @@ class EntityRef(Node):
         self.name=name
     def __str__(self):
         return '&%(name)s;' % self.__dict__
+    def __unicode__(self):
+        return u'&%(name)s;' % self.__dict__
     def __repr__(self):
-        return 'entity ref at %(pos)s' % self.__dict__
+        return 'entity ref %(name)r at %(pos)s' % self.__dict__
     def clone(self, newParent):
         result=EntityRef(self.name, newParent, self.pos)
         return result
+    def text(self):
+        if not self.name in entities:
+            raise Xn('entity %(name)s is not in python htmlentitydefs.name2codepoint'%self.__dict__)
+        return unichr(entities[self.name])
     pass
 
 class CharRef(Node):
@@ -215,11 +268,15 @@ class CharRef(Node):
         self.name=name
     def __str__(self):
         return '&#%(name)s;' % self.__dict__
+    def __unicode__(self):
+        return u'&#%(name)s;' % self.__dict__
     def __repr__(self):
         return 'char ref at %(pos)s' % self.__dict__
     def clone(self, newParent):
         result=CharRef(self.name, newParent, self.pos)
         return result
+    def text(self):
+        return unichr(int(self.name))
     pass
 
 class Comment(Node):
@@ -230,11 +287,15 @@ class Comment(Node):
         self.comment=comment
     def __str__(self):
         return '<!-- %(comment)s -->' % self.__dict__
+    def __unicode__(self):
+        return u'<!-- %(comment)s -->' % self.__dict__
     def __repr__(self):
         return 'comment at %(pos)s' % self.__dict__
     def clone(self, newParent):
         result=Comment(self.comment, newParent, self.pos)
         return result
+    def text(self):
+        return u''
     pass
 
 class Decl(Node):
@@ -245,11 +306,15 @@ class Decl(Node):
         self.decl=decl
     def __str__(self):
         return '<!%(decl)s>' % self.__dict__
+    def __unicode__(self):
+        return u'<!%(decl)s>' % self.__dict__
     def __repr__(self):
         return 'decl at %(pos)s' % self.__dict__
     def clone(self, newParent):
         result=Decl(self.decl, newParent, self.pos)
         return result
+    def text(self):
+        return u''
     pass
 
 class PI(Node):
@@ -260,11 +325,15 @@ class PI(Node):
         self.pi=pi
     def __str__(self):
         return '<?%(pi)s>' % self.__dict__
+    def __unicode__(self):
+        return u'<?%(pi)s>' % self.__dict__
     def __repr__(self):
         return 'processing instruction at %(pos)s' % self.__dict__
     def clone(self, newParent):
         result=PI(self.pi, newParent, self.pos)
         return result
+    def text(self):
+        return u''
     pass
 
 class Parser(HTMLParser.HTMLParser):
@@ -296,7 +365,7 @@ class Parser(HTMLParser.HTMLParser):
             pass
         if not current is self.root:
             self.current=current
-            self.current.end='</%(tag)s>'%vars()
+            self.current.end=u'</%(tag)s>'%vars()
             self.current=self.current.parent
         return
     def handle_data(self,data):
@@ -328,7 +397,13 @@ def filter(node, predicate):
         
 class Selection:
     def __init__(self, nodeList):
-        self.nodeList=nodeList
+        if isinstance(nodeList,Selection):
+            self.nodeList=nodeList.nodeList
+        elif isinstance(nodeList,Node):
+            self.nodeList=[nodeList,]
+        else:
+            self.nodeList=nodeList[:]
+            pass
         return
     def find(self, predicate):
         '''find all children of our nodes that match predicate'''
@@ -354,8 +429,16 @@ class Selection:
             for c in n.children:
                 c.parent=n
         return self
-    def text(self, s):
+    def text(self, s=None):
         '''replace our first node's children with the specified text string'''
+        '''or return unicode concatenation of text content of children'''
+        if s is None:
+            return u''.join([_.text() for _ in self.nodeList])
+        if type(s) is types.StringType:
+            s=unicode(s,'utf-8','strict')
+        else:
+            s=unicode(s)
+            pass
         for n in self.nodeList:
             Selection([n]).html(parse(encodeEntities(s)))
         return self
@@ -375,6 +458,16 @@ class Selection:
         return self
     def addAfter(self, nodes):
         '''add our nodes after first of specified nodes'''
+        if isinstance(nodes, Selection):
+            nodes=nodes.nodeList
+        parent=nodes[0].parent
+        index=parent.indexOf(nodes[0])
+        for n in self.nodeList:
+            n.parent=parent
+        parent.children[index+1:index+1]=self.nodeList
+        return self
+    def addBefore(self, nodes):
+        '''add our nodes before first of specified nodes'''
         if isinstance(nodes, Selection):
             nodes=nodes.nodeList
         parent=nodes[0].parent
@@ -403,6 +496,12 @@ class Selection:
     def first(self):
         '''return Selection containing first of our nodes'''
         return Selection(self.nodeList[0:1])
+    def last(self):
+        '''return Selection containing first of our nodes'''
+        return Selection(self.nodeList[-1:])
+    def children(self):
+        '''return Selection containing children of our nodes'''
+        return Selection(sum([_.children for _ in self.nodeList],[]))
     def clone(self):
         '''return Selection containing a copy of our nodes'''
         return Selection([_.clone(None) for _ in self.nodeList])
@@ -416,21 +515,43 @@ class Selection:
         for n in self.nodeList:
             n.removeClass(name)
         return self
-    def attr(self, name, value=None):
+    def hasClass(self,c):
+        '''True iff all our nodes have class c'''
+        each=[True for _ in self.nodeList if _.hasClass(c)]
+        return len(each)==len(self.nodeList)
+    def attr(self, name, value=None, joiner=u''):
+        '''attr('src') gets the values of the src attributes of our nodes and joins them with joiner, returning a single string'''
+        """attr('src','fred') sets the src attribute of our only node to 'fred'"""
+        if value is None:
+            return joiner.join([_.attr(name, value) for _ in self.nodeList])
+        [_.attr(name, value) for _ in self.nodeList]
+        return self
+    def attrs(self, name, value=None):
+        '''attrs('src') lists the values of the src attributes of each of our nodes'''
+        """attrs('src','fred.html') sets the src attribute of each of our nodes to 'html'"""
         if value is None:
             return [_.attr(name, value) for _ in self.nodeList]
         [_.attr(name, value) for _ in self.nodeList]
         return self
+    def removeAttr(self, name):
+        [_.removeAttr(name) for _ in self.nodeList]
+        return self
     def __str__(self):
         return ''.join([str(_) for _ in self.nodeList])
     def __unicode__(self):
-        return u''.join([unicode(_) for _ in self.nodeList])
+        return u''.join(unicodeOfElements(self.nodeList))
+    def utf8(self):
+        return unicode(self).encode('utf-8')
     def __len__(self):
         return len(self.nodeList)
     def __getitem__(self, key):
-        return self.nodeList[key]
+        return Selection(self.nodeList[key])
     def __getslice__(self, i, j):
         return Selection(self.nodeList[i:j])
+    def __add__(self, b):
+        if isinstance(b,Selection):
+            return Selection(self.nodeList+b.nodeList)
+        return NotImplemented
     pass
 
 # basic predicates
@@ -440,13 +561,15 @@ def tagName(t):
     return lambda node: isinstance(node, Tag) and node.tagName==t
 def attrEquals(attr,value):
     return lambda node: isinstance(node, Tag) and node.attrEquals(attr,value)
+def isEntityRef(name):
+    return lambda node: isinstance(node, EntityRef) and node.name==name
 
 def parse(s, origin='unknown',encoding='utf-8'):
-    '''parse HTML string "%(origin)s" assuming it has %(encoding)r encoding (per python unicode() function)'''
+    '''parse HTML string "%(origin)s" assuming it has %(encoding)r encoding (per python unicode() function), returns a Selection'''
     parser=Parser(origin)
     try:
         u=s
-        if type(s)=='str':
+        if type(s) is types.StringType:
             u=unicode(s,encoding,'strict')
             pass
         parser.feed(u)
@@ -465,7 +588,7 @@ def loadFile(fileName,encoding='utf-8'):
     return parse(file(fileName).read(),fileName,encoding)
 
 def assert_equal(a, b):
-    assert a==b, ('%(a)s\n!=\n%(b)s' % vars())
+    assert a==b, (u'%(a)r\n!=\n%(b)r' % vars())
 
 html1='''<html>
 <body>
@@ -561,13 +684,100 @@ def test4():
     a=parse('<head></head>')
     parse(encodeEntities(script)).appendTo(a)
     assert_equal(str(a), '<head>'+script+'</head>')
+    pass
+
+def test5():
+    s=parse('<p>fred</p>')
+    s.text('jock')
+    assert_equal(unicode(s),u'<p>jock</p>')
+    pass
+
+def test6():
+    s=parse('<p>fred</p>')
+    s.text(u'30x40”')
+    assert_equal(unicode(s),u'<p>30x40&rdquo;</p>')
+    pass
+
+def test7():
+    s=parse('<p>fred</p>')
+    s.text('30x40”')
+    assert_equal(unicode(s),u'<p>30x40&rdquo;</p>')
+    pass
+
+def test8():
+    s=parse('<html><p>fred</p><p>jock</p></html>')
+    s=s.children()
+    assert len(s)==2, unicode(s).encode('utf-8')
+    assert_equal(unicode(s.first()),u'<p>fred</p>')
+    pass
+
+def test9():
+    s=parse('<td><a href="fred">jock</a> and fred</td>')
+    assert_equal(s.text(), u'jock and fred')
+    pass
+
+def test10():
+    s=parse('<td><a href="fred">jock</a>&nbsp;and fred</td>')
+    assert_equal(s.text(), u'jock\xa0and fred')
+    s1=parse('<td><a href="fred">jock</a>&nbsp;')
+    s2=parse('and fred</td>')
+    assert_equal((s1+s2).text(), u'jock\xa0and fred')
+    pass
+
+def test11():
+    s=parse('<a href="fred">John&nbsp;Walker</a>')
+    s.find(isEntityRef('nbsp')).remove()
+    assert str(s)=='<a href="fred">JohnWalker</a>',s.text()
+    pass
+
+def test12():
+    s=parse('<ul><li class="a">1<li class="b">2</ul>')
+    parse('<li>1.5').addBefore(s.find(hasClass('b')))
+    assert_equal(unicode(s),u'<ul><li class="a">1<li>1.5<li class="b">2</ul>')
+    
+def test13():
+    s=parse('<ul><li class="a">1<li class="b">2</ul>')
+    parse('<li>0').addBefore(s.find(hasClass('a')))
+    assert_equal(unicode(s),u'<ul><li>0<li class="a">1<li class="b">2</ul>')
+
+def test14():
+    s=parse('<li>')
+    s.attr('x','"fred&jock"')
+    assert_equal(unicode(s),u'<li x="&quot;fred&amp;jock&quot;">')
+    assert_equal(s.attr('x'),'"fred&jock"')
+    s=parse('<div><p a="fred"><bold>a</bold>x</p><p a="jock">b</p></div>').find(tagName('p'))
+    assert len(s)==2, s.utf8()
+    assert_equal(s.attr('a'),'fredjock')
+    assert_equal(s.attrs('a'),['fred','jock'])
+    pass
+
+def test15():
+    s=parse('&lambda;')
+    assert s.text()==unichr(955), s.text()
+    s=parse('&#955;')
+    assert s.text()==unichr(955), s.text()
+
+def test16():
+    s=parse('<div><p><bold>a</bold>x</p><p>b</p></div>').find(tagName('p'))
+    assert len(s)==2, s.utf8()
+    assert Selection(s[0]).find(tagName('bold')).text()=='a'
+    assert s[0].find(tagName('bold')).text()=='a'
+    pass
 
 if __name__=='__main__':
-    try:
         test1()
         test2()
         test3()
         test4()
-    except:
-        print >>sys.stderr, sys.exc_info()[1]
-        sys.exit(1)
+        test5()
+        test6()
+        test7()
+        test8()
+        test9()
+        test10()
+        test11()
+        test12()
+        test13()
+        test14()
+        test15()
+        test16()

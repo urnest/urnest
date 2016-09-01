@@ -24,7 +24,11 @@ mkdir extract_dir &&
 if [ -n "$files" ]
 then
   mkdir out &&
-  ( cd out && { tar xf "$ODIN_tar_file" $files >../WARNINGS 2>&1 || 
+  ( cd out && 
+    { 
+      PATH="$ODIN_TAR_PATH" \
+      LD_LIBRARY_PATH="$ODIN_TAR_LD_LIBRARY_PATH" \
+      tar xf "$ODIN_tar_file" $files >../WARNINGS 2>&1 || 
                 mv ../WARNINGS ../ERRORS; } ) &&
   if [ ! -f ERRORS ]
   then

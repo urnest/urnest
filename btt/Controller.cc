@@ -55,7 +55,7 @@ namespace btt
 		task_(task)
 	    {
 	    }
-	    std::auto_ptr<Controller::Cmd> operator()() throw(xju::Exception);
+	    std::unique_ptr<Controller::Cmd> operator()() throw(xju::Exception);
 	private:
 	    Tasks& tasks_;
 	public:
@@ -75,19 +75,19 @@ namespace btt
 		successor_(successor)
 	    {
 	    }
-	    std::auto_ptr<Controller::Undo> operator()() throw(xju::Exception);
+	    std::unique_ptr<Controller::Undo> operator()() throw(xju::Exception);
 	private:
 	    Tasks& tasks_;
 	    const Task task_;
 	    const Tasks::const_iterator successor_;
 	};
 	
-	std::auto_ptr<Controller::Cmd> UndoAddTask::operator()() throw(
+	std::unique_ptr<Controller::Cmd> UndoAddTask::operator()() throw(
 	    xju::Exception)
 	{
 	    try
 	    {
-		std::auto_ptr<Controller::Cmd> result(
+		std::unique_ptr<Controller::Cmd> result(
 		    new AddTask(tasks_, *task_, xju::next(task_)));
 		tasks_.erase(task_);
 		return result;
@@ -99,12 +99,12 @@ namespace btt
 	    }
 	}
 
-	std::auto_ptr<Controller::Undo> AddTask::operator()() throw(
+	std::unique_ptr<Controller::Undo> AddTask::operator()() throw(
 	    xju::Exception)
 	{
 	    try
 	    {
-		std::auto_ptr<Controller::Undo> result(
+		std::unique_ptr<Controller::Undo> result(
 		    new UndoAddTask(tasks_, tasks_.insert(successor_, task_)));
 		return result;
 	    }
@@ -134,7 +134,7 @@ namespace btt
 		oldStarted_(oldStarted)
 	    {
 	    }
-	    std::auto_ptr<Controller::Cmd> operator()() throw(
+	    std::unique_ptr<Controller::Cmd> operator()() throw(
 		xju::Exception);
 	private:
 	    Tasks& tasks_;
@@ -159,7 +159,7 @@ namespace btt
 	    {
 	    }
 	    
-	    std::auto_ptr<Controller::Undo> operator()() throw(
+	    std::unique_ptr<Controller::Undo> operator()() throw(
 		xju::Exception);
 	private:
 	    Tasks& tasks_;
@@ -167,7 +167,7 @@ namespace btt
 	    const Tasks::const_iterator task_;
 	    const xju::Time since_;
 	};
-	std::auto_ptr<Controller::Cmd>
+	std::unique_ptr<Controller::Cmd>
 	UndoRecordWorkingOnTask::operator()() throw(
 	    xju::Exception)
 	{
@@ -184,7 +184,7 @@ namespace btt
                 
                 const xju::Time since((*workLog_.rbegin()).first);
                 
-                std::auto_ptr<Controller::Cmd> result(
+                std::unique_ptr<Controller::Cmd> result(
                     new RecordWorkingOnTask(
                         tasks_,
                         workLog_,
@@ -216,7 +216,7 @@ namespace btt
             }
 	}
 
-	std::auto_ptr<Controller::Undo>
+	std::unique_ptr<Controller::Undo>
 	RecordWorkingOnTask::operator()() throw(
 	    xju::Exception)
 	{
@@ -269,7 +269,7 @@ namespace btt
                     (*task).started_ = xju::Optional<xju::Time>(since_);
                 }
                 
-                std::auto_ptr<Controller::Undo> u(new UndoRecordWorkingOnTask(
+                std::unique_ptr<Controller::Undo> u(new UndoRecordWorkingOnTask(
                     tasks_,
                     workLog_,
                     oldStarted));
@@ -302,7 +302,7 @@ namespace btt
                 description_(description)
             {
             }
-            std::auto_ptr<Controller::Undo> operator()() throw(xju::Exception);
+            std::unique_ptr<Controller::Undo> operator()() throw(xju::Exception);
         private:
             Tasks& tasks_;
             const Tasks::const_iterator task_;
@@ -322,19 +322,19 @@ namespace btt
                 oldDescription_(oldDescription)
             {
             }
-            std::auto_ptr<Controller::Cmd> operator()() throw();
+            std::unique_ptr<Controller::Cmd> operator()() throw();
         private:
             Tasks& tasks_;
             const Tasks::const_iterator task_;
             const std::string oldDescription_;
         };
         
-        std::auto_ptr<Controller::Undo> SetDescription::operator()() throw(
+        std::unique_ptr<Controller::Undo> SetDescription::operator()() throw(
             xju::Exception)
         {
             try
             {
-                std::auto_ptr<Controller::Undo> result(
+                std::unique_ptr<Controller::Undo> result(
                     new UndoSetDescription(tasks_,
                                            task_,
                                            (*task_).description_));
@@ -353,11 +353,11 @@ namespace btt
                 throw;
             }
         }
-        std::auto_ptr<Controller::Cmd> UndoSetDescription::operator()() throw()
+        std::unique_ptr<Controller::Cmd> UndoSetDescription::operator()() throw()
         {
             try
             {
-                std::auto_ptr<Controller::Cmd> result(
+                std::unique_ptr<Controller::Cmd> result(
                     new SetDescription(tasks_,
                                        task_,
                                        (*task_).description_));
@@ -390,11 +390,10 @@ namespace btt
     {
         const TaskId id(getNextUnusedTaskId(*tasks_));
         xju::Optional<xju::Time> started;
-        std::auto_ptr<Cmd> d(new AddTask(
-            *tasks_,
-            btt::Task(id, "", 0, started),
-            before));
-        doCmd(d);
+        doCmd(new AddTask(
+                  *tasks_,
+                  btt::Task(id, "", 0, started),
+                  before));
     }
 
     void Controller::recordWorkingOnTask(
@@ -402,21 +401,18 @@ namespace btt
 	const xju::Time& since) throw(
 	    xju::Exception)
     {
-        std::auto_ptr<Cmd> d(new RecordWorkingOnTask(
-            *tasks_,
-            workLog_,
-            ctask,
-            since));
-        doCmd(d);
+        doCmd(new RecordWorkingOnTask(
+                  *tasks_,
+                  workLog_,
+                  ctask,
+                  since));
     }
 
     void Controller::setDescription(
 	const Tasks::const_iterator task,
 	const std::string& description) throw(xju::Exception)
     {
-        std::auto_ptr<Controller::Cmd> d(
-            new SetDescription(*tasks_, task, description));
-        doCmd(d);
+        doCmd(new SetDescription(*tasks_, task, description));
     }
     
     
@@ -514,10 +510,10 @@ namespace btt
 	redoList_ = l;
     }
 
-    void Controller::doCmd(std::auto_ptr<Cmd> d) throw(
+    void Controller::doCmd(xju::Shared<Cmd> d) throw(
         xju::Exception)
     {
-        std::auto_ptr<Undo> u((*d)());
+        xju::Shared<Undo> u((*d)());
         
         try
         {
@@ -538,7 +534,7 @@ namespace btt
         did(u);
     }
     
-    void Controller::did(std::auto_ptr<Undo> x) throw()
+    void Controller::did(xju::Shared<Undo> x) throw()
     {
 	redoList_ = RedoList();
 	UndoList l;

@@ -23,11 +23,6 @@ else
   compiler="$ODIN_CC"
 fi
 
-if [ "$ODIN_CC_LD_LIBRARY_PATH" != "" ] ; then
-   LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ODIN_CC_LD_LIBRARY_PATH;
-   export LD_LIBRARY_PATH; fi
-
-
 flags=""
 if [ "$ODIN_debug" != "" ] ; then flags="$flags $ODIN_CC_DEBUGF"; fi
 if [ "$ODIN_prof" != "" ] ; then flags="$flags -pg"; fi
@@ -42,7 +37,9 @@ if [ "$ODINVERBOSE" != "" ] ; then
 
 exe=`pwd`/exe
 (
-   PATH="$ODIN_CC_PATH" $compiler $flags $ODIN_a $libs $ODIN_CC_LD_EXTRA_LIBS -o $exe &&
+   PATH="$ODIN_CC_PATH" \
+   LD_LIBRARY_PATH="$ODIN_CC_LD_LIBRARY_PATH" \
+   $compiler $flags $ODIN_a $libs $ODIN_CC_LD_EXTRA_LIBS -o $exe &&
    #
    # for windows, e.g. mingw
    #

@@ -48,6 +48,12 @@ Value::operator unsigned long() const throw(xju::Exception)
   s << (*this) << " is not an integer";
   throw xju::Exception(s.str(),XJU_TRACED);
 }
+Value::operator Oid() const throw(xju::Exception)
+{
+  std::ostringstream s;
+  s << (*this) << " is not an Oid";
+  throw xju::Exception(s.str(),XJU_TRACED);
+}
 
 
 

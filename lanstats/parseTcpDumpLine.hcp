@@ -1,0 +1,60 @@
+// Copyright (c) 2015 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+namespace lanstats
+{
+// parse single tcpdump output line from s
+Packet parseTcpDumpLine(istream& s) throw(
+  //post: position unknown in s
+  xju::Exception)
+{
+  try {
+    uint32_t seconds;
+    s >> seconds;
+    if (!s) {
+      std::ostringstream s;
+      s << "failed to parse integer (timestamp seconds part) from input stream";
+      throw xju::Exception(s.str(), XJU_TRACED);
+    }
+    int dot=s.getc();
+    if (dot != '.') {
+      std::ostringstream s;
+      s << "expected '.' after seconds part of timestamp (" << seconds << ")"
+        << " but got " << (char)dot;
+      throw xju::Exception(s.str(), XJU_TRACED);
+    }
+    uint32_t useconds;
+    s >> useconds;
+    if (!s) {
+      std::ostringstream s;
+      s << "failed to parse integer (timestamp useconds part) from input stream having parsed seconds part " << seconds << (char)dot;
+      throw xju::Exception(s.str(), XJU_TRACED);
+    }
+    char macs[31];
+    xju::copyn(istream_iterator(s), 31, macs);
+    if (!s) {
+      std::ostringstream s;
+      s << "failed to skip 31 chars (mac-addresses) on input stream having parsed \"" << seconds << "." << useconds << "\"";
+      throw xju::Exception(s.str(), XJU_TRACED);
+    }
+    char comma=s.getc();
+    REVISIT;
+    
+    std::string protocol;
+    
+  }
+  catch(xju::Exception& e) {
+    e.addContext("parse tcpdump line from input stream", XJU_TRACED);
+    throw;
+  }
+}
+
+  
+}

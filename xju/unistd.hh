@@ -71,8 +71,14 @@ namespace xju
     extern const SyscallF1<int, const char*> rmdir;
     extern const SyscallF1<int, const char*> unlink;
     extern const SyscallF2<char*, char*, size_t> getcwd;
+    extern const SyscallF0<pid_t> fork;
 
     std::string getcwd_() throw(xju::SyscallFailed);
+
+    void exec(std::string const& file,
+              std::vector<std::string> const& argv) throw(xju::SyscallFailed);
+    
+              
 }
 
 

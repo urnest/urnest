@@ -39,6 +39,14 @@ void test1()
    xju::assert_(T(1), std::greater<T>(), T(0));
    xju::assert_(T(0), std::greater_equal<T>(), T(0));
    xju::assert_(T(1), std::greater_equal<T>(), T(0));
+   xju::assert_equal(++x,T(1));
+   xju::assert_equal(x,T(1));
+   xju::assert_equal(x++,T(1));
+   xju::assert_equal(x,T(2));
+   xju::assert_equal(--x,T(1));
+   xju::assert_equal(x,T(1));
+   xju::assert_equal(x--,T(1));
+   xju::assert_equal(x,T(0));
    
 }
 void test2()

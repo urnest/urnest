@@ -14,29 +14,29 @@
 namespace p3
 {
 class MyBoolean_tag {};
-typedef ::xju::Int< MyBoolean_tag,bool > MyBoolean;
+typedef ::xju::Int< MyBoolean_tag,bool,cxy::Exception > MyBoolean;
 class MyChar_tag {};
-typedef ::xju::Int< MyChar_tag,char > MyChar;
+typedef ::xju::Int< MyChar_tag,char,cxy::Exception > MyChar;
 class MyDouble_tag {};
-typedef ::xju::Float< double,MyDouble_tag > MyDouble;
+typedef ::xju::Float< MyDouble_tag,double,cxy::Exception > MyDouble;
 class MyFloat_tag {};
-typedef ::xju::Float< float,MyFloat_tag > MyFloat;
+typedef ::xju::Float< MyFloat_tag,float,cxy::Exception > MyFloat;
 class MyInt_tag {};
-typedef ::xju::Int< MyInt_tag,int32_t > MyInt;
+typedef ::xju::Int< MyInt_tag,int32_t,cxy::Exception > MyInt;
 class MyLongLong_tag {};
-typedef ::xju::Int< MyLongLong_tag,int64_t > MyLongLong;
+typedef ::xju::Int< MyLongLong_tag,int64_t,cxy::Exception > MyLongLong;
 class MyOctet_tag {};
-typedef ::xju::Int< MyOctet_tag,uint8_t > MyOctet;
+typedef ::xju::Int< MyOctet_tag,uint8_t,cxy::Exception > MyOctet;
 class MyShort_tag {};
-typedef ::xju::Int< MyShort_tag,int16_t > MyShort;
+typedef ::xju::Int< MyShort_tag,int16_t,cxy::Exception > MyShort;
 class MyString_tag {};
 typedef ::xju::Tagged<std::string,MyString_tag > MyString;
 class MyULong_tag {};
-typedef ::xju::Int< MyULong_tag,uint32_t > MyULong;
+typedef ::xju::Int< MyULong_tag,uint32_t,cxy::Exception > MyULong;
 class MyULongLong_tag {};
-typedef ::xju::Int< MyULongLong_tag,uint64_t > MyULongLong;
+typedef ::xju::Int< MyULongLong_tag,uint64_t,cxy::Exception > MyULongLong;
 class MyUShort_tag {};
-typedef ::xju::Int< MyUShort_tag,uint16_t > MyUShort;
+typedef ::xju::Int< MyUShort_tag,uint16_t,cxy::Exception > MyUShort;
 class F 
 {
 public:
@@ -49,6 +49,16 @@ public:
     cxy::Exception) = 0;
   virtual ::p3::MyString f2(
     ::p3::MyString const& a) throw(
+    // ipc failure
+    // - note servant may not throw
+    cxy::Exception) = 0;
+  virtual ::p3::MyFloat f3(
+    ::p3::MyFloat const& a) throw(
+    // ipc failure
+    // - note servant may not throw
+    cxy::Exception) = 0;
+  virtual ::p3::MyDouble f4(
+    ::p3::MyDouble const& a) throw(
     // ipc failure
     // - note servant may not throw
     cxy::Exception) = 0;

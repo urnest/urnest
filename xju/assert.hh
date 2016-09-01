@@ -34,6 +34,10 @@
 #include <utility>
 #include <string>
 
+namespace std
+{
+    template<class T, class U> class vector;
+}
 
 namespace xju
 {
@@ -174,6 +178,56 @@ namespace xju
     {
 	return assert_equal(a, std::string(b));
     }
+
+    //
+    // Here we specialize to ease debugging (gdb tends not to print
+    // whole strings - it truncates after a few characters - so we
+    // figure out where the difference occurs, and leave the same
+    // and different bits lying around in variables so we can
+    // see them in the debugger.
+    //
+    template<class T>
+    inline bool assert_equal(const std::vector<T>& a, const std::vector<T>& b)
+    {
+        std::vector<T> commonPrefix;		  // placed so gdb to works reliably
+        size_t offsetOfFirstMismatch;
+        
+	const typename std::vector<T>::size_type size_a(a.size());
+	const typename std::vector<T>::size_type size_b(b.size());
+	
+	// to avoid unused warnings
+	assert_equal(sizeof(size_a), sizeof(size_b));
+	
+	if (a.size() < b.size())
+	{
+	    std::pair<typename std::vector<T>::const_iterator, typename std::vector<T>::const_iterator> r =
+		mismatch(a.begin(), a.end(), b.begin());
+	    commonPrefix = std::vector<T>(a.begin(), r.first);
+            offsetOfFirstMismatch=r.first-a.begin();
+	    assert_abort();
+	}
+	else if (b.size() < a.size())
+	{
+	    std::pair<typename std::vector<T>::const_iterator, typename std::vector<T>::const_iterator> r =
+		mismatch(b.begin(), b.end(), a.begin());
+	    commonPrefix = std::vector<T>(b.begin(), r.first);
+            offsetOfFirstMismatch=r.first-b.begin();
+	    assert_abort();
+	}
+	else
+	{
+	    std::pair<typename std::vector<T>::const_iterator, typename std::vector<T>::const_iterator> r =
+		mismatch(a.begin(), a.end(), b.begin());
+	    if (r.first != a.end())
+	    {
+		commonPrefix = std::vector<T>(a.begin(), r.first);
+                offsetOfFirstMismatch=r.first-a.begin();
+		assert_abort();
+	    }
+	}
+	return true;
+    }
+    
 };
 
 

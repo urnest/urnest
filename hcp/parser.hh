@@ -69,19 +69,26 @@ public:
     virtual std::string str() const throw() = 0;
   };
     
-  Exception(xju::Shared<Cause const> cause, I at, xju::Traced const& trace) throw():
+  Exception(xju::Shared<Cause const> cause, 
+            I at, 
+            xju::Traced const& trace,
+            bool atEnd=false) throw():
     cause_(cause),
     at_(at),
-    trace_(trace) {
+    trace_(trace),
+    atEnd_(atEnd) {
   }
   // gcc 4.7.2 refuses to generate the copy constructor
   Exception(Exception const& b) throw():
       cause_(b.cause_),
       at_(b.at_),
       trace_(b.trace_),
-      context_(b.context_) {
+      context_(b.context_),
+      atEnd_(b.atEnd_),
+      irsAtEnd_(b.irsAtEnd_) {
   }
-  
+
+  //pre: lifetime(parser) includes lifetime(this)
   void addContext(Parser const& parser, I at, xju::Traced const& trace) throw()
   {
     context_.push_back(std::make_pair(std::make_pair(&parser, at), trace));
@@ -91,6 +98,19 @@ public:
   xju::Shared<Cause const> const cause_;
   I const at_;
   xju::Traced const trace_;
+
+  void addAtEndIRs(IRs const& irs) throw()
+  {
+    if (atEnd_) {
+      std::copy(irs.begin(),irs.end(),std::back_inserter(irsAtEnd_));
+    }
+  }
+  
+private:
+  //indicates eof caused parse failure
+  bool const atEnd_;
+  //if atEnd_, collects 
+  std::vector<IR> irsAtEnd_;
 };
 std::string readableRepr(Exception const& e) throw();
   

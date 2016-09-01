@@ -61,6 +61,15 @@ public:
   xju::snmp::Value const* operator->() const throw(
     NoSuchObject,
     NoSuchInstance);
+
+  // return length of encoded value
+  // ie return encodeTo(x)-x
+  size_t encodedLength() const throw();
+  
+  // encode at begin, returning end of encoding
+  virtual std::vector<uint8_t>::iterator encodeTo(
+    std::vector<uint8_t>::iterator begin) const throw();
+
   
 private:
   Oid oid_;

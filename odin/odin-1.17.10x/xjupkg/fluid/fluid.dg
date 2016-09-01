@@ -18,7 +18,8 @@
 
 $ODIN_FLUID 'default for +fluid' = 'fluid';
 
-$ODIN_FLUID_PATH 'path to install when running fluid' = '/usr/bin:/bin';
+$ODIN_FLUID_PATH 'PATH to install when running fluid' = '/usr/bin:/bin';
+$ODIN_FLUID_LD_LIBRARY_PATH 'LD_LIBRARY_PATH to install when running fluid' = '';
 
 
 # Tools

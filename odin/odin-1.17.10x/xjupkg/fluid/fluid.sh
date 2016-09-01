@@ -21,7 +21,9 @@ ln -s "$ODIN_fld" "$b"
 if [ "$ODINVERBOSE" != "" ] ; then
    echo ${ODINRBSHOST}$compiler -c "$b"; fi
 
-PATH="$ODIN_FLUID_PATH" $compiler -c "$b" 2>MSGS
+PATH="$ODIN_FLUID_PATH" \
+LD_LIBRARY_PATH="$ODIN_FLUID_LD_LIBRARY_PATH" \
+$compiler -c "$b" 2>MSGS
 ok=$?
 test $ok = 0 || {
   if egrep -s -f $ODIN_abort MSGS; then

@@ -1,7 +1,7 @@
 urnest
 ======
 
-C++ and odin build bits and pieces to share, all except odin 
+C++, odin build, python bits and pieces to share, all except odin 
 under free licence:
 
 
@@ -118,3 +118,7 @@ under free licence:
 -   xo is my notes on how I would re-write odin so that I could
     understand how it works and therefor fix and improve it :-)
       status: planning
+
+-   pq is jquery-like functionality for python, useful for doing
+    server-side stuff as you might do client-side in javascript with
+    jquery. See the tests at the bottom of pq/pq.py for examples.

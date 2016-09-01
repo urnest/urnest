@@ -1243,7 +1243,7 @@ void test5() throw()
     xju::assert_never_reached();
   }
   catch(CommitFailed const& e) {
-    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 14, error index 2, values .1.3.3: \"fred\", .1.3.9.3333: 3 to SnmpV2cSetRequest community dje, id 23, values .1.3.3: \"fred\", .1.3.9.3333: 3 because\nRequest was valid but could not be applied (no changes have been made).");
+    xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 14, error index 2, values .1.3.3: \"fred\", .1.3.9.3333: 3 to SnmpV2cSetRequest community dje, id 23, values .1.3.3: \"fred\", .1.3.9.3333: 3 because\ncommit failed at object .1.3.9.3333 (no changes have been made).");
   }
   
   try {

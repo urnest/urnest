@@ -1,0 +1,49 @@
+// Copyright (c) 2015 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+module lanstats
+{
+  typedef short IpPortNumber;
+  typedef long  IpAddress;
+  typedef string ProtocolName;
+  typedef long long Timestamp;
+  typedef long long PacketLength;
+  typedef long long BytesPerSecond;
+  
+  struct Protocol_PortPair
+  {
+    ProtocolName first;
+    PortNumber   second;
+  };
+  
+  struct ProtocolPort_SourceIpAddressPair
+  {
+    ProtocolPort first;
+    IpAddress    second;
+  };
+  
+  struct StatPair
+  {
+    ProtocolPort_SourceIpAddressPair first; //key
+    BytesPerSecond second; //value
+  };
+  typedef sequence<StatPair> Stats;
+  
+  Stats getCurrentStats();
+
+  // other useful defs
+  struct Packet
+  {
+    Timestamp t_;
+    IpAddress source_;
+    ProtocolName protocol_;
+    IpPortNumber portNumber_;
+    PacketLength length_;
+  };
+};

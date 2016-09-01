@@ -16,6 +16,7 @@
 #include <vector>
 #include <xju/Tagged.hh>
 #include <xju/Int.hh>
+#include <xju/Float.hh>
 #include "IOR.hh"
 #include "TaggedProfileList.hh" //impl
 #include <cxy/optional.hh>
@@ -322,20 +323,45 @@ public:
   
 };
 
-template<class Tag, class Impl>
-class cdr<xju::Int<Tag, Impl> >
+template<class Tag, class Impl, class E>
+class cdr<xju::Int<Tag, Impl, E> >
 {
 public:
-  static xju::Int<Tag, Impl> unmarshalFrom(cdrStream& s) 
+  static xju::Int<Tag, Impl, E> unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
   //  CORBA::SystemException,
   //  omni::giopStream::CommFailure
   //  )
   {
-    return xju::Int<Tag, Impl>(cdr<Impl>::unmarshalFrom(s));
+    return xju::Int<Tag, Impl, E>(cdr<Impl>::unmarshalFrom(s));
   }
-  static void marshal(xju::Int<Tag, Impl> const& x, cdrStream& s)
+  static void marshal(xju::Int<Tag, Impl, E> const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    cdr<Impl>::marshal(x.value(), s);
+  }
+
+};
+
+  
+template<class Tag, class Impl, class E>
+class cdr<xju::Float<Tag, Impl, E> >
+{
+public:
+  static xju::Float<Tag, Impl, E> unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    return xju::Float<Tag, Impl, E>(cdr<Impl>::unmarshalFrom(s));
+  }
+  static void marshal(xju::Float<Tag, Impl, E> const& x, cdrStream& s)
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
   //  omni::giopStream::CommFailure

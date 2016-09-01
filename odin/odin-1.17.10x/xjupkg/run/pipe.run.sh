@@ -7,8 +7,9 @@ if [ "$ODIN_cmd" != "" ] ; then
    cmd=`cat $ODIN_cmd`; fi
 
 if [ "$ODINVERBOSE" != "" ] ; then
-   echo LD_LIBRARY_PATH="$ODIN_LD_LIBRARY_PATH" ${ODINRBSHOST}$cmd; fi
-(mkdir output; cd output; LD_LIBRARY_PATH="$ODIN_LD_LIBRARY_PATH" $cmd) \
+   echo ${ODINRBSHOST}$cmd; fi
+
+(mkdir output; cd output; LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" eval $cmd) \
  <$ODIN_FILE >stdout 2>WARNINGS ||
  { mv WARNINGS ERRORS; echo $cmd failed. >>ERRORS; }
 

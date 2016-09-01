@@ -33,7 +33,7 @@ namespace btt
 	//
 	// post: file' = file
 	//
-	std::auto_ptr<Tasks> loadTasks(
+	std::unique_ptr<Tasks> loadTasks(
 	    const std::string& fileName,
 	    const std::string& tasksSchemaFileName) throw(
 		//
