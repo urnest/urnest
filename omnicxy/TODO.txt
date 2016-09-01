@@ -320,6 +320,27 @@ x make p1.hh // impl in p1.sref.hcp
 - allow servant to throw base exception
 
 - make uri cxy::objref<X> cons param
+
+- have seen cxx p2-main crash at end (after calling orb->destroy()), why?:
+
+#5  0x00007f6924661ab8 in __cxxabiv1::__cxa_throw (obj=0x7f6914000970, 
+    tinfo=0x7f6924f036b0 <typeinfo for CORBA::OBJECT_NOT_EXIST>, 
+    dest=0x7f6924c11e80 <CORBA::OBJECT_NOT_EXIST::~OBJECT_NOT_EXIST()>)
+    at ../../.././libstdc++-v3/libsupc++/eh_throw.cc:87
+#6  0x00007f6924c07efd in omniOrbORB::run() ()
+   from /home/xju/omniORB-4.2.0/lib/libomniORB4.so.2
+#7  0x0000000000407522 in xju::mt::Thread<CORBA::ORB>::main (x=0x7ffde4b5f350)
+    at /home/xju/urnest/xju/mt.hh:350
+
+#5  0x00007f6924661ab8 in __cxxabiv1::__cxa_throw (obj=0x7f6914000970, 
+    tinfo=0x7f6924f036b0 <typeinfo for CORBA::OBJECT_NOT_EXIST>, 
+    dest=0x7f6924c11e80 <CORBA::OBJECT_NOT_EXIST::~OBJECT_NOT_EXIST()>)
+    at ../../.././libstdc++-v3/libsupc++/eh_throw.cc:87
+#6  0x00007f6924c07efd in omniOrbORB::run() ()
+   from /home/xju/omniORB-4.2.0/lib/libomniORB4.so.2
+#7  0x0000000000407522 in xju::mt::Thread<CORBA::ORB>::main (x=0x7ffde4b5f350)
+    at /home/xju/urnest/xju/mt.hh:350
+
 ---------------------------------------------
 
 xju@xjutv:~/urnest$ ODIN_LIB_SP="/usr/local/omniORB-4.2.0/lib /lib /usr/lib" ODIN_EXEC_PATH=/usr/local/omniORB-4.2.0/bin:/usr/bin:/bin ODIN_OMNICXY_PATH=/usr/local/omniORB-4.2.0/bin:/usr/bin:/bin ODIN_OMNICXY_BE_DIR=~/urnest/omnicxy/omniidl_be  ODIN_CXX_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib ODIN_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib ODIN_CXX_I=/usr/local/omniORB-4.2.0/include odin/create-linux-cache.sh $ODIN
