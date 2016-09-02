@@ -1,5 +1,3 @@
-* test-StringToInt, test-stringToUInt: use C++11 long long so we can always test
-
 snmp/README.txt stuff
 
 Int,Float add operator* operator/
