@@ -374,7 +374,7 @@ public:
     assert_equal(format::hex((unsigned long)0x43), "0x0000000000000043");
     assert_equal(format::hex((unsigned long)0x143), "0x0000000000000143");
     assert_equal(format::hex((unsigned long)0xaf3933fc2143), "0x0000af3933fc2143");
-    assert_equal(format::hex((unsigned long)0xffffffff), "0xffffffffffffffff");
+    assert_equal(format::hex((unsigned long)0xffffffffffffffff), "0xffffffffffffffff");
     
   };
 };
