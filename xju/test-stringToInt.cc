@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string>
 #include <xju/assert.hh>
+#include <xju/format.hh>
 #include <sstream>
 #include <limits.h>
 
@@ -51,10 +52,10 @@ struct Test3
     template<int X>
     void t()
     {
+        const long long x(INT_MAX);
         try
         {
             std::ostringstream s;
-            const long x(INT_MAX);
             s << (x+1L);
             
             xju::stringToInt(s.str());
@@ -67,7 +68,7 @@ struct Test3
             s << e;
             xju::assert_equal(
                 s.str(),
-                "Failed to convert \"2147483648\" to an integer because\n2147483648 is too large (maximum allowed integer is 2147483647).");
+                "Failed to convert \""+xju::format::str(x+1)+"\" to an integer because\n"+xju::format::str(x+1)+" is too large (maximum allowed integer is "+xju::format::str(INT_MAX)+").");
         }
     }
 };
@@ -77,13 +78,13 @@ void Test3::t<0>()
 {
 }
 
-// overflow - can't do unless sizeof(long) > sizeof(int)
+// overflow - can't do unless sizeof(long long) > sizeof(int)
 void test3()
 {
     // avoid compiler warning by not instatiating code unless
-    // sizeof(long) > sizeof(int)
+    // sizeof(long long) > sizeof(int)
     Test3 t3;
-    t3.t<sizeof(long)-sizeof(int)>();
+    t3.t<sizeof(long long)-sizeof(int)>();
 }
 
 
