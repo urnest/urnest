@@ -363,14 +363,17 @@ class CommandLineOptions
 public:
   explicit CommandLineOptions(unsigned int dir_levels, 
                               bool th,
+                              bool tc,
                               std::string hpath) throw():
       dir_levels_(dir_levels),
       th_(th),
+      tc_(tc),
       hpath_(hpath)
   {
   }
   unsigned int dir_levels_;
   bool th_;
+  bool tc_;
   std::string hpath_;
 };
 
@@ -382,6 +385,7 @@ std::pair<CommandLineOptions, std::vector<std::string> > parseCommandLine(
   std::vector<std::string>::const_iterator i(x.begin());
   unsigned int dir_levels=0;
   bool th=false;
+  bool tc=true;
   std::string hpath="";
   
   while((i != x.end()) && ((*i)[0]=='-')) {
@@ -392,6 +396,10 @@ std::pair<CommandLineOptions, std::vector<std::string> > parseCommandLine(
     }
     else if ((*i)=="-th") {
       th=true;
+      ++i;
+    }
+    else if ((*i)=="-ntc") {
+      tc=false;
       ++i;
     }
     else if ((*i)=="-hpath") {
@@ -409,7 +417,7 @@ std::pair<CommandLineOptions, std::vector<std::string> > parseCommandLine(
       throw xju::Exception(s.str(), XJU_TRACED);
     }
   }
-  return std::make_pair(CommandLineOptions(dir_levels, th, hpath), 
+  return std::make_pair(CommandLineOptions(dir_levels, th, tc, hpath), 
                         std::vector<std::string>(i, x.end()));
 }
 
@@ -480,6 +488,8 @@ int main(int argc, char* argv[])
                 << std::endl;
       std::cout << "-th tracks source file and line in generated header file"
                 << std::endl;
+      std::cout << "-ntc disables source file and line in generated cc file"
+                << std::endl;
       return 1;
     }
 
@@ -525,8 +535,10 @@ int main(int argc, char* argv[])
     if (cmd_line.first.hpath_.size()) {
       fc << "#include <" 
          << (cmd_line.first.hpath_+outputHH.second._)
-         << ">" << std::endl
-         << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
+         << ">" << std::endl;
+      if (cmd_line.first.tc_) {
+        fc << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
+      }
     }
     else
     {
@@ -540,12 +552,14 @@ int main(int argc, char* argv[])
       {
         fc << "#include \"" 
            << xju::path::str(hhinc, outputHH.second)
-           << "\"" << std::endl
-           << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
+           << "\"" << std::endl;
+        if (cmd_line.first.tc_) {
+          fc << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
+        }
       }
     }
     OStream oh(fh, cmd_line.first.th_);
-    OStream oc(fc, true);
+    OStream oc(fc, cmd_line.first.tc_);
     
     genNamespaceContent(
       root.items_.front()->asA<hcp_ast::File>().items_, oh, oc);
