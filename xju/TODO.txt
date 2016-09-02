@@ -1,8 +1,4 @@
-* use cstdint for int64_t etc and figure out how to use its constants
-  to write code that compiles "everywhere" eg format.hh, test-format.cc, test-stringToInt, test-stringToUnsignedInt
-  C++11 has long long at least 64 bits, use that in format.hh in 
-  place of int64_t; put functions in place for int16, int32, int64
-  and their unsigned equivs if no standard type has that size
+* test-StringToInt, test-stringToUInt: use C++11 long long so we can always test
 
 snmp/README.txt stuff
 
