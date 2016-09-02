@@ -60,7 +60,7 @@
 #ifndef _XJU_FORMAT_HH_
 #define _XJU_FORMAT_HH_
 
-#include <stdint.h>
+#include <cstdint>
 #include <limits.h>
 
 #include <iostream>
@@ -125,6 +125,17 @@ inline std::string int_(unsigned char const x,
 }
 
 
+template<>
+inline std::string int_(signed char const x,
+                        int const width,
+                        char const fill,
+                        ios_base::fmtflags align,
+                        ios_base::fmtflags base) throw()
+{
+  return int_((int)x, width, fill, align, base);
+}
+
+
 //
 // Function object to call int_.
 //
@@ -133,9 +144,9 @@ inline std::string int_(unsigned char const x,
 //    vector<int> values;
 //    xju::format::set(values.begin(), 
 //                     values.end(),
-//                     xju::format::Int(width = 4));
+//                     xju::format::Int(/*width*/4));
 //
-struct Int : std::unary_function<long, std::string>
+struct Int : std::unary_function<long long, std::string>
 {
 public:
   explicit Int(int width = 0, 
@@ -148,7 +159,7 @@ public:
     _base(base)
   {
   }
-  std::string operator()(const long& x) const throw()
+  std::string operator()(const long long x) const throw()
   {
     return int_(x, _width, _fill, _align, _base);
   }
@@ -162,7 +173,7 @@ private:
 //
 // function object to call int_ (for unsigned value type).
 //
-struct IntU : std::unary_function<unsigned long, std::string>
+struct IntU : std::unary_function<unsigned long long, std::string>
 {
 public:
   explicit IntU(
@@ -177,7 +188,7 @@ public:
     _base(base)
   {
   }
-  std::string operator()(const unsigned long& x) const throw()
+  std::string operator()(const unsigned long long x) const throw()
   {
     return int_(x, _width, _fill, _align, _base);
   }
@@ -522,7 +533,10 @@ std::string set(const ConstIterator begin,
 }
 
 // format as fixed width hexadecimal with leading '0x'
+// post: result.size()==leader.size()+sizeof(x)*2
 std::string hex(char x, const std::string& leader = "0x") 
+  throw(std::bad_alloc);
+std::string hex(signed char x, const std::string& leader = "0x") 
   throw(std::bad_alloc);
 std::string hex(unsigned char x, const std::string& leader = "0x") 
   throw(std::bad_alloc);
@@ -538,12 +552,44 @@ std::string hex(long x, const std::string& leader = "0x")
   throw(std::bad_alloc);
 std::string hex(unsigned long x, const std::string& leader = "0x") 
   throw(std::bad_alloc);
-#if UINT64_MAX - ULONG_MAX > 0
+std::string hex(long long x, const std::string& leader = "0x") 
+  throw(std::bad_alloc);
+std::string hex(unsigned long long x, const std::string& leader = "0x") 
+  throw(std::bad_alloc);
+
+// we can't define a hex function where the type of x is a typedef
+// of a type that we've done above, but the above does not necessarily
+// cover all int types (eg a pure 32bit compiler v int64_t)
+#define XJU__IS_AN_ABOVE_TYPE(UX_MAX) (\
+    ((UX_MAX) - UCHAR_MAX == 0) ||     \
+    ((UX_MAX) - USHRT_MAX == 0) ||     \
+    ((UX_MAX) - UINT_MAX == 0) ||      \
+    ((UX_MAX) - ULONG_MAX == 0) ||     \
+    ((UX_MAX) - ULLONG_MAX == 0))
+
+#if !XJU__IS_AN_ABOVE_TYPE(UINT16_MAX)
+std::string hex(int16_t x, const std::string& leader = "0x") 
+  throw(std::bad_alloc);
+std::string hex(uint16_t x, const std::string& leader = "0x") 
+  throw(std::bad_alloc);
+#endif
+
+#if !XJU__IS_AN_ABOVE_TYPE(UINT32_MAX)
+std::string hex(int32_t x, const std::string& leader = "0x") 
+  throw(std::bad_alloc);
+std::string hex(uint32_t x, const std::string& leader = "0x") 
+  throw(std::bad_alloc);
+#endif
+
+#if !XJU__IS_AN_ABOVE_TYPE(UINT64_MAX)
 std::string hex(int64_t x, const std::string& leader = "0x") 
   throw(std::bad_alloc);
 std::string hex(uint64_t x, const std::string& leader = "0x") 
   throw(std::bad_alloc);
 #endif
+
+#undef XJU__IS_AN_ABOVE_TYPE
+
 }
 }
 

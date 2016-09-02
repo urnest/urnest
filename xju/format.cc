@@ -32,36 +32,6 @@ std::string char_(const char c) throw()
   return s.str();
 }
 
-std::string int_(long x, 
-                 int width, 
-                 char fill,
-                 ios_base::fmtflags align,
-                 ios_base::fmtflags base) throw()
-{
-  std::ostringstream s;
-  s.setf(align, ios_base::adjustfield);
-  s.fill(fill);
-  s.width(width);
-  s.setf(base, ios_base::basefield);
-  s << x;
-  return s.str();
-}
-
-std::string int_(unsigned long x, 
-                 int width, 
-                 char fill,
-                 ios_base::fmtflags align,
-                 ios_base::fmtflags base) throw()
-{
-  std::ostringstream s;
-  s.setf(align, ios_base::adjustfield);
-  s.fill(fill);
-  s.width(width);
-  s.setf(base, ios_base::basefield);
-  s << x;
-  return s.str();
-}
-
 std::string float_(const float x, 
                    const ios_base::fmtflags format,
                    const int precision) throw()
@@ -114,7 +84,17 @@ std::string hex(char x, const std::string& leader)
 {
   std::ostringstream s;
   s << leader
-    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') << (long)x;
+    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') 
+    << (unsigned short)(unsigned char)x; //avoid printing as character
+  return s.str();
+}
+std::string hex(signed char x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader
+    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') 
+    << (unsigned short)(unsigned char)x; //avoid printing as character
   return s.str();
 }
 
@@ -123,7 +103,8 @@ std::string hex(unsigned char x, const std::string& leader)
 {
   std::ostringstream s;
   s << leader
-    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') << (unsigned long)x;
+    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') 
+    << (unsigned short)x; //avoid printing as character
   return s.str();
 }
 std::string hex(short x, const std::string& leader) 
@@ -131,7 +112,8 @@ std::string hex(short x, const std::string& leader)
 {
   std::ostringstream s;
   s << leader
-    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') << (long)x;
+    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') 
+    << (unsigned short)x; //avoid printing a sign
   return s.str();
 }
 std::string hex(unsigned short x, const std::string& leader) 
@@ -139,7 +121,8 @@ std::string hex(unsigned short x, const std::string& leader)
 {
   std::ostringstream s;
   s << leader
-    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') << (unsigned long)x;
+    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') 
+    << x;
   return s.str();
 }
 std::string hex(int x, const std::string& leader) 
@@ -147,7 +130,8 @@ std::string hex(int x, const std::string& leader)
 {
   std::ostringstream s;
   s << leader
-    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') << (long)x;
+    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') 
+    << (unsigned int)x; //avoid printing a sign
   return s.str();
 }
 std::string hex(unsigned int x, const std::string& leader) 
@@ -155,7 +139,8 @@ std::string hex(unsigned int x, const std::string& leader)
 {
   std::ostringstream s;
   s << leader
-    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') << (unsigned long)x;
+    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') 
+    << x;
   return s.str();
 }
 std::string hex(long x, const std::string& leader) 
@@ -163,7 +148,8 @@ std::string hex(long x, const std::string& leader)
 {
   std::ostringstream s;
   s << leader
-    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') << (long)x;
+    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') 
+    << (unsigned long)x; //avoid printing a sign
   return s.str();
 }
 std::string hex(unsigned long x, const std::string& leader) 
@@ -171,16 +157,87 @@ std::string hex(unsigned long x, const std::string& leader)
 {
   std::ostringstream s;
   s << leader
-    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') << (unsigned long)x;
+    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') 
+    << x;
   return s.str();
 }
-#if ULONG_MAX != UINT64_MAX
+std::string hex(long long x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader
+    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') 
+    << (unsigned long long)x; //avoid printing a sign
+  return s.str();
+}
+std::string hex(unsigned long long x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader
+    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0')
+    << x;
+  return s.str();
+}
+
+// see format.hh for explanation
+#define XJU__IS_AN_ABOVE_TYPE(UX_MAX) (\
+    ((UX_MAX) - UCHAR_MAX == 0) ||     \
+    ((UX_MAX) - USHRT_MAX == 0) ||     \
+    ((UX_MAX) - UINT_MAX == 0) ||      \
+    ((UX_MAX) - ULONG_MAX == 0) ||     \
+    ((UX_MAX) - ULLONG_MAX == 0))
+
+#if !XJU__IS_AN_ABOVE_TYPE(UINT16_MAX)
+std::string hex(int16_t x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader
+    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') 
+    << (uint16_t)x; //avoid printing a sign
+  return s.str();
+}
+std::string hex(uint16_t x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader
+    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') 
+    << x;
+  return s.str();
+}
+#endif
+
+#if !XJU__IS_AN_ABOVE_TYPE(UINT32_MAX)
+std::string hex(int32_t x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader
+    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') 
+    << (uint32_t)x; //avoid printing a sign
+  return s.str();
+}
+std::string hex(uint32_t x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader
+    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') 
+    << x;
+  return s.str();
+}
+#endif
+
+#if !XJU__IS_AN_ABOVE_TYPE(UINT64_MAX)
 std::string hex(int64_t x, const std::string& leader) 
   throw(std::bad_alloc)
 {
   std::ostringstream s;
   s << leader
-    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') << (uint64_t)x;
+    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') 
+    << (uint64_t)x; //avoid printing a sign
   return s.str();
 }
 std::string hex(uint64_t x, const std::string& leader) 
@@ -188,10 +245,14 @@ std::string hex(uint64_t x, const std::string& leader)
 {
   std::ostringstream s;
   s << leader
-    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') << (uint64_t)x;
+    << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') 
+    << x;
   return s.str();
 }
 #endif
+
+#undef XJU__IS_AN_ABOVE_TYPE
+
 
 std::string cEscapeChar(char const c) throw()
 {
