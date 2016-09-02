@@ -3,6 +3,7 @@
 sourcedir="$1" && shift &&
 hcpsplit="$1" && shift &&
 hpath="$1" && shift &&
+ntc="$1" && shift &&
 if [ -z "$hcpsplit" ]
 then
   hcpsplit='hcp-split'
@@ -11,6 +12,10 @@ hcpflags="" &&
 if [ -n "$hpath" ]
 then
   hcpflags="-hpath $hpath"
+fi &&
+if [ -n "$ntc" ]
+then
+  hcpflags="$hcpflags -ntc"
 fi &&
 (
 PATH=$ODIN_OMNICXY_PATH &&

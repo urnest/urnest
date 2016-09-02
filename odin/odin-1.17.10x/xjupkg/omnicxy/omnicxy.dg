@@ -41,6 +41,8 @@ $ODIN_OMNICXY_OMNIIDL 'name of omniidl program' = 'omniidl';
 
 +cxy 'flags to pass to omniidl cxy backend (omit the -Wb)' ? => :cat;
 
++ntc 'pass to -ntc to hcp-split, disabling file-and-line tracking in generated cc files' ? => :first;
+
 EXEC (omniidl.sh) (:IDL) (+hpath) (+cxy-be-dir) (+cxy) (+inc_sp)
   NEEDS (+cxy-be-dir:list:map=:list) (:IDL:lookup=:hash_inc_all)
         ($ODIN_OMNICXY_BE_DIR/cxy.py)
@@ -50,7 +52,7 @@ EXEC (omniidl.sh) (:IDL) (+hpath) (+cxy-be-dir) (+cxy) (+inc_sp)
         ($ODIN_OMNICXY_BE_DIR/cxysref.py)
   => (:omnicxy.output);
 
-EXEC (hcpsplit.sh) (:omnicxy.output) (+hcp-split) (+hpath) 
+EXEC (hcpsplit.sh) (:omnicxy.output) (+hcp-split) (+hpath) (+ntc)
   NEEDS (:omnicxy.output:list)
   => (:hcpsplit.output);
 
