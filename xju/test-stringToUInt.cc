@@ -62,7 +62,6 @@ struct Test3
         }
         catch(const xju::Exception& e)
         {
-            std::cerr << e << std::endl;
             std::ostringstream s;
             s << e;
             xju::assert_equal(
@@ -70,7 +69,7 @@ struct Test3
                 "Failed to convert \"4294967296\" to a base-10 unsigned integer because\n4294967296 is too large (maximum allowed unsigned integer is 4294967295).");
         }
     }
-}
+};
 
 template<>
 void Test3::t<0>()
