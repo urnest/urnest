@@ -157,3 +157,8 @@ omnicxy/cxy/optional.cc
 omnicxy/cxy/optional.hh
 *.pyc
 hcp/hcp-tags
+
+omnicxy/cxy/TypeCode.cc
+omnicxy/cxy/TypeCode.hh
+omnicxy/cxy/TypeKind.cc
+omnicxy/cxy/TypeKind.hh

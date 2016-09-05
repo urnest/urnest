@@ -8,6 +8,14 @@
 // implied warranty.
 //
 
+#include <cxy/cdr.hh>
+#include <cxy/TypeKind.hh>
+
+#include <omniORB4/CORBA.h> //impl
+#include <omniORB4/cdrStream.h> //impl
+#include <memory>
+
+class cdrStream;
 
 namespace cxy
 {
@@ -16,9 +24,6 @@ class TypeCode
 public:
   virtual ~TypeCode() throw(){}
 
-  virtual cxy::TypeKind kind() const throw()=0;
-  virtual std::string repoId() const throw()=0;
-  
   virtual void copyValue(cdrStream& from, cdrStream& to)
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
@@ -32,19 +37,12 @@ public:
   //  omni::giopStream::CommFailure
   //)
   = 0;
+
+  virtual bool equals(TypeCode const& b) const throw() = 0;
 };
 
 class TypeCodeShort : public TypeCode
 {
-  virtual cxy::TypeKind kind() const throw()
-  {
-    return cxy::TypeKind::SHORT;
-  }
-  virtual std::string repoId() const throw()
-  {
-    return "";
-  }
-  
   virtual void copyValue(cdrStream& from, cdrStream& to)
   {
     cxy::cdr<int16_t>::marshal(
@@ -54,16 +52,21 @@ class TypeCodeShort : public TypeCode
 
   virtual void marshal(cdrStream& s)
   {
-    cxy::typecode<int16_t>::encode(s);
+    cxy::cdr<uint32_t>::marshal(TypeKind::SHORT, s);
   }
   
+  virtual bool equals(TypeCode const& b) const throw()
+  {
+    TypeCodeShort b_(dynamic_cast<TypeCodeShort const*>(&b));
+    return b_;
+  }
 };
 
 template<>
-class cxy::cdr<std::unique_ptr<TypeCode> >
+class cxy::cdr<std::shared_ptr<TypeCode> >
 {
 public:
-  static std::unique_ptr<TypeCode> unmarshalFrom(cdrStream& s)
+  static std::shared_ptr<TypeCode> unmarshalFrom(cdrStream& s)
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
   //  CORBA::SystemException,
@@ -73,7 +76,7 @@ public:
     cxy::TypeKind const k(cxy::cdr<uint32_t>::unmarshalFrom(s));
     switch(k) {
     case cxy::TypeKind::SHORT:
-      return std::unique_ptr<TypeCode>(
+      return std::shared_ptr<TypeCode>(
         new TypeCodeShort());
     default:
       std::ostringstream s;
@@ -81,8 +84,20 @@ public:
       throw cxy::Exception(s.str(),XJU_TRACED);
     }
   }
-  
+
+  static void marshal(std::shared_ptr<TypeCode const> x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    x->marshal(s);
+  }
 };
   
+bool operator==(TypeCode const& a, TypeCode const& b) throw()
+{
+  return a.equals(b);
+}
   
 }

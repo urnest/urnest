@@ -58,11 +58,6 @@ cdr.cc==%cdr/cdr.cc
 
 %cdr==()+cmd=(../../hcp/hcp-split) -l 1 (cdr.hcp) 'cdr.hh' 'cdr.cc':output
 
-marshal.hh==%marshal/marshal.hh
-marshal.cc==%marshal/marshal.cc
-
-%marshal==()+cmd=(../../hcp/hcp-split) -l 1 (marshal.hcp) 'marshal.hh' 'marshal.cc':output
-
 optional.hh==%optional/optional.hh
 optional.cc==%optional/optional.cc
 
@@ -109,9 +104,21 @@ TaggedProfileList.cc==%TaggedProfileList/TaggedProfileList.cc
 %TaggedProfileList==()+cmd=(../../hcp/hcp-split) -l 1 (TaggedProfileList.hcp) 'TaggedProfileList.hh' 'TaggedProfileList.cc':output
 
 
+TypeCode.hh==%TypeCode/TypeCode.hh
+TypeCode.cc==%TypeCode/TypeCode.cc
+
+%TypeCode==()+cmd=(../../hcp/hcp-split) -l 1 (TypeCode.hcp) 'TypeCode.hh' 'TypeCode.cc':output
+
+TypeKind.hh==%TypeKind/TypeKind.hh
+TypeKind.cc==%TypeKind/TypeKind.cc
+
+%TypeKind==()+cmd=(../../hcp/hcp-split) -l 1 (TypeKind.hcp) 'TypeKind.hh' 'TypeKind.cc':output
+
+
 %tests.tree==<<
 ()+cmd=(test-Exception.cc+(%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-port-in-use.cc+(%cxx-opts):auto.cxx.exe) '3736':stdout
+()+cmd=(test-TypeCode.cc+(%cxx-opts):auto.cxx.exe):stdout
 
 %cxx-opts==<<
 +(..%cxx-opts)

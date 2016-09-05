@@ -13,7 +13,7 @@ namespace cxy
 {
 enum class TypeKind
 {
-    NULL,
+    NULL_,
     VOID,
     SHORT,
     LONG,
