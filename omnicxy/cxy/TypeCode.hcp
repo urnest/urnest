@@ -24,14 +24,14 @@ class TypeCode
 public:
   virtual ~TypeCode() throw(){}
 
-  virtual void copyValue(cdrStream& from, cdrStream& to)
+  virtual void copyValue(cdrStream& from, cdrStream& to) const
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
   //  omni::giopStream::CommFailure
   //)
   = 0;
 
-  virtual void marshal(cdrStream& s)
+  virtual void marshal(cdrStream& s) const
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
   //  omni::giopStream::CommFailure
@@ -41,29 +41,42 @@ public:
   virtual bool equals(TypeCode const& b) const throw() = 0;
 };
 
-class TypeCodeShort : public TypeCode
+template<class T>
+class TypeCodeOf : public TypeCode // must specialise
 {
-  virtual void copyValue(cdrStream& from, cdrStream& to)
+};
+
+template<class T>
+std::shared_ptr<TypeCode> typeCodeOf(T const&) throw()
+{
+  return std::shared_ptr<TypeCode>(new TypeCodeOf<T>);
+}
+
+template<>  
+class TypeCodeOf<int16_t> : public TypeCode
+{
+public:
+  virtual void copyValue(cdrStream& from, cdrStream& to) const
   {
     cxy::cdr<int16_t>::marshal(
       cxy::cdr<int16_t>::unmarshalFrom(from),
       to);
   }
 
-  virtual void marshal(cdrStream& s)
+  virtual void marshal(cdrStream& s) const
   {
-    cxy::cdr<uint32_t>::marshal(TypeKind::SHORT, s);
+    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::SHORT, s);
   }
   
   virtual bool equals(TypeCode const& b) const throw()
   {
-    TypeCodeShort b_(dynamic_cast<TypeCodeShort const*>(&b));
+    TypeCodeOf const* b_(dynamic_cast<TypeCodeOf const*>(&b));
     return b_;
   }
 };
 
 template<>
-class cxy::cdr<std::shared_ptr<TypeCode> >
+class cdr< std::shared_ptr<TypeCode> >
 {
 public:
   static std::shared_ptr<TypeCode> unmarshalFrom(cdrStream& s)
@@ -73,15 +86,14 @@ public:
   //  omni::giopStream::CommFailure
   //  )
   {
-    cxy::TypeKind const k(cxy::cdr<uint32_t>::unmarshalFrom(s));
-    switch(k) {
+    uint32_t k(cxy::cdr<uint32_t>::unmarshalFrom(s));
+    switch(static_cast<cxy::TypeKind>(k)) {
     case cxy::TypeKind::SHORT:
-      return std::shared_ptr<TypeCode>(
-        new TypeCodeShort());
+      return std::shared_ptr<TypeCode>(new TypeCodeOf<int16_t>);
     default:
       std::ostringstream s;
       s << "unimplemented type kind " << k;
-      throw cxy::Exception(s.str(),XJU_TRACED);
+      throw CORBA::MARSHAL(26,CORBA::COMPLETED_NO);
     }
   }
 

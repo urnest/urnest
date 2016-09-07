@@ -18,12 +18,27 @@
 namespace cxy
 {
 
-void test1() {
-  TypeCodeShort x;
+template<class T>
+void testx(T const v) {
   cdrMemoryStream s;
-  x.marshal(s);
-  std::shared_ptr<TypeCode> y(cdr<std::shared_ptr<TypeCode>::unmarshalFrom(s));
-  xju::assert_equal(x,*y);
+  std::shared_ptr<TypeCode> const x(cxy::typeCodeOf(v));
+  x->marshal(s);
+  cdr<T>::marshal(v,s);
+
+  std::shared_ptr<TypeCode> y(
+    cdr< std::shared_ptr<TypeCode> >::unmarshalFrom(s));
+  xju::assert_equal(*x,*y);
+  
+  cdrMemoryStream t;
+  y->copyValue(s,t);
+  
+  xju::assert_equal(cdr<T>::unmarshalFrom(t),v);
+}
+
+void test1()
+{
+  testx((int16_t)27);
+  //testx((int32_t)27);
 }
 
 }
