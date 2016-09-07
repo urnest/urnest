@@ -902,7 +902,7 @@ void test19()
   }
 }
 
-// enum_def
+// enum_def and scoped_enum_def
 void test20()
 {
   {
@@ -934,6 +934,36 @@ void test20()
   }
   catch(xju::Exception const& e) {
     assert_readableRepr_equal(e, "Failed to parse enum definition at line 1 column 1 because\nfailed to parse some whitespace at line 1 column 5 because\nfailed to parse at least one occurrance of one of chars [\\t\\n ] at line 1 column 5 because\nfailed to parse one of chars [\\t\\n ] at line 1 column 5 because\nline 1 column 5: \'y\' is not one of chars [\t\n ].", XJU_TRACED);
+  }
+  {
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, cache);
+    std::string const x(
+      "enum class Lateness {\n"
+      "  LITTLE,\n"
+      "  LOTS\n"
+      "};\n");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    at = parse(root, at, hcp_parser::scoped_enum_def);
+    xju::assert_equal(reconstruct(root), x);
+    xju::assert_equal(at.atEnd(), true);
+  }
+  try
+  {
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, cache);
+    hcp_ast::CompositeItem root;
+
+    std::string const x("enum classy Lateness { FRED, JOCK };");
+    hcp_parser::I at(x.begin(), x.end());
+    
+    at = parse(root, at, hcp_parser::enum_def);
+    xju::assert_abort();
+  }
+  catch(xju::Exception const& e) {
+    assert_readableRepr_equal(e, "Failed to parse enum definition at line 1 column 1 because\nfailed to parse \"{\" at line 1 column 13 because\nline 1 column 13: expected \'{\' but found \'L\'.", XJU_TRACED);
   }
 }
 

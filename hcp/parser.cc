@@ -1067,6 +1067,17 @@ PR enum_name(
     "\"enum name\"",
     unqualifiedName));
 
+PR scoped_enum_def(new NamedParser<hcp_ast::EnumDef>(
+  "scoped enum definition",
+  parseLiteral("enum")+whitespace+(parseLiteral("struct")|
+                                   parseLiteral("class"))+
+  whitespace+
+  optional(enum_name)+eatWhite+parseLiteral("{")+
+  balanced(parseOneOfChars("}"))+
+  parseOneOfChars("}")+eatWhite+
+  parseOneOfChars(";")+
+  eatWhite));
+
 PR enum_def(new NamedParser<hcp_ast::EnumDef>(
   "enum definition",
   parseLiteral("enum")+
@@ -1327,6 +1338,7 @@ public:
                        access_modifier|
                        PR(new SelfParser(*this))|
                        class_decl|
+                       scoped_enum_def|
                        enum_def|
                        typedef_statement|
                        function_def|
@@ -1372,6 +1384,7 @@ PR namespace_leaf(
   class_decl|
   typedef_statement|
   using_statement|
+  scoped_enum_def|
   enum_def|
   whitespace|
   function_decl| // inc. template

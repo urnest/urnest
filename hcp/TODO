@@ -1,3 +1,7 @@
+- handle enum/scoped enum with fixed type
+
+x handle scoped enum (non-fixed type)
+
 - hcp-split handle inline constructor eg
   struct X {
     inline X() {...};

@@ -324,6 +324,7 @@ extern PR hashInclude; // include preprocessor directive
 extern PR hash;        // other preprocessor directive
 extern PR typedef_statement;    // restriction: no anon class/struct/enum
 extern PR using_statement;       // using statement
+extern PR scoped_enum_def;
 extern PR enum_def;
 extern PR type_name; // eg x::y::Z, X<T>::size, x::Y<Z>
 extern PR function_decl;
