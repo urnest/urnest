@@ -12,7 +12,7 @@
 
 #include "Exception.hh"
 #include "Exceptions.hh"
-#include "translateException.hh"
+#include "translateCorbaException.hh"
 #include <string>
 #include <typeinfo> // impl
 #include <omniORB4/CORBA.h>
@@ -20,6 +20,7 @@
 #include <xju/format.hh>
 #include "WrongType.hh"
 #include "NoSuchObject.hh"
+#include "PortInUse.hh"
 
 namespace CORBA
 {
@@ -30,31 +31,6 @@ namespace cxy
 {
 namespace
 {
-cxy::Exception translate(CORBA::Exception const& e) throw()
-{
-  std::ostringstream s;
-  s << typeid(e).name();
-  {
-    CORBA::SystemException const* ee=
-      dynamic_cast<CORBA::SystemException const*>(&e);
-    if(ee) {
-#ifdef minor
-  // Digital Unix 3.2, and may be others as well, defines minor() as
-  // a macro in its sys/types.h. Get rid of it!
-#undef minor
-#endif
-      s << " minor " << ee->minor();
-    }
-  }
-  {
-    CORBA::PolicyError const* ee=
-      dynamic_cast<CORBA::PolicyError const*>(&e);
-    if(ee) {
-      s << " reason " << ee->reason;
-    }
-  }
-  return cxy::Exception(s.str(), std::make_pair(__FILE__,__LINE__));
-}
 
 // post: result.second.first is omniORB insPOA
 //       result.second.second is its manager, which is activated
@@ -86,7 +62,7 @@ std::pair< ::CORBA::ORB*, std::pair< ::PortableServer::POA*, ::PortableServer::P
         s << "endPoint \"" << orbEndPoint << "\" requests a port that is in use (or endPoint is malformed or invalid)";
         throw cxy::PortInUse(s.str(),std::make_pair(__FILE__,__LINE__));
       }
-      throw cxy::Exception(translate(ex));
+      throw cxy::Exception(translateCorbaException(ex));
     }
   }
   catch (cxy::Exception& e) {
@@ -115,10 +91,10 @@ std::pair< ::CORBA::ORB*, std::pair< ::PortableServer::POA*, ::PortableServer::P
       s << "endPoint \"" << orbEndPoint << "\" requests a port that is in use (or endPoint is malformed or invalid)";
       throw cxy::PortInUse(s.str(),std::make_pair(__FILE__,__LINE__));
     }
-    throw cxy::Exception(translate(ex));
+    throw cxy::Exception(translateCorbaException(ex));
   }
   catch (CORBA::Exception& ex) {
-    cxy::Exception e(translate(ex));
+    cxy::Exception e(translateCorbaException(ex));
     std::ostringstream s;
     s << "get omniORB insPOA at endpoint " << orbEndPoint;
     e.addContext(s.str(), std::make_pair(__FILE__,__LINE__));
@@ -165,7 +141,7 @@ public:
       orb_->run();
     }
     catch(CORBA::Exception& ex) {
-      cxy::Exception e(translate(ex));
+      cxy::Exception e(translateCorbaException(ex));
       std::ostringstream s;
       s << "cxy::ORBImpl::run";
       e.addContext(s.str(), std::make_pair(__FILE__,__LINE__));
@@ -179,7 +155,7 @@ public:
       orb_->shutdown(true);
     }
     catch(CORBA::Exception& ex) {
-      cxy::Exception e(translate(ex));
+      cxy::Exception e(translateCorbaException(ex));
       std::ostringstream s;
       s << "cxy::ORBImpl::stop";
       e.addContext(s.str(), std::make_pair(__FILE__,__LINE__));
@@ -217,7 +193,7 @@ public:
           s.str(), std::make_pair(__FILE__, __LINE__));
       }
       catch(CORBA::Exception const& ee) {
-        throw cxy::translateException<cxy::Exception>(ee);
+        throw cxy::translateCorbaException(ee);
       }
     }
     catch(cxy::Exception& e) {

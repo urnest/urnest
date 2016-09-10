@@ -1,0 +1,70 @@
+// Copyright (c) 2015 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <cxy/cdr.hh> //impl
+#include <cinttypes>
+#include <memory>
+#include <cxy/AnyImpl.hh> //impl
+#include <cxy/Exception.hh>
+#include <sstream> //impl
+#include <cxy/translateCorbaException.hh> //impl
+
+namespace cxy
+{
+class AnyImpl;
+
+template<class T>
+class any //must specialise
+{
+public:
+};
+
+template<>
+class any<int16_t>
+{
+public:
+  static std::shared_ptr<AnyImpl> encode(int16_t const& x) throw()
+  {
+    std::shared_ptr<TypeCode> typeCode(::cxy::typeCodeOf(x));
+    MemCdrStream value;
+    ::cxy::cdr<int16_t>::marshal(x,*value);
+    return std::shared_ptr<AnyImpl>(new AnyImpl(typeCode,value));
+  }
+  static bool isA(AnyImpl const& x) throw()
+  {
+    return ::cxy::TypeCodeOf<int16_t>().equals(*x.typeCode_);
+  }
+  
+  static int16_t decode(AnyImpl const& x) throw(
+    cxy::Exception)
+  {
+    if (!isA(x)) {
+      std::ostringstream s;
+      s << "Any contains a " << (*x.typeCode_)
+        << ", not a " << typeid(int16_t).name();
+      throw ::cxy::Exception(s.str(),std::make_pair(__FILE__,__LINE__));
+    }
+    try {
+      MemCdrStream::Ref value(x.value_);
+      return ::cxy::cdr<int16_t>::unmarshalFrom(*value);
+    }
+    catch(CORBA::Exception& ex) {
+      ::cxy::Exception e(translateCorbaException(ex));
+      std::ostringstream s;
+      s << "extract " << typeid(int16_t).name() << " from Any containing "
+        << (*x.typeCode_);
+      e.addContext(s.str(), std::make_pair(__FILE__,__LINE__));
+      throw e;
+    }
+  }
+};
+
+}
+

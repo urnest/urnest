@@ -94,6 +94,16 @@ omnicxy/cxy/objref.cc
 omnicxy/cxy/objref.hh
 omnicxy/cxy/pof.cc
 omnicxy/cxy/pof.hh
+omnicxy/cxy/Any.cc
+omnicxy/cxy/Any.hh
+omnicxy/cxy/AnyImpl.cc
+omnicxy/cxy/AnyImpl.hh
+omnicxy/cxy/MemCdrStream.cc
+omnicxy/cxy/MemCdrStream.hh
+omnicxy/cxy/any_.cc
+omnicxy/cxy/any_.hh
+omnicxy/cxy/translateCorbaException.cc
+omnicxy/cxy/translateCorbaException.hh
 omnicxy/cxy/translateException.cc
 omnicxy/cxy/translateException.hh
 *.objref.hh

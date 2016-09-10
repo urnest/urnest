@@ -1,0 +1,79 @@
+// Copyright (c) 2015 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <omniORB4/CORBA.h>//impl
+#include <omniORB4/cdrStream.h> //impl
+#include <new>
+
+class cdrStream;
+class cdrMemoryStream;
+
+namespace cxy
+{
+
+class MemCdrStream
+{
+public:
+  MemCdrStream() throw(std::bad_alloc):
+      s_(new cdrMemoryStream)
+  {
+  }
+  cdrStream& operator*() throw()
+  {
+    return *s_;
+  }
+  cdrStream const& operator*() const throw()
+  {
+    return *s_;
+  }
+  ~MemCdrStream() throw()
+  {
+    delete s_;
+  }
+
+  MemCdrStream(MemCdrStream const& b) throw(std::bad_alloc):
+      s_(new cdrMemoryStream(*b.s_))
+  {
+  }
+  
+  MemCdrStream& operator=(MemCdrStream const& b) throw(std::bad_alloc)
+  {
+    if (s_ != b.s_) {
+      delete s_;
+      s_=new cdrMemoryStream(*b.s_);
+    }
+  }
+
+  class Ref
+  {
+  public:
+    explicit Ref(MemCdrStream const& s) throw():
+        s_(new cdrMemoryStream(*s.s_,1))//1 means read only ref, not copy
+    {
+      s_->rewindInputPtr();      
+    }
+    ~Ref() throw()
+    {
+      delete s_;
+    }
+    cdrStream& operator*() throw()
+    {
+      return *s_;
+    }
+  private:
+    cdrMemoryStream* s_;
+  };
+    
+private:
+  cdrMemoryStream* s_;
+};
+
+  
+}

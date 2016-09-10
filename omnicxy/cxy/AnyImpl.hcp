@@ -1,0 +1,60 @@
+// Copyright (c) 2015 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <cxy/TypeCode.hh>
+#include <cxy/Exception.hh>
+#include <cxy/MemCdrStream.hh>
+#include <cxy/translateException.hh> //impl
+
+class cdrStream;
+
+namespace cxy
+{
+
+class AnyImpl
+{
+public:
+  // post: *this owns value
+  AnyImpl(std::shared_ptr<TypeCode const> typeCode,
+          MemCdrStream value) throw():
+      typeCode_(typeCode),
+      value_(value) {
+  }
+
+  void marshalTo(cdrStream& s) const
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    MemCdrStream::Ref value(value_);
+    typeCode_->copyValue(*value,s);
+  }
+
+  //post: result != 0, caller owns result
+  static AnyImpl* unmarshal(cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    std::shared_ptr<cxy::TypeCode> const t(
+      cdr<std::shared_ptr<cxy::TypeCode> >::unmarshalFrom(s));
+    MemCdrStream value;
+    t->copyValue(s, *value);
+    return new AnyImpl(t,value);
+  }
+  
+  std::shared_ptr<TypeCode const> typeCode_;
+  MemCdrStream const value_;
+};
+
+}

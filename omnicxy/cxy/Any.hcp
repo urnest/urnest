@@ -8,63 +8,91 @@
 // implied warranty.
 //
 
-#include "typecode.hh"
-#include "cdr.hh"
-#include <cxy/CDRMemOStream.hh> //impl
+#include <cxy/any_.hh>
+#include <cxy/Exception.hh>
+
+#include <cxy/AnyImpl.hh>
+#include <memory>
+#include <cxy/translateException.hh>
 
 namespace cxy
 {
-
+template<class E=cxy::Exception>
 class Any
 {
 public:
-  Any(cxy::typecode::Kind kind,
-      std::string repoId,
-      std::vector<uint8_t> cdrEncodedTypeCode,
-      std::vector<uint8_t> cdrEncodedValue) throw():
-      kind_(kind),
-      repoId_(repoId),
-      cdrEncodedTypeCode_(cdrEncodedTypeCode),
-      cdrEncodedValue_(cdrEncodedValue), {
+  // unmarshal
+  explicit Any(cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+      :
+      impl_(AnyImpl::unmarshal(s))
+  {
   }
   
-  cxy::typecode::Kind kind_;
-  std::string repoId_;
-  std::vector<uint8_t> cdrEncodedTypeCode_;
-  std::vector<uint8_t> cdrEncodedValue_;
+  template<class T>
+  Any(T const& x) throw():
+      impl_(::cxy::any<T>::encode(x))
+  {
+  }
+
+  template<class T>
+  bool isA() const throw()
+  {
+    return ::cxy::any<T>::isA(*impl_);
+  }
+  
+  //pre: isA<T>()
+  template<class T>
+  T get() const throw(
+    //not a T, or value incompatible with T (eg out of range)
+    E)
+  {
+    try {
+      return ::cxy::any<T>::decode(*impl_);
+    }
+    catch(cxy::Exception& e) {
+      throw translateException<E>(e);
+    }
+  }
+  
+  void marshalTo(cdrStream& s) const
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    impl_->typeCode_->marshal(s);
+    MemCdrStream::Ref value(impl_->value_);
+    impl_->typeCode_->copyValue(*value,s);
+  }
+private:
+  std::shared_ptr<AnyImpl const> impl_;
 };
 
-template<>
-class cdr<Any>
+template<class E>
+class cdr< Any<E> >
 {
 public:
-  static Any unmarshalFrom(cdrStream& s) 
-  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  static Any<E> unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
   //throw(
   //  CORBA::SystemException,
   //  omni::giopStream::CommFailure
   //  )
   {
-    std::unique_ptr<cxy::TypeCode> const t(
-      cdr<std::unique_ptr<cxy::TypeCode> >::unmarshalFrom(s));
-    cxy::Any result(t.kind(),
-                    t.repoId(),
-                    std::vector<uint8_t>(),
-                    std::vector<uint8_t>());
-    cxy::CdrMemOStream ts(result.cdrEncodedTypeCode_);
-    cxy::CdrMemOStream vs(result.cdrEncodedValue_);
-    cdr<std::unique_ptr<cxy::TypeCode> >::marshal(t,ts);
-    t->copyValue(s, vs);
-    return result;
+    return Any<E>(s);
   }
-  static void marshal(Any const& x, cdrStream& s)
-  //to avoid needing CORBA.h in our .hh, excepiton specs are commented
+  static void marshal(Any<E> const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
   //throw(
   //  omni::giopStream::CommFailure
   //)
   {
-    s.put_octet_array(&x.cdrEncodedTypeCode_[0],x.cdrEncodedTypeCode_.size());
-    s.put_octet_array(&x.cdrEncodedValue_[0],x.cdrEncodedValue_.size());
+    x.marshalTo(s);
   }
 };
   

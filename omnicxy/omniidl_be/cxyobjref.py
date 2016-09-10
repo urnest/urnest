@@ -17,7 +17,8 @@ objref_operation_t='''
       _invoke(c);%(returnValue)s
     }
     catch(CORBA::Exception const& ee) {
-      throw cxy::translateException< %(eclass)s >(ee);
+      throw cxy::translateException< %(eclass)s >(
+        translateCorbaException(ee));
     }
   }
   catch(%(eclass)s& e) {
@@ -269,7 +270,8 @@ template='''\
 #include %(cdrhhinc)s
 
 #include <cxy/objref.hh>
-#include <cxy/translateException.hh>
+#include <cxy/translateException.hh> //impl
+#include <cxy/translateCorbaException.hh> //impl
 #include <cxy/pof.hh>
 
 #include <xju/NonCopyable.hh>

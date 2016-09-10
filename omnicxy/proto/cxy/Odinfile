@@ -136,6 +136,7 @@ echo.sref.cc==%gen/echo.sref.cc
 ()+cmd=(%test-duplicate-name) '3761':exec.output
 ()+cmd=(%test-port-in-use):exec.output
 ()+cmd=(%p2-main-2) '3753' 'both':exec.output
+()+cmd=(%test-any):exec.output
 %leak-checks.tree
 
 %cxx-opts==<<
@@ -164,6 +165,7 @@ echo.sref.cc==%gen/echo.sref.cc
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-duplicate-name==test-duplicate-name.cc+(%cxx-opts):auto.cxx.exe
 %test-port-in-use==test-port-in-use.cc+(%cxx-opts):auto.cxx.exe
+%test-any==test-any.cc+(%cxx-opts):auto.cxx.exe
 
 %test-transient==()+cmd=(%test-transient.sh) (%p1-main):exec.output
 
