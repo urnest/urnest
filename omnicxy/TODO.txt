@@ -278,7 +278,18 @@ x memory leaks:
         inline void* bufPtr() const
       ... but might be better implementing own cdrStream that
       uses external std::vector<uint8_t> (stored in Any)
-      - is there a header eg for byte order?
+    - is there a header eg for byte order?
+      x "complex" typecodes are encapsulated ie they are
+        encoded as typekind+vector<byte> where the vector<byte> has
+        a byte order followed by cdr encodings
+      x value of any is not encapsulated, therefore need to decode the
+        typecode to be able to figure out how big the value is
+    - recursion/indirection in typecodes:
+      - want to store as just TypeCode const*, but when we get to the
+        referer we have not necessarily created the referee, so perhaps
+        use 2x maps: map<offset,TypeCode const*> for those we know,
+        multimap<offset, std::reference<TypeCode const*> > for those we 
+        don't know (and fill them as we create the referee)
 
     - test test-any-interop.cc :
       - encode cxy, decode cxx and vice-versa, use cdrMemoryStream
