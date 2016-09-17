@@ -1610,24 +1610,24 @@ void test33()
 void test34()
 {
   std::string const x(
-    "  operator int() const throw()"
-    "  {"
-    "    return x_;"
-    "  }");
+    "operator int() const throw()"
+    "{"
+    "  return x_;"
+    "}");
 
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
 
   try {
-    at = parse(root, at, hcp_parser::conversion_operator);
+    at = parse(root, at, hcp_parser::function_def);
     xju::assert_equal(reconstruct(root), x);
     std::vector<hcp_ast::IR>::const_iterator j(
-      std::find_if(root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.begin(),
-                   root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end(),
-                   hcp_ast::isA_<hcp_ast::VarName>));
+      std::find_if(root.items_[0]->asA<hcp_ast::FunctionDef>().items_.begin(),
+                   root.items_[0]->asA<hcp_ast::FunctionDef>().items_.end(),
+                   hcp_ast::isA_<hcp_ast::FunctionName>));
     xju::assert_not_equal(
       j, 
-      root.items_[0]->asA<hcp_ast::FunctionName>().items_.end());
+      root.items_[0]->asA<hcp_ast::FunctionDef>().items_.end());
     xju::assert_equal(reconstruct(*j), "operator int");
     xju::assert_equal(at.atEnd(), true);
   }

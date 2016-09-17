@@ -1137,6 +1137,11 @@ PR type_name(
   unqualifiedTypeName+
   eatWhite);
 
+PR conversion_operator_name(
+  parseLiteral("operator")+
+  whitespace+
+  type_name);
+  
 PR keyword_static(
   new NamedParser<hcp_ast::KeywordStatic>(
     "\"static\"",
@@ -1180,10 +1185,16 @@ PR function_impl(
 PR function_proto(
   function_qualifiers+
   balanced(parseOneOfChars("();{}[]")|
-           ((operator_name|destructor_name|type_name)+parseOneOfChars("(")))+
+           ((operator_name|
+             conversion_operator_name|
+             destructor_name|
+             type_name)+parseOneOfChars("(")))+
   new NamedParser<hcp_ast::FunctionName>(
     "function name",
-    (operator_name|destructor_name|type_name))+
+    (operator_name|
+     conversion_operator_name|
+     destructor_name|
+     type_name))+
   bracketed+
   balanced((eatWhite+parseOneOfChars(";"))|function_impl));
 
@@ -1333,14 +1344,14 @@ public:
        PR(new NamedParser<hcp_ast::ClassMembers>(
             "class members",
             parseUntil(comments|
-                       function_decl|
-                       template_function_def|
                        access_modifier|
                        PR(new SelfParser(*this))|
                        class_decl|
                        scoped_enum_def|
                        enum_def|
                        typedef_statement|
+                       function_decl|
+                       template_function_def|
                        function_def|
                        static_var_def|
                        attr_decl,
