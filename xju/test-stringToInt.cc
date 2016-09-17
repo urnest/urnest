@@ -68,7 +68,7 @@ struct Test3
             s << e;
             xju::assert_equal(
                 s.str(),
-                "Failed to convert \""+xju::format::str(x+1)+"\" to an integer because\n"+xju::format::str(x+1)+" is too large (maximum allowed integer is "+xju::format::str(INT_MAX)+").");
+                "Failed to convert \""+xju::format::str(x+1)+"\" to an integer because\n"+xju::format::str(x+1)+" is outside range "+xju::format::str(INT_MIN)+".."+xju::format::str(INT_MAX)+".");
         }
     }
 };

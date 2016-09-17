@@ -40,6 +40,13 @@ namespace xju
 		      << " unexpected";
 		throw xju::Exception(cause, XJU_TRACED);
 	    }
+            else if (errno==ERANGE)
+            {
+		std::ostringstream cause;
+		cause << value << " is outside range "
+		      << INT_MIN << ".." << INT_MAX;
+		throw xju::Exception(cause, XJU_TRACED);
+	    }
 	    const int result(x);
 	    if ((long)result != x)
 	    {
