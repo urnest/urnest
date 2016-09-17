@@ -1607,6 +1607,36 @@ void test33()
   }
 }
   
+void test34()
+{
+  std::string const x(
+    "  operator int() const throw()"
+    "  {"
+    "    return x_;"
+    "  }");
+
+  hcp_ast::CompositeItem root;
+  hcp_parser::I at(x.begin(), x.end());
+
+  try {
+    at = parse(root, at, hcp_parser::conversion_operator);
+    xju::assert_equal(reconstruct(root), x);
+    std::vector<hcp_ast::IR>::const_iterator j(
+      std::find_if(root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.begin(),
+                   root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end(),
+                   hcp_ast::isA_<hcp_ast::VarName>));
+    xju::assert_not_equal(
+      j, 
+      root.items_[0]->asA<hcp_ast::FunctionName>().items_.end());
+    xju::assert_equal(reconstruct(*j), "operator int");
+    xju::assert_equal(at.atEnd(), true);
+  }
+  catch(xju::Exception const& e) {
+    assert_readableRepr_equal(e, "", XJU_TRACED);
+    xju::assert_equal(true,false);
+  }
+}
+  
 int main(int argc, char* argv[])
 {
   unsigned int n(0);
@@ -1643,6 +1673,7 @@ int main(int argc, char* argv[])
   test31(), ++n;
   test32(), ++n;
   test33(), ++n;
+  test34(), ++n;
   
   xju::assert_equal(atLeastOneReadableReprFailed, false);
   std::cout << "PASS - " << n << " steps" << std::endl;
