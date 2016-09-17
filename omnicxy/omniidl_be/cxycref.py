@@ -94,10 +94,9 @@ public:
     return cxy::IOR< %(fqn)s >(obj_->ior(cxy::cdr< ::%(fqn)s >::repoId));
   }
 
-  //REVISIT: hcp-split does not understand:
-  //operator cxy::IOR< %(fqn)s >() const throw(){
-  //  return ior();
-  //}
+  operator cxy::IOR< %(fqn)s >() const throw(){
+    return ior();
+  }
 
   ~cref() throw()
   {

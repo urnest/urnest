@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
         cxy::ORB<cxy::Exception> orb("giop:tcp::");
         cxy::cref<p15::BBB> ref(orb, makeURI(port, OBJECT_NAME));
         cxy::cref<p15::AAA> a(orb, ref->getA());
-        cxy::cref<p15::AAA> aa(orb, ref->echoA(a.ior()));
+        cxy::cref<p15::AAA> aa(orb, ref->echoA(a));
         aa->f(11);
       }
     }
