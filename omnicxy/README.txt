@@ -139,7 +139,7 @@ Contents
   use of C++ dynamic_cast for discrimination - see proto/cxy/p11.hh
 
   exception maps to C++ class derived from the "default" exception class,
-  which case be specified when invoking omniidl. More on this in 
+  which can be specified when invoking omniidl. More on this in 
   5. Exceptions.
 
   object reference, ie reference to interface T, maps to a cxy::IOR<T>, which

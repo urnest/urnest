@@ -95,6 +95,12 @@ public:
   }
   std::string uri_;
 
+  IORImpl ior(std::string const& repoId) throw() {
+    omniIOR_var const ior(_getIOR());
+    return IORImpl(repoId,
+                   cxy::TaggedProfileList(ior->iopProfiles()));
+  }
+
   %(objref_content)s
 
 protected:
@@ -273,6 +279,7 @@ template='''\
 #include <cxy/translateException.hh> //impl
 #include <cxy/translateCorbaException.hh> //impl
 #include <cxy/pof.hh>
+#include <cxy/TaggedProfileList.hh>//impl
 
 #include <xju/NonCopyable.hh>
 #include <xju/Optional.hh>

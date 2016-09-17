@@ -7,6 +7,7 @@ module p15
   interface BBB
   {
     AAA getA();
+    AAA echoA(in AAA a);
   };
 };
 

@@ -95,6 +95,12 @@ public:
   {
     return aaa_;
   }
+  // BBB::
+  virtual ::cxy::IOR< ::p15::AAA > echoA(::cxy::IOR< ::p15::AAA >const& a) 
+    throw()
+  {
+    return a;
+  }
 };
 
   
@@ -119,7 +125,8 @@ int main(int argc, char* argv[])
         cxy::ORB<cxy::Exception> orb("giop:tcp::");
         cxy::cref<p15::BBB> ref(orb, makeURI(port, OBJECT_NAME));
         cxy::cref<p15::AAA> a(orb, ref->getA());
-        a->f(11);
+        cxy::cref<p15::AAA> aa(orb, ref->echoA(a.ior()));
+        aa->f(11);
       }
     }
     else if (argv[2]==std::string("server")) {

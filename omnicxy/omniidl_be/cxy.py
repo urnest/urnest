@@ -113,6 +113,10 @@ def ptype(p):
         elif p.paramType().kind()==idltype.tk_union:
             unionTypeName=''.join(['::'+_ for _ in p.paramType().scopedName()])
             return '::xju::Shared< %(unionTypeName)s const> const'%vars()
+        elif p.paramType().kind()==idltype.tk_objref:
+            t=''.join(['::'+_ for _ in p.paramType().scopedName()])
+            if t=='::CORBA::Object': t='void'
+            return '::cxy::IOR< %(t)s > const'%vars()
         assert False, '%s not implemented, only basic types %s implemented' % (p.paramType().kind(),basicParamTypes.keys())
 
     assert p.dirtext()+' params not yet implemented'

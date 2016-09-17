@@ -146,6 +146,7 @@ TypeKind.cc==%TypeKind/TypeKind.cc
 ()+cmd=(test-TypeCode.cc+(%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Any.cc+(%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Any-interop.cc+(%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-nested.cc+(%cxx-opts):auto.cxx.exe):stdout
 
 %cxx-opts==<<
 +(..%cxx-opts)

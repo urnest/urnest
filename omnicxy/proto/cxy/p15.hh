@@ -31,6 +31,11 @@ public:
     // ipc failure
     // - note servant may not throw
     cxy::Exception) = 0;
+  virtual ::cxy::IOR< ::p15::AAA > echoA(
+    ::cxy::IOR< ::p15::AAA > const& a) throw(
+    // ipc failure
+    // - note servant may not throw
+    cxy::Exception) = 0;
 };
 
 }

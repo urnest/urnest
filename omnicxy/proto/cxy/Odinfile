@@ -112,30 +112,30 @@ echo.sref.cc==%gen/echo.sref.cc
 %p18.sref.hcp==%gen/p18.sref.hcp
 
 %all-tests.tree==<<
-()+cmd=(%p1-main) '3735' 'both':exec.output
-()+cmd=(%p2-main) '3736' 'both':exec.output
-()+cmd=(%p3-main) '3737' 'both':exec.output
+()+cmd=(%p1-main)+cmd='3735'+cmd='both':exec.output
+()+cmd=(%p2-main)+cmd='3736'+cmd='both':exec.output
+()+cmd=(%p3-main)+cmd='3737'+cmd='both':exec.output
 %test-transient
-()+cmd=(%p4-main) '3738' 'both':exec.output
-()+cmd=(%p5-main) '3739' 'both':exec.output
-()+cmd=(%p6-main) '3740' 'both':exec.output
-()+cmd=(%p7-main) '3741' 'both':exec.output
-()+cmd=(%p9-main) '3743' 'both':exec.output
-()+cmd=(%p10-main) '3744' 'both':exec.output
-()+cmd=(%p11-main) '3745' 'both':exec.output
-()+cmd=(%p12-main) '3746' 'both':exec.output
-()+cmd=(%p13-main) '3747' 'both':exec.output
-()+cmd=(%p14-main) '3748' 'both':exec.output
-()+cmd=(%p15-main) '3749' 'both':exec.output
-()+cmd=(%p16-main) '3750' 'both':exec.output
-()+cmd=(%echo-main) '3751' 'both':exec.output
-()+cmd=(%p17-main) '3752' 'both':exec.output
-()+cmd=(%p18-main) '3754' 'both':exec.output
+()+cmd=(%p4-main)+cmd='3738'+cmd='both':exec.output
+()+cmd=(%p5-main)+cmd='3739'+cmd='both':exec.output
+()+cmd=(%p6-main)+cmd='3740'+cmd='both':exec.output
+()+cmd=(%p7-main)+cmd='3741'+cmd='both':exec.output
+()+cmd=(%p9-main)+cmd='3743'+cmd='both':exec.output
+()+cmd=(%p10-main)+cmd='3744'+cmd='both':exec.output
+()+cmd=(%p11-main)+cmd='3745'+cmd='both':exec.output
+()+cmd=(%p12-main)+cmd='3746'+cmd='both':exec.output
+()+cmd=(%p13-main)+cmd='3747'+cmd='both':exec.output
+()+cmd=(%p14-main)+cmd='3748'+cmd='both':exec.output
+()+cmd=(%p15-main)+cmd='3749'+cmd='both':exec.output
+()+cmd=(%p16-main)+cmd='3750'+cmd='both':exec.output
+()+cmd=(%echo-main)+cmd='3751'+cmd='both':exec.output
+()+cmd=(%p17-main)+cmd='3752'+cmd='both':exec.output
+()+cmd=(%p18-main)+cmd='3754'+cmd='both':exec.output
 %test-transient
-()+cmd=(%test-no-such-object) '3760':exec.output
-()+cmd=(%test-duplicate-name) '3761':exec.output
+()+cmd=(%test-no-such-object)+cmd='3760'+cmd=exec.output
+()+cmd=(%test-duplicate-name)+cmd='3761'+cmd=exec.output
 ()+cmd=(%test-port-in-use):exec.output
-()+cmd=(%p2-main-2) '3753' 'both':exec.output
+()+cmd=(%p2-main-2)+cmd='3753'+cmd='both':exec.output
 ()+cmd=(%test-any):exec.output
 %leak-checks.tree
 

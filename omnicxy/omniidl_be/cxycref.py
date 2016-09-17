@@ -49,7 +49,7 @@ public:
   // note T must be a %(fqn)s or %(fqn)s must be a T
   template<class T>
   explicit cref(cxy::ORB< %(eclass)s >& orb, 
-                cxy::IOR< T >const& ior) throw(
+                cxy::IOR< T > const& ior) throw(
     // no object with specified ior, including server
     // not reachable and server does not know name
     cxy::Exceptions< %(eclass)s >::NoSuchObject,
@@ -89,6 +89,15 @@ public:
     %(fqn)s const* T_must_be_a_((T const*)0);
     return cref<T>(*orb_, uri());
   }
+
+  cxy::IOR< %(fqn)s > ior() const throw(){
+    return cxy::IOR< %(fqn)s >(obj_->ior(cxy::cdr< ::%(fqn)s >::repoId));
+  }
+
+  //REVISIT: hcp-split does not understand:
+  //operator cxy::IOR< %(fqn)s >() const throw(){
+  //  return ior();
+  //}
 
   ~cref() throw()
   {
