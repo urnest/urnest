@@ -19,12 +19,14 @@
 #include <xju/Float.hh>
 #include "IOR.hh"
 #include "TaggedProfileList.hh" //impl
+#include <cxy/EncapsulationCdrStream.hh> //impl
 #include <cxy/optional.hh>
 
 class cdrStream;
 
 namespace cxy
 {
+class EncapsulationCdrStream;
 
 template<class T>
 class cdr
@@ -323,6 +325,30 @@ public:
   
 };
 
+template<>
+class cdr<EncapsulationCdrStream>
+{
+public:
+  static EncapsulationCdrStream unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    return EncapsulationCdrStream(s);
+  }
+  static void marshal(EncapsulationCdrStream const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    x.marshalTo(s);
+  }
+};
+
+  
 template<class Tag, class Impl, class E>
 class cdr<xju::Int<Tag, Impl, E> >
 {

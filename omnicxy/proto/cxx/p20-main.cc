@@ -85,10 +85,13 @@ void client(int argc, char* argv[],
       }
 
       ::CORBA::Any x;
-      x <<= (CORBA::Short)3;
+      p20::A a;
+      a.a_= (CORBA::Short)3;
+      x <<= a;
       ::CORBA::Any_var y(ref->f1(x));
-      CORBA::Short z(0);
-      y >>= z;
+      p20::A* a2(0);
+      y >>= a2;
+      CORBA::Short z(a2->a_);
       std::cout << z << std::endl;
     }
     catch(CORBA::Exception& e) {

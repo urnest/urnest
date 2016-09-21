@@ -5,7 +5,7 @@ key:
 
 x documentation / tutorial
 
-* once hcp-split can understand conversion operators, see //REVISIT in
+x once hcp-split can understand conversion operators, see //REVISIT in
   cxycref.py, adjust p15-main.cc and document in README.txt
 
 * fix up exception handling:
@@ -291,8 +291,11 @@ x memory leaks:
 	   tk_fixed: ushort(digits), short(scale)
 
       x "complex" typecodes are encapsulated ie they are
-        encoded as typekind+vector<byte> where the vector<byte> has
-        a byte order byte followed by cdr encodings
+        encoded as sequence<octet> where the sequence<octet> has
+        a byte order byte followed by cdr encodings. Use 
+        cdrEncapsulationStream? How to marshal it?
+           ~/omniORB-4.2.0/src/lib/omniORB/dynamic/typecode.cc:5049
+
       x value of any is not encapsulated, therefore need to decode the
         typecode to be able to figure out how big the value is
         tk_objref: string (repository ID), string(name)
@@ -324,6 +327,10 @@ x memory leaks:
                    ulong (count)
                   {string (member name),
                  TypeCode (member type)}
+        - step through omni orb encoding of a struct to see how it
+          does the encapsulation
+         ~/omniORB-4.2.0/src/lib/omniORB/dynamic/typecode.cc:5049
+         ... is the interesting bit
 
     - recursion/indirection in typecodes:
       - want to store as just TypeCode const*, but when we get to the
@@ -333,9 +340,16 @@ x memory leaks:
         don't know (and fill them as we create the referee)
       - encoding needs the corrolery map<fqn,offset> ... might need
         more if idl allows cross-linked structures (C++ appears to)
+        No: 9.3.4.3 Scope of the Indirections states "Non-negative offsets are
+        reserved for future use."
       - use struct N from test-nested as a test case
         - typecode for sequence
         - typecode for struct
+      - need to undestand typecode offset v encapsulation... corba.pdf states
+        encapsulation allows pre-marshalling, therefore inside encapsulation,
+        offset must stay within encapsulation? Yes - 9.3.4.3 Scope of the 
+        Indirections explicitly states this as 
+        "Indirections may not cross encapsulation boundaries."
 
     - test test-any-interop.cc :
       - encode cxy, decode cxx and vice-versa, use cdrMemoryStream

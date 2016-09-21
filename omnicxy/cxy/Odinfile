@@ -134,6 +134,11 @@ MemCdrStream.cc==%MemCdrStream/MemCdrStream.cc
 
 %MemCdrStream==()+cmd=(../../hcp/hcp-split) -l 1 (MemCdrStream.hcp) 'MemCdrStream.hh' 'MemCdrStream.cc':output
 
+EncapsulationCdrStream.hh==%EncapsulationCdrStream/EncapsulationCdrStream.hh
+EncapsulationCdrStream.cc==%EncapsulationCdrStream/EncapsulationCdrStream.cc
+
+%EncapsulationCdrStream==()+cmd=(../../hcp/hcp-split) -l 1 (EncapsulationCdrStream.hcp) 'EncapsulationCdrStream.hh' 'EncapsulationCdrStream.cc':output
+
 TypeKind.hh==%TypeKind/TypeKind.hh
 TypeKind.cc==%TypeKind/TypeKind.cc
 

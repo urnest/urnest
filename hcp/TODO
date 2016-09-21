@@ -95,7 +95,7 @@ x fix forward-declared classes, eg:
     class B{};
   };
 
-* handle class "operator X()" functions
+x handle class "operator X()" functions (conversion operator)
 
 - add trailing blank lines to end of entities, but add inline leading blanks
   to start of entities, to get nicer split code formatting

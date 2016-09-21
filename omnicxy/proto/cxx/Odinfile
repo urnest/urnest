@@ -19,11 +19,11 @@
 
 
 %all-tests.tree==<<
-()+cmd=(%p1-main) '6735' 'both':exec.output
-()+cmd=(%p2-main) '6736' 'both':exec.output
-()+cmd=(%p6-main) '6740' 'both':exec.output
-()+cmd=(%p9-main) '6743' 'both':exec.output
-()+cmd=(%p20-main) '6744' 'both':exec.output
+()+cmd=(%p1-main)+cmd='6735'+cmd='both':exec.output
+()+cmd=(%p2-main)+cmd='6736'+cmd='both':exec.output
+()+cmd=(%p6-main)+cmd='6740'+cmd='both':exec.output
+()+cmd=(%p9-main)+cmd='6743'+cmd='both':exec.output
+()+cmd=(%p20-main)+cmd='6744'+cmd='both':exec.output
 
 %dummy.hh==<<
 

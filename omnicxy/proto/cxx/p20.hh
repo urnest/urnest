@@ -57,10 +57,10 @@ _CORBA_MODULE p20
 _CORBA_MODULE_BEG
 
   struct A {
-    typedef _CORBA_ConstrType_Variable_Var<A> _var_type;
+    typedef _CORBA_ConstrType_Fix_Var<A> _var_type;
 
     
-    ::CORBA::String_member a_;
+    ::CORBA::Short a_;
 
   
 
@@ -70,7 +70,7 @@ _CORBA_MODULE_BEG
 
   typedef A::_var_type A_var;
 
-  typedef _CORBA_ConstrType_Variable_OUT_arg< A,A_var > A_out;
+  typedef A& A_out;
 
   _CORBA_MODULE_VAR _dyn_attr const ::CORBA::TypeCode_ptr _tc_A;
 

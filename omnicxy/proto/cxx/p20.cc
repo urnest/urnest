@@ -17,14 +17,14 @@ static const char* _0RL_library_version = omniORB_4_2;
 void
 p20::A::operator>>= (cdrStream &_n) const
 {
-  _n.marshalString(a_,0);
+  a_ >>= _n;
 
 }
 
 void
 p20::A::operator<<= (cdrStream &_n)
 {
-  a_ = _n.unmarshalString(0);
+  (::CORBA::Short&)a_ <<= _n;
 
 }
 
@@ -291,7 +291,7 @@ static const char* _0RL_dyn_library_version = omniORB_4_2_dyn;
 static ::CORBA::TypeCode::_Tracker _0RL_tcTrack(__FILE__);
 
 static CORBA::PR_structMember _0RL_structmember_p20_mA[] = {
-  {"a_", CORBA::TypeCode::PR_string_tc(0, &_0RL_tcTrack)}
+  {"a_", CORBA::TypeCode::PR_short_tc()}
 };
 
 #ifdef _0RL_tc_p20_mA

@@ -13,6 +13,8 @@
 
 #include <omniORB4/CORBA.h> //impl
 #include <omniORB4/cdrStream.h> //impl
+#include <xju/format.hh>//impl
+#include <cxy/EncapsulationCdrStream.hh>//impl
 #include <memory>
 
 class cdrStream;
@@ -85,6 +87,83 @@ public:
   }
 };
 
+class SequenceTypeCode : public TypeCode
+{
+public:
+  SequenceTypeCode(std::shared_ptr<TypeCode> itemType,
+                   uint32_t maxSize):
+      itemType_(itemType),
+      maxSize_(maxSize)
+  {
+  }
+  virtual void copyValue(cdrStream& from, cdrStream& to) const
+  {
+    cxy::cdr<uint32_t> const size(
+      cxy::cdr<uint32_t>::unmarshalFrom(from));
+    // deliberately don't check max size
+    for(uint32_t i=0; i != size; ++i) {
+      itemType_->copyValue(from,to);
+    }
+  }
+
+  virtual void marshal(cdrStream& s) const
+  {
+    EncapsulationCdrStream es;
+    itemType_->marshal(*es);
+    cxy::cdr<uint32_t>::marshal(maxSize_,*es);
+
+    cxy::cdr<std::vector<T> >::marshal((uint32_t)TypeKind::SEQUENCE, s);
+    cxy::cdr<EncapsulationCdrStream>::marshal(es,s);
+  }
+  
+  virtual bool equals(TypeCode const& b) const throw()
+  {
+    SequenceTypeCode const* b_(dynamic_cast<SequenceTypeCode const*>(&b));
+    return b_ && (*b==*this);
+  }
+  virtual std::string str() const throw()
+  {
+    return std::string("sequence<")+itemType_->str()+","+
+      xju::format::int_(maxSize_)+">";
+  }
+private:
+  std::shared_ptr<TypeCode> itemType_;
+  uint32_t maxSize_;
+  
+  friend bool operator==(SequenceTypeCode const& a,
+                         SequenceTypeCode const& b) const throw()
+  {
+    return a.maxSize_==b.maxSize_ &&
+      a.itemType_->equals(*b.itemType_);
+  }
+};
+
+  
+template<class T>  
+class TypeCodeOf<std::vector<T> > : public SequenceTypeCode
+{
+public:
+  TypeCodeOf<std::vector<T> >() throw():
+      SequenceTypeCode(std::shared_ptr<TypeCodeOf<T> >(
+                         new TypeCodeOf<T>),
+                       0) {
+  }
+  virtual bool equals(TypeCode const& b) const throw()
+  {
+    TypeCodeOf const* b_(dynamic_cast<TypeCodeOf const*>(&b));
+    return b_;
+  }
+
+  virtual void copyValue(cdrStream& from, cdrStream& to) const
+  {
+    cxy::cdr<std::vector<T> >::marshal(
+      cxy::cdr<std::vector<T> >::unmarshalFrom(from),
+      to);
+    }
+  }
+
+};
+
 template<>
 class cdr< std::shared_ptr<TypeCode> >
 {
@@ -100,6 +179,13 @@ public:
     switch(static_cast<cxy::TypeKind>(k)) {
     case cxy::TypeKind::SHORT:
       return std::shared_ptr<TypeCode>(new TypeCodeOf<int16_t>);
+    case cxy::TypeKind::SEQUENCE:
+    {
+      EncapsulationCdrStream es(s);
+      auto const t(cdr< std::shared_ptr<TypeCode> >::unmarshalFrom(*es));
+      auto const maxSize(cdr<uint32_t>::unmarshalFrom(*es));
+      return std::shared_ptr<TypeCode>(new SequenceTypeCode(t,maxSize));
+    }
     default:
       std::ostringstream s;
       s << "unimplemented type kind " << k;

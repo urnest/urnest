@@ -39,6 +39,7 @@ void test1()
 {
   testx((int16_t)27);
   //testx((int32_t)27);
+  testx(std::vector<int16_t>{3});
 }
 
 }
