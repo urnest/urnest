@@ -100,6 +100,8 @@ omnicxy/cxy/AnyImpl.cc
 omnicxy/cxy/AnyImpl.hh
 omnicxy/cxy/MemCdrStream.cc
 omnicxy/cxy/MemCdrStream.hh
+omnicxy/cxy/EncapsulationCdrStream.cc
+omnicxy/cxy/EncapsulationCdrStream.hh
 omnicxy/cxy/any_.cc
 omnicxy/cxy/any_.hh
 omnicxy/cxy/translateCorbaException.cc

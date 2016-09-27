@@ -100,6 +100,7 @@ public:
   {
     uint32_t const size(
       cxy::cdr<uint32_t>::unmarshalFrom(from));
+    cxy::cdr<uint32_t>::marshal(size,to);
     // deliberately don't check max size
     for(uint32_t i=0; i != size; ++i) {
       itemType_->copyValue(from,to);
