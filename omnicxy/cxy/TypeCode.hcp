@@ -98,7 +98,7 @@ public:
   }
   virtual void copyValue(cdrStream& from, cdrStream& to) const
   {
-    cxy::cdr<uint32_t> const size(
+    uint32_t const size(
       cxy::cdr<uint32_t>::unmarshalFrom(from));
     // deliberately don't check max size
     for(uint32_t i=0; i != size; ++i) {
@@ -112,14 +112,14 @@ public:
     itemType_->marshal(*es);
     cxy::cdr<uint32_t>::marshal(maxSize_,*es);
 
-    cxy::cdr<std::vector<T> >::marshal((uint32_t)TypeKind::SEQUENCE, s);
+    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::SEQUENCE, s);
     cxy::cdr<EncapsulationCdrStream>::marshal(es,s);
   }
   
   virtual bool equals(TypeCode const& b) const throw()
   {
     SequenceTypeCode const* b_(dynamic_cast<SequenceTypeCode const*>(&b));
-    return b_ && (*b==*this);
+    return b_ && (*b_==*this);
   }
   virtual std::string str() const throw()
   {
@@ -131,7 +131,7 @@ private:
   uint32_t maxSize_;
   
   friend bool operator==(SequenceTypeCode const& a,
-                         SequenceTypeCode const& b) const throw()
+                         SequenceTypeCode const& b) throw()
   {
     return a.maxSize_==b.maxSize_ &&
       a.itemType_->equals(*b.itemType_);
@@ -151,7 +151,7 @@ public:
   virtual bool equals(TypeCode const& b) const throw()
   {
     TypeCodeOf const* b_(dynamic_cast<TypeCodeOf const*>(&b));
-    return b_;
+    return b_ || SequenceTypeCode::equals(b);
   }
 
   virtual void copyValue(cdrStream& from, cdrStream& to) const
@@ -159,7 +159,6 @@ public:
     cxy::cdr<std::vector<T> >::marshal(
       cxy::cdr<std::vector<T> >::unmarshalFrom(from),
       to);
-    }
   }
 
 };

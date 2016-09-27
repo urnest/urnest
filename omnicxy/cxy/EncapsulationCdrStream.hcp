@@ -8,11 +8,15 @@
 // implied warranty.
 //
 
+#include <cxy/cdr.hh>
+
 #include <omniORB4/CORBA.h>//impl
 #include <omniORB4/cdrStream.h> //impl
 #include <new>
+#include <cinttypes>
 
 class cdrStream;
+class cdrMemoryStream;
 class cdrEncapsulationStream;
 
 namespace cxy
@@ -33,14 +37,15 @@ public:
   //  CORBA::SystemException,
   //  omni::giopStream::CommFailure
   //  )
-      s_(0)
+    : s_(0)
   {
     uint32_t const c(cxy::cdr<uint32_t>::unmarshalFrom(s));
-    std::unique_ptr<cdrEncapsulationStream> es(
-      new cdrEncapsulationStream(c));
+    std::unique_ptr<cdrMemoryStream> es(
+      new cdrMemoryStream(c));
     s.copy_to(*es,c);
-    es->setByteSwapFlag(cxy::cdr<bool>::unmarshalFrom(es));
-    return s_=es.release();
+    bool const byteSwap(cxy::cdr<bool>::unmarshalFrom(*es));
+    es->setByteSwapFlag(byteSwap);
+    s_=es.release();
   }
   void marshalTo(cdrStream& s) const
   //to avoid needing CORBA.h in our .hh, exception specs are commented
@@ -50,7 +55,7 @@ public:
   {
     uint32_t const size(s_->bufSize());
     cxy::cdr<uint32_t>::marshal(size,s);
-    s.put_octet_array(s_->bufPtr(),size);
+    s.put_octet_array((const _CORBA_Octet*)s_->bufPtr(),size);
   }
   
   cdrStream& operator*() throw()
@@ -67,7 +72,7 @@ public:
   }
 
   EncapsulationCdrStream(EncapsulationCdrStream const& b) throw(std::bad_alloc):
-      s_(new cdrEncapsulationStream(*b.s_))
+      s_(new cdrMemoryStream(*b.s_))
   {
   }
   
@@ -76,20 +81,37 @@ public:
   {
     if (s_ != b.s_) {
       delete s_;
-      s_=new cdrEncapsulationStream(*b.s_);
+      s_=new cdrMemoryStream(*b.s_);
     }
   }
 
-  void marshalTo(cdrStream& s) const
+private:
+  cdrMemoryStream* s_;
+};
+
+template<>
+class cdr<EncapsulationCdrStream>
+{
+public:
+  static EncapsulationCdrStream unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    return EncapsulationCdrStream(s);
+  }
+  static void marshal(EncapsulationCdrStream const& x, cdrStream& s)
   //to avoid needing CORBA.h in our .hh, exception specs are commented
   //throw(
   //  omni::giopStream::CommFailure
   //)
   {
-    
-private:
-  cdrEncapsulationStream* s_;
+    x.marshalTo(s);
+  }
 };
 
+  
   
 }
