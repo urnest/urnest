@@ -264,6 +264,7 @@ x memory leaks:
 - bounded sequences > 1
 - arrays
 - any
+  * add sequence to test-Any, test-Any-interop
   any is marshalled as type code then data, the data is the cdr encoding
     of the value (the length of the data is implicit in the type code)
     what is typecode? essentially parallels instance encoding

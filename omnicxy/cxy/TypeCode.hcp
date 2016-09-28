@@ -16,6 +16,7 @@
 #include <xju/format.hh>//impl
 #include <cxy/EncapsulationCdrStream.hh>//impl
 #include <memory>
+#include <vector>
 
 class cdrStream;
 
@@ -153,13 +154,6 @@ public:
   {
     TypeCodeOf const* b_(dynamic_cast<TypeCodeOf const*>(&b));
     return b_ || SequenceTypeCode::equals(b);
-  }
-
-  virtual void copyValue(cdrStream& from, cdrStream& to) const
-  {
-    cxy::cdr<std::vector<T> >::marshal(
-      cxy::cdr<std::vector<T> >::unmarshalFrom(from),
-      to);
   }
 
 };

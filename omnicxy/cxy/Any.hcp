@@ -8,7 +8,6 @@
 // implied warranty.
 //
 
-#include <cxy/any_.hh>
 #include <cxy/Exception.hh>
 
 #include <cxy/AnyImpl.hh>
@@ -17,6 +16,9 @@
 
 namespace cxy
 {
+template<class T>
+class any;
+
 template<class E=cxy::Exception>
 class Any
 {

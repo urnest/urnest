@@ -11,10 +11,11 @@
 #include <cxy/cdr.hh> //impl
 #include <cinttypes>
 #include <memory>
-#include <cxy/AnyImpl.hh> //impl
+#include <cxy/AnyImpl.hh>
 #include <cxy/Exception.hh>
 #include <sstream> //impl
-#include <cxy/translateCorbaException.hh> //impl
+#include <cxy/translateCorbaException.hh>
+#include <cxy/TypeCode.hh>
 
 namespace cxy
 {
@@ -59,6 +60,46 @@ public:
       ::cxy::Exception e(translateCorbaException(ex));
       std::ostringstream s;
       s << "extract " << typeid(int16_t).name() << " from Any containing "
+        << (*x.typeCode_);
+      e.addContext(s.str(), std::make_pair(__FILE__,__LINE__));
+      throw e;
+    }
+  }
+};
+
+template<class T>
+class any<std::vector<T> >
+{
+public:
+  static std::shared_ptr<AnyImpl> encode(std::vector<T> const& x) throw()
+  {
+    std::shared_ptr<TypeCode> typeCode(::cxy::typeCodeOf(x));
+    MemCdrStream value;
+    ::cxy::cdr<std::vector<T> >::marshal(x,*value);
+    return std::shared_ptr<AnyImpl>(new AnyImpl(typeCode,value));
+  }
+  static bool isA(AnyImpl const& x) throw()
+  {
+    return ::cxy::TypeCodeOf<std::vector<T> >().equals(*x.typeCode_);
+  }
+  
+  static std::vector<T> decode(AnyImpl const& x) throw(
+    cxy::Exception)
+  {
+    if (!isA(x)) {
+      std::ostringstream s;
+      s << "Any contains a " << (*x.typeCode_)
+        << ", not a " << typeid(std::vector<T>).name();
+      throw ::cxy::Exception(s.str(),std::make_pair(__FILE__,__LINE__));
+    }
+    try {
+      MemCdrStream::Ref value(x.value_);
+      return ::cxy::cdr<std::vector<T> >::unmarshalFrom(*value);
+    }
+    catch(CORBA::Exception& ex) {
+      ::cxy::Exception e(translateCorbaException(ex));
+      std::ostringstream s;
+      s << "extract " << typeid(std::vector<T>).name() << " from Any containing "
         << (*x.typeCode_);
       e.addContext(s.str(), std::make_pair(__FILE__,__LINE__));
       throw e;

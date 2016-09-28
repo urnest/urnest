@@ -10,6 +10,7 @@
 #include <omniORB4/CORBA.h>
 
 #include <cxy/Any.hh>
+#include <cxy/any_.hh>
 
 #include <iostream>
 #include <xju/assert.hh>
