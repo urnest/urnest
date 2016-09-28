@@ -19,87 +19,39 @@
 
 namespace cxy
 {
-class AnyImpl;
-
 template<class T>
-class any //must specialise
+class any
 {
 public:
-};
-
-template<>
-class any<int16_t>
-{
-public:
-  static std::shared_ptr<AnyImpl> encode(int16_t const& x) throw()
+  static std::shared_ptr<AnyImpl> encode(T const& x) throw()
   {
     std::shared_ptr<TypeCode> typeCode(::cxy::typeCodeOf(x));
     MemCdrStream value;
-    ::cxy::cdr<int16_t>::marshal(x,*value);
+    ::cxy::cdr<T>::marshal(x,*value);
     return std::shared_ptr<AnyImpl>(new AnyImpl(typeCode,value));
   }
   static bool isA(AnyImpl const& x) throw()
   {
-    return ::cxy::TypeCodeOf<int16_t>().equals(*x.typeCode_);
+    return ::cxy::TypeCodeOf<T>().equals(*x.typeCode_);
   }
   
-  static int16_t decode(AnyImpl const& x) throw(
+  static T decode(AnyImpl const& x) throw(
     cxy::Exception)
   {
     if (!isA(x)) {
       std::ostringstream s;
       s << "Any contains a " << (*x.typeCode_)
-        << ", not a " << typeid(int16_t).name();
+        << ", not a " << typeid(T).name();
       throw ::cxy::Exception(s.str(),std::make_pair(__FILE__,__LINE__));
     }
     try {
       MemCdrStream::Ref value(x.value_);
-      return ::cxy::cdr<int16_t>::unmarshalFrom(*value);
+      return ::cxy::cdr<T>::unmarshalFrom(*value);
     }
     catch(CORBA::Exception& ex) {
       ::cxy::Exception e(translateCorbaException(ex));
       std::ostringstream s;
-      s << "extract " << typeid(int16_t).name() << " from Any containing "
-        << (*x.typeCode_);
-      e.addContext(s.str(), std::make_pair(__FILE__,__LINE__));
-      throw e;
-    }
-  }
-};
-
-template<class T>
-class any<std::vector<T> >
-{
-public:
-  static std::shared_ptr<AnyImpl> encode(std::vector<T> const& x) throw()
-  {
-    std::shared_ptr<TypeCode> typeCode(::cxy::typeCodeOf(x));
-    MemCdrStream value;
-    ::cxy::cdr<std::vector<T> >::marshal(x,*value);
-    return std::shared_ptr<AnyImpl>(new AnyImpl(typeCode,value));
-  }
-  static bool isA(AnyImpl const& x) throw()
-  {
-    return ::cxy::TypeCodeOf<std::vector<T> >().equals(*x.typeCode_);
-  }
-  
-  static std::vector<T> decode(AnyImpl const& x) throw(
-    cxy::Exception)
-  {
-    if (!isA(x)) {
-      std::ostringstream s;
-      s << "Any contains a " << (*x.typeCode_)
-        << ", not a " << typeid(std::vector<T>).name();
-      throw ::cxy::Exception(s.str(),std::make_pair(__FILE__,__LINE__));
-    }
-    try {
-      MemCdrStream::Ref value(x.value_);
-      return ::cxy::cdr<std::vector<T> >::unmarshalFrom(*value);
-    }
-    catch(CORBA::Exception& ex) {
-      ::cxy::Exception e(translateCorbaException(ex));
-      std::ostringstream s;
-      s << "extract " << typeid(std::vector<T>).name() << " from Any containing "
+      s << "extract " << typeid(T).name() << " from Any containing "
         << (*x.typeCode_);
       e.addContext(s.str(), std::make_pair(__FILE__,__LINE__));
       throw e;
