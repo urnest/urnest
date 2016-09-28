@@ -4,9 +4,14 @@ module p20
   {
     short a_;
   };
+
+  typedef sequence<short> SS;
   
   interface F{
     // returns x
     any f1(in any x);
+
+    // returns x
+    short f2(in short x);
   };
 };

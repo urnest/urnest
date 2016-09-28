@@ -68,80 +68,96 @@ basicParamTypes=dict(
     idltype.tk_void:   TypeInfo('void',[])
     }.items()
 )
-def unqualifiedType(t):
-    assert isinstance(t,idltype.Type),t
-    if t.kind() in basicParamTypes:
-        return basicParamTypes.get(t.kind()).typename
-    elif t.kind()==idltype.tk_alias:
-        return ''.join(['::'+_ for _ in t.scopedName()])
-    elif t.kind()==idltype.tk_struct:
-        return ''.join(['::'+_ for _ in t.scopedName()])
-    elif t.kind()==idltype.tk_sequence:
-        if t.bound()==0:
-            itemType=unqualifiedType(t.seqType())
-            return 'std::vector< %(itemType)s >'%vars()
-        elif t.bound()==1:
-            itemType=unqualifiedType(t.seqType())
-            return 'cxy::optional< %(itemType)s >'%vars()
-        else:
-            assert False,(t.bound(),'bounded sequences with bound > 1 not yet implemented')
-            pass
+
+def sequenceUnqualifiedType(t):
+    if t.bound()==0:
+        itemType=unqualifiedType(t.seqType())
+        return 'std::vector< %(itemType)s >'%vars()
+    elif t.bound()==1:
+        itemType=unqualifiedType(t.seqType())
+        return 'cxy::optional< %(itemType)s >'%vars()
+    else:
+        assert False,(t.bound(),'bounded sequences with bound > 1 not yet implemented')
         pass
-    elif t.kind()==idltype.tk_enum:
-        return ''.join(['::'+_ for _ in t.scopedName()])
-    elif t.kind()==idltype.tk_union:
-        t=''.join(['::'+_ for _ in t.scopedName()])
-        return '::xju::Shared< %(t)s const>'%vars()
-    elif t.kind()==idltype.tk_objref:
-        t=''.join(['::'+_ for _ in t.scopedName()])
-        if t=='::CORBA::Object': t='void'
-        return '::cxy::IOR< %(t)s >'%vars()
-    assert False, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
     pass
 
+def unionUnqualifiedType(t):
+    t=''.join(['::'+_ for _ in t.scopedName()])
+    return '::xju::Shared< %(t)s const>'%vars()
+
+def objrefUnqualifiedType(t):
+    t=''.join(['::'+_ for _ in t.scopedName()])
+    if t=='::CORBA::Object': t='void'
+    return '::cxy::IOR< %(t)s >'%vars()
+
+unqualifiedType_=dict(
+    [(idltype.tk_any,lambda t:'::cxy::Any')]+
+    [(kind,lambda t:basicParamTypes.get(t.kind()).typename)
+     for kind in basicParamTypes]+
+    [(kind,lambda t:''.join(['::'+_ for _ in t.scopedName()]))
+     for kind in [idltype.tk_alias,
+               idltype.tk_struct,
+               idltype.tk_enum]]+
+    [(idltype.tk_sequence,sequenceUnqualifiedType)]+
+    [(idltype.tk_union,unionUnqualifiedType)]+
+    [(idltype.tk_objref,objrefUnqualifiedType)])
+               
+def unqualifiedType(t):
+    assert isinstance(t,idltype.Type),t
+    if t.kind() in unqualifiedType_:
+        return unqualifiedType_[t.kind()](t)
+    assert False, '%s not implemented, only types %s implemented' % (t.kind(),unqualifiedType_.keys())
+    pass
+
+def unionPtype(p):
+    assert p.paramType().kind()==idltype.tk_union, p.paramType().kind()
+    unionTypeName=''.join(['::'+_ for _ in p.paramType().scopedName()])
+    return '::xju::Shared< %(unionTypeName)s const> const'%vars()
+def objrefPtype(p):
+    assert p.paramType().kind()==idltype.tk_objref, p.paramType().kind()
+    t=''.join(['::'+_ for _ in p.paramType().scopedName()])
+    if t=='::CORBA::Object': t='void'
+    return '::cxy::IOR< %(t)s > const'%vars()
+
+ptype_=dict(
+    [(idltype.tk_any, lambda p:'::cxy::Any const')]+
+    [(idltype.tk_union,unionPtype)]+
+    [(idltype.tk_objref,objrefPtype)]+
+    [(kind,lambda p:''.join(['::'+_ for _ in p.paramType().scopedName()])+' const')
+     for kind in [idltype.tk_alias,
+                  idltype.tk_struct,
+                  idltype.tk_enum]]+
+    [(kind, lambda p: basicParamTypes.get(p.paramType().kind()).typename+' const') for kind in basicParamTypes])
+    
 def ptype(p):
     assert isinstance(p,idlast.Parameter),p
     if p.direction()==0: #in
-        if p.paramType().kind() in basicParamTypes:
-            return basicParamTypes.get(p.paramType().kind()).typename+' const'
-        elif p.paramType().kind()==idltype.tk_alias:
-            return ''.join(['::'+_ for _ in p.paramType().scopedName()])+' const'
-        elif p.paramType().kind()==idltype.tk_struct:
-            return ''.join(['::'+_ for _ in p.paramType().scopedName()])+' const'
-        elif p.paramType().kind()==idltype.tk_enum:
-            return ''.join(['::'+_ for _ in p.paramType().scopedName()])+' const'
-        elif p.paramType().kind()==idltype.tk_union:
-            unionTypeName=''.join(['::'+_ for _ in p.paramType().scopedName()])
-            return '::xju::Shared< %(unionTypeName)s const> const'%vars()
-        elif p.paramType().kind()==idltype.tk_objref:
-            t=''.join(['::'+_ for _ in p.paramType().scopedName()])
-            if t=='::CORBA::Object': t='void'
-            return '::cxy::IOR< %(t)s > const'%vars()
-        assert False, '%s not implemented, only basic types %s implemented' % (p.paramType().kind(),basicParamTypes.keys())
-
+        if p.paramType().kind() in ptype_:
+            return ptype_[p.paramType().kind()](p)
+        assert False, '%s not implemented, only types %s implemented' % (p.paramType().kind(),ptype_.keys())
     assert p.dirtext()+' params not yet implemented'
 
 def tn(t):
     if type(t) is types.InstanceType:
         return t.__class__
     return type(t)
-    
+
+tincludes_=dict(
+    [(idltype.tk_objref, lambda t: ['<cxy/IOR.hh>'])]+
+    [(idltype.tk_any, lambda t: ['<cxy/Any.hh>'])]+
+    [(kind, lambda t:basicParamTypes.get(t.kind()).includeFiles)
+     for kind in basicParamTypes]+
+    [(kind, lambda t: []) 
+     for kind in [idltype.tk_alias,
+                  idltype.tk_struct,
+                  idltype.tk_union,
+                  idltype.tk_enum]]+
+    [(idltype.tk_sequence, lambda t: tincludes(t.seqType()))])
+
 def tincludes(t):
-    if t.kind() in basicParamTypes:
-        return basicParamTypes.get(t.kind()).includeFiles
-    elif t.kind() in [idltype.tk_alias]:
-        return []
-    elif t.kind() in [idltype.tk_struct]:
-        return []
-    elif t.kind() in [idltype.tk_union]:
-        return []
-    elif t.kind() in [idltype.tk_sequence]:
-        return tincludes(t.seqType())
-    elif t.kind() in [idltype.tk_enum]:
-        return []
-    elif t.kind() in [idltype.tk_objref]:
-        return ['<cxy/IOR.hh>']
-    assert False, '%s not implemented, only basic types %s implemented' % (t.kind(),basicParamTypes.keys())
+    if t.kind() in tincludes_:
+        return tincludes_[t.kind()](t)
+    assert False, '%s not implemented, only types %s implemented' % (t.kind(),tincludes_.keys())
 
 def pincludes(t):
     if t.kind() in [idltype.tk_union]:

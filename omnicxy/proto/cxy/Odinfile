@@ -13,6 +13,7 @@ p16.hh
 p17.hh
 p18.hh
 p19.hh
+p20.hh
 echo.hh
 echo.cc
 echo.cref.hh
@@ -48,6 +49,7 @@ p16.hh==%gen/p16.hh
 p17.hh==%gen/p17.hh
 p18.hh==%gen/p18.hh
 p19.hh==%gen/p19.hh
+p20.hh==%gen/p20.hh
 echo.hh==%gen/echo.hh
 echo.cc==%gen-ntc/echo.cc
 echo.cref.hh==%gen/echo.cref.hh
@@ -110,6 +112,11 @@ echo.sref.cc==%gen/echo.sref.cc
 %p18.cdr.hcp==%gen/p18.cdr.hcp
 %p18.objref.hcp==%gen/p18.objref.hcp
 %p18.sref.hcp==%gen/p18.sref.hcp
+%p20.hcp==%gen/p20.hcp
+%p20.cref.hcp==%gen/p20.cref.hcp
+%p20.cdr.hcp==%gen/p20.cdr.hcp
+%p20.objref.hcp==%gen/p20.objref.hcp
+%p20.sref.hcp==%gen/p20.sref.hcp
 
 %all-tests.tree==<<
 ()+cmd=(%p1-main)+cmd='3735'+cmd='both':exec.output
@@ -131,12 +138,12 @@ echo.sref.cc==%gen/echo.sref.cc
 ()+cmd=(%echo-main)+cmd='3751'+cmd='both':exec.output
 ()+cmd=(%p17-main)+cmd='3752'+cmd='both':exec.output
 ()+cmd=(%p18-main)+cmd='3754'+cmd='both':exec.output
+()+cmd=(%p20-main)+cmd='3754'+cmd='both':exec.output
 %test-transient
 ()+cmd=(%test-no-such-object)+cmd='3760'+cmd=exec.output
 ()+cmd=(%test-duplicate-name)+cmd='3761'+cmd=exec.output
 ()+cmd=(%test-port-in-use):exec.output
 ()+cmd=(%p2-main-2)+cmd='3753'+cmd='both':exec.output
-()+cmd=(%test-any):exec.output
 %leak-checks.tree
 
 %cxx-opts==<<
@@ -165,7 +172,6 @@ echo.sref.cc==%gen/echo.sref.cc
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-duplicate-name==test-duplicate-name.cc+(%cxx-opts):auto.cxx.exe
 %test-port-in-use==test-port-in-use.cc+(%cxx-opts):auto.cxx.exe
-%test-any==test-any.cc+(%cxx-opts):auto.cxx.exe
 
 %test-transient==()+cmd=(%test-transient.sh) (%p1-main):exec.output
 

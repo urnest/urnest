@@ -113,7 +113,7 @@ Contents
   remains active until it is destroyed; there are no "run", "activate",
   "stop" etc methods to (forget to) call.
 
-  Complete echo example code is in proto/cxy/echo*.{idl,hh,cc}.
+  Complete echo example code is in proto/cxy/echo-main.cc.
 
 
 3. Mapping of Types

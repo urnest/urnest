@@ -264,24 +264,18 @@ x memory leaks:
 - bounded sequences > 1
 - arrays
 - any
-  * add sequence to test-Any, test-Any-interop
+  * proto/cxy/p20-main-1.cc that does not actually use any and does
+    not include any_.hcp nor any omniORB headers
+  * proto/cxy/p20-main-2.cc does use any (and does include any_.hh)
   any is marshalled as type code then data, the data is the cdr encoding
     of the value (the length of the data is implicit in the type code)
     what is typecode? essentially parallels instance encoding
     - generate xxx.any.hcp which has specialisations of
-      cxy::TypeCodeOf and cxy::any
+      cxy::TypeCodeOf
     - need lots of interoperability tests
       - cxy/test-Any-interop.cc for predefined types
       - proto/cxy/test-Any-interop.cc for others
 
-    - useful: cdrStream::
-        virtual _CORBA_ULong currentInputPtr() const = 0;
-        virtual _CORBA_ULong currentOutputPtr() const = 0;
-      cdrMemoryStream:
-        inline _CORBA_ULong bufSize() const
-        inline void* bufPtr() const
-      ... but might be better implementing own cdrStream that
-      uses external std::vector<uint8_t> (stored in Any)
     - is there a header eg for byte order?
       - simple, no:
          - kind only: 
