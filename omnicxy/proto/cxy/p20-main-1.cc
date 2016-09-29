@@ -12,7 +12,6 @@
 #include <omnicxy/proto/p20.hh>
 #include <omnicxy/proto/p20.cref.hh>
 #include <omnicxy/proto/p20.sref.hh>
-#include <omnicxy/proto/p20.any.hh>
 
 #include <xju/Exception.hh>
 #include <iostream>
@@ -25,7 +24,6 @@
 #include <cxy/ORB.hh>
 #include "xju/Shared.hh"
 #include <xju/stringToUInt.hh>
-#include <cxy/any_.hh>
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {
@@ -50,6 +48,7 @@ public:
   //p20::F::
   virtual int16_t f2(const int16_t& x) throw()
   {
+    calls_.push_back(xju::Shared<Call>(new Call::f2(x)));
     return x;
   }
   
@@ -70,7 +69,16 @@ public:
         a_(a) {
     }
     cxy::Any<> a_;
-    
+  };
+  struct Call::f2 : Call
+  {
+    ~f2() throw()
+    {
+    }
+    f2(int16_t a) throw():
+        a_(a) {
+    }
+    int16_t a_;
   };
   std::vector<xju::Shared<Call> > calls_;
 };
@@ -94,8 +102,8 @@ int main(int argc, char* argv[])
     if (argv[2]==std::string("client")) {
       cxy::ORB<cxy::Exception> orb("giop:tcp::");
       cxy::cref<p20::F> ref(orb, makeURI(port, OBJECT_NAME));
-      cxy::Any<> const y((int16_t)3);
-      std::cout << y.get<int16_t>() << std::endl;
+      int16_t const y(ref->f2((int16_t)3));
+      std::cout << y << std::endl;
     }
     else if (argv[2]==std::string("server")) {
       std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
@@ -120,46 +128,15 @@ int main(int argc, char* argv[])
       for(unsigned int i=0; i != repeat; ++i) {
       
         cxy::cref<p20::F> ref(orb, makeURI(port, OBJECT_NAME));
+        int16_t const y(ref->f2((int16_t)3));
+        xju::assert_equal(y,(int16_t)3);
+        xju::assert_equal(x.calls_.size(),1U);
         {
-          cxy::Any<> const y(ref->f1(cxy::Any<>((int16_t)3)));
-          int16_t const z(y.get<int16_t>());
-          
-          xju::assert_equal(x.calls_.size(),1U);
-          {
-            F_impl::Call::f1 const& c(
-              dynamic_cast<F_impl::Call::f1 const&>(*x.calls_[0]));
-            xju::assert_equal(c.a_.isA<int16_t>(),true);
-            xju::assert_equal(c.a_.get<int16_t>(), (int16_t)3);
-          }
-          x.calls_=std::vector<xju::Shared<F_impl::Call> >();
+          F_impl::Call::f2 const& c(
+            dynamic_cast<F_impl::Call::f2 const&>(*x.calls_[0]));
+          xju::assert_equal(c.a_, (int16_t)3);
         }
-        {
-          cxy::Any<> const y(ref->f1(cxy::Any<>(std::vector<int16_t>({3}))));
-          std::vector<int16_t> const z(y.get<std::vector<int16_t> >());
-          
-          xju::assert_equal(x.calls_.size(),1U);
-          {
-            F_impl::Call::f1 const& c(
-              dynamic_cast<F_impl::Call::f1 const&>(*x.calls_[0]));
-            xju::assert_equal(c.a_.isA<std::vector<int16_t> >(),true);
-            xju::assert_equal(c.a_.get<std::vector<int16_t> >(), 
-                              std::vector<int16_t>({3}));
-          }
-          x.calls_=std::vector<xju::Shared<F_impl::Call> >();
-        }
-        {
-          cxy::Any<> const y(ref->f1(cxy::Any<>(::p20::A(3))));
-          ::p20::A const z(y.get< ::p20::A >());
-          xju::assert_equal(z, ::p20::A(3));
-          xju::assert_equal(x.calls_.size(),1U);
-          {
-            F_impl::Call::f1 const& c(
-              dynamic_cast<F_impl::Call::f1 const&>(*x.calls_[0]));
-            xju::assert_equal(c.a_.isA< ::p20::A >(),true);
-            xju::assert_equal(c.a_.get< ::p20::A >(),::p20::A(3));
-          }
-          x.calls_=std::vector<xju::Shared<F_impl::Call> >();
-        }
+        x.calls_=std::vector<xju::Shared<F_impl::Call> >();
       }
     }
     return 0;

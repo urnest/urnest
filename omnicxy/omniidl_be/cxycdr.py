@@ -227,7 +227,7 @@ public:
 };
 '''
 
-def gen_enum_union(decl):
+def gen_enum_union(decl,eclass):
     name='::'.join(decl.scopedName())
     repoId=decl.repoId()
     switchTypeName='::'.join(decl.switchType().scopedName())
@@ -239,7 +239,7 @@ def gen_enum_union(decl):
         for l in c.labels():
             assert isinstance(l.value(),idlast.Enumerator),l.value()
             cases[l.value().identifier()].append(
-                (unqualifiedType(c.caseType()),#type
+                (unqualifiedType(c.caseType(),eclass),#type
                 c.declarator().identifier()))    #name
         pass
     #cases is like [('A', [('int32_t','a_')]), ('B', [])]
@@ -311,12 +311,12 @@ def gen_non_enum_union_case_marshal(unionFqn,
     return non_enum_union_case_marshal_t%vars()
 
 
-def gen_non_enum_union(decl):
+def gen_non_enum_union(decl,eclass):
     assert decl.switchType().kind() in basicIntTypes,decl
     name='::'.join(decl.scopedName())
     repoId=decl.repoId()
-    switchTypeName=unqualifiedType(decl.switchType())
-    cases=get_union_cases(decl)
+    switchTypeName=unqualifiedType(decl.switchType(),eclass)
+    cases=get_union_cases(decl,eclass)
     labels=[_[0] for _ in cases if not _[0] is None]
     caseClasses=['V< %(_)s >'%vars() for _ in labels]
     cases=dict(cases)
@@ -361,14 +361,14 @@ def gen(decl,eclass,eheader,causeType,contextType,
             pass
         elif isinstance(decl, idlast.Struct):
             name='::'.join(decl.scopedName())
-            memberTypesAndNames=[(unqualifiedType(_.memberType()),_.declarators()[0].identifier()) for _ in decl.members()];
+            memberTypesAndNames=[(unqualifiedType(_.memberType(),eclass),_.declarators()[0].identifier()) for _ in decl.members()];
             result=gen_struct(name,memberTypesAndNames)
             pass
         elif isinstance(decl, idlast.Exception):
             name='::'.join(decl.scopedName())
             repoId=decl.repoId()
             memberTypesAndNames=[
-                (unqualifiedType(_.memberType()),_.declarators()[0].identifier()) \
+                (unqualifiedType(_.memberType(),eclass),_.declarators()[0].identifier()) \
                     for _ in decl.members()];
             memberTypes=[_[0] for _ in memberTypesAndNames]
             if causeType in memberTypes and contextType in memberTypes:
@@ -388,9 +388,9 @@ def gen(decl,eclass,eheader,causeType,contextType,
             pass
         elif isinstance(decl, idlast.Union):
             if decl.switchType().kind()==idltype.tk_enum:
-                result=gen_enum_union(decl)
+                result=gen_enum_union(decl,eclass)
             else:
-                result=gen_non_enum_union(decl)
+                result=gen_non_enum_union(decl,eclass)
                 pass
         else:
             assert False, repr(decl)

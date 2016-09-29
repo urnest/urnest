@@ -179,12 +179,12 @@ def genCalldesc(decl,eclass,eheader,indent,fqn):
     name=decl.identifier()
     nameLen=len(name)
     pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
-    params=''.join([',\n    %s& %s'%(ptype(p),n) for p,n in zip(decl.parameters(),pns)])
+    params=''.join([',\n    %s& %s'%(ptype(p,eclass),n) for p,n in zip(decl.parameters(),pns)])
     callDescInvocationParams=','.join(['\n      cd->%s_'%n for n in pns])
     paramInits=''.join([',\n      %s_(%s)'%(n,n) for n in pns])
-    paramMembers=''.join(['\n  %s %s_;'%(ptype(p),n) for p,n in zip(decl.parameters(),pns)])
-    paramMarshals=''.join(['\n    cxy::cdr< %s >::marshal(%s_, s);'%(unqualifiedType(p.paramType()),n) for p,n in zip(decl.parameters(),pns)])
-    returnType=unqualifiedType(decl.returnType())
+    paramMembers=''.join(['\n  %s %s_;'%(ptype(p,eclass),n) for p,n in zip(decl.parameters(),pns)])
+    paramMarshals=''.join(['\n    cxy::cdr< %s >::marshal(%s_, s);'%(unqualifiedType(p.paramType(),eclass),n) for p,n in zip(decl.parameters(),pns)])
+    returnType=unqualifiedType(decl.returnType(),eclass)
     returnMember=''
     returnUnmarshal=''
     callDescReturnValue=''
@@ -207,10 +207,10 @@ def genObjref(decl,eclass,eheader,indent,fqn):
     name=decl.identifier()
     nameLen=len(name)
     pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
-    params=','.join(['\n  %s& %s'%(ptype(p),n) for p,n in zip(decl.parameters(),pns)])
+    params=','.join(['\n  %s& %s'%(ptype(p,eclass),n) for p,n in zip(decl.parameters(),pns)])
     paramNames=''.join([',\n      %s'%n for n in pns])
     assert len(decl.contexts())==0, 'contexts not yet implemented'
-    returnType=unqualifiedType(decl.returnType())
+    returnType=unqualifiedType(decl.returnType(),eclass)
     returnValue=''
     if returnType != 'void':
         returnValue='\n    return c.r_.value();'

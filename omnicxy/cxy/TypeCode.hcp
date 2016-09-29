@@ -158,6 +158,58 @@ public:
 
 };
 
+class StructTypeCode : public TypeCode
+{
+public:
+  StructTypeCode(REVISIT std::shared_ptr<TypeCode> itemType):
+      itemType_(itemType),
+      maxSize_(maxSize)
+  {
+  }
+  virtual void copyValue(cdrStream& from, cdrStream& to) const
+  {
+    uint32_t const size(
+      cxy::cdr<uint32_t>::unmarshalFrom(from));
+    cxy::cdr<uint32_t>::marshal(size,to);
+    // deliberately don't check max size
+    for(uint32_t i=0; i != size; ++i) {
+      itemType_->copyValue(from,to);
+    }
+  }
+
+  virtual void marshal(cdrStream& s) const
+  {
+    EncapsulationCdrStream es;
+    itemType_->marshal(*es);
+    cxy::cdr<uint32_t>::marshal(maxSize_,*es);
+
+    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::SEQUENCE, s);
+    cxy::cdr<EncapsulationCdrStream>::marshal(es,s);
+  }
+  
+  virtual bool equals(TypeCode const& b) const throw()
+  {
+    StructTypeCode const* b_(dynamic_cast<StructTypeCode const*>(&b));
+    return b_ && (*b_==*this);
+  }
+  virtual std::string str() const throw()
+  {
+    return std::string("sequence<")+itemType_->str()+","+
+      xju::format::int_(maxSize_)+">";
+  }
+private:
+  std::shared_ptr<TypeCode> itemType_;
+  uint32_t maxSize_;
+  
+  friend bool operator==(StructTypeCode const& a,
+                         StructTypeCode const& b) throw()
+  {
+    return a.maxSize_==b.maxSize_ &&
+      a.itemType_->equals(*b.itemType_);
+  }
+};
+
+  
 template<>
 class cdr< std::shared_ptr<TypeCode> >
 {
@@ -179,6 +231,14 @@ public:
       auto const t(cdr< std::shared_ptr<TypeCode> >::unmarshalFrom(*es));
       auto const maxSize(cdr<uint32_t>::unmarshalFrom(*es));
       return std::shared_ptr<TypeCode>(new SequenceTypeCode(t,maxSize));
+    }
+    case cxy::TypeKind::STRUCT:
+    {
+      EncapsulationCdrStream es(s);
+      REVISIT;
+      auto const t(cdr< std::shared_ptr<TypeCode> >::unmarshalFrom(*es));
+      auto const maxSize(cdr<uint32_t>::unmarshalFrom(*es));
+      return std::shared_ptr<TypeCode>(new StructTypeCode(REVISIT));
     }
     default:
       std::ostringstream s;

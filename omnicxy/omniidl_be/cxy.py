@@ -69,32 +69,32 @@ basicParamTypes=dict(
     }.items()
 )
 
-def sequenceUnqualifiedType(t):
+def sequenceUnqualifiedType(t,eclass):
     if t.bound()==0:
-        itemType=unqualifiedType(t.seqType())
+        itemType=unqualifiedType(t.seqType(),eclass)
         return 'std::vector< %(itemType)s >'%vars()
     elif t.bound()==1:
-        itemType=unqualifiedType(t.seqType())
+        itemType=unqualifiedType(t.seqType(),eclass)
         return 'cxy::optional< %(itemType)s >'%vars()
     else:
         assert False,(t.bound(),'bounded sequences with bound > 1 not yet implemented')
         pass
     pass
 
-def unionUnqualifiedType(t):
+def unionUnqualifiedType(t,eclass):
     t=''.join(['::'+_ for _ in t.scopedName()])
     return '::xju::Shared< %(t)s const>'%vars()
 
-def objrefUnqualifiedType(t):
+def objrefUnqualifiedType(t,eclass):
     t=''.join(['::'+_ for _ in t.scopedName()])
     if t=='::CORBA::Object': t='void'
     return '::cxy::IOR< %(t)s >'%vars()
 
 unqualifiedType_=dict(
-    [(idltype.tk_any,lambda t:'::cxy::Any')]+
-    [(kind,lambda t:basicParamTypes.get(t.kind()).typename)
+    [(idltype.tk_any,lambda t,eclass:'::cxy::Any< {eclass} >'.format(**vars()))]+
+    [(kind,lambda t,eclass:basicParamTypes.get(t.kind()).typename)
      for kind in basicParamTypes]+
-    [(kind,lambda t:''.join(['::'+_ for _ in t.scopedName()]))
+    [(kind,lambda t,eclass:''.join(['::'+_ for _ in t.scopedName()]))
      for kind in [idltype.tk_alias,
                idltype.tk_struct,
                idltype.tk_enum]]+
@@ -102,38 +102,38 @@ unqualifiedType_=dict(
     [(idltype.tk_union,unionUnqualifiedType)]+
     [(idltype.tk_objref,objrefUnqualifiedType)])
                
-def unqualifiedType(t):
+def unqualifiedType(t,eclass):
     assert isinstance(t,idltype.Type),t
     if t.kind() in unqualifiedType_:
-        return unqualifiedType_[t.kind()](t)
+        return unqualifiedType_[t.kind()](t,eclass)
     assert False, '%s not implemented, only types %s implemented' % (t.kind(),unqualifiedType_.keys())
     pass
 
-def unionPtype(p):
+def unionPtype(p,eclass):
     assert p.paramType().kind()==idltype.tk_union, p.paramType().kind()
     unionTypeName=''.join(['::'+_ for _ in p.paramType().scopedName()])
     return '::xju::Shared< %(unionTypeName)s const> const'%vars()
-def objrefPtype(p):
+def objrefPtype(p,eclass):
     assert p.paramType().kind()==idltype.tk_objref, p.paramType().kind()
     t=''.join(['::'+_ for _ in p.paramType().scopedName()])
     if t=='::CORBA::Object': t='void'
     return '::cxy::IOR< %(t)s > const'%vars()
 
 ptype_=dict(
-    [(idltype.tk_any, lambda p:'::cxy::Any const')]+
+    [(idltype.tk_any, lambda p,eclass:'::cxy::Any< {eclass} > const'.format(**vars()))]+
     [(idltype.tk_union,unionPtype)]+
     [(idltype.tk_objref,objrefPtype)]+
-    [(kind,lambda p:''.join(['::'+_ for _ in p.paramType().scopedName()])+' const')
+    [(kind,lambda p,eclass:''.join(['::'+_ for _ in p.paramType().scopedName()])+' const')
      for kind in [idltype.tk_alias,
                   idltype.tk_struct,
                   idltype.tk_enum]]+
-    [(kind, lambda p: basicParamTypes.get(p.paramType().kind()).typename+' const') for kind in basicParamTypes])
+    [(kind, lambda p,eclass: basicParamTypes.get(p.paramType().kind()).typename+' const') for kind in basicParamTypes])
     
-def ptype(p):
+def ptype(p,eclass):
     assert isinstance(p,idlast.Parameter),p
     if p.direction()==0: #in
         if p.paramType().kind() in ptype_:
-            return ptype_[p.paramType().kind()](p)
+            return ptype_[p.paramType().kind()](p,eclass)
         assert False, '%s not implemented, only types %s implemented' % (p.paramType().kind(),ptype_.keys())
     assert p.dirtext()+' params not yet implemented'
 
@@ -688,7 +688,7 @@ bool operator>=(%(typeName)s const& a, %(typeName)s const& b) throw()
   return (a>b)||(a==b);
 }
 '''
-def get_union_cases(decl):
+def get_union_cases(decl,eclass):
     '''get union cases as [(label,[(memberType,memberName)]'''
     '''order is declaration order, except that default, if '''
     '''any, is always last, with label None'''
@@ -709,7 +709,7 @@ def get_union_cases(decl):
                 labels.append(label)
                 pass
             cases.setdefault(label,[]).append(
-                (unqualifiedType(c.caseType()),#type
+                (unqualifiedType(c.caseType(),eclass),#type
                  c.declarator().identifier())) #name
             pass
         pass
@@ -719,7 +719,7 @@ def get_union_cases(decl):
         pass
     return result
 
-def gen_enum_union(decl):
+def gen_enum_union(decl,eclass):
     typeName=decl.identifier()
     assert decl.switchType().kind()==idltype.tk_enum, decl.switchType()
     switchTypeName='::'.join(decl.switchType().scopedName())
@@ -731,7 +731,7 @@ def gen_enum_union(decl):
         for l in c.labels():
             assert isinstance(l.value(),idlast.Enumerator),l.value()
             cases[l.value().identifier()].append(
-                (unqualifiedType(c.caseType()),#type
+                (unqualifiedType(c.caseType(),eclass),#type
                 c.declarator().identifier()))    #name
         pass
     #cases is like [('A', [('int32_t','a_')]), ('B', [])]
@@ -804,11 +804,11 @@ bool operator>=(%(typeName)s const& a, %(typeName)s const& b) throw()
   return (a>b)||(a==b);
 }
 '''
-def gen_non_enum_union(decl):
+def gen_non_enum_union(decl,eclass):
     assert decl.switchType().kind() in basicIntTypes,decl
     typeName=decl.identifier()
-    switchTypeName=unqualifiedType(decl.switchType())
-    cases=get_union_cases(decl)
+    switchTypeName=unqualifiedType(decl.switchType(),eclass)
+    cases=get_union_cases(decl,eclass)
     labels=[_[0] for _ in cases if not _[0] is None]
     caseClasses=['V< %(_)s >'%vars() for _ in labels]
     cases=dict(cases)
@@ -860,25 +860,25 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
             result=reindent(indent,interface_t%vars())
         elif isinstance(decl, idlast.Operation):
             name=decl.identifier()
-            params=','.join(['\n  %s& %s'%(ptype(p),p.identifier()) \
+            params=','.join(['\n  %s& %s'%(ptype(p,eclass),p.identifier()) \
                                  for p in decl.parameters()])
             assert len(decl.contexts())==0, 'contexts not yet implemented'
             exceptionTypes=['::'.join(_.scopedName()) for _ in decl.raises()]
             exceptions=''.join(['\n  %(_)s,'%vars() for _ in exceptionTypes])
-            returnType=unqualifiedType(decl.returnType())
+            returnType=unqualifiedType(decl.returnType(),eclass)
             result=reindent(indent,operation_t%vars())
         elif isinstance(decl, idlast.Typedef):
             name=decl.declarators()[0].identifier()
             tagClass=''
             aliasOf=decl.aliasType()
             if aliasOf.kind() in basicIntTypes:
-                aliasOf=unqualifiedType(aliasOf)
+                aliasOf=unqualifiedType(aliasOf,eclass)
                 result=reindent(
                     indent,
                     ('class %(name)s_tag {};\n'+
                      'typedef ::xju::Int< %(name)s_tag,%(aliasOf)s,%(eclass)s > %(name)s;')%vars())
             elif aliasOf.kind() in basicFloatTypes:
-                aliasOf=unqualifiedType(aliasOf)
+                aliasOf=unqualifiedType(aliasOf,eclass)
                 result=reindent(
                     indent,
                     ('class %(name)s_tag {};\n'+
@@ -889,14 +889,14 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
                     ('class %(name)s_tag {};\n'+
                      'typedef ::xju::Tagged<std::string,%(name)s_tag > %(name)s;')%vars())
             else:
-                aliasOf=unqualifiedType(aliasOf)
+                aliasOf=unqualifiedType(aliasOf,eclass)
                 result=reindent(
                     indent,
                     ('typedef %(aliasOf)s %(name)s;')%vars())
                 pass
         elif isinstance(decl, idlast.Struct):
             name=decl.identifier()
-            memberTypesAndNames=[(unqualifiedType(_.memberType()),_.declarators()[0].identifier()) for _ in decl.members()];
+            memberTypesAndNames=[(unqualifiedType(_.memberType(),eclass),_.declarators()[0].identifier()) for _ in decl.members()];
             result=reindent(
                 indent,
                 gen_struct(name,memberTypesAndNames))
@@ -904,7 +904,7 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
         elif isinstance(decl, idlast.Exception):
             name=decl.identifier()
             memberTypesAndNames=[\
-                (unqualifiedType(_.memberType()),_.declarators()[0].identifier()) \
+                (unqualifiedType(_.memberType(),eclass),_.declarators()[0].identifier()) \
                     for _ in decl.members()];
             memberTypes=[_[0] for _ in memberTypesAndNames]
             if causeType in memberTypes and contextType in memberTypes:
@@ -925,7 +925,7 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
                 gen_enum(name,values,eclass))
         elif isinstance(decl, idlast.Const):
             name=decl.identifier()
-            type_=unqualifiedType(decl.constType())
+            type_=unqualifiedType(decl.constType(),eclass)
             if type_=='std::string':
                 value='"%s"'%decl.value()
             else:
@@ -936,9 +936,9 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
                 '%(type_)s const %(name)s = %(value)s;'%vars())
         elif isinstance(decl, idlast.Union):
             if decl.switchType().kind()==idltype.tk_enum:
-                result=reindent(indent, gen_enum_union(decl))
+                result=reindent(indent, gen_enum_union(decl,eclass))
             else:
-                result=reindent(indent, gen_non_enum_union(decl))
+                result=reindent(indent, gen_non_enum_union(decl,eclass))
         else:
             assert False, repr(decl)
             pass

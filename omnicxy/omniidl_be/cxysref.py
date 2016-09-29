@@ -212,7 +212,7 @@ def genOperation(decl,eclass,eheader,indent,fqn):
     name=decl.identifier()
     pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
     callDescInvocationParams=','.join(['\n      c->%s_.value()'%n for n in pns])
-    returnType=unqualifiedType(decl.returnType())
+    returnType=unqualifiedType(decl.returnType(),eclass)
     callDescReturnValue=''
     if returnType != 'void':
         callDescReturnValue='c->r_ ='
@@ -239,9 +239,9 @@ def genCalldesc(decl,eclass,eheader,indent,fqn):
     assert isinstance(decl, idlast.Operation), repr(decl)
     name=decl.identifier()
     pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
-    paramMembers=''.join(['\n    xju::Optional< %s > %s_;'%(unqualifiedType(p.paramType()),n) for p,n in zip(decl.parameters(),pns)])
-    paramUnmarshals=''.join(['\n      %s_=cxy::cdr< %s >::unmarshalFrom(s);'%(n,unqualifiedType(p.paramType())) for p,n in zip(decl.parameters(),pns)])
-    returnType=unqualifiedType(decl.returnType())
+    paramMembers=''.join(['\n    xju::Optional< %s > %s_;'%(unqualifiedType(p.paramType(),eclass),n) for p,n in zip(decl.parameters(),pns)])
+    paramUnmarshals=''.join(['\n      %s_=cxy::cdr< %s >::unmarshalFrom(s);'%(n,unqualifiedType(p.paramType(),eclass)) for p,n in zip(decl.parameters(),pns)])
+    returnType=unqualifiedType(decl.returnType(),eclass)
     returnMember=''
     returnMarshal=''
     if returnType != 'void':

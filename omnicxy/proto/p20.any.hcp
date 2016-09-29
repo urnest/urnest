@@ -1,0 +1,38 @@
+// generated from p20.idl by omnicxy cxyany idl backend
+
+#include <cxy/any_.hh>
+#include "p20.hh"
+#include "p20.cdr.hh" //impl
+
+namespace cxy
+{
+
+template<>  
+class TypeCodeOf< ::p20::A > : public TypeCode
+{
+public:
+  virtual void copyValue(cdrStream& from, cdrStream& to) const
+  {
+    cxy::cdr< ::p20::A >::marshal(
+      cxy::cdr< ::p20::A >::unmarshalFrom(from),
+      to);
+  }
+
+  virtual void marshal(cdrStream& s) const
+  {
+    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::STRUCT, s);
+    REVISIT;
+  }
+  
+  virtual bool equals(TypeCode const& b) const throw()
+  {
+    TypeCodeOf const* b_(dynamic_cast<TypeCodeOf const*>(&b));
+    return b_;
+  }
+  virtual std::string str() const throw()
+  {
+    return "::p20::A";
+  }
+};
+
+}

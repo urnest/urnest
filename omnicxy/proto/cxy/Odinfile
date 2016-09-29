@@ -138,7 +138,8 @@ echo.sref.cc==%gen/echo.sref.cc
 ()+cmd=(%echo-main)+cmd='3751'+cmd='both':exec.output
 ()+cmd=(%p17-main)+cmd='3752'+cmd='both':exec.output
 ()+cmd=(%p18-main)+cmd='3754'+cmd='both':exec.output
-()+cmd=(%p20-main)+cmd='3754'+cmd='both':exec.output
+()+cmd=(%p20-main)+cmd='3755'+cmd='both':exec.output
+()+cmd=(%p20-main-1)+cmd='3756'+cmd='both':exec.output
 %test-transient
 ()+cmd=(%test-no-such-object)+cmd='3760'+cmd=exec.output
 ()+cmd=(%test-duplicate-name)+cmd='3761'+cmd=exec.output
@@ -169,6 +170,8 @@ echo.sref.cc==%gen/echo.sref.cc
 %p16-main==p16-main.cc+(%cxx-opts):auto.cxx.exe
 %p17-main==p17-main.cc+(%cxx-opts):auto.cxx.exe
 %p18-main==p18-main.cc+(%cxx-opts):auto.cxx.exe
+%p20-main==p20-main.cc+(%cxx-opts):auto.cxx.exe
+%p20-main-1==p20-main-1.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-duplicate-name==test-duplicate-name.cc+(%cxx-opts):auto.cxx.exe
 %test-port-in-use==test-port-in-use.cc+(%cxx-opts):auto.cxx.exe

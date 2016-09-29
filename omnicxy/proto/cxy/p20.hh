@@ -59,8 +59,8 @@ class F
 public:
   virtual ~F() throw();
 
-  virtual ::cxy::Any f1(
-    ::cxy::Any const& x) throw(
+  virtual ::cxy::Any< cxy::Exception > f1(
+    ::cxy::Any< cxy::Exception > const& x) throw(
     // ipc failure
     // - note servant may not throw
     cxy::Exception) = 0;
