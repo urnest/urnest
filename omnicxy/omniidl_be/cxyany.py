@@ -11,18 +11,21 @@ interface_t='''\
 '''
 
 struct_t='''\
-std::shared_ptr<cxy::TypeCode> typeCodeOf(
-  cxy::TypeTag< ::%(name)s > const&) throw(std::bad_alloc)
+template<>
+struct TypeCodeOf< ::%(name)s >
 {
-  return std::shared_ptr<cxy::TypeCode>(
-    new cxy::StructTypeCode(
-      cxy::cdr< ::%(name)s >::repoId,
-      "%(name)s",
-      {%(struct_members)s
-      }));
-}
+  static std::shared_ptr<cxy::TypeCode> create() throw(std::bad_alloc)
+  {
+    return std::shared_ptr<cxy::TypeCode>(
+      new cxy::StructTypeCode(
+        cxy::cdr< ::%(name)s >::repoId,
+        "%(name)s",
+        {%(struct_members)s
+        }));
+  }
+};
 '''
-struct_member_t='''\n        { "%(member_name)s", cxy::typeCodeOf(cxy::TypeTag< %(member_type)s >()) }'''
+struct_member_t='''\n          { "%(member_name)s", cxy::TypeCodeOf< %(member_type)s >::create() }'''
 def gen_struct(name,memberTypesAndNames,repoId):
     assert len(memberTypesAndNames)>0, name
     struct_members=''.join(
@@ -251,9 +254,10 @@ template='''\
 #include <cxy/TypeTag.hh>
 #include <cxy/TypeCode.hh>
 
-#include <cxy/any_.hh> //impl
+#include <cxy/any_.hh>
 
 #include %(hhinc)s
+#include %(hhcdrinc)s
 
 namespace cxy
 {
@@ -294,9 +298,11 @@ def run(tree, args):
     if len(hpath)>0 and not hpath.endswith('/'):
         hpath=hpath+'/'
     if len(hpath):
-        hhinc='<%(hpath)s%(baseName)s.cdr.hh>'%vars()
+        hhinc='<%(hpath)s%(baseName)s.hh>'%vars()
+        hhcdrinc='<%(hpath)s%(baseName)s.cdr.hh>'%vars()
     else:
-        hhinc='"%(baseName)s.cdr.hh"'%vars()
+        hhinc='"%(baseName)s.hh"'%vars()
+        hhcdrinc='"%(baseName)s.cdr.hh"'%vars()
         pass
     print template % vars()
     pass

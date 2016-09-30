@@ -11,6 +11,7 @@ global-var%all-tests.tree
 hpath_option%all-tests.tree
 nested_namespace%all-tests.tree
 static_var_def%all-tests.tree
+template-static-member-function%all-tests.tree
 
 %opts==<<
 +inc_sp=(%gendir)

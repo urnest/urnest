@@ -25,14 +25,14 @@ class any
 public:
   static std::shared_ptr<AnyImpl> encode(T const& x) throw()
   {
-    std::shared_ptr<TypeCode> typeCode(::cxy::typeCodeOf(x));
+    std::shared_ptr<TypeCode> typeCode(::cxy::TypeCodeOf<T>::create());
     MemCdrStream value;
     ::cxy::cdr<T>::marshal(x,*value);
     return std::shared_ptr<AnyImpl>(new AnyImpl(typeCode,value));
   }
   static bool isA(AnyImpl const& x) throw()
   {
-    return ::cxy::typeCodeOf(TypeTag<T>())->equals(*x.typeCode_);
+    return ::cxy::TypeCodeOf<T>::create()->equals(*x.typeCode_);
   }
   
   static T decode(AnyImpl const& x) throw(

@@ -1,0 +1,12 @@
+struct X
+{
+  template<class T>
+  static int of();
+};
+
+template<>
+int X::of<int>()
+{
+  return 0;
+}
+
