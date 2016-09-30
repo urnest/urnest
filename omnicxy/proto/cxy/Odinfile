@@ -117,6 +117,7 @@ echo.sref.cc==%gen/echo.sref.cc
 %p20.cdr.hcp==%gen/p20.cdr.hcp
 %p20.objref.hcp==%gen/p20.objref.hcp
 %p20.sref.hcp==%gen/p20.sref.hcp
+%p20.any.hcp==%gen/p20.any.hcp
 
 %all-tests.tree==<<
 ()+cmd=(%p1-main)+cmd='3735'+cmd='both':exec.output

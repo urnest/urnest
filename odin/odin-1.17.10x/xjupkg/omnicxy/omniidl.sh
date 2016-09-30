@@ -58,6 +58,8 @@ mkdir omnicxy.output &&
   "$omniidl" $flags -b cxyobjref $beflags "$source" > "$b.objref.hcp" &&
   verbose "$omniidl $flags -b cxysref $beflags $source" &&
   "$omniidl" $flags -b cxysref $beflags "$source" > "$b.sref.hcp" &&
+  verbose "$omniidl $flags -b cxyany $beflags $source" &&
+  "$omniidl" $flags -b cxyany $beflags "$source" > "$b.any.hcp" &&
   
   true
 ) 2>> WARNINGS || mv WARNINGS ERRORS )

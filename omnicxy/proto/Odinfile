@@ -31,7 +31,3 @@ echo.idl
 p19.idl
 
 
-%p20.any==()+cmd=(../../hcp/hcp-split) -l 2 (p20.any.hcp) 'p20.any.hh' 'p20.any.cc':output
-p20.any.hh==%p20.any/p20.any.hh
-p20.any.cc==%p20.any/p20.any.cc
-

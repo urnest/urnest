@@ -50,6 +50,7 @@ EXEC (omniidl.sh) (:IDL) (+hpath) (+cxy-be-dir) (+cxy) (+inc_sp)
         ($ODIN_OMNICXY_BE_DIR/cxyobjref.py)
         ($ODIN_OMNICXY_BE_DIR/cxycdr.py)
         ($ODIN_OMNICXY_BE_DIR/cxysref.py)
+        ($ODIN_OMNICXY_BE_DIR/cxyany.py)
   => (:omnicxy.output);
 
 EXEC (hcpsplit.sh) (:omnicxy.output) (+hcp-split) (+hpath) (+ntc)
