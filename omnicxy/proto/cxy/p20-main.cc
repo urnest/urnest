@@ -25,7 +25,6 @@
 #include <cxy/ORB.hh>
 #include "xju/Shared.hh"
 #include <xju/stringToUInt.hh>
-#include <cxy/any_.hh>
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {

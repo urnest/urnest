@@ -144,6 +144,11 @@ TypeKind.cc==%TypeKind/TypeKind.cc
 
 %TypeKind==()+cmd=(../../hcp/hcp-split) -l 1 (TypeKind.hcp) 'TypeKind.hh' 'TypeKind.cc':output
 
+TypeTag.hh==%TypeTag/TypeTag.hh
+TypeTag.cc==%TypeTag/TypeTag.cc
+
+%TypeTag==()+cmd=(../../hcp/hcp-split) -l 1 (TypeTag.hcp) 'TypeTag.hh' 'TypeTag.cc':output
+
 
 %tests.tree==<<
 ()+cmd=(test-Exception.cc+(%cxx-opts):auto.cxx.exe):stdout

@@ -266,8 +266,8 @@ x memory leaks:
 - any
   * proto/cxy/p20-main-1.cc that does not actually use any and does
     not include any_.hcp nor any omniORB headers
-  * proto/cxy/p20-main-2.cc does use any (and does include any_.hh)
-  any is marshalled as type code then data, the data is the cdr encoding
+  * proto/cxy/p20-main.cc does use Any (and does include any_.hh)
+  - any is marshalled as type code then data, the data is the cdr encoding
     of the value (the length of the data is implicit in the type code)
     what is typecode? essentially parallels instance encoding
     - generate xxx.any.hcp which has specialisations of

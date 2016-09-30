@@ -37,9 +37,10 @@ public:
   //)
   {%(memberMarshals)s
   }
+  static const char repoId[]="%(repoId)s";
 };
 '''
-def gen_struct(name,memberTypesAndNames):
+def gen_struct(name,memberTypesAndNames,repoId):
     assert len(memberTypesAndNames)>0, name
     memberNames=[_[1] for _ in memberTypesAndNames]
     memberTypes=[_[0] for _ in memberTypesAndNames]
@@ -360,9 +361,10 @@ def gen(decl,eclass,eheader,causeType,contextType,
         elif isinstance(decl, idlast.Typedef):
             pass
         elif isinstance(decl, idlast.Struct):
+            repoId=decl.repoId()
             name='::'.join(decl.scopedName())
             memberTypesAndNames=[(unqualifiedType(_.memberType(),eclass),_.declarators()[0].identifier()) for _ in decl.members()];
-            result=gen_struct(name,memberTypesAndNames)
+            result=gen_struct(name,memberTypesAndNames,repoId)
             pass
         elif isinstance(decl, idlast.Exception):
             name='::'.join(decl.scopedName())

@@ -74,6 +74,117 @@ _CORBA_MODULE_BEG
 
   _CORBA_MODULE_VAR _dyn_attr const ::CORBA::TypeCode_ptr _tc_A;
 
+  _CORBA_MODULE_VAR _dyn_attr const ::CORBA::TypeCode_ptr _tc_SS;
+
+  class SS_var;
+
+  class SS : public _CORBA_Unbounded_Sequence_w_FixSizeElement< ::CORBA::Short, 2, 2 >  {
+  public:
+    typedef SS_var _var_type;
+    inline SS() {}
+    inline SS(const SS& _s)
+      : _CORBA_Unbounded_Sequence_w_FixSizeElement< ::CORBA::Short, 2, 2 > (_s) {}
+
+    inline SS(_CORBA_ULong _max)
+      : _CORBA_Unbounded_Sequence_w_FixSizeElement< ::CORBA::Short, 2, 2 > (_max) {}
+    inline SS(_CORBA_ULong _max, _CORBA_ULong _len, ::CORBA::Short* _val, _CORBA_Boolean _rel=0)
+      : _CORBA_Unbounded_Sequence_w_FixSizeElement< ::CORBA::Short, 2, 2 > (_max, _len, _val, _rel) {}
+
+  
+
+    inline SS& operator = (const SS& _s) {
+      _CORBA_Unbounded_Sequence_w_FixSizeElement< ::CORBA::Short, 2, 2 > ::operator=(_s);
+      return *this;
+    }
+  };
+
+  class SS_out;
+
+  class SS_var {
+  public:
+    inline SS_var() : _pd_seq(0) {}
+    inline SS_var(SS* _s) : _pd_seq(_s) {}
+    inline SS_var(const SS_var& _s) {
+      if (_s._pd_seq)  _pd_seq = new SS(*_s._pd_seq);
+      else             _pd_seq = 0;
+    }
+    inline ~SS_var() { if (_pd_seq)  delete _pd_seq; }
+      
+    inline SS_var& operator = (SS* _s) {
+      if (_pd_seq)  delete _pd_seq;
+      _pd_seq = _s;
+      return *this;
+    }
+    inline SS_var& operator = (const SS_var& _s) {
+      if (_s._pd_seq) {
+        if (!_pd_seq)  _pd_seq = new SS;
+        *_pd_seq = *_s._pd_seq;
+      } else if (_pd_seq) {
+        delete _pd_seq;
+        _pd_seq = 0;
+      }
+      return *this;
+    }
+    inline ::CORBA::Short& operator [] (_CORBA_ULong _s) {
+      return (*_pd_seq)[_s];
+    }
+
+  
+
+    inline SS* operator -> () { return _pd_seq; }
+    inline const SS* operator -> () const { return _pd_seq; }
+#if defined(__GNUG__)
+    inline operator SS& () const { return *_pd_seq; }
+#else
+    inline operator const SS& () const { return *_pd_seq; }
+    inline operator SS& () { return *_pd_seq; }
+#endif
+      
+    inline const SS& in() const { return *_pd_seq; }
+    inline SS&       inout()    { return *_pd_seq; }
+    inline SS*&      out() {
+      if (_pd_seq) { delete _pd_seq; _pd_seq = 0; }
+      return _pd_seq;
+    }
+    inline SS* _retn() { SS* tmp = _pd_seq; _pd_seq = 0; return tmp; }
+      
+    friend class SS_out;
+    
+  private:
+    SS* _pd_seq;
+  };
+
+  class SS_out {
+  public:
+    inline SS_out(SS*& _s) : _data(_s) { _data = 0; }
+    inline SS_out(SS_var& _s)
+      : _data(_s._pd_seq) { _s = (SS*) 0; }
+    inline SS_out(const SS_out& _s) : _data(_s._data) {}
+    inline SS_out& operator = (const SS_out& _s) {
+      _data = _s._data;
+      return *this;
+    }
+    inline SS_out& operator = (SS* _s) {
+      _data = _s;
+      return *this;
+    }
+    inline operator SS*&()  { return _data; }
+    inline SS*& ptr()       { return _data; }
+    inline SS* operator->() { return _data; }
+
+    inline ::CORBA::Short& operator [] (_CORBA_ULong _i) {
+      return (*_data)[_i];
+    }
+
+  
+
+    SS*& _data;
+
+  private:
+    SS_out();
+    SS_out& operator=(const SS_var&);
+  };
+
 #ifndef __p20_mF__
 #define __p20_mF__
   class F;
@@ -143,6 +254,7 @@ _CORBA_MODULE_BEG
   public:
     // IDL operations
     ::CORBA::Any* f1(const ::CORBA::Any& x);
+    ::CORBA::Short f2(::CORBA::Short x);
 
     // Constructors
     inline _objref_F()  { _PR_setobj(0); }  // nil
@@ -178,6 +290,7 @@ _CORBA_MODULE_BEG
     virtual ~_impl_F();
 
     virtual ::CORBA::Any* f1(const ::CORBA::Any& x) = 0;
+    virtual ::CORBA::Short f2(::CORBA::Short x) = 0;
     
   public:  // Really protected, workaround for xlC
     virtual _CORBA_Boolean _dispatch(omniCallHandle&);
@@ -230,6 +343,11 @@ extern void operator<<=(::CORBA::Any& _a, const p20::A& _s);
 extern void operator<<=(::CORBA::Any& _a, p20::A* _sp);
 extern _CORBA_Boolean operator>>=(const ::CORBA::Any& _a, p20::A*& _sp);
 extern _CORBA_Boolean operator>>=(const ::CORBA::Any& _a, const p20::A*& _sp);
+
+void operator<<=(::CORBA::Any& _a, const p20::SS& _s);
+void operator<<=(::CORBA::Any& _a, p20::SS* _sp);
+_CORBA_Boolean operator>>=(const ::CORBA::Any& _a, p20::SS*& _sp);
+_CORBA_Boolean operator>>=(const ::CORBA::Any& _a, const p20::SS*& _sp);
 
 void operator<<=(::CORBA::Any& _a, p20::F_ptr _s);
 void operator<<=(::CORBA::Any& _a, p20::F_ptr* _s);

@@ -1,38 +1,26 @@
-// generated from p20.idl by omnicxy cxyany idl backend
+// generated from p20.idl by omnicxy cxyany.py idl backend
 
-#include <cxy/any_.hh>
+#include <cxy/TypeTag.hh>
+#include <cxy/TypeCode.hh>
+
+#include <cxy/any_.hh> //impl
+
 #include "p20.hh"
-#include "p20.cdr.hh" //impl
+#include "p20.cdr.hh"
 
 namespace cxy
 {
 
-template<>  
-class TypeCodeOf< ::p20::A > : public TypeCode
+std::shared_ptr<cxy::TypeCode> typeCodeOf(
+  cxy::TypeTag< ::p20::A > const&) throw(std::bad_alloc)
 {
-public:
-  virtual void copyValue(cdrStream& from, cdrStream& to) const
-  {
-    cxy::cdr< ::p20::A >::marshal(
-      cxy::cdr< ::p20::A >::unmarshalFrom(from),
-      to);
-  }
-
-  virtual void marshal(cdrStream& s) const
-  {
-    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::STRUCT, s);
-    REVISIT;
-  }
-  
-  virtual bool equals(TypeCode const& b) const throw()
-  {
-    TypeCodeOf const* b_(dynamic_cast<TypeCodeOf const*>(&b));
-    return b_;
-  }
-  virtual std::string str() const throw()
-  {
-    return "::p20::A";
-  }
-};
+  return std::shared_ptr<cxy::TypeCode>(
+    new cxy::StructTypeCode(
+      cxy::cdr< ::p20::A >::repoId,
+      "p20::A",
+      {
+        { "a_", cxy::typeCodeOf(cxy::TypeTag< int16_t >()) }
+      }));
+}
 
 }
