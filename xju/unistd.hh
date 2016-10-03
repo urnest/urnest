@@ -21,33 +21,6 @@
 #ifndef _XJU_UNISTD_HH_
 #define _XJU_UNISTD_HH_
 
-#ifdef __MINGW32__
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <xju/syscall.hh>
-
-
-typedef struct stat btt_stat; // [1]
-
-
-namespace xju
-{
-    typedef btt_stat Stat; // [1]
-    
-    extern const SyscallF3<int, int, void*, size_t> read;
-    extern const SyscallF2<int, const char*, Stat*> stat_; // [1]
-    extern const SyscallF3<int, int, const void*, size_t> write;
-    extern const SyscallF3<off_t, int, off_t, int> lseek;
-    extern const SyscallF1<int, int> close;
-    extern const SyscallF2<int, const char*, mode_t> mkdir;
-    extern const SyscallF1<int, const char*> rmdir;
-    extern const SyscallF1<int, const char*> unlink;
-}
-
-#else
-
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <xju/syscall.hh>
@@ -70,10 +43,17 @@ namespace xju
     extern const SyscallF2<int, const char*, mode_t> mkdir;
     extern const SyscallF1<int, const char*> rmdir;
     extern const SyscallF1<int, const char*> unlink;
-    extern const SyscallF2<char*, char*, size_t> getcwd;
     extern const SyscallF0<pid_t> fork;
 
-    std::string getcwd_() throw(xju::SyscallFailed);
+    // post: result.first is read end
+    //       result.second is write end
+    //       both file descriptors have close-on-exec set (atomically
+    //       on creation); both are set non-blocking
+    std::pair<int,int> pipe() throw(xju::SyscallFailed);
+    
+    extern const SyscallF1<int, int*> pipe;
+    
+    std::string getcwd() throw(xju::SyscallFailed);
 
     void exec(std::string const& file,
               std::vector<std::string> const& argv) throw(xju::SyscallFailed);
@@ -81,7 +61,5 @@ namespace xju
               
 }
 
-
-#endif
 
 #endif

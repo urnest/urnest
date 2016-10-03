@@ -11,72 +11,15 @@
 //
 #include <xju/unistd.hh>
 
-#ifdef __MINGW32__
-
-#include <io.h>
-
-
-namespace xju
-{
-    namespace
-    {
-        int mkdir_wrapper(const char* n, mode_t)
-        {
-            return ::mkdir(n);
-        }
-    }
-    
-    const SyscallF3<int, int, void*, size_t> read(
-	"read",
-	::read);
-    
-    const SyscallF2<int, const char*, Stat*> stat_(
-	"stat",
-	::stat);
-
-    const SyscallF3<int, int, const void*, size_t> write(
-	"write",
-	::write);
-
-    const SyscallF1<int, int> close(
-	"close",
-	::close);
-
-    const SyscallF3<off_t, int, off_t, int> lseek(
-	"lseek",
-	::lseek);
-
-    const SyscallF2<int, const char*, mode_t> mkdir(
-        "mkdir",
-        mkdir_wrapper);
-
-    const SyscallF1<int, const char*> rmdir(
-        "rmdir",
-        ::rmdir);
-
-    const SyscallF1<int, const char*> unlink(
-        "unlink",
-        ::unlink);
-}
-
-
-#else
-
-#ifdef __Lynx__
-#include <lockf.h>
-#endif
-
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 
 namespace xju
 {
-#ifndef __CYGWIN__
     const SyscallF3<int, int, int, off_t> lockf(
 	"lockf",
 	::lockf);
-#endif
     const SyscallF3<ssize_t, int, void*, size_t> read(
 	"read",
 	::read);
@@ -113,20 +56,32 @@ namespace xju
         "unlink",
         ::unlink);
 
-    const SyscallF2<char*, char*, size_t> getcwd(
-        "getcwd",
-        ::getcwd);
-
     const SyscallF0<pid_t> fork(
         "fork",
         ::fork);
 
-    std::string getcwd_() throw(xju::SyscallFailed)
+    std::pair<int,int> pipe() throw(xju::SyscallFailed)
     {
-        char* x = syscall(getcwd, XJU_TRACED, false, (char*)0)(0, 0);
-        std::string result(x);
-        ::free(x);
-        return result;
+        int fds[2];
+        syscall("pipe2",::pipe2, XJU_TRACED, true, -1)(
+            fds,O_NONBLOCK|O_CLOEXEC);
+        return std::make_pair(fds[0],fds[1]);
+    }
+    
+    std::string getcwd() throw(std::bad_alloc)
+    {
+        char* x = ::getcwd(0, 0);
+        if (x==0) {
+            throw std::bad_alloc("could not allocate memory for xju::getcwd");
+        }
+        try {
+            std::string result(x);
+            ::free(x);
+            return result;
+        }
+        catch(...) {
+            ::free(x);
+        }
     }
 
     void execvp(std::string const& file,
@@ -147,5 +102,3 @@ namespace xju
     }
 }
 
-
-#endif
