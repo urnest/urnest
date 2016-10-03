@@ -13,6 +13,7 @@ snmp%tests.tree
 ()+cmd=(test-Exception.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Float.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Int.cc+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-Holder.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-ip.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-JoiningIterator.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Notifying.cc+(..%cxx-opts):auto.cxx.exe):stdout
@@ -48,3 +49,8 @@ unix_epoch.cc==%unix_epoch/unix_epoch.cc
 
 ip.hh==%ip/ip.hh
 ip.cc==%ip/ip.cc
+
+%Holder==()+cmd=(../hcp/hcp-split) -l 1 (Holder.hcp) 'Holder.hh' 'Holder.cc':output
+
+Holder.hh==%Holder/Holder.hh
+Holder.cc==%Holder/Holder.cc
