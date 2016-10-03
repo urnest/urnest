@@ -11,7 +11,7 @@ io::Output
   - close on exec? only ever make stdin,stdout,stderr survive exec (and always)
   - other fd and socket options? eg udp Don't Fragment, use constructed objects
   - dup2, perhaps:
-    InByteStream::useAsStdin, OutByteStream::useAsStdout, OutByteStream::useAsStderr
+    IStream::useAsStdin, OStream::useAsStdout, OStream::useAsStderr
 
 - io
   - InFile
@@ -34,11 +34,11 @@ io::Output
         - is a Output
 
   - Pipe
-      - shared_ptr<InByteStream> input_;
-      - shared_ptr<OutByteStream> output_;
+      - shared_ptr<IStream> input_;
+      - shared_ptr<OStream> output_;
   - SocketPair
-      - unique_ptr<InByteStream> input_;
-      - unique_ptr<OutByteStream> output_;
+      - unique_ptr<IStream> input_;
+      - unique_ptr<OStream> output_;
   - UnixListener,UnixSocket - like TCPListener,TCPSocket
   - MessageQueue (linux allows select)
       IQueue& input();

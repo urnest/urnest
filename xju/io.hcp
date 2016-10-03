@@ -1,0 +1,145 @@
+// Copyright (c) 2015 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <utility>
+#include <set>
+#include <chrono>
+#include <new>
+#include <xju/syscall.hh> //impl
+#include <xju/unistd.h> //impl
+
+namespace xju
+{
+namespace io
+{
+
+class Input;
+class Output;
+
+// wait at most until deadline for one of the specified inputs or outputs
+// to be readable/writable; return as soon as one is, returning all that are
+// - returns empty sets when deadline is reached
+// - returns those inputs/outputs that are already readable/writable if
+//   deadline has already passed
+// post: result.first.size()||result.second.size()||deadline reached
+std::pair<std::set<ref<Input> >,std::set<ref<Output> > > select(
+  std::set<ref<Input> > const& inputs,
+  std::set<ref<Output> > const& outputs,
+  std::chrono::system_clock::time_point const& deadline) throw(
+    std::bad_alloc)
+{
+  REVISIT;
+}
+
+// as above but without any outputs
+// 
+std::set<ref<Input> > select(
+  std::set<ref<Input> > const& inputs,
+  std::chrono::system_clock::time_point const& deadline) throw(
+    xju::SyscallFailed)
+{
+  return select(inputs,std::set<ref<Output> >(),deadline).first;
+}
+
+// as above but without any inputs
+// 
+std::set<ref<Output> > select(
+  std::set<ref<Output> > const& outputs,
+  std::chrono::system_clock::time_point const& deadline) throw(
+    std::bad_alloc)
+{
+  return select(std::set<ref<Iutput> >(),outputs,deadline).second;
+}
+
+class Input
+{
+public:
+  virtual ~Input() throw()
+  {
+  }
+protected:
+  virtual int fileDescriptor() const throw() = 0;
+
+friend std::pair<std::set<ref<Input> >,std::set<ref<Output> > > select(
+  std::set<ref<Input> > const& inputs,
+  std::set<ref<Output> > const& outputs,
+  std::chrono::system_clock const& deadline) throw(
+    std::bad_alloc);
+
+};
+
+class Output
+{
+public:
+  virtual ~Output() throw()
+  {
+  }
+protected:
+  virtual int fileDescriptor() const throw() = 0;
+
+friend std::pair<std::set<ref<Input> >,std::set<ref<Output> > > select(
+  std::set<ref<Input> > const& inputs,
+  std::set<ref<Output> > const& outputs,
+  std::chrono::system_clock const& deadline) throw(
+    std::bad_alloc);
+};
+
+class IStream : public Input
+{
+public:
+  // read bytes into buffer until deadline reached or bufferSize bytes read
+  // or end of input is reached
+  // - return number of bytes read
+  // - reads any immediately available bytes if deadline has already passed
+  size_t read(void* buffer, size_t bufferSize,
+              std::chrono::system_clock::timepoint deadline) throw(
+                // eg disk error
+                xju::Exception) {
+    size_t bytesRead(0);
+    try {
+      uint8_t* p((uint8_t*)buffer);
+      while(bytesRead<bufferSize &&
+            select({*this},deadline).size()) {
+        size_t const thisRead=xju::read(
+          fileDescriptor(),
+          std::min(bufferSize-bytesRead,std::numeric_limits<ssize_t>::max()));
+        if (thisRead==0) {
+          //end of input
+          return bytesRead;
+        }
+        bytesRead+=thisRead;
+      }
+      return bytesRead;
+    }
+    catch(xju::Exception& e)
+    {
+      std::ostringstream s;
+      s << "read bytes from " << (*this)
+        << "until " << deadline << " or " << (bufferSize-bytesRead) 
+        << " more (of " << bufferSize << " total) bytes read "
+        << "or end of input";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+};
+
+class OStream : public Output
+{
+public:
+  // write bytes from buffer until deadline reached
+  // - return number of bytes written
+  size_t write(void* buffer, size_t bufferSize,
+               std::chrono::system_clock::timepoint deadline) throw() {
+    REVISIT;
+  }
+};
+
+}
+}

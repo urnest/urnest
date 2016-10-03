@@ -1,0 +1,98 @@
+// Copyright (c) 2015 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <xju/io.hh>
+#include <utility>
+#include <memory>
+
+#include <xju/unistd.hh> //impl
+#include "xju/NonCopyable.hh" //impl
+#include "xju/assert.hh" //impl
+
+namespace xju
+{
+
+namespace
+{
+  class I : public IStream, xju::NonCopyable
+  {
+  public:
+    ~I() throw()
+    {
+      ::close(fd_);
+    }
+  private:
+    explicit I(int fd) throw():
+        fd_(fd)
+    {
+      xju::assert_not_equal(fd,0);
+    }
+    //Input::
+    int fileDescriptor() const throw()
+    {
+      return fd_;
+    }
+    int fd_;
+  };
+  class O : public OStream, xju::NonCopyable
+  {
+  public:
+    ~O() throw()
+    {
+      ::close(fd_);
+    }
+  private:
+    explicit O(int fd) throw():
+        fd_(fd)
+    {
+      xju::assert_not_equal(fd,0);
+    }
+    //Output::
+    int fileDescriptor() const throw()
+    {
+      return fd_;
+    }
+    int fd_;
+  };
+}
+
+std::pair<std::unique_ptr<IStream>, std::unique_ptr<OStream> > pipe(
+  bool closeReadEndOnExec=true,
+  bool closeWriteEndOnExec=true) throw(std::bad_alloc,
+                                       SyscallFailed) {
+  std::pair<int,int> fds(xju::pipe());
+  std::pair<std::unique_ptr<IStream>, std::unique_ptr<OStream> > result;
+  try {
+    result.first=std::unique_ptr<IStream>(new I(fds[0]));
+  }
+  catch(...) {
+    ::close(fds[0]);
+    ::close(fds[1]);
+    throw;
+  }
+  try {
+    result.second=std::unique_ptr<OStream>(new O(fds[1]));
+  }
+  catch(...) {
+    ::close(fds[1]);
+    throw;
+  }
+  if (!closeReadEndOnExec) {
+    ::fcntl(fds[0],F_SETFD,::fcntl(fds[0],F_GETFD)&~FD_CLOEXEC);
+  }
+  if (!closeWriteEndOnExec) {
+    ::fcntl(fds[1],F_SETFD,::fcntl(fds[1],F_GETFD)&~FD_CLOEXEC);
+  }
+  return result;
+}
+
+}
+
+
