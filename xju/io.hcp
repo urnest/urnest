@@ -12,7 +12,8 @@
 #include <chrono>
 #include <new>
 #include <xju/syscall.hh> //impl
-#include <xju/unistd.h> //impl
+#include <xju/unistd.hh> //impl
+#include <sys/select.h> //impl
 
 namespace xju
 {
@@ -34,7 +35,52 @@ std::pair<std::set<ref<Input> >,std::set<ref<Output> > > select(
   std::chrono::system_clock::time_point const& deadline) throw(
     std::bad_alloc)
 {
-  REVISIT;
+  std::pair<std::set<ref<Input> >,std::set<ref<Output> > > result;
+  int n;
+  do {
+    fd_set r;
+    FD_ZERO(&r);
+    for(auto x : inputs) {
+      FD_SET(&r,x.fileDescriptor());
+    }
+    for(auto x : outputs) {
+      FD_SET(&w,x.fileDescriptor());
+    }
+    std::chrono::system_clock::duration const timeout(
+      std::min(deadline-std::chrono::system_clock::now(),
+               std::chrono::duration(
+                 std::chrono::seconds(std::numeric_limits<long>::max()))));
+    struct timeval timeout_;
+    timeout_.tv_sec=std::chrono::seconds(timeout);
+    timeout_.tv_usec=std::chrono::microseconds(timeout);
+    n=::select(FD_SETSIZE,&r,&w,0,&timeout_);
+    switch(n) {
+    case 0:
+      break;
+    case -1:
+      if (errno != EINTR)
+      {
+        xju::assert_equal(errno,ENOMEM);
+        throw std::bad_alloc();
+      }
+      break;
+    default:
+      for(auto x : inputs) {
+        if (FD_ISSET(&r,x.fileDescriptor())) {
+          result.first.insert(x);
+        }
+      }
+      for(auto x : outputs) {
+        if (FD_ISSET(&w,x.fileDescriptor())) {
+          result.second.insert(x);
+        }
+      }
+    }
+  }
+  while(result.first.size()==0 &&
+        result.second.size()==0 &&
+        std::chrono::system_clock::now()<deadline);
+  return result;
 }
 
 // as above but without any outputs
@@ -63,6 +109,9 @@ public:
   virtual ~Input() throw()
   {
   }
+  // in-line human readable description
+  virtual std::string str() const throw()=0;
+  
 protected:
   virtual int fileDescriptor() const throw() = 0;
 
@@ -73,6 +122,10 @@ friend std::pair<std::set<ref<Input> >,std::set<ref<Output> > > select(
     std::bad_alloc);
 
 };
+std::ostream& operator<<(std::ostream& s, Input const& x) throw()
+{
+  return s << x.str();
+}
 
 class Output
 {
@@ -80,6 +133,9 @@ public:
   virtual ~Output() throw()
   {
   }
+  // in-line human readable description
+  virtual std::string str() const throw()=0;
+
 protected:
   virtual int fileDescriptor() const throw() = 0;
 
@@ -89,6 +145,10 @@ friend std::pair<std::set<ref<Input> >,std::set<ref<Output> > > select(
   std::chrono::system_clock const& deadline) throw(
     std::bad_alloc);
 };
+std::ostream& operator<<(std::ostream& s, Output const& x) throw()
+{
+  return s << x.str();
+}
 
 class IStream : public Input
 {
@@ -99,6 +159,7 @@ public:
   // - reads any immediately available bytes if deadline has already passed
   size_t read(void* buffer, size_t bufferSize,
               std::chrono::system_clock::timepoint deadline) throw(
+                std::bad_alloc,
                 // eg disk error
                 xju::Exception) {
     size_t bytesRead(0);
@@ -133,11 +194,43 @@ public:
 class OStream : public Output
 {
 public:
-  // write bytes from buffer until deadline reached
+  // write bytes from buffer until bufferSize bytes written or
+  // deadline reached or output closed
   // - return number of bytes written
-  size_t write(void* buffer, size_t bufferSize,
-               std::chrono::system_clock::timepoint deadline) throw() {
-    REVISIT;
+  // - writes what is possible immediately if deadline has already passed
+  // - returns immediately if output closes before deadline
+  size_t write(void const* buffer, size_t bufferSize,
+               std::chrono::system_clock::timepoint deadline) throw(
+                 std::bad_alloc,
+                // eg disk error
+                 xju::Exception) {
+    size_t bytesWrote(0);
+    try {
+      uint8_t const* p((uint8_t const*)buffer);
+      uint8_t* p((uint8_t*)buffer);
+      while(bytesRead<bufferSize &&
+            select({*this},deadline).size()) {
+        size_t const thisWrite=xju::write(
+          fileDescriptor(),
+          std::min(bufferSize-bytesWrote,std::numeric_limits<ssize_t>::min()));
+        if (thisWrite==0) {
+          //output closed
+          return bytesWrote;
+        }
+        bytesWrote+=thisWrite;
+      }
+      return bytesWrote;
+    }
+    catch(xju::Exception& e)
+    {
+      std::ostringstream s;
+      s << "write bytes to " << (*this)
+        << "until " << deadline << " or " << (bufferSize-bytesWrote) 
+        << " more (of " << bufferSize << " total) bytes written "
+        << "or output closed";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
   }
 };
 

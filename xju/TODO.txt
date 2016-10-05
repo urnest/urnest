@@ -33,7 +33,7 @@ io::Output
         - void enque(void const* message, size_t bytes, Time deadline);
         - is a Output
 
-  - Pipe
+  * Pipe
       - shared_ptr<IStream> input_;
       - shared_ptr<OStream> output_;
   - SocketPair
@@ -43,6 +43,12 @@ io::Output
   - MessageQueue (linux allows select)
       IQueue& input();
       OQueue& input();
+- test-pipe.cc:
+  - only tests creation
+- test-io.cc:
+  - use Pipe to test read/write
+  - use multiple pipes to test select
+- make syscall turn ENOMEM into std::bad_alloc
 
 Subprocess
   x start function object,

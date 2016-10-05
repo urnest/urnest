@@ -8,43 +8,103 @@
 // implied warranty.
 //
 
+#include <xju/io.hh>
+#include <utility>
+#include <memory>
+
+#include <xju/unistd.hh> //impl
+#include "xju/NonCopyable.hh" //impl
+#include "xju/assert.hh" //impl
 
 namespace xju
 {
+
 namespace
 {
-class inlet:public outputstream, noncopyable
-{
-public:
-  explicit inlet(int fd) throw():
-      fd_(fd)
+class I : public xju::io::IStream, xju::NonCopyable
   {
-  }
-  ~inlet() throw()
+  public:
+    ~I() throw()
+    {
+      ::close(fd_);
+    }
+    //Input::
+    std::string str() const throw()
+    {
+      std::ostringstream s;
+      s << "readable end of pipe (file descriptor " << fileDescriptor() <<")";
+      return s.str();
+    }
+  private:
+    explicit I(int fd) throw():
+        fd_(fd)
+    {
+      xju::assert_not_equal(fd,0);
+    }
+    //Input::
+    int fileDescriptor() const throw()
+    {
+      return fd_;
+    }
+    int fd_;
+  };
+  class O : public xju::io::OStream, xju::NonCopyable
   {
-    ::close(fd_);
-  }
-};
-class outlet:public inputstream, noncopyable
-{
-public:
-  explicit outlet(int fd) throw():
-      fd_(fd)
-  {
-  }
-  ~inlet() throw()
-  {
-    ::close(fd_);
-  }
-};
-  
+  public:
+    ~O() throw()
+    {
+      ::close(fd_);
+    }
+    //Output::
+    std::string str() const throw()
+    {
+      std::ostringstream s;
+      s << "writeable end of pipe (file descriptor " << fileDescriptor() <<")";
+      return s.str();
+    }
+  private:
+    explicit O(int fd) throw():
+        fd_(fd)
+    {
+      xju::assert_not_equal(fd,0);
+    }
+    //Output::
+    int fileDescriptor() const throw()
+    {
+      return fd_;
+    }
+    int fd_;
+  };
 }
 
-std::pair<std::auto_ptr<xju::inputstream>,
-          std::auto_ptr<xju::outputstream> pipe(
-            bool closeReadableEndOnExec=true,
-            bool closeWriteableEndOnExec=true) throw(
-    xju::Exception)
-  {
+std::pair<std::unique_ptr<xju::io::IStream>, std::unique_ptr<xju::io::OStream> > pipe(
+  bool closeReadEndOnExec=true,
+  bool closeWriteEndOnExec=true) throw(std::bad_alloc,
+                                       SyscallFailed) {
+  std::pair<int,int> fds(xju::pipe());
+  std::pair<std::unique_ptr<IStream>, std::unique_ptr<OStream> > result;
+  try {
+    result.first=std::unique_ptr<IStream>(new I(fds[0]));
   }
+  catch(...) {
+    ::close(fds[0]);
+    ::close(fds[1]);
+    throw;
+  }
+  try {
+    result.second=std::unique_ptr<OStream>(new O(fds[1]));
+  }
+  catch(...) {
+    ::close(fds[1]);
+    throw;
+  }
+  if (!closeReadEndOnExec) {
+    ::fcntl(fds[0],F_SETFD,::fcntl(fds[0],F_GETFD)&~FD_CLOEXEC);
+  }
+  if (!closeWriteEndOnExec) {
+    ::fcntl(fds[1],F_SETFD,::fcntl(fds[1],F_GETFD)&~FD_CLOEXEC);
+  }
+  return result;
+}
+
 }
