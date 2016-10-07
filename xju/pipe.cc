@@ -1,25 +1,12 @@
-// Copyright (c) 2015 Trevor Taylor
-//
-// Permission to use, copy, modify, distribute and sell this software
-// and its documentation for any purpose is hereby granted without fee,
-// provided that the above copyright notice appear in all.
-// Trevor Taylor makes no representations about the suitability of this
-// software for any purpose.  It is provided "as is" without express or
-// implied warranty.
-//
-
-#include <xju/io.hh>
-#include <utility>
-#include <memory>
-
+#include <xju/pipe.hh>
+#line 1 "/home/xju/urnest/xju/pipe.hcp"
+#line 15
 #include <xju/unistd.hh> //impl
 #include "xju/NonCopyable.hh" //impl
 #include "xju/assert.hh" //impl
-#include <fcntl.h>
-
 namespace xju
 {
-
+#line 23
 namespace
 {
 class Fd : xju::NonCopyable

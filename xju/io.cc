@@ -1,69 +1,33 @@
-// Copyright (c) 2015 Trevor Taylor
-//
-// Permission to use, copy, modify, distribute and sell this software
-// and its documentation for any purpose is hereby granted without fee,
-// provided that the above copyright notice appear in all.
-// Trevor Taylor makes no representations about the suitability of this
-// software for any purpose.  It is provided "as is" without express or
-// implied warranty.
-//
-#include <utility>
-#include <set>
-#include <chrono>
-#include <new>
+#include <xju/io.hh>
+#line 1 "/home/xju/urnest/xju/io.hcp"
+#line 14
 #include <xju/syscall.hh> //impl
 #include <xju/unistd.hh> //impl
 #include <xju/format.hh> //impl
 #include <sys/select.h> //impl
-#include "xju/syscall.hh"
-
 namespace xju
 {
 namespace io
 {
-class Output;
-class Input
-{
-public:
-  virtual ~Input() throw()
+#line 28
+Input::~Input() throw()
   {
   }
   // in-line human readable description
-  virtual std::string str() const throw()=0;
   
-protected:
-  virtual int fileDescriptor() const throw() = 0;
-
-  friend std::pair<std::set<Input const* >,std::set<Output const* > > select(
-  std::set<Input const* > const& inputs,
-  std::set<Output const* > const& outputs,
-  std::chrono::system_clock::time_point const& deadline) throw(
-    std::bad_alloc);
-
-};
+#line 44
 std::ostream& operator<<(std::ostream& s, Input const& x) throw()
 {
   return s << x.str();
 }
 
-class Output
-{
-public:
-  virtual ~Output() throw()
+#line 52
+Output::~Output() throw()
   {
   }
   // in-line human readable description
-  virtual std::string str() const throw()=0;
-
-protected:
-  virtual int fileDescriptor() const throw() = 0;
-
-friend std::pair<std::set<Input const*>,std::set<Output const* > > select(
-  std::set<Input const* > const& inputs,
-  std::set<Output const* > const& outputs,
-  std::chrono::system_clock::time_point const& deadline) throw(
-    std::bad_alloc);
-};
+  
+#line 67
 std::ostream& operator<<(std::ostream& s, Output const& x) throw()
 {
   return s << x.str();
@@ -155,14 +119,8 @@ std::set<Output const* > select(
   return select(std::set<Input const*>(),outputs,deadline).second;
 }
 
-class IStream : public Input
-{
-public:
-  // read bytes into buffer until deadline reached or bufferSize bytes read
-  // or end of input is reached
-  // - return number of bytes read
-  // - reads any immediately available bytes if deadline has already passed
-  size_t read(void* buffer, size_t bufferSize,
+#line 165
+size_t IStream::read(void* buffer, size_t bufferSize,
               std::chrono::system_clock::time_point deadline) throw(
                 std::bad_alloc,
                 // eg disk error
@@ -199,17 +157,9 @@ public:
       throw;
     }
   }
-};
 
-class OStream : public Output
-{
-public:
-  // write bytes from buffer until bufferSize bytes written or
-  // deadline reached or output closed
-  // - return number of bytes written
-  // - writes what is possible immediately if deadline has already passed
-  // - returns immediately if output closes before deadline
-  size_t write(void const* buffer, 
+#line 212
+size_t OStream::write(void const* buffer, 
                size_t bufferSize,
                std::chrono::system_clock::time_point deadline) throw(
                  std::bad_alloc,
@@ -247,7 +197,6 @@ public:
       throw;
     }
   }
-};
 
 }
 }

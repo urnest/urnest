@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 
 namespace xju
 {
@@ -60,7 +61,7 @@ namespace xju
         "fork",
         ::fork);
 
-    std::pair<int,int> pipe() throw(xju::SyscallFailed)
+    std::pair<int,int> pipe_() throw(xju::SyscallFailed)
     {
         int fds[2];
         syscall("pipe2",::pipe2, XJU_TRACED, true, -1)(
@@ -68,19 +69,25 @@ namespace xju
         return std::make_pair(fds[0],fds[1]);
     }
     
-    std::string getcwd() throw(std::bad_alloc)
+    std::string getcwd() throw(std::bad_alloc,xju::SyscallFailed)
     {
-        char* x = ::getcwd(0, 0);
-        if (x==0) {
-            throw std::bad_alloc("could not allocate memory for xju::getcwd");
-        }
         try {
-            std::string result(x);
-            ::free(x);
-            return result;
+            char* x = ::getcwd(0, 0);
+            if (x==0) {
+                throw std::bad_alloc();
+            }
+            try {
+                std::string result(x);
+                ::free(x);
+                return result;
+            }
+            catch(...) {
+                ::free(x);
+            }
         }
-        catch(...) {
-            ::free(x);
+        catch(xju::SyscallFailed& e) {
+            e.addContext("get current working directory",XJU_TRACED);
+            throw;
         }
     }
 

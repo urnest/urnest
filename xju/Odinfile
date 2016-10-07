@@ -27,6 +27,7 @@ snmp%tests.tree
 ()+cmd=(test-functional.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-mt.cc+(..%cxx-opts)+ld_flags=-lpthread:auto.cxx.exe):stdout
 ()+cmd=(test-path.cc+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-pipe.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-stringToDouble.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-stringToInt.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-stringToTime.cc+(..%cxx-opts):auto.cxx.exe):stdout
@@ -45,6 +46,11 @@ netflow%tests.tree
 unix_epoch.hh==%unix_epoch/unix_epoch.hh
 unix_epoch.cc==%unix_epoch/unix_epoch.cc
 
+%io==()+cmd=(../hcp/hcp-split) -l 1 (io.hcp) 'io.hh' 'io.cc':output
+
+io.hh==%io/io.hh
+io.cc==%io/io.cc
+
 %ip==()+cmd=(../hcp/hcp-split) -l 1 (ip.hcp) 'ip.hh' 'ip.cc':output
 
 ip.hh==%ip/ip.hh
@@ -54,3 +60,9 @@ ip.cc==%ip/ip.cc
 
 Holder.hh==%Holder/Holder.hh
 Holder.cc==%Holder/Holder.cc
+
+%pipe==()+cmd=(../hcp/hcp-split) -l 1 (pipe.hcp) 'pipe.hh' 'pipe.cc':output
+
+pipe.hh==%pipe/pipe.hh
+pipe.cc==%pipe/pipe.cc
+
