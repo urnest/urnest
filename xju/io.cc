@@ -59,9 +59,12 @@ std::pair<std::set<Input const*>,std::set<Output const*> > select(
       FD_SET(x->fileDescriptor(),&w);
     }
     std::chrono::system_clock::duration const timeout(
-      std::min(deadline-std::chrono::system_clock::now(),
-               std::chrono::system_clock::duration(
-                 std::chrono::seconds(std::numeric_limits<long>::max()))));
+      std::max(
+        std::chrono::system_clock::duration(
+          std::chrono::seconds(0)),
+        std::min(deadline-std::chrono::system_clock::now(),
+                 std::chrono::system_clock::duration(
+                   std::chrono::seconds(std::numeric_limits<long>::max())))));
     std::chrono::seconds const tv_sec(
       std::chrono::duration_cast<std::chrono::seconds>(timeout));
     std::chrono::microseconds const tv_usec(
@@ -119,7 +122,7 @@ std::set<Output const* > select(
   return select(std::set<Input const*>(),outputs,deadline).second;
 }
 
-#line 165
+#line 168
 size_t IStream::read(void* buffer, size_t bufferSize,
               std::chrono::system_clock::time_point deadline) throw(
                 std::bad_alloc,
@@ -158,7 +161,7 @@ size_t IStream::read(void* buffer, size_t bufferSize,
     }
   }
 
-#line 212
+#line 215
 size_t OStream::write(void const* buffer, 
                size_t bufferSize,
                std::chrono::system_clock::time_point deadline) throw(

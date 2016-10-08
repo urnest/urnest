@@ -14,6 +14,7 @@ snmp%tests.tree
 ()+cmd=(test-Float.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Int.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Holder.cc+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-io.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-ip.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-JoiningIterator.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Notifying.cc+(..%cxx-opts):auto.cxx.exe):stdout
