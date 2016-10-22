@@ -27,7 +27,14 @@ public:
 
   // in-line human readable description
   virtual std::string str() const throw()=0;
-  
+
+  class Closed : public xju::Exception
+  {
+  public:
+    Closed(Input const& x, xju::Traced trace) throw();
+
+  };
+    
 protected:
   virtual int fileDescriptor() const throw() = 0;
 
@@ -49,6 +56,13 @@ public:
   // in-line human readable description
   virtual std::string str() const throw()=0;
 
+  class Closed : public xju::Exception
+  {
+  public:
+    Closed(Output const& x, xju::Traced trace) throw();
+
+  };
+    
 protected:
   virtual int fileDescriptor() const throw() = 0;
 
@@ -100,6 +114,8 @@ public:
   size_t read(void* buffer, size_t bufferSize,
               std::chrono::system_clock::time_point deadline) throw(
                 std::bad_alloc,
+                // end of input before anything was read
+                Input::Closed,
                 // eg disk error
                 xju::Exception);
 

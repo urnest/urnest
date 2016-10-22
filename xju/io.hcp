@@ -30,7 +30,16 @@ public:
   }
   // in-line human readable description
   virtual std::string str() const throw()=0;
-  
+
+  class Closed : public xju::Exception
+  {
+  public:
+    Closed(Input const& x, xju::Traced trace) throw():
+        xju::Exception(x.str()+" closed",trace)
+    {
+    }
+  };
+    
 protected:
   virtual int fileDescriptor() const throw() = 0;
 
@@ -55,6 +64,15 @@ public:
   // in-line human readable description
   virtual std::string str() const throw()=0;
 
+  class Closed : public xju::Exception
+  {
+  public:
+    Closed(Output const& x, xju::Traced trace) throw():
+        xju::Exception(x.str()+" closed",trace)
+    {
+    }
+  };
+    
 protected:
   virtual int fileDescriptor() const throw() = 0;
 
@@ -168,6 +186,8 @@ public:
   size_t read(void* buffer, size_t bufferSize,
               std::chrono::system_clock::time_point deadline) throw(
                 std::bad_alloc,
+                // end of input before anything was read
+                Input::Closed,
                 // eg disk error
                 xju::Exception) {
     std::chrono::duration<float> const timeout(
@@ -183,8 +203,10 @@ public:
           std::min(bufferSize-bytesRead,
                    (size_t)std::numeric_limits<ssize_t>::max()));
         if (thisRead==0) {
-          //end of input
-          return bytesRead;
+          if (bytesRead) {
+            return bytesRead;
+          }
+          throw Input::Closed(*this,XJU_TRACED);
         }
         bytesRead+=thisRead;
       }
@@ -231,8 +253,10 @@ public:
           std::min(bufferSize-bytesWrote,
                    (size_t)std::numeric_limits<ssize_t>::max()));
         if (thisWrite==0) {
-          //output closed
-          return bytesWrote;
+          if (bytesWrote) {
+            return bytesWrote;
+          }
+          throw Output::Closed(*this,XJU_TRACED);
         }
         bytesWrote+=thisWrite;
       }

@@ -33,6 +33,7 @@ snmp%tests.tree
 ()+cmd=(test-stringToInt.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-stringToTime.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-stringToUInt.cc+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-Thread.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-unix_epoch.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-xml.cc+(..%cxx-opts):auto.cxx.exe):stdout
 snmp%tests.tree

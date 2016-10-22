@@ -41,8 +41,8 @@ namespace std
 
 namespace xju
 {
-    void assert_abort() throw();
-    void assert_never_reached() throw();
+    void assert_abort() noexcept;
+    void assert_never_reached() noexcept;
     
     template<class A, class B>
     bool assert_equal(const A& a, const B& b)
@@ -245,8 +245,18 @@ namespace xju
 	}
 	return true;
     }
+
+    // T, U are sequences, eg std::string
+    template<class T, class U>
+    bool assert_contains(T const& x, U const& contains) noexcept
+    {
+        xju::assert_greater_equal(x.size(),contains.size());
+        xju::assert_not_equal(std::search(x.begin(),x.end(),
+                                          contains.begin(),
+                                          contains.end()),x.end());
+    }
     
-};
+}
 
 
 #endif

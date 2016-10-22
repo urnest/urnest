@@ -15,19 +15,31 @@ Input::~Input() throw()
   }
   // in-line human readable description
   
-#line 44
+#line 37
+Input::Closed::Closed(Input const& x, xju::Traced trace) throw():
+        xju::Exception(x.str()+" closed",trace)
+    {
+    }
+  
+#line 53
 std::ostream& operator<<(std::ostream& s, Input const& x) throw()
 {
   return s << x.str();
 }
 
-#line 52
+#line 61
 Output::~Output() throw()
   {
   }
   // in-line human readable description
   
-#line 67
+#line 70
+Output::Closed::Closed(Output const& x, xju::Traced trace) throw():
+        xju::Exception(x.str()+" closed",trace)
+    {
+    }
+  
+#line 85
 std::ostream& operator<<(std::ostream& s, Output const& x) throw()
 {
   return s << x.str();
@@ -122,10 +134,12 @@ std::set<Output const* > select(
   return select(std::set<Input const*>(),outputs,deadline).second;
 }
 
-#line 168
+#line 186
 size_t IStream::read(void* buffer, size_t bufferSize,
               std::chrono::system_clock::time_point deadline) throw(
                 std::bad_alloc,
+                // end of input before anything was read
+                Input::Closed,
                 // eg disk error
                 xju::Exception) {
     std::chrono::duration<float> const timeout(
@@ -141,8 +155,10 @@ size_t IStream::read(void* buffer, size_t bufferSize,
           std::min(bufferSize-bytesRead,
                    (size_t)std::numeric_limits<ssize_t>::max()));
         if (thisRead==0) {
-          //end of input
-          return bytesRead;
+          if (bytesRead) {
+            return bytesRead;
+          }
+          throw Input::Closed(*this,XJU_TRACED);
         }
         bytesRead+=thisRead;
       }
@@ -161,7 +177,7 @@ size_t IStream::read(void* buffer, size_t bufferSize,
     }
   }
 
-#line 215
+#line 237
 size_t OStream::write(void const* buffer, 
                size_t bufferSize,
                std::chrono::system_clock::time_point deadline) throw(
@@ -181,8 +197,10 @@ size_t OStream::write(void const* buffer,
           std::min(bufferSize-bytesWrote,
                    (size_t)std::numeric_limits<ssize_t>::max()));
         if (thisWrite==0) {
-          //output closed
-          return bytesWrote;
+          if (bytesWrote) {
+            return bytesWrote;
+          }
+          throw Output::Closed(*this,XJU_TRACED);
         }
         bytesWrote+=thisWrite;
       }
