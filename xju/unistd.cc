@@ -61,6 +61,10 @@ namespace xju
         "fork",
         ::fork);
 
+    const SyscallF2<int,int,int> dup2(
+        "dup2",
+        ::dup2);
+
     std::pair<int,int> pipe_() throw(xju::SyscallFailed)
     {
         int fds[2];

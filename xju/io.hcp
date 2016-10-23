@@ -224,6 +224,13 @@ public:
       throw;
     }
   }
+
+  //point stdin (file descriptor 0) at this input
+  void useAsStdin() throw()
+  {
+    xju::dup2(fileDescriptor(),0);
+  }
+  
 };
 
 class OStream : public Output
@@ -274,6 +281,17 @@ public:
       throw;
     }
   }
+
+  void useAsStdout() throw()
+  {
+    xju::dup2(fileDescriptor(),1);
+  }
+  
+  void useAsStderr() throw()
+  {
+    xju::dup2(fileDescriptor(),2);
+  }
+  
 };
 
 }

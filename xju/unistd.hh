@@ -44,7 +44,8 @@ namespace xju
     extern const SyscallF1<int, const char*> rmdir;
     extern const SyscallF1<int, const char*> unlink;
     extern const SyscallF0<pid_t> fork;
-
+    extern const SyscallF2<int,int,int> dup2;
+    
     // post: result.first is read end
     //       result.second is write end
     //       both file descriptors have close-on-exec set (atomically

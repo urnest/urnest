@@ -4,6 +4,8 @@ Int,Float add operator* operator/
 Float add math functions exp, sqrt, log, floor, ceiling etc
 
 x Thread
+- Mutex,Lock
+- Condition
 
 io::Input
 io::Output
@@ -45,14 +47,14 @@ io::Output
       OQueue& input();
 x test-pipe.cc:
   x only tests creation
-- test-io.cc:
-  - use Pipe to test read/write
+x test-io.cc:
+  x use Pipe to test read/write
     x read already available
     x read no timeout
     x read timeout
     x close before timeout
     x write timeout
-  - use multiple pipes to test select
+  x use multiple pipes to test select
 - make syscall turn ENOMEM into std::bad_alloc
 - move eg unistd functions into eg xju::unistd:: to allow higher level implementations (eg see pipe)
 - move xju::SyscallFailed to SyscallFailed.hh
@@ -61,7 +63,7 @@ Subprocess
   x start function object,
   x optional stop function object (pass pid) - default kill 9
   x exit status
-  - test scenarios
+  * test scenarios
     - process output before destroy -> wait exit
     - exception processing -> kill
 
@@ -69,9 +71,9 @@ unit testing
   generic stub that captures calls, so can do test like:
     Stub<Y> y;
     X x(y);
-    auto call = ut.call(x,&X::f,3,2);
-    stub.calls_.awaitCall(y,&Y::g,Duration(3,0))->validateParams(3)->return_(6);
-    call.awaitResult(Duration(3))->verify(3*2-2);
+    auto call = ut.call(x,&X::f,3,2); //better to use lambda?
+    stub.calls_.awaitCall(y,&Y::g,std::chrono::seconds(3))->validateParams(3)->return_(6);
+    call.awaitResult(std::chrono::seconds(3))->verify(3*2-2);
 
 
 gcc 5.2.0:
