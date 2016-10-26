@@ -560,6 +560,31 @@ namespace xju
     };
     
     
+    template<class R>
+    R Syscall0<R>::operator()() const throw(
+	//
+	// pre: !retryIfInterrupted &&
+	//      signal interrupted the system call
+	//
+	SyscallInterrupted,
+	SyscallFailed)
+    {
+	R status;
+	while(((status=(*_f._f)()) == _errorIndicator) &&
+	      (errno == EINTR) &&
+	      _retryIfInterrupted);
+	if (status == _errorIndicator)
+	{
+	    if (errno == EINTR)
+	    {
+		throw SyscallInterrupted();
+	    }
+	    throw SyscallFailed(_f._name, errno, _location);
+	}
+	return status;
+    }
+    
+    
     template<class R, class P1>
     R Syscall1<R, P1>::operator()(P1 p1) const throw(
 	//
@@ -687,7 +712,7 @@ namespace xju
     }
     
     
-    template<class R, class P1>
+    template<class R>
     Syscall0<R>
     syscall(const SyscallF0<R>& f,
 	    const Traced& location, 

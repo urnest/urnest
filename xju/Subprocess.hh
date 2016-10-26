@@ -1,3 +1,5 @@
+#ifndef _XJU_SUBPROCESS_HCP
+#define _XJU_SUBPROCESS_HCP
 // Copyright (c) 2015 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -61,7 +63,6 @@
 //  }
 #include "xju/Exception.hh"
 #include "xju/unistd.hh"
-#include "xju/signal.hh" //impl
 #include "xju/wait.hh"
 #include <memory>
 #include <sys/types.h>
@@ -111,16 +112,11 @@ public:
     }
   }
   void kill(int signal) throw(
-    xju::Exception)
-  {
-    xju::syscall(xju::kill,XJU_TRACED)(pid_,signal);
-  }
+    xju::Exception);
 
-  ~Subprocess() throw()
-  {
-    (*stop_)(pid_);
-    xju::syscall(xju::waitpid,XJU_TRACED)(pid_,&exitStatus_,0);
-  }
+
+  ~Subprocess() throw();
+
   
 private:
   int& exitStatus_;
@@ -128,13 +124,10 @@ private:
   class Stop
   {
   public:
-    virtual ~Stop() noexcept
-    {
-    }
-    virtual void operator()(pid_t pid) noexcept
-    {
-      xju::syscall(xju::kill,XJU_TRACED)(pid, 9);
-    }
+    virtual ~Stop() noexcept;
+
+    virtual void operator()(pid_t pid) noexcept;
+
   };
   
 
@@ -159,3 +152,4 @@ private:
 
   
 }
+#endif

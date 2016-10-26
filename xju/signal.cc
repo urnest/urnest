@@ -8,6 +8,7 @@
 // implied warranty.
 //
 #include "signal.hh"
+#include <signal.h>
 
 namespace xju
 {

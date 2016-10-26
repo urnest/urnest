@@ -64,8 +64,9 @@ Subprocess
   x optional stop function object (pass pid) - default kill 9
   x exit status
   * test scenarios
-    - process output before destroy -> wait exit
-    - exception processing -> kill
+    x process output before destroy -> wait exit
+    x exception processing -> kill
+    - 1000 iterations of wait-till-stdout-closed
 
 unit testing
   generic stub that captures calls, so can do test like:

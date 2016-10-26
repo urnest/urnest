@@ -33,6 +33,7 @@ snmp%tests.tree
 ()+cmd=(test-stringToInt.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-stringToTime.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-stringToUInt.cc+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-Subprocess.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Thread.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-unix_epoch.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-xml.cc+(..%cxx-opts):auto.cxx.exe):stdout
@@ -67,4 +68,9 @@ Holder.cc==%Holder/Holder.cc
 
 pipe.hh==%pipe/pipe.hh
 pipe.cc==%pipe/pipe.cc
+
+%Subprocess==()+cmd=(../hcp/hcp-split) -l 1 (Subprocess.hcp) 'Subprocess.hh' 'Subprocess.cc':output
+
+Subprocess.hh==%Subprocess/Subprocess.hh
+Subprocess.cc==%Subprocess/Subprocess.cc
 
