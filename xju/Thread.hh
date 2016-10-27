@@ -7,6 +7,15 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
+// Design Notes:
+//
+// [1] we could do fancy stuff eg avoid copying f and stop where
+//     their types allow it, and adding variable parameters to pass
+//     to f and stop, but that all just makes it hard to see what
+//     types and lifetimes are actually used; it works out
+//     better let the caller use lambda functions to easily get the 
+//     same effects (much easier to see what's going on).
+//
 #ifndef XJU_THREAD_H
 #define XJU_THREAD_H
 
