@@ -119,6 +119,11 @@ public:
                 // eg disk error
                 xju::Exception);
 
+
+  //point stdin (file descriptor 0) at this input
+  void useAsStdin() throw();
+
+  
 };
 
 class OStream : public Output
@@ -136,6 +141,13 @@ public:
                 // eg disk error
                  xju::Exception);
 
+
+  void useAsStdout() throw();
+
+  
+  void useAsStderr() throw();
+
+  
 };
 
 }

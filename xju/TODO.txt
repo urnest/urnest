@@ -9,12 +9,12 @@ x Thread
 
 io::Input
 io::Output
-  - pure interfaces
-  - pair<std::set<ref<Input>>,std::set<ref<Output>>> 
+  x pure interfaces
+  x pair<std::set<ref<Input>>,std::set<ref<Output>>> 
       io::select(std::set<ref<Input>>,std::set<ref<Output>>,Time until)
-  - close on exec? only ever make stdin,stdout,stderr survive exec (and always)
-  - other fd and socket options? eg udp Don't Fragment, use constructed objects
-  - dup2, perhaps:
+  x close on exec
+  x other fd and socket options? eg udp Don't Fragment, use constructed objects
+  x dup2, perhaps:
     IStream::useAsStdin, OStream::useAsStdout, OStream::useAsStderr
 
 - io
@@ -56,17 +56,17 @@ x test-io.cc:
     x write timeout
   x use multiple pipes to test select
 - make syscall turn ENOMEM into std::bad_alloc
-- move eg unistd functions into eg xju::unistd:: to allow higher level implementations (eg see pipe)
+- move eg unistd functions into eg xju::unistd:: to allow higher level implementations (eg see pipe)?
 - move xju::SyscallFailed to SyscallFailed.hh
 
 Subprocess
   x start function object,
   x optional stop function object (pass pid) - default kill 9
   x exit status
-  * test scenarios
+  x test scenarios
     x process output before destroy -> wait exit
     x exception processing -> kill
-    - 1000 iterations of wait-till-stdout-closed
+    x 1000 iterations of wait-till-stdout-closed
 
 unit testing
   generic stub that captures calls, so can do test like:

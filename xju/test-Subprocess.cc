@@ -66,6 +66,52 @@ void test3() {
   xju::assert_not_equal(WIFSIGNALED(exitStatus),0);
   xju::assert_equal(WTERMSIG(exitStatus),2);
 }
+}
+
+#include "xju/pipe.hh"
+#include <stdlib.h>
+
+namespace xju
+{
+void test4()
+{
+  // stress test looking for race condition between process exit and
+  // pipe closure by ::exit
+  for(int i=0; i != 2000; ++i) {
+    std::cout << "." << std::flush;
+    auto p(xju::pipe(true,false));
+    int exitStatus(0);
+    {
+      Subprocess sp(
+        exitStatus,
+        [](){ 
+          // child process
+          ::exit(0);
+          return 0;
+        },
+        [&](pid_t pid) {
+          // parent process "stop" function - the child process should
+          // exit of its own accord straight away, closing its end
+          // of the pipe
+          auto const deadline(std::chrono::system_clock::now()+
+                              std::chrono::milliseconds(200));
+          try {
+            char c;
+            size_t const x(p.first->read(&c,1,deadline));
+            xju::assert_never_reached();
+          }
+          catch(io::Input::Closed const&) {
+            // child should already be exited: if it has this kill
+            // will have no effect
+            xju::syscall(xju::kill,XJU_TRACED)(pid,9);
+          }
+        });
+      p.second.reset(); // close pipe write end in parent
+    }
+    xju::assert_not_equal(WIFEXITED(exitStatus),0);
+    xju::assert_equal(WEXITSTATUS(exitStatus),0);
+  }
+}
 
 }
 
@@ -77,6 +123,7 @@ int main(int argc, char* argv[])
   test1(), ++n;
   test2(), ++n;
   test3(), ++n;
+  test4(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

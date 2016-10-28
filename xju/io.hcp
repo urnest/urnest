@@ -228,7 +228,7 @@ public:
   //point stdin (file descriptor 0) at this input
   void useAsStdin() throw()
   {
-    xju::dup2(fileDescriptor(),0);
+    xju::syscall(xju::dup2,XJU_TRACED)(fileDescriptor(),0);
   }
   
 };
@@ -284,12 +284,12 @@ public:
 
   void useAsStdout() throw()
   {
-    xju::dup2(fileDescriptor(),1);
+    xju::syscall(xju::dup2,XJU_TRACED)(fileDescriptor(),1);
   }
   
   void useAsStderr() throw()
   {
-    xju::dup2(fileDescriptor(),2);
+    xju::syscall(xju::dup2,XJU_TRACED)(fileDescriptor(),2);
   }
   
 };

@@ -177,7 +177,16 @@ size_t IStream::read(void* buffer, size_t bufferSize,
     }
   }
 
-#line 237
+  //point stdin (file descriptor 0) at this input
+  
+#line 229
+void IStream::useAsStdin() throw()
+  {
+    xju::syscall(xju::dup2,XJU_TRACED)(fileDescriptor(),0);
+  }
+  
+
+#line 244
 size_t OStream::write(void const* buffer, 
                size_t bufferSize,
                std::chrono::system_clock::time_point deadline) throw(
@@ -218,6 +227,21 @@ size_t OStream::write(void const* buffer,
       throw;
     }
   }
+
+  
+#line 285
+void OStream::useAsStdout() throw()
+  {
+    xju::syscall(xju::dup2,XJU_TRACED)(fileDescriptor(),1);
+  }
+  
+  
+#line 290
+void OStream::useAsStderr() throw()
+  {
+    xju::syscall(xju::dup2,XJU_TRACED)(fileDescriptor(),2);
+  }
+  
 
 }
 }
