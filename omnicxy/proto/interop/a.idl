@@ -1,0 +1,21 @@
+module omnicxy
+{
+module proto
+{
+module interop
+{
+module a
+{
+  interface reflect
+  {
+    // returns x
+    any f(in any x);
+  };
+  interface server
+  {
+    void run(in reflect f);
+  };
+};
+};
+};
+};

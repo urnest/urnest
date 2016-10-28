@@ -346,8 +346,21 @@ x memory leaks:
         Indirections explicitly states this as 
         "Indirections may not cross encapsulation boundaries."
 
-    - test test-any-interop.cc :
+    - interop/test-Any.cc :
       - encode cxy, decode cxx and vice-versa, use cdrMemoryStream
+      - can't do cxx and cxy in same process for same interface
+        because they generate the same namespaces, so:
+        - main process does cxy, sub process does cxx (because cxy
+          cleans up reliably and can simply kill subprocess)
+        - main process needs to create a server before starting subprocess
+          - main creates a::server
+          - main starts sub
+          - sub gets corbaloc of a::server
+          - sub creates reflect implementation
+          - sub calls main a::server::run passing reflect implementation
+          - main a::server::run does the test cases then returns
+          - sub exits
+          - main collects exit status and exits
 
     - optimisation:
       add TypeCode::minEncodedValueSize() and use as initial value buffer size
