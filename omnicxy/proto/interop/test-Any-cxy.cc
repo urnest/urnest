@@ -9,10 +9,10 @@
 //
 
 
-#include <omnicxy/proto/a.hh>
-#include <omnicxy/proto/a.cref.hh>
-#include <omnicxy/proto/a.sref.hh>
-#include <omnicxy/proto/a.any.hh>
+#include <omnicxy/proto/interop/a.hh>
+#include <omnicxy/proto/interop/a.cref.hh>
+#include <omnicxy/proto/interop/a.sref.hh>
+#include <omnicxy/proto/interop/a.any.hh>
 #include "cxy/ORB.hh"
 #include "xju/unistd.hh"
 #include "xju/Subprocess.hh"

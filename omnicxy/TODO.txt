@@ -279,7 +279,7 @@ x memory leaks:
     - is there a header eg for byte order?
       - simple, no:
          - kind only: 
-           tk_null, tk_void, tk_short, tk_long, tk_ushort, tk_ulong, tk_float, tk_double, tk_boolean, tk_char, tk_octet, tk_any, tk_TypeCode, tk_Principal, tk_longlong, tk_ulonglong, tk_longdouble, tk_wchar, 
+           tk_null, tk_void, x tk_short, tk_long, tk_ushort, tk_ulong, tk_float, tk_double, tk_boolean, tk_char, tk_octet, tk_any, tk_TypeCode, tk_Principal, tk_longlong, tk_ulonglong, tk_longdouble, tk_wchar, 
          - others have params:
            tk_string: ulong (max length or 0)
            tk_wstring: ulong(max length or zero if unbounded)
@@ -347,20 +347,22 @@ x memory leaks:
         "Indirections may not cross encapsulation boundaries."
 
     - interop/test-Any.cc :
-      - encode cxy, decode cxx and vice-versa, use cdrMemoryStream
-      - can't do cxx and cxy in same process for same interface
+      x encode cxy, decode cxx and vice-versa, use cdrMemoryStream
+      x can't do cxx and cxy in same process for same interface
         because they generate the same namespaces, so:
-        - main process does cxy, sub process does cxx (because cxy
+        x main process does cxy, sub process does cxx (because cxy
           cleans up reliably and can simply kill subprocess)
-        - main process needs to create a server before starting subprocess
-          - main creates a::server
-          - main starts sub
-          - sub gets corbaloc of a::server
-          - sub creates reflect implementation
-          - sub calls main a::server::run passing reflect implementation
-          - main a::server::run does the test cases then returns
-          - sub exits
-          - main collects exit status and exits
+        x main process needs to create a server before starting subprocess
+          x main creates a::server
+          x main starts sub
+          x sub gets corbaloc of a::server
+          x sub creates reflect implementation
+          x sub calls main a::server::run passing reflect implementation
+          x main a::server::run does the test cases then returns
+          x sub exits
+          x main collects exit status and exits
+      x CORBA::Short
+      - other types
 
     - optimisation:
       add TypeCode::minEncodedValueSize() and use as initial value buffer size
