@@ -95,9 +95,9 @@ namespace xju
         }
     }
 
-    void execvp(std::string const& file,
-                std::vector<std::string> const& argv) throw(
-                    xju::SyscallFailed) {
+    void exec(std::string const& file,
+              std::vector<std::string> const& argv) throw(
+                  xju::SyscallFailed) {
         char* f(::strdup(file.c_str()));
         std::vector<char*> a;
         for(auto arg: argv) {

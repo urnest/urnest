@@ -7,7 +7,7 @@
 
 
 %all-tests.tree==<<
-()+cmd=(%test-Any-cxy) (%test-Any-cxx):exec.output
+()+cmd=(%test-Any-cxy)+cmd=(%test-Any-cxx):exec.output
 
 %cxy-opts==<<
 +(../..%cxx-opts)
@@ -37,11 +37,11 @@ a.idl
 %a.dir==%a.v:vir_dir
 
 %a.v==<<
-a.hh==%a.cxx.files/a.hh
-a.cc==.%a.cc
+%a.hh==.%a.cxx.files/a.hh
+%a.cc==.%a.cc
 
 %a.cxx.files==a.idl+cmd='omniidl' '-bcxx' '-Wba' (a.idl)+need=(a.idl:hash_inc_all):output
-%a.cc==(%dummy.cc)+cmd=cat (%a.cxx.files/a.cc) (%a.cxx.files/aDyn.cc):stdout
+%a.cc==(%dummy.cc)+cmd=cat (%a.cxx.files/aSK.cc) (%a.cxx.files/aDynSK.cc):stdout
 
 %dummy.hh==<<
 

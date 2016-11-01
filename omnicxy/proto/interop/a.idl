@@ -9,7 +9,7 @@ module a
   interface reflect
   {
     // returns x
-    any f(in any x);
+    any f(in long step, in any x);
   };
   interface server
   {

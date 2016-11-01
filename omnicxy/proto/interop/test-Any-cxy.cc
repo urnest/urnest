@@ -13,7 +13,12 @@
 #include <omnicxy/proto/a.cref.hh>
 #include <omnicxy/proto/a.sref.hh>
 #include <omnicxy/proto/a.any.hh>
-
+#include "cxy/ORB.hh"
+#include "xju/unistd.hh"
+#include "xju/Subprocess.hh"
+#include <thread>
+#include "xju/signal.hh"
+#include "xju/pipe.hh"
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {
@@ -22,31 +27,35 @@ std::string makeURI(int port, std::string const& objectName) throw()
   return s.str();
 }
 
-class server_impl : public a::server
+class server_impl : public omnicxy::proto::interop::a::server
 {
 public:
   explicit server_impl(cxy::ORB<cxy::Exception>& orb) throw():
-      orb_(orb)
+      orb_(orb),
+      done_(false)
   {
   }
   cxy::ORB<cxy::Exception>& orb_;
+  bool done_;
   
   ~server_impl() throw()
   {
   }
   
-  //a::server::
-  virtual void run(cxy::IOR<a::reflect> const& f_) throw()
+  //omnicxy::proto::interop::a::server::
+  virtual void run(
+    cxy::IOR<omnicxy::proto::interop::a::reflect> const& f_) throw()
   {
-    cxy::cref<a::reflect> f(orb_,f_);
+    cxy::cref<omnicxy::proto::interop::a::reflect> f(orb_,f_);
 
-    cxy::Any<> const y(f->f(cxy::Any<>((int16_t)3)));
+    cxy::Any<> const y(f->f(1,cxy::Any<>((int16_t)-997)));
     int16_t const z(y.get<int16_t>());
-    xju::assert_equal(z,(int16_t)3);
+    xju::assert_equal(z,(int16_t)-997);
+    done_=true;
   }
 };
 
-int main(uint16_t const port, std::string const& testAnyCxxExe) throw(
+int main_(uint16_t const port, std::string const& testAnyCxxExe) throw(
   cxy::Exception)
 {
   try {
@@ -55,11 +64,40 @@ int main(uint16_t const port, std::string const& testAnyCxxExe) throw(
     std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
     cxy::ORB<cxy::Exception> orb(orbEndPoint);
     
-    server_impl x;
+    server_impl x(orb);
     
-    cxy::sref<a::server> const xa(orb, OBJECT_NAME, x);
-    
-    //REVISIT: run testAnyCxxExe
+    cxy::sref<omnicxy::proto::interop::a::server> const xa(orb, OBJECT_NAME, x);
+    int exitStatus(0);
+    {
+      auto p(xju::pipe(true,false));
+      xju::Subprocess sp(
+        exitStatus,
+        [&](){
+          xju::exec(
+            testAnyCxxExe, {testAnyCxxExe, makeURI(port,OBJECT_NAME)});
+          return 0;
+        },
+        [&](pid_t pid){
+          // parent process "stop" function - the child process should
+          // exit of its own accord straight away, closing its end
+          // of the pipe
+          auto const deadline(std::chrono::system_clock::now()+
+                              std::chrono::seconds(5));
+          try {
+            char c;
+            size_t const x(p.first->read(&c,1,deadline));
+            xju::assert_never_reached();
+          }
+          catch(xju::io::Input::Closed const&) {
+            // child should already be exited: if it has this kill
+            // will have no effect
+            xju::syscall(xju::kill,XJU_TRACED)(pid,6);
+          }
+        });
+      p.second.reset(); // close pipe write end in parent
+    }
+    xju::assert_equal(exitStatus,0);
+    xju::assert_equal(x.done_,true);
     return 0;
   }
   catch(cxy::Exception& e) {
@@ -81,7 +119,7 @@ int main(int argc, char* argv[])
     
     for(uint16_t port=3387; port!=4387; ++port) {
       try {
-        return main(port);
+        return main_(port,argv[1]);
       }
       catch(cxy::PortInUse&) {
       }
