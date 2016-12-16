@@ -51,9 +51,8 @@ namespace xju
 	    if ((long)result != x)
 	    {
 		std::ostringstream cause;
-		cause << x << " is too large (maximum allowed integer is "
-		      << INT_MAX
-		      << ")";
+		cause << value << " is outside range "
+		      << INT_MIN << ".." << INT_MAX;
 		throw xju::Exception(cause, XJU_TRACED);
 	    }
 	    return result;
