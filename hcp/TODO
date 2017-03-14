@@ -27,9 +27,9 @@ x handle scoped enum (non-fixed type)
     - template specialisation v template
   - test on .hh and .hcp file types
 
-- hcp-scope-at-offset
+- hcp-scope-at
     x need a way to capture scope at EndOfFile where partially parsed
-    - think we just need to capture a list of completed items when
+    x think we just need to capture a list of completed items when
       we hit end of input eg as a std::vector<IR> - should be able to
       capture in Exception
     - only need to add to that in "and" parser? ie add all the ones we've
@@ -38,7 +38,17 @@ x handle scoped enum (non-fixed type)
            x, x, x, NamespaceName, x, ClassName, y, z, ClassName, x, x
     - then hcp-scope-at-offset just runs through and collects the interesting
       ones (NamespaceName, ClassName, EnumName, any others?)
-
+    x add optional<vector<IR>> to exception, set conditionally when
+      catch xju::parse::IteratorAdaptor::EndOfInput
+    - extend in and/zeroOrMore/parseUntil/atLeastOne exception handler
+    - tests:
+      global scope after namespace
+      global scope after class
+      namespace scope
+      class scope
+      enum scope
+      namespace+class+enum scope
+      
 - hcp split generate operator< (and others) where there is an operator<
   function prototype (ie no implementation)
   - need to better parse attr decls to get attr names
@@ -101,7 +111,7 @@ x handle class "operator X()" functions (conversion operator)
   to start of entities, to get nicer split code formatting
 
 * when generating .cc for class member function, qualify return type
-  if it was defined by the class, eg:
+  if it was defined by the class, eg test generate of:
   struct X{
     struct Y{};
     Y f();
@@ -202,8 +212,8 @@ real    0m2.320s
 user    0m2.100s
 sys     0m0.024s
 
-- see if using std::vector<std::set<Parser*> > as Cache improves
-  performance
+* see if using std::vector<std::set<Parser*> > as Cache improves
+  performance (ie source file offset is vector index)
 
 xju@xjutv:/data/xju/u1/urnest/hcp$ ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l
 10391
@@ -346,6 +356,16 @@ commit d98c65bdbdfd2f875d4b33935e92aab53db6ae18
 
 Compilation finished at Fri Jul 22 13:43:21
 
+... new pc (re-baseline):
+
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "%all" && ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l && git log | head -1
+end at line 146 column 1
+
+real	0m0.178s
+user	0m0.172s
+sys	0m0.004s
+2278
+commit 247ac28702ea5d82d1eb3ae6654696e3d40a04c2
 
 
 empty file overhead:

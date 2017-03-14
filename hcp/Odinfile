@@ -5,6 +5,8 @@
 hcp-split
 hcp-parse-file
 hcp-what-is-at
+hcp-tags
+hcp-scope-at
 test-hcp-tags%all.tree
 
 %run-standalone-tests == %standalone-tests.tree:leaves
@@ -42,3 +44,4 @@ hcp-split == hcp-split.cc+(%opts):auto.cxx.exe
 hcp-parse-file == hcp-parse-file.cc+(%opts):auto.cxx.exe
 hcp-what-is-at == hcp-what-is-at.cc+(%opts):auto.cxx.exe
 hcp-tags == hcp-tags.cc+(%opts):auto.cxx.exe
+hcp-scope-at == hcp-scope-at.cc+(%opts):auto.cxx.exe

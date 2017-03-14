@@ -161,8 +161,11 @@ public:
     for(std::vector<PR>::iterator i = xju::next(terms_.begin()); 
         i != terms_.end();
         ++i) {
-      ParseResult const br((*i)->parse(result.second, options));
+      ParseResult br((*i)->parse(result.second, options));
       if (br.failed()) {
+        if (options.irsAtEnd_) {
+          br.addAtEndIRs(result.first);
+        }
         return br;
       }
       else {
@@ -1509,13 +1512,16 @@ PR file(new NamedParser<hcp_ast::File>(
 I parse(hcp_ast::CompositeItem& parent,
         I const startOfElement,
         xju::Shared<Parser> elementType,
-        bool traceToStdout)
+        bool traceToStdout,
+        bool irsAtEnd)
   throw(
     // post: parent unmodified
     xju::Exception)
 {
   try {
-    Options options(traceToStdout, Cache(new hcp_parser::CacheVal()));
+    Options options(traceToStdout,
+                    Cache(new hcp_parser::CacheVal()),
+                    irsAtEnd);
     ParseResult const r(elementType->parse(startOfElement, options));
     if (r.failed()) {
       throw r.e();

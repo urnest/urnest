@@ -52,7 +52,8 @@ extern xju::Shared<Parser> file; // reference to whole-file parser
 I parse(hcp_ast::CompositeItem& parent,
         I const startOfElement,
         xju::Shared<Parser> = file,
-        bool traceToStdout = false)
+        bool traceToStdout = false,
+        bool irsAtEnd = false)
   throw(
     // post: parent unmodified
     xju::Exception);
@@ -102,8 +103,12 @@ public:
   void addAtEndIRs(IRs const& irs) throw()
   {
     if (atEnd_) {
-      std::copy(irs.begin(),irs.end(),std::back_inserter(irsAtEnd_));
+      std::copy(irs.rbegin(),irs.rend(),std::back_inserter(irsAtEnd_));
     }
+  }
+  IRs const& getIrsAtEnd() const throw()
+  {
+    return irsAtEnd_;
   }
   
 private:
@@ -151,6 +156,10 @@ public:
   {
     e_.value().addContext(p, at, trace);
   }
+  void addAtEndIRs(IRs const& irs) throw()
+  {
+    e_.value().addAtEndIRs(irs);
+  }
 private:
   xju::Optional<Exception> e_;
   xju::Optional<PV> v_;
@@ -166,17 +175,21 @@ class Options
 {
 public:
   explicit Options(bool trace,
-                   Cache cache) throw():
+                   Cache cache,
+                   bool irsAtEnd) throw():
     trace_(trace),
-    cache_(cache) {
+    cache_(cache),
+    irsAtEnd_(irsAtEnd) {
   }
   Options(Options const& y) throw():
       trace_(y.trace_),
-      cache_(y.cache_) {
+      cache_(y.cache_),
+      irsAtEnd_(y.irsAtEnd_) {
   }
     
   bool trace_;
   mutable xju::Shared<std::map<std::pair<I, Parser*const>, ParseResult> > cache_;
+  bool irsAtEnd_;
 };
 
 class Parser

@@ -29,19 +29,21 @@
 #include <hcp/getOptionValue.hh>
 #include <map>
 #include <typeinfo>
+#include "xju/JoiningIterator.hh"
 
 class Options
 {
 public:
-  Options(size_t offset, 
+  Options(bool verbose, 
           hcp_parser::Options const& parser_options) throw():
-    offset_(offset),
+    verbose_(verbose),
     parser_options_(parser_options) {
   }
-  size_t offset_;
+  bool verbose_;
   hcp_parser::Options parser_options_;
 };
 
+  
 // result.second are remaining arguments
 std::pair<Options, std::vector<std::string> > parseCommandLine(
   std::vector<std::string> const& x) throw(
@@ -50,35 +52,29 @@ std::pair<Options, std::vector<std::string> > parseCommandLine(
   std::vector<std::string>::const_iterator i(x.begin());
   size_t offset=0;
   bool trace=false;
-  bool includeAllExceptionContext=false;
+  bool verbose=false;
   
   while((i != x.end()) && ((*i)[0]=='-')) {
     if ((*i)=="-v") {
-      includeAllExceptionContext=true;
+      verbose=true;
       ++i;
     }
     else if ((*i)=="-t") {
       trace=true;
       ++i;
     }
-    else if ((*i)=="-o") {
-      ++i;
-      offset=xju::stringToUInt(hcp::getOptionValue("-o", i, x.end()));
-      ++i;
-    }
     else {
       std::ostringstream s;
       s << "unknown option " << (*i)
-        << " (only know -v, -t, -o)";
+        << " (only know -v, -t)";
       throw xju::Exception(s.str(), XJU_TRACED);
     }
   }
   return std::make_pair(
-    Options(
-      offset,
-      hcp_parser::Options(trace,
-                          hcp_parser::Cache(new hcp_parser::CacheVal()),
-                          false)), 
+    Options(verbose,
+            hcp_parser::Options(trace,
+                                hcp_parser::Cache(new hcp_parser::CacheVal()),
+                                true)), 
     std::vector<std::string>(i, x.end()));
 }
 
@@ -88,36 +84,59 @@ int main(int argc, char* argv[])
     std::pair<Options, std::vector<std::string> > const cmd_line(
       parseCommandLine(std::vector<std::string>(argv+1, argv+argc)));
 
-    if (cmd_line.second.size() != 1) {
+    if (cmd_line.second.size() != 2) {
       std::cout << "usage: " << argv[0] 
-                << " [-v] [-t] <input-file>" << std::endl;
+                << " [-v] [-t] <input-file> <offset>" << std::endl;
       std::cout << "-t, trace " << std::endl
                 << "-v, verbose" << std::endl
-                << "-o <offset>, report what is at offset (default 0)"
                 << "\n";
       return 1;
     }
 
     std::pair<xju::path::AbsolutePath, xju::path::FileName> const inputFile(
       xju::path::split(cmd_line.second[0]));
+
+    size_t const offset(xju::stringToUInt(cmd_line.second[1]));
     
     std::string const x(xju::readFile(xju::path::str(inputFile)));
 
     Options const options(cmd_line.first);
 
-    hcp_ast::CompositeItem root;
-    hcp_parser::parse(root, hcp_parser::I(x.begin(), x.end()),
-                      hcp_parser::file, 
-                      options.parser_options_.trace_);
-    hcp_parser::I at(x.begin(), x.end());
-    unsigned u;
-    for(u=0; u != options.offset_; ++u, ++at);
-    std::vector<hcp_ast::CompositeItem const*> context(getContextAt(at, root));
-    std::vector<hcp_ast::CompositeItem const*>::const_iterator j;
-    for(j=context.begin(); j!=context.end(); ++j) {
-      std::cout << (*j)->begin() << ": " << typeid(**j).name() << std::endl;
+    hcp_parser::ParseResult const r(
+      hcp_parser::file->parse(
+        hcp_parser::I(x.begin(), x.begin()+offset),
+        options.parser_options_));
+    std::vector<std::string> scope;
+    if (r.failed()) {
+      hcp_parser::IRs const irsAtEnd(
+        r.e().getIrsAtEnd());
+      for(auto i=irsAtEnd.rbegin();i!=irsAtEnd.rend();++i) {
+        hcp_parser::IR const ir(*i);
+        if (options.verbose_) {
+          std::cerr << typeid(*ir).name() << " "
+                    << xju::format::quote(
+                      xju::format::cEscapeString(
+                        hcp_ast::reconstruct(*ir)))
+                    << std::endl;
+        }
+        if (ir->isA<hcp_ast::NamespaceName>()) {
+          scope.push_back(hcp_ast::reconstruct(*ir));
+        }
+        else if (ir->isA<hcp_ast::ClassName>())
+        {
+          scope.push_back(hcp_ast::reconstruct(*ir));
+        }
+        else if (ir->isA<hcp_ast::EnumName>())
+        {
+          scope.push_back(hcp_ast::reconstruct(*ir));
+        }
+      }
     }
-    std::cout << at << std::endl;
+    std::cout << "::";
+    std::copy(scope.begin(),
+              scope.end(),
+              xju::JoiningIterator<std::string,std::string>(std::cout,"::"));
+    std::cout << std::endl;
     return 0;
   }
   catch(xju::Exception& e) {
