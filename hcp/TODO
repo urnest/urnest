@@ -27,6 +27,9 @@ x handle scoped enum (non-fixed type)
     - template specialisation v template
   - test on .hh and .hcp file types
 
+* when excluding class/struct/union/enum/namespace keywords need to ensure
+  it is not them being used to start a valid identifer, eg class_1 f();
+  
 - hcp-scope-at
     x need a way to capture scope at EndOfFile where partially parsed
     x think we just need to capture a list of completed items when
@@ -203,6 +206,9 @@ x on parse failure, output the branch that got furthest
     with type and name? what is difference to function pointer?
   - how often is it tried (and failed) in practice?
 
+- optimisations:
+  - disallow preprocessor #include inside namespace (minor)
+  
 x speed parsing by caching results <at,parser> => PV or exception
   stats:
 xju@xjutv:/data/xju/u1/urnest/hcp$ time ./hcp-parse-file test/xju/JoiningIterator.hcp 

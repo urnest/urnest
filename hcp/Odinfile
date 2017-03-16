@@ -8,6 +8,7 @@ hcp-what-is-at
 hcp-tags
 hcp-scope-at
 test-hcp-tags%all.tree
+%scope-at-tests:list
 
 %run-standalone-tests == %standalone-tests.tree:leaves
 
@@ -45,3 +46,70 @@ hcp-parse-file == hcp-parse-file.cc+(%opts):auto.cxx.exe
 hcp-what-is-at == hcp-what-is-at.cc+(%opts):auto.cxx.exe
 hcp-tags == hcp-tags.cc+(%opts):auto.cxx.exe
 hcp-scope-at == hcp-scope-at.cc+(%opts):auto.cxx.exe
+
+
+%check-scope-at==()+cmd=(hcp-parse-file) (%test-scope-at.hcp):exec.output
+
+%scope-at-tests==<<
+%test-scope-at-0
+%test-scope-at-30
+%test-scope-at-57
+%test-scope-at-75
+%test-scope-at-21
+%test-scope-at-47
+%test-scope-at-68
+%test-scope-at-110
+%test-scope-at-181
+%test-scope-at-287
+
+%test-scope-at-0==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '0' '::':exec.output
+%test-scope-at-30==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '30' '::':exec.output
+%test-scope-at-57==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '57' '::':exec.output
+%test-scope-at-75==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '75' '::':exec.output
+%test-scope-at-21==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '21' '::a':exec.output
+%test-scope-at-47==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '47' '::b':exec.output
+%test-scope-at-68==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '68' '::f':exec.output
+%test-scope-at-110==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '110' '::n1::c1':exec.output
+%test-scope-at-181==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '181' '::n2::n21::c1':exec.output
+%test-scope-at-287==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '287' '::g::h::p::q::r':exec.output
+
+%test-scope-at.sh== ! <<
+#!/bin/sh
+cat > input &&
+"$1" input "$2" > got &&
+echo "$3" > want &&
+diff want got
+
+%test-scope-at.hcp==<<
+namespace a {
+  void c() {}
+}
+class b {
+  void d() {}
+};
+enum f {
+  a
+};
+namespace n1 {
+  class c1 {
+    void f1() {}
+  };
+};
+namespace n2 {
+  namespace n21 {
+  class c1 {
+    void f1() {}
+  };
+  }
+}
+namespace g {
+  namespace h {
+    class p {
+      class q {
+        enum r {
+          c
+        };
+      };
+    };
+  }
+}

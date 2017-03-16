@@ -108,6 +108,9 @@ int main(int argc, char* argv[])
         options.parser_options_));
     std::vector<std::string> scope;
     if (r.failed()) {
+      if (!r.e().atEnd()) {
+        throw r.e();
+      }
       hcp_parser::IRs const irsAtEnd(
         r.e().getIrsAtEnd());
       for(auto i=irsAtEnd.rbegin();i!=irsAtEnd.rend();++i) {

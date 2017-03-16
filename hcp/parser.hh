@@ -100,6 +100,10 @@ public:
   I const at_;
   xju::Traced const trace_;
 
+  bool atEnd() const throw()
+  {
+    return atEnd_;
+  }
   void addAtEndIRs(IRs const& irs) throw()
   {
     if (atEnd_) {
