@@ -177,8 +177,6 @@ std::map<Symbol,LineNumber> genNamespace(hcp_ast::NamespaceDef const& x) throw(
   for(auto s: content) {
     result.insert(std::make_pair(qualify(s.first,x.namespaceName_),s.second));
   }
-  result.insert(std::make_pair(Symbol(x.namespaceName_),
-                               LineNumber(x.begin().line_)));
   return result;
 }
 

@@ -391,6 +391,15 @@ sys	0m0.004s
 2268
 commit 0cd1a32c9576ef06cb7f86debe62247a88b54194
 
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "%all" && ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l && git log | head -1
+end at line 146 column 1
+
+real	0m0.211s
+user	0m0.204s
+sys	0m0.004s
+2275
+commit b1180d3b6d0c32332217defad2394bc8e2dff925
+
 
 empty file overhead:
 
