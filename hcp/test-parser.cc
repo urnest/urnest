@@ -1018,6 +1018,22 @@ void test21()
   catch(xju::Exception const& e) {
     assert_readableRepr_equal(e, "Failed to parse function declaration at line 1 column 1 because\nfailed to parse one of chars [;] at line 2 column 27 because\nline 2 column 27: \'{\' is not one of chars [;].", XJU_TRACED);
   }
+  try {
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, cache, false);
+    std::string const x(
+      "operator const T&() const throw();");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    at = parse(root, at, hcp_parser::function_decl);
+    xju::assert_equal(reconstruct(root), x);
+    xju::assert_equal(at.atEnd(), true);
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e), readableRepr(e));
+  }
+  
 }
 
 

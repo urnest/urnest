@@ -1148,10 +1148,8 @@ PR type_name(
   unqualifiedTypeName);
 
 PR conversion_operator_name(
-  parseLiteral("operator")+
-  whitespace+
-  type_name+
-  eatWhite);
+  parseLiteral("operator")+!identifierContChar+
+  balanced(parseOneOfChars("(")));
   
 PR keyword_static(
   new NamedParser<hcp_ast::KeywordStatic>(
@@ -1193,6 +1191,8 @@ PR function_impl(
      block+
      zeroOrMore*(eatWhite+catch_block))));
                 
+PR operator_keyword(parseLiteral("operator")+!identifierContChar);
+
 PR function_proto(
   function_qualifiers+
   balanced(parseOneOfChars("();{}[]")|
