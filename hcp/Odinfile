@@ -48,9 +48,8 @@ hcp-tags == hcp-tags.cc+(%opts):auto.cxx.exe
 hcp-scope-at == hcp-scope-at.cc+(%opts):auto.cxx.exe
 
 
-%check-scope-at==()+cmd=(hcp-parse-file) (%test-scope-at.hcp):exec.output
-
 %scope-at-tests==<<
+%check-scope-at
 %test-scope-at-0
 %test-scope-at-30
 %test-scope-at-57
@@ -61,6 +60,13 @@ hcp-scope-at == hcp-scope-at.cc+(%opts):auto.cxx.exe
 %test-scope-at-110
 %test-scope-at-181
 %test-scope-at-287
+%test-scope-at-337
+%test-scope-at-353
+%test-scope-at-367
+%test-scope-at-380
+%test-scope-at-394
+
+%check-scope-at==()+cmd=(hcp-parse-file) (%test-scope-at.hcp):exec.output
 
 %test-scope-at-0==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '0' '::':exec.output
 %test-scope-at-30==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '30' '::':exec.output
@@ -72,6 +78,11 @@ hcp-scope-at == hcp-scope-at.cc+(%opts):auto.cxx.exe
 %test-scope-at-110==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '110' '::n1::c1':exec.output
 %test-scope-at-181==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '181' '::n2::n21::c1':exec.output
 %test-scope-at-287==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '287' '::g::h::p::q::r':exec.output
+%test-scope-at-337==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '337' '::g':exec.output
+%test-scope-at-353==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '353' '::g':exec.output
+%test-scope-at-367==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '367' '::g':exec.output
+%test-scope-at-380==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '380' '::g':exec.output
+%test-scope-at-394==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '394' '::g':exec.output
 
 %test-scope-at.sh== ! <<
 #!/bin/sh
@@ -112,4 +123,9 @@ namespace g {
       };
     };
   }
+  namespace_ x();
+  typedef_ y();
+  using_ z();
+  enum_ q();
+  class_ r();
 }

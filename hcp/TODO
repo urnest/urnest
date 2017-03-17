@@ -208,6 +208,11 @@ x on parse failure, output the branch that got furthest
 
 - optimisations:
   - disallow preprocessor #include inside namespace (minor)
+  - ParseOneOfChars use bitset
+  - ParseAnyCharExcept use bitset
+  - pass I by const ref to parse_
+  - hand-code unqualifiedName
+  - add !identifierContChar to namespace_keyword
   
 x speed parsing by caching results <at,parser> => PV or exception
   stats:

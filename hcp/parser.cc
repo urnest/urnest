@@ -1038,11 +1038,13 @@ PR whitespace(new NamedParser<hcp_ast::Whitespace>(
   "some whitespace",
   atLeastOne*whitespaceChar));
 
+PR identifierContChar(charInRange('a', 'z')|
+                      charInRange('A', 'Z')|
+                      charInRange('0', '9')|
+                      parseOneOfChars("_"));
+
 PR unqualifiedName(
-  atLeastOne*(charInRange('a', 'z')|
-              charInRange('A', 'Z')|
-              charInRange('0', '9')|
-              parseOneOfChars("_")));
+  atLeastOne*(identifierContChar));
 
 PR defined_type(
   new NamedParser<hcp_ast::DefinedType>(
@@ -1074,11 +1076,11 @@ PR enum_name(
     "\"enum name\"",
     unqualifiedName));
 
-PR enum_literal(parseLiteral("enum"));
+PR enum_keyword(parseLiteral("enum"));
 
 PR scoped_enum_def(new NamedParser<hcp_ast::EnumDef>(
   "scoped enum definition",
-  enum_literal+whitespace+(parseLiteral("struct")|
+  enum_keyword+whitespace+(parseLiteral("struct")|
                            parseLiteral("class"))+
   whitespace+
   optional(enum_name)+eatWhite+parseLiteral("{")+
@@ -1089,7 +1091,7 @@ PR scoped_enum_def(new NamedParser<hcp_ast::EnumDef>(
 
 PR enum_def(new NamedParser<hcp_ast::EnumDef>(
   "enum definition",
-  enum_literal+
+  enum_keyword+
   whitespace+
   optional(enum_name)+eatWhite+parseLiteral("{")+
   balanced(parseOneOfChars("}"))+
@@ -1249,7 +1251,10 @@ PR template_function_def(new NamedParser<hcp_ast::TemplateFunctionDef>(
 
 PR class_struct_union_literal(
   parseLiteral("class")|parseLiteral("struct")|parseLiteral("union"));
-  
+
+PR not_class_struct_union_literal(
+  !(class_struct_union_literal+!identifierContChar));
+
 PR class_proto(
   zeroOrMore*(template_preamble|template_empty_preamble)+
   class_struct_union_literal+
@@ -1322,6 +1327,9 @@ PR access_modifier(new NamedParser<hcp_ast::AccessModifier>(
   parseOneOfChars(":")+
   eatWhite));
 
+PR not_typedef_using_enum_keyword(
+  !((typedef_keyword|using_keyword|enum_keyword)+!identifierContChar));
+
 namespace
 {
 class SelfParser : public Parser
@@ -1362,11 +1370,11 @@ public:
                        access_modifier|
                        PR(new SelfParser(*this))|
                        class_decl|
-                       (!class_struct_union_literal+(
+                       (not_class_struct_union_literal+(
                          typedef_statement|
                          scoped_enum_def|
                          enum_def|
-                         (!(typedef_keyword|using_keyword|enum_literal)+(
+                         (not_typedef_using_enum_keyword+(
                            function_decl|
                            template_function_def|
                            function_def|
@@ -1410,12 +1418,12 @@ PR namespace_leaf(
   hash|
   class_def| // note recursive
   class_decl|
-  (!class_struct_union_literal+(
+  (not_class_struct_union_literal+(
     typedef_statement|
     using_statement|
     scoped_enum_def|
     enum_def|
-    (!(typedef_keyword|using_keyword|enum_literal)+(
+    (not_typedef_using_enum_keyword+(
       whitespace| //REVISIT: remove?
       function_decl| // inc. template
       template_function_def|
@@ -1424,6 +1432,8 @@ PR namespace_leaf(
       attr_decl)))));
 
 PR namespace_keyword(parseLiteral("namespace"));
+
+PR not_namespace_keyword(!(namespace_keyword+!identifierContChar));
 
 PR anonymous_namespace(new NamedParser<hcp_ast::AnonymousNamespace>(
   "anonymous namespace",
@@ -1457,7 +1467,7 @@ public:
           "namespace members",
           parseUntil((PR(new SelfParser(*this))|
                       anonymous_namespace|
-                      (!namespace_keyword+namespace_leaf))+
+                      (not_namespace_keyword+namespace_leaf))+
                      eatWhite,
                      parseOneOfChars("}")))+
         parseOneOfChars("}")+
@@ -1524,7 +1534,7 @@ PR file(new NamedParser<hcp_ast::File>(
   eatWhite+
   parseUntil(namespace_def|
              anonymous_namespace|
-             (!namespace_keyword+namespace_leaf),
+             (not_namespace_keyword+namespace_leaf),
              endOfFile)+
   endOfFile));
 
