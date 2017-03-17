@@ -8,6 +8,7 @@ x handle scoped enum (non-fixed type)
   };
 
 - hcp-tags
+  * need multiple defs per tag eg for function overload
   - generate tags for:
     x class
     x template class
