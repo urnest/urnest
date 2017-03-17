@@ -19,6 +19,8 @@ x remove ar stuff from cxx, make cxx.sm an sm
   .c.sm => .c.exe 
   - no .sm => .exe
 
+x hcp-tags package
+    
 - add pyimport package and py-exec to support python scripts with
   auto dependencies
 

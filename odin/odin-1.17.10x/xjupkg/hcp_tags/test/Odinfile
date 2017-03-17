@@ -1,0 +1,33 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+%dir_taggable
+%tree_tags_list
+%tree_tags
+%test-tree-tags
+
+%dir_taggable==.:dir_taggable:ls
+%tree_tags_list==.:tree_tags_list
+%tree_tags==%tree_tags_list:tree_tags
+
+%tree_tags_expect==<<
+{
+    "::x::Y": [
+        "/home/xju/urnest/odin/odin-1.17.10x/xjupkg/hcp_tags/test/x.hcp",
+        3
+    ],
+    "::x::Y::f": [
+        "/home/xju/urnest/odin/odin-1.17.10x/xjupkg/hcp_tags/test/x.hcp",
+        6
+    ],
+    "::x::y::C": [
+        "/home/xju/urnest/odin/odin-1.17.10x/xjupkg/hcp_tags/test/d1/y.hcp",
+        5
+    ],
+    "::x::y::C::f": [
+        "/home/xju/urnest/odin/odin-1.17.10x/xjupkg/hcp_tags/test/d1/y.hcp",
+        8
+    ]
+}
+
+%test-tree-tags==()+cmd=(tester.py) (%tree_tags) (%tree_tags_expect):exec.output

@@ -1,0 +1,12 @@
+namespace x
+{
+namespace y
+{
+class C
+{
+public:
+  void f();
+};
+
+}
+}

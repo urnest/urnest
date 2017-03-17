@@ -1,0 +1,32 @@
+#
+# Abstract
+#
+#    Package for C++ tags using hcp-tags.
+#    
+#
+
+$ODIN_HCP_TAGS_PATH 'PATH to set when running hcp tags' = '/usr/bin:/bin';
+
+$ODIN_HCP_TAGS 'name of the hcp-tags program' = 'hcp-tags';
+
+$ODIN_HCP_TAGS_MERGE 'name of the hcp-tags-merge program' = 'hcp-tags-merge';
+
+*.hcp => :hcp;
+
+:hcp 'hcp (C++ combined header+implementation)'? => :FILE;
+
+:tags 'hcp-tags file'? => :FILE;
+:dir_tags 'hcp-tags file covering all header and hcp files in a directory'?=> :tags;
+:tree_tags 'hcp-tags file covering all header and hcp files in a directory tree'? => :tags;
+:dir_taggable 'list of taggable (header and hcp) files in a directory'? => :LIST;
+:tree_tags_list 'list of hcp-tags files for a direcory tree' => :LIST;
+
+#:FILE here is a directory
+COLLECT (:FILE:list:extract=:h) (:FILE:list:extract=:hcp) => (:dir_taggable);
+
+EXEC (hcp-tags.sh) (:dir_taggable:ls) NEEDS (:dir_taggable) => (:dir_tags);
+
+COLLECT (:dirtree:leaves:map=:dir_tags) => (:tree_tags_list);
+
+EXEC (hcp-tags-merge.sh) (:tree_tags_list:ls) NEEDS (:tree_tags_list)
+        => (:tree_tags);
