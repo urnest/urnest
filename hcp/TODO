@@ -27,7 +27,7 @@ x handle scoped enum (non-fixed type)
     - template specialisation v template
   - test on .hh and .hcp file types
 
-* when excluding class/struct/union/enum/namespace keywords need to ensure
+x when excluding class/struct/union/enum/namespace keywords need to ensure
   it is not them being used to start a valid identifer, eg class_1 f();
   
 - hcp-scope-at
@@ -35,16 +35,18 @@ x handle scoped enum (non-fixed type)
     x think we just need to capture a list of completed items when
       we hit end of input eg as a std::vector<IR> - should be able to
       capture in Exception
-    - only need to add to that in "and" parser? ie add all the ones we've
+    x only need to add to that in "and" parser? ie add all the ones we've
       done already? (might also need zeroOrMore, parseUntil, atLeastOne?)
-    - we would end up with something like:
+      No, only and, the others don't affect scope.
+    x we would end up with something like:
            x, x, x, NamespaceName, x, ClassName, y, z, ClassName, x, x
-    - then hcp-scope-at-offset just runs through and collects the interesting
+    x then hcp-scope-at-offset just runs through and collects the interesting
       ones (NamespaceName, ClassName, EnumName, any others?)
     x add optional<vector<IR>> to exception, set conditionally when
       catch xju::parse::IteratorAdaptor::EndOfInput
-    - extend in and/zeroOrMore/parseUntil/atLeastOne exception handler
-    - tests:
+    x extend in and exception handler
+    - rename irsAtEnd to scopeIrsAtEnd or just scopeIrs
+    x tests:
       global scope after namespace
       global scope after class
       namespace scope
@@ -212,7 +214,7 @@ x on parse failure, output the branch that got furthest
   - ParseAnyCharExcept use bitset
   - pass I by const ref to parse_
   - hand-code unqualifiedName
-  - add !identifierContChar to namespace_keyword
+  - add !identifierContChar to namespace_keyword etc, does it affect perf?
   
 x speed parsing by caching results <at,parser> => PV or exception
   stats:
@@ -378,6 +380,17 @@ sys	0m0.004s
 2278
 commit 247ac28702ea5d82d1eb3ae6654696e3d40a04c2
 
+... hcp-scope-at:
+
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "%all" && ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l && git log | head -1
+end at line 146 column 1
+
+real	0m0.203s
+user	0m0.196s
+sys	0m0.004s
+2268
+commit 0cd1a32c9576ef06cb7f86debe62247a88b54194
+
 
 empty file overhead:
 
@@ -389,6 +402,16 @@ user	0m0.004s
 sys	0m0.000s
 13
 
+  ... hcp-scope-at:
+
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "%all" && ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file /dev/null && ./hcp-parse-file -t /dev/null  | wc -l && git log | head -1
+end at line 1 column 1
+
+real	0m0.012s
+user	0m0.008s
+sys	0m0.000s
+13
+commit 0cd1a32c9576ef06cb7f86debe62247a88b54194
 
 --------- create gcc 5.2 linux cache --------------
 xju@xjutv:~/urnest$ ODIN_CXX_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib:/home/xju/gcc-5.2.0-run/lib  ODIN_CXX_PATH=/home/xju/gcc-5.2.0-run/bin:/usr/bin:/bin ODIN_CXX_FLAGS=-std=c++11 ODIN_EXEC_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib:/home/xju/gcc-5.2.0-run/lib ODIN_CXX_I=/usr/local/omniORB-4.2.0/include ODIN_LIB_SP="/usr/local/omniORB-4.2.0/lib /lib /usr/lib" ODIN_EXEC_PATH=/usr/local/omniORB-4.2.0/bin:/bin:/usr/bin ODIN_OMNICXY_PATH=/usr/local/omniORB-4.2.0/bin:/usr/bin:/bin ODIN_OMNICXY_BE_DIR=~/urnest/omnicxy/omniidl_be ./odin/create-linux-cache.sh $ODIN

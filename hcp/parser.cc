@@ -1051,7 +1051,7 @@ PR defined_type(
     "\"defined type\"",
     unqualifiedName));
 
-PR typedef_keyword(parseLiteral("typedef"));
+PR typedef_keyword(parseLiteral("typedef")+!identifierContChar);
 
 PR typedef_statement(new NamedParser<hcp_ast::Typedef>(
   "typedef statement",
@@ -1061,7 +1061,7 @@ PR typedef_statement(new NamedParser<hcp_ast::Typedef>(
   whitespace+defined_type+parseOneOfChars(";")+
   eatWhite));
 
-PR using_keyword(parseLiteral("using"));
+PR using_keyword(parseLiteral("using")+!identifierContChar);
 
 PR using_statement(new NamedParser<hcp_ast::Using>(
   "using statement",
@@ -1076,7 +1076,7 @@ PR enum_name(
     "\"enum name\"",
     unqualifiedName));
 
-PR enum_keyword(parseLiteral("enum"));
+PR enum_keyword(parseLiteral("enum")+!identifierContChar);
 
 PR scoped_enum_def(new NamedParser<hcp_ast::EnumDef>(
   "scoped enum definition",
@@ -1250,10 +1250,11 @@ PR template_function_def(new NamedParser<hcp_ast::TemplateFunctionDef>(
   function_def));
 
 PR class_struct_union_literal(
-  parseLiteral("class")|parseLiteral("struct")|parseLiteral("union"));
+  (parseLiteral("class")|parseLiteral("struct")|parseLiteral("union"))+
+  !identifierContChar);
 
 PR not_class_struct_union_literal(
-  !(class_struct_union_literal+!identifierContChar));
+  !class_struct_union_literal);
 
 PR class_proto(
   zeroOrMore*(template_preamble|template_empty_preamble)+
@@ -1328,7 +1329,7 @@ PR access_modifier(new NamedParser<hcp_ast::AccessModifier>(
   eatWhite));
 
 PR not_typedef_using_enum_keyword(
-  !((typedef_keyword|using_keyword|enum_keyword)+!identifierContChar));
+  !(typedef_keyword|using_keyword|enum_keyword));
 
 namespace
 {
@@ -1431,9 +1432,9 @@ PR namespace_leaf(
       global_var_def|
       attr_decl)))));
 
-PR namespace_keyword(parseLiteral("namespace"));
+PR namespace_keyword(parseLiteral("namespace")+!identifierContChar);
 
-PR not_namespace_keyword(!(namespace_keyword+!identifierContChar));
+PR not_namespace_keyword(!namespace_keyword);
 
 PR anonymous_namespace(new NamedParser<hcp_ast::AnonymousNamespace>(
   "anonymous namespace",

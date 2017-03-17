@@ -857,7 +857,7 @@ void test18()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse typedef statement at line 1 column 1 because\nfailed to parse some whitespace at line 1 column 8 because\nfailed to parse at least one occurrance of one of chars [\\t\\n ] at line 1 column 8 because\nfailed to parse one of chars [\\t\\n ] at line 1 column 8 because\nline 1 column 8: \'i\' is not one of chars [\t\n ].", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse typedef statement at line 1 column 1 because\nfailed to parse !one of chars \'a\'..\'z\' or one of chars \'A\'..\'Z\' or one of chars \'0\'..\'9\' or one of chars [_] at line 1 column 8 because\nline 1 column 8: expected parse failure.", XJU_TRACED);
   }
 }
 
@@ -898,7 +898,7 @@ void test19()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse using statement at line 1 column 1 because\nfailed to parse some whitespace at line 1 column 6 because\nfailed to parse at least one occurrance of one of chars [\\t\\n ] at line 1 column 6 because\nfailed to parse one of chars [\\t\\n ] at line 1 column 6 because\nline 1 column 6: \'m\' is not one of chars [\t\n ].", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse using statement at line 1 column 1 because\nfailed to parse !one of chars \'a\'..\'z\' or one of chars \'A\'..\'Z\' or one of chars \'0\'..\'9\' or one of chars [_] at line 1 column 6 because\nline 1 column 6: expected parse failure.", XJU_TRACED);
   }
 }
 
@@ -933,7 +933,7 @@ void test20()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse enum definition at line 1 column 1 because\nfailed to parse some whitespace at line 1 column 5 because\nfailed to parse at least one occurrance of one of chars [\\t\\n ] at line 1 column 5 because\nfailed to parse one of chars [\\t\\n ] at line 1 column 5 because\nline 1 column 5: \'y\' is not one of chars [\t\n ].", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse enum definition at line 1 column 1 because\nfailed to parse !one of chars \'a\'..\'z\' or one of chars \'A\'..\'Z\' or one of chars \'0\'..\'9\' or one of chars [_] at line 1 column 5 because\nline 1 column 5: expected parse failure.", XJU_TRACED);
   }
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
