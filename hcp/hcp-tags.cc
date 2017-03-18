@@ -234,9 +234,11 @@ std::string formatSymbol(
   std::pair<Symbol,std::pair<File,LineNumber> > const& symbol) throw()
 {
   std::ostringstream s;
-  s << xju::format::quote("::"+symbol.first._) << ":" << "["
+  s << xju::format::quote("::"+symbol.first._) << ":" << "[{"
+    << xju::format::quote("f") << ":"
     << xju::format::quote(str(symbol.second.first)) << ","
-    << symbol.second.second.value() << "]";
+    << xju::format::quote("l") << ":"
+    << symbol.second.second.value() << "}]";
   return s.str();
 }
 

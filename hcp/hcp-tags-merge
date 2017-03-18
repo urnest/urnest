@@ -10,11 +10,17 @@ def toJson(x):
 def fromJson(x):
     return json.loads(x)
 
+def merge(existing,additions):
+    for symbol,locations in additions.items():
+        existing.setdefault(symbol,[]).extend(locations)
+        pass
+    return existing
+
 result={}
 for f in sys.argv[1:]:
     try:
-        result.update(fromJson(file(f).read()))
+        merge(result,fromJson(file(f).read()))
     except Exception,e:
-        raise Exception('failed to merge tags because failed to read tags from file {f!r} because {e}'.format(vars()))
+        raise Exception('failed to merge tags because failed to read tags from file {f!r} because {e}'.format(**vars()))
     pass
 print toJson(result)

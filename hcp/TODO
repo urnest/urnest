@@ -8,7 +8,7 @@ x handle scoped enum (non-fixed type)
   };
 
 - hcp-tags
-  * need multiple defs per tag eg for function overload
+  x need multiple defs per tag eg for function overload
   - generate tags for:
     x class
     x template class
@@ -163,7 +163,7 @@ x fix string literal parsing:
   x no need to do continuations
   x do it character-based with specials as per c++ standard
 
-- add charLiteral(char) and use it instead of oneOfChars("x")
+- add literal(char) and use it instead of oneOfChars("x")
 
 x make readableRepr smarter to get better error messages, so that
   other tools get the full exception context to work with:
@@ -191,6 +191,8 @@ x on parse failure, output the branch that got furthest
   that point. ie fail parseFunction because function cannot start with
   keyword class (or template, namespace, enum etc)
   x try using "longest branch" as error
+  - add lookingAt(classIntro)+mustBe(classDecl|classDef)
+    ... where mustBe raises a "final" exception - no more options are tried
   - where multiple longest branches, combine their causes
   - combine with prepending ! parseKeyword() to parseFunction
   
@@ -205,10 +207,17 @@ x on parse failure, output the branch that got furthest
 
 - function_proto looks like it would be slow as it does a long
   lookahead, is there another way? Might need a hand-coded parser?
+  - hand code:
+    parseBalanced(oneOfChars("(;="))+literal('(')
+    ... then refine to one of:
+      operator<> etc
+      conversion operator
+      else get function name by working backwards (assumes no comment
+      between name and '(')
   - perhaps commonality between function and object decl? both start
     with type and name? what is difference to function pointer?
   - how often is it tried (and failed) in practice?
-
+  
 - optimisations:
   - disallow preprocessor #include inside namespace (minor)
   - ParseOneOfChars use bitset

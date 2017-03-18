@@ -14,3 +14,4 @@ public:
   };
 };
 }
+int y(int x);

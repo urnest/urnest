@@ -10,9 +10,12 @@ def toJson(x):
 def fromJson(x):
     return json.loads(x)
 
-got=sorted(fromJson(file(sys.argv[1]).read()).items())
+def normValue(x,d):
+    '''x like [{"f":"files/x","l":3}]'''
+    return sorted([ {"f":os.path.join(d,_["f"]),"l":_["l"]} for _ in x])
+
+got=fromJson(file(sys.argv[1]).read())
 expect=fromJson(file(sys.argv[2]).read())
 d=os.path.dirname(os.path.abspath(sys.argv[2]))
-expect=sorted([ (_[0],[os.path.join(d,_[1][0]),_[1][1]]) for _ in expect.items()])
-
-assert got==expect, (repr(got),repr(expect))
+expect=dict([ (_[0],normValue(_[1],d)) for _ in expect.items()])
+assert got==expect, 'got:\n{got!r}\nexpected:\n{expect!r}'.format(**vars())
