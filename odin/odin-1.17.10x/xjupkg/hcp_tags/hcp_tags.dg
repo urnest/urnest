@@ -13,20 +13,32 @@ $ODIN_HCP_TAGS_MERGE 'name of the hcp-tags-merge program' = 'hcp-tags-merge';
 
 *.hcp => :hcp;
 
-:hcp 'hcp (C++ combined header+implementation)'? => :FILE;
-
+:hcp 'hcp file' => :FILE;
 :tags 'hcp-tags file'? => :FILE;
-:dir_tags 'hcp-tags file covering all header and hcp files in a directory'?=> :tags;
+:htags 'hcp-tags from a :h' => :tags;
+:hcptags 'hcp-tags from a :hcp' => :tags;
+
+:dir_taggable ':h and :hcp files of a directory' => :LIST;
+:dir_tags_list 'list of :tags for a directory' => :LIST;
+
+:dir_tags 'hcp-tags file covering all header and hcp files in a directory'?
+  => :tags;
+:tree_tags_list 'list of :dir_tags for a directory tree' => :LIST;
 :tree_tags 'hcp-tags file covering all header and hcp files in a directory tree'? => :tags;
-:dir_taggable 'list of taggable (header and hcp) files in a directory'? => :LIST;
-:tree_tags_list 'list of hcp-tags files for a direcory tree' => :LIST;
 
 #:FILE here is a directory
 COLLECT (:FILE:list:extract=:h) (:FILE:list:extract=:hcp) => (:dir_taggable);
+COLLECT (:dir_taggable:map=:tags) => (:dir_tags_list);
 
-EXEC (hcp-tags.sh) (:dir_taggable:ls) NEEDS (:dir_taggable) => (:dir_tags);
+EXEC (hcp-tags.sh) (:h) 'htags' => (:htags);
+EXEC (hcp-tags.sh) (:hcp) 'hcptags' => (:hcptags);
 
 COLLECT (:dirtree:leaves:map=:dir_tags) => (:tree_tags_list);
 
-EXEC (hcp-tags-merge.sh) (:tree_tags_list:ls) NEEDS (:tree_tags_list)
-        => (:tree_tags);
+EXEC (hcp-tags-merge.sh) (:dir_tags_list:ls) 'dir_tags'
+  NEEDS (:dir_tags_list)
+  => (:dir_tags);
+
+EXEC (hcp-tags-merge.sh) (:tree_tags_list:ls) 'tree_tags'
+  NEEDS (:tree_tags_list)
+  => (:tree_tags);

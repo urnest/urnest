@@ -20,12 +20,15 @@ x remove ar stuff from cxx, make cxx.sm an sm
   - no .sm => .exe
 
 - hcp-tags package
-  rework so steps are:
+  x rework so steps are:
     :FILE => :dir_taggable;
     :taggable => :filetags;
     :dir_taggable:map=:filetags => dir_file_tags;
     EXEC (merge.sh) (:dir_file_tags:ls) NEED (:dir_file_tags) => :dir_tags;
-  ... so that do minimal re-parsing (which is slow)
+  x ... so that do minimal re-parsing (which is slow)
+  - rework hcp-tags-merge.sh to read list of input files on stdin to avoid
+    command line too long; give verbose flag to make it report progress to
+    stdout; give it output file name as single arg
   
 - add pyimport package and py-exec to support python scripts with
   auto dependencies

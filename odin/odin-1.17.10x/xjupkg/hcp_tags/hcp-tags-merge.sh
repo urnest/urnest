@@ -1,6 +1,7 @@
 #!/bin/sh
 
 ODIN_sources=$(cat $1) && shift &&
+ODIN_outputType="$1" && shift &&
 
 x=`PATH="$ODIN_HCP_TAGS_PATH" /usr/bin/which "$ODIN_HCP_TAGS_MERGE" 2>&1`
 if [ $? != 0 ] ; then
@@ -15,6 +16,6 @@ if [ "$ODINVERBOSE" != "" ] ; then
 fi &&
 
 (  PATH="$ODIN_HCP_TAGS_PATH" \
-       "$hcptagsmerge" $ODIN_sources 2>WARNINGS >tree_tags ||
+       "$hcptagsmerge" $ODIN_sources 2>WARNINGS >$ODIN_outputType ||
 	( mv WARNINGS ERRORS && echo "$hcptagsmerge failed" >> ERRORS )
    ) 2>&1

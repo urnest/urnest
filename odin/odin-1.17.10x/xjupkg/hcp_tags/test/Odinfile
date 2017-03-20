@@ -13,20 +13,28 @@
 %tree_tags_expect==<<
 {
     "::x::Y": [
-        "/home/xju/urnest/odin/odin-1.17.10x/xjupkg/hcp_tags/test/x.hcp",
-        3
+        {
+            "f": "/home/xju/urnest/odin/odin-1.17.10x/xjupkg/hcp_tags/test/x.hcp",
+            "l": 3
+        }
     ],
     "::x::Y::f": [
-        "/home/xju/urnest/odin/odin-1.17.10x/xjupkg/hcp_tags/test/x.hcp",
-        6
+        {
+            "f": "/home/xju/urnest/odin/odin-1.17.10x/xjupkg/hcp_tags/test/x.hcp",
+            "l": 6
+        }
     ],
     "::x::y::C": [
-        "/home/xju/urnest/odin/odin-1.17.10x/xjupkg/hcp_tags/test/d1/y.hcp",
-        5
+        {
+            "f": "/home/xju/urnest/odin/odin-1.17.10x/xjupkg/hcp_tags/test/d1/y.hcp",
+            "l": 5
+        }
     ],
     "::x::y::C::f": [
-        "/home/xju/urnest/odin/odin-1.17.10x/xjupkg/hcp_tags/test/d1/y.hcp",
-        8
+        {
+            "f": "/home/xju/urnest/odin/odin-1.17.10x/xjupkg/hcp_tags/test/d1/y.hcp",
+            "l": 8
+        }
     ]
 }
 
