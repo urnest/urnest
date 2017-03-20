@@ -214,6 +214,34 @@ x on parse failure, output the branch that got furthest
       conversion operator
       else get function name by working backwards (assumes no comment
       between name and '(')
+    ... except it does not work for function pointer eg
+        int (*f)(int q);
+    ... so I think have no choice than to correctly parse type and then do
+        cons/dest
+        [static] var_type (*ident)( balanced ) [= balanced];
+        [static] var_type (*ident)( balanced )\[balanced\] [= balanced];
+        [static] var_type name [=balanced];
+        [static] var_type name\[balanced\] [=balanced];
+        [template-preamble] [inline|static|friend] ret_type operator=( balanced );
+        [template-preamble] [inline|static|friend] ret_type operator=( balanced );
+        [template-preamble] [inline|static|friend] ret_type name( balanced );
+        [template-preamble] [inline|static|friend] ret_type name( balanced ){ balanced }
+	ret_type:
+	  T
+	  int
+	  Q< balanced >
+	  X*
+	  X const *
+	  X *const
+	  X const *const
+	  X&
+	  X const
+          const X* etc
+          ie zeroOrMore(const_keyword|volatile_keyword)+
+	     identifier+zeroOrOne*templateArgs+
+	     zeroOrMore(const_keyword|volatile_keyword|star|amp)
+        var_type same as return type (same enough)
+	
   - perhaps commonality between function and object decl? both start
     with type and name? what is difference to function pointer?
   - how often is it tried (and failed) in practice?
