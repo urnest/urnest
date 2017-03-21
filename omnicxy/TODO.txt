@@ -378,7 +378,7 @@ x memory leaks:
 
 - try to remove all omniORB headers from all other generated:
   - .cc
-  - objeref.hcp
+  - objref.hcp
 
 - try to remove all omniORB headers from cxy/*.hh too
 
@@ -388,7 +388,7 @@ x memory leaks:
   able to narrow via a cxy::cref<T>::narrow(U), it can first narrow
   to a objref<U> then do the usual stuff
 
-- compile errors:
+- compile errors (make sure they're meaningful):
   IOR conversion to unrelated type
   narrow to unrelated type
   use of cref<T> without including appropriate header
