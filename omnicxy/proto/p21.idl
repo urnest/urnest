@@ -1,0 +1,11 @@
+module p21
+{
+  struct X
+  {
+    sequence<string, 2> x_;
+  };
+  
+  typedef sequence<short, 4> Short4;
+
+  Short4 f(in Short4 x);
+};

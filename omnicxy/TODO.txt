@@ -261,8 +261,19 @@ x memory leaks:
 - in-place struct union member union(short){ 1: struct X{ long a_;}; }
 - recursive union
 - bounded strings
-- bounded sequences > 1
+    - do like bounded sequence
+- p21.idl
+  bounded sequences > 1
+    ... nah, create own vector wrapper that does size checks
+      cxy::BoundedSequence<class T, size_t MaxSize, class Allocator = std::allocator<T>,
+      - like vector
+      - allow construct from any such sequence same size or less
+      - compile error if size greater
+      
 - arrays
+    - fixed size vector? What are all non-size-chaning vector methods?
+    - want to be able to init from n-element "literal"
+    
 - any
   * proto/cxy/p20-main-1.cc that does not actually use any and does
     not include any_.hcp nor any omniORB headers
@@ -370,11 +381,15 @@ x memory leaks:
     x rename Any to AnyImpl and do a Any template to translate exceptions
     * can share AnyImpl (make it const)
 
+- cxy/Time.idl and hand-code cxy/Time.hcp to inherit from std::time_point
+- cxy/Duration.idl and hand-code cxy/Duration.hcp to inherit also
+
 - other stuff (see omniidl idltypes.py)
 
 - cxysref.py generates dispatch code for all inherited operations, which
   will result in lots of duplicate code, instead call the dispatch code
   for the inherited interface
+    - how to tell in omniidl backend which is inherited operation?
 
 - try to remove all omniORB headers from all other generated:
   - .cc
