@@ -1,0 +1,444 @@
+// Copyright (c) 2015 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace cxy
+{
+// like std::vector, but with bounds checking
+// throws E where bounds would be exceeded, leaving *this unmodified
+template<class T, size_t MaxSize, class E=cxy::Exception, class Allocator = std::allocator<T> >
+class BoundedSequence
+{
+private:
+  typedef std::vector<T,MaxSize,Allocator> V;
+  static V::size_type check(V::size_type n,
+                            std::pair<std::string,unsigned int> const& t)
+    throw(E)
+  {
+    if (i!=x.end()) {
+      std::ostringstream s;
+      s << "BoundedSequence of max size " << MaxSize << " cannot accept "
+        << n << " elements";
+      throw E(s.str(),t);
+    }
+    return n;
+  }
+public:
+  typedef typename V::value_type    value_type;
+  typedef typename V::pointer       pointer;
+  typedef typename V::const_pointer const_pointer;
+  typedef typename V::reference     reference;
+  typedef typename V::const_reference const_reference;
+  typedef typename V::iterator      iterator;
+  typedef typename V::const_iterator const_iterator;
+  typedef typename V::const_reverse_iterator const_reverse_iterator;
+  typedef typename V::reverse_iterator reverse_iterator;
+  typedef typename V::size_type        size_type;
+  typedef typename V::difference_type  difference_type;
+  typedef typename V::allocator_type   allocator_type;
+  
+  operator std::vector<T,MaxSize,Allocator> const&() const noexcept
+  {
+    return x_;
+  }
+
+  BoundedSequence() noexcept(
+    std::is_nothrow_default_constructible<V>::value) {
+  }
+  explicit BoundedSequence(const allocator_type& a)
+    noexcept:
+     x_(a) {
+  }
+  explicit BoundedSequence(
+    size_type n,
+    value_type const& value,
+    allocator_type const& a = allocator_type()):
+      x_(check(n),value,allocator)
+  {
+  }
+  BoundedSequence(BoundedSequence const& x):
+      x_(x.x_)
+  {
+  }
+  BoundedSequence(BoundedSequence&& x) noexcept:
+      x_(std::move(x)) {
+  }
+  BoundedSequence(BoundedSequence const& x, const allocator_type& allocator):
+      x_(x.x_, allocator)
+  {
+  }
+  BoundedSequence(BoundedSequence&& x, const allocator_type& allocator):
+      x_(x.x_,allocator)
+  {
+  }
+  BoundedSequence(std::initializer_list<value_type> x,
+                  allocator_type const& allocator = allocator_type()) {
+    for(auto i=x.begin(),size_t s=0; i!=x.end() && s<MaxSize; ++i, ++s) {
+      x_.push_back(*i);
+    }
+    if (i!=x.end()) {
+      while(i!=x.end()) {
+        ++i;
+        ++s;
+      }
+      std::ostringstream s;
+      s << "BoundedSequence of max size " << MaxSize << " cannot accept "
+        << s << " elements";
+      throw E(s.str(),std::make_pair(__FILE__,__LINE__));
+    }
+  }
+  template<class InputIterator>
+  vector(InputIterator begin, InputIterator end,
+         allocator_type const& allocator = allocator_type()) {
+    for(auto i=begin,size_t s=0; i!=x.end && s<MaxSize; ++i, ++s) {
+      x_.push_back(*i);
+    }
+    if (i!=x.end()) {
+      while(i!=x.end()) {
+        ++i;
+        ++s;
+      }
+      std::ostringstream s;
+      s << "BoundedSequence of max size " << MaxSize << " cannot accept "
+        << s << " elements";
+      throw E(s.str(),std::make_pair(__FILE__,__LINE__));
+    }
+  }
+  ~BoundedSequence() noexcept
+  {
+  }
+
+  BoundedSequence& operator=(const BoundedSequence& x)
+  {
+    x_=x.x_;
+    return *this;
+  }
+
+  BoundedSequence& operator=(BoundedSequence&& x)
+  {
+    x_=std::move(x.x_);
+    return *this;
+  }
+  BoundedSequence& operator=(initializer_list<value_type> x)
+  {
+    V y;
+    for(auto i=x.begin(),size_t c=0; i!=x.end() && c<MaxSize; ++i, ++c) {
+      x_.push_back(*i);
+    }
+    if (i!=x.end()) {
+      while(i!=x.end()) {
+        ++i;
+        ++c;
+      }
+      std::ostringstream s;
+      s << "BoundedSequence of max size " << MaxSize << " cannot accept "
+        << c << " elements";
+      throw E(s.str(),std::make_pair(__FILE__,__LINE__));
+    }
+    return *this;
+  }
+  template<class InputIterator>
+  void assign(InputIterator const begin, InputIterator const end)
+  // throws E if bounds exceeded, leaving *this unmodified
+  {
+    V y;
+    for(auto i=begin,size_t c=0; i!=end && c<MaxSize; ++i, ++s) {
+      y.push_back(*i);
+    }
+    if (i!=end) {
+      while(i!=end) {
+        ++i;
+        ++c;
+      }
+      std::ostringstream s;
+      s << "BoundedSequence of max size " << MaxSize << " cannot accept "
+        << c << " elements";
+      throw E(s.str(),std::make_pair(__FILE__,__LINE__));
+    }
+    std::move(y,x_);
+  }
+  
+  void assign(initializer_list<value_type> l)
+  {
+    assign(l.begin(), l.end());
+  }
+
+  allocator_type get_allocator() const
+  {
+    return x_.get_allocator();
+  }
+  iterator begin() noexcept
+  {
+    return x_.begin();
+  }
+  iterator end() noexcept
+  {
+    return x_.end();
+  }
+  const_iterator begin() const noexcept
+  {
+    return x_.begin();
+  }
+  const_iterator end() const noexcept
+  {
+    return x_.end();
+  }
+  reverse_iterator rbegin() noexcept
+  {
+    return x_.rbegin();
+  }
+  reverse_iterator rend() noexcept
+  {
+    return x_.rend();
+  }
+  const_reverse_iterator rbegin() const noexcept
+  {
+    return x_.rbegin();
+  }
+  const_reverse_iterator rend() const noexcept
+  {
+    return x_.rend();
+  }
+  const_iterator cbegin() const noexcept
+  {
+    return x_.cbegin();
+  }
+  const_iterator cend() const noexcept
+  {
+    return x_.cend();
+  }
+  const_reverse_iterator crbegin() const noexcept
+  {
+    return x_.crbegin();
+  }
+  const_reverse_iterator crend() const noexcept
+  {
+    return x_.crend();
+  }
+  size_type size() const
+  {
+    return x_.size();
+  }
+  size_type max_size() const
+  {
+    return std::min(x_.max_size(),MaxSize);
+  }
+  void resize(size_type new_size, value_type const& value)
+  // throws E if bounds exceeded, leaving *this unmodified
+  {
+    if (new_size>MaxSize) {
+      std::ostringstream s;
+      s << "BoundedSequence of max size " << MaxSize
+        << " cannot be resized to "
+        << new_size;
+      throw E(s.str(),std::make_pair(__FILE__,__LINE__));
+    }
+    x_.resize(new_size,value);
+  }
+  void shrink_to_fit()
+  {
+    x_.shrink_to_fit();
+  }
+  size_type capacity() const noexcept
+  {
+    return x.capacity();
+  }
+  bool empty() const noexcept
+  {
+    return x.empty();
+  }
+  void reserve(size_type n)
+  // throws E if bounds exceeded, leaving *this unmodified
+  {
+    if (n>max_size()) {
+      std::ostringstream s;
+      s << "BoundedSequence of max size " << MaxSize
+        << " cannot reserve room for " << n << " elements";
+      throw E(s.str(),std::make_pair(__FILE__,__LINE__));
+    }
+    x_.reserve(n);
+  }
+  reference operator[](size_type n) noexcept
+  {
+    return x_[n];
+  }
+  const_reference operator[](size_type n) const noexcept
+  {
+    return x_[n];
+  }
+  reference at(size_type n)
+  // throws E if bounds exceeded, leaving *this unmodified
+  {
+    if (n>=size()) {
+      std::ostringstream s;
+      s << "BoundedSequence has only " << size() << " elements, not " << (n+1);
+      throw E(s.str(),std::make_pair(__FILE__,__LINE__));
+    }
+    return x_.at(n);
+  }
+  const_reference at(size_type n) const
+  // throws E if bounds exceeded, leaving *this unmodified
+  {
+    if (n>=size()) {
+      std::ostringstream s;
+      s << "BoundedSequence has only " << size() << " elements, not " << (n+1);
+      throw E(s.str(),std::make_pair(__FILE__,__LINE__));
+    }
+    return x_.at(n);
+  }    
+  reference front() noexcept
+  {
+    return x_.front();
+  }
+  const_reference front() const noexcept
+  {
+    return x_.front();
+  }
+  reference back() noexcept
+  {
+    return x_.back();
+  }
+  const_reference back() const noexcept
+  {
+    return x_.back();
+  }
+  T* data() noexcept
+  {
+    return x_.data();
+  }
+  T const* data() const noexcept
+  {
+    return x_.data();
+  }
+  void push_back(value_type const& x)
+  // throws E if bounds exceeded, leaving *this unmodified
+  {
+    if (size()==max_size()) {
+      std::ostringstream s;
+      s << "BoundedSequence of max size " << MaxSize << " is full";
+      throw E(s.str(),std::make_pair(__FILE__,__LINE__));
+    }
+    x_.push_back(x);
+  }
+  void push_back(value_type && x)
+  // throws E if bounds exceeded, leaving *this unmodified
+  {
+    if (size()==max_size()) {
+      std::ostringstream s;
+      s << "BoundedSequence of max size " << MaxSize << " is full";
+      throw E(s.str(),std::make_pair(__FILE__,__LINE__));
+    }
+    x_.push_back(x);
+  }
+  template<typename... _Args>
+  void emplace_back(_Args&&... args)
+  // throws E if bounds exceeded, leaving *this unmodified
+  {
+    if (size()==max_size()) {
+      std::ostringstream s;
+      s << "BoundedSequence of max size " << MaxSize << " is full";
+      throw E(s.str(),std::make_pair(__FILE__,__LINE__));
+    }
+    x_.emplace_back(args);
+  }
+  void pop_back() noexcept
+  {
+    x_.pop_back();
+  }
+  template<typename... _Args>
+  iterator emplace(const_iterator at, _Args&&... args)
+  // throws E if bounds exceeded, leaving *this unmodified
+  {
+    if (size()==max_size()) {
+      std::ostringstream s;
+      s << "BoundedSequence of max size " << MaxSize << " is full";
+      throw E(s.str(),std::make_pair(__FILE__,__LINE__));
+    }
+    return x_.emplace(at, args);
+  }
+  iterator insert(const_iterator at, value_type const& x)
+  // throws E if bounds exceeded, leaving *this unmodified
+  {
+    if (size()==max_size()) {
+      std::ostringstream s;
+      s << "BoundedSequence of max size " << MaxSize << " is full";
+      throw E(s.str(),std::make_pair(__FILE__,__LINE__));
+    }
+    return x_.insert(at,x);
+  }
+  iterator insert(const_iterator at, value_type&& x)
+  // throws E if bounds exceeded, leaving *this unmodified
+  {
+    if (size()==max_size()) {
+      std::ostringstream s;
+      s << "BoundedSequence of max size " << MaxSize << " is full";
+      throw E(s.str(),std::make_pair(__FILE__,__LINE__));
+    }
+    return x_.insert(at,x);
+  }
+  iterator insert(const_iterator at, initializer_list<value_type> x)
+  // throws E if bounds exceeded, leaving *this unmodified
+  {
+    return insert(at,x.begin(),x.end());
+  }
+  iterator insert(const_iterator at, size_type n, value_type const& v)
+  // throws E if bounds exceeded, leaving *this unmodified
+  {
+    if (size()+n>max_size()) {
+      std::ostringstream s;
+      s << "BoundedSequence of max size " << MaxSize << " has "
+        << size() << " elements and cannot accept " << n << " more";
+      throw E(s.str(),std::make_pair(__FILE__,__LINE__));
+    }      
+    x_.insert(at,n,v);
+  }
+  template<typename InputIterator,
+           typename = std::_RequireInputIter<InputIterator> >
+  iterator insert(const_iterator at, InputIterator begin, InputIterator end)
+  // throws E if bounds exceeded, leaving *this unmodified
+  {
+    auto const offset(at-begin());
+    try {
+      std::BoundedSequence<T,MaxSize,E,Allocator> x(x_.begin(),at);
+      std::copy(begin,end,std::back_inserter(x));
+      std::copy(at,x_.end(),std::back_inserter(x));
+      std::move(x,*this);
+    }
+    catch(E& e) {
+      std::ostringstream s;
+      s << "insert range of elements into BoundedSequence of max size "
+        << MaxSize
+        << " at offset " << offset;
+      e.addContext(s.str(),std::make_pair(__FILE__,__LINE__));
+    }      
+    return begin()+offset;
+  }
+  iterator erase(const_iterator i) noexcept
+  {
+    return x_.erase(i);
+  }
+  iterator erase(const_iterator begin, const_iterator end) noexcept
+  {
+    return x_.erase(begin,end);
+  }
+  void swap(BoundedSequence& x)
+  {
+    x_.swap(x.x_);
+  }
+  void clear() noexcept
+  {
+    x_.clear();
+  }
+  
+private:
+  std::vector<T,MaxSize,Allocator> x_;
+};
+
+}
