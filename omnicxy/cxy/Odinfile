@@ -149,6 +149,11 @@ TypeTag.cc==%TypeTag/TypeTag.cc
 
 %TypeTag==()+cmd=(../../hcp/hcp-split) -l 1 (TypeTag.hcp) 'TypeTag.hh' 'TypeTag.cc':output
 
+BoundedSequence.hh==%BoundedSequence/BoundedSequence.hh
+BoundedSequence.cc==%BoundedSequence/BoundedSequence.cc
+
+%BoundedSequence==()+cmd=(../../hcp/hcp-split) -l 1 (BoundedSequence.hcp) 'BoundedSequence.hh' 'BoundedSequence.cc':output
+
 
 %tests.tree==<<
 ()+cmd=(test-Exception.cc+(%cxx-opts):auto.cxx.exe):stdout
@@ -157,6 +162,7 @@ TypeTag.cc==%TypeTag/TypeTag.cc
 ()+cmd=(test-Any.cc+(%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Any-interop.cc+(%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-nested.cc+(%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-BoundedSequence.cc+(%cxx-opts):auto.cxx.exe):stdout
 
 %cxx-opts==<<
 +(..%cxx-opts)

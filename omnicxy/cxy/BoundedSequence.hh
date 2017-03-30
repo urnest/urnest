@@ -1,3 +1,5 @@
+#ifndef _CXY_BOUNDEDSEQUENCE_HCP
+#define _CXY_BOUNDEDSEQUENCE_HCP
 // Copyright (c) 2015 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -488,3 +490,4 @@ private:
 };
 
 }
+#endif

@@ -1,8 +1,8 @@
-module p21
+interface p21
 {
   struct X
   {
-    sequence<string, 2> x_;
+    sequence<short, 4> x_;
   };
   
   typedef sequence<short, 4> Short4;

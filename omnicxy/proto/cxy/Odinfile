@@ -50,6 +50,7 @@ p17.hh==%gen/p17.hh
 p18.hh==%gen/p18.hh
 p19.hh==%gen/p19.hh
 p20.hh==%gen/p20.hh
+p21.hh==%gen/p21.hh
 echo.hh==%gen/echo.hh
 echo.cc==%gen-ntc/echo.cc
 echo.cref.hh==%gen/echo.cref.hh
@@ -118,6 +119,12 @@ echo.sref.cc==%gen/echo.sref.cc
 %p20.objref.hcp==%gen/p20.objref.hcp
 %p20.sref.hcp==%gen/p20.sref.hcp
 %p20.any.hcp==%gen/p20.any.hcp
+%p21.hcp==%gen/p21.hcp
+%p21.cref.hcp==%gen/p21.cref.hcp
+%p21.cdr.hcp==%gen/p21.cdr.hcp
+%p21.objref.hcp==%gen/p21.objref.hcp
+%p21.sref.hcp==%gen/p21.sref.hcp
+%p21.any.hcp==%gen/p21.any.hcp
 
 %all-tests.tree==<<
 ()+cmd=(%p1-main)+cmd='3735'+cmd='both':exec.output
@@ -141,6 +148,7 @@ echo.sref.cc==%gen/echo.sref.cc
 ()+cmd=(%p18-main)+cmd='3754'+cmd='both':exec.output
 ()+cmd=(%p20-main)+cmd='3755'+cmd='both':exec.output
 ()+cmd=(%p20-main-1)+cmd='3756'+cmd='both':exec.output
+()+cmd=(%p21-main)+cmd='3757'+cmd='both':exec.output
 %test-transient
 ()+cmd=(%test-no-such-object)+cmd='3760'+cmd=exec.output
 ()+cmd=(%test-duplicate-name)+cmd='3761'+cmd=exec.output
@@ -173,6 +181,7 @@ echo.sref.cc==%gen/echo.sref.cc
 %p18-main==p18-main.cc+(%cxx-opts):auto.cxx.exe
 %p20-main==p20-main.cc+(%cxx-opts):auto.cxx.exe
 %p20-main-1==p20-main-1.cc+(%cxx-opts):auto.cxx.exe
+%p21-main==p21-main.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-duplicate-name==test-duplicate-name.cc+(%cxx-opts):auto.cxx.exe
 %test-port-in-use==test-port-in-use.cc+(%cxx-opts):auto.cxx.exe

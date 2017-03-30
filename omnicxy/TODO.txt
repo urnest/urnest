@@ -266,10 +266,12 @@ x memory leaks:
   bounded sequences > 1
     ... nah, create own vector wrapper that does size checks
       cxy::BoundedSequence<class T, size_t MaxSize, class Allocator = std::allocator<T>,
-      - like vector
+      x like vector
       - allow construct from any such sequence same size or less
       - compile error if size greater
-      
+
+- revisit BoundedSequence exceptions to give them all info known eg context
+
 - arrays
     - fixed size vector? What are all non-size-chaning vector methods?
     - want to be able to init from n-element "literal"

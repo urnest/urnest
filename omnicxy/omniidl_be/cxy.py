@@ -70,15 +70,16 @@ basicParamTypes=dict(
 )
 
 def sequenceUnqualifiedType(t,eclass):
-    if t.bound()==0:
+    bound=t.bound()
+    if bound==0:
         itemType=unqualifiedType(t.seqType(),eclass)
         return 'std::vector< %(itemType)s >'%vars()
-    elif t.bound()==1:
+    elif bound==1:
         itemType=unqualifiedType(t.seqType(),eclass)
         return 'cxy::optional< %(itemType)s >'%vars()
     else:
-        assert False,(t.bound(),'bounded sequences with bound > 1 not yet implemented')
-        pass
+        itemType=unqualifiedType(t.seqType(),eclass)
+        return 'cxy::BoundedSequence<%(itemType)s,%(bound)s>'%vars()
     pass
 
 def unionUnqualifiedType(t,eclass):
@@ -972,7 +973,7 @@ def gen_tincludes(decl):
             elif aliasOf.bound()==1:
                 result=result+['<cxy/optional.hh>']+tincludes(aliasOf)
             else:
-                assert False,(aliasOf.bound(),'sequence with bound > 1 are not yet implemented')
+                result=result+['<cxy/BoundedSequence.hh>']+tincludes(aliasOf)
                 pass
         else:
             result=tincludes(aliasOf)
@@ -992,7 +993,7 @@ def gen_tincludes(decl):
                 elif m.memberType().bound()==1:
                     result=result+['<cxy/optional.hh>']+tincludes(m.memberType())
                 else:
-                    assert False,(m.memberType().bound(),'sequence with bound > 1 are not yet implemented')
+                    result=result+['<cxy/BoundedSequence.hh>']+tincludes(m.memberType())
                     pass
                 pass
             pass
@@ -1012,7 +1013,7 @@ def gen_tincludes(decl):
                 elif m.memberType().bound()==1:
                     result=result+['<cxy/optional.hh>']+tincludes(m.memberType())
                 else:
-                    assert False,(m.memberType().bound(),'sequence with bound > 1 are not yet implemented')
+                    result=result+['<cxy/BoundedSequence.hh>']+tincludes(m.memberType())
                     pass
                 pass
             pass

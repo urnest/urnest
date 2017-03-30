@@ -20,6 +20,7 @@
 #include "IOR.hh"
 #include "TaggedProfileList.hh" //impl
 #include <cxy/optional.hh>
+#include <cxy/BoundedSequence.hh>
 
 class cdrStream;
 
@@ -507,6 +508,38 @@ public:
     }
   }
 
+};
+  
+template<class T,size_t MaxSize>
+class cdr< cxy::BoundedSequence<T,MaxSize> >
+{
+public:
+  static cxy::BoundedSequence<T,MaxSize> unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    uint32_t const length(cdr<uint32_t>::unmarshalFrom(s));
+    cxy::BoundedSequence<T,MaxSize> result;
+    result.reserve(length);
+    for(uint32_t i=0; i!=length; ++i) {
+      result.push_back(cdr<T>::unmarshalFrom(s));
+    }
+    return result;
+  }
+  static void marshal(cxy::BoundedSequence<T,MaxSize> const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    cdr<uint32_t>::marshal(x.size(),s);
+    for(auto i=x.begin(); i!=x.end(); ++i) {
+      cdr<T>::marshal(*i, s);
+    }
+  }
 };
   
 }
