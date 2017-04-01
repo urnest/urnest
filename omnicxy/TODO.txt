@@ -262,19 +262,22 @@ x memory leaks:
 - recursive union
 - bounded strings
     - do like bounded sequence
-- p21.idl
+x p21.idl
   bounded sequences > 1
     ... nah, create own vector wrapper that does size checks
       cxy::BoundedSequence<class T, size_t MaxSize, class Allocator = std::allocator<T>,
       x like vector
+
+- revisit BoundedSequence
+      - exceptions to give them all info known eg context
       - allow construct from any such sequence same size or less
       - compile error if size greater
 
-- revisit BoundedSequence exceptions to give them all info known eg context
-
 - arrays
-    - fixed size vector? What are all non-size-chaning vector methods?
+    - fixed size vector? What are all non-size-changing vector methods?
     - want to be able to init from n-element "literal"
+    - like BoundedSequence with only constructor from default element,
+      no size-changing operations
     
 - any
   * proto/cxy/p20-main-1.cc that does not actually use any and does

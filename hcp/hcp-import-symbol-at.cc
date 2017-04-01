@@ -8,22 +8,6 @@
 // implied warranty.
 //
 
-struct IdentifierTag{};
-typedef xju::Tagged<std::string, IdentifierTag> Identifier;
-
-
-// get identifier at offset within text
-// - offset might be at start, end or in the middle of an identifier or
-//   outside an identifier
-// - result includes any qualification
-// post: result is a valid C++ identifier
-Identifier getIdentifierAt(std::string const& text, size_t const offset)
-  throw(
-    // pre: no identifier at offset
-    xju::Exception)
-{
-}
-
 hcp_parser::IRs getIrsAtEnd(std::string const& x, size_t offset) throw(
   xju::Exception)
 {
