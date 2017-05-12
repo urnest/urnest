@@ -1,0 +1,15 @@
+#ifndef HCP_TAGS_LOCATION
+#define HCP_TAGS_LOCATION
+
+module hcp
+{
+  module tags
+  {
+    struct Location
+    {
+      AbsolutePath directory;
+      FileName     file;
+      LineNumber   line;
+    };
+  };
+};

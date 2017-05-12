@@ -1,0 +1,12 @@
+#ifndef HCP_TAGS_DIRNAME
+#define HCP_TAGS_DIRNAME
+
+module hcp
+{
+  module tags
+  {
+    typedef string DirName;
+  };
+};
+
+#endif

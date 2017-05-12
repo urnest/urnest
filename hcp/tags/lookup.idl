@@ -1,0 +1,23 @@
+#ifndef HCP_TAGS_LOOKUP
+#define HCP_TAGS_LOOKUP
+
+#include <hcp/tags/NamespaceName.idl>
+#include <hcp/tags/Location.idl>
+
+module hcp
+{
+  module tags
+  {
+    interface lookup
+    {
+      typedef sequence<NamespaceName> NamespaceNames;
+      typedef sequence<Location> Locations;
+      
+      Locations lookup(in NamespaceNames fromScope,
+                       in NamespaceNames symbolScope,
+                       in UnqualifiedSymbol symbol);
+    };
+  };
+};
+
+#endif

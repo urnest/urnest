@@ -1,0 +1,11 @@
+#ifndef HCP_TAGS_NAMESPACENAME
+#define HCP_TAGS_NAMESPACENAME
+module hcp
+{
+  module tags
+  {
+    typedef string NamespaceName;
+  }
+}
+
+#endif

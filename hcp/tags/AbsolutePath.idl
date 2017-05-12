@@ -1,0 +1,14 @@
+#ifndef HCP_TAGS_ABSOLUTEPATH
+#define HCP_TAGS_ABSOLUTEPATH
+
+#include <hcp/tags/DirName.idl>
+
+module hcp
+{
+  module tags
+  {
+    typedef sequence<DirName> AbsolutePath;
+  };
+};
+
+#endif
