@@ -1,3 +1,5 @@
+#ifndef _HCP_TAGS_NAMESPACE_HCP
+#define _HCP_TAGS_NAMESPACE_HCP
 // Copyright (c) 2015 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -7,20 +9,24 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-
+#include <vector>
+#include <hcp/tags/NamespaceName.hh>
+#include <hcp/tags/UnqualifiedSymbol.hh>
+#include <hcp/tags/Location.hh>
+#include "xju/Exception.hh"
+#include <map>
 
 namespace hcp
 {
-namespace tagsd
+namespace tags
 {
 
 class Namespace
 {
 public:
-  
   void addSymbol(std::vector<NamespaceName> const& namespace_,
                  UnqualifiedSymbol const& symbol,
-                 Locations const& locations) throw();
+                 std::vector<Location> const& locations) throw();
 
 
   class UnknownNamespace : public xju::Exception
@@ -34,12 +40,14 @@ public:
   };
   
   
-  Locations lookup(std::vector<NamespaceName> const& namespace_,
-                   UnqualifiedSymbol const& symbol) const throw(
-                     UnknownNamespace,
-                     UnknownSymbol);
+  std::vector<Location> lookup(std::vector<NamespaceName> const& namespace_,
+                               UnqualifiedSymbol const& symbol) const throw(
+                                 UnknownNamespace,
+                                 UnknownSymbol);
     
 private:
+  typedef std::vector<Location> Locations;
+  
   std::map<NamespaceName, Namespace> children_;
   std::map<UnqualifiedSymbol, Locations> symbols_;
 
@@ -56,12 +64,12 @@ private:
                                  std::vector<NamespaceName> const& path) throw(
                                    UnknownNamespace);
   
-  Locations const& findSymbol(std::map<UnqualifiedSymbol, Locations> const& symbols) throw(
-    UnknownSymbol);
+  Locations const& findSymbol(
+    std::map<UnqualifiedSymbol, Locations> const& symbols) throw(
+      UnknownSymbol);
   
 };
 
 }
-
 }
-}
+#endif

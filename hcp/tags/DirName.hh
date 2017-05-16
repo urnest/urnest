@@ -1,4 +1,6 @@
-// Copyright (c) 2015 Trevor Taylor
+#ifndef _HCP_TAGS_DIRNAME_HCP
+#define _HCP_TAGS_DIRNAME_HCP
+// Copyright (c) 2017 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
 // and its documentation for any purpose is hereby granted without fee,
@@ -13,8 +15,8 @@ namespace hcp
 {
 namespace tags
 {
-// override idl generated code
-typedef xju::path::AbsolutePath AbsolutePath;
-
+// override generated idl
+typedef xju::path::DirName DirName;
 }
 }
+#endif

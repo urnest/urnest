@@ -4,30 +4,43 @@ AbsolutePath.idl
 FileName.idl
 LineNumber.idl
 UnqualifiedSymbol.idl
-lookup.idl
+Lookup.idl
+NamespaceName.idl
+Location.idl
 
 %gen==(%all.idl.sm)+inc_sp=(../..)+hcp-split=(../hcp-split)+cxy='-exju::Exception=xju/Exception.hh':omnicxy
 
 %geninc.vir_tree_spec==<<
-hcp/tags==%gen
+hcp/tags==.%gen
 
 %cxx-opts==<<
 +inc_sp=(../..)
-+inc_sp=(%geninc:vir_tree)
++inc_sp=(%geninc.vir_tree_spec:vir_tree)
 
 # below override idl-generated code, redirecting to xju::path types
 #
-%DirName==()+cmd=(../hcp-split) -l 1 (DirName.hcp) 'DirName.hh' 'DirName.cc':output
+%DirName==()+cmd=(../hcp-split) -l 2 (DirName.hcp) 'DirName.hh' 'DirName.cc':output
 
 DirName.hh==%DirName/DirName.hh
 DirName.cc==%DirName/DirName.cc
 
-%AbsolutePath==()+cmd=(../hcp-split) -l 1 (AbsolutePath.hcp) 'AbsolutePath.hh' 'AbsolutePath.cc':output
+%AbsolutePath==()+cmd=(../hcp-split) -l 2 (AbsolutePath.hcp) 'AbsolutePath.hh' 'AbsolutePath.cc':output
 
 AbsolutePath.hh==%AbsolutePath/AbsolutePath.hh
 AbsolutePath.cc==%AbsolutePath/AbsolutePath.cc
 
-%RelativePath==()+cmd=(../hcp-split) -l 1 (RelativePath.hcp) 'RelativePath.hh' 'RelativePath.cc':output
+%RelativePath==()+cmd=(../hcp-split) -l 2 (RelativePath.hcp) 'RelativePath.hh' 'RelativePath.cc':output
 
 RelativePath.hh==%RelativePath/RelativePath.hh
 RelativePath.cc==%RelativePath/RelativePath.cc
+
+%Namespace==()+cmd=(../hcp-split) -l 2 (Namespace.hcp) 'Namespace.hh' 'Namespace.cc':output
+
+Namespace.hh==%Namespace/Namespace.hh
+Namespace.cc==%Namespace/Namespace.cc
+
+
+%test-Namespace==(test-Namespace.cc)+(%cxx-opts):auto.cxx.exe
+
+%tests.tree==<<
+%test-Namespace:exec.output

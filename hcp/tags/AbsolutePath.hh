@@ -1,3 +1,5 @@
+#ifndef _HCP_TAGS_ABSOLUTEPATH_HCP
+#define _HCP_TAGS_ABSOLUTEPATH_HCP
 // Copyright (c) 2015 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -18,3 +20,4 @@ typedef xju::path::AbsolutePath AbsolutePath;
 
 }
 }
+#endif

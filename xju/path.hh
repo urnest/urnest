@@ -53,6 +53,31 @@ private:
   std::vector<DirName> x_;
 
   friend std::string str(RelativePath const& x) throw();
+
+  friend bool operator<(RelativePath const& x, RelativePath const& y) throw()
+  {
+    return x.x_ < y.x_;
+  }
+  friend bool operator>(RelativePath const& x, RelativePath const& y) throw()
+  {
+    return y < x;
+  }
+  friend bool operator==(RelativePath const& x, RelativePath const& y) throw()
+  {
+    return !(y < x) && !(x < y);
+  }
+  friend bool operator!=(RelativePath const& x, RelativePath const& y) throw()
+  {
+    return (y < x) || (x < y);
+  }
+  friend bool operator<=(RelativePath const& x, RelativePath const& y) throw()
+  {
+    return (x < y) || (x==y);
+  }
+  friend bool operator>=(RelativePath const& x, RelativePath const& y) throw()
+  {
+    return (x > y) || (x==y);
+  }
 };
 
 class AbsolutePath
@@ -88,13 +113,34 @@ private:
   friend AbsolutePath operator+(AbsolutePath const& x, 
                                 RelativePath const& y) throw(
                                   xju::Exception);
-  friend bool operator==(AbsolutePath const& x,
-                         AbsolutePath const& y) throw() {
-    return x.x_ == y.x_;
-  }
-  
+
   friend std::ostream& operator<<(std::ostream& s,
                                   AbsolutePath const& x) throw();
+
+  friend bool operator<(AbsolutePath const& x, AbsolutePath const& y) throw()
+  {
+    return x.x_ < y.x_;
+  }
+  friend bool operator>(AbsolutePath const& x, AbsolutePath const& y) throw()
+  {
+    return y < x;
+  }
+  friend bool operator==(AbsolutePath const& x, AbsolutePath const& y) throw()
+  {
+    return !(y < x) && !(x < y);
+  }
+  friend bool operator!=(AbsolutePath const& x, AbsolutePath const& y) throw()
+  {
+    return (y < x) || (x < y);
+  }
+  friend bool operator<=(AbsolutePath const& x, AbsolutePath const& y) throw()
+  {
+    return (x < y) || (x==y);
+  }
+  friend bool operator>=(AbsolutePath const& x, AbsolutePath const& y) throw()
+  {
+    return (x > y) || (x==y);
+  }
 };
 
 

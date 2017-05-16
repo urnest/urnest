@@ -5,7 +5,7 @@ module hcp
   module tags
   {
     typedef string NamespaceName;
-  }
-}
+  };
+};
 
 #endif

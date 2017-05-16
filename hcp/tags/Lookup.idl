@@ -3,6 +3,7 @@
 
 #include <hcp/tags/NamespaceName.idl>
 #include <hcp/tags/Location.idl>
+#include <hcp/tags/UnqualifiedSymbol.idl>
 
 module hcp
 {
@@ -13,9 +14,9 @@ module hcp
       typedef sequence<NamespaceName> NamespaceNames;
       typedef sequence<Location> Locations;
       
-      Locations lookup(in NamespaceNames fromScope,
-                       in NamespaceNames symbolScope,
-                       in UnqualifiedSymbol symbol);
+      Locations lookupSymbol(in NamespaceNames fromScope,
+                             in NamespaceNames symbolScope,
+                             in UnqualifiedSymbol symbol);
     };
   };
 };
