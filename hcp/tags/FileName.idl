@@ -1,0 +1,12 @@
+#ifndef HCP_TAGS_FILENAME
+#define HCP_TAGS_FILENAME
+
+module hcp
+{
+  module tags
+  {
+    typedef string FileName;
+  };
+};
+
+#endif

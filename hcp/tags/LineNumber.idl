@@ -1,0 +1,12 @@
+#ifndef HCP_TAGS_LINENUMBER
+#define HCP_TAGS_LINENUMBER
+
+module hcp
+{
+  module tags
+  {
+    typedef unsigned long LineNumber;
+  };
+};
+  
+#endif

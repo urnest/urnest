@@ -1,6 +1,10 @@
 #ifndef HCP_TAGS_LOCATION
 #define HCP_TAGS_LOCATION
 
+#include <hcp/tags/AbsolutePath.idl>
+#include <hcp/tags/FileName.idl>
+#include <hcp/tags/LineNumber.idl>
+
 module hcp
 {
   module tags
@@ -13,3 +17,5 @@ module hcp
     };
   };
 };
+
+#endif

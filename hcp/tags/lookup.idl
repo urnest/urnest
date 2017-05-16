@@ -8,7 +8,7 @@ module hcp
 {
   module tags
   {
-    interface lookup
+    interface Lookup
     {
       typedef sequence<NamespaceName> NamespaceNames;
       typedef sequence<Location> Locations;
