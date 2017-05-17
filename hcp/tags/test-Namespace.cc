@@ -30,6 +30,7 @@ void test1() {
               l1);
   
   xju::assert_equal(x.lookup(std::vector<NamespaceName>{},
+                             std::vector<NamespaceName>{},
                              UnqualifiedSymbol("fred")),
                     l1);
 }

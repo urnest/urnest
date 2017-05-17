@@ -1,5 +1,7 @@
 - handle enum/scoped enum with fixed type
 
+- handle using xju::Exception; in derived class
+
 x handle scoped enum (non-fixed type)
 
 - hcp-split handle inline constructor eg

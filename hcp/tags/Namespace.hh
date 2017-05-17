@@ -15,12 +15,14 @@
 #include <hcp/tags/Location.hh>
 #include "xju/Exception.hh"
 #include <map>
-
+#include <utility>
 namespace hcp
 {
 namespace tags
 {
 
+// Represents a namespace, which might contain symbols and child namespaces.
+// not thread safe
 class Namespace
 {
 public:
@@ -32,15 +34,25 @@ public:
   class UnknownNamespace : public xju::Exception
   {
   public:
-    
+    //REVISIT: using xju::Exception;
+    UnknownNamespace(const std::string& cause,
+                     const xju::Traced& trace) throw();
+
   };
   class UnknownSymbol : public xju::Exception
   {
   public:
+    //REVISIT: using xju::Exception;
+    UnknownSymbol(const std::string& cause,
+                  const xju::Traced& trace) throw();
+
   };
   
-  
-  std::vector<Location> lookup(std::vector<NamespaceName> const& namespace_,
+  // eg to lookup X in
+  // namespace a { b::c::X f(); }
+  // lookup( {'a'}, {'b','c'}, X) assuming *this is the root namespace
+  std::vector<Location> lookup(std::vector<NamespaceName> const& fromScope,
+                               std::vector<NamespaceName> const& namespace_,
                                UnqualifiedSymbol const& symbol) const throw(
                                  UnknownNamespace,
                                  UnknownSymbol);
@@ -51,22 +63,26 @@ private:
   std::map<NamespaceName, Namespace> children_;
   std::map<UnqualifiedSymbol, Locations> symbols_;
 
-  // find namespace given by path within root, adding children where
+  // find namespace given by path within this namespace, adding children where
   // necessary
   // post: path.size() || result===root
-  Namespace& findNamespace(Namespace& root,
-                           std::vector<NamespaceName> const& path) throw();
+  Namespace& findNamespace(
+    std::pair<std::vector<NamespaceName>::const_iterator,
+              std::vector<NamespaceName>::const_iterator> const& path) throw();
 
-  // find namespace given by path within root, adding children where
-  // necessary
-  // post: path.size() || result===root
-  Namespace const& findNamespace(Namespace const& root,
-                                 std::vector<NamespaceName> const& path) throw(
-                                   UnknownNamespace);
+
+  // find namespace given by path within *this
+  // post: path.size() || result===*this
+  Namespace const& findNamespace(
+    std::pair<std::vector<NamespaceName>::const_iterator,
+              std::vector<NamespaceName>::const_iterator> const& path) const
+    throw(UnknownNamespace);
+
   
-  Locations const& findSymbol(
-    std::map<UnqualifiedSymbol, Locations> const& symbols) throw(
+  std::vector<Location> const& findSymbol(
+    UnqualifiedSymbol const& symbol) const throw(
       UnknownSymbol);
+
   
 };
 
