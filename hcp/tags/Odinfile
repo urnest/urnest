@@ -14,9 +14,11 @@ Location.idl
 hcp/tags==.%gen
 
 %cxx-opts==<<
++debug
 +inc_sp=(../..)
 +inc_sp=(../../omnicxy)
 +inc_sp=(%geninc.vir_tree_spec:vir_tree)
++ld_flags=-lpthread
 
 # below override idl-generated code, redirecting to xju::path types
 #
@@ -44,4 +46,4 @@ Namespace.cc==%Namespace/Namespace.cc
 %test-Namespace==(test-Namespace.cc)+(%cxx-opts):auto.cxx.exe
 
 %tests.tree==<<
-%test-Namespace:exec.output
+()+cmd=(%test-Namespace):exec.output

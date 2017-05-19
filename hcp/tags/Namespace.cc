@@ -11,7 +11,7 @@ namespace hcp
 {
 namespace tags
 {
-#line 32
+#line 34
 void Namespace::addSymbol(std::vector<NamespaceName> const& namespace_,
                  UnqualifiedSymbol const& symbol,
                  std::vector<Location> const& locations) throw() {
@@ -25,21 +25,81 @@ void Namespace::addSymbol(std::vector<NamespaceName> const& namespace_,
   }
 
   
-#line 48
+#line 50
 Namespace::UnknownNamespace::UnknownNamespace(const std::string& cause,
                      const xju::Traced& trace) throw():
         xju::Exception(cause,trace)
     {
     }
   
-#line 58
+#line 60
 Namespace::UnknownSymbol::UnknownSymbol(const std::string& cause,
                   const xju::Traced& trace) throw():
         xju::Exception(cause,trace)
     {
     }
   
-#line 83
+#line 73
+std::vector<Location> Namespace::lookup(std::vector<NamespaceName> const& fromScope,
+                               std::vector<NamespaceName> const& namespace_,
+                               UnqualifiedSymbol const& symbol) const throw(
+                                 UnknownNamespace,
+                                 UnknownSymbol)
+  {
+    try {
+      return lookup_( std::make_pair(fromScope.begin(),fromScope.end()),
+                      namespace_,
+                      symbol);
+    }
+    catch(xju::Exception& e) {
+      std::ostringstream s;
+      s << "lookup locations of "
+        << xju::format::join(namespace_.begin(),namespace_.end(),"::")
+        << "::" << symbol
+        << " when it is referenced from "
+        << xju::format::join(fromScope.begin(),fromScope.end(),"::") << "::";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+      
+        
+
+#line 104
+std::vector<Location> Namespace::lookup_(
+    std::pair<std::vector<NamespaceName>::const_iterator,
+              std::vector<NamespaceName>::const_iterator> const& fromScope,
+                               std::vector<NamespaceName> const& namespace_,
+                               UnqualifiedSymbol const& symbol) const throw(
+                                 UnknownNamespace,
+                                 UnknownSymbol)
+  {
+    if (fromScope.first!=fromScope.second) {
+      auto const i=children_.find(*fromScope.first);
+      if (i != children_.end()) {
+        try {
+          return (*i).second.lookup_(
+            std::make_pair(xju::next(fromScope.first),fromScope.second),
+            namespace_,
+            symbol);
+        }
+        catch(UnknownSymbol const&) {
+        }
+        catch(UnknownNamespace const&) {
+        }
+      }
+    }
+    return findNamespace(
+      std::make_pair(namespace_.begin(),namespace_.end())).findSymbol(
+        symbol);
+  }
+  
+    
+  // find namespace given by path within this namespace, adding children where
+  // necessary
+  // post: path.size() || result===root
+  
+#line 136
 Namespace& Namespace::findNamespace(
     std::pair<std::vector<NamespaceName>::const_iterator,
               std::vector<NamespaceName>::const_iterator> const& path) throw()
@@ -57,7 +117,7 @@ Namespace& Namespace::findNamespace(
   // find namespace given by path within *this
   // post: path.size() || result===*this
   
-#line 99
+#line 152
 Namespace const& Namespace::findNamespace(
     std::pair<std::vector<NamespaceName>::const_iterator,
               std::vector<NamespaceName>::const_iterator> const& path) const
@@ -90,7 +150,7 @@ Namespace const& Namespace::findNamespace(
   }
   
   
-#line 130
+#line 183
 std::vector<Location> const& Namespace::findSymbol(
     UnqualifiedSymbol const& symbol) const throw(
       UnknownSymbol)
@@ -114,7 +174,7 @@ std::vector<Location> const& Namespace::findSymbol(
       throw;
     }
   }
-  
+
 
 }
 }

@@ -29,6 +29,8 @@ namespace tags
 class Namespace
 {
 public:
+  // record locations of namespace_::symbol
+  // - appends to any existing locations
   void addSymbol(std::vector<NamespaceName> const& namespace_,
                  UnqualifiedSymbol const& symbol,
                  std::vector<Location> const& locations) throw() {
@@ -61,22 +63,73 @@ public:
     {
     }
   };
-  
+
+  // Lookup locations of namespace_::symbol when it is referenced
+  // from scope fromScope_.
+  //
   // eg to lookup X in
-  // namespace a { b::c::X f(); }
+  //    namespace a { b::c::X f(); }
   // lookup( {'a'}, {'b','c'}, X) assuming *this is the root namespace
   std::vector<Location> lookup(std::vector<NamespaceName> const& fromScope,
                                std::vector<NamespaceName> const& namespace_,
                                UnqualifiedSymbol const& symbol) const throw(
                                  UnknownNamespace,
-                                 UnknownSymbol);
-    
+                                 UnknownSymbol)
+  {
+    try {
+      return lookup_( std::make_pair(fromScope.begin(),fromScope.end()),
+                      namespace_,
+                      symbol);
+    }
+    catch(xju::Exception& e) {
+      std::ostringstream s;
+      s << "lookup locations of "
+        << xju::format::join(namespace_.begin(),namespace_.end(),"::")
+        << "::" << symbol
+        << " when it is referenced from "
+        << xju::format::join(fromScope.begin(),fromScope.end(),"::") << "::";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+      
+        
 private:
   typedef std::vector<Location> Locations;
   
   std::map<NamespaceName, Namespace> children_;
   std::map<UnqualifiedSymbol, Locations> symbols_;
 
+  // implementation of lookup above
+  std::vector<Location> lookup_(
+    std::pair<std::vector<NamespaceName>::const_iterator,
+              std::vector<NamespaceName>::const_iterator> const& fromScope,
+                               std::vector<NamespaceName> const& namespace_,
+                               UnqualifiedSymbol const& symbol) const throw(
+                                 UnknownNamespace,
+                                 UnknownSymbol)
+  {
+    if (fromScope.first!=fromScope.second) {
+      auto const i=children_.find(*fromScope.first);
+      if (i != children_.end()) {
+        try {
+          return (*i).second.lookup_(
+            std::make_pair(xju::next(fromScope.first),fromScope.second),
+            namespace_,
+            symbol);
+        }
+        catch(UnknownSymbol const&) {
+        }
+        catch(UnknownNamespace const&) {
+        }
+      }
+    }
+    return findNamespace(
+      std::make_pair(namespace_.begin(),namespace_.end())).findSymbol(
+        symbol);
+  }
+  
+    
   // find namespace given by path within this namespace, adding children where
   // necessary
   // post: path.size() || result===root
@@ -150,7 +203,7 @@ private:
       throw;
     }
   }
-  
+
 };
 
 }
