@@ -1,0 +1,179 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <hcp/tags/Namespace.hh>
+
+#include <hcp/parser.hh>
+#include <utility>
+
+#include <xju/stringToUInt.hh> //impl
+#include <hcp/ast.hh> //impl
+#include "xju/assert.hh" //impl
+#include <string>
+#include <xju/readFile.hh>
+#include <xju/path.hh>
+
+namespace hcp
+{
+namespace tags
+{
+
+namespace
+{
+using namespace hcp_parser;
+
+PR eatWhite(zeroOrMore*whitespaceChar);
+PR openBrace(eatWhite+parseLiteral("{")+eatWhite);
+hcp_parser::PR stringValue(parseUntil(doubleQuote));
+struct SymbolTag{};
+typedef hcp::ast::TaggedCompositeItem<SymbolTag> Symbol;
+PR symbol(new NamedParser<Symbol>(
+            "symbol",
+            stringValue));
+struct FileNameTag{};
+typedef hcp_parser::ast::TaggedCompositeItem<FileNameTag> FileName;
+PR fileName(new NamedParser<FileName>(
+              "file name",
+              stringValue));
+
+class LineNumber : public hcp::ast::Item
+{
+public:
+  LineNumber(std::vector<IR> const& items) throw(xju::Exception):
+      CompositeItem(items),
+      lineNumber_(xju::stringToUInt str())
+  {
+  }
+  hcp::tags::LineNumber lineNumber_;
+  operator hcp::tags::LineNumber() const throw()
+  {
+    return lineNumber_;
+  }
+};
+  
+
+PR lineNumber(new NamedParser<LineNumber>(
+                "line number",
+                atLeastOne*charInRange('0','9')));
+
+PR openBrace(parseLiteral("{"));
+PR closeBrace(parseLiteral("}"));
+PR f(parseLiteral("f"));
+PR colon(parseLiteral(":"));
+PR comma(parseLiteral(","));
+
+struct LocationTag{};
+typedef hcp::ast::TaggedCompositeItem<LocationTag> Location;
+PR location(new NamedParser<Location>(
+              "location",
+              openBrace+eatWhite+doubleQuote+f+doubleQuote+eatWhite+colon+
+              doubleQuote+fileName+doubleQuote+eatWhite+comma+eatWhite+
+              doubleQuote+l+doubleQuote+eatWhite+colon+
+              lineNumber+eatWhite+closeBrace+eatWhite));
+
+PR openSquare(parseLiteral("["));
+PR closeSquare(parseLiteral("]"));
+
+PR locations=openSquare+eatWhite+location+eatWhite+
+  zeroOrMore*(comma+eatWhite+location)+
+  closeSquare+eatWhite);
+
+struct EntryTag{};
+typedef hcp::ast::TaggedCompositeItem<EntryTag> Entry;
+PR entry(new NamedParser<Entry>(
+           "entry",
+           doubleQuote+symbol+doubleQuote+eatWhite+
+           colon+eatWhite+locations));
+
+
+PR tagsFile=openBrace+eatWhite+
+  ((closeBrace+eatWhite)|
+   (entry+eatWhite+zeroOrMore*(comma+eatWhite+entry)+closeBrace+eatWhite))+
+  endOfFile;
+
+template<class T>
+std::pair<T const&, hcp::parser::I> find(hcp_ast::IRs::const_iterator begin,
+                                         hcp_ast::IRs::const_iterator end)
+  throw() {
+  auto const i(hcp_ast::find1stInTree(begin,end,
+                                      [](IR x) { return x.isA<T>(); }));
+  xju::assert_not_equal(i,end);
+  return std::make_pair((*i)->asA<T>(),xju::next(i));
+}
+std::pair<std::vector<NamespaceName>,UnqualifiedSymbol> splitSymbol(
+  std::string const& symbol) throw()
+{
+  std::string const sep("::");
+  auto i(symbol.begin());
+  auto j(std::search(symbol.begin(),symbol.end()
+                     sep.begin(),sep.end()));
+  std::vector<NamespaceName> a;
+  while(j!=symbol.end()) {
+    a.push_back(NamespaceName(std::string(i,j)));
+    i=j+2;
+    j=std::search(i,symbol.end(),sep.begin(),sep.end());
+  }
+  return std::make_pair(a, UnqualifiedSymbol(std::string(i,j)));
+}
+
+}
+
+
+// augment rootNamespace with symbols from file
+void augmentRootNamespace(Namespace& rootNamespace,
+                          std::pair<AbsolutePath, FileName> const& file,
+                          hcp_parser::Options const& parser_options)
+  throw(
+    // pre: rootNamespace == rootNamespace@pre
+    xju::Exception) {
+  try {
+    std::string const x(xju::readFile(xju::path::str(tagsFile)));
+    hcp_parser::I i(x.begin(), x.end());
+    hcp_ast::CompositeItem root;
+    hcp_parser::parse(root, i, tagsFile, parser_options_.trace_);
+
+    for(auto x:root.items_) {
+      if (x->isA<Entry>()) {
+        Entry const& entry(x->asA<Entry>());
+        auto sx(find<Symbol>(entry.items_.begin(),
+                             entry.items_.end()));
+        Symbol const& symbol(sx.first);
+        std::vector<hcp::tags::Location> locations;
+        for(auto i=sx.second; i!=entry.items_.end(); ++i) {
+          if ((*i)->isA<Location>()) {
+            Location const& location((*i)->asA<Location>());
+            auto fx(find<FileName>(location.items_.begin(),
+                                   location.items_.end()));
+            auto lx(find<LineNumber>(location.items_.begin(),
+                                     location.items_.end()));
+            auto fileName(xju::path::split(lx.first.str()));
+            locations.push_back(hcp::tags::Location(
+                                  fileName.first,
+                                  fileName.second,
+                                  lx.first));
+          }
+        }
+        auto const ns(splitSymbol(symbol.str()));
+        rootNamespace.addSymbol(ns.first,ns.second,locations);
+      }
+    }
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "augment namespace with symbols from tags file "
+      << xju::path::str(tagsFile);
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+}
+
+
