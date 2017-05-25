@@ -50,7 +50,7 @@ public:
       lineNumber_(xju::stringToUInt str())
   {
   }
-  hcp::tags::LineNumber lineNumber_;
+  hcp::tags::LineNumber const lineNumber_;
   operator hcp::tags::LineNumber() const throw()
   {
     return lineNumber_;
@@ -98,37 +98,21 @@ PR tagsFile=openBrace+eatWhite+
   endOfFile;
 
 template<class T>
-std::pair<T const&, hcp::parser::I> find(hcp_ast::IRs::const_iterator begin,
-                                         hcp_ast::IRs::const_iterator end)
+T const& find(hcp_ast::IRs::const_iterator begin,
+              hcp_ast::IRs::const_iterator end)
   throw() {
   auto const i(hcp_ast::find1stInTree(begin,end,
                                       [](IR x) { return x.isA<T>(); }));
   xju::assert_not_equal(i,end);
-  return std::make_pair((*i)->asA<T>(),xju::next(i));
+  return (*i)->asA<T>();
 }
-std::pair<std::vector<NamespaceName>,UnqualifiedSymbol> splitSymbol(
-  std::string const& symbol) throw()
-{
-  std::string const sep("::");
-  auto i(symbol.begin());
-  auto j(std::search(symbol.begin(),symbol.end()
-                     sep.begin(),sep.end()));
-  std::vector<NamespaceName> a;
-  while(j!=symbol.end()) {
-    a.push_back(NamespaceName(std::string(i,j)));
-    i=j+2;
-    j=std::search(i,symbol.end(),sep.begin(),sep.end());
-  }
-  return std::make_pair(a, UnqualifiedSymbol(std::string(i,j)));
-}
-
 }
 
 
 // augment rootNamespace with symbols from file
 void augmentRootNamespace(Namespace& rootNamespace,
-                          std::pair<AbsolutePath, FileName> const& file,
-                          hcp_parser::Options const& parser_options)
+                          std::pair<AbsolutePath, FileName> const& tagsFile,
+                          bool const traceParser)
   throw(
     // pre: rootNamespace == rootNamespace@pre
     xju::Exception) {
@@ -136,27 +120,32 @@ void augmentRootNamespace(Namespace& rootNamespace,
     std::string const x(xju::readFile(xju::path::str(tagsFile)));
     hcp_parser::I i(x.begin(), x.end());
     hcp_ast::CompositeItem root;
-    hcp_parser::parse(root, i, tagsFile, parser_options_.trace_);
+    hcp_parser::Cache(new hcp_parser::CacheVal);
+    hcp_parser::Options const parser_options(
+      traceParser,
+      cache,
+      false);
+    
+    hcp_parser::parse(root, i, tagsFile, parser_options);
 
     for(auto x:root.items_) {
       if (x->isA<Entry>()) {
         Entry const& entry(x->asA<Entry>());
-        auto sx(find<Symbol>(entry.items_.begin(),
-                             entry.items_.end()));
-        Symbol const& symbol(sx.first);
+        Symbol const& symbol(
+          find<Symbol>(entry.items_.begin(),entry.items_.end()));
         std::vector<hcp::tags::Location> locations;
-        for(auto i=sx.second; i!=entry.items_.end(); ++i) {
-          if ((*i)->isA<Location>()) {
+        for(auto x:entry.items_) {
+          if (x->isA<Location>()) {
             Location const& location((*i)->asA<Location>());
-            auto fx(find<FileName>(location.items_.begin(),
-                                   location.items_.end()));
-            auto lx(find<LineNumber>(location.items_.begin(),
-                                     location.items_.end()));
-            auto fileName(xju::path::split(lx.first.str()));
+            auto f(find<FileName>(location.items_.begin(),
+                                  location.items_.end()));
+            auto l(find<LineNumber>(location.items_.begin(),
+                                    location.items_.end()));
+            auto fileName(xju::path::split(f.str()));
             locations.push_back(hcp::tags::Location(
                                   fileName.first,
                                   fileName.second,
-                                  lx.first));
+                                  l));
           }
         }
         auto const ns(splitSymbol(symbol.str()));
@@ -175,5 +164,3 @@ void augmentRootNamespace(Namespace& rootNamespace,
 
 }
 }
-
-

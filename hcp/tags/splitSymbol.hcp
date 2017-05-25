@@ -1,0 +1,55 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <utility>
+#include <vector>
+#include <hcp/tags/NamespaceName.hh>
+#include <hcp/tags/UnqualifiedSymbol.hh>
+#include <string>
+#include <algorithm> //impl
+
+namespace hcp
+{
+namespace tags
+{
+namespace
+{
+  std::string const sep("::");
+}
+
+// split C++ symbol, possibly qualified, into namespace names and
+// (leaf) symbol name
+// eg a::b -> { {a},b }
+//    a::b::c ->  { {a,b},c }
+// ... note leading :: is ignored
+// eg ::a::b ->  { {a},b }
+//
+std::pair<std::vector<NamespaceName>,UnqualifiedSymbol> splitSymbol(
+  std::string const& symbol) throw()
+{
+  auto i(symbol.begin());
+  if (symbol.size()>=2 && std::string(i,i+2)=="::") {
+    i+=2;
+  }
+  auto j(std::search(i,symbol.end(),
+                     sep.begin(),sep.end()));
+  std::vector<NamespaceName> a;
+  while(j!=symbol.end()) {
+    a.push_back(NamespaceName(std::string(i,j)));
+    i=j+2;
+    j=std::search(i,symbol.end(),sep.begin(),sep.end());
+  }
+  return std::make_pair(a, UnqualifiedSymbol(std::string(i,j)));
+}
+
+
+}
+}
+
+

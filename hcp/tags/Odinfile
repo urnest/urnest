@@ -45,5 +45,14 @@ Namespace.cc==%Namespace/Namespace.cc
 
 %test-Namespace==(test-Namespace.cc)+(%cxx-opts):auto.cxx.exe
 
+%splitSymbol==()+cmd=(../hcp-split) -l 2 (splitSymbol.hcp) 'splitSymbol.hh' 'splitSymbol.cc':output
+
+splitSymbol.hh==%splitSymbol/splitSymbol.hh
+splitSymbol.cc==%splitSymbol/splitSymbol.cc
+
+
+%test-splitSymbol==(test-splitSymbol.cc)+(%cxx-opts):auto.cxx.exe
+
 %tests.tree==<<
 ()+cmd=(%test-Namespace):exec.output
+()+cmd=(%test-splitSymbol):exec.output
