@@ -37,22 +37,36 @@ AbsolutePath.cc==%AbsolutePath/AbsolutePath.cc
 RelativePath.hh==%RelativePath/RelativePath.hh
 RelativePath.cc==%RelativePath/RelativePath.cc
 
+%FileName==()+cmd=(../hcp-split) -l 2 (FileName.hcp) 'FileName.hh' 'FileName.cc':output
+
+FileName.hh==%FileName/FileName.hh
+FileName.cc==%FileName/FileName.cc
+
 %Namespace==()+cmd=(../hcp-split) -l 2 (Namespace.hcp) 'Namespace.hh' 'Namespace.cc':output
 
 Namespace.hh==%Namespace/Namespace.hh
 Namespace.cc==%Namespace/Namespace.cc
 
-
 %test-Namespace==(test-Namespace.cc)+(%cxx-opts):auto.cxx.exe
+
 
 %splitSymbol==()+cmd=(../hcp-split) -l 2 (splitSymbol.hcp) 'splitSymbol.hh' 'splitSymbol.cc':output
 
 splitSymbol.hh==%splitSymbol/splitSymbol.hh
 splitSymbol.cc==%splitSymbol/splitSymbol.cc
 
-
 %test-splitSymbol==(test-splitSymbol.cc)+(%cxx-opts):auto.cxx.exe
+
+
+%augmentRootNamespace==()+cmd=(../hcp-split) -l 2 (augmentRootNamespace.hcp) 'augmentRootNamespace.hh' 'augmentRootNamespace.cc':output
+
+augmentRootNamespace.hh==%augmentRootNamespace/augmentRootNamespace.hh
+augmentRootNamespace.cc==%augmentRootNamespace/augmentRootNamespace.cc
+
+%test-augmentRootNamespace==(test-augmentRootNamespace.cc)+(%cxx-opts):auto.cxx.exe
+
 
 %tests.tree==<<
 ()+cmd=(%test-Namespace):exec.output
 ()+cmd=(%test-splitSymbol):exec.output
+()+cmd=(%test-augmentRootNamespace)+cmd=(../test-hcp-tags/test-1.json):exec.output

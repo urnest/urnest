@@ -322,6 +322,8 @@ extern AtLeastOne atLeastOne;
 extern PR parseAnyChar;
 PR parseOneOfChars(std::string const& chars) throw();
 
+PR charInRange(char const min, char const max) throw();
+
 PR parseUntil(PR const x) throw();
 
 PR parseUntil(PR const match, PR const until) throw();
@@ -353,6 +355,8 @@ extern PR class_decl;
 extern PR class_def;    // template/non-template
 extern PR anonymous_namespace;
 extern PR namespace_def;    // matches anonymous, so try anonymous_namespace first
+extern PR endOfFile; // matches end of file
+
 extern PR file;             // ensures at end of file
 
 // Parse text, balancing (), [], {}, stringLiteral and optionally <>, 

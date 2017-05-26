@@ -1,30 +1,21 @@
-// Copyright (c) 2017 Trevor Taylor
-//
-// Permission to use, copy, modify, distribute and sell this software
-// and its documentation for any purpose is hereby granted without fee,
-// provided that the above copyright notice appear in all.
-// Trevor Taylor makes no representations about the suitability of this
-// software for any purpose.  It is provided "as is" without express or
-// implied warranty.
-//
-#include <hcp/tags/Namespace.hh>
-
+#include <hcp/tags/augmentRootNamespace.hh>
+#line 1 "/home/xju/urnest/hcp/tags/augmentRootNamespace.hcp"
+#line 12
 #include <hcp/parser.hh> //impl
-#include <utility>
-
+#line 15
 #include <xju/stringToUInt.hh> //impl
 #include <hcp/ast.hh> //impl
 #include "xju/assert.hh" //impl
-#include <string>
+#line 19
 #include <xju/readFile.hh> //impl
-#include <xju/path.hh>
+#line 21
 #include <hcp/tags/splitSymbol.hh> //impl
 
 namespace hcp
 {
 namespace tags
 {
-
+#line 28
 namespace
 {
 using namespace hcp_parser;

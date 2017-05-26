@@ -12,6 +12,13 @@ namespace
   std::string const sep("::");
 }
 
+// split C++ symbol, possibly qualified, into namespace names and
+// (leaf) symbol name
+// eg a::b -> { {a},b }
+//    a::b::c ->  { {a,b},c }
+// ... note leading :: is ignored
+// eg ::a::b ->  { {a},b }
+//
 std::pair<std::vector<NamespaceName>,UnqualifiedSymbol> splitSymbol(
   std::string const& symbol) throw()
 {
