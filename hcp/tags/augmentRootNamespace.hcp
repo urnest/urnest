@@ -27,27 +27,28 @@ namespace tags
 
 namespace
 {
-using namespace hcp_parser;
+typedef hcp_parser::PR PR_;
+typedef hcp_parser::IR IR_;
 
-PR eatWhite(zeroOrMore*whitespaceChar);
-hcp_parser::PR stringValue(parseUntil(doubleQuote));
+PR_ eatWhite_(hcp_parser::zeroOrMore()*hcp_parser::whitespaceChar());
+PR_ stringValue(hcp_parser::parseUntil(hcp_parser::doubleQuote()));
 struct SymbolTag{};
 typedef hcp_ast::TaggedCompositeItem<SymbolTag> Symbol;
-PR symbol(new NamedParser<Symbol>(
+PR_ symbol(new hcp_parser::NamedParser<Symbol>(
             "symbol",
             stringValue));
 struct FileNameTag{};
 typedef hcp_ast::TaggedCompositeItem<FileNameTag> ParsedFileName;
-PR fileName(new NamedParser<ParsedFileName>(
+PR_ fileName(new hcp_parser::NamedParser<ParsedFileName>(
               "file name",
               stringValue));
 
 class ParsedLineNumber : public hcp_ast::CompositeItem
 {
 public:
-  ParsedLineNumber(std::vector<IR> const& items) throw(xju::Exception):
+  ParsedLineNumber(std::vector<hcp_ast::IR> const& items) throw(xju::Exception):
       CompositeItem(items),
-      lineNumber_(xju::stringToUInt(str()))
+      lineNumber_(xju::stringToUInt(hcp_ast::reconstruct(*this)))
   {
   }
   hcp::tags::LineNumber const lineNumber_;
@@ -57,49 +58,53 @@ public:
   }
 };
   
-PR digit(charInRange('0','9'));
-PR lineNumber(new NamedParser<ParsedLineNumber>(
+PR_ digit(hcp_parser::charInRange('0','9'));
+PR_ lineNumber(new hcp_parser::NamedParser<ParsedLineNumber>(
                 "line number",
                 // we do not use parse::atLeastOne as it uses
                 // CompositeItem, which is redundent
-                digit+zeroOrMore*digit));
+                digit+hcp_parser::zeroOrMore()*digit));
 
-PR openBrace(parseLiteral("{"));
-PR closeBrace(parseLiteral("}"));
-PR f(parseLiteral("f"));
-PR l(parseLiteral("l"));
-PR colon(parseLiteral(":"));
-PR comma(parseLiteral(","));
+PR_ openBrace(hcp_parser::parseLiteral("{"));
+PR_ closeBrace(hcp_parser::parseLiteral("}"));
+PR_ f(hcp_parser::parseLiteral("\"f\""));
+PR_ l(hcp_parser::parseLiteral("\"l\""));
+PR_ colon(hcp_parser::parseLiteral(":"));
+PR_ comma(hcp_parser::parseLiteral(","));
 
 struct LocationTag{};
 typedef hcp_ast::TaggedCompositeItem<LocationTag> ParsedLocation;
-PR location(new NamedParser<ParsedLocation>(
+PR_ location(new hcp_parser::NamedParser<ParsedLocation>(
               "location",
-              openBrace+eatWhite+doubleQuote+f+doubleQuote+eatWhite+
-              colon+eatWhite+
-              doubleQuote+fileName+doubleQuote+eatWhite+comma+eatWhite+
-              doubleQuote+l+doubleQuote+eatWhite+colon+eatWhite+
-              lineNumber+eatWhite+closeBrace+eatWhite));
+              openBrace+eatWhite_+f+eatWhite_+
+              colon+eatWhite_+
+              hcp_parser::doubleQuote()+fileName+hcp_parser::doubleQuote()+
+              eatWhite_+comma+eatWhite_+
+              l+eatWhite_+colon+eatWhite_+
+              lineNumber+eatWhite_+closeBrace+eatWhite_));
 
-PR openSquare(parseLiteral("["));
-PR closeSquare(parseLiteral("]"));
+PR_ openSquare(hcp_parser::parseLiteral("["));
+PR_ closeSquare(hcp_parser::parseLiteral("]"));
 
-PR locations=openSquare+eatWhite+location+eatWhite+
-  zeroOrMore*(comma+eatWhite+location+eatWhite)+
-  closeSquare+eatWhite;
+PR_ locations=openSquare+eatWhite_+location+eatWhite_+
+  hcp_parser::zeroOrMore()*(comma+eatWhite_+location+eatWhite_)+
+  closeSquare+eatWhite_;
 
 struct EntryTag{};
 typedef hcp_ast::TaggedCompositeItem<EntryTag> Entry;
-PR entry(new NamedParser<Entry>(
+PR_ entry(new hcp_parser::NamedParser<Entry>(
            "entry",
-           doubleQuote+symbol+doubleQuote+eatWhite+
-           colon+eatWhite+locations));
+           hcp_parser::doubleQuote()+symbol+hcp_parser::doubleQuote()+eatWhite_+
+           colon+eatWhite_+locations));
 
+PR_ nextEntry(comma+eatWhite_+entry);
 
-PR tagsFile=openBrace+eatWhite+
-  ((entry+eatWhite+zeroOrMore*(comma+eatWhite+entry)+closeBrace+eatWhite)|
-    (closeBrace+eatWhite))+
-  endOfFile;
+PR_ entries(entry+eatWhite_+hcp_parser::zeroOrMore()*nextEntry+closeBrace+eatWhite_);
+
+PR_ tagsFile=openBrace+eatWhite_+
+  (entries|
+    (closeBrace+eatWhite_))+
+  hcp_parser::endOfFile();
 
 template<class T>
 T const& find(hcp_ast::IRs::const_iterator begin,
@@ -107,7 +112,7 @@ T const& find(hcp_ast::IRs::const_iterator begin,
   throw() {
   hcp_ast::IRs::const_iterator const i(
     hcp_ast::find1stInTree(begin,end,
-                           [](IR x) { return x->isA<T>(); }));
+                           [](hcp_ast::IR x) { return x->isA<T>(); }));
   xju::assert_not_equal(i,end);
   return (*i)->asA<T>();
 }
@@ -142,14 +147,14 @@ void augmentRootNamespace(Namespace& rootNamespace,
                                         location.items_.end()));
             auto l(find<ParsedLineNumber>(location.items_.begin(),
                                           location.items_.end()));
-            auto fileName(xju::path::split(f.str()));
+            auto fileName(xju::path::split(reconstruct(f)));
             locations.push_back(hcp::tags::Location(
                                   fileName.first,
                                   fileName.second,
                                   l));
           }
         }
-        auto const ns(splitSymbol(symbol.str()));
+        auto const ns(splitSymbol(reconstruct(symbol)));
         rootNamespace.addSymbol(ns.first,ns.second,locations);
       }
     }

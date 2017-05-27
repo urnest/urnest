@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
 
     hcp_ast::CompositeItem root;
     hcp_parser::parse(root, hcp_parser::I(x.begin(), x.end()),
-                      hcp_parser::file, 
+                      hcp_parser::file(), 
                       options.parser_options_.trace_);
     hcp_parser::I at(x.begin(), x.end());
     unsigned u;

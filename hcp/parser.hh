@@ -41,7 +41,7 @@ typedef std::vector<IR> IRs;
 typedef std::pair<IRs, I> PV;
 
 class Parser;
-extern xju::Shared<Parser> file; // reference to whole-file parser
+xju::Shared<Parser> file() throw(); // reference to whole-file parser
 
 // The simplest parsing interface, which parses the specified
 // type of C++ element (default is "whole file") assumed to
@@ -51,7 +51,7 @@ extern xju::Shared<Parser> file; // reference to whole-file parser
 // 
 I parse(hcp_ast::CompositeItem& parent,
         I const startOfElement,
-        xju::Shared<Parser> = file,
+        xju::Shared<Parser> = file(),
         bool traceToStdout = false,
         bool irsAtEnd = false)
   throw(
@@ -248,7 +248,7 @@ class ZeroOrMore{};
 
 PR operator*(ZeroOrMore a, PR b) throw();
 
-extern ZeroOrMore zeroOrMore;
+ZeroOrMore zeroOrMore() throw();
 
 // result parses an a then a b
 PR operator+(PR a, PR b) throw();
@@ -318,8 +318,8 @@ public:
   }
 };
 
-extern AtLeastOne atLeastOne;
-extern PR parseAnyChar;
+PR atLeastOne(PR const x) throw();
+PR parseAnyChar() throw();
 PR parseOneOfChars(std::string const& chars) throw();
 
 PR charInRange(char const min, char const max) throw();
@@ -329,35 +329,32 @@ PR parseUntil(PR const x) throw();
 PR parseUntil(PR const match, PR const until) throw();
 
 PR parseLiteral(std::string const& x) throw();
-extern PR whitespaceChar;
-extern PR eatWhite;             // matches nothing
-extern PR nonBackslashQuote;    // to next backslash or quote
-extern PR nonQuote;
-extern PR doubleQuote;
-extern PR backslash;
-extern PR oneChar;
-extern PR stringLiteral;
-extern PR comments;
-extern PR hashIncludeImpl; // include preprocessor directive, with trailing "// impl" marker
-extern PR hashInclude; // include preprocessor directive
-extern PR hash;        // other preprocessor directive
-extern PR typedef_statement;    // restriction: no anon class/struct/enum
-extern PR using_statement;       // using statement
-extern PR scoped_enum_def;
-extern PR enum_def;
-extern PR type_name; // eg x::y::Z, X<T>::size, x::Y<Z>
-extern PR function_decl;
-extern PR template_function_def;
-extern PR function_def; // matches template, so try template_function_def first
-extern PR attr_decl;
-extern PR static_var_def;
-extern PR class_decl;
-extern PR class_def;    // template/non-template
-extern PR anonymous_namespace;
-extern PR namespace_def;    // matches anonymous, so try anonymous_namespace first
-extern PR endOfFile; // matches end of file
-
-extern PR file;             // ensures at end of file
+PR whitespaceChar() throw();
+PR whitespaceChar_() throw();
+PR eatWhite() throw();             // matches nothing
+PR doubleQuote() throw();
+PR backslash() throw();
+PR oneChar() throw();
+PR stringLiteral() throw();
+PR comments() throw();
+PR hashIncludeImpl() throw(); // include preprocessor directive, with trailing "// impl" marker
+PR hashInclude() throw(); // include preprocessor directive
+PR hash() throw();        // other preprocessor directive
+PR typedef_statement() throw();    // restriction: no anon class/struct/enum
+PR using_statement() throw();       // using statement
+PR scoped_enum_def() throw();
+PR enum_def() throw();
+PR type_name() throw(); // eg x::y::Z, X<T>::size, x::Y<Z>
+PR function_decl() throw();
+PR template_function_def() throw();
+PR function_def() throw(); // matches template, so try template_function_def first
+PR attr_decl() throw();
+PR static_var_def() throw();
+PR class_decl() throw();
+PR class_def() throw();    // template/non-template
+PR anonymous_namespace() throw();
+PR namespace_def() throw();    // matches anonymous, so try anonymous_namespace first
+PR endOfFile() throw(); // matches end of file
 
 // Parse text, balancing (), [], {}, stringLiteral and optionally <>, 
 // up to first match of until.

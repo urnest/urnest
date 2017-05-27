@@ -254,7 +254,7 @@ int main(int argc, char* argv[])
       try {
         hcp_parser::I at(x.begin(), x.end());
         hcp_ast::CompositeItem root;
-        at = hcp_parser::parse(root, at, hcp_parser::file);
+        at = hcp_parser::parse(root, at, hcp_parser::file());
         xju::assert_equal(root.items_.size(), 1U);
         std::map<Symbol,LineNumber> const symbols(
           genNamespaceContent(

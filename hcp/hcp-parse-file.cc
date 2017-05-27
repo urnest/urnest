@@ -107,22 +107,22 @@ int main(int argc, char* argv[])
       parseCommandLine(std::vector<std::string>(argv+1, argv+argc)));
 
     std::map<std::string, hcp_parser::PR> parsers;
-    std::pair<char const*, xju::Shared<hcp_parser::Parser> > pp("string literal", hcp_parser::stringLiteral);
+    std::pair<char const*, xju::Shared<hcp_parser::Parser> > pp("string literal", hcp_parser::stringLiteral());
     
     parsers.insert(pp);
-    parsers.insert(std::make_pair("comments", hcp_parser::comments));
-    parsers.insert(std::make_pair("typedef", hcp_parser::typedef_statement));
-    parsers.insert(std::make_pair("using", hcp_parser::using_statement));
-    parsers.insert(std::make_pair("enum definition", hcp_parser::enum_def));
-    parsers.insert(std::make_pair("function decl", hcp_parser::function_decl));
-    parsers.insert(std::make_pair("template function def", hcp_parser::template_function_def));
-    parsers.insert(std::make_pair("function def", hcp_parser::function_def));
-    parsers.insert(std::make_pair("attr decl", hcp_parser::attr_decl));
-    parsers.insert(std::make_pair("class decl", hcp_parser::class_decl));
-    parsers.insert(std::make_pair("class def", hcp_parser::class_def));
-    parsers.insert(std::make_pair("anonymous namespace", hcp_parser::anonymous_namespace));
-    parsers.insert(std::make_pair("namespace def", hcp_parser::namespace_def));
-    parsers.insert(std::make_pair("file", hcp_parser::file));
+    parsers.insert(std::make_pair("comments", hcp_parser::comments()));
+    parsers.insert(std::make_pair("typedef", hcp_parser::typedef_statement()));
+    parsers.insert(std::make_pair("using", hcp_parser::using_statement()));
+    parsers.insert(std::make_pair("enum definition", hcp_parser::enum_def()));
+    parsers.insert(std::make_pair("function decl", hcp_parser::function_decl()));
+    parsers.insert(std::make_pair("template function def", hcp_parser::template_function_def()));
+    parsers.insert(std::make_pair("function def", hcp_parser::function_def()));
+    parsers.insert(std::make_pair("attr decl", hcp_parser::attr_decl()));
+    parsers.insert(std::make_pair("class decl", hcp_parser::class_decl()));
+    parsers.insert(std::make_pair("class def", hcp_parser::class_def()));
+    parsers.insert(std::make_pair("anonymous namespace", hcp_parser::anonymous_namespace()));
+    parsers.insert(std::make_pair("namespace def", hcp_parser::namespace_def()));
+    parsers.insert(std::make_pair("file", hcp_parser::file()));
 
     if (cmd_line.second.size() != 1) {
       std::cout << "usage: " << argv[0] 

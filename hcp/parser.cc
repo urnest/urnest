@@ -113,7 +113,7 @@ PR optional(PR x) throw()
 class ParseZeroOrMore : public Parser
 {
 public:
-  PR x_;
+  PR const x_;
   
   virtual ~ParseZeroOrMore() throw() {
   }
@@ -756,7 +756,7 @@ public:
       switch(*end) {
       case '"':
       {
-        ParseResult const r2(stringLiteral->parse_(end, o));
+        ParseResult const r2(stringLiteral()->parse_(end, o));
         if (r2.failed()) {
           return r2;
         }
@@ -811,7 +811,7 @@ public:
       case '/':
       {
         ParseResult const r2(
-          comments->parse_(end,o));
+          comments()->parse_(end,o));
         if (!r2.failed()) {
           end=(*r2).second;
         }
@@ -865,6 +865,12 @@ PR parseUntil(PR match, PR const x) throw()
 PR parseLiteral(std::string const& x) throw()
 {
   return PR(new ParseLiteral(x));
+}
+
+ZeroOrMore zeroOrMore() throw()
+{
+  static ZeroOrMore zeroOrMore;
+  return zeroOrMore;
 }
 
 PR operator*(ZeroOrMore const, PR const b) throw()
@@ -928,73 +934,161 @@ PR operator!(PR x) throw()
   return xju::Shared<ParseNot>(new ParseNot(x));
 }
 
-PR operator*(AtLeastOne a, PR b) throw()
+PR atLeastOne(PR b) throw()
 {
   std::ostringstream s;
   s << "at least one occurrance of " << b->target();
   return PR(new NamedParser<hcp_ast::CompositeItem>(s.str(),
-                                                    b+(zeroOrMore*b)));
+                                                    b+(zeroOrMore()*b)));
 }
 
-PR parseAnyChar(new ParseAnyChar);
+PR parseAnyChar() throw()
+{
+  static PR parseAnyChar(new ParseAnyChar);
+  return parseAnyChar;
+}
 
-PR whitespaceChar(parseOneOfChars(" \t\n"));
-PR parseHash(new ParseHash);
+PR whitespaceChar() throw()
+{
+  static PR whitespaceChar(parseOneOfChars(" \t\n"));
+  return whitespaceChar;
+}
 
-PR lineComment(new NamedParser<hcp_ast::LineComment>(
-  "line comment",
-  parseLiteral("//")+
-  parseUntil(parseOneOfChars("\n"))+
-  (zeroOrMore*whitespaceChar)));
+PR parseHash() throw()
+{
+  static PR parseHash(new ParseHash);
+  return parseHash;
+}
 
-PR blockComment(new NamedParser<hcp_ast::BlockComment>(
-  "block comment",
-  parseLiteral("/*")+
-  parseUntil(parseLiteral("*/"))+
-  (zeroOrMore*whitespaceChar)));
 
-PR comments(new NamedParser<hcp_ast::Comments>(
-  "comments",
-  atLeastOne*(lineComment|blockComment)));
+PR lineComment() throw()
+{
+  static PR lineComment(new NamedParser<hcp_ast::LineComment>(
+                          "line comment",
+                          parseLiteral("//")+
+                          parseUntil(parseOneOfChars("\n"))+
+                          (zeroOrMore()*whitespaceChar())));
+  return lineComment;
+}
 
+  
+PR blockComment() throw()
+{
+  static PR blockComment(new NamedParser<hcp_ast::BlockComment>(
+                           "block comment",
+                           parseLiteral("/*")+
+                           parseUntil(parseLiteral("*/"))+
+                           (zeroOrMore()*whitespaceChar())));
+  return blockComment;
+}
+
+  
+PR comments() throw()
+{
+  static PR comments(new NamedParser<hcp_ast::Comments>(
+                       "comments",
+                       atLeastOne(lineComment()|blockComment())));
+  return comments;
+}
+
+  
 // matches nothing or something
-PR eatWhite(zeroOrMore*(whitespaceChar|comments));
+PR eatWhite() throw()
+{
+  static PR eatWhite(zeroOrMore()*(whitespaceChar()|comments()));
+  return eatWhite;
+}
 
-PR nonBackslashDoubleQuote(new ParseUntil(parseOneOfChars("\\\"")));
-PR nonDoubleQuote(new ParseUntil(parseOneOfChars("\"")));
+PR nonBackslashDoubleQuote() throw()
+{
+  static PR nonBackslashDoubleQuote(new ParseUntil(parseOneOfChars("\\\"")));
+  return nonBackslashDoubleQuote;
+}
 
-PR doubleQuote(parseOneOfChars("\""));
-PR backslash(parseOneOfChars("\\"));
-PR oneChar(new ParseAnyChar);
+PR nonDoubleQuote() throw()
+{
+  static PR nonDoubleQuote(new ParseUntil(parseOneOfChars("\"")));
+  return nonDoubleQuote;
+}
 
-PR octalDigit=charInRange('0', '7');
+  
+PR doubleQuote() throw()
+{
+  static PR doubleQuote(parseOneOfChars("\""));
+  return doubleQuote;
+}
 
-PR hexDigit=charInRange('0','9')|
-       charInRange('a','f')|
-       charInRange('A','F');
+PR backslash() throw()
+{
+  static PR backslash(parseOneOfChars("\\"));
+  return backslash;
+}
 
-PR stringEscapeSequence(
-  parseLiteral("\\")+(
-    parseOneOfChars("'\"?\\abfnrtv")|
-    (octalDigit+octalDigit+octalDigit)|
-    (octalDigit+octalDigit)|
-    octalDigit|
-    (parseLiteral("x")+atLeastOne*hexDigit)));
+PR oneChar() throw()
+{
+  static PR oneChar(new ParseAnyChar);
+  return oneChar;
+}
 
-PR s_char(
-  parseAnyCharExcept("\\\"\n")|
-  stringEscapeSequence);
 
-PR s_chars(new NamedParser<hcp_ast::S_Chars>(
-             "string literal characters",
-             parseUntil(s_char, doubleQuote)));
+PR octalDigit() throw()
+{
+  static PR octalDigit(charInRange('0', '7'));
+  return octalDigit;
+}
 
-PR stringLiteral(new NamedParser<hcp_ast::StringLiteral>(
-  "string literal",
-  atLeastOne*(doubleQuote+
-              s_chars+
-              doubleQuote+eatWhite)));
+  
+PR hexDigit() throw()
+{
+  static PR hexDigit(charInRange('0','9')|
+                     charInRange('a','f')|
+                     charInRange('A','F'));
+  return hexDigit;
+}
 
+  
+PR stringEscapeSequence() throw()
+{
+  static PR stringEscapeSequence(
+    parseLiteral("\\")+(
+      parseOneOfChars("'\"?\\abfnrtv")|
+      (octalDigit()+octalDigit()+octalDigit())|
+      (octalDigit()+octalDigit())|
+      octalDigit()|
+      (parseLiteral("x")+atLeastOne(hexDigit()))));
+  return stringEscapeSequence;
+}
+
+
+PR s_char() throw()
+{
+  static PR s_char(
+    parseAnyCharExcept("\\\"\n")|
+    stringEscapeSequence());
+  return s_char;
+}
+
+
+PR s_chars() throw()
+{
+  static PR s_chars(new NamedParser<hcp_ast::S_Chars>(
+                      "string literal characters",
+                      parseUntil(s_char(), doubleQuote())));
+  return s_chars;
+}
+
+
+PR stringLiteral() throw()
+{
+  static PR stringLiteral(new NamedParser<hcp_ast::StringLiteral>(
+                            "string literal",
+                            atLeastOne(doubleQuote()+
+                                       s_chars()+
+                                       doubleQuote()+eatWhite())));
+  return stringLiteral;
+}
+
+  
 //
 // to be able to split a combined .h and .cpp (ie a .hcp) file into
 // .h and .cpp parts, we need to choose whether each #include goes
@@ -1003,333 +1097,602 @@ PR stringLiteral(new NamedParser<hcp_ast::StringLiteral>(
 //   #include <x.h> //impl
 // ... which indicates #include <x.h> should go in the .cpp not the .h
 //
-PR hashIncludeImplMarker(
-  parseLiteral("//")+
-  (zeroOrMore*parseOneOfChars(" \t"))+
-  parseLiteral("impl")+
-  (zeroOrMore*parseOneOfChars(" \t"))+
-  parseLiteral("\n"));
+PR hashIncludeImplMarker() throw()
+{
+  static PR hashIncludeImplMarker(
+    parseLiteral("//")+
+    (zeroOrMore()*parseOneOfChars(" \t"))+
+    parseLiteral("impl")+
+    (zeroOrMore()*parseOneOfChars(" \t"))+
+    parseLiteral("\n"));
+  return hashIncludeImplMarker;
+}
 
-PR hashIncludeCommon(
-    parseHash+
-    (zeroOrMore*parseOneOfChars(" \t"))+
+
+PR hashIncludeCommon() throw()
+{
+  static PR hashIncludeCommon(
+    parseHash()+
+    (zeroOrMore()*parseOneOfChars(" \t"))+
     parseLiteral("include")+
-    parseUntil(parseLiteral("\n")|hashIncludeImplMarker));
+    parseUntil(parseLiteral("\n")|hashIncludeImplMarker()));
+  return hashIncludeCommon;
+}
 
-PR hashInclude(new NamedParser<hcp_ast::HashInclude>(
-  "#include",
-  hashIncludeCommon+
-  parseOneOfChars("\n")+
-  eatWhite));
+
+PR hashInclude() throw()
+{
+  static PR hashInclude(new NamedParser<hcp_ast::HashInclude>(
+                          "#include",
+                          hashIncludeCommon()+
+                          parseOneOfChars("\n")+
+                          eatWhite()));
+  return hashInclude;
+}
+
   
-PR hashIncludeImpl(new NamedParser<hcp_ast::HashIncludeImpl>(
-  "#include with //impl marker",
-  hashIncludeCommon+
-  hashIncludeImplMarker+
-  eatWhite));
+PR hashIncludeImpl() throw()
+{
+  static PR hashIncludeImpl(new NamedParser<hcp_ast::HashIncludeImpl>(
+                              "#include with //impl marker",
+                              hashIncludeCommon()+
+                              hashIncludeImplMarker()+
+                              eatWhite()));
+  return hashIncludeImpl;
+}
 
-PR hash(new NamedParser<hcp_ast::OtherPreprocessor>(
-  "other preprocessor directive",
-  parseHash+
-  parseUntil(parseOneOfChars("\n"))+
-  eatWhite));
-
-PR whitespace(new NamedParser<hcp_ast::Whitespace>(
-  "some whitespace",
-  atLeastOne*whitespaceChar));
-
-PR identifierContChar(charInRange('a', 'z')|
-                      charInRange('A', 'Z')|
-                      charInRange('0', '9')|
-                      parseOneOfChars("_"));
-
-PR unqualifiedName(
-  atLeastOne*(identifierContChar));
-
-PR defined_type(
-  new NamedParser<hcp_ast::DefinedType>(
-    "\"defined type\"",
-    unqualifiedName));
-
-PR typedef_keyword(parseLiteral("typedef")+!identifierContChar);
-
-PR typedef_statement(new NamedParser<hcp_ast::Typedef>(
-  "typedef statement",
-  typedef_keyword+
-  whitespace+
-  balanced(whitespace+defined_type+parseOneOfChars(";"))+
-  whitespace+defined_type+parseOneOfChars(";")+
-  eatWhite));
-
-PR using_keyword(parseLiteral("using")+!identifierContChar);
-
-PR using_statement(new NamedParser<hcp_ast::Using>(
-  "using statement",
-  using_keyword+
-  whitespace+
-  balanced(parseOneOfChars(";"))+
-  parseOneOfChars(";")+
-  eatWhite));
-
-PR enum_name(
-  new NamedParser<hcp_ast::EnumName>(
-    "\"enum name\"",
-    unqualifiedName));
-
-PR enum_keyword(parseLiteral("enum")+!identifierContChar);
-
-PR scoped_enum_def(new NamedParser<hcp_ast::EnumDef>(
-  "scoped enum definition",
-  enum_keyword+whitespace+(parseLiteral("struct")|
-                           parseLiteral("class"))+
-  whitespace+
-  optional(enum_name)+eatWhite+parseLiteral("{")+
-  balanced(parseOneOfChars("}"))+
-  parseOneOfChars("}")+eatWhite+
-  parseOneOfChars(";")+
-  eatWhite));
-
-PR enum_def(new NamedParser<hcp_ast::EnumDef>(
-  "enum definition",
-  enum_keyword+
-  whitespace+
-  optional(enum_name)+eatWhite+parseLiteral("{")+
-  balanced(parseOneOfChars("}"))+
-  parseOneOfChars("}")+eatWhite+
-  parseOneOfChars(";")+
-  eatWhite));
-
-PR bracketed(parseLiteral("(")+balanced(parseLiteral(")"))+parseLiteral(")"));
-
-PR unqualifiedTypeName(
-  unqualifiedName+
-  zeroOrMore*(parseOneOfChars("<")+
-              balanced(parseOneOfChars(">"), true)+
-              parseOneOfChars(">")));
   
-PR operator_name(
-  parseLiteral("operator")+
-  eatWhite+
-  (parseLiteral("<<")|
-   parseLiteral(">>")|
-   parseLiteral("==")|
-   parseLiteral("!=")|
-   parseLiteral("<=")|
-   parseLiteral(">=")|
-   parseLiteral("<")|
-   parseLiteral(">")|
-   parseLiteral("++")|
-   parseLiteral("--")|
-   parseLiteral("->")|
-   parseLiteral("+")|
-   parseLiteral("-")|
-   parseLiteral("|=")|
-   parseLiteral("&=")|
-   parseLiteral("|")|
-   parseLiteral("&")|
-   parseLiteral("[]")|
-   parseLiteral("!")|
-   parseLiteral("%=")|
-   parseLiteral("%")|
-   parseLiteral("=")|
-   parseLiteral("*"))+
-  eatWhite);
+PR hash() throw()
+{
+  static PR hash(new NamedParser<hcp_ast::OtherPreprocessor>(
+                   "other preprocessor directive",
+                   parseHash()+
+                   parseUntil(parseOneOfChars("\n"))+
+                   eatWhite()));
+  return hash;
+}
 
-PR destructor_name(
-  parseLiteral("~")+eatWhite+unqualifiedName);
-
-PR name(
-  zeroOrMore*(unqualifiedName+eatWhite+parseLiteral("::")+eatWhite)+
-  unqualifiedName+
-  eatWhite);
-
-PR type_name(
-  zeroOrMore*(unqualifiedTypeName+eatWhite+parseLiteral("::")+eatWhite)+
-  unqualifiedTypeName);
-
-PR conversion_operator_name(
-  parseLiteral("operator")+!identifierContChar+
-  balanced(parseOneOfChars("(")));
   
-PR keyword_static(
-  new NamedParser<hcp_ast::KeywordStatic>(
-    "\"static\"",
-    parseLiteral("static")));
+PR whitespace() throw()
+{
+  static PR whitespace(new NamedParser<hcp_ast::Whitespace>(
+                         "some whitespace",
+                         atLeastOne(whitespaceChar())));
+  return whitespace;
+}
 
-PR keyword_friend(
-  new NamedParser<hcp_ast::KeywordFriend>(
-    "\"friend\"",
-    parseLiteral("friend")));
 
-PR function_qualifiers(
-  new NamedParser<hcp_ast::FunctionQualifiers>(
-    "function qualifiers",
-    zeroOrMore*((parseLiteral("virtual")|
-                 parseLiteral("explicit")|
-                 parseLiteral("friend")|
-                 keyword_static)+eatWhite)));
+PR identifierContChar() throw()
+{
+  static PR identifierContChar(charInRange('a', 'z')|
+                               charInRange('A', 'Z')|
+                               charInRange('0', '9')|
+                               parseOneOfChars("_"));
+  return identifierContChar;
+}
 
-PR block(new NamedParser<hcp_ast::Block>(
-  "block",
-  parseLiteral("{")+
-  balanced(parseOneOfChars("}"))+
-  parseLiteral("}")));
 
-PR init_list(new NamedParser<hcp_ast::InitList>(
-  "initialiser list",
-  parseLiteral(":")+
-  balanced(parseOneOfChars("{;:"))));
+PR unqualifiedName() throw()
+{
+  static PR unqualifiedName(
+    atLeastOne(identifierContChar()));
+  return unqualifiedName;
+}
 
-PR catch_block(parseLiteral("catch")+eatWhite+bracketed+eatWhite+block);
 
-PR function_impl(
-  new NamedParser<hcp_ast::FunctionImpl>(
-    "function implementation",
-    eatWhite+
-    (zeroOrMore*(parseLiteral("try")+eatWhite)+
-     zeroOrMore*(init_list+eatWhite)+
-     block+
-     zeroOrMore*(eatWhite+catch_block))));
+PR defined_type() throw()
+{
+  static PR defined_type(
+    new NamedParser<hcp_ast::DefinedType>(
+      "\"defined type\"",
+      unqualifiedName()));
+  return defined_type;
+}
+
+
+PR typedef_keyword() throw()
+{
+  static PR typedef_keyword(parseLiteral("typedef")+!identifierContChar());
+  return typedef_keyword;
+}
+
+
+PR typedef_statement() throw()
+{
+  static PR typedef_statement(
+    new NamedParser<hcp_ast::Typedef>(
+      "typedef statement",
+      typedef_keyword()+
+      whitespace()+
+      balanced(whitespace()+defined_type()+parseOneOfChars(";"))+
+      whitespace()+defined_type()+parseOneOfChars(";")+
+      eatWhite()));
+  return typedef_statement;
+}
+
+PR using_keyword() throw()
+{
+  static PR using_keyword(parseLiteral("using")+!identifierContChar());
+  return using_keyword;
+}
+
+
+PR using_statement() throw()
+{
+  static PR using_statement(
+    new NamedParser<hcp_ast::Using>(
+      "using statement",
+      using_keyword()+
+      whitespace()+
+      balanced(parseOneOfChars(";"))+
+      parseOneOfChars(";")+
+      eatWhite()));
+  return using_statement;
+}
+
+  
+PR enum_name() throw()
+{
+  static PR enum_name(
+    new NamedParser<hcp_ast::EnumName>(
+      "\"enum name\"",
+      unqualifiedName()));
+  return enum_name;
+}
+
+
+PR enum_keyword() throw()
+{
+  static PR enum_keyword(parseLiteral("enum")+!identifierContChar());
+  return enum_keyword;
+}
+
+
+PR scoped_enum_def() throw()
+{
+  static PR scoped_enum_def(
+    new NamedParser<hcp_ast::EnumDef>(
+      "scoped enum definition",
+      enum_keyword()+whitespace()+(parseLiteral("struct")|
+                                   parseLiteral("class"))+
+      whitespace()+
+      optional(enum_name())+eatWhite()+parseLiteral("{")+
+      balanced(parseOneOfChars("}"))+
+      parseOneOfChars("}")+eatWhite()+
+      parseOneOfChars(";")+
+      eatWhite()));
+  return scoped_enum_def;
+}
+
+PR enum_def() throw()
+{
+  static PR enum_def(
+    new NamedParser<hcp_ast::EnumDef>(
+      "enum definition",
+      enum_keyword()+
+      whitespace()+
+      optional(enum_name())+eatWhite()+parseLiteral("{")+
+      balanced(parseOneOfChars("}"))+
+      parseOneOfChars("}")+eatWhite()+
+      parseOneOfChars(";")+
+      eatWhite()));
+  return enum_def;
+}
+
+  
+PR bracketed() throw()
+{
+  static PR bracketed(parseLiteral("(")+balanced(parseLiteral(")"))+parseLiteral(")"));
+  return bracketed;
+}
+
+
+PR unqualifiedTypeName() throw()
+{
+  static PR unqualifiedTypeName(
+    unqualifiedName()+
+    zeroOrMore()*(parseOneOfChars("<")+
+                  balanced(parseOneOfChars(">"), true)+
+                  parseOneOfChars(">")));
+  return unqualifiedTypeName;
+}
+
+  
+PR operator_name() throw()
+{
+  static PR operator_name(
+    parseLiteral("operator")+
+    eatWhite()+
+    (parseLiteral("<<")|
+     parseLiteral(">>")|
+     parseLiteral("==")|
+     parseLiteral("!=")|
+     parseLiteral("<=")|
+     parseLiteral(">=")|
+     parseLiteral("<")|
+     parseLiteral(">")|
+     parseLiteral("++")|
+     parseLiteral("--")|
+     parseLiteral("->")|
+     parseLiteral("+")|
+     parseLiteral("-")|
+     parseLiteral("|=")|
+     parseLiteral("&=")|
+     parseLiteral("|")|
+     parseLiteral("&")|
+     parseLiteral("[]")|
+     parseLiteral("!")|
+     parseLiteral("%=")|
+     parseLiteral("%")|
+     parseLiteral("=")|
+     parseLiteral("*"))+
+    eatWhite());
+  return operator_name;
+}
+
+
+PR destructor_name() throw()
+{
+  static PR destructor_name(
+    parseLiteral("~")+eatWhite()+unqualifiedName());
+  return destructor_name;
+}
+
+
+PR name() throw()
+{
+  static PR name(
+    zeroOrMore()*(unqualifiedName()+eatWhite()+parseLiteral("::")+eatWhite())+
+    unqualifiedName()+
+    eatWhite());
+  return name;
+}
+
+
+PR type_name() throw()
+{
+  static PR type_name(
+    zeroOrMore()*(unqualifiedTypeName()+eatWhite()+parseLiteral("::")+eatWhite())+
+    unqualifiedTypeName());
+  return type_name;
+}
+
+  
+PR conversion_operator_name() throw()
+{
+  static PR conversion_operator_name(
+    parseLiteral("operator")+!identifierContChar()+
+    balanced(parseOneOfChars("(")));
+  return conversion_operator_name;
+}
+
+  
+PR keyword_static() throw()
+{
+  static PR keyword_static(
+    new NamedParser<hcp_ast::KeywordStatic>(
+      "\"static\"",
+      parseLiteral("static")));
+  return keyword_static;
+}
+
+
+PR keyword_friend() throw()
+{
+  static PR keyword_friend(
+    new NamedParser<hcp_ast::KeywordFriend>(
+      "\"friend\"",
+      parseLiteral("friend")));
+  return keyword_friend;
+}
+
+
+PR function_qualifiers() throw()
+{
+  static PR function_qualifiers(
+    new NamedParser<hcp_ast::FunctionQualifiers>(
+      "function qualifiers",
+      zeroOrMore()*((parseLiteral("virtual")|
+                     parseLiteral("explicit")|
+                     parseLiteral("friend")|
+                     keyword_static())+eatWhite())));
+  return function_qualifiers;
+}
+
+
+PR block() throw()
+{
+  static PR block(new NamedParser<hcp_ast::Block>(
+                    "block",
+                    parseLiteral("{")+
+                    balanced(parseOneOfChars("}"))+
+                    parseLiteral("}")));
+  return block;
+}
+
+
+PR init_list() throw()
+{
+  static PR init_list(new NamedParser<hcp_ast::InitList>(
+                        "initialiser list",
+                        parseLiteral(":")+
+                        balanced(parseOneOfChars("{;:"))));
+  return init_list;
+}
+
+
+PR catch_block() throw()
+{
+  static PR catch_block(parseLiteral("catch")+eatWhite()+bracketed()+eatWhite()+block());
+  return catch_block;
+}
+
+
+PR function_impl() throw()
+{
+  static PR function_impl(
+    new NamedParser<hcp_ast::FunctionImpl>(
+      "function implementation",
+      eatWhite()+
+      (zeroOrMore()*(parseLiteral("try")+eatWhite())+
+       zeroOrMore()*(init_list()+eatWhite())+
+       block()+
+       zeroOrMore()*(eatWhite()+catch_block()))));
+  return function_impl;
+}
+
                 
-PR operator_keyword(parseLiteral("operator")+!identifierContChar);
+PR operator_keyword() throw()
+{
+  static PR operator_keyword(parseLiteral("operator")+!identifierContChar());
+  return operator_keyword;
+}
 
-PR function_proto(
-  function_qualifiers+
-  balanced(parseOneOfChars("();{}[]")|
-           ((operator_name|
-             conversion_operator_name|
-             destructor_name|
-             type_name+
-             eatWhite)+parseOneOfChars("(")))+
-  new NamedParser<hcp_ast::FunctionName>(
-    "function name",
-    (operator_name|
-     conversion_operator_name|
-     destructor_name|
-     type_name))+
-  eatWhite+
-  bracketed+
-  balanced((eatWhite+parseOneOfChars(";"))|function_impl));
 
-PR function_decl(new NamedParser<hcp_ast::FunctionDecl>(
-  "function declaration",
-  function_proto+
-  (eatWhite+parseOneOfChars(";"))+
-  eatWhite));
+PR function_proto() throw()
+{
+  static PR function_proto(
+    function_qualifiers()+
+    balanced(parseOneOfChars("();{}[]")|
+             ((operator_name()|
+               conversion_operator_name()|
+               destructor_name()|
+               type_name()+
+               eatWhite())+parseOneOfChars("(")))+
+    new NamedParser<hcp_ast::FunctionName>(
+      "function name",
+      (operator_name()|
+       conversion_operator_name()|
+       destructor_name()|
+       type_name()))+
+    eatWhite()+
+    bracketed()+
+    balanced((eatWhite()+parseOneOfChars(";"))|function_impl()));
+  return function_proto;
+}
 
-PR templateKeyword(parseLiteral("template"));
 
-PR template_empty_preamble(
-  new NamedParser<hcp_ast::TemplateEmptyPreamble>(
-    "template empty preamble",
-    templateKeyword+
-    eatWhite+
-    parseOneOfChars("<")+
-    eatWhite+
-    parseOneOfChars(">")+
-    eatWhite));
+PR function_decl() throw()
+{
+  static PR function_decl(new NamedParser<hcp_ast::FunctionDecl>(
+                            "function declaration",
+                            function_proto()+
+                            (eatWhite()+parseOneOfChars(";"))+
+                            eatWhite()));
+  return function_decl;
+}
 
-PR template_preamble(
-  !template_empty_preamble+(
-    templateKeyword+
-    eatWhite+
-    parseOneOfChars("<")+
-    balanced(parseOneOfChars(">"), true)+
-    parseOneOfChars(">")+
-    eatWhite));
-
-PR function_def(new NamedParser<hcp_ast::FunctionDef>(
-  "function definition",
-  function_proto+
-  function_impl+
-  new NamedParser<hcp_ast::WhiteSpace>("whitespace",eatWhite)));
-
-PR template_function_def(new NamedParser<hcp_ast::TemplateFunctionDef>(
-  "template function definition",
-  atLeastOne*template_preamble+
-  function_def));
-
-PR class_struct_union_literal(
-  (parseLiteral("class")|parseLiteral("struct")|parseLiteral("union"))+
-  !identifierContChar);
-
-PR not_class_struct_union_literal(
-  !class_struct_union_literal);
-
-PR class_proto(
-  zeroOrMore*(template_preamble|template_empty_preamble)+
-  class_struct_union_literal+
-  whitespace+
-  new NamedParser<hcp_ast::ClassName>(
-    "class name",
-    type_name)+
-  eatWhite+
-  balanced(parseOneOfChars("{;")));
-
-PR class_decl(new NamedParser<hcp_ast::ClassForwardDecl>(
-  "class forward-declaration",
-  class_proto+
-  parseOneOfChars(";")+
-  eatWhite));
-
-PR attr_decl(new NamedParser<hcp_ast::AttrDecl>(
-  "attr declaration",
-  balanced(parseOneOfChars("{}();"))+
-  parseOneOfChars(";")+
-  eatWhite));
-
-PR var_name(new NamedParser<hcp_ast::VarName>(
-              "var name",
-              name));
-
-PR array_decl(
-  parseOneOfChars("[")+
-  balanced(parseOneOfChars("]"))+
-  parseOneOfChars("]")+
-  eatWhite);
-
-PR var_intro(
-  balanced(whitespaceChar+var_name+eatWhite+optional(array_decl)+eatWhite+
-           parseOneOfChars("=;"))+
-  whitespaceChar+var_name+eatWhite+optional(array_decl)+eatWhite);
-
-PR static_var_intro(
-  keyword_static+
-  whitespaceChar+
-  eatWhite+
-  var_intro);
   
-PR var_initialiser(
-  new NamedParser<hcp_ast::VarInitialiser>(
-    "static variable initialiser",
-    
-    (parseOneOfChars("=")+balanced(parseOneOfChars(";")))));
+PR templateKeyword() throw()
+{
+  static PR templateKeyword(parseLiteral("template"));
+  return templateKeyword;
+}
 
-PR static_var_def(new NamedParser<hcp_ast::StaticVarDef>(
-  "static variable definition",
-  static_var_intro+
-  optional(var_initialiser)+
-  parseOneOfChars(";")+
-  eatWhite));
 
-PR global_var_def(new NamedParser<hcp_ast::GlobalVarDef>(
-  "global variable definition",
-  var_intro+
-  optional(var_initialiser)+
-  parseOneOfChars(";")+
-  eatWhite));
+PR template_empty_preamble() throw()
+{
+  static PR template_empty_preamble(
+    new NamedParser<hcp_ast::TemplateEmptyPreamble>(
+      "template empty preamble",
+      templateKeyword()+
+      eatWhite()+
+      parseOneOfChars("<")+
+      eatWhite()+
+      parseOneOfChars(">")+
+      eatWhite()));
+  return template_empty_preamble;
+}
 
-PR access_modifier(new NamedParser<hcp_ast::AccessModifier>(
-  "public/private/protected: marker",
-  (parseLiteral("public")|
-   parseLiteral("private")|
-   parseLiteral("protected"))+
-  eatWhite+
-  parseOneOfChars(":")+
-  eatWhite));
 
-PR not_typedef_using_enum_keyword(
-  !(typedef_keyword|using_keyword|enum_keyword));
+PR template_preamble() throw()
+{
+  static PR template_preamble(
+    !template_empty_preamble()+(
+      templateKeyword()+
+      eatWhite()+
+      parseOneOfChars("<")+
+      balanced(parseOneOfChars(">"), true)+
+      parseOneOfChars(">")+
+      eatWhite()));
+  return template_preamble;
+}
+
+
+PR function_def() throw()
+{
+  static PR function_def(
+    new NamedParser<hcp_ast::FunctionDef>(
+      "function definition",
+      function_proto()+
+      function_impl()+
+      new NamedParser<hcp_ast::WhiteSpace>("whitespace",eatWhite())));
+  return function_def;
+}
+
+  
+PR template_function_def() throw()
+{
+  static PR template_function_def(new NamedParser<hcp_ast::TemplateFunctionDef>(
+                                    "template function definition",
+                                    atLeastOne(template_preamble())+
+                                    function_def()));
+  return template_function_def;
+}
+
+  
+PR class_struct_union_literal() throw()
+{
+  static PR class_struct_union_literal(
+    (parseLiteral("class")|parseLiteral("struct")|parseLiteral("union"))+
+    !identifierContChar());
+  return class_struct_union_literal;
+}
+
+
+PR not_class_struct_union_literal() throw()
+{
+  static PR not_class_struct_union_literal(
+    !class_struct_union_literal());
+  return not_class_struct_union_literal;
+}
+
+
+PR class_proto() throw()
+{
+  static PR class_proto(
+    zeroOrMore()*(template_preamble()|template_empty_preamble())+
+    class_struct_union_literal()+
+    whitespace()+
+    new NamedParser<hcp_ast::ClassName>(
+      "class name",
+      type_name())+
+    eatWhite()+
+    balanced(parseOneOfChars("{;")));
+  return class_proto;
+}
+
+
+PR class_decl() throw()
+{
+  static PR class_decl(new NamedParser<hcp_ast::ClassForwardDecl>(
+                         "class forward-declaration",
+                         class_proto()+
+                         parseOneOfChars(";")+
+                         eatWhite()));
+  return class_decl;
+}
+
+  
+PR attr_decl() throw()
+{
+  static PR attr_decl(new NamedParser<hcp_ast::AttrDecl>(
+                        "attr declaration",
+                        balanced(parseOneOfChars("{}();"))+
+                        parseOneOfChars(";")+
+                        eatWhite()));
+  return attr_decl;
+}
+
+  
+PR var_name() throw()
+{
+  static PR var_name(new NamedParser<hcp_ast::VarName>(
+                       "var name",
+                       name()));
+  return var_name;
+}
+
+
+PR array_decl() throw()
+{
+  static PR array_decl(
+    parseOneOfChars("[")+
+    balanced(parseOneOfChars("]"))+
+    parseOneOfChars("]")+
+    eatWhite());
+  return array_decl;
+}
+
+
+PR var_intro() throw()
+{
+  static PR var_intro(
+    balanced(whitespaceChar()+var_name()+eatWhite()+
+             optional(array_decl())+eatWhite()+
+             parseOneOfChars("=;"))+
+    whitespaceChar()+var_name()+eatWhite()+optional(array_decl())+eatWhite());
+  return var_intro;
+}
+
+
+PR static_var_intro() throw()
+{
+  static PR static_var_intro(
+    keyword_static()+
+    whitespaceChar()+
+    eatWhite()+
+    var_intro());
+  return static_var_intro;
+}
+
+  
+PR var_initialiser() throw()
+{
+  static PR var_initialiser(
+    new NamedParser<hcp_ast::VarInitialiser>(
+      "static variable initialiser",
+      
+      (parseOneOfChars("=")+balanced(parseOneOfChars(";")))));
+  return var_initialiser;
+}
+
+
+PR static_var_def() throw()
+{
+  static PR static_var_def(new NamedParser<hcp_ast::StaticVarDef>(
+                             "static variable definition",
+                             static_var_intro()+
+                             optional(var_initialiser())+
+                             parseOneOfChars(";")+
+                             eatWhite()));
+  return static_var_def;
+}
+
+  
+PR global_var_def() throw()
+{
+  static PR global_var_def(new NamedParser<hcp_ast::GlobalVarDef>(
+                             "global variable definition",
+                             var_intro()+
+                             optional(var_initialiser())+
+                             parseOneOfChars(";")+
+                             eatWhite()));
+  return global_var_def;
+}
+
+
+PR access_modifier() throw()
+{
+  static PR access_modifier(new NamedParser<hcp_ast::AccessModifier>(
+                              "public/private/protected: marker",
+                              (parseLiteral("public")|
+                               parseLiteral("private")|
+                               parseLiteral("protected"))+
+                              eatWhite()+
+                              parseOneOfChars(":")+
+                              eatWhite()));
+  return access_modifier;
+}
+
+
+PR not_typedef_using_enum_keyword() throw()
+{
+  static PR not_typedef_using_enum_keyword(
+    !(typedef_keyword()|using_keyword()|enum_keyword()));
+  return not_typedef_using_enum_keyword;
+}
+
 
 namespace
 {
@@ -1362,33 +1725,33 @@ public:
   PR p_;
   
   ParseClass() throw():
-    x_(class_proto+
+  x_(class_proto()+
        parseOneOfChars("{")+
-       eatWhite+
+       eatWhite()+
        PR(new NamedParser<hcp_ast::ClassMembers>(
             "class members",
-            parseUntil(comments|
-                       access_modifier|
+            parseUntil(comments()|
+                       access_modifier()|
                        PR(new SelfParser(*this))|
-                       class_decl|
-                       (not_class_struct_union_literal+(
-                         typedef_statement|
-                         scoped_enum_def|
-                         enum_def|
-                         (not_typedef_using_enum_keyword+(
-                           function_decl|
-                           template_function_def|
-                           function_def|
-                           static_var_def|
-                           attr_decl)))),
+                       class_decl()|
+                       (not_class_struct_union_literal()+(
+                         typedef_statement()|
+                         scoped_enum_def()|
+                         enum_def()|
+                         (not_typedef_using_enum_keyword()+(
+                           function_decl()|
+                           template_function_def()|
+                           function_def()|
+                           static_var_def()|
+                           attr_decl())))),
                        parseOneOfChars("}"))))+
        parseOneOfChars("}")+
-       eatWhite+
+       eatWhite()+
        parseOneOfChars(";")+
-       eatWhite),
+       eatWhite()),
     tp_(new NamedParser<hcp_ast::TemplateClassDef>(
       "template class definition",
-      template_preamble+
+      template_preamble()+
       x_)),
     p_(new NamedParser<hcp_ast::ClassDef>(
       "non-template class definition",
@@ -1410,42 +1773,68 @@ public:
 };
 }
 
-PR class_def(new ParseClass);
+PR class_def() throw()
+{
+  static PR class_def(new ParseClass);
+  return class_def;
+}
 
-PR namespace_leaf(
-  comments|
-  hashIncludeImpl|
-  hashInclude|
-  hash|
-  class_def| // note recursive
-  class_decl|
-  (not_class_struct_union_literal+(
-    typedef_statement|
-    using_statement|
-    scoped_enum_def|
-    enum_def|
-    (not_typedef_using_enum_keyword+(
-      whitespace| //REVISIT: remove?
-      function_decl| // inc. template
-      template_function_def|
-      function_def|
-      global_var_def|
-      attr_decl)))));
+  
+PR namespace_leaf() throw()
+{
+  static PR namespace_leaf(
+    comments()|
+    hashIncludeImpl()|
+    hashInclude()|
+    hash()|
+    class_def()| // note recursive
+    class_decl()|
+    (not_class_struct_union_literal()+(
+      typedef_statement()|
+      using_statement()|
+      scoped_enum_def()|
+      enum_def()|
+      (not_typedef_using_enum_keyword()+(
+        whitespace()| //REVISIT: remove?
+        function_decl()| // inc. template
+        template_function_def()|
+        function_def()|
+        global_var_def()|
+        attr_decl())))));
+  return namespace_leaf;
+}
 
-PR namespace_keyword(parseLiteral("namespace")+!identifierContChar);
 
-PR not_namespace_keyword(!namespace_keyword);
+PR namespace_keyword() throw()
+{
+  static PR namespace_keyword(parseLiteral("namespace")+!identifierContChar());
+  return namespace_keyword;
+}
 
-PR anonymous_namespace(new NamedParser<hcp_ast::AnonymousNamespace>(
-  "anonymous namespace",
-  namespace_keyword+
-  eatWhite+
-  parseOneOfChars("{")+
-  eatWhite+
-  parseUntil(namespace_leaf, parseOneOfChars("}"))+
-  parseOneOfChars("}")+
-  eatWhite));
 
+PR not_namespace_keyword() throw()
+{
+  static PR not_namespace_keyword(!namespace_keyword());
+  return not_namespace_keyword;
+}
+
+
+PR anonymous_namespace() throw()
+{
+  static PR anonymous_namespace(
+    new NamedParser<hcp_ast::AnonymousNamespace>(
+      "anonymous namespace",
+      namespace_keyword()+
+      eatWhite()+
+      parseOneOfChars("{")+
+      eatWhite()+
+      parseUntil(namespace_leaf(), parseOneOfChars("}"))+
+      parseOneOfChars("}")+
+      eatWhite()));
+  return anonymous_namespace;
+}
+
+  
 namespace
 {
 class ParseNamespace : public NamedParser<hcp_ast::NamespaceDef>
@@ -1456,30 +1845,35 @@ public:
   ParseNamespace() throw():
     NamedParser<hcp_ast::NamespaceDef>(
       "namespace",(
-        namespace_keyword+
-        whitespace+
+        namespace_keyword()+
+        whitespace()+
         new NamedParser<hcp_ast::NamespaceName>(
           "namespace name",
-          unqualifiedName)+
-        eatWhite+
+          unqualifiedName())+
+        eatWhite()+
         parseOneOfChars("{")+
-        eatWhite+
+        eatWhite()+
         new NamedParser<hcp_ast::NamespaceMembers>(
           "namespace members",
           parseUntil((PR(new SelfParser(*this))|
-                      anonymous_namespace|
-                      (not_namespace_keyword+namespace_leaf))+
-                     eatWhite,
+                      anonymous_namespace()|
+                      (not_namespace_keyword()+namespace_leaf()))+
+                     eatWhite(),
                      parseOneOfChars("}")))+
         parseOneOfChars("}")+
-        eatWhite)) {
+        eatWhite())) {
   }
 };
 
 }
 
-PR namespace_def(new ParseNamespace);
+PR namespace_def() throw()
+{
+  static PR namespace_def(new ParseNamespace);
+  return namespace_def;
+}
 
+  
 namespace
 {
 class ParseEndOfFile : public Parser
@@ -1528,16 +1922,25 @@ public:
 };
 }
 
-PR endOfFile(new ParseEndOfFile);
+PR endOfFile() throw()
+{
+  static PR endOfFile(new ParseEndOfFile);
+  return endOfFile;
+}
 
-PR file(new NamedParser<hcp_ast::File>(
-  "file",
-  eatWhite+
-  parseUntil(namespace_def|
-             anonymous_namespace|
-             (not_namespace_keyword+namespace_leaf),
-             endOfFile)+
-  endOfFile));
+  
+PR file() throw()
+{
+  static PR file(new NamedParser<hcp_ast::File>(
+                   "file",
+                   eatWhite()+
+                   parseUntil(namespace_def()|
+                              anonymous_namespace()|
+                              (not_namespace_keyword()+namespace_leaf()),
+                              endOfFile())+
+                   endOfFile()));
+  return file;
+}
 
 I parse(hcp_ast::CompositeItem& parent,
         I const startOfElement,

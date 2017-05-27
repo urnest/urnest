@@ -51,20 +51,20 @@ void test1()
   hcp_parser::Cache cache(new hcp_parser::CacheVal());
   hcp_parser::Options const options(false, cache, false);
   std::string const x("ab");
-  hcp_parser::PV const y(*hcp_parser::parseAnyChar->parse_(
+  hcp_parser::PV const y(*hcp_parser::parseAnyChar()->parse_(
     hcp_parser::I(x.begin(), x.end()),
     options));
   xju::assert_equal(reconstruct(y.first), "a");
   xju::assert_equal(y.second.x_, x.begin()+1);
 
-  hcp_parser::PV const y2(*hcp_parser::parseAnyChar->parse_(
+  hcp_parser::PV const y2(*hcp_parser::parseAnyChar()->parse_(
     y.second,
     options));
   xju::assert_equal(reconstruct(y2.first), "b");
   xju::assert_equal(y2.second.x_, x.begin()+2);
   
   hcp_parser::ParseResult const r(
-    hcp_parser::parseAnyChar->parse_(
+    hcp_parser::parseAnyChar()->parse_(
       y2.second,
       options));
   xju::assert_equal(r.failed(), true);
@@ -72,9 +72,9 @@ void test1()
 
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
-  at = parse(root, at, hcp_parser::parseAnyChar);
+  at = parse(root, at, hcp_parser::parseAnyChar());
   xju::assert_equal(at.x_, x.begin()+1);
-  at = parse(root, at, hcp_parser::parseAnyChar);
+  at = parse(root, at, hcp_parser::parseAnyChar());
   xju::assert_equal(at.x_, x.begin()+2);
   
   xju::assert_equal(reconstruct(root), "ab");
@@ -83,7 +83,7 @@ void test1()
     hcp_parser::I const y3(parse(
       root,
       at,
-      hcp_parser::parseAnyChar));
+      hcp_parser::parseAnyChar()));
     xju::assert_not_equal(y3, y3);
   }
   catch(xju::Exception const& e) {
@@ -97,7 +97,7 @@ void test2()
   std::string const x("ab");
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
-  at = parse(root, at, hcp_parser::zeroOrMore*hcp_parser::parseAnyChar);
+  at = parse(root, at, hcp_parser::zeroOrMore()*hcp_parser::parseAnyChar());
   xju::assert_equal(reconstruct(root), "ab");
   xju::assert_equal(at.atEnd(), true);
 }
@@ -112,15 +112,15 @@ void test3()
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
 
-  at = parse(root, at, (hcp_parser::parseAnyChar+
-                        hcp_parser::parseAnyChar));
+  at = parse(root, at, (hcp_parser::parseAnyChar()+
+                        hcp_parser::parseAnyChar()));
   xju::assert_equal(reconstruct(root), "ab");
   xju::assert_equal(at.atEnd(), true);
 
   try {
-    hcp_parser::PR p(hcp_parser::parseAnyChar+
-                     hcp_parser::parseAnyChar+
-                     hcp_parser::parseAnyChar);
+    hcp_parser::PR p(hcp_parser::parseAnyChar()+
+                     hcp_parser::parseAnyChar()+
+                     hcp_parser::parseAnyChar());
     at = parse(root, at, p);
     xju::assert_not_equal(at, at);
   }
@@ -136,7 +136,7 @@ void test4()
   std::string const x("abcd");
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
-  at = parse(root, at, (hcp_parser::zeroOrMore*hcp_parser::parseOneOfChars("abc")));
+  at = parse(root, at, (hcp_parser::zeroOrMore()*hcp_parser::parseOneOfChars("abc")));
   xju::assert_equal(reconstruct(root), "abc");
   xju::assert_equal(at.atEnd(), false);
 
@@ -160,7 +160,7 @@ void test5()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     at = parse(
-      root, at, (hcp_parser::zeroOrMore*
+      root, at, (hcp_parser::zeroOrMore()*
                  (hcp_parser::parseOneOfChars("ab")|
                   hcp_parser::parseOneOfChars("c"))));
     xju::assert_equal(reconstruct(root), "abca");
@@ -199,7 +199,7 @@ void test5()
     std::string const x("abcad");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
-    hcp_parser::PR p(hcp_parser::zeroOrMore*
+    hcp_parser::PR p(hcp_parser::zeroOrMore()*
                      (hcp_parser::parseOneOfChars("ab")|
                       hcp_parser::parseOneOfChars("c")|
                       hcp_parser::parseOneOfChars("d")));
@@ -216,7 +216,7 @@ void test6()
   std::string const x("abcd");
   hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
-  at = parse(root, at, (hcp_parser::atLeastOne*hcp_parser::parseOneOfChars("abc")));
+  at = parse(root, at, (hcp_parser::atLeastOne(hcp_parser::parseOneOfChars("abc"))));
   xju::assert_equal(reconstruct(root), "abc");
   xju::assert_equal(at.atEnd(), false);
 }
@@ -230,7 +230,7 @@ void test7()
     std::string const x("abcd");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
-    hcp_parser::PR p(hcp_parser::atLeastOne*hcp_parser::parseOneOfChars("e"));
+    hcp_parser::PR p(hcp_parser::atLeastOne(hcp_parser::parseOneOfChars("e")));
     at = parse(root, at, p);
     xju::assert_abort();
   }
@@ -312,7 +312,7 @@ void test10()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     at = parse(
-      root, at, hcp_parser::whitespaceChar);
+      root, at, hcp_parser::whitespaceChar());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -330,7 +330,7 @@ void test11()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::stringLiteral);
+    at = parse(root, at, hcp_parser::stringLiteral());
     xju::assert_equal(reconstruct(root), "\"abcd\"");
     xju::assert_equal(at.atEnd(), true);
   }
@@ -341,7 +341,7 @@ void test11()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::stringLiteral);
+    at = parse(root, at, hcp_parser::stringLiteral());
     xju::assert_equal(reconstruct(root), "\"\"");
     xju::assert_equal(at.atEnd(), true);
   }
@@ -353,7 +353,7 @@ void test11()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::stringLiteral);
+    at = parse(root, at, hcp_parser::stringLiteral());
     xju::assert_equal(reconstruct(root), "\"\\\"\"");
     xju::assert_equal(at.atEnd(), true);
   }
@@ -368,7 +368,7 @@ void test11()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::stringLiteral);
+    at = parse(root, at, hcp_parser::stringLiteral());
     xju::assert_equal(reconstruct(root), "\"\\\"de\"");
     xju::assert_equal(at.atEnd(), true);
   }
@@ -383,7 +383,7 @@ void test11()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::stringLiteral);
+    at = parse(root, at, hcp_parser::stringLiteral());
     xju::assert_equal(reconstruct(root), "\"ab\\\"de\"");
     xju::assert_equal(at.atEnd(), true);
   }
@@ -398,7 +398,7 @@ void test11()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::stringLiteral);
+    at = parse(root, at, hcp_parser::stringLiteral());
     xju::assert_equal(reconstruct(root), "\"ab\\\"d\\ne\"");
     xju::assert_equal(at.atEnd(), true);
   }
@@ -413,7 +413,7 @@ void test11()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::stringLiteral);
+    at = parse(root, at, hcp_parser::stringLiteral());
     xju::assert_equal(reconstruct(root), "\"ab\\\\d\\ne\"   ");
     xju::assert_equal(at.atEnd(), true);
   }
@@ -428,7 +428,7 @@ void test11()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::stringLiteral);
+    at = parse(root, at, hcp_parser::stringLiteral());
     xju::assert_equal(reconstruct(root), "\"abcde\"  \n \"fred\"  ");
     xju::assert_equal(at.atEnd(), true);
   }
@@ -443,7 +443,7 @@ void test11()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::stringLiteral);
+    at = parse(root, at, hcp_parser::stringLiteral());
     xju::assert_equal(reconstruct(root), "\"abcde\"  \n \"fred\"\n\"jock\"  ");
     xju::assert_equal(at.atEnd(), true);
   }
@@ -458,7 +458,7 @@ void test11()
     std::string const x("\"abcde\" \"fred\"");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
-    at = parse(root, at, hcp_parser::stringLiteral);
+    at = parse(root, at, hcp_parser::stringLiteral());
     xju::assert_equal(reconstruct(root), "\"abcde\" \"fred\"");
     xju::assert_equal(at.atEnd(), true);
   }
@@ -472,7 +472,7 @@ void test11()
     hcp_parser::Options const options(false, cache, false);
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
-    at = parse(root, at, hcp_parser::stringLiteral);
+    at = parse(root, at, hcp_parser::stringLiteral());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -489,7 +489,7 @@ void test11()
     hcp_parser::Options const options(false, cache, false);
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
-    at = parse(root, at, hcp_parser::stringLiteral);
+    at = parse(root, at, hcp_parser::stringLiteral());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -506,7 +506,7 @@ void test11()
     hcp_parser::Options const options(false, cache, false);
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
-    at = parse(root, at, hcp_parser::stringLiteral);
+    at = parse(root, at, hcp_parser::stringLiteral());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -560,7 +560,7 @@ void test13()
   hcp_parser::I at(x.begin(), x.end());
   
   at = parse(
-    root, at, hcp_parser::comments);
+    root, at, hcp_parser::comments());
   xju::assert_equal(reconstruct(root), "// comment \n   ");
   xju::assert_equal(at.atEnd(), true);
   try {
@@ -570,7 +570,7 @@ void test13()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::comments);
+    at = parse(root, at, hcp_parser::comments());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -589,7 +589,7 @@ void test14()
     hcp_parser::I at(x.begin(), x.end());
     
     at = parse(
-      root, at, hcp_parser::hash);
+      root, at, hcp_parser::hash());
     xju::assert_equal(reconstruct(root), "#if\n  ");
     xju::assert_equal(at.atEnd(), true);
   }
@@ -602,7 +602,7 @@ void test14()
     hcp_parser::I at(x.begin(), x.end());
     
     at = parse(
-      root, at, hcp_parser::hash);
+      root, at, hcp_parser::hash());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -622,7 +622,7 @@ void test15()
     hcp_parser::I at(x.begin(), x.end());
     
     at = parse(
-      root, at, hcp_parser::hashInclude);
+      root, at, hcp_parser::hashInclude());
     xju::assert_equal(reconstruct(root), "#include <string>\n  ");
     xju::assert_equal(at.atEnd(), true);
   }
@@ -634,7 +634,7 @@ void test15()
     hcp_parser::I at(x.begin(), x.end());
     
     at = parse(
-      root, at, hcp_parser::hashInclude);
+      root, at, hcp_parser::hashInclude());
     xju::assert_equal(reconstruct(root), "#  include <string>\n  ");
     xju::assert_equal(at.atEnd(), true);
   }
@@ -648,7 +648,7 @@ void test15()
     hcp_parser::I at(x.begin(), x.end());
     
     at = parse(
-      root, at, hcp_parser::hashInclude);
+      root, at, hcp_parser::hashInclude());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -668,7 +668,7 @@ void test16()
     hcp_parser::I at(x.begin(), x.end());
     
     at = parse(
-      root, at, hcp_parser::hashIncludeImpl);
+      root, at, hcp_parser::hashIncludeImpl());
     xju::assert_equal(reconstruct(root), "#include <string> // impl \n  ");
     xju::assert_equal(at.atEnd(), true);
   }
@@ -680,7 +680,7 @@ void test16()
     hcp_parser::I at(x.begin(), x.end());
     
     at = parse(
-      root, at, hcp_parser::hashIncludeImpl);
+      root, at, hcp_parser::hashIncludeImpl());
     xju::assert_equal(reconstruct(root), "#  include <string>//impl\n  ");
     xju::assert_equal(at.atEnd(), true);
   }
@@ -693,7 +693,7 @@ void test16()
     hcp_parser::I at(x.begin(), x.end());
     
     at = parse(
-      root, at, hcp_parser::hashIncludeImpl);
+      root, at, hcp_parser::hashIncludeImpl());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -830,7 +830,7 @@ void test18()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::typedef_statement);
+    at = parse(root, at, hcp_parser::typedef_statement());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -841,7 +841,7 @@ void test18()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::typedef_statement);
+    at = parse(root, at, hcp_parser::typedef_statement());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -853,7 +853,7 @@ void test18()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::typedef_statement);
+    at = parse(root, at, hcp_parser::typedef_statement());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -871,7 +871,7 @@ void test19()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::using_statement);
+    at = parse(root, at, hcp_parser::using_statement());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -882,7 +882,7 @@ void test19()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::using_statement);
+    at = parse(root, at, hcp_parser::using_statement());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -894,7 +894,7 @@ void test19()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::using_statement);
+    at = parse(root, at, hcp_parser::using_statement());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -916,7 +916,7 @@ void test20()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::enum_def);
+    at = parse(root, at, hcp_parser::enum_def());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -929,7 +929,7 @@ void test20()
     std::string const x("enumy { FRED, JOCK };");
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::enum_def);
+    at = parse(root, at, hcp_parser::enum_def());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -946,7 +946,7 @@ void test20()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::scoped_enum_def);
+    at = parse(root, at, hcp_parser::scoped_enum_def());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -959,7 +959,7 @@ void test20()
     std::string const x("enum classy Lateness { FRED, JOCK };");
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::enum_def);
+    at = parse(root, at, hcp_parser::enum_def());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -980,7 +980,7 @@ void test21()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::function_decl);
+    at = parse(root, at, hcp_parser::function_decl());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -995,7 +995,7 @@ void test21()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::function_decl);
+    at = parse(root, at, hcp_parser::function_decl());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -1012,7 +1012,7 @@ void test21()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::function_decl);
+    at = parse(root, at, hcp_parser::function_decl());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -1026,7 +1026,7 @@ void test21()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::function_decl);
+    at = parse(root, at, hcp_parser::function_decl());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -1052,7 +1052,7 @@ void test22()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::function_def);
+    at = parse(root, at, hcp_parser::function_def());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -1071,7 +1071,7 @@ void test22()
       "}");
     hcp_parser::I at(x.begin(), x.end());
     
-    hcp_parser::PV const y = *hcp_parser::function_def->parse(at, options);
+    hcp_parser::PV const y = *hcp_parser::function_def()->parse(at, options);
     xju::assert_equal(reconstruct(y.first), x);
     xju::assert_equal(y.second.atEnd(), true);
     xju::assert_equal(y.first.front()->isA<hcp_ast::FunctionDef>(), true);
@@ -1093,7 +1093,7 @@ void test22()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::function_def);
+    at = parse(root, at, hcp_parser::function_def());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -1126,7 +1126,7 @@ void test22()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::function_def);
+    at = parse(root, at, hcp_parser::function_def());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -1151,7 +1151,7 @@ void test23()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::template_function_def);
+    at = parse(root, at, hcp_parser::template_function_def());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -1172,7 +1172,7 @@ void test23()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::function_def);
+    at = parse(root, at, hcp_parser::function_def());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -1189,7 +1189,7 @@ void test23()
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::template_function_def);
+    at = parse(root, at, hcp_parser::template_function_def());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -1209,7 +1209,7 @@ void test24(std::vector<std::string> const& f)
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::class_def);
+    at = parse(root, at, hcp_parser::class_def());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
     xju::assert_equal(root.items_[0]->isA<hcp_ast::ClassDef>(), true);
@@ -1234,7 +1234,7 @@ void test24(std::vector<std::string> const& f)
     hcp_parser::I at(x.begin(), x.end());
     
 
-    at = parse(root, at, hcp_parser::class_def);
+    at = parse(root, at, hcp_parser::class_def());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -1249,7 +1249,7 @@ void test24(std::vector<std::string> const& f)
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::class_def);
+    at = parse(root, at, hcp_parser::class_def());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -1270,7 +1270,7 @@ void test25(std::vector<std::string> const& f)
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::anonymous_namespace);
+    at = parse(root, at, hcp_parser::anonymous_namespace());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -1290,7 +1290,7 @@ void test25(std::vector<std::string> const& f)
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::anonymous_namespace);
+    at = parse(root, at, hcp_parser::anonymous_namespace());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -1304,7 +1304,7 @@ void test25(std::vector<std::string> const& f)
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::anonymous_namespace);
+    at = parse(root, at, hcp_parser::anonymous_namespace());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -1324,7 +1324,7 @@ void test26(std::vector<std::string> const& f)
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::namespace_def);
+    at = parse(root, at, hcp_parser::namespace_def());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -1339,7 +1339,7 @@ void test26(std::vector<std::string> const& f)
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::namespace_def);
+    at = parse(root, at, hcp_parser::namespace_def());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -1359,7 +1359,7 @@ void test26(std::vector<std::string> const& f)
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::anonymous_namespace);
+    at = parse(root, at, hcp_parser::anonymous_namespace());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -1379,7 +1379,7 @@ void test27(std::vector<std::string> const& f)
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::file);
+    at = parse(root, at, hcp_parser::file());
     xju::assert_equal(at.atEnd(), true);
     xju::assert_equal(reconstruct(root), x);
   }
@@ -1394,7 +1394,7 @@ void test27(std::vector<std::string> const& f)
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::attr_decl);
+    at = parse(root, at, hcp_parser::attr_decl());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -1408,7 +1408,7 @@ void test27(std::vector<std::string> const& f)
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::file);
+    at = parse(root, at, hcp_parser::file());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -1428,7 +1428,7 @@ void test28(std::vector<std::string> const& f)
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::file);
+    at = parse(root, at, hcp_parser::file());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -1443,7 +1443,7 @@ void test28(std::vector<std::string> const& f)
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::file);
+    at = parse(root, at, hcp_parser::file());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -1471,7 +1471,7 @@ void test29(std::vector<std::string> const& f)
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
-    at = parse(root, at, hcp_parser::class_def);
+    at = parse(root, at, hcp_parser::class_def());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
     xju::assert_equal(root.items_[0]->asA<hcp_ast::ClassDef>().className_, "X<int>");
@@ -1492,7 +1492,7 @@ void test30()
   hcp_parser::I at(x.begin(), x.end());
 
   try {
-    at = parse(root, at, hcp_parser::static_var_def);
+    at = parse(root, at, hcp_parser::static_var_def());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
     xju::assert_equal(root.items_[0]->isA<hcp_ast::StaticVarDef>(),true);
@@ -1529,7 +1529,7 @@ void test31()
   hcp_parser::I at(x.begin(), x.end());
 
   try {
-    at = parse(root, at, hcp_parser::static_var_def);
+    at = parse(root, at, hcp_parser::static_var_def());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
     xju::assert_equal(root.items_[0]->isA<hcp_ast::StaticVarDef>(),true);
@@ -1572,7 +1572,7 @@ void test32()
   hcp_parser::I at(x.begin(), x.end());
 
   try {
-    at = parse(root, at, hcp_parser::static_var_def);
+    at = parse(root, at, hcp_parser::static_var_def());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
     xju::assert_equal(root.items_[0]->isA<hcp_ast::StaticVarDef>(),true);
@@ -1613,7 +1613,7 @@ void test33()
   hcp_parser::I at(x.begin(), x.end());
 
   try {
-    at = parse(root, at, hcp_parser::type_name);
+    at = parse(root, at, hcp_parser::type_name());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
   }
@@ -1635,7 +1635,7 @@ void test34()
   hcp_parser::I at(x.begin(), x.end());
 
   try {
-    at = parse(root, at, hcp_parser::function_def);
+    at = parse(root, at, hcp_parser::function_def());
     xju::assert_equal(reconstruct(root), x);
     std::vector<hcp_ast::IR>::const_iterator j(
       std::find_if(root.items_[0]->asA<hcp_ast::FunctionDef>().items_.begin(),

@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
     Options const options(cmd_line.first);
 
     hcp_parser::ParseResult const r(
-      hcp_parser::file->parse(
+      hcp_parser::file()->parse(
         hcp_parser::I(x.begin(), x.begin()+offset),
         options.parser_options_));
     std::vector<std::string> scope;
