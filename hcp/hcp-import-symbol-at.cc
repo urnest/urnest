@@ -49,31 +49,6 @@ bool isAbsolute(Identifier const& identifier) throw()
   return identifier.size()>=2 && identifier[0]==':' && identifier[1]==':';
 }
 
-struct DepthTag{};
-typedef xju::Int<DepthTag,unsigned int> Depth;
-struct LocationTag{};
-typedef xju::Tagged<std::string,LocationTag> Location;
-
-//tags file parsers
-hcp_parser::PR eatWhite(zeroOrMore*whitespaceChar);
-hcp_parser::PR openBrace(eatWhite+hcp_parser::parseLiteral("{")+eatWhite);
-hcp_parser::PR stringValue(hcp_parser::parseUntil(hcp_parser::doubleQuote));
-hcp_parser::PR tagValueOpen(hcp_parser::doubleQuote+eatWhite+
-                            hcp_parser::parseLiteral(":")+eatWhite+
-                            hcp_parser::parseLiteral("[")+eatWhite);
-hcp_parser::PR fString(hcp_parser::parseLiteral("\"f\""));
-hcp_parser::PR lString(hcp_parser::parseLiteral("\"l\""));
-hcp_parser::PR skipTagValue(hcp_parser::balanced(parseLiteral("]"))+eatWhite+
-                            hcp_parser::optional(parseLiteral(","))+eatWhite);
-hcp_parser::PV deref(hcp_parser::PR const& r) throw(
-  xju::Exception)
-{
-  if (r.failed()) {
-    throw r.e();
-  }
-  return *r;
-}
-
 int main(int argc, char* argv[])
 {
   try {
@@ -106,55 +81,9 @@ int main(int argc, char* argv[])
       isAbsolute(identifier)?
       std::vector<std::string> :
       getScopeAtEnd(irsAtEnd));
-    }
     
-    std::ostringstream fqs;
-    fqs << "::";
-    std::copy(scope.begin(),
-              scope.end(),
-              xju::JoiningIterator<std::string,std::string>(fqs,"::"));
-
-    std::optional<std::pair<Depth, Location> > deepestMatch;
-
-    std::string const HCP_TAGS_FILES(::getenv(HCP_TAGS_FILES));
-    for(auto i=HCP_TAGS_FILES.begin(), auto j=HCP_TAGS_FILES.begin();
-        i != HCP_TAGS_FILES.end();
-        j=i,i=std::find(i,HCP_TAGS_FILES.end(),':')) {
-      std::string const fileName(j,i);
-      std::pair<xju::path::AbsolutePath, xju::path::FileName> const tagsFile(
-        xju::path::split(fileName));
-
-      std::string const x(xju::readFile(xju::path::str(tagsFile)));
-      hcp_parser::I i(x.begin(), x.end());
-      PV x=deref(openBrace->parse(i,options));
-      while(*x.second!='}') {
-        x=deref(hcp_parser::doubleQuote->parse(x.second));
-        x=deref(stringValue->parse(x.second));
-        
-        Tag t(x.first->reconstruct());
-        x=deref(tagValueOpen->parse(x.second));
-        if (t.endsWith(identifier)) {
-          auto m(match(t-identifier,scope));
-          if (m.first && (!deepestMatch.valid()||
-                          m.second>deepestMatch.value().first)) {
-            deepestMatch=std::make_pair(m.second,makeRelative(nextLocation(),
-                                                              tagsFile));
-          }
-        }
-        else
-        {
-          x=deref(skipTagValue->parse(x.second));
-        }
-      }
-    }
-    if (!deepestMatch.valid()) {
-      std::ostringstream s;
-      s << "no definition of " << identifier << " found for scope "
-        << scope;
-      throw xju::Exception(s.str(),XJU_TRACED);
-    }
     
-            
+  
     // irsAtEnd will include all #includes, so check those for
     // already mentioned
 

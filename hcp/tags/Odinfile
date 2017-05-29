@@ -74,4 +74,4 @@ augmentRootNamespace.cc==%augmentRootNamespace/augmentRootNamespace.cc
 %tests.tree==<<
 ()+cmd=(%test-Namespace):exec.output
 ()+cmd=(%test-splitSymbol):exec.output
-()+cmd=(%test-augmentRootNamespace)+cmd=(../test-hcp-tags/test-1.json):exec.output
+()+cmd=(%test-augmentRootNamespace)+cmd=(../test-hcp-tags/test-1.json)+cmd=(../test-hcp-tags/test-4.json):exec.output
