@@ -1,0 +1,8 @@
+x more tests in test-augmentRootNamespace
+
+- lookup interface implementation (locked)
+    TagsFile
+- daemon without inotify
+    hcp-tagsd.cc
+- hcp-import-symbol-at.cc
+- add inotify
