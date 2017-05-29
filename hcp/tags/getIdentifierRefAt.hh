@@ -7,29 +7,28 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef HCP_GETIDENTIFIERAT_H
-#define HCP_GETIDENTIFIERAT_H
+#ifndef HCP_TAGS_GETIDENTIFIERREFAT_H
+#define HCP_TAGS_GETIDENTIFIERREFAT_H
 
-#include "hcp/Identifier.hh"
+#include "hcp/tags/IdentifierRef.hh"
 #include "xju/Exception.hh"
 
 namespace hcp
 {
-
-// get identifier at offset within text
-// - offset might be at start, end or in the middle of an identifier or
-//   outside an identifier
+namespace tags
+{
+// get identifier reference at offset within text
+// - offset might be at start, end or in the middle of an identifier ref or
+//   outside an identifier ref
 // - result includes any qualification
-// post: result is a valid C++ identifier
-Identifier getIdentifierAt(std::string const& text,
-                           std::string::size_type const offset)
+// post: result is a valid C++ identifier ref
+IdentifierRef getIdentifierRefAt(std::string const& text,
+                                 std::string::size_type const offset)
   throw(
-    // pre: no identifier at offset
+    // pre: no identifier ref at offset
     xju::Exception);
 
-
-
+}
 }
 
 #endif
-

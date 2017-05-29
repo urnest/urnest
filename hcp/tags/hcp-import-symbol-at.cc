@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
 
     Options const options(cmd_line.first);
 
-    Identifier identifier(getIdentifierAt(x, offset, options.verbose_));
+    IdentifierRef identifier(getIdentifierRefAt(x, offset, options.verbose_));
 
     hcp_parser::IRs const irsAtEnd(getIrsAtEnd(x,offset));
 

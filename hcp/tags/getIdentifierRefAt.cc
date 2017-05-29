@@ -7,10 +7,12 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include "hcp/getIdentifierAt.hh"
+#include <hcp/tags/getIdentifierRefAt.hh>
 #include <sstream>
 
 namespace hcp
+{
+namespace tags
 {
 
 namespace
@@ -24,8 +26,8 @@ bool isIdentifierChar(char c) throw()
 }
 }
 
-Identifier getIdentifierAt(std::string const& text,
-                           std::string::size_type const offset)
+IdentifierRef getIdentifierRefAt(std::string const& text,
+                                 std::string::size_type const offset)
   throw(
     // pre: no identifier at offset
     xju::Exception)
@@ -58,7 +60,7 @@ Identifier getIdentifierAt(std::string const& text,
           << start << ")";
         throw xju::Exception(s.str(),XJU_TRACED);
       }
-      return Identifier(std::string(text.begin()+start,text.begin()+end));
+      return IdentifierRef(std::string(text.begin()+start,text.begin()+end));
     }
     catch(xju::Exception& e) {
       xju::assert_less_equal(offset,text.size());
@@ -71,7 +73,7 @@ Identifier getIdentifierAt(std::string const& text,
       std::string const after(at,text.begin()+std::min(offset+10,text.size()));
 
       std::ostringstream s;
-      s << "get identifier at or just before \"^^\" in \""
+      s << "get identifier ref at or just before \"^^\" in \""
         << before << "^^" << after
         << "\"";
       e.addContext(s.str(),XJU_TRACED);
@@ -80,7 +82,7 @@ Identifier getIdentifierAt(std::string const& text,
   }
   catch(xju::Exception& e) {
     std::ostringstream s;
-    s << "get C++ identifier at or just before offset " << offset
+    s << "get C++ identifier ref at or just before offset " << offset
       << " in text";
     e.addContext(s.str(),XJU_TRACED);
     throw;
@@ -88,5 +90,6 @@ Identifier getIdentifierAt(std::string const& text,
 }
 
 
+}
 }
 

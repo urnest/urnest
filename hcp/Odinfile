@@ -39,7 +39,7 @@ test-hcp-tags%all.tree
 
 %local-standalone-tests.tree == <<
 ()+(%test-parser-cmd):exec.output
-()+cmd=(test-getIdentifierAt.cc+(%opts):auto.cxx.exe):stdout
+()+cmd=(%test-splitSymbol):exec.output
 test%all-tests.tree
 
 hcp-split == hcp-split.cc+(%opts):auto.cxx.exe
@@ -130,3 +130,5 @@ namespace g {
   enum_ q();
   class_ r();
 }
+
+
