@@ -64,7 +64,11 @@ public:
     try {
       return root_.lookup(fromScope,symbolScope,symbol);
     }
-    catch(xju::Exception const& e) {
+    catch(xju::Exception& e) {
+      std::ostringstream s;
+      s << "lookup symbol in tags file "
+        << xju::path::str(d_,f_);
+      e.addContext(s.str(),XJU_TRACED);
       std::cerr << readableRepr(e) << std::endl;
     }
     return Locations();

@@ -1,0 +1,102 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <hcp/tags/Lookup.hh>
+
+#include <hcp/tags/str.hh> //impl
+#include <iostream> //impl
+#include <xju/io.hh>
+#include <xju/pipe.h> //impl
+#include <xju/now.h> //impl
+#include <memory>
+#include <vector>
+#include <map>
+#include <utility>
+#include <xju/path/path.hh>
+
+namespace hcp
+{
+namespace tags
+{
+class TagLookupService : Lookup
+{
+public:
+  explicit TagLookupService(
+    std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& tagsFiles) throw():
+      stop_(false),
+      filesWatcher_(tagsFiles),
+      files_(makeFiles(tagsFiles)),
+      stopper_(xju::pipe())
+  {
+  }
+
+  void run() throw()
+  {
+    std::set<xju::io::Input const*> const inputs(
+      {&filesWatcher_,&*stopper_.second});
+    while(!stop_) {
+      if (xju::io::select(inputs,xju::now()+std::chrono::seconds(10))
+          .find(&filesWatcher_)!=inputs.end()) {
+        updateFiles();
+      }
+    }
+  }
+  
+  void stop() throw()
+  {
+    stop_=true;
+    stopper_.second->write("x",1U,std::chrono::system_clock::now());
+  }
+
+  Locations lookupSymbol(NamespaceNames const& fromScope,
+                         NamespaceNames const& symbolScope,
+                         UnqualifiedSymbol const& symbol) throw() {
+    for(x:files_) {
+      auto const l(x.second->lookupSymbol(fromScope,symbolScope,symbol));
+      if (l.size()) {
+        std::cerr << "found " << str(symbolScope) << str(symbol)
+                  << " (referenced from ::"
+                  << str(fromScope)
+                  << ") in tags file "
+                  << xju::path::str(x.first);
+        return l;
+      }
+    }
+    return Locations();
+  }
+
+  void updateFiles() throw()
+  {
+    for(auto x: filesWatcher_.read(xju::now())) {
+      std::ostringstream s;
+      s << "reload tags file " << str(x);
+      try {
+        std::cout << s.str() << std::endl;
+        files_[x]->reload();
+      }
+      catch(xju::Exception& e) {
+        e.addContext(s.str(),XJU_TRACED);
+        std::cerr << "ERROR: " << readable(e) << std::endl;
+      }
+    }
+  }
+  
+private:
+  typedef std::pair<xju::path::AbsolutePath,xju::path::FileName> FileId;
+
+  std::AtomicFlag stop_;
+  xju::INotify const filesWatcher_;
+  std::map<FileId, std::unique_ptr<TagsFile> > const files_;
+
+  std::pair<std::unique_ptr<xju::io::IStream>,
+            std::unique_ptr<xju::io::OStream> > const stopper_;
+};
+  
+}
+}

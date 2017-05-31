@@ -1,0 +1,119 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace
+{
+struct Buffer
+{
+  struct inotify_event event;
+  char data[NAME_MAX+1];
+};
+}
+
+class INotify : public xju::io::Input
+{
+public:
+  // watch for modifications to files
+  // - parent directories of all files must exist
+  INotify(std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& files) throw(
+    // no resources (see initify_init1)
+    xju::Exception) try:
+    fd_(xju::syscall(inotify_init1,XJU_TRACED)(IN_NONBLOCK|IN_CLOEXEC))
+  {
+    std::set<xju::path::AbsolutePath> dirs;
+    std::transform(files.begin(),files.end(),
+                   std::inserter(dirs,dirs.end()),
+                   xju::functional::First());
+    for(auto x:dirs) {
+      try {
+        xju::syscall(inotify_add_watch,XJU_TRACED)(fd_.fd(),x.str().c_str(),
+                                                   IN_MODIFY);
+      }
+      catch(xju::Exception& e) {
+        std::ostringstream s;
+        s << "add watch for directory " << xju::path::str(x);
+        e.addContext(s.str(),XJU_TRACED);
+        throw;
+      }
+    }
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "start watching for changes to files "
+      << xju::join(files.begin(),files.end(),
+                   xju::path::str,
+                   ", ");
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+
+  // get file changes until deadline
+  // - if deadline has passed, gets any past, unread changes
+  std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > read(
+    std::chrono::system_clock::time_point deadline) throw()
+  {
+    std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > result;
+    std::chrono::duration<float> const timeout(
+      deadline-std::chrono::system_clock::now());
+    size_t bytesRead(0);
+    try {
+      @@@;
+      
+      Buffer buffer;
+      size_t const bufferSize(sizeof(buffer));
+      uint8_t p((uint8_t*)buffer);
+      while(bytesRead<bufferSize &&
+            select({this},deadline).size()) {
+        size_t const thisRead=xju::syscall(xju::read,XJU_TRACED)(
+          fileDescriptor(),
+          p,
+          std::min(bufferSize-bytesRead,
+                   (size_t)std::numeric_limits<ssize_t>::max()));
+        if (thisRead==0) {
+          if (bytesRead) {
+            return bytesRead;
+          }
+          throw Input::Closed(*this,XJU_TRACED);
+        }
+        bytesRead+=thisRead;
+      }
+      return bytesRead;
+    }
+    catch(xju::Exception& e)
+    {
+      std::ostringstream s;
+      s << "read bytes from " << (*this)
+        << "for " << xju::format::float_(timeout.count())
+        << "s or " << (bufferSize-bytesRead) 
+        << " more (of " << bufferSize << " total) bytes read "
+        << "or end of input";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+    
+  }
+  
+private:
+  xju::io::Fd fd_;
+
+  //Input::
+  int fileDescriptor() const throw()
+  {
+    return fd_.fd();
+  }
+};
+
+  
+}
+
+

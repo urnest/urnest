@@ -59,6 +59,11 @@ io.cc==%io/io.cc
 ip.hh==%ip/ip.hh
 ip.cc==%ip/ip.cc
 
+%now==()+cmd=(../hcp/hcp-split) -l 1 (now.hcp) 'now.hh' 'now.cc':output
+
+now.hh==%now/now.hh
+now.cc==%now/now.cc
+
 %Holder==()+cmd=(../hcp/hcp-split) -l 1 (Holder.hcp) 'Holder.hh' 'Holder.cc':output
 
 Holder.hh==%Holder/Holder.hh
