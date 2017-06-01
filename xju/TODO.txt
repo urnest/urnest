@@ -4,7 +4,7 @@ Int,Float add operator* operator/
 Float add math functions exp, sqrt, log, floor, ceiling etc
 
 x Thread
-- Mutex,Lock
+x Mutex,Lock
 - Condition
 
 io::Input
@@ -17,10 +17,11 @@ io::Output
   x dup2, perhaps:
     IStream::useAsStdin, OStream::useAsStdout, OStream::useAsStderr
 
-- io
-  - InFile
-  - OutFile
-  - InOutFile?
+- io:
+  / FileObserver
+  - FileIStream
+  - FileOStream
+  - FileIOStream
   - TCPListener
   - TCPSocket
       - IStream& input()
@@ -36,7 +37,7 @@ io::Output
       OQueue& output();
         - void enque(void const* message, size_t bytes, Time deadline);
         - is a Output
-
+  - break up io.hcp into io/xxx with aggregation like snmp.hh
   x pipe()
   - SocketPair
       - unique_ptr<IStream> input_;

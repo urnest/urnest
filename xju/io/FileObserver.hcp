@@ -11,6 +11,9 @@
 
 namespace xju
 {
+namespace io
+{
+
 namespace
 {
 struct Buffer
@@ -20,15 +23,19 @@ struct Buffer
 };
 }
 
-class INotify : public xju::io::Input
+class FileObserver : public xju::io::Input, xju::NonCopyable
 {
 public:
   // watch for modifications to files
   // - parent directories of all files must exist
-  INotify(std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& files) throw(
-    // no resources (see initify_init1)
+  // - use xju::io::select() to wait for one or more of files possibly
+  //   modified; use read() to see which of files if any modified
+  //
+  FileObserver(std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& files) throw(
+    // - no resources (see initify_init1)
+    // - missing/unreadable parent directory
     xju::Exception) try:
-    fd_(xju::syscall(inotify_init1,XJU_TRACED)(IN_NONBLOCK|IN_CLOEXEC))
+    fd_(xju::syscall(::inotify_init1,XJU_TRACED)(IN_NONBLOCK|IN_CLOEXEC))
   {
     std::set<xju::path::AbsolutePath> dirs;
     std::transform(files.begin(),files.end(),
@@ -36,8 +43,8 @@ public:
                    xju::functional::First());
     for(auto x:dirs) {
       try {
-        xju::syscall(inotify_add_watch,XJU_TRACED)(fd_.fd(),x.str().c_str(),
-                                                   IN_MODIFY);
+        xju::syscall(::inotify_add_watch,XJU_TRACED)(fd_.fd(),x.str().c_str(),
+                                                     IN_MODIFY);
       }
       catch(xju::Exception& e) {
         std::ostringstream s;
@@ -59,7 +66,8 @@ public:
 
   // get file changes until deadline
   // - if deadline has passed, gets any past, unread changes
-  std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > read(
+  // - only returns names originally asked for
+  std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> >&& read(
     std::chrono::system_clock::time_point deadline) throw()
   {
     std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > result;
@@ -115,5 +123,4 @@ private:
 
   
 }
-
-
+}

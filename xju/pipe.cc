@@ -4,41 +4,14 @@
 #include <xju/unistd.hh> //impl
 #include "xju/NonCopyable.hh" //impl
 #include "xju/assert.hh" //impl
+#line 19
+#include <xju/io/Fd.hh> //impl
+
 namespace xju
 {
-#line 23
+#line 24
 namespace
 {
-class Fd : xju::NonCopyable
-{
-public:
-  // takes exclusive ownership of fd (close on destroy)
-  // pre: fd is valid, open file descriptor
-  explicit Fd(int fd) throw():
-      fd_(fd)
-  {
-    xju::assert_greater_equal(fd,0);
-  }
-  ~Fd() throw()
-  {
-    if (fd_!=-1) {
-      xju::syscall(xju::close,XJU_TRACED)(fd_);
-    }
-  }
-  Fd& operator=(Fd&&) = delete;
-  Fd(Fd&& y) throw():
-      fd_(std::move(y.fd_))
-  {
-    y.fd_=-1;
-  }
-  int fd() const noexcept
-  {
-    return fd_;
-  }
-private:
-  int fd_;
-};
-  
 class I : public xju::io::IStream
   {
   public:
@@ -49,7 +22,7 @@ class I : public xju::io::IStream
       s << "readable end of pipe (file descriptor " << fileDescriptor() <<")";
       return s.str();
     }
-    explicit I(Fd&& fd) throw():
+    explicit I(xju::io::Fd&& fd) throw():
         fd_(std::move(fd))
     {
     }
@@ -59,7 +32,7 @@ class I : public xju::io::IStream
     {
       return fd_.fd();
     }
-    Fd fd_;
+    xju::io::Fd fd_;
   };
   class O : public xju::io::OStream, xju::NonCopyable
   {
@@ -71,7 +44,7 @@ class I : public xju::io::IStream
       s << "writeable end of pipe (file descriptor " << fileDescriptor() <<")";
       return s.str();
     }
-    explicit O(Fd&& fd) throw():
+    explicit O(xju::io::Fd&& fd) throw():
         fd_(std::move(fd))
     {
     }
@@ -81,7 +54,7 @@ class I : public xju::io::IStream
     {
       return fd_.fd();
     }
-    Fd fd_;
+    xju::io::Fd fd_;
   };
 }
 
@@ -90,8 +63,8 @@ std::pair<std::unique_ptr<xju::io::IStream>, std::unique_ptr<xju::io::OStream> >
   bool closeWriteEndOnExec) throw(std::bad_alloc,
                                   SyscallFailed) {
   std::pair<int,int> fds(xju::pipe_());
-  Fd fdr(fds.first); //ensure close on exception
-  Fd fdw(fds.second); //ensure close on exception
+  xju::io::Fd fdr(fds.first); //ensure close on exception
+  xju::io::Fd fdw(fds.second); //ensure close on exception
   if (!closeReadEndOnExec) {
     ::fcntl(fdr.fd(),F_SETFD,::fcntl(fdw.fd(),F_GETFD)&~FD_CLOEXEC);
   }
