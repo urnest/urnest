@@ -10,7 +10,6 @@
 #include "xju/assert.hh" //impl
 #include "xju/syscall.hh" //impl
 #include "xju/unistd.hh" //impl
-#include <utility>
 #include "xju/NonCopyable.hh"
 
 

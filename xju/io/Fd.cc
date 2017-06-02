@@ -8,14 +8,14 @@ namespace xju
 {
 namespace io
 {
-#line 27
+#line 26
 Fd::Fd(int fd) noexcept:
       fd_(fd)
   {
     xju::assert_greater_equal(fd,0);
   }
   
-#line 32
+#line 31
 Fd::~Fd() noexcept
   {
     if (fd_!=-1) {
@@ -23,7 +23,7 @@ Fd::~Fd() noexcept
     }
   }
   
-#line 38
+#line 37
 Fd& Fd::operator=(Fd&& x) noexcept
   {
     if (this != &x) {
@@ -36,14 +36,14 @@ Fd& Fd::operator=(Fd&& x) noexcept
     return *this;
   }
   
-#line 49
+#line 48
 Fd::Fd(Fd&& y) noexcept:
       fd_(std::move(y.fd_))
   {
     y.fd_=-1;
   }
   
-#line 54
+#line 53
 int Fd::fd() const noexcept
   {
     return fd_;

@@ -1,3 +1,11 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+%tests.tree
+
+%tests.tree==<<
+()+cmd=(test-Fd.cc+(../..%cxx-opts):auto.cxx.exe):stdout
+
 %Fd==()+cmd=(../../hcp/hcp-split) -l 2 (Fd.hcp) 'Fd.hh' 'Fd.cc':output
 
 Fd.hh==%Fd/Fd.hh

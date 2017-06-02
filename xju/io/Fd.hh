@@ -9,7 +9,6 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <utility>
 #include "xju/NonCopyable.hh"
 
 
