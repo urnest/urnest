@@ -23,12 +23,13 @@ class Fd : xju::NonCopyable
 public:
   // takes exclusive ownership of fd (close on destroy)
   // pre: fd is valid, open file descriptor
-  explicit Fd(int fd) throw();
+  explicit Fd(int fd) noexcept;
 
-  ~Fd() throw();
+  ~Fd() noexcept;
 
-  Fd& operator=(Fd&&) = delete;
-  Fd(Fd&& y) throw();
+  Fd& operator=(Fd&& x) noexcept;
+
+  Fd(Fd&& y) noexcept;
 
   int fd() const noexcept;
 

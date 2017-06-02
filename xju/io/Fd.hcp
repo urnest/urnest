@@ -24,19 +24,29 @@ class Fd : xju::NonCopyable
 public:
   // takes exclusive ownership of fd (close on destroy)
   // pre: fd is valid, open file descriptor
-  explicit Fd(int fd) throw():
+  explicit Fd(int fd) noexcept:
       fd_(fd)
   {
     xju::assert_greater_equal(fd,0);
   }
-  ~Fd() throw()
+  ~Fd() noexcept
   {
     if (fd_!=-1) {
       xju::syscall(xju::close,XJU_TRACED)(fd_);
     }
   }
-  Fd& operator=(Fd&&) = delete;
-  Fd(Fd&& y) throw():
+  Fd& operator=(Fd&& x) noexcept
+  {
+    if (this != &x) {
+      if (fd_!=-1) {
+        xju::syscall(xju::close,XJU_TRACED)(fd_);
+      }
+      fd_=x.fd_;
+      x.fd_=-1;
+    }
+    return *this;
+  }
+  Fd(Fd&& y) noexcept:
       fd_(std::move(y.fd_))
   {
     y.fd_=-1;
