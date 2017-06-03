@@ -1,0 +1,75 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <xju/path.hh>
+#include "xju/Exception.hh"
+
+#include <unistd.h> //impl
+#include "xju/fcntl.hh" //impl
+#include "xju/AutoFd.hh" //impl
+#include "xju/syscall.hh" //impl
+#include <cinttypes> //impl
+#include <sstream> //impl
+#include "xju/unistd.hh" //impl
+#include <xju/format.hh> //impl
+
+
+namespace xju
+{
+namespace file
+{
+
+// write content to file, creating file with specified mode if necessary
+// - replaces existing content
+// - actual mode is mode & ~umask & 0777 - see open manpage
+void write(
+  std::pair<xju::path::AbsolutePath,xju::path::FileName> const& file,
+  void const* content,
+  size_t const contentSize,
+  mode_t const mode) throw(
+    xju::Exception)
+{
+  try {
+    xju::AutoFd const fd(xju::syscall(xju::open,XJU_TRACED)(
+                           xju::path::str(file).c_str(),
+                           O_WRONLY|O_CREAT|O_TRUNC|O_CLOEXEC,
+                           mode));
+    uint8_t const*const p((uint8_t const*)content);
+    size_t bytesWritten(0);
+    do {
+      bytesWritten+=xju::syscall(xju::write,XJU_TRACED)(
+        fd.value_,
+        p+bytesWritten,
+        contentSize-bytesWritten);
+    }
+    while(bytesWritten < contentSize);
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "write " << contentSize << "-byte content "
+      << " to file " << xju::path::str(file)
+      << ", creating file with mode "
+      << xju::format::octal(mode)
+      << " & ~umask & 0777 if necessary";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+void write(
+  std::pair<xju::path::AbsolutePath,xju::path::FileName> const& file,
+  std::string const& content,
+  mode_t const mode) throw(
+    xju::Exception)
+{
+  return xju::file::write(file,content.c_str(),content.size(),mode);
+}
+
+}
+}

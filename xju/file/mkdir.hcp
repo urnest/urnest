@@ -1,5 +1,3 @@
-#ifndef _XJU_IO_FD_HCP
-#define _XJU_IO_FD_HCP
 // Copyright (c) 2017 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -9,34 +7,24 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include "xju/NonCopyable.hh"
+#include <xju/path.hh>
+#include "xju/Exception.hh"
 
+#include "xju/syscall.hh" //impl
+#include <sys/stat.h> //impl
+#include <sys/types.h> //impl
+#include "xju/unistd.hh" //impl
 
 namespace xju
 {
-namespace io
+namespace file
 {
-
-class Fd : xju::NonCopyable
+void mkdir(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& d,
+           mode_t mode)
+  throw(xju::Exception)
 {
-public:
-  // takes exclusive ownership of fd (close on destroy)
-  // pre: fd is valid, open file descriptor
-  explicit Fd(int fd) noexcept;
-
-  ~Fd() noexcept;
-
-  Fd& operator=(Fd&& x) noexcept;
-
-  Fd(Fd&& y) noexcept;
-
-  int fd() const noexcept;
-
-private:
-  int fd_;
-};
-  
+  xju::syscall(xju::mkdir,XJU_TRACED)(xju::path::str(d).c_str(),mode);
+}
 
 }
 }
-#endif

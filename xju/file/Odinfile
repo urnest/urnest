@@ -1,0 +1,32 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+%tests.tree
+
+%tests.tree==<<
+
+%mkdir==()+cmd=(../../hcp/hcp-split) -l 2 (mkdir.hcp) 'mkdir.hh' 'mkdir.cc':output
+
+mkdir.hh==%mkdir/mkdir.hh
+mkdir.cc==%mkdir/mkdir.cc
+
+%touch==()+cmd=(../../hcp/hcp-split) -l 2 (touch.hcp) 'touch.hh' 'touch.cc':output
+
+touch.hh==%touch/touch.hh
+touch.cc==%touch/touch.cc
+
+%read==()+cmd=(../../hcp/hcp-split) -l 2 (read.hcp) 'read.hh' 'read.cc':output
+
+read.hh==%read/read.hh
+read.cc==%read/read.cc
+
+%write==()+cmd=(../../hcp/hcp-split) -l 2 (write.hcp) 'write.hh' 'write.cc':output
+
+write.hh==%write/write.hh
+write.cc==%write/write.cc
+
+%rename==()+cmd=(../../hcp/hcp-split) -l 2 (rename.hcp) 'rename.hh' 'rename.cc':output
+
+rename.hh==%rename/rename.hh
+rename.cc==%rename/rename.cc
+

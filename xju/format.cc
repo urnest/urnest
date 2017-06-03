@@ -180,6 +180,100 @@ std::string hex(unsigned long long x, const std::string& leader)
   return s.str();
 }
 
+namespace
+{
+template<class IntType>
+std::string asOctal(IntType x) noexcept
+{
+  std::vector<char> reverse;
+  for(int bits=sizeof(x)*8;
+      bits>0;
+      bits-=3, x>>=3) {
+    reverse.push_back(hex((unsigned char)(x&7),"")[1]);
+  }
+  return std::string(reverse.rbegin(),reverse.rend());
+}
+}
+
+std::string octal(char x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader << asOctal((unsigned char)x);
+  return s.str();
+}
+std::string octal(signed char x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader << asOctal((unsigned char)x);
+  return s.str();
+}
+
+std::string octal(unsigned char x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader << asOctal(x);
+  return s.str();
+}
+std::string octal(short x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader << asOctal((unsigned short)x);
+  return s.str();
+}
+std::string octal(unsigned short x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader << asOctal(x);
+  return s.str();
+}
+std::string octal(int x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader << asOctal((unsigned int)x);
+  return s.str();
+}
+std::string octal(unsigned int x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader << asOctal(x);
+  return s.str();
+}
+std::string octal(long x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader << asOctal((unsigned long)x);
+  return s.str();
+}
+std::string octal(unsigned long x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader << asOctal(x);
+  return s.str();
+}
+std::string octal(long long x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader << asOctal((unsigned long long)x);
+  return s.str();
+}
+std::string octal(unsigned long long x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader << asOctal(x);
+  return s.str();
+}
+
 // see format.hh for explanation
 #define XJU__IS_AN_ABOVE_TYPE(UX_MAX) (\
     ((UX_MAX) - UCHAR_MAX == 0) ||     \
@@ -207,6 +301,20 @@ std::string hex(uint16_t x, const std::string& leader)
     << x;
   return s.str();
 }
+std::string octal(int16_t x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader << asOctal((uint16_t)x);
+  return s.str();
+}
+std::string octal(uint16_t x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader << asOctal(x);
+  return s.str();
+}
 #endif
 
 #if !XJU__IS_AN_ABOVE_TYPE(UINT32_MAX)
@@ -228,6 +336,20 @@ std::string hex(uint32_t x, const std::string& leader)
     << x;
   return s.str();
 }
+std::string octal(int32_t x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader << asOctal((uint32_t)x);
+  return s.str();
+}
+std::string octal(uint32_t x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader << asOctal(x);
+  return s.str();
+}
 #endif
 
 #if !XJU__IS_AN_ABOVE_TYPE(UINT64_MAX)
@@ -247,6 +369,20 @@ std::string hex(uint64_t x, const std::string& leader)
   s << leader
     << std::hex << std::setw(sizeof(x)*2) << std::setfill('0') 
     << x;
+  return s.str();
+}
+std::string octal(int64_t x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader << asOctal((uint64_t)x);
+  return s.str();
+}
+std::string octal(uint64_t x, const std::string& leader) 
+  throw(std::bad_alloc)
+{
+  std::ostringstream s;
+  s << leader << asOctal(x);
   return s.str();
 }
 #endif
@@ -282,7 +418,7 @@ std::string cEscapeChar(char const c) throw()
     {
       return str(c);
     }
-    return hex(c);
+    return "\\"+octal(c);
   }
 }
 

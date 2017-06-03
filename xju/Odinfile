@@ -11,6 +11,7 @@ snmp%tests.tree
 ()+cmd=test '-s' (%test-check_types_related_2_err):stdout
 ()+cmd=(test-EventClient.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Exception.cc+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-file.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Float.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Int.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-Holder.cc+(..%cxx-opts):auto.cxx.exe):stdout

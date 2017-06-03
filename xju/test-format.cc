@@ -226,6 +226,18 @@ public:
     assert_equal(format::hex((unsigned short)0x2143), "0x2143");
     assert_equal(format::hex((unsigned short)0xffff), "0xffff");
     
+    assert_equal(format::octal((short)03), "0000003");
+    assert_equal(format::octal((short)043), "0000043");
+    assert_equal(format::octal((short)0143), "0000143");
+    assert_equal(format::octal((short)02143), "0002143");
+    assert_equal(format::octal((short)-1), "0177777");
+    
+    assert_equal(format::octal((unsigned short)03), "0000003");
+    assert_equal(format::octal((unsigned short)043), "0000043");
+    assert_equal(format::octal((unsigned short)0143), "0000143");
+    assert_equal(format::octal((unsigned short)02143), "0002143");
+    assert_equal(format::octal((unsigned short)0177777), "0177777");
+    
   };
 };
 

@@ -1,7 +1,4 @@
-//     -*- mode: c++ ; c-file-style: "xju" ; -*-
-//
-// Copyright (c) 2008
-// Trevor Taylor
+// Copyright (c) 2017 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
 // and its documentation for any purpose is hereby granted without fee,
@@ -10,22 +7,30 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/readFile.hh>
-#include "xju/AutoFd.hh"
-#include "xju/syscall.hh"
-#include <sstream>
-#include <xju/fcntl.hh>
-#include <xju/unistd.hh>
+#include <utility>
+#include <xju/path.hh>
+#include "xju/Exception.hh"
+
+#include "xju/AutoFd.hh" //impl
+#include "xju/syscall.hh" //impl
+#include <fcntl.h> //impl
+#include <sstream> //impl
+#include <unistd.h> //impl
+#include <string> //impl
+#include "xju/fcntl.hh" //impl
+#include "xju/unistd.hh" //impl
 
 namespace xju
 {
-std::string readFile(std::string fileName) throw(
-  xju::Exception)
+namespace file
 {
-  try
-  {
+std::string read(
+  std::pair<xju::path::AbsolutePath,xju::path::FileName> const& file) throw(
+    xju::Exception)
+{
+  try {
     xju::AutoFd fd(xju::syscall(xju::open, XJU_TRACED)(
-      fileName.c_str(), O_RDONLY|O_CLOEXEC, 0777));
+                     xju::path::str(file).c_str(), O_RDONLY|O_CLOEXEC, 0777));
     std::ostringstream result;
     char buffer[1024];
     while(1)
@@ -40,13 +45,14 @@ std::string readFile(std::string fileName) throw(
       result << std::string(buffer, buffer+x);
     }
   }
-  catch(xju::Exception& e)
-  {
+  catch(xju::Exception& e) {
     std::ostringstream s;
-    s << "read contents of file " << fileName;
-    e.addContext(s, XJU_TRACED);
+    s << "read file " << xju::path::str(file);
+    e.addContext(s.str(),XJU_TRACED);
     throw;
   }
 }
 
+
+}
 }

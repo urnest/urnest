@@ -557,6 +557,30 @@ std::string hex(long long x, const std::string& leader = "0x")
 std::string hex(unsigned long long x, const std::string& leader = "0x") 
   throw(std::bad_alloc);
 
+// format as fixed width octal with leading "0"
+std::string octal(char x, const std::string& leader = "0") 
+  throw(std::bad_alloc);
+std::string octal(signed char x, const std::string& leader = "0") 
+  throw(std::bad_alloc);
+std::string octal(unsigned char x, const std::string& leader = "0") 
+  throw(std::bad_alloc);
+std::string octal(short x, const std::string& leader = "0") 
+  throw(std::bad_alloc);
+std::string octal(unsigned short x, const std::string& leader = "0") 
+  throw(std::bad_alloc);
+std::string octal(int x, const std::string& leader = "0") 
+  throw(std::bad_alloc);
+std::string octal(unsigned int x, const std::string& leader = "0") 
+  throw(std::bad_alloc);
+std::string octal(long x, const std::string& leader = "0") 
+  throw(std::bad_alloc);
+std::string octal(unsigned long x, const std::string& leader = "0") 
+  throw(std::bad_alloc);
+std::string octal(long long x, const std::string& leader = "0") 
+  throw(std::bad_alloc);
+std::string octal(unsigned long long x, const std::string& leader = "0") 
+  throw(std::bad_alloc);
+
 // we can't define a hex function where the type of x is a typedef
 // of a type that we've done above, but the above does not necessarily
 // cover all int types (eg a pure 32bit compiler v int64_t)
@@ -572,6 +596,10 @@ std::string hex(int16_t x, const std::string& leader = "0x")
   throw(std::bad_alloc);
 std::string hex(uint16_t x, const std::string& leader = "0x") 
   throw(std::bad_alloc);
+std::string octal(int16_t x, const std::string& leader = "0") 
+  throw(std::bad_alloc);
+std::string octal(uint16_t x, const std::string& leader = "0") 
+  throw(std::bad_alloc);
 #endif
 
 #if !XJU__IS_AN_ABOVE_TYPE(UINT32_MAX)
@@ -579,12 +607,20 @@ std::string hex(int32_t x, const std::string& leader = "0x")
   throw(std::bad_alloc);
 std::string hex(uint32_t x, const std::string& leader = "0x") 
   throw(std::bad_alloc);
+std::string octal(int32_t x, const std::string& leader = "0") 
+  throw(std::bad_alloc);
+std::string octal(uint32_t x, const std::string& leader = "0") 
+  throw(std::bad_alloc);
 #endif
 
 #if !XJU__IS_AN_ABOVE_TYPE(UINT64_MAX)
 std::string hex(int64_t x, const std::string& leader = "0x") 
   throw(std::bad_alloc);
 std::string hex(uint64_t x, const std::string& leader = "0x") 
+  throw(std::bad_alloc);
+std::string octal(int64_t x, const std::string& leader = "0") 
+  throw(std::bad_alloc);
+std::string octal(uint64_t x, const std::string& leader = "0") 
   throw(std::bad_alloc);
 #endif
 
