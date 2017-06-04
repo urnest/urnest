@@ -54,6 +54,7 @@ void test1() {
   xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
   xju::assert_equal(o.read(xju::now()).size(),0U);
   
+  // create watched file
   xju::file::touch(f1,0777);
   xju::assert_equal(xju::io::select({&o},xju::now()).size(),1U);
 
@@ -64,10 +65,12 @@ void test1() {
   }
   xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
                        
+  // create non-watched file
   xju::file::write(f3,"fred",0777);
   xju::assert_equal(o.read(xju::now()).size(),0U);
   xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
   
+  // create watched file
   xju::file::touch(f2,0777);
   xju::assert_equal(xju::io::select({&o},xju::now()).size(),1U);
 
@@ -78,7 +81,19 @@ void test1() {
   }
   xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
                        
+  // modify watched file via rename
   xju::file::rename(f3,f2);
+  xju::assert_equal(xju::io::select({&o},xju::now()).size(),1U);
+
+  {
+    auto const r(o.read(xju::now()));
+    xju::assert_equal(r.size(),1U);
+    xju::assert_equal(*r.begin(),f2);
+  }
+  xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
+
+  // delete watched file via rename
+  xju::file::rename(f2,f3);
   xju::assert_equal(xju::io::select({&o},xju::now()).size(),1U);
 
   {

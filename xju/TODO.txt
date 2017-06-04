@@ -5,6 +5,9 @@ Float add math functions exp, sqrt, log, floor, ceiling etc
 
 test-format add format::octal tests for int, long, long long
 
+add AbsFile and AbsDir typedefs in xju::path.hh and use them in xju::file::*
+... and in xju::io::*
+
 add xju::file::rm,rmdir,stat,ls
 
 x Thread
@@ -22,7 +25,7 @@ io::Output
     IStream::useAsStdin, OStream::useAsStdout, OStream::useAsStderr
 
 - io:
-  / FileObserver
+  x FileObserver
   - FileIStream
   - FileOStream
   - FileIOStream

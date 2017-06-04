@@ -61,7 +61,11 @@ std::map<int,xju::path::AbsolutePath> addWatches(
         xju::syscall(xju::inotify_add_watch,XJU_TRACED)(
           inotifyFd,str(x).c_str(),
           // covers touch, rm, mv, and write
-          IN_CREATE|IN_DELETE|IN_MODIFY|IN_MOVED_TO));
+          IN_CREATE| //touch, write-non-existent
+          IN_DELETE| //rm
+          IN_MOVED_TO|IN_MOVED_FROM| //mv
+          IN_MODIFY //write
+          ));
       result.insert(std::make_pair(watchId,x));
     }
     catch(xju::Exception& e) {

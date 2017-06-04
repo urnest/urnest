@@ -42,7 +42,11 @@ std::map<int,xju::path::AbsolutePath> addWatches(
         xju::syscall(xju::inotify_add_watch,XJU_TRACED)(
           inotifyFd,str(x).c_str(),
           // covers touch, rm, mv, and write
-          IN_CREATE|IN_DELETE|IN_MODIFY|IN_MOVED_TO));
+          IN_CREATE| //touch, write-non-existent
+          IN_DELETE| //rm
+          IN_MOVED_TO|IN_MOVED_FROM| //mv
+          IN_MODIFY //write
+          ));
       result.insert(std::make_pair(watchId,x));
     }
     catch(xju::Exception& e) {
@@ -57,7 +61,7 @@ std::map<int,xju::path::AbsolutePath> addWatches(
 
 }
 
-#line 87
+#line 91
 FileObserver::FileObserver(std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& files) throw(
     // - no resources (see initify_init1)
     // - missing/unreadable parent directory
@@ -83,7 +87,7 @@ FileObserver::FileObserver(std::set<std::pair<xju::path::AbsolutePath,xju::path:
   // - if deadline has passed, gets any past, unread changes
   // - only returns names originally asked for
   
-#line 111
+#line 115
 std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > FileObserver::read(
     std::chrono::system_clock::time_point deadline) throw()
   {
@@ -134,7 +138,7 @@ std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > FileObserver::
   }
   
 
-#line 169
+#line 173
 int FileObserver::fileDescriptor() const throw()
   {
     return fd_.fd();
@@ -142,7 +146,7 @@ int FileObserver::fileDescriptor() const throw()
 
   //Input::
   
-#line 175
+#line 179
 std::string FileObserver::str() const throw()
   {
     std::ostringstream s;
