@@ -28,11 +28,14 @@ x handle scoped enum (non-fixed type)
     - typedef + anon struct/class
     - typedef + named struct/class
     - template specialisation v template
+    - skip anonymous namespaces (perhaps does already?)
   - test on .hh and .hcp file types
 
 x when excluding class/struct/union/enum/namespace keywords need to ensure
   it is not them being used to start a valid identifer, eg class_1 f();
-  
+
+- hcp-split copy copyright notice to .cc? (optional?)
+
 - hcp-scope-at
     x need a way to capture scope at EndOfFile where partially parsed
     x think we just need to capture a list of completed items when
@@ -56,7 +59,7 @@ x when excluding class/struct/union/enum/namespace keywords need to ensure
       class scope
       enum scope
       namespace+class+enum scope
-      
+          
 - hcp split generate operator< (and others) where there is an operator<
   function prototype (ie no implementation)
   - need to better parse attr decls to get attr names
