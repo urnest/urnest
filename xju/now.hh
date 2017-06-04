@@ -1,3 +1,5 @@
+#ifndef _XJU_NOW_HCP
+#define _XJU_NOW_HCP
 // Copyright (c) 2017 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -11,11 +13,10 @@
 
 namespace xju
 {
-std::chrono::system_clock::time_point now() throw()
-{
-  return std::chrono::system_clock::now();
+std::chrono::system_clock::time_point now() throw();
+
+
 }
 
-}
 
-
+#endif

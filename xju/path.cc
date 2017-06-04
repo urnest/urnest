@@ -271,6 +271,22 @@ std::pair<AbsolutePath, FileName> split(std::string const& x) throw(
   }
 }
 
+// parent directory of x
+// pre: x.first.size()!=0
+std::pair<AbsolutePath, FileName> dirname(
+  std::pair<AbsolutePath, FileName> const& x) throw()
+{
+  xju::assert_not_equal(x.first.size(),0);
+  return split(str(x.first));
+}
+
+std::pair<AbsolutePath, FileName> join(
+  std::pair<AbsolutePath, FileName> const& dir,
+  FileName const& file) throw()
+{
+  return std::make_pair(AbsolutePath(str(dir)),file);
+}
+
 
 }
 }

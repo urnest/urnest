@@ -190,6 +190,15 @@ std::pair<AbsolutePath, FileName> split(std::string const& x) throw(
   // can't normalise
   xju::Exception);
 
+// parent directory of x
+// pre: x.first.size()!=0
+std::pair<AbsolutePath, FileName> dirname(
+  std::pair<AbsolutePath, FileName> const& x) throw();
+
+std::pair<AbsolutePath, FileName> join(
+  std::pair<AbsolutePath, FileName> const& dir,
+  FileName const& file) throw();
+
 }
 }
 

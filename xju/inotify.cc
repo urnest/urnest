@@ -7,15 +7,15 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <chrono>
+#include <xju/inotify.hh>
+
+#include <sys/inotify.h> //impl
 
 namespace xju
 {
-std::chrono::system_clock::time_point now() throw()
-{
-  return std::chrono::system_clock::now();
+const SyscallF1<int,int> inotify_init1=SyscallF1<int,int>(
+  "::inotify_init",::inotify_init1);
+const SyscallF3<int,int,const char*,uint32_t> inotify_add_watch=
+  SyscallF3<int,int,const char*,uint32_t>(
+    "::inotify_add_watch", ::inotify_add_watch);
 }
-
-}
-
-

@@ -7,15 +7,15 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <chrono>
+#ifndef _XJU_INOTIFY_HCP
+#define _XJU_INOTIFY_HCP
+
+#include <cinttypes>
+#include "xju/syscall.hh"
 
 namespace xju
 {
-std::chrono::system_clock::time_point now() throw()
-{
-  return std::chrono::system_clock::now();
+extern const xju::SyscallF1<int,int> inotify_init1;
+extern const xju::SyscallF3<int,int,const char*,uint32_t> inotify_add_watch;
 }
-
-}
-
-
+#endif

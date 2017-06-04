@@ -4,6 +4,12 @@
 %tests.tree
 
 %tests.tree==<<
+()+cmd=(test-FileObserver.cc+(../..%cxx-opts):auto.cxx.exe):stdout
+
+%FileObserver==()+cmd=(../../hcp/hcp-split) -l 2 (FileObserver.hcp) 'FileObserver.hh' 'FileObserver.cc':output
+
+FileObserver.hh==%FileObserver/FileObserver.hh
+FileObserver.cc==%FileObserver/FileObserver.cc
 
 %Input==()+cmd=(../../hcp/hcp-split) -l 2 (Input.hcp) 'Input.hh' 'Input.cc':output
 

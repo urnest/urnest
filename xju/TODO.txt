@@ -5,7 +5,7 @@ Float add math functions exp, sqrt, log, floor, ceiling etc
 
 test-format add format::octal tests for int, long, long long
 
-xju::file::rmdir,stat
+add xju::file::rm,rmdir,stat,ls
 
 x Thread
 x Mutex,Lock
