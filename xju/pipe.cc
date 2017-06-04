@@ -5,7 +5,7 @@
 #include "xju/NonCopyable.hh" //impl
 #include "xju/assert.hh" //impl
 #line 19
-#include <xju/io/Fd.hh> //impl
+#include <xju/AutoFd.hh> //impl
 
 namespace xju
 {
@@ -22,7 +22,7 @@ class I : public xju::io::IStream
       s << "readable end of pipe (file descriptor " << fileDescriptor() <<")";
       return s.str();
     }
-    explicit I(xju::io::Fd&& fd) throw():
+    explicit I(xju::AutoFd&& fd) throw():
         fd_(std::move(fd))
     {
     }
@@ -32,7 +32,7 @@ class I : public xju::io::IStream
     {
       return fd_.fd();
     }
-    xju::io::Fd fd_;
+    xju::AutoFd fd_;
   };
   class O : public xju::io::OStream, xju::NonCopyable
   {
@@ -44,7 +44,7 @@ class I : public xju::io::IStream
       s << "writeable end of pipe (file descriptor " << fileDescriptor() <<")";
       return s.str();
     }
-    explicit O(xju::io::Fd&& fd) throw():
+    explicit O(xju::AutoFd&& fd) throw():
         fd_(std::move(fd))
     {
     }
@@ -54,7 +54,7 @@ class I : public xju::io::IStream
     {
       return fd_.fd();
     }
-    xju::io::Fd fd_;
+    xju::AutoFd fd_;
   };
 }
 
@@ -63,8 +63,8 @@ std::pair<std::unique_ptr<xju::io::IStream>, std::unique_ptr<xju::io::OStream> >
   bool closeWriteEndOnExec) throw(std::bad_alloc,
                                   SyscallFailed) {
   std::pair<int,int> fds(xju::pipe_());
-  xju::io::Fd fdr(fds.first); //ensure close on exception
-  xju::io::Fd fdw(fds.second); //ensure close on exception
+  xju::AutoFd fdr(fds.first); //ensure close on exception
+  xju::AutoFd fdw(fds.second); //ensure close on exception
   if (!closeReadEndOnExec) {
     ::fcntl(fdr.fd(),F_SETFD,::fcntl(fdw.fd(),F_GETFD)&~FD_CLOEXEC);
   }

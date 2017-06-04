@@ -23,7 +23,7 @@
 #include <sstream>
 #include <ctype.h>
 #include <xju/path.hh>
-#include <xju/readFile.hh>
+#include <xju/file/read.hh>
 #include <fstream>
 #include <xju/format.hh>
 #include <xju/stringToUInt.hh>
@@ -509,7 +509,7 @@ int main(int argc, char* argv[])
                    inputFile.second,
                    cmd_line.first.dir_levels_));
     
-    std::string const x(xju::readFile(xju::path::str(inputFile)));
+    std::string const x(xju::file::read(inputFile));
 
     hcp_parser::I at(x.begin(), x.end());
     hcp_ast::CompositeItem root;

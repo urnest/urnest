@@ -7,8 +7,6 @@ test-format add format::octal tests for int, long, long long
 
 xju::file::rmdir,stat
 
-delete xju::readFile, use xju::file::read instead
-
 x Thread
 x Mutex,Lock
 - Condition
@@ -39,7 +37,7 @@ io::Output
       OQueue& output();
         - void enque(void const* message, size_t bytes, Time deadline);
         - is a Output
-  - break up io.hcp into io/xxx with aggregation like snmp.hh
+  x break up io.hcp into io/xxx with aggregation like snmp.hh
   x pipe()
   - SocketPair
       - unique_ptr<IStream> input_;
