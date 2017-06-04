@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/io/Fd.hh>
+#include <xju/AutoFd.hh>
 
 #include <iostream>
 #include <xju/assert.hh>
@@ -18,14 +18,11 @@
 
 namespace xju
 {
-namespace io
-{
-
 void test1() {
-  Fd devnull(::open("/dev/null",O_WRONLY));
+  AutoFd devnull(::open("/dev/null",O_WRONLY));
   xju::syscall(xju::write,XJU_TRACED)(devnull.fd(),"x",1U);
 
-  Fd devnull2(std::move(devnull));
+  AutoFd devnull2(std::move(devnull));
   xju::syscall(xju::write,XJU_TRACED)(devnull2.fd(),"x",1U);
   try {
     xju::syscall(xju::write,XJU_TRACED)(devnull.fd(),"x",1U);
@@ -46,9 +43,8 @@ void test1() {
 }
 
 }
-}
 
-using namespace xju::io;
+using namespace xju;
 
 int main(int argc, char* argv[])
 {

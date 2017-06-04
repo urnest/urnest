@@ -3,9 +3,12 @@
 %all.tree==<<
 %tests.tree
 snmp%tests.tree
+io%tests.tree
+file%tests.tree
 
 %tests.tree == <<
 #()+cmd=(%test-serialisation.cxx.sm+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-AutoFd.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-check_types_related.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=(test-countSignificantBits.cc+(..%cxx-opts):auto.cxx.exe):stdout
 ()+cmd=test '-s' (%test-check_types_related_2_err):stdout
@@ -43,6 +46,11 @@ snmp%tests.tree
 netflow%tests.tree
 
 %test-check_types_related_2_err==test-check_types_related_2.cc+(..%cxx-opts):auto.cxx.exe:err
+
+%AutoFd==()+cmd=(../hcp/hcp-split) -l 1 (AutoFd.hcp) 'AutoFd.hh' 'AutoFd.cc':output
+
+AutoFd.hh==%AutoFd/AutoFd.hh
+AutoFd.cc==%AutoFd/AutoFd.cc
 
 
 %unix_epoch==()+cmd=(../hcp/hcp-split) -l 1 (unix_epoch.hcp) 'unix_epoch.hh' 'unix_epoch.cc':output

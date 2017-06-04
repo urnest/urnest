@@ -7,34 +7,32 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
+#include "xju/NonCopyable.hh"
+
 #include "xju/assert.hh" //impl
 #include "xju/syscall.hh" //impl
 #include "xju/unistd.hh" //impl
-#include "xju/NonCopyable.hh"
 
 
 namespace xju
 {
-namespace io
-{
-
-class Fd : xju::NonCopyable
+class AutoFd : xju::NonCopyable
 {
 public:
   // takes exclusive ownership of fd (close on destroy)
   // pre: fd is valid, open file descriptor
-  explicit Fd(int fd) noexcept:
+  explicit AutoFd(int fd) noexcept:
       fd_(fd)
   {
     xju::assert_greater_equal(fd,0);
   }
-  ~Fd() noexcept
+  ~AutoFd() noexcept
   {
     if (fd_!=-1) {
       xju::syscall(xju::close,XJU_TRACED)(fd_);
     }
   }
-  Fd& operator=(Fd&& x) noexcept
+  AutoFd& operator=(AutoFd&& x) noexcept
   {
     if (this != &x) {
       if (fd_!=-1) {
@@ -45,7 +43,7 @@ public:
     }
     return *this;
   }
-  Fd(Fd&& y) noexcept:
+  AutoFd(AutoFd&& y) noexcept:
       fd_(std::move(y.fd_))
   {
     y.fd_=-1;
@@ -59,5 +57,4 @@ private:
 };
   
 
-}
 }

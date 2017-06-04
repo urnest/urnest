@@ -32,7 +32,7 @@ void write(
     size_t bytesWritten(0);
     do {
       bytesWritten+=xju::syscall(xju::write,XJU_TRACED)(
-        fd.value_,
+        fd.fd(),
         p+bytesWritten,
         contentSize-bytesWritten);
     }

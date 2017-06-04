@@ -5,9 +5,7 @@ Float add math functions exp, sqrt, log, floor, ceiling etc
 
 test-format add format::octal tests for int, long, long long
 
-rename xju::io::Fd to xju::AutoFd, move test too
-
-xju::file::rmdir
+xju::file::rmdir,stat
 
 delete xju::readFile, use xju::file::read instead
 

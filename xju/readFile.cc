@@ -32,7 +32,7 @@ std::string readFile(std::string fileName) throw(
     {
       size_t const x(
         xju::syscall(xju::read, XJU_TRACED)(
-          fd.value_, buffer, 1024));
+          fd.fd(), buffer, 1024));
       if (x == 0)
       {
         return result.str();

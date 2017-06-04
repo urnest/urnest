@@ -1,30 +1,30 @@
-#include <xju/io/Fd.hh>
-#line 1 "/home/xju/urnest/xju/io/Fd.hcp"
-#line 10
+#include <xju/AutoFd.hh>
+#line 1 "/home/xju/urnest/xju/AutoFd.hcp"
+#line 12
 #include "xju/assert.hh" //impl
 #include "xju/syscall.hh" //impl
 #include "xju/unistd.hh" //impl
+
+
 namespace xju
 {
-namespace io
-{
-#line 26
-Fd::Fd(int fd) noexcept:
+#line 24
+AutoFd::AutoFd(int fd) noexcept:
       fd_(fd)
   {
     xju::assert_greater_equal(fd,0);
   }
   
-#line 31
-Fd::~Fd() noexcept
+#line 29
+AutoFd::~AutoFd() noexcept
   {
     if (fd_!=-1) {
       xju::syscall(xju::close,XJU_TRACED)(fd_);
     }
   }
   
-#line 37
-Fd& Fd::operator=(Fd&& x) noexcept
+#line 35
+AutoFd& AutoFd::operator=(AutoFd&& x) noexcept
   {
     if (this != &x) {
       if (fd_!=-1) {
@@ -36,18 +36,17 @@ Fd& Fd::operator=(Fd&& x) noexcept
     return *this;
   }
   
-#line 48
-Fd::Fd(Fd&& y) noexcept:
+#line 46
+AutoFd::AutoFd(AutoFd&& y) noexcept:
       fd_(std::move(y.fd_))
   {
     y.fd_=-1;
   }
   
-#line 53
-int Fd::fd() const noexcept
+#line 51
+int AutoFd::fd() const noexcept
   {
     return fd_;
   }
 
-}
 }
