@@ -111,6 +111,10 @@ public:
   {
     return new ::CORBA::Any(x);
   }
+  virtual ::CORBA::Short f2(::CORBA::Short x)
+  {
+    return x;
+  }
 };
 
   

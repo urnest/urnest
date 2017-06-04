@@ -7,7 +7,7 @@
 #include <hcp/ast.hh> //impl
 #include "xju/assert.hh" //impl
 #line 19
-#include <xju/readFile.hh> //impl
+#include <xju/file/read.hh> //impl
 #line 21
 #include <hcp/tags/splitSymbol.hh> //impl
 
@@ -118,7 +118,7 @@ void augmentRootNamespace(Namespace& rootNamespace,
     // pre: rootNamespace == rootNamespace@pre
     xju::Exception) {
   try {
-    std::string const x(xju::readFile(xju::path::str(tagsFileName)));
+    std::string const x(xju::file::read(tagsFileName));
     hcp_parser::I i(x.begin(), x.end());
     hcp_ast::CompositeItem root;
     

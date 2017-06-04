@@ -21,7 +21,7 @@
 #include <string>
 #include <sstream>
 #include <xju/path.hh>
-#include <xju/readFile.hh>
+#include <xju/file/read.hh>
 #include <xju/format.hh>
 #include "xju/functional.hh"
 #include <utility>
@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
     std::pair<xju::path::AbsolutePath, xju::path::FileName> const inputFile(
       xju::path::split(cmd_line.second[0]));
     
-    std::string const x(xju::readFile(xju::path::str(inputFile)));
+    std::string const x(xju::file::read(inputFile));
 
     Options const options(cmd_line.first);
 

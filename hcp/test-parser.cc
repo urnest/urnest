@@ -12,7 +12,7 @@
 //
 #include <hcp/parser.hh>
 #include "xju/assert.hh"
-#include <xju/readFile.hh>
+#include <xju/file/read.hh>
 
 bool atLeastOneReadableReprFailed=false;
 
@@ -1205,7 +1205,7 @@ void test24(std::vector<std::string> const& f)
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache, false);
-    std::string const x(xju::readFile(f[0]));
+    std::string const x(xju::file::read(xju::path::split(f[0])));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
@@ -1245,7 +1245,7 @@ void test24(std::vector<std::string> const& f)
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache, false);
-    std::string const x(xju::readFile(f[1]));
+    std::string const x(xju::file::read(xju::path::split(f[1])));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
@@ -1266,7 +1266,7 @@ void test25(std::vector<std::string> const& f)
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache, false);
-    std::string const x(xju::readFile(f[2]));
+    std::string const x(xju::file::read(xju::path::split(f[2])));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
@@ -1298,7 +1298,7 @@ void test25(std::vector<std::string> const& f)
   }
   try
   {
-    std::string const x(xju::readFile(f[3]));
+    std::string const x(xju::file::read(xju::path::split(f[3])));
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache, false);
     hcp_ast::CompositeItem root;
@@ -1320,7 +1320,7 @@ void test26(std::vector<std::string> const& f)
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache, false);
-    std::string const x(xju::readFile(f[3]));
+    std::string const x(xju::file::read(xju::path::split(f[3])));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
@@ -1335,7 +1335,7 @@ void test26(std::vector<std::string> const& f)
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache, false);
-    std::string const x(xju::readFile(f[4]));
+    std::string const x(xju::file::read(xju::path::split(f[4])));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
@@ -1375,7 +1375,7 @@ void test27(std::vector<std::string> const& f)
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache, false);
-    std::string const x(xju::readFile(f[3]));
+    std::string const x(xju::file::read(xju::path::split(f[3])));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
@@ -1402,7 +1402,7 @@ void test27(std::vector<std::string> const& f)
   }
   try
   {
-    std::string const x(xju::readFile(f[3])+"xxx");
+    std::string const x(xju::file::read(xju::path::split(f[3]))+"xxx");
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache, false);
     hcp_ast::CompositeItem root;
@@ -1424,7 +1424,7 @@ void test28(std::vector<std::string> const& f)
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache, false);
-    std::string const x(xju::readFile(f[4]));
+    std::string const x(xju::file::read(xju::path::split(f[4])));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
@@ -1439,7 +1439,7 @@ void test28(std::vector<std::string> const& f)
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache, false);
-    std::string const x(xju::readFile(f[5]));
+    std::string const x(xju::file::read(xju::path::split(f[5])));
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     

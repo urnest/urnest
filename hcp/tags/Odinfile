@@ -1,7 +1,7 @@
 %all==(%all.tree:leaves)
 
 %all.tree==<<
-%tests.tree
+%all-tests.tree
 
 %all.idl.sm==<<
 DirName.idl
@@ -71,7 +71,7 @@ augmentRootNamespace.cc==%augmentRootNamespace/augmentRootNamespace.cc
 %test-augmentRootNamespace==(test-augmentRootNamespace.cc)+(%cxx-opts):auto.cxx.exe
 
 
-%tests.tree==<<
+%all-tests.tree==<<
 ()+cmd=(%test-Namespace):exec.output
 ()+cmd=(%test-splitSymbol):exec.output
 ()+cmd=(test-getIdentifierRefAt.cc+(%cxx-opts):auto.cxx.exe):stdout

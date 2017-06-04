@@ -39,8 +39,8 @@ test-hcp-tags%all.tree
 
 %local-standalone-tests.tree == <<
 ()+(%test-parser-cmd):exec.output
-()+cmd=(%test-splitSymbol):exec.output
 test%all-tests.tree
+tags%all-tests.tree
 
 hcp-split == hcp-split.cc+(%opts):auto.cxx.exe
 hcp-parse-file == hcp-parse-file.cc+(%opts):auto.cxx.exe

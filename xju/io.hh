@@ -15,4 +15,5 @@
 #include <xju/io/select.hh>
 #include <xju/io/IStream.hh>
 #include <xju/io/OStream.hh>
+#include <xju/io/FileObserver.hh>
 #endif
