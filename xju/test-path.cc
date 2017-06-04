@@ -150,6 +150,16 @@ void test8()
   xju::assert_equal(
     xju::path::split("/a/b/c"),
     std::make_pair(xju::path::AbsolutePath("/a/b"), xju::path::FileName("c")));
+  xju::assert_equal(
+    xju::path::dirname(xju::path::split("/a/b/c")),
+    std::make_pair(xju::path::AbsolutePath("/a"), xju::path::DirName("b")));
+
+  xju::assert_equal(
+    xju::path::splitdir("/a/b/c"),
+    std::make_pair(xju::path::AbsolutePath("/a/b"), xju::path::DirName("c")));
+  xju::assert_equal(
+    xju::path::dirname(xju::path::splitdir("/a/b/c")),
+    std::make_pair(xju::path::AbsolutePath("/a"), xju::path::DirName("b")));
 }
 
 int main(int argc, char* argv[])

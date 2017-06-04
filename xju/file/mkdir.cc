@@ -10,7 +10,7 @@ namespace xju
 {
 namespace file
 {
-void mkdir(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& d,
+void mkdir(std::pair<xju::path::AbsolutePath,xju::path::DirName> const& d,
            mode_t mode)
   throw(xju::Exception)
 {

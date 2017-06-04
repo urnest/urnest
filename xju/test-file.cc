@@ -16,8 +16,9 @@ namespace xju
 {
 
 void test1() {
-  auto const d(xju::path::split("x"));
   auto const f(xju::path::split("x/y"));
+  auto const d(xju::path::dirname(f));
+  
   xju::file::mkdir(d,0777);
   xju::file::touch(f,0777);
   xju::assert_equal(xju::file::read(f),"");

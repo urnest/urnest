@@ -15,6 +15,7 @@
 #include <xju/next.hh>
 #include <xju/format.hh>
 #include <unistd.h>
+#include "xju/prev.hh"
 
 namespace xju
 {
@@ -179,6 +180,15 @@ std::string str(std::pair<AbsolutePath, FileName> const& x) throw()
   return str(x.first, x.second);
 }
 
+std::string str(AbsolutePath const& x, DirName const& y) throw()
+{
+  return str(x)+"/"+y._+"/";
+}
+std::string str(std::pair<AbsolutePath, DirName> const& x) throw()
+{
+  return str(x.first, x.second);
+}
+
 std::string str(RelativePath const& x, FileName const& y) throw()
 {
   if (x.size()) {
@@ -271,20 +281,53 @@ std::pair<AbsolutePath, FileName> split(std::string const& x) throw(
   }
 }
 
-// parent directory of x
-// pre: x.first.size()!=0
-std::pair<AbsolutePath, FileName> dirname(
+std::pair<AbsolutePath, DirName> splitdir(std::string const& x) throw(
+  xju::Exception)
+{
+  try {
+    if (x.size() && (x[0]=='/')) {
+      return std::make_pair(absolute_dirname(x),
+                            DirName(basename(x)._));
+    }
+    return std::make_pair(working_dir()+relative_dirname(x),
+                          DirName(basename(x)._));
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "split " << x << " into absolute path and dirname, from working "
+      << "directory " << working_dir();
+    e.addContext(s.str(), XJU_TRACED);
+    throw;
+  }
+}
+
+std::pair<AbsolutePath, DirName> dirname(
   std::pair<AbsolutePath, FileName> const& x) throw()
 {
   xju::assert_not_equal(x.first.size(),0);
-  return split(str(x.first));
+  return std::make_pair(
+    AbsolutePath(
+      std::vector<DirName>(x.first.begin(),xju::prev(x.first.end()))),
+    *x.first.rbegin());
+}
+
+std::pair<AbsolutePath, DirName> dirname(
+  std::pair<AbsolutePath, DirName> const& x) throw()
+{
+  xju::assert_not_equal(x.first.size(),0);
+  return std::make_pair(
+    AbsolutePath(
+      std::vector<DirName>(x.first.begin(),xju::prev(x.first.end()))),
+    *x.first.rbegin());
 }
 
 std::pair<AbsolutePath, FileName> join(
-  std::pair<AbsolutePath, FileName> const& dir,
+  std::pair<AbsolutePath, DirName> const& dir,
   FileName const& file) throw()
 {
-  return std::make_pair(AbsolutePath(str(dir)),file);
+  std::vector<DirName> x(dir.first.begin(),dir.first.end());
+  x.push_back(dir.second);
+  return std::make_pair(AbsolutePath(x),file);
 }
 
 

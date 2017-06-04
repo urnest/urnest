@@ -36,6 +36,7 @@ public:
     xju::Exception);
 
   typedef std::vector<DirName>::const_iterator const_iterator;
+  typedef std::vector<DirName>::const_reverse_iterator const_reverse_iterator;
   
   size_t size() const throw() {
     return x_.size();
@@ -47,6 +48,14 @@ public:
   
   const_iterator end() const throw() {
     return x_.end();
+  }
+  
+  const_reverse_iterator rbegin() const throw() {
+    return x_.rbegin();
+  }
+  
+  const_reverse_iterator rend() const throw() {
+    return x_.rend();
   }
   
 private:
@@ -94,6 +103,7 @@ public:
     xju::Exception);
 
   typedef std::vector<DirName>::const_iterator const_iterator;
+  typedef std::vector<DirName>::const_reverse_iterator const_reverse_iterator;
   
   size_t size() const throw() {
     return x_.size();
@@ -105,6 +115,14 @@ public:
   
   const_iterator end() const throw() {
     return x_.end();
+  }
+  
+  const_reverse_iterator rbegin() const throw() {
+    return x_.rbegin();
+  }
+  
+  const_reverse_iterator rend() const throw() {
+    return x_.rend();
   }
   
 private:
@@ -165,6 +183,9 @@ typedef xju::Tagged<std::string, FileNameTag> FileName;
 std::string str(AbsolutePath const& x, FileName const& y) throw();
 std::string str(std::pair<AbsolutePath, FileName> const& x) throw();
 
+std::string str(AbsolutePath const& x, DirName const& y) throw();
+std::string str(std::pair<AbsolutePath, DirName> const& x) throw();
+
 std::string str(RelativePath const& x, FileName const& y) throw();
 std::string str(std::pair<RelativePath, FileName> const& x) throw();
 
@@ -190,13 +211,26 @@ std::pair<AbsolutePath, FileName> split(std::string const& x) throw(
   // can't normalise
   xju::Exception);
 
+// split x into absolute path (using working dir if necessary) and
+// dir name
+std::pair<AbsolutePath, DirName> splitdir(std::string const& x) throw(
+  // can't normalise
+  xju::Exception);
+
 // parent directory of x
 // pre: x.first.size()!=0
-std::pair<AbsolutePath, FileName> dirname(
+std::pair<AbsolutePath, DirName> dirname(
   std::pair<AbsolutePath, FileName> const& x) throw();
 
+// parent directory of x
+// pre: x.first.size()!=0
+std::pair<AbsolutePath, DirName> dirname(
+  std::pair<AbsolutePath, DirName> const& x) throw();
+
+// parent directory of x
+// pre: x.first.size()!=0
 std::pair<AbsolutePath, FileName> join(
-  std::pair<AbsolutePath, FileName> const& dir,
+  std::pair<AbsolutePath, DirName> const& dir,
   FileName const& file) throw();
 
 }

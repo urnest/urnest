@@ -26,6 +26,13 @@ void rename(
     xju::Exception);
 
 
+// rename directory to newName
+void rename(
+  std::pair<xju::path::AbsolutePath,xju::path::DirName> const& directory,
+  std::pair<xju::path::AbsolutePath,xju::path::DirName> const& newName) throw(
+    xju::Exception);
+
+
 }
 }
 #endif

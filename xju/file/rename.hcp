@@ -38,5 +38,24 @@ void rename(
   }
 }
 
+// rename directory to newName
+void rename(
+  std::pair<xju::path::AbsolutePath,xju::path::DirName> const& directory,
+  std::pair<xju::path::AbsolutePath,xju::path::DirName> const& newName) throw(
+    xju::Exception)
+{
+  try {
+    xju::syscall(xju::rename,XJU_TRACED)(xju::path::str(directory).c_str(),
+                                      xju::path::str(newName).c_str());
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "rename " << xju::path::str(directory) << " to "
+      << xju::path::str(newName);
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
 }
 }
