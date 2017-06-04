@@ -1,6 +1,7 @@
 - handle enum/scoped enum with fixed type
 
-- handle using xju::Exception; in derived class
+- handle using base class method/member
+  - eg handle using xju::Exception; in derived class see REVISIT in hcp/tags
 
 x handle scoped enum (non-fixed type)
 

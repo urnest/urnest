@@ -18,7 +18,8 @@
 #include <vector>
 #include <map>
 #include <utility>
-#include <xju/path/path.hh>
+#include <xju/path.hh>
+#include <atomic>
 
 namespace hcp
 {
@@ -40,7 +41,7 @@ public:
   {
     std::set<xju::io::Input const*> const inputs(
       {&filesWatcher_,&*stopper_.second});
-    while(!stop_) {
+    while(!stop_.load()) {
       if (xju::io::select(inputs,xju::now()+std::chrono::seconds(10))
           .find(&filesWatcher_)!=inputs.end()) {
         updateFiles();
@@ -50,7 +51,7 @@ public:
   
   void stop() throw()
   {
-    stop_=true;
+    stop_.store(true);
     stopper_.second->write("x",1U,std::chrono::system_clock::now());
   }
 
@@ -90,7 +91,7 @@ public:
 private:
   typedef std::pair<xju::path::AbsolutePath,xju::path::FileName> FileId;
 
-  std::AtomicFlag stop_;
+  std::atomic<bool> stop_;
   xju::INotify const filesWatcher_;
   std::map<FileId, std::unique_ptr<TagsFile> > const files_;
 
