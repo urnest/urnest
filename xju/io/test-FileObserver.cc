@@ -65,6 +65,10 @@ void test1() {
   }
   xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
                        
+  // touch existing file - note no change
+  xju::file::touch(f1,0777);
+  xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
+                       
   // create non-watched file
   xju::file::write(f3,"fred",0777);
   xju::assert_equal(o.read(xju::now()).size(),0U);
@@ -102,6 +106,19 @@ void test1() {
     xju::assert_equal(*r.begin(),f2);
   }
   xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
+
+  // two mods
+  xju::file::write(f3,"pete",0777);
+  xju::file::rename(f3,f1);
+  xju::file::write(f3,"jock",0777);
+  xju::file::rename(f3,f2);
+  xju::assert_equal(xju::io::select({&o},xju::now()).size(),1U);
+
+  {
+    auto const r(o.read(xju::now()));
+    xju::assert_equal(r.size(),2U);
+    xju::assert_equal(r,std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName>>({f1,f2}));
+  }
   
 }
 
