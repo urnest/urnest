@@ -20,6 +20,7 @@
 #include <utility>
 #include <xju/path.hh>
 #include <atomic>
+#include "xju/io/FileObserver.hh"
 
 namespace hcp
 {
@@ -89,14 +90,30 @@ public:
   }
   
 private:
-  typedef std::pair<xju::path::AbsolutePath,xju::path::FileName> FileId;
+  typedef std::pair<xju::path::AbsolutePath,xju::path::FileName> AbsFile;
 
   std::atomic<bool> stop_;
-  xju::INotify const filesWatcher_;
-  std::map<FileId, std::unique_ptr<TagsFile> > const files_;
+  xju::io::FileObserver filesWatcher_;
+  std::map<AbsFile, std::unique_ptr<TagsFile> > files_;
 
   std::pair<std::unique_ptr<xju::io::IStream>,
             std::unique_ptr<xju::io::OStream> > const stopper_;
+
+  static std::map<AbsFile, std::unique_ptr<TagsFile> > makeFiles(
+    std::set<AbsFile> const& tagsFiles) throw()
+  {
+    std::map<AbsFile, std::unique_ptr<TagsFile> > result;
+    std::transform(tagsFiles.begin(),
+                   tagsFiles.end(),
+                   std::inserter(result,result.end()),
+                   [](AbsFile const& f) {
+                     return std::make_pair(
+                       f,
+                       std::unique_ptr<TagsFile>(
+                         new TagsFile(f.first,f.second)));
+                   });
+  }
+                     
 };
   
 }

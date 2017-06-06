@@ -25,18 +25,18 @@ namespace tags
 class TagsFile : public Lookup
 {
 public:
+  xju::path::AbsolutePath const d_;
+  xju::path::FileName const f_;
+
   explicit TagsFile(xju::path::AbsolutePath const& d,
                     xju::path::FileName const& f) throw():
       d_(d),
-      f_(f) {
-    try {
-      reload();
-    }
-    catch(xju::Exception const& e) {
-      std::cerr << "ERROR: " << readableRepr(e) << std::endl;
-    }
+      f_(f)
+  {
+    reload();
   }
-  void reload() throw(xju::Exception)
+
+  void reload() throw()
   {
     xju::Lock l(guard_);
     try {
@@ -50,13 +50,10 @@ public:
       s << "reload tags file "
         << xju::path::str(d_,f_);
       e.addContext(s.str(),XJU_TRACED);
-      throw;
+      std::cerr << "ERROR: " << readableRepr(e) << std::endl;
     }
   }
   
-  xju::path::AbsolutePath const d_;
-  xju::path::FileName const f_;
-
   Locations lookupSymbol(NamespaceNames const& fromScope,
                          NamespaceNames const& symbolScope,
                          UnqualifiedSymbol const& symbol) throw() {
@@ -81,5 +78,3 @@ private:
   
 }
 }
-
-
