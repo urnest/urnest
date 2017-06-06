@@ -16,7 +16,7 @@ namespace xju
 {
 namespace file
 {
-void touch(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& d,
+void touch(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& f,
            mode_t mode)
   throw(xju::Exception);
 
