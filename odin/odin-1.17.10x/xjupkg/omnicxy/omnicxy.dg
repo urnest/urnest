@@ -9,11 +9,17 @@
 
 :idl.sm.list 'list from :idl.sm' ? => :LIST;
 
+READ-LIST (:idl.sm) => (:idl.sm.list);
+
 :idl.list 'list of idl files' ? => :LIST;
 
 :idl.list.m ':idl.list from :idl.sm' => :idl.list;
 
+COLLECT (:idl.sm.list :recurse=:idl.sm.list) => (:idl.list.m);
+
 :idl.list.s ':idl.list from .idl' => :idl.list;
+
+COLLECT (:IDL) => (:idl.list.s);
 
 :omnicxy.hcp.list 'list of :hcp files generated from .idl file' ? => :hcp.list;
 
@@ -31,7 +37,7 @@ $ODIN_OMNICXY_OMNIIDL 'name of omniidl program' = 'omniidl';
 
 +cxy 'flags to pass to omniidl cxy backend (omit the -Wb)' ? => :cat;
 
-EXEC (omniidl.sh) (:IDL) (+hpath) (+cxy-be-dir) (+cxy) (+inc_sp)
+EXEC (omnicxy.sh) (:IDL) (+hpath) (+cxy-be-dir) (+cxy) (+inc_sp)
   NEEDS (+cxy-be-dir:list:map=:list) (:IDL:lookup=:hash_inc_all)
         ($ODIN_OMNICXY_BE_DIR/cxy.py)
         ($ODIN_OMNICXY_BE_DIR/cxycref.py)
@@ -42,3 +48,24 @@ EXEC (omniidl.sh) (:IDL) (+hpath) (+cxy-be-dir) (+cxy) (+inc_sp)
   => (:omnicxy);
 
 READ-LIST (:omnicxy) => (:omnicxy.hcp.list);
+
+
+:omnicxy.virdir-spec 'odinfile with virtual targets for hh and cc files generated from a .idl file'? => :FILE;
+
+:omnicxy.virdir-specs 'list of :omnicxy.virdir-spec'? => :REFERENCE;
+
+COLLECT (:idl.list:map=:omnicxy.virdir-spec) => (:omnicxy.virdir-specs);
+
+EXEC (omnicxy.virdir-spec.sh) (:IDL)@ (:omnicxy)@ (+hh-ext) (+cc-ext) => (:omnicxy.virdir-spec);
+
+:omnicxy.targets-spec 'odinfile with targets for hh and cc files generated from a .idl file'? => :FILE;
+
+:omnicxy.targets-specs 'list of :omnicxy.target-spec'? => :REFERENCE;
+
+:omnicxy.targets 'odinfile covering hh and cc files generated from idl.sm'? => :REFERENCE;
+
+COLLECT (:idl.list:map=:omnicxy.targets-spec) => (:omnicxy.targets-specs);
+
+EXEC (omnicxy.targets-spec.sh) (:IDL)@ (:omnicxy)@ (+hh-ext) (+cc-ext) => (:omnicxy.targets-spec);
+
+COLLECT (:omnicxy.targets-specs:cat) => (:omnicxy.targets);

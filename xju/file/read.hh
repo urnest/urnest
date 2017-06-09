@@ -1,5 +1,5 @@
-#ifndef _XJU_FILE_READ_HCP
-#define _XJU_FILE_READ_HCP
+#ifndef _READ_HCP
+#define _READ_HCP
 // Copyright (c) 2017 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software

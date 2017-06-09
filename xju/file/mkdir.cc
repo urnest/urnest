@@ -1,6 +1,4 @@
-#include <xju/file/mkdir.hh>
-#line 1 "/home/xju/urnest/xju/file/mkdir.hcp"
-#line 13
+#include "mkdir.hh"
 #include "xju/syscall.hh" //impl
 #include <sys/stat.h> //impl
 #include <sys/types.h> //impl

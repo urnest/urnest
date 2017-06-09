@@ -6,32 +6,4 @@
 %tests.tree==<<
 ()+cmd=(test-FileObserver.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 
-%FileObserver==()+cmd=(../../hcp/hcp-split) -l 2 (FileObserver.hcp) 'FileObserver.hh' 'FileObserver.cc':output
-
-FileObserver.hh==%FileObserver/FileObserver.hh
-FileObserver.cc==%FileObserver/FileObserver.cc
-
-%Input==()+cmd=(../../hcp/hcp-split) -l 2 (Input.hcp) 'Input.hh' 'Input.cc':output
-
-Input.hh==%Input/Input.hh
-Input.cc==%Input/Input.cc
-
-%Output==()+cmd=(../../hcp/hcp-split) -l 2 (Output.hcp) 'Output.hh' 'Output.cc':output
-
-Output.hh==%Output/Output.hh
-Output.cc==%Output/Output.cc
-
-%select==()+cmd=(../../hcp/hcp-split) -l 2 (select.hcp) 'select.hh' 'select.cc':output
-
-select.hh==%select/select.hh
-select.cc==%select/select.cc
-
-%IStream==()+cmd=(../../hcp/hcp-split) -l 2 (IStream.hcp) 'IStream.hh' 'IStream.cc':output
-
-IStream.hh==%IStream/IStream.hh
-IStream.cc==%IStream/IStream.cc
-
-%OStream==()+cmd=(../../hcp/hcp-split) -l 2 (OStream.hcp) 'OStream.hh' 'OStream.cc':output
-
-OStream.hh==%OStream/OStream.hh
-OStream.cc==%OStream/OStream.cc
+==(.:dir.hcp.list:hcp-split)

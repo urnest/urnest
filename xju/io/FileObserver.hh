@@ -1,5 +1,5 @@
-#ifndef _XJU_IO_FILEOBSERVER_HCP
-#define _XJU_IO_FILEOBSERVER_HCP
+#ifndef _FILEOBSERVER_HCP
+#define _FILEOBSERVER_HCP
 // Copyright (c) 2017 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software

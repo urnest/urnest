@@ -1,6 +1,4 @@
-#include <xju/io/select.hh>
-#line 1 "/home/xju/urnest/xju/io/select.hcp"
-#line 15
+#include "select.hh"
 #include <xju/io/Input.hh> //impl
 #include <xju/io/Output.hh> //impl
 
@@ -12,7 +10,6 @@ namespace xju
 {
 namespace io
 {
-#line 37
 std::pair<std::set<Input const*>,std::set<Output const*> > select(
   std::set<Input const*> const& inputs,
   std::set<Output const*> const& outputs,

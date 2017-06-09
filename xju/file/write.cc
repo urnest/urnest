@@ -1,6 +1,4 @@
-#include <xju/file/write.hh>
-#line 1 "/home/xju/urnest/xju/file/write.hcp"
-#line 13
+#include "write.hh"
 #include <unistd.h> //impl
 #include "xju/fcntl.hh" //impl
 #include "xju/AutoFd.hh" //impl
@@ -15,7 +13,6 @@ namespace xju
 {
 namespace file
 {
-#line 31
 void write(
   std::pair<xju::path::AbsolutePath,xju::path::FileName> const& file,
   void const* content,

@@ -2,8 +2,6 @@
 
 source="$1" && shift &&
 hcpsplit="$1" && shift &&
-hh=$(cat "$1") && shift &&
-cc=$(cat "$1") && shift &&
 hhext="$1" && shift &&
 ccext="$1" && shift &&
 
@@ -34,10 +32,6 @@ fi &&
   verbose "$hcpsplit $hcpflags $source $b.$hhext $b.$ccext" &&
   $hcpsplit $hcpflags $source $b.$hhext $b.$ccext &&
   mv $b.$hhext hcp.hh &&
-  mv $b.$ccext hcp.cc &&
-  cat > hcp-split-virdir-spec <<EOF
-$b.$hhext==$hh
-$b.$ccext==$cc
-EOF
+  mv $b.$ccext hcp.cc
 ) 2>> WARNINGS || mv WARNINGS ERRORS )
 )

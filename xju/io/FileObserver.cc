@@ -1,6 +1,4 @@
-#include <xju/io/FileObserver.hh>
-#line 1 "/home/xju/urnest/xju/io/FileObserver.hcp"
-#line 23
+#include "FileObserver.hh"
 #include <xju/inotify.hh> //impl
 #include <limits.h> //impl
 #include "xju/syscall.hh" //impl
@@ -17,7 +15,6 @@ namespace xju
 {
 namespace io
 {
-#line 40
 namespace
 {
 struct Buffer
@@ -61,7 +58,6 @@ std::map<int,xju::path::AbsolutePath> addWatches(
 
 }
 
-#line 91
 FileObserver::FileObserver(std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& files) throw(
     // - no resources (see initify_init1)
     // - missing/unreadable parent directory
@@ -87,7 +83,6 @@ FileObserver::FileObserver(std::set<std::pair<xju::path::AbsolutePath,xju::path:
   // - if deadline has passed, gets any past, unread changes
   // - only returns names originally asked for
   
-#line 115
 std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > FileObserver::read(
     std::chrono::system_clock::time_point deadline) throw()
   {
@@ -138,7 +133,6 @@ std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > FileObserver::
   }
   
 
-#line 173
 int FileObserver::fileDescriptor() const throw()
   {
     return fd_.fd();
@@ -146,7 +140,6 @@ int FileObserver::fileDescriptor() const throw()
 
   //Input::
   
-#line 179
 std::string FileObserver::str() const throw()
   {
     std::ostringstream s;

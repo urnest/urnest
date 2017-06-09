@@ -1,5 +1,5 @@
-#ifndef _XJU_IO_SELECT_HCP
-#define _XJU_IO_SELECT_HCP
+#ifndef _SELECT_HCP
+#define _SELECT_HCP
 // Copyright (c) 2017 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software

@@ -496,6 +496,14 @@ int main(int argc, char* argv[])
     std::pair<xju::path::AbsolutePath, xju::path::FileName> const inputFile(
       xju::path::split(cmd_line.second[0]));
     
+    std::string const x(hcp::readFile(inputFile));
+
+    hcp_parser::I at(x.begin(), x.end());
+    hcp_ast::CompositeItem root;
+    at = hcp_parser::parse(root, at, hcp_parser::file());
+    xju::assert_equal(root.items_.size(), 1U);
+
+    
     std::pair<xju::path::AbsolutePath, xju::path::FileName> const outputHH(
       xju::path::split(cmd_line.second[1]));
     std::pair<xju::path::AbsolutePath, xju::path::FileName> const outputCC(
@@ -508,13 +516,6 @@ int main(int argc, char* argv[])
         make_guard(inputFile.first,
                    inputFile.second,
                    cmd_line.first.dir_levels_));
-    
-    std::string const x(hcp::readFile(inputFile));
-
-    hcp_parser::I at(x.begin(), x.end());
-    hcp_ast::CompositeItem root;
-    at = hcp_parser::parse(root, at, hcp_parser::file());
-    xju::assert_equal(root.items_.size(), 1U);
     
     std::ofstream fh(xju::path::str(outputHH).c_str(), 
                      std::ios_base::out|std::ios_base::trunc);

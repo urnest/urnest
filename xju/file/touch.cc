@@ -1,6 +1,4 @@
-#include <xju/file/touch.hh>
-#line 1 "/home/xju/urnest/xju/file/touch.hcp"
-#line 13
+#include "touch.hh"
 #include <fcntl.h> //impl
 #include <unistd.h> //impl
 #include "xju/unistd.hh" //impl

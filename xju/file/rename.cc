@@ -1,13 +1,10 @@
-#include <xju/file/rename.hh>
-#line 1 "/home/xju/urnest/xju/file/rename.hcp"
-#line 14
+#include "rename.hh"
 #include <stdio.h> //impl
 #include "xju/syscall.hh" //impl
 namespace xju
 {
 namespace file
 {
-#line 23
 void rename(
   std::pair<xju::path::AbsolutePath,xju::path::FileName> const& file,
   std::pair<xju::path::AbsolutePath,xju::path::FileName> const& newName) throw(
