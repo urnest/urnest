@@ -23,7 +23,7 @@
 #include <sstream>
 #include <ctype.h>
 #include <xju/path.hh>
-#include <xju/file/read.hh>
+#include <hcp/readFile.hh>
 #include <fstream>
 #include <xju/format.hh>
 #include <xju/stringToUInt.hh>
@@ -250,7 +250,7 @@ int main(int argc, char* argv[])
 
     for(char** arg=argv+1; arg!=argv+argc; ++arg) {
       File const inputFile(xju::path::split(*arg));
-      std::string const x(xju::file::read(inputFile));
+      std::string const x(hcp::readFile(inputFile));
       try {
         hcp_parser::I at(x.begin(), x.end());
         hcp_ast::CompositeItem root;

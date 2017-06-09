@@ -15,19 +15,11 @@
 
 :idl.list.s ':idl.list from .idl' => :idl.list;
 
-:omnicxy 'vir-dir of files generated from .idl files' ? => :REFERENCE;
+:omnicxy.hcp.list.ls 'ls of :hcp files generated from .idl file' => :FILE;
 
-:omnicxy.output 'directory of files generated from a .idl file' ? => :DERIVED-DIRECTORY;
+:omnicxy.hcp.list 'list of :hcp files generated from .idl file' ? => :hcp.list;
 
-:hcpsplit.output 'directory of files generated from a .idl file' ? => :DERIVED-DIRECTORY;
-
-:omnicxy.vir_dir_spec 'vir dir spec with all files in :hcpsplit.output directory' ? => :FILE;
-
-:omnicxy.vir_dir_spec.s ':omnicxy.vir_dir_spec from single .idl file' ? => :omnicxy.vir_dir_spec;
-
-#:omnicxy.vir_dir_spec.m ':omnicxy.vir_dir_spec from .idl.sm' ? => :omnicxy.vir_dir_spec;
-
-+hcp-split 'hcp-split exe, default to hcp-split on PATH' ? => :first;
+:omnicxy 'directory of :hcp files generated from a .idl file' ? => :DERIVED-DIRECTORY;
 
 +hpath 'path to locate all generated headers, in generated #include statements (see hcp-split -hpath option), eg x/y generates #include <x/y/idl.hh>' ? => :first;
 
@@ -41,8 +33,6 @@ $ODIN_OMNICXY_OMNIIDL 'name of omniidl program' = 'omniidl';
 
 +cxy 'flags to pass to omniidl cxy backend (omit the -Wb)' ? => :cat;
 
-+ntc 'pass to -ntc to hcp-split, disabling file-and-line tracking in generated cc files' ? => :first;
-
 EXEC (omniidl.sh) (:IDL) (+hpath) (+cxy-be-dir) (+cxy) (+inc_sp)
   NEEDS (+cxy-be-dir:list:map=:list) (:IDL:lookup=:hash_inc_all)
         ($ODIN_OMNICXY_BE_DIR/cxy.py)
@@ -51,18 +41,8 @@ EXEC (omniidl.sh) (:IDL) (+hpath) (+cxy-be-dir) (+cxy) (+inc_sp)
         ($ODIN_OMNICXY_BE_DIR/cxycdr.py)
         ($ODIN_OMNICXY_BE_DIR/cxysref.py)
         ($ODIN_OMNICXY_BE_DIR/cxyany.py)
-  => (:omnicxy.output);
+  => (:omnicxy);
 
-EXEC (hcpsplit.sh) (:omnicxy.output) (+hcp-split) (+hpath) (+ntc)
-  NEEDS (:omnicxy.output:list)
-  => (:hcpsplit.output);
+EXEC (omnicxy.hcp.list.sh) (:IDL)@ (:omnicxy)@ => (:omnicxy.hcp.list.ls);
 
-EXEC (vir_dir_spec.sh) (:hcpsplit.output) => (:omnicxy.vir_dir_spec.s);
-
-COLLECT (:IDL) => (:idl.list.s);
-
-READ-LIST (:idl.sm) => (:idl.sm.list);
-
-COLLECT (:idl.sm.list :recurse=:idl.sm.list) => (:idl.list.m);
-
-COLLECT (:idl.list :map=:omnicxy.vir_dir_spec.s :cat:vir_dir) => (:omnicxy);
+READ-LIST (:omnicxy.hcp.list.ls) => (:omnicxy.hcp.list);

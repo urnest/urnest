@@ -1,0 +1,62 @@
+#
+# to add targets to hcp-split all .hcp files in current directory, leaving them
+# as .hh and .cc files in the current directory, add to ./Odinfile
+#
+#   == (.:hcp-split-virdir-specs:cat)
+#
+# to split just one .hcp file, producing a derived directory with .hh and
+# .cc files in it: xxx.hcp :hcp-split
+#
+$ODIN_HCP_PATH 'path for hcp-split' = '/usr/bin:/bin';
+$ODIN_HCP_LD_LIBRARY_PATH 'LD_LIBRARY_PATH for hcp-split' = '';
+
+*.hcp => :hcp;
+
+*.hcp.sm  => :hcp.sm;
+
+:hcp.sm 'hcp files tree spec'? => :FILE;
+
+:hcp.sm.list 'list from hcp.sm' => :LIST;
+
+:hcp.list 'list of :hcp files' => :LIST;
+
+:hcp.sm.hcp.list 'list of :hcp files from :hcp.sm' => :hcp.list;
+
+:dir.hcp.list 'list of :hcp files in a directory'? => <:hcp.list>;
+
+:hcp.hh 'C++ header file from hcp-split'? => :h;
+
+:hcp.cc 'C++ implementation file from hcp-split'? => :cxx;
+
+:hcp-split-virdir-spec 'virdir spec covering hcp-split generated files'? => :FILE;
+
+:hcp-split-virdir-specs 'list of :hcp-split-virdir-spec'? => :REFERENCE;
+
+:hcp-split-targets 'odin file with targets for :h and :cxx generated from :hcp.list'? => :FILE;
+
+
++hh-ext 'extension to give generated hh file, default .hh'? => :first;
+
++cc-ext 'extension to give generated cc file, default .cc'? => :first;
+
++hcp-split 'hcp-split exe, default to hcp-split on ODIN_HCP_PATH' ? => :first;
+
+READ-LIST (:hcp.sm)
+   => (:hcp.sm.list);
+
+COLLECT (:hcp.sm.list :recurse=:hcp.sm.list)
+   => (:hcp.sm.hcp.list);
+
+COLLECT (:FILE:list:extract=:hcp) => (:dir.hcp.list);
+
+COLLECT (:hcp.sm.hcp.list:map=:hcp-split-virdir-spec) => (:hcp-split-virdir-specs);
+
+:which-hcp-split 'hcp-split exe from +hcp-split or ODIN_HCP_PATH hcp-split'
+  => :REFERENCE;
+:which-hcp-split-viewspec 'viewspec to locate hcp-split exe' => :FILE;
+
+EXEC (which-hcp-split-viewspec.sh) (+hcp-split) => (:which-hcp-split-viewspec);
+
+COLLECT (:which-hcp-split-viewspec:view:first) => (:which-hcp-split);
+
+EXEC (hcpsplit.sh)  (:hcp) (:which-hcp-split) (:hcp.hh:filename) (:hcp.cc:filename) (+hh-ext) (+cc-ext) => (:hcp.hh) (:hcp.cc) (:hcp-split-virdir-spec);

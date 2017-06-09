@@ -7,32 +7,19 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef _XJU_AUTOFD_HH
-#define _XJU_AUTOFD_HH
+#ifndef HCP_READFILE_HH
+#define HCP_READFILE_HH
 
-#include "xju/NonCopyable.hh"
+#include <utility>
+#include <xju/path.hh>
+#include "xju/Exception.hh"
 
-namespace xju
+namespace hcp
 {
-class AutoFd : xju::NonCopyable
-{
-public:
-  // takes exclusive ownership of fd (close on destroy)
-  // pre: fd is valid, open file descriptor
-  explicit AutoFd(int fd) noexcept;
-
-  ~AutoFd() noexcept;
-
-  AutoFd& operator=(AutoFd&& x) noexcept;
-
-  AutoFd(AutoFd&& y) noexcept;
-
-  int fd() const noexcept;
-
-private:
-  int fd_;
-};
-  
+std::string readFile(
+  std::pair<xju::path::AbsolutePath,xju::path::FileName> const& file) throw(
+    xju::Exception);
 
 }
+
 #endif

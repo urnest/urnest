@@ -39,9 +39,9 @@ if [ $? != 0 ] ; then
     exit 1
 fi ; } &&
 
-mkdir omnicxy.output && 
+mkdir omnicxy && 
 ( (
-  cd omnicxy.output &&
+  cd omnicxy &&
   verbose(){
     test -z "$ODINVERBOSE"||echo "$@"
   }

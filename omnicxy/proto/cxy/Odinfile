@@ -31,7 +31,7 @@ echo.sref.cc
 
 %gen.1==(../p14.idl)+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy.output
 
-%gen-ntc==(..%all.idl.sm)+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext'+ntc:omnicxy
+%gen-ntc==(..%all.idl.sm)+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy
 
 #above %gen assumes OMNICXY_BE_DIR environment variable passed to cache
 #creation, otherwise could use

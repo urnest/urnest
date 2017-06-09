@@ -29,8 +29,12 @@ namespace tags
 class TagLookupService : Lookup
 {
 public:
+  // create tags lookup service covering tagsFiles
+  // - tagsFiles need not exist yet, but their parent directories must exist
   explicit TagLookupService(
-    std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& tagsFiles) throw():
+    std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& tagsFiles) throw(
+      // eg a parent directory does not exist
+      xju::Exception):
       stop_(false),
       filesWatcher_(tagsFiles),
       files_(makeFiles(tagsFiles)),
@@ -38,6 +42,10 @@ public:
   {
   }
 
+  // track tags file changes, until stop() called
+  // - note that files should be updated by writing to a separate file
+  //   then renaming over the tagsFile
+  //
   void run() throw()
   {
     std::set<xju::io::Input const*> const inputs(
@@ -49,13 +57,17 @@ public:
       }
     }
   }
-  
+
+  // make current and future calls to run() return immediately
   void stop() throw()
   {
     stop_.store(true);
     stopper_.second->write("x",1U,std::chrono::system_clock::now());
   }
 
+  // lookup symbol amongst tags files
+  // - returns results from a tags file that knows about symbol
+  //
   Locations lookupSymbol(NamespaceNames const& fromScope,
                          NamespaceNames const& symbolScope,
                          UnqualifiedSymbol const& symbol) throw() {
@@ -73,6 +85,7 @@ public:
     return Locations();
   }
 
+  // update ie reload any files that have changed
   void updateFiles() throw()
   {
     for(auto x: filesWatcher_.read(xju::now())) {
