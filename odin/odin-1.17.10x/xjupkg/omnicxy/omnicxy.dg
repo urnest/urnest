@@ -15,8 +15,6 @@
 
 :idl.list.s ':idl.list from .idl' => :idl.list;
 
-:omnicxy.hcp.list.ls 'ls of :hcp files generated from .idl file' => :FILE;
-
 :omnicxy.hcp.list 'list of :hcp files generated from .idl file' ? => :hcp.list;
 
 :omnicxy 'directory of :hcp files generated from a .idl file' ? => :DERIVED-DIRECTORY;
@@ -43,6 +41,4 @@ EXEC (omniidl.sh) (:IDL) (+hpath) (+cxy-be-dir) (+cxy) (+inc_sp)
         ($ODIN_OMNICXY_BE_DIR/cxyany.py)
   => (:omnicxy);
 
-EXEC (omnicxy.hcp.list.sh) (:IDL)@ (:omnicxy)@ => (:omnicxy.hcp.list.ls);
-
-READ-LIST (:omnicxy.hcp.list.ls) => (:omnicxy.hcp.list);
+READ-LIST (:omnicxy) => (:omnicxy.hcp.list);
