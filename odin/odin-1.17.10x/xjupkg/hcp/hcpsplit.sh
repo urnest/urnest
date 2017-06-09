@@ -4,6 +4,7 @@ source="$1" && shift &&
 hcpsplit="$1" && shift &&
 hhext="$1" && shift &&
 ccext="$1" && shift &&
+hpath="$1" && shift &&
 
 if [ -z "$hhext" ]
 then
@@ -14,6 +15,10 @@ then
   ccext="cc"
 fi &&
 hcpflags="-ntc" &&
+if [ -n "$hpath" ]
+then
+  hcpflags="$hcpflags -hpath $hpath"
+fi &&
 (
 export PATH="$ODIN_HCP_PATH" &&
 export LD_LIBRARY_PATH="$ODIN_HCP_LD_LIBRARY_PATH" &&

@@ -1,6 +1,4 @@
 #include <xju/io/OStream.hh>
-#line 1 "/home/xju/urnest/xju/io/OStream.hcp"
-#line 15
 #include <sstream> //impl
 #include "xju/format.hh" //impl
 #include "xju/syscall.hh" //impl
@@ -13,7 +11,6 @@ namespace xju
 {
 namespace io
 {
-#line 35
 size_t OStream::write(void const* buffer, 
                size_t bufferSize,
                std::chrono::system_clock::time_point deadline) throw(
@@ -56,14 +53,12 @@ size_t OStream::write(void const* buffer,
   }
 
   
-#line 76
 void OStream::useAsStdout() throw()
   {
     xju::syscall(xju::dup2,XJU_TRACED)(fileDescriptor(),1);
   }
   
   
-#line 81
 void OStream::useAsStderr() throw()
   {
     xju::syscall(xju::dup2,XJU_TRACED)(fileDescriptor(),2);

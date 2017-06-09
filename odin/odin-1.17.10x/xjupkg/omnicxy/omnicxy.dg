@@ -56,7 +56,7 @@ READ-LIST (:omnicxy) => (:omnicxy.hcp.list);
 
 COLLECT (:idl.list:map=:omnicxy.virdir-spec) => (:omnicxy.virdir-specs);
 
-EXEC (omnicxy.virdir-spec.sh) (:IDL)@ (:omnicxy)@ (+hh-ext) (+cc-ext) => (:omnicxy.virdir-spec);
+EXEC (omnicxy.virdir-spec.sh) (:IDL)@ (:omnicxy)@ (+hh-ext) (+cc-ext) (+hpath) => (:omnicxy.virdir-spec);
 
 :omnicxy.targets-spec 'odinfile with targets for hh and cc files generated from a .idl file'? => :FILE;
 
@@ -66,6 +66,6 @@ EXEC (omnicxy.virdir-spec.sh) (:IDL)@ (:omnicxy)@ (+hh-ext) (+cc-ext) => (:omnic
 
 COLLECT (:idl.list:map=:omnicxy.targets-spec) => (:omnicxy.targets-specs);
 
-EXEC (omnicxy.targets-spec.sh) (:IDL)@ (:omnicxy)@ (+hh-ext) (+cc-ext) => (:omnicxy.targets-spec);
+EXEC (omnicxy.targets-spec.sh) (:IDL)@ (:omnicxy)@ (+hh-ext) (+cc-ext) (+hpath) => (:omnicxy.targets-spec);
 
 COLLECT (:omnicxy.targets-specs:cat) => (:omnicxy.targets);

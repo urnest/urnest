@@ -1,4 +1,4 @@
-#include "FileObserver.hh"
+#include <xju/io/FileObserver.hh>
 #include <xju/inotify.hh> //impl
 #include <limits.h> //impl
 #include "xju/syscall.hh" //impl

@@ -1,15 +1,11 @@
 #include <xju/pipe.hh>
-#line 1 "/home/xju/urnest/xju/pipe.hcp"
-#line 15
 #include <xju/unistd.hh> //impl
 #include "xju/NonCopyable.hh" //impl
 #include "xju/assert.hh" //impl
-#line 19
 #include <xju/AutoFd.hh> //impl
 
 namespace xju
 {
-#line 24
 namespace
 {
 class I : public xju::io::IStream

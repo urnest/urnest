@@ -43,6 +43,8 @@ $ODIN_HCP_LD_LIBRARY_PATH 'LD_LIBRARY_PATH for hcp-split' = '';
 
 +cc-ext 'extension to give generated cc file, default .cc'? => :first;
 
++hpath 'hpath option to hcp-split'? => :first;
+
 +hcp-split 'hcp-split exe, default to hcp-split on ODIN_HCP_PATH' ? => :first;
 
 READ-LIST (:hcp.sm)
@@ -63,7 +65,7 @@ EXEC (which-hcp-split-viewspec.sh) (+hcp-split) => (:which-hcp-split-viewspec);
 
 COLLECT (:which-hcp-split-viewspec:view:first) => (:which-hcp-split);
 
-EXEC (hcpsplit.sh)  (:hcp) (:which-hcp-split) (+hh-ext) (+cc-ext) => (:hcp.hh) (:hcp.cc);
+EXEC (hcpsplit.sh)  (:hcp) (:which-hcp-split) (+hh-ext) (+cc-ext) (+hpath) => (:hcp.hh) (:hcp.cc);
 
 EXEC (hcp-split-virdir-spec.sh) (:hcp)@  (+hh-ext) (+cc-ext) (:hcp.hh)@ (:hcp.cc)@ => (:hcp-split-virdir-spec);
 

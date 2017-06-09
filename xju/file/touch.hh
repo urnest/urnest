@@ -1,5 +1,5 @@
-#ifndef _TOUCH_HCP
-#define _TOUCH_HCP
+#ifndef _XJU_FILE_TOUCH_HCP
+#define _XJU_FILE_TOUCH_HCP
 // Copyright (c) 2017 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software

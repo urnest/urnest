@@ -1,4 +1,4 @@
-#include "write.hh"
+#include <xju/file/write.hh>
 #include <unistd.h> //impl
 #include "xju/fcntl.hh" //impl
 #include "xju/AutoFd.hh" //impl

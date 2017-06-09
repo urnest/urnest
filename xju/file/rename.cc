@@ -1,4 +1,4 @@
-#include "rename.hh"
+#include <xju/file/rename.hh>
 #include <stdio.h> //impl
 #include "xju/syscall.hh" //impl
 namespace xju

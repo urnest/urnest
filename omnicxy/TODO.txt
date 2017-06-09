@@ -16,6 +16,10 @@ x once hcp-split can understand conversion operators, see //REVISIT in
 
 * update all tests to retry on PortInUse
 
+* omnicxy does not work, need to pass through basename to
+  hcp-split as in the generated cc it uses the .hcp basename which is
+  the odin cache file name
+
 - proto/cxy/echo-main
 
 - how to get just direct includes (in omnipy backend)? currently picks up nested

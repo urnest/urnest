@@ -29,9 +29,7 @@ echo.sref.cc
 
 %gen==(..%all.idl.sm)+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy.virdir-specs:cat:vir_dir
 
-%gen.1==(../p14.idl)+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy.output
-
-%gen-ntc==(..%all.idl.sm)+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy
+%gen.1==(../p14.idl)+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy.virdir-specs:cat:vir_dir
 
 #above %gen assumes OMNICXY_BE_DIR environment variable passed to cache
 #creation, otherwise could use
@@ -52,7 +50,7 @@ p19.hh==%gen/p19.hh
 p20.hh==%gen/p20.hh
 p21.hh==%gen/p21.hh
 echo.hh==%gen/echo.hh
-echo.cc==%gen-ntc/echo.cc
+echo.cc==%gen/echo.cc
 echo.cref.hh==%gen/echo.cref.hh
 echo.cref.cc==%gen/echo.cref.cc
 echo.objref.hh==%gen/echo.objref.hh

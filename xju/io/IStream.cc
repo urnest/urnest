@@ -1,6 +1,4 @@
 #include <xju/io/IStream.hh>
-#line 1 "/home/xju/urnest/xju/io/IStream.hcp"
-#line 15
 #include <sstream> //impl
 #include "xju/format.hh" //impl
 #include "xju/syscall.hh" //impl
@@ -13,7 +11,6 @@ namespace xju
 {
 namespace io
 {
-#line 35
 size_t IStream::read(void* buffer, size_t bufferSize,
               std::chrono::system_clock::time_point const& deadline) throw(
                 std::bad_alloc,
@@ -58,7 +55,6 @@ size_t IStream::read(void* buffer, size_t bufferSize,
 
   //point stdin (file descriptor 0) at this input
   
-#line 78
 void IStream::useAsStdin() throw()
   {
     xju::syscall(xju::dup2,XJU_TRACED)(fileDescriptor(),0);

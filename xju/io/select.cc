@@ -1,4 +1,4 @@
-#include "select.hh"
+#include <xju/io/select.hh>
 #include <xju/io/Input.hh> //impl
 #include <xju/io/Output.hh> //impl
 

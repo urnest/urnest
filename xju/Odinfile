@@ -47,38 +47,5 @@ netflow%tests.tree
 
 %test-check_types_related_2_err==test-check_types_related_2.cc+(..%cxx-opts):auto.cxx.exe:err
 
-%unix_epoch==()+cmd=(../hcp/hcp-split) -l 1 (unix_epoch.hcp) 'unix_epoch.hh' 'unix_epoch.cc':output
-
-unix_epoch.hh==%unix_epoch/unix_epoch.hh
-unix_epoch.cc==%unix_epoch/unix_epoch.cc
-
-%io==()+cmd=(../hcp/hcp-split) -l 1 (io.hcp) 'io.hh' 'io.cc':output
-
-io.hh==%io/io.hh
-io.cc==%io/io.cc
-
-%ip==()+cmd=(../hcp/hcp-split) -l 1 (ip.hcp) 'ip.hh' 'ip.cc':output
-
-ip.hh==%ip/ip.hh
-ip.cc==%ip/ip.cc
-
-%now==()+cmd=(../hcp/hcp-split) -l 1 (now.hcp) 'now.hh' 'now.cc':output
-
-now.hh==%now/now.hh
-now.cc==%now/now.cc
-
-%Holder==()+cmd=(../hcp/hcp-split) -l 1 (Holder.hcp) 'Holder.hh' 'Holder.cc':output
-
-Holder.hh==%Holder/Holder.hh
-Holder.cc==%Holder/Holder.cc
-
-%pipe==()+cmd=(../hcp/hcp-split) -l 1 (pipe.hcp) 'pipe.hh' 'pipe.cc':output
-
-pipe.hh==%pipe/pipe.hh
-pipe.cc==%pipe/pipe.cc
-
-%Subprocess==()+cmd=(../hcp/hcp-split) -l 1 (Subprocess.hcp) 'Subprocess.hh' 'Subprocess.cc':output
-
-Subprocess.hh==%Subprocess/Subprocess.hh
-Subprocess.cc==%Subprocess/Subprocess.cc
+==(.:dir.hcp.list+hpath='xju':hcp-split)
 
