@@ -27,13 +27,13 @@ echo.sref.cc
 
 %run-all-tests==%all-tests.tree:leaves
 
-%gen==(..%all.idl.sm)+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy.virdir-specs:cat:vir_dir
+%gen==(..%all.idl.sm)+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy.virdir
 
-%gen.1==(../p14.idl)+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy.virdir-specs:cat:vir_dir
+%gen.1==(../p14.idl)+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy.virdir
 
 #above %gen assumes OMNICXY_BE_DIR environment variable passed to cache
 #creation, otherwise could use
-#%gen==(..%all.idl.sm)+hcp-split=(../../../hcp/hcp-split)+cxy-be-dir=(../../omniidl_be)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy
+#%gen==(..%all.idl.sm)+hcp-split=(../../../hcp/hcp-split)+cxy-be-dir=(../../omniidl_be)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy.virdir
 
 #code referenced by ../../README.txt
 p2.hh==%gen/p2.hh
@@ -217,7 +217,7 @@ echo "$x" | fgrep TRANSIENT
 %omnicxy-2.v==<<
 %proto==.%gen-2
 
-%gen-2==(%all-2.idl.sm)+hpath='omnicxy/proto'+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy
+%gen-2==(%all-2.idl.sm)+hpath='omnicxy/proto'+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy.virdir
 
 %leak-checks.tree==<<
 %p1-leak-check

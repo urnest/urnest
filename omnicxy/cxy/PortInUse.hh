@@ -1,5 +1,5 @@
-#ifndef _CXY_PORTINUSE_HCP
-#define _CXY_PORTINUSE_HCP
+#ifndef _CXY_PORTINUSE_HH
+#define _CXY_PORTINUSE_HH
 // Copyright (c) 2014 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software

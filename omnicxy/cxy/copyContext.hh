@@ -1,5 +1,5 @@
-#ifndef _CXY_COPYCONTEXT_HCP
-#define _CXY_COPYCONTEXT_HCP
+#ifndef _CXY_COPYCONTEXT_HH
+#define _CXY_COPYCONTEXT_HH
 // Copyright (c) 2014 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software

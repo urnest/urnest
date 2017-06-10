@@ -433,14 +433,14 @@ char make_guard_char(char c) throw()
 }
 
 std::string make_guard(xju::path::AbsolutePath const& pathToInputFile,
-                       xju::path::FileName const& inputFileName,
+                       xju::path::FileName const& outputHHFileName,
                        unsigned int dir_levels) throw(
                          xju::Exception)
 {
   std::ostringstream s;
   s << "make include-guard from last " << dir_levels
     << " levels of " << str(pathToInputFile)
-    << " and " << inputFileName;
+    << " and " << outputHHFileName;
   try {
     std::string x(
       xju::path::str(
@@ -448,7 +448,7 @@ std::string make_guard(xju::path::AbsolutePath const& pathToInputFile,
           std::vector<xju::path::DirName>(
             pathToInputFile.end()-dir_levels,
             pathToInputFile.end())),
-        inputFileName));
+        outputHHFileName));
     std::transform(x.begin(), x.end(),
                    x.begin(),
                    make_guard_char);
@@ -511,10 +511,10 @@ int main(int argc, char* argv[])
     
     std::string const guard(
       cmd_line.first.hpath_.size()?
-        make_guard(cmd_line.first.hpath_+inputFile.second._)
+        make_guard(cmd_line.first.hpath_+outputHH.second._)
       : 
         make_guard(inputFile.first,
-                   inputFile.second,
+                   outputHH.second,
                    cmd_line.first.dir_levels_));
     
     std::ofstream fh(xju::path::str(outputHH).c_str(), 

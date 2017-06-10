@@ -4,6 +4,7 @@ source="$1" && shift &&
 hcpsplit="$1" && shift &&
 hhext="$1" && shift &&
 ccext="$1" && shift &&
+basename_="$1" && shift &&
 hpath="$1" && shift &&
 
 if [ -z "$hhext" ]
@@ -19,6 +20,11 @@ if [ -n "$hpath" ]
 then
   hcpflags="$hcpflags -hpath $hpath"
 fi &&
+b=$(basename "$source" .hcp) &&
+if [ -n "$basename_" ]
+then
+    b="$basename_"
+fi &&
 (
 export PATH="$ODIN_HCP_PATH" &&
 export LD_LIBRARY_PATH="$ODIN_HCP_LD_LIBRARY_PATH" &&
@@ -33,7 +39,6 @@ fi &&
   verbose(){
     test -z "$ODINVERBOSE"||echo "$@"
   }
-  b=$(basename "$source" .hcp) &&
   verbose "$hcpsplit $hcpflags $source $b.$hhext $b.$ccext" &&
   $hcpsplit $hcpflags $source $b.$hhext $b.$ccext &&
   mv $b.$hhext hcp.hh &&

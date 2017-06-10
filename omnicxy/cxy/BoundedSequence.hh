@@ -1,5 +1,5 @@
-#ifndef _CXY_BOUNDEDSEQUENCE_HCP
-#define _CXY_BOUNDEDSEQUENCE_HCP
+#ifndef _CXY_BOUNDEDSEQUENCE_HH
+#define _CXY_BOUNDEDSEQUENCE_HH
 // Copyright (c) 2015 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software

@@ -1,5 +1,5 @@
-#ifndef _P19_HCP
-#define _P19_HCP
+#ifndef _P19_HH
+#define _P19_HH
 // generated from p19.idl by omni cxy idl backend specifying 
 // cxy::Exception from <cxy/Exception.hh> as base class for all ipc exceptions
 

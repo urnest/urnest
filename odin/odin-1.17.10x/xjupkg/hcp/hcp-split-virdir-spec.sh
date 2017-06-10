@@ -3,6 +3,7 @@
 source="$1" && shift &&
 hhext="$1" && shift &&
 ccext="$1" && shift &&
+basename_="$1" && shift &&
 hh="$1" && shift &&
 cc="$1" && shift &&
 
@@ -14,8 +15,12 @@ if [ -z "$ccext" ]
 then
   ccext="cc"
 fi &&
+b=$(basename "$source" .hcp) &&
+if [ -n "$basename_" ]
+then
+    b="$basename_"
+fi &&
 ( (
-  b=$(basename "$source" .hcp) &&
   cat > hcp-split-virdir-spec <<EOF
 %$b.$hhext==$hh
 %$b.$ccext==$cc

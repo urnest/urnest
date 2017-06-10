@@ -1,5 +1,5 @@
-#ifndef _CXY_TYPETAG_HCP
-#define _CXY_TYPETAG_HCP
+#ifndef _CXY_TYPETAG_HH
+#define _CXY_TYPETAG_HH
 // Copyright (c) 2015 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
