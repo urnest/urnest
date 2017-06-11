@@ -27,7 +27,7 @@ void touch(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& f,
     n[1]=n[0];
     xju::AutoFd const fd(
       xju::syscall(xju::open,XJU_TRACED)(xju::path::str(f).c_str(),
-                                         O_CREAT|O_APPEND|O_CLOEXEC,
+                                         O_RDONLY|O_CREAT|O_CLOEXEC,
                                          mode));
     xju::syscall(fut,XJU_TRACED)(fd.fd(),n);
   }

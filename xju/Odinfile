@@ -7,42 +7,42 @@ io%tests.tree
 file%tests.tree
 
 %tests.tree == <<
-#()+cmd=(%test-serialisation.cxx.sm+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-AutoFd.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-check_types_related.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-countSignificantBits.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=test '-s' (%test-check_types_related_2_err):stdout
-()+cmd=(test-EventClient.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-Exception.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-file.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-Float.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-Int.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-Holder.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-io.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-ip.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-JoiningIterator.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-Notifying.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-NotifyingList.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-Observer.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-ObserverP.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-Ring.cxx+(..%cxx-opts)+o_src_suffix=.cc .cxx:auto.cxx.exe):stdout
-()+cmd=(test-Time.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-Traced.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-format.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-functional.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-mt.cc+(..%cxx-opts)+ld_flags=-lpthread:auto.cxx.exe):stdout
-()+cmd=(test-path.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-pipe.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-stringToDouble.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-stringToInt.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-stringToTime.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-stringToUInt.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-Subprocess.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-Thread.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-unix_epoch.cc+(..%cxx-opts):auto.cxx.exe):stdout
-()+cmd=(test-xml.cc+(..%cxx-opts):auto.cxx.exe):stdout
+#()+cmd=(%test-serialisation.cxx.sm+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-AutoFd.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-check_types_related.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-countSignificantBits.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=test '-s' (%test-check_types_related_2_err):exec.output
+()+cmd=(test-EventClient.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-Exception.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-file.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-Float.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-Int.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-Holder.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-io.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-ip.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-JoiningIterator.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-Notifying.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-NotifyingList.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-Observer.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-ObserverP.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-Ring.cxx+(..%cxx-opts)+o_src_suffix=.cc .cxx:auto.cxx.exe):exec.output
+()+cmd=(test-Time.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-Traced.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-format.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-functional.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-mt.cc+(..%cxx-opts)+ld_flags=-lpthread:auto.cxx.exe):exec.output
+()+cmd=(test-path.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-pipe.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-stringToDouble.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-stringToInt.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-stringToTime.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-stringToUInt.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-Subprocess.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-Thread.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-unix_epoch.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-xml.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 snmp%tests.tree
-()+cmd=(print-wordsizes.cc+(..%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(print-wordsizes.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 netflow%tests.tree
 
 %test-check_types_related_2_err==test-check_types_related_2.cc+(..%cxx-opts):auto.cxx.exe:err
