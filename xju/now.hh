@@ -1,5 +1,5 @@
-#ifndef _XJU_NOW_HCP
-#define _XJU_NOW_HCP
+#ifndef _XJU_NOW_HH
+#define _XJU_NOW_HH
 // Copyright (c) 2017 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software

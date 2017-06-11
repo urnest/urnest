@@ -1,5 +1,5 @@
-#ifndef _HCP_TAGS_NAMESPACE_HCP
-#define _HCP_TAGS_NAMESPACE_HCP
+#ifndef _NAMESPACE_HH
+#define _NAMESPACE_HH
 // Copyright (c) 2015 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software

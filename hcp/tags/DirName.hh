@@ -1,5 +1,5 @@
-#ifndef _HCP_TAGS_DIRNAME_HCP
-#define _HCP_TAGS_DIRNAME_HCP
+#ifndef _DIRNAME_HH
+#define _DIRNAME_HH
 // Copyright (c) 2017 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software

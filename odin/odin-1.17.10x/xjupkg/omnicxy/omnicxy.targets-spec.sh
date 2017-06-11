@@ -22,7 +22,7 @@ fi &&
 b=$(basename "$idl" .idl) &&
 if [ -n "$basename_" ]
 then
-  b="$basename_" &&
+  b="$basename_"
 fi &&
 bn="+basename='$b'" &&
 bncref="+basename='$b.cref'" &&

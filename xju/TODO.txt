@@ -8,6 +8,7 @@ test-format add format::octal tests for int, long, long long
 add AbsFile and AbsDir typedefs in xju::path.hh and use them in xju::file::*
 ... and in xju::io::*
 
+* mkdir gets wrong perms?
 add xju::file::rm,rmdir,stat,stat(dir),ls
 
 x Thread

@@ -1,5 +1,4 @@
-#include <hcp/tags/DirName.hh>
-#line 1 "/home/xju/urnest/hcp/tags/DirName.hcp"
+#include "DirName.hh"
 namespace hcp
 {
 namespace tags

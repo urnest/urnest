@@ -1,5 +1,5 @@
-#ifndef _XJU_FILE_MKDIR_HCP
-#define _XJU_FILE_MKDIR_HCP
+#ifndef _XJU_FILE_MKDIR_HH
+#define _XJU_FILE_MKDIR_HH
 // Copyright (c) 2017 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software

@@ -1,6 +1,4 @@
-#include <hcp/tags/splitSymbol.hh>
-#line 1 "/home/xju/urnest/hcp/tags/splitSymbol.hcp"
-#line 15
+#include "splitSymbol.hh"
 #include <algorithm> //impl
 
 namespace hcp

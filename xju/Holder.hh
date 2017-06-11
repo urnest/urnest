@@ -1,5 +1,5 @@
-#ifndef _XJU_HOLDER_HCP
-#define _XJU_HOLDER_HCP
+#ifndef _XJU_HOLDER_HH
+#define _XJU_HOLDER_HH
 // Copyright (c) 2015 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software

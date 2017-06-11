@@ -3,7 +3,7 @@
 
 %run-all-tests==%all-tests.tree:leaves
 
-%gen==(../..%all.idl.sm)+inc_sp=(../../../..)+hcp-split=(../../../../hcp/hcp-split)+cxy-be-dir=(../../../omniidl_be)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext'+cxy='-causeMemberExpression=cause\(\)'+cxy='-contextMemberExpression=context\(\)'+cxy='-e::E=proto/cxy/e/E.hh' :omnicxy
+%gen==(../..%all.idl.sm)+inc_sp=(../../../..)+hcp-split=(../../../../hcp/hcp-split)+cxy-be-dir=(../../../omniidl_be)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext'+cxy='-causeMemberExpression=cause\(\)'+cxy='-contextMemberExpression=context\(\)'+cxy='-e::E=proto/cxy/e/E.hh' :omnicxy.virdir
 
 #generated code for reference
 %p1.hcp==%gen/p1.hcp

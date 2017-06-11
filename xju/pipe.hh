@@ -1,5 +1,5 @@
-#ifndef _XJU_PIPE_HCP
-#define _XJU_PIPE_HCP
+#ifndef _XJU_PIPE_HH
+#define _XJU_PIPE_HH
 // Copyright (c) 2015 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software

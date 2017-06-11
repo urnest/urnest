@@ -1,21 +1,15 @@
-#include <hcp/tags/augmentRootNamespace.hh>
-#line 1 "/home/xju/urnest/hcp/tags/augmentRootNamespace.hcp"
-#line 12
+#include "augmentRootNamespace.hh"
 #include <hcp/parser.hh> //impl
-#line 15
 #include <xju/stringToUInt.hh> //impl
 #include <hcp/ast.hh> //impl
 #include "xju/assert.hh" //impl
-#line 19
 #include <xju/file/read.hh> //impl
-#line 21
 #include <hcp/tags/splitSymbol.hh> //impl
 
 namespace hcp
 {
 namespace tags
 {
-#line 28
 namespace
 {
 typedef hcp_parser::PR PR_;

@@ -1,8 +1,5 @@
-#include <hcp/tags/Namespace.hh>
-#line 1 "/home/xju/urnest/hcp/tags/Namespace.hcp"
-#line 16
+#include "Namespace.hh"
 #include <algorithm> //impl
-#line 18
 #include "xju/next.hh" //impl
 #include <sstream> //impl
 #include <xju/format.hh> //impl
@@ -11,7 +8,6 @@ namespace hcp
 {
 namespace tags
 {
-#line 34
 void Namespace::addSymbol(std::vector<NamespaceName> const& namespace_,
                  UnqualifiedSymbol const& symbol,
                  std::vector<Location> const& locations) throw() {
@@ -25,21 +21,18 @@ void Namespace::addSymbol(std::vector<NamespaceName> const& namespace_,
   }
 
   
-#line 50
 Namespace::UnknownNamespace::UnknownNamespace(const std::string& cause,
                      const xju::Traced& trace) throw():
         xju::Exception(cause,trace)
     {
     }
   
-#line 60
 Namespace::UnknownSymbol::UnknownSymbol(const std::string& cause,
                   const xju::Traced& trace) throw():
         xju::Exception(cause,trace)
     {
     }
   
-#line 73
 std::vector<Location> Namespace::lookup(std::vector<NamespaceName> const& fromScope,
                                std::vector<NamespaceName> const& namespace_,
                                UnqualifiedSymbol const& symbol) const throw(
@@ -65,7 +58,6 @@ std::vector<Location> Namespace::lookup(std::vector<NamespaceName> const& fromSc
       
         
 
-#line 104
 std::vector<Location> Namespace::lookup_(
     std::pair<std::vector<NamespaceName>::const_iterator,
               std::vector<NamespaceName>::const_iterator> const& fromScope,
@@ -99,7 +91,6 @@ std::vector<Location> Namespace::lookup_(
   // necessary
   // post: path.size() || result===root
   
-#line 136
 Namespace& Namespace::findNamespace(
     std::pair<std::vector<NamespaceName>::const_iterator,
               std::vector<NamespaceName>::const_iterator> const& path) throw()
@@ -117,7 +108,6 @@ Namespace& Namespace::findNamespace(
   // find namespace given by path within *this
   // post: path.size() || result===*this
   
-#line 152
 Namespace const& Namespace::findNamespace(
     std::pair<std::vector<NamespaceName>::const_iterator,
               std::vector<NamespaceName>::const_iterator> const& path) const
@@ -150,7 +140,6 @@ Namespace const& Namespace::findNamespace(
   }
   
   
-#line 183
 std::vector<Location> const& Namespace::findSymbol(
     UnqualifiedSymbol const& symbol) const throw(
       UnknownSymbol)

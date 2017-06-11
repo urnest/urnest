@@ -1,5 +1,5 @@
-#ifndef _HCP_TAGS_FILENAME_HCP
-#define _HCP_TAGS_FILENAME_HCP
+#ifndef _FILENAME_HH
+#define _FILENAME_HH
 // Copyright (c) 2015 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software

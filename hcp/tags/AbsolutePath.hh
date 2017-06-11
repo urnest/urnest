@@ -1,5 +1,5 @@
-#ifndef _HCP_TAGS_ABSOLUTEPATH_HCP
-#define _HCP_TAGS_ABSOLUTEPATH_HCP
+#ifndef _ABSOLUTEPATH_HH
+#define _ABSOLUTEPATH_HH
 // Copyright (c) 2015 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software

@@ -1,5 +1,5 @@
-#ifndef _HCP_TAGS_AUGMENTROOTNAMESPACE_HCP
-#define _HCP_TAGS_AUGMENTROOTNAMESPACE_HCP
+#ifndef _AUGMENTROOTNAMESPACE_HH
+#define _AUGMENTROOTNAMESPACE_HH
 // Copyright (c) 2017 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software

@@ -1,5 +1,5 @@
-#ifndef _HCP_TAGS_SPLITSYMBOL_HCP
-#define _HCP_TAGS_SPLITSYMBOL_HCP
+#ifndef _SPLITSYMBOL_HH
+#define _SPLITSYMBOL_HH
 // Copyright (c) 2017 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
