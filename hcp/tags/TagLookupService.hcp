@@ -21,18 +21,20 @@
 #include <xju/path.hh>
 #include <atomic>
 #include "xju/io/FileObserver.hh"
+#include <set>
+#include <hcp/tags/TagsFile.hh>
 
 namespace hcp
 {
 namespace tags
 {
-class TagLookupService : Lookup
+class TagLookupService : public Lookup
 {
 public:
   // create tags lookup service covering tagsFiles
   // - tagsFiles need not exist yet, but their parent directories must exist
   explicit TagLookupService(
-    std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& tagsFiles) throw(
+    std::vector<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& tagsFiles) throw(
       // eg a parent directory does not exist
       xju::Exception):
       stop_(false),
@@ -113,7 +115,7 @@ private:
             std::unique_ptr<xju::io::OStream> > const stopper_;
 
   static std::map<AbsFile, std::unique_ptr<TagsFile> > makeFiles(
-    std::set<AbsFile> const& tagsFiles) throw()
+    std::vector<AbsFile> const& tagsFiles) throw()
   {
     std::map<AbsFile, std::unique_ptr<TagsFile> > result;
     std::transform(tagsFiles.begin(),

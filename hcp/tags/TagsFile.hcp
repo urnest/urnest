@@ -16,6 +16,7 @@
 #include <iostream> //impl
 #include <sstream> //impl
 #include <utility> //impl
+#include <hcp/tags/augmentRootNamespace.hh> //impl
 
 namespace hcp
 {
@@ -54,9 +55,9 @@ public:
     }
   }
   
-  Locations lookupSymbol(NamespaceNames const& fromScope,
-                         NamespaceNames const& symbolScope,
-                         UnqualifiedSymbol const& symbol) throw() {
+  Lookup::Locations lookupSymbol(NamespaceNames const& fromScope,
+                                 NamespaceNames const& symbolScope,
+                                 UnqualifiedSymbol const& symbol) throw() {
     xju::Lock l(guard_);
     try {
       return root_.lookup(fromScope,symbolScope,symbol);
@@ -74,7 +75,7 @@ public:
 private:
   xju::Mutex guard_;
   Namespace root_;
-}
+};
   
 }
 }

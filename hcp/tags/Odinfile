@@ -26,17 +26,14 @@ Location.idl
 ==(.:dir.hcp.list):hcp-split
 
 %test-Namespace==(test-Namespace.cc)+(%cxx-opts):auto.cxx.exe
-
-
 %test-splitSymbol==(test-splitSymbol.cc)+(%cxx-opts):auto.cxx.exe
-
-
-
+%test-TagLookupService==(test-TagLookupService.cc)+(%cxx-opts):auto.cxx.exe
 %test-augmentRootNamespace==(test-augmentRootNamespace.cc)+(%cxx-opts):auto.cxx.exe
 
 
 %all-tests.tree==<<
 ()+cmd=(%test-Namespace):exec.output
 ()+cmd=(%test-splitSymbol):exec.output
-()+cmd=(test-getIdentifierRefAt.cc+(%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-getIdentifierRefAt.cc+(%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(%test-augmentRootNamespace)+cmd=(../test-hcp-tags/test-1.json)+cmd=(../test-hcp-tags/test-4.json):exec.output
+()+cmd=(%test-TagLookupService):exec.output
