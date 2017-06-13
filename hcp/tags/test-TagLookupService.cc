@@ -26,10 +26,14 @@ void test1() {
     xju::path::split("f1.tags"));
   std::pair<xju::path::AbsolutePath,xju::path::FileName> const f2(
     xju::path::split("f2.tags"));
-  
+
+  std::pair<xju::path::AbsolutePath,xju::path::FileName> const newTagsFile(
+    xju::path::split("tags.new"));
+
   // no files yet
   TagLookupService x({f1,f2});
-  xju::Thread t([&]() { x.run(); } );
+  xju::Thread t([&]() { x.run(); },
+                [&]() { x.stop(); });
 
   xju::assert_equal(x.lookupSymbol(TagLookupService::NamespaceNames(),
                                    TagLookupService::NamespaceNames(),
@@ -37,10 +41,11 @@ void test1() {
                     Lookup::Locations());
   
   // create a file
-  xju::file::write(f1,
-                   "{ \"x\":  { \"f\":\"/src/x.hh\",\"l\":23 } }",
+  xju::file::write(newTagsFile,
+                   "{ \"x\":  [{ \"f\":\"/src/x.hh\",\"l\":23 }] }",
                    0777);
-
+  xju::file::rename(newTagsFile,f1);
+  
   auto const x_hh(xju::path::split("/src/x.hh"));
   
   // lookup symbol
@@ -56,9 +61,10 @@ void test1() {
                     Lookup::Locations());
   
   // create new file
-  xju::file::write(f2,
-                   "{ \"y\":  { \"f\":\"/src/y.hh\",\"l\":12 } }",
+  xju::file::write(newTagsFile,
+                   "{ \"y\":  [{ \"f\":\"/src/y.hh\",\"l\":12 }] }",
                    0777);
+  xju::file::rename(newTagsFile,f2);
   
   auto const y_hh(xju::path::split("/src/y.hh"));
 
@@ -75,14 +81,12 @@ void test1() {
                     Lookup::Locations());
 
   // update a file
-  std::pair<xju::path::AbsolutePath,xju::path::FileName> const f2new(
-    xju::path::split("f2.tags.new"));
-  xju::file::write(f2new,
-                   "{ \"y\":  { \"f\":\"/src/y.hh\",\"l\":12 },"
-                   "  \"z\":  { \"f\":\"/src/z.hh\",\"l\":99 } }",
+  xju::file::write(newTagsFile,
+                   "{ \"y\":  [{ \"f\":\"/src/y.hh\",\"l\":12 }],"
+                   "  \"z\":  [{ \"f\":\"/src/z.hh\",\"l\":99 }] }",
                    0777);
 
-  xju::file::rename(f2new,f2);
+  xju::file::rename(newTagsFile,f2);
   
   auto const z_hh(xju::path::split("/src/z.hh"));
   // redo lookup

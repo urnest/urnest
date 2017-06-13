@@ -1,29 +1,8 @@
-// Copyright (c) 2017 Trevor Taylor
-//
-// Permission to use, copy, modify, distribute and sell this software
-// and its documentation for any purpose is hereby granted without fee,
-// provided that the above copyright notice appear in all.
-// Trevor Taylor makes no representations about the suitability of this
-// software for any purpose.  It is provided "as is" without express or
-// implied warranty.
-//
-#include <hcp/tags/Lookup.hh>
-
+#include "TagLookupService.hh"
 #include <hcp/tags/str.hh> //impl
 #include <iostream> //impl
-#include <xju/io.hh>
 #include <xju/pipe.hh> //impl
 #include <xju/now.hh> //impl
-#include <memory>
-#include <vector>
-#include <map>
-#include <utility>
-#include <xju/path.hh>
-#include <atomic>
-#include "xju/io/FileObserver.hh"
-#include <set>
-#include <hcp/tags/TagsFile.hh>
-
 namespace hcp
 {
 namespace tags
@@ -63,12 +42,7 @@ std::map<AbsFile, std::shared_ptr<TagsFile> > makeFilesMap(
 
 }
 
-class TagLookupService : public Lookup
-{
-public:
-  // create tags lookup service covering tagsFiles
-  // - tagsFiles need not exist yet, but their parent directories must exist
-  explicit TagLookupService(
+TagLookupService::TagLookupService(
     std::vector<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& tagsFiles) throw(
       // eg a parent directory does not exist
       xju::Exception):
@@ -84,7 +58,8 @@ public:
   // - note that files should be updated by writing to a separate file
   //   then renaming over the tagsFile
   //
-  void run() throw()
+  
+void TagLookupService::run() throw()
   {
     std::set<xju::io::Input const*> const inputs
       {&filesWatcher_,&*stopper_.first};
@@ -97,7 +72,8 @@ public:
   }
 
   // make current and future calls to run() return immediately
-  void stop() throw()
+  
+void TagLookupService::stop() throw()
   {
     stop_.store(true);
     stopper_.second->write("x",1U,std::chrono::system_clock::now());
@@ -106,7 +82,8 @@ public:
   // lookup symbol amongst tags files
   // - returns results from a tags file that knows about symbol
   //
-  Lookup::Locations lookupSymbol(NamespaceNames const& fromScope,
+  
+Lookup::Locations TagLookupService::lookupSymbol(NamespaceNames const& fromScope,
                                  NamespaceNames const& symbolScope,
                                  UnqualifiedSymbol const& symbol) throw() {
     updateFiles();
@@ -125,7 +102,8 @@ public:
   }
 
   // update ie reload any files that have changed
-  void updateFiles() throw()
+  
+void TagLookupService::updateFiles() throw()
   {
     for(auto x: filesWatcher_.read(xju::now())) {
       std::ostringstream s;
@@ -143,18 +121,6 @@ public:
     }
   }
   
-private:
-  typedef std::pair<xju::path::AbsolutePath,xju::path::FileName> AbsFile;
 
-  std::atomic<bool> stop_;
-  xju::io::FileObserver filesWatcher_;
-  std::vector<std::shared_ptr<TagsFile> > const files_;
-  std::map<AbsFile, std::shared_ptr<TagsFile> > const filesMap_;
-
-  std::pair<std::unique_ptr<xju::io::IStream>,
-            std::unique_ptr<xju::io::OStream> > const stopper_;
-
-};
-  
 }
 }
