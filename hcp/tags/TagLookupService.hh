@@ -19,10 +19,13 @@
 #include <xju/path.hh>
 #include <atomic>
 #include "xju/io/FileObserver.hh"
-#include <set>
 #include <hcp/tags/Namespace.hh>
 #include "xju/Mutex.hh"
-#include "xju/Lock.hh"
+namespace xju
+{
+class Lock;
+}
+
 namespace hcp
 {
 namespace tags
@@ -50,14 +53,14 @@ public:
 
 
   // lookup symbol amongst tags files
-  // - returns results from a tags file that knows about symbol
+  // - returns results from first tags file that knows about symbol
   //
   Lookup::Locations lookupSymbol(NamespaceNames const& fromScope,
                                  NamespaceNames const& symbolScope,
                                  UnqualifiedSymbol const& symbol) throw();
 
 
-  // update ie reload any files that have changed
+  // update ie reload any tags files that have changed
   // pre: l.holds(guard_)
   void updateFiles(xju::Lock const& l) throw();
 

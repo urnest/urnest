@@ -3,8 +3,14 @@
 #include <iostream> //impl
 #include <xju/pipe.hh> //impl
 #include <xju/now.hh> //impl
+#include <set> //impl
+#include "xju/Lock.hh" //impl
 #include "hcp/tags/augmentRootNamespace.hh" //impl
+#include <algorithm> //impl
 
+namespace xju
+{
+}
 namespace hcp
 {
 namespace tags
@@ -49,8 +55,8 @@ TagLookupService::TagLookupService(
   
 void TagLookupService::run() throw()
   {
-    std::set<xju::io::Input const*> const inputs
-      {&filesWatcher_,&*stopper_.first};
+    std::set<xju::io::Input const*> const inputs(
+      {&filesWatcher_,&*stopper_.first});
     while(!stop_.load()) {
       if (xju::io::select(inputs,xju::now()+std::chrono::seconds(10))
           .find(&filesWatcher_)!=inputs.end()) {
@@ -69,7 +75,7 @@ void TagLookupService::stop() throw()
   }
 
   // lookup symbol amongst tags files
-  // - returns results from a tags file that knows about symbol
+  // - returns results from first tags file that knows about symbol
   //
   
 Lookup::Locations TagLookupService::lookupSymbol(NamespaceNames const& fromScope,
@@ -100,7 +106,7 @@ Lookup::Locations TagLookupService::lookupSymbol(NamespaceNames const& fromScope
     return Lookup::Locations();
   }
 
-  // update ie reload any files that have changed
+  // update ie reload any tags files that have changed
   // pre: l.holds(guard_)
   
 void TagLookupService::updateFiles(xju::Lock const& l) throw()
