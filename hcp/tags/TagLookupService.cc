@@ -3,6 +3,8 @@
 #include <iostream> //impl
 #include <xju/pipe.hh> //impl
 #include <xju/now.hh> //impl
+#include "hcp/tags/augmentRootNamespace.hh" //impl
+
 namespace hcp
 {
 namespace tags
@@ -11,30 +13,16 @@ namespace
 {
 typedef std::pair<xju::path::AbsolutePath,xju::path::FileName> AbsFile;
 
-std::vector<std::shared_ptr<TagsFile>> makeOrderedFiles(
-  std::vector<AbsFile> const& files) throw()
+std::map<AbsFile, std::shared_ptr<Namespace> > makeFilesMap(
+  std::vector<AbsFile> const& tagsFiles) throw()
 {
-  std::vector<std::shared_ptr<TagsFile>> result;
-  std::transform(files.begin(), files.end(),
-                 std::back_inserter(result),
-                 [](AbsFile const& f) {
-                   return std::shared_ptr<TagsFile>(
-                     new TagsFile(f.first,f.second));
-                 }
-    );
-  return result;
-}
-
-std::map<AbsFile, std::shared_ptr<TagsFile> > makeFilesMap(
-  std::vector<std::shared_ptr<TagsFile>> const& tagsFiles) throw()
-{
-  std::map<AbsFile, std::shared_ptr<TagsFile> > result;
+  std::map<AbsFile, std::shared_ptr<Namespace> > result;
   std::transform(tagsFiles.begin(),tagsFiles.end(),
                  std::inserter(result,result.end()),
-                 [](std::shared_ptr<TagsFile> const& x) {
+                 [](AbsFile const& x) {
                    return std::make_pair(
-                     AbsFile(x->d_,x->f_),
-                     x);
+                     x,
+                     std::shared_ptr<Namespace>(new Namespace));
                  }
     );
   return result;
@@ -46,11 +34,11 @@ TagLookupService::TagLookupService(
     std::vector<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& tagsFiles) throw(
       // eg a parent directory does not exist
       xju::Exception):
+      files_(tagsFiles),
       stop_(false),
+      stopper_(xju::pipe(true,true)),
       filesWatcher_(std::set<AbsFile>(tagsFiles.begin(),tagsFiles.end())),
-      files_(makeOrderedFiles(tagsFiles)),
-      filesMap_(makeFilesMap(files_)),
-      stopper_(xju::pipe(true,true))
+      filesMap_(makeFilesMap(files_))
   {
   }
 
@@ -66,7 +54,8 @@ void TagLookupService::run() throw()
     while(!stop_.load()) {
       if (xju::io::select(inputs,xju::now()+std::chrono::seconds(10))
           .find(&filesWatcher_)!=inputs.end()) {
-        updateFiles();
+        xju::Lock l(guard_);
+        updateFiles(l);
       }
     }
   }
@@ -86,25 +75,37 @@ void TagLookupService::stop() throw()
 Lookup::Locations TagLookupService::lookupSymbol(NamespaceNames const& fromScope,
                                  NamespaceNames const& symbolScope,
                                  UnqualifiedSymbol const& symbol) throw() {
-    updateFiles();
+    xju::Lock l(guard_);
+    updateFiles(l);
     for(auto const x:files_) {
-      auto const l(x->lookupSymbol(fromScope,symbolScope,symbol));
-      if (l.size()) {
-        std::cerr << "found " << str(symbolScope) << str(symbol)
-                  << " (referenced from ::"
-                  << str(fromScope)
-                  << ") in tags file "
-                  << xju::path::str(std::make_pair(x->d_,x->f_));
-        return l;
+      Namespace const& root(*(*filesMap_.find(x)).second);
+      try {
+        auto const l(root.lookup(fromScope,symbolScope,symbol));
+        if (l.size()) {
+          std::cerr << "found " << str(symbolScope) << str(symbol)
+                    << " (referenced from ::"
+                    << str(fromScope)
+                    << ") in tags file "
+                    << xju::path::str(x);
+          return l;
+        }
+      }
+      catch(xju::Exception& e) {
+        std::ostringstream s;
+        s << "lookup symbol in tags file " << xju::path::str(x);
+        e.addContext(s.str(),XJU_TRACED);
+        std::cerr << readableRepr(e) << std::endl;
       }
     }
     return Lookup::Locations();
   }
 
   // update ie reload any files that have changed
+  // pre: l.holds(guard_)
   
-void TagLookupService::updateFiles() throw()
+void TagLookupService::updateFiles(xju::Lock const& l) throw()
   {
+    xju::assert_equal(l.holds(guard_),true);
     for(auto x: filesWatcher_.read(xju::now())) {
       std::ostringstream s;
       s << "reload tags file " << xju::path::str(x);
@@ -112,7 +113,17 @@ void TagLookupService::updateFiles() throw()
         std::cerr << s.str() << std::endl;
         auto const i(filesMap_.find(x));
         xju::assert_not_equal(i,filesMap_.end());
-        (*i).second->reload();
+        Namespace& root(*(*i).second);
+        root=Namespace();
+        try {
+          augmentRootNamespace(root,x,false);
+        }
+        catch(xju::Exception& e) {
+          std::ostringstream s;
+          s << "reload tags file " << xju::path::str(x);
+          e.addContext(s.str(),XJU_TRACED);
+          throw;
+        }
       }
       catch(xju::Exception& e) {
         e.addContext(s.str(),XJU_TRACED);

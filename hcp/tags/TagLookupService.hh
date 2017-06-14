@@ -20,8 +20,9 @@
 #include <atomic>
 #include "xju/io/FileObserver.hh"
 #include <set>
-#include <hcp/tags/TagsFile.hh>
-
+#include <hcp/tags/Namespace.hh>
+#include "xju/Mutex.hh"
+#include "xju/Lock.hh"
 namespace hcp
 {
 namespace tags
@@ -57,20 +58,23 @@ public:
 
 
   // update ie reload any files that have changed
-  void updateFiles() throw();
+  // pre: l.holds(guard_)
+  void updateFiles(xju::Lock const& l) throw();
 
   
 private:
   typedef std::pair<xju::path::AbsolutePath,xju::path::FileName> AbsFile;
 
-  std::atomic<bool> stop_;
-  xju::io::FileObserver filesWatcher_;
-  std::vector<std::shared_ptr<TagsFile> > const files_;
-  std::map<AbsFile, std::shared_ptr<TagsFile> > const filesMap_;
+  std::vector<AbsFile> const files_;
 
+  std::atomic<bool> stop_;
   std::pair<std::unique_ptr<xju::io::IStream>,
             std::unique_ptr<xju::io::OStream> > const stopper_;
 
+  mutable xju::Mutex guard_;
+  xju::io::FileObserver filesWatcher_;
+  std::map<AbsFile, std::shared_ptr<Namespace> > const filesMap_;
+  
 };
   
 }
