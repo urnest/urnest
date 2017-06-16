@@ -30,6 +30,31 @@ public:
   
   // Value::
   virtual std::string str() const throw();
+
+  friend bool operator<(IPv4AddressValue const& x, IPv4AddressValue const& y) throw()
+  {
+    return x.val_<y.val_;
+  }
+  friend bool operator>(IPv4AddressValue const& x, IPv4AddressValue const& y) throw()
+  {
+    return x.val_>y.val_;
+  }
+  friend bool operator==(IPv4AddressValue const& x, IPv4AddressValue const& y) throw()
+  {
+    return x.val_==y.val_;
+  }
+  friend bool operator!=(IPv4AddressValue const& x, IPv4AddressValue const& y) throw()
+  {
+    return x.val_!=y.val_;
+  }
+  friend bool operator<=(IPv4AddressValue const& x, IPv4AddressValue const& y) throw()
+  {
+    return x.val_<=y.val_;
+  }
+  friend bool operator>=(IPv4AddressValue const& x, IPv4AddressValue const& y) throw()
+  {
+    return x.val_>=y.val_;
+  }
 };
   
 

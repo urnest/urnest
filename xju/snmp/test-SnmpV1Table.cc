@@ -35,10 +35,10 @@ void test1() throw()
   
   xju::assert_equal(t[col1].size(),1U);
   xju::assert_equal(t[col1][0].oid_,Oid(".1.3.5.20.1"));
-  xju::assert_equal(t[col1][0].value_->operator int(),3);
+  xju::assert_equal(t[col1][0].value_->intValue(),3);
   xju::assert_equal(t[col2].size(),1U);
   xju::assert_equal(t[col2][0].oid_,Oid(".1.3.5.21.1"));
-  xju::assert_equal(t[col2][0].value_->operator int(),10);
+  xju::assert_equal(t[col2][0].value_->intValue(),10);
   
   xju::assert_equal(t.atEnd(),false);
   xju::assert_equal(t.nextOids().size(),2U);
@@ -51,14 +51,14 @@ void test1() throw()
   
   xju::assert_equal(t[col1].size(),2U);
   xju::assert_equal(t[col1][0].oid_,Oid(".1.3.5.20.1"));
-  xju::assert_equal(t[col1][0].value_->operator int(),3);
+  xju::assert_equal(t[col1][0].value_->intValue(),3);
   xju::assert_equal(t[col1][1].oid_,Oid(".1.3.5.20.2"));
-  xju::assert_equal(t[col1][1].value_->operator int(),4);
+  xju::assert_equal(t[col1][1].value_->intValue(),4);
   xju::assert_equal(t[col2].size(),2U);
   xju::assert_equal(t[col2][0].oid_,Oid(".1.3.5.21.1"));
-  xju::assert_equal(t[col2][0].value_->operator int(),10);
+  xju::assert_equal(t[col2][0].value_->intValue(),10);
   xju::assert_equal(t[col2][1].oid_,Oid(".1.3.5.21.2"));
-  xju::assert_equal(t[col2][1].value_->operator int(),11);
+  xju::assert_equal(t[col2][1].value_->intValue(),11);
   
   xju::assert_equal(t.atEnd(),false);
   xju::assert_equal(t.nextOids().size(),2U);
@@ -71,14 +71,14 @@ void test1() throw()
 
   xju::assert_equal(t[col1].size(),2U);
   xju::assert_equal(t[col1][0].oid_,Oid(".1.3.5.20.1"));
-  xju::assert_equal(t[col1][0].value_->operator int(),3);
+  xju::assert_equal(t[col1][0].value_->intValue(),3);
   xju::assert_equal(t[col1][1].oid_,Oid(".1.3.5.20.2"));
-  xju::assert_equal(t[col1][1].value_->operator int(),4);
+  xju::assert_equal(t[col1][1].value_->intValue(),4);
   xju::assert_equal(t[col2].size(),2U);
   xju::assert_equal(t[col2][0].oid_,Oid(".1.3.5.21.1"));
-  xju::assert_equal(t[col2][0].value_->operator int(),10);
+  xju::assert_equal(t[col2][0].value_->intValue(),10);
   xju::assert_equal(t[col2][1].oid_,Oid(".1.3.5.21.2"));
-  xju::assert_equal(t[col2][1].value_->operator int(),11);
+  xju::assert_equal(t[col2][1].value_->intValue(),11);
   
   xju::assert_equal(t.atEnd(),true);
 }

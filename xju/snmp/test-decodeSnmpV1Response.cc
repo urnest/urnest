@@ -57,7 +57,7 @@ void test2() throw()
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
     xju::assert_not_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second),(StringValue const*)0);
-    xju::assert_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second)->val_,std::string(128,'a'));
+    xju::assert_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second)->val_,std::vector<uint8_t>(128,'a'));
   }
   catch(xju::Exception const& e) {
     xju::assert_not_equal(readableRepr(e),readableRepr(e));
@@ -78,7 +78,7 @@ void test2() throw()
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
     xju::assert_not_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second),(StringValue const*)0);
-    xju::assert_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second)->val_,std::string(128,'a'));
+    xju::assert_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second)->val_,std::vector<uint8_t>(128,'a'));
   }
   catch(xju::Exception const& e) {
     xju::assert_not_equal(readableRepr(e),readableRepr(e));
@@ -99,7 +99,7 @@ void test2() throw()
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
     xju::assert_not_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second),(StringValue const*)0);
-    xju::assert_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second)->val_,std::string(128,'a'));
+    xju::assert_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second)->val_,std::vector<uint8_t>(128,'a'));
   }
   catch(xju::Exception const& e) {
     xju::assert_not_equal(readableRepr(e),readableRepr(e));
@@ -120,7 +120,7 @@ void test2() throw()
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
     xju::assert_not_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second),(StringValue const*)0);
-    xju::assert_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second)->val_,std::string(128,'a'));
+    xju::assert_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second)->val_,std::vector<uint8_t>(128,'a'));
   }
   catch(xju::Exception const& e) {
     xju::assert_not_equal(readableRepr(e),readableRepr(e));
@@ -141,7 +141,7 @@ void test2() throw()
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
     xju::assert_not_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second),(StringValue const*)0);
-    xju::assert_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second)->val_,std::string(128,'a'));
+    xju::assert_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second)->val_,std::vector<uint8_t>(128,'a'));
   }
   catch(xju::Exception const& e) {
     xju::assert_not_equal(readableRepr(e),readableRepr(e));
@@ -162,7 +162,7 @@ void test2() throw()
     xju::assert_equal(y.values_.size(),1);
     xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
     xju::assert_not_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second),(StringValue const*)0);
-    xju::assert_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second)->val_,std::string(128,'a'));
+    xju::assert_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second)->val_,std::vector<uint8_t>(128,'a'));
   }
   catch(xju::Exception const& e) {
     xju::assert_not_equal(readableRepr(e),readableRepr(e));

@@ -23,7 +23,7 @@ Counter32Value::Counter32Value(uint32_t val) throw():
     val_(val) {
   }
 
-Counter32Value::operator int() const throw(xju::Exception)
+int Counter32Value::intValue() const throw(xju::Exception)
 {
   if (val_ > INT_MAX) {
     std::ostringstream s;
@@ -34,12 +34,12 @@ Counter32Value::operator int() const throw(xju::Exception)
   return val_;
 }
 
-Counter32Value::operator unsigned int() const throw()
+unsigned int Counter32Value::uintValue() const throw()
 {
   return val_;
 }
 
-Counter32Value::operator long() const throw(xju::Exception)
+long Counter32Value::longValue() const throw(xju::Exception)
 {
   if (val_ > LONG_MAX) {
     std::ostringstream s;
@@ -56,7 +56,7 @@ Counter32Value::operator long() const throw(xju::Exception)
   return val_;
 }
 
-Counter32Value::operator unsigned long() const throw()
+unsigned long Counter32Value::ulongValue() const throw()
 {
   return val_;
 }

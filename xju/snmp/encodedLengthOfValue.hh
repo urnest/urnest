@@ -11,6 +11,7 @@
 #define XJU_SNMP_ENCODEDLENGTHOFVALUE_H
 
 #include "xju/snmp/Oid.hh"
+#include <vector>
 
 namespace xju
 {
@@ -19,7 +20,7 @@ namespace snmp
 
 size_t encodedLengthOfValue(int64_t val_) throw();
 
-size_t encodedLengthOfValue(std::string const& val_) throw();
+size_t encodedLengthOfValue(std::vector<uint8_t> const& val_) throw();
 
 size_t encodedLengthOfValue(Oid const& val_) throw();
 

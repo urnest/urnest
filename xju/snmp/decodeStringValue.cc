@@ -18,7 +18,7 @@ namespace xju
 {
 namespace snmp
 {
-std::pair<std::string,DecodeIterator> decodeStringValue(
+std::pair<std::vector<uint8_t>,DecodeIterator> decodeStringValue(
   DecodeIterator const at) throw(xju::Exception)
 {
   try {
@@ -33,7 +33,7 @@ std::pair<std::string,DecodeIterator> decodeStringValue(
       s << "strings with indefinite length are illegal";
       throw xju::Exception(s.str(), XJU_TRACED);
     }
-    std::string s;
+    std::vector<uint8_t> s;
     for(DecodeIterator i=length.second;
         i!=length.second+length.first.value();
         ++i) {

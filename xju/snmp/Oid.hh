@@ -55,6 +55,18 @@ private:
   {
     return x.components_ < y.components_;
   }
+  friend bool operator>(Oid const& x, Oid const& y) throw()
+  {
+    return x.components_ > y.components_;
+  }
+  friend bool operator<=(Oid const& x, Oid const& y) throw()
+  {
+    return x.components_ <= y.components_;
+  }
+  friend bool operator>=(Oid const& x, Oid const& y) throw()
+  {
+    return x.components_ >= y.components_;
+  }
   friend Oid operator+(Oid const& a, Oid const& b) throw();
 
   friend std::ostream& operator<<(std::ostream& s, Oid const& x) throw()

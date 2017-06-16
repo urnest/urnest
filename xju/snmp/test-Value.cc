@@ -153,7 +153,7 @@ void test1() throw()
   // StringValue encoding
   // null string
   {
-    StringValue const x("");
+    StringValue const x({});
     std::vector<uint8_t> y(x.encodedLength(),0U);
     xju::assert_equal(y.size(),2U);
     xju::assert_equal(x.encodeTo(y.begin()),y.end());
@@ -161,7 +161,7 @@ void test1() throw()
   }
   // fred
   {
-    StringValue const x("fred");
+    StringValue const x(std::vector<uint8_t> {'f','r','e','d'});
     std::vector<uint8_t> y(x.encodedLength(),0U);
     xju::assert_equal(y.size(),6U);
     xju::assert_equal(x.encodeTo(y.begin()),y.end());
@@ -169,7 +169,7 @@ void test1() throw()
   }
   // 127 byte string
   {
-    StringValue const x(std::string(127U,'x'));
+    StringValue const x(std::vector<uint8_t>(127U,'x'));
     std::vector<uint8_t> y(x.encodedLength(),0U);
     xju::assert_equal(y.size(),129U);
     xju::assert_equal(x.encodeTo(y.begin()),y.end());
@@ -180,15 +180,15 @@ void test1() throw()
   }
   // 128 byte string
   {
-    StringValue const x(std::string(128U,'x'));
+    StringValue const x(std::vector<uint8_t>(128U,'x'));
     std::vector<uint8_t> y(x.encodedLength(),0U);
     xju::assert_equal(y.size(),131U);
     xju::assert_equal(x.encodeTo(y.begin()),y.end());
     xju::assert_equal(y[0],0x04);
     xju::assert_equal(y[1],0x81);
     xju::assert_equal(y[2],128);
-    xju::assert_equal(std::string(y.begin()+3,y.end()),
-                      std::string(128U,'x'));
+    xju::assert_equal(std::vector<uint8_t>(y.begin()+3,y.end()),
+                      std::vector<uint8_t>(128U,'x'));
   }
 
   // OidValue encoding

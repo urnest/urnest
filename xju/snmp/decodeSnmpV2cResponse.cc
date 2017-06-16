@@ -143,7 +143,8 @@ SnmpV2cResponse decodeSnmpV2cResponse(std::vector<uint8_t> const& data) throw(
                     }
                     return SnmpV2cResponse(
                       s2.first.first,
-                      Community(community.first),
+                      Community(std::string(community.first.begin(),
+                                            community.first.end())),
                       RequestId(id.first),
                       (SnmpV2cResponse::ErrorStatus)errorStatus.first,
                       SnmpV2cResponse::ErrorIndex(ei.first),
@@ -194,7 +195,9 @@ SnmpV2cResponse decodeSnmpV2cResponse(std::vector<uint8_t> const& data) throw(
         }
         catch(xju::Exception const& e) {
           std::ostringstream s;
-          s << "community " << xju::format::quote(community.first)
+          s << "community "
+            << xju::format::quote(std::string(community.first.begin(),
+                                              community.first.end()))
             << " at " << snmpVersion.second;
           ok.push_back(s.str());
           throw;

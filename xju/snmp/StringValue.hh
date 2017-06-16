@@ -22,12 +22,14 @@ class StringValue : public Value
 {
 public:
   ~StringValue() throw(){}
+
+  explicit StringValue(std::vector<uint8_t> const& val) throw();
+  explicit StringValue(std::vector<uint8_t> && val) throw();
   
-  explicit StringValue(std::string const& val) throw();
-  std::string const val_;
+  std::vector<uint8_t> const val_;
 
   // Value::
-  operator std::string() const throw(xju::Exception) override
+  std::vector<uint8_t>const& stringValue() const throw(xju::Exception) override
   {
     return val_;
   }
@@ -38,6 +40,32 @@ public:
 
   // Value::
   virtual std::string str() const throw() override;
+
+  friend bool operator<(StringValue const& x, StringValue const& y) throw()
+  {
+    return x.val_<y.val_;
+  }
+  friend bool operator>(StringValue const& x, StringValue const& y) throw()
+  {
+    return x.val_>y.val_;
+  }
+  friend bool operator==(StringValue const& x, StringValue const& y) throw()
+  {
+    return x.val_==y.val_;
+  }
+  friend bool operator!=(StringValue const& x, StringValue const& y) throw()
+  {
+    return x.val_!=y.val_;
+  }
+  friend bool operator<=(StringValue const& x, StringValue const& y) throw()
+  {
+    return x.val_<=y.val_;
+  }
+  friend bool operator>=(StringValue const& x, StringValue const& y) throw()
+  {
+    return x.val_>=y.val_;
+  }
+  
 };
 
 

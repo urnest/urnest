@@ -108,7 +108,8 @@ std::vector<uint8_t> encode(SnmpV1GetRequest const& request) throw()
                  });
   Sequence s({
       vp(new IntValue(0)), // SNMP version 1 -see RFC 1157
-      vp(new StringValue(request.community_._)),
+      vp(new StringValue(std::vector<uint8_t>(request.community_._.begin(),
+                                              request.community_._.end()))),
       vp(new Sequence({
             vp(new IntValue(request.id_.value())),
             vp(new IntValue(0)),//error
@@ -138,7 +139,8 @@ std::vector<uint8_t> encode(SnmpV1SetRequest const& request) throw()
                  });
   Sequence s({
       vp(new IntValue(0)), // SNMP version 1 -see RFC 1157
-      vp(new StringValue(request.community_._)),
+      vp(new StringValue(std::vector<uint8_t>(request.community_._.begin(),
+                                              request.community_._.end()))),
       vp(new Sequence({
             vp(new IntValue(request.id_.value())),
             vp(new IntValue(0)),//error
@@ -168,7 +170,8 @@ std::vector<uint8_t> encode(SnmpV1GetNextRequest const& request) throw()
                  });
   Sequence s({
       vp(new IntValue(0)), // SNMP version 1 -see RFC 1157
-      vp(new StringValue(request.community_._)),
+      vp(new StringValue(std::vector<uint8_t>(request.community_._.begin(),
+                                              request.community_._.end()))),
       vp(new Sequence({
             vp(new IntValue(request.id_.value())),
             vp(new IntValue(0)),//error
@@ -198,7 +201,8 @@ std::vector<uint8_t> encode(SnmpV1Trap const& trap) throw()
                  });
   Sequence s({
       vp(new IntValue(0)), // SNMP version 1 -see RFC 1157
-      vp(new StringValue(trap.community_._)),
+      vp(new StringValue(std::vector<uint8_t>(trap.community_._.begin(),
+                                              trap.community_._.end()))),
       vp(new Sequence({
             vp(new OidValue(trap.trapType_)),
             vp(new IPv4AddressValue(trap.origin_)),//error
@@ -230,7 +234,8 @@ std::vector<uint8_t> encode(SnmpV2cGetRequest const& request) throw()
                  });
   Sequence s({
       vp(new IntValue(1)), // SNMP version 2c - see RFC 1901
-      vp(new StringValue(request.community_._)),
+      vp(new StringValue(std::vector<uint8_t>(request.community_._.begin(),
+                                              request.community_._.end()))),
       vp(new Sequence({
             vp(new IntValue(request.id_.value())),
             vp(new IntValue(0)),//error
@@ -260,7 +265,8 @@ std::vector<uint8_t> encode(SnmpV2cGetNextRequest const& request) throw()
                  });
   Sequence s({
       vp(new IntValue(1)), // SNMP version 2c -see RFC 1901
-      vp(new StringValue(request.community_._)),
+      vp(new StringValue(std::vector<uint8_t>(request.community_._.begin(),
+                                              request.community_._.end()))),
       vp(new Sequence({
             vp(new IntValue(request.id_.value())),
             vp(new IntValue(0)),//error
@@ -290,7 +296,8 @@ std::vector<uint8_t> encode(SnmpV2cSetRequest const& request) throw()
                  });
   Sequence s({
       vp(new IntValue(1)), // SNMP version 2c
-      vp(new StringValue(request.community_._)),
+      vp(new StringValue(std::vector<uint8_t>(request.community_._.begin(),
+                                              request.community_._.end()))),
       vp(new Sequence({
             vp(new IntValue(request.id_.value())),
             vp(new IntValue(0)),//error

@@ -30,6 +30,31 @@ public:
 
   // Value::
   virtual std::string str() const throw();
+
+  friend bool operator<(TimeTicksValue const& x, TimeTicksValue const& y) throw()
+  {
+    return x.val_<y.val_;
+  }
+  friend bool operator>(TimeTicksValue const& x, TimeTicksValue const& y) throw()
+  {
+    return x.val_>y.val_;
+  }
+  friend bool operator==(TimeTicksValue const& x, TimeTicksValue const& y) throw()
+  {
+    return x.val_==y.val_;
+  }
+  friend bool operator!=(TimeTicksValue const& x, TimeTicksValue const& y) throw()
+  {
+    return x.val_!=y.val_;
+  }
+  friend bool operator<=(TimeTicksValue const& x, TimeTicksValue const& y) throw()
+  {
+    return x.val_<=y.val_;
+  }
+  friend bool operator>=(TimeTicksValue const& x, TimeTicksValue const& y) throw()
+  {
+    return x.val_>=y.val_;
+  }
 };
 
 

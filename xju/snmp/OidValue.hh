@@ -27,7 +27,7 @@ public:
   Oid const val_;
 
   // Value::
-  operator Oid() const throw(xju::Exception)
+  Oid oidValue() const throw(xju::Exception) override
   {
     return val_;
   }
@@ -41,6 +41,32 @@ public:
   {
     return val_.toString();
   }
+
+  friend bool operator<(OidValue const& x, OidValue const& y) throw()
+  {
+    return x.val_<y.val_;
+  }
+  friend bool operator>(OidValue const& x, OidValue const& y) throw()
+  {
+    return x.val_>y.val_;
+  }
+  friend bool operator==(OidValue const& x, OidValue const& y) throw()
+  {
+    return x.val_==y.val_;
+  }
+  friend bool operator!=(OidValue const& x, OidValue const& y) throw()
+  {
+    return x.val_!=y.val_;
+  }
+  friend bool operator<=(OidValue const& x, OidValue const& y) throw()
+  {
+    return x.val_<=y.val_;
+  }
+  friend bool operator>=(OidValue const& x, OidValue const& y) throw()
+  {
+    return x.val_>=y.val_;
+  }
+
 };
 
 

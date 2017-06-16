@@ -18,37 +18,37 @@ namespace snmp
 {
 
 
-Value::operator std::string() const throw(xju::Exception)
+std::vector<uint8_t>const& Value::stringValue() const throw(xju::Exception)
 {
   std::ostringstream s;
   s << (*this) << " is not a string";
   throw xju::Exception(s.str(),XJU_TRACED);
 }
-Value::operator int() const throw(xju::Exception)
+int Value::intValue() const throw(xju::Exception)
 {
   std::ostringstream s;
   s << (*this) << " is not an integer";
   throw xju::Exception(s.str(),XJU_TRACED);
 }
-Value::operator unsigned int() const throw(xju::Exception)
+unsigned int Value::uintValue() const throw(xju::Exception)
 {
   std::ostringstream s;
   s << (*this) << " is not an integer";
   throw xju::Exception(s.str(),XJU_TRACED);
 }
-Value::operator long() const throw(xju::Exception)
+long Value::longValue() const throw(xju::Exception)
 {
   std::ostringstream s;
   s << (*this) << " is not an integer";
   throw xju::Exception(s.str(),XJU_TRACED);
 }
-Value::operator unsigned long() const throw(xju::Exception)
+unsigned long Value::ulongValue() const throw(xju::Exception)
 {
   std::ostringstream s;
   s << (*this) << " is not an integer";
   throw xju::Exception(s.str(),XJU_TRACED);
 }
-Value::operator Oid() const throw(xju::Exception)
+Oid Value::oidValue() const throw(xju::Exception)
 {
   std::ostringstream s;
   s << (*this) << " is not an Oid";

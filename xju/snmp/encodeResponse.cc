@@ -172,7 +172,8 @@ std::vector<uint8_t> encodePDU(
                        
   Sequence s({
       vp(new IntValue(snmpVersion)),
-      vp(new StringValue(community._)),
+      vp(new StringValue(std::vector<uint8_t>(community._.begin(),
+                                              community._.end()))),
       vp(new Sequence({
             vp(new IntValue(requestId.value())),
             vp(new IntValue(error)),//error
@@ -196,7 +197,8 @@ std::vector<uint8_t> encodePDU(
 {
   Sequence s({
       vp(new IntValue(1)), //SNMP V2c
-      vp(new StringValue(community._)),
+      vp(new StringValue(std::vector<uint8_t>(community._.begin(),
+                                              community._.end()))),
       vp(new Sequence({
             vp(new IntValue(requestId.value())),
             vp(new IntValue(error)),//error

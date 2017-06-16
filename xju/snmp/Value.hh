@@ -16,6 +16,8 @@
 #include <stdint.h>
 #include <iostream>
 #include "xju/snmp/Oid.hh"
+#include "xju/check_types_related.hh"
+#include <typeinfo>
 
 namespace xju
 {
@@ -36,12 +38,12 @@ public:
   size_t const encodedLength_;
   
   // convenience functions that do type and range checking
-  virtual operator std::string() const throw(xju::Exception);
-  virtual operator int() const throw(xju::Exception);
-  virtual operator unsigned int() const throw(xju::Exception);
-  virtual operator long() const throw(xju::Exception);
-  virtual operator unsigned long() const throw(xju::Exception);
-  virtual operator Oid() const throw(xju::Exception);
+  virtual std::vector<uint8_t>const& stringValue() const throw(xju::Exception);
+  virtual int intValue() const throw(xju::Exception);
+  virtual unsigned int uintValue() const throw(xju::Exception);
+  virtual long longValue() const throw(xju::Exception);
+  virtual unsigned long ulongValue() const throw(xju::Exception);
+  virtual Oid oidValue() const throw(xju::Exception);
 
   // return length of encoded value
   // ie return encodeTo(x)-x
@@ -62,8 +64,7 @@ public:
     return s << x.str();
   }
 };
-
-
+  
 }
 }
 

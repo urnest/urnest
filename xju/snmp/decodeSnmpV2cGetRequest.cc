@@ -142,7 +142,8 @@ std::pair<SnmpV2cGetRequest,std::vector<Oid> > decodeSnmpV2cGetRequest(
                                    xju::functional::First());
                     return std::make_pair(
                       SnmpV2cGetRequest(
-                        Community(community.first),
+                        Community(std::string(community.first.begin(),
+                                              community.first.end())),
                         RequestId(id.first),
                         oids),
                       order);
@@ -192,7 +193,9 @@ std::pair<SnmpV2cGetRequest,std::vector<Oid> > decodeSnmpV2cGetRequest(
         }
         catch(xju::Exception const& e) {
           std::ostringstream s;
-          s << "community " << xju::format::quote(community.first)
+          s << "community "
+            << xju::format::quote(std::string(community.first.begin(),
+                                              community.first.end()))
             << " at " << snmpVersion.second;
           ok.push_back(s.str());
           throw;

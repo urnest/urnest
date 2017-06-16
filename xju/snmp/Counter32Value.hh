@@ -25,10 +25,10 @@ public:
   uint32_t val_;
 
   // Value::
-  operator int() const throw(xju::Exception) override;
-  operator unsigned int() const throw() override;
-  operator long() const throw(xju::Exception) override;
-  operator unsigned long() const throw() override;
+  int intValue() const throw(xju::Exception) override;
+  unsigned int uintValue() const throw() override;
+  long longValue() const throw(xju::Exception) override;
+  unsigned long ulongValue() const throw() override;
 
   // Value::
   virtual std::vector<uint8_t>::iterator encodeTo(
@@ -36,6 +36,31 @@ public:
 
   // Value::
   virtual std::string str() const throw();
+
+  friend bool operator<(Counter32Value const& x, Counter32Value const& y) throw()
+  {
+    return x.val_<y.val_;
+  }
+  friend bool operator>(Counter32Value const& x, Counter32Value const& y) throw()
+  {
+    return x.val_>y.val_;
+  }
+  friend bool operator==(Counter32Value const& x, Counter32Value const& y) throw()
+  {
+    return x.val_==y.val_;
+  }
+  friend bool operator!=(Counter32Value const& x, Counter32Value const& y) throw()
+  {
+    return x.val_!=y.val_;
+  }
+  friend bool operator<=(Counter32Value const& x, Counter32Value const& y) throw()
+  {
+    return x.val_<=y.val_;
+  }
+  friend bool operator>=(Counter32Value const& x, Counter32Value const& y) throw()
+  {
+    return x.val_>=y.val_;
+  }
 };
 
 

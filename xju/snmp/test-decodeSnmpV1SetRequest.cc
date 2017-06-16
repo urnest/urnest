@@ -57,7 +57,8 @@ void test2() throw()
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
     xju::assert_equal((*y.values_.begin()).first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
-    xju::assert_equal((*y.values_.begin()).second->operator std::string(),std::string(128,'a'));
+    xju::assert_equal((*y.values_.begin()).second->stringValue(),
+                      std::vector<uint8_t>(128,'a'));
     xju::assert_equal(r.second,
                       std::vector<Oid>({
                           Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")}));
@@ -77,8 +78,8 @@ void test2() throw()
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
     xju::assert_equal((*y.values_.begin()).first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
-    xju::assert_equal((*y.values_.begin()).second->operator std::string(),
-                      std::string(128,'a'));
+    xju::assert_equal((*(*y.values_.begin()).second).stringValue(),
+                      std::vector<uint8_t>(128,'a'));
     xju::assert_equal(r.second,
                       std::vector<Oid>({
                           Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")}));
@@ -98,8 +99,8 @@ void test2() throw()
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
     xju::assert_equal((*y.values_.begin()).first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
-    xju::assert_equal((*y.values_.begin()).second->operator std::string(),
-                      std::string(128,'a'));
+    xju::assert_equal((*(*y.values_.begin()).second).stringValue(),
+                      std::vector<uint8_t>(128,'a'));
     xju::assert_equal(r.second,
                       std::vector<Oid>({
                           Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")}));
@@ -119,8 +120,8 @@ void test2() throw()
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
     xju::assert_equal((*y.values_.begin()).first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
-    xju::assert_equal((*y.values_.begin()).second->operator std::string(),
-                      std::string(128,'a'));
+    xju::assert_equal((*(*y.values_.begin()).second).stringValue(),
+                      std::vector<uint8_t>(128,'a'));
     xju::assert_equal(r.second,
                       std::vector<Oid>({
                           Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")}));
@@ -140,8 +141,8 @@ void test2() throw()
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
     xju::assert_equal((*y.values_.begin()).first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
-    xju::assert_equal(std::string(*(*y.values_.begin()).second),
-                      std::string(128,'a'));
+    xju::assert_equal((*(*y.values_.begin()).second).stringValue(),
+                      std::vector<uint8_t>(128,'a'));
     xju::assert_equal(r.second,
                       std::vector<Oid>({
                           Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")}));
@@ -161,8 +162,8 @@ void test2() throw()
     xju::assert_equal(y.community_,Community("private"));
     xju::assert_equal(y.id_,RequestId(1));
     xju::assert_equal((*y.values_.begin()).first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
-    xju::assert_equal(std::string(*(*y.values_.begin()).second),
-                      std::string(128,'a'));
+    xju::assert_equal((*(*y.values_.begin()).second).stringValue(),
+                      std::vector<uint8_t>(128,'a'));
     xju::assert_equal(r.second,
                       std::vector<Oid>({
                           Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")}));
@@ -203,7 +204,7 @@ void test2() throw()
     xju::assert_equal(y.id_,RequestId(1));
     xju::assert_equal(y.values_.size(),2);
     xju::assert_equal((*y.values_.begin()).first,Oid(".1.3"));
-    xju::assert_equal((*y.values_.begin()).second->operator Oid(),
+    xju::assert_equal((*y.values_.begin()).second->oidValue(),
                       Oid(".1.3.7"));
     xju::assert_equal((*y.values_.rbegin()).first,
                       Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));

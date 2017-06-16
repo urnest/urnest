@@ -125,7 +125,8 @@ SnmpV2cGetNextRequest decodeSnmpV2cGetNextRequest(
                       throw xju::Exception(s.str(), XJU_TRACED);
                     }
                     return SnmpV2cGetNextRequest(
-                      Community(community.first),
+                      Community(std::string(community.first.begin(),
+                                            community.first.end())),
                       RequestId(id.first),
                       oids);
                   }
@@ -174,7 +175,9 @@ SnmpV2cGetNextRequest decodeSnmpV2cGetNextRequest(
         }
         catch(xju::Exception const& e) {
           std::ostringstream s;
-          s << "community " << xju::format::quote(community.first)
+          s << "community "
+            << xju::format::quote(std::string(community.first.begin(),
+                                              community.first.end()))
             << " at " << snmpVersion.second;
           ok.push_back(s.str());
           throw;

@@ -18,7 +18,7 @@ namespace snmp
 {
 
 IPv4AddressValue::IPv4AddressValue(IPv4Address val) throw():
-  Value(encodedLengthOfValue(std::string("    "))),
+    Value(encodedLengthOfValue(std::vector<uint8_t>({0,0,0,0}))),
   val_(val)
 {
 }

@@ -31,10 +31,10 @@ public:
   int64_t const val_;
 
   // Value::
-  operator int() const throw(xju::Exception) override;
-  operator unsigned int() const throw(xju::Exception) override;
-  operator long() const throw(xju::Exception) override;
-  operator unsigned long() const throw(xju::Exception) override;
+  int intValue() const throw(xju::Exception) override;
+  unsigned int uintValue() const throw(xju::Exception) override;
+  long longValue() const throw(xju::Exception) override;
+  unsigned long ulongValue() const throw(xju::Exception) override;
 
   // Value::
   std::vector<uint8_t>::iterator encodeTo(
@@ -42,6 +42,31 @@ public:
 
   // Value::
   virtual std::string str() const throw() override;
+
+  friend bool operator<(IntValue const& x, IntValue const& y) throw()
+  {
+    return x.val_<y.val_;
+  }
+  friend bool operator>(IntValue const& x, IntValue const& y) throw()
+  {
+    return x.val_>y.val_;
+  }
+  friend bool operator==(IntValue const& x, IntValue const& y) throw()
+  {
+    return x.val_==y.val_;
+  }
+  friend bool operator!=(IntValue const& x, IntValue const& y) throw()
+  {
+    return x.val_!=y.val_;
+  }
+  friend bool operator<=(IntValue const& x, IntValue const& y) throw()
+  {
+    return x.val_<=y.val_;
+  }
+  friend bool operator>=(IntValue const& x, IntValue const& y) throw()
+  {
+    return x.val_>=y.val_;
+  }
 };
 
 

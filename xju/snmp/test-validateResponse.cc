@@ -26,13 +26,16 @@ namespace xju
 {
 namespace snmp
 {
+std::vector<uint8_t> const fred{'f','r','e','d'};
+std::vector<uint8_t> const jock{'j','o','c','k'};
+std::vector<uint8_t> const sal{'s','a','l'};
 
 void test1() throw()
 {
   // validateResponse
   std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
-    {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue("fred")}},
-    {Oid(".1.3.9.3333"),std::shared_ptr<Value const>{new IntValue(3)}}
+    {Oid(".1.3.3"), std::shared_ptr<Value const>(new StringValue(fred))},
+    {Oid(".1.3.9.3333"),std::shared_ptr<Value const>(new IntValue(3))}
   };
   auto x=validateResponse(
     SnmpV1GetRequest(Community("dje"),
@@ -46,12 +49,12 @@ void test1() throw()
                    values));
     
   xju::assert_equal(x.size(),2U);
-  xju::assert_equal(x[Oid(".1.3.3")]->operator std::string(),"fred");
-  xju::assert_equal(x[Oid(".1.3.9.3333")]->operator int(),3);
+  xju::assert_equal(x[Oid(".1.3.3")]->stringValue(),fred);
+  xju::assert_equal(x[Oid(".1.3.9.3333")]->intValue(),3);
 
   try {
     std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
-      {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue("fred")}},
+      {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue(fred)}},
       {Oid(".1.3.9.3333"),std::shared_ptr<Value const>{new IntValue(3)}}
     };
     auto x=validateResponse(
@@ -78,7 +81,7 @@ void test1() throw()
   
   try {
     std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
-      {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue("fred")}},
+      {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue(fred)}},
       {Oid(".1.3.9.3333"),std::shared_ptr<Value const>{new IntValue(3)}}
     };
     auto x=validateResponse(
@@ -105,7 +108,7 @@ void test1() throw()
 
   try {
     std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
-      {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue("fred")}},
+      {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue(fred)}},
       {Oid(".1.3.9.3333"),std::shared_ptr<Value const>{new NullValue}}
     };
     auto x=validateResponse(
@@ -154,7 +157,7 @@ void test1() throw()
 
   try {
     std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
-      {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue("fred")}},
+      {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue(fred)}},
       {Oid(".1.3.9.3333"),std::shared_ptr<Value const>{new NullValue}}
     };
     auto x=validateResponse(
@@ -202,7 +205,7 @@ void test2() throw()
 {
   // validateResponse
   std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
-    {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue("fred")}},
+    {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue(fred)}},
     {Oid(".1.3.9.3333"),std::shared_ptr<Value const>{new IntValue(3)}}
   };
   std::map<Oid, std::shared_ptr<Value const> > requestValues(
@@ -372,7 +375,7 @@ void test2() throw()
   }
   try {
     std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
-      {Oid(".1.3.4"), std::shared_ptr<Value const>{new StringValue("fred")}},
+      {Oid(".1.3.4"), std::shared_ptr<Value const>{new StringValue(fred)}},
     };
     validateResponse(
       SnmpV1SetRequest(Community("dje"),
@@ -397,11 +400,11 @@ void test3() throw()
   // validateResponse(SnmpV1GetNextRequest,SnmpV1Response)
 
   std::vector<std::pair<Oid, std::shared_ptr<Value const> > > values {
-    {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue("fred")}},
+    {Oid(".1.3.3"), std::shared_ptr<Value const>{new StringValue(fred)}},
     {Oid(".1.3.9.3333"),std::shared_ptr<Value const>{new IntValue(3)}}
   };
   std::vector<std::pair<Oid, std::shared_ptr<Value const> > > nextValues {
-    {Oid(".1.3.4"), std::shared_ptr<Value const>{new StringValue("jock")}},
+    {Oid(".1.3.4"), std::shared_ptr<Value const>{new StringValue(jock)}},
     {Oid(".1.3.9.3334"),std::shared_ptr<Value const>{new IntValue(5)}}
   };
   try
@@ -419,9 +422,9 @@ void test3() throw()
   
     xju::assert_equal(x.size(),2U);
     xju::assert_equal(x[0].first,Oid(".1.3.4"));
-    xju::assert_equal(x[0].second->operator std::string(),"jock");
+    xju::assert_equal(x[0].second->stringValue(),jock);
     xju::assert_equal(x[1].first,Oid(".1.3.9.3334"));
-    xju::assert_equal(x[1].second->operator int(),5);
+    xju::assert_equal(x[1].second->intValue(),5);
   }
   catch(xju::Exception const& e)
   {
@@ -544,8 +547,8 @@ void test3() throw()
   }
   try {
     std::vector<std::pair<Oid, std::shared_ptr<Value const> > > nextValues {
-      {Oid(".1.3.4"), std::shared_ptr<Value const>{new StringValue("jock")}},
-      {Oid(".1.3.4.1"), std::shared_ptr<Value const>{new StringValue("sal")}},
+      {Oid(".1.3.4"), std::shared_ptr<Value const>{new StringValue(jock)}},
+      {Oid(".1.3.4.1"), std::shared_ptr<Value const>{new StringValue(sal)}},
       {Oid(".1.3.9.3334"),std::shared_ptr<Value const>{new IntValue(5)}}
     };
     auto x=validateResponse(
@@ -571,7 +574,7 @@ void test4() throw()
   // validateResponse
   std::vector<SnmpV2cResponse::VarResult> values {
     SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
-                                                 new StringValue("fred"))),
+                                                 new StringValue(fred))),
       SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
                                                      new IntValue(3)))
   };
@@ -587,13 +590,13 @@ void test4() throw()
                    values));
     
   xju::assert_equal(x.size(),2U);
-  xju::assert_equal((*x.find(Oid(".1.3.3"))).second->operator std::string(),"fred");
-  xju::assert_equal((*x.find(Oid(".1.3.9.3333"))).second->operator int(),3);
+  xju::assert_equal((*x.find(Oid(".1.3.3"))).second->stringValue(),fred);
+  xju::assert_equal((*x.find(Oid(".1.3.9.3333"))).second->intValue(),3);
 
   try {
     std::vector<SnmpV2cResponse::VarResult> values {
       SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
-                                   new StringValue("fred"))),
+                                   new StringValue(fred))),
         SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
                                      new IntValue(3)))
         };
@@ -622,7 +625,7 @@ void test4() throw()
   try {
     std::vector<SnmpV2cResponse::VarResult> values {
       SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
-                                                   new StringValue("fred"))),
+                                                   new StringValue(fred))),
         SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
                                                        new IntValue(3)))
     };
@@ -651,7 +654,7 @@ void test4() throw()
   try {
     std::vector<SnmpV2cResponse::VarResult> values {
       SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
-                                                   new StringValue("fred"))),
+                                                   new StringValue(fred))),
         SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
                                                        new NullValue))
     };
@@ -702,7 +705,7 @@ void test4() throw()
   try {
     std::vector<SnmpV2cResponse::VarResult> values {
       SnmpV2cResponse::VarResult(Oid(".1.3.3"), std::shared_ptr<Value const>(
-                                   new StringValue("fred"))),
+                                   new StringValue(fred))),
         SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"), std::shared_ptr<Value const>(
                                      new NullValue))
         };
@@ -749,7 +752,7 @@ void test4() throw()
   try {
     std::vector<SnmpV2cResponse::VarResult> values {
       SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
-                                                 new StringValue("fred"))),
+                                                 new StringValue(fred))),
       SnmpV2cResponse::VarResult(
         Oid(".1.3.9.3333"),
         SnmpV2cResponse::VarResult::NO_SUCH_OBJECT)
@@ -766,9 +769,9 @@ void test4() throw()
                      values));
     
     xju::assert_equal(x.size(),2U);
-    xju::assert_equal((*x.find(Oid(".1.3.3"))).second->operator std::string(),"fred");
+    xju::assert_equal((*x.find(Oid(".1.3.3"))).second->stringValue(),fred);
     try {
-      (*x.find(Oid(".1.3.9.3333"))).second->operator int();
+      (*x.find(Oid(".1.3.9.3333"))).second->intValue();
       xju::assert_never_reached();
     }
     catch(SnmpV2cVarResponse::NoSuchObject const& e) {
@@ -782,7 +785,7 @@ void test4() throw()
   try {
     std::vector<SnmpV2cResponse::VarResult> values {
       SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
-                                                 new StringValue("fred"))),
+                                                 new StringValue(fred))),
       SnmpV2cResponse::VarResult(
         Oid(".1.3.9.3333"),
         SnmpV2cResponse::VarResult::NO_SUCH_INSTANCE)
@@ -799,9 +802,9 @@ void test4() throw()
                      values));
     
     xju::assert_equal(x.size(),2U);
-    xju::assert_equal((*x.find(Oid(".1.3.3"))).second->operator std::string(),"fred");
+    xju::assert_equal((*x.find(Oid(".1.3.3"))).second->stringValue(),fred);
     try {
-      (*x.find(Oid(".1.3.9.3333"))).second->operator int();
+      (*x.find(Oid(".1.3.9.3333"))).second->intValue();
       xju::assert_never_reached();
     }
     catch(SnmpV2cVarResponse::NoSuchInstance const& e) {
@@ -815,7 +818,7 @@ void test4() throw()
   try {
     std::vector<SnmpV2cResponse::VarResult> values {
       SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
-                                                 new StringValue("fred"))),
+                                                 new StringValue(fred))),
       SnmpV2cResponse::VarResult(
         Oid(".1.3.9.3333"),
         SnmpV2cResponse::VarResult::END_OF_MIB_VIEW)
@@ -843,13 +846,13 @@ void test5() throw()
   // validateResponse(SnmpV2cSetRequest)
   std::vector<SnmpV2cResponse::VarResult> values {
     SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
-                                                 new StringValue("fred"))),
+                                                 new StringValue(fred))),
       SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
                                                      new IntValue(3)))
   };
   std::map<Oid, std::shared_ptr<Value const> > requestValues {
     std::make_pair(Oid(".1.3.3"), std::shared_ptr<Value const>(
-                     new StringValue("fred"))),
+                     new StringValue(fred))),
       std::make_pair(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
                        new IntValue(3)))
   };
@@ -1019,7 +1022,7 @@ void test5() throw()
   try {
     std::vector<SnmpV2cResponse::VarResult> values {
       SnmpV2cResponse::VarResult(
-        Oid(".1.3.4"), std::shared_ptr<Value const>(new StringValue("fred")))
+        Oid(".1.3.4"), std::shared_ptr<Value const>(new StringValue(fred)))
         };
     validateResponse(
       SnmpV2cSetRequest(Community("dje"),
@@ -1309,7 +1312,7 @@ void test5() throw()
   try {
     std::vector<SnmpV2cResponse::VarResult> values {
       SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
-                                   new StringValue("fred"))),
+                                   new StringValue(fred))),
         SnmpV2cResponse::VarResult(Oid(".1.3.9.3334"),std::shared_ptr<Value const>(
                                      new IntValue(3)))
         };

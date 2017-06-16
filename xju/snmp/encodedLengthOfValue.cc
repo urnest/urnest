@@ -14,6 +14,7 @@
 #include "xju/snmp/intDataLength.hh"
 #include "xju/assert.hh"
 #include "xju/snmp/oidDataLength.hh"
+#include <vector>
 
 namespace xju
 {
@@ -28,7 +29,7 @@ size_t encodedLengthOfValue(int64_t val_) throw()
     dataLength;
 }
 
-size_t encodedLengthOfValue(std::string const& val_) throw()
+size_t encodedLengthOfValue(std::vector<uint8_t> const& val_) throw()
 {
   // X.690 octetstring using primitive encoding
   uint64_t const dataLength(val_.size());

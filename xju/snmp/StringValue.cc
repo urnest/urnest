@@ -18,7 +18,13 @@ namespace xju
 namespace snmp
 {
 
-StringValue::StringValue(std::string const& val) throw():
+StringValue::StringValue(std::vector<uint8_t> const& val) throw():
+    Value(encodedLengthOfValue(val)),
+    val_(val)
+{
+}
+
+StringValue::StringValue(std::vector<uint8_t> && val) throw():
     Value(encodedLengthOfValue(val)),
     val_(val)
 {
@@ -32,7 +38,8 @@ std::vector<uint8_t>::iterator StringValue::encodeTo(
 }
 std::string StringValue::str() const throw()
 {
-  return xju::format::quote(xju::format::cEscapeString(val_));
+  return xju::format::quote(xju::format::cEscapeString(
+                              std::string(val_.begin(),val_.end())));
 }
 
 
