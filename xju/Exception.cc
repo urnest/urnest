@@ -37,6 +37,12 @@ namespace xju
 	_cause(std::make_pair(cause, trace))
     {
     }
+    Exception::Exception(
+        const std::string& cause,
+        std::pair<std::string,unsigned int> const& trace) throw():
+        _cause(std::make_pair(cause, Traced(trace)))
+    {
+    }
     Exception::Exception(const std::ostringstream& cause,
                          const xju::Traced& trace) throw():
 	_cause(std::make_pair(cause.str(), trace))
@@ -60,6 +66,14 @@ namespace xju
 	_context.push_back(std::make_pair(c, t));
         what_=std::string();
     }
+    void Exception::addContext(
+        const std::string& c,
+        std::pair<std::string,unsigned int> const& trace) throw()
+    {
+        _context.push_back(std::make_pair(c,Traced(trace)));
+        what_=std::string();
+    }
+    
     void Exception::addContext(const std::ostringstream& c,
 			       const xju::Traced& t) throw()
     {

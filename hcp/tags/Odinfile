@@ -2,6 +2,10 @@
 
 %all.tree==<<
 %all-tests.tree
+tag-lookup-service
+
+tag-lookup-service==tag-lookup-service.cc+(%cxx-opts):auto.cxx.exe
+
 
 %all.idl.sm==<<
 DirName.idl

@@ -180,6 +180,8 @@ std::string str(RelativePath const& x) throw();
 class FileNameTag{};
 typedef xju::Tagged<std::string, FileNameTag> FileName;
 
+typedef std::pair<AbsolutePath, FileName> AbsFile;
+
 std::string str(AbsolutePath const& x, FileName const& y) throw();
 std::string str(std::pair<AbsolutePath, FileName> const& x) throw();
 

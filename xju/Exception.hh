@@ -73,6 +73,8 @@ namespace xju
 	//       context().size() = 0
 	//
 	Exception(const std::string& cause, const xju::Traced& trace) throw();
+	Exception(const std::string& cause,
+                  std::pair<std::string,unsigned int> const& trace) throw();
 	Exception(const std::ostringstream& cause,
                   const xju::Traced& trace) throw();
 	Exception(Exception const& x) throw():
@@ -110,6 +112,8 @@ namespace xju
 	//
 	void addContext(const std::string& c,
                         const xju::Traced& trace) throw();
+	void addContext(const std::string& c,
+                        std::pair<std::string,unsigned int> const& trace) throw();
 	void addContext(const std::ostringstream& c,
                         const xju::Traced& trace) throw();
 	void addContext(std::pair<std::string, xju::Traced> const& trace) 
