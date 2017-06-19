@@ -1,5 +1,6 @@
 %all-test.tree==<<
 %test1
+%test3
 
 %java-dirs==(../../java/test:dirtree:leaves)
 
@@ -34,3 +35,12 @@ find $1/* -print
 sort "$1" > manual &&
 sort "$2" > allfiles &&
 diff manual allfiles
+
+%all-files-3==(.:dirtree:allfiles:ls)
+
+%test3==()+cmd=(%test3.sh)+cmd=(%all-files-3):stdout
+
+%test3.sh == !<<
+#!/bin/sh
+cat "$1" | grep Odinfile &&
+cat "$1" | grep c++/f1.h
