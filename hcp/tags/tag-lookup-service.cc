@@ -24,6 +24,7 @@
 #include <xju/file/write.hh>
 #include <xju/file/rename.hh>
 #include <xju/format.hh>
+#include "xju/Optional.hh"
 
 char const usage[]="-u uri-file tags-file [tags-file...]\n"
   "  provides hcp::tags::Lookup interface - see Lookup.idl - to tags files, via CORBA uri written to uri-file";
@@ -35,7 +36,7 @@ std::pair<xju::path::AbsFile, std::vector<xju::path::AbsFile> > parseCommandLine
     xju::Exception)
 {
   std::vector<std::string>::const_iterator i(x.begin());
-  std::string uriFile;
+  xju::Optional<std::string> uriFile;
   std::vector<xju::path::AbsFile> tagsFiles;
   
   while((i != x.end()) && ((*i)[0]=='-')) {
@@ -51,12 +52,22 @@ std::pair<xju::path::AbsFile, std::vector<xju::path::AbsFile> > parseCommandLine
       throw xju::Exception(s.str(), XJU_TRACED);
     }
   }
+  if (!uriFile.valid()) {
+    std::ostringstream s;
+    s << "-u option is mandatory";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  if (i==x.end()) {
+    std::ostringstream s;
+    s << "specify at least one tags file";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
   std::transform(i,x.end(),
                  std::back_inserter(tagsFiles),
                  [](std::string const& tagsFile) {
                    return xju::path::split(tagsFile);
                  });
-  return std::make_pair(xju::path::split(uriFile), tagsFiles);
+  return std::make_pair(xju::path::split(uriFile.value()), tagsFiles);
 }
 
 
