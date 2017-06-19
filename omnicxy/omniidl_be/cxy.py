@@ -1060,19 +1060,19 @@ head='''\
 #include <cxy/copyContext.hh> //impl
 '''
 
-def includeSpec(fileName,hpath):
+def includeSpec(fileName,hpath,hhext):
     if os.path.dirname(fileName)=='':
         if hpath=='':
-            return '"%s"'%(os.path.splitext(fileName)[0]+'.hh')
+            return '"%s"'%(os.path.splitext(fileName)[0]+'.'+hhext)
         else:
-            return '<%s%s>'%(hpath,os.path.splitext(fileName)[0]+'.hh')
-    return '<%s>'%(os.path.splitext(fileName)[0]+'.hh')
+            return '<%s%s>'%(hpath,os.path.splitext(fileName)[0]+'.'+hhext)
+    return '<%s>'%(os.path.splitext(fileName)[0]+'.'+hhext)
 
-def gen_idlincludes(fileNames,hpath):
+def gen_idlincludes(fileNames,hpath,hhext):
     if not len(fileNames):
         return ''
-    return '\n// included idl'+''.join(['\n#include %s'%includeSpec(_,hpath) \
-                                            for _ in fileNames])
+    return '\n// included idl'+''.join(
+        ['\n#include %s'%includeSpec(_,hpath,hhext) for _ in fileNames])
 
 def run(tree, args):
     eclass,eheader=([_.split('-e',1)[1].split('=',1) for _ in args \
@@ -1084,6 +1084,9 @@ def run(tree, args):
     contextType=([_.split('-contextType=',1)[1] for _ in args \
                                 if _.startswith('-contextType')]+\
                                [None])[0]
+    hhext=([_.split('-hhext=',1)[1] for _ in args \
+            if _.startswith('-hhext')]+\
+           ['hh'])[0]
     if eheader.startswith('./') or os.path.dirname(eheader)=='':
         eheader='"%s"'%eheader[2:]
     else:
@@ -1097,7 +1100,8 @@ def run(tree, args):
         hpath=hpath+'/'
     idlincludes=gen_idlincludes(set([_.file() for _ in tree.declarations() \
                                          if not _.mainFile()]),
-                                hpath)
+                                hpath,
+                                hhext)
     
     print head % vars()
     print '\n'.join([gen(_,eclass,eheader,causeType,contextType) \

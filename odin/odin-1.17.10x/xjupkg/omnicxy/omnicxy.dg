@@ -37,7 +37,7 @@ $ODIN_OMNICXY_OMNIIDL 'name of omniidl program' = 'omniidl';
 
 +cxy 'flags to pass to omniidl cxy backend (omit the -Wb)' ? => :cat;
 
-EXEC (omnicxy.sh) (:IDL) (+hpath) (+cxy-be-dir) (+cxy) (+inc_sp)
+EXEC (omnicxy.sh) (:IDL) (+hpath) (+cxy-be-dir) (+cxy) (+inc_sp) (+hh-ext)
   NEEDS (+cxy-be-dir:list:map=:list) (:IDL:lookup=:hash_inc_all)
         ($ODIN_OMNICXY_BE_DIR/cxy.py)
         ($ODIN_OMNICXY_BE_DIR/cxycref.py)

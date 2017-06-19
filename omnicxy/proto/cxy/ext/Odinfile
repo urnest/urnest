@@ -1,0 +1,8 @@
+%tests.tree==<<
+p2.cpp+inc_sp=(.)+inc_sp=(../../..):o
+
+%all.idl.sm==<<
+../../p1.idl
+../../p2.idl
+
+==%all.idl.sm+hh-ext='h'+cc-ext='cpp'+inc_sp=(.)+hcp-split=(../../../../hcp/hcp-split):omnicxy.targets

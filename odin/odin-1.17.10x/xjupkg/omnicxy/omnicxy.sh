@@ -22,6 +22,8 @@ then
   incsp=$(cat "$1")
 fi && shift &&
 
+hhext="$1" && shift &&
+
 pflags=$(for x in $bedirs ; do echo "-p$x"; done) &&
 beflags=$(for x in $beopts ; do echo "-Wb$x"; done) &&
 iflags=$(for x in $incsp ; do echo "-I$x"; done) &&
@@ -29,6 +31,10 @@ flags="$pflags $iflags" &&
 if [ -n "$hpath" ]
 then
   beflags="$beflags -Wb-hpath=$hpath"
+fi &&
+if [ -n "$hhext" ]
+then
+  beflags="$beflags -Wb-hhext=$hhext"
 fi &&
 (
 PATH=$ODIN_OMNICXY_PATH &&
