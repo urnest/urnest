@@ -26,9 +26,11 @@ hcp_parser::IRs getIrsAtEnd(std::string const& x, size_t offset) throw(
   return (*r).first;
 }
 
-std::vector<std::string> getScopeAtEnd(hcp_parser::IRs const& irs) throw()
+// result.second true means scope is "impl" scope
+std::pair<std::vector<hcp::tags::NamespaceName,bool> > getScopeAtEnd(
+  hcp_parser::IRs const& irs) throw()
 {
-  std::vector<std::string> scope;
+  std::pair<std::vector<NamespaceName>,bool> result({},false);
   for(auto i=irsAtEnd.rbegin();i!=irsAtEnd.rend();++i) {
     hcp_parser::IR const ir(*i);
     if (ir->isA<hcp_ast::NamespaceName>()) {
@@ -42,8 +44,20 @@ std::vector<std::string> getScopeAtEnd(hcp_parser::IRs const& irs) throw()
     {
       scope.push_back(hcp_ast::reconstruct(*ir));
     }
+    else if (ir->isA<hcp_ast::TemplateFunctionDef>())
+    {
+      return result;
+    }
+    else if (ir->isA<hcp_ast::AnonymousNamespace>()||
+             ir->isA<hcp_ast::FunctionImpl>()
+             //REVISIT: adjust parser to allow us to tell if we're
+             //in the "def" part of an global or static var)
+    {
+      result.second=true;
+      return result;
+    }
   }
-  return scope;
+  return result;
 }
 bool isAbsolute(Identifier const& identifier) throw()
 {
@@ -80,9 +94,9 @@ int main(int argc, char* argv[])
 
     hcp_parser::IRs const irsAtEnd(getIrsAtEnd(x,offset));
 
-    std::vector<std::string> const scope(
+    std::pair<std::vector<NamespaceName>,bool> const scope(
       isAbsolute(identifier)?
-      std::vector<std::string> :
+      std::pair<std::vector<NamespaceName>,bool>({},false):
       getScopeAtEnd(irsAtEnd));
     
     // lookup in tag-lookup-service
@@ -105,11 +119,6 @@ int main(int argc, char* argv[])
       return 3;
     }
     
-    // figure out whether offset is in "impl" scope:
-    //   anon-namespace
-    //   non-template, non-inline function def
-    //   static var def
-    //   ... check hcp-split for full list
 
     // irsAtEnd will include all #includes, so check those for
     // already mentioned
