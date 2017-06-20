@@ -229,15 +229,18 @@ def run(tree, args):
     hpath=([_.split('-hpath=',1)[1] for _ in args \
                 if _.startswith('-hpath')]+\
                [''])[0]
+    hhext=([_.split('-hhext=',1)[1] for _ in args \
+            if _.startswith('-hhext')]+\
+           ['hh'])[0]
     if len(hpath)>0 and not hpath.endswith('/'):
         hpath=hpath+'/'
     if len(hpath):
-        hhinc='<%(hpath)s%(baseName)s.hh>'%vars()
-        objrefhhinc='<%(hpath)s%(baseName)s.objref.hh>'%vars()
-        cdrhhinc='<%(hpath)s%(baseName)s.cdr.hh>'%vars()
+        hhinc='<%(hpath)s%(baseName)s.%(hhext)s>'%vars()
+        objrefhhinc='<%(hpath)s%(baseName)s.objref.%(hhext)s>'%vars()
+        cdrhhinc='<%(hpath)s%(baseName)s.cdr.%(hhext)s>'%vars()
     else:
-        hhinc='"%(baseName)s.hh"'%vars()
-        objrefhhinc='"%(baseName)s.objref.hh"'%vars()
-        cdrhhinc='"%(baseName)s.cdr.hh"'%vars()
+        hhinc='"%(baseName)s.%(hhext)s"'%vars()
+        objrefhhinc='"%(baseName)s.objref.%(hhext)s"'%vars()
+        cdrhhinc='"%(baseName)s.cdr.%(hhext)s"'%vars()
     print template % vars()
     pass

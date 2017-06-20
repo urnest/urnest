@@ -8,6 +8,8 @@ x documentation / tutorial
 x once hcp-split can understand conversion operators, see //REVISIT in
   cxycref.py, adjust p15-main.cc and document in README.txt
 
+* cxy/UnixTimeMilli, mapping to std::chrono::system_clock::timepoint
+
 * fix up exception handling:
   - define equivalents of all corba exception types
   - have translateCorbaException return std::exception_ptr
@@ -23,6 +25,8 @@ x omnicxy does not work, need to pass through basename to
 - proto/cxy/echo-main
 
 - how to get just direct includes (in omnipy backend)? currently picks up nested
+
+- use xju::Thread instead of xju::mt::Thread
 
 x hand-code p1 server
 

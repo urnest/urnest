@@ -296,22 +296,26 @@ namespace cxy
 }
 '''
 
-def includeSpec(fileName,hpath):
+def includeSpec(fileName,hpath,hhext):
     if os.path.dirname(fileName)=='':
         if hpath=='':
-            return '"%s"'%(os.path.splitext(fileName)[0]+'.objref.hh')
+            return '"%s"'%(os.path.splitext(fileName)[0]+'.objref.'+hhext)
         else:
-            return '<%s%s>'%(hpath,os.path.splitext(fileName)[0]+'.objref.hh')
-    return '<%s>'%(os.path.splitext(fileName)[0]+'.objref.hh')
+            return '<%s%s>'%(hpath,os.path.splitext(fileName)[0]+'.objref.'+hhext)
+    return '<%s>'%(os.path.splitext(fileName)[0]+'.objref.'+hhext)
 
-def gen_idlincludes(fileNames,hpath):
+def gen_idlincludes(fileNames,hpath,hhext):
     if not len(fileNames):
         return ''
-    return '\n// included idl'+''.join(['\n#include %s'%includeSpec(_,hpath) \
-                                            for _ in fileNames])
+    return '\n// included idl'+''.join(
+        ['\n#include %s'%includeSpec(_,hpath,hhext)
+         for _ in fileNames])
 
 def run(tree, args):
     eclass,eheader=([_.split('-e',1)[1].split('=',1) for _ in args if _.startswith('-e')]+[('cxy::Exception','cxy/Exception.hh')])[0]
+    hhext=([_.split('-hhext=',1)[1] for _ in args \
+            if _.startswith('-hhext')]+\
+           ['hh'])[0]
     if eheader.startswith('./') or os.path.dirname(eheader)=='':
         eheader='"%s"'%eheader[2:]
     else:
@@ -326,13 +330,14 @@ def run(tree, args):
     if len(hpath)>0 and not hpath.endswith('/'):
         hpath=hpath+'/'
     if len(hpath):
-        hhinc='<%(hpath)s%(baseName)s.hh>'%vars()
-        cdrhhinc='<%(hpath)s%(baseName)s.cdr.hh>'%vars()
+        hhinc='<%(hpath)s%(baseName)s.%(hhext)s>'%vars()
+        cdrhhinc='<%(hpath)s%(baseName)s.cdr.%(hhext)s>'%vars()
     else:
-        hhinc='"%(baseName)s.hh"'%vars()
-        cdrhhinc='"%(baseName)s.cdr.hh"'%vars()
+        hhinc='"%(baseName)s.%(hhext)s"'%vars()
+        cdrhhinc='"%(baseName)s.cdr.%(hhext)s"'%vars()
     idlincludes=gen_idlincludes(set([_.file() for _ in tree.declarations() \
                                          if not _.mainFile()]),
-                                hpath)
+                                hpath,
+                                hhext)
     print template % vars()
     pass

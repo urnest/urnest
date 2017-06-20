@@ -7,6 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
+#include "hcp/tags/getIdentifierRefAt.hh"
 
 hcp_parser::IRs getIrsAtEnd(std::string const& x, size_t offset) throw(
   xju::Exception)
@@ -61,6 +62,7 @@ int main(int argc, char* argv[])
       std::cout << "-t, trace " << std::endl
                 << "-v, verbose" << std::endl
                 << "\n";
+      std::cout << "note: $TAG_LOOKUP_SERVICE_URI_FILE must locate uri-file of tag-lookup-service to use" << std::endl;
       return 1;
     }
 
@@ -73,7 +75,8 @@ int main(int argc, char* argv[])
 
     Options const options(cmd_line.first);
 
-    IdentifierRef identifier(getIdentifierRefAt(x, offset, options.verbose_));
+    IdentifierRef const identifier(
+      getIdentifierRefAt(x, offset, options.verbose_));
 
     hcp_parser::IRs const irsAtEnd(getIrsAtEnd(x,offset));
 
@@ -82,20 +85,38 @@ int main(int argc, char* argv[])
       std::vector<std::string> :
       getScopeAtEnd(irsAtEnd));
     
-    
-  
-    // irsAtEnd will include all #includes, so check those for
-    // already mentioned
+    // lookup in tag-lookup-service
+    // ... what if not found?
+    xju::path::AbsFile const tagLookupServiceURIfile(
+      xju::path::split(::getenv("TAG_LOOKUP_SERVICE_URI_FILE")));
+    auto const uri(xju::file::read(tagLookupServiceURIfile));
+    cxy::ORB<xju::Exception> orb("giop:tcp::");
+    cxy::cref<hcp::tags::Lookup> ref(orb,uri);
 
+    hcp::tags::Locations const l(ref->lookupSymbol(fromScope,
+                                                   symbolScope,
+                                                   symbol));
+    if (l.size()==0) {
+      std::cout << "symbol " << identifier
+                << " from scope " << fromScope
+                << " not known to tag-lookup-service at "
+                << uri
+                << std::endl;
+      return 3;
+    }
+    
     // figure out whether offset is in "impl" scope:
     //   anon-namespace
     //   non-template, non-inline function def
     //   static var def
     //   ... check hcp-split for full list
+
+    // irsAtEnd will include all #includes, so check those for
+    // already mentioned
+
     
-    // otherwise, skip over initial comment block if any, then
+    // skip over initial comment block if any, then
     // insert #include <location> and add //impl if in "impl" scope
-#include "hcp/getIdentifierAt.hh"
     // write updated text to fileName
 
     return 0;

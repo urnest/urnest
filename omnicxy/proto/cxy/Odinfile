@@ -153,6 +153,7 @@ echo.sref.cc==%gen/echo.sref.cc
 ()+cmd=(%test-port-in-use):exec.output
 ()+cmd=(%p2-main-2)+cmd='3753'+cmd='both':exec.output
 %leak-checks.tree
+ext%tests.tree
 
 %cxx-opts==<<
 +inc_sp=(%gen)

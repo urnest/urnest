@@ -281,6 +281,9 @@ def run(tree, args):
         [_.split('-contextMemberExpression=',1)[1] for _ in args \
              if _.startswith('-contextMemberExpression')]+\
             [None])[0]
+    hhext=([_.split('-hhext=',1)[1] for _ in args \
+            if _.startswith('-hhext')]+\
+           ['hh'])[0]
     if eheader.startswith('./') or os.path.dirname(eheader)=='':
         eheader='"%s"'%eheader[2:]
     else:
@@ -298,11 +301,11 @@ def run(tree, args):
     if len(hpath)>0 and not hpath.endswith('/'):
         hpath=hpath+'/'
     if len(hpath):
-        hhinc='<%(hpath)s%(baseName)s.hh>'%vars()
-        hhcdrinc='<%(hpath)s%(baseName)s.cdr.hh>'%vars()
+        hhinc='<%(hpath)s%(baseName)s.%(hhext)s>'%vars()
+        hhcdrinc='<%(hpath)s%(baseName)s.cdr.%(hhext)s>'%vars()
     else:
-        hhinc='"%(baseName)s.hh"'%vars()
-        hhcdrinc='"%(baseName)s.cdr.hh"'%vars()
+        hhinc='"%(baseName)s.%(hhext)s"'%vars()
+        hhcdrinc='"%(baseName)s.cdr.%(hhext)s"'%vars()
         pass
     print template % vars()
     pass
