@@ -30,6 +30,8 @@
 #include <map>
 #include <typeinfo>
 #include "xju/JoiningIterator.hh"
+#include <hcp/getIrsAtEnd.hh>
+#include <hcp/scopeAt.hh>
 
 class Options
 {
@@ -102,42 +104,22 @@ int main(int argc, char* argv[])
 
     Options const options(cmd_line.first);
 
-    hcp_parser::ParseResult const r(
-      hcp_parser::file()->parse(
-        hcp_parser::I(x.begin(), x.begin()+offset),
-        options.parser_options_));
-    std::vector<std::string> scope;
-    if (r.failed()) {
-      if (!r.e().atEnd()) {
-        throw r.e();
-      }
-      hcp_parser::IRs const irsAtEnd(
-        r.e().getIrsAtEnd());
-      for(auto i=irsAtEnd.rbegin();i!=irsAtEnd.rend();++i) {
-        hcp_parser::IR const ir(*i);
-        if (options.verbose_) {
-          std::cerr << typeid(*ir).name() << " "
-                    << xju::format::quote(
-                      xju::format::cEscapeString(
-                        hcp_ast::reconstruct(*ir)))
-                    << std::endl;
-        }
-        if (ir->isA<hcp_ast::NamespaceName>()) {
-          scope.push_back(hcp_ast::reconstruct(*ir));
-        }
-        else if (ir->isA<hcp_ast::ClassName>())
-        {
-          scope.push_back(hcp_ast::reconstruct(*ir));
-        }
-        else if (ir->isA<hcp_ast::EnumName>())
-        {
-          scope.push_back(hcp_ast::reconstruct(*ir));
+    hcp_parser::IRs const irsAtEnd(
+      hcp::getIrsAtEnd(x,offset,options.parser_options_));
+
+    if (options.verbose_) {
+      for(auto x:irsAtEnd) {
+        if (x->isA<hcp_ast::CompositeItem>()) {
+          std::cout << x->str() << std::endl;
         }
       }
     }
-    std::cout << "::";
-    std::copy(scope.begin(),
-              scope.end(),
+
+    std::pair<std::vector<std::string>,bool> const scope(
+      hcp::scopeAt(irsAtEnd));
+    std::cout << (scope.second?"impl":"header") << " ::";
+    std::copy(scope.first.begin(),
+              scope.first.end(),
               xju::JoiningIterator<std::string,std::string>(std::cout,"::"));
     std::cout << std::endl;
     return 0;

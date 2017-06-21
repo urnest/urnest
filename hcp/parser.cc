@@ -17,6 +17,7 @@
 #include <sstream>
 #include "xju/format.hh"
 #include "xju/JoiningIterator.hh"
+#include <hcp/translateException.hh>
 
 namespace hcp_parser
 {
@@ -1966,28 +1967,7 @@ I parse(hcp_ast::CompositeItem& parent,
     return x.second;
   }
   catch(Exception const& e) {
-    std::ostringstream s;
-    s << e.at_ << ": " << e.cause_->str();
-
-    std::vector<std::pair<std::string, xju::Traced> > context;
-    xju::Exception ee(s.str(), XJU_TRACED);
-    typedef std::pair<std::pair<Parser const*, I>, xju::Traced> C;
-    std::vector<C>::const_iterator i;
-    
-    for(i=e.context_.begin(); i!=e.context_.end(); ++i) {
-      // to get a less verbose but hopefully detailed enough
-      // error message, we only add context from NamedParsers
-      // and from the root-cause parser (whether it is a NamedParser
-      // or not)
-      if (i==e.context_.begin() ||
-          dynamic_cast<NamedParser_ const*>((*i).first.first)) {
-        std::ostringstream s;
-        s << "parse " << (*i).first.first->target() 
-          << " at " << (*i).first.second;
-        ee.addContext(s.str(), (*i).second);
-      }
-    }
-    throw ee;
+    throw hcp::translateException(e);
   }
 }
 

@@ -1,0 +1,65 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <utility>
+#include <vector>
+#include <string>
+#include "hcp/parser.hh"
+#include <hcp/ast.hh> //impl
+
+
+namespace hcp
+{
+
+// get the c++ scope represented by the specified irs
+// result.first is outer-most-first list of namespace/class/struct/union/enum names
+// result.second true means scope is "impl" scope
+// eg in function prototype for a::b::f()
+//    result is {"a","b"},false
+// eg in a::b::f() implementation
+//    result is {"a","b"},true
+//
+std::pair<std::vector<std::string>,bool> scopeAt(
+  hcp_parser::IRs const& irs) throw()
+{
+  std::pair<std::vector<std::string>,bool> result({},false);
+  std::vector<std::string>& scope(result.first);
+  for(auto i=irs.rbegin();i!=irs.rend();++i) {
+    hcp_parser::IR const ir(*i);
+    if (ir->isA<hcp_ast::NamespaceName>()) {
+      scope.push_back(hcp_ast::reconstruct(*ir));
+    }
+    else if (ir->isA<hcp_ast::ClassName>())
+    {
+      scope.push_back(hcp_ast::reconstruct(*ir));
+    }
+    else if (ir->isA<hcp_ast::EnumName>())
+    {
+      scope.push_back(hcp_ast::reconstruct(*ir));
+    }
+    else if (ir->isA<hcp_ast::TemplateFunctionDef>())
+    {
+      return result;
+    }
+    else if (ir->isA<hcp_ast::AnonymousNamespace>()||
+             ir->isA<hcp_ast::FunctionImpl>()
+             //REVISIT: adjust parser to allow us to tell if we're
+             //in the "def" part of an global or static var
+      )
+    {
+      result.second=true;
+      return result;
+    }
+  }
+  return result;
+}
+
+}
+
+

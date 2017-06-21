@@ -8,57 +8,9 @@
 // implied warranty.
 //
 #include "hcp/tags/getIdentifierRefAt.hh"
+#include <hcp/getIrsAtEnd.hh>
+#include <hcp/scopeAt.hh>
 
-hcp_parser::IRs getIrsAtEnd(std::string const& x, size_t offset) throw(
-  xju::Exception)
-{
-  hcp_parser::ParseResult const r(
-    hcp_parser::file->parse(
-      hcp_parser::I(x.begin(), x.begin()+offset),
-      options.parser_options_));
-  
-  if (r.failed()) {
-    if (!r.e().atEnd()) {
-      throw r.e();
-    }
-    return r.e().getIrsAtEnd();
-  }
-  return (*r).first;
-}
-
-// result.second true means scope is "impl" scope
-std::pair<std::vector<hcp::tags::NamespaceName,bool> > getScopeAtEnd(
-  hcp_parser::IRs const& irs) throw()
-{
-  std::pair<std::vector<NamespaceName>,bool> result({},false);
-  for(auto i=irsAtEnd.rbegin();i!=irsAtEnd.rend();++i) {
-    hcp_parser::IR const ir(*i);
-    if (ir->isA<hcp_ast::NamespaceName>()) {
-      scope.push_back(hcp_ast::reconstruct(*ir));
-    }
-    else if (ir->isA<hcp_ast::ClassName>())
-    {
-      scope.push_back(hcp_ast::reconstruct(*ir));
-    }
-    else if (ir->isA<hcp_ast::EnumName>())
-    {
-      scope.push_back(hcp_ast::reconstruct(*ir));
-    }
-    else if (ir->isA<hcp_ast::TemplateFunctionDef>())
-    {
-      return result;
-    }
-    else if (ir->isA<hcp_ast::AnonymousNamespace>()||
-             ir->isA<hcp_ast::FunctionImpl>()
-             //REVISIT: adjust parser to allow us to tell if we're
-             //in the "def" part of an global or static var)
-    {
-      result.second=true;
-      return result;
-    }
-  }
-  return result;
-}
 bool isAbsolute(Identifier const& identifier) throw()
 {
   return identifier.size()>=2 && identifier[0]==':' && identifier[1]==':';

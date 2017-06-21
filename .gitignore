@@ -175,3 +175,7 @@ omnicxy/cxy/TypeKind.cc
 omnicxy/cxy/TypeKind.hh
 hcp/hcp-scope-at
 hcp/tags/tag-lookup-service
+hcp/getIrsAtEnd.cc
+hcp/getIrsAtEnd.hh
+hcp/scopeAt.cc
+hcp/scopeAt.hh

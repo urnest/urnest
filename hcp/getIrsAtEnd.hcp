@@ -1,0 +1,40 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include "hcp/parser.hh"
+#include <string>
+#include <unistd.h>
+#include "xju/Exception.hh"
+#include <hcp/translateException.hh>
+
+namespace hcp
+{
+
+// parse hcp up to offset as hcp, return IRs to that point
+// - parse uses parser_options
+hcp_parser::IRs getIrsAtEnd(std::string const& hcp,
+                            size_t offset,
+                            hcp_parser::Options const& parser_options) throw(
+                              xju::Exception)
+{
+  hcp_parser::ParseResult const r(
+    hcp_parser::file()->parse(
+      hcp_parser::I(hcp.begin(), hcp.begin()+offset),
+      parser_options));
+  
+  if (r.failed()) {
+    if (!r.e().atEnd()) {
+      throw translateException(r.e());
+    }
+    return r.e().getIrsAtEnd();
+  }
+  return (*r).first;
+}
+
+}
