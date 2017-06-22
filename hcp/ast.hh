@@ -263,6 +263,9 @@ typedef TaggedCompositeItem<FunctionNameTag> FunctionName;
 class FunctionDeclTag{};
 typedef TaggedCompositeItem<FunctionDeclTag> FunctionDecl;
 
+class BlockOpenTag{};
+typedef TaggedCompositeItem<BlockOpenTag> BlockOpen;
+
 class BlockTag{};
 typedef TaggedCompositeItem<BlockTag> Block;
 
@@ -278,6 +281,9 @@ typedef TaggedCompositeItem<FunctionImplTag> FunctionImpl;
 class TemplateFunctionDefTag{};
 typedef TaggedCompositeItem<TemplateFunctionDefTag> TemplateFunctionDef;
 
+class TemplatePreambleTag{};
+typedef TaggedCompositeItem<TemplatePreambleTag> TemplatePreamble;
+  
 class TemplateEmptyPreambleTag{};
 typedef TaggedCompositeItem<TemplateEmptyPreambleTag> TemplateEmptyPreamble;
   

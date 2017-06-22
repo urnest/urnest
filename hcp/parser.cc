@@ -935,6 +935,50 @@ PR operator!(PR x) throw()
   return xju::Shared<ParseNot>(new ParseNot(x));
 }
 
+class AnonParser : public NamedParser_
+{
+public:
+  std::string const name_;
+  PR x_;
+  
+  virtual ~AnonParser() throw() {
+  }
+  
+  explicit AnonParser(std::string const& name, PR const x) throw():
+    name_(name),
+    x_(x) {
+  }
+
+  // Parser::
+  virtual ParseResult parse_(I const at, Options const& o) throw() 
+  {
+    std::unique_ptr<hcp_trace::Scope> scope;
+    if (o.trace_) {
+      std::ostringstream s;
+      s << "parse " << target() << " at " << at;
+      scope = std::unique_ptr<hcp_trace::Scope>(
+        new hcp_trace::Scope(s.str(), XJU_TRACED));
+    }
+    ParseResult r(x_->parse(at, o));
+    if (!r.failed()) {
+      return r;
+    }
+    if (o.trace_) {
+      scope->fail();
+    }
+    return r;
+  }
+  // Parser::
+  virtual std::string target() const throw() {
+    return name_;
+  }
+};
+
+PR anon(std::string const& name, PR const x) throw()
+{
+  return PR(new AnonParser(name,x));
+}
+
 PR atLeastOne(PR b) throw()
 {
   std::ostringstream s;
@@ -1401,11 +1445,19 @@ PR function_qualifiers() throw()
 }
 
 
+PR block_open() throw()
+{
+  static PR result(new NamedParser<hcp_ast::BlockOpen>(
+                    "block",
+                    parseLiteral("{")));
+  return result;
+}
+
 PR block() throw()
 {
   static PR block(new NamedParser<hcp_ast::Block>(
                     "block",
-                    parseLiteral("{")+
+                    block_open()+
                     balanced(parseOneOfChars("}"))+
                     parseLiteral("}")));
   return block;
@@ -1468,7 +1520,7 @@ PR function_proto() throw()
        type_name()))+
     eatWhite()+
     bracketed()+
-    balanced((eatWhite()+parseOneOfChars(";"))|function_impl()));
+    balanced((eatWhite()+parseOneOfChars(";:{"))|parseLiteral("try")));
   return function_proto;
 }
 
@@ -1509,35 +1561,45 @@ PR template_empty_preamble() throw()
 PR template_preamble() throw()
 {
   static PR template_preamble(
-    !template_empty_preamble()+(
-      templateKeyword()+
-      eatWhite()+
-      parseOneOfChars("<")+
-      balanced(parseOneOfChars(">"), true)+
-      parseOneOfChars(">")+
-      eatWhite()));
+    new NamedParser<hcp_ast::TemplatePreamble>(
+      "template preamble",
+      !template_empty_preamble()+(
+        templateKeyword()+
+        eatWhite()+
+        parseOneOfChars("<")+
+        balanced(parseOneOfChars(">"), true)+
+        parseOneOfChars(">")+
+        eatWhite())));
   return template_preamble;
 }
 
+
+PR function_def_unnamed() throw()
+{
+  static PR result(
+    function_proto()+
+    function_impl()+
+    new NamedParser<hcp_ast::WhiteSpace>("whitespace",eatWhite()));
+  return result;
+}
 
 PR function_def() throw()
 {
   static PR function_def(
     new NamedParser<hcp_ast::FunctionDef>(
       "function definition",
-      function_proto()+
-      function_impl()+
-      new NamedParser<hcp_ast::WhiteSpace>("whitespace",eatWhite())));
+      function_def_unnamed()));
   return function_def;
 }
 
   
 PR template_function_def() throw()
 {
-  static PR template_function_def(new NamedParser<hcp_ast::TemplateFunctionDef>(
-                                    "template function definition",
-                                    atLeastOne(template_preamble())+
-                                    function_def()));
+  static PR template_function_def(
+    new NamedParser<hcp_ast::TemplateFunctionDef>(
+      "template function definition",
+      atLeastOne(template_preamble())+
+      function_def_unnamed()));
   return template_function_def;
 }
 
@@ -1780,7 +1842,14 @@ PR class_def() throw()
   return class_def;
 }
 
-  
+PR not_function_proto_or_template_function_proto() throw()
+{
+  static PR result(
+    anon("not function proto or template function proto",
+         !(function_proto()|(template_preamble()+function_proto()))));
+  return result;
+}
+
 PR namespace_leaf() throw()
 {
   static PR namespace_leaf(
@@ -1800,8 +1869,9 @@ PR namespace_leaf() throw()
         function_decl()| // inc. template
         template_function_def()|
         function_def()|
-        global_var_def()|
-        attr_decl())))));
+        (not_function_proto_or_template_function_proto()+
+         (global_var_def()|
+          attr_decl())))))));
   return namespace_leaf;
 }
 

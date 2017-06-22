@@ -38,7 +38,7 @@ public:
   FileObserver(std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& files) throw(
     // - no resources (see initify_init1)
     // - missing/unreadable parent directory
-    xju::Exception);
+    xju::Exception) ;
 
 
   // read file changes until deadline

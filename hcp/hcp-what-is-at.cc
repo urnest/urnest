@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
 
     if (cmd_line.second.size() != 1) {
       std::cout << "usage: " << argv[0] 
-                << " [-v] [-t] <input-file>" << std::endl;
+                << " [-v] [-t] [-o <offset>] <input-file>" << std::endl;
       std::cout << "-t, trace " << std::endl
                 << "-v, verbose" << std::endl
                 << "-o <offset>, report what is at offset (default 0)"

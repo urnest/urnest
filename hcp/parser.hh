@@ -318,6 +318,9 @@ public:
   }
 };
 
+// same as parsing x, but if x fails we get name in exception context
+PR anon(std::string const& name, PR const x) throw();
+
 PR atLeastOne(PR const x) throw();
 PR parseAnyChar() throw();
 PR parseOneOfChars(std::string const& chars) throw();

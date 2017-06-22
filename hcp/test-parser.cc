@@ -1130,7 +1130,7 @@ void test22()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse function definition at line 1 column 1 because\nfailed to parse function implementation at line 2 column 26 because\nfailed to parse block at line 2 column 26 because\nfailed to parse \"{\" at line 2 column 26 because\nline 2 column 26: expected \'{\' but found \';\'.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse function definition at line 1 column 1 because\nfailed to parse function implementation at line 2 column 26 because\nfailed to parse block at line 2 column 26 because\nfailed to parse block at line 2 column 26 because\nfailed to parse \"{\" at line 2 column 26 because\nline 2 column 26: expected \'{\' but found \';\'.", XJU_TRACED);
   }
 }
 
@@ -1193,7 +1193,7 @@ void test23()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse template function definition at line 1 column 1 because\nfailed to parse at least one occurrance of !template empty preamble then \"template\" then (zero or more occurrances of (one of chars [\\t\\n ] or comments)) then one of chars [<] then parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [>] then one of chars [>] then zero or more occurrances of (one of chars [\\t\\n ] or comments) at line 1 column 1 because\nfailed to parse \"template\" at line 1 column 1 because\nline 1 column 1: expected \'t\' but found \'v\'.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse template function definition at line 1 column 1 because\nfailed to parse at least one occurrance of template preamble at line 1 column 1 because\nfailed to parse template preamble at line 1 column 1 because\nfailed to parse \"template\" at line 1 column 1 because\nline 1 column 1: expected \'t\' but found \'v\'.", XJU_TRACED);
   }
 }
 

@@ -444,6 +444,15 @@ sys	0m0.004s
 2275
 commit b1180d3b6d0c32332217defad2394bc8e2dff925
 
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "%all" && ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l && git log | head -1
+end at line 146 column 1
+
+real	0m0.191s
+user	0m0.188s
+sys	0m0.000s
+2249
+commit 8fcf2bb1e800fdfa75045e6d40f7fa7fc5ba307e
+
 
 empty file overhead:
 
@@ -466,5 +475,15 @@ sys	0m0.000s
 13
 commit 0cd1a32c9576ef06cb7f86debe62247a88b54194
 
+   ... add impl/header detection to scopeAt:
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "%all" && ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file /dev/null && ./hcp-parse-file -t /dev/null  | wc -l && git log | head -1
+end at line 1 column 1
+
+real	0m0.012s
+user	0m0.008s
+sys	0m0.000s
+13
+commit 8fcf2bb1e800fdfa75045e6d40f7fa7fc5ba307e
+   
 --------- create gcc 5.2 linux cache --------------
 xju@xjutv:~/urnest$ ODIN_CXX_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib:/home/xju/gcc-5.2.0-run/lib  ODIN_CXX_PATH=/home/xju/gcc-5.2.0-run/bin:/usr/bin:/bin ODIN_CXX_FLAGS=-std=c++11 ODIN_EXEC_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib:/home/xju/gcc-5.2.0-run/lib ODIN_CXX_I=/usr/local/omniORB-4.2.0/include ODIN_LIB_SP="/usr/local/omniORB-4.2.0/lib /lib /usr/lib" ODIN_EXEC_PATH=/usr/local/omniORB-4.2.0/bin:/bin:/usr/bin ODIN_OMNICXY_PATH=/usr/local/omniORB-4.2.0/bin:/usr/bin:/bin ODIN_OMNICXY_BE_DIR=~/urnest/omnicxy/omniidl_be ./odin/create-linux-cache.sh $ODIN
