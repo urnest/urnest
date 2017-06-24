@@ -48,10 +48,8 @@ std::pair<std::vector<std::string>,bool> scopeAt(
       return result;
     }
     else if (ir->isA<hcp_ast::AnonymousNamespace>()||
-             ir->isA<hcp_ast::BlockOpen>()
-             //REVISIT: adjust parser to allow us to tell if we're
-             //in the "def" part of an global or static var
-      )
+             ir->isA<hcp_ast::BlockOpen>()||
+             ir->isA<hcp_ast::VarInitialiserOpen>())
     {
       result.second=true;
       return result;

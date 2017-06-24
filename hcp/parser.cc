@@ -1023,6 +1023,7 @@ PR blockComment() throw()
                            "block comment",
                            parseLiteral("/*")+
                            parseUntil(parseLiteral("*/"))+
+                           parseLiteral("*/")+
                            (zeroOrMore()*whitespaceChar())));
   return blockComment;
 }
@@ -1133,7 +1134,6 @@ PR stringLiteral() throw()
   return stringLiteral;
 }
 
-  
 //
 // to be able to split a combined .h and .cpp (ie a .hcp) file into
 // .h and .cpp parts, we need to choose whether each #include goes
@@ -1206,7 +1206,14 @@ PR whitespace() throw()
   return whitespace;
 }
 
-
+PR identifierStartChar() throw()
+{
+  static PR result(charInRange('a', 'z')|
+                   charInRange('A', 'Z')|
+                   parseOneOfChars("_"));
+  return result;
+}
+  
 PR identifierContChar() throw()
 {
   static PR identifierContChar(charInRange('a', 'z')|
@@ -1220,10 +1227,23 @@ PR identifierContChar() throw()
 PR unqualifiedName() throw()
 {
   static PR unqualifiedName(
-    atLeastOne(identifierContChar()));
+    identifierStartChar()+
+    zeroOrMore()*identifierContChar());
   return unqualifiedName;
 }
 
+PR identier() throw()
+{
+  static PR result(
+    identifierStartChar()+
+    zeroOrMore()*identifierContChar());
+  return result;
+}
+
+PR bracketed(PR x) throw()
+{
+  return parseLiteral("(")+eatWhite()+x+parseLiteral(")");
+}
 
 PR defined_type() throw()
 {
@@ -1241,6 +1261,43 @@ PR typedef_keyword() throw()
   return typedef_keyword;
 }
 
+PR const_keyword() throw()
+{
+  static PR result{parseLiteral("const")+!identifierContChar()};
+  return result;
+}
+
+PR volatile_keyword() throw()
+{
+  static PR result{parseLiteral("volatile")+!identifierContChar()};
+  return result;
+}
+
+PR cv() throw()
+{
+  static PR result {
+    anon("const/volatile qualifiers",
+         zeroOrMore()*((const_keyword()|volatile_keyword())+eatWhite()))};
+  return result;
+}
+
+PR type_qual() throw()
+{
+  static PR result{
+    anon("const/volatile/*/& type qualifier",
+         (const_keyword()|volatile_keyword()|parseOneOfChars("*&"))+eatWhite())
+      };
+  return result;
+}
+
+PR type_ref() throw()
+{
+  static PR result{
+    anon("type reference",
+         cv() + type_name() +eatWhite() + zeroOrMore()*type_qual() + eatWhite())
+      };
+  return result;
+}
 
 PR typedef_statement() throw()
 {
@@ -1327,7 +1384,7 @@ PR enum_def() throw()
   
 PR bracketed() throw()
 {
-  static PR bracketed(parseLiteral("(")+balanced(parseLiteral(")"))+parseLiteral(")"));
+  static PR bracketed(parseLiteral("(")+balanced(parseLiteral(")"))+parseLiteral(")")+eatWhite());
   return bracketed;
 }
 
@@ -1415,9 +1472,9 @@ PR conversion_operator_name() throw()
 PR keyword_static() throw()
 {
   static PR keyword_static(
-    new NamedParser<hcp_ast::KeywordStatic>(
-      "\"static\"",
-      parseLiteral("static")));
+    PR(new NamedParser<hcp_ast::KeywordStatic>(
+         "\"static\"",
+         parseLiteral("static")))+!identifierContChar());
   return keyword_static;
 }
 
@@ -1651,7 +1708,7 @@ PR attr_decl() throw()
 {
   static PR attr_decl(new NamedParser<hcp_ast::AttrDecl>(
                         "attr declaration",
-                        balanced(parseOneOfChars("{}();"))+
+                        balanced(parseOneOfChars("{}();="))+
                         parseOneOfChars(";")+
                         eatWhite()));
   return attr_decl;
@@ -1662,7 +1719,7 @@ PR var_name() throw()
 {
   static PR var_name(new NamedParser<hcp_ast::VarName>(
                        "var name",
-                       name()));
+                       unqualifiedName())+eatWhite());
   return var_name;
 }
 
@@ -1681,10 +1738,10 @@ PR array_decl() throw()
 PR var_intro() throw()
 {
   static PR var_intro(
-    balanced(whitespaceChar()+var_name()+eatWhite()+
+    balanced(whitespaceChar()+var_name()+
              optional(array_decl())+eatWhite()+
              parseOneOfChars("=;"))+
-    whitespaceChar()+var_name()+eatWhite()+optional(array_decl())+eatWhite());
+    whitespaceChar()+var_name()+optional(array_decl())+eatWhite());
   return var_intro;
 }
 
@@ -1693,31 +1750,133 @@ PR static_var_intro() throw()
 {
   static PR static_var_intro(
     keyword_static()+
-    whitespaceChar()+
     eatWhite()+
     var_intro());
   return static_var_intro;
 }
 
-  
-PR var_initialiser() throw()
+PR var_initialiser_open() throw()
+{
+  static PR result(
+    new NamedParser<hcp_ast::VarInitialiserOpen>(
+      "variable initialiser '='",
+      parseOneOfChars("=")));
+  return result;
+}
+    
+PR var_initialiser_1() throw()
 {
   static PR var_initialiser(
     new NamedParser<hcp_ast::VarInitialiser>(
-      "static variable initialiser",
-      
-      (parseOneOfChars("=")+balanced(parseOneOfChars(";")))));
+      "variable initialiser",
+      (var_initialiser_open()+balanced(parseOneOfChars(";,")))));
   return var_initialiser;
 }
 
+PR var_initialiser_open_2() throw()
+{
+  PR result{
+    new NamedParser<hcp_ast::VarInitialiserOpen>(
+      "variable initialiser '{'",
+      parseOneOfChars("{"))};
+  return result;
+}
+    
+    
+PR var_initialiser_2() throw()
+{
+  static PR result{
+    new NamedParser<hcp_ast::VarInitialiser>(
+      "variable initialiser",
+      (var_initialiser_open_2()+balanced(parseOneOfChars("}"))+
+       parseOneOfChars("}")))};
+  return result;
+}
 
+PR var_initialiser() throw()
+{
+  static PR result{
+    anon("var initialiser",
+         var_initialiser_1()|
+         var_initialiser_2())};
+  return result;
+}
+  
+PR var_non_fp() throw()
+{
+  static PR result{
+    anon(
+      "non-function pointer var",
+      (type_ref()+var_name()+optional(array_decl())+
+       optional(var_initialiser())))};
+  return result;
+}
+
+PR var_fp() throw();
+
+struct VarFpBackref : public Parser
+{
+  // Parser::
+  virtual ParseResult parse_(I const at, Options const& o) throw() 
+  {
+    return var_fp()->parse_(at,o);
+  }
+  virtual std::string target() const throw() {
+    return "function pointer var (backref)";
+  }
+};
+PR var_fp_backref() throw()
+{
+  static PR result{new VarFpBackref};
+  return result;
+}
+    
+PR param() throw()
+{
+  static PR result {
+    (var_non_fp()|
+     var_fp_backref()|
+     type_ref())+
+      eatWhite()};
+  return result;
+}
+  
+PR params() throw()
+{
+  static PR result {
+    anon(
+      "params",
+      optional(zeroOrMore()*(param()+parseLiteral(",")+eatWhite())+param())+eatWhite())};
+  return result;
+}
+  
+PR var_fp() throw()
+{
+  static PR result{
+    anon("function pointer var",
+         type_ref()+bracketed(type_qual()+var_name())+
+         bracketed(params())+
+         optional(var_initialiser())+
+         eatWhite())};
+  return result;
+}
+    
+PR var_def() throw()
+{
+  static PR result{
+    (var_non_fp()|var_fp())+
+    eatWhite()};
+  return result;
+}
+    
 PR static_var_def() throw()
 {
   static PR static_var_def(new NamedParser<hcp_ast::StaticVarDef>(
                              "static variable definition",
-                             static_var_intro()+
-                             optional(var_initialiser())+
-                             parseOneOfChars(";")+
+                             keyword_static()+
+                             eatWhite()+
+                             var_def()+
+                             parseLiteral(";")+
                              eatWhite()));
   return static_var_def;
 }
@@ -1725,12 +1884,12 @@ PR static_var_def() throw()
   
 PR global_var_def() throw()
 {
-  static PR global_var_def(new NamedParser<hcp_ast::GlobalVarDef>(
-                             "global variable definition",
-                             var_intro()+
-                             optional(var_initialiser())+
-                             parseOneOfChars(";")+
-                             eatWhite()));
+  static PR global_var_def{
+    new NamedParser<hcp_ast::GlobalVarDef>(
+      "global variable definition",
+      var_def()+
+      parseLiteral(";")+
+      eatWhite())};
   return global_var_def;
 }
 

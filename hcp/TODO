@@ -84,20 +84,31 @@ x when excluding class/struct/union/enum/namespace keywords need to ensure
          typeid (*& unqualifiedName)(params);
          ... is throw clause allowed?
 
-      attr_decl=(zeroOrMore*lqual + typename + zeroOrMore*rqual + unqualifiedName + zeroOrOne*arrayQual)|
-                (zeroOrMore*lqual + typename + zeroOrMore*rqual + literal("(")+eatwhite+zeroOrMore*rqual+ unqualifiedName + literal(")") + literal("(")+params+parseLiteral(")"))
-      lqual=cv_keyword+whitespace
-      rqual=((cv_keyword+oneOfChars("*&"))|
-             (cv_keyword+whitespace)|
-             oneOfChars("*&"))+eatwhite
-      cv_keyword=literal("const")|literal("volatile")
-      arrayqual=literal("[")+balanced(parseLiteral("]")
-      param_decl=attr_decl
-      params=(zeroOrMore(param_decl+literal(","))+param_decl)|param_decl
-             
+      x bracketed(x)=literal("(")+eatwhite+x+parseLiteral(")")+eatwhite
+      x cv_keyword=(keyword("const")|keyword("volatile"))
+      x type_qual=const_keyword|volatile_keyword|(oneOfChars("*&")+eatwhite)
+      x type_ref=cv + typename + zeroOrMore*type_qual
+      x array_decl=parseLiteral("[")+balanced(parseLiteral("]")
+      x var_initialiser -> var_init_1|var_init_2
+      x var_init_1="="+parseUntil(';,')
+      x var_init_2="{"+parseUntil('}')
+      x var_non_fp
+      x var_fp
+      x param
+      x params
+      function_proto=flquals+type_ref+name+bracketed(params)+frquals
+      function_decl=function_proto+optional(|pure_virtual|deleted)+";"
+      function_def=function_proto+(impl)
+
+      - ensure A b=C(3) does not match function proto
+      
   - need to better parse function proto to get param types
-  - then look for friend operator< with 2x params of type = class name
+  - then look for friend bool operator< with 2x params of type = class name
     (possibly const/ref qualified)
+
+- zeroOrMore()*x -> zeroOrMore(x)
+
+- parser + "xxx" short-hand for parser+parseLiteral("xxx")
 
 - handle // comments anywhere, eg:
   class A  // comment

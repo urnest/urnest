@@ -818,6 +818,56 @@ void test17()
   catch(xju::Exception const& e) {
     assert_readableRepr_equal(e, "Failed to parse parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [(] at line 1 column 1 because\nline 1 column 3: end of input.", XJU_TRACED);
   }
+
+  //type_ref
+  {
+    std::string const x("I<3>");
+    
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    try {
+      at = parse(root, at, hcp_parser::type_ref());
+      xju::assert_equal(reconstruct(root), x);
+      xju::assert_equal(at.atEnd(), true);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  {
+    std::string const x("const& ");
+    
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    try {
+      at = parse(root, at, hcp_parser::zeroOrMore()*hcp_parser::type_qual());
+      xju::assert_equal(reconstruct(root), x);
+      xju::assert_equal(at.atEnd(), true);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  {
+    std::string const x("X const& ");
+    
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    try {
+      at = parse(root, at, hcp_parser::type_ref());
+      xju::assert_equal(reconstruct(root), x);
+      xju::assert_equal(at.atEnd(), true);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
 }
 
 // typedef_statement
@@ -1398,7 +1448,7 @@ void test27(std::vector<std::string> const& f)
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse attr declaration at line 1 column 1 because\nfailed to parse parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [();{}] at line 1 column 1 because\nline 1 column 4: end of input.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse attr declaration at line 1 column 1 because\nfailed to parse parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [();={}] at line 1 column 1 because\nline 1 column 4: end of input.", XJU_TRACED);
   }
   try
   {
@@ -1413,7 +1463,7 @@ void test27(std::vector<std::string> const& f)
   }
   catch(xju::Exception const& e) {
     // REVISIT: not that helpful
-    assert_readableRepr_equal(e, "Failed to parse file at line 1 column 1 because\nfailed to parse attr declaration at line 22 column 1 because\nfailed to parse parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [();{}] at line 22 column 1 because\nline 22 column 4: end of input.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse file at line 1 column 1 because\nfailed to parse attr declaration at line 22 column 1 because\nfailed to parse parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [();={}] at line 22 column 1 because\nline 22 column 4: end of input.", XJU_TRACED);
   }
 }
 
@@ -1523,85 +1573,210 @@ void test30()
 
 void test31()
 {
-  std::string const x("static const int* x = 3;");
-
-  hcp_ast::CompositeItem root;
-  hcp_parser::I at(x.begin(), x.end());
-
-  try {
-    at = parse(root, at, hcp_parser::static_var_def());
-    xju::assert_equal(reconstruct(root), x);
-    xju::assert_equal(at.atEnd(), true);
-    xju::assert_equal(root.items_[0]->isA<hcp_ast::StaticVarDef>(),true);
-    std::vector<hcp_ast::IR>::const_iterator j(
-      std::find_if(root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.begin(),
-                   root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end(),
-                   hcp_ast::isA_<hcp_ast::VarName>));
-    xju::assert_not_equal(
-      j, 
-      root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end());
-    xju::assert_equal(reconstruct(*j), "x ");
-
-    hcp_ast::IRs::const_iterator k(
-      hcp_ast::find1stInTree(root.items_.begin(),
-                             root.items_.end(),
-                             hcp_ast::isA_<hcp_ast::StaticVarDef>));
-    xju::assert_equal(k, root.items_.begin());
-    k=hcp_ast::find1stInTree(root.items_.begin(),
-                             root.items_.end(),
-                             hcp_ast::isA_<hcp_ast::VarName>);
-    xju::assert_equal(k, j);
-    k=hcp_ast::find1stInTree(root.items_.begin(),
-                             root.items_.end(),
-                             hcp_ast::isA_<hcp_ast::VarInitialiser>);
-    xju::assert_equal(std::string(root.begin().x_, (**k).begin().x_), 
-                      "static const int* x ");
-  }
-  catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "", XJU_TRACED);
-    xju::assert_equal(true,false);
-  }
+ {
+   std::string const x("static const int* x = 3;");
+   
+   hcp_ast::CompositeItem root;
+   hcp_parser::I at(x.begin(), x.end());
+   
+   try {
+     at = parse(root, at, hcp_parser::static_var_def());
+     xju::assert_equal(reconstruct(root), x);
+     xju::assert_equal(at.atEnd(), true);
+     xju::assert_equal(root.items_[0]->isA<hcp_ast::StaticVarDef>(),true);
+     std::vector<hcp_ast::IR>::const_iterator j(
+       std::find_if(root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.begin(),
+                    root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end(),
+                    hcp_ast::isA_<hcp_ast::VarName>));
+     xju::assert_not_equal(
+       j, 
+       root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end());
+     xju::assert_equal(reconstruct(*j), "x");
+     
+     hcp_ast::IRs::const_iterator k(
+       hcp_ast::find1stInTree(root.items_.begin(),
+                              root.items_.end(),
+                              hcp_ast::isA_<hcp_ast::StaticVarDef>));
+     xju::assert_equal(k, root.items_.begin());
+     k=hcp_ast::find1stInTree(root.items_.begin(),
+                              root.items_.end(),
+                              hcp_ast::isA_<hcp_ast::VarName>);
+     xju::assert_equal(k, j);
+     k=hcp_ast::find1stInTree(root.items_.begin(),
+                              root.items_.end(),
+                              hcp_ast::isA_<hcp_ast::VarInitialiser>);
+     xju::assert_equal(std::string(root.begin().x_, (**k).begin().x_), 
+                       "static const int* x ");
+   }
+   catch(xju::Exception const& e) {
+     assert_readableRepr_equal(e, "", XJU_TRACED);
+     xju::assert_equal(true,false);
+   }
+ }
+ 
+ {
+   std::string const x("static X y=Z(3);");
+   
+   hcp_ast::CompositeItem root;
+   hcp_parser::I at(x.begin(), x.end());
+   
+   try {
+     at = parse(root, at, hcp_parser::static_var_def());
+     xju::assert_equal(reconstruct(root), x);
+     xju::assert_equal(at.atEnd(), true);
+     xju::assert_equal(root.items_[0]->isA<hcp_ast::StaticVarDef>(),true);
+     std::vector<hcp_ast::IR>::const_iterator j(
+       std::find_if(root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.begin(),
+                    root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end(),
+                    hcp_ast::isA_<hcp_ast::VarName>));
+     xju::assert_not_equal(
+       j, 
+       root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end());
+     xju::assert_equal(reconstruct(*j), "y");
+     
+     hcp_ast::IRs::const_iterator k(
+       hcp_ast::find1stInTree(root.items_.begin(),
+                              root.items_.end(),
+                              hcp_ast::isA_<hcp_ast::StaticVarDef>));
+     xju::assert_equal(k, root.items_.begin());
+     k=hcp_ast::find1stInTree(root.items_.begin(),
+                              root.items_.end(),
+                              hcp_ast::isA_<hcp_ast::VarName>);
+     xju::assert_equal(k, j);
+     k=hcp_ast::find1stInTree(root.items_.begin(),
+                              root.items_.end(),
+                              hcp_ast::isA_<hcp_ast::VarInitialiser>);
+     xju::assert_equal(std::string(root.begin().x_, (**k).begin().x_), 
+                       "static X y");
+   }
+   catch(xju::Exception const& e) {
+     assert_readableRepr_equal(e, "", XJU_TRACED);
+     xju::assert_equal(true,false);
+   }
+ }
+ {
+   std::string const x("static X y{Z(3)};");
+   
+   hcp_ast::CompositeItem root;
+   hcp_parser::I at(x.begin(), x.end());
+   
+   try {
+     at = parse(root, at, hcp_parser::static_var_def());
+     xju::assert_equal(reconstruct(root), x);
+     xju::assert_equal(at.atEnd(), true);
+     xju::assert_equal(root.items_[0]->isA<hcp_ast::StaticVarDef>(),true);
+     std::vector<hcp_ast::IR>::const_iterator j(
+       std::find_if(root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.begin(),
+                    root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end(),
+                    hcp_ast::isA_<hcp_ast::VarName>));
+     xju::assert_not_equal(
+       j, 
+       root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end());
+     xju::assert_equal(reconstruct(*j), "y");
+     
+     hcp_ast::IRs::const_iterator k(
+       hcp_ast::find1stInTree(root.items_.begin(),
+                              root.items_.end(),
+                              hcp_ast::isA_<hcp_ast::StaticVarDef>));
+     xju::assert_equal(k, root.items_.begin());
+     k=hcp_ast::find1stInTree(root.items_.begin(),
+                              root.items_.end(),
+                              hcp_ast::isA_<hcp_ast::VarName>);
+     xju::assert_equal(k, j);
+     k=hcp_ast::find1stInTree(root.items_.begin(),
+                              root.items_.end(),
+                              hcp_ast::isA_<hcp_ast::VarInitialiser>);
+     xju::assert_equal(std::string(root.begin().x_, (**k).begin().x_), 
+                       "static X y");
+   }
+   catch(xju::Exception const& e) {
+     assert_readableRepr_equal(e, "", XJU_TRACED);
+     xju::assert_equal(true,false);
+   }
+ }
+ {
+   std::string const x("static X (*y)(int x, I<p> const& p)=pq;");
+   
+   hcp_ast::CompositeItem root;
+   hcp_parser::I at(x.begin(), x.end());
+   
+   try {
+     at = parse(root, at, hcp_parser::static_var_def());
+     xju::assert_equal(reconstruct(root), x);
+     xju::assert_equal(at.atEnd(), true);
+     xju::assert_equal(root.items_[0]->isA<hcp_ast::StaticVarDef>(),true);
+     std::vector<hcp_ast::IR>::const_iterator j(
+       std::find_if(root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.begin(),
+                    root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end(),
+                    hcp_ast::isA_<hcp_ast::VarName>));
+     xju::assert_not_equal(
+       j, 
+       root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end());
+     xju::assert_equal(reconstruct(*j), "y");
+     
+     hcp_ast::IRs::const_iterator k(
+       hcp_ast::find1stInTree(root.items_.begin(),
+                              root.items_.end(),
+                              hcp_ast::isA_<hcp_ast::StaticVarDef>));
+     xju::assert_equal(k, root.items_.begin());
+     k=hcp_ast::find1stInTree(root.items_.begin(),
+                              root.items_.end(),
+                              hcp_ast::isA_<hcp_ast::VarName>);
+     xju::assert_equal(k, j);
+     k=hcp_ast::find1stInTree(root.items_.begin(),
+                              root.items_.end(),
+                              hcp_ast::isA_<hcp_ast::VarInitialiser>);
+     xju::assert_equal(std::string(root.begin().x_, (**k).begin().x_), 
+                       "static X (*y)(int x, I<p> const& p)");
+   }
+   catch(xju::Exception const& e) {
+     assert_readableRepr_equal(e, "", XJU_TRACED);
+     xju::assert_equal(true,false);
+   }
+ }
 }
 
 
 void test32()
 {
-  std::string const x("static pof me;");
-
-  hcp_ast::CompositeItem root;
-  hcp_parser::I at(x.begin(), x.end());
-
-  try {
-    at = parse(root, at, hcp_parser::static_var_def());
-    xju::assert_equal(reconstruct(root), x);
-    xju::assert_equal(at.atEnd(), true);
-    xju::assert_equal(root.items_[0]->isA<hcp_ast::StaticVarDef>(),true);
-    std::vector<hcp_ast::IR>::const_iterator j(
-      std::find_if(root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.begin(),
-                   root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end(),
-                   hcp_ast::isA_<hcp_ast::VarName>));
-    xju::assert_not_equal(
-      j, 
-      root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end());
-    xju::assert_equal(reconstruct(*j), "me");
-
-    hcp_ast::IRs::const_iterator k(
-      hcp_ast::find1stInTree(root.items_.begin(),
-                             root.items_.end(),
-                             hcp_ast::isA_<hcp_ast::StaticVarDef>));
-    xju::assert_equal(k, root.items_.begin());
-    k=hcp_ast::find1stInTree(root.items_.begin(),
-                             root.items_.end(),
-                             hcp_ast::isA_<hcp_ast::VarName>);
-    xju::assert_equal(k, j);
-    k=hcp_ast::find1stInTree(root.items_.begin(),
-                             root.items_.end(),
-                             hcp_ast::isA_<hcp_ast::VarInitialiser>);
-    xju::assert_equal(k, root.items_.end());
-  }
-  catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "", XJU_TRACED);
-    xju::assert_equal(true,false);
+  {
+    std::string const x("static pof me;");
+    
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    try {
+      at = parse(root, at, hcp_parser::static_var_def());
+      xju::assert_equal(reconstruct(root), x);
+      xju::assert_equal(at.atEnd(), true);
+      xju::assert_equal(root.items_[0]->isA<hcp_ast::StaticVarDef>(),true);
+      std::vector<hcp_ast::IR>::const_iterator j(
+        std::find_if(root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.begin(),
+                     root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end(),
+                     hcp_ast::isA_<hcp_ast::VarName>));
+      xju::assert_not_equal(
+        j, 
+        root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end());
+      xju::assert_equal(reconstruct(*j), "me");
+      
+      hcp_ast::IRs::const_iterator k(
+        hcp_ast::find1stInTree(root.items_.begin(),
+                               root.items_.end(),
+                               hcp_ast::isA_<hcp_ast::StaticVarDef>));
+      xju::assert_equal(k, root.items_.begin());
+      k=hcp_ast::find1stInTree(root.items_.begin(),
+                               root.items_.end(),
+                               hcp_ast::isA_<hcp_ast::VarName>);
+      xju::assert_equal(k, j);
+      k=hcp_ast::find1stInTree(root.items_.begin(),
+                               root.items_.end(),
+                               hcp_ast::isA_<hcp_ast::VarInitialiser>);
+      xju::assert_equal(k, root.items_.end());
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
   }
 }
 
@@ -1652,7 +1827,197 @@ void test34()
     xju::assert_equal(true,false);
   }
 }
+
+void test35()
+{
+  std::string const x("(x)");
+
+  hcp_ast::CompositeItem root;
+  hcp_parser::I at(x.begin(), x.end());
+
+  try {
+    at = parse(root,at,hcp_parser::bracketed(hcp_parser::parseLiteral("x")));
+    xju::assert_equal(reconstruct(root), x);
+    xju::assert_equal(at.atEnd(), true);
+  }
+  catch(xju::Exception const& e) {
+    assert_readableRepr_equal(e, "", XJU_TRACED);
+    xju::assert_equal(true,false);
+  }
   
+}
+
+void test36()
+{
+  std::string const x("( /*fred*/x)");
+
+  hcp_ast::CompositeItem root;
+  hcp_parser::I at(x.begin(), x.end());
+
+  try {
+    at = parse(root,at,hcp_parser::bracketed(hcp_parser::parseLiteral("x")));
+    xju::assert_equal(reconstruct(root), x);
+    xju::assert_equal(at.atEnd(), true);
+  }
+  catch(xju::Exception const& e) {
+    assert_readableRepr_equal(e, "", XJU_TRACED);
+    xju::assert_equal(true,false);
+  }
+  
+}
+
+void test37()
+{
+  {
+    std::string const x("const ");
+    
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    try {
+      at = parse(root,at,hcp_parser::cv());
+      xju::assert_equal(reconstruct(root), x);
+      xju::assert_equal(at.atEnd(), true);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  
+  {
+    std::string const x("const volatile ");
+    
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    try {
+      at = parse(root,at,hcp_parser::cv());
+      xju::assert_equal(reconstruct(root), x);
+      xju::assert_equal(at.atEnd(), true);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  
+  {
+    std::string const x("volatile const");
+    
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    try {
+      at = parse(root,at,hcp_parser::cv());
+      xju::assert_equal(reconstruct(root), x);
+      xju::assert_equal(at.atEnd(), true);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  
+  {
+    std::string const x("volatile ");
+    
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    try {
+      at = parse(root,at,hcp_parser::cv());
+      xju::assert_equal(reconstruct(root), x);
+      xju::assert_equal(at.atEnd(), true);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  
+  {
+    std::string const x("volatiles ");
+    
+    hcp_ast::CompositeItem root;
+    hcp_parser::I const at(x.begin(), x.end());
+    
+    try {
+      auto nowat = parse(root,at,hcp_parser::cv());
+      xju::assert_equal(at,nowat);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  
+}
+
+void test38()
+{
+  {
+    std::string const x("int f");
+    
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    try {
+      at = parse(root,at,hcp_parser::type_ref());
+      xju::assert_equal(reconstruct(root), "int ");
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  {
+    std::string const x("const int& f");
+    
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    try {
+      at = parse(root,at,hcp_parser::type_ref());
+      xju::assert_equal(reconstruct(root), "const int& ");
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  {
+    std::string const x("int* const& f");
+    
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    try {
+      at = parse(root,at,hcp_parser::type_ref());
+      xju::assert_equal(reconstruct(root), "int* const& ");
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  {
+    std::string const x("fred<int* const&,float,jock<float>> f");
+    
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    try {
+      at = parse(root,at,hcp_parser::type_ref());
+      xju::assert_equal(reconstruct(root), "fred<int* const&,float,jock<float>> ");
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+}
+
 int main(int argc, char* argv[])
 {
   unsigned int n(0);
@@ -1690,6 +2055,10 @@ int main(int argc, char* argv[])
   test32(), ++n;
   test33(), ++n;
   test34(), ++n;
+  test35(), ++n;
+  test36(), ++n;
+  test37(), ++n;
+  test38(), ++n;
   
   xju::assert_equal(atLeastOneReadableReprFailed, false);
   std::cout << "PASS - " << n << " steps" << std::endl;

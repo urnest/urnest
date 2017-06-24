@@ -333,6 +333,10 @@ typedef TaggedCompositeItem<StaticVarDefTag> StaticVarDef;
 class GlobalVarDefTag{};
 typedef TaggedCompositeItem<GlobalVarDefTag> GlobalVarDef;
 
+// marks the '=' in var initialiser
+class VarInitialiserOpenTag{};
+typedef TaggedCompositeItem<VarInitialiserOpenTag> VarInitialiserOpen;
+  
 class VarInitialiserTag{};
 typedef TaggedCompositeItem<VarInitialiserTag> VarInitialiser;
 

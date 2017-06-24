@@ -334,15 +334,23 @@ PR parseUntil(PR const match, PR const until) throw();
 PR parseLiteral(std::string const& x) throw();
 PR whitespaceChar() throw();
 PR whitespaceChar_() throw();
-PR eatWhite() throw();             // matches nothing
+PR eatWhite() throw();             // matches nothing, eats comments
 PR doubleQuote() throw();
 PR backslash() throw();
-PR oneChar() throw();
+PR oneChar() throw(); //any single char
 PR stringLiteral() throw();
+
+// rest are C++-specific
+PR identifier() throw(); //C++ identifier
+PR bracketed(PR x) throw(); //x inside brackets, with optional whitespace preceding x
 PR comments() throw();
+PR eatWhite() throw(); // matches nothing or something, including comments
 PR hashIncludeImpl() throw(); // include preprocessor directive, with trailing "// impl" marker
 PR hashInclude() throw(); // include preprocessor directive
 PR hash() throw();        // other preprocessor directive
+PR cv() throw(); //C++ const/volatile qualifiers
+PR type_qual() throw(); //C++ const/volatile/*/& qualifier + whitespace
+PR type_ref() throw(); //type ref eg int const&
 PR typedef_statement() throw();    // restriction: no anon class/struct/enum
 PR using_statement() throw();       // using statement
 PR scoped_enum_def() throw();
