@@ -868,6 +868,38 @@ void test17()
       xju::assert_equal(true,false);
     }
   }
+  {
+    std::string const x("const T&");
+    
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    try {
+      at = parse(root, at, hcp_parser::type_ref());
+      xju::assert_equal(reconstruct(root), x);
+      xju::assert_equal(at.atEnd(), true);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  {
+    std::string const x("operator const T&");
+    
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    try {
+      at = parse(root, at, hcp_parser::conversion_operator_name());
+      xju::assert_equal(reconstruct(root), x);
+      xju::assert_equal(at.atEnd(), true);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
 }
 
 // typedef_statement
@@ -1025,6 +1057,34 @@ void test21()
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache, false);
     std::string const x(
+      "void fred();");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    at = parse(root, at, hcp_parser::function_proto());
+    xju::assert_equal(reconstruct(root), "void fred()");
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e), readableRepr(e));
+  }
+  try {
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, cache, false);
+    std::string const x(
+      "operator const T&();");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    at = parse(root, at, hcp_parser::function_proto());
+    xju::assert_equal(reconstruct(root), "operator const T&()");
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e), readableRepr(e));
+  }
+  try {
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, cache, false);
+    std::string const x(
       "template<class T>\n"
       "void fred() const throw();\n");
     hcp_ast::CompositeItem root;
@@ -1169,7 +1229,6 @@ void test22()
   try
   {
     std::string const x(
-      "template<class T>\n"
       "void fred() const throw();");
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache, false);
@@ -1180,7 +1239,7 @@ void test22()
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse function definition at line 1 column 1 because\nfailed to parse function implementation at line 2 column 26 because\nfailed to parse block at line 2 column 26 because\nfailed to parse block at line 2 column 26 because\nfailed to parse \"{\" at line 2 column 26 because\nline 2 column 26: expected \'{\' but found \';\'.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse non-template function definition at line 1 column 1 because\nfailed to parse function implementation at line 1 column 26 because\nfailed to parse block at line 1 column 26 because\nfailed to parse block open at line 1 column 26 because\nfailed to parse \"{\" at line 1 column 26 because\nline 1 column 26: expected \'{\' but found \';\'.", XJU_TRACED);
   }
 }
 
@@ -1209,7 +1268,7 @@ void test23()
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache, false);
     std::string const x(
-      "template<class T>\n"
+      "template<>\n"
       "void fred() throw() try:\n"
       "  x_(3)\n"
       "{\n"

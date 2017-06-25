@@ -34,7 +34,6 @@ test-hcp-tags%all.tree
 %test-parser-run==(.)+(%test-parser-cmd):run
 
 %standalone-tests.tree == <<
-(../xju%tests.tree)
 %local-standalone-tests.tree
 
 %local-standalone-tests==%local-standalone-test.tree:leaves

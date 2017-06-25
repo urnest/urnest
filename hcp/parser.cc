@@ -1400,43 +1400,52 @@ PR unqualifiedTypeName() throw()
 }
 
   
+PR operator_keyword() throw()
+{
+  static PR operator_keyword(
+    parseLiteral("operator")+!identifierContChar()+eatWhite());
+  return operator_keyword;
+}
+
 PR operator_name() throw()
 {
   static PR operator_name(
-    parseLiteral("operator")+
-    eatWhite()+
-    (parseLiteral("<<")|
-     parseLiteral(">>")|
-     parseLiteral("==")|
-     parseLiteral("!=")|
-     parseLiteral("<=")|
-     parseLiteral(">=")|
-     parseLiteral("<")|
-     parseLiteral(">")|
-     parseLiteral("++")|
-     parseLiteral("--")|
-     parseLiteral("->")|
-     parseLiteral("+")|
-     parseLiteral("-")|
-     parseLiteral("|=")|
-     parseLiteral("&=")|
-     parseLiteral("|")|
-     parseLiteral("&")|
-     parseLiteral("[]")|
-     parseLiteral("!")|
-     parseLiteral("%=")|
-     parseLiteral("%")|
-     parseLiteral("=")|
-     parseLiteral("*"))+
-    eatWhite());
+    anon(
+      "operator name",
+      operator_keyword()+
+      (parseLiteral("<<")|
+       parseLiteral(">>")|
+       parseLiteral("==")|
+       parseLiteral("!=")|
+       parseLiteral("<=")|
+       parseLiteral(">=")|
+       parseLiteral("<")|
+       parseLiteral(">")|
+       parseLiteral("++")|
+       parseLiteral("--")|
+       parseLiteral("->")|
+       parseLiteral("+")|
+       parseLiteral("-")|
+       parseLiteral("|=")|
+       parseLiteral("&=")|
+       parseLiteral("|")|
+       parseLiteral("&")|
+       parseLiteral("[]")|
+       parseLiteral("!")|
+       parseLiteral("%=")|
+       parseLiteral("%")|
+       parseLiteral("=")|
+       parseLiteral("*"))+
+      eatWhite()));
   return operator_name;
 }
-
 
 PR destructor_name() throw()
 {
   static PR destructor_name(
-    parseLiteral("~")+eatWhite()+unqualifiedName());
+    anon(
+      "destructor name",
+      parseLiteral("~")+eatWhite()+unqualifiedName()));
   return destructor_name;
 }
 
@@ -1459,12 +1468,13 @@ PR type_name() throw()
   return type_name;
 }
 
-  
 PR conversion_operator_name() throw()
 {
   static PR conversion_operator_name(
-    parseLiteral("operator")+!identifierContChar()+
-    balanced(parseOneOfChars("(")));
+    anon(
+      "conversion operator name",
+      operator_keyword()+
+      type_ref()));
   return conversion_operator_name;
 }
 
@@ -1474,7 +1484,7 @@ PR keyword_static() throw()
   static PR keyword_static(
     PR(new NamedParser<hcp_ast::KeywordStatic>(
          "\"static\"",
-         parseLiteral("static")))+!identifierContChar());
+         parseLiteral("static")))+!identifierContChar()+eatWhite());
   return keyword_static;
 }
 
@@ -1484,8 +1494,26 @@ PR keyword_friend() throw()
   static PR keyword_friend(
     new NamedParser<hcp_ast::KeywordFriend>(
       "\"friend\"",
-      parseLiteral("friend")));
+      parseLiteral("friend"))+!identifierContChar()+eatWhite());
   return keyword_friend;
+}
+
+PR keyword_virtual() throw()
+{
+  static PR keyword_virtual(
+    new NamedParser<hcp_ast::KeywordVirtual>(
+      "\"virtual\"",
+      parseLiteral("virtual"))+!identifierContChar()+eatWhite());
+  return keyword_virtual;
+}
+
+PR keyword_explicit() throw()
+{
+  static PR keyword_explicit(
+    new NamedParser<hcp_ast::KeywordExplicit>(
+      "\"explicit\"",
+      parseLiteral("explicit"))+!identifierContChar()+eatWhite());
+  return keyword_explicit;
 }
 
 
@@ -1494,9 +1522,9 @@ PR function_qualifiers() throw()
   static PR function_qualifiers(
     new NamedParser<hcp_ast::FunctionQualifiers>(
       "function qualifiers",
-      zeroOrMore()*((parseLiteral("virtual")|
-                     parseLiteral("explicit")|
-                     parseLiteral("friend")|
+      zeroOrMore()*((keyword_virtual()|
+                     keyword_explicit()|
+                     keyword_friend()|
                      keyword_static())+eatWhite())));
   return function_qualifiers;
 }
@@ -1505,7 +1533,7 @@ PR function_qualifiers() throw()
 PR block_open() throw()
 {
   static PR result(new NamedParser<hcp_ast::BlockOpen>(
-                    "block",
+                    "block open",
                     parseLiteral("{")));
   return result;
 }
@@ -1552,51 +1580,12 @@ PR function_impl() throw()
 }
 
                 
-PR operator_keyword() throw()
+PR params() throw();
+
+PR template_keyword() throw()
 {
-  static PR operator_keyword(parseLiteral("operator")+!identifierContChar());
-  return operator_keyword;
-}
-
-
-PR function_proto() throw()
-{
-  static PR function_proto(
-    function_qualifiers()+
-    balanced(parseOneOfChars("();{}[]")|
-             ((operator_name()|
-               conversion_operator_name()|
-               destructor_name()|
-               type_name()+
-               eatWhite())+parseOneOfChars("(")))+
-    new NamedParser<hcp_ast::FunctionName>(
-      "function name",
-      (operator_name()|
-       conversion_operator_name()|
-       destructor_name()|
-       type_name()))+
-    eatWhite()+
-    bracketed()+
-    balanced((eatWhite()+parseOneOfChars(";:{"))|parseLiteral("try")));
-  return function_proto;
-}
-
-
-PR function_decl() throw()
-{
-  static PR function_decl(new NamedParser<hcp_ast::FunctionDecl>(
-                            "function declaration",
-                            function_proto()+
-                            (eatWhite()+parseOneOfChars(";"))+
-                            eatWhite()));
-  return function_decl;
-}
-
-  
-PR templateKeyword() throw()
-{
-  static PR templateKeyword(parseLiteral("template"));
-  return templateKeyword;
+  static PR template_keyword(parseLiteral("template")+!identifierContChar()+eatWhite());
+  return template_keyword;
 }
 
 
@@ -1605,8 +1594,7 @@ PR template_empty_preamble() throw()
   static PR template_empty_preamble(
     new NamedParser<hcp_ast::TemplateEmptyPreamble>(
       "template empty preamble",
-      templateKeyword()+
-      eatWhite()+
+      template_keyword()+
       parseOneOfChars("<")+
       eatWhite()+
       parseOneOfChars(">")+
@@ -1621,8 +1609,7 @@ PR template_preamble() throw()
     new NamedParser<hcp_ast::TemplatePreamble>(
       "template preamble",
       !template_empty_preamble()+(
-        templateKeyword()+
-        eatWhite()+
+        template_keyword()+
         parseOneOfChars("<")+
         balanced(parseOneOfChars(">"), true)+
         parseOneOfChars(">")+
@@ -1631,6 +1618,72 @@ PR template_preamble() throw()
 }
 
 
+PR conversion_operator_function_proto() throw()
+{
+  static PR result(
+    function_qualifiers()+
+    PR(new NamedParser<hcp_ast::FunctionName>(
+         "function name",
+         conversion_operator_name()))+
+    eatWhite()+
+    bracketed(params())+
+    balanced((eatWhite()+parseOneOfChars(";:{"))|parseLiteral("try")));
+  return result;
+}
+
+PR typed_function_proto() throw()
+{
+  static PR result(
+    function_qualifiers()+
+    type_ref()+
+    PR(new NamedParser<hcp_ast::FunctionName>(
+         "function name",
+         operator_name()|
+         unqualifiedName()))+
+    eatWhite()+
+    bracketed(params())+
+    balanced((eatWhite()+parseOneOfChars(";:{"))|parseLiteral("try")));
+  return result;
+}
+
+PR untyped_function_proto() throw()
+{
+  static PR result(
+    function_qualifiers()+
+    PR(new NamedParser<hcp_ast::FunctionName>(
+         "function name",
+         destructor_name()|
+         unqualifiedTypeName()))+
+    eatWhite()+
+    bracketed(params())+
+    balanced((eatWhite()+parseOneOfChars(";:{"))|parseLiteral("try")));
+  return result;
+}
+
+PR function_proto() throw()
+{
+  static PR result(
+    anon(
+      "function proto",
+      conversion_operator_function_proto()|
+      typed_function_proto()|
+      untyped_function_proto()));
+  return result;
+}
+
+PR function_decl() throw()
+{
+  static PR function_decl(new NamedParser<hcp_ast::FunctionDecl>(
+                            "function declaration",
+                            optional(template_empty_preamble()|
+                                     template_preamble())+
+                            function_proto()+
+                            (eatWhite()+parseOneOfChars(";"))+
+                            eatWhite()));
+  return function_decl;
+}
+
+  
 PR function_def_unnamed() throw()
 {
   static PR result(
@@ -1644,7 +1697,8 @@ PR function_def() throw()
 {
   static PR function_def(
     new NamedParser<hcp_ast::FunctionDef>(
-      "function definition",
+      "non-template function definition",
+      optional(template_empty_preamble())+
       function_def_unnamed()));
   return function_def;
 }

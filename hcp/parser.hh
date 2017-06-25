@@ -356,6 +356,8 @@ PR using_statement() throw();       // using statement
 PR scoped_enum_def() throw();
 PR enum_def() throw();
 PR type_name() throw(); // eg x::y::Z, X<T>::size, x::Y<Z>
+PR conversion_operator_name() throw(); // eg operator constT&
+PR function_proto() throw();
 PR function_decl() throw();
 PR template_function_def() throw();
 PR function_def() throw(); // matches template, so try template_function_def first

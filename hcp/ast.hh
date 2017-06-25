@@ -327,6 +327,12 @@ typedef TaggedCompositeItem<KeywordStaticTag> KeywordStatic;
 class KeywordFriendTag{};
 typedef TaggedCompositeItem<KeywordFriendTag> KeywordFriend;
 
+class KeywordVirtualTag{};
+typedef TaggedCompositeItem<KeywordVirtualTag> KeywordVirtual;
+
+class KeywordExplicitTag{};
+typedef TaggedCompositeItem<KeywordExplicitTag> KeywordExplicit;
+
 class StaticVarDefTag{};
 typedef TaggedCompositeItem<StaticVarDefTag> StaticVarDef;
 
