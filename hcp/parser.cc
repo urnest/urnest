@@ -76,6 +76,7 @@ namespace
 class Optional;
 class ParseOr;
 class ParseAnd;
+class ParseNot;
 class ParseZeroOrMore;
 
 class Optional : public Parser
@@ -106,11 +107,6 @@ public:
   // Parser::
   virtual std::string target() const throw();
 };
-PR optional(PR x) throw()
-{
-  return PR(new Optional(x));
-}
-
 class ParseZeroOrMore : public Parser
 {
 public:
@@ -835,37 +831,46 @@ public:
   }
 };
 
-
-}
-
-PR parseOneOfChars(std::string const& chars) throw()
+class AnonParser : public NamedParser_
 {
-  return PR(new ParseOneOfChars(chars));
-}
+public:
+  std::string const name_;
+  PR x_;
+  
+  virtual ~AnonParser() throw() {
+  }
+  
+  explicit AnonParser(std::string const& name, PR const x) throw():
+    name_(name),
+    x_(x) {
+  }
 
-PR parseAnyCharExcept(std::string const& chars) throw()
-{
-  return PR(new ParseAnyCharExcept(chars));
-}
+  // Parser::
+  virtual ParseResult parse_(I const at, Options const& o) throw() 
+  {
+    std::unique_ptr<hcp_trace::Scope> scope;
+    if (o.trace_) {
+      std::ostringstream s;
+      s << "parse " << target() << " at " << at;
+      scope = std::unique_ptr<hcp_trace::Scope>(
+        new hcp_trace::Scope(s.str(), XJU_TRACED));
+    }
+    ParseResult r(x_->parse(at, o));
+    if (!r.failed()) {
+      return r;
+    }
+    if (o.trace_) {
+      scope->fail();
+    }
+    return r;
+  }
+  // Parser::
+  virtual std::string target() const throw() {
+    return name_;
+  }
+};
 
-PR charInRange(char const min, char const max) throw()
-{
-  return PR(new ParseCharInRange(min, max));
-}
 
-PR parseUntil(PR const x) throw()
-{
-  return PR(new ParseUntil(x));
-}
-
-PR parseUntil(PR match, PR const x) throw()
-{
-  return PR(new ParseSpecificUntil(match, x));
-}
-
-PR parseLiteral(std::string const& x) throw()
-{
-  return PR(new ParseLiteral(x));
 }
 
 ZeroOrMore zeroOrMore() throw()
@@ -877,11 +882,6 @@ ZeroOrMore zeroOrMore() throw()
 PR operator*(ZeroOrMore const, PR const b) throw()
 {
   return PR(new ParseZeroOrMore(b));
-}
-
-PR balanced(PR until, bool angles) throw()
-{
-  return PR(new ParseBalanced(until, angles));
 }
 
 PR operator+(PR a, PR b) throw()
@@ -935,45 +935,6 @@ PR operator!(PR x) throw()
   return xju::Shared<ParseNot>(new ParseNot(x));
 }
 
-class AnonParser : public NamedParser_
-{
-public:
-  std::string const name_;
-  PR x_;
-  
-  virtual ~AnonParser() throw() {
-  }
-  
-  explicit AnonParser(std::string const& name, PR const x) throw():
-    name_(name),
-    x_(x) {
-  }
-
-  // Parser::
-  virtual ParseResult parse_(I const at, Options const& o) throw() 
-  {
-    std::unique_ptr<hcp_trace::Scope> scope;
-    if (o.trace_) {
-      std::ostringstream s;
-      s << "parse " << target() << " at " << at;
-      scope = std::unique_ptr<hcp_trace::Scope>(
-        new hcp_trace::Scope(s.str(), XJU_TRACED));
-    }
-    ParseResult r(x_->parse(at, o));
-    if (!r.failed()) {
-      return r;
-    }
-    if (o.trace_) {
-      scope->fail();
-    }
-    return r;
-  }
-  // Parser::
-  virtual std::string target() const throw() {
-    return name_;
-  }
-};
-
 PR anon(std::string const& name, PR const x) throw()
 {
   return PR(new AnonParser(name,x));
@@ -986,10 +947,50 @@ PR atLeastOne(PR b) throw()
     b+zeroOrMore()*b);
 }
 
+PR optional(PR x) throw()
+{
+  return PR(new Optional(x));
+}
+
 PR parseAnyChar() throw()
 {
   static PR parseAnyChar(new ParseAnyChar);
   return parseAnyChar;
+}
+
+PR parseOneOfChars(std::string const& chars) throw()
+{
+  return PR(new ParseOneOfChars(chars));
+}
+
+PR parseAnyCharExcept(std::string const& chars) throw()
+{
+  return PR(new ParseAnyCharExcept(chars));
+}
+
+PR charInRange(char const min, char const max) throw()
+{
+  return PR(new ParseCharInRange(min, max));
+}
+
+PR parseLiteral(std::string const& x) throw()
+{
+  return PR(new ParseLiteral(x));
+}
+
+PR parseUntil(PR match, PR const x) throw()
+{
+  return PR(new ParseSpecificUntil(match, x));
+}
+
+PR parseUntil(PR const x) throw()
+{
+  return PR(new ParseUntil(x));
+}
+
+PR balanced(PR until, bool angles) throw()
+{
+  return PR(new ParseBalanced(until, angles));
 }
 
 PR whitespaceChar() throw()
@@ -1952,7 +1953,9 @@ PR params() throw()
   static PR result {
     anon(
       "params",
-      optional(zeroOrMore()*(param()+parseLiteral(",")+eatWhite())+param())+eatWhite())};
+      optional(param()+
+               zeroOrMore()*(parseLiteral(",")+eatWhite()+param()))+
+      eatWhite())};
   return result;
 }
   

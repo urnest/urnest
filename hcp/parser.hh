@@ -104,6 +104,7 @@ public:
   {
     return atEnd_;
   }
+  // at irs, last-first
   void addAtEndIRs(IRs const& irs) throw()
   {
     if (atEnd_) {
@@ -260,9 +261,8 @@ PR operator|(PR a, PR b) throw();
 // not consume anything
 PR operator!(PR x) throw();
 
-class AtLeastOne{};
-
-PR operator*(AtLeastOne a, PR b) throw();
+// same as x except that if x fails we get name in exception context
+PR anon(std::string const& name, PR const x) throw();
 
 class NamedParser_ : public Parser
 {
@@ -271,8 +271,8 @@ public:
   {
   }
 };
-  
-// pre: ItemType is a ast::CompositeItem
+
+// pre: ItemType is e.g. a hcp_ast::CompositeItem
 template<class ItemType>
 class NamedParser : public NamedParser_
 {
@@ -282,13 +282,16 @@ public:
   
   virtual ~NamedParser() throw() {
   }
-  
+
   explicit NamedParser(std::string const& name, PR const x) throw():
     name_(name),
     x_(x) {
   }
 
   // Parser::
+  // Parse x and:
+  // - if x fails, put name in excetion context
+  // - if x succeeds, wrap result in ItemType and return that as result
   virtual ParseResult parse_(I const at, Options const& o) throw() 
   {
     std::unique_ptr<hcp_trace::Scope> scope;
@@ -318,63 +321,68 @@ public:
   }
 };
 
-// same as parsing x, but if x fails we get name in exception context
-PR anon(std::string const& name, PR const x) throw();
-
 PR atLeastOne(PR const x) throw();
+PR optional(PR x) throw();
+
 PR parseAnyChar() throw();
 PR parseOneOfChars(std::string const& chars) throw();
-
+PR parseAnyCharExcept(std::string const& chars) throw();
 PR charInRange(char const min, char const max) throw();
 
-PR parseUntil(PR const x) throw();
+PR parseLiteral(std::string const& x) throw();
 
+
+// parse match repeatedly until specified until
+// - does not consume until
 PR parseUntil(PR const match, PR const until) throw();
 
-PR parseLiteral(std::string const& x) throw();
+// shorthand for parseUntil(parseAnyChar(),x)
+// ... downside of this is poor exception message, so prefer
+//     above parseUntil
+// - does not consume x
+PR parseUntil(PR const x) throw();
+
+// Parse text, balancing (), [], {}, stringLiteral and optionally <>, 
+// up to first match of until.
+PR balanced(PR until, bool angles=false) throw();
+
 PR whitespaceChar() throw();
-PR whitespaceChar_() throw();
-PR eatWhite() throw();             // matches nothing, eats comments
 PR doubleQuote() throw();
 PR doubleColon() throw();
 PR backslash() throw();
 PR oneChar() throw(); //any single char
-PR stringLiteral() throw();
+PR bracketed(PR x) throw(); //x inside brackets, with optional whitespace preceding x
 
 // rest are C++-specific
-PR identifier() throw(); //C++ identifier
-PR bracketed(PR x) throw(); //x inside brackets, with optional whitespace preceding x
 PR comments() throw();
-PR eatWhite() throw(); // matches nothing or something, including comments
+PR eatWhite() throw(); // matches nothing or something; eats C++ comments
+PR identifier() throw(); //C++ identifier
+PR stringLiteral() throw(); //C++ string literal
 PR hashIncludeImpl() throw(); // include preprocessor directive, with trailing "// impl" marker
 PR hashInclude() throw(); // include preprocessor directive
 PR hash() throw();        // other preprocessor directive
 PR cv() throw(); //C++ const/volatile qualifiers
+PR type_name() throw(); // examples: int, typename x::y::Z, X<Q>::size, Y<Z>
 PR type_qual() throw(); //C++ const/volatile/*/& qualifier + whitespace
-PR type_ref() throw(); //type ref eg int const&
+PR type_ref() throw(); //type ref egs "int const&", "Y<Z>* const&"
 PR typedef_statement() throw();    // restriction: no anon class/struct/enum
 PR using_statement() throw();       // using statement
 PR scoped_enum_def() throw();
 PR enum_def() throw();
-PR type_name() throw(); // eg x::y::Z, X<T>::size, x::Y<Z>
 PR conversion_operator_name() throw(); // eg operator constT&
 PR function_proto() throw();
 PR function_decl() throw();
 PR template_function_def() throw();
 PR function_def() throw(); // matches template, so try template_function_def first
-PR attr_decl() throw();
 PR global_var_def() throw();
 PR static_var_def() throw();
-PR class_decl() throw();
+PR class_decl() throw();   // template/non-template
 PR class_def() throw();    // template/non-template
 PR anonymous_namespace() throw();
 PR namespace_def() throw();    // matches anonymous, so try anonymous_namespace first
 
 PR endOfFile() throw(); // matches end of file
 
-// Parse text, balancing (), [], {}, stringLiteral and optionally <>, 
-// up to first match of until.
-PR balanced(PR until, bool angles=false) throw();
 }
 
 #endif

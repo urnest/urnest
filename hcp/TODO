@@ -63,7 +63,7 @@ x when excluding class/struct/union/enum/namespace keywords need to ensure
           
 - hcp split generate operator< (and others) where there is an operator<
   function prototype (ie no implementation)
-  - need to better parse attr decls to get attr names
+  x need to better parse attr decls to get attr names
       attr decl is typeid unqualifiedName optional(array decl)
       typeid is qualifiers (const, static) typename qualifiers (const & *)
       type_name is ok as-is I think
@@ -103,11 +103,20 @@ x when excluding class/struct/union/enum/namespace keywords need to ensure
       x ensure A b=C(3) does not match function proto
 
       x fix attr_decl, just wraps var_def?
-      - name() v class_name()?
       
   x need to better parse function proto to get param types
+
   - then look for friend bool operator< with 2x params of type = class name
     (possibly const/ref qualified)
+
+- accept some old-style var init (where cannot be a function decl)
+  - not empty
+  - single arg (balanced no commas)
+  - arg is not a valid param
+  - no initialiser
+  - ie if it does not parse as a function decl/def
+  
+- name() v class_name()?
 
 x friend, template friend class forward decl
 
@@ -169,7 +178,7 @@ x static member object:
       0
     };
 
-- global (variant of above, or same? could just do "object decl") and
+x global (variant of above, or same? could just do "object decl") and
   let context show whether it is a class member or global?
 
 x recognise template specialisation class
@@ -189,16 +198,17 @@ x fix string literal parsing:
   x do it character-based with specials as per c++ standard
 
 - add literal(char) and use it instead of oneOfChars("x")
-
+  ... with shorthand + 'x'
+  
 x make readableRepr smarter to get better error messages, so that
   other tools get the full exception context to work with:
   x only show named parsers, except always show the last parser
     context
 
-- rework atLeastOne for saner error message - see REVISIT in test-parse.cc
+x rework atLeastOne for saner error message
 
 x add zeroOrOne (perhaps call it optional?) and review where to use it
-- rework Optional::parse_, should be to avoid copying the "good" result?
+- rework Optional::parse_, should be able to avoid copying the "good" result?
 
 - replace more zeroOrMore with parseUntil(match,x)
 
@@ -209,6 +219,11 @@ x on parse failure, output the branch that got furthest
     parser.cc/hh
   x replace with Malfomed exception that has at and can carry
     other fail branches
+
+- should type_qual have volatile?
+- rename global_var_def to non_static_var_def
+- named<T>(x) to create NamedParser
+- find a natural way to make optional(x)+y mention x in exception message?
 
 - also to get better errors need to make use of keywords, eg
   if have "class" but what follows is not a class, want that error

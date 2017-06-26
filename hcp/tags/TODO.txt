@@ -1,8 +1,13 @@
 x more tests in test-augmentRootNamespace
 
-- lookup interface implementation (locked)
+x lookup interface implementation (locked)
     TagsFile
-- daemon without inotify
+x daemon without inotify
     hcp-tagsd.cc
+x add inotify
+
 - hcp-import-symbol-at.cc
-- add inotify
+  - pass in inc_sp
+  - return code for "not found"
+  - support manual tags ie twt-c-import-map
+
