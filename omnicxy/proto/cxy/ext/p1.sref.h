@@ -53,20 +53,14 @@ private:
   class f1 
   {
   public:
-    static void lcfn(omniCallDescriptor* ocd, omniServant* svnt) 
-      //exception spec commented to avoid header dependency on omniORB headers
-      //throw(CORBA::UserException)
-    ;
+    static void lcfn(omniCallDescriptor* ocd, omniServant* svnt);
 
     static const char* const _user_exns[] ;
 };
   
 
   // sref_if::
-  virtual bool _dispatch(omniCallHandle& _handle)
-    //exception spec commented to avoid header dependency on omniORB headers
-    // throw(CORBA::Exception)
-  ;
+  virtual bool _dispatch(omniCallHandle& _handle);
 
 
   // sref_if::

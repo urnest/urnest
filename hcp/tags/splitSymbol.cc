@@ -7,7 +7,7 @@ namespace tags
 {
 namespace
 {
-  std::string const sep("::");
+std::string const sep{"::"};
 }
 
 // split C++ symbol, possibly qualified, into namespace names and

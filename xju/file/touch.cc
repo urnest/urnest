@@ -14,7 +14,7 @@ namespace file
 {
 namespace
 {
-xju::SyscallF2<int,int,timeval const*> fut("::futimes",::futimes);
+xju::SyscallF2<int,int,timeval const*> fut{"::futimes",::futimes};
 }
 
 void touch(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& f,

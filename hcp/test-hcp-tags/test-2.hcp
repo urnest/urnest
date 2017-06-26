@@ -2,4 +2,4 @@
 int x=1;
 void y() throw(xju::Exception)
 {
-};
+}

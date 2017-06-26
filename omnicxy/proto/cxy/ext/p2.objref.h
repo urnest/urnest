@@ -90,20 +90,16 @@ private:
       bool const p7_;
     
       // omniCallDescriptor::
-      void marshalArguments(cdrStream& s) // REVISIT: throw
-      ;
+      void marshalArguments(cdrStream& s);
 
-      void unmarshalReturnedValues(cdrStream& s) // REVISIT: throw
-      ;
+      void unmarshalReturnedValues(cdrStream& s);
 
       void userException(cdrStream& s,
                          omni::IOP_C* iop_client,
-                         const char* repoId)//REVISIT: throw
-      ;
+                         const char* repoId);
 
     
-      static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt)
-      ;
+      static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt);
 
       static const char* const _user_exns[] ;
 };
@@ -120,42 +116,35 @@ private:
       xju::Optional< int16_t > r_;
     
       // omniCallDescriptor::
-      void marshalArguments(cdrStream& s) // REVISIT: throw
-      ;
+      void marshalArguments(cdrStream& s);
 
-      void unmarshalReturnedValues(cdrStream& s) // REVISIT: throw
-      ;
+      void unmarshalReturnedValues(cdrStream& s);
 
       void userException(cdrStream& s,
                          omni::IOP_C* iop_client,
-                         const char* repoId)//REVISIT: throw
-      ;
+                         const char* repoId);
 
     
-      static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt)
-      ;
+      static void lcfn(omniCallDescriptor* calldesc, omniServant* svnt);
 
       static const char* const _user_exns[] ;
 };
     
   };
   // CORBA::Object::
-  virtual void* _ptrToObjRef(const char* repoId)
-  ;
+  virtual void* _ptrToObjRef(const char* repoId);
 
 };
 
 template<>
 class pof< ::p2::F > : public omni::proxyObjectFactory {
 public:
-  pof() ;
+  pof();
 
-  virtual ~pof()
-  ;
+  virtual ~pof();
 
   
-  virtual omniObjRef* newObjRef(omniIOR* ior,omniIdentity* id)
-  ;
+  virtual omniObjRef* newObjRef(omniIOR* ior,omniIdentity* id);
 
   
   virtual _CORBA_Boolean is_a(const char* repoId) const;

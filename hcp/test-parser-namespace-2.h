@@ -6,7 +6,7 @@ typedef std::vector<int> Ints;
 // above won't work
 
 /* .. well, not really */
-std::string x("fred"
+std::string x(char const* const x[]="fred"
               "doesn't"
               "lie");
 

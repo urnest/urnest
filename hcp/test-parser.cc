@@ -1085,6 +1085,22 @@ void test21()
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache, false);
     std::string const x(
+      "std::string x(char const* const x[]=\"fred\"\n"
+              "\"doesn't\"\n"
+              "\"lie\");");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    at = parse(root, at, hcp_parser::function_proto());
+    xju::assert_equal(reconstruct(root), std::string(x.begin(),x.end()-1));
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e), readableRepr(e));
+  }
+  try {
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, cache, false);
+    std::string const x(
       "template<class T>\n"
       "void fred() const throw();\n");
     hcp_ast::CompositeItem root;
@@ -1200,6 +1216,21 @@ void test22()
       "catch(xju::Exception& e) {\n"
       "  abort();\n"
       "}");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    at = parse(root, at, hcp_parser::function_def());
+    xju::assert_equal(reconstruct(root), x);
+    xju::assert_equal(at.atEnd(), true);
+  }
+  {
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    std::string const x(
+      "template<>\n"
+      "int X::of<int>()\n"
+      "{\n"
+      "  return 0;\n"
+      "}\n");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
@@ -1497,20 +1528,6 @@ void test27(std::vector<std::string> const& f)
   }
   try
   {
-    std::string const x("xxx");
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(root, at, hcp_parser::attr_decl());
-    xju::assert_abort();
-  }
-  catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse attr declaration at line 1 column 1 because\nfailed to parse parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [();={}] at line 1 column 1 because\nline 1 column 4: end of input.", XJU_TRACED);
-  }
-  try
-  {
     std::string const x(hcp::readFile(xju::path::split(f[3]))+"xxx");
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache, false);
@@ -1522,7 +1539,7 @@ void test27(std::vector<std::string> const& f)
   }
   catch(xju::Exception const& e) {
     // REVISIT: not that helpful
-    assert_readableRepr_equal(e, "Failed to parse file at line 1 column 1 because\nfailed to parse attr declaration at line 22 column 1 because\nfailed to parse parse text, balancing (), [], {}, <>, stringLiteral, up to but not including one of chars [();={}] at line 22 column 1 because\nline 22 column 4: end of input.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse file at line 1 column 1 because\nfailed to parse global variable definition at line 22 column 1 because\nfailed to parse function pointer var at line 22 column 1 because\nfailed to parse \"(\" at line 22 column 4 because\nline 22 column 4: end of input.", XJU_TRACED);
   }
 }
 
@@ -1747,6 +1764,22 @@ void test31()
                               hcp_ast::isA_<hcp_ast::VarInitialiser>);
      xju::assert_equal(std::string(root.begin().x_, (**k).begin().x_), 
                        "static X y");
+   }
+   catch(xju::Exception const& e) {
+     assert_readableRepr_equal(e, "", XJU_TRACED);
+     xju::assert_equal(true,false);
+   }
+ }
+ {
+   std::string const x("X y=Z(3);");
+   
+   hcp_ast::CompositeItem root;
+   hcp_parser::I at(x.begin(), x.end());
+   
+   try {
+     at = parse(root, at, hcp_parser::global_var_def());
+     xju::assert_equal(reconstruct(root), x);
+     xju::assert_equal(at.atEnd(), true);
    }
    catch(xju::Exception const& e) {
      assert_readableRepr_equal(e, "", XJU_TRACED);

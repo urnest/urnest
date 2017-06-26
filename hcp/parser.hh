@@ -336,6 +336,7 @@ PR whitespaceChar() throw();
 PR whitespaceChar_() throw();
 PR eatWhite() throw();             // matches nothing, eats comments
 PR doubleQuote() throw();
+PR doubleColon() throw();
 PR backslash() throw();
 PR oneChar() throw(); //any single char
 PR stringLiteral() throw();
@@ -362,11 +363,13 @@ PR function_decl() throw();
 PR template_function_def() throw();
 PR function_def() throw(); // matches template, so try template_function_def first
 PR attr_decl() throw();
+PR global_var_def() throw();
 PR static_var_def() throw();
 PR class_decl() throw();
 PR class_def() throw();    // template/non-template
 PR anonymous_namespace() throw();
 PR namespace_def() throw();    // matches anonymous, so try anonymous_namespace first
+
 PR endOfFile() throw(); // matches end of file
 
 // Parse text, balancing (), [], {}, stringLiteral and optionally <>, 

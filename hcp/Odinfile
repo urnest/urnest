@@ -113,7 +113,7 @@ namespace n1 {
   class c1 {
     void f1() {}
   };
-};
+}
 namespace n2 {
   namespace n21 {
   class c1 {

@@ -981,10 +981,9 @@ PR anon(std::string const& name, PR const x) throw()
 
 PR atLeastOne(PR b) throw()
 {
-  std::ostringstream s;
-  s << "at least one occurrance of " << b->target();
-  return PR(new NamedParser<hcp_ast::CompositeItem>(s.str(),
-                                                    b+(zeroOrMore()*b)));
+  return anon(
+    "at least one occurrance of "+b->target(),
+    b+zeroOrMore()*b);
 }
 
 PR parseAnyChar() throw()
@@ -1062,6 +1061,12 @@ PR doubleQuote() throw()
 {
   static PR doubleQuote(parseOneOfChars("\""));
   return doubleQuote;
+}
+
+PR doubleColon() throw()
+{
+  static PR result(parseLiteral("::")+!parseOneOfChars(":"));
+  return result;
 }
 
 PR backslash() throw()
@@ -1232,7 +1237,7 @@ PR unqualifiedName() throw()
   return unqualifiedName;
 }
 
-PR identier() throw()
+PR identifier() throw()
 {
   static PR result(
     identifierStartChar()+
@@ -1294,7 +1299,10 @@ PR type_ref() throw()
 {
   static PR result{
     anon("type reference",
-         cv() + type_name() +eatWhite() + zeroOrMore()*type_qual() + eatWhite())
+         cv() +
+         type_name() +eatWhite() +
+         zeroOrMore()*type_qual()+ eatWhite()+
+         (!parseLiteral(".")|(parseLiteral("...")+eatWhite())))
       };
   return result;
 }
@@ -1435,7 +1443,8 @@ PR operator_name() throw()
        parseLiteral("%=")|
        parseLiteral("%")|
        parseLiteral("=")|
-       parseLiteral("*"))+
+       parseLiteral("*")|
+       parseLiteral("new"))+
       eatWhite()));
   return operator_name;
 }
@@ -1449,32 +1458,70 @@ PR destructor_name() throw()
   return destructor_name;
 }
 
+PR typename_keyword() throw()
+{
+  PR result(
+    parseLiteral("typename")+!identifierContChar()+eatWhite());
+  return result;
+}
 
 PR name() throw()
 {
   static PR name(
-    zeroOrMore()*(unqualifiedName()+eatWhite()+parseLiteral("::")+eatWhite())+
-    unqualifiedName()+
+    optional(typename_keyword())+
+    optional(doubleColon())+eatWhite()+
+    zeroOrMore()*(
+      unqualifiedTypeName()+eatWhite()+doubleColon()+eatWhite())+
+    unqualifiedTypeName()+
     eatWhite());
   return name;
 }
 
 
+PR class_name() throw()
+{
+  static PR result(
+    optional(typename_keyword())+
+    optional(doubleColon())+eatWhite()+
+    zeroOrMore()*(
+      unqualifiedTypeName()+eatWhite()+doubleColon()+eatWhite())+
+    unqualifiedTypeName());
+  return result;
+}
+
+PR built_in_type_name() throw()
+{
+  static PR result(
+    atLeastOne(
+      (parseLiteral("char")|
+       parseLiteral("char16_t")|
+       parseLiteral("char32_t")|
+       parseLiteral("wchar_t")|
+       parseLiteral("short")|
+       parseLiteral("int")|
+       parseLiteral("long")|
+       parseLiteral("float")|
+       parseLiteral("double")|
+       parseLiteral("signed")|
+       parseLiteral("unsigned"))+!identifierContChar()+eatWhite()));
+  return result;
+}
+
 PR type_name() throw()
 {
-  static PR type_name(
-    zeroOrMore()*(unqualifiedTypeName()+eatWhite()+parseLiteral("::")+eatWhite())+
-    unqualifiedTypeName());
-  return type_name;
+  static PR result(
+    anon(
+      "type name",
+      built_in_type_name()|
+      class_name()));
+  return result;
 }
 
 PR conversion_operator_name() throw()
 {
   static PR conversion_operator_name(
-    anon(
-      "conversion operator name",
-      operator_keyword()+
-      type_ref()));
+    operator_keyword()+
+    type_ref());
   return conversion_operator_name;
 }
 
@@ -1488,6 +1535,20 @@ PR keyword_static() throw()
   return keyword_static;
 }
 
+
+PR keyword_inline() throw()
+{
+  static PR result(
+    parseLiteral("inline")+!identifierContChar()+eatWhite());
+  return result;
+}
+
+PR keyword_mutable() throw()
+{
+  static PR result(
+    parseLiteral("mutable")+!identifierContChar()+eatWhite());
+  return result;
+}
 
 PR keyword_friend() throw()
 {
@@ -1525,7 +1586,8 @@ PR function_qualifiers() throw()
       zeroOrMore()*((keyword_virtual()|
                      keyword_explicit()|
                      keyword_friend()|
-                     keyword_static())+eatWhite())));
+                     keyword_static()|
+                     keyword_inline())+eatWhite())));
   return function_qualifiers;
 }
 
@@ -1623,7 +1685,7 @@ PR conversion_operator_function_proto() throw()
   static PR result(
     function_qualifiers()+
     PR(new NamedParser<hcp_ast::FunctionName>(
-         "function name",
+         "conversion operator name",
          conversion_operator_name()))+
     eatWhite()+
     bracketed(params())+
@@ -1639,7 +1701,7 @@ PR typed_function_proto() throw()
     PR(new NamedParser<hcp_ast::FunctionName>(
          "function name",
          operator_name()|
-         unqualifiedName()))+
+         name()))+
     eatWhite()+
     bracketed(params())+
     balanced((eatWhite()+parseOneOfChars(";:{"))|parseLiteral("try")));
@@ -1736,11 +1798,12 @@ PR class_proto() throw()
 {
   static PR class_proto(
     zeroOrMore()*(template_preamble()|template_empty_preamble())+
+    optional(keyword_friend())+
     class_struct_union_literal()+
     whitespace()+
     new NamedParser<hcp_ast::ClassName>(
       "class name",
-      type_name())+
+      class_name())+
     eatWhite()+
     balanced(parseOneOfChars("{;")));
   return class_proto;
@@ -1755,17 +1818,6 @@ PR class_decl() throw()
                          parseOneOfChars(";")+
                          eatWhite()));
   return class_decl;
-}
-
-  
-PR attr_decl() throw()
-{
-  static PR attr_decl(new NamedParser<hcp_ast::AttrDecl>(
-                        "attr declaration",
-                        balanced(parseOneOfChars("{}();="))+
-                        parseOneOfChars(";")+
-                        eatWhite()));
-  return attr_decl;
 }
 
   
@@ -1823,7 +1875,7 @@ PR var_initialiser_1() throw()
   static PR var_initialiser(
     new NamedParser<hcp_ast::VarInitialiser>(
       "variable initialiser",
-      (var_initialiser_open()+balanced(parseOneOfChars(";,")))));
+      (var_initialiser_open()+balanced(parseOneOfChars(");,")))));
   return var_initialiser;
 }
 
@@ -1862,7 +1914,7 @@ PR var_non_fp() throw()
     anon(
       "non-function pointer var",
       (type_ref()+var_name()+optional(array_decl())+
-       optional(var_initialiser())))};
+       (!parseOneOfChars("={")|var_initialiser())))};
   return result;
 }
 
@@ -1910,7 +1962,7 @@ PR var_fp() throw()
     anon("function pointer var",
          type_ref()+bracketed(type_qual()+var_name())+
          bracketed(params())+
-         optional(var_initialiser())+
+         (!parseOneOfChars("={")|var_initialiser())+
          eatWhite())};
   return result;
 }
@@ -1918,6 +1970,7 @@ PR var_fp() throw()
 PR var_def() throw()
 {
   static PR result{
+    optional(keyword_mutable())+
     (var_non_fp()|var_fp())+
     eatWhite()};
   return result;
@@ -2019,7 +2072,7 @@ public:
                            template_function_def()|
                            function_def()|
                            static_var_def()|
-                           attr_decl())))),
+                           global_var_def())))),
                        parseOneOfChars("}"))))+
        parseOneOfChars("}")+
        eatWhite()+
@@ -2084,7 +2137,7 @@ PR namespace_leaf() throw()
         function_def()|
         (not_function_proto_or_template_function_proto()+
          (global_var_def()|
-          attr_decl())))))));
+          static_var_def())))))));
   return namespace_leaf;
 }
 

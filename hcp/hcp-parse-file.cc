@@ -117,7 +117,6 @@ int main(int argc, char* argv[])
     parsers.insert(std::make_pair("function decl", hcp_parser::function_decl()));
     parsers.insert(std::make_pair("template function def", hcp_parser::template_function_def()));
     parsers.insert(std::make_pair("function def", hcp_parser::function_def()));
-    parsers.insert(std::make_pair("attr decl", hcp_parser::attr_decl()));
     parsers.insert(std::make_pair("class decl", hcp_parser::class_decl()));
     parsers.insert(std::make_pair("class def", hcp_parser::class_def()));
     parsers.insert(std::make_pair("anonymous namespace", hcp_parser::anonymous_namespace()));
