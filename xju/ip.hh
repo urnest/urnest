@@ -11,31 +11,6 @@
 //
 // misc IP
 //
-#include <xju/Int.hh>
-#include <stdint.h>
-#include <iosfwd>
-
-namespace xju
-{
-namespace ip
-{
-struct PortTag{};
-
-// port number
-typedef xju::Int<PortTag,uint16_t> Port;
-
-namespace v4
-{
-struct AddressTag{};
-
-// address (in host byte order)
-typedef xju::Int<AddressTag,uint32_t> Address;
-
-std::ostream& operator<<(std::ostream& s, Address const& a) throw();
-
-
-}
-
-}
-}
+#include <xju/ip/Port.hh>
+#include <xju/ip/v4.hh>
 #endif

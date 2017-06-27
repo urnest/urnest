@@ -5,6 +5,7 @@
 snmp%tests.tree
 io%tests.tree
 file%tests.tree
+ip%tests.tree
 
 %tests.tree == <<
 #()+cmd=(%test-serialisation.cxx.sm+(..%cxx-opts):auto.cxx.exe):exec.output
@@ -48,4 +49,3 @@ netflow%tests.tree
 %test-check_types_related_2_err==test-check_types_related_2.cc+(..%cxx-opts):auto.cxx.exe:err
 
 ==(.:dir.hcp.list+hpath='xju':hcp-split)
-

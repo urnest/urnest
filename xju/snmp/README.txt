@@ -174,3 +174,23 @@ notes:
       The encoding of a choice value is the same as the encoding of a value 
       of the chosen type.
 
+
+
+
+xju@xjutv:~/urnest$ snmptrap -v 1 -c private localhost .1.3.6 192.168.0.3 6 42 33 .1.3.6.1.4.1.2680.1.2.7.3.2.0 i 2
+
+19:31:42.998587 IP (tos 0x0, ttl 64, id 14689, offset 0, flags [DF], proto UDP (17), length 85)
+    localhost.54249 > localhost.snmp-trap: [bad udp cksum 0xfe54 -> 0x72df!]  { SNMPv1 C="private" { Trap(41)  .iso.org.dod 192.168.0.3 enterpriseSpecific s=42 33 E:2680.1.2.7.3.2.0=2 } } 
+0x0000:  4500 0055 3961 4000 4011 0335 7f00 0001  E..U9a@.@..5....
+0x0010:  7f00 0001 d3e9 00a2 0041 fe54 3037 0201  .........A.T07..
+                                       x x  x x
+0x0020:  0004 0770 7269 7661 7465 a429 0602 2b06  ...private.)..+.
+         x x  x p  r i  v a  t e  x 29 x x  x x  
+0x0030:  4004 c0a8 0003 0201 0602 012a 4301 2130  @..........*C.!0
+         x x  x x  x x  x x  x x  x x  x x  x x
+0x0040:  1430 1206 0d2b 0601 0401 9478 0102 0703  .0...+.....x....
+         x x  x x  x x  x x  x x  x x  x x  x x
+0x0050:  0200 0201 02                             .....
+         x x  x x  x
+
+perfect

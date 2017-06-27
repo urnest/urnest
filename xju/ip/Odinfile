@@ -1,0 +1,11 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+%tests.tree
+v4%tests.tree
+
+%tests.tree == <<
+
+
+
+==(.:dir.hcp.list:hcp-split)
