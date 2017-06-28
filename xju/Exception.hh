@@ -81,6 +81,11 @@ namespace xju
             _cause(x._cause),
             _context(x._context) {
         }
+	Exception(Exception const&& x) throw():
+            _cause(std::move(x._cause)),
+            _context(sd::move(x._context)),
+            what_(std::move(x.what_)) {
+        }
         Exception& operator=(Exception const& x) throw()
         {
             if (this != &x) {

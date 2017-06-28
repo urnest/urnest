@@ -12,7 +12,6 @@
 //
 #include <xju/socket.hh>
 
-#ifndef __MINGW32__
 namespace xju
 {
     const SyscallF3<int, int, int, int> socket(
@@ -34,6 +33,9 @@ namespace xju
     const SyscallF4<ssize_t, int, void*, size_t, int> recv(
 	"recv",
 	::recv);
+    const SyscallF3<ssize_t, int, struct msghdr*, int> recvmsg(
+	"recvmsg",
+	::recvmsg);
     const SyscallF5<int, int, int, int, void*, socklen_t*> getsockopt(
 	"getsockopt",
 	::getsockopt);
@@ -41,5 +43,7 @@ namespace xju
     setsockopt(
 	"setsockopt",
 	::setsockopt);
+    extern const SyscallF3<int, int, ::sockaddr_t*, socklen_t*> getsockname(
+        "getsockname",
+        ::getsockname);
 }
-#endif

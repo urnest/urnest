@@ -42,6 +42,8 @@ namespace xju
     class Syscall4;
     template<class R, class P1, class P2, class P3, class P4, class P5>
     class Syscall5;
+    template<class R,class P1,class P2,class P3,class P4,class P5,clss P6>
+    class Syscall6;
     
     //
     // Descriptors for functions, each has a null-terminated string
@@ -68,6 +70,13 @@ namespace xju
 	class P3,
 	class P4,
 	class P5> struct SyscallF5;
+    template<class R,
+	class P1,
+	class P2,
+	class P3,
+	class P4,
+	class P5,
+	class P6> struct SyscallF6;
     
     //
     // Call a specified system call with the specified parameters:
@@ -290,6 +299,31 @@ namespace xju
 		//
 		SyscallInterrupted,
 		SyscallFailed);
+
+    template<class R, class P1, class P2, class P3, class P4, class P5, class P6>
+    Syscall6<R, P1, P2, P3, P4, P5, P6>
+    syscall(const SyscallF5<R, P1, P2, P3, P4, P5, P6>& f,
+	    const Traced& location,
+	    bool retryIfInterrupted = true) throw(
+		//
+		// pre: !retryIfInterrupted &&
+		//      signal interrupted the system call
+		//
+		SyscallInterrupted,
+		SyscallFailed);
+    
+    template<class R, class P1, class P2, class P3, class P4, class P5, class P6>
+    Syscall5<R, P1, P2, P3, P4, P5, P6>
+    syscall(const char* name,
+	    R (*const f)(P1, P2, P3, P4, P5, P6),
+	    const Traced& location,
+	    bool retryIfInterrupted = true) throw(
+		//
+		// pre: !retryIfInterrupted &&
+		//      signal interrupted the system call
+		//
+		SyscallInterrupted,
+		SyscallFailed);
 }
 
 
@@ -392,6 +426,19 @@ namespace xju
 	}
 	const char* _name;
 	R (*const _f)(P1, P2, P3, P4, P5);
+    };
+    
+    
+    template<class R, class P1, class P2, class P3, class P4, class P5, class P6>
+    struct SyscallF6
+    {
+	SyscallF6(const char* name, R (*const f)(P1, P2, P3, P4, P5, P6)) throw():
+	    _name(name),
+	    _f(f)
+	{
+	}
+	const char* _name;
+	R (*const _f)(P1, P2, P3, P4, P5, P6);
     };
     
     
@@ -560,6 +607,32 @@ namespace xju
     };
     
     
+    template<class R, class P1, class P2, class P3, class P4, class P5, class P6>
+    class Syscall6
+    {
+    public:
+	Syscall6(const SyscallF6<R, P1, P2, P3, P4, P5, P6>& f,
+		 const bool retryIfInterrupted,
+		 const Traced& location) throw():
+	    _f(f),
+	    _retryIfInterrupted(retryIfInterrupted),
+	    _location(location)
+	{
+	}
+	R operator()(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6) const throw(
+	    //
+	    // pre: !retryIfInterrupted &&
+	    //      signal interrupted the system call
+	    //
+	    SyscallInterrupted,
+	    SyscallFailed);
+    private:
+	const SyscallF6<R, P1, P2, P3, P4, P5, P6> _f;
+	const bool _retryIfInterrupted;
+	const Traced _location;
+    };
+    
+    
     template<class R>
     R Syscall0<R>::operator()() const throw(
 	//
@@ -698,6 +771,32 @@ namespace xju
     {
 	R status;
 	while(((status=(*_f._f)(p1, p2, p3, p4, p5)) == -1) &&
+	      (errno == EINTR) &&
+	      _retryIfInterrupted);
+	if (status == -1)
+	{
+	    if (errno == EINTR)
+	    {
+		throw SyscallInterrupted();
+	    }
+	    throw SyscallFailed(_f._name, errno, _location);
+	}
+	return status;
+    }
+    
+    
+    template<class R, class P1, class P2, class P3, class P4, class P5, class P6>
+    R Syscall6<R, P1, P2, P3, P4, P5, P6>::operator()(
+	P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6) const throw(
+	//
+	// pre: !retryIfInterrupted &&
+	//      signal interrupted the system call
+	//
+	SyscallInterrupted,
+	SyscallFailed)
+    {
+	R status;
+	while(((status=(*_f._f)(p1, p2, p3, p4, p5, p6)) == -1) &&
 	      (errno == EINTR) &&
 	      _retryIfInterrupted);
 	if (status == -1)
@@ -936,6 +1035,25 @@ namespace xju
     {
 	return Syscall5<R, P1, P2, P3, P4, P5>(
 	    SyscallF5<R, P1, P2, P3, P4, P5>(name, f),
+	    retryIfInterrupted,
+	    location);
+    }
+
+    template<class R, class P1, class P2, class P3, class P4, class P5, class P6>
+    Syscall5<R, P1, P2, P3, P4, P5, P6>
+    syscall(const char* name,
+	    R (*const f)(P1, P2, P3, P4, P5, P6),
+	    const Traced& location,
+	    bool retryIfInterrupted) throw(
+		//
+		// pre: !retryIfInterrupted &&
+		//      signal interrupted the system call
+		//
+		SyscallInterrupted,
+		SyscallFailed)
+    {
+	return Syscall5<R, P1, P2, P3, P4, P5, P6>(
+	    SyscallF6<R, P1, P2, P3, P4, P5, P6>(name, f),
 	    retryIfInterrupted,
 	    location);
     }
