@@ -30,6 +30,7 @@ namespace xju
     const SyscallF4<ssize_t, int, const void*, size_t, int> send={
 	"send",
 	::send};
+    const SyscallF6<ssize_t, int, const void*, size_t, int, const struct sockaddr*, socklen_t> sendto={"sendto",::sendto};
     const SyscallF4<ssize_t, int, void*, size_t, int> recv={
 	"recv",
 	::recv};

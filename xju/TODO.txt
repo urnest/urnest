@@ -44,9 +44,7 @@ io::Output
     
   x break up io.hcp into io/xxx with aggregation like snmp.hh
   x pipe()
-  - SocketPair
-      - unique_ptr<IStream> input_;
-      - unique_ptr<OStream> output_;
+  - SocketPair, like pipe
   - UnixListener,UnixSocket - like TCPListener,TCPSocket
   - MessageQueue (linux allows select)
       IQueue& input();
@@ -62,10 +60,10 @@ x test-io.cc:
     x write timeout
   x use multiple pipes to test select
 - make syscall turn ENOMEM into std::bad_alloc
-- move eg unistd functions into eg xju::unistd:: to allow higher level implementations (eg see pipe)?
+- move eg unistd functions into eg xju::unistd:: to allow higher level implementations (eg see pipe)? No, pretty much no clashes
 - move xju::SyscallFailed to SyscallFailed.hh
 
-Subprocess
+x Subprocess
   x start function object,
   x optional stop function object (pass pid) - default kill 9
   x exit status

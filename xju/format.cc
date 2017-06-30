@@ -16,6 +16,7 @@
 #include <iomanip>
 #include <iterator>
 #include <algorithm>
+#include <xju/unix_epoch.hh>
 
 namespace xju
 {
@@ -461,6 +462,15 @@ std::string indent(std::string const& s, std::string const& prefix) throw()
   return result.str();
 }
 
+std::string time(std::chrono::system_clock::time_point const& t) throw()
+{
+  auto const secs(
+    std::chrono::duration_cast<std::chrono::seconds>(t-xju::unix_epoch()));
+  auto const usecs(
+    std::chrono::duration_cast<std::chrono::microseconds>(
+      t-xju::unix_epoch()-secs));
+  return xju::format::str(secs.count())+"."+xju::format::int_(usecs.count(),6);
+}
 
 }
 }

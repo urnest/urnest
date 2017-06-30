@@ -72,6 +72,7 @@
 #include <xju/ios_base.hh>
 #include <cinttypes>
 #include <climits>
+#include <chrono>
 
 namespace xju
 {
@@ -317,6 +318,9 @@ std::string cEscapeString(std::string const& s) throw();
 //
 std::string indent(std::string const& s, std::string const& prefix) throw();
 
+// time as seconds.usecs since unix epoch
+std::string time(std::chrono::system_clock::time_point const& t) throw();
+
 }
 }
 
@@ -441,6 +445,7 @@ std::string set(const ConstIterator begin,
 template<class ConstIterator>
 std::string set(const ConstIterator begin,
                 const ConstIterator end) throw();
+
 }
 }
 

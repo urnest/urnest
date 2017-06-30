@@ -424,6 +424,14 @@ void test9()
   
 }
 
+// time
+void test10()
+{
+  xju::assert_equal(time(xju::unix_epoch()+std::chrono::seconds(3745)),"3745.000000");
+  xju::assert_equal(time(xju::unix_epoch()+std::chrono::microseconds(3745)),"0.003745");
+  xju::assert_equal(time(xju::unix_epoch()+std::seconds(85)+std::chrono::microseconds(3745)),"85.003745");
+}
+
 }
 
 int main(int argc, char* argv[])
@@ -438,6 +446,7 @@ int main(int argc, char* argv[])
   xju::test7(); ++n;
   xju::test8(); ++n;
   xju::test9(); ++n;
+  xju::test10(); ++n;
   
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;

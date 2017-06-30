@@ -1006,6 +1006,24 @@ namespace xju
 
     template<class R, class P1, class P2, class P3, class P4, class P5, class P6>
     Syscall6<R, P1, P2, P3, P4, P5, P6>
+    syscall(const SyscallF6<R, P1, P2, P3, P4, P5, P6>& f,
+	    const Traced& location,
+	    bool retryIfInterrupted) throw(
+		//
+		// pre: !retryIfInterrupted &&
+		//      signal interrupted the system call
+		//
+		SyscallInterrupted,
+		SyscallFailed)
+    {
+	return Syscall6<R, P1, P2, P3, P4, P5, P6>(
+	    f,
+	    retryIfInterrupted,
+	    location);
+    }
+    
+    template<class R, class P1, class P2, class P3, class P4, class P5, class P6>
+    Syscall6<R, P1, P2, P3, P4, P5, P6>
     syscall(const char* name,
 	    R (*const f)(P1, P2, P3, P4, P5, P6),
 	    const Traced& location,

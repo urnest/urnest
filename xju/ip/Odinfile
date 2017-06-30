@@ -5,6 +5,7 @@
 v4%tests.tree
 
 %tests.tree == <<
+()+cmd=(test-UDPSocket.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 
 
