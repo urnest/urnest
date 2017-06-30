@@ -12,6 +12,6 @@
 
 namespace xju
 {
-xju::SyscallF3<pid_t,pid_t,int*,int> const waitpid("waitpid",::waitpid);
+xju::SyscallF3<pid_t,pid_t,int*,int> const waitpid={"waitpid",::waitpid};
 }
 

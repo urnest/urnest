@@ -18,52 +18,50 @@
 
 namespace xju
 {
-    const SyscallF3<int, int, int, off_t> lockf(
+    const SyscallF3<int, int, int, off_t> lockf={
 	"lockf",
-	::lockf);
-    const SyscallF3<ssize_t, int, void*, size_t> read(
+	::lockf};
+    const SyscallF3<ssize_t, int, void*, size_t> read={
 	"read",
-	::read);
+	::read};
     
-    const SyscallF2<int, const char*, Stat*> stat_(
+    const SyscallF2<int, const char*, Stat*> stat_={
 	"stat",
-	::stat);
+	::stat};
 
-    const SyscallF3<ssize_t, int, const void*, size_t> write(
+    const SyscallF3<ssize_t, int, const void*, size_t> write={
 	"write",
-	::write);
+	::write};
 
-    const SyscallF1<int, int> close(
+    const SyscallF1<int, int> close={
 	"close",
-	::close);
+	::close};
 
-    const SyscallF3<off_t, int, off_t, int> lseek(
+    const SyscallF3<off_t, int, off_t, int> lseek={
 	"lseek",
-	::lseek);
+	::lseek};
 
-    const SyscallF2<int, int, off_t> ftruncate(
+    const SyscallF2<int, int, off_t> ftruncate={
 	"ftruncate",
-	::ftruncate);
+	::ftruncate};
 
-    const SyscallF2<int, const char*, mode_t> mkdir(
+    const SyscallF2<int, const char*, mode_t> mkdir={
         "mkdir",
-        ::mkdir);
+        ::mkdir};
 
-    const SyscallF1<int, const char*> rmdir(
+    const SyscallF1<int, const char*> rmdir={
         "rmdir",
-        ::rmdir);
+        ::rmdir};
 
-    const SyscallF1<int, const char*> unlink(
+    const SyscallF1<int, const char*> unlink={
         "unlink",
-        ::unlink);
+        ::unlink};
 
-    const SyscallF0<pid_t> fork(
-        "fork",
-        ::fork);
+    const SyscallF0<pid_t> fork={"fork",::fork};
 
-    const SyscallF2<int,int,int> dup2(
+    const SyscallF2<int,int,int> dup2={
         "dup2",
-        ::dup2);
+        ::dup2};
 
     std::pair<int,int> pipe_() throw(xju::SyscallFailed)
     {

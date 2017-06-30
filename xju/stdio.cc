@@ -49,9 +49,9 @@ namespace xju
 	detail::rename_);
 
 #else
-    const SyscallF2<int, const char*, const char*> rename(
+    const SyscallF2<int, const char*, const char*> rename={
 	"rename",
-	::rename);
+	::rename};
 #endif
 
 }

@@ -42,7 +42,7 @@ namespace xju
     class Syscall4;
     template<class R, class P1, class P2, class P3, class P4, class P5>
     class Syscall5;
-    template<class R,class P1,class P2,class P3,class P4,class P5,clss P6>
+    template<class R,class P1,class P2,class P3,class P4,class P5,class P6>
     class Syscall6;
     
     //
@@ -302,7 +302,7 @@ namespace xju
 
     template<class R, class P1, class P2, class P3, class P4, class P5, class P6>
     Syscall6<R, P1, P2, P3, P4, P5, P6>
-    syscall(const SyscallF5<R, P1, P2, P3, P4, P5, P6>& f,
+    syscall(const SyscallF6<R, P1, P2, P3, P4, P5, P6>& f,
 	    const Traced& location,
 	    bool retryIfInterrupted = true) throw(
 		//
@@ -313,7 +313,7 @@ namespace xju
 		SyscallFailed);
     
     template<class R, class P1, class P2, class P3, class P4, class P5, class P6>
-    Syscall5<R, P1, P2, P3, P4, P5, P6>
+    Syscall6<R, P1, P2, P3, P4, P5, P6>
     syscall(const char* name,
 	    R (*const f)(P1, P2, P3, P4, P5, P6),
 	    const Traced& location,
@@ -354,11 +354,6 @@ namespace xju
     template<class R>
     struct SyscallF0
     {
-	SyscallF0(const char* name, R (*const f)()) throw():
-	    _name(name),
-	    _f(f)
-	{
-	}
 	const char* _name;
 	R (*const _f)();
     };
@@ -367,11 +362,6 @@ namespace xju
     template<class R, class P1>
     struct SyscallF1
     {
-	SyscallF1(const char* name, R (*const f)(P1)) throw():
-	    _name(name),
-	    _f(f)
-	{
-	}
 	const char* _name;
 	R (*const _f)(P1);
     };
@@ -380,11 +370,6 @@ namespace xju
     template<class R, class P1, class P2>
     struct SyscallF2
     {
-	SyscallF2(const char* name, R (*const f)(P1, P2)) throw():
-	    _name(name),
-	    _f(f)
-	{
-	}
 	const char* _name;
 	R (*const _f)(P1, P2);
     };
@@ -393,11 +378,6 @@ namespace xju
     template<class R, class P1, class P2, class P3>
     struct SyscallF3
     {
-	SyscallF3(const char* name, R (*const f)(P1, P2, P3)) throw():
-	    _name(name),
-	    _f(f)
-	{
-	}
 	const char* _name;
 	R (*const _f)(P1, P2, P3);
     };
@@ -406,11 +386,6 @@ namespace xju
     template<class R, class P1, class P2, class P3, class P4>
     struct SyscallF4
     {
-	SyscallF4(const char* name, R (*const f)(P1, P2, P3, P4)) throw():
-	    _name(name),
-	    _f(f)
-	{
-	}
 	const char* _name;
 	R (*const _f)(P1, P2, P3, P4);
     };
@@ -419,11 +394,6 @@ namespace xju
     template<class R, class P1, class P2, class P3, class P4, class P5>
     struct SyscallF5
     {
-	SyscallF5(const char* name, R (*const f)(P1, P2, P3, P4, P5)) throw():
-	    _name(name),
-	    _f(f)
-	{
-	}
 	const char* _name;
 	R (*const _f)(P1, P2, P3, P4, P5);
     };
@@ -432,11 +402,6 @@ namespace xju
     template<class R, class P1, class P2, class P3, class P4, class P5, class P6>
     struct SyscallF6
     {
-	SyscallF6(const char* name, R (*const f)(P1, P2, P3, P4, P5, P6)) throw():
-	    _name(name),
-	    _f(f)
-	{
-	}
 	const char* _name;
 	R (*const _f)(P1, P2, P3, P4, P5, P6);
     };
@@ -845,7 +810,7 @@ namespace xju
 		SyscallFailed)
     {
 	return Syscall0<R>(
-	    SyscallF0<R>(name, f),
+	    {name, f},
 	    retryIfInterrupted,
 	    location,
 	    errorIndicator);
@@ -885,7 +850,7 @@ namespace xju
 		SyscallFailed)
     {
 	return Syscall1<R, P1>(
-	    SyscallF1<R, P1>(name, f),
+	    {name, f},
 	    retryIfInterrupted,
 	    location,
 	    errorIndicator);
@@ -925,7 +890,7 @@ namespace xju
 		SyscallFailed)
     {
 	return Syscall2<R, P1, P2>(
-	    SyscallF2<R, P1, P2>(name, f),
+            {name, f},
 	    retryIfInterrupted,
 	    location,
 	    errorIndicator);
@@ -997,7 +962,7 @@ namespace xju
 		SyscallFailed)
     {
 	return Syscall4<R, P1, P2, P3, P4>(
-	    SyscallF4<R, P1, P2, P3, P4>(name, f),
+	    {name, f},
 	    retryIfInterrupted,
 	    location);
     }
@@ -1034,13 +999,13 @@ namespace xju
 		SyscallFailed)
     {
 	return Syscall5<R, P1, P2, P3, P4, P5>(
-	    SyscallF5<R, P1, P2, P3, P4, P5>(name, f),
+	    {name, f},
 	    retryIfInterrupted,
 	    location);
     }
 
     template<class R, class P1, class P2, class P3, class P4, class P5, class P6>
-    Syscall5<R, P1, P2, P3, P4, P5, P6>
+    Syscall6<R, P1, P2, P3, P4, P5, P6>
     syscall(const char* name,
 	    R (*const f)(P1, P2, P3, P4, P5, P6),
 	    const Traced& location,
@@ -1052,8 +1017,8 @@ namespace xju
 		SyscallInterrupted,
 		SyscallFailed)
     {
-	return Syscall5<R, P1, P2, P3, P4, P5, P6>(
-	    SyscallF6<R, P1, P2, P3, P4, P5, P6>(name, f),
+	return Syscall6<R, P1, P2, P3, P4, P5, P6>(
+	    {name, f},
 	    retryIfInterrupted,
 	    location);
     }

@@ -12,5 +12,5 @@
 
 namespace xju
 {
-SyscallF2<int, pid_t, int> const kill("kill",::kill);
+SyscallF2<int, pid_t, int> const kill={"kill",::kill};
 }

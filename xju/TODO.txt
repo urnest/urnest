@@ -12,6 +12,10 @@ add AbsFile and AbsDir typedefs in xju::path.hh and use them in xju::file::*
 add xju::file::rm,rmdir,stat,stat(dir),ls
 
 x Thread
+  - optional stack size as percent of default to be more cross-platform?
+  - optional rt prio, or prio value? (might be better to create a RTThread
+    class?)
+  
 x Mutex,Lock
 - Condition
 
@@ -33,16 +37,11 @@ io::Output
   - FileOStream
   - FileIOStream
   - TCPListener
-  - TCPSocket
-      - IStream& input()
-      - OStream& output()
-  - UDPSocket
-      IQueue& input();
-        - is a Input
-        - size_t deque(void* message, size_t bytes, Time deadline);
-      OQueue& output();
-        - void enque(void const* message, size_t bytes, Time deadline);
-        - is a Output
+  - TCPSocket : IStream,OStream
+  / UDPSocket
+  - TLSSocket
+    - use pipe+TCPSocket+thread to "run"
+    
   x break up io.hcp into io/xxx with aggregation like snmp.hh
   x pipe()
   - SocketPair

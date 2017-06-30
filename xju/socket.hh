@@ -30,7 +30,7 @@ namespace xju
     extern const SyscallF5<int, int, int, int, void*, socklen_t*> getsockopt;
     extern const SyscallF5<int, int, int, int, const void*, socklen_t>
        setsockopt;
-    extern const SyscallF3<int, int, ::sockaddr_t*, socklen_t*> getsockname;
+    extern const SyscallF3<int, int, ::sockaddr*, socklen_t*> getsockname;
 }
 
 #endif

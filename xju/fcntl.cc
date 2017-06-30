@@ -32,11 +32,11 @@ namespace
 
 namespace xju
 {
-    const SyscallF3<int, const char*, int, mode_t> open(
+    const SyscallF3<int, const char*, int, mode_t> open={
 	"open",
-	open_);
+	open_};
 
 #ifndef __MINGW32__
-    const SyscallF3<int, int, int, long> fcntl1("fcntl", fcntl1_);
+    const SyscallF3<int, int, int, long> fcntl1={"fcntl", fcntl1_};
 #endif
 }

@@ -13,9 +13,8 @@
 
 namespace xju
 {
-const SyscallF1<int,int> inotify_init1=SyscallF1<int,int>(
-  "::inotify_init",::inotify_init1);
-const SyscallF3<int,int,const char*,uint32_t> inotify_add_watch=
-  SyscallF3<int,int,const char*,uint32_t>(
-    "::inotify_add_watch", ::inotify_add_watch);
+const SyscallF1<int,int> inotify_init1={
+  "::inotify_init",::inotify_init1};
+const SyscallF3<int,int,const char*,uint32_t> inotify_add_watch={
+  "::inotify_add_watch", ::inotify_add_watch};
 }
