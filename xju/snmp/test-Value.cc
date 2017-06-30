@@ -153,7 +153,7 @@ void test1() throw()
   // StringValue encoding
   // null string
   {
-    StringValue const x({});
+    StringValue const x("");
     std::vector<uint8_t> y(x.encodedLength(),0U);
     xju::assert_equal(y.size(),2U);
     xju::assert_equal(x.encodeTo(y.begin()),y.end());
@@ -162,6 +162,14 @@ void test1() throw()
   // fred
   {
     StringValue const x(std::vector<uint8_t> {'f','r','e','d'});
+    std::vector<uint8_t> y(x.encodedLength(),0U);
+    xju::assert_equal(y.size(),6U);
+    xju::assert_equal(x.encodeTo(y.begin()),y.end());
+    xju::assert_equal(y,std::vector<uint8_t>{0x04,4,'f','r','e','d'});
+  }
+  // fred
+  {
+    StringValue const x("fred");
     std::vector<uint8_t> y(x.encodedLength(),0U);
     xju::assert_equal(y.size(),6U);
     xju::assert_equal(x.encodeTo(y.begin()),y.end());

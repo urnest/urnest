@@ -21,18 +21,18 @@ std::vector<uint8_t>::iterator encodeLength(
 {
   auto at(begin);
   if (length < 128) {
-    // X.690 Definite Short Form length encoding (described above)
+    // X.690 Definite Short Form length encoding
     *at++=length;
     return at;
   }
-  // X.690 Definite Long Form length encoding (described above)
+  // X.690 Definite Long Form length encoding
   int const lengthBytes=(xju::countSignificantBits(length)+7)/8;
   *at++=0x80|lengthBytes; // how many bytes
   at+=lengthBytes;
   std::vector<uint8_t>::reverse_iterator r(at);
   for(int i=0; i!=lengthBytes; ++i) {
     *r++=length&0xff;
-    length>>8;
+    length>>=8;
   }
   return at;
 }

@@ -30,6 +30,11 @@ StringValue::StringValue(std::vector<uint8_t> && val) throw():
 {
 }
 
+StringValue::StringValue(std::string const& val) throw():
+    StringValue(std::vector<uint8_t>(val.begin(),val.end()))
+{
+}
+
 std::vector<uint8_t>::iterator StringValue::encodeTo(
   std::vector<uint8_t>::iterator begin) const throw()
 {

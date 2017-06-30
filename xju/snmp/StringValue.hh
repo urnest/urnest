@@ -25,6 +25,10 @@ public:
 
   explicit StringValue(std::vector<uint8_t> const& val) throw();
   explicit StringValue(std::vector<uint8_t> && val) throw();
+
+  // copy string byte values verbatim
+  // post: val_.size()==val.size()
+  explicit StringValue(std::string const& val) throw();
   
   std::vector<uint8_t> const val_;
 

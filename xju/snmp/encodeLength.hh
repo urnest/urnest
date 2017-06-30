@@ -19,12 +19,14 @@ namespace xju
 namespace snmp
 {
 
+// encode x as a BER encoded length, as bytes placed onwards from *begin
+// pre: begin... has enough room for encoded form of length
+//
 std::vector<uint8_t>::iterator encodeLength(
   std::vector<uint8_t>::iterator const begin,
-  size_t length) throw();
+  size_t const x) throw();
 
 }
 }
 
 #endif
-
