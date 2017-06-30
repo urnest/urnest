@@ -26,6 +26,10 @@ public:
   explicit Tagged(T const& x):
     _(x) {
   }
+
+  T value() const throw() {
+    return _;
+  }
 };
 template<class T, class Tag>
 std::ostream& operator<<(std::ostream& s, Tagged<T, Tag> const& x) throw()
