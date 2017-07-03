@@ -11,3 +11,6 @@ x add inotify
   - return code for "not found"
   - support manual tags ie twt-c-import-map
 
+- tag-lookup-service -h for usage
+
+- Lookup: throw UnknownSymbol so can pass it on to importSymbolAt

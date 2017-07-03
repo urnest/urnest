@@ -26,8 +26,8 @@
 #include <xju/format.hh>
 #include "xju/Optional.hh"
 
-char const usage[]="-u uri-file tags-file [tags-file...]\n"
-  "  provides hcp::tags::Lookup interface - see Lookup.idl - to tags files, via CORBA uri written to uri-file";
+char const usage[]="-u url-file tags-file [tags-file...]\n"
+  "  provides hcp::tags::Lookup interface - see Lookup.idl - to tags files, via CORBA url written to url-file";
 
 // result.first is uri-file
 // result.second are remaining arguments

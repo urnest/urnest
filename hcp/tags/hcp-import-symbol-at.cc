@@ -16,6 +16,29 @@ bool isAbsolute(Identifier const& identifier) throw()
   return identifier.size()>=2 && identifier[0]==':' && identifier[1]==':';
 }
 
+// get $TAGS_HPATH directories
+std::vector<xju::path::AbsolutePath> getHPath() throw(xju::Exception)
+{
+  try {
+    auto const x(::getenv("TAGS_HPATH"));
+    if (x==0){
+      throw xju::Exception("TAGS_HPATH environment variable is not set",XJU_TRACED);
+    }
+    std::vector<xju::path::AbsFile> result;
+    for(auto d: xju::split(::getenv("TAGS_HPATH"),':')){
+      result.push_back(xju::path::split(d+"/.").first);
+    }
+    return result;
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "get $TAGS_HPATH directories";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+  
 int main(int argc, char* argv[])
 {
   try {
@@ -23,12 +46,12 @@ int main(int argc, char* argv[])
       parseCommandLine(std::vector<std::string>(argv+1, argv+argc)));
 
     if (cmd_line.second.size() != 2) {
-      std::cout << "usage: " << argv[0] 
+      std::cerr << "usage: " << argv[0] 
                 << " [-v] [-t] <input-file> <offset>" << std::endl;
-      std::cout << "-t, trace " << std::endl
+      std::cerr << "-t, trace " << std::endl
                 << "-v, verbose" << std::endl
                 << "\n";
-      std::cout << "note: $TAG_LOOKUP_SERVICE_URI_FILE must locate uri-file of tag-lookup-service to use" << std::endl;
+      std::cerr << "note: $TAG_LOOKUP_SERVICE_URL_FILE must locate url-file of tag-lookup-service to use - see tag-lookup-service" << std::endl;
       return 1;
     }
 
@@ -37,50 +60,26 @@ int main(int argc, char* argv[])
 
     size_t const offset(xju::stringToUInt(cmd_line.second[1]));
     
-    std::string const x(xju::readFile(xju::path::str(inputFile)));
-
     Options const options(cmd_line.first);
 
-    IdentifierRef const identifier(
-      getIdentifierRefAt(x, offset, options.verbose_));
+    std::string const x(xju::file::read(xju::path::str(inputFile)));
 
-    hcp_parser::IRs const irsAtEnd(getIrsAtEnd(x,offset));
-
-    std::pair<std::vector<NamespaceName>,bool> const scope(
-      isAbsolute(identifier)?
-      std::pair<std::vector<NamespaceName>,bool>({},false):
-      getScopeAtEnd(irsAtEnd));
-    
-    // lookup in tag-lookup-service
-    // ... what if not found?
-    xju::path::AbsFile const tagLookupServiceURIfile(
-      xju::path::split(::getenv("TAG_LOOKUP_SERVICE_URI_FILE")));
-    auto const uri(xju::file::read(tagLookupServiceURIfile));
+    xju::path::AbsFile const tagLookupServiceURLfile(
+      xju::path::split(::getenv("TAG_LOOKUP_SERVICE_URL_FILE")));
+    auto const url(xju::file::read(tagLookupServiceURLfile));
     cxy::ORB<xju::Exception> orb("giop:tcp::");
-    cxy::cref<hcp::tags::Lookup> ref(orb,uri);
+    cxy::cref<hcp::tags::Lookup> ref(orb,url);
 
-    hcp::tags::Locations const l(ref->lookupSymbol(fromScope,
-                                                   symbolScope,
-                                                   symbol));
-    if (l.size()==0) {
-      std::cout << "symbol " << identifier
-                << " from scope " << fromScope
-                << " not known to tag-lookup-service at "
-                << uri
-                << std::endl;
-      return 3;
-    }
+    std::cout << hcp::tags::importSymbolAt(x, offset, options, *ref);
     
-
-    // irsAtEnd will include all #includes, so check those for
-    // already mentioned
-
-    
-    // skip over initial comment block if any, then
-    // insert #include <location> and add //impl if in "impl" scope
-    // write updated text to fileName
-
     return 0;
+  }
+  catch(hcp::tags::UnknownSymbol& e) {
+    std::ostringstream s;
+    s << xju::format::join(argv, argv+argc, " ");
+    e.addContext(s.str(), XJU_TRACED);
+    std::cerr << readableRepr(e);
+    return 3;
   }
   catch(xju::Exception& e) {
     std::ostringstream s;
