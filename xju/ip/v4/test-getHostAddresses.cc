@@ -7,10 +7,34 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef XJU_IP_V4_H
-#define XJU_IP_V4_H
-
-#include <xju/ip/v4/Address.hh>
 #include <xju/ip/v4/getHostAddresses.hh>
 
-#endif
+#include <iostream>
+#include <xju/assert.hh>
+
+namespace xju
+{
+namespace ip
+{
+namespace v4
+{
+
+void test1() {
+  xju::assert_equal(getHostAddresses(xju::HostName("localhost")),
+                    {Address(0x7f000001)});
+}
+
+}
+}
+}
+
+using namespace xju::ip::v4;
+
+int main(int argc, char* argv[])
+{
+  unsigned int n(0);
+  test1(), ++n;
+  std::cout << "PASS - " << n << " steps" << std::endl;
+  return 0;
+}
+

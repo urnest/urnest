@@ -1,5 +1,5 @@
-#ifndef _GETADDRINFO_HH
-#define _GETADDRINFO_HH
+#ifndef _GETHOSTADDRESSES_HH
+#define _GETHOSTADDRESSES_HH
 // Copyright (c) 2017 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -11,7 +11,7 @@
 //
 #include <vector>
 #include <xju/ip/v4/Address.hh>
-#include "xju/ip/Port.hh"
+#include "xju/HostName.hh"
 #include <string>
 #include "xju/Exception.hh"
 
@@ -21,18 +21,15 @@ namespace ip
 {
 namespace v4
 {
-// see getaddrinfo manpage for ai_socktype, eg SOCK_STREAM, SOCK_DGRAM
-// see getaddrinfo manpage for ai_protocol, for ip, 0 for above socktypes
-// pre: ai_socktype!=0
-//      hostname.size()
-//      service.size()
+// get IP v4 addresses of specified host
+// pre: hostname != HostName("")
+// post: result.size()
+// post: std::set(result).size()==result.size()
 //
-std::vector<std::pair<xju::ip::v4::Address,xju::ip::Port> > getAddrInfo(
-  std::string const& hostname,
-  std::string const& service,
-  int ai_socktype,
-  int ai_protocol)
+std::vector<xju::ip::v4::Address> getHostAddresses(
+  xju::HostName const& hostname)
   throw(
+    // failure, including unknown host
     xju::Exception);
 
 

@@ -4,6 +4,6 @@
 %tests.tree
 
 %tests.tree == <<
-()+cmd=(test-getAddrInfo.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-getHostAddresses.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 
 ==(.:dir.hcp.list:hcp-split)

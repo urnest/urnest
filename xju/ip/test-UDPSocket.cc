@@ -12,13 +12,12 @@
 #include <iostream>
 #include <xju/assert.hh>
 #include <string>
-#include "xju/ip/v4/getAddrInfo.hh"
+#include "xju/ip/v4/getHostAddresses.hh"
 #include <chrono>
 #include <vector>
 #include <utility>
 #include "xju/next.hh"
 #include "xju/format.hh"
-#include <netinet/ip.h>
 
 namespace xju
 {
@@ -37,17 +36,15 @@ void test1() {
   }
   for(xju::ip::Port p2{xju::next(p1)};p2!=p1+xju::ip::Port(1000);++p2){
     try{
+      xju::ip::v4::Address localhost(
+        xju::ip::v4::getHostAddresses(xju::HostName("localhost"))[0]);
+      
       UDPSocket s2(p2);
+
       std::string const fred("fred");
-      auto const addr1(
-        xju::ip::v4::getAddrInfo("localhost",xju::format::str(p1),
-                                 SOCK_DGRAM,0)[0]);
-      auto const addr2(
-        xju::ip::v4::getAddrInfo("localhost",xju::format::str(p2),
-                                 SOCK_DGRAM,0)[0]);
 
       // good receive
-      s1.sendTo(addr2,
+      s1.sendTo(localhost,p2,
                 fred.c_str(),
                 fred.size(),
                 std::chrono::system_clock::now());
@@ -55,7 +52,7 @@ void test1() {
       auto const rr(
         s2.receive(r.data(),r.size(),
                    std::chrono::system_clock::now()+std::chrono::seconds(1)));
-      xju::assert_equal(rr,std::make_pair(addr1,fred.size()));
+      xju::assert_equal(rr,std::make_pair(std::make_pair(localhost,p1),fred.size()));
       xju::assert_equal(std::string(r.begin(),r.end()),fred);
 
       // timeout
@@ -70,7 +67,7 @@ void test1() {
       }
 
       // buffer too small
-      s1.sendTo(addr2,
+      s1.sendTo(localhost,p2,
                 fred.c_str(),
                 fred.size(),
                 deadline);

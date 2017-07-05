@@ -1,3 +1,5 @@
+#ifndef _XJU_HOSTNAME_HH
+#define _XJU_HOSTNAME_HH
 // Copyright (c) 2017 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -7,10 +9,15 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef XJU_IP_V4_H
-#define XJU_IP_V4_H
+#include "xju/Tagged.hh"
+#include <string>
 
-#include <xju/ip/v4/Address.hh>
-#include <xju/ip/v4/getHostAddresses.hh>
 
+namespace xju
+{
+struct HostNameTag{};
+
+typedef xju::Tagged<std::string,HostNameTag> HostName;
+
+}
 #endif

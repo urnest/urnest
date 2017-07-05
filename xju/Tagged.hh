@@ -67,6 +67,12 @@ bool operator>=(Tagged<T, Tag> const& x, Tagged<T, Tag> const& y) throw()
   return x._ >= y._;
 }
 
+template<class T, class Tag>
+bool operator!=(Tagged<T, Tag> const& x, Tagged<T, Tag> const& y) throw()
+{
+  return x._ != y._;
+}
+
 }
 
 

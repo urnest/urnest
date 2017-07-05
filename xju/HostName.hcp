@@ -7,10 +7,14 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef XJU_IP_V4_H
-#define XJU_IP_V4_H
+#include "xju/Tagged.hh"
+#include <string>
 
-#include <xju/ip/v4/Address.hh>
-#include <xju/ip/v4/getHostAddresses.hh>
 
-#endif
+namespace xju
+{
+struct HostNameTag{};
+
+typedef xju::Tagged<std::string,HostNameTag> HostName;
+
+}
