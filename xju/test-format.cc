@@ -18,6 +18,7 @@
 #include <functional>
 #include <set>
 #include <math.h>
+#include <xju/unix_epoch.hh>
 
 namespace xju
 {
@@ -427,9 +428,9 @@ void test9()
 // time
 void test10()
 {
-  xju::assert_equal(time(xju::unix_epoch()+std::chrono::seconds(3745)),"3745.000000");
-  xju::assert_equal(time(xju::unix_epoch()+std::chrono::microseconds(3745)),"0.003745");
-  xju::assert_equal(time(xju::unix_epoch()+std::seconds(85)+std::chrono::microseconds(3745)),"85.003745");
+  xju::assert_equal(xju::format::time(xju::unix_epoch()+std::chrono::seconds(3745)),"3745.000000");
+  xju::assert_equal(xju::format::time(xju::unix_epoch()+std::chrono::microseconds(3745)),"0.003745");
+  xju::assert_equal(xju::format::time(xju::unix_epoch()+std::chrono::seconds(85)+std::chrono::microseconds(3745)),"85.003745");
 }
 
 }

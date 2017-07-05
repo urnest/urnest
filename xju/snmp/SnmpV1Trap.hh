@@ -13,7 +13,7 @@
 #include <xju/Int.hh>
 #include "xju/snmp/Community.hh"
 #include "xju/snmp/Oid.hh"
-#include "xju/snmp/IPv4AddressValue.hh"
+#include "xju/ip/v4/Address.hh"
 #include "xju/MicroSeconds.hh"
 #include <map>
 #include <memory>
@@ -44,7 +44,7 @@ struct SnmpV1Trap
   SnmpV1Trap(
     Community community,
     Oid trapType,
-    IPv4Address origin,
+    xju::ip::v4::Address origin,
     GenericType genericType,
     SpecificType specificType,
     xju::MicroSeconds timestamp,
@@ -60,7 +60,7 @@ struct SnmpV1Trap
 
   Community community_;
   Oid trapType_;
-  IPv4Address origin_;
+  xju::ip::v4::Address origin_;
   GenericType genericType_;
   SpecificType specificType_;
   xju::MicroSeconds timestamp_;

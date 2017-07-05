@@ -17,7 +17,7 @@ namespace xju
 namespace snmp
 {
 
-IPv4AddressValue::IPv4AddressValue(IPv4Address val) throw():
+IPv4AddressValue::IPv4AddressValue(xju::ip::v4::Address val) throw():
     Value(encodedLengthOfValue(std::vector<uint8_t>({0,0,0,0}))),
   val_(val)
 {
@@ -27,7 +27,11 @@ std::vector<uint8_t>::iterator IPv4AddressValue::encodeTo(
   std::vector<uint8_t>::iterator begin) const throw()
 {
   return encodeOctetString(
-    begin,0x40,{val_[0],val_[1],val_[2],val_[3]});
+    begin,0x40,{
+      (uint8_t)((val_.value()>>24) & 0xff),
+        (uint8_t)((val_.value()>>16) & 0xff),
+        (uint8_t)((val_.value()>> 8) & 0xff),
+        (uint8_t)((val_.value()>> 0) & 0xff)});
 }
 
 std::string IPv4AddressValue::str() const throw()

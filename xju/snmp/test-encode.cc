@@ -80,7 +80,7 @@ void test4() throw()
     SnmpV1Trap t(
       Community("private"),
       Oid(".1.3.6"),
-      IPv4Address({192,168,0,3}),
+      xju::ip::v4::Address((192U<<24)+(168U<<16)+(0U<<8)+3U),
       SnmpV1Trap::GenericType(6),
       SnmpV1Trap::SpecificType(42),
       xju::MicroSeconds(330000),
@@ -110,7 +110,7 @@ void test4() throw()
     SnmpV1Trap t(
       Community("private"),
       Oid(".1.3.6"),
-      IPv4Address({192,168,0,3}),
+      xju::ip::v4::Address((192U<<24)+(168U<<16)+(0U<<8)+3U),
       SnmpV1Trap::GenericType(6),
       SnmpV1Trap::SpecificType(42),
       xju::MicroSeconds(330000),

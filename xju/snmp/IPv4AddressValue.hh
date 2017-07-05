@@ -10,7 +10,7 @@
 #ifndef XJU_SNMP_IPV4ADDRESSVALUE_H
 #define XJU_SNMP_IPV4ADDRESSVALUE_H
 #include "xju/snmp/Value.hh"
-#include "xju/snmp/IPv4Address.hh"
+#include "xju/ip/v4/Address.hh"
 
 namespace xju
 {
@@ -20,9 +20,9 @@ namespace snmp
 class IPv4AddressValue : public Value
 {
 public:
-  explicit IPv4AddressValue(IPv4Address val) throw();
+  explicit IPv4AddressValue(xju::ip::v4::Address val) throw();
 
-  IPv4Address const val_;
+  xju::ip::v4::Address const val_;
 
   // Value::
   virtual std::vector<uint8_t>::iterator encodeTo(
