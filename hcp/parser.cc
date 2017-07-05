@@ -1064,6 +1064,17 @@ PR doubleQuote() throw()
   return doubleQuote;
 }
 
+PR lessThan() throw()
+{
+  static PR result(parseOneOfChars("<"));
+  return result;
+}
+PR greaterThan() throw()
+{
+  static PR result(parseOneOfChars(">"));
+  return result;
+}
+
 PR doubleColon() throw()
 {
   static PR result(parseLiteral("::")+!parseOneOfChars(":"));
@@ -1165,7 +1176,13 @@ PR hashIncludeCommon() throw()
   static PR hashIncludeCommon(
     parseHash()+
     (zeroOrMore()*parseOneOfChars(" \t"))+
-    parseLiteral("include")+
+    parseLiteral("include")+(zeroOrMore()*parseOneOfChars(" \t"))+
+    ((lessThan()+PR(new NamedParser<hcp_ast::TargetOfHashInclude>(
+                      "target of #include",parseUntil(greaterThan())))+
+      greaterThan())|
+     (doubleQuote()+PR(new NamedParser<hcp_ast::TargetOfHashInclude>(
+                         "target of #include",parseUntil(doubleQuote())))+
+      doubleQuote()))+
     parseUntil(parseLiteral("\n")|hashIncludeImplMarker()));
   return hashIncludeCommon;
 }

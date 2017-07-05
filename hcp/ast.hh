@@ -236,6 +236,9 @@ typedef TaggedCompositeItem<HashIncludeTag> HashInclude;
 class HashIncludeImplTag{};
 typedef TaggedCompositeItem<HashIncludeImplTag> HashIncludeImpl;
 
+class TargetOfHashIncludeTag{};
+typedef TaggedCompositeItem<TargetOfHashIncludeTag> TargetOfHashInclude;
+  
 class OtherPreprocessorTag{};
 typedef TaggedCompositeItem<OtherPreprocessorTag> OtherPreprocessor;
 

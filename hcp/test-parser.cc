@@ -625,18 +625,30 @@ void test15()
       root, at, hcp_parser::hashInclude());
     xju::assert_equal(reconstruct(root), "#include <string>\n  ");
     xju::assert_equal(at.atEnd(), true);
+    hcp_ast::IRs::const_iterator k(
+      hcp_ast::find1stInTree(root.items_.begin(),
+                             root.items_.end(),
+                             hcp_ast::isA_<hcp_ast::TargetOfHashInclude>));
+    xju::assert_not_equal(k, root.items_.end());
+    xju::assert_equal(reconstruct(*k),"string");
   }
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache, false);
-    std::string const x("#  include <string>\n  ");
+    std::string const x("#  include \"string\"\n  ");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     
     at = parse(
       root, at, hcp_parser::hashInclude());
-    xju::assert_equal(reconstruct(root), "#  include <string>\n  ");
+    xju::assert_equal(reconstruct(root), "#  include \"string\"\n  ");
     xju::assert_equal(at.atEnd(), true);
+    hcp_ast::IRs::const_iterator k(
+      hcp_ast::find1stInTree(root.items_.begin(),
+                             root.items_.end(),
+                             hcp_ast::isA_<hcp_ast::TargetOfHashInclude>));
+    xju::assert_not_equal(k, root.items_.end());
+    xju::assert_equal(reconstruct(*k),"string");
   }
   try
   {
