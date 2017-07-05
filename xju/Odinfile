@@ -48,4 +48,23 @@ netflow%tests.tree
 
 %test-check_types_related_2_err==test-check_types_related_2.cc+(..%cxx-opts):auto.cxx.exe:err
 
-==(.:dir.hcp.list+hpath='xju':hcp-split)
+%all.hcp.sm==<<
+DeadlineReached.hcp
+getHostName.hcp
+Holder.hcp
+HostName.hcp
+io.hcp
+ip.hcp
+now.hcp
+OStream.hcp
+pipe.hcp
+Subprocess.hcp
+unix_epoch.hcp
+
+==(%all.hcp.sm:hcp.list+hpath='xju':hcp-split)
+
+%test-getHostName==()+cmd=(%test-getHostName.sh) (test-getHostName.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+
+%test-getHostName.sh == ! <<
+#!/bin/sh
+"$1" $(hostname)

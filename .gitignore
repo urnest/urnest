@@ -179,3 +179,5 @@ hcp/getIrsAtEnd.cc
 hcp/getIrsAtEnd.hh
 hcp/scopeAt.cc
 hcp/scopeAt.hh
+xju/getHostName.cc
+xju/getHostName.hh

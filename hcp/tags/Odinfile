@@ -27,6 +27,19 @@ Location.idl
 
 # note some .hcp override idl-generated code, redirecting to xju::path types
 #
+%all.hcp.sm==<<
+AbsolutePath.cdr.hcp
+AbsolutePath.hcp
+augmentRootNamespace.hcp
+DirName.hcp
+FileName.hcp
+importSymbolAt.hcp
+Namespace.hcp
+RelativePath.hcp
+splitSymbol.hcp
+str.hcp
+TagLookupService.hcp
+
 ==(.:dir.hcp.list):hcp-split
 
 %test-Namespace==(test-Namespace.cc)+(%cxx-opts):auto.cxx.exe

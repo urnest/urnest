@@ -8,5 +8,8 @@ v4%tests.tree
 ()+cmd=(test-UDPSocket.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 
+%all.hcp.sm==<<
+Port.hcp
+UDPSocket.hcp
 
-==(.:dir.hcp.list:hcp-split)
+==(%all.hcp.sm:hcp.list:hcp-split)
