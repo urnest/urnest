@@ -28,6 +28,7 @@
 #include "xju/snmp/SnmpV1GetRequest.hh"
 #include "xju/snmp/SnmpV2cGetRequest.hh"
 #include "xju/snmp/SnmpV2cGetNextRequest.hh"
+#include "xju/format.hh"
 
 namespace xju
 {

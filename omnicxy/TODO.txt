@@ -16,6 +16,9 @@ x once hcp-split can understand conversion operators, see //REVISIT in
   - have translateException return std::exception_ptr
   - use std::rethrow_exception to throw the result
 
+* allow retry after PortInUse (with different port; currently retries same
+  port always)
+  
 * update all tests to retry on PortInUse
 
 x omnicxy does not work, need to pass through basename to
@@ -27,6 +30,8 @@ x omnicxy does not work, need to pass through basename to
 - how to get just direct includes (in omnipy backend)? currently picks up nested
 
 - use xju::Thread instead of xju::mt::Thread
+
+- use std::chrono::system_clock::timepoint instead of xju::Time
 
 x hand-code p1 server
 

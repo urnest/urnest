@@ -83,7 +83,7 @@ void test4() throw()
       xju::ip::v4::Address((192U<<24)+(168U<<16)+(0U<<8)+3U),
       SnmpV1Trap::GenericType(6),
       SnmpV1Trap::SpecificType(42),
-      xju::MicroSeconds(330000),
+      std::chrono::milliseconds(330),
       {{Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
             std::shared_ptr<Value const>(new IntValue(2))}});
     std::vector<uint8_t> x(encode(t));
@@ -113,7 +113,7 @@ void test4() throw()
       xju::ip::v4::Address((192U<<24)+(168U<<16)+(0U<<8)+3U),
       SnmpV1Trap::GenericType(6),
       SnmpV1Trap::SpecificType(42),
-      xju::MicroSeconds(330000),
+      std::chrono::milliseconds(330),
       {{Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
             std::shared_ptr<Value const>(new StringValue("Once apon a time there were three little pigs, who each wanted to build a house. The first little pig built a straw house, with straw from the field. The second little pig built a stick house, with sticks from the forest. The third little pig built a brick house, with bricks from the brick works."))}});
     std::vector<uint8_t> x(encode(t));

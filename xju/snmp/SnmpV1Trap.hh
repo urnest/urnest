@@ -14,7 +14,7 @@
 #include "xju/snmp/Community.hh"
 #include "xju/snmp/Oid.hh"
 #include "xju/ip/v4/Address.hh"
-#include "xju/MicroSeconds.hh"
+#include <chrono>
 #include <map>
 #include <memory>
 #include "xju/snmp/Value.hh"
@@ -47,7 +47,7 @@ struct SnmpV1Trap
     xju::ip::v4::Address origin,
     GenericType genericType,
     SpecificType specificType,
-    xju::MicroSeconds timestamp,
+    std::chrono::milliseconds timestamp,
     std::map<Oid, std::shared_ptr<Value const> > vars) throw():
       community_(community),
       trapType_(trapType),
@@ -63,7 +63,7 @@ struct SnmpV1Trap
   xju::ip::v4::Address origin_;
   GenericType genericType_;
   SpecificType specificType_;
-  xju::MicroSeconds timestamp_;
+  std::chrono::milliseconds timestamp_;
 
   std::map<Oid, std::shared_ptr<Value const> > vars_;
   

@@ -11,7 +11,7 @@
 #define XJU_SNMP_TIMETICKSVALUE_H
 
 #include "xju/snmp/Value.hh"
-#include "xju/MicroSeconds.hh"
+#include <chrono>
 
 namespace xju
 {
@@ -21,8 +21,8 @@ namespace snmp
 class TimeTicksValue : public Value
 {
 public:
-  explicit TimeTicksValue(xju::MicroSeconds val) throw();
-  xju::MicroSeconds val_;
+  explicit TimeTicksValue(std::chrono::milliseconds val) throw();
+  std::chrono::milliseconds val_;
 
   // Value::
   virtual std::vector<uint8_t>::iterator encodeTo(

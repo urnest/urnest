@@ -18,19 +18,20 @@ namespace xju
 namespace snmp
 {
 
-TimeTicksValue::TimeTicksValue(xju::MicroSeconds val) throw():
-    Value(encodedLengthOfValue(val.value()/10000)),
+TimeTicksValue::TimeTicksValue(std::chrono::milliseconds val) throw():
+    Value(encodedLengthOfValue(val.count()/10)),
     val_(val) {
   }
 
 std::vector<uint8_t>::iterator TimeTicksValue::encodeTo(
   std::vector<uint8_t>::iterator begin) const throw()
 {
-  return encodeInt(begin,0x43,val_.value()/10000);
+  return encodeInt(begin,0x43,val_.count()/10);
 }
 std::string TimeTicksValue::str() const throw()
 {
-  return xju::format::str(val_);
+  return xju::format::int_(val_.count()/1000)+"."+
+    xju::format::int_(val_.count()%1000/10,2)+"s";
 }
 
 

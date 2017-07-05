@@ -22,6 +22,7 @@
 ()+cmd=(test-validateResponse.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-SnmpV1Table.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-encodeLength.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-TimeTicksValue.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 encodeResponse.gen.hh==()+cmd=(%encodeResponse.gen.sh):exec.output
 
