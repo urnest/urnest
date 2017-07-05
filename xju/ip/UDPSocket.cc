@@ -20,14 +20,14 @@ xju::ip::Port bindToPort(xju::AutoFd const& socket,
 {
   sockaddr_in a;
   a.sin_family=AF_INET;
-  a.sin_port=port.value();
+  a.sin_port=::htons(port.value());
   a.sin_addr.s_addr=INADDR_ANY;
   xju::syscall(xju::bind,XJU_TRACED)(socket.fd(),(sockaddr*)&a,sizeof(a));
   
   socklen_t l(sizeof(a));
   xju::syscall(xju::getsockname,XJU_TRACED)(socket.fd(),(sockaddr*)&a,&l);
   xju::assert_equal(l,sizeof(a));
-  return xju::ip::Port(a.sin_port);
+  return xju::ip::Port(::ntohs(a.sin_port));
 }
 
 }
@@ -95,7 +95,7 @@ void UDPSocket::sendTo(xju::ip::v4::Address const& host,
       if (xju::io::select({(xju::io::Output*)this},deadline).size()) {
         sockaddr_in dest_addr;
         dest_addr.sin_family=AF_INET;
-        dest_addr.sin_port=port.value();
+        dest_addr.sin_port=::htons(port.value());
         dest_addr.sin_addr.s_addr=::htonl(host.value());
         
         auto const bytesSent=xju::syscall(xju::sendto,XJU_TRACED)(
@@ -157,7 +157,7 @@ std::pair<UDPSocket::Sender,size_t> UDPSocket::receive(
         }
         return std::make_pair(
           Sender(xju::ip::v4::Address(::ntohl(sender_addr.sin_addr.s_addr)),
-                 xju::ip::Port(sender_addr.sin_port)),
+                 xju::ip::Port(::ntohs(sender_addr.sin_port))),
           bytesRead);
       }
       std::ostringstream s;
