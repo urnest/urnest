@@ -17,6 +17,8 @@ TODO:
     - Counter64 6
     x BITS... is an octet string interpreted implicitly?
 
+  - decode SnmpV1Trap
+  
   - add snmp v2c
     x SnmpV2cGetRequest, encode
     x SnmpV2cResponse, decode
@@ -31,6 +33,8 @@ TODO:
     - SnmpV2cTable
     - SnmpV2cWalk(?)
     - SnmpV2cGetBulk
+    - SnmpV2cTrap
+    
   - server side:
     x decodeSnmpV1GetRequest
     x encodeResponse(SnmpV1GetRequest,std::vector<Value>)

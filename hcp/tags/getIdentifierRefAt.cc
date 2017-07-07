@@ -41,11 +41,19 @@ IdentifierRef getIdentifierRefAt(std::string const& text,
     }
     try {
       size_t end(offset);
-      while(end<text.size() && isIdentifierChar(text[end])) {
+      while((end<text.size() && isIdentifierChar(text[end]))||
+            (end<(text.size()-1) && text[end]==':' && text[end+1]==':')){
+        if (text[end]==':'){
+          ++end;
+        }
         ++end;
       }
       size_t start(offset);
-      while(start>0 && isIdentifierChar(text[start-1])) {
+      while((start>0 && isIdentifierChar(text[start-1]))||
+            (start>1 && text[start-2]==':' && text[start-1]==':')) {
+        if (text[start-1]==':'){
+          --start;
+        }
         --start;
       }
       if (start==end) {

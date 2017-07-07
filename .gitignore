@@ -181,3 +181,7 @@ hcp/scopeAt.cc
 hcp/scopeAt.hh
 xju/getHostName.cc
 xju/getHostName.hh
+hcp/tags/importSymbolAt.cc
+hcp/tags/importSymbolAt.hh
+hcp/tags/makeRelativeIfPossible.cc
+hcp/tags/makeRelativeIfPossible.hh

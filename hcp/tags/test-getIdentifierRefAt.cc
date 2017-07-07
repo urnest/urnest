@@ -26,6 +26,7 @@ void test1() {
   xju::assert_equal(getIdentifierRefAt("abc_12",5),IdentifierRef("abc_12"));
   xju::assert_equal(getIdentifierRefAt("abc_12",6),IdentifierRef("abc_12"));
   xju::assert_equal(getIdentifierRefAt("a[33]",1),IdentifierRef("a"));
+  xju::assert_equal(getIdentifierRefAt("Q::Z",4),IdentifierRef("Q::Z"));
   try {
     auto const x(getIdentifierRefAt("abc_12",7));
     xju::assert_never_reached();

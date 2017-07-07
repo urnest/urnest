@@ -104,7 +104,7 @@ public:
   {
     return atEnd_;
   }
-  // at irs, last-first
+  // add at-end irs, last-first
   void addAtEndIRs(IRs const& irs) throw()
   {
     if (atEnd_) {

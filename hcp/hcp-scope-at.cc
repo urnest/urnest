@@ -37,12 +37,12 @@ class Options
 {
 public:
   Options(bool verbose, 
-          hcp_parser::Options const& parser_options) throw():
+          bool traceParsing) throw():
     verbose_(verbose),
-    parser_options_(parser_options) {
+    traceParsing_(traceParsing) {
   }
   bool verbose_;
-  hcp_parser::Options parser_options_;
+  bool traceParsing_;
 };
 
   
@@ -52,7 +52,6 @@ std::pair<Options, std::vector<std::string> > parseCommandLine(
     xju::Exception)
 {
   std::vector<std::string>::const_iterator i(x.begin());
-  size_t offset=0;
   bool trace=false;
   bool verbose=false;
   
@@ -73,10 +72,7 @@ std::pair<Options, std::vector<std::string> > parseCommandLine(
     }
   }
   return std::make_pair(
-    Options(verbose,
-            hcp_parser::Options(trace,
-                                hcp_parser::Cache(new hcp_parser::CacheVal()),
-                                true)), 
+    Options(verbose,trace), 
     std::vector<std::string>(i, x.end()));
 }
 
@@ -89,8 +85,15 @@ int main(int argc, char* argv[])
     if (cmd_line.second.size() != 2) {
       std::cout << "usage: " << argv[0] 
                 << " [-v] [-t] <input-file> <offset>" << std::endl;
-      std::cout << "-t, trace " << std::endl
-                << "-v, verbose" << std::endl
+      std::cout << "-t, trace parsing" << std::endl
+                << "-v, verbose output" << std::endl
+                << "\n";
+      std::cout << "reports C++ scope at specified offset, either like:"
+                << std::endl
+                << "  header: x::y::z" << std::endl
+                << "    ... if in \"header\" scope" << std::endl
+                << "  impl: x::y::z" << std::endl
+                << "    ... if in \"impl\" scope" << std::endl
                 << "\n";
       return 1;
     }
@@ -105,14 +108,16 @@ int main(int argc, char* argv[])
     Options const options(cmd_line.first);
 
     hcp_parser::IRs const irsAtEnd(
-      hcp::getIrsAtEnd(x,offset,options.parser_options_));
+      hcp::getIrsAtEnd(x,offset,options.traceParsing_));
 
     if (options.verbose_) {
-      for(auto x:irsAtEnd) {
-        if (x->isA<hcp_ast::CompositeItem>()) {
-          std::cout << x->str() << std::endl;
-        }
-      }
+      std::for_each(irsAtEnd.rbegin(),
+                    irsAtEnd.rend(),
+                    [](hcp_parser::IR const x){
+                      if (x->isA<hcp_ast::CompositeItem>()) {
+                        std::cout << x->str() << std::endl;
+                      }
+                    });
     }
 
     std::pair<std::vector<std::string>,bool> const scope(

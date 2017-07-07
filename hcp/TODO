@@ -1,3 +1,11 @@
+- trace should go to stderr
+
+- reorg
+  - want minimum in hcp to get to hcp-split?
+  - move tags out to urnest/cctags?
+  - where to put editing/language tools?
+  - split parser into generic parser and c++/hcp specific
+  
 - handle enum/scoped enum with fixed type
 
 - handle using base class method/member

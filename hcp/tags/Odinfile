@@ -39,8 +39,9 @@ RelativePath.hcp
 splitSymbol.hcp
 str.hcp
 TagLookupService.hcp
+makeRelativeIfPossible.hcp
 
-==(.:dir.hcp.list):hcp-split
+==(%all.hcp.sm:hcp.list):hcp-split
 
 %test-Namespace==(test-Namespace.cc)+(%cxx-opts):auto.cxx.exe
 %test-splitSymbol==(test-splitSymbol.cc)+(%cxx-opts):auto.cxx.exe
@@ -54,3 +55,49 @@ TagLookupService.hcp
 ()+cmd=(test-getIdentifierRefAt.cc+(%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(%test-augmentRootNamespace)+cmd=(../test-hcp-tags/test-1.json)+cmd=(../test-hcp-tags/test-4.json):exec.output
 ()+cmd=(%test-TagLookupService):exec.output
+()+cmd=(test-makeRelativeIfPossible.cc+(%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(%test-importSymbolAt)+cmd=(%test-importSymbolAt-x)+cmd=(%test-importSymbolAt-y)+cmd=(%test-importSymbolAt-z)+cmd=(%test-importSymbolAt-a)+cmd=(%test-importSymbolAt-x2)+cmd=(%test-importSymbolAt-y2):exec.output
+
+%test-importSymbolAt==test-importSymbolAt.cc+(%cxx-opts):auto.cxx.exe
+
+%test-importSymbolAt-x==<<
+class A : class B { F c;
+  void c() { Q::Z z; }
+};
+
+%test-importSymbolAt-y==<<
+#include <B.hh>
+class A : class B { F c;
+  void c() { Q::Z z; }
+};
+
+%test-importSymbolAt-z==<<
+#include <B.hh>
+#include </d1/F.hh>
+class A : class B { F c;
+  void c() { Q::Z z; }
+};
+
+%test-importSymbolAt-a==<<
+#include <B.hh>
+#include </d1/F.hh>
+#include <Q/Z.hh> //impl
+class A : class B { F c;
+  void c() { Q::Z z; }
+};
+
+%test-importSymbolAt-x2==<<
+// abstract
+//
+class A : class B { F c;
+  void c() { Q::Z z; }
+};
+
+%test-importSymbolAt-y2==<<
+// abstract
+//
+#include <B.hh>
+class A : class B { F c;
+  void c() { Q::Z z; }
+};
+

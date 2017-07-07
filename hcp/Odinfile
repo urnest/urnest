@@ -18,7 +18,11 @@ test-hcp-tags%all.tree
 %opts == <<
 +(%cxx-opts)
 
-==(.:dir.hcp.list:hcp-split)
+%all.hcp.sm==<<
+getIrsAtEnd.hcp
+scopeAt.hcp
+
+==(%all.hcp.sm:hcp.list:hcp-split)
 
 %test-parser == test-parser.cc+(%opts):auto.cxx.exe
 

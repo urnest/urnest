@@ -16,13 +16,20 @@
 namespace hcp
 {
 
-// parse hcp up to offset as hcp, return IRs to that point
-// - parse uses parser_options
+// parse hcp up to offset as hcp, return IRs to that point in reverse order
+// - optionally trace parsing to stdout
 hcp_parser::IRs getIrsAtEnd(std::string const& hcp,
                             size_t offset,
-                            hcp_parser::Options const& parser_options) throw(
+                            bool traceParsing) throw(
                               xju::Exception)
 {
+  hcp_parser::Cache cache(new hcp_parser::CacheVal());
+  
+  hcp_parser::Options parser_options(
+    traceParsing,
+    cache,
+    true);
+  
   hcp_parser::ParseResult const r(
     hcp_parser::file()->parse(
       hcp_parser::I(hcp.begin(), hcp.begin()+offset),

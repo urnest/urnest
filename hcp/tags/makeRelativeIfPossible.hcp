@@ -1,0 +1,52 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <string>
+#include "hcp/tags/AbsolutePath.hh"
+#include <vector>
+#include "xju/Optional.hh" //impl
+#include "xju/path.hh" //impl
+#include <algorithm> //impl
+
+
+namespace hcp
+{
+namespace tags
+{
+
+std::string makeRelativeIfPossible(
+  std::pair<xju::path::AbsolutePath,xju::path::FileName> const& abs,
+  std::vector<xju::path::AbsolutePath> const& searchPath) throw()
+{
+  auto const directory(abs.first);
+  xju::Optional<xju::path::AbsolutePath> longestPrefix;
+  for(auto const p:searchPath){
+    if (p.size()<=directory.size()){
+      auto const m(std::mismatch(p.begin(),p.end(),directory.begin()).first);
+      if (m==p.end()){
+        if (!longestPrefix.valid()||
+            (p.size()>longestPrefix.value().size())){
+          longestPrefix=p;
+        }
+      }
+    }
+  }
+  if (longestPrefix.valid()){
+    return xju::path::str(
+      std::make_pair(xju::path::RelativePath(
+                       std::vector<xju::path::DirName>(
+                         directory.begin()+longestPrefix.value().size(),
+                         directory.end())),
+                     abs.second));
+  }
+  return xju::path::str(abs);
+}
+
+}
+}

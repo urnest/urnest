@@ -14,3 +14,12 @@ x add inotify
 - tag-lookup-service -h for usage
 
 - Lookup: throw UnknownSymbol so can pass it on to importSymbolAt
+
+- Location generate file+line as pair, so can typedef to hcp:::path::AbsFile
+
+- scopeAt should return std::pair<std::vector<UnqualifiedSymbol>,bool>
+  with UnqualifiedSymbol a base class for NamespaceName,ClassName,EnumName
+  - similarly splitSymbol should return std::vector<UnqualifiedSymbol>
+  - or something like that
+  - simplifies importSymbolAt
+  - is UnqualifiedSymbol just Identifier?

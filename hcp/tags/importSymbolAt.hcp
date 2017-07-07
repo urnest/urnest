@@ -9,18 +9,49 @@
 //
 #include "xju/Exception.hh"
 #include <string>
-#include <alogirthm>
 #include <utility>
 #include <unistd.h>
 #include "hcp/tags/Lookup.hh"
 #include <vector>
 #include "hcp/tags/AbsolutePath.hh"
 #include <sstream> //impl
+#include <hcp/tags/makeRelativeIfPossible.hh> //impl
+#include <hcp/ast.hh> //impl
+#include <hcp/tags/IdentifierRef.hh> //impl
+#include <hcp/tags/getIdentifierRefAt.hh> //impl
+#include <hcp/parser.hh> //impl
+#include <hcp/getIrsAtEnd.hh> //impl
+#include "hcp/parser.hh" //impl
+#include "hcp/tags/splitSymbol.hh" //impl
+#include "hcp/scopeAt.hh" //impl
+#include <algorithm> //impl
+#include "xju/format.hh" //impl
 
 namespace hcp
 {
 namespace tags
 {
+namespace
+{
+std::string targetOfHashInclude(
+  hcp_ast::CompositeItem const& hashIncludeItem) throw()
+{
+  hcp_ast::IRs::const_iterator k(
+    hcp_ast::find1stInTree(hashIncludeItem.items_.begin(),
+                           hashIncludeItem.items_.end(),
+                           hcp_ast::isA_<hcp_ast::TargetOfHashInclude>));
+  xju::assert_not_equal(k, hashIncludeItem.items_.end());
+  return reconstruct(*k);
+}
+bool isAbsolute(IdentifierRef const& x) throw(){
+  return (x._.size()>=2) &&
+    (std::string(x._.begin(),x._.begin()+2)=="::");
+}
+
+}
+
+
+
 class UnknownSymbol : public xju::Exception
 {
 public:
@@ -34,48 +65,11 @@ public:
   }
 };
 
-namespace
-{
-std::string targetOfHashInclude(hcp_ast::Item const& hashIncludeItem) throw(){
-    hcp_ast::IRs::const_iterator k(
-      hcp_ast::find1stInTree(hashIncludeItem.items_.begin(),
-                             hashIncludeItem.items_.end(),
-                             hcp_ast::isA_<hcp_ast::TargetOfHashInclude>));
-    xju::assert_not_equal(k, hashIncludeItem.items_.end());
-    return reconstruct(*k);
-}
-std::string makeRelativeIfPossible(
-  xju::path::AboslutePath const& directory,
-  std::vector<xju::path::AbsolutePath> const& hpath) throw()
-{
-  xju::Optional longestPrefix;
-  for(auto const p:hpath){
-    if (p.size()<=directory.size()){
-      auto const m(std::mismatch(p.begin(),p.end(),
-                                 directory.begin(),directory.end()).first==
-                   p.end()){
-        if (!longestPrefix.valid()||
-            (p.size()>longestPrefix.value().size())){
-          longestPrefix=p;
-        }
-      }
-    }
-  }
-  if (p.valid()){
-    return p.value();
-  }
-  return directory;
-}
-
-}
-
-
 // return x adjusted to include the header defining the
 // symbol at specified offset, parsing x with verboseLogging if specified
 std::string importSymbolAt(
   std::string const& x,
   size_t const offset,
-  bool verboseLogging,
   hcp::tags::Lookup& tagLookupService,
   std::vector<xju::path::AbsolutePath> const& hpath) throw(
                              UnknownSymbol,
@@ -83,31 +77,43 @@ std::string importSymbolAt(
 {
   try {
     IdentifierRef const identifier(
-      getIdentifierRefAt(x, offset, verboseLogging));
-    
-    hcp_parser::IRs const irsAtEnd(getIrsAtEnd(x,offset));
-    
-    std::pair<std::vector<NamespaceName>,bool> const scope(
+      getIdentifierRefAt(x, offset));
+
+    hcp_parser::IRs const rirsAtEnd(getIrsAtEnd(x,offset,false));
+
+    auto const scope_(scopeAt(rirsAtEnd));
+    std::pair<std::vector<NamespaceName>,bool> scope({},scope_.second);
+    std::transform(scope_.first.begin(),scope_.first.end(),
+                   std::back_inserter(scope.first),
+                   [](std::string const& x){return NamespaceName(x);});
+    auto const fromScope(
       isAbsolute(identifier)?
-      std::pair<std::vector<NamespaceName>,bool>({},false):
-      getScopeAtEnd(irsAtEnd));
+      std::vector<NamespaceName>{}:
+      scope.first);
+    auto const ss(splitSymbol(identifier.value()));
     
-    hcp::tags::Locations const l(tagLookupService.lookupSymbol(fromScope,
-                                                               symbolScope,
-                                                               symbol));
-    if (l.size()==0) {
-      std::ostringstream s;
+    auto const l(tagLookupService.lookupSymbol(fromScope,
+                                               ss.first,
+                                               ss.second));
+    if (l.size()==0) { 
+     std::ostringstream s;
       s << "symbol " << identifier
-        << " from scope " << fromScope
+        << " from scope "
+        << xju::format::join(fromScope.begin(),fromScope.end(),"::")
         << " not known to tag-lookup-service";
       throw UnknownSymbol(xju::Exception(s.str(),XJU_TRACED));
     }
     
     // turn location into relative path if $TAGS_HPATH locates it
-    std::string const p{makeRelativeIfPossible(l[0].directory,hpath)};
-    std::string const includePath(xju::path::str(std::make_pair(p,l[1])));
+    std::string const includeTarget(
+      makeRelativeIfPossible(
+        std::make_pair(l[0].directory,l[0].file),hpath));
+
     
-    hcp_ast::I insertAt(x.begin());
+    hcp_ast::I insertAt(x.begin(),x.end());
+
+    hcp_parser::IRs irsAtEnd(rirsAtEnd.rbegin(),rirsAtEnd.rend());
+    
     auto i(irsAtEnd.begin());
     // skip over initial comment block if any, then
     if (i!=irsAtEnd.end() &&
@@ -120,33 +126,41 @@ std::string importSymbolAt(
     while(i!=irsAtEnd.end()){
       auto const j(std::find_if(i,irsAtEnd.end(),
                                 [](hcp_ast::IR const x){
-                                  (*x).isA<hcp_ast::HashInclude>()||
+                                  return (*x).isA<hcp_ast::HashInclude>()||
                                     (*x).isA<hcp_ast::HashIncludeImpl>();
                                 }));
       if (j != irsAtEnd.end()){
         auto const item(*j);
-        if (item.isA<hcp_ast::HashInclude>()){
-          if (p==targetOfHashInclude(item)){
+        if (item->isA<hcp_ast::HashInclude>()){
+          std::string const existing(targetOfHashInclude(
+                                       item->asA<hcp_ast::CompositeItem>()));
+          if (includeTarget==existing){
             // already included
             return x;
           }
         }
-        else if (scope.second && item.isA<hcp_ast::HashIncludeImpl>()){
-          if (p==targetOfHashInclude(item)){
+        else if (scope.second && item->isA<hcp_ast::HashIncludeImpl>()){
+          std::string const existing(targetOfHashInclude(
+                                       item->asA<hcp_ast::CompositeItem>()));
+          if (includeTarget==existing){
             // already included
             return x;
           }
         }
         insertAt=(*j)->end(); // remember last #include
+        i=xju::next(j);
       }
-      i=j;
+      else{
+        i=j;
+      }
     }
     
     // insert #include <location> and add //impl if in "impl" scope
     std::string const hashInclude(
       scope.second?
-      "#include <"+includePath+"> //impl\n":
-      "#include <"+includePath+">\n");
+      "#include <"+includeTarget+"> //impl\n":
+      "#include <"+includeTarget+">\n");
+#include "xju/next.hh"
 
     return std::string(x.begin(),insertAt.x_)+hashInclude+
       std::string(insertAt.x_,x.end());

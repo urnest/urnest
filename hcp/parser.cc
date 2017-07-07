@@ -576,16 +576,19 @@ public:
   }
   
   // Parser::
-  virtual ParseResult parse_(I const at, Options const& o) throw() 
+  virtual ParseResult parse_(I const at, Options const& options) throw() 
   {
     PV result(IRs(), at);
     while(true) {
-      ParseResult const re(x_->parse_(result.second, o));
+      ParseResult const re(x_->parse_(result.second, options));
       if (!re.failed()) {
         return ParseResult(result);
       }
-      ParseResult const r(match_->parse_(result.second, o));
+      ParseResult r(match_->parse_(result.second, options));
       if (r.failed()) {
+        if (options.irsAtEnd_) {
+          r.addAtEndIRs(result.first);
+        }
         return r;
       }
       PV const x(*r);
