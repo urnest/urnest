@@ -1,5 +1,3 @@
-#ifndef _XJU_UNIX_EPOCH_HH
-#define _XJU_UNIX_EPOCH_HH
 // Copyright (c) 2015 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -9,6 +7,9 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
+#ifndef _XJU_UNIX_EPOCH_HH
+#define _XJU_UNIX_EPOCH_HH
+
 #include <chrono>
 namespace xju
 {

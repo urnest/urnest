@@ -59,7 +59,6 @@ now.hcp
 OStream.hcp
 pipe.hcp
 Subprocess.hcp
-unix_epoch.hcp
 
 ==%all.hcp.sm:hcp.list+hpath='xju':hcp-split
 
