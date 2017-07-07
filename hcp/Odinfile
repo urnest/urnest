@@ -22,7 +22,7 @@ test-hcp-tags%all.tree
 getIrsAtEnd.hcp
 scopeAt.hcp
 
-==(%all.hcp.sm:hcp.list:hcp-split)
+==%all.hcp.sm:hcp.list:hcp-split
 
 %test-parser == test-parser.cc+(%opts):auto.cxx.exe
 

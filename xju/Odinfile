@@ -61,7 +61,7 @@ pipe.hcp
 Subprocess.hcp
 unix_epoch.hcp
 
-==(%all.hcp.sm:hcp.list+hpath='xju':hcp-split)
+==%all.hcp.sm:hcp.list+hpath='xju':hcp-split
 
 %test-getHostName==()+cmd=(%test-getHostName.sh) (test-getHostName.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 

@@ -7,14 +7,11 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include "hcp/tags/getIdentifierRefAt.hh"
-#include <hcp/getIrsAtEnd.hh>
+#include <hcp/tags/importSymbolAt.hh>
 #include <hcp/scopeAt.hh>
-
-bool isAbsolute(Identifier const& identifier) throw()
-{
-  return identifier.size()>=2 && identifier[0]==':' && identifier[1]==':';
-}
+#include <vector>
+#include "hcp/tags/AbsolutePath.hh"
+#include "xju/Exception.hh"
 
 // get $TAGS_HPATH directories
 std::vector<xju::path::AbsolutePath> getHPath() throw(xju::Exception)
@@ -70,7 +67,7 @@ int main(int argc, char* argv[])
     cxy::ORB<xju::Exception> orb("giop:tcp::");
     cxy::cref<hcp::tags::Lookup> ref(orb,url);
 
-    std::cout << hcp::tags::importSymbolAt(x, offset, options, *ref);
+    std::cout << hcp::tags::importSymbolAt(x, offset, *ref);
     
     return 0;
   }

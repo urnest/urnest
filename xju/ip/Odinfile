@@ -12,4 +12,4 @@ v4%tests.tree
 Port.hcp
 UDPSocket.hcp
 
-==(%all.hcp.sm:hcp.list:hcp-split)
+==%all.hcp.sm:hcp.list:hcp-split

@@ -41,7 +41,7 @@ str.hcp
 TagLookupService.hcp
 makeRelativeIfPossible.hcp
 
-==(%all.hcp.sm:hcp.list):hcp-split
+==%all.hcp.sm:hcp.list:hcp-split
 
 %test-Namespace==(test-Namespace.cc)+(%cxx-opts):auto.cxx.exe
 %test-splitSymbol==(test-splitSymbol.cc)+(%cxx-opts):auto.cxx.exe

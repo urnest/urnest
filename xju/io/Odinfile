@@ -14,4 +14,4 @@ OStream.hcp
 Output.hcp
 select.hcp
 
-==(%all.hcp.sm:hcp.list+hpath='xju/io':hcp-split)
+==%all.hcp.sm:hcp.list+hpath='xju/io':hcp-split

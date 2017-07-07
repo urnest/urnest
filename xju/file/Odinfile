@@ -13,4 +13,4 @@ rm.hcp
 touch.hcp
 write.hcp
 
-==(%all.hcp.sm:hcp.list+hpath='xju/file':hcp-split)
+==%all.hcp.sm:hcp.list+hpath='xju/file':hcp-split
