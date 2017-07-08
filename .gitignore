@@ -185,3 +185,7 @@ hcp/tags/importSymbolAt.cc
 hcp/tags/importSymbolAt.hh
 hcp/tags/makeRelativeIfPossible.cc
 hcp/tags/makeRelativeIfPossible.hh
+./hcp/tags/makeRelativeIfPossible.hh
+./hcp/tags/AbsolutePath.hh
+./hcp/tags/makeRelativeIfPossible.cc
+./hcp/tags/AbsolutePath.cc
