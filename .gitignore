@@ -189,3 +189,5 @@ hcp/tags/makeRelativeIfPossible.hh
 ./hcp/tags/AbsolutePath.hh
 ./hcp/tags/makeRelativeIfPossible.cc
 ./hcp/tags/AbsolutePath.cc
+hcp/tags/AbsolutePath.cc
+hcp/tags/AbsolutePath.hh
