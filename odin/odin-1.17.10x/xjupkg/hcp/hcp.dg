@@ -2,7 +2,7 @@
 # to add targets to hcp-split all .hcp files in current directory, leaving them
 # as .hh and .cc files in the current directory, add to ./Odinfile
 #
-#   == (.:hcp-split-virdir-specs:cat)
+#   == (.:hcp.list:hcp-split)
 #
 # to split just one .hcp file, producing a derived directory with .hh and
 # .cc files in it: xxx.hcp :hcp-split

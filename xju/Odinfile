@@ -48,19 +48,18 @@ netflow%tests.tree
 
 %test-check_types_related_2_err==test-check_types_related_2.cc+(..%cxx-opts):auto.cxx.exe:err
 
-%all.hcp.sm==<<
-DeadlineReached.hcp
-getHostName.hcp
-Holder.hcp
-HostName.hcp
-io.hcp
-ip.hcp
-now.hcp
-OStream.hcp
-pipe.hcp
-Subprocess.hcp
+%hcp-gen==%hcp-gen.vir_dir_specs:list:cat:vir_dir
 
-==%all.hcp.sm:hcp.list+hpath='xju':hcp-split
+%hcp-gen.vir_dir_specs==<<
+%hcp-local-spec
+%hcp-subdir-spec
+
+%hcp-local-spec==.:dir.hcp.list+hpath='xju':hcp-split-virdir-specs:cat
+
+%hcp-subdir-spec==<<
+%io==io%hcp-gen
+%ip==ip%hcp-gen
+%file==file%hcp-gen
 
 %test-getHostName==()+cmd=(%test-getHostName.sh) (test-getHostName.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 

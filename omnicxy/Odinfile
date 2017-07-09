@@ -6,4 +6,4 @@ proto%all.tree
 
 
 %cxx-opts==<<
-+(..%cxx-opts)+inc_sp=(.)+lib='omniDynamic4' 'omniORB4' 'omnithread'
++(..%cxx-opts)+lib='omniDynamic4' 'omniORB4' 'omnithread'

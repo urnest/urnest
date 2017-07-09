@@ -7,6 +7,14 @@ hcp%all.tree
 
 %cxx-opts==<<
 +debug
++inc_sp=(%hcp-gen)
 +inc_sp=(.)
++inc_sp=(omnicxy)
 +inc_sp=(/usr/include/freetype2)
 +ld_flags=-lpthread
+
+%hcp-gen==%hcp-gen.virdir_spec:vir_dir
+
+%hcp-gen.virdir_spec == <<
+%xju==xju%hcp-gen
+%hcp==hcp%hcp-gen

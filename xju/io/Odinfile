@@ -6,12 +6,5 @@
 %tests.tree==<<
 ()+cmd=(test-FileObserver.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
-%all.hcp.sm==<<
-FileObserver.hcp
-Input.hcp
-IStream.hcp
-OStream.hcp
-Output.hcp
-select.hcp
+%hcp-gen==.:dir.hcp.list+hpath='xju/io':hcp-split-virdir-specs:cat:vir_dir
 
-==%all.hcp.sm:hcp.list+hpath='xju/io':hcp-split

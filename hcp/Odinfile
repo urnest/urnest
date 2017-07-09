@@ -18,11 +18,16 @@ test-hcp-tags%all.tree
 %opts == <<
 +(%cxx-opts)
 
-%all.hcp.sm==<<
-getIrsAtEnd.hcp
-scopeAt.hcp
+%hcp-gen==%hcp-gen.vir_dir_specs:list:cat:vir_dir
 
-==%all.hcp.sm:hcp.list:hcp-split
+%hcp-gen.vir_dir_specs==<<
+%hcp-local-spec
+%hcp-subdir-spec
+
+%hcp-local-spec==.:dir.hcp.list+hpath='hcp':hcp-split-virdir-specs:cat
+
+%hcp-subdir-spec==<<
+%tags==./tags%hcp-gen
 
 %test-parser == test-parser.cc+(%opts):auto.cxx.exe
 

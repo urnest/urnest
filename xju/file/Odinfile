@@ -5,12 +5,4 @@
 
 %tests.tree==<<
 
-%all.hcp.sm==<<
-mkdir.hcp
-read.hcp
-rename.hcp
-rm.hcp
-touch.hcp
-write.hcp
-
-==%all.hcp.sm:hcp.list+hpath='xju/file':hcp-split
+%hcp-gen==.:dir.hcp.list+hpath='xju/file':hcp-split-virdir-specs:cat:vir_dir

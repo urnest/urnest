@@ -6,8 +6,5 @@
 %tests.tree == <<
 ()+cmd=(test-getHostAddresses.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 
-%all.hcp.sm==<<
-Address.hcp
-getHostAddresses.hcp
+%hcp-gen==.:dir.hcp.list+hpath='xju/ip/v4':hcp-split-virdir-specs:cat:vir_dir
 
-==%all.hcp.sm:hcp.list:hcp-split
