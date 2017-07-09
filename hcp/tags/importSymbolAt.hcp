@@ -26,7 +26,7 @@
 #include "hcp/scopeAt.hh" //impl
 #include <algorithm> //impl
 #include "xju/format.hh" //impl
-
+#include <xju/endsWith.hh> //impl
 namespace hcp
 {
 namespace tags
@@ -47,7 +47,14 @@ bool isAbsolute(IdentifierRef const& x) throw(){
   return (x._.size()>=2) &&
     (std::string(x._.begin(),x._.begin()+2)=="::");
 }
+std::string changeExtensionToHH(std::string const& fileName) throw() {
+  if (xju::endsWith(fileName,std::string(".hcp"))){
+    return std::string(fileName.begin(),fileName.end()-4)+".hh";
+  }
+  return fileName;
+}
 
+  
 }
 
 
@@ -66,20 +73,21 @@ public:
 };
 
 // return x adjusted to include the header defining the
-// symbol at specified offset, parsing x with verboseLogging if specified
+// symbol at specified offset, parsing x with tracing if specified
 std::string importSymbolAt(
   std::string const& x,
   size_t const offset,
   hcp::tags::Lookup& tagLookupService,
-  std::vector<xju::path::AbsolutePath> const& hpath) throw(
-                             UnknownSymbol,
-                             xju::Exception)
+  std::vector<xju::path::AbsolutePath> const& hpath,
+  bool const traceParsing) throw(
+    UnknownSymbol,
+    xju::Exception)
 {
   try {
     IdentifierRef const identifier(
       getIdentifierRefAt(x, offset));
 
-    hcp_parser::IRs const rirsAtEnd(getIrsAtEnd(x,offset,false));
+    hcp_parser::IRs const rirsAtEnd(getIrsAtEnd(x,offset,traceParsing));
 
     auto const scope_(scopeAt(rirsAtEnd));
     std::pair<std::vector<NamespaceName>,bool> scope({},scope_.second);
@@ -106,8 +114,9 @@ std::string importSymbolAt(
     
     // turn location into relative path if $TAGS_HPATH locates it
     std::string const includeTarget(
-      makeRelativeIfPossible(
-        std::make_pair(l[0].directory,l[0].file),hpath));
+      changeExtensionToHH(
+        makeRelativeIfPossible(
+          std::make_pair(l[0].directory,l[0].file),hpath)));
 
     
     hcp_ast::I insertAt(x.begin(),x.end());

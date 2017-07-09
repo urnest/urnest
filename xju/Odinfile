@@ -13,6 +13,7 @@ ip%tests.tree
 ()+cmd=(test-check_types_related.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-countSignificantBits.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=test '-s' (%test-check_types_related_2_err):exec.output
+()+cmd=(test-endsWith.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-EventClient.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-Exception.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-file.cc+(..%cxx-opts):auto.cxx.exe):exec.output
@@ -34,6 +35,8 @@ ip%tests.tree
 ()+cmd=(test-mt.cc+(..%cxx-opts)+ld_flags=-lpthread:auto.cxx.exe):exec.output
 ()+cmd=(test-path.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-pipe.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-split.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-startsWith.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-stringToDouble.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-stringToInt.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-stringToTime.cc+(..%cxx-opts):auto.cxx.exe):exec.output
