@@ -1,0 +1,35 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <vector>
+#include <algorithm>
+#include "xju/next.hh"
+
+
+namespace xju
+{
+template<class T>
+std::vector<T> split(T const& x,
+                     typename T::value_type const& delimeter) throw(){
+  std::vector<T> result;
+  auto i=std::begin(x);
+  auto j=i;
+  for(i=std::find(j,x.end(),delimeter);
+      i!=std::end(x);
+      i=std::find(j,x.end(),delimeter)){
+    result.push_back(T(j,i));
+    j=xju::next(i);
+  }
+  result.push_back(T(j,i));
+  return result;
+}
+
+}
+
+

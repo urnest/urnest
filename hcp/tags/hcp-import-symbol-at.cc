@@ -12,6 +12,17 @@
 #include <vector>
 #include "hcp/tags/AbsolutePath.hh"
 #include "xju/Exception.hh"
+#include <stdlib.h>
+#include <xju/file/read.hh>
+#include <sstream>
+#include <utility>
+#include <iostream>
+#include <xju/stringToUInt.hh>
+#include <cxy/ORB.hh>
+#include "hcp/tags/Lookup.hh"
+#include "hcp/tags/Lookup.cref.hh"
+#include <xju/format.hh>
+#include <xju/split.hh>
 
 // get $TAGS_HPATH directories
 std::vector<xju::path::AbsolutePath> getHPath() throw(xju::Exception)
@@ -21,8 +32,8 @@ std::vector<xju::path::AbsolutePath> getHPath() throw(xju::Exception)
     if (x==0){
       throw xju::Exception("TAGS_HPATH environment variable is not set",XJU_TRACED);
     }
-    std::vector<xju::path::AbsFile> result;
-    for(auto d: xju::split(::getenv("TAGS_HPATH"),':')){
+    std::vector<xju::path::AbsolutePath> result;
+    for(auto d: xju::split(std::string(::getenv("TAGS_HPATH")),':')){
       result.push_back(xju::path::split(d+"/.").first);
     }
     return result;
@@ -35,6 +46,60 @@ std::vector<xju::path::AbsolutePath> getHPath() throw(xju::Exception)
   }
 }
 
+struct Options {
+  Options(bool traceParsing) throw():
+      traceParsing_(traceParsing) {
+  }
+  bool const traceParsing_;
+};
+
+// get tag lookup service - see tag-lookup-service.cc - URL from
+// file
+std::string getTagLookupServiceURL() throw(
+  xju::Exception) {
+  try {
+    if (::getenv("TAG_LOOKUP_SERVICE_URL_FILE")==0) {
+      throw xju::Exception("TAG_LOOKUP_SERVICE_URL_FILE environment is not set",XJU_TRACED);
+    }
+    xju::path::AbsFile const tagLookupServiceURLfile(
+      xju::path::split(::getenv("TAG_LOOKUP_SERVICE_URL_FILE")));
+    auto const url(xju::file::read(tagLookupServiceURLfile));
+    return url;
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "get tag-lookup-service URL from file located by $TAG_LOOKUP_SERVICE_URL_FILE";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+
+// result.second are remaining arguments
+std::pair<Options, std::vector<std::string> > parseCommandLine(
+  std::vector<std::string> const& x) throw(
+    xju::Exception)
+{
+  std::vector<std::string>::const_iterator i(x.begin());
+  bool trace=false;
+  
+  while((i != x.end()) && ((*i)[0]=='-')) {
+    if ((*i)=="-t") {
+      trace=true;
+      ++i;
+    }
+    else {
+      std::ostringstream s;
+      s << "unknown option " << (*i)
+        << " (only know -t)";
+      throw xju::Exception(s.str(), XJU_TRACED);
+    }
+  }
+  return std::make_pair(
+    Options(trace), 
+    std::vector<std::string>(i, x.end()));
+}
+
   
 int main(int argc, char* argv[])
 {
@@ -44,14 +109,19 @@ int main(int argc, char* argv[])
 
     if (cmd_line.second.size() != 2) {
       std::cerr << "usage: " << argv[0] 
-                << " [-v] [-t] <input-file> <offset>" << std::endl;
-      std::cerr << "-t, trace " << std::endl
-                << "-v, verbose" << std::endl
+                << " [-t] <input-file> <offset>" << std::endl;
+      std::cerr << "-t, trace parsing " << std::endl
                 << "\n";
       std::cerr << "note: $TAG_LOOKUP_SERVICE_URL_FILE must locate url-file of tag-lookup-service to use - see tag-lookup-service" << std::endl;
+      std::cerr << "note: $TAGS_HPATH specifies search path for headers" << std::endl;
+      std::cerr << std::endl
+                << "Looks up, via Lookup service located by $TAG_LOOKUP_SERVICE_URL_FILE, the C++ symbol referred to at the specified offset within input file. Adds the appropriate include statement and prints adjusted file on stdout." << std::endl
+                << "- returns 3 if symbol not found" << std::endl;
       return 1;
     }
 
+    auto const hpath(getHPath());
+    
     std::pair<xju::path::AbsolutePath, xju::path::FileName> const inputFile(
       xju::path::split(cmd_line.second[0]));
 
@@ -59,15 +129,14 @@ int main(int argc, char* argv[])
     
     Options const options(cmd_line.first);
 
-    std::string const x(xju::file::read(xju::path::str(inputFile)));
+    std::string const x(xju::file::read(inputFile));
 
-    xju::path::AbsFile const tagLookupServiceURLfile(
-      xju::path::split(::getenv("TAG_LOOKUP_SERVICE_URL_FILE")));
-    auto const url(xju::file::read(tagLookupServiceURLfile));
+    auto const url(getTagLookupServiceURL());
     cxy::ORB<xju::Exception> orb("giop:tcp::");
     cxy::cref<hcp::tags::Lookup> ref(orb,url);
 
-    std::cout << hcp::tags::importSymbolAt(x, offset, *ref);
+    std::cout << hcp::tags::importSymbolAt(x, offset, *ref, hpath,
+                                           options.traceParsing_);
     
     return 0;
   }
@@ -75,7 +144,7 @@ int main(int argc, char* argv[])
     std::ostringstream s;
     s << xju::format::join(argv, argv+argc, " ");
     e.addContext(s.str(), XJU_TRACED);
-    std::cerr << readableRepr(e);
+    std::cerr << readableRepr(e) << std::endl;
     return 3;
   }
   catch(xju::Exception& e) {
