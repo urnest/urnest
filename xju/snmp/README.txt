@@ -33,7 +33,7 @@ TODO:
     - SnmpV2cTable
     - SnmpV2cWalk(?)
     - SnmpV2cGetBulk
-    - SnmpV2cTrap
+    * SnmpV2cTrap
     
   - server side:
     x decodeSnmpV1GetRequest
@@ -52,6 +52,14 @@ TODO:
   x does the snmpv1 "set" error handling say to return the original
     values (like v2c says)? do we do that? Yes and yes.
 
+  - higher level:
+    UDPClient:
+      UDPClient(host,port)
+      UDPClient(host,port,opt-localhost,opt-localport)
+      xxx snmpGet(SnmpV1GetRequest,retries,timePerTry)
+      xxx snmpGetNext(SnmpV1GetRequest,retries,timePerTry)
+      snmpSet(SnmpV1SetRequest,retries,timePerTry)
+      
 references:
   http://www.rane.com/note161.html
   https://en.wikipedia.org/wiki/X.690#BER_encoding
