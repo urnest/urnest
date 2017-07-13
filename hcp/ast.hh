@@ -25,6 +25,7 @@
 #include "xju/assert.hh"
 #include <typeinfo>
 #include <iostream>
+#include <functional>
 
 namespace hcp_ast
 {
@@ -144,49 +145,43 @@ public:
   }
 };
 
-// Find first item for which p is true, searching item, its 
-// CompositeItem children then next item.
-//   bool p(IR);
-template<class Predicate>
-IRs::const_iterator find1stInTree(IRs::const_iterator begin, 
-                                  IRs::const_iterator end,
-                                  Predicate p) throw() {
-  while(begin != end &&
-        !p(*begin)) {
-    if (isA_<CompositeItem>(*begin)) {
-      IRs::const_iterator const i(find1stInTree(
-                                    asA_<CompositeItem>(*begin).items_.begin(),
-                                    asA_<CompositeItem>(*begin).items_.end(),
-                                    p));
-      
-      if (i!=asA_<CompositeItem>(*begin).items_.end()) {
-        return i;
+template<class T>
+std::vector<std::reference_wrapper<T const> > findChildrenOfType(
+  CompositeItem const& parent,
+  size_t const returnAtMost=SIZE_MAX)
+    throw()
+{
+  std::vector<std::reference_wrapper<T const> > result;
+  for(auto const ir: parent.items_) {
+    if (ir->isA<T>()) {
+      result.push_back(ir->asA<T>());
+      if (result.size()==returnAtMost){
+        return result;
       }
     }
-    ++begin;
+    else if (ir->isA<CompositeItem>()) {
+      std::vector<std::reference_wrapper<T const> > descendents(
+        findChildrenOfType<T>(ir->asA<CompositeItem>(),
+                              returnAtMost-result.size()));
+      std::copy(descendents.begin(),descendents.end(),
+                std::back_inserter(result));
+      if (result.size()==returnAtMost) {
+        return result;
+      }
+    }
   }
-  return begin;
-}
-template<class Predicate>
-IRs::iterator find1stInTree(IRs::iterator begin, 
-                                  IRs::iterator end,
-                                  Predicate p) throw() {
-  while(begin != end &&
-        !p(*begin)) {
-    if (isA_<CompositeItem>(*begin)) {
-      IRs::iterator const i(find1stInTree(
-                              asA_<CompositeItem>(*begin).items_.begin(),
-                              asA_<CompositeItem>(*begin).items_.end(),
-                              p));
+  return result;
+};
 
-      if (i!=asA_<CompositeItem>(*begin).items_.end()) {
-        return i;
-      }
-    }
-    ++begin;
-  }
-  return begin;
+//pre: parent has only one child of type T
+template<class T>
+T const& findOnlyChildOfType(CompositeItem const& parent) throw()
+{
+  auto const result(findChildrenOfType<T>(parent,2));
+  xju::assert_equal(result.size(),1U);
+  return result[0];
 }
+    
 
 class String : public Item
 {

@@ -107,16 +107,6 @@ PR_ tagsFile=openBrace+eatWhite_+
     (closeBrace+eatWhite_))+
   hcp_parser::endOfFile();
 
-template<class T>
-T const& find(hcp_ast::IRs::const_iterator begin,
-              hcp_ast::IRs::const_iterator end)
-  throw() {
-  hcp_ast::IRs::const_iterator const i(
-    hcp_ast::find1stInTree(begin,end,
-                           [](hcp_ast::IR x) { return x->isA<T>(); }));
-  xju::assert_not_equal(i,end);
-  return (*i)->asA<T>();
-}
 }
 
 
@@ -137,17 +127,14 @@ void augmentRootNamespace(Namespace& rootNamespace,
     for(auto x:root.items_) {
       if (x->isA<Entry>()) {
         Entry const& entry(x->asA<Entry>());
-        Symbol const& symbol(
-          find<Symbol>(entry.items_.begin(),entry.items_.end()));
+        Symbol const& symbol(hcp_ast::findOnlyChildOfType<Symbol>(entry));
         std::vector<hcp::tags::Location> locations;
         for(auto x:entry.items_) {
           if (hcp_ast::isA_<ParsedLocation>(x)) {
             ParsedLocation const& location(
               x->asA<ParsedLocation>());
-            auto f(find<ParsedFileName>(location.items_.begin(),
-                                        location.items_.end()));
-            auto l(find<ParsedLineNumber>(location.items_.begin(),
-                                          location.items_.end()));
+            auto f(hcp_ast::findOnlyChildOfType<ParsedFileName>(location));
+            auto l(hcp_ast::findOnlyChildOfType<ParsedLineNumber>(location));
             auto fileName(xju::path::split(reconstruct(f)));
             locations.push_back(hcp::tags::Location(
                                   fileName.first,

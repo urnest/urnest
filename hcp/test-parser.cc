@@ -625,12 +625,8 @@ void test15()
       root, at, hcp_parser::hashInclude());
     xju::assert_equal(reconstruct(root), "#include <string>\n  ");
     xju::assert_equal(at.atEnd(), true);
-    hcp_ast::IRs::const_iterator k(
-      hcp_ast::find1stInTree(root.items_.begin(),
-                             root.items_.end(),
-                             hcp_ast::isA_<hcp_ast::TargetOfHashInclude>));
-    xju::assert_not_equal(k, root.items_.end());
-    xju::assert_equal(reconstruct(*k),"string");
+    auto k(hcp_ast::findOnlyChildOfType<hcp_ast::TargetOfHashInclude>(root));
+    xju::assert_equal(reconstruct(k),"string");
   }
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
@@ -643,12 +639,8 @@ void test15()
       root, at, hcp_parser::hashInclude());
     xju::assert_equal(reconstruct(root), "#  include \"string\"\n  ");
     xju::assert_equal(at.atEnd(), true);
-    hcp_ast::IRs::const_iterator k(
-      hcp_ast::find1stInTree(root.items_.begin(),
-                             root.items_.end(),
-                             hcp_ast::isA_<hcp_ast::TargetOfHashInclude>));
-    xju::assert_not_equal(k, root.items_.end());
-    xju::assert_equal(reconstruct(*k),"string");
+    auto k(hcp_ast::findOnlyChildOfType<hcp_ast::TargetOfHashInclude>(root));
+    xju::assert_equal(reconstruct(k),"string");
   }
   try
   {
@@ -1643,15 +1635,8 @@ void test30()
       root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end());
     xju::assert_equal(reconstruct(*j), "_user_exns");
 
-    hcp_ast::IRs::const_iterator k(
-      hcp_ast::find1stInTree(root.items_.begin(),
-                             root.items_.end(),
-                             hcp_ast::isA_<hcp_ast::StaticVarDef>));
-    xju::assert_equal(k, root.items_.begin());
-    k=hcp_ast::find1stInTree(root.items_.begin(),
-                             root.items_.end(),
-                             hcp_ast::isA_<hcp_ast::VarName>);
-    xju::assert_equal(k, j);
+    hcp_ast::asA_<hcp_ast::StaticVarDef>(*root.items_.begin());
+    hcp_ast::asA_<hcp_ast::VarName>(*j);
   }
   catch(xju::Exception const& e) {
     assert_readableRepr_equal(e, "", XJU_TRACED);
@@ -1671,30 +1656,13 @@ void test31()
      at = parse(root, at, hcp_parser::static_var_def());
      xju::assert_equal(reconstruct(root), x);
      xju::assert_equal(at.atEnd(), true);
-     xju::assert_equal(root.items_[0]->isA<hcp_ast::StaticVarDef>(),true);
-     std::vector<hcp_ast::IR>::const_iterator j(
-       std::find_if(root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.begin(),
-                    root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end(),
-                    hcp_ast::isA_<hcp_ast::VarName>));
-     xju::assert_not_equal(
-       j, 
-       root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end());
-     xju::assert_equal(reconstruct(*j), "x");
-     
-     hcp_ast::IRs::const_iterator k(
-       hcp_ast::find1stInTree(root.items_.begin(),
-                              root.items_.end(),
-                              hcp_ast::isA_<hcp_ast::StaticVarDef>));
-     xju::assert_equal(k, root.items_.begin());
-     k=hcp_ast::find1stInTree(root.items_.begin(),
-                              root.items_.end(),
-                              hcp_ast::isA_<hcp_ast::VarName>);
-     xju::assert_equal(k, j);
-     k=hcp_ast::find1stInTree(root.items_.begin(),
-                              root.items_.end(),
-                              hcp_ast::isA_<hcp_ast::VarInitialiser>);
-     xju::assert_equal(std::string(root.begin().x_, (**k).begin().x_), 
-                       "static const int* x ");
+
+     auto d(hcp_ast::findOnlyChildOfType<hcp_ast::StaticVarDef>(root));
+     hcp_ast::asA_<hcp_ast::StaticVarDef>(*root.items_.begin());
+     auto n(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(d));
+     xju::assert_equal(reconstruct(n),"x");
+     auto i(hcp_ast::findOnlyChildOfType<hcp_ast::VarInitialiser>(d));
+     xju::assert_equal(reconstruct(i),"= 3");
    }
    catch(xju::Exception const& e) {
      assert_readableRepr_equal(e, "", XJU_TRACED);
@@ -1712,30 +1680,14 @@ void test31()
      at = parse(root, at, hcp_parser::static_var_def());
      xju::assert_equal(reconstruct(root), x);
      xju::assert_equal(at.atEnd(), true);
-     xju::assert_equal(root.items_[0]->isA<hcp_ast::StaticVarDef>(),true);
-     std::vector<hcp_ast::IR>::const_iterator j(
-       std::find_if(root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.begin(),
-                    root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end(),
-                    hcp_ast::isA_<hcp_ast::VarName>));
-     xju::assert_not_equal(
-       j, 
-       root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end());
-     xju::assert_equal(reconstruct(*j), "y");
-     
-     hcp_ast::IRs::const_iterator k(
-       hcp_ast::find1stInTree(root.items_.begin(),
-                              root.items_.end(),
-                              hcp_ast::isA_<hcp_ast::StaticVarDef>));
-     xju::assert_equal(k, root.items_.begin());
-     k=hcp_ast::find1stInTree(root.items_.begin(),
-                              root.items_.end(),
-                              hcp_ast::isA_<hcp_ast::VarName>);
-     xju::assert_equal(k, j);
-     k=hcp_ast::find1stInTree(root.items_.begin(),
-                              root.items_.end(),
-                              hcp_ast::isA_<hcp_ast::VarInitialiser>);
-     xju::assert_equal(std::string(root.begin().x_, (**k).begin().x_), 
-                       "static X y");
+
+     auto d(hcp_ast::findOnlyChildOfType<hcp_ast::StaticVarDef>(root));
+     hcp_ast::asA_<hcp_ast::StaticVarDef>(*root.items_.begin());
+     auto n(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(d));
+     xju::assert_equal(reconstruct(n),"y");
+     auto i(hcp_ast::findOnlyChildOfType<hcp_ast::VarInitialiser>(d));
+     xju::assert_equal(reconstruct(i),"=Z(3)");
+
    }
    catch(xju::Exception const& e) {
      assert_readableRepr_equal(e, "", XJU_TRACED);
@@ -1752,30 +1704,13 @@ void test31()
      at = parse(root, at, hcp_parser::static_var_def());
      xju::assert_equal(reconstruct(root), x);
      xju::assert_equal(at.atEnd(), true);
-     xju::assert_equal(root.items_[0]->isA<hcp_ast::StaticVarDef>(),true);
-     std::vector<hcp_ast::IR>::const_iterator j(
-       std::find_if(root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.begin(),
-                    root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end(),
-                    hcp_ast::isA_<hcp_ast::VarName>));
-     xju::assert_not_equal(
-       j, 
-       root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end());
-     xju::assert_equal(reconstruct(*j), "y");
-     
-     hcp_ast::IRs::const_iterator k(
-       hcp_ast::find1stInTree(root.items_.begin(),
-                              root.items_.end(),
-                              hcp_ast::isA_<hcp_ast::StaticVarDef>));
-     xju::assert_equal(k, root.items_.begin());
-     k=hcp_ast::find1stInTree(root.items_.begin(),
-                              root.items_.end(),
-                              hcp_ast::isA_<hcp_ast::VarName>);
-     xju::assert_equal(k, j);
-     k=hcp_ast::find1stInTree(root.items_.begin(),
-                              root.items_.end(),
-                              hcp_ast::isA_<hcp_ast::VarInitialiser>);
-     xju::assert_equal(std::string(root.begin().x_, (**k).begin().x_), 
-                       "static X y");
+
+     auto d(hcp_ast::findOnlyChildOfType<hcp_ast::StaticVarDef>(root));
+     hcp_ast::asA_<hcp_ast::StaticVarDef>(*root.items_.begin());
+     auto n(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(d));
+     xju::assert_equal(reconstruct(n),"y");
+     auto i(hcp_ast::findOnlyChildOfType<hcp_ast::VarInitialiser>(d));
+     xju::assert_equal(reconstruct(i),"{Z(3)}");
    }
    catch(xju::Exception const& e) {
      assert_readableRepr_equal(e, "", XJU_TRACED);
@@ -1808,30 +1743,16 @@ void test31()
      at = parse(root, at, hcp_parser::static_var_def());
      xju::assert_equal(reconstruct(root), x);
      xju::assert_equal(at.atEnd(), true);
-     xju::assert_equal(root.items_[0]->isA<hcp_ast::StaticVarDef>(),true);
-     std::vector<hcp_ast::IR>::const_iterator j(
-       std::find_if(root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.begin(),
-                    root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end(),
-                    hcp_ast::isA_<hcp_ast::VarName>));
-     xju::assert_not_equal(
-       j, 
-       root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end());
-     xju::assert_equal(reconstruct(*j), "y");
-     
-     hcp_ast::IRs::const_iterator k(
-       hcp_ast::find1stInTree(root.items_.begin(),
-                              root.items_.end(),
-                              hcp_ast::isA_<hcp_ast::StaticVarDef>));
-     xju::assert_equal(k, root.items_.begin());
-     k=hcp_ast::find1stInTree(root.items_.begin(),
-                              root.items_.end(),
-                              hcp_ast::isA_<hcp_ast::VarName>);
-     xju::assert_equal(k, j);
-     k=hcp_ast::find1stInTree(root.items_.begin(),
-                              root.items_.end(),
-                              hcp_ast::isA_<hcp_ast::VarInitialiser>);
-     xju::assert_equal(std::string(root.begin().x_, (**k).begin().x_), 
-                       "static X (*y)(int x, I<p> const& p)");
+
+     auto d(hcp_ast::findOnlyChildOfType<hcp_ast::StaticVarDef>(root));
+     hcp_ast::asA_<hcp_ast::StaticVarDef>(*root.items_.begin());
+     auto n(hcp_ast::findChildrenOfType<hcp_ast::VarName>(d));
+     xju::assert_equal(reconstruct(n[0]),"y");
+     xju::assert_equal(reconstruct(n[1]),"x");
+     xju::assert_equal(reconstruct(n[2]),"p");
+     xju::assert_equal(n.size(),3);
+     auto i(hcp_ast::findOnlyChildOfType<hcp_ast::VarInitialiser>(d));
+     xju::assert_equal(reconstruct(i),"=pq");
    }
    catch(xju::Exception const& e) {
      assert_readableRepr_equal(e, "", XJU_TRACED);
@@ -1853,29 +1774,13 @@ void test32()
       at = parse(root, at, hcp_parser::static_var_def());
       xju::assert_equal(reconstruct(root), x);
       xju::assert_equal(at.atEnd(), true);
-      xju::assert_equal(root.items_[0]->isA<hcp_ast::StaticVarDef>(),true);
-      std::vector<hcp_ast::IR>::const_iterator j(
-        std::find_if(root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.begin(),
-                     root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end(),
-                     hcp_ast::isA_<hcp_ast::VarName>));
-      xju::assert_not_equal(
-        j, 
-        root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end());
-      xju::assert_equal(reconstruct(*j), "me");
-      
-      hcp_ast::IRs::const_iterator k(
-        hcp_ast::find1stInTree(root.items_.begin(),
-                               root.items_.end(),
-                               hcp_ast::isA_<hcp_ast::StaticVarDef>));
-      xju::assert_equal(k, root.items_.begin());
-      k=hcp_ast::find1stInTree(root.items_.begin(),
-                               root.items_.end(),
-                               hcp_ast::isA_<hcp_ast::VarName>);
-      xju::assert_equal(k, j);
-      k=hcp_ast::find1stInTree(root.items_.begin(),
-                               root.items_.end(),
-                               hcp_ast::isA_<hcp_ast::VarInitialiser>);
-      xju::assert_equal(k, root.items_.end());
+
+     auto d(hcp_ast::findOnlyChildOfType<hcp_ast::StaticVarDef>(root));
+     hcp_ast::asA_<hcp_ast::StaticVarDef>(*root.items_.begin());
+     auto n(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(d));
+     xju::assert_equal(reconstruct(n),"me");
+     auto i(hcp_ast::findChildrenOfType<hcp_ast::VarInitialiser>(d,1));
+     xju::assert_equal(i.size(),0);
     }
     catch(xju::Exception const& e) {
       assert_readableRepr_equal(e, "", XJU_TRACED);

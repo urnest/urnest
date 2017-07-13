@@ -148,11 +148,9 @@ void genClassStaticVarDef(
   std::vector<hcp_ast::ClassDef const*> const& scope) throw(
     xju::Exception)
 {
-  std::vector<hcp_ast::IR>::const_iterator i(
-    hcp_ast::find1stInTree(x.items_.begin(), x.items_.end(),
-                           hcp_ast::isA_<hcp_ast::VarInitialiser>));
-  if (i != x.items_.end()) {
-    h.copy(x.begin(), (*i)->begin());
+  auto i(hcp_ast::findChildrenOfType<hcp_ast::VarInitialiser>(x));
+  if (i.size()){
+    h.copy(x.begin(), i[0].get().begin());
     h << ";\n";
   }
   else
@@ -160,22 +158,20 @@ void genClassStaticVarDef(
     h.copy(x.begin(), x.end());
     h << "\n";
   }
-  
-  std::vector<hcp_ast::IR>::const_iterator j(
-    std::find_if(x.items_.begin(), x.items_.end(),
-                 hcp_ast::isA_<hcp_ast::VarName>));
-  xju::assert_not_equal(j, x.items_.end());
+
+  auto name(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(x));
 
   std::vector<hcp_ast::IR>::const_iterator k(x.items_.begin());
   xju::assert_(*k, hcp_ast::isA_<hcp_ast::KeywordStatic>);
   ++k;
-  c.copy((*k)->begin(), (*j)->begin());
+  c.copy(hcp_ast::asA_<hcp_ast::KeywordStatic>(x.items_[0]).end(),
+         name.begin());
   c << xju::format::join(scope.begin(),
                          scope.end(),
                          getClassName,
                          "::")
     << "::";
-  c.copy((*j)->begin(), x.end());
+  c.copy(name.begin(), x.end());
   c << "\n";
 }
 

@@ -36,12 +36,9 @@ namespace
 std::string targetOfHashInclude(
   hcp_ast::CompositeItem const& hashIncludeItem) throw()
 {
-  hcp_ast::IRs::const_iterator k(
-    hcp_ast::find1stInTree(hashIncludeItem.items_.begin(),
-                           hashIncludeItem.items_.end(),
-                           hcp_ast::isA_<hcp_ast::TargetOfHashInclude>));
-  xju::assert_not_equal(k, hashIncludeItem.items_.end());
-  return reconstruct(*k);
+  auto k(hcp_ast::findOnlyChildOfType<hcp_ast::TargetOfHashInclude>(
+           hashIncludeItem));
+  return reconstruct(k);
 }
 bool isAbsolute(IdentifierRef const& x) throw(){
   return (x._.size()>=2) &&
