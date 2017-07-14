@@ -180,6 +180,12 @@ std::string str(RelativePath const& x) throw();
 class FileNameTag{};
 typedef xju::Tagged<std::string, FileNameTag> FileName;
 
+class BaseNameTag{};
+typedef xju::Tagged<std::string, BaseNameTag> BaseName; //excludes .
+
+class ExtensionTag{};
+typedef xju::Tagged<std::string, ExtensionTag> Extension; //includes .
+
 typedef std::pair<AbsolutePath, FileName> AbsFile;
 
 std::string str(AbsolutePath const& x, FileName const& y) throw();
@@ -234,6 +240,13 @@ std::pair<AbsolutePath, DirName> dirname(
 std::pair<AbsolutePath, FileName> join(
   std::pair<AbsolutePath, DirName> const& dir,
   FileName const& file) throw();
+
+// split FileName into BaseName and Extension
+// - split(FileName("x")) == {BaseName("x"),Extension("")}
+// - split(FileName(".y")) == {BaseName(".y"),Extension("")}
+// - split(FileName(".y.txt")) == {BaseName(".y"),Extension(".txt")}
+// - split(FileName("y.tar.gz")) == {BaseName("y.tar"),Extension(".gz")}
+std::pair<BaseName,Extension> split(FileName const& x) throw();
 
 }
 }

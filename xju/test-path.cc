@@ -16,6 +16,11 @@
 #include "xju/Exception.hh"
 #include "xju/next.hh"
 
+namespace xju
+{
+namespace path
+{
+
 void test1()
 {
   {
@@ -162,6 +167,23 @@ void test8()
     std::make_pair(xju::path::AbsolutePath("/a"), xju::path::DirName("b")));
 }
 
+void test9()
+{
+  xju::assert_equal(split(FileName("x")),
+                    std::make_pair(BaseName("x"),Extension("")));
+  xju::assert_equal(split(FileName(".y")),
+                    std::make_pair(BaseName(".y"),Extension("")));
+  xju::assert_equal(split(FileName(".y.txt")),
+                    std::make_pair(BaseName(".y"),Extension(".txt")));
+  xju::assert_equal(split(FileName("y.tar.gz")),
+                    std::make_pair(BaseName("y.tar"),Extension(".gz")));
+}
+
+}
+}
+
+using namespace xju::path;
+
 int main(int argc, char* argv[])
 {
   unsigned int n(0);
@@ -173,6 +195,7 @@ int main(int argc, char* argv[])
   test6(), ++n;
   test7(), ++n;
   test8(), ++n;
+  test9(), ++n;
   
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;

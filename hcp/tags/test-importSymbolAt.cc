@@ -69,6 +69,7 @@ void test1(std::string const& x,
                };
          }),
       hpath,
+      {},
       false),
     std::string(y));
 }
@@ -99,6 +100,7 @@ void test2(std::string const& x,
                };
          }),
       hpath,
+      {},
       false),
     std::string(y));
 }
@@ -129,6 +131,7 @@ void test3(std::string const& x,
                };
          }),
       hpath,
+      {},
       false),
     std::string(z));
 }
@@ -154,11 +157,20 @@ void test4(std::string const& x,
            xju::assert_equal(symbol,::hcp::tags::UnqualifiedSymbol("Z"));
            return ::hcp::tags::Lookup::Locations{
              ::hcp::tags::Location(xju::path::split("/d2/Q/.").first,
-                                   xju::path::FileName("Z.hh"),
+                                   xju::path::FileName("Z.hcp"),
                                    hcp::tags::LineNumber(7))
                };
          }),
       hpath,
+      {std::make_pair(xju::path::RelativePath(
+                        std::vector<DirName>{xju::path::DirName("d1")}),
+                      xju::path::Extension(".hpp")),
+       std::make_pair(xju::path::RelativePath(
+                        std::vector<DirName>{xju::path::DirName("Q")}),
+                      xju::path::Extension(".hh")),
+       std::make_pair(xju::path::RelativePath(
+                        std::vector<DirName>{}),
+                      xju::path::Extension(".h"))},
       false),
     std::string(a));
   
@@ -188,6 +200,15 @@ void test5(std::string const& x,
                };
          }),
       hpath,
+      {std::make_pair(xju::path::RelativePath(
+                        std::vector<DirName>{xju::path::DirName("d1")}),
+                      xju::path::Extension(".hpp")),
+       std::make_pair(xju::path::RelativePath(
+                        std::vector<DirName>{xju::path::DirName("d2")}),
+                      xju::path::Extension(".h")),
+       std::make_pair(xju::path::RelativePath(
+                        std::vector<DirName>{}),
+                      xju::path::Extension(".hh"))},
       false),
     std::string(y));
 }

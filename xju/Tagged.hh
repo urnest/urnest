@@ -27,7 +27,10 @@ public:
     _(x) {
   }
 
-  T value() const throw() {
+  T const& value() const throw() {
+    return _;
+  }
+  T& value() throw() {
     return _;
   }
 };

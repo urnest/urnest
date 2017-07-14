@@ -16,6 +16,7 @@
 #include <xju/format.hh>
 #include <unistd.h>
 #include "xju/prev.hh"
+#include <algorithm>
 
 namespace xju
 {
@@ -328,6 +329,26 @@ std::pair<AbsolutePath, FileName> join(
   std::vector<DirName> x(dir.first.begin(),dir.first.end());
   x.push_back(dir.second);
   return std::make_pair(AbsolutePath(x),file);
+}
+
+std::pair<BaseName,Extension> split(FileName const& x) throw(){
+  std::string const& v(x.value());
+  if (v==""){
+    return std::make_pair(BaseName(""),Extension(""));
+  }
+  std::string::const_reverse_iterator lastDot(
+    std::find(v.rbegin(),v.rend(),'.'));
+  if(lastDot==v.rend()||
+     // handle filename ".y"
+     lastDot==xju::prev(v.rend()))
+  {
+    return std::make_pair(BaseName(v),Extension(""));
+  }
+  size_t const lastDotOffset(v.rend()-lastDot-1);
+  
+  return std::make_pair(
+    BaseName(std::string(v.begin(),v.begin()+lastDotOffset)),
+    Extension(std::string(v.begin()+lastDotOffset,v.end())));
 }
 
 

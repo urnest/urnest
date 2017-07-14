@@ -46,8 +46,11 @@ std::vector<xju::path::AbsolutePath> getHPath() throw(xju::Exception)
   }
 }
 
+typedef std::vector<std::pair<xju::path::RelativePath,
+                              xju::path::Extension> > ExtensionMappings;
+
 struct Options {
-  Options(bool traceParsing) throw():
+  explicit Options(bool traceParsing) throw():
       traceParsing_(traceParsing) {
   }
   bool const traceParsing_;
@@ -59,7 +62,7 @@ std::string getTagLookupServiceURL() throw(
   xju::Exception) {
   try {
     if (::getenv("TAG_LOOKUP_SERVICE_URL_FILE")==0) {
-      throw xju::Exception("TAG_LOOKUP_SERVICE_URL_FILE environment is not set",XJU_TRACED);
+      throw xju::Exception("TAG_LOOKUP_SERVICE_URL_FILE environment variable is not set",XJU_TRACED);
     }
     xju::path::AbsFile const tagLookupServiceURLfile(
       xju::path::split(::getenv("TAG_LOOKUP_SERVICE_URL_FILE")));
@@ -74,6 +77,54 @@ std::string getTagLookupServiceURL() throw(
   }
 }
 
+// get hcp extension mappings
+ExtensionMappings getHcpExtensionMappings() throw(
+  xju::Exception) {
+  try {
+    if (::getenv("HCP_EXTENSION_MAPPINGS")==0) {
+      throw xju::Exception("HCP_EXTENSION_MAPPINGS environment variable is not set",XJU_TRACED);
+    }
+    try {
+      ExtensionMappings result;
+      for(auto const mapping: xju::split(
+            std::string(::getenv("HCP_EXTENSION_MAPPINGS")),
+            ':')) {
+        auto const x(xju::split(mapping,'='));
+        if (x.size()==0){
+          std::ostringstream s;
+          s << xju::format::quote(mapping)
+            << " (from HCP_EXTENSION_MAPPINGS environment variable) "
+            << "has no '=' (as in a/b/c=.xx)";
+          throw xju::Exception(s.str(),XJU_TRACED);
+        }
+        else if (x.size()>2) {
+          std::ostringstream s;
+          s << xju::format::quote(mapping)
+            << " (from HCP_EXTENSION_MAPPINGS environment variable) "
+            << "has more than 1 '=' (as in a/b/c=.xx)";
+          throw xju::Exception(s.str(),XJU_TRACED);
+        }
+        result.push_back(std::make_pair(xju::path::RelativePath(x[0]),
+                                        xju::path::Extension(x[1])));
+      }
+      return result;
+    }
+    catch(xju::Exception& e) {
+      std::ostringstream s;
+      s << "parse $HCP_EXTENSION_MAPPINGS value "
+        << xju::format::quote(::getenv("HCP_EXTENSION_MAPPINGS"));
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "get hcp extension mappings from $HCP_EXTENSION_MAPPINGS";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
 
 // result.second are remaining arguments
 std::pair<Options, std::vector<std::string> > parseCommandLine(
@@ -82,6 +133,7 @@ std::pair<Options, std::vector<std::string> > parseCommandLine(
 {
   std::vector<std::string>::const_iterator i(x.begin());
   bool trace=false;
+  ExtensionMappings extensionMappings;
   
   while((i != x.end()) && ((*i)[0]=='-')) {
     if ((*i)=="-t") {
@@ -109,11 +161,17 @@ int main(int argc, char* argv[])
 
     if (cmd_line.second.size() != 2) {
       std::cerr << "usage: " << argv[0] 
-                << " [-t] <input-file> <offset>" << std::endl;
-      std::cerr << "-t, trace parsing " << std::endl
-                << "\n";
+                << " [-t] [-m hcp-extension-mappings] <input-file> <offset>"
+                << std::endl
+                << "-t, trace parsing " << std::endl
+                << std::endl;
       std::cerr << "note: $TAG_LOOKUP_SERVICE_URL_FILE must locate url-file of tag-lookup-service to use - see tag-lookup-service" << std::endl;
       std::cerr << "note: $TAGS_HPATH specifies search path for headers" << std::endl;
+      std::cerr << "note: $HCP_EXTENSION_MAPPINGS is comma-separated extension mappings to apply where symbol is found in .hcp file, eg: " << std::endl
+                << "  xju:.hh,app-aa/src:.h,:hpp" << std::endl
+                << "... will map .hcp files included via xju/... to .hh and\n"
+                << "    .hcp files includes via app-aa/src... to .h and all\n"
+                << "    other non-absolute .hcp filenames to .hpp\n";
       std::cerr << std::endl
                 << "Looks up, via Lookup service located by $TAG_LOOKUP_SERVICE_URL_FILE, the C++ symbol referred to at the specified offset within input file. Adds the appropriate include statement and prints adjusted file on stdout." << std::endl
                 << "- returns 3 if symbol not found" << std::endl;
@@ -121,7 +179,8 @@ int main(int argc, char* argv[])
     }
 
     auto const hpath(getHPath());
-    
+    auto const hcpExtensionMappings(getHcpExtensionMappings());
+
     std::pair<xju::path::AbsolutePath, xju::path::FileName> const inputFile(
       xju::path::split(cmd_line.second[0]));
 
@@ -136,6 +195,7 @@ int main(int argc, char* argv[])
     cxy::cref<hcp::tags::Lookup> ref(orb,url);
 
     std::cout << hcp::tags::importSymbolAt(x, offset, *ref, hpath,
+                                           hcpExtensionMappings,
                                            options.traceParsing_);
     
     return 0;

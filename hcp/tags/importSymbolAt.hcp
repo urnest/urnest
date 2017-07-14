@@ -14,19 +14,23 @@
 #include "hcp/tags/Lookup.hh"
 #include <vector>
 #include "hcp/tags/AbsolutePath.hh"
-#include <sstream> //impl
-#include <hcp/tags/makeRelativeIfPossible.hh> //impl
+#include "hcp/parser.hh" //impl
+#include "hcp/scopeAt.hh" //impl
+#include "hcp/tags/splitSymbol.hh" //impl
+#include "xju/format.hh" //impl
+#include <algorithm> //impl
 #include <hcp/ast.hh> //impl
+#include <hcp/getIrsAtEnd.hh> //impl
+#include <hcp/parser.hh> //impl
 #include <hcp/tags/IdentifierRef.hh> //impl
 #include <hcp/tags/getIdentifierRefAt.hh> //impl
-#include <hcp/parser.hh> //impl
-#include <hcp/getIrsAtEnd.hh> //impl
-#include "hcp/parser.hh" //impl
-#include "hcp/tags/splitSymbol.hh" //impl
-#include "hcp/scopeAt.hh" //impl
-#include <algorithm> //impl
-#include "xju/format.hh" //impl
+#include <hcp/tags/makeRelativeIfPossible.hh> //impl
+#include <sstream> //impl
 #include <xju/endsWith.hh> //impl
+#include "xju/next.hh" //impl
+#include "xju/startsWith.hh" //impl
+
+
 namespace hcp
 {
 namespace tags
@@ -44,9 +48,32 @@ bool isAbsolute(IdentifierRef const& x) throw(){
   return (x._.size()>=2) &&
     (std::string(x._.begin(),x._.begin()+2)=="::");
 }
-std::string changeExtensionToHH(std::string const& fileName) throw() {
-  if (xju::endsWith(fileName,std::string(".hcp"))){
-    return std::string(fileName.begin(),fileName.end()-4)+".hh";
+// change .hcp fileName extension according to mapping, ie
+// - find first mapping.first that is or is is an ancestor of fileName's
+//   directory and use that mapping's extension
+// - leaves fileName unchanged if no mapping matches
+// - empty mapping.first matches all fileNames, ie can act as default
+// - note that it is not possible to match absolute fileNames
+//
+std::string mapHcpExtension(
+  std::string const& fileName,
+  std::vector<std::pair<xju::path::RelativePath,xju::path::Extension> > const& mappings) throw() {
+  if (xju::endsWith(fileName,std::string(".hcp")) &&
+      !xju::startsWith(fileName,std::string("/")))
+  {
+    xju::path::RelativePath const directoryOfFileName(
+      xju::path::relative_dirname(fileName));
+    
+    for(auto const mapping: mappings){
+      auto const& prefix(mapping.first);
+      if (prefix.size()<=directoryOfFileName.size() &&
+          std::mismatch(prefix.begin(),prefix.end(),
+                        directoryOfFileName.begin()).first==prefix.end()) {
+        auto const& extension(mapping.second);
+        return std::string(fileName.begin(),fileName.end()-4)+
+          extension.value();
+      }
+    }
   }
   return fileName;
 }
@@ -76,6 +103,7 @@ std::string importSymbolAt(
   size_t const offset,
   hcp::tags::Lookup& tagLookupService,
   std::vector<xju::path::AbsolutePath> const& hpath,
+  std::vector<std::pair<xju::path::RelativePath,xju::path::Extension> > const& hcpMappings,
   bool const traceParsing) throw(
     UnknownSymbol,
     xju::Exception)
@@ -111,9 +139,10 @@ std::string importSymbolAt(
     
     // turn location into relative path if $TAGS_HPATH locates it
     std::string const includeTarget(
-      changeExtensionToHH(
+      mapHcpExtension(
         makeRelativeIfPossible(
-          std::make_pair(l[0].directory,l[0].file),hpath)));
+          std::make_pair(l[0].directory,l[0].file),hpath),
+        hcpMappings));
 
     
     hcp_ast::I insertAt(x.begin(),x.end());
@@ -166,8 +195,6 @@ std::string importSymbolAt(
       scope.second?
       "#include <"+includeTarget+"> //impl\n":
       "#include <"+includeTarget+">\n");
-#include "xju/next.hh"
-
     return std::string(x.begin(),insertAt.x_)+hashInclude+
       std::string(insertAt.x_,x.end());
   }
