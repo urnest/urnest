@@ -69,6 +69,32 @@ private:
   friend ::X discriminator(U1 const& x) throw() {
     return x.d_;
   }
+  virtual bool lessThan(U1 const& b) const throw()=0;
+
+friend bool operator<(U1 const& a, U1 const& b) throw()
+{
+  return a.lessThan(b);
+}
+friend bool operator>(U1 const& a, U1 const& b) throw()
+{
+  return b < a;
+}
+friend bool operator!=(U1 const& a, U1 const& b) throw()
+{
+  return (a<b)||(b<a);
+}
+friend bool operator==(U1 const& a, U1 const& b) throw()
+{
+  return !(a<b)&&!(b<a);
+}
+friend bool operator<=(U1 const& a, U1 const& b) throw()
+{
+  return (a<b)||(a==b);
+}
+friend bool operator>=(U1 const& a, U1 const& b) throw()
+{
+  return (a>b)||(a==b);
+}
 };
 
 class U1::A : 
@@ -114,6 +140,8 @@ public:
     A const& y) throw() {
     return (x>y)||(x==y);
   }
+  bool lessThan(U1 const& b) const throw();
+
 };
 
 class U1::B : 
@@ -155,6 +183,8 @@ public:
     B const& y) throw() {
     return (x>y)||(x==y);
   }
+  bool lessThan(U1 const& b) const throw();
+
 };
 
 class U1::C : 
@@ -200,26 +230,9 @@ public:
     C const& y) throw() {
     return (x>y)||(x==y);
   }
+  bool lessThan(U1 const& b) const throw();
+
 };
-
-
-bool operator<(U1::A const& x, U1 const& b) throw();
-
-bool operator<(U1::B const& x, U1 const& b) throw();
-
-bool operator<(U1::C const& x, U1 const& b) throw();
-
-bool operator<(U1 const& a, U1 const& b) throw();
-
-bool operator>(U1 const& a, U1 const& b) throw();
-
-bool operator!=(U1 const& a, U1 const& b) throw();
-
-bool operator==(U1 const& a, U1 const& b) throw();
-
-bool operator<=(U1 const& a, U1 const& b) throw();
-
-bool operator>=(U1 const& a, U1 const& b) throw();
 
 
 namespace p11
@@ -229,11 +242,189 @@ class F
 public:
   virtual ~F() throw();
 
-  virtual void f1(
+  virtual ::xju::Shared< ::U1 const> f1(
     ::xju::Shared< ::U1 const> const& a) throw(
     // ipc failure
     // - note servant may not throw
     cxy::Exception) = 0;
+  class Y
+  {
+  public:
+    enum Value {
+      U,
+      V
+    };
+    Y(Value v) throw(cxy::Exception);
+
+    friend Value valueOf(Y const& x) throw(){ return x.v_; }
+  private:
+    Value v_;
+    friend bool operator<(Y const& x, Y const& y) throw(){
+      return x.v_ < y.v_;
+    }
+    friend bool operator>(Y const& x, Y const& y) throw(){
+      return x.v_ > y.v_;
+    }
+    friend bool operator==(Y const& x, Y const& y) throw(){
+      return x.v_ == y.v_;
+    }
+    friend bool operator!=(Y const& x, Y const& y) throw(){
+      return x.v_ != y.v_;
+    }
+    friend bool operator<=(Y const& x, Y const& y) throw(){
+      return x.v_ <= y.v_;
+    }
+    friend bool operator>=(Y const& x, Y const& y) throw(){
+      return x.v_ >= y.v_;
+    }
+    friend std::ostream& operator<<(std::ostream& s, Y const& x) throw(){
+      switch(x.v_){
+      case U: return s << "U";
+      case V: return s << "V";
+      }
+      return s << (x.v_);
+    }
+  };
+  
+   // IDL Union U2
+  class U2
+  {
+  public:
+    virtual ~U2() throw();
+
+    class U;
+    class V;
+  protected:
+    explicit U2(::p11::F::Y d) throw();
+
+  private:
+    ::p11::F::Y d_;
+    friend ::p11::F::Y discriminator(U2 const& x) throw() {
+      return x.d_;
+    }
+    virtual bool lessThan(U2 const& b) const throw()=0;
+  
+  friend bool operator<(U2 const& a, U2 const& b) throw()
+  {
+    return a.lessThan(b);
+  }
+  friend bool operator>(U2 const& a, U2 const& b) throw()
+  {
+    return b < a;
+  }
+  friend bool operator!=(U2 const& a, U2 const& b) throw()
+  {
+    return (a<b)||(b<a);
+  }
+  friend bool operator==(U2 const& a, U2 const& b) throw()
+  {
+    return !(a<b)&&!(b<a);
+  }
+  friend bool operator<=(U2 const& a, U2 const& b) throw()
+  {
+    return (a<b)||(a==b);
+  }
+  friend bool operator>=(U2 const& a, U2 const& b) throw()
+  {
+    return (a>b)||(a==b);
+  }
+  };
+  
+  class U2::U : 
+    public U2
+  {
+  public:
+    std::string u_;
+  
+    virtual ~U() throw();
+
+    explicit U(
+      std::string const& p1) throw();
+
+    friend bool operator<(
+      U const& x, 
+      U const& y) throw() {
+      if (x.u_<y.u_) return true;
+      if (y.u_<x.u_) return false;
+      return false;
+    }
+    friend bool operator>(
+      U const& x, 
+      U const& y) throw() {
+      return y<x;
+    }
+    friend bool operator!=(
+      U const& x, 
+      U const& y) throw() {
+      return (x<y)||(y<x);
+    }
+    friend bool operator==(
+      U const& x, 
+      U const& y) throw() {
+      return !(x!=y);
+    }
+    friend bool operator<=(
+      U const& x, 
+      U const& y) throw() {
+      return (x<y)||(x==y);
+    }
+    friend bool operator>=(
+      U const& x, 
+      U const& y) throw() {
+      return (x>y)||(x==y);
+    }
+    bool lessThan(U2 const& b) const throw();
+
+  };
+  
+  class U2::V : 
+    public U2
+  {
+  public:
+    int16_t v_;
+  
+    virtual ~V() throw();
+
+    explicit V(
+      int16_t const& p1) throw();
+
+    friend bool operator<(
+      V const& x, 
+      V const& y) throw() {
+      if (x.v_<y.v_) return true;
+      if (y.v_<x.v_) return false;
+      return false;
+    }
+    friend bool operator>(
+      V const& x, 
+      V const& y) throw() {
+      return y<x;
+    }
+    friend bool operator!=(
+      V const& x, 
+      V const& y) throw() {
+      return (x<y)||(y<x);
+    }
+    friend bool operator==(
+      V const& x, 
+      V const& y) throw() {
+      return !(x!=y);
+    }
+    friend bool operator<=(
+      V const& x, 
+      V const& y) throw() {
+      return (x<y)||(x==y);
+    }
+    friend bool operator>=(
+      V const& x, 
+      V const& y) throw() {
+      return (x>y)||(x==y);
+    }
+    bool lessThan(U2 const& b) const throw();
+
+  };
+  
+  
 };
 
 }

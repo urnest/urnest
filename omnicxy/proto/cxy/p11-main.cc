@@ -56,13 +56,14 @@ public:
   {
   }
   
-  virtual void f1(
+  virtual ::xju::Shared< ::U1 const> f1(
     ::xju::Shared< ::U1 const> const& a) throw(cxy::Exception)
   {
     std::cout << "F::f1(" 
               << (*a) << ")" << std::endl;
     calls_.push_back(xju::Shared<Call>(
                        new Call::f1(a)));
+    return a;
   }
   struct Call
   {
@@ -113,8 +114,8 @@ int main(int argc, char* argv[])
     if (argv[2]==std::string("client")) {
       cxy::ORB<cxy::Exception> orb("giop:tcp::");
       cxy::cref<p11::F> ref(orb, makeURI(port, OBJECT_NAME));
-      ref->f1(::xju::Shared< ::U1 const>(
-                new ::U1::C(10.6)));
+      std::cout << ref->f1(::xju::Shared< ::U1 const>(
+                             new ::U1::C(10.6))) << std::endl;
     }
     else if (argv[2]==std::string("server")) {
       std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
@@ -135,7 +136,8 @@ int main(int argc, char* argv[])
       cxy::sref<p11::F> const xa(orb, OBJECT_NAME, x);
       
       cxy::cref<p11::F> ref(orb, makeURI(port, OBJECT_NAME));
-      ref->f1(::xju::Shared< ::U1 const>(new ::U1::A(20L)));
+      ::xju::Shared< ::U1 const> r(
+        ref->f1(::xju::Shared< ::U1 const>(new ::U1::A(20L))));
       xju::assert_equal(x.calls_.size(),1U);
       {
         F_impl::Call::f1 const& c(
@@ -143,6 +145,10 @@ int main(int argc, char* argv[])
         xju::assert_equal(c, F_impl::Call::f1(::xju::Shared< ::U1 const>(
                                                 new ::U1::A(20L))));
       }
+      xju::assert_equal(*r, ::U1::A(20L));
+      xju::assert_less(*r, ::U1::A(21L));
+      xju::assert_less(*r, ::U1::B());
+      xju::assert_less(*r, ::U1::C(0.0));
     }
     return 0;
   }

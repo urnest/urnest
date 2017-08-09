@@ -524,10 +524,18 @@ public:%(members)s
     %(caseName)s const& y) throw() {
     return (x>y)||(x==y);
   }
+  bool lessThan(%(typeName)s const& b) const throw()
+  {
+    if (dynamic_cast<%(typeName)s::%(caseName)s const* >(&b)) {
+      return (*this) < dynamic_cast< %(typeName)s::%(caseName)s const& >(b);
+    }%(latter_cases)s
+    return false;
+  }
 };
 '''
 def gen_union_case_def(typeName,
                        caseName,
+                       latterCaseNames,
                        memberTypesAndNames,
                        switchTypeName,
                        descriminator,
@@ -547,6 +555,8 @@ def gen_union_case_def(typeName,
                           '\n    if (y.%(_)s<x.%(_)s) return false;')%vars()
                          for _ in memberNames])
     caseTypeNameInDecl=caseTypeNameInDecl or caseName
+    latter_cases=''.join([gen_union_latter_case(typeName,_) \
+                              for _ in latterCaseNames])
     return union_case_def_t%vars()
 
 union_default_case_def_t='''
@@ -559,6 +569,13 @@ public:%(members)s
   }
   explicit Default(%(consparams)s) throw():
       %(typeName)s(d)%(consinitialisers)s {%(validateDiscriminator)s
+  }
+  bool lessThan(%(typeName)s const& b) const throw() //override
+  {
+    if (dynamic_cast<%(typeName)s::Default const* >(&b)) {
+      return (*this) < dynamic_cast< %(typeName)s::Default const& >(b);
+    }
+    return false;
   }
   friend bool operator<(
     Default const& x, 
@@ -624,26 +641,6 @@ union_latter_case_t='''
 def gen_union_latter_case(typeName,latterCaseName):
     return union_latter_case_t%vars()
 
-union_case_less_operator_t='''
-bool operator<(%(typeName)s::%(caseName)s const& x, %(typeName)s const& b) throw()
-{
-  if (dynamic_cast<%(typeName)s::%(caseName)s const* >(&b)) {
-    return x < dynamic_cast< %(typeName)s::%(caseName)s const& >(b);
-  }%(latter_cases)s
-  return false;
-}'''
-def gen_union_case_less_operator(typeName,caseName,latterCaseNames):
-    latter_cases=''.join([gen_union_latter_case(typeName,_) \
-                              for _ in latterCaseNames])
-    return union_case_less_operator_t%vars()
-
-union_less_clause_t='''
-  if (dynamic_cast<%(typeName)s::%(caseName)s const* >(&a)) {
-    return dynamic_cast<%(typeName)s::%(caseName)s const&>(a)<b;
-  }'''
-def gen_union_less_clause(typeName,caseName):
-    return union_less_clause_t%vars()
-
 enum_union_t='''\
  // IDL Union %(typeName)s
 class %(typeName)s
@@ -661,33 +658,34 @@ private:
   friend ::%(switchTypeName)s discriminator(%(typeName)s const& x) throw() {
     return x.d_;
   }
-};
-%(union_case_defs)s
-%(case_less_operators)s
-bool operator<(%(typeName)s const& a, %(typeName)s const& b) throw()
-{%(less_clauses)s
-  return discriminator(a) < discriminator(b);
+  virtual bool lessThan(%(typeName)s const& b) const throw()=0;
+
+friend bool operator<(%(typeName)s const& a, %(typeName)s const& b) throw()
+{
+  return a.lessThan(b);
 }
-bool operator>(%(typeName)s const& a, %(typeName)s const& b) throw()
+friend bool operator>(%(typeName)s const& a, %(typeName)s const& b) throw()
 {
   return b < a;
 }
-bool operator!=(%(typeName)s const& a, %(typeName)s const& b) throw()
+friend bool operator!=(%(typeName)s const& a, %(typeName)s const& b) throw()
 {
   return (a<b)||(b<a);
 }
-bool operator==(%(typeName)s const& a, %(typeName)s const& b) throw()
+friend bool operator==(%(typeName)s const& a, %(typeName)s const& b) throw()
 {
   return !(a<b)&&!(b<a);
 }
-bool operator<=(%(typeName)s const& a, %(typeName)s const& b) throw()
+friend bool operator<=(%(typeName)s const& a, %(typeName)s const& b) throw()
 {
   return (a<b)||(a==b);
 }
-bool operator>=(%(typeName)s const& a, %(typeName)s const& b) throw()
+friend bool operator>=(%(typeName)s const& a, %(typeName)s const& b) throw()
 {
   return (a>b)||(a==b);
 }
+};
+%(union_case_defs)s
 '''
 def get_union_cases(decl,eclass):
     '''get union cases as [(label,[(memberType,memberName)]'''
@@ -740,13 +738,13 @@ def gen_enum_union(decl,eclass):
                  for _ in decl.switchType().decl().enumerators()])
     union_case_fwds='\n  '.join(['class %(_)s;'%vars() for _ in labels])
     union_case_defs=''.join(
-        [gen_union_case_def(typeName,caseName,cases[caseName],switchTypeName,ds[caseName])\
+        [gen_union_case_def(typeName,
+                            caseName,
+                            labels[labels.index(caseName)+1:],
+                            cases[caseName],
+                            switchTypeName,
+                            ds[caseName])\
              for caseName in labels])
-    case_less_operators=''.join(\
-        [gen_union_case_less_operator(typeName,caseName,labels[i+1:])\
-             for i,caseName in enumerate(labels)])
-    less_clauses=''.join([gen_union_less_clause(typeName,caseName)\
-                              for caseName in labels])
     return enum_union_t%vars()
 
 non_enum_union_t='''\
@@ -771,6 +769,32 @@ private:
   friend ::%(switchTypeName)s discriminator(%(typeName)s const& x) throw() {
     return x.d_;
   }
+  virtual bool lessThan(%(typeName)s const& b) const throw()=0;
+
+friend bool operator<(%(typeName)s const& a, %(typeName)s const& b) throw()
+{
+  return a.lessThan(b);
+}
+friend bool operator>(%(typeName)s const& a, %(typeName)s const& b) throw()
+{
+  return b < a;
+}
+friend bool operator!=(%(typeName)s const& a, %(typeName)s const& b) throw()
+{
+  return (a<b)||(b<a);
+}
+friend bool operator==(%(typeName)s const& a, %(typeName)s const& b) throw()
+{
+  return !(a<b)&&!(b<a);
+}
+friend bool operator<=(%(typeName)s const& a, %(typeName)s const& b) throw()
+{
+  return (a<b)||(a==b);
+}
+friend bool operator>=(%(typeName)s const& a, %(typeName)s const& b) throw()
+{
+  return (a>b)||(a==b);
+}
 };
 template< %(switchTypeName)s >
 class %(typeName)s::V
@@ -779,31 +803,6 @@ private:
   V() throw(); // must specialise class
 };
 %(union_case_defs)s
-%(case_less_operators)s
-bool operator<(%(typeName)s const& a, %(typeName)s const& b) throw()
-{%(less_clauses)s
-  return discriminator(a) < discriminator(b);
-}
-bool operator>(%(typeName)s const& a, %(typeName)s const& b) throw()
-{
-  return b < a;
-}
-bool operator!=(%(typeName)s const& a, %(typeName)s const& b) throw()
-{
-  return (a<b)||(b<a);
-}
-bool operator==(%(typeName)s const& a, %(typeName)s const& b) throw()
-{
-  return !(a<b)&&!(b<a);
-}
-bool operator<=(%(typeName)s const& a, %(typeName)s const& b) throw()
-{
-  return (a<b)||(a==b);
-}
-bool operator>=(%(typeName)s const& a, %(typeName)s const& b) throw()
-{
-  return (a>b)||(a==b);
-}
 '''
 def gen_non_enum_union(decl,eclass):
     assert decl.switchType().kind() in basicIntTypes,decl
@@ -818,23 +817,20 @@ def gen_non_enum_union(decl,eclass):
     union_case_fwds='\n  '.join(['template<> class V< %(_)s >;'%vars()
                                  for _ in labels]+
                                 ['class Default;'])
-    union_case_defs=''.join([gen_union_case_def(typeName,
-                                                caseClass,
-                                                cases[label],
-                                                switchTypeName,
-                                                label,
-                                                'template<>\n',
-                                                'V')
-                             for label,caseClass in zip(labels,caseClasses)]+
+    union_case_defs=''.join([
+        gen_union_case_def(typeName,
+                           caseClass,
+                           caseClasses[caseClasses.index(caseClass)+1:],
+                           cases[label],
+                           switchTypeName,
+                           label,
+                           'template<>\n',
+                           'V')
+        for label,caseClass in zip(labels,caseClasses)]+
                             [gen_union_default_case_def(typeName,
                                                         cases[None],
                                                         switchTypeName,
                                                         labels)])
-    case_less_operators=''.join(\
-        [gen_union_case_less_operator(typeName,caseName,caseClasses[i+1:])\
-             for i,caseName in enumerate(caseClasses)])
-    less_clauses=''.join([gen_union_less_clause(typeName,caseName)\
-                              for caseName in caseClasses])
     return non_enum_union_t%vars()
 
 def gen(decl,eclass,eheader,causeType,contextType,indent=''):

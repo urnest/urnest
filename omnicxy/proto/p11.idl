@@ -13,6 +13,14 @@ module p11
 {
   interface F
   {
-    void f1(in U1 a);
+    U1 f1(in U1 a);
+
+    enum Y{
+      U, V
+    };
+    union U2 switch(Y) {
+    case U: string u_;
+    case V: short v_;
+    };
   };
 };
