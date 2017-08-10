@@ -414,6 +414,9 @@ class Selection:
     def filter(self, predicate):
         '''nodes of ours that match predicate'''
         return Selection([_ for _ in self.nodeList if predicate(_)])
+    def unless(self, predicate):
+        '''nodes of ours that don't match predicate'''
+        return Selection([_ for _ in self.nodeList if not predicate(_)])
     def html(self, nodes):
         '''replace our first node's children with the specified list of nodes/html string'''
         if type(nodes)==types.StringType:
@@ -545,9 +548,9 @@ class Selection:
     def __len__(self):
         return len(self.nodeList)
     def __getitem__(self, key):
-        return Selection(self.nodeList[key])
+        return Selection(self.nodeList.__getitem__(key))
     def __getslice__(self, i, j):
-        return Selection(self.nodeList[i:j])
+        return Selection(self.nodeList.__getslice(i,j))
     def __add__(self, b):
         if isinstance(b,Selection):
             return Selection(self.nodeList+b.nodeList)
@@ -765,19 +768,10 @@ def test16():
     pass
 
 if __name__=='__main__':
-        test1()
-        test2()
-        test3()
-        test4()
-        test5()
-        test6()
-        test7()
-        test8()
-        test9()
-        test10()
-        test11()
-        test12()
-        test13()
-        test14()
-        test15()
-        test16()
+    tests=[_ for _ in vars().keys()[:]
+           if _.startswith('test') and callable(vars()[_])]
+    for t in tests:
+        vars()[t]()
+        pass
+    print 'PASS - {0} steps'.format(len(tests))
+    pass
