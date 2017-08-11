@@ -484,7 +484,7 @@ def gen_enum(name,values,eclass):
     return enum_t%vars()
 
 union_case_def_t='''
-%(templateIntro)sclass %(typeName)s::%(caseName)s : 
+%(templateIntro)sclass %(extraScope)s%(typeName)s::%(caseName)s : 
   public %(typeName)s
 {
 public:%(members)s
@@ -540,7 +540,8 @@ def gen_union_case_def(typeName,
                        switchTypeName,
                        descriminator,
                        templateIntro='',
-                       caseTypeNameInDecl=None):
+                       caseTypeNameInDecl=None,
+                       extraScopeNames=[]):
     memberNames=[_[1] for _ in memberTypesAndNames]
     memberTypes=[_[0] for _ in memberTypesAndNames]
     paramNames=['p%s'%i for i in range(1,len(memberTypesAndNames)+1)]
@@ -557,10 +558,11 @@ def gen_union_case_def(typeName,
     caseTypeNameInDecl=caseTypeNameInDecl or caseName
     latter_cases=''.join([gen_union_latter_case(typeName,_) \
                               for _ in latterCaseNames])
+    extraScope=''.join([_+'::' for _ in extraScopeNames])
     return union_case_def_t%vars()
 
 union_default_case_def_t='''
-class %(typeName)s::Default : 
+class %(extraScope)s%(typeName)s::Default : 
   public %(typeName)s
 {
 public:%(members)s
@@ -613,7 +615,8 @@ public:%(members)s
 def gen_union_default_case_def(typeName,
                                memberTypesAndNames,
                                switchTypeName,
-                               nonDefaultDiscriminators):
+                               nonDefaultDiscriminators,
+                               extraScopeNames):
     memberNames=[_[1] for _ in memberTypesAndNames]
     memberTypes=[_[0] for _ in memberTypesAndNames]
     paramNames=['p%s'%i for i in range(1,len(memberTypesAndNames)+1)]
@@ -632,12 +635,13 @@ def gen_union_default_case_def(typeName,
     lessMembers=''.join([('\n    if (x.%(_)s<y.%(_)s) return true;'+
                           '\n    if (y.%(_)s<x.%(_)s) return false;')%vars()
                          for _ in memberNames])
+    extraScope=''.join([_+'::' for _ in extraScopeNames])
     return union_default_case_def_t%vars()
 
 union_latter_case_t='''
-  if (dynamic_cast<%(typeName)s::%(latterCaseName)s const* >(&b)) {
-    return true;
-  }'''
+    if (dynamic_cast<%(typeName)s::%(latterCaseName)s const* >(&b)) {
+      return true;
+    }'''
 def gen_union_latter_case(typeName,latterCaseName):
     return union_latter_case_t%vars()
 
@@ -660,30 +664,30 @@ private:
   }
   virtual bool lessThan(%(typeName)s const& b) const throw()=0;
 
-friend bool operator<(%(typeName)s const& a, %(typeName)s const& b) throw()
-{
-  return a.lessThan(b);
-}
-friend bool operator>(%(typeName)s const& a, %(typeName)s const& b) throw()
-{
-  return b < a;
-}
-friend bool operator!=(%(typeName)s const& a, %(typeName)s const& b) throw()
-{
-  return (a<b)||(b<a);
-}
-friend bool operator==(%(typeName)s const& a, %(typeName)s const& b) throw()
-{
-  return !(a<b)&&!(b<a);
-}
-friend bool operator<=(%(typeName)s const& a, %(typeName)s const& b) throw()
-{
-  return (a<b)||(a==b);
-}
-friend bool operator>=(%(typeName)s const& a, %(typeName)s const& b) throw()
-{
-  return (a>b)||(a==b);
-}
+  friend bool operator<(%(typeName)s const& a, %(typeName)s const& b) throw()
+  {
+    return a.lessThan(b);
+  }
+  friend bool operator>(%(typeName)s const& a, %(typeName)s const& b) throw()
+  {
+    return b < a;
+  }
+  friend bool operator!=(%(typeName)s const& a, %(typeName)s const& b) throw()
+  {
+    return (a<b)||(b<a);
+  }
+  friend bool operator==(%(typeName)s const& a, %(typeName)s const& b) throw()
+  {
+    return !(a<b)&&!(b<a);
+  }
+  friend bool operator<=(%(typeName)s const& a, %(typeName)s const& b) throw()
+  {
+    return (a<b)||(a==b);
+  }
+  friend bool operator>=(%(typeName)s const& a, %(typeName)s const& b) throw()
+  {
+    return (a>b)||(a==b);
+  }
 };
 %(union_case_defs)s
 '''
@@ -747,6 +751,37 @@ def gen_enum_union(decl,eclass):
              for caseName in labels])
     return enum_union_t%vars()
 
+class ForNamespaceScope:
+    def __init__(self,f):
+        assert callable(f),repr(f)
+        self.f=f
+        self.extraScope=[]
+        pass
+    def __str__(self):
+        extraScope=self.extraScope
+        extraScope.reverse()
+        return self.f(extraScope)
+    pass
+
+class GenResult:
+    def __init__(self,code,forNamespaceScope):
+        assert isinstance(code,str),code.__class__
+        assert isinstance(forNamespaceScope,list),forNamespaceScope.__class__
+        assert len([_ for _ in forNamespaceScope if not isinstance(_,ForNamespaceScope)])==0,repr(forNamespaceScope)
+        self.code=code
+        self.forNamespaceScope=forNamespaceScope
+        pass
+    def addScope(self,scope):
+        '''add scope like "na"'''
+        for x in self.forNamespaceScope:
+            x.extraScope.append(scope)
+            pass
+        pass
+    def genNamespaceScopeCode(self,indent):
+        return reindent(indent,
+                        ''.join([str(_) for _ in self.forNamespaceScope]))
+    pass
+
 non_enum_union_t='''\
  // IDL Union %(typeName)s
 class %(typeName)s
@@ -771,30 +806,30 @@ private:
   }
   virtual bool lessThan(%(typeName)s const& b) const throw()=0;
 
-friend bool operator<(%(typeName)s const& a, %(typeName)s const& b) throw()
-{
-  return a.lessThan(b);
-}
-friend bool operator>(%(typeName)s const& a, %(typeName)s const& b) throw()
-{
-  return b < a;
-}
-friend bool operator!=(%(typeName)s const& a, %(typeName)s const& b) throw()
-{
-  return (a<b)||(b<a);
-}
-friend bool operator==(%(typeName)s const& a, %(typeName)s const& b) throw()
-{
-  return !(a<b)&&!(b<a);
-}
-friend bool operator<=(%(typeName)s const& a, %(typeName)s const& b) throw()
-{
-  return (a<b)||(a==b);
-}
-friend bool operator>=(%(typeName)s const& a, %(typeName)s const& b) throw()
-{
-  return (a>b)||(a==b);
-}
+  friend bool operator<(%(typeName)s const& a, %(typeName)s const& b) throw()
+  {
+    return a.lessThan(b);
+  }
+  friend bool operator>(%(typeName)s const& a, %(typeName)s const& b) throw()
+  {
+    return b < a;
+  }
+  friend bool operator!=(%(typeName)s const& a, %(typeName)s const& b) throw()
+  {
+    return (a<b)||(b<a);
+  }
+  friend bool operator==(%(typeName)s const& a, %(typeName)s const& b) throw()
+  {
+    return !(a<b)&&!(b<a);
+  }
+  friend bool operator<=(%(typeName)s const& a, %(typeName)s const& b) throw()
+  {
+    return (a<b)||(a==b);
+  }
+  friend bool operator>=(%(typeName)s const& a, %(typeName)s const& b) throw()
+  {
+    return (a>b)||(a==b);
+  }
 };
 template< %(switchTypeName)s >
 class %(typeName)s::V
@@ -802,9 +837,9 @@ class %(typeName)s::V
 private:
   V() throw(); // must specialise class
 };
-%(union_case_defs)s
 '''
 def gen_non_enum_union(decl,eclass):
+    '''returns a GenResult'''
     assert decl.switchType().kind() in basicIntTypes,decl
     typeName=decl.identifier()
     switchTypeName=unqualifiedType(decl.switchType(),eclass)
@@ -817,32 +852,44 @@ def gen_non_enum_union(decl,eclass):
     union_case_fwds='\n  '.join(['template<> class V< %(_)s >;'%vars()
                                  for _ in labels]+
                                 ['class Default;'])
-    union_case_defs=''.join([
-        gen_union_case_def(typeName,
-                           caseClass,
-                           caseClasses[caseClasses.index(caseClass)+1:],
-                           cases[label],
-                           switchTypeName,
-                           label,
-                           'template<>\n',
-                           'V')
-        for label,caseClass in zip(labels,caseClasses)]+
-                            [gen_union_default_case_def(typeName,
-                                                        cases[None],
-                                                        switchTypeName,
-                                                        labels)])
-    return non_enum_union_t%vars()
+    #defer generation of the template specialisations to nearest
+    #namespace scope
+    union_case_defs=lambda scopeNames:\
+                     ''.join([
+                         gen_union_case_def(
+                             typeName,
+                             caseClass,
+                             caseClasses[caseClasses.index(caseClass)+1:]+
+                             ['Default'],
+                             cases[label],
+                             switchTypeName,
+                             label,
+                             'template<>\n',
+                             'V',
+                             scopeNames)
+                         for label,caseClass in zip(labels,caseClasses)]+
+                             [gen_union_default_case_def(typeName,
+                                                         cases[None],
+                                                         switchTypeName,
+                                                         labels,
+                                                         scopeNames)])
+    return GenResult(non_enum_union_t%locals(),[
+        ForNamespaceScope(union_case_defs)])
 
 def gen(decl,eclass,eheader,causeType,contextType,indent=''):
+    '''- returns a GenResult'''
     try:
-        result=''
+        result=GenResult('',[])
         if isinstance(decl, idlast.Module):
             ns=decl.identifier()
-            result='%(indent)snamespace %(ns)s\n%(indent)s{\n'%vars()
-            result=result+''.join(
-                [gen(_,eclass,eheader,causeType,contextType,indent)+'\n' \
-                     for _ in decl.definitions()])
-            result=result+'%(indent)s}'%vars()
+            result.code='%(indent)snamespace %(ns)s\n%(indent)s{\n'%vars()
+            genResults=[
+                gen(_,eclass,eheader,causeType,contextType,indent) \
+                for _ in decl.definitions()]
+            result.code=result.code+''.join([_.code+'\n' for _ in genResults])
+            result.code=result.code+''.join(
+                [_.genNamespaceScopeCode(indent) for _ in genResults])
+            result.code=result.code+'%(indent)s}'%vars()
         elif isinstance(decl, idlast.Interface):
             inherits=''
             if len(decl.inherits()):
@@ -851,10 +898,13 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
                     ['\n  public virtual %(fqn)s'%vars() for fqn in fqns])
                 pass
             name=decl.identifier()
-            content='\n'.join(
-                [gen(_,eclass,eheader,causeType,contextType,indent+'  ') \
-                     for _ in decl.contents()])
-            result=reindent(indent,interface_t%vars())
+            genResults=[
+                gen(_,eclass,eheader,causeType,contextType,indent+'  ')
+                for _ in decl.contents()]
+            content='\n'.join([_.code for _ in genResults])
+            result.code=reindent(indent,interface_t%vars())
+            result.forNamespaceScope=sum([_.forNamespaceScope for _ in genResults],[])
+            result.addScope(decl.identifier())
         elif isinstance(decl, idlast.Operation):
             name=decl.identifier()
             params=','.join(['\n  %s& %s'%(ptype(p,eclass),p.identifier()) \
@@ -863,38 +913,38 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
             exceptionTypes=['::'.join(_.scopedName()) for _ in decl.raises()]
             exceptions=''.join(['\n  %(_)s,'%vars() for _ in exceptionTypes])
             returnType=unqualifiedType(decl.returnType(),eclass)
-            result=reindent(indent,operation_t%vars())
+            result.code=reindent(indent,operation_t%vars())
         elif isinstance(decl, idlast.Typedef):
             name=decl.declarators()[0].identifier()
             tagClass=''
             aliasOf=decl.aliasType()
             if aliasOf.kind() in basicIntTypes:
                 aliasOf=unqualifiedType(aliasOf,eclass)
-                result=reindent(
+                result.code=reindent(
                     indent,
                     ('class %(name)s_tag {};\n'+
                      'typedef ::xju::Int< %(name)s_tag,%(aliasOf)s,%(eclass)s > %(name)s;')%vars())
             elif aliasOf.kind() in basicFloatTypes:
                 aliasOf=unqualifiedType(aliasOf,eclass)
-                result=reindent(
+                result.code=reindent(
                     indent,
                     ('class %(name)s_tag {};\n'+
                      'typedef ::xju::Float< %(name)s_tag,%(aliasOf)s,%(eclass)s > %(name)s;')%vars())
             elif aliasOf.kind() in basicStringTypes:
-                result=reindent(
+                result.code=reindent(
                     indent,
                     ('class %(name)s_tag {};\n'+
                      'typedef ::xju::Tagged<std::string,%(name)s_tag > %(name)s;')%vars())
             else:
                 aliasOf=unqualifiedType(aliasOf,eclass)
-                result=reindent(
+                result.code=reindent(
                     indent,
                     ('typedef %(aliasOf)s %(name)s;')%vars())
                 pass
         elif isinstance(decl, idlast.Struct):
             name=decl.identifier()
             memberTypesAndNames=[(unqualifiedType(_.memberType(),eclass),_.declarators()[0].identifier()) for _ in decl.members()];
-            result=reindent(
+            result.code=reindent(
                 indent,
                 gen_struct(name,memberTypesAndNames))
             pass
@@ -905,19 +955,19 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
                     for _ in decl.members()];
             memberTypes=[_[0] for _ in memberTypesAndNames]
             if causeType in memberTypes and contextType in memberTypes:
-                result=reindent(
+                result.code=reindent(
                     indent,
                     gen_mapped_exception(name,memberTypesAndNames,
                                          eclass,causeType,contextType))
             else:
-                result=reindent(
+                result.code=reindent(
                     indent,
                     gen_exception(name,memberTypesAndNames,eclass))
             pass
         elif isinstance(decl, idlast.Enum):
             name=decl.identifier()
             values=[_.identifier() for _ in decl.enumerators()]
-            result=reindent(
+            result.code=reindent(
                 indent,
                 gen_enum(name,values,eclass))
         elif isinstance(decl, idlast.Const):
@@ -928,14 +978,16 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
             else:
                 value=repr(decl.value())
                 pass
-            result=reindent(
+            result.code=reindent(
                 indent,
                 '%(type_)s const %(name)s = %(value)s;'%vars())
         elif isinstance(decl, idlast.Union):
             if decl.switchType().kind()==idltype.tk_enum:
-                result=reindent(indent, gen_enum_union(decl,eclass))
+                result.code=reindent(indent, gen_enum_union(decl,eclass))
             else:
-                result=reindent(indent, gen_non_enum_union(decl,eclass))
+                r=gen_non_enum_union(decl,eclass)
+                result.code=reindent(indent, r.code)
+                result.forNamespaceScope.extend(r.forNamespaceScope)
         else:
             assert False, repr(decl)
             pass
@@ -1100,6 +1152,8 @@ def run(tree, args):
                                 hhext)
     
     print head % vars()
-    print '\n'.join([gen(_,eclass,eheader,causeType,contextType) \
-                         for _ in tree.declarations() if _.mainFile()])
+    genResults=[gen(_,eclass,eheader,causeType,contextType)
+                for _ in tree.declarations() if _.mainFile()]
+    print '\n'.join([_.code for _ in genResults])
+    print '\n'.join([_.genNamespaceScopeCode('') for _ in genResults])
     pass

@@ -9,5 +9,10 @@ module p13
   interface F
   {
     void f1(in U1 a);
+
+    union U2 switch(long) {
+    case 3: string c3;
+    default: long d_;
+    };
   };
 };

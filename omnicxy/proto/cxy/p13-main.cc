@@ -150,6 +150,10 @@ int main(int argc, char* argv[])
         xju::assert_equal(c, F_impl::Call::f1(::xju::Shared< ::p13::U1 const>(
                                                 new ::p13::U1::Default(18,"fred"))));
       }
+      //check ordering
+      xju::assert_less(::p13::U1::V<1>(20L),::p13::U1::Default(18,"fred"));
+      xju::assert_less(::p13::U1::V<1>(20L),::p13::U1::V<1>(21L));
+      xju::assert_less(::p13::U1::V<1>(20L),::p13::U1::V<2>(20.0));
     }
     return 0;
   }
