@@ -1,11 +1,25 @@
-- get jsonschema
+- get jsonschema from eg rss-carnival
 - jsonschema:
-  - fix dict. handling to verify all elements supplied
+  x fix dict. handling to verify all elements supplied
+  x allow fixed literal values False, True
+  x allow fixed literal values 7, "nothanks"
+  - allow optional dict members
   - add HTML type, and query for HTML objects
   - add some kind of pq.parse for parsing list returned by jsonschema query
   - set(x) - set of x
 
 pq.py:
+  - .showData(dict-or-list)
+    - dict:
+      put each dict element into html elements with corresponding class:
+        input: set value
+	checkbox: set checked
+	select: set which checked
+	text area: set value
+	other: text(v)
+    - list: as for dict but clone html for each list element
+  - .sep(html):
+    - insert html.clone() between each element of selection
   - css selector parsing
     - tag name
     - class
