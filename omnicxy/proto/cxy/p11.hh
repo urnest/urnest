@@ -71,30 +71,30 @@ private:
   }
   virtual bool lessThan(U1 const& b) const throw()=0;
 
-friend bool operator<(U1 const& a, U1 const& b) throw()
-{
-  return a.lessThan(b);
-}
-friend bool operator>(U1 const& a, U1 const& b) throw()
-{
-  return b < a;
-}
-friend bool operator!=(U1 const& a, U1 const& b) throw()
-{
-  return (a<b)||(b<a);
-}
-friend bool operator==(U1 const& a, U1 const& b) throw()
-{
-  return !(a<b)&&!(b<a);
-}
-friend bool operator<=(U1 const& a, U1 const& b) throw()
-{
-  return (a<b)||(a==b);
-}
-friend bool operator>=(U1 const& a, U1 const& b) throw()
-{
-  return (a>b)||(a==b);
-}
+  friend bool operator<(U1 const& a, U1 const& b) throw()
+  {
+    return a.lessThan(b);
+  }
+  friend bool operator>(U1 const& a, U1 const& b) throw()
+  {
+    return b < a;
+  }
+  friend bool operator!=(U1 const& a, U1 const& b) throw()
+  {
+    return (a<b)||(b<a);
+  }
+  friend bool operator==(U1 const& a, U1 const& b) throw()
+  {
+    return !(a<b)&&!(b<a);
+  }
+  friend bool operator<=(U1 const& a, U1 const& b) throw()
+  {
+    return (a<b)||(a==b);
+  }
+  friend bool operator>=(U1 const& a, U1 const& b) throw()
+  {
+    return (a>b)||(a==b);
+  }
 };
 
 class U1::A : 
@@ -304,30 +304,30 @@ public:
     }
     virtual bool lessThan(U2 const& b) const throw()=0;
   
-  friend bool operator<(U2 const& a, U2 const& b) throw()
-  {
-    return a.lessThan(b);
-  }
-  friend bool operator>(U2 const& a, U2 const& b) throw()
-  {
-    return b < a;
-  }
-  friend bool operator!=(U2 const& a, U2 const& b) throw()
-  {
-    return (a<b)||(b<a);
-  }
-  friend bool operator==(U2 const& a, U2 const& b) throw()
-  {
-    return !(a<b)&&!(b<a);
-  }
-  friend bool operator<=(U2 const& a, U2 const& b) throw()
-  {
-    return (a<b)||(a==b);
-  }
-  friend bool operator>=(U2 const& a, U2 const& b) throw()
-  {
-    return (a>b)||(a==b);
-  }
+    friend bool operator<(U2 const& a, U2 const& b) throw()
+    {
+      return a.lessThan(b);
+    }
+    friend bool operator>(U2 const& a, U2 const& b) throw()
+    {
+      return b < a;
+    }
+    friend bool operator!=(U2 const& a, U2 const& b) throw()
+    {
+      return (a<b)||(b<a);
+    }
+    friend bool operator==(U2 const& a, U2 const& b) throw()
+    {
+      return !(a<b)&&!(b<a);
+    }
+    friend bool operator<=(U2 const& a, U2 const& b) throw()
+    {
+      return (a<b)||(a==b);
+    }
+    friend bool operator>=(U2 const& a, U2 const& b) throw()
+    {
+      return (a>b)||(a==b);
+    }
   };
   
   class U2::U : 
@@ -428,4 +428,9 @@ public:
 };
 
 }
+
+
+
+
+
 #endif

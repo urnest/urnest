@@ -853,7 +853,8 @@ def gen_non_enum_union(decl,eclass):
                                  for _ in labels]+
                                 ['class Default;'])
     #defer generation of the template specialisations to nearest
-    #namespace scope
+    #namespace scope, scopeNames gives us the scope "delta" as a list
+    #from outermost to innermost
     union_case_defs=lambda scopeNames:\
                      ''.join([
                          gen_union_case_def(

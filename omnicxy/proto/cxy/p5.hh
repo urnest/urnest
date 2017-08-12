@@ -76,4 +76,5 @@ struct X
 };
 
 }
+
 #endif
