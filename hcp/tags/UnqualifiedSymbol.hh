@@ -16,4 +16,5 @@ class UnqualifiedSymbol_tag {};
 typedef ::xju::Tagged<std::string,UnqualifiedSymbol_tag > UnqualifiedSymbol;
 }
 }
+
 #endif

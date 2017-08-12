@@ -27,3 +27,11 @@ x make sure tags package does .hcp files (yes)
   - or something like that
   - simplifies importSymbolAt
   - is UnqualifiedSymbol just Identifier? Yes, rename it
+
+
+- adjust udv:
+  - get tags file name (in cache) from odin
+  - run tag-lookup-service putting url in $ODIN/tag-lookup-service.url
+  - set TAGS_HPATH based on -I options
+  - set HCP_EXTENSION_MAPPINGS default extension to .hh
+  

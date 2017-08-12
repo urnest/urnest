@@ -5,8 +5,10 @@ Float add math functions exp, sqrt, log, floor, ceiling etc
 
 test-format add format::octal tests for int, long, long long
 
-add AbsFile and AbsDir typedefs in xju::path.hh and use them in xju::file::*
+- add AbsFile and AbsDir typedefs in xju::path.hh and use them in xju::file::*
 ... and in xju::io::*
+
+- add hcp::path::makeRelative
 
 * mkdir gets wrong perms?
 add xju::file::rm,rmdir,stat,stat(dir),ls
@@ -18,8 +20,9 @@ x Thread
   
 x Mutex,Lock
 - Condition
+- delete xju::mt
 
-- xju::Microseconds -> std::chrono::microseconds?
+- xju::Microseconds -> std::chrono::microseconds
 
 io::Input
 io::Output
@@ -36,7 +39,7 @@ io::Output
   - FileIStream
   - FileOStream
   - FileIOStream
-  - TCPListener
+  - TCPListener : Input
   - TCPSocket : IStream,OStream
   / UDPSocket
   - TLSSocket
@@ -47,20 +50,9 @@ io::Output
   - SocketPair, like pipe
   - UnixListener,UnixSocket - like TCPListener,TCPSocket
   - MessageQueue (linux allows select)
-      IQueue& input();
-      OQueue& input();
-x test-pipe.cc:
-  x only tests creation
-x test-io.cc:
-  x use Pipe to test read/write
-    x read already available
-    x read no timeout
-    x read timeout
-    x close before timeout
-    x write timeout
-  x use multiple pipes to test select
+
 - make syscall turn ENOMEM into std::bad_alloc
-- move eg unistd functions into eg xju::unistd:: to allow higher level implementations (eg see pipe)? No, pretty much no clashes
+~ move eg unistd functions into eg xju::unistd:: to allow higher level implementations (eg see pipe)? No, pretty much no clashes
 - move xju::SyscallFailed to SyscallFailed.hh
 
 x Subprocess

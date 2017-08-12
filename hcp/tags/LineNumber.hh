@@ -16,4 +16,5 @@ class LineNumber_tag {};
 typedef ::xju::Int< LineNumber_tag,uint32_t,xju::Exception > LineNumber;
 }
 }
+
 #endif

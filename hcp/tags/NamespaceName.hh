@@ -16,4 +16,5 @@ class NamespaceName_tag {};
 typedef ::xju::Tagged<std::string,NamespaceName_tag > NamespaceName;
 }
 }
+
 #endif
