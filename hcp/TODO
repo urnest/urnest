@@ -11,6 +11,8 @@
 - handle using base class method/member
   - eg handle using xju::Exception; in derived class see REVISIT in hcp/tags
 
+- handle override
+
 x handle scoped enum (non-fixed type)
 
 - hcp-split handle inline constructor eg

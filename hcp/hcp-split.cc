@@ -28,6 +28,7 @@
 #include <xju/format.hh>
 #include <xju/stringToUInt.hh>
 #include "xju/assert.hh"
+#include <map>
 
 std::string getClassName(hcp_ast::ClassDef const* x) throw()
 {
@@ -38,11 +39,11 @@ class OStream
 {
 public:
   // pre: lifetime(s) includes lifetime(this)
-  explicit OStream(std::ostream& s, bool mapFileAndLine) throw():
+  explicit OStream(std::ostream& s) throw():
       s_(s),
       line_(1),
       column_(1),
-      mapFileAndLine_(mapFileAndLine)
+      outputLine_(1)
   {
   }
   template<class T>
@@ -59,6 +60,7 @@ public:
     if (i.line_ != 1) {
       line_+=i.line_-1;
       column_=i.column_;
+      outputLine_+=i.line_-1;
     }
     else
     {
@@ -67,19 +69,20 @@ public:
   }
   void copy(hcp_ast::I begin, hcp_ast::I end)
   {
+    int const beginLine(begin.line_);
     if(line_ != begin.line_) {
       if (column_!=1) {
         s_ << std::endl;
+        ++outputLine_;
       }
-      if (mapFileAndLine_) {
-        s_ << "#line " << begin.line_ << std::endl;
-      }
+      sourceLineMap_.insert(std::make_pair(outputLine_,begin.line_));
     }
     while(begin != end) {
       s_ << (*begin++);
     }
     line_=end.line_;
     column_=end.column_;
+    outputLine_+=end.line_-beginLine;
   }
   void copy(hcp_ast::IRs const& irs)
   {
@@ -89,12 +92,15 @@ public:
       copy((*i)->begin(), (*i)->end());
     }
   }
-  
+  std::map<int,int> const& getSourceLineMap() const throw(){
+    return sourceLineMap_;
+  }
 private:
   std::ostream& s_;
   int line_;
   int column_;
-  bool mapFileAndLine_;
+  int outputLine_;
+  std::map<int,int> sourceLineMap_; //outputLine->sourceLine
 };
 template<class T>
 OStream& operator<<(OStream& s, T const& x)
@@ -358,18 +364,12 @@ class CommandLineOptions
 {
 public:
   explicit CommandLineOptions(unsigned int dir_levels, 
-                              bool th,
-                              bool tc,
                               std::string hpath) throw():
       dir_levels_(dir_levels),
-      th_(th),
-      tc_(tc),
       hpath_(hpath)
   {
   }
   unsigned int dir_levels_;
-  bool th_;
-  bool tc_;
   std::string hpath_;
 };
 
@@ -380,22 +380,12 @@ std::pair<CommandLineOptions, std::vector<std::string> > parseCommandLine(
 {
   std::vector<std::string>::const_iterator i(x.begin());
   unsigned int dir_levels=0;
-  bool th=false;
-  bool tc=true;
   std::string hpath="";
   
   while((i != x.end()) && ((*i)[0]=='-')) {
     if ((*i)=="-l") {
       ++i;
       dir_levels=xju::stringToUInt(hcp::getOptionValue("-l", i, x.end()));
-      ++i;
-    }
-    else if ((*i)=="-th") {
-      th=true;
-      ++i;
-    }
-    else if ((*i)=="-ntc") {
-      tc=false;
       ++i;
     }
     else if ((*i)=="-hpath") {
@@ -413,7 +403,7 @@ std::pair<CommandLineOptions, std::vector<std::string> > parseCommandLine(
       throw xju::Exception(s.str(), XJU_TRACED);
     }
   }
-  return std::make_pair(CommandLineOptions(dir_levels, th, tc, hpath), 
+  return std::make_pair(CommandLineOptions(dir_levels, hpath), 
                         std::vector<std::string>(i, x.end()));
 }
 
@@ -463,17 +453,27 @@ std::string make_guard(std::string x) throw()
   return "_"+x;
 }
 
+void writeLineMap(std::ostream& s,
+                  std::string const& inputFileName,
+                  std::map<int,int> const& lineMap) throw(){
+  s << inputFileName << std::endl;
+  for(auto const x:lineMap){
+    s << x.first << " " << x.second << std::endl;
+  }
+}
+
 int main(int argc, char* argv[])
 {
   try {
     std::pair<CommandLineOptions, std::vector<std::string> > const cmd_line(
       parseCommandLine(std::vector<std::string>(argv+1, argv+argc)));
     
-    if (cmd_line.second.size() != 3) {
+    if (cmd_line.second.size() < 3) {
       std::cout << "usage: " << argv[0] 
                 << " [-th] [-l <levels> | -hpath <path>] <input-file>"
                 << " <output-header-file>"
-                << " <output-cpp-file>" << std::endl;
+                << " <output-cpp-file>"
+                << " [header-line-map-file] [cpp-line-map]" << std::endl;
       std::cout << "-l defaults to 0, which generates #includes without "
                 << "any directory part; non-zero generates that many levels of relative path in output-cpp-file's include statement for output-header-file"
                 << std::endl;
@@ -481,10 +481,6 @@ int main(int argc, char* argv[])
                 << " output-cpp-file's include statement for"
                 << " output-header-file, eg -hpath x/y generates"
                 << " #include <x/y/idl.hh>"
-                << std::endl;
-      std::cout << "-th tracks source file and line in generated header file"
-                << std::endl;
-      std::cout << "-ntc disables source file and line in generated cc file"
                 << std::endl;
       return 1;
     }
@@ -518,11 +514,12 @@ int main(int argc, char* argv[])
     std::ofstream fc(xju::path::str(outputCC).c_str(), 
                      std::ios_base::out|std::ios_base::trunc);
     
-    fh << "#ifndef " << guard << std::endl
-       << "#define " << guard << std::endl;
-    if (cmd_line.first.th_) {
-      fh << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
-    }
+    OStream oh(fh);
+    OStream oc(fc);
+    
+    oh << "#ifndef " << guard << "\n"
+       << "#define " << guard << "\n";
+    oh << "//generated from \""<< xju::path::str(inputFile)<< "\"\n";
     
     xju::path::RelativePath const hhinc(
       std::vector<xju::path::DirName>(
@@ -530,38 +527,44 @@ int main(int argc, char* argv[])
         inputFile.first.end()));
 
     if (cmd_line.first.hpath_.size()) {
-      fc << "#include <" 
+      oc << "#include <" 
          << (cmd_line.first.hpath_+outputHH.second._)
-         << ">" << std::endl;
-      if (cmd_line.first.tc_) {
-        fc << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
-      }
+         << ">" << "\n";
+        oc << "//generated from \""<<xju::path::str(inputFile)<<"\"\n";
     }
     else
     {
       if (hhinc.size()) {
-        fc << "#include <" 
+        oc << "#include <" 
            << xju::path::str(hhinc, outputHH.second)
-           << ">" << std::endl
-           << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
+           << ">" << "\n"
+           << "//generated from \""<<xju::path::str(inputFile)<<"\"\n";
       }
       else
       {
-        fc << "#include \"" 
+        oc << "#include \"" 
            << xju::path::str(hhinc, outputHH.second)
-           << "\"" << std::endl;
-        if (cmd_line.first.tc_) {
-          fc << "#line 1 \""<<xju::path::str(inputFile)<<"\"" << std::endl;
-        }
+           << "\"" << "\n";
+        oc << "//generated from \""<<xju::path::str(inputFile)<<"\"\n";
       }
     }
-    OStream oh(fh, cmd_line.first.th_);
-    OStream oc(fc, cmd_line.first.tc_);
-    
     genNamespaceContent(
       root.items_.front()->asA<hcp_ast::File>().items_, oh, oc);
     
-    fh << "#endif" << std::endl;
+    oh << "#endif" << "\n";
+
+    if (cmd_line.second.size()>3){
+      std::ofstream fh(cmd_line.second[3], 
+                       std::ios_base::out|std::ios_base::trunc);
+      writeLineMap(fh,xju::path::str(inputFile),oh.getSourceLineMap());
+    }
+        
+    if (cmd_line.second.size()>4){
+      std::ofstream fc(cmd_line.second[4], 
+                       std::ios_base::out|std::ios_base::trunc);
+      writeLineMap(fc,xju::path::str(inputFile),oc.getSourceLineMap());
+    }
+
     return 0;
   }
   catch(xju::Exception& e) {

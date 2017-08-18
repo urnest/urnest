@@ -15,7 +15,7 @@ if [ -z "$ccext" ]
 then
   ccext="cc"
 fi &&
-hcpflags="-ntc" &&
+hcpflags="" &&
 if [ -n "$hpath" ]
 then
   hcpflags="$hcpflags -hpath $hpath"
@@ -40,7 +40,7 @@ fi &&
     test -z "$ODINVERBOSE"||echo "$@"
   }
   verbose "$hcpsplit $hcpflags $source $b.$hhext $b.$ccext" &&
-  $hcpsplit $hcpflags $source $b.$hhext $b.$ccext &&
+  $hcpsplit $hcpflags $source $b.$hhext $b.$ccext hcp.hh.smap hcp.cc.smap &&
   mv $b.$hhext hcp.hh &&
   mv $b.$ccext hcp.cc
 ) 2>> WARNINGS || mv WARNINGS ERRORS )

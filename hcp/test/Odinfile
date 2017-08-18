@@ -25,6 +25,6 @@ xju/Traced.cc==.%Traced/Traced.cc
 xju/JoiningIterator.hh==.%JoiningIterator/JoiningIterator.hh
 xju/JoiningIterator.cc==.%JoiningIterator/JoiningIterator.cc
 
-%Traced==()+cmd=(../hcp-split) -l 1 (xju/Traced.hcp) 'Traced.hh' 'Traced.cc':output
+%Traced==()+cmd=(../hcp-split) -l 1 (xju/Traced.hcp) 'Traced.hh' 'Traced.cc' 'hmap' 'cmap':output
 %JoiningIterator==()+cmd=(../hcp-split) -l 1 (xju/JoiningIterator.hcp) 'JoiningIterator.hh' 'JoiningIterator.cc':output
 
