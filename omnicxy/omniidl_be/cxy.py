@@ -84,7 +84,7 @@ def sequenceUnqualifiedType(t,eclass):
 
 def unionUnqualifiedType(t,eclass):
     t=''.join(['::'+_ for _ in t.scopedName()])
-    return '::xju::Shared< %(t)s const>'%vars()
+    return '::std::shared_ptr< %(t)s const>'%vars()
 
 def objrefUnqualifiedType(t,eclass):
     t=''.join(['::'+_ for _ in t.scopedName()])
@@ -113,7 +113,7 @@ def unqualifiedType(t,eclass):
 def unionPtype(p,eclass):
     assert p.paramType().kind()==idltype.tk_union, p.paramType().kind()
     unionTypeName=''.join(['::'+_ for _ in p.paramType().scopedName()])
-    return '::xju::Shared< %(unionTypeName)s const> const'%vars()
+    return '::std::shared_ptr< %(unionTypeName)s const> const'%vars()
 def objrefPtype(p,eclass):
     assert p.paramType().kind()==idltype.tk_objref, p.paramType().kind()
     t=''.join(['::'+_ for _ in p.paramType().scopedName()])
@@ -162,7 +162,7 @@ def tincludes(t):
 
 def pincludes(t):
     if t.kind() in [idltype.tk_union]:
-        result=['<xju/Shared.hh>']
+        result=['<memory>']
         return result
     return tincludes(t)
 

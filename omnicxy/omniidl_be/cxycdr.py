@@ -169,7 +169,7 @@ public:
 union_case_unmarshal_t='''
     case %(d)s:
     {%(memberUnmarshals)s
-      return xju::Shared< ::%(unionFqn)s::%(caseName)s const>(
+      return std::shared_ptr< ::%(unionFqn)s::%(caseName)s const>(
         new ::%(unionFqn)s::%(caseName)s(%(consParams)s));
     }\
 '''
@@ -201,10 +201,10 @@ def gen_union_case_marshal(unionFqn,
 
 union_t='''\
 template<>
-class cdr< ::xju::Shared< ::%(name)s const> >
+class cdr< ::std::shared_ptr< ::%(name)s const> >
 {
 public:
-  static xju::Shared< ::%(name)s const> unmarshalFrom(cdrStream& s) 
+  static std::shared_ptr< ::%(name)s const> unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
   //  CORBA::SystemException,
@@ -217,7 +217,7 @@ public:
       throw CORBA::BAD_PARAM(omni::BAD_PARAM_InvalidUnionDiscValue,::CORBA::COMPLETED_NO);
     }
   }  
-  static void marshal(xju::Shared< ::%(name)s const> const& x, cdrStream& s)
+  static void marshal(std::shared_ptr< ::%(name)s const> const& x, cdrStream& s)
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
   //  omni::giopStream::CommFailure
@@ -258,10 +258,10 @@ def gen_enum_union(decl,eclass):
 
 non_enum_union_t='''\
 template<>
-class cdr< ::xju::Shared< ::%(name)s const> >
+class cdr< ::std::shared_ptr< ::%(name)s const> >
 {
 public:
-  static xju::Shared< ::%(name)s const> unmarshalFrom(cdrStream& s) 
+  static std::shared_ptr< ::%(name)s const> unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
   //  CORBA::SystemException,
@@ -272,12 +272,12 @@ public:
     switch(d){%(unmarshal_cases)s
     default:
       {%(defaultMemberUnmarshals)s
-        return ::xju::Shared< ::%(name)s const>(
+        return ::std::shared_ptr< ::%(name)s const>(
           new ::%(name)s::Default(%(defaultConsParams)s));
       }
     }
   }  
-  static void marshal(xju::Shared< ::%(name)s const> const& x, cdrStream& s)
+  static void marshal(std::shared_ptr< ::%(name)s const> const& x, cdrStream& s)
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented
   //throw(
   //  omni::giopStream::CommFailure

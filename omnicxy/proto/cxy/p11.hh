@@ -7,7 +7,9 @@
 #include <iostream>
 #include <string>
 #include <stdint.h>
-#include <xju/Shared.hh>
+#include <memory>
+
+
 extern 
 std::string const p11_Z ;
 extern int16_t const p11_Q ;
@@ -242,8 +244,8 @@ class F
 public:
   virtual ~F() throw();
 
-  virtual ::xju::Shared< ::U1 const> f1(
-    ::xju::Shared< ::U1 const> const& a) throw(
+  virtual ::std::shared_ptr< ::U1 const> f1(
+    ::std::shared_ptr< ::U1 const> const& a) throw(
     // ipc failure
     // - note servant may not throw
     cxy::Exception) = 0;

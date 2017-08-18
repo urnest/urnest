@@ -10,6 +10,11 @@ x once hcp-split can understand conversion operators, see //REVISIT in
 
 * cxy/UnixTimeMilli, mapping to std::chrono::system_clock::timepoint
 
+* replace all xju::Shared with std::shared_ptr, especially union
+
+* union: promote variant structure members to get more natural
+  C++ code, if can only have one data type per variant type
+  
 * fix up exception handling:
   - define equivalents of all corba exception types
   - have translateCorbaException return std::exception_ptr
@@ -399,7 +404,7 @@ x p21.idl
     x rename Any to AnyImpl and do a Any template to translate exceptions
     * can share AnyImpl (make it const)
 
-- cxy/Time.idl and hand-code cxy/Time.hcp to inherit from std::time_point
+- cxy/Time.idl and hand-code cxy/Time.hcp to inherit from std::time_point - see UnixTimeMilli above
 - cxy/Duration.idl and hand-code cxy/Duration.hcp to inherit also
 
 - other stuff (see omniidl idltypes.py)

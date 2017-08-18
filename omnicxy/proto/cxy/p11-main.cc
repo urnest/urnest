@@ -22,7 +22,6 @@
 #include <xju/mt.hh>
 #include <xju/Time.hh>
 #include <cxy/ORB.hh>
-#include "xju/Shared.hh"
 
 #include <xju/assert.hh>
 
@@ -56,12 +55,12 @@ public:
   {
   }
   
-  virtual ::xju::Shared< ::U1 const> f1(
-    ::xju::Shared< ::U1 const> const& a) throw(cxy::Exception)
+  virtual ::std::shared_ptr< ::U1 const> f1(
+    ::std::shared_ptr< ::U1 const> const& a) throw(cxy::Exception)
   {
     std::cout << "F::f1(" 
               << (*a) << ")" << std::endl;
-    calls_.push_back(xju::Shared<Call>(
+    calls_.push_back(std::shared_ptr<Call>(
                        new Call::f1(a)));
     return a;
   }
@@ -77,10 +76,10 @@ public:
     ~f1() throw()
     {
     }
-    f1(::xju::Shared< ::U1 const> const& a) throw():
+    f1(::std::shared_ptr< ::U1 const> const& a) throw():
         a_(a) {
     }
-    ::xju::Shared< ::U1 const> a_;
+    ::std::shared_ptr< ::U1 const> a_;
     
     friend bool operator==(f1 const& x, f1 const& y) throw()
     {
@@ -90,7 +89,7 @@ public:
       return x_==y_;
     }
   };
-  std::vector<xju::Shared<Call> > calls_;
+  std::vector<std::shared_ptr<Call> > calls_;
 };
 
   
@@ -114,7 +113,7 @@ int main(int argc, char* argv[])
     if (argv[2]==std::string("client")) {
       cxy::ORB<cxy::Exception> orb("giop:tcp::");
       cxy::cref<p11::F> ref(orb, makeURI(port, OBJECT_NAME));
-      std::cout << ref->f1(::xju::Shared< ::U1 const>(
+      std::cout << ref->f1(::std::shared_ptr< ::U1 const>(
                              new ::U1::C(10.6))) << std::endl;
     }
     else if (argv[2]==std::string("server")) {
@@ -136,13 +135,13 @@ int main(int argc, char* argv[])
       cxy::sref<p11::F> const xa(orb, OBJECT_NAME, x);
       
       cxy::cref<p11::F> ref(orb, makeURI(port, OBJECT_NAME));
-      ::xju::Shared< ::U1 const> r(
-        ref->f1(::xju::Shared< ::U1 const>(new ::U1::A(20L))));
+      ::std::shared_ptr< ::U1 const> r(
+        ref->f1(::std::shared_ptr< ::U1 const>(new ::U1::A(20L))));
       xju::assert_equal(x.calls_.size(),1U);
       {
         F_impl::Call::f1 const& c(
           dynamic_cast<F_impl::Call::f1 const&>(*x.calls_[0]));
-        xju::assert_equal(c, F_impl::Call::f1(::xju::Shared< ::U1 const>(
+        xju::assert_equal(c, F_impl::Call::f1(::std::shared_ptr< ::U1 const>(
                                                 new ::U1::A(20L))));
       }
       xju::assert_equal(*r, ::U1::A(20L));
