@@ -63,6 +63,8 @@ public:
   class A;
   class B;
   class C;
+  // throws std::bad_alloc and exceptions of case-type copy constructor
+  virtual std::unique_ptr< U1 > clone() const=0;
 protected:
   explicit U1(::X d) throw();
 
@@ -98,144 +100,6 @@ private:
     return (a>b)||(a==b);
   }
 };
-
-class U1::A : 
-  public U1
-{
-public:
-  int32_t a_;
-
-  virtual ~A() throw();
-
-  explicit A(
-    int32_t const& p1) throw();
-
-  friend bool operator<(
-    A const& x, 
-    A const& y) throw() {
-    if (x.a_<y.a_) return true;
-    if (y.a_<x.a_) return false;
-    return false;
-  }
-  friend bool operator>(
-    A const& x, 
-    A const& y) throw() {
-    return y<x;
-  }
-  friend bool operator!=(
-    A const& x, 
-    A const& y) throw() {
-    return (x<y)||(y<x);
-  }
-  friend bool operator==(
-    A const& x, 
-    A const& y) throw() {
-    return !(x!=y);
-  }
-  friend bool operator<=(
-    A const& x, 
-    A const& y) throw() {
-    return (x<y)||(x==y);
-  }
-  friend bool operator>=(
-    A const& x, 
-    A const& y) throw() {
-    return (x>y)||(x==y);
-  }
-  bool lessThan(U1 const& b) const throw();
-
-};
-
-class U1::B : 
-  public U1
-{
-public:
-
-  virtual ~B() throw();
-
-  explicit B() throw();
-
-  friend bool operator<(
-    B const& x, 
-    B const& y) throw() {
-    return false;
-  }
-  friend bool operator>(
-    B const& x, 
-    B const& y) throw() {
-    return y<x;
-  }
-  friend bool operator!=(
-    B const& x, 
-    B const& y) throw() {
-    return (x<y)||(y<x);
-  }
-  friend bool operator==(
-    B const& x, 
-    B const& y) throw() {
-    return !(x!=y);
-  }
-  friend bool operator<=(
-    B const& x, 
-    B const& y) throw() {
-    return (x<y)||(x==y);
-  }
-  friend bool operator>=(
-    B const& x, 
-    B const& y) throw() {
-    return (x>y)||(x==y);
-  }
-  bool lessThan(U1 const& b) const throw();
-
-};
-
-class U1::C : 
-  public U1
-{
-public:
-  float c_;
-
-  virtual ~C() throw();
-
-  explicit C(
-    float const& p1) throw();
-
-  friend bool operator<(
-    C const& x, 
-    C const& y) throw() {
-    if (x.c_<y.c_) return true;
-    if (y.c_<x.c_) return false;
-    return false;
-  }
-  friend bool operator>(
-    C const& x, 
-    C const& y) throw() {
-    return y<x;
-  }
-  friend bool operator!=(
-    C const& x, 
-    C const& y) throw() {
-    return (x<y)||(y<x);
-  }
-  friend bool operator==(
-    C const& x, 
-    C const& y) throw() {
-    return !(x!=y);
-  }
-  friend bool operator<=(
-    C const& x, 
-    C const& y) throw() {
-    return (x<y)||(x==y);
-  }
-  friend bool operator>=(
-    C const& x, 
-    C const& y) throw() {
-    return (x>y)||(x==y);
-  }
-  bool lessThan(U1 const& b) const throw();
-
-};
-
 
 namespace p11
 {
@@ -296,6 +160,8 @@ public:
 
     class U;
     class V;
+    // throws std::bad_alloc and exceptions of case-type copy constructor
+    virtual std::unique_ptr< U2 > clone() const=0;
   protected:
     explicit U2(::p11::F::Y d) throw();
 
@@ -332,107 +198,253 @@ public:
     }
   };
   
-  class U2::U : 
-    public U2
-  {
-  public:
-    std::string u_;
-  
-    virtual ~U() throw();
-
-    explicit U(
-      std::string const& p1) throw();
-
-    friend bool operator<(
-      U const& x, 
-      U const& y) throw() {
-      if (x.u_<y.u_) return true;
-      if (y.u_<x.u_) return false;
-      return false;
-    }
-    friend bool operator>(
-      U const& x, 
-      U const& y) throw() {
-      return y<x;
-    }
-    friend bool operator!=(
-      U const& x, 
-      U const& y) throw() {
-      return (x<y)||(y<x);
-    }
-    friend bool operator==(
-      U const& x, 
-      U const& y) throw() {
-      return !(x!=y);
-    }
-    friend bool operator<=(
-      U const& x, 
-      U const& y) throw() {
-      return (x<y)||(x==y);
-    }
-    friend bool operator>=(
-      U const& x, 
-      U const& y) throw() {
-      return (x>y)||(x==y);
-    }
-    bool lessThan(U2 const& b) const throw();
-
-  };
-  
-  class U2::V : 
-    public U2
-  {
-  public:
-    int16_t v_;
-  
-    virtual ~V() throw();
-
-    explicit V(
-      int16_t const& p1) throw();
-
-    friend bool operator<(
-      V const& x, 
-      V const& y) throw() {
-      if (x.v_<y.v_) return true;
-      if (y.v_<x.v_) return false;
-      return false;
-    }
-    friend bool operator>(
-      V const& x, 
-      V const& y) throw() {
-      return y<x;
-    }
-    friend bool operator!=(
-      V const& x, 
-      V const& y) throw() {
-      return (x<y)||(y<x);
-    }
-    friend bool operator==(
-      V const& x, 
-      V const& y) throw() {
-      return !(x!=y);
-    }
-    friend bool operator<=(
-      V const& x, 
-      V const& y) throw() {
-      return (x<y)||(x==y);
-    }
-    friend bool operator>=(
-      V const& x, 
-      V const& y) throw() {
-      return (x>y)||(x==y);
-    }
-    bool lessThan(U2 const& b) const throw();
-
-  };
-  
-  
 };
 
+
+class F::U2::U : 
+  public U2
+{
+public:
+  std::string u_;
+
+  virtual ~U() throw();
+
+  explicit U(
+    std::string const& p1) throw();
+
+  std::unique_ptr< F::U2 > clone() const;
+
+  friend bool operator<(
+    U const& x, 
+    U const& y) throw() {
+    if (x.u_<y.u_) return true;
+    if (y.u_<x.u_) return false;
+    return false;
+  }
+  friend bool operator>(
+    U const& x, 
+    U const& y) throw() {
+    return y<x;
+  }
+  friend bool operator!=(
+    U const& x, 
+    U const& y) throw() {
+    return (x<y)||(y<x);
+  }
+  friend bool operator==(
+    U const& x, 
+    U const& y) throw() {
+    return !(x!=y);
+  }
+  friend bool operator<=(
+    U const& x, 
+    U const& y) throw() {
+    return (x<y)||(x==y);
+  }
+  friend bool operator>=(
+    U const& x, 
+    U const& y) throw() {
+    return (x>y)||(x==y);
+  }
+  bool lessThan(U2 const& b) const throw();
+
+};
+
+class F::U2::V : 
+  public U2
+{
+public:
+  int16_t v_;
+
+  virtual ~V() throw();
+
+  explicit V(
+    int16_t const& p1) throw();
+
+  std::unique_ptr< F::U2 > clone() const;
+
+  friend bool operator<(
+    V const& x, 
+    V const& y) throw() {
+    if (x.v_<y.v_) return true;
+    if (y.v_<x.v_) return false;
+    return false;
+  }
+  friend bool operator>(
+    V const& x, 
+    V const& y) throw() {
+    return y<x;
+  }
+  friend bool operator!=(
+    V const& x, 
+    V const& y) throw() {
+    return (x<y)||(y<x);
+  }
+  friend bool operator==(
+    V const& x, 
+    V const& y) throw() {
+    return !(x!=y);
+  }
+  friend bool operator<=(
+    V const& x, 
+    V const& y) throw() {
+    return (x<y)||(x==y);
+  }
+  friend bool operator>=(
+    V const& x, 
+    V const& y) throw() {
+    return (x>y)||(x==y);
+  }
+  bool lessThan(U2 const& b) const throw();
+
+};
 }
 
 
 
+
+class U1::A : 
+  public U1
+{
+public:
+  int32_t a_;
+
+  virtual ~A() throw();
+
+  explicit A(
+    int32_t const& p1) throw();
+
+  std::unique_ptr< U1 > clone() const;
+
+  friend bool operator<(
+    A const& x, 
+    A const& y) throw() {
+    if (x.a_<y.a_) return true;
+    if (y.a_<x.a_) return false;
+    return false;
+  }
+  friend bool operator>(
+    A const& x, 
+    A const& y) throw() {
+    return y<x;
+  }
+  friend bool operator!=(
+    A const& x, 
+    A const& y) throw() {
+    return (x<y)||(y<x);
+  }
+  friend bool operator==(
+    A const& x, 
+    A const& y) throw() {
+    return !(x!=y);
+  }
+  friend bool operator<=(
+    A const& x, 
+    A const& y) throw() {
+    return (x<y)||(x==y);
+  }
+  friend bool operator>=(
+    A const& x, 
+    A const& y) throw() {
+    return (x>y)||(x==y);
+  }
+  bool lessThan(U1 const& b) const throw();
+
+};
+
+class U1::B : 
+  public U1
+{
+public:
+
+  virtual ~B() throw();
+
+  explicit B() throw();
+
+  std::unique_ptr< U1 > clone() const;
+
+  friend bool operator<(
+    B const& x, 
+    B const& y) throw() {
+    return false;
+  }
+  friend bool operator>(
+    B const& x, 
+    B const& y) throw() {
+    return y<x;
+  }
+  friend bool operator!=(
+    B const& x, 
+    B const& y) throw() {
+    return (x<y)||(y<x);
+  }
+  friend bool operator==(
+    B const& x, 
+    B const& y) throw() {
+    return !(x!=y);
+  }
+  friend bool operator<=(
+    B const& x, 
+    B const& y) throw() {
+    return (x<y)||(x==y);
+  }
+  friend bool operator>=(
+    B const& x, 
+    B const& y) throw() {
+    return (x>y)||(x==y);
+  }
+  bool lessThan(U1 const& b) const throw();
+
+};
+
+class U1::C : 
+  public U1
+{
+public:
+  float c_;
+
+  virtual ~C() throw();
+
+  explicit C(
+    float const& p1) throw();
+
+  std::unique_ptr< U1 > clone() const;
+
+  friend bool operator<(
+    C const& x, 
+    C const& y) throw() {
+    if (x.c_<y.c_) return true;
+    if (y.c_<x.c_) return false;
+    return false;
+  }
+  friend bool operator>(
+    C const& x, 
+    C const& y) throw() {
+    return y<x;
+  }
+  friend bool operator!=(
+    C const& x, 
+    C const& y) throw() {
+    return (x<y)||(y<x);
+  }
+  friend bool operator==(
+    C const& x, 
+    C const& y) throw() {
+    return !(x!=y);
+  }
+  friend bool operator<=(
+    C const& x, 
+    C const& y) throw() {
+    return (x<y)||(x==y);
+  }
+  friend bool operator>=(
+    C const& x, 
+    C const& y) throw() {
+    return (x>y)||(x==y);
+  }
+  bool lessThan(U1 const& b) const throw();
+
+};
 
 
 #endif

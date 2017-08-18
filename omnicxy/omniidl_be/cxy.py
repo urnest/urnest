@@ -494,6 +494,10 @@ public:%(members)s
   explicit %(caseTypeNameInDecl)s(%(consparams)s) throw():
       %(typeName)s(%(descriminator)s)%(consinitialisers)s {
   }
+  std::unique_ptr< %(extraScope)s%(typeName)s > clone() const // override 
+  {
+    return std::unique_ptr< %(typeName)s >(new %(caseName)s(*this));
+  }
   friend bool operator<(
     %(caseName)s const& x, 
     %(caseName)s const& y) throw() {%(lessMembers)s
@@ -571,6 +575,10 @@ public:%(members)s
   }
   explicit Default(%(consparams)s) throw():
       %(typeName)s(d)%(consinitialisers)s {%(validateDiscriminator)s
+  }
+  std::unique_ptr< %(extraScope)s%(typeName)s > clone() const //override 
+  {
+    return std::unique_ptr< %(typeName)s >(new Default(*this));
   }
   bool lessThan(%(typeName)s const& b) const throw() //override
   {
@@ -653,6 +661,8 @@ public:
   virtual ~%(typeName)s() throw() {
   }
   %(union_case_fwds)s
+  // throws std::bad_alloc and exceptions of case-type copy constructor
+  virtual std::unique_ptr< %(typeName)s > clone() const=0;
 protected:
   explicit %(typeName)s(::%(switchTypeName)s d) throw():
     d_(d){
@@ -689,7 +699,6 @@ private:
     return (a>b)||(a==b);
   }
 };
-%(union_case_defs)s
 '''
 def get_union_cases(decl,eclass):
     '''get union cases as [(label,[(memberType,memberName)]'''
@@ -722,35 +731,6 @@ def get_union_cases(decl,eclass):
         pass
     return result
 
-def gen_enum_union(decl,eclass):
-    typeName=decl.identifier()
-    assert decl.switchType().kind()==idltype.tk_enum, decl.switchType()
-    switchTypeName='::'.join(decl.switchType().scopedName())
-    labels=[_.identifier() for _ in \
-                decl.switchType().decl().enumerators()]
-    cases=dict([(label,[]) for label in labels])
-    for c in decl.cases():
-        assert c.constrType()==False,c
-        for l in c.labels():
-            assert isinstance(l.value(),idlast.Enumerator),l.value()
-            cases[l.value().identifier()].append(
-                (unqualifiedType(c.caseType(),eclass),#type
-                c.declarator().identifier()))    #name
-        pass
-    #cases is like [('A', [('int32_t','a_')]), ('B', [])]
-    ds=dict([(_.identifier(),'::%(switchTypeName)s::'%vars()+_.identifier())\
-                 for _ in decl.switchType().decl().enumerators()])
-    union_case_fwds='\n  '.join(['class %(_)s;'%vars() for _ in labels])
-    union_case_defs=''.join(
-        [gen_union_case_def(typeName,
-                            caseName,
-                            labels[labels.index(caseName)+1:],
-                            cases[caseName],
-                            switchTypeName,
-                            ds[caseName])\
-             for caseName in labels])
-    return enum_union_t%vars()
-
 class ForNamespaceScope:
     def __init__(self,f):
         assert callable(f),repr(f)
@@ -781,6 +761,41 @@ class GenResult:
         return reindent(indent,
                         ''.join([str(_) for _ in self.forNamespaceScope]))
     pass
+
+def gen_enum_union(decl,eclass):
+    typeName=decl.identifier()
+    assert decl.switchType().kind()==idltype.tk_enum, decl.switchType()
+    switchTypeName='::'.join(decl.switchType().scopedName())
+    labels=[_.identifier() for _ in \
+                decl.switchType().decl().enumerators()]
+    cases=dict([(label,[]) for label in labels])
+    for c in decl.cases():
+        assert c.constrType()==False,c
+        for l in c.labels():
+            assert isinstance(l.value(),idlast.Enumerator),l.value()
+            cases[l.value().identifier()].append(
+                (unqualifiedType(c.caseType(),eclass),#type
+                c.declarator().identifier()))    #name
+        pass
+    #cases is like [('A', [('int32_t','a_')]), ('B', [])]
+    ds=dict([(_.identifier(),'::%(switchTypeName)s::'%vars()+_.identifier())\
+                 for _ in decl.switchType().decl().enumerators()])
+    union_case_fwds='\n  '.join(['class %(_)s;'%vars() for _ in labels])
+    union_case_defs=lambda scopeNames:\
+                     ''.join(
+                         [gen_union_case_def(
+                             typeName,
+                             caseName,
+                             labels[labels.index(caseName)+1:],
+                             cases[caseName],
+                             switchTypeName,
+                             ds[caseName],
+                             '',
+                             None,
+                             scopeNames)\
+                          for caseName in labels])
+    return GenResult(enum_union_t%locals(),[
+        ForNamespaceScope(union_case_defs)])
 
 non_enum_union_t='''\
  // IDL Union %(typeName)s
@@ -984,7 +999,9 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
                 '%(type_)s const %(name)s = %(value)s;'%vars())
         elif isinstance(decl, idlast.Union):
             if decl.switchType().kind()==idltype.tk_enum:
-                result.code=reindent(indent, gen_enum_union(decl,eclass))
+                r=gen_enum_union(decl,eclass)
+                result.code=reindent(indent, r.code)
+                result.forNamespaceScope.extend(r.forNamespaceScope)
             else:
                 r=gen_non_enum_union(decl,eclass)
                 result.code=reindent(indent, r.code)

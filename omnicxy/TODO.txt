@@ -8,13 +8,19 @@ x documentation / tutorial
 x once hcp-split can understand conversion operators, see //REVISIT in
   cxycref.py, adjust p15-main.cc and document in README.txt
 
-* cxy/UnixTimeMilli, mapping to std::chrono::system_clock::timepoint
+* cxy/UnixTimeMilli, mapping to std::chrono::system_clock::time_point
 
-* replace all xju::Shared with std::shared_ptr, especially union
+x replace all xju::Shared with std::shared_ptr, especially union
 
-* union: promote variant structure members to get more natural
+- union: promote variant structure members to get more natural
   C++ code, if can only have one data type per variant type
-  
+
+~ union return as std::unique_ptr, in as T const&
+  no that makes embedding union types in structures harder, just
+  stick with shared_ptr<T const>
+
+x union add clone() convenience function giving a unique_ptr<T>
+
 * fix up exception handling:
   - define equivalents of all corba exception types
   - have translateCorbaException return std::exception_ptr

@@ -148,6 +148,7 @@ int main(int argc, char* argv[])
       xju::assert_less(*r, ::U1::A(21L));
       xju::assert_less(*r, ::U1::B());
       xju::assert_less(*r, ::U1::C(0.0));
+      xju::assert_less(*r->clone(), ::U1::C(0.0));
     }
     return 0;
   }
