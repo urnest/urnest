@@ -8,51 +8,63 @@
 // implied warranty.
 //
 
+#include <hcp/ast.hh>
+#include <hcp/parser.hh>
+#include <iostream>
+#include <string>
+#include <xju/stringToUInt.hh>
+#include <xju/path.hh>
+#include "xju/startsWith.hh"
+#include <xju/file/read.hh>
+#include <utility>
+#include <map>
+#include <sstream>
+#include <algorithm>
+#include "xju/assert.hh"
+
 struct MapHcpTag{};
 typedef hcp_ast::TaggedCompositeItem<MapHcpTag> MapHcp;
-struct FromLineNumberTag{};
+struct MapFromLineNumberTag{};
 typedef hcp_ast::TaggedCompositeItem<MapFromLineNumberTag> MapFromLineNumber;
-struct ToLineNumberTag{};
+struct MapToLineNumberTag{};
 typedef hcp_ast::TaggedCompositeItem<MapToLineNumberTag> MapToLineNumber;
 struct MapLinePairTag{};
 typedef hcp_ast::TaggedCompositeItem<MapLinePairTag> MapLinePair;
 
 int main(int argc, char* argv[]) {
   if (argc!=3){
-    std::cerr << "usage: " << argv[0] << " <file> <line>" << std::endl
-              << "  <file> is .hh or .cc generated from a .hcp, " << std::endl
-              << "  with corresponding hmap or cmap file expected in same "
-              << "directory as <file>" << std::endl;
+    std::cerr << "usage: " << argv[0] << " <file> <line>\n"
+              << "  - assumes <file>.smap is hmap- or smap-file\n"
+              << "    generated from .hcp eg by hcp-split\n"
+              << "  - reports source file and line corresponding to \n"
+              << "    line <line> in <file>, according to smap" << std::endl;
     return 1;
   }
   try{
     std::string fileName(argv[1]);
     unsigned int lineNumber(xju::stringToUInt(argv[2]));
-    std::pair<AbsolutePath,FileName> const f(xju::path::split(fileName));
-    std::pair<xju::path::BaseName,xju::path::Extension> const be(
-      xju::path::split(f.second));
-    xju::path::FileName const mapFile(
-      xju::startsWith(be.second,"h")||xju::startswith(be.second,"H")?
-      "hmap":"cmap");
-    std::string const map(xju::file::read(std::make_pair(f.first,map)));
+    std::pair<xju::path::AbsolutePath,xju::path::FileName> const f(
+      xju::path::split(fileName+".smap"));
+    std::string const map(xju::file::read(f));
 
     auto parseLineNumber=hcp_parser::atLeastOne(
-      hcp_parser::parseCharInRange('0','9'));
+      hcp_parser::charInRange('0','9'));
 
-    auto mapParser=hcp_parser::NamedParser<MapHcp>(
+    auto mapParser=hcp_parser::PR(new hcp_parser::NamedParser<MapHcp>(
       "hcp file name",
-      hcp_parser::parseUntil(parseLiteral("\n")))+
+      hcp_parser::parseUntil(hcp_parser::parseLiteral("\n"))))+
       hcp_parser::parseLiteral("\n")+
-      hcp_parser::zeroOrMore()*hcp_parser::NamedParser<MapLinePair>(
-        "line number pair",
-        hcp_parser::NamedParser<MapFromLineNumber>(
-          "from line number",
-          parseLineNumber)+
-        hcp_parser::atLeastOne(hcp_parser::whitespaceChar())+
-        hcp_parser::NamedParser<MapToLineNumber>(
-          "to line number",
-          parseLineNumber)+
-        hcp_parser::parseLiteral("\n"));
+      hcp_parser::zeroOrMore()*hcp_parser::PR(
+        new hcp_parser::NamedParser<MapLinePair>(
+          "line number pair",
+          hcp_parser::PR(new hcp_parser::NamedParser<MapFromLineNumber>(
+                           "from line number",
+                           parseLineNumber))+
+          hcp_parser::atLeastOne(hcp_parser::whitespaceChar())+
+          hcp_parser::PR(new hcp_parser::NamedParser<MapToLineNumber>(
+                           "to line number",
+                           parseLineNumber))+
+          hcp_parser::parseLiteral("\n")));
     hcp_ast::CompositeItem root{};
     hcp_ast::I begin(map.begin(),map.end());
     hcp_ast::I end(hcp_parser::parse(root,begin,mapParser));
@@ -87,9 +99,7 @@ int main(int argc, char* argv[]) {
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
-    auto i(std::upper_bound(lineMap.begin(),
-                            lineMap.end(),
-                            lineNumber()));
+    auto i(lineMap.upper_bound(lineNumber));
     xju::assert_not_equal(i,lineMap.begin());
     --i;
     std::cout << hcp << " " << (lineNumber-(*i).first+(*i).second) << "\n";

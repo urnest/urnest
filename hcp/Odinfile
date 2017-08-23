@@ -7,6 +7,7 @@ hcp-parse-file
 hcp-what-is-at
 hcp-tags
 hcp-scope-at
+hcp-map-to-source
 test-hcp-tags%all.tree
 %scope-at-tests.tree
 
@@ -57,6 +58,7 @@ hcp-parse-file == hcp-parse-file.cc+(%opts):auto.cxx.exe
 hcp-what-is-at == hcp-what-is-at.cc+(%opts):auto.cxx.exe
 hcp-tags == hcp-tags.cc+(%opts):auto.cxx.exe
 hcp-scope-at == hcp-scope-at.cc+(%opts):auto.cxx.exe
+hcp-map-to-source == hcp-map-to-source.cc+(%opts):auto.cxx.exe
 
 
 %scope-at-tests.tree==<<

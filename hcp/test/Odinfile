@@ -25,6 +25,15 @@ xju/Traced.cc==.%Traced/Traced.cc
 xju/JoiningIterator.hh==.%JoiningIterator/JoiningIterator.hh
 xju/JoiningIterator.cc==.%JoiningIterator/JoiningIterator.cc
 
-%Traced==()+cmd=(../hcp-split) -l 1 (xju/Traced.hcp) 'Traced.hh' 'Traced.cc' 'hmap' 'cmap':output
+%Traced==()+cmd=(../hcp-split) -l 1 (xju/Traced.hcp) 'Traced.hh' 'Traced.cc' 'Traced.hh.smap' 'Traced.cc.smap':output
 %JoiningIterator==()+cmd=(../hcp-split) -l 1 (xju/JoiningIterator.hcp) 'JoiningIterator.hh' 'JoiningIterator.cc':output
 
+%test-hcp-map-to-source-1.sh == ! <<
+#!/bin/sh
+l=$("$1" "$2/Traced.cc" 10) &&
+echo "$l" | (
+  read f l &&
+  test $f = $3 || ( echo "$f != $3" >&2 && false ) &&
+  test $l = 44 || ( echo "$l != 44" >&2 && false ) )
+
+%test-hcp-map-to-source-1==()+cmd=(%test-hcp-map-to-source-1.sh) (../hcp-map-to-source) (%Traced) (xju/Traced.hcp)+need=(%Traced) 10:stdout

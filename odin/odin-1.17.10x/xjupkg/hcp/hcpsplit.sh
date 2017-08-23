@@ -39,9 +39,9 @@ fi &&
   verbose(){
     test -z "$ODINVERBOSE"||echo "$@"
   }
-  verbose "$hcpsplit $hcpflags $source $b.$hhext $b.$ccext" &&
-  $hcpsplit $hcpflags $source $b.$hhext $b.$ccext hcp.hh.smap hcp.cc.smap &&
-  mv $b.$hhext hcp.hh &&
-  mv $b.$ccext hcp.cc
+  verbose "$hcpsplit $hcpflags $source $b.$hhext $b.$ccext $b.$hhext.smap $b.$ccext.smap" &&
+  $hcpsplit $hcpflags $source $b.$hhext $b.$ccext $b.$hhext.smap $b.$ccext.smap &&
+  mkdir hcp-split &&    
+  mv $b.$hhext $b.$ccext $b.$hhext.smap $b.$ccext.smap hcp-split
 ) 2>> WARNINGS || mv WARNINGS ERRORS )
 )
