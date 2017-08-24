@@ -374,8 +374,11 @@ PR function_proto() throw();
 PR function_decl() throw();
 PR template_function_def() throw();
 PR function_def() throw(); // matches template, so try template_function_def first
+PR var_fp() throw(); // function pointer eg int (T::*f)()
+PR var_def() throw();
 PR global_var_def() throw();
 PR static_var_def() throw();
+PR extern_var_def() throw();
 PR class_decl() throw();   // template/non-template
 PR class_def() throw();    // template/non-template
 PR anonymous_namespace() throw();

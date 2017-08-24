@@ -1,5 +1,5 @@
 #include <hcp/tags/Location.hh>
-//generated from "/home/xju/tmp/oc52-2/xjutv/FILES/d/l/Location.hcp.1888127.hcp"
+//generated from "/home/xju/tmp/oc52-2/xjutv/FILES/a/m/Location.hcp.1228659.hcp"
 #include <cxy/copyContext.hh> //impl
 
 namespace hcp

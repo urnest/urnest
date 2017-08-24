@@ -1,5 +1,28 @@
 - trace should go to stderr
 
+- replace unqualifiedName with identifier (already exists)
+  delete unqualifiedName
+
+- remove defined_type (do inline in typedef)
+- rework typedef to be "typedef" type_ref DefinedType(ident)
+
+- names, scoped names, type names, var names
+  scope_ref optional(::)+n*(ident+optional(<balanced>)::)
+  scoped_function_name = scope_ref+(operator_name|destructor_name|conversion_op_name|(ident+optional(<balanced>)))
+  scoped_name = scope_ref+ident+optional(<balanced>)
+
+  conversion_op_name = "operator" type_ref_fwd
+  operator_name (as-now)
+  type_ref = type_name -> scoped_name
+
+  conversion_operator_function_proto should then be covered by
+  untyped_function_proto
+
+  ... many uses of identifier should be scoped_name?
+  
+
+  ... then see where xju%tags:warn> is at
+  
 - reorg
   - want minimum in hcp to get to hcp-split?
   - move tags out to urnest/cctags?
@@ -21,6 +44,12 @@ x handle scoped enum (non-fixed type)
   };
 
 - hcp-tags
+  - parser C++-only (ie not used in .hcp files) to allow tags across
+    regular .hh files:
+    - extern variables
+    - inline keyword
+    - constructor def outside class
+    
   x need multiple defs per tag eg for function overload
   - generate tags for:
     x class

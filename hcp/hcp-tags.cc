@@ -268,7 +268,7 @@ int main(int argc, char* argv[])
         std::ostringstream s;
         s << "parse file " << xju::path::str(inputFile);
         e.addContext(s.str(),XJU_TRACED);
-        std::cerr << "Warning: " << readableRepr(e);
+        std::cerr << "Warning: " << readableRepr(e) << std::endl;
       }
     }
     std::cout << "{" << std::endl

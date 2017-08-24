@@ -1250,14 +1250,6 @@ PR identifierContChar() throw()
 }
 
 
-PR unqualifiedName() throw()
-{
-  static PR unqualifiedName(
-    identifierStartChar()+
-    zeroOrMore()*identifierContChar());
-  return unqualifiedName;
-}
-
 PR identifier() throw()
 {
   static PR result(
@@ -1276,7 +1268,7 @@ PR defined_type() throw()
   static PR defined_type(
     new NamedParser<hcp_ast::DefinedType>(
       "\"defined type\"",
-      unqualifiedName()));
+      identifier()));
   return defined_type;
 }
 
@@ -1367,7 +1359,7 @@ PR enum_name() throw()
   static PR enum_name(
     new NamedParser<hcp_ast::EnumName>(
       "\"enum name\"",
-      unqualifiedName()));
+      identifier()));
   return enum_name;
 }
 
@@ -1421,14 +1413,13 @@ PR bracketed() throw()
 PR unqualifiedTypeName() throw()
 {
   static PR unqualifiedTypeName(
-    unqualifiedName()+
+    identifier()+
     zeroOrMore()*(parseOneOfChars("<")+
                   balanced(parseOneOfChars(">"), true)+
                   parseOneOfChars(">")));
   return unqualifiedTypeName;
 }
 
-  
 PR operator_keyword() throw()
 {
   static PR operator_keyword(
@@ -1475,7 +1466,7 @@ PR destructor_name() throw()
   static PR destructor_name(
     anon(
       "destructor name",
-      parseLiteral("~")+eatWhite()+unqualifiedName()));
+      parseLiteral("~")+eatWhite()+identifier()));
   return destructor_name;
 }
 
@@ -1493,7 +1484,7 @@ PR name() throw()
     optional(doubleColon())+eatWhite()+
     zeroOrMore()*(
       unqualifiedTypeName()+eatWhite()+doubleColon()+eatWhite())+
-    unqualifiedTypeName()+
+    (operator_name()|destructor_name()|unqualifiedTypeName())+
     eatWhite());
   return name;
 }
@@ -1554,6 +1545,15 @@ PR keyword_static() throw()
          "\"static\"",
          parseLiteral("static")))+!identifierContChar()+eatWhite());
   return keyword_static;
+}
+
+PR keyword_extern() throw()
+{
+  static PR result(
+    PR(new NamedParser<hcp_ast::KeywordExtern>(
+         "\"extern\"",
+         parseLiteral("extern")))+!identifierContChar()+eatWhite());
+  return result;
 }
 
 
@@ -1736,7 +1736,8 @@ PR untyped_function_proto() throw()
     PR(new NamedParser<hcp_ast::FunctionName>(
          "function name",
          destructor_name()|
-         unqualifiedTypeName()))+
+         operator_name()|
+         name()))+
     eatWhite()+
     bracketed(params())+
     balanced((eatWhite()+parseOneOfChars(";:{"))|parseLiteral("try")));
@@ -1846,7 +1847,7 @@ PR var_name() throw()
 {
   static PR var_name(new NamedParser<hcp_ast::VarName>(
                        "var name",
-                       unqualifiedName())+eatWhite());
+                       identifier())+eatWhite());
   return var_name;
 }
 
@@ -1983,7 +1984,11 @@ PR var_fp() throw()
 {
   static PR result{
     anon("function pointer var",
-         type_ref()+bracketed(type_qual()+var_name())+
+         type_ref()+
+         bracketed(
+           zeroOrMore()*(
+             unqualifiedTypeName()+eatWhite()+doubleColon()+eatWhite())+
+           parseLiteral("*")+eatWhite()+var_name())+
          bracketed(params())+
          (!parseOneOfChars("={")|var_initialiser())+
          eatWhite())};
@@ -1999,19 +2004,6 @@ PR var_def() throw()
   return result;
 }
     
-PR static_var_def() throw()
-{
-  static PR static_var_def(new NamedParser<hcp_ast::StaticVarDef>(
-                             "static variable definition",
-                             keyword_static()+
-                             eatWhite()+
-                             var_def()+
-                             parseLiteral(";")+
-                             eatWhite()));
-  return static_var_def;
-}
-
-  
 PR global_var_def() throw()
 {
   static PR global_var_def{
@@ -2023,7 +2015,30 @@ PR global_var_def() throw()
   return global_var_def;
 }
 
-
+PR static_var_def() throw()
+{
+  static PR static_var_def(new NamedParser<hcp_ast::StaticVarDef>(
+                             "static variable definition",
+                             keyword_static()+
+                             eatWhite()+
+                             var_def()+
+                             parseLiteral(";")+
+                             eatWhite()));
+  return static_var_def;
+}
+  
+PR extern_var_def() throw()
+{
+  static PR result(new NamedParser<hcp_ast::ExternVarDef>(
+                     "extern variable definition",
+                     keyword_extern()+
+                     eatWhite()+
+                     var_def()+
+                     parseLiteral(";")+
+                     eatWhite()));
+  return result;
+}
+  
 PR access_modifier() throw()
 {
   static PR access_modifier(new NamedParser<hcp_ast::AccessModifier>(
@@ -2095,6 +2110,7 @@ public:
                            template_function_def()|
                            function_def()|
                            static_var_def()|
+                           extern_var_def()|
                            global_var_def())))),
                        parseOneOfChars("}"))))+
        parseOneOfChars("}")+
@@ -2159,8 +2175,9 @@ PR namespace_leaf() throw()
         template_function_def()|
         function_def()|
         (not_function_proto_or_template_function_proto()+
-         (global_var_def()|
-          static_var_def())))))));
+         (static_var_def()|
+          extern_var_def()|
+          global_var_def())))))));
   return namespace_leaf;
 }
 
@@ -2209,7 +2226,7 @@ public:
         whitespace()+
         new NamedParser<hcp_ast::NamespaceName>(
           "namespace name",
-          unqualifiedName())+
+          identifier())+
         eatWhite()+
         parseOneOfChars("{")+
         eatWhite()+

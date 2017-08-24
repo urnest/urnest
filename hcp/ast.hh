@@ -322,6 +322,9 @@ typedef TaggedCompositeItem<VarNameTag> VarName;
 class KeywordStaticTag{};
 typedef TaggedCompositeItem<KeywordStaticTag> KeywordStatic;
 
+class KeywordExternTag{};
+typedef TaggedCompositeItem<KeywordExternTag> KeywordExtern;
+
 class KeywordFriendTag{};
 typedef TaggedCompositeItem<KeywordFriendTag> KeywordFriend;
 
@@ -336,6 +339,9 @@ typedef TaggedCompositeItem<StaticVarDefTag> StaticVarDef;
 
 class GlobalVarDefTag{};
 typedef TaggedCompositeItem<GlobalVarDefTag> GlobalVarDef;
+
+class ExternVarDefTag{};
+typedef TaggedCompositeItem<ExternVarDefTag> ExternVarDef;
 
 // marks the '=' in var initialiser
 class VarInitialiserOpenTag{};

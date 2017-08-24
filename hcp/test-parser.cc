@@ -2027,6 +2027,122 @@ void test38()
   }
 }
 
+void test39()
+{
+  std::string const x(
+    "extern const SyscallF3<int, const char*, int, mode_t> open;");
+
+  hcp_ast::CompositeItem root;
+  hcp_parser::I at(x.begin(), x.end());
+
+  try {
+    at = parse(root, at, hcp_parser::extern_var_def());
+    xju::assert_equal(reconstruct(root), x);
+    std::vector<hcp_ast::IR>::const_iterator j(
+      std::find_if(
+        root.items_[0]->asA<hcp_ast::ExternVarDef>().items_.begin(),
+        root.items_[0]->asA<hcp_ast::ExternVarDef>().items_.end(),
+        hcp_ast::isA_<hcp_ast::VarName>));
+    xju::assert_not_equal(
+      j, 
+      root.items_[0]->asA<hcp_ast::ExternVarDef>().items_.end());
+    xju::assert_equal(reconstruct(*j), "open");
+    xju::assert_equal(at.atEnd(), true);
+  }
+  catch(xju::Exception const& e) {
+    assert_readableRepr_equal(e, "", XJU_TRACED);
+    xju::assert_equal(true,false);
+  }
+}
+
+void test40()
+{
+  std::string const x(
+    "template<class T>\n"
+    "    inline EventP<T>::EventP() throw():\n"
+    "      m_observers(0)\n"
+    "    {\n"
+    "}\n");
+  hcp_ast::CompositeItem root;
+  hcp_parser::I at(x.begin(), x.end());
+  try {
+    at = parse(root, at, hcp_parser::template_function_def());
+    xju::assert_equal(reconstruct(root), x);
+    std::vector<hcp_ast::IR>::const_iterator j(
+      std::find_if(
+        root.items_[0]->asA<hcp_ast::TemplateFunctionDef>().items_.begin(),
+        root.items_[0]->asA<hcp_ast::TemplateFunctionDef>().items_.end(),
+        hcp_ast::isA_<hcp_ast::FunctionName>));
+    xju::assert_not_equal(
+      j, 
+      root.items_[0]->asA<hcp_ast::TemplateFunctionDef>().items_.end());
+    xju::assert_equal(reconstruct(*j), "EventP<T>::EventP");
+    xju::assert_equal(at.atEnd(), true);
+  }
+  catch(xju::Exception const& e) {
+    assert_readableRepr_equal(e, "", XJU_TRACED);
+    xju::assert_equal(true,false);
+  }
+}
+
+void test41()
+{
+  std::string const x(
+    "template<class T>\n"
+    "inline EventP<T>& EventP<T>::operator=(const EventP& b)\n"
+    "    throw()\n"
+    "{\n"
+    "    return *this;\n"
+    "}\n");
+  hcp_ast::CompositeItem root;
+  hcp_parser::I at(x.begin(), x.end());
+  try {
+    at = parse(root, at, hcp_parser::template_function_def());
+    xju::assert_equal(reconstruct(root), x);
+    std::vector<hcp_ast::IR>::const_iterator j(
+      std::find_if(
+        root.items_[0]->asA<hcp_ast::TemplateFunctionDef>().items_.begin(),
+        root.items_[0]->asA<hcp_ast::TemplateFunctionDef>().items_.end(),
+        hcp_ast::isA_<hcp_ast::FunctionName>));
+    xju::assert_not_equal(
+      j, 
+      root.items_[0]->asA<hcp_ast::TemplateFunctionDef>().items_.end());
+    xju::assert_equal(reconstruct(*j), "EventP<T>::operator=");
+    xju::assert_equal(at.atEnd(), true);
+  }
+  catch(xju::Exception const& e) {
+    assert_readableRepr_equal(e, "", XJU_TRACED);
+    xju::assert_equal(true,false);
+  }
+}
+
+void test42()
+{
+  std::string const x(
+    "void (T::*f)(P)");
+  hcp_ast::CompositeItem root;
+  hcp_parser::I at(x.begin(), x.end());
+  try {
+    at = parse(root, at, hcp_parser::var_fp());
+    xju::assert_equal(reconstruct(root), x);
+    std::vector<hcp_ast::IR>::const_iterator j(
+      std::find_if(
+        root.items_.begin(),
+        root.items_.end(),
+        hcp_ast::isA_<hcp_ast::VarName>));
+    xju::assert_not_equal(
+      j, 
+      root.items_.end());
+    xju::assert_equal(reconstruct(*j), "f");
+    xju::assert_equal(at.atEnd(), true);
+  }
+  catch(xju::Exception const& e) {
+    assert_readableRepr_equal(e, "", XJU_TRACED);
+    xju::assert_equal(true,false);
+  }
+}
+
+
 int main(int argc, char* argv[])
 {
   unsigned int n(0);
@@ -2068,6 +2184,10 @@ int main(int argc, char* argv[])
   test36(), ++n;
   test37(), ++n;
   test38(), ++n;
+  test39(), ++n;
+  test40(), ++n;
+  test41(), ++n;
+  test42(), ++n;
   
   xju::assert_equal(atLeastOneReadableReprFailed, false);
   std::cout << "PASS - " << n << " steps" << std::endl;
