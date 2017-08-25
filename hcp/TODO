@@ -1,15 +1,24 @@
 - trace should go to stderr
 
-- replace unqualifiedName with identifier (already exists)
+x replace unqualifiedName with identifier (already exists)
   delete unqualifiedName
 
-- remove defined_type (do inline in typedef)
-- rework typedef to be "typedef" type_ref DefinedType(ident)
+x remove defined_type (do inline in typedef)
+x rework typedef to be "typedef" type_ref DefinedType(ident)
+
+- type_ref forward references type_name, ie dependency cycle
+  - use conditional prototypes to find cycles?
+
+- typedef = fp typedef | reg typedef
+
+- allow const/throw()/noexcept in function pointer var
+
+- get rid of unqualifiedTypeName?
 
 - names, scoped names, type names, var names
-  scope_ref optional(::)+n*(ident+optional(<balanced>)::)
+  x scope_ref optional(::)+n*(ident+optional(<balanced>)::)
   scoped_function_name = scope_ref+(operator_name|destructor_name|conversion_op_name|(ident+optional(<balanced>)))
-  scoped_name = scope_ref+ident+optional(<balanced>)
+  x scoped_name = scope_ref+ident+optional(<balanced>)
 
   conversion_op_name = "operator" type_ref_fwd
   operator_name (as-now)
@@ -38,13 +47,16 @@
 
 x handle scoped enum (non-fixed type)
 
+- define operator+, | etc variants to allow eg eatWhite without brackets
+  ... and parse too
+  
 - hcp-split handle inline constructor eg
   struct X {
     inline X() {...};
   };
 
 - hcp-tags
-  - parser C++-only (ie not used in .hcp files) to allow tags across
+  - parse C++-only (ie not used in .hcp files) to allow tags across
     regular .hh files:
     - extern variables
     - inline keyword

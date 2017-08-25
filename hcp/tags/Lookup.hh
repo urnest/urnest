@@ -23,7 +23,8 @@ namespace tags
 class Lookup 
 {
 public:
-  virtual ~Lookup() throw();
+  virtual ~Lookup() throw()
+  ;
 
   typedef std::vector< ::hcp::tags::NamespaceName > NamespaceNames;
   typedef std::vector< ::hcp::tags::Location > Locations;

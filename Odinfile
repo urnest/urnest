@@ -18,3 +18,4 @@ hcp%all.tree
 %hcp-gen.virdir_spec == <<
 %xju==xju%hcp-gen
 %hcp==hcp%hcp-gen
+

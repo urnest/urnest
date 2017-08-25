@@ -1258,20 +1258,32 @@ PR identifier() throw()
   return result;
 }
 
+PR scope_ref() throw(){
+  static PR result(
+    optional(doubleColon()+eatWhite())+
+    zeroOrMore()*(
+      identifier()+eatWhite()+optional(
+        parseOneOfChars("<")+
+        balanced(parseOneOfChars(">"), true)+
+        parseOneOfChars(">")+eatWhite())+
+      doubleColon()+eatWhite()));
+  return result;
+}
+
+PR scoped_name() throw(){ //see also scoped_function_name
+  static PR result(
+    scope_ref()+
+    identifier()+eatWhite()+optional(
+        parseOneOfChars("<")+
+        balanced(parseOneOfChars(">"), true)+
+        parseOneOfChars(">")+eatWhite()));
+  return result;
+}
+
 PR bracketed(PR x) throw()
 {
   return parseLiteral("(")+eatWhite()+x+parseLiteral(")");
 }
-
-PR defined_type() throw()
-{
-  static PR defined_type(
-    new NamedParser<hcp_ast::DefinedType>(
-      "\"defined type\"",
-      identifier()));
-  return defined_type;
-}
-
 
 PR typedef_keyword() throw()
 {
@@ -1322,13 +1334,16 @@ PR type_ref() throw()
 
 PR typedef_statement() throw()
 {
+  static PR defined_type(
+    new NamedParser<hcp_ast::DefinedType>(
+      "\"defined type\"",
+      identifier()));
   static PR typedef_statement(
     new NamedParser<hcp_ast::Typedef>(
       "typedef statement",
       typedef_keyword()+
       whitespace()+
-      balanced(whitespace()+defined_type()+parseOneOfChars(";"))+
-      whitespace()+defined_type()+parseOneOfChars(";")+
+      type_ref()+defined_type+eatWhite()+parseOneOfChars(";")+
       eatWhite()));
   return typedef_statement;
 }
@@ -1525,7 +1540,7 @@ PR type_name() throw()
     anon(
       "type name",
       built_in_type_name()|
-      class_name()));
+      scoped_name()));
   return result;
 }
 
@@ -1598,6 +1613,30 @@ PR keyword_explicit() throw()
   return keyword_explicit;
 }
 
+PR keyword_noexcept() throw()
+{
+  static PR result(
+    new NamedParser<hcp_ast::KeywordExplicit>(
+      "\"noexcept\"",
+      parseLiteral("noexcept"))+!identifierContChar()+eatWhite());
+  return result;
+}
+
+PR keyword_throw() throw()
+{
+  static PR result(
+    new NamedParser<hcp_ast::KeywordExplicit>(
+      "\"throw\"",
+      parseLiteral("throw"))+!identifierContChar()+eatWhite());
+  return result;
+}
+
+PR throw_clause() throw()
+{
+  static PR result(
+    keyword_throw()+eatWhite()+bracketed()+eatWhite());
+  return result;
+}
 
 PR function_qualifiers() throw()
 {
@@ -1610,6 +1649,20 @@ PR function_qualifiers() throw()
                      keyword_static()|
                      keyword_inline())+eatWhite())));
   return function_qualifiers;
+}
+
+
+PR function_post_qualifiers() throw()
+{
+  static PR result(
+    new NamedParser<hcp_ast::FunctionQualifiers>(
+      "function post-qualifiers",
+      cv()+
+      zeroOrMore()*(keyword_noexcept()|
+                    throw_clause())+
+      (!parseLiteral("=")|
+       parseLiteral("=")+balanced(parseOneOfChars(";")))));
+  return result;
 }
 
 
@@ -1700,7 +1753,6 @@ PR template_preamble() throw()
   return template_preamble;
 }
 
-
 PR conversion_operator_function_proto() throw()
 {
   static PR result(
@@ -1709,8 +1761,7 @@ PR conversion_operator_function_proto() throw()
          "conversion operator name",
          conversion_operator_name()))+
     eatWhite()+
-    bracketed(params())+
-    balanced((eatWhite()+parseOneOfChars(";:{"))|parseLiteral("try")));
+    bracketed(params())+eatWhite());
   return result;
 }
 
@@ -1724,8 +1775,7 @@ PR typed_function_proto() throw()
          operator_name()|
          name()))+
     eatWhite()+
-    bracketed(params())+
-    balanced((eatWhite()+parseOneOfChars(";:{"))|parseLiteral("try")));
+    bracketed(params())+eatWhite());
   return result;
 }
 
@@ -1739,8 +1789,7 @@ PR untyped_function_proto() throw()
          operator_name()|
          name()))+
     eatWhite()+
-    bracketed(params())+
-    balanced((eatWhite()+parseOneOfChars(";:{"))|parseLiteral("try")));
+    bracketed(params())+eatWhite());
   return result;
 }
 
@@ -1749,9 +1798,12 @@ PR function_proto() throw()
   static PR result(
     anon(
       "function proto",
-      conversion_operator_function_proto()|
-      typed_function_proto()|
-      untyped_function_proto()));
+      (conversion_operator_function_proto()|
+       typed_function_proto()|
+       untyped_function_proto())+
+      //balanced((eatWhite()+parseOneOfChars(";:{"))|parseLiteral("try"))
+      function_post_qualifiers()
+      ));
   return result;
 }
 
@@ -1986,10 +2038,10 @@ PR var_fp() throw()
     anon("function pointer var",
          type_ref()+
          bracketed(
-           zeroOrMore()*(
-             unqualifiedTypeName()+eatWhite()+doubleColon()+eatWhite())+
-           parseLiteral("*")+eatWhite()+var_name())+
+           scope_ref()+cv()+parseLiteral("*")+eatWhite()+cv()+
+           var_name())+
          bracketed(params())+
+         
          (!parseOneOfChars("={")|var_initialiser())+
          eatWhite())};
   return result;

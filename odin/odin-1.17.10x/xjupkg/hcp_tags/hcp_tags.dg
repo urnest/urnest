@@ -26,12 +26,23 @@ $ODIN_HCP_TAGS_MERGE 'name of the hcp-tags-merge program' = 'hcp-tags-merge';
 :tree_tags_list 'list of :dir_tags for a directory tree' => :LIST;
 :tree_tags 'hcp-tags file covering all header and hcp files in a directory tree'? => :tags;
 
+:which-hcp-tags 'hcp-tags exe from +hcp-tags or ODIN_HCP_TAGS_PATH hcp-tags'
+  => :REFERENCE;
+:which-hcp-tags-viewspec 'viewspec to locate hcp-tags exe' => :FILE;
+
++hcp-tags 'hcp-tags exe, default to hcp-tags on ODIN_HCP_TAGS_PATH' ? => :first;
+
+EXEC (which-hcp-tags-viewspec.sh) (+hcp-tags) => (:which-hcp-tags-viewspec);
+
+COLLECT (:which-hcp-tags-viewspec:view:first) => (:which-hcp-tags);
+
+
 #:FILE here is a directory
 COLLECT (:FILE:list:extract=:h) (:FILE:list:extract=:hcp) => (:dir_taggable);
 COLLECT (:dir_taggable:map=:tags) => (:dir_tags_list);
 
-EXEC (hcp-tags.sh) (:h) 'htags' => (:htags);
-EXEC (hcp-tags.sh) (:hcp) 'hcptags' => (:hcptags);
+EXEC (hcp-tags.sh) (:h) 'htags' (:which-hcp-tags) => (:htags);
+EXEC (hcp-tags.sh) (:hcp) 'hcptags' (:which-hcp-tags) => (:hcptags);
 
 COLLECT (:dirtree:leaves:map=:dir_tags) => (:tree_tags_list);
 
