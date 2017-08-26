@@ -269,7 +269,7 @@ namespace xju
         }
 
     }
-};
+}
 
 // implementation
 namespace xju

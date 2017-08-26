@@ -229,8 +229,8 @@ namespace xju
 	//
 	// Work around for lack of mutable
 	//
-	Ring<T>*& p() const { return *(Ring<T>**)&m_p; };
-	Ring<T>*& n() const { return *(Ring<T>**)&m_n; };
+	Ring<T>*& p() const { return *(Ring<T>**)&m_p; }
+	Ring<T>*& n() const { return *(Ring<T>**)&m_n; }
     };
 
 
