@@ -15,7 +15,8 @@
 //
 //    std c++ doesn't really cut it; boost is much better but
 //    bloated
-//    REVISIT: is newer C++ 11 better
+//    REVISIT: get rid of now C++ has lambda functions (perhaps
+//    First and Second are still useful for working with maps?)
 //
 #ifndef _XJU_FUNCTIONAL_H_
 #define _XJU_FUNCTIONAL_H_
