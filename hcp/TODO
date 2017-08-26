@@ -13,6 +13,12 @@ x rework typedef to be "typedef" type_ref DefinedType(ident)
 
 - allow const/throw()/noexcept in function pointer var
 
+- get rid of name()?
+
+- params() check for ending ")" first (before checking for next param)
+
+- create cxx-opts for use before hcp-split
+
 - get rid of unqualifiedTypeName?
 
 - names, scoped names, type names, var names

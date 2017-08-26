@@ -334,6 +334,12 @@ typedef TaggedCompositeItem<KeywordVirtualTag> KeywordVirtual;
 class KeywordExplicitTag{};
 typedef TaggedCompositeItem<KeywordExplicitTag> KeywordExplicit;
 
+class KeywordThrowTag{};
+typedef TaggedCompositeItem<KeywordThrowTag> KeywordThrow;
+
+class KeywordCatchTag{};
+typedef TaggedCompositeItem<KeywordCatchTag> KeywordCatch;
+
 class StaticVarDefTag{};
 typedef TaggedCompositeItem<StaticVarDefTag> StaticVarDef;
 

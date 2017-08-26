@@ -2118,27 +2118,53 @@ void test41()
 
 void test42()
 {
-  std::string const x(
-    "void (T::*f)(P)");
-  hcp_ast::CompositeItem root;
-  hcp_parser::I at(x.begin(), x.end());
-  try {
-    at = parse(root, at, hcp_parser::var_fp());
-    xju::assert_equal(reconstruct(root), x);
-    std::vector<hcp_ast::IR>::const_iterator j(
-      std::find_if(
-        root.items_.begin(),
-        root.items_.end(),
-        hcp_ast::isA_<hcp_ast::VarName>));
-    xju::assert_not_equal(
-      j, 
-      root.items_.end());
-    xju::assert_equal(reconstruct(*j), "f");
-    xju::assert_equal(at.atEnd(), true);
+  {
+    std::string const x(
+      "void (T::*f)(P)");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    try {
+      at = parse(root, at, hcp_parser::var_fp());
+      xju::assert_equal(reconstruct(root), x);
+      std::vector<hcp_ast::IR>::const_iterator j(
+        std::find_if(
+          root.items_.begin(),
+          root.items_.end(),
+          hcp_ast::isA_<hcp_ast::VarName>));
+      xju::assert_not_equal(
+        j, 
+        root.items_.end());
+      xju::assert_equal(reconstruct(*j), "f");
+      xju::assert_equal(at.atEnd(), true);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
   }
-  catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "", XJU_TRACED);
-    xju::assert_equal(true,false);
+  {
+    std::string const x(
+      "void (T::*f)() throw()");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    try {
+      at = parse(root, at, hcp_parser::var_fp(),true);
+      xju::assert_equal(reconstruct(root), x);
+      std::vector<hcp_ast::IR>::const_iterator j(
+        std::find_if(
+          root.items_.begin(),
+          root.items_.end(),
+          hcp_ast::isA_<hcp_ast::VarName>));
+      xju::assert_not_equal(
+        j, 
+        root.items_.end());
+      xju::assert_equal(reconstruct(*j), "f");
+      xju::assert_equal(at.atEnd(), true);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
   }
 }
 
