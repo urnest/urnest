@@ -728,6 +728,59 @@ public:
 xju::Shared<Exception::Cause const> ParseHash::not_at_column_1(
   new FixedCause("not at column 1"));
 
+PR oneChar() throw()
+{
+  static PR oneChar(new ParseAnyChar);
+  return oneChar;
+}
+
+
+PR octalDigit() throw()
+{
+  static PR octalDigit(charInRange('0', '7'));
+  return octalDigit;
+}
+
+  
+PR hexDigit() throw()
+{
+  static PR hexDigit(charInRange('0','9')|
+                     charInRange('a','f')|
+                     charInRange('A','F'));
+  return hexDigit;
+}
+
+  
+PR stringEscapeSequence() throw()
+{
+  static PR stringEscapeSequence(
+    parseLiteral("\\")+(
+      parseOneOfChars("'\"?\\abfnrtv")|
+      (octalDigit()+octalDigit()+octalDigit())|
+      (octalDigit()+octalDigit())|
+      octalDigit()|
+      (parseLiteral("x")+atLeastOne(hexDigit()))));
+  return stringEscapeSequence;
+}
+
+
+PR s_char() throw()
+{
+  static PR s_char(
+    parseAnyCharExcept("\\\"\n")|
+    stringEscapeSequence());
+  return s_char;
+}
+
+PR c_char() throw()
+{
+  static PR s_char(
+    parseAnyCharExcept("\\'\n")|
+    stringEscapeSequence());
+  return s_char;
+}
+
+
 class ParseBalanced : public Parser
 {
 public:
@@ -754,6 +807,17 @@ public:
         return ParseResult(EndOfInput(end, XJU_TRACED));
       }
       switch(*end) {
+      case '\'':
+      {
+        ParseResult const r2(
+          (parseOneOfChars("'")+c_char()+parseOneOfChars("'"))->parse_(
+            end, o));
+        if (r2.failed()) {
+          return r2;
+        }
+        end=(*r2).second;
+      }
+      break;
       case '"':
       {
         ParseResult const r2(stringLiteral()->parse_(end, o));
@@ -1090,51 +1154,6 @@ PR backslash() throw()
   return backslash;
 }
 
-PR oneChar() throw()
-{
-  static PR oneChar(new ParseAnyChar);
-  return oneChar;
-}
-
-
-PR octalDigit() throw()
-{
-  static PR octalDigit(charInRange('0', '7'));
-  return octalDigit;
-}
-
-  
-PR hexDigit() throw()
-{
-  static PR hexDigit(charInRange('0','9')|
-                     charInRange('a','f')|
-                     charInRange('A','F'));
-  return hexDigit;
-}
-
-  
-PR stringEscapeSequence() throw()
-{
-  static PR stringEscapeSequence(
-    parseLiteral("\\")+(
-      parseOneOfChars("'\"?\\abfnrtv")|
-      (octalDigit()+octalDigit()+octalDigit())|
-      (octalDigit()+octalDigit())|
-      octalDigit()|
-      (parseLiteral("x")+atLeastOne(hexDigit()))));
-  return stringEscapeSequence;
-}
-
-
-PR s_char() throw()
-{
-  static PR s_char(
-    parseAnyCharExcept("\\\"\n")|
-    stringEscapeSequence());
-  return s_char;
-}
-
-
 PR s_chars() throw()
 {
   static PR s_chars(new NamedParser<hcp_ast::S_Chars>(
@@ -1270,8 +1289,16 @@ PR scope_ref() throw(){
   return result;
 }
 
+PR typename_keyword() throw()
+{
+  PR result(
+    parseLiteral("typename")+!identifierContChar()+eatWhite());
+  return result;
+}
+
 PR scoped_name() throw(){ //see also scoped_function_name
   static PR result(
+    optional(typename_keyword())+
     scope_ref()+
     identifier()+eatWhite()+optional(
         parseOneOfChars("<")+
@@ -1332,19 +1359,21 @@ PR type_ref() throw()
   return result;
 }
 
-PR typedef_statement() throw()
-{
-  static PR defined_type(
+PR defined_type() throw(){
+  static PR result(
     new NamedParser<hcp_ast::DefinedType>(
       "\"defined type\"",
-      identifier()));
+      identifier())+eatWhite());
+  return result;
+}
+
+PR typedef_non_fp() throw()
+{
   static PR typedef_statement(
-    new NamedParser<hcp_ast::Typedef>(
-      "typedef statement",
-      typedef_keyword()+
-      whitespace()+
-      type_ref()+defined_type+eatWhite()+parseOneOfChars(";")+
-      eatWhite()));
+    typedef_keyword()+
+    whitespace()+
+    type_ref()+defined_type()+parseOneOfChars(";")+
+    eatWhite());
   return typedef_statement;
 }
 
@@ -1494,13 +1523,6 @@ PR destructor_name() throw()
       "destructor name",
       scope_ref()+parseLiteral("~")+eatWhite()+identifier()));
   return destructor_name;
-}
-
-PR typename_keyword() throw()
-{
-  PR result(
-    parseLiteral("typename")+!identifierContChar()+eatWhite());
-  return result;
 }
 
 PR name() throw()
@@ -2074,7 +2096,35 @@ PR var_fp() throw()
          eatWhite())};
   return result;
 }
-    
+
+PR typedef_fp() throw()
+{
+  PR result(
+    anon("typedef of function pointer",
+         typedef_keyword()+
+         whitespace()+
+         type_ref()+
+         bracketed(
+           scope_ref()+cv()+parseLiteral("*")+eatWhite()+cv()+
+           defined_type())+
+         bracketed(params())+
+         function_post_qualifiers()+
+         eatWhite()+
+         parseOneOfChars(";")+eatWhite()));
+  return result;
+}
+
+PR typedef_statement() throw()
+{
+  static PR result(
+    new NamedParser<hcp_ast::Typedef>(
+      "typedef statement",
+      typedef_fp()|
+      typedef_non_fp()));
+  return result;
+}
+
+
 PR var_def() throw()
 {
   static PR result{

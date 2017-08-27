@@ -777,6 +777,22 @@ void test17()
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache, false);
+    std::string const x("(*i) != '\"')");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    at = parse(
+      root, at, hcp_parser::balanced(hcp_parser::parseOneOfChars(")")));
+    xju::assert_equal(reconstruct(root), "(*i) != '\"'");
+    xju::assert_equal((++at).atEnd(), true);
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e), readableRepr(e));
+  }
+  try
+  {
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, cache, false);
     std::string const x("template<fred, jock> fred[\"jock(\"](");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
@@ -919,6 +935,20 @@ void test18()
     at = parse(root, at, hcp_parser::typedef_statement());
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
+  }
+  {
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, cache, false);
+    std::string const x("typedef void (T::*Method)(P);");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    at = parse(root, at, hcp_parser::typedef_statement());
+    xju::assert_equal(reconstruct(root), x);
+    xju::assert_equal(at.atEnd(), true);
+    auto k(hcp_ast::findOnlyChildOfType<hcp_ast::Typedef>(root));
+    auto l(hcp_ast::findOnlyChildOfType<hcp_ast::DefinedType>(k));
+    xju::assert_equal(reconstruct(l),"Method");
   }
   {
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
@@ -1719,6 +1749,22 @@ void test31()
  }
  {
    std::string const x("X y=Z(3);");
+   
+   hcp_ast::CompositeItem root;
+   hcp_parser::I at(x.begin(), x.end());
+   
+   try {
+     at = parse(root, at, hcp_parser::global_var_def());
+     xju::assert_equal(reconstruct(root), x);
+     xju::assert_equal(at.atEnd(), true);
+   }
+   catch(xju::Exception const& e) {
+     assert_readableRepr_equal(e, "", XJU_TRACED);
+     xju::assert_equal(true,false);
+   }
+ }
+ {
+   std::string const x("typename std::list<item_type>::iterator m_i;");
    
    hcp_ast::CompositeItem root;
    hcp_parser::I at(x.begin(), x.end());
