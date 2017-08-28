@@ -593,6 +593,18 @@ void test14()
     xju::assert_equal(reconstruct(root), "#if\n  ");
     xju::assert_equal(at.atEnd(), true);
   }
+  {
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, cache, false);
+    std::string const x("#if\\\n  fred\n ");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    at = parse(
+      root, at, hcp_parser::hash());
+    xju::assert_equal(reconstruct(root), x);
+    xju::assert_equal(at.atEnd(), true);
+  }
   try
   {
     std::string const x(" #if");

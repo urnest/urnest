@@ -69,3 +69,8 @@ netflow%tests.tree
 %test-getHostName.sh == ! <<
 #!/bin/sh
 "$1" $(hostname)
+
+
+%tags==%tags-list:list
+%tags-list==<<
+.:tree_tags

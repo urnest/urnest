@@ -3,6 +3,8 @@ snmp/README.txt stuff
 Int,Float add operator* operator/
 Float add math functions exp, sqrt, log, floor, ceiling etc
 
+- Tagged<string> somehow add startsWith and endsWith?
+
 test-format add format::octal tests for int, long, long long
 
 - add AbsFile and AbsDir typedefs in xju::path.hh and use them in xju::file::*
@@ -23,6 +25,8 @@ x Mutex,Lock
 - delete xju::mt
 
 - xju::Microseconds -> std::chrono::microseconds
+
+- get rid of xju::Shared, use std::shared_ptr
 
 io::Input
 io::Output

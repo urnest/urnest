@@ -119,19 +119,34 @@ SnmpV2cTrap decodeSnmpV2cTrap(std::vector<uint8_t> const& data) throw(
                     }
                     if (values.size()<1){
                       std::ostringstream s;
-                      s << "trap is missing trap type var";
+                      s << "trap is missing sys uptime ie sysUpTime.0 var";
                       throw xju::Exception(s.str(),XJU_TRACED);
                     }
-                    if (values[0].first!=Oid(REVISIT)){
+                    if (values[0].first!=Oid(".1.3.6.1.2.1.1.3.0")){
                       std::ostringstream s;
-                      s << "first trap var oid is not " << REVISIT
-                        << " (ie not trap type), it is " << values[0].first;
+                      s << "first trap var oid is not .1.3.6.1.2.1.1.3.0"
+                        << " (ie not sys uptime ie sysUpTime.0), it is "
+                        << values[0].first;
                       throw xju::Exception(s.str(),XJU_TRACED);
                     }
-                    
+                  REVISIT: TimeTicksValue;
+                    if (values.size()<2){
+                      std::ostringstream s;
+                      s << "trap is missing trap type ie snmpTrapOID.0 var";
+                      throw xju::Exception(s.str(),XJU_TRACED);
+                    }
+                    if (values[1].first!=Oid("1.3.6.1.6.3.1.1.4.1.0")){
+                      std::ostringstream s;
+                      s << "first trap var oid is not 1.3.6.1.6.3.1.1.4.1.0"
+                        << " (ie not trap type ie not snmpTrapOID.0), it is "
+                        << values[0].first;
+                      throw xju::Exception(s.str(),XJU_TRACED);
+                    }
+                    Oid const trapType(values[1].second.oidValue);
                     return SnmpV2cTrap(
                       Community(std::string(community.first.begin(),
                                             community.first.end())),
+                      id,
                       trapType,
                       timestamp,
                       decltype(values)(values.begin()+2,values.end()));

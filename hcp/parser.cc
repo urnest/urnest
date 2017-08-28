@@ -1237,7 +1237,8 @@ PR hash() throw()
   static PR hash(new NamedParser<hcp_ast::OtherPreprocessor>(
                    "other preprocessor directive",
                    parseHash()+
-                   parseUntil(parseOneOfChars("\n"))+
+                   parseUntil(parseAnyCharExcept("\\")+parseOneOfChars("\n"))+
+                   parseAnyChar()+
                    eatWhite()));
   return hash;
 }
@@ -1647,6 +1648,15 @@ PR keyword_explicit() throw()
   return keyword_explicit;
 }
 
+PR keyword_override() throw()
+{
+  static PR result(
+    new NamedParser<hcp_ast::KeywordExplicit>(
+      "\"override\"",
+      parseLiteral("override"))+!identifierContChar()+eatWhite());
+  return result;
+}
+
 PR keyword_noexcept() throw()
 {
   static PR result(
@@ -1692,7 +1702,8 @@ PR function_post_qualifiers() throw()
     new NamedParser<hcp_ast::FunctionQualifiers>(
       "function post-qualifiers",
       cv()+
-      zeroOrMore()*(keyword_noexcept()|
+      zeroOrMore()*(keyword_override()|
+                    keyword_noexcept()|
                     throw_clause())));
   return result;
 }

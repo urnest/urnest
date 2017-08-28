@@ -162,7 +162,7 @@ std::ostream& operator<<(std::ostream& s, const xju::Exception& e) throw();
 std::string readableRepr(const xju::Exception& e,
                          const bool includeTrace = false,
                          const bool asPhrase = false) throw();
-};
+}
 
 
 #endif
