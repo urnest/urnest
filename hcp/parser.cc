@@ -1278,8 +1278,18 @@ PR identifier() throw()
   return result;
 }
 
+PR class_struct_union_literal() throw()
+{
+  static PR class_struct_union_literal(
+    (parseLiteral("class")|parseLiteral("struct")|parseLiteral("union"))+
+    !identifierContChar());
+  return class_struct_union_literal;
+}
+
+
 PR scope_ref() throw(){
   static PR result(
+    optional(class_struct_union_literal())+eatWhite()+
     optional(doubleColon()+eatWhite())+
     zeroOrMore()*(
       identifier()+eatWhite()+optional(
@@ -1911,15 +1921,6 @@ PR template_function_def() throw()
 }
 
   
-PR class_struct_union_literal() throw()
-{
-  static PR class_struct_union_literal(
-    (parseLiteral("class")|parseLiteral("struct")|parseLiteral("union"))+
-    !identifierContChar());
-  return class_struct_union_literal;
-}
-
-
 PR not_class_struct_union_literal() throw()
 {
   static PR not_class_struct_union_literal(
