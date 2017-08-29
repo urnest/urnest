@@ -13,6 +13,10 @@ test-hcp-tags%all.tree
 
 %run-standalone-tests == %standalone-tests.tree:leaves
 
+%bootstrap-cxx-opts==<<
++inc_sp=(%hcp-split-bootstrap.tree)
++ld_flags=-lpthread
+
 %cxx-opts == <<
 +(..%cxx-opts)
 
@@ -30,7 +34,7 @@ test-hcp-tags%all.tree
 %hcp-subdir-spec==<<
 %tags==./tags%hcp-gen
 
-%test-parser == test-parser.cc+(%opts):auto.cxx.exe
+%test-parser == test-parser.cc+(%bootstrap-cxx-opts):auto.cxx.exe
 
 %test-parser-cmd==<<
 +cmd=(%test-parser) \
@@ -53,7 +57,7 @@ test-hcp-tags%all.tree
 test%all-tests.tree
 tags%all-tests.tree
 
-hcp-split == hcp-split.cc+(%opts):auto.cxx.exe
+hcp-split == hcp-split.cc+(%bootstrap-cxx-opts):auto.cxx.exe
 hcp-parse-file == hcp-parse-file.cc+(%opts):auto.cxx.exe
 hcp-what-is-at == hcp-what-is-at.cc+(%opts):auto.cxx.exe
 hcp-tags == hcp-tags.cc+(%opts):auto.cxx.exe
@@ -149,3 +153,57 @@ namespace g {
   class_ r();
   B p=Z(32);
 }
+
+
+%hcp-split-bootstrap.tree==%hcp-split-bootstrap.vir_tree_spec:vir_tree
+
+%hcp-split-bootstrap.vir_tree_spec==<<
+xju/assert.hh==../xju/assert.hh
+xju/Exception.hh==../xju/Exception.hh
+xju/path.hh==../xju/path.hh
+xju/format.hh==../xju/format.hh
+xju/stringToUInt.hh==../xju/stringToUInt.hh
+xju/Shared.hh==../xju/Shared.hh
+xju/parse.hh==../xju/parse.hh
+xju/RingLink.hh==../xju/RingLink.hh
+xju/Traced.hh==../xju/Traced.hh
+xju/Mutex.hh==../xju/Mutex.hh
+xju/JoiningIterator.hh==../xju/JoiningIterator.hh
+xju/ios_base.hh==../xju/ios_base.hh
+xju/next.hh==../xju/next.hh
+xju/Optional.hh==../xju/Optional.hh
+xju/Tagged.hh==../xju/Tagged.hh
+xju/Lock.hh==../xju/Lock.hh
+xju/isnan.hh==../xju/isnan.hh
+xju/unix_epoch.hh==../xju/unix_epoch.hh
+xju/prev.hh==../xju/prev.hh
+xju/AutoFd.hh==../xju/AutoFd.hh
+xju/syscall.hh==../xju/syscall.hh
+xju/fcntl.hh==../xju/fcntl.hh
+xju/unistd.hh==../xju/unistd.hh
+xju/NonCopyable.hh==../xju/NonCopyable.hh
+xju/assert.cc==../xju/assert.cc
+xju/Exception.cc==../xju/Exception.cc
+xju/path.cc==../xju/path.cc
+xju/format.cc==../xju/format.cc
+xju/stringToUInt.cc==../xju/stringToUInt.cc
+xju/Mutex.cc==../xju/Mutex.cc
+xju/isnan.cc==../xju/isnan.cc
+xju/unix_epoch.cc==../xju/unix_epoch.cc
+xju/AutoFd.cc==../xju/AutoFd.cc
+xju/syscall.cc==../xju/syscall.cc
+xju/fcntl.cc==../xju/fcntl.cc
+xju/unistd.cc==../xju/unistd.cc
+hcp/ast.hh==./ast.hh
+hcp/parser.hh==./parser.hh
+hcp/getOptionValue.hh==./getOptionValue.hh
+hcp/readFile.hh==./readFile.hh
+hcp/trace.hh==./trace.hh
+hcp/ast.cc==./ast.cc
+hcp/parser.cc==./parser.cc
+hcp/getOptionValue.cc==./getOptionValue.cc
+hcp/readFile.cc==./readFile.cc
+hcp/trace.cc==./trace.cc
+hcp/translateException.hh==./translateException.hh
+hcp/translateException.cc==./translateException.cc
+
