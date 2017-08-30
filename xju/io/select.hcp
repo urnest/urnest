@@ -53,13 +53,11 @@ std::pair<std::set<Input const*>,std::set<Output const*> > select(
     for(auto x : outputs) {
       FD_SET(x->fileDescriptor(),&w);
     }
-    std::chrono::system_clock::duration const timeout(
-      std::max(
-        std::chrono::system_clock::duration(
-          std::chrono::seconds(0)),
-        std::min(deadline-std::chrono::system_clock::now(),
-                 std::chrono::system_clock::duration(
-                   std::chrono::seconds(std::numeric_limits<long>::max())))));
+    auto const now(std::chrono::system_clock::now());
+    std::chrono::system_clock::duration timeout(deadline-now);
+    if (timeout<std::chrono::seconds(0)){
+      timeout=std::chrono::seconds(0);
+    }
     std::chrono::seconds const tv_sec(
       std::chrono::duration_cast<std::chrono::seconds>(timeout));
     std::chrono::microseconds const tv_usec(
