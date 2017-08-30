@@ -20,9 +20,9 @@ std::vector<T> split(T const& x,
   std::vector<T> result;
   auto i=std::begin(x);
   auto j=i;
-  for(i=std::find(j,x.end(),delimeter);
+  for(i=std::find(j,std::end(x),delimeter);
       i!=std::end(x);
-      i=std::find(j,x.end(),delimeter)){
+      i=std::find(j,std::end(x),delimeter)){
     result.push_back(T(j,i));
     j=xju::next(i);
   }
