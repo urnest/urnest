@@ -1163,6 +1163,36 @@ void test21()
     hcp_parser::Cache cache(new hcp_parser::CacheVal());
     hcp_parser::Options const options(false, cache, false);
     std::string const x(
+      "void fred() const noexcept;\n");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    at = parse(root, at, hcp_parser::function_decl());
+    xju::assert_equal(reconstruct(root), x);
+    xju::assert_equal(at.atEnd(), true);
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e), readableRepr(e));
+  }
+  try {
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, cache, false);
+    std::string const x(
+      "void fred() const noexcept(false);\n");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    
+    at = parse(root, at, hcp_parser::function_decl());
+    xju::assert_equal(reconstruct(root), x);
+    xju::assert_equal(at.atEnd(), true);
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e), readableRepr(e));
+  }
+  try {
+    hcp_parser::Cache cache(new hcp_parser::CacheVal());
+    hcp_parser::Options const options(false, cache, false);
+    std::string const x(
       "std::ostream& operator<<(std::ostream& s, const TaskId& x) throw();");
     hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());

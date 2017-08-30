@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
         cxy::sref<hcp::tags::Lookup> sref(orb,"TagLookupService",s);
         auto const tmpFile(xju::path::split(xju::path::str(uriFile)+".new"));
         xju::file::write(tmpFile,
-                         "corbaloc::iiop::localhost:"+xju::format::str(port)+
+                         "corbaloc:iiop:localhost:"+xju::format::str(port)+
                          "/TagLookupService",
                          0666);
         xju::file::rename(tmpFile,uriFile);

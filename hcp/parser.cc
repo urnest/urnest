@@ -1688,7 +1688,8 @@ PR keyword_throw() throw()
 PR throw_clause() throw()
 {
   static PR result(
-    keyword_throw()+bracketed());
+    (keyword_throw()+bracketed())|
+    (keyword_noexcept()+optional(bracketed())));
   return result;
 }
 
@@ -1713,7 +1714,6 @@ PR function_post_qualifiers() throw()
       "function post-qualifiers",
       cv()+
       zeroOrMore()*(keyword_override()|
-                    keyword_noexcept()|
                     throw_clause())));
   return result;
 }

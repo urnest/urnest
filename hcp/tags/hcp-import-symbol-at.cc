@@ -88,8 +88,8 @@ ExtensionMappings getHcpExtensionMappings() throw(
       ExtensionMappings result;
       for(auto const mapping: xju::split(
             std::string(::getenv("HCP_EXTENSION_MAPPINGS")),
-            ':')) {
-        auto const x(xju::split(mapping,'='));
+            ',')) {
+        auto const x(xju::split(mapping,':'));
         if (x.size()==0){
           std::ostringstream s;
           s << xju::format::quote(mapping)

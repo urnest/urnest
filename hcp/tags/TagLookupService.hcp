@@ -84,7 +84,8 @@ public:
     std::set<xju::io::Input const*> const inputs(
       {&filesWatcher_,&*stopper_.first});
     while(!stop_.load()) {
-      if (xju::io::select(inputs,xju::now()+std::chrono::seconds(10))
+      auto const now(xju::now());
+      if (xju::io::select(inputs,now+std::chrono::seconds(10))
           .find(&filesWatcher_)!=inputs.end()) {
         xju::Lock l(guard_);
         updateFiles(l);
