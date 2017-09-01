@@ -1,6 +1,6 @@
 #ifndef _HCP_TAGS_LOOKUP_HH
 #define _HCP_TAGS_LOOKUP_HH
-//generated from "/home/xju/tmp/oc52-2/xjutv/FILES/a/o/Lookup.hcp.1167577.hcp"
+//generated from "Lookup.hcp.1167577.hcp"
 // generated from Lookup.idl by omni cxy idl backend specifying 
 // xju::Exception from <xju/Exception.hh> as base class for all ipc exceptions
 

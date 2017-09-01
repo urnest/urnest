@@ -480,7 +480,7 @@ void test11()
     // first x of atLeastOneOf*x that fails to parse but the error message
     // waffles about the optional extras; for "at least one" it will only
     // ever fail on the first one
-    assert_readableRepr_equal(e, "Failed to parse string literal at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars [\"] then string literal characters then one of chars [\"] then zero or more occurrances of (one of chars [\\t\\n ] or comments) at line 1 column 1 because\nfailed to parse string literal characters at line 1 column 2 because\nfailed to parse \"\\\" at line 1 column 7 because\nline 1 column 7: end of input.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse string literal at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars [\"] then string literal characters then one of chars [\"] then optional whitespace at line 1 column 1 because\nfailed to parse string literal characters at line 1 column 2 because\nfailed to parse \"\\\" at line 1 column 7 because\nline 1 column 7: end of input.", XJU_TRACED);
   }
   try
   {
@@ -497,7 +497,7 @@ void test11()
     // first x of atLeastOneOf*x that fails to parse but the error message
     // waffles about the optional extras; for "at least one" it will only
     // ever fail on the first one
-    assert_readableRepr_equal(e, "Failed to parse string literal at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars [\"] then string literal characters then one of chars [\"] then zero or more occurrances of (one of chars [\\t\\n ] or comments) at line 1 column 1 because\nfailed to parse string literal characters at line 1 column 2 because\nfailed to parse \"\\\" at line 1 column 5 because\nline 1 column 5: expected \'\\\' but found \'\\n\'.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse string literal at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars [\"] then string literal characters then one of chars [\"] then optional whitespace at line 1 column 1 because\nfailed to parse string literal characters at line 1 column 2 because\nfailed to parse \"\\\" at line 1 column 5 because\nline 1 column 5: expected \'\\\' but found \'\\n\'.", XJU_TRACED);
   }
   try
   {
@@ -514,7 +514,7 @@ void test11()
     // first x of atLeastOneOf*x that fails to parse but the error message
     // waffles about the optional extras; for "at least one" it will only
     // ever fail on the first one
-    assert_readableRepr_equal(e, "Failed to parse string literal at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars [\"] then string literal characters then one of chars [\"] then zero or more occurrances of (one of chars [\\t\\n ] or comments) at line 1 column 1 because\nfailed to parse string literal characters at line 1 column 2 because\nfailed to parse \"x\" at line 1 column 6 because\nline 1 column 6: expected \'x\' but found \'9\'.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse string literal at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars [\"] then string literal characters then one of chars [\"] then optional whitespace at line 1 column 1 because\nfailed to parse string literal characters at line 1 column 2 because\nfailed to parse \"x\" at line 1 column 6 because\nline 1 column 6: expected \'x\' but found \'9\'.", XJU_TRACED);
   }
 }
 
@@ -2255,6 +2255,33 @@ void test42()
     }
   }
 }
+void test43()
+{
+  {
+    std::string const x(
+      "xju::Optional<size_t> const& length");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    try {
+      at = parse(root, at, hcp_parser::var_non_fp(),true);
+      xju::assert_equal(reconstruct(root), x);
+      std::vector<hcp_ast::IR>::const_iterator j(
+        std::find_if(
+          root.items_.begin(),
+          root.items_.end(),
+          hcp_ast::isA_<hcp_ast::VarName>));
+      xju::assert_not_equal(
+        j, 
+        root.items_.end());
+      xju::assert_equal(reconstruct(*j), "length");
+      xju::assert_equal(at.atEnd(), true);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+}
 
 
 int main(int argc, char* argv[])
@@ -2302,6 +2329,7 @@ int main(int argc, char* argv[])
   test40(), ++n;
   test41(), ++n;
   test42(), ++n;
+  test43(), ++n;
   
   xju::assert_equal(atLeastOneReadableReprFailed, false);
   std::cout << "PASS - " << n << " steps" << std::endl;

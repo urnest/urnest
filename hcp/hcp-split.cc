@@ -519,7 +519,7 @@ int main(int argc, char* argv[])
     
     oh << "#ifndef " << guard << "\n"
        << "#define " << guard << "\n";
-    oh << "//generated from \""<< xju::path::str(inputFile)<< "\"\n";
+    oh << "//generated from \""<< inputFile.second<< "\"\n";
     
     xju::path::RelativePath const hhinc(
       std::vector<xju::path::DirName>(
@@ -530,7 +530,7 @@ int main(int argc, char* argv[])
       oc << "#include <" 
          << (cmd_line.first.hpath_+outputHH.second._)
          << ">" << "\n";
-        oc << "//generated from \""<<xju::path::str(inputFile)<<"\"\n";
+        oc << "//generated from \""<<inputFile.second<<"\"\n";
     }
     else
     {
@@ -538,14 +538,14 @@ int main(int argc, char* argv[])
         oc << "#include <" 
            << xju::path::str(hhinc, outputHH.second)
            << ">" << "\n"
-           << "//generated from \""<<xju::path::str(inputFile)<<"\"\n";
+           << "//generated from \""<<inputFile.second<<"\"\n";
       }
       else
       {
         oc << "#include \"" 
            << xju::path::str(hhinc, outputHH.second)
            << "\"" << "\n";
-        oc << "//generated from \""<<xju::path::str(inputFile)<<"\"\n";
+        oc << "//generated from \""<<inputFile.second<<"\"\n";
       }
     }
     genNamespaceContent(

@@ -1,6 +1,6 @@
 #ifndef _HCP_TAGS_LOCATION_HH
 #define _HCP_TAGS_LOCATION_HH
-//generated from "/home/xju/tmp/oc52-2/xjutv/FILES/a/m/Location.hcp.1228659.hcp"
+//generated from "Location.hcp.1228659.hcp"
 // generated from Location.idl by omni cxy idl backend specifying 
 // xju::Exception from <xju/Exception.hh> as base class for all ipc exceptions
 

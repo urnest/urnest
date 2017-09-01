@@ -46,22 +46,12 @@ public:
   class UnknownNamespace : public xju::Exception
   {
   public:
-    //REVISIT: using xju::Exception;
-    UnknownNamespace(const std::string& cause,
-                     const xju::Traced& trace) throw():
-        xju::Exception(cause,trace)
-    {
-    }
+    using xju::Exception::Exception;
   };
   class UnknownSymbol : public xju::Exception
   {
   public:
-    //REVISIT: using xju::Exception;
-    UnknownSymbol(const std::string& cause,
-                  const xju::Traced& trace) throw():
-        xju::Exception(cause,trace)
-    {
-    }
+    using xju::Exception::Exception;
   };
 
   // Lookup locations of namespace_::symbol when it is referenced

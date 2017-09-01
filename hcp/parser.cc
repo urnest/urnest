@@ -18,6 +18,7 @@
 #include "xju/format.hh"
 #include "xju/JoiningIterator.hh"
 #include <hcp/translateException.hh>
+#include <hcp/trace.hh>
 
 namespace hcp_parser
 {
@@ -202,7 +203,7 @@ public:
     }
     if (options.trace_) {
       std::ostringstream s;
-      s << "ParseOr choosing " 
+      s << "ParseOr choosing exception of " 
         << (*(*failures.rbegin()).second.context_.rbegin()).first.first->target()
         << " which got to " << (*failures.rbegin()).first;
       hcp_trace::milestone(s.str(), XJU_TRACED);
@@ -915,19 +916,9 @@ public:
   // Parser::
   virtual ParseResult parse_(I const at, Options const& o) throw() 
   {
-    std::unique_ptr<hcp_trace::Scope> scope;
-    if (o.trace_) {
-      std::ostringstream s;
-      s << "parse " << target() << " at " << at;
-      scope = std::unique_ptr<hcp_trace::Scope>(
-        new hcp_trace::Scope(s.str(), XJU_TRACED));
-    }
     ParseResult r(x_->parse(at, o));
     if (!r.failed()) {
       return r;
-    }
-    if (o.trace_) {
-      scope->fail();
     }
     return r;
   }
@@ -938,6 +929,49 @@ public:
 };
 
 
+}
+
+ParseResult Parser::parse(I const at, Options const& options) throw() 
+{
+  std::unique_ptr<hcp_trace::Scope> scope;
+  if (options.trace_ && traced_) {
+    std::ostringstream s;
+    s << "parse " << target() << " at " << at;
+    scope = std::unique_ptr<hcp_trace::Scope>(
+      new hcp_trace::Scope(s.str(), XJU_TRACED));
+  }
+  CacheKey const k(at, this);
+  CacheVal::const_iterator i((*options.cache_).find(k));
+  if (i == (*options.cache_).end()) {
+    ParseResult result(parse_(at, options));
+    if (result.failed()) {
+      result.addContext(*this, at, XJU_TRACED);
+    }
+    CacheVal::value_type v(k, result);
+    i=(*options.cache_).insert(v).first;
+  }
+  else{
+    if (scope.get()){
+      scope->cached();
+    }
+  }
+  if (scope.get()) {
+    if ((*i).second.failed()){
+      scope->fail();
+    }
+    else{
+      scope->result(reconstruct((*((*i).second)).first));
+    }
+  }
+  return (*i).second;
+}
+
+PR listOf(PR x, PR separator, PR terminator) throw()
+{
+  return anon(separator->target()+"-separated list of "+x->target()+
+              " terminated by "+terminator->target(),
+              terminator|
+              (x+parseUntil(separator+x,terminator)+terminator));
 }
 
 ZeroOrMore zeroOrMore() throw()
@@ -1108,7 +1142,9 @@ PR comments() throw()
 // matches nothing or something
 PR eatWhite() throw()
 {
-  static PR eatWhite(zeroOrMore()*(whitespaceChar()|comments()));
+  static PR eatWhite(
+    anon("optional whitespace",
+         zeroOrMore()*(whitespaceChar()|comments())));
   return eatWhite;
 }
 
@@ -1309,12 +1345,14 @@ PR typename_keyword() throw()
 
 PR scoped_name() throw(){ //see also scoped_function_name
   static PR result(
-    optional(typename_keyword())+
-    scope_ref()+
-    identifier()+eatWhite()+optional(
-        parseOneOfChars("<")+
-        balanced(parseOneOfChars(">"), true)+
-        parseOneOfChars(">")+eatWhite()));
+    anon("scoped name",
+         optional(typename_keyword())+
+         scope_ref()+
+         identifier()+eatWhite()+
+         ((parseOneOfChars("<")+
+           balanced(parseOneOfChars(">"), true)+
+           parseOneOfChars(">")+eatWhite())|
+          !parseOneOfChars("<"))));
   return result;
 }
 
@@ -1363,7 +1401,7 @@ PR type_ref() throw()
   static PR result{
     anon("type reference",
          cv() +
-         type_name() +eatWhite() +
+         type_name() +
          zeroOrMore()*type_qual()+ eatWhite()+
          (!parseLiteral(".")|(parseLiteral("...")+eatWhite())))
       };
@@ -1822,7 +1860,7 @@ PR conversion_operator_function_proto() throw()
          "conversion operator name",
          conversion_operator_name()))+
     eatWhite()+
-    bracketed(params()));
+    params());
   return result;
 }
 
@@ -1836,7 +1874,7 @@ PR typed_function_proto() throw()
          operator_name()|
          scoped_name()))+
     eatWhite()+
-    bracketed(params()));
+    params());
   return result;
 }
 
@@ -1850,7 +1888,7 @@ PR untyped_function_proto() throw()
          operator_name()|
          scoped_name()))+
     eatWhite()+
-    bracketed(params()));
+    params());
   return result;
 }
 
@@ -1858,7 +1896,7 @@ PR function_initialiser() throw()
 {
   static PR result(
     anon("function initialier",
-         parseLiteral("=")+balanced(parseLiteral(";"))));
+         parseLiteral("=")+balanced(parseLiteral(";")+eatWhite())));
   return result;
 }
 
@@ -1870,10 +1908,8 @@ PR function_proto() throw()
       (conversion_operator_function_proto()|
        typed_function_proto()|
        untyped_function_proto())+
-      //balanced((eatWhite()+parseOneOfChars(";:{"))|parseLiteral("try"))
       function_post_qualifiers()+
-      (!parseLiteral("=")|function_initialiser())
-      ));
+      (!parseLiteral("=")|function_initialiser())));
   return result;
 }
 
@@ -2075,11 +2111,11 @@ PR var_fp_backref() throw()
 PR param() throw()
 {
   static PR result(
-    !parseLiteral(")")+
-    (var_non_fp()|
-     var_fp_backref()|
-     type_ref())+
-    eatWhite());
+    anon("param",
+         (var_non_fp()|
+          var_fp_backref()|
+          type_ref())+
+         eatWhite()));
   return result;
 }
   
@@ -2088,8 +2124,8 @@ PR params() throw()
   static PR result {
     anon(
       "params",
-      optional(param()+
-               zeroOrMore()*(parseLiteral(",")+eatWhite()+param()))+
+      parseLiteral("(")+eatWhite()+
+      listOf(param(),parseLiteral(",")+eatWhite(),parseLiteral(")"))+
       eatWhite())};
   return result;
 }
@@ -2102,7 +2138,7 @@ PR var_fp() throw()
          bracketed(
            scope_ref()+cv()+parseLiteral("*")+eatWhite()+cv()+
            var_name())+
-         bracketed(params())+
+         params()+
          function_post_qualifiers()+
          (!parseOneOfChars("={")|var_initialiser())+
          eatWhite())};
@@ -2119,7 +2155,7 @@ PR typedef_fp() throw()
          bracketed(
            scope_ref()+cv()+parseLiteral("*")+eatWhite()+cv()+
            defined_type())+
-         bracketed(params())+
+         params()+
          function_post_qualifiers()+
          eatWhite()+
          parseOneOfChars(";")+eatWhite()));
@@ -2247,6 +2283,7 @@ public:
                          typedef_statement()|
                          scoped_enum_def()|
                          enum_def()|
+                         using_statement()|
                          (not_typedef_using_enum_keyword()+(
                            function_decl()|
                            template_function_def()|

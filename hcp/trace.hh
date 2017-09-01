@@ -24,8 +24,14 @@ public:
   std::string message_;
   xju::Traced t_;
   bool failed_;
+  bool cached_;
+  std::string result_;
+  
   void fail() throw(){ failed_=true; }
-
+  void cached() throw(){ cached_=true; }
+  void result(std::string&& r) throw(){
+    result_=r;
+  }
   Scope(std::string const& message, xju::Traced const& t) throw();
   
   ~Scope() throw();

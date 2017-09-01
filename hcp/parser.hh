@@ -27,7 +27,6 @@
 #include <utility>
 #include <set>
 #include <algorithm>
-#include <hcp/trace.hh>
 #include "xju/Optional.hh"
 #include <map>
 #include <vector>
@@ -200,6 +199,11 @@ public:
 class Parser
 {
 public:
+  bool traced_;
+  
+  Parser(bool traced=false) throw():
+      traced_(traced){
+  }
   virtual ~Parser() throw() {
   }
   
@@ -213,20 +217,7 @@ public:
 
   // post: result contains references to at or beyond, even if parsing
   //       fails (ie if result.failed())
-  ParseResult parse(I const at, Options const& options) throw() 
-  {
-    CacheKey const k(at, this);
-    CacheVal::const_iterator i((*options.cache_).find(k));
-    if (i == (*options.cache_).end()) {
-      ParseResult result(parse_(at, options));
-      if (result.failed()) {
-        result.addContext(*this, at, XJU_TRACED);
-        }
-        CacheVal::value_type v(k, result);
-        i=(*options.cache_).insert(v).first;
-    }
-    return (*i).second;
-  }
+  ParseResult parse(I const at, Options const& options) throw();
 
   template<class T>
   bool isA() const throw() {
@@ -249,6 +240,12 @@ class ZeroOrMore{};
 
 PR operator*(ZeroOrMore a, PR b) throw();
 
+// Parse list of xs each separated by separator, with
+// list terminated by terminator.
+// - result includes terminator
+PR listOf(PR x, PR separator, PR terminator) throw();
+
+// not good - prefer listOf/parseUntil
 ZeroOrMore zeroOrMore() throw();
 
 // result parses an a then a b
@@ -267,6 +264,9 @@ PR anon(std::string const& name, PR const x) throw();
 class NamedParser_ : public Parser
 {
 public:
+  NamedParser_() throw():
+    Parser(true){
+  }
   virtual ~NamedParser_() throw()
   {
   }
@@ -294,13 +294,6 @@ public:
   // - if x succeeds, wrap result in ItemType and return that as result
   virtual ParseResult parse_(I const at, Options const& o) throw() 
   {
-    std::unique_ptr<hcp_trace::Scope> scope;
-    if (o.trace_) {
-      std::ostringstream s;
-      s << "parse " << target() << " at " << at;
-      scope = std::unique_ptr<hcp_trace::Scope>(
-        new hcp_trace::Scope(s.str(), XJU_TRACED));
-    }
     ParseResult r(x_->parse(at, o));
     if (!r.failed()) {
       PV a(*r);
@@ -309,9 +302,6 @@ public:
         a.first.push_back(IR(new hcp_ast::String(at, at)));
       }
       return ParseResult(PV(IRs(1U, new ItemType(a.first)), a.second));
-    }
-    if (o.trace_) {
-      scope->fail();
     }
     return r;
   }
@@ -375,6 +365,7 @@ PR function_proto() throw();
 PR function_decl() throw();
 PR template_function_def() throw();
 PR function_def() throw(); // matches template, so try template_function_def first
+PR var_non_fp() throw(); // eg int t
 PR var_fp() throw(); // function pointer eg int (T::*f)()
 PR var_def() throw();
 PR global_var_def() throw();

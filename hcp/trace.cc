@@ -14,22 +14,29 @@
 
 #include <iostream>
 #include <exception>
+#include <xju/format.hh>
 
 namespace hcp_trace
 {
 Scope::Scope(std::string const& message, xju::Traced const& t) throw():
   message_(message),
   t_(t),
-  failed_(false)
+  failed_(false),
+  cached_(false)
 {
-  std::cout << "[ " << message_ << " " << t_.file() << ":" << t_.line()
+  std::cout << "[  " << message_ << " " << t_.file() << ":" << t_.line()
             << std::endl;
 }
 
 Scope::~Scope() throw()
 {
-  std::cout << "]" << ((std::uncaught_exception()||failed_)?"*":" ")
-            << message_ << " " << t_.file() << ":" << t_.line()
+  std::cout << "]"
+            << (cached_?"C":" ")
+            << ((std::uncaught_exception()||failed_)?"*":" ")
+            << message_ << " "
+            << (failed_?"":xju::format::quote(
+                  xju::format::cEscapeString(result_))+" ")
+            << t_.file() << ":" << t_.line()
             << std::endl;
 }
 
