@@ -1,5 +1,4 @@
 #include <hcp/tags/Location.hh>
-//generated from "Location.hcp.1228659.hcp"
 #include <cxy/copyContext.hh> //impl
 
 namespace hcp

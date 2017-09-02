@@ -125,9 +125,10 @@ std::string importSymbolAt(
       scope.first);
     auto const ss(splitSymbol(identifier.value()));
     
-    auto const l(tagLookupService.lookupSymbol(fromScope,
-                                               ss.first,
-                                               ss.second));
+    auto const foundIn(tagLookupService.lookupSymbol(fromScope,
+                                                     ss.first,
+                                                     ss.second));
+    auto const l(foundIn.locations_);
     if (l.size()==0) { 
      std::ostringstream s;
       s << "symbol " << identifier

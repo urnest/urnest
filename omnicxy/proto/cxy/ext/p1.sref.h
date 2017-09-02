@@ -37,13 +37,10 @@ public:
   sref(cxy::ORB< cxy::Exception >& orb, 
        std::string const& name,
        ::p1::F& x) throw(
-         cxy::Exceptions< cxy::Exception >::DuplicateName) ;
-
+         cxy::Exceptions< cxy::Exception >::DuplicateName);
   ~sref() throw();
 
-
   cxy::IOR< ::p1::F > ior() const throw();
-
 
   std::string const name_;
   ::p1::F& x_;
@@ -53,23 +50,25 @@ private:
   class f1 
   {
   public:
-    static void lcfn(omniCallDescriptor* ocd, omniServant* svnt);
-
+    static void lcfn(omniCallDescriptor* ocd, omniServant* svnt) 
+      //exception spec commented to avoid header dependency on omniORB headers
+      //throw(CORBA::UserException)
+    ;
     static const char* const _user_exns[] ;
 };
   
 
   // sref_if::
-  virtual bool _dispatch(omniCallHandle& _handle);
-
+  virtual bool _dispatch(omniCallHandle& _handle)
+    //exception spec commented to avoid header dependency on omniORB headers
+    // throw(CORBA::Exception)
+  ;
 
   // sref_if::
   virtual void* _ptrToInterface(const char* id) throw();
-
   
   // sref_if::
   virtual void impl_deleted() throw();
-
 
   xju::mt::Mutex guard_;
   xju::mt::Condition c_;

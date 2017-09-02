@@ -6,7 +6,6 @@ omnicxy%all.tree
 hcp%all.tree
 
 %cxx-opts==<<
-+debug
 +inc_sp=(%hcp-gen)
 +inc_sp=(.)
 +inc_sp=(omnicxy)

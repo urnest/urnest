@@ -13,10 +13,15 @@ module hcp
     {
       typedef sequence<NamespaceName> NamespaceNames;
       typedef sequence<Location> Locations;
-      
-      Locations lookupSymbol(in NamespaceNames fromScope,
-                             in NamespaceNames symbolScope,
-                             in UnqualifiedSymbol symbol);
+      typedef string Header; //eg <iostream>
+      typedef sequence<Header> Headers;
+      struct FoundIn {
+        Locations locations_;
+        Headers headers_;
+      };
+      FoundIn lookupSymbol(in NamespaceNames fromScope,
+                           in NamespaceNames symbolScope,
+                           in UnqualifiedSymbol symbol);
     };
   };
 };

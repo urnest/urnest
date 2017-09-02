@@ -41,7 +41,6 @@ class F
 {
 public:
   virtual ~F() throw();
-
   virtual ::p3::MyInt f1(
     ::p3::MyInt const& a) throw(
     // ipc failure

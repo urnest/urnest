@@ -36,7 +36,6 @@ public:
     // other failure, eg communication failure
     cxy::Exception);
 
-
   explicit cref(cxy::ORB< cxy::Exception >& orb, 
                 cxy::IOR< ::p2::F >const& ior) throw(
     // no object with specified ior, including server
@@ -44,7 +43,6 @@ public:
     cxy::Exceptions< cxy::Exception >::NoSuchObject,
     // other failure, eg communication failure
     cxy::Exception);
-
 
   // note T must be a p2::F or p2::F must be a T
   template<class T>
@@ -65,9 +63,7 @@ public:
 
   cref(cref const& b) throw();
 
-
   cref< ::p2::F >& operator=(cref< ::p2::F > const& b) throw();
-
 
   // pre: T is a p2::F 
   template<class T>
@@ -80,28 +76,20 @@ public:
 
   cxy::IOR< p2::F > ior() const throw();
 
-
   operator cxy::IOR< p2::F >() const throw();
 
-
   ~cref() throw();
-
   
   p2::F* operator->() throw();
-
   p2::F const* operator->() const throw();
-
   p2::F& operator*() throw();
-
   p2::F const& operator*() const throw();
-
   
 private:
   cxy::ORB< cxy::Exception >* orb_;
   cxy::objref< ::p2::F >* obj_;
 
   std::string uri() const throw();
-
 
   static cxy::objref< ::p2::F >* locate(
     cxy::ORB< cxy::Exception >& orb,
@@ -113,7 +101,6 @@ private:
       cxy::Exceptions< cxy::Exception >::WrongType,
       // other failure, eg communication failure
       cxy::Exception);
-
 };
 
 }

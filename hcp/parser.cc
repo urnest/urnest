@@ -337,19 +337,6 @@ public:
   }
 };
 
-// escape newline, tab
-std::string printChar(char const c) throw() {
-  std::ostringstream s;
-  switch(c) {
-  case '\t': s << "\\t"; break;
-  case '\n': s << "\\n"; break;
-  default:
-    s << c;
-  }
-  return s.str();
-}
-
-
 class ParseOneOfChars : public Parser
 {
 public:
@@ -381,12 +368,10 @@ public:
   // Parser::
   virtual std::string target() const throw()
   {
-    std::vector<std::string> x;
-    std::transform(chars_.begin(), chars_.end(), 
-                   std::back_inserter(x), 
-                   printChar);
     std::ostringstream s;
-    s << "one of chars [" << xju::format::join(x.begin(), x.end(), "") << "]";
+    s << "one of chars "
+      << xju::format::quote(xju::format::cEscapeString(
+                              std::string(chars_.begin(),chars_.end())));
     return s.str();
   }
 
@@ -403,8 +388,9 @@ public:
     std::string str() const throw()
     {
       std::ostringstream s;
-      s << "'" << (*at_) << "'" << " is not one of chars [" 
-        << xju::format::join(chars_.begin(), chars_.end(), "") << "]";
+      s << "'" << (*at_) << "'" << " is not one of chars "
+        << xju::format::quote(xju::format::cEscapeString(
+                                std::string(chars_.begin(),chars_.end())));
       return s.str();
     }
     I const at_;
@@ -444,13 +430,10 @@ public:
   // Parser::
   virtual std::string target() const throw()
   {
-    std::vector<std::string> x;
-    std::transform(chars_.begin(), chars_.end(), 
-                   std::back_inserter(x), 
-                   printChar);
     std::ostringstream s;
-    s << "any char except [" 
-      << xju::format::join(x.begin(), x.end(), "") << "]";
+    s << "any char except " 
+      << xju::format::quote(xju::format::cEscapeString(
+                              std::string(chars_.begin(),chars_.end())));
     return s.str();
   }
 
@@ -467,8 +450,9 @@ public:
     std::string str() const throw()
     {
       std::ostringstream s;
-      s << "'" << (*at_) << "'" << " is one of [" 
-        << xju::format::join(chars_.begin(), chars_.end(), "") << "]";
+      s << "'" << (*at_) << "'" << " is one of "
+        << xju::format::quote(xju::format::cEscapeString(
+                                std::string(chars_.begin(),chars_.end())));
       return s.str();
     }
     I const at_;
@@ -508,7 +492,9 @@ public:
   virtual std::string target() const throw()
   {
     std::ostringstream s;
-    s << "one of chars '" << printChar(min_) <<"'..'" << printChar(max_) <<"'";
+    s << "one of chars '"
+      << xju::format::cEscapeChar(min_) <<"'..'"
+      << xju::format::cEscapeChar(max_) <<"'";
     return s.str();
   }
   class CharNotInRange : public Exception::Cause
@@ -525,8 +511,10 @@ public:
     std::string str() const throw()
     {
       std::ostringstream s;
-      s << "'" << printChar(*at_) << "'" << " is not one of chars '" 
-        << printChar(min_) <<"'..'" << printChar(max_) <<"'";
+      s << "'" << xju::format::cEscapeChar(*at_) << "'"
+        << " is not one of chars '" 
+        << xju::format::cEscapeChar(min_) <<"'..'"
+        << xju::format::cEscapeChar(max_) <<"'";
       return s.str();
     }
     I const at_;
@@ -660,8 +648,8 @@ public:
     std::string str() const throw()
     {
       std::ostringstream s;
-      s << "expected '" << printChar(wanted_) << "'" 
-        << " but found '" << printChar(got_) << "'";
+      s << "expected '" << xju::format::cEscapeChar(wanted_) << "'" 
+        << " but found '" << xju::format::cEscapeChar(got_) << "'";
       return s.str();
     }
     char const got_;
@@ -718,7 +706,8 @@ public:
     std::string str() const throw()
     {
       std::ostringstream s;
-      s << "line starts with '" << printChar(got_) << "', not '#'";
+      s << "line starts with '" << xju::format::cEscapeChar(got_)
+        << "', not '#'";
       return s.str();
     }
     char const got_;
@@ -1096,8 +1085,23 @@ PR balanced(PR until, bool angles) throw()
 
 PR whitespaceChar() throw()
 {
-  static PR whitespaceChar(parseOneOfChars(" \t\n"));
+  static PR whitespaceChar(parseOneOfChars(" \t\n\r"));
   return whitespaceChar;
+}
+
+PR doubleSlash() throw(){
+  static PR result(parseLiteral("//"));
+  return result;
+}
+
+PR slashStar() throw(){
+  static PR result(parseLiteral("/*"));
+  return result;
+}
+
+PR starSlash() throw(){
+  static PR result(parseLiteral("*/"));
+  return result;
 }
 
 PR parseHash() throw()
@@ -1111,7 +1115,7 @@ PR lineComment() throw()
 {
   static PR lineComment(new NamedParser<hcp_ast::LineComment>(
                           "line comment",
-                          parseLiteral("//")+
+                          doubleSlash()+
                           parseUntil(parseOneOfChars("\n"))+
                           (zeroOrMore()*whitespaceChar())));
   return lineComment;
@@ -1122,9 +1126,9 @@ PR blockComment() throw()
 {
   static PR blockComment(new NamedParser<hcp_ast::BlockComment>(
                            "block comment",
-                           parseLiteral("/*")+
-                           parseUntil(parseLiteral("*/"))+
-                           parseLiteral("*/")+
+                           slashStar()+
+                           parseUntil(starSlash())+
+                           starSlash()+
                            (zeroOrMore()*whitespaceChar())));
   return blockComment;
 }
@@ -1144,7 +1148,10 @@ PR eatWhite() throw()
 {
   static PR eatWhite(
     anon("optional whitespace",
-         zeroOrMore()*(whitespaceChar()|comments())));
+         !(whitespaceChar()|doubleSlash()|slashStar())|
+         PR(new NamedParser<hcp_ast::WhiteSpace>(
+              "whitespace",
+              zeroOrMore()*(whitespaceChar()|comments())))));
   return eatWhite;
 }
 
@@ -1781,8 +1788,18 @@ PR init_list() throw()
   static PR init_list(new NamedParser<hcp_ast::InitList>(
                         "initialiser list",
                         parseLiteral(":")+
-                        balanced(parseOneOfChars("{;:"))));
+                        balanced(parseOneOfChars("{;"))));
   return init_list;
+}
+
+
+PR keyword_try() throw()
+{
+  static PR result(
+    new NamedParser<hcp_ast::KeywordTry>(
+      "\"try\"",
+      parseLiteral("try"))+!identifierContChar()+eatWhite());
+  return result;
 }
 
 PR keyword_catch() throw()
@@ -1806,11 +1823,10 @@ PR function_impl() throw()
   static PR function_impl(
     new NamedParser<hcp_ast::FunctionImpl>(
       "function implementation",
-      eatWhite()+
-      (zeroOrMore()*(parseLiteral("try")+eatWhite())+
-       zeroOrMore()*(init_list()+eatWhite())+
-       block()+
-       zeroOrMore()*(eatWhite()+catch_block()))));
+      optional(keyword_try())+
+      optional(init_list())+
+      block()+ //block does not eat trailing white
+      optional(eatWhite()+catch_block())));
   return function_impl;
 }
 
@@ -1931,7 +1947,7 @@ PR function_def_unnamed() throw()
   static PR result(
     function_proto()+
     function_impl()+
-    new NamedParser<hcp_ast::WhiteSpace>("whitespace",eatWhite()));
+    eatWhite());
   return result;
 }
 
@@ -2121,12 +2137,12 @@ PR param() throw()
   
 PR params() throw()
 {
-  static PR result {
+  static PR result(
     anon(
       "params",
       parseLiteral("(")+eatWhite()+
       listOf(param(),parseLiteral(",")+eatWhite(),parseLiteral(")"))+
-      eatWhite())};
+      eatWhite()));
   return result;
 }
   
@@ -2469,7 +2485,8 @@ public:
     std::string str() const throw()
     {
       std::ostringstream s;
-      s << "expected end of input, not '" << printChar(got_) << "'";
+      s << "expected end of input, not '"
+        << xju::format::cEscapeChar(got_) << "'";
       return s.str();
     }
     char const got_;
@@ -2489,6 +2506,7 @@ PR file() throw()
 {
   static PR file(new NamedParser<hcp_ast::File>(
                    "file",
+                   optional(comments())+
                    eatWhite()+
                    parseUntil(namespace_def()|
                               anonymous_namespace()|

@@ -11,6 +11,7 @@ hcp-map-to-source
 test-hcp-tags%all.tree
 %scope-at-tests.tree
 tags%all.tree
+%test-xju-tags-no-warnings
 
 %run-standalone-tests == %standalone-tests.tree:leaves
 
@@ -214,3 +215,4 @@ hcp/trace.cc==./trace.cc
 hcp/translateException.hh==./translateException.hh
 hcp/translateException.cc==./translateException.cc
 
+%test-xju-tags-no-warnings==()+cmd=cmp (../xju%tags:warn) '-':stdout

@@ -11,7 +11,6 @@ class echo
 {
 public:
   virtual ~echo() throw();
-
   virtual std::string echoString(
     std::string const& x) throw(
     // ipc failure

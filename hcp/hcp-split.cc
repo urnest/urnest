@@ -71,10 +71,6 @@ public:
   {
     int const beginLine(begin.line_);
     if(line_ != begin.line_) {
-      if (column_!=1) {
-        s_ << std::endl;
-        ++outputLine_;
-      }
       sourceLineMap_.insert(std::make_pair(outputLine_,begin.line_));
     }
     while(begin != end) {
@@ -108,7 +104,48 @@ OStream& operator<<(OStream& s, T const& x)
   s.copy(x);
   return s;
 }
-  
+
+std::string reconstructWithoutTrailingWhitespace(
+  std::vector<hcp_ast::IR>::const_iterator begin,
+  std::vector<hcp_ast::IR>::const_iterator end) throw()
+{
+  if (begin==end){
+    return std::string();
+  }
+  --end;
+  std::string result(reconstruct(hcp_ast::IRs(begin,end)));
+  if (hcp_ast::isA_<hcp_ast::WhiteSpace>(*end)){
+    return result;
+  }
+  if (hcp_ast::isA_<hcp_ast::CompositeItem>(*end)){
+    auto const c(hcp_ast::asA_<hcp_ast::CompositeItem>(*end));
+    return result+reconstructWithoutTrailingWhitespace(
+      c.items_.begin(),
+      c.items_.end());
+  }
+  return result+reconstruct(*end);
+}
+
+std::string reconstructTrailingWhitespace(
+  std::vector<hcp_ast::IR>::const_iterator begin,
+  std::vector<hcp_ast::IR>::const_iterator end) throw()
+{
+  if (begin==end){
+    return std::string();
+  }
+  --end;
+  if (hcp_ast::isA_<hcp_ast::WhiteSpace>(*end)){
+    return reconstruct(*end);
+  }
+  if (hcp_ast::isA_<hcp_ast::CompositeItem>(*end)){
+    auto const c(hcp_ast::asA_<hcp_ast::CompositeItem>(*end));
+    return reconstructTrailingWhitespace(
+      c.items_.begin(),
+      c.items_.end());
+  }
+  return "";
+}
+
 void genClassMemberFunctionDef(
   hcp_ast::FunctionDef const& x,
   OStream& h,
@@ -116,17 +153,18 @@ void genClassMemberFunctionDef(
   std::vector<hcp_ast::ClassDef const*> const& scope) throw(
     xju::Exception)
 {
-  std::vector<hcp_ast::IR>::const_iterator i(
+  std::vector<hcp_ast::IR>::const_iterator const i(
     std::find_if(x.items_.begin(), x.items_.end(),
                  hcp_ast::isA_<hcp_ast::FunctionImpl>));
   xju::assert_not_equal(i, x.items_.end());
-  h.copy(x.begin(), (*i)->begin());
-  h << ";";
-  std::vector<hcp_ast::IR>::const_iterator w(
-    xju::next(i));
-  xju::assert_not_equal(w, x.items_.end());
-  xju::assert_equal(hcp_ast::isA_<hcp_ast::WhiteSpace>(*w),true);
-  h.copy((*w)->begin(),(*w)->end()); //copy trailing whitespace
+
+  std::string proto(reconstructWithoutTrailingWhitespace(
+                      x.items_.begin(), i));
+  h << proto << ";";
+
+  std::string const implTrailingWhite(
+    reconstructTrailingWhitespace(i,x.items_.end()));
+  h << implTrailingWhite;
   
   std::vector<hcp_ast::IR>::const_iterator j(
     std::find_if(x.items_.begin(), x.items_.end(),
@@ -254,13 +292,13 @@ void genFunction(hcp_ast::FunctionDef const& x,
     std::find_if(x.items_.begin(), x.items_.end(),
                  hcp_ast::isA_<hcp_ast::FunctionImpl>));
   xju::assert_not_equal(i, x.items_.end());
-  h.copy(x.begin(), (*i)->begin());
-  h << ";";
-  std::vector<hcp_ast::IR>::const_iterator w(
-    xju::next(i));
-  xju::assert_not_equal(w, x.items_.end());
-  xju::assert_equal(hcp_ast::isA_<hcp_ast::WhiteSpace>(*w),true);
-  h.copy((*w)->begin(),(*w)->end()); //copy trailing whitespace
+  std::string proto(reconstructWithoutTrailingWhitespace(
+                      x.items_.begin(), i));
+  h << proto << ";";
+
+  std::string const implTrailingWhite(
+    reconstructTrailingWhitespace(i,x.items_.end()));
+  h << implTrailingWhite;
   
   std::vector<hcp_ast::IR>::const_iterator j(
     std::find_if(x.items_.begin(), x.items_.end(),
@@ -363,14 +401,17 @@ void genNamespaceContent(hcp_ast::IRs const& x,
 class CommandLineOptions
 {
 public:
-  explicit CommandLineOptions(unsigned int dir_levels, 
-                              std::string hpath) throw():
+  explicit CommandLineOptions(unsigned int const dir_levels, 
+                              std::string const hpath,
+                              bool const includeGeneratedBy) throw():
       dir_levels_(dir_levels),
-      hpath_(hpath)
+      hpath_(hpath),
+      includeGeneratedBy_(includeGeneratedBy)
   {
   }
   unsigned int dir_levels_;
   std::string hpath_;
+  bool includeGeneratedBy_;
 };
 
 // result.second are remaining arguments
@@ -381,6 +422,7 @@ std::pair<CommandLineOptions, std::vector<std::string> > parseCommandLine(
   std::vector<std::string>::const_iterator i(x.begin());
   unsigned int dir_levels=0;
   std::string hpath="";
+  bool includeGeneratedBy=false;
   
   while((i != x.end()) && ((*i)[0]=='-')) {
     if ((*i)=="-l") {
@@ -396,6 +438,10 @@ std::pair<CommandLineOptions, std::vector<std::string> > parseCommandLine(
         hpath=hpath+"/";
       }
     }
+    else if ((*i)=="-G") {
+      includeGeneratedBy=true;
+      ++i;
+    }
     else {
       std::ostringstream s;
       s << "unknown option " << (*i)
@@ -403,8 +449,9 @@ std::pair<CommandLineOptions, std::vector<std::string> > parseCommandLine(
       throw xju::Exception(s.str(), XJU_TRACED);
     }
   }
-  return std::make_pair(CommandLineOptions(dir_levels, hpath), 
-                        std::vector<std::string>(i, x.end()));
+  return std::make_pair(
+    CommandLineOptions(dir_levels, hpath, includeGeneratedBy), 
+    std::vector<std::string>(i, x.end()));
 }
 
 char make_guard_char(char c) throw()
@@ -469,19 +516,20 @@ int main(int argc, char* argv[])
       parseCommandLine(std::vector<std::string>(argv+1, argv+argc)));
     
     if (cmd_line.second.size() < 3) {
-      std::cout << "usage: " << argv[0] 
-                << " [-th] [-l <levels> | -hpath <path>] <input-file>"
+      std::cerr << "usage: " << argv[0] 
+                << " [-G] [-l <levels> | -hpath <path>] <input-file>"
                 << " <output-header-file>"
                 << " <output-cpp-file>"
                 << " [header-line-map-file] [cpp-line-map]" << std::endl;
-      std::cout << "-l defaults to 0, which generates #includes without "
+      std::cerr << "-l defaults to 0, which generates #includes without "
                 << "any directory part; non-zero generates that many levels of relative path in output-cpp-file's include statement for output-header-file"
                 << std::endl;
-      std::cout << "-hpath overrides -l, and uses the specified path in"
+      std::cerr << "-hpath overrides -l, and uses the specified path in"
                 << " output-cpp-file's include statement for"
                 << " output-header-file, eg -hpath x/y generates"
                 << " #include <x/y/idl.hh>"
                 << std::endl;
+      std::cerr << "-G includes generated-by comments" << std::endl;
       return 1;
     }
 
@@ -519,8 +567,9 @@ int main(int argc, char* argv[])
     
     oh << "#ifndef " << guard << "\n"
        << "#define " << guard << "\n";
-    oh << "//generated from \""<< inputFile.second<< "\"\n";
-    
+    if (cmd_line.first.includeGeneratedBy_){
+      oh << "//generated by hcp-split from \""<< inputFile.second<< "\"\n";
+    }
     xju::path::RelativePath const hhinc(
       std::vector<xju::path::DirName>(
         inputFile.first.end()-cmd_line.first.dir_levels_,
@@ -530,22 +579,28 @@ int main(int argc, char* argv[])
       oc << "#include <" 
          << (cmd_line.first.hpath_+outputHH.second._)
          << ">" << "\n";
-        oc << "//generated from \""<<inputFile.second<<"\"\n";
+      if (cmd_line.first.includeGeneratedBy_){
+        oc << "//generated by hcp-split from \""<<inputFile.second<<"\"\n";
+      }
     }
     else
     {
       if (hhinc.size()) {
         oc << "#include <" 
            << xju::path::str(hhinc, outputHH.second)
-           << ">" << "\n"
-           << "//generated from \""<<inputFile.second<<"\"\n";
+           << ">" << "\n";
+        if (cmd_line.first.includeGeneratedBy_){
+          oc << "//generated by hcp-split from \""<<inputFile.second<<"\"\n";
+        }
       }
       else
       {
         oc << "#include \"" 
            << xju::path::str(hhinc, outputHH.second)
            << "\"" << "\n";
-        oc << "//generated from \""<<inputFile.second<<"\"\n";
+        if (cmd_line.first.includeGeneratedBy_){
+          oc << "//generated by hcp-split from \""<<inputFile.second<<"\"\n";
+        }
       }
     }
     genNamespaceContent(

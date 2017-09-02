@@ -344,6 +344,8 @@ PR oneChar() throw(); //any single char
 PR bracketed(PR x) throw(); //x inside brackets, with optional whitespace preceding x
 
 // rest are C++-specific
+PR doubleSlash() throw(); // "//"
+PR slashStar() throw(); // "/*"
 PR comments() throw();
 PR eatWhite() throw(); // matches nothing or something; eats C++ comments
 PR identifier() throw(); //C++ identifier

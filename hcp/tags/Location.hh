@@ -1,6 +1,5 @@
 #ifndef _HCP_TAGS_LOCATION_HH
 #define _HCP_TAGS_LOCATION_HH
-//generated from "Location.hcp.1228659.hcp"
 // generated from Location.idl by omni cxy idl backend specifying 
 // xju::Exception from <xju/Exception.hh> as base class for all ipc exceptions
 
@@ -28,7 +27,6 @@ struct Location
     ::hcp::tags::AbsolutePath const& p1,
     ::hcp::tags::FileName const& p2,
     ::hcp::tags::LineNumber const& p3) throw();
-
   friend bool operator<(
     Location const& x, 
     Location const& y) throw() {

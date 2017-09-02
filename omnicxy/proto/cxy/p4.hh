@@ -21,7 +21,6 @@ struct XS1
   XS1(
     ::p3::MyInt const& p1,
     std::string const& p2) throw();
-
   friend bool operator<(
     XS1 const& x, 
     XS1 const& y) throw() {
@@ -62,7 +61,6 @@ class F
 {
 public:
   virtual ~F() throw();
-
   virtual ::p4::XS1 f1(
     ::p4::XS1 const& y) throw(
     // ipc failure
@@ -71,7 +69,6 @@ public:
   struct XxPair : public std::pair< int32_t, std::string >
   {
     XxPair(int32_t const& p1, std::string const& p2) throw();
-
     template<class T1, class T2>
     explicit XxPair(std::pair<T1, T2> const& x) throw():
        std::pair< int32_t, std::string >(x.first,std::string(x.second)) {

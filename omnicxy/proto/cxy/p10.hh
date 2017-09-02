@@ -16,7 +16,6 @@ public:
     CC
   };
   EN(Value v) throw(cxy::Exception);
-
   friend Value valueOf(EN const& x) throw(){ return x.v_; }
 private:
   Value v_;
@@ -52,7 +51,6 @@ class F
 {
 public:
   virtual ~F() throw();
-
   virtual void f1(
     ::p10::EN const& a) throw(
     // ipc failure

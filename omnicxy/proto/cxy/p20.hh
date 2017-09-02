@@ -18,7 +18,6 @@ struct A
 
   A(
     int16_t const& p1) throw();
-
   friend bool operator<(
     A const& x, 
     A const& y) throw() {
@@ -58,7 +57,6 @@ class F
 {
 public:
   virtual ~F() throw();
-
   virtual ::cxy::Any< cxy::Exception > f1(
     ::cxy::Any< cxy::Exception > const& x) throw(
     // ipc failure

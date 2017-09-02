@@ -6,6 +6,7 @@ snmp%tests.tree
 io%tests.tree
 file%tests.tree
 ip%tests.tree
+%tags
 
 %tests.tree == <<
 #()+cmd=(%test-serialisation.cxx.sm+(..%cxx-opts):auto.cxx.exe):exec.output
@@ -71,6 +72,5 @@ netflow%tests.tree
 "$1" $(hostname)
 
 
-%tags==%tags-list:list
-%tags-list==<<
-.:tree_tags
+%tags==.:tree_tags
+

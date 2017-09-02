@@ -103,9 +103,9 @@ public:
   // lookup symbol amongst tags files
   // - returns results from first tags file that knows about symbol
   //
-  Lookup::Locations lookupSymbol(NamespaceNames const& fromScope,
-                                 NamespaceNames const& symbolScope,
-                                 UnqualifiedSymbol const& symbol) throw() {
+  Lookup::FoundIn lookupSymbol(NamespaceNames const& fromScope,
+                               NamespaceNames const& symbolScope,
+                               UnqualifiedSymbol const& symbol) throw() {
     xju::Lock l(guard_);
     updateFiles(l);
     for(auto const x:files_) {
@@ -118,7 +118,7 @@ public:
                     << str(fromScope)
                     << ") in tags file "
                     << xju::path::str(x);
-          return l;
+          return FoundIn(l,Lookup::Headers());
         }
       }
       catch(xju::Exception& e) {
@@ -128,7 +128,8 @@ public:
         std::cerr << readableRepr(e) << std::endl;
       }
     }
-    return Lookup::Locations();
+    return FoundIn(Lookup::Locations(),
+                   Lookup::Headers());
   }
 
   // update ie reload any tags files that have changed

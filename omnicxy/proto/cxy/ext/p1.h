@@ -13,7 +13,6 @@ class F
 {
 public:
   virtual ~F() throw();
-
   virtual void f1() throw(
     // ipc failure
     // - note servant may not throw

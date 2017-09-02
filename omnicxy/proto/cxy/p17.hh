@@ -13,7 +13,6 @@ class p17
 {
 public:
   virtual ~p17() throw();
-
   class Name_tag {};
   typedef ::xju::Tagged<std::string,Name_tag > Name;
   typedef cxy::optional< ::p17::Name > OptionalName;

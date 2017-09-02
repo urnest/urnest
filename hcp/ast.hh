@@ -337,6 +337,9 @@ typedef TaggedCompositeItem<KeywordExplicitTag> KeywordExplicit;
 class KeywordThrowTag{};
 typedef TaggedCompositeItem<KeywordThrowTag> KeywordThrow;
 
+class KeywordTryTag{};
+typedef TaggedCompositeItem<KeywordTryTag> KeywordTry;
+
 class KeywordCatchTag{};
 typedef TaggedCompositeItem<KeywordCatchTag> KeywordCatch;
 

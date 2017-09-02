@@ -16,6 +16,11 @@ x make param() anon
   parseLiteral
   parseOneOfChars
   etc
+
+- identifier()
+  - performance before,after:
+  - custom parser to avoid each character ending up in a separate IR
+  
   
 x replace unqualifiedName with identifier (already exists)
   delete unqualifiedName
@@ -61,12 +66,18 @@ x handle scoped enum (non-fixed type)
     inline X() {...};
   };
 
+- hcp-map-to-source.cc
+  - change generator comment to:
+    // hcp-split: generated as x/y/xxx.hh from xxx.hcp
+  - ... where x/y is header include path
+  - then give hcp-map-to-source a search path to look for the smap file
+  
 - hcp-tags
   - parse C++-only (ie not used in .hcp files) to allow tags across
     regular .hh files:
-    - extern variables
-    - inline keyword
-    - constructor def outside class
+    x extern variables
+    x inline keyword
+    x constructor def outside class
     
   x need multiple defs per tag eg for function overload
   - generate tags for:
@@ -89,6 +100,13 @@ x handle scoped enum (non-fixed type)
     - skip anonymous namespaces (perhaps does already?)
   - test on .hh and .hcp file types
 
+  - add tags for std:: stuff, mapping only to header
+    - idl
+    - tags::Namespace
+    - tag file parser
+    - lookup service
+    - importSymbolAt
+    
 x when excluding class/struct/union/enum/namespace keywords need to ensure
   it is not them being used to start a valid identifer, eg class_1 f();
 

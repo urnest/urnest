@@ -14,7 +14,6 @@ class AAA
 {
 public:
   virtual ~AAA() throw();
-
   virtual int32_t f(
     int32_t const& x) throw(
     // ipc failure
@@ -26,7 +25,6 @@ class BBB
 {
 public:
   virtual ~BBB() throw();
-
   virtual ::cxy::IOR< ::p16::AAA > getA() throw(
     // ipc failure
     // - note servant may not throw
@@ -38,7 +36,6 @@ class CCC :
 {
 public:
   virtual ~CCC() throw();
-
   virtual int32_t f2(
     int32_t const& x) throw(
     // ipc failure

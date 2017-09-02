@@ -9,6 +9,8 @@
 //
 #include "xju/snmp/decodeSnmpV2cTrap.hh"
 
+#include <xju/Optional.hh>
+
 namespace xju
 {
 namespace snmp

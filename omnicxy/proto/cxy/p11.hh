@@ -10,8 +10,7 @@
 #include <memory>
 
 
-extern 
-std::string const p11_Z ;
+extern std::string const p11_Z ;
 extern int16_t const p11_Q ;
 class X
 {
@@ -22,7 +21,6 @@ public:
     C
   };
   X(Value v) throw(cxy::Exception);
-
   friend Value valueOf(X const& x) throw(){ return x.v_; }
 private:
   Value v_;
@@ -59,7 +57,6 @@ class U1
 {
 public:
   virtual ~U1() throw();
-
   class A;
   class B;
   class C;
@@ -67,7 +64,6 @@ public:
   virtual std::unique_ptr< U1 > clone() const=0;
 protected:
   explicit U1(::X d) throw();
-
 private:
   ::X d_;
   friend ::X discriminator(U1 const& x) throw() {
@@ -107,7 +103,6 @@ class F
 {
 public:
   virtual ~F() throw();
-
   virtual ::std::shared_ptr< ::U1 const> f1(
     ::std::shared_ptr< ::U1 const> const& a) throw(
     // ipc failure
@@ -121,7 +116,6 @@ public:
       V
     };
     Y(Value v) throw(cxy::Exception);
-
     friend Value valueOf(Y const& x) throw(){ return x.v_; }
   private:
     Value v_;
@@ -157,14 +151,12 @@ public:
   {
   public:
     virtual ~U2() throw();
-
     class U;
     class V;
     // throws std::bad_alloc and exceptions of case-type copy constructor
     virtual std::unique_ptr< U2 > clone() const=0;
   protected:
     explicit U2(::p11::F::Y d) throw();
-
   private:
     ::p11::F::Y d_;
     friend ::p11::F::Y discriminator(U2 const& x) throw() {
@@ -208,12 +200,9 @@ public:
   std::string u_;
 
   virtual ~U() throw();
-
   explicit U(
     std::string const& p1) throw();
-
   std::unique_ptr< F::U2 > clone() const;
-
   friend bool operator<(
     U const& x, 
     U const& y) throw() {
@@ -247,7 +236,6 @@ public:
     return (x>y)||(x==y);
   }
   bool lessThan(U2 const& b) const throw();
-
 };
 
 class F::U2::V : 
@@ -257,12 +245,9 @@ public:
   int16_t v_;
 
   virtual ~V() throw();
-
   explicit V(
     int16_t const& p1) throw();
-
   std::unique_ptr< F::U2 > clone() const;
-
   friend bool operator<(
     V const& x, 
     V const& y) throw() {
@@ -296,7 +281,6 @@ public:
     return (x>y)||(x==y);
   }
   bool lessThan(U2 const& b) const throw();
-
 };
 }
 
@@ -310,12 +294,9 @@ public:
   int32_t a_;
 
   virtual ~A() throw();
-
   explicit A(
     int32_t const& p1) throw();
-
   std::unique_ptr< U1 > clone() const;
-
   friend bool operator<(
     A const& x, 
     A const& y) throw() {
@@ -349,7 +330,6 @@ public:
     return (x>y)||(x==y);
   }
   bool lessThan(U1 const& b) const throw();
-
 };
 
 class U1::B : 
@@ -358,11 +338,8 @@ class U1::B :
 public:
 
   virtual ~B() throw();
-
   explicit B() throw();
-
   std::unique_ptr< U1 > clone() const;
-
   friend bool operator<(
     B const& x, 
     B const& y) throw() {
@@ -394,7 +371,6 @@ public:
     return (x>y)||(x==y);
   }
   bool lessThan(U1 const& b) const throw();
-
 };
 
 class U1::C : 
@@ -404,12 +380,9 @@ public:
   float c_;
 
   virtual ~C() throw();
-
   explicit C(
     float const& p1) throw();
-
   std::unique_ptr< U1 > clone() const;
-
   friend bool operator<(
     C const& x, 
     C const& y) throw() {
@@ -443,7 +416,6 @@ public:
     return (x>y)||(x==y);
   }
   bool lessThan(U1 const& b) const throw();
-
 };
 
 

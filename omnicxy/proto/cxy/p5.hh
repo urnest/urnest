@@ -19,7 +19,6 @@ class F
 {
 public:
   virtual ~F() throw();
-
   virtual ::p5::JW2s f1(
     ::p5::JW2s const& p1) throw(
     // ipc failure
@@ -38,7 +37,6 @@ struct X
   X(
     cxy::optional< bool > const& p1,
     ::p5::LT const& p2) throw();
-
   friend bool operator<(
     X const& x, 
     X const& y) throw() {

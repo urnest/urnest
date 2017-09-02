@@ -24,7 +24,6 @@ struct E : cxy::Exception
     // cxy::Exception params
     std::string const& cause, 
     std::pair<std::string, unsigned int> const& fileAndLine) throw();
-
   friend bool operator<(
     E const& x, 
     E const& y) throw() {
@@ -70,7 +69,6 @@ struct F
   F(
     std::vector< std::string > const& p1,
     cxy::optional< int32_t > const& p2) throw();
-
   friend bool operator<(
     F const& x, 
     F const& y) throw() {

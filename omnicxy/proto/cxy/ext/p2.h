@@ -16,7 +16,6 @@ class F
 {
 public:
   virtual ~F() throw();
-
   virtual void f1(
     int16_t const& a,
     int32_t const& b,

@@ -26,12 +26,14 @@ public:
   explicit L(F f) throw():
       f_(f){
   }
-  virtual ::hcp::tags::Lookup::Locations lookupSymbol(
+  //Lookup::
+  virtual ::hcp::tags::Lookup::FoundIn lookupSymbol(
     ::hcp::tags::Lookup::NamespaceNames const& fromScope,
     ::hcp::tags::Lookup::NamespaceNames const& symbolScope,
     ::hcp::tags::UnqualifiedSymbol const& symbol) throw(xju::Exception)
     {
-      return f_(fromScope,symbolScope,symbol);
+      return Lookup::FoundIn(f_(fromScope,symbolScope,symbol),
+                             Lookup::Headers());
     }
   
   F f_;
@@ -43,6 +45,7 @@ xju::Shared<hcp::tags::Lookup> l(F f)
 }
 
   
+
 void test1(std::string const& x,
            std::string const& y,
            std::string const& z,
