@@ -205,6 +205,11 @@ std::string str(std::pair<RelativePath, FileName> const& x) throw()
   return str(x.first, x.second);
 }
 
+std::string str(FileName const& x) throw()
+{
+  return x._;
+}
+
 FileName basename(std::string const& x) throw()
 {
   std::vector<DirName> const y = split_string(x);

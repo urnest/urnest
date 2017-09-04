@@ -197,6 +197,7 @@ std::string str(std::pair<AbsolutePath, DirName> const& x) throw();
 std::string str(RelativePath const& x, FileName const& y) throw();
 std::string str(std::pair<RelativePath, FileName> const& x) throw();
 
+std::string str(FileName const& x) throw();
 
 // filename part of x
 FileName basename(std::string const& x) throw();
