@@ -29,7 +29,4 @@ std::vector<T> split(T const& x,
   result.push_back(T(j,i));
   return result;
 }
-
 }
-
-

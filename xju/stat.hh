@@ -26,6 +26,7 @@
 namespace xju
 {
     extern const SyscallF2<int, const char*, mode_t> chmod;
+    extern const SyscallF2<int, const char*, struct stat*> stat;
 }
 
 

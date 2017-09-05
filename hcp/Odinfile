@@ -31,7 +31,7 @@ tags%all.tree
 %hcp-local-spec
 %hcp-subdir-spec
 
-%hcp-local-spec==.:dir.hcp.list+hpath='hcp':hcp-split-virdir-specs:cat
+%hcp-local-spec==.:dir.hcp.list+G+hpath='hcp':hcp-split-virdir-specs:cat
 
 %hcp-subdir-spec==<<
 %tags==./tags%hcp-gen
@@ -201,6 +201,8 @@ xju/unix_epoch.cc==../xju/unix_epoch.cc
 xju/AutoFd.cc==../xju/AutoFd.cc
 xju/syscall.cc==../xju/syscall.cc
 xju/fcntl.cc==../xju/fcntl.cc
+xju/startsWith.hh==../xju/startsWith.hh
+xju/startsWith.cc==../xju/startsWith.cc
 xju/unistd.cc==../xju/unistd.cc
 hcp/ast.hh==./ast.hh
 hcp/parser.hh==./parser.hh

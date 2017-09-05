@@ -1,0 +1,38 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <sys/stat.h>
+#include <xju/path.hh>
+#include <xju/Exception.hh>
+#include <xju/stat.hh> //impl
+
+typedef struct stat Stat;
+
+namespace xju
+{
+namespace file
+{
+Stat stat(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& file)
+  throw(xju::Exception)
+{
+  try{
+    Stat result;
+    xju::syscall(xju::stat,XJU_TRACED)(xju::path::str(file).c_str(),&result);
+    return result;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "stat file " << xju::path::str(file);
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+}

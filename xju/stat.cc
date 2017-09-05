@@ -12,26 +12,12 @@
 //
 #include <xju/stat.hh>
 
-#ifdef __MINGW32__
-namespace 
-{
-    int chmod_(const char* f, mode_t mode)
-    {
-	return ::chmod(f, mode);
-    }
-}
-
 namespace xju
 {
-    const SyscallF2<int, const char*, mode_t> chmod(
+    const SyscallF2<int, const char*, mode_t> chmod={
 	"chmod",
-	chmod_);
+	::chmod};
+    const SyscallF2<int, const char*, struct stat*> stat={
+	"stat",
+	::stat};
 }
-#else
-namespace xju
-{
-    const SyscallF2<int, const char*, mode_t> chmod(
-	"chmod",
-	::chmod);
-}
-#endif

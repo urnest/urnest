@@ -5,4 +5,4 @@
 
 %tests.tree==<<
 
-%hcp-gen==.:dir.hcp.list+hpath='xju/file':hcp-split-virdir-specs:cat:vir_dir
+%hcp-gen==.:dir.hcp.list+G+hpath='xju/file':hcp-split-virdir-specs:cat:vir_dir

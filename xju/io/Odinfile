@@ -6,5 +6,5 @@
 %tests.tree==<<
 ()+cmd=(test-FileObserver.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
-%hcp-gen==.:dir.hcp.list+hpath='xju/io':hcp-split-virdir-specs:cat:vir_dir
+%hcp-gen==.:dir.hcp.list+G+hpath='xju/io':hcp-split-virdir-specs:cat:vir_dir
 

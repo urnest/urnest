@@ -24,23 +24,23 @@
 #include <xju/format.hh>
 #include <xju/split.hh>
 
-// get $TAGS_HPATH directories
+// get $HCP_HPATH directories
 std::vector<xju::path::AbsolutePath> getHPath() throw(xju::Exception)
 {
   try {
-    auto const x(::getenv("TAGS_HPATH"));
+    auto const x(::getenv("HCP_HPATH"));
     if (x==0){
-      throw xju::Exception("TAGS_HPATH environment variable is not set",XJU_TRACED);
+      throw xju::Exception("HCP_HPATH environment variable is not set",XJU_TRACED);
     }
     std::vector<xju::path::AbsolutePath> result;
-    for(auto d: xju::split(std::string(::getenv("TAGS_HPATH")),':')){
+    for(auto d: xju::split(std::string(::getenv("HCP_HPATH")),':')){
       result.push_back(xju::path::split(d+"/.").first);
     }
     return result;
   }
   catch(xju::Exception& e) {
     std::ostringstream s;
-    s << "get $TAGS_HPATH directories";
+    s << "get $HCP_HPATH directories";
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }
@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
                 << "-t, trace parsing " << std::endl
                 << std::endl;
       std::cerr << "note: $TAG_LOOKUP_SERVICE_URL_FILE must locate url-file of tag-lookup-service to use - see tag-lookup-service" << std::endl;
-      std::cerr << "note: $TAGS_HPATH specifies search path for headers" << std::endl;
+      std::cerr << "note: $HCP_HPATH specifies search path for headers" << std::endl;
       std::cerr << "note: $HCP_EXTENSION_MAPPINGS is comma-separated extension mappings to apply where symbol is found in .hcp file, eg: " << std::endl
                 << "  xju:.hh,app-aa/src:.h,:hpp" << std::endl
                 << "... will map .hcp files included via xju/... to .hh and\n"

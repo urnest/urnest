@@ -14,7 +14,7 @@ v4%tests.tree
 %hcp-local-spec
 %hcp-subdir-spec
 
-%hcp-local-spec==.:dir.hcp.list+hpath='xju/ip':hcp-split-virdir-specs:cat
+%hcp-local-spec==.:dir.hcp.list+G+hpath='xju/ip':hcp-split-virdir-specs:cat
 
 %hcp-subdir-spec==<<
 %v4==v4%hcp-gen

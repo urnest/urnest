@@ -21,6 +21,8 @@
 #include <sstream>
 #include <algorithm>
 #include "xju/assert.hh"
+#include <xju/file/stat.hh>
+#include <xju/split.hh>
 
 struct MapHcpTag{};
 typedef hcp_ast::TaggedCompositeItem<MapHcpTag> MapHcp;
@@ -31,20 +33,121 @@ typedef hcp_ast::TaggedCompositeItem<MapToLineNumberTag> MapToLineNumber;
 struct MapLinePairTag{};
 typedef hcp_ast::TaggedCompositeItem<MapLinePairTag> MapLinePair;
 
+// get $HCP_HPATH directories
+std::vector<xju::path::AbsolutePath> getHPath() throw(xju::Exception)
+{
+  try {
+    auto const x(::getenv("HCP_HPATH"));
+    if (x==0){
+      throw xju::Exception("HCP_HPATH environment variable is not set",XJU_TRACED);
+    }
+    std::vector<xju::path::AbsolutePath> result;
+    for(auto d: xju::split(std::string(::getenv("HCP_HPATH")),':')){
+      result.push_back(xju::path::split(d+"/.").first);
+    }
+    return result;
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "get $HCP_HPATH directories";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+struct GeneratedAsTag{};
+typedef hcp_ast::TaggedCompositeItem<GeneratedAsTag> GeneratedAs;
+
+std::pair<xju::path::AbsolutePath,xju::path::FileName> const findSmap(
+  std::string const& fileName) throw(
+    xju::Exception)
+{
+  try{
+    try{
+      std::pair<xju::path::AbsolutePath,xju::path::FileName> const f(
+        xju::path::split(fileName));
+      
+      auto const p(hcp_parser::parseLiteral("// hcp-split: generated as ")+
+                   new hcp_parser::NamedParser<GeneratedAs>(
+                     "generated as",
+                     hcp_parser::parseUntil(hcp_parser::whitespaceChar())));
+      hcp_ast::CompositeItem root;
+      std::string const fileContent(xju::file::read(f));
+      hcp_parser::parse(root,
+                        hcp_parser::I(fileContent.begin(),fileContent.end()),
+                        hcp_parser::parseUntil(p)+p);
+      auto const generatedAs(
+        hcp_ast::reconstruct(
+          hcp_ast::findOnlyChildOfType<GeneratedAs>(root)));
+      if (xju::startsWith(generatedAs,std::string("/"))){
+        return xju::path::split(generatedAs);
+      }
+      auto const hpath(getHPath());
+      try{
+        std::vector<std::string> failures;
+        for(auto const path: hpath){
+          auto const candidate(
+            xju::path::split(xju::path::str(path)+"/"+generatedAs+".smap"));
+          try{
+            xju::file::stat(candidate);
+            return candidate;
+          }
+          catch(xju::Exception const& e){
+            failures.push_back(readableRepr(e));
+          }
+        }
+        throw xju::Exception(
+          xju::format::join(failures.begin(),failures.end(), " and "),
+          XJU_TRACED);
+      }
+      catch(xju::Exception& e){
+        std::ostringstream s;
+        s << "read first " << generatedAs
+          << " found on path specified by HCP_HPATH environment variable";
+        e.addContext(s.str(),XJU_TRACED);
+        throw;
+      }
+    }
+    catch(xju::Exception& e){
+      try{
+        auto const candidate(xju::path::split(fileName+".smap"));
+        xju::file::stat(candidate);
+        return candidate;
+      }
+      catch(xju::Exception& ee){
+        throw xju::Exception(
+          readableRepr(ee)+" and "+readableRepr(e),XJU_TRACED);
+        throw;
+      }
+    }
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "find hcp .smap file of " << fileName;
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
 int main(int argc, char* argv[]) {
   if (argc!=3){
     std::cerr << "usage: " << argv[0] << " <file> <line>\n"
               << "  - assumes <file>.smap is hmap- or smap-file\n"
               << "    generated from .hcp eg by hcp-split\n"
               << "  - reports source file and line corresponding to \n"
-              << "    line <line> in <file>, according to smap" << std::endl;
+              << "    line <line> in <file>, according to smap\n"
+              << "  - where <file> is specified without a path, seaches for"
+              << "    <rel>/<file>.smap on HCP_HPATH where <rel> is the "
+              << "    path specified via -hpath option to hcp-split when "
+              << "    <file> was generated, assuming -G was specified"
+              << std::endl;
     return 1;
   }
   try{
     std::string fileName(argv[1]);
     unsigned int lineNumber(xju::stringToUInt(argv[2]));
     std::pair<xju::path::AbsolutePath,xju::path::FileName> const f(
-      xju::path::split(fileName+".smap"));
+      findSmap(fileName));
     std::string const map(xju::file::read(f));
 
     auto parseLineNumber=hcp_parser::atLeastOne(

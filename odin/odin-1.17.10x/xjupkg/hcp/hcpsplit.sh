@@ -6,6 +6,7 @@ hhext="$1" && shift &&
 ccext="$1" && shift &&
 basename_="$1" && shift &&
 hpath="$1" && shift &&
+G="$1" && shift &&
 
 if [ -z "$hhext" ]
 then
@@ -16,6 +17,10 @@ then
   ccext="cc"
 fi &&
 hcpflags="" &&
+if [ -n "$G" ]
+then
+  hcpflags="$hcpflags -G"
+fi &&
 if [ -n "$hpath" ]
 then
   hcpflags="$hcpflags -hpath $hpath"

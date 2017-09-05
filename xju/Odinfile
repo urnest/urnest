@@ -58,7 +58,7 @@ netflow%tests.tree
 %hcp-local-spec
 %hcp-subdir-spec
 
-%hcp-local-spec==.:dir.hcp.list+hpath='xju':hcp-split-virdir-specs:cat
+%hcp-local-spec==.:dir.hcp.list+G+hpath='xju':hcp-split-virdir-specs:cat
 
 %hcp-subdir-spec==<<
 %io==io%hcp-gen
