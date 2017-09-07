@@ -11,6 +11,8 @@
 #include <hcp/tags/NamespaceName.hh>
 #include <hcp/tags/UnqualifiedSymbol.hh>
 #include <hcp/tags/Location.hh>
+#include <hcp/tags/Header.hh>
+#include <hcp/tags/FoundIn.hh>
 #include "xju/Exception.hh"
 #include <map>
 #include <algorithm> //impl
@@ -33,16 +35,30 @@ public:
   // - appends to any existing locations
   void addSymbol(std::vector<NamespaceName> const& namespace_,
                  UnqualifiedSymbol const& symbol,
-                 std::vector<Location> const& locations) throw() {
+                 std::vector<Location> const& locations,
+                 std::vector<Header> const& headers) throw() {
     Namespace& n(findNamespace( {namespace_.begin(),namespace_.end()} ));
     auto i=n.symbols_.find(symbol);
     if (i==n.symbols_.end()) {
-      i=n.symbols_.insert( {symbol,Locations() }).first;
+      i=n.symbols_.insert( {symbol,FoundIn(Locations(),Headers()) }).first;
     }
     std::copy(locations.begin(),locations.end(),
-              std::back_inserter((*i).second));
+              std::back_inserter((*i).second.locations_));
+    std::copy(headers.begin(),headers.end(),
+              std::back_inserter((*i).second.headers_));
   }
-
+  void addSymbol(std::vector<NamespaceName> const& namespace_,
+                 UnqualifiedSymbol const& symbol,
+                 std::vector<Location> const& locations) throw(){
+    addSymbol(namespace_,symbol,locations,{});
+  }
+  void addSymbol(std::vector<NamespaceName> const& namespace_,
+                 UnqualifiedSymbol const& symbol,
+                 std::vector<Header> const& headers) throw(){
+    addSymbol(namespace_,symbol,{},headers);
+  }
+  
+                 
   class UnknownNamespace : public xju::Exception
   {
   public:
@@ -54,17 +70,17 @@ public:
     using xju::Exception::Exception;
   };
 
-  // Lookup locations of namespace_::symbol when it is referenced
+  // Lookup namespace_::symbol when it is referenced
   // from scope fromScope_.
   //
   // eg to lookup X in
   //    namespace a { b::c::X f(); }
   // lookup( {'a'}, {'b','c'}, X) assuming *this is the root namespace
-  std::vector<Location> lookup(std::vector<NamespaceName> const& fromScope,
-                               std::vector<NamespaceName> const& namespace_,
-                               UnqualifiedSymbol const& symbol) const throw(
-                                 UnknownNamespace,
-                                 UnknownSymbol)
+  FoundIn lookup(std::vector<NamespaceName> const& fromScope,
+                 std::vector<NamespaceName> const& namespace_,
+                 UnqualifiedSymbol const& symbol) const throw(
+                   UnknownNamespace,
+                   UnknownSymbol)
   {
     try {
       return lookup_( std::make_pair(fromScope.begin(),fromScope.end()),
@@ -86,12 +102,13 @@ public:
         
 private:
   typedef std::vector<Location> Locations;
+  typedef std::vector<Header> Headers;
   
   std::map<NamespaceName, Namespace> children_;
-  std::map<UnqualifiedSymbol, Locations> symbols_;
+  std::map<UnqualifiedSymbol, FoundIn> symbols_;
 
   // implementation of lookup above
-  std::vector<Location> lookup_(
+  FoundIn lookup_(
     std::pair<std::vector<NamespaceName>::const_iterator,
               std::vector<NamespaceName>::const_iterator> const& fromScope,
                                std::vector<NamespaceName> const& namespace_,
@@ -170,7 +187,7 @@ private:
     }
   }
   
-  std::vector<Location> const& findSymbol(
+  FoundIn const& findSymbol(
     UnqualifiedSymbol const& symbol) const throw(
       UnknownSymbol)
   {

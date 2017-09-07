@@ -1,0 +1,16 @@
+#ifndef HCP_TAGS_LOCATIONS
+#define HCP_TAGS_LOCATIONS
+
+#include <hcp/tags/Location.idl>
+#include <hcp/tags/Header.idl>
+
+module hcp
+{
+  module tags
+  {
+    typedef sequence<Location> Locations;
+  };
+};
+
+#endif
+        

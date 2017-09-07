@@ -29,7 +29,7 @@
 #include <xju/endsWith.hh> //impl
 #include "xju/next.hh" //impl
 #include "xju/startsWith.hh" //impl
-
+#include <xju/Tagged.hh> //impl
 
 namespace hcp
 {
@@ -77,6 +77,20 @@ std::string mapHcpExtension(
   }
   return fileName;
 }
+//return start of x's trailing whitespace or x.end()
+hcp_parser::I findTrailingWhitespace(hcp_parser::IR x) throw()
+{
+  if (hcp_ast::isA_<hcp_ast::WhiteSpace>(x)){
+    return x->begin();
+  }
+  if (hcp_ast::isA_<hcp_ast::CompositeItem>(x)){
+    auto const c(hcp_ast::asA_<hcp_ast::CompositeItem>(x));
+    if (c.items_.size()){
+      return findTrailingWhitespace(*(c.items_.rbegin()));
+    }
+    return x->end();
+  }
+}
 
   
 }
@@ -95,16 +109,21 @@ public:
   {
   }
 };
+struct IncludeTargetTag{};
+typedef xju::Tagged<std::string,IncludeTargetTag> IncludeTarget;
 
 // return x adjusted to include the header defining the
 // symbol at specified offset, parsing x with tracing if specified
-std::string importSymbolAt(
+// also returns name of include target added to x, eg sys/types.h
+//
+std::pair<std::string,IncludeTarget> importSymbolAt(
   std::string const& x,
   size_t const offset,
   hcp::tags::Lookup& tagLookupService,
   std::vector<xju::path::AbsolutePath> const& hpath,
   std::vector<std::pair<xju::path::RelativePath,xju::path::Extension> > const& hcpMappings,
-  bool const traceParsing) throw(
+  bool const traceParsing,
+  bool suppressImplMarker) throw(
     UnknownSymbol,
     xju::Exception)
 {
@@ -128,8 +147,9 @@ std::string importSymbolAt(
     auto const foundIn(tagLookupService.lookupSymbol(fromScope,
                                                      ss.first,
                                                      ss.second));
-    auto const l(foundIn.locations_);
-    if (l.size()==0) { 
+    auto const& l(foundIn.locations_);
+    auto const& h(foundIn.headers_);
+    if (l.size()==0&&h.size()==0) { 
      std::ostringstream s;
       s << "symbol " << identifier
         << " from scope "
@@ -140,21 +160,30 @@ std::string importSymbolAt(
     
     // turn location into relative path if $TAGS_HPATH locates it
     std::string const includeTarget(
+      l.size()?
       mapHcpExtension(
         makeRelativeIfPossible(
           std::make_pair(l[0].directory,l[0].file),hpath),
-        hcpMappings));
+        hcpMappings):
+      h[0]._);
 
+    //push empty IR so our following code can insert #include
+    //at the very begining
+    hcp_parser::IRs irsAtEnd{hcp_parser::IR(
+                          new hcp_ast::Comments(
+                            hcp_parser::IRs(1U,new hcp_ast::String(
+                                              hcp_ast::I(x.begin(),x.end()),
+                                              hcp_ast::I(x.begin(),x.end())))))};
+    std::copy(rirsAtEnd.rbegin(),rirsAtEnd.rend(),
+              std::back_inserter(irsAtEnd));
     
-    hcp_ast::I insertAt(x.begin(),x.end());
+    hcp_parser::IR insertAfter(*irsAtEnd.begin());
 
-    hcp_parser::IRs irsAtEnd(rirsAtEnd.rbegin(),rirsAtEnd.rend());
-    
     auto i(irsAtEnd.begin());
     // skip over initial comment block if any, then
     if (i!=irsAtEnd.end() &&
         (*i)->isA<hcp_ast::Comments>()){
-      insertAt=(*i)->end();
+      insertAfter=*i;
       ++i;
     }
     // irsAtEnd will include all #includes, so check those for
@@ -172,7 +201,7 @@ std::string importSymbolAt(
                                        item->asA<hcp_ast::CompositeItem>()));
           if (includeTarget==existing){
             // already included
-            return x;
+            return std::make_pair(x,IncludeTarget(includeTarget));
           }
         }
         else if (scope.second && item->isA<hcp_ast::HashIncludeImpl>()){
@@ -180,10 +209,10 @@ std::string importSymbolAt(
                                        item->asA<hcp_ast::CompositeItem>()));
           if (includeTarget==existing){
             // already included
-            return x;
+            return std::make_pair(x,IncludeTarget(includeTarget));
           }
         }
-        insertAt=(*j)->end(); // remember last #include
+        insertAfter=(*j); // remember last #include
         i=xju::next(j);
       }
       else{
@@ -193,11 +222,14 @@ std::string importSymbolAt(
     
     // insert #include <location> and add //impl if in "impl" scope
     std::string const hashInclude(
-      scope.second?
+      scope.second&&!suppressImplMarker?
       "#include <"+includeTarget+"> //impl\n":
       "#include <"+includeTarget+">\n");
-    return std::string(x.begin(),insertAt.x_)+hashInclude+
-      std::string(insertAt.x_,x.end());
+    auto const insertAt(findTrailingWhitespace(insertAfter));
+    return std::make_pair(
+      std::string(x.begin(),insertAt.x_)+hashInclude+
+      std::string(insertAt.x_,x.end()),
+      IncludeTarget(includeTarget));
   }
   catch(xju::Exception& e) {
     std::ostringstream s;

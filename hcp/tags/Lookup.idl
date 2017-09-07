@@ -2,7 +2,7 @@
 #define HCP_TAGS_LOOKUP
 
 #include <hcp/tags/NamespaceName.idl>
-#include <hcp/tags/Location.idl>
+#include <hcp/tags/FoundIn.idl>
 #include <hcp/tags/UnqualifiedSymbol.idl>
 
 module hcp
@@ -12,13 +12,6 @@ module hcp
     interface Lookup
     {
       typedef sequence<NamespaceName> NamespaceNames;
-      typedef sequence<Location> Locations;
-      typedef string Header; //eg <iostream>
-      typedef sequence<Header> Headers;
-      struct FoundIn {
-        Locations locations_;
-        Headers headers_;
-      };
       FoundIn lookupSymbol(in NamespaceNames fromScope,
                            in NamespaceNames symbolScope,
                            in UnqualifiedSymbol symbol);

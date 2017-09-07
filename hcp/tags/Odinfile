@@ -8,18 +8,12 @@ hcp-import-symbol-at
 tag-lookup-service==tag-lookup-service.cc+(../..%cxx-opts)+lib='omniDynamic4' 'omniORB4' 'omnithread':auto.cxx.exe
 hcp-import-symbol-at==hcp-import-symbol-at.cc+(../..%cxx-opts)+lib='omniDynamic4' 'omniORB4' 'omnithread':auto.cxx.exe
 
+%idl-gen==%idl-gen.vir_dir_specs:list:cat:vir_dir
 
-%all.idl.sm==<<
-DirName.idl
-AbsolutePath.idl
-FileName.idl
-LineNumber.idl
-UnqualifiedSymbol.idl
-Lookup.idl
-NamespaceName.idl
-Location.idl
+%idl-gen.vir_dir_specs==<<
+%idl-local-spec
 
-==(%all.idl.sm)+inc_sp=(../..)+hcp-split=(../hcp-split)+hpath='hcp/tags'+cxy='-exju::Exception=xju/Exception.hh':omnicxy.targets
+%idl-local-spec==.:dir.idl.list+inc_sp=(../..)+hcp-split=(../hcp-split)+hpath='hcp/tags'+cxy='-exju::Exception=xju/Exception.hh':omnicxy.virdir-specs:cat
 
 # note some .hcp override idl-generated code, redirecting to xju::path types
 #
@@ -38,7 +32,7 @@ Location.idl
 ()+cmd=(%test-augmentRootNamespace)+cmd=(../test-hcp-tags/test-1.json)+cmd=(../test-hcp-tags/test-4.json):exec.output
 ()+cmd=(%test-TagLookupService):exec.output
 ()+cmd=(test-makeRelativeIfPossible.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
-()+cmd=(%test-importSymbolAt)+cmd=(%test-importSymbolAt-x)+cmd=(%test-importSymbolAt-y)+cmd=(%test-importSymbolAt-z)+cmd=(%test-importSymbolAt-a)+cmd=(%test-importSymbolAt-x2)+cmd=(%test-importSymbolAt-y2):exec.output
+()+cmd=(%test-importSymbolAt)+cmd=(%test-importSymbolAt-x)+cmd=(%test-importSymbolAt-y)+cmd=(%test-importSymbolAt-z)+cmd=(%test-importSymbolAt-a)+cmd=(%test-importSymbolAt-x2)+cmd=(%test-importSymbolAt-y2)+cmd=(%test-importSymbolAt-x3)+cmd=(%test-importSymbolAt-y3):exec.output
 
 %test-importSymbolAt==test-importSymbolAt.cc+(../..%cxx-opts):auto.cxx.exe
 
@@ -80,6 +74,21 @@ class A : class B { F c;
 //
 #include <B.hh>
 class A : class B { F c;
+  void c() { Q::Z z; }
+};
+
+%test-importSymbolAt-x3==<<
+// abstract
+//
+class A : std::ostream { F c;
+  void c() { Q::Z z; }
+};
+
+%test-importSymbolAt-y3==<<
+// abstract
+//
+#include <iostream>
+class A : std::ostream { F c;
   void c() { Q::Z z; }
 };
 

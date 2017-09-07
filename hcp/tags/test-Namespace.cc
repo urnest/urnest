@@ -32,11 +32,11 @@ void test1() {
   xju::assert_equal(x.lookup(std::vector<NamespaceName>{},
                              std::vector<NamespaceName>{},
                              UnqualifiedSymbol("fred")),
-                    l1);
+                    FoundIn(l1,{}));
   xju::assert_equal(x.lookup({NamespaceName("a")},
                              std::vector<NamespaceName>{},
                              UnqualifiedSymbol("fred")),
-                    l1);
+                    FoundIn(l1,{}));
   std::vector<Location> const l2(
     1U,
     Location(AbsolutePath("/n1"),
@@ -50,11 +50,11 @@ void test1() {
   xju::assert_equal(x.lookup({NamespaceName("n1")},
                              std::vector<NamespaceName>{},
                              UnqualifiedSymbol("jock")),
-                    l2);
+                    FoundIn(l2,{}));
   xju::assert_equal(x.lookup({NamespaceName("a")},
                              {NamespaceName("n1")},
                              UnqualifiedSymbol("jock")),
-                    l2);
+                    FoundIn(l2,{}));
   
   std::vector<Location> const l3(
     1U,
@@ -69,15 +69,15 @@ void test1() {
   xju::assert_equal(x.lookup({NamespaceName("a")},
                              std::vector<NamespaceName>{},
                              UnqualifiedSymbol("fred")),
-                    l3);
+                    FoundIn(l3,{}));
   xju::assert_equal(x.lookup({},
                              std::vector<NamespaceName>{},
                              UnqualifiedSymbol("fred")),
-                    l1);
+                    FoundIn(l1,{}));
   xju::assert_equal(x.lookup(std::vector<NamespaceName>{},
                              {NamespaceName("a")},
                              UnqualifiedSymbol("fred")),
-                    l3);
+                    FoundIn(l3,{}));
 
   try {
     x.lookup({NamespaceName("")},

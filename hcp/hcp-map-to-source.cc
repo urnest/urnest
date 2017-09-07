@@ -26,12 +26,12 @@
 
 struct MapHcpTag{};
 typedef hcp_ast::TaggedCompositeItem<MapHcpTag> MapHcp;
-struct MapFromLineNumberTag{};
-typedef hcp_ast::TaggedCompositeItem<MapFromLineNumberTag> MapFromLineNumber;
-struct MapToLineNumberTag{};
-typedef hcp_ast::TaggedCompositeItem<MapToLineNumberTag> MapToLineNumber;
-struct MapLinePairTag{};
-typedef hcp_ast::TaggedCompositeItem<MapLinePairTag> MapLinePair;
+struct MapFromOffsetTag{};
+typedef hcp_ast::TaggedCompositeItem<MapFromOffsetTag> MapFromOffset;
+struct MapToOffsetTag{};
+typedef hcp_ast::TaggedCompositeItem<MapToOffsetTag> MapToOffset;
+struct MapOffsetPairTag{};
+typedef hcp_ast::TaggedCompositeItem<MapOffsetPairTag> MapOffsetPair;
 
 // get $HCP_HPATH directories
 std::vector<xju::path::AbsolutePath> getHPath() throw(xju::Exception)
@@ -131,11 +131,11 @@ std::pair<xju::path::AbsolutePath,xju::path::FileName> const findSmap(
 
 int main(int argc, char* argv[]) {
   if (argc!=3){
-    std::cerr << "usage: " << argv[0] << " <file> <line>\n"
+    std::cerr << "usage: " << argv[0] << " <file> <offset>\n"
               << "  - assumes <file>.smap is hmap- or smap-file\n"
               << "    generated from .hcp eg by hcp-split\n"
-              << "  - reports source file and line corresponding to \n"
-              << "    line <line> in <file>, according to smap\n"
+              << "  - reports source file and offset corresponding to \n"
+              << "    offset <offset> in <file>, according to smap\n"
               << "  - where <file> is specified without a path, seaches for"
               << "    <rel>/<file>.smap on HCP_HPATH where <rel> is the "
               << "    path specified via -hpath option to hcp-split when "
@@ -145,12 +145,12 @@ int main(int argc, char* argv[]) {
   }
   try{
     std::string fileName(argv[1]);
-    unsigned int lineNumber(xju::stringToUInt(argv[2]));
+    unsigned int offset(xju::stringToUInt(argv[2]));
     std::pair<xju::path::AbsolutePath,xju::path::FileName> const f(
       findSmap(fileName));
     std::string const map(xju::file::read(f));
 
-    auto parseLineNumber=hcp_parser::atLeastOne(
+    auto parseOffset=hcp_parser::atLeastOne(
       hcp_parser::charInRange('0','9'));
 
     auto mapParser=hcp_parser::PR(new hcp_parser::NamedParser<MapHcp>(
@@ -158,15 +158,15 @@ int main(int argc, char* argv[]) {
       hcp_parser::parseUntil(hcp_parser::parseLiteral("\n"))))+
       hcp_parser::parseLiteral("\n")+
       hcp_parser::zeroOrMore()*hcp_parser::PR(
-        new hcp_parser::NamedParser<MapLinePair>(
-          "line number pair",
-          hcp_parser::PR(new hcp_parser::NamedParser<MapFromLineNumber>(
-                           "from line number",
-                           parseLineNumber))+
+        new hcp_parser::NamedParser<MapOffsetPair>(
+          "offset pair",
+          hcp_parser::PR(new hcp_parser::NamedParser<MapFromOffset>(
+                           "from offset",
+                           parseOffset))+
           hcp_parser::atLeastOne(hcp_parser::whitespaceChar())+
-          hcp_parser::PR(new hcp_parser::NamedParser<MapToLineNumber>(
-                           "to line number",
-                           parseLineNumber))+
+          hcp_parser::PR(new hcp_parser::NamedParser<MapToOffset>(
+                           "to offset",
+                           parseOffset))+
           hcp_parser::parseLiteral("\n")));
     hcp_ast::CompositeItem root{};
     hcp_ast::I begin(map.begin(),map.end());
@@ -180,38 +180,38 @@ int main(int argc, char* argv[]) {
     std::string const hcp(
       hcp_ast::reconstruct(
         hcp_ast::findOnlyChildOfType<MapHcp>(root)));
-    std::map<unsigned int, unsigned int> lineMap;
-    lineMap.insert(std::make_pair(0U,0U));
-    auto const linePairs(
-      hcp_ast::findChildrenOfType<MapLinePair>(root));
+    std::map<off_t,off_t> offsetMap;
+    offsetMap.insert(std::make_pair(-1,-1));
+    auto const offsetPairs(
+      hcp_ast::findChildrenOfType<MapOffsetPair>(root));
     try{
-      for(auto p: linePairs){
-        lineMap.insert(
+      for(auto p: offsetPairs){
+        offsetMap.insert(
           std::make_pair(
             xju::stringToUInt(
               hcp_ast::reconstruct(
-                hcp_ast::findOnlyChildOfType<MapFromLineNumber>(p))),
+                hcp_ast::findOnlyChildOfType<MapFromOffset>(p))),
             xju::stringToUInt(
               hcp_ast::reconstruct(
-                hcp_ast::findOnlyChildOfType<MapToLineNumber>(p)))));
+                hcp_ast::findOnlyChildOfType<MapToOffset>(p)))));
       }
     }
     catch(xju::Exception& e){
       std::ostringstream s;
-      s << "read line pair " << lineMap.size();
+      s << "read offset pair " << offsetMap.size();
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
-    auto i(lineMap.upper_bound(lineNumber));
-    xju::assert_not_equal(i,lineMap.begin());
+    auto i(offsetMap.upper_bound(offset));
+    xju::assert_not_equal(i,offsetMap.begin());
     --i;
-    std::cout << hcp << " " << (lineNumber-(*i).first+(*i).second) << "\n";
+    std::cout << hcp << " " << (offset-(*i).first+(*i).second) << "\n";
     return 0;
   }
   catch(xju::Exception& e){
     std::ostringstream s;
-    s << "map file " << argv[1] << " line " << argv[2]
-      << " its .hcp source file and line";
+    s << "map file " << argv[1] << " offset " << argv[2]
+      << " its .hcp source file and offset";
     e.addContext(s.str(),XJU_TRACED);
     std::cerr << readableRepr(e) << std::endl;
     return 2;

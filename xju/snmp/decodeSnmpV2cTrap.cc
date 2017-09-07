@@ -10,7 +10,16 @@
 #include "xju/snmp/decodeSnmpV2cTrap.hh"
 
 #include <xju/Optional.hh>
-
+#include <xju/format.hh>
+#include <xju/snmp/DecodeIterator.hh>
+#include <xju/snmp/decodeSequenceTypeAndLength.hh>
+#include <xju/snmp/decodeIntValue.hh>
+#include <xju/snmp/decodeStringValue.hh>
+#include <xju/snmp/RequestTypeMismatch.hh>
+#include <sstream>
+#include <vector>
+#include <xju/snmp/decodeOidValue.hh>
+#include <xju/snmp/decodeValue.hh>
 namespace xju
 {
 namespace snmp
@@ -131,26 +140,27 @@ SnmpV2cTrap decodeSnmpV2cTrap(std::vector<uint8_t> const& data) throw(
                         << values[0].first;
                       throw xju::Exception(s.str(),XJU_TRACED);
                     }
-                  REVISIT: TimeTicksValue;
+                    std::chrono::milliseconds const sysUpTime(
+                      values[0].second->timeTicksValue());
                     if (values.size()<2){
                       std::ostringstream s;
                       s << "trap is missing trap type ie snmpTrapOID.0 var";
                       throw xju::Exception(s.str(),XJU_TRACED);
                     }
-                    if (values[1].first!=Oid("1.3.6.1.6.3.1.1.4.1.0")){
+                    if (values[1].first!=Oid(".1.3.6.1.6.3.1.1.4.1.0")){
                       std::ostringstream s;
                       s << "first trap var oid is not 1.3.6.1.6.3.1.1.4.1.0"
                         << " (ie not trap type ie not snmpTrapOID.0), it is "
                         << values[0].first;
                       throw xju::Exception(s.str(),XJU_TRACED);
                     }
-                    Oid const trapType(values[1].second.oidValue);
+                    Oid const trapType(values[1].second->oidValue());
                     return SnmpV2cTrap(
                       Community(std::string(community.first.begin(),
                                             community.first.end())),
-                      id,
+                      RequestId(id.first),
                       trapType,
-                      timestamp,
+                      sysUpTime,
                       decltype(values)(values.begin()+2,values.end()));
                   }
                   catch(xju::Exception& e) {
@@ -237,4 +247,6 @@ SnmpV2cTrap decodeSnmpV2cTrap(std::vector<uint8_t> const& data) throw(
 
 }
 }
+
+
 

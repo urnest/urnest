@@ -1,0 +1,18 @@
+#ifndef HCP_TAGS_FOUNDIN
+#define HCP_TAGS_FOUNDIN
+
+#include <hcp/tags/Locations.idl>
+#include <hcp/tags/Headers.idl>
+
+module hcp
+{
+  module tags
+  {
+      struct FoundIn {
+        Locations locations_;
+        Headers headers_;
+      };
+  };
+};
+
+#endif

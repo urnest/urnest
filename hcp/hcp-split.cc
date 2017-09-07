@@ -27,9 +27,10 @@
 #include <fstream>
 #include <xju/format.hh>
 #include <xju/stringToUInt.hh>
-#include "xju/assert.hh"
+#include <xju/assert.hh>
 #include <map>
 #include <xju/startsWith.hh>
+#include <sys/types.h>
 
 std::string getClassName(hcp_ast::ClassDef const* x) throw()
 {
@@ -42,10 +43,13 @@ public:
   // pre: lifetime(s) includes lifetime(this)
   explicit OStream(std::ostream& s) throw():
       s_(s),
-      line_(1),
-      column_(1),
-      outputLine_(1)
+      outputOffset_(0)
   {
+  }
+  void copy(std::string const& x) throw()
+  {
+    s_ << x;
+    outputOffset_+=x.size();
   }
   template<class T>
   void copy(T const& x) throw()
@@ -53,33 +57,15 @@ public:
     std::ostringstream s;
     s << x;
     std::string ss(s.str());
-    hcp_ast::I i(ss.begin(), ss.end());
-    while(!i.atEnd()) {
-      ++i;
-    }
-    s_ << ss;
-    if (i.line_ != 1) {
-      line_+=i.line_-1;
-      column_=i.column_;
-      outputLine_+=i.line_-1;
-    }
-    else
-    {
-      column_+=i.column_-1;
-    }
+    copy(ss);
   }
   void copy(hcp_ast::I begin, hcp_ast::I end)
   {
-    int const beginLine(begin.line_);
-    if(line_ != begin.line_) {
-      sourceLineMap_.insert(std::make_pair(outputLine_,begin.line_));
+    if (mappedOffset()!=begin.offset()){
+      sourceOffsetMap_.insert(std::make_pair(outputOffset_,begin.offset()));
     }
-    while(begin != end) {
-      s_ << (*begin++);
-    }
-    line_=end.line_;
-    column_=end.column_;
-    outputLine_+=end.line_-beginLine;
+    xju::assert_equal(mappedOffset(),begin.offset());
+    copy(std::string(begin.x_,end.x_));
   }
   void copy(hcp_ast::IRs const& irs)
   {
@@ -89,15 +75,21 @@ public:
       copy((*i)->begin(), (*i)->end());
     }
   }
-  std::map<int,int> const& getSourceLineMap() const throw(){
-    return sourceLineMap_;
+  std::map<off_t,off_t> const& getSourceOffsetMap() const throw(){
+    return sourceOffsetMap_;
   }
 private:
   std::ostream& s_;
-  int line_;
-  int column_;
-  int outputLine_;
-  std::map<int,int> sourceLineMap_; //outputLine->sourceLine
+  off_t outputOffset_;
+  std::map<off_t,off_t> sourceOffsetMap_; //outputOffset->sourceOffset
+  off_t mappedOffset() const throw(){
+    auto i(sourceOffsetMap_.upper_bound(outputOffset_));
+    if (i==sourceOffsetMap_.begin()){
+      return outputOffset_;
+    }
+    --i;
+    return outputOffset_-(*i).first+(*i).second;
+  }
 };
 template<class T>
 OStream& operator<<(OStream& s, T const& x)
@@ -501,11 +493,11 @@ std::string make_guard(std::string x) throw()
   return "_"+x;
 }
 
-void writeLineMap(std::ostream& s,
+void writeOffsetMap(std::ostream& s,
                   std::string const& inputFileName,
-                  std::map<int,int> const& lineMap) throw(){
+                  std::map<off_t,off_t> const& offsetMap) throw(){
   s << inputFileName << std::endl;
-  for(auto const x:lineMap){
+  for(auto const x:offsetMap){
     s << x.first << " " << x.second << std::endl;
   }
 }
@@ -537,7 +529,7 @@ int main(int argc, char* argv[])
                 << " [-G] [-l <levels> | -hpath <path>] <input-file>"
                 << " <output-header-file>"
                 << " <output-cpp-file>"
-                << " [header-line-map-file] [cpp-line-map]" << std::endl;
+                << " [header-offset-map-file] [cpp-offset-map]" << std::endl;
       std::cerr << "-l defaults to 0, which generates #includes without "
                 << "any directory part; non-zero generates that many levels of relative path in output-cpp-file's include statement for output-header-file"
                 << std::endl;
@@ -641,13 +633,13 @@ int main(int argc, char* argv[])
     if (cmd_line.second.size()>3){
       std::ofstream fh(cmd_line.second[3], 
                        std::ios_base::out|std::ios_base::trunc);
-      writeLineMap(fh,xju::path::str(inputFile),oh.getSourceLineMap());
+      writeOffsetMap(fh,xju::path::str(inputFile),oh.getSourceOffsetMap());
     }
         
     if (cmd_line.second.size()>4){
       std::ofstream fc(cmd_line.second[4], 
                        std::ios_base::out|std::ios_base::trunc);
-      writeLineMap(fc,xju::path::str(inputFile),oc.getSourceLineMap());
+      writeOffsetMap(fc,xju::path::str(inputFile),oc.getSourceOffsetMap());
     }
 
     return 0;

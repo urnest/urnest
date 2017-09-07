@@ -181,16 +181,6 @@ hcp/scopeAt.cc
 hcp/scopeAt.hh
 xju/getHostName.cc
 xju/getHostName.hh
-hcp/tags/importSymbolAt.cc
-hcp/tags/importSymbolAt.hh
-hcp/tags/makeRelativeIfPossible.cc
-hcp/tags/makeRelativeIfPossible.hh
-./hcp/tags/makeRelativeIfPossible.hh
-./hcp/tags/AbsolutePath.hh
-./hcp/tags/makeRelativeIfPossible.cc
-./hcp/tags/AbsolutePath.cc
-hcp/tags/AbsolutePath.cc
-hcp/tags/AbsolutePath.hh
 hcp/tags/hcp-import-symbol-at
 hcp/test/hpath_option/x.cc
 hcp/test/hpath_option/x.hh

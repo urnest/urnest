@@ -21,6 +21,7 @@
 #include <xju/format.hh>
 #include <sstream>
 #include <algorithm>
+#include <sys/types.h>
 
 namespace xju
 {
@@ -116,6 +117,7 @@ namespace xju
             IteratorAdaptor(iterator x, iterator end) throw():
                 line_(1),
                 column_(1),
+                offset_(0),
                 x_(x),
                 end_(end)
             {
@@ -145,6 +147,7 @@ namespace xju
                     column_=1;
                 }
                 ++x_;
+                ++offset_;
                 return *this;
             }
             bool atEnd() const throw()
@@ -159,6 +162,7 @@ namespace xju
             
             unsigned int line_;
             unsigned int column_;
+            off_t offset_;
             iterator x_;
             iterator end_;
 
@@ -192,6 +196,10 @@ namespace xju
                 IteratorAdaptor const& y) throw()
             {
                 return x.x_ - y.x_;
+            }
+            off_t offset() const throw()
+            {
+                return offset_;
             }
         };
 

@@ -17,13 +17,15 @@ namespace xju
 namespace snmp
 {
 
-std::pair<uint64_t,DecodeIterator> decodeIntValue(DecodeIterator const at)
-  throw(xju::Exception)
+std::pair<uint64_t,DecodeIterator> decodeIntValue(
+  DecodeIterator const at,
+  uint8_t const type_) throw(xju::Exception)
 {
   try {
-    if ((*at) != 0x02) {
+    if ((*at) != type_) {
       std::ostringstream s;
-      s << "type is " << xju::format::hex(*at) << " not 0x02";
+      s << "type is " << xju::format::hex(*at) << " not "
+        << xju::format::hex(type_);
       throw xju::Exception(s.str(), XJU_TRACED);
     }
     auto const length(decodeLength(at+1));

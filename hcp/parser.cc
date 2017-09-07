@@ -963,6 +963,16 @@ PR listOf(PR x, PR separator, PR terminator) throw()
               (x+parseUntil(separator+x,terminator)+terminator));
 }
 
+PR listOf(PR opener, PR x, PR separator, PR terminator) throw()
+{
+  return anon(separator->target()+"-separated list of "+x->target()+
+              " commencing with "+opener->target()+
+              " and terminated by "+terminator->target(),
+              opener+(
+                terminator|
+                (x+parseUntil(separator+x,terminator)+terminator)));
+}
+
 ZeroOrMore zeroOrMore() throw()
 {
   static ZeroOrMore zeroOrMore;

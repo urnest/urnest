@@ -112,6 +112,16 @@ std::pair<Symbol,LineNumber> genFunction(hcp_ast::FunctionDef const& x) throw(
   return std::make_pair(symbol,lineNumber);
 }
 
+std::pair<Symbol,LineNumber> genTemplateFunction(
+  hcp_ast::TemplateFunctionDef const& x) throw(
+    xju::Exception)
+{
+  auto y(findFirst<hcp_ast::FunctionName>(x.items_.begin(), x.items_.end()));
+  Symbol symbol(reconstruct(y));
+  LineNumber lineNumber(y.begin().line_);
+  return std::make_pair(symbol,lineNumber);
+}
+
 std::pair<Symbol,LineNumber> genFunctionDecl(
   hcp_ast::FunctionDecl const& x) throw(
     xju::Exception)
@@ -207,6 +217,11 @@ std::map<Symbol,LineNumber> genNamespaceContent(hcp_ast::IRs const& x) throw(
     else if ((*i)->isA<hcp_ast::FunctionDef>())
     {
       result.insert(genFunction((*i)->asA<hcp_ast::FunctionDef>()));
+    } 
+    else if ((*i)->isA<hcp_ast::TemplateFunctionDef>())
+    {
+      result.insert(
+        genTemplateFunction((*i)->asA<hcp_ast::TemplateFunctionDef>()));
     } 
     else if ((*i)->isA<hcp_ast::FunctionDecl>())
     {

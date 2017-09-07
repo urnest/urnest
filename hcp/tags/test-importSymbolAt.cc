@@ -27,13 +27,12 @@ public:
       f_(f){
   }
   //Lookup::
-  virtual ::hcp::tags::Lookup::FoundIn lookupSymbol(
+  virtual ::hcp::tags::FoundIn lookupSymbol(
     ::hcp::tags::Lookup::NamespaceNames const& fromScope,
     ::hcp::tags::Lookup::NamespaceNames const& symbolScope,
     ::hcp::tags::UnqualifiedSymbol const& symbol) throw(xju::Exception)
     {
-      return Lookup::FoundIn(f_(fromScope,symbolScope,symbol),
-                             Lookup::Headers());
+      return f_(fromScope,symbolScope,symbol);
     }
   
   F f_;
@@ -65,15 +64,17 @@ void test1(std::string const& x,
            xju::assert_equal(fromScope,::hcp::tags::Lookup::NamespaceNames{hcp::tags::NamespaceName("A")});
            xju::assert_equal(symbolScope,::hcp::tags::Lookup::NamespaceNames{});
            xju::assert_equal(symbol,::hcp::tags::UnqualifiedSymbol("B"));
-           return ::hcp::tags::Lookup::Locations{
+           return hcp::tags::FoundIn(
+             ::hcp::tags::Locations{
              ::hcp::tags::Location(xju::path::split("/d2/.").first,
                                    xju::path::FileName("B.hh"),
                                    hcp::tags::LineNumber(3))
-               };
+               },
+             ::hcp::tags::Headers());
          }),
       hpath,
       {},
-      false),
+      false,false).first,
     std::string(y));
 }
 
@@ -96,15 +97,17 @@ void test2(std::string const& x,
            xju::assert_equal(fromScope,::hcp::tags::Lookup::NamespaceNames{hcp::tags::NamespaceName("A")});
            xju::assert_equal(symbolScope,::hcp::tags::Lookup::NamespaceNames{});
            xju::assert_equal(symbol,::hcp::tags::UnqualifiedSymbol("B"));
-           return ::hcp::tags::Lookup::Locations{
+           return hcp::tags::FoundIn(
+             ::hcp::tags::Locations{
              ::hcp::tags::Location(xju::path::split("/d2/.").first,
                                    xju::path::FileName("B.hh"),
                                    hcp::tags::LineNumber(3))
-               };
+               },
+             ::hcp::tags::Headers());
          }),
       hpath,
       {},
-      false),
+      false,false).first,
     std::string(y));
 }
 void test3(std::string const& x,
@@ -127,15 +130,17 @@ void test3(std::string const& x,
            xju::assert_equal(fromScope,::hcp::tags::Lookup::NamespaceNames{hcp::tags::NamespaceName("A")});
            xju::assert_equal(symbolScope,::hcp::tags::Lookup::NamespaceNames{});
            xju::assert_equal(symbol,::hcp::tags::UnqualifiedSymbol("F"));
-           return ::hcp::tags::Lookup::Locations{
+           return hcp::tags::FoundIn(
+             ::hcp::tags::Locations{
              ::hcp::tags::Location(xju::path::split("/d1/.").first,
                                    xju::path::FileName("F.hh"),
                                    hcp::tags::LineNumber(7))
-               };
+               },
+             ::hcp::tags::Headers());
          }),
       hpath,
       {},
-      false),
+      false,false).first,
     std::string(z));
 }
 void test4(std::string const& x,
@@ -158,11 +163,13 @@ void test4(std::string const& x,
            xju::assert_equal(fromScope,::hcp::tags::Lookup::NamespaceNames{hcp::tags::NamespaceName("A")});
            xju::assert_equal(symbolScope,::hcp::tags::Lookup::NamespaceNames{hcp::tags::NamespaceName("Q")});
            xju::assert_equal(symbol,::hcp::tags::UnqualifiedSymbol("Z"));
-           return ::hcp::tags::Lookup::Locations{
+           return hcp::tags::FoundIn(
+             ::hcp::tags::Locations{
              ::hcp::tags::Location(xju::path::split("/d2/Q/.").first,
                                    xju::path::FileName("Z.hcp"),
                                    hcp::tags::LineNumber(7))
-               };
+               },
+             ::hcp::tags::Headers());
          }),
       hpath,
       {std::make_pair(xju::path::RelativePath(
@@ -174,7 +181,7 @@ void test4(std::string const& x,
        std::make_pair(xju::path::RelativePath(
                         std::vector<DirName>{}),
                       xju::path::Extension(".h"))},
-      false),
+      false,false).first,
     std::string(a));
   
 }
@@ -196,11 +203,13 @@ void test5(std::string const& x,
            xju::assert_equal(fromScope,::hcp::tags::Lookup::NamespaceNames{hcp::tags::NamespaceName("A")});
            xju::assert_equal(symbolScope,::hcp::tags::Lookup::NamespaceNames{});
            xju::assert_equal(symbol,::hcp::tags::UnqualifiedSymbol("B"));
-           return ::hcp::tags::Lookup::Locations{
-             ::hcp::tags::Location(xju::path::split("/d2/.").first,
-                                   xju::path::FileName("B.hcp"),
-                                   hcp::tags::LineNumber(3))
-               };
+           return hcp::tags::FoundIn(
+             ::hcp::tags::Locations{::hcp::tags::Location(
+                                         xju::path::split("/d2/.").first,
+                                         xju::path::FileName("B.hcp"),
+                                         hcp::tags::LineNumber(3))
+                                         },
+             ::hcp::tags::Headers());
          }),
       hpath,
       {std::make_pair(xju::path::RelativePath(
@@ -212,7 +221,34 @@ void test5(std::string const& x,
        std::make_pair(xju::path::RelativePath(
                         std::vector<DirName>{}),
                       xju::path::Extension(".hh"))},
-      false),
+      false,false).first,
+    std::string(y));
+}
+
+void test6(std::string const& x,
+           std::string const& y) {
+
+  std::vector<xju::path::AbsolutePath> const hpath{
+    xju::path::split("/d2/.").first,
+    xju::path::split("/d3/.").first};
+  
+  xju::assert_equal(
+    importSymbolAt(
+      x,
+      34U,
+      *l([](::hcp::tags::Lookup::NamespaceNames const& fromScope,
+            ::hcp::tags::Lookup::NamespaceNames const& symbolScope,
+            ::hcp::tags::UnqualifiedSymbol const& symbol){
+           xju::assert_equal(fromScope,::hcp::tags::Lookup::NamespaceNames{hcp::tags::NamespaceName("A")});
+           xju::assert_equal(symbolScope,::hcp::tags::Lookup::NamespaceNames{hcp::tags::NamespaceName("std")});
+           xju::assert_equal(symbol,::hcp::tags::UnqualifiedSymbol("ostream"));
+           return hcp::tags::FoundIn(
+             ::hcp::tags::Locations{},
+             ::hcp::tags::Headers{::hcp::tags::Header("iostream")});
+         }),
+      hpath,
+      {},
+      false,false).first,
     std::string(y));
 }
 
@@ -243,6 +279,8 @@ int main(int argc, char* argv[])
         xju::file::read(xju::path::split(argv[4]))), ++n;
   test5(xju::file::read(xju::path::split(argv[5])),
         xju::file::read(xju::path::split(argv[6]))), ++n;
+  test6(xju::file::read(xju::path::split(argv[7])),
+        xju::file::read(xju::path::split(argv[8]))), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

@@ -21,6 +21,10 @@ COLLECT (:idl.sm.list :recurse=:idl.sm.list) => (:idl.list.m);
 
 COLLECT (:IDL) => (:idl.list.s);
 
+:dir.idl.list 'list of :idl files in a directory'? => <:idl.list>;
+
+COLLECT (:FILE:list:extract=:IDL) => (:dir.idl.list);
+
 :omnicxy.hcp.list 'list of :hcp files generated from .idl file' ? => :hcp.list;
 
 :omnicxy 'directory of :hcp files generated from a .idl file' ? => :DERIVED-DIRECTORY;

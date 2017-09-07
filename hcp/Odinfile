@@ -36,6 +36,17 @@ tags%all.tree
 %hcp-subdir-spec==<<
 %tags==./tags%hcp-gen
 
+%idl-gen==%idl-gen.vir_dir_specs:list:cat:vir_dir
+
+%idl-gen.vir_dir_specs==<<
+%idl-local-spec
+%idl-subdir-spec
+
+%idl-local-spec==.:dir.idl.list+G+hpath='hcp':omnicxy.virdir-specs:cat
+
+%idl-subdir-spec==<<
+%tags==./tags%idl-gen
+
 %test-parser == test-parser.cc+(%bootstrap-cxx-opts):auto.cxx.exe
 
 %test-parser-cmd==<<

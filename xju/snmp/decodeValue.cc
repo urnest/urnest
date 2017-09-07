@@ -18,6 +18,7 @@
 #include "xju/snmp/IntValue.hh"
 #include <xju/format.hh>
 #include "xju/Exception.hh"
+#include <xju/snmp/TimeTicksValue.hh>
 
 namespace xju
 {
@@ -72,6 +73,14 @@ std::pair<std::shared_ptr<Value const>, DecodeIterator> decodeValue(
                               new IntValue(v.first)),
                             v.second);
     }
+    case 0x43:
+    {
+      auto v(decodeIntValue(i,0x43));
+      return std::make_pair(std::shared_ptr<Value const>(
+                              new TimeTicksValue(
+                                std::chrono::milliseconds(v.first*10))),
+                            v.second);
+    }
     }
     std::ostringstream s;
     s << "decoding of type " << xju::format::hex(*i) << " is not implemented";
@@ -88,4 +97,5 @@ std::pair<std::shared_ptr<Value const>, DecodeIterator> decodeValue(
 
 }
 }
+
 

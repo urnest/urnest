@@ -245,6 +245,11 @@ PR operator*(ZeroOrMore a, PR b) throw();
 // - result includes terminator
 PR listOf(PR x, PR separator, PR terminator) throw();
 
+// Parse list of xs each separated by separator, with
+// list commencing with opener and terminated by terminator.
+// - result includes terminator
+PR listOf(PR opener, PR x, PR separator, PR terminator) throw();
+
 // not good - prefer listOf/parseUntil
 ZeroOrMore zeroOrMore() throw();
 

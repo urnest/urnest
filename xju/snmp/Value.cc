@@ -54,6 +54,13 @@ Oid Value::oidValue() const throw(xju::Exception)
   s << (*this) << " is not an Oid";
   throw xju::Exception(s.str(),XJU_TRACED);
 }
+std::chrono::milliseconds Value::timeTicksValue() const throw(
+    xju::Exception)
+{
+  std::ostringstream s;
+  s << (*this) << " is not an TimeTicks";
+  throw xju::Exception(s.str(),XJU_TRACED);
+}
 
 
 

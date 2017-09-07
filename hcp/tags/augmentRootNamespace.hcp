@@ -31,7 +31,8 @@ typedef hcp_parser::PR PR_;
 typedef hcp_parser::IR IR_;
 
 PR_ eatWhite_{hcp_parser::zeroOrMore()*hcp_parser::whitespaceChar()};
-PR_ stringValue{hcp_parser::parseUntil(hcp_parser::doubleQuote())};
+PR_ doubleQuote_{hcp_parser::doubleQuote()};
+PR_ stringValue{hcp_parser::parseUntil(doubleQuote_)};
 struct SymbolTag{};
 typedef hcp_ast::TaggedCompositeItem<SymbolTag> Symbol;
 PR_ symbol{new hcp_parser::NamedParser<Symbol>(
@@ -41,6 +42,12 @@ struct FileNameTag{};
 typedef hcp_ast::TaggedCompositeItem<FileNameTag> ParsedFileName;
 PR_ fileName{
   new hcp_parser::NamedParser<ParsedFileName>(
+    "file name",
+    stringValue)};
+struct HeaderNameTag{};
+typedef hcp_ast::TaggedCompositeItem<HeaderNameTag> ParsedHeaderName;
+PR_ headerName{
+  new hcp_parser::NamedParser<ParsedHeaderName>(
     "file name",
     stringValue)};
 
@@ -66,12 +73,16 @@ PR_ lineNumber{new hcp_parser::NamedParser<ParsedLineNumber>(
                 // CompositeItem, which is redundent
                 digit+hcp_parser::zeroOrMore()*digit)};
 
-PR_ openBrace{hcp_parser::parseLiteral("{")};
-PR_ closeBrace{hcp_parser::parseLiteral("}")};
-PR_ f{hcp_parser::parseLiteral("\"f\"")};
-PR_ l{hcp_parser::parseLiteral("\"l\"")};
-PR_ colon{hcp_parser::parseLiteral(":")};
-PR_ comma{hcp_parser::parseLiteral(",")};
+struct ParsedHeaderTag{};
+typedef hcp_ast::TaggedCompositeItem<ParsedHeaderTag> ParsedHeader;
+
+PR_ openBrace=hcp_parser::parseLiteral("{");
+PR_ closeBrace=hcp_parser::parseLiteral("}");
+PR_ f=hcp_parser::parseLiteral("\"f\"");
+PR_ l=hcp_parser::parseLiteral("\"l\"");
+PR_ h=hcp_parser::parseLiteral("\"h\"");
+PR_ colon=hcp_parser::parseLiteral(":");
+PR_ comma=hcp_parser::parseLiteral(",");
 
 struct LocationTag{};
 typedef hcp_ast::TaggedCompositeItem<LocationTag> ParsedLocation;
@@ -79,32 +90,38 @@ PR_ location{new hcp_parser::NamedParser<ParsedLocation>(
               "location",
               openBrace+eatWhite_+f+eatWhite_+
               colon+eatWhite_+
-              hcp_parser::doubleQuote()+fileName+hcp_parser::doubleQuote()+
+              doubleQuote_+fileName+doubleQuote_+
               eatWhite_+comma+eatWhite_+
               l+eatWhite_+colon+eatWhite_+
               lineNumber+eatWhite_+closeBrace+eatWhite_)};
 
+PR_ header{new hcp_parser::NamedParser<ParsedHeader>(
+             "header",
+             openBrace+eatWhite_+h+eatWhite_+
+             colon+eatWhite_+
+             doubleQuote_+headerName+doubleQuote_+
+             eatWhite_+closeBrace+eatWhite_)};
+              
 PR_ openSquare{hcp_parser::parseLiteral("[")};
 PR_ closeSquare{hcp_parser::parseLiteral("]")};
 
-PR_ locations=openSquare+eatWhite_+location+eatWhite_+
-  hcp_parser::zeroOrMore()*(comma+eatWhite_+location+eatWhite_)+
-  closeSquare+eatWhite_;
+PR_ locations=hcp_parser::listOf(openSquare+eatWhite_,
+                                 location|header,
+                                 comma+eatWhite_,
+                                 closeSquare+eatWhite_);
 
 struct EntryTag{};
 typedef hcp_ast::TaggedCompositeItem<EntryTag> Entry;
 PR_ entry{new hcp_parser::NamedParser<Entry>(
-           "entry",
-           hcp_parser::doubleQuote()+symbol+hcp_parser::doubleQuote()+eatWhite_+
-           colon+eatWhite_+locations)};
+    "entry",
+    doubleQuote_+symbol+doubleQuote_+eatWhite_+
+    colon+eatWhite_+locations)};
 
-PR_ nextEntry{comma+eatWhite_+entry};
-
-PR_ entries{entry+eatWhite_+hcp_parser::zeroOrMore()*nextEntry+closeBrace+eatWhite_};
-
-PR_ tagsFile=openBrace+eatWhite_+
-  (entries|
-    (closeBrace+eatWhite_))+
+PR_ tagsFile=hcp_parser::listOf(
+  openBrace+eatWhite_,
+  entry,
+  comma+eatWhite_,
+  closeBrace+eatWhite_)+
   hcp_parser::endOfFile();
 
 }
@@ -129,6 +146,7 @@ void augmentRootNamespace(Namespace& rootNamespace,
         Entry const& entry(x->asA<Entry>());
         Symbol const& symbol(hcp_ast::findOnlyChildOfType<Symbol>(entry));
         std::vector<hcp::tags::Location> locations;
+        std::vector<hcp::tags::Header> headers;
         for(auto x:entry.items_) {
           if (hcp_ast::isA_<ParsedLocation>(x)) {
             ParsedLocation const& location(
@@ -141,9 +159,16 @@ void augmentRootNamespace(Namespace& rootNamespace,
                                   fileName.second,
                                   l));
           }
+          else if (hcp_ast::isA_<ParsedHeader>(x)) {
+            ParsedHeader const& header(
+              x->asA<ParsedHeader>());
+            auto h(hcp_ast::findOnlyChildOfType<ParsedHeaderName>(header));
+            auto headerName(reconstruct(h));
+            headers.push_back(hcp::tags::Header(headerName));
+          }
         }
         auto const ns(splitSymbol(reconstruct(symbol)));
-        rootNamespace.addSymbol(ns.first,ns.second,locations);
+        rootNamespace.addSymbol(ns.first,ns.second,locations,headers);
       }
     }
   }

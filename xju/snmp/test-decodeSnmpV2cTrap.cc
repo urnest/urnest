@@ -28,12 +28,12 @@ void test1() {
   
   SnmpV2cTrap y(decodeSnmpV2cTrap(x));
   xju::assert_equal(y.community_,Community("aaaa"));
-  xju::assert_equal(y.id_,RequestId(67));
+  xju::assert_equal(y.id_,RequestId(1798143932));
   xju::assert_equal(y.trapType_,Oid(".1.3.6.1.4.1.7.8"));
   xju::assert_equal(y.timestamp_,std::chrono::milliseconds(370));
   xju::assert_equal(y.vars_.size(),1);
   xju::assert_equal(y.vars_[0].first,Oid(".1.3.6.1.4.1.7.8.1"));
-  xju::assert_not_equal(y.vars_[0].second->intValue(),4);
+  xju::assert_equal(y.vars_[0].second->intValue(),4);
 }
 
 }

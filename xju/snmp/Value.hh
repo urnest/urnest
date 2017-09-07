@@ -19,6 +19,7 @@
 #include "xju/check_types_related.hh"
 #include <typeinfo>
 
+#include <chrono>
 namespace xju
 {
 namespace snmp
@@ -44,7 +45,9 @@ public:
   virtual long longValue() const throw(xju::Exception);
   virtual unsigned long ulongValue() const throw(xju::Exception);
   virtual Oid oidValue() const throw(xju::Exception);
-
+  virtual std::chrono::milliseconds timeTicksValue() const throw(
+    xju::Exception);
+  
   // return length of encoded value
   // ie return encodeTo(x)-x
   size_t encodedLength() const throw()
@@ -69,4 +72,5 @@ public:
 }
 
 #endif
+
 

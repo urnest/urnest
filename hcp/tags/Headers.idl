@@ -1,0 +1,15 @@
+#ifndef HCP_TAGS_HEADERS
+#define HCP_TAGS_HEADERS
+
+#include <hcp/tags/Header.idl>
+
+module hcp
+{
+  module tags
+  {
+    typedef sequence<Header> Headers;
+  };
+};
+
+#endif
+        

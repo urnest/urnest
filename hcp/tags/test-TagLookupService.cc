@@ -38,8 +38,9 @@ void test1() {
   xju::assert_equal(x.lookupSymbol(TagLookupService::NamespaceNames(),
                                    TagLookupService::NamespaceNames(),
                                    UnqualifiedSymbol("x")),
-                    Lookup::FoundIn(Lookup::Locations(),
-                                    Lookup::Headers()));
+                    FoundIn(
+                      Locations(),
+                      Headers()));
   
   // create a file
   xju::file::write(newTagsFile,
@@ -53,17 +54,17 @@ void test1() {
   xju::assert_equal(x.lookupSymbol(TagLookupService::NamespaceNames(),
                                    TagLookupService::NamespaceNames(),
                                    UnqualifiedSymbol("x")),
-                    Lookup::FoundIn(
-                      Lookup::Locations(
+                    FoundIn(
+                      Locations(
                         {Location(x_hh.first,x_hh.second,LineNumber(23))}),
-                      Lookup::Headers()));
+                      Headers()));
   
   // lookup non-existent symbol
   xju::assert_equal(x.lookupSymbol(TagLookupService::NamespaceNames(),
                                    TagLookupService::NamespaceNames(),
                                    UnqualifiedSymbol("y")),
-                    Lookup::FoundIn(Lookup::Locations(),
-                                    Lookup::Headers()));
+                    FoundIn(Locations(),
+                                    Headers()));
   
   // create new file
   xju::file::write(newTagsFile,
@@ -77,18 +78,18 @@ void test1() {
   xju::assert_equal(x.lookupSymbol(TagLookupService::NamespaceNames(),
                                    TagLookupService::NamespaceNames(),
                                    UnqualifiedSymbol("y")),
-                    Lookup::FoundIn(
-                      Lookup::Locations(
+                    FoundIn(
+                      Locations(
                         {Location(y_hh.first,y_hh.second,LineNumber(12))}),
-                      Lookup::Headers()));
+                      Headers()));
 
   // lookup non-existent symbol
   xju::assert_equal(x.lookupSymbol(TagLookupService::NamespaceNames(),
                                    TagLookupService::NamespaceNames(),
                                    UnqualifiedSymbol("z")),
-                    Lookup::FoundIn(
-                      Lookup::Locations(),
-                      Lookup::Headers()));
+                    FoundIn(
+                      Locations(),
+                      Headers()));
 
   // update a file
   xju::file::write(newTagsFile,
@@ -103,10 +104,10 @@ void test1() {
   xju::assert_equal(x.lookupSymbol(TagLookupService::NamespaceNames(),
                                    TagLookupService::NamespaceNames(),
                                    UnqualifiedSymbol("z")),
-                    Lookup::FoundIn(
-                      Lookup::Locations(
+                    FoundIn(
+                      Locations(
                         {Location(z_hh.first,z_hh.second,LineNumber(99))}),
-                      Lookup::Headers()));
+                      Headers()));
 
   // remove file
   xju::file::rm(f2);
@@ -115,9 +116,9 @@ void test1() {
   xju::assert_equal(x.lookupSymbol(TagLookupService::NamespaceNames(),
                                    TagLookupService::NamespaceNames(),
                                    UnqualifiedSymbol("z")),
-                    Lookup::FoundIn(
-                      Lookup::Locations(),
-                      Lookup::Headers()));
+                    FoundIn(
+                      Locations(),
+                      Headers()));
   
 }
 

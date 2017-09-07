@@ -31,6 +31,11 @@ public:
   // Value::
   virtual std::string str() const throw();
 
+  virtual std::chrono::milliseconds timeTicksValue() const throw(
+    xju::Exception) {
+    return val_;
+  }
+
   friend bool operator<(TimeTicksValue const& x, TimeTicksValue const& y) throw()
   {
     return x.val_<y.val_;

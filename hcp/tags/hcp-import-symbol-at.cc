@@ -23,6 +23,7 @@
 #include "hcp/tags/Lookup.cref.hh"
 #include <xju/format.hh>
 #include <xju/split.hh>
+#include <xju/endsWith.hh> //impl
 
 // get $HCP_HPATH directories
 std::vector<xju::path::AbsolutePath> getHPath() throw(xju::Exception)
@@ -194,10 +195,14 @@ int main(int argc, char* argv[])
     cxy::ORB<xju::Exception> orb("giop:tcp::");
     cxy::cref<hcp::tags::Lookup> ref(orb,url);
 
-    std::cout << hcp::tags::importSymbolAt(x, offset, *ref, hpath,
-                                           hcpExtensionMappings,
-                                           options.traceParsing_);
-    
+    auto const result(hcp::tags::importSymbolAt(
+                        x, offset, *ref, hpath,
+                        hcpExtensionMappings,
+                        options.traceParsing_,
+                        !xju::endsWith(inputFile.second._,
+                                       std::string(".hcp"))));
+    std::cout << result.first << std::endl;
+    std::cerr << "#included " << result.second << std::endl;
     return 0;
   }
   catch(hcp::tags::UnknownSymbol& e) {
@@ -215,3 +220,4 @@ int main(int argc, char* argv[])
     return 2;
   }
 }
+

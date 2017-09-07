@@ -1,0 +1,12 @@
+#ifndef HCP_TAGS_HEADER
+#define HCP_TAGS_HEADER
+
+module hcp
+{
+  module tags
+  {
+    typedef string Header; //eg <iostream>
+  };
+};
+
+#endif
