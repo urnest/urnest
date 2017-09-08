@@ -26,7 +26,17 @@
 ()+cmd=(test-encodeLength.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-TimeTicksValue.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
-encodeResponse.gen.hh==()+cmd=(%encodeResponse.gen.sh):exec.output
+%hcp-gen==%hcp-gen.vir_dir_specs:list:cat:vir_dir
+
+%hcp-gen.vir_dir_specs==<<
+%hcp-local-spec
+
+%hcp-local-spec==<<
+%encodeResponse.gen.hh==.%encodeResponse.gen.hh
+
+%encodeResponse.gen.hh==(%dummy.hh)+cmd=(%encodeResponse.gen.sh):stdout
+
+%dummy.hh==<<
 
 %encodeResponse.gen.sh == ! <<END
 #!/bin/sh
@@ -55,7 +65,7 @@ echo "$names"|
 while read className errorCode
 do
   cat <<EOF
-#include "${className}.hh"
+#include <xju/snmp/${className}.hh>
 EOF
 done &&
 (cat <<EOF
