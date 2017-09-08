@@ -65,6 +65,7 @@ netflow%tests.tree
 %ip==ip%hcp-gen
 %file==file%hcp-gen
 %snmp==snmp%hcp-gen
+%netflow==netflow%hcp-gen
 
 %test-getHostName==()+cmd=(%test-getHostName.sh) (test-getHostName.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 

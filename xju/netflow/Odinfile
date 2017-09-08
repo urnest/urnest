@@ -6,7 +6,10 @@
 %tests.tree == <<
 ()+cmd=(test-v5.cc+(../..%cxx-opts):auto.cxx.exe):stdout
 
-%v5==()+cmd=(../../hcp/hcp-split) -l 2 (v5.hcp) 'v5.hh' 'v5.cc':output
+%hcp-gen==%hcp-gen.vir_dir_specs:list:cat:vir_dir
 
-v5.hh==%v5/v5.hh
-v5.cc==%v5/v5.cc
+%hcp-gen.vir_dir_specs==<<
+%hcp-local-spec
+
+%hcp-local-spec==.:dir.hcp.list+G+hpath='xju/netflow':hcp-split-virdir-specs:cat
+
