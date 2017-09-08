@@ -1,5 +1,5 @@
-#ifndef _P2_HH
-#define _P2_HH
+#ifndef _OMNICXY_PROTO_P2_HH
+#define _OMNICXY_PROTO_P2_HH
 // generated from p2.idl by omni cxy idl backend specifying 
 // cxy::Exception from <cxy/Exception.hh> as base class for all ipc exceptions
 
@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 // included idl
-#include "p1.hh"
+#include <omnicxy/proto/p1.hh>
 
 namespace p2
 {

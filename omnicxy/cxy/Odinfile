@@ -3,156 +3,12 @@
 %all.tree==<<
 %tests.tree
 
-%ORBImpl==()+cmd=(../../hcp/hcp-split) -l 1 (ORBImpl.hcp) 'ORBImpl.hh' 'ORBImpl.cc':output
+%hcp-gen==%hcp-gen.vir_dir_specs:list:cat:vir_dir
 
-ORBImpl.hh==%ORBImpl/ORBImpl.hh
-ORBImpl.cc==%ORBImpl/ORBImpl.cc
+%hcp-gen.vir_dir_specs==<<
+%hcp-local-spec
 
-WrongType.hh==%WrongType/WrongType.hh
-WrongType.cc==%WrongType/WrongType.cc
-
-%WrongType==()+cmd=(../../hcp/hcp-split) -l 1 (WrongType.hcp) 'WrongType.hh' 'WrongType.cc':output
-
-NoSuchObject.hh==%NoSuchObject/NoSuchObject.hh
-NoSuchObject.cc==%NoSuchObject/NoSuchObject.cc
-
-%NoSuchObject==()+cmd=(../../hcp/hcp-split) -l 1 (NoSuchObject.hcp) 'NoSuchObject.hh' 'NoSuchObject.cc':output
-
-PortInUse.hh==%PortInUse/PortInUse.hh
-PortInUse.cc==%PortInUse/PortInUse.cc
-
-%PortInUse==()+cmd=(../../hcp/hcp-split) -l 1 (PortInUse.hcp) 'PortInUse.hh' 'PortInUse.cc':output
-
-StubUserException.hh==%StubUserException/StubUserException.hh
-StubUserException.cc==%StubUserException/StubUserException.cc
-
-%StubUserException==()+cmd=(../../hcp/hcp-split) -l 1 (StubUserException.hcp) 'StubUserException.hh' 'StubUserException.cc':output
-
-cref.hh==%cref/cref.hh
-cref.cc==%cref/cref.cc
-
-%cref==()+cmd=(../../hcp/hcp-split) -l 1 (cref.hcp) 'cref.hh' 'cref.cc':output
-
-objref.hh==%objref/objref.hh
-objref.cc==%objref/objref.cc
-
-%objref==()+cmd=(../../hcp/hcp-split) -l 1 (objref.hcp) 'objref.hh' 'objref.cc':output
-
-copyContext.hh==%copyContext/copyContext.hh
-copyContext.cc==%copyContext/copyContext.cc
-
-%copyContext==()+cmd=(../../hcp/hcp-split) -l 1 (copyContext.hcp) 'copyContext.hh' 'copyContext.cc':output
-
-translateException.hh==%translateException/translateException.hh
-translateException.cc==%translateException/translateException.cc
-
-%translateException==()+cmd=(../../hcp/hcp-split) -l 1 (translateException.hcp) 'translateException.hh' 'translateException.cc':output
-
-translateCorbaException.hh==%translateCorbaException/translateCorbaException.hh
-translateCorbaException.cc==%translateCorbaException/translateCorbaException.cc
-
-%translateCorbaException==()+cmd=(../../hcp/hcp-split) -l 1 (translateCorbaException.hcp) 'translateCorbaException.hh' 'translateCorbaException.cc':output
-
-pof.hh==%pof/pof.hh
-pof.cc==%pof/pof.cc
-
-%pof==()+cmd=(../../hcp/hcp-split) -l 1 (pof.hcp) 'pof.hh' 'pof.cc':output
-
-cdr.hh==%cdr/cdr.hh
-cdr.cc==%cdr/cdr.cc
-
-%cdr==()+cmd=(../../hcp/hcp-split) -l 1 (cdr.hcp) 'cdr.hh' 'cdr.cc':output
-
-optional.hh==%optional/optional.hh
-optional.cc==%optional/optional.cc
-
-%optional==()+cmd=(../../hcp/hcp-split) -l 1 (optional.hcp) 'optional.hh' 'optional.cc':output
-
-ORB.hh==%ORB/ORB.hh
-ORB.cc==%ORB/ORB.cc
-
-%ORB==()+cmd=(../../hcp/hcp-split) -l 1 (ORB.hcp) 'ORB.hh' 'ORB.cc':output
-
-Exception.hh==%Exception/Exception.hh
-Exception.cc==%Exception/Exception.cc
-
-%Exception==()+cmd=(../../hcp/hcp-split) -l 1 (Exception.hcp) 'Exception.hh' 'Exception.cc':output
-
-sref.hh==%sref/sref.hh
-sref.cc==%sref/sref.cc
-
-%sref==()+cmd=(../../hcp/hcp-split) -l 1 (sref.hcp) 'sref.hh' 'sref.cc':output
-
-sref_if.hh==%sref_if/sref_if.hh
-sref_if.cc==%sref_if/sref_if.cc
-
-%sref_if==()+cmd=(../../hcp/hcp-split) -l 1 (sref_if.hcp) 'sref_if.hh' 'sref_if.cc':output
-
-sref_impl.hh==%sref_impl/sref_impl.hh
-sref_impl.cc==%sref_impl/sref_impl.cc
-
-%sref_impl==()+cmd=(../../hcp/hcp-split) -l 1 (sref_impl.hcp) 'sref_impl.hh' 'sref_impl.cc':output
-
-IOR.hh==%IOR/IOR.hh
-IOR.cc==%IOR/IOR.cc
-
-%IOR==()+cmd=(../../hcp/hcp-split) -l 1 (IOR.hcp) 'IOR.hh' 'IOR.cc':output
-
-IORImpl.hh==%IORImpl/IORImpl.hh
-IORImpl.cc==%IORImpl/IORImpl.cc
-
-%IORImpl==()+cmd=(../../hcp/hcp-split) -l 1 (IORImpl.hcp) 'IORImpl.hh' 'IORImpl.cc':output
-
-TaggedProfileList.hh==%TaggedProfileList/TaggedProfileList.hh
-TaggedProfileList.cc==%TaggedProfileList/TaggedProfileList.cc
-
-%TaggedProfileList==()+cmd=(../../hcp/hcp-split) -l 1 (TaggedProfileList.hcp) 'TaggedProfileList.hh' 'TaggedProfileList.cc':output
-
-
-TypeCode.hh==%TypeCode/TypeCode.hh
-TypeCode.cc==%TypeCode/TypeCode.cc
-
-%TypeCode==()+cmd=(../../hcp/hcp-split) -l 1 (TypeCode.hcp) 'TypeCode.hh' 'TypeCode.cc':output
-
-Any.hh==%Any/Any.hh
-Any.cc==%Any/Any.cc
-
-%Any==()+cmd=(../../hcp/hcp-split) -l 1 (Any.hcp) 'Any.hh' 'Any.cc':output
-
-AnyImpl.hh==%AnyImpl/AnyImpl.hh
-AnyImpl.cc==%AnyImpl/AnyImpl.cc
-
-%AnyImpl==()+cmd=(../../hcp/hcp-split) -l 1 (AnyImpl.hcp) 'AnyImpl.hh' 'AnyImpl.cc':output
-
-any_.hh==%any_/any_.hh
-any_.cc==%any_/any_.cc
-
-%any_==()+cmd=(../../hcp/hcp-split) -l 1 (any_.hcp) 'any_.hh' 'any_.cc':output
-
-MemCdrStream.hh==%MemCdrStream/MemCdrStream.hh
-MemCdrStream.cc==%MemCdrStream/MemCdrStream.cc
-
-%MemCdrStream==()+cmd=(../../hcp/hcp-split) -l 1 (MemCdrStream.hcp) 'MemCdrStream.hh' 'MemCdrStream.cc':output
-
-EncapsulationCdrStream.hh==%EncapsulationCdrStream/EncapsulationCdrStream.hh
-EncapsulationCdrStream.cc==%EncapsulationCdrStream/EncapsulationCdrStream.cc
-
-%EncapsulationCdrStream==()+cmd=(../../hcp/hcp-split) -l 1 (EncapsulationCdrStream.hcp) 'EncapsulationCdrStream.hh' 'EncapsulationCdrStream.cc':output
-
-TypeKind.hh==%TypeKind/TypeKind.hh
-TypeKind.cc==%TypeKind/TypeKind.cc
-
-%TypeKind==()+cmd=(../../hcp/hcp-split) -l 1 (TypeKind.hcp) 'TypeKind.hh' 'TypeKind.cc':output
-
-TypeTag.hh==%TypeTag/TypeTag.hh
-TypeTag.cc==%TypeTag/TypeTag.cc
-
-%TypeTag==()+cmd=(../../hcp/hcp-split) -l 1 (TypeTag.hcp) 'TypeTag.hh' 'TypeTag.cc':output
-
-BoundedSequence.hh==%BoundedSequence/BoundedSequence.hh
-BoundedSequence.cc==%BoundedSequence/BoundedSequence.cc
-
-%BoundedSequence==()+cmd=(../../hcp/hcp-split) -l 1 (BoundedSequence.hcp) 'BoundedSequence.hh' 'BoundedSequence.cc':output
+%hcp-local-spec==.:dir.hcp.list+G+hpath='cxy':hcp-split-virdir-specs:cat
 
 
 %tests.tree==<<
@@ -166,3 +22,5 @@ BoundedSequence.cc==%BoundedSequence/BoundedSequence.cc
 
 %cxx-opts==<<
 +(..%cxx-opts)
+
+%tags==.:tree_tags

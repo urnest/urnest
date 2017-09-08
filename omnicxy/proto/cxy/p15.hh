@@ -1,5 +1,5 @@
-#ifndef _P15_HH
-#define _P15_HH
+#ifndef _OMNICXY_PROTO_P15_HH
+#define _OMNICXY_PROTO_P15_HH
 // generated from p15.idl by omni cxy idl backend specifying 
 // cxy::Exception from <cxy/Exception.hh> as base class for all ipc exceptions
 

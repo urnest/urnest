@@ -8,11 +8,13 @@
 // implied warranty.
 //
 #include <string>
-#include "TaggedProfileList.hh" //impl
+#include <cxy/TaggedProfileList.hh> //impl
 #include <iosfwd>
 #include <iostream> //impl
-#include <cxy/cdr.hh> //impl
 #include <xju/format.hh>
+#include <omniORB4/cdrStream.h> //impl
+
+class cdrStream;
 
 namespace cxy
 {
@@ -60,11 +62,17 @@ public:
     return *profiles_;
   }
 
+  void marshal(cdrStream& s) const
+  {
+    s.marshalString(repoID().c_str(),0);
+    (const IOP::TaggedProfileList&)profiles() >>= s;
+  }
+  
   std::string toString() const throw()
   {
     cdrMemoryStream buf(CORBA::ULong(0),CORBA::Boolean(1));
     buf.marshalOctet(omni::myByteOrder);
-    cxy::cdr<IORImpl>::marshal(*this,buf);
+    marshal(buf);
     
     // turn the encapsulation into a hex string with "IOR:" prepended
     buf.rewindInputPtr();
@@ -83,17 +91,7 @@ private:
 
 std::ostream& operator<<(std::ostream& s,
                          IORImpl const& x) throw() {
-  cdrMemoryStream buf(CORBA::ULong(0),CORBA::Boolean(1));
-  buf.marshalOctet(omni::myByteOrder);
-  cxy::cdr<IORImpl>::marshal(x,buf);
-
-  // turn the encapsulation into a hex string with "IOR:" prepended
-  buf.rewindInputPtr();
-  s << "IOR:";
-  for(unsigned int i=0; i != buf.bufSize(); ++i) {
-    s << xju::format::hex(((unsigned char const*)buf.bufPtr())[i],"");
-  }
-  return s;
+  return s << x.toString();
 }
 
 }

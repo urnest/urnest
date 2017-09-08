@@ -9,9 +9,9 @@
 //
 
 
-#include "p3.hh"
-#include "p3.cref.hh"
-#include "p3.sref.hh"
+#include <omnicxy/proto/p3.hh>
+#include <omnicxy/proto/p3.cref.hh>
+#include <omnicxy/proto/p3.sref.hh>
 
 #include <xju/Exception.hh>
 #include <iostream>
@@ -22,7 +22,7 @@
 #include <xju/mt.hh>
 #include <xju/Time.hh>
 #include <cxy/ORB.hh>
-#include "xju/Shared.hh"
+#include <xju/Shared.hh>
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {

@@ -17,15 +17,18 @@
 #include <xju/Tagged.hh>
 #include <xju/Int.hh>
 #include <xju/Float.hh>
-#include "IOR.hh"
-#include "TaggedProfileList.hh" //impl
+#include <cxy/IOR.hh>
+#include <cxy/TaggedProfileList.hh> //impl
 #include <cxy/optional.hh>
 #include <cxy/BoundedSequence.hh>
+#include <cxy/IORImpl.hh> //impl
 
 class cdrStream;
 
 namespace cxy
 {
+class IORImpl;
+
 template<class T>
 class cdr
 {
@@ -427,7 +430,7 @@ public:
     }
   }
 };
-  
+
 template<>
 class cdr< IORImpl >
 {
@@ -450,11 +453,10 @@ public:
   //  omni::giopStream::CommFailure
   //)
   {
-    cdr< std::string >::marshal(x.repoID(),s);
-    (const IOP::TaggedProfileList&)x.profiles() >>= s;
+    x.marshal(s);
   }
 };
-  
+
 template<class T>
 class cdr< IOR<T> >
 {
@@ -543,3 +545,4 @@ public:
 };
   
 }
+

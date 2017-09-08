@@ -9,18 +9,18 @@
 //
 
 
-#include "p2.hh"
-#include "p2.cref.hh"
-#include "p2.sref.hh"
-#include "p1.cref.hh"
+#include <omnicxy/proto/p2.hh>
+#include <omnicxy/proto/p2.cref.hh>
+#include <omnicxy/proto/p2.sref.hh>
+#include <omnicxy/proto/p1.cref.hh>
 
-#include "E.hh"
+#include <omnicxy/proto/cxy/e/E.hh>
 #include <iostream>
 #include <string>
-#include<xju/format.hh>
-#include<xju/stringToInt.hh>
+#include <xju/format.hh>
+#include <xju/stringToInt.hh>
 #include <stdlib.h>
-#include<xju/mt.hh>
+#include <xju/mt.hh>
 #include <cxy/ORB.hh>
 
 std::string makeURI(int port, std::string const& objectName) throw()

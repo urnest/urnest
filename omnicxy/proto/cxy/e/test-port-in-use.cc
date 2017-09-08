@@ -11,7 +11,7 @@
 #include <xju/assert.hh>
 #include <xju/format.hh>
 #include <cxy/ORB.hh>
-#include "E.hh"
+#include <omnicxy/proto/cxy/e/E.hh>
 #include <sstream>
 
 std::ostringstream messages;

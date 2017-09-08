@@ -7,12 +7,12 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <omnicxy/cxy/BoundedSequence.hh>
+#include <cxy/BoundedSequence.hh>
 
 #include <iostream>
 #include <xju/assert.hh>
-#include "xju/next.hh"
-#include "xju/prev.hh"
+#include <xju/next.hh>
+#include <xju/prev.hh>
 
 namespace cxy
 {

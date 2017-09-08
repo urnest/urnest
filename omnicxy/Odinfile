@@ -7,3 +7,4 @@ proto%all.tree
 
 %cxx-opts==<<
 +(..%cxx-opts)+lib='omniDynamic4' 'omniORB4' 'omnithread'
+

@@ -9,12 +9,12 @@
 //
 #include <sstream>
 #include <typeinfo>
-#include "Exceptions.hh"
-#include "Exception.hh"
-#include "copyContext.hh"
-#include "WrongType.hh"
-#include "NoSuchObject.hh"
-#include "PortInUse.hh"
+#include <cxy/Exceptions.hh>
+#include <cxy/Exception.hh>
+#include <cxy/copyContext.hh>
+#include <cxy/WrongType.hh>
+#include <cxy/NoSuchObject.hh>
+#include <cxy/PortInUse.hh>
 
 namespace cxy
 {

@@ -9,11 +9,11 @@
 //
 
 
-#include "p7.hh"
-#include "p7.cref.hh"
-#include "p7.sref.hh"
+#include <omnicxy/proto/p7.hh>
+#include <omnicxy/proto/p7.cref.hh>
+#include <omnicxy/proto/p7.sref.hh>
 
-#include "E.hh"
+#include <omnicxy/proto/cxy/e/E.hh>
 #include <iostream>
 #include <string>
 #include <xju/format.hh>

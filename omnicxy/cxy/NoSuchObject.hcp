@@ -8,8 +8,8 @@
 // implied warranty.
 //
 
-#include "Exceptions.hh"
-#include "Exception.hh"
+#include <cxy/Exceptions.hh>
+#include <cxy/Exception.hh>
 
 namespace cxy
 {

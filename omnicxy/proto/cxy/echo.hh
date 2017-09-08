@@ -1,5 +1,5 @@
-#ifndef _ECHO_HH
-#define _ECHO_HH
+#ifndef _OMNICXY_PROTO_ECHO_HH
+#define _OMNICXY_PROTO_ECHO_HH
 // generated from echo.idl by omni cxy idl backend specifying 
 // cxy::Exception from <cxy/Exception.hh> as base class for all ipc exceptions
 

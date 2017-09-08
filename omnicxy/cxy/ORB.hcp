@@ -8,14 +8,14 @@
 // implied warranty.
 //
 
-#include "ORBImpl.hh"
+#include <cxy/ORBImpl.hh>
 #include <algorithm>
 #include <functional>
 #include <typeinfo>
 #include <xju/functional.hh>
-#include "copyContext.hh"
-#include "Exceptions.hh"
-#include "translateException.hh"
+#include <cxy/copyContext.hh>
+#include <cxy/Exceptions.hh>
+#include <cxy/translateException.hh>
 #include <xju/mt.hh>
 #include <xju/Time.hh>
 #include <xju/Optional.hh>

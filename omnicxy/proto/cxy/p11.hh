@@ -1,5 +1,5 @@
-#ifndef _P11_HH
-#define _P11_HH
+#ifndef _OMNICXY_PROTO_P11_HH
+#define _OMNICXY_PROTO_P11_HH
 // generated from p11.idl by omni cxy idl backend specifying 
 // cxy::Exception from <cxy/Exception.hh> as base class for all ipc exceptions
 

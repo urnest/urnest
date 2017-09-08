@@ -9,9 +9,9 @@
 //
 
 
-#include "p14.hh"
-#include "p14.cref.hh"
-#include "p14.sref.hh"
+#include <omnicxy/proto/p14.hh>
+#include <omnicxy/proto/p14.cref.hh>
+#include <omnicxy/proto/p14.sref.hh>
 
 #include <xju/Exception.hh>
 #include <iostream>

@@ -9,9 +9,9 @@
 //
 
 
-#include "p1.cref.hh"
+#include <omnicxy/proto/p1.cref.hh>
 
-#include "E.hh"
+#include <omnicxy/proto/cxy/e/E.hh>
 #include <iostream>
 #include <string>
 #include <xju/format.hh>

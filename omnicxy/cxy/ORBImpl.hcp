@@ -10,17 +10,17 @@
 #ifndef CXY_ORBIMPL_H
 #define CXY_ORBIMPL_H
 
-#include "Exception.hh"
-#include "Exceptions.hh"
-#include "translateCorbaException.hh"
+#include <cxy/Exception.hh>
+#include <cxy/Exceptions.hh>
+#include <cxy/translateCorbaException.hh>
 #include <string>
 #include <typeinfo> // impl
 #include <omniORB4/CORBA.h>
 #include <iostream> // impl
 #include <xju/format.hh>
-#include "WrongType.hh"
-#include "NoSuchObject.hh"
-#include "PortInUse.hh"
+#include <cxy/WrongType.hh>
+#include <cxy/NoSuchObject.hh>
+#include <cxy/PortInUse.hh>
 
 namespace CORBA
 {
