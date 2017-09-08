@@ -73,6 +73,30 @@ public:
       filesWatcher_(std::set<AbsFile>(tagsFiles.begin(),tagsFiles.end())),
       filesMap_(makeFilesMap(files_))
   {
+    for(auto x: files_) {
+      std::ostringstream s;
+      s << "load tags file " << xju::path::str(x);
+      try {
+        std::cerr << s.str() << std::endl;
+        auto const i(filesMap_.find(x));
+        xju::assert_not_equal(i,filesMap_.end());
+        Namespace& root(*(*i).second);
+        root=Namespace();
+        try {
+          augmentRootNamespace(root,x,false);
+        }
+        catch(xju::Exception& e) {
+          std::ostringstream s;
+          s << "load tags file " << xju::path::str(x);
+          e.addContext(s.str(),XJU_TRACED);
+          throw;
+        }
+      }
+      catch(xju::Exception& e) {
+        e.addContext(s.str(),XJU_TRACED);
+        std::cerr << "ERROR: " << readableRepr(e) << std::endl;
+      }
+    }
   }
 
   // track tags file changes, until stop() called
