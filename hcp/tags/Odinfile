@@ -32,7 +32,9 @@ hcp-import-symbol-at==hcp-import-symbol-at.cc+(../..%cxx-opts)+lib='omniDynamic4
 ()+cmd=(%test-augmentRootNamespace)+cmd=(../test-hcp-tags/test-1.json)+cmd=(../test-hcp-tags/test-4.json):exec.output
 ()+cmd=(%test-TagLookupService):exec.output
 ()+cmd=(test-makeRelativeIfPossible.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
-()+cmd=(%test-importSymbolAt)+cmd=(%test-importSymbolAt-x)+cmd=(%test-importSymbolAt-y)+cmd=(%test-importSymbolAt-z)+cmd=(%test-importSymbolAt-a)+cmd=(%test-importSymbolAt-x2)+cmd=(%test-importSymbolAt-y2)+cmd=(%test-importSymbolAt-x3)+cmd=(%test-importSymbolAt-y3):exec.output
+%test-importSymbolAt.exe:exec.output
+
+%test-importSymbolAt.exe==()+cmd=(%test-importSymbolAt)+cmd=(%test-importSymbolAt-x)+cmd=(%test-importSymbolAt-y)+cmd=(%test-importSymbolAt-z)+cmd=(%test-importSymbolAt-a)+cmd=(%test-importSymbolAt-x2)+cmd=(%test-importSymbolAt-y2)+cmd=(%test-importSymbolAt-x3)+cmd=(%test-importSymbolAt-y3):exec
 
 %test-importSymbolAt==test-importSymbolAt.cc+(../..%cxx-opts):auto.cxx.exe
 

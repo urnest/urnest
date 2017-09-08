@@ -44,7 +44,6 @@ xju::Shared<hcp::tags::Lookup> l(F f)
 }
 
   
-
 void test1(std::string const& x,
            std::string const& y,
            std::string const& z,

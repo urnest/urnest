@@ -7,17 +7,17 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include "xju/Exception.hh"
+#include <xju/Exception.hh>
 #include <string>
 #include <utility>
 #include <unistd.h>
-#include "hcp/tags/Lookup.hh"
+#include <hcp/tags/Lookup.hh>
 #include <vector>
-#include "hcp/tags/AbsolutePath.hh"
-#include "hcp/parser.hh" //impl
-#include "hcp/scopeAt.hh" //impl
-#include "hcp/tags/splitSymbol.hh" //impl
-#include "xju/format.hh" //impl
+#include <hcp/tags/AbsolutePath.hh>
+#include <hcp/parser.hh> //impl
+#include <hcp/scopeAt.hh> //impl
+#include <hcp/tags/splitSymbol.hh> //impl
+#include <xju/format.hh> //impl
 #include <algorithm> //impl
 #include <hcp/ast.hh> //impl
 #include <hcp/getIrsAtEnd.hh> //impl
@@ -27,8 +27,8 @@
 #include <hcp/tags/makeRelativeIfPossible.hh> //impl
 #include <sstream> //impl
 #include <xju/endsWith.hh> //impl
-#include "xju/next.hh" //impl
-#include "xju/startsWith.hh" //impl
+#include <xju/next.hh> //impl
+#include <xju/startsWith.hh> //impl
 #include <xju/Tagged.hh> //impl
 
 namespace hcp
@@ -85,11 +85,10 @@ hcp_parser::I findTrailingWhitespace(hcp_parser::IR x) throw()
   }
   if (hcp_ast::isA_<hcp_ast::CompositeItem>(x)){
     auto const c(hcp_ast::asA_<hcp_ast::CompositeItem>(x));
-    if (c.items_.size()){
-      return findTrailingWhitespace(*(c.items_.rbegin()));
-    }
-    return x->end();
+    xju::assert_not_equal(c.items_.size(),0U);
+    return findTrailingWhitespace(*(c.items_.rbegin()));
   }
+  return x->end();
 }
 
   
@@ -179,7 +178,7 @@ std::pair<std::string,IncludeTarget> importSymbolAt(
     
     hcp_parser::IR insertAfter(*irsAtEnd.begin());
 
-    auto i(irsAtEnd.begin());
+    auto i(xju::next(irsAtEnd.begin()));
     // skip over initial comment block if any, then
     if (i!=irsAtEnd.end() &&
         (*i)->isA<hcp_ast::Comments>()){
@@ -241,5 +240,6 @@ std::pair<std::string,IncludeTarget> importSymbolAt(
 
 }
 }
+
 
 
