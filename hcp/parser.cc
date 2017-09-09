@@ -657,6 +657,69 @@ public:
   };
 
 };
+bool isIdentifierChar(char c) throw(){
+  return ('a' <= c && c <= 'z')||
+    ('A' <= c && c <= 'Z') ||
+    (c=='_');
+}
+bool isIdentifierContChar(char c) throw(){
+  return isIdentifierChar(c)||
+    ('0' <= c && c <= '9');
+}
+
+class ParseIdentifier : public Parser
+{
+public:
+  virtual ~ParseIdentifier() throw() {
+  }
+  
+  // Parser::
+  virtual ParseResult parse_(I const at, Options const& o) throw()
+  {
+    I i(at);
+    if (i.atEnd()){
+      return ParseResult(EndOfInput(i, XJU_TRACED));
+    }
+    if(!isIdentifierChar(*i)){
+      return ParseResult(
+        Exception(
+          xju::Shared<Exception::Cause const>(
+            new NotIdentifierChar(*i)),
+          i, XJU_TRACED));
+    }
+    ++i;
+    while(!i.atEnd()&&isIdentifierContChar(*i)){
+      ++i;
+    }
+    return ParseResult(
+      std::make_pair(IRs(1U, IR(new hcp_ast::String(at, i))),
+                     i));
+  }
+  
+  virtual std::string target() const throw() {
+    return "identifier";
+  }
+
+  class NotIdentifierChar : public Exception::Cause
+  {
+  public:
+    explicit NotIdentifierChar(char const got) throw():
+        got_(got)
+    {
+    }
+    ~NotIdentifierChar() throw()
+    {
+    }
+    std::string str() const throw()
+    {
+      std::ostringstream s;
+      s << "'" << xju::format::cEscapeChar(got_) << "' is not an identifier char";
+      return s.str();
+    }
+    char const got_;
+  };
+
+};
 
 class ParseHash : public Parser
 {
@@ -1305,14 +1368,6 @@ PR whitespace() throw()
   return whitespace;
 }
 
-PR identifierStartChar() throw()
-{
-  static PR result(charInRange('a', 'z')|
-                   charInRange('A', 'Z')|
-                   parseOneOfChars("_"));
-  return result;
-}
-  
 PR identifierContChar() throw()
 {
   static PR identifierContChar(charInRange('a', 'z')|
@@ -1325,9 +1380,7 @@ PR identifierContChar() throw()
 
 PR identifier() throw()
 {
-  static PR result(
-    identifierStartChar()+
-    zeroOrMore()*identifierContChar());
+  static PR result(new ParseIdentifier());
   return result;
 }
 

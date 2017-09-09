@@ -35,13 +35,13 @@ x typedef = fp typedef | reg typedef
 
 x allow const/throw()/noexcept in function pointer var
 
-- get rid of name()?
+- use scoped_name() in class_name()? Then perhaps:
+  - get rid of name()?
+  - get rid of unqualifiedTypeName?
 
 x params() check for ending ")" first (before checking for next param)
 
 x create cxx-opts for use before hcp-split
-
-- get rid of unqualifiedTypeName?
 
 - reorg
   - want minimum in hcp to get to hcp-split?
@@ -555,6 +555,15 @@ user	0m0.196s
 sys	0m0.004s
 2545
 commit aa0e66330b53f6b40569468691d70c4b1bdf19ef
+
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "%all" && ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l && git log | head -1
+end at line 146 column 1
+
+real	0m0.193s
+user	0m0.188s
+sys	0m0.000s
+3042 <-note tracing changed
+commit 18327186dae262b086d493b99ea6434310bc3cbd
 
 empty file overhead:
 
