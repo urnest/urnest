@@ -1524,9 +1524,9 @@ PR unqualifiedTypeName() throw()
 {
   static PR unqualifiedTypeName(
     identifier()+
-    zeroOrMore()*(parseOneOfChars("<")+
-                  balanced(parseOneOfChars(">"), true)+
-                  parseOneOfChars(">")));
+    (!parseOneOfChars("<")|(parseOneOfChars("<")+
+                            balanced(parseOneOfChars(">"), true)+
+                            parseOneOfChars(">"))));
   return unqualifiedTypeName;
 }
 
@@ -1591,27 +1591,17 @@ PR destructor_name() throw()
   return destructor_name;
 }
 
-PR name() throw()
-{
-  static PR name(
-    optional(typename_keyword())+
-    optional(doubleColon())+eatWhite()+
-    zeroOrMore()*(
-      unqualifiedTypeName()+eatWhite()+doubleColon()+eatWhite())+
-    (operator_name()|destructor_name()|unqualifiedTypeName())+
-    eatWhite());
-  return name;
-}
-
-
 PR class_name() throw()
 {
   static PR result(
-    optional(typename_keyword())+
-    optional(doubleColon())+eatWhite()+
-    zeroOrMore()*(
-      unqualifiedTypeName()+eatWhite()+doubleColon()+eatWhite())+
-    unqualifiedTypeName());
+    new NamedParser<hcp_ast::ClassName>(
+      "class name",
+      optional(typename_keyword())+
+      optional(doubleColon())+eatWhite()+
+      unqualifiedTypeName()+
+      zeroOrMore()*(
+        eatWhite()+doubleColon()+eatWhite()+unqualifiedTypeName()))+
+    eatWhite());
   return result;
 }
 
@@ -1998,10 +1988,7 @@ PR class_proto() throw()
     optional(keyword_friend())+
     class_struct_union_literal()+
     whitespace()+
-    new NamedParser<hcp_ast::ClassName>(
-      "class name",
-      class_name())+
-    eatWhite()+
+    class_name()+
     balanced(parseOneOfChars("{;")));
   return class_proto;
 }
