@@ -1345,10 +1345,10 @@ PR scope_ref() throw(){
     optional(class_struct_union_literal())+eatWhite()+
     optional(doubleColon()+eatWhite())+
     zeroOrMore()*(
-      identifier()+eatWhite()+optional(
-        parseOneOfChars("<")+
-        balanced(parseOneOfChars(">"), true)+
-        parseOneOfChars(">")+eatWhite())+
+      identifier()+eatWhite()+
+      (!parseOneOfChars("<")|(parseOneOfChars("<")+
+                              balanced(parseOneOfChars(">"), true)+
+                              parseOneOfChars(">")+eatWhite()))+
       doubleColon()+eatWhite()));
   return result;
 }
@@ -1366,10 +1366,9 @@ PR scoped_name() throw(){ //see also scoped_function_name
          optional(typename_keyword())+
          scope_ref()+
          identifier()+eatWhite()+
-         ((parseOneOfChars("<")+
-           balanced(parseOneOfChars(">"), true)+
-           parseOneOfChars(">")+eatWhite())|
-          !parseOneOfChars("<"))));
+         (!parseOneOfChars("<")|(parseOneOfChars("<")+
+                                 balanced(parseOneOfChars(">"), true)+
+                                 parseOneOfChars(">")+eatWhite()))));
   return result;
 }
 
