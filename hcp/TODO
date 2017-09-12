@@ -17,10 +17,7 @@ x make param() anon
   parseOneOfChars
   etc
 
-- identifier()
-  - performance before,after:
-  - custom parser to avoid each character ending up in a separate IR
-  
+- custom eatwhite for efficiency, performance before and after
   
 x replace unqualifiedName with identifier (already exists)
   delete unqualifiedName

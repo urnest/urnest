@@ -25,6 +25,7 @@
 #include <xju/file/rename.hh>
 #include <xju/format.hh>
 #include "xju/Optional.hh"
+#include <iostream>
 
 char const usage[]="-u url-file tags-file [tags-file...]\n"
   "  provides hcp::tags::Lookup interface - see Lookup.idl - to tags files, via CORBA url written to url-file";
@@ -74,6 +75,11 @@ std::pair<xju::path::AbsFile, std::vector<xju::path::AbsFile> > parseCommandLine
 int main(int argc, char* argv[])
 {
   try {
+    if (argc==2 && (argv[1]==std::string("-h")||
+                    argv[1]==std::string("--help"))){
+      std::cerr << usage << std::endl;
+      return 1;
+    }
     auto const args(
       parseCommandLine(std::vector<std::string>(argv+1,argv+argc)));
     xju::path::AbsFile const uriFile(args.first);
@@ -106,3 +112,4 @@ int main(int argc, char* argv[])
     return 1;
   }
 }
+
