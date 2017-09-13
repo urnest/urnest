@@ -34,6 +34,7 @@ omnicxy/proto==.%gen
 
 %gen-opts==<<
 +inc_sp=(../../..)
++inc_sp=(../../../omnicxy)
 +hcp-split=(../../../hcp/hcp-split)
 +hpath='omnicxy/proto'
 +cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext'
@@ -160,6 +161,8 @@ echo.sref.cc==%gen/echo.sref.cc
 ()+cmd=(%p20-main-1)+cmd='3756'+cmd='both':exec.output
 ()+cmd=(%p21-main)+cmd='3757'+cmd='both':exec.output
 %test-transient
+()+cmd=(%p22-main)+cmd='3758'+cmd='both':exec.output
+%test-transient
 ()+cmd=(%test-no-such-object)+cmd='3760'+cmd=exec.output
 ()+cmd=(%test-duplicate-name)+cmd='3761'+cmd=exec.output
 ()+cmd=(%test-port-in-use):exec.output
@@ -191,6 +194,7 @@ ext%tests.tree
 %p20-main==p20-main.cc+(%cxx-opts):auto.cxx.exe
 %p20-main-1==p20-main-1.cc+(%cxx-opts):auto.cxx.exe
 %p21-main==p21-main.cc+(%cxx-opts):auto.cxx.exe
+%p22-main==p22-main.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-duplicate-name==test-duplicate-name.cc+(%cxx-opts):auto.cxx.exe
 %test-port-in-use==test-port-in-use.cc+(%cxx-opts):auto.cxx.exe

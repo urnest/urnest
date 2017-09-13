@@ -1,3 +1,10 @@
+- import-symbol-at
+  - skip #ifndef + #define
+  
+- find-symbol n symbol from-scope
+  - return nth candidate for symbol when looked up from scope wrapping to 1st
+  - returned as n abs-file line
+
 - Lookup: throw UnknownSymbol so can pass it on to importSymbolAt
 
 - Location generate file+line as pair, so can typedef to hcp:::path::AbsFile

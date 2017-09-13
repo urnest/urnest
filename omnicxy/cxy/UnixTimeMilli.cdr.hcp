@@ -1,0 +1,52 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <cxy/cdr.hh>
+
+#include <cxy/UnixTimeMilli.hh>
+
+
+#include <omniORB4/CORBA.h> // impl
+#include <xju/unix_epoch.hh> //impl
+#include <omniORB4/cdrStream.h> //impl
+
+namespace cxy
+{
+
+template<>
+class cdr<UnixTimeMilli>
+{
+public:
+  static UnixTimeMilli unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    int64_t x;
+    (::CORBA::LongLong&)x <<= s;
+    std::chrono::milliseconds const y(x);
+    UnixTimeMilli const result(xju::unix_epoch()+y);
+    return result;
+  }
+  static void marshal(UnixTimeMilli const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    std::chrono::milliseconds const y(
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+        x-xju::unix_epoch()));
+    ((CORBA::LongLong)y.count()) >>= s;
+  }
+};
+
+}

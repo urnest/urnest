@@ -6,10 +6,10 @@ omnicxy%all.tree
 hcp%all.tree
 
 %cxx-opts==<<
-+inc_sp=(%hcp-gen)
-+inc_sp=(%idl-gen)
 +inc_sp=(omnicxy)
 +inc_sp=(.)
++inc_sp=(%hcp-gen)
++inc_sp=(%idl-gen)
 +inc_sp=(/usr/include/freetype2)
 +ld_flags=-lpthread
 
@@ -24,4 +24,4 @@ hcp%all.tree
 
 %idl-gen.virdir_spec == <<
 %hcp==hcp%idl-gen
-
+%cxy==omnicxy/cxy%idl-gen
