@@ -9,7 +9,7 @@ Contents
   5. Exceptions
   6. Building and installing omnicxy
   7. Invoking omniidl
-
+  8. Extras
 
 1. Introduction
 
@@ -251,3 +251,12 @@ Contents
     generated code:
       - if you see xxx.hcp, use hcp-split to produce xxx.hh and xxx.cc
       - the omniidl backend scripts eg cxycref.py produce .hcp files
+
+8. Extras
+
+    cxy/UnixTimeMilli.idl defines a time type; cxy/UnixTimeMilli*.hcp
+    hand-codes its implementation so that it derives from
+    std::chrono::system_clock::time_point, allowing C++ clients and
+    servers to work with the C++ standard time representation. Note
+    that conversion truncates.
+    

@@ -8,8 +8,8 @@ x documentation / tutorial
 x once hcp-split can understand conversion operators, see //REVISIT in
   cxycref.py, adjust p15-main.cc and document in README.txt
 
-* cxy/UnixTimeMilli, mapping to std::chrono::system_clock::time_point
-  * test by passing and returning as param plus interop
+x cxy/UnixTimeMilli, mapping to std::chrono::system_clock::time_point
+  x test by passing and returning as param plus interop
   
 x replace all xju::Shared with std::shared_ptr, especially union
 
