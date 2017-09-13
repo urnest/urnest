@@ -9,5 +9,8 @@ module p15
     AAA getA();
     AAA echoA(in AAA a);
   };
+  struct CCC {
+    AAA a_;
+  };
 };
 

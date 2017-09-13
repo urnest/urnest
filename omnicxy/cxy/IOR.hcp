@@ -32,6 +32,24 @@ public:
       IORImpl(x) {
     T const* U_must_be_a_T((U*)0);
   }
+  friend bool operator<(IOR const& x, IOR const& y) throw(){
+    return x.toString()<y.toString();
+  }
+  friend bool operator>(IOR const& x, IOR const& y) throw(){
+    return y<x;
+  }
+  friend bool operator!=(IOR const& x, IOR const& y) throw(){
+    return (x<y)||(y<x);
+  }
+  friend bool operator==(IOR const& x, IOR const& y) throw(){
+    return !(x!=y);
+  }
+  friend bool operator<=(IOR const& x, IOR const& y) throw(){
+    return !(x>y);
+  }
+  friend bool operator>=(IOR const& x, IOR const& y) throw(){
+    return !(x<y);
+  }
 };
 
 }
