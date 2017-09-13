@@ -19,7 +19,7 @@
 #include <xju/mt.hh>
 #include <xju/Time.hh>
 #include <xju/Optional.hh>
-#include "WrongType.hh"
+#include <cxy/WrongType.hh>
 
 namespace cxy
 {

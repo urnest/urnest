@@ -10,10 +10,16 @@
 #ifndef CXY_UNIXTIMEMILLI_H
 #define CXY_UNIXTIMEMILLI_H
 
+#include <chrono>
+
 namespace cxy
 {
 // conversion to idl truncates
-typedef std::chrono::system_clock::time_point UnixTimeMilli;
+class UnixTimeMilli : public std::chrono::system_clock::time_point
+{
+  using std::chrono::system_clock::time_point;
+};
+
 }
 
 #endif

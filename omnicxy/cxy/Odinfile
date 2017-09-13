@@ -10,6 +10,13 @@
 
 %hcp-local-spec==.:dir.hcp.list+G+hpath='cxy':hcp-split-virdir-specs:cat
 
+%idl-gen==%idl-gen.vir_dir_specs:list:cat:vir_dir
+
+%idl-gen.vir_dir_specs==<<
+%idl-local-spec
+
+%idl-local-spec==.:dir.idl.list+inc_sp=(../..)+hcp-split=(../hcp-split)+hpath='cxy':omnicxy.virdir-specs:cat
+
 
 %tests.tree==<<
 ()+cmd=(test-Exception.cc+(%cxx-opts):auto.cxx.exe):stdout

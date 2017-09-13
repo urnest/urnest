@@ -213,7 +213,7 @@ public:
   //  omni::giopStream::CommFailure
   //)
   {
-    ((CORBA::ULongLong)x) >>= s;
+    ((CORBA::LongLong)x) >>= s;
   }
   
 };
