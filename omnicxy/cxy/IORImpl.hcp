@@ -94,4 +94,23 @@ std::ostream& operator<<(std::ostream& s,
   return s << x.toString();
 }
 
+bool operator<(IORImpl const& x, IORImpl const& y) throw(){
+  return x.toString()<y.toString();
+}
+bool operator>(IORImpl const& x, IORImpl const& y) throw(){
+  return y<x;
+}
+bool operator!=(IORImpl const& x, IORImpl const& y) throw(){
+  return (x<y)||(y<x);
+}
+bool operator==(IORImpl const& x, IORImpl const& y) throw(){
+  return !(x!=y);
+}
+bool operator<=(IORImpl const& x, IORImpl const& y) throw(){
+  return !(x>y);
+}
+bool operator>=(IORImpl const& x, IORImpl const& y) throw(){
+  return !(x<y);
+}
+
 }

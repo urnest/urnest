@@ -3,24 +3,12 @@ key:
   "-" means to-be-done
   "~" means decided not to do
 
-x documentation / tutorial
-
-x once hcp-split can understand conversion operators, see //REVISIT in
-  cxycref.py, adjust p15-main.cc and document in README.txt
-
-x cxy/UnixTimeMilli, mapping to std::chrono::system_clock::time_point
-  x test by passing and returning as param plus interop
-  
-x replace all xju::Shared with std::shared_ptr, especially union
-
 - union: promote variant structure members to get more natural
   C++ code, if can only have one data type per variant type
 
 ~ union return as std::unique_ptr, in as T const&
   no that makes embedding union types in structures harder, just
   stick with shared_ptr<T const>
-
-x union add clone() convenience function giving a unique_ptr<T>
 
 * fix up exception handling:
   - define equivalents of all corba exception types
@@ -33,121 +21,11 @@ x union add clone() convenience function giving a unique_ptr<T>
   
 * update all tests to retry on PortInUse
 
-x omnicxy does not work, need to pass through basename to
-  hcp-split as in the generated cc it uses the .hcp basename which is
-  the odin cache file name
-
 - proto/cxy/echo-main
 
 - how to get just direct includes (in omnipy backend)? currently picks up nested
 
 - use xju::Thread instead of xju::mt::Thread
-
-- use std::chrono::system_clock::timepoint instead of xju::Time
-
-x hand-code p1 server
-
-    root_poa->activate_object_with_id(oid, f);
-
-    f : PortableServer::Servant
-
-    .. do we really need to use poa? No but seems like
-    lots of work to bypass... but alas it assumes that
-    the object will hang around post-deativate (deativate
-    is not synchronous), based on reference counting :-(
-
-    ... but can use a reference counted servant and wait for
-    its deletion
-
-x move m_c out of sref< ::p1::F>::f1 and into _dispatch to avoid
-  malloc/free on every call
-
-x do a cxy/p1-main.cc that uses exception class derived
-  from xju::Exception as its base exception type instead of
-  cxy::Exception (p1-main-e.cc) but need variants of generated files
-  (subdirectory e?)
-
-x move server_t thread into ORB (Impl)
-
-x move generic code from cref to ORBImpl, and add translation functions
-  for cxy::Exception base to other
-
-x test port-in-use
-x test port-in-use - E
-x test no-such-object
-x test no-such-object - E
-
-x make sure no generated headers that would be included in
-  application code include any omniORB headers (to keep
-  compilation dependencies minimal)
-
-x generate proto/cxy code from p1.idl
-  x p1.hcp
-  x p1.cdr.hcp
-  x p1.cref.hcp
-  x p1.objref.hcp
-  x p1.sref.hcp
-
-x generate proto/cxy/e code from p1.idl
-  ... via eg -Wb-eE=E.hh
-  x p1.hcp
-  x p1.cdr.hcp
-  x p1.cref.hcp
-  x p1.objref.hcp
-  x p1.sref.hcp
-
-x allow "" v <> control for -e eg:
-   ./x/E.hh -> "x/E.hh"
-   x/E.hh -> <x/E.hh>
-   ./E.hh -> "E.hh"
-   E.hh -> "E.hh"
-
-x omnicxy odin package
-  idl.sm+omnicxy-be-dir=(cxy-be-dir)+hcp-split=(xxx):omnicxy
-    :omnicxy is a virdir containing all generated files for the .idl
-    files in idl.cxx.sm
-    +hcpsplit 'hcp-split'
-    +omnicxy-be-dir '' (default assumes in omniidl default search path)
-    OMNICXY_PATH - enough path to run omniidl and hcpsplit if not explicit
-    
-x adjust sref.hcp need to derive from omniCallDescriptor to override
-  unmarshalArguments
-
-x p2.idl:
-  x include p1.idl
-  x basic types in params - short,long,double,string,long long,boolean
-    x proto
-      x .hcp
-      x .cdr.hcp
-      x .cref.hcp
-      x .objref.hcp
-      x .sref.hcp
-    x gen
-      x .hcp
-      x .cdr.hcp
-      x .cref.hcp
-      x .objref.hcp
-      x .sref.hcp
-    x cxy/e
-  x return basic types:
-    x short
-    x long,double,string
-    proto
-      x .hcp
-      x .cdr.hcp
-      x .cref.hcp
-      x .objref.hcp
-      x .sref.hcp
-    gen
-      x .hcp
-      x .cdr.hcp
-      x .cref.hcp
-      x .objref.hcp
-      x .sref.hcp
-    x cxy/e
-  
-x test client wrong type exception
-  x e
 
 - p3.idl:
   x typedef basic type -> distinct
@@ -166,18 +44,8 @@ x test client wrong type exception
     - wstring
     - long double
 
-x p4.idl:
-  x struct in param, return
-  x struct declared in class (need hcp-split "friend" support)
-  x translate struct XxPair { Y first; Z second; } into 
     struct XxPair : std::pair<Y,Z> XxPair { ... };
     - perhaps that should be a typedef?
-
-x p5.idl:
-  x sequence param, return, struct
-
-x p6.idl
-  x exception EEE
 
 - p7.idl:
     - want to seamlessly handle BaseException, which
@@ -209,76 +77,8 @@ x p6.idl
   - exception with cause and context mapped to BaseException and
     with extra attributes
 
-x p9.idl:
-  x oneway
-
-x p10.idl:
-  x enum
-
-x p11.idl:
-  x constant
-  x enum X {A}; union(X) { A: X x_; };
-
-x p12.idl:
-  x union(X) { case A: X x_; default: Y y_; };
-
-x p13.idl:
-  x union(int) { 1: X x_; };
-
-x p14.idl:
-  x inherit interface
-
-x p15.idl:
-  x objref param/return
-    cxy::IOR<X>:
-    x cxy::IOR<X> cxy::sref<X>::ior() const;
-      we have:
-        ::PortableServer::ServantBase
-        ::PortableServer::ObjectId
-        omniServant
-        CORBA::Object via orb.insPOA().id_to_reference(objectId)
-        omniObjRef* via CORBA::Object::_PR_getobj()
-        omniIOR* via omniObjRef::_getIOR()
-        ... but maybe we can store a bit more info in sref_impl
-        when we construct the sref_impl? Nope.
-      
-    x cxy::cref<X>(cxy::IOR<X> const& ior) throw();
-      see see src/lib/omniORB/orbcore/omniObjRef.cc
-      omniObjRef::_unMarshal
-      note current uri param is only stored in cxy::objref<X> so
-      ~ it can be added to exception context for a start use _toString(objRef) 
-        (I don't think omniObjRef::_toString is valid on the client side)
-      x use stringified IOR borrowing code from omniObjRef._toString()
-
-x p16.idl:
-  x IOR<T>::IOR(IOR<U> const& x); // only compiles if U is a T
-      x implement
-        x test
-
-  x dynamic_cast
-      template<class T, class U>
-      cxy::cref<U> cxy::cref<T>::dynamic_cast<U>() throw(cxy::BadDynamicCast);
-      x compile check U is a T
-      ~ if (!obj || obj->_NP_is_nil() || obj->_NP_is_pseudo()) return _nil();
-      ~ _ptr_type e = (_ptr_type) obj->_PR_getobj()->_realNarrow(_PD_repoId);
-      ~ return e ? e : _nil();
-      x easier to go via stringified ior to start with
-
-x p17.idl:
-  sequence<X, 1> -> optional<X>
-
-x p18.idl:
-  x untyped object ref (ie CORBA::Object) plus casting
-
 - p19.idl:
   - sequence test cases
-
-x memory leaks:
-  x allow a repeat count, and compare eg 1 repeat v 100 with
-    eg valgrind
-    x p1-main (repeat the basic call)
-    x p2-main (repeat "locate"+basic calls)
-    x p16-main (repeat "locate"+obj ref+basic calls)
 
 - inherit interface multi-level
 - inherit multiple interfaces
@@ -287,11 +87,6 @@ x memory leaks:
 - recursive union
 - bounded strings
     - do like bounded sequence
-x p21.idl
-  bounded sequences > 1
-    ... nah, create own vector wrapper that does size checks
-      cxy::BoundedSequence<class T, size_t MaxSize, class Allocator = std::allocator<T>,
-      x like vector
 
 - revisit BoundedSequence
       - exceptions to give them all info known eg context
@@ -411,8 +206,7 @@ x p21.idl
     x rename Any to AnyImpl and do a Any template to translate exceptions
     * can share AnyImpl (make it const)
 
-- cxy/Time.idl and hand-code cxy/Time.hcp to inherit from std::time_point - see UnixTimeMilli above
-- cxy/Duration.idl and hand-code cxy/Duration.hcp to inherit also
+- cxy/Milliseconds.idl and hand-code map to std::chrono::milliseconds
 
 - other stuff (see omniidl idltypes.py)
 
@@ -442,8 +236,6 @@ x p21.idl
 - operator<<(std::ostream&,IORImpl) better to describe the IOR type and
   tagged profile list (could use catior?) see REVISIT in cxy::IORImpl
 
-x test duplicate object name exception
-
 - add a two-process client server test
   - cxx->cxy, for each single-process test
   - cxy->cxx, for each single-process test
@@ -451,33 +243,8 @@ x test duplicate object name exception
 
 - allow cref cons/assign from super-class-cref
 
-x client side:
-
-x can get (CORBA_Object.h class Object) CORBA::Object* from 
-  ORB::string_to_object
-x then generated code calls CORBA::Object::_PR_getobj()->_realNarrow(
-   _PD_repoId), _PR_getobj() is just 
-    (omniObjRef.h) omniObjRef* CORBA::Object::pd_obj
-x ... generated code has a static _pof_F which is a
-  proxyObjectFactory and it has a omniObjRef* newObjRef that
-  returns a generated class p1::_objref_F : omniObjRef
-x   which has an implementation of each method
-
-
-x allow "unchecked narrow"? Na
-
-x clean up xju::Exceptions, get it back to a minimum of function
-  variants:
-    x add cxy::Exception which uses xju::Exception as its implementation
-    x change xju::Exception back
-    x have cxy/* throw cxy::Exceptions<cxy::Exception>::X and
-      provide translate of all those to cxy::Exceptions<Y>::X with
-      null-translation overrides
-
 - translate the various system exceptions eg Transient
   separately in translateException.hcp
-
-x make p1.hh // impl in p1.sref.hcp
 
 - allow servant to throw base exception
 

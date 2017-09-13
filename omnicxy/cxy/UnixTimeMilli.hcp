@@ -9,7 +9,8 @@
 //
 #include <chrono>
 #include <iostream>
-#include <xju/unix_epoch.hh> //should be impl
+#include <xju/unix_epoch.hh> //impl
+
 
 namespace cxy
 {
@@ -18,12 +19,13 @@ class UnixTimeMilli : public std::chrono::time_point<std::chrono::system_clock>
 {
   using std::chrono::time_point<std::chrono::system_clock>::time_point;
 
-  friend std::ostream& operator<<(std::ostream& s, UnixTimeMilli const& x)
-    throw(){
-    return s << std::chrono::duration_cast<std::chrono::milliseconds>(x-xju::unix_epoch()).count();
-  }
 };
+std::ostream& operator<<(std::ostream& s, UnixTimeMilli const& x)
+  throw(){
+  return s << std::chrono::duration_cast<std::chrono::milliseconds>(x-xju::unix_epoch()).count();
+}
 
 }
+
 
 
