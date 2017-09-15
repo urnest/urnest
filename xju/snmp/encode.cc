@@ -29,6 +29,7 @@
 #include "xju/snmp/SnmpV2cGetRequest.hh"
 #include "xju/snmp/SnmpV2cGetNextRequest.hh"
 #include "xju/format.hh"
+#include <xju/snmp/SnmpV2cTrap.hh>
 
 namespace xju
 {
@@ -311,8 +312,50 @@ std::vector<uint8_t> encode(SnmpV2cSetRequest const& request) throw()
   return result;
 }
 
+std::vector<uint8_t> encode(SnmpV2cTrap const& trap) throw()
+{
+  typedef std::shared_ptr<Value const> vp;
+  
+  std::vector<vp > params;
+  params.push_back(
+    vp(new Sequence(
+         {vp(new OidValue(Oid(".1.3.6.1.2.1.1.3.0"))),
+          vp(new TimeTicksValue(trap.timestamp_))},
+         0x30)));
+  params.push_back(
+    vp(new Sequence(
+         {vp(new OidValue(Oid(".1.3.6.1.6.3.1.1.4.1.0"))),
+          vp(new OidValue(trap.trapType_))},
+         0x30)));
+  std::transform(trap.vars_.begin(),
+                 trap.vars_.end(),
+                 std::back_inserter(params),
+                 [](std::pair<Oid const,vp> const& x) {
+                   return vp(
+                     new Sequence({
+                         vp(new OidValue(x.first)),
+                         x.second},
+                       0x30));
+                 });
+  Sequence s({
+      vp(new IntValue(1)), // SNMP version 2c
+      vp(new StringValue(std::vector<uint8_t>(trap.community_._.begin(),
+                                              trap.community_._.end()))),
+      vp(new Sequence({
+            vp(new IntValue(trap.id_.value())),
+            vp(new IntValue(0)),//error
+            vp(new IntValue(0)),//errorIndex
+            vp(new Sequence(params,0x30))},
+          0xA7))}, // SNMP Trap
+    0x30);
+  std::vector<uint8_t> result(s.encodedLength());
+  xju::assert_equal(s.encodeTo(result.begin()),result.end());
+  return result;
+}
+
 
 
 }
 }
+
 

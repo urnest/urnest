@@ -32,9 +32,12 @@ std::vector<uint8_t> encode(SnmpV1Trap const& trap) throw();
 class SnmpV2cGetRequest;
 class SnmpV2cGetNextRequest;
 class SnmpV2cSetRequest;
+class SnmpV2cTrap;
+
 std::vector<uint8_t> encode(SnmpV2cGetRequest const& request) throw();
 std::vector<uint8_t> encode(SnmpV2cGetNextRequest const& request) throw();
 std::vector<uint8_t> encode(SnmpV2cSetRequest const& request) throw();
+std::vector<uint8_t> encode(SnmpV2cTrap const& trap) throw();
 
 }
 }

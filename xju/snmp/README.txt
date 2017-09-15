@@ -29,11 +29,14 @@ TODO:
     x SnmpV2cSetRequest, encode
     x validateResponse(SnmpV2cSetRequest,SnmpV2cResponse)
         - test all exceptions
-    - SnmpV2cGetNextRequest plus encode, validateResponse
+    - SnmpV2cGetNextRequest
+      x def
+      x encode,
+      - validateResponse
     - SnmpV2cTable
     - SnmpV2cWalk(?)
     - SnmpV2cGetBulk
-    * SnmpV2cTrap
+    x SnmpV2cTrap
     
   - server side:
     x decodeSnmpV1GetRequest
@@ -48,6 +51,7 @@ TODO:
     x decode SnmpV2c get, get next, set request
     x encodeResponse snmpv2c get
     x encodeResponse snmpv2c set
+    - encodeResponse snmpv2c getnext
     x includes in ../snmp.hh
   x does the snmpv1 "set" error handling say to return the original
     values (like v2c says)? do we do that? Yes and yes.
