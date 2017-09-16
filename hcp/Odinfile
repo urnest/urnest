@@ -12,6 +12,7 @@ test-hcp-tags%all.tree
 %scope-at-tests.tree
 tags%all.tree
 %test-xju-tags-no-warnings
+%tags
 
 %run-standalone-tests == %standalone-tests.tree:leaves
 
@@ -229,3 +230,5 @@ hcp/translateException.hh==./translateException.hh
 hcp/translateException.cc==./translateException.cc
 
 %test-xju-tags-no-warnings==()+cmd=cmp (../xju%tags:warn) '-':stdout
+
+%tags==.:tree_tags

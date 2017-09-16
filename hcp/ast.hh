@@ -171,7 +171,7 @@ std::vector<std::reference_wrapper<T const> > findChildrenOfType(
     }
   }
   return result;
-};
+}
 
 //pre: parent has only one child of type T
 template<class T>

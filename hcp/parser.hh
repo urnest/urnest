@@ -50,7 +50,7 @@ xju::Shared<Parser> file() throw(); // reference to whole-file parser
 // 
 I parse(hcp_ast::CompositeItem& parent,
         I const startOfElement,
-        xju::Shared<Parser> = file(),
+        xju::Shared<Parser> parser = file(),
         bool traceToStdout = false,
         bool irsAtEnd = false)
   throw(

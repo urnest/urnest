@@ -125,11 +125,14 @@ public:
   }
 
   // lookup symbol amongst tags files
-  // - returns results from first tags file that knows about symbol
+  // - returns results from all tags files that know about symbol, in
+  //   order that the files were given to constructor (multiple matches
+  //   in the same tags file are returned in no particular order)
   //
   FoundIn lookupSymbol(NamespaceNames const& fromScope,
                        NamespaceNames const& symbolScope,
                        UnqualifiedSymbol const& symbol) throw() {
+    FoundIn result{Locations(),Headers()};
     xju::Lock l(guard_);
     updateFiles(l);
     for(auto const x:files_) {
@@ -142,7 +145,10 @@ public:
                     << str(fromScope)
                     << ") in tags file "
                     << xju::path::str(x);
-          return FoundIn(l);
+          std::copy(l.locations_.begin(),l.locations_.end(),
+                    std::back_inserter(result.locations_));
+          std::copy(l.headers_.begin(),l.headers_.end(),
+                    std::back_inserter(result.headers_));
         }
       }
       catch(xju::Exception& e) {
@@ -152,7 +158,7 @@ public:
         std::cerr << readableRepr(e) << std::endl;
       }
     }
-    return FoundIn(Locations(),Headers());
+    return result;
   }
 
   // update ie reload any tags files that have changed

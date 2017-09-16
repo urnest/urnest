@@ -1,0 +1,46 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <vector>
+#include <string>
+#include <hcp/tags/NamespaceName.hh>
+#include <algorithm> //impl
+
+namespace hcp
+{
+namespace tags
+{
+// split scope eg a::b::c into its components
+// - note leading :: is ignored
+std::vector<NamespaceName> splitScope(std::string const& scope) throw(){
+  std::string const sep("::");
+  auto i(scope.begin());
+  if (scope.size()>=2 && std::string(i,i+2)==sep) {
+    i+=2;
+  }
+  std::vector<NamespaceName> result;
+  if (i==scope.end()){
+    return result;
+  }
+  auto j(std::search(i,scope.end(),sep.begin(),sep.end()));
+  while(j!=scope.end()) {
+    result.push_back(NamespaceName(std::string(i,j)));
+    i=j+2;
+    j=std::search(i,scope.end(),sep.begin(),sep.end());
+  }
+  result.push_back(NamespaceName(std::string(i,j)));
+  return result;
+}
+
+}
+}
+
+
+
+

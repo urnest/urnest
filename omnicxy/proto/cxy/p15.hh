@@ -36,6 +36,47 @@ public:
     cxy::Exception) = 0;
 };
 
+struct CCC
+{
+  
+  ::cxy::IOR< ::p15::AAA > a_;
+
+  CCC(
+    ::cxy::IOR< ::p15::AAA > const& p1) throw();
+  friend bool operator<(
+    CCC const& x, 
+    CCC const& y) throw() {
+    if (x.a_<y.a_) return true;
+    if (y.a_<x.a_) return false;
+    return false;
+  }
+  friend bool operator>(
+    CCC const& x, 
+    CCC const& y) throw() {
+    return y<x;
+  }
+  friend bool operator!=(
+    CCC const& x, 
+    CCC const& y) throw() {
+    return (x<y)||(y<x);
+  }
+  friend bool operator==(
+    CCC const& x, 
+    CCC const& y) throw() {
+    return !(x!=y);
+  }
+  friend bool operator<=(
+    CCC const& x, 
+    CCC const& y) throw() {
+    return (x<y)||(x==y);
+  }
+  friend bool operator>=(
+    CCC const& x, 
+    CCC const& y) throw() {
+    return (x>y)||(x==y);
+  }
+};
+
 }
 
 #endif
