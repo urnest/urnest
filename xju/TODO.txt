@@ -24,6 +24,8 @@ x Thread
   
 x Mutex,Lock
 - Condition
+  x draft
+  - test
 - delete xju::mt
 
 - xju::Microseconds -> std::chrono::microseconds

@@ -1,0 +1,136 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+// Examples:
+//
+//    Signal condition variable.
+//
+//        Mutex guard;
+//        Condition condition(guard);
+//
+//        Lock l(guard);           assert(l.holds(guard))
+//        bool signalled = true;
+//        condition.signal(l);
+//                                 assert(l.holds(guard))
+//
+//    Wait for condition variable
+//
+//        Mutex guard;
+//        Condition condition(guard);
+//
+//        Lock l(guard);           assert(l.holds(guard))
+//        signalled = false;
+//        while(!signalled)        // see [1]
+//        {
+//           condition.wait(l);
+//        }
+//                                 assert(l.holds(guard))
+//
+//
+//        [1] Note that it is allowable for
+//            pthread_cond_[timed]wait to return before
+//            the timeout even though nobody has called
+//            signal: so have to have state explicitly
+//            shared between the waiter/signaller.
+//
+#include <chrono>
+#include <pthread.h>
+#include <xju/assert.hh> //impl
+#include <xju/Mutex.hh> //impl
+#include <xju/Lock.hh> //impl
+#include <xju/unix_epoch.hh> //impl
+#include <xju/Mutex.hh>
+
+namespace xju
+{
+class Mutex;
+class Lock;
+
+class Condition
+{
+public:
+  //
+  // pre: lifetime(guard) > lifetime(this)
+  //
+  explicit Condition(Mutex& guard) throw():
+      _guard(guard)
+  {
+    assert_equal(pthread_cond_init(&_impl, 0),0);
+  }
+  
+  //
+  // pre: l.holds(guard)
+  //
+  void signal(const Lock& l) throw()
+  {
+    assert_equal(l.holds(_guard), true);
+    
+    assert_equal(pthread_cond_signal(&_impl),0);
+  }
+  
+  //
+  // Unlock guard, wait for signal() to be
+  // called, then relock guard.
+  //
+  // Note that this can return even though
+  // signal has not been called since we locked
+  // guard - see note [1] in Examples at top of file.
+  //
+  // pre: l.holds(guard)
+  // post: l.holds(guard)
+  //
+  void wait(Lock& l) throw()
+  {
+    assert_equal(l.holds(_guard), true);
+    
+    assert_equal(pthread_cond_wait(&_impl, &_guard._impl),0);
+  }
+  
+  //
+  // Unlock guard, wait at most the specified amount
+  // of time for signal() to be called.
+  //
+  // Timeout is absolute.
+  //
+  // Note that return before timeout does not necessarily
+  // mean signal() has been called - see note [1].
+  //
+  void wait(Lock& l,
+            const std::chrono::system_clock::time_point& timeout) throw()
+  {
+    assert_equal(l.holds(_guard), true);
+
+    auto const d(timeout-xju::unix_epoch());
+    auto const s(std::chrono::duration_cast<std::chrono::seconds>(d));
+    auto const us(std::chrono::duration_cast<std::chrono::nanoseconds>(d));
+    
+    struct timespec ts_abs;
+    
+    ts_abs.tv_sec  = s.count();
+    ts_abs.tv_nsec = us.count();
+    
+    int s = pthread_cond_timedwait(&_impl, &_guard._impl, &ts_abs);
+    
+    if (!(s==0 || s == ETIMEDOUT || s == EINTR)) {
+      assert_abort();
+    }
+  }
+  
+  
+  ~Condition() throw()
+  {
+    assert_equal(pthread_cond_destroy(&_impl),0);
+  }
+  
+private:
+  Mutex& _guard;
+  pthread_cond_t _impl;
+};
+
+}

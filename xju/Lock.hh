@@ -7,6 +7,19 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
+//    Example:
+//
+//    Lock mutex guarding data, and update data
+//
+//        Data data = ...;
+//        Mutex guard;             assert(!guard.isHeld());
+//
+//        Lock l(guard);           assert(guard.isHeld());
+//                                 assert(l.holds(guard));
+//
+//        data = new_value;
+//
+//
 #ifndef XJU_LOCK_HH
 #define XJU_LOCK_HH
 
