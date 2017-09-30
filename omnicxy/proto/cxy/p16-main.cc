@@ -19,8 +19,7 @@
 #include <xju/format.hh>
 #include <xju/stringToInt.hh>
 #include <stdlib.h>
-#include <xju/mt.hh>
-#include <xju/Time.hh>
+#include <chrono>
 #include <cxy/ORB.hh>
 #include "xju/Shared.hh"
 #include <xju/stringToUInt.hh>
@@ -158,7 +157,8 @@ int main(int argc, char* argv[])
       BBB_impl y(xa.ior());
       cxy::sref<p16::BBB> const xb(orb, OBJECT_NAME, y);
       
-      orb.monitorUntil(xju::Time::now()+xju::MicroSeconds(30*1000000));
+      orb.monitorUntil(std::chrono::system_clock::now()+
+                       std::chrono::seconds(30));
     }
     else
     {

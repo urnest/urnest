@@ -34,7 +34,6 @@ ip%tests.tree
 ()+cmd=(test-Traced.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-format.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-functional.cc+(..%cxx-opts):auto.cxx.exe):exec.output
-()+cmd=(test-mt.cc+(..%cxx-opts)+ld_flags=-lpthread:auto.cxx.exe):exec.output
 ()+cmd=(test-path.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-pipe.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-split.cc+(..%cxx-opts):auto.cxx.exe):exec.output

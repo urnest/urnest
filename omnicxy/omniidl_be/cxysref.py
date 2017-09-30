@@ -134,10 +134,10 @@ public:
   }
   ~sref() throw()
   {
-    xju::mt::Lock l(guard_);
+    xju::Lock l(guard_);
     // impl might be deleted during deactivate or sometime after, which
     // is why we use a separate thread
-    xju::mt::Thread<sref_impl> t(*impl_, &sref_impl::deactivate);
+    xju::Thread t([this](){this->impl_->deactivate();});
     while(!impl_deleted_) {
       c_.wait(l);
     }
@@ -186,13 +186,13 @@ private:
   // sref_if::
   virtual void impl_deleted() throw()
   {
-    xju::mt::Lock l(guard_);
+    xju::Lock l(guard_);
     impl_deleted_=true;
     c_.signal(l);
   }
 
-  xju::mt::Mutex guard_;
-  xju::mt::Condition c_;
+  xju::Mutex guard_;
+  xju::Condition c_;
   bool impl_deleted_;
   cxy::sref_impl* impl_;
   
@@ -338,7 +338,9 @@ template='''\
 #include <omniORB4/omniServant.h> // impl
 #include <omniORB4/internal/giopStream.h> // impl
 
-#include <xju/mt.hh>
+#include <xju/Lock.hh>
+#include <xju/Thread.hh>
+#include <xju/Condition.hh>
 #include <string>
 #include <xju/Optional.hh> //impl
 #include <cxy/cdr.hh> //impl

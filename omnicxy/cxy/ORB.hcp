@@ -16,10 +16,13 @@
 #include <cxy/copyContext.hh>
 #include <cxy/Exceptions.hh>
 #include <cxy/translateException.hh>
-#include <xju/mt.hh>
 #include <xju/Time.hh>
 #include <xju/Optional.hh>
 #include <cxy/WrongType.hh>
+#include <xju/Lock.hh>
+#include <xju/Mutex.hh>
+#include <xju/Condition.hh>
+#include <xju/Thread.hh>
 
 namespace cxy
 {
@@ -44,9 +47,12 @@ public:
     BaseException) try:
     impl_(orbEndPoint),
     e_changed_(guard_),
-    t_(*this, 
-       &cxy::ORB<BaseException>::run, // exceptions?
-       &cxy::ORB<BaseException>::stop){
+      t_([this](){
+          this->run();
+        },
+        [this](){
+          this->stop();
+        }){
   }
   catch(cxy::PortInUse& e)
   {
@@ -72,12 +78,12 @@ public:
     throw x;
   }
   // monitor ORB until the specified time
-  void monitorUntil(xju::Time const& t) throw(
+  void monitorUntil(std::chrono::system_clock::time_point const& t) throw(
     // ORB exception
     BaseException)
   {
-    xju::mt::Lock l(guard_);
-    while(!e_.valid() && xju::Time::now()<t) {
+    xju::Lock l(guard_);
+    while(!e_.valid() && std::chrono::system_clock::now()<t) {
       e_changed_.wait(l, t);
     }
     if (e_.valid()) {
@@ -87,11 +93,11 @@ public:
   
 private:
   ORBImpl impl_;
-  xju::mt::Mutex guard_;
+  xju::Mutex guard_;
   xju::Optional<BaseException> e_;
-  xju::mt::Condition e_changed_;
+  xju::Condition e_changed_;
   
-  xju::mt::Thread<cxy::ORB<BaseException> > t_;
+  xju::Thread t_;
   
   template<class T>
   friend class cref;
@@ -149,7 +155,7 @@ private:
       }
     }
     catch(BaseException& e) {
-      xju::mt::Lock l(guard_);
+      xju::Lock l(guard_);
       e_=e;
       e_changed_.signal(l);
     }

@@ -19,8 +19,10 @@
 #include <xju/format.hh>
 #include <xju/stringToInt.hh>
 #include <stdlib.h>
-#include <xju/mt.hh>
-#include <xju/Time.hh>
+#include <xju/Lock.hh>
+#include <xju/Mutex.hh>
+#include <xju/Condition.hh>
+#include <chrono>
 #include <cxy/ORB.hh>
 #include <unistd.h>
 
@@ -54,13 +56,13 @@ public:
   virtual void f1(std::string const& x) throw(cxy::Exception)
   {
     std::cout << "F::f1(" << x.size() << ")" << std::endl;
-    xju::mt::Lock l(guard_);
+    xju::Lock l(guard_);
     calls_.push_back(x);
     changed_.signal(l);
   }
 
-  xju::mt::Mutex guard_;
-  xju::mt::Condition changed_;
+  xju::Mutex guard_;
+  xju::Condition changed_;
   std::vector<std::string> calls_;
 };
 
@@ -103,7 +105,8 @@ int main(int argc, char* argv[])
       
       cxy::sref<p9::F> const xa(orb, OBJECT_NAME, x);
       
-      orb.monitorUntil(xju::Time::now()+xju::MicroSeconds(30*1000000));
+      orb.monitorUntil(std::chrono::system_clock::now()+
+                       std::chrono::seconds(30));
     }
     else
     {
@@ -117,11 +120,13 @@ int main(int argc, char* argv[])
       ref->f1("fred");
       ref->f1(std::string(6000,'a'));
       ref->f1(std::string(10000,'a'));
-      xju::mt::Lock l(x.guard_);
-      xju::Time const onlyWaitUntil(xju::Time::now()+
-                                    xju::MicroSeconds(5000000));
+      xju::Lock l(x.guard_);
+      auto const onlyWaitUntil(
+        std::chrono::system_clock::now()+
+        std::chrono::seconds(5));
       
-      while((x.calls_.size()<3) && (xju::Time::now()<onlyWaitUntil)) {
+      while((x.calls_.size()<3) &&
+            (std::chrono::system_clock::now()<onlyWaitUntil)) {
         x.changed_.wait(l,onlyWaitUntil);
       }
       xju::assert_equal(x.calls_.size(),3);

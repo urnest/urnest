@@ -16,7 +16,7 @@
 #include <typeinfo>
 #include "xju/stringToInt.hh"
 #include <stdlib.h>
-#include "xju/mt.hh"
+#include "xju/Thread.hh"
 
 xju::Exception translate(CORBA::Exception const& e) throw()
 {
@@ -171,9 +171,9 @@ int main(int argc, char* argv[])
       
       server(orb, OBJECT_NAME);
 
-      xju::mt::Thread<CORBA::ORB> server_t(*orb, 
-                                           &CORBA::ORB::run,
-                                           &CORBA::ORB::destroy);
+      xju::Thread server_t(
+        [orb](){ orb->run(); },
+        [orb](){ orb->destroy(); });
       
       client(argc, argv, port, OBJECT_NAME);
     }

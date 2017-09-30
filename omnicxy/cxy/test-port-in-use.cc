@@ -49,4 +49,3 @@ int main(int argc, char* argv[])
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }
-
