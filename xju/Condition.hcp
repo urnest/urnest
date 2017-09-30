@@ -107,13 +107,13 @@ public:
     assert_equal(l.holds(_guard), true);
 
     auto const d(timeout-xju::unix_epoch());
-    auto const s(std::chrono::duration_cast<std::chrono::seconds>(d));
-    auto const us(std::chrono::duration_cast<std::chrono::nanoseconds>(d));
+    auto const se(std::chrono::duration_cast<std::chrono::seconds>(d));
+    auto const ns(std::chrono::duration_cast<std::chrono::nanoseconds>(d-se));
     
     struct timespec ts_abs;
     
-    ts_abs.tv_sec  = s.count();
-    ts_abs.tv_nsec = us.count();
+    ts_abs.tv_sec  = se.count();
+    ts_abs.tv_nsec = ns.count();
     
     int s = pthread_cond_timedwait(&_impl, &_guard._impl, &ts_abs);
     
