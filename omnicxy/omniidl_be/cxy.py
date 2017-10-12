@@ -283,6 +283,13 @@ struct %(name)s : %(eclass)s
 
   ~%(name)s() throw(){}
 
+  // pre: %(eclass)s(T) constructs a %(eclass)s
+  template<class T>
+  explicit %(name)s(
+    T const& p) throw():
+      %(eclass)s(p) {
+  }
+  
   %(name)s(%(consparams)s
     // %(eclass)s params
     std::string const& cause, 
