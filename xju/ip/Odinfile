@@ -19,3 +19,8 @@ v4%tests.tree
 %hcp-subdir-spec==<<
 %v4==v4%hcp-gen
 
+%tags==%all.list-of-tags:merged-tags
+
+%all.list-of-tags==<<
+.:merged-tags
+v4%tags

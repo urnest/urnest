@@ -6,3 +6,5 @@
 %tests.tree==<<
 
 %hcp-gen==.:dir.hcp.list+G+hpath='xju/file':hcp-split-virdir-specs:cat:vir_dir
+
+%tags==.:merged-tags

@@ -25,3 +25,7 @@ hcp%all.tree
 %idl-gen.virdir_spec == <<
 %hcp==hcp%idl-gen
 %cxy==omnicxy/cxy%idl-gen
+
+
+%tags==%all.list-of-tags:merged-tags
+

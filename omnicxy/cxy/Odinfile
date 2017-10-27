@@ -30,4 +30,4 @@
 %cxx-opts==<<
 +(..%cxx-opts)
 
-%tags==.:tree_tags
+%tags==.:merged-tags

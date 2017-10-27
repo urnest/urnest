@@ -12,19 +12,22 @@ $ODIN_HCP_TAGS 'name of the hcp-tags program' = 'hcp-tags';
 $ODIN_HCP_TAGS_MERGE 'name of the hcp-tags-merge program' = 'hcp-tags-merge';
 
 *.hcp => :hcp;
+*.list-of-tags => :list-of-tags;
+:tags.sm 'manual list of :tags' => :FILE;
 
 :hcp 'hcp file' => :FILE;
 :tags 'hcp-tags file'? => :FILE;
 :htags 'hcp-tags from a :h' => :tags;
 :hcptags 'hcp-tags from a :hcp' => :tags;
+:merged-tags ':tags file merged togeter to for a new :tags file'? => :tags;
+
+:list-of-tags 'file listing :tags file'? => :FILE;
+:list-of-tags.list 'list from :list-of-tags ' => :LIST;
 
 :dir_taggable ':h and :hcp files of a directory' => :LIST;
-:dir_tags_list 'list of :tags for a directory' => :LIST;
+:dir.list-of-tags 'list of :tags for a directory ie all header and hcp files in a directory'? => :list-of-tags.list;
 
-:dir_tags 'hcp-tags file covering all header and hcp files in a directory'?
-  => :tags;
-:tree_tags_list 'list of :dir_tags for a directory tree' => :LIST;
-:tree_tags 'hcp-tags file covering all header and hcp files in a directory tree'? => :tags;
+:merged_tags ':tags file from :list-of-tags'? => :tags;
 
 :which-hcp-tags 'hcp-tags exe from +hcp-tags or ODIN_HCP_TAGS_PATH hcp-tags'
   => :REFERENCE;
@@ -39,17 +42,13 @@ COLLECT (:which-hcp-tags-viewspec:view:first) => (:which-hcp-tags);
 
 #:FILE here is a directory
 COLLECT (:FILE:list:extract=:h) (:FILE:list:extract=:hcp) => (:dir_taggable);
-COLLECT (:dir_taggable:map=:tags) => (:dir_tags_list);
+COLLECT (:dir_taggable:map=:tags) => (:dir.list-of-tags);
 
 EXEC (hcp-tags.sh) (:h) 'htags' (:which-hcp-tags) => (:htags);
 EXEC (hcp-tags.sh) (:hcp) 'hcptags' (:which-hcp-tags) => (:hcptags);
 
-COLLECT (:dirtree:leaves:map=:dir_tags) => (:tree_tags_list);
+READ-LIST (:list-of-tags) => (:list-of-tags.list);
 
-EXEC (hcp-tags-merge.sh) (:dir_tags_list:ls) 'dir_tags'
-  NEEDS (:dir_tags_list)
-  => (:dir_tags);
-
-EXEC (hcp-tags-merge.sh) (:tree_tags_list:ls) 'tree_tags'
-  NEEDS (:tree_tags_list)
-  => (:tree_tags);
+EXEC (hcp-tags-merge.sh) (:list-of-tags.list:ls) 'merged-tags'
+  NEEDS (:list-of-tags.list)
+  => (:merged-tags);

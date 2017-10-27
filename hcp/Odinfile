@@ -231,4 +231,8 @@ hcp/translateException.cc==./translateException.cc
 
 %test-xju-tags-no-warnings==()+cmd=cmp (../xju%tags:warn) '-':stdout
 
-%tags==.:tree_tags
+%tags==%all.list-of-tags:merged-tags
+
+%all.list-of-tags==<<
+.:merged-tags
+tags%tags

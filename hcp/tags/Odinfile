@@ -96,3 +96,4 @@ class A : std::ostream { F c;
   void c() { Q::Z z; }
 };
 
+%tags==.:merged-tags

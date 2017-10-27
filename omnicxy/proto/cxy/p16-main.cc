@@ -178,6 +178,7 @@ int main(int argc, char* argv[])
         cxy::cref<p16::BBB> ref(orb, makeURI(port, OBJECT_NAME));
         cxy::IOR<p16::AAA> aior(ref->getA());
         cxy::cref<p16::AAA> a(orb, aior);
+        a.ior();
         a->f(11);
         xju::assert_equal(x.calls_.size(),1U);
         {
@@ -201,6 +202,10 @@ int main(int argc, char* argv[])
           xju::assert_never_reached();
         }
         catch(cxy::Exceptions< cxy::Exception >::WrongType const&) {
+        }
+        {
+
+          cxy::cref<p16::CCC> c(orb,a.ior());
         }
       }
     }

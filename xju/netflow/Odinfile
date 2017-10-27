@@ -13,3 +13,4 @@
 
 %hcp-local-spec==.:dir.hcp.list+G+hpath='xju/netflow':hcp-split-virdir-specs:cat
 
+%tags==.:merged-tags

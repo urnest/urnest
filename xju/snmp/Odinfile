@@ -113,3 +113,6 @@ done
 EOF
 )
 END
+
+
+%tags==.:merged-tags

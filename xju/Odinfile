@@ -73,6 +73,12 @@ netflow%tests.tree
 #!/bin/sh
 "$1" $(hostname)
 
+%tags==%all.list-of-tags:merged-tags
 
-%tags==.:tree_tags
-
+%all.list-of-tags==<<
+.:merged-tags
+io%tags
+ip%tags
+file%tags
+snmp%tags
+netflow%tags

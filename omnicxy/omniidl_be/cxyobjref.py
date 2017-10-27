@@ -117,10 +117,10 @@ private:
   virtual void* _ptrToObjRef(const char* repoId)
   {
     if (repoId == cxy::cdr< ::%(fqn)s >::repoId%(inherit_equal_repoids)s)
-      return this;
+      return (objref< ::%(fqn)s >*)this;
     
     if (omni::strMatch(repoId, cxy::cdr< ::%(fqn)s >::repoId)%(inherit_equal_repoid_strs)s)
-      return this;
+      return (objref< ::%(fqn)s >*)this;
     
     if (repoId == ::CORBA::Object::_PD_repoId)
       return (::CORBA::Object_ptr) this;

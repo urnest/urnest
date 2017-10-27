@@ -3,6 +3,14 @@ key:
   "-" means to-be-done
   "~" means decided not to do
 
+* p16-main core dump
+  omniObjRef::_getIOR return value ownership?
+  x- step through using omniORB debug build
+  x a's obj_ seems broken when we come to use it at line 207
+  x was it always broken? Yes
+  - why is it broken? Need to look at equivalent cxx code?
+  - see how it was constructed
+  
 - union: promote variant structure members to get more natural
   C++ code, if can only have one data type per variant type
 
