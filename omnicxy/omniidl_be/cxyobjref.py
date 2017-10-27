@@ -114,13 +114,14 @@ private:
     %(calldesc_content)s
   };
   // CORBA::Object::
+  // result is a CORBA::Object* not a omniObjRef as the name suggest
   virtual void* _ptrToObjRef(const char* repoId)
   {
-    if (repoId == cxy::cdr< ::%(fqn)s >::repoId%(inherit_equal_repoids)s)
-      return (objref< ::%(fqn)s >*)this;
-    
-    if (omni::strMatch(repoId, cxy::cdr< ::%(fqn)s >::repoId)%(inherit_equal_repoid_strs)s)
-      return (objref< ::%(fqn)s >*)this;
+    if (repoId == cxy::cdr< ::%(fqn)s >::repoId)
+      return (objref< ::%(fqn)s >*)this;%(inherit_equal_repoids)s
+
+    if (omni::strMatch(repoId, cxy::cdr< ::%(fqn)s >::repoId))
+      return (objref< ::%(fqn)s >*)this;%(inherit_equal_repoid_strs)s
     
     if (repoId == ::CORBA::Object::_PD_repoId)
       return (::CORBA::Object_ptr) this;
@@ -242,10 +243,10 @@ def gen(decl,eclass,eheader,indent=''):
                 [',\n      objref< ::%(_)s >(ior,id)'%vars()
                  for _ in inherit_fqns])
             inherit_equal_repoids=''.join(
-                ['||\n        repoId == cxy::cdr< ::%(_)s >::repoId'%vars()
+                ['\n    if (repoId == cxy::cdr< ::%(_)s >::repoId)\n      return (objref< ::%(_)s >*)this;'%vars()
                  for _ in inherit_fqns])
             inherit_equal_repoid_strs=''.join(
-                ['||\n        omni::strMatch(repoId, cxy::cdr< ::%(_)s >::repoId)'%vars()
+                ['\n    if (omni::strMatch(repoId, cxy::cdr< ::%(_)s >::repoId))\n      return (objref< ::%(_)s >*)this;'%vars()
                  for _ in inherit_fqns])
             result=interface_t%vars()
         elif isinstance(decl, idlast.Typedef):
