@@ -39,6 +39,7 @@ ip%tests.tree
 ()+cmd=(test-split.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-startsWith.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-stringToDouble.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-stringToFloat.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-stringToInt.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-stringToTime.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-stringToUInt.cc+(..%cxx-opts):auto.cxx.exe):exec.output

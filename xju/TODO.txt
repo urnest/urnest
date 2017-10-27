@@ -14,6 +14,9 @@ test-format add format::octal tests for int, long, long long
 
 - add hcp::path::makeRelative
 
+- way to get string-to-Float<Tag,float,E> by calling stringToFloat
+  and string-to-Float<Tag,double,E> by calling stringToDouble
+
 * mkdir gets wrong perms?
 add xju::file::rm,rmdir,stat,stat(dir),ls
 
