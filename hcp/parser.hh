@@ -57,6 +57,15 @@ I parse(hcp_ast::CompositeItem& parent,
     // post: parent unmodified
     xju::Exception);
 
+// ... or apply parser to begin..end
+// - note parser must consume entire string
+hcp_ast::CompositeItem parseString(
+  std::string::const_iterator begin,
+  std::string::const_iterator end,
+  xju::Shared<Parser> parser,
+  bool traceToStdout = false) throw(
+    xju::Exception);
+
 class Exception
 {
 public:

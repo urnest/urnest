@@ -2282,6 +2282,15 @@ void test43()
     }
   }
 }
+void test44()
+{
+  {
+    std::string const x("abc");
+    auto r(hcp_parser::parseString(x.begin(),x.end(),
+                                   hcp_parser::parseLiteral("abc")));
+    xju::assert_equal(reconstruct(r),"abc");
+  }
+}
 
 
 int main(int argc, char* argv[])
@@ -2330,6 +2339,7 @@ int main(int argc, char* argv[])
   test41(), ++n;
   test42(), ++n;
   test43(), ++n;
+  test44(), ++n;
   
   xju::assert_equal(atLeastOneReadableReprFailed, false);
   std::cout << "PASS - " << n << " steps" << std::endl;

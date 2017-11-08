@@ -2593,5 +2593,17 @@ I parse(hcp_ast::CompositeItem& parent,
   }
 }
 
+hcp_ast::CompositeItem parseString(
+  std::string::const_iterator begin,
+  std::string::const_iterator end,
+  xju::Shared<Parser> parser,
+  bool traceToStdout) throw(
+    xju::Exception)
+{
+  hcp_ast::CompositeItem root;
+  I const startOfElement(begin,end);
+  parse(root,startOfElement,parser+endOfFile(),traceToStdout);
+  return root;
+}
 
 }
