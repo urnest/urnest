@@ -118,10 +118,10 @@ private:
   virtual void* _ptrToObjRef(const char* repoId)
   {
     if (repoId == cxy::cdr< ::%(fqn)s >::repoId)
-      return (objref< ::%(fqn)s >*)this;%(inherit_equal_repoids)s
+      return (objref< ::%(fqn)s >*)this;%(inherit_cast_repoids)s
 
     if (omni::strMatch(repoId, cxy::cdr< ::%(fqn)s >::repoId))
-      return (objref< ::%(fqn)s >*)this;%(inherit_equal_repoid_strs)s
+      return (objref< ::%(fqn)s >*)this;%(inherit_cast_repoid_strs)s
     
     if (repoId == ::CORBA::Object::_PD_repoId)
       return (::CORBA::Object_ptr) this;
@@ -242,11 +242,17 @@ def gen(decl,eclass,eheader,indent=''):
             initinherits=''.join(
                 [',\n      objref< ::%(_)s >(ior,id)'%vars()
                  for _ in inherit_fqns])
-            inherit_equal_repoids=''.join(
+            inherit_cast_repoids=''.join(
                 ['\n    if (repoId == cxy::cdr< ::%(_)s >::repoId)\n      return (objref< ::%(_)s >*)this;'%vars()
                  for _ in inherit_fqns])
-            inherit_equal_repoid_strs=''.join(
+            inherit_cast_repoid_strs=''.join(
                 ['\n    if (omni::strMatch(repoId, cxy::cdr< ::%(_)s >::repoId))\n      return (objref< ::%(_)s >*)this;'%vars()
+                 for _ in inherit_fqns])
+            inherit_equal_repoids=''.join(
+                [' ||\n       (repoId == cxy::cdr< ::%(_)s >::repoId)'%vars()
+                 for _ in inherit_fqns])
+            inherit_equal_repoid_strs=''.join(
+                [' ||\n       (omni::strMatch(repoId, cxy::cdr< ::%(_)s >::repoId))'%vars()
                  for _ in inherit_fqns])
             result=interface_t%vars()
         elif isinstance(decl, idlast.Typedef):

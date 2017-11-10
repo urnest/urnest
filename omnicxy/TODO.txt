@@ -91,6 +91,18 @@ key:
 - inherit interface multi-level
 - inherit multiple interfaces
 - inherit interface diamond
+x p16a-main:
+    x inherit base implementation:
+      interface IfA { void f(); }
+      interface IfB : IfA { void g(); }
+      class A : public virtual IfA { void f() { ...; } };
+      class B : public virtual A, public virtual IfB {
+        void g() { ...; }
+      };
+      x remote access a B as an A
+      x narrow to a B
+      ... just like p16
+    
 - in-place struct union member union(short){ 1: struct X{ long a_;}; }
 - recursive union
 - bounded strings

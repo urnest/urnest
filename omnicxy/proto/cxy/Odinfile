@@ -154,6 +154,7 @@ echo.sref.cc==%gen/echo.sref.cc
 ()+cmd=(%p14-main)+cmd='3748'+cmd='both':exec.output
 ()+cmd=(%p15-main)+cmd='3749'+cmd='both':exec.output
 ()+cmd=(%p16-main)+cmd='3750'+cmd='both':exec.output
+()+cmd=(%p16b-main)+cmd='3750'+cmd='both':exec.output
 ()+cmd=(%echo-main)+cmd='3751'+cmd='both':exec.output
 ()+cmd=(%p17-main)+cmd='3752'+cmd='both':exec.output
 ()+cmd=(%p18-main)+cmd='3754'+cmd='both':exec.output
@@ -189,6 +190,7 @@ ext%tests.tree
 %p14-main==p14-main.cc+(%cxx-opts):auto.cxx.exe
 %p15-main==p15-main.cc+(%cxx-opts):auto.cxx.exe
 %p16-main==p16-main.cc+(%cxx-opts):auto.cxx.exe
+%p16b-main==p16b-main.cc+(%cxx-opts):auto.cxx.exe
 %p17-main==p17-main.cc+(%cxx-opts):auto.cxx.exe
 %p18-main==p18-main.cc+(%cxx-opts):auto.cxx.exe
 %p20-main==p20-main.cc+(%cxx-opts):auto.cxx.exe

@@ -4,6 +4,7 @@
 xju%all.tree
 omnicxy%all.tree
 hcp%all.tree
+%tags
 
 %cxx-opts==<<
 +inc_sp=(omnicxy)
@@ -28,4 +29,10 @@ hcp%all.tree
 
 
 %tags==%all.list-of-tags:merged-tags
+
+%all.list-of-tags==<<
+.:merged-tags
+xju%tags
+hcp%tags
+omnicxy/cxy%tags
 
