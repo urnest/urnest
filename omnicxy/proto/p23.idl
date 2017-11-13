@@ -1,0 +1,13 @@
+interface A {
+  string fa();
+};
+interface B : A {
+  string fb();
+};
+interface C {
+  string fc();
+};
+interface D : C {
+};
+interface X : B, D{
+};
