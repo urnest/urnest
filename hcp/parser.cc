@@ -1814,8 +1814,8 @@ PR function_post_qualifiers() throw()
     new NamedParser<hcp_ast::FunctionQualifiers>(
       "function post-qualifiers",
       cv()+
-      zeroOrMore()*(keyword_override()|
-                    throw_clause())));
+      (!(keyword_throw()|keyword_noexcept())|throw_clause())+
+      optional(keyword_override())));
   return result;
 }
 

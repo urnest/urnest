@@ -178,7 +178,7 @@ namespace g2{
 
 %test-scope-at-2.hcp==<<
 void f() throw(E) {
-};
+}
 
 %hcp-split-bootstrap.tree==%hcp-split-bootstrap.vir_tree_spec:vir_tree
 
