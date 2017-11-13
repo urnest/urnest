@@ -90,7 +90,9 @@ key:
 
 - inherit interface multi-level
 - inherit multiple interfaces
-- inherit interface diamond
+- p23.idl:
+  - inherit interface diamond
+
 x p16a-main:
     x inherit base implementation:
       interface IfA { void f(); }

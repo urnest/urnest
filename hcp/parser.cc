@@ -537,14 +537,18 @@ public:
   virtual ParseResult parse_(I const at, Options const& o) throw() 
   {
     I end(at);
-    for(; !end.atEnd(); ++end) {
-      ParseResult const r(x_->parse_(end, o));
-      if (!r.failed()) {
+    do{
+      ParseResult r(x_->parse_(end, o));
+      if (!r.failed()){
         xju::Shared<hcp_ast::String> item(new hcp_ast::String(at, end));
         return ParseResult(std::make_pair(IRs(1U, item), end));
       }
+      if (end.atEnd()) {
+        return ParseResult(EndOfInput(end, XJU_TRACED));
+      }
+      ++end;
     }
-    return ParseResult(EndOfInput(end, XJU_TRACED));
+    while(true);
   }
   virtual std::string target() const throw() {
     std::ostringstream s;

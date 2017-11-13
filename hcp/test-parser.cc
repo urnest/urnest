@@ -2291,6 +2291,24 @@ void test44()
     xju::assert_equal(reconstruct(r),"abc");
   }
 }
+void test45()
+{
+  {
+    std::string const x("aaa");
+    auto r(hcp_parser::parseString(x.begin(),x.end(),
+                                   hcp_parser::parseUntil(
+                                     hcp_parser::parseLiteral("a"),
+                                     hcp_parser::endOfFile())));
+    xju::assert_equal(reconstruct(r),"aaa");
+  }
+  {
+    std::string const x("aaa");
+    auto r(hcp_parser::parseString(x.begin(),x.end(),
+                                   hcp_parser::parseUntil(
+                                     hcp_parser::endOfFile())));
+    xju::assert_equal(reconstruct(r),"aaa");
+  }
+}
 
 
 int main(int argc, char* argv[])
@@ -2340,6 +2358,7 @@ int main(int argc, char* argv[])
   test42(), ++n;
   test43(), ++n;
   test44(), ++n;
+  test45(), ++n;
   
   xju::assert_equal(atLeastOneReadableReprFailed, false);
   std::cout << "PASS - " << n << " steps" << std::endl;
