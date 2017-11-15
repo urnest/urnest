@@ -1,0 +1,78 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <string>
+#include <vector>
+#include <chrono>
+#include <new>
+#include <xju/Exception.hh>
+#include <xju/pipe.hh> //impl
+#include <sstream> //impl
+#include <xju/Subprocess.hh> //impl
+#include <xju/unistd.hh> //impl
+#include <algorithm> //impl
+#include <iterator> //impl
+
+namespace xju
+{
+// run command by a deadline, capturing its stdout,
+// killing subprocess on timeout
+std::string doCmd(std::vector<std::string> const& cmd,
+                  std::chrono::system_clock::time_point const& deadline)
+  throw(std::bad_alloc,xju::Exception)
+{
+  std::chrono::milliseconds const timeout(
+    std::chrono::duration_cast<std::chrono::milliseconds>(
+      deadline-std::chrono::system_clock::now()));
+  try{
+    auto p(xju::pipe(true,false)); // to capture output of subprocess
+    int exitStatus(0);
+    std::ostringstream output;
+    try {
+      Subprocess command(exitStatus,[&]() -> int { 
+          p.second->useAsStdout(); // use writable end of pipe as stdout
+          xju::exec(cmd[0],cmd);
+          return 0;
+        });
+      p.second.reset();//close writable end of pipe in parent process
+      std::vector<char> buffer(512,0);
+      while(std::chrono::system_clock::now()<deadline){
+        buffer.resize(p.first->read(buffer.data(),512,deadline));
+        std::copy(buffer.begin(),buffer.end(),
+                  std::ostream_iterator<char>(output));
+      }
+      throw xju::Exception("timeout",XJU_TRACED);
+      // note exiting this block will kill(9) the subprocess, but that
+      // has no effect if it has exited already. Exiting this block
+      // also "waits" for the subprocess, collecting its exit status
+    }
+    catch(xju::io::Input::Closed&)
+    {
+      // pipe closes when subprocess exits
+    }
+    if (exitStatus!=0){
+      std::ostringstream s;
+      s << "command failed with status " << exitStatus;
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    return output.str();
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "run " << xju::format::join(cmd.begin(),cmd.end(),std::string(" "))
+      << " within " << timeout.count() << "ms";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+  
+}
+
