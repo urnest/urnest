@@ -14,17 +14,19 @@
 #include <sys/stat.h> //impl
 #include <sys/types.h> //impl
 #include "xju/unistd.hh" //impl
+#include <xju/Mode.hh>
 
 namespace xju
 {
 namespace file
 {
 void mkdir(std::pair<xju::path::AbsolutePath,xju::path::DirName> const& d,
-           mode_t mode)
+           Mode mode)
   throw(xju::Exception)
 {
-  xju::syscall(xju::mkdir,XJU_TRACED)(xju::path::str(d).c_str(),mode);
+  xju::syscall(xju::mkdir,XJU_TRACED)(xju::path::str(d).c_str(),mode.value());
 }
 
 }
 }
+

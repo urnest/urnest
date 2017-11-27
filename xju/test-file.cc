@@ -11,6 +11,8 @@
 
 #include <xju/assert.hh>
 #include <iostream>
+#include <xju/Mode.hh>
+#include <xju/file/stat.hh>
 
 namespace xju
 {
@@ -19,13 +21,29 @@ void test1() {
   auto const f(xju::path::split("x/y"));
   auto const d(xju::path::dirname(f));
   
-  xju::file::mkdir(d,0777);
-  xju::file::touch(f,0777);
+  xju::file::mkdir(d,Mode(0777));
+  xju::file::touch(f,Mode(0777));
   xju::assert_equal(xju::file::read(f),"");
-  xju::file::write(f,"fred",0777);
+  xju::file::stat(f);
+  xju::file::write(f,"fred",Mode(0777));
   auto const f2(xju::path::split("z"));
   xju::file::rename(f,f2);
+  try{
+    xju::file::rm(f);
+    xju::assert_never_reached();
+  }
+  catch(xju::SyscallFailed const& e){
+    xju::assert_equal(e._errno,ENOENT);
+  }
   xju::assert_equal(xju::file::read(f2),"fred");
+  xju::file::rm(f2);
+  try{
+    xju::file::stat(f2);
+    xju::assert_never_reached();
+  }
+  catch(xju::SyscallFailed const& e){
+    xju::assert_equal(e._errno,ENOENT);
+  }
 }
 
 }
@@ -39,4 +57,3 @@ int main(int argc, char* argv[])
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }
-

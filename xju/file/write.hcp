@@ -18,6 +18,7 @@
 #include <sstream> //impl
 #include "xju/unistd.hh" //impl
 #include <xju/format.hh> //impl
+#include <xju/Mode.hh>
 
 
 namespace xju
@@ -32,14 +33,14 @@ void write(
   std::pair<xju::path::AbsolutePath,xju::path::FileName> const& file,
   void const* content,
   size_t const contentSize,
-  mode_t const mode) throw(
+  Mode const mode) throw(
     xju::Exception)
 {
   try {
     xju::AutoFd const fd(xju::syscall(xju::open,XJU_TRACED)(
                            xju::path::str(file).c_str(),
                            O_WRONLY|O_CREAT|O_TRUNC|O_CLOEXEC,
-                           mode));
+                           mode.value()));
     uint8_t const*const p((uint8_t const*)content);
     size_t bytesWritten(0);
     do {
@@ -55,7 +56,7 @@ void write(
     s << "write " << contentSize << "-byte content "
       << " to file " << xju::path::str(file)
       << ", creating file with mode "
-      << xju::format::octal(mode)
+      << xju::format::octal(mode.value())
       << " & ~umask & 0777 if necessary";
     e.addContext(s.str(),XJU_TRACED);
     throw;
@@ -65,7 +66,7 @@ void write(
 void write(
   std::pair<xju::path::AbsolutePath,xju::path::FileName> const& file,
   std::string const& content,
-  mode_t const mode) throw(
+  Mode const mode) throw(
     xju::Exception)
 {
   return xju::file::write(file,content.c_str(),content.size(),mode);
@@ -73,3 +74,4 @@ void write(
 
 }
 }
+

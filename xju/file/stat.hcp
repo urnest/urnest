@@ -11,6 +11,7 @@
 #include <xju/path.hh>
 #include <xju/Exception.hh>
 #include <xju/stat.hh> //impl
+#include <xju/SyscallFailed.hh>
 
 typedef struct stat Stat;
 
@@ -19,7 +20,9 @@ namespace xju
 namespace file
 {
 Stat stat(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& file)
-  throw(xju::Exception)
+  throw(
+    // eg ENOENT for no such file
+    xju::SyscallFailed)
 {
   try{
     Stat result;
@@ -36,3 +39,4 @@ Stat stat(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& file)
 
 }
 }
+

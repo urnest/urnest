@@ -10,18 +10,19 @@
 #include <utility>
 #include <xju/path.hh>
 #include "xju/unistd.hh" //impl
+#include <xju/SyscallFailed.hh>
 
 namespace xju
 {
 namespace file
 {
 void rm(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& file)
-  throw(xju::Exception)
+  throw(
+    // eg no such file -> _errno==ENOENT
+    xju::SyscallFailed)
 {
   xju::syscall(xju::unlink,XJU_TRACED)(xju::path::str(file).c_str());
 }
 
 }
 }
-
-

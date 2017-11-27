@@ -17,6 +17,7 @@
 #include <sys/time.h> //impl
 #include "xju/AutoFd.hh" //impl
 #include <sstream> //impl
+#include <xju/Mode.hh>
 
 
 namespace xju
@@ -29,7 +30,7 @@ xju::SyscallF2<int,int,timeval const*> fut{"::futimes",::futimes};
 }
 
 void touch(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& f,
-           mode_t mode)
+           Mode mode)
   throw(xju::Exception)
 {
   try {
@@ -39,7 +40,7 @@ void touch(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& f,
     xju::AutoFd const fd(
       xju::syscall(xju::open,XJU_TRACED)(xju::path::str(f).c_str(),
                                          O_RDONLY|O_CREAT|O_CLOEXEC,
-                                         mode));
+                                         mode.value()));
     xju::syscall(fut,XJU_TRACED)(fd.fd(),n);
   }
   catch(xju::Exception& e) {
@@ -52,3 +53,4 @@ void touch(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& f,
 
 }
 }
+

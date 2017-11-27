@@ -220,6 +220,8 @@ xju/syscall.cc==../xju/syscall.cc
 xju/fcntl.cc==../xju/fcntl.cc
 xju/startsWith.hh==../xju/startsWith.hh
 xju/startsWith.cc==../xju/startsWith.cc
+xju/SyscallFailed.hh==../xju/SyscallFailed.hh
+xju/SyscallFailed.cc==../xju/SyscallFailed.cc
 xju/unistd.cc==../xju/unistd.cc
 hcp/ast.hh==./ast.hh
 hcp/parser.hh==./parser.hh

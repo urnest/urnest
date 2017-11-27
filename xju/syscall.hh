@@ -23,12 +23,11 @@
 #include <xju/Exception.hh>
 #include <xju/Traced.hh>
 #include <errno.h>
-
+#include <xju/SyscallFailed.hh>
 
 namespace xju
 {
     class SyscallInterrupted;
-    class SyscallFailed;
     
     template<class R>
     class Syscall0;
@@ -333,23 +332,6 @@ namespace xju
     class SyscallInterrupted
     {
     };
-    
-    class SyscallFailed : public Exception
-    {
-    public:
-	SyscallFailed(const std::string& name,
-		      const int errno_,
-		      const Traced& location) throw():
-	    Exception(makeCause(name, errno_), location),
-	    _errno(errno_)
-	{
-	}
-	const int _errno;
-    private:
-	std::string makeCause(const std::string& name,
-			      const int errno_) throw();
-    };
-    
     
     template<class R>
     struct SyscallF0
