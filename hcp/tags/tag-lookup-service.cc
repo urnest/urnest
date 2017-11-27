@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
         xju::file::write(tmpFile,
                          "corbaloc:iiop:localhost:"+xju::format::str(port)+
                          "/TagLookupService",
-                         0666);
+                         xju::file::Mode(0666));
         xju::file::rename(tmpFile,uriFile);
         s.run();
         return 0;

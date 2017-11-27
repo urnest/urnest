@@ -47,15 +47,15 @@ void test1() {
   catch(xju::Exception const& e) {
   }
       
-  xju::file::mkdir(xju::path::dirname(f1),0777);
-  xju::file::mkdir(xju::path::dirname(f2),0777);
+  xju::file::mkdir(xju::path::dirname(f1),xju::file::Mode(0777));
+  xju::file::mkdir(xju::path::dirname(f2),xju::file::Mode(0777));
   
   FileObserver o( {f1,f2} );
   xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
   xju::assert_equal(o.read(xju::now()).size(),0U);
   
   // create watched file
-  xju::file::touch(f1,0777);
+  xju::file::touch(f1,xju::file::Mode(0777));
   xju::assert_equal(xju::io::select({&o},xju::now()).size(),1U);
 
   {
@@ -66,16 +66,16 @@ void test1() {
   xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
                        
   // touch existing file - note no change
-  xju::file::touch(f1,0777);
+  xju::file::touch(f1,xju::file::Mode(0777));
   xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
                        
   // create non-watched file
-  xju::file::write(f3,"fred",0777);
+  xju::file::write(f3,"fred",xju::file::Mode(0777));
   xju::assert_equal(o.read(xju::now()).size(),0U);
   xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
   
   // create watched file
-  xju::file::touch(f2,0777);
+  xju::file::touch(f2,xju::file::Mode(0777));
   xju::assert_equal(xju::io::select({&o},xju::now()).size(),1U);
 
   {
@@ -108,9 +108,9 @@ void test1() {
   xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
 
   // two mods
-  xju::file::write(f3,"pete",0777);
+  xju::file::write(f3,"pete",xju::file::Mode(0777));
   xju::file::rename(f3,f1);
-  xju::file::write(f3,"jock",0777);
+  xju::file::write(f3,"jock",xju::file::Mode(0777));
   xju::file::rename(f3,f2);
   xju::assert_equal(xju::io::select({&o},xju::now()).size(),1U);
 

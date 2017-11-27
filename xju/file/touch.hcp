@@ -17,7 +17,7 @@
 #include <sys/time.h> //impl
 #include "xju/AutoFd.hh" //impl
 #include <sstream> //impl
-#include <xju/Mode.hh>
+#include <xju/file/Mode.hh>
 
 
 namespace xju

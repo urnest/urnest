@@ -11,7 +11,7 @@
 
 #include <xju/assert.hh>
 #include <iostream>
-#include <xju/Mode.hh>
+#include <xju/file/Mode.hh>
 #include <xju/file/stat.hh>
 
 namespace xju
@@ -21,11 +21,11 @@ void test1() {
   auto const f(xju::path::split("x/y"));
   auto const d(xju::path::dirname(f));
   
-  xju::file::mkdir(d,Mode(0777));
-  xju::file::touch(f,Mode(0777));
+  xju::file::mkdir(d,xju::file::Mode(0777));
+  xju::file::touch(f,xju::file::Mode(0777));
   xju::assert_equal(xju::file::read(f),"");
   xju::file::stat(f);
-  xju::file::write(f,"fred",Mode(0777));
+  xju::file::write(f,"fred",xju::file::Mode(0777));
   auto const f2(xju::path::split("z"));
   xju::file::rename(f,f2);
   try{

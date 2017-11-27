@@ -12,7 +12,9 @@
 
 namespace xju
 {
+namespace file
+{
 class ModeTag{};
 typedef Int<ModeTag,mode_t> Mode;
 }
-
+}

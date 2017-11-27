@@ -14,7 +14,7 @@
 #include <sys/stat.h> //impl
 #include <sys/types.h> //impl
 #include "xju/unistd.hh" //impl
-#include <xju/Mode.hh>
+#include <xju/file/Mode.hh>
 
 namespace xju
 {

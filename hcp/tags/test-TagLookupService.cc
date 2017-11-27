@@ -15,6 +15,7 @@
 #include <xju/file/write.hh>
 #include <xju/file/rename.hh>
 #include <xju/file/rm.hh>
+#include <xju/file/Mode.hh>
 
 namespace hcp
 {
@@ -45,7 +46,7 @@ void test1() {
   // create a file
   xju::file::write(newTagsFile,
                    "{ \"x\":  [{ \"f\":\"/src/x.hh\",\"l\":23 }] }",
-                   0777);
+                   xju::file::Mode(0777));
   xju::file::rename(newTagsFile,f1);
   
   auto const x_hh(xju::path::split("/src/x.hh"));
@@ -69,7 +70,7 @@ void test1() {
   // create new file
   xju::file::write(newTagsFile,
                    "{ \"y\":  [{ \"f\":\"/src/y.hh\",\"l\":12 }] }",
-                   0777);
+                   xju::file::Mode(0777));
   xju::file::rename(newTagsFile,f2);
   
   auto const y_hh(xju::path::split("/src/y.hh"));
@@ -95,7 +96,7 @@ void test1() {
   xju::file::write(newTagsFile,
                    "{ \"y\":  [{ \"f\":\"/src/y.hh\",\"l\":12 }],"
                    "  \"z\":  [{ \"f\":\"/src/z.hh\",\"l\":99 }] }",
-                   0777);
+                   xju::file::Mode(0777));
 
   xju::file::rename(newTagsFile,f2);
   
@@ -134,4 +135,5 @@ int main(int argc, char* argv[])
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }
+
 
