@@ -23,31 +23,48 @@
 
 namespace xju
 {
-// run command by a deadline, capturing its stdout,
+// run command by a deadline, capturing its stdout and stderr,
 // killing subprocess on timeout
-std::string doCmd(std::vector<std::string> const& cmd,
-                  std::chrono::system_clock::time_point const& deadline)
-  throw(std::bad_alloc,xju::Exception)
+// - result.first is stdout
+// - result.second is stderr
+std::pair<std::string,std::string> doCmd(
+  std::vector<std::string> const& cmd,
+  std::chrono::system_clock::time_point const& deadline) throw(
+    std::bad_alloc,xju::Exception)
 {
   std::chrono::milliseconds const timeout(
     std::chrono::duration_cast<std::chrono::milliseconds>(
       deadline-std::chrono::system_clock::now()));
   try{
-    auto p(xju::pipe(true,false)); // to capture output of subprocess
+    auto p(xju::pipe(true,false)); // to capture stdout of subprocess
+    auto pe(xju::pipe(true,false)); // to capture stderr of subprocess
     int exitStatus(0);
     std::ostringstream output;
+    std::ostringstream cmdstderr;
     try {
       Subprocess command(exitStatus,[&]() -> int { 
           p.second->useAsStdout(); // use writable end of pipe as stdout
+          pe.second->useAsStderr(); // use writable end of pipe as stdout
           xju::exec(cmd[0],cmd);
           return 0;
         });
       p.second.reset();//close writable end of pipe in parent process
+      pe.second.reset();//close writable end of pipe in parent process
       std::vector<char> buffer(512,0);
-      while(std::chrono::system_clock::now()<deadline){
-        buffer.resize(p.first->read(buffer.data(),512,deadline));
-        std::copy(buffer.begin(),buffer.end(),
-                  std::ostream_iterator<char>(output));
+      for(auto now=std::chrono::system_clock::now();
+          now<deadline;
+          now=std::chrono::system_clock::now()){
+        auto r=xju::io::select({&*p.first,&*pe.first},{},deadline);
+        if (r.first.find(&*p.first)!=r.first.end()){
+          buffer.resize(p.first->read(buffer.data(),512,deadline));
+          std::copy(buffer.begin(),buffer.end(),
+                    std::ostream_iterator<char>(output));
+        }
+        if (r.first.find(&*pe.first)!=r.first.end()){
+          buffer.resize(pe.first->read(buffer.data(),512,deadline));
+          std::copy(buffer.begin(),buffer.end(),
+                    std::ostream_iterator<char>(cmdstderr));
+        }
       }
       throw xju::Exception("timeout",XJU_TRACED);
       // note exiting this block will kill(9) the subprocess, but that
@@ -60,10 +77,14 @@ std::string doCmd(std::vector<std::string> const& cmd,
     }
     if (exitStatus!=0){
       std::ostringstream s;
-      s << "command failed with status " << exitStatus;
+      s << "command failed with status " << exitStatus
+        << ", stdout "
+        << xju::format::quote(xju::format::cEscapeString(output.str()))
+        << " and stderr "
+        << xju::format::quote(xju::format::cEscapeString(cmdstderr.str()));
       throw xju::Exception(s.str(),XJU_TRACED);
     }
-    return output.str();
+    return std::make_pair(output.str(),cmdstderr.str());
   }
   catch(xju::Exception& e){
     std::ostringstream s;
