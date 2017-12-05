@@ -411,8 +411,10 @@ void test7()
 void test8()
 {
   assert_equal(format::cEscapeChar('\n'), std::string("\\n"));
-  assert_equal(format::cEscapeString("fred\njock"),
-               std::string("fred\\njock"));
+  assert_equal(format::cEscapeChar('\''), std::string("\\'"));
+  assert_equal(format::cEscapeChar('"'), std::string("\""));
+  assert_equal(format::cEscapeString("'fred'\n\"jock\""),
+               std::string("'fred'\\n\\\"jock\\\""));
 }
 
 // indent

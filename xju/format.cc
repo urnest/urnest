@@ -391,13 +391,9 @@ std::string octal(uint64_t x, const std::string& leader)
 #undef XJU__IS_AN_ABOVE_TYPE
 
 
-std::string cEscapeChar(char const c) throw()
+std::string cEscapeCharCommon(char const c) throw()
 {
   switch(c) {
-  case '\'':
-    return "\\'";
-  case '"':
-    return "\\\"";
   case '\\':
     return "\\\\";
   case '\a':
@@ -422,13 +418,31 @@ std::string cEscapeChar(char const c) throw()
     return "\\"+octal(c);
   }
 }
+std::string cEscapeChar(char const c) throw()
+{
+  switch(c) {
+  case '\'':
+    return "\\'";
+  default:
+    return cEscapeCharCommon(c);
+  }
+}
+std::string cEscapeStringChar(char const c) throw()
+{
+  switch(c) {
+  case '"':
+    return "\\\"";
+  default:
+    return cEscapeCharCommon(c);
+  }
+}
 
 std::string cEscapeString(std::string const& s) throw()
 {
   std::ostringstream result;
   std::transform(s.begin(), s.end(),
                  std::ostream_iterator<std::string>(result),
-                 cEscapeChar);
+                 cEscapeStringChar);
   return result.str();
 }
 
