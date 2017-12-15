@@ -135,6 +135,35 @@ namespace xju
 	std::vector<std::pair<std::string, xju::Traced> > _context;
         mutable xju::Mutex guard_;
         mutable std::string what_;
+
+        friend bool operator<(Exception const& x, Exception const& y) throw()
+        {
+            if (x._cause < y._cause) return true;
+            if (y._cause < x._cause) return false;
+            if (x._context < y._context) return true;
+            if (y._context < x._context) return false;
+            return false;
+        }
+        friend bool operator>(Exception const& x, Exception const& y) throw()
+        {
+            return y<x;
+        }
+        friend bool operator!=(Exception const& x, Exception const& y) throw()
+        {
+            return y<x || x<y;
+        }
+        friend bool operator==(Exception const& x, Exception const& y) throw()
+        {
+            return !(y<x || x<y);
+        }
+        friend bool operator<=(Exception const& x, Exception const& y) throw()
+        {
+            return !(x>y);
+        }
+        friend bool operator>=(Exception const& x, Exception const& y) throw()
+        {
+            return !(x<y);
+        }
     };
 //
 // A human readable representation:
