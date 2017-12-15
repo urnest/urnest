@@ -22,7 +22,8 @@ namespace v5
 
 void test1() {
   std::vector<uint8_t> const x {
-    0x05,0,0,0,
+    0x05,0,
+      0,0x02, //number of flow records
       0x00,0x00,0x45,0x20,//uptime
       0x01,0x23,0x45,0x67,//unix_secs
       0x02,0xab,0xcd,0xef,//unix_nsecs
@@ -105,6 +106,7 @@ void test1() {
   xju::assert_equal(y.second[1].bgpSrcAs_,0x23U);
   xju::assert_equal(y.second[1].bgpDstAs_,0x77U);
 
+  xju::assert_equal(encode(y),x);
   try {
     std::pair<Header,std::vector<Flow> > y(decode(
                                              std::vector<uint8_t>(

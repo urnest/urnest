@@ -172,7 +172,7 @@ std::pair<Header,std::vector<Flow> > decode(
       get32(16,"flow_sequence"));
     std::vector<Flow> records;
     try {
-      for(size_t i=24; i!=udpMessageContent.size(); i+=48) {
+      for(size_t i=24; i<udpMessageContent.size(); i+=48) {
         Flow r(
           xju::ip::v4::Address(get32(i+0,"srcaddr")),
           xju::ip::Port(get16(i+32,"srcport")),
@@ -215,6 +215,68 @@ std::pair<Header,std::vector<Flow> > decode(
   }
 }
 
+
+std::vector<uint8_t> encode(
+  std::pair<Header,std::vector<Flow> >const& x) throw()
+{
+  std::vector<uint8_t> result;
+  auto put8=[&result](uint8_t n){ result.push_back(n); };
+  auto put16=[&result](uint16_t n){
+    result.push_back( (uint8_t)(n>>8) );
+    result.push_back( (uint8_t)(n>>0) );
+  };
+  auto put32=[&result](uint32_t n){
+    result.push_back( (uint8_t)(n>>24) );
+    result.push_back( (uint8_t)(n>>16) );
+    result.push_back( (uint8_t)(n>>8) );
+    result.push_back( (uint8_t)(n>>0) );
+  };
+  put8(5); //version
+  put8(0); //pad
+  put16(x.second.size());
+  put32(x.first.routerUpTime_.count());
+  {
+    auto s(std::chrono::duration_cast<std::chrono::seconds>(
+             x.first.routerTime_-xju::unix_epoch()));
+    auto n(std::chrono::duration_cast<std::chrono::nanoseconds>(
+             x.first.routerTime_-xju::unix_epoch()-s));
+    put32(s.count());
+    put32(n.count());
+  }
+  put32(x.first.flowNumberOfFirstFlow_);
+  put8(0);//engine type
+  put8(0);//engine id
+  put16(0);//sampling_interval
+  xju::assert_equal(result.size(),24U);
+
+  auto routerStartTime=x.first.routerTime_-x.first.routerUpTime_;
+  
+  for(auto f: x.second){
+    put32(f.srcAddress_.value());
+    put32(f.destAddress_.value());
+    put32(f.nextHopRouter_.value());
+    put32(f.interfaceSnmpIndex_);
+    put32(f.packetsInFlow_);
+    put32(f.bytesInFlow_);
+    put32(std::chrono::duration_cast<std::chrono::milliseconds>(
+            f.flowStart_-routerStartTime).count());
+    put32(std::chrono::duration_cast<std::chrono::milliseconds>(
+            f.flowEnd_-routerStartTime).count());
+    put16(f.srcPort_.value());
+    put16(f.destPort_.value());
+    put8(0);
+    put8(f.tcpFlags_);
+    put8(f.ipProtocol_);
+    put8(f.ipTOS_);
+    put16(f.bgpSrcAs_);
+    put16(f.bgpDstAs_);
+    put8(f.srcNetmaskBits_);
+    put8(f.dstNetmaskBits_);
+    put16(0);
+  }
+  xju::assert_equal(result.size(),24+48*x.second.size());
+  return result;
+}
 
 }
 }
