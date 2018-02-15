@@ -86,6 +86,11 @@ namespace xju
             _context(std::move(x._context)),
             what_(std::move(x.what_)) {
         }
+        Exception(std::pair<std::string, xju::Traced> const& cause,
+                  std::vector<std::pair<std::string, xju::Traced> > const& context) throw():
+            _cause(cause),
+            _context(context){
+        }
         Exception& operator=(Exception const& x) throw()
         {
             if (this != &x) {
