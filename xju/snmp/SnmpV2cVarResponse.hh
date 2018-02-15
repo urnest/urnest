@@ -62,6 +62,10 @@ public:
     NoSuchObject,
     NoSuchInstance);
 
+  std::shared_ptr<xju::snmp::Value const> value() const throw(
+    NoSuchObject,
+    NoSuchInstance);
+  
   // return length of encoded value
   // ie return encodeTo(x)-x
   size_t encodedLength() const throw();

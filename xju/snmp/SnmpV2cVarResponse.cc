@@ -54,6 +54,21 @@ xju::snmp::Value const* SnmpV2cVarResponse::operator->() const throw(
   return v_.operator->();
 }
 
+std::shared_ptr<xju::snmp::Value const> SnmpV2cVarResponse::value() const
+  throw(
+    NoSuchObject,
+    NoSuchInstance)
+{
+  if (e_.get()) {
+    if (dynamic_cast<NoSuchObject const*>(e_.get())) {
+      throw dynamic_cast<NoSuchObject const&>(*e_);
+    }
+    throw dynamic_cast<NoSuchInstance const&>(*e_);
+  }
+  return v_;
+}
+
+
 size_t SnmpV2cVarResponse::encodedLength() const throw()
 {
   size_t contentLength(OidValue(oid_).encodedLength()+

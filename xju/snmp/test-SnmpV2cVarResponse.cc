@@ -23,13 +23,22 @@ void test1() {
                                new IntValue(5)));
   xju::assert_equal(x.oid(),Oid(".1.3.4"));
   xju::assert_equal(dynamic_cast<IntValue const&>(*x).val_,5);
+  xju::assert_equal(x.value()->intValue(),5);
 }
 
 void test2() {
-  SnmpV2cVarResponse x(Oid(".1.3.4"),
-                       SnmpV2cVarResponse::NoSuchObject(Oid(".1.3.4"),XJU_TRACED));
+  SnmpV2cVarResponse const x(
+    Oid(".1.3.4"),
+    SnmpV2cVarResponse::NoSuchObject(Oid(".1.3.4"),XJU_TRACED));
   try {
     auto y(dynamic_cast<IntValue const*>(&*x));
+    xju::assert_not_equal(y,y);
+  }
+  catch(SnmpV2cVarResponse::NoSuchObject const& e) {
+    xju::assert_equal(readableRepr(e),"no such object .1.3.4.");
+  }
+  try {
+    auto y(x.value()->intValue());
     xju::assert_not_equal(y,y);
   }
   catch(SnmpV2cVarResponse::NoSuchObject const& e) {
@@ -38,10 +47,18 @@ void test2() {
 }
 
 void test3() {
-  SnmpV2cVarResponse x(Oid(".1.3.4"),
-                       SnmpV2cVarResponse::NoSuchInstance(Oid(".1.3.4"),XJU_TRACED));
+  SnmpV2cVarResponse const x(
+    Oid(".1.3.4"),
+    SnmpV2cVarResponse::NoSuchInstance(Oid(".1.3.4"),XJU_TRACED));
   try {
     auto y(dynamic_cast<IntValue const*>(&*x));
+    xju::assert_not_equal(y,y);
+  }
+  catch(SnmpV2cVarResponse::NoSuchInstance const& e) {
+    xju::assert_equal(readableRepr(e),"no such instance .1.3.4.");
+  }
+  try {
+    auto y(x.value()->intValue());
     xju::assert_not_equal(y,y);
   }
   catch(SnmpV2cVarResponse::NoSuchInstance const& e) {
