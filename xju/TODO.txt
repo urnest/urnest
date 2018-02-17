@@ -50,17 +50,20 @@ io::Output
   - FileIStream
   - FileOStream
   - FileIOStream
-  - TCPListener : Input
-  - TCPSocket : IStream,OStream
-  / UDPSocket
-  - TLSSocket
-    - use pipe+TCPSocket+thread to "run"
-    
+  
   x break up io.hcp into io/xxx with aggregation like snmp.hh
   x pipe()
   - SocketPair, like pipe
   - UnixListener,UnixSocket - like TCPListener,TCPSocket
   - MessageQueue (linux allows select)
+
+- ip:
+  / TCPListener : Input
+  / TCPSocket : IStream,OStream
+  / UDPSocket
+  - TLSSocket
+    - use pipe+TCPSocket+thread to "run"
+  - add ipv6 support
 
 - make syscall turn ENOMEM into std::bad_alloc
 ~ move eg unistd functions into eg xju::unistd:: to allow higher level implementations (eg see pipe)? No, pretty much no clashes

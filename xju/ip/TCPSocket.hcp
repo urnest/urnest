@@ -1,0 +1,78 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace ip
+{
+
+class TCPService;
+class TCPSocket : public virtual xju::io::Istream,
+                  public virtual xju::io::Ostream
+{
+public:
+  TCPSocket(std::pair<xju::ip::v4::Address,xju::ip::Port> const& to,
+            std::chrono::system_clock::time_point const& deadline,
+            bool closeOnExec=true) throw(
+              xju::DeadlineReached,
+              // eg connection refused, unreachable
+              xju::Exception)
+  {
+  }
+
+  TCPSocket(TCPService& listener,
+            std::chrono::system_clock::time_point const& deadline,
+            bool closeOnExec=true) throw(
+              xju::DeadlineReached,
+              // eg connection refused, unreachable
+              xju::Exception)
+  {
+  }
+
+  std::pair<xju::ip::v4::Address,xju::ip::Port> const& to_;
+  
+  // xju::io::Input::
+  // xju::io::Output::
+  std::string str() const throw()
+  {
+    std::ostringstream s;
+    s << "TCP socket connected to "
+      << to_.first()
+      << " port "
+      << to_.second()
+      << " using local port "+xju::format::str(port_);
+    return s.str();
+  }
+
+  xju::ip::Port port() const throw()
+  {
+    return port_;
+  }
+  
+  
+public:
+  xju::AutoFd fd_;
+
+  xju::ip::Port port_;
+
+  // xju::io::Input::
+  // xju::io::Output::
+  int fileDescriptor() const throw() {
+    return fd_.fd();
+  }
+
+};
+
+
+}
+}
+
+

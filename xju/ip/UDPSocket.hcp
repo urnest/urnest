@@ -199,9 +199,11 @@ public:
     }
   }
 
+  // xju::io::Input::
+  // xju::io::Output::
   std::string str() const throw()
   {
-    return "UDP socket";
+    return "UDP socket using local port "+xju::format::str(port_);
   }
 
   xju::ip::Port port() const throw()
@@ -214,6 +216,8 @@ private:
 
   xju::ip::Port port_;
 
+  // xju::io::Input::
+  // xju::io::Output::
   int fileDescriptor() const throw() {
     return fd_.fd();
   }
