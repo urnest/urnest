@@ -19,13 +19,54 @@ class TCPSocket : public virtual xju::io::Istream,
                   public virtual xju::io::Ostream
 {
 public:
-  TCPSocket(std::pair<xju::ip::v4::Address,xju::ip::Port> const& to,
+  TCPSocket(std::pair<xju::ip::v4::Address,xju::ip::Port> const& connectTo,
             std::chrono::system_clock::time_point const& deadline,
             bool closeOnExec=true) throw(
               xju::DeadlineReached,
               // eg connection refused, unreachable
-              xju::Exception)
+              xju::Exception) try:
+    fd_(xju::syscall(xju::socket,XJU_TRACED)(
+          AF_INET,
+          SOCK_STREAM|
+          (closeOnExec?SOCK_CLOEXEC:0)|
+          SOCK_NONBLOCK, 0))
   {
+    sockaddr_in a;
+    a.sin_family=AF_INET;
+    a.sin_port=::htons(connectTo.second.value());
+    a.sin_addr.s_addr=::htonl(connectTo.first.value());
+    try{
+      xju::syscall(xju::connect,XJU_TRACED)(socket.fd(),
+                                            (sockaddr*)
+                                            &a,sizeof(a));
+    }
+    catch(xju::SyscallFailed const& e){
+      if (e.errno_!=EINPROGRESS){
+        throw;
+      }
+      if (!xju::io::select({(Output const*)this}).size()){
+        throw xju::DeadlineReached(
+          xju::Exception("deadlien reached",XJU_TRACED));
+      }
+      int e(0);
+      xju::syscall(xju::getsocketopt,XJU_TRACED)(socket.fd(),
+                                                 SOL_SOCKET,
+                                                 SO_ERROR,
+                                                 &e,
+                                                 sizeof(e));
+      if (e!=0){
+        throw xju::SyscallFailed("connect",e,XJU_TRACED);
+      }
+    }
+  }
+  catch(xju::Exception& e)
+  {
+    std::ostringstream s;
+    s << "create TCP connection to host " << connectTo.first
+      << ", port " << connectTo.second
+      << (closeOnExec?", ":" not") << " closing connection socket on exec";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
   }
 
   TCPSocket(TCPService& listener,
@@ -33,7 +74,8 @@ public:
             bool closeOnExec=true) throw(
               xju::DeadlineReached,
               // eg connection refused, unreachable
-              xju::Exception)
+              xju::Exception):
+      fd_(REVISIT)
   {
   }
 

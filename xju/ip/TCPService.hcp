@@ -27,7 +27,7 @@ namespace ip
 {
 namespace
 {
-// bind to specified port (choose a port if specified as Port(0))
+// bind to specified, non-zero port
 // - returns bound port
 xju::ip::Port bindToPort(
   xju::AutoFd const& socket,
@@ -37,16 +37,47 @@ xju::ip::Port bindToPort(
     xju::ip::PortInUse,
     xju::SyscallFailed)
 {
+  if (port==Port(0)){
+    throw xju::Exception("0 is not a valid ip port number");
+  }
+  int v(reuseAddr);
+  xju::syscall(xju::setsockopt,XJU_TRACED)(socket.fd(),SOL_SOCKET,SO_REUSEADDR,
+                                           &v,sizeof(v));
+  sockaddr_in a;
+  try{
+    a.sin_family=AF_INET;
+    a.sin_port=::htons(port.value());
+    a.sin_addr.s_addr=
+      localAddress.get()?::htonl(localAddress.value()):INADDR_ANY;
+    xju::syscall(xju::bind,XJU_TRACED)(socket.fd(),(sockaddr*)&a,sizeof(a));
+  }
+  catch(xju::Syscallfailed const& e){
+    if (e.errno_==EADDRINUSE) {
+      throw xju::ip::PortInUse(e);
+    }
+    throw;
+  }
+  return port;
+}
+
+// bind to an unusd port
+// - returns bound port
+xju::ip::Port bindToPort(
+  xju::AutoFd const& socket,
+  xju::Optional<xju::ip::v4::Address> const& localAddress,
+  bool const reuseAddr) throw(
+    xju::SyscallFailed)
+{
   int v(reuseAddr);
   xju::syscall(xju::setsockopt,XJU_TRACED)(socket.fd(),SOL_SOCKET,SO_REUSEADDR,
                                            &v,sizeof(v));
   sockaddr_in a;
   a.sin_family=AF_INET;
-  a.sin_port=::htons(port.value());
+  a.sin_port=::htons(0);
   a.sin_addr.s_addr=
     localAddress.get()?::htonl(localAddress.value()):INADDR_ANY;
   xju::syscall(xju::bind,XJU_TRACED)(socket.fd(),(sockaddr*)&a,sizeof(a));
-  
+
   socklen_t l(sizeof(a));
   xju::syscall(xju::getsockname,XJU_TRACED)(socket.fd(),(sockaddr*)&a,&l);
   xju::assert_equal(l,sizeof(a));
@@ -74,13 +105,14 @@ public:
   {
     xju::syscall(xju::listen,XJU_TRACED)(socket.fd(),backlog);
   }
-  catch(xju::SyscallFailed& e)
+  catch(xju::Exception& e)
   {
     std::ostringstream s;
     s << "create TCP listener socket listening on local address "
       << listenOn.first
       << ", local port " << listenOn.second
-      << (reuseAddr?" ":" not") << " allowing local address re-use";
+      << (reuseAddr?", ":", not") << " allowing local port re-use"
+      << (closeOnExec?", ":" not") << " closing socket on exec";
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }
@@ -101,14 +133,36 @@ public:
                xju::Exception)
   {
   }
+*/
 
-  // choose a port not already in use
+  // choose a port not already in use, listen on all local addresses
   TCPService(unsigned int backlog,
+             bool reuseAddr=false,
              bool closeOnExec=true) throw(
-               xju::Exception)
+               xju::Exception) try:
+    fd_(xju::syscall(xju::socket,XJU_TRACED)(
+          AF_INET,
+          SOCK_STREAM|
+          (closeOnExec?SOCK_CLOEXEC:0)|
+          SOCK_NONBLOCK, 0)),
+      port_(bindToPort(fd_,xju::Optional<xju::ip::v4::Address>(),reuseAddr))
+  {
+    xju::syscall(xju::listen,XJU_TRACED)(socket.fd(),backlog);
+  }
+  catch(xju::Exception& e)
+  {
+    std::ostringstream s;
+    s << "create TCP listener socket listening on local address "
+      << listenOn.first
+      << ", local unused port "
+      << (reuseAddr?", ":", not") << " allowing local port re-use"
+      << (closeOnExec?", ":" not") << " closing socket on exec";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
   {
   }
-*/
+
   xju::Optional<xju::ip::v4::Address> const& localAddress() const noexcept
   {
     return localAddress_;
@@ -125,7 +179,6 @@ private:
 
   xju::Optional<xju::ip::v4::Address> localAddress_;
   xju::ip::Port port_;
-
   
   // xju::io::Input::
   // xju::io::Output::
