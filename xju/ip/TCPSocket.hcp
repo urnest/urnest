@@ -75,7 +75,8 @@ public:
               xju::DeadlineReached,
               // eg connection refused, unreachable
               xju::Exception):
-      fd_(REVISIT)
+      fd_(accept(peerAdress_,listener,deadline,closeOnExec)),
+      localAddress_(getSockName(fd_))
   {
   }
 
@@ -101,9 +102,10 @@ public:
   
   
 public:
-  xju::AutoFd fd_;
+  std::pair<xju::ip::v4::Address,xju::ip::Port> peerAddress_;
+  xju::AutoFd fd_
 
-  xju::ip::Port port_;
+  std::pair<xju::ip::v4::Address,xju::ip::Port> localAddress_;
 
   // xju::io::Input::
   // xju::io::Output::
