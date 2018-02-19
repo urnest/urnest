@@ -172,6 +172,17 @@ public:
     return port_;
   }
   
+  std::string str() const throw()
+  {
+    std::ostringstream s;
+    s << "TCP listener socket listening on "
+      << (localAddress_.valid()?
+          xju::format::str(localAddress_.value()):
+          std::string(" all local addresses"))
+      << ", port " << port_;
+    return s.str();
+  }
+
   friend class TCPSocket;
 
 private:
@@ -181,10 +192,60 @@ private:
   xju::ip::Port port_;
   
   // xju::io::Input::
-  // xju::io::Output::
   int fileDescriptor() const throw() {
     return fd_.fd();
   }
+
+  
+  AutoFd accept(std::pair<xju::ip::v4::Address,xju::ip::Port>& peerAddress,
+                std::chrono::system_clock::time_point const& deadline.
+                bool closeOnExec) throw(
+                  xju::DeadlineReached,
+                  xju::Exception)
+  {
+    try {
+      do{
+        if (deadline>std::chrono::system_clock::now()){
+          xju::io::select({(xju::io::Input*)this},deadline);
+        }
+        try{
+          sockaddr_in a;
+          AutoFd result(xju::syscall(::accept4,XJU_TRACED)(
+                          fileDescriptor(),
+                          &a,
+                          sizeof(a),
+                          SOCK_NONBLOCK|
+                          (closeOnExec?SOCK_CLOEXEC:0)));
+          peerAddress.first=xju::ip::v4::Address(::ntohl(a.sin_addr.s_addr));
+          peerAddress.second=xju::ip::Port(::ntohs(a.sin_port));
+          return std::move(result);
+        }
+        catch(xju::SyscallFailed const& e){
+          switch(e.errno_){
+          case EAGAIN:
+            if (deadline<=std::chrono::system_clock::now())
+            {
+              throw xju::DeadlineReached(
+                xju::Exception("deadline reached before connection arrived",
+                               XJU_TRACED));
+            }
+            break;
+          default:
+            throw;
+          }
+        }
+      }
+      while(true);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "accept connection on " << (*this) << " by specified deadline";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+
 };
 
 }
