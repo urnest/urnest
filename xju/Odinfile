@@ -45,6 +45,7 @@ ip%tests.tree
 ()+cmd=(test-stringToTime.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-stringToUInt.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-Subprocess.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-syscall.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-Thread.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-unix_epoch.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-xml.cc+(..%cxx-opts):auto.cxx.exe):exec.output

@@ -907,7 +907,7 @@ namespace xju
 		SyscallFailed)
     {
 	return Syscall3<R, P1, P2, P3>(
-	    SyscallF3<R, P1, P2, P3>(name, f),
+	    {name, f},
 	    retryIfInterrupted,
 	    location);
     }
