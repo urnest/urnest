@@ -201,7 +201,7 @@ int main(int argc, char* argv[])
                         options.traceParsing_,
                         !xju::endsWith(inputFile.second._,
                                        std::string(".hcp"))));
-    std::cout << result.first << std::endl;
+    std::cout << result.first;
     std::cerr << "#included " << result.second << std::endl;
     return 0;
   }
