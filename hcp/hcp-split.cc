@@ -159,22 +159,26 @@ void genClassMemberFunctionDef(
     reconstructTrailingWhitespace(i,x.items_.end()));
   h << implTrailingWhite;
   
-  std::vector<hcp_ast::IR>::const_iterator j(
-    std::find_if(x.items_.begin(), x.items_.end(),
-                 hcp_ast::isA_<hcp_ast::FunctionName>));
-  xju::assert_not_equal(j, x.items_.end());
-
   std::vector<hcp_ast::IR>::const_iterator k(x.items_.begin());
   if ((*k)->isA<hcp_ast::FunctionQualifiers>()) {
     k=xju::next(k);
   }
+  std::vector<hcp_ast::IR>::const_iterator j(
+    std::find_if(k, x.items_.end(),
+                 hcp_ast::isA_<hcp_ast::FunctionName>));
+  xju::assert_not_equal(j, x.items_.end());
+
   c.copy((*k)->begin(), (*j)->begin());
   c << xju::format::join(scope.begin(),
                          scope.end(),
                          getClassName,
                          "::")
     << "::";
-  c .copy((*j)->begin(), x.end());
+  auto const l(std::find_if(j,x.items_.end(),
+                            hcp_ast::isA_<hcp_ast::FunctionImpl>));
+  xju::assert_not_equal(l,x.items_.end());
+  c .copy((*j)->begin(), (*l)->begin()); //REVISIT: exclude param default values hcp_ast::VarInitialiser
+  c .copy((*l)->begin(), x.end());
   c << "\n";
 }
 
