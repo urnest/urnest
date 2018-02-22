@@ -270,6 +270,9 @@ typedef TaggedCompositeItem<BlockTag> Block;
 class InitListTag{};
 typedef TaggedCompositeItem<InitListTag> InitList;
 
+class InitListOpenTag{};
+typedef TaggedCompositeItem<InitListOpenTag> InitListOpen;
+
 class FunctionDefTag{};
 typedef TaggedCompositeItem<FunctionDefTag> FunctionDef;
 

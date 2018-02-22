@@ -9,14 +9,37 @@
 //
 
 
+#include <xju/io/IStream.hh>
+#include <xju/io/OStream.hh>
+#include <xju/ip/v4/Address.hh>
+#include <xju/ip/Port.hh>
+#include <chrono>
+#include <xju/DeadlineReached.hh>
+#include <xju/Exception.hh>
+#include <arpa/inet.h> //impl
+#include <xju/syscall.hh> //impl
+#include <errno.h> //impl
+#include <xju/io/select.hh> //impl
+#include <sstream> //impl
+#include <xju/ip/TCPService.hh> //impl
+#include <xju/assert.hh> //impl
+#include <utility> //impl
+
 namespace xju
 {
 namespace ip
 {
 
+namespace
+{
+std::pair<xju::ip::v4::Address,xju::ip::Port> getSockName(
+  xju::AutoFd const& fd) throw(
+    xju::Exception);
+}
+
 class TCPService;
-class TCPSocket : public virtual xju::io::Istream,
-                  public virtual xju::io::Ostream
+class TCPSocket : public virtual xju::io::IStream,
+                  public virtual xju::io::OStream
 {
 public:
   TCPSocket(std::pair<xju::ip::v4::Address,xju::ip::Port> const& connectTo,
@@ -44,7 +67,7 @@ public:
       if (e.errno_!=EINPROGRESS){
         throw;
       }
-      if (!xju::io::select({(Output const*)this}).size()){
+      if (!xju::io::select({(xju::io::Output const*)this}).size()){
         throw xju::DeadlineReached(
           xju::Exception("deadlien reached",XJU_TRACED));
       }
@@ -74,12 +97,18 @@ public:
             bool closeOnExec=true) throw(
               xju::DeadlineReached,
               // eg connection refused, unreachable
-              xju::Exception):
+              xju::Exception) try:
       fd_(std::move(listener.accept(peerAdress_,deadline,closeOnExec))),
       localAddress_(getSockName(fd_))
   {
   }
-
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "create TCP socket by accepting connection";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+    
   std::pair<xju::ip::v4::Address,xju::ip::Port> const& to_;
   
   // xju::io::Input::
@@ -103,7 +132,7 @@ public:
   
 public:
   std::pair<xju::ip::v4::Address,xju::ip::Port> peerAddress_;
-  xju::AutoFd fd_
+  xju::AutoFd fd_;
 
   std::pair<xju::ip::v4::Address,xju::ip::Port> localAddress_;
 
@@ -115,8 +144,23 @@ public:
 
 };
 
+namespace
+{
+std::pair<xju::ip::v4::Address,xju::ip::Port> getSockName(
+  xju::AutoFd const& fd) throw(
+    xju::Exception)
+{
+  sockaddr_in a;
+  socklen_t l(sizeof(a));
+  xju::syscall(xju::getsockname,XJU_TRACED)(fd.fd(),(sockaddr*)&a,&l);
+  xju::assert_equal(l,sizeof(a));
+  return std::make_pair(
+    xju::ip::v4::Address(::ntohl(a.sin_addr.s_addr)),
+    xju::ip::Port(::ntohs(a.sin_port)));
+}
+
+}
+
 
 }
 }
-
-

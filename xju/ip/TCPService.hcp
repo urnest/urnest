@@ -20,6 +20,10 @@
 #include <xju/socket.hh> //impl
 #include <utility> //impl
 #include <sstream> //impl
+#include <chrono> //impl
+#include <xju/io/select.hh> //impl
+#include <xju/DeadlineReached.hh>
+#include <xju/format.hh> //impl
 
 namespace xju
 {
@@ -38,7 +42,7 @@ xju::ip::Port bindToPort(
     xju::SyscallFailed)
 {
   if (port==Port(0)){
-    throw xju::Exception("0 is not a valid ip port number");
+    throw xju::Exception("0 is not a valid ip port number",XJU_TRACED);
   }
   int v(reuseAddr);
   xju::syscall(xju::setsockopt,XJU_TRACED)(socket.fd(),SOL_SOCKET,SO_REUSEADDR,
@@ -48,11 +52,11 @@ xju::ip::Port bindToPort(
     a.sin_family=AF_INET;
     a.sin_port=::htons(port.value());
     a.sin_addr.s_addr=
-      localAddress.get()?::htonl(localAddress.value()):INADDR_ANY;
+      localAddress.get()?::htonl(localAddress.value().value()):INADDR_ANY;
     xju::syscall(xju::bind,XJU_TRACED)(socket.fd(),(sockaddr*)&a,sizeof(a));
   }
-  catch(xju::Syscallfailed const& e){
-    if (e.errno_==EADDRINUSE) {
+  catch(xju::SyscallFailed const& e){
+    if (e._errno==EADDRINUSE) {
       throw xju::ip::PortInUse(e);
     }
     throw;
@@ -75,7 +79,7 @@ xju::ip::Port bindToPort(
   a.sin_family=AF_INET;
   a.sin_port=::htons(0);
   a.sin_addr.s_addr=
-    localAddress.get()?::htonl(localAddress.value()):INADDR_ANY;
+    localAddress.get()?::htonl(localAddress.value().value()):INADDR_ANY;
   xju::syscall(xju::bind,XJU_TRACED)(socket.fd(),(sockaddr*)&a,sizeof(a));
 
   socklen_t l(sizeof(a));
@@ -89,8 +93,11 @@ xju::ip::Port bindToPort(
 class TCPService : public virtual xju::io::Input
 {
 public:
+  class BacklogTag{};
+  typedef xju::Int<BacklogTag,unsigned int> Backlog;
+  
   TCPService(std::pair<xju::ip::v4::Address,xju::ip::Port> const& listenOn,
-             unsigned int backlog,
+             Backlog backlog,
              bool reuseAddr,
              bool closeOnExec=true) throw(
                xju::ip::PortInUse,
@@ -103,7 +110,7 @@ public:
     localAddress_(listenOn.first),
     port_(bindToPort(fd_,listenOn.first,listenOn.second,reuseAddr))
   {
-    xju::syscall(xju::listen,XJU_TRACED)(socket.fd(),backlog);
+    xju::syscall(xju::listen,XJU_TRACED)(fd_.fd(),backlog.value());
   }
   catch(xju::Exception& e)
   {
@@ -116,19 +123,38 @@ public:
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }
-/*
+
   TCPService(xju::ip::Port const& listenOn,
-             unsigned int backlog,
+             Backlog backlog,
              bool reuseAddr,
              bool closeOnExec=true) throw(
                xju::ip::PortInUse,
-               xju::Exception)
+               xju::Exception) try:
+    fd_(xju::syscall(xju::socket,XJU_TRACED)(
+          AF_INET,
+          SOCK_STREAM|
+          (closeOnExec?SOCK_CLOEXEC:0)|
+          SOCK_NONBLOCK, 0)),
+    port_(bindToPort(fd_,xju::Optional<xju::ip::v4::Address>(),
+                     listenOn,reuseAddr))
   {
+    xju::syscall(xju::listen,XJU_TRACED)(fd_.fd(),backlog.value());
+  }
+  catch(xju::Exception& e)
+  {
+    std::ostringstream s;
+    s << "create TCP listener socket listening on local port "
+      << listenOn
+      << (reuseAddr?", ":", not") << " allowing local port re-use"
+      << (closeOnExec?", ":" not") << " closing socket on exec";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
   }
 
+/*
   // choose a port not already in use
   TCPService(xju::ip::v4::Address const& listenOn,
-             unsigned int backlog,
+             Backlog backlog,
              bool closeOnExec=true) throw(
                xju::Exception)
   {
@@ -136,10 +162,10 @@ public:
 */
 
   // choose a port not already in use, listen on all local addresses
-  TCPService(unsigned int backlog,
-             bool reuseAddr=false,
-             bool closeOnExec=true) throw(
-               xju::Exception) try:
+  explicit TCPService(Backlog backlog,
+                      bool reuseAddr=false,
+                      bool closeOnExec=true) throw(
+                        xju::Exception) try:
     fd_(xju::syscall(xju::socket,XJU_TRACED)(
           AF_INET,
           SOCK_STREAM|
@@ -147,20 +173,16 @@ public:
           SOCK_NONBLOCK, 0)),
       port_(bindToPort(fd_,xju::Optional<xju::ip::v4::Address>(),reuseAddr))
   {
-    xju::syscall(xju::listen,XJU_TRACED)(socket.fd(),backlog);
+    xju::syscall(xju::listen,XJU_TRACED)(fd_.fd(),backlog.value());
   }
   catch(xju::Exception& e)
   {
     std::ostringstream s;
-    s << "create TCP listener socket listening on local address "
-      << listenOn.first
-      << ", local unused port "
+    s << "create TCP listener socket listening on local unused port "
       << (reuseAddr?", ":", not") << " allowing local port re-use"
       << (closeOnExec?", ":" not") << " closing socket on exec";
     e.addContext(s.str(),XJU_TRACED);
     throw;
-  }
-  {
   }
 
   xju::Optional<xju::ip::v4::Address> const& localAddress() const noexcept
@@ -198,7 +220,7 @@ private:
 
   
   AutoFd accept(std::pair<xju::ip::v4::Address,xju::ip::Port>& peerAddress,
-                std::chrono::system_clock::time_point const& deadline.
+                std::chrono::system_clock::time_point const& deadline,
                 bool closeOnExec) throw(
                   xju::DeadlineReached,
                   xju::Exception)
@@ -210,10 +232,11 @@ private:
         }
         try{
           sockaddr_in a;
-          AutoFd result(xju::syscall(::accept4,XJU_TRACED)(
+          unsigned int al(sizeof(a));
+          AutoFd result(xju::syscall("accept4",::accept4,XJU_TRACED)(
                           fileDescriptor(),
-                          &a,
-                          sizeof(a),
+                          (sockaddr*)&a,
+                          &al,
                           SOCK_NONBLOCK|
                           (closeOnExec?SOCK_CLOEXEC:0)));
           peerAddress.first=xju::ip::v4::Address(::ntohl(a.sin_addr.s_addr));
@@ -221,7 +244,7 @@ private:
           return std::move(result);
         }
         catch(xju::SyscallFailed const& e){
-          switch(e.errno_){
+          switch(e._errno){
           case EAGAIN:
             if (deadline<=std::chrono::system_clock::now())
             {

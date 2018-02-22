@@ -1843,7 +1843,9 @@ PR init_list() throw()
 {
   static PR init_list(new NamedParser<hcp_ast::InitList>(
                         "initialiser list",
-                        parseLiteral(":")+
+                        new NamedParser<hcp_ast::InitListOpen>(
+                          "init list open",
+                          parseLiteral(":"))+
                         balanced(parseOneOfChars("{;"))));
   return init_list;
 }
@@ -1873,16 +1875,17 @@ PR catch_block() throw()
   return catch_block;
 }
 
-
+// does not eat trailing white
 PR function_impl() throw()
 {
   static PR function_impl(
     new NamedParser<hcp_ast::FunctionImpl>(
       "function implementation",
-      optional(keyword_try())+
-      optional(init_list())+
-      block()+ //block does not eat trailing white
-      optional(eatWhite()+catch_block())));
+      //block does not eat trailing white...
+      (keyword_try()+init_list()+block()+eatWhite()+catch_block())|
+      (keyword_try()+block()+eatWhite()+catch_block())|
+      (init_list()+block())|
+      block()));
   return function_impl;
 }
 

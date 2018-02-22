@@ -100,6 +100,7 @@ hcp-map-to-source == hcp-map-to-source.cc+(%opts):auto.cxx.exe
 %test-scope-at-52
 %test-scope-at-401
 %test-scope-at-458
+%test-scope-at-509
 %test-scope-at-2-15
 
 %check-scope-at==()+cmd=(hcp-parse-file) (%test-scope-at.hcp):exec.output
@@ -123,6 +124,7 @@ hcp-map-to-source == hcp-map-to-source.cc+(%opts):auto.cxx.exe
 %test-scope-at-394==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '394' 'header ::g':exec.output
 %test-scope-at-401==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '401' 'impl ::g':exec.output
 %test-scope-at-458==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '458' 'header ::g2':exec.output
+%test-scope-at-509==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '509' 'impl ::C':exec.output
 %test-scope-at-2-15==(%test-scope-at-2.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '15' 'header ::':exec.output
 
 %test-scope-at.sh== ! <<
@@ -175,6 +177,12 @@ namespace g2{
   std::string decode(xju::Optional<X> const& x){
   }
 }
+struct C
+{
+  C(int x):
+    x_(X(x)) {
+  }
+};
 
 %test-scope-at-2.hcp==<<
 void f() throw(E) {

@@ -6,6 +6,7 @@ v4%tests.tree
 
 %tests.tree == <<
 ()+cmd=(test-UDPSocket.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-TCPService.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 
 %hcp-gen==%hcp-gen.vir_dir_specs:list:cat:vir_dir

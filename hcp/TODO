@@ -229,6 +229,9 @@ x fix generation of friend functions
   should be OK now, test it
   
 - param default values
+  - mark function params so can get bounds
+  - reconstructExcluding<t,...>:
+    
 
 x static member object:
     static const char* const _user_exns[] = {
