@@ -11,6 +11,12 @@
 
 #include <iostream>
 #include <xju/assert.hh>
+#include <xju/format.hh>
+#include <xju/now.hh>
+#include <xju/Thread.hh>
+#include <xju/ip/TCPSocket.hh>
+#include <xju/ip/v4/getHostAddresses.hh>
+#include <xju/getHostName.hh>
 
 namespace xju
 {
@@ -26,8 +32,24 @@ void test1() {
     xju::assert_never_reached();
   }
   catch(xju::ip::PortInUse const& e){
-    xju::assert_equal(readableRepr(e),"");
+    xju::assert_equal(readableRepr(e),"Failed to create TCP listener socket listening on local port "+xju::format::str(s.port())+", not allowing local port re-use,  closing socket on exec because\nbind system call failed, errno = 98.");
+
   }
+  auto const deadline(xju::now()+std::chrono::seconds(5));
+  xju::Thread t([&](){
+      TCPSocket c(
+        {xju::ip::v4::getHostAddresses(xju::getHostName())[0],s.port()},
+        deadline);
+      char a;
+      c.read(&a,sizeof(a),deadline);
+      ++a;
+      c.write(&a,sizeof(a),deadline);
+    });
+  TCPSocket server(s,deadline);
+  char b('x');
+  server.write(&b,sizeof(b),deadline);
+  server.read(&b,sizeof(b),deadline);
+  xju::assert_equal(b,'y');
 }
 
 }

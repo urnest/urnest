@@ -47,7 +47,7 @@ std::pair<std::vector<std::string>,bool> scopeAt(
     {
       return result;
     }
-    else if (ir->isA<hcp_ast::AnonymousNamespace>()||
+    else if (ir->isA<hcp_ast::AnonymousNamespaceOpen>()||
              ir->isA<hcp_ast::BlockOpen>()||
              ir->isA<hcp_ast::VarInitialiserOpen>()||
              ir->isA<hcp_ast::KeywordTry>()||

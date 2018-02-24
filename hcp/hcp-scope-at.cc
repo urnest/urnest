@@ -114,9 +114,7 @@ int main(int argc, char* argv[])
       std::for_each(irsAtEnd.rbegin(),
                     irsAtEnd.rend(),
                     [](hcp_parser::IR const x){
-                      if (x->isA<hcp_ast::CompositeItem>()) {
-                        std::cout << x->str() << std::endl;
-                      }
+                      std::cout << typeid(*x).name() << std::endl;
                     });
     }
 

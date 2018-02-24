@@ -75,6 +75,21 @@ public:
       copy((*i)->begin(), (*i)->end());
     }
   }
+  template<class T, class ...Us>
+  void copyExcluding(hcp_ast::IRs const& irs)
+  {
+    for(auto ir: irs){
+      if (!hcp_ast::IsAnyOf<T,Us...>(ir)){
+        if (hcp_ast::isA_<hcp_ast::CompositeItem>(ir)){
+          auto const c(hcp_ast::asA_<hcp_ast::CompositeItem>(ir));
+          copyExcluding<T,Us...>(c.items_);
+        }
+        else{
+          copy(ir->begin(),ir->end());
+        }
+      }
+    }
+  }
   std::map<off_t,off_t> const& getSourceOffsetMap() const throw(){
     return sourceOffsetMap_;
   }
@@ -177,8 +192,8 @@ void genClassMemberFunctionDef(
   auto const l(std::find_if(j,x.items_.end(),
                             hcp_ast::isA_<hcp_ast::FunctionImpl>));
   xju::assert_not_equal(l,x.items_.end());
-  c .copy((*j)->begin(), (*l)->begin()); //REVISIT: exclude param default values hcp_ast::VarInitialiser
-  c .copy((*l)->begin(), x.end());
+  c.copyExcluding<hcp_ast::VarInitialiser>(hcp_ast::IRs(j, l));
+  c.copy((*l)->begin(), x.end());
   c << "\n";
 }
 

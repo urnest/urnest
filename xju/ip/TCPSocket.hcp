@@ -24,6 +24,9 @@
 #include <xju/ip/TCPService.hh> //impl
 #include <xju/assert.hh> //impl
 #include <utility> //impl
+#include <xju/AutoFd.hh>
+#include <xju/socket.hh> //impl
+
 
 namespace xju
 {
@@ -48,6 +51,7 @@ public:
               xju::DeadlineReached,
               // eg connection refused, unreachable
               xju::Exception) try:
+    peerAdress_(connectTo),
     fd_(xju::syscall(xju::socket,XJU_TRACED)(
           AF_INET,
           SOCK_STREAM|
@@ -59,7 +63,7 @@ public:
     a.sin_port=::htons(connectTo.second.value());
     a.sin_addr.s_addr=::htonl(connectTo.first.value());
     try{
-      xju::syscall(xju::connect,XJU_TRACED)(socket.fd(),
+      xju::syscall(xju::connect,XJU_TRACED)(fileDescriptor(),
                                             (sockaddr*)
                                             &a,sizeof(a));
     }
@@ -109,8 +113,6 @@ public:
     throw;
   }
     
-  std::pair<xju::ip::v4::Address,xju::ip::Port> const& to_;
-  
   // xju::io::Input::
   // xju::io::Output::
   std::string str() const throw()

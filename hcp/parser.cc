@@ -2454,7 +2454,9 @@ PR anonymous_namespace() throw()
       "anonymous namespace",
       namespace_keyword()+
       eatWhite()+
-      parseOneOfChars("{")+
+      new NamedParser<hcp_ast::AnonymousNamespaceOpen>(
+        "anon namespace open",
+        parseOneOfChars("{"))+
       eatWhite()+
       parseUntil(namespace_leaf(), parseOneOfChars("}"))+
       parseOneOfChars("}")+

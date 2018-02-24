@@ -88,6 +88,29 @@ T& asA_(IR const& x) throw()
   return (*x).asA<T>();
 }
 
+template<class T, class ... Us>
+struct IsAnyOf
+{
+  IsAnyOf(IR const& x) throw():
+      val_(isA_<T>(x)||IsAnyOf<Us...>(x)){
+  }
+  operator bool() const throw(){
+    return val_;
+  }
+  bool const val_;
+};
+template<class T>
+struct IsAnyOf<T>
+{
+  IsAnyOf(IR const& x) throw():
+      val_(isA_<T>(x)) {
+  }
+  operator bool() const throw(){
+    return val_;
+  }
+  bool const val_;
+};
+
 std::string reconstruct(IRs const& x) throw();
 
 class CompositeItem : public Item
@@ -373,6 +396,8 @@ typedef TaggedCompositeItem<ClassForwardDeclTag> ClassForwardDecl;
 
 class AnonymousNamespaceTag{};
 typedef TaggedCompositeItem<AnonymousNamespaceTag> AnonymousNamespace;
+class AnonymousNamespaceOpenTag{};
+typedef TaggedCompositeItem<AnonymousNamespaceOpenTag> AnonymousNamespaceOpen;
 
 class NamespaceDef : public CompositeItem
 {
