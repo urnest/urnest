@@ -1524,7 +1524,7 @@ void test25(std::vector<std::string> const& f)
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "Failed to parse anonymous namespace at line 1 column 1 because\nfailed to parse one of chars \"{\" at line 1 column 11 because\nline 1 column 11: \'h\' is not one of chars \"{\".", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse anonymous namespace at line 1 column 1 because\nfailed to parse anon namespace open at line 1 column 11 because\nfailed to parse one of chars \"{\" at line 1 column 11 because\nline 1 column 11: 'h' is not one of chars \"{\".", XJU_TRACED);
   }
 }
 

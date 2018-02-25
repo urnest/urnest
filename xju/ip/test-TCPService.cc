@@ -25,16 +25,6 @@ namespace ip
 
 void test1() {
   TCPService s(TCPService::Backlog(1),true);
-  try{
-    TCPService s2(s.port(),
-                  TCPService::Backlog(1),
-                  false);
-    xju::assert_never_reached();
-  }
-  catch(xju::ip::PortInUse const& e){
-    xju::assert_equal(readableRepr(e),"Failed to create TCP listener socket listening on local port "+xju::format::str(s.port())+", not allowing local port re-use,  closing socket on exec because\nbind system call failed, errno = 98.");
-
-  }
   auto const deadline(xju::now()+std::chrono::seconds(5));
   xju::Thread t([&](){
       TCPSocket c(
@@ -52,6 +42,20 @@ void test1() {
   xju::assert_equal(b,'y');
 }
 
+void test2() {
+  TCPService s(TCPService::Backlog(1),true);
+  try{
+    TCPService s2(s.port(),
+                  TCPService::Backlog(1),
+                  false);
+    xju::assert_never_reached();
+  }
+  catch(xju::ip::PortInUse const& e){
+    xju::assert_equal(readableRepr(e),"Failed to create TCP listener socket listening on local port "+xju::format::str(s.port())+", not allowing local port re-use,  closing socket on exec because\nbind system call failed, errno = 98.");
+
+  }
+}
+
 }
 }
 
@@ -61,6 +65,7 @@ int main(int argc, char* argv[])
 {
   unsigned int n(0);
   test1(), ++n;
+  test2(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

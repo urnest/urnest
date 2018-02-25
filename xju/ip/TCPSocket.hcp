@@ -38,6 +38,14 @@ namespace
 std::pair<xju::ip::v4::Address,xju::ip::Port> getSockName(
   xju::AutoFd const& fd) throw(
     xju::Exception);
+
+// connect fd to specified peer
+// - returns *local* address of connection
+// - connection is not yet complete (need to wait till fd writable)
+std::pair<xju::ip::v4::Address,xju::ip::Port> connect(
+  xju::AutoFd const& fd,
+  std::pair<xju::ip::v4::Address,xju::ip::Port> const& peer) throw(
+    xju::Exception);
 }
 
 class TCPService;
@@ -51,39 +59,27 @@ public:
               xju::DeadlineReached,
               // eg connection refused, unreachable
               xju::Exception) try:
-    peerAdress_(connectTo),
+    peerAddress_(connectTo),
     fd_(xju::syscall(xju::socket,XJU_TRACED)(
           AF_INET,
           SOCK_STREAM|
           (closeOnExec?SOCK_CLOEXEC:0)|
-          SOCK_NONBLOCK, 0))
+          SOCK_NONBLOCK, 0)),
+      localAddress_(connect(fd_,connectTo))
   {
-    sockaddr_in a;
-    a.sin_family=AF_INET;
-    a.sin_port=::htons(connectTo.second.value());
-    a.sin_addr.s_addr=::htonl(connectTo.first.value());
-    try{
-      xju::syscall(xju::connect,XJU_TRACED)(fileDescriptor(),
-                                            (sockaddr*)
-                                            &a,sizeof(a));
+    if (!xju::io::select({static_cast<Output const*>(this)},deadline).size()){
+      throw xju::DeadlineReached(
+        xju::Exception("deadlien reached",XJU_TRACED));
     }
-    catch(xju::SyscallFailed const& e){
-      if (e.errno_!=EINPROGRESS){
-        throw;
-      }
-      if (!xju::io::select({(xju::io::Output const*)this}).size()){
-        throw xju::DeadlineReached(
-          xju::Exception("deadlien reached",XJU_TRACED));
-      }
-      int e(0);
-      xju::syscall(xju::getsocketopt,XJU_TRACED)(socket.fd(),
-                                                 SOL_SOCKET,
-                                                 SO_ERROR,
-                                                 &e,
-                                                 sizeof(e));
-      if (e!=0){
-        throw xju::SyscallFailed("connect",e,XJU_TRACED);
-      }
+    int e(0);
+    unsigned int el(sizeof(e));
+    xju::syscall(xju::getsockopt,XJU_TRACED)(fileDescriptor(),
+                                             SOL_SOCKET,
+                                             SO_ERROR,
+                                             (void*)&e,
+                                             &el);
+    if (e!=0){
+      throw xju::SyscallFailed("connect",e,XJU_TRACED);
     }
   }
   catch(xju::Exception& e)
@@ -102,8 +98,9 @@ public:
               xju::DeadlineReached,
               // eg connection refused, unreachable
               xju::Exception) try:
-      fd_(std::move(listener.accept(peerAdress_,deadline,closeOnExec))),
-      localAddress_(getSockName(fd_))
+    peerAddress_(xju::ip::v4::Address(0),xju::ip::Port(0)),
+    fd_(std::move(listener.accept(peerAddress_,deadline,closeOnExec))),
+    localAddress_(getSockName(fd_))
   {
   }
   catch(xju::Exception& e){
@@ -119,24 +116,25 @@ public:
   {
     std::ostringstream s;
     s << "TCP socket connected to "
-      << to_.first()
-      << " port "
-      << to_.second()
-      << " using local port "+xju::format::str(port_);
+      << peerAddress_.first << " port " << peerAddress_.second
+      << " using local address "
+      << localAddress_.first << " port " << localAddress_.second;
     return s.str();
   }
 
-  xju::ip::Port port() const throw()
+  std::pair<xju::ip::v4::Address,xju::ip::Port> localAddress() const noexcept
   {
-    return port_;
+    return localAddress_;
+  }
+  std::pair<xju::ip::v4::Address,xju::ip::Port> peerAddress() const noexcept
+  {
+    return peerAddress_;
   }
   
-  
-public:
+private:
   std::pair<xju::ip::v4::Address,xju::ip::Port> peerAddress_;
-  xju::AutoFd fd_;
-
-  std::pair<xju::ip::v4::Address,xju::ip::Port> localAddress_;
+  xju::AutoFd const fd_;
+  std::pair<xju::ip::v4::Address,xju::ip::Port> const localAddress_;
 
   // xju::io::Input::
   // xju::io::Output::
@@ -159,6 +157,36 @@ std::pair<xju::ip::v4::Address,xju::ip::Port> getSockName(
   return std::make_pair(
     xju::ip::v4::Address(::ntohl(a.sin_addr.s_addr)),
     xju::ip::Port(::ntohs(a.sin_port)));
+}
+std::pair<xju::ip::v4::Address,xju::ip::Port> connect(
+  xju::AutoFd const& fd,
+  std::pair<xju::ip::v4::Address,xju::ip::Port> const& connectTo) throw(
+    xju::Exception)
+{
+  try{
+    sockaddr_in a;
+    a.sin_family=AF_INET;
+    a.sin_port=::htons(connectTo.second.value());
+    a.sin_addr.s_addr=::htonl(connectTo.first.value());
+    try{
+      xju::syscall(xju::connect,XJU_TRACED)(fd.fd(),
+                                            (sockaddr*)
+                                            &a,sizeof(a));
+    }
+    catch(xju::SyscallFailed const& e){
+      if (e._errno!=EINPROGRESS){
+        throw;
+      }
+    }
+    return getSockName(fd);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "initiate TCP/IP connection to "
+      << connectTo.first << " port " << connectTo.second;
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
 }
 
 }
