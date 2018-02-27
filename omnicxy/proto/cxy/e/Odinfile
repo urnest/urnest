@@ -1,3 +1,5 @@
+%all==%all.tree:leaves
+
 %all.tree==<<
 %all-tests.tree
 
@@ -16,17 +18,21 @@ omnicxy/proto==.%gen
 +cxy='-contextType=::p7::ExceptionContext'
 +cxy='-causeMemberExpression=cause\(\)'
 +cxy='-contextMemberExpression=context\(\)'
-+cxy='-e::E=proto/cxy/e/E.hh'
++cxy='-e::E=omnicxy/proto/cxy/e/E.hh'
 
-%gen==(../..%all.idl.sm)+(%gen-opts):omnicxy.virdir
+%gen==%gen.vir_dir_specs:list:cat:vir_dir
 
-%idl-gen==%idl-gen.vir_dir_specs:list:cat:vir_dir
-
-%idl-gen.vir_dir_specs==<<
+%gen.vir_dir_specs==<<
 %idl-local-spec
+%cxy-spec
 
 %idl-local-spec==(../..%all.idl.sm)+(%gen-opts):omnicxy.virdir-specs:cat
 
+%cxy-spec==<<
+%cxy==.%e-spec:vir_dir
+
+%e-spec==<<
+%e==.%hcp-gen
 
 #generated code for reference
 %p1.hcp==%gen/p1.hcp
