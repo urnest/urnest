@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <xju/assert.hh>
+#include <xju/unistd.hh>
 
 namespace xju
 {
@@ -58,11 +59,13 @@ using namespace xju;
 int main(int argc, char* argv[])
 {
   if (argc>1 && argv[1]==std::string("w")){
-    std::cerr << "warning" << std::endl;
+    std::string const x("warning\n");
+    xju::syscall(xju::write,XJU_TRACED)(2,x.c_str(),x.size());
     return 0;
   }
   if (argc>1 && argv[1]==std::string("e")){
-    std::cerr << "error" << std::endl;
+    std::string const x("error\n");
+    xju::syscall(xju::write,XJU_TRACED)(2,x.c_str(),x.size());
     return 1;
   }
   unsigned int n(0);

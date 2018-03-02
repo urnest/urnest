@@ -14,7 +14,7 @@ ip%tests.tree
 ()+cmd=(test-check_types_related.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-countSignificantBits.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=test '-s' (%test-check_types_related_2_err):exec.output
-()+cmd=(test-doCmd.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(%test-doCmd):exec.output
 ()+cmd=(test-endsWith.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-EventClient.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-Condition.cc+(..%cxx-opts):auto.cxx.exe):exec.output
@@ -55,6 +55,21 @@ snmp%tests.tree
 netflow%tests.tree
 
 %test-check_types_related_2_err==test-check_types_related_2.cc+(..%cxx-opts):auto.cxx.exe:err
+
+%test-doCmd==test-doCmd.cc+(..%cxx-opts):auto.cxx.exe
+
+%stress-test-doCmd! == (.)+cmd=(%repeat-test.sh) '1000' (%test-doCmd) :run
+
+%repeat-test.sh == ! <<
+#!/bin/sh
+count="$1" && shift &&
+echo "$count x " "$@" &&
+i=0 &&
+while [ $? = 0 ] && [ $i != $count ]
+do
+  "$@" &&
+  i=$((i+1))
+done
 
 %hcp-gen==%hcp-gen.vir_dir_specs:list:cat:vir_dir
 

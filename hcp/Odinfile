@@ -1,13 +1,18 @@
-%all==%all.tree:leaves
+%tools==%tools.tree:leaves
 
-%all.tree==<<
-%standalone-tests.tree
+%tools.tree==<<
 hcp-split
 hcp-parse-file
 hcp-what-is-at
 hcp-tags
 hcp-scope-at
 hcp-map-to-source
+
+%all==%all.tree:leaves
+
+%all.tree==<<
+%tools.tree
+%standalone-tests.tree
 test-hcp-tags%all.tree
 %scope-at-tests.tree
 tags%all.tree

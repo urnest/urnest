@@ -60,14 +60,22 @@ io::Output
 - ip:
   / TCPListener : Input
   / TCPSocket : IStream,OStream
-  / UDPSocket
+  x UDPSocket
   - TLSSocket
     - use pipe+TCPSocket+thread to "run"
   - add ipv6 support
-
+  - maybe an abstract class hierarchy
+      Socket
+        IPSocket
+	  TCPSocket
+          TCPListener
+	  UDPSocket
+      ... to capture socket options at different levels?
+      
 - make syscall turn ENOMEM into std::bad_alloc
-~ move eg unistd functions into eg xju::unistd:: to allow higher level implementations (eg see pipe)? No, pretty much no clashes
 - move xju::SyscallFailed to SyscallFailed.hh
+
+~ move eg unistd functions into eg xju::unistd:: to allow higher level implementations (eg see pipe)? No, pretty much no clashes
 
 x Subprocess
   x start function object,

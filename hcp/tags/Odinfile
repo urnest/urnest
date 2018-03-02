@@ -1,10 +1,16 @@
-%all==(%all.tree:leaves)
+%tools==%tools.tree:leaves
 
-%all.tree==<<
-%all-tests.tree
+%tools.tree==<<
 tag-lookup-service
 hcp-import-symbol-at
 hcp-find-def
+
+
+%all==(%all.tree:leaves)
+
+%all.tree==<<
+%tools.tree
+%all-tests.tree
 
 tag-lookup-service==tag-lookup-service.cc+(../..%cxx-opts)+lib='omniDynamic4' 'omniORB4' 'omnithread':auto.cxx.exe
 hcp-import-symbol-at==hcp-import-symbol-at.cc+(../..%cxx-opts)+lib='omniDynamic4' 'omniORB4' 'omnithread':auto.cxx.exe

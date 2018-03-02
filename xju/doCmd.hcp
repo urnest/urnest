@@ -38,10 +38,13 @@ std::pair<std::string,std::string> doCmd(
   try{
     auto p(xju::pipe(true,false)); // to capture stdout of subprocess
     auto pe(xju::pipe(true,false)); // to capture stderr of subprocess
+    std::set<xju::io::Input const*> inputs({&*p.first,&*pe.first});
     int exitStatus(0);
     std::ostringstream output;
+    std::ostream_iterator<char> oi(output);
     std::ostringstream cmdstderr;
-    try {
+    std::ostream_iterator<char> ei(cmdstderr);
+    /*deliberate block*/ {
       Subprocess command(exitStatus,[&]() -> int { 
           p.second->useAsStdout(); // use writable end of pipe as stdout
           pe.second->useAsStderr(); // use writable end of pipe as stdout
@@ -52,28 +55,38 @@ std::pair<std::string,std::string> doCmd(
       pe.second.reset();//close writable end of pipe in parent process
       std::vector<char> buffer(512,0);
       for(auto now=std::chrono::system_clock::now();
-          now<deadline;
+          now<deadline && inputs.size();
           now=std::chrono::system_clock::now()){
-        auto r=xju::io::select({&*p.first,&*pe.first},{},deadline);
+        auto r=xju::io::select(inputs,{},deadline);
         if (r.first.find(&*p.first)!=r.first.end()){
-          buffer.resize(p.first->read(buffer.data(),512,deadline));
-          std::copy(buffer.begin(),buffer.end(),
-                    std::ostream_iterator<char>(output));
+          try{
+            buffer.resize(512);
+            buffer.resize(p.first->read(buffer.data(),512,now));
+            std::copy(buffer.begin(),buffer.end(),oi);
+          }
+          catch(xju::io::Input::Closed const&)
+          {
+            inputs.erase(&*p.first);
+          }
         }
         if (r.first.find(&*pe.first)!=r.first.end()){
-          buffer.resize(pe.first->read(buffer.data(),512,deadline));
-          std::copy(buffer.begin(),buffer.end(),
-                    std::ostream_iterator<char>(cmdstderr));
+          try{
+            buffer.resize(512);
+            buffer.resize(pe.first->read(buffer.data(),512,now));
+            std::copy(buffer.begin(),buffer.end(),ei);
+          }
+          catch(xju::io::Input::Closed const&)
+          {
+            inputs.erase(&*pe.first);
+          }
         }
       }
-      throw xju::Exception("timeout",XJU_TRACED);
+      if (std::chrono::system_clock::now() >= deadline){
+        throw xju::Exception("timeout",XJU_TRACED);
+      }
       // note exiting this block will kill(9) the subprocess, but that
       // has no effect if it has exited already. Exiting this block
       // also "waits" for the subprocess, collecting its exit status
-    }
-    catch(xju::io::Input::Closed&)
-    {
-      // pipe closes when subprocess exits
     }
     if (exitStatus!=0){
       std::ostringstream s;
