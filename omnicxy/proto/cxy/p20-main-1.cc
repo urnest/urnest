@@ -50,6 +50,12 @@ public:
     calls_.push_back(xju::Shared<Call>(new Call::f2(x)));
     return x;
   }
+  //p20::F::
+  virtual p20::B f3(const p20::B& x) throw()
+  {
+    calls_.push_back(xju::Shared<Call>(new Call::f3(x)));
+    return x;
+  }
   
   struct Call
   {
@@ -58,6 +64,7 @@ public:
     }
     struct f1;
     struct f2;
+    struct f3;
   };
   struct Call::f1 : Call
   {
@@ -78,6 +85,17 @@ public:
         a_(a) {
     }
     int16_t a_;
+  };
+  struct Call::f3 : Call
+  {
+    ~f3() throw()
+    {
+    }
+    f3(p20::B const& a) throw():
+        a_(a) {
+    }
+    p20::B a_;
+    
   };
   std::vector<xju::Shared<Call> > calls_;
 };

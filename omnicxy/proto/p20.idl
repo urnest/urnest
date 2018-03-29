@@ -4,7 +4,10 @@ module p20
   {
     short a_;
   };
-
+  struct B
+  {
+    any b_;
+  };
   typedef sequence<short> SS;
   
   interface F{
@@ -13,5 +16,8 @@ module p20
 
     // returns x
     short f2(in short x);
+
+    // returns x
+    B f3(in B x);
   };
 };

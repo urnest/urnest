@@ -50,6 +50,12 @@ public:
   {
     return x;
   }
+  //p20::F::
+  virtual p20::B f3(const p20::B& x) throw()
+  {
+    calls_.push_back(xju::Shared<Call>(new Call::f3(x)));
+    return x;
+  }
   
   struct Call
   {
@@ -58,6 +64,7 @@ public:
     }
     struct f1;
     struct f2;
+    struct f3;
   };
   struct Call::f1 : Call
   {
@@ -68,6 +75,17 @@ public:
         a_(a) {
     }
     cxy::Any<> a_;
+    
+  };
+  struct Call::f3 : Call
+  {
+    ~f3() throw()
+    {
+    }
+    f3(p20::B const& a) throw():
+        a_(a) {
+    }
+    p20::B a_;
     
   };
   std::vector<xju::Shared<Call> > calls_;
@@ -147,15 +165,42 @@ int main(int argc, char* argv[])
           x.calls_=std::vector<xju::Shared<F_impl::Call> >();
         }
         {
-          cxy::Any<> const y(ref->f1(cxy::Any<>(::p20::A(3))));
+          cxy::Any<> const y(ref->f1(cxy::Any<>(::p20::A(7))));
           ::p20::A const z(y.get< ::p20::A >());
-          xju::assert_equal(z, ::p20::A(3));
+          xju::assert_equal(z, ::p20::A(7));
           xju::assert_equal(x.calls_.size(),1U);
           {
             F_impl::Call::f1 const& c(
               dynamic_cast<F_impl::Call::f1 const&>(*x.calls_[0]));
             xju::assert_equal(c.a_.isA< ::p20::A >(),true);
-            xju::assert_equal(c.a_.get< ::p20::A >(),::p20::A(3));
+            xju::assert_equal(c.a_.get< ::p20::A >(),::p20::A(7));
+          }
+          x.calls_=std::vector<xju::Shared<F_impl::Call> >();
+        }
+        {
+          ::p20::B const z(ref->f3(::p20::B(cxy::Any<>(8))));
+          xju::assert_equal(z.b_, cxy::Any<>(8));
+          xju::assert_equal(z, ::p20::B(cxy::Any<>(8)));
+          xju::assert_equal(x.calls_.size(),1U);
+          {
+            F_impl::Call::f3 const& c(
+              dynamic_cast<F_impl::Call::f3 const&>(*x.calls_[0]));
+            xju::assert_equal(c.a_,::p20::B(cxy::Any<>(8)));
+          }
+          x.calls_=std::vector<xju::Shared<F_impl::Call> >();
+        }
+        {
+          cxy::Any<> const y(ref->f1(cxy::Any<>(::p20::B(
+                                                  cxy::Any<>(9)))));
+          ::p20::B const z(y.get< ::p20::B >());
+          xju::assert_equal(z.b_, cxy::Any<>(9));
+          xju::assert_equal(z, ::p20::B(cxy::Any<>(9)));
+          xju::assert_equal(x.calls_.size(),1U);
+          {
+            F_impl::Call::f1 const& c(
+              dynamic_cast<F_impl::Call::f1 const&>(*x.calls_[0]));
+            xju::assert_equal(c.a_.isA< ::p20::B >(),true);
+            xju::assert_equal(c.a_.get< ::p20::B >(),::p20::B(cxy::Any<>(9)));
           }
           x.calls_=std::vector<xju::Shared<F_impl::Call> >();
         }

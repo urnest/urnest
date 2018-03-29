@@ -73,6 +73,22 @@ public:
   }
 private:
   std::shared_ptr<AnyImpl const> impl_;
+
+  friend bool operator<(Any const& a, Any const& b) throw(){
+    return *a.impl_ < *b.impl_;
+  }
+  friend bool operator>(Any const& a, Any const& b) throw(){
+    return *a.impl_ > *b.impl_;
+  }
+  friend bool operator==(Any const& a, Any const& b) throw(){
+    return *a.impl_ == *b.impl_;
+  }
+  friend bool operator<=(Any const& a, Any const& b) throw(){
+    return *a.impl_ <= *b.impl_;
+  }
+  friend bool operator>=(Any const& a, Any const& b) throw(){
+    return *a.impl_ >= *b.impl_;
+  }
 };
 
 template<class E>
@@ -97,5 +113,19 @@ public:
     x.marshalTo(s);
   }
 };
-  
+
+template<class E>
+class AnyTypeCode : public AnyImplTypeCode
+{
+};
+
+template<class E>
+struct TypeCodeOf<Any<E> >
+{
+static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+{
+  return std::shared_ptr<TypeCode>(new AnyTypeCode<E>);
+}
+};
+
 }

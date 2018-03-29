@@ -11,6 +11,7 @@
 #include <omniORB4/CORBA.h>//impl
 #include <omniORB4/cdrStream.h> //impl
 #include <new>
+#include <cinttypes> //impl
 
 class cdrStream;
 class cdrMemoryStream;
@@ -73,6 +74,36 @@ public:
     
 private:
   cdrMemoryStream* s_;
+
+  bool lessThan(MemCdrStream const& b) const throw()
+  {
+    MemCdrStream const& a(*this);
+    if (a.s_->bufSize()<b.s_->bufSize()){
+      return true;
+    }
+    else if (b.s_->bufSize()<a.s_->bufSize()){
+      return false;
+    }
+    uint8_t const* begin=(uint8_t const*)a.s_->bufPtr();
+    uint8_t const* end=begin+a.s_->bufSize();
+    uint8_t const* begin_b=(uint8_t const*)b.s_->bufPtr();
+    uint8_t const* p=begin;
+    uint8_t const* q=begin_b;
+    for(; p!=end; ++p,++q){
+      if (*p < *q){
+        return true;
+      }
+      if (*q < *p){
+        return false;
+      }
+    }
+    return false;
+  }
+  friend bool operator<(MemCdrStream const& a,
+                        MemCdrStream const& b) throw()
+  {
+    return a.lessThan(b);
+  }
 };
 
   

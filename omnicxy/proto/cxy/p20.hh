@@ -52,6 +52,47 @@ struct A
   }
 };
 
+struct B
+{
+  
+  ::cxy::Any< cxy::Exception > b_;
+
+  B(
+    ::cxy::Any< cxy::Exception > const& p1) throw();
+  friend bool operator<(
+    B const& x, 
+    B const& y) throw() {
+    if (x.b_<y.b_) return true;
+    if (y.b_<x.b_) return false;
+    return false;
+  }
+  friend bool operator>(
+    B const& x, 
+    B const& y) throw() {
+    return y<x;
+  }
+  friend bool operator!=(
+    B const& x, 
+    B const& y) throw() {
+    return (x<y)||(y<x);
+  }
+  friend bool operator==(
+    B const& x, 
+    B const& y) throw() {
+    return !(x!=y);
+  }
+  friend bool operator<=(
+    B const& x, 
+    B const& y) throw() {
+    return (x<y)||(x==y);
+  }
+  friend bool operator>=(
+    B const& x, 
+    B const& y) throw() {
+    return (x>y)||(x==y);
+  }
+};
+
 typedef std::vector< int16_t > SS;
 class F 
 {
@@ -64,6 +105,11 @@ public:
     cxy::Exception) = 0;
   virtual int16_t f2(
     int16_t const& x) throw(
+    // ipc failure
+    // - note servant may not throw
+    cxy::Exception) = 0;
+  virtual ::p20::B f3(
+    ::p20::B const& x) throw(
     // ipc failure
     // - note servant may not throw
     cxy::Exception) = 0;

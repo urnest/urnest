@@ -9,52 +9,8 @@
 //
 
 #include <cxy/TypeCode.hh>
-#include <cxy/Exception.hh>
-#include <cxy/MemCdrStream.hh>
-#include <cxy/translateException.hh> //impl
-
-class cdrStream;
 
 namespace cxy
 {
-
-class AnyImpl
-{
-public:
-  // post: *this owns value
-  AnyImpl(std::shared_ptr<TypeCode const> typeCode,
-          MemCdrStream value) throw():
-      typeCode_(typeCode),
-      value_(value) {
-  }
-
-  void marshalTo(cdrStream& s) const
-  //to avoid needing CORBA.h in our .hh, exception specs are commented
-  //throw(
-  //  omni::giopStream::CommFailure
-  //)
-  {
-    MemCdrStream::Ref value(value_);
-    typeCode_->copyValue(*value,s);
-  }
-
-  //post: result != 0, caller owns result
-  static AnyImpl* unmarshal(cdrStream& s)
-  //to avoid needing CORBA.h in our .hh, exception specs are commented
-  //throw(
-  //  CORBA::SystemException,
-  //  omni::giopStream::CommFailure
-  //  )
-  {
-    std::shared_ptr<cxy::TypeCode> const t(
-      cdr<std::shared_ptr<cxy::TypeCode> >::unmarshalFrom(s));
-    MemCdrStream value;
-    t->copyValue(s, *value);
-    return new AnyImpl(t,value);
-  }
-  
-  std::shared_ptr<TypeCode const> typeCode_;
-  MemCdrStream const value_;
-};
-
+//see TypeCode.hh for AnyImpl
 }

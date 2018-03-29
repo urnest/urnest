@@ -10,10 +10,13 @@ key:
   x was it always broken? Yes
   - why is it broken? Need to look at equivalent cxx code?
   - see how it was constructed
-  
+
+- cxy::any operator< etc
+
 - union: promote variant structure members to get more natural
   C++ code, if can only have one data type per variant type
-
+  - consider using latest C++ standard technique, it looks like a close match?
+  
 ~ union return as std::unique_ptr, in as T const&
   no that makes embedding union types in structures harder, just
   stick with shared_ptr<T const>
@@ -25,7 +28,7 @@ key:
   - use std::rethrow_exception to throw the result
 
 * allow retry after PortInUse (with different port; currently retries same
-  port always)
+  port always ... omniORB needs mod?)
   
 * update all tests to retry on PortInUse
 
@@ -225,6 +228,9 @@ x p16a-main:
     - optimisation:
       add TypeCode::minEncodedValueSize() and use as initial value buffer size
 
+    - adjust so Any.hh does not include TypeCode.hh (which means
+      can use interfaces that contain anys without it?
+    
     x rename Any to AnyImpl and do a Any template to translate exceptions
     * can share AnyImpl (make it const)
 
