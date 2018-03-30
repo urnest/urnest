@@ -115,16 +115,12 @@ public:
 };
 
 template<class E>
-class AnyTypeCode : public AnyImplTypeCode
-{
-};
-
-template<class E>
 struct TypeCodeOf<Any<E> >
 {
 static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
 {
-  return std::shared_ptr<TypeCode>(new AnyTypeCode<E>);
+  // REVISIT: create template AnyTypeCode to translate exceptions?
+  return std::shared_ptr<TypeCode>(new AnyTypeCode);
 }
 };
 

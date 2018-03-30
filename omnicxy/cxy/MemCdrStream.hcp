@@ -12,6 +12,7 @@
 #include <omniORB4/cdrStream.h> //impl
 #include <new>
 #include <cinttypes> //impl
+#include <utility> //impl
 
 class cdrStream;
 class cdrMemoryStream;
@@ -50,6 +51,23 @@ public:
       delete s_;
       s_=new cdrMemoryStream(*b.s_);
     }
+    return *this;
+  }
+
+  MemCdrStream(MemCdrStream && b) throw():
+      s_(b.s_)
+  {
+    b.s_=0;
+  }
+  
+  MemCdrStream& operator=(MemCdrStream && b) throw()
+  {
+    if (s_ != b.s_) {
+      delete s_;
+      s_=b.s_;
+      b.s_=0;
+    }
+    return *this;
   }
 
   class Ref
