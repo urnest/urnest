@@ -11,36 +11,40 @@
 
 namespace cxy
 {
+class TypeCode;
+
+// CORBA 3.3 Table 9.2 TCKind
+// REVISIT: empty rows below
 enum class TypeKind
-{
-    NULL_,
+{                // no params     raw params     encapsulated params
+  NULL_,
     VOID,
-    SHORT,
-    LONG,
-    USHORT,
-    ULONG,
-    FLOAT,
-    DOUBLE,
-    BOOLEAN,
-    CHAR,
-    OCTET,
+    SHORT,       //int16_t
+    LONG,        //int32_t
+    USHORT,      //uint16_t
+    ULONG,       //uint32_t
+    FLOAT,       //float
+    DOUBLE,      //double
+    BOOLEAN,     //bool
+    CHAR,        //char
+    OCTET,       //uint8_t
     ANY,
-    TYPECODE,
+    TYPECODE,    //cxy::TypeCode
     PRINCIPAL,
     OBJREF,
-    STRUCT,
+    STRUCT,                                      //generated
     UNION,
     ENUM,
-    STRING,
-    SEQUENCE,
+    STRING,                      //std::string
+    SEQUENCE,                                    //std::vector
     ARRAY,
     ALIAS,
     EXCEPT,
-    LONGLONG,
-    ULONGLONG,
-    LONGDOUBLE,
-    WCHAR,
-    WSTRING,
+    LONGLONG,    //int64_t
+    ULONGLONG,   //uint64_t
+    LONGDOUBLE,  //long double
+    WCHAR,       //wchar_t
+    WSTRING,     //std::wstring
     FIXED,
     VALUE,
     VALUE_BOX,

@@ -306,6 +306,116 @@ static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
 }
 };
   
+template<>
+struct TypeCodeOf<int64_t>
+{
+static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+{
+  return std::shared_ptr<TypeCode>(
+    new BasicTypeCode<int64_t,cxy::TypeKind::LONGLONG>);
+}
+};
+  
+template<>
+struct TypeCodeOf<uint16_t>
+{
+static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+{
+  return std::shared_ptr<TypeCode>(
+    new BasicTypeCode<uint16_t,cxy::TypeKind::USHORT>);
+}
+};
+  
+template<>
+struct TypeCodeOf<uint32_t>
+{
+static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+{
+  return std::shared_ptr<TypeCode>(
+    new BasicTypeCode<uint32_t,cxy::TypeKind::ULONG>);
+}
+};
+  
+template<>
+struct TypeCodeOf<uint64_t>
+{
+static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+{
+  return std::shared_ptr<TypeCode>(
+    new BasicTypeCode<uint64_t,cxy::TypeKind::ULONGLONG>);
+}
+};
+  
+template<>
+struct TypeCodeOf<float>
+{
+static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+{
+  return std::shared_ptr<TypeCode>(
+    new BasicTypeCode<float,cxy::TypeKind::FLOAT>);
+}
+};
+  
+template<>
+struct TypeCodeOf<double>
+{
+static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+{
+  return std::shared_ptr<TypeCode>(
+    new BasicTypeCode<double,cxy::TypeKind::DOUBLE>);
+}
+};
+  
+template<>
+struct TypeCodeOf<long double>
+{
+static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+{
+  return std::shared_ptr<TypeCode>(
+    new BasicTypeCode<long double,cxy::TypeKind::LONGDOUBLE>);
+}
+};
+  
+template<>
+struct TypeCodeOf<char>
+{
+static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+{
+  return std::shared_ptr<TypeCode>(
+    new BasicTypeCode<char,cxy::TypeKind::CHAR>);
+}
+};
+  
+template<>
+struct TypeCodeOf<bool>
+{
+static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+{
+  return std::shared_ptr<TypeCode>(
+    new BasicTypeCode<bool,cxy::TypeKind::BOOLEAN>);
+}
+};
+  
+template<>
+struct TypeCodeOf<uint8_t>
+{
+static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+{
+  return std::shared_ptr<TypeCode>(
+    new BasicTypeCode<uint8_t,cxy::TypeKind::OCTET>);
+}
+};
+  
+template<>
+struct TypeCodeOf<char32_t>
+{
+static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+{
+  return std::shared_ptr<TypeCode>(
+    new BasicTypeCode<char32_t,cxy::TypeKind::WCHAR>);
+}
+};
+  
 template<class T>
 struct TypeCodeOf<std::vector<T> >
 {
@@ -337,6 +447,28 @@ public:
       return TypeCodeOf<int16_t>::create();
     case cxy::TypeKind::LONG:
       return TypeCodeOf<int32_t>::create();
+    case cxy::TypeKind::LONGLONG:
+      return TypeCodeOf<int64_t>::create();
+    case cxy::TypeKind::USHORT:
+      return TypeCodeOf<uint16_t>::create();
+    case cxy::TypeKind::ULONG:
+      return TypeCodeOf<uint32_t>::create();
+    case cxy::TypeKind::ULONGLONG:
+      return TypeCodeOf<uint64_t>::create();
+    case cxy::TypeKind::FLOAT:
+      return TypeCodeOf<float>::create();
+    case cxy::TypeKind::DOUBLE:
+      return TypeCodeOf<double>::create();
+    case cxy::TypeKind::LONGDOUBLE:
+      return TypeCodeOf<long double>::create();
+    case cxy::TypeKind::BOOLEAN:
+      return TypeCodeOf<bool>::create();
+    case cxy::TypeKind::CHAR:
+      return TypeCodeOf<char>::create();
+    case cxy::TypeKind::OCTET:
+      return TypeCodeOf<uint8_t>::create();
+    case cxy::TypeKind::WCHAR:
+      return TypeCodeOf<char32_t>::create();
     case cxy::TypeKind::ANY:
       return std::shared_ptr<TypeCode>(new AnyTypeCode);
     case cxy::TypeKind::SEQUENCE:

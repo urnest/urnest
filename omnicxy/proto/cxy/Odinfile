@@ -154,9 +154,9 @@ echo.sref.cc==%gen/echo.sref.cc
 ()+cmd=(%p14-main)+cmd='3748'+cmd='both':exec.output
 ()+cmd=(%p15-main)+cmd='3749'+cmd='both':exec.output
 ()+cmd=(%p16-main)+cmd='3750'+cmd='both':exec.output
-()+cmd=(%p16b-main)+cmd='3750'+cmd='both':exec.output
-()+cmd=(%echo-main)+cmd='3751'+cmd='both':exec.output
-()+cmd=(%p17-main)+cmd='3752'+cmd='both':exec.output
+()+cmd=(%p16b-main)+cmd='3751'+cmd='both':exec.output
+()+cmd=(%echo-main)+cmd='3752'+cmd='both':exec.output
+()+cmd=(%p17-main)+cmd='3753'+cmd='both':exec.output
 ()+cmd=(%p18-main)+cmd='3754'+cmd='both':exec.output
 ()+cmd=(%p20-main)+cmd='3755'+cmd='both':exec.output
 ()+cmd=(%p20-main-1)+cmd='3756'+cmd='both':exec.output
@@ -214,6 +214,7 @@ echo "$x" | fgrep TRANSIENT
 %p1-leak-check
 %p2-leak-check
 %p16-leak-check
+%p20-leak-check
 
 %p1-leak-check==(%p1-10-leak-report.txt)+cmd=diff (%p1-100-leak-report.txt) -:stdout
 %p1-10-leak-report.txt==()+cmd=(%valgrind-leaks.sh) '10' (%p1-main) '13735' 'both':exec.output
@@ -226,6 +227,10 @@ echo "$x" | fgrep TRANSIENT
 %p16-leak-check==(%p16-10-leak-report.txt)+cmd=diff (%p16-100-leak-report.txt) -:stdout
 %p16-10-leak-report.txt==()+cmd=(%valgrind-leaks.sh) '10' (%p16-main) '13750' 'both':exec.output
 %p16-100-leak-report.txt==()+cmd=(%valgrind-leaks.sh) '100' (%p16-main) '23750' 'both':exec.output
+
+%p20-leak-check==(%p20-10-leak-report.txt)+cmd=diff (%p20-100-leak-report.txt) -:stdout
+%p20-10-leak-report.txt==()+cmd=(%valgrind-leaks.sh) '10' (%p20-main) '13750' 'both':exec.output
+%p20-100-leak-report.txt==()+cmd=(%valgrind-leaks.sh) '100' (%p20-main) '23750' 'both':exec.output
 
 %valgrind-leaks.sh == ! <<
 #!/bin/sh

@@ -273,6 +273,33 @@ public:
 
   
 template<>
+class cdr<long double>
+{
+public:
+  static long double unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    long double result;
+    (::CORBA::LongDouble&)result <<= s;
+    return result;
+  }
+  static void marshal(long double const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    x >>= s;
+  }
+  
+};
+
+  
+template<>
 class cdr<float>
 {
 public:
@@ -298,6 +325,56 @@ public:
   
 };
 
+template<>
+class cdr<char>
+{
+public:
+  static char unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    uint8_t result(s.unmarshalOctet());
+    return result;
+  }
+  static void marshal(char const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    s.marshalOctet(x);
+  }
+};
+
+template<>
+class cdr<char32_t>
+{
+public:
+  static char32_t unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    int32_t result;
+    result <<= s;
+    return result;
+  }
+  static void marshal(char32_t const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    ((::CORBA::WChar)x) >>= s;
+  }
+};
+
+  
   
 template<>
 class cdr<std::string>
