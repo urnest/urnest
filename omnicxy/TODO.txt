@@ -11,7 +11,7 @@ key:
   - why is it broken? Need to look at equivalent cxx code?
   - see how it was constructed
 
-- cxy::any operator< etc
+x cxy::any operator< etc
 
 - union: promote variant structure members to get more natural
   C++ code, if can only have one data type per variant type
@@ -51,7 +51,7 @@ key:
     x unsigned long
     x unsigned long long
     x boolean
-    - wchar
+    - wchar ... code incorrect, much more complex
     - wstring
     - long double
 
@@ -125,9 +125,13 @@ x p16a-main:
       no size-changing operations
     
 - any
+  - string
+  - array
+  - union
+  
   * proto/cxy/p20-main-1.cc that does not actually use any and does
     not include any_.hcp nor any omniORB headers
-  * proto/cxy/p20-main.cc does use Any (and does include any_.hh)
+  x proto/cxy/p20-main.cc does use Any (and does include any_.hh)
   - any is marshalled as type code then data, the data is the cdr encoding
     of the value (the length of the data is implicit in the type code)
     what is typecode? essentially parallels instance encoding
@@ -234,6 +238,8 @@ x p16a-main:
     x rename Any to AnyImpl and do a Any template to translate exceptions
     * can share AnyImpl (make it const)
 
+    - test interop with complex any param
+    
 - cxy/Milliseconds.idl and hand-code map to std::chrono::milliseconds
 
 - other stuff (see omniidl idltypes.py)

@@ -48,9 +48,41 @@ public:
   {
     cxy::cref<omnicxy::proto::interop::a::reflect> f(orb_,f_);
 
-    cxy::Any<> const y(f->f(1,cxy::Any<>((int16_t)-997)));
-    int16_t const z(y.get<int16_t>());
-    xju::assert_equal(z,(int16_t)-997);
+    {
+      cxy::Any<> const y(f->f(1,cxy::Any<>((int16_t)-997)));
+      auto const z(y.get<int16_t>());
+      xju::assert_equal(z,(int16_t)-997);
+    }
+    {
+      cxy::Any<> const y(f->f(2,cxy::Any<>((int32_t)-100997)));
+      auto const z(y.get<int32_t>());
+      xju::assert_equal(z,(int32_t)-100997);
+    }
+    {
+      cxy::Any<> const y(f->f(3,cxy::Any<>((uint16_t)997)));
+      auto const z(y.get<uint16_t>());
+      xju::assert_equal(z,(uint16_t)997);
+    }
+    {
+      cxy::Any<> const y(f->f(4,cxy::Any<>((uint32_t)100997)));
+      auto const z(y.get<uint32_t>());
+      xju::assert_equal(z,(uint32_t)100997);
+    }
+    {
+      cxy::Any<> const y(f->f(5,cxy::Any<>((float)997.5e-1)));
+      auto const z(y.get<float>());
+      xju::assert_equal(z,(float)997.5e-1);
+    }
+    {
+      cxy::Any<> const y(f->f(6,cxy::Any<>((double)100997.7e-3)));
+      auto const z(y.get<double>());
+      xju::assert_equal(z,(double)100997.7e-3);
+    }
+    {
+      cxy::Any<> const y(f->f(7,cxy::Any<>('g')));
+      auto const z(y.get<char>());
+      xju::assert_equal(z,'g');
+    }
     done_=true;
   }
 };

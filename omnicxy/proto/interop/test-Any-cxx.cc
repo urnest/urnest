@@ -29,6 +29,60 @@ public:
       (*result) <<= y;
       return result;
     }
+    case 2:
+    {
+      CORBA::Long y;
+      x >>= y;
+      xju::assert_equal(y, -100997);
+      CORBA::Any* result(new CORBA::Any);
+      (*result) <<= y;
+      return result;
+    }
+    case 3:
+    {
+      CORBA::UShort y;
+      x >>= y;
+      xju::assert_equal(y, 997);
+      CORBA::Any* result(new CORBA::Any);
+      (*result) <<= y;
+      return result;
+    }
+    case 4:
+    {
+      CORBA::ULong y;
+      x >>= y;
+      xju::assert_equal(y, 100997);
+      CORBA::Any* result(new CORBA::Any);
+      (*result) <<= y;
+      return result;
+    }
+    case 5:
+    {
+      CORBA::Float y;
+      x >>= y;
+      xju::assert_equal(y, 997.5e-1);
+      CORBA::Any* result(new CORBA::Any);
+      (*result) <<= y;
+      return result;
+    }
+    case 6:
+    {
+      CORBA::Double y;
+      x >>= y;
+      xju::assert_equal(y, 100997.7e-3);
+      CORBA::Any* result(new CORBA::Any);
+      (*result) <<= y;
+      return result;
+    }
+    case 7:
+    {
+      CORBA::Char y;
+      x >>= CORBA::Any::to_char(y);
+      xju::assert_equal(y, 'g');
+      CORBA::Any* result(new CORBA::Any);
+      (*result) <<= CORBA::Any::from_char(y);
+      return result;
+    }
     default:
       xju::assert_never_reached();
     }
