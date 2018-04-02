@@ -115,6 +115,10 @@ public:
   {
     return x;
   }
+  virtual ::p20::B* f3(const ::p20::B& x)
+  {
+    return new ::p20::B(x);
+  }
 };
 
   

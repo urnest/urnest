@@ -74,6 +74,24 @@ _CORBA_MODULE_BEG
 
   _CORBA_MODULE_VAR _dyn_attr const ::CORBA::TypeCode_ptr _tc_A;
 
+  struct B {
+    typedef _CORBA_ConstrType_Variable_Var<B> _var_type;
+
+    
+    ::CORBA::Any b_;
+
+  
+
+    void operator>>= (cdrStream &) const;
+    void operator<<= (cdrStream &);
+  };
+
+  typedef B::_var_type B_var;
+
+  typedef _CORBA_ConstrType_Variable_OUT_arg< B,B_var > B_out;
+
+  _CORBA_MODULE_VAR _dyn_attr const ::CORBA::TypeCode_ptr _tc_B;
+
   _CORBA_MODULE_VAR _dyn_attr const ::CORBA::TypeCode_ptr _tc_SS;
 
   class SS_var;
@@ -255,6 +273,7 @@ _CORBA_MODULE_BEG
     // IDL operations
     ::CORBA::Any* f1(const ::CORBA::Any& x);
     ::CORBA::Short f2(::CORBA::Short x);
+    B* f3(const ::p20::B& x);
 
     // Constructors
     inline _objref_F()  { _PR_setobj(0); }  // nil
@@ -291,6 +310,7 @@ _CORBA_MODULE_BEG
 
     virtual ::CORBA::Any* f1(const ::CORBA::Any& x) = 0;
     virtual ::CORBA::Short f2(::CORBA::Short x) = 0;
+    virtual B* f3(const ::p20::B& x) = 0;
     
   public:  // Really protected, workaround for xlC
     virtual _CORBA_Boolean _dispatch(omniCallHandle&);
@@ -343,6 +363,11 @@ extern void operator<<=(::CORBA::Any& _a, const p20::A& _s);
 extern void operator<<=(::CORBA::Any& _a, p20::A* _sp);
 extern _CORBA_Boolean operator>>=(const ::CORBA::Any& _a, p20::A*& _sp);
 extern _CORBA_Boolean operator>>=(const ::CORBA::Any& _a, const p20::A*& _sp);
+
+extern void operator<<=(::CORBA::Any& _a, const p20::B& _s);
+extern void operator<<=(::CORBA::Any& _a, p20::B* _sp);
+extern _CORBA_Boolean operator>>=(const ::CORBA::Any& _a, p20::B*& _sp);
+extern _CORBA_Boolean operator>>=(const ::CORBA::Any& _a, const p20::B*& _sp);
 
 void operator<<=(::CORBA::Any& _a, const p20::SS& _s);
 void operator<<=(::CORBA::Any& _a, p20::SS* _sp);

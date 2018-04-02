@@ -28,6 +28,20 @@ p20::A::operator<<= (cdrStream &_n)
 
 }
 
+void
+p20::B::operator>>= (cdrStream &_n) const
+{
+  (const ::CORBA::Any&) b_ >>= _n;
+
+}
+
+void
+p20::B::operator<<= (cdrStream &_n)
+{
+  (::CORBA::Any&)b_ <<= _n;
+
+}
+
 p20::F_ptr p20::F_Helper::_nil() {
   return ::p20::F::_nil();
 }
@@ -293,6 +307,89 @@ _0RL_lcfn_c6f716239037bfb6_30000000(omniCallDescriptor* cd, omniServant* svnt)
 
 }
 
+
+//
+// Code for p20::F::f3
+
+// Proxy call descriptor class. Mangled signature:
+//  _cp20_mB_i_cp20_mB
+class _0RL_cd_c6f716239037bfb6_40000000
+  : public omniCallDescriptor
+{
+public:
+  inline _0RL_cd_c6f716239037bfb6_40000000(LocalCallFn lcfn, const char* op_, size_t oplen, _CORBA_Boolean upcall=0)
+    : omniCallDescriptor(lcfn, op_, oplen, 0, _user_exns, 0, upcall)
+  {
+    
+  }
+  
+  void marshalArguments(cdrStream&);
+  void unmarshalArguments(cdrStream&);
+
+  void unmarshalReturnedValues(cdrStream&);
+  void marshalReturnedValues(cdrStream&);
+  
+  
+  static const char* const _user_exns[];
+
+  p20::B_var arg_0_;
+  const p20::B* arg_0;
+  p20::B_var result;
+};
+
+void _0RL_cd_c6f716239037bfb6_40000000::marshalArguments(cdrStream& _n)
+{
+  (const p20::B&) *arg_0 >>= _n;
+
+}
+
+void _0RL_cd_c6f716239037bfb6_40000000::unmarshalArguments(cdrStream& _n)
+{
+  arg_0_ = new p20::B;
+  (p20::B&)arg_0_ <<= _n;
+  arg_0 = &arg_0_.in();
+
+}
+
+void _0RL_cd_c6f716239037bfb6_40000000::marshalReturnedValues(cdrStream& _n)
+{
+  (const p20::B&) result >>= _n;
+
+}
+
+void _0RL_cd_c6f716239037bfb6_40000000::unmarshalReturnedValues(cdrStream& _n)
+{
+  result = new p20::B;
+  (p20::B&)result <<= _n;
+
+}
+
+const char* const _0RL_cd_c6f716239037bfb6_40000000::_user_exns[] = {
+  0
+};
+
+// Local call call-back function.
+static void
+_0RL_lcfn_c6f716239037bfb6_50000000(omniCallDescriptor* cd, omniServant* svnt)
+{
+  _0RL_cd_c6f716239037bfb6_40000000* tcd = (_0RL_cd_c6f716239037bfb6_40000000*)cd;
+  p20::_impl_F* impl = (p20::_impl_F*) svnt->_ptrToInterface(p20::F::_PD_repoId);
+  tcd->result = impl->f3(*tcd->arg_0);
+
+
+}
+
+p20::B* p20::_objref_F::f3(const ::p20::B& x)
+{
+  _0RL_cd_c6f716239037bfb6_40000000 _call_desc(_0RL_lcfn_c6f716239037bfb6_50000000, "f3", 3);
+  _call_desc.arg_0 = &(::p20::B&) x;
+
+  _invoke(_call_desc);
+  return _call_desc.result._retn();
+
+
+}
+
 p20::_pof_F::~_pof_F() {}
 
 
@@ -333,6 +430,14 @@ p20::_impl_F::_dispatch(omniCallHandle& _handle)
   if (omni::strMatch(op, "f2")) {
 
     _0RL_cd_c6f716239037bfb6_20000000 _call_desc(_0RL_lcfn_c6f716239037bfb6_30000000, "f2", 3, 1);
+    
+    _handle.upcall(this,_call_desc);
+    return 1;
+  }
+
+  if (omni::strMatch(op, "f3")) {
+
+    _0RL_cd_c6f716239037bfb6_40000000 _call_desc(_0RL_lcfn_c6f716239037bfb6_50000000, "f3", 3, 1);
     
     _handle.upcall(this,_call_desc);
     return 1;
@@ -393,6 +498,25 @@ namespace p20 {
 } 
 #else
 const ::CORBA::TypeCode_ptr p20::_tc_A = _0RL_tc_p20_mA;
+#endif
+
+
+static CORBA::PR_structMember _0RL_structmember_p20_mB[] = {
+  {"b_", CORBA::TypeCode::PR_any_tc()}
+};
+
+#ifdef _0RL_tc_p20_mB
+#  undef _0RL_tc_p20_mB
+#endif
+static CORBA::TypeCode_ptr _0RL_tc_p20_mB = CORBA::TypeCode::PR_struct_tc("IDL:p20/B:1.0", "B", _0RL_structmember_p20_mB, 1, &_0RL_tcTrack);
+
+#if defined(HAS_Cplusplus_Namespace) && defined(_MSC_VER)
+// MSVC++ does not give the constant external linkage otherwise.
+namespace p20 { 
+  const ::CORBA::TypeCode_ptr _tc_B = _0RL_tc_p20_mB;
+} 
+#else
+const ::CORBA::TypeCode_ptr p20::_tc_B = _0RL_tc_p20_mB;
 #endif
 
 
@@ -463,6 +587,57 @@ void operator<<=(::CORBA::Any& _a, p20::A* _sp)
                     _0RL_p20_mA_destructor_fn,
                     _v)) {
     _sp = (const p20::A*)_v;
+    return 1;
+  }
+  return 0;
+}
+
+static void _0RL_p20_mB_marshal_fn(cdrStream& _s, void* _v)
+{
+  p20::B* _p = (p20::B*)_v;
+  *_p >>= _s;
+}
+static void _0RL_p20_mB_unmarshal_fn(cdrStream& _s, void*& _v)
+{
+  p20::B* _p = new p20::B;
+  *_p <<= _s;
+  _v = _p;
+}
+static void _0RL_p20_mB_destructor_fn(void* _v)
+{
+  p20::B* _p = (p20::B*)_v;
+  delete _p;
+}
+
+void operator<<=(::CORBA::Any& _a, const p20::B& _s)
+{
+  p20::B* _p = new p20::B(_s);
+  _a.PR_insert(_0RL_tc_p20_mB,
+               _0RL_p20_mB_marshal_fn,
+               _0RL_p20_mB_destructor_fn,
+               _p);
+}
+void operator<<=(::CORBA::Any& _a, p20::B* _sp)
+{
+  _a.PR_insert(_0RL_tc_p20_mB,
+               _0RL_p20_mB_marshal_fn,
+               _0RL_p20_mB_destructor_fn,
+               _sp);
+}
+
+::CORBA::Boolean operator>>=(const ::CORBA::Any& _a, p20::B*& _sp)
+{
+  return _a >>= (const p20::B*&) _sp;
+}
+::CORBA::Boolean operator>>=(const ::CORBA::Any& _a, const p20::B*& _sp)
+{
+  void* _v;
+  if (_a.PR_extract(_0RL_tc_p20_mB,
+                    _0RL_p20_mB_unmarshal_fn,
+                    _0RL_p20_mB_marshal_fn,
+                    _0RL_p20_mB_destructor_fn,
+                    _v)) {
+    _sp = (const p20::B*)_v;
     return 1;
   }
   return 0;
