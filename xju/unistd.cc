@@ -29,6 +29,10 @@ namespace xju
 	"stat",
 	::stat};
 
+    const SyscallF2<int, int, Stat*> fstat_={
+	"fstat",
+	::fstat};
+
     const SyscallF3<ssize_t, int, const void*, size_t> write={
 	"write",
 	::write};

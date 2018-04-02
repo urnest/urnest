@@ -22,11 +22,11 @@
 #include <xju/syscall.hh>
 #include <sys/types.h>
 
-
 namespace xju
 {
     extern const SyscallF2<int, const char*, mode_t> chmod;
     extern const SyscallF2<int, const char*, struct stat*> stat;
+    extern const SyscallF2<int, int, struct stat*> fstat;
 }
 
 

@@ -1,7 +1,4 @@
-//     -*- mode: c++ ; c-file-style: "osse" ; -*-
-//
-// Copyright (c) 2003
-// Trevor Taylor
+// Copyright (c) 2017 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
 // and its documentation for any purpose is hereby granted without fee,
@@ -10,17 +7,24 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/stat.hh>
+
+
+#include <xju/Exception.hh>
 
 namespace xju
 {
-    const SyscallF2<int, const char*, mode_t> chmod={
-	"chmod",
-	::chmod};
-    const SyscallF2<int, const char*, struct stat*> stat={
-	"stat",
-	::stat};
-    const SyscallF2<int, int, struct stat*> fstat={
-	"fstat",
-	::fstat};
+namespace io
+{
+class EndOfFile : public xju::Exception
+{
+public:
+  virtual ~EndOfFile() noexcept
+  {
+  }
+  using xju::Exception::Exception;
+};
+
 }
+}
+
+

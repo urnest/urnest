@@ -36,6 +36,7 @@ namespace xju
     extern const SyscallF3<int, int, int, off_t> lockf;
     extern const SyscallF3<ssize_t, int, void*, size_t> read;
     extern const SyscallF2<int, const char*, Stat*> stat_; // [1]
+    extern const SyscallF2<int, int, Stat*> fstat_; // [1]
     extern const SyscallF3<ssize_t, int, const void*, size_t> write;
     extern const SyscallF3<off_t, int, off_t, int> lseek;
     extern const SyscallF2<int, int, off_t> ftruncate;

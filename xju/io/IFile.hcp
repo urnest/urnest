@@ -1,0 +1,138 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/SyscallFailed.hh>
+#include <xju/io/IStream.hh>
+#include <utility>
+#include <xju/path.hh>
+#include <xju/syscall.hh> //impl
+#include <xju/fcntl.hh> //impl
+#include <xju/unistd.hh>
+#include <sstream> //impl
+#include <xju/AutoFd.hh>
+#include <xju/io/EndOfFile.hh>
+#include <xju/now.hh> //impl
+
+namespace xju
+{
+namespace io
+{
+
+class IFile : public IStream {
+public:
+  std::pair<xju::path::AbsolutePath, xju::path::FileName> const fileName_;
+  
+  explicit IFile(std::pair<xju::path::AbsolutePath,
+                           xju::path::FileName> const& fileName,
+                 bool closeOnExec=true) throw(
+                   // eg no access, file not found
+                   xju::SyscallFailed) try:
+      fileName_(fileName),
+      fd_(xju::syscall(xju::open,XJU_TRACED)(
+            xju::path::str(fileName_).c_str(),
+            O_RDONLY|(closeOnExec?O_CLOEXEC:0),
+            0))
+  {
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "open file " << xju::path::str(fileName) << " for reading";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+
+  // read up to bufferSize bytes from file starting at current pointer
+  size_t read(void* buffer,size_t bufferSize) throw(
+    // at end of file already (nothing read)
+    EndOfFile,
+    xju::Exception)
+  {
+    try{
+      try{
+        return IStream::read(buffer,bufferSize,xju::now());
+      }
+      catch(xju::io::Input::Closed const& e){
+        throw xju::io::EndOfFile("end of file",XJU_TRACED);
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "read up to " << bufferSize << " bytes at offset "
+        << seekBy(0) << " of file " << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+  xju::Stat stat() const noexcept
+  {
+    xju::Stat result;
+    xju::syscall(xju::fstat_,XJU_TRACED)(fileDescriptor(),&result);
+    return result;
+  }
+  off_t size() const noexcept
+  {
+    return stat().st_size;
+  }
+
+  virtual std::string str() const throw()
+  {
+    return xju::path::str(fileName_);
+  }
+
+  // advance pointer by n bytes
+  // - seeks backwards if n<0
+  // - returns current location if n==0
+  off_t seekBy(off_t n) throw(
+    xju::SyscallFailed)
+  {
+    try{
+      return xju::syscall(xju::lseek,XJU_TRACED)(fileDescriptor(),n,SEEK_CUR);
+    }
+    catch(xju::SyscallFailed& e){
+      std::ostringstream s;
+      s << "advance " << (*this) << " read pointer by " << n << " bytes";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+  // set pointer to n, returns n
+  // - returns current location if n==0
+  // - see lseek(2)
+  off_t seekTo(off_t n) throw(
+    // eg n < 0
+    xju::SyscallFailed)
+  {
+    try{
+      return xju::syscall(xju::lseek,XJU_TRACED)(fileDescriptor(),n,SEEK_SET);
+    }
+    catch(xju::SyscallFailed& e){
+      std::ostringstream s;
+      s << "set " << (*this) << " read pointer to " << n;
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+private:
+  xju::AutoFd fd_;
+
+  // Input::
+  virtual int fileDescriptor() const throw()
+  {
+    return fd_.fd();
+  }
+  
+};
+
+}
+}

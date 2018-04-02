@@ -1,0 +1,199 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/io/OStream.hh>
+#include <utility>
+#include <xju/path.hh>
+#include <xju/SyscallFailed.hh>
+#include <xju/syscall.hh> //impl
+#include <xju/fcntl.hh> //impl
+#include <xju/unistd.hh>
+#include <sstream> //impl
+#include <xju/AutoFd.hh>
+#include <xju/io/EndOfFile.hh>
+#include <xju/now.hh> //impl
+#include <xju/file/Mode.hh>
+
+namespace xju
+{
+namespace io
+{
+
+class OFile : public OStream {
+public:
+  std::pair<xju::path::AbsolutePath, xju::path::FileName> const fileName_;
+
+  // open existing file writing
+  // - positions at end of file
+  OFile(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& fileName,
+        bool closeOnExec=true) throw(
+          // file not found, no access
+          xju::SyscallFailed) try:
+      fileName_(fileName),
+      fd_(xju::syscall(xju::open,XJU_TRACED)(
+            xju::path::str(fileName_).c_str(),
+            O_WRONLY|(closeOnExec?O_CLOEXEC:0),
+            0))
+  {
+    seekTo(size());
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "open existing file " << xju::path::str(fileName) << " for writing";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+    
+
+  // open existing file for writing, creating file if it doesn't exist
+  // - positions at end of file
+  OFile(std::pair<xju::path::AbsolutePath,
+        xju::path::FileName> const& fileName,
+        xju::file::Mode mode,
+        bool closeOnExec=true) throw(
+          // invalid path, no access
+          xju::SyscallFailed) try:
+      fileName_(fileName),
+      fd_(xju::syscall(xju::open,XJU_TRACED)(
+            xju::path::str(fileName_).c_str(),
+            O_WRONLY|O_CREAT|(closeOnExec?O_CLOEXEC:0),
+            mode.value()))
+  {
+    seekTo(size());
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "open file " << xju::path::str(fileName)
+      << " for writing, creating it with mode " << mode
+      << " if it does not exist";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+
+  class Exclusive{};
+
+  // create file
+  OFile(std::pair<xju::path::AbsolutePath,
+        xju::path::FileName> const& fileName,
+        xju::file::Mode mode,
+        Exclusive x,
+        bool closeOnExec=true) throw(
+          // file exists
+          // invalid path, no access
+          xju::SyscallFailed) try:
+      fileName_(fileName),
+      fd_(xju::syscall(xju::open,XJU_TRACED)(
+            xju::path::str(fileName_).c_str(),
+            O_WRONLY|O_CREAT|O_EXCL|(closeOnExec?O_CLOEXEC:0),
+            mode.value()))
+  {
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "create file " << xju::path::str(fileName)
+      << " with mode " << mode;
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+
+  // Output::
+  virtual std::string str() const throw()
+  {
+    return xju::path::str(fileName_);
+  }
+
+  xju::Stat stat() const noexcept
+  {
+    xju::Stat result;
+    xju::syscall(xju::fstat_,XJU_TRACED)(fileDescriptor(),&result);
+    return result;
+  }
+  off_t size() const noexcept
+  {
+    return stat().st_size;
+  }
+
+  // advance pointer by n bytes
+  // - seeks backwards if n<0
+  // - returns new pointer value
+  // - see lseek(2)
+  off_t seekBy(off_t n) throw(
+    xju::SyscallFailed)
+  {
+    try{
+      return xju::syscall(xju::lseek,XJU_TRACED)(fileDescriptor(),n,SEEK_CUR);
+    }
+    catch(xju::SyscallFailed& e){
+      std::ostringstream s;
+      s << "advance " << (*this) << " write pointer by " << n << " bytes";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+  // set pointer to n, returns n
+  // - returns current location if n==0
+  // - see lseek(2)
+  off_t seekTo(off_t n) throw(
+    // eg n < 0
+    xju::SyscallFailed)
+  {
+    try{
+      return xju::syscall(xju::lseek,XJU_TRACED)(fileDescriptor(),n,SEEK_SET);
+    }
+    catch(xju::SyscallFailed& e){
+      std::ostringstream s;
+      s << "set " << (*this) << " write pointer to " << n;
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+  // truncate file to specified new size, position at new end of file
+  void truncate(off_t newSize) throw(
+    xju::SyscallFailed)
+  {
+    xju::syscall(xju::ftruncate,XJU_TRACED)(fileDescriptor(),newSize);
+    seekTo(newSize);
+  }
+
+  // write bufferSize bytes to file at current pointer
+  void write(void const* buffer,size_t bufferSize) throw(
+    xju::Exception)
+  {
+    try{
+      xju::assert_equal(OStream::write(buffer,bufferSize,xju::now()),
+                        bufferSize);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "write " << bufferSize << " bytes at offset "
+        << seekBy(0) << " of file " << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  
+private:
+  xju::AutoFd fd_;
+
+  // Output::
+  virtual int fileDescriptor() const throw()
+  {
+    return fd_.fd();
+  }
+
+};
+
+}
+}
+
+

@@ -1,3 +1,5 @@
+* override
+
 - trace should go to stderr
 
 - move tracing into base class parse() function:
