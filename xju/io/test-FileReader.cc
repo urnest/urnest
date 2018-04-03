@@ -66,7 +66,14 @@ void test1() {
   data.resize(4U);
   data.resize(x.read(&data[0],2));
   xju::assert_equal(data,"re");
-  
+
+  try{
+    x.seekTo(-1);
+    xju::assert_never_reached();
+  }
+  catch(xju::SyscallFailed const& e){
+    xju::assert_equal(e._errno,EINVAL);
+  }
 }
 
 }

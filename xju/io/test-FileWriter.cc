@@ -72,6 +72,15 @@ void test1() {
     FileWriter x(fileName);
     x.truncate(4);
     x.write("sally",5);
+
+    try{
+      x.seekTo(-1);
+      xju::assert_never_reached();
+    }
+    catch(xju::SyscallFailed const& e){
+      xju::assert_equal(e._errno,EINVAL);
+    }
+    
   }
   xju::assert_equal(xju::file::read(fileName),
                     std::string("feedsally"));
