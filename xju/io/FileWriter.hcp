@@ -27,21 +27,22 @@ namespace xju
 namespace io
 {
 
-class OFile : public OStream {
+class FileWriter : public OStream {
 public:
   std::pair<xju::path::AbsolutePath, xju::path::FileName> const fileName_;
 
   // open existing file writing
   // - positions at end of file
-  OFile(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& fileName,
-        bool closeOnExec=true) throw(
-          // file not found, no access
-          xju::SyscallFailed) try:
-      fileName_(fileName),
-      fd_(xju::syscall(xju::open,XJU_TRACED)(
-            xju::path::str(fileName_).c_str(),
-            O_WRONLY|(closeOnExec?O_CLOEXEC:0),
-            0))
+  explicit FileWriter(
+    std::pair<xju::path::AbsolutePath,xju::path::FileName> const& fileName,
+    bool closeOnExec=true) throw(
+      // file not found, no access
+      xju::SyscallFailed) try:
+    fileName_(fileName),
+    fd_(xju::syscall(xju::open,XJU_TRACED)(
+          xju::path::str(fileName_).c_str(),
+          O_WRONLY|(closeOnExec?O_CLOEXEC:0),
+          0))
   {
     seekTo(size());
   }
@@ -51,21 +52,21 @@ public:
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }
-    
+  
 
   // open existing file for writing, creating file if it doesn't exist
   // - positions at end of file
-  OFile(std::pair<xju::path::AbsolutePath,
-        xju::path::FileName> const& fileName,
-        xju::file::Mode mode,
-        bool closeOnExec=true) throw(
-          // invalid path, no access
-          xju::SyscallFailed) try:
-      fileName_(fileName),
-      fd_(xju::syscall(xju::open,XJU_TRACED)(
-            xju::path::str(fileName_).c_str(),
-            O_WRONLY|O_CREAT|(closeOnExec?O_CLOEXEC:0),
-            mode.value()))
+  FileWriter(
+    std::pair<xju::path::AbsolutePath,xju::path::FileName> const& fileName,
+    xju::file::Mode mode,
+    bool closeOnExec=true) throw(
+      // invalid path, no access
+      xju::SyscallFailed) try:
+    fileName_(fileName),
+    fd_(xju::syscall(xju::open,XJU_TRACED)(
+          xju::path::str(fileName_).c_str(),
+          O_WRONLY|O_CREAT|(closeOnExec?O_CLOEXEC:0),
+          mode.value()))
   {
     seekTo(size());
   }
@@ -81,19 +82,19 @@ public:
   class Exclusive{};
 
   // create file
-  OFile(std::pair<xju::path::AbsolutePath,
-        xju::path::FileName> const& fileName,
-        xju::file::Mode mode,
-        Exclusive x,
-        bool closeOnExec=true) throw(
-          // file exists
-          // invalid path, no access
-          xju::SyscallFailed) try:
-      fileName_(fileName),
-      fd_(xju::syscall(xju::open,XJU_TRACED)(
-            xju::path::str(fileName_).c_str(),
-            O_WRONLY|O_CREAT|O_EXCL|(closeOnExec?O_CLOEXEC:0),
-            mode.value()))
+  FileWriter(
+    std::pair<xju::path::AbsolutePath,xju::path::FileName> const& fileName,
+    xju::file::Mode mode,
+    Exclusive x,
+    bool closeOnExec=true) throw(
+      // file exists
+      // invalid path, no access
+      xju::SyscallFailed) try:
+    fileName_(fileName),
+    fd_(xju::syscall(xju::open,XJU_TRACED)(
+          xju::path::str(fileName_).c_str(),
+          O_WRONLY|O_CREAT|O_EXCL|(closeOnExec?O_CLOEXEC:0),
+          mode.value()))
   {
   }
   catch(xju::Exception& e){

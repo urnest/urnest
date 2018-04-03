@@ -5,8 +5,8 @@
 
 %tests.tree==<<
 ()+cmd=(test-FileObserver.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
-()+cmd=(test-IFile.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
-()+cmd=(test-OFile.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-FileReader.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-FileWriter.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 %hcp-gen==.:dir.hcp.list+G+hpath='xju/io':hcp-split-virdir-specs:cat:vir_dir
 

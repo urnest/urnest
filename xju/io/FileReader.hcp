@@ -26,16 +26,16 @@ namespace xju
 namespace io
 {
 
-class IFile : public IStream {
+class FileReader : public IStream {
 public:
   std::pair<xju::path::AbsolutePath, xju::path::FileName> const fileName_;
   
-  explicit IFile(std::pair<xju::path::AbsolutePath,
-                           xju::path::FileName> const& fileName,
-                 bool closeOnExec=true) throw(
-                   // eg no access, file not found
-                   xju::SyscallFailed) try:
-      fileName_(fileName),
+  explicit FileReader(
+    std::pair<xju::path::AbsolutePath,xju::path::FileName> const& fileName,
+    bool closeOnExec=true) throw(
+      // eg no access, file not found
+      xju::SyscallFailed) try:
+    fileName_(fileName),
       fd_(xju::syscall(xju::open,XJU_TRACED)(
             xju::path::str(fileName_).c_str(),
             O_RDONLY|(closeOnExec?O_CLOEXEC:0),

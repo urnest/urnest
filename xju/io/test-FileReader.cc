@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/io/IFile.hh>
+#include <xju/io/FileReader.hh>
 
 #include <iostream>
 #include <xju/assert.hh>
@@ -27,7 +27,7 @@ void test1() {
   xju::file::touch(fileName,xju::file::Mode(0777));
   xju::file::rm(fileName);
   try{
-    IFile x(fileName);
+    FileReader x(fileName);
   }
   catch(xju::SyscallFailed const& e){
     xju::assert_equal(e._errno,ENOENT);
@@ -38,7 +38,7 @@ void test1() {
     "fred",4,
     xju::file::Mode(0777));
 
-  IFile x(fileName);
+  FileReader x(fileName);
   std::string data(4U,' ');
   data.resize(x.read(&data[0],2));
   xju::assert_equal(data,"fr");

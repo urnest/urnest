@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/io/OFile.hh>
+#include <xju/io/FileWriter.hh>
 
 #include <iostream>
 #include <xju/assert.hh>
@@ -25,27 +25,27 @@ void test1() {
   xju::file::touch(fileName,xju::file::Mode(0777));
   xju::file::rm(fileName);
   try{
-    OFile x(fileName);
+    FileWriter x(fileName);
   }
   catch(xju::SyscallFailed const& e){
     xju::assert_equal(e._errno,ENOENT);
   }
   {
-    OFile x(fileName,xju::file::Mode(0777),xju::io::OFile::Exclusive());
+    FileWriter x(fileName,xju::file::Mode(0777),FileWriter::Exclusive());
     x.write("fred",4);
     x.write("jock",4);
   }
   xju::assert_equal(xju::file::read(fileName),
                     std::string("fredjock"));
   try{
-    OFile x(fileName,xju::file::Mode(0777),xju::io::OFile::Exclusive());
+    FileWriter x(fileName,xju::file::Mode(0777),FileWriter::Exclusive());
     xju::assert_never_reached();
   }
   catch(xju::SyscallFailed const& e){
     xju::assert_equal(e._errno,EEXIST);
   }
   {
-    OFile x(fileName);
+    FileWriter x(fileName);
     x.write("sally",5);
     x.seekBy(-4);
     x.write("i",1);
@@ -54,14 +54,14 @@ void test1() {
                     std::string("fredjocksilly"));
   {
     xju::file::rm(fileName);
-    OFile x(fileName,xju::file::Mode(0777));
+    FileWriter x(fileName,xju::file::Mode(0777));
     x.write("fred",4);
     x.write("jock",4);
   }
   xju::assert_equal(xju::file::read(fileName),
                     std::string("fredjock"));
   {
-    OFile x(fileName);
+    FileWriter x(fileName);
     x.write("sally",5);
     x.seekTo(1);
     x.write("e",1);
@@ -69,7 +69,7 @@ void test1() {
   xju::assert_equal(xju::file::read(fileName),
                     std::string("feedjocksally"));
   {
-    OFile x(fileName);
+    FileWriter x(fileName);
     x.truncate(4);
     x.write("sally",5);
   }
