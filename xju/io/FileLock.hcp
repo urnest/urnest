@@ -1,0 +1,102 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <sys/file.h> //impl
+#include <xju/Exception.hh>
+#include <xju/SyscallFailed.hh>
+#include <sstream> //impl
+#include <xju/io/FileWriter.hh> //impl
+#include <xju/io/FileReader.hh> //impl
+
+
+namespace xju
+{
+namespace io
+{
+class FileReader;
+class FileWriter;
+
+class FileLock
+{
+public:
+  class Unavailable : public xju::Exception
+  {
+  public:
+    explicit Unavailable(xju::Exception const& x) throw():
+        xju::Exception(x)
+    {
+    }
+  };
+
+  // Take out immediate exclusive lock on file x.
+  // - wraps flock
+  // pre: x will outlive this
+  explicit FileLock(FileReader const& x) throw(
+    // x's file is currently locked by another file descriptor
+    // (which could be in this process or another process)
+    Unavailable,
+    xju::SyscallFailed) try:
+      fd_(x.fd_.fd())
+  {
+    try{
+      xju::syscall("flock",::flock,XJU_TRACED)(x.fd_.fd(),LOCK_EX|LOCK_NB);
+    }
+    catch(xju::SyscallFailed const& e){
+      if (e._errno==EWOULDBLOCK){
+        throw Unavailable(e);
+      }
+      throw;
+    }
+  }
+  catch(xju::Exception& e)
+  {
+    std::ostringstream s;
+    s << "lock " << x;
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+  
+  explicit FileLock(FileWriter const& x) throw(
+    // x's file is currently locked by another file descriptor
+    // (which could be in this process or another process)
+    Unavailable,
+    xju::SyscallFailed) try:
+      fd_(x.fd_.fd())
+  {
+    try{
+      xju::syscall("flock",::flock,XJU_TRACED)(x.fd_.fd(),LOCK_EX|LOCK_NB);
+    }
+    catch(xju::SyscallFailed const& e){
+      if (e._errno==EWOULDBLOCK){
+        throw Unavailable(e);
+      }
+      throw;
+    }
+  }
+  catch(xju::Exception& e)
+  {
+    std::ostringstream s;
+    s << "lock " << x;
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+
+  ~FileLock() throw()
+  {
+    xju::syscall("flock",::flock,XJU_TRACED)(fd_,LOCK_UN);
+  }
+private:
+  int const fd_;
+};
+
+}
+}
+
+
