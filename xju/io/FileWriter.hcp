@@ -27,6 +27,8 @@ namespace xju
 namespace io
 {
 
+// note xju::io::select is always true for FileWriter, and OStream deadlines
+// are never reached
 class FileWriter : public OStream {
 public:
   std::pair<xju::path::AbsolutePath, xju::path::FileName> const fileName_;
@@ -182,6 +184,8 @@ public:
       throw;
     }
   }
+
+  friend class FileLock;
   
 private:
   xju::AutoFd fd_;
