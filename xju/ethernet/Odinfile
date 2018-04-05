@@ -1,0 +1,12 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+%tests.tree
+
+%tests.tree == <<
+()+cmd=(test-UDPSocket.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+
+%tags==%all.list-of-tags:merged-tags
+
+%all.list-of-tags==<<
+.:merged-tags

@@ -1,0 +1,46 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <cinttypes>
+#include <iosfwd>
+
+#include <ostream> //impl
+#include <xju/format.hh> //impl
+#include <string> //impl
+
+namespace xju
+{
+namespace ethernet
+{
+
+class Address : public std::array<uint8_t,6>
+{
+public:
+  explicit Address(std::array<uint8_t,6> const& value) noexcept:
+    std::array<uint8_t,6>(value)
+  {
+  }
+  friend std::ostream& operator<<(std::ostream& s,Address const& x) noexcept
+  {
+    return s << xju::format::join(
+      x.begin(),x.end(),
+      [](uint8_t x){return xju::format::hex(x);},
+      std::string("-"));
+  }
+  bool isUnicast() const throw(){
+    return (*this)[0]&1;
+  }
+};
+
+extern Address BROADCAST_ADDRESS{0xff,0xff,0xff,0xff,0xff,0xff};
+
+}
+}

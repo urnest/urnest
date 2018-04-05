@@ -1,0 +1,133 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <arpa/inet.h> //impl
+namespace xju
+{
+namespace ethernet
+{
+
+namespace
+{
+std::vector<std::tuple<InterfaceName,InterfaceIndex,MacAddress>> getInterfaces()
+  throw(xju::SyscallFailed)
+{
+  std::vector<std::pair<InterfaceName,InterfaceIndex>> namesAndIndices;
+  std::unique_ptr<struct if_nameindex[],decltype(&::if_freenameindex)>
+    interfaces(
+      xju::syscall("if_nameindex",::if_nameindex,XJU_TRACED,true,0),
+      &::if_freenameindex);
+  for(auto i=0;
+      interfaces[i]->if_index&&interfaces[i]->if_name;
+      ++i){
+    namesAndIndices.push_back(std::make_pair(
+                                InterfaceName(interfaces[i]->if_name),
+                                InterfaceIndex(interfaces[i]->if_index)));
+  }
+  std::vector<std::tuple<InterfaceName,InterfaceIndex,MacAddress> result;
+  xju::AutoFd socket(
+    xju::syscall(xju::socket,XJU_TRACED)(
+      AF_PACKET,
+      SOCK_RAW|SOCK_CLOEXEC|SOCK_NONBLOCK,
+      0xffff));
+  for(auto x: ni){
+    sockaddr_ll addr;
+    addr.sll_protocol=0xffff;
+    addr.sll_ifindex=x.second.value();
+    xju::syscall(xju::bind(socket.fd(),(const struct sockaddr *)&addr,
+                           sizeof(addr)));
+    struct ifreq r;
+    xju::syscall(xju::ioctl,SIOCGIFHWADDR,&r);
+    if(r.ifr_hwaddr.sa_family==ARPHRD_ETHER){
+      result.push_back(
+        std::make_tuple(x.first,x.second,MacAddress({
+              sa_data[0],
+              sa_data[1],
+              sa_data[2],
+              sa_data[3],
+              sa_data[4],
+                sa_data[5]})));
+    }
+  }
+  return result;
+}
+  
+}
+
+class Socket : public virtual xju::io::Input,
+                  public virtual xju::io::Output
+{
+public:
+  // Socket receiving specified 802.3 protocol on all interfaces
+  // including loopback
+  explicit Socket(Protocol matchProtocol=Protocol(ETH_P_ALL)) throw(
+    xju::Exception,
+    xju::SyscallFailed) try:
+      fd_(xju::syscall(xju::socket,XJU_TRACED)(
+            AF_PACKET,
+            SOCK_DGRAM|SOCK_CLOEXEC|SOCK_NONBLOCK,
+            ::htons(matchProtocol.value()) ))
+  {
+  }
+  catch(xju::SyscallFailed& e)
+  {
+    std::ostringstream s;
+    s << "create ethernet socket receiving all 802.3 protocols on all interfaces including loopback";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+
+  // Socket receiving specified 802.3 protocol on the interface
+  // that has specified mac address
+  explicit Socket(Address localAddress,
+                  Protocol matchProtocol=Protocol(ETH_P_ALL)) throw(
+    xju::Exception,
+    xju::SyscallFailed) try:
+      fd_(xju::syscall(xju::socket,XJU_TRACED)(
+            AF_PACKET,
+            SOCK_DGRAM|SOCK_CLOEXEC|SOCK_NONBLOCK,
+            ::htons(matchProtocol.value()) ))
+  {
+    auto const interfaces(getInterfaces());
+    auto const i(
+      std::find_if(
+        interfaces.begin(),
+        interfaces.end(),
+        [&](decltype(interfaces)::value_type const& x){
+          return x.get<2>()==localAddress; }));
+    if (i==interfaces.end()){
+      std::ostringstream s;
+      s << "only have interfaces "
+        << xju::format::join(interfaces.begin(),
+                             interfaces.end(),
+                             [](decltype(interfaces)::value_type const& x){
+                               return xju::format::str(x.get<2>());},
+                             std::string(", "));
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    sockaddr_ll addr;
+    addr.sll_protocol=::htons(matchProtocol);
+    addr.sll_ifindex=(*i).get<1>().value();
+    xju::syscall(xju::bind(fileDescriptor(),
+                           (const struct sockaddr *)&addr,
+                           sizeof(addr)));
+  }
+  catch(xju::SyscallFailed& e)
+  {
+    std::ostringstream s;
+    s << "create ethernet socket receiving all 802.3 protocols on all interfaces including loopback";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+};
+  
+}
+}
