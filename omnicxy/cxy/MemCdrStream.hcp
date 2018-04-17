@@ -8,23 +8,22 @@
 // implied warranty.
 //
 
-#include <omniORB4/CORBA.h>//impl
-#include <omniORB4/cdrStream.h> //impl
+#include <cxy/cdrMemoryStream_.hh> //impl
 #include <new>
 #include <cinttypes> //impl
 #include <utility> //impl
 
 class cdrStream;
-class cdrMemoryStream;
 
 namespace cxy
 {
+class cdrMemoryStream_;
 
 class MemCdrStream
 {
 public:
   MemCdrStream() throw(std::bad_alloc):
-      s_(new cdrMemoryStream)
+      s_(new cdrMemoryStream_)
   {
   }
   cdrStream& operator*() throw()
@@ -41,7 +40,7 @@ public:
   }
 
   MemCdrStream(MemCdrStream const& b) throw(std::bad_alloc):
-      s_(new cdrMemoryStream(*b.s_))
+      s_(new cdrMemoryStream_(*b.s_))
   {
   }
   
@@ -49,7 +48,7 @@ public:
   {
     if (s_ != b.s_) {
       delete s_;
-      s_=new cdrMemoryStream(*b.s_);
+      s_=new cdrMemoryStream_(*b.s_);
     }
     return *this;
   }
@@ -74,7 +73,7 @@ public:
   {
   public:
     explicit Ref(MemCdrStream const& s) throw():
-        s_(new cdrMemoryStream(*s.s_,1))//1 means read only ref, not copy
+        s_(new cdrMemoryStream_(*s.s_,1))//1 means read only ref, not copy
     {
       s_->rewindInputPtr();      
     }
@@ -87,11 +86,11 @@ public:
       return *s_;
     }
   private:
-    cdrMemoryStream* s_;
+    cdrMemoryStream_* s_;
   };
     
 private:
-  cdrMemoryStream* s_;
+  cdrMemoryStream_* s_;
 
   bool lessThan(MemCdrStream const& b) const throw()
   {

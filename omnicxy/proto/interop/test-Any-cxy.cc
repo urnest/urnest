@@ -83,6 +83,11 @@ public:
       auto const z(y.get<char>());
       xju::assert_equal(z,'g');
     }
+    {
+      cxy::Any<> const y(f->f(8,cxy::Any<>(std::string("fred"))));
+      auto const z(y.get<std::string>());
+      xju::assert_equal(z,"fred");
+    }
     done_=true;
   }
 };

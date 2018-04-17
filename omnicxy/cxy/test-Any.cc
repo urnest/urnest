@@ -38,6 +38,16 @@ void test2() {
   xju::assert_equal(x, y);
 }
 
+void test3() {
+  std::string const x("fred");
+
+  ::cxy::Any<> const a(x);
+  xju::assert_equal(a.isA<std::string>(),true);
+
+  std::string const y(a.get<std::string>());
+  xju::assert_equal(x, y);
+}
+
 }
 
 using namespace cxy;
@@ -47,6 +57,7 @@ int main(int argc, char* argv[])
   unsigned int n(0);
   test1(), ++n;
   test2(), ++n;
+  test3(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

@@ -1,0 +1,41 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <omniORB4/CORBA.h>
+#include <omniORB4/cdrStream.h>
+#include <omniORB4/codeSets.h> //impl
+#include <omniORB4/internal/giopStreamImpl.h> //impl
+
+namespace cxy
+{
+class cdrMemoryStream_ : public cdrMemoryStream
+{
+public:
+  cdrMemoryStream_() throw(){
+    // to allow cxy::Any use before omniORB orbInit
+    if (!pd_ncs_c){
+      pd_ncs_c=omni::omniCodeSet::getNCS_C(omni::omniCodeSet::ID_8859_1);
+    }
+    if (!pd_tcs_c){
+      GIOP::Version ver{1,2};
+
+      pd_tcs_c = omni::omniCodeSet::getTCS_C(pd_ncs_c->id(), ver);
+    }
+  }
+  cdrMemoryStream_(cdrMemoryStream_ const& b,bool readOnly=false) throw():
+      cdrMemoryStream(b,readOnly?1:0)
+  {
+    // work around omniORB cdrMemoryStream copy constructor bug
+    pd_ncs_c=b.pd_ncs_c;
+    pd_ncs_w=b.pd_ncs_w;
+  }
+};
+
+}

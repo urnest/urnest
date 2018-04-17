@@ -83,6 +83,15 @@ public:
       (*result) <<= CORBA::Any::from_char(y);
       return result;
     }
+    case 8:
+    {
+      char* y;
+      x >>= CORBA::Any::to_string(y,0);
+      xju::assert_equal(y, std::string("fred"));
+      CORBA::Any* result(new CORBA::Any);
+      (*result) <<= CORBA::Any::from_string(y,0);
+      return result;
+    }
     default:
       xju::assert_never_reached();
     }

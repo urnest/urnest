@@ -125,7 +125,7 @@ x p16a-main:
       no size-changing operations
     
 - any
-  - string
+  x string
   - array
   - union
   
