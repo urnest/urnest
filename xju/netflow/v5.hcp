@@ -157,9 +157,9 @@ std::pair<Header,std::vector<Flow> > decode(
         throw;
       }
     };
-    if (get8(0,"version")!=5) {
+    if (get16(0,"version")!=5) {
       std::ostringstream s;
-      s << "data is netflow version " << xju::format::int_(get8(0,"version")) 
+      s << "data is netflow version " << xju::format::int_(get16(0,"version")) 
         << ", not 5";
       throw xju::Exception(s.str(),XJU_TRACED);
     }
@@ -231,8 +231,7 @@ std::vector<uint8_t> encode(
     result.push_back( (uint8_t)(n>>8) );
     result.push_back( (uint8_t)(n>>0) );
   };
-  put8(5); //version
-  put8(0); //pad
+  put16(5); //version
   put16(x.second.size());
   put32(x.first.routerUpTime_.count());
   {
