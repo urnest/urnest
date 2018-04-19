@@ -20,6 +20,8 @@
 #include <vector>
 #include <typeinfo>
 #include <typeindex> //impl
+#include <cxy/MemCdrStream.hh>
+#include <xju/Optional.hh>
 
 class cdrStream;
 
@@ -240,26 +242,45 @@ private:
   }
 };
 
-/* REVISIT:
 class UnionTypeCode : public TypeCode
 {
 public:
+  typedef std::tuple<MemCdrStream,std::string,std::shared_ptr<TypeCode>> Case;
   UnionTypeCode(std::string repoId,
                 std::string name,
                 std::shared_ptr<TypeCode> const& descriminantType,
-                uint32_t defaultUsed,
-                std::vector<std::pair<std::string, std::shared_ptr<TypeCode> > > memberNamesAndTypes):
+                std::vector<Case> const& cases,
+                xju::Optional<uint32_t> const& indexOfDefaultCase) throw():
       repoId_(repoId),
       name_(name),
-      memberNamesAndTypes_(memberNamesAndTypes)
+      descriminantType_(descriminantType),
+      cases_(cases),
+      indexOfDefaultCase_(indexOfDefaultCase)
   {
   }
-  typedef std::vector<std::pair<std::string, std::shared_ptr<TypeCode> > > Members;
   
   virtual void copyValue(cdrStream& from, cdrStream& to) const
   {
-    for(auto nameAndType : memberNamesAndTypes_) {
-      nameAndType.second->copyValue(from,to);
+    MemCdrStream d;
+    descriminantType_->copyValue(from,*d);
+    descriminantType_->copyValue(*d,to);
+    auto i=cases_.begin();
+    for(; i!=cases_.end();++i){
+      // default case could be anywhere in the sequence, we have to ignore it
+      // until we've checked all the other cases... stupid encoding really
+      if (indexOfDefaultCase_==xju::Optional<uint32_t>(i-cases_.begin())){
+        continue;
+      }
+      if(std::get<0>(*i)==d){
+        break;
+      }
+    }
+    if (i!=cases_.end()){
+      std::get<2>(*i)->copyValue(from,to);
+    }
+    // only now can we check the default case (if there is one)
+    else if (indexOfDefaultCase_.valid()){
+      std::get<2>(cases_[indexOfDefaultCase_.value()])->copyValue(from,to);
     }
   }
 
@@ -270,10 +291,15 @@ public:
     EncapsulationCdrStream es;
     cxy::cdr<std::string>::marshal(repoId_,*es);
     cxy::cdr<std::string>::marshal(name_,*es);
-    cxy::cdr<uint32_t>::marshal(memberNamesAndTypes_.size(),*es);
-    for(auto nameAndType : memberNamesAndTypes_) {
-      cxy::cdr<std::string>::marshal(nameAndType.first,*es);
-      nameAndType.second->marshal(*es);
+    descriminantType_->marshal(*es);
+    cxy::cdr<int32_t>::marshal(
+      indexOfDefaultCase_.valid()?indexOfDefaultCase_.value():(int32_t)-1,
+      *es);
+    cxy::cdr<uint32_t>::marshal(cases_.size(),*es);
+    for(auto c: cases_){
+      descriminantType_->copyValue(*std::get<0>(c),*es);
+      cxy::cdr<std::string>::marshal(std::get<1>(c),*es);
+      std::get<2>(c)->marshal(*es);
     }
 
     cxy::cdr<EncapsulationCdrStream>::marshal(es,s);
@@ -297,7 +323,9 @@ public:
 private:
   std::string repoId_;
   std::string name_;
-  Members memberNamesAndTypes_;
+  std::shared_ptr<TypeCode> descriminantType_;
+  std::vector<Case> cases_;
+  xju::Optional<uint32_t> indexOfDefaultCase_; //if valid, < cases_.size()
   
   friend bool operator==(UnionTypeCode const& a,
                          UnionTypeCode const& b) throw()
@@ -305,7 +333,6 @@ private:
     return a.repoId_==b.repoId_;
   }
 };
-*/
 
 class StringTypeCode : public TypeCode
 {

@@ -121,6 +121,31 @@ private:
   {
     return a.lessThan(b);
   }
+  friend bool operator>(MemCdrStream const& a,
+                        MemCdrStream const& b) throw()
+  {
+    return b<a;
+  }
+  friend bool operator==(MemCdrStream const& a,
+                         MemCdrStream const& b) throw()
+  {
+    return !(a<b) && !(b<a);
+  }
+  friend bool operator!=(MemCdrStream const& a,
+                         MemCdrStream const& b) throw()
+  {
+    return (a<b) || (b<a);
+  }
+  friend bool operator<=(MemCdrStream const& a,
+                         MemCdrStream const& b) throw()
+  {
+    return !(a>b);
+  }
+  friend bool operator>=(MemCdrStream const& a,
+                         MemCdrStream const& b) throw()
+  {
+    return !(a<b);
+  }
 };
 
   
