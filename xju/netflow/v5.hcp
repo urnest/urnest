@@ -45,7 +45,8 @@ struct Flow
        xju::ip::Port srcPort,
        xju::ip::v4::Address destAddress,
        xju::ip::Port destPort,
-       uint32_t interfaceSnmpIndex,
+       uint16_t inputInterfaceSnmpIndex,
+       uint16_t outputInterfaceSnmpIndex,
        xju::ip::v4::Address nextHopRouter,
        std::chrono::system_clock::time_point flowStart,
        std::chrono::system_clock::time_point flowEnd,
@@ -62,7 +63,8 @@ struct Flow
       srcPort_(srcPort),
       destAddress_(destAddress),
       destPort_(destPort),
-      interfaceSnmpIndex_(interfaceSnmpIndex),
+      inputInterfaceSnmpIndex_(inputInterfaceSnmpIndex),
+      outputInterfaceSnmpIndex_(outputInterfaceSnmpIndex),
       nextHopRouter_(nextHopRouter),
       flowStart_(flowStart),
       flowEnd_(flowEnd),
@@ -81,14 +83,15 @@ struct Flow
   xju::ip::Port srcPort_;
   xju::ip::v4::Address destAddress_;
   xju::ip::Port destPort_;
-  uint32_t interfaceSnmpIndex_;
+  uint32_t inputInterfaceSnmpIndex_;
+  uint32_t outputInterfaceSnmpIndex_;
   xju::ip::v4::Address nextHopRouter_;
   std::chrono::system_clock::time_point flowStart_;
   std::chrono::system_clock::time_point flowEnd_;
   uint32_t packetsInFlow_;
   uint32_t bytesInFlow_;
   uint8_t tcpFlags_;
-  uint8_t ipProtocol_; // eg 6 tdp, 17 udp
+  uint8_t ipProtocol_; // eg 6 tcp, 17 udp
   uint8_t ipTOS_;
   uint8_t srcNetmaskBits_; // eg 24
   uint8_t dstNetmaskBits_;
@@ -178,7 +181,8 @@ std::pair<Header,std::vector<Flow> > decode(
           xju::ip::Port(get16(i+32,"srcport")),
           xju::ip::v4::Address(get32(i+4,"dstaddr")),
           xju::ip::Port(get16(i+34,"dstport")),
-          get32(i+12,"interface"),
+          get16(i+12,"input interface"),
+          get16(i+14,"output interface"),
           xju::ip::v4::Address(get32(i+8,"nexthop")),
           h.routerTime_-h.routerUpTime_+std::chrono::milliseconds(
                       get32(i+24,"start")),
@@ -254,7 +258,8 @@ std::vector<uint8_t> encode(
     put32(f.srcAddress_.value());
     put32(f.destAddress_.value());
     put32(f.nextHopRouter_.value());
-    put32(f.interfaceSnmpIndex_);
+    put16(f.inputInterfaceSnmpIndex_);
+    put16(f.outputInterfaceSnmpIndex_);
     put32(f.packetsInFlow_);
     put32(f.bytesInFlow_);
     put32(std::chrono::duration_cast<std::chrono::milliseconds>(

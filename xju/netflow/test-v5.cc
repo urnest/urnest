@@ -33,7 +33,7 @@ void test1() {
       192,168,1,2,//src
       193,169,19,87,//dest
       188,54,33,1,//nexthop
-      0x00,0x00,0x00,0x09,//interface snmp index
+      0x00,0x03,0x00,0x09,//interface snmp index
       0x00,0x00,0x53,0x24,//pkts
       0x00,0x20,0x32,0xac,//octets
       0x00,0x00,0x20,0x00,//start
@@ -46,7 +46,7 @@ void test1() {
       122,43,77,1,//src
       193,169,19,89,//dest
       188,54,33,1,//nexthop
-      0x00,0x00,0x00,0x09,//interface snmp index
+      0x00,0x03,0x00,0x09,//interface snmp index
       0x01,0x02,0x3,0x4,//pkts
       0x00,0x20,0x32,0xac,//octets
       0x00,0x00,0x20,0x00,//start
@@ -68,7 +68,8 @@ void test1() {
   xju::assert_equal(y.second[0].srcAddress_,xju::ip::v4::Address(0xc0a80102));
   xju::assert_equal(y.second[0].destAddress_,xju::ip::v4::Address(0xc1a91357));
   xju::assert_equal(y.second[0].nextHopRouter_,xju::ip::v4::Address(0xbc362101));
-  xju::assert_equal(y.second[0].interfaceSnmpIndex_,0x09U);
+  xju::assert_equal(y.second[0].inputInterfaceSnmpIndex_,0x03U);
+  xju::assert_equal(y.second[0].outputInterfaceSnmpIndex_,0x09U);
   xju::assert_equal(y.second[0].packetsInFlow_,0x00005324);
   xju::assert_equal(y.second[0].bytesInFlow_,0x002032acU);
   xju::assert_equal(y.second[0].flowStart_,
@@ -87,7 +88,8 @@ void test1() {
   xju::assert_equal(y.second[1].srcAddress_,xju::ip::v4::Address(0x7a2b4d01));
   xju::assert_equal(y.second[1].destAddress_,xju::ip::v4::Address(0xc1a91359));
   xju::assert_equal(y.second[1].nextHopRouter_,xju::ip::v4::Address(0xbc362101));
-  xju::assert_equal(y.second[1].interfaceSnmpIndex_,0x09U);
+  xju::assert_equal(y.second[1].inputInterfaceSnmpIndex_,0x03U);
+  xju::assert_equal(y.second[1].outputInterfaceSnmpIndex_,0x09U);
   xju::assert_equal(y.second[1].packetsInFlow_,0x01020304);
   xju::assert_equal(y.second[1].bytesInFlow_,0x002032acU);
   xju::assert_equal(y.second[1].flowStart_,
