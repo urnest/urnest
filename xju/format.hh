@@ -73,6 +73,7 @@
 #include <cinttypes>
 #include <climits>
 #include <chrono>
+#include <time.h>
 
 namespace xju
 {
@@ -321,6 +322,39 @@ std::string indent(std::string const& s, std::string const& prefix) throw();
 // time as seconds.usecs since unix epoch
 std::string time(std::chrono::system_clock::time_point const& t) throw();
 
+// format time t as specified
+// e.g.
+//   cout << localTime(now,Hour,':',Minute,':',Second);
+//
+template<class Formatter,class ... Formatters>
+std::string localTime(
+  std::chrono::system_clock::time_point const& t,
+  Formatter a,
+  Formatters... b) throw();
+template<class Formatter,class ... Formatters>
+std::string gmTime(
+  std::chrono::system_clock::time_point const& t,
+  Formatter a,
+  Formatters... b) throw();
+
+class Hour_{};class Hour12_{};class Minute_{};class Second_{};
+class Year_{};class Month_{};class Day_{};
+class DayName_{};class DayName3_{};
+class ampm_{};
+class AMPM_{};
+
+// time format selectors for use with localtime, gmtime above
+extern Year_ const Year;
+extern Month_ const Month;
+extern Day_ const Day;
+extern DayName_ const DayName;
+extern DayName3_ const DayName3;
+extern Hour_ const Hour;
+extern Minute_ const Minute;
+extern Second_ const Second;
+extern Hour12_ const Hour12;
+extern ampm_ const ampm;
+extern AMPM_ const AMPM;
 }
 }
 
@@ -654,6 +688,115 @@ std::string int_(I const x,
   s << x;
   return s.str();
 }
+
+template<class ...Formatters>
+std::string formatTm(struct tm const& x) throw(){
+  return std::string();
+}
+template<class ... Formatters>
+std::string formatTm(struct tm const& x, Year_, Formatters... bs) throw(){
+  return format::int_(x.tm_year+1900,4)+formatTm(x,bs...);
+}
+template<class ... Formatters>
+std::string formatTm(struct tm const& x, Month_, Formatters... bs) throw(){
+  return format::int_(x.tm_mon+1)+formatTm(x,bs...);
+}
+template<class ... Formatters>
+std::string formatTm(struct tm const& x, Day_, Formatters... bs) throw(){
+  return format::int_(x.tm_mday)+formatTm(x,bs...);
+}
+template<class ... Formatters>
+std::string formatTm(struct tm const& x, DayName_, Formatters... bs) throw(){
+  static const char* dayNames[]={
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday"};
+  return std::string(
+    (x.tm_wday>=0&&x.tm_wday<=6)?dayNames[x.tm_wday]:"???")+
+    formatTm(x,bs...);
+}
+template<class ... Formatters>
+std::string formatTm(struct tm const& x, DayName3_, Formatters... bs) throw(){
+  static const char* dayNames[]={
+    "Sun",
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat"};
+  return std::string(
+    (x.tm_wday>=0&&x.tm_wday<=6)?dayNames[x.tm_wday]:"???")+
+    formatTm(x,bs...);
+}
+template<class ... Formatters>
+std::string formatTm(struct tm const& x, Hour_, Formatters... bs) throw(){
+  return format::int_(x.tm_hour,2)+formatTm(x,bs...);
+}
+template<class ... Formatters>
+std::string formatTm(struct tm const& x, Hour12_, Formatters... bs) throw(){
+  int h;
+  switch(x.tm_hour){
+  case 0: h=12; break;
+  case 12: h=12; break;
+  default:
+    h=(x.tm_hour%12)+1;
+  }
+  return format::int_(h)+formatTm(x,bs...);
+}
+template<class ... Formatters>
+std::string formatTm(struct tm const& x, ampm_, Formatters... bs) throw(){
+  return std::string(x.tm_hour>=12?"pm":"am")+formatTm(x,bs...);
+}
+template<class ... Formatters>
+std::string formatTm(struct tm const& x, AMPM_, Formatters... bs) throw(){
+  return std::string(x.tm_hour>=12?"PM":"AM")+formatTm(x,bs...);
+}
+template<class ... Formatters>
+std::string formatTm(struct tm const& x, Minute_, Formatters... bs) throw(){
+  return format::int_(x.tm_min,2)+formatTm(x,bs...);
+}
+template<class ... Formatters>
+std::string formatTm(struct tm const& x, Second_, Formatters... bs) throw(){
+  return format::int_(x.tm_sec,2)+formatTm(x,bs...);
+}
+template<class ... Formatters>
+std::string formatTm(struct tm const& x, char c, Formatters... bs) throw(){
+  return std::string(1U,c)+formatTm(x,bs...);
+}
+template<class ... Formatters>
+std::string formatTm(struct tm const& x,
+                     std::string const& s,
+                     Formatters... bs) throw(){
+  return s+formatTm(x,bs...);
+}
+template<class Formatter,class ... Formatters>
+std::string localTime(
+  std::chrono::system_clock::time_point const& x,
+  Formatter a,
+  Formatters... b) throw()
+{
+  time_t xt(std::chrono::system_clock::to_time_t(x));
+  struct tm xx;
+  ::localtime_r(&xt,&xx);
+  return formatTm(xx,a,b...);
+}
+template<class Formatter,class ... Formatters>
+std::string gmTime(
+  std::chrono::system_clock::time_point const& x,
+  Formatter a,
+  Formatters... b) throw()
+{
+  time_t xt(std::chrono::system_clock::to_time_t(x));
+  struct tm xx;
+  ::gmtime_r(&xt,&xx);
+  return formatTm(xx,a,b...);
+}
+
 }
 }
 

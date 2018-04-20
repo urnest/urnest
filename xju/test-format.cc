@@ -435,6 +435,76 @@ void test10()
   xju::assert_equal(xju::format::time(xju::unix_epoch()+std::chrono::seconds(85)+std::chrono::microseconds(3745)),"85.003745");
 }
 
+// gmtime
+void test11()
+{
+  {
+    struct tm x{
+      32, //sec
+        12, //min
+        18, //hr
+        3, //mday
+        8, //mon-1
+        118,//yr-1900
+        3,//wday-1, sun..sat
+        0,0};
+    
+    xju::assert_equal(
+      format::formatTm(x,
+                       format::DayName,
+                       ", ",
+                       format::Day,
+                       '/',
+                       format::Month,
+                       '/',
+                       format::Year,
+                       "  ",
+                       format::Hour,
+                       ':',
+                       format::Minute,
+                       ':',
+                       format::Second),"Wednesday, 3/9/2018  18:12:32");
+  }
+  {
+    struct tm x{
+      0, //sec
+        0, //min
+        0, //hr
+        3, //mday
+        8, //mon-1
+        118,//yr-1900
+        0,//wday-1, sun..sat
+        0,0};
+    
+    xju::assert_equal(
+      format::formatTm(x,
+                       format::DayName3,
+                       ", ",
+                       format::Hour12,
+                       format::ampm),"Sun, 12am");
+  }
+  {
+    struct tm x{
+      0, //sec
+        0, //min
+        12, //hr
+        3, //mday
+        8, //mon-1
+        118,//yr-1900
+        6,//wday-1, sun..sat
+        0,0};
+    
+    xju::assert_equal(
+      format::formatTm(x,
+                       format::DayName3,
+                       ", ",
+                       format::Hour12,
+                       ':',
+                       format::Minute,
+                       format::AMPM),"Sat, 12:00PM");
+  }
+}
+
 }
 
 int main(int argc, char* argv[])
@@ -450,6 +520,7 @@ int main(int argc, char* argv[])
   xju::test8(); ++n;
   xju::test9(); ++n;
   xju::test10(); ++n;
+  xju::test11(); ++n;
   
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
