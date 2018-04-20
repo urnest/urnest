@@ -340,8 +340,8 @@ std::string gmTime(
 class Hour_{};class Hour12_{};class Minute_{};class Second_{};
 class Year_{};class Month_{};class Day_{};
 class DayName_{};class DayName3_{};
-class ampm_{};
-class AMPM_{};
+class ampm_{};class AMPM_{};
+class Millisecond_{};class Microsecond_{};class Nanosecond_{};
 
 // time format selectors for use with localtime, gmtime above
 extern Year_ const Year;
@@ -355,6 +355,9 @@ extern Second_ const Second;
 extern Hour12_ const Hour12;
 extern ampm_ const ampm;
 extern AMPM_ const AMPM;
+extern Millisecond_ const Millisecond;
+extern Microsecond_ const Microsecond;
+extern Nanosecond_ const Nanosecond;
 }
 }
 
@@ -690,23 +693,27 @@ std::string int_(I const x,
 }
 
 template<class ...Formatters>
-std::string formatTm(struct tm const& x) throw(){
+std::string formatTm(struct tm const& x,std::chrono::nanoseconds) throw(){
   return std::string();
 }
 template<class ... Formatters>
-std::string formatTm(struct tm const& x, Year_, Formatters... bs) throw(){
-  return format::int_(x.tm_year+1900,4)+formatTm(x,bs...);
+std::string formatTm(struct tm const& x,std::chrono::nanoseconds n,
+                     Year_, Formatters... bs) throw(){
+  return format::int_(x.tm_year+1900,4)+formatTm(x,n,bs...);
 }
 template<class ... Formatters>
-std::string formatTm(struct tm const& x, Month_, Formatters... bs) throw(){
-  return format::int_(x.tm_mon+1)+formatTm(x,bs...);
+std::string formatTm(struct tm const& x, std::chrono::nanoseconds n,
+                     Month_, Formatters... bs) throw(){
+  return format::int_(x.tm_mon+1)+formatTm(x,n,bs...);
 }
 template<class ... Formatters>
-std::string formatTm(struct tm const& x, Day_, Formatters... bs) throw(){
-  return format::int_(x.tm_mday)+formatTm(x,bs...);
+std::string formatTm(struct tm const& x, std::chrono::nanoseconds n,
+                     Day_, Formatters... bs) throw(){
+  return format::int_(x.tm_mday)+formatTm(x,n,bs...);
 }
 template<class ... Formatters>
-std::string formatTm(struct tm const& x, DayName_, Formatters... bs) throw(){
+std::string formatTm(struct tm const& x, std::chrono::nanoseconds n,
+                     DayName_, Formatters... bs) throw(){
   static const char* dayNames[]={
     "Sunday",
     "Monday",
@@ -717,10 +724,11 @@ std::string formatTm(struct tm const& x, DayName_, Formatters... bs) throw(){
     "Saturday"};
   return std::string(
     (x.tm_wday>=0&&x.tm_wday<=6)?dayNames[x.tm_wday]:"???")+
-    formatTm(x,bs...);
+    formatTm(x,n,bs...);
 }
 template<class ... Formatters>
-std::string formatTm(struct tm const& x, DayName3_, Formatters... bs) throw(){
+std::string formatTm(struct tm const& x, std::chrono::nanoseconds n,
+                     DayName3_, Formatters... bs) throw(){
   static const char* dayNames[]={
     "Sun",
     "Mon",
@@ -731,14 +739,16 @@ std::string formatTm(struct tm const& x, DayName3_, Formatters... bs) throw(){
     "Sat"};
   return std::string(
     (x.tm_wday>=0&&x.tm_wday<=6)?dayNames[x.tm_wday]:"???")+
-    formatTm(x,bs...);
+    formatTm(x,n,bs...);
 }
 template<class ... Formatters>
-std::string formatTm(struct tm const& x, Hour_, Formatters... bs) throw(){
-  return format::int_(x.tm_hour,2)+formatTm(x,bs...);
+std::string formatTm(struct tm const& x, std::chrono::nanoseconds n,
+                     Hour_, Formatters... bs) throw(){
+  return format::int_(x.tm_hour,2)+formatTm(x,n,bs...);
 }
 template<class ... Formatters>
-std::string formatTm(struct tm const& x, Hour12_, Formatters... bs) throw(){
+std::string formatTm(struct tm const& x, std::chrono::nanoseconds n,
+                     Hour12_, Formatters... bs) throw(){
   int h;
   switch(x.tm_hour){
   case 0: h=12; break;
@@ -746,33 +756,54 @@ std::string formatTm(struct tm const& x, Hour12_, Formatters... bs) throw(){
   default:
     h=(x.tm_hour%12)+1;
   }
-  return format::int_(h)+formatTm(x,bs...);
+  return format::int_(h)+formatTm(x,n,bs...);
 }
 template<class ... Formatters>
-std::string formatTm(struct tm const& x, ampm_, Formatters... bs) throw(){
-  return std::string(x.tm_hour>=12?"pm":"am")+formatTm(x,bs...);
+std::string formatTm(struct tm const& x, std::chrono::nanoseconds n,
+                     ampm_, Formatters... bs) throw(){
+  return std::string(x.tm_hour>=12?"pm":"am")+formatTm(x,n,bs...);
 }
 template<class ... Formatters>
-std::string formatTm(struct tm const& x, AMPM_, Formatters... bs) throw(){
-  return std::string(x.tm_hour>=12?"PM":"AM")+formatTm(x,bs...);
+std::string formatTm(struct tm const& x, std::chrono::nanoseconds n,
+                     AMPM_, Formatters... bs) throw(){
+  return std::string(x.tm_hour>=12?"PM":"AM")+formatTm(x,n,bs...);
 }
 template<class ... Formatters>
-std::string formatTm(struct tm const& x, Minute_, Formatters... bs) throw(){
-  return format::int_(x.tm_min,2)+formatTm(x,bs...);
+std::string formatTm(struct tm const& x, std::chrono::nanoseconds n,
+                     Minute_, Formatters... bs) throw(){
+  return format::int_(x.tm_min,2)+formatTm(x,n,bs...);
 }
 template<class ... Formatters>
-std::string formatTm(struct tm const& x, Second_, Formatters... bs) throw(){
-  return format::int_(x.tm_sec,2)+formatTm(x,bs...);
+std::string formatTm(struct tm const& x, std::chrono::nanoseconds n,
+                     Second_, Formatters... bs) throw(){
+  return format::int_(x.tm_sec,2)+formatTm(x,n,bs...);
 }
 template<class ... Formatters>
-std::string formatTm(struct tm const& x, char c, Formatters... bs) throw(){
-  return std::string(1U,c)+formatTm(x,bs...);
+std::string formatTm(struct tm const& x, std::chrono::nanoseconds n,
+                     Millisecond_, Formatters... bs) throw(){
+  return format::int_((n.count()/1000000)%1000,3)+formatTm(x,n,bs...);
+}
+template<class ... Formatters>
+std::string formatTm(struct tm const& x, std::chrono::nanoseconds n,
+                     Microsecond_, Formatters... bs) throw(){
+  return format::int_((n.count()/1000)%1000000,6)+formatTm(x,n,bs...);
+}
+template<class ... Formatters>
+std::string formatTm(struct tm const& x, std::chrono::nanoseconds n,
+                     Nanosecond_, Formatters... bs) throw(){
+  return format::int_(n.count(),9)+formatTm(x,n,bs...);
+}
+template<class ... Formatters>
+std::string formatTm(struct tm const& x, std::chrono::nanoseconds n,
+                     char c, Formatters... bs) throw(){
+  return std::string(1U,c)+formatTm(x,n,bs...);
 }
 template<class ... Formatters>
 std::string formatTm(struct tm const& x,
+                     std::chrono::nanoseconds n,
                      std::string const& s,
                      Formatters... bs) throw(){
-  return s+formatTm(x,bs...);
+  return s+formatTm(x,n,bs...);
 }
 template<class Formatter,class ... Formatters>
 std::string localTime(
@@ -783,7 +814,11 @@ std::string localTime(
   time_t xt(std::chrono::system_clock::to_time_t(x));
   struct tm xx;
   ::localtime_r(&xt,&xx);
-  return formatTm(xx,a,b...);
+  auto const seconds(std::chrono::duration_cast<std::chrono::seconds>(
+                       x.time_since_epoch()));
+  auto const nanoseconds(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                           x.time_since_epoch()-seconds));
+  return formatTm(xx,nanoseconds,a,b...);
 }
 template<class Formatter,class ... Formatters>
 std::string gmTime(
@@ -794,7 +829,11 @@ std::string gmTime(
   time_t xt(std::chrono::system_clock::to_time_t(x));
   struct tm xx;
   ::gmtime_r(&xt,&xx);
-  return formatTm(xx,a,b...);
+  auto const seconds(std::chrono::duration_cast<std::chrono::seconds>(
+                       x.time_since_epoch()));
+  auto const nanoseconds(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                           x.time_since_epoch()-seconds));
+  return formatTm(xx,nanoseconds,a,b...);
 }
 
 }

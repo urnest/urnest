@@ -451,6 +451,7 @@ void test11()
     
     xju::assert_equal(
       format::formatTm(x,
+                       std::chrono::nanoseconds(0),
                        format::DayName,
                        ", ",
                        format::Day,
@@ -478,6 +479,7 @@ void test11()
     
     xju::assert_equal(
       format::formatTm(x,
+                       std::chrono::nanoseconds(0),
                        format::DayName3,
                        ", ",
                        format::Hour12,
@@ -496,6 +498,7 @@ void test11()
     
     xju::assert_equal(
       format::formatTm(x,
+                       std::chrono::nanoseconds(0),
                        format::DayName3,
                        ", ",
                        format::Hour12,
@@ -503,6 +506,67 @@ void test11()
                        format::Minute,
                        format::AMPM),"Sat, 12:00PM");
   }
+  {
+    struct tm x{
+      0, //sec
+        0, //min
+        12, //hr
+        3, //mday
+        8, //mon-1
+        118,//yr-1900
+        6,//wday-1, sun..sat
+        0,0};
+    
+    xju::assert_equal(
+      format::formatTm(x,
+                       std::chrono::nanoseconds(33567987),
+                       format::Hour12,
+                       ':',
+                       format::Minute,
+                       ':',
+                       format::Second,
+                       '.',
+                       format::Millisecond,
+                       format::AMPM),"12:00:00.033PM");
+    xju::assert_equal(
+      format::formatTm(x,
+                       std::chrono::nanoseconds(33567987),
+                       format::Hour12,
+                       ':',
+                       format::Minute,
+                       ':',
+                       format::Second,
+                       '.',
+                       format::Microsecond,
+                       format::AMPM),"12:00:00.033567PM");
+    xju::assert_equal(
+      format::formatTm(x,
+                       std::chrono::nanoseconds(33567987),
+                       format::Hour12,
+                       ':',
+                       format::Minute,
+                       ':',
+                       format::Second,
+                       '.',
+                       format::Nanosecond,
+                       format::AMPM),"12:00:00.033567987PM");
+  }
+  xju::format::localTime(std::chrono::system_clock::now(),
+                         format::Hour12,
+                         ':',
+                         format::Minute,
+                         ':',
+                         format::Second,
+                         '.',
+                         format::Nanosecond);
+  xju::format::gmTime(std::chrono::system_clock::now(),
+                      format::Hour12,
+                      ':',
+                      format::Minute,
+                      ':',
+                      format::Second,
+                      '.',
+                      format::Nanosecond);
 }
 
 }
