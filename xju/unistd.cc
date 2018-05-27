@@ -41,6 +41,10 @@ namespace xju
 	"close",
 	::close};
 
+    const SyscallF1<int, int> fsync={
+	"fsync",
+	::fsync};
+
     const SyscallF3<off_t, int, off_t, int> lseek={
 	"lseek",
 	::lseek};

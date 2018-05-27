@@ -47,7 +47,7 @@ void test1() {
   {
     FileWriter x(fileName);
     x.write("sally",5);
-    x.seekBy(-4);
+    xju::assert_equal(x.seekBy(-4),9);
     x.write("i",1);
   }
   xju::assert_equal(xju::file::read(fileName),
@@ -63,7 +63,7 @@ void test1() {
   {
     FileWriter x(fileName);
     x.write("sally",5);
-    x.seekTo(1);
+    xju::assert_equal(&x.seekTo(1),&x);
     x.write("e",1);
   }
   xju::assert_equal(xju::file::read(fileName),

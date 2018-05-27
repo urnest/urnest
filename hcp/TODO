@@ -1,3 +1,9 @@
+* parse global like
+  namespace x
+  {
+    std::chrono::seconds const x(10);
+  }
+
 * override
 
 - trace should go to stderr

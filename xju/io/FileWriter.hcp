@@ -142,15 +142,15 @@ public:
     }
   }
 
-  // set pointer to n, returns n
-  // - returns current location if n==0
+  // set pointer to n, returns *this
   // - see lseek(2)
-  off_t seekTo(off_t n) throw(
+  FileWriter& seekTo(off_t n) throw(
     // eg n < 0
     xju::SyscallFailed)
   {
     try{
-      return xju::syscall(xju::lseek,XJU_TRACED)(fileDescriptor(),n,SEEK_SET);
+      xju::syscall(xju::lseek,XJU_TRACED)(fileDescriptor(),n,SEEK_SET);
+      return *this;
     }
     catch(xju::SyscallFailed& e){
       std::ostringstream s;
@@ -184,7 +184,10 @@ public:
       throw;
     }
   }
-
+  void sync() throw(xju::SyscallFailed)
+  {
+    xju::syscall(xju::fsync,XJU_TRACED)(fileDescriptor());
+  }
   friend class FileLock;
   
 private:

@@ -41,6 +41,7 @@ namespace xju
     extern const SyscallF3<off_t, int, off_t, int> lseek;
     extern const SyscallF2<int, int, off_t> ftruncate;
     extern const SyscallF1<int, int> close;
+    extern const SyscallF1<int, int> fsync;
     extern const SyscallF2<int, const char*, mode_t> mkdir;
     extern const SyscallF1<int, const char*> rmdir;
     extern const SyscallF1<int, const char*> unlink;
