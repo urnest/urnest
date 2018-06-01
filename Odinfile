@@ -1,3 +1,8 @@
+#install source (including generated C++) into $INST_SRC,
+#        tools (hcp-split etc) into INST_BIN
+%install!==(.)+cmd=(%installer.sh) (%hcp-gen.tar) (%idl-gen.tar) (%tools.tar):run
+
+#build and run all tests
 %all==%all.tree:leaves
 
 %all.tree==<<
@@ -35,4 +40,62 @@ hcp%all.tree
 xju%tags
 hcp%tags
 omnicxy/cxy%tags
+
+%hcp-gen.tar==()+cmd=(%vir-tree-tar.sh) (%hcp-gen)+need=(%hcp-gen:vir_tree_list):stdout
+
+%idl-gen.tar==()+cmd=(%vir-tree-tar.sh) (%hcp-gen)+need=(%hcp-gen:vir_tree_list):stdout
+
+%vir-tree-tar.sh == ! <<
+#!/bin/sh
+cd "$1" &&
+tar chf - .
+
+%tools.tar==()+cmd=(%tools-tar.sh) (hcp%tools:leaves:ls)+need=(hcp%tools:leaves):stdout
+
+%tools-tar.sh == ! <<
+#!/bin/sh
+(
+mkdir x &&
+cd x &&
+test -r "$1" &&
+cat "$1" |
+while [ $? = 0 ] && read n
+do
+  b=$(basename "$n") &&
+  ln -s "$n" "$b"
+done &&
+tar chf - .
+)
+
+%installer.sh == ! <<
+#!/bin/sh
+set -x &&
+hcpgentar="$1" && shift &&
+idlgentar="$1" && shift &&
+toolstar="$1" && shift &&
+sourcedir="$(pwd)" &&
+if ! test -n "$INST_BIN"
+then
+  echo "ERROR: set INST_BIN environment variable to tools destination directory, e.g. /usr/local/bin" &&
+  false
+fi &&
+if ! test -n "$INST_SRC"
+then
+  echo "ERROR: set INST_SRC environment variable to header destination directory, e.g. /usr/local/include" &&
+  false
+fi &&
+test -r "$hcpgentar" &&
+test -r "$idlgentar" &&
+test -r "$toolstar" &&
+test -r "$sourcedir" &&
+test -d "$sourcedir" &&
+cat "$toolstar" | (cd "$INST_BIN" && tar xvf - ) &&
+cat "$idlgentar" | (cd "$INST_SRC" && tar xvf - ) &&
+cat "$hcpgentar" | (cd "$INST_SRC" && tar xvf - ) &&
+sources=$(cd "$sourcedir" && find xju hcp -name '*.idl' -o -name '*.hh' -o -name '*.cc' ) &&
+(cd "$sourcedir" && tar cf - $sources) | (cd "$INST_SRC" && tar xvf - ) &&
+sources=$(cd "$sourcedir/omnicxy" && find cxy -name '*.idl' -o -name '*.hh' -o -name '*.cc' ) &&
+(cd "$sourcedir/omnicxy" && tar cf - $sources) | (cd "$INST_SRC" && tar xvf - ) &&
+set +x &&
+echo "Installation Successfull"
 
