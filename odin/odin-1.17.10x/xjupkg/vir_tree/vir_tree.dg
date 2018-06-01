@@ -33,9 +33,13 @@
 
 :cast.vir_tree_spec 'explicit cast of file to vir_tree_spec'? => <:vir_tree_spec>;
 
+:vir_dir_list 'list of files in DERIVED-DIRECTORY eg vir_dir' => :LIST;
+
 # Output Types
 
 :vir_tree '(virtual) directory tree - root :vir_dir'? => :REFERENCE;
+
+:vir_tree_list 'list of files in DERIVED-DIRECTORY recursively'? => :LIST;
 
 # Parameter Types
 
@@ -48,3 +52,7 @@ EXEC (vir_tree.py) (:vir_tree_spec) (+select) => (:vir_dir_spec);
 COLLECT (:vir_dir_spec:vir_dir) => (:vir_tree);
 
 EXEC (/bin/cp) (:FILE) 'cast.vir_tree_spec' => (:cast.vir_tree_spec);
+
+COLLECT (:DERIVED-DIRECTORY:list) => (:vir_dir_list);
+
+COLLECT (:vir_dir_list :recurse=:vir_dir_list) => (:vir_tree_list);
