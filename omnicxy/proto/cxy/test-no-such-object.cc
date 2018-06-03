@@ -9,7 +9,7 @@
 //
 
 
-#include "p1.cref.hh"
+#include "omnicxy/proto/p1.cref.hh"
 
 #include <xju/Exception.hh>
 #include <iostream>
