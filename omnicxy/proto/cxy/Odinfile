@@ -164,8 +164,9 @@ echo.sref.cc==%gen/echo.sref.cc
 %test-transient
 ()+cmd=(%p22-main)+cmd='3758'+cmd='both':exec.output
 %test-transient
-()+cmd=(%test-no-such-object)+cmd='3760'+cmd=exec.output
-()+cmd=(%test-duplicate-name)+cmd='3761'+cmd=exec.output
+()+cmd=(%test-no-such-object)+cmd='3760':exec.output
+()+cmd=(%test-duplicate-name)+cmd='3761':exec.output
+()+cmd=(%test-no-such-host)+cmd='3762':exec.output
 ()+cmd=(%test-port-in-use):exec.output
 %leak-checks.tree
 ext%tests.tree
@@ -198,6 +199,7 @@ ext%tests.tree
 %p21-main==p21-main.cc+(%cxx-opts):auto.cxx.exe
 %p22-main==p22-main.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
+%test-no-such-host==test-no-such-host.cc+(%cxx-opts):auto.cxx.exe
 %test-duplicate-name==test-duplicate-name.cc+(%cxx-opts):auto.cxx.exe
 %test-port-in-use==test-port-in-use.cc+(%cxx-opts):auto.cxx.exe
 

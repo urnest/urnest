@@ -1,9 +1,17 @@
-- hcp_tags*tree_tags deends on all files in tree, how can we make it
+- fix race condition when immediately re-invoking odin without
+  explicit server, handle and document two use cases:
+  - explicit server, where user must ensure server is not stopped/started
+    while clients are active
+  - on-the-fly server, where the client that forks server waits for it
+    exit completely before exiting (to avoid race conditions in scripts
+    that have strings of odin invocations)
+  
+x hcp_tags*tree_tags deends on all files in tree, how can we make it
   depend only :h and :hcp?
-  - perhaps dir_tags_list only depends on :h, :hcp in a directory, in
+  x perhaps dir_tags_list only depends on :h, :hcp in a directory, in
     which case manually build tree by merging subdir tree tags
     at each level?
-    
+
 - fix +ignore handling in hash_inc.sh
 
 x :cxx.impl redo to make it correct, scan_for_impls would

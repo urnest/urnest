@@ -96,6 +96,8 @@ sources=$(cd "$sourcedir" && find xju hcp -name '*.idl' -o -name '*.hh' -o -name
 (cd "$sourcedir" && tar cf - $sources) | (cd "$INST_SRC" && tar xvf - ) &&
 sources=$(cd "$sourcedir/omnicxy" && find cxy -name '*.idl' -o -name '*.hh' -o -name '*.cc' ) &&
 (cd "$sourcedir/omnicxy" && tar cf - $sources) | (cd "$INST_SRC" && tar xvf - ) &&
+headers=$(find "$INST_SRC" -name '*.hh' -print) &&
+"$INST_BIN/hcp-tags" $headers > "$INST_SRC/hcp-tags.json" &&
 set +x &&
 echo "Installation Successfull"
 

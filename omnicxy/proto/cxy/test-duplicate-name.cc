@@ -9,8 +9,8 @@
 //
 
 
-#include "p1.hh"
-#include "p1.sref.hh"
+#include "omnicxy/proto/p1.hh"
+#include "omnicxy/proto/p1.sref.hh"
 
 #include <xju/Exception.hh>
 #include <iostream>

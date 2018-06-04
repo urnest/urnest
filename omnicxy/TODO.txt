@@ -3,6 +3,8 @@ key:
   "-" means to-be-done
   "~" means decided not to do
 
+x exception from resolve to non-existent ip address?
+
 * p16-main core dump
   omniObjRef::_getIOR return value ownership?
   x- step through using omniORB debug build
