@@ -195,11 +195,11 @@ x p16a-main:
          ... is the interesting bit
 
     - recursion/indirection in typecodes:
-      - want to store as just TypeCode const*, but when we get to the
+      - decoding want to store as just TypeCode const*, but when we get to the
         referer we have not necessarily created the referee, so perhaps
         use 2x maps: map<offset,TypeCode const*> for those we know,
         multimap<offset, std::reference<TypeCode const*> > for those we 
-        don't know (and fill them as we create the referee)
+        don't know (and fill them as we create the referee).
       - encoding needs the corrolery map<fqn,offset> ... might need
         more if idl allows cross-linked structures (C++ appears to)
         No: 9.3.4.3 Scope of the Indirections states "Non-negative offsets are
@@ -211,8 +211,24 @@ x p16a-main:
         encapsulation allows pre-marshalling, therefore inside encapsulation,
         offset must stay within encapsulation? Yes - 9.3.4.3 Scope of the 
         Indirections explicitly states this as 
-        "Indirections may not cross encapsulation boundaries."
-
+        "Indirections may not cross encapsulation boundaries." ... oops
+	that is for value types? Need page 91. Two scenarios, need
+	example of each:
+	  - recursion
+	  - repetition eg union with many cases having same value
+	... although we only need to support decoding, we have no way
+	to make an OTS client generate (at last case 2) so support both, then
+	encode and make sure decoded correctly by C++ mapping, then encode
+	and make sure self can decode; both cases involve unions so do
+	non-recursive union first. Need the concept of top-level v nested.
+        Are there other examples like
+	- struct containing sequence of self?
+	- struct containing A plus B which has an A?
+        - multiple any params, passing more than one of same type?
+          - can write test before implementing back-refs to see if
+	    omniORB generates back-refs for this case, if so we
+	    don't need to support encoding of inter-top-level since
+	    can test decoding via interop
     - interop/test-Any.cc :
       x encode cxy, decode cxx and vice-versa, use cdrMemoryStream
       x can't do cxx and cxy in same process for same interface
@@ -229,8 +245,12 @@ x p16a-main:
           x sub exits
           x main collects exit status and exits
       x CORBA::Short
+      - struct
+      - union
+      - sequence
+      x string
       - other types
-
+	
     - optimisation:
       add TypeCode::minEncodedValueSize() and use as initial value buffer size
 

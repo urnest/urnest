@@ -650,6 +650,34 @@ public:
                                          name,
                                          members));
     }
+    case cxy::TypeKind::UNION:
+    {
+      EncapsulationCdrStream es(s);
+      auto const repoId(cdr<std::string>::unmarshalFrom(*es));
+      auto const name(cdr<std::string>::unmarshalFrom(*es));
+      auto const descriminantType(
+        cdr< std::shared_ptr<TypeCode> >::unmarshalFrom(*es));
+      auto const defaultCaseUsed(cdr<int32_t>::unmarshalFrom(*es));
+      xju::Optional<uint32_t> const indexOfDefaultCase(
+        defaultCaseUsed<0?
+        xju::Optional<uint32_t>():
+        xju::Optional<uint32_t>(defaultCaseUsed));
+      auto const numberOfCases(cdr<uint32_t>::unmarshalFrom(*es));
+      std::vector<UnionTypeCode::Case> cases;
+      for(auto i=0; i!=numberOfCases; ++i) {
+        MemCdrStream value;
+        descriminantType->copyValue(s,*value);
+        auto name(cdr<std::string>::unmarshalFrom(*es));
+        auto const t(cdr< std::shared_ptr<TypeCode> >::unmarshalFrom(*es));
+        cases.push_back(UnionTypeCode::Case(std::move(value),name,t));
+      }
+      return std::shared_ptr<TypeCode>(new UnionTypeCode(
+                                         repoId,
+                                         name,
+                                         descriminantType,
+                                         cases,
+                                         indexOfDefaultCase));
+    }
     default:
       std::ostringstream s;
       s << "unimplemented type kind " << k;
