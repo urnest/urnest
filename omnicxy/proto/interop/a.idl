@@ -6,6 +6,12 @@ module interop
 {
 module a
 {
+  struct S
+  {
+    long x_;
+    string y_;
+  };
+  
   interface reflect
   {
     // returns x

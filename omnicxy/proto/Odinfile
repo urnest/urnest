@@ -4,6 +4,7 @@
 cxx%all.tree
 cxy%all.tree
 cxy/e%all.tree
+interop%all.tree
 
 %x.all.idl.sm==<<
 p18.idl

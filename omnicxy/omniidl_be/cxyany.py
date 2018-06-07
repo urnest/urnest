@@ -28,7 +28,7 @@ struct TypeCodeOf< ::%(name)s >
 struct_member_t='''\n          { "%(member_name)s", cxy::TypeCodeOf< %(member_type)s >::create() }'''
 def gen_struct(name,memberTypesAndNames,repoId):
     assert len(memberTypesAndNames)>0, name
-    struct_members=''.join(
+    struct_members=','.join(
         [struct_member_t%vars() 
          for member_type,member_name in memberTypesAndNames])
     return struct_t%vars()
@@ -65,7 +65,7 @@ def gen_union(name,discriminateType,cases,repoId):
         l=len(cases)
         defaultCase='xju::Optional<uint32_t>(%(l)s)'%vars()
         pass
-    union_cases=',\n          '.join(
+    union_cases=','.join(
         [union_case_t%vars() 
          for case_value,case_type,case_name in cases])
     return union_t%vars()
