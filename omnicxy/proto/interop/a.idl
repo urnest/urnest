@@ -12,6 +12,12 @@ module a
     string y_;
   };
   
+  union U1 switch(short)
+  {
+  case 1: long x_;
+  default: string y_;
+  };
+  
   interface reflect
   {
     // returns x

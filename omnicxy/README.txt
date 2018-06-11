@@ -136,7 +136,8 @@ Contents
   enum maps to a type-safe class with inner C++ enum - see proto/cxy/p10.hh
 
   union maps to a set of classes with a common base class, allowing
-  use of C++ dynamic_cast for discrimination - see proto/cxy/p11.hh
+  use of C++ dynamic_cast for discrimination - see proto/cxy/p11.hh,
+  proto/cxy/p12.hh, proto/cxy/p13.hh
 
   exception maps to C++ class derived from the "default" exception class,
   which can be specified when invoking omniidl. More on this in 

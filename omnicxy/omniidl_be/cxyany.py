@@ -35,19 +35,20 @@ def gen_struct(name,memberTypesAndNames,repoId):
 
 union_t='''\
 template<>
-struct TypeCodeOf< ::%(name)s >
+struct TypeCodeOf< ::std::shared_ptr< ::%(name)s const > >
 {
   static std::shared_ptr<cxy::TypeCode> create() throw(std::bad_alloc)
   {
-    auto marshalCaseValue( [](%(descriminateType)s const& x ) {
-      xju::MemCdrStream s;
-      cxy::cdr< %(descriminateType)s >::marshal(x,s);
+    auto marshalCaseValue( [](%(discriminantType)s const& x ) {
+      cxy::MemCdrStream s;
+      cxy::cdr< %(discriminantType)s >::marshal(x,*s);
       return s;
     });
     return std::shared_ptr<cxy::TypeCode>(
       new cxy::UnionTypeCode(
-        cxy::cdr< ::%(name)s >::repoId,
+        cxy::cdr< ::std::shared_ptr< ::%(name)s const > >::repoId,
         "%(name)s",
+        cxy::TypeCodeOf< %(discriminantType)s >::create(),
         {
           %(union_cases)s
         },
@@ -55,19 +56,19 @@ struct TypeCodeOf< ::%(name)s >
   }
 };
 '''
-union_case_t='''\n          { marshalCaseValue(%(case_value)s),"%(case_name)s", cxy::TypeCodeOf< %(case_type)s >::create() }'''
-def gen_union(name,discriminateType,cases,repoId):
+union_case_t='''\n          { cxy::UnionTypeCode::Case(marshalCaseValue(%(case_value)s),"%(case_name)s", cxy::TypeCodeOf< %(case_type)s >::create()) }'''
+def gen_union(name,discriminantType,cases,repoId):
     assert len(cases)>0, name
     defaultCase='xju::Optional<uint32_t>()'
     if cases[-1][0] is None:
         assert len(cases)>1, name
         cases[-1]=(cases[0][0],cases[-1][1])
-        l=len(cases)
+        l=len(cases)-1
         defaultCase='xju::Optional<uint32_t>(%(l)s)'%vars()
         pass
     union_cases=','.join(
         [union_case_t%vars() 
-         for case_value,case_type,case_name in cases])
+         for case_value,case_type,case_name in [(_[0],_[1][0][0],_[1][0][1]) for _ in cases]])
     return union_t%vars()
 
 #see also mapped_exception_t below
@@ -114,8 +115,26 @@ def gen_mapped_exception(name,repoId,memberTypesAndNames,
     return mapped_exception_t%vars()
 
 enum_t='''\
-  REVISIT
+template<>
+struct TypeCodeOf< ::%(name)s >
+{
+  static std::shared_ptr<cxy::TypeCode> create() throw(std::bad_alloc)
+  {
+    return std::shared_ptr<cxy::TypeCode>(
+      new cxy::EnumTypeCode(
+        cxy::cdr< ::%(name)s >::repoId,
+        "%(name)s",
+        {%(enum_members)s
+        }));
+  }
+};
 '''
+enum_member_t='''\n          { "%(value)s" }'''
+def gen_enum(name,values,repoId):
+    enum_members=','.join(
+        [enum_member_t%vars() 
+         for value in values])
+    return enum_t%vars()
 
 def gen(decl,eclass,eheader,causeType,contextType,
         causeMemberExpression,contextMemberExpression,indent=''):
@@ -147,7 +166,7 @@ def gen(decl,eclass,eheader,causeType,contextType,
             name='::'.join(decl.scopedName())
             switchTypeName=unqualifiedType(decl.switchType(),eclass)
             cases=get_union_cases(decl,eclass)
-            result=gen_union(name,descriminateType,cases,repoId)
+            result=gen_union(name,switchTypeName,cases,repoId)
             pass
         elif isinstance(decl, idlast.Exception):
             name='::'.join(decl.scopedName())
@@ -168,7 +187,9 @@ def gen(decl,eclass,eheader,causeType,contextType,
         elif isinstance(decl, idlast.Enum):
             name='::'.join(decl.scopedName())
             repoId=decl.repoId()
-            result=enum_t%vars()
+            values=[_.identifier() for _ in decl.enumerators()]
+            result=gen_enum(name,values,repoId)
+            pass
         elif isinstance(decl, idlast.Const):
             pass
         else:

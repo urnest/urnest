@@ -88,6 +88,22 @@ public:
       auto const z(y.get<std::string>());
       xju::assert_equal(z,"fred");
     }
+    {
+      cxy::Any<> const y(f->f(9,cxy::Any<>(
+                                omnicxy::proto::interop::a::S(5,"fred"))));
+      auto const z(y.get<omnicxy::proto::interop::a::S>());
+      xju::assert_equal(z,omnicxy::proto::interop::a::S(5,"fred"));
+    }
+    {
+      cxy::Any<> const y(
+        f->f(
+          10,
+          cxy::Any<>(
+            std::shared_ptr<omnicxy::proto::interop::a::U1 const>(
+              new omnicxy::proto::interop::a::U1::V<1>(5)))));
+      auto const z(y.get<std::shared_ptr<omnicxy::proto::interop::a::U1 const> >());
+      xju::assert_equal(*z,omnicxy::proto::interop::a::U1::V<1>(5));
+    }
     done_=true;
   }
 };

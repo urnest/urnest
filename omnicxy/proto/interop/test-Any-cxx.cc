@@ -92,6 +92,26 @@ public:
       (*result) <<= CORBA::Any::from_string(y,0);
       return result;
     }
+    case 9:
+    {
+      omnicxy::proto::interop::a::S* y;
+      x >>= y;
+      xju::assert_equal(y->x_, 5);
+      xju::assert_equal(std::string(y->y_), std::string("fred"));
+      CORBA::Any* result(new CORBA::Any);
+      (*result) <<= y;
+      return result;
+    }
+    case 10:
+    {
+      omnicxy::proto::interop::a::U1* y;
+      x >>= y;
+      xju::assert_equal(y->_d(), 1);
+      xju::assert_equal(y->x_(), 5);
+      CORBA::Any* result(new CORBA::Any);
+      (*result) <<= y;
+      return result;
+    }
     default:
       xju::assert_never_reached();
     }

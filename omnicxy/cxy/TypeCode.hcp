@@ -382,6 +382,69 @@ private:
 };
 
 
+class EnumTypeCode : public TypeCode
+{
+public:
+  EnumTypeCode(std::string repoId,
+               std::string name,
+               std::vector<std::string> values):
+      repoId_(repoId),
+      name_(name),
+      values_(values)
+  {
+  }
+  typedef std::vector<std::string> Values;
+  
+  virtual void copyValue(cdrStream& from, cdrStream& to) const
+  {
+    cxy::cdr<int32_t>::marshal(
+      cxy::cdr<int32_t>::unmarshalFrom(from),
+      to);
+  }
+
+  virtual void marshal(cdrStream& s) const
+  {
+    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::ENUM, s);
+
+    EncapsulationCdrStream es;
+    cxy::cdr<std::string>::marshal(repoId_,*es);
+    cxy::cdr<std::string>::marshal(name_,*es);
+    cxy::cdr<uint32_t>::marshal(values_.size(),*es);
+    for(auto value : values_) {
+      cxy::cdr<std::string>::marshal(value,*es);
+    }
+
+    cxy::cdr<EncapsulationCdrStream>::marshal(es,s);
+  }
+  
+  virtual bool equals(TypeCode const& b) const throw()
+  {
+    EnumTypeCode const* b_(dynamic_cast<EnumTypeCode const*>(&b));
+    return b_ && (*b_==*this);
+  }
+  virtual bool lessThan(TypeCode const& b) const throw()
+  {
+    xju::assert_equal(typeid(*this),typeid(b));
+    EnumTypeCode const& b_(static_cast<EnumTypeCode const&>(b));
+    return repoId_<b_.repoId_;
+  }
+  virtual std::string str() const throw()
+  {
+    return repoId_;
+  }
+private:
+  std::string repoId_;
+  std::string name_;
+  Values values_;
+  
+  friend bool operator==(EnumTypeCode const& a,
+                         EnumTypeCode const& b) throw()
+  {
+    return a.repoId_==b.repoId_;
+  }
+};
+
+
 class AnyTypeCode : public TypeCode
 {
 public:
@@ -666,7 +729,7 @@ public:
       std::vector<UnionTypeCode::Case> cases;
       for(auto i=0; i!=numberOfCases; ++i) {
         MemCdrStream value;
-        descriminantType->copyValue(s,*value);
+        descriminantType->copyValue(*es,*value);
         auto name(cdr<std::string>::unmarshalFrom(*es));
         auto const t(cdr< std::shared_ptr<TypeCode> >::unmarshalFrom(*es));
         cases.push_back(UnionTypeCode::Case(std::move(value),name,t));
@@ -677,6 +740,22 @@ public:
                                          descriminantType,
                                          cases,
                                          indexOfDefaultCase));
+    }
+    case cxy::TypeKind::ENUM:
+    {
+      EncapsulationCdrStream es(s);
+      auto const repoId(cdr<std::string>::unmarshalFrom(*es));
+      auto const name(cdr<std::string>::unmarshalFrom(*es));
+      auto const numberOfValues(cdr<uint32_t>::unmarshalFrom(*es));
+      EnumTypeCode::Values values;
+      for(auto i=0; i!=numberOfValues; ++i) {
+        auto name(cdr<std::string>::unmarshalFrom(*es));
+        values.push_back(name));
+      }
+      return std::shared_ptr<TypeCode>(new EnumTypeCode(
+                                         repoId,
+                                         name,
+                                         values));
     }
     default:
       std::ostringstream s;

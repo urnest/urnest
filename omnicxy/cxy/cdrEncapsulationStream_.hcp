@@ -16,13 +16,13 @@
 
 namespace cxy
 {
-// class so we get write access to cdrMemoryStream's pd_ncs_c,
+// class so we get write access to cdrEncapsulationStream's pd_ncs_c,
 // pd_ncs_w, pd_tcs_c and pd_tcs_w
 //
-class cdrMemoryStream_ : public cdrMemoryStream
+class cdrEncapsulationStream_ : public cdrEncapsulationStream
 {
 public:
-  cdrMemoryStream_() throw(){
+  cdrEncapsulationStream_() throw(){
     // to allow cxy::Any use before omniORB orbInit
     if (!pd_ncs_c){
       pd_ncs_c=omni::omniCodeSet::getNCS_C(omni::omniCodeSet::ID_8859_1);
@@ -41,18 +41,18 @@ public:
       pd_tcs_w = omni::omniCodeSet::getTCS_W(pd_ncs_w->id(), ver);
     }
   }
-  cdrMemoryStream_(uint32_t c,
+  cdrEncapsulationStream_(uint32_t c,
                    omni::omniCodeSet::TCS_C* pd_tcs_c,
                    omni::omniCodeSet::TCS_W* pd_tcs_w) throw():
-      cdrMemoryStream(c)
+      cdrEncapsulationStream(c)
   {
     this->pd_tcs_c=pd_tcs_c;
     this->pd_tcs_w=pd_tcs_w;
     this->pd_ncs_c=omni::omniCodeSet::getNCS_C(omni::omniCodeSet::ID_8859_1);
     this->pd_ncs_w=omni::omniCodeSet::getNCS_W(omni::omniCodeSet::ID_8859_1);
   }
-  cdrMemoryStream_(cdrMemoryStream_ const& b,bool readOnly=false) throw():
-      cdrMemoryStream(b,readOnly?1:0)
+  cdrEncapsulationStream_(cdrEncapsulationStream_ const& b) throw():
+      cdrEncapsulationStream(b)
   {
     // work around omniORB cdrMemoryStream copy constructor bug
     pd_ncs_c=b.pd_ncs_c;

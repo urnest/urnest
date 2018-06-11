@@ -14,13 +14,15 @@
 #include <omniORB4/cdrStream.h> //impl
 #include <new>
 #include <cinttypes>
+#include <cxy/cdrEncapsulationStream_.hh> //impl
+#include <cxy/cdrMemoryStream_.hh> //impl
 
 class cdrStream;
 class cdrMemoryStream;
-class cdrEncapsulationStream;
 
 namespace cxy
 {
+class cdrEncapsulationStream_;
 
 // Encapsulation CDR stream has a leading byte-order byte
 // 0=Big Endian, 1=Little Endian, followed by CDR encoded
@@ -29,7 +31,7 @@ class EncapsulationCdrStream
 {
 public:
   EncapsulationCdrStream() throw(std::bad_alloc):
-      s_(new cdrEncapsulationStream)
+      s_(new cdrEncapsulationStream_)
   {
   }
   // unmarshal from s
@@ -44,7 +46,8 @@ public:
   {
     uint32_t const c(cxy::cdr<uint32_t>::unmarshalFrom(s));
     std::unique_ptr<cdrMemoryStream> es(
-      new cdrMemoryStream(c));
+      new cxy::cdrMemoryStream_(c,s.TCS_C(),s.TCS_W()));
+
     s.copy_to(*es,c);
     bool const byteSwap(cxy::cdr<bool>::unmarshalFrom(*es));
     es->setByteSwapFlag(byteSwap);
