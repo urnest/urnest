@@ -18,6 +18,12 @@ x cxy::any operator< etc
 - union: promote variant structure members to get more natural
   C++ code, if can only have one data type per variant type
   - consider using latest C++ standard technique, it looks like a close match?
+  - at least make enum union work like non-enum union, which works better for
+    default case, want to be able to do:
+       switch(x){
+         case E::A: u=std::shared_ptr<U const> x(new U::A("fred"));
+	 default: u=std::shared_ptr<U const> x(new U::E(x,"fred"));
+    v U::V<>(5)?
   
 ~ union return as std::unique_ptr, in as T const&
   no that makes embedding union types in structures harder, just
@@ -130,7 +136,8 @@ x p16a-main:
   x string
   - array
   - union
-  
+    test union's that have no default cases
+    
   * proto/cxy/p20-main-1.cc that does not actually use any and does
     not include any_.hcp nor any omniORB headers
   x proto/cxy/p20-main.cc does use Any (and does include any_.hh)

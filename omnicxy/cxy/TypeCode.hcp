@@ -750,7 +750,7 @@ public:
       EnumTypeCode::Values values;
       for(auto i=0; i!=numberOfValues; ++i) {
         auto name(cdr<std::string>::unmarshalFrom(*es));
-        values.push_back(name));
+        values.push_back(name);
       }
       return std::shared_ptr<TypeCode>(new EnumTypeCode(
                                          repoId,

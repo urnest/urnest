@@ -49,6 +49,64 @@ void test2() {
     ::cxy::Any<> b(cxy::cdr< ::cxy::Any<> >::unmarshalFrom(*s));
     auto const z(b.get<std::shared_ptr<p12::U1  const> >());
     xju::assert_equal(*x, *z);
+    dynamic_cast<p12::U1::A const&>(*z.get());
+  }
+}
+
+void test3() {
+  {
+    std::shared_ptr<p12::U1 const> x(
+      new p12::U1::B("fred"));
+    ::cxy::Any<> const a(x);
+    xju::assert_equal(a.isA<std::shared_ptr<p12::U1 const> >(),true);
+
+    auto const y(a.get<std::shared_ptr<p12::U1  const> >());
+    xju::assert_equal(*x, *y);
+
+    ::cxy::MemCdrStream s;
+    ::cxy::cdr< ::cxy::Any<> >::marshal(a,*s);
+    ::cxy::Any<> b(cxy::cdr< ::cxy::Any<> >::unmarshalFrom(*s));
+    auto const z(b.get<std::shared_ptr<p12::U1  const> >());
+    xju::assert_equal(*x, *z);
+    dynamic_cast<p12::U1::B const&>(*z.get());
+  }
+}
+
+void test4() {
+  {
+    std::shared_ptr<p12::U2 const> x(
+      new p12::U2::B(2.6));
+    ::cxy::Any<> const a(x);
+    xju::assert_equal(a.isA<std::shared_ptr<p12::U2 const> >(),true);
+
+    auto const y(a.get<std::shared_ptr<p12::U2 const> >());
+    xju::assert_equal(*x, *y);
+
+    ::cxy::MemCdrStream s;
+    ::cxy::cdr< ::cxy::Any<> >::marshal(a,*s);
+    ::cxy::Any<> b(cxy::cdr< ::cxy::Any<> >::unmarshalFrom(*s));
+    auto const z(b.get<std::shared_ptr<p12::U2 const> >());
+    xju::assert_equal(*x, *z);
+    dynamic_cast<p12::U2::B const&>(*z.get());
+  }
+}
+
+void test5() {
+  {
+    std::shared_ptr<p12::U2 const> x(
+      new p12::U2::C());
+    ::cxy::Any<> const a(x);
+    xju::assert_equal(a.isA<std::shared_ptr<p12::U2 const> >(),true);
+
+    auto const y(a.get<std::shared_ptr<p12::U2 const> >());
+    xju::assert_equal(*x, *y);
+
+    ::cxy::MemCdrStream s;
+    ::cxy::cdr< ::cxy::Any<> >::marshal(a,*s);
+    ::cxy::Any<> b(cxy::cdr< ::cxy::Any<> >::unmarshalFrom(*s));
+    auto const z(b.get<std::shared_ptr<p12::U2 const> >());
+    xju::assert_equal(*x, *z);
+    dynamic_cast<p12::U2::C const&>(*z.get());
   }
 }
 
@@ -57,6 +115,9 @@ int main(int argc, char* argv[])
   unsigned int n(0);
   test1(), ++n;
   test2(), ++n;
+  test3(), ++n;
+  test4(), ++n;
+  test5(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

@@ -13,4 +13,12 @@ module p12
   {
     void f1(in U1 a);
   };
+
+  module N {
+    enum Y { A, B, C };
+  };
+  union U2 switch(N::Y) {
+  case N::A: long a_;
+  case N::B: float c_;
+  };
 };

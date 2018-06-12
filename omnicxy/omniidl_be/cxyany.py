@@ -166,6 +166,13 @@ def gen(decl,eclass,eheader,causeType,contextType,
             name='::'.join(decl.scopedName())
             switchTypeName=unqualifiedType(decl.switchType(),eclass)
             cases=get_union_cases(decl,eclass)
+            if decl.switchType().kind()==idltype.tk_enum:
+                #qualify the label (case) values
+                q=decl.switchType().scopedName()
+                cases=[('::'+'::'.join(q+[_[0]]) if not _[0] is None else None,
+                        _[1])
+                       for _ in cases]
+                pass
             result=gen_union(name,switchTypeName,cases,repoId)
             pass
         elif isinstance(decl, idlast.Exception):

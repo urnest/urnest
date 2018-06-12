@@ -78,6 +78,17 @@ public:
       auto const z(y.get<double>());
       xju::assert_equal(z,(double)100997.7e-3);
     }
+    //REVISIT: if I move 10 down any further test-Any-cxx crashes
+    {
+      cxy::Any<> const y(
+        f->f(
+          10,
+          cxy::Any<>(
+            std::shared_ptr<omnicxy::proto::interop::a::U1 const>(
+              new omnicxy::proto::interop::a::U1::V<1>(5)))));
+      auto const z(y.get<std::shared_ptr<omnicxy::proto::interop::a::U1 const> >());
+      xju::assert_equal(*z,omnicxy::proto::interop::a::U1::V<1>(5));
+    }
     {
       cxy::Any<> const y(f->f(7,cxy::Any<>('g')));
       auto const z(y.get<char>());
@@ -93,16 +104,6 @@ public:
                                 omnicxy::proto::interop::a::S(5,"fred"))));
       auto const z(y.get<omnicxy::proto::interop::a::S>());
       xju::assert_equal(z,omnicxy::proto::interop::a::S(5,"fred"));
-    }
-    {
-      cxy::Any<> const y(
-        f->f(
-          10,
-          cxy::Any<>(
-            std::shared_ptr<omnicxy::proto::interop::a::U1 const>(
-              new omnicxy::proto::interop::a::U1::V<1>(5)))));
-      auto const z(y.get<std::shared_ptr<omnicxy::proto::interop::a::U1 const> >());
-      xju::assert_equal(*z,omnicxy::proto::interop::a::U1::V<1>(5));
     }
     done_=true;
   }

@@ -725,6 +725,9 @@ def get_union_cases(decl,eclass):
                 label=None
             else:
                 label=l.value()
+                if isinstance(label,idlast.Enumerator):
+                    label=label.identifier()
+                    pass
                 labels.append(label)
                 pass
             cases.setdefault(label,[]).append(
