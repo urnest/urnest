@@ -223,8 +223,8 @@ x p16a-main:
 	example of each:
 	  - recursion
 	  - repetition eg union with many cases having same value
-	... although we only need to support decoding, we have no way
-	to make an OTS client generate (at last case 2) so support both, then
+	... although we only need to support decoding, we have no way to make
+	a COTS client generate (at for least case 2) so support both, then
 	encode and make sure decoded correctly by C++ mapping, then encode
 	and make sure self can decode; both cases involve unions so do
 	non-recursive union first. Need the concept of top-level v nested.
@@ -236,6 +236,29 @@ x p16a-main:
 	    omniORB generates back-refs for this case, if so we
 	    don't need to support encoding of inter-top-level since
 	    can test decoding via interop
+	Top-level v nested:
+	  e.g.
+	  Struct X {
+	    string a;
+	    string b;
+	    sequence<X> children;
+	    sequence<string> m;
+	  }
+	  ... in encoding the TypeCode for X:
+	    - b may reference string typecode encoded for a
+	    - the second X must be a back-ref to avoid infinite recursion
+	  I guess we need to support decoding the v1.3 inter-top-level case,
+	  e.g.: sequence<any>, where we put in e.g. two Xs, the second
+	  occurrance of X can be a reference to the first; similarly if
+	  we're decoding a sequence of function params, our scope
+	  for references is the whole sequence.
+	  - use uint32_t cdrStream::currentOutputPtr() along the way
+	  - setting it into e.g. encapsulation stream REVISIT: there does not
+	    appear to be a way?
+      * first encode/decode recursive union/sequence
+      * then add map param to marshal functions?
+      * and map param to demarshal functions?
+      
     - interop/test-Any.cc :
       x encode cxy, decode cxx and vice-versa, use cdrMemoryStream
       x can't do cxx and cxy in same process for same interface

@@ -1,5 +1,13 @@
 omnicxy - a modern CORBA C++ language mapping implementation for omniORB/linux
 
+omnicxy, being derived in part from omniORB 4.2.0, is copyright Trevor Taylor,
+Apasphere Ltd, AT&T Laboratories Cambridge and others. It is free software.
+The programs in omnicxy are distributed under the GNU General Public Licence
+as published by the Free Software Foundation. See the file COPYING for
+copying permission of these programs. The libraries in omnicxy are
+distributed under the GNU Lesser General Public Licence. See the file
+COPYING.LIB for copying permission of these libraries.
+
 Contents
 
   1. Introduction

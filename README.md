@@ -1,16 +1,24 @@
 urnest
 ======
 
-C++, odin build, python bits and pieces to share, all except odin 
-under free licence:
+C++, odin build, python bits and pieces to share.
 
+LICENSING
 
-    Copyright (c) 2015, Trevor Taylor
+- the omnicxy sub-directory is derived from omniORB 4.2.0 and uses its
+  licence - see omnicxy/README.txt
+
+- the odin sub-directory is derived from (and includes a copy of) odin and
+  uses its licence - see odin-1.17.10x/README
+
+- all other sub-directories, including xju, hcp and pq are under free licence:
 
     Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
 
     THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+
+OVERVIEW
 
 -   odin/ has my customisations to and extras for excellent build tool
     from [sourceforge/projects/odin-build] 
