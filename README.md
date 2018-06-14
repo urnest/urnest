@@ -109,9 +109,6 @@ OVERVIEW
         - RAII
       status: usable
 
--   btt is a simple time tracker, it uses fltk1.3 for UI
-      status: usable
-
 -   hcp is progress towards a utility to split C++-in-single-source-file
     into .h and .cpp files (to make hand-coding more efficient); part of
     this utility is a (partial) C++ parser that I hope to use to write
