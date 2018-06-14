@@ -11,7 +11,8 @@ LICENSING
 - the odin sub-directory is derived from (and includes a copy of) odin and
   uses its licence - see odin-1.17.10x/README
 
-- all other sub-directories, including xju, hcp and pq are under free licence:
+- all other sub-directories, including xju, hcp and pq are licensed under
+  the following terms:
 
     Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that all copyright notices and this permission notice appear in all copies.
 
