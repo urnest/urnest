@@ -41,7 +41,7 @@ tags%all.tree
 %hcp-local-spec==.:dir.hcp.list+G+hpath='hcp':hcp-split-virdir-specs:cat
 
 %hcp-subdir-spec==<<
-%tags==./tags%hcp-gen
+%tags==./tags/Odinfile%hcp-gen
 
 %idl-gen==%idl-gen.vir_dir_specs:list:cat:vir_dir
 
@@ -52,7 +52,7 @@ tags%all.tree
 %idl-local-spec==.:dir.idl.list+G+hpath='hcp':omnicxy.virdir-specs:cat
 
 %idl-subdir-spec==<<
-%tags==./tags%idl-gen
+%tags==./tags/Odinfile%idl-gen
 
 %test-parser == test-parser.cc+(%bootstrap-cxx-opts):auto.cxx.exe
 

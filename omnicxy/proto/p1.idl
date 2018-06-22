@@ -1,5 +1,7 @@
 module p1
 {
+  interface F; //forward declare
+  
   interface F
   {
     void f1();

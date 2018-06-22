@@ -1,5 +1,5 @@
 #install source (including generated C++) into $INST_SRC,
-#        tools (hcp-split etc) into INST_BIN
+#        tools (hcp-split etc) into $INST_BIN
 %install!==(.)+cmd=(%installer.sh) (%hcp-gen.tar) (%idl-gen.tar) (%tools.tar):run
 
 #build and run all tests
@@ -22,15 +22,15 @@ hcp%all.tree
 %hcp-gen==%hcp-gen.virdir_spec:vir_dir
 
 %hcp-gen.virdir_spec == <<
-%xju==xju%hcp-gen
-%hcp==hcp%hcp-gen
-%cxy==omnicxy/cxy%hcp-gen
+%xju==./xju/Odinfile%hcp-gen
+%hcp==./hcp/Odinfile%hcp-gen
+%cxy==./omnicxy/cxy/Odinfile%hcp-gen
 
 %idl-gen==%idl-gen.virdir_spec:vir_dir
 
 %idl-gen.virdir_spec == <<
-%hcp==hcp%idl-gen
-%cxy==omnicxy/cxy%idl-gen
+%hcp==./hcp/Odinfile%idl-gen
+%cxy==./omnicxy/cxy/Odinfile%idl-gen
 
 
 %tags==%all.list-of-tags:merged-tags

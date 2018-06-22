@@ -394,6 +394,8 @@ def gen(decl,eclass,eheader,causeType,contextType,
             else:
                 result=gen_non_enum_union(decl,eclass)
                 pass
+        elif isinstance(decl, idlast.Forward):
+            pass
         else:
             assert False, repr(decl)
             pass

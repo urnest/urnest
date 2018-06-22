@@ -171,6 +171,8 @@ Contents
   typedef of struct, sequence, enum, union maps to C++ typedef - see
   proto/cxy/p5.hh
 
+  CORBA::TypeCode maps to std::sharedptr< ::cxy::TypeCode > - see proto/cxy/p24.hh
+  
 4. Parameters and Results
 
   "in" params are always passed as const&.

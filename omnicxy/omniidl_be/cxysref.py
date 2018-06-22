@@ -310,6 +310,8 @@ def gen(decl,eclass,eheader,indent=''):
             pass
         elif isinstance(decl, idlast.Union):
             pass
+        elif isinstance(decl, idlast.Forward):
+            pass
         else:
             assert False, repr(decl)
             pass

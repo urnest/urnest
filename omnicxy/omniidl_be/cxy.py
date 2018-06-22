@@ -93,6 +93,7 @@ def objrefUnqualifiedType(t,eclass):
 
 unqualifiedType_=dict(
     [(idltype.tk_any,lambda t,eclass:'::cxy::Any< {eclass} >'.format(**vars()))]+
+    [(idltype.tk_TypeCode,lambda t,eclass:'std::shared_ptr< ::cxy::TypeCode >')]+
     [(kind,lambda t,eclass:basicParamTypes.get(t.kind()).typename)
      for kind in basicParamTypes]+
     [(kind,lambda t,eclass:''.join(['::'+_ for _ in t.scopedName()]))
@@ -122,6 +123,7 @@ def objrefPtype(p,eclass):
 
 ptype_=dict(
     [(idltype.tk_any, lambda p,eclass:'::cxy::Any< {eclass} > const'.format(**vars()))]+
+    [(idltype.tk_TypeCode,lambda p,eclass: 'std::shared_ptr< ::cxy::TypeCode > const')]+
     [(idltype.tk_union,unionPtype)]+
     [(idltype.tk_objref,objrefPtype)]+
     [(kind,lambda p,eclass:''.join(['::'+_ for _ in p.paramType().scopedName()])+' const')
@@ -146,6 +148,7 @@ def tn(t):
 tincludes_=dict(
     [(idltype.tk_objref, lambda t: ['<cxy/IOR.hh>'])]+
     [(idltype.tk_any, lambda t: ['<cxy/Any.hh>'])]+
+    [(idltype.tk_TypeCode, lambda t: ['<cxy/TypeCode.hh>'])]+
     [(kind, lambda t:basicParamTypes.get(t.kind()).includeFiles)
      for kind in basicParamTypes]+
     [(kind, lambda t: []) 
@@ -1016,6 +1019,12 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
                 r=gen_non_enum_union(decl,eclass)
                 result.code=reindent(indent, r.code)
                 result.forNamespaceScope.extend(r.forNamespaceScope)
+        elif isinstance(decl, idlast.Forward):
+            name=decl.identifier()
+            result.code=reindent(
+                indent,
+                ('class %(name)s;')%vars())
+            pass
         else:
             assert False, repr(decl)
             pass
@@ -1119,6 +1128,9 @@ def gen_tincludes(decl):
                     result.extend(tincludes(c.caseType()))
                 pass
             pass
+        pass
+    elif isinstance(decl, idlast.Forward):
+        result=[]
         pass
     else:
         assert False, (str(decl.__class__),repr(decl))

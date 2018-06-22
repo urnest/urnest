@@ -82,6 +82,32 @@ _CORBA_MODULE_BEG
 
 #endif
 
+#ifndef __p1_mF__
+#define __p1_mF__
+  class F;
+  class _objref_F;
+  class _impl_F;
+  
+  typedef _objref_F* F_ptr;
+  typedef F_ptr FRef;
+
+  class F_Helper {
+  public:
+    typedef F_ptr _ptr_type;
+
+    static _ptr_type _nil();
+    static _CORBA_Boolean is_nil(_ptr_type);
+    static void release(_ptr_type);
+    static void duplicate(_ptr_type);
+    static void marshalObjRef(_ptr_type, cdrStream&);
+    static _ptr_type unmarshalObjRef(cdrStream&);
+  };
+
+  typedef _CORBA_ObjRef_Var<_objref_F, F_Helper> F_var;
+  typedef _CORBA_ObjRef_OUT_arg<_objref_F,F_Helper > F_out;
+
+#endif
+
   // interface F
   class F {
   public:

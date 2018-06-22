@@ -199,6 +199,8 @@ def gen(decl,eclass,eheader,causeType,contextType,
             pass
         elif isinstance(decl, idlast.Const):
             pass
+        elif isinstance(decl, idlast.Forward):
+            pass
         else:
             assert False, repr(decl)
             pass

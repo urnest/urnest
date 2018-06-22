@@ -80,11 +80,11 @@ done
 %hcp-local-spec==.:dir.hcp.list+G+hpath='xju':hcp-split-virdir-specs:cat
 
 %hcp-subdir-spec==<<
-%io==io%hcp-gen
-%ip==ip%hcp-gen
-%file==file%hcp-gen
-%snmp==snmp%hcp-gen
-%netflow==netflow%hcp-gen
+%io==./io/Odinfile%hcp-gen
+%ip==./ip/Odinfile%hcp-gen
+%file==./file/Odinfile%hcp-gen
+%snmp==./snmp/Odinfile%hcp-gen
+%netflow==./netflow/Odinfile%hcp-gen
 
 %test-getHostName==()+cmd=(%test-getHostName.sh) (test-getHostName.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 

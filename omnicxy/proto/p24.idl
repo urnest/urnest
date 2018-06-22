@@ -1,0 +1,11 @@
+module p24
+{
+  interface i24
+  {
+    CORBA::TypeCode f(in CORBA::TypeCode x);
+    struct Y
+    {
+      CORBA::TypeCode y_;
+    };
+  };
+};
