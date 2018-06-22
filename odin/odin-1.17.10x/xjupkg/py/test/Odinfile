@@ -1,0 +1,42 @@
+%all==%all.tests.tree:leaves
+
+%all.tests.tree==<<
+%test1
+%test2
+%test3
+
+%test1==(%test1.got)+cmd=(%test1.sh) (%test1.expect:list:ls):stdout
+
+%test1.sh==! <<
+#/bin/sh
+sort -u <"$1" > want &&
+sort -u > got &&
+diff -b want got >&2
+
+%test1.got==x.py+py_sp=(sd):py_import_all:ls
+
+%test1.expect==<<
+y.py
+b/__init__.py
+c/__init__.py
+d/__init__.py
+d/z.py
+b/q.py
+sd/i.py
+
+
+%test2==()+py=(x.py)+py_sp=(sd):py.stdout
+
+%test3==()+cmd=(%cmp.sh) (%test3.want) (%test3.got):stdout
+
+%test3.want==<<
+fred
+
+%test3.got==(t1.py)+cmd='fred'+py_sp=(sd):py.exec.output
+
+%cmp.sh==! <<
+#/bin/sh
+sort -u <"$1" > want &&
+sort -u <"$2" > got &&
+diff -b want got >&2
+
