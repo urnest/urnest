@@ -14,6 +14,8 @@ x hcp_tags*tree_tags deends on all files in tree, how can we make it
 
 - fix +ignore handling in hash_inc.sh
 
+- add +stdin to :exec / :py.exec
+
 x :cxx.impl redo to make it correct, scan_for_impls would
   give .h and .cpp at once, then recurse on that and then
   hmm, need o_src back again
@@ -44,8 +46,7 @@ x remove ar stuff from cxx, make cxx.sm an sm
     command line too long; give verbose flag to make it report progress to
     stdout; give it output file name as single arg
   
-- add pyimport package and py-exec to support python scripts with
-  auto dependencies
+x add py package to support python scripts with auto dependencies
 
 - don't hard-code which path, and test for which separately, eg ld.sh
 
