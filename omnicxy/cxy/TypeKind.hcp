@@ -11,7 +11,7 @@
 
 namespace cxy
 {
-class TypeCode;
+class TypeCode_;
 
 // CORBA 3.3 Table 9.2 TCKind
 // REVISIT: empty rows below

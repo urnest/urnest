@@ -21,12 +21,11 @@ namespace cxy
 template<class T>
 void testx(T const v) {
   cdrMemoryStream s;
-  std::shared_ptr<TypeCode> const x(cxy::TypeCodeOf<T>::create());
+  ::cxy::TypeCode const x(cxy::TypeCodeOf<T>::create());
   x->marshal(s);
   cdr<T>::marshal(v,s);
 
-  std::shared_ptr<TypeCode> y(
-    cdr< std::shared_ptr<TypeCode> >::unmarshalFrom(s));
+  ::cxy::TypeCode y(cdr< ::cxy::TypeCode >::unmarshalFrom(s));
   xju::assert_equal(*x,*y);
   
   cdrMemoryStream t;

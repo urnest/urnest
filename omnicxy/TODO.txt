@@ -29,12 +29,12 @@ x cxy::any operator< etc
   no that makes embedding union types in structures harder, just
   stick with shared_ptr<T const>
 
-- TypeCode
-  - current mapping to sharedptr< TypeCode > does not get value-compare
+x TypeCode
+  x current mapping to sharedptr< TypeCode > does not get value-compare
     semantics - make TypeCode a reference wrapper so it can have
     value-compare
-    - 1st rename TypeCode to TypeCode_
-    - then replaced std::shared_ptr< > with TypeCode:
+    x 1st rename TypeCode to TypeCode_
+    x then replaced std::shared_ptr< > with TypeCode:
     TypeCode {
       explicit TypeCode(std::sharedptr< TypeCode_ const> x) throw():
         x_(x)
@@ -44,6 +44,7 @@ x cxy::any operator< etc
         std::sharedptr< TypeCode_ const> x_;
       friend bool operator<(TypeCode const& x, TypeCode const& y)...;
     };
+
 * fix up exception handling:
   - define equivalents of all corba exception types
   - have translateCorbaException return std::exception_ptr

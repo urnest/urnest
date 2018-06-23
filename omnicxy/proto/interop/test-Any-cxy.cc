@@ -105,6 +105,12 @@ public:
       auto const z(y.get<omnicxy::proto::interop::a::S>());
       xju::assert_equal(z,omnicxy::proto::interop::a::S(5,"fred"));
     }
+    {
+      cxy::Any<> const y(f->f(11,cxy::Any<>(
+                                cxy::TypeCodeOf<uint32_t>::create())));
+      auto const z(y.get< cxy::TypeCode >());
+      xju::assert_equal(z,cxy::TypeCodeOf<uint32_t>::create());
+    }
     done_=true;
   }
 };

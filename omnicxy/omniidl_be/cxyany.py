@@ -14,18 +14,19 @@ struct_t='''\
 template<>
 struct TypeCodeOf< ::%(name)s >
 {
-  static std::shared_ptr<cxy::TypeCode> create() throw(std::bad_alloc)
+  static ::cxy::TypeCode create() throw(std::bad_alloc)
   {
-    return std::shared_ptr<cxy::TypeCode>(
-      new cxy::StructTypeCode(
-        cxy::cdr< ::%(name)s >::repoId,
-        "%(name)s",
-        {%(struct_members)s
-        }));
+    return ::cxy::TypeCode(
+      std::shared_ptr<cxy::TypeCode_>(
+        new cxy::StructTypeCode(
+          cxy::cdr< ::%(name)s >::repoId,
+          "%(name)s",
+          {%(struct_members)s
+          })));
   }
 };
 '''
-struct_member_t='''\n          { "%(member_name)s", cxy::TypeCodeOf< %(member_type)s >::create() }'''
+struct_member_t='''\n          { "%(member_name)s", ::cxy::TypeCodeOf< %(member_type)s >::create() }'''
 def gen_struct(name,memberTypesAndNames,repoId):
     assert len(memberTypesAndNames)>0, name
     struct_members=','.join(
@@ -37,22 +38,23 @@ union_t='''\
 template<>
 struct TypeCodeOf< ::std::shared_ptr< ::%(name)s const > >
 {
-  static std::shared_ptr<cxy::TypeCode> create() throw(std::bad_alloc)
+  static ::cxy::TypeCode create() throw(std::bad_alloc)
   {
     auto marshalCaseValue( [](%(discriminantType)s const& x ) {
       cxy::MemCdrStream s;
       cxy::cdr< %(discriminantType)s >::marshal(x,*s);
       return s;
     });
-    return std::shared_ptr<cxy::TypeCode>(
-      new cxy::UnionTypeCode(
-        cxy::cdr< ::std::shared_ptr< ::%(name)s const > >::repoId,
-        "%(name)s",
-        cxy::TypeCodeOf< %(discriminantType)s >::create(),
-        {
-          %(union_cases)s
-        },
-        %(defaultCase)s));
+    return ::cxy::TypeCode(
+      std::shared_ptr<cxy::TypeCode_>(
+        new cxy::UnionTypeCode(
+          cxy::cdr< ::std::shared_ptr< ::%(name)s const > >::repoId,
+          "%(name)s",
+          cxy::TypeCodeOf< %(discriminantType)s >::create(),
+          {
+            %(union_cases)s
+          },
+          %(defaultCase)s)));
   }
 };
 '''
@@ -118,14 +120,15 @@ enum_t='''\
 template<>
 struct TypeCodeOf< ::%(name)s >
 {
-  static std::shared_ptr<cxy::TypeCode> create() throw(std::bad_alloc)
+  static ::cxy::TypeCode create() throw(std::bad_alloc)
   {
-    return std::shared_ptr<cxy::TypeCode>(
-      new cxy::EnumTypeCode(
-        cxy::cdr< ::%(name)s >::repoId,
-        "%(name)s",
-        {%(enum_members)s
-        }));
+    return ::cxy::TypeCode(
+      std::shared_ptr<cxy::TypeCode_>(
+        new cxy::EnumTypeCode(
+          cxy::cdr< ::%(name)s >::repoId,
+          "%(name)s",
+          {%(enum_members)s
+          })));
   }
 };
 '''

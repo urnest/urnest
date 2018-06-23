@@ -18,13 +18,13 @@ class AnyImpl
 {
 public:
   // post: *this owns value
-  AnyImpl(std::shared_ptr<TypeCode const> typeCode,
+  AnyImpl(TypeCode const& typeCode,
           MemCdrStream const& value) throw(std::bad_alloc):
       typeCode_(typeCode),
       value_(value) {
   }
 
-  AnyImpl(std::shared_ptr<TypeCode const> typeCode,
+  AnyImpl(TypeCode const& typeCode,
           MemCdrStream && value) throw():
       typeCode_(typeCode),
       value_(std::move(value)) {
@@ -49,14 +49,13 @@ public:
   //  omni::giopStream::CommFailure
   //  )
   {
-    std::shared_ptr<cxy::TypeCode> const t(
-      cdr<std::shared_ptr<cxy::TypeCode> >::unmarshalFrom(s));
+    ::cxy::TypeCode const t(cdr< ::cxy::TypeCode >::unmarshalFrom(s));
     MemCdrStream value;
     t->copyValue(s, *value);
     return new AnyImpl(t,std::move(value));
   }
   
-  std::shared_ptr<TypeCode const> typeCode_;
+  TypeCode typeCode_;
   MemCdrStream const value_;
 
   friend bool operator<(AnyImpl const& a, AnyImpl const& b) throw(){
@@ -94,9 +93,10 @@ public:
 template<>
 struct TypeCodeOf<AnyImpl>
 {
-static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+static TypeCode create() throw(std::bad_alloc)
 {
-  return std::shared_ptr<TypeCode>(new AnyTypeCode);
+  return TypeCode(
+    std::shared_ptr<TypeCode_>(new AnyTypeCode));
 }
 };
   

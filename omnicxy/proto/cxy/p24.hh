@@ -13,18 +13,18 @@ class i24
 {
 public:
   virtual ~i24() throw();
-  virtual std::shared_ptr< ::cxy::TypeCode > f(
-    std::shared_ptr< ::cxy::TypeCode > const& x) throw(
+  virtual ::cxy::TypeCode f(
+    ::cxy::TypeCode const& x) throw(
     // ipc failure
     // - note servant may not throw
     cxy::Exception) = 0;
   struct Y
   {
     
-    std::shared_ptr< ::cxy::TypeCode > y_;
+    ::cxy::TypeCode y_;
   
     Y(
-      std::shared_ptr< ::cxy::TypeCode > const& p1) throw();
+      ::cxy::TypeCode const& p1) throw();
     friend bool operator<(
       Y const& x, 
       Y const& y) throw() {

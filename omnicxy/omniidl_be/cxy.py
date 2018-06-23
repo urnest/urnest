@@ -93,7 +93,7 @@ def objrefUnqualifiedType(t,eclass):
 
 unqualifiedType_=dict(
     [(idltype.tk_any,lambda t,eclass:'::cxy::Any< {eclass} >'.format(**vars()))]+
-    [(idltype.tk_TypeCode,lambda t,eclass:'std::shared_ptr< ::cxy::TypeCode >')]+
+    [(idltype.tk_TypeCode,lambda t,eclass:'::cxy::TypeCode')]+
     [(kind,lambda t,eclass:basicParamTypes.get(t.kind()).typename)
      for kind in basicParamTypes]+
     [(kind,lambda t,eclass:''.join(['::'+_ for _ in t.scopedName()]))
@@ -123,7 +123,7 @@ def objrefPtype(p,eclass):
 
 ptype_=dict(
     [(idltype.tk_any, lambda p,eclass:'::cxy::Any< {eclass} > const'.format(**vars()))]+
-    [(idltype.tk_TypeCode,lambda p,eclass: 'std::shared_ptr< ::cxy::TypeCode > const')]+
+    [(idltype.tk_TypeCode,lambda p,eclass: '::cxy::TypeCode const')]+
     [(idltype.tk_union,unionPtype)]+
     [(idltype.tk_objref,objrefPtype)]+
     [(kind,lambda p,eclass:''.join(['::'+_ for _ in p.paramType().scopedName()])+' const')

@@ -112,6 +112,14 @@ public:
       (*result) <<= y;
       return result;
     }
+    case 11:
+    {
+      CORBA::TypeCode* y;
+      x >>= y;
+      CORBA::Any* result(new CORBA::Any);
+      (*result) <<= y;
+      return result;
+    }
     default:
       xju::assert_never_reached();
     }

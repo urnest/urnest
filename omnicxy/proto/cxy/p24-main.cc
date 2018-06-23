@@ -48,8 +48,8 @@ public:
   {
   }
   
-  virtual std::shared_ptr< ::cxy::TypeCode> f(
-    std::shared_ptr< ::cxy::TypeCode> const& x) throw(
+  virtual ::cxy::TypeCode f(
+    ::cxy::TypeCode const& x) throw(
     cxy::Exception) override
   {
     std::cout << "servant: p24::i24::f()"
@@ -71,10 +71,10 @@ public:
     ~f1() throw()
     {
     }
-    f1(std::shared_ptr< ::cxy::TypeCode> const& x):
+    f1(::cxy::TypeCode const& x):
         x_(x) {
     }
-    std::shared_ptr< ::cxy::TypeCode> const x_;
+    ::cxy::TypeCode const x_;
     friend bool operator==(f1 const& x, f1 const& y) throw()
     {
       return *x.x_==*y.x_;

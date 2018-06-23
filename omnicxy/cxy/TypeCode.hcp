@@ -33,10 +33,10 @@ namespace cxy
 // TypeCode describes a type well enough to marshal and unmarshal
 // objects of that type without their IDL definitions.
 //
-class TypeCode
+class TypeCode_
 {
 public:
-  virtual ~TypeCode() throw(){}
+  virtual ~TypeCode_() throw(){}
 
   virtual void copyValue(cdrStream& from, cdrStream& to) const
   //to avoid needing CORBA.h in our .hh, exception specs are commented
@@ -52,23 +52,23 @@ public:
   //)
   = 0;
 
-  virtual bool equals(TypeCode const& b) const throw() = 0;
+  virtual bool equals(TypeCode_ const& b) const throw() = 0;
 
   //pre: typeid(*this)==typeid(b)
-  virtual bool lessThan(TypeCode const& b) const throw() = 0;
+  virtual bool lessThan(TypeCode_ const& b) const throw() = 0;
   
   virtual std::string str() const throw() = 0;
 };
-std::ostream& operator<<(std::ostream& s, TypeCode const& x) throw()
+std::ostream& operator<<(std::ostream& s, TypeCode_ const& x) throw()
 {
   return s << x.str();
 }
 
-bool operator==(TypeCode const& a, TypeCode const& b) throw()
+bool operator==(TypeCode_ const& a, TypeCode_ const& b) throw()
 {
   return a.equals(b);
 }
-bool operator<(TypeCode const& a, TypeCode const& b) throw()
+bool operator<(TypeCode_ const& a, TypeCode_ const& b) throw()
 {
   if (std::type_index(typeid(a))<std::type_index(typeid(b))){
     return true;
@@ -79,10 +79,48 @@ bool operator<(TypeCode const& a, TypeCode const& b) throw()
   return a.lessThan(b);
 }
 
+class TypeCode
+{
+public:
+  explicit TypeCode(std::shared_ptr<TypeCode_ const> value) throw():
+      value_(value)
+  {
+  }
+  TypeCode_ const& operator*() const throw(){
+    return *value_;
+  }
+  TypeCode_ const* operator->() const throw(){
+    return value_.operator->();
+  }
+private:
+  std::shared_ptr<TypeCode_ const> value_;
+
+  friend bool operator==(TypeCode const& x, TypeCode const& y) throw(){
+    return *x.value_==*y.value_;
+  }
+  friend bool operator!=(TypeCode const& x, TypeCode const& y) throw(){
+    return !(x==y);
+  }
+  friend bool operator<(TypeCode const& x, TypeCode const& y) throw(){
+    return *x.value_<*y.value_;
+  }
+  friend bool operator<=(TypeCode const& x, TypeCode const& y) throw(){
+    return (x<y)||(x==y);
+  }
+  friend bool operator>(TypeCode const& x, TypeCode const& y) throw(){
+    return (y<x);
+  }
+  friend bool operator>=(TypeCode const& x, TypeCode const& y) throw(){
+    return (y<=x);
+  }
+  friend std::ostream& operator<<(std::ostream& s, TypeCode const& x) throw(){
+    return s << (*x.value_);
+  }
+};
 
 //typecode class for eg CORBA::Short (ie int16_t)
 template<class BasicType, cxy::TypeKind typeKind>
-class BasicTypeCode : public TypeCode
+class BasicTypeCode : public TypeCode_
 {
 public:
   virtual void copyValue(cdrStream& from, cdrStream& to) const
@@ -97,12 +135,12 @@ public:
     cxy::cdr<uint32_t>::marshal((uint32_t)typeKind, s);
   }
   
-  virtual bool equals(TypeCode const& b) const throw()
+  virtual bool equals(TypeCode_ const& b) const throw()
   {
     BasicTypeCode const* b_(dynamic_cast<BasicTypeCode const*>(&b));
     return b_;
   }
-  virtual bool lessThan(TypeCode const& b) const throw()
+  virtual bool lessThan(TypeCode_ const& b) const throw()
   {
     xju::assert_equal(typeid(*this),typeid(b));
     return false;
@@ -113,10 +151,10 @@ public:
   }
 };
 
-class SequenceTypeCode : public TypeCode
+class SequenceTypeCode : public TypeCode_
 {
 public:
-  SequenceTypeCode(std::shared_ptr<TypeCode> itemType,
+  SequenceTypeCode(TypeCode const& itemType,
                    uint32_t maxSize):
       itemType_(itemType),
       maxSize_(maxSize)
@@ -143,12 +181,12 @@ public:
     cxy::cdr<EncapsulationCdrStream>::marshal(es,s);
   }
   
-  virtual bool equals(TypeCode const& b) const throw()
+  virtual bool equals(TypeCode_ const& b) const throw()
   {
     SequenceTypeCode const* b_(dynamic_cast<SequenceTypeCode const*>(&b));
     return b_ && (*b_==*this);
   }
-  virtual bool lessThan(TypeCode const& b) const throw()
+  virtual bool lessThan(TypeCode_ const& b) const throw()
   {
     xju::assert_equal(typeid(*this),typeid(b));
     SequenceTypeCode const& a_(static_cast<SequenceTypeCode const&>(*this));
@@ -167,7 +205,7 @@ public:
       xju::format::int_(maxSize_)+">";
   }
 private:
-  std::shared_ptr<TypeCode> itemType_;
+  TypeCode itemType_;
   uint32_t maxSize_;
   
   friend bool operator==(SequenceTypeCode const& a,
@@ -179,18 +217,18 @@ private:
 };
 
   
-class StructTypeCode : public TypeCode
+class StructTypeCode : public TypeCode_
 {
 public:
   StructTypeCode(std::string repoId,
                  std::string name,
-                 std::vector<std::pair<std::string, std::shared_ptr<TypeCode> > > memberNamesAndTypes):
+                 std::vector<std::pair<std::string, TypeCode > > memberNamesAndTypes):
       repoId_(repoId),
       name_(name),
       memberNamesAndTypes_(memberNamesAndTypes)
   {
   }
-  typedef std::vector<std::pair<std::string, std::shared_ptr<TypeCode> > > Members;
+  typedef std::vector<std::pair<std::string, TypeCode > > Members;
   
   virtual void copyValue(cdrStream& from, cdrStream& to) const
   {
@@ -215,12 +253,12 @@ public:
     cxy::cdr<EncapsulationCdrStream>::marshal(es,s);
   }
   
-  virtual bool equals(TypeCode const& b) const throw()
+  virtual bool equals(TypeCode_ const& b) const throw()
   {
     StructTypeCode const* b_(dynamic_cast<StructTypeCode const*>(&b));
     return b_ && (*b_==*this);
   }
-  virtual bool lessThan(TypeCode const& b) const throw()
+  virtual bool lessThan(TypeCode_ const& b) const throw()
   {
     xju::assert_equal(typeid(*this),typeid(b));
     StructTypeCode const& b_(static_cast<StructTypeCode const&>(b));
@@ -242,13 +280,13 @@ private:
   }
 };
 
-class UnionTypeCode : public TypeCode
+class UnionTypeCode : public TypeCode_
 {
 public:
-  typedef std::tuple<MemCdrStream,std::string,std::shared_ptr<TypeCode>> Case;
+  typedef std::tuple<MemCdrStream,std::string,TypeCode> Case;
   UnionTypeCode(std::string repoId,
                 std::string name,
-                std::shared_ptr<TypeCode> const& descriminantType,
+                TypeCode const& descriminantType,
                 std::vector<Case> const& cases,
                 xju::Optional<uint32_t> const& indexOfDefaultCase) throw():
       repoId_(repoId),
@@ -305,12 +343,12 @@ public:
     cxy::cdr<EncapsulationCdrStream>::marshal(es,s);
   }
   
-  virtual bool equals(TypeCode const& b) const throw()
+  virtual bool equals(TypeCode_ const& b) const throw()
   {
     UnionTypeCode const* b_(dynamic_cast<UnionTypeCode const*>(&b));
     return b_ && (*b_==*this);
   }
-  virtual bool lessThan(TypeCode const& b) const throw()
+  virtual bool lessThan(TypeCode_ const& b) const throw()
   {
     xju::assert_equal(typeid(*this),typeid(b));
     UnionTypeCode const& b_(static_cast<UnionTypeCode const&>(b));
@@ -323,7 +361,7 @@ public:
 private:
   std::string repoId_;
   std::string name_;
-  std::shared_ptr<TypeCode> descriminantType_;
+  TypeCode descriminantType_;
   std::vector<Case> cases_;
   xju::Optional<uint32_t> indexOfDefaultCase_; //if valid, < cases_.size()
   
@@ -334,7 +372,7 @@ private:
   }
 };
 
-class StringTypeCode : public TypeCode
+class StringTypeCode : public TypeCode_
 {
 public:
   explicit StringTypeCode(uint32_t maxSize):
@@ -355,12 +393,12 @@ public:
     cxy::cdr<uint32_t>::marshal(maxSize_,s);
   }
   
-  virtual bool equals(TypeCode const& b) const throw()
+  virtual bool equals(TypeCode_ const& b) const throw()
   {
     StringTypeCode const* b_(dynamic_cast<StringTypeCode const*>(&b));
     return b_ && (*b_==*this);
   }
-  virtual bool lessThan(TypeCode const& b) const throw()
+  virtual bool lessThan(TypeCode_ const& b) const throw()
   {
     xju::assert_equal(typeid(*this),typeid(b));
     StringTypeCode const& a_(static_cast<StringTypeCode const&>(*this));
@@ -382,7 +420,7 @@ private:
 };
 
 
-class EnumTypeCode : public TypeCode
+class EnumTypeCode : public TypeCode_
 {
 public:
   EnumTypeCode(std::string repoId,
@@ -417,12 +455,12 @@ public:
     cxy::cdr<EncapsulationCdrStream>::marshal(es,s);
   }
   
-  virtual bool equals(TypeCode const& b) const throw()
+  virtual bool equals(TypeCode_ const& b) const throw()
   {
     EnumTypeCode const* b_(dynamic_cast<EnumTypeCode const*>(&b));
     return b_ && (*b_==*this);
   }
-  virtual bool lessThan(TypeCode const& b) const throw()
+  virtual bool lessThan(TypeCode_ const& b) const throw()
   {
     xju::assert_equal(typeid(*this),typeid(b));
     EnumTypeCode const& b_(static_cast<EnumTypeCode const&>(b));
@@ -445,13 +483,13 @@ private:
 };
 
 
-class AnyTypeCode : public TypeCode
+class AnyTypeCode : public TypeCode_
 {
 public:
   virtual void copyValue(cdrStream& from, cdrStream& to) const
   {
-    std::shared_ptr<cxy::TypeCode> const t(
-      cdr<std::shared_ptr<cxy::TypeCode> >::unmarshalFrom(from));
+    TypeCode const t(
+      cdr<TypeCode>::unmarshalFrom(from));
     t->marshal(to);
     t->copyValue(from, to);
   }
@@ -461,12 +499,12 @@ public:
     cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::ANY, s);
   }
   
-  virtual bool equals(TypeCode const& b) const throw()
+  virtual bool equals(TypeCode_ const& b) const throw()
   {
     AnyTypeCode const* b_(dynamic_cast<AnyTypeCode const*>(&b));
     return b_;
   }
-  virtual bool lessThan(TypeCode const& b) const throw()
+  virtual bool lessThan(TypeCode_ const& b) const throw()
   {
     xju::assert_equal(typeid(*this),typeid(b));
     return false;
@@ -487,156 +525,182 @@ template<class T>
 struct TypeCodeOf
 {
 private:
-  static std::shared_ptr<TypeCode> create() throw(std::bad_alloc); //not implemented - must specialise class to provide implementations
+  static TypeCode create() throw(std::bad_alloc); //not implemented - must specialise class to provide implementations
 };
   
 template<>
 struct TypeCodeOf<int16_t>
 {
-static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+static TypeCode create() throw(std::bad_alloc)
 {
-  return std::shared_ptr<TypeCode>(
-    new BasicTypeCode<int16_t,cxy::TypeKind::SHORT>);
+  return TypeCode(
+    std::shared_ptr<TypeCode_>(
+      new BasicTypeCode<int16_t,cxy::TypeKind::SHORT>));
 }
 };
   
 template<>
 struct TypeCodeOf<int32_t>
 {
-static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+static TypeCode create() throw(std::bad_alloc)
 {
-  return std::shared_ptr<TypeCode>(
-    new BasicTypeCode<int32_t,cxy::TypeKind::LONG>);
+  return TypeCode(
+    std::shared_ptr<TypeCode_>(
+      new BasicTypeCode<int32_t,cxy::TypeKind::LONG>));
 }
 };
   
 template<>
 struct TypeCodeOf<int64_t>
 {
-static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+static TypeCode create() throw(std::bad_alloc)
 {
-  return std::shared_ptr<TypeCode>(
-    new BasicTypeCode<int64_t,cxy::TypeKind::LONGLONG>);
+  return TypeCode(
+    std::shared_ptr<TypeCode_>(
+      new BasicTypeCode<int64_t,cxy::TypeKind::LONGLONG>));
 }
 };
   
 template<>
 struct TypeCodeOf<uint16_t>
 {
-static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+static TypeCode create() throw(std::bad_alloc)
 {
-  return std::shared_ptr<TypeCode>(
-    new BasicTypeCode<uint16_t,cxy::TypeKind::USHORT>);
+  return TypeCode(
+    std::shared_ptr<TypeCode_>(
+      new BasicTypeCode<uint16_t,cxy::TypeKind::USHORT>));
 }
 };
   
 template<>
 struct TypeCodeOf<uint32_t>
 {
-static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+static TypeCode create() throw(std::bad_alloc)
 {
-  return std::shared_ptr<TypeCode>(
-    new BasicTypeCode<uint32_t,cxy::TypeKind::ULONG>);
+  return TypeCode(
+    std::shared_ptr<TypeCode_>(
+      new BasicTypeCode<uint32_t,cxy::TypeKind::ULONG>));
 }
 };
   
 template<>
 struct TypeCodeOf<uint64_t>
 {
-static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+static TypeCode create() throw(std::bad_alloc)
 {
-  return std::shared_ptr<TypeCode>(
-    new BasicTypeCode<uint64_t,cxy::TypeKind::ULONGLONG>);
+  return TypeCode(
+    std::shared_ptr<TypeCode_>(
+      new BasicTypeCode<uint64_t,cxy::TypeKind::ULONGLONG>));
 }
 };
   
 template<>
 struct TypeCodeOf<float>
 {
-static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+static TypeCode create() throw(std::bad_alloc)
 {
-  return std::shared_ptr<TypeCode>(
-    new BasicTypeCode<float,cxy::TypeKind::FLOAT>);
+  return TypeCode(
+    std::shared_ptr<TypeCode_>(
+      new BasicTypeCode<float,cxy::TypeKind::FLOAT>));
 }
 };
   
 template<>
 struct TypeCodeOf<double>
 {
-static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+static TypeCode create() throw(std::bad_alloc)
 {
-  return std::shared_ptr<TypeCode>(
-    new BasicTypeCode<double,cxy::TypeKind::DOUBLE>);
+  return TypeCode(
+    std::shared_ptr<TypeCode_>(
+      new BasicTypeCode<double,cxy::TypeKind::DOUBLE>));
 }
 };
   
 template<>
 struct TypeCodeOf<long double>
 {
-static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+static TypeCode create() throw(std::bad_alloc)
 {
-  return std::shared_ptr<TypeCode>(
-    new BasicTypeCode<long double,cxy::TypeKind::LONGDOUBLE>);
+  return TypeCode(
+    std::shared_ptr<TypeCode_>(
+      new BasicTypeCode<long double,cxy::TypeKind::LONGDOUBLE>));
 }
 };
   
 template<>
 struct TypeCodeOf<char>
 {
-static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+static TypeCode create() throw(std::bad_alloc)
 {
-  return std::shared_ptr<TypeCode>(
-    new BasicTypeCode<char,cxy::TypeKind::CHAR>);
+  return TypeCode(
+    std::shared_ptr<TypeCode_>(
+      new BasicTypeCode<char,cxy::TypeKind::CHAR>));
 }
 };
   
 template<>
 struct TypeCodeOf<bool>
 {
-static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+static TypeCode create() throw(std::bad_alloc)
 {
-  return std::shared_ptr<TypeCode>(
-    new BasicTypeCode<bool,cxy::TypeKind::BOOLEAN>);
+  return TypeCode(
+    std::shared_ptr<TypeCode_>(
+      new BasicTypeCode<bool,cxy::TypeKind::BOOLEAN>));
 }
 };
   
 template<>
 struct TypeCodeOf<uint8_t>
 {
-static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+static TypeCode create() throw(std::bad_alloc)
 {
-  return std::shared_ptr<TypeCode>(
-    new BasicTypeCode<uint8_t,cxy::TypeKind::OCTET>);
+  return TypeCode(
+    std::shared_ptr<TypeCode_>(
+      new BasicTypeCode<uint8_t,cxy::TypeKind::OCTET>));
 }
 };
   
 template<>
 struct TypeCodeOf<char32_t>
 {
-static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+static TypeCode create() throw(std::bad_alloc)
 {
-  return std::shared_ptr<TypeCode>(
-    new BasicTypeCode<char32_t,cxy::TypeKind::WCHAR>);
+  return TypeCode(
+    std::shared_ptr<TypeCode_>(
+      new BasicTypeCode<char32_t,cxy::TypeKind::WCHAR>));
 }
 };
   
 template<class T>
 struct TypeCodeOf<std::vector<T> >
 {
-static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+static TypeCode create() throw(std::bad_alloc)
 {
-  return std::shared_ptr<TypeCode>(
-    new SequenceTypeCode(TypeCodeOf<T>::create(),0));
+  return TypeCode(
+    std::shared_ptr<TypeCode_>(
+      new SequenceTypeCode(TypeCodeOf<T>::create(),0)));
 }
 };
 
 template<>
 struct TypeCodeOf<std::string>
 {
-static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
+static TypeCode create() throw(std::bad_alloc)
 {
-  return std::shared_ptr<TypeCode>(
-    new StringTypeCode(0));
+  return TypeCode(
+    std::shared_ptr<TypeCode_>(
+      new StringTypeCode(0)));
+}
+};
+
+template<>
+struct TypeCodeOf< TypeCode >
+{
+static TypeCode create() throw(std::bad_alloc)
+{
+  return TypeCode(
+    std::shared_ptr<TypeCode_>(
+      new BasicTypeCode<TypeCode,cxy::TypeKind::TYPECODE>));
 }
 };
   
@@ -644,10 +708,10 @@ static std::shared_ptr<TypeCode> create() throw(std::bad_alloc)
 
 
 template<>
-class cdr< std::shared_ptr<TypeCode> >
+class cdr< TypeCode >
 {
 public:
-  static std::shared_ptr<TypeCode> unmarshalFrom(cdrStream& s)
+  static TypeCode unmarshalFrom(cdrStream& s)
   //to avoid needing CORBA.h in our .hh, exception specs are commented
   //throw(
   //  CORBA::SystemException,
@@ -683,18 +747,21 @@ public:
     case cxy::TypeKind::WCHAR:
       return TypeCodeOf<char32_t>::create();
     case cxy::TypeKind::ANY:
-      return std::shared_ptr<TypeCode>(new AnyTypeCode);
+      return TypeCode(
+        std::shared_ptr<TypeCode_>(new AnyTypeCode));
     case cxy::TypeKind::STRING:
     {
       auto const maxSize(cdr<uint32_t>::unmarshalFrom(s));
-      return std::shared_ptr<TypeCode>(new StringTypeCode(maxSize));
+      return TypeCode(
+        std::shared_ptr<TypeCode_>(new StringTypeCode(maxSize)));
     }
     case cxy::TypeKind::SEQUENCE:
     {
       EncapsulationCdrStream es(s);
-      auto const t(cdr< std::shared_ptr<TypeCode> >::unmarshalFrom(*es));
+      auto const t(cdr< TypeCode >::unmarshalFrom(*es));
       auto const maxSize(cdr<uint32_t>::unmarshalFrom(*es));
-      return std::shared_ptr<TypeCode>(new SequenceTypeCode(t,maxSize));
+      return TypeCode(
+        std::shared_ptr<TypeCode_>(new SequenceTypeCode(t,maxSize)));
     }
     case cxy::TypeKind::STRUCT:
     {
@@ -705,13 +772,14 @@ public:
       StructTypeCode::Members members;
       for(auto i=0; i!=numberOfMembers; ++i) {
         auto name(cdr<std::string>::unmarshalFrom(*es));
-        auto const t(cdr< std::shared_ptr<TypeCode> >::unmarshalFrom(*es));
+        auto const t(cdr< TypeCode >::unmarshalFrom(*es));
         members.push_back(std::make_pair(name,t));
       }
-      return std::shared_ptr<TypeCode>(new StructTypeCode(
+      return TypeCode(
+        std::shared_ptr<TypeCode_>(new StructTypeCode(
                                          repoId,
                                          name,
-                                         members));
+                                         members)));
     }
     case cxy::TypeKind::UNION:
     {
@@ -719,7 +787,7 @@ public:
       auto const repoId(cdr<std::string>::unmarshalFrom(*es));
       auto const name(cdr<std::string>::unmarshalFrom(*es));
       auto const descriminantType(
-        cdr< std::shared_ptr<TypeCode> >::unmarshalFrom(*es));
+        cdr< TypeCode >::unmarshalFrom(*es));
       auto const defaultCaseUsed(cdr<int32_t>::unmarshalFrom(*es));
       xju::Optional<uint32_t> const indexOfDefaultCase(
         defaultCaseUsed<0?
@@ -731,15 +799,16 @@ public:
         MemCdrStream value;
         descriminantType->copyValue(*es,*value);
         auto name(cdr<std::string>::unmarshalFrom(*es));
-        auto const t(cdr< std::shared_ptr<TypeCode> >::unmarshalFrom(*es));
+        auto const t(cdr< TypeCode >::unmarshalFrom(*es));
         cases.push_back(UnionTypeCode::Case(std::move(value),name,t));
       }
-      return std::shared_ptr<TypeCode>(new UnionTypeCode(
+      return TypeCode(
+        std::shared_ptr<TypeCode_>(new UnionTypeCode(
                                          repoId,
                                          name,
                                          descriminantType,
                                          cases,
-                                         indexOfDefaultCase));
+                                         indexOfDefaultCase)));
     }
     case cxy::TypeKind::ENUM:
     {
@@ -752,10 +821,15 @@ public:
         auto name(cdr<std::string>::unmarshalFrom(*es));
         values.push_back(name);
       }
-      return std::shared_ptr<TypeCode>(new EnumTypeCode(
+      return TypeCode(
+        std::shared_ptr<TypeCode_>(new EnumTypeCode(
                                          repoId,
                                          name,
-                                         values));
+                                         values)));
+    }
+    case cxy::TypeKind::TYPECODE:
+    {
+      return TypeCodeOf<TypeCode>::create();
     }
     default:
       std::ostringstream s;
@@ -764,7 +838,7 @@ public:
     }
   }
 
-  static void marshal(std::shared_ptr<TypeCode const> x, cdrStream& s)
+  static void marshal(TypeCode const& x, cdrStream& s)
   //to avoid needing CORBA.h in our .hh, exception specs are commented
   //throw(
   //  omni::giopStream::CommFailure
