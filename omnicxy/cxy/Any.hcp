@@ -117,7 +117,7 @@ public:
 template<class E>
 struct TypeCodeOf<Any<E> >
 {
-static TypeCode create() throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 {
   // REVISIT: create template AnyTypeCode to translate exceptions?
   return TypeCode(

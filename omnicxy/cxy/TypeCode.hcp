@@ -22,6 +22,8 @@
 #include <typeindex> //impl
 #include <cxy/MemCdrStream.hh>
 #include <xju/Optional.hh>
+#include <map>
+#include <functional>
 
 class cdrStream;
 
@@ -515,6 +517,63 @@ public:
   }
 };
 
+class ReferenceTypeCode_ : public TypeCode_
+{
+public:
+  ReferenceTypeCode_() throw():
+      p_(0)
+  {
+  }
+  explicit ReferenceTypeCode_(TypeCode_ const& p) throw():
+      p_(&p)
+  {
+  }
+  virtual ~ReferenceTypeCode_() throw(){}
+
+  virtual void copyValue(cdrStream& from, cdrStream& to) const
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    return p_->copyValue(from,to);
+  }
+
+  virtual void marshal(cdrStream& s) const
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    xju::assert_never_reached(); //REVISIT: to be implemented
+  }
+
+  virtual bool equals(TypeCode_ const& b) const throw()
+  {
+    return p_->equals(b);
+  }
+
+  //pre: typeid(*this)==typeid(b)
+  virtual bool lessThan(TypeCode_ const& b) const throw()
+  {
+    return p_->lessThan(b);
+  }
+  
+  virtual std::string str() const throw()
+  {
+    return p_->str();
+  }
+
+  void referTo(TypeCode_ const& p) throw()
+  {
+    p_=&p;
+  }
+      
+private:
+  TypeCode_ const* p_;
+};
+
+typedef std::map<std::type_info const*,std::vector<std::reference_wrapper<ReferenceTypeCode_> > > TypeCodeRefIndex;
 
 // TypeCodeOf provides a generic way of getting the TypeCode subclass
 // for any type including plain old types. (Only predefined types have
@@ -525,13 +584,25 @@ template<class T>
 struct TypeCodeOf
 {
 private:
-  static TypeCode create() throw(std::bad_alloc); //not implemented - must specialise class to provide implementations
+  static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc); //not implemented - must specialise class to provide implementations
 };
-  
+
+template<class T>
+TypeCode createTypeCodeOf() throw(std::bad_alloc){
+  TypeCodeRefIndex index;
+  return TypeCodeOf<T>::create(index);
+}
+
+template<class T>
+TypeCode createTypeCodeOf(TypeCodeRefIndex& index) throw(std::bad_alloc){
+  return TypeCodeOf<T>::create(index);
+}
+
 template<>
 struct TypeCodeOf<int16_t>
 {
-static TypeCode create() throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) throw(
+  std::bad_alloc)
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -542,7 +613,7 @@ static TypeCode create() throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<int32_t>
 {
-static TypeCode create() throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -553,7 +624,7 @@ static TypeCode create() throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<int64_t>
 {
-static TypeCode create() throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -564,7 +635,7 @@ static TypeCode create() throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<uint16_t>
 {
-static TypeCode create() throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -575,7 +646,7 @@ static TypeCode create() throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<uint32_t>
 {
-static TypeCode create() throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -586,7 +657,7 @@ static TypeCode create() throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<uint64_t>
 {
-static TypeCode create() throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -597,7 +668,7 @@ static TypeCode create() throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<float>
 {
-static TypeCode create() throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -608,7 +679,7 @@ static TypeCode create() throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<double>
 {
-static TypeCode create() throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -619,7 +690,7 @@ static TypeCode create() throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<long double>
 {
-static TypeCode create() throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -630,7 +701,7 @@ static TypeCode create() throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<char>
 {
-static TypeCode create() throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -641,7 +712,7 @@ static TypeCode create() throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<bool>
 {
-static TypeCode create() throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -652,7 +723,7 @@ static TypeCode create() throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<uint8_t>
 {
-static TypeCode create() throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -663,7 +734,7 @@ static TypeCode create() throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<char32_t>
 {
-static TypeCode create() throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -674,18 +745,18 @@ static TypeCode create() throw(std::bad_alloc)
 template<class T>
 struct TypeCodeOf<std::vector<T> >
 {
-static TypeCode create() throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
-      new SequenceTypeCode(TypeCodeOf<T>::create(),0)));
+      new SequenceTypeCode(createTypeCodeOf<T>(index),0)));
 }
 };
 
 template<>
 struct TypeCodeOf<std::string>
 {
-static TypeCode create() throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -696,7 +767,7 @@ static TypeCode create() throw(std::bad_alloc)
 template<>
 struct TypeCodeOf< TypeCode >
 {
-static TypeCode create() throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -721,31 +792,31 @@ public:
     uint32_t k(cxy::cdr<uint32_t>::unmarshalFrom(s));
     switch(static_cast<cxy::TypeKind>(k)) {
     case cxy::TypeKind::SHORT:
-      return TypeCodeOf<int16_t>::create();
+      return createTypeCodeOf<int16_t>();
     case cxy::TypeKind::LONG:
-      return TypeCodeOf<int32_t>::create();
+      return createTypeCodeOf<int32_t>();
     case cxy::TypeKind::LONGLONG:
-      return TypeCodeOf<int64_t>::create();
+      return createTypeCodeOf<int64_t>();
     case cxy::TypeKind::USHORT:
-      return TypeCodeOf<uint16_t>::create();
+      return createTypeCodeOf<uint16_t>();
     case cxy::TypeKind::ULONG:
-      return TypeCodeOf<uint32_t>::create();
+      return createTypeCodeOf<uint32_t>();
     case cxy::TypeKind::ULONGLONG:
-      return TypeCodeOf<uint64_t>::create();
+      return createTypeCodeOf<uint64_t>();
     case cxy::TypeKind::FLOAT:
-      return TypeCodeOf<float>::create();
+      return createTypeCodeOf<float>();
     case cxy::TypeKind::DOUBLE:
-      return TypeCodeOf<double>::create();
+      return createTypeCodeOf<double>();
     case cxy::TypeKind::LONGDOUBLE:
-      return TypeCodeOf<long double>::create();
+      return createTypeCodeOf<long double>();
     case cxy::TypeKind::BOOLEAN:
-      return TypeCodeOf<bool>::create();
+      return createTypeCodeOf<bool>();
     case cxy::TypeKind::CHAR:
-      return TypeCodeOf<char>::create();
+      return createTypeCodeOf<char>();
     case cxy::TypeKind::OCTET:
-      return TypeCodeOf<uint8_t>::create();
+      return createTypeCodeOf<uint8_t>();
     case cxy::TypeKind::WCHAR:
-      return TypeCodeOf<char32_t>::create();
+      return createTypeCodeOf<char32_t>();
     case cxy::TypeKind::ANY:
       return TypeCode(
         std::shared_ptr<TypeCode_>(new AnyTypeCode));
@@ -829,7 +900,7 @@ public:
     }
     case cxy::TypeKind::TYPECODE:
     {
-      return TypeCodeOf<TypeCode>::create();
+      return createTypeCodeOf<TypeCode>();
     }
     default:
       std::ostringstream s;

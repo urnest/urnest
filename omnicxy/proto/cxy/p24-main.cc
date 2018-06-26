@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
     if (argv[2]==std::string("client")) {
       cxy::ORB<cxy::Exception> orb("giop:tcp::");
       cxy::cref<p24::i24> ref(orb, makeURI(port, OBJECT_NAME));
-      auto const result(ref->f(::cxy::TypeCodeOf<uint32_t>::create()));
+      auto const result(ref->f(::cxy::createTypeCodeOf<uint32_t>()));
       std::cout << "x" << std::endl;
     }
     else if (argv[2]==std::string("server")) {
@@ -127,13 +127,13 @@ int main(int argc, char* argv[])
       unsigned int const repeat(
         xju::stringToUInt(::getenv("CXY_REPEAT")?::getenv("CXY_REPEAT"):"1"));
       for(unsigned int i=0; i != repeat; ++i) {
-        auto const result(ref->f(::cxy::TypeCodeOf<uint32_t>::create()));
-        xju::assert_equal(*result, *::cxy::TypeCodeOf<uint32_t>::create());
+        auto const result(ref->f(::cxy::createTypeCodeOf<uint32_t>()));
+        xju::assert_equal(*result, *::cxy::createTypeCodeOf<uint32_t>());
         xju::assert_equal(x.calls_.size(),1U);
         p24_impl::Call::f1 const& c(
           dynamic_cast<p24_impl::Call::f1 const&>(*x.calls_[0]));
         xju::assert_equal(c, p24_impl::Call::f1(
-                            ::cxy::TypeCodeOf<uint32_t>::create()));
+                            ::cxy::createTypeCodeOf<uint32_t>()));
         x.calls_=std::vector<xju::Shared<p24_impl::Call> >();
       }
     }

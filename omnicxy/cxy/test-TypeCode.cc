@@ -21,7 +21,7 @@ namespace cxy
 template<class T>
 void testx(T const v) {
   cdrMemoryStream s;
-  ::cxy::TypeCode const x(cxy::TypeCodeOf<T>::create());
+  ::cxy::TypeCode const x(cxy::createTypeCodeOf<T>());
   x->marshal(s);
   cdr<T>::marshal(v,s);
 

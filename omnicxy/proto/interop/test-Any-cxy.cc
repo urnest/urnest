@@ -107,9 +107,9 @@ public:
     }
     {
       cxy::Any<> const y(f->f(11,cxy::Any<>(
-                                cxy::TypeCodeOf<uint32_t>::create())));
+                                cxy::createTypeCodeOf<uint32_t>())));
       auto const z(y.get< cxy::TypeCode >());
-      xju::assert_equal(z,cxy::TypeCodeOf<uint32_t>::create());
+      xju::assert_equal(z,cxy::createTypeCodeOf<uint32_t>());
     }
     done_=true;
   }
