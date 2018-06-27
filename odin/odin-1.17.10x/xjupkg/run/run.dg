@@ -27,6 +27,7 @@
 
 +need 'run dependency'? => :LIST;
 
++stderr 'what to do with command stderr: "output" to combine with stdout (default), "warn" to generate warnings, "trace" to show as command trace'? => :first;
 
 # Environment Variables
 
@@ -47,7 +48,7 @@ EXEC (pipe.run.sh) (:FILE) (+cmd :ls) NEEDS (+cmd) (+need)
    => (:stdout) (:output);
 
 # :FILE is stdin to command
-EXEC (exec.sh) (:FILE) (+cmd :ls) (:env) NEEDS (+cmd) (+need)
+EXEC (exec.sh) (:FILE) (+cmd :ls) (:env) (+stderr) NEEDS (+cmd) (+need)
   => (:exec);
 
 :exec.output.ref ':exec.output ref' => :FILE;

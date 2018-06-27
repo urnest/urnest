@@ -69,4 +69,10 @@ mkdir omnicxy &&
   
   true
 ) 2>> WARNINGS || mv WARNINGS ERRORS )
+if [ -r WARNINGS ] && [ -n "$ODIN_OMNICXY_SUPPRESS_WARNINGS" ]
+then
+    cat WARNINGS | egrep -v -e "$ODIN_OMNICXY_SUPPRESS_WARNINGS" |
+	cat > WARNINGS.new &&
+    mv WARNINGS.new WARNINGS
+fi
 )
