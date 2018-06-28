@@ -4,6 +4,9 @@
 %test1a
 %test1b
 %test2a
+%test3
+%test3b
+%test3c
 
 %test1a==()+cmd=cmp (%test.output) (%test1.output):stdout
 %test1b==()+cmd=cmp (%test.ls) (%test1.ls):stdout
@@ -33,3 +36,15 @@ echo "test1 stderr" >&2 &&
 eval "$1"
 
 %test2==()+cmd=(%test1.sh) 'false':exec.output
+
+%test3==()+cmd=grep '"warning: fred"' (%test3.got:warn):stdout
+%test3b==()+cmd=grep '"warning: fred"' (%test3b.got):stdout
+%test3c==()+cmd=\! grep '"warning: fred"' (%test3c.got) (%test3c.got:warn):stdout
+
+%test3.got == ()+cmd=(%test3.sh)+stderr=warn:exec.output
+%test3b.got == ()+cmd=(%test3.sh)+stderr=output:exec.output
+%test3c.got == ()+cmd=(%test3.sh)+stderr=trace:exec.output
+
+%test3.sh == ! <<
+#!/bin/sh
+echo "warning: fred" >&2
