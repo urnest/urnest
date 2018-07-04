@@ -192,7 +192,8 @@ void genClassMemberFunctionDef(
   auto const l(std::find_if(j,x.items_.end(),
                             hcp_ast::isA_<hcp_ast::FunctionImpl>));
   xju::assert_not_equal(l,x.items_.end());
-  c.copyExcluding<hcp_ast::VarInitialiser>(hcp_ast::IRs(j, l));
+  c.copyExcluding<hcp_ast::VarInitialiser,hcp_ast::VirtSpecifierSeq>(
+    hcp_ast::IRs(j, l));
   c.copy((*l)->begin(), x.end());
   c << "\n";
 }

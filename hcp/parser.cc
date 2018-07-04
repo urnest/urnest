@@ -1762,16 +1762,25 @@ PR keyword_explicit() throw()
 PR keyword_override() throw()
 {
   static PR result(
-    new NamedParser<hcp_ast::KeywordExplicit>(
+    new NamedParser<hcp_ast::KeywordOverride>(
       "\"override\"",
       parseLiteral("override"))+!identifierContChar()+eatWhite());
+  return result;
+}
+
+PR keyword_final() throw()
+{
+  static PR result(
+    new NamedParser<hcp_ast::KeywordFinal>(
+      "\"final\"",
+      parseLiteral("final"))+!identifierContChar()+eatWhite());
   return result;
 }
 
 PR keyword_noexcept() throw()
 {
   static PR result(
-    new NamedParser<hcp_ast::KeywordExplicit>(
+    new NamedParser<hcp_ast::KeywordNoexcept>(
       "\"noexcept\"",
       parseLiteral("noexcept"))+!identifierContChar()+eatWhite());
   return result;
@@ -1807,15 +1816,25 @@ PR function_qualifiers() throw()
   return function_qualifiers;
 }
 
-
+PR virt_specifier_seq() throw()
+{
+  static PR result(
+    new NamedParser<hcp_ast::VirtSpecifierSeq>(
+      "virt-specifier-seq",
+      (keyword_override()+eatWhite()+keyword_final())|
+      (keyword_final()+eatWhite()+keyword_override())|
+      keyword_override()|
+      keyword_final()));
+  return result;
+}
 PR function_post_qualifiers() throw()
 {
   static PR result(
-    new NamedParser<hcp_ast::FunctionQualifiers>(
+    new NamedParser<hcp_ast::FunctionPostQualifiers>(
       "function post-qualifiers",
       cv()+
       (!(keyword_throw()|keyword_noexcept())|throw_clause())+
-      optional(keyword_override())));
+      optional(virt_specifier_seq())));
   return result;
 }
 

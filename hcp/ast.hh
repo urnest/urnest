@@ -360,6 +360,15 @@ typedef TaggedCompositeItem<KeywordVirtualTag> KeywordVirtual;
 class KeywordExplicitTag{};
 typedef TaggedCompositeItem<KeywordExplicitTag> KeywordExplicit;
 
+class KeywordOverrideTag{};
+typedef TaggedCompositeItem<KeywordOverrideTag> KeywordOverride;
+
+class KeywordFinalTag{};
+typedef TaggedCompositeItem<KeywordFinalTag> KeywordFinal;
+
+class KeywordNoexceptTag{};
+typedef TaggedCompositeItem<KeywordNoexceptTag> KeywordNoexcept;
+
 class KeywordThrowTag{};
 typedef TaggedCompositeItem<KeywordThrowTag> KeywordThrow;
 
@@ -430,6 +439,12 @@ typedef TaggedCompositeItem<EatWhiteTag> EatWhite;
 
 class FunctionQualifiersTag{};
 typedef TaggedCompositeItem<FunctionQualifiersTag> FunctionQualifiers;
+
+class FunctionPostQualifiersTag{};
+typedef TaggedCompositeItem<FunctionPostQualifiersTag> FunctionPostQualifiers;
+
+class VirtSpecifierSeqTag{};
+typedef TaggedCompositeItem<VirtSpecifierSeqTag> VirtSpecifierSeq;
 
 class EndOfFileTag{};
 typedef TaggedCompositeItem<EndOfFileTag> EndOfFile;
