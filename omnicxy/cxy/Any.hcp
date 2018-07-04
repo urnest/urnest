@@ -67,7 +67,7 @@ public:
   //  omni::giopStream::CommFailure
   //)
   {
-    impl_->typeCode_->marshal(s);
+    ::cxy::cdr< ::cxy::TypeCode >::marshal(impl_->typeCode_,s);
     MemCdrStream::Ref value(impl_->value_);
     impl_->typeCode_->copyValue(*value,s);
   }

@@ -15,11 +15,11 @@
 #include <omniORB4/CORBA.h> //impl
 #include <omniORB4/cdrStream.h> //impl
 #include <xju/format.hh>//impl
-#include <cxy/EncapsulationCdrStream.hh>//impl
+#include <cxy/EncapsulationCdrStream.hh>
 #include <memory>
 #include <vector>
 #include <typeinfo>
-#include <typeindex> //impl
+#include <typeindex>
 #include <cxy/MemCdrStream.hh>
 #include <xju/Optional.hh>
 #include <map>
@@ -38,6 +38,31 @@ namespace cxy
 class TypeCode_
 {
 public:
+  class OstreamIf
+  {
+  public:
+    virtual ~OstreamIf() throw() {}
+    class Ref
+    {
+    public:
+      //pre: x will outlive this
+      Ref(TypeCode_ const& x) throw():
+          x_(&x)
+      {
+      }
+      TypeCode_ const* x_;
+      friend bool operator<(Ref const& x, Ref const& y) throw(){
+        return (*(x.x_)) < (*(y.x_));
+      }
+    };
+    struct StreamPosTag{};
+    typedef xju::Int<StreamPosTag,uint32_t> StreamPos;
+    typedef std::map<Ref,StreamPos> Index;
+    virtual Index& index() throw()=0;
+    virtual StreamPos currentPosition() const throw()=0;
+    virtual cdrStream& s() throw()=0;
+  };
+  
   virtual ~TypeCode_() throw(){}
 
   virtual void copyValue(cdrStream& from, cdrStream& to) const
@@ -47,39 +72,141 @@ public:
   //)
   = 0;
 
-  virtual void marshal(cdrStream& s) const
+  virtual void marshal_(TypeCode_::OstreamIf& s) const
   //to avoid needing CORBA.h in our .hh, exception specs are commented
   //throw(
   //  omni::giopStream::CommFailure
   //)
   = 0;
 
+  void marshal(TypeCode_::OstreamIf& s) const
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    if (&derefed()!=this)
+    {
+      //reference, the real type should already be marhalled
+      auto const i(s.index().find(OstreamIf::Ref(derefed())));
+      xju::assert_not_equal(i,s.index().end());
+      //reference previous marshal of this type
+      cxy::cdr<uint32_t>::marshal((uint32_t)0xffffffff, s.s());
+      cxy::cdr<uint32_t>::marshal(
+        (s.currentPosition()-(*i).second).value(),
+        s.s());
+    }
+    else{
+      auto const i(s.index().insert(std::make_pair(OstreamIf::Ref(*this),
+                                                   s.currentPosition())));
+      xju::assert_equal(i.second,true); //we should not be nested in outselves
+      marshal_(s);
+    }
+  }
   virtual bool equals(TypeCode_ const& b) const throw() = 0;
 
   //pre: typeid(*this)==typeid(b)
   virtual bool lessThan(TypeCode_ const& b) const throw() = 0;
   
   virtual std::string str() const throw() = 0;
+
+  virtual TypeCode_ const& derefed() const throw(){
+    return *this;
+  }
+  friend bool operator==(TypeCode_ const& a, TypeCode_ const& b) throw()
+  {
+    return a.equals(b);
+  }
+  friend bool operator<(TypeCode_ const& a, TypeCode_ const& b) throw()
+  {
+    if (std::type_index(typeid(a.derefed()))<
+        std::type_index(typeid(b.derefed()))){
+      return true;
+    }
+    if (std::type_index(typeid(b.derefed()))<
+        std::type_index(typeid(a.derefed()))){
+      return false;
+    }
+    return a.derefed().lessThan(b.derefed());
+  }
 };
 std::ostream& operator<<(std::ostream& s, TypeCode_ const& x) throw()
 {
   return s << x.str();
 }
 
-bool operator==(TypeCode_ const& a, TypeCode_ const& b) throw()
+
+class TypeCodeOstream : public TypeCode_::OstreamIf
 {
-  return a.equals(b);
-}
-bool operator<(TypeCode_ const& a, TypeCode_ const& b) throw()
+public:
+  ~TypeCodeOstream() throw(){}
+
+  //pre: s will outlive this
+  explicit TypeCodeOstream(cdrStream& s) throw():
+      s_(s)
+  {
+  }
+  virtual TypeCode_::OstreamIf::Index& index() throw() override
+  {
+    return index_;
+  }
+  virtual TypeCode_::OstreamIf::StreamPos currentPosition() const throw()
+    override
+  {
+    return StreamPos(s_.currentOutputPtr());
+  }
+  virtual cdrStream& s() throw() override
+  {
+    return s_;
+  }
+  
+private:
+  TypeCode_::OstreamIf::Index index_;
+  cdrStream& s_;
+};
+class EncapsulationTypeCodeOstream : public TypeCode_::OstreamIf
 {
-  if (std::type_index(typeid(a))<std::type_index(typeid(b))){
-    return true;
+public:
+  ~EncapsulationTypeCodeOstream() throw(){}
+  // pre: outer will outlive this
+  explicit EncapsulationTypeCodeOstream(TypeCode_::OstreamIf& outer) throw():
+      outer_(outer),
+      outerPos_(outer.currentPosition()),
+      sInitialPos_((*s_).currentOutputPtr())
+  {
   }
-  if (std::type_index(typeid(b))<std::type_index(typeid(a))){
-    return false;
+  virtual TypeCode_::OstreamIf::Index& index() throw() override
+  {
+    return outer_.index();
   }
-  return a.lessThan(b);
-}
+  virtual TypeCode_::OstreamIf::StreamPos currentPosition() const throw()
+    override
+  {
+    // we assume sInitialPos is after the byte-order byte, and
+    // that outer pos is at the point where our encapsulation length
+    // will be placed, so that outerPos_+1+4 will be the location of
+    // the first encapsulated object
+    return outerPos_+StreamPos(5)+
+      (StreamPos((*s_).currentOutputPtr())-sInitialPos_);
+  }
+  virtual cdrStream& s() throw() override
+  {
+    return *s_;
+  }
+  void marshal()
+  {
+    //check nothing has gone into outer stream since we were constructed
+    xju::assert_equal(outer_.currentPosition(),outerPos_);
+    cdr<EncapsulationCdrStream>::marshal(s_,outer_.s());
+    //did we get it right?
+    xju::assert_equal(outer_.currentPosition(),currentPosition());
+  }
+private:
+  TypeCode_::OstreamIf& outer_;
+  TypeCode_::OstreamIf::StreamPos const outerPos_;
+  cxy::EncapsulationCdrStream s_;
+  TypeCode_::OstreamIf::StreamPos const sInitialPos_;
+};
 
 class TypeCode
 {
@@ -132,9 +259,9 @@ public:
       to);
   }
 
-  virtual void marshal(cdrStream& s) const
+  virtual void marshal_(TypeCode_::OstreamIf& s) const override
   {
-    cxy::cdr<uint32_t>::marshal((uint32_t)typeKind, s);
+    cxy::cdr<uint32_t>::marshal((uint32_t)typeKind, s.s());
   }
   
   virtual bool equals(TypeCode_ const& b) const throw()
@@ -173,14 +300,15 @@ public:
     }
   }
 
-  virtual void marshal(cdrStream& s) const
+  virtual void marshal_(TypeCode_::OstreamIf& s) const override
   {
-    EncapsulationCdrStream es;
-    itemType_->marshal(*es);
-    cxy::cdr<uint32_t>::marshal(maxSize_,*es);
+    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::SEQUENCE, s.s());
 
-    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::SEQUENCE, s);
-    cxy::cdr<EncapsulationCdrStream>::marshal(es,s);
+    EncapsulationTypeCodeOstream es(s);
+    itemType_->marshal(es);
+    cxy::cdr<uint32_t>::marshal(maxSize_,es.s());
+
+    es.marshal();
   }
   
   virtual bool equals(TypeCode_ const& b) const throw()
@@ -239,20 +367,19 @@ public:
     }
   }
 
-  virtual void marshal(cdrStream& s) const
+  virtual void marshal_(TypeCode_::OstreamIf& s) const override
   {
-    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::STRUCT, s);
+    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::STRUCT, s.s());
 
-    EncapsulationCdrStream es;
-    cxy::cdr<std::string>::marshal(repoId_,*es);
-    cxy::cdr<std::string>::marshal(name_,*es);
-    cxy::cdr<uint32_t>::marshal(memberNamesAndTypes_.size(),*es);
+    EncapsulationTypeCodeOstream es(s);
+    cxy::cdr<std::string>::marshal(repoId_,es.s());
+    cxy::cdr<std::string>::marshal(name_,es.s());
+    cxy::cdr<uint32_t>::marshal(memberNamesAndTypes_.size(),es.s());
     for(auto nameAndType : memberNamesAndTypes_) {
-      cxy::cdr<std::string>::marshal(nameAndType.first,*es);
-      nameAndType.second->marshal(*es);
+      cxy::cdr<std::string>::marshal(nameAndType.first,es.s());
+      nameAndType.second->marshal(es);
     }
-
-    cxy::cdr<EncapsulationCdrStream>::marshal(es,s);
+    es.marshal();
   }
   
   virtual bool equals(TypeCode_ const& b) const throw()
@@ -324,25 +451,24 @@ public:
     }
   }
 
-  virtual void marshal(cdrStream& s) const
+  virtual void marshal_(TypeCode_::OstreamIf& s) const override
   {
-    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::UNION, s);
+    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::UNION, s.s());
 
-    EncapsulationCdrStream es;
-    cxy::cdr<std::string>::marshal(repoId_,*es);
-    cxy::cdr<std::string>::marshal(name_,*es);
-    descriminantType_->marshal(*es);
+    EncapsulationTypeCodeOstream es(s);
+    cxy::cdr<std::string>::marshal(repoId_,es.s());
+    cxy::cdr<std::string>::marshal(name_,es.s());
+    descriminantType_->marshal(es);
     cxy::cdr<int32_t>::marshal(
       indexOfDefaultCase_.valid()?indexOfDefaultCase_.value():(int32_t)-1,
-      *es);
-    cxy::cdr<uint32_t>::marshal(cases_.size(),*es);
+      es.s());
+    cxy::cdr<uint32_t>::marshal(cases_.size(),es.s());
     for(auto c: cases_){
-      descriminantType_->copyValue(*std::get<0>(c),*es);
-      cxy::cdr<std::string>::marshal(std::get<1>(c),*es);
-      std::get<2>(c)->marshal(*es);
+      descriminantType_->copyValue(*std::get<0>(c),es.s());
+      cxy::cdr<std::string>::marshal(std::get<1>(c),es.s());
+      std::get<2>(c)->marshal(es);
     }
-
-    cxy::cdr<EncapsulationCdrStream>::marshal(es,s);
+    es.marshal();
   }
   
   virtual bool equals(TypeCode_ const& b) const throw()
@@ -389,10 +515,10 @@ public:
       to);
   }
 
-  virtual void marshal(cdrStream& s) const
+  virtual void marshal_(TypeCode_::OstreamIf& s) const override
   {
-    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::STRING, s);
-    cxy::cdr<uint32_t>::marshal(maxSize_,s);
+    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::STRING, s.s());
+    cxy::cdr<uint32_t>::marshal(maxSize_,s.s());
   }
   
   virtual bool equals(TypeCode_ const& b) const throw()
@@ -442,19 +568,18 @@ public:
       to);
   }
 
-  virtual void marshal(cdrStream& s) const
+  virtual void marshal_(TypeCode_::OstreamIf& s) const override
   {
-    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::ENUM, s);
+    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::ENUM, s.s());
 
-    EncapsulationCdrStream es;
-    cxy::cdr<std::string>::marshal(repoId_,*es);
-    cxy::cdr<std::string>::marshal(name_,*es);
-    cxy::cdr<uint32_t>::marshal(values_.size(),*es);
+    EncapsulationTypeCodeOstream es(s);
+    cxy::cdr<std::string>::marshal(repoId_,es.s());
+    cxy::cdr<std::string>::marshal(name_,es.s());
+    cxy::cdr<uint32_t>::marshal(values_.size(),es.s());
     for(auto value : values_) {
-      cxy::cdr<std::string>::marshal(value,*es);
+      cxy::cdr<std::string>::marshal(value,es.s());
     }
-
-    cxy::cdr<EncapsulationCdrStream>::marshal(es,s);
+    es.marshal();
   }
   
   virtual bool equals(TypeCode_ const& b) const throw()
@@ -492,13 +617,13 @@ public:
   {
     TypeCode const t(
       cdr<TypeCode>::unmarshalFrom(from));
-    t->marshal(to);
+    ::cxy::cdr< ::cxy::TypeCode >::marshal(t,to);
     t->copyValue(from, to);
   }
 
-  virtual void marshal(cdrStream& s) const
+  virtual void marshal_(TypeCode_::OstreamIf& s) const override
   {
-    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::ANY, s);
+    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::ANY, s.s());
   }
   
   virtual bool equals(TypeCode_ const& b) const throw()
@@ -539,13 +664,13 @@ public:
     return p_->copyValue(from,to);
   }
 
-  virtual void marshal(cdrStream& s) const
+  virtual void marshal_(TypeCode_::OstreamIf& s) const override
   //to avoid needing CORBA.h in our .hh, exception specs are commented
   //throw(
   //  omni::giopStream::CommFailure
   //)
   {
-    xju::assert_never_reached(); //REVISIT: to be implemented
+    xju::assert_never_reached(); //because the referrenced TypeCode should already be in s.index() and hence TypeCode_::marshal() should have taken care of it
   }
 
   virtual bool equals(TypeCode_ const& b) const throw()
@@ -556,7 +681,7 @@ public:
   //pre: typeid(*this)==typeid(b)
   virtual bool lessThan(TypeCode_ const& b) const throw()
   {
-    return p_->lessThan(b);
+    return (*p_)<b;
   }
   
   virtual std::string str() const throw()
@@ -568,7 +693,11 @@ public:
   {
     p_=&p;
   }
-      
+
+  virtual TypeCode_ const& derefed() const throw() override
+  {
+    return p_->derefed();
+  }
 private:
   TypeCode_ const* p_;
 };
@@ -588,14 +717,27 @@ private:
 };
 
 template<class T>
-TypeCode createTypeCodeOf() throw(std::bad_alloc){
-  TypeCodeRefIndex index;
-  return TypeCodeOf<T>::create(index);
+TypeCode createTypeCodeOf(TypeCodeRefIndex& index) throw(std::bad_alloc){
+  auto const i(index.insert(TypeCodeRefIndex::value_type(&typeid(T),{})));
+  if (i.second){
+    auto const result(TypeCodeOf<T>::create(index));
+    for(auto x: (*i.first).second){
+      x.get().referTo(*result);
+    }
+    index.erase(i.first);
+    return result;
+  }
+  else{
+    std::shared_ptr<ReferenceTypeCode_> result(new ReferenceTypeCode_);
+    (*i.first).second.push_back(std::ref(*result));
+    return TypeCode(result);
+  }
 }
 
 template<class T>
-TypeCode createTypeCodeOf(TypeCodeRefIndex& index) throw(std::bad_alloc){
-  return TypeCodeOf<T>::create(index);
+TypeCode createTypeCodeOf() throw(std::bad_alloc){
+  TypeCodeRefIndex index;
+  return createTypeCodeOf<T>(index);
 }
 
 template<>
@@ -828,7 +970,7 @@ public:
     }
     case cxy::TypeKind::SEQUENCE:
     {
-      EncapsulationCdrStream es(s);
+      cxy::EncapsulationCdrStream es(s);
       auto const t(cdr< TypeCode >::unmarshalFrom(*es));
       auto const maxSize(cdr<uint32_t>::unmarshalFrom(*es));
       return TypeCode(
@@ -836,7 +978,7 @@ public:
     }
     case cxy::TypeKind::STRUCT:
     {
-      EncapsulationCdrStream es(s);
+      cxy::EncapsulationCdrStream es(s);
       auto const repoId(cdr<std::string>::unmarshalFrom(*es));
       auto const name(cdr<std::string>::unmarshalFrom(*es));
       auto const numberOfMembers(cdr<uint32_t>::unmarshalFrom(*es));
@@ -854,7 +996,7 @@ public:
     }
     case cxy::TypeKind::UNION:
     {
-      EncapsulationCdrStream es(s);
+      cxy::EncapsulationCdrStream es(s);
       auto const repoId(cdr<std::string>::unmarshalFrom(*es));
       auto const name(cdr<std::string>::unmarshalFrom(*es));
       auto const descriminantType(
@@ -883,7 +1025,7 @@ public:
     }
     case cxy::TypeKind::ENUM:
     {
-      EncapsulationCdrStream es(s);
+      cxy::EncapsulationCdrStream es(s);
       auto const repoId(cdr<std::string>::unmarshalFrom(*es));
       auto const name(cdr<std::string>::unmarshalFrom(*es));
       auto const numberOfValues(cdr<uint32_t>::unmarshalFrom(*es));
@@ -915,7 +1057,8 @@ public:
   //  omni::giopStream::CommFailure
   //)
   {
-    x->marshal(s);
+    TypeCodeOstream s_(s);
+    x->marshal(s_);
   }
 };
   
