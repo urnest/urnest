@@ -6,6 +6,16 @@ module interop
 {
 module a
 {
+  interface reflect
+  {
+    // returns x
+    any f(in long step, in any x);
+  };
+  interface server
+  {
+    void run(in reflect f);
+  };
+
   struct S
   {
     long x_;
@@ -17,16 +27,16 @@ module a
   case 1: long x_;
   default: string y_;
   };
+
+  //recursive
+  struct Tree;
+  typedef sequence<Tree> Branches;
+  struct Tree
+  {
+    string name_;
+    Branches children_;
+  };
   
-  interface reflect
-  {
-    // returns x
-    any f(in long step, in any x);
-  };
-  interface server
-  {
-    void run(in reflect f);
-  };
 };
 };
 };

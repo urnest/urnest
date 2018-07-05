@@ -98,8 +98,9 @@ unqualifiedType_=dict(
      for kind in basicParamTypes]+
     [(kind,lambda t,eclass:''.join(['::'+_ for _ in t.scopedName()]))
      for kind in [idltype.tk_alias,
-               idltype.tk_struct,
-               idltype.tk_enum]]+
+                  idltype.tk_struct,
+                  idltype.tk_enum,
+                  idltype.ot_structforward]]+
     [(idltype.tk_sequence,sequenceUnqualifiedType)]+
     [(idltype.tk_union,unionUnqualifiedType)]+
     [(idltype.tk_objref,objrefUnqualifiedType)])
@@ -155,13 +156,14 @@ tincludes_=dict(
      for kind in [idltype.tk_alias,
                   idltype.tk_struct,
                   idltype.tk_union,
-                  idltype.tk_enum]]+
+                  idltype.tk_enum,
+                  idltype.ot_structforward]]+
     [(idltype.tk_sequence, lambda t: tincludes(t.seqType()))])
 
 def tincludes(t):
     if t.kind() in tincludes_:
         return tincludes_[t.kind()](t)
-    assert False, '%s not implemented, only types %s implemented' % (t.kind(),tincludes_.keys())
+    assert False, '%s (kind %s) not implemented, only types %s implemented' % (t,t.kind(),tincludes_.keys())
 
 def pincludes(t):
     if t.kind() in [idltype.tk_union]:
@@ -1025,6 +1027,12 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
                 indent,
                 ('class %(name)s;')%vars())
             pass
+        elif isinstance(decl, idlast.StructForward):
+            name=decl.identifier()
+            result.code=reindent(
+                indent,
+                ('class %(name)s;')%vars())
+            pass
         else:
             assert False, repr(decl)
             pass
@@ -1130,6 +1138,9 @@ def gen_tincludes(decl):
             pass
         pass
     elif isinstance(decl, idlast.Forward):
+        result=[]
+        pass
+    elif isinstance(decl, idlast.StructForward):
         result=[]
         pass
     else:

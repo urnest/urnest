@@ -178,6 +178,8 @@ def gen(decl,eclass,eheader,indent=''):
             pass
         elif isinstance(decl, idlast.Forward):
             pass
+        elif isinstance(decl, idlast.StructForward):
+            pass
         else:
             assert False, repr(decl)
             pass

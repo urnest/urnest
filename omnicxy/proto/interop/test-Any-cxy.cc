@@ -111,6 +111,14 @@ public:
       auto const z(y.get< cxy::TypeCode >());
       xju::assert_equal(z,cxy::createTypeCodeOf<uint32_t>());
     }
+    {
+      omnicxy::proto::interop::a::Tree const x(
+        "root",
+        {omnicxy::proto::interop::a::Tree("fred",{})});
+      cxy::Any<> const y(f->f(13,cxy::Any<>(1))); //REVISIT
+      auto const z(y.get< omnicxy::proto::interop::a::Tree >());
+      xju::assert_equal(z,x);
+    }
     done_=true;
   }
 };

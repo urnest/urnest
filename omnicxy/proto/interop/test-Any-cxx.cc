@@ -120,6 +120,36 @@ public:
       (*result) <<= y;
       return result;
     }
+    case 12:
+    {
+      omnicxy::proto::interop::a::Tree* y;
+      x >>= y;
+      xju::assert_equal(y->name_.in(), std::string("root"));
+      xju::assert_equal(y->children_.length(), 1);
+      xju::assert_equal(y->children_[0].name_.in(), std::string("fred"));
+      CORBA::Any* result(new CORBA::Any);
+      (*result) <<= y;
+      return result;
+    }
+    case 13:
+    {
+      CORBA::Long y_;
+      x >>= y_;
+      xju::assert_equal(y_, 1);
+      omnicxy::proto::interop::a::Tree* y;
+      y=new omnicxy::proto::interop::a::Tree;
+      y->name_=CORBA::string_dup("root");
+      y->children_.length(1);
+      y->children_[0]=omnicxy::proto::interop::a::Tree();
+      y->children_[0].name_=CORBA::string_dup("fred");
+      x >>= y;
+      xju::assert_equal(y->name_.in(), std::string("root"));
+      xju::assert_equal(y->children_.length(), 1);
+      xju::assert_equal(y->children_[0].name_.in(), std::string("fred"));
+      CORBA::Any* result(new CORBA::Any);
+      (*result) <<= y;
+      return result;
+    }
     default:
       xju::assert_never_reached();
     }
