@@ -6,6 +6,7 @@
 %test3
 %test4
 %test5
+%test1b
 
 %test1==(%test1.got)+cmd=(%test1.sh) (%test1.expect:list:ls):stdout
 
@@ -26,6 +27,7 @@ d/z.py
 b/q.py
 sd/i.py
 
+%test1b==x.py+py_sp=(sd):py.exec.output
 
 %test2==()+py=(x.py)+py_sp=(sd):py.stdout
 
@@ -67,3 +69,13 @@ d/__init__.py
 d/z.py
 b/q.py
 a.egg
+
+
+%test6==()+cmd=(%cmp.sh) (%test6.want) (%test6.got):stdout
+
+%test6.want==<<
+e1
+x: OK
+
+%test6.got==(xe.py)+py_sp=(sd)+py_sp=(se/a.egg):py.exec.output
+
