@@ -53,7 +53,8 @@ enum class TypeKind
     LOCAL_INTERFACE,
     COMPONENT,
     HOME,
-    EVENT
+    EVENT,
+    REFERENCE=-1
 };
 
 
