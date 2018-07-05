@@ -1,9 +1,11 @@
-%all==%all.tests.tree:leaves
+%all==%all-tests.tree:leaves
 
-%all.tests.tree==<<
+%all-tests.tree==<<
 %test1
 %test2
 %test3
+%test4
+%test5
 
 %test1==(%test1.got)+cmd=(%test1.sh) (%test1.expect:list:ls):stdout
 
@@ -40,3 +42,28 @@ sort -u <"$1" > want &&
 sort -u <"$2" > got &&
 diff -b want got >&2
 
+
+%test4==(%test4.got)+cmd=(%test1.sh) (%test4.expect:list:ls):stdout
+
+%test4.got==x.py:py_import_all:ls
+
+%test4.expect==<<
+y.py
+b/__init__.py
+c/__init__.py
+d/__init__.py
+d/z.py
+b/q.py
+
+%test5==(%test5.got)+cmd=(%test1.sh) (%test5.expect:list:ls):stdout
+
+%test5.got==x.py+py_sp=(a.egg):py_import_all:ls
+
+%test5.expect==<<
+y.py
+b/__init__.py
+c/__init__.py
+d/__init__.py
+d/z.py
+b/q.py
+a.egg

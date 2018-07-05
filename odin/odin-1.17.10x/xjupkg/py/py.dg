@@ -4,7 +4,6 @@
 
 *.py => :py;
 
-# REVISIT: dependencies on modules inside .egg files are no detected
 *.egg => :egg;
 
 :py 'python source file'? => :FILE;
@@ -16,6 +15,8 @@
 :py_import 'list of directly python imported files'? => :LIST;
 
 :py_import_all 'list of transitively python imported files'? => :LIST;
+
+:egg.py_import.view_desc 'empty list of imported files'? => :py_import.view_desc;
 
 :py.stdout 'output from a python script run'? => :stdout;
 
@@ -45,6 +46,8 @@ $ODIN_PYTHONPATH 'colon-separated list of directories to search for python impor
 
 EXEC (py-import.py) (:py) (:py:dir)@ (+py_sp) (+ignore)
    => (:py_import.view_desc);
+
+EXEC (empty-import.sh) (:egg) => (:egg.py_import.view_desc);
 
 COLLECT (:py_import.view_desc :view)
    => (:py_import);

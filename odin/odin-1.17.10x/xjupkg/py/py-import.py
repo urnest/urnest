@@ -29,8 +29,10 @@ class Scope:
     pass
 
 with Scope('scan for py imports {py}'.format(**vars())):
-    if pySp: pySp=file(pySp).read().split()
-    
+    pySp=file(pySp).read().split() if pySp else []
+    eggs=[_ for _ in pySp if _.endswith('.egg')]
+    pySp=[_ for _ in pySp if not _.endswith('.egg')]
+
     rel=' '.join([_ for _ in pySp if not _.startswith('/')])
     if rel:
         print >>err, '+py_sp entries must be absolute: {rel}'.format(**vars())
@@ -138,5 +140,9 @@ with Scope('scan for py imports {py}'.format(**vars())):
                 viewDesc.write("=''\n")
                 pass
             pass
+        pass
+    for e in eggs:
+        viewDesc.write("'"+e+"'\n")
+        viewDesc.write("='"+e+"'\n")
         pass
     pass
