@@ -4,8 +4,11 @@ ODIN_FILE=$1;shift;
 ODIN_cmd=$1;shift;
 ODIN_env=$1;shift;
 ODIN_dir=$1;shift;
-pySp=$1;shift;
-
+pySp="$1";shift;
+if [ -z "$pySp" ]
+then
+    pySp=/dev/null
+fi
 PYPATH=$(
     echo -n "$ODIN_DIR" &&
     cat "$pySp"|
