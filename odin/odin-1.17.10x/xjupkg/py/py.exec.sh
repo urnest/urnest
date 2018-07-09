@@ -18,7 +18,7 @@ PYPATH=$(
 	done
       )
 
-cmd=cat
+cmd=
 if [ "$ODIN_cmd" != "" ] ; then
    cmd=`cat $ODIN_cmd`; fi
 

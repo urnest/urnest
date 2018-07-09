@@ -92,8 +92,8 @@ public:
       xju::assert_not_equal(i,s.index().end());
       //reference previous marshal of this type
       cxy::cdr<uint32_t>::marshal((uint32_t)0xffffffff, s.s());
-      cxy::cdr<uint32_t>::marshal(
-        (s.currentPosition()-(*i).second).value(),
+      cxy::cdr<int32_t>::marshal(
+        -(s.currentPosition()-(*i).second).value(),
         s.s());
     }
     else{
@@ -1138,14 +1138,23 @@ TypeCode unmarshalTypeCodeFrom_(TypeCodeIstreamIf& s,
   {
     return createTypeCodeOf<TypeCode>();
   }
+  case cxy::TypeKind::ALIAS:
+  {
+    cxy::EncapsulationTypeCodeIstream es(s);
+    auto const repoId(cdr<std::string>::unmarshalFrom(es.s()));
+    auto const name(cdr<std::string>::unmarshalFrom(es.s()));
+    auto const t(unmarshalTypeCodeFrom(es));
+    return t;
+  }
   case cxy::TypeKind::REFERENCE:
   {
     //the offset in the cdr stream is relative to the start of the offset
     //i.e. the position before decoding the 4-byte offset
     TypeCodeIstreamIf::StreamPos const offset(
-      cdr<uint32_t>::unmarshalFrom(s.s())+4);
+      // cdr encoding of offset is negative offset
+      -cdr<int32_t>::unmarshalFrom(s.s())+4);
     TypeCodeIstreamIf::StreamPos const absolutePosition(
-      s.currentPosition()-offset);
+      s.currentPosition()+offset);
     auto const i(std::lower_bound(
                    s.index().begin(),
                    s.index().end(),
