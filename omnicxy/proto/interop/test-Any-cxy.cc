@@ -113,25 +113,35 @@ public:
       xju::assert_equal(*z,omnicxy::proto::interop::a::U1::V<1>(5));
     }
     if (step_==12) {
-      cxy::Any<> const y(f->f(12,cxy::Any<>(
+      cxy::Any<> const y(
+        f->f(
+          12,
+          cxy::Any<>(
+            std::shared_ptr<omnicxy::proto::interop::a::U2 const>(
+              new omnicxy::proto::interop::a::U2::EV1(5)))));
+      auto const z(y.get<std::shared_ptr<omnicxy::proto::interop::a::U2 const> >());
+      xju::assert_equal(*z,omnicxy::proto::interop::a::U2::EV1(5));
+    }
+    if (step_==13) {
+      cxy::Any<> const y(f->f(13,cxy::Any<>(
                                 cxy::createTypeCodeOf<uint32_t>())));
       auto const z(y.get< cxy::TypeCode >());
       xju::assert_equal(z,cxy::createTypeCodeOf<uint32_t>());
     }
-    if (step_==13) {
+    if (step_==14) {
        //test cxx->cxy direction
       omnicxy::proto::interop::a::Tree const x(
         "root",
         {omnicxy::proto::interop::a::Tree("fred",{})});
-      cxy::Any<> const y(f->f(13,cxy::Any<>(1)));
+      cxy::Any<> const y(f->f(14,cxy::Any<>(1)));
       auto const z(y.get< omnicxy::proto::interop::a::Tree >());
       xju::assert_equal(z,x);
     }
-    if (step_==14) {
+    if (step_==15) {
       omnicxy::proto::interop::a::Tree const x(
         "root",
         {omnicxy::proto::interop::a::Tree("fred",{})});
-      cxy::Any<> const y(f->f(14,cxy::Any<>(x)));
+      cxy::Any<> const y(f->f(15,cxy::Any<>(x)));
       auto const z(y.get< omnicxy::proto::interop::a::Tree >());
       xju::assert_equal(z,x);
     }
@@ -151,7 +161,7 @@ int main_(uint16_t const port, std::string const& testAnyCxxExe) throw(
     // we run a new subprocess for each step because if we do them all
     // in a single subprocess the subprocess gets corruption somewhere - we're
     // not really interested in debugging cxx mapping code
-    for (auto step: {1,2,3,4,5,6,7,8,9,10,11,12,13,14}){
+    for (auto step: {12,1,2,3,4,5,6,7,8,9,10,11,12,13,14}){
       server_impl x(orb,step);
     
       cxy::sref<omnicxy::proto::interop::a::server> const xa(orb, OBJECT_NAME, x);

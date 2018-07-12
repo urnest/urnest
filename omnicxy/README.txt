@@ -171,7 +171,9 @@ Contents
   typedef of struct, sequence, enum, union maps to C++ typedef - see
   proto/cxy/p5.hh
 
-  CORBA::TypeCode maps to std::sharedptr< ::cxy::TypeCode > - see proto/cxy/p24.hh
+  CORBA::TypeCode maps to ::cxy::TypeCode - see proto/cxy/p24.hh
+
+  CORBA::Any maps to ::cxy::Any<> - see 
   
 4. Parameters and Results
 

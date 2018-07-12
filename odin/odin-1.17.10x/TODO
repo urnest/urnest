@@ -15,6 +15,8 @@ x hcp_tags*tree_tags deends on all files in tree, how can we make it
 - fix +ignore handling in hash_inc.sh
 
 - add +stdin to :exec / :py.exec
+- add +stderr=error to :exec / :py.exec so can capture stderr
+  and display it as error messages in :exec.output / :exec.files
 
 x :cxx.impl redo to make it correct, scan_for_impls would
   give .h and .cpp at once, then recurse on that and then

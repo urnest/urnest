@@ -97,8 +97,9 @@ public:
       char* y(0);
       x >>= CORBA::Any::to_string(y,0);
       xju::assert_equal(y, std::string("fred"));
+      char* z(CORBA::string_dup(y));
       CORBA::Any* result(new CORBA::Any);
-      (*result) <<= CORBA::Any::from_string(y,0);
+      (*result) <<= CORBA::Any::from_string(z,0);
       return result;
     }
     case 10:
@@ -107,8 +108,10 @@ public:
       x >>= y;
       xju::assert_equal(y->x_, 5);
       xju::assert_equal(std::string(y->y_), std::string("fred"));
+      omnicxy::proto::interop::a::S* z(
+        new omnicxy::proto::interop::a::S(*y));
       CORBA::Any* result(new CORBA::Any);
-      (*result) <<= y;
+      (*result) <<= z;
       return result;
     }
     case 11:
@@ -117,19 +120,34 @@ public:
       x >>= y;
       xju::assert_equal(y->_d(), 1);
       xju::assert_equal(y->x_(), 5);
+      omnicxy::proto::interop::a::U1* z(
+        new omnicxy::proto::interop::a::U1(*y));
       CORBA::Any* result(new CORBA::Any);
-      (*result) <<= y;
+      (*result) <<= z;
       return result;
     }
     case 12:
     {
-      CORBA::TypeCode* y(0);
+      omnicxy::proto::interop::a::U2* y(0);
       x >>= y;
+      xju::assert_equal(y->_d(), omnicxy::proto::interop::a::EV1);
+      xju::assert_equal(y->x_(), 5);
+      omnicxy::proto::interop::a::U2* z(
+        new omnicxy::proto::interop::a::U2(*y));
       CORBA::Any* result(new CORBA::Any);
-      (*result) <<= y;
+      (*result) <<= z;
       return result;
     }
     case 13:
+    {
+      CORBA::TypeCode* y(0);
+      x >>= y;
+      //note cannot copy CORBA::TypeCode but can copy
+      //CORBA::Any containing TypeCode
+      CORBA::Any* result(new CORBA::Any(x));
+      return result;
+    }
+    case 14:
     {
       CORBA::Long y_;
       x >>= y_;
@@ -148,15 +166,17 @@ public:
       (*result) <<= y;
       return result;
     }
-    case 14:
+    case 15:
     {
       omnicxy::proto::interop::a::Tree* y(0);
       x >>= y;
       xju::assert_equal(y->name_.in(), std::string("root"));
       xju::assert_equal(y->children_.length(), 1);
       xju::assert_equal(y->children_[0].name_.in(), std::string("fred"));
+      omnicxy::proto::interop::a::Tree* z(
+        new omnicxy::proto::interop::a::Tree(*y));
       CORBA::Any* result(new CORBA::Any);
-      (*result) <<= y;
+      (*result) <<= z;
       return result;
     }
     default:

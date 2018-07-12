@@ -30,14 +30,14 @@ module a
 
   enum E
   {
-    E1,
-    E2
+    EV1,
+    EV2
   };
 
   union U2 switch(E)
   {
-  case E1: long x_;
-  case E2: string y_;
+  case EV1: long x_;
+  case EV2: string y_;
   };
   
   //recursive
