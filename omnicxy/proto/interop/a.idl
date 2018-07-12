@@ -28,6 +28,18 @@ module a
   default: string y_;
   };
 
+  enum E
+  {
+    E1,
+    E2
+  };
+
+  union U2 switch(E)
+  {
+  case E1: long x_;
+  case E2: string y_;
+  };
+  
   //recursive
   struct Tree;
   typedef sequence<Tree> Branches;

@@ -272,9 +272,9 @@ x p16a-main:
 	  - use uint32_t cdrStream::currentOutputPtr() along the way
 	  - setting it into e.g. encapsulation stream REVISIT: there does not
 	    appear to be a way?
-      * first encode/decode recursive union/sequence
-      * then add map param to marshal functions?
-      * and map param to demarshal functions?
+      x first encode/decode recursive union/sequence
+      x then add map param to marshal functions?
+      x and map param to demarshal functions?
       
     - interop/test-Any.cc :
       x encode cxy, decode cxx and vice-versa, use cdrMemoryStream
@@ -292,10 +292,13 @@ x p16a-main:
           x sub exits
           x main collects exit status and exits
       x CORBA::Short
-      - struct
-      - union
-      - sequence
+      x struct
+      x union
+      x sequence
       x string
+      x recursion:
+        x struct with sequence<self> member
+	- union with self case
       - other types
 	
     - optimisation:

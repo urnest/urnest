@@ -85,6 +85,15 @@ public:
     }
     case 8:
     {
+      CORBA::Boolean y;
+      x >>= CORBA::Any::to_boolean(y);
+      xju::assert_equal(y, 1);
+      CORBA::Any* result(new CORBA::Any);
+      (*result) <<= CORBA::Any::from_boolean(y);
+      return result;
+    }
+    case 9:
+    {
       char* y(0);
       x >>= CORBA::Any::to_string(y,0);
       xju::assert_equal(y, std::string("fred"));
@@ -92,7 +101,7 @@ public:
       (*result) <<= CORBA::Any::from_string(y,0);
       return result;
     }
-    case 9:
+    case 10:
     {
       omnicxy::proto::interop::a::S* y(0);
       x >>= y;
@@ -102,7 +111,7 @@ public:
       (*result) <<= y;
       return result;
     }
-    case 10:
+    case 11:
     {
       omnicxy::proto::interop::a::U1* y(0);
       x >>= y;
@@ -112,7 +121,7 @@ public:
       (*result) <<= y;
       return result;
     }
-    case 11:
+    case 12:
     {
       CORBA::TypeCode* y(0);
       x >>= y;
@@ -120,7 +129,7 @@ public:
       (*result) <<= y;
       return result;
     }
-    case 12:
+    case 13:
     {
       CORBA::Long y_;
       x >>= y_;
@@ -139,7 +148,7 @@ public:
       (*result) <<= y;
       return result;
     }
-    case 13:
+    case 14:
     {
       omnicxy::proto::interop::a::Tree* y(0);
       x >>= y;

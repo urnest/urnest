@@ -1153,8 +1153,9 @@ TypeCode unmarshalTypeCodeFrom_(TypeCodeIstreamIf& s,
     TypeCodeIstreamIf::StreamPos const offset(
       // cdr encoding of offset is negative offset
       -cdr<int32_t>::unmarshalFrom(s.s())+4);
+    TypeCodeIstreamIf::StreamPos currentPosition(s.currentPosition());
     TypeCodeIstreamIf::StreamPos const absolutePosition(
-      s.currentPosition()+offset);
+      currentPosition-offset);
     auto const i(std::lower_bound(
                    s.index().begin(),
                    s.index().end(),
@@ -1186,8 +1187,9 @@ TypeCode unmarshalTypeCodeFrom(TypeCodeIstreamIf& s)
 //  )
 {
   auto const i(s.index().size());
+  auto const p(s.currentPosition());
   s.index().push_back(
-    {s.currentPosition(),
+    {p,
       {(TypeCode_ const*)0,{}}});
   cxy::TypeKind k(static_cast<cxy::TypeKind>(
                     cxy::cdr<uint32_t>::unmarshalFrom(s.s())));

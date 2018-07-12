@@ -28,12 +28,12 @@ enum class TypeKind
     BOOLEAN,     //bool
     CHAR,        //char
     OCTET,       //uint8_t
-    ANY,
+    ANY,         //cxy::Any
     TYPECODE,    //cxy::TypeCode
     PRINCIPAL,
     OBJREF,
     STRUCT,                                      //generated
-    UNION,
+    UNION,                                       //generated
     ENUM,
     STRING,                      //std::string
     SEQUENCE,                                    //std::vector

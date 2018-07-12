@@ -81,40 +81,44 @@ public:
       auto const z(y.get<double>());
       xju::assert_equal(z,(double)100997.7e-3);
     }
-    //REVISIT: if I move 10 down any further test-Any-cxx crashes
-    if (step_==10) {
-      cxy::Any<> const y(
-        f->f(
-          10,
-          cxy::Any<>(
-            std::shared_ptr<omnicxy::proto::interop::a::U1 const>(
-              new omnicxy::proto::interop::a::U1::V<1>(5)))));
-      auto const z(y.get<std::shared_ptr<omnicxy::proto::interop::a::U1 const> >());
-      xju::assert_equal(*z,omnicxy::proto::interop::a::U1::V<1>(5));
-    }
     if (step_==7) {
       cxy::Any<> const y(f->f(7,cxy::Any<>('g')));
       auto const z(y.get<char>());
       xju::assert_equal(z,'g');
     }
     if (step_==8) {
-      cxy::Any<> const y(f->f(8,cxy::Any<>(std::string("fred"))));
+      cxy::Any<> const y(f->f(8,cxy::Any<>(true)));
+      auto const z(y.get<bool>());
+      xju::assert_equal(z,true);
+    }
+    if (step_==9) {
+      cxy::Any<> const y(f->f(9,cxy::Any<>(std::string("fred"))));
       auto const z(y.get<std::string>());
       xju::assert_equal(z,"fred");
     }
-    if (step_==9) {
-      cxy::Any<> const y(f->f(9,cxy::Any<>(
+    if (step_==10) {
+      cxy::Any<> const y(f->f(10,cxy::Any<>(
                                 omnicxy::proto::interop::a::S(5,"fred"))));
       auto const z(y.get<omnicxy::proto::interop::a::S>());
       xju::assert_equal(z,omnicxy::proto::interop::a::S(5,"fred"));
     }
     if (step_==11) {
-      cxy::Any<> const y(f->f(11,cxy::Any<>(
+      cxy::Any<> const y(
+        f->f(
+          11,
+          cxy::Any<>(
+            std::shared_ptr<omnicxy::proto::interop::a::U1 const>(
+              new omnicxy::proto::interop::a::U1::V<1>(5)))));
+      auto const z(y.get<std::shared_ptr<omnicxy::proto::interop::a::U1 const> >());
+      xju::assert_equal(*z,omnicxy::proto::interop::a::U1::V<1>(5));
+    }
+    if (step_==12) {
+      cxy::Any<> const y(f->f(12,cxy::Any<>(
                                 cxy::createTypeCodeOf<uint32_t>())));
       auto const z(y.get< cxy::TypeCode >());
       xju::assert_equal(z,cxy::createTypeCodeOf<uint32_t>());
     }
-    if (step_==12) {
+    if (step_==13) {
        //test cxx->cxy direction
       omnicxy::proto::interop::a::Tree const x(
         "root",
@@ -123,7 +127,7 @@ public:
       auto const z(y.get< omnicxy::proto::interop::a::Tree >());
       xju::assert_equal(z,x);
     }
-    if (step_==13) {
+    if (step_==14) {
       omnicxy::proto::interop::a::Tree const x(
         "root",
         {omnicxy::proto::interop::a::Tree("fred",{})});
@@ -147,7 +151,7 @@ int main_(uint16_t const port, std::string const& testAnyCxxExe) throw(
     // we run a new subprocess for each step because if we do them all
     // in a single subprocess the subprocess gets corruption somewhere - we're
     // not really interested in debugging cxx mapping code
-    for (auto step: {1,2,3,4,5,6,7,8,9,10,11,12,13}){
+    for (auto step: {1,2,3,4,5,6,7,8,9,10,11,12,13,14}){
       server_impl x(orb,step);
     
       cxy::sref<omnicxy::proto::interop::a::server> const xa(orb, OBJECT_NAME, x);
