@@ -14,11 +14,12 @@ namespace cxy
 class TypeCode_;
 
 // CORBA 3.3 Table 9.2 TCKind
+// REVISIT: //* rows need implementing n TypeCode.hcp
 // REVISIT: empty rows below
 enum class TypeKind
 {                // no params     raw params     encapsulated params
   NULL_,
-    VOID,
+    VOID,        //*
     SHORT,       //int16_t
     LONG,        //int32_t
     USHORT,      //uint16_t
@@ -31,20 +32,20 @@ enum class TypeKind
     ANY,         //cxy::Any
     TYPECODE,    //cxy::TypeCode
     PRINCIPAL,
-    OBJREF,
+    OBJREF,                                      //*
     STRUCT,                                      //generated
     UNION,                                       //generated
-    ENUM,
+    ENUM,                                        //generated
     STRING,                      //std::string
     SEQUENCE,                                    //std::vector
-    ARRAY,
-    ALIAS,
-    EXCEPT,
+    ARRAY,                                       
+    ALIAS,                                       //generated
+    EXCEPT,                                      //*
     LONGLONG,    //int64_t
     ULONGLONG,   //uint64_t
     LONGDOUBLE,  //long double
-    WCHAR,       //wchar_t
-    WSTRING,     //std::wstring
+    WCHAR,       //*wchar_t (rework to cater for transcode)
+    WSTRING,     //*std::wstring (rework to cater for transcode)
     FIXED,
     VALUE,
     VALUE_BOX,
@@ -54,7 +55,7 @@ enum class TypeKind
     COMPONENT,
     HOME,
     EVENT,
-    REFERENCE=-1
+    REFERENCE=-1                 //(ref)
 };
 
 

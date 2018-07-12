@@ -146,32 +146,33 @@ x p16a-main:
     - fixed size vector? What are all non-size-changing vector methods?
     - want to be able to init from n-element "literal"
     - like BoundedSequence with only constructor from default element,
-      no size-changing operations
+      no size-changing operations? But prefer...
+    - could use std::array<>?
     
 - any
   x string
   - array
-  - CORBA::TypeCode
-  - union
-    test union's that have no default cases
-    
+  x CORBA::TypeCode
+  / union
+    - test union's that have no default cases
+
+  - see also TypeKind.hcp REVISITs
   * proto/cxy/p20-main-1.cc that does not actually use any and does
     not include any_.hcp nor any omniORB headers
   x proto/cxy/p20-main.cc does use Any (and does include any_.hh)
-  - any is marshalled as type code then data, the data is the cdr encoding
+  x any is marshalled as type code then data, the data is the cdr encoding
     of the value (the length of the data is implicit in the type code)
     what is typecode? essentially parallels instance encoding
-    - generate xxx.any.hcp which has specialisations of
+    x generate xxx.any.hcp which has specialisations of
       cxy::TypeCodeOf
-    - need lots of interoperability tests
-      - cxy/test-Any-interop.cc for predefined types
-      - proto/cxy/test-Any-interop.cc for others
+    / need lots of interoperability tests
+      / proto/cxy/interop/test-Any-cx{y,x}.cc
 
-    - is there a header eg for byte order?
+    x is there a header eg for byte order?
       - simple, no:
-         - kind only: 
+         x kind only: 
            tk_null, tk_void, x tk_short, tk_long, tk_ushort, tk_ulong, tk_float, tk_double, tk_boolean, tk_char, tk_octet, tk_any, tk_TypeCode, tk_Principal, tk_longlong, tk_ulonglong, tk_longdouble, tk_wchar, 
-         - others have params:
+         x others have params:
            tk_string: ulong (max length or 0)
            tk_wstring: ulong(max length or zero if unbounded)
 	   tk_fixed: ushort(digits), short(scale)
@@ -213,93 +214,14 @@ x p16a-main:
                    ulong (count)
                   {string (member name),
                  TypeCode (member type)}
-        - step through omni orb encoding of a struct to see how it
-          does the encapsulation
-         ~/omniORB-4.2.0/src/lib/omniORB/dynamic/typecode.cc:5049
-         ... is the interesting bit
 
-    - recursion/indirection in typecodes:
-      - decoding want to store as just TypeCode const*, but when we get to the
-        referer we have not necessarily created the referee, so perhaps
-        use 2x maps: map<offset,TypeCode const*> for those we know,
-        multimap<offset, std::reference<TypeCode const*> > for those we 
-        don't know (and fill them as we create the referee).
-      - encoding needs the corrolery map<fqn,offset> ... might need
-        more if idl allows cross-linked structures (C++ appears to)
-        No: 9.3.4.3 Scope of the Indirections states "Non-negative offsets are
-        reserved for future use."
-      - use struct N from test-nested as a test case
-        - typecode for sequence
-        - typecode for struct
-      - need to undestand typecode offset v encapsulation... corba.pdf states
-        encapsulation allows pre-marshalling, therefore inside encapsulation,
-        offset must stay within encapsulation? Yes - 9.3.4.3 Scope of the 
-        Indirections explicitly states this as 
-        "Indirections may not cross encapsulation boundaries." ... oops
-	that is for value types? Need page 91. Two scenarios, need
-	example of each:
-	  - recursion
-	  - repetition eg union with many cases having same value
-	... although we only need to support decoding, we have no way to make
-	a COTS client generate (at for least case 2) so support both, then
-	encode and make sure decoded correctly by C++ mapping, then encode
-	and make sure self can decode; both cases involve unions so do
-	non-recursive union first. Need the concept of top-level v nested.
-        Are there other examples like
-	- struct containing sequence of self?
-	- struct containing A plus B which has an A?
-        - multiple any params, passing more than one of same type?
-          - can write test before implementing back-refs to see if
-	    omniORB generates back-refs for this case, if so we
-	    don't need to support encoding of inter-top-level since
-	    can test decoding via interop
-	Top-level v nested:
-	  e.g.
-	  Struct X {
-	    string a;
-	    string b;
-	    sequence<X> children;
-	    sequence<string> m;
-	  }
-	  ... in encoding the TypeCode for X:
-	    - b may reference string typecode encoded for a
-	    - the second X must be a back-ref to avoid infinite recursion
-	  I guess we need to support decoding the v1.3 inter-top-level case,
-	  e.g.: sequence<any>, where we put in e.g. two Xs, the second
-	  occurrance of X can be a reference to the first; similarly if
-	  we're decoding a sequence of function params, our scope
-	  for references is the whole sequence.
-	  - use uint32_t cdrStream::currentOutputPtr() along the way
-	  - setting it into e.g. encapsulation stream REVISIT: there does not
-	    appear to be a way?
-      x first encode/decode recursive union/sequence
-      x then add map param to marshal functions?
-      x and map param to demarshal functions?
+    x recursion/indirection in typecodes (see cxy/TypeCode.hcp)
       
     - interop/test-Any.cc :
-      x encode cxy, decode cxx and vice-versa, use cdrMemoryStream
-      x can't do cxx and cxy in same process for same interface
-        because they generate the same namespaces, so:
-        x main process does cxy, sub process does cxx (because cxy
-          cleans up reliably and can simply kill subprocess)
-        x main process needs to create a server before starting subprocess
-          x main creates a::server
-          x main starts sub
-          x sub gets corbaloc of a::server
-          x sub creates reflect implementation
-          x sub calls main a::server::run passing reflect implementation
-          x main a::server::run does the test cases then returns
-          x sub exits
-          x main collects exit status and exits
-      x CORBA::Short
-      x struct
-      x union
-      x sequence
-      x string
-      x recursion:
-        x struct with sequence<self> member
+      / recursion:
 	- union with self case
-      - other types
+	- struct A with B that has an A
+      - other types (see REVISITs in cxy/TypeCode.hcp)
 	
     - optimisation:
       add TypeCode::minEncodedValueSize() and use as initial value buffer size
@@ -310,8 +232,9 @@ x p16a-main:
     x rename Any to AnyImpl and do a Any template to translate exceptions
     * can share AnyImpl (make it const)
 
-    - test interop with complex any param
-    
+    / test interop with complex any param
+      - still to test some types (see REVISITs in cxy/TypeCode.hcp)
+      
 - cxy/Milliseconds.idl and hand-code map to std::chrono::milliseconds
 
 - other stuff (see omniidl idltypes.py)
