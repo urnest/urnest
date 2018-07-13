@@ -12,18 +12,24 @@ py,dir_,pySp,ignore=sys.argv[1:]
 err=file('ERROR','w')
 viewDesc=file('py_import.view_desc','w')
 
+indent=''
+
 class Scope:
     def __init__(self,desc):
         self.desc=desc
         pass
     def __enter__(self):
         if os.environ.get('ODINVERBOSE',''):
-            print '{'+'{desc}'.format(**self.__dict__)
+            global indent
+            print indent+'{desc}'.format(**self.__dict__)
+            indent=indent+'  '
             pass
         pass
-    def __exit__(self,a,b,c):
+    def __exit__(self,exceptionType,exception,traceBack):
         if os.environ.get('ODINVERBOSE'):
-            print '}'+'{desc}'.format(**self.__dict__)
+            global indent
+            if exception: print indent+'*** failed'
+            indent=indent[0:-2]
             pass
         pass
     pass
@@ -54,7 +60,7 @@ with Scope('scan for py imports {py}'.format(**vars())):
     for i,m in enumerate(m1s):
         if m:
             line=lines[i]
-            with Scope('analyse import line {line}'.format(**vars())):
+            with Scope('analyse py import line {line}'.format(**vars())):
                 matched=m.groups()[0]
                 n=0
                 while i+n<len(lines) and matched.endswith('\\'):
