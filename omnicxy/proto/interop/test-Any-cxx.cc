@@ -179,6 +179,17 @@ public:
       (*result) <<= z;
       return result;
     }
+    case 16:
+    {
+      omnicxy::proto::interop::a::X const* y(0);
+      x >>= y;
+      xju::assert_equal(y->message_.in(), std::string("file not found"));
+      omnicxy::proto::interop::a::X* z(
+        new omnicxy::proto::interop::a::X(*y));
+      CORBA::Any* result(new CORBA::Any);
+      (*result) <<= z;
+      return result;
+    }
     default:
       xju::assert_never_reached();
     }

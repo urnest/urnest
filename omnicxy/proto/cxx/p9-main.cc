@@ -62,17 +62,11 @@ CORBA::ORB_var orbInit(int argc, char* argv[]) throw(
   }
 }
 
-void client(int argc, char* argv[], 
-            int port, 
-            std::string const& objectName) throw(
-              xju::Exception)
-{
-  std::ostringstream s;
-  s << makeURI(port, objectName) << "->f1()";
-  try {
-    try {
-      CORBA::ORB_var orb = orbInit(argc, argv);
-      
+void client_(CORBA::ORB_var orb, 
+             int port, 
+             std::string const& objectName) throw(
+  xju::Exception){
+  try{
       CORBA::Object_var obj = orb->string_to_object(
         makeURI(port, objectName).c_str());
       
@@ -85,6 +79,24 @@ void client(int argc, char* argv[],
       }
       
       ref->f1("fred");
+  }
+  catch(CORBA::Exception& e){
+    throw translate(e);
+  }
+}
+
+void client(int argc, char* argv[], 
+            int port, 
+            std::string const& objectName) throw(
+              xju::Exception)
+{
+  std::ostringstream s;
+  s << makeURI(port, objectName) << "->f1()";
+  try {
+    try {
+      CORBA::ORB_var orb = orbInit(argc, argv);
+
+      client_(orb,port,objectName);
     }
     catch(CORBA::Exception& e) {
       throw translate(e);
@@ -170,7 +182,7 @@ int main(int argc, char* argv[])
         [orb](){ orb->run(); },
         [orb](){ orb->destroy(); });
       
-      client(argc, argv, port, OBJECT_NAME);
+      client_(orb, port, OBJECT_NAME);
     }
     
     return 0;

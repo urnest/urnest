@@ -290,9 +290,9 @@ struct %(name)s : %(eclass)s
 
   // pre: %(eclass)s(T) constructs a %(eclass)s
   template<class T>
-  explicit %(name)s(
+  explicit %(name)s(%(consparams)s
     T const& p) throw():
-      %(eclass)s(p) {
+      %(eclass)s(p)%(consinitialisers)s {
   }
   
   %(name)s(%(consparams)s

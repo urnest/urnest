@@ -73,48 +73,30 @@ def gen_union(name,discriminantType,cases,repoId):
          for case_value,case_type,case_name in [(_[0],_[1][0][0],_[1][0][1]) for _ in cases]])
     return union_t%vars()
 
-#see also mapped_exception_t below
 exception_t='''\
+template<>
+struct TypeCodeOf< ::%(name)s >
+{
+  static ::cxy::TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+  {
+    return ::cxy::TypeCode(
+      std::shared_ptr<cxy::TypeCode_>(
+        new cxy::ExceptionTypeCode(
+          cxy::cdr< ::%(name)s >::repoId,
+          "%(name)s",
+          {%(exception_members)s
+          })));
+  }
+};
 '''
-def gen_exception(name,repoId,memberTypesAndNames,eclass):
-    memberNames=[_[1] for _ in memberTypesAndNames]
-    memberTypes=[_[0] for _ in memberTypesAndNames]
-    paramNames=['p%s'%i for i in range(1,len(memberTypesAndNames)+1)]
-    memberUnmarshals=''.join(['\n    %(t)s const %(pn)s(cdr< %(t)s >::unmarshalFrom(s));'%vars() for t,pn in zip(memberTypes,paramNames)])
-    consparams=''.join([pn+',' for pn in paramNames])
-    memberMarshals=''.join(['\n    cdr< %(t)s >::marshal(x.%(n)s,s);'%vars() for t,n in zip(memberTypes,memberNames)])
+exception_member_t='''\n          { "%(member_name)s", ::cxy::createTypeCodeOf< %(member_type)s >(index) }'''
+def gen_exception(name,memberTypesAndNames,repoId):
+    assert len(memberTypesAndNames)>0, name
+    exception_members=','.join(
+        [exception_member_t%vars() 
+         for member_type,member_name in memberTypesAndNames])
     return exception_t%vars()
 
-#see also exception_t above
-mapped_exception_t='''\
-'''
-def mapped_marshal(t,n,
-                   causeType,
-                   contextType,
-                   causeMemberExpression,
-                   contextMemberExpression):
-    if t==causeType:
-        causeMemberExpression=causeMemberExpression or n
-        return '\n    cdr< %(t)s >::marshal(%(t)s(x.%(causeMemberExpression)s),s);'%vars()
-    elif t==contextType:
-        contextMemberExpression=contextMemberExpression or n
-        return '\n    cdr< %(t)s >::marshal(%(t)s(x.%(contextMemberExpression)s.begin(),x.%(contextMemberExpression)s.end()),s);'%vars()
-    return '\n    cdr< %(t)s >::marshal(x.%(n)s,s);'%vars() 
-    
-def gen_mapped_exception(name,repoId,memberTypesAndNames,
-                         eclass,causeType,contextType,
-                         causeMemberExpression,contextMemberExpression):
-    memberNames=[_[1] for _ in memberTypesAndNames]
-    memberTypes=[_[0] for _ in memberTypesAndNames]
-    paramNames=['p%s'%i for i in range(1,len(memberTypesAndNames)+1)]
-    memberUnmarshals=''.join(['\n    %(t)s const %(pn)s(cdr< %(t)s >::unmarshalFrom(s));'%vars() for t,pn in zip(memberTypes,paramNames)])
-    consparams=','.join(paramNames)
-    memberMarshals=''.join([mapped_marshal(t,n,
-                                           causeType,contextType,
-                                           causeMemberExpression,
-                                           contextMemberExpression) \
-                                for t,n in zip(memberTypes,memberNames)])
-    return mapped_exception_t%vars()
 
 enum_t='''\
 template<>
@@ -185,14 +167,7 @@ def gen(decl,eclass,eheader,causeType,contextType,
                 (unqualifiedType(_.memberType(),eclass),_.declarators()[0].identifier()) \
                     for _ in decl.members()];
             memberTypes=[_[0] for _ in memberTypesAndNames]
-            if causeType in memberTypes and contextType in memberTypes:
-                result=gen_mapped_exception(
-                    name,repoId,memberTypesAndNames,
-                    eclass,causeType,contextType,
-                    causeMemberExpression,contextMemberExpression)
-            else:
-                result=gen_exception(name,repoId,memberTypesAndNames,eclass)
-                pass
+            result=gen_exception(name,memberTypesAndNames,repoId)
             pass
         elif isinstance(decl, idlast.Enum):
             name='::'.join(decl.scopedName())

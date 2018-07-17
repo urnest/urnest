@@ -21,8 +21,12 @@ struct E : cxy::Exception
   // pre: cxy::Exception(T) constructs a cxy::Exception
   template<class T>
   explicit E(
+    std::vector< std::string > const& p1,
+    cxy::optional< int32_t > const& p2,
     T const& p) throw():
-      cxy::Exception(p) {
+      cxy::Exception(p),
+      cause(p1),
+      optionalNumber(p2) {
   }
   
   E(

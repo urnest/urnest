@@ -48,6 +48,11 @@ module a
     string name_;
     Branches children_;
   };
+
+  exception X
+  {
+    string message_;
+  };
   
 };
 };

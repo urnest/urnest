@@ -145,6 +145,14 @@ public:
       auto const z(y.get< omnicxy::proto::interop::a::Tree >());
       xju::assert_equal(z,x);
     }
+    if (step_==16) {
+      omnicxy::proto::interop::a::X x(
+        "file not found",
+        cxy::Exception("file not found", {__FILE__,__LINE__}));
+      cxy::Any<> const y(f->f(16,cxy::Any<>(x)));
+      auto const z(y.get< omnicxy::proto::interop::a::X >());
+      xju::assert_equal(z.message_,x.message_);
+    }
     done_=true;
   }
 };
@@ -161,7 +169,7 @@ int main_(uint16_t const port, std::string const& testAnyCxxExe) throw(
     // we run a new subprocess for each step because if we do them all
     // in a single subprocess the subprocess gets corruption somewhere - we're
     // not really interested in debugging cxx mapping code
-    for (auto step: {12,1,2,3,4,5,6,7,8,9,10,11,12,13,14}){
+    for (auto step: {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}){
       server_impl x(orb,step);
     
       cxy::sref<omnicxy::proto::interop::a::server> const xa(orb, OBJECT_NAME, x);

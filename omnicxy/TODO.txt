@@ -218,9 +218,9 @@ x p16a-main:
     x recursion/indirection in typecodes (see cxy/TypeCode.hcp)
       
     - interop/test-Any.cc :
-      / recursion:
-	- union with self case
-	- struct A with B that has an A
+      x recursion:
+	~ union with self case (not possible in IDL)
+	~ struct A with B that has an A (not possible in IDL)
       - other types (see REVISITs in cxy/TypeCode.hcp)
 	
     - optimisation:

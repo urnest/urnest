@@ -18,6 +18,16 @@
 namespace cxy
 {
 
+void testVoid() {
+  cxy::MemCdrStream s;
+  ::cxy::TypeCode const x(cxy::createTypeCodeOf<void>());
+  ::cxy::cdr< ::cxy::TypeCode>::marshal(x,*s);
+
+  ::cxy::TypeCode y(cdr< ::cxy::TypeCode >::unmarshalFrom(*s));
+  xju::assert_equal(*x,*y);
+  
+}
+
 template<class T>
 void testx(T const v) {
   {
@@ -91,6 +101,7 @@ public:
 };
 void test1()
 {
+  testVoid();
   testx((int16_t)27);
   testx((int32_t)-32);
   testx(std::vector<int16_t>{3});

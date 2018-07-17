@@ -18,8 +18,8 @@ class TypeCode_;
 // REVISIT: empty rows below
 enum class TypeKind
 {                // no params     raw params     encapsulated params
-  NULL_,
-    VOID,        //*
+    NULL_,
+    VOID,        //void
     SHORT,       //int16_t
     LONG,        //int32_t
     USHORT,      //uint16_t
@@ -40,7 +40,7 @@ enum class TypeKind
     SEQUENCE,                                    //std::vector
     ARRAY,                                       
     ALIAS,                                       //generated
-    EXCEPT,                                      //*
+    EXCEPT,                                      //generated
     LONGLONG,    //int64_t
     ULONGLONG,   //uint64_t
     LONGDOUBLE,  //long double
