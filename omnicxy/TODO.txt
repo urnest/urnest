@@ -118,12 +118,14 @@ x TypeCode
 - p19.idl:
   - sequence test cases
 
-- inherit interface multi-level
-- inherit multiple interfaces
 
-- p23.idl:
-  - inherit interface diamond
-
+x p23.idl:
+  x inherit interface multi-level
+  x inherit multiple interfaces
+  x inherit interface diamond
+    x only emit each function once:
+      x cxysref.py
+      
 x p16a-main:
     x inherit base implementation:
       interface IfA { void f(); }

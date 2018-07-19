@@ -264,7 +264,11 @@ def getOperations(decl):
     assert isinstance(decl,idlast.Interface),decl
     result=[_ for _ in decl.contents() if isinstance(_,idlast.Operation)]
     result.extend(sum([getOperations(_) for _ in decl.inherits()],[]))
-    return result
+    def seen(x,d={}):
+        result=d.get(x,False)
+        d[x]=True
+        return result
+    return [_ for _ in result if not seen(_)]
 
 def gen(decl,eclass,eheader,indent=''):
     try:

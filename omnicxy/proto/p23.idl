@@ -4,10 +4,8 @@ interface A {
 interface B : A {
   string fb();
 };
-interface C {
+interface C : A {
   string fc();
 };
-interface D : C {
-};
-interface X : B, D{
+interface D : B, C {
 };
