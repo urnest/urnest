@@ -7,7 +7,7 @@ x exception from resolve to non-existent ip address?
 
 * p16-main core dump
   omniObjRef::_getIOR return value ownership?
-  x- step through using omniORB debug build
+  x step through using omniORB debug build
   x a's obj_ seems broken when we come to use it at line 207
   x was it always broken? Yes
   - why is it broken? Need to look at equivalent cxx code?
@@ -58,7 +58,10 @@ x TypeCode
 
 - proto/cxy/echo-main
 
-- how to get just direct includes (in omnipy backend)? currently picks up nested
+~ how to get just direct includes (in omnipy backend)? currently picks
+  up nested
+  ~ omniORB cxx backend does not - it #includes all transitively included -
+    what rubbish... actually it probably does not matter
 
 - use xju::Thread instead of xju::mt::Thread
 
@@ -117,6 +120,7 @@ x TypeCode
 
 - inherit interface multi-level
 - inherit multiple interfaces
+
 - p23.idl:
   - inherit interface diamond
 
@@ -153,8 +157,8 @@ x p16a-main:
   x string
   - array
   x CORBA::TypeCode
-  / union
-    - test union's that have no default cases
+  x union
+    x test union's that have no default cases
 
   - see also TypeKind.hcp REVISITs
   * proto/cxy/p20-main-1.cc that does not actually use any and does
@@ -165,11 +169,11 @@ x p16a-main:
     what is typecode? essentially parallels instance encoding
     x generate xxx.any.hcp which has specialisations of
       cxy::TypeCodeOf
-    / need lots of interoperability tests
-      / proto/cxy/interop/test-Any-cx{y,x}.cc
+    x need lots of interoperability tests
+      x proto/cxy/interop/test-Any-cx{y,x}.cc
 
     x is there a header eg for byte order?
-      - simple, no:
+      x simple, no:
          x kind only: 
            tk_null, tk_void, x tk_short, tk_long, tk_ushort, tk_ulong, tk_float, tk_double, tk_boolean, tk_char, tk_octet, tk_any, tk_TypeCode, tk_Principal, tk_longlong, tk_ulonglong, tk_longdouble, tk_wchar, 
          x others have params:
@@ -232,8 +236,8 @@ x p16a-main:
     x rename Any to AnyImpl and do a Any template to translate exceptions
     * can share AnyImpl (make it const)
 
-    / test interop with complex any param
-      - still to test some types (see REVISITs in cxy/TypeCode.hcp)
+    x test interop with complex any param
+      x still to test some types (see REVISITs in cxy/TypeCode.hcp)
       
 - cxy/Milliseconds.idl and hand-code map to std::chrono::milliseconds
 
@@ -279,7 +283,7 @@ x p16a-main:
 
 - make uri cxy::objref<X> cons param
 
-- have seen cxx p2-main crash at end (after calling orb->destroy()), why?:
+x have seen cxx p2-main crash at end (after calling orb->destroy()), why?:
 
 #5  0x00007f6924661ab8 in __cxxabiv1::__cxa_throw (obj=0x7f6914000970, 
     tinfo=0x7f6924f036b0 <typeinfo for CORBA::OBJECT_NOT_EXIST>, 
@@ -299,6 +303,9 @@ x p16a-main:
 #7  0x0000000000407522 in xju::mt::Thread<CORBA::ORB>::main (x=0x7ffde4b5f350)
     at /home/xju/urnest/xju/mt.hh:350
 
+    ... think it is due to two calls to ORB_init... which has been fixed
+    at least in a couple of the tests (see p20-main.cc for example)
+    
 ---------------------------------------------
 
 xju@xjutv:~/urnest$ ODIN_LIB_SP="/usr/local/omniORB-4.2.0/lib /lib /usr/lib" ODIN_EXEC_PATH=/usr/local/omniORB-4.2.0/bin:/usr/bin:/bin ODIN_OMNICXY_PATH=/usr/local/omniORB-4.2.0/bin:/usr/bin:/bin ODIN_OMNICXY_BE_DIR=~/urnest/omnicxy/omniidl_be  ODIN_CXX_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib ODIN_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib ODIN_CXX_I=/usr/local/omniORB-4.2.0/include odin/create-linux-cache.sh $ODIN

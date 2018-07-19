@@ -62,6 +62,31 @@ CORBA::ORB_var orbInit(int argc, char* argv[]) throw(
   }
 }
 
+void client_(CORBA::ORB_var orb, 
+            int port, 
+            std::string const& objectName) throw(
+              xju::Exception)
+{
+  try {
+    CORBA::Object_var obj = orb->string_to_object(
+      makeURI(port, objectName).c_str());
+    
+    p2::F_var ref = p2::F::_narrow(obj);
+    
+    if (CORBA::is_nil(ref)) {
+      throw xju::Exception(
+        "Can't narrow reference to type p2::F (or it was nil).",
+        XJU_TRACED);
+    }
+    
+    ref->f1(1, 2, 3.4, "fred",'k',82,true);
+    std::cout << ref->f2() << std::endl;
+  }
+  catch(CORBA::Exception& e) {
+    throw translate(e);
+  }
+}
+
 void client(int argc, char* argv[], 
             int port, 
             std::string const& objectName) throw(
@@ -73,19 +98,7 @@ void client(int argc, char* argv[],
     try {
       CORBA::ORB_var orb = orbInit(argc, argv);
       
-      CORBA::Object_var obj = orb->string_to_object(
-        makeURI(port, objectName).c_str());
-      
-      p2::F_var ref = p2::F::_narrow(obj);
-      
-      if (CORBA::is_nil(ref)) {
-        throw xju::Exception(
-          "Can't narrow reference to type p2::F (or it was nil).",
-          XJU_TRACED);
-      }
-      
-      ref->f1(1, 2, 3.4, "fred",'k',82,true);
-      std::cout << ref->f2() << std::endl;
+      client_(orb,port,objectName);
     }
     catch(CORBA::Exception& e) {
       throw translate(e);
@@ -183,7 +196,7 @@ int main(int argc, char* argv[])
         [orb](){ orb->run(); },
         [orb](){ orb->destroy(); });
       
-      client(argc, argv, port, OBJECT_NAME);
+      client_(orb, port, OBJECT_NAME);
     }
     
     return 0;
