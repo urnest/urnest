@@ -739,6 +739,61 @@ public:
   }
 };
 
+
+class IORTypeCode : public TypeCode_
+{
+public:
+  IORTypeCode(
+    std::string repoId,
+    std::string name)
+      throw():
+      repoId_(repoId),
+      name_(name)
+  {
+  }
+    
+  virtual void copyValue(cdrStream& from, cdrStream& to) const override
+  {
+    auto x(cxy::cdr<cxy::IORImpl>::unmarshalFrom(from));
+    cxy::cdr<cxy::IORImpl>::marshal(x,to);
+  }    
+
+  virtual void marshal_(TypeCode_::OstreamIf& s) const override
+  {
+    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::OBJREF, s.s());
+
+    EncapsulationTypeCodeOstream es(s);
+    cxy::cdr<std::string>::marshal(repoId_,es.s());
+    cxy::cdr<std::string>::marshal(name_,es.s());
+    es.marshal();
+  }  
+  virtual bool equals(TypeCode_ const& b) const throw() override
+  {
+    IORTypeCode const* b_(dynamic_cast<IORTypeCode const*>(&b));
+    return b_ && (*b_==*this);
+  }
+  virtual bool lessThan(TypeCode_ const& b) const throw()
+  {
+    xju::assert_equal(typeid(*this),typeid(b));
+    IORTypeCode const& b_(static_cast<IORTypeCode const&>(b));
+    return repoId_<b_.repoId_;
+  }
+  virtual std::string str() const throw()
+  {
+    return repoId_;
+  }
+private:
+  std::string repoId_;
+  std::string name_;
+  
+  friend bool operator==(IORTypeCode const& a,
+                         IORTypeCode const& b) throw()
+  {
+    return a.repoId_==b.repoId_;
+  }
+};
+
+
 class ReferenceTypeCode_ : public TypeCode_
 {
 public:
@@ -1025,7 +1080,20 @@ static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
       new BasicTypeCode<TypeCode,cxy::TypeKind::TYPECODE>));
 }
 };
-  
+
+template<class T>
+struct TypeCodeOf< cxy::IOR<T> >
+{
+static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+{
+  return TypeCode(
+    std::shared_ptr<TypeCode_>(
+      new IORTypeCode(
+        cxy::cdr<T>::repoId,
+        typeid(T).name())));
+}
+};
+
 // TypeCodeOf for structures, unions, exceptionss defined in code generated
 // by cxyany.py backend
 
@@ -1259,6 +1327,16 @@ TypeCode unmarshalTypeCodeFrom_(TypeCodeIstreamIf& s,
                                    repoId,
                                    name,
                                    values)));
+  }
+  case cxy::TypeKind::OBJREF:
+  {
+    cxy::EncapsulationTypeCodeIstream es(s);
+    auto const repoId(cdr<std::string>::unmarshalFrom(es.s()));
+    auto const name(cdr<std::string>::unmarshalFrom(es.s()));
+    return TypeCode(
+      std::shared_ptr<TypeCode_>(new IORTypeCode(
+                                   repoId,
+                                   name)));
   }
   case cxy::TypeKind::TYPECODE:
   {

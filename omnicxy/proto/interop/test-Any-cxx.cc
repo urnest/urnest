@@ -190,6 +190,14 @@ public:
       (*result) <<= z;
       return result;
     }
+    case 17:
+    {
+      omnicxy::proto::interop::a::reflect_ptr y(0);
+      x >>= y;
+      CORBA::Any* result(new CORBA::Any);
+      (*result) <<= y;
+      return result;
+    }
     default:
       xju::assert_never_reached();
     }

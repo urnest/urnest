@@ -52,52 +52,52 @@ public:
     cxy::cref<omnicxy::proto::interop::a::reflect> f(orb_,f_);
 
     if (step_==1) {
-      cxy::Any<> const y(f->f(1,cxy::Any<>((int16_t)-997)));
+      cxy::Any<> const y(f->f(step_,cxy::Any<>((int16_t)-997)));
       auto const z(y.get<int16_t>());
       xju::assert_equal(z,(int16_t)-997);
     }
     if (step_==2) {
-      cxy::Any<> const y(f->f(2,cxy::Any<>((int32_t)-100997)));
+      cxy::Any<> const y(f->f(step_,cxy::Any<>((int32_t)-100997)));
       auto const z(y.get<int32_t>());
       xju::assert_equal(z,(int32_t)-100997);
     }
     if (step_==3) {
-      cxy::Any<> const y(f->f(3,cxy::Any<>((uint16_t)997)));
+      cxy::Any<> const y(f->f(step_,cxy::Any<>((uint16_t)997)));
       auto const z(y.get<uint16_t>());
       xju::assert_equal(z,(uint16_t)997);
     }
     if (step_==4) {
-      cxy::Any<> const y(f->f(4,cxy::Any<>((uint32_t)100997)));
+      cxy::Any<> const y(f->f(step_,cxy::Any<>((uint32_t)100997)));
       auto const z(y.get<uint32_t>());
       xju::assert_equal(z,(uint32_t)100997);
     }
     if (step_==5) {
-      cxy::Any<> const y(f->f(5,cxy::Any<>((float)997.5e-1)));
+      cxy::Any<> const y(f->f(step_,cxy::Any<>((float)997.5e-1)));
       auto const z(y.get<float>());
       xju::assert_equal(z,(float)997.5e-1);
     }
     if (step_==6) {
-      cxy::Any<> const y(f->f(6,cxy::Any<>((double)100997.7e-3)));
+      cxy::Any<> const y(f->f(step_,cxy::Any<>((double)100997.7e-3)));
       auto const z(y.get<double>());
       xju::assert_equal(z,(double)100997.7e-3);
     }
     if (step_==7) {
-      cxy::Any<> const y(f->f(7,cxy::Any<>('g')));
+      cxy::Any<> const y(f->f(step_,cxy::Any<>('g')));
       auto const z(y.get<char>());
       xju::assert_equal(z,'g');
     }
     if (step_==8) {
-      cxy::Any<> const y(f->f(8,cxy::Any<>(true)));
+      cxy::Any<> const y(f->f(step_,cxy::Any<>(true)));
       auto const z(y.get<bool>());
       xju::assert_equal(z,true);
     }
     if (step_==9) {
-      cxy::Any<> const y(f->f(9,cxy::Any<>(std::string("fred"))));
+      cxy::Any<> const y(f->f(step_,cxy::Any<>(std::string("fred"))));
       auto const z(y.get<std::string>());
       xju::assert_equal(z,"fred");
     }
     if (step_==10) {
-      cxy::Any<> const y(f->f(10,cxy::Any<>(
+      cxy::Any<> const y(f->f(step_,cxy::Any<>(
                                 omnicxy::proto::interop::a::S(5,"fred"))));
       auto const z(y.get<omnicxy::proto::interop::a::S>());
       xju::assert_equal(z,omnicxy::proto::interop::a::S(5,"fred"));
@@ -105,7 +105,7 @@ public:
     if (step_==11) {
       cxy::Any<> const y(
         f->f(
-          11,
+          step_,
           cxy::Any<>(
             std::shared_ptr<omnicxy::proto::interop::a::U1 const>(
               new omnicxy::proto::interop::a::U1::V<1>(5)))));
@@ -115,7 +115,7 @@ public:
     if (step_==12) {
       cxy::Any<> const y(
         f->f(
-          12,
+          step_,
           cxy::Any<>(
             std::shared_ptr<omnicxy::proto::interop::a::U2 const>(
               new omnicxy::proto::interop::a::U2::EV1(5)))));
@@ -123,7 +123,7 @@ public:
       xju::assert_equal(*z,omnicxy::proto::interop::a::U2::EV1(5));
     }
     if (step_==13) {
-      cxy::Any<> const y(f->f(13,cxy::Any<>(
+      cxy::Any<> const y(f->f(step_,cxy::Any<>(
                                 cxy::createTypeCodeOf<uint32_t>())));
       auto const z(y.get< cxy::TypeCode >());
       xju::assert_equal(z,cxy::createTypeCodeOf<uint32_t>());
@@ -133,7 +133,7 @@ public:
       omnicxy::proto::interop::a::Tree const x(
         "root",
         {omnicxy::proto::interop::a::Tree("fred",{})});
-      cxy::Any<> const y(f->f(14,cxy::Any<>(1)));
+      cxy::Any<> const y(f->f(step_,cxy::Any<>(1)));
       auto const z(y.get< omnicxy::proto::interop::a::Tree >());
       xju::assert_equal(z,x);
     }
@@ -141,7 +141,7 @@ public:
       omnicxy::proto::interop::a::Tree const x(
         "root",
         {omnicxy::proto::interop::a::Tree("fred",{})});
-      cxy::Any<> const y(f->f(15,cxy::Any<>(x)));
+      cxy::Any<> const y(f->f(step_,cxy::Any<>(x)));
       auto const z(y.get< omnicxy::proto::interop::a::Tree >());
       xju::assert_equal(z,x);
     }
@@ -149,13 +149,19 @@ public:
       omnicxy::proto::interop::a::X x(
         "file not found",
         cxy::Exception("file not found", {__FILE__,__LINE__}));
-      cxy::Any<> const y(f->f(16,cxy::Any<>(x)));
+      cxy::Any<> const y(f->f(step_,cxy::Any<>(x)));
       auto const z(y.get< omnicxy::proto::interop::a::X >());
       xju::assert_equal(z.message_,x.message_);
+    }
+    if (step_==17) {
+      cxy::Any<> const y(f->f(step_,cxy::Any<>(f_)));
+      auto const z(y.get< cxy::IOR<omnicxy::proto::interop::a::reflect> >());
+      xju::assert_equal(z,f_);
     }
     done_=true;
   }
 };
+
 
 int main_(uint16_t const port, std::string const& testAnyCxxExe) throw(
   cxy::Exception)
@@ -169,7 +175,7 @@ int main_(uint16_t const port, std::string const& testAnyCxxExe) throw(
     // we run a new subprocess for each step because if we do them all
     // in a single subprocess the subprocess gets corruption somewhere - we're
     // not really interested in debugging cxx mapping code
-    for (auto step: {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}){
+    for (auto step: {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17}){
       server_impl x(orb,step);
     
       cxy::sref<omnicxy::proto::interop::a::server> const xa(orb, OBJECT_NAME, x);
