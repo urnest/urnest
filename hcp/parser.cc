@@ -1799,7 +1799,7 @@ PR throw_clause() throw()
 {
   static PR result(
     (keyword_throw()+bracketed())|
-    (keyword_noexcept()+optional(bracketed())));
+    (keyword_noexcept()+(!parseLiteral("(")|bracketed())));
   return result;
 }
 

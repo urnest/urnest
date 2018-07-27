@@ -149,15 +149,14 @@ x p16a-main:
       - compile error if size greater
 
 - arrays
-    - fixed size vector? What are all non-size-changing vector methods?
-    - want to be able to init from n-element "literal"
-    - like BoundedSequence with only constructor from default element,
-      no size-changing operations? But prefer...
-    - could use std::array<>?
+    ~ could use std::array<>? No, it cannot be used for types
+      that have no default constructor
+    - come up with own Array that allows no default constructor
     
 - any
   x string
   - array
+  - bounded sequence
   x CORBA::TypeCode
   x union
     x test union's that have no default cases
@@ -284,6 +283,10 @@ x p16a-main:
 - allow servant to throw base exception
 
 - make uri cxy::objref<X> cons param
+
+- out params like python, map to tuple<> return type
+
+- in-out param X&
 
 x have seen cxx p2-main crash at end (after calling orb->destroy()), why?:
 

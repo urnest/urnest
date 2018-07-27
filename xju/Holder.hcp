@@ -10,7 +10,7 @@
 
 #include <cinttypes>
 #include <cstddef>
-
+#include <xju/MinAlign.hh>
 
 namespace xju
 {
@@ -28,11 +28,7 @@ class Holder
 public:
   union H // for correct alignment
   {
-    short a_;
-    int b_;
-    long c_;
-    long long d_;
-    void* e_;
+    MinAlign<T> align_;
     uint8_t f_[sizeof(T)];
   };
   H x_;

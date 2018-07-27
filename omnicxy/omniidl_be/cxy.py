@@ -907,6 +907,13 @@ def gen_non_enum_union(decl,eclass):
     return GenResult(non_enum_union_t%locals(),[
         ForNamespaceScope(union_case_defs)])
 
+def narry(baseType,sizes):
+    '''generate n-dimensional array of baseType'''
+    if not len(sizes): return baseType
+    n=sizes[0]
+    inner=narry(baseType,sizes[1:])
+    return 'std::array< {inner},{n} >'.format(**vars())
+
 def gen(decl,eclass,eheader,causeType,contextType,indent=''):
     '''- returns a GenResult'''
     try:
@@ -947,31 +954,28 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
             result.code=reindent(indent,operation_t%vars())
         elif isinstance(decl, idlast.Typedef):
             name=decl.declarators()[0].identifier()
+            sizes=decl.declarators()[0].sizes()
             tagClass=''
             aliasOf=decl.aliasType()
             if aliasOf.kind() in basicIntTypes:
+                tagClass='class %(name)s_tag {};\n'
                 aliasOf=unqualifiedType(aliasOf,eclass)
-                result.code=reindent(
-                    indent,
-                    ('class %(name)s_tag {};\n'+
-                     'typedef ::xju::Int< %(name)s_tag,%(aliasOf)s,%(eclass)s > %(name)s;')%vars())
+                baseType='::xju::Int< %(name)s_tag,%(aliasOf)s,%(eclass)s > '
             elif aliasOf.kind() in basicFloatTypes:
+                tagClass='class %(name)s_tag {};\n'
                 aliasOf=unqualifiedType(aliasOf,eclass)
-                result.code=reindent(
-                    indent,
-                    ('class %(name)s_tag {};\n'+
-                     'typedef ::xju::Float< %(name)s_tag,%(aliasOf)s,%(eclass)s > %(name)s;')%vars())
+                baseType='::xju::Float< %(name)s_tag,%(aliasOf)s,%(eclass)s >'
             elif aliasOf.kind() in basicStringTypes:
-                result.code=reindent(
-                    indent,
-                    ('class %(name)s_tag {};\n'+
-                     'typedef ::xju::Tagged<std::string,%(name)s_tag > %(name)s;')%vars())
+                tagClass='class %(name)s_tag {};\n'
+                baseType='::xju::Tagged<std::string,%(name)s_tag >'
             else:
                 aliasOf=unqualifiedType(aliasOf,eclass)
-                result.code=reindent(
-                    indent,
-                    ('typedef %(aliasOf)s %(name)s;')%vars())
+                baseType='%(aliasOf)s'
                 pass
+            result.code=reindent(
+                indent,
+                (tagClass+'typedef '+narry(baseType,sizes)+' %(name)s;')%vars())
+            pass
         elif isinstance(decl, idlast.Struct):
             name=decl.identifier()
             memberTypesAndNames=[(unqualifiedType(_.memberType(),eclass),_.declarators()[0].identifier()) for _ in decl.members()];
@@ -1070,6 +1074,9 @@ def gen_tincludes(decl):
                 pass
         else:
             result=tincludes(aliasOf)
+            pass
+        sizes=decl.declarators()[0].sizes()
+        if len(sizes): result=result+['<array>']
         pass
     elif isinstance(decl, idlast.Struct):
         for m in decl.members():

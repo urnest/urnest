@@ -5,6 +5,8 @@
   }
 
 * override
+* final
+* constexpr
 
 - trace should go to stderr
 

@@ -135,6 +135,8 @@ Contents
   sequence maps to std::vector - see proto/cxy/p5.hh
     - bounded sequence of length 1 maps to cxy::optional - see proto/cxy/p17.hh
 
+  array maps to std::array - see proto/cxy/p25.hh
+
   struct maps to struct with same members and generated compare 
   operators - see proto/cxy/p4.hh. Note
   that the lack of default constructor is deliberate to reduce programming

@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <array>
 #include <xju/Tagged.hh>
 #include <xju/Int.hh>
 #include <xju/Float.hh>
@@ -503,6 +504,35 @@ public:
   {
     cdr<uint32_t>::marshal(x.size(),s);
     for(typename std::vector<T>::const_iterator i=x.begin(); i!=x.end(); ++i) {
+      cdr<T>::marshal(*i, s);
+    }
+  }
+};
+
+template<class T, size_t N>
+class cdr< std::array<T,N> >
+{
+public:
+  static std::array<T,N> unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    std::vector<T> result;
+    for(uint32_t i=0; i!=N; ++i) {
+      result.push_back(cdr<T>::unmarshalFrom(s));
+    }
+    return std::array<T,N>(result);
+  }
+  static void marshal(std::array<T,N> const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    for(auto i=x.begin(); i!=x.end(); ++i) {
       cdr<T>::marshal(*i, s);
     }
   }

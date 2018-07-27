@@ -49,6 +49,35 @@ void test1() {
   xju::assert_equal(destructs,1);
 }
 
+struct A
+{
+  uint32_t x;
+  uint8_t y;
+};
+struct B
+{
+  uint8_t y;
+};
+struct C
+{
+  uint8_t y[3];
+};
+struct D
+{
+  uint32_t x;
+  uint8_t y[3];
+};
+typedef D E[2];
+
+void test2()
+{
+  xju::assert_equal(sizeof(Holder<A>),sizeof(A));
+  xju::assert_equal(sizeof(Holder<B>),sizeof(B));
+  xju::assert_equal(sizeof(Holder<C>),sizeof(C));
+  xju::assert_equal(sizeof(Holder<D>),sizeof(D));
+  xju::assert_equal(sizeof(E),sizeof(D)*2);
+}
+
 }
 
 using namespace xju;
@@ -57,6 +86,7 @@ int main(int argc, char* argv[])
 {
   unsigned int n(0);
   test1(), ++n;
+  test2(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

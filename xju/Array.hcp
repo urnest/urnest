@@ -1,0 +1,436 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <iterator>
+#include <xju/Exception.hh>
+#include <string>
+#include <utility>
+#include <sstream>
+#include <xju/Holder.hh>
+#include <initializer_list>
+
+namespace xju
+{
+
+namespace
+{
+static size_t checkLess(size_t n,size_t Size) throw(xju::Exception)
+{
+  if (n>=Size) {
+    std::ostringstream s;
+    s << "Array of size " << Size << " cannot have "
+      << (n+1) << " elements";
+    throw xju::Exception(s.str(),
+                         std::make_pair(std::string(__FILE__),__LINE__));
+  }
+  return n;
+}
+static void checkEqual(size_t n,size_t Size) throw(xju::Exception)
+{
+  if (n!=Size) {
+    std::ostringstream s;
+    s << (n+1) << " elements cannot be placed in Array of size "
+      << Size;
+    throw xju::Exception(s.str(),
+                         std::make_pair(std::string(__FILE__),__LINE__));
+  }
+}
+}
+
+// like C++ array but allows T that does not have default constructor
+// REVISIT: provide zero-size specialisation
+template<class T, size_t Size, class E=xju::Exception>
+class Array
+{
+private:
+
+public:
+  typedef size_t   size_type;
+
+  Array() noexcept(
+    std::is_nothrow_default_constructible<T>::value)
+  {
+    auto i=elements_.begin();
+    try{
+      while(i != elements_.end()){
+        new(*i++) T;
+      }
+    }
+    catch(...){
+      while(i!=elements_.begin())
+      {
+        (*--i)->~T();
+      }
+      throw;
+    }
+  }
+  
+  explicit Array(T const& initialValueOfAllElements) noexcept(
+    std::is_nothrow_copy_constructible<T>::value)
+  {
+
+    auto i=std::begin(elements_);
+    try{
+      while(i != std::end(elements_)){
+        new(*i++) T(initialValueOfAllElements);
+      }
+    }
+    catch(...){
+      while(i!=std::begin(elements_))
+      {
+        (*--i)->~T();
+      }
+      throw;
+    }
+  }
+
+  template<class U>
+  Array(std::initializer_list<U> const& x) noexcept(
+    std::is_nothrow_copy_constructible<T>::value)
+  {
+    checkEqual(x.size(),Size);
+    auto i=elements_.begin();
+    auto j=x.begin();
+    try{
+      while(i != elements_.end()){
+        new(*i++) T(*j++);
+      }
+    }
+    catch(...){
+      while(i!=elements_.begin())
+      {
+        (*--i)->~T();
+      }
+      throw;
+    }
+  }
+  
+  Array(Array const& b) noexcept(
+    std::is_nothrow_copy_constructible<T>::value)
+  {
+    auto i=elements_.begin();
+    auto j=b.begin();
+    try{
+      while(i != elements_.end()){
+        new(*i++) T(*j++);
+      }
+    }
+    catch(...){
+      while(i!=elements_.begin())
+      {
+        (*--i)->~T();
+      }
+      throw;
+    }
+  }
+  Array(Array&& b) noexcept(
+    std::is_nothrow_move_constructible<T>::value)
+  {
+    auto i=elements_.begin();
+    auto j=b.begin();
+    try{
+      while(i != elements_.end()){
+        new(*i++) T(std::move(*j++));
+      }
+    }
+    catch(...){
+      while(i!=elements_.begin())
+      {
+        (*--i)->~T();
+      }
+      throw;
+    }
+  }
+  Array& operator=(Array& b) noexcept(
+    std::is_nothrow_copy_assignable<T>::value)
+  {
+    std::copy(b.begin(),b.end(),begin());
+  }
+  //REVISIT: construct from initialiser
+
+  T const& operator[](size_t const n) const throw(E)
+  {
+    return *static_cast<T const*>(&elements_[n].x_);
+  }
+  T& operator[](size_t const n) throw(E)
+  {
+    return *static_cast<T*>(&elements_[n].x_);
+  }
+
+  template<class U>
+  class iterator_
+  {
+  public:
+    // input iterator_
+    iterator_() noexcept:
+      value_(0)
+    {
+    }
+    friend bool operator==(iterator_ i, iterator_ j) noexcept
+    {
+      return i.value_==i.value_;
+    }
+    U& operator*() const noexcept
+    {
+      return *value_;
+    }
+    U* operator->() const noexcept
+    {
+      return value_;
+    }
+    iterator_& operator++() noexcept
+    {
+      ++value_;
+      return *this;
+    }
+    iterator_ operator++(int) noexcept
+    {
+      iterator_ result(value_);
+      ++value_;
+      return result;
+    }
+    // bidirectional iterator_
+    iterator_& operator--() noexcept
+    {
+      --value_;
+      return *this;
+    }
+    iterator_ operator--(int) noexcept
+    {
+      iterator_ result(value_);
+      --value_;
+      return result;
+    }
+    // random access iterator_
+    iterator_& operator+=(ssize_t n) noexcept
+    {
+      value_+=n;
+      return *this;
+    }
+    iterator_& operator-=(ssize_t n) noexcept
+    {
+      value_-=n;
+      return *this;
+    }
+    friend iterator_ operator+(iterator_ i, ssize_t n) noexcept
+    {
+      return iterator_(i.value_+n);
+    }
+    friend iterator_ operator+(ssize_t n, iterator_ i) noexcept
+    {
+      return iterator_(i.value_+n);
+    }
+    friend iterator_ operator-(iterator_ i, ssize_t n) noexcept
+    {
+      return iterator_(i.value_-n);
+    }
+    friend ssize_t operator-(iterator_ i, iterator_ j) noexcept
+    {
+      return i.value_-j.value_;
+    }
+    U& operator[](ssize_t n) noexcept
+    {
+      return *(value_+n);
+    }
+    friend bool operator<(iterator_ i, iterator_ j) noexcept
+    {
+      return i.value_<j.value_;
+    }
+    friend bool operator>(iterator_ i, iterator_ j) noexcept
+    {
+      return i.value_>j.value_;
+    }
+    friend bool operator>=(iterator_ i, iterator_ j) noexcept
+    {
+      return i.value_>=j.value_;
+    }
+    friend bool operator<=(iterator_ i, iterator_ j) noexcept
+    {
+      return i.value_<=j.value_;
+    }
+
+  private:
+    iterator_(U* value) noexcept
+      :value_(value)
+    {
+    }
+    
+    U* value_;
+    friend class Array;
+  };
+
+  typedef iterator_<T> iterator;
+  typedef iterator_<T const> const_iterator;
+  typedef std::reverse_iterator<iterator> reverse_iterator;
+  typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+  
+  iterator begin() noexcept
+  {
+    return iterator(data());
+  }
+  iterator end() noexcept
+  {
+    return iterator(data()+size());
+  }
+  const_iterator begin() const noexcept
+  {
+    return const_iterator(data());
+  }
+  const_iterator const end() const noexcept
+  {
+    return iterator(data()+size());
+  }
+  reverse_iterator rbegin() noexcept
+  {
+    return reverse_iterator(end());
+  }
+  
+  const_reverse_iterator rbegin() const noexcept
+  {
+    return const_reverse_iterator(end());
+  }
+  
+  reverse_iterator rend() noexcept
+  {
+    return reverse_iterator(begin());
+  }
+  
+  const_reverse_iterator rend() const noexcept
+  {
+    return const_reverse_iterator(begin());
+  }
+  
+  const_iterator cbegin() const noexcept
+  {
+    return const_iterator(data());
+  }
+  
+  const_iterator cend() const noexcept
+  {
+    return const_iterator(data() + Size);
+  }
+  
+  const_reverse_iterator crbegin() const noexcept
+  {
+    return const_reverse_iterator(end());
+  }
+  
+  const_reverse_iterator crend() const noexcept
+  {
+    return const_reverse_iterator(begin());
+  }
+  
+  size_type size() const noexcept { return Size; }
+  
+  size_type max_size() const noexcept { return Size; }
+  
+  bool empty() const noexcept { return size() == 0; }
+  
+  T& at(size_type n)
+  {
+    try{
+      return *static_cast<T*>(&elements_[Array::checkLess(n,Size)].x_);
+    }
+    catch(E& e){
+      e.addContext("get element at offset n",{__FILE__,__LINE__});
+      throw;
+    }
+    catch(xju::Exception& e_){
+      E e(e_);
+      e.addContext("get element at offset n",{__FILE__,__LINE__});
+      throw;
+    }
+  }
+  
+  T const& at(size_type n) const
+  {
+    try{
+      return *static_cast<T const*>(
+        &elements_[Array::checkLess(n,Size)].x_);
+    }
+    catch(E& e){
+      e.addContext("get element at offset n",{__FILE__,__LINE__});
+      throw;
+    }
+    catch(xju::Exception& e_){
+      E e(e_);
+      e.addContext("get element at offset n",{__FILE__,__LINE__});
+      throw;
+    }
+  }
+  
+  T& front() noexcept
+  {
+    return *begin();
+  }
+  
+  T const& front() const noexcept
+  {
+    return *begin();
+  }
+  
+  T& back() noexcept
+  {
+    return *rbegin();
+  }
+  
+  T const& back() const noexcept
+  {
+    return *rbegin();
+  }
+  
+  T* data() noexcept
+  {
+    return static_cast<T*>(&elements_[0].x_);
+  }
+  
+  T const* data() const noexcept
+  {
+    return static_cast<T const*>(&elements_[0].x_);
+  }
+  
+  ~Array() noexcept
+  {
+    for(auto x=rbegin(); x != rend(); ++x){
+      (*x)->~T();
+    }
+  }
+private:
+  xju::Holder<T> elements_[Size];
+
+  friend bool operator<(Array const& x, Array const& y) noexcept
+  {
+    return std::lexicographical_compare(x.begin(),x.end(),
+                                        y.begin(),y.end());
+  }
+};
+
+}
+namespace std
+{
+template<class T,size_t Size,class E>
+class iterator_traits<typename xju::Array<T,Size,E>::iterator>
+{
+  typedef ssize_t difference_type;
+  typedef T value_type;
+  typedef T* pointer;
+  typedef T& reference;
+  typedef std::random_access_iterator_tag iterator_category;
+};
+template<class T,size_t Size,class E>
+class iterator_traits<typename xju::Array<T,Size,E>::const_iterator>
+{
+  typedef ssize_t difference_type;
+  typedef T value_type;
+  typedef T const* pointer;
+  typedef T const& reference;
+  typedef std::random_access_iterator_tag iterator_category;
+};
+}

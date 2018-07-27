@@ -16,6 +16,7 @@ p19.hh
 p20.hh
 p23.hh
 p24.hh
+p25.hh
 echo.hh
 echo.cc
 echo.cref.hh
@@ -67,6 +68,7 @@ p20.hh==%gen/p20.hh
 p21.hh==%gen/p21.hh
 p23.hh==%gen/p23.hh
 p24.hh==%gen/p24.hh
+p25.hh==%gen/p25.hh
 echo.hh==%gen/echo.hh
 echo.cc==%gen/echo.cc
 echo.cref.hh==%gen/echo.cref.hh
@@ -147,6 +149,12 @@ echo.sref.cc==%gen/echo.sref.cc
 %p23.objref.hcp==(../p23.idl)+(%gen-opts):omnicxy/p23.objref.hcp
 %p23.sref.hcp==(../p23.idl)+(%gen-opts):omnicxy/p23.sref.hcp
 %p23.any.hcp==(../p23.idl)+(%gen-opts):omnicxy/p23.any.hcp
+%p25.hcp==(../p25.idl)+(%gen-opts):omnicxy/p25.hcp
+%p25.cref.hcp==(../p25.idl)+(%gen-opts):omnicxy/p25.cref.hcp
+%p25.cdr.hcp==(../p25.idl)+(%gen-opts):omnicxy/p25.cdr.hcp
+%p25.objref.hcp==(../p25.idl)+(%gen-opts):omnicxy/p25.objref.hcp
+%p25.sref.hcp==(../p25.idl)+(%gen-opts):omnicxy/p25.sref.hcp
+%p25.any.hcp==(../p25.idl)+(%gen-opts):omnicxy/p25.any.hcp
 %p24.hcp==(../p24.idl)+(%gen-opts):omnicxy/p24.hcp
 %p24.cref.hcp==(../p24.idl)+(%gen-opts):omnicxy/p24.cref.hcp
 %p24.cdr.hcp==(../p24.idl)+(%gen-opts):omnicxy/p24.cdr.hcp
@@ -187,6 +195,7 @@ echo.sref.cc==%gen/echo.sref.cc
 ()+cmd=(%test-Any)+cmd='3763':exec.output
 ()+cmd=(%p23-main)+cmd='3764'+cmd='both':exec.output
 ()+cmd=(%p24-main)+cmd='3765'+cmd='both':exec.output
+()+cmd=(%p25-main)+cmd='3766'+cmd='both':exec.output
 ()+cmd=(%test-port-in-use):exec.output
 %leak-checks.tree
 ext%tests.tree
@@ -220,6 +229,7 @@ ext%tests.tree
 %p22-main==p22-main.cc+(%cxx-opts):auto.cxx.exe
 %p23-main==p23-main.cc+(%cxx-opts):auto.cxx.exe
 %p24-main==p24-main.cc+(%cxx-opts):auto.cxx.exe
+%p25-main==p25-main.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-host==test-no-such-host.cc+(%cxx-opts):auto.cxx.exe
 %test-duplicate-name==test-duplicate-name.cc+(%cxx-opts):auto.cxx.exe

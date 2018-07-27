@@ -1,0 +1,15 @@
+
+
+module p25
+{
+  struct Two
+  {
+    long a_;
+    long b_;
+  };
+  typedef Two ThreeTwos[3];
+  interface I25
+  {
+    ThreeTwos f25(in ThreeTwos x);
+  };
+};

@@ -53,8 +53,7 @@ public:
     return x_;
   }
 
-  BoundedSequence() noexcept(
-    std::is_nothrow_default_constructible<V>::value) {
+  BoundedSequence() noexcept {
   }
   explicit BoundedSequence(const allocator_type& a)
     noexcept:
