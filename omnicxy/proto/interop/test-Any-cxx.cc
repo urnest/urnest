@@ -198,6 +198,19 @@ public:
       (*result) <<= y;
       return result;
     }
+    case 18:
+    {
+      omnicxy::proto::interop::a::S (*y)[3];
+      x >>= y;
+      CORBA::Any* result(new CORBA::Any);
+      omnicxy::proto::interop::a::S (*z)[3]=
+        new omnicxy::proto::interop::a::S[3];
+      (*z)[0]=(*y)[0];
+      (*z)[1]=(*y)[1];
+      (*z)[2]=(*y)[2];
+      (*result) <<= z;
+      return result;
+    }
     default:
       xju::assert_never_reached();
     }

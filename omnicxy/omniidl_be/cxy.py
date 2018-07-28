@@ -907,12 +907,12 @@ def gen_non_enum_union(decl,eclass):
     return GenResult(non_enum_union_t%locals(),[
         ForNamespaceScope(union_case_defs)])
 
-def narry(baseType,sizes):
+def narry(baseType,sizes,eclass):
     '''generate n-dimensional array of baseType'''
     if not len(sizes): return baseType
     n=sizes[0]
-    inner=narry(baseType,sizes[1:])
-    return 'std::array< {inner},{n} >'.format(**vars())
+    inner=narry(baseType,sizes[1:],eclass)
+    return 'xju::Array< {inner},{n},{eclass} >'.format(**vars())
 
 def gen(decl,eclass,eheader,causeType,contextType,indent=''):
     '''- returns a GenResult'''
@@ -974,7 +974,7 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
                 pass
             result.code=reindent(
                 indent,
-                (tagClass+'typedef '+narry(baseType,sizes)+' %(name)s;')%vars())
+                (tagClass+'typedef '+narry(baseType,sizes,eclass)+' %(name)s;')%vars())
             pass
         elif isinstance(decl, idlast.Struct):
             name=decl.identifier()
@@ -1076,7 +1076,7 @@ def gen_tincludes(decl):
             result=tincludes(aliasOf)
             pass
         sizes=decl.declarators()[0].sizes()
-        if len(sizes): result=result+['<array>']
+        if len(sizes): result=result+['<xju/Array.hh>']
         pass
     elif isinstance(decl, idlast.Struct):
         for m in decl.members():

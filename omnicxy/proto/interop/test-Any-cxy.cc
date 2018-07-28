@@ -158,6 +158,16 @@ public:
       auto const z(y.get< cxy::IOR<omnicxy::proto::interop::a::reflect> >());
       xju::assert_equal(z,f_);
     }
+    if (step_==18) {
+      xju::Array<omnicxy::proto::interop::a::S,3> const x{
+        omnicxy::proto::interop::a::S(5,"fred"),
+        omnicxy::proto::interop::a::S(6,"jock"),
+        omnicxy::proto::interop::a::S(2,"sally")};
+          
+      cxy::Any<> const y(f->f(step_,cxy::Any<>(x)));
+      auto const z(y.get< xju::Array<omnicxy::proto::interop::a::S,3> >());
+      xju::assert_equal(z,x);
+    }
     done_=true;
   }
 };
@@ -175,7 +185,7 @@ int main_(uint16_t const port, std::string const& testAnyCxxExe) throw(
     // we run a new subprocess for each step because if we do them all
     // in a single subprocess the subprocess gets corruption somewhere - we're
     // not really interested in debugging cxx mapping code
-    for (auto step: {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17}){
+    for (auto step: {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18}){
       server_impl x(orb,step);
     
       cxy::sref<omnicxy::proto::interop::a::server> const xa(orb, OBJECT_NAME, x);

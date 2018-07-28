@@ -37,7 +37,7 @@ public:
   ~I25_impl() throw()
   {
   }
-  virtual p25::ThreeTwos f25(p25::ThreeTwos a) noexcept
+  virtual p25::ThreeTwos f25(p25::ThreeTwos const& a) noexcept
   {
     return a;
   }
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
         x.begin(),
         x.end(),
         [](p25::Two const& t){
-          return xju::format;:str(t.a_)+","+xju::format(t.b_);
+          return xju::format::str(t.a_)+","+xju::format::str(t.b_);
         },
         ",") << std::endl;
     }
@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
       std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
       cxy::ORB<cxy::Exception> orb(orbEndPoint);
 
-      p25::I25_impl x;
+      I25_impl x;
       
       cxy::sref<p25::I25> const xa(orb, OBJECT_NAME, x);
       
@@ -89,22 +89,24 @@ int main(int argc, char* argv[])
     {
       std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
       cxy::ORB<cxy::Exception> orb(orbEndPoint);
-      D_impl x;
+      I25_impl x;
       
-      cxy::sref<D> const xa(orb, OBJECT_NAME, x);
+      cxy::sref<p25::I25> const xa(orb, OBJECT_NAME, x);
       
       cxy::cref<p25::I25> ref(orb, makeURI(port, OBJECT_NAME));
       unsigned int const repeat(
         xju::stringToUInt(::getenv("CXY_REPEAT")?::getenv("CXY_REPEAT"):"1"));
       for(unsigned int i=0; i != repeat; ++i) {
-        auto const x(ref->f25(p25::ThreeTwos(
-                                p25::Two(1,2),
-                                p25::Two(3,4),
-                                p25::Two(5,6))));
-        xju::assert_equal(x,p25::ThreeTwos(
+        auto const x(ref->f25(
+                       p25::ThreeTwos{
+                         p25::Two(1,2),
+                         p25::Two(3,4),
+                         p25::Two(5,6)}));
+        xju::assert_equal(x,
+                          p25::ThreeTwos{
                             p25::Two(1,2),
                             p25::Two(3,4),
-                            p25::Two(5,6)));
+                            p25::Two(5,6)});
         
       }
     }

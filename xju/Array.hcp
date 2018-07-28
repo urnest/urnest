@@ -54,14 +54,14 @@ public:
   Array() noexcept(
     std::is_nothrow_default_constructible<T>::value)
   {
-    auto i=elements_.begin();
+    auto i=std::begin(elements_);
     try{
-      while(i != elements_.end()){
+      while(i != std::end(elements_)){
         new(*i++) T;
       }
     }
     catch(...){
-      while(i!=elements_.begin())
+      while(i!=std::begin(elements_))
       {
         (*--i)->~T();
       }
@@ -130,15 +130,15 @@ public:
   Array(Array&& b) noexcept(
     std::is_nothrow_move_constructible<T>::value)
   {
-    auto i=elements_.begin();
+    auto i=std::begin(elements_);
     auto j=b.begin();
     try{
-      while(i != elements_.end()){
+      while(i != std::end(elements_)){
         new(*i++) T(std::move(*j++));
       }
     }
     catch(...){
-      while(i!=elements_.begin())
+      while(i!=std::begin(elements_))
       {
         (*--i)->~T();
       }

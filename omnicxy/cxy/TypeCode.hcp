@@ -18,6 +18,7 @@
 #include <cxy/EncapsulationCdrStream.hh>
 #include <memory>
 #include <vector>
+#include <xju/Array.hh>
 #include <typeinfo>
 #include <typeindex>
 #include <cxy/MemCdrStream.hh>
@@ -375,6 +376,73 @@ private:
                          SequenceTypeCode const& b) throw()
   {
     return a.maxSize_==b.maxSize_ &&
+      a.itemType_->equals(*b.itemType_);
+  }
+};
+
+  
+class ArrayTypeCode : public TypeCode_
+{
+public:
+  ArrayTypeCode(TypeCode const& itemType,
+                   uint32_t size):
+      itemType_(itemType),
+      size_(size)
+  {
+  }
+  virtual void copyValue(cdrStream& from, cdrStream& to) const
+  {
+    uint32_t const size(
+      cxy::cdr<uint32_t>::unmarshalFrom(from));
+    cxy::cdr<uint32_t>::marshal(size,to);
+    // deliberately don't check max size
+    for(uint32_t i=0; i != size; ++i) {
+      itemType_->copyValue(from,to);
+    }
+  }
+
+  virtual void marshal_(TypeCode_::OstreamIf& s) const override
+  {
+    cxy::cdr<uint32_t>::marshal((uint32_t)TypeKind::ARRAY, s.s());
+
+    EncapsulationTypeCodeOstream es(s);
+    itemType_->marshal(es);
+    cxy::cdr<uint32_t>::marshal(size_,es.s());
+
+    es.marshal();
+  }
+  
+  virtual bool equals(TypeCode_ const& b) const throw()
+  {
+    ArrayTypeCode const* b_(dynamic_cast<ArrayTypeCode const*>(&b));
+    return b_ && (*b_==*this);
+  }
+  virtual bool lessThan(TypeCode_ const& b) const throw()
+  {
+    xju::assert_equal(typeid(*this),typeid(b));
+    ArrayTypeCode const& a_(static_cast<ArrayTypeCode const&>(*this));
+    ArrayTypeCode const& b_(static_cast<ArrayTypeCode const&>(b));
+    if (*a_.itemType_ < *b_.itemType_){
+      return true;
+    }
+    if (*b_.itemType_ < *a_.itemType_){
+      return false;
+    }
+    return a_.size_ < b_.size_;
+  }
+  virtual std::string str() const throw()
+  {
+    return std::string("array<")+itemType_->str()+","+
+      xju::format::int_(size_)+">";
+  }
+private:
+  TypeCode itemType_;
+  uint32_t size_;
+  
+  friend bool operator==(ArrayTypeCode const& a,
+                         ArrayTypeCode const& b) throw()
+  {
+    return a.size_==b.size_ &&
       a.itemType_->equals(*b.itemType_);
   }
 };
@@ -1059,6 +1127,17 @@ static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 }
 };
 
+template<class T,size_t N,class E>
+struct TypeCodeOf<xju::Array<T,N,E> >
+{
+static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+{
+  return TypeCode(
+    std::shared_ptr<TypeCode_>(
+      new ArrayTypeCode(createTypeCodeOf<T>(index),N)));
+}
+};
+
 template<>
 struct TypeCodeOf<std::string>
 {
@@ -1245,6 +1324,14 @@ TypeCode unmarshalTypeCodeFrom_(TypeCodeIstreamIf& s,
     auto const maxSize(cdr<uint32_t>::unmarshalFrom(es.s()));
     return TypeCode(
       std::shared_ptr<TypeCode_>(new SequenceTypeCode(t,maxSize)));
+  }
+  case cxy::TypeKind::ARRAY:
+  {
+    cxy::EncapsulationTypeCodeIstream es(s);
+    auto const t(unmarshalTypeCodeFrom(es));
+    auto const size(cdr<uint32_t>::unmarshalFrom(es.s()));
+    return TypeCode(
+      std::shared_ptr<TypeCode_>(new ArrayTypeCode(t,size)));
   }
   case cxy::TypeKind::STRUCT:
   {

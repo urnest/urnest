@@ -14,7 +14,7 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include <array>
+#include <xju/Array.hh>
 #include <xju/Tagged.hh>
 #include <xju/Int.hh>
 #include <xju/Float.hh>
@@ -509,24 +509,48 @@ public:
   }
 };
 
-template<class T, size_t N>
-class cdr< std::array<T,N> >
+template<class T, class E>
+class cdr< xju::Array<T,0U,E> >
 {
 public:
-  static std::array<T,N> unmarshalFrom(cdrStream& s) 
+  static xju::Array<T,0,E> unmarshalFrom(cdrStream& s) 
   //to avoid needing CORBA.h in our .hh, exception specs are commented
   //throw(
   //  CORBA::SystemException,
   //  omni::giopStream::CommFailure
   //  )
   {
-    std::vector<T> result;
-    for(uint32_t i=0; i!=N; ++i) {
-      result.push_back(cdr<T>::unmarshalFrom(s));
-    }
-    return std::array<T,N>(result);
+    return xju::Array<T,0,E>{};
   }
-  static void marshal(std::array<T,N> const& x, cdrStream& s)
+  static void marshal(xju::Array<T,0,E> const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+  }
+};
+
+template<class T, size_t N, class E>
+class cdr< xju::Array<T,N,E> >
+{
+public:
+  static xju::Array<T,N,E> unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    xju::assert_not_equal(N,0U);//0 case specialised above
+    T first(cdr<T>::unmarshalFrom(s));
+    xju::Array<T,N,E> result(first);
+    for(uint32_t i=1; i!=N; ++i) {
+      result[i]=cdr<T>::unmarshalFrom(s);
+    }
+    return result;
+  }
+  static void marshal(xju::Array<T,N,E> const& x, cdrStream& s)
   //to avoid needing CORBA.h in our .hh, exception specs are commented
   //throw(
   //  omni::giopStream::CommFailure
