@@ -19,9 +19,7 @@
 namespace xju
 {
 
-namespace
-{
-static size_t checkLess(size_t n,size_t Size) throw(xju::Exception)
+size_t ArrayCheckLess(size_t n,size_t Size) throw(xju::Exception)
 {
   if (n>=Size) {
     std::ostringstream s;
@@ -32,7 +30,7 @@ static size_t checkLess(size_t n,size_t Size) throw(xju::Exception)
   }
   return n;
 }
-static void checkEqual(size_t n,size_t Size) throw(xju::Exception)
+void ArrayCheckEqual(size_t n,size_t Size) throw(xju::Exception)
 {
   if (n!=Size) {
     std::ostringstream s;
@@ -41,7 +39,6 @@ static void checkEqual(size_t n,size_t Size) throw(xju::Exception)
     throw xju::Exception(s.str(),
                          std::make_pair(std::string(__FILE__),__LINE__));
   }
-}
 }
 
 // like C++ array but allows T that does not have default constructor
@@ -95,16 +92,16 @@ public:
   Array(std::initializer_list<U> const& x) noexcept(
     std::is_nothrow_copy_constructible<T>::value)
   {
-    checkEqual(x.size(),Size);
-    auto i=elements_.begin();
-    auto j=x.begin();
+    ArrayCheckEqual(x.size(),Size);
+    auto i=std::begin(elements_);
+    auto j=std::begin(x);
     try{
-      while(i != elements_.end()){
+      while(i != std::end(elements_)){
         new(*i++) T(*j++);
       }
     }
     catch(...){
-      while(i!=elements_.begin())
+      while(i!=std::begin(elements_))
       {
         (*--i)->~T();
       }
@@ -115,15 +112,15 @@ public:
   Array(Array const& b) noexcept(
     std::is_nothrow_copy_constructible<T>::value)
   {
-    auto i=elements_.begin();
+    auto i=std::begin(elements_);
     auto j=b.begin();
     try{
-      while(i != elements_.end()){
+      while(i != std::end(elements_)){
         new(*i++) T(*j++);
       }
     }
     catch(...){
-      while(i!=elements_.begin())
+      while(i!=std::begin(elements_))
       {
         (*--i)->~T();
       }
@@ -148,126 +145,245 @@ public:
       throw;
     }
   }
-  Array& operator=(Array& b) noexcept(
+  Array& operator=(Array const& b) noexcept(
     std::is_nothrow_copy_assignable<T>::value)
   {
     std::copy(b.begin(),b.end(),begin());
   }
-  //REVISIT: construct from initialiser
 
   T const& operator[](size_t const n) const throw(E)
   {
-    return *static_cast<T const*>(&elements_[n].x_);
+    return *elements_[n];
   }
   T& operator[](size_t const n) throw(E)
   {
-    return *static_cast<T*>(&elements_[n].x_);
+    return *elements_[n];
   }
 
-  template<class U>
-  class iterator_
+  class iterator
   {
   public:
-    // input iterator_
-    iterator_() noexcept:
+    // see std::iterator_traits
+    typedef ssize_t difference_type;
+    typedef T value_type;
+    typedef T* pointer;
+    typedef T& reference;
+    typedef std::random_access_iterator_tag iterator_category;
+
+    // input iterator
+    iterator() noexcept:
       value_(0)
     {
     }
-    friend bool operator==(iterator_ i, iterator_ j) noexcept
+    friend bool operator==(iterator i, iterator j) noexcept
     {
-      return i.value_==i.value_;
+      return i.value_==j.value_;
     }
-    U& operator*() const noexcept
+    friend bool operator!=(iterator i, iterator j) noexcept
+    {
+      return i.value_!=j.value_;
+    }
+    T& operator*() const noexcept
     {
       return *value_;
     }
-    U* operator->() const noexcept
+    T* operator->() const noexcept
     {
       return value_;
     }
-    iterator_& operator++() noexcept
+    iterator& operator++() noexcept
     {
       ++value_;
       return *this;
     }
-    iterator_ operator++(int) noexcept
+    iterator operator++(int) noexcept
     {
-      iterator_ result(value_);
+      iterator result(value_);
       ++value_;
       return result;
     }
-    // bidirectional iterator_
-    iterator_& operator--() noexcept
+    // bidirectional iterator
+    iterator& operator--() noexcept
     {
       --value_;
       return *this;
     }
-    iterator_ operator--(int) noexcept
+    iterator operator--(int) noexcept
     {
-      iterator_ result(value_);
+      iterator result(value_);
       --value_;
       return result;
     }
-    // random access iterator_
-    iterator_& operator+=(ssize_t n) noexcept
+    // random access iterator
+    iterator& operator+=(ssize_t n) noexcept
     {
       value_+=n;
       return *this;
     }
-    iterator_& operator-=(ssize_t n) noexcept
+    iterator& operator-=(ssize_t n) noexcept
     {
       value_-=n;
       return *this;
     }
-    friend iterator_ operator+(iterator_ i, ssize_t n) noexcept
+    friend iterator operator+(iterator i, ssize_t n) noexcept
     {
-      return iterator_(i.value_+n);
+      return iterator(i.value_+n);
     }
-    friend iterator_ operator+(ssize_t n, iterator_ i) noexcept
+    friend iterator operator+(ssize_t n, iterator i) noexcept
     {
-      return iterator_(i.value_+n);
+      return iterator(i.value_+n);
     }
-    friend iterator_ operator-(iterator_ i, ssize_t n) noexcept
+    friend iterator operator-(iterator i, ssize_t n) noexcept
     {
-      return iterator_(i.value_-n);
+      return iterator(i.value_-n);
     }
-    friend ssize_t operator-(iterator_ i, iterator_ j) noexcept
+    friend ssize_t operator-(iterator i, iterator j) noexcept
     {
       return i.value_-j.value_;
     }
-    U& operator[](ssize_t n) noexcept
+    T& operator[](ssize_t n) noexcept
     {
       return *(value_+n);
     }
-    friend bool operator<(iterator_ i, iterator_ j) noexcept
+    friend bool operator<(iterator i, iterator j) noexcept
     {
       return i.value_<j.value_;
     }
-    friend bool operator>(iterator_ i, iterator_ j) noexcept
+    friend bool operator>(iterator i, iterator j) noexcept
     {
       return i.value_>j.value_;
     }
-    friend bool operator>=(iterator_ i, iterator_ j) noexcept
+    friend bool operator>=(iterator i, iterator j) noexcept
     {
       return i.value_>=j.value_;
     }
-    friend bool operator<=(iterator_ i, iterator_ j) noexcept
+    friend bool operator<=(iterator i, iterator j) noexcept
     {
       return i.value_<=j.value_;
     }
 
   private:
-    iterator_(U* value) noexcept
+    explicit iterator(T* value) noexcept
       :value_(value)
     {
     }
     
-    U* value_;
+    T* value_;
     friend class Array;
   };
 
-  typedef iterator_<T> iterator;
-  typedef iterator_<T const> const_iterator;
+  class const_iterator
+  {
+  public:
+    // see std::iterator_traits
+    typedef ssize_t difference_type;
+    typedef T value_type;
+    typedef T const* pointer;
+    typedef T const& reference;
+    typedef std::random_access_iterator_tag iterator_category;
+    
+    // input iterator
+    const_iterator() noexcept:
+      value_(0)
+    {
+    }
+    friend bool operator==(const_iterator i, const_iterator j) noexcept
+    {
+      return i.value_==j.value_;
+    }
+    friend bool operator!=(const_iterator i, const_iterator j) noexcept
+    {
+      return i.value_!=j.value_;
+    }
+    T const& operator*() const noexcept
+    {
+      return *value_;
+    }
+    T const* operator->() const noexcept
+    {
+      return value_;
+    }
+    const_iterator& operator++() noexcept
+    {
+      ++value_;
+      return *this;
+    }
+    const_iterator operator++(int) noexcept
+    {
+      const_iterator result(value_);
+      ++value_;
+      return result;
+    }
+    // bidirectional iterator
+    const_iterator& operator--() noexcept
+    {
+      --value_;
+      return *this;
+    }
+    const_iterator operator--(int) noexcept
+    {
+      const_iterator result(value_);
+      --value_;
+      return result;
+    }
+    // random access iterator
+    const_iterator& operator+=(ssize_t n) noexcept
+    {
+      value_+=n;
+      return *this;
+    }
+    const_iterator& operator-=(ssize_t n) noexcept
+    {
+      value_-=n;
+      return *this;
+    }
+    friend const_iterator operator+(const_iterator i, ssize_t n) noexcept
+    {
+      return const_iterator(i.value_+n);
+    }
+    friend const_iterator operator+(ssize_t n, const_iterator i) noexcept
+    {
+      return const_iterator(i.value_+n);
+    }
+    friend const_iterator operator-(const_iterator i, ssize_t n) noexcept
+    {
+      return const_iterator(i.value_-n);
+    }
+    friend ssize_t operator-(const_iterator i, const_iterator j) noexcept
+    {
+      return i.value_-j.value_;
+    }
+    T const& operator[](ssize_t n) noexcept
+    {
+      return *(value_+n);
+    }
+    friend bool operator<(const_iterator i, const_iterator j) noexcept
+    {
+      return i.value_<j.value_;
+    }
+    friend bool operator>(const_iterator i, const_iterator j) noexcept
+    {
+      return i.value_>j.value_;
+    }
+    friend bool operator>=(const_iterator i, const_iterator j) noexcept
+    {
+      return i.value_>=j.value_;
+    }
+    friend bool operator<=(const_iterator i, const_iterator j) noexcept
+    {
+      return i.value_<=j.value_;
+    }
+
+  private:
+    explicit const_iterator(T const* value) noexcept
+      :value_(value)
+    {
+    }
+    
+    T const* value_;
+    friend class Array;
+  };
+
   typedef std::reverse_iterator<iterator> reverse_iterator;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
   
@@ -285,7 +401,7 @@ public:
   }
   const_iterator const end() const noexcept
   {
-    return iterator(data()+size());
+    return const_iterator(data()+size());
   }
   reverse_iterator rbegin() noexcept
   {
@@ -336,33 +452,24 @@ public:
   T& at(size_type n)
   {
     try{
-      return *static_cast<T*>(&elements_[Array::checkLess(n,Size)].x_);
-    }
-    catch(E& e){
-      e.addContext("get element at offset n",{__FILE__,__LINE__});
-      throw;
+      return operator[](ArrayCheckLess(n,Size));
     }
     catch(xju::Exception& e_){
       E e(e_);
       e.addContext("get element at offset n",{__FILE__,__LINE__});
-      throw;
+      throw e;
     }
   }
   
   T const& at(size_type n) const
   {
     try{
-      return *static_cast<T const*>(
-        &elements_[Array::checkLess(n,Size)].x_);
-    }
-    catch(E& e){
-      e.addContext("get element at offset n",{__FILE__,__LINE__});
-      throw;
+      return operator[](ArrayCheckLess(n,Size));
     }
     catch(xju::Exception& e_){
       E e(e_);
       e.addContext("get element at offset n",{__FILE__,__LINE__});
-      throw;
+      throw e;
     }
   }
   
@@ -388,18 +495,18 @@ public:
   
   T* data() noexcept
   {
-    return static_cast<T*>(&elements_[0].x_);
+    return elements_[0].operator->();
   }
   
   T const* data() const noexcept
   {
-    return static_cast<T const*>(&elements_[0].x_);
+    return elements_[0].operator->();
   }
   
   ~Array() noexcept
   {
     for(auto x=rbegin(); x != rend(); ++x){
-      (*x)->~T();
+      x->~T();
     }
   }
 private:
@@ -410,27 +517,26 @@ private:
     return std::lexicographical_compare(x.begin(),x.end(),
                                         y.begin(),y.end());
   }
+  friend bool operator>(Array const& x, Array const& y) noexcept
+  {
+    return y<x;
+  }
+  friend bool operator!=(Array const& x, Array const& y) noexcept
+  {
+    return x<y||y<x;
+  }
+  friend bool operator==(Array const& x, Array const& y) noexcept
+  {
+    return !(x<y) && !(y<x);
+  }
+  friend bool operator<=(Array const& x, Array const& y) noexcept
+  {
+    return !(x>y);
+  }
+  friend bool operator>=(Array const& x, Array const& y) noexcept
+  {
+    return !(x<y);
+  }
 };
 
-}
-namespace std
-{
-template<class T,size_t Size,class E>
-class iterator_traits<typename xju::Array<T,Size,E>::iterator>
-{
-  typedef ssize_t difference_type;
-  typedef T value_type;
-  typedef T* pointer;
-  typedef T& reference;
-  typedef std::random_access_iterator_tag iterator_category;
-};
-template<class T,size_t Size,class E>
-class iterator_traits<typename xju::Array<T,Size,E>::const_iterator>
-{
-  typedef ssize_t difference_type;
-  typedef T value_type;
-  typedef T const* pointer;
-  typedef T const& reference;
-  typedef std::random_access_iterator_tag iterator_category;
-};
 }

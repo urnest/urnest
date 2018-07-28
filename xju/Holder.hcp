@@ -32,6 +32,11 @@ public:
     uint8_t f_[sizeof(T)];
   };
   H x_;
+
+  T* operator->() noexcept             { return (T*)&x_; }
+  T const* operator->() const noexcept { return (T*)&x_; }
+  T& operator*() noexcept             { return *(T*)&x_; }
+  T const& operator*() const noexcept { return *(T const*)&x_; }
 };
 
 }

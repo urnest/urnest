@@ -74,6 +74,26 @@ namespace xju
         what_=std::string();
     }
     
+    void Exception::addContext(
+        const std::string& c,
+        std::pair<char const*,unsigned int> const& trace) throw()
+    {
+        _context.push_back(
+            std::make_pair(c,
+                           Traced(trace.first,trace.second)));
+        what_=std::string();
+    }
+    
+    void Exception::addContext(
+        const char* c,
+        std::pair<char const*,unsigned int> const& trace) throw()
+    {
+        _context.push_back(
+            std::make_pair(c,
+                           Traced(trace.first,trace.second)));
+        what_=std::string();
+    }
+    
     void Exception::addContext(const std::ostringstream& c,
 			       const xju::Traced& t) throw()
     {
