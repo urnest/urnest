@@ -4,7 +4,7 @@
 // cxy::Exception from <cxy/Exception.hh> as base class for all ipc exceptions
 
 #include <cxy/Exception.hh>
-#include <array>
+#include <xju/Array.hh>
 #include <stdint.h>
 
 
@@ -55,7 +55,7 @@ struct Two
   }
 };
 
-typedef std::array< ::p25::Two,3 > ThreeTwos;
+typedef xju::Array< ::p25::Two,3,cxy::Exception > ThreeTwos;
 class I25 
 {
 public:

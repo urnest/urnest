@@ -68,7 +68,7 @@ namespace xju
     }
     void Exception::addContext(
         const std::string& c,
-        std::pair<std::string,unsigned int> const& trace) throw()
+        std::pair<std::string,int> const& trace) throw()
     {
         _context.push_back(std::make_pair(c,Traced(trace)));
         what_=std::string();
@@ -76,7 +76,7 @@ namespace xju
     
     void Exception::addContext(
         const std::string& c,
-        std::pair<char const*,unsigned int> const& trace) throw()
+        std::pair<char const*,int> const& trace) throw()
     {
         _context.push_back(
             std::make_pair(c,
@@ -86,7 +86,7 @@ namespace xju
     
     void Exception::addContext(
         const char* c,
-        std::pair<char const*,unsigned int> const& trace) throw()
+        std::pair<char const*,int> const& trace) throw()
     {
         _context.push_back(
             std::make_pair(c,

@@ -21,6 +21,8 @@ module a
     long x_;
     string y_;
   };
+
+  typedef S ThreeSs[3];
   
   union U1 switch(short)
   {

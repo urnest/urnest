@@ -200,14 +200,11 @@ public:
     }
     case 18:
     {
-      omnicxy::proto::interop::a::S (*y)[3];
+      omnicxy::proto::interop::a::ThreeSs_forany y;
       x >>= y;
       CORBA::Any* result(new CORBA::Any);
-      omnicxy::proto::interop::a::S (*z)[3]=
-        new omnicxy::proto::interop::a::S[3];
-      (*z)[0]=(*y)[0];
-      (*z)[1]=(*y)[1];
-      (*z)[2]=(*y)[2];
+      omnicxy::proto::interop::a::ThreeSs_forany z(
+        omnicxy::proto::interop::a::ThreeSs_dup(y));
       (*result) <<= z;
       return result;
     }
