@@ -1,11 +1,29 @@
-* parse global like
+- balanced fails e.g. for
+  X<&((C*)0)->a - &((C*)0)->b>
+  ... make it recognise ->?
+  
+x parse global like
   namespace x
   {
     std::chrono::seconds const x(10);
   }
+  ... but that tends to be ambiguous, could be function
+  prototype, e.g.
+  namespace x
+  {
+    std::chrono::seconds const x(a);
+  }
+  ... we need to know whether a is a type or variable.
 
-* override
-* final
+  Treat is as function proto, i.e. require global to be
+  written:
+  {
+    std::chrono::seconds const x{a};
+  }
+
+
+x override
+x final
 * constexpr
 
 - trace should go to stderr
@@ -58,10 +76,8 @@ x create cxx-opts for use before hcp-split
   
 - handle enum/scoped enum with fixed type
 
-- handle using base class method/member
+* handle using base class method/member
   - eg handle using xju::Exception; in derived class see REVISIT in hcp/tags
-
-- handle override
 
 x handle scoped enum (non-fixed type)
 
@@ -170,7 +186,28 @@ x when excluding class/struct/union/enum/namespace keywords need to ensure
       x ensure A b=C(3) does not match function proto
 
       x fix attr_decl, just wraps var_def?
-      
+
+  - need to tag:
+    x friend KeywordFriend
+    x static (exclude) KeywordStatic
+    - return type
+    - operator< with no scoping
+    - param
+    - var_non_fp
+    - var_name VarName
+    x var init (exclude) VarInitialiser
+    - var array_decl (exclude)
+    - type_ref
+    - scoped_name
+    - c_qual, v_qual, m_qual(&&), r_qual(&),p_qual(*),e_qual(...)
+    - want either:
+       T
+       T const
+       T const&
+       ... no others (e.g. T &&, T const*); could require T const& as
+       nothing else makes sense
+       
+    
   x need to better parse function proto to get param types
 
   - then look for friend bool operator< with 2x params of type = class name
@@ -576,6 +613,18 @@ sys	0m0.000s
 3042 <-note tracing changed
 commit 18327186dae262b086d493b99ea6434310bc3cbd
 
+new pc (rebaseline):
+
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l && git log | head -1
+end at line 146 column 1
+
+real	0m0.084s
+user	0m0.080s
+sys	0m0.000s
+3057
+commit 146e929778ad7e773b49d10962eac93d5daf2950
+
+
 empty file overhead:
 
 ODINVERIFYLEVEL=0 odin maxbuilds=4 "%all" && ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file /dev/null && ./hcp-parse-file -t /dev/null  | wc -l
@@ -585,8 +634,6 @@ real	0m0.010s
 user	0m0.004s
 sys	0m0.000s
 13
-
-  ... hcp-scope-at:
 
 ODINVERIFYLEVEL=0 odin maxbuilds=4 "%all" && ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file /dev/null && ./hcp-parse-file -t /dev/null  | wc -l && git log | head -1
 end at line 1 column 1
@@ -616,5 +663,13 @@ sys	0m0.000s
 13
 commit aa0e66330b53f6b40569468691d70c4b1bdf19ef
 
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file /dev/null && ./hcp-parse-file -t /dev/null  | wc -l && git log | head -1
+end at line 1 column 1
+
+real	0m0.014s
+user	0m0.012s
+sys	0m0.000s
+15
+commit 146e929778ad7e773b49d10962eac93d5daf2950
 --------- create gcc 5.2 linux cache --------------
 xju@xjutv:~/urnest$ ODIN_CXX_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib:/home/xju/gcc-5.2.0-run/lib  ODIN_CXX_PATH=/home/xju/gcc-5.2.0-run/bin:/usr/bin:/bin ODIN_CXX_FLAGS=-std=c++11 ODIN_EXEC_LD_LIBRARY_PATH=/usr/local/omniORB-4.2.0/lib:/home/xju/gcc-5.2.0-run/lib ODIN_CXX_I=/usr/local/omniORB-4.2.0/include ODIN_LIB_SP="/usr/local/omniORB-4.2.0/lib /lib /usr/lib" ODIN_EXEC_PATH=/usr/local/omniORB-4.2.0/bin:/bin:/usr/bin ODIN_OMNICXY_PATH=/usr/local/omniORB-4.2.0/bin:/usr/bin:/bin ODIN_OMNICXY_BE_DIR=~/urnest/omnicxy/omniidl_be ./odin/create-linux-cache.sh $ODIN

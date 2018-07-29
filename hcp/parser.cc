@@ -1464,7 +1464,9 @@ PR type_qual() throw()
 {
   static PR result{
     anon("const/volatile/*/& type qualifier",
-         (const_keyword()|volatile_keyword()|parseOneOfChars("*&"))+eatWhite())
+         (const_keyword()|volatile_keyword()|
+          parseLiteral("&&")|
+          parseOneOfChars("*&"))+eatWhite())
       };
   return result;
 }

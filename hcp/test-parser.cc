@@ -1806,6 +1806,22 @@ void test31()
    }
  }
  {
+   std::string const x("std::chrono::seconds const x{a};");
+   
+   hcp_ast::CompositeItem root;
+   hcp_parser::I at(x.begin(), x.end());
+   
+   try {
+     at = parse(root, at, hcp_parser::global_var_def());
+     xju::assert_equal(reconstruct(root), x);
+     xju::assert_equal(at.atEnd(), true);
+   }
+   catch(xju::Exception const& e) {
+     assert_readableRepr_equal(e, "", XJU_TRACED);
+     xju::assert_equal(true,false);
+   }
+ }
+ {
    std::string const x("typename std::list<item_type>::iterator m_i;");
    
    hcp_ast::CompositeItem root;

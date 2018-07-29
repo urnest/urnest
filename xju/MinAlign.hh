@@ -60,7 +60,7 @@ struct MinAlign
     uint8_t b;
     T_ c;
   };
-  typedef typename MinAlignType< (uint8_t*) &((MinAlign<T_>::Offset*)0)->c - (uint8_t*)&((MinAlign<T_>::Offset*)0)->b >::T T;
+  typedef typename MinAlignType< offsetof(Offset,c)-offsetof(Offset,b) >::T T;
 };
 
 }
