@@ -255,7 +255,12 @@ bool isFriendFunction(hcp_ast::FunctionDef const& x) throw(
   return (std::find_if(q.items_.begin(), q.items_.end(),
                        isLiteral("friend"))!=q.items_.end());
 }
-
+bool isFriendOperatorLessDecl(hcp_ast::FunctionDecl const& x,
+                              std::string const& className) throw()
+{
+  return false; // REVISIT
+}
+                              
 void genClass(hcp_ast::ClassDef const& x,
               OStream& h,
               OStream& c,
@@ -284,6 +289,11 @@ void genClass(hcp_ast::ClassDef const& x,
           std::vector<hcp_ast::ClassDef const*> outer(outerClasses);
           outer.push_back(&x);
           genClass(m->asA<hcp_ast::ClassDef>(), h, c, outer);
+        }
+        else if (m->isA<hcp_ast::FunctionDecl>() &&
+                 isFriendOperatorLessDecl(m->asA<hcp_ast::FunctionDecl>(),
+                                          x.className_)){
+          h.copy(m->begin(), m->end()); //REVISIT: generate less etc
         }
         else {
           h.copy(m->begin(), m->end());
@@ -330,12 +340,10 @@ void genGlobalVar(hcp_ast::GlobalVarDef const& x,
                   OStream& c) throw(
                     xju::Exception)
 {
-  std::vector<hcp_ast::IR>::const_iterator i(
-    std::find_if(x.items_.begin(), x.items_.end(),
-                 hcp_ast::isA_<hcp_ast::VarInitialiser>));
-  xju::assert_not_equal(i, x.items_.end());
+  auto const y(
+    hcp_ast::findOnlyChildOfType<hcp_ast::VarInitialiser>(x));
   h << "extern ";
-  h.copy(x.begin(), (*i)->begin());
+  h.copy(x.begin(), y.begin());
   h << ";\n";
   
   c.copy(x.begin(), x.end());

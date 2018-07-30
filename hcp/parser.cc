@@ -1419,13 +1419,14 @@ PR typename_keyword() throw()
 
 PR scoped_name() throw(){ //see also scoped_function_name
   static PR result(
-    anon("scoped name",
-         optional(typename_keyword())+
-         scope_ref()+
-         identifier()+eatWhite()+
-         (!parseOneOfChars("<")|(parseOneOfChars("<")+
-                                 balanced(parseOneOfChars(">"), true)+
-                                 parseOneOfChars(">")+eatWhite()))));
+    new NamedParser<hcp_ast::ScopedName>(
+      "scoped name",
+      optional(typename_keyword())+
+      scope_ref()+
+      identifier()+eatWhite()+
+      (!parseOneOfChars("<")|(parseOneOfChars("<")+
+                              balanced(parseOneOfChars(">"), true)+
+                              parseOneOfChars(">")+eatWhite()))));
   return result;
 }
 
@@ -1442,13 +1443,19 @@ PR typedef_keyword() throw()
 
 PR const_keyword() throw()
 {
-  static PR result{parseLiteral("const")+!identifierContChar()};
+  static PR result{
+    PR(new NamedParser<hcp_ast::ConstQual>(
+         "const qualifier",
+         parseLiteral("const")))+!identifierContChar()};
   return result;
 }
 
 PR volatile_keyword() throw()
 {
-  static PR result{parseLiteral("volatile")+!identifierContChar()};
+  static PR result{
+    PR(new NamedParser<hcp_ast::VolatileQual>(
+         "volatile qualifier",
+         parseLiteral("volatile")))+!identifierContChar()};
   return result;
 }
 
@@ -1456,7 +1463,8 @@ PR cv() throw()
 {
   static PR result {
     anon("const/volatile qualifiers",
-         zeroOrMore()*((const_keyword()|volatile_keyword())+eatWhite()))};
+         zeroOrMore()*((const_keyword()|volatile_keyword())+
+                       eatWhite()))};
   return result;
 }
 
@@ -1465,8 +1473,15 @@ PR type_qual() throw()
   static PR result{
     anon("const/volatile/*/& type qualifier",
          (const_keyword()|volatile_keyword()|
-          parseLiteral("&&")|
-          parseOneOfChars("*&"))+eatWhite())
+          PR(new NamedParser<hcp_ast::MoveQual>(
+               "move qualifier",
+               parseLiteral("&&")))|
+          PR(new NamedParser<hcp_ast::RefQual>(
+               "ref qualifier",
+               parseOneOfChars("&")))|
+          PR(new NamedParser<hcp_ast::PointerQual>(
+               "pointer qualifier",
+               parseOneOfChars("*"))))+eatWhite())
       };
   return result;
 }
@@ -1474,12 +1489,15 @@ PR type_qual() throw()
 PR type_ref() throw()
 {
   static PR result{
-    anon("type reference",
-         cv() +
-         type_name() +
-         zeroOrMore()*type_qual()+ eatWhite()+
-         (!parseLiteral(".")|(parseLiteral("...")+eatWhite())))
-      };
+    new NamedParser<hcp_ast::TypeRef>(
+      "type reference",
+      cv() +
+      type_name() +
+      zeroOrMore()*type_qual()+ eatWhite()+
+      (!parseLiteral(".")|(
+        PR(new NamedParser<hcp_ast::ElipsesQual>(
+             "elipses qualifier",
+             parseLiteral("...")))+eatWhite())))};
   return result;
 }
 
@@ -1602,40 +1620,49 @@ PR operator_name() throw()
       "operator name",
       scope_ref()+
       operator_keyword()+
-      (parseLiteral("()")|
-       parseLiteral("<<=")|
-       parseLiteral("<<")|
-       parseLiteral(">>")|
-       parseLiteral(">>=")|
-       parseLiteral("==")|
-       parseLiteral("!=")|
-       parseLiteral("<=")|
-       parseLiteral(">=")|
-       parseLiteral("<")|
-       parseLiteral(">")|
-       parseLiteral("++")|
-       parseLiteral("+=")|
-       parseLiteral("--")|
-       parseLiteral("-=")|
-       parseLiteral("->")|
-       parseLiteral("+")|
-       parseLiteral("-")|
-       parseLiteral("|=")|
-       parseLiteral("&=")|
-       parseLiteral("|")|
-       parseLiteral("&")|
-       parseLiteral("[]")|
-       parseLiteral("!")|
-       parseLiteral("%=")|
-       parseLiteral("%")|
-       parseLiteral("=")|
-       parseLiteral("*")|
-       parseLiteral("*=")|
-       parseLiteral("~")|
-       parseLiteral("~=")|
-       parseLiteral("/")|
-       parseLiteral("/=")|
-       parseLiteral("new"))+
+      PR(new NamedParser<hcp_ast::OperatorName>(
+           "operator name",
+           parseLiteral("()")|
+           parseLiteral("&&")|
+           parseLiteral("||")|
+           parseLiteral("<<=")|
+           parseLiteral("<<")|
+           parseLiteral(">>")|
+           parseLiteral(">>=")|
+           parseLiteral("==")|
+           parseLiteral("!=")|
+           parseLiteral("<=")|
+           parseLiteral(">=")|
+           parseLiteral("<")|
+           parseLiteral(">")|
+           parseLiteral("++")|
+           parseLiteral("+=")|
+           parseLiteral("--")|
+           parseLiteral("-=")|
+           parseLiteral("->*")|
+           parseLiteral("->")|
+           parseLiteral("+")|
+           parseLiteral("-")|
+           parseLiteral("|=")|
+           parseLiteral("&=")|
+           parseLiteral("|")|
+           parseLiteral("&")|
+           parseLiteral(",")|
+           parseLiteral("[]")|
+           parseLiteral("!")|
+           parseLiteral("^")|
+           parseLiteral("^=")|
+           parseLiteral("%=")|
+           parseLiteral("%")|
+           parseLiteral("=")|
+           parseLiteral("*")|
+           parseLiteral("*=")|
+           parseLiteral("~")|
+           parseLiteral("~=")|
+           parseLiteral("/")|
+           parseLiteral("/=")|
+           parseLiteral("new")|
+           parseLiteral("delete")))+
       eatWhite()));
   return operator_name;
 }
@@ -1964,7 +1991,9 @@ PR typed_function_proto() throw()
 {
   static PR result(
     function_qualifiers()+
-    type_ref()+
+    PR(new NamedParser<hcp_ast::ReturnType>(
+         "return type",
+         type_ref()))+
     PR(new NamedParser<hcp_ast::FunctionName>(
          "function name",
          operator_name()|
@@ -2020,7 +2049,6 @@ PR function_decl() throw()
                             eatWhite()));
   return function_decl;
 }
-
   
 PR function_def_unnamed() throw()
 {
@@ -2097,9 +2125,11 @@ PR var_name() throw()
 PR array_decl() throw()
 {
   static PR array_decl(
-    parseOneOfChars("[")+
-    balanced(parseOneOfChars("]"))+
-    parseOneOfChars("]")+
+    new NamedParser<hcp_ast::ArrayDecl>(
+      "array decl",
+      parseOneOfChars("[")+
+      balanced(parseOneOfChars("]"))+
+      parseOneOfChars("]"))+
     eatWhite());
   return array_decl;
 }
@@ -2175,7 +2205,7 @@ PR var_initialiser() throw()
 PR var_non_fp() throw()
 {
   static PR result{
-    anon(
+    new NamedParser<hcp_ast::VarNonFp>(
       "non-function pointer var",
       (type_ref()+var_name()+optional(array_decl())+
        (!parseOneOfChars("={")|var_initialiser())))};
@@ -2204,11 +2234,12 @@ PR var_fp_backref() throw()
 PR param() throw()
 {
   static PR result(
-    anon("param",
-         (var_non_fp()|
-          var_fp_backref()|
-          type_ref())+
-         eatWhite()));
+    new NamedParser<hcp_ast::Param>(
+      "param",
+      (var_non_fp()|
+       var_fp_backref()|
+       type_ref())+
+      eatWhite()));
   return result;
 }
   

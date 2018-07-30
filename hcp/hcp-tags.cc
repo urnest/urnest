@@ -162,13 +162,9 @@ std::pair<Symbol,LineNumber> genEnumDef(
 std::pair<Symbol,LineNumber> genGlobalVar(hcp_ast::GlobalVarDef const& x) throw(
   xju::Exception)
 {
-  
-  std::vector<hcp_ast::IR>::const_iterator i(
-    std::find_if(x.items_.begin(), x.items_.end(),
-                 hcp_ast::isA_<hcp_ast::VarName>));
-  xju::assert_not_equal(i, x.items_.end());
-  Symbol symbol(reconstruct(**i));
-  LineNumber lineNumber((**i).begin().line_);
+  auto const y(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(x));
+  Symbol symbol(reconstruct(y));
+  LineNumber lineNumber(y.begin().line_);
   return std::make_pair(symbol,lineNumber);
 }
 

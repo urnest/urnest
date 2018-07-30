@@ -1,6 +1,7 @@
 - balanced fails e.g. for
   X<&((C*)0)->a - &((C*)0)->b>
-  ... make it recognise ->?
+  ... could make it recognise -> but ultimately have to fully parse
+  expressions? (x-->2 means (x--) > 2 not (x-) -> 2)
   
 x parse global like
   namespace x
@@ -20,7 +21,7 @@ x parse global like
   {
     std::chrono::seconds const x{a};
   }
-
+  see "accept some old-style var init" below
 
 x override
 x final
@@ -39,11 +40,6 @@ x final
   - show exception cause
   
 x make param() anon
-
-- performance: add cached_ flag to Parser and set false for:
-  parseLiteral
-  parseOneOfChars
-  etc
 
 - custom eatwhite for efficiency, performance before and after
   
@@ -190,16 +186,17 @@ x when excluding class/struct/union/enum/namespace keywords need to ensure
   - need to tag:
     x friend KeywordFriend
     x static (exclude) KeywordStatic
-    - return type
-    - operator< with no scoping
-    - param
-    - var_non_fp
-    - var_name VarName
+    x return type ReturnType
+    x operator< with no scoping FunctioName OperatorName
+    x param Param
+    x var_non_fp
+    x var_name VarName
     x var init (exclude) VarInitialiser
-    - var array_decl (exclude)
-    - type_ref
-    - scoped_name
-    - c_qual, v_qual, m_qual(&&), r_qual(&),p_qual(*),e_qual(...)
+    x var array_decl (exclude) ArrayDecl
+    x type_ref TypeRef
+    x scoped_name ScopedName
+    x c_qual, v_qual, m_qual(&&), r_qual(&),p_qual(*),e_qual(...)
+      TypeRef ConstQual/VolatileQual/MoveQual/RefQual/PointerQual/ElipsesQual
     - want either:
        T
        T const
@@ -413,6 +410,11 @@ sys     0m0.024s
 
 * see if using std::vector<std::set<Parser*> > as Cache improves
   performance (ie source file offset is vector index)
+
+- performance: add cached_ flag to Parser and set false for:
+  parseLiteral
+  parseOneOfChars
+  etc
 
 xju@xjutv:/data/xju/u1/urnest/hcp$ ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l
 10391

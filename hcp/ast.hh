@@ -437,8 +437,47 @@ typedef TaggedCompositeItem<NamespaceMembersTag> NamespaceMembers;
 class EatWhiteTag{};
 typedef TaggedCompositeItem<EatWhiteTag> EatWhite;
 
+class ReturnTypeTag{};
+typedef TaggedCompositeItem<ReturnTypeTag> ReturnType;
+
+class OperatorNameTag{};
+typedef TaggedCompositeItem<OperatorNameTag> OperatorName;
+
+class ParamTag{};
+typedef TaggedCompositeItem<ParamTag> Param;
+
+class VarNonFpTag{};
+typedef TaggedCompositeItem<VarNonFpTag> VarNonFp;
+
+class ArrayDeclTag{};
+typedef TaggedCompositeItem<ArrayDeclTag> ArrayDecl;
+
 class FunctionQualifiersTag{};
 typedef TaggedCompositeItem<FunctionQualifiersTag> FunctionQualifiers;
+
+class TypeRefTag{};
+typedef TaggedCompositeItem<TypeRefTag> TypeRef;
+
+class ScopedNameTag{};
+typedef TaggedCompositeItem<ScopedNameTag> ScopedName;
+
+class ConstQualTag{};
+typedef TaggedCompositeItem<ConstQualTag> ConstQual;
+
+class VolatileQualTag{};
+typedef TaggedCompositeItem<VolatileQualTag> VolatileQual;
+
+class MoveQualTag{};
+typedef TaggedCompositeItem<MoveQualTag> MoveQual;
+
+class RefQualTag{};
+typedef TaggedCompositeItem<RefQualTag> RefQual;
+
+class PointerQualTag{};
+typedef TaggedCompositeItem<PointerQualTag> PointerQual;
+
+class ElipsesQualTag{};
+typedef TaggedCompositeItem<ElipsesQualTag> ElipsesQual;
 
 class FunctionPostQualifiersTag{};
 typedef TaggedCompositeItem<FunctionPostQualifiersTag> FunctionPostQualifiers;

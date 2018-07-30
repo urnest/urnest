@@ -1698,17 +1698,10 @@ void test30()
     xju::assert_equal(reconstruct(root), x);
     xju::assert_equal(at.atEnd(), true);
     xju::assert_equal(root.items_[0]->isA<hcp_ast::StaticVarDef>(),true);
-    std::vector<hcp_ast::IR>::const_iterator j(
-      std::find_if(root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.begin(),
-                   root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end(),
-                   hcp_ast::isA_<hcp_ast::VarName>));
-    xju::assert_not_equal(
-      j, 
-      root.items_[0]->asA<hcp_ast::StaticVarDef>().items_.end());
-    xju::assert_equal(reconstruct(*j), "_user_exns");
-
-    hcp_ast::asA_<hcp_ast::StaticVarDef>(*root.items_.begin());
-    hcp_ast::asA_<hcp_ast::VarName>(*j);
+    auto const y(
+      hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(
+        root.items_[0]->asA<hcp_ast::StaticVarDef>()));
+    xju::assert_equal(reconstruct(y),"_user_exns");
   }
   catch(xju::Exception const& e) {
     assert_readableRepr_equal(e, "", XJU_TRACED);
@@ -2142,15 +2135,12 @@ void test39()
   try {
     at = parse(root, at, hcp_parser::extern_var_def());
     xju::assert_equal(reconstruct(root), x);
-    std::vector<hcp_ast::IR>::const_iterator j(
-      std::find_if(
-        root.items_[0]->asA<hcp_ast::ExternVarDef>().items_.begin(),
-        root.items_[0]->asA<hcp_ast::ExternVarDef>().items_.end(),
-        hcp_ast::isA_<hcp_ast::VarName>));
-    xju::assert_not_equal(
-      j, 
-      root.items_[0]->asA<hcp_ast::ExternVarDef>().items_.end());
-    xju::assert_equal(reconstruct(*j), "open");
+
+    auto const y(
+      hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(
+        root.items_[0]->asA<hcp_ast::ExternVarDef>()));
+    xju::assert_equal(reconstruct(y),"open");
+    
     xju::assert_equal(at.atEnd(), true);
   }
   catch(xju::Exception const& e) {
@@ -2281,15 +2271,12 @@ void test43()
     try {
       at = parse(root, at, hcp_parser::var_non_fp(),true);
       xju::assert_equal(reconstruct(root), x);
-      std::vector<hcp_ast::IR>::const_iterator j(
-        std::find_if(
-          root.items_.begin(),
-          root.items_.end(),
-          hcp_ast::isA_<hcp_ast::VarName>));
-      xju::assert_not_equal(
-        j, 
-        root.items_.end());
-      xju::assert_equal(reconstruct(*j), "length");
+
+      auto const y(
+        hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(
+          root.items_[0]->asA<hcp_ast::CompositeItem>()));
+      xju::assert_equal(reconstruct(y),"length");
+      
       xju::assert_equal(at.atEnd(), true);
     }
     catch(xju::Exception const& e) {
