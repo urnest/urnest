@@ -2,7 +2,14 @@
   X<&((C*)0)->a - &((C*)0)->b>
   ... could make it recognise -> but ultimately have to fully parse
   expressions? (x-->2 means (x--) > 2 not (x-) -> 2)
-  
+
+- ParseKeyword like existing but
+  fail with "keyword "private"" rather than complicated expression of now
+  (see test-parser.cc test46)
+
+- use nonEmptyList for params, as in
+    params = "("+(")"|nonEmptyListOf(param,",")+")")
+    
 x parse global like
   namespace x
   {

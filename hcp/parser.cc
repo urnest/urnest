@@ -1034,32 +1034,28 @@ public:
   // Parser::
   virtual ParseResult parse_(I const at, Options const& options) throw() 
   {
+    IRs irs;
+    I i(at);
     PV result(IRs(), at);
-    ParseResult first(x_->parse(at,options));
-    if (first.failed()) {
-      return first;
-    }
-    std::copy((*first).first.begin(),(*first).first.end(),
-              std::back_inserter(result.first));
-    result.second=(*first).second;
     while(true){
-      ParseResult const more(moreIndicator_->parse(result.second,options));
+      ParseResult x(x_->parse(i,options));
+      if (x.failed()) {
+        if (options.irsAtEnd_) {
+          x.addAtEndIRs(irs);
+        }
+        return x; // failed
+      }
+      std::copy((*x).first.begin(),(*x).first.end(),
+                std::back_inserter(irs));
+      i=(*x).second;
+
+      ParseResult const more(moreIndicator_->parse(i,options));
       if (more.failed()){
-        return ParseResult(result); //success (no more)
+        return ParseResult(PV(irs,i)); //success (no more)
       }
       std::copy((*more).first.begin(),(*more).first.end(),
-                std::back_inserter(result.first));
-      result.second=(*more).second;
-      ParseResult next(x_->parse(result.second,options));
-      if (next.failed()){
-        if (options.irsAtEnd_) {
-          next.addAtEndIRs(result.first);
-        }
-        return next; //failed
-      }
-      std::copy((*next).first.begin(),(*next).first.end(),
-                std::back_inserter(result.first));
-      result.second=(*next).second;
+                std::back_inserter(irs));
+      i=(*more).second;
     }
   }
 
