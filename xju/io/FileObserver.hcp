@@ -41,7 +41,7 @@ namespace
 {
 struct Buffer
 {
-  struct inotify_event event;
+  inotify_event event;
   char data[NAME_MAX+1];
 };
 std::map<int,xju::path::AbsolutePath> addWatches(

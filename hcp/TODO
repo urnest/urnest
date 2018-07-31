@@ -189,7 +189,7 @@ x when excluding class/struct/union/enum/namespace keywords need to ensure
     x return type ReturnType
     x operator< with no scoping FunctioName OperatorName
     x param Param
-    x var_non_fp
+    x var_non_fp VarNonFp
     x var_name VarName
     x var init (exclude) VarInitialiser
     x var array_decl (exclude) ArrayDecl
@@ -197,13 +197,15 @@ x when excluding class/struct/union/enum/namespace keywords need to ensure
     x scoped_name ScopedName
     x c_qual, v_qual, m_qual(&&), r_qual(&),p_qual(*),e_qual(...)
       TypeRef ConstQual/VolatileQual/MoveQual/RefQual/PointerQual/ElipsesQual
-    - want either:
+    x want either:
        T
        T const
        T const&
        ... no others (e.g. T &&, T const*); could require T const& as
        nothing else makes sense
-       
+    - class var (varNonFp?) non-static GlobalVarDef VarName
+    - plus base classes - BaseSpecifier ScopedName
+    - generate
     
   x need to better parse function proto to get param types
 

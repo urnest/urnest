@@ -31,6 +31,7 @@
 #include <map>
 #include <xju/startsWith.hh>
 #include <sys/types.h>
+#include <xju/strip.hh>
 
 std::string getClassName(hcp_ast::ClassDef const* x) throw()
 {
@@ -255,10 +256,44 @@ bool isFriendFunction(hcp_ast::FunctionDef const& x) throw(
   return (std::find_if(q.items_.begin(), q.items_.end(),
                        isLiteral("friend"))!=q.items_.end());
 }
+
 bool isFriendOperatorLessDecl(hcp_ast::FunctionDecl const& x,
                               std::string const& className) throw()
 {
-  return false; // REVISIT
+  auto const params(hcp_ast::findChildrenOfType<hcp_ast::Param>(x));
+  if (params.size()!=2){
+    return false;
+  }
+  auto const filtered{
+    hcp_ast::filter(
+      params,
+      [&](hcp_ast::Param const& p){
+        if (hcp_ast::findChildrenOfType<hcp_ast::VarNonFp>(p).size()||
+            hcp_ast::findChildrenOfType<hcp_ast::MoveQual>(p).size()||
+            hcp_ast::findChildrenOfType<hcp_ast::PointerQual>(p).size()||
+            hcp_ast::findChildrenOfType<hcp_ast::ElipsesQual>(p).size()||
+            hcp_ast::findChildrenOfType<hcp_ast::ArrayDecl>(p).size()){
+          return false;
+        }
+        if (hcp_ast::findChildrenOfType<hcp_ast::RefQual>(p).size()&&
+            !hcp_ast::findChildrenOfType<hcp_ast::ConstQual>(p).size()){
+          return false;
+        }
+        auto const scopedName{
+          hcp_ast::findChildrenOfType<hcp_ast::ScopedName>(p)};
+        if (scopedName.size()!=1){
+          return false;
+        }
+        if (xju::strip(className)!=xju::strip(hcp_ast::reconstruct(
+                                                scopedName[0]))){
+          return false;
+        }
+        return true;
+      })};
+  if (filtered.size()!=2){
+    return false;
+  }
+  return true;
 }
                               
 void genClass(hcp_ast::ClassDef const& x,

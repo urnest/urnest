@@ -249,6 +249,11 @@ class ZeroOrMore{};
 
 PR operator*(ZeroOrMore a, PR b) throw();
 
+// Parse non-empty list of xs each separated by a
+// moreIndicator
+// - result includes trailing whitespace
+PR nonEmptyListOf(PR x, PR moreIndicator) throw();
+
 // Parse list of xs each separated by separator, with
 // list terminated by terminator.
 // - result includes terminator
@@ -391,6 +396,7 @@ PR class_decl() throw();   // template/non-template
 PR class_def() throw();    // template/non-template
 PR anonymous_namespace() throw();
 PR namespace_def() throw();    // matches anonymous, so try anonymous_namespace first
+PR base_specifier_list() throw(); // class' base class list
 
 PR endOfFile() throw(); // matches end of file
 

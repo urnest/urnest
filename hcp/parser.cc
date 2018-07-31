@@ -1022,6 +1022,60 @@ ParseResult Parser::parse(I const at, Options const& options) throw()
   return (*i).second;
 }
 
+class NonEmptyListOf : public Parser
+{
+public:
+  explicit NonEmptyListOf(PR x, PR moreIndicator) throw()
+      : x_(x),
+        moreIndicator_(moreIndicator)
+  {
+  }
+
+  // Parser::
+  virtual ParseResult parse_(I const at, Options const& options) throw() 
+  {
+    PV result(IRs(), at);
+    ParseResult first(x_->parse(at,options));
+    if (first.failed()) {
+      return first;
+    }
+    std::copy((*first).first.begin(),(*first).first.end(),
+              std::back_inserter(result.first));
+    result.second=(*first).second;
+    while(true){
+      ParseResult const more(moreIndicator_->parse(result.second,options));
+      if (more.failed()){
+        return ParseResult(result); //success (no more)
+      }
+      std::copy((*more).first.begin(),(*more).first.end(),
+                std::back_inserter(result.first));
+      result.second=(*more).second;
+      ParseResult next(x_->parse(result.second,options));
+      if (next.failed()){
+        if (options.irsAtEnd_) {
+          next.addAtEndIRs(result.first);
+        }
+        return next; //failed
+      }
+      std::copy((*next).first.begin(),(*next).first.end(),
+                std::back_inserter(result.first));
+      result.second=(*next).second;
+    }
+  }
+
+  // Parser::
+  virtual std::string target() const throw() {
+    return "non-empty list";
+  }
+  PR const x_;
+  PR const moreIndicator_;
+};
+
+PR nonEmptyListOf(PR x, PR moreIndicator) throw()
+{
+  return PR(new NonEmptyListOf(x,moreIndicator));
+}
+
 PR listOf(PR x, PR separator, PR terminator) throw()
 {
   return anon(separator->target()+"-separated list of "+x->target()+
@@ -1770,6 +1824,33 @@ PR keyword_friend() throw()
   return keyword_friend;
 }
 
+PR keyword_public() throw()
+{
+  static PR keyword_public(
+    new NamedParser<hcp_ast::KeywordPublic>(
+      "\"public\"",
+      parseLiteral("public"))+!identifierContChar()+eatWhite());
+  return keyword_public;
+}
+
+PR keyword_private() throw()
+{
+  static PR keyword_private(
+    new NamedParser<hcp_ast::KeywordPrivate>(
+      "\"private\"",
+      parseLiteral("private"))+!identifierContChar()+eatWhite());
+  return keyword_private;
+}
+
+PR keyword_protected() throw()
+{
+  static PR keyword_protected(
+    new NamedParser<hcp_ast::KeywordProtected>(
+      "\"protected\"",
+      parseLiteral("protected"))+!identifierContChar()+eatWhite());
+  return keyword_protected;
+}
+
 PR keyword_virtual() throw()
 {
   static PR keyword_virtual(
@@ -2088,7 +2169,29 @@ PR not_class_struct_union_literal() throw()
   return not_class_struct_union_literal;
 }
 
-
+PR base_specifier() throw()
+{
+  static PR result{
+    PR(new NamedParser<hcp_ast::BaseSpecifier>(
+         "base specifier",
+         optional((keyword_public()|
+                   keyword_private()|
+                   keyword_protected())+eatWhite())+
+         optional(keyword_virtual())+eatWhite()+
+         !(keyword_public()|
+           keyword_private()|
+           keyword_protected()|
+           keyword_virtual())+
+         scoped_name()))};
+  return result;
+}
+PR base_specifier_list() throw()
+{
+  static PR result{
+    nonEmptyListOf(base_specifier(),
+                   parseLiteral(",")+eatWhite())};
+  return result;
+}
 PR class_proto() throw()
 {
   static PR class_proto(
@@ -2097,7 +2200,8 @@ PR class_proto() throw()
     class_struct_union_literal()+
     whitespace()+
     class_name()+
-    balanced(parseOneOfChars("{;")));
+    (!parseLiteral(":")|
+     (parseLiteral(":")+eatWhite()+base_specifier_list())));
   return class_proto;
 }
 

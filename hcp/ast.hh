@@ -205,6 +205,19 @@ T const& findOnlyChildOfType(CompositeItem const& parent) throw()
   return result[0];
 }
     
+template<class T,class F>
+std::vector<std::reference_wrapper<T const> > filter(
+  std::vector<std::reference_wrapper<T const> > const&  items,
+  F f) throw()
+{
+  std::vector<std::reference_wrapper<T const> > result;
+  for(auto x: items) {
+    if (f(x)){
+      result.push_back(x);
+    }
+  }
+  return result;
+}
 
 class String : public Item
 {
@@ -336,6 +349,9 @@ public:
   }
 };
 
+class BaseSpecifierTag{};
+typedef TaggedCompositeItem<BaseSpecifierTag> BaseSpecifier;
+
 class ClassMembersTag{};
 typedef TaggedCompositeItem<ClassMembersTag> ClassMembers;
 
@@ -353,6 +369,15 @@ typedef TaggedCompositeItem<KeywordExternTag> KeywordExtern;
 
 class KeywordFriendTag{};
 typedef TaggedCompositeItem<KeywordFriendTag> KeywordFriend;
+
+class KeywordPublicTag{};
+typedef TaggedCompositeItem<KeywordPublicTag> KeywordPublic;
+
+class KeywordPrivateTag{};
+typedef TaggedCompositeItem<KeywordPrivateTag> KeywordPrivate;
+
+class KeywordProtectedTag{};
+typedef TaggedCompositeItem<KeywordProtectedTag> KeywordProtected;
 
 class KeywordVirtualTag{};
 typedef TaggedCompositeItem<KeywordVirtualTag> KeywordVirtual;

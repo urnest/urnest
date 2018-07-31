@@ -2313,6 +2313,73 @@ void test45()
   }
 }
 
+void test46()
+{
+  {
+    std::string const x(
+      "A ");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    try {
+      at = parse(root, at, hcp_parser::base_specifier_list(),true);
+      xju::assert_equal(reconstruct(root), x);
+
+      auto const y(
+        hcp_ast::findChildrenOfType<hcp_ast::ScopedName>(
+          root.asA<hcp_ast::CompositeItem>()));
+      xju::assert_equal(reconstruct(y[0]),"A ");
+      
+      xju::assert_equal(at.atEnd(), true);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  {
+    std::string const x(
+      "A , private virtual I::B<int,C>");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    try {
+      at = parse(root, at, hcp_parser::base_specifier_list(),true);
+      xju::assert_equal(reconstruct(root), x);
+
+      {
+        auto const y(
+          hcp_ast::findChildrenOfType<hcp_ast::BaseSpecifier>(
+            root.asA<hcp_ast::CompositeItem>()));
+        xju::assert_equal(reconstruct(y[0]),"A ");
+        xju::assert_equal(reconstruct(y[1]),"private virtual I::B<int,C>");
+      }
+      {
+        auto const y(
+          hcp_ast::findChildrenOfType<hcp_ast::ScopedName>(
+            root.asA<hcp_ast::CompositeItem>()));
+        xju::assert_equal(reconstruct(y[0]),"A ");
+        xju::assert_equal(reconstruct(y[1]),"I::B<int,C>");
+      }
+      xju::assert_equal(at.atEnd(), true);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  {
+    std::string const x(
+      "A , private virtual I::B<int,C>, private private D");
+    hcp_ast::CompositeItem root;
+    hcp_parser::I at(x.begin(), x.end());
+    try {
+      at = parse(root, at, hcp_parser::base_specifier_list(),true);
+      xju::assert_never_reached();
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "Failed to parse base specifier at line 1 column 34 because\nfailed to parse !(\"public\" then !one of chars 'a'..'z' or one of chars 'A'..'Z' or one of chars '0'..'9' or one of chars \"_\" then optional whitespace) or (\"private\" then !one of chars 'a'..'z' or one of chars 'A'..'Z' or one of chars '0'..'9' or one of chars \"_\" then optional whitespace) or (\"protected\" then !one of chars 'a'..'z' or one of chars 'A'..'Z' or one of chars '0'..'9' or one of chars \"_\" then optional whitespace) or (\"virtual\" then !one of chars 'a'..'z' or one of chars 'A'..'Z' or one of chars '0'..'9' or one of chars \"_\" then optional whitespace) at line 1 column 42 because\nline 1 column 42: expected parse failure.", XJU_TRACED);
+    }
+  }
+}
 
 int main(int argc, char* argv[])
 {
@@ -2362,6 +2429,7 @@ int main(int argc, char* argv[])
   test43(), ++n;
   test44(), ++n;
   test45(), ++n;
+  test46(), ++n;
   
   xju::assert_equal(atLeastOneReadableReprFailed, false);
   std::cout << "PASS - " << n << " steps" << std::endl;

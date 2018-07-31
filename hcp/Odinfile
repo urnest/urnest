@@ -236,6 +236,7 @@ xju/startsWith.hh==../xju/startsWith.hh
 xju/startsWith.cc==../xju/startsWith.cc
 xju/SyscallFailed.hh==../xju/SyscallFailed.hh
 xju/SyscallFailed.cc==../xju/SyscallFailed.cc
+xju/strip.hh==../xju/strip.hh
 xju/unistd.cc==../xju/unistd.cc
 hcp/ast.hh==./ast.hh
 hcp/parser.hh==./parser.hh
