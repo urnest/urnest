@@ -915,6 +915,10 @@ def narry(baseType,sizes,eclass):
     inner=narry(baseType,sizes[1:],eclass)
     return 'xju::Array< {inner},{n},{eclass} >'.format(**vars())
 
+DIRECTION_IN=0
+DIRECTION_OUT=1
+DIRECTION_INOUT=2
+
 def gen(decl,eclass,eheader,causeType,contextType,indent=''):
     '''- returns a GenResult'''
     try:
@@ -947,11 +951,27 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
         elif isinstance(decl, idlast.Operation):
             name=decl.identifier()
             params=','.join(['\n  %s %s'%(ptype(p,eclass),p.identifier()) \
-                                 for p in decl.parameters()])
+                                 for p in decl.parameters()
+                             if p.direction()!=DIRECTION_OUT])
             assert len(decl.contexts())==0, 'contexts not yet implemented'
             exceptionTypes=['::'.join(_.scopedName()) for _ in decl.raises()]
             exceptions=''.join(['\n  %(_)s,'%vars() for _ in exceptionTypes])
-            returnType=unqualifiedType(decl.returnType(),eclass)
+            returnedTypes=[unqualifiedType(decl.returnType(),eclass)]+\
+                [unqualifiedType(p.paramType(),eclass)
+                 for p in decl.parameters()
+                 if p.direction()==DIRECTION_OUT]
+            if (len(returnedTypes)>1 and
+                (decl.returnType().kind()==idltype.tk_void)):
+                # can't put void into tuple (and wouldn't want to either)
+                returnedTypes=returnedTypes[1:]
+                pass
+            if len(returnedTypes)==1:
+                # don't want tuple<long> f()
+                returnType=returnedTypes[0]
+            else:
+                # more than one returned type -> need a tuple
+                returnType='std::tuple< '+','.join(returnedTypes)+' >'
+                pass
             result.code=reindent(indent,operation_t%vars())
         elif isinstance(decl, idlast.Typedef):
             name=decl.declarators()[0].identifier()
@@ -1056,6 +1076,15 @@ def gen_tincludes(decl):
         result=result+sum(
             [pincludes(p.paramType()) for p in decl.parameters()],[])
         result=result+pincludes(decl.returnType())
+        numberOfOutparams=len(
+            [p for p in decl.parameters() if p.direction()==DIRECTION_OUT])
+        oneReturnType=(numberOfOutparams==0 or
+                       (numberOfOutparams==1 and
+                        decl.returnType()==idltype.tk_void))
+        if not oneReturnType:
+            result.append('<tuple>')
+            pass
+        pass
     elif isinstance(decl, idlast.Typedef):
         aliasOf=decl.aliasType()
         if aliasOf.kind() in basicIntTypes:

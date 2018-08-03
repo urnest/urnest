@@ -4,7 +4,7 @@ from omniidl import idltype
 import sys
 import os.path
 
-from cxy import ptype, unqualifiedType,GenerateFailed
+from cxy import ptype, unqualifiedType,GenerateFailed,DIRECTION_OUT
 
 objref_operation_t='''
 // %(fqn)s::
@@ -181,7 +181,8 @@ def genCalldesc(decl,eclass,eheader,indent,fqn):
     nameLen=len(name)
     pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
     params=''.join([',\n    %s %s'%(ptype(p,eclass),n)
-                    for p,n in zip(decl.parameters(),pns)])
+                    for p,n in zip(decl.parameters(),pns)
+                    if p.direction()!=DIRECTION_OUT])
     callDescInvocationParams=','.join(['\n      cd->%s_'%n for n in pns])
     paramInits=''.join([',\n      %s_(%s)'%(n,n) for n in pns])
     paramMembers=''.join(
@@ -215,7 +216,8 @@ def genObjref(decl,eclass,eheader,indent,fqn):
     nameLen=len(name)
     pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
     params=','.join(['\n  %s %s'%(ptype(p,eclass),n)
-                     for p,n in zip(decl.parameters(),pns)])
+                     for p,n in zip(decl.parameters(),pns)
+                     if p.direction()!=DIRECTION_OUT])
     paramNames=''.join([',\n      %s'%n for n in pns])
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     returnType=unqualifiedType(decl.returnType(),eclass)
