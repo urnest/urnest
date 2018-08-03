@@ -4,7 +4,7 @@ from omniidl import idltype
 import sys
 import os.path
 
-from cxy import ptype,unqualifiedType,GenerateFailed
+from cxy import unqualifiedType,GenerateFailed
 
 calldesc_t='''
   class %(name)s : public omniCallDescriptor

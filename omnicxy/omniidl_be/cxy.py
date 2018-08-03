@@ -115,31 +115,32 @@ def unqualifiedType(t,eclass):
 def unionPtype(p,eclass):
     assert p.paramType().kind()==idltype.tk_union, p.paramType().kind()
     unionTypeName=''.join(['::'+_ for _ in p.paramType().scopedName()])
-    return '::std::shared_ptr< %(unionTypeName)s const> const'%vars()
+    return '::std::shared_ptr< %(unionTypeName)s const>'%vars()
 def objrefPtype(p,eclass):
     assert p.paramType().kind()==idltype.tk_objref, p.paramType().kind()
     t=''.join(['::'+_ for _ in p.paramType().scopedName()])
     if t=='::CORBA::Object': t='void'
-    return '::cxy::IOR< %(t)s > const'%vars()
+    return '::cxy::IOR< %(t)s >'%vars()
 
 ptype_=dict(
-    [(idltype.tk_any, lambda p,eclass:'::cxy::Any< {eclass} > const'.format(**vars()))]+
-    [(idltype.tk_TypeCode,lambda p,eclass: '::cxy::TypeCode const')]+
+    [(idltype.tk_any, lambda p,eclass:'::cxy::Any< {eclass} >'.format(**vars()))]+
+    [(idltype.tk_TypeCode,lambda p,eclass: '::cxy::TypeCode')]+
     [(idltype.tk_union,unionPtype)]+
     [(idltype.tk_objref,objrefPtype)]+
-    [(kind,lambda p,eclass:''.join(['::'+_ for _ in p.paramType().scopedName()])+' const')
+    [(kind,lambda p,eclass:''.join(['::'+_ for _ in p.paramType().scopedName()]))
      for kind in [idltype.tk_alias,
                   idltype.tk_struct,
                   idltype.tk_enum]]+
-    [(kind, lambda p,eclass: basicParamTypes.get(p.paramType().kind()).typename+' const') for kind in basicParamTypes])
+    [(kind, lambda p,eclass: basicParamTypes.get(p.paramType().kind()).typename)
+     for kind in basicParamTypes])
     
 def ptype(p,eclass):
     assert isinstance(p,idlast.Parameter),p
     if p.direction()==0: #in
         if p.paramType().kind() in ptype_:
-            return ptype_[p.paramType().kind()](p,eclass)
+            return ptype_[p.paramType().kind()](p,eclass)+' const&'
         assert False, '%s not implemented, only types %s implemented' % (p.paramType().kind(),ptype_.keys())
-    assert p.dirtext()+' params not yet implemented'
+    assert False,p.dirtext()+'('+str(p.direction())+') params not yet implemented'
 
 def tn(t):
     if type(t) is types.InstanceType:
@@ -945,7 +946,7 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
             result.addScope(decl.identifier())
         elif isinstance(decl, idlast.Operation):
             name=decl.identifier()
-            params=','.join(['\n  %s& %s'%(ptype(p,eclass),p.identifier()) \
+            params=','.join(['\n  %s %s'%(ptype(p,eclass),p.identifier()) \
                                  for p in decl.parameters()])
             assert len(decl.contexts())==0, 'contexts not yet implemented'
             exceptionTypes=['::'.join(_.scopedName()) for _ in decl.raises()]
