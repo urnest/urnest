@@ -4,7 +4,7 @@ from omniidl import idltype
 import sys
 import os.path
 
-from cxy import ptype, unqualifiedType,GenerateFailed,DIRECTION_OUT
+from cxy import ptype, unqualifiedType,GenerateFailed,DIRECTION_OUT,opParams,opReturnedTypes,opReturnType
 
 objref_operation_t='''
 // %(fqn)s::
@@ -179,20 +179,21 @@ def genCalldesc(decl,eclass,eheader,indent,fqn):
     assert isinstance(decl, idlast.Operation),repr(decl)
     name=decl.identifier()
     nameLen=len(name)
-    pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
+    nonOutParams=[p for p in decl.parameters() if p.direction()!=DIRECTION_OUT]
+    pns=['p%s'%i for i in range(1, len(nonOutParams)+1)]
     params=''.join([',\n    %s %s'%(ptype(p,eclass),n)
-                    for p,n in zip(decl.parameters(),pns)
-                    if p.direction()!=DIRECTION_OUT])
+                    for p,n in zip(nonOutParams,pns)])
     callDescInvocationParams=','.join(['\n      cd->%s_'%n for n in pns])
     paramInits=''.join([',\n      %s_(%s)'%(n,n) for n in pns])
     paramMembers=''.join(
         ['\n  %s %s_;'%(unqualifiedType(p.paramType(),eclass),n)
-         for p,n in zip(decl.parameters(),pns)])
+         for p,n in zip(nonOutParams,pns)])
     paramMarshals=''.join(
         ['\n    cxy::cdr< %s >::marshal(%s_, s);'%(
             unqualifiedType(p.paramType(),eclass),n)
-         for p,n in zip(decl.parameters(),pns)])
-    returnType=unqualifiedType(decl.returnType(),eclass)
+         for p,n in zip(nonOutParams,pns)])
+    returnedTypes=opReturnedTypes(decl,eclass)
+    returnType=opReturnType(returnedTypes)
     returnMember=''
     returnUnmarshal=''
     callDescReturnValue=''
@@ -214,13 +215,13 @@ def genObjref(decl,eclass,eheader,indent,fqn):
     assert isinstance(decl, idlast.Operation), repr(decl)
     name=decl.identifier()
     nameLen=len(name)
-    pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
-    params=','.join(['\n  %s %s'%(ptype(p,eclass),n)
-                     for p,n in zip(decl.parameters(),pns)
-                     if p.direction()!=DIRECTION_OUT])
+    params=opParams(decl,eclass)
+    pns=['p%s'%i for i in range(1, len(params)+1)]
+    params=','.join(params)
     paramNames=''.join([',\n      %s'%n for n in pns])
     assert len(decl.contexts())==0, 'contexts not yet implemented'
-    returnType=unqualifiedType(decl.returnType(),eclass)
+    returnedTypes=opReturnedTypes(decl,eclass)
+    returnType=opReturnType(returnedTypes)
     returnValue=''
     if returnType != 'void':
         returnValue='\n    return c.r_.value();'

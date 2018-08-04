@@ -1,0 +1,9 @@
+module p26
+{
+  interface I26 {
+    long e();
+    void f(out long n);
+    string g(out long n);
+    void h(out long n,out string s,in long x);
+  };
+};

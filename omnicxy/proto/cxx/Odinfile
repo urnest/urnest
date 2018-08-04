@@ -106,7 +106,13 @@ p16.cc==(%dummy.hh)+cmd=cat (%p16.cxx.files+member='p16SK.cc':extract_file):stdo
 p20.hh==(%dummy.hh)+cmd=cat (%p20.cxx.files+member='p20.hh':extract_file):stdout
 %p20.cc==(%dummy.hh)+cmd=cat (%p20.cxx.files+member='p20SK.cc':extract_file):stdout
 %p20Dyn.cc==(%dummy.hh)+cmd=cat (%p20.cxx.files+member='p20DynSK.cc':extract_file):stdout
-
 p20.cc==()+cmd=cat (%p20.cc) (%p20Dyn.cc):stdout
+
+%p26.cxx.files==../p26.idl+cmd='omniidl' '-bcxx' '-Wba' (../p26.idl)+need=(../p26.idl:hash_inc_all):exec.files
+
+p26.hh==(%dummy.hh)+cmd=cat (%p26.cxx.files+member='p26.hh':extract_file):stdout
+%p26.cc==(%dummy.hh)+cmd=cat (%p26.cxx.files+member='p26SK.cc':extract_file):stdout
+%p26Dyn.cc==(%dummy.hh)+cmd=cat (%p26.cxx.files+member='p26DynSK.cc':extract_file):stdout
+p26.cc==()+cmd=cat (%p26.cc) (%p26Dyn.cc):stdout
 
 %p20-main==p20-main.cc+(%cxx-opts)+lib='omniORB4' 'omniDynamic4' 'omnithread':auto.cxx.exe

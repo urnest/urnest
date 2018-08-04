@@ -919,6 +919,36 @@ DIRECTION_IN=0
 DIRECTION_OUT=1
 DIRECTION_INOUT=2
 
+def opParams(decl,eclass):
+    assert isinstance(decl,idlast.Operation), repr(decl)
+    params=['\n  %s %s'%(ptype(p,eclass),p.identifier()) \
+            for p in decl.parameters()
+            if p.direction()!=DIRECTION_OUT]
+    return params
+
+def opReturnedTypes(decl,eclass):
+    assert isinstance(decl,idlast.Operation), repr(decl)
+    returnedTypes=[unqualifiedType(decl.returnType(),eclass)]+\
+        [unqualifiedType(p.paramType(),eclass)
+         for p in decl.parameters()
+         if p.direction()==DIRECTION_OUT]
+    if (len(returnedTypes)>1 and
+        (decl.returnType().kind()==idltype.tk_void)):
+        # can't put void into tuple (and wouldn't want to either)
+        returnedTypes=returnedTypes[1:]
+        pass
+    return returnedTypes
+
+def opReturnType(returnedTypes):
+    if len(returnedTypes)==1:
+        # don't want tuple<long> f()
+        returnType=returnedTypes[0]
+    else:
+        # more than one returned type -> need a tuple
+        returnType='std::tuple< '+','.join(returnedTypes)+' >'
+        pass
+    return returnType
+
 def gen(decl,eclass,eheader,causeType,contextType,indent=''):
     '''- returns a GenResult'''
     try:
@@ -950,28 +980,12 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
             result.addScope(decl.identifier())
         elif isinstance(decl, idlast.Operation):
             name=decl.identifier()
-            params=','.join(['\n  %s %s'%(ptype(p,eclass),p.identifier()) \
-                                 for p in decl.parameters()
-                             if p.direction()!=DIRECTION_OUT])
+            params=','.join(opParams(decl,eclass))
             assert len(decl.contexts())==0, 'contexts not yet implemented'
             exceptionTypes=['::'.join(_.scopedName()) for _ in decl.raises()]
             exceptions=''.join(['\n  %(_)s,'%vars() for _ in exceptionTypes])
-            returnedTypes=[unqualifiedType(decl.returnType(),eclass)]+\
-                [unqualifiedType(p.paramType(),eclass)
-                 for p in decl.parameters()
-                 if p.direction()==DIRECTION_OUT]
-            if (len(returnedTypes)>1 and
-                (decl.returnType().kind()==idltype.tk_void)):
-                # can't put void into tuple (and wouldn't want to either)
-                returnedTypes=returnedTypes[1:]
-                pass
-            if len(returnedTypes)==1:
-                # don't want tuple<long> f()
-                returnType=returnedTypes[0]
-            else:
-                # more than one returned type -> need a tuple
-                returnType='std::tuple< '+','.join(returnedTypes)+' >'
-                pass
+            returnedTypes=opReturnedTypes(decl,eclass)
+            returnType=opReturnType(returnedTypes)
             result.code=reindent(indent,operation_t%vars())
         elif isinstance(decl, idlast.Typedef):
             name=decl.declarators()[0].identifier()
