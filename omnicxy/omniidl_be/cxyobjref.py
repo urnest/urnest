@@ -215,10 +215,14 @@ def genObjref(decl,eclass,eheader,indent,fqn):
     assert isinstance(decl, idlast.Operation), repr(decl)
     name=decl.identifier()
     nameLen=len(name)
-    params=opParams(decl,eclass)
-    pns=['p%s'%i for i in range(1, len(params)+1)]
-    params=','.join(params)
-    paramNames=''.join([',\n      %s'%n for n in pns])
+    paramTypes=[ptype(p,eclass)
+                for p in decl.parameters()
+                if p.direction()!=DIRECTION_OUT]
+    paramNames=['p{n}'.format(**vars())
+                for n in range(1,len(paramTypes)+1)]
+    params=','.join(['\n      {t} {n}'.format(**vars())
+                     for t,n in zip(paramTypes,paramNames)])
+    paramNames=''.join([',%s'%n for n in paramNames])
     assert len(decl.contexts())==0, 'contexts not yet implemented'
     returnedTypes=opReturnedTypes(decl,eclass)
     returnType=opReturnType(returnedTypes)

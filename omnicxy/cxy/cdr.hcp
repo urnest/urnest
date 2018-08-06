@@ -674,6 +674,79 @@ public:
     }
   }
 };
-  
+
+template<std::size_t N,std::size_t Size,std::size_t Remaining>
+class TupleEach
+{
+public:
+  //pre: Ts has size Size
+  template<class... Ts>
+  static void marshal(std::tuple<Ts...> const& x,cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    cdr< typename std::tuple_element<N,std::tuple<Ts...> >::type >::marshal(
+      std::get<N>(x), s);
+    TupleEach<N+1,Size,Remaining-1>::marshal(x,s);
+  }
+};
+
+template<std::size_t Size>
+class TupleEach<Size,Size,0U>
+{
+public:
+  template<class... Ts>
+  static void marshal(std::tuple<Ts...> const& x,cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+  }
+};
+
+template<class T, class... Us>
+class cdr< std::tuple<T, Us...> >
+{
+public:
+  static std::tuple<T,Us...> unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    std::tuple<T> const t(cdr<T>::unmarshalFrom(s));
+    return std::tuple_cat(t, cdr< std::tuple<Us...> >::unmarshalFrom(s));
+  }
+  static void marshal(std::tuple<T,Us...> const& x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    TupleEach<0,
+              std::tuple_size< std::tuple<T,Us...> >::value,
+              std::tuple_size< std::tuple<T,Us...> >::value>::marshal(x,s);
+  }
+};
+
+template<>
+class cdr< std::tuple<> >
+{
+public:
+  static std::tuple<> unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    return std::tuple<>();
+  }
+};
+
 }
 
