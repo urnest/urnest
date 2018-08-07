@@ -4,7 +4,7 @@ from omniidl import idltype
 import sys
 import os.path
 
-from cxy import unqualifiedType,GenerateFailed
+from cxy import ptype, unqualifiedType,GenerateFailed,DIRECTION_OUT,opParams,opReturnedTypes,opReturnType
 
 calldesc_t='''
   class %(name)s : public omniCallDescriptor
@@ -210,9 +210,15 @@ def genOperation(decl,eclass,eheader,indent,fqn):
     result=''
     assert isinstance(decl, idlast.Operation), repr(decl)
     name=decl.identifier()
-    pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
-    callDescInvocationParams=','.join(['\n      c->%s_.value()'%n for n in pns])
-    returnType=unqualifiedType(decl.returnType(),eclass)
+    paramTypes=[ptype(p,eclass)
+                for p in decl.parameters()
+                if p.direction()!=DIRECTION_OUT]
+    pns=['p{n}'.format(**vars())
+         for n in range(1,len(paramTypes)+1)]
+    callDescInvocationParams=','.join(['\n          c->%s_.value()'%n
+                                       for n in pns])
+    returnedTypes=opReturnedTypes(decl,eclass)
+    returnType=opReturnType(returnedTypes)
     callDescReturnValue=''
     if returnType != 'void':
         callDescReturnValue='c->r_ ='
@@ -238,10 +244,18 @@ def genDispatcher(decl,eclass,eheader,indent,fqn):
 def genCalldesc(decl,eclass,eheader,indent,fqn):
     assert isinstance(decl, idlast.Operation), repr(decl)
     name=decl.identifier()
-    pns=['p%s'%i for i in range(1, len(decl.parameters())+1)]
-    paramMembers=''.join(['\n    xju::Optional< %s > %s_;'%(unqualifiedType(p.paramType(),eclass),n) for p,n in zip(decl.parameters(),pns)])
-    paramUnmarshals=''.join(['\n      %s_=cxy::cdr< %s >::unmarshalFrom(s);'%(n,unqualifiedType(p.paramType(),eclass)) for p,n in zip(decl.parameters(),pns)])
-    returnType=unqualifiedType(decl.returnType(),eclass)
+    paramTypes=[unqualifiedType(p.paramType(),eclass)
+                for p in decl.parameters()
+                if p.direction()!=DIRECTION_OUT]
+    pns=['p{n}'.format(**vars())
+         for n in range(1,len(paramTypes)+1)]
+    paramMembers=''.join(['\n    xju::Optional< {t} > {n}_;'.format(**vars())
+                          for t,n in zip(paramTypes,pns)])
+    paramUnmarshals=''.join(
+        ['\n      {n}_=cxy::cdr< {t} >::unmarshalFrom(s);'.format(**vars())
+         for t,n in zip(paramTypes,pns)])
+    returnedTypes=opReturnedTypes(decl,eclass)
+    returnType=opReturnType(returnedTypes)
     returnMember=''
     returnMarshal=''
     if returnType != 'void':

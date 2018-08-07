@@ -48,6 +48,7 @@ public:
   }
   virtual std::tuple< int32_t,std::string > h(
     int32_t const& x) throw() {
+    return std::make_tuple(x,std::string("h"));
   }
 };
 
@@ -71,17 +72,15 @@ int main(int argc, char* argv[])
       cxy::ORB<cxy::Exception> orb("giop:tcp::");
 
       cxy::cref<p26::I26> ref(orb, makeURI(port, OBJECT_NAME));
-      //REVISIT
-      // auto const x(ref->({p26::Two(1,2),
-      //         p26::Two(3,4),
-      //         p26::Two(5,6)}));
-      // std::cout << xju::format::join(
-      //   x.begin(),
-      //   x.end(),
-      //   [](p26::Two const& t){
-      //     return xju::format::str(t.a_)+","+xju::format::str(t.b_);
-      //   },
-      //   ",") << std::endl;
+      std::cout << ref->e() << std::endl
+                << ref->f() << std::endl;
+      auto const x{ref->g()};
+      std::cout << std::get<0>(x) << ", "
+                << std::get<1>(x) << std::endl;
+      auto const y{ref->h(3)};
+      std::cout << std::get<0>(y) << ", "
+                << std::get<1>(y) << std::endl;
+      
     }
     else if (argv[2]==std::string("server")) {
       std::string const orbEndPoint="giop:tcp::"+xju::format::str(port);
@@ -106,17 +105,12 @@ int main(int argc, char* argv[])
       unsigned int const repeat(
         xju::stringToUInt(::getenv("CXY_REPEAT")?::getenv("CXY_REPEAT"):"1"));
       for(unsigned int i=0; i != repeat; ++i) {
-        //REVISIT
-        // auto const x(ref->f26(
-        //                p26::ThreeTwos{
-        //                  p26::Two(1,2),
-        //                  p26::Two(3,4),
-        //                  p26::Two(5,6)}));
-        // xju::assert_equal(x,
-        //                   p26::ThreeTwos{
-        //                     p26::Two(1,2),
-        //                     p26::Two(3,4),
-        //                     p26::Two(5,6)});
+        xju::assert_equal(ref->e(),(int32_t)'e');
+        xju::assert_equal(ref->f(),(int32_t)'f');
+        xju::assert_equal(ref->g(),std::make_tuple(std::string("g"),
+                                                   (int32_t)'g'));
+        xju::assert_equal(ref->h(3),std::make_tuple(3,std::string("h")));
+        
         
       }
     }

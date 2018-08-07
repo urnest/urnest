@@ -15,6 +15,7 @@
 +inc_sp=(%cxygen)
 
 %test-Any-cxy==test-Any-cxy.cc+(%cxy-opts):auto.cxx.exe
+%test-b-cxy==test-b-cxy.cc+(%cxy-opts):auto.cxx.exe
 
 %cxygenroot.v==<<
 %omnicxy==.%omnicxy.v:vir_dir
@@ -29,12 +30,15 @@
 
 %cxy.idl.sm==<<
 a.idl
+b.idl
 
 %cxx-opts==<<
 +(../..%cxx-opts)
 +inc_sp=(%a.dir)
++inc_sp=(%b.dir)
 
 %test-Any-cxx==test-Any-cxx.cc+(%cxx-opts):auto.cxx.exe
+%test-b-cxx==test-b-cxx.cc+(%cxx-opts):auto.cxx.exe
 
 
 %a.dir==%a.v:vir_dir
@@ -45,6 +49,15 @@ a.idl
 
 %a.cxx.files==a.idl+cmd='omniidl' '-bcxx' '-Wba' (a.idl)+need=(a.idl:hash_inc_all):output
 %a.cc==(%dummy.cc)+cmd=cat (%a.cxx.files/aSK.cc) (%a.cxx.files/aDynSK.cc):stdout
+
+%b.dir==%b.v:vir_dir
+
+%b.v==<<
+%b.hh==.%b.cxx.files/b.hh
+%b.cc==.%b.cc
+
+%b.cxx.files==b.idl+cmd='omniidl' '-bcxx' '-Wba' (b.idl)+need=(b.idl:hash_inc_all):output
+%b.cc==(%dummy.cc)+cmd=cat (%b.cxx.files/bSK.cc) (%b.cxx.files/bDynSK.cc):stdout
 
 %dummy.hh==<<
 

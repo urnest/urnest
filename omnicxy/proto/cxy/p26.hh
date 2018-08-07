@@ -15,6 +15,10 @@ class I26
 {
 public:
   virtual ~I26() throw();
+  virtual int32_t e() throw(
+    // ipc failure
+    // - note servant may not throw
+    cxy::Exception) = 0;
   virtual int32_t f() throw(
     // ipc failure
     // - note servant may not throw
@@ -23,7 +27,8 @@ public:
     // ipc failure
     // - note servant may not throw
     cxy::Exception) = 0;
-  virtual std::tuple< int32_t,std::string > h() throw(
+  virtual std::tuple< int32_t,std::string > h(
+    int32_t const& x) throw(
     // ipc failure
     // - note servant may not throw
     cxy::Exception) = 0;
