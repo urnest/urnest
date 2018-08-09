@@ -287,11 +287,6 @@ do
 done
 
 
-%COSNaming.idl.sm.raw==CosNamingClient.idl+(%gen-opts)+inc_sp=($ODIN_CXX_I/../share/idl/omniORB):hash_inc_all:ls
+%cosnaming-client==cosnaming-client.cc+(%cxx-opts):auto.cxx.exe
 
-%COSNaming.idl.sm==(%dummy.idl.sm)+cmd=cat (%COSNaming.idl.sm.raw):stdout
-
-%dummy.idl.sm==<<
-
-%COSNaming-gen==%COSNaming.idl.sm+(%gen-opts)+inc_sp=($ODIN_CXX_I/../share/idl/omniORB):omnicxy.virdir
 

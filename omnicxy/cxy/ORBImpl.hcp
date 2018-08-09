@@ -104,9 +104,6 @@ std::pair< ::CORBA::ORB*, std::pair< ::PortableServer::POA*, ::PortableServer::P
 }
 }
 
-template<class T>
-class cref;
-
 class ORBImpl
 {
 public:
@@ -135,7 +132,7 @@ public:
     return *insPOA_;
   }
   void run() throw(
-    cxy::Exception)
+    cxy::Exception) override
   {
     try {
       orb_->run();
@@ -214,12 +211,8 @@ private:
   ::PortableServer::POA* insPOA_;
   ::PortableServer::POAManager* insPOA_Manager_;
   
-  //REVISIT: get rid of these
-  template<class T>
-  friend class cref;
 };
 
-  
 }
 
 #endif

@@ -7,14 +7,17 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <CosNaming.cref.hh>
+#include <omnicxy/proto/CosNaming.cref.hh>
 #include <cinttypes>
 #include <string>
 #include <sstream>
-#include <omnicxy/cxy/ORB.hh>
+#include <cxy/ORB.hh>
 #include <vector>
 #include <xju/format.hh>
 #include <xju/next.hh>
+#include <xju/split.hh>
+#include <algorithm>
+#include <iostream>
 
 namespace
 {
@@ -22,10 +25,19 @@ std::string format(CosNaming::NameComponent const& x) noexcept
 {
   std::ostringstream s;
   s << x.id;
-  if (x.kind.size()){
+  if (x.kind!=CosNaming::Istring("")){
     s << ":" << x.kind;
   }
-  return s;
+  return s.str();
+}
+std::string format(CosNaming::Name const& x) noexcept
+{
+  return xju::format::join(x.begin(),
+                           x.end(),
+                           [](CosNaming::NameComponent const& x){
+                             return format(x);
+                           },
+                           "/");
 }
 
 std::string show(cxy::ORB<cxy::Exception>& orb,
@@ -44,43 +56,45 @@ std::string show(cxy::ORB<cxy::Exception>& orb,
       return xju::format::join(
         l.begin(),
         l.end(),
-        [](CosNaming::Binding const& x){
+        [&](CosNaming::Binding const& x){
           std::ostringstream s;
-          s << prefix << x.binding_name[0];
+          s << prefix << format(x.binding_name[0]);
           return s.str();
         },
         "\n");
     }
     auto const name{*rest.begin()};
-    auto const value{ref->resolve(name)};
+    auto const value{ref->resolve({name})};
     try{
       std::vector<std::string> nextScope{scope};
       nextScope.push_back(format(name));
       return show(
         orb,
-        cxy::cref<CosNaming::NamingContext>(value),
+        cxy::cref<CosNaming::NamingContext>(orb,value),
         nextScope,
         std::vector<CosNaming::NameComponent>(xju::next(rest.begin()),
                                               rest.end()));
     }
-    catch(cxy::WrongType<> const&){
+    catch(cxy::WrongType const&){
     }
     if(rest.size()>1){
       std::ostringstream s;
-      s << name << " in scope " << xju::format::join(scope,"/")
+      s << format(name) << " in scope "
+        << xju::format::join(scope.begin(),scope.end(),"/")
         << " is not a CosNaming::NamingContext";
       throw cxy::Exception(s.str(),{__FILE__,__LINE__});
     }
     std::ostringstream s;
-    s << xju::format::join(scope,"/") << "/" << format(name) << "="
+    s << xju::format::join(scope.begin(),scope.end(),"/") << "/"
+      << format(name) << "="
       << value;
     return s.str();
   }
   catch(cxy::Exception& e){
     std::ostringstream s;
-    s << "show name " << rest << " in NamingContext "
-      << xju::format::join(scope,"/");
-    e.addContext(s.str(),{__FILE__,__LINE});
+    s << "show name " << format(rest) << " in NamingContext "
+      << xju::format::join(scope.begin(),scope.end(),"/");
+    e.addContext(s.str(),{__FILE__,__LINE__});
     throw;
   }
 }
@@ -100,17 +114,23 @@ int main(int argc, char* argv[])
     
     cxy::ORB<cxy::Exception> orb("giop:tcp::");
     cxy::cref<CosNaming::NamingContext> ref(orb, argv[1]);
-    std::vector<std::string> name{xju::split(argc==3?argv[2]:"","/")};
-    std::vector<CosNaming::NamingComponent> ncs;
+    std::vector<std::string> name{
+      xju::split(argc==3?std::string(argv[2]):std::string(""),
+                 '/')};
+    std::vector<CosNaming::NameComponent> ncs;
     std::transform(name.begin(),name.end(),
                    std::back_inserter(ncs),
                    [](std::string const& x){
-                     auto const result(xju::split(x,":"));
+                     auto const result(xju::split(x,':'));
                      if (result.size()==1){
-                       return CosNaming::NamingComponent(x[0],"");
+                       return CosNaming::NameComponent(
+                         CosNaming::Istring(result[0]),
+                         CosNaming::Istring(""));
                      }
                      else if (result.size()==2){
-                       return CosNaming::NamingComponent(x[0],x[1]);
+                       return CosNaming::NameComponent{
+                         CosNaming::Istring(result[0]),
+                           CosNaming::Istring(result[1])};
                      }
                      std::ostringstream s;
                      s << xju::format::quote(x) << "contains multiple colons";
