@@ -179,10 +179,14 @@ Contents
   
 4. Parameters and Results
 
-  "in" params are always passed as const&.
-  Returned values are always by value.
-  "out" and "inout" param types are not yet implemented
-
+  - returned values are always by value
+  - "in" params are always passed as const&
+  - "out" params are returned from the function in a tuple along
+    with the return value (like the python language mapping), e.g.:
+      long x(out string s, out double f, char y);
+    ... generates method:
+      std::tuple< int32_t, std::string, double > x(char);
+  - "inout" param types are not yet implemented
 
 5. Exceptions
 
@@ -192,6 +196,8 @@ Contents
   The proto/cxy/e directory shows how to use a non-default base exception
   type. Compared to the corresponding examples in proto/cxy, using a
   non-default exception type avoids try/catch blocks in application code.
+
+  REVISIT: what do the backend params do exactly?
   
   For class T to be used as the base exception type it must have the
   following members:
@@ -203,7 +209,7 @@ Contents
                        FileAndLine const& fileAndLine) throw()
     
   ... omnicxy calls these with cause like "connect timed out after 10 seconds"
-  (cause) and "connect to host fred port 6253" so that they can be stitched
+  and context like "connect to host fred port 6253" so that they can be stitched
   together to read "failed to connect to host fred port 6253 because 
   connect timed out after 10 seconds". (cxy::Exception has a readableRepr
   function that produces such a message)

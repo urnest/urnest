@@ -91,7 +91,7 @@ struct TypeCodeOf< ::%(name)s >
 '''
 exception_member_t='''\n          { "%(member_name)s", ::cxy::createTypeCodeOf< %(member_type)s >(index) }'''
 def gen_exception(name,memberTypesAndNames,repoId):
-    assert len(memberTypesAndNames)>0, name
+    #assert len(memberTypesAndNames)>0, name
     exception_members=','.join(
         [exception_member_t%vars() 
          for member_type,member_name in memberTypesAndNames])
