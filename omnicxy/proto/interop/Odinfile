@@ -8,6 +8,7 @@
 
 %all-tests.tree==<<
 ()+cmd=(%test-Any-cxy)+cmd=(%test-Any-cxx):exec.output
+()+cmd=(%test-b-cxy)+cmd=(%test-b-cxx):exec.output
 
 %cxy-opts==<<
 +(../..%cxx-opts)

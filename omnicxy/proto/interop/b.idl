@@ -1,0 +1,32 @@
+module omnicxy
+{
+module proto
+{
+module interop
+{
+module b
+{
+  struct S
+  {
+    long x_;
+    string y_;
+  };
+
+  typedef S T;
+  
+  interface reflect
+  {
+    // returns step+1
+    // - sets eq if len(x)==y
+    // - sets z to {y,x}
+    long f(in long step, in string x, in long y,
+           out boolean eq, out T z);
+  };
+  interface server
+  {
+    void run(in reflect f);
+  };
+};
+};
+};
+};
