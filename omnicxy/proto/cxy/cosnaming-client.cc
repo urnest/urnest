@@ -42,45 +42,24 @@ std::string format(CosNaming::Name const& x) noexcept
                            "/");
 }
 
-std::string show(cxy::ORB<cxy::Exception>& orb,
-                 cxy::cref<CosNaming::NamingContext> ref,
-                 std::vector<std::string> const& scope,
-                 std::vector<CosNaming::NameComponent> const& rest) throw(
-                   cxy::Exception)
+::cxy::IOR< void > find(
+  cxy::ORB<cxy::Exception>& orb,
+  cxy::cref<CosNaming::NamingContext> ref,
+  std::vector<std::string> const& scope,
+  std::vector<CosNaming::NameComponent> const& rest) throw(
+    cxy::Exception)
 {
   try{
-    if (rest.size()==0) {
-      auto const l{std::get<0>(ref->list(UINT32_MAX))};
-      std::string const prefix{
-        scope.size()?
-          xju::format::join(scope.begin(),scope.end(),std::string("/"))+"/":
-          std::string()};
-      return xju::format::join(
-        l.begin(),
-        l.end(),
-        [&](CosNaming::Binding const& x){
-          std::ostringstream s;
-          s << prefix << format(x.binding_name[0])
-            << (x.binding_type==CosNaming::BindingType::ncontext?"/":"");
-          return s.str();
-        },
-        "\n");
+    if (rest.size()==0){
+      return ref.ior();
     }
-    
     auto const name{*rest.begin()};
     auto const value{ref->resolve({name})};
     try{
       cxy::cref<CosNaming::NamingContext>(orb,value);
-      // REVISIT: duplicates/ in our exception context
-      // REVISIT: maybe the function should be locateLeaf()? and then an
-      // if statement to list v show the leaf?
-      // could even use resolve, just(!) need to catch the specific
-      // exceptions... but that won't give us as good diagnostic since
-      // it discards the actual type in the wrong type case
-      cxy::cref<CosNaming::NamingContext>(orb,value);
       std::vector<std::string> nextScope{scope};
       nextScope.push_back(format(name));
-      return show(
+      return find(
         orb,
         cxy::cref<CosNaming::NamingContext>(orb,value),
         nextScope,
@@ -88,29 +67,57 @@ std::string show(cxy::ORB<cxy::Exception>& orb,
                                               rest.end()));
     }
     catch(cxy::Exceptions< cxy::Exception >::WrongType const&){
-      if(rest.size()>1){
-        std::ostringstream s;
-        s << format(name) << " in scope "
-          << xju::format::join(scope.begin(),scope.end(),"/")
-          << "(" << value << ") "
-          << " is not a CosNaming::NamingContext";
-        throw cxy::Exception(s.str(),{__FILE__,__LINE__});
-      }
-      std::ostringstream s;
-      s << xju::format::join(scope.begin(),scope.end(),"/") << "/"
-        << format(name) << "="
-        << value;
-      return s.str();
     }
+    if(rest.size()>1){
+      std::ostringstream s;
+      s << format(name) << " in scope "
+        << xju::format::join(scope.begin(),scope.end(),"/")
+        << "(" << value << ") "
+        << " is not a CosNaming::NamingContext";
+      throw cxy::Exception(s.str(),{__FILE__,__LINE__});
+    }
+    return value;
   }
   catch(cxy::Exception& e){
     std::ostringstream s;
-    s << "show name " << format(rest) << " in NamingContext "
+    s << "find name " << format(rest) << " in NamingContext "
       << xju::format::join(scope.begin(),scope.end(),"/");
     e.addContext(s.str(),{__FILE__,__LINE__});
     throw;
   }
-  
+}
+
+std::string list(std::vector<std::string> const& name,
+                 cxy::cref<CosNaming::NamingContext> ref) throw(
+                   cxy::Exception)
+{
+  std::string const prefix{
+    xju::format::join(name.begin(),name.end(),std::string("/"))+"/"};
+  try{
+    auto const l{std::get<0>(ref->list(UINT32_MAX))};
+    return xju::format::join(
+      l.begin(),
+      l.end(),
+      [&](CosNaming::Binding const& x){
+        std::ostringstream s;
+        s << prefix << format(x.binding_name[0])
+          << (x.binding_type==CosNaming::BindingType::ncontext?"/":"");
+        return s.str();
+      },
+      "\n");
+  }
+  catch(cxy::Exception& e){
+    std::ostringstream s;
+    s << "list naming context " << prefix << "(" << ref << ")";
+  }
+}
+
+std::string show(std::vector<std::string> const& name,
+                 cxy::IOR< void > const value) noexcept
+{
+      std::ostringstream s;
+      s << xju::format::join(name.begin(),name.end(),"/") << "=" << value;
+      return s.str();
 }
 
 }
@@ -158,7 +165,14 @@ int main(int argc, char* argv[])
                      s << xju::format::quote(x) << "contains multiple colons";
                      throw cxy::Exception(s.str(),{__FILE__,__LINE__});
                    });
-    std::cout << show(orb,ref,{},ncs) << std::endl;
+    cxy::IOR< void > x{find(orb,ref,{},ncs)};
+    try{
+      std::cout << list(name,cxy::cref< CosNaming::NamingContext >(orb,x))
+                << std::endl;
+    }
+    catch(cxy::Exceptions< cxy::Exception >::WrongType const&){
+      std::cout << show(name,x) << std::endl;
+    }
     return 0;
   }
   catch(xju::Exception& e) {
