@@ -23,6 +23,7 @@ module a
   };
 
   typedef S ThreeSs[3];
+
   
   union U1 switch(short)
   {

@@ -36,7 +36,9 @@ public:
                          cxy::Exception) = 0;
   virtual ::PortableServer::POA& insPOA() throw(
     // eg port in use
-    cxy::Exception) = 0;  
+    cxy::Exception) = 0;
+
+  virtual std::string orbEndPoint() const throw() = 0;
 };
 
 }

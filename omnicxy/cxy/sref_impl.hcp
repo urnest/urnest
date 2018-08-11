@@ -54,7 +54,7 @@ public:
   {
     std::ostringstream s;
     s << "create CORBA servant with corbaloc name " << xju::format::quote(name)
-      << " in ORB at " << orb.orbEndPoint_;
+      << " in ORB at " << orb.orbEndPoint();
     e.addContext(s.str(), std::make_pair(__FILE__,__LINE__));
     throw;
   }

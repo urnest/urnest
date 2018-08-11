@@ -206,6 +206,13 @@ public:
   }
 
   std::string const orbEndPoint_;
+
+  // ORBImpl::
+  virtual std::string orbEndPoint() const throw() override
+  {
+    return orbEndPoint_;
+  }
+
 private:
   std::pair< ::CORBA::ORB*, std::pair< ::PortableServer::POA*, ::PortableServer::POAManager*> > orb_etc_;
   ::CORBA::ORB* orb_;

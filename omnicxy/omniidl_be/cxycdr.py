@@ -214,7 +214,7 @@ public:
     ::%(switchTypeName)s const d(cdr< ::%(switchTypeName)s >::unmarshalFrom(s));
     switch(valueOf(d)){%(unmarshal_cases)s
     default:
-      throw CORBA::BAD_PARAM(omni::BAD_PARAM_InvalidUnionDiscValue,::CORBA::COMPLETED_NO);
+      ::cxy::throw_CORBA_BAD_PARAM_InvalidUnionDiscValue();
     }
   }  
   static void marshal(std::shared_ptr< ::%(name)s const> const& x, cdrStream& s)
@@ -346,9 +346,9 @@ def gen(decl,eclass,eheader,causeType,contextType,
     try:
         result=''
         if isinstance(decl, idlast.Module):
-            result=''.join(gen(_,eclass,eheader,causeType,contextType,
-                               causeMemberExpression,contextMemberExpression) \
-                               for _ in decl.definitions())
+            result=''.join([gen(_,eclass,eheader,causeType,contextType,
+                                causeMemberExpression,contextMemberExpression) \
+                            for _ in decl.definitions()])
         elif isinstance(decl, idlast.Interface):
             fqn='::'.join(decl.scopedName())
             repoId=decl.repoId()
@@ -406,8 +406,29 @@ def gen(decl,eclass,eheader,causeType,contextType,
         raise GenerateFailed(decl,sys.exc_info())
     pass
 
+def gen_tincludes(decl,eclass,eheader,causeType,contextType,
+        causeMemberExpression,contextMemberExpression,indent=''):
+    try:
+        result=[]
+        if isinstance(decl, idlast.Module):
+            result=sum([gen_tincludes(_,eclass,eheader,causeType,contextType,
+                            causeMemberExpression,contextMemberExpression) \
+                        for _ in decl.definitions()],
+            [])
+        elif isinstance(decl, idlast.Union):
+            result.append('#include <cxy/throw_CORBA_BAD_PARAM_InvalidUnionDiscValue.hh> //impl')
+            pass
+        return result
+    except:
+        raise GenerateFailed(decl,sys.exc_info())
+    pass
+
 template='''\
 // generated from %(fileName)s by omnicxy cxycdr idl backend
+
+// stop include of cxx mapping generated header files via
+// omniORB4/CORBA.h, e.g. COS/CosNaming.h, because they
+// introduce names that clash with ours
 
 #ifndef __Naming_hh__
 #define __Naming_hh__
@@ -433,6 +454,7 @@ template='''\
 
 #include %(hhinc)s
 %(idlincludes)s
+%(tincludes)s
 
 namespace cxy
 {
@@ -498,5 +520,12 @@ def run(tree, args):
                                          if not _.mainFile()]),
                                 hpath,
                                 hhext)
+    tincludes='\n'.join(set(sum(
+        [gen_tincludes(_,eclass,eheader,causeType,contextType,
+                       causeMemberExpression,contextMemberExpression) \
+         for _ in tree.declarations() \
+         if _.mainFile()],
+        [])))
+    
     print template % vars()
     pass

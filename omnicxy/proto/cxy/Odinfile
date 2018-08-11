@@ -106,6 +106,10 @@ echo.sref.cc==%gen/echo.sref.cc
 %p10.hcp==(../p10.idl)+(%gen-opts):omnicxy/p10.hcp
 %p11.hcp==(../p11.idl)+(%gen-opts):omnicxy/p11.hcp
 %p12.hcp==(../p12.idl)+(%gen-opts):omnicxy/p12.hcp
+%p12.cref.hcp==(../p12.idl)+(%gen-opts):omnicxy/p12.cref.hcp
+%p12.cdr.hcp==(../p12.idl)+(%gen-opts):omnicxy/p12.cdr.hcp
+%p12.objref.hcp==(../p12.idl)+(%gen-opts):omnicxy/p12.objref.hcp
+%p12.sref.hcp==(../p12.idl)+(%gen-opts):omnicxy/p12.sref.hcp
 %p13.hcp==(../p13.idl)+(%gen-opts):omnicxy/p13.hcp
 %p14.hcp==(../p14.idl)+(%gen-opts):omnicxy/p14.hcp
 %p14.cref.hcp==(../p14.idl)+(%gen-opts):omnicxy/p14.cref.hcp
@@ -203,7 +207,7 @@ echo.sref.cc==%gen/echo.sref.cc
 ()+cmd=(%p23-main)+cmd='3764'+cmd='both':exec.output
 ()+cmd=(%p24-main)+cmd='3765'+cmd='both':exec.output
 ()+cmd=(%p25-main)+cmd='3766'+cmd='both':exec.output
-()+cmd=(%p26-main)+cmd='3766'+cmd='both':exec.output
+()+cmd=(%p26-main)+cmd='3767'+cmd='both':exec.output
 ()+cmd=(%test-port-in-use):exec.output
 %leak-checks.tree
 ext%tests.tree

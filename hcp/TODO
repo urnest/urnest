@@ -9,7 +9,10 @@
 
 - use nonEmptyList for params, as in
     params = "("+(")"|nonEmptyListOf(param,",")+")")
-    
+
+- handle attributes:
+  - [[noreturn]] before function proto open '('
+  
 x parse global like
   namespace x
   {
