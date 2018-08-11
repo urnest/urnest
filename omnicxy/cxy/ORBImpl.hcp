@@ -128,7 +128,7 @@ public:
   // post: lifetime(result) includes lifetime(this)
   ::PortableServer::POA& insPOA() throw(
     // eg port in use
-    cxy::Exception)
+    cxy::Exception) override
   {
     return *insPOA_;
   }

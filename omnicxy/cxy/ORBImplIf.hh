@@ -15,6 +15,10 @@
 #include <cxy/WrongType.hh>
 #include <cxy/NoSuchObject.hh>
 
+namespace PortableServer
+{
+class POA;
+}
 namespace cxy
 {
 
@@ -30,7 +34,9 @@ public:
                          cxy::WrongType,
                          cxy::NoSuchObject,
                          cxy::Exception) = 0;
-  
+  virtual ::PortableServer::POA& insPOA() throw(
+    // eg port in use
+    cxy::Exception) = 0;  
 };
 
 }

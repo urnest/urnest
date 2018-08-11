@@ -111,7 +111,7 @@ public:
       x_(x),
       c_(guard_),
       impl_deleted_(false),
-      impl_(new cxy::sref_impl(orb.impl_, 
+      impl_(new cxy::sref_impl(*orb.impl_, 
                                name, 
                                cxy::cdr< ::%(fqn)s >::repoId, 
                                *this))

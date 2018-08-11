@@ -13,6 +13,7 @@
 #include <cxy/ORB.hh>
 #include <cxy/Exception.hh>
 #include <sstream>
+#include <omniORB4/CORBA.h>
 
 std::ostringstream messages;
 void log(char const* message)

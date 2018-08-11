@@ -12,7 +12,7 @@
 #include <omniORB4/CORBA.h>
 #include <omniORB4/poa.h>
 #include <omniORB4/omniServant.h>
-#include <cxy/ORBImpl.hh>
+#include <cxy/ORBImplIf.hh>
 #include <string>
 #include <cxy/sref_if.hh>
 #include <cxy/Exceptions.hh>
@@ -29,7 +29,7 @@ public:
   // pre: lifetime(orb) includes lifetime(this)
   // pre: lifetime(repoId) includes lifetime(this)
   // pre: lifetime(sref) includes lifetime(this)
-  sref_impl(cxy::ORBImpl& orb, 
+  sref_impl(cxy::ORBImplIf& orb, 
             std::string const& name,
             const char* repoId,
             sref_if& sref) throw(
@@ -96,7 +96,7 @@ public:
   }
 
 private:
-  cxy::ORBImpl& orb_;
+  cxy::ORBImplIf& orb_;
   const char* repoId_;
   sref_if& sref_;
   PortableServer::ObjectId_var oid_;

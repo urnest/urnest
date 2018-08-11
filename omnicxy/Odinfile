@@ -3,8 +3,15 @@
 %all.tree==<<
 cxy%all.tree
 proto%all.tree
+%tools.tree
 
 
 %cxx-opts==<<
 +(..%cxx-opts)+lib='omniDynamic4' 'omniORB4' 'omnithread'
 
+%tools==%tools.tree:leaves
+
+%tools.tree==<<
+cosnaming-client
+
+cosnaming-client==proto/cxy%cosnaming-client
