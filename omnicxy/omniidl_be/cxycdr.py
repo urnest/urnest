@@ -409,12 +409,30 @@ def gen(decl,eclass,eheader,causeType,contextType,
 template='''\
 // generated from %(fileName)s by omnicxy cxycdr idl backend
 
+#ifndef __Naming_hh__
+#define __Naming_hh__
+#endif
+
+#ifndef __CosNaming_hh_EXTERNAL_GUARD__
+#  define __CosNaming_hh_EXTERNAL_GUARD__
+#endif
+
+// Define __CosNaming_hh__ in case application code tries to import a
+// header generated from CosNaming.idl.
+#ifndef __CosNaming_hh__
+#  define __CosNaming_hh__
+#endif
+
+#ifndef __messaging_hh_EXTERNAL_GUARD__
+#  define __messaging_hh_EXTERNAL_GUARD__
+#endif
+
+
+
 #include <cxy/cdr.hh>
 
 #include %(hhinc)s
 %(idlincludes)s
-
-#include <omniORB4/CORBA.h> // impl
 
 namespace cxy
 {

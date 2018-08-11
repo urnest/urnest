@@ -3,6 +3,14 @@ key:
   "-" means to-be-done
   "~" means decided not to do
 
+* const cref-> should return non-const ref, like T*const x
+
+- prefer shared_ptr<T> to cref<T>:
+    - generate code with shared_ptr<T>, never cref<T>
+    - look at whether dynamic_cast is overloadable so
+      it becomes a corba narrow where the object is remote
+      ... if so then cref<T> is not needed at all
+
 x exception from resolve to non-existent ip address?
 
 * p16-main core dump

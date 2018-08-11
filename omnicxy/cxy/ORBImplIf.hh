@@ -29,7 +29,7 @@ public:
                        std::string const& repoId) throw(
                          cxy::WrongType,
                          cxy::NoSuchObject,
-                         cxy::Exception);
+                         cxy::Exception) = 0;
   
 };
 

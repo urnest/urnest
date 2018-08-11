@@ -21,6 +21,7 @@
 #include <cxy/WrongType.hh>
 #include <cxy/NoSuchObject.hh>
 #include <cxy/PortInUse.hh>
+#include <cxy/ORBImplIf.hh>
 
 namespace CORBA
 {
@@ -104,7 +105,7 @@ std::pair< ::CORBA::ORB*, std::pair< ::PortableServer::POA*, ::PortableServer::P
 }
 }
 
-class ORBImpl
+class ORBImpl : public ORBImplIf
 {
 public:
   explicit ORBImpl(std::string const& orbEndPoint) throw(

@@ -7,6 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
+
 #include <omnicxy/proto/CosNaming.cref.hh>
 #include <cinttypes>
 #include <string>
@@ -18,6 +19,7 @@
 #include <xju/split.hh>
 #include <algorithm>
 #include <iostream>
+#include <cxy/Exceptions.hh>
 
 namespace
 {
@@ -63,9 +65,18 @@ std::string show(cxy::ORB<cxy::Exception>& orb,
         },
         "\n");
     }
+    
     auto const name{*rest.begin()};
     auto const value{ref->resolve({name})};
     try{
+      cxy::cref<CosNaming::NamingContext>(orb,value);
+      // REVISIT: duplicates/ in our exception context
+      // REVISIT: maybe the function should be locateLeaf()? and then an
+      // if statement to list v show the leaf?
+      // could even use resolve, just(!) need to catch the specific
+      // exceptions... but that won't give us as good diagnostic since
+      // it discards the actual type in the wrong type case
+      cxy::cref<CosNaming::NamingContext>(orb,value);
       std::vector<std::string> nextScope{scope};
       nextScope.push_back(format(name));
       return show(
@@ -75,20 +86,21 @@ std::string show(cxy::ORB<cxy::Exception>& orb,
         std::vector<CosNaming::NameComponent>(xju::next(rest.begin()),
                                               rest.end()));
     }
-    catch(cxy::WrongType const&){
-    }
-    if(rest.size()>1){
+    catch(cxy::Exceptions< cxy::Exception >::WrongType const&){
+      if(rest.size()>1){
+        std::ostringstream s;
+        s << format(name) << " in scope "
+          << xju::format::join(scope.begin(),scope.end(),"/")
+          << "(" << value << ") "
+          << " is not a CosNaming::NamingContext";
+        throw cxy::Exception(s.str(),{__FILE__,__LINE__});
+      }
       std::ostringstream s;
-      s << format(name) << " in scope "
-        << xju::format::join(scope.begin(),scope.end(),"/")
-        << " is not a CosNaming::NamingContext";
-      throw cxy::Exception(s.str(),{__FILE__,__LINE__});
+      s << xju::format::join(scope.begin(),scope.end(),"/") << "/"
+        << format(name) << "="
+        << value;
+      return s.str();
     }
-    std::ostringstream s;
-    s << xju::format::join(scope.begin(),scope.end(),"/") << "/"
-      << format(name) << "="
-      << value;
-    return s.str();
   }
   catch(cxy::Exception& e){
     std::ostringstream s;
@@ -97,16 +109,25 @@ std::string show(cxy::ORB<cxy::Exception>& orb,
     e.addContext(s.str(),{__FILE__,__LINE__});
     throw;
   }
+  
 }
 
 }
 
 int main(int argc, char* argv[])
 {
-  if (argc<3){
-    std::cout << "usage: " << argv[0] << "name-service-IOR a/b/c...\n";
-    std::cout << "a/b/c is name, e.g. AUS/CITIES/BRISBANE" << std::endl;
-    std::cout << "(components can include kind e.g. CITIES:BIG" << std::endl;
+  if (argc<2){
+    std::cout << "usage: " << argv[0] << "name-service-IOR [a/b/c]\n"
+              << "- name-server-IOR is a COSNaming::NamingContext\n"
+              << "- a/b/c is name, e.g. AUS/CITIES/BRISBANE\n"
+              << "  (components can include kind e.g. CITIES:BIG"
+              << std::endl;
+    std::cout << "\n"
+      "  If the specified name is itself a NamingContext, lists the names it \n"
+      "  contains, marking each that is a NamingContext with a trailing '/'.\n"
+      "\n"
+      "  Otherwise, shows the IOR of the associated object." << std::endl;
+  
     return 1;
   }
   try{
@@ -137,6 +158,7 @@ int main(int argc, char* argv[])
                      throw cxy::Exception(s.str(),{__FILE__,__LINE__});
                    });
     std::cout << show(orb,ref,{},ncs) << std::endl;
+    return 0;
   }
   catch(xju::Exception& e) {
     e.addContext(xju::format::join(argv, argv+argc, " "), XJU_TRACED);
