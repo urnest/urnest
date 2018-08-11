@@ -60,7 +60,8 @@ std::string show(cxy::ORB<cxy::Exception>& orb,
         l.end(),
         [&](CosNaming::Binding const& x){
           std::ostringstream s;
-          s << prefix << format(x.binding_name[0]);
+          s << prefix << format(x.binding_name[0])
+            << (x.binding_type==CosNaming::BindingType::ncontext?"/":"");
           return s.str();
         },
         "\n");

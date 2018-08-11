@@ -256,6 +256,16 @@ namespace xju
                                           contains.end()),x.end());
     }
     
+    // T, U are sequences, eg std::string
+    template<class T, class U>
+    bool assert_startswith(T const& x, U const& contains) noexcept
+    {
+        xju::assert_greater_equal(x.size(),contains.size());
+        xju::assert_equal(std::search(x.begin(),x.end(),
+                                      contains.begin(),
+                                      contains.end()),x.begin());
+    }
+    
 }
 
 

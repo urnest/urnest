@@ -201,3 +201,4 @@ xju/netflow/v5.hh
 hcp/hcp-map-to-source
 hcp/tags/hcp-find-def
 omnicxy/proto/cxx/p26.cc
+omnicxy/cosnaming-client

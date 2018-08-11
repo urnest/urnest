@@ -209,6 +209,7 @@ echo.sref.cc==%gen/echo.sref.cc
 ()+cmd=(%p25-main)+cmd='3766'+cmd='both':exec.output
 ()+cmd=(%p26-main)+cmd='3767'+cmd='both':exec.output
 ()+cmd=(%test-port-in-use):exec.output
+()+cmd=(%test-cosnaming-client)+cmd='3768'+cmd=(%cosnaming-client):exec.output
 %leak-checks.tree
 ext%tests.tree
 
@@ -292,5 +293,6 @@ done
 
 
 %cosnaming-client==cosnaming-client.cc+(%cxx-opts):auto.cxx.exe
+%test-cosnaming-client==test-cosnaming-client.cc+(%cxx-opts):auto.cxx.exe
 
 
