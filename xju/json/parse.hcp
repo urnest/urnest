@@ -25,6 +25,11 @@ namespace json
 
 namespace
 {
+
+// Subclasses of each json Element type, to capture the
+// line and column that each element was parsed at, which
+// can then be included in diagnostics.
+//
 class ParsedDouble : public xju::json::Double
 {
   ParsedDouble(long double value,
@@ -66,6 +71,7 @@ class ParsedUInt : public xju::json::UInt
   }
 };
 
+// hcp_ast::Item type tree mirroring json Element type tree
 class AstElement : public hcp_ast::CompositeItem
 {
 public:
@@ -98,35 +104,57 @@ private:
   }
 };
 
-hcp_parser::PR double_() noexcept
+hcp_parser::PR digit() noexcept
 {
-  return hcp_parser::NamedParser<AstDouble>(
-    "double",
-    (integer()|unsignedInteger())+
-    parseLiteral(".")+
-    unsignedInteger()+
-    (!parseOneOfChars("eE")|
-     (parseOneOfChars("eE")+
-      integer()|
-      unsignedInteger())));
+  static hcp_parser::PR result(charInRange('0','9'));
+  return result;
 }
 
-/*
-hcp_parser::PR uint_() noexcept
+hcp_parser::PR nonZeroDigit() noexcept
 {
-  return hcp_parser::NamedParser<AstUInt>(
-    "unsigned integer",
-    hcp_parser::atLeastOne(charInRange('0','9')));
+  static hcp_parser::PR result(charInRange('1','9'));
+  return result;
+}
+
+hcp_parser::PR uint() noexcept
+{
+  static hcp_parser::PR result(
+    new hcp_parser::NamedParser<AstUInt>(
+      "unsigned integer",
+      nonZeroDigit()+
+      hcp_parser::zeroOrMore(digit())));
+  return result;
 }
 
 hcp_parser::PR int_() noexcept
 {
-  return hcp_parser::NamedParser<AstUInt>(
-    "integer",
-    hcp_parser::optional(parseOneOfChars("+-"))+ //REVISIT: + allowed?
-    unsignedInteger());
+  static hcp_parser::PR result(
+    new hcp_parser::NamedParser<AstUInt>(
+      "integer",
+      hcp_parser::optional(parseOneOfChars("-"))+
+      uint()));
+  return result;
 }
-*/
+
+hcp_parser::PR exponent() noexcept
+{
+  static hcp_parser::PR result(
+    parseOneOfChars("eE")+
+    hcp_parser::optional(parseOneOfChars("+-"))+
+    hcp_parser::atLeastOne(digit()));
+  return result;
+}
+
+hcp_parser::PR double_() noexcept
+{
+  return hcp_parser::NamedParser<AstDouble>(
+    "double",
+    (int_()|uint_())+
+    parseLiteral(".")+
+    hcp_parser::zeroOrMore(hcp_parser::charInRange('0','9'))+
+    (!parseOneOfChars("eE")|exponent()));
+}
+
 
 hcp_parser::PR element() noexcept
 {
