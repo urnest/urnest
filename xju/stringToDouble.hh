@@ -21,18 +21,15 @@
 
 namespace xju
 {
-    namespace util
-    {
-	//
-	// Convert specified string to an double.
-	//
-	double stringToDouble(const std::string& value) throw(
-	    //
-	    // pre: string = "", or
-	    //      strtod(3) failure
-	    //
-	    xju::Exception);
-    }
+    //
+    // Convert specified string to an double.
+    //
+    long double stringToDouble(const std::string& value) throw(
+        //
+        // pre: string = "", or
+        //      stold(3) failure
+        //
+        xju::Exception);
 }
 
 	

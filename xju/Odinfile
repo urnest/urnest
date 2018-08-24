@@ -105,3 +105,4 @@ file%tags
 snmp%tags
 netflow%tags
 ethernet%tags
+json%tags

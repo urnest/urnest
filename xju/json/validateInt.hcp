@@ -1,0 +1,33 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace json
+{
+// gets the value of x assuming it is an integer in range [min,max]
+template<class Int=int>
+Int validateInt(
+  std::string const& description,
+  xju::Traced const& fileAndLine,
+  std::shared_ptr<Element const> const& x,
+  Int const min = std::numeric_traits<Int>::min(),
+  Int const max = std::numeric_traits<Int>::max()) const throw(
+    // x is not a json::Number or
+    // x is not a whole number or
+    // x is outside range [min,max]
+    std::exception);
+
+
+}
+}
+
+

@@ -13,44 +13,39 @@
 
 
 #include <xju/format.hh>
-#include <stdlib.h>
-#include <limits.h>
 #include <sstream>
 
 namespace xju
 {
-    namespace util
+    double stringToDouble(const std::string& value) throw(xju::Exception)
     {
-	double stringToDouble(const std::string& value) throw(xju::Exception)
-	{
-	    try
-	    {
-		if (value.size() == 0)
-		{
-		    std::ostringstream cause;
-		    cause << xju::format::quote(value) << " is null";
-		    throw xju::Exception(cause, XJU_TRACED);
-		}
-		char* p(0);
-		const double result(strtod(value.c_str(), &p));
-		if (*p != 0)
-		{
-		    std::ostringstream cause;
-		    cause << "character " << (p - value.c_str() + 1)
-			  << " ('" << (*p) << "') of "
-			  << value 
-			  << " unexpected";
-		    throw xju::Exception(cause, XJU_TRACED);
-		}
-		return result;
-	    }
-	    catch(xju::Exception& e)
-	    {
-		std::ostringstream s;
-		s << "convert " << xju::format::quote(value) << " to a double";
-		e.addContext(s, XJU_TRACED);
-		throw;
-	    }
-	}
+        try
+        {
+            if (value.size() == 0)
+            {
+                std::ostringstream cause;
+                cause << xju::format::quote(value) << " is null";
+                throw xju::Exception(cause, XJU_TRACED);
+            }
+            std::size_t* p(0);
+            const long double result(std::stold(value.c_str(), &p));
+            if (p != value.size())
+            {
+                std::ostringstream cause;
+                cause << "character " << (p + 1)
+                      << " ('" << (value[p]) << "') of "
+                      << value 
+                      << " unexpected";
+                throw xju::Exception(cause, XJU_TRACED);
+            }
+            return result;
+        }
+        catch(xju::Exception& e)
+        {
+            std::ostringstream s;
+            s << "convert " << xju::format::quote(value) << " to a double";
+            e.addContext(s, XJU_TRACED);
+            throw;
+        }
     }
 }

@@ -1,0 +1,28 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace json
+{
+// gets the value of  x assuming it is an array of Ts
+// - GetT(x) converts element x to a T, e.g. validateInt<T> above
+template<class T, class ValidateElement>
+std::vector<T> validateArray(
+  std::string const& description,
+  xju::Traced const& fileAndLine,
+  std::shared_ptr<Element const> const& x,
+  ValidateElement validateElement) const throw(
+    std::exception);
+
+
+}
+}
