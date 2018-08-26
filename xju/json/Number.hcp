@@ -13,19 +13,19 @@ namespace xju
 {
 namespace json
 {
-class Double : public Element
+class Number : public Element
 {
 public:
-  explicit Double(long double const value) noexcept
+  explicit Number(long number const value) noexcept
     :value_(value)
   {
   }
 
-  long double value_;
+  std::string value_;
   
   virtual std::string str() const noexcept override
   {
-    return xju::format::str(value_);
+    return value_;
   }
 
   virtual bool lessThan(Element const& y) const noexcept override
@@ -33,7 +33,7 @@ public:
     if (typeid(*this)!=typeid(y)){
       return std::string(typeid(*this).name())<typeid(y).name();
     }
-    return value_ < static_cast<Uint const&>(y).value_;
+    return value_ < static_cast<Number const&>(y).value_;
   }
 
 };

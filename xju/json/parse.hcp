@@ -12,9 +12,7 @@
 #include <memory>
 #include <xju/Exception.hh>
 #include <xju/assert.hh> //impl
-#include <xju/stringToDouble.hh> //impl
 #include <sstream> //impl
-#include <xju/json/Double.hh> //impl
 #include <xju/json/Element.hh>
 #include <hcp/parser.hh> //impl
 
@@ -30,12 +28,12 @@ namespace
 // line and column that each element was parsed at, which
 // can then be included in diagnostics.
 //
-class ParsedDouble : public xju::json::Double
+class ParsedNumber : public xju::json::Number
 {
-  ParsedDouble(long double value,
+  ParsedDouble(std::string const& value,
                unsigned int atLine,
                unsigned int atColumn) noexcept
-    :xju::json::Double(value),
+    :xju::json::Number(value),
      atLine_(atLine),
      atColumn_(atColumn)
   {
@@ -46,27 +44,7 @@ class ParsedDouble : public xju::json::Double
   virtual std::string str() const noexcept override
   {
     std::ostringstream s;
-    s << Double::str() << " (at " << at_.atLine_ << ":" << atColumn_ << ")";
-    return s.str();
-  }
-};
-class ParsedUInt : public xju::json::UInt
-{
-  ParsedDouble(std::uintmax_t value,
-               unsigned int atLine,
-               unsigned int atColumn) noexcept
-    :xju::json::UInt(value),
-     atLine_(atLine),
-     atColumn_(atColumn)
-  {
-  }
-  unsigned int atLine_;
-  unsigned int atColumn_;
-  
-  virtual std::string str() const noexcept override
-  {
-    std::ostringstream s;
-    s << UInt::str() << " (at " << at_.atLine_ << ":" << atColumn_ << ")";
+    s << Number::str() << " (at " << at_.atLine_ << ":" << atColumn_ << ")";
     return s.str();
   }
 };
@@ -84,23 +62,22 @@ public:
   std::shared_ptr<xju::json::Element const> const element_;
 };
 
-class AstDouble : public Element
+class AstNumber : public AstElement
 {
 public:
-  explicit AstDouble(std::vector<IR const>& items) noexcept
-      :AstElement(items,AstDouble::convert(items))
+  explicit AstNumber(std::vector<IR const>& items) noexcept
+      :AstElement(items,AstNumber::convert(items))
   {
   }
 private:
-  std::shared_ptr<xju::json::Double> convert(
+  std::shared_ptr<xju::json::Number> convert(
     std::vector<IR const>& items) throw(
       // too big/small
       xju::Exception)
   {
     xju::assert_not_equal(items.size(),0U);
-    return new xju::json::ParsedDouble(xju::stringToDouble(
-                                         items.front().begin(),
-                                         items.back().end()));
+    return new xju::json::ParsedNumber(
+      std::string(items.front().begin(),items.back().end()));
   }
 };
 
@@ -116,26 +93,6 @@ hcp_parser::PR nonZeroDigit() noexcept
   return result;
 }
 
-hcp_parser::PR uint() noexcept
-{
-  static hcp_parser::PR result(
-    new hcp_parser::NamedParser<AstUInt>(
-      "unsigned integer",
-      nonZeroDigit()+
-      hcp_parser::zeroOrMore(digit())));
-  return result;
-}
-
-hcp_parser::PR int_() noexcept
-{
-  static hcp_parser::PR result(
-    new hcp_parser::NamedParser<AstUInt>(
-      "integer",
-      hcp_parser::optional(parseOneOfChars("-"))+
-      uint()));
-  return result;
-}
-
 hcp_parser::PR exponent() noexcept
 {
   static hcp_parser::PR result(
@@ -145,11 +102,13 @@ hcp_parser::PR exponent() noexcept
   return result;
 }
 
-hcp_parser::PR double_() noexcept
+hcp_parser::PR number() noexcept
 {
-  return hcp_parser::NamedParser<AstDouble>(
-    "double",
-    (int_()|uint_())+
+  return hcp_parser::NamedParser<AstNumber>(
+    "number",
+    hcp_parser::optional(parseOneOfChars('-'))+
+    nonZeroDigit()+
+    hcp_parser::zeroOrMore(digit()))
     parseLiteral(".")+
     hcp_parser::zeroOrMore(hcp_parser::charInRange('0','9'))+
     (!parseOneOfChars("eE")|exponent()));
@@ -160,8 +119,11 @@ hcp_parser::PR element() noexcept
 {
   static hcp_parser::PR result(
     double_()/*|
-    int_()|
-    uint_()|
+    bool()|
+    string()|
+    array()|
+    map()|
+    null()
     ... */);
   return result;
 }

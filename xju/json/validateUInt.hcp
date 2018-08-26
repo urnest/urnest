@@ -9,49 +9,48 @@
 //
 
 
-#include <xju/stringToDouble.hh>
+#include <xju/stringToUInt.hh>
 #include <memory>
 #include <xju/json/Element.hh>
-#include <sstream>
-
 namespace xju
 {
 namespace json
 {
-// return the value of x assuming it is a Double in range [min,max]
-// - description, e.g. "a scaling factor" and fileAndLine appear in any
-//   exception raised
-template<class Double=double>
-Double validateDouble(
+// return the value of x assuming it is an integer in range [min,max]
+template<class UInt=unsigned int>
+UInt validateUInt(
   std::string const& description,
   xju::Traced const& fileAndLine,
   std::shared_ptr<xju::json::Element const> const& x,
-  Double const min = std::numeric_traits<Double>::min(),
-  Double const max = std::numeric_traits<Double>::max()) const throw(
+  UInt const min = std::numeric_traits<UInt>::min(),
+  UInt const max = std::numeric_traits<UInt>::max()) const throw(
     // x is not a json::Number or
+    // x is not a whole number or
     // x is outside range [min,max]
-    xju::Exception)
+    std::exception)
 {
   try {
     Number const& number(x->asA<Number>());
-    auto const result(xju::stringToDouble(number.value_));
+    auto const result(xju::stringToUInt(number.value_));
     if (result<min || result>max){
       std::ostringstream s;
       s << result << " is not in range [" << min << ".." << max << "]";
       throw xju::Exception(s.str(),XJU_TRACED);
     }
-    return Double(result);
+    return UInt(result);
   }
   catch(xju::Exception& e){
     std::ostringstream s;
-    s << "validate JSON element " 
-      << (*x) << " assuming it is " << description << " i.e. a double "
+    s << "validate JSON element " << (*x) << " assuming it is "
+      << description << " i.e. an unsigned int "
       << "in range ["<< min << ".." << max << "]";
     e.addContext(s.str(),fileAndLine);
     throw;
   }
 }
-  
+
 
 }
 }
+
+

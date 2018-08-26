@@ -14,6 +14,9 @@ namespace xju
 namespace json
 {
 // gets the value of x assuming it is an integer in range [min,max]
+// - description, e.g. "an IP port number" and fileAndLine appear in any
+//   exception raised
+// - note Int(std::intmax_t) may throw xju::Exception
 template<class Int=int>
 Int validateInt(
   std::string const& description,
@@ -24,7 +27,27 @@ Int validateInt(
     // x is not a json::Number or
     // x is not a whole number or
     // x is outside range [min,max]
-    std::exception);
+    xju::Exception)
+{
+  try {
+    Number const& number(x->asA<Number>());
+    auto const result(xju::stringToInt(number.value_));
+    if (result<min || result>max){
+      std::ostringstream s;
+      s << result << " is not in range [" << min << ".." << max << "]";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    return Int(result);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "validate JSON element " << (*x) << " assuming it is "
+      << description << " i.e. an int "
+      << "in range ["<< min << ".." << max << "]";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
 
 
 }
