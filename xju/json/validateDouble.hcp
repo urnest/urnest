@@ -21,6 +21,7 @@ namespace json
 // return the value of x assuming it is a Double in range [min,max]
 // - description, e.g. "a scaling factor" and fileAndLine appear in any
 //   exception raised
+// - note Double(long double) may throw xju::Exception
 template<class Double=double>
 Double validateDouble(
   std::string const& description,
