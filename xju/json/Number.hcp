@@ -9,25 +9,49 @@
 //
 
 
+#include <xju/json/Element.hh>
+#include <xju/stringToDouble.hh> //impl
+#include <xju/stringToInt.hh> //impl
+#include <string>
+
 namespace xju
 {
 namespace json
 {
-class Number : public Element
+class Number : public xju::json::Element
 {
 public:
-  explicit Number(long number const value) noexcept
+  explicit Number(std::string const value) noexcept
     :value_(value)
   {
   }
 
-  std::string value_;
+  // Get the value of this element assuming it is a JSON Number
+  // representable as a long double.
+  virtual double asDouble() const throw(
+    // this element is not a Number or
+    // it is too big or small to represent as a long double
+    xju::Exception) override
+  {
+    return xju::stringToDouble(value_);
+  }
+
+  int asInt() const throw(
+    // this element is not a Number or
+    // its value is not a whole number or
+    // its value is too big or small to represent as a std::intmax_t
+    xju::Exception)
+  {
+    return xju::stringToInt(value_);
+  }
+
   
   virtual std::string str() const noexcept override
   {
     return value_;
   }
 
+  
   virtual bool lessThan(Element const& y) const noexcept override
   {
     if (typeid(*this)!=typeid(y)){
@@ -36,6 +60,8 @@ public:
     return value_ < static_cast<Number const&>(y).value_;
   }
 
+private:
+  std::string value_;
 };
 
 }

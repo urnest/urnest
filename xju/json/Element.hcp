@@ -21,28 +21,48 @@ namespace json
 //
 //   Bool
 //   String
-//   Double*
-//   UInt*
-//   Int*
+//   Number
 //   Array
 //   Map
 //   Null
-//
-// * JSON numbers are stored as appropriate as a Double, UInt or Int
-//   to allow maximum range and precision
 //
 class Element
 {
 public:
   virtual ~Element() noexcept {}
 
-  template<class ElementSubClass>
-  ElementSubClass const& asA() const throw(
-    // *this is not a T
-    xju::Exception);
+  // Get the value of this element assuming it is a Bool (JSON true or false).
+  virtual bool asBool() const throw(
+    // this element is not a Bool.
+    xju::Exception)
+  {
+    std::ostringstream s;
+    s << str() << " is not a Bool";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
   
-  template<class ElementSubClass>
-  bool isA() const noexcept;
+  // Get the value of this element assuming it is a JSON Number
+  // representable as a double.
+  virtual double asDouble() const throw(
+    // this element is not a Number or
+    // it is too big or small to represent as a double
+    xju::Exception)
+  {
+    std::ostringstream s;
+    s << str() << " is not a Number";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+
+  std::intmax_t asInt() const throw(
+    // this element is not a Number or
+    // its value is not a whole number or
+    // its value is too big or small to represent as a std::intmax_t
+    xju::Exception)
+  {
+    std::ostringstream s;
+    s << str() << " is not a Number";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
 
   
   // human readable description of element, no new-lines

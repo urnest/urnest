@@ -24,7 +24,7 @@ namespace xju
     //
     // Convert specified string to an double.
     //
-    long double stringToDouble(const std::string& value) throw(
+    double stringToDouble(const std::string& value) throw(
         //
         // pre: string = "", or
         //      stold(3) failure

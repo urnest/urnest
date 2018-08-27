@@ -15,11 +15,20 @@
 #include <sstream> //impl
 #include <xju/json/Element.hh>
 #include <hcp/parser.hh> //impl
+#include <xju/json/Number.hh> //impl
+#include <hcp/ast.hh> //impl
+#include <xju/Utf8String.hh>
 
 namespace xju
 {
 namespace json
 {
+
+// parse s assuming it is valid JSON
+std::shared_ptr<xju::json::Element const> parse(
+  xju::Utf8String const& s) throw(
+    // x is not valid JSON
+    xju::Exception);
 
 namespace
 {
@@ -44,7 +53,8 @@ class ParsedNumber : public xju::json::Number
   virtual std::string str() const noexcept override
   {
     std::ostringstream s;
-    s << Number::str() << " (at " << at_.atLine_ << ":" << atColumn_ << ")";
+    s << Number::str() << " (at line " << at_.atLine_
+      << " column " << atColumn_ << ")";
     return s.str();
   }
 };
@@ -108,7 +118,7 @@ hcp_parser::PR number() noexcept
     "number",
     hcp_parser::optional(parseOneOfChars('-'))+
     nonZeroDigit()+
-    hcp_parser::zeroOrMore(digit()))
+    hcp_parser::zeroOrMore(digit())+
     parseLiteral(".")+
     hcp_parser::zeroOrMore(hcp_parser::charInRange('0','9'))+
     (!parseOneOfChars("eE")|exponent()));
@@ -118,7 +128,7 @@ hcp_parser::PR number() noexcept
 hcp_parser::PR element() noexcept
 {
   static hcp_parser::PR result(
-    double_()/*|
+    number()/*|
     bool()|
     string()|
     array()|
@@ -130,14 +140,13 @@ hcp_parser::PR element() noexcept
 
 }
 
-// parse json assuming it is valid JSON utf-8 string
+// (declared above)
 std::shared_ptr<xju::json::Element const> parse(
   xju::Utf8String const& json) throw(
-    // x is not valid JSON
     xju::Exception)
 {
-  auto v(hcp::parse(json,element()));
-  return dynamic_cast<AstElement const&>(*v).element_;
+  auto v(hcp_parser::parse(json,element()));
+  return v->asA<AstElement>().element_;
 }
 
 }

@@ -28,7 +28,7 @@ namespace xju
                 throw xju::Exception(cause, XJU_TRACED);
             }
             std::size_t* p(0);
-            const long double result(std::stold(value.c_str(), &p));
+            const long double result(std::stod(value.c_str(), &p));
             if (p != value.size())
             {
                 std::ostringstream cause;
