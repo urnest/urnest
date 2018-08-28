@@ -69,8 +69,8 @@ public:
   virtual std::string str() const noexcept = 0;
 
   // true iff (*this) < y
-  // note ordering of different-type elements is arbitrary; ordering
-  // of same-type elements is the natural ordering of their values
+  // - note ordering is arbitrary and surprising especially in the case
+  //   of Number elements since is comparison is by literal string value
   //
   virtual bool lessThan(Element const& y) const noexcept = 0;
   

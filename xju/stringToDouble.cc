@@ -27,7 +27,7 @@ namespace xju
                 cause << xju::format::quote(value) << " is null";
                 throw xju::Exception(cause, XJU_TRACED);
             }
-            std::size_t* p(0);
+            std::size_t p{0};
             const long double result(std::stod(value.c_str(), &p));
             if (p != value.size())
             {

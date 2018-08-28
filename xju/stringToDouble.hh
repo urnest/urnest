@@ -22,12 +22,12 @@
 namespace xju
 {
     //
-    // Convert specified string to an double.
+    // Convert specified string to a double.
     //
     double stringToDouble(const std::string& value) throw(
         //
         // pre: string = "", or
-        //      stold(3) failure
+        //      stod(3) failure
         //
         xju::Exception);
 }

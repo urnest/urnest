@@ -22,7 +22,7 @@
 // good
 void test1()
 {
-	xju::assert_equal(xju::util::stringToDouble("234.5"), 234.5);
+	xju::assert_equal(xju::stringToDouble("234.5"), 234.5);
 }
 
 
@@ -31,7 +31,7 @@ void test2()
 {
 	try
 	{
-		xju::util::stringToDouble("234.5A");
+		xju::stringToDouble("234.5A");
 		abort();
 	}
 	catch(const xju::Exception& e)

@@ -8,6 +8,10 @@
 // implied warranty.
 //
 
+#include <string>
+#include <unistd.h>
+#include <xju/parse.hh>
+#include <xju/next.hh> //impl
 namespace xju
 {
 class Utf8String
@@ -16,25 +20,116 @@ public:
   explicit Utf8String(std::string const& value) throw(
     // value is not valid UTF-8
     xju::Exception)
-      :value_(value)
+      :value_(value),
+       size_(Utf8String::validate(value_))
   {
-    Utf8String::validate(value_);
   }
 
   // number of characters (not number of bytes)
-  size_t size() const throw();
-  
+  size_t size() const throw()
+  {
+    return size_;
+  }
+
+  // the original utf-8 encoded value (as passed to constructor)
   operator std::string const&() noexcept
   {
     return value_;
   }
 private:
   std::string value_;
-
-  void validate(std::string const& value) throw(
+  size_t size_;
+  
+  static xju::parse::IteratorAdaptor<std::string::const_iterator>
+  validateTrailingBytes(
+    xju::parse::IteratorAdaptor<std::string::const_iterator> const first,
+    size_t numberOfTrailingBytes) throw(
+      xju::Exception)
+  {
+    try{
+      auto i{xju::next(first)};
+      for(auto n=0; n!=numberOfTrailingBytes; ++n){
+        try{
+          uint8_t const c(*i);
+          if ((c>>6)!=2){
+            std::ostringstream s;
+            s << xju::format::hex(c)
+              << " does not have bit pattern 10xxxxxx";
+            throw xju::Exception(s.str(),XJU_TRACED);
+          }
+          ++i;
+        }
+        catch(xju::Exception& e){
+          std::ostringstream s;
+          s << "validate trailing byte number " << (n+1)
+            << " of " << numberOfTrailingBytes;
+          e.addContext(s.str(),XJU_TRACED);
+          throw;
+        }
+      }
+      return i;
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "validate trailing bytes of " << (numberOfTrailingBytes+1)
+        << "-byte character";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  static size_t validate(std::string const& value) throw(
     xju::Exception)
   {
-    //REVISIT
+    size_t result{0};
+    auto i(xju::parse::iterator(value.begin(),value.end()));
+    try{
+      try{
+        while(!i.atEnd()){
+          ++result;
+          uint8_t const c(*i);
+          if ((c>>7)==0){
+            ++i;
+          }
+          else if ((c>>5)==6){
+            i=validateTrailingBytes(i,1);
+          }
+          else if ((c>>4)==0x0e){
+            i=validateTrailingBytes(i,2);
+          }
+          else if ((c>>3)==0x1e){
+            i=validateTrailingBytes(i,3);
+          }
+          else if ((c>>3)==0x1f){
+            std::ostringstream s;
+            s << "first byte of character, "
+              << xju::format::hex(c) << ", has invalid bit pattern 11111xxxx";
+            throw xju::Exception(s.str(),XJU_TRACED);
+          }
+          else if ((c>>6)==2){
+            std::ostringstream s;
+            s << "first byte of character, "
+              << xju::format::hex(c) << ", has invalid bit pattern 10xxxxxx";
+            throw xju::Exception(s.str(),XJU_TRACED);
+          }
+        }
+        return result;
+      }
+      catch(xju::parse::IteratorAdaptor<std::string::const_iterator>::EndOfInput const& e){
+        // avoid line and column in our exception
+        xju::Exception ei{"end of input",XJU_TRACED};
+        for(auto c:e.context()){
+          ei.addContext(c);
+        }
+        throw ei;
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "validate UTF-8 character " << result << " at byte-offset "
+        << (i.x_-value.begin());
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
   }
 };
 

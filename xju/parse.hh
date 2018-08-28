@@ -217,6 +217,11 @@ namespace xju
             return (*x_);
         }
 
+        template<class Iterator>
+        IteratorAdaptor<Iterator> iterator(Iterator i, Iterator end) noexcept
+        {
+            return IteratorAdaptor<Iterator>(i,end);
+        }
     }
 }
 
