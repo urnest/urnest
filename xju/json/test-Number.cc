@@ -38,7 +38,7 @@ void test2() {
     xju::assert_never_reached();
   }
   catch(xju::Exception const& e){
-    xju::assert_equal(readableRepr(e),"Failed to treat 3.62 as an int because\nfailed to convert \"3.62\" to an integer because\ncharacter 2 ('.') of \"3.62\" unexpected.");
+    xju::assert_equal(readableRepr(e),"Failed to get 3.62 as an int because\nfailed to convert \"3.62\" to an integer because\ncharacter 2 ('.') of \"3.62\" unexpected.");
   }
 }
 

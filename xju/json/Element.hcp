@@ -12,6 +12,9 @@
 #include <iostream> //impl
 #include <string>
 #include <xju/Exception.hh>
+#include <memory>
+#include <map>
+#include <xju/Utf8String.hh>
 
 namespace xju
 {
@@ -32,76 +35,86 @@ class Element
 public:
   virtual ~Element() noexcept {}
 
-  // Get the value of this element assuming it is a Bool (JSON true or false).
-  virtual bool asBool() const throw(
-    // this element is not a Bool.
+  // Get the value of this element assuming it is a JSON true or false.
+  bool asBool() const throw(
+    // this element is not a JSON true or false.
     xju::Exception)
   {
     try{
       return asBool_();
     }
     catch(xju::Exception& e){
-      
+      std::ostringstream s;
+      s << "get " << str() << " as a bool";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
   }
-  
-protected:
-  // Get the value of this element assuming it is a Bool (JSON true or false).
-  virtual bool asBool_() const throw(
-    // this element is not a Bool.
-    xju::Exception)
-  {
-    std::ostringstream s;
-    s << str() << " is not a Bool";
-    throw xju::Exception(s.str(),XJU_TRACED);
-  }
-  
-  // Get the value of this element assuming it is a JSON Number
+
+  // Get the value of this element assuming it is a JSON number
   // representable as a double.
-  virtual double asDouble() const throw(
-    // this element is not a Number or
+  double asDouble() const throw(
+    // this element is not a number or
     // it is too big or small to represent as a double
     xju::Exception)
   {
-    std::ostringstream s;
-    s << str() << " is not a Number";
-    throw xju::Exception(s.str(),XJU_TRACED);
+    try{
+      return asDouble_();
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "get " << str() << " as a double";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
   }
-
-  virtual std::intmax_t asInt() const throw(
-    // this element is not a Number or
+  int asInt() const throw(
+    // this element is not a number or
     // its value is not a whole number or
-    // its value is too big or small to represent as a std::intmax_t
+    // its value is too big or small to represent as an int
     xju::Exception)
   {
-    std::ostringstream s;
-    s << str() << " is not a Number";
-    throw xju::Exception(s.str(),XJU_TRACED);
+    try{
+      return asInt_();
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "get " << str() << " as an int";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
   }
 
-
-  virtual std::vector<std::shared_ptr<Element> > const& asArray() const throw(
+  // Get the value of this element assuming it is a JSON array.
+  std::vector<std::shared_ptr<Element> > const& asArray() const throw(
+    // this element is not an array
     xju::Exception)
   {
-    std::ostringstream s;
-    s << str() << " is not an Array";
-    throw xju::Exception(s.str(),XJU_TRACED);
+    try{
+      return asArray_();
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "get " << str() << " as an array";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
   }
 
   // Check whether this element has a member of
   // specified name assuming this element is a JSON object.
-  virtual bool hasMember(xju::Utf8String const& name) const throw(
+  bool hasMember(xju::Utf8String const& name) const throw(
     // this element is not a JSON object
     xju::Exception)
   {
     try{
-      std::ostringstream s;
-      s << str() << " is not an Object";
-      throw xju::Exception(s.str(),XJU_TRACED);
+      auto const o{asObject()};
+      return o.find(name)!=o.end();
     }
     catch(xju::Exception& e){
       std::ostringstream s;
-      s << "get value of " << str() << "'s " << xju::format::quote(name)
-        << "name/value pair";
+      s << "check whether " << str() << " has a " << xju::format::quote(name)
+        << " member";
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
@@ -109,15 +122,20 @@ protected:
   
   // Get value of this element's member with specified name assuming
   // this element is a JSON object.
-  virtual Element const& getMember(xju::Utf8String const& name) const throw(
+  Element const& getMember(xju::Utf8String const& name) const throw(
     // this element is not an object or
     // this object has no such element
     xju::Exception)
   {
     try{
-      std::ostringstream s;
-      s << str() << " is not an Object";
-      throw xju::Exception(s.str(),XJU_TRACED);
+      auto const o{asObject()};
+      auto const i{o.find(name)};
+      if (i==o.end()){
+        std::ostringstream s;
+        s << str() << " has no " << xju::format::quote(name) << " member";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      return *(*i).second;
     }
     catch(xju::Exception& e){
       std::ostringstream s;
@@ -128,15 +146,22 @@ protected:
     }
   }
 
-  virtual std::map<xju::Utf8String,std::shared_ptr<Element const> > const&
+  // Get this element assuming it is a JSON object.
+  std::map<xju::Utf8String,std::shared_ptr<Element const> > const&
   asObject() const throw(
     xju::Exception)
   {
-    std::ostringstream s;
-    s << str() << " is not an Object";
-    throw xju::Exception(s.str(),XJU_TRACED);
+    try{
+      return asObject_();
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "get " << str() << " as an object";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
   }
-  
+
   // human readable description of element, no new-lines
   virtual std::string str() const noexcept = 0;
 
@@ -145,6 +170,58 @@ protected:
   //   of Number elements since is comparison is by literal string value
   //
   virtual bool lessThan(Element const& y) const noexcept = 0;
+  
+protected:
+  // see asBool() above
+  // - note overridden by subclass(es)
+  virtual bool asBool_() const throw(
+    xju::Exception)
+  {
+    std::ostringstream s;
+    s << str() << " is not true or false";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  
+  // see asDouble() above
+  // - note overridden by subclass(es)
+  virtual double asDouble_() const throw(
+    xju::Exception)
+  {
+    std::ostringstream s;
+    s << str() << " is not a number";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+
+  // see asInt() above
+  // - note overridden by subclass(es)
+  virtual int asInt_() const throw(
+    xju::Exception)
+  {
+    std::ostringstream s;
+    s << str() << " is not a Number";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+
+  // see asArray() above
+  // - note overridden by subclass(es)
+  virtual std::vector<std::shared_ptr<Element> > const& asArray_() const throw(
+    xju::Exception)
+  {
+    std::ostringstream s;
+    s << str() << " is not an Array";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+
+  // see asObject() above
+  // - note overridden by subclass(es)
+  virtual std::map<xju::Utf8String,std::shared_ptr<Element const> > const&
+  asObject_() const throw(
+    xju::Exception)
+  {
+    std::ostringstream s;
+    s << str() << " is not an Object";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
   
 };
 

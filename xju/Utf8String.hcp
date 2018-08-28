@@ -32,7 +32,7 @@ public:
   }
 
   // the original utf-8 encoded value (as passed to constructor)
-  operator std::string const&() noexcept
+  operator std::string const&() const noexcept
   {
     return value_;
   }
@@ -80,6 +80,9 @@ private:
   static size_t validate(std::string const& value) throw(
     xju::Exception)
   {
+    //REVISIT: need to verify normalised ie no multi-byte values
+    //         that could be encoded in less bytes; also verify
+    //         surrugate pair code points
     size_t result{0};
     auto i(xju::parse::iterator(value.begin(),value.end()));
     try{
@@ -130,6 +133,11 @@ private:
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
+  }
+
+  friend bool operator<(Utf8String const& x, Utf8String const& y) noexcept
+  {
+    return x.value_ < y.value_;
   }
 };
 
