@@ -13,6 +13,8 @@
 #include <xju/stringToDouble.hh> //impl
 #include <xju/stringToInt.hh> //impl
 #include <string>
+#include <sstream> //impl
+#include <typeinfo> //impl
 
 namespace xju
 {
@@ -33,7 +35,16 @@ public:
     // it is too big or small to represent as a long double
     xju::Exception) override
   {
-    return xju::stringToDouble(value_);
+    try{
+      return xju::stringToDouble(value_);
+    }
+    catch(xju::Exception& e)
+    {
+      std::ostringstream s;
+      s << "treat " << str() << " as a double";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
   }
 
   int asInt() const throw(
@@ -42,7 +53,16 @@ public:
     // its value is too big or small to represent as a std::intmax_t
     xju::Exception)
   {
-    return xju::stringToInt(value_);
+    try{
+      return xju::stringToInt(value_);
+    }
+    catch(xju::Exception& e)
+    {
+      std::ostringstream s;
+      s << "treat " << str() << " as an int";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
   }
 
   

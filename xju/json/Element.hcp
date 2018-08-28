@@ -8,9 +8,10 @@
 // implied warranty.
 //
 
-#include <iostreamfwd>
+#include <iosfwd>
 #include <iostream> //impl
 #include <string>
+#include <xju/Exception.hh>
 
 namespace xju
 {
@@ -36,6 +37,19 @@ public:
     // this element is not a Bool.
     xju::Exception)
   {
+    try{
+      return asBool_();
+    }
+    catch(xju::Exception& e){
+      
+  }
+  
+protected:
+  // Get the value of this element assuming it is a Bool (JSON true or false).
+  virtual bool asBool_() const throw(
+    // this element is not a Bool.
+    xju::Exception)
+  {
     std::ostringstream s;
     s << str() << " is not a Bool";
     throw xju::Exception(s.str(),XJU_TRACED);
@@ -53,7 +67,7 @@ public:
     throw xju::Exception(s.str(),XJU_TRACED);
   }
 
-  std::intmax_t asInt() const throw(
+  virtual std::intmax_t asInt() const throw(
     // this element is not a Number or
     // its value is not a whole number or
     // its value is too big or small to represent as a std::intmax_t
@@ -64,6 +78,64 @@ public:
     throw xju::Exception(s.str(),XJU_TRACED);
   }
 
+
+  virtual std::vector<std::shared_ptr<Element> > const& asArray() const throw(
+    xju::Exception)
+  {
+    std::ostringstream s;
+    s << str() << " is not an Array";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+
+  // Check whether this element has a member of
+  // specified name assuming this element is a JSON object.
+  virtual bool hasMember(xju::Utf8String const& name) const throw(
+    // this element is not a JSON object
+    xju::Exception)
+  {
+    try{
+      std::ostringstream s;
+      s << str() << " is not an Object";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "get value of " << str() << "'s " << xju::format::quote(name)
+        << "name/value pair";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  
+  // Get value of this element's member with specified name assuming
+  // this element is a JSON object.
+  virtual Element const& getMember(xju::Utf8String const& name) const throw(
+    // this element is not an object or
+    // this object has no such element
+    xju::Exception)
+  {
+    try{
+      std::ostringstream s;
+      s << str() << " is not an Object";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "get value of " << str() << "'s " << xju::format::quote(name)
+        << " member";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+  virtual std::map<xju::Utf8String,std::shared_ptr<Element const> > const&
+  asObject() const throw(
+    xju::Exception)
+  {
+    std::ostringstream s;
+    s << str() << " is not an Object";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
   
   // human readable description of element, no new-lines
   virtual std::string str() const noexcept = 0;

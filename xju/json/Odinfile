@@ -5,8 +5,8 @@
 
 %tests.tree == <<
 ()+cmd=(test-parse.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-Number.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
-%tags==%all.list-of-tags:merged-tags
+%hcp-gen==.:dir.hcp.list+G+hpath='xju/json':hcp-split-virdir-specs:cat:vir_dir
 
-%all.list-of-tags==<<
-.:merged-tags
+%tags==.:merged-tags
