@@ -1,3 +1,15 @@
+- in urnest/Odinfile:
+  ... had:
+  %hcp-gen==%hcp-gen.virdir_spec:vir_dir
+  ... but that left %hcp-gen pointing to non-existent file, even
+      though +inc_sp=(%hcp-gen) had been used successfully
+  ... changed to:
+  %hcp-gen==Odinfile%hcp-gen.virdir_spec:vir_dir
+  ... and that made it get the same file as +inc_sp=(%hcp-gen) used
+  - %hcp-gen==./Odinfile%hcp-gen... also worked
+  - %hcp-gen==.%hcp-gen... did not work
+  - fix this odin bug!
+  
 - fix race condition when immediately re-invoking odin without
   explicit server, handle and document two use cases:
   - explicit server, where user must ensure server is not stopped/started

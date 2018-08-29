@@ -39,7 +39,8 @@ namespace
 //
 class ParsedNumber : public xju::json::Number
 {
-  ParsedDouble(std::string const& value,
+public:
+  ParsedNumber(std::string const& value,
                unsigned int atLine,
                unsigned int atColumn) noexcept
     :xju::json::Number(value),
@@ -49,11 +50,11 @@ class ParsedNumber : public xju::json::Number
   }
   unsigned int atLine_;
   unsigned int atColumn_;
-  
+
   virtual std::string str() const noexcept override
   {
     std::ostringstream s;
-    s << Number::str() << " (at line " << at_.atLine_
+    s << Number::str() << " (at line " << atLine_
       << " column " << atColumn_ << ")";
     return s.str();
   }
@@ -63,7 +64,7 @@ class ParsedNumber : public xju::json::Number
 class AstElement : public hcp_ast::CompositeItem
 {
 public:
-  AstElement(std::vector<IR const>& items,
+  AstElement(std::vector<hcp_ast::IR>& items,
              std::shared_ptr<xju::json::Element const> const& element) throw()
       : hcp_ast::CompositeItem(items),
         element_(element)
@@ -75,55 +76,69 @@ public:
 class AstNumber : public AstElement
 {
 public:
-  explicit AstNumber(std::vector<IR const>& items) noexcept
+  explicit AstNumber(std::vector<hcp_ast::IR>& items) noexcept
       :AstElement(items,AstNumber::convert(items))
   {
   }
 private:
-  std::shared_ptr<xju::json::Number> convert(
-    std::vector<IR const>& items) throw(
-      // too big/small
-      xju::Exception)
+  std::shared_ptr<xju::json::Number const> convert(
+    std::vector<hcp_ast::IR>& items) noexcept
   {
     xju::assert_not_equal(items.size(),0U);
-    return new xju::json::ParsedNumber(
-      std::string(items.front().begin(),items.back().end()));
+    return std::shared_ptr<xju::json::Number const>(
+      new xju::json::ParsedNumber(
+        std::string(items.front()->begin(),items.back()->end()),
+        items.front()->begin().line_,
+        items.front()->begin().column_));
   }
 };
 
 hcp_parser::PR digit() noexcept
 {
-  static hcp_parser::PR result(charInRange('0','9'));
+  static hcp_parser::PR result(hcp_parser::charInRange('0','9'));
   return result;
 }
 
 hcp_parser::PR nonZeroDigit() noexcept
 {
-  static hcp_parser::PR result(charInRange('1','9'));
+  static hcp_parser::PR result(hcp_parser::charInRange('1','9'));
   return result;
 }
 
 hcp_parser::PR exponent() noexcept
 {
   static hcp_parser::PR result(
-    parseOneOfChars("eE")+
-    hcp_parser::optional(parseOneOfChars("+-"))+
+    hcp_parser::parseOneOfChars("eE")+
+    hcp_parser::optional(hcp_parser::parseOneOfChars("+-"))+
     hcp_parser::atLeastOne(digit()));
   return result;
 }
 
 hcp_parser::PR number() noexcept
 {
-  return hcp_parser::NamedParser<AstNumber>(
-    "number",
-    hcp_parser::optional(parseOneOfChars('-'))+
-    nonZeroDigit()+
-    hcp_parser::zeroOrMore(digit())+
-    parseLiteral(".")+
-    hcp_parser::zeroOrMore(hcp_parser::charInRange('0','9'))+
-    (!parseOneOfChars("eE")|exponent()));
+  static hcp_parser::PR result(
+    hcp_parser::PR(
+      new hcp_parser::NamedParser<AstNumber>(
+        "number",
+        hcp_parser::optional(hcp_parser::parseOneOfChars("-"))+
+        (hcp_parser::parseLiteral("0")|
+         (nonZeroDigit()+
+          hcp_parser::zeroOrMore()*digit()))+
+        (!hcp_parser::parseLiteral(".")|
+         hcp_parser::parseLiteral(".")+
+         hcp_parser::atLeastOne(digit()))+
+        ((!hcp_parser::parseOneOfChars("eE"))|exponent())))+
+    hcp_parser::eatWhite());
+  return result;
 }
 
+// hcp_parser::PR array() noexcept
+// {
+//   static hcp_parser::PR result{
+//     new hcp_parser::NamedParser<AstArray>(
+//       "array",
+      
+// }
 
 hcp_parser::PR element() noexcept
 {
@@ -145,8 +160,10 @@ std::shared_ptr<xju::json::Element const> parse(
   xju::Utf8String const& json) throw(
     xju::Exception)
 {
-  auto v(hcp_parser::parse(json,element()));
-  return v->asA<AstElement>().element_;
+  std::string const& s{json};
+  auto v(hcp_parser::parseString(s.begin(),s.end(),
+                                 hcp_parser::eatWhite()+element()));
+  return hcp_ast::findOnlyChildOfType<AstElement>(v).element_;
 }
 
 }
