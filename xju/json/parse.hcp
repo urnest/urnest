@@ -18,6 +18,7 @@
 #include <xju/json/Number.hh> //impl
 #include <hcp/ast.hh> //impl
 #include <xju/Utf8String.hh>
+#include <xju/json/Array.hh> //impl
 
 namespace xju
 {
@@ -60,6 +61,33 @@ public:
   }
 };
 
+// Subclasses of each json Element type, to capture the
+// line and column that each element was parsed at, which
+// can then be included in diagnostics.
+//
+class ParsedArray : public xju::json::Array
+{
+public:
+  ParsedArray(std::vector<std::shared_ptr<Element const> > const& value,
+              unsigned int atLine,
+              unsigned int atColumn) noexcept
+    :xju::json::Array(value),
+     atLine_(atLine),
+     atColumn_(atColumn)
+  {
+  }
+  unsigned int atLine_;
+  unsigned int atColumn_;
+
+  virtual std::string str() const noexcept override
+  {
+    std::ostringstream s;
+    s << Array::str() << " (at line " << atLine_
+      << " column " << atColumn_ << ")";
+    return s.str();
+  }
+};
+
 // hcp_ast::Item type tree mirroring json Element type tree
 class AstElement : public hcp_ast::CompositeItem
 {
@@ -88,6 +116,34 @@ private:
     return std::shared_ptr<xju::json::Number const>(
       new xju::json::ParsedNumber(
         std::string(items.front()->begin(),items.back()->end()),
+        items.front()->begin().line_,
+        items.front()->begin().column_));
+  }
+};
+
+class AstArray : public AstElement
+{
+public:
+  explicit AstArray(std::vector<hcp_ast::IR>& items) noexcept
+      :AstElement(items,AstArray::convert(items))
+  {
+  }
+private:
+  std::shared_ptr<xju::json::Array const> convert(
+    std::vector<hcp_ast::IR>& items) noexcept
+  {
+    xju::assert_not_equal(items.size(),0U);
+    auto const children(hcp_ast::findChildrenOfType<AstElement>(
+                          hcp_ast::CompositeItem(items)));
+    std::vector<std::shared_ptr<Element const> > arrayElements;
+    std::transform(children.begin(),children.end(),
+                   std::back_inserter(arrayElements),
+                   [](AstElement const& x){
+                     return x.element_;
+                   });
+    return std::shared_ptr<xju::json::Array const>(
+      new xju::json::ParsedArray(
+        arrayElements,
         items.front()->begin().line_,
         items.front()->begin().column_));
   }
@@ -132,21 +188,46 @@ hcp_parser::PR number() noexcept
   return result;
 }
 
-// hcp_parser::PR array() noexcept
-// {
-//   static hcp_parser::PR result{
-//     new hcp_parser::NamedParser<AstArray>(
-//       "array",
-      
-// }
+hcp_parser::PR element() noexcept;
+
+struct RecurseElement : public hcp_parser::Parser
+{
+  // Parser::
+  virtual hcp_parser::ParseResult parse_(
+    hcp_parser::I const at, hcp_parser::Options const& o) throw() 
+  {
+    return element()->parse_(at,o);
+  }
+  virtual std::string target() const throw() {
+    return "element (recurse)";
+  }
+};
+hcp_parser::PR elementRecurse() noexcept
+{
+  static hcp_parser::PR result{new RecurseElement};
+  return result;
+}
+hcp_parser::PR array() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::PR(
+      new hcp_parser::NamedParser<AstArray>(
+        "array",
+        hcp_parser::listOf(
+          hcp_parser::parseLiteral("[")+hcp_parser::eatWhite(),
+          elementRecurse(),
+          hcp_parser::parseLiteral(",")+hcp_parser::eatWhite(),
+          hcp_parser::parseLiteral("]")+hcp_parser::eatWhite())))};
+  return result;
+}
 
 hcp_parser::PR element() noexcept
 {
   static hcp_parser::PR result(
+    array()|
     number()/*|
     bool()|
     string()|
-    array()|
     map()|
     null()
     ... */);

@@ -1,0 +1,88 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/json/Element.hh>
+#include <sstream> //impl
+#include <algorithm> //impl
+
+namespace xju
+{
+namespace json
+{
+class Array : public xju::json::Element
+{
+public:
+  explicit Array(
+    std::vector<std::shared_ptr<xju::json::Element const> > const& elements)
+      noexcept
+    :value_(elements)
+  {
+  }
+
+  virtual std::string str() const noexcept override
+  {
+    std::ostringstream s;
+    s << "array with " << value_.size() << " elements";
+    return s.str();
+  }
+
+  
+  virtual bool lessThan(Element const& y) const noexcept override
+  {
+    if (typeid(*this)!=typeid(y)){
+      return std::string(typeid(*this).name())<typeid(y).name();
+    }
+    auto const b{dynamic_cast<Array const&>(y)};
+    auto const m{
+      std::mismatch(
+        value_.begin(),
+        value_.begin()+std::min(value_.size(),b.value_.size()),
+        b.value_.begin(),
+        [](std::shared_ptr<Element const> const& a,
+           std::shared_ptr<Element const> const& b){
+          return (*a) < (*b);
+        })};
+    if (m.first==value_.end() && m.second==b.value_.end()){
+      // a,b,c < a,b,c
+      return false;
+    }
+    if (m.first==value_.end() && m.second!=b.value_.end()){
+      // a,b,c < a,b,c,d
+      return true;
+    }
+    if (m.first!=value_.end() && m.second==b.value_.end()){
+      // a,b,c,d < a,b,c
+      return false;
+    }
+    xju::assert_not_equal(m.first,value_.end());
+    xju::assert_not_equal(m.second,b.value_.end());
+    // a,b,c,x < a,b,c,y
+    return (**m.first)<(**m.second);
+  }
+
+protected:
+  // Get the value of this element assuming it is a JSON Array
+  // representable as a long double.
+  virtual std::vector<std::shared_ptr<Element const> > const& asArray_() const
+    throw() override
+  {
+    return value_;
+  }
+
+  
+private:
+  std::vector<std::shared_ptr<Element const> > const value_;
+};
+
+}
+}
+
+

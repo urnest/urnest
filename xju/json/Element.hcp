@@ -86,7 +86,7 @@ public:
   }
 
   // Get the value of this element assuming it is a JSON array.
-  std::vector<std::shared_ptr<Element> > const& asArray() const throw(
+  std::vector<std::shared_ptr<Element const> > const& asArray() const throw(
     // this element is not an array
     xju::Exception)
   {
@@ -204,8 +204,9 @@ protected:
 
   // see asArray() above
   // - note overridden by subclass(es)
-  virtual std::vector<std::shared_ptr<Element> > const& asArray_() const throw(
-    xju::Exception)
+  virtual std::vector<std::shared_ptr<Element const> > const& asArray_() const
+    throw(
+      xju::Exception)
   {
     std::ostringstream s;
     s << str() << " is not an Array";
