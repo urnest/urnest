@@ -48,7 +48,7 @@ public:
         b.value_.begin(),
         [](std::shared_ptr<Element const> const& a,
            std::shared_ptr<Element const> const& b){
-          return (*a) < (*b);
+          return (*a) == (*b);
         })};
     if (m.first==value_.end() && m.second==b.value_.end()){
       // a,b,c < a,b,c
@@ -69,8 +69,6 @@ public:
   }
 
 protected:
-  // Get the value of this element assuming it is a JSON Array
-  // representable as a long double.
   virtual std::vector<std::shared_ptr<Element const> > const& asArray_() const
     throw() override
   {

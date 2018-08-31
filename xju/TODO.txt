@@ -1,5 +1,7 @@
 - fix Utf8String validation - see REVISITs
 
+- extract xju::seq_less from xju::json::Array::lessThan
+
 - use std::chrono::system_clock::timepoint instead of xju::Time
 
 snmp/README.txt stuff

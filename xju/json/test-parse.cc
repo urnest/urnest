@@ -92,6 +92,12 @@ line 1 column 6: expected ',' but found '4'.)--");
 Failed to get 1.06e10 (at line 1 column 1) as an array because
 1.06e10 (at line 1 column 1) is not an Array.)--");
   }
+  {
+    std::string const s{};
+    auto const x{parse(Utf8String(" [ 1,2 , 3] "))};
+    auto const y{parse(Utf8String(" [ 1,2 , 3,4] "))};
+    xju::assert_less(*x,*y);
+  }
 }
 
 }

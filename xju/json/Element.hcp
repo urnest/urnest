@@ -234,5 +234,25 @@ bool operator<(Element const& x, Element const& y) noexcept {
   return x.lessThan(y);
 }
 
+bool operator>(Element const& x, Element const& y) noexcept {
+  return y.lessThan(x);
+}
+
+bool operator!=(Element const& x, Element const& y) noexcept {
+  return y<x || x<y;
+}
+
+bool operator==(Element const& x, Element const& y) noexcept {
+  return !(y!=x);
+}
+
+bool operator<=(Element const& x, Element const& y) noexcept {
+  return !(y<x);
+}
+
+bool operator>=(Element const& x, Element const& y) noexcept {
+  return !(y>x);
+}
+
 }
 }
