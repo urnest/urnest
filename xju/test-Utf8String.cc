@@ -27,8 +27,8 @@ void test1() {
     xju::assert_equal(x.size(),4U);
   }
   {
-    Utf8String x{std::string{'f','r',(char)0xc0,(char)0x95,'d'}};
-    xju::assert_equal(std::string{'f','r',(char)0xc0,(char)0x95,'d'},
+    Utf8String x{std::string{'f','r',(char)0xc4,(char)0x95,'d'}};
+    xju::assert_equal(std::string{'f','r',(char)0xc4,(char)0x95,'d'},
                       std::string(x));
     xju::assert_equal(x.size(),4U);
   }
@@ -39,19 +39,19 @@ void test1() {
     xju::assert_equal(x.size(),4U);
   }
   {
-    Utf8String x{std::string{'f','r',(char)0xf7,(char)0x95,(char)0xaf,(char)0xa2,'d'}};
-    xju::assert_equal(std::string{'f','r',(char)0xf7,(char)0x95,(char)0xaf,(char)0xa2,'d'},
+    Utf8String x{std::string{'f','r',(char)0xf1,(char)0x95,(char)0xaf,(char)0xa2,'d'}};
+    xju::assert_equal(std::string{'f','r',(char)0xf1,(char)0x95,(char)0xaf,(char)0xa2,'d'},
                       std::string(x));
     xju::assert_equal(x.size(),4U);
   }
   {
-    Utf8String x{std::string{'f','r',(char)0xf7,(char)0x95,(char)0xaf,(char)0xa2,'d',(char)0xc0,(char)0x95,(char)0xe7,(char)0x95,(char)0xaf}};
+    Utf8String x{std::string{'f','r',(char)0xf1,(char)0x95,(char)0xaf,(char)0xa2,'d',(char)0xc4,(char)0x95,(char)0xe7,(char)0x95,(char)0xaf}};
     xju::assert_equal(std::string{
         'f',
           'r',
-          (char)0xf7,(char)0x95,(char)0xaf,(char)0xa2,
+          (char)0xf1,(char)0x95,(char)0xaf,(char)0xa2,
           'd',
-          (char)0xc0,(char)0x95,
+          (char)0xc4,(char)0x95,
           (char)0xe7,(char)0x95,(char)0xaf},
       std::string(x));
     xju::assert_equal(x.size(),6U);
@@ -65,7 +65,12 @@ void test2() {
     xju::assert_never_reached();
   }
   catch(xju::Exception const& e){
-    xju::assert_equal(readableRepr(e),"Failed to validate UTF-8 character 3 at byte-offset 2 because\nfailed to validate trailing bytes of 2-byte character because\nfailed to validate trailing byte number 1 of 1 because\nend of input.");
+    xju::assert_equal("\n"+readableRepr(e)+"\n",R"--(
+Failed to validate UTF-8 character 3 at byte-offset 2 because
+failed to decode unicode character from UTF-8 string because
+failed to decode byte 2 of 2-byte utf-8 char sequence because
+end of input.
+)--");
   }
   try
   {
@@ -73,7 +78,12 @@ void test2() {
     xju::assert_never_reached();
   }
   catch(xju::Exception const& e){
-    xju::assert_equal(readableRepr(e),"Failed to validate UTF-8 character 3 at byte-offset 2 because\nfailed to validate trailing bytes of 2-byte character because\nfailed to validate trailing byte number 1 of 1 because\n0xf1 does not have bit pattern 10xxxxxx.");
+    xju::assert_equal("\n"+readableRepr(e)+"\n",R"--(
+Failed to validate UTF-8 character 3 at byte-offset 2 because
+failed to decode unicode character from UTF-8 string because
+failed to decode byte 2 of 2-byte utf-8 char sequence because
+0xf1 does not have bit pattern 10xxxxxx.
+)--");
   }
   try
   {
@@ -81,7 +91,11 @@ void test2() {
     xju::assert_never_reached();
   }
   catch(xju::Exception const& e){
-    xju::assert_equal(readableRepr(e),"Failed to validate UTF-8 character 3 at byte-offset 2 because\nfirst byte of character, 0xfa, has invalid bit pattern 11111xxxx.");
+    xju::assert_equal("\n"+readableRepr(e)+"\n",R"--(
+Failed to validate UTF-8 character 3 at byte-offset 2 because
+failed to decode unicode character from UTF-8 string because
+first byte of character, 0xfa, has invalid bit pattern 11111xxxx.
+)--");
   }
   try
   {
@@ -89,7 +103,11 @@ void test2() {
     xju::assert_never_reached();
   }
   catch(xju::Exception const& e){
-    xju::assert_equal(readableRepr(e),"Failed to validate UTF-8 character 3 at byte-offset 2 because\nfirst byte of character, 0x80, has invalid bit pattern 10xxxxxx.");
+    xju::assert_equal("\n"+readableRepr(e)+"\n",R"--(
+Failed to validate UTF-8 character 3 at byte-offset 2 because
+failed to decode unicode character from UTF-8 string because
+first byte of character, 0x80, has invalid bit pattern 10xxxxxx.
+)--");
   }
 }
 

@@ -5,6 +5,8 @@
 
 %tests.tree == <<
 ()+cmd=(test-encodeCodePoint.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-decodeCodePoint.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-surrogate.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 
 %hcp-gen==.:dir.hcp.list+G+hpath='xju/utf8':hcp-split-virdir-specs:cat:vir_dir

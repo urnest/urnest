@@ -288,7 +288,8 @@ struct StringLiteralParser : public hcp_parser::Parser
                                        i,
                                        XJU_TRACED));
     }
-    while(*++i != '"'){
+    ++i;
+    while(*i != '"'){
       try{
         if ((*i)=='\\'){
           switch(*++i){
@@ -304,11 +305,20 @@ struct StringLiteralParser : public hcp_parser::Parser
           case 'u':{
             std::string s{*++i,*++i,*++i,*++i};
             uint16_t const v(xju::stringToUInt(s,16));
-            if (xju::utf8::isSurrogateHigh(v)){
+            if (xju::utf8::surrogate::isSurrogateHigh(v)){
+              ++i;
+              if (*i!='\\' || *xju::next(i)!='u'){
+                return hcp_parser::ParseResult(
+                  hcp_parser::Exception(
+                    xju::Shared(new C2(*i,*xju::next(i))),
+                    i,
+                    XJU_TRACED));
+              }
+              ++i;++i;
               std::string s{*++i,*++i,*++i,*++i};
               uint16_t const u(xju::stringToUInt(s,16));
-              unescaped << std::string(xju::utf8::encodeCodePoint(
-                                         xju::utf8::decodeSurrogatePair(u,v)));
+              unescaped << xju::utf8::encodeCodePoint(
+                xju::utf8::surrogate::decodeSurrogatePair(u,v));
             }
             else{
               unescaped << xju::utf8::encodeCodePoint(v);
@@ -316,15 +326,17 @@ struct StringLiteralParser : public hcp_parser::Parser
             break;
           }
           }
+          ++i;
         }
         else {
-          unescaped << xju::utf8::encodeCodePoint(
-            xju::utf8::decodeCodePoint(i));
+          auto const x{xju::utf8::decodeCodePoint(i)};
+          unescaped << xju::utf8::encodeCodePoint(x.first);
+          i=x.second;
         }
       }
       catch(xju::Exception& e){
         return hcp_parser::ParseResult(hcp_parser::Exception(
-                                         xju::Shared(new C2(e),i,XJU_TRACED)));
+                                         xju::Shared(new C0(e),i,XJU_TRACED)));
       }
     }
     return hcp_parser::ParseResult(

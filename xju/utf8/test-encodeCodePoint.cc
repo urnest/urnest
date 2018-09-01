@@ -18,40 +18,40 @@ namespace utf8
 {
 
 void test1() {
-  xju::assert_equal(std::string(encodeCodePoint(0x24)),
+  xju::assert_equal(encodeCodePoint(0x24),
                     std::string{0x24});
-  xju::assert_equal(std::string(encodeCodePoint(0xA2)),
+  xju::assert_equal(encodeCodePoint(0xA2),
                     std::string{(char)0xC2,(char)0xA2});
-  xju::assert_equal(std::string(encodeCodePoint(0x20AC)),
+  xju::assert_equal(encodeCodePoint(0x20AC),
                     std::string{(char)0xE2,(char)0x82,(char)0xAC});
-  xju::assert_equal(std::string(encodeCodePoint(0x10348)),
+  xju::assert_equal(encodeCodePoint(0x10348),
                     std::string{(char)0xF0,(char)0x90,(char)0x8D,(char)0x88});
 }
 
 void test2() {
   // boundaries
-  xju::assert_equal(std::string(encodeCodePoint(0x00)),
+  xju::assert_equal(encodeCodePoint(0x00),
                     std::string{0x00});
-  xju::assert_equal(std::string(encodeCodePoint(0x7f)),
+  xju::assert_equal(encodeCodePoint(0x7f),
                     std::string{0x7f});
 
-  xju::assert_equal(std::string(encodeCodePoint(0x80)),
+  xju::assert_equal(encodeCodePoint(0x80),
                     std::string{(char)0xC2,(char)0x80});
-  xju::assert_equal(std::string(encodeCodePoint(0x7ff)),
+  xju::assert_equal(encodeCodePoint(0x7ff),
                     std::string{(char)0xDF,(char)0xbf});
 
-  xju::assert_equal(std::string(encodeCodePoint(0x800)),
+  xju::assert_equal(encodeCodePoint(0x800),
                     std::string{(char)0xE0,(char)0xa0,(char)0x80});
-  xju::assert_equal(std::string(encodeCodePoint(0xd7ff)),
+  xju::assert_equal(encodeCodePoint(0xd7ff),
                     std::string{(char)0xEd,(char)0x9f,(char)0xbf});
-  xju::assert_equal(std::string(encodeCodePoint(0xe000)),
+  xju::assert_equal(encodeCodePoint(0xe000),
                     std::string{(char)0xEe,(char)0x80,(char)0x80});
-  xju::assert_equal(std::string(encodeCodePoint(0xffff)),
+  xju::assert_equal(encodeCodePoint(0xffff),
                     std::string{(char)0xEF,(char)0xbf,(char)0xbf});
 
-  xju::assert_equal(std::string(encodeCodePoint(0x10000)),
+  xju::assert_equal(encodeCodePoint(0x10000),
                     std::string{(char)0xF0,(char)0x90,(char)0x80,(char)0x80});
-  xju::assert_equal(std::string(encodeCodePoint(0x10ffff)),
+  xju::assert_equal(encodeCodePoint(0x10ffff),
                     std::string{(char)0xF4,(char)0x8f,(char)0xbf,(char)0xbf});
   try{
     encodeCodePoint(0x110000);

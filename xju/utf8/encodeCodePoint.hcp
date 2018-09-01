@@ -9,7 +9,6 @@
 //
 
 
-#include <xju/Utf8String.hh>
 #include <cinttypes> //impl
 #include <sstream> //impl
 #include <xju/format.hh> //impl
@@ -19,7 +18,7 @@ namespace xju
 {
 namespace utf8
 {
-xju::Utf8String encodeCodePoint(char32_t codePoint) throw(
+std::string encodeCodePoint(char32_t codePoint) throw(
   //codePoint > 0x10FFFF
   xju::Exception)
 {
@@ -32,25 +31,25 @@ xju::Utf8String encodeCodePoint(char32_t codePoint) throw(
     throw xju::Exception(s.str(),XJU_TRACED);
   }
   if(x<=0x7F){
-    return Utf8String(std::string{(char)x});
+    return std::string{(char)x};
   }
   else if (x<=0x7FF){
-    return Utf8String(std::string{
+    return std::string{
         (char)(((0xc0)+(x >> 6))),
-        (char)(((0x80)+(x & 0x3f)))});
+        (char)(((0x80)+(x & 0x3f)))};
   }
   else if (x<=0xFFFF){
-    return Utf8String(std::string{
+    return std::string{
         (char)(((0xe0)+(x >> 12))),
         (char)(((0x80)+((x >> 6)& 0x3f))),
-        (char)(((0x80)+((x >> 0)& 0x3f)))});
+        (char)(((0x80)+((x >> 0)& 0x3f)))};
   }
   else if (x<=0x10FFFF){
-    return Utf8String(std::string{
+    return std::string{
         (char)(((0xf0)+(x >> 18))),
           (char)(((0x80)+((x >> 12)& 0x3f))),
           (char)(((0x80)+((x >> 6)& 0x3f))),
-          (char)(((0x80)+((x >> 0)& 0x3f)))});
+          (char)(((0x80)+((x >> 0)& 0x3f)))};
   }
   std::ostringstream s;
   s << xju::format::hex(x) << " > 0x10FFFF (the last Unicode character)";
