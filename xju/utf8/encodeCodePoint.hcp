@@ -24,6 +24,13 @@ xju::Utf8String encodeCodePoint(char32_t codePoint) throw(
   xju::Exception)
 {
   uint32_t const x{codePoint};
+  //utf-16 surrogate pair code points are invalid unicode characters
+  if (0xd800<=codePoint && codePoint<=0xdfff){
+    std::ostringstream s;
+    s << xju::format::hex(x) << " is not a valid Unicode character because "
+      << "it is in the utf-16 surrogate pair reserved range 0xD800..0xDFFF";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
   if(x<=0x7F){
     return Utf8String(std::string{(char)x});
   }

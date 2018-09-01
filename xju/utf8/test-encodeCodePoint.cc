@@ -42,6 +42,10 @@ void test2() {
 
   xju::assert_equal(std::string(encodeCodePoint(0x800)),
                     std::string{(char)0xE0,(char)0xa0,(char)0x80});
+  xju::assert_equal(std::string(encodeCodePoint(0xd7ff)),
+                    std::string{(char)0xEd,(char)0x9f,(char)0xbf});
+  xju::assert_equal(std::string(encodeCodePoint(0xe000)),
+                    std::string{(char)0xEe,(char)0x80,(char)0x80});
   xju::assert_equal(std::string(encodeCodePoint(0xffff)),
                     std::string{(char)0xEF,(char)0xbf,(char)0xbf});
 
@@ -55,6 +59,21 @@ void test2() {
   }
   catch(xju::Exception const& e){
     xju::assert_equal(readableRepr(e),"0x00110000 > 0x10FFFF (the last Unicode character).");
+  }
+
+  try{
+    encodeCodePoint(0xD800);
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal(readableRepr(e),"0x0000d800 is not a valid Unicode character because it is in the utf-16 surrogate pair reserved range 0xD800..0xDFFF.");
+  }
+  try{
+    encodeCodePoint(0xDFFF);
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal(readableRepr(e),"0x0000dfff is not a valid Unicode character because it is in the utf-16 surrogate pair reserved range 0xD800..0xDFFF.");
   }
 }
 
