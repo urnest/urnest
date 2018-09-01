@@ -6,6 +6,7 @@ snmp%tests.tree
 io%tests.tree
 file%tests.tree
 json%tests.tree
+utf8%tests.tree
 ip%tests.tree
 %tags
 
@@ -57,6 +58,7 @@ ip%tests.tree
 ()+cmd=(test-xml.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 snmp%tests.tree
 json%tests.tree
+utf8%tests.tree
 ()+cmd=(print-wordsizes.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 netflow%tests.tree
 
@@ -91,6 +93,7 @@ done
 %file==./file/Odinfile%hcp-gen
 %snmp==./snmp/Odinfile%hcp-gen
 %json==./json/Odinfile%hcp-gen
+%utf8==./utf8/Odinfile%hcp-gen
 %netflow==./netflow/Odinfile%hcp-gen
 
 %test-getHostName==()+cmd=(%test-getHostName.sh) (test-getHostName.cc+(..%cxx-opts):auto.cxx.exe):exec.output
@@ -110,3 +113,4 @@ snmp%tags
 netflow%tags
 ethernet%tags
 json%tags
+utf8%tags

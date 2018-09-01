@@ -1,0 +1,59 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <cinttypes>
+#include <sstream> //impl
+#include <xju/format.hh> //impl
+#include <xju/Exception.hh>
+
+namespace xju
+{
+namespace utf8
+{
+namespace surrogate
+{
+bool isSurrugateHigh(uint16_t const x) noexcept
+{
+  return  0xD800<=x && x<=0xDBFF;
+}
+char32_t decodeSurrogatePair(uint16_t const high,uint16_t const low)
+  throw(xju::Exception)
+{
+  try{
+    if (high<0xD800 || high > 0xDBFF){
+      std::ostringstream s;
+      s << xju::format::hex(high) << " is not in range 0xD800..0xDBFF";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    if (low<0xDC00 || low >0xDFFF){
+      std::ostringstream s;
+      s << xju::format::hex(low) << " is not in range 0xDC00..0xDFFF";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    return 0x010000+(((char32_t)(high)-0xD800)<<10)+(((char32_t)low)-0xDC00);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode " << xju::format::hex(high) << " and "
+      << xju::format::hex(low)
+      << " assuming they are a UTF16 surrogate pair (high,low)";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+  
+
+}
+
+}
+}
+
+

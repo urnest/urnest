@@ -12,8 +12,12 @@
 #include <unistd.h>
 #include <xju/parse.hh>
 #include <xju/next.hh> //impl
+
 namespace xju
 {
+
+//REVISIT: rename to xju::utf::String
+
 class Utf8String
 {
 public:

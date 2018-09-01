@@ -1,0 +1,56 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/Utf8String.hh>
+#include <cinttypes> //impl
+#include <sstream> //impl
+#include <xju/format.hh> //impl
+#include <xju/Exception.hh>
+
+namespace xju
+{
+namespace utf8
+{
+xju::Utf8String encodeCodePoint(char32_t codePoint) throw(
+  //codePoint > 0x10FFFF
+  xju::Exception)
+{
+  uint32_t const x{codePoint};
+  if(x<=0x7F){
+    return Utf8String(std::string{(char)x});
+  }
+  else if (x<=0x7FF){
+    return Utf8String(std::string{
+        (char)(((0xc0)+(x >> 6))),
+        (char)(((0x80)+(x & 0x3f)))});
+  }
+  else if (x<=0xFFFF){
+    return Utf8String(std::string{
+        (char)(((0xe0)+(x >> 12))),
+        (char)(((0x80)+((x >> 6)& 0x3f))),
+        (char)(((0x80)+((x >> 0)& 0x3f)))});
+  }
+  else if (x<=0x10FFFF){
+    return Utf8String(std::string{
+        (char)(((0xf0)+(x >> 18))),
+          (char)(((0x80)+((x >> 12)& 0x3f))),
+          (char)(((0x80)+((x >> 6)& 0x3f))),
+          (char)(((0x80)+((x >> 0)& 0x3f)))});
+  }
+  std::ostringstream s;
+  s << xju::format::hex(x) << " > 0x10FFFF (the last Unicode character)";
+  throw xju::Exception(s.str(),XJU_TRACED);
+}
+
+}
+}
+
+

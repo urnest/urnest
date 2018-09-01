@@ -304,11 +304,11 @@ struct StringLiteralParser : public hcp_parser::Parser
           case 'u':{
             std::string s{*++i,*++i,*++i,*++i};
             uint16_t const v(xju::stringToUInt(s,16));
-            if (xju::utf8::isSurrugateHigh(v)){
+            if (xju::utf8::isSurrogateHigh(v)){
               std::string s{*++i,*++i,*++i,*++i};
               uint16_t const u(xju::stringToUInt(s,16));
-              unescaped << ((char)(v>>8)) << ((char)(v&0xff))
-                        << ((char)(u>>8)) << ((char)(u&0xff));
+              unescaped << std::string(xju::utf8::encodeCodePoint(
+                                         xju::utf8::decodeSurrogatePair(u,v)));
             }
             else{
               unescaped << xju::utf8::encodeCodePoint(v);

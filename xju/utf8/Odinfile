@@ -1,0 +1,12 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+%tests.tree
+
+%tests.tree == <<
+()+cmd=(test-encodeCodePoint.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+
+
+%hcp-gen==.:dir.hcp.list+G+hpath='xju/utf8':hcp-split-virdir-specs:cat:vir_dir
+
+%tags==.:merged-tags
