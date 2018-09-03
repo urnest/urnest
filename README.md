@@ -102,9 +102,9 @@ OVERVIEW
     -   odin/test a couple of tests of odin itself
 
 -   xju has my C++ classes etc for things like posix threads,
-    exception handling, assertions; if there is a theme it is
-    providing classes that are hard to misuse and that leverage
-    C++ strengths:
+    exception handling, assertions, io, file+directory, utf8, json, snmp; if
+    there is a theme it is providing classes that are hard to misuse and
+    that leverage C++ strengths:
         - type safety
         - RAII
       status: usable
