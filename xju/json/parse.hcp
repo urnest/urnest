@@ -24,6 +24,9 @@
 #include <xju/utf8/surrogate.hh> //impl
 #include <xju/utf8/encodeCodePoint.hh> //impl
 #include <xju/utf8/decodeCodePoint.hh> //impl
+#include <xju/json/Null.hh> //impl
+#include <xju/json/True.hh> //impl
+#include <xju/json/False.hh> //impl
 
 namespace xju
 {
@@ -89,6 +92,69 @@ public:
   }
 };
 
+class ParsedNull : public xju::json::Null
+{
+public:
+  ParsedNull(unsigned int atLine,
+             unsigned int atColumn) noexcept
+    :atLine_(atLine),
+     atColumn_(atColumn)
+  {
+  }
+  unsigned int atLine_;
+  unsigned int atColumn_;
+
+  virtual std::string str() const noexcept override
+  {
+    std::ostringstream s;
+    s << Null::str() << " (at line " << atLine_
+      << " column " << atColumn_ << ")";
+    return s.str();
+  }
+};
+
+class ParsedTrue : public xju::json::True
+{
+public:
+  ParsedTrue(unsigned int atLine,
+             unsigned int atColumn) noexcept
+    :atLine_(atLine),
+     atColumn_(atColumn)
+  {
+  }
+  unsigned int atLine_;
+  unsigned int atColumn_;
+
+  virtual std::string str() const noexcept override
+  {
+    std::ostringstream s;
+    s << True::str() << " (at line " << atLine_
+      << " column " << atColumn_ << ")";
+    return s.str();
+  }
+};
+
+class ParsedFalse : public xju::json::False
+{
+public:
+  ParsedFalse(unsigned int atLine,
+             unsigned int atColumn) noexcept
+    :atLine_(atLine),
+     atColumn_(atColumn)
+  {
+  }
+  unsigned int atLine_;
+  unsigned int atColumn_;
+
+  virtual std::string str() const noexcept override
+  {
+    std::ostringstream s;
+    s << False::str() << " (at line " << atLine_
+      << " column " << atColumn_ << ")";
+    return s.str();
+  }
+};
+
 class ParsedArray : public xju::json::Array
 {
 public:
@@ -145,6 +211,36 @@ private:
   }
 };
 
+class AstNull : public AstElement
+{
+public:
+  explicit AstNull(std::vector<hcp_ast::IR> const& items) noexcept
+    :AstElement(items,
+                std::shared_ptr<xju::json::Element>(new xju::json::Null))
+  {
+  }
+};
+
+class AstTrue : public AstElement
+{
+public:
+  explicit AstTrue(std::vector<hcp_ast::IR> const& items) noexcept
+    :AstElement(items,
+                std::shared_ptr<xju::json::Element>(new xju::json::True))
+  {
+  }
+};
+
+class AstFalse : public AstElement
+{
+public:
+  explicit AstFalse(std::vector<hcp_ast::IR> const& items) noexcept
+    :AstElement(items,
+                std::shared_ptr<xju::json::Element>(new xju::json::False))
+  {
+  }
+};
+
 class AstString : public AstElement
 {
 public:
@@ -153,32 +249,6 @@ public:
     :AstElement(items,AstString::convert(items,value))
   {
   }
-  class Item : public hcp_ast::Item
-  {
-  public:
-    hcp_ast::I begin_;
-    hcp_ast::I end_;
-    
-    virtual ~Item() throw() {
-    }
-    
-    explicit Item(hcp_ast::I begin, hcp_ast::I end) throw():
-        begin_(begin),
-        end_(end) {
-    }
-    // Item::
-    virtual hcp_ast::I begin() const noexcept override {
-      return begin_;
-    }
-    // Item::
-    virtual hcp_ast::I end() const noexcept override {
-      return end_;
-    }
-    virtual std::string str() const noexcept override
-    {
-      return "JSON string";
-    }
-  };
 private:
 
   std::shared_ptr<xju::json::String const> convert(
@@ -257,6 +327,38 @@ hcp_parser::PR number() noexcept
          hcp_parser::parseLiteral(".")+
          hcp_parser::atLeastOne(digit()))+
         ((!hcp_parser::parseOneOfChars("eE"))|exponent())))+
+    hcp_parser::eatWhite());
+  return result;
+}
+hcp_parser::PR null_() noexcept
+{
+  static hcp_parser::PR result(
+    hcp_parser::PR(
+      new hcp_parser::NamedParser<AstNull>(
+        "null",
+        hcp_parser::parseLiteral("null")))+
+    hcp_parser::eatWhite());
+  return result;
+}
+
+hcp_parser::PR true_() noexcept
+{
+  static hcp_parser::PR result(
+    hcp_parser::PR(
+      new hcp_parser::NamedParser<AstTrue>(
+        "true",
+        hcp_parser::parseLiteral("true")))+
+    hcp_parser::eatWhite());
+  return result;
+}
+
+hcp_parser::PR false_() noexcept
+{
+  static hcp_parser::PR result(
+    hcp_parser::PR(
+      new hcp_parser::NamedParser<AstFalse>(
+        "false",
+        hcp_parser::parseLiteral("false")))+
     hcp_parser::eatWhite());
   return result;
 }
@@ -348,7 +450,7 @@ struct StringLiteralParser : public hcp_parser::Parser
           hcp_ast::IRs(
             1U,
             new AstString(
-              hcp_ast::IRs(1U,new AstString::Item(at,i)),
+              hcp_ast::IRs(1U,new hcp_ast::String(at,i)),
               xju::Utf8String(unescaped.str()))),
           i));
     }
@@ -466,10 +568,12 @@ hcp_parser::PR array() noexcept
 hcp_parser::PR element() noexcept
 {
   static hcp_parser::PR result(
+    null_()|
     array()|
+    true_()|
+    false_()|
     string()|
     number()/*|
-    bool()|
     map()|
     null()
     ... */);

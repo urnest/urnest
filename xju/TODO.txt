@@ -2,10 +2,8 @@
   ... when s could throw?
 
 - xju::json
-  true
-  false
-  null
   object
+  config file example
   
 - extract xju::seq_less from xju::json::Array::lessThan
 

@@ -15,6 +15,7 @@
 #include <memory>
 #include <map>
 #include <xju/Utf8String.hh>
+#include <xju/json/Null.hh> //impl
 
 namespace xju
 {
@@ -30,10 +31,19 @@ namespace json
 //   Map
 //   Null
 //
+// ... though most applications might only need to use
+// the conversion functions asDouble, asInt etc below
+//
 class Element
 {
 public:
   virtual ~Element() noexcept {}
+
+  // Check whether this element is JSON null.
+  bool isNull() const noexcept
+  {
+    return dynamic_cast<xju::json::Null const*>(this);
+  }
 
   // Get the value of this element assuming it is a JSON true or false.
   bool asBool() const throw(

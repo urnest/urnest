@@ -18,6 +18,93 @@ namespace xju
 namespace json
 {
 
+void testNull()
+{
+  {
+    auto const x{parse(Utf8String(" null "))};
+    xju::assert_equal(x->isNull(),true);
+  }
+  try{
+    auto const x{parse(Utf8String("nil"))};
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal("\n"+readableRepr(e)+"\n",R"--(
+Failed to parse null at line 1 column 1 because
+failed to parse "null" at line 1 column 1 because
+line 1 column 2: expected 'u' but found 'i'.
+)--");
+  }
+  {
+    auto const x{parse(Utf8String("1.06e10"))};
+    xju::assert_equal(x->isNull(),false);
+  }
+}
+
+void testTrue()
+{
+  {
+    auto const x{parse(Utf8String(" true "))};
+    xju::assert_equal(x->asBool(),true);
+  }
+  try{
+    auto const x{parse(Utf8String("tru"))};
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal("\n"+readableRepr(e)+"\n",R"--(
+Failed to parse true at line 1 column 1 because
+failed to parse "true" at line 1 column 1 because
+line 1 column 4: end of input.
+)--");
+  }
+  {
+    auto const x{parse(Utf8String("1.06e10"))};
+    try{
+      x->asBool();
+      xju::assert_never_reached();
+    }
+    catch(xju::Exception const& e){
+      xju::assert_equal("\n"+readableRepr(e)+"\n",R"--(
+Failed to get 1.06e10 (at line 1 column 1) as a bool because
+1.06e10 (at line 1 column 1) is not true or false.
+)--");
+    }
+  }
+}
+
+void testFalse()
+{
+  {
+    auto const x{parse(Utf8String(" false "))};
+    xju::assert_equal(x->asBool(),false);
+  }
+  try{
+    auto const x{parse(Utf8String("fasle"))};
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal("\n"+readableRepr(e)+"\n",R"--(
+Failed to parse false at line 1 column 1 because
+failed to parse "false" at line 1 column 1 because
+line 1 column 3: expected 'l' but found 's'.
+)--");
+  }
+  {
+    auto const x{parse(Utf8String("1.06e10"))};
+    try{
+      x->asBool();
+      xju::assert_never_reached();
+    }
+    catch(xju::Exception const& e){
+      xju::assert_equal("\n"+readableRepr(e)+"\n",R"--(
+Failed to get 1.06e10 (at line 1 column 1) as a bool because
+1.06e10 (at line 1 column 1) is not true or false.
+)--");
+    }
+  }
+}
+
 void testNumber() {
   {
     auto const x{parse(Utf8String("3.45"))};
@@ -211,6 +298,9 @@ using namespace xju::json;
 int main(int argc, char* argv[])
 {
   unsigned int n(0);
+  testNull(), ++n;
+  testTrue(), ++n;
+  testFalse(), ++n;
   testNumber(), ++n;
   testString(), ++n;
   testArray(), ++n;

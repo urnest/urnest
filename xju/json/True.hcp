@@ -1,0 +1,52 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/json/Element.hh>
+#include <string>
+#include <sstream> //impl
+#include <typeinfo> //impl
+
+namespace xju
+{
+namespace json
+{
+class True : public xju::json::Element
+{
+public:
+  explicit True() noexcept
+  {
+  }
+
+  virtual std::string str() const noexcept override
+  {
+    return "true";
+  }
+
+  virtual bool lessThan(Element const& y) const noexcept override
+  {
+    if (typeid(*this)!=typeid(y)){
+      return std::string(typeid(*this).name())<typeid(y).name();
+    }
+    return false;
+  }
+
+protected:
+  // Get the value of this element assuming it is a JSON Number
+  // representable as a long double.
+  virtual bool asBool_() const throw() override
+  {
+    return true;
+  }
+
+};
+
+}
+}
