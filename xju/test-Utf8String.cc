@@ -25,6 +25,7 @@ void test1() {
     Utf8String x{"fred"};
     xju::assert_equal(std::string("fred"),std::string(x));
     xju::assert_equal(x.size(),4U);
+    xju::assert_equal(x+x,Utf8String("fredfred"));
   }
   {
     Utf8String x{std::string{'f','r',(char)0xc4,(char)0x95,'d'}};

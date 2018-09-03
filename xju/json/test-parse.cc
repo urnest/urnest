@@ -11,13 +11,14 @@
 
 #include <iostream>
 #include <xju/assert.hh>
+#include <xju/utf8/encodeCodePoint.hh>
 
 namespace xju
 {
 namespace json
 {
 
-void test1() {
+void testNumber() {
   {
     auto const x{parse(Utf8String("3.45"))};
     xju::assert_equal(x->asDouble(),3.45);
@@ -54,7 +55,108 @@ void test1() {
   catch(xju::Exception const& e){
     xju::assert_equal(readableRepr(e),"Failed to get 1.06e10 (at line 1 column 1) as a bool because\n1.06e10 (at line 1 column 1) is not true or false.");
   }
+  try{
+    auto const x{parse(Utf8String("1.06e10"))};
+    x->asString();
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal("\n"+readableRepr(e)+"\n",R"--(
+Failed to get 1.06e10 (at line 1 column 1) as a string because
+1.06e10 (at line 1 column 1) is not a string.
+)--");
+  }
 
+}
+
+void testString()
+{
+  {
+    auto const x{parse(Utf8String("\"fred\""))};
+    xju::assert_equal(x->asString(),xju::Utf8String("fred"));
+  }
+  {
+    auto const x{parse(Utf8String(R"--("fr\"\\\/\a\b\f\n\r\ted")--"))};
+    xju::assert_equal(x->asString(),xju::Utf8String("fr\"\\/\a\b\f\n\r\ted"));
+  }
+  {
+    auto const x{parse(Utf8String(R"--("fr\u20ACed")--"))};
+    xju::assert_equal(x->asString(),
+                      xju::Utf8String(
+                        std::string{'f','r',
+                            (char)0xE2,(char)0x82,(char)0xAC,
+                            'e','d'}));
+  }
+  {
+    //surrogate pair - see xju/utf8/test-surrogate.cc
+    auto const x{parse(Utf8String(R"--("fr\uD801\uDC37ed")--"))};
+    xju::assert_equal(x->asString(),
+                      xju::Utf8String("fr")+
+                      xju::Utf8String(xju::utf8::encodeCodePoint(0x10437))+
+                      xju::Utf8String("ed"));
+  }
+
+  try{
+    auto const x{parse(Utf8String(R"--("fred")--"))};
+    x->asInt();
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal("\n"+readableRepr(e)+"\n",R"--(
+Failed to get "fred" (at line 1 column 1) as an int because
+"fred" (at line 1 column 1) is not a number.
+)--");
+  }
+
+  try{
+    auto const x{parse(Utf8String(R"--("fre\d")--"))};
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal("\n"+readableRepr(e)+"\n",R"--(
+Failed to parse JSON string at line 1 column 1 because
+line 1 column 6: expected one of ", \, /, a, b, f, n, r, t, u, got (c-escaped) "d".
+)--");
+  }
+
+  try{
+    auto const x{parse(Utf8String(R"--("fre\uD7ff\uDC00d")--"))};
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal("\n"+readableRepr(e)+"\n",R"--(
+Failed to parse JSON string at line 1 column 1 because
+line 1 column 16: 0x0000dc00 is not a valid Unicode character because it is in the utf-16 surrogate pair reserved range 0xD800..0xDFFF.
+)--");
+  }
+  try{
+    auto const x{parse(Utf8String(R"--("fre\uD800\uDb00d")--"))};
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal("\n"+readableRepr(e)+"\n",R"--(
+Failed to parse JSON string at line 1 column 1 because
+line 1 column 16: failed to decode 0xd800 and 0xdb00 assuming they are a UTF16 surrogate pair (high,low) because
+0xdb00 is not in range 0xDC00..0xDFFF.
+)--");
+  }
+
+  try{
+    auto const x{parse(Utf8String(R"--("fred)--"))};
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal("\n"+readableRepr(e)+"\n",R"--(
+Failed to parse JSON string at line 1 column 1 because
+line 1 column 6: end of input.
+)--");
+  }
+
+
+}
+
+void testArray()
+{
   {
     std::string const s{" [ 1,2 , 3] "};
     auto const x{parse(Utf8String(s))};
@@ -98,6 +200,7 @@ Failed to get 1.06e10 (at line 1 column 1) as an array because
     auto const y{parse(Utf8String(" [ 1,2 , 3,4] "))};
     xju::assert_less(*x,*y);
   }
+
 }
 
 }
@@ -108,7 +211,9 @@ using namespace xju::json;
 int main(int argc, char* argv[])
 {
   unsigned int n(0);
-  test1(), ++n;
+  testNumber(), ++n;
+  testString(), ++n;
+  testArray(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

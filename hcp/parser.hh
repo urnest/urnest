@@ -132,7 +132,22 @@ private:
 };
 std::string readableRepr(Exception const& e) throw();
   
-  
+class FixedCause : public hcp_parser::Exception::Cause
+{
+public:
+  ~FixedCause() throw()
+  {
+  }
+  explicit FixedCause(std::string const& cause) throw():
+      cause_(cause)
+  {
+  }
+  virtual std::string str() const throw()
+  {
+    return cause_;
+  }
+  std::string const cause_;
+};
 
 class ParseResult
 {

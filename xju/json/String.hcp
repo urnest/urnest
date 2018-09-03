@@ -10,12 +10,11 @@
 
 
 #include <xju/json/Element.hh>
-#include <xju/stringToDouble.hh> //impl
-#include <xju/stringToInt.hh> //impl
 #include <string>
 #include <sstream> //impl
 #include <typeinfo> //impl
 #include <xju/format.hh> //impl
+#include <xju/Utf8String.hh>
 
 namespace xju
 {
@@ -24,7 +23,7 @@ namespace json
 class String : public xju::json::Element
 {
 public:
-  explicit String(Utf8String const value) noexcept
+  explicit String(xju::Utf8String const value) noexcept
     :value_(value)
   {
   }
@@ -50,7 +49,7 @@ protected:
   }
 
 private:
-  std::Utf8String value_;
+  xju::Utf8String value_;
 };
 
 }

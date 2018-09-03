@@ -19,6 +19,11 @@
 #include <hcp/ast.hh> //impl
 #include <xju/Utf8String.hh>
 #include <xju/json/Array.hh> //impl
+#include <xju/json/String.hh> //impl
+#include <xju/stringToUInt.hh> //impl
+#include <xju/utf8/surrogate.hh> //impl
+#include <xju/utf8/encodeCodePoint.hh> //impl
+#include <xju/utf8/decodeCodePoint.hh> //impl
 
 namespace xju
 {
@@ -111,7 +116,7 @@ public:
 class AstElement : public hcp_ast::CompositeItem
 {
 public:
-  AstElement(std::vector<hcp_ast::IR>& items,
+  AstElement(std::vector<hcp_ast::IR> const& items,
              std::shared_ptr<xju::json::Element const> const& element) throw()
       : hcp_ast::CompositeItem(items),
         element_(element)
@@ -123,13 +128,13 @@ public:
 class AstNumber : public AstElement
 {
 public:
-  explicit AstNumber(std::vector<hcp_ast::IR>& items) noexcept
+  explicit AstNumber(std::vector<hcp_ast::IR> const& items) noexcept
       :AstElement(items,AstNumber::convert(items))
   {
   }
 private:
   std::shared_ptr<xju::json::Number const> convert(
-    std::vector<hcp_ast::IR>& items) noexcept
+    std::vector<hcp_ast::IR> const& items) noexcept
   {
     xju::assert_not_equal(items.size(),0U);
     return std::shared_ptr<xju::json::Number const>(
@@ -143,7 +148,7 @@ private:
 class AstString : public AstElement
 {
 public:
-  explicit AstString(std::vector<hcp_ast::IR>& items,
+  explicit AstString(std::vector<hcp_ast::IR> const& items,
                      Utf8String const& value) noexcept
     :AstElement(items,AstString::convert(items,value))
   {
@@ -151,22 +156,22 @@ public:
   class Item : public hcp_ast::Item
   {
   public:
-    I begin_;
-    I end_;
+    hcp_ast::I begin_;
+    hcp_ast::I end_;
     
     virtual ~Item() throw() {
     }
     
-    explicit Item(I begin, I end) throw():
+    explicit Item(hcp_ast::I begin, hcp_ast::I end) throw():
         begin_(begin),
         end_(end) {
     }
     // Item::
-    virtual I begin() const noexcept override {
+    virtual hcp_ast::I begin() const noexcept override {
       return begin_;
     }
     // Item::
-    virtual I end() const noexcept override {
+    virtual hcp_ast::I end() const noexcept override {
       return end_;
     }
     virtual std::string str() const noexcept override
@@ -177,7 +182,7 @@ public:
 private:
 
   std::shared_ptr<xju::json::String const> convert(
-    std::vector<hcp_ast::IR>& items,
+    std::vector<hcp_ast::IR> const& items,
     Utf8String const& value) noexcept
   {
     xju::assert_not_equal(items.size(),0U);
@@ -258,7 +263,111 @@ hcp_parser::PR number() noexcept
 
 struct StringLiteralParser : public hcp_parser::Parser
 {
-  class C1 : hcp_parser::Cause
+  // Parser::
+  virtual hcp_parser::ParseResult parse_(
+    hcp_parser::I const at, hcp_parser::Options const& o) throw() 
+  {
+    try{
+      std::ostringstream unescaped;
+      auto i{at};
+      if (*i != '"'){
+        return hcp_parser::ParseResult(
+          hcp_parser::Exception(
+            xju::Shared<hcp_parser::Exception::Cause>(new C1(*i,'"')),
+            i,
+            XJU_TRACED));
+      }
+      ++i;
+      while(*i != '"'){
+        try{
+          if ((*i)=='\\'){
+            switch(*++i){
+            case '"': unescaped << '"'; break;
+            case '\\':unescaped << '\\'; break;
+            case '/': unescaped << '/'; break;
+            case 'a': unescaped << '\a'; break;
+            case 'b': unescaped << '\b'; break;
+            case 'f': unescaped << '\f'; break;
+            case 'n': unescaped << '\n'; break;
+            case 'r': unescaped << '\r'; break;
+            case 't': unescaped << '\t'; break;
+            case 'u':{
+              std::string s{*++i,*++i,*++i,*++i};
+              uint16_t const u(xju::stringToUInt(s,16));
+              if (xju::utf8::surrogate::isSurrogateHigh(u)){
+                ++i;
+                if (*i!='\\' || *xju::next(i)!='u'){
+                  return hcp_parser::ParseResult(
+                    hcp_parser::Exception(
+                      xju::Shared<hcp_parser::Exception::Cause>(
+                        new C2(*i,*xju::next(i))),
+                      i,
+                      XJU_TRACED));
+                }
+                ++i;
+                std::string s{*++i,*++i,*++i,*++i};
+                uint16_t const v(xju::stringToUInt(s,16));
+                unescaped << xju::utf8::encodeCodePoint(
+                  xju::utf8::surrogate::decodeSurrogatePair(u,v));
+              }
+              else{
+                unescaped << xju::utf8::encodeCodePoint(u);
+              }
+              break;
+            }
+            default:
+              return hcp_parser::ParseResult(
+                hcp_parser::Exception(
+                  xju::Shared<hcp_parser::Exception::Cause>(
+                    new C3(*i)),
+                  i,
+                  XJU_TRACED));
+            }
+            ++i;
+          }
+          else {
+            auto const x{xju::utf8::decodeCodePoint(i)};
+            unescaped << xju::utf8::encodeCodePoint(x.first);
+            i=x.second;
+          }
+        }
+        catch(xju::Exception& e){
+          return hcp_parser::ParseResult(
+            hcp_parser::Exception(
+              xju::Shared<hcp_parser::Exception::Cause>(
+                new hcp_parser::FixedCause(
+                  readableRepr(e,false,true))),
+              i,
+              XJU_TRACED));
+        }
+      }
+      xju::assert_equal(*i,'"');
+      ++i;
+      return hcp_parser::ParseResult(
+        std::make_pair(
+          hcp_ast::IRs(
+            1U,
+            new AstString(
+              hcp_ast::IRs(1U,new AstString::Item(at,i)),
+              xju::Utf8String(unescaped.str()))),
+          i));
+    }
+    catch(hcp_ast::I::EndOfInput const& e) {
+      return hcp_parser::ParseResult(
+        hcp_parser::Exception(
+          xju::Shared<hcp_parser::Exception::Cause>(
+            new hcp_parser::FixedCause(
+              "end of input")),
+          e.at_,
+          XJU_TRACED));
+    }
+  }
+    
+  virtual std::string target() const throw() {
+    return "JSON string";
+  }
+
+  class C1 : public hcp_parser::Exception::Cause
   {
   public:
     explicit C1(char got,char want) noexcept
@@ -276,81 +385,50 @@ struct StringLiteralParser : public hcp_parser::Parser
     char const got_;
     char const want_;
   };
-  // Parser::
-  virtual hcp_parser::ParseResult parse_(
-    hcp_parser::I const at, hcp_parser::Options const& o) throw() 
+  class C2 : public hcp_parser::Exception::Cause
   {
-    std::ostringstream unescaped;
-    auto i{at};
-    if (*i != '"'){
-      return hcp_parser::ParseResult(hcp_parser::Exception(
-                                       xju::Shared(new C1(*i,'"')),
-                                       i,
-                                       XJU_TRACED));
+  public:
+    explicit C2(char got1,char got2) noexcept
+      :got1_(got1),
+       got2_(got2)
+    {
     }
-    ++i;
-    while(*i != '"'){
-      try{
-        if ((*i)=='\\'){
-          switch(*++i){
-          case '"': unescaped << '"'; break;
-          case '\\':unescaped << '\\'; break;
-          case '/': unescaped << '/'; break;
-          case 'a': unescaped << '\a'; break;
-          case 'b': unescaped << '\b'; break;
-          case 'f': unescaped << '\c'; break;
-          case 'n': unescaped << '\n'; break;
-          case 'r': unescaped << '\r'; break;
-          case 't': unescaped << '\t'; break;
-          case 'u':{
-            std::string s{*++i,*++i,*++i,*++i};
-            uint16_t const v(xju::stringToUInt(s,16));
-            if (xju::utf8::surrogate::isSurrogateHigh(v)){
-              ++i;
-              if (*i!='\\' || *xju::next(i)!='u'){
-                return hcp_parser::ParseResult(
-                  hcp_parser::Exception(
-                    xju::Shared(new C2(*i,*xju::next(i))),
-                    i,
-                    XJU_TRACED));
-              }
-              ++i;++i;
-              std::string s{*++i,*++i,*++i,*++i};
-              uint16_t const u(xju::stringToUInt(s,16));
-              unescaped << xju::utf8::encodeCodePoint(
-                xju::utf8::surrogate::decodeSurrogatePair(u,v));
-            }
-            else{
-              unescaped << xju::utf8::encodeCodePoint(v);
-            }
-            break;
-          }
-          }
-          ++i;
-        }
-        else {
-          auto const x{xju::utf8::decodeCodePoint(i)};
-          unescaped << xju::utf8::encodeCodePoint(x.first);
-          i=x.second;
-        }
-      }
-      catch(xju::Exception& e){
-        return hcp_parser::ParseResult(hcp_parser::Exception(
-                                         xju::Shared(new C0(e),i,XJU_TRACED)));
-      }
+    virtual std::string str() const throw() override
+    {
+      std::ostringstream s;
+      s << "expected \"\\u\""
+        << ", got "  << xju::format::quote(xju::format::cEscapeChar(got1_)+
+                                           xju::format::cEscapeChar(got2_));
+      return s.str();
     }
-    return hcp_parser::ParseResult(
-      std::make_pair(
-        hcp_ast::IRs(
-          1U,
-          new AstString(
-            hcp_ast::IRs(1U,new AstString::Item(at,i)),
-            xju::Utf8String(unescaped.str())))));
-  }
-  virtual std::string target() const throw() {
-    return "JSON string";
-  }
+    char const got1_;
+    char const got2_;
+  };
+  class C3 : public hcp_parser::Exception::Cause
+  {
+  public:
+    explicit C3(char got) noexcept
+      :got_(got)
+    {
+    }
+    virtual std::string str() const throw() override
+    {
+      std::ostringstream s;
+      s << "expected one of \", \\, /, a, b, f, n, r, t, u, got (c-escaped) "
+        << xju::format::quote(xju::format::cEscapeChar(got_));
+      return s.str();
+    }
+    char const got_;
+  };
 };
+
+hcp_parser::PR string() noexcept
+{
+  static hcp_parser::PR result(
+    hcp_parser::PR(new StringLiteralParser)+
+    hcp_parser::eatWhite());
+  return result;
+}
 
 hcp_parser::PR element() noexcept;
 
@@ -389,9 +467,9 @@ hcp_parser::PR element() noexcept
 {
   static hcp_parser::PR result(
     array()|
+    string()|
     number()/*|
     bool()|
-    string()|
     map()|
     null()
     ... */);

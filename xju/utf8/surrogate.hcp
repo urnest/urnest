@@ -20,7 +20,7 @@ namespace utf8
 {
 namespace surrogate
 {
-bool isSurrugateHigh(uint16_t const x) noexcept
+bool isSurrogateHigh(uint16_t const x) noexcept
 {
   return  0xD800<=x && x<=0xDBFF;
 }

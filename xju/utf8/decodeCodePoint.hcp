@@ -1,0 +1,125 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <utility>
+#include <xju/parse.hh>
+#include <string>
+#include <xju/Exception.hh>
+#include <cinttypes> //impl
+#include <xju/format.hh> //impl
+#include <sstream> //impl
+namespace xju
+{
+namespace utf8
+{
+
+namespace
+{
+// note at is start of whole char
+uint32_t
+decodeTrailingByte(
+  xju::parse::IteratorAdaptor<std::string::const_iterator> const at,
+  unsigned int bytesInChar,
+  unsigned int byteOfChar) throw(
+    xju::Exception)
+{
+  try{
+    auto i(at);
+    for(int n=1; n<byteOfChar; ++n,++i);
+    uint8_t const c(*i);
+    if ((c>>6)!=2){
+      std::ostringstream s;
+      s << xju::format::hex(c)
+        << " does not have bit pattern 10xxxxxx";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    return c&0x3f;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode byte " << byteOfChar << " of "
+      << bytesInChar << "-byte utf-8 char sequence";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+}
+
+std::pair<
+  char32_t,
+  xju::parse::IteratorAdaptor<std::string::const_iterator> > decodeCodePoint(
+    xju::parse::IteratorAdaptor<std::string::const_iterator> at) throw(
+      xju::Exception)
+{
+  try{
+    auto i{at};
+    uint32_t c((uint8_t)(*i));
+    if ((c>>7)==0){
+      return std::make_pair((char32_t)c,++i);
+    }
+    else if ((c>>5)==6){
+      c=((c&0x1f)<<6)+
+        decodeTrailingByte(i,2,2);
+      ++i;++i;
+    }
+    else if ((c>>4)==0x0e){
+      c=((c&0x0f)<<12)+
+        (decodeTrailingByte(i,3,2)<<6)+
+        decodeTrailingByte(i,3,3);
+      ++i;++i;++i;
+    }
+    else if ((c>>3)==0x1e){
+      c=((c&0x07)<<18)+
+        (decodeTrailingByte(i,4,2)<<12)+
+        (decodeTrailingByte(i,4,3)<<6)+
+        decodeTrailingByte(i,4,4);
+      ++i;++i;++i;++i;
+    }
+    else if ((c>>3)==0x1f){
+      std::ostringstream s;
+      s << "first byte of character, "
+        << xju::format::hex((int8_t)c)
+        << ", has invalid bit pattern 11111xxxx";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    else if ((c>>6)==2){
+      std::ostringstream s;
+      s << "first byte of character, "
+        << xju::format::hex((int8_t)c) << ", has invalid bit pattern 10xxxxxx";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    if (c > 0x10ffff){
+      std::ostringstream s;
+      s << xju::format::hex(c) << " is invalid "
+        << "(the last valid unicode code point is 0x10FFFF)";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    if (0xd800<=c && c<=0xdfff){
+      std::ostringstream s;
+      s << xju::format::hex(c)
+        << " is not a valid Unicode character because "
+        << "it is in the utf-16 surrogate pair reserved range 0xD800..0xDFFF";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    return std::make_pair((char32_t)c,i);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode unicode character from UTF-8 string";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+}
+
+

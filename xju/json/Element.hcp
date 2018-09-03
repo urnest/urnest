@@ -85,6 +85,21 @@ public:
     }
   }
 
+  xju::Utf8String asString() const throw(
+    // this element is not a string
+    xju::Exception)
+  {
+    try{
+      return asString_();
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "get " << str() << " as a string";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
   // Get the value of this element assuming it is a JSON array.
   std::vector<std::shared_ptr<Element const> > const& asArray() const throw(
     // this element is not an array
@@ -198,7 +213,17 @@ protected:
     xju::Exception)
   {
     std::ostringstream s;
-    s << str() << " is not a Number";
+    s << str() << " is not a number";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+
+  // see asString() above
+  // - note overridden by subclass(es)
+  virtual xju::Utf8String asString_() const throw(
+    xju::Exception)
+  {
+    std::ostringstream s;
+    s << str() << " is not a string";
     throw xju::Exception(s.str(),XJU_TRACED);
   }
 

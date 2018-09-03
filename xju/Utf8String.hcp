@@ -83,6 +83,37 @@ private:
   {
     return x.value_ < y.value_;
   }
+  friend bool operator>(Utf8String const& x, Utf8String const& y) noexcept
+  {
+    return y < x;
+  }
+  friend bool operator!=(Utf8String const& x, Utf8String const& y) noexcept
+  {
+    return (x<y)||(y<x);
+  }
+  friend bool operator==(Utf8String const& x, Utf8String const& y) noexcept
+  {
+    return !(x!=y);
+  }
+  friend bool operator<=(Utf8String const& x, Utf8String const& y) noexcept
+  {
+    return (x<y)||(x==y);
+  }
+  friend bool operator>=(Utf8String const& x, Utf8String const& y) noexcept
+  {
+    return (x>y)||(x==y);
+  }
+  friend std::ostream& operator<<(std::ostream& s, Utf8String const& x) noexcept
+  {
+    return s << x.value_.first;
+  }
+  friend Utf8String operator+(Utf8String const& x, Utf8String const& y) noexcept
+  {
+    Utf8String result("");
+    result.value_.first=x.value_.first+y.value_.first;
+    result.value_.second=x.value_.second+y.value_.second;
+    return result;
+  }
 };
 
 }

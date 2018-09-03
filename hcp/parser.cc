@@ -26,24 +26,6 @@ namespace hcp_parser
 
 namespace
 {
-class FixedCause : public hcp_parser::Exception::Cause
-{
-public:
-  ~FixedCause() throw()
-  {
-  }
-  explicit FixedCause(std::string const& cause) throw():
-      cause_(cause)
-  {
-  }
-  virtual std::string str() const throw()
-  {
-    return cause_;
-  }
-  std::string const cause_;
-};
-
-    
 std::string contextReadableRepr(
   std::pair<std::pair<Parser const*, I>, xju::Traced> const& c) throw()
 {
