@@ -101,7 +101,7 @@ OVERVIEW
 	
     -   odin/test a couple of tests of odin itself
 
--   xju has my C++ classes etc for things like posix threads,
+-   xju has my C++ classes etc for things like posix threads, sub-processes
     exception handling, assertions, io, file+directory, utf8, json, snmp; if
     there is a theme it is providing classes that are hard to misuse and
     that leverage C++ strengths:
@@ -109,10 +109,9 @@ OVERVIEW
         - RAII
       status: usable
 
--   hcp is progress towards a utility to split C++-in-single-source-file
+-   hcp is a utility to split C++-in-single-source-file
     into .h and .cpp files (to make hand-coding more efficient); part of
-    this utility is a (partial) C++ parser that I hope to use to write
-    other C++ source code handling tools
+    this utility is a (partial) C++ parser and a decent C++ tags program
       status: usable but room for improvement (see hcp/TODO)
 
 -   omnicxy is progress towards a modern CORBA C++ language mapping 
