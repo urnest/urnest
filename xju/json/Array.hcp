@@ -12,6 +12,7 @@
 #include <xju/json/Element.hh>
 #include <sstream> //impl
 #include <algorithm> //impl
+#include <xju/seq_less.hh> //impl
 
 namespace xju
 {
@@ -41,31 +42,12 @@ public:
       return std::string(typeid(*this).name())<typeid(y).name();
     }
     auto const b{dynamic_cast<Array const&>(y)};
-    auto const m{
-      std::mismatch(
-        value_.begin(),
-        value_.begin()+std::min(value_.size(),b.value_.size()),
-        b.value_.begin(),
-        [](std::shared_ptr<Element const> const& a,
-           std::shared_ptr<Element const> const& b){
-          return (*a) == (*b);
-        })};
-    if (m.first==value_.end() && m.second==b.value_.end()){
-      // a,b,c < a,b,c
-      return false;
-    }
-    if (m.first==value_.end() && m.second!=b.value_.end()){
-      // a,b,c < a,b,c,d
-      return true;
-    }
-    if (m.first!=value_.end() && m.second==b.value_.end()){
-      // a,b,c,d < a,b,c
-      return false;
-    }
-    xju::assert_not_equal(m.first,value_.end());
-    xju::assert_not_equal(m.second,b.value_.end());
-    // a,b,c,x < a,b,c,y
-    return (**m.first)<(**m.second);
+    return xju::seq_less(value_.begin(),value_.end(),
+                         b.value_.begin(),b.value_.end(),
+                         [](std::shared_ptr<Element const> const& a,
+                            std::shared_ptr<Element const> const& b){
+                           return (*a) == (*b);
+                         });
   }
 
 protected:

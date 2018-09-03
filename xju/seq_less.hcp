@@ -1,0 +1,58 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/assert.hh>
+namespace xju
+{
+template<class I1, class I2, class Less>
+bool seq_less(I1 b1, I1 const e1,
+              I2 b2, I2 const e2,
+              Less l) noexcept
+{
+  while(b1<e1 && b2<e2){
+    if (l(*b1,*b2)){
+      return true;
+    }
+    if (l(*b2,*b1)){
+      return false;
+    }
+    ++b1;
+    ++b2;
+  }
+  if (b1==e1 && b2==e2){
+    // a,b < a,b
+    return false;
+  }
+  if (b1==e1){
+    // a,b < a,b,c
+    return true;
+  }
+  if (b2==e2){
+    // a,b,c < a,b
+    return false;
+  }
+  xju::assert_never_reached();
+}
+template<class I1, class I2>
+bool seq_less(I1 b1, I1 const e1,
+              I2 b2, I2 const e2) noexcept
+{
+  return seq_less(b1,e1,
+                  b2,e2,
+                  [](decltype(*b1) const& x,
+                     decltype(*b2) const& y){
+                    return x<y;
+                  });
+}
+
+}
+
+
