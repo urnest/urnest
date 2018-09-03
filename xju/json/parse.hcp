@@ -19,6 +19,7 @@
 #include <hcp/ast.hh> //impl
 #include <xju/Utf8String.hh>
 #include <xju/json/Array.hh> //impl
+#include <xju/json/Object.hh> //impl
 #include <xju/json/String.hh> //impl
 #include <xju/stringToUInt.hh> //impl
 #include <xju/utf8/surrogate.hh> //impl
@@ -178,6 +179,30 @@ public:
   }
 };
 
+class ParsedObject : public xju::json::Object
+{
+public:
+  ParsedObject(
+    std::map<xju::Utf8String,std::shared_ptr<Element const> > const& value,
+    unsigned int atLine,
+    unsigned int atColumn) noexcept
+    :xju::json::Object(value),
+     atLine_(atLine),
+     atColumn_(atColumn)
+  {
+  }
+  unsigned int atLine_;
+  unsigned int atColumn_;
+
+  virtual std::string str() const noexcept override
+  {
+    std::ostringstream s;
+    s << Object::str() << " (at line " << atLine_
+      << " column " << atColumn_ << ")";
+    return s.str();
+  }
+};
+
 // hcp_ast::Item type tree mirroring json Element type tree
 class AstElement : public hcp_ast::CompositeItem
 {
@@ -287,6 +312,47 @@ private:
     return std::shared_ptr<xju::json::Array const>(
       new xju::json::ParsedArray(
         arrayElements,
+        items.front()->begin().line_,
+        items.front()->begin().column_));
+  }
+};
+
+class ObjectMemberTag{};
+typedef hcp_ast::TaggedCompositeItem<ObjectMemberTag> ObjectMember;
+
+class ObjectValueTag{};
+typedef hcp_ast::TaggedCompositeItem<ObjectValueTag> ObjectValue;
+
+class AstObject : public AstElement
+{
+public:
+  explicit AstObject(std::vector<hcp_ast::IR>& items) noexcept
+      :AstElement(items,AstObject::convert(items))
+  {
+  }
+private:
+  std::shared_ptr<xju::json::Object const> convert(
+    std::vector<hcp_ast::IR>& items) noexcept
+  {
+    xju::assert_not_equal(items.size(),0U);
+    auto const children(hcp_ast::findChildrenOfType<ObjectMember>(
+                          hcp_ast::CompositeItem(items)));
+    std::map<xju::Utf8String,std::shared_ptr<Element const> > objectElements;
+    std::transform(children.begin(),children.end(),
+                   std::inserter(objectElements,objectElements.end()),
+                   [](ObjectMember const& x){
+                     auto const key(
+                       hcp_ast::findChildrenOfType<AstString>(x,1U).front());
+                     auto const value(
+                       hcp_ast::findChildrenOfType<ObjectValue>(x,1U).front());
+                     return std::make_pair(
+                       key.get().element_->asString(),
+                       hcp_ast::findChildrenOfType<AstElement>(
+                         value.get(),1U).front().get().element_);
+                   });
+    return std::shared_ptr<xju::json::Object const>(
+      new xju::json::ParsedObject(
+        objectElements,
         items.front()->begin().line_,
         items.front()->begin().column_));
   }
@@ -564,19 +630,36 @@ hcp_parser::PR array() noexcept
           hcp_parser::parseLiteral("]")+hcp_parser::eatWhite())))};
   return result;
 }
+hcp_parser::PR object() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::PR(
+      new hcp_parser::NamedParser<AstObject>(
+        "object",
+        hcp_parser::listOf(
+          hcp_parser::parseLiteral("{")+hcp_parser::eatWhite(),
+          new hcp_parser::NamedParser<ObjectMember>(
+            "object member",
+            string()+hcp_parser::parseLiteral(":")+hcp_parser::eatWhite()+
+            hcp_parser::PR(
+              new hcp_parser::NamedParser<ObjectValue>(
+                "object value",
+                elementRecurse()))),
+          hcp_parser::parseLiteral(",")+hcp_parser::eatWhite(),
+          hcp_parser::parseLiteral("}")+hcp_parser::eatWhite())))};
+  return result;
+}
 
 hcp_parser::PR element() noexcept
 {
   static hcp_parser::PR result(
     null_()|
-    array()|
     true_()|
     false_()|
     string()|
-    number()/*|
-    map()|
-    null()
-    ... */);
+    number()|
+    array()|
+    object());
   return result;
 }
 

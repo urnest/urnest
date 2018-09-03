@@ -1,0 +1,70 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/json/Element.hh>
+#include <sstream> //impl
+#include <algorithm> //impl
+#include <xju/seq_less.hh> //impl
+
+namespace xju
+{
+namespace json
+{
+class Object : public xju::json::Element
+{
+public:
+  explicit Object(
+    std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> > const& elements)
+      noexcept
+    :value_(elements)
+  {
+  }
+
+  virtual std::string str() const noexcept override
+  {
+    std::ostringstream s;
+    s << "object with " << value_.size() << " elements";
+    return s.str();
+  }
+
+  
+  virtual bool lessThan(Element const& y) const noexcept override
+  {
+    if (typeid(*this)!=typeid(y)){
+      return std::string(typeid(*this).name())<typeid(y).name();
+    }
+    auto const b{dynamic_cast<Object const&>(y)};
+    return xju::seq_less(
+      value_.begin(),value_.end(),
+      b.value_.begin(),b.value_.end(),
+      [](decltype(*value_.begin()) const& a,
+         decltype(*value_.begin()) const& b){
+        return (a.first < b.first) || ((*a.second) < (*b.second));
+      });
+  }
+
+protected:
+  virtual std::map<xju::Utf8String,std::shared_ptr<Element const> > const&
+  asObject_() const
+    throw() override
+  {
+    return value_;
+  }
+
+  
+private:
+  std::map<xju::Utf8String,std::shared_ptr<Element const> > const value_;
+};
+
+}
+}
+
+

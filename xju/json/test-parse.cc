@@ -290,6 +290,60 @@ Failed to get 1.06e10 (at line 1 column 1) as an array because
 
 }
 
+void testObject()
+{
+  {
+    std::string const s{R"--( { "a":1,"b" :2 , "c" : 3 } )--"};
+    auto const x{parse(Utf8String(s))};
+    auto const y{x->asObject()};
+    xju::assert_equal(y.size(),3);
+    xju::assert_equal((*y.find(Utf8String("a"))).second->asInt(),1);
+    xju::assert_equal((*y.find(Utf8String("b"))).second->asInt(),2);
+    xju::assert_equal((*y.find(Utf8String("c"))).second->asInt(),3);
+    xju::assert_equal(x->hasMember(Utf8String("a")),true);
+    xju::assert_equal(x->getMember(Utf8String("a")).asInt(),1);
+    xju::assert_equal(x->hasMember(Utf8String("d")),false);
+  }
+  {
+    std::string const s{" { } "};
+    auto const x{parse(Utf8String(s))};
+    auto const y{x->asObject()};
+    xju::assert_equal(y.size(),0U);
+  }
+  try{
+    std::string const s{R"--( { "a":1 "b" :2 , "c" : 3 } )--"};
+    auto const x{parse(Utf8String(s))};
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal("\n"+readableRepr(e)+"\n",R"--(
+Failed to parse object at line 1 column 2 because
+failed to parse "," then optional whitespace-separated list of object member commencing with "{" then optional whitespace and terminated by "}" then optional whitespace at line 1 column 2 because
+failed to parse "," at line 1 column 10 because
+line 1 column 10: expected ',' but found '"'.
+)--");
+  }
+  try{
+    auto const x{parse(Utf8String("1.06e10"))};
+    x->asObject();
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal("\n"+readableRepr(e)+"\n",R"--(
+Failed to get 1.06e10 (at line 1 column 1) as an object because
+1.06e10 (at line 1 column 1) is not an Object.
+)--");
+  }
+  {
+    std::string const s1{R"--( { "a":1,"b" :1 , "c" : 3 } )--"};
+    std::string const s2{R"--( { "a":1,"b" :2 , "c" : 3 } )--"};
+    auto const x{parse(Utf8String(s1))};
+    auto const y{parse(Utf8String(s2))};
+    xju::assert_less(*x,*y);
+  }
+
+}
+
 }
 }
 
@@ -304,6 +358,7 @@ int main(int argc, char* argv[])
   testNumber(), ++n;
   testString(), ++n;
   testArray(), ++n;
+  testObject(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

@@ -17,7 +17,7 @@ bool seq_less(I1 b1, I1 const e1,
               I2 b2, I2 const e2,
               Less l) noexcept
 {
-  while(b1<e1 && b2<e2){
+  while(b1!=e1 && b2!=e2){
     if (l(*b1,*b2)){
       return true;
     }
