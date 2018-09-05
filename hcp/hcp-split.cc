@@ -363,28 +363,33 @@ void genFunction(hcp_ast::FunctionDef const& x,
                  OStream& c) throw(
                    xju::Exception)
 {
-  std::vector<hcp_ast::IR>::const_iterator i(
-    std::find_if(x.items_.begin(), x.items_.end(),
-                 hcp_ast::isA_<hcp_ast::FunctionImpl>));
-  xju::assert_not_equal(i, x.items_.end());
-  std::string proto(reconstructWithoutTrailingWhitespace(
-                      x.items_.begin(), i));
-  h << proto << ";";
-
-  std::string const implTrailingWhite(
-    reconstructTrailingWhitespace(i,x.items_.end()));
-  h << implTrailingWhite;
-  
-  std::vector<hcp_ast::IR>::const_iterator j(
-    std::find_if(x.items_.begin(), x.items_.end(),
-                 hcp_ast::isA_<hcp_ast::FunctionName>));
-  xju::assert_not_equal(j, x.items_.end());
-
-  std::vector<hcp_ast::IR>::const_iterator k(x.items_.begin());
-  if ((*k)->isA<hcp_ast::FunctionQualifiers>()) {
-    k=xju::next(k);
+  if (isInlineFunction(x)) {
+    h.copy(x.begin(),x.end());
   }
-  c.copy(x.begin(), x.end());
+  else{
+    std::vector<hcp_ast::IR>::const_iterator i(
+      std::find_if(x.items_.begin(), x.items_.end(),
+                   hcp_ast::isA_<hcp_ast::FunctionImpl>));
+    xju::assert_not_equal(i, x.items_.end());
+    std::string proto(reconstructWithoutTrailingWhitespace(
+                        x.items_.begin(), i));
+    h << proto << ";";
+    
+    std::string const implTrailingWhite(
+      reconstructTrailingWhitespace(i,x.items_.end()));
+    h << implTrailingWhite;
+    
+    std::vector<hcp_ast::IR>::const_iterator j(
+      std::find_if(x.items_.begin(), x.items_.end(),
+                   hcp_ast::isA_<hcp_ast::FunctionName>));
+    xju::assert_not_equal(j, x.items_.end());
+    
+    std::vector<hcp_ast::IR>::const_iterator k(x.items_.begin());
+    if ((*k)->isA<hcp_ast::FunctionQualifiers>()) {
+      k=xju::next(k);
+    }
+    c.copy(x.begin(), x.end());
+  }
 }
 
 void genGlobalVar(hcp_ast::GlobalVarDef const& x,

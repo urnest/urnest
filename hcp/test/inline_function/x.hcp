@@ -20,3 +20,8 @@ public:
     }
   };
 };
+
+inline int get2(A::B const& x) noexcept
+{
+  return x.get();
+}

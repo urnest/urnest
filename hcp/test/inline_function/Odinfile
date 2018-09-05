@@ -10,7 +10,7 @@
 
 
 %x==()+cmd=(../../hcp-split) (x.hcp) 'x.hh' 'x.cc':output
-%check-inlines==(.%x/x.cc)+cmd='!' 'egrep' '-q' 'A::B::get':stdout
+%check-inlines==(.%x/x.cc)+cmd='!' 'egrep' '-q' '"A::B::get|get2"':stdout
 
 %gendir==%gen.vir_tree_spec:vir_tree
 
