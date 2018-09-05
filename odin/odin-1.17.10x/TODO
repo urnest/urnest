@@ -17,7 +17,9 @@
   - on-the-fly server, where the client that forks server waits for it
     exit completely before exiting (to avoid race conditions in scripts
     that have strings of odin invocations)
-  
+
+- make sure ctrl-c on client+server does not result in out-of-sync
+
 x hcp_tags*tree_tags deends on all files in tree, how can we make it
   depend only :h and :hcp?
   x perhaps dir_tags_list only depends on :h, :hcp in a directory, in

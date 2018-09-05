@@ -248,6 +248,15 @@ public:
 };
 
   
+bool isInlineFunction(hcp_ast::FunctionDef const& x) throw(
+  xju::Exception)
+{
+  hcp_ast::FunctionQualifiers const& q(
+    (*x.items_.begin())->asA<hcp_ast::FunctionQualifiers>());
+  return (std::find_if(q.items_.begin(), q.items_.end(),
+                       isLiteral("inline"))!=q.items_.end());
+}
+
 bool isFriendFunction(hcp_ast::FunctionDef const& x) throw(
   xju::Exception)
 {
@@ -308,12 +317,20 @@ void genClass(hcp_ast::ClassDef const& x,
   {
     if ((*i)->isA<hcp_ast::ClassMembers>()) {
       for(auto const m: (*i)->asA<hcp_ast::ClassMembers>().items_) {
-        if (m->isA<hcp_ast::FunctionDef>() &&
-            !isFriendFunction(m->asA<hcp_ast::FunctionDef>())) {
-          std::vector<hcp_ast::ClassDef const*> scope(outerClasses);
-          scope.push_back(&x);
-          genClassMemberFunctionDef(m->asA<hcp_ast::FunctionDef>(), h, c, 
-                                    scope);
+        if (m->isA<hcp_ast::FunctionDef>()) {
+          if (isInlineFunction(m->asA<hcp_ast::FunctionDef>())) {
+            h.copy(m->begin(),m->end());
+          }
+          else if (isFriendFunction(m->asA<hcp_ast::FunctionDef>())) {
+            //REVISIT: split
+            h.copy(m->begin(), m->end());
+          }
+          else {
+            std::vector<hcp_ast::ClassDef const*> scope(outerClasses);
+            scope.push_back(&x);
+            genClassMemberFunctionDef(m->asA<hcp_ast::FunctionDef>(), h, c, 
+                                      scope);
+          }
         }
         else if (m->isA<hcp_ast::StaticVarDef>()) {
           std::vector<hcp_ast::ClassDef const*> scope(outerClasses);

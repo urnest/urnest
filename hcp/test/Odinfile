@@ -9,6 +9,7 @@ classpecialize%all-tests.tree
 friend_function%all-tests.tree
 global-var%all-tests.tree
 hpath_option%all-tests.tree
+inline_function%all-tests.tree
 nested_namespace%all-tests.tree
 static_var_def%all-tests.tree
 template-static-member-function%all-tests.tree
