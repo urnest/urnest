@@ -251,24 +251,67 @@ public:
 bool isInlineFunction(hcp_ast::FunctionDef const& x) throw(
   xju::Exception)
 {
-  hcp_ast::FunctionQualifiers const& q(
-    (*x.items_.begin())->asA<hcp_ast::FunctionQualifiers>());
-  return (std::find_if(q.items_.begin(), q.items_.end(),
-                       isLiteral("inline"))!=q.items_.end());
+  auto const qualifiers{
+    hcp_ast::findChildrenOfType<hcp_ast::FunctionQualifiers>(x)};
+  if (!qualifiers.size()){
+    return false;
+  }
+  return (std::find_if(
+            qualifiers.front().get().items_.begin(),
+            qualifiers.front().get().items_.end(),
+            isLiteral("inline"))!=qualifiers.front().get().items_.end());
 }
 
 bool isFriendFunction(hcp_ast::FunctionDef const& x) throw(
   xju::Exception)
 {
-  hcp_ast::FunctionQualifiers const& q(
-    (*x.items_.begin())->asA<hcp_ast::FunctionQualifiers>());
-  return (std::find_if(q.items_.begin(), q.items_.end(),
-                       isLiteral("friend"))!=q.items_.end());
+  auto const qualifiers{
+    hcp_ast::findChildrenOfType<hcp_ast::FunctionQualifiers>(x)};
+  if (!qualifiers.size()){
+    return false;
+  }
+  return (std::find_if(
+            qualifiers.front().get().items_.begin(),
+            qualifiers.front().get().items_.end(),
+            isLiteral("friend"))!=qualifiers.front().get().items_.end());
+}
+
+bool isFriendFunction(hcp_ast::FunctionDecl const& x) throw(
+  xju::Exception)
+{
+  auto const qualifiers{
+    hcp_ast::findChildrenOfType<hcp_ast::FunctionQualifiers>(x)};
+  if (!qualifiers.size()){
+    return false;
+  }
+  return (std::find_if(
+            qualifiers.front().get().items_.begin(),
+            qualifiers.front().get().items_.end(),
+            isLiteral("friend"))!=qualifiers.front().get().items_.end());
 }
 
 bool isFriendOperatorLessDecl(hcp_ast::FunctionDecl const& x,
                               std::string const& className) throw()
 {
+  if (hcp_ast::findChildrenOfType<hcp_ast::TemplatePreamble>(x).size()){
+    return false;
+  }
+  if (!isFriendFunction(x)){
+    return false;
+  }
+  auto const returnType{hcp_ast::findChildrenOfType<hcp_ast::ReturnType>(x)};
+  if (!returnType.size()||
+      xju::strip(hcp_ast::reconstruct(returnType.front()))!="bool"){
+    return false;
+  }
+  auto const functionName{
+    hcp_ast::findChildrenOfType<hcp_ast::FunctionName>(x).front()};
+  auto const operatorName{
+    hcp_ast::findChildrenOfType<hcp_ast::OperatorName>(x)};
+  if (!operatorName.size()||
+      hcp_ast::reconstruct(operatorName.front())!="<"){
+    return false;
+  }
   auto const params(hcp_ast::findChildrenOfType<hcp_ast::Param>(x));
   if (params.size()!=2){
     return false;
@@ -277,7 +320,7 @@ bool isFriendOperatorLessDecl(hcp_ast::FunctionDecl const& x,
     hcp_ast::filter(
       params,
       [&](hcp_ast::Param const& p){
-        if (hcp_ast::findChildrenOfType<hcp_ast::VarNonFp>(p).size()||
+        if (!hcp_ast::findChildrenOfType<hcp_ast::VarNonFp>(p).size()||
             hcp_ast::findChildrenOfType<hcp_ast::MoveQual>(p).size()||
             hcp_ast::findChildrenOfType<hcp_ast::PointerQual>(p).size()||
             hcp_ast::findChildrenOfType<hcp_ast::ElipsesQual>(p).size()||
@@ -304,7 +347,21 @@ bool isFriendOperatorLessDecl(hcp_ast::FunctionDecl const& x,
   }
   return true;
 }
-                              
+
+std::vector<std::string> getClassMemberVarNames(hcp_ast::ClassDef const& x)
+  noexcept
+{
+  auto const globalVars{
+    hcp_ast::findChildrenOfType<hcp_ast::GlobalVarDef>(x)};
+  std::vector<std::string> result;
+  for(auto c : globalVars){
+    result.push_back(
+      hcp_ast::reconstruct(
+        hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(c)));
+  }
+  return result;
+}
+
 void genClass(hcp_ast::ClassDef const& x,
               OStream& h,
               OStream& c,
@@ -345,7 +402,64 @@ void genClass(hcp_ast::ClassDef const& x,
         else if (m->isA<hcp_ast::FunctionDecl>() &&
                  isFriendOperatorLessDecl(m->asA<hcp_ast::FunctionDecl>(),
                                           x.className_)){
-          h.copy(m->begin(), m->end()); //REVISIT: generate less etc
+          std::vector<std::string> const memberVarNames{
+            getClassMemberVarNames(x)};
+          h.copy(m->begin(), m->end());
+          h << "friend bool operator>(" << getClassName(&x) << " const& x, "
+            << getClassName(&x) << " const& y) noexcept;\n";
+
+          h << "friend bool operator!=(" << getClassName(&x) << " const& x, "
+            << getClassName(&x) << " const& y) noexcept;\n";
+
+          h << "friend bool operator==(" << getClassName(&x) << " const& x, "
+            << getClassName(&x) << " const& y) noexcept;\n";
+
+          h << "friend bool operator<=(" << getClassName(&x) << " const& x, "
+            << getClassName(&x) << " const& y) noexcept;\n";
+
+          h << "friend bool operator>=(" << getClassName(&x) << " const& x, "
+            << getClassName(&x) << " const& y) noexcept;\n";
+
+          std::vector<hcp_ast::ClassDef const*> scope(outerClasses);
+          scope.push_back(&x);
+          auto const scopedName{
+            xju::format::join(scope.begin(),
+                              scope.end(),
+                              getClassName,
+                              "::")};
+          c << "bool operator<(" << scopedName << " const& x, "
+            << scopedName << " const& y) noexcept\n{\n";
+          for(auto v:memberVarNames){
+            c << "  if (x." << v << " < y." << v << ") return true;\n";
+            c << "  if (y." << v << " < x." << v << ") return false;\n";
+          }
+          c << "  return false;\n"
+            << "}\n";
+
+          c << "bool operator>(" << scopedName << " const& x, "
+            << scopedName << " const& y) noexcept\n{\n"
+            << "  return y<x;\n"
+            << "}\n";
+
+          c << "bool operator!=(" << scopedName << " const& x, "
+            << scopedName << " const& y) noexcept\n{\n"
+            << "  return y<x||x<y;\n"
+            << "}\n";
+
+          c << "bool operator==(" << scopedName << " const& x, "
+            << scopedName << " const& y) noexcept\n{\n"
+            << "  return !(y<x||x<y);\n"
+            << "}\n";
+
+          c << "bool operator<=(" << scopedName << " const& x, "
+            << scopedName << " const& y) noexcept\n{\n"
+            << "  return !(x>y);\n"
+            << "}\n";
+
+          c << "bool operator>=(" << scopedName << " const& x, "
+            << scopedName << " const& y) noexcept\n{\n"
+            << "  return !(x<y);\n"
+            << "}\n";
         }
         else {
           h.copy(m->begin(), m->end());
