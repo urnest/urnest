@@ -21,8 +21,8 @@ test-format add format::octal tests for int, long, long long
 - way to get string-to-Float<Tag,float,E> by calling stringToFloat
   and string-to-Float<Tag,double,E> by calling stringToDouble
 
-* mkdir gets wrong perms?
-add xju::file::rm,rmdir,stat,stat(dir),ls
+- io
+  - add stat(dir),ls
 
 x Thread
   - optional stack size as percent of default to be more cross-platform?
@@ -42,11 +42,7 @@ io::Output
     IStream::useAsStdin, OStream::useAsStdout, OStream::useAsStderr
 
 - io:
-  x FileObserver
   - DirectoryObserver
-  - FileIStream
-  - FileOStream
-  - FileIOStream
   
   x break up io.hcp into io/xxx with aggregation like snmp.hh
   x pipe()

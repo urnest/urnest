@@ -13,6 +13,7 @@
 #include <iostream>
 #include <xju/file/Mode.hh>
 #include <xju/file/stat.hh>
+#include <xju/file/rmdir.hh>
 
 namespace xju
 {
@@ -44,6 +45,15 @@ void test1() {
   catch(xju::SyscallFailed const& e){
     xju::assert_equal(e._errno,ENOENT);
   }
+  xju::file::rmdir(d);
+  try{
+    xju::file::rmdir(d);
+    xju::assert_never_reached();
+  }
+  catch(xju::SyscallFailed const& e){
+    xju::assert_equal(e._errno,ENOENT);
+  }
+    
 }
 
 }
