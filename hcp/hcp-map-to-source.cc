@@ -165,9 +165,9 @@ int main(int argc, char* argv[]) {
                            "from offset",
                            parseOffset))+
           hcp_parser::atLeastOne(hcp_parser::whitespaceChar())+
-          hcp_parser::PR(new hcp_parser::NamedParser<MapToOffset>(
-                           "to offset",
-                           parseOffset))+
+          hcp_parser::named<MapToOffset>(
+            "to offset",
+            parseOffset)+
           hcp_parser::parseLiteral("\n")));
     hcp_ast::CompositeItem root{};
     hcp_ast::I begin(map.begin(),map.end());

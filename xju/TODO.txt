@@ -29,7 +29,7 @@ x Thread
   - optional rt prio, or prio value? (might be better to create a RTThread
     class?)
   
-- get rid of xju::Shared, use std::shared_ptr
+x get rid of xju::Shared, use std::shared_ptr
 
 io::Input
 io::Output

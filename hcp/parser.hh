@@ -345,6 +345,12 @@ public:
   }
 };
 
+template<class ItemType>
+PR named(std::string const& name, PR const x) throw()
+{
+  return PR(new NamedParser<ItemType>(name,x));
+}
+
 PR atLeastOne(PR const x) throw();
 PR optional(PR x) throw();
 
