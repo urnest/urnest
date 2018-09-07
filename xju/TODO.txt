@@ -4,10 +4,6 @@
 - xju::json
   config file example
   
-- extract xju::seq_less from xju::json::Array::lessThan
-
-- use std::chrono::system_clock::timepoint instead of xju::Time
-
 snmp/README.txt stuff
 
 Int,Float add operator* operator/
@@ -33,14 +29,6 @@ x Thread
   - optional rt prio, or prio value? (might be better to create a RTThread
     class?)
   
-x Mutex,Lock
-- Condition
-  x draft
-  - test
-- delete xju::mt
-
-- xju::Microseconds -> std::chrono::microseconds
-
 - get rid of xju::Shared, use std::shared_ptr
 
 io::Input
@@ -55,6 +43,7 @@ io::Output
 
 - io:
   x FileObserver
+  - DirectoryObserver
   - FileIStream
   - FileOStream
   - FileIOStream
@@ -64,7 +53,8 @@ io::Output
   - SocketPair, like pipe
   - UnixListener,UnixSocket - like TCPListener,TCPSocket
   - MessageQueue (linux allows select)
-
+  - Ethernet
+  
 - ip:
   / TCPListener : Input
   / TCPSocket : IStream,OStream

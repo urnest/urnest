@@ -19,12 +19,13 @@
 #include <xju/format.hh>
 #include <stdlib.h>
 #include <sstream>
+#include <xju/unix_epoch.hh>
 
 
 namespace
 {
 #ifdef __MINGW32__
-    struct tm* localtime_r(const time_t* t, struct tm* result)
+    tm* localtime_r(const time_t* t, struct tm* result)
     {
         // REVISIT: need serialisation
         *result = *::localtime(t);
@@ -56,7 +57,7 @@ void test1()
     xju::assert_equal(x.tm_sec, z.tm_sec);
     
     xju::assert_equal(xju::stringToTime("20020425 8:00am"),
-		      xju::Time(y, 0));
+		      xju::unix_epoch()+std::chrono::seconds(y));
 }
 
 void test2()
@@ -72,7 +73,7 @@ void test2()
     time_t y(mktime(&x));
     
     xju::assert_equal(xju::stringToTime("20020425 12:00am"),
-		      xju::Time(y, 0));
+		      xju::unix_epoch()+std::chrono::seconds(y));
 }
 
 void test3()
@@ -87,7 +88,7 @@ void test3()
     time_t y(mktime(&x));
     
     xju::assert_equal(xju::stringToTime("20020425 12:00pm"),
-		      xju::Time(y, 0));
+		      xju::unix_epoch()+std::chrono::seconds(y));
 }
 
 void test4()
@@ -102,7 +103,7 @@ void test4()
     time_t y(mktime(&x));
     
     xju::assert_equal(xju::stringToTime("20020425 9:23am"),
-		      xju::Time(y, 0));
+		      xju::unix_epoch()+std::chrono::seconds(y));
 }
 
 void test5()

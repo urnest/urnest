@@ -18,6 +18,7 @@
 #include <xju/assert.hh>
 #include <xju/stringToInt.hh>
 #include <xju/parse.hh>
+#include <xju/unix_epoch.hh>
 
 namespace xju
 {
@@ -155,7 +156,8 @@ namespace xju
                 x.tm_isdst = 0;
             
                 const time_t y(mktime(&x));
-                return xju::Time(y, 0);
+                return xju::Time(
+                    xju::unix_epoch()+std::chrono::seconds(y));
             }
             catch(xju::Exception& e)
             {
@@ -192,7 +194,7 @@ namespace xju
                 x.tm_isdst = 0;
                 
                 const time_t y(mktime(&x));
-                return xju::Time(y, 0);
+                return xju::Time(xju::unix_epoch()+std::chrono::seconds(y));
             }
             catch(xju::Exception& e)
             {

@@ -85,8 +85,9 @@ class FileObserver : public xju::io::Input, xju::NonCopyable
 public:
   // watch for modifications to files
   // - parent directories of all files must exist
-  // - use xju::io::select() to wait for one or more of files possibly
-  //   modified; use read() to see which of files if any modified
+  //
+  // Note you can use xju::io::select() to wait for one or more of files
+  // possibly modified; use read() to see which of files if any modified
   //
   FileObserver(std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& files) throw(
     // - no resources (see initify_init1)

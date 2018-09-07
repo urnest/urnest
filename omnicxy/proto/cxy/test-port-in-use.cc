@@ -18,6 +18,7 @@
 #include "xju/unistd.hh"
 #include <netinet/ip.h>
 #include <arpa/inet.h>
+#include <xju/format.hh>
 
 void test1() {
   for(uint16_t port=9012; port != 10012; ++port) {

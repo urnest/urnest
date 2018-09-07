@@ -21,54 +21,12 @@
 #ifndef _XJU_TIME_HH_
 #define _XJU_TIME_HH_
 
-#include <string>
-#include "xju/MicroSeconds.hh"
+#include <chrono>
 
 namespace xju
 {
-    class Time {
-    public:
-	//
-	// pre: usecs < 1000000
-	//
-	Time(unsigned long secs, unsigned int usecs) throw();
-	
-	bool operator<(const Time &) const throw();
-	bool operator==(const Time &) const throw();
-	bool operator>(const Time& x) const throw();
-	bool operator<=(const Time& x) const throw();
-	bool operator>=(const Time& x) const throw();
-	bool operator!=(const Time& x) const throw()
-	{
-	    return !(operator==(x));
-	}
-	
-	unsigned long getSecs() const throw();
-	unsigned int getUsecs() const throw(); // result < 1000000
-	
-	static Time now() throw(); // since epoch (see gettimeofday(2))
-	
-    private:
-	unsigned long _secs;
-	unsigned int _usecs;
-    };
+    typedef std::chrono::system_clock::time_point Time;
 }
-
-xju::Time operator+(xju::Time const& t, 
-                    xju::MicroSeconds const& d) throw(); // REVISIT: overflow?
-
-// pre: t >= d
-xju::Time operator-(xju::Time const& t, 
-                    xju::MicroSeconds const& d) throw();
-
-// pre: t1 >= t2
-xju::MicroSeconds operator-(const xju::Time &t1, const xju::Time &t2) throw();
-
-//
-// format is seconds.microseconds. Result has 6 digits
-// after the decimal and no leading zeros, e.g. 2445234.324070
-//
-std::ostream& operator<<(std::ostream& s, const xju::Time& x) throw();
 
 
 #endif

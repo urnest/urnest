@@ -36,7 +36,6 @@ ip%tests.tree
 ()+cmd=(test-Observer.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-ObserverP.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-Ring.cxx+(..%cxx-opts)+o_src_suffix=.cc .cxx:auto.cxx.exe):exec.output
-()+cmd=(test-Time.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-Traced.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-format.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-functional.cc+(..%cxx-opts):auto.cxx.exe):exec.output
