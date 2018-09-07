@@ -20,7 +20,7 @@
 #include<xju/stringToInt.hh>
 #include <stdlib.h>
 #include <cxy/ORB.hh>
-#include "xju/Shared.hh"
+#include <memory>
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {
@@ -53,13 +53,13 @@ public:
               << e << ", "
               << f << ", "
               << g << ")" << std::endl;
-    calls_.push_back(xju::Shared<Call>(
+    calls_.push_back(std::shared_ptr<Call>(
                        new Call::f1(a,b,c,d,e,f,g)));
   }
   virtual int16_t f2() throw(E)
   {
     std::cout << "F::f2(" << std::endl;
-    calls_.push_back(xju::Shared<Call>(
+    calls_.push_back(std::shared_ptr<Call>(
                        new Call::f2));
     return 22;
   }
@@ -131,7 +131,7 @@ public:
     }
   };
   
-  std::vector<xju::Shared<Call> > calls_;
+  std::vector<std::shared_ptr<Call> > calls_;
 };
 
   

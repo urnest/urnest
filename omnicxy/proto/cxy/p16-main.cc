@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <chrono>
 #include <cxy/ORB.hh>
-#include "xju/Shared.hh"
+#include <memory>
 #include <xju/stringToUInt.hh>
 
 std::string makeURI(int port, std::string const& objectName) throw()
@@ -44,7 +44,7 @@ public:
   {
     std::cout << "AAA::f(" 
               << x << ")" << std::endl;
-    calls_.push_back(xju::Shared<Call>(
+    calls_.push_back(std::shared_ptr<Call>(
                        new Call::f1(x)));
     return x;
   }
@@ -55,7 +55,7 @@ public:
   {
     std::cout << "CCC::f2(" 
               << x << ")" << std::endl;
-    calls_.push_back(xju::Shared<Call>(
+    calls_.push_back(std::shared_ptr<Call>(
                        new Call::f2(x)));
     return x;
   }
@@ -98,7 +98,7 @@ public:
       return x.a_==y.a_;
     }
   };
-  std::vector<xju::Shared<Call> > calls_;
+  std::vector<std::shared_ptr<Call> > calls_;
 };
 
   
@@ -194,7 +194,7 @@ int main(int argc, char* argv[])
             dynamic_cast<CCC_impl::Call::f2 const&>(*x.calls_[1]));
           xju::assert_equal(c, CCC_impl::Call::f2(17));
         }
-        x.calls_=std::vector<xju::Shared<CCC_impl::Call> >();
+        x.calls_=std::vector<std::shared_ptr<CCC_impl::Call> >();
         cxy::IOR<void> d(aior);
         cxy::cref<p16::CCC> e(orb,d);
         try {

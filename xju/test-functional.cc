@@ -16,7 +16,7 @@
 #include <vector>
 #include <algorithm>
 #include "xju/assert.hh"
-#include "xju/Shared.hh"
+#include <memory>
 #include <functional>
 #include <utility>
 
@@ -50,8 +50,8 @@ void test2()
 
 void test3()
 {
-    std::vector<xju::Shared<std::string const> > x;
-    x.push_back(xju::Shared<std::string const>(new std::string("a")));
+    std::vector<std::shared_ptr<std::string const> > x;
+    x.push_back(std::shared_ptr<std::string const>(new std::string("a")));
     std::vector<size_t> y;
     std::transform(
         x.begin(), 
@@ -68,9 +68,9 @@ int f4(int x)
 
 void test4()
 {
-    std::vector<xju::Shared<int> > x;
-    x.push_back(new int(1));
-    x.push_back(new int(2));
+    std::vector<std::shared_ptr<int> > x;
+    x.push_back(std::shared_ptr<int>(new int(1)));
+    x.push_back(std::shared_ptr<int>(new int(2)));
     
     std::vector<int> expect;
     expect.push_back(2);

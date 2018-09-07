@@ -19,7 +19,7 @@
 #define HCP_AST_HH
 
 #include <xju/parse.hh>
-#include "xju/Shared.hh"
+#include <memory>
 #include <string>
 #include <vector>
 #include "xju/assert.hh"
@@ -73,7 +73,11 @@ inline std::string reconstruct(Item const& x) throw() {
   return std::string(x.begin().x_, x.end().x_);
 }
 
-typedef xju::Shared<Item> IR;
+typedef std::shared_ptr<Item> IR;
+inline std::string reconstruct(IR const& x) throw() {
+  return reconstruct(*x);
+}
+
 typedef std::vector<IR> IRs;
 
 template<class T>

@@ -441,7 +441,7 @@ struct StringLiteralParser : public hcp_parser::Parser
       if (*i != '"'){
         return hcp_parser::ParseResult(
           hcp_parser::Exception(
-            xju::Shared<hcp_parser::Exception::Cause>(new C1(*i,'"')),
+            std::shared_ptr<hcp_parser::Exception::Cause>(new C1(*i,'"')),
             i,
             XJU_TRACED));
       }
@@ -467,7 +467,7 @@ struct StringLiteralParser : public hcp_parser::Parser
                 if (*i!='\\' || *xju::next(i)!='u'){
                   return hcp_parser::ParseResult(
                     hcp_parser::Exception(
-                      xju::Shared<hcp_parser::Exception::Cause>(
+                      std::shared_ptr<hcp_parser::Exception::Cause>(
                         new C2(*i,*xju::next(i))),
                       i,
                       XJU_TRACED));
@@ -486,7 +486,7 @@ struct StringLiteralParser : public hcp_parser::Parser
             default:
               return hcp_parser::ParseResult(
                 hcp_parser::Exception(
-                  xju::Shared<hcp_parser::Exception::Cause>(
+                  std::shared_ptr<hcp_parser::Exception::Cause>(
                     new C3(*i)),
                   i,
                   XJU_TRACED));
@@ -502,7 +502,7 @@ struct StringLiteralParser : public hcp_parser::Parser
         catch(xju::Exception& e){
           return hcp_parser::ParseResult(
             hcp_parser::Exception(
-              xju::Shared<hcp_parser::Exception::Cause>(
+              std::shared_ptr<hcp_parser::Exception::Cause>(
                 new hcp_parser::FixedCause(
                   readableRepr(e,false,true))),
               i,
@@ -515,15 +515,15 @@ struct StringLiteralParser : public hcp_parser::Parser
         std::make_pair(
           hcp_ast::IRs(
             1U,
-            new AstString(
-              hcp_ast::IRs(1U,new hcp_ast::String(at,i)),
-              xju::Utf8String(unescaped.str()))),
-          i));
+            hcp_ast::IR(new AstString(
+                 hcp_ast::IRs(1U,hcp_ast::IR(new hcp_ast::String(at,i))),
+                 xju::Utf8String(unescaped.str())))),
+            i));
     }
     catch(hcp_ast::I::EndOfInput const& e) {
       return hcp_parser::ParseResult(
         hcp_parser::Exception(
-          xju::Shared<hcp_parser::Exception::Cause>(
+          std::shared_ptr<hcp_parser::Exception::Cause>(
             new hcp_parser::FixedCause(
               "end of input")),
           e.at_,
@@ -638,13 +638,14 @@ hcp_parser::PR object() noexcept
         "object",
         hcp_parser::listOf(
           hcp_parser::parseLiteral("{")+hcp_parser::eatWhite(),
-          new hcp_parser::NamedParser<ObjectMember>(
-            "object member",
-            string()+hcp_parser::parseLiteral(":")+hcp_parser::eatWhite()+
-            hcp_parser::PR(
-              new hcp_parser::NamedParser<ObjectValue>(
-                "object value",
-                elementRecurse()))),
+          hcp_parser::PR(
+            new hcp_parser::NamedParser<ObjectMember>(
+              "object member",
+              string()+hcp_parser::parseLiteral(":")+hcp_parser::eatWhite()+
+              hcp_parser::PR(
+                new hcp_parser::NamedParser<ObjectValue>(
+                  "object value",
+                  elementRecurse())))),
           hcp_parser::parseLiteral(",")+hcp_parser::eatWhite(),
           hcp_parser::parseLiteral("}")+hcp_parser::eatWhite())))};
   return result;

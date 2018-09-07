@@ -22,8 +22,8 @@
 #include <chrono>
 #include <cxy/ORB.hh>
 #include <xju/stringToUInt.hh>
-#include "xju/Shared.hh"
-#include "xju/format.hh"
+#include <memory>
+#include <xju/format.hh>
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {
@@ -53,7 +53,7 @@ public:
   {
     std::cout << "servant: p21::f(" << str(s) << ")" 
               << std::endl;
-    calls_.push_back(xju::Shared<Call>(
+    calls_.push_back(std::shared_ptr<Call>(
                        new Call::f1(s)));
     return s;
   }
@@ -79,7 +79,7 @@ public:
       return x.x_==y.x_;
     }
   };
-  std::vector<xju::Shared<Call> > calls_;
+  std::vector<std::shared_ptr<Call> > calls_;
 };
 
 int main(int argc, char* argv[])
@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
           dynamic_cast<p21_impl::Call::f1 const&>(*x.calls_[0]));
         xju::assert_equal(c, p21_impl::Call::f1(
                             cxy::BoundedSequence<int16_t,4>{1,2,3,4}));
-        x.calls_=std::vector<xju::Shared<p21_impl::Call> >();
+        x.calls_=std::vector<std::shared_ptr<p21_impl::Call> >();
       }
     }
    

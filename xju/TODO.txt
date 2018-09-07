@@ -9,7 +9,7 @@ snmp/README.txt stuff
 Int,Float add operator* operator/
 Float add math functions exp, sqrt, log, floor, ceiling etc
 
-- Tagged<string> somehow add startsWith and endsWith?
+- Tagged<string> template specialisation add startsWith and endsWith?
 
 test-format add format::octal tests for int, long, long long
 

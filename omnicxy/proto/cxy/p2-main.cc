@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <chrono>
 #include <cxy/ORB.hh>
-#include "xju/Shared.hh"
+#include <memory>
 #include <xju/stringToUInt.hh>
 
 std::string makeURI(int port, std::string const& objectName) throw()
@@ -55,13 +55,13 @@ public:
               << e << ", "
               << f << ", "
               << g << ")" << std::endl;
-    calls_.push_back(xju::Shared<Call>(
+    calls_.push_back(std::shared_ptr<Call>(
                        new Call::f1(a,b,c,d,e,f,g)));
   }
   virtual int16_t f2() throw(cxy::Exception)
   {
     std::cout << "F::f2() -> 22" << std::endl;
-    calls_.push_back(xju::Shared<Call>(
+    calls_.push_back(std::shared_ptr<Call>(
                        new Call::f2));
     return 22;
   }
@@ -133,7 +133,7 @@ public:
     }
   };
   
-  std::vector<xju::Shared<Call> > calls_;
+  std::vector<std::shared_ptr<Call> > calls_;
 };
 
   
@@ -195,7 +195,7 @@ int main(int argc, char* argv[])
           F_impl::Call::f2 const& c(
             dynamic_cast<F_impl::Call::f2 const&>(*x.calls_[1]));
         }
-        x.calls_=std::vector<xju::Shared<F_impl::Call> >();
+        x.calls_=std::vector<std::shared_ptr<F_impl::Call> >();
       }
     }
     return 0;

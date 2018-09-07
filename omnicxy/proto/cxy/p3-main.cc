@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <chrono>
 #include <cxy/ORB.hh>
-#include <xju/Shared.hh>
+#include <memory>
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {
@@ -42,7 +42,7 @@ public:
   {
     std::cout << "::p3::f1(" 
               << a << ") -> MyInt(33)" << std::endl;
-    calls_.push_back(xju::Shared<Call>(
+    calls_.push_back(std::shared_ptr<Call>(
                        new Call::f1(a)));
     return ::p3::MyInt(33);
   }
@@ -50,7 +50,7 @@ public:
   {
     std::cout << "::p3::f2("
               << a << ") -> returning p3::f2" << std::endl;
-    calls_.push_back(xju::Shared<Call>(
+    calls_.push_back(std::shared_ptr<Call>(
                        new Call::f2(a)));
     return ::p3::MyString("returning p3::f2");
   }
@@ -58,7 +58,7 @@ public:
   {
     std::cout << "::p3::f3("
               << a << ") -> returning " << a << std::endl;
-    calls_.push_back(xju::Shared<Call>(
+    calls_.push_back(std::shared_ptr<Call>(
                        new Call::f3(a)));
     return a;
   }
@@ -66,7 +66,7 @@ public:
   {
     std::cout << "::p3::f4("
               << a << ") -> returning " << a << std::endl;
-    calls_.push_back(xju::Shared<Call>(
+    calls_.push_back(std::shared_ptr<Call>(
                        new Call::f4(a)));
     return a;
   }
@@ -141,7 +141,7 @@ public:
     }
   };
   
-  std::vector<xju::Shared<Call> > calls_;
+  std::vector<std::shared_ptr<Call> > calls_;
 };
 
   

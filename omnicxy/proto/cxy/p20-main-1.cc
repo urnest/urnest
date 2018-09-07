@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <chrono>
 #include <cxy/ORB.hh>
-#include "xju/Shared.hh"
+#include <memory>
 #include <xju/stringToUInt.hh>
 
 std::string makeURI(int port, std::string const& objectName) throw()
@@ -41,19 +41,19 @@ public:
   //p20::F::
   virtual cxy::Any<> f1(cxy::Any<> const& x) throw()
   {
-    calls_.push_back(xju::Shared<Call>(new Call::f1(x)));
+    calls_.push_back(std::shared_ptr<Call>(new Call::f1(x)));
     return x;
   }
   //p20::F::
   virtual int16_t f2(const int16_t& x) throw()
   {
-    calls_.push_back(xju::Shared<Call>(new Call::f2(x)));
+    calls_.push_back(std::shared_ptr<Call>(new Call::f2(x)));
     return x;
   }
   //p20::F::
   virtual p20::B f3(const p20::B& x) throw()
   {
-    calls_.push_back(xju::Shared<Call>(new Call::f3(x)));
+    calls_.push_back(std::shared_ptr<Call>(new Call::f3(x)));
     return x;
   }
   
@@ -97,7 +97,7 @@ public:
     p20::B a_;
     
   };
-  std::vector<xju::Shared<Call> > calls_;
+  std::vector<std::shared_ptr<Call> > calls_;
 };
 
   
@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
             dynamic_cast<F_impl::Call::f2 const&>(*x.calls_[0]));
           xju::assert_equal(c.a_, (int16_t)3);
         }
-        x.calls_=std::vector<xju::Shared<F_impl::Call> >();
+        x.calls_=std::vector<std::shared_ptr<F_impl::Call> >();
       }
     }
     return 0;

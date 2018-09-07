@@ -22,8 +22,8 @@
 #include <chrono>
 #include <cxy/ORB.hh>
 #include <xju/stringToUInt.hh>
-#include "xju/Shared.hh"
-#include "xju/format.hh"
+#include <memory>
+#include <xju/format.hh>
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {
@@ -54,7 +54,7 @@ public:
   {
     std::cout << "servant: p24::i24::f()"
               << std::endl;
-    calls_.push_back(xju::Shared<Call>(
+    calls_.push_back(std::shared_ptr<Call>(
                        new Call::f1(x)));
     return x;
   }
@@ -80,7 +80,7 @@ public:
       return *x.x_==*y.x_;
     }
   };
-  std::vector<xju::Shared<Call> > calls_;
+  std::vector<std::shared_ptr<Call> > calls_;
 };
 
 int main(int argc, char* argv[])
@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
           dynamic_cast<p24_impl::Call::f1 const&>(*x.calls_[0]));
         xju::assert_equal(c, p24_impl::Call::f1(
                             ::cxy::createTypeCodeOf<uint32_t>()));
-        x.calls_=std::vector<xju::Shared<p24_impl::Call> >();
+        x.calls_=std::vector<std::shared_ptr<p24_impl::Call> >();
       }
     }
    

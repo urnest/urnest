@@ -19,7 +19,7 @@
 #define HCP_PARSER_H_
 
 #include <hcp/ast.hh>
-#include "xju/Shared.hh"
+#include <memory>
 #include "xju/Exception.hh"
 #include "xju/next.hh"
 #include <sstream>
@@ -40,7 +40,7 @@ typedef std::vector<IR> IRs;
 typedef std::pair<IRs, I> PV;
 
 class Parser;
-xju::Shared<Parser> file() throw(); // reference to whole-file parser
+std::shared_ptr<Parser> file() throw(); // reference to whole-file parser
 
 // The simplest parsing interface, which parses the specified
 // type of C++ element (default is "whole file") assumed to
@@ -50,7 +50,7 @@ xju::Shared<Parser> file() throw(); // reference to whole-file parser
 // 
 I parse(hcp_ast::CompositeItem& parent,
         I const startOfElement,
-        xju::Shared<Parser> parser = file(),
+        std::shared_ptr<Parser> parser = file(),
         bool traceToStdout = false,
         bool irsAtEnd = false)
   throw(
@@ -62,7 +62,7 @@ I parse(hcp_ast::CompositeItem& parent,
 hcp_ast::CompositeItem parseString(
   std::string::const_iterator begin,
   std::string::const_iterator end,
-  xju::Shared<Parser> parser,
+  std::shared_ptr<Parser> parser,
   bool traceToStdout = false) throw(
     xju::Exception);
 
@@ -78,7 +78,7 @@ public:
     virtual std::string str() const throw() = 0;
   };
     
-  Exception(xju::Shared<Cause const> cause, 
+  Exception(std::shared_ptr<Cause const> cause, 
             I at, 
             xju::Traced const& trace,
             bool atEnd=false) throw():
@@ -104,7 +104,7 @@ public:
   }
   std::vector<std::pair<std::pair<Parser const*, I>, xju::Traced> > context_;
 
-  xju::Shared<Cause const> const cause_;
+  std::shared_ptr<Cause const> const cause_;
   I const at_;
   xju::Traced const trace_;
 
@@ -197,7 +197,7 @@ class Parser;
 typedef std::pair<I, Parser*const> CacheKey;
 typedef std::map<CacheKey, ParseResult> CacheVal;
     
-typedef xju::Shared<CacheVal> Cache;
+typedef std::shared_ptr<CacheVal> Cache;
     
 class Options
 {
@@ -216,7 +216,7 @@ public:
   }
     
   bool trace_;
-  mutable xju::Shared<std::map<std::pair<I, Parser*const>, ParseResult> > cache_;
+  mutable std::shared_ptr<std::map<std::pair<I, Parser*const>, ParseResult> > cache_;
   bool irsAtEnd_;
 };
 
@@ -258,7 +258,7 @@ public:
     return *dynamic_cast<T const*>(this);
   }
 };
-typedef xju::Shared<Parser> PR;
+typedef std::shared_ptr<Parser> PR;
 
 class ZeroOrMore{};
 
@@ -335,7 +335,7 @@ public:
         // composite needs an item
         a.first.push_back(IR(new hcp_ast::String(at, at)));
       }
-      return ParseResult(PV(IRs(1U, new ItemType(a.first)), a.second));
+      return ParseResult(PV(IRs(1U, IR(new ItemType(a.first))), a.second));
     }
     return r;
   }

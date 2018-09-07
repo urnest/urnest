@@ -68,9 +68,10 @@ std::pair<xju::path::AbsolutePath,xju::path::FileName> const findSmap(
         xju::path::split(fileName));
       
       auto const p(hcp_parser::parseLiteral("// hcp-split: generated as ")+
-                   new hcp_parser::NamedParser<GeneratedAs>(
+                   hcp_parser::PR(
+                     new hcp_parser::NamedParser<GeneratedAs>(
                      "generated as",
-                     hcp_parser::parseUntil(hcp_parser::whitespaceChar())));
+                     hcp_parser::parseUntil(hcp_parser::whitespaceChar()))));
       hcp_ast::CompositeItem root;
       std::string const fileContent(xju::file::read(f));
       hcp_parser::parse(root,

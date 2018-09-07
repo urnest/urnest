@@ -199,7 +199,7 @@ public:
 
 class ParseNot : public Parser
 {
-  static xju::Shared<Exception::Cause const> const expected_parse_failure;
+  static std::shared_ptr<Exception::Cause const> const expected_parse_failure;
 public:
   explicit ParseNot(PR term) throw():
     term_(term)
@@ -225,7 +225,7 @@ public:
   virtual std::string target() const throw();
 
 };
-xju::Shared<Exception::Cause const> const ParseNot::expected_parse_failure(
+std::shared_ptr<Exception::Cause const> const ParseNot::expected_parse_failure(
   new FixedCause("expected parse failure"));
 
 std::string Optional::target() const throw()
@@ -293,7 +293,7 @@ std::string ParseNot::target() const throw() {
 
 namespace
 {
-  xju::Shared<Exception::Cause const> const end_of_input(
+std::shared_ptr<Exception::Cause const> const end_of_input(
     new FixedCause("end of input"));
   Exception EndOfInput(I at, xju::Traced const& trace) throw()
   {
@@ -340,12 +340,13 @@ public:
     if (chars_.find(*at) == chars_.end()) {
       return ParseResult(
         Exception(
-          xju::Shared<Exception::Cause const>(new UnexpectedChar(at, chars_)), 
+          std::shared_ptr<Exception::Cause const>(new UnexpectedChar(at, chars_)), 
           at, XJU_TRACED));
     }
     return ParseResult(
       std::make_pair(
-        IRs(1U, new hcp_ast::String(at, xju::next(at))), xju::next(at)));
+        IRs(1U, std::shared_ptr<hcp_ast::String>(
+              new hcp_ast::String(at, xju::next(at)))), xju::next(at)));
   }
   // Parser::
   virtual std::string target() const throw()
@@ -402,12 +403,12 @@ public:
     if (chars_.find(*at) != chars_.end()) {
       return ParseResult(
         Exception(
-          xju::Shared<Exception::Cause const>(new UnexpectedChar(at,chars_)), 
+          std::shared_ptr<Exception::Cause const>(new UnexpectedChar(at,chars_)), 
           at, XJU_TRACED));
     }
     return ParseResult(
       std::make_pair(
-        IRs(1U, new hcp_ast::String(at, xju::next(at))), xju::next(at)));
+        IRs(1U, IR(new hcp_ast::String(at, xju::next(at)))), xju::next(at)));
   }
   // Parser::
   virtual std::string target() const throw()
@@ -462,13 +463,13 @@ public:
     if (((*at) < min_) || ((*at) > max_)) {
       return ParseResult(
         Exception(
-          xju::Shared<Exception::Cause const>(
+          std::shared_ptr<Exception::Cause const>(
             new CharNotInRange(at, min_, max_)),
           at, XJU_TRACED));
     }
     return ParseResult(
       std::make_pair(
-        IRs(1U, new hcp_ast::String(at, xju::next(at))), xju::next(at)));
+        IRs(1U, IR(new hcp_ast::String(at, xju::next(at)))), xju::next(at)));
   }
   // Parser::
   virtual std::string target() const throw()
@@ -522,7 +523,7 @@ public:
     do{
       ParseResult r(x_->parse_(end, o));
       if (!r.failed()){
-        xju::Shared<hcp_ast::String> item(new hcp_ast::String(at, end));
+        std::shared_ptr<hcp_ast::String> item(new hcp_ast::String(at, end));
         return ParseResult(std::make_pair(IRs(1U, item), end));
       }
       if (end.atEnd()) {
@@ -600,7 +601,7 @@ public:
       if (x.first != x_.end()) {
         return ParseResult(
           Exception(
-            xju::Shared<Exception::Cause const>(
+            std::shared_ptr<Exception::Cause const>(
               new Mismatch(*x.second, *x.first)),
             x.second, XJU_TRACED));
       }
@@ -669,7 +670,7 @@ public:
     if(!isIdentifierChar(*i)){
       return ParseResult(
         Exception(
-          xju::Shared<Exception::Cause const>(
+          std::shared_ptr<Exception::Cause const>(
             new NotIdentifierChar(*i)),
           i, XJU_TRACED));
     }
@@ -710,7 +711,7 @@ public:
 class ParseHash : public Parser
 {
 public:
-  static xju::Shared<Exception::Cause const> not_at_column_1;
+  static std::shared_ptr<Exception::Cause const> not_at_column_1;
   
   virtual ~ParseHash() throw() {
   }
@@ -728,7 +729,7 @@ public:
     if ((*at) != '#') {
       return ParseResult(
         Exception(
-          xju::Shared<Exception::Cause>(
+          std::shared_ptr<Exception::Cause>(
             new NotHash(*at)), at, XJU_TRACED));
     }
     I const nowAt(xju::next(at));
@@ -764,7 +765,7 @@ public:
     
 
 };
-xju::Shared<Exception::Cause const> ParseHash::not_at_column_1(
+std::shared_ptr<Exception::Cause const> ParseHash::not_at_column_1(
   new FixedCause("not at column 1"));
 
 PR oneChar() throw()
@@ -834,7 +835,7 @@ public:
   // Parser::
   virtual ParseResult parse_(I const at, Options const& o) throw() 
   {
-    xju::Shared<hcp_ast::String> item(new hcp_ast::String(at, at));
+    std::shared_ptr<hcp_ast::String> item(new hcp_ast::String(at, at));
     I end(at);
     while(true) {
       ParseResult const r1(until_->parse_(end, o));
@@ -1085,7 +1086,7 @@ PR operator*(ZeroOrMore const, PR const b) throw()
 
 PR operator+(PR a, PR b) throw()
 {
-  xju::Shared<ParseAnd> result(new ParseAnd);
+  std::shared_ptr<ParseAnd> result(new ParseAnd);
   if (a->isA<ParseAnd>()) {
     ParseAnd const& x(a->asA<ParseAnd>());
     std::copy(x.terms_.begin(),
@@ -1109,7 +1110,7 @@ PR operator+(PR a, PR b) throw()
 
 PR operator|(PR a, PR b) throw()
 {
-  xju::Shared<ParseOr> result(new ParseOr);
+  std::shared_ptr<ParseOr> result(new ParseOr);
   if (a->isA<ParseOr>()) {
     ParseOr const& x(a->asA<ParseOr>());
     std::copy(x.terms_.begin(), x.terms_.end(),
@@ -1131,7 +1132,7 @@ PR operator|(PR a, PR b) throw()
 
 PR operator!(PR x) throw()
 {
-  return xju::Shared<ParseNot>(new ParseNot(x));
+  return std::shared_ptr<ParseNot>(new ParseNot(x));
 }
 
 PR anon(std::string const& name, PR const x) throw()
@@ -1535,9 +1536,9 @@ PR type_ref() throw()
 
 PR defined_type() throw(){
   static PR result(
-    new NamedParser<hcp_ast::DefinedType>(
-      "\"defined type\"",
-      identifier())+eatWhite());
+    PR(new NamedParser<hcp_ast::DefinedType>(
+         "\"defined type\"",
+         identifier()))+eatWhite());
   return result;
 }
 
@@ -1711,13 +1712,13 @@ PR destructor_name() throw()
 PR class_name() throw()
 {
   static PR result(
-    new NamedParser<hcp_ast::ClassName>(
-      "class name",
-      optional(typename_keyword())+
-      optional(doubleColon())+eatWhite()+
-      unqualifiedTypeName()+
-      zeroOrMore()*(
-        eatWhite()+doubleColon()+eatWhite()+unqualifiedTypeName()))+
+    PR(new NamedParser<hcp_ast::ClassName>(
+         "class name",
+         optional(typename_keyword())+
+         optional(doubleColon())+eatWhite()+
+         unqualifiedTypeName()+
+         zeroOrMore()*(
+           eatWhite()+doubleColon()+eatWhite()+unqualifiedTypeName())))+
     eatWhite());
   return result;
 }
@@ -1796,90 +1797,90 @@ PR keyword_mutable() throw()
 PR keyword_friend() throw()
 {
   static PR keyword_friend(
-    new NamedParser<hcp_ast::KeywordFriend>(
-      "\"friend\"",
-      parseLiteral("friend"))+!identifierContChar()+eatWhite());
+    PR(new NamedParser<hcp_ast::KeywordFriend>(
+         "\"friend\"",
+         parseLiteral("friend")))+!identifierContChar()+eatWhite());
   return keyword_friend;
 }
 
 PR keyword_public() throw()
 {
   static PR keyword_public(
-    new NamedParser<hcp_ast::KeywordPublic>(
-      "\"public\"",
-      parseLiteral("public"))+!identifierContChar()+eatWhite());
+    PR(new NamedParser<hcp_ast::KeywordPublic>(
+         "\"public\"",
+         parseLiteral("public")))+!identifierContChar()+eatWhite());
   return keyword_public;
 }
 
 PR keyword_private() throw()
 {
   static PR keyword_private(
-    new NamedParser<hcp_ast::KeywordPrivate>(
-      "\"private\"",
-      parseLiteral("private"))+!identifierContChar()+eatWhite());
+    PR(new NamedParser<hcp_ast::KeywordPrivate>(
+         "\"private\"",
+         parseLiteral("private")))+!identifierContChar()+eatWhite());
   return keyword_private;
 }
 
 PR keyword_protected() throw()
 {
   static PR keyword_protected(
-    new NamedParser<hcp_ast::KeywordProtected>(
+    PR(new NamedParser<hcp_ast::KeywordProtected>(
       "\"protected\"",
-      parseLiteral("protected"))+!identifierContChar()+eatWhite());
+      parseLiteral("protected")))+!identifierContChar()+eatWhite());
   return keyword_protected;
 }
 
 PR keyword_virtual() throw()
 {
   static PR keyword_virtual(
-    new NamedParser<hcp_ast::KeywordVirtual>(
+    PR(new NamedParser<hcp_ast::KeywordVirtual>(
       "\"virtual\"",
-      parseLiteral("virtual"))+!identifierContChar()+eatWhite());
+      parseLiteral("virtual")))+!identifierContChar()+eatWhite());
   return keyword_virtual;
 }
 
 PR keyword_explicit() throw()
 {
   static PR keyword_explicit(
-    new NamedParser<hcp_ast::KeywordExplicit>(
+    PR(new NamedParser<hcp_ast::KeywordExplicit>(
       "\"explicit\"",
-      parseLiteral("explicit"))+!identifierContChar()+eatWhite());
+      parseLiteral("explicit")))+!identifierContChar()+eatWhite());
   return keyword_explicit;
 }
 
 PR keyword_override() throw()
 {
   static PR result(
-    new NamedParser<hcp_ast::KeywordOverride>(
-      "\"override\"",
-      parseLiteral("override"))+!identifierContChar()+eatWhite());
+    PR(new NamedParser<hcp_ast::KeywordOverride>(
+         "\"override\"",
+         parseLiteral("override")))+!identifierContChar()+eatWhite());
   return result;
 }
 
 PR keyword_final() throw()
 {
   static PR result(
-    new NamedParser<hcp_ast::KeywordFinal>(
-      "\"final\"",
-      parseLiteral("final"))+!identifierContChar()+eatWhite());
+    PR(new NamedParser<hcp_ast::KeywordFinal>(
+         "\"final\"",
+         parseLiteral("final")))+!identifierContChar()+eatWhite());
   return result;
 }
 
 PR keyword_noexcept() throw()
 {
   static PR result(
-    new NamedParser<hcp_ast::KeywordNoexcept>(
-      "\"noexcept\"",
-      parseLiteral("noexcept"))+!identifierContChar()+eatWhite());
+    PR(new NamedParser<hcp_ast::KeywordNoexcept>(
+         "\"noexcept\"",
+         parseLiteral("noexcept")))+!identifierContChar()+eatWhite());
   return result;
 }
 
 PR keyword_throw() throw()
 {
   static PR result(
-    new NamedParser<hcp_ast::KeywordThrow>(
+    PR(new NamedParser<hcp_ast::KeywordThrow>(
       "\"throw\"",
-      parseLiteral("throw"))+!identifierContChar()+eatWhite());
+      parseLiteral("throw")))+!identifierContChar()+eatWhite());
   return result;
 }
 
@@ -1894,13 +1895,13 @@ PR throw_clause() throw()
 PR function_qualifiers() throw()
 {
   static PR function_qualifiers(
-    new NamedParser<hcp_ast::FunctionQualifiers>(
+    PR(new NamedParser<hcp_ast::FunctionQualifiers>(
       "function qualifiers",
       zeroOrMore()*((keyword_virtual()|
                      keyword_explicit()|
                      keyword_friend()|
                      keyword_static()|
-                     keyword_inline())+eatWhite())));
+                     keyword_inline())+eatWhite()))));
   return function_qualifiers;
 }
 
@@ -1950,9 +1951,9 @@ PR init_list() throw()
 {
   static PR init_list(new NamedParser<hcp_ast::InitList>(
                         "initialiser list",
-                        new NamedParser<hcp_ast::InitListOpen>(
-                          "init list open",
-                          parseLiteral(":"))+
+                        PR(new NamedParser<hcp_ast::InitListOpen>(
+                             "init list open",
+                             parseLiteral(":")))+
                         balanced(parseOneOfChars("{;"))));
   return init_list;
 }
@@ -1961,18 +1962,18 @@ PR init_list() throw()
 PR keyword_try() throw()
 {
   static PR result(
-    new NamedParser<hcp_ast::KeywordTry>(
-      "\"try\"",
-      parseLiteral("try"))+!identifierContChar()+eatWhite());
+    PR(new NamedParser<hcp_ast::KeywordTry>(
+         "\"try\"",
+         parseLiteral("try")))+!identifierContChar()+eatWhite());
   return result;
 }
 
 PR keyword_catch() throw()
 {
   static PR result(
-    new NamedParser<hcp_ast::KeywordCatch>(
+    PR(new NamedParser<hcp_ast::KeywordCatch>(
       "\"catch\"",
-      parseLiteral("catch"))+!identifierContChar()+eatWhite());
+      parseLiteral("catch")))+!identifierContChar()+eatWhite());
   return result;
 }
 
@@ -2001,7 +2002,8 @@ PR params() throw();
 
 PR template_keyword() throw()
 {
-  static PR template_keyword(parseLiteral("template")+!identifierContChar()+eatWhite());
+  static PR template_keyword(
+    parseLiteral("template")+!identifierContChar()+eatWhite());
   return template_keyword;
 }
 
@@ -2197,9 +2199,10 @@ PR class_decl() throw()
   
 PR var_name() throw()
 {
-  static PR var_name(new NamedParser<hcp_ast::VarName>(
-                       "var name",
-                       identifier())+eatWhite());
+  static PR var_name(
+    PR(new NamedParser<hcp_ast::VarName>(
+         "var name",
+         identifier()))+eatWhite());
   return var_name;
 }
 
@@ -2207,11 +2210,11 @@ PR var_name() throw()
 PR array_decl() throw()
 {
   static PR array_decl(
-    new NamedParser<hcp_ast::ArrayDecl>(
-      "array decl",
-      parseOneOfChars("[")+
-      balanced(parseOneOfChars("]"))+
-      parseOneOfChars("]"))+
+    PR(new NamedParser<hcp_ast::ArrayDecl>(
+         "array decl",
+         parseOneOfChars("[")+
+         balanced(parseOneOfChars("]"))+
+         parseOneOfChars("]")))+
     eatWhite());
   return array_decl;
 }
@@ -2588,9 +2591,9 @@ PR anonymous_namespace() throw()
       "anonymous namespace",
       namespace_keyword()+
       eatWhite()+
-      new NamedParser<hcp_ast::AnonymousNamespaceOpen>(
+      PR(new NamedParser<hcp_ast::AnonymousNamespaceOpen>(
         "anon namespace open",
-        parseOneOfChars("{"))+
+        parseOneOfChars("{")))+
       eatWhite()+
       parseUntil(namespace_leaf(), parseOneOfChars("}"))+
       parseOneOfChars("}")+
@@ -2611,19 +2614,19 @@ public:
       "namespace",(
         namespace_keyword()+
         whitespace()+
-        new NamedParser<hcp_ast::NamespaceName>(
+        PR(new NamedParser<hcp_ast::NamespaceName>(
           "namespace name",
-          identifier())+
+          identifier()))+
         eatWhite()+
         parseOneOfChars("{")+
         eatWhite()+
-        new NamedParser<hcp_ast::NamespaceMembers>(
+        PR(new NamedParser<hcp_ast::NamespaceMembers>(
           "namespace members",
           parseUntil((PR(new SelfParser(*this))|
                       anonymous_namespace()|
                       (not_namespace_keyword()+namespace_leaf()))+
                      eatWhite(),
-                     parseOneOfChars("}")))+
+                     parseOneOfChars("}"))))+
         parseOneOfChars("}")+
         eatWhite())) {
   }
@@ -2649,13 +2652,13 @@ public:
     if (!at.atEnd()) {
       return ParseResult(
         Exception(
-          xju::Shared<Exception::Cause>(
+          std::shared_ptr<Exception::Cause>(
             new NotEndOfInput(*at)), at, XJU_TRACED));
     }
     return ParseResult(
       std::make_pair(
-        IRs(1U, new hcp_ast::EndOfFile(IRs(1U, new hcp_ast::String(at, at)))),
-        at));
+        IRs(1U, IR(new hcp_ast::EndOfFile(
+                     IRs(1U, IR(new hcp_ast::String(at, at)))))),at));
   }
 
 
@@ -2710,7 +2713,7 @@ PR file() throw()
 
 I parse(hcp_ast::CompositeItem& parent,
         I const startOfElement,
-        xju::Shared<Parser> elementType,
+        std::shared_ptr<Parser> elementType,
         bool traceToStdout,
         bool irsAtEnd)
   throw(
@@ -2739,7 +2742,7 @@ I parse(hcp_ast::CompositeItem& parent,
 hcp_ast::CompositeItem parseString(
   std::string::const_iterator begin,
   std::string::const_iterator end,
-  xju::Shared<Parser> parser,
+  std::shared_ptr<Parser> parser,
   bool traceToStdout) throw(
     xju::Exception)
 {

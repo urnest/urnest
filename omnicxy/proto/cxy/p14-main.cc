@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <chrono>
 #include <cxy/ORB.hh>
-#include "xju/Shared.hh"
+#include <memory>
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {
@@ -42,7 +42,7 @@ public:
   {
     std::cout << "F::f1(" 
               << x << ")" << std::endl;
-    calls_.push_back(xju::Shared<Call>(
+    calls_.push_back(std::shared_ptr<Call>(
                        new Call::f1(x)));
     return x;
   }
@@ -51,7 +51,7 @@ public:
   {
     std::cout << "F::f2(" 
               << x << ")" << std::endl;
-    calls_.push_back(xju::Shared<Call>(
+    calls_.push_back(std::shared_ptr<Call>(
                        new Call::f2(x)));
     return x;
   }
@@ -93,7 +93,7 @@ public:
       return x.a_==y.a_;
     }
   };
-  std::vector<xju::Shared<Call> > calls_;
+  std::vector<std::shared_ptr<Call> > calls_;
 };
 
   

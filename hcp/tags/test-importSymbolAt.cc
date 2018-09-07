@@ -11,7 +11,7 @@
 
 #include <iostream>
 #include <xju/assert.hh>
-#include "xju/Shared.hh"
+#include <memory>
 #include <xju/file/read.hh>
 
 namespace hcp
@@ -38,9 +38,9 @@ public:
   F f_;
 };
 template<class F>
-xju::Shared<hcp::tags::Lookup> l(F f)
+std::shared_ptr<hcp::tags::Lookup> l(F f)
 {
-  return xju::Shared<hcp::tags::Lookup>(new L<F>(f));
+  return std::shared_ptr<hcp::tags::Lookup>(new L<F>(f));
 }
 
   

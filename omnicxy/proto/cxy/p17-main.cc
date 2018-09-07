@@ -22,7 +22,7 @@
 #include <chrono>
 #include <cxy/ORB.hh>
 #include <xju/stringToUInt.hh>
-#include "xju/Shared.hh"
+#include <memory>
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {
@@ -51,7 +51,7 @@ public:
   {
     std::cout << "servant: p17::echo(" << str(s) << ")" 
               << std::endl;
-    calls_.push_back(xju::Shared<Call>(
+    calls_.push_back(std::shared_ptr<Call>(
                        new Call::f1(s)));
     return s;
   }
@@ -78,7 +78,7 @@ public:
       return x.x_==y.x_;
     }
   };
-  std::vector<xju::Shared<Call> > calls_;
+  std::vector<std::shared_ptr<Call> > calls_;
 };
 
 int main(int argc, char* argv[])
@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
         p17_impl::Call::f1 const& c(
           dynamic_cast<p17_impl::Call::f1 const&>(*x.calls_[0]));
         xju::assert_equal(c, p17_impl::Call::f1(p17::Name("hello world")));
-        x.calls_=std::vector<xju::Shared<p17_impl::Call> >();
+        x.calls_=std::vector<std::shared_ptr<p17_impl::Call> >();
       }
       cxy::optional<p17::Name> const result(
         ref->echo(cxy::optional<p17::Name>()));

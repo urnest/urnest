@@ -168,11 +168,14 @@ std::pair<std::string,IncludeTarget> importSymbolAt(
 
     //push empty IR so our following code can insert #include
     //at the very begining
-    hcp_parser::IRs irsAtEnd{hcp_parser::IR(
-                          new hcp_ast::Comments(
-                            hcp_parser::IRs(1U,new hcp_ast::String(
-                                              hcp_ast::I(x.begin(),x.end()),
-                                              hcp_ast::I(x.begin(),x.end())))))};
+    hcp_parser::IRs irsAtEnd{
+      hcp_parser::IR(
+        new hcp_ast::Comments(
+          hcp_parser::IRs(1U,
+                          hcp_ast::IR(
+                            new hcp_ast::String(
+                              hcp_ast::I(x.begin(),x.end()),
+                              hcp_ast::I(x.begin(),x.end()))))))};
     std::copy(rirsAtEnd.rbegin(),rirsAtEnd.rend(),
               std::back_inserter(irsAtEnd));
     
