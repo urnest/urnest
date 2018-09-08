@@ -36,6 +36,7 @@ namespace hcp_parser
 
 typedef hcp_ast::I I;
 typedef hcp_ast::IR IR;
+typedef hcp_ast::Item Item;
 typedef std::vector<IR> IRs;
 typedef std::pair<IRs, I> PV;
 
@@ -44,15 +45,13 @@ std::shared_ptr<Parser> file() throw(); // reference to whole-file parser
 
 // The simplest parsing interface, which parses the specified
 // type of C++ element (default is "whole file") assumed to
-// appear at the specified startOfElement, appending ast Items
-// to the specified parent.items_, and returning the position
-// just after the parsed element.
+// appear at the specified startOfElement, returning ast Items
+// and returning the position just after the parsed element.
 // 
-I parse(hcp_ast::CompositeItem& parent,
-        I const startOfElement,
-        std::shared_ptr<Parser> parser = file(),
-        bool traceToStdout = false,
-        bool irsAtEnd = false)
+std::pair<IRs,I> parse(I const startOfElement,
+                       std::shared_ptr<Parser> parser = file(),
+                       bool traceToStdout = false,
+                       bool irsAtEnd = false)
   throw(
     // post: parent unmodified
     xju::Exception);

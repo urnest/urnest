@@ -161,13 +161,12 @@ int main(int argc, char* argv[])
     hcp_parser::I at(x.begin(), x.end());
     size_t u;
     for(u=0; u != options.offset_; ++u, ++at);
-    hcp_ast::CompositeItem root;
-    at = hcp_parser::parse(root, at, (*i).second, 
-                           options.parser_options_.trace_);
+    auto const r{hcp_parser::parse(at, (*i).second, 
+                                   options.parser_options_.trace_)};
     if (options.dump_) {
-      std::cout << root << std::endl;
+      std::cout << hcp_ast::Item(r.first) << std::endl;
     }
-    std::cout << "end at " << at << std::endl;
+    std::cout << "end at " << r.second << std::endl;
   }
   catch(xju::Exception& e) {
     std::ostringstream s;

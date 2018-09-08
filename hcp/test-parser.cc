@@ -70,21 +70,15 @@ void test1()
   xju::assert_equal(r.failed(), true);
   xju::assert_equal(readableRepr(r.e()), "line 1 column 3: end of input");
 
-  hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
-  at = parse(root, at, hcp_parser::parseAnyChar());
-  xju::assert_equal(at.x_, x.begin()+1);
-  at = parse(root, at, hcp_parser::parseAnyChar());
-  xju::assert_equal(at.x_, x.begin()+2);
-  
-  xju::assert_equal(reconstruct(root), "ab");
+  auto const r2{parse(at, hcp_parser::parseAnyChar())};
+  xju::assert_equal(r2.second.x_, x.begin()+1);
+  xju::assert_equal(reconstruct(r2.first), "a");
+  auto const r3{parse(r2.second, hcp_parser::parseAnyChar())};
 
   try {
-    hcp_parser::I const y3(parse(
-      root,
-      at,
-      hcp_parser::parseAnyChar()));
-    xju::assert_not_equal(y3, y3);
+    parse(r3.second,hcp_parser::parseAnyChar());
+    xju::assert_never_reached();
   }
   catch(xju::Exception const& e) {
     assert_readableRepr_equal(e, "Failed to parse any char at line 1 column 3 because\nline 1 column 3: end of input.", XJU_TRACED);
@@ -95,34 +89,28 @@ void test1()
 void test2()
 {
   std::string const x("ab");
-  hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
-  at = parse(root, at, hcp_parser::zeroOrMore()*hcp_parser::parseAnyChar());
-  xju::assert_equal(reconstruct(root), "ab");
-  xju::assert_equal(at.atEnd(), true);
+  auto const r{
+    parseString(x.begin(),x.end(),
+                hcp_parser::zeroOrMore()*hcp_parser::parseAnyChar())};
+  xju::assert_equal(reconstruct(r), "ab");
 }
 
 void test3()
 {
-  hcp_parser::Cache cache(new hcp_parser::CacheVal());
-
-  hcp_parser::Options const options(false, cache, false);
-  
   std::string const x("ab");
-  hcp_ast::CompositeItem root;
-  hcp_parser::I at(x.begin(), x.end());
-
-  at = parse(root, at, (hcp_parser::parseAnyChar()+
-                        hcp_parser::parseAnyChar()));
-  xju::assert_equal(reconstruct(root), "ab");
-  xju::assert_equal(at.atEnd(), true);
+  auto const r{
+    parseString(x.begin(),x.end(),
+                (hcp_parser::parseAnyChar()+
+                 hcp_parser::parseAnyChar()))};
+  xju::assert_equal(reconstruct(r), "ab");
 
   try {
     hcp_parser::PR p(hcp_parser::parseAnyChar()+
                      hcp_parser::parseAnyChar()+
                      hcp_parser::parseAnyChar());
-    at = parse(root, at, p);
-    xju::assert_not_equal(at, at);
+    auto const r{parseString(x.begin(),x.end(), p)};
+    xju::assert_never_reached();
   }
   catch(xju::Exception const& e) {
     assert_readableRepr_equal(e, "Failed to parse any char at line 1 column 3 because\nline 1 column 3: end of input.", XJU_TRACED);
@@ -131,18 +119,16 @@ void test3()
 
 void test4()
 {
-  hcp_parser::Cache cache(new hcp_parser::CacheVal());
-  hcp_parser::Options const options(false, cache, false);
   std::string const x("abcd");
-  hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
-  at = parse(root, at, (hcp_parser::zeroOrMore()*hcp_parser::parseOneOfChars("abc")));
-  xju::assert_equal(reconstruct(root), "abc");
-  xju::assert_equal(at.atEnd(), false);
+  auto const r{
+    parse(at, (hcp_parser::zeroOrMore()*hcp_parser::parseOneOfChars("abc")))};
+  xju::assert_equal(reconstruct(r.first), "abc");
+  xju::assert_equal(r.second.atEnd(), false);
 
   try {
     hcp_parser::PR p(hcp_parser::parseOneOfChars("abc"));
-    at = parse(root, at, p);
+    parse(r.second, p);
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -153,24 +139,21 @@ void test4()
 void test5()
 {
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("abcad");
-    hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
-    at = parse(
-      root, at, (hcp_parser::zeroOrMore()*
-                 (hcp_parser::parseOneOfChars("ab")|
-                  hcp_parser::parseOneOfChars("c"))));
-    xju::assert_equal(reconstruct(root), "abca");
+    auto const r{
+      parse(
+        at, (hcp_parser::zeroOrMore()*
+             (hcp_parser::parseOneOfChars("ab")|
+              hcp_parser::parseOneOfChars("c"))))};
+    xju::assert_equal(reconstruct(r.first), "abca");
     xju::assert_equal(at.atEnd(), false);
 
     try {
       hcp_parser::PR p(hcp_parser::parseOneOfChars("ab")|
                        hcp_parser::parseOneOfChars("c"));
-      at = parse(root, at, p);
-      xju::assert_abort();
+      parse(r.second, p);
+      xju::assert_never_reached();
     }
     catch(xju::Exception const& e) {
       assert_readableRepr_equal(e, "Failed to parse one of chars \"c\" at line 1 column 5 because\nline 1 column 5: \'d\' is not one of chars \"c\".", XJU_TRACED);
@@ -178,15 +161,12 @@ void test5()
   }
   
   try {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("abcad");
-    hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end()); 
     hcp_parser::PR p(hcp_parser::parseOneOfChars("b")|
                      hcp_parser::parseOneOfChars("c")|
                      hcp_parser::parseOneOfChars("e"));
-    at = parse(root, at, p);
+    auto const r{parse(at, p)};
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -194,44 +174,33 @@ void test5()
   }
   
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("abcad");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
     hcp_parser::PR p(hcp_parser::zeroOrMore()*
                      (hcp_parser::parseOneOfChars("ab")|
                       hcp_parser::parseOneOfChars("c")|
                       hcp_parser::parseOneOfChars("d")));
-    at = parse(root, at, p);
+    auto const root{parseString(x.begin(),x.end(), p)};
     xju::assert_equal(reconstruct(root), "abcad");
-    xju::assert_equal(at.atEnd(), true);
   }
 }
 
 void test6()
 {
-  hcp_parser::Cache cache(new hcp_parser::CacheVal());
-  hcp_parser::Options const options(false, cache, false);
   std::string const x("abcd");
-  hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
-  at = parse(root, at, (hcp_parser::atLeastOne(hcp_parser::parseOneOfChars("abc"))));
-  xju::assert_equal(reconstruct(root), "abc");
-  xju::assert_equal(at.atEnd(), false);
+  auto const r{
+    parse(at, (hcp_parser::atLeastOne(hcp_parser::parseOneOfChars("abc"))))};
+  xju::assert_equal(reconstruct(r.first), "abc");
+  xju::assert_equal(r.second.atEnd(), false);
 }
 
 void test7()
 {
-  hcp_parser::Cache cache(new hcp_parser::CacheVal());
-  hcp_parser::Options const options(false, cache, false);
-  
   try {
     std::string const x("abcd");
-    hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     hcp_parser::PR p(hcp_parser::atLeastOne(hcp_parser::parseOneOfChars("e")));
-    at = parse(root, at, p);
+    parse(at, p);
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -241,59 +210,49 @@ void test7()
 
 void test8()
 {
-  hcp_parser::Cache cache(new hcp_parser::CacheVal());
-  hcp_parser::Options const options(false, cache, false);
   std::string const x("abcdefg");
-  hcp_ast::CompositeItem root;
   hcp_parser::I at(x.begin(), x.end());
-  at = parse(root, at, (hcp_parser::parseUntil(
-                          hcp_parser::parseOneOfChars("e"))));
-  xju::assert_equal(reconstruct(root), "abcd");
-  xju::assert_equal(at.atEnd(), false);
+  auto const r{
+    parse(at, hcp_parser::parseUntil(
+            hcp_parser::parseOneOfChars("e")))};
+  xju::assert_equal(reconstruct(r.first), "abcd");
+  xju::assert_equal(r.second.atEnd(), false);
 
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("abcdefg");
-    hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
-    at = parse(root, at, (hcp_parser::parseUntil(
-                            hcp_parser::parseOneOfChars("abcd"),
-                            hcp_parser::parseOneOfChars("e"))));
-    xju::assert_equal(reconstruct(root), "abcd");
-    xju::assert_equal(at.atEnd(), false);
+    auto const r{
+      parse(at, (hcp_parser::parseUntil(
+                   hcp_parser::parseOneOfChars("abcd"),
+                   hcp_parser::parseOneOfChars("e"))))};
+    xju::assert_equal(reconstruct(r.first), "abcd");
+    xju::assert_equal(r.second.atEnd(), false);
   }
 }
 
 void test9()
 {
-  hcp_parser::Cache cache(new hcp_parser::CacheVal());
-  hcp_parser::Options const options(false, cache, false);
   try {
     std::string const x("abcdefg");
-    hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
     hcp_parser::PR p(hcp_parser::parseUntil(
                        hcp_parser::parseOneOfChars("h")));
-    at = parse(root, at, p);
+    parse(at, p);
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
     assert_readableRepr_equal(e, "Failed to parse up to but not including one of chars \"h\" at line 1 column 1 because\nline 1 column 8: end of input.", XJU_TRACED);
   }
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     try {
       std::string const x("fredjockalicealan");
-      hcp_ast::CompositeItem root;
       hcp_parser::I at(x.begin(), x.end());
       hcp_parser::PR p(hcp_parser::parseUntil(
                          hcp_parser::parseLiteral("fred")|
                          hcp_parser::parseLiteral("jock")|
                          hcp_parser::parseLiteral("alice"),
                          hcp_parser::parseLiteral("peter")));
-      at = parse(root, at, p);
+      parse(at, p);
       xju::assert_abort();
     }
     catch(xju::Exception const& e) {
@@ -304,15 +263,11 @@ void test9()
 
 void test10()
 {
-  hcp_parser::Cache cache(new hcp_parser::CacheVal());
-  hcp_parser::Options const options(false, cache, false);
-  
   try {
     std::string const x("abcd");
-    hcp_ast::CompositeItem root;
     hcp_parser::I at(x.begin(), x.end());
-    at = parse(
-      root, at, hcp_parser::whitespaceChar());
+    parse(
+      at, hcp_parser::whitespaceChar());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -324,143 +279,84 @@ void test10()
 void test11()
 {
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("\"abcd\"");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(root, at, hcp_parser::stringLiteral());
-    xju::assert_equal(reconstruct(root), "\"abcd\"");
-    xju::assert_equal(at.atEnd(), true);
+    auto const r{parseString(x.begin(),x.end(), hcp_parser::stringLiteral())};
+    xju::assert_equal(reconstruct(r), "\"abcd\"");
   }
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("\"\"");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(root, at, hcp_parser::stringLiteral());
-    xju::assert_equal(reconstruct(root), "\"\"");
-    xju::assert_equal(at.atEnd(), true);
+    auto const r{parseString(x.begin(),x.end(), hcp_parser::stringLiteral())};
+    xju::assert_equal(reconstruct(r), "\"\"");
   }
   try
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("\"\\\"\"");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(root, at, hcp_parser::stringLiteral());
-    xju::assert_equal(reconstruct(root), "\"\\\"\"");
-    xju::assert_equal(at.atEnd(), true);
+    auto const r{parseString(x.begin(),x.end(), hcp_parser::stringLiteral())};
+    xju::assert_equal(reconstruct(r), "\"\\\"\"");
   }
   catch(xju::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("\"\\\"de\"");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(root, at, hcp_parser::stringLiteral());
-    xju::assert_equal(reconstruct(root), "\"\\\"de\"");
-    xju::assert_equal(at.atEnd(), true);
+    auto const r{parseString(x.begin(),x.end(), hcp_parser::stringLiteral())};
+    xju::assert_equal(reconstruct(r), "\"\\\"de\"");
   }
   catch(xju::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("\"ab\\\"de\"");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(root, at, hcp_parser::stringLiteral());
-    xju::assert_equal(reconstruct(root), "\"ab\\\"de\"");
-    xju::assert_equal(at.atEnd(), true);
+    auto const r{parseString(x.begin(),x.end(), hcp_parser::stringLiteral())};
+    xju::assert_equal(reconstruct(r), "\"ab\\\"de\"");
   }
   catch(xju::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("\"ab\\\"d\\ne\"");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(root, at, hcp_parser::stringLiteral());
-    xju::assert_equal(reconstruct(root), "\"ab\\\"d\\ne\"");
-    xju::assert_equal(at.atEnd(), true);
+    auto const r{parseString(x.begin(),x.end(), hcp_parser::stringLiteral())};
+    xju::assert_equal(reconstruct(r), "\"ab\\\"d\\ne\"");
   }
   catch(xju::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("\"ab\\\\d\\ne\"   ");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(root, at, hcp_parser::stringLiteral());
-    xju::assert_equal(reconstruct(root), "\"ab\\\\d\\ne\"   ");
-    xju::assert_equal(at.atEnd(), true);
+    auto const r{parseString(x.begin(),x.end(), hcp_parser::stringLiteral())};
+    xju::assert_equal(reconstruct(r), "\"ab\\\\d\\ne\"   ");
   }
   catch(xju::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("\"abcde\"  \n \"fred\"  ");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(root, at, hcp_parser::stringLiteral());
-    xju::assert_equal(reconstruct(root), "\"abcde\"  \n \"fred\"  ");
-    xju::assert_equal(at.atEnd(), true);
+    auto const r{parseString(x.begin(),x.end(), hcp_parser::stringLiteral())};
+    xju::assert_equal(reconstruct(r), "\"abcde\"  \n \"fred\"  ");
   }
   catch(xju::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("\"abcde\"  \n \"fred\"\n\"jock\"  ");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(root, at, hcp_parser::stringLiteral());
-    xju::assert_equal(reconstruct(root), "\"abcde\"  \n \"fred\"\n\"jock\"  ");
-    xju::assert_equal(at.atEnd(), true);
+    auto const r{parseString(x.begin(),x.end(), hcp_parser::stringLiteral())};
+    xju::assert_equal(reconstruct(r), "\"abcde\"  \n \"fred\"\n\"jock\"  ");
   }
   catch(xju::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
   }
   try
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     // adjacent string literals combine
     std::string const x("\"abcde\" \"fred\"");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    at = parse(root, at, hcp_parser::stringLiteral());
-    xju::assert_equal(reconstruct(root), "\"abcde\" \"fred\"");
-    xju::assert_equal(at.atEnd(), true);
+    auto const r{parseString(x.begin(),x.end(), hcp_parser::stringLiteral())};
+    xju::assert_equal(reconstruct(r), "\"abcde\" \"fred\"");
   }
   catch(xju::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
@@ -468,11 +364,7 @@ void test11()
   try
   {
     std::string const x("\"abcde");
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    at = parse(root, at, hcp_parser::stringLiteral());
+    auto const r{parseString(x.begin(),x.end(), hcp_parser::stringLiteral())};
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -485,11 +377,7 @@ void test11()
   try
   {
     std::string const x("\"abc\nde");
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    at = parse(root, at, hcp_parser::stringLiteral());
+    auto const r{parseString(x.begin(),x.end(), hcp_parser::stringLiteral())};
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -502,11 +390,7 @@ void test11()
   try
   {
     std::string const x("\"abc\\999");
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    at = parse(root, at, hcp_parser::stringLiteral());
+    auto const r{parseString(x.begin(),x.end(), hcp_parser::stringLiteral())};
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -522,27 +406,15 @@ void test11()
 void test12()
 {
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("abcd");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(
-      root, at, hcp_parser::parseLiteral("abcd"));
-    xju::assert_equal(reconstruct(root), "abcd");
-    xju::assert_equal(at.atEnd(), true);
+    auto const r{
+      parseString(x.begin(),x.end(), hcp_parser::parseLiteral("abcd"))};
+    xju::assert_equal(reconstruct(r), "abcd");
   }
   try {
     hcp_parser::PR p(hcp_parser::parseLiteral("abed"));
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("abcd");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(
-      root, at, p);
+    auto const r{parseString(x.begin(),x.end(), p)};
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -553,24 +425,12 @@ void test12()
 // comments
 void test13()
 {
-  hcp_parser::Cache cache(new hcp_parser::CacheVal());
-  hcp_parser::Options const options(false, cache, false);
   std::string const x("// comment \n   ");
-  hcp_ast::CompositeItem root;
-  hcp_parser::I at(x.begin(), x.end());
-  
-  at = parse(
-    root, at, hcp_parser::comments());
-  xju::assert_equal(reconstruct(root), "// comment \n   ");
-  xju::assert_equal(at.atEnd(), true);
+  auto const r{parseString(x.begin(),x.end(), hcp_parser::comments())};
+  xju::assert_equal(reconstruct(r), "// comment \n   ");
   try {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("/ / comment \n   ");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(root, at, hcp_parser::comments());
+    parseString(x.begin(),x.end(), hcp_parser::comments());
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -582,39 +442,19 @@ void test13()
 void test14()
 {
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("#if\n  ");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(
-      root, at, hcp_parser::hash());
+    auto const root{parseString(x.begin(),x.end(),hcp_parser::hash())};
     xju::assert_equal(reconstruct(root), "#if\n  ");
-    xju::assert_equal(at.atEnd(), true);
   }
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("#if\\\n  fred\n ");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(
-      root, at, hcp_parser::hash());
+    auto const root{parseString(x.begin(),x.end(), hcp_parser::hash())};
     xju::assert_equal(reconstruct(root), x);
-    xju::assert_equal(at.atEnd(), true);
   }
   try
   {
     std::string const x(" #if");
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(
-      root, at, hcp_parser::hash());
+    auto const root{parseString(x.begin(),x.end(), hcp_parser::hash())};
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -627,44 +467,23 @@ void test14()
 void test15()
 {
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("#include <string>\n  ");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(
-      root, at, hcp_parser::hashInclude());
+    auto const root{parseString(x.begin(),x.end(), hcp_parser::hashInclude())};
     xju::assert_equal(reconstruct(root), "#include <string>\n  ");
-    xju::assert_equal(at.atEnd(), true);
     auto k(hcp_ast::findOnlyChildOfType<hcp_ast::TargetOfHashInclude>(root));
     xju::assert_equal(reconstruct(k),"string");
   }
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("#  include \"string\"\n  ");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(
-      root, at, hcp_parser::hashInclude());
+    auto const root{parseString(x.begin(),x.end(), hcp_parser::hashInclude())};
     xju::assert_equal(reconstruct(root), "#  include \"string\"\n  ");
-    xju::assert_equal(at.atEnd(), true);
     auto k(hcp_ast::findOnlyChildOfType<hcp_ast::TargetOfHashInclude>(root));
     xju::assert_equal(reconstruct(k),"string");
   }
   try
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("#if");
-    
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(
-      root, at, hcp_parser::hashInclude());
+    auto const root{parseString(x.begin(),x.end(), hcp_parser::hashInclude())};
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {
@@ -677,39 +496,22 @@ void test15()
 void test16()
 {
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("#include <string> // impl \n  ");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(
-      root, at, hcp_parser::hashIncludeImpl());
+    auto const root{
+      parseString(x.begin(),x.end(), hcp_parser::hashIncludeImpl())};
     xju::assert_equal(reconstruct(root), "#include <string> // impl \n  ");
-    xju::assert_equal(at.atEnd(), true);
   }
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("#  include <string>//impl\n  ");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(
-      root, at, hcp_parser::hashIncludeImpl());
+    auto const root{
+      parseString(x.begin(),x.end(), hcp_parser::hashIncludeImpl())};
     xju::assert_equal(reconstruct(root), "#  include <string>//impl\n  ");
-    xju::assert_equal(at.atEnd(), true);
   }
   try
   {
-    hcp_parser::Cache cache(new hcp_parser::CacheVal());
-    hcp_parser::Options const options(false, cache, false);
     std::string const x("#include <string> //implementation defines\n");
-    hcp_ast::CompositeItem root;
-    hcp_parser::I at(x.begin(), x.end());
-    
-    at = parse(
-      root, at, hcp_parser::hashIncludeImpl());
+    auto const root{
+      parseString(x.begin(),x.end(), hcp_parser::hashIncludeImpl())};
     xju::assert_abort();
   }
   catch(xju::Exception const& e) {

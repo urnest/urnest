@@ -105,13 +105,13 @@ int main(int argc, char* argv[])
 
     Options const options(cmd_line.first);
 
-    hcp_ast::CompositeItem root;
-    hcp_parser::parse(root, hcp_parser::I(x.begin(), x.end()),
-                      hcp_parser::file(), 
-                      options.parser_options_.trace_);
+    auto const r{hcp_parser::parse(hcp_parser::I(x.begin(), x.end()),
+                                   hcp_parser::file(), 
+                                   options.parser_options_.trace_)};
     hcp_parser::I at(x.begin(), x.end());
     unsigned u;
     for(u=0; u != options.offset_; ++u, ++at);
+    hcp_ast::CompositeItem root{r.first};
     std::vector<hcp_ast::CompositeItem const*> context(getContextAt(at, root));
     std::vector<hcp_ast::CompositeItem const*>::const_iterator j;
     for(j=context.begin(); j!=context.end(); ++j) {

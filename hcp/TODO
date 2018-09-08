@@ -14,10 +14,10 @@
   - [[noreturn]] before function proto open '('
 
 - collapse CompositeItem back into Item
-
-x add PR named<X>(std::string const& name, PR const x) throw();
-- use everywhere (search new NamedParser)
-- use everywhere (search new hcp_parser::NamedParser)
+  - give Item children and 2x cons (moving childen down from CompositeItem)
+  - replace String with Item
+  - delete CompositeItem altogether
+  - items_ -> children_
   
 x parse global like
   namespace x

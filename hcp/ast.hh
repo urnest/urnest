@@ -35,11 +35,36 @@ typedef xju::parse::IteratorAdaptor<std::string::const_iterator> I;
 class Item
 {
 public:
+  //pre: items.size()
+  explicit Item(std::vector<std::shared_ptr<Item> > const& children) throw():
+      items_(children),
+      begin_(items_.front()->begin()),
+      end_(items_.back()->end())
+  {
+    xju::assert_not_equal(items_.size(),0U);
+  }
+  explicit Item(I begin, I end) throw():
+      begin_(begin),
+      end_(end)
+  {
+  }
   virtual ~Item() throw() {
   }
-  virtual I begin() const throw() = 0;
-  virtual I end() const throw() = 0;
+  // Item::
+  virtual I begin() const throw() {
+    return items_.size()?items_.front()->begin():begin_;
+  }
+  
+  // Item::
+  virtual I end() const throw() {
+    return items_.size()?items_.back()->end():end_;
+  }
 
+  // The items that make up this composite item, ie the
+  // children of this AST node.
+  std::vector<std::shared_ptr<Item> > items_;
+  
+  
   template<class T>
   bool isA() const throw() {
     return dynamic_cast<T const*>(this);
@@ -61,8 +86,12 @@ public:
     return *result;
   }
 
-  virtual std::string str() const throw() = 0;
+  virtual std::string str() const throw();
 
+private:
+  I begin_;
+  I end_;
+  
   friend std::ostream& operator<<(std::ostream& s, Item const& x) throw()
   {
     return s << x.str();
@@ -120,31 +149,12 @@ std::string reconstruct(IRs const& x) throw();
 class CompositeItem : public Item
 {
 public:
-  CompositeItem() throw()
-  {
-  }
   explicit CompositeItem(std::vector<IR> const& items) throw():
-    items_(items) 
+      Item(items)
   {
   }
   virtual ~CompositeItem() throw() {
   }
-  
-  // Item::
-  virtual I begin() const throw() {
-    return items_.front()->begin();
-  }
-  
-  // Item::
-  virtual I end() const throw() {
-    return items_.back()->end();
-  }
-
-  // The items that make up this composite item, ie the
-  // children of this AST node.
-  std::vector<IR> items_;
-
-  virtual std::string str() const throw();
   
 };
 
@@ -174,7 +184,7 @@ public:
 
 template<class T>
 std::vector<std::reference_wrapper<T const> > findChildrenOfType(
-  CompositeItem const& parent,
+  Item const& parent,
   size_t const returnAtMost=SIZE_MAX)
     throw()
 {
@@ -186,9 +196,9 @@ std::vector<std::reference_wrapper<T const> > findChildrenOfType(
         return result;
       }
     }
-    else if (ir->isA<CompositeItem>()) {
+    else {
       std::vector<std::reference_wrapper<T const> > descendents(
-        findChildrenOfType<T>(ir->asA<CompositeItem>(),
+        findChildrenOfType<T>(*ir,
                               returnAtMost-result.size()));
       std::copy(descendents.begin(),descendents.end(),
                 std::back_inserter(result));
@@ -202,7 +212,7 @@ std::vector<std::reference_wrapper<T const> > findChildrenOfType(
 
 //pre: parent has only one child of type T
 template<class T>
-T const& findOnlyChildOfType(CompositeItem const& parent) throw()
+T const& findOnlyChildOfType(Item const& parent) throw()
 {
   auto const result(findChildrenOfType<T>(parent,2));
   xju::assert_equal(result.size(),1U);
@@ -226,30 +236,13 @@ std::vector<std::reference_wrapper<T const> > filter(
 class String : public Item
 {
 public:
-  I begin_;
-  I end_;
-  
   virtual ~String() throw() {
   }
   
   explicit String(I begin, I end) throw():
-    begin_(begin),
-    end_(end) {
-  }
-  // Item::
-  virtual I begin() const throw() {
-    return begin_;
-  }
-  // Item::
-  virtual I end() const throw() {
-    return end_;
-  }
-
-  virtual std::string str() const throw()
+      Item(begin,end)
   {
-    return xju::format::quote(std::string(begin().x_, end().x_));
   }
-
 };
 
 class WhiteSpaceTag{};

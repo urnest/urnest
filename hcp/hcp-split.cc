@@ -746,11 +746,8 @@ int main(int argc, char* argv[])
     
     std::string const x(hcp::readFile(inputFile));
 
-    hcp_parser::I at(x.begin(), x.end());
-    hcp_ast::CompositeItem root;
-    at = hcp_parser::parse(root, at, hcp_parser::file());
-    xju::assert_equal(root.items_.size(), 1U);
-
+    auto const root{
+      hcp_parser::parseString(x.begin(),x.end(), hcp_parser::file())};
     
     std::pair<xju::path::AbsolutePath, xju::path::FileName> const outputHH(
       xju::path::split(cmd_line.second[1]));

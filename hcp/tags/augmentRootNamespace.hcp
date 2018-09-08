@@ -136,10 +136,8 @@ void augmentRootNamespace(Namespace& rootNamespace,
     xju::Exception) {
   try {
     std::string const x(xju::file::read(tagsFileName));
-    hcp_parser::I i(x.begin(), x.end());
-    hcp_ast::CompositeItem root;
-    
-    hcp_parser::parse(root, i, tagsFile, traceParser);
+    auto const root{hcp_parser::parseString(x.begin(),x.end(),
+                                            tagsFile,traceParser)};
 
     for(auto x:root.items_) {
       if (x->isA<Entry>()) {

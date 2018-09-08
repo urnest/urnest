@@ -263,13 +263,11 @@ int main(int argc, char* argv[])
       File const inputFile(xju::path::split(*arg));
       std::string const x(hcp::readFile(inputFile));
       try {
-        hcp_parser::I at(x.begin(), x.end());
-        hcp_ast::CompositeItem root;
-        at = hcp_parser::parse(root, at, hcp_parser::file());
-        xju::assert_equal(root.items_.size(), 1U);
+        auto const r{
+          hcp_parser::parseString(x.begin(),x.end(),hcp_parser::file())};
+        xju::assert_equal(r.items_.size(), 1U);
         std::map<Symbol,LineNumber> const symbols(
-          genNamespaceContent(
-            root.items_.front()->asA<hcp_ast::File>().items_));
+          genNamespaceContent(r.items_.front()->asA<hcp_ast::File>().items_));
         for(auto s: symbols) {
           result.insert(std::make_pair(s.first,
                                        std::make_pair(inputFile,s.second)));

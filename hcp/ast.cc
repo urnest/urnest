@@ -29,8 +29,11 @@ std::string reconstruct(IRs const& x) throw() {
   return s.str();
 }
 
-std::string CompositeItem::str() const throw()
+std::string Item::str() const throw()
 {
+  if (!items_.size()){
+    return xju::format::quote(std::string(begin().x_, end().x_));
+  }
   std::vector<std::string> ss;
   for(std::vector<IR>::const_iterator i=items_.begin();
       i!=items_.end();

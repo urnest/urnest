@@ -835,13 +835,12 @@ public:
   // Parser::
   virtual ParseResult parse_(I const at, Options const& o) throw() 
   {
-    std::shared_ptr<hcp_ast::String> item(new hcp_ast::String(at, at));
     I end(at);
     while(true) {
       ParseResult const r1(until_->parse_(end, o));
       if (!r1.failed()) {
-        item->end_=end;
-        return ParseResult(std::make_pair(IRs(1U, item), end));
+        return ParseResult(
+          std::make_pair(IRs(1U,IR(new hcp_ast::String(at, end))),end));
       }
       if (end.atEnd()) {
         return ParseResult(EndOfInput(end, XJU_TRACED));
@@ -2711,11 +2710,10 @@ PR file() throw()
   return file;
 }
 
-I parse(hcp_ast::CompositeItem& parent,
-        I const startOfElement,
-        std::shared_ptr<Parser> elementType,
-        bool traceToStdout,
-        bool irsAtEnd)
+std::pair<IRs,I> parse(I const startOfElement,
+                      std::shared_ptr<Parser> elementType,
+                      bool traceToStdout,
+                      bool irsAtEnd)
   throw(
     // post: parent unmodified
     xju::Exception)
@@ -2729,10 +2727,7 @@ I parse(hcp_ast::CompositeItem& parent,
       throw r.e();
     }
     PV const x(*r);
-    std::copy(x.first.begin(), 
-              x.first.end(), 
-              std::back_inserter(parent.items_));
-    return x.second;
+    return std::make_pair(x.first,x.second);
   }
   catch(Exception const& e) {
     throw hcp::translateException(e);
@@ -2746,10 +2741,15 @@ hcp_ast::CompositeItem parseString(
   bool traceToStdout) throw(
     xju::Exception)
 {
-  hcp_ast::CompositeItem root;
   I const startOfElement(begin,end);
-  parse(root,startOfElement,parser+endOfFile(),traceToStdout);
-  return root;
+  auto const r{
+    parse(startOfElement,parser,traceToStdout)};
+  if (!r.second.atEnd()){
+    std::ostringstream s;
+    s << "only parsed until " << r.second;
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  return hcp_ast::CompositeItem(r.first);
 }
 
 }

@@ -72,14 +72,13 @@ std::pair<xju::path::AbsolutePath,xju::path::FileName> const findSmap(
                      new hcp_parser::NamedParser<GeneratedAs>(
                      "generated as",
                      hcp_parser::parseUntil(hcp_parser::whitespaceChar()))));
-      hcp_ast::CompositeItem root;
       std::string const fileContent(xju::file::read(f));
-      hcp_parser::parse(root,
-                        hcp_parser::I(fileContent.begin(),fileContent.end()),
-                        hcp_parser::parseUntil(p)+p);
+      auto const r{hcp_parser::parse(
+          hcp_parser::I(fileContent.begin(),fileContent.end()),
+          hcp_parser::parseUntil(p)+p)};
       auto const generatedAs(
         hcp_ast::reconstruct(
-          hcp_ast::findOnlyChildOfType<GeneratedAs>(root)));
+          hcp_ast::findOnlyChildOfType<GeneratedAs>(hcp_ast::Item(r.first))));
       if (xju::startsWith(generatedAs,std::string("/"))){
         return xju::path::split(generatedAs);
       }
@@ -169,15 +168,8 @@ int main(int argc, char* argv[]) {
             "to offset",
             parseOffset)+
           hcp_parser::parseLiteral("\n")));
-    hcp_ast::CompositeItem root{};
-    hcp_ast::I begin(map.begin(),map.end());
-    hcp_ast::I end(hcp_parser::parse(root,begin,mapParser));
-    if (!end.atEnd()){
-      std::ostringstream s;
-      s << "parsing of map did not end at end of file, it ended at "
-        << (*end) << " (offset " << (end-begin) << ")";
-      throw xju::Exception(s.str(),XJU_TRACED);
-    }
+    auto const root{hcp_parser::parseString(map.begin(),map.end(),
+                                            mapParser)};
     std::string const hcp(
       hcp_ast::reconstruct(
         hcp_ast::findOnlyChildOfType<MapHcp>(root)));
