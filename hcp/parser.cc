@@ -311,7 +311,7 @@ public:
       return ParseResult(EndOfInput(at, XJU_TRACED));
     }
     return ParseResult(
-      std::make_pair(IRs(1U, IR(new hcp_ast::String(at, xju::next(at)))), 
+      std::make_pair(IRs(1U, IR(new hcp_ast::Item(at, xju::next(at)))), 
                      xju::next(at)));
   }
   virtual std::string target() const throw() {
@@ -345,8 +345,7 @@ public:
     }
     return ParseResult(
       std::make_pair(
-        IRs(1U, std::shared_ptr<hcp_ast::String>(
-              new hcp_ast::String(at, xju::next(at)))), xju::next(at)));
+        IRs(1U, IR(new hcp_ast::Item(at, xju::next(at)))), xju::next(at)));
   }
   // Parser::
   virtual std::string target() const throw()
@@ -408,7 +407,7 @@ public:
     }
     return ParseResult(
       std::make_pair(
-        IRs(1U, IR(new hcp_ast::String(at, xju::next(at)))), xju::next(at)));
+        IRs(1U, IR(new hcp_ast::Item(at, xju::next(at)))), xju::next(at)));
   }
   // Parser::
   virtual std::string target() const throw()
@@ -469,7 +468,7 @@ public:
     }
     return ParseResult(
       std::make_pair(
-        IRs(1U, IR(new hcp_ast::String(at, xju::next(at)))), xju::next(at)));
+        IRs(1U, IR(new hcp_ast::Item(at, xju::next(at)))), xju::next(at)));
   }
   // Parser::
   virtual std::string target() const throw()
@@ -523,7 +522,7 @@ public:
     do{
       ParseResult r(x_->parse_(end, o));
       if (!r.failed()){
-        std::shared_ptr<hcp_ast::String> item(new hcp_ast::String(at, end));
+        std::shared_ptr<hcp_ast::Item> item(new hcp_ast::Item(at, end));
         return ParseResult(std::make_pair(IRs(1U, item), end));
       }
       if (end.atEnd()) {
@@ -606,7 +605,7 @@ public:
             x.second, XJU_TRACED));
       }
       return ParseResult(
-        std::make_pair(IRs(1U, IR(new hcp_ast::String(at, x.second))),
+        std::make_pair(IRs(1U, IR(new hcp_ast::Item(at, x.second))),
                        x.second));
     }
     catch(I::EndOfInput const& e) {
@@ -679,7 +678,7 @@ public:
       ++i;
     }
     return ParseResult(
-      std::make_pair(IRs(1U, IR(new hcp_ast::String(at, i))),
+      std::make_pair(IRs(1U, IR(new hcp_ast::Item(at, i))),
                      i));
   }
   
@@ -734,7 +733,7 @@ public:
     }
     I const nowAt(xju::next(at));
     return ParseResult(
-      std::make_pair(IRs(1U, IR(new hcp_ast::String(at, nowAt))), nowAt));
+      std::make_pair(IRs(1U, IR(new hcp_ast::Item(at, nowAt))), nowAt));
   }
   
   virtual std::string target() const throw() {
@@ -840,7 +839,7 @@ public:
       ParseResult const r1(until_->parse_(end, o));
       if (!r1.failed()) {
         return ParseResult(
-          std::make_pair(IRs(1U,IR(new hcp_ast::String(at, end))),end));
+          std::make_pair(IRs(1U,IR(new hcp_ast::Item(at, end))),end));
       }
       if (end.atEnd()) {
         return ParseResult(EndOfInput(end, XJU_TRACED));
@@ -2657,7 +2656,7 @@ public:
     return ParseResult(
       std::make_pair(
         IRs(1U, IR(new hcp_ast::EndOfFile(
-                     IRs(1U, IR(new hcp_ast::String(at, at)))))),at));
+                     IRs(1U, IR(new hcp_ast::Item(at, at)))))),at));
   }
 
 

@@ -173,7 +173,7 @@ std::pair<std::string,IncludeTarget> importSymbolAt(
         new hcp_ast::Comments(
           hcp_parser::IRs(1U,
                           hcp_ast::IR(
-                            new hcp_ast::String(
+                            new hcp_ast::Item(
                               hcp_ast::I(x.begin(),x.end()),
                               hcp_ast::I(x.begin(),x.end()))))))};
     std::copy(rirsAtEnd.rbegin(),rirsAtEnd.rend(),

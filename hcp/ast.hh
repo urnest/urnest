@@ -233,18 +233,6 @@ std::vector<std::reference_wrapper<T const> > filter(
   return result;
 }
 
-class String : public Item
-{
-public:
-  virtual ~String() throw() {
-  }
-  
-  explicit String(I begin, I end) throw():
-      Item(begin,end)
-  {
-  }
-};
-
 class WhiteSpaceTag{};
 class LineCommentTag{};
 class BlockCommentTag{};

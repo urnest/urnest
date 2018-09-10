@@ -332,7 +332,7 @@ public:
       PV a(*r);
       if (!a.first.size()) {
         // composite needs an item
-        a.first.push_back(IR(new hcp_ast::String(at, at)));
+        a.first.push_back(IR(new hcp_ast::Item(at, at)));
       }
       return ParseResult(PV(IRs(1U, IR(new ItemType(a.first))), a.second));
     }
