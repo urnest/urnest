@@ -25,13 +25,13 @@
 #include <xju/split.hh>
 
 struct MapHcpTag{};
-typedef hcp_ast::TaggedCompositeItem<MapHcpTag> MapHcp;
+typedef hcp_ast::TaggedItem<MapHcpTag> MapHcp;
 struct MapFromOffsetTag{};
-typedef hcp_ast::TaggedCompositeItem<MapFromOffsetTag> MapFromOffset;
+typedef hcp_ast::TaggedItem<MapFromOffsetTag> MapFromOffset;
 struct MapToOffsetTag{};
-typedef hcp_ast::TaggedCompositeItem<MapToOffsetTag> MapToOffset;
+typedef hcp_ast::TaggedItem<MapToOffsetTag> MapToOffset;
 struct MapOffsetPairTag{};
-typedef hcp_ast::TaggedCompositeItem<MapOffsetPairTag> MapOffsetPair;
+typedef hcp_ast::TaggedItem<MapOffsetPairTag> MapOffsetPair;
 
 // get $HCP_HPATH directories
 std::vector<xju::path::AbsolutePath> getHPath() throw(xju::Exception)
@@ -56,7 +56,7 @@ std::vector<xju::path::AbsolutePath> getHPath() throw(xju::Exception)
 }
 
 struct GeneratedAsTag{};
-typedef hcp_ast::TaggedCompositeItem<GeneratedAsTag> GeneratedAs;
+typedef hcp_ast::TaggedItem<GeneratedAsTag> GeneratedAs;
 
 std::pair<xju::path::AbsolutePath,xju::path::FileName> const findSmap(
   std::string const& fileName) throw(

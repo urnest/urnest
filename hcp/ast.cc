@@ -43,18 +43,18 @@ std::string Item::str() const throw()
   return "[ "+xju::format::join(ss.begin(),ss.end(),",")+"]";
 }
 
-std::vector<CompositeItem const*> getContextAt(
-  I i, CompositeItem const& within) throw()
+std::vector<Item const*> getContextAt(
+  I i, Item const& within) throw()
 {
-  std::vector<CompositeItem const*> result;
-  for(IRs::const_iterator j = within.items_.begin();
-      j != within.items_.end();
+  std::vector<Item const*> result;
+  for(IRs::const_iterator j = within.items().begin();
+      j != within.items().end();
       ++j) {
     if (((*j)->begin().x_ <= i.x_) && (i.x_ < (*j)->end().x_) &&
-        (*j)->isA<CompositeItem>()) {
-      result.push_back(&(*j)->asA<CompositeItem>());
-      std::vector<CompositeItem const*> children(
-        getContextAt(i, (*j)->asA<CompositeItem>()));
+        (*j)->items().size()) {
+      result.push_back(&(**j));
+      std::vector<Item const*> children(
+        getContextAt(i, (**j)));
       std::copy(children.begin(), children.end(), std::back_inserter(result));
     }
   }

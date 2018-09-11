@@ -58,7 +58,7 @@ std::pair<IRs,I> parse(I const startOfElement,
 
 // ... or apply parser to begin..end
 // - note parser must consume entire string
-hcp_ast::CompositeItem parseString(
+hcp_ast::Item parseString(
   std::string::const_iterator begin,
   std::string::const_iterator end,
   std::shared_ptr<Parser> parser,
@@ -305,7 +305,7 @@ public:
   }
 };
 
-// pre: ItemType is e.g. a hcp_ast::CompositeItem
+// pre: ItemType is e.g. a hcp_ast::Item
 template<class ItemType>
 class NamedParser : public NamedParser_
 {

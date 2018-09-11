@@ -38,7 +38,7 @@ namespace tags
 namespace
 {
 std::string targetOfHashInclude(
-  hcp_ast::CompositeItem const& hashIncludeItem) throw()
+  hcp_ast::Item const& hashIncludeItem) throw()
 {
   auto k(hcp_ast::findOnlyChildOfType<hcp_ast::TargetOfHashInclude>(
            hashIncludeItem));
@@ -83,10 +83,8 @@ hcp_parser::I findTrailingWhitespace(hcp_parser::IR x) throw()
   if (hcp_ast::isA_<hcp_ast::WhiteSpace>(x)){
     return x->begin();
   }
-  if (hcp_ast::isA_<hcp_ast::CompositeItem>(x)){
-    auto const c(hcp_ast::asA_<hcp_ast::CompositeItem>(x));
-    xju::assert_not_equal(c.items_.size(),0U);
-    return findTrailingWhitespace(*(c.items_.rbegin()));
+  if (x->items().size()){
+    return findTrailingWhitespace(x->items().back());
   }
   return x->end();
 }
@@ -200,7 +198,7 @@ std::pair<std::string,IncludeTarget> importSymbolAt(
         auto const item(*j);
         if (item->isA<hcp_ast::HashInclude>()){
           std::string const existing(targetOfHashInclude(
-                                       item->asA<hcp_ast::CompositeItem>()));
+                                       item->asA<hcp_ast::Item>()));
           if (includeTarget==existing){
             // already included
             return std::make_pair(x,IncludeTarget(includeTarget));
@@ -208,7 +206,7 @@ std::pair<std::string,IncludeTarget> importSymbolAt(
         }
         else if (scope.second && item->isA<hcp_ast::HashIncludeImpl>()){
           std::string const existing(targetOfHashInclude(
-                                       item->asA<hcp_ast::CompositeItem>()));
+                                       item->asA<hcp_ast::Item>()));
           if (includeTarget==existing){
             // already included
             return std::make_pair(x,IncludeTarget(includeTarget));

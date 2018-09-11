@@ -204,12 +204,12 @@ public:
 };
 
 // hcp_ast::Item type tree mirroring json Element type tree
-class AstElement : public hcp_ast::CompositeItem
+class AstElement : public hcp_ast::Item
 {
 public:
   AstElement(std::vector<hcp_ast::IR> const& items,
              std::shared_ptr<xju::json::Element const> const& element) throw()
-      : hcp_ast::CompositeItem(items),
+      : hcp_ast::Item(items),
         element_(element)
   {
   }
@@ -302,7 +302,7 @@ private:
   {
     xju::assert_not_equal(items.size(),0U);
     auto const children(hcp_ast::findChildrenOfType<AstElement>(
-                          hcp_ast::CompositeItem(items)));
+                          hcp_ast::Item(items)));
     std::vector<std::shared_ptr<Element const> > arrayElements;
     std::transform(children.begin(),children.end(),
                    std::back_inserter(arrayElements),
@@ -318,10 +318,10 @@ private:
 };
 
 class ObjectMemberTag{};
-typedef hcp_ast::TaggedCompositeItem<ObjectMemberTag> ObjectMember;
+typedef hcp_ast::TaggedItem<ObjectMemberTag> ObjectMember;
 
 class ObjectValueTag{};
-typedef hcp_ast::TaggedCompositeItem<ObjectValueTag> ObjectValue;
+typedef hcp_ast::TaggedItem<ObjectValueTag> ObjectValue;
 
 class AstObject : public AstElement
 {
@@ -336,7 +336,7 @@ private:
   {
     xju::assert_not_equal(items.size(),0U);
     auto const children(hcp_ast::findChildrenOfType<ObjectMember>(
-                          hcp_ast::CompositeItem(items)));
+                          hcp_ast::Item(items)));
     std::map<xju::Utf8String,std::shared_ptr<Element const> > objectElements;
     std::transform(children.begin(),children.end(),
                    std::inserter(objectElements,objectElements.end()),
@@ -516,7 +516,7 @@ struct StringLiteralParser : public hcp_parser::Parser
           hcp_ast::IRs(
             1U,
             hcp_ast::IR(new AstString(
-                 hcp_ast::IRs(1U,hcp_ast::IR(new hcp_ast::String(at,i))),
+                 hcp_ast::IRs(1U,hcp_ast::IR(new hcp_ast::Item(at,i))),
                  xju::Utf8String(unescaped.str())))),
             i));
     }

@@ -34,28 +34,28 @@ PR_ eatWhite_{hcp_parser::zeroOrMore()*hcp_parser::whitespaceChar()};
 PR_ doubleQuote_{hcp_parser::doubleQuote()};
 PR_ stringValue{hcp_parser::parseUntil(doubleQuote_)};
 struct SymbolTag{};
-typedef hcp_ast::TaggedCompositeItem<SymbolTag> Symbol;
+typedef hcp_ast::TaggedItem<SymbolTag> Symbol;
 PR_ symbol{new hcp_parser::NamedParser<Symbol>(
     "symbol",
     stringValue)};
 struct FileNameTag{};
-typedef hcp_ast::TaggedCompositeItem<FileNameTag> ParsedFileName;
+typedef hcp_ast::TaggedItem<FileNameTag> ParsedFileName;
 PR_ fileName{
   new hcp_parser::NamedParser<ParsedFileName>(
     "file name",
     stringValue)};
 struct HeaderNameTag{};
-typedef hcp_ast::TaggedCompositeItem<HeaderNameTag> ParsedHeaderName;
+typedef hcp_ast::TaggedItem<HeaderNameTag> ParsedHeaderName;
 PR_ headerName{
   new hcp_parser::NamedParser<ParsedHeaderName>(
     "file name",
     stringValue)};
 
-class ParsedLineNumber : public hcp_ast::CompositeItem
+class ParsedLineNumber : public hcp_ast::Item
 {
 public:
   ParsedLineNumber(std::vector<hcp_ast::IR> const& items) throw(xju::Exception):
-      CompositeItem(items),
+      Item(items),
       lineNumber_(xju::stringToUInt(hcp_ast::reconstruct(*this)))
   {
   }
@@ -70,11 +70,11 @@ PR_ digit{hcp_parser::charInRange('0','9')};
 PR_ lineNumber{new hcp_parser::NamedParser<ParsedLineNumber>(
                 "line number",
                 // we do not use parse::atLeastOne as it uses
-                // CompositeItem, which is redundent
+                // Item, which is redundent
                 digit+hcp_parser::zeroOrMore()*digit)};
 
 struct ParsedHeaderTag{};
-typedef hcp_ast::TaggedCompositeItem<ParsedHeaderTag> ParsedHeader;
+typedef hcp_ast::TaggedItem<ParsedHeaderTag> ParsedHeader;
 
 PR_ openBrace=hcp_parser::parseLiteral("{");
 PR_ closeBrace=hcp_parser::parseLiteral("}");
@@ -85,7 +85,7 @@ PR_ colon=hcp_parser::parseLiteral(":");
 PR_ comma=hcp_parser::parseLiteral(",");
 
 struct LocationTag{};
-typedef hcp_ast::TaggedCompositeItem<LocationTag> ParsedLocation;
+typedef hcp_ast::TaggedItem<LocationTag> ParsedLocation;
 PR_ location{new hcp_parser::NamedParser<ParsedLocation>(
               "location",
               openBrace+eatWhite_+f+eatWhite_+
@@ -111,7 +111,7 @@ PR_ locations=hcp_parser::listOf(openSquare+eatWhite_,
                                  closeSquare+eatWhite_);
 
 struct EntryTag{};
-typedef hcp_ast::TaggedCompositeItem<EntryTag> Entry;
+typedef hcp_ast::TaggedItem<EntryTag> Entry;
 PR_ entry{new hcp_parser::NamedParser<Entry>(
     "entry",
     doubleQuote_+symbol+doubleQuote_+eatWhite_+
@@ -139,13 +139,13 @@ void augmentRootNamespace(Namespace& rootNamespace,
     auto const root{hcp_parser::parseString(x.begin(),x.end(),
                                             tagsFile,traceParser)};
 
-    for(auto x:root.items_) {
+    for(auto x:root.items()) {
       if (x->isA<Entry>()) {
         Entry const& entry(x->asA<Entry>());
         Symbol const& symbol(hcp_ast::findOnlyChildOfType<Symbol>(entry));
         std::vector<hcp::tags::Location> locations;
         std::vector<hcp::tags::Header> headers;
-        for(auto x:entry.items_) {
+        for(auto x:entry.items()) {
           if (hcp_ast::isA_<ParsedLocation>(x)) {
             ParsedLocation const& location(
               x->asA<ParsedLocation>());

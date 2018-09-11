@@ -81,9 +81,8 @@ public:
   {
     for(auto ir: irs){
       if (!hcp_ast::IsAnyOf<T,Us...>(ir)){
-        if (hcp_ast::isA_<hcp_ast::CompositeItem>(ir)){
-          auto const c(hcp_ast::asA_<hcp_ast::CompositeItem>(ir));
-          copyExcluding<T,Us...>(c.items_);
+        if (ir->items().size()){
+          copyExcluding<T,Us...>(ir->items());
         }
         else{
           copy(ir->begin(),ir->end());
@@ -126,11 +125,10 @@ std::string reconstructWithoutTrailingWhitespace(
   if (hcp_ast::isA_<hcp_ast::WhiteSpace>(*end)){
     return result;
   }
-  if (hcp_ast::isA_<hcp_ast::CompositeItem>(*end)){
-    auto const c(hcp_ast::asA_<hcp_ast::CompositeItem>(*end));
+  if ((**end).items().size()){
     return result+reconstructWithoutTrailingWhitespace(
-      c.items_.begin(),
-      c.items_.end());
+      (**end).items().begin(),
+      (**end).items().end());
   }
   return result+reconstruct(*end);
 }
@@ -146,11 +144,10 @@ std::string reconstructTrailingWhitespace(
   if (hcp_ast::isA_<hcp_ast::WhiteSpace>(*end)){
     return reconstruct(*end);
   }
-  if (hcp_ast::isA_<hcp_ast::CompositeItem>(*end)){
-    auto const c(hcp_ast::asA_<hcp_ast::CompositeItem>(*end));
+  if ((**end).items().size()){
     return reconstructTrailingWhitespace(
-      c.items_.begin(),
-      c.items_.end());
+      (**end).items().begin(),
+      (**end).items().end());
   }
   return "";
 }
@@ -163,26 +160,26 @@ void genClassMemberFunctionDef(
     xju::Exception)
 {
   std::vector<hcp_ast::IR>::const_iterator const i(
-    std::find_if(x.items_.begin(), x.items_.end(),
+    std::find_if(x.items().begin(), x.items().end(),
                  hcp_ast::isA_<hcp_ast::FunctionImpl>));
-  xju::assert_not_equal(i, x.items_.end());
+  xju::assert_not_equal(i, x.items().end());
 
   std::string proto(reconstructWithoutTrailingWhitespace(
-                      x.items_.begin(), i));
+                      x.items().begin(), i));
   h << proto << ";";
 
   std::string const implTrailingWhite(
-    reconstructTrailingWhitespace(i,x.items_.end()));
+    reconstructTrailingWhitespace(i,x.items().end()));
   h << implTrailingWhite;
   
-  std::vector<hcp_ast::IR>::const_iterator k(x.items_.begin());
+  std::vector<hcp_ast::IR>::const_iterator k(x.items().begin());
   if ((*k)->isA<hcp_ast::FunctionQualifiers>()) {
     k=xju::next(k);
   }
   std::vector<hcp_ast::IR>::const_iterator j(
-    std::find_if(k, x.items_.end(),
+    std::find_if(k, x.items().end(),
                  hcp_ast::isA_<hcp_ast::FunctionName>));
-  xju::assert_not_equal(j, x.items_.end());
+  xju::assert_not_equal(j, x.items().end());
 
   c.copy((*k)->begin(), (*j)->begin());
   c << xju::format::join(scope.begin(),
@@ -190,9 +187,9 @@ void genClassMemberFunctionDef(
                          getClassName,
                          "::")
     << "::";
-  auto const l(std::find_if(j,x.items_.end(),
+  auto const l(std::find_if(j,x.items().end(),
                             hcp_ast::isA_<hcp_ast::FunctionImpl>));
-  xju::assert_not_equal(l,x.items_.end());
+  xju::assert_not_equal(l,x.items().end());
   c.copyExcluding<hcp_ast::VarInitialiser,hcp_ast::VirtSpecifierSeq>(
     hcp_ast::IRs(j, l));
   c.copy((*l)->begin(), x.end());
@@ -219,10 +216,10 @@ void genClassStaticVarDef(
 
   auto name(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(x));
 
-  std::vector<hcp_ast::IR>::const_iterator k(x.items_.begin());
+  std::vector<hcp_ast::IR>::const_iterator k(x.items().begin());
   xju::assert_(*k, hcp_ast::isA_<hcp_ast::KeywordStatic>);
   ++k;
-  c.copy(hcp_ast::asA_<hcp_ast::KeywordStatic>(x.items_[0]).end(),
+  c.copy(hcp_ast::asA_<hcp_ast::KeywordStatic>(x.items().front()).end(),
          name.begin());
   c << xju::format::join(scope.begin(),
                          scope.end(),
@@ -257,9 +254,9 @@ bool isInlineFunction(hcp_ast::FunctionDef const& x) throw(
     return false;
   }
   return (std::find_if(
-            qualifiers.front().get().items_.begin(),
-            qualifiers.front().get().items_.end(),
-            isLiteral("inline"))!=qualifiers.front().get().items_.end());
+            qualifiers.front().get().items().begin(),
+            qualifiers.front().get().items().end(),
+            isLiteral("inline"))!=qualifiers.front().get().items().end());
 }
 
 bool isFriendFunction(hcp_ast::FunctionDef const& x) throw(
@@ -271,9 +268,9 @@ bool isFriendFunction(hcp_ast::FunctionDef const& x) throw(
     return false;
   }
   return (std::find_if(
-            qualifiers.front().get().items_.begin(),
-            qualifiers.front().get().items_.end(),
-            isLiteral("friend"))!=qualifiers.front().get().items_.end());
+            qualifiers.front().get().items().begin(),
+            qualifiers.front().get().items().end(),
+            isLiteral("friend"))!=qualifiers.front().get().items().end());
 }
 
 bool isFriendFunction(hcp_ast::FunctionDecl const& x) throw(
@@ -285,9 +282,9 @@ bool isFriendFunction(hcp_ast::FunctionDecl const& x) throw(
     return false;
   }
   return (std::find_if(
-            qualifiers.front().get().items_.begin(),
-            qualifiers.front().get().items_.end(),
-            isLiteral("friend"))!=qualifiers.front().get().items_.end());
+            qualifiers.front().get().items().begin(),
+            qualifiers.front().get().items().end(),
+            isLiteral("friend"))!=qualifiers.front().get().items().end());
 }
 
 bool isFriendOperatorLessDecl(hcp_ast::FunctionDecl const& x,
@@ -368,12 +365,12 @@ void genClass(hcp_ast::ClassDef const& x,
               std::vector<hcp_ast::ClassDef const*> const& outerClasses) throw(
                 xju::Exception)
 {
-  for(hcp_ast::IRs::const_iterator i=x.items_.begin(); 
-      i!=x.items_.end(); 
+  for(hcp_ast::IRs::const_iterator i=x.items().begin(); 
+      i!=x.items().end(); 
       ++i) 
   {
     if ((*i)->isA<hcp_ast::ClassMembers>()) {
-      for(auto const m: (*i)->asA<hcp_ast::ClassMembers>().items_) {
+      for(auto const m: (*i)->asA<hcp_ast::ClassMembers>().items()) {
         if (m->isA<hcp_ast::FunctionDef>()) {
           if (isInlineFunction(m->asA<hcp_ast::FunctionDef>())) {
             h.copy(m->begin(),m->end());
@@ -482,23 +479,23 @@ void genFunction(hcp_ast::FunctionDef const& x,
   }
   else{
     std::vector<hcp_ast::IR>::const_iterator i(
-      std::find_if(x.items_.begin(), x.items_.end(),
+      std::find_if(x.items().begin(), x.items().end(),
                    hcp_ast::isA_<hcp_ast::FunctionImpl>));
-    xju::assert_not_equal(i, x.items_.end());
+    xju::assert_not_equal(i, x.items().end());
     std::string proto(reconstructWithoutTrailingWhitespace(
-                        x.items_.begin(), i));
+                        x.items().begin(), i));
     h << proto << ";";
     
     std::string const implTrailingWhite(
-      reconstructTrailingWhitespace(i,x.items_.end()));
+      reconstructTrailingWhitespace(i,x.items().end()));
     h << implTrailingWhite;
     
     std::vector<hcp_ast::IR>::const_iterator j(
-      std::find_if(x.items_.begin(), x.items_.end(),
+      std::find_if(x.items().begin(), x.items().end(),
                    hcp_ast::isA_<hcp_ast::FunctionName>));
-    xju::assert_not_equal(j, x.items_.end());
+    xju::assert_not_equal(j, x.items().end());
     
-    std::vector<hcp_ast::IR>::const_iterator k(x.items_.begin());
+    std::vector<hcp_ast::IR>::const_iterator k(x.items().begin());
     if ((*k)->isA<hcp_ast::FunctionQualifiers>()) {
       k=xju::next(k);
     }
@@ -540,18 +537,18 @@ void genNamespace(hcp_ast::NamespaceDef const& x,
                     xju::Exception)
 {
   std::vector<hcp_ast::IR>::const_iterator i(
-    std::find_if(x.items_.begin(), x.items_.end(),
+    std::find_if(x.items().begin(), x.items().end(),
                  hcp_ast::isA_<hcp_ast::NamespaceMembers>));
-  xju::assert_not_equal(i, x.items_.end());
+  xju::assert_not_equal(i, x.items().end());
 
   c << "namespace " << x.namespaceName_ << "\n"
     << "{\n";
 
-  h.copy(hcp_ast::IRs(x.items_.begin(), i));
+  h.copy(hcp_ast::IRs(x.items().begin(), i));
   
-  genNamespaceContent((*i)->asA<hcp_ast::NamespaceMembers>().items_, h, c);
+  genNamespaceContent((*i)->asA<hcp_ast::NamespaceMembers>().items(), h, c);
   
-  h.copy(hcp_ast::IRs(xju::next(i), x.items_.end()));
+  h.copy(hcp_ast::IRs(xju::next(i), x.items().end()));
   c << "}\n";
 }
 
@@ -822,7 +819,7 @@ int main(int argc, char* argv[])
       }
     }
     genNamespaceContent(
-      root.items_.front()->asA<hcp_ast::File>().items_, oh, oc);
+      root.items().front()->asA<hcp_ast::File>().items(), oh, oc);
     
     oh << "#endif" << "\n";
 

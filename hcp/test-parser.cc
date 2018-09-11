@@ -939,7 +939,7 @@ void test22()
     xju::assert_equal(reconstruct(y.first), x);
     xju::assert_equal(y.second.atEnd(), true);
     xju::assert_equal(y.first.front()->isA<hcp_ast::FunctionDef>(), true);
-    xju::assert_equal((*y.first.front()->asA<hcp_ast::FunctionDef>().items_.
+    xju::assert_equal((*y.first.front()->asA<hcp_ast::FunctionDef>().items().
                        begin())->isA<hcp_ast::FunctionQualifiers>(), true);
   }
   {
@@ -1061,9 +1061,9 @@ void test24(std::vector<std::string> const& f)
         x.begin(),x.end(),
         hcp_parser::class_def())};
     xju::assert_equal(reconstruct(root), x);
-    xju::assert_equal(root.items_[0]->isA<hcp_ast::ClassDef>(), true);
-    xju::assert_equal(root.items_[0]->asA<hcp_ast::ClassDef>().className_, "X");
-    xju::assert_equal(root.items_[0]->asA<hcp_ast::ClassDef>().isTemplateSpecialisation_, false);
+    xju::assert_equal(root.items()[0]->isA<hcp_ast::ClassDef>(), true);
+    xju::assert_equal(root.items()[0]->asA<hcp_ast::ClassDef>().className_, "X");
+    xju::assert_equal(root.items()[0]->asA<hcp_ast::ClassDef>().isTemplateSpecialisation_, false);
   }
   catch(xju::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
@@ -1261,8 +1261,8 @@ void test29(std::vector<std::string> const& f)
         x.begin(),x.end(),
         hcp_parser::class_def())};
     xju::assert_equal(reconstruct(root), x);
-    xju::assert_equal(root.items_[0]->asA<hcp_ast::ClassDef>().className_, "X<int>");
-    xju::assert_equal(root.items_[0]->asA<hcp_ast::ClassDef>().isTemplateSpecialisation_, true);
+    xju::assert_equal(root.items()[0]->asA<hcp_ast::ClassDef>().className_, "X<int>");
+    xju::assert_equal(root.items()[0]->asA<hcp_ast::ClassDef>().isTemplateSpecialisation_, true);
   }
   catch(xju::Exception const& e) {
     xju::assert_not_equal(readableRepr(e), readableRepr(e));
@@ -1280,10 +1280,10 @@ void test30()
         x.begin(),x.end(),
         hcp_parser::static_var_def())};
     xju::assert_equal(reconstruct(root), x);
-    xju::assert_equal(root.items_[0]->isA<hcp_ast::StaticVarDef>(),true);
+    xju::assert_equal(root.items()[0]->isA<hcp_ast::StaticVarDef>(),true);
     auto const y(
       hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(
-        root.items_[0]->asA<hcp_ast::StaticVarDef>()));
+        root.items()[0]->asA<hcp_ast::StaticVarDef>()));
     xju::assert_equal(reconstruct(y),"_user_exns");
   }
   catch(xju::Exception const& e) {
@@ -1304,7 +1304,7 @@ void test31()
      xju::assert_equal(reconstruct(root), x);
 
      auto d(hcp_ast::findOnlyChildOfType<hcp_ast::StaticVarDef>(root));
-     hcp_ast::asA_<hcp_ast::StaticVarDef>(*root.items_.begin());
+     hcp_ast::asA_<hcp_ast::StaticVarDef>(*root.items().begin());
      auto n(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(d));
      xju::assert_equal(reconstruct(n),"x");
      auto i(hcp_ast::findOnlyChildOfType<hcp_ast::VarInitialiser>(d));
@@ -1326,7 +1326,7 @@ void test31()
      xju::assert_equal(reconstruct(root), x);
 
      auto d(hcp_ast::findOnlyChildOfType<hcp_ast::StaticVarDef>(root));
-     hcp_ast::asA_<hcp_ast::StaticVarDef>(*root.items_.begin());
+     hcp_ast::asA_<hcp_ast::StaticVarDef>(*root.items().begin());
      auto n(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(d));
      xju::assert_equal(reconstruct(n),"y");
      auto i(hcp_ast::findOnlyChildOfType<hcp_ast::VarInitialiser>(d));
@@ -1348,7 +1348,7 @@ void test31()
      xju::assert_equal(reconstruct(root), x);
 
      auto d(hcp_ast::findOnlyChildOfType<hcp_ast::StaticVarDef>(root));
-     hcp_ast::asA_<hcp_ast::StaticVarDef>(*root.items_.begin());
+     hcp_ast::asA_<hcp_ast::StaticVarDef>(*root.items().begin());
      auto n(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(d));
      xju::assert_equal(reconstruct(n),"y");
      auto i(hcp_ast::findOnlyChildOfType<hcp_ast::VarInitialiser>(d));
@@ -1409,7 +1409,7 @@ void test31()
      xju::assert_equal(reconstruct(root), x);
 
      auto d(hcp_ast::findOnlyChildOfType<hcp_ast::StaticVarDef>(root));
-     hcp_ast::asA_<hcp_ast::StaticVarDef>(*root.items_.begin());
+     hcp_ast::asA_<hcp_ast::StaticVarDef>(*root.items().begin());
      auto n(hcp_ast::findChildrenOfType<hcp_ast::VarName>(d));
      xju::assert_equal(reconstruct(n[0]),"y");
      xju::assert_equal(reconstruct(n[1]),"x");
@@ -1438,7 +1438,7 @@ void test32()
       xju::assert_equal(reconstruct(root), x);
 
      auto d(hcp_ast::findOnlyChildOfType<hcp_ast::StaticVarDef>(root));
-     hcp_ast::asA_<hcp_ast::StaticVarDef>(*root.items_.begin());
+     hcp_ast::asA_<hcp_ast::StaticVarDef>(*root.items().begin());
      auto n(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(d));
      xju::assert_equal(reconstruct(n),"me");
      auto i(hcp_ast::findChildrenOfType<hcp_ast::VarInitialiser>(d,1));
@@ -1481,12 +1481,12 @@ void test34()
         hcp_parser::function_def())};
     xju::assert_equal(reconstruct(root), x);
     std::vector<hcp_ast::IR>::const_iterator j(
-      std::find_if(root.items_[0]->asA<hcp_ast::FunctionDef>().items_.begin(),
-                   root.items_[0]->asA<hcp_ast::FunctionDef>().items_.end(),
+      std::find_if(root.items()[0]->asA<hcp_ast::FunctionDef>().items().begin(),
+                   root.items()[0]->asA<hcp_ast::FunctionDef>().items().end(),
                    hcp_ast::isA_<hcp_ast::FunctionName>));
     xju::assert_not_equal(
       j, 
-      root.items_[0]->asA<hcp_ast::FunctionDef>().items_.end());
+      root.items()[0]->asA<hcp_ast::FunctionDef>().items().end());
     xju::assert_equal(reconstruct(*j), "operator int");
   }
   catch(xju::Exception const& e) {
@@ -1668,7 +1668,7 @@ void test39()
         hcp_parser::extern_var_def())};
     auto const y(
       hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(
-        root.items_[0]->asA<hcp_ast::ExternVarDef>()));
+        root.items()[0]->asA<hcp_ast::ExternVarDef>()));
     xju::assert_equal(reconstruct(y),"open");
     
   }
@@ -1693,12 +1693,12 @@ void test40()
     xju::assert_equal(reconstruct(root), x);
     std::vector<hcp_ast::IR>::const_iterator j(
       std::find_if(
-        root.items_[0]->asA<hcp_ast::TemplateFunctionDef>().items_.begin(),
-        root.items_[0]->asA<hcp_ast::TemplateFunctionDef>().items_.end(),
+        root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().begin(),
+        root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().end(),
         hcp_ast::isA_<hcp_ast::FunctionName>));
     xju::assert_not_equal(
       j, 
-      root.items_[0]->asA<hcp_ast::TemplateFunctionDef>().items_.end());
+      root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().end());
     xju::assert_equal(reconstruct(*j), "EventP<T>::EventP");
   }
   catch(xju::Exception const& e) {
@@ -1722,12 +1722,12 @@ void test41()
         hcp_parser::template_function_def())};
     std::vector<hcp_ast::IR>::const_iterator j(
       std::find_if(
-        root.items_[0]->asA<hcp_ast::TemplateFunctionDef>().items_.begin(),
-        root.items_[0]->asA<hcp_ast::TemplateFunctionDef>().items_.end(),
+        root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().begin(),
+        root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().end(),
         hcp_ast::isA_<hcp_ast::FunctionName>));
     xju::assert_not_equal(
       j, 
-      root.items_[0]->asA<hcp_ast::TemplateFunctionDef>().items_.end());
+      root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().end());
     xju::assert_equal(reconstruct(*j), "EventP<T>::operator=");
   }
   catch(xju::Exception const& e) {
@@ -1748,12 +1748,12 @@ void test42()
       xju::assert_equal(reconstruct(root), x);
       std::vector<hcp_ast::IR>::const_iterator j(
         std::find_if(
-          root.items_.begin(),
-          root.items_.end(),
+          root.items().begin(),
+          root.items().end(),
           hcp_ast::isA_<hcp_ast::VarName>));
       xju::assert_not_equal(
         j, 
-        root.items_.end());
+        root.items().end());
       xju::assert_equal(reconstruct(*j), "f");
     }
     catch(xju::Exception const& e) {
@@ -1771,12 +1771,12 @@ void test42()
       xju::assert_equal(reconstruct(root), x);
       std::vector<hcp_ast::IR>::const_iterator j(
         std::find_if(
-          root.items_.begin(),
-          root.items_.end(),
+          root.items().begin(),
+          root.items().end(),
           hcp_ast::isA_<hcp_ast::VarName>));
       xju::assert_not_equal(
         j, 
-        root.items_.end());
+        root.items().end());
       xju::assert_equal(reconstruct(*j), "f");
     }
     catch(xju::Exception const& e) {
@@ -1798,7 +1798,7 @@ void test43()
 
       auto const y(
         hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(
-          root.items_[0]->asA<hcp_ast::CompositeItem>()));
+          root.items()[0]->asA<hcp_ast::Item>()));
       xju::assert_equal(reconstruct(y),"length");
     }
     catch(xju::Exception const& e) {
@@ -1847,8 +1847,7 @@ void test46()
       xju::assert_equal(reconstruct(root), x);
 
       auto const y(
-        hcp_ast::findChildrenOfType<hcp_ast::ScopedName>(
-          root.asA<hcp_ast::CompositeItem>()));
+        hcp_ast::findChildrenOfType<hcp_ast::ScopedName>(root));
       xju::assert_equal(reconstruct(y[0]),"A ");
     }
     catch(xju::Exception const& e) {
@@ -1868,14 +1867,14 @@ void test46()
       {
         auto const y(
           hcp_ast::findChildrenOfType<hcp_ast::BaseSpecifier>(
-            root.asA<hcp_ast::CompositeItem>()));
+            root));
         xju::assert_equal(reconstruct(y[0]),"A ");
         xju::assert_equal(reconstruct(y[1]),"private virtual I::B<int,C>");
       }
       {
         auto const y(
           hcp_ast::findChildrenOfType<hcp_ast::ScopedName>(
-            root.asA<hcp_ast::CompositeItem>()));
+            root));
         xju::assert_equal(reconstruct(y[0]),"A ");
         xju::assert_equal(reconstruct(y[1]),"I::B<int,C>");
       }

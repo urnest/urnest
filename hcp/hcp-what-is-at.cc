@@ -111,9 +111,9 @@ int main(int argc, char* argv[])
     hcp_parser::I at(x.begin(), x.end());
     unsigned u;
     for(u=0; u != options.offset_; ++u, ++at);
-    hcp_ast::CompositeItem root{r.first};
-    std::vector<hcp_ast::CompositeItem const*> context(getContextAt(at, root));
-    std::vector<hcp_ast::CompositeItem const*>::const_iterator j;
+    hcp_ast::Item root{r.first};
+    std::vector<hcp_ast::Item const*> context(getContextAt(at, root));
+    std::vector<hcp_ast::Item const*>::const_iterator j;
     for(j=context.begin(); j!=context.end(); ++j) {
       std::cout << (*j)->begin() << ": " << typeid(**j).name() << std::endl;
     }

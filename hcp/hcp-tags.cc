@@ -75,8 +75,8 @@ std::map<Symbol,LineNumber> genClass(hcp_ast::ClassDef const& x) throw(
                                LineNumber(x.begin().line_)));
 
   auto const members(findFirst<hcp_ast::ClassMembers>(
-                       x.items_.begin(),x.items_.end()));
-  auto const memberSymbols(genNamespaceContent(members.items_));
+                       x.items().begin(),x.items().end()));
+  auto const memberSymbols(genNamespaceContent(members.items()));
   
   for(auto s: memberSymbols) {
     result.insert(std::make_pair(qualify(s.first,x.className_),s.second));
@@ -89,13 +89,13 @@ std::map<Symbol,LineNumber> genTemplateClass(
     xju::Exception)
 {
   std::map<Symbol,LineNumber> result;
-  std::string const className(hcp_ast::ClassDef::getClassName(x.items_));
+  std::string const className(hcp_ast::ClassDef::getClassName(x.items()));
   result.insert(std::make_pair(Symbol(className),
                                LineNumber(x.begin().line_)));
 
   auto const members(findFirst<hcp_ast::ClassMembers>(
-                       x.items_.begin(),x.items_.end()));
-  auto const memberSymbols(genNamespaceContent(members.items_));
+                       x.items().begin(),x.items().end()));
+  auto const memberSymbols(genNamespaceContent(members.items()));
   
   for(auto s: memberSymbols) {
     result.insert(std::make_pair(qualify(s.first,className),s.second));
@@ -106,7 +106,7 @@ std::map<Symbol,LineNumber> genTemplateClass(
 std::pair<Symbol,LineNumber> genFunction(hcp_ast::FunctionDef const& x) throw(
   xju::Exception)
 {
-  auto y(findFirst<hcp_ast::FunctionName>(x.items_.begin(), x.items_.end()));
+  auto y(findFirst<hcp_ast::FunctionName>(x.items().begin(), x.items().end()));
   Symbol symbol(reconstruct(y));
   LineNumber lineNumber(y.begin().line_);
   return std::make_pair(symbol,lineNumber);
@@ -116,7 +116,7 @@ std::pair<Symbol,LineNumber> genTemplateFunction(
   hcp_ast::TemplateFunctionDef const& x) throw(
     xju::Exception)
 {
-  auto y(findFirst<hcp_ast::FunctionName>(x.items_.begin(), x.items_.end()));
+  auto y(findFirst<hcp_ast::FunctionName>(x.items().begin(), x.items().end()));
   Symbol symbol(reconstruct(y));
   LineNumber lineNumber(y.begin().line_);
   return std::make_pair(symbol,lineNumber);
@@ -127,7 +127,7 @@ std::pair<Symbol,LineNumber> genFunctionDecl(
     xju::Exception)
 {
   auto const y(findFirst<hcp_ast::FunctionName>(
-                 x.items_.begin(), x.items_.end()));
+                 x.items().begin(), x.items().end()));
   Symbol symbol(reconstruct(y));
   LineNumber lineNumber(y.begin().line_);
   return std::make_pair(symbol,lineNumber);
@@ -138,9 +138,9 @@ std::pair<Symbol,LineNumber> genTypedef(
     xju::Exception)
 {
   std::vector<hcp_ast::IR>::const_iterator i(
-    std::find_if(x.items_.begin(), x.items_.end(),
+    std::find_if(x.items().begin(), x.items().end(),
                  hcp_ast::isA_<hcp_ast::DefinedType>));
-  xju::assert_not_equal(i, x.items_.end());
+  xju::assert_not_equal(i, x.items().end());
   Symbol symbol(reconstruct(**i));
   LineNumber lineNumber((**i).begin().line_);
   return std::make_pair(symbol,lineNumber);
@@ -151,9 +151,9 @@ std::pair<Symbol,LineNumber> genEnumDef(
     xju::Exception)
 {
   std::vector<hcp_ast::IR>::const_iterator i(
-    std::find_if(x.items_.begin(), x.items_.end(),
+    std::find_if(x.items().begin(), x.items().end(),
                  hcp_ast::isA_<hcp_ast::EnumName>));
-  xju::assert_not_equal(i, x.items_.end());
+  xju::assert_not_equal(i, x.items().end());
   Symbol symbol(reconstruct(**i));
   LineNumber lineNumber((**i).begin().line_);
   return std::make_pair(symbol,lineNumber);
@@ -172,12 +172,12 @@ std::map<Symbol,LineNumber> genNamespace(hcp_ast::NamespaceDef const& x) throw(
   xju::Exception)
 {
   std::vector<hcp_ast::IR>::const_iterator i(
-    std::find_if(x.items_.begin(), x.items_.end(),
+    std::find_if(x.items().begin(), x.items().end(),
                  hcp_ast::isA_<hcp_ast::NamespaceMembers>));
-  xju::assert_not_equal(i, x.items_.end());
+  xju::assert_not_equal(i, x.items().end());
 
   std::map<Symbol,LineNumber> content(
-    genNamespaceContent((*i)->asA<hcp_ast::NamespaceMembers>().items_));
+    genNamespaceContent((*i)->asA<hcp_ast::NamespaceMembers>().items()));
   
   std::map<Symbol,LineNumber> result;
   for(auto s: content) {
@@ -265,9 +265,9 @@ int main(int argc, char* argv[])
       try {
         auto const r{
           hcp_parser::parseString(x.begin(),x.end(),hcp_parser::file())};
-        xju::assert_equal(r.items_.size(), 1U);
+        xju::assert_equal(r.items().size(), 1U);
         std::map<Symbol,LineNumber> const symbols(
-          genNamespaceContent(r.items_.front()->asA<hcp_ast::File>().items_));
+          genNamespaceContent(r.items().front()->asA<hcp_ast::File>().items()));
         for(auto s: symbols) {
           result.insert(std::make_pair(s.first,
                                        std::make_pair(inputFile,s.second)));

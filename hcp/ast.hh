@@ -60,17 +60,18 @@ public:
     return items_.size()?items_.back()->end():end_;
   }
 
-  // The items that make up this composite item, ie the
-  // children of this AST node.
-  std::vector<std::shared_ptr<Item> > items_;
-  
+  std::vector<std::shared_ptr<Item> > const& items() const noexcept {
+    return items_;
+  }
   
   template<class T>
   bool isA() const throw() {
+    CheckNotItem<T>::check;
     return dynamic_cast<T const*>(this);
   }
   template<class T>
   T const& asA() const throw() {
+    CheckNotItem<T>::check;
     T const* result=dynamic_cast<T const*>(this);
     if (!result) {
       xju::assert_equal(typeid(*this).name(), typeid(T).name());
@@ -89,13 +90,32 @@ public:
   virtual std::string str() const throw();
 
 private:
+  // The items that make up this composite item, ie the
+  // children of this AST node.
+  std::vector<std::shared_ptr<Item> > items_;
+  
+  
   I begin_;
   I end_;
-  
+
+  template<class T>
+  class CheckNotItem
+  {
+  public:
+    static void check();
+  };
+    
   friend std::ostream& operator<<(std::ostream& s, Item const& x) throw()
   {
     return s << x.str();
   }
+};
+
+template<>
+class Item::CheckNotItem<Item>
+{
+private:
+  static void check(); //rejected cast to Item
 };
 
 inline std::string reconstruct(Item const& x) throw() {
@@ -146,42 +166,36 @@ struct IsAnyOf<T>
 
 std::string reconstruct(IRs const& x) throw();
 
-class CompositeItem : public Item
-{
-public:
-  explicit CompositeItem(std::vector<IR> const& items) throw():
-      Item(items)
-  {
-  }
-  virtual ~CompositeItem() throw() {
-  }
-  
-};
-
 // pre: begin() <= i < end()
-std::vector<CompositeItem const*> getContextAt(
-  I i, CompositeItem const& within) throw();
+std::vector<Item const*> getContextAt(
+  I i, Item const& within) throw();
   
 
-// A convenient way to create CompositeItem subclasses
+// A convenient way to create Item subclasses
 // (see below for subclasses that the parser creates).
 template<class Tag>
-class TaggedCompositeItem : public CompositeItem
+class TaggedItem : public Item
 {
 public:
-  explicit TaggedCompositeItem(std::vector<IR> const& items) throw():
-    CompositeItem(items)
+  explicit TaggedItem(std::vector<IR> const& items) throw():
+    Item(items)
   {
   }
-  virtual ~TaggedCompositeItem() throw() {
+  virtual ~TaggedItem() throw() {
   }
 
   virtual std::string str() const throw()
   {
-    return typeid(Tag).name() + std::string(" ") + CompositeItem::str();
+    return typeid(Tag).name() + std::string(" ") + Item::str();
   }
 };
 
+// recursive search; does not search children that are of type T
+// i.e. returns first returnAtMost x where:
+//   x is a T
+//   parent is an ancestor of x
+//   lineage from x to parent has no Ts
+//
 template<class T>
 std::vector<std::reference_wrapper<T const> > findChildrenOfType(
   Item const& parent,
@@ -189,7 +203,7 @@ std::vector<std::reference_wrapper<T const> > findChildrenOfType(
     throw()
 {
   std::vector<std::reference_wrapper<T const> > result;
-  for(auto const ir: parent.items_) {
+  for(auto const ir: parent.items()) {
     if (ir->isA<T>()) {
       result.push_back(ir->asA<T>());
       if (result.size()==returnAtMost){
@@ -210,7 +224,8 @@ std::vector<std::reference_wrapper<T const> > findChildrenOfType(
   return result;
 }
 
-//pre: parent has only one child of type T
+//pre: parent has only one child of type T that has no ancestors of type T
+//     up to parent
 template<class T>
 T const& findOnlyChildOfType(Item const& parent) throw()
 {
@@ -241,85 +256,85 @@ class StringLiteralTag{};
 class S_CharsTag{};
 class HashIncludeTag{};
 
-typedef TaggedCompositeItem<WhiteSpaceTag> WhiteSpace;
-typedef TaggedCompositeItem<LineCommentTag> LineComment;
-typedef TaggedCompositeItem<BlockCommentTag> BlockComment;
-typedef TaggedCompositeItem<CommentsTag> Comments;
-typedef TaggedCompositeItem<StringLiteralTag> StringLiteral;
-typedef TaggedCompositeItem<S_CharsTag> S_Chars;
-typedef TaggedCompositeItem<HashIncludeTag> HashInclude;
+typedef TaggedItem<WhiteSpaceTag> WhiteSpace;
+typedef TaggedItem<LineCommentTag> LineComment;
+typedef TaggedItem<BlockCommentTag> BlockComment;
+typedef TaggedItem<CommentsTag> Comments;
+typedef TaggedItem<StringLiteralTag> StringLiteral;
+typedef TaggedItem<S_CharsTag> S_Chars;
+typedef TaggedItem<HashIncludeTag> HashInclude;
 
 class HashIncludeImplTag{};
-typedef TaggedCompositeItem<HashIncludeImplTag> HashIncludeImpl;
+typedef TaggedItem<HashIncludeImplTag> HashIncludeImpl;
 
 class TargetOfHashIncludeTag{};
-typedef TaggedCompositeItem<TargetOfHashIncludeTag> TargetOfHashInclude;
+typedef TaggedItem<TargetOfHashIncludeTag> TargetOfHashInclude;
   
 class OtherPreprocessorTag{};
-typedef TaggedCompositeItem<OtherPreprocessorTag> OtherPreprocessor;
+typedef TaggedItem<OtherPreprocessorTag> OtherPreprocessor;
 
 class WhitespaceTag{};
-typedef TaggedCompositeItem<WhitespaceTag> Whitespace;
+typedef TaggedItem<WhitespaceTag> Whitespace;
 
 class TypedefTag{};
-typedef TaggedCompositeItem<TypedefTag> Typedef;
+typedef TaggedItem<TypedefTag> Typedef;
 
 class DefinedTypeTag{};
-typedef TaggedCompositeItem<DefinedTypeTag> DefinedType;
+typedef TaggedItem<DefinedTypeTag> DefinedType;
 
 class UsingTag{};
-typedef TaggedCompositeItem<UsingTag> Using;
+typedef TaggedItem<UsingTag> Using;
 
 class EnumDefTag{};
-typedef TaggedCompositeItem<EnumDefTag> EnumDef;
+typedef TaggedItem<EnumDefTag> EnumDef;
 
 class EnumNameTag{};
-typedef TaggedCompositeItem<EnumNameTag> EnumName;
+typedef TaggedItem<EnumNameTag> EnumName;
 
 class FunctionNameTag{};
-typedef TaggedCompositeItem<FunctionNameTag> FunctionName;
+typedef TaggedItem<FunctionNameTag> FunctionName;
 
 class FunctionDeclTag{};
-typedef TaggedCompositeItem<FunctionDeclTag> FunctionDecl;
+typedef TaggedItem<FunctionDeclTag> FunctionDecl;
 
 class BlockOpenTag{};
-typedef TaggedCompositeItem<BlockOpenTag> BlockOpen;
+typedef TaggedItem<BlockOpenTag> BlockOpen;
 
 class BlockTag{};
-typedef TaggedCompositeItem<BlockTag> Block;
+typedef TaggedItem<BlockTag> Block;
 
 class InitListTag{};
-typedef TaggedCompositeItem<InitListTag> InitList;
+typedef TaggedItem<InitListTag> InitList;
 
 class InitListOpenTag{};
-typedef TaggedCompositeItem<InitListOpenTag> InitListOpen;
+typedef TaggedItem<InitListOpenTag> InitListOpen;
 
 class FunctionDefTag{};
-typedef TaggedCompositeItem<FunctionDefTag> FunctionDef;
+typedef TaggedItem<FunctionDefTag> FunctionDef;
 
 class FunctionImplTag{};
-typedef TaggedCompositeItem<FunctionImplTag> FunctionImpl;
+typedef TaggedItem<FunctionImplTag> FunctionImpl;
 
 class TemplateFunctionDefTag{};
-typedef TaggedCompositeItem<TemplateFunctionDefTag> TemplateFunctionDef;
+typedef TaggedItem<TemplateFunctionDefTag> TemplateFunctionDef;
 
 class TemplatePreambleTag{};
-typedef TaggedCompositeItem<TemplatePreambleTag> TemplatePreamble;
+typedef TaggedItem<TemplatePreambleTag> TemplatePreamble;
   
 class TemplateEmptyPreambleTag{};
-typedef TaggedCompositeItem<TemplateEmptyPreambleTag> TemplateEmptyPreamble;
+typedef TaggedItem<TemplateEmptyPreambleTag> TemplateEmptyPreamble;
   
 class ClassNameTag{};
-typedef TaggedCompositeItem<ClassNameTag> ClassName;
+typedef TaggedItem<ClassNameTag> ClassName;
 
-class ClassDef : public CompositeItem
+class ClassDef : public Item
 {
 public:
   std::string const className_;
   bool const isTemplateSpecialisation_;
   
   explicit ClassDef(std::vector<IR> const& items) throw():
-    CompositeItem(items),
+    Item(items),
     className_(getClassName(items)),
     isTemplateSpecialisation_(getIsTemplateSpeicialisation(items))
   {
@@ -330,101 +345,101 @@ public:
   static bool getIsTemplateSpeicialisation(std::vector<IR> const& items) throw();
   virtual std::string str() const throw()
   {
-    return typeid(ClassDef).name() + std::string(" ") + CompositeItem::str();
+    return typeid(ClassDef).name() + std::string(" ") + Item::str();
   }
 };
 
 class BaseSpecifierTag{};
-typedef TaggedCompositeItem<BaseSpecifierTag> BaseSpecifier;
+typedef TaggedItem<BaseSpecifierTag> BaseSpecifier;
 
 class ClassMembersTag{};
-typedef TaggedCompositeItem<ClassMembersTag> ClassMembers;
+typedef TaggedItem<ClassMembersTag> ClassMembers;
 
 class AttrDeclTag{};
-typedef TaggedCompositeItem<AttrDeclTag> AttrDecl;
+typedef TaggedItem<AttrDeclTag> AttrDecl;
 
 class VarNameTag{};
-typedef TaggedCompositeItem<VarNameTag> VarName;
+typedef TaggedItem<VarNameTag> VarName;
 
 class KeywordStaticTag{};
-typedef TaggedCompositeItem<KeywordStaticTag> KeywordStatic;
+typedef TaggedItem<KeywordStaticTag> KeywordStatic;
 
 class KeywordExternTag{};
-typedef TaggedCompositeItem<KeywordExternTag> KeywordExtern;
+typedef TaggedItem<KeywordExternTag> KeywordExtern;
 
 class KeywordFriendTag{};
-typedef TaggedCompositeItem<KeywordFriendTag> KeywordFriend;
+typedef TaggedItem<KeywordFriendTag> KeywordFriend;
 
 class KeywordPublicTag{};
-typedef TaggedCompositeItem<KeywordPublicTag> KeywordPublic;
+typedef TaggedItem<KeywordPublicTag> KeywordPublic;
 
 class KeywordPrivateTag{};
-typedef TaggedCompositeItem<KeywordPrivateTag> KeywordPrivate;
+typedef TaggedItem<KeywordPrivateTag> KeywordPrivate;
 
 class KeywordProtectedTag{};
-typedef TaggedCompositeItem<KeywordProtectedTag> KeywordProtected;
+typedef TaggedItem<KeywordProtectedTag> KeywordProtected;
 
 class KeywordVirtualTag{};
-typedef TaggedCompositeItem<KeywordVirtualTag> KeywordVirtual;
+typedef TaggedItem<KeywordVirtualTag> KeywordVirtual;
 
 class KeywordExplicitTag{};
-typedef TaggedCompositeItem<KeywordExplicitTag> KeywordExplicit;
+typedef TaggedItem<KeywordExplicitTag> KeywordExplicit;
 
 class KeywordOverrideTag{};
-typedef TaggedCompositeItem<KeywordOverrideTag> KeywordOverride;
+typedef TaggedItem<KeywordOverrideTag> KeywordOverride;
 
 class KeywordFinalTag{};
-typedef TaggedCompositeItem<KeywordFinalTag> KeywordFinal;
+typedef TaggedItem<KeywordFinalTag> KeywordFinal;
 
 class KeywordNoexceptTag{};
-typedef TaggedCompositeItem<KeywordNoexceptTag> KeywordNoexcept;
+typedef TaggedItem<KeywordNoexceptTag> KeywordNoexcept;
 
 class KeywordThrowTag{};
-typedef TaggedCompositeItem<KeywordThrowTag> KeywordThrow;
+typedef TaggedItem<KeywordThrowTag> KeywordThrow;
 
 class KeywordTryTag{};
-typedef TaggedCompositeItem<KeywordTryTag> KeywordTry;
+typedef TaggedItem<KeywordTryTag> KeywordTry;
 
 class KeywordCatchTag{};
-typedef TaggedCompositeItem<KeywordCatchTag> KeywordCatch;
+typedef TaggedItem<KeywordCatchTag> KeywordCatch;
 
 class StaticVarDefTag{};
-typedef TaggedCompositeItem<StaticVarDefTag> StaticVarDef;
+typedef TaggedItem<StaticVarDefTag> StaticVarDef;
 
 class GlobalVarDefTag{};
-typedef TaggedCompositeItem<GlobalVarDefTag> GlobalVarDef;
+typedef TaggedItem<GlobalVarDefTag> GlobalVarDef;
 
 class ExternVarDefTag{};
-typedef TaggedCompositeItem<ExternVarDefTag> ExternVarDef;
+typedef TaggedItem<ExternVarDefTag> ExternVarDef;
 
 // marks the '=' in var initialiser
 class VarInitialiserOpenTag{};
-typedef TaggedCompositeItem<VarInitialiserOpenTag> VarInitialiserOpen;
+typedef TaggedItem<VarInitialiserOpenTag> VarInitialiserOpen;
   
 class VarInitialiserTag{};
-typedef TaggedCompositeItem<VarInitialiserTag> VarInitialiser;
+typedef TaggedItem<VarInitialiserTag> VarInitialiser;
 
 class AccessModifierTag{};
-typedef TaggedCompositeItem<AccessModifierTag> AccessModifier;
+typedef TaggedItem<AccessModifierTag> AccessModifier;
 
 class TemplateClassDefTag{};
-typedef TaggedCompositeItem<TemplateClassDefTag> TemplateClassDef;
+typedef TaggedItem<TemplateClassDefTag> TemplateClassDef;
 
 class ClassForwardDeclTag{};
-typedef TaggedCompositeItem<ClassForwardDeclTag> ClassForwardDecl;
+typedef TaggedItem<ClassForwardDeclTag> ClassForwardDecl;
 
 class AnonymousNamespaceTag{};
-typedef TaggedCompositeItem<AnonymousNamespaceTag> AnonymousNamespace;
+typedef TaggedItem<AnonymousNamespaceTag> AnonymousNamespace;
 class AnonymousNamespaceOpenTag{};
-typedef TaggedCompositeItem<AnonymousNamespaceOpenTag> AnonymousNamespaceOpen;
+typedef TaggedItem<AnonymousNamespaceOpenTag> AnonymousNamespaceOpen;
 
-class NamespaceDef : public CompositeItem
+class NamespaceDef : public Item
 {
 public:
   std::string const namespaceName_;
   
   explicit NamespaceDef(std::vector<IR> const& items) throw():
-    CompositeItem(items),
+    Item(items),
     namespaceName_(getNamespaceName(items))
   {
   }
@@ -434,72 +449,72 @@ public:
 
   virtual std::string str() const throw()
   {
-    return typeid(NamespaceDef).name() + std::string(" ") + CompositeItem::str();
+    return typeid(NamespaceDef).name() + std::string(" ") + Item::str();
   }
 };
 
 class NamespaceNameTag{};
-typedef TaggedCompositeItem<NamespaceNameTag> NamespaceName;
+typedef TaggedItem<NamespaceNameTag> NamespaceName;
 
 class NamespaceMembersTag{};
-typedef TaggedCompositeItem<NamespaceMembersTag> NamespaceMembers;
+typedef TaggedItem<NamespaceMembersTag> NamespaceMembers;
 
 class EatWhiteTag{};
-typedef TaggedCompositeItem<EatWhiteTag> EatWhite;
+typedef TaggedItem<EatWhiteTag> EatWhite;
 
 class ReturnTypeTag{};
-typedef TaggedCompositeItem<ReturnTypeTag> ReturnType;
+typedef TaggedItem<ReturnTypeTag> ReturnType;
 
 class OperatorNameTag{};
-typedef TaggedCompositeItem<OperatorNameTag> OperatorName;
+typedef TaggedItem<OperatorNameTag> OperatorName;
 
 class ParamTag{};
-typedef TaggedCompositeItem<ParamTag> Param;
+typedef TaggedItem<ParamTag> Param;
 
 class VarNonFpTag{};
-typedef TaggedCompositeItem<VarNonFpTag> VarNonFp;
+typedef TaggedItem<VarNonFpTag> VarNonFp;
 
 class ArrayDeclTag{};
-typedef TaggedCompositeItem<ArrayDeclTag> ArrayDecl;
+typedef TaggedItem<ArrayDeclTag> ArrayDecl;
 
 class FunctionQualifiersTag{};
-typedef TaggedCompositeItem<FunctionQualifiersTag> FunctionQualifiers;
+typedef TaggedItem<FunctionQualifiersTag> FunctionQualifiers;
 
 class TypeRefTag{};
-typedef TaggedCompositeItem<TypeRefTag> TypeRef;
+typedef TaggedItem<TypeRefTag> TypeRef;
 
 class ScopedNameTag{};
-typedef TaggedCompositeItem<ScopedNameTag> ScopedName;
+typedef TaggedItem<ScopedNameTag> ScopedName;
 
 class ConstQualTag{};
-typedef TaggedCompositeItem<ConstQualTag> ConstQual;
+typedef TaggedItem<ConstQualTag> ConstQual;
 
 class VolatileQualTag{};
-typedef TaggedCompositeItem<VolatileQualTag> VolatileQual;
+typedef TaggedItem<VolatileQualTag> VolatileQual;
 
 class MoveQualTag{};
-typedef TaggedCompositeItem<MoveQualTag> MoveQual;
+typedef TaggedItem<MoveQualTag> MoveQual;
 
 class RefQualTag{};
-typedef TaggedCompositeItem<RefQualTag> RefQual;
+typedef TaggedItem<RefQualTag> RefQual;
 
 class PointerQualTag{};
-typedef TaggedCompositeItem<PointerQualTag> PointerQual;
+typedef TaggedItem<PointerQualTag> PointerQual;
 
 class ElipsesQualTag{};
-typedef TaggedCompositeItem<ElipsesQualTag> ElipsesQual;
+typedef TaggedItem<ElipsesQualTag> ElipsesQual;
 
 class FunctionPostQualifiersTag{};
-typedef TaggedCompositeItem<FunctionPostQualifiersTag> FunctionPostQualifiers;
+typedef TaggedItem<FunctionPostQualifiersTag> FunctionPostQualifiers;
 
 class VirtSpecifierSeqTag{};
-typedef TaggedCompositeItem<VirtSpecifierSeqTag> VirtSpecifierSeq;
+typedef TaggedItem<VirtSpecifierSeqTag> VirtSpecifierSeq;
 
 class EndOfFileTag{};
-typedef TaggedCompositeItem<EndOfFileTag> EndOfFile;
+typedef TaggedItem<EndOfFileTag> EndOfFile;
 
 class FileTag{};
-typedef TaggedCompositeItem<FileTag> File;
+typedef TaggedItem<FileTag> File;
 
 }
 

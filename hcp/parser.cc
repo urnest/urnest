@@ -2733,7 +2733,7 @@ std::pair<IRs,I> parse(I const startOfElement,
   }
 }
 
-hcp_ast::CompositeItem parseString(
+hcp_ast::Item parseString(
   std::string::const_iterator begin,
   std::string::const_iterator end,
   std::shared_ptr<Parser> parser,
@@ -2748,7 +2748,7 @@ hcp_ast::CompositeItem parseString(
     s << "only parsed until " << r.second;
     throw xju::Exception(s.str(),XJU_TRACED);
   }
-  return hcp_ast::CompositeItem(r.first);
+  return hcp_ast::Item(r.first);
 }
 
 }
