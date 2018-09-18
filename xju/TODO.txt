@@ -3,7 +3,10 @@
 
 - xju::json
   config file example
-    
+  xju::json::format, something like
+    xju::Utf8String format(std::shared_ptr<Element const> const& x,
+                           std::string const& indent="\t") noexcept;
+  
 snmp/README.txt stuff
 
 Int,Float add operator* operator/

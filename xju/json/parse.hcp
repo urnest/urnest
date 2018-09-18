@@ -207,6 +207,12 @@ public:
 class AstElement : public hcp_ast::Item
 {
 public:
+  AstElement(hcp_ast::I begin, hcp_ast::I end,
+             std::shared_ptr<xju::json::Element const> const& element) throw()
+      : hcp_ast::Item(begin,end),
+        element_(element)
+  {
+  }
   AstElement(std::vector<hcp_ast::IR> const& items,
              std::shared_ptr<xju::json::Element const> const& element) throw()
       : hcp_ast::Item(items),
@@ -269,23 +275,22 @@ public:
 class AstString : public AstElement
 {
 public:
-  explicit AstString(std::vector<hcp_ast::IR> const& items,
+  explicit AstString(hcp_ast::I begin, hcp_ast::I end,
                      Utf8String const& value) noexcept
-    :AstElement(items,AstString::convert(items,value))
+    :AstElement(begin,end,AstString::convert(begin,value))
   {
   }
 private:
 
   std::shared_ptr<xju::json::String const> convert(
-    std::vector<hcp_ast::IR> const& items,
+    hcp_ast::I at,
     Utf8String const& value) noexcept
   {
-    xju::assert_not_equal(items.size(),0U);
     return std::shared_ptr<xju::json::String const>(
       new xju::json::ParsedString(
         value,
-        items.front()->begin().line_,
-        items.front()->begin().column_));
+        at.line_,
+        at.column_));
   }
 };
 
@@ -516,7 +521,7 @@ struct StringLiteralParser : public hcp_parser::Parser
           hcp_ast::IRs(
             1U,
             hcp_ast::IR(new AstString(
-                 hcp_ast::IRs(1U,hcp_ast::IR(new hcp_ast::Item(at,i))),
+                 at,i,
                  xju::Utf8String(unescaped.str())))),
             i));
     }

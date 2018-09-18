@@ -177,10 +177,7 @@ template<class Tag>
 class TaggedItem : public Item
 {
 public:
-  explicit TaggedItem(std::vector<IR> const& items) throw():
-    Item(items)
-  {
-  }
+  using Item::Item;
   virtual ~TaggedItem() throw() {
   }
 
