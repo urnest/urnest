@@ -1,11 +1,15 @@
+
 - what to do about operator<<(std::ostream& s,X) noexcept
   ... when s could throw?
 
 - xju::json
   config file example
+  asMap so do not have to know keys
   xju::json::format, something like
     xju::Utf8String format(std::shared_ptr<Element const> const& x,
                            std::string const& indent="\t") noexcept;
+  getMember/hasMember taking std::string for convenience (where that
+  string is utf-8 encoded)... update config example
   
 snmp/README.txt stuff
 
@@ -68,6 +72,7 @@ io::Output
           TCPListener
 	  UDPSocket
       ... to capture socket options at different levels?
+  - IcmpEchoSocket
       
 - make syscall turn ENOMEM into std::bad_alloc
 - move xju::SyscallFailed to SyscallFailed.hh

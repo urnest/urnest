@@ -144,6 +144,13 @@ public:
       throw;
     }
   }
+  bool hasMember(std::string const& name) const throw(
+    // name is not valid utf-8 or
+    // this element is not a JSON object
+    xju::Exception)
+  {
+    return hasMember(xju::Utf8String(name));
+  }
   
   // Get value of this element's member with specified name assuming
   // this element is a JSON object.
@@ -169,6 +176,14 @@ public:
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
+  }
+  Element const& getMember(std::string const& name) const throw(
+    // name is not valid utf-8 or
+    // this element is not an object or
+    // this object has no such element
+    xju::Exception)
+  {
+    return getMember(xju::Utf8String(name));
   }
 
   // Get this element assuming it is a JSON object.

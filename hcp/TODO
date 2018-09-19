@@ -1,3 +1,5 @@
+- raw string literal
+
 - balanced fails e.g. for
   X<&((C*)0)->a - &((C*)0)->b>
   ... could make it recognise -> but ultimately have to fully parse
