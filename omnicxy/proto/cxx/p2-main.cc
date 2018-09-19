@@ -132,15 +132,11 @@ public:
 };
 
   
-void server(CORBA::ORB_var orb, std::string const& objectName) throw(
+void server(PortableServer::POA_var root_poa,
+            std::string const& objectName) throw(
   xju::Exception)
 {
   try {
-    PortableServer::POA_var root_poa = PortableServer::POA::_narrow(
-      orb->resolve_initial_references("omniINSPOA"));
-    PortableServer::POAManager_var pman = root_poa->the_POAManager();
-    pman->activate();
-    
     PortableServer::ObjectId_var oid =
       PortableServer::string_to_ObjectId(objectName.c_str());
     
@@ -180,7 +176,12 @@ int main(int argc, char* argv[])
       
       CORBA::ORB_var orb = orbInit(argc, argv);
       
-      server(orb, OBJECT_NAME);
+      PortableServer::POA_var root_poa = PortableServer::POA::_narrow(
+        orb->resolve_initial_references("omniINSPOA"));
+      PortableServer::POAManager_var pman = root_poa->the_POAManager();
+      pman->activate();
+      
+      server(root_poa, OBJECT_NAME);
       orb->run();
     }
     else
@@ -190,7 +191,12 @@ int main(int argc, char* argv[])
       
       CORBA::ORB_var orb = orbInit(argc, argv);
       
-      server(orb, OBJECT_NAME);
+      PortableServer::POA_var root_poa = PortableServer::POA::_narrow(
+        orb->resolve_initial_references("omniINSPOA"));
+      PortableServer::POAManager_var pman = root_poa->the_POAManager();
+      pman->activate();
+      
+      server(root_poa, OBJECT_NAME);
 
       xju::Thread server_t(
         [orb](){ orb->run(); },
