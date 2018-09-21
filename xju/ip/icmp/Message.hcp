@@ -1,0 +1,49 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace ip
+{
+namespace icmp
+{
+
+class Message
+{
+public:
+  enum Type{
+  };
+  class CodeTag;
+  typedef xju::Int<CodeTag,uint8_t> Code;
+  
+  Message(Type type,
+          Code code,
+          xju::Array<uint8_t,4> const& header,
+          std::vector<uint8_t> data) noexcept
+      :type_(type),
+       code_(code),
+       header_(header),
+       data_(std::move(data))
+  {
+  }
+  Type type_;
+  Code code_;
+  xju::Array<uint8_t,4> const header_;
+  std::vector<uint8_t> data;
+
+  friend bool operator<(Message const& x, Message const& y) noexcept;
+  
+};
+  
+
+}
+}
+}

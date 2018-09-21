@@ -1,0 +1,49 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace ip
+{
+namespace icmp
+{
+
+class DestinationUnreachable
+{
+public:
+  DestinationUnreachable(
+    xju::ip::v4::Address address,
+    Message::Code code,
+    xju::ip::v4::Protocol protocol,
+    xju::Array<uint8_t,8> data) noexcept
+      :address_(address),
+       code_(code),
+       protocol_(protocol),
+       data_(data)
+  {
+  }
+  
+  xju::ip::v4::Address address_;
+  Message::Code code_;
+  xju::ip::v4::Protocol protocol_;
+  xju::Array<uint8_t,8> data_;
+
+  friend bool operator<(DestinationUnreachable const& x,
+                        DestinationUnreachable const& y) noexcept;
+  
+};
+
+
+}
+}
+}
+
+

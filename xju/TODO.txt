@@ -1,15 +1,19 @@
+- ip::v4::Protocol should only be 8 bits not 6
+
+- switch all deadlines to relative timeouts so they are usable
+  with any clock, noting std::condition_variable, select all work with
+  timeouts... but that will mean all such functions are templates...
+  perhaps that is OK? Use nanoseconds instead I think. Allows timeout
+  of 250+ years.
 
 - what to do about operator<<(std::ostream& s,X) noexcept
   ... when s could throw?
 
 - xju::json
-  config file example
-  asMap so do not have to know keys
+  - asMap so do not have to know keys; update config-file-example
   xju::json::format, something like
     xju::Utf8String format(std::shared_ptr<Element const> const& x,
                            std::string const& indent="\t") noexcept;
-  getMember/hasMember taking std::string for convenience (where that
-  string is utf-8 encoded)... update config example
   
 snmp/README.txt stuff
 
@@ -76,14 +80,16 @@ io::Output
       Echo
       {
         ip::v4::Address address_;
-	uint16_t identifier_;
-        uint16_t sequence_;
-	std::vector<uint8_t> const& payload_;
+	ip::icmp::Identifier identifier_;
+        ip::icmp::Sequence sequence_;
+	std::vector<uint8_t> const payload_;
       };
-      ping(Echo const& request);
+      void ping(Echo const& request);
       // note might be reply for some other process/thread i.e. not
       // a reply to a request sent by this->ping
-      Echo getReply();
+      Echo getReply() throw(
+        // an ICMP echo request error
+        EchoFailed);
       
 - make syscall turn ENOMEM into std::bad_alloc
 - move xju::SyscallFailed to SyscallFailed.hh

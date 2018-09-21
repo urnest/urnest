@@ -1,0 +1,40 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace ip
+{
+
+class SocketIf : public xju::io::Input
+{
+public:
+  // send message by deadline
+  virtual void send(
+    xju::ip::v4::Address const& to,
+    Message const& x,
+    std::chrono::system_clock::time_point const& deadline) throw(
+      xju::DeadlineReached,
+      xju::SyscallFailed) const = 0;
+
+  // receive message by deadline
+  // result.second is the received ICMP checksum field
+  virtual void std::tuple<
+    xju::ip::v4::Addresss,
+    Message,
+    xju::ip::Checksum> recv(
+      std::chrono::system_clock::time_point const& deadline) throw(
+        xju::DeadlineReached,
+        xju::SyscallFailed) const = 0;
+};
+  
+}
+}

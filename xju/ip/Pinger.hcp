@@ -1,0 +1,86 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace ip
+{
+
+// multi-address monitor
+class Pinger
+{
+public:
+  class Collector
+  {
+  public:
+    // address responded
+    // - retry is how many failures we had before it responded
+    //   (which will be <= maxRetries)
+    // - rtt covers only the successful ping
+    virtual void pinged(xju::ip::v4::Address const& address,
+                        unsigned int retry,
+                        std::chrono::nanoseconds rtt) = 0;
+    //
+    // address failed to respond 1+maxRetries times
+    // e described the reason for the last retry e.g. timeout
+    // but may also be host unreachable
+    //
+    // - note that e is stable, in that successive failures
+    //   for the same reason (e.g. timeout) will have identical e
+    //
+    virtual void failed(xju::ip::v4::Address const& address,
+                        xju::Exception const& e) = 0;
+  };
+
+  // see run
+  Pinger(xju::ip::icmp::SocketIf& socket,
+         Collector& collector,
+         xju::icmp::Echo::Identifier identifier,
+         xju::icmp::Echo::Sequence nextSequence,
+         std::set<xju::ip::v4::Address> addresses,
+         double nominalPacketRate,
+         unsigned int maxRetries,
+         std::chrono::nanoseconds timeoutPerRetry) noexcept;
+
+  // Use socket to ping addresses, round-robin, sending
+  // Echo requests at nominal packet rate (or less if that
+  // would produce overlapping pings to the same address), feeding
+  // results (success/failure of each ping) to collector.
+  //
+  // Responses are waited for asynchronously, so that multiple
+  // requests may be outstanding at any time, however an individual
+  // is never pinged again before timeoutPerRetry*.
+  //
+  // Declares success on successful response; retries ping to an
+  // address maxRetries times before declaring failure for that
+  // address (the address is not then tried again until next round).
+  // Retries occur immediately (not waiting until the next round).
+  //
+  // * the nominalPacketRate is reduced to
+  //   1/(maxRetries*addresses.size()*timeoutPerRetry) where it
+  //   exceeds that rate
+  //
+  // timeoutPerRetry is raised to 1 if it is <1; note that operating
+  // system limitations might result in response arriving before
+  // operating system minimum sleep time, in which case the ping is
+  // considered successful even though it exceeded timeoutPerRetry
+  //
+  void run() noexcept;
+
+  // cause run() to return immediately (well, soon)
+  void stop() noexcept;
+  
+};
+
+}
+}
+
+
