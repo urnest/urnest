@@ -19,7 +19,6 @@ namespace icmp
 class Echo
 {
 public:
-  xju::ip::v4::Address address_;
   Identifier identifier_;
   Sequence sequence_;
   std::vector<uint8_t> payload_;

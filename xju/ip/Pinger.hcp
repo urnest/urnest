@@ -29,26 +29,57 @@ public:
                         unsigned int retry,
                         std::chrono::nanoseconds rtt) = 0;
     //
-    // address failed to respond 1+maxRetries times
-    // e described the reason for the last retry e.g. timeout
-    // but may also be host unreachable
+    // address failed to respond within timeoutPerRetry,
+    // 1+maxRetries times in a row
     //
-    // - note that e is stable, in that successive failures
-    //   for the same reason (e.g. timeout) will have identical e
+    virtual void timeout(xju::ip::v4::Address const& address) = 0;
+
     //
-    virtual void failed(xju::ip::v4::Address const& address,
-                        xju::Exception const& e) = 0;
+    // address is unreachable according to gatewayOrHost
+    //
+    virtual void unreachable(xju::ip::v4::Address const& address,
+                             xju::ip::v4::Address const& gatewayOrHost,
+                             xju::ip::icmp::Message::Code code) = 0;
+
+
+    //
+    // socket send failed
+    //
+    virtual void sendFailed(xju::Exception) = 0;
+
+    //
+    // socket receive failed, including invalid message received
+    //
+    virtual void receiveFailed(xju::Exception) = 0;
   };
 
   // see run
+  // pre: nominalPacketRate>0
   Pinger(xju::ip::icmp::SocketIf& socket,
          Collector& collector,
-         xju::icmp::Echo::Identifier identifier,
-         xju::icmp::Echo::Sequence nextSequence,
-         std::set<xju::ip::v4::Address> addresses,
-         double nominalPacketRate,
-         unsigned int maxRetries,
-         std::chrono::nanoseconds timeoutPerRetry) noexcept;
+         xju::icmp::Echo::Identifier const identifier,
+         xju::icmp::Echo::Sequence const firstSequence,
+         std::set<xju::ip::v4::Address> const& addresses,
+         double const nominalPacketRate,
+         unsigned int const maxRetries,
+         std::chrono::nanoseconds const timeoutPerRetry) noexcept
+      :socket_(socket),
+       collector_(collector),
+       identifier_(identifier),
+       firstSequence_(firstSequence),
+       nominalPacketRate_(nominalPacketRate),
+       maxRetries_(maxRetries),
+       timeoutPerRetry_(std::max(std::chrono::nanoseconds(1),timeoutPerRetry)),
+       stopReceiving_(xju::pipe()),
+       currentSequence_(firstSequence.value()),
+       changed_(guard_),
+       stop_(false)
+  {
+    for(auto address: addresses){
+      targets_.insert({address,timers.end()});
+    }
+    xju::assert_greater(nominalPacketRate,0.0);
+  }
 
   // Use socket to ping addresses, round-robin, sending
   // Echo requests at nominal packet rate (or less if that
@@ -57,7 +88,7 @@ public:
   //
   // Responses are waited for asynchronously, so that multiple
   // requests may be outstanding at any time, however an individual
-  // is never pinged again before timeoutPerRetry*.
+  // address is never pinged again before maxRetries*timeoutPerRetry*.
   //
   // Declares success on successful response; retries ping to an
   // address maxRetries times before declaring failure for that
@@ -73,11 +104,191 @@ public:
   // operating system minimum sleep time, in which case the ping is
   // considered successful even though it exceeded timeoutPerRetry
   //
-  void run() noexcept;
+  void run() noexcept
+  {
+    xju::Lock l(guard);
+
+    if (!targets_.size()){
+      while(!stop_){
+        changed_.wait(l);
+      }
+      return;
+    }
+
+    xju::Thread receiverThread{
+      [&]{ receiver(); },
+      [&]{ stopReceiving_.second->write('x',1U,0); }};
+
+    xju::Thread alarmClockThread{[&]{ alarmClock(); }};
+
+    auto const step(
+      std::max(std::chrono::nanoseconds(1.0e9/nominalPacketRate_),
+               timeoutPerRetry_*maxRetries_/addresses_.size()));
+
+    auto t(std::chrono::steady_clock::now());
+
+    for(auto i{targets.begin()}; !stop_;
+        i=(xju::next(i)==targets.end()?
+           (currentSequence_+=(maxRetries_+1),targets.begin()):
+           xju::next(i)))
+    {
+      if ((*i).second==requests_.end()){
+        socket_.send((*i).first,
+                     xju::icmp::encodeEcho(
+                       identifier_,
+                       currentSequence_,
+                       std::vector<uint8_t>()));
+        (*i).second=requests.insert(
+          std::make_pair(
+            t+timeoutPerRetry_,
+            Request((*i).first,
+                    0,
+                    xju::icmp::Echo::Sequence(currentSequence_),
+                    t)));
+        changed_.signal(l);
+      }
+      changed_.wait(l,step);
+      t+=step;
+    }
+  }
 
   // cause run() to return immediately (well, soon)
-  void stop() noexcept;
+  void stop() noexcept
+  {
+    xju::Lock l(guard_);
+    stop_=true;
+    changed_.signal(l);
+  }
+
+private:
+  xju::ip::icmp::SocketIf& socket_;
+  Collector& collector_;
+  xju::icmp::Echo::Identifier const identifier_;
+  xju::icmp::Echo::Sequence const firstSequence_;
+  std::set<xju::ip::v4::Address> const addresses_;
+  double const nominalPacketRate_;
+  unsigned int const maxRetries_;
+  std::chrono::nanoseconds const timeoutPerRetry_;
+
+  struct Request
+  {
+    Request(xju::ip::v4::Address const& address,
+            unsigned int const retryNumber,
+            xju::icmp::Echo::Sequence const sequence,
+            std::chrono::steady_clock::time_point const sentAt) noexcept
+        :address_(address),
+         retryNumber_(retryNumber),
+         sequence_(sequence),
+         sentAt_(sentAt)
+    {
+    }
+    xju::ip::v4::Address address_;
+    unsigned int retryNumber_;
+    xju::icmp::Echo::Sequence sequence_;
+    std::chrono::steady_clock::time_point sentAt_;
+  };
+  typedef std::multimap<std::chrono::steady_clock::time_point, //deadline
+                        Request const> Requests;
   
+  std::pair<std::unique_ptr<xju::io::IStream>,
+            std::unique_ptr<xju::io::OStream> > stopReceiving_;
+  
+  mutable xju::Mutex guard_; //guards remaining attributes
+  std::map<xju::ip::v4::Address,Requests::iterator> targets;
+  uint16_t currentSequence_;
+  xju::Condition changed_;   //signals change to remaining attributes
+  bool stop_;
+  Requests requests_;
+
+  void alarmClock() noexcept
+  {
+    xju::Lock l(guard_);
+    while(!stop_)
+    {
+      auto now{std::chrono::steady_clock::now()};
+      for(auto i=requests_.begin();
+          i!=requests_.end() && (*i).first<=now;
+          requests_.erase(i),i=requests_.begin()){
+        Request request{(*i).second};
+        if (request.retryNumber<maxRetries_){
+          ++request.retryNumber;
+          ++request.sequence_;
+          try{
+            socket_.send(request.address_,
+                         xju::icmp::encodeEcho(
+                           identifier_,
+                           request.sequence_,
+                           std::vector<uint8_t>()));
+            request.sentAt_=now;
+            (*targets.find(request.address_)).second=requests_.insert(
+              std::make_pair(now+timeoutPerRetry_,request));
+          }
+          catch(xju::Exception const& e){
+            collector_.sendFailed(e);
+            (*targets.find(request.address_)).second=requests_.end();
+          }
+        }
+        else{
+          collector_.timeout(request.address_);
+          (*targets.find(request.address_)).second=requests_.end();
+        }
+      }
+      if (times.size()){
+        changed_.wait(l,(*timers.begin()).first-now);
+      }
+      else{
+        changed_.wait(l);
+      }
+    }
+  }
+  void receiver() noexcept
+  {
+    std::set<xju::io::Input const*> const inputs{
+      stopReceiving_.first.get(),
+      &socket_};
+    while(true){
+      std::chrono::nanoseconds sleepFor{std::chrono::seconds(10)}; //arbitrary
+      auto const readable(xju::io::select(inputs,std::max(0,sleepFor)));
+      if (readable.find(stopReceiving_.first.get())){
+        return;
+      }
+      if (readable.find(&socket_)){
+        try{
+          auto const r(socket_.recv());
+          xju::ip::v4::Address const& from(r.get<0>());
+          xju::ip::icmp::Message const& message(r.getsecond);
+          if (message.type_==xju::ip::icmp::Message::Echo){
+            xju::Lock l(guard_);
+            auto i(targets.find(address));
+            if (i!=targets.end()){
+              if ((*i).second != requests_.end()){
+                Request const& request{(*(*i).second)};
+                xju::ip::icmp::Echo const echo(
+                  xju::ip::icmp::decodeEcho(message));
+                if (echo.identifier_==identifier_ &&
+                    echo.sequence_==request.sequence_){
+                  collector_.pinged(
+                    address,
+                    request.retryNumber_,
+                    std::chrono::steady_clock::now()-request.sentAt_);
+                  requests_.erase((*i).second);
+                }
+              }
+            }
+          }
+          else if (message.type_==
+                   xju::ip::icmp::Message::DestinationUnreachable){
+            auto const u{xju::ip::icmp::decodeDestinationUnreachable(message)};
+            //REVISIT
+            collector_.unreachable(address,gatewayOrHost,code);
+          }
+        }
+        catch(xju::Exception const& e){
+          collector_.receiveFailed(e);
+        }
+      }
+    }
+  }
 };
 
 }

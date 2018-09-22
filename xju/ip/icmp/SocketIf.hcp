@@ -17,23 +17,22 @@ namespace ip
 class SocketIf : public xju::io::Input
 {
 public:
-  // send message by deadline
+  // send message immediately
+  // - retries on interrupt
   virtual void send(
     xju::ip::v4::Address const& to,
-    Message const& x,
-    std::chrono::system_clock::time_point const& deadline) throw(
-      xju::DeadlineReached,
+    Message const& x) throw(
       xju::SyscallFailed) const = 0;
 
-  // receive message by deadline
-  // result.second is the received ICMP checksum field
+  // receive message assumed to have already arrived
+  // result.get<2>() is the received ICMP checksum field
+  // - retries on interrupt
   virtual void std::tuple<
     xju::ip::v4::Addresss,
-    Message,
-    xju::ip::Checksum> recv(
-      std::chrono::system_clock::time_point const& deadline) throw(
-        xju::DeadlineReached,
-        xju::SyscallFailed) const = 0;
+    Message> recv() throw(
+      xju::SyscallFailed,
+      // invalid message, e.g. incorrect checksum
+      xju::Exception) const = 0;
 };
   
 }

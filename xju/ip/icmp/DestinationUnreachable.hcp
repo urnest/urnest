@@ -20,18 +20,18 @@ class DestinationUnreachable
 {
 public:
   DestinationUnreachable(
-    xju::ip::v4::Address address,
+    xju::ip::v4::Address gateway,
     Message::Code code,
     xju::ip::v4::Protocol protocol,
     xju::Array<uint8_t,8> data) noexcept
-      :address_(address),
+      :gateway_(gateway),
        code_(code),
        protocol_(protocol),
        data_(data)
   {
   }
   
-  xju::ip::v4::Address address_;
+  xju::ip::v4::Address gateway_;
   Message::Code code_;
   xju::ip::v4::Protocol protocol_;
   xju::Array<uint8_t,8> data_;
