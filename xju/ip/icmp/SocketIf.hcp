@@ -19,6 +19,7 @@ class SocketIf : public xju::io::Input
 public:
   // send message immediately
   // - retries on interrupt
+  // - from address, ttl etc are set by the implementation
   virtual void send(
     xju::ip::v4::Address const& to,
     Message const& x) throw(
@@ -27,9 +28,7 @@ public:
   // receive message assumed to have already arrived
   // result.get<2>() is the received ICMP checksum field
   // - retries on interrupt
-  virtual void std::tuple<
-    xju::ip::v4::Addresss,
-    Message> recv() throw(
+  virtual void std::tuple<xju::ip::v4::Addresss,Message> receive() throw(
       xju::SyscallFailed,
       // invalid message, e.g. incorrect checksum
       xju::Exception) const = 0;
