@@ -1,10 +1,6 @@
 - ip::v4::Protocol should only be 8 bits not 6
 
-- switch all deadlines to relative timeouts so they are usable
-  with any clock, noting std::condition_variable, select all work with
-  timeouts... but that will mean all such functions are templates...
-  perhaps that is OK? Use nanoseconds instead I think. Allows timeout
-  of 250+ years.
+- switch all deadlines to be steady_clock.
 
 - what to do about operator<<(std::ostream& s,X) noexcept
   ... when s could throw?
