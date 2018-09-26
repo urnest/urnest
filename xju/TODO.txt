@@ -72,20 +72,12 @@ io::Output
           TCPListener
 	  UDPSocket
       ... to capture socket options at different levels?
-  - IcmpEchoIf : public io::Input
-      Echo
-      {
-        ip::v4::Address address_;
-	ip::icmp::Identifier identifier_;
-        ip::icmp::Sequence sequence_;
-	std::vector<uint8_t> const payload_;
-      };
-      void ping(Echo const& request);
-      // note might be reply for some other process/thread i.e. not
-      // a reply to a request sent by this->ping
-      Echo getReply() throw(
-        // an ICMP echo request error
-        EchoFailed);
+  - icmp
+    - ipv4 header encode/decode
+    - Message encode/decode
+    - Echo encode/decode
+    - DestinationUnreachable encode/decode
+    - convert all xju deadlines to steady_clock
       
 - make syscall turn ENOMEM into std::bad_alloc
 - move xju::SyscallFailed to SyscallFailed.hh
