@@ -35,9 +35,9 @@ public:
     Message const& x) throw(
       xju::SyscallFailed) const override
   {
-    calls_.enqueue(xju::test::call(&xju::ip::icmp::SocketIf::send,
-                                   to,
-                                   x)).awaitReturn();
+    calls_.enqueue(xju::test::callTo(&xju::ip::icmp::SocketIf::send,
+                                     to,
+                                     x))->awaitReturn();
   }
   virtual void std::tuple<xju::ip::v4::Addresss,Message> receive() throw(
       xju::SyscallFailed,
@@ -47,8 +47,8 @@ public:
     char c(' ');
     input_.first->read(&c,1U,xju::steadyNow());
     xju::assert_equal(c,'x');
-    return calls_.enqueue(xju::test::call(&xju::ip::icmp::SocketIf::receive))
-      .result();
+    return calls_.enqueue(xju::test::callTo(&xju::ip::icmp::SocketIf::receive))
+      ->result();
   }
   xju::test::Calls calls_;
 
@@ -69,7 +69,8 @@ private:
   std::chrono::nanoseconds const leeway_;
   std::pair<std::unique_ptr<xju::io::IStream>,
             std::unique_ptr<xju::io::OStream> > input_;
-  
+
+  xju::test::Calls calls_;
 };
 
 }

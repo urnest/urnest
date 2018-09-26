@@ -1,0 +1,220 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/Mutex.hh>
+#include <xju/Condition.hh>
+#include <memory>
+#include <xju/assert.hh> //impl
+#include <xju/Lock.hh> //impl
+
+namespace xju
+{
+namespace test
+{
+
+class CallTo
+{
+public:
+  explicit CallTo(void* f) noexcept
+      :f_(f)
+  {
+  }
+  virtual ~CallTo()  noexcept {}
+protected:
+  void* const f_;
+};
+
+class CallToVoid : public CallTo
+{
+public:
+  explicit CallToVoid(void* f) noexcept:
+      CallTo(f)
+  {
+  }
+  void awaitReturn() const {
+    xju::Lock l(guard_);
+    while(!result_.get()){
+      changed_.wait(l);
+    }
+    (*result_)();
+  }
+  
+  void return_() noexcept {
+    xju::Lock l(guard_);
+    xju::assert_equal(result_.get(),0);
+    changed_=new Success;
+    changed_.signal(l);
+  }
+  
+  template<class E>
+  void raise(E e) noexcept {
+    xju::Lock l(guard_);
+    xju::assert_equal(result_.get(),0);
+    changed_=new Failure<E>(e);
+    changed_.signal(l);
+  }
+private:
+  class Result
+  {
+  public:
+    virtual ~Result() noexcept {}
+    virtual void operator()() = 0;
+  };
+  class Success : public Result
+  {
+  public:
+    virtual void operator()() noexcept override
+    {
+    }
+  };
+  mutable xju::Mutex guard_;
+  xju::Condition changed_;
+  std::shared_ptr<Result> result_;
+  
+  template<class E>
+  class Failure : public Result
+  {
+  public:
+    explicit Failure(E e) noexcept
+        :e_(std::move(e))
+    {
+    }
+    virtual void operator()() override
+    {
+      throw e_;
+    }
+  private:
+    E e_;
+  };
+};
+
+template<class T>
+class CallToV0 : public CallToVoid
+{
+public:
+  explicit CallToV0(void (T::*f)())
+      : CallToVoid(f)
+  {
+  }
+};
+
+template<class T,class P1>
+class CallToV1 : public CallToVoid
+{
+public:
+  explicit CallToV1(void (T::*f)(P1),
+                    std::add_rvalue_reference<P1>::type p1)
+      : CallToVoid(f),
+        p1_(p1)
+  {
+  }
+  std::add_rvalue_reference<P1>::type p1_;
+};
+
+template<class R>
+class CallToR : public CallTo
+{
+public:
+  explicit CallToR(void* f) noexcept:
+      CallTo(f)
+  {
+  }
+  R result() const {
+    xju::Lock l(guard_);
+    while(!result_.get()){
+      changed_.wait(l);
+    }
+    return (*result_)();
+  }
+  
+  void return_(R r) noexcept {
+    xju::Lock l(guard_);
+    xju::assert_equal(result_.get(),0);
+    changed_=new Success(r);
+    changed_.signal(l);
+  }
+  
+  template<class E>
+  void raise(E e) noexcept {
+    xju::Lock l(guard_);
+    xju::assert_equal(result_.get(),0);
+    changed_=new Failure<E>(e);
+    changed_.signal(l);
+  }
+private:
+  class Result
+  {
+  public:
+    virtual ~Result() noexcept {}
+    virtual R operator()() = 0;
+  };
+  class Success : public Result
+  {
+  public:
+    Success(R r) noexcept
+        :r_(r)
+    {
+    }
+    virtual void operator()() noexcept override
+    {
+      return r_;
+    }
+    R r_;
+  };
+  mutable xju::Mutex guard_;
+  xju::Condition changed_;
+  std::shared_ptr<Result> result_;
+  
+  template<class E>
+  class Failure : public Result
+  {
+  public:
+    explicit Failure(E e) noexcept
+        :e_(std::move(e))
+    {
+    }
+    virtual void operator()() override
+    {
+      throw e_;
+    }
+  private:
+    E e_;
+  };
+};
+
+template<class T, class R>
+class CallToR0 : public CallToR<R>
+{
+public:
+  explicit CallToR0(R (T::*f)() f)
+      : CallToR<R>(f)
+  {
+  }
+};
+
+template<class T,class R,class P1>
+class CallToR1 : public CallToR<R>
+{
+public:
+  explicit CallToR1(R (T::*f)(P1) f,
+                    std::add_rvalue_reference<P1>::type p1)
+      : CallToR<R>(f),
+        p1_(p1)
+  {
+  }
+  std::add_rvalue_reference<P1>::type p1_;
+};
+
+
+}
+}
+
+
