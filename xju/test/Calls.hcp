@@ -18,6 +18,8 @@
 #include <typeinfo>
 #include <xju/assert.hh>
 #include <stdlib.h>
+#include <chrono>
+#include <xju/steadyNow.hh>
 
 namespace xju
 {
