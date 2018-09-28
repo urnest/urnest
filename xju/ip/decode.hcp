@@ -158,6 +158,23 @@ public:
   {
     return i_==end_;
   }
+
+  void verifyAtEnd() const throw(
+    xju::Exception)
+  {
+    try{
+      if (i_==end_)
+      {
+        throw xju::Exception("not at end of input",XJU_TRACED);
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "verify end of input after " << offset_.first << " bytes";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
 private:
   I i_;
   I end_;
