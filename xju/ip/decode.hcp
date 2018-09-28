@@ -1,0 +1,226 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <cinttypes>
+#include <sstream> //impl
+#include <xju/Exception.hh>
+#include <unistd.h>
+#include <xju/format.hh>
+#include <sstream>
+
+namespace xju
+{
+namespace ip
+{
+namespace decode
+{
+
+template<class I>
+class Iterator
+{
+public:
+  // see std::iterator_traits
+  typedef ssize_t difference_type;
+  typedef typename I::value_type value_type;
+  typedef typename I::pointer pointer;
+  typedef typename I::reference reference;
+  typedef std::input_iterator_tag iterator_category;
+
+  Iterator(I begin, I end) noexcept:
+    i_(begin),
+    end_(end),
+    offset_({0,0})
+  {
+  }
+  friend bool operator==(Iterator i, Iterator j) noexcept
+  {
+    return i.i_==j.i_;
+  }
+  friend bool operator!=(Iterator i, Iterator j) noexcept
+  {
+    return !(operator==(i,j));
+  }
+
+  // result is byte,bit-within-that-byte
+  std::pair<size_t,uint8_t> currentOffset() const noexcept
+  {
+    return offset_;
+  }
+
+  uint8_t get1Bit() throw(
+    // at end
+    xju::Exception)
+  {
+    return getBits(1);
+  }
+  
+  uint8_t get2Bits() throw(
+    // at end
+    xju::Exception)
+  {
+    return getBits(2);
+  }
+  
+  uint8_t get3Bits() throw(
+    // at end
+    xju::Exception)
+  {
+    return getBits(3);
+  }
+  
+  uint8_t get4Bits() throw(
+    // at end
+    xju::Exception)
+  {
+    return getBits(4);
+  }
+  
+  uint8_t get5Bits() throw(
+    // at end
+    xju::Exception)
+  {
+    return getBits(5);
+  }
+  
+  uint8_t get6Bits() throw(
+    // at end
+    xju::Exception)
+  {
+    return getBits(6);
+  }
+  
+  uint8_t get7Bits() throw(
+    // at end
+    xju::Exception)
+  {
+    return getBits(7);
+  }
+  
+  uint8_t get8Bits() throw(
+    // at end
+    xju::Exception)
+  {
+    try{
+      verifyNotAtEnd();
+      xju::assert_equal(offset_.second,0U); //alignment check
+      uint8_t const result{*i_};
+      ++i_;
+      ++offset_.first;
+      return result;
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "read 8 bits having read " << offset_.first << " bytes "
+        << "and " << xju::format::int_(offset_.second) << " bits";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  
+  uint16_t get16Bits() throw(
+    // at end
+    xju::Exception)
+  {
+    try{
+      uint16_t result{get8Bits()};
+      result=(result<<8)+get8Bits();
+      return result;
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "read 16 bits having read " << offset_.first << " bytes "
+        << "and " << xju::format::int_(offset_.second) << " bits";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  
+  uint32_t get32Bits() throw(
+    // at end
+    xju::Exception)
+  {
+    try{
+      uint32_t result{ get16Bits() };
+      result=(result<<16)+get16Bits();
+      return result;
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "read 32 bits having read " << offset_.first << " bytes "
+        << "and " << xju::format::int_(offset_.second) << " bits";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+  bool atEnd() const noexcept
+  {
+    return i_==end_;
+  }
+private:
+  I i_;
+  I end_;
+  std::pair<size_t,uint8_t> offset_; //bytes,bits(0..7)
+  void verifyNotAtEnd() const throw(
+    xju::Exception)
+  {
+    if (i_==end_)
+    {
+      throw xju::Exception("end of input",XJU_TRACED);
+    }
+  }
+  //pre: 0<N<8
+  //pre: N<= 8-currentOffset().second
+  uint8_t getBits(uint8_t n) throw(
+    // at end
+    xju::Exception)
+  {
+    try{
+      xju::assert_greater(n,0);
+      xju::assert_less(n,8);
+      xju::assert_less_equal(n,8-offset_.second);//enough bits available?
+      verifyNotAtEnd();
+      uint8_t result{*i_};
+      result=result>>(8-n-offset_.second);
+      result&=(((uint8_t)0xff)>>(8-n));
+      offset_.second+=n;
+      if (offset_.second==8){
+        offset_.second=0;
+        ++i_;
+        ++offset_.first;
+      }
+      return result;
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "read " << xju::format::int_(n)
+        << " bits having read " << offset_.first << " bytes "
+        << "and " << xju::format::int_(offset_.second) << " bits";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+};
+
+
+
+template<class I>
+Iterator<I> makeIterator(I begin,I end) noexcept
+{
+  return Iterator<I>(begin,end);
+}
+
+}
+
+}
+}
+
+
