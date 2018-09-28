@@ -27,13 +27,6 @@ template<class I>
 class Iterator
 {
 public:
-  // see std::iterator_traits
-  typedef ssize_t difference_type;
-  typedef typename I::value_type value_type;
-  typedef typename I::pointer pointer;
-  typedef typename I::reference reference;
-  typedef std::input_iterator_tag iterator_category;
-
   Iterator(I begin, I end) noexcept:
     i_(begin),
     end_(end),
