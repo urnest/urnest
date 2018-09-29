@@ -1,5 +1,3 @@
-- ip::v4::Protocol should only be 8 bits not 6
-
 - switch all deadlines to be steady_clock.
 
 - what to do about operator<<(std::ostream& s,X) noexcept
@@ -73,12 +71,26 @@ io::Output
 	  UDPSocket
       ... to capture socket options at different levels?
   - icmp
+    - add field name (char const*const) to decode::Iterator::getXbits()
     - ipv4 header encode/decode
+      - tcpdump to capture real header
+      ping 192.168.0.1
+    22:47:43.169408 IP xjutv > adsl-router: ICMP echo request, id 3759, seq 1, length 64
+        0x0000:  8026 89e5 c268 7c8b ca02 2209 0800 4500  .&...h|..."...E.
+        0x0010:  0054 bbdb 4000 4001 fd78 c0a8 0003 c0a8  .T..@.@..x......
+        0x0020:  0001 0800 6317 0eaf 0001 6f74 af5b 0000  ....c.....ot.[..
+        0x0030:  0000 a695 0200 0000 0000 1011 1213 1415  ................
+        0x0040:  1617 1819 1a1b 1c1d 1e1f 2021 2223 2425  ...........!"#$%
+        0x0050:  2627 2829 2a2b 2c2d 2e2f 3031 3233 3435  &'()*+,-./012345
+        0x0060:  3637                                     67
+
+      
     - Message encode/decode
     - Echo encode/decode
     - DestinationUnreachable encode/decode
     - convert all xju deadlines to steady_clock
-      
+    - test-Pinger
+    
 - make syscall turn ENOMEM into std::bad_alloc
 - move xju::SyscallFailed to SyscallFailed.hh
 

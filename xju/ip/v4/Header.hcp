@@ -1,0 +1,100 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/Int.hh>
+#include <xju/ip/Protocol.hh>
+#include <xju/ip/v4/Address.hh>
+
+namespace xju
+{
+namespace ip
+{
+namespace v4
+{
+
+class Header
+{
+  class VersionTag{};
+  class IHLTag{};
+  class DSCPTag{};
+  class ECNTag{};
+  class TotalLengthTag{};
+  class IdentificationTag{};
+  class FlagsTag{};
+  class FragmentOffsetTag{};
+  class TTLTag{};
+  class HeaderChecksumTag{};
+public:
+  typedef xju::Int<VersionTag,uint8_t> Version; //4bits
+  typedef xju::Int<IHLTag,uint8_t> IHL; //4bits
+  typedef xju::Int<DSCPTag,uint8_t> DSCP; //6bits
+  typedef xju::Int<ECNTag,uint8_t> ECN; //2bits
+  typedef xju::Int<TotalLengthTag,uint16_t> TotalLength; //16bits
+  typedef xju::Int<IdentificationTag,uint16_t> Identification; //16bits
+  typedef xju::Int<FlagsTag,uint8_t> Flags; //3bits
+  typedef xju::Int<FragmentOffsetTag,uint16_t> FragmentOffset; //13bits
+  typedef xju::Int<TTLTag,uint8_t> TTL; //8bits
+  typedef xju::ip::Protocol Protocol;//8bits
+  typedef xju::Int<HeaderChecksumTag,uint16_t> HeaderChecksum;//16bits
+  typedef xju::ip::v4::Address Address;//source 32bits, source 32bits
+
+  Header(Version version,
+         IHL ihl,
+         DSCP dscp,
+         ECN ecn,
+         TotalLength totalLength,
+         Identification identification,
+         Flags flags,
+         FragmentOffset fragmentOffset,
+         TTL ttl,
+         Protocol protocol,
+         HeaderChecksum headerChecksum,
+         Address sourceAddress,
+         Address destAddress,
+         std::vector<uint32_t> options) noexcept
+      :version_(version),
+       ihl_(ihl),
+       dscp_(dscp),
+       ecn_(ecn),
+       totalLength_(totalLength),
+       identification_(identification),
+       flags_(flags),
+       fragmentOffset_(fragmentOffset),
+       ttl_(ttl),
+       protocol_(protocol),
+       headerChecksum_(headerChecksum),
+       sourceAddress_(sourceAddress),
+       destAddress_(destAddress),
+       options_(std::move(options))
+  {
+  }
+  Version version_;
+  IHL ihl_;
+  DSCP dscp_;
+  ECN ecn_;
+  TotalLength totalLength_;
+  Identification identification_;
+  Flags flags_;
+  FragmentOffset fragmentOffset_;
+  TTL ttl_;
+  Protocol protocol_;
+  HeaderChecksum headerChecksum_;
+  Address sourceAddress_;
+  Address destAddress_;
+  std::vector<uint32_t> options_;
+
+  friend bool operator<(Header const& x,Header const& y) noexcept;
+  
+};
+
+}
+}
+}

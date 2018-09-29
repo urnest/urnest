@@ -1,0 +1,77 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/ip/decode.hh>
+#include <xju/ip/v4/Header.hh>
+#include <sstream>
+namespace xju
+{
+namespace ip
+{
+namespace v4
+{
+
+// decode IPv4 header at offset of specified iterator
+// - return header plus iterator following header
+template<class I>
+std::pair<Header,xju::ip::decode::Iterator<I> > decodeHeader(
+  xju::ip::decode::Iterator<I> const at) throw(
+    xju::Exception){
+  try{
+    I i(at);
+    Version version{i.get4Bits()};
+    IHL ihl{i.get4Bits()};
+    DSCP dscp{i.get6Bits()};
+    ECN ecn{i.get2Bits()};
+    TotalLength totallength{i.get16Bits()};
+    Identification identification{i.get16Bits()};
+    Flags flags{i.get3Bits()};
+    FragmentOffset fragmentOffset{
+      ((uint16_t)i.get5Bits())<<8+i.get8Bits()};
+    TTL ttl{i.get8Bits()};
+    Protocol protocol{i.get8Bits()};
+    HeaderChecksum headerChecksum{i.get16Bits()};
+    Address sourceAddress{i.get32Bits()};
+    Address destAddress{i.get32Bits()};
+    std::vector<uint32_t> options;
+    for(auto j=5;j!=ihl;++j){
+      options.push_back(i.get32bits());
+    }
+    return std::make_pair(
+      Header(version,
+             ihl,
+             dscp,
+             ecn,
+             totalLength,
+             identification,
+             flags,
+             fragmentOffset,
+             ttl,
+             protocol,
+             headerChecksum,
+             sourceAddress,
+             destAddress,
+             std::move(options)),
+      i);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode IPv4 header at offset " << at.currentOffset();
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+}
+}
+
+

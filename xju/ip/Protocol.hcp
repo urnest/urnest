@@ -18,7 +18,7 @@ namespace ip
 {
 
 struct ProtocolTag{};
-typedef xju::Int<ProtocolTag,uint16_t> Protocol;
+typedef xju::Int<ProtocolTag,uint8_t> Protocol;
 
 }
 }
