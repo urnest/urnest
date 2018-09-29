@@ -26,24 +26,25 @@ std::pair<Header,xju::ip::decode::Iterator<I> > decodeHeader(
   xju::ip::decode::Iterator<I> const at) throw(
     xju::Exception){
   try{
-    I i(at);
-    Version version{i.get4Bits()};
-    IHL ihl{i.get4Bits()};
-    DSCP dscp{i.get6Bits()};
-    ECN ecn{i.get2Bits()};
-    TotalLength totallength{i.get16Bits()};
-    Identification identification{i.get16Bits()};
-    Flags flags{i.get3Bits()};
-    FragmentOffset fragmentOffset{
-      ((uint16_t)i.get5Bits())<<8+i.get8Bits()};
-    TTL ttl{i.get8Bits()};
-    Protocol protocol{i.get8Bits()};
-    HeaderChecksum headerChecksum{i.get16Bits()};
-    Address sourceAddress{i.get32Bits()};
-    Address destAddress{i.get32Bits()};
+    xju::ip::decode::Iterator<I> i(at);
+    Header::Version version{i.get4Bits("version")};
+    Header::IHL ihl{i.get4Bits("internal header length")};
+    Header::DSCP dscp{i.get6Bits("DSCP")};
+    Header::ECN ecn{i.get2Bits("ECN")};
+    Header::TotalLength totalLength{i.get16Bits("total length")};
+    Header::Identification identification{i.get16Bits("identification")};
+    Header::Flags flags{i.get3Bits("flags")};
+    uint16_t fragment{i.get5Bits("fragment offset...")};
+    fragment=(fragment<<8)+i.get8Bits("... fragment offset");
+    Header::FragmentOffset fragmentOffset{fragment};
+    Header::TTL ttl{i.get8Bits("time to live")};
+    Header::Protocol protocol{i.get8Bits("protocol")};
+    Header::HeaderChecksum headerChecksum{i.get16Bits("header checksum")};
+    Header::Address sourceAddress{i.get32Bits("source address")};
+    Header::Address destAddress{i.get32Bits("dest address")};
     std::vector<uint32_t> options;
-    for(auto j=5;j!=ihl;++j){
-      options.push_back(i.get32bits());
+    for(auto j=5;j!=ihl.value();++j){
+      options.push_back(i.get32Bits("options"));
     }
     return std::make_pair(
       Header(version,

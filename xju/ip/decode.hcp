@@ -16,6 +16,7 @@
 #include <iosfwd>
 #include <xju/format.hh> //impl
 #include <xju/format.hh>
+#include <string>
 
 namespace xju
 {
@@ -79,57 +80,57 @@ public:
     return offset_;
   }
 
-  uint8_t get1Bit() throw(
+  uint8_t get1Bit(std::string const& name) throw(
     // at end
     xju::Exception)
   {
-    return getBits(1);
+    return getBits(1,name);
   }
   
-  uint8_t get2Bits() throw(
+  uint8_t get2Bits(std::string const& name) throw(
     // at end
     xju::Exception)
   {
-    return getBits(2);
+    return getBits(2,name);
   }
   
-  uint8_t get3Bits() throw(
+  uint8_t get3Bits(std::string const& name) throw(
     // at end
     xju::Exception)
   {
-    return getBits(3);
+    return getBits(3,name);
   }
   
-  uint8_t get4Bits() throw(
+  uint8_t get4Bits(std::string const& name) throw(
     // at end
     xju::Exception)
   {
-    return getBits(4);
+    return getBits(4,name);
   }
   
-  uint8_t get5Bits() throw(
+  uint8_t get5Bits(std::string const& name) throw(
     // at end
     xju::Exception)
   {
-    return getBits(5);
+    return getBits(5,name);
   }
   
-  uint8_t get6Bits() throw(
+  uint8_t get6Bits(std::string const& name) throw(
     // at end
     xju::Exception)
   {
-    return getBits(6);
+    return getBits(6,name);
   }
   
-  uint8_t get7Bits() throw(
+  uint8_t get7Bits(std::string const& name) throw(
     // at end
     xju::Exception)
   {
-    return getBits(7);
+    return getBits(7,name);
   }
 
   //pre: offset().second==0
-  uint8_t get8Bits() throw(
+  uint8_t get8Bits(std::string const& name) throw(
     // at end
     xju::Exception)
   {
@@ -143,43 +144,49 @@ public:
     }
     catch(xju::Exception& e){
       std::ostringstream s;
-      s << "read 8 bits having read " << offset_;
+      s << "read 8 bit"
+        << (name.size()?" "+xju::format::quote(name):std::string("s"))
+        << " having read " << offset_;
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
   }
   
   //pre: offset().second==0
-  uint16_t get16Bits() throw(
+  uint16_t get16Bits(std::string const& name) throw(
     // at end
     xju::Exception)
   {
     try{
-      uint16_t result{get8Bits()};
-      result=(result<<8)+get8Bits();
+      uint16_t result{get8Bits("")};
+      result=(result<<8)+get8Bits("");
       return result;
     }
     catch(xju::Exception& e){
       std::ostringstream s;
-      s << "read 16 bits having read " << offset_;
+      s << "read 16 bit"
+        << (name.size()?" "+xju::format::quote(name):std::string("s"))
+        << " having read " << offset_;
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
   }
   
   //pre: offset().second==0
-  uint32_t get32Bits() throw(
+  uint32_t get32Bits(std::string const& name) throw(
     // at end
     xju::Exception)
   {
     try{
-      uint32_t result{ get16Bits() };
-      result=(result<<16)+get16Bits();
+      uint32_t result{ get16Bits("") };
+      result=(result<<16)+get16Bits("");
       return result;
     }
     catch(xju::Exception& e){
       std::ostringstream s;
-      s << "read 32 bits having read " << offset_;
+      s << "read 32 bit"
+        << (name.size()?" "+xju::format::quote(name):std::string("s"))
+        << " having read " << offset_;
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
@@ -221,7 +228,7 @@ private:
   //read n bits within current byte
   //pre: 0<N<8
   //pre: N<= 8-currentOffset().bits()
-  uint8_t getBits(uint8_t n) throw(
+  uint8_t getBits(uint8_t n,std::string const& name) throw(
     // at end
     xju::Exception)
   {
@@ -241,7 +248,9 @@ private:
     }
     catch(xju::Exception& e){
       std::ostringstream s;
-      s << "read " << xju::format::int_(n) << " bits having read " << offset_;
+      s << "read " << xju::format::int_(n) << " bit"
+        << (name.size()?" "+xju::format::quote(name):std::string("s"))
+        << " having read " << offset_;
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }

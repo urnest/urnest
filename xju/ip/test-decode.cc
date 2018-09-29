@@ -24,20 +24,20 @@ void test1() {
   auto i{makeIterator(x.begin(),x.end())};
   xju::assert_equal(i,makeIterator(x.begin(),x.end()));
 
-  xju::assert_equal(i.get8Bits(),1);
-  xju::assert_equal(i.get4Bits(),9);
-  xju::assert_equal(i.get3Bits(),5);
-  xju::assert_equal(i.get1Bit(),1);
-  xju::assert_equal(i.get16Bits(),0x0305);
-  xju::assert_equal(i.get32Bits(),0xaf37b28e);
+  xju::assert_equal(i.get8Bits(""),1);
+  xju::assert_equal(i.get4Bits(""),9);
+  xju::assert_equal(i.get3Bits(""),5);
+  xju::assert_equal(i.get1Bit(""),1);
+  xju::assert_equal(i.get16Bits(""),0x0305);
+  xju::assert_equal(i.get32Bits(""),0xaf37b28e);
   xju::assert_equal(i.atEnd(),true);
   try
   {
-    i.get1Bit();
+    i.get1Bit("x");
     xju::assert_never_reached();
   }
   catch(xju::Exception const& e){
-    xju::assert_equal(readableRepr(e),"Failed to read 1 bits having read 8 bytes and 0 bits because\nend of input.");
+    xju::assert_equal(readableRepr(e),"Failed to read 1 bit \"x\" having read 8 bytes and 0 bits because\nend of input.");
   }
 }
 
