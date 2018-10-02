@@ -1,0 +1,140 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace ip
+{
+namespace icmp
+{
+
+class Socket : public SocketIf
+{
+public:
+  Socket() throw(
+    xju::Exception,
+    xju::SyscallFailed) try:
+      fd_(xju::syscall(xju::socket,XJU_TRACED)(
+            AF_INET, SOCK_RAW|SOCK_CLOEXEC|SOCK_NONBLOCK, IPPROTO_ICMP))
+  {
+    std::bitset<256> o;
+    o[0]=true; //echo reply
+    o[3]=true; //destination unreachable
+    o.flip(); // ICMP_FILTER is "exclude"
+    xju::syscall(xju::setsockopt,XJU_TRACED)(
+      fd_,IPPROTO_ICMP,ICMP_FILTER,o.data(),256/8)
+  }
+  catch(xju::SyscallFailed& e)
+  {
+    std::ostringstream s;
+    s << "create ICMP-only RAW socket";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+  
+  void send(
+    xju::ip::v4::Address const& to,
+    Message const& x,
+    std::chrono::steady_clock::time_point const& deadline) throw(
+      xju::SyscallFailed) const override
+  {
+    try{
+      if (xju::io::select({(xju::io::Output*)this},deadline).size()) {
+        sockaddr_in dest_addr;
+        dest_addr.sin_family=AF_INET;
+        dest_addr.sin_port=0;
+        dest_addr.sin_addr.s_addr=::htonl(to.value());
+
+        std::vector<uint8_t> m;
+        Message y{x};
+        y.checksum_=0;
+        encodeMessage(y,std::back_inserter(m));
+        y.checksum_=actualChecksum{
+          xju::ip::checksum(
+            xju::ip::decode::makeIterator(m.begin(),m.end()))};
+        encodeMessage(y,m.begin());
+        auto const bytesSent=xju::syscall(xju::sendto,XJU_TRACED)(
+          fileDescriptor(),
+          m.data(),
+          m.size(),
+          MSG_NOSIGNAL,
+          (sockaddr*)&dest_addr,
+          sizeof(dest_addr));
+        if (bytesSent<size) {
+          std::ostringstream s;
+          s << "only sent " << bytesSent << " bytes of " << m.size();
+          throw xju::DeadlineReached(xju::Exception(s.str(),XJU_TRACED));
+        }
+        return;
+      }
+      std::ostringstream s;
+      s << "deadline reached before socket writable";
+      throw xju::DeadlineReached(xju::Exception(s.str(),XJU_TRACED));
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "send ICMP message " << message << " to " << to;
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+  void std::tuple<xju::ip::v4::Addresss,Message> receive() throw(
+    xju::SyscallFailed,
+    // invalid message, e.g. incorrect checksum
+    xju::Exception) const override
+  {
+    try{
+      std::array<uint8_t,2048> buffer;
+      ssize_t const bytesRead=xju::syscall(xju::recv,XJU_TRACED)(
+        fileDescriptor(),
+        buffer.data(),buffer.size(),
+        MSG_NOSIGNAL);
+      auto const h{xju::ip::v4::decodeHeader(
+                     xju::ip::decode::makeIterator(
+                       buffer.begin(),buffer.begin()+bytesRead))};
+      auto const m{decodeMessage(h.second)};
+      if (!m.second.atEnd()){
+        std::ostringstream s;
+        s << "extra "
+          << (bytesRead-m.second.currentOffset().first)
+          << " having decoded IP header "
+          << h.first << " and ICMP message " << m.first
+          << " from " << m.second.currentOffset();
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      auto const actualChecksum{xju::ip::checksum(h.second)};
+      if (m.first.checksum_ != actualChecksum){
+        std::ostringstream s;
+        s << "invalid checksum "
+          << xju::format::hex(m.first.checksum_.value())
+          << " in received ICMP message " << m.first
+          << " (checksum should have been " << actualChecksum << ")";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      return std::make_tuple(h.first.sourceAddress_,m.first);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "get next ICMP message assuming it has already arrived";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  
+};
+
+
+}
+}
+}
+
+
