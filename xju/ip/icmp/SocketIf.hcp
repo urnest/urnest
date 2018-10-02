@@ -14,7 +14,7 @@ namespace xju
 namespace ip
 {
 
-class SocketIf : public xju::io::Input
+class SocketIf : public xju::io::Input,xju::io::Output
 {
 public:
   // send message immediately
@@ -22,7 +22,8 @@ public:
   // - from address, ttl etc are set by the implementation
   virtual void send(
     xju::ip::v4::Address const& to,
-    Message const& x) throw(
+    Message const& x,
+    std::chrono::steady_clock::time_point const& deadline) throw(
       xju::SyscallFailed) const = 0;
 
   // receive message assumed to have already arrived

@@ -58,7 +58,7 @@ public:
         y.checksum_=0;
         encodeMessage(y,std::back_inserter(m));
         y.checksum_=actualChecksum{
-          xju::ip::checksum(
+          xju::ip::checksum::calculate(
             xju::ip::decode::makeIterator(m.begin(),m.end()))};
         encodeMessage(y,m.begin());
         auto const bytesSent=xju::syscall(xju::sendto,XJU_TRACED)(
@@ -101,23 +101,23 @@ public:
       auto const h{xju::ip::v4::decodeHeader(
                      xju::ip::decode::makeIterator(
                        buffer.begin(),buffer.begin()+bytesRead))};
+      try{
+        xju::ip::checksum::validate(h.second);
+      }
+      catch(xju::Exception& e){
+        std::ostringstream s;
+        s << "validate checksum in received ICMP message";
+        e.addContext(s.str(),XJU_TRACED);
+        throw;
+      }
       auto const m{decodeMessage(h.second)};
       if (!m.second.atEnd()){
         std::ostringstream s;
         s << "extra "
           << (bytesRead-m.second.currentOffset().first)
-          << " having decoded IP header "
+          << " bytes after decoded IP header "
           << h.first << " and ICMP message " << m.first
           << " from " << m.second.currentOffset();
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      auto const actualChecksum{xju::ip::checksum(h.second)};
-      if (m.first.checksum_ != actualChecksum){
-        std::ostringstream s;
-        s << "invalid checksum "
-          << xju::format::hex(m.first.checksum_.value())
-          << " in received ICMP message " << m.first
-          << " (checksum should have been " << actualChecksum << ")";
         throw xju::Exception(s.str(),XJU_TRACED);
       }
       return std::make_tuple(h.first.sourceAddress_,m.first);
