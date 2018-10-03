@@ -1,0 +1,47 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <xju/ip/decode.hh>
+#include <xju/ip/Checksum.hh>
+
+namespace xju
+{
+namespace ip
+{
+namespace checksum
+{
+template<class I>
+xju::ip::Checksum calculate(xju::ip::decode::Iterator<I> i) noexcept
+{
+  // adapter from https://tools.ietf.org/html/rfc1071
+  register uint32_t sum = 0;
+  
+  while( !i.atEnd() )  {
+    uint16_t x{i.get8Bits("")};
+    x<<=8;
+    if (!i.atEnd()){
+      x+=i.get8Bits("");
+    }
+    sum+=x;
+  }
+  
+  /*  Fold 32-bit sum to 16 bits */
+  while (sum>>16){
+    sum = (sum & 0xffff) + (sum >> 16);
+  }
+  Checksum checksum{(uint16_t)~sum};
+  return checksum;
+}
+
+}
+}
+}
+
+

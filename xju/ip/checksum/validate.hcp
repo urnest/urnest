@@ -10,35 +10,15 @@
 
 
 #include <xju/ip/decode.hh>
+#include <xju/ip/Checksum.hh>
 #include <xju/Exception.hh>
+
 namespace xju
 {
 namespace ip
 {
 namespace checksum
 {
-template<class I>
-uint16_t calculate(xju::ip::decode::Iterator<I> i) noexcept
-{
-  // adapter from https://tools.ietf.org/html/rfc1071
-  register uint32_t sum = 0;
-  
-  while( !i.atEnd() )  {
-    uint16_t x{i.get8Bits("")};
-    x<<=8;
-    if (!i.atEnd()){
-      x+=i.get8Bits("");
-    }
-    sum+=x;
-  }
-  
-  /*  Fold 32-bit sum to 16 bits */
-  while (sum>>16){
-    sum = (sum & 0xffff) + (sum >> 16);
-  }
-  uint16_t checksum = ~sum;
-  return checksum;
-}
 template<class I>
 void validate(xju::ip::decode::Iterator<I> i) throw(
   xju::Exception)

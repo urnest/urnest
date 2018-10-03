@@ -7,7 +7,8 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/ip/checksum.hh>
+#include <xju/ip/checksum/validate.hh>
+#include <xju/ip/checksum/calculate.hh>
 
 #include <iostream>
 #include <xju/assert.hh>
@@ -26,7 +27,7 @@ void test1() {
     0x00, 0x01};
   xju::assert_equal(calculate(
                       xju::ip::decode::makeIterator(x.begin(),x.end())),
-                    0xfd78);
+                    xju::ip::Checksum(0xfd78));
 }
 void test2() {
   std::vector<uint8_t> x{

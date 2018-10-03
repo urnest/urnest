@@ -8,6 +8,12 @@
 // implied warranty.
 //
 
+#include <utility>
+#include <xju/ip/icmp/Message.hh>
+#include <xju/ip/Checksum.hh>
+#include <xju/ip/decode.hh>
+#include <xju/Array.hh>
+#include <vector>
 
 namespace xju
 {
@@ -17,10 +23,41 @@ namespace icmp
 {
 
 template<class InputIterator>
-std::pair<Message,Checksum> decodeMessage(
-  InputIterator begin,
-  InputIterator end) throw(
-    xju::Exception);
+std::pair<Message,xju::ip::decode::Iterator<InputIterator>>
+decodeMessage(
+  xju::ip::decode::Iterator<InputIterator> const at) throw(
+    xju::Exception)
+{
+  try{
+    xju::ip::decode::Iterator<InputIterator> i(at);
+    Message::Type type_((Message::Type)i.get8Bits("type"));
+    Message::Code code(i.get8Bits("code"));
+    Checksum checksum(i.get16Bits("checksum"));
+    xju::Array<uint8_t,4> header(0);
+    header[0]=i.get8Bits("header[0]");
+    header[1]=i.get8Bits("header[1]");
+    header[2]=i.get8Bits("header[2]");
+    header[3]=i.get8Bits("header[3]");
+    std::vector<uint8_t> data;
+    while(!i.atEnd())
+    {
+      data.push_back(i.get8Bits("data..."));
+    }
+    return std::make_pair(
+      Message(type_,
+              code,
+              checksum,
+              header,
+              std::move(data)),
+      i);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode icmp message after " << at.currentOffset();
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
 
 }
 }

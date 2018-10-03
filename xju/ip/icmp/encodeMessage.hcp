@@ -9,6 +9,7 @@
 //
 
 
+#include <xju/ip/icmp/Message.hh>
 namespace xju
 {
 namespace ip
@@ -17,8 +18,22 @@ namespace icmp
 {
 
 template<class OutputIterator>
-void encodeMessage(Message const& x, OutputIterator to) throw(
-  xju::Exception);
+OutputIterator encodeMessage(Message const& x,
+                             OutputIterator to) noexcept
+{
+  *to++=(uint8_t)x.type_;
+  *to++=x.code_.value();
+  *to++=(uint8_t)(x.checksum_.value()>>8);
+  *to++=(uint8_t)(x.checksum_.value()&0xff);
+  *to++=x.header_[0];
+  *to++=x.header_[1];
+  *to++=x.header_[2];
+  *to++=x.header_[3];
+  for(auto b:x.data_){
+    *to++=b;
+  }
+  return to;
+}
 
 }
 }

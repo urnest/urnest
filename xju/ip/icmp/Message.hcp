@@ -9,6 +9,12 @@
 //
 
 
+#include <xju/Int.hh>
+#include <xju/Array.hh>
+#include <vector>
+#include <xju/ip/icmp/Message.hh>
+#include <xju/ip/Checksum.hh>
+
 namespace xju
 {
 namespace ip
@@ -19,25 +25,41 @@ namespace icmp
 class Message
 {
 public:
-  enum Type{
+  enum class Type{
+    ECHOREPLY=		0,
+    DEST_UNREACH=	3,
+    SOURCE_QUENCH=	4,
+    REDIRECT=		5,
+    ECHO=		8,
+    TIME_EXCEEDED=	11,
+    PARAMETERPROB=	12,
+    TIMESTAMP=		13,
+    TIMESTAMPREPLY=	14,
+    INFO_REQUEST=	15,
+    INFO_REPLY=		16,
+    ADDRESS=		17,
+    ADDRESSREPLY=	18
   };
   class CodeTag;
   typedef xju::Int<CodeTag,uint8_t> Code;
   
   Message(Type type,
           Code code,
+          Checksum checksum,
           xju::Array<uint8_t,4> const& header,
           std::vector<uint8_t> data) noexcept
       :type_(type),
        code_(code),
+       checksum_(checksum),
        header_(header),
        data_(std::move(data))
   {
   }
   Type type_;
   Code code_;
+  Checksum checksum_;
   xju::Array<uint8_t,4> const header_;
-  std::vector<uint8_t> data;
+  std::vector<uint8_t> data_;
 
   friend bool operator<(Message const& x, Message const& y) noexcept;
   
