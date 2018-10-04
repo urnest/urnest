@@ -24,15 +24,15 @@ public:
     xju::ip::v4::Address const& to,
     Message const& x,
     std::chrono::steady_clock::time_point const& deadline) throw(
-      xju::SyscallFailed) const = 0;
+      xju::SyscallFailed) = 0;
 
   // receive message assumed to have already arrived
   // result.get<2>() is the received ICMP checksum field
   // - retries on interrupt
-  virtual void std::tuple<xju::ip::v4::Addresss,Message> receive() throw(
+  virtual std::tuple<xju::ip::v4::Addresss,Message> receive() throw(
       xju::SyscallFailed,
       // invalid message, e.g. incorrect checksum
-      xju::Exception) const = 0;
+      xju::Exception) = 0;
 };
   
 }

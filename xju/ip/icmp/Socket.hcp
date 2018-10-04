@@ -8,6 +8,20 @@
 // implied warranty.
 //
 
+#include <unistd.h>
+#include <chrono>
+#include <xju/DeadlineReached.hh>
+#include "xju/AutoFd.hh"
+
+#include <sstream> //impl
+#include <bitset> //impl
+#include "xju/syscall.hh"
+#include "xju/socket.hh" //impl
+#include "xju/io/select.hh" //impl
+#include "xju/format.hh" //impl
+#include <xju/ip/checksum/calculate.hh> //impl
+#include <xju/ip/decode.hh> //impl
+#include <xju/ip/icmp/encodeMessage.hh> //impl
 
 namespace xju
 {
@@ -44,7 +58,7 @@ public:
     xju::ip::v4::Address const& to,
     Message const& x,
     std::chrono::steady_clock::time_point const& deadline) throw(
-      xju::SyscallFailed) const override
+      xju::SyscallFailed) override
   {
     try{
       if (xju::io::select({(xju::io::Output*)this},deadline).size()) {
@@ -87,22 +101,30 @@ public:
     }
   }
 
-  void std::tuple<xju::ip::v4::Addresss,Message> receive() throw(
+  std::tuple<xju::ip::v4::Addresss,Message> receive() throw(
     xju::SyscallFailed,
     // invalid message, e.g. incorrect checksum
-    xju::Exception) const override
+    xju::Exception) override
   {
     try{
+      sockaddr_in senderAddr;
+      socklen_t senderAddrLen{sizeof(senderAddr)};
       std::array<uint8_t,2048> buffer;
-      ssize_t const bytesRead=xju::syscall(xju::recv,XJU_TRACED)(
+      ssize_t const bytesRead=xju::syscall(xju::recvfrom,XJU_TRACED)(
         fileDescriptor(),
         buffer.data(),buffer.size(),
-        MSG_NOSIGNAL);
-      auto const h{xju::ip::v4::decodeHeader(
-                     xju::ip::decode::makeIterator(
-                       buffer.begin(),buffer.begin()+bytesRead))};
+        MSG_NOSIGNAL,
+        &(sockaddr*)&senderAddr,&senderAddrLen);
+      if (senderAddrLen!=sizeof(senderAddr)){
+        std::ostringstream s;
+        s << "recvfrom() returned unexpected from-address length "
+          << senderAddrLen << " (expected " << sizeof(senderAddr) << ")";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
       try{
-        xju::ip::checksum::validate(h.second);
+        xju::ip::checksum::validate(
+          xju::ip::decode::makeIterator(
+            buffer.begin(),buffer.begin()+bytesRead));
       }
       catch(xju::Exception& e){
         std::ostringstream s;
@@ -110,17 +132,20 @@ public:
         e.addContext(s.str(),XJU_TRACED);
         throw;
       }
-      auto const m{decodeMessage(h.second)};
+      auto const m{decodeMessage(
+          xju::ip::decode::makeIterator(
+            buffer.begin(),buffer.begin()+bytesRead))};
       if (!m.second.atEnd()){
         std::ostringstream s;
         s << "extra "
           << (bytesRead-m.second.currentOffset().first)
-          << " bytes after decoded IP header "
-          << h.first << " and ICMP message " << m.first
+          << " bytes after decoded ICMP message " << m.first
           << " from " << m.second.currentOffset();
         throw xju::Exception(s.str(),XJU_TRACED);
       }
-      return std::make_tuple(h.first.sourceAddress_,m.first);
+      return std::make_tuple(
+        xju::ip::v4::Address(::ntohl(senderAddr.sin_addr.s_addr)),
+        m.first);
     }
     catch(xju::Exception& e){
       std::ostringstream s;
@@ -128,6 +153,13 @@ public:
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
+  }
+private:
+  xju::AutoFd fd_;
+  // xju::io::Input::
+  // xju::io::Output::
+  int fileDescriptor() const throw() {
+    return fd_.fd();
   }
   
 };

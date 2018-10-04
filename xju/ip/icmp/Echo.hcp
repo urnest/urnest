@@ -9,6 +9,9 @@
 //
 
 
+#include <xju/Int.hh>
+#include <inttypes.h>
+
 namespace xju
 {
 namespace ip
@@ -19,9 +22,24 @@ namespace icmp
 class Echo
 {
 public:
+  class IdentifierTag{};
+  typedef xju::Int<IdentifierTag,uint16_t> Identifier;
+  class SequenceTag{};
+  typedef xju::Int<SequenceTag> Sequence;
+
+  Echo(Identifier const& identifier,
+       Sequence const& sequence,
+       std::vector<uint8_t> payload) noexcept
+      :identifier_(identifier),
+       sequence_(sequence),
+       payload_(payload)
+  {
+  }
   Identifier identifier_;
   Sequence sequence_;
   std::vector<uint8_t> payload_;
+
+  friend bool operator<(Echo const& x, Echo const& y) noexcept;
 };
 
 }

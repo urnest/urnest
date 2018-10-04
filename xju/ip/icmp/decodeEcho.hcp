@@ -1,0 +1,45 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/ip/icmp/Echo.hh>
+
+#include <xju/assert.hh> //impl
+#include <xju/ip/decode.hh> //impl
+#include <xju/Array.hh>
+#include <vector>
+
+namespace xju
+{
+namespace ip
+{
+namespace icmp
+{
+
+Echo decodeEcho(xju::Array<uint8_t,4> const& header,
+                std::vector<uint8_t> const& data) noexcept
+{
+  auto i{xju::ip::decode::makeIterator(
+      header.begin(),header.end())};
+  uint16_t identifier{0};
+  identifier+=i.get8Bits("identifier...");
+  identifier=(identifier<<8)+i.get8Bits("...identifier");
+  uint16_t sequence{0};
+  sequence+=i.get8Bits("sequence...");
+  sequence=(sequence<<8)+i.get8Bits("...sequence");
+  return Echo(Echo::Identifier(identifier),
+              Echo::Sequence(sequence),
+              data);
+}
+
+
+}
+}
+}

@@ -6,6 +6,8 @@
 %tests.tree == <<
 ()+cmd=(test-decodeMessage.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-encodeMessage.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-decodeEcho.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-encodeEcho.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 
 %hcp-gen==.:dir.hcp.list+G+hpath='xju/ip/icmp':hcp-split-virdir-specs:cat:vir_dir
 
