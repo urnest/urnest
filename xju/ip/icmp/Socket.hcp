@@ -158,7 +158,7 @@ private:
   xju::AutoFd fd_;
   // xju::io::Input::
   // xju::io::Output::
-  int fileDescriptor() const throw() {
+  int fileDescriptor() const throw() override {
     return fd_.fd();
   }
   

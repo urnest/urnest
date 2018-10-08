@@ -55,6 +55,20 @@ public:
        data_(std::move(data))
   {
   }
+
+  Message(
+    Type type,
+    Code code,
+    Checksum checksum,
+    std::pair<xju::Array<uint8_t,4>, std::vector<uint8_t> > headerAndData) noexcept
+      :type_(type),
+       code_(code),
+       checksum_(checksum),
+       header_(headerAndData.first),
+       data_(std::move(headerAndData.second))
+  {
+  }
+
   Type type_;
   Code code_;
   Checksum checksum_;
