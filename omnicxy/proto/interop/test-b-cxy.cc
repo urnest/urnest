@@ -94,7 +94,7 @@ int main_(uint16_t const port, std::string const& testBCxxExe) throw(
             // parent process "stop" function - the child process should
             // exit of its own accord straight away, closing its end
             // of the pipe
-            auto const deadline(std::chrono::system_clock::now()+
+            auto const deadline(std::chrono::steady_clock::now()+
                                 std::chrono::seconds(5));
             try {
               char c;

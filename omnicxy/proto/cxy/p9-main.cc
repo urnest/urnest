@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
       
       cxy::sref<p9::F> const xa(orb, OBJECT_NAME, x);
       
-      orb.monitorUntil(std::chrono::system_clock::now()+
+      orb.monitorUntil(std::chrono::steady_clock::now()+
                        std::chrono::seconds(30));
     }
     else
@@ -122,11 +122,11 @@ int main(int argc, char* argv[])
       ref->f1(std::string(10000,'a'));
       xju::Lock l(x.guard_);
       auto const onlyWaitUntil(
-        std::chrono::system_clock::now()+
+        std::chrono::steady_clock::now()+
         std::chrono::seconds(5));
       
       while((x.calls_.size()<3) &&
-            (std::chrono::system_clock::now()<onlyWaitUntil)) {
+            (std::chrono::steady_clock::now()<onlyWaitUntil)) {
         x.changed_.wait(l,onlyWaitUntil);
       }
       xju::assert_equal(x.calls_.size(),3);

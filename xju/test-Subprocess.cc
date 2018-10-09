@@ -93,7 +93,7 @@ void test4()
           // parent process "stop" function - the child process should
           // exit of its own accord straight away, closing its end
           // of the pipe
-          auto const deadline(std::chrono::system_clock::now()+
+          auto const deadline(std::chrono::steady_clock::now()+
                               std::chrono::milliseconds(200));
           try {
             char c;

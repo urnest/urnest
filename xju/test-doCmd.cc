@@ -19,21 +19,21 @@ namespace xju
 void test1(std::string self) {
   {
     auto const x(doCmd({"/bin/echo", "fred"},
-                       std::chrono::system_clock::now()+
+                       std::chrono::steady_clock::now()+
                        std::chrono::seconds(1)));
     xju::assert_equal(x.first,"fred\n");
     xju::assert_equal(x.second,"");
   }
   {
     auto const x(doCmd({self, "w"},
-                       std::chrono::system_clock::now()+
+                       std::chrono::steady_clock::now()+
                        std::chrono::seconds(1)));
     xju::assert_equal(x.first,"");
     xju::assert_equal(x.second,"warning\n");
   }
   try{
     auto const x(doCmd({self,"e"},
-                       std::chrono::system_clock::now()+
+                       std::chrono::steady_clock::now()+
                        std::chrono::seconds(1)));
     xju::assert_never_reached();
   }
@@ -43,7 +43,7 @@ void test1(std::string self) {
   
   try{
     auto const x(doCmd({"/bin/sleep","2"},
-                       std::chrono::system_clock::now()+
+                       std::chrono::steady_clock::now()+
                        std::chrono::milliseconds(10)));
     xju::assert_never_reached();
   }

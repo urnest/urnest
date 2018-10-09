@@ -12,7 +12,7 @@
 #include <iostream>
 #include <xju/assert.hh>
 #include <xju/format.hh>
-#include <xju/now.hh>
+#include <xju/steadyNow.hh>
 #include <xju/Thread.hh>
 #include <xju/ip/TCPSocket.hh>
 #include <xju/ip/v4/getHostAddresses.hh>
@@ -25,7 +25,7 @@ namespace ip
 
 void test1() {
   TCPService s(TCPService::Backlog(1),true);
-  auto const deadline(xju::now()+std::chrono::seconds(5));
+  auto const deadline(xju::steadyNow()+std::chrono::seconds(5));
   xju::Thread t([&](){
       TCPSocket c(
         {xju::ip::v4::getHostAddresses(xju::getHostName())[0],s.port()},

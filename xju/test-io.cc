@@ -27,7 +27,7 @@ size_t fillPipe(
   do {
     thisWrite=pipeInput.write(std::vector<uint8_t>(1024,0).data(),
                               1024,
-                              std::chrono::system_clock::now());
+                              std::chrono::steady_clock::now());
     pipeMax+=thisWrite;
   }
   while(thisWrite==1024);
@@ -41,13 +41,13 @@ void test1() {
 
   // write timeout
   {
-    auto t1(std::chrono::system_clock::now());
+    auto t1(std::chrono::steady_clock::now());
     xju::assert_equal(
       p.second->write(std::vector<uint8_t>(1024,0).data(),
                       1024,
                       t1+std::chrono::milliseconds(100)),
       0);
-    auto t2(std::chrono::system_clock::now());
+    auto t2(std::chrono::steady_clock::now());
     xju::assert_greater_equal(t2-t1,std::chrono::milliseconds(100));
     xju::assert_less(t2-t1,std::chrono::milliseconds(200));
   }
@@ -55,24 +55,24 @@ void test1() {
   {
     std::vector<uint8_t> r(pipeMax+1,0);
     size_t read(p.first->read(
-                  r.data(),pipeMax+1,std::chrono::system_clock::now()));
+                  r.data(),pipeMax+1,std::chrono::steady_clock::now()));
     xju::assert_equal(read,pipeMax);
   }
   // read timeout, nothing read
   {
     std::vector<uint8_t> r(1,0);
-    auto t1(std::chrono::system_clock::now());
+    auto t1(std::chrono::steady_clock::now());
     xju::assert_equal(
       p.first->read(r.data(),r.size(),t1+std::chrono::milliseconds(100)),
       0);
-    auto t2(std::chrono::system_clock::now());
+    auto t2(std::chrono::steady_clock::now());
     xju::assert_greater_equal(t2-t1,std::chrono::milliseconds(100));
     xju::assert_less(t2-t1,std::chrono::milliseconds(200));
   }
   // data becomes available before timeout
   {
     std::vector<uint8_t> r(512,0);
-    auto t1(std::chrono::system_clock::now());
+    auto t1(std::chrono::steady_clock::now());
     xju::Thread th([&]() {
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
         xju::assert_equal(
@@ -84,14 +84,14 @@ void test1() {
     xju::assert_equal(
       p.first->read(r.data(),r.size(),t1+std::chrono::milliseconds(100)),
       r.size());
-    auto t2(std::chrono::system_clock::now());
+    auto t2(std::chrono::steady_clock::now());
     xju::assert_greater_equal(t2-t1,std::chrono::milliseconds(50));
     xju::assert_less(t2-t1,std::chrono::milliseconds(100));
   }
   // close other end before read timeout
   {
     std::vector<uint8_t> r(512,0);
-    auto t1(std::chrono::system_clock::now());
+    auto t1(std::chrono::steady_clock::now());
     xju::Thread th([&]() {
         xju::assert_equal(
           p.second->write(r.data(),
@@ -103,7 +103,7 @@ void test1() {
     xju::assert_equal(
       p.first->read(r.data(),r.size(),t1+std::chrono::milliseconds(100)),
       r.size());
-    auto t2(std::chrono::system_clock::now());
+    auto t2(std::chrono::steady_clock::now());
     xju::assert_less(t2-t1,std::chrono::milliseconds(100));
     try {
       size_t const x(
@@ -112,7 +112,7 @@ void test1() {
     }
     catch(xju::io::Input::Closed& e) {
       xju::assert_contains(readableRepr(e),p.first->str()+" closed");
-      auto t2(std::chrono::system_clock::now());
+      auto t2(std::chrono::steady_clock::now());
       xju::assert_less(t2-t1,std::chrono::milliseconds(100));
     }
   }
@@ -127,7 +127,7 @@ void test2() noexcept
   xju::assert_equal(
     xju::io::select({p1.first.get(),p2.first.get()},
                     {p1.second.get(),p2.second.get()},
-                    std::chrono::system_clock::now()),
+                    std::chrono::steady_clock::now()),
     std::pair<std::set<Input const*>,std::set<Output const*> >(
       {},
       {p1.second.get(),p2.second.get()}));
@@ -137,7 +137,7 @@ void test2() noexcept
   xju::assert_equal(
     xju::io::select({p1.first.get(),p2.first.get()},
                     {p1.second.get(),p2.second.get()},
-                    std::chrono::system_clock::now()),
+                    std::chrono::steady_clock::now()),
     std::pair<std::set<Input const*>,std::set<Output const*> >(
       {p1.first.get()},
       {p2.second.get()}));
@@ -147,31 +147,31 @@ void test2() noexcept
   xju::assert_equal(
     xju::io::select({p1.first.get(),p2.first.get()},
                     {p1.second.get(),p2.second.get()},
-                    std::chrono::system_clock::now()),
+                    std::chrono::steady_clock::now()),
     std::pair<std::set<Input const*>,std::set<Output const*> >(
       {p1.first.get(),p2.first.get()},
       {}));
 
   std::vector<uint8_t> r(pipeMax,0);
   xju::assert_equal(p2.first->read(r.data(),pipeMax/2,
-                                   std::chrono::system_clock::now()),
+                                   std::chrono::steady_clock::now()),
                     pipeMax/2);
   
   xju::assert_equal(
     xju::io::select({p1.first.get(),p2.first.get()},
                     {p1.second.get(),p2.second.get()},
-                    std::chrono::system_clock::now()),
+                    std::chrono::steady_clock::now()),
     std::pair<std::set<Input const*>,std::set<Output const*> >(
       {p1.first.get(),p2.first.get()},
       {p2.second.get()}));
 
   xju::assert_equal(p2.first->read(r.data(),pipeMax/2,
-                                   std::chrono::system_clock::now()),
+                                   std::chrono::steady_clock::now()),
                     pipeMax/2);
 
   // return before timeout on readable/writable
   {
-    auto t1(std::chrono::system_clock::now());
+    auto t1(std::chrono::steady_clock::now());
     xju::assert_equal(
       xju::io::select({p1.first.get(),p2.first.get()},
                       {p1.second.get(),p2.second.get()},
@@ -180,27 +180,27 @@ void test2() noexcept
         {p1.first.get()},
         {p2.second.get()}));
     xju::assert_less_equal(
-      std::chrono::system_clock::now(),
+      std::chrono::steady_clock::now(),
       t1+std::chrono::milliseconds(100));
   }
   
   // inputs only
   xju::assert_equal(
     xju::io::select(std::set<Input const*>({p1.first.get(),p2.first.get()}),
-                    std::chrono::system_clock::now()),
+                    std::chrono::steady_clock::now()),
     std::set<Input const*>(
       {p1.first.get()}));
 
   // outputs only
   xju::assert_equal(
     xju::io::select(std::set<Output const*>({p1.second.get(),p2.second.get()}),
-                    std::chrono::system_clock::now()),
+                    std::chrono::steady_clock::now()),
     std::set<Output const*>(
       {p2.second.get()}));
 
   // timeout
   {
-    auto t1(std::chrono::system_clock::now());
+    auto t1(std::chrono::steady_clock::now());
     xju::assert_equal(
       xju::io::select({p2.first.get()},
                       {p1.second.get()},
@@ -209,31 +209,31 @@ void test2() noexcept
         {},
         {}));
     xju::assert_greater_equal(
-      std::chrono::system_clock::now(),
+      std::chrono::steady_clock::now(),
       t1+std::chrono::milliseconds(50));
   }
 
   // timeout
   {
-    auto t1(std::chrono::system_clock::now());
+    auto t1(std::chrono::steady_clock::now());
     xju::assert_equal(
       xju::io::select(std::set<Input const*>({p2.first.get()}),
                       t1+std::chrono::milliseconds(50)),
       std::set<Input const*>({}));
     xju::assert_greater_equal(
-      std::chrono::system_clock::now(),
+      std::chrono::steady_clock::now(),
       t1+std::chrono::milliseconds(50));
   }
 
   // timeout
   {
-    auto t1(std::chrono::system_clock::now());
+    auto t1(std::chrono::steady_clock::now());
     xju::assert_equal(
       xju::io::select(std::set<Output const*>({p1.second.get()}),
                       t1+std::chrono::milliseconds(50)),
       std::set<Output const*>({}));
     xju::assert_greater_equal(
-      std::chrono::system_clock::now(),
+      std::chrono::steady_clock::now(),
       t1+std::chrono::milliseconds(50));
   }
 

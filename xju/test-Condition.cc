@@ -21,7 +21,7 @@ namespace xju
 
 // condition variable - wait
 void test1() {
-  const auto begin(std::chrono::system_clock::now());
+  const auto begin(std::chrono::steady_clock::now());
   xju::Mutex guard;
   xju::Condition c(guard);
   xju::Lock l(guard);
@@ -32,7 +32,7 @@ void test1() {
       c.signal(l);
     });
   c.wait(l);
-  const auto end(std::chrono::system_clock::now());
+  const auto end(std::chrono::steady_clock::now());
   
   const std::chrono::microseconds diff(
     std::chrono::duration_cast<std::chrono::microseconds>(end - begin));
@@ -51,7 +51,7 @@ void test2()
   xju::Condition c(m);
   bool flag(false);
   
-  const std::chrono::system_clock::time_point n(std::chrono::system_clock::now());
+  const std::chrono::steady_clock::time_point n(std::chrono::steady_clock::now());
   
   xju::Lock l(m);
   
@@ -63,19 +63,19 @@ void test2()
       c.signal(l);
     });
   
-  while(std::chrono::system_clock::now() < n+std::chrono::seconds(2))
+  while(std::chrono::steady_clock::now() < n+std::chrono::seconds(2))
   {
     c.wait(l, n+std::chrono::seconds(2));
   }
   xju::assert_equal(flag, false);
   
-  while(!flag && std::chrono::system_clock::now() < n+std::chrono::seconds(6))
+  while(!flag && std::chrono::steady_clock::now() < n+std::chrono::seconds(6))
   {
     c.wait(l, n+std::chrono::seconds(5));
   }
   xju::assert_equal(flag, true);
   xju::assert_(
-    std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - n), std::less<std::chrono::microseconds>(), std::chrono::seconds(6));
+    std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - n), std::less<std::chrono::microseconds>(), std::chrono::seconds(6));
 }
 
 }

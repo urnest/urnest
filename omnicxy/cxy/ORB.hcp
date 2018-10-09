@@ -80,12 +80,12 @@ public:
     throw x;
   }
   // monitor ORB until the specified time
-  void monitorUntil(std::chrono::system_clock::time_point const& t) throw(
+  void monitorUntil(std::chrono::steady_clock::time_point const& t) throw(
     // ORB exception
     BaseException)
   {
     xju::Lock l(guard_);
-    while(!e_.valid() && std::chrono::system_clock::now()<t) {
+    while(!e_.valid() && std::chrono::steady_clock::now()<t) {
       e_changed_.wait(l, t);
     }
     if (e_.valid()) {

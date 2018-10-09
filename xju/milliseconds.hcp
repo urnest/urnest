@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Trevor Taylor
+// Copyright (c) 2018 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
 // and its documentation for any purpose is hereby granted without fee,
@@ -7,13 +7,17 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
+
+
 #include <chrono>
 
 namespace xju
 {
-std::chrono::steady_clock::time_point steadyNow() throw()
+template<class A,class B>
+std::chrono::milliseconds milliseconds(std::chrono::duration<A,B> const& x)
+  noexcept
 {
-  return std::chrono::steady_clock::now();
+  return std::chrono::duration_cast<std::chrono::milliseconds>(x);
 }
 
 }

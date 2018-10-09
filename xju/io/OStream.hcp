@@ -34,12 +34,12 @@ public:
   // - returns immediately if output closes before deadline
   size_t write(void const* buffer, 
                size_t bufferSize,
-               std::chrono::system_clock::time_point deadline) throw(
+               std::chrono::steady_clock::time_point deadline) throw(
                  std::bad_alloc,
                 // eg disk error
                  xju::Exception) {
     std::chrono::duration<float> const timeout(
-      deadline-std::chrono::system_clock::now());
+      deadline-std::chrono::steady_clock::now());
     size_t bytesWrote(0);
     try {
       uint8_t const* p((uint8_t const*)buffer);

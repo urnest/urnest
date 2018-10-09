@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
       BBB_impl y(xa.ior());
       cxy::sref<p16::BBB> const xb(orb, OBJECT_NAME, y);
       
-      orb.monitorUntil(std::chrono::system_clock::now()+
+      orb.monitorUntil(std::chrono::steady_clock::now()+
                        std::chrono::seconds(30));
     }
     else

@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
       
       cxy::sref<p26::I26> const xa(orb, OBJECT_NAME, x);
       
-      orb.monitorUntil(std::chrono::system_clock::now()+
+      orb.monitorUntil(std::chrono::steady_clock::now()+
                        std::chrono::seconds(30));
     }
     else

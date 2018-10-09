@@ -54,7 +54,7 @@ class TCPSocket : public virtual xju::io::IStream,
 {
 public:
   TCPSocket(std::pair<xju::ip::v4::Address,xju::ip::Port> const& connectTo,
-            std::chrono::system_clock::time_point const& deadline,
+            std::chrono::steady_clock::time_point const& deadline,
             bool closeOnExec=true) throw(
               xju::DeadlineReached,
               // eg connection refused, unreachable
@@ -93,7 +93,7 @@ public:
   }
 
   TCPSocket(TCPService& listener,
-            std::chrono::system_clock::time_point const& deadline,
+            std::chrono::steady_clock::time_point const& deadline,
             bool closeOnExec=true) throw(
               xju::DeadlineReached,
               // eg connection refused, unreachable

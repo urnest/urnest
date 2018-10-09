@@ -47,23 +47,24 @@ void test1() {
       s1.sendTo(localhost,p2,
                 fred.c_str(),
                 fred.size(),
-                std::chrono::system_clock::now());
+                std::chrono::steady_clock::now());
       std::vector<char> r(4,0);
       auto const rr(
         s2.receive(r.data(),r.size(),
-                   std::chrono::system_clock::now()+std::chrono::seconds(1)));
+                   std::chrono::steady_clock::now()+std::chrono::seconds(1)));
       xju::assert_equal(rr,std::make_pair(std::make_pair(localhost,p1),fred.size()));
       xju::assert_equal(std::string(r.begin(),r.end()),fred);
 
       // timeout
-      auto const deadline(std::chrono::system_clock::now());
+      auto const deadline(std::chrono::steady_clock::now());
       try {
         std::vector<char> r(4,0);
         s2.receive(r.data(),r.size(),deadline);
         xju::assert_never_reached();
       }
       catch(xju::DeadlineReached const& e){
-        xju::assert_equal(readableRepr(e),"Failed to receive udp datagram (up to 4 bytes) on port "+xju::format::str(p2)+" before "+xju::format::time(deadline)+" because\ndeadline reached before socket readable.");
+        xju::assert_startswith(readableRepr(e),"Failed to receive udp datagram (up to 4 bytes) on port "+xju::format::str(p2)+" within ");
+        xju::assert_endswith(readableRepr(e),std::string(" because\ndeadline reached before socket readable."));
       }
 
       // buffer too small
@@ -77,7 +78,8 @@ void test1() {
         s2.receive(r.data(),r.size(),deadline2);
       }
       catch(xju::Exception const& e){
-        xju::assert_equal(readableRepr(e),"Failed to receive udp datagram (up to 0 bytes) on port "+xju::format::str(p2)+" before "+xju::format::time(deadline2)+" because\nbuffer too small.");
+        xju::assert_startswith(readableRepr(e),"Failed to receive udp datagram (up to 0 bytes) on port "+xju::format::str(p2)+" within ");
+        xju::assert_endswith(readableRepr(e),std::string(" because\nbuffer too small."));
       }
      
       return;

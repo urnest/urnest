@@ -19,7 +19,7 @@
 #include <sstream> //impl
 #include <xju/AutoFd.hh>
 #include <xju/io/EndOfFile.hh>
-#include <xju/now.hh> //impl
+#include <xju/steadyNow.hh> //impl
 #include <xju/file/Mode.hh>
 
 namespace xju
@@ -173,7 +173,7 @@ public:
     xju::Exception)
   {
     try{
-      xju::assert_equal(OStream::write(buffer,bufferSize,xju::now()),
+      xju::assert_equal(OStream::write(buffer,bufferSize,xju::steadyNow()),
                         bufferSize);
     }
     catch(xju::Exception& e){

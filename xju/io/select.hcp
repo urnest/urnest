@@ -37,7 +37,7 @@ class Output;
 std::pair<std::set<Input const*>,std::set<Output const*> > select(
   std::set<Input const*> const& inputs,
   std::set<Output const*> const& outputs,
-  std::chrono::system_clock::time_point const& deadline) throw(
+  std::chrono::steady_clock::time_point const& deadline) throw(
     std::bad_alloc)
 {
   std::pair<std::set<Input const* >,std::set<Output const* > > result;
@@ -53,7 +53,7 @@ std::pair<std::set<Input const*>,std::set<Output const*> > select(
     for(auto x : outputs) {
       FD_SET(x->fileDescriptor(),&w);
     }
-    auto const now(std::chrono::system_clock::now());
+    auto const now(std::chrono::steady_clock::now());
     std::chrono::system_clock::duration timeout(deadline-now);
     if (timeout<std::chrono::seconds(0)){
       timeout=std::chrono::seconds(0);
@@ -91,7 +91,7 @@ std::pair<std::set<Input const*>,std::set<Output const*> > select(
   }
   while(result.first.size()==0 &&
         result.second.size()==0 &&
-        std::chrono::system_clock::now()<deadline);
+        std::chrono::steady_clock::now()<deadline);
   return result;
 }
 
@@ -99,7 +99,7 @@ std::pair<std::set<Input const*>,std::set<Output const*> > select(
 // 
 std::set<Input const* > select(
   std::set<Input const* > const& inputs,
-  std::chrono::system_clock::time_point const& deadline) throw(
+  std::chrono::steady_clock::time_point const& deadline) throw(
     xju::SyscallFailed)
 {
   return select(inputs,std::set<Output const* >(),deadline).first;
@@ -109,7 +109,7 @@ std::set<Input const* > select(
 // 
 std::set<Output const* > select(
   std::set<Output const* > const& outputs,
-  std::chrono::system_clock::time_point const& deadline) throw(
+  std::chrono::steady_clock::time_point const& deadline) throw(
     std::bad_alloc)
 {
   return select(std::set<Input const*>(),outputs,deadline).second;

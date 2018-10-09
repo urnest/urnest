@@ -19,7 +19,7 @@
 #include <sstream> //impl
 #include <xju/AutoFd.hh>
 #include <xju/io/EndOfFile.hh>
-#include <xju/now.hh> //impl
+#include <xju/steadyNow.hh> //impl
 
 namespace xju
 {
@@ -59,7 +59,7 @@ public:
   {
     try{
       try{
-        return IStream::read(buffer,bufferSize,xju::now());
+        return IStream::read(buffer,bufferSize,xju::steadyNow());
       }
       catch(xju::io::Input::Closed const& e){
         throw xju::io::EndOfFile("end of file",XJU_TRACED);

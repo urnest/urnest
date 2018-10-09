@@ -17,7 +17,7 @@
 #include <omnicxy/proto/p1.cref.hh>
 #include <omnicxy/proto/p1.sref.hh>
 #include <chrono>
-#include <xju/now.hh>
+#include <xju/steadyNow.hh>
 #include <cxy/Exception.hh>
 #include <cxy/IOR.hh>
 #include <string>
@@ -282,7 +282,7 @@ public:
 
 void test1(uint16_t const port, std::string const& namingClientExe)
 {
-  auto const deadline(xju::now()+std::chrono::seconds(5));
+  auto const deadline(xju::steadyNow()+std::chrono::seconds(5));
   cxy::ORB<cxy::Exception> orb("giop:tcp::"+xju::format::str(port));
 
   F_impl x;
@@ -309,7 +309,7 @@ void test1(uint16_t const port, std::string const& namingClientExe)
       xju::Subprocess p(exitStatus,client);
       clientOutput.second=std::unique_ptr<xju::io::OStream>(); //close write end of pipe now that child has started
       std::vector<char> buffer;
-      while(xju::now()<deadline){
+      while(xju::steadyNow()<deadline){
         buffer.resize(1024);
         buffer.resize(clientOutput.first->read(buffer.data(),buffer.size(),
                                                deadline));
@@ -339,7 +339,7 @@ void test1(uint16_t const port, std::string const& namingClientExe)
       clientOutput.second=std::unique_ptr<xju::io::OStream>();
       //read all output
       std::vector<char> buffer;
-      while(xju::now()<deadline){
+      while(xju::steadyNow()<deadline){
         buffer.resize(1024);
         buffer.resize(clientOutput.first->read(buffer.data(),buffer.size(),
                                                deadline));

@@ -29,12 +29,12 @@ namespace xju
 // - result.second is stderr
 std::pair<std::string,std::string> doCmd(
   std::vector<std::string> const& cmd,
-  std::chrono::system_clock::time_point const& deadline) throw(
+  std::chrono::steady_clock::time_point const& deadline) throw(
     std::bad_alloc,xju::Exception)
 {
   std::chrono::milliseconds const timeout(
     std::chrono::duration_cast<std::chrono::milliseconds>(
-      deadline-std::chrono::system_clock::now()));
+      deadline-std::chrono::steady_clock::now()));
   try{
     auto p(xju::pipe(true,false)); // to capture stdout of subprocess
     auto pe(xju::pipe(true,false)); // to capture stderr of subprocess
@@ -54,9 +54,9 @@ std::pair<std::string,std::string> doCmd(
       p.second.reset();//close writable end of pipe in parent process
       pe.second.reset();//close writable end of pipe in parent process
       std::vector<char> buffer(512,0);
-      for(auto now=std::chrono::system_clock::now();
+      for(auto now=std::chrono::steady_clock::now();
           now<deadline && inputs.size();
-          now=std::chrono::system_clock::now()){
+          now=std::chrono::steady_clock::now()){
         auto r=xju::io::select(inputs,{},deadline);
         if (r.first.find(&*p.first)!=r.first.end()){
           try{
@@ -81,7 +81,7 @@ std::pair<std::string,std::string> doCmd(
           }
         }
       }
-      if (std::chrono::system_clock::now() >= deadline){
+      if (std::chrono::steady_clock::now() >= deadline){
         throw xju::Exception("timeout",XJU_TRACED);
       }
       // note exiting this block will kill(9) the subprocess, but that

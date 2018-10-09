@@ -322,6 +322,9 @@ std::string indent(std::string const& s, std::string const& prefix) throw();
 // time as seconds.usecs since unix epoch
 std::string time(std::chrono::system_clock::time_point const& t) throw();
 
+// format like as 0.000s
+std::string duration(std::chrono::milliseconds const& d) noexcept;
+
 // format time t as specified
 // e.g.
 //   cout << localTime(now,Hour,':',Minute,':',Second);

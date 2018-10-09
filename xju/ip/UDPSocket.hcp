@@ -25,6 +25,8 @@
 #include "xju/socket.hh" //impl
 #include "xju/io/select.hh" //impl
 #include "xju/format.hh" //impl
+#include <xju/steadyNow.hh> //impl
+#include <xju/milliseconds.hh> //impl
 
 
 namespace xju
@@ -98,7 +100,7 @@ public:
   void sendTo(std::pair<xju::ip::v4::Address,xju::ip::Port> const& host_port,
               void const* const datagram,
               size_t const size,
-              std::chrono::system_clock::time_point const& deadline)
+              std::chrono::steady_clock::time_point const& deadline)
     throw(xju::DeadlineReached,xju::SyscallFailed)
   {
     return sendTo(host_port.first,
@@ -111,9 +113,10 @@ public:
               xju::ip::Port const& port,
               void const* const datagram,
               size_t const size,
-              std::chrono::system_clock::time_point const& deadline)
+              std::chrono::steady_clock::time_point const& deadline)
     throw(xju::DeadlineReached,xju::SyscallFailed)
   {
+    auto const d{deadline-xju::steadyNow()};
     try {
       if (xju::io::select({(xju::io::Output*)this},deadline).size()) {
         sockaddr_in dest_addr;
@@ -143,7 +146,7 @@ public:
       std::ostringstream s;
       s << "send " << size << " byte udp datagram to host "
         << host << " port " << port << " from port " << port_
-        << " before " << xju::format::time(deadline);
+        << " within " << xju::format::duration(xju::milliseconds(d));
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
@@ -156,12 +159,13 @@ public:
   std::pair<UDPSocket::Sender,size_t> receive(
     void* buffer,
     size_t const size,
-    std::chrono::system_clock::time_point const& deadline)
+    std::chrono::steady_clock::time_point const& deadline)
     throw(xju::DeadlineReached,
           xju::SyscallFailed,
           // eg truncation due to buffer too small
           xju::Exception)
   {
+    auto const d{deadline-xju::steadyNow()};
     try {
       if (xju::io::select({(xju::io::Input*)this},deadline).size()) {
         sockaddr_in sender_addr;
@@ -193,7 +197,8 @@ public:
     catch(xju::Exception& e) {
       std::ostringstream s;
       s << "receive udp datagram (up to " << size << " bytes) on port "
-        << port_ << " before " << xju::format::time(deadline);
+        << port_ << " within "
+        << xju::format::duration(xju::milliseconds(d));
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }

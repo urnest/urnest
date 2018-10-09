@@ -427,12 +427,16 @@ void test9()
   
 }
 
-// time
+// time, duration
 void test10()
 {
   xju::assert_equal(xju::format::time(xju::unix_epoch()+std::chrono::seconds(3745)),"3745.000000");
   xju::assert_equal(xju::format::time(xju::unix_epoch()+std::chrono::microseconds(3745)),"0.003745");
   xju::assert_equal(xju::format::time(xju::unix_epoch()+std::chrono::seconds(85)+std::chrono::microseconds(3745)),"85.003745");
+  xju::assert_equal(xju::format::duration(std::chrono::milliseconds(0)),"0.000s");
+  xju::assert_equal(xju::format::duration(std::chrono::milliseconds(999)),"0.999s");
+  xju::assert_equal(xju::format::duration(std::chrono::milliseconds(1000)),"1.000s");
+  
 }
 
 // gmtime

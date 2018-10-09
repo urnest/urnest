@@ -220,14 +220,14 @@ private:
 
   
   AutoFd accept(std::pair<xju::ip::v4::Address,xju::ip::Port>& peerAddress,
-                std::chrono::system_clock::time_point const& deadline,
+                std::chrono::steady_clock::time_point const& deadline,
                 bool closeOnExec) throw(
                   xju::DeadlineReached,
                   xju::Exception)
   {
     try {
       do{
-        if (deadline>std::chrono::system_clock::now()){
+        if (deadline>std::chrono::steady_clock::now()){
           xju::io::select({(xju::io::Input*)this},deadline);
         }
         try{
@@ -246,7 +246,7 @@ private:
         catch(xju::SyscallFailed const& e){
           switch(e._errno){
           case EAGAIN:
-            if (deadline<=std::chrono::system_clock::now())
+            if (deadline<=std::chrono::steady_clock::now())
             {
               throw xju::DeadlineReached(
                 xju::Exception("deadline reached before connection arrived",

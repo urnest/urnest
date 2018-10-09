@@ -46,6 +46,8 @@
 #include <xju/Lock.hh> //impl
 #include <xju/unix_epoch.hh> //impl
 #include <xju/Mutex.hh>
+#include <xju/steadyNow.hh> //impl
+#include <xju/now.hh> //impl
 
 namespace xju
 {
@@ -96,17 +98,18 @@ public:
   // Unlock guard, wait at most the specified amount
   // of time for signal() to be called.
   //
-  // Timeout is absolute.
-  //
   // Note that return before timeout does not necessarily
   // mean signal() has been called - see note [1].
   //
   void wait(Lock& l,
-            const std::chrono::system_clock::time_point& timeout) throw()
+            const std::chrono::steady_clock::time_point& timeout) throw()
   {
     assert_equal(l.holds(_guard), true);
 
-    auto const d(timeout-xju::unix_epoch());
+    auto const a{xju::steadyNow()};
+    auto const b{xju::now()};
+    auto const c(timeout-a);
+    auto const d(b+c-xju::unix_epoch());
     auto const se(std::chrono::duration_cast<std::chrono::seconds>(d));
     auto const ns(std::chrono::duration_cast<std::chrono::nanoseconds>(d-se));
     

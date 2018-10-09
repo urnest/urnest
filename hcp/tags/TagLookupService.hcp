@@ -13,7 +13,6 @@
 #include <iostream> //impl
 #include <xju/io.hh>
 #include <xju/pipe.hh> //impl
-#include <xju/now.hh> //impl
 #include <memory>
 #include <vector>
 #include <map>
@@ -27,6 +26,7 @@
 #include "xju/Lock.hh" //impl
 #include "hcp/tags/augmentRootNamespace.hh" //impl
 #include <algorithm> //impl
+#include <xju/steadyNow.hh> //impl
 
 namespace xju
 {
@@ -108,7 +108,7 @@ public:
     std::set<xju::io::Input const*> const inputs(
       {&filesWatcher_,&*stopper_.first});
     while(!stop_.load()) {
-      auto const now(xju::now());
+      auto const now(xju::steadyNow());
       if (xju::io::select(inputs,now+std::chrono::seconds(10))
           .find(&filesWatcher_)!=inputs.end()) {
         xju::Lock l(guard_);
@@ -121,7 +121,7 @@ public:
   void stop() throw()
   {
     stop_.store(true);
-    stopper_.second->write("x",1U,std::chrono::system_clock::now());
+    stopper_.second->write("x",1U,xju::steadyNow());
   }
 
   // lookup symbol amongst tags files
@@ -166,7 +166,7 @@ public:
   void updateFiles(xju::Lock const& l) throw()
   {
     xju::assert_equal(l.holds(guard_),true);
-    for(auto x: filesWatcher_.read(xju::now())) {
+    for(auto x: filesWatcher_.read(xju::steadyNow())) {
       std::ostringstream s;
       s << "reload tags file " << xju::path::str(x);
       try {

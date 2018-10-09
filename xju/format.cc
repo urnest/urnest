@@ -486,5 +486,14 @@ std::string time(std::chrono::system_clock::time_point const& t) throw()
   return xju::format::str(secs.count())+"."+xju::format::int_(usecs.count(),6);
 }
 
+std::string duration(std::chrono::milliseconds const& d) noexcept
+{
+  auto const secs(
+    std::chrono::duration_cast<std::chrono::seconds>(d));
+  auto const msecs(
+    std::chrono::duration_cast<std::chrono::milliseconds>(d-secs));
+  return int_(secs.count(),1)+"."+int_(msecs.count(),3)+"s";
+}
+
 }
 }

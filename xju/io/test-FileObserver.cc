@@ -28,7 +28,7 @@ void test0() //header check
 #include <xju/file/write.hh>
 #include <xju/file/rename.hh>
 #include <xju/io/select.hh>
-#include <xju/now.hh>
+#include <xju/steadyNow.hh>
 
 namespace xju
 {
@@ -51,71 +51,71 @@ void test1() {
   xju::file::mkdir(xju::path::dirname(f2),xju::file::Mode(0777));
   
   FileObserver o( {f1,f2} );
-  xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
-  xju::assert_equal(o.read(xju::now()).size(),0U);
+  xju::assert_equal(xju::io::select({&o},xju::steadyNow()).size(),0U);
+  xju::assert_equal(o.read(xju::steadyNow()).size(),0U);
   
   // create watched file
   xju::file::touch(f1,xju::file::Mode(0777));
-  xju::assert_equal(xju::io::select({&o},xju::now()).size(),1U);
+  xju::assert_equal(xju::io::select({&o},xju::steadyNow()).size(),1U);
 
   {
-    auto const r(o.read(xju::now()));
+    auto const r(o.read(xju::steadyNow()));
     xju::assert_equal(r.size(),1U);
     xju::assert_equal(*r.begin(),f1);
   }
-  xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
+  xju::assert_equal(xju::io::select({&o},xju::steadyNow()).size(),0U);
                        
   // touch existing file - note no change
   xju::file::touch(f1,xju::file::Mode(0777));
-  xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
+  xju::assert_equal(xju::io::select({&o},xju::steadyNow()).size(),0U);
                        
   // create non-watched file
   xju::file::write(f3,"fred",xju::file::Mode(0777));
-  xju::assert_equal(o.read(xju::now()).size(),0U);
-  xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
+  xju::assert_equal(o.read(xju::steadyNow()).size(),0U);
+  xju::assert_equal(xju::io::select({&o},xju::steadyNow()).size(),0U);
   
   // create watched file
   xju::file::touch(f2,xju::file::Mode(0777));
-  xju::assert_equal(xju::io::select({&o},xju::now()).size(),1U);
+  xju::assert_equal(xju::io::select({&o},xju::steadyNow()).size(),1U);
 
   {
-    auto const r(o.read(xju::now()));
+    auto const r(o.read(xju::steadyNow()));
     xju::assert_equal(r.size(),1U);
     xju::assert_equal(*r.begin(),f2);
   }
-  xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
+  xju::assert_equal(xju::io::select({&o},xju::steadyNow()).size(),0U);
                        
   // modify watched file via rename
   xju::file::rename(f3,f2);
-  xju::assert_equal(xju::io::select({&o},xju::now()).size(),1U);
+  xju::assert_equal(xju::io::select({&o},xju::steadyNow()).size(),1U);
 
   {
-    auto const r(o.read(xju::now()));
+    auto const r(o.read(xju::steadyNow()));
     xju::assert_equal(r.size(),1U);
     xju::assert_equal(*r.begin(),f2);
   }
-  xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
+  xju::assert_equal(xju::io::select({&o},xju::steadyNow()).size(),0U);
 
   // delete watched file via rename
   xju::file::rename(f2,f3);
-  xju::assert_equal(xju::io::select({&o},xju::now()).size(),1U);
+  xju::assert_equal(xju::io::select({&o},xju::steadyNow()).size(),1U);
 
   {
-    auto const r(o.read(xju::now()));
+    auto const r(o.read(xju::steadyNow()));
     xju::assert_equal(r.size(),1U);
     xju::assert_equal(*r.begin(),f2);
   }
-  xju::assert_equal(xju::io::select({&o},xju::now()).size(),0U);
+  xju::assert_equal(xju::io::select({&o},xju::steadyNow()).size(),0U);
 
   // two mods
   xju::file::write(f3,"pete",xju::file::Mode(0777));
   xju::file::rename(f3,f1);
   xju::file::write(f3,"jock",xju::file::Mode(0777));
   xju::file::rename(f3,f2);
-  xju::assert_equal(xju::io::select({&o},xju::now()).size(),1U);
+  xju::assert_equal(xju::io::select({&o},xju::steadyNow()).size(),1U);
 
   {
-    auto const r(o.read(xju::now()));
+    auto const r(o.read(xju::steadyNow()));
     xju::assert_equal(r.size(),2U);
     xju::assert_equal(r,std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName>>({f1,f2}));
   }
