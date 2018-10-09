@@ -14,6 +14,8 @@
 #include <xju/ip/icmp/Echo.hh>
 #include <xju/steadyNow.hh>
 #include <xju/io/select.hh>
+#include <xju/ip/icmp/encodeEcho.hh>
+#include <xju/ip/icmp/decodeEcho.hh>
 
 namespace xju
 {
@@ -33,16 +35,16 @@ void test1() {
             Checksum(0),
             encodeEcho(e));
   auto const deadline{xju::steadyNow()+std::chrono::seconds(1)};
-  s.send(xju::ip::v4::Address(127U<<24+0U<<16+0U<<8+1U),
-         m,
-         deadline);
+  xju::ip::v4::Address localHost{127U<<24+0U<<16+0U<<8+1U};
+  s.send(localHost,m,deadline);
   while(true){
     xju::assert_not_equal(
-      xju::io::select({(xju::io::Input*)this},deadline).size(),0U);
+      xju::io::select({(xju::io::Input*)&s},deadline).size(),0U);
     auto const r{s.receive()};
-    if (r.type_==Message::Type::ECHOREPLY &&
-        r.code_==Message::Code(0)){
-      auto const er{decodeEcho(r.header,r.data)};
+    if (std::get<0>(r)==localHost &&
+        std::get<1>(r).type_==Message::Type::ECHOREPLY &&
+        std::get<1>(r).code_==Message::Code(0)){
+      auto const er{decodeEcho(std::get<1>(r).header_,std::get<1>(r).data_)};
       if (er==e){
         return;
       }

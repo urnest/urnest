@@ -34,6 +34,9 @@ namespace xju
     const SyscallF4<ssize_t, int, void*, size_t, int> recv={
 	"recv",
 	::recv};
+    const SyscallF6<ssize_t, int, void*, size_t, int,sockaddr*,socklen_t*> recvfrom={
+	"recvfrom",
+	::recvfrom};
     const SyscallF3<ssize_t, int, struct msghdr*, int> recvmsg={
 	"recvmsg",
 	::recvmsg};

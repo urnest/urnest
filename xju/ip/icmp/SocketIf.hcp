@@ -9,12 +9,23 @@
 //
 
 
+#include <xju/io/Input.hh>
+#include <xju/io/Output.hh>
+#include <xju/ip/v4/Address.hh>
+#include <xju/ip/icmp/Message.hh>
+#include <chrono>
+#include <xju/SyscallFailed.hh>
+#include <tuple>
+#include <xju/Exception.hh>
+
 namespace xju
 {
 namespace ip
 {
+namespace icmp
+{
 
-class SocketIf : public xju::io::Input,xju::io::Output
+class SocketIf : public virtual xju::io::Input, public virtual xju::io::Output
 {
 public:
   // send message immediately
@@ -29,11 +40,12 @@ public:
   // receive message assumed to have already arrived
   // result.get<2>() is the received ICMP checksum field
   // - retries on interrupt
-  virtual std::tuple<xju::ip::v4::Addresss,Message> receive() throw(
+  virtual std::tuple<xju::ip::v4::Address,Message> receive() throw(
       xju::SyscallFailed,
       // invalid message, e.g. incorrect checksum
       xju::Exception) = 0;
 };
   
+}
 }
 }

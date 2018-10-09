@@ -14,7 +14,6 @@
 #include "xju/AutoFd.hh"
 
 #include <sstream> //impl
-#include <bitset> //impl
 #include "xju/syscall.hh"
 #include "xju/socket.hh" //impl
 #include "xju/io/select.hh" //impl
@@ -22,6 +21,12 @@
 #include <xju/ip/checksum/calculate.hh> //impl
 #include <xju/ip/decode.hh> //impl
 #include <xju/ip/icmp/encodeMessage.hh> //impl
+#include <xju/ip/icmp/SocketIf.hh>
+#include <netinet/in.h> //impl
+#include <linux/icmp.h> //impl
+#include <xju/ip/Checksum.hh> //impl
+#include <xju/ip/checksum/validate.hh> //impl
+#include <xju/ip/icmp/decodeMessage.hh> //impl
 
 namespace xju
 {
@@ -39,12 +44,12 @@ public:
       fd_(xju::syscall(xju::socket,XJU_TRACED)(
             AF_INET, SOCK_RAW|SOCK_CLOEXEC|SOCK_NONBLOCK, IPPROTO_ICMP))
   {
-    std::bitset<256> o;
-    o[0]=true; //echo reply
-    o[3]=true; //destination unreachable
-    o.flip(); // ICMP_FILTER is "exclude"
+    uint32_t o{0};
+    o|=1U<<0; //echo reply
+    o!=1U<<3; //destination unreachable
+    o=~o; // ICMP_FILTER is "exclude"
     xju::syscall(xju::setsockopt,XJU_TRACED)(
-      fd_,IPPROTO_ICMP,ICMP_FILTER,o.data(),256/8)
+      fd_.fd(),IPPROTO_ICMP,ICMP_FILTER,&o,sizeof(o));
   }
   catch(xju::SyscallFailed& e)
   {
@@ -69,11 +74,10 @@ public:
 
         std::vector<uint8_t> m;
         Message y{x};
-        y.checksum_=0;
+        y.checksum_=Checksum(0);
         encodeMessage(y,std::back_inserter(m));
-        y.checksum_=actualChecksum{
-          xju::ip::checksum::calculate(
-            xju::ip::decode::makeIterator(m.begin(),m.end()))};
+        y.checksum_=xju::ip::checksum::calculate(
+          xju::ip::decode::makeIterator(m.begin(),m.end()));
         encodeMessage(y,m.begin());
         auto const bytesSent=xju::syscall(xju::sendto,XJU_TRACED)(
           fileDescriptor(),
@@ -82,7 +86,7 @@ public:
           MSG_NOSIGNAL,
           (sockaddr*)&dest_addr,
           sizeof(dest_addr));
-        if (bytesSent<size) {
+        if (bytesSent<m.size()) {
           std::ostringstream s;
           s << "only sent " << bytesSent << " bytes of " << m.size();
           throw xju::DeadlineReached(xju::Exception(s.str(),XJU_TRACED));
@@ -95,13 +99,13 @@ public:
     }
     catch(xju::Exception& e){
       std::ostringstream s;
-      s << "send ICMP message " << message << " to " << to;
+      s << "send ICMP message " << x << " to " << to;
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
   }
 
-  std::tuple<xju::ip::v4::Addresss,Message> receive() throw(
+  std::tuple<xju::ip::v4::Address,Message> receive() throw(
     xju::SyscallFailed,
     // invalid message, e.g. incorrect checksum
     xju::Exception) override
@@ -114,7 +118,7 @@ public:
         fileDescriptor(),
         buffer.data(),buffer.size(),
         MSG_NOSIGNAL,
-        &(sockaddr*)&senderAddr,&senderAddrLen);
+        (sockaddr*)&senderAddr,&senderAddrLen);
       if (senderAddrLen!=sizeof(senderAddr)){
         std::ostringstream s;
         s << "recvfrom() returned unexpected from-address length "
@@ -138,7 +142,7 @@ public:
       if (!m.second.atEnd()){
         std::ostringstream s;
         s << "extra "
-          << (bytesRead-m.second.currentOffset().first)
+          << (bytesRead-m.second.currentOffset().bytes())
           << " bytes after decoded ICMP message " << m.first
           << " from " << m.second.currentOffset();
         throw xju::Exception(s.str(),XJU_TRACED);
@@ -154,6 +158,14 @@ public:
       throw;
     }
   }
+
+  std::string str() const throw() override
+  {
+    std::ostringstream s;
+    s << "file descriptor " << fd_.fd();
+    return s.str();
+  }
+  
 private:
   xju::AutoFd fd_;
   // xju::io::Input::

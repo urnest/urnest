@@ -14,6 +14,7 @@
 #include <vector>
 #include <xju/ip/icmp/Message.hh>
 #include <xju/ip/Checksum.hh>
+#include <xju/format.hh> //impl
 
 namespace xju
 {
@@ -76,9 +77,23 @@ public:
   std::vector<uint8_t> data_;
 
   friend bool operator<(Message const& x, Message const& y) noexcept;
-  
+
 };
-  
+
+std::ostream& operator<<(std::ostream& s, Message const& x) noexcept
+{
+  s << "type " << (int)x.type_ << ", code " << x.code_.value()
+    << ", checksum " << x.checksum_ << ", header "
+    << xju::format::join(x.header_.begin(),x.header_.end(),
+                         [](uint8_t x){ return xju::format::hex(x); },
+                         std::string(", "))
+    << ", data "
+    << xju::format::join(x.data_.begin(),x.data_.end(),
+                         [](uint8_t x){ return xju::format::hex(x); },
+                         std::string(", "));
+  return s;
+}
+
 
 }
 }

@@ -26,6 +26,7 @@ namespace xju
     extern const SyscallF4<ssize_t, int, const void*, size_t, int> send;
     extern const SyscallF6<ssize_t, int, const void*, size_t, int, const struct sockaddr*, socklen_t> sendto;
     extern const SyscallF4<ssize_t, int, void*, size_t, int> recv;
+    extern const SyscallF6<ssize_t, int, void*, size_t, int,sockaddr*,socklen_t*> recvfrom;
     extern const SyscallF3<ssize_t, int, struct msghdr*, int> recvmsg;
     extern const SyscallF5<int, int, int, int, void*, socklen_t*> getsockopt;
     extern const SyscallF5<int, int, int, int, const void*, socklen_t>
