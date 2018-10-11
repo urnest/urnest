@@ -34,17 +34,20 @@ void test1() {
             Message::Code(0),
             Checksum(0),
             encodeEcho(e));
-  auto const deadline{xju::steadyNow()+std::chrono::seconds(1)};
-  xju::ip::v4::Address localHost{127U<<24+0U<<16+0U<<8+1U};
+  auto const deadline{xju::steadyNow()+std::chrono::seconds(10)};
+  xju::ip::v4::Address localHost{(127U<<24)+(0U<<16)+(0U<<8)+1U};
   s.send(localHost,m,deadline);
   while(true){
     xju::assert_not_equal(
       xju::io::select({(xju::io::Input*)&s},deadline).size(),0U);
+    xju::io::select({(xju::io::Input*)&s},deadline);
     auto const r{s.receive()};
+    std::cout << std::get<1>(r) << std::endl;
     if (std::get<0>(r)==localHost &&
         std::get<1>(r).type_==Message::Type::ECHOREPLY &&
         std::get<1>(r).code_==Message::Code(0)){
       auto const er{decodeEcho(std::get<1>(r).header_,std::get<1>(r).data_)};
+      std::cout << er << std::endl;
       if (er==e){
         return;
       }

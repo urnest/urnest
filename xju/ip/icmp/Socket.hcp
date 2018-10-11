@@ -27,6 +27,8 @@
 #include <xju/ip/Checksum.hh> //impl
 #include <xju/ip/checksum/validate.hh> //impl
 #include <xju/ip/icmp/decodeMessage.hh> //impl
+#include <sys/capability.h> //impl
+#include <xju/ip/v4/decodeHeader.hh> //impl
 
 namespace xju
 {
@@ -34,6 +36,34 @@ namespace ip
 {
 namespace icmp
 {
+namespace
+{
+void enableCapSetRaw() throw(
+  xju::Exception)
+{
+  try{
+    cap_t c{xju::syscall("cap_get_proc",cap_get_proc,XJU_TRACED,true,
+                         (cap_t)0)()};
+    try{
+      cap_value_t f[1]={CAP_NET_RAW};
+      xju::syscall("cap_set_flag",cap_set_flag,XJU_TRACED)(
+        c,CAP_EFFECTIVE,1,f,CAP_SET);
+      xju::syscall("cap_set_proc",cap_set_proc,XJU_TRACED)(c);
+    }
+    catch(...){
+      cap_free(c);
+      throw;
+    }
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "enable CAP_NET_RAW capability in the current thread";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
 
 class Socket : public SocketIf
 {
@@ -41,12 +71,12 @@ public:
   Socket() throw(
     xju::Exception,
     xju::SyscallFailed) try:
-      fd_(xju::syscall(xju::socket,XJU_TRACED)(
-            AF_INET, SOCK_RAW|SOCK_CLOEXEC|SOCK_NONBLOCK, IPPROTO_ICMP))
+      fd_( (enableCapSetRaw(),xju::syscall(xju::socket,XJU_TRACED)(
+            AF_INET, SOCK_RAW|SOCK_CLOEXEC|SOCK_NONBLOCK, IPPROTO_ICMP)) )
   {
     uint32_t o{0};
     o|=1U<<0; //echo reply
-    o!=1U<<3; //destination unreachable
+    o|=1U<<3; //destination unreachable
     o=~o; // ICMP_FILTER is "exclude"
     xju::syscall(xju::setsockopt,XJU_TRACED)(
       fd_.fd(),IPPROTO_ICMP,ICMP_FILTER,&o,sizeof(o));
@@ -132,13 +162,15 @@ public:
       }
       catch(xju::Exception& e){
         std::ostringstream s;
-        s << "validate checksum in received ICMP message";
+        s << "validate checksums in received IP+ICMP message";
         e.addContext(s.str(),XJU_TRACED);
         throw;
       }
-      auto const m{decodeMessage(
+      //our buffer gets the ip header + icmp message
+      auto const h{xju::ip::v4::decodeHeader(
           xju::ip::decode::makeIterator(
             buffer.begin(),buffer.begin()+bytesRead))};
+      auto const m{decodeMessage(h.second)};
       if (!m.second.atEnd()){
         std::ostringstream s;
         s << "extra "

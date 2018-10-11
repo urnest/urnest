@@ -82,8 +82,9 @@ public:
 
 std::ostream& operator<<(std::ostream& s, Message const& x) noexcept
 {
-  s << "type " << (int)x.type_ << ", code " << x.code_.value()
-    << ", checksum " << x.checksum_ << ", header "
+  s << "type " << (int)x.type_
+    << ", code " << xju::format::int_(x.code_.value())
+    << ", checksum " << xju::format::hex(x.checksum_.value()) << ", header "
     << xju::format::join(x.header_.begin(),x.header_.end(),
                          [](uint8_t x){ return xju::format::hex(x); },
                          std::string(", "))

@@ -11,6 +11,8 @@
 
 #include <xju/Int.hh>
 #include <inttypes.h>
+#include <iostream>
+#include <xju/format.hh> //impl
 
 namespace xju
 {
@@ -41,6 +43,15 @@ public:
 
   friend bool operator<(Echo const& x, Echo const& y) noexcept;
 };
+std::ostream& operator<<(std::ostream& s, Echo const& x) noexcept
+{
+  return s << "identifier " << xju::format::int_(x.identifier_)
+           << ", sequence " << xju::format::int_(x.sequence_)
+           << ", payload " << xju::format::join(
+             x.payload_.begin(),x.payload_.end(),
+             [](uint8_t x){ return xju::format::hex(x); },
+             std::string(", "));
+}
 
 }
 }
