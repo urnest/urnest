@@ -1,0 +1,84 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/ip/icmp/DestinationUnreachable.hh>
+
+#include <xju/assert.hh> //impl
+#include <xju/ip/decode.hh> //impl
+#include <xju/Array.hh>
+#include <vector>
+#include <xju/ip/v4/decodeHeader.hh> //impl
+#include <xju/format.hh> //impl
+
+namespace xju
+{
+namespace ip
+{
+namespace icmp
+{
+
+DestinationUnreachable decodeDestinationUnreachable(
+  xju::ip::v4::Address gateway,
+  xju::ip::icmp::Message::Code icmpCode,
+  xju::Array<uint8_t,4> const& icmpHeader,
+  std::vector<uint8_t> const& icmpData) throw(
+    xju::Exception)
+{
+  try{
+    auto i{xju::ip::decode::makeIterator(icmpHeader.begin(),icmpHeader.end())};
+    i.get8Bits("unused");
+    i.get8Bits("unused");
+    uint16_t nextHopMTU{0};
+    nextHopMTU+=i.get8Bits("next hop MTU...");
+    nextHopMTU=(nextHopMTU<<8)+i.get8Bits("... next HOP MTU");
+    auto const h{xju::ip::v4::decodeHeader(
+        xju::ip::decode::makeIterator(
+          icmpData.begin(),icmpData.end()))};
+    auto j{h.second};
+    xju::Array<uint8_t,8> data{
+      j.get8Bits(""),j.get8Bits(""),j.get8Bits(""),j.get8Bits(""),
+      j.get8Bits(""),j.get8Bits(""),j.get8Bits(""),j.get8Bits("")};
+    j.verifyAtEnd();
+    return DestinationUnreachable(
+        gateway,
+        icmpCode,
+        h.first.destAddress_,
+        h.first.protocol_,
+        data);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode ICMP destination unreachable message containing code "
+      << xju::format::int_(icmpCode.value())
+      << ", header { "
+      << xju::format::join(icmpHeader.begin(),
+                           icmpHeader.end(),
+                           [](uint8_t const x){
+                             return xju::format::hex(x);
+                           },
+                           std::string(", "))
+      << " }, data { "
+      << xju::format::join(icmpHeader.begin(),
+                           icmpHeader.end(),
+                           [](uint8_t const x){
+                             return xju::format::hex(x);
+                           },
+                           std::string(", "))
+      << " } from gateway " << gateway;
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+
+}
+}
+}

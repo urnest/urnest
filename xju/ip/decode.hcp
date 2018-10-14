@@ -201,7 +201,7 @@ public:
     xju::Exception)
   {
     try{
-      if (i_==end_)
+      if (i_!=end_)
       {
         throw xju::Exception("not at end of input",XJU_TRACED);
       }

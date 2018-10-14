@@ -68,6 +68,13 @@ void enableCapSetRaw() throw(
 class Socket : public SocketIf
 {
 public:
+  // Create icmp socket, which will receive a copy of all
+  // IPv4 ICMP messages received by host, and may send ICMP
+  // messages.
+  //
+  // Note caller must be CAP_NET_RAW-authorized - see capabilities(7), e.g.
+  // run as root or use setcap on executable.
+  //
   Socket() throw(
     xju::Exception,
     xju::SyscallFailed) try:

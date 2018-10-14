@@ -9,6 +9,12 @@
 //
 
 
+#include <xju/ip/v4/Address.hh>
+#include <xju/ip/icmp/Message.hh>
+#include <xju/ip/Protocol.hh>
+#include <xju/Array.hh>
+#include <cinttypes>
+
 namespace xju
 {
 namespace ip
@@ -16,16 +22,22 @@ namespace ip
 namespace icmp
 {
 
+// smattering of info from ICMP destination unreachable message
 class DestinationUnreachable
 {
 public:
+  // unreachableAddress is dest address of original IP packet
+  // protocol is protocol of original IP packet
+  // data is first 8 bytes of payload of original IP packet
   DestinationUnreachable(
     xju::ip::v4::Address gateway,
     Message::Code code,
-    xju::ip::v4::Protocol protocol,
+    xju::ip::v4::Address unreachableAddress,
+    xju::ip::Protocol protocol,
     xju::Array<uint8_t,8> data) noexcept
       :gateway_(gateway),
        code_(code),
+       unreachableAddress_(unreachableAddress),
        protocol_(protocol),
        data_(data)
   {
@@ -33,8 +45,9 @@ public:
   
   xju::ip::v4::Address gateway_;
   Message::Code code_;
-  xju::ip::v4::Protocol protocol_;
-  xju::Array<uint8_t,8> data_;
+  xju::ip::v4::Address unreachableAddress_;
+  xju::ip::Protocol protocol_;
+  xju::Array<uint8_t,8> data_; // e.g. icmp message
 
   friend bool operator<(DestinationUnreachable const& x,
                         DestinationUnreachable const& y) noexcept;
