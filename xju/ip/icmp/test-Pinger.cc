@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <xju/assert.hh>
+#include <xju/test/Calls.hh>
 
 namespace xju
 {
@@ -33,16 +34,16 @@ public:
   virtual void send(
     xju::ip::v4::Address const& to,
     Message const& x) throw(
-      xju::SyscallFailed) const override
+      xju::SyscallFailed) override
   {
     calls_.enqueue(xju::test::callTo(&xju::ip::icmp::SocketIf::send,
                                      to,
                                      x))->awaitReturn();
   }
-  virtual void std::tuple<xju::ip::v4::Addresss,Message> receive() throw(
+  virtual std::tuple<xju::ip::v4::Addresss,Message> receive() throw(
       xju::SyscallFailed,
       // invalid message, e.g. incorrect checksum
-      xju::Exception) const override
+      xju::Exception) override
   {
     char c(' ');
     input_.first->read(&c,1U,xju::steadyNow());

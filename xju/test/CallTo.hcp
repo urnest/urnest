@@ -14,6 +14,8 @@
 #include <memory>
 #include <xju/assert.hh> //impl
 #include <xju/Lock.hh> //impl
+#include <type_traits>
+#include <xju/steadyNow.hh> //impl
 
 namespace xju
 {
@@ -23,42 +25,37 @@ namespace test
 class CallTo
 {
 public:
-  explicit CallTo(void* f) noexcept
-      :f_(f)
-  {
-  }
   virtual ~CallTo()  noexcept {}
-protected:
-  void* const f_;
 };
 
 class CallToVoid : public CallTo
 {
 public:
-  explicit CallToVoid(void* f) noexcept:
-      CallTo(f)
+  explicit CallToVoid() noexcept:
+      changed_(guard_)
   {
   }
-  void awaitReturn() const {
+  void awaitReturn(std::chrono::steady_clock::time_point deadline) const {
     xju::Lock l(guard_);
-    while(!result_.get()){
-      changed_.wait(l);
+    while(!result_.get() && xju::steadyNow()<deadline){
+      changed_.wait(l,deadline);
     }
+    xju::assert_not_equal(result_.get(),(void*)0); //deadline reached?
     (*result_)();
   }
   
   void return_() noexcept {
     xju::Lock l(guard_);
-    xju::assert_equal(result_.get(),0);
-    changed_=new Success;
+    xju::assert_equal(result_.get(),(void*)0);
+    result_=std::shared_ptr<Result>(new Success);
     changed_.signal(l);
   }
   
   template<class E>
   void raise(E e) noexcept {
     xju::Lock l(guard_);
-    xju::assert_equal(result_.get(),0);
-    changed_=new Failure<E>(e);
+    xju::assert_equal(result_.get(),(void*)0);
+    result_=std::shared_ptr<Result>(new Failure<E>(e));
     changed_.signal(l);
   }
 private:
@@ -75,9 +72,6 @@ private:
     {
     }
   };
-  mutable xju::Mutex guard_;
-  xju::Condition changed_;
-  std::shared_ptr<Result> result_;
   
   template<class E>
   class Failure : public Result
@@ -94,37 +88,33 @@ private:
   private:
     E e_;
   };
+
+  mutable xju::Mutex guard_;
+  mutable xju::Condition changed_;
+  std::shared_ptr<Result> result_;
+  
 };
 
-template<class T>
+template<class T,class U>
 class CallToV0 : public CallToVoid
 {
 public:
-  explicit CallToV0(void (T::*f)())
-      : CallToVoid(f)
+  explicit CallToV0(T& x,void (U::*f)())
+      : x_(x),
+        f_(f)
   {
   }
+  T& x_;
+  void (U::* const f_)();
 };
 
-template<class T,class P1>
-class CallToV1 : public CallToVoid
-{
-public:
-  explicit CallToV1(void (T::*f)(P1),
-                    std::add_rvalue_reference<P1>::type p1)
-      : CallToVoid(f),
-        p1_(p1)
-  {
-  }
-  std::add_rvalue_reference<P1>::type p1_;
-};
 
 template<class R>
 class CallToR : public CallTo
 {
 public:
-  explicit CallToR(void* f) noexcept:
-      CallTo(f)
+  explicit CallToR() noexcept
+    : changed_(guard_)
   {
   }
   R result() const {
@@ -169,9 +159,6 @@ private:
     }
     R r_;
   };
-  mutable xju::Mutex guard_;
-  xju::Condition changed_;
-  std::shared_ptr<Result> result_;
   
   template<class E>
   class Failure : public Result
@@ -188,29 +175,21 @@ private:
   private:
     E e_;
   };
+
+  mutable xju::Mutex guard_;
+  mutable xju::Condition changed_;
+  std::shared_ptr<Result> result_;
+  
 };
 
 template<class T, class R>
 class CallToR0 : public CallToR<R>
 {
 public:
-  explicit CallToR0(R (T::*f)() f)
+  explicit CallToR0(R (T::*f)())
       : CallToR<R>(f)
   {
   }
-};
-
-template<class T,class R,class P1>
-class CallToR1 : public CallToR<R>
-{
-public:
-  explicit CallToR1(R (T::*f)(P1) f,
-                    std::add_rvalue_reference<P1>::type p1)
-      : CallToR<R>(f),
-        p1_(p1)
-  {
-  }
-  std::add_rvalue_reference<P1>::type p1_;
 };
 
 
