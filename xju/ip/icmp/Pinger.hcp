@@ -274,6 +274,12 @@ private:
       }
     }
   }
+
+  // Receive and process messages from socket until stopReceiving_ is
+  // readable.
+  // - note that we get all ICMP echo reply and destination unreachable
+  //   messages, not just those we "asked" for; we ignore anything that
+  //   wasn't "asked" for by us
   void runReceiver() noexcept
   {
     std::set<xju::io::Input const*> const inputs{

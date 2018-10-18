@@ -59,6 +59,7 @@ p4.hh==%gen/p4.hh
 p10.hh==%gen/p10.hh
 p11.hh==%gen/p11.hh
 p12.hh==%gen/p12.hh
+p12a.hh==%gen/p12a.hh
 p15.hh==%gen/p15.hh
 p16.hh==%gen/p16.hh
 p17.hh==%gen/p17.hh
@@ -93,6 +94,7 @@ echo.sref.cc==%gen/echo.sref.cc
 %p10.hh==%gen/p10.hh
 %p11.hh==%gen/p11.hh
 %p12.hh==%gen/p12.hh
+%p12a.hh==%gen/p12a.hh
 %p13.hh==%gen/p13.hh
 %p14.hh==%gen/p14.hh
 %p1.hcp==(../p1.idl)+(%gen-opts):omnicxy/p1.hcp
@@ -110,6 +112,11 @@ echo.sref.cc==%gen/echo.sref.cc
 %p12.cdr.hcp==(../p12.idl)+(%gen-opts):omnicxy/p12.cdr.hcp
 %p12.objref.hcp==(../p12.idl)+(%gen-opts):omnicxy/p12.objref.hcp
 %p12.sref.hcp==(../p12.idl)+(%gen-opts):omnicxy/p12.sref.hcp
+%p12a.hcp==(../p12.idl)+(%gen-opts):omnicxy/p12.hcp
+%p12a.cref.hcp==(../p12.idl)+(%gen-opts):omnicxy/p12.cref.hcp
+%p12a.cdr.hcp==(../p12.idl)+(%gen-opts):omnicxy/p12.cdr.hcp
+%p12a.objref.hcp==(../p12.idl)+(%gen-opts):omnicxy/p12.objref.hcp
+%p12a.sref.hcp==(../p12.idl)+(%gen-opts):omnicxy/p12.sref.hcp
 %p13.hcp==(../p13.idl)+(%gen-opts):omnicxy/p13.hcp
 %p14.hcp==(../p14.idl)+(%gen-opts):omnicxy/p14.hcp
 %p14.cref.hcp==(../p14.idl)+(%gen-opts):omnicxy/p14.cref.hcp
@@ -210,6 +217,7 @@ echo.sref.cc==%gen/echo.sref.cc
 ()+cmd=(%p26-main)+cmd='3767'+cmd='both':exec.output
 ()+cmd=(%test-port-in-use):exec.output
 ()+cmd=(%test-cosnaming-client)+cmd='3768'+cmd=(%cosnaming-client):exec.output
+()+cmd=(%p12a-main)+cmd='3749'+cmd='both':exec.output
 %leak-checks.tree
 ext%tests.tree
 
@@ -229,6 +237,7 @@ ext%tests.tree
 %p10-main==p10-main.cc+(%cxx-opts):auto.cxx.exe
 %p11-main==p11-main.cc+(%cxx-opts):auto.cxx.exe
 %p12-main==p12-main.cc+(%cxx-opts):auto.cxx.exe
+%p12a-main==p12a-main.cc+(%cxx-opts):auto.cxx.exe
 %p13-main==p13-main.cc+(%cxx-opts):auto.cxx.exe
 %p14-main==p14-main.cc+(%cxx-opts):auto.cxx.exe
 %p15-main==p15-main.cc+(%cxx-opts):auto.cxx.exe

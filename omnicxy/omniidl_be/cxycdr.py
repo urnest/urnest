@@ -415,6 +415,11 @@ def gen_tincludes(decl,eclass,eheader,causeType,contextType,
                             causeMemberExpression,contextMemberExpression) \
                         for _ in decl.definitions()],
             [])
+        if isinstance(decl, idlast.Interface):
+            result=sum([gen_tincludes(_,eclass,eheader,causeType,contextType,
+                            causeMemberExpression,contextMemberExpression) \
+                        for _ in decl.contents()],
+            [])
         elif isinstance(decl, idlast.Union):
             result.append('#include <cxy/throw_CORBA_BAD_PARAM_InvalidUnionDiscValue.hh> //impl')
             pass
