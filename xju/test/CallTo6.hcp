@@ -74,6 +74,73 @@ public:
   P6 const& p6_;
 };
 
+template<class T,class U,class P1,class P2,class P3,class P4,class P5,class P6>
+class CallToVc6 : public CallToVoid
+{
+public:
+  explicit CallToVc6(
+    T const& x,void 
+    (U::*f)(P1,P2,P3,P4,P5,P6) const,
+    P1 const& p1,
+    P2 const& p2,
+    P3 const& p3,
+    P4 const& p4,
+    P5 const& p5,
+    P6 const& p6)
+      : x_(x),
+        f_(f),
+        p1_(p1),
+        p2_(p2),
+        p3_(p3),
+        p4_(p4),
+        p5_(p5),
+        p6_(p6)
+  {
+  }
+  T const& x_;
+  void (U::* const f_)(P1,P2,P3,P4,P5,P6) const;
+  P1 const& p1_;
+  P2 const& p2_;
+  P3 const& p3_;
+  P4 const& p4_;
+  P5 const& p5_;
+  P6 const& p6_;
+};
+
+
+template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5,class P6>
+class CallToRc6 : public CallToR<R>
+{
+public:
+  explicit CallToRc6(
+    T const& x,
+    R (U::*f)(P1,P2,P3,P4,P5,P6) const,
+    P1 const& p1,
+    P2 const& p2,
+    P3 const& p3,
+    P4 const& p4,
+    P5 const& p5,
+    P6 const& p6)
+      : x_(x),
+        f_(f),
+        p1_(p1),
+        p2_(p2),
+        p3_(p3),
+        p4_(p4),
+        p5_(p5),
+        p6_(p6)
+  {
+  }
+  T const& x_;
+  R (U::* const f_)(P1,P2,P3,P4,P5,P6) const;
+  P1 const& p1_;
+  P2 const& p2_;
+  P3 const& p3_;
+  P4 const& p4_;
+  P5 const& p5_;
+  P6 const& p6_;
+};
+
 }
 }
 

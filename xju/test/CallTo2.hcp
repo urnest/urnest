@@ -50,6 +50,49 @@ public:
   P2 const& p2_;
 };
 
+template<class T,class U,class P1,class P2>
+class CallToVc2 : public CallToVoid
+{
+public:
+  explicit CallToVc2(
+    T const& x,void 
+    (U::*f)(P1,P2) const,
+    P1 const& p1,
+    P2 const& p2)
+      : x_(x),
+        f_(f),
+        p1_(p1),
+        p2_(p2)
+  {
+  }
+  T const& x_;
+  void (U::* const f_)(P1,P2) const;
+  P1 const& p1_;
+  P2 const& p2_;
+};
+
+
+template<class T,class U,class R,class P1,class P2>
+class CallToRc2 : public CallToR<R>
+{
+public:
+  explicit CallToRc2(
+    T const& x,
+    R (U::*f)(P1,P2) const,
+    P1 const& p1,
+    P2 const& p2)
+      : x_(x),
+        f_(f),
+        p1_(p1),
+        p2_(p2)
+  {
+  }
+  T const& x_;
+  R (U::* const f_)(P1,P2) const;
+  P1 const& p1_;
+  P2 const& p2_;
+};
+
 }
 }
 

@@ -130,6 +130,76 @@ methodN='''\
     return result;
   }}
 
+  template<class T,class U{pClasses}>
+  std::shared_ptr<CallToVc{nParams}<T,U{paramTypes}> > enqueue(
+    T const& x, 
+    void (U::*f)({fParams}) const{params}) noexcept
+  {{
+    xju::Lock l(guard_);
+    std::shared_ptr<CallToVc{nParams}<T,U{paramTypes}> > result{{
+      new CallToVc{nParams}<T,U{paramTypes}>(x,f{paramNames})}};
+    calls_.push_back(result);
+    changed_.signal(l);
+    return result;
+  }}
+  template<class T,class U,class R{pClasses}>
+  std::shared_ptr<CallToRc{nParams}<T,U,R{paramTypes}> > enqueue(
+    T const& x, 
+    R (U::*f)({fParams}) const{params}) noexcept
+  {{
+    xju::Lock l(guard_);
+    std::shared_ptr<CallToRc{nParams}<T,U,R{paramTypes}> > result{{
+      new CallToRc{nParams}<T,U,R{paramTypes}>(x,f{paramNames})}};
+    calls_.push_back(result);
+    changed_.signal(l);
+    return result;
+  }}
+
+  template<class T,class U{pClasses}>
+  std::shared_ptr<CallToVc{nParams}<T,U{paramTypes}> > awaitCall(
+    T const& x,
+    void (U::*f)({fParams}) const,
+    std::chrono::steady_clock::time_point deadline) noexcept
+  {{
+    xju::Lock l(guard_);
+    while(!calls_.size()&&xju::steadyNow()<deadline){{
+      changed_.wait(l,deadline);
+    }}
+    xju::assert_not_equal(calls_.size(),0U);
+    std::shared_ptr<CallTo> const call(calls_.front());
+    calls_.pop_front();
+    auto result{{std::dynamic_pointer_cast<CallToVc{nParams}<T,U{paramTypes}> >(call)}};
+    if (!result.get()){{
+      std::string actualType{{typeid(*call).name()}};
+      ::abort();
+    }}
+    xju::assert_equal(&x,&result->x_);
+    xju::assert_equal(f,result->f_);
+    return result;
+  }}
+
+  template<class T,class U,class R{pClasses}>
+  std::shared_ptr<CallToRc{nParams}<T,U,R{paramTypes}> > awaitCall(
+    T const& x, R (U::*f)({fParams}) const,
+    std::chrono::steady_clock::time_point deadline) noexcept
+  {{
+    xju::Lock l(guard_);
+    while(!calls_.size()&&xju::steadyNow()<deadline){{
+      changed_.wait(l,deadline);
+    }}
+    xju::assert_not_equal(calls_.size(),0U);
+    auto call(calls_.front());
+    calls_.pop_front();
+    auto result{{std::dynamic_pointer_cast<CallToRc{nParams}<T,U,R{paramTypes}> >(call)}};
+    if (!result.get()){{
+      std::string actualType{{typeid(*call).name()}};
+      abort();
+    }}
+    xju::assert_equal(&result->x_,&x);
+    xju::assert_equal(result->f_,f);
+    return result;
+  }}
+
 '''
 
 maxParams=int(sys.argv[1])

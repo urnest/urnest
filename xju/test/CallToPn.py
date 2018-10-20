@@ -43,6 +43,37 @@ public:
   R (U::* const f_)({fParams});{paramMembers}
 }};
 
+template<class T,class U{pClasses}>
+class CallToVc{nParams} : public CallToVoid
+{{
+public:
+  explicit CallToVc{nParams}(
+    T const& x,void 
+    (U::*f)({fParams}) const{params})
+      : x_(x),
+        f_(f){paramInits}
+  {{
+  }}
+  T const& x_;
+  void (U::* const f_)({fParams}) const;{paramMembers}
+}};
+
+
+template<class T,class U,class R{pClasses}>
+class CallToRc{nParams} : public CallToR<R>
+{{
+public:
+  explicit CallToRc{nParams}(
+    T const& x,
+    R (U::*f)({fParams}) const{params})
+      : x_(x),
+        f_(f){paramInits}
+  {{
+  }}
+  T const& x_;
+  R (U::* const f_)({fParams}) const;{paramMembers}
+}};
+
 }}
 }}
 '''

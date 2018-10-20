@@ -177,6 +177,166 @@ void test2() {
   }
 }
 
+void test0c() {
+  Calls c;
+
+  class A
+  {
+  public:
+    void f1() const {}
+    int f2() const {return 0;}
+  };
+  
+  A a;
+  {
+    c.enqueue(a,&A::f1);
+    auto call{c.awaitCall(a,&A::f1,xju::steadyNow())};
+    call->return_();
+    call->awaitReturn(xju::steadyNow());
+  }
+  {
+    c.enqueue(a,&A::f1);
+    auto call{c.awaitCall(a,&A::f1,xju::steadyNow())};
+    xju::Exception e{"fred",XJU_TRACED};
+    call->raise(e);
+    try{
+      call->awaitReturn(xju::steadyNow());
+      xju::assert_never_reached();
+    }
+    catch(xju::Exception const& e2){
+      xju::assert_equal(e2,e);
+    }
+  }
+  {
+    c.enqueue(a,&A::f2);
+    auto call{c.awaitCall(a,&A::f2,xju::steadyNow())};
+    call->return_(3);
+    xju::assert_equal(call->awaitResult(xju::steadyNow()),3);
+  }
+  {
+    c.enqueue(a,&A::f2);
+    auto call{c.awaitCall(a,&A::f2,xju::steadyNow())};
+    xju::Exception e{"fred",XJU_TRACED};
+    call->raise(e);
+    try{
+      call->awaitResult(xju::steadyNow());
+      xju::assert_never_reached();
+    }
+    catch(xju::Exception const& e2){
+      xju::assert_equal(e2,e);
+    }
+  }
+}
+
+
+void test1c() {
+  Calls c;
+
+  class A
+  {
+  public:
+    void f1(int x) const {}
+    int f2(int x) const {return x;}
+  };
+  
+  A a;
+  {
+    c.enqueue(a,&A::f1,3);
+    auto call{c.awaitCall(a,&A::f1,xju::steadyNow())};
+    xju::assert_equal(call->p1_,3);
+    call->return_();
+    call->awaitReturn(xju::steadyNow());
+  }
+  {
+    c.enqueue(a,&A::f1,4);
+    auto call{c.awaitCall(a,&A::f1,xju::steadyNow())};
+    xju::Exception e{"fred",XJU_TRACED};
+    call->raise(e);
+    try{
+      call->awaitReturn(xju::steadyNow());
+      xju::assert_never_reached();
+    }
+    catch(xju::Exception const& e2){
+      xju::assert_equal(e2,e);
+    }
+  }
+  {
+    c.enqueue(a,&A::f2,5);
+    auto call{c.awaitCall(a,&A::f2,xju::steadyNow())};
+    xju::assert_equal(call->p1_,5);
+    call->return_(3);
+    xju::assert_equal(call->awaitResult(xju::steadyNow()),3);
+  }
+  {
+    c.enqueue(a,&A::f2,5);
+    auto call{c.awaitCall(a,&A::f2,xju::steadyNow())};
+    xju::Exception e{"fred",XJU_TRACED};
+    call->raise(e);
+    try{
+      call->awaitResult(xju::steadyNow());
+      xju::assert_never_reached();
+    }
+    catch(xju::Exception const& e2){
+      xju::assert_equal(e2,e);
+    }
+  }
+}
+
+void test2c() {
+  Calls c;
+
+  class A
+  {
+  public:
+    void f1(int x,char y) const {}
+    int f2(int x,char y) const {return x;}
+  };
+  
+  A a;
+  {
+    c.enqueue(a,&A::f1,3,'a');
+    auto call{c.awaitCall(a,&A::f1,xju::steadyNow())};
+    xju::assert_equal(call->p1_,3);
+    xju::assert_equal(call->p2_,'a');
+    call->return_();
+    call->awaitReturn(xju::steadyNow());
+  }
+  {
+    c.enqueue(a,&A::f1,4,'b');
+    auto call{c.awaitCall(a,&A::f1,xju::steadyNow())};
+    xju::Exception e{"fred",XJU_TRACED};
+    call->raise(e);
+    try{
+      call->awaitReturn(xju::steadyNow());
+      xju::assert_never_reached();
+    }
+    catch(xju::Exception const& e2){
+      xju::assert_equal(e2,e);
+    }
+  }
+  {
+    c.enqueue(a,&A::f2,5,'b');
+    auto call{c.awaitCall(a,&A::f2,xju::steadyNow())};
+    xju::assert_equal(call->p1_,5);
+    xju::assert_equal(call->p2_,'b');
+    call->return_(3);
+    xju::assert_equal(call->awaitResult(xju::steadyNow()),3);
+  }
+  {
+    c.enqueue(a,&A::f2,5,'b');
+    auto call{c.awaitCall(a,&A::f2,xju::steadyNow())};
+    xju::Exception e{"fred",XJU_TRACED};
+    call->raise(e);
+    try{
+      call->awaitResult(xju::steadyNow());
+      xju::assert_never_reached();
+    }
+    catch(xju::Exception const& e2){
+      xju::assert_equal(e2,e);
+    }
+  }
+}
+
 }
 }
 
@@ -188,6 +348,9 @@ int main(int argc, char* argv[])
   test0(), ++n;
   test1(), ++n;
   test2(), ++n;
+  test0c(), ++n;
+  test1c(), ++n;
+  test2c(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

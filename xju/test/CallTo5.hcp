@@ -68,6 +68,67 @@ public:
   P5 const& p5_;
 };
 
+template<class T,class U,class P1,class P2,class P3,class P4,class P5>
+class CallToVc5 : public CallToVoid
+{
+public:
+  explicit CallToVc5(
+    T const& x,void 
+    (U::*f)(P1,P2,P3,P4,P5) const,
+    P1 const& p1,
+    P2 const& p2,
+    P3 const& p3,
+    P4 const& p4,
+    P5 const& p5)
+      : x_(x),
+        f_(f),
+        p1_(p1),
+        p2_(p2),
+        p3_(p3),
+        p4_(p4),
+        p5_(p5)
+  {
+  }
+  T const& x_;
+  void (U::* const f_)(P1,P2,P3,P4,P5) const;
+  P1 const& p1_;
+  P2 const& p2_;
+  P3 const& p3_;
+  P4 const& p4_;
+  P5 const& p5_;
+};
+
+
+template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5>
+class CallToRc5 : public CallToR<R>
+{
+public:
+  explicit CallToRc5(
+    T const& x,
+    R (U::*f)(P1,P2,P3,P4,P5) const,
+    P1 const& p1,
+    P2 const& p2,
+    P3 const& p3,
+    P4 const& p4,
+    P5 const& p5)
+      : x_(x),
+        f_(f),
+        p1_(p1),
+        p2_(p2),
+        p3_(p3),
+        p4_(p4),
+        p5_(p5)
+  {
+  }
+  T const& x_;
+  R (U::* const f_)(P1,P2,P3,P4,P5) const;
+  P1 const& p1_;
+  P2 const& p2_;
+  P3 const& p3_;
+  P4 const& p4_;
+  P5 const& p5_;
+};
+
 }
 }
 

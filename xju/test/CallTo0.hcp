@@ -38,6 +38,37 @@ public:
   R (U::* const f_)();
 };
 
+template<class T,class U>
+class CallToVc0 : public CallToVoid
+{
+public:
+  explicit CallToVc0(
+    T const& x,void 
+    (U::*f)() const)
+      : x_(x),
+        f_(f)
+  {
+  }
+  T const& x_;
+  void (U::* const f_)() const;
+};
+
+
+template<class T,class U,class R>
+class CallToRc0 : public CallToR<R>
+{
+public:
+  explicit CallToRc0(
+    T const& x,
+    R (U::*f)() const)
+      : x_(x),
+        f_(f)
+  {
+  }
+  T const& x_;
+  R (U::* const f_)() const;
+};
+
 }
 }
 

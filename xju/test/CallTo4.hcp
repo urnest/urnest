@@ -62,6 +62,61 @@ public:
   P4 const& p4_;
 };
 
+template<class T,class U,class P1,class P2,class P3,class P4>
+class CallToVc4 : public CallToVoid
+{
+public:
+  explicit CallToVc4(
+    T const& x,void 
+    (U::*f)(P1,P2,P3,P4) const,
+    P1 const& p1,
+    P2 const& p2,
+    P3 const& p3,
+    P4 const& p4)
+      : x_(x),
+        f_(f),
+        p1_(p1),
+        p2_(p2),
+        p3_(p3),
+        p4_(p4)
+  {
+  }
+  T const& x_;
+  void (U::* const f_)(P1,P2,P3,P4) const;
+  P1 const& p1_;
+  P2 const& p2_;
+  P3 const& p3_;
+  P4 const& p4_;
+};
+
+
+template<class T,class U,class R,class P1,class P2,class P3,class P4>
+class CallToRc4 : public CallToR<R>
+{
+public:
+  explicit CallToRc4(
+    T const& x,
+    R (U::*f)(P1,P2,P3,P4) const,
+    P1 const& p1,
+    P2 const& p2,
+    P3 const& p3,
+    P4 const& p4)
+      : x_(x),
+        f_(f),
+        p1_(p1),
+        p2_(p2),
+        p3_(p3),
+        p4_(p4)
+  {
+  }
+  T const& x_;
+  R (U::* const f_)(P1,P2,P3,P4) const;
+  P1 const& p1_;
+  P2 const& p2_;
+  P3 const& p3_;
+  P4 const& p4_;
+};
+
 }
 }
 
