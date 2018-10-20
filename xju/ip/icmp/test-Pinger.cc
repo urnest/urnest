@@ -36,9 +36,10 @@ public:
     Message const& x) throw(
       xju::SyscallFailed) override
   {
-    calls_.enqueue(xju::test::callTo(&xju::ip::icmp::SocketIf::send,
-                                     to,
-                                     x))->awaitReturn();
+    calls_.enqueue(*this,
+                   &xju::ip::icmp::SocketIf::send,
+                   to,
+                   x)->awaitReturn();
   }
   virtual std::tuple<xju::ip::v4::Addresss,Message> receive() throw(
       xju::SyscallFailed,
@@ -48,7 +49,7 @@ public:
     char c(' ');
     input_.first->read(&c,1U,xju::steadyNow());
     xju::assert_equal(c,'x');
-    return calls_.enqueue(xju::test::callTo(&xju::ip::icmp::SocketIf::receive))
+    return calls_.enqueue(*this,&xju::ip::icmp::SocketIf::receive)
       ->result();
   }
   xju::test::Calls calls_;
@@ -62,7 +63,7 @@ public:
                       xju::ip::icmp::Message m) noexcept
   {
     makeReadable();
-    calls_.awaitCall(xju::ip::icmp::SocketIf::receive,
+    calls_.awaitCall(*this,xju::ip::icmp::SocketIf::receive,
                      xju::ip::steadyNow()+leeway_)->return_(
       std::make_tuple(a,m));
   }
@@ -104,7 +105,7 @@ void test1() {
 
   // round 1 perfect
   {
-    auto call=socket.calls_.awaitCall(SocketIf::send, t1+leeway);
+    auto call=socket.calls_.awaitCall(socket,SocketIf::send, t1+leeway);
     xju::assert_equal(call->p1_,a1);
     xju::assert_equal(call->p2,encodeEcho(Echo(identifier,
                                                Echo::Sequence(5),
@@ -118,7 +119,8 @@ void test1() {
                           encodeEchoResponse(Echo(identifier,
                                                   Echo::Sequence(5),
                                                   {})));
-    auto call=collector.calls_.awaitCall(CollectorIf::pinged, now()+0.1*step);
+    auto call=collector.calls_.awaitCall(collectorIf,
+                                         CollectorIf::pinged, now()+0.1*step);
     xju::assert_equal(call->p1_,a1);
     xju::assert_equal(call->p2_,0U);
     xju::assert_greater_equal(call->p3_,0.1*step);
@@ -126,7 +128,9 @@ void test1() {
     call->return_();
   }
   {
-    auto call=socket.calls_.awaitCall(SocketIf::send, t1+1.0*step+leeway);
+    auto call=socket.calls_.awaitCall(socket,
+                                      SocketIf::send,
+                                      t1+1.0*step+leeway);
     xju::assert_equal(call->p1_,a2);
     xju::assert_equal(call->p2,encodeEcho(Echo(identifier,
                                                Echo::Sequence(5),
@@ -141,7 +145,9 @@ void test1() {
                           encodeEchoResponse(Echo(identifier,
                                                   Echo::Sequence(5),
                                                   {})));
-    auto call=collector.calls_.awaitCall(CollectorIf::pinged, 0.1*step);
+    auto call=collector.calls_.awaitCall(collector,
+                                         CollectorIf::pinged,
+                                         0.1*step);
     xju::assert_equal(call->p1_,a2);
     xju::assert_equal(call->p2_,0U);
     xju::assert_greater_equal(call->p3_,0.2*step);
@@ -151,7 +157,9 @@ void test1() {
 
   //round 2 - a1 times out, a2 takes 2 attempts
   {
-    auto call=socket.calls_.awaitCall(SocketIf::send, t1+2*step+leeway);
+    auto call=socket.calls_.awaitCall(socket,
+                                      SocketIf::send,
+                                      t1+2*step+leeway);
     xju::assert_equal(call->p1_,a1);
     xju::assert_equal(call->p2,encodeEcho(Echo(identifier,
                                                Echo::Sequence(5),
@@ -162,7 +170,9 @@ void test1() {
   }
   {
     //re-send after 0.4*step timeout
-    auto call=socket.calls_.awaitCall(SocketIf::send, t1+2.4*step+leeway);
+    auto call=socket.calls_.awaitCall(socket,
+                                      SocketIf::send,
+                                      t1+2.4*step+leeway);
     xju::assert_equal(call->p1_,a1);
     xju::assert_equal(call->p2,encodeEcho(Echo(identifier,
                                                Echo::Sequence(5),
@@ -173,7 +183,9 @@ void test1() {
   }
   {
     //re-send after another 0.4*step timeout
-    auto call=socket.calls_.awaitCall(SocketIf::send, t1+2.8*step+leeway);
+    auto call=socket.calls_.awaitCall(socket,
+                                      SocketIf::send,
+                                      t1+2.8*step+leeway);
     xju::assert_equal(call->p1_,a1);
     xju::assert_equal(call->p2,encodeEcho(Echo(identifier,
                                                Echo::Sequence(5),
@@ -183,7 +195,9 @@ void test1() {
     call->return_();
   }
   {
-    auto call=socket.calls_.awaitCall(SocketIf::send, t1+3.0*step+leeway);
+    auto call=socket.calls_.awaitCall(socket,
+                                      SocketIf::send,
+                                      t1+3.0*step+leeway);
     xju::assert_equal(call->p1_,a2);
     xju::assert_equal(call->p2,encodeEcho(Echo(identifier,
                                                Echo::Sequence(5),
@@ -193,7 +207,9 @@ void test1() {
   }
   {
     //re-send to a1 after another 0.4*step timeout
-    auto call=socket.calls_.awaitCall(SocketIf::send, t1+3.2*step+leeway);
+    auto call=socket.calls_.awaitCall(socket,
+                                      SocketIf::send,
+                                      t1+3.2*step+leeway);
     xju::assert_equal(call->p1_,a1);
     xju::assert_equal(call->p2,encodeEcho(Echo(identifier,
                                                Echo::Sequence(5),
@@ -204,7 +220,9 @@ void test1() {
   }
   {
     //re-send to a2 after 0.4*step timeout
-    auto call=socket.calls_.awaitCall(SocketIf::send, t1+3.4*step+leeway);
+    auto call=socket.calls_.awaitCall(socket,
+                                      SocketIf::send,
+                                      t1+3.4*step+leeway);
     xju::assert_equal(call->p1_,a2);
     xju::assert_equal(call->p2,encodeEcho(Echo(identifier,
                                                Echo::Sequence(5),
@@ -219,7 +237,8 @@ void test1() {
                           encodeEchoResponse(Echo(identifier,
                                                   Echo::Sequence(5),
                                                   {})));
-    auto call=collector.calls_.awaitCall(CollectorIf::pinged,
+    auto call=collector.calls_.awaitCall(collector,
+                                         CollectorIf::pinged,
                                          t1+3.4*step+leeway);
     xju::assert_equal(call->p1_,a2);
     xju::assert_equal(call->p2_,1U);
@@ -229,7 +248,8 @@ void test1() {
   }
   {
     auto t1{now()};
-    auto call=collector.calls_.awaitCall(CollectorIf::timeout,
+    auto call=collector.calls_.awaitCall(collector,
+                                         CollectorIf::timeout,
                                          t1+3.6*step+leeway);
     xju::assert_equal(call->p1_,a1);
     call->return_();
