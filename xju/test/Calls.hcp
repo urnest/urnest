@@ -1,13 +1,3 @@
-// Copyright (c) 2018 Trevor Taylor
-//
-// Permission to use, copy, modify, distribute and sell this software
-// and its documentation for any purpose is hereby granted without fee,
-// provided that the above copyright notice appear in all.
-// Trevor Taylor makes no representations about the suitability of this
-// software for any purpose.  It is provided "as is" without express or
-// implied warranty.
-//
-
 
 #include <deque>
 #include <memory>
@@ -20,6 +10,15 @@
 #include <stdlib.h>
 #include <chrono>
 #include <xju/steadyNow.hh>
+#include <xju/test/CallTo0.hh>
+#include <xju/test/CallTo1.hh>
+#include <xju/test/CallTo2.hh>
+#include <xju/test/CallTo3.hh>
+#include <xju/test/CallTo4.hh>
+#include <xju/test/CallTo5.hh>
+#include <xju/test/CallTo6.hh>
+#include <xju/test/CallTo7.hh>
+
 
 namespace xju
 {
@@ -33,9 +32,11 @@ public:
     : changed_(guard_)
   {
   }
-      
-  template<class T, class U>
-  std::shared_ptr<CallToV0<T,U> > enqueue(T& x, void (U::*f)()) noexcept
+
+  template<class T,class U>
+  std::shared_ptr<CallToV0<T,U> > enqueue(
+    T& x, 
+    void (U::*f)()) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToV0<T,U> > result{
@@ -44,47 +45,20 @@ public:
     changed_.signal(l);
     return result;
   }
-
-  /*
-  template<class T, class P1>
-  std::shared_ptr<CallToV1<T,P1> > enqueue(
-    void (T::*f)(P1),
-    typename std::add_rvalue_reference<P1>::type p1) noexcept
+  template<class T,class U,class R>
+  std::shared_ptr<CallToR0<T,U,R> > enqueue(
+    T& x, 
+    R (U::*f)()) noexcept
   {
     xju::Lock l(guard_);
-    std::shared_ptr<CallToV1<T,P1> > result{
-      CallToV1<T,P1>(f,p1)};
-    calls_.push_back(result);
-    changed_.signal(l);
-    return result;
-  }
-  */
-  template<class T,class R>
-  std::shared_ptr<CallToR0<T,R> > enqueue(R (T::*f)()) noexcept
-  {
-    xju::Lock l(guard_);
-    std::shared_ptr<CallToR0<T,R> > result{
-      CallToR0<T,R>(f)};
+    std::shared_ptr<CallToR0<T,U,R> > result{
+      new CallToR0<T,U,R>(x,f)};
     calls_.push_back(result);
     changed_.signal(l);
     return result;
   }
 
-  /*
-  template<class T,class R, class P1>
-  std::shared_ptr<CallToR1<T,R,P1> > enqueue(
-    R (T::*f)(P1),
-    typename std::add_rvalue_reference<P1>::type p1) noexcept
-  {
-    xju::Lock l(guard_);
-    std::shared_ptr<CallToR1<T,R,P1> > result{
-      CallToR1<T,R,P1>(f,p1)};
-    calls_.push_back(result);
-    changed_.signal(l);
-    return result;
-  }
-  */
-  template<class T, class U>
+  template<class T,class U>
   std::shared_ptr<CallToV0<T,U> > awaitCall(
     T& x,
     void (U::*f)(),
@@ -107,67 +81,632 @@ public:
     return result;
   }
 
-  /*
-  template<class T,class P1>
-  std::shared_ptr<CallToV1> awaitCall(
-    void (T::*f)(P1),
+  template<class T,class U,class R>
+  std::shared_ptr<CallToR0<T,U,R> > awaitCall(
+    T& x, R (U::*f)(),
     std::chrono::steady_clock::time_point deadline) noexcept
   {
     xju::Lock l(guard_);
     while(!calls_.size()&&xju::steadyNow()<deadline){
-      changed_.wait(deadline);
+      changed_.wait(l,deadline);
     }
     xju::assert_not_equal(calls_.size(),0U);
-    auto call(calls_.pop_front());
-    auto result{std::dynamic_pointer_cast<CallToV1<T,P1> >(call)};
+    auto call(calls_.front());
+    calls_.pop_front();
+    auto result{std::dynamic_pointer_cast<CallToR0<T,U,R> >(call)};
     if (!result.get()){
-      std::string actualType{typeid<*call>::name()};
+      std::string actualType{typeid(*call).name()};
       abort();
     }
-    xju::assert_equal(call.f_,f);
+    xju::assert_equal(&result->x_,&x);
+    xju::assert_equal(result->f_,f);
     return result;
   }
 
-  template<class T,class R>
-  std::shared_ptr<CallToR0> awaitCall(
-    R (T::*f)(),
-    std::chrono::steady_clock::time_point deadline) noexcept
+  template<class T,class U,class P1>
+  std::shared_ptr<CallToV1<T,U,P1> > enqueue(
+    T& x, 
+    void (U::*f)(P1),
+    P1 const& p1) noexcept
   {
     xju::Lock l(guard_);
-    while(!calls_.size()&&xju::steadyNow()<deadline){
-      changed_.wait(deadline);
-    }
-    xju::assert_not_equal(calls_.size(),0U);
-    auto call(calls_.pop_front());
-    auto result{std::dynamic_pointer_cast<CallToR0<T,R> >(call)};
-    if (!result.get()){
-      std::string actualType{typeid<*call>::name()};
-      abort();
-    }
-    xju::assert_equal(call.f_,f);
+    std::shared_ptr<CallToV1<T,U,P1> > result{
+      new CallToV1<T,U,P1>(x,f,
+        p1)};
+    calls_.push_back(result);
+    changed_.signal(l);
+    return result;
+  }
+  template<class T,class U,class R,class P1>
+  std::shared_ptr<CallToR1<T,U,R,P1> > enqueue(
+    T& x, 
+    R (U::*f)(P1),
+    P1 const& p1) noexcept
+  {
+    xju::Lock l(guard_);
+    std::shared_ptr<CallToR1<T,U,R,P1> > result{
+      new CallToR1<T,U,R,P1>(x,f,
+        p1)};
+    calls_.push_back(result);
+    changed_.signal(l);
     return result;
   }
 
-  template<class T,class R,class P1>
-  std::shared_ptr<CallToR1> awaitCall(
-    R (T::*f)(P1),
+  template<class T,class U,class P1>
+  std::shared_ptr<CallToV1<T,U,P1> > awaitCall(
+    T& x,
+    void (U::*f)(P1),
     std::chrono::steady_clock::time_point deadline) noexcept
   {
     xju::Lock l(guard_);
     while(!calls_.size()&&xju::steadyNow()<deadline){
-      changed_.wait(deadline);
+      changed_.wait(l,deadline);
     }
     xju::assert_not_equal(calls_.size(),0U);
-    auto call(calls_.pop_front());
-    auto result{std::dynamic_pointer_cast<CallToR1<T,R,P1> >(call)};
+    std::shared_ptr<CallTo> const call(calls_.front());
+    calls_.pop_front();
+    auto result{std::dynamic_pointer_cast<CallToV1<T,U,P1> >(call)};
     if (!result.get()){
-      std::string actualType{typeid<*call>::name()};
-      abort();
+      std::string actualType{typeid(*call).name()};
+      ::abort();
     }
-    xju::assert_equal(call.f_,f);
+    xju::assert_equal(&x,&result->x_);
+    xju::assert_equal(f,result->f_);
     return result;
   }
-  */
+
+  template<class T,class U,class R,class P1>
+  std::shared_ptr<CallToR1<T,U,R,P1> > awaitCall(
+    T& x, R (U::*f)(P1),
+    std::chrono::steady_clock::time_point deadline) noexcept
+  {
+    xju::Lock l(guard_);
+    while(!calls_.size()&&xju::steadyNow()<deadline){
+      changed_.wait(l,deadline);
+    }
+    xju::assert_not_equal(calls_.size(),0U);
+    auto call(calls_.front());
+    calls_.pop_front();
+    auto result{std::dynamic_pointer_cast<CallToR1<T,U,R,P1> >(call)};
+    if (!result.get()){
+      std::string actualType{typeid(*call).name()};
+      abort();
+    }
+    xju::assert_equal(&result->x_,&x);
+    xju::assert_equal(result->f_,f);
+    return result;
+  }
+
+  template<class T,class U,class P1,class P2>
+  std::shared_ptr<CallToV2<T,U,P1,P2> > enqueue(
+    T& x, 
+    void (U::*f)(P1,P2),
+    P1 const& p1,
+    P2 const& p2) noexcept
+  {
+    xju::Lock l(guard_);
+    std::shared_ptr<CallToV2<T,U,P1,P2> > result{
+      new CallToV2<T,U,P1,P2>(x,f,
+        p1,
+        p2)};
+    calls_.push_back(result);
+    changed_.signal(l);
+    return result;
+  }
+  template<class T,class U,class R,class P1,class P2>
+  std::shared_ptr<CallToR2<T,U,R,P1,P2> > enqueue(
+    T& x, 
+    R (U::*f)(P1,P2),
+    P1 const& p1,
+    P2 const& p2) noexcept
+  {
+    xju::Lock l(guard_);
+    std::shared_ptr<CallToR2<T,U,R,P1,P2> > result{
+      new CallToR2<T,U,R,P1,P2>(x,f,
+        p1,
+        p2)};
+    calls_.push_back(result);
+    changed_.signal(l);
+    return result;
+  }
+
+  template<class T,class U,class P1,class P2>
+  std::shared_ptr<CallToV2<T,U,P1,P2> > awaitCall(
+    T& x,
+    void (U::*f)(P1,P2),
+    std::chrono::steady_clock::time_point deadline) noexcept
+  {
+    xju::Lock l(guard_);
+    while(!calls_.size()&&xju::steadyNow()<deadline){
+      changed_.wait(l,deadline);
+    }
+    xju::assert_not_equal(calls_.size(),0U);
+    std::shared_ptr<CallTo> const call(calls_.front());
+    calls_.pop_front();
+    auto result{std::dynamic_pointer_cast<CallToV2<T,U,P1,P2> >(call)};
+    if (!result.get()){
+      std::string actualType{typeid(*call).name()};
+      ::abort();
+    }
+    xju::assert_equal(&x,&result->x_);
+    xju::assert_equal(f,result->f_);
+    return result;
+  }
+
+  template<class T,class U,class R,class P1,class P2>
+  std::shared_ptr<CallToR2<T,U,R,P1,P2> > awaitCall(
+    T& x, R (U::*f)(P1,P2),
+    std::chrono::steady_clock::time_point deadline) noexcept
+  {
+    xju::Lock l(guard_);
+    while(!calls_.size()&&xju::steadyNow()<deadline){
+      changed_.wait(l,deadline);
+    }
+    xju::assert_not_equal(calls_.size(),0U);
+    auto call(calls_.front());
+    calls_.pop_front();
+    auto result{std::dynamic_pointer_cast<CallToR2<T,U,R,P1,P2> >(call)};
+    if (!result.get()){
+      std::string actualType{typeid(*call).name()};
+      abort();
+    }
+    xju::assert_equal(&result->x_,&x);
+    xju::assert_equal(result->f_,f);
+    return result;
+  }
+
+  template<class T,class U,class P1,class P2,class P3>
+  std::shared_ptr<CallToV3<T,U,P1,P2,P3> > enqueue(
+    T& x, 
+    void (U::*f)(P1,P2,P3),
+    P1 const& p1,
+    P2 const& p2,
+    P3 const& p3) noexcept
+  {
+    xju::Lock l(guard_);
+    std::shared_ptr<CallToV3<T,U,P1,P2,P3> > result{
+      new CallToV3<T,U,P1,P2,P3>(x,f,
+        p1,
+        p2,
+        p3)};
+    calls_.push_back(result);
+    changed_.signal(l);
+    return result;
+  }
+  template<class T,class U,class R,class P1,class P2,class P3>
+  std::shared_ptr<CallToR3<T,U,R,P1,P2,P3> > enqueue(
+    T& x, 
+    R (U::*f)(P1,P2,P3),
+    P1 const& p1,
+    P2 const& p2,
+    P3 const& p3) noexcept
+  {
+    xju::Lock l(guard_);
+    std::shared_ptr<CallToR3<T,U,R,P1,P2,P3> > result{
+      new CallToR3<T,U,R,P1,P2,P3>(x,f,
+        p1,
+        p2,
+        p3)};
+    calls_.push_back(result);
+    changed_.signal(l);
+    return result;
+  }
+
+  template<class T,class U,class P1,class P2,class P3>
+  std::shared_ptr<CallToV3<T,U,P1,P2,P3> > awaitCall(
+    T& x,
+    void (U::*f)(P1,P2,P3),
+    std::chrono::steady_clock::time_point deadline) noexcept
+  {
+    xju::Lock l(guard_);
+    while(!calls_.size()&&xju::steadyNow()<deadline){
+      changed_.wait(l,deadline);
+    }
+    xju::assert_not_equal(calls_.size(),0U);
+    std::shared_ptr<CallTo> const call(calls_.front());
+    calls_.pop_front();
+    auto result{std::dynamic_pointer_cast<CallToV3<T,U,P1,P2,P3> >(call)};
+    if (!result.get()){
+      std::string actualType{typeid(*call).name()};
+      ::abort();
+    }
+    xju::assert_equal(&x,&result->x_);
+    xju::assert_equal(f,result->f_);
+    return result;
+  }
+
+  template<class T,class U,class R,class P1,class P2,class P3>
+  std::shared_ptr<CallToR3<T,U,R,P1,P2,P3> > awaitCall(
+    T& x, R (U::*f)(P1,P2,P3),
+    std::chrono::steady_clock::time_point deadline) noexcept
+  {
+    xju::Lock l(guard_);
+    while(!calls_.size()&&xju::steadyNow()<deadline){
+      changed_.wait(l,deadline);
+    }
+    xju::assert_not_equal(calls_.size(),0U);
+    auto call(calls_.front());
+    calls_.pop_front();
+    auto result{std::dynamic_pointer_cast<CallToR3<T,U,R,P1,P2,P3> >(call)};
+    if (!result.get()){
+      std::string actualType{typeid(*call).name()};
+      abort();
+    }
+    xju::assert_equal(&result->x_,&x);
+    xju::assert_equal(result->f_,f);
+    return result;
+  }
+
+  template<class T,class U,class P1,class P2,class P3,class P4>
+  std::shared_ptr<CallToV4<T,U,P1,P2,P3,P4> > enqueue(
+    T& x, 
+    void (U::*f)(P1,P2,P3,P4),
+    P1 const& p1,
+    P2 const& p2,
+    P3 const& p3,
+    P4 const& p4) noexcept
+  {
+    xju::Lock l(guard_);
+    std::shared_ptr<CallToV4<T,U,P1,P2,P3,P4> > result{
+      new CallToV4<T,U,P1,P2,P3,P4>(x,f,
+        p1,
+        p2,
+        p3,
+        p4)};
+    calls_.push_back(result);
+    changed_.signal(l);
+    return result;
+  }
+  template<class T,class U,class R,class P1,class P2,class P3,class P4>
+  std::shared_ptr<CallToR4<T,U,R,P1,P2,P3,P4> > enqueue(
+    T& x, 
+    R (U::*f)(P1,P2,P3,P4),
+    P1 const& p1,
+    P2 const& p2,
+    P3 const& p3,
+    P4 const& p4) noexcept
+  {
+    xju::Lock l(guard_);
+    std::shared_ptr<CallToR4<T,U,R,P1,P2,P3,P4> > result{
+      new CallToR4<T,U,R,P1,P2,P3,P4>(x,f,
+        p1,
+        p2,
+        p3,
+        p4)};
+    calls_.push_back(result);
+    changed_.signal(l);
+    return result;
+  }
+
+  template<class T,class U,class P1,class P2,class P3,class P4>
+  std::shared_ptr<CallToV4<T,U,P1,P2,P3,P4> > awaitCall(
+    T& x,
+    void (U::*f)(P1,P2,P3,P4),
+    std::chrono::steady_clock::time_point deadline) noexcept
+  {
+    xju::Lock l(guard_);
+    while(!calls_.size()&&xju::steadyNow()<deadline){
+      changed_.wait(l,deadline);
+    }
+    xju::assert_not_equal(calls_.size(),0U);
+    std::shared_ptr<CallTo> const call(calls_.front());
+    calls_.pop_front();
+    auto result{std::dynamic_pointer_cast<CallToV4<T,U,P1,P2,P3,P4> >(call)};
+    if (!result.get()){
+      std::string actualType{typeid(*call).name()};
+      ::abort();
+    }
+    xju::assert_equal(&x,&result->x_);
+    xju::assert_equal(f,result->f_);
+    return result;
+  }
+
+  template<class T,class U,class R,class P1,class P2,class P3,class P4>
+  std::shared_ptr<CallToR4<T,U,R,P1,P2,P3,P4> > awaitCall(
+    T& x, R (U::*f)(P1,P2,P3,P4),
+    std::chrono::steady_clock::time_point deadline) noexcept
+  {
+    xju::Lock l(guard_);
+    while(!calls_.size()&&xju::steadyNow()<deadline){
+      changed_.wait(l,deadline);
+    }
+    xju::assert_not_equal(calls_.size(),0U);
+    auto call(calls_.front());
+    calls_.pop_front();
+    auto result{std::dynamic_pointer_cast<CallToR4<T,U,R,P1,P2,P3,P4> >(call)};
+    if (!result.get()){
+      std::string actualType{typeid(*call).name()};
+      abort();
+    }
+    xju::assert_equal(&result->x_,&x);
+    xju::assert_equal(result->f_,f);
+    return result;
+  }
+
+  template<class T,class U,class P1,class P2,class P3,class P4,class P5>
+  std::shared_ptr<CallToV5<T,U,P1,P2,P3,P4,P5> > enqueue(
+    T& x, 
+    void (U::*f)(P1,P2,P3,P4,P5),
+    P1 const& p1,
+    P2 const& p2,
+    P3 const& p3,
+    P4 const& p4,
+    P5 const& p5) noexcept
+  {
+    xju::Lock l(guard_);
+    std::shared_ptr<CallToV5<T,U,P1,P2,P3,P4,P5> > result{
+      new CallToV5<T,U,P1,P2,P3,P4,P5>(x,f,
+        p1,
+        p2,
+        p3,
+        p4,
+        p5)};
+    calls_.push_back(result);
+    changed_.signal(l);
+    return result;
+  }
+  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5>
+  std::shared_ptr<CallToR5<T,U,R,P1,P2,P3,P4,P5> > enqueue(
+    T& x, 
+    R (U::*f)(P1,P2,P3,P4,P5),
+    P1 const& p1,
+    P2 const& p2,
+    P3 const& p3,
+    P4 const& p4,
+    P5 const& p5) noexcept
+  {
+    xju::Lock l(guard_);
+    std::shared_ptr<CallToR5<T,U,R,P1,P2,P3,P4,P5> > result{
+      new CallToR5<T,U,R,P1,P2,P3,P4,P5>(x,f,
+        p1,
+        p2,
+        p3,
+        p4,
+        p5)};
+    calls_.push_back(result);
+    changed_.signal(l);
+    return result;
+  }
+
+  template<class T,class U,class P1,class P2,class P3,class P4,class P5>
+  std::shared_ptr<CallToV5<T,U,P1,P2,P3,P4,P5> > awaitCall(
+    T& x,
+    void (U::*f)(P1,P2,P3,P4,P5),
+    std::chrono::steady_clock::time_point deadline) noexcept
+  {
+    xju::Lock l(guard_);
+    while(!calls_.size()&&xju::steadyNow()<deadline){
+      changed_.wait(l,deadline);
+    }
+    xju::assert_not_equal(calls_.size(),0U);
+    std::shared_ptr<CallTo> const call(calls_.front());
+    calls_.pop_front();
+    auto result{std::dynamic_pointer_cast<CallToV5<T,U,P1,P2,P3,P4,P5> >(call)};
+    if (!result.get()){
+      std::string actualType{typeid(*call).name()};
+      ::abort();
+    }
+    xju::assert_equal(&x,&result->x_);
+    xju::assert_equal(f,result->f_);
+    return result;
+  }
+
+  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5>
+  std::shared_ptr<CallToR5<T,U,R,P1,P2,P3,P4,P5> > awaitCall(
+    T& x, R (U::*f)(P1,P2,P3,P4,P5),
+    std::chrono::steady_clock::time_point deadline) noexcept
+  {
+    xju::Lock l(guard_);
+    while(!calls_.size()&&xju::steadyNow()<deadline){
+      changed_.wait(l,deadline);
+    }
+    xju::assert_not_equal(calls_.size(),0U);
+    auto call(calls_.front());
+    calls_.pop_front();
+    auto result{std::dynamic_pointer_cast<CallToR5<T,U,R,P1,P2,P3,P4,P5> >(call)};
+    if (!result.get()){
+      std::string actualType{typeid(*call).name()};
+      abort();
+    }
+    xju::assert_equal(&result->x_,&x);
+    xju::assert_equal(result->f_,f);
+    return result;
+  }
+
+  template<class T,class U,class P1,class P2,class P3,class P4,class P5,class P6>
+  std::shared_ptr<CallToV6<T,U,P1,P2,P3,P4,P5,P6> > enqueue(
+    T& x, 
+    void (U::*f)(P1,P2,P3,P4,P5,P6),
+    P1 const& p1,
+    P2 const& p2,
+    P3 const& p3,
+    P4 const& p4,
+    P5 const& p5,
+    P6 const& p6) noexcept
+  {
+    xju::Lock l(guard_);
+    std::shared_ptr<CallToV6<T,U,P1,P2,P3,P4,P5,P6> > result{
+      new CallToV6<T,U,P1,P2,P3,P4,P5,P6>(x,f,
+        p1,
+        p2,
+        p3,
+        p4,
+        p5,
+        p6)};
+    calls_.push_back(result);
+    changed_.signal(l);
+    return result;
+  }
+  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5,class P6>
+  std::shared_ptr<CallToR6<T,U,R,P1,P2,P3,P4,P5,P6> > enqueue(
+    T& x, 
+    R (U::*f)(P1,P2,P3,P4,P5,P6),
+    P1 const& p1,
+    P2 const& p2,
+    P3 const& p3,
+    P4 const& p4,
+    P5 const& p5,
+    P6 const& p6) noexcept
+  {
+    xju::Lock l(guard_);
+    std::shared_ptr<CallToR6<T,U,R,P1,P2,P3,P4,P5,P6> > result{
+      new CallToR6<T,U,R,P1,P2,P3,P4,P5,P6>(x,f,
+        p1,
+        p2,
+        p3,
+        p4,
+        p5,
+        p6)};
+    calls_.push_back(result);
+    changed_.signal(l);
+    return result;
+  }
+
+  template<class T,class U,class P1,class P2,class P3,class P4,class P5,class P6>
+  std::shared_ptr<CallToV6<T,U,P1,P2,P3,P4,P5,P6> > awaitCall(
+    T& x,
+    void (U::*f)(P1,P2,P3,P4,P5,P6),
+    std::chrono::steady_clock::time_point deadline) noexcept
+  {
+    xju::Lock l(guard_);
+    while(!calls_.size()&&xju::steadyNow()<deadline){
+      changed_.wait(l,deadline);
+    }
+    xju::assert_not_equal(calls_.size(),0U);
+    std::shared_ptr<CallTo> const call(calls_.front());
+    calls_.pop_front();
+    auto result{std::dynamic_pointer_cast<CallToV6<T,U,P1,P2,P3,P4,P5,P6> >(call)};
+    if (!result.get()){
+      std::string actualType{typeid(*call).name()};
+      ::abort();
+    }
+    xju::assert_equal(&x,&result->x_);
+    xju::assert_equal(f,result->f_);
+    return result;
+  }
+
+  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5,class P6>
+  std::shared_ptr<CallToR6<T,U,R,P1,P2,P3,P4,P5,P6> > awaitCall(
+    T& x, R (U::*f)(P1,P2,P3,P4,P5,P6),
+    std::chrono::steady_clock::time_point deadline) noexcept
+  {
+    xju::Lock l(guard_);
+    while(!calls_.size()&&xju::steadyNow()<deadline){
+      changed_.wait(l,deadline);
+    }
+    xju::assert_not_equal(calls_.size(),0U);
+    auto call(calls_.front());
+    calls_.pop_front();
+    auto result{std::dynamic_pointer_cast<CallToR6<T,U,R,P1,P2,P3,P4,P5,P6> >(call)};
+    if (!result.get()){
+      std::string actualType{typeid(*call).name()};
+      abort();
+    }
+    xju::assert_equal(&result->x_,&x);
+    xju::assert_equal(result->f_,f);
+    return result;
+  }
+
+  template<class T,class U,class P1,class P2,class P3,class P4,class P5,class P6,class P7>
+  std::shared_ptr<CallToV7<T,U,P1,P2,P3,P4,P5,P6,P7> > enqueue(
+    T& x, 
+    void (U::*f)(P1,P2,P3,P4,P5,P6,P7),
+    P1 const& p1,
+    P2 const& p2,
+    P3 const& p3,
+    P4 const& p4,
+    P5 const& p5,
+    P6 const& p6,
+    P7 const& p7) noexcept
+  {
+    xju::Lock l(guard_);
+    std::shared_ptr<CallToV7<T,U,P1,P2,P3,P4,P5,P6,P7> > result{
+      new CallToV7<T,U,P1,P2,P3,P4,P5,P6,P7>(x,f,
+        p1,
+        p2,
+        p3,
+        p4,
+        p5,
+        p6,
+        p7)};
+    calls_.push_back(result);
+    changed_.signal(l);
+    return result;
+  }
+  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5,class P6,class P7>
+  std::shared_ptr<CallToR7<T,U,R,P1,P2,P3,P4,P5,P6,P7> > enqueue(
+    T& x, 
+    R (U::*f)(P1,P2,P3,P4,P5,P6,P7),
+    P1 const& p1,
+    P2 const& p2,
+    P3 const& p3,
+    P4 const& p4,
+    P5 const& p5,
+    P6 const& p6,
+    P7 const& p7) noexcept
+  {
+    xju::Lock l(guard_);
+    std::shared_ptr<CallToR7<T,U,R,P1,P2,P3,P4,P5,P6,P7> > result{
+      new CallToR7<T,U,R,P1,P2,P3,P4,P5,P6,P7>(x,f,
+        p1,
+        p2,
+        p3,
+        p4,
+        p5,
+        p6,
+        p7)};
+    calls_.push_back(result);
+    changed_.signal(l);
+    return result;
+  }
+
+  template<class T,class U,class P1,class P2,class P3,class P4,class P5,class P6,class P7>
+  std::shared_ptr<CallToV7<T,U,P1,P2,P3,P4,P5,P6,P7> > awaitCall(
+    T& x,
+    void (U::*f)(P1,P2,P3,P4,P5,P6,P7),
+    std::chrono::steady_clock::time_point deadline) noexcept
+  {
+    xju::Lock l(guard_);
+    while(!calls_.size()&&xju::steadyNow()<deadline){
+      changed_.wait(l,deadline);
+    }
+    xju::assert_not_equal(calls_.size(),0U);
+    std::shared_ptr<CallTo> const call(calls_.front());
+    calls_.pop_front();
+    auto result{std::dynamic_pointer_cast<CallToV7<T,U,P1,P2,P3,P4,P5,P6,P7> >(call)};
+    if (!result.get()){
+      std::string actualType{typeid(*call).name()};
+      ::abort();
+    }
+    xju::assert_equal(&x,&result->x_);
+    xju::assert_equal(f,result->f_);
+    return result;
+  }
+
+  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5,class P6,class P7>
+  std::shared_ptr<CallToR7<T,U,R,P1,P2,P3,P4,P5,P6,P7> > awaitCall(
+    T& x, R (U::*f)(P1,P2,P3,P4,P5,P6,P7),
+    std::chrono::steady_clock::time_point deadline) noexcept
+  {
+    xju::Lock l(guard_);
+    while(!calls_.size()&&xju::steadyNow()<deadline){
+      changed_.wait(l,deadline);
+    }
+    xju::assert_not_equal(calls_.size(),0U);
+    auto call(calls_.front());
+    calls_.pop_front();
+    auto result{std::dynamic_pointer_cast<CallToR7<T,U,R,P1,P2,P3,P4,P5,P6,P7> >(call)};
+    if (!result.get()){
+      std::string actualType{typeid(*call).name()};
+      abort();
+    }
+    xju::assert_equal(&result->x_,&x);
+    xju::assert_equal(result->f_,f);
+    return result;
+  }
+
+
+
   std::deque<std::shared_ptr<CallTo> > calls() noexcept
   {
     xju::Lock l(guard_);
@@ -183,3 +722,4 @@ private:
 
 }
 }
+
