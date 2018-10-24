@@ -16,6 +16,7 @@
 #include <xju/Lock.hh> //impl
 #include <type_traits>
 #include <xju/steadyNow.hh> //impl
+#include <xju/steadyNow.hh>
 
 namespace xju
 {
@@ -41,6 +42,14 @@ public:
       changed_.wait(l,deadline);
     }
     xju::assert_not_equal(result_.get(),(void*)0); //deadline reached?
+    (*result_)();
+  }
+  
+  void awaitReturn() const {
+    xju::Lock l(guard_);
+    while(!result_.get()){
+      changed_.wait(l);
+    }
     (*result_)();
   }
   
@@ -105,10 +114,18 @@ public:
   }
   R awaitResult(std::chrono::steady_clock::time_point deadline) const {
     xju::Lock l(guard_);
-    while(!result_.get()){
+    while(!result_.get() && xju::steadyNow()<deadline){
       changed_.wait(l,deadline);
     }
     xju::assert_not_equal(result_.get(),(void*)0);//deadline reached
+    return (*result_)();
+  }
+  
+  R awaitResult() const {
+    xju::Lock l(guard_);
+    while(!result_.get()){
+      changed_.wait(l);
+    }
     return (*result_)();
   }
   

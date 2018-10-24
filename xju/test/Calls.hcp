@@ -173,11 +173,11 @@ public:
     return result;
   }
 
-  template<class T,class U,class P1>
+  template<class T,class U,class P1,class P1_>
   std::shared_ptr<CallToV1<T,U,P1> > enqueue(
     T& x, 
     void (U::*f)(P1),
-    P1 const& p1) noexcept
+    P1_ const& p1) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToV1<T,U,P1> > result{
@@ -187,11 +187,11 @@ public:
     changed_.signal(l);
     return result;
   }
-  template<class T,class U,class R,class P1>
+  template<class T,class U,class R,class P1,class P1_>
   std::shared_ptr<CallToR1<T,U,R,P1> > enqueue(
     T& x, 
     R (U::*f)(P1),
-    P1 const& p1) noexcept
+    P1_ const& p1) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToR1<T,U,R,P1> > result{
@@ -247,11 +247,11 @@ public:
     return result;
   }
 
-  template<class T,class U,class P1>
+  template<class T,class U,class P1,class P1_>
   std::shared_ptr<CallToVc1<T,U,P1> > enqueue(
     T const& x, 
     void (U::*f)(P1) const,
-    P1 const& p1) noexcept
+    P1_ const& p1) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToVc1<T,U,P1> > result{
@@ -261,11 +261,11 @@ public:
     changed_.signal(l);
     return result;
   }
-  template<class T,class U,class R,class P1>
+  template<class T,class U,class R,class P1,class P1_>
   std::shared_ptr<CallToRc1<T,U,R,P1> > enqueue(
     T const& x, 
     R (U::*f)(P1) const,
-    P1 const& p1) noexcept
+    P1_ const& p1) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToRc1<T,U,R,P1> > result{
@@ -321,12 +321,12 @@ public:
     return result;
   }
 
-  template<class T,class U,class P1,class P2>
+  template<class T,class U,class P1,class P2,class P1_,class P2_>
   std::shared_ptr<CallToV2<T,U,P1,P2> > enqueue(
     T& x, 
     void (U::*f)(P1,P2),
-    P1 const& p1,
-    P2 const& p2) noexcept
+    P1_ const& p1,
+    P2_ const& p2) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToV2<T,U,P1,P2> > result{
@@ -337,12 +337,12 @@ public:
     changed_.signal(l);
     return result;
   }
-  template<class T,class U,class R,class P1,class P2>
+  template<class T,class U,class R,class P1,class P2,class P1_,class P2_>
   std::shared_ptr<CallToR2<T,U,R,P1,P2> > enqueue(
     T& x, 
     R (U::*f)(P1,P2),
-    P1 const& p1,
-    P2 const& p2) noexcept
+    P1_ const& p1,
+    P2_ const& p2) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToR2<T,U,R,P1,P2> > result{
@@ -399,12 +399,12 @@ public:
     return result;
   }
 
-  template<class T,class U,class P1,class P2>
+  template<class T,class U,class P1,class P2,class P1_,class P2_>
   std::shared_ptr<CallToVc2<T,U,P1,P2> > enqueue(
     T const& x, 
     void (U::*f)(P1,P2) const,
-    P1 const& p1,
-    P2 const& p2) noexcept
+    P1_ const& p1,
+    P2_ const& p2) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToVc2<T,U,P1,P2> > result{
@@ -415,12 +415,12 @@ public:
     changed_.signal(l);
     return result;
   }
-  template<class T,class U,class R,class P1,class P2>
+  template<class T,class U,class R,class P1,class P2,class P1_,class P2_>
   std::shared_ptr<CallToRc2<T,U,R,P1,P2> > enqueue(
     T const& x, 
     R (U::*f)(P1,P2) const,
-    P1 const& p1,
-    P2 const& p2) noexcept
+    P1_ const& p1,
+    P2_ const& p2) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToRc2<T,U,R,P1,P2> > result{
@@ -477,13 +477,13 @@ public:
     return result;
   }
 
-  template<class T,class U,class P1,class P2,class P3>
+  template<class T,class U,class P1,class P2,class P3,class P1_,class P2_,class P3_>
   std::shared_ptr<CallToV3<T,U,P1,P2,P3> > enqueue(
     T& x, 
     void (U::*f)(P1,P2,P3),
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToV3<T,U,P1,P2,P3> > result{
@@ -495,13 +495,13 @@ public:
     changed_.signal(l);
     return result;
   }
-  template<class T,class U,class R,class P1,class P2,class P3>
+  template<class T,class U,class R,class P1,class P2,class P3,class P1_,class P2_,class P3_>
   std::shared_ptr<CallToR3<T,U,R,P1,P2,P3> > enqueue(
     T& x, 
     R (U::*f)(P1,P2,P3),
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToR3<T,U,R,P1,P2,P3> > result{
@@ -559,13 +559,13 @@ public:
     return result;
   }
 
-  template<class T,class U,class P1,class P2,class P3>
+  template<class T,class U,class P1,class P2,class P3,class P1_,class P2_,class P3_>
   std::shared_ptr<CallToVc3<T,U,P1,P2,P3> > enqueue(
     T const& x, 
     void (U::*f)(P1,P2,P3) const,
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToVc3<T,U,P1,P2,P3> > result{
@@ -577,13 +577,13 @@ public:
     changed_.signal(l);
     return result;
   }
-  template<class T,class U,class R,class P1,class P2,class P3>
+  template<class T,class U,class R,class P1,class P2,class P3,class P1_,class P2_,class P3_>
   std::shared_ptr<CallToRc3<T,U,R,P1,P2,P3> > enqueue(
     T const& x, 
     R (U::*f)(P1,P2,P3) const,
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToRc3<T,U,R,P1,P2,P3> > result{
@@ -641,14 +641,14 @@ public:
     return result;
   }
 
-  template<class T,class U,class P1,class P2,class P3,class P4>
+  template<class T,class U,class P1,class P2,class P3,class P4,class P1_,class P2_,class P3_,class P4_>
   std::shared_ptr<CallToV4<T,U,P1,P2,P3,P4> > enqueue(
     T& x, 
     void (U::*f)(P1,P2,P3,P4),
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3,
-    P4 const& p4) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3,
+    P4_ const& p4) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToV4<T,U,P1,P2,P3,P4> > result{
@@ -661,14 +661,14 @@ public:
     changed_.signal(l);
     return result;
   }
-  template<class T,class U,class R,class P1,class P2,class P3,class P4>
+  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P1_,class P2_,class P3_,class P4_>
   std::shared_ptr<CallToR4<T,U,R,P1,P2,P3,P4> > enqueue(
     T& x, 
     R (U::*f)(P1,P2,P3,P4),
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3,
-    P4 const& p4) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3,
+    P4_ const& p4) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToR4<T,U,R,P1,P2,P3,P4> > result{
@@ -727,14 +727,14 @@ public:
     return result;
   }
 
-  template<class T,class U,class P1,class P2,class P3,class P4>
+  template<class T,class U,class P1,class P2,class P3,class P4,class P1_,class P2_,class P3_,class P4_>
   std::shared_ptr<CallToVc4<T,U,P1,P2,P3,P4> > enqueue(
     T const& x, 
     void (U::*f)(P1,P2,P3,P4) const,
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3,
-    P4 const& p4) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3,
+    P4_ const& p4) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToVc4<T,U,P1,P2,P3,P4> > result{
@@ -747,14 +747,14 @@ public:
     changed_.signal(l);
     return result;
   }
-  template<class T,class U,class R,class P1,class P2,class P3,class P4>
+  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P1_,class P2_,class P3_,class P4_>
   std::shared_ptr<CallToRc4<T,U,R,P1,P2,P3,P4> > enqueue(
     T const& x, 
     R (U::*f)(P1,P2,P3,P4) const,
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3,
-    P4 const& p4) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3,
+    P4_ const& p4) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToRc4<T,U,R,P1,P2,P3,P4> > result{
@@ -813,15 +813,15 @@ public:
     return result;
   }
 
-  template<class T,class U,class P1,class P2,class P3,class P4,class P5>
+  template<class T,class U,class P1,class P2,class P3,class P4,class P5,class P1_,class P2_,class P3_,class P4_,class P5_>
   std::shared_ptr<CallToV5<T,U,P1,P2,P3,P4,P5> > enqueue(
     T& x, 
     void (U::*f)(P1,P2,P3,P4,P5),
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3,
-    P4 const& p4,
-    P5 const& p5) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3,
+    P4_ const& p4,
+    P5_ const& p5) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToV5<T,U,P1,P2,P3,P4,P5> > result{
@@ -835,15 +835,15 @@ public:
     changed_.signal(l);
     return result;
   }
-  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5>
+  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5,class P1_,class P2_,class P3_,class P4_,class P5_>
   std::shared_ptr<CallToR5<T,U,R,P1,P2,P3,P4,P5> > enqueue(
     T& x, 
     R (U::*f)(P1,P2,P3,P4,P5),
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3,
-    P4 const& p4,
-    P5 const& p5) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3,
+    P4_ const& p4,
+    P5_ const& p5) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToR5<T,U,R,P1,P2,P3,P4,P5> > result{
@@ -903,15 +903,15 @@ public:
     return result;
   }
 
-  template<class T,class U,class P1,class P2,class P3,class P4,class P5>
+  template<class T,class U,class P1,class P2,class P3,class P4,class P5,class P1_,class P2_,class P3_,class P4_,class P5_>
   std::shared_ptr<CallToVc5<T,U,P1,P2,P3,P4,P5> > enqueue(
     T const& x, 
     void (U::*f)(P1,P2,P3,P4,P5) const,
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3,
-    P4 const& p4,
-    P5 const& p5) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3,
+    P4_ const& p4,
+    P5_ const& p5) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToVc5<T,U,P1,P2,P3,P4,P5> > result{
@@ -925,15 +925,15 @@ public:
     changed_.signal(l);
     return result;
   }
-  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5>
+  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5,class P1_,class P2_,class P3_,class P4_,class P5_>
   std::shared_ptr<CallToRc5<T,U,R,P1,P2,P3,P4,P5> > enqueue(
     T const& x, 
     R (U::*f)(P1,P2,P3,P4,P5) const,
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3,
-    P4 const& p4,
-    P5 const& p5) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3,
+    P4_ const& p4,
+    P5_ const& p5) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToRc5<T,U,R,P1,P2,P3,P4,P5> > result{
@@ -993,16 +993,16 @@ public:
     return result;
   }
 
-  template<class T,class U,class P1,class P2,class P3,class P4,class P5,class P6>
+  template<class T,class U,class P1,class P2,class P3,class P4,class P5,class P6,class P1_,class P2_,class P3_,class P4_,class P5_,class P6_>
   std::shared_ptr<CallToV6<T,U,P1,P2,P3,P4,P5,P6> > enqueue(
     T& x, 
     void (U::*f)(P1,P2,P3,P4,P5,P6),
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3,
-    P4 const& p4,
-    P5 const& p5,
-    P6 const& p6) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3,
+    P4_ const& p4,
+    P5_ const& p5,
+    P6_ const& p6) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToV6<T,U,P1,P2,P3,P4,P5,P6> > result{
@@ -1017,16 +1017,16 @@ public:
     changed_.signal(l);
     return result;
   }
-  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5,class P6>
+  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5,class P6,class P1_,class P2_,class P3_,class P4_,class P5_,class P6_>
   std::shared_ptr<CallToR6<T,U,R,P1,P2,P3,P4,P5,P6> > enqueue(
     T& x, 
     R (U::*f)(P1,P2,P3,P4,P5,P6),
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3,
-    P4 const& p4,
-    P5 const& p5,
-    P6 const& p6) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3,
+    P4_ const& p4,
+    P5_ const& p5,
+    P6_ const& p6) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToR6<T,U,R,P1,P2,P3,P4,P5,P6> > result{
@@ -1087,16 +1087,16 @@ public:
     return result;
   }
 
-  template<class T,class U,class P1,class P2,class P3,class P4,class P5,class P6>
+  template<class T,class U,class P1,class P2,class P3,class P4,class P5,class P6,class P1_,class P2_,class P3_,class P4_,class P5_,class P6_>
   std::shared_ptr<CallToVc6<T,U,P1,P2,P3,P4,P5,P6> > enqueue(
     T const& x, 
     void (U::*f)(P1,P2,P3,P4,P5,P6) const,
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3,
-    P4 const& p4,
-    P5 const& p5,
-    P6 const& p6) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3,
+    P4_ const& p4,
+    P5_ const& p5,
+    P6_ const& p6) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToVc6<T,U,P1,P2,P3,P4,P5,P6> > result{
@@ -1111,16 +1111,16 @@ public:
     changed_.signal(l);
     return result;
   }
-  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5,class P6>
+  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5,class P6,class P1_,class P2_,class P3_,class P4_,class P5_,class P6_>
   std::shared_ptr<CallToRc6<T,U,R,P1,P2,P3,P4,P5,P6> > enqueue(
     T const& x, 
     R (U::*f)(P1,P2,P3,P4,P5,P6) const,
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3,
-    P4 const& p4,
-    P5 const& p5,
-    P6 const& p6) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3,
+    P4_ const& p4,
+    P5_ const& p5,
+    P6_ const& p6) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToRc6<T,U,R,P1,P2,P3,P4,P5,P6> > result{
@@ -1181,17 +1181,17 @@ public:
     return result;
   }
 
-  template<class T,class U,class P1,class P2,class P3,class P4,class P5,class P6,class P7>
+  template<class T,class U,class P1,class P2,class P3,class P4,class P5,class P6,class P7,class P1_,class P2_,class P3_,class P4_,class P5_,class P6_,class P7_>
   std::shared_ptr<CallToV7<T,U,P1,P2,P3,P4,P5,P6,P7> > enqueue(
     T& x, 
     void (U::*f)(P1,P2,P3,P4,P5,P6,P7),
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3,
-    P4 const& p4,
-    P5 const& p5,
-    P6 const& p6,
-    P7 const& p7) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3,
+    P4_ const& p4,
+    P5_ const& p5,
+    P6_ const& p6,
+    P7_ const& p7) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToV7<T,U,P1,P2,P3,P4,P5,P6,P7> > result{
@@ -1207,17 +1207,17 @@ public:
     changed_.signal(l);
     return result;
   }
-  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5,class P6,class P7>
+  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5,class P6,class P7,class P1_,class P2_,class P3_,class P4_,class P5_,class P6_,class P7_>
   std::shared_ptr<CallToR7<T,U,R,P1,P2,P3,P4,P5,P6,P7> > enqueue(
     T& x, 
     R (U::*f)(P1,P2,P3,P4,P5,P6,P7),
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3,
-    P4 const& p4,
-    P5 const& p5,
-    P6 const& p6,
-    P7 const& p7) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3,
+    P4_ const& p4,
+    P5_ const& p5,
+    P6_ const& p6,
+    P7_ const& p7) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToR7<T,U,R,P1,P2,P3,P4,P5,P6,P7> > result{
@@ -1279,17 +1279,17 @@ public:
     return result;
   }
 
-  template<class T,class U,class P1,class P2,class P3,class P4,class P5,class P6,class P7>
+  template<class T,class U,class P1,class P2,class P3,class P4,class P5,class P6,class P7,class P1_,class P2_,class P3_,class P4_,class P5_,class P6_,class P7_>
   std::shared_ptr<CallToVc7<T,U,P1,P2,P3,P4,P5,P6,P7> > enqueue(
     T const& x, 
     void (U::*f)(P1,P2,P3,P4,P5,P6,P7) const,
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3,
-    P4 const& p4,
-    P5 const& p5,
-    P6 const& p6,
-    P7 const& p7) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3,
+    P4_ const& p4,
+    P5_ const& p5,
+    P6_ const& p6,
+    P7_ const& p7) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToVc7<T,U,P1,P2,P3,P4,P5,P6,P7> > result{
@@ -1305,17 +1305,17 @@ public:
     changed_.signal(l);
     return result;
   }
-  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5,class P6,class P7>
+  template<class T,class U,class R,class P1,class P2,class P3,class P4,class P5,class P6,class P7,class P1_,class P2_,class P3_,class P4_,class P5_,class P6_,class P7_>
   std::shared_ptr<CallToRc7<T,U,R,P1,P2,P3,P4,P5,P6,P7> > enqueue(
     T const& x, 
     R (U::*f)(P1,P2,P3,P4,P5,P6,P7) const,
-    P1 const& p1,
-    P2 const& p2,
-    P3 const& p3,
-    P4 const& p4,
-    P5 const& p5,
-    P6 const& p6,
-    P7 const& p7) noexcept
+    P1_ const& p1,
+    P2_ const& p2,
+    P3_ const& p3,
+    P4_ const& p4,
+    P5_ const& p5,
+    P6_ const& p6,
+    P7_ const& p7) noexcept
   {
     xju::Lock l(guard_);
     std::shared_ptr<CallToRc7<T,U,R,P1,P2,P3,P4,P5,P6,P7> > result{

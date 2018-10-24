@@ -77,6 +77,7 @@ void test1() {
   public:
     void f1(int x) {}
     int f2(int x) {return x;}
+    void f3(std::string const& x) {};
   };
   
   A a;
@@ -119,6 +120,13 @@ void test1() {
     catch(xju::Exception const& e2){
       xju::assert_equal(e2,e);
     }
+  }
+  {
+    c.enqueue(a,&A::f3,std::string("fred"));
+    auto call{c.awaitCall(a,&A::f3,xju::steadyNow())};
+    xju::assert_equal(call->p1_,std::string("fred"));
+    call->return_();
+    call->awaitReturn(xju::steadyNow());
   }
 }
 

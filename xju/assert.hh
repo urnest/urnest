@@ -275,7 +275,12 @@ namespace xju
                                       contains.rbegin(),
                                       contains.rend()),x.rbegin());
     }
-    
+
+    template<class T>
+    bool assert_empty(T const& x) noexcept
+    {
+        xju::assert_equal(x.size(),0U);
+    }
 }
 
 

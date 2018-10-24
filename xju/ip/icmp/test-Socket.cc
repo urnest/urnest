@@ -39,8 +39,7 @@ void test1() {
   s.send(localHost,m,deadline);
   while(true){
     xju::assert_not_equal(
-      xju::io::select({(xju::io::Input*)&s},deadline).size(),0U);
-    xju::io::select({(xju::io::Input*)&s},deadline);
+      xju::io::select({&s.input()},deadline).size(),0U);
     auto const r{s.receive()};
     std::cout << std::get<1>(r) << std::endl;
     if (std::get<0>(r)==localHost &&

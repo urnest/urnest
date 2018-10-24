@@ -60,7 +60,7 @@ private:
 
 
 methodN='''\
-  template<class T,class U{pClasses}>
+  template<class T,class U{pClasses}{p_Classes}>
   std::shared_ptr<CallToV{nParams}<T,U{paramTypes}> > enqueue(
     T& x, 
     void (U::*f)({fParams}){params}) noexcept
@@ -72,7 +72,7 @@ methodN='''\
     changed_.signal(l);
     return result;
   }}
-  template<class T,class U,class R{pClasses}>
+  template<class T,class U,class R{pClasses}{p_Classes}>
   std::shared_ptr<CallToR{nParams}<T,U,R{paramTypes}> > enqueue(
     T& x, 
     R (U::*f)({fParams}){params}) noexcept
@@ -130,7 +130,7 @@ methodN='''\
     return result;
   }}
 
-  template<class T,class U{pClasses}>
+  template<class T,class U{pClasses}{p_Classes}>
   std::shared_ptr<CallToVc{nParams}<T,U{paramTypes}> > enqueue(
     T const& x, 
     void (U::*f)({fParams}) const{params}) noexcept
@@ -142,7 +142,7 @@ methodN='''\
     changed_.signal(l);
     return result;
   }}
-  template<class T,class U,class R{pClasses}>
+  template<class T,class U,class R{pClasses}{p_Classes}>
   std::shared_ptr<CallToRc{nParams}<T,U,R{paramTypes}> > enqueue(
     T const& x, 
     R (U::*f)({fParams}) const{params}) noexcept
@@ -208,11 +208,13 @@ methods=[]
 for nParams in range(0,maxParams+1):
     pClasses=''.join([',class P{n}'.format(**vars())
                       for n in range(1,nParams+1)])
+    p_Classes=''.join([',class P{n}_'.format(**vars())
+                      for n in range(1,nParams+1)])
     paramTypes=''.join([',P{n}'.format(**vars())
                         for n in range(1,nParams+1)])
     fParams=','.join(['P{n}'.format(**vars())
                         for n in range(1,nParams+1)])
-    params=  ''.join([',\n    P{n} const& p{n}'.format(**vars())
+    params=  ''.join([',\n    P{n}_ const& p{n}'.format(**vars())
                       for n in range(1,nParams+1)])
     paramNames=''.join([',\n        p{n}'.format(**vars())
                         for n in range(1,nParams+1)])

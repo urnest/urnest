@@ -29,6 +29,7 @@
 #include <xju/ip/icmp/decodeMessage.hh> //impl
 #include <sys/capability.h> //impl
 #include <xju/ip/v4/decodeHeader.hh> //impl
+#include <xju/io/Output.hh>
 
 namespace xju
 {
@@ -79,7 +80,9 @@ public:
     xju::Exception,
     xju::SyscallFailed) try:
       fd_( (enableCapSetRaw(),xju::syscall(xju::socket,XJU_TRACED)(
-            AF_INET, SOCK_RAW|SOCK_CLOEXEC|SOCK_NONBLOCK, IPPROTO_ICMP)) )
+            AF_INET, SOCK_RAW|SOCK_CLOEXEC|SOCK_NONBLOCK, IPPROTO_ICMP)) ),
+      output_(fd_.fd()),
+      input_(fd_.fd())
   {
     uint32_t o{0};
     o|=1U<<0; //echo reply
@@ -103,7 +106,7 @@ public:
       xju::SyscallFailed) override
   {
     try{
-      if (xju::io::select({(xju::io::Output*)this},deadline).size()) {
+      if (xju::io::select({&output_},deadline).size()) {
         sockaddr_in dest_addr;
         dest_addr.sin_family=AF_INET;
         dest_addr.sin_port=0;
@@ -117,7 +120,7 @@ public:
           xju::ip::decode::makeIterator(m.begin(),m.end()));
         encodeMessage(y,m.begin());
         auto const bytesSent=xju::syscall(xju::sendto,XJU_TRACED)(
-          fileDescriptor(),
+          fd_.fd(),
           m.data(),
           m.size(),
           MSG_NOSIGNAL,
@@ -152,7 +155,7 @@ public:
       socklen_t senderAddrLen{sizeof(senderAddr)};
       std::array<uint8_t,2048> buffer;
       ssize_t const bytesRead=xju::syscall(xju::recvfrom,XJU_TRACED)(
-        fileDescriptor(),
+        fd_.fd(),
         buffer.data(),buffer.size(),
         MSG_NOSIGNAL,
         (sockaddr*)&senderAddr,&senderAddrLen);
@@ -198,21 +201,61 @@ public:
     }
   }
 
-  std::string str() const throw() override
+  // SocketIf::
+  xju::io::Input const& input() const noexcept override
   {
-    std::ostringstream s;
-    s << "file descriptor " << fd_.fd();
-    return s.str();
+    return input_;
   }
-  
+
 private:
   xju::AutoFd fd_;
-  // xju::io::Input::
-  // xju::io::Output::
-  int fileDescriptor() const throw() override {
-    return fd_.fd();
-  }
-  
+
+  class Output:public xju::io::Output
+  {
+  public:
+    int const fd_;
+    
+    explicit Output(int const fd) noexcept
+        : fd_(fd)
+    {
+    }
+    // xju::io::Output::
+    int fileDescriptor() const throw() override {
+      return fd_;
+    }
+    // xju::io::Output::
+    std::string str() const throw() override
+    {
+      std::ostringstream s;
+      s << "file descriptor " << fd_;
+      return s.str();
+    }
+  };
+
+  class Input:public xju::io::Input
+  {
+  public:
+    int const fd_;
+    
+    explicit Input(int const fd) noexcept
+        : fd_(fd)
+    {
+    }
+    // xju::io::Input::
+    int fileDescriptor() const throw() override {
+      return fd_;
+    }
+    // xju::io::Input::
+    std::string str() const throw() override
+    {
+      std::ostringstream s;
+      s << "file descriptor " << fd_;
+      return s.str();
+    }
+  };
+
+  Output output_;
+  Input input_;
 };
 
 
