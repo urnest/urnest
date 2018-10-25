@@ -34,6 +34,8 @@
 #include <xju/Condition.hh>
 #include <xju/io/OStream.hh>
 #include <xju/next.hh> //impl
+#include <xju/ip/icmp/encodeMessage.hh> //impl
+#include <xju/ip/icmp/decodeDestinationUnreachable.hh> //impl
 
 namespace xju
 {
@@ -161,12 +163,14 @@ public:
       if ((*i).second==requests_.end()){
         try{
           auto const sentAt{xju::steadyNow()};
-          socket_.send((*i).first,
-                       xju::ip::icmp::encodeEcho(
-                         identifier_,
-                         currentSequence_,
-                         std::vector<uint8_t>()),
-                       sentAt);
+          Message m{Message::Type::ECHO,
+                    Message::Code(0),
+                    Checksum(0),
+                    encodeEcho(Echo(
+                                 identifier_,
+                                 Echo::Sequence(currentSequence_),
+                                 std::vector<uint8_t>()))};
+          socket_.send((*i).first,m,sentAt);
           (*i).second=requests_.insert(
             std::make_pair(
               t+timeoutPerRetry_,
@@ -242,7 +246,7 @@ private:
       for(auto i=requests_.begin();
           i!=requests_.end() && (*i).first<=now;
           requests_.erase(i),i=requests_.begin()){
-        if ((*i).second.request.retryNumber_==maxRetries_){
+        if ((*i).second.retryNumber_==maxRetries_){
           collector_.timeout((*i).second.address_);
           (*targets_.find((*i).second.address_)).second=requests_.end();
         }
@@ -250,7 +254,7 @@ private:
           Request const request{
             (*i).second.address_,
             (*i).second.retryNumber_+1,
-            (*i).second.sequence_+1,
+            Echo::Sequence((*i).second.sequence_.value()+1),
             now};
           try{
             socket_.send(request.address_,
@@ -259,9 +263,10 @@ private:
                            xju::ip::icmp::Message::Code(0),
                            xju::ip::Checksum(0),
                            xju::ip::icmp::encodeEcho(
-                             identifier_,
-                             request.sequence_,
-                             std::vector<uint8_t>())),
+                             Echo(
+                               identifier_,
+                               request.sequence_,
+                               std::vector<uint8_t>()))),
                          now);
             (*targets_.find(request.address_)).second=requests_.insert(
               std::make_pair(now+timeoutPerRetry_,request));
@@ -273,7 +278,7 @@ private:
         }
       }
       if (requests_.size()){
-        changed_.wait(l,(*.begin()).first);
+        changed_.wait(l,(*requests_.begin()).first);
       }
       else{
         changed_.wait(l);
@@ -296,23 +301,24 @@ private:
       if (readable.find(stopReceiving_.first.get())!=readable.end()){
         return;
       }
-      if (readable.find(&socket_)!=readable.end()){
+      if (readable.find(&socket_.input())!=readable.end()){
         try{
           auto const r(socket_.receive());
           xju::ip::v4::Address const& from{std::get<0>(r)};
           Message const& message{std::get<1>(r)};
           if (message.type_==Message::Type::ECHOREPLY){
             xju::Lock l(guard_);
-            auto const i(targets_.find(address));
+            auto const i(targets_.find(from));
             if (i!=targets_.end()){
               if ((*i).second != requests_.end()){
-                Request const& request{(*(*i).second)};
+                Requests::const_iterator const ri{(*i).second};
+                Request const& request{(*ri).second};
                 Echo const echo{decodeEcho(message.header_,
                                            message.data_)};
-                if (echo.identifier_==request.identifier_ &&
+                if (echo.identifier_==identifier_ &&
                     echo.sequence_==request.sequence_){
                   collector_.pinged(
-                    address,
+                    from,
                     request.retryNumber_,
                     xju::steadyNow()-request.sentAt_);
                   requests_.erase((*i).second);
@@ -322,13 +328,17 @@ private:
             }
           }
           else if (message.type_==icmp::Message::Type::DEST_UNREACH){
-            auto const u{decodeDestinationUnreachable(message)};
+            auto const u{decodeDestinationUnreachable(from,
+                                                      message.code_,
+                                                      message.header_,
+                                                      message.data_)};
             if (u.protocol_== 1 /*ICMP*/){
               auto const& address{u.unreachableAddress_};
               auto const i(targets_.find(address));
               if (i!=targets_.end()){
                 if ((*i).second != requests_.end()){
-                  Request const& request{(*(*i).second).second};
+                  Requests::const_iterator const ri{(*i).second};
+                  Request const& request{(*ri).second};
                   // destination unreachable data only has 8 bytes of
                   // original message but that always gives us a complete
                   // ICMP header i.e. will always decode
