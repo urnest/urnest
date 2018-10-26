@@ -36,6 +36,8 @@
 #include <xju/next.hh> //impl
 #include <xju/ip/icmp/encodeMessage.hh> //impl
 #include <xju/ip/icmp/decodeDestinationUnreachable.hh> //impl
+#include <xju/ip/decode.hh> //impl
+#include <xju/ip/icmp/decodeMessage.hh> //impl
 
 namespace xju
 {
@@ -136,9 +138,9 @@ public:
   //
   void run() noexcept
   {
-    xju::Lock l(guard_);
-
     if (!targets_.size()){
+      xju::Lock l(guard_);
+
       while(!stop_){
         changed_.wait(l);
       }
@@ -150,6 +152,8 @@ public:
       [&]{ stopReceiving_.second->write("x",1U,xju::steadyNow()); }};
 
     xju::Thread runAlarmClockThread{[&]{ runAlarmClock(); }};
+
+    xju::Lock l(guard_);
 
     std::chrono::nanoseconds const step{(uint64_t)(1.0e9/nominalPacketRate_)};
 
@@ -332,8 +336,9 @@ private:
                                                       message.code_,
                                                       message.header_,
                                                       message.data_)};
-            if (u.protocol_== 1 /*ICMP*/){
+            if (u.protocol_== xju::ip::Protocol(1) /*ICMP*/){
               auto const& address{u.unreachableAddress_};
+              xju::Lock l(guard_);
               auto const i(targets_.find(address));
               if (i!=targets_.end()){
                 if ((*i).second != requests_.end()){
@@ -349,7 +354,7 @@ private:
                   if (icmpMessage.first.type_==Message::Type::ECHO){
                     auto const echo{decodeEcho(icmpMessage.first.header_,
                                                icmpMessage.first.data_)};
-                    if (echo.identifier_==request.identifier_ &&
+                    if (echo.identifier_==identifier_ &&
                         echo.sequence_==request.sequence_){
                       collector_.unreachable(
                         address,

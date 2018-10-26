@@ -17,6 +17,7 @@
 #include <thread>
 #include <xju/Thread.hh>
 #include <xju/nanoseconds.hh>
+#include <xju/now.hh>
 
 namespace xju
 {
@@ -42,6 +43,9 @@ public:
     std::chrono::steady_clock::time_point const& deadline) throw(
       xju::SyscallFailed) override
   {
+    std::cout << xju::format::time(xju::now())
+              << " send(" << to << ", " << x << ")"<<std::endl;
+      
     calls_.enqueue(*this,
                    &xju::ip::icmp::SocketIf::send,
                    to,
@@ -53,6 +57,9 @@ public:
       // invalid message, e.g. incorrect checksum
       xju::Exception) override
   {
+    std::cout << xju::format::time(xju::now())
+              << " receive()"<<std::endl;
+      
     char c(' ');
     input_.first->read(&c,1U,xju::steadyNow());
     xju::assert_equal(c,'x');
@@ -131,18 +138,17 @@ public:
 
 void test1() {
             
-  double const rate{10};
+  double const rate{1};
   std::chrono::nanoseconds const step{(long)(1e9/rate)};
   auto leeway=xju::nanoseconds(0.25*step); //allows for non-realtime delays
 
-  stub::SocketIf socket(
-    std::chrono::duration_cast<std::chrono::nanoseconds>(leeway));
+  stub::SocketIf socket(leeway);
   stub::CollectorIf collector;
 
-  xju::ip::v4::Address const a1{ 1U<<24 & 2U<<16 & 3U<<8 & 4U<<0 };
-  xju::ip::v4::Address const a2{ 1U<<24 & 2U<<16 & 3U<<8 & 5U<<0 };
-  std::chrono::nanoseconds const timeoutPerRetry{(long)0.4*step};
-xju::ip::icmp::Echo::Identifier identifier{0xfedc};
+  xju::ip::v4::Address const a1{ (1U<<24) | (2U<<16) | (3U<<8) | (4U<<0) };
+  xju::ip::v4::Address const a2{ (1U<<24) | (2U<<16) | (3U<<8) | (5U<<0) };
+  auto const timeoutPerRetry{xju::nanoseconds(0.4*step)};
+  xju::ip::icmp::Echo::Identifier identifier{0xfedc};
   Pinger p{socket,
            collector,
            identifier,
@@ -193,7 +199,7 @@ xju::ip::icmp::Echo::Identifier identifier{0xfedc};
                                       &SocketIf::send,
                                       t1+xju::nanoseconds(1.0*step+leeway));
     xju::assert_equal(call->p1_,a2);
-    xju::assert_equal(call->p2_,Message(Message::Type::ECHOREPLY,
+    xju::assert_equal(call->p2_,Message(Message::Type::ECHO,
                                         Message::Code(0),
                                         Checksum(0),
                                         encodeEcho(Echo(identifier,
@@ -215,7 +221,7 @@ xju::ip::icmp::Echo::Identifier identifier{0xfedc};
                                                   {}))));
     auto call=collector.calls_.awaitCall(collector,
                                          &Pinger::CollectorIf::pinged,
-                                         t1+xju::nanoseconds(0.1*step));
+                                         t1+xju::nanoseconds(1.3*step));
     xju::assert_equal(call->p1_,a2);
     xju::assert_equal(call->p2_,0U);
     xju::assert_greater_equal(call->p3_,0.2*step);
@@ -227,13 +233,13 @@ xju::ip::icmp::Echo::Identifier identifier{0xfedc};
   {
     auto call=socket.calls_.awaitCall(socket,
                                       &SocketIf::send,
-                                      t1+xju::nanoseconds(2*step+leeway));
+                                      t1+xju::nanoseconds(2.0*step+leeway));
     xju::assert_equal(call->p1_,a1);
-    xju::assert_equal(call->p2_,Message(Message::Type::ECHOREPLY,
+    xju::assert_equal(call->p2_,Message(Message::Type::ECHO,
                                         Message::Code(0),
                                         Checksum(0),
                                         encodeEcho(Echo(identifier,
-                                                        Echo::Sequence(5),
+                                                        Echo::Sequence(9),
                                                         {}))));
     xju::assert_greater_equal(xju::steadyNow(),t1+xju::nanoseconds(2.0*step));
     xju::assert_empty(collector.calls_.calls());
@@ -245,11 +251,11 @@ xju::ip::icmp::Echo::Identifier identifier{0xfedc};
                                       &SocketIf::send,
                                       t1+xju::nanoseconds(2.4*step+leeway));
     xju::assert_equal(call->p1_,a1);
-    xju::assert_equal(call->p2_,Message(Message::Type::ECHOREPLY,
+    xju::assert_equal(call->p2_,Message(Message::Type::ECHO,
                                         Message::Code(0),
                                         Checksum(0),
                                         encodeEcho(Echo(identifier,
-                                                        Echo::Sequence(5),
+                                                        Echo::Sequence(10),
                                                         {}))));
     xju::assert_greater_equal(xju::steadyNow(),t1+xju::nanoseconds(2.4*step));
     xju::assert_empty(collector.calls_.calls());
@@ -261,26 +267,27 @@ xju::ip::icmp::Echo::Identifier identifier{0xfedc};
                                       &SocketIf::send,
                                       t1+xju::nanoseconds(2.8*step+leeway));
     xju::assert_equal(call->p1_,a1);
-    xju::assert_equal(call->p2_,Message(Message::Type::ECHOREPLY,
+    xju::assert_equal(call->p2_,Message(Message::Type::ECHO,
                                         Message::Code(0),
                                         Checksum(0),
                                         encodeEcho(Echo(identifier,
-                                                        Echo::Sequence(5),
+                                                        Echo::Sequence(11),
                                                         {}))));
     xju::assert_greater_equal(xju::steadyNow(),t1+xju::nanoseconds(2.8*step));
     xju::assert_empty(collector.calls_.calls());
     call->return_();
   }
   {
+    //a2 ping interleaves
     auto call=socket.calls_.awaitCall(socket,
                                       &SocketIf::send,
                                       t1+xju::nanoseconds(3.0*step+leeway));
     xju::assert_equal(call->p1_,a2);
-    xju::assert_equal(call->p2_,Message(Message::Type::ECHOREPLY,
+    xju::assert_equal(call->p2_,Message(Message::Type::ECHO,
                                         Message::Code(0),
                                         Checksum(0),
                                         encodeEcho(Echo(identifier,
-                                                        Echo::Sequence(5),
+                                                        Echo::Sequence(9),
                                                         {}))));
     xju::assert_empty(collector.calls_.calls());
     call->return_();
@@ -291,11 +298,11 @@ xju::ip::icmp::Echo::Identifier identifier{0xfedc};
                                       &SocketIf::send,
                                       t1+xju::nanoseconds(3.2*step+leeway));
     xju::assert_equal(call->p1_,a1);
-    xju::assert_equal(call->p2_,Message(Message::Type::ECHOREPLY,
+    xju::assert_equal(call->p2_,Message(Message::Type::ECHO,
                                         Message::Code(0),
                                         Checksum(0),
                                         encodeEcho(Echo(identifier,
-                                                        Echo::Sequence(5),
+                                                        Echo::Sequence(12),
                                                         {}))));
     xju::assert_greater_equal(xju::steadyNow(),t1+xju::nanoseconds(3.2*step));
     xju::assert_empty(collector.calls_.calls());
@@ -307,11 +314,11 @@ xju::ip::icmp::Echo::Identifier identifier{0xfedc};
                                       &SocketIf::send,
                                       t1+xju::nanoseconds(3.4*step+leeway));
     xju::assert_equal(call->p1_,a2);
-    xju::assert_equal(call->p2_,Message(Message::Type::ECHOREPLY,
+    xju::assert_equal(call->p2_,Message(Message::Type::ECHO,
                                         Message::Code(0),
                                         Checksum(0),
                                         encodeEcho(Echo(identifier,
-                                                        Echo::Sequence(5),
+                                                        Echo::Sequence(10),
                                                         {}))));
     xju::assert_greater_equal(xju::steadyNow(),t1+xju::nanoseconds(3.4*step));
     xju::assert_empty(collector.calls_.calls());
@@ -324,7 +331,7 @@ xju::ip::icmp::Echo::Identifier identifier{0xfedc};
                                   Message::Code(0),
                                   Checksum(0),
                                   encodeEcho(Echo(identifier,
-                                                  Echo::Sequence(5),
+                                                  Echo::Sequence(10),
                                                   {}))));
     auto call=collector.calls_.awaitCall(collector,
                                          &Pinger::CollectorIf::pinged,
@@ -336,6 +343,7 @@ xju::ip::icmp::Echo::Identifier identifier{0xfedc};
     call->return_();
   }
   {
+    //a1 times out = max retries
     auto t1{xju::steadyNow()};
     auto call=collector.calls_.awaitCall(collector,
                                          &Pinger::CollectorIf::timeout,
