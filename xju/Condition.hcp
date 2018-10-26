@@ -67,13 +67,15 @@ public:
   }
   
   //
+  // Wake *all* threads waiting on condition.
+  //
   // pre: l.holds(guard)
   //
   void signal(const Lock& l) throw()
   {
     assert_equal(l.holds(_guard), true);
     
-    assert_equal(pthread_cond_signal(&_impl),0);
+    assert_equal(pthread_cond_broadcast(&_impl),0);
   }
   
   //

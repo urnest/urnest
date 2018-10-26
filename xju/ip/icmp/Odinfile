@@ -9,7 +9,7 @@
 ()+cmd=(test-decodeEcho.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-encodeEcho.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-decodeDestinationUnreachable.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
-()+cmd=(test-Pinger.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-Pinger.cc+(../../..%cxx-opts):auto.cxx.exe)+cmd=10:exec.output
 
 #note test-Socket requires CAP_NET_RAW capability (see capability(7) manpage)
 %test-Socket==()+cmd=(test-Socket.cc+(../../..%cxx-opts)+lib_sp=(/usr/lib/x86_64-linux-gnu)+lib=cap:auto.cxx.exe):exec.output

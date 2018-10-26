@@ -18,6 +18,7 @@
 #include <xju/Thread.hh>
 #include <xju/nanoseconds.hh>
 #include <xju/now.hh>
+#include <xju/stringToDouble.hh>
 
 namespace xju
 {
@@ -136,9 +137,8 @@ public:
   
 }
 
-void test1() {
+void test1(double rate) {
             
-  double const rate{1};
   std::chrono::nanoseconds const step{(long)(1e9/rate)};
   auto leeway=xju::nanoseconds(0.25*step); //allows for non-realtime delays
 
@@ -351,6 +351,7 @@ void test1() {
     xju::assert_equal(call->p1_,a1);
     call->return_();
   }
+  return;
 }
 
 }
@@ -362,7 +363,7 @@ using namespace xju::ip::icmp;
 int main(int argc, char* argv[])
 {
   unsigned int n(0);
-  test1(), ++n;
+  test1(argc>1?xju::stringToDouble(argv[1]):1), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }
