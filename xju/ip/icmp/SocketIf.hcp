@@ -16,6 +16,7 @@
 #include <xju/SyscallFailed.hh>
 #include <tuple>
 #include <xju/Exception.hh>
+#include <xju/DeadlineReached.hh>
 
 namespace xju
 {
@@ -36,7 +37,8 @@ public:
     xju::ip::v4::Address const& to,
     Message const& x,
     std::chrono::steady_clock::time_point const& deadline) throw(
-      xju::SyscallFailed) = 0;
+      xju::SyscallFailed,
+      xju::DeadlineReached) = 0;
 
   // receive message assumed to have already arrived
   // i.e. input() is readable

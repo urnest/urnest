@@ -1,0 +1,54 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/ip/icmp/DestinationUnreachable.hh>
+#include <xju/Array.hh>
+#include <algorithm>
+#include <utility>
+#include <vector>
+#include <cinttypes>
+#include <xju/ip/v4/Header.hh>
+#include <xju/ip/icmp/Message.hh>
+#include <xju/ip/icmp/encodeMessage.hh> //impl
+#include <xju/ip/v4/encodeHeader.hh> //impl
+
+namespace xju
+{
+namespace ip
+{
+namespace icmp
+{
+
+std::pair<xju::Array<uint8_t,4>,
+          std::vector<uint8_t> > encodeDestinationUnreachable(
+            uint16_t nextHopMTU,
+            ip::v4::Header const& header,
+            Message const& originalRequest) noexcept
+{
+  std::pair<xju::Array<uint8_t,4>,
+            std::vector<uint8_t> > result;
+  result.first[0]=(uint8_t)(0);//unused
+  result.first[1]=(uint8_t)(0);//unused
+  result.first[2]=(uint8_t)(nextHopMTU>>8);
+  result.first[3]=(uint8_t)(nextHopMTU&0xff);
+  xju::ip::v4::encodeHeader(header,std::back_inserter(result.second));
+  Message const truncated(originalRequest.type_,
+                          originalRequest.code_,
+                          originalRequest.checksum_,
+                          originalRequest.header_,
+                          std::vector<uint8_t>());
+  encodeMessage(truncated,std::back_inserter(result.second));
+  return result;
+}
+
+}
+}
+}

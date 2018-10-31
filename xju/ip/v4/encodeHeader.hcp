@@ -1,0 +1,76 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/ip/v4/Header.hh>
+#include <cinttypes>
+#include <xju/ip/Checksum.hh>
+#include <xju/ip/decode.hh>
+#include <xju/ip/checksum/calculate.hh>
+
+namespace xju
+{
+namespace ip
+{
+namespace v4
+{
+
+// OutputIterator has value to uint8_t
+template<class OutputIterator>
+OutputIterator encodeHeader(
+  Header const& h, OutputIterator i,
+  Checksum const& checksum)
+{
+  (*i++)=(h.version_.value()<<4)+(h.ihl_.value());
+  (*i++)=(h.dscp_.value()<<2)+(h.ecn_.value());
+  (*i++)=(uint8_t)(h.totalLength_.value()>>8);
+  (*i++)=(uint8_t)(h.totalLength_.value()&0xff);
+  (*i++)=(uint8_t)(h.identification_.value()>>8);
+  (*i++)=(uint8_t)(h.identification_.value()&0xff);
+  (*i++)=(h.flags_.value()<<5)+(uint8_t)(h.fragmentOffset_.value()>>8);
+  (*i++)=(uint8_t)(h.fragmentOffset_.value()&0xff);
+  (*i++)=h.ttl_.value();
+  (*i++)=h.protocol_.value();
+  (*i++)=(uint8_t)(checksum.value()>>8);
+  (*i++)=(uint8_t)(checksum.value()&0xff);
+  (*i++)=(uint8_t)(h.sourceAddress_.value()>>24);
+  (*i++)=(uint8_t)((h.sourceAddress_.value()>>16)&0xff);
+  (*i++)=(uint8_t)((h.sourceAddress_.value()>>8)&0xff);
+  (*i++)=(uint8_t)((h.sourceAddress_.value()>>0)&0xff);
+  (*i++)=(uint8_t)(h.destAddress_.value()>>24);
+  (*i++)=(uint8_t)((h.destAddress_.value()>>16)&0xff);
+  (*i++)=(uint8_t)((h.destAddress_.value()>>8)&0xff);
+  (*i++)=(uint8_t)((h.destAddress_.value()>>0)&0xff);
+  for(auto j=5;j!=h.ihl_.value();++j){
+    (*i++)=(uint8_t)(h.options_[j-5]>>24);
+    (*i++)=(uint8_t)((h.options_[j-5]>>16)&0xff);
+    (*i++)=(uint8_t)((h.options_[j-5]>>8)&0xff);
+    (*i++)=(uint8_t)((h.options_[j-5]>>0)&0xff);
+  }
+  return i;
+}
+
+// OutputIterator has value to uint8_t
+template<class OutputIterator>
+OutputIterator encodeHeader(
+  Header const& h, OutputIterator i)
+{
+  std::vector<uint8_t> x;
+  encodeHeader(h,std::back_inserter(x),Checksum(0));
+  auto const c{xju::ip::checksum::calculate(
+      xju::ip::decode::makeIterator(x.begin(),x.end()))};
+  return encodeHeader(h,i,c);
+}
+
+}
+}
+}
+
+

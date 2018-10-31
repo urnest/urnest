@@ -310,8 +310,8 @@ private:
           auto const r(socket_.receive());
           xju::ip::v4::Address const& from{std::get<0>(r)};
           Message const& message{std::get<1>(r)};
+          xju::Lock l(guard_);
           if (message.type_==Message::Type::ECHOREPLY){
-            xju::Lock l(guard_);
             auto const i(targets_.find(from));
             if (i!=targets_.end()){
               if ((*i).second != requests_.end()){
@@ -338,7 +338,6 @@ private:
                                                       message.data_)};
             if (u.protocol_== xju::ip::Protocol(1) /*ICMP*/){
               auto const& address{u.unreachableAddress_};
-              xju::Lock l(guard_);
               auto const i(targets_.find(address));
               if (i!=targets_.end()){
                 if ((*i).second != requests_.end()){

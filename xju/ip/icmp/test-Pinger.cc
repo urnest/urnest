@@ -19,6 +19,8 @@
 #include <xju/nanoseconds.hh>
 #include <xju/now.hh>
 #include <xju/stringToDouble.hh>
+#include <xju/ip/v4/Header.hh>
+#include <xju/ip/icmp/encodeDestinationUnreachable.hh>
 
 namespace xju
 {
@@ -42,7 +44,8 @@ public:
     xju::ip::v4::Address const& to,
     Message const& x,
     std::chrono::steady_clock::time_point const& deadline) throw(
-      xju::SyscallFailed) override
+      xju::SyscallFailed,
+      xju::DeadlineReached) override
   {
     std::cout << xju::format::time(xju::now())
               << " send(" << to << ", " << x << ")"<<std::endl;
@@ -81,6 +84,13 @@ public:
     calls_.awaitCall(*this,&xju::ip::icmp::SocketIf::receive,
                      xju::steadyNow()+leeway_)->return_(
                        std::make_tuple(a,m));
+  }
+  
+  void receiveFail(xju::Exception const& e) noexcept
+  {
+    makeReadable();
+    calls_.awaitCall(*this,&xju::ip::icmp::SocketIf::receive,
+                     xju::steadyNow()+leeway_)->raise(e);
   }
   
   xju::io::Input const& input() const noexcept override
@@ -246,7 +256,7 @@ void test1(double rate) {
     call->return_();
   }
   {
-    //re-send after 0.4*step timeout
+    //re-send to a1 after 0.4*step timeout
     auto call=socket.calls_.awaitCall(socket,
                                       &SocketIf::send,
                                       t1+xju::nanoseconds(2.4*step+leeway));
@@ -262,7 +272,7 @@ void test1(double rate) {
     call->return_();
   }
   {
-    //re-send after another 0.4*step timeout
+    //re-send to a1 after another 0.4*step timeout
     auto call=socket.calls_.awaitCall(socket,
                                       &SocketIf::send,
                                       t1+xju::nanoseconds(2.8*step+leeway));
@@ -354,6 +364,211 @@ void test1(double rate) {
   return;
 }
 
+void test2(double rate) {
+            
+  std::chrono::nanoseconds const step{(long)(1e9/rate)};
+  auto leeway=xju::nanoseconds(0.25*step); //allows for non-realtime delays
+
+  stub::SocketIf socket(leeway);
+  stub::CollectorIf collector;
+
+  xju::ip::v4::Address const a1{ (1U<<24) | (2U<<16) | (3U<<8) | (4U<<0) };
+  xju::ip::v4::Address const a2{ (1U<<24) | (2U<<16) | (3U<<8) | (5U<<0) };
+  xju::ip::v4::Address const a3{ (1U<<24) | (2U<<16) | (3U<<8) | (6U<<0) };
+  auto const timeoutPerRetry{xju::nanoseconds(0.4*step)};
+  xju::ip::icmp::Echo::Identifier identifier{0xfedc};
+  Pinger p{socket,
+           collector,
+           identifier,
+           Echo::Sequence(5),
+           {a1},
+           rate,
+           3,
+           timeoutPerRetry};
+
+  auto t1{xju::steadyNow()};
+  xju::Thread t{ [&]{ p.run(); }, [&]{ p.stop(); }};
+
+  // a1 unreachable
+  {
+    auto call=socket.calls_.awaitCall(socket,&SocketIf::send, t1+leeway);
+    xju::assert_equal(call->p1_,a1);
+    xju::assert_equal(call->p2_,Message(Message::Type::ECHO,
+                                        Message::Code(0),
+                                        Checksum(0),
+                                        encodeEcho(Echo(identifier,
+                                                        Echo::Sequence(5),
+                                                        {}))));
+    xju::assert_empty(collector.calls_.calls());
+    call->return_();
+  }
+  {
+    std::this_thread::sleep_for(0.1*step);
+    
+    socket.receiveMessage(
+      a3,
+      Message(Message::Type::DEST_UNREACH,
+              Message::Code(6),
+              Checksum(0),
+              encodeDestinationUnreachable(
+                128U,
+                xju::ip::v4::Header(
+                  xju::ip::v4::Header::Version(4),
+                  xju::ip::v4::Header::IHL(5),
+                  xju::ip::v4::Header::DSCP(0),
+                  xju::ip::v4::Header::ECN(0),
+                  xju::ip::v4::Header::TotalLength(28),
+                  xju::ip::v4::Header::Identification(0),
+                  xju::ip::v4::Header::Flags(0),
+                  xju::ip::v4::Header::FragmentOffset(0),
+                  xju::ip::v4::Header::TTL(0),
+                  xju::ip::v4::Header::Protocol(1),
+                  xju::ip::v4::Header::HeaderChecksum(0),
+                  a3,
+                  a1,
+                  {}),
+                Message(Message::Type::ECHO,
+                        Message::Code(0),
+                        Checksum(0),
+                        encodeEcho(
+                          Echo(identifier,
+                               Echo::Sequence(5),
+                               {}))))));
+    auto call=collector.calls_.awaitCall(
+      collector,
+      &Pinger::CollectorIf::unreachable,
+      xju::steadyNow()+xju::nanoseconds(0.1*step));
+    xju::assert_equal(call->p1_,a1);
+    xju::assert_equal(call->p2_,a3);
+    xju::assert_equal(call->p3_,Message::Code(6));
+    call->return_();
+  }
+  //a1 not tried again until next round
+  {
+    auto call=socket.calls_.awaitCall(socket,
+                                      &SocketIf::send,
+                                      t1+xju::nanoseconds(1.0*step+leeway));
+    xju::assert_equal(call->p1_,a1);
+    xju::assert_equal(call->p2_,Message(Message::Type::ECHO,
+                                        Message::Code(0),
+                                        Checksum(0),
+                                        encodeEcho(Echo(identifier,
+                                                        Echo::Sequence(9),
+                                                        {}))));
+    xju::assert_greater_equal(xju::steadyNow(),t1+xju::nanoseconds(1.0*step));
+    xju::assert_empty(collector.calls_.calls());
+    call->return_();
+  }
+}
+
+void test3(double rate) {
+            
+  std::chrono::nanoseconds const step{(long)(1e9/rate)};
+  auto leeway=xju::nanoseconds(0.25*step); //allows for non-realtime delays
+
+  stub::SocketIf socket(leeway);
+  stub::CollectorIf collector;
+
+  xju::ip::v4::Address const a1{ (1U<<24) | (2U<<16) | (3U<<8) | (4U<<0) };
+  xju::ip::v4::Address const a2{ (1U<<24) | (2U<<16) | (3U<<8) | (5U<<0) };
+  xju::ip::v4::Address const a3{ (1U<<24) | (2U<<16) | (3U<<8) | (6U<<0) };
+  auto const timeoutPerRetry{xju::nanoseconds(0.4*step)};
+  xju::ip::icmp::Echo::Identifier identifier{0xfedc};
+  Pinger p{socket,
+           collector,
+           identifier,
+           Echo::Sequence(5),
+           {a1},
+           rate,
+           3,
+           timeoutPerRetry};
+
+  auto t1{xju::steadyNow()};
+  xju::Thread t{ [&]{ p.run(); }, [&]{ p.stop(); }};
+
+  // receive fails
+  {
+    auto call=socket.calls_.awaitCall(socket,&SocketIf::send, t1+leeway);
+    xju::assert_equal(call->p1_,a1);
+    xju::assert_equal(call->p2_,Message(Message::Type::ECHO,
+                                        Message::Code(0),
+                                        Checksum(0),
+                                        encodeEcho(Echo(identifier,
+                                                        Echo::Sequence(5),
+                                                        {}))));
+    xju::assert_empty(collector.calls_.calls());
+    call->return_();
+  }
+  {
+    std::this_thread::sleep_for(0.1*step);
+    xju::Exception e("some error",XJU_TRACED);
+    socket.receiveFail(e);
+    auto call=collector.calls_.awaitCall(
+      collector,
+      &Pinger::CollectorIf::receiveFailed,
+      xju::steadyNow()+xju::nanoseconds(0.1*step));
+    xju::assert_equal(call->p1_,e);
+    call->return_();
+  }
+  {
+    std::this_thread::sleep_for(0.1*step);
+    
+    socket.receiveMessage(a1,
+                          Message(Message::Type::ECHOREPLY,
+                                  Message::Code(0),
+                                  Checksum(0),
+                                  encodeEcho(Echo(identifier,
+                                                  Echo::Sequence(5),
+                                                  {}))));
+    auto call=collector.calls_.awaitCall(
+      collector,
+      &Pinger::CollectorIf::pinged,
+      xju::steadyNow()+xju::nanoseconds(0.2*step));
+    xju::assert_equal(call->p1_,a1);
+    xju::assert_equal(call->p2_,0U);
+    xju::assert_greater_equal(call->p3_,0.2*step);
+    xju::assert_less(call->p3_,0.3*step);
+    call->return_();
+  }
+  // send fails
+  {
+    auto call=socket.calls_.awaitCall(socket,&SocketIf::send,
+                                      t1+xju::nanoseconds(1.0*step+leeway));
+    xju::assert_equal(call->p1_,a1);
+    xju::assert_equal(call->p2_,Message(Message::Type::ECHO,
+                                        Message::Code(0),
+                                        Checksum(0),
+                                        encodeEcho(Echo(identifier,
+                                                        Echo::Sequence(9),
+                                                        {}))));
+    xju::assert_empty(collector.calls_.calls());
+    xju::DeadlineReached e(xju::Exception("some error",XJU_TRACED));
+    call->raise(e);
+    auto call2=collector.calls_.awaitCall(
+      collector,
+      &Pinger::CollectorIf::sendFailed,
+      xju::steadyNow()+xju::nanoseconds(0.1*step));
+    xju::assert_equal(call2->p1_,e);
+    call2->return_();
+  }
+  //a1 not tried again until next round
+  {
+    auto call=socket.calls_.awaitCall(socket,
+                                      &SocketIf::send,
+                                      t1+xju::nanoseconds(2.0*step+leeway));
+    xju::assert_equal(call->p1_,a1);
+    xju::assert_equal(call->p2_,Message(Message::Type::ECHO,
+                                        Message::Code(0),
+                                        Checksum(0),
+                                        encodeEcho(Echo(identifier,
+                                                        Echo::Sequence(13),
+                                                        {}))));
+    xju::assert_greater_equal(xju::steadyNow(),t1+xju::nanoseconds(2.0*step));
+    xju::assert_empty(collector.calls_.calls());
+    call->return_();
+  }
+}
+
 }
 }
 }
@@ -364,6 +579,8 @@ int main(int argc, char* argv[])
 {
   unsigned int n(0);
   test1(argc>1?xju::stringToDouble(argv[1]):1), ++n;
+  test2(argc>1?xju::stringToDouble(argv[1]):1), ++n;
+  test3(argc>1?xju::stringToDouble(argv[1]):1), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }
