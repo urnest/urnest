@@ -41,7 +41,7 @@ eval "$1"
 %test3b==()+cmd=grep '"warning: fred"' (%test3b.got):stdout
 %test3c==()+cmd=\! grep '"warning: fred"' (%test3c.got) (%test3c.got:warn):stdout
 
-%test3.got == ()+cmd=(%test3.sh)+stderr=warn:exec.output
+%test3.got == ()+cmd=(%test3.sh)+stderr=warn:exec.output:warn
 %test3b.got == ()+cmd=(%test3.sh)+stderr=output:exec.output
 %test3c.got == ()+cmd=(%test3.sh)+stderr=trace:exec.output
 %test3d.got == ()+cmd=(%test3.sh)+cmd='a'+stderr=error:exec:err

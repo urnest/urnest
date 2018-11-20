@@ -11,9 +11,12 @@
 
 #
 # :exec is created regardless of exit status of test run, with:
-#   :exec/files.tar the files produced by the run, and either
-#   :exec/output - the stdout+stderr if command exits with 0 status, or
-#   :exec/status - file containing status as single line, eg 0
+#   :exec/files.tar the files produced by the run
+#   :exec/status - file containing status as single line, eg 0, and either
+#   :exec/output - the stdout+stderr* if command exits with zero status, or
+#   :exec/errors - the stderr* if command exits with non-zero status
+#
+# * depending on +stderr, see below
 #
 :exec 'results of a test run'? => :DERIVED-DIRECTORY;
 
@@ -54,12 +57,12 @@ EXEC (exec.sh) (:FILE) (+cmd :ls) (:env) (+stderr) NEEDS (+cmd) (+need)
 :exec.output.ref ':exec.output ref' => :FILE;
 :exec.files.ref ':exec.files ref' => :FILE;
 
-EXEC (exec.output.sh) (:exec/output) (:exec/status) (:exec:name)
+EXEC (exec.output.sh) (:exec/output) (:exec/errors) (:exec/status) (:exec:name) (+stderr)
   => (:exec.output.ref);
 
 READ-REFERENCE (:exec.output.ref) => (:exec.output);
 
-EXEC (exec.files.sh) (:exec/files.tar) (:exec/status) (:exec:name) (:exec/output)
+EXEC (exec.files.sh) (:exec/files.tar) (:exec/errors) (:exec/status) (:exec:name) (:exec/output) (+stderr)
   => (:exec.files.ref);
 
 READ-REFERENCE (:exec.files.ref) => (:exec.files);

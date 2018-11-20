@@ -20,6 +20,8 @@ fi
   mkdir exec &&
   cd exec &&
   mkdir files &&
+  touch errors &&
+  touch output &&
   (
     cd files &&
     if [ $ODIN_stderr = "trace" ]
@@ -29,6 +31,10 @@ fi
     elif [ $ODIN_stderr = "output" ]
     then
 	eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" `cat "$ODIN_env"` $cmd >../output 2>&1
+	echo $? > ../status
+    elif [ $ODIN_stderr = "error" ]
+    then
+	eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" `cat "$ODIN_env"` $cmd >../output 2>errors
 	echo $? > ../status
     else
       eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" `cat "$ODIN_env"` $cmd >../output

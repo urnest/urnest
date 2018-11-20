@@ -3,14 +3,22 @@ V="$ODINVERBOSE" &&
 
 
 files="$1" &&
-status=$(cat "$2") &&
-name="$3" &&
-output="$4" &&
+errors="$2" &&
+status=$(cat "$3") &&
+name="$4" &&
+output="$5" &&
+stderr="$6" &&
 
 if [ $status = 0 ]
 then
   echo "$files" > exec.files.ref
 else
   ( echo "$(cat $name) failed with status $status and output:" &&
-    cat "$output" ) > ERRORS 
+    if [ $stderr = "error" ]
+    then
+      cat "$errors"
+    else
+      cat "$output"
+    fi
+  ) > ERRORS 
 fi
