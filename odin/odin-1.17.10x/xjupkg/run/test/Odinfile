@@ -7,6 +7,7 @@
 %test3
 %test3b
 %test3c
+%test3d
 
 %test1a==()+cmd=cmp (%test.output) (%test1.output):stdout
 %test1b==()+cmd=cmp (%test.ls) (%test1.ls):stdout
@@ -37,16 +38,18 @@ eval "$1"
 
 %test2==()+cmd=(%test1.sh) 'false':exec.output
 
-%test3==()+cmd=grep '"warning: fred"' (%test3.got:warn):stdout
+%test3==()+cmd=grep '"warning: fred"' (%test3.got):stdout
 %test3b==()+cmd=grep '"warning: fred"' (%test3b.got):stdout
 %test3c==()+cmd=\! grep '"warning: fred"' (%test3c.got) (%test3c.got:warn):stdout
+%test3d==()+cmd=grep '"warning: fred"' (%test3d.got):stdout
 
 %test3.got == ()+cmd=(%test3.sh)+stderr=warn:exec.output:warn
 %test3b.got == ()+cmd=(%test3.sh)+stderr=output:exec.output
 %test3c.got == ()+cmd=(%test3.sh)+stderr=trace:exec.output
-%test3d.got == ()+cmd=(%test3.sh)+cmd='a'+stderr=error:exec:err
+%test3d.got == ()+cmd=(%test3.sh)+cmd='a'+stderr=error:exec.output:err
 
 %test3.sh == ! <<
 #!/bin/sh
 echo "warning: fred" >&2 &&
-test -z "$1"
+test -z "$1" || ( echo "error: jock" >&2 && false)
+

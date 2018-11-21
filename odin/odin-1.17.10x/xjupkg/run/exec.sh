@@ -26,19 +26,23 @@ fi
     cd files &&
     if [ $ODIN_stderr = "trace" ]
     then
-	eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" `cat "$ODIN_env"` $cmd 2>&1 >../output
-	echo $? > ../status
+      eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" `cat "$ODIN_env"` $cmd 2>&1 >../output
+      echo $? > ../status
     elif [ $ODIN_stderr = "output" ]
     then
-	eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" `cat "$ODIN_env"` $cmd >../output 2>&1
-	echo $? > ../status
+      eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" `cat "$ODIN_env"` $cmd >../output 2>&1
+      echo $? > ../status
     elif [ $ODIN_stderr = "error" ]
     then
-	eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" `cat "$ODIN_env"` $cmd >../output 2>errors
-	echo $? > ../status
-    else
+      eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" `cat "$ODIN_env"` $cmd >../output 2>../errors
+      echo $? > ../status
+    elif [ $ODIN_stderr = "warn" ]
+    then
       eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" `cat "$ODIN_env"` $cmd >../output
       echo $? > ../status
+    else
+      echo "error: +stderr, \"$ODIN_stderr\" is not one of trace, output, error, warn.">&2 &&
+      false
     fi
   ) &&
   if [ -z "`ls files`" ]

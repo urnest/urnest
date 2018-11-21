@@ -8,6 +8,14 @@
 %test5
 %test1b
 %test-simple
+%test-stderr-1
+%test-stderr-2
+%test-stderr-3
+%test-stderr-4
+%test-stderr-5
+%test-stderr-6
+%test-stderr-7
+%test-stderr-8
 
 %test1==(%test1.got)+cmd=(%test1.sh) (%test1.expect:list:ls):stdout
 
@@ -81,3 +89,34 @@ x: OK
 %test6.got==(xe.py)+py_sp=(sd)+py_sp=(se/a.egg):py.exec.output
 
 %test-simple==(simple.py):py.exec.output
+
+
+%test-stderr-1==()+cmd=grep '"test1 outputtest1 stderr"' (%toutput.zero):stdout
+%test-stderr-2==()+cmd=grep '"test1 outputtest1 stderr"' (%toutput.one):stdout
+%test-stderr-3==()+cmd=grep '"xtest1 stderr"' (%twarn.zero.w):stdout
+%test-stderr-4==()+cmd=grep '"test1 output "' (%twarn.one):stdout
+%test-stderr-5==()+cmd=grep '"xtest1 stderr"' (%terror.zero):stdout
+%test-stderr-6==()+cmd=grep '"xtest1 stderr"' (%terror.one):stdout
+%test-stderr-7==()+cmd=grep '"test1 output "' (%ttrace.zero):stdout
+%test-stderr-8==()+cmd=grep '"test1 output "' (%ttrace.one):stdout
+
+%toutput.zero==(%test1.py)+cmd='0':py.exec.output
+%toutput.one==(%test1.py)+cmd='1':py.exec.output:err
+%twarn.zero.o==(%test1.py)+cmd='0'+stderr=warn:py.exec.output
+%twarn.zero.w==(%test1.py)+cmd='0'+stderr=warn:py.exec.output:warn
+%twarn.one==(%test1.py)+cmd='1'+stderr=warn:py.exec.output:err
+%terror.zero==(%test1.py)+cmd='0'+stderr=error:py.exec.output:warn
+%terror.one==(%test1.py)+cmd='1'+stderr=error:py.exec.output:err
+%ttrace.zero==(%test1.py)+cmd='0'+stderr=trace:py.exec.output
+%ttrace.one==(%test1.py)+cmd='1'+stderr=trace:py.exec.output:err
+
+%test1.py== !<<
+#!/bin/env python
+import sys
+sys.stderr.write('x')
+sys.stderr.flush()
+sys.stdout.write('test1 output')
+sys.stdout.flush()
+sys.stderr.write('test1 stderr\n')
+sys.stdout.write(' \n')
+sys.exit(int(sys.argv[1]))

@@ -8,10 +8,15 @@ status=$(cat "$3") &&
 name="$4" &&
 output="$5" &&
 stderr="$6" &&
+if [ -z "$stderr" ]
+then
+  stderr=output
+fi &&
 
 if [ $status = 0 ]
 then
-  echo "$files" > py.exec.files.ref
+  echo "$files" > py.exec.files.ref &&
+  cat "$errors" > WARNINGS
 else
   ( echo "$(cat $name) failed with status $status and output:" &&
     if [ $stderr = "error" ]

@@ -31,7 +31,6 @@ L=""
 if [ "$ODINVERBOSE" != "" ] ; then
    echo ${ODINRBSHOST}env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHONPATH" \`cat "$ODIN_env"\` python "$ODIN_FILE" $cmd; 
 fi
-
 (
   mkdir py.exec &&
   cd py.exec &&
@@ -50,10 +49,15 @@ fi
       echo $? > ../status
     elif  [ $ODIN_stderr = "error" ]
     then
-      eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHONPATH" `cat "$ODIN_env"` python "$ODIN_FILE" $cmd  >../output 2>errors
+      eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHONPATH" `cat "$ODIN_env"` python "$ODIN_FILE"  $cmd >../output 2>../errors
+      echo $? > ../status
+    elif [ $ODIN_stderr = "warn" ]
+    then
+      eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHONPATH" `cat "$ODIN_env"` python "$ODIN_FILE" $cmd >../output
       echo $? > ../status
     else
-      eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHONPATH" `cat "$ODIN_env"` python "$ODIN_FILE" $cmd > ../status
+      echo "error: +stderr, \"$ODIN_stderr\" is not one of trace, output, error, warn.">&2 &&
+      false
     fi
   ) &&
   if [ -z "`ls files`" ]
@@ -63,9 +67,8 @@ fi
     ( cd files && tar cf - * )
   fi > files.tar &&
   rm -rf files
-) \
- <$ODIN_FILE 2>WARNINGS 1>&2 ||
+
+) <$ODIN_FILE 2>WARNINGS ||
 mv WARNINGS ERRORS
 
 exit 0
-
