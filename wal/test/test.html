@@ -1,0 +1,31 @@
+<html>
+  <!--
+    Copyright (c) 2018 Trevor Taylor
+
+    Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that all copyright notices and this permission notice appear in all copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+-->
+  <head>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="wal.js"></script>
+    <script type="text/javascript" src="test.js"></script>
+  </head>
+  <body>
+    <ul>
+      <li><a href="test.html">static file</a>
+      <li><a href="public-html">public function returning html string</a>
+      <li><a href="params">public function returning plain text</a>
+      <li><a href="params?name=fred&age=25">public function returning plain text detailing query-string params</a>
+      <li><a href="json">public function returning text/json</a>
+      <li><a href="html">public function returning pq.Selection (HTML)</a>
+      <li><a href="redirect">public function redirecting html</a>
+      <li><a href="client-error?e=doh">client error</a>
+      <li><a class="ajax-post" href="#">params via ajax - POST</a>/<a class="ajax-get" href="#">params via ajax - GET</a>, result:
+	<div class="result"></div>
+      <li><a href="login">login</a>
+      <li><a href="login-required">login-required</a>
+      <li><a href="logout">logout</a>
+    </ul>
+  </body>
+</html>
