@@ -352,19 +352,17 @@
   wal.now=function(){
     return Date.now();
   };
-  // async HTTP-get url passing specified data (an object) according to raw:
-  // - raw: passes data as a url-encoded query string
-  //   (so data in this case must only have string values)
-  // - not raw: json encodes data then passes that as the value of json_params
-  //   url query string parameter
+  // async HTTP-get url passing specified data (an object) json encodeed
+  // then passed that as the value of json_params url query string parameter
   // ... returns an object that has overridable functions, override them by:
   //   then(f) - on successful completion calls f(result)
-  //             result is content (if raw) else... read the code
+  //             result "result" member of json-decoded response*
   //   or(f) - on failure f(s) where s is human readable string describing
-  //           failure
+  //           failure*
+  //     * f(s) is called if json-decoded result has an "error" member
   //   always(f) - after then/or function, calls f()
   //
-  wal.getFromServer=function(url,data,raw){
+  wal.getFromServer=function(url,data){
     var result={
       then_: function(){},
       error_:function(e){
@@ -388,17 +386,12 @@
     $.ajax({ 
       type: 'GET',
       url: url,
-      data: raw?data:{
+      data: {
 	'json_params':wal.json.encode(data)
       },
       dataType: 'text',
       cache:false,
       success: function(responseData_, status){
-	if (raw){
-	  result.then_(responseData_);
-	  result.always_();
-	  return;
-	}
 	var responseData;
 	try{
 	  responseData=wal.json.decode(responseData_);
@@ -418,6 +411,54 @@
 	  };
 	  result.then_(responseData.result);
         }
+	result.always_();
+      },
+      error: function(jqXHR, status, e){
+	result.error_(wal.inContext(''+e, 'get url '+url));
+	result.always_();
+      }
+    });
+    return result;
+  };
+
+  // async HTTP-get url passing specified data as a url-encoded query string
+  //   (so data must only have string values)
+  // ... returns an object that has overridable functions, override them by:
+  //   then(f) - on successful completion calls f(result)
+  //             result is content
+  //   or(f) - on failure f(s) where s is human readable string describing
+  //           failure
+  //   always(f) - after then/or function, calls f()
+  //
+  wal.getFromServerRaw=function(url,data){
+    var result={
+      then_: function(){},
+      error_:function(e){
+	alert(e);
+      },
+      always_:function(){
+      }
+    };
+    result.then=function(then){
+      result.then_=then;
+      return result;
+    }
+    result.or=function(error){
+      result.error_=error;
+      return result;
+    }
+    result.always=function(always){
+      result.always_=always;
+      return result;
+    }
+    $.ajax({ 
+      type: 'GET',
+      url: url,
+      data: data,
+      dataType: 'text',
+      cache:false,
+      success: function(responseData_, status){
+	result.then_(responseData_);
 	result.always_();
       },
       error: function(jqXHR, status, e){
@@ -769,7 +810,7 @@
 
   var $load_image=false;
 
-  wal.postToServer=function(url,data,sync,raw){
+  wal.postToServer=function(url,data,sync){
     var result={
       then_: function(){},
       error_:function(e){
@@ -793,18 +834,13 @@
     $.ajax({ 
       type: 'POST',
       url: url,
-      data: raw?data:{
+      data: {
 	'json_params':wal.json.encode(data)
       },
       dataType: 'text',
       async: !sync,
       success: function(responseData_, status){
 	var responseData;
-	if (raw){
-	  result.then_(responseData_);
-	  result.always_();
-	  return;
-	}
 	try{
 	  responseData=wal.json.decode(responseData_);
 	}
@@ -836,6 +872,47 @@
     });
     return result;
   };
+
+  wal.postToServerRaw=function(url,data,sync){
+    var result={
+      then_: function(){},
+      error_:function(e){
+	alert(e);
+      },
+      always_:function(){
+      }
+    };
+    result.then=function(then){
+      result.then_=then;
+      return result;
+    };
+    result.or=function(error){
+      result.error_=error;
+      return result;
+    };
+    result.always=function(always){
+      result.always_=always;
+      return result;
+    }
+    $.ajax({ 
+      type: 'POST',
+      url: url,
+      data: data,
+      dataType: 'text',
+      async: !sync,
+      success: function(responseData_, status){
+	result.then_(responseData_);
+	result.always_();
+	return;
+      },
+      error: function(jqXHR, status, e){
+	result.error_(wal.inContext(''+e, 'post data to '+url));
+	result.always_();
+      }
+    });
+    return result;
+  };
+
   wal.rendering=function($x){
     var $overlay=$('<div class="wal-busy-cursor">&nbsp;</div>').css({
       position:'absolute',

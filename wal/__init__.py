@@ -28,7 +28,7 @@ class PushPath(object):
         sys.path.insert(0,self.path)
         pass
     def __exit__(self,eType,eVal,eTrc):
-        assert sys.path[0]==self.path,sys.path[0:2}
+        assert sys.path[0]==self.path,sys.path[0:2]
         pass
     pass
 
