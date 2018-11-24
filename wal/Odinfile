@@ -1,0 +1,7 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+(jsonschema.py):py3.exec.output
+(pq.py):py3.exec.output
+(rfc2616.py):py3.exec.output
+(xn.py):py3.exec.output

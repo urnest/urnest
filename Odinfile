@@ -9,6 +9,7 @@
 xju%all.tree
 omnicxy%all.tree
 hcp%all.tree
+wal%all.tree
 %tags
 
 %cxx-opts==<<

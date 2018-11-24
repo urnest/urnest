@@ -248,7 +248,7 @@ def test():
         Schema({int:str}).validate({'sal':'fred',2:'jock'})
         assert None
     except Exception as e:
-        assert readableRepr(e)=="Failed to verify {2: 'jock', 'sal': 'fred'} conforms to json schema {<class 'int'>: <class 'str'>} because\nfailed to validate dictionary item 'sal' because\nfailed to verify 'sal' conforms to json schema <class 'int'> because\n'sal' is not an Int.",repr(readableRepr(e))
+        assert readableRepr(e)=="Failed to verify "+repr({'sal':'fred',2:'jock'})+" conforms to json schema {<class 'int'>: <class 'str'>} because\nfailed to validate dictionary item 'sal' because\nfailed to verify 'sal' conforms to json schema <class 'int'> because\n'sal' is not an Int.",repr(readableRepr(e))
         pass
     try:
         Schema(OneOf(int,str)).validate(None)
@@ -288,9 +288,10 @@ def test():
         assert readableRepr(e)=='''Failed to verify 'jock' conforms to json schema 'fred' because\n'jock' is not 'fred'.''',repr(readableRepr(e))
         pass
     try:
-        Schema({'a':int,'c':int}).validate({'a':1})
+        x={'a':int,'c':int}
+        Schema(x).validate({'a':1})
     except Exception as e:
-        assert readableRepr(e)=='''Failed to verify {'a': 1} conforms to json schema {'c': <class 'int'>, 'a': <class 'int'>} because\n'c' is missing.''' or readableRepr(e)=='''Failed to verify {'a': 1} conforms to json schema {'c': <class 'int'>, 'a': <class 'int'>} because\n'c' is missing.''',repr(readableRepr(e))
+        assert readableRepr(e)=='''Failed to verify {'a': 1} conforms to json schema '''+repr(x)+''' because\n'c' is missing.''',repr(readableRepr(e))
     else:
         assert None
         pass

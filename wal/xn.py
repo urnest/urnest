@@ -159,7 +159,7 @@ class AllFailed(Exception):
 if __name__== '__main__':
     # unit test
     import assert_
-    def test1():
+    def test1(prog=sys.argv[0]):
         def a():
             raise Exception('fred')
         def b():
@@ -178,10 +178,10 @@ fred.\
 ''')
             assert_.equal(str(e),'''\
 failed to jock because
-./xn.py:156: failed to c() because
-./xn.py:153: failed to b() because
-./xn.py:150: failed to a() because
-./xn.py:148: fred''')
+{prog}:172: failed to c() because
+{prog}:169: failed to b() because
+{prog}:166: failed to a() because
+{prog}:164: fred'''.format(**vars()))
             pass
         pass
 

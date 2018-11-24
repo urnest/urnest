@@ -127,3 +127,22 @@ OVERVIEW
 -   pq is jquery-like functionality for python, useful for doing
     server-side stuff as you might do client-side in javascript with
     jquery. See the tests at the bottom of pq/pq.py for examples.
+    This pq is for python 2.
+
+-   wal is a python3 wsgi library, see wal/test/app.py and wal/test/server.py
+    for examples; also contains wal.js which is miscellaneous javascript
+    functions I have found useful
+
+    wal's key feature is dispatching urls to functions, with automatic
+    parameter matching and json parameter support, e.g. URL
+    getAddressOf?name=fred will be served by python getAddressOf(name) if
+    it exists (and the static file getAddressOf if it doesn't).
+    getAddressOf might look like:
+      @wal.public
+      def getAddressOf(name):
+        #...do the work to get l1, l2, postcode
+	return { 'addressLine1': l1,
+	         'addressLine2': l2,
+		 'postcode': postcode }
+    ... which would return a text/json encoded result to the client.
+

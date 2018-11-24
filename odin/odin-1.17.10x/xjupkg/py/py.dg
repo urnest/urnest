@@ -22,6 +22,10 @@
 
 :py.output 'output files from a python script run'? => :output;
 
+:py3.stdout 'output from a python3 script run'? => :stdout;
+
+:py3.output 'output files from a python3 script run'? => :output;
+
 #
 # :py.exec is created regardless of exit status of test run, with:
 #   :py.exec/files.tar the files produced by the run
@@ -37,17 +41,26 @@
 
 :py.exec.files ':py.exec/files.tar where :py.exec/status is 0'? => :REFERENCE;
 
+:py3.exec 'results of a python3 script run'? => :DERIVED-DIRECTORY;
+
+:py3.exec.output ':py3.exec/output where :py3.exec/status is 0'? => :REFERENCE;
+
+:py3.exec.files ':py3.exec/files.tar where :py3.exec/status is 0'? => :REFERENCE;
+
 +py_sp 'name of a directory in a PYTHONPATH'? => :ls;
 
 +ignore 'egrep expression for imports to ignore'? => :ls;
 
 +py 'python file to execute'? => :first;
++py3 'python3 file to execute'? => :first;
 
 +stderr 'what to do with command stderr: "output" to combine with stdout (default), "warn" to generate warnings, "error" to display as errors if command fails and command trace otherwise, "trace" to show as command trace'? => :first;
 
 $ODIN_PY_IGNORE 'egrep expression for python imports to ignore, e.g. "^os$|^sys$"' = '';
 
 $ODIN_PYTHONPATH 'colon-separated list of directories to search for python imports, after searching +py_sp directories, e.g. /usr/local/python2.7/site-packages' = '';
+
+$ODIN_PYTHON3PATH 'colon-separated list of directories to search for python3 imports, after searching +py_sp directories, e.g. /usr/local/python3/site-packages' = '';
 
 EXEC (py-import.py) (:py) (:py:dir)@ (+py_sp) (+ignore)
    => (:py_import.view_desc);
@@ -63,6 +76,8 @@ COLLECT (:py_import :map=:py_import_all) (:py_import)
 #:FILE is stdin
 EXEC (py.pipe.run.sh) (:FILE) (+py) (+cmd :ls) (+py:dir)@ (+py_sp) NEEDS (+cmd) (+need) (+py:py_import_all)
    => (:py.stdout) (:py.output);
+EXEC (py3.pipe.run.sh) (:FILE) (+py) (+cmd :ls) (+py:dir)@ (+py_sp) NEEDS (+cmd) (+need) (+py:py_import_all)
+   => (:py3.stdout) (:py3.output);
 
 
 # :FILE is stdin to command
@@ -70,15 +85,30 @@ EXEC (py.exec.sh) (:py) (+cmd :ls) (:env) (+stderr) (+py:dir)@ (+py_sp)
   NEEDS (+cmd) (+need) (:py:py_import_all)
   => (:py.exec);
 
+EXEC (py3.exec.sh) (:py) (+cmd :ls) (:env) (+stderr) (+py:dir)@ (+py_sp)
+  NEEDS (+cmd) (+need) (:py:py_import_all)
+  => (:py3.exec);
+
 :py.exec.output.ref ':py.exec.output ref' => :FILE;
 :py.exec.files.ref ':py.exec.files ref' => :FILE;
+
+:py3.exec.output.ref ':py3.exec.output ref' => :FILE;
+:py3.exec.files.ref ':py3.exec.files ref' => :FILE;
 
 EXEC (py.exec.output.sh) (:py.exec/output) (:py.exec/errors) (:py.exec/status) (:py.exec:name) (+stderr)
   => (:py.exec.output.ref);
 
+EXEC (py3.exec.output.sh) (:py3.exec/output) (:py3.exec/errors) (:py3.exec/status) (:py3.exec:name) (+stderr)
+  => (:py3.exec.output.ref);
+
 READ-REFERENCE (:py.exec.output.ref) => (:py.exec.output);
+READ-REFERENCE (:py3.exec.output.ref) => (:py3.exec.output);
 
 EXEC (py.exec.files.sh) (:py.exec/files.tar) (:py.exec/errors) (:py.exec/status) (:py.exec:name) (:py.exec/output) (+stderr)
   => (:py.exec.files.ref);
 
+EXEC (py3.exec.files.sh) (:py3.exec/files.tar) (:py3.exec/errors) (:py3.exec/status) (:py3.exec:name) (:py3.exec/output) (+stderr)
+  => (:py3.exec.files.ref);
+
 READ-REFERENCE (:py.exec.files.ref) => (:py.exec.files);
+READ-REFERENCE (:py3.exec.files.ref) => (:py3.exec.files);

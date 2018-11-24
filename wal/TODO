@@ -1,4 +1,4 @@
-- licence
+x licence
 
 x wal.postToServer/getFromServer always encode as json
 
