@@ -325,6 +325,12 @@ std::string time(std::chrono::system_clock::time_point const& t) throw();
 // format like as 0.000s
 std::string duration(std::chrono::milliseconds const& d) noexcept;
 
+// format like as 0.000000s
+std::string duration(std::chrono::microseconds const& d) noexcept;
+
+// format like as 0.000000000s
+std::string duration(std::chrono::nanoseconds const& d) noexcept;
+
 // format time t as specified
 // e.g.
 //   cout << localTime(now,Hour,':',Minute,':',Second);

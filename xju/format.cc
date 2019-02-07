@@ -495,5 +495,23 @@ std::string duration(std::chrono::milliseconds const& d) noexcept
   return int_(secs.count(),1)+"."+int_(msecs.count(),3)+"s";
 }
 
+std::string duration(std::chrono::microseconds const& d) noexcept
+{
+  auto const secs(
+    std::chrono::duration_cast<std::chrono::seconds>(d));
+  auto const msecs(
+    std::chrono::duration_cast<std::chrono::microseconds>(d-secs));
+  return int_(secs.count(),1)+"."+int_(msecs.count(),6)+"s";
+}
+
+std::string duration(std::chrono::nanoseconds const& d) noexcept
+{
+  auto const secs(
+    std::chrono::duration_cast<std::chrono::seconds>(d));
+  auto const nsecs(
+    std::chrono::duration_cast<std::chrono::nanoseconds>(d-secs));
+  return int_(secs.count(),1)+"."+int_(nsecs.count(),9)+"s";
+}
+
 }
 }

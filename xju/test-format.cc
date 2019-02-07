@@ -436,6 +436,12 @@ void test10()
   xju::assert_equal(xju::format::duration(std::chrono::milliseconds(0)),"0.000s");
   xju::assert_equal(xju::format::duration(std::chrono::milliseconds(999)),"0.999s");
   xju::assert_equal(xju::format::duration(std::chrono::milliseconds(1000)),"1.000s");
+  xju::assert_equal(xju::format::duration(std::chrono::microseconds(0)),"0.000000s");
+  xju::assert_equal(xju::format::duration(std::chrono::microseconds(999999)),"0.999999s");
+  xju::assert_equal(xju::format::duration(std::chrono::microseconds(1000000)),"1.000000s");
+  xju::assert_equal(xju::format::duration(std::chrono::nanoseconds(0)),"0.000000000s");
+  xju::assert_equal(xju::format::duration(std::chrono::nanoseconds(999999999)),"0.999999999s");
+  xju::assert_equal(xju::format::duration(std::chrono::nanoseconds(1000000000)),"1.000000000s");
   
 }
 
