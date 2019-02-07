@@ -16,7 +16,7 @@ namespace xju
 {
 namespace file
 {
-void rmdir(std::pair<xju::path::AbsolutePath,xju::path::DirName> const& d)
+void rmdir(xju::path::AbsolutePath const& d)
   throw(
     // eg no such dir -> _errno==ENOENT
     xju::SyscallFailed)

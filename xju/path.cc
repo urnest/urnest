@@ -151,6 +151,23 @@ AbsolutePath operator+(AbsolutePath const& x, RelativePath const& y) throw(
   return AbsolutePath(a);
 }
 
+AbsolutePath operator+(AbsolutePath const& x, DirName const& y) throw(
+  xju::Exception)
+{
+  std::vector<DirName> a;
+  std::copy(x.begin(), x.end(), std::back_inserter(a));
+  a.push_back(y);
+  return AbsolutePath(a);
+}
+
+std::pair<AbsolutePath,FileName> operator+(
+  AbsolutePath const& x,
+  FileName const& y) throw(
+    xju::Exception)
+{
+  return std::make_pair(x,y);
+}
+
 AbsolutePath root() throw()
 {
   return AbsolutePath("/");
@@ -217,6 +234,16 @@ FileName basename(std::string const& x) throw()
     return FileName("");
   }
   return FileName(y.back()._);
+}
+
+FileName basename(std::pair<AbsolutePath,FileName> const& x) throw()
+{
+  return x.second;
+}
+
+DirName basename(AbsolutePath const& x) throw()
+{
+  return *x.rbegin();
 }
 
 RelativePath relative_dirname(std::string const& x) throw(
@@ -287,16 +314,15 @@ std::pair<AbsolutePath, FileName> split(std::string const& x) throw(
   }
 }
 
-std::pair<AbsolutePath, DirName> splitdir(std::string const& x) throw(
+AbsolutePath splitdir(std::string const& x) throw(
   xju::Exception)
 {
   try {
     if (x.size() && (x[0]=='/')) {
-      return std::make_pair(absolute_dirname(x),
-                            DirName(basename(x)._));
+      return absolute_dirname(x)+RelativePath( {DirName(basename(x)._)});
     }
-    return std::make_pair(working_dir()+relative_dirname(x),
-                          DirName(basename(x)._));
+    return working_dir()+relative_dirname(x)+RelativePath(
+      {DirName(basename(x)._)});
   }
   catch(xju::Exception& e) {
     std::ostringstream s;
@@ -307,33 +333,18 @@ std::pair<AbsolutePath, DirName> splitdir(std::string const& x) throw(
   }
 }
 
-std::pair<AbsolutePath, DirName> dirname(
+AbsolutePath dirname(
   std::pair<AbsolutePath, FileName> const& x) throw()
 {
-  xju::assert_not_equal(x.first.size(),0);
-  return std::make_pair(
-    AbsolutePath(
-      std::vector<DirName>(x.first.begin(),xju::prev(x.first.end()))),
-    *x.first.rbegin());
+  return x.first;
 }
 
-std::pair<AbsolutePath, DirName> dirname(
-  std::pair<AbsolutePath, DirName> const& x) throw()
+AbsolutePath dirname(
+  AbsolutePath const& x) throw()
 {
-  xju::assert_not_equal(x.first.size(),0);
-  return std::make_pair(
-    AbsolutePath(
-      std::vector<DirName>(x.first.begin(),xju::prev(x.first.end()))),
-    *x.first.rbegin());
-}
-
-std::pair<AbsolutePath, FileName> join(
-  std::pair<AbsolutePath, DirName> const& dir,
-  FileName const& file) throw()
-{
-  std::vector<DirName> x(dir.first.begin(),dir.first.end());
-  x.push_back(dir.second);
-  return std::make_pair(AbsolutePath(x),file);
+  xju::assert_not_equal(x.size(),0);
+  return AbsolutePath(
+    std::vector<DirName>(x.begin(),xju::prev(x.end())));
 }
 
 std::pair<BaseName,Extension> split(FileName const& x) throw(){

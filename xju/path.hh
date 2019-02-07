@@ -22,6 +22,9 @@ namespace xju
 {
 namespace path
 {
+class FileNameTag{};
+typedef xju::Tagged<std::string, FileNameTag> FileName;
+
 class DirNameTag{};
 typedef xju::Tagged<std::string, DirNameTag> DirName;
 
@@ -132,6 +135,15 @@ private:
                                 RelativePath const& y) throw(
                                   xju::Exception);
 
+  friend AbsolutePath operator+(AbsolutePath const& x, 
+                                DirName const& y) throw(
+                                  xju::Exception);
+
+  friend std::pair<AbsolutePath,FileName> operator+(
+    AbsolutePath const& x, 
+    FileName const& y) throw(
+      xju::Exception);
+
   friend std::ostream& operator<<(std::ostream& s,
                                   AbsolutePath const& x) throw();
 
@@ -177,9 +189,6 @@ std::string str(AbsolutePath const& x) throw();
 // result is never "" (will be "." instead)
 std::string str(RelativePath const& x) throw();
 
-class FileNameTag{};
-typedef xju::Tagged<std::string, FileNameTag> FileName;
-
 class BaseNameTag{};
 typedef xju::Tagged<std::string, BaseNameTag> BaseName; //excludes .
 
@@ -202,6 +211,12 @@ std::string str(FileName const& x) throw();
 // filename part of x
 FileName basename(std::string const& x) throw();
 
+// filename part of x
+FileName basename(std::pair<AbsolutePath,FileName> const& x) throw();
+
+// last directory x
+DirName basename(AbsolutePath const& x) throw();
+
 // directory part of x, where x is filename with optional
 // relative directory, e.g. relative_dirname("x/y")==RelativePath("x")
 RelativePath relative_dirname(std::string const& x) throw(
@@ -220,27 +235,20 @@ std::pair<AbsolutePath, FileName> split(std::string const& x) throw(
   // can't normalise
   xju::Exception);
 
-// split x into absolute path (using working dir if necessary) and
-// dir name
-std::pair<AbsolutePath, DirName> splitdir(std::string const& x) throw(
+// split x into absolute path (using working dir if necessary)
+AbsolutePath splitdir(std::string const& x) throw(
   // can't normalise
   xju::Exception);
 
 // parent directory of x
-// pre: x.first.size()!=0
-std::pair<AbsolutePath, DirName> dirname(
+// post: result==x.first
+AbsolutePath dirname(
   std::pair<AbsolutePath, FileName> const& x) throw();
 
 // parent directory of x
-// pre: x.first.size()!=0
-std::pair<AbsolutePath, DirName> dirname(
-  std::pair<AbsolutePath, DirName> const& x) throw();
-
-// parent directory of x
-// pre: x.first.size()!=0
-std::pair<AbsolutePath, FileName> join(
-  std::pair<AbsolutePath, DirName> const& dir,
-  FileName const& file) throw();
+// pre: x.size()!=0
+AbsolutePath dirname(
+  AbsolutePath const& x) throw();
 
 // split FileName into BaseName and Extension
 // - split(FileName("x")) == {BaseName("x"),Extension("")}

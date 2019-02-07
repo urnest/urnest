@@ -83,9 +83,9 @@ void test2()
   
 }
 
-// AbsolutePath+RelativePath
 void test3()
 {
+// AbsolutePath+RelativePath
   {
     xju::path::AbsolutePath x(
       xju::path::AbsolutePath("/a/..//b/./")+
@@ -105,6 +105,26 @@ void test3()
   catch(xju::Exception const& e) {
     xju::assert_equal(readableRepr(e), "Failed to normalise absolute path /a/../../c because\nfailed to normalise path a/../../c because\ntoo many '..'s at component 3.");
   }
+
+// AbsolutePath+DirName
+  {
+    xju::path::AbsolutePath x(
+      xju::path::AbsolutePath("/a/..//b/./")+
+      xju::path::DirName("c"));
+    xju::assert_equal(x.size(), 2);
+    xju::assert_equal((*x.begin()), xju::path::DirName("b"));
+    xju::assert_equal((*(x.begin()+1)), xju::path::DirName("c"));
+  }
+  try
+  {
+    xju::path::AbsolutePath x(
+      xju::path::AbsolutePath("/")+
+      xju::path::DirName(".."));
+    xju::assert_abort();
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_equal(readableRepr(e), "Failed to normalise absolute path /.. because\nfailed to normalise path .. because\ntoo many '..'s at component 1.");
+  }
 }
 
 // root
@@ -118,6 +138,8 @@ void test5()
   xju::assert_equal(xju::path::basename("/a/b"), xju::path::FileName("b"));
   xju::assert_equal(xju::path::basename("c"), xju::path::FileName("c"));
   xju::assert_equal(xju::path::basename("/c"), xju::path::FileName("c"));
+  xju::assert_equal(xju::path::basename(xju::path::split("/a/b")),FileName("b"));
+  xju::assert_equal(xju::path::basename(xju::path::AbsolutePath("/a/b")),DirName("b"));
 }
 
 void test6()
@@ -157,14 +179,15 @@ void test8()
     std::make_pair(xju::path::AbsolutePath("/a/b"), xju::path::FileName("c")));
   xju::assert_equal(
     xju::path::dirname(xju::path::split("/a/b/c")),
-    std::make_pair(xju::path::AbsolutePath("/a"), xju::path::DirName("b")));
+    xju::path::AbsolutePath("/a/b"));
 
   xju::assert_equal(
     xju::path::splitdir("/a/b/c"),
-    std::make_pair(xju::path::AbsolutePath("/a/b"), xju::path::DirName("c")));
+    xju::path::AbsolutePath("/a/b/c"));
+
   xju::assert_equal(
-    xju::path::dirname(xju::path::splitdir("/a/b/c")),
-    std::make_pair(xju::path::AbsolutePath("/a"), xju::path::DirName("b")));
+    xju::path::dirname(xju::path::AbsolutePath("/a/b/c")),
+    xju::path::AbsolutePath("/a/b"));
 }
 
 void test9()
