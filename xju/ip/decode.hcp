@@ -213,6 +213,9 @@ public:
       throw;
     }
   }
+
+  I at() const noexcept { return i_; }
+  I end() const noexcept { return end_; }
 private:
   I i_;
   I end_;

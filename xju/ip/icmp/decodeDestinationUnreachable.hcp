@@ -17,6 +17,8 @@
 #include <vector>
 #include <xju/ip/v4/decodeHeader.hh> //impl
 #include <xju/format.hh> //impl
+#include <algorithm> //impl
+#include <iterator> //impl
 
 namespace xju
 {
@@ -43,16 +45,18 @@ DestinationUnreachable decodeDestinationUnreachable(
         xju::ip::decode::makeIterator(
           icmpData.begin(),icmpData.end()))};
     auto j{h.second};
-    xju::Array<uint8_t,8> data{
+    xju::Array<uint8_t,8> mandatoryData{
       j.get8Bits(""),j.get8Bits(""),j.get8Bits(""),j.get8Bits(""),
       j.get8Bits(""),j.get8Bits(""),j.get8Bits(""),j.get8Bits("")};
-    j.verifyAtEnd();
+    std::vector<uint8_t> restOfData;
+    std::copy(j.at(),j.end(),std::back_inserter(restOfData));
     return DestinationUnreachable(
         gateway,
         icmpCode,
         h.first.destAddress_,
         h.first.protocol_,
-        data);
+        mandatoryData,
+        restOfData);
   }
   catch(xju::Exception& e){
     std::ostringstream s;
@@ -66,8 +70,8 @@ DestinationUnreachable decodeDestinationUnreachable(
                            },
                            std::string(", "))
       << " }, data { "
-      << xju::format::join(icmpHeader.begin(),
-                           icmpHeader.end(),
+      << xju::format::join(icmpData.begin(),
+                           icmpData.end(),
                            [](uint8_t const x){
                              return xju::format::hex(x);
                            },
@@ -77,6 +81,7 @@ DestinationUnreachable decodeDestinationUnreachable(
     throw;
   }
 }
+
 
 
 }

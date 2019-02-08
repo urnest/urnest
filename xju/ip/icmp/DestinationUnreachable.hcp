@@ -34,21 +34,24 @@ public:
     Message::Code code,
     xju::ip::v4::Address unreachableAddress,
     xju::ip::Protocol protocol,
-    xju::Array<uint8_t,8> data) noexcept
+    xju::Array<uint8_t,8> const& mandatoryData,
+    std::vector<uint8_t> const& restOfData) noexcept
       :gateway_(gateway),
        code_(code),
        unreachableAddress_(unreachableAddress),
-       protocol_(protocol),
-       data_(data)
+       protocol_(protocol)
   {
+    std::copy(mandatoryData.begin(),mandatoryData.end(),
+              std::back_inserter(data_));
+    std::copy(restOfData.begin(),restOfData.end(),
+              std::back_inserter(data_));
   }
   
   xju::ip::v4::Address gateway_;
   Message::Code code_;
   xju::ip::v4::Address unreachableAddress_;
   xju::ip::Protocol protocol_;
-  xju::Array<uint8_t,8> data_; // e.g. icmp message
-
+  std::vector<uint8_t> data_;  // e.g. icmp message
   friend bool operator<(DestinationUnreachable const& x,
                         DestinationUnreachable const& y) noexcept;
   
