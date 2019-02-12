@@ -31,6 +31,9 @@ namespace xju
 	"send",
 	::send};
     const SyscallF6<ssize_t, int, const void*, size_t, int, const struct sockaddr*, socklen_t> sendto={"sendto",::sendto};
+    const SyscallF3<ssize_t, int, const msghdr*, int> sendmsg={
+        "sendmsg",
+        ::sendmsg};
     const SyscallF4<ssize_t, int, void*, size_t, int> recv={
 	"recv",
 	::recv};

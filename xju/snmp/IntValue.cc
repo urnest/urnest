@@ -7,11 +7,11 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include "xju/snmp/IntValue.hh"
+#include <xju/snmp/IntValue.hh>
 
-#include "xju/format.hh"
-#include "xju/snmp/encodeInt.hh"
-#include "xju/snmp/encodedLengthOfValue.hh"
+#include <xju/format.hh>
+#include <xju/snmp/encodeInt.hh>
+#include <xju/snmp/encodedLengthOfValue.hh>
 #include <limits.h>
 #include <sstream>
 

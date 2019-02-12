@@ -12,6 +12,10 @@
 #include <iosfwd>
 
 #include <iostream> //impl
+#include <xju/stringToUInt.hh> //impl
+#include <sstream> //impl
+#include <xju/format.hh> //impl
+#include <xju/split.hh> //impl
 
 namespace xju
 {
@@ -21,8 +25,71 @@ namespace v4
 {
 struct AddressTag{};
 
+namespace
+{
+uint32_t parse8BitUInt(std::string x) throw(
+  xju::Exception)
+{
+  try{
+    auto const result{xju::stringToUInt(x)};
+    if (result>255){
+      std::ostringstream s;
+      s << result << ">255";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    return result;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "parse " << xju::format::quote(x)
+      << " assuming it is an integer in the range 0..255";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+uint32_t parseDotted(std::string const& dotted) throw(
+  xju::Exception)
+{
+  try{
+    auto const v{xju::split(dotted,'.')};
+    if (v.size()!=4){
+      std::ostringstream s;
+      s << xju::format::quote(dotted) << " has " << v.size()
+        << " dot-separated components not 4";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    uint32_t const result{
+      (parse8BitUInt(v[0])<<24U)+
+        (parse8BitUInt(v[1])<<16U)+
+        (parse8BitUInt(v[2])<<8U)+
+        (parse8BitUInt(v[3])<<0U)};
+    return result;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "parse " << xju::format::quote(dotted)
+      << " assuming it is an IPv4 address like 192.168.0.3";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+
 // address (in host byte order)
-typedef xju::Int<AddressTag,uint32_t> Address;
+class Address : public xju::Int<AddressTag,uint32_t>
+{
+public:
+  using xju::Int<AddressTag,uint32_t>::Int;
+
+  explicit Address(std::string const& dotted) throw(
+    xju::Exception):
+      xju::Int<AddressTag,uint32_t>(parseDotted(dotted))
+  {
+  }
+
+};
 
 std::ostream& operator<<(std::ostream& s, Address const& a) throw()
 {

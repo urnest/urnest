@@ -25,6 +25,7 @@ namespace xju
     extern const SyscallF3<int, int, ::sockaddr*, socklen_t*> accept;
     extern const SyscallF4<ssize_t, int, const void*, size_t, int> send;
     extern const SyscallF6<ssize_t, int, const void*, size_t, int, const struct sockaddr*, socklen_t> sendto;
+    extern const SyscallF3<ssize_t, int, const msghdr*, int> sendmsg;
     extern const SyscallF4<ssize_t, int, void*, size_t, int> recv;
     extern const SyscallF6<ssize_t, int, void*, size_t, int,sockaddr*,socklen_t*> recvfrom;
     extern const SyscallF3<ssize_t, int, struct msghdr*, int> recvmsg;

@@ -10,8 +10,7 @@
 #ifndef XJU_SNMP_INTVALUE_H
 #define XJU_SNMP_INTVALUE_H
 
-#include "xju/snmp/Value.hh"
-#include "xju/snmp/IntValue.hh"
+#include <xju/snmp/Value.hh>
 #include <vector>
 #include <stdint.h>
 #include <string>
