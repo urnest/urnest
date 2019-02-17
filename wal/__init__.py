@@ -46,6 +46,7 @@ with PushPath(os.path.dirname(os.path.realpath(__file__))):
     from dispatcher import Response,Dispatcher,ClientError
     from etc import fromJson,toJson,Scope
     from pq import loadFile as loadHTML,parse as parseHTML
+    from assert_ import Assert
     
     # decorator - see test/app.py for use
     def public(f):
@@ -93,3 +94,4 @@ with PushPath(os.path.dirname(os.path.realpath(__file__))):
         result.location=location
         return result
     pass
+

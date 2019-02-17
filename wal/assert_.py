@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Copyright (c) 2018 Trevor Taylor
 # 
 # Permission to use, copy, modify, and/or distribute this software for
@@ -15,3 +17,48 @@
 def equal(a,b):
     assert a==b, '{a!r} != {b!r}'.format(**vars())
     pass
+
+class Assert():
+    def __init__(self,x):
+        self.x=x
+        pass
+    def isInstanceOf(self,y):
+        if not isinstance(self.x,y):
+            xc=self.x.__class__.__name__
+            yc=y.__name__
+            raise Exception('{self.x!r} is not an instance of class {yc} (it is of class {xc})'.format(**vars()))
+        return self.x
+    def isGreaterThan(self,y):
+        if not self.x > y:
+            raise Exception('{self.x!r} is not greater than {y!r}'.format(**vars()))
+        return self.x
+    def isLessThan(self,y):
+        if not self.x < y:
+            raise Exception('{self.x!r} is not less than {y!r}'.format(**vars()))
+        return self.x
+    def startsWith(self,y):
+        if not self.x[0:len(y)]==y:
+            raise Exception('{self.x!r} does not start with {y!r}'.format(**vars()))
+        return self.x
+    def isNotIn(self,y):
+        if self.x in y:
+            raise Exception('{self.x!r} is in {y!r}'.format(**vars()))
+        pass
+    def isIn(self,y):
+        if not self.x in y:
+            raise Exception('{self.x!r} is not in {y!r}'.format(**vars()))
+        pass
+    pass
+
+if __name__=='__main__':
+    # unit test
+    try:
+        Assert('fred').isInstanceOf(int)
+    except Exception as e:
+        assert str(e)=="'fred' is not an instance of class int (it is of class str)",str(e)
+        pass
+    else:
+        assert False
+        pass
+    pass
+
