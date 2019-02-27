@@ -162,9 +162,11 @@ std::pair<Symbol,LineNumber> genEnumDef(
 std::pair<Symbol,LineNumber> genGlobalVar(hcp_ast::GlobalVarDef const& x) throw(
   xju::Exception)
 {
-  auto const y(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(x));
-  Symbol symbol(reconstruct(y));
-  LineNumber lineNumber(y.begin().line_);
+  // might be a function pointer var, in which case the first VarName
+  // is what we want (the others being param names)
+  auto const y(hcp_ast::findChildrenOfType<hcp_ast::VarName>(x));
+  Symbol symbol(reconstruct(y[0]));
+  LineNumber lineNumber(y[0].get().begin().line_);
   return std::make_pair(symbol,lineNumber);
 }
 

@@ -5,6 +5,7 @@ hcp-split
 hcp-parse-file
 hcp-what-is-at
 hcp-tags
+hcp-tags-merge
 hcp-scope-at
 hcp-map-to-source
 tags%tools.tree
