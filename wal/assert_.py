@@ -48,6 +48,30 @@ class Assert():
         if not self.x in y:
             raise Exception('{self.x!r} is not in {y!r}'.format(**vars()))
         pass
+    def __lt__(self,y):
+        if not self.x < y:
+            raise Exception('{self.x!r} is not less than {y!r}'.format(**vars()))
+        return self.x
+    def __le__(self,y):
+        if not self.x <= y:
+            raise Exception('{self.x!r} is not less than or equal to {y!r}'.format(**vars()))
+        return self.x
+    def __eq__(self,y):
+        if not self.x == y:
+            raise Exception('{self.x!r} is not equal to {y!r}'.format(**vars()))
+        return self.x
+    def __ne__(self,y):
+        if self.x == y:
+            raise Exception('{self.x!r} is equal to {y!r}'.format(**vars()))
+        return self.x
+    def __gt__(self,y):
+        if not self.x > y:
+            raise Exception('{self.x!r} is not greater than {y!r}'.format(**vars()))
+        return self.x
+    def __ge__(self,y):
+        if not self.x >= y:
+            raise Exception('{self.x!r} is not greater than or equal to {y!r}'.format(**vars()))
+        return self.x
     pass
 
 if __name__=='__main__':

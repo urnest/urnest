@@ -13,8 +13,6 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-import app
-
 import os
 import mimetypes
 
@@ -100,7 +98,6 @@ class Response:
     pass
 
 public_functions=set()
-print(public_functions)
 
 restricted_functions={}
 
