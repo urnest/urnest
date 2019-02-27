@@ -1,5 +1,7 @@
-#install source (including generated C++) into $INST_SRC,
-#        tools (hcp-split etc) into $INST_BIN
+# install source (static source, generated C++ and omniidl_be) into $INST_SRC,
+# install tools (hcp-split etc) into $INST_BIN
+# ... note omnicxy/{cxy,omniidl_be} are moved up a level so they are in
+# $INST_SRC/{cxy,omniidl_be}
 %install!==(.)+cmd=(%installer.sh) (%hcp-gen.tar) (%idl-gen.tar) (%tools.tar):run
 
 #build and run all tests
@@ -93,9 +95,9 @@ test -d "$sourcedir" &&
 cat "$toolstar" | (cd "$INST_BIN" && tar xvf - ) &&
 cat "$idlgentar" | (cd "$INST_SRC" && tar xvf - ) &&
 cat "$hcpgentar" | (cd "$INST_SRC" && tar xvf - ) &&
-sources=$(cd "$sourcedir" && find xju hcp -name '*.idl' -o -name '*.hh' -o -name '*.cc' ) &&
+sources=$(cd "$sourcedir" && find xju hcp -name '*.idl' -o -name '*.hh' -o -name '*.cc' -o -name '*.h' ) &&
 (cd "$sourcedir" && tar cf - $sources) | (cd "$INST_SRC" && tar xvf - ) &&
-sources=$(cd "$sourcedir/omnicxy" && find cxy -name '*.idl' -o -name '*.hh' -o -name '*.cc' ) &&
+sources=$(cd "$sourcedir/omnicxy" && find cxy -name '*.idl' -o -name '*.hh' -o -name '*.cc' -o -name '*.h' && find omniidl_be -name '*.py' -o -name '*.sh' ) &&
 (cd "$sourcedir/omnicxy" && tar cf - $sources) | (cd "$INST_SRC" && tar xvf - ) &&
 headers=$(find "$INST_SRC" -name '*.hh' -print) &&
 "$INST_BIN/hcp-tags" $headers > "$INST_SRC/hcp-tags.json" &&
