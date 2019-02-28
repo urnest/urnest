@@ -81,7 +81,7 @@ touch hash_impl.view_desc &&
 dirs=$incsp &&
 for name in `cat local | ( test -n "$ignore" && egrep -v "$ignore" || cat )`
 do
-   # to avoid a dependcy cycle, we ignore the #include "x.h" from
+   # to avoid a dependency cycle, we ignore the #include "x.h" from
    # #include "x.cc", which is complicated by the suffixes, so
    # we assume x.h looks like x.<something> and that x.cc looks like
    # x<o_src_suffix>, we add the "."s so that eg x_y_z.h doesn't
