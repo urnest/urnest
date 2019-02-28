@@ -46,7 +46,7 @@ omnicxy/cxy%tags
 
 %hcp-gen.tar==()+cmd=(%vir-tree-tar.sh) (%hcp-gen)+need=(%hcp-gen:vir_tree_list):stdout
 
-%idl-gen.tar==()+cmd=(%vir-tree-tar.sh) (%hcp-gen)+need=(%hcp-gen:vir_tree_list):stdout
+%idl-gen.tar==()+cmd=(%vir-tree-tar.sh) (%idl-gen)+need=(%idl-gen:vir_tree_list):stdout
 
 %vir-tree-tar.sh == ! <<
 #!/bin/sh
