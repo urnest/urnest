@@ -12,7 +12,6 @@
 #include <xju/Int.hh>
 #include <xju/Array.hh>
 #include <vector>
-#include <xju/ip/icmp/Message.hh>
 #include <xju/ip/Checksum.hh>
 #include <xju/format.hh> //impl
 
