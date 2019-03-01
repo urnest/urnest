@@ -63,33 +63,10 @@ sed -n -e '/^[ 	]*#[ 	]*include/s/^[^"]*"\([^"]*\)".*$/\1/w local' \
        -e '/^[ 	]*#[ 	]*include/s/^[^<]*<\([^>]*\)>.*$/\1/w global' \
    <$ODIN_FILE 2>>ERRORS &&
 
-impl_base="" &&
-file_base=$(basename $ODIN_FILE) &&
-for suffix in $suffixes
-do
-  #use first matching suffix so eg suffix list _win.cxx .cxx
-  #turns x_win.cxx into x
-  #
-  if [ -z "$impl_base" ] && 
-     [ $(basename "$file_base" "$suffix") != $(basename "$file_base") ]
-  then
-    impl_base=$(basename "$file_base" "$suffix")
-  fi
-done &&
-
 touch hash_impl.view_desc &&
 dirs=$incsp &&
 for name in `cat local | ( test -n "$ignore" && egrep -v "$ignore" || cat )`
 do
-   # to avoid a dependency cycle, we ignore the #include "x.h" from
-   # #include "x.cc", which is complicated by the suffixes, so
-   # we assume x.h looks like x.<something> and that x.cc looks like
-   # x<o_src_suffix>, we add the "."s so that eg x_y_z.h doesn't
-   # get discarded by x.cc
-   #
-   name_base=$(basename "$name") &&
-   { test -n "$impl_base" && 
-     expr "$name_base." : "$impl_base[.]" >/dev/null; } ||
    case $name in
       /* )
          echo "'$name'" >>hash_impl.view_desc &&
@@ -124,9 +101,6 @@ done || ( echo 'include scanning failed' ; false ) &&
 
 for name in `cat global | ( test -n "$ignore" && egrep -v "$ignore" || cat )`
 do
-   name_base=$(basename "$name") &&
-   { test -n "$impl_base" && 
-     expr "$name_base." : "$impl_base[.]" >/dev/null ; } ||
    case $name in
       /* )
          echo "'$name'" >>hash_impl.view_desc &&

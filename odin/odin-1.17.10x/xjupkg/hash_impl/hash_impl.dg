@@ -6,9 +6,15 @@
 #   of +o_src_suffix (default $ODIN_O_SRC_SUFFIX); searches for
 #   x<suffix> in all dirs that x.h is searched for (ie x.h and x<suffix>
 #   need not be in the same directory)
-# - note :hash_impl_all does not include self
 #
-:hash_impl_all 'list of transitively included files and implied :o_src files'? => :LIST;
+
+# note use of union:
+# - :hash_impl_all.list:ls> fails with cycles detected
+# - :hash_impl_all:ls> works
+#
+:hash_impl_all 'union of :hash_impl_all'? => :LIST;
+
+:hash_impl_all.list 'list of transitively included files and implied :o_src files'? => :LIST;
 
 +o_src_suffix 'suffixes to form X.cxx/.c etc from X.h'? => :ls;
 
@@ -28,7 +34,7 @@ EXEC (hash_impl.sh) (:hash_incable) (:hash_incable:dir)@ (+inc_sp) (+impl_sp) (+
 COLLECT (:hash_impl.view_desc :view)
    => (:hash_impl);
 
-COLLECT (:hash_impl :map=:hash_impl_all) (:hash_impl)
-   => (:hash_impl_all);
+COLLECT (:hash_impl :map=:hash_impl_all.list) (:hash_impl)
+   => (:hash_impl_all.list);
 
-
+COLLECT (:hash_impl_all.list:union) => (:hash_impl_all);
