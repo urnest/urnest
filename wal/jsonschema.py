@@ -63,10 +63,10 @@ def validateSchemaElement(x):
                 pass
             return
         if type(x) is list:
-            if not len(x) == 1:
-                i=len(x)
-                raise Exception('list schema must contain exactly one element, not %(i)s'%vars())
-            validateSchemaElement(x[0])
+            if len(x) == 0:
+                raise Exception(
+                    'list schema must contain at least one element'%vars())
+            for xx in x: validateSchemaElement(xx)
             return
         if type(x) is tuple:
             for i,y in enumerate(x):
@@ -130,28 +130,37 @@ def validate(schema,x):
                         raise inContext('validate dictionary item %(key)r'%vars())
                     pass
                 return x
-            for name, y in x.items():
+            for name, y in schema.items():
                 try:
-                    if not name in schema:
-                        keys=schema.keys()
-                        raise Exception('%(name)r is not one of %(keys)r'%vars())
-                    validate(schema[name],y)
+                    if not name in x:
+                        keys=x.keys()
+                        raise Exception('%(name)r is not in %(keys)r'%vars())
+                    validate(y,x[name])
                 except:
                     raise inContext('validate dictionary item %(name)r'%vars())
                 pass
-            for name in schema:
-                if not name in x:
-                    raise Exception('%(name)r is missing'%vars())
-                pass
-            pass
+            return x
         if type(schema) is list:
             if not type(x) is list:
                 raise Exception('%(x)r is not a List'%vars())
-            for i,y in enumerate(x):
-                try:
-                    validate(schema[0],y)
-                except:
-                    raise inContext('validate list item %(i)r'%vars())
+            if len(schema)==1:
+                for i,y in enumerate(x):
+                    try:
+                        validate(schema[0],y)
+                    except:
+                        raise inContext('validate list item %(i)r'%vars())
+                    pass
+                pass
+            else:
+                if len(schema)!=len(x):
+                    i=len(schema)
+                    j=len(x)
+                    raise 'list {x} does not have {i} elements, it has {j} elements'.format(**vars())
+                for i,v in enumerate(zip(schema,x)):
+                    try:
+                        validate(v[0],v[1])
+                    except:
+                        raise inContext('validate list element {i}'.format(**vars()))
                 pass
             pass
         if type(schema) is tuple:
