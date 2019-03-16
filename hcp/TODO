@@ -45,6 +45,8 @@ x override
 x final
 * constexpr
 
+- utf8? e.g. import stuff gets confused about where to place things
+
 - trace should go to stderr
 
 - move tracing into base class parse() function:

@@ -8,10 +8,15 @@ icmp%tests.tree
 
 %tests.tree == <<
 ()+cmd=(test-UDPSocket.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+test-UDPLocalForwardSocket.cc+(../..%cxx-opts):auto.cxx.exe
 ()+cmd=(test-TCPService.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-decode.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-checksum.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
+#need CAP_NET_RAW (see capabilities(7) manpage) for the following tests
+#to run, e.g. run as root
+%tests-requiring-cap-net-raw == <<
+()+cmd=(test-UDPLocalForwardSocket.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 %hcp-gen==%hcp-gen.vir_dir_specs:list:cat:vir_dir
 

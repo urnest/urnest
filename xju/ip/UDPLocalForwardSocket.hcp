@@ -1,0 +1,160 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <xju/io/Output.hh>
+#include <xju/Exception.hh>
+#include <xju/ip/v4/Address.hh>
+#include <xju/ip/v4/Header.hh>
+#include <xju/ip/Port.hh>
+#include <unistd.h>
+#include <chrono>
+#include <xju/DeadlineReached.hh>
+#include <xju/AutoFd.hh>
+
+#include <sstream> //impl
+#include <netinet/ip.h> //impl
+#include <xju/syscall.hh>
+#include <xju/socket.hh> //impl
+#include <xju/io/select.hh> //impl
+#include <xju/format.hh> //impl
+#include <xju/steadyNow.hh> //impl
+#include <xju/milliseconds.hh> //impl
+#include <sys/socket.h> //impl
+#include <netinet/in.h> //impl
+#include <xju/ip/v4/encodeHeader.hh> //impl
+#include <xju/assert.hh> //impl
+
+
+namespace xju
+{
+namespace ip
+{
+class UDPLocalForwardSocket : public virtual xju::io::Output
+{
+public:
+  UDPLocalForwardSocket() throw(
+    xju::Exception,
+    xju::SyscallFailed) try:
+      fd_(xju::syscall(xju::socket,XJU_TRACED)(
+            AF_INET, SOCK_RAW|SOCK_CLOEXEC|SOCK_NONBLOCK, IPPROTO_RAW))
+  {
+  }
+  catch(xju::SyscallFailed& e)
+  {
+    std::ostringstream s;
+    s << "create UDP local forward socket";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+
+  //pre: size<=65507
+  void forwardToLocalPort(
+    xju::ip::Port const& port,
+    void const* const datagram,
+    size_t const size,
+    xju::ip::v4::Address const& senderHost,
+    xju::ip::Port const& senderPort,
+    std::chrono::steady_clock::time_point const& deadline) throw(
+      xju::DeadlineReached,xju::SyscallFailed)
+  {
+    xju::assert_less_equal(size,65507);
+    
+    auto const d{deadline-xju::steadyNow()};
+    try {
+      if (xju::io::select({(xju::io::Output*)this},deadline).size()) {
+        xju::ip::v4::Address localhost((127U<<24)+
+                                       (0U<<16)+
+                                       (0U<<8)+
+                                       (1U<<0));
+        xju::ip::v4::Header h(
+          xju::ip::v4::Header::Version(4),
+          xju::ip::v4::Header::IHL(5),
+          xju::ip::v4::Header::DSCP(0),
+          xju::ip::v4::Header::ECN(0),
+          xju::ip::v4::Header::TotalLength(20+8+size),
+          xju::ip::v4::Header::Identification(0),
+          xju::ip::v4::Header::Flags(0),
+          xju::ip::v4::Header::FragmentOffset(0),
+          xju::ip::v4::Header::TTL(1),
+          xju::ip::Protocol(17), //UDP
+          xju::ip::v4::Header::HeaderChecksum(0),
+          senderHost,
+          localhost,
+          {});
+        std::vector<uint8_t> encodedHeader;
+        auto i{xju::ip::v4::encodeHeader(h,std::back_inserter(encodedHeader))};
+        //UDP header 
+        (*i++)=(uint8_t)((senderPort.value()>>8)&0xff);
+        (*i++)=(uint8_t)((senderPort.value()>>0)&0xff);
+        (*i++)=(uint8_t)((port.value()>>8)&0xff);
+        (*i++)=(uint8_t)((port.value()>>0)&0xff);
+        (*i++)=(uint8_t)(((size+8)>>8)&0xff);
+        (*i++)=(uint8_t)(((size+8)>>0)&0xff);
+        (*i++)=0; //checksum unused
+        (*i++)=0; //checksum unused
+        iovec v[]={ { (void*)encodedHeader.data(),encodedHeader.size()},
+                    { (void*)datagram, size } };
+        sockaddr_in dest_addr;
+        dest_addr.sin_family=AF_INET;
+        dest_addr.sin_port=::htons(port.value());
+        dest_addr.sin_addr.s_addr=::htonl(localhost.value());
+
+        struct msghdr mh{
+          &dest_addr, //addr
+          sizeof(dest_addr), //addrlen
+          v,2, //iovec len
+          0, //opts
+          0, //optslen
+          0}; //flags
+        auto const bytesSent=xju::syscall(xju::sendmsg,XJU_TRACED)(
+          fileDescriptor(),
+          &mh,
+          0);
+        if (bytesSent<(encodedHeader.size()+size)) {
+          std::ostringstream s;
+          s << "only sent " << bytesSent << " bytes of "
+            << (encodedHeader.size()+size);
+          throw xju::DeadlineReached(xju::Exception(s.str(),XJU_TRACED));
+        }
+        return;
+      }
+      std::ostringstream s;
+      s << "deadline reached before socket writable";
+      throw xju::DeadlineReached(xju::Exception(s.str(),XJU_TRACED));
+    }
+    catch(xju::Exception& e) {
+      std::ostringstream s;
+      s << "send " << size << " byte udp datagram to localhost "
+        << " port " << port << " from host " << senderHost << " port "
+        << senderPort
+        << " within " << xju::format::duration(xju::milliseconds(d));
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+  // xju::io::Output::
+  std::string str() const throw()
+  {
+    return "UDP local forward socket ";
+  }
+
+private:
+  xju::AutoFd fd_;
+
+  // xju::io::Output::
+  int fileDescriptor() const throw() {
+    return fd_.fd();
+  }
+};
+  
+}
+}
+
