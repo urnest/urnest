@@ -67,6 +67,29 @@ struct SnmpV1Trap
 
   std::map<Oid, std::shared_ptr<Value const> > vars_;
   
+  friend bool operator<(SnmpV1Trap const& x, SnmpV1Trap const& y) noexcept
+  {
+    if (x.community_<y.community_) return true;
+    if (y.community_<x.community_) return false;
+    if (x.trapType_<y.trapType_) return true;
+    if (y.trapType_<x.trapType_) return false;
+    if (x.origin_<y.origin_) return true;
+    if (y.origin_<x.origin_) return false;
+    if (x.genericType_<y.genericType_) return true;
+    if (y.genericType_<x.genericType_) return false;
+    if (x.specificType_<y.specificType_) return true;
+    if (y.specificType_<x.specificType_) return false;
+    if (x.timestamp_<y.timestamp_) return true;
+    if (y.timestamp_<x.timestamp_) return false;
+    if (x.vars_<y.vars_) return true;
+    if (y.vars_<x.vars_) return false;
+    return false;
+  }
+  friend bool operator==(SnmpV1Trap const& x, SnmpV1Trap const& y) noexcept
+  {
+    return !(x<y) && !(y<x);
+  }
+  
   friend std::ostream& operator<<(std::ostream& s, SnmpV1Trap const& x) 
     throw();
 };
