@@ -207,7 +207,7 @@ std::vector<uint8_t> encode(SnmpV1Trap const& trap) throw()
                                               trap.community_._.end()))),
       vp(new Sequence({
             vp(new OidValue(trap.trapType_)),
-            vp(new IPv4AddressValue(trap.origin_)),//error
+            vp(new IPv4AddressValue(trap.origin_)),
             vp(new IntValue((int)trap.genericType_)),
             vp(new IntValue(trap.specificType_.value())),
             vp(new TimeTicksValue(trap.timestamp_)),

@@ -46,6 +46,25 @@ struct SnmpV2cTrap
   std::chrono::milliseconds timestamp_;
 
   std::vector<std::pair<Oid, std::shared_ptr<Value const> > > vars_;
+
+  friend bool operator<(SnmpV2cTrap const& x, SnmpV2cTrap const& y) noexcept
+  {
+    if (x.community_<y.community_) return true;
+    if (y.community_<x.community_) return false;
+    if (x.id_<y.id_) return true;
+    if (y.id_<x.id_) return false;
+    if (x.trapType_<y.trapType_) return true;
+    if (y.trapType_<x.trapType_) return false;
+    if (x.timestamp_<y.timestamp_) return true;
+    if (y.timestamp_<x.timestamp_) return false;
+    if (x.vars_<y.vars_) return true;
+    if (y.vars_<x.vars_) return false;
+    return false;
+  }
+  friend bool operator==(SnmpV2cTrap const& x, SnmpV2cTrap const& y) noexcept
+  {
+    return !(x<y) && !(y<x);
+  }
   
   friend std::ostream& operator<<(std::ostream& s, SnmpV2cTrap const& x) 
     throw();

@@ -19,6 +19,8 @@
 #include <xju/format.hh>
 #include "xju/Exception.hh"
 #include <xju/snmp/TimeTicksValue.hh>
+#include <xju/snmp/decodeIPv4AddressValue.hh>
+#include <xju/snmp/IPv4AddressValue.hh>
 
 namespace xju
 {
@@ -79,6 +81,13 @@ std::pair<std::shared_ptr<Value const>, DecodeIterator> decodeValue(
       return std::make_pair(std::shared_ptr<Value const>(
                               new TimeTicksValue(
                                 std::chrono::milliseconds(v.first*10))),
+                            v.second);
+    }
+    case 0x40:
+    {
+      auto v(decodeIPv4AddressValue(i));
+      return std::make_pair(std::shared_ptr<Value const>(
+                              new IPv4AddressValue(v.first)),
                             v.second);
     }
     }
