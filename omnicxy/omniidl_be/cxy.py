@@ -91,12 +91,20 @@ def objrefUnqualifiedType(t,eclass):
     if t=='::CORBA::Object': t='void'
     return '::cxy::IOR< %(t)s >'%vars()
 
+def mappedType(t):
+    'map fully qualified type name {t} where it is well known'
+    if t.startswith('cxy::chrono::'):
+        t='std::chrono::'+t.split('cxy::chrono::',1)[1]
+        pass
+    return t
+
 unqualifiedType_=dict(
     [(idltype.tk_any,lambda t,eclass:'::cxy::Any< {eclass} >'.format(**vars()))]+
     [(idltype.tk_TypeCode,lambda t,eclass:'::cxy::TypeCode')]+
     [(kind,lambda t,eclass:basicParamTypes.get(t.kind()).typename)
      for kind in basicParamTypes]+
-    [(kind,lambda t,eclass:''.join(['::'+_ for _ in t.scopedName()]))
+    [(kind,lambda t,eclass:mappedType(
+        ''.join(['::'+_ for _ in t.scopedName()])))
      for kind in [idltype.tk_alias,
                   idltype.tk_struct,
                   idltype.tk_enum,
@@ -127,7 +135,8 @@ ptype_=dict(
     [(idltype.tk_TypeCode,lambda p,eclass: '::cxy::TypeCode')]+
     [(idltype.tk_union,unionPtype)]+
     [(idltype.tk_objref,objrefPtype)]+
-    [(kind,lambda p,eclass:''.join(['::'+_ for _ in p.paramType().scopedName()]))
+    [(kind,lambda p,eclass:mappedType(
+        ''.join(['::'+_ for _ in p.paramType().scopedName()])))
      for kind in [idltype.tk_alias,
                   idltype.tk_struct,
                   idltype.tk_enum]]+
@@ -147,13 +156,18 @@ def tn(t):
         return t.__class__
     return type(t)
 
+def mappedTypeIncludes(t):
+    '''return list of includes for qualified type {t}'''
+    return []
+
 tincludes_=dict(
     [(idltype.tk_objref, lambda t: ['<cxy/IOR.hh>'])]+
     [(idltype.tk_any, lambda t: ['<cxy/Any.hh>'])]+
     [(idltype.tk_TypeCode, lambda t: ['<cxy/TypeCode.hh>'])]+
     [(kind, lambda t:basicParamTypes.get(t.kind()).includeFiles)
      for kind in basicParamTypes]+
-    [(kind, lambda t: []) 
+    [(kind, lambda t: mappedTypeIncludes(
+        ''.join(['::'+_ for _ in t.scopedName()])))
      for kind in [idltype.tk_alias,
                   idltype.tk_struct,
                   idltype.tk_union,
@@ -1216,6 +1230,9 @@ def includeSpec(fileName,hpath,hhext):
             return '"%s"'%(os.path.splitext(fileName)[0]+'.'+hhext)
         else:
             return '<%s%s>'%(hpath,os.path.splitext(fileName)[0]+'.'+hhext)
+        pass
+    if fileName=='cxy/chrono.idl':
+        return '<chrono>'
     return '<%s>'%(os.path.splitext(fileName)[0]+'.'+hhext)
 
 def gen_idlincludes(fileNames,hpath,hhext):
