@@ -103,6 +103,11 @@ echo.sref.cc==%gen/echo.sref.cc
 %p2.hcp==(../p2.idl)+(%gen-opts):omnicxy/p2.hcp
 %p3.hcp==(../p3.idl)+(%gen-opts):omnicxy/p3.hcp
 %p4.hcp==(../p4.idl)+(%gen-opts):omnicxy/p4.hcp
+%p4.cref.hcp==(../p4.idl)+(%gen-opts):omnicxy/p4.cref.hcp
+%p4.cdr.hcp==(../p4.idl)+(%gen-opts):omnicxy/p4.cdr.hcp
+%p4.objref.hcp==(../p4.idl)+(%gen-opts):omnicxy/p4.objref.hcp
+%p4.sref.hcp==(../p4.idl)+(%gen-opts):omnicxy/p4.sref.hcp
+%p4.any.hcp==(../p4.idl)+(%gen-opts):omnicxy/p4.any.hcp
 %p5.hcp==(../p5.idl)+(%gen-opts):omnicxy/p5.hcp
 %p5.any.hcp==(../p5.idl)+(%gen-opts):omnicxy/p5.any.hcp
 %p6.hcp==(../p6.idl)+(%gen-opts):omnicxy/p6.hcp
@@ -224,7 +229,7 @@ echo.sref.cc==%gen/echo.sref.cc
 ()+cmd=(%p24-main)+cmd='3765'+cmd='both':exec.output
 ()+cmd=(%p25-main)+cmd='3766'+cmd='both':exec.output
 ()+cmd=(%p26-main)+cmd='3767'+cmd='both':exec.output
-()+cmd=(%p27-main)+cmd='3768'+cmd='both':exec.output
+()+cmd=(%p27-main)+cmd='3769'+cmd='both':exec.output
 ()+cmd=(%test-port-in-use):exec.output
 ()+cmd=(%test-cosnaming-client)+cmd='3768'+cmd=(%cosnaming-client):exec.output
 ()+cmd=(%p12a-main)+cmd='3749'+cmd='both':exec.output

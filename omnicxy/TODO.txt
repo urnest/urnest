@@ -3,16 +3,22 @@ key:
   "-" means to-be-done
   "~" means decided not to do
 
-* const cref-> should return non-const ref, like T*const x
-
-- switch to C++-17 so we can use using to get base class constructors
+x const cref-> should return non-const ref, like T*const x
 
 - consider dropping derived "Pair" class (see p4) and using std::pair
   directly... perhaps cannot do because of repoid / typeid?
+    - repoid is not important for struct, only really used for interfaces
+    - is allowed to be "" in TypeCode; alternative would be to have
+      the "container" specify the typecode... but that's too hard so just
+      make it ""
+    - add interop testing of it
 
 - map typedef sequence<XyPair> XyMap to std::map<X,Y> but again repoid trouble?
-  
+    - no trouble: see discussion above
+    
 - map typedef sequence<X> SetOfX to std::set<X>
+
+- switch to C++-17 so we can use using to get base class constructors
 
 - prefer shared_ptr<T> to cref<T>:
     - generate code with shared_ptr<T>, never cref<T>
