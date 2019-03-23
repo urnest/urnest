@@ -138,7 +138,7 @@ Contents
   array maps to std::array - see proto/cxy/p25.hh
 
   struct maps to struct with same members and generated compare operators -
-  see proto/cxy/p4.hh. Note that the lack of default constructor is
+  see proto/cxy/p4.hh, noting that the lack of default constructor is
   deliberate to reduce programming errors. A struct whose name ends in
   "Pair" and which has two members named first and second is mapped to a
   std::pair - see proto/cxy/p4.hh

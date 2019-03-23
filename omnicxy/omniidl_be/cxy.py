@@ -237,40 +237,8 @@ struct %(name)s : public std::pair< %(t1)s, %(t2)s >
      std::pair< %(t1)s, %(t2)s >(p1, p2) {
   }
   template<class T1, class T2>
-  explicit %(name)s(std::pair<T1, T2> const& x) throw():
+  %(name)s(std::pair<T1, T2> const& x) throw():
      std::pair< %(t1)s, %(t2)s >(x.first,%(t2)s(x.second)) {
-  }
-  friend bool operator<(
-    %(name)s const& x, 
-    %(name)s const& y) throw() {
-    if (x.first < y.first) return true;
-    if (y.first < x.first) return false;
-    return false;
-  }
-  friend bool operator>(
-    %(name)s const& x, 
-    %(name)s const& y) throw() {
-    return y<x;
-  }
-  friend bool operator!=(
-    %(name)s const& x, 
-    %(name)s const& y) throw() {
-    return (x<y)||(y<x);
-  }
-  friend bool operator==(
-    %(name)s const& x, 
-    %(name)s const& y) throw() {
-    return !(x!=y);
-  }
-  friend bool operator<=(
-    %(name)s const& x, 
-    %(name)s const& y) throw() {
-    return (x<y)||(x==y);
-  }
-  friend bool operator>=(
-    %(name)s const& x, 
-    %(name)s const& y) throw() {
-    return (x>y)||(x==y);
   }
 };
 '''

@@ -70,40 +70,8 @@ public:
   {
     XxPair(int32_t const& p1, std::string const& p2) throw();
     template<class T1, class T2>
-    explicit XxPair(std::pair<T1, T2> const& x) throw():
+    XxPair(std::pair<T1, T2> const& x) throw():
        std::pair< int32_t, std::string >(x.first,std::string(x.second)) {
-    }
-    friend bool operator<(
-      XxPair const& x, 
-      XxPair const& y) throw() {
-      if (x.first < y.first) return true;
-      if (y.first < x.first) return false;
-      return false;
-    }
-    friend bool operator>(
-      XxPair const& x, 
-      XxPair const& y) throw() {
-      return y<x;
-    }
-    friend bool operator!=(
-      XxPair const& x, 
-      XxPair const& y) throw() {
-      return (x<y)||(y<x);
-    }
-    friend bool operator==(
-      XxPair const& x, 
-      XxPair const& y) throw() {
-      return !(x!=y);
-    }
-    friend bool operator<=(
-      XxPair const& x, 
-      XxPair const& y) throw() {
-      return (x<y)||(x==y);
-    }
-    friend bool operator>=(
-      XxPair const& x, 
-      XxPair const& y) throw() {
-      return (x>y)||(x==y);
     }
   };
   

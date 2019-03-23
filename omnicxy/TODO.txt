@@ -5,6 +5,15 @@ key:
 
 * const cref-> should return non-const ref, like T*const x
 
+- switch to C++-17 so we can use using to get base class constructors
+
+- consider dropping derived "Pair" class (see p4) and using std::pair
+  directly... perhaps cannot do because of repoid / typeid?
+
+- map typedef sequence<XyPair> XyMap to std::map<X,Y> but again repoid trouble?
+  
+- map typedef sequence<X> SetOfX to std::set<X>
+
 - prefer shared_ptr<T> to cref<T>:
     - generate code with shared_ptr<T>, never cref<T>
     - look at whether dynamic_cast is overloadable so
