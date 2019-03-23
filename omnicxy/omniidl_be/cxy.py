@@ -93,8 +93,8 @@ def objrefUnqualifiedType(t,eclass):
 
 def mappedType(t):
     'map fully qualified type name {t} where it is well known'
-    if t.startswith('cxy::chrono::'):
-        t='std::chrono::'+t.split('cxy::chrono::',1)[1]
+    if t.startswith('::cxy::chrono::'):
+        t='::std::chrono::'+t[len('::cxy::chrono::'):]
         pass
     return t
 

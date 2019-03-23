@@ -34,9 +34,9 @@ a.idl
 b.idl
 
 %cxx-opts==<<
-+(../..%cxx-opts)
 +inc_sp=(%a.dir)
 +inc_sp=(%b.dir)
++(../..%cxx-opts)
 
 %test-Any-cxx==test-Any-cxx.cc+(%cxx-opts):auto.cxx.exe
 %test-b-cxx==test-b-cxx.cc+(%cxx-opts):auto.cxx.exe
@@ -54,11 +54,23 @@ b.idl
 %b.dir==%b.v:vir_dir
 
 %b.v==<<
-%b.hh==.%b.cxx.files/b.hh
-%b.cc==.%b.cc
+%b.hh==./Odinfile%b.cxx.files/b.hh
+%b.cc==./Odinfile%b.cc
+%chrono.hh==./Odinfile%chrono.cxx.files/chrono.hh
+%chrono.cc==./Odinfile%chrono.cc
+%cxy==./Odinfile%cxy.dir
 
 %b.cxx.files==b.idl+cmd='omniidl' '-bcxx' '-Wba' (b.idl)+need=(b.idl:hash_inc_all):output
 %b.cc==(%dummy.cc)+cmd=cat (%b.cxx.files/bSK.cc) (%b.cxx.files/bDynSK.cc):stdout
+
+%cxy.dir==%cxy.v:vir_dir
+
+%cxy.v==<<
+%chrono.hh==./Odinfile%chrono.cxx.files/chrono.hh
+%chrono.cc==./Odinfile%chrono.cc
+
+%chrono.cxx.files==b.idl+cmd='omniidl' '-bcxx' '-Wba' (../../cxy/chrono.idl)+need=(../../cxy/chrono.idl:hash_inc_all):output
+%chrono.cc==(%dummy.cc)+cmd=cat (%chrono.cxx.files/chronoSK.cc) (%chrono.cxx.files/chronoDynSK.cc):stdout
 
 %dummy.hh==<<
 

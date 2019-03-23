@@ -331,6 +331,15 @@ std::string duration(std::chrono::microseconds const& d) noexcept;
 // format like as 0.000000000s
 std::string duration(std::chrono::nanoseconds const& d) noexcept;
 
+// format like as 0s
+std::string duration(std::chrono::seconds const& d) noexcept;
+
+// format like as 0m
+std::string duration(std::chrono::minutes const& d) noexcept;
+
+// format like as 0h
+std::string duration(std::chrono::hours const& d) noexcept;
+
 // format time t as specified
 // e.g.
 //   cout << localTime(now,Hour,':',Minute,':',Second);

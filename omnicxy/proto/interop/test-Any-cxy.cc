@@ -19,6 +19,8 @@
 #include <thread>
 #include "xju/signal.hh"
 #include "xju/pipe.hh"
+#include <chrono>
+#include <cxy/chrono.any.hh>
 
 std::string makeURI(int port, std::string const& objectName) throw()
 {
@@ -167,6 +169,12 @@ public:
       cxy::Any<> const y(f->f(step_,cxy::Any<>(x)));
       auto const z(y.get< xju::Array<omnicxy::proto::interop::a::S,3> >());
       xju::assert_equal(z,x);
+    }
+    if (step_==19) {
+      cxy::Any<> const y(f->f(step_,cxy::Any<>(
+                                std::chrono::nanoseconds(100997))));
+      auto const z(y.get<std::chrono::nanoseconds>());
+      xju::assert_equal(z,std::chrono::nanoseconds(100997));
     }
     done_=true;
   }
