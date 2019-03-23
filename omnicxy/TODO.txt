@@ -5,7 +5,7 @@ key:
 
 x const cref-> should return non-const ref, like T*const x
 
-- consider dropping derived "Pair" class (see p4) and using std::pair
+~ consider dropping derived "Pair" class (see p4) and using std::pair
   directly... perhaps cannot do because of repoid / typeid?
     - repoid is not important for struct, only really used for interfaces
     - is allowed to be "" in TypeCode; alternative would be to have
@@ -17,6 +17,8 @@ x const cref-> should return non-const ref, like T*const x
     - no trouble: see discussion above
     
 - map typedef sequence<X> SetOfX to std::set<X>
+
+- come up with a convention to denote const methods
 
 - switch to C++-17 so we can use using to get base class constructors
 

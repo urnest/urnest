@@ -72,6 +72,8 @@ basicParamTypes=dict(
 def sequenceUnqualifiedType(t,eclass):
     bound=t.bound()
     if bound==0:
+        if isPairType(t.seqType):
+            pass #REVISIT
         itemType=unqualifiedType(t.seqType(),eclass)
         return 'std::vector< %(itemType)s >'%vars()
     elif bound==1:
@@ -105,7 +107,7 @@ unqualifiedType_=dict(
      for kind in basicParamTypes]+
     [(kind,lambda t,eclass:mappedType(
         ''.join(['::'+_ for _ in t.scopedName()])))
-     for kind in [idltype.tk_alias,
+     for kind in [idltype.tk_alias, #REVISIT: handle specially for seq->map/set
                   idltype.tk_struct,
                   idltype.tk_enum,
                   idltype.ot_structforward]]+
@@ -115,6 +117,7 @@ unqualifiedType_=dict(
                
 def unqualifiedType(t,eclass):
     assert isinstance(t,idltype.Type),t
+    #REVISIT: do alias explicitly here to handle seq->map/set
     if t.kind() in unqualifiedType_:
         return unqualifiedType_[t.kind()](t,eclass)
     assert False, '%s not implemented, only types %s implemented' % (t.kind(),unqualifiedType_.keys())
@@ -1092,6 +1095,7 @@ def gen_tincludes(decl):
             pass
         elif aliasOf.kind()==idltype.tk_sequence:
             if aliasOf.bound()==0:
+                # REVISIT: XyMap -> <map>
                 result=result+['<vector>']+tincludes(aliasOf)
             elif aliasOf.bound()==1:
                 result=result+['<cxy/optional.hh>']+tincludes(aliasOf)
