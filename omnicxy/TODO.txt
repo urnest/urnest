@@ -5,6 +5,14 @@ key:
 
 x const cref-> should return non-const ref, like T*const x
 
+- move chrono any, cdr into base files to avoid extension trouble with
+  generated code... and suppress generated include of cxy/chrono.xxx
+  
+- make cxy::UnixTimeMilli map directly to std::chrono::system_clock::time_point
+  ... just like cxy::chrono::seconds
+  - and then remove cxy/UnixTimeMilli.h
+
+  
 ~ consider dropping derived "Pair" class (see p4) and using std::pair
   directly... perhaps cannot do because of repoid / typeid?
     - repoid is not important for struct, only really used for interfaces
@@ -265,7 +273,9 @@ x p16a-main:
     x test interop with complex any param
       x still to test some types (see REVISITs in cxy/TypeCode.hcp)
       
-- cxy/Milliseconds.idl and hand-code map to std::chrono::milliseconds
+~ cxy/Milliseconds.idl and hand-code map to std::chrono::milliseconds
+  x now have cxy::chrono::milliseconds mapping directly
+  to std::chrono::milliseconds
 
 - other stuff (see omniidl idltypes.py)
 
