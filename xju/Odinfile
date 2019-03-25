@@ -98,12 +98,24 @@ done
 %utf8==./utf8/Odinfile%hcp-gen
 %test==./test/Odinfile%hcp-gen
 %netflow==./netflow/Odinfile%hcp-gen
+%linux==./linux/Odinfile%hcp-gen
 
 %test-getHostName==()+cmd=(%test-getHostName.sh) (test-getHostName.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 
 %test-getHostName.sh == ! <<
 #!/bin/sh
 "$1" $(hostname)
+
+%idl-gen==%idl-gen.vir_dir_specs:list:cat:vir_dir
+
+%idl-gen.vir_dir_specs==<<
+%idl-local-spec
+%idl-subdir-spec
+
+%idl-local-spec==.:dir.idl.list+G+hpath='xju':omnicxy.virdir-specs:cat
+
+%idl-subdir-spec==<<
+%linux==./linux/Odinfile%idl-gen
 
 %tags==%all.list-of-tags:merged-tags
 
@@ -118,3 +130,4 @@ ethernet%tags
 json%tags
 utf8%tags
 test%tags
+linux%tags

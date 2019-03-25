@@ -22,6 +22,12 @@ wal%all.tree
 +inc_sp=(/usr/include/freetype2)
 +ld_flags=-lpthread
 
+%idl-opts==<<
++inc_sp=(.)
++inc_sp=(omnicxy)
++cxy='-exju::Exception=xju/Exception.hh'
++hcp-split=(hcp/hcp-split)
+
 %hcp-gen==Odinfile%hcp-gen.virdir_spec:vir_dir
 
 %hcp-gen.virdir_spec == <<
@@ -34,7 +40,7 @@ wal%all.tree
 %idl-gen.virdir_spec == <<
 %hcp==./hcp/Odinfile%idl-gen
 %cxy==./omnicxy/cxy/Odinfile%idl-gen
-
+%xju==./xju/Odinfile%idl-gen
 
 %tags==%all.list-of-tags:merged-tags
 

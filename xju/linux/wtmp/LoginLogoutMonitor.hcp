@@ -1,0 +1,154 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <xju/linux/wtmp/event.hh>
+#include <xju/path.hh>
+#include <xju/SyscallFailed.hh>
+#include <sstream> //impl
+#include <vector>
+#include <memory>
+#include <chrono>
+#include <sys/stat.h> //impl
+#include <utility> //impl
+#include <iterator> //impl
+#include <xju/io/select.hh> //impl
+#include <xju/steadyNow.hh> //impl
+#include <xju/io/FileObserver.hh>
+#include <xju/io/FileReader.hh>
+#include <xju/Exception.hh>
+#include <utmp.h> //impl
+#include <iostream> //impl
+
+namespace xju
+{
+namespace linux
+{
+namespace wtmp
+{
+
+namespace {
+bool sameFile(struct stat const& a, struct stat const& b) noexcept
+{
+  return (a.st_dev==b.st_dev)&&(a.st_ino==b.st_ino);
+}
+
+}
+
+class LoginLogoutMonitor
+{
+public:
+  explicit LoginLogoutMonitor(xju::path::AbsFile const& wtmp) throw(
+    // - wtmp.first - i.e. directory of wtmp - does not exist (ENOENT)
+    // - no resources
+    xju::SyscallFailed) try:
+    wtmp_(wtmp),
+    notifier_({wtmp})
+  {
+  }
+  catch(xju::SyscallFailed& e){
+    std::ostringstream s;
+    s << "monitor logins/logouts recorded by wtmp file "
+      << xju::path::str(wtmp);
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+    
+  std::vector<std::shared_ptr<event::Event_ const> > readEventsUntilDeadline(
+    std::chrono::steady_clock::time_point const& deadline) throw(
+      xju::Exception)
+  {
+    std::vector<std::shared_ptr<event::Event_ const> > result;
+    do
+    {
+      // cases to deal with:
+      // - file wtmp_ has never existed (i.e. never successfully opened it)...
+      //     ... and still doesn't [1]
+      //     ... and does now [2]
+      // - file existed (i.e. we have it open) and has been renamed
+      //     ... new file has not yet been created [3]
+      //     ... new file has been created [4]
+      // - open fails [5]
+      // - also want to work where the writer continues to write to old
+      //   for an arbitrary amount of time after opening the new file [6]
+      try{
+        std::unique_ptr<xju::io::FileReader> newFile{
+          new xju::io::FileReader(wtmp_)};
+        if (newFile->size()) { // [6]
+          if (!currentFile_.get()){
+            std::swap(currentFile_,newFile); // [2]
+          }
+          else if (!sameFile(currentFile_->stat(),newFile->stat())){
+            readNewEntries(*currentFile_,std::back_inserter(result));
+            std::swap(newFile,currentFile_);
+          }
+        }
+      }
+      catch(xju::SyscallFailed const& e){
+        if (e._errno!=ENOENT){ // [5]
+          throw;
+        }
+        //named wtmp file does not exist, which might be transient ([1] or [3])
+      }
+      if (currentFile_.get()){ //[1]
+        readNewEntries(*currentFile_,std::back_inserter(result));
+      }
+      xju::io::select({&notifier_},deadline);
+    }
+    while(xju::steadyNow()<deadline);
+    return result;
+  }
+
+  xju::io::Input& input() noexcept
+  {
+    return notifier_;
+  }
+private:
+  xju::path::AbsFile const wtmp_;
+  xju::io::FileObserver notifier_;
+  std::unique_ptr<xju::io::FileReader> currentFile_;
+
+  typedef std::vector<std::shared_ptr<event::Event_ const> > Events;
+  
+  void readNewEntries(xju::io::FileReader& file,
+                      std::back_insert_iterator<Events> into) throw(
+                        xju::Exception)
+  {
+    try {
+      while(true) {
+        struct utmp record;
+        off_t const at{file.seekBy(0)};
+        size_t s{file.read(&record,sizeof(record))};
+        if (s<sizeof(record)){
+          // writer not writing atomically? or disk full?
+          file.seekTo(at);
+        }
+        else {
+          //process(record);
+          std::cout << "\n"
+                    << "type: " << record.ut_type << "\n"
+                    << "pid:  " << record.ut_pid << "\n"
+                    << "line: " << std::string(
+                      record.ut_line,record.ut_line+UT_LINESIZE)<<"\n"
+                    << "id:   " << std::string(
+                      record.ut_id,record.ut_id+4) << "\n"
+                    << "user: " << std::string(
+                      record.ut_user,record.ut_user+UT_NAMESIZE) << "\n"
+                    << "host: " << std::string(
+                      record.ut_host,record.ut_host+UT_HOSTSIZE) << "\n";
+        }
+      }
+    }
+    catch(xju::io::EndOfFile) {
+    }
+  }
+};
+
+}
+}
+}

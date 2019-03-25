@@ -169,11 +169,12 @@ tincludes_=dict(
     [(idltype.tk_TypeCode, lambda t: ['<cxy/TypeCode.hh>'])]+
     [(kind, lambda t:basicParamTypes.get(t.kind()).includeFiles)
      for kind in basicParamTypes]+
+    [(idltype.tk_union, lambda t: ['<memory>']+mappedTypeIncludes(
+        ''.join(['::'+_ for _ in t.scopedName()])))]+
     [(kind, lambda t: mappedTypeIncludes(
         ''.join(['::'+_ for _ in t.scopedName()])))
      for kind in [idltype.tk_alias,
                   idltype.tk_struct,
-                  idltype.tk_union,
                   idltype.tk_enum,
                   idltype.ot_structforward]]+
     [(idltype.tk_sequence, lambda t: tincludes(t.seqType()))])
@@ -1162,7 +1163,7 @@ def gen_tincludes(decl):
             result=[]
             pass
     elif isinstance(decl, idlast.Union):
-        result=tincludes(decl.switchType())
+        result=['<memory>']+tincludes(decl.switchType())
         for c in decl.cases():
             assert c.constrType()==False,c
             for l in c.labels():
