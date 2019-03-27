@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Trevor Taylor
+// Copyright (c) 2019 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
 // and its documentation for any purpose is hereby granted without fee,
@@ -7,14 +7,25 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef CXY_UNIXTIMEMILLI_IDL
-#define CXY_UNIXTIMEMILLI_IDL
+#ifndef XJU_LINUX_WTMP_USERLOGGEDOUT_IDL
+#define XJU_LINUX_WTMP_USERLOGGEDOUT_IDL
 
-module cxy
+#include <cxy/UnixTimeMilli.idl>
+#include <xju/linux/wtmp/UserLoggedIn.idl>
+
+module xju
 {
-  // milliseconds since Unix Epoch, 1 Jan 1970 UTC
-  // includes leap-seconds (see C++ std::chrono::utc_clock)
-  typedef long long UnixTimeMilli;
+  module linux
+  {
+    module wtmp
+    {
+      struct UserLoggedOut
+      {
+        UserLoggedIn who_;
+        ::cxy::UnixTimeMilli at_;
+      };
+    };
+  };
 };
 
 #endif

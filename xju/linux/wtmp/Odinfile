@@ -6,9 +6,6 @@ cat-wtmp.cc+(../../..%cxx-opts):auto.cxx.exe
 
 %tests.tree == <<
 
-event.hh==%idl-gen/event.hh
-event.cc==%idl-gen/event.cc
-
 %hcp-gen==.:dir.hcp.list+G+hpath='xju/linux/wtmp':hcp-split-virdir-specs:cat:vir_dir
 
 %idl-gen==%idl-gen.vir_dir_specs:list:cat:vir_dir

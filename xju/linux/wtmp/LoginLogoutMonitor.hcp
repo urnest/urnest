@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/linux/wtmp/event.hh>
+#include <xju/linux/wtmp/Event.hh>
 #include <xju/path.hh>
 #include <xju/SyscallFailed.hh>
 #include <sstream> //impl
@@ -24,6 +24,10 @@
 #include <xju/Exception.hh>
 #include <utmp.h> //impl
 #include <iostream> //impl
+#include <xju/format.hh> //impl
+#include <xju/unix_epoch.hh> //impl
+#include <xju/startsWith.hh> //impl
+#include <algorithm> //impl
 
 namespace xju
 {
@@ -36,6 +40,13 @@ namespace {
 bool sameFile(struct stat const& a, struct stat const& b) noexcept
 {
   return (a.st_dev==b.st_dev)&&(a.st_ino==b.st_ino);
+}
+std::string toString(char const* const begin,
+                     char const* const end) noexcept
+{
+  for(char const* e{begin}; e!=end && (*e)!=0; ++e){
+    return std::string(begin,e);
+  }
 }
 
 }
@@ -58,12 +69,13 @@ public:
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }
-    
-  std::vector<std::shared_ptr<event::Event_ const> > readEventsUntilDeadline(
+
+  // not thread safe
+  std::vector<std::shared_ptr<Event const> > readEventsUntilDeadline(
     std::chrono::steady_clock::time_point const& deadline) throw(
       xju::Exception)
   {
-    std::vector<std::shared_ptr<event::Event_ const> > result;
+    std::vector<std::shared_ptr<Event const> > result;
     do
     {
       // cases to deal with:
@@ -112,8 +124,9 @@ private:
   xju::path::AbsFile const wtmp_;
   xju::io::FileObserver notifier_;
   std::unique_ptr<xju::io::FileReader> currentFile_;
-
-  typedef std::vector<std::shared_ptr<event::Event_ const> > Events;
+  std::map<pid_t, UserLoggedIn const> who_;
+  
+  typedef std::vector<std::shared_ptr<Event const> > Events;
   
   void readNewEntries(xju::io::FileReader& file,
                       std::back_insert_iterator<Events> into) throw(
@@ -129,24 +142,73 @@ private:
           file.seekTo(at);
         }
         else {
-          //process(record);
-          std::cout << "\n"
-                    << "type: " << record.ut_type << "\n"
-                    << "pid:  " << record.ut_pid << "\n"
-                    << "line: " << std::string(
-                      record.ut_line,record.ut_line+UT_LINESIZE)<<"\n"
-                    << "id:   " << std::string(
-                      record.ut_id,record.ut_id+4) << "\n"
-                    << "user: " << std::string(
-                      record.ut_user,record.ut_user+UT_NAMESIZE) << "\n"
-                    << "host: " << std::string(
-                      record.ut_host,record.ut_host+UT_HOSTSIZE) << "\n";
+          processRecord(record.ut_type,
+                        record.ut_pid,
+                        toString(record.ut_host,record.ut_host+UT_HOSTSIZE),
+                        toString(record.ut_user,record.ut_user+UT_NAMESIZE),
+                        xju::unix_epoch()+
+                        std::chrono::seconds(record.ut_tv.tv_sec)+
+                        std::chrono::microseconds(record.ut_tv.tv_usec),
+                        into);
         }
       }
     }
     catch(xju::io::EndOfFile) {
     }
   }
+
+  void processRecord(short ut_type,
+                     pid_t ut_pid,
+                     std::string host,
+                     std::string user,
+                     std::chrono::system_clock::time_point at,
+                     std::back_insert_iterator<Events> into) noexcept
+  {
+    // type: 7 host not :x.0 -> login
+    // type: 7 host :x.0 -> xterm without -l
+    //         - the corresponding type 8 has clear host
+    //         -> need to track just to ignore
+    // type: 8 sometimes has user, sometimes not (e.g. ssh) -> logout
+    // type: 1 boot -> clear all
+    switch(ut_type){
+    case 1: {
+      who_.clear();
+      break;
+    }
+    case 7: {
+      auto const i{
+        who_.insert(
+          std::make_pair(ut_pid,UserLoggedIn(user,host,at))).first};
+      if (xju::startsWith(host,std::string(":")) &&
+          std::find(host.begin(),host.end(),'.')!=host.end()){
+        // e.g. :0.0 xterm without -l, i.e. already logged in so skip
+        // but need to track the entry because the logout will have
+        // host cleared
+      }
+      else {
+        (*into++)=std::shared_ptr<Event>(
+          new Event::USER_LOGGED_IN((*i).second));
+      }
+      break;
+    }
+    case 8: {
+      auto const i{who_.find(ut_pid)};
+      if (i!=who_.end()){
+        if (xju::startsWith(host,std::string(":")) &&
+            std::find(host.begin(),host.end(),'.')!=host.end()){
+          // e.g. :0.0 ... see above
+        }
+        else {
+          (*into++)=std::shared_ptr<Event>(
+            new Event::USER_LOGGED_OUT(
+              UserLoggedOut((*i).second,at)));
+        }
+        who_.erase(i);
+      }
+    }
+    }
+  }
+  
 };
 
 }
