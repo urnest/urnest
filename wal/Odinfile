@@ -5,3 +5,4 @@
 (pq.py):py3.exec.output
 (rfc2616.py):py3.exec.output
 (xn.py):py3.exec.output
+(etc.py):py3.exec.output
