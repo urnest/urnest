@@ -80,7 +80,9 @@ INFO: - do some stuff = 77
     try:
         f()
     except Exception as e:
-        Assert(str(e))=='failed to do some stuff because\n./etc.py:78: did not work'
+        Assert(e.readableRepr())=='''\
+Failed to do some stuff because
+did not work.'''
     else:
         assert False,'should not reach'
     pass

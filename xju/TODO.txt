@@ -1,3 +1,5 @@
+* test xju/linux/wtmp/LoginOutMonitor
+
 x switch all deadlines to be steady_clock.
 
 - what to do about operator<<(std::ostream& s,X) noexcept

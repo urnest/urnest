@@ -28,6 +28,7 @@
 #include <xju/unix_epoch.hh> //impl
 #include <xju/startsWith.hh> //impl
 #include <algorithm> //impl
+#include <set>
 
 namespace xju
 {
@@ -88,6 +89,8 @@ public:
       // - open fails [5]
       // - also want to work where the writer continues to write to old
       //   for an arbitrary amount of time after opening the new file [6]
+      // - also where new file is never written to before it is replaced,
+      //   ... but is written to after it is replaced
       try{
         std::unique_ptr<xju::io::FileReader> newFile{
           new xju::io::FileReader(wtmp_)};
@@ -110,15 +113,24 @@ public:
       if (currentFile_.get()){ //[1]
         readNewEntries(*currentFile_,std::back_inserter(result));
       }
-      xju::io::select({&notifier_},deadline);
+      if (currentFile_.get()){
+        xju::io::select({&notifier_,currentFile_.get()},deadline);
+      }
+      else{
+        xju::io::select({&notifier_},deadline);
+      }
     }
     while(xju::steadyNow()<deadline);
     return result;
   }
 
-  xju::io::Input& input() noexcept
+  // post: 0 not in result
+  std::set<xju::io::Input const*> inputs() noexcept
   {
-    return notifier_;
+    if (currentFile_.get()){
+      return {&notifier_,currentFile_.get()};
+    }
+    return {&notifier_};
   }
 private:
   xju::path::AbsFile const wtmp_;
