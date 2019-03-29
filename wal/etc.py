@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Copyright (c) 2018 Trevor Taylor
 # 
 # Permission to use, copy, modify, and/or distribute this software for
@@ -14,6 +16,7 @@
 #
 import json
 import sys
+import io
 
 def toJson(x,cls=json.JSONEncoder):
     return json.dumps(x,sort_keys=True,indent=4,separators=(',',': '),
@@ -26,7 +29,7 @@ from xn import inContext
 class Scope:
     def __init__(self,description,
                  log=lambda s: print('INFO: {s}'.format(**vars()))):
-        self.description=descriptions
+        self.description=description
         self.log=log
         self.result_=None
         log('+ '+self.description)
@@ -50,3 +53,34 @@ class Scope:
         return result
     pass
 
+if __name__=='__main__':
+    from assert_ import Assert
+    sys.stdout=io.StringIO()
+    with Scope('do some stuff') as scope:
+        pass
+    Assert(sys.stdout.getvalue())=='''\
+INFO: + do some stuff
+INFO: - do some stuff = None
+'''
+    sys.stdout=io.StringIO()
+    def f():
+        with Scope('do some stuff') as scope:
+            return scope.result(77)
+            pass
+        pass
+    Assert(f())==77
+    Assert(sys.stdout.getvalue())=='''\
+INFO: + do some stuff
+INFO: - do some stuff = 77
+'''
+    def f():
+        with Scope('do some stuff') as scope:
+            raise Exception('did not work')
+        pass
+    try:
+        f()
+    except Exception as e:
+        Assert(str(e))=='failed to do some stuff because\n./etc.py:78: did not work'
+    else:
+        assert False,'should not reach'
+    pass
