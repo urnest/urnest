@@ -47,9 +47,10 @@ bool sameFile(struct stat const& a, struct stat const& b) noexcept
 std::string toString(char const* const begin,
                      char const* const end) noexcept
 {
-  for(char const* e{begin}; e!=end && (*e)!=0; ++e){
-    return std::string(begin,e);
+  char const* e{begin};
+  for(; e!=end && (*e)!=0; ++e){
   }
+  return std::string(begin,e);
 }
 
 }
@@ -155,6 +156,7 @@ private:
         if (s<sizeof(record)){
           // writer not writing atomically? or disk full?
           file.seekTo(at);
+          return result;
         }
         else {
           result+=processRecord(
@@ -171,6 +173,7 @@ private:
     }
     catch(xju::io::EndOfFile) {
     }
+    return result;
   }
 
   size_t processRecord(short ut_type,

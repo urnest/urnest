@@ -3,6 +3,7 @@
 %all.tree==<<
 %tests.tree
 cat-wtmp.cc+(../../..%cxx-opts):auto.cxx.exe
+()+cmd=(test-LoginLogoutMonitor.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 
 %tests.tree == <<
 
@@ -18,4 +19,9 @@ cat-wtmp.cc+(../../..%cxx-opts):auto.cxx.exe
 
 %idl-subdir-spec==<<
 
-%tags==.:merged-tags
+%tags==%all.list-of-tags:merged-tags
+
+%all.list-of-tags==<<
+.:merged-tags
+%idl-gen:merged-tags
+
