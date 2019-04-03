@@ -69,6 +69,9 @@ basicParamTypes=dict(
     }.items()
 )
 
+def isPairType(t):
+    return False #REVISIT
+
 def sequenceUnqualifiedType(t,eclass):
     bound=t.bound()
     if bound==0:

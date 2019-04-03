@@ -103,6 +103,10 @@ std::string IntValue::str() const throw()
   return xju::format::int_(val_);
 }
 
+bool IntValue::less(Value const& y) const throw()
+{
+  return val_ < dynamic_cast<IntValue const&>(y).val_;
+}
 
 }
 }

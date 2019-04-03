@@ -36,6 +36,23 @@ void test1() {
         Oid(".1.3.6.1.4.1.33.2.1.6"),
         std::shared_ptr<Value const>(new IntValue(89)))});
   xju::assert_equal(xju::format::str(x),"community \"pub\", trap type .1.3.6.1.4.1.33.2.1, origin 1.2.3.4, generic type 2, specific type 0, up time 2, vars: .1.3.6.1.4.1.33.2.1.5=\"fred\", .1.3.6.1.4.1.33.2.1.6=89");
+
+  SnmpV1Trap const y(
+    Community("pub"),
+    Oid(".1.3.6.1.4.1.33.2.1"),
+    xju::ip::v4::Address(0x01020304),
+    SnmpV1Trap::GenericType(SnmpV1Trap::GenericType::LINKDOWN),
+    SnmpV1Trap::SpecificType(0),
+    std::chrono::milliseconds(20),
+    std::map<Oid, std::shared_ptr<Value const> >{
+      std::pair<Oid const,std::shared_ptr<Value const> >(
+        Oid(".1.3.6.1.4.1.33.2.1.5"),
+        std::shared_ptr<Value const>(new StringValue("fred"))),
+      std::pair<Oid const,std::shared_ptr<Value const> >(
+        Oid(".1.3.6.1.4.1.33.2.1.6"),
+        std::shared_ptr<Value const>(new IntValue(90)))});
+
+  xju::assert_less(x,y);
 }
 
 }

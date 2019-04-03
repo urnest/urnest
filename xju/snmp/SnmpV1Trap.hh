@@ -19,6 +19,7 @@
 #include <memory>
 #include "xju/snmp/Value.hh"
 #include <iostream>
+#include <xju/seq_less.hh>
 
 namespace xju
 {
@@ -81,13 +82,37 @@ struct SnmpV1Trap
     if (y.specificType_<x.specificType_) return false;
     if (x.timestamp_<y.timestamp_) return true;
     if (y.timestamp_<x.timestamp_) return false;
-    if (x.vars_<y.vars_) return true;
-    if (y.vars_<x.vars_) return false;
-    return false;
+    return xju::seq_less(
+      x.vars_.begin(),x.vars_.end(),
+      y.vars_.begin(),y.vars_.end(),
+      [](std::pair<Oid,std::shared_ptr<Value const> > const& x,
+         std::pair<Oid,std::shared_ptr<Value const> > const& y){
+        if (x.first<y.first) return true;
+        if (y.first<x.first) return false;
+        if (*x.second<*y.second) return true;
+        if (*y.second<*x.second) return false;
+        return false;
+      });
   }
   friend bool operator==(SnmpV1Trap const& x, SnmpV1Trap const& y) noexcept
   {
     return !(x<y) && !(y<x);
+  }
+  friend bool operator<=(SnmpV1Trap const& x, SnmpV1Trap const& y) noexcept
+  {
+    return x<y || x==y;
+  }
+  friend bool operator>(SnmpV1Trap const& x, SnmpV1Trap const& y) noexcept
+  {
+    return y<x;
+  }
+  friend bool operator>=(SnmpV1Trap const& x, SnmpV1Trap const& y) noexcept
+  {
+    return x>y || x==y;
+  }
+  friend bool operator!=(SnmpV1Trap const& x, SnmpV1Trap const& y) noexcept
+  {
+    return !(x==y);
   }
   
   friend std::ostream& operator<<(std::ostream& s, SnmpV1Trap const& x) 

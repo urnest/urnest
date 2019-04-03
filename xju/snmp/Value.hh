@@ -61,10 +61,24 @@ public:
 
   // human readable
   virtual std::string str() const throw()=0;
+
+  // pre: typeid(y)==typeid(*this)
+  virtual bool less(Value const& y) const throw()=0;
   
   friend std::ostream& operator<<(std::ostream& s, Value const& x) throw()
   {
     return s << x.str();
+  }
+
+  friend bool operator<(Value const& x, Value const& y) noexcept
+  {
+    if (std::string(typeid(x).name())<std::string(typeid(y).name())){
+      return true;
+    }
+    if (std::string(typeid(y).name())<std::string(typeid(x).name())){
+      return false;
+    }
+    return x.less(y);
   }
 };
   

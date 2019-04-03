@@ -34,6 +34,7 @@
 #include "xju/snmp/SnmpV2cGetRequest.hh"
 #include "xju/snmp/SnmpV2cSetRequest.hh"
 #include "xju/snmp/SnmpV2cResponse.hh"
+#include <xju/seq_less.hh>
 
 namespace xju
 {
@@ -91,7 +92,17 @@ public:
                                return x->str();
                              },", ");
   }
-  
+  // Value::
+  bool less(Value const& yy) const throw() override
+  {
+    auto const y{dynamic_cast<Sequence const&>(yy)};
+    return xju::seq_less(items_.begin(),items_.end(),
+                         y.items_.begin(),y.items_.end(),
+                         [](std::shared_ptr<Value const> const& x,
+                            std::shared_ptr<Value const> const& y){
+                           return (*x) < (*y);
+                         });
+  }
 };
 
 uint64_t encodedLengthOfItems(
@@ -141,6 +152,13 @@ public:
                              [](SnmpV2cVarResponse const& x) {
                                return xju::format::str(x);
                              },", ");
+  }
+  // Value::
+  bool less(Value const& yy) const throw() override
+  {
+    auto const y{dynamic_cast<V2cSequence const&>(yy)};
+    return xju::seq_less(items_.begin(),items_.end(),
+                         y.items_.begin(),y.items_.end());
   }
   
 };

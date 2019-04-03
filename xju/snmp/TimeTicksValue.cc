@@ -34,6 +34,10 @@ std::string TimeTicksValue::str() const throw()
     xju::format::int_(val_.count()%1000/10,2)+"s";
 }
 
+bool TimeTicksValue::less(Value const& y) const throw()
+{
+  return val_ < dynamic_cast<TimeTicksValue const&>(y).val_;
+}
 
 }
 }

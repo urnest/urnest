@@ -39,6 +39,10 @@ std::string IPv4AddressValue::str() const throw()
   return xju::format::str(val_);
 }
 
+bool IPv4AddressValue::less(Value const& y) const throw()
+{
+  return val_ < dynamic_cast<IPv4AddressValue const&>(y).val_;
+}
 
 }
 }

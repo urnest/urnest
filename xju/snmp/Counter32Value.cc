@@ -68,11 +68,16 @@ std::vector<uint8_t>::iterator Counter32Value::encodeTo(
 {
   return encodeInt(begin,0x41,val_);
 }
+
 std::string Counter32Value::str() const throw()
 {
   return xju::format::str(val_);
 }
 
+bool Counter32Value::less(Value const& y) const throw()
+{
+  return val_ < dynamic_cast<Counter32Value const&>(y).val_;
+}
 
 }
 }
