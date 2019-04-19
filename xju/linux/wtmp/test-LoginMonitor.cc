@@ -23,6 +23,7 @@
 #include <xju/file/rename.hh>
 #include <xju/next.hh>
 #include <thread>
+#include <xju/test/call.hh>
 
 namespace xju
 {
@@ -240,21 +241,23 @@ void test3(){
 
   {
     // - becomes readable
+    auto const t1{xju::steadyNow()};
     auto c{xju::test::call(
         [&](){
           return m.readEventsUntilDeadline(
-            xju::steadyNow()+std::chrono::milliseconds(100))
+            t1+std::chrono::milliseconds(100));
             })};
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    std::this_thread::sleep_until(t1+std::chrono::milliseconds(50));
     {
       auto const r{loggedIn("l1","u9",std::chrono::seconds(9))};
       writer.write(&r,sizeof(r));
     }
+    std::this_thread::sleep_until(t1+std::chrono::milliseconds(80));
     {
       auto const r{loggedIn("l1","u10",std::chrono::seconds(10))};
-      writer.write(&r,sizeof(r));
+      writer2.write(&r,sizeof(r));
     }
-    auto const events{c.result(std::chrono::milliseconds(80))};
+    auto const events{c->getResultBy(t1+std::chrono::milliseconds(160))};
     xju::assert_equal(events.size(),2U);
     xju::assert_equal(*events.begin(),
                       UserLoggedIn("u9","hh",
@@ -284,7 +287,6 @@ void test3(){
                       UserLoggedIn("u11","hh",
                                    xju::unix_epoch()+
                                    std::chrono::seconds(11)));
-  }
   }
 }
 
