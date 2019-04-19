@@ -19,7 +19,6 @@
 #include <xju/linux/wtmp/UserLoggedIn.hh>
 #include <xju/unix_epoch.hh>
 #include <chrono>
-#include <xju/linux/wtmp/Event.hh>
 #include <xju/file/rename.hh>
 #include <xju/next.hh>
 #include <thread>
