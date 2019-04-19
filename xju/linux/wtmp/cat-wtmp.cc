@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/linux/wtmp/LoginLogoutMonitor.hh>
+#include <xju/linux/wtmp/LoginMonitor.hh>
 #include <xju/steadyNow.hh>
 #include <sstream>
 #include <xju/format.hh>
@@ -29,21 +29,12 @@ int main(int argc, char* argv[])
   }
   try{
     auto const fileName{xju::path::split(argv[1])};
-    xju::linux::wtmp::LoginLogoutMonitor m{fileName};
+    xju::linux::wtmp::LoginMonitor m{fileName,0};
 
     auto const events{m.readEventsUntilDeadline(xju::steadyNow())};
-    for (auto e: events){
-      xju::linux::wtmp::Event::USER_LOGGED_IN const* ii;
-      xju::linux::wtmp::Event::USER_LOGGED_OUT const* oo;
-      if (ii=dynamic_cast<xju::linux::wtmp::Event::USER_LOGGED_IN const*>(&*e)){
-        auto const& i{ii->userLoggedIn_};
-        std::cout << t(i.at_) << ": " << i.user_ << " logged in from "
-                  << i.from_ << "\n";
-      }
-      else if (oo=dynamic_cast<xju::linux::wtmp::Event::USER_LOGGED_OUT const*>(&*e)){
-        auto const& o{oo->userLoggedOut_};
-        std::cout << t(o.at_) << ": " << o.who_.user_ << " logged out\n";
-      }
+    for (auto i: events){
+      std::cout << t(i.at_) << ": " << i.user_ << " logged in from "
+                << i.from_ << "\n";
     };
     return 0;
   }
