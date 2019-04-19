@@ -11,6 +11,7 @@
 #include <xju/steadyNow.hh>
 #include <sstream>
 #include <xju/format.hh>
+#include <chrono>
 
 
 std::string t(std::chrono::system_clock::time_point const& t) noexcept
@@ -31,11 +32,18 @@ int main(int argc, char* argv[])
     auto const fileName{xju::path::split(argv[1])};
     xju::linux::wtmp::LoginMonitor m{fileName,0};
 
+    // skip existing
     auto const events{m.readEventsUntilDeadline(xju::steadyNow())};
-    for (auto i: events){
-      std::cout << t(i.at_) << ": " << i.user_ << " logged in from "
-                << i.from_ << "\n";
-    };
+
+    while(true){
+      auto const events{m.readEventsUntilDeadline(xju::steadyNow()+
+                                                  std::chrono::seconds(3))};
+      for (auto i: events){
+        std::cout << i.user_ << " logged in from "
+                  << i.from_ << " at " << t(i.at_) << "\n";
+      };
+      std::cout.flush();
+    }
     return 0;
   }
   catch(xju::Exception& e){

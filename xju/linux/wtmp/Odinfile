@@ -2,7 +2,7 @@
 
 %all.tree==<<
 %tests.tree
-cat-wtmp.cc+(../../..%cxx-opts):auto.cxx.exe
+monitor-logins.cc+(../../..%cxx-opts):auto.cxx.exe
 ()+cmd=(test-LoginMonitor.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 
 %tests.tree == <<
