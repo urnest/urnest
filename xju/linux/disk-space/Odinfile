@@ -1,0 +1,19 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+%tests.tree
+%monitor-disk-space
+()+cmd=(test-statFileSystem.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-trackLevel.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
+
+%monitor-disk-space==monitor-disk-space.cc+(../../..%cxx-opts):auto.cxx.exe
+
+%tests.tree == <<
+
+%hcp-gen==.:dir.hcp.list+G+hpath='xju/linux/disk-space':hcp-split-virdir-specs:cat:vir_dir
+
+%tags==%all.list-of-tags:merged-tags
+
+%all.list-of-tags==<<
+.:merged-tags
+

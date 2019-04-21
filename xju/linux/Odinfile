@@ -3,6 +3,7 @@
 %all.tree==<<
 %tests.tree
 wtmp%tests.tree
+disk-space%tests.tree
 
 %tests.tree == <<
 
@@ -16,6 +17,7 @@ wtmp%tests.tree
 
 %hcp-subdir-spec==<<
 %wtmp==wtmp/Odinfile%hcp-gen
+%disk-space==disk-space/Odinfile%hcp-gen
 
 %idl-gen==%idl-gen.vir_dir_specs:list:cat:vir_dir
 
@@ -33,3 +35,4 @@ wtmp%tests.tree
 %all.list-of-tags==<<
 .:merged-tags
 wtmp%tags
+disk-space%tags

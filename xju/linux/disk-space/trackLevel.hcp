@@ -1,0 +1,64 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/linux/disk-space/statFileSystem.hh>
+#include <set>
+#include <xju/linux/disk-space/Percent.hh>
+#include <algorithm> //impl
+#include <map> //impl
+
+namespace xju
+{
+namespace linux
+{
+namespace disk_space
+{
+// Track level of file system use amost specified levels
+// considering previous level and current stats, noting that
+// to drop below a level use must go at least 0.5% below that level.
+// 
+std::set<Percent>::const_iterator trackLevel(
+  std::set<Percent>::const_iterator const& previous,
+  std::set<Percent> const& percentLevels,
+  FileSystemStat const& counts) noexcept
+{
+  std::map<size_t,Percent> levels;
+  std::transform(percentLevels.begin(),percentLevels.end(),
+                 std::inserter(levels,levels.end()),
+                 [&](Percent const& x){
+                   return std::make_pair(counts.blocksTotal_/100*x.value(),
+                                         x);
+                 });
+  auto i{levels.lower_bound(counts.blocksTotal_-counts.blocksFree_)};
+  if (i==levels.end()){
+    // top
+    return percentLevels.end();
+  }
+  else if (previous!=percentLevels.end() && (*i).second>(*previous)){
+    // gone up
+    return percentLevels.find((*i).second);
+  }
+
+  size_t const halfPercent{counts.blocksTotal_/200U};
+  i=levels.upper_bound(counts.blocksTotal_-counts.blocksFree_+halfPercent);
+  if (i!=levels.end() &&
+      ((previous==percentLevels.end()) || ((*i).second<(*previous)))){
+    // gone down
+    return percentLevels.find((*i).second);
+  }
+
+  // no change
+  return previous;
+}
+
+}
+}
+}
