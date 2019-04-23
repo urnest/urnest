@@ -24,31 +24,42 @@ namespace disk_space
 // Track level of file system use amost specified levels
 // considering previous level and current stats, noting that
 // to drop below a level use must go at least 0.5% below that level.
-// 
+//
+// pre: percentLevels contains 0%
 std::set<Percent>::const_iterator trackLevel(
   std::set<Percent>::const_iterator const& previous,
   std::set<Percent> const& percentLevels,
   FileSystemStat const& counts) noexcept
 {
-  std::map<size_t,Percent> levels;
+  // so we work where total blocks <100
+  size_t const blocksTotal{counts.blocksTotal_<100?counts.blocksTotal_*100,
+                           counts.blocksTotal_};
+  size_t const totalFree{counts.blocksTotal_<100?counts.blocksFree_*100,
+                         counts.blocksFree_};
+  
+  xju::assert_not_equal(percentLevels.find(Percent(0)),percentLevels.end());
+  
+  std::map<size_t, //blocks in use
+           Percent //percent full
+           > levels{ {blocksTotal,Percent(100)} };
   std::transform(percentLevels.begin(),percentLevels.end(),
                  std::inserter(levels,levels.end()),
                  [&](Percent const& x){
-                   return std::make_pair(counts.blocksTotal_/100*x.value(),
-                                         x);
+                   return std::make_pair(
+                     blocksTotal/100*x.value().value(),x);
                  });
-  auto i{levels.lower_bound(counts.blocksTotal_-counts.blocksFree_)};
-  if (i==levels.end()){
-    // top
-    return percentLevels.end();
-  }
-  else if (previous!=percentLevels.end() && (*i).second>(*previous)){
+  size_t const blocksInUse{blocksTotal-
+                           //avoid underflow when subtracting from unsigned
+                           std::min(blocksFree,blocksTotal)};
+  auto i{levels.lower_bound(blocksInUse)};
+  xju::assert_not_equal(i,levels.end()); //since we put 100% in
+  if (previous!=percentLevels.end() && (*i).second>(*previous)){
     // gone up
     return percentLevels.find((*i).second);
   }
 
-  size_t const halfPercent{counts.blocksTotal_/200U};
-  i=levels.upper_bound(counts.blocksTotal_-counts.blocksFree_+halfPercent);
+  size_t const halfPercent{blocksTotal/200U};
+  i=levels.upper_bound(blocksInUse+halfPercent);
   if (i!=levels.end() &&
       ((previous==percentLevels.end()) || ((*i).second<(*previous)))){
     // gone down

@@ -39,12 +39,15 @@ namespace linux
 namespace disk_space
 {
 
+//pre: triggers contains 0%
 void monitor(std::string const& self,
              xju::path::AbsolutePath const& path,
              std::set<Percent> const& triggers,
              std::chrono::milliseconds const& period) noexcept
 {
-  //current is upper bound of current disk usage
+  xju::assert_not_equal(triggers.find(Percent(0)),triggers.end());
+  
+  //current is lower bound of disk space use, initially assumed 0%
   auto current{triggers.begin()};
   std::chrono::steady_clock::time_point nextPoll{xju::steadyNow()};
   while(true){
@@ -85,7 +88,7 @@ std::tuple<xju::path::AbsolutePath,
     auto const path{
       xju::path::splitdir(
         j->getMember(xju::Utf8String("filesys")).asString())};
-    std::set<Percent> levels;
+    std::set<Percent> levels{Percent(0)};
     for(auto l: j->getMember(xju::Utf8String("triggers")).asArray()){
       levels.insert(Percent(l->asInt()));
     }
