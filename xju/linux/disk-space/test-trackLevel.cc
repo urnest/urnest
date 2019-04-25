@@ -20,6 +20,20 @@ namespace disk_space
 {
 
 void test1() {
+  FileSystemStat counts{1000,//free
+                        1000,//total
+                        1};
+  std::set<Percent> const percentLevels{Percent(0),Percent(50),Percent(75)};
+  xju::assert_equal(trackLevel(percentLevels.find(Percent(0)),
+                               percentLevels,
+                               counts),
+                    percentLevels.find(Percent(0)));
+
+  counts.blocksFree_=501;
+  xju::assert_equal(trackLevel(percentLevels.find(Percent(0)),
+                               percentLevels,
+                               counts),
+                    percentLevels.find(Percent(0)));
   @@@;
 }
 

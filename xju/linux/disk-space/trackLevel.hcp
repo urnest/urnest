@@ -14,6 +14,7 @@
 #include <xju/linux/disk-space/Percent.hh>
 #include <algorithm> //impl
 #include <map> //impl
+#include <xju/prev.hh> //impl
 
 namespace xju
 {
@@ -26,22 +27,23 @@ namespace disk_space
 // to drop below a level use must go at least 0.5% below that level.
 //
 // pre: percentLevels contains 0%
+// post: result != percentLevels.end()
 std::set<Percent>::const_iterator trackLevel(
   std::set<Percent>::const_iterator const& previous,
   std::set<Percent> const& percentLevels,
   FileSystemStat const& counts) noexcept
 {
   // so we work where total blocks <100
-  size_t const blocksTotal{counts.blocksTotal_<100?counts.blocksTotal_*100,
+  size_t const blocksTotal{counts.blocksTotal_<100?counts.blocksTotal_*100:
                            counts.blocksTotal_};
-  size_t const totalFree{counts.blocksTotal_<100?counts.blocksFree_*100,
-                         counts.blocksFree_};
+  size_t const blocksFree{counts.blocksTotal_<100?counts.blocksFree_*100:
+                          counts.blocksFree_};
   
   xju::assert_not_equal(percentLevels.find(Percent(0)),percentLevels.end());
   
   std::map<size_t, //blocks in use
            Percent //percent full
-           > levels{ {blocksTotal,Percent(100)} };
+           > levels;
   std::transform(percentLevels.begin(),percentLevels.end(),
                  std::inserter(levels,levels.end()),
                  [&](Percent const& x){
@@ -51,17 +53,15 @@ std::set<Percent>::const_iterator trackLevel(
   size_t const blocksInUse{blocksTotal-
                            //avoid underflow when subtracting from unsigned
                            std::min(blocksFree,blocksTotal)};
-  auto i{levels.lower_bound(blocksInUse)};
-  xju::assert_not_equal(i,levels.end()); //since we put 100% in
-  if (previous!=percentLevels.end() && (*i).second>(*previous)){
+  auto i{xju::prev(levels.upper_bound(blocksInUse))};
+  if ((*i).second>(*previous)){
     // gone up
     return percentLevels.find((*i).second);
   }
 
   size_t const halfPercent{blocksTotal/200U};
-  i=levels.upper_bound(blocksInUse+halfPercent);
-  if (i!=levels.end() &&
-      ((previous==percentLevels.end()) || ((*i).second<(*previous)))){
+  i=xju::prev(levels.upper_bound(blocksInUse+halfPercent));
+  if ((*i).second<(*previous)){
     // gone down
     return percentLevels.find((*i).second);
   }

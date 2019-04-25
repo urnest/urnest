@@ -25,53 +25,53 @@ struct PercentImpl{
   explicit PercentImpl(int value) throw(
     //x not in range 0..100
     xju::Exception):
-      value_(x)
+      value_(value)
   {
-    if (x<0){
+    if (value<0){
       std::ostringstream s;
-      s << x << "% is invalid, must be >= 0%";
+      s << value << "% is invalid, must be >= 0%";
       throw xju::Exception(s.str(),XJU_TRACED);
     }
-    if (x>100){
+    if (value>100){
       std::ostringstream s;
-      s << x << "% is invalid, must be <= 100%";
+      s << value << "% is invalid, must be <= 100%";
       throw xju::Exception(s.str(),XJU_TRACED);
     }
   }
   int value() const noexcept { return value_; }
-  Int& operator++() noexcept
+  PercentImpl& operator++() noexcept
   {
     ++value_;
     return *this;
   }
   
-  Int operator++(int) noexcept
+  PercentImpl operator++(int) noexcept
   {
-    Int result(value_);
+    PercentImpl result(value_);
     ++value_;
     return result;
   }
   
-  Int& operator--() noexcept
+  PercentImpl& operator--() noexcept
   {
     --value_;
     return *this;
   }
   
-  Int operator--(int) noexcept
+  PercentImpl operator--(int) noexcept
   {
-    Int result(value_);
+    PercentImpl result(value_);
     --value_;
     return result;
   }
   
-  Int& operator+=(Int const& y) noexcept
+  PercentImpl& operator+=(PercentImpl const& y) noexcept
   {
     value_+=y.value();
     return *this;
   }
   
-  Int& operator-=(Int const& y) noexcept
+  PercentImpl& operator-=(PercentImpl const& y) noexcept
   {
     value_-=y.value();
     return *this;
@@ -80,45 +80,50 @@ struct PercentImpl{
 private:
   int value_;
   
-  friend Int operator+(Int const& x, Int const& y)
+  friend PercentImpl operator+(PercentImpl const& x, PercentImpl const& y)
   {
-      Int result(x);
+      PercentImpl result(x);
       result+=y;
       return result;
   }
   
-  friend Int operator-(Int const& x, Int const& y)
+  friend PercentImpl operator-(PercentImpl const& x, PercentImpl const& y)
   {
-      Int result(x);
+      PercentImpl result(x);
       result-=y;
       return result;
   }
   
-  friend bool operator<(Int const& x, Int const& y) noexcept 
+  friend bool operator<(PercentImpl const& x, PercentImpl const& y) noexcept 
   {
     return x.value_ < y.value_;
   }
-  friend bool operator>(Int const& x, Int const& y) noexcept 
+  friend bool operator>(PercentImpl const& x, PercentImpl const& y) noexcept 
   {
     return y < x;
   }
-  friend bool operator!=(Int const& x, Int const& y) noexcept 
+  friend bool operator!=(PercentImpl const& x, PercentImpl const& y) noexcept 
   {
     return y < x || x < y;
   }
-  friend bool operator==(Int const& x, Int const& y) noexcept 
+  friend bool operator==(PercentImpl const& x, PercentImpl const& y) noexcept 
   {
     return !(x != y);
   }
-  friend bool operator<=(Int const& x, Int const& y) noexcept 
+  friend bool operator<=(PercentImpl const& x, PercentImpl const& y) noexcept 
   {
     return (x < y) || (x == y);
   }
-  friend bool operator>=(Int const& x, Int const& y) noexcept 
+  friend bool operator>=(PercentImpl const& x, PercentImpl const& y) noexcept 
   {
     return (x > y) || (x == y);
   }
-  
+
+  friend std::ostream& operator<<(std::ostream& s,PercentImpl const& x)
+    noexcept
+  {
+    return s << x.value_ << "%";
+  }
 };
 
 }
@@ -127,13 +132,13 @@ private:
 namespace std
 {
 template<>
-struct numeric_limits<xju::linux::disk_space::Percent>
+struct numeric_limits<xju::linux::disk_space::PercentImpl>
 {
-  static xju::linux::disk_space::Percent min() noexcept {
-    return xju::linux::disk_space::Percent(0);
+  static xju::linux::disk_space::PercentImpl min() noexcept {
+    return xju::linux::disk_space::PercentImpl(0);
   }
-  static xju::linux::disk_space::Percent max() noexcept {
-    return xju::linux::disk_space::Percent(100);
+  static xju::linux::disk_space::PercentImpl max() noexcept {
+    return xju::linux::disk_space::PercentImpl(100);
   }
 };
 

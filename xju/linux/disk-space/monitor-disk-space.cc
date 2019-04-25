@@ -58,13 +58,13 @@ void monitor(std::string const& self,
                         statFileSystemOfPath(path,nextPoll))};
       if (i!=triggers.end() &&
           ((current==triggers.end()) || (*i<*current))) {
-        std::cout << xju::path::str(path) << " less than "
-                  << xju::format::str((*i)) << "% full" << std::endl;
+        std::cout << xju::path::str(path) << " has dropped below "
+                  << xju::format::str((*i)) << " full" << std::endl;
       }
       else if (current!=triggers.end() &&
                ((i==triggers.end() || (*i>*current)))) {
-        std::cout << xju::path::str(path)
-                  << xju::format::str((*xju::prev(i))) << "% full"
+        std::cout << xju::path::str(path) << " has reached "
+                  << xju::format::str((*xju::prev(i))) << " full"
                   << std::endl;
       }
       current=i;
@@ -156,7 +156,7 @@ R"--( [ <config-file>... ]
   ... where config-file contains a json object containing
     filesys : string naming file system\n"
     triggers: list of levels (each a percentage) at which to
-              print \"X% full\" messages to stdout
+              print \"/ has reached X% full\" messages to stdout
     period:   string specifying how often to check e.g. "15s"
               available units: 
                 ms (milliseconds), s (seconds), m (minutes), h (hours)
@@ -166,10 +166,11 @@ R"--( [ <config-file>... ]
     triggers: [ 90,95,97,99 ],
     period: "60s"
   }
-  ... will trigger "X% full" messages at 90% full, again at 95% full etc.
+  ... will trigger "/ has reached X% full" messages at 90% full, again at 
+  95% full etc.
   Note that as disk usage drops back down, it must drop 0.5% below the
   trigger point for the next lower level to apply; when it does  
-  a "below X% full" message is printed.
+  a "/ has dropped below X% full" message is printed.
 
   Runs forever. On startup, acts as if the last known disk usage was 0%.
 )--";

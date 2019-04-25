@@ -5,6 +5,7 @@
 %monitor-disk-space
 ()+cmd=(test-statFileSystem.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-trackLevel.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-Percent.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 
 %monitor-disk-space==monitor-disk-space.cc+(../../..%cxx-opts):auto.cxx.exe
 
