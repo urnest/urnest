@@ -1,0 +1,98 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <string>
+#include <xju/path.hh>
+#include <set>
+#include <xju/linux/disk-space/Percent.hh>
+#include <chrono>
+#include <xju/assert.hh> //impl
+#include <xju/linux/disk-space/trackLevel.hh> //impl
+#include <xju/linux/disk-space/statFileSystem.hh> //impl
+#include <xju/next.hh> //impl
+#include <iostream> //impl
+#include <thread> //impl
+#include <algorithm> //impl
+#include <sstream> //impl
+
+namespace xju
+{
+namespace linux
+{
+namespace disk_space
+{
+
+// Monitor space used on file system of specified path until specified
+// endTime by checking space used every interval milliseconds and
+// writing a single line message to stdout when space used reaches each
+// of the specified triggerPoints and when space used drops 0.5% below
+// each of the specified trigger points.
+//
+// Uses statFileSystemOfPath with specified stat command to perform each
+// check of space used. stat command must behave like stat -f (see stat(1)
+// manpage).
+//
+// stat failures are each written to stderr as a single line error message
+// prefixed with "Failed to check space used on file system of " followed
+// by path.
+//
+//pre: triggerPoints contains 0%
+//
+void monitorSpaceUsedOnFileSystem(
+  xju::path::AbsolutePath const& path,
+  std::set<Percent> const& triggerPoints,
+  std::chrono::milliseconds const& interval,
+  std::chrono::steady_clock::time_point const& endTime,
+  std::string const& statCommand) noexcept
+{
+  xju::assert_equal(*triggerPoints.begin(),Percent(0)); //pre
+
+  //current is lower bound of disk space use, initially assumed 0%
+  auto current{triggerPoints.begin()};
+  std::chrono::steady_clock::time_point nextPoll{xju::steadyNow()};
+  while(xju::steadyNow()<endTime){
+    nextPoll+=interval;
+    try{
+      auto i{trackLevel(current,
+                        triggerPoints,
+                        statFileSystemOfPath(path,nextPoll,statProgram))};
+      xju::assert_not_equal(i,triggerPoints.end()); //post
+      if (*i<*current) {
+        int const l{*xju::next(i)};
+        std::cout << xju::path::str(path) << " has dropped below "
+                  << (l.value()-1) << ".5% full" << std::endl;
+      }
+      else if (*i>*current) {
+        std::cout << xju::path::str(path) << " has reached "
+                  << (*i) << " full"
+                  << std::endl;
+      }
+      current=i;
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "check space used on file system of " << xju::path::str(path);
+      e.addContext(s.str(),XJU_TRACED);
+      std::string es{readableRepr(e)};
+      std::transform(es.begin(),es.end(),es.begin(),
+                     [](char c){
+                       return (c=='\n')?' ':c;
+                     });
+      std::cerr << es << std::endl;
+    }
+    std::this_thread::sleep_until(std::min(nextPoll,until));
+  }
+}
+
+
+}
+}
+}

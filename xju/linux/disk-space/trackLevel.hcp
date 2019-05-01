@@ -27,19 +27,21 @@ namespace disk_space
 // to drop below a level use must go at least 0.5% below that level.
 //
 // pre: percentLevels contains 0%
+//      previous!=percentLevels.end()
 // post: result != percentLevels.end()
 std::set<Percent>::const_iterator trackLevel(
   std::set<Percent>::const_iterator const& previous,
   std::set<Percent> const& percentLevels,
   FileSystemStat const& counts) noexcept
 {
+  xju::assert_not_equal(percentLevels.find(Percent(0)),percentLevels.end());
+  xju::assert_not_equal(previous,percentLevels.end());
+  
   // so we work where total blocks <100
   size_t const blocksTotal{counts.blocksTotal_<100?counts.blocksTotal_*100:
                            counts.blocksTotal_};
   size_t const blocksFree{counts.blocksTotal_<100?counts.blocksFree_*100:
                           counts.blocksFree_};
-  
-  xju::assert_not_equal(percentLevels.find(Percent(0)),percentLevels.end());
   
   std::map<size_t, //blocks in use
            Percent //percent full

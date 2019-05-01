@@ -1,0 +1,123 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <tuple>
+#include <xju/linux/disk-space/Percent.hh>
+#include <set>
+#include <chrono>
+#include <xju/path.hh>
+#include <xju/json/parse.hh> //impl
+#include <xju/file/read.hh> //impl
+#include <xju/endsWith.hh> //impl
+#include <xju/stringToUInt.hh> //impl
+
+namespace xju
+{
+namespace linux
+{
+namespace disk_space
+{
+
+// Read JSON object in config file, returning its "filesys", "triggers" array
+// and "period" members adding 0% to triggers and converting period string
+// like "500ms", "7s", "8m", "1h" to milliseconds.
+//
+// post: std::get<1>(result) contains 0%
+//
+std::tuple<xju::path::AbsolutePath,
+           std::set<Percent>,
+           std::chrono::milliseconds> readConfig(
+             xju::path::AbsFile const& configFile) throw(
+               xju::Exception)
+{
+  try{
+    auto const j{
+      xju::json::parse(xju::Utf8String(xju::file::read(configFile)))};
+    auto const path{
+      xju::path::splitdir(
+        j->getMember(xju::Utf8String("filesys")).asString())};
+    std::set<Percent> levels{Percent(0)};
+    for(auto l: j->getMember(xju::Utf8String("triggers")).asArray()){
+      try{
+        levels.insert(Percent(l->asInt()));
+      }
+      catch(xju::Exception& e){
+        std::ostringstream s;
+        s << "validate trigger level " << l->str();
+        e.addContext(s.str(),XJU_TRACED);
+        throw;
+      }
+    }
+    auto const& period_{j->getMember(xju::Utf8String("period"))};
+    try{
+      std::string const period{period_.asString()};
+      if (xju::endsWith(period,std::string("ms"))){
+        return std::make_tuple(
+          path,
+          levels,
+          std::chrono::milliseconds(
+            xju::stringToUInt(
+              std::string(period.begin(),period.end()-2))));
+      }
+      else if (xju::endsWith(period,std::string("s"))){
+        return std::make_tuple(
+          path,
+          levels,
+          std::chrono::milliseconds(
+            1000UL*
+            xju::stringToUInt(
+              std::string(period.begin(),period.end()-1))));
+      }
+      else if (xju::endsWith(period,std::string("m"))){
+        return std::make_tuple(
+          path,
+          levels,
+          std::chrono::milliseconds(
+            60UL*1000UL*
+            xju::stringToUInt(
+              std::string(period.begin(),period.end()-1))));
+      }
+      else if (xju::endsWith(period,std::string("h"))){
+        return std::make_tuple(
+          path,
+          levels,
+          std::chrono::milliseconds(
+            60UL*60UL*1000UL*
+            xju::stringToUInt(
+              std::string(period.begin(),period.end()-1))));
+      }
+      std::ostringstream s;
+      s << "period " << xju::format::quote(period)
+        << " does not end with ms, s, m or h";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "validate period " << period_.str();
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "read xju linux disk-space monitor config file "
+      << xju::path::str(configFile);
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+
+}
+}
+}
+
+
