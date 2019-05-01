@@ -13,6 +13,7 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
 $(document).ready(function(){
+  $('.query-params').text(wal.json.encode(wal.queryParams()));
   $('a.ajax-post').click(function(){
     wal.postToServer('post-json',{
 	'type_':'json',
@@ -32,5 +33,8 @@ $(document).ready(function(){
 	$('div.result').text('GET result (json)'+wal.json.encode(result));
       });
     return false;
+  });
+  wal.trackTextInput($('input.tracked'),function(x){
+    $('span.input-value').text(x);
   });
 });
