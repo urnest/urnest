@@ -22,6 +22,7 @@
 #include <thread> //impl
 #include <algorithm> //impl
 #include <sstream> //impl
+#include <xju/steadyNow.hh> //impl
 
 namespace xju
 {
@@ -51,7 +52,9 @@ void monitorSpaceUsedOnFileSystem(
   std::set<Percent> const& triggerPoints,
   std::chrono::milliseconds const& interval,
   std::chrono::steady_clock::time_point const& endTime,
-  std::string const& statCommand) noexcept
+  std::string const& statCommand,
+  std::ostream& stdout,
+  std::ostream& stderr) noexcept
 {
   xju::assert_equal(*triggerPoints.begin(),Percent(0)); //pre
 
@@ -59,23 +62,24 @@ void monitorSpaceUsedOnFileSystem(
   auto current{triggerPoints.begin()};
   std::chrono::steady_clock::time_point nextPoll{xju::steadyNow()};
   while(xju::steadyNow()<endTime){
-    nextPoll+=interval;
     try{
+      auto const deadline{xju::steadyNow()+interval};
       auto i{trackLevel(current,
                         triggerPoints,
-                        statFileSystemOfPath(path,nextPoll,statProgram))};
+                        statFileSystemOfPath(path,deadline,statCommand))};
       xju::assert_not_equal(i,triggerPoints.end()); //post
       if (*i<*current) {
-        int const l{*xju::next(i)};
-        std::cout << xju::path::str(path) << " has dropped below "
-                  << (l.value()-1) << ".5% full" << std::endl;
+        int const l{(*xju::next(i)).value().value()};
+        stdout << xju::path::str(path) << " has dropped below "
+               << (l-1) << ".5% full" << std::endl;
       }
       else if (*i>*current) {
-        std::cout << xju::path::str(path) << " has reached "
-                  << (*i) << " full"
-                  << std::endl;
+        stdout << xju::path::str(path) << " has reached "
+               << (*i) << " full"
+               << std::endl;
       }
       current=i;
+      nextPoll=xju::steadyNow()+interval;
     }
     catch(xju::Exception& e){
       std::ostringstream s;
@@ -86,9 +90,10 @@ void monitorSpaceUsedOnFileSystem(
                      [](char c){
                        return (c=='\n')?' ':c;
                      });
-      std::cerr << es << std::endl;
+      stderr << es << std::endl;
+      nextPoll=xju::steadyNow()+std::chrono::seconds(10);
     }
-    std::this_thread::sleep_until(std::min(nextPoll,until));
+    std::this_thread::sleep_until(std::min(nextPoll,endTime));
   }
 }
 
