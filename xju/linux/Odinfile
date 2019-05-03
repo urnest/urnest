@@ -4,6 +4,14 @@
 %tests.tree
 wtmp%tests.tree
 disk-space%tests.tree
+%tools.tree
+
+%tools==%tools.tree:leaves
+
+%tools.tree==<<
+disk-space/monitor-disk-space
+wtmp/monitor-logins
+
 
 %tests.tree == <<
 

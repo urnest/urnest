@@ -2,8 +2,10 @@
 
 %all.tree==<<
 %tests.tree
-monitor-logins.cc+(../../..%cxx-opts):auto.cxx.exe
+monitor-logins
 ()+cmd=(test-LoginMonitor.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
+
+monitor-logins==monitor-logins.cc+(../../..%cxx-opts):auto.cxx.exe
 
 %tests.tree == <<
 
@@ -24,4 +26,3 @@ monitor-logins.cc+(../../..%cxx-opts):auto.cxx.exe
 %all.list-of-tags==<<
 .:merged-tags
 %idl-gen:merged-tags
-

@@ -16,6 +16,9 @@
 #include <algorithm>
 #include <iterator>
 #include <iostream>
+#include <xju/linux/disk-space/readConfig.hh>
+#include <xju/linux/disk-space/monitorSpaceUsedOnFileSystem.hh>
+#include <xju/steadyEternity.hh>
 using namespace xju::linux::disk_space;
 
 int main(int argc, char* argv[])
@@ -39,30 +42,48 @@ R"--( [ <config-file>... ]
   }
   ... will trigger "/ has reached X% full" messages at 90% full, again at 
   95% full etc.
+
   Note that as disk usage drops back down, it must drop 0.5% below the
   trigger point for the next lower level to apply; when it does  
   a "/ has dropped below X% full" message is printed.
-
+  
   Runs forever. On startup, acts as if the last known disk usage was 0%.
+
+  Note that 100% full means 0-blocks available to user root, i.e. uses
+  stat "%f" not "%a" (see stat(1) manpage).
 )--";
     return 0;
   }
-  std::vector<std::unique_ptr<xju::Thread> > threads;
+  std::vector<
+    std::tuple<xju::path::AbsolutePath,
+               std::set<Percent>,
+               std::chrono::milliseconds> > configs;
   std::transform(
     argv+1,argv+argc,
-    std::back_inserter(threads),
+    std::back_inserter(configs),
     [&](std::string const& configFile) {
-      auto const config{xju::linux::disk_space::readConfig(
-          xju::path::split(configFile))};
+      return xju::linux::disk_space::readConfig(xju::path::split(configFile));
+    });
+    
+  std::vector<std::unique_ptr<xju::Thread> > threads;
+  std::transform(
+    configs.begin(),configs.end(),
+    std::back_inserter(threads),
+    [&](std::tuple<xju::path::AbsolutePath,
+        std::set<Percent>,
+        std::chrono::milliseconds> const& config) {
       return std::unique_ptr<xju::Thread>(
         new xju::Thread(
           [&]()
           {
-            monitorSpaceUsedOnFileSystem(std::get<0>(config),
-                                         std::get<1>(config),
-                                         std::get<2>(config),
-                                         xju::steadyEternity(),
-                                         "/usr/bin/stat");
+            xju::linux::disk_space::monitorSpaceUsedOnFileSystem(
+              std::get<0>(config),
+              std::get<1>(config),
+              std::get<2>(config),
+              xju::steadyEternity(),
+              "/usr/bin/stat",
+              std::cout,
+              std::cerr);
           }));
     });
   return 0;

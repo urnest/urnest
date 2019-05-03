@@ -59,7 +59,7 @@ omnicxy/cxy%tags
 cd "$1" &&
 tar chf - .
 
-%tools.tar==()+cmd=(%tools-tar.sh) (hcp%tools:leaves:ls) (omnicxy%tools:leaves:ls)+need=(hcp%tools:leaves)+need=(omnicxy%tools:leaves):stdout
+%tools.tar==()+cmd=(%tools-tar.sh) (hcp%tools:leaves:ls) (omnicxy%tools:leaves:ls) (xju/linux%tools:leaves:ls) +need=(hcp%tools:leaves) (omnicxy%tools:leaves) (xju/linux%tools:leaves) :stdout
 
 %tools-tar.sh == ! <<
 #!/bin/sh

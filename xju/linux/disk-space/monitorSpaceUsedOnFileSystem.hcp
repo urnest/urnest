@@ -60,7 +60,6 @@ void monitorSpaceUsedOnFileSystem(
 
   //current is lower bound of disk space use, initially assumed 0%
   auto current{triggerPoints.begin()};
-  std::chrono::steady_clock::time_point nextPoll{xju::steadyNow()};
   while(xju::steadyNow()<endTime){
     try{
       auto const deadline{xju::steadyNow()+interval};
@@ -79,7 +78,6 @@ void monitorSpaceUsedOnFileSystem(
                << std::endl;
       }
       current=i;
-      nextPoll=xju::steadyNow()+interval;
     }
     catch(xju::Exception& e){
       std::ostringstream s;
@@ -91,9 +89,8 @@ void monitorSpaceUsedOnFileSystem(
                        return (c=='\n')?' ':c;
                      });
       stderr << es << std::endl;
-      nextPoll=xju::steadyNow()+std::chrono::seconds(10);
     }
-    std::this_thread::sleep_until(std::min(nextPoll,endTime));
+    std::this_thread::sleep_until(std::min(xju::steadyNow()+interval,endTime));
   }
 }
 

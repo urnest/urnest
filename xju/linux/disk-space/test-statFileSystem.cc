@@ -42,7 +42,7 @@ void test1(std::string const& self) {
   }
   catch(xju::Exception& e){
     auto const r{readableRepr(e)};
-    xju::assert_equal(xju::startsWith(r,std::string("Failed to get size and use info for file system containing path /2 because\nfailed to run "+self+" -f --format=\"%b %f %s\" /2 within ")),true);
+    xju::assert_equal(xju::startsWith(r,std::string("Failed to get size and use info for file system containing path /2 because\nfailed to run "+self+" -f --format=%b %f %s /2 within ")),true);
     xju::assert_equal(xju::endsWith(r,std::string("ms because\ncommand failed with status 256, stdout \"\" and stderr \"unknown file system\\n\".")),true);
   }
 }
@@ -59,8 +59,8 @@ int stub(std::vector<std::string> const& args) {
               << args[0] << "\n";
     return 1;
   }
-  if (args[1]!="--format=\"%b %f %s\""){
-    std::cerr << args[1] << " stub expected --format=\"%b %f %s\" as 2nd "
+  if (args[1]!="--format=%b %f %s"){
+    std::cerr << args[1] << " stub expected --format=%b %f %s as 2nd "
               << "argument not "
               << args[1] << "\n";
     return 1;

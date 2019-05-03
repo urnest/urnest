@@ -78,7 +78,7 @@ FileSystemStat statFileSystemOfPath(
 {
   try{
     std::vector<std::string> const cmd{
-      stat,"-f","--format=\"%b %f %s\"",xju::path::str(path)};
+      stat,"-f","--format=%b %f %s",xju::path::str(path)};
     auto const stdoutStderr{
       xju::doCmd(cmd,deadline)};
     try{
