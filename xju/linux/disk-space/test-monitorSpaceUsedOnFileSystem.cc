@@ -95,7 +95,6 @@ void test1(std::string const& self) {
 int statCommand(std::vector<std::string> const& params) noexcept
 {
   try{
-    auto const testDataFile{xju::path::split("sizes.txt")};
     auto sizes{xju::split(xju::file::read(testDataFile),',')};
     if (sizes.front()==""){
       throw xju::Exception("ran out of test data",XJU_TRACED);

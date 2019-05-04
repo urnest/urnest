@@ -41,7 +41,7 @@ bool awaitSynced(bool statusToAwait, //true==synced
       auto const stdoutStderr{xju::doCmd(cmd,xju::steadyNow()+interval)};
       auto const x{parseNtpqAssociations(stdoutStderr.first)};
       auto const i(std::find_if(x.begin(),x.end(),
-                                [](std::decltype((*x).begin()) const& y){
+                                [](decltype(*x.begin()) const& y){
                                   return isSysPeer(y.second);
                                 }));
       if (statusToAwait){
