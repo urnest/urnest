@@ -1,0 +1,107 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <chrono>
+#include <xju/json/parse.hh> //impl
+#include <xju/file/read.hh> //impl
+#include <xju/endsWith.hh> //impl
+#include <xju/stringToUInt.hh> //impl
+#include <utility> //impl
+#include <xju/path.hh>
+
+namespace xju
+{
+namespace linux
+{
+namespace ntpd
+{
+
+namespace
+{
+std::chrono::milliseconds getMemberAsMillisecond(
+  xju::json::Element const& j,
+  xju::Utf8String const& member) throw(
+    xju::Exception)
+{
+  try{
+    std::string const value{j.getMember(member).asString()};
+    if (xju::endsWith(value,std::string("ms"))){
+      return std::chrono::milliseconds(
+        xju::stringToUInt(
+          std::string(value.begin(),value.end()-2)));
+    }
+    else if (xju::endsWith(value,std::string("s"))){
+      return std::chrono::milliseconds(
+        1000UL*
+        xju::stringToUInt(
+          std::string(value.begin(),value.end()-1)));
+    }
+    else if (xju::endsWith(value,std::string("m"))){
+      return std::chrono::milliseconds(
+        60UL*1000UL*
+        xju::stringToUInt(
+          std::string(value.begin(),value.end()-1)));
+    }
+    else if (xju::endsWith(value,std::string("h"))){
+      return std::chrono::milliseconds(
+        60UL*60UL*1000UL*
+        xju::stringToUInt(
+          std::string(value.begin(),value.end()-1)));
+    }
+    std::ostringstream s;
+    s << "value " << xju::format::quote(value)
+      << " does not end with ms, s, m or h";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "get member " << std::string(member) << " as milliseconds";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+
+// Read JSON object in config file, returning its "delayFirstCheckFor"
+// and "period" strings like "500ms", "7s", "8m", "1h" convertin
+// then to milliseconds.
+//
+std::pair<
+  std::chrono::milliseconds, //delayFirstCheckFor
+  std::chrono::milliseconds  //period
+  > readConfig(xju::path::AbsFile const& configFile) throw(
+      xju::Exception)
+{
+  try{
+    auto const j{
+      xju::json::parse(xju::Utf8String(xju::file::read(configFile)))};
+    auto const delayFirstCheckFor{
+      getMemberAsMillisecond(*j,xju::Utf8String("delayFirstCheckFor"))};
+    auto const period{
+      getMemberAsMillisecond(*j,xju::Utf8String("period"))};
+    return std::make_pair(delayFirstCheckFor,period);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "read xju linux ntp sync monitor config file "
+      << xju::path::str(configFile);
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+
+}
+}
+}
+
+

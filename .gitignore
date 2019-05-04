@@ -204,3 +204,4 @@ omnicxy/proto/cxx/p26.cc
 omnicxy/cosnaming-client
 xju/linux/disk-space/monitor-disk-space
 xju/linux/wtmp/monitor-logins
+xju/linux/ntpd/monitor-ntp-sync

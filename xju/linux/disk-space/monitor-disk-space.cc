@@ -36,9 +36,9 @@ R"--( [ <config-file>... ]
                 ms (milliseconds), s (seconds), m (minutes), h (hours)
   e.g.
   { 
-    filesys: "/",
-    triggers: [ 90,95,97,99 ],
-    period: "60s"
+    "filesys": "/",
+    "triggers": [ 90,95,97,99 ],
+    "period": "60s"
   }
   ... will trigger "/ has reached X% full" messages at 90% full, again at 
   95% full etc.
