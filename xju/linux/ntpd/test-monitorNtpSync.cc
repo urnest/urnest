@@ -73,6 +73,7 @@ void test1(std::string const& self) {
     so,
     std::string(
       "system clock not synchronised\n"
+      "system clock not synchronised\n"
       "system clock synchronised\n"
       "system clock not synchronised\n"));
   xju::assert_equal(true,xju::startsWith(se,std::string("Failed to check time sync status using ntpq command ")));
