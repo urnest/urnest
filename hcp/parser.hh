@@ -382,6 +382,10 @@ PR backslash() throw();
 PR oneChar() throw(); //any single char
 PR bracketed(PR x) throw(); //x inside brackets, with optional whitespace preceding x
 
+PR digit() throw();
+PR octalDigit() throw();
+PR hexDigit() throw();
+
 // rest are C++-specific
 PR doubleSlash() throw(); // "//"
 PR slashStar() throw(); // "/*"

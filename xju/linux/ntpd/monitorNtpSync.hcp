@@ -1,0 +1,96 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <string>
+#include <chrono>
+#include <iostream>
+#include <thread>
+#include <algorithm>
+#include <xju/steadyNow.hh>
+#include <vector>
+#include <xju/doCmd.hh>
+#include <xju/linux/ntpd/parseNtpqAssociations.hh>
+#include <xju/Exception.hh>
+#include <sstream>
+
+namespace xju
+{
+namespace linux
+{
+namespace ntpd
+{
+
+namespace {
+bool awaitSynced(bool statusToAwait, //true==synced
+                 std::string const& ntpqCommand,
+                 std::chrono::milliseconds const& interval,
+                 std::chrono::steady_clock::time_point const& endTime,
+                 std::ostream& stderr) noexcept
+{
+  std::this_thread::sleep_until(std::min(endTime,xju::steadyNow()+interval));
+  while(xju::steadyNow()<endTime){
+    try{
+      std::vector<std::string> const cmd{ntpqCommand,"-c","associations"};
+      auto const stdoutStderr{xju::doCmd(cmd,xju::steadyNow()+interval)};
+      auto const x{parseNtpqAssociations(stdoutStderr.first)};
+      auto const i(std::find_if(x.begin(),x.end(),
+                                [](std::decltype((*x).begin()) const& y){
+                                  return isSysPeer(y.second);
+                                }));
+      if (statusToAwait){
+        if (i!=x.end()){
+          return true; //synced
+        }
+      }
+      else{
+        if (i==x.end()){
+          return true; //not synced
+        }
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "check time sync status using ntpq command " << ntpqCommand;
+      e.addContext(s.str(),XJU_TRACED);
+      stderr << readableRepr(e) << std::endl;
+    }
+    std::this_thread::sleep_until(std::min(endTime,xju::steadyNow()+interval));
+  }
+  return false;
+}
+
+}
+
+// monitor ntp synchronisation of system clock until endTime, checking
+// at specified interval
+//
+// - writes "system clock not synchronised" when clock becomes unsyncrhonised
+// - writes "system clock synchronised" when clock becomes synchonised again
+//
+void monitorNtpSync(
+  std::chrono::milliseconds const& interval,
+  std::chrono::steady_clock::time_point const& endTime,
+  std::string const& ntpqCommand,
+  std::ostream& stdout,
+  std::ostream& stderr) noexcept
+{
+  while(xju::steadyNow()<endTime){
+    if (awaitSynced(false,ntpqCommand,interval,endTime,stderr)){
+      stdout << "system clock not synchronised" << std::endl;
+      if (awaitSynced(true,ntpqCommand,interval,endTime,stderr)){
+        stdout << "system clock synchronised" << std::endl;
+      }
+    }
+  }
+}
+
+}
+}
+}

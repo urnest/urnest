@@ -4,11 +4,13 @@
 %tests.tree
 wtmp%tests.tree
 disk-space%tests.tree
+ntpd%tests.tree
 %tools.tree
 
 %tools==%tools.tree:leaves
 
 %tools.tree==<<
+ntpd/monitor-ntp-sync
 disk-space/monitor-disk-space
 wtmp/monitor-logins
 
@@ -26,6 +28,7 @@ wtmp/monitor-logins
 %hcp-subdir-spec==<<
 %wtmp==wtmp/Odinfile%hcp-gen
 %disk-space==disk-space/Odinfile%hcp-gen
+%ntpd==ntpd/Odinfile%hcp-gen
 
 %idl-gen==%idl-gen.vir_dir_specs:list:cat:vir_dir
 
@@ -44,3 +47,4 @@ wtmp/monitor-logins
 .:merged-tags
 wtmp%tags
 disk-space%tags
+ntpd%tags

@@ -291,14 +291,11 @@ std::string ParseNot::target() const throw() {
   return "!"+term_->target();
 }
 
-namespace
-{
 std::shared_ptr<Exception::Cause const> const end_of_input(
-    new FixedCause("end of input"));
-  Exception EndOfInput(I at, xju::Traced const& trace) throw()
-  {
-    return Exception(end_of_input, at, trace, true);
-  }
+  new FixedCause("end of input"));
+Exception EndOfInput(I at, xju::Traced const& trace) throw()
+{
+  return Exception(end_of_input, at, trace, true);
 }
 
 class ParseAnyChar : public Parser
@@ -774,22 +771,7 @@ PR oneChar() throw()
 }
 
 
-PR octalDigit() throw()
-{
-  static PR octalDigit(charInRange('0', '7'));
-  return octalDigit;
-}
 
-  
-PR hexDigit() throw()
-{
-  static PR hexDigit(charInRange('0','9')|
-                     charInRange('a','f')|
-                     charInRange('A','F'));
-  return hexDigit;
-}
-
-  
 PR stringEscapeSequence() throw()
 {
   static PR stringEscapeSequence(
@@ -1176,6 +1158,29 @@ PR parseLiteral(std::string const& x) throw()
   return PR(new ParseLiteral(x));
 }
 
+PR digit() throw()
+{
+  static PR digit(charInRange('0','9'));
+  return digit;
+}
+
+  
+PR octalDigit() throw()
+{
+  static PR octalDigit(charInRange('0', '7'));
+  return octalDigit;
+}
+
+  
+PR hexDigit() throw()
+{
+  static PR hexDigit(charInRange('0','9')|
+                     charInRange('a','f')|
+                     charInRange('A','F'));
+  return hexDigit;
+}
+
+  
 PR parseUntil(PR match, PR const x) throw()
 {
   return PR(new ParseSpecificUntil(match, x));

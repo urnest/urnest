@@ -1,0 +1,19 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+%tests.tree
+monitor-ntp-sync
+()+cmd=(test-PeerStatus.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-parseNtpqAssociations.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
+
+monitor-ntp-sync==monitor-ntp-sync.cc+(../../..%cxx-opts):auto.cxx.exe
+
+%tests.tree == <<
+
+%hcp-gen==.:dir.hcp.list+G+hpath='xju/linux/ntpd':hcp-split-virdir-specs:cat:vir_dir
+
+%tags==%all.list-of-tags:merged-tags
+
+%all.list-of-tags==<<
+.:merged-tags
+
