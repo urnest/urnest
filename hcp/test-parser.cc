@@ -551,6 +551,14 @@ void test17()
         hcp_parser::balanced(hcp_parser::parseOneOfChars("}"))+
         hcp_parser::parseLiteral("}"))};
   }
+  {
+    std::string const x(R"**({a}(b); uR"--(
+                          {fred)--";})**");
+    auto const root{parseString(
+        x.begin(),x.end(),
+        hcp_parser::balanced(hcp_parser::parseOneOfChars("}"))+
+        hcp_parser::parseLiteral("}"))};
+  }
   try
   {
     std::string const x("fred[\"jock(\"](");
@@ -1899,6 +1907,139 @@ void test46()
   }
 }
 
+void test47()
+{
+  {
+    std::string const x(R"**(R"--(ABC)--")**");
+    try {
+      auto const root{parseString(
+        x.begin(),x.end(),
+        hcp_parser::rawStringLiteral(),true)};
+      xju::assert_equal(reconstruct(root), x);
+
+      auto const y(
+        hcp_ast::findChildrenOfType<hcp_ast::StringLiteral>(root));
+      xju::assert_equal(reconstruct(y[0]),x);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  {
+    std::string const x(R"**(uR"--(ABC)--")**");
+    try {
+      auto const root{parseString(
+        x.begin(),x.end(),
+        hcp_parser::rawStringLiteral(),true)};
+      xju::assert_equal(reconstruct(root), x);
+
+      auto const y(
+        hcp_ast::findChildrenOfType<hcp_ast::StringLiteral>(root));
+      xju::assert_equal(reconstruct(y[0]),x);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  {
+    std::string const x(R"**(u8R"--(ABC)--")**");
+    try {
+      auto const root{parseString(
+        x.begin(),x.end(),
+        hcp_parser::rawStringLiteral(),true)};
+      xju::assert_equal(reconstruct(root), x);
+
+      auto const y(
+        hcp_ast::findChildrenOfType<hcp_ast::StringLiteral>(root));
+      xju::assert_equal(reconstruct(y[0]),x);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  {
+    std::string const x(R"**(LR"--(ABC)--")**");
+    try {
+      auto const root{parseString(
+        x.begin(),x.end(),
+        hcp_parser::rawStringLiteral(),true)};
+      xju::assert_equal(reconstruct(root), x);
+
+      auto const y(
+        hcp_ast::findChildrenOfType<hcp_ast::StringLiteral>(root));
+      xju::assert_equal(reconstruct(y[0]),x);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  {
+    std::string const x(R"**(r"--(ABC)--")**");
+    try {
+      auto const root{parseString(
+        x.begin(),x.end(),
+        hcp_parser::rawStringLiteral(),true)};
+      xju::assert_never_reached();
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "Failed to parse raw string literal at line 1 column 1 because\nfailed to parse \"R\"\" at line 1 column 1 because\nline 1 column 1: expected 'R' but found 'r'.", XJU_TRACED);
+    }
+  }
+  {
+    std::string const x(R"**(R"- -(ABC)- -")**");
+    try {
+      auto const root{parseString(
+        x.begin(),x.end(),
+        hcp_parser::rawStringLiteral(),true)};
+      xju::assert_never_reached();
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "Failed to parse raw string literal at line 1 column 1 because\nfailed to parse raw string literal at line 1 column 1 because\nline 1 column 4: ' ' is not allowed in raw string literal delimeter.", XJU_TRACED);
+    }
+  }
+  {
+    std::string const x(R"**(R"-)-(ABC)- -")**");
+    try {
+      auto const root{parseString(
+        x.begin(),x.end(),
+        hcp_parser::rawStringLiteral(),true)};
+      xju::assert_never_reached();
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "Failed to parse raw string literal at line 1 column 1 because\nfailed to parse raw string literal at line 1 column 1 because\nline 1 column 4: ')' is not allowed in raw string literal delimeter.", XJU_TRACED);
+    }
+  }
+  {
+    std::string const x(R"**(R"12345678901234567(ABC)- -")**");
+    try {
+      auto const root{parseString(
+        x.begin(),x.end(),
+        hcp_parser::rawStringLiteral(),true)};
+      xju::assert_never_reached();
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "Failed to parse raw string literal at line 1 column 1 because\nfailed to parse raw string literal at line 1 column 1 because\nline 1 column 19: too many (more than 16) delimeter chars in raw string literal delimeter.", XJU_TRACED);
+    }
+  }
+  {
+    std::string const x(R"**(R"--(ABC)**");
+    hcp_parser::PR p{hcp_parser::rawStringLiteral()};
+    try {
+      auto const root{parseString(
+        x.begin(),x.end(),
+        p,true)};
+      xju::assert_never_reached();
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "Failed to parse raw string literal at line 1 column 1 because\nfailed to parse raw string literal at line 1 column 1 because\nline 1 column 9: raw string literal end delimeter \")--\"\" not found.", XJU_TRACED);
+    }
+  }
+}
+
 int main(int argc, char* argv[])
 {
   unsigned int n(0);
@@ -1948,6 +2089,7 @@ int main(int argc, char* argv[])
   test44(), ++n;
   test45(), ++n;
   test46(), ++n;
+  test47(), ++n;
   
   xju::assert_equal(atLeastOneReadableReprFailed, false);
   std::cout << "PASS - " << n << " steps" << std::endl;

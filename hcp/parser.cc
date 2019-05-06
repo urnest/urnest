@@ -801,6 +801,136 @@ PR c_char() throw()
   return s_char;
 }
 
+class ParseRawStringLiteral : public Parser
+{
+public:
+  ParseRawStringLiteral() noexcept
+  : r_(parseLiteral("R\"")),
+    o_((parseLiteral("u8")+r_)|
+       (parseOneOfChars("LuU")+r_)|
+       r_)
+  {
+  }
+  PR r_;
+  PR o_;
+  // Parser::
+  virtual ParseResult parse_(I const at, Options const& o) throw() 
+  {
+    try{
+      auto r{o_->parse(at,o)};
+      if (r.failed()){
+        return r;
+      }
+      I i{(*r).second};
+      int c{0};
+      for(; (c<16) && (*i != '('); ++i,++c){
+        if (std::isspace(*i) || *i == '\\' || *i == ')'){
+          return ParseResult(
+            Exception(
+              std::shared_ptr<Exception::Cause const>(
+                new InvalidDelimeterChar(i)),
+              i, XJU_TRACED));
+        }
+      }
+      if (*i != '('){
+        return ParseResult(
+          Exception(
+            std::shared_ptr<Exception::Cause const>(
+              new TooManyDelimeterChars()),
+            i, XJU_TRACED));
+      }
+      std::string const endDelimeter{
+        ")"+std::string((*r).second.x_,i.x_)+"\""};
+      PR l{parseLiteral(endDelimeter)};
+      auto rr{parseUntil(l)->parse(i,o)};
+      if (rr.failed()){
+        return ParseResult(
+          Exception(
+            std::shared_ptr<Exception::Cause const>(
+              new EndDelimeterNotFound(endDelimeter)),
+            rr.e().at_, XJU_TRACED));
+      }
+      auto rrr{l->parse((*rr).second,o)};
+      return ParseResult(PV(IRs({IR(new hcp_ast::Item(at,(*rrr).second))}),
+                            (*rrr).second));
+    }
+    catch(I::EndOfInput const& x){
+      return ParseResult(EndOfInput(x.at_, XJU_TRACED));
+    }
+  }
+  // Parser::
+  virtual std::string target() const throw() {
+    return "raw string literal";
+  }
+
+  class InvalidDelimeterChar : public Exception::Cause
+  {
+  public:
+    InvalidDelimeterChar(I const at) throw():
+        at_(at) {
+    }
+    ~InvalidDelimeterChar() throw()
+    {
+    }
+    std::string str() const throw()
+    {
+      std::ostringstream s;
+      s << "'" << (*at_) << "'"
+        << " is not allowed in raw string literal delimeter";
+      return s.str();
+    }
+    I const at_;
+  };
+
+  class TooManyDelimeterChars : public Exception::Cause
+  {
+  public:
+    TooManyDelimeterChars() throw()
+    {
+    }
+    ~TooManyDelimeterChars() throw()
+    {
+    }
+    std::string str() const throw()
+    {
+      std::ostringstream s;
+      s << "too many (more than 16) delimeter chars in raw string literal delimeter";
+      return s.str();
+    }
+  };
+
+  class EndDelimeterNotFound : public Exception::Cause
+  {
+  public:
+    explicit EndDelimeterNotFound(std::string const& endDelimeter) throw():
+        endDelimeter_(endDelimeter) {
+    }
+    ~EndDelimeterNotFound() throw()
+    {
+    }
+    std::string str() const throw()
+    {
+      std::ostringstream s;
+      s << "raw string literal end delimeter "
+        << xju::format::quote(endDelimeter_)
+        << " not found";
+      return s.str();
+    }
+    std::string const endDelimeter_;
+  };
+
+};
+
+namespace
+{
+bool lookingAt(I i,std::string const& x) noexcept
+{
+  auto xi{x.begin()};
+  for(; !i.atEnd() && (xi!=x.end()) && (*i == *xi); ++i, ++xi);
+  return (xi==x.end());
+}
+
+}
 
 class ParseBalanced : public Parser
 {
@@ -826,87 +956,101 @@ public:
       if (end.atEnd()) {
         return ParseResult(EndOfInput(end, XJU_TRACED));
       }
-      switch(*end) {
-      case '\'':
+      if (lookingAt(end,"u8R\"")||
+          lookingAt(end,"uR\"")||
+          lookingAt(end,"UR\"")||
+          lookingAt(end,"LR\"")||
+          lookingAt(end,"R\""))
       {
-        ParseResult const r2(
-          (parseOneOfChars("'")+c_char()+parseOneOfChars("'"))->parse_(
-            end, o));
+        ParseResult const r2(rawStringLiteral()->parse_(end, o));
         if (r2.failed()) {
           return r2;
         }
         end=(*r2).second;
       }
-      break;
-      case '"':
-      {
-        ParseResult const r2(stringLiteral()->parse_(end, o));
-        if (r2.failed()) {
-          return r2;
-        }
-        end=(*r2).second;
-      }
-      break;
-      case '{':
-      {
-        ParseResult const r2(ParseBalanced(parseOneOfChars("}"), angles_).parse_(xju::next(end),o));
-        if (r2.failed()) {
-          return r2;
-        }
-        end=xju::next((*r2).second);
-      }
-      break;
-      case '<':
-        if (angles_) {
+      else{
+        switch(*end) {
+        case '\'':
+        {
           ParseResult const r2(
-            ParseBalanced(parseOneOfChars(">"), angles_).parse_(
+            (parseOneOfChars("'")+c_char()+parseOneOfChars("'"))->parse_(
+              end, o));
+          if (r2.failed()) {
+            return r2;
+          }
+          end=(*r2).second;
+        }
+        break;
+        case '"':
+        {
+          ParseResult const r2(stringLiteral()->parse_(end, o));
+          if (r2.failed()) {
+            return r2;
+          }
+          end=(*r2).second;
+        }
+        break;
+        case '{':
+        {
+          ParseResult const r2(ParseBalanced(parseOneOfChars("}"), angles_).parse_(xju::next(end),o));
+          if (r2.failed()) {
+            return r2;
+          }
+          end=xju::next((*r2).second);
+        }
+        break;
+        case '<':
+          if (angles_) {
+            ParseResult const r2(
+              ParseBalanced(parseOneOfChars(">"), angles_).parse_(
+                xju::next(end),o));
+            if (r2.failed()) {
+              return r2;
+            }
+            end=xju::next((*r2).second);
+          }
+          else {
+            ++end;
+          }
+          break;
+        case '[':
+        {
+          ParseResult const r2(
+            ParseBalanced(parseOneOfChars("]"), angles_).parse_(
               xju::next(end),o));
           if (r2.failed()) {
             return r2;
           }
           end=xju::next((*r2).second);
         }
-        else {
-          ++end;
+        break;
+        case '(':
+        {
+          ParseResult const r2(
+            ParseBalanced(parseOneOfChars(")"), angles_).parse_(
+              xju::next(end),o));
+          if (r2.failed()) {
+            return r2;
+          }
+          end=xju::next((*r2).second);
         }
         break;
-      case '[':
-      {
-        ParseResult const r2(
-          ParseBalanced(parseOneOfChars("]"), angles_).parse_(
-            xju::next(end),o));
-        if (r2.failed()) {
-          return r2;
-        }
-        end=xju::next((*r2).second);
-      }
-      break;
-      case '(':
-      {
-        ParseResult const r2(
-          ParseBalanced(parseOneOfChars(")"), angles_).parse_(
-            xju::next(end),o));
-        if (r2.failed()) {
-          return r2;
-        }
-        end=xju::next((*r2).second);
-      }
-      break;
-      case '/':
-      {
-        ParseResult const r2(
-          comments()->parse_(end,o));
-        if (!r2.failed()) {
-          end=(*r2).second;
-        }
-        else
+        case '/':
         {
+          ParseResult const r2(
+            comments()->parse_(end,o));
+          if (!r2.failed()) {
+            end=(*r2).second;
+          }
+          else
+          {
+            ++end;
+          }
+        }
+        break;
+        default:
           ++end;
         }
-      }
-      break;
-      default:
-        ++end;
       }
     }
   }
@@ -1327,6 +1471,15 @@ PR stringLiteral() throw()
                                        s_chars()+
                                        doubleQuote()+eatWhite())));
   return stringLiteral;
+}
+
+PR rawStringLiteral() throw()
+{
+  static PR result(named<hcp_ast::StringLiteral>(
+                     "raw string literal",
+                     std::shared_ptr<hcp_parser::Parser>(
+                       new ParseRawStringLiteral)));
+  return result;
 }
 
 //
