@@ -52,7 +52,7 @@ void writePeerStatuses(std::vector<PeerStatus> const& sizes) throw(
   }
 }
 
-void test1(std::string const& self) {
+void test1(xju::path::AbsFile const& self) {
   writePeerStatuses({PeerStatus(0x8811),
                      PeerStatus(0x151a),
                      PeerStatus(0x161a), //good
@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
     return ntpqCommand(std::vector<std::string>(argv+1,argv+argc));
   }
   unsigned int n(0);
-  test1(argv[0]), ++n;
+  test1(xju::path::split(argv[0])), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

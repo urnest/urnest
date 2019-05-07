@@ -6,6 +6,7 @@ monitor-ntp-sync
 ()+cmd=(test-PeerStatus.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-parseNtpqAssociations.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-monitorNtpSync.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-readConfig.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 
 monitor-ntp-sync==monitor-ntp-sync.cc+(../../..%cxx-opts):auto.cxx.exe
 

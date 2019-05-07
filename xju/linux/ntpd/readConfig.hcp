@@ -16,6 +16,7 @@
 #include <xju/stringToUInt.hh> //impl
 #include <utility> //impl
 #include <xju/path.hh>
+#include <tuple>
 
 namespace xju
 {
@@ -73,11 +74,13 @@ std::chrono::milliseconds getMemberAsMillisecond(
 
 // Read JSON object in config file, returning its "delayFirstCheckFor"
 // and "period" strings like "500ms", "7s", "8m", "1h" convertin
-// then to milliseconds.
+// then to milliseconds and its "ntpq" member (or /usr/bin/ntpq if not
+// present).
 //
-std::pair<
+std::tuple<
   std::chrono::milliseconds, //delayFirstCheckFor
-  std::chrono::milliseconds  //period
+  std::chrono::milliseconds,  //period
+  xju::path::AbsFile         //ntpq
   > readConfig(xju::path::AbsFile const& configFile) throw(
       xju::Exception)
 {
@@ -88,7 +91,12 @@ std::pair<
       getMemberAsMillisecond(*j,xju::Utf8String("delayFirstCheckFor"))};
     auto const period{
       getMemberAsMillisecond(*j,xju::Utf8String("period"))};
-    return std::make_pair(delayFirstCheckFor,period);
+    xju::path::AbsFile const ntpq{
+      xju::path::split(
+        (*j).hasMember(xju::Utf8String("ntpq"))?
+        (*j).getMember(xju::Utf8String("ntpq")).asString():
+        xju::Utf8String("/usr/bin/ntpq"))};
+    return std::make_tuple(delayFirstCheckFor,period,ntpq);
   }
   catch(xju::Exception& e){
     std::ostringstream s;

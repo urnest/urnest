@@ -20,6 +20,7 @@
 #include <xju/Exception.hh>
 #include <sstream>
 #include <xju/DeadlineReached.hh>
+#include <xju/path.hh>
 
 namespace xju
 {
@@ -29,13 +30,14 @@ namespace ntpd
 {
 
 namespace {
-bool isSynced(std::string const& ntpqCommand,
+bool isSynced(xju::path::AbsFile const& ntpqCommand,
               std::chrono::steady_clock::time_point const& deadline) throw(
                 xju::DeadlineReached,
                 xju::Exception)
 {
   try{
-    std::vector<std::string> const cmd{ntpqCommand,"-c","associations"};
+    std::vector<std::string> const cmd{
+      xju::path::str(ntpqCommand),"-c","associations"};
     auto const cmdStdoutStderr{xju::doCmd(cmd,deadline)};
     auto const x{parseNtpqAssociations(cmdStdoutStderr.first)};
     auto const i(std::find_if(x.begin(),x.end(),
@@ -46,7 +48,8 @@ bool isSynced(std::string const& ntpqCommand,
   }
   catch(xju::Exception& e){
     std::ostringstream s;
-    s << "check time sync status using ntpq command " << ntpqCommand;
+    s << "check time sync status using ntpq command "
+      << xju::path::str(ntpqCommand);
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }
@@ -55,7 +58,7 @@ bool isSynced(std::string const& ntpqCommand,
 void awaitSynced(
   std::chrono::milliseconds const& interval,
   std::chrono::steady_clock::time_point const& endTime,
-  std::string const& ntpqCommand,
+  xju::path::AbsFile const& ntpqCommand,
   std::ostream& stdout,
   std::ostream& stderr) noexcept
 {
@@ -88,7 +91,7 @@ void awaitSynced(
 void monitorNtpSync(
   std::chrono::milliseconds const& interval,
   std::chrono::steady_clock::time_point const& endTime,
-  std::string const& ntpqCommand,
+  xju::path::AbsFile const& ntpqCommand,
   std::ostream& stdout,
   std::ostream& stderr) noexcept
 {

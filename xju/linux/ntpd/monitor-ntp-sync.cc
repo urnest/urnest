@@ -20,7 +20,7 @@
 
 int main(int argc, char* argv[])
 {
-  if (argc!=2)
+  if (argc<2)
   {
     std::cout << "usage: " << argv[0] <<
 R"--( <config-file>
@@ -30,6 +30,7 @@ R"--( <config-file>
     period:   string specifying how often to check e.g. "15s"
               available units: 
                 ms (milliseconds), s (seconds), m (minutes), h (hours)
+    ntpq: ntpq program (default /usr/bin/ntpq)
   e.g.
   { 
     delayFirstCheckFor: "2m",
@@ -46,15 +47,16 @@ R"--( <config-file>
 )--";
     return 1;
   }
-  std::pair<
+  std::tuple<
     std::chrono::milliseconds, // delayFirstCheckFor
-    std::chrono::milliseconds  // period
+    std::chrono::milliseconds, // period
+    xju::path::AbsFile         // ntpq
     > config{xju::linux::ntpd::readConfig(xju::path::split(argv[1]))};
 
-  std::this_thread::sleep_for(config.first);
-  xju::linux::ntpd::monitorNtpSync(config.second,
+  std::this_thread::sleep_for(std::get<0>(config));
+  xju::linux::ntpd::monitorNtpSync(std::get<1>(config),
                                    xju::steadyEternity(),
-                                   "/usr/bin/ntpq",
+                                   std::get<2>(config),
                                    std::cout,
                                    std::cerr);
   return 0;

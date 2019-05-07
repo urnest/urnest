@@ -67,11 +67,15 @@ tar chf - .
 mkdir x &&
 cd x &&
 test -r "$1" &&
-cat "$1" |
-while [ $? = 0 ] && read n
+while [ $? = 0 ] && [ -r "$1" ]
 do
-  b=$(basename "$n") &&
-  ln -s "$n" "$b"
+  cat "$1" |
+  while [ $? = 0 ] && read n
+  do
+    b=$(basename "$n") &&
+    ln -s "$n" "$b"
+  done &&
+  shift
 done &&
 tar chf - .
 )
