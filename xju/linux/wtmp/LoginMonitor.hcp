@@ -31,11 +31,9 @@
 #include <set>
 #include <unistd.h>
 #include <deque>
-#include <xju/pipe.hh> //impl
 #include <utility>
 #include <xju/io/IStream.hh>
 #include <xju/io/OStream.hh>
-#include <xju/Thread.hh>
 #include <xju/steadyEternity.hh> //impl
 
 namespace xju
@@ -71,9 +69,7 @@ public:
     xju::SyscallFailed) try:
       wtmp_(wtmp),
       maxRollsTracked_(maxRollsTracked),
-      notifier_({wtmp}),
-      stop_(xju::pipe(true,true)),
-      run_([&](){run();},[&](){stop();})
+      notifier_({wtmp})
   {
   }
   catch(xju::SyscallFailed& e){
@@ -84,8 +80,9 @@ public:
     throw;
   }
 
+  // Read until at least one event or deadline reached.
   // not thread safe
-  std::vector<UserLoggedIn> readEventsUntilDeadline(
+  std::vector<UserLoggedIn> readEvents(
     std::chrono::steady_clock::time_point const& deadline) throw(
       xju::Exception)
   {
@@ -112,56 +109,26 @@ public:
         }
       }
       currentFiles_.erase(currentFiles_.begin(),newestRead);
-      xju::io::select(inputs(),deadline);
+      if (result.size()){
+        return result;
+      }
+      xju::io::select({&notifier_},deadline);
     }
     while(xju::steadyNow()<deadline);
     return result;
   }
 
-  // post: 0 not in result
-  std::set<xju::io::Input const*> inputs() noexcept
-  {
-    std::set<xju::io::Input const*> inputs;
-    std::transform(currentFiles_.begin(),currentFiles_.end(),
-                   std::inserter(inputs,inputs.end()),
-                   [](std::unique_ptr<xju::io::FileReader> const& x){
-                     return &*x;
-                   });
-    inputs.insert(&notifier_);
-    return inputs;
-  }
 private:
   xju::path::AbsFile const wtmp_;
   size_t const             maxRollsTracked_;
   xju::io::FileObserver    notifier_;
-  std::pair<std::unique_ptr<xju::io::IStream>, std::unique_ptr<xju::io::OStream> > stop_;
   std::deque<std::unique_ptr<xju::io::FileReader> > currentFiles_;
-  xju::Thread run_;
   
   typedef std::vector<UserLoggedIn> Logins;
 
-  void run() noexcept
-  {
-    while(true){
-      auto const r{xju::io::select({stop_.first.get(),&notifier_},
-                                   xju::steadyEternity())};
-      if (r.find(stop_.first.get())!=r.end()){
-        return;
-      }
-      try{
-        trackRoll();
-      }
-      catch(xju::Exception const&e)
-      {
-      }
-    }
-  }
-  void stop() noexcept
-  {
-    stop_.second->write("x",1U,xju::steadyNow());
-  }
   void trackRoll() throw(xju::Exception)
   {
+    notifier_.read(xju::steadyNow());
     try{
       std::unique_ptr<xju::io::FileReader> newFile{
         new xju::io::FileReader(wtmp_)};

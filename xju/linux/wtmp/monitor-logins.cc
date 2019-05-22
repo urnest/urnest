@@ -33,11 +33,11 @@ int main(int argc, char* argv[])
     xju::linux::wtmp::LoginMonitor m{fileName,0};
 
     // skip existing
-    auto const events{m.readEventsUntilDeadline(xju::steadyNow())};
+    auto const events{m.readEvents(xju::steadyNow())};
 
     while(true){
-      auto const events{m.readEventsUntilDeadline(xju::steadyNow()+
-                                                  std::chrono::seconds(3))};
+      auto const events{m.readEvents(xju::steadyNow()+
+                                     std::chrono::seconds(3))};
       for (auto i: events){
         std::cout << i.user_ << " logged in from "
                   << i.from_ << " at " << t(i.at_) << "\n";
