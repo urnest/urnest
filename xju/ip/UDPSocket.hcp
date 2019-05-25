@@ -8,25 +8,27 @@
 // implied warranty.
 //
 
-#include "xju/io/Input.hh"
-#include "xju/io/Output.hh"
-#include "xju/Exception.hh"
-#include "xju/ip/v4/Address.hh"
-#include "xju/ip/Port.hh"
-#include "xju/ip/PortInUse.hh"
+#include <xju/io/Input.hh>
+#include <xju/io/Output.hh>
+#include <xju/Exception.hh>
+#include <xju/ip/v4/Address.hh>
+#include <xju/ip/Port.hh>
+#include <xju/ip/PortInUse.hh>
+#include <xju/ip/DSCP.hh>
 #include <unistd.h>
 #include <chrono>
 #include <xju/DeadlineReached.hh>
-#include "xju/AutoFd.hh"
+#include <xju/AutoFd.hh>
 
 #include <sstream> //impl
 #include <netinet/ip.h> //impl
-#include "xju/syscall.hh"
-#include "xju/socket.hh" //impl
-#include "xju/io/select.hh" //impl
-#include "xju/format.hh" //impl
+#include <xju/syscall.hh>
+#include <xju/socket.hh> //impl
+#include <xju/io/select.hh> //impl
+#include <xju/format.hh> //impl
 #include <xju/steadyNow.hh> //impl
 #include <xju/milliseconds.hh> //impl
+#include <cinttypes> //impl
 
 
 namespace xju
@@ -60,7 +62,7 @@ class UDPSocket : public virtual xju::io::Input,
 {
 public:
   // udp socket bound to some free local port
-  UDPSocket() throw(
+  UDPSocket(DSCP const& dscp=DSCP(0)) throw(
     xju::Exception,
     xju::SyscallFailed) try:
       fd_(xju::syscall(xju::socket,XJU_TRACED)(
@@ -77,13 +79,21 @@ public:
   }
     
   // udp socket bound to specific port
-  explicit UDPSocket(xju::ip::Port port) throw(
+  explicit UDPSocket(xju::ip::Port port,DSCP const& dscp=DSCP(0)) throw(
     xju::ip::PortInUse,
     xju::SyscallFailed) try:
       fd_(xju::syscall(xju::socket,XJU_TRACED)(
           AF_INET, SOCK_DGRAM|SOCK_CLOEXEC|SOCK_NONBLOCK, 0)),
       port_(bindToPort(fd_,port))
   {
+    uint8_t tos{0};
+    socklen_t l{1};
+    xju::syscall(xju::getsockopt,XJU_TRACED)(
+      fd_.fd(),IPPROTO_IP,IP_TOS,&tos,&l);
+    tos&=~(0x3f<<3);
+    tos|=(dscp.value()<<3);
+    xju::syscall(xju::setsockopt,XJU_TRACED)(
+      fd_.fd(),IPPROTO_IP,IP_TOS,&tos,l);
   }
   catch(xju::SyscallFailed& e)
   {
