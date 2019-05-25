@@ -1,0 +1,37 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/assert.hh> //impl
+namespace xju
+{
+namespace ip
+{
+
+class DSCP
+{
+public:
+  //pre: 0 <= x < 0x40
+  explicit DSCP(int const x) noexcept:
+      x_(x)
+  {
+    xju::assert_less_equal(0,x);
+    xju::assert_less(x,0x40);
+  }
+  int value() const noexcept { return x_; }
+private:
+  int x_;
+
+  friend bool operator<(DSCP const& x, DSCP const& y) noexcept;
+};
+
+const DSCP DSCP_EF=DSCP(0x2e);
+}
+}
