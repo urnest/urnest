@@ -1,0 +1,118 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/format.hh> //impl
+#include <unistd.h>
+#include <xju/path.hh>
+#include <string>
+#include <chrono>
+#include <xju/Exception.hh>
+#include <vector> //impl
+#include <xju/doCmd.hh> //impl
+#include <xju/strip.hh> //impl
+#include <xju/split.hh> //impl
+#include <xju/stringToULongLong.hh> //impl
+
+namespace xju
+{
+namespace linux
+{
+namespace disk_space
+{
+
+namespace
+{
+size_t toSizeT(unsigned long long x) throw(
+  //overflow
+  xju::Exception)
+{
+  size_t const result{x};
+  if (result!=x){
+    std::ostringstream s;
+    s << "unsigned long long " << x << " overflows size_t";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  return result;
+}
+
+}
+
+struct FileSystemStat
+{
+  FileSystemStat(size_t blocksTotal,
+                 size_t blocksFree,
+                 size_t blockSize) noexcept:
+      blocksTotal_(blocksTotal),
+      blocksFree_(blocksFree),
+      blockSize_(blockSize)
+  {
+  }
+  size_t blocksTotal_;
+  size_t blocksFree_;
+  size_t blockSize_;
+
+  friend bool operator<(FileSystemStat const& x,
+                        FileSystemStat const& y) noexcept;
+};
+
+FileSystemStat statFileSystemOfPath(
+  xju::path::AbsolutePath const& path,
+  std::chrono::steady_clock::time_point const& deadline) throw(
+    xju::Exception)
+{
+  return statFileSystemOfPath(path,deadline,"/usr/bin/stat");
+}
+FileSystemStat statFileSystemOfPath(
+  xju::path::AbsolutePath const& path,
+  std::chrono::steady_clock::time_point const& deadline,
+  std::string const& stat) throw(
+    xju::Exception)
+{
+  try{
+    std::vector<std::string> const cmd{
+      stat,"-f","--format=%b %f %s",xju::path::str(path)};
+    auto const stdoutStderr{
+      xju::doCmd(cmd,deadline)};
+    try{
+      auto const bfs{xju::split(xju::strip(stdoutStderr.first),' ')};
+      if (bfs.size()!=3){
+        std::ostringstream s;
+        s << "expected "
+          << xju::format::join(cmd.begin(),cmd.end(),std::string(" "))
+          << " to produce 3 space-separated numbers on stdout but it produced "
+          << xju::format::join(bfs.begin(),bfs.end(),std::string(" "));
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      auto const blocksTotal{toSizeT(xju::stringToULongLong(bfs[0]))};
+      auto const blocksFree{toSizeT(xju::stringToULongLong(bfs[1]))};
+      auto const blockSize{toSizeT(xju::stringToULongLong(bfs[2]))};
+      return FileSystemStat(blocksTotal,blocksFree,blockSize);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "parse result of command "
+        << xju::format::join(cmd.begin(),cmd.end(),std::string(" "));
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "get size and use info for file system containing path "
+      << xju::path::str(path);
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+}
+}

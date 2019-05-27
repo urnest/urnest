@@ -109,7 +109,6 @@ public:
   }
 
   // set pointer to n, returns n
-  // - returns current location if n==0
   // - see lseek(2)
   off_t seekTo(off_t n) throw(
     // eg n < 0

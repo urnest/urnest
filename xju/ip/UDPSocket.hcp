@@ -8,25 +8,30 @@
 // implied warranty.
 //
 
-#include "xju/io/Input.hh"
-#include "xju/io/Output.hh"
-#include "xju/Exception.hh"
-#include "xju/ip/v4/Address.hh"
-#include "xju/ip/Port.hh"
-#include "xju/ip/PortInUse.hh"
+#include <xju/io/Input.hh>
+#include <xju/io/Output.hh>
+#include <xju/Exception.hh>
+#include <xju/ip/v4/Address.hh>
+#include <xju/ip/Port.hh>
+#include <xju/ip/PortInUse.hh>
+#include <xju/ip/DSCP.hh>
 #include <unistd.h>
 #include <chrono>
 #include <xju/DeadlineReached.hh>
-#include "xju/AutoFd.hh"
+#include <xju/AutoFd.hh>
 
 #include <sstream> //impl
 #include <netinet/ip.h> //impl
-#include "xju/syscall.hh"
-#include "xju/socket.hh" //impl
-#include "xju/io/select.hh" //impl
-#include "xju/format.hh" //impl
+#include <xju/syscall.hh>
+#include <xju/socket.hh> //impl
+#include <xju/io/select.hh> //impl
+#include <xju/format.hh> //impl
 #include <xju/steadyNow.hh> //impl
 #include <xju/milliseconds.hh> //impl
+#include <cinttypes> //impl
+#include <atomic>
+#include <cinttypes>
+#include <string.h> //impl
 
 
 namespace xju
@@ -52,7 +57,44 @@ xju::ip::Port bindToPort(xju::AutoFd const& socket,
   xju::assert_equal(l,sizeof(a));
   return xju::ip::Port(::ntohs(a.sin_port));
 }
-
+void setDSCP(xju::AutoFd const& socket,
+             DSCP const& dscp) throw(
+               xju::Exception)
+{
+  try{
+    uint8_t tos{0};
+    socklen_t l{1};
+    xju::syscall(xju::getsockopt,XJU_TRACED)(
+      socket.fd(),IPPROTO_IP,IP_TOS,&tos,&l);
+    tos&=~(0x3f<<3);
+    tos|=(dscp.value()<<3);
+    xju::syscall(xju::setsockopt,XJU_TRACED)(
+      socket.fd(),IPPROTO_IP,IP_TOS,&tos,l);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "set DSCP " << xju::format::hex(dscp.value()) << " on UDPSocket";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+void enableDrops(xju::AutoFd const& socket) throw(
+  xju::Exception)
+{
+  try{
+    int v{1};
+    socklen_t l{sizeof(v)};
+    xju::syscall(xju::setsockopt,XJU_TRACED)(
+      socket.fd(),SOL_SOCKET,SO_RXQ_OVFL,&v,l);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "enable receive drop reporting on UDPSocket";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+                 
 }
 
 class UDPSocket : public virtual xju::io::Input,
@@ -60,13 +102,16 @@ class UDPSocket : public virtual xju::io::Input,
 {
 public:
   // udp socket bound to some free local port
-  UDPSocket() throw(
+  UDPSocket(DSCP const& dscp=DSCP(0)) throw(
     xju::Exception,
     xju::SyscallFailed) try:
       fd_(xju::syscall(xju::socket,XJU_TRACED)(
             AF_INET, SOCK_DGRAM|SOCK_CLOEXEC|SOCK_NONBLOCK, 0)),
-      port_(bindToPort(fd_,xju::ip::Port(0)))
+      port_(bindToPort(fd_,xju::ip::Port(0))),
+      drops_(0)
   {
+    setDSCP(fd_,dscp);
+    enableDrops(fd_);
   }
   catch(xju::SyscallFailed& e)
   {
@@ -77,13 +122,16 @@ public:
   }
     
   // udp socket bound to specific port
-  explicit UDPSocket(xju::ip::Port port) throw(
+  explicit UDPSocket(xju::ip::Port port,DSCP const& dscp=DSCP(0)) throw(
     xju::ip::PortInUse,
     xju::SyscallFailed) try:
       fd_(xju::syscall(xju::socket,XJU_TRACED)(
           AF_INET, SOCK_DGRAM|SOCK_CLOEXEC|SOCK_NONBLOCK, 0)),
-      port_(bindToPort(fd_,port))
+      port_(bindToPort(fd_,port)),
+      drops_(0)
   {
+    setDSCP(fd_,dscp);
+    enableDrops(fd_);
   }
   catch(xju::SyscallFailed& e)
   {
@@ -154,6 +202,10 @@ public:
 
   typedef std::pair<xju::ip::v4::Address,xju::ip::Port> Sender;
 
+  // total drops between successful receives
+  // (this counter is only updated on successful receive)
+  std::atomic<unsigned long> drops_;
+  
   // receive datagram by deadline, copying into specified buffer of
   // specified size
   std::pair<UDPSocket::Sender,size_t> receive(
@@ -170,16 +222,33 @@ public:
       if (xju::io::select({(xju::io::Input*)this},deadline).size()) {
         sockaddr_in sender_addr;
         struct iovec v={buffer,size};
+        union {
+          char buf[CMSG_SPACE(sizeof(uint32_t))];
+          struct cmsghdr align;
+        } u;
         struct msghdr h={
           &sender_addr,sizeof(sender_addr),
           &v,1,
-          0,0,
+          u.buf,sizeof(u.buf),
           0
         };
         ssize_t const bytesRead=xju::syscall(xju::recvmsg,XJU_TRACED)(
           fileDescriptor(),
           &h,
           MSG_NOSIGNAL);
+        struct cmsghdr* cmsg{CMSG_FIRSTHDR(&h)};
+        //SO_RXQ_OVFL is poorly documented, don't get the
+        // message until there are drops and the counter does not
+        // reset
+        for (; cmsg; cmsg = CMSG_NXTHDR(&h, cmsg)) {
+          if (cmsg->cmsg_level == SOL_SOCKET &&
+              cmsg->cmsg_type == SO_RXQ_OVFL) {
+            uint32_t drops;
+            memcpy(&drops,CMSG_DATA(cmsg),sizeof(drops));
+            drops_.store(drops);
+            break;
+          }
+        }
         if(h.msg_flags&MSG_TRUNC) {
           std::ostringstream s;
           s << "buffer too small";
@@ -221,6 +290,7 @@ private:
 
   xju::ip::Port port_;
 
+protected:
   // xju::io::Input::
   // xju::io::Output::
   int fileDescriptor() const throw() {

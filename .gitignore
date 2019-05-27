@@ -202,3 +202,6 @@ hcp/hcp-map-to-source
 hcp/tags/hcp-find-def
 omnicxy/proto/cxx/p26.cc
 omnicxy/cosnaming-client
+xju/linux/disk-space/monitor-disk-space
+xju/linux/wtmp/monitor-logins
+xju/linux/ntpd/monitor-ntp-sync

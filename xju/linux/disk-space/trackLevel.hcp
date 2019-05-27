@@ -1,0 +1,77 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/linux/disk-space/statFileSystem.hh>
+#include <set>
+#include <xju/linux/disk-space/Percent.hh>
+#include <algorithm> //impl
+#include <map> //impl
+#include <xju/prev.hh> //impl
+
+namespace xju
+{
+namespace linux
+{
+namespace disk_space
+{
+// Track level of file system use amost specified levels
+// considering previous level and current stats, noting that
+// to drop below a level use must go at least 0.5% below that level.
+//
+// pre: percentLevels contains 0%
+//      previous!=percentLevels.end()
+// post: result != percentLevels.end()
+std::set<Percent>::const_iterator trackLevel(
+  std::set<Percent>::const_iterator const& previous,
+  std::set<Percent> const& percentLevels,
+  FileSystemStat const& counts) noexcept
+{
+  xju::assert_not_equal(percentLevels.find(Percent(0)),percentLevels.end());
+  xju::assert_not_equal(previous,percentLevels.end());
+  
+  // so we work where total blocks <100
+  size_t const blocksTotal{counts.blocksTotal_<100?counts.blocksTotal_*100:
+                           counts.blocksTotal_};
+  size_t const blocksFree{counts.blocksTotal_<100?counts.blocksFree_*100:
+                          counts.blocksFree_};
+  
+  std::map<size_t, //blocks in use
+           Percent //percent full
+           > levels;
+  std::transform(percentLevels.begin(),percentLevels.end(),
+                 std::inserter(levels,levels.end()),
+                 [&](Percent const& x){
+                   return std::make_pair(
+                     blocksTotal/100*x.value().value(),x);
+                 });
+  size_t const blocksInUse{blocksTotal-
+                           //avoid underflow when subtracting from unsigned
+                           std::min(blocksFree,blocksTotal)};
+  auto i{xju::prev(levels.upper_bound(blocksInUse))};
+  if ((*i).second>(*previous)){
+    // gone up
+    return percentLevels.find((*i).second);
+  }
+
+  size_t const halfPercent{blocksTotal/200U};
+  i=xju::prev(levels.upper_bound(blocksInUse+halfPercent));
+  if ((*i).second<(*previous)){
+    // gone down
+    return percentLevels.find((*i).second);
+  }
+
+  // no change
+  return previous;
+}
+
+}
+}
+}

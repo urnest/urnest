@@ -513,5 +513,20 @@ std::string duration(std::chrono::nanoseconds const& d) noexcept
   return int_(secs.count(),1)+"."+int_(nsecs.count(),9)+"s";
 }
 
+std::string duration(std::chrono::seconds const& d) noexcept
+{
+  return int_(d.count(),1)+"s";
+}
+
+std::string duration(std::chrono::minutes const& d) noexcept
+{
+  return int_(d.count(),1)+"m";
+}
+
+std::string duration(std::chrono::hours const& d) noexcept
+{
+  return int_(d.count(),1)+"h";
+}
+
 }
 }

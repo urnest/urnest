@@ -13,6 +13,7 @@
 #include "a.hh"
 #include "xju/Exception.hh"
 #include <typeinfo>
+#include <cxy/chrono.hh>
 
 class reflect_impl : public POA_omnicxy::proto::interop::a::reflect
 {
@@ -206,6 +207,15 @@ public:
       omnicxy::proto::interop::a::ThreeSs_forany z(
         omnicxy::proto::interop::a::ThreeSs_dup(y));
       (*result) <<= z;
+      return result;
+    }
+    case 19:
+    {
+      cxy::chrono::nanoseconds y;
+      x >>= y;
+      xju::assert_equal(y, 100997);
+      CORBA::Any* result(new CORBA::Any);
+      (*result) <<= y;
       return result;
     }
     default:

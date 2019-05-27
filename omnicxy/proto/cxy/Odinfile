@@ -18,6 +18,7 @@ p23.hh
 p24.hh
 p25.hh
 p26.hh
+p27.hh
 echo.hh
 echo.cc
 echo.cref.hh
@@ -71,6 +72,7 @@ p23.hh==%gen/p23.hh
 p24.hh==%gen/p24.hh
 p25.hh==%gen/p25.hh
 p26.hh==%gen/p26.hh
+p27.hh==%gen/p27.hh
 echo.hh==%gen/echo.hh
 echo.cc==%gen/echo.cc
 echo.cref.hh==%gen/echo.cref.hh
@@ -101,7 +103,13 @@ echo.sref.cc==%gen/echo.sref.cc
 %p2.hcp==(../p2.idl)+(%gen-opts):omnicxy/p2.hcp
 %p3.hcp==(../p3.idl)+(%gen-opts):omnicxy/p3.hcp
 %p4.hcp==(../p4.idl)+(%gen-opts):omnicxy/p4.hcp
+%p4.cref.hcp==(../p4.idl)+(%gen-opts):omnicxy/p4.cref.hcp
+%p4.cdr.hcp==(../p4.idl)+(%gen-opts):omnicxy/p4.cdr.hcp
+%p4.objref.hcp==(../p4.idl)+(%gen-opts):omnicxy/p4.objref.hcp
+%p4.sref.hcp==(../p4.idl)+(%gen-opts):omnicxy/p4.sref.hcp
+%p4.any.hcp==(../p4.idl)+(%gen-opts):omnicxy/p4.any.hcp
 %p5.hcp==(../p5.idl)+(%gen-opts):omnicxy/p5.hcp
+%p5.any.hcp==(../p5.idl)+(%gen-opts):omnicxy/p5.any.hcp
 %p6.hcp==(../p6.idl)+(%gen-opts):omnicxy/p6.hcp
 %p7.hcp==(../p7.idl)+(%gen-opts):omnicxy/p7.hcp
 %p9.hcp==(../p9.idl)+(%gen-opts):omnicxy/p9.hcp
@@ -179,6 +187,12 @@ echo.sref.cc==%gen/echo.sref.cc
 %p26.objref.hcp==(../p26.idl)+(%gen-opts):omnicxy/p26.objref.hcp
 %p26.sref.hcp==(../p26.idl)+(%gen-opts):omnicxy/p26.sref.hcp
 %p26.any.hcp==(../p26.idl)+(%gen-opts):omnicxy/p26.any.hcp
+%p27.hcp==(../p27.idl)+(%gen-opts):omnicxy/p27.hcp
+%p27.cref.hcp==(../p27.idl)+(%gen-opts):omnicxy/p27.cref.hcp
+%p27.cdr.hcp==(../p27.idl)+(%gen-opts):omnicxy/p27.cdr.hcp
+%p27.objref.hcp==(../p27.idl)+(%gen-opts):omnicxy/p27.objref.hcp
+%p27.sref.hcp==(../p27.idl)+(%gen-opts):omnicxy/p27.sref.hcp
+%p27.any.hcp==(../p27.idl)+(%gen-opts):omnicxy/p27.any.hcp
 
 %all-tests.tree==<<
 ()+cmd=(%p1-main)+cmd='3735'+cmd='both':exec.output
@@ -215,6 +229,7 @@ echo.sref.cc==%gen/echo.sref.cc
 ()+cmd=(%p24-main)+cmd='3765'+cmd='both':exec.output
 ()+cmd=(%p25-main)+cmd='3766'+cmd='both':exec.output
 ()+cmd=(%p26-main)+cmd='3767'+cmd='both':exec.output
+()+cmd=(%p27-main)+cmd='3769'+cmd='both':exec.output
 ()+cmd=(%test-port-in-use):exec.output
 ()+cmd=(%test-cosnaming-client)+cmd='3768'+cmd=(%cosnaming-client):exec.output
 ()+cmd=(%p12a-main)+cmd='3749'+cmd='both':exec.output
@@ -253,6 +268,7 @@ ext%tests.tree
 %p24-main==p24-main.cc+(%cxx-opts):auto.cxx.exe
 %p25-main==p25-main.cc+(%cxx-opts):auto.cxx.exe
 %p26-main==p26-main.cc+(%cxx-opts):auto.cxx.exe
+%p27-main==p27-main.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-no-such-host==test-no-such-host.cc+(%cxx-opts):auto.cxx.exe
 %test-duplicate-name==test-duplicate-name.cc+(%cxx-opts):auto.cxx.exe

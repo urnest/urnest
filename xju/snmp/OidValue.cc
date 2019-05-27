@@ -61,6 +61,10 @@ std::vector<uint8_t>::iterator OidValue::encodeTo(
   return at;
 }
 
+bool OidValue::less(Value const& y) const throw()
+{
+  return val_ < dynamic_cast<OidValue const&>(y).val_;
+}
 
 }
 }

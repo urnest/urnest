@@ -226,6 +226,9 @@
   wal.queryParams=function(url){
     var result={};
     url=url||window.location.search;
+    if (!url.includes('?')){
+      return result;
+    }
     wal.each(url.split('?')[1].split('&'),function(i,p){
       p=p.split('=');
       if (p.length==1){
@@ -352,17 +355,19 @@
   wal.now=function(){
     return Date.now();
   };
-  // async HTTP-get url passing specified data (an object) json encodeed
-  // then passed that as the value of json_params url query string parameter
+  // async HTTP-get url passing specified data (an object) according to raw:
+  // - raw: passes data as a url-encoded query string
+  //   (so data in this case must only have string values)
+  // - not raw: json encodes data then passes that as the value of json_params
+  //   url query string parameter
   // ... returns an object that has overridable functions, override them by:
   //   then(f) - on successful completion calls f(result)
-  //             result "result" member of json-decoded response*
+  //             result is content (if raw) else... read the code
   //   or(f) - on failure f(s) where s is human readable string describing
-  //           failure*
-  //     * f(s) is called if json-decoded result has an "error" member
+  //           failure
   //   always(f) - after then/or function, calls f()
   //
-  wal.getFromServer=function(url,data){
+  wal.getFromServer=function(url,data,raw){
     var result={
       then_: function(){},
       error_:function(e){
@@ -386,12 +391,17 @@
     $.ajax({ 
       type: 'GET',
       url: url,
-      data: {
+      data: raw?data:{
 	'json_params':wal.json.encode(data)
       },
       dataType: 'text',
       cache:false,
       success: function(responseData_, status){
+	if (raw){
+	  result.then_(responseData_);
+	  result.always_();
+	  return;
+	}
 	var responseData;
 	try{
 	  responseData=wal.json.decode(responseData_);
@@ -411,54 +421,6 @@
 	  };
 	  result.then_(responseData.result);
         }
-	result.always_();
-      },
-      error: function(jqXHR, status, e){
-	result.error_(wal.inContext(''+e, 'get url '+url));
-	result.always_();
-      }
-    });
-    return result;
-  };
-
-  // async HTTP-get url passing specified data as a url-encoded query string
-  //   (so data must only have string values)
-  // ... returns an object that has overridable functions, override them by:
-  //   then(f) - on successful completion calls f(result)
-  //             result is content
-  //   or(f) - on failure f(s) where s is human readable string describing
-  //           failure
-  //   always(f) - after then/or function, calls f()
-  //
-  wal.getFromServerRaw=function(url,data){
-    var result={
-      then_: function(){},
-      error_:function(e){
-	alert(e);
-      },
-      always_:function(){
-      }
-    };
-    result.then=function(then){
-      result.then_=then;
-      return result;
-    }
-    result.or=function(error){
-      result.error_=error;
-      return result;
-    }
-    result.always=function(always){
-      result.always_=always;
-      return result;
-    }
-    $.ajax({ 
-      type: 'GET',
-      url: url,
-      data: data,
-      dataType: 'text',
-      cache:false,
-      success: function(responseData_, status){
-	result.then_(responseData_);
 	result.always_();
       },
       error: function(jqXHR, status, e){
@@ -810,7 +772,7 @@
 
   var $load_image=false;
 
-  wal.postToServer=function(url,data,sync){
+  wal.postToServer=function(url,data,sync,raw){
     var result={
       then_: function(){},
       error_:function(e){
@@ -834,13 +796,18 @@
     $.ajax({ 
       type: 'POST',
       url: url,
-      data: {
+      data: raw?data:{
 	'json_params':wal.json.encode(data)
       },
       dataType: 'text',
       async: !sync,
       success: function(responseData_, status){
 	var responseData;
+	if (raw){
+	  result.then_(responseData_);
+	  result.always_();
+	  return;
+	}
 	try{
 	  responseData=wal.json.decode(responseData_);
 	}
@@ -872,47 +839,6 @@
     });
     return result;
   };
-
-  wal.postToServerRaw=function(url,data,sync){
-    var result={
-      then_: function(){},
-      error_:function(e){
-	alert(e);
-      },
-      always_:function(){
-      }
-    };
-    result.then=function(then){
-      result.then_=then;
-      return result;
-    };
-    result.or=function(error){
-      result.error_=error;
-      return result;
-    };
-    result.always=function(always){
-      result.always_=always;
-      return result;
-    }
-    $.ajax({ 
-      type: 'POST',
-      url: url,
-      data: data,
-      dataType: 'text',
-      async: !sync,
-      success: function(responseData_, status){
-	result.then_(responseData_);
-	result.always_();
-	return;
-      },
-      error: function(jqXHR, status, e){
-	result.error_(wal.inContext(''+e, 'post data to '+url));
-	result.always_();
-      }
-    });
-    return result;
-  };
-
   wal.rendering=function($x){
     var $overlay=$('<div class="wal-busy-cursor">&nbsp;</div>').css({
       position:'absolute',
@@ -979,24 +905,33 @@
   // call set(val) whenever input changes
   // - returns f() that stops tracking input
   wal.trackTextInput=function($input, set/*f(val:string)*/){
-    var last=$input.val();
+    var last;
+    var delayedSet;
     function set_(){
       var now=$input.val();
       if (now != last){
 	last = now;
 	set(now);
       }
+      delayedSet();
     }
     var timer;
-    function delayedSet(){
+    delayedSet=function(){
       timer&&clearTimeout(timer);
       timer=setTimeout(set_, 100);
     }
+    // change is not relyable, some browsers don't trigger in all cases
+    // e.g. mouse-paste
     $input.bind('change', delayedSet);
     // note keypress is no good as IE and webkit don't send eg on backspace
     $input.bind('keyup', delayedSet);
+    // note keypress is no good as IE and webkit don't send eg on backspace
+    $input.bind('mouseup', delayedSet);
+    // and in the end only poll is foolproof
+    delayedSet();
     return function(){
       timer&&clearTimeout(timer);
+      $input.unbind('mouseup', delayedSet);
       $input.unbind('keyup', delayedSet);
       $input.unbind('change', delayedSet);
     }

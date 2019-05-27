@@ -88,6 +88,18 @@ public:
                                return x->str();
                              },", ");
   }
+  // Value::
+  // pre: yy is a Sequence
+  bool less(Value const& yy) const throw() override
+  {
+    auto const y{dynamic_cast<Sequence const&>(yy)};
+    return xju::seq_less(items_.begin(),items_.end(),
+                         y.items_.begin(),y.items_.end(),
+                         [](std::shared_ptr<Value const> const& x,
+                            std::shared_ptr<Value const> const& y){
+                           return (*x)<(*y);
+                         });
+  }
   
 };
 

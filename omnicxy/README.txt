@@ -127,7 +127,7 @@ Contents
 3. Mapping of Types
 
   short,long etc map to uint16_t, uint32_t etc - see proto/cxy/p2.hh
-
+    - cxy::chrono::nanoseconds etc map to std::chrono::nanoseconds etc
   float, double map to float, double  - see proto/cxy/p2.hh
 
   string maps to std::string - see proto/cxy/p2.hh
@@ -137,11 +137,11 @@ Contents
 
   array maps to std::array - see proto/cxy/p25.hh
 
-  struct maps to struct with same members and generated compare 
-  operators - see proto/cxy/p4.hh. Note
-  that the lack of default constructor is deliberate to reduce programming
-  errors. A struct whose name ends in "Pair" and which has two members
-  named first and second is mapped to a std::pair - see proto/cxy/p4.hh
+  struct maps to struct with same members and generated compare operators -
+  see proto/cxy/p4.hh, noting that the lack of default constructor is
+  deliberate to reduce programming errors. A struct whose name ends in
+  "Pair" and which has two members named first and second is mapped to a
+  std::pair - see proto/cxy/p4.hh
 
   enum maps to a type-safe class with inner C++ enum - see proto/cxy/p10.hh
 
@@ -150,8 +150,7 @@ Contents
   proto/cxy/p12.hh, proto/cxy/p13.hh
 
   exception maps to C++ class derived from the "default" exception class,
-  which can be specified when invoking omniidl. More on this in 
-  5. Exceptions.
+  which can be specified when invoking omniidl. More on this in 5. Exceptions.
 
   object reference, ie reference to interface T, maps to a cxy::IOR<T>, which
   can be passed to cxy::cref<T> constructor - see proto/cxy/p15.hh and

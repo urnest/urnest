@@ -7,8 +7,14 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
+#ifndef CXY_UNIXTIMEMILLI_IDL
+#define CXY_UNIXTIMEMILLI_IDL
+
 module cxy
 {
   // milliseconds since Unix Epoch, 1 Jan 1970 UTC
+  // includes leap-seconds (see C++ std::chrono::utc_clock)
   typedef long long UnixTimeMilli;
 };
+
+#endif

@@ -602,10 +602,14 @@ def parse(s, origin='unknown'):
     pass
 
 def parseFile(fileName,encoding='utf-8'):
-    return parse(file(fileName,encoding).read(),fileName)
+    with open(fileName,encoding=encoding) as f:
+        return parse(f.read(),fileName)
+    pass
 
 def loadFile(fileName,encoding='utf-8'):
-    return parse(file(fileName,encoding).read(),fileName)
+    with open(fileName,encoding=encoding) as f:
+        return parse(f.read(),fileName)
+    pass
 
 def assert_equal(a, b):
     assert a==b, (u'%(a)r\n!=\n%(b)r' % vars())

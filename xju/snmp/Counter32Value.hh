@@ -37,6 +37,10 @@ public:
   // Value::
   virtual std::string str() const throw();
 
+  // Value::
+  // pre: y is a Counter32Value
+  virtual bool less(Value const& y) const throw() override;
+
   friend bool operator<(Counter32Value const& x, Counter32Value const& y) throw()
   {
     return x.val_<y.val_;

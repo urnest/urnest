@@ -22,6 +22,12 @@ wal%all.tree
 +inc_sp=(/usr/include/freetype2)
 +ld_flags=-lpthread
 
+%idl-opts==<<
++inc_sp=(.)
++inc_sp=(omnicxy)
++cxy='-exju::Exception=xju/Exception.hh'
++hcp-split=(hcp/hcp-split)
+
 %hcp-gen==Odinfile%hcp-gen.virdir_spec:vir_dir
 
 %hcp-gen.virdir_spec == <<
@@ -35,7 +41,7 @@ wal%all.tree
 %idl-gen.virdir_spec == <<
 %hcp==./hcp/Odinfile%idl-gen
 %cxy==./omnicxy/cxy/Odinfile%idl-gen
-
+%xju==./xju/Odinfile%idl-gen
 
 %tags==%all.list-of-tags:merged-tags
 
@@ -54,7 +60,7 @@ omnicxy/cxy%tags
 cd "$1" &&
 tar chf - .
 
-%tools.tar==()+cmd=(%tools-tar.sh) (hcp%tools:leaves:ls) (omnicxy%tools:leaves:ls)+need=(hcp%tools:leaves)+need=(omnicxy%tools:leaves):stdout
+%tools.tar==()+cmd=(%tools-tar.sh) (hcp%tools:leaves:ls) (omnicxy%tools:leaves:ls) (xju/linux%tools:leaves:ls) +need=(hcp%tools:leaves) (omnicxy%tools:leaves) (xju/linux%tools:leaves) :stdout
 
 %tools-tar.sh == ! <<
 #!/bin/sh
@@ -62,11 +68,15 @@ tar chf - .
 mkdir x &&
 cd x &&
 test -r "$1" &&
-cat "$1" |
-while [ $? = 0 ] && read n
+while [ $? = 0 ] && [ -r "$1" ]
 do
-  b=$(basename "$n") &&
-  ln -s "$n" "$b"
+  cat "$1" |
+  while [ $? = 0 ] && read n
+  do
+    b=$(basename "$n") &&
+    ln -s "$n" "$b"
+  done &&
+  shift
 done &&
 tar chf - .
 )

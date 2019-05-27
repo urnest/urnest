@@ -82,6 +82,51 @@ private:
   
   friend std::ostream& operator<<(std::ostream& s, SnmpV2cVarResponse const& x)
     throw();
+
+  friend bool operator<(SnmpV2cVarResponse const& x,
+                        SnmpV2cVarResponse const& y) noexcept
+  {
+    if (x.oid_<y.oid_) return true;
+    if (y.oid_<x.oid_) return false;
+    if (!x.e_.get()&&y.e_.get()) return true;
+    if (!y.e_.get()&&x.e_.get()) return false;
+    if (x.e_.get() && y.e_.get()){
+      auto const sx{readableRepr(*x.e_)};
+      auto const sy{readableRepr(*y.e_)};
+      if (sx<sy) return true;
+      if (sy<sx) return false;
+    }
+    if (!x.v_.get()&&y.v_.get()) return true;
+    if (!y.v_.get()&&x.v_.get()) return false;
+    if (x.v_.get() && y.v_.get()) return (*x.v_)<(*y.v_);
+    return false;
+  }
+  friend bool operator>(SnmpV2cVarResponse const& x,
+                        SnmpV2cVarResponse const& y) noexcept
+  {
+    return y<x;
+  }
+  friend bool operator==(SnmpV2cVarResponse const& x,
+                         SnmpV2cVarResponse const& y) noexcept
+  {
+    return !(x<y) && !(y<x);
+  }
+  friend bool operator<=(SnmpV2cVarResponse const& x,
+                         SnmpV2cVarResponse const& y) noexcept
+  {
+    return x<y || x==y;
+  }
+  friend bool operator>=(SnmpV2cVarResponse const& x,
+                         SnmpV2cVarResponse const& y) noexcept
+  {
+    return x>y || x==y;
+  }
+  friend bool operator!=(SnmpV2cVarResponse const& x,
+                         SnmpV2cVarResponse const& y) noexcept
+  {
+    return !(x==y);
+  }
+  
 };
 
 

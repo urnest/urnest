@@ -47,6 +47,10 @@ std::string StringValue::str() const throw()
                               std::string(val_.begin(),val_.end())));
 }
 
+bool StringValue::less(Value const& y) const throw()
+{
+  return val_ < dynamic_cast<StringValue const&>(y).val_;
+}
 
 }
 }

@@ -42,6 +42,10 @@ public:
   // Value::
   virtual std::string str() const throw() override;
 
+  // Value::
+  // pre: y is a IntValue
+  virtual bool less(Value const& y) const throw() override;
+  
   friend bool operator<(IntValue const& x, IntValue const& y) throw()
   {
     return x.val_<y.val_;

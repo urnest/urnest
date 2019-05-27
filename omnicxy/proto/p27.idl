@@ -1,0 +1,23 @@
+#include <cxy/chrono.idl>
+
+module p27
+{
+  interface I
+  {
+    struct R
+    {
+      cxy::chrono::nanoseconds ns_;
+      cxy::chrono::microseconds us_;
+      cxy::chrono::milliseconds ms_;
+      cxy::chrono::seconds s_;
+      cxy::chrono::minutes m_;
+      cxy::chrono::hours h_;
+    };
+    R f(in cxy::chrono::nanoseconds ns_,
+        in cxy::chrono::microseconds us_,
+        in cxy::chrono::milliseconds ms_,
+        in cxy::chrono::seconds s_,
+        in cxy::chrono::minutes m_,
+        in cxy::chrono::hours h_);
+  };
+};

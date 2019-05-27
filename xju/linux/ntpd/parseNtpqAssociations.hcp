@@ -1,0 +1,104 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <hcp/parser.hh> //impl
+#include <algorithm> //impl
+#include <utility> //impl
+#include <xju/stringToInt.hh> //impl
+#include <xju/stringToUInt.hh> //impl
+#include <sstream> //impl
+#include <map>
+#include <string>
+#include <xju/Exception.hh>
+#include <xju/linux/ntpd/AssocId.hh>
+#include <xju/linux/ntpd/PeerStatus.hh>
+
+namespace xju
+{
+namespace linux
+{
+namespace ntpd
+{
+
+// parse specified ntpqOutput (from ntpq -c associations)
+std::map<AssocId,PeerStatus> parseNtpqAssociations(
+  std::string const& ntpqOutput) throw(
+    xju::Exception)
+{
+  typedef hcp_ast::TaggedItem<std::pair<AssocId,PeerStatus>> AssocItem;
+  typedef hcp_ast::TaggedItem<AssocId> AssocIdItem;
+  typedef hcp_ast::TaggedItem<PeerStatus> PeerStatusItem;
+  
+  static auto parser{
+    hcp_parser::eatWhite()+
+    hcp_parser::parseLiteral("ind")+
+    hcp_parser::eatWhite()+
+    hcp_parser::parseLiteral("assid")+
+    hcp_parser::eatWhite()+
+    hcp_parser::parseLiteral("status")+
+    hcp_parser::parseUntil(hcp_parser::parseLiteral("="))+
+    hcp_parser::parseUntil(hcp_parser::parseLiteral("="),
+                           hcp_parser::parseLiteral("\n"))+
+    hcp_parser::eatWhite()+
+    hcp_parser::parseUntil(
+      hcp_parser::PR(
+        new hcp_parser::NamedParser<AssocItem>(
+          "association",
+          hcp_parser::parseUntil(hcp_parser::digit(),
+                                 hcp_parser::whitespaceChar())+
+          hcp_parser::eatWhite()+
+          hcp_parser::PR(
+            new hcp_parser::NamedParser<AssocIdItem>(
+              "assid",
+              hcp_parser::parseUntil(hcp_parser::digit(),
+                                     hcp_parser::whitespaceChar())))+
+          hcp_parser::eatWhite()+
+          hcp_parser::PR(
+            new hcp_parser::NamedParser<PeerStatusItem>(
+              "assid",
+              hcp_parser::parseUntil(hcp_parser::hexDigit(),
+                                     hcp_parser::whitespaceChar())))+
+          hcp_parser::parseUntil(hcp_parser::parseLiteral("\n"))+
+          hcp_parser::eatWhite())),
+      hcp_parser::endOfFile())+
+    hcp_parser::endOfFile()};
+
+  auto const x{hcp_parser::parseString(ntpqOutput.begin(),
+                                       ntpqOutput.end(),
+                                       parser)};
+
+  std::map<AssocId,PeerStatus> result;
+
+  auto const assocs{hcp_ast::findChildrenOfType<AssocItem>(x)};
+  
+  std::transform(assocs.begin(),assocs.end(),
+                 std::inserter(result,result.end()),
+                 [](AssocItem const& i){
+                     return std::make_pair(
+                       AssocId(
+                         xju::stringToInt(
+                           reconstruct(
+                             hcp_ast::findOnlyChildOfType<AssocIdItem>(i)))),
+                       PeerStatus(
+                         xju::stringToUInt(
+                           reconstruct(
+                             hcp_ast::findOnlyChildOfType<PeerStatusItem>(i)),
+                           16)));
+                 });
+  return result;
+}
+  
+
+}
+}
+}
+
+

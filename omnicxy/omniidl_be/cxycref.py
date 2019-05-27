@@ -107,7 +107,7 @@ public:
   {
     return obj_;
   }
-  %(fqn)s const* operator->() const throw()
+  %(fqn)s* operator->() const throw()
   {
     return obj_;
   }
@@ -115,7 +115,7 @@ public:
   {
     return *obj_;
   }
-  %(fqn)s const& operator*() const throw()
+  %(fqn)s& operator*() const throw()
   {
     return *obj_;
   }

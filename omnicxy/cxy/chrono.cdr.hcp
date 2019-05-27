@@ -1,0 +1,168 @@
+// Copyright (c) 2018 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <cxy/cdr.hh>
+#include <chrono>
+
+namespace cxy
+{
+
+template<>
+class cdr<::std::chrono::nanoseconds>
+{
+public:
+  static ::std::chrono::nanoseconds unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    int64_t result{cdr< int64_t >::unmarshalFrom(s)};
+    return ::std::chrono::nanoseconds(result);
+  }
+  static void marshal(::std::chrono::nanoseconds const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    cdr< int64_t >::marshal(x.count(),s);
+  }
+  
+};
+
+template<>
+class cdr<::std::chrono::microseconds>
+{
+public:
+  static ::std::chrono::microseconds unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    int64_t result{cdr< int64_t >::unmarshalFrom(s)};
+    return ::std::chrono::microseconds(result);
+  }
+  static void marshal(::std::chrono::microseconds const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    cdr< int64_t >::marshal(x.count(),s);
+  }
+  
+};
+
+template<>
+class cdr<::std::chrono::milliseconds>
+{
+public:
+  static ::std::chrono::milliseconds unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    int64_t result{cdr< int64_t >::unmarshalFrom(s)};
+    return ::std::chrono::milliseconds(result);
+  }
+  static void marshal(::std::chrono::milliseconds const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    cdr< int64_t >::marshal(x.count(),s);
+  }
+  
+};
+
+template<>
+class cdr<::std::chrono::seconds>
+{
+public:
+  static ::std::chrono::seconds unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    int64_t result{cdr< int64_t >::unmarshalFrom(s)};
+    return ::std::chrono::seconds(result);
+  }
+  static void marshal(::std::chrono::seconds const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    cdr< int64_t >::marshal(x.count(),s);
+  }
+  
+};
+
+template<>
+class cdr<::std::chrono::minutes>
+{
+public:
+  static ::std::chrono::minutes unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    int64_t result{cdr< int64_t >::unmarshalFrom(s)};
+    return ::std::chrono::minutes(result);
+  }
+  static void marshal(::std::chrono::minutes const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    cdr< int64_t >::marshal(x.count(),s);
+  }
+  
+};
+
+template<>
+class cdr<::std::chrono::hours>
+{
+public:
+  static ::std::chrono::hours unmarshalFrom(cdrStream& s) 
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  CORBA::SystemException,
+  //  omni::giopStream::CommFailure
+  //  )
+  {
+    int64_t result{cdr< int64_t >::unmarshalFrom(s)};
+    return ::std::chrono::hours(result);
+  }
+  static void marshal(::std::chrono::hours const x, cdrStream& s)
+  //to avoid needing CORBA.h in our .hh, exception specs are commented
+  //throw(
+  //  omni::giopStream::CommFailure
+  //)
+  {
+    cdr< int64_t >::marshal(x.count(),s);
+  }
+  
+};
+
+
+}

@@ -23,9 +23,8 @@
 #ifndef XJU_LOCK_HH
 #define XJU_LOCK_HH
 
-#include "Mutex.hh"
+#include <xju/Mutex.hh>
 
-#include <pthread.h>
 #include <xju/assert.hh>
 
 namespace xju
@@ -52,29 +51,31 @@ public:
   bool holds(const Mutex& mutex) const throw();
   
 private:
-  Mutex& _mutex;
+  Mutex& mutex_;
+  std::unique_lock<std::mutex> l_;
   
   // not implemented
   Lock(const Lock&);
   Lock& operator=(const Lock&);
+
+  friend class Condition;
 };
 
 inline Lock::Lock(Mutex& mutex) throw():
-    _mutex(mutex)
+    mutex_(mutex),
+    l_(mutex_._impl)
 {
-  assert_equal(pthread_mutex_lock(&mutex._impl),0);
-  _mutex._holder = this;
+  mutex_._holder = this;
 }
 
 inline Lock::~Lock() throw()
 {
-  _mutex._holder = 0;
-  pthread_mutex_unlock(&_mutex._impl);
+  mutex_._holder = 0;
 }
 
 inline bool Lock::holds(const Mutex& mutex) const throw()
 {
-  return &mutex == &_mutex;
+  return &mutex == &mutex_;
 }
 
 }

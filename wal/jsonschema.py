@@ -133,7 +133,7 @@ def validate(schema,x):
             for name, y in schema.items():
                 try:
                     if not name in x:
-                        keys=x.keys()
+                        keys=list(x.keys())
                         raise Exception('%(name)r is not in %(keys)r'%vars())
                     validate(y,x[name])
                 except:
@@ -201,6 +201,7 @@ def validate(schema,x):
                     
 
 def test():
+    from assert_ import Assert
     Schema(None).validate(None)
     Schema(2).validate(2)
     Schema('fred').validate('fred')
@@ -300,7 +301,7 @@ def test():
         x={'a':int,'c':int}
         Schema(x).validate({'a':1})
     except Exception as e:
-        assert readableRepr(e)=='''Failed to verify {'a': 1} conforms to json schema '''+repr(x)+''' because\n'c' is missing.''',repr(readableRepr(e))
+        Assert(readableRepr(e))=='''Failed to verify {'a': 1} conforms to json schema '''+repr(x)+''' because\nfailed to validate dictionary item 'c' because\n'c' is not in ['a'].'''
     else:
         assert None
         pass

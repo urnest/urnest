@@ -36,6 +36,11 @@ public:
   {
     return "null";
   }
+
+  // Value::
+  // pre: y is a NullValue
+  virtual bool less(Value const& y) const throw() override;
+
 };
 
 

@@ -24,6 +24,11 @@ std::vector<uint8_t>::iterator NullValue::encodeTo(
   return at;
 }
 
+bool NullValue::less(Value const& y) const throw()
+{
+  dynamic_cast<NullValue const&>(y);
+  return false;
+}
 
 }
 }

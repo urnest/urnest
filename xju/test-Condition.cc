@@ -15,6 +15,9 @@
 #include <xju/Lock.hh>
 #include <xju/Thread.hh>
 #include <chrono>
+#include <xju/steadyEternity.hh>
+#include <xju/steadyNow.hh>
+#include <xju/now.hh>
 
 namespace xju
 {
@@ -80,6 +83,32 @@ void test2()
 
 }
 
+// condition wait eternity
+void test3()
+{
+  auto a{xju::steadyNow()-xju::steadyNow()};
+  auto b{xju::now()-xju::now()};
+  
+  xju::Mutex m;
+  xju::Condition c(m);
+  bool flag(false);
+  xju::Lock l(m);
+  xju::Thread thread(
+    [&](){
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      xju::Lock l(m);
+      flag=true;
+      c.signal(l);
+    });
+  auto const t1{xju::steadyNow()};
+  while(!flag){
+    //REVISIT: broken c.wait(l,xju::steadyNow()+std::chrono::seconds(1));
+    c.wait(l,xju::steadyNow()+std::chrono::seconds(1));
+  }
+  auto const t2{xju::steadyNow()};
+  xju::assert_less(t2,t1+std::chrono::milliseconds(500));
+}
+
 using namespace xju;
 
 int main(int argc, char* argv[])
@@ -87,6 +116,7 @@ int main(int argc, char* argv[])
   unsigned int n(0);
   test1(), ++n;
   test2(), ++n;
+  test3(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

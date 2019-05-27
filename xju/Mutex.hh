@@ -10,8 +10,8 @@
 #ifndef XJU_MUTEX_HH
 #define XJU_MUTEX_HH
 
-#include <pthread.h>
-#include "assert.hh"
+#include <mutex>
+#include <xju/assert.hh>
 
 namespace xju
 {
@@ -33,7 +33,7 @@ public:
   bool isHeld() const throw();
   
 private:
-  pthread_mutex_t _impl;
+  std::mutex _impl;
   void* _holder;				  // could be Lock or TryLock, for example
   
   friend class Lock;
@@ -47,14 +47,11 @@ private:
 inline Mutex::Mutex() throw():
     _holder(0)
 {
-  pthread_mutex_init(&_impl, 0);
 }
 
 inline Mutex::~Mutex() throw()
 {
   assert_equal(_holder, (void*)0);
-  
-  pthread_mutex_destroy(&_impl);
 }
 
 inline bool Mutex::isHeld() const throw()

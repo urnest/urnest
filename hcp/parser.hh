@@ -382,6 +382,10 @@ PR backslash() throw();
 PR oneChar() throw(); //any single char
 PR bracketed(PR x) throw(); //x inside brackets, with optional whitespace preceding x
 
+PR digit() throw();
+PR octalDigit() throw();
+PR hexDigit() throw();
+
 // rest are C++-specific
 PR doubleSlash() throw(); // "//"
 PR slashStar() throw(); // "/*"
@@ -389,6 +393,7 @@ PR comments() throw();
 PR eatWhite() throw(); // matches nothing or something; eats C++ comments
 PR identifier() throw(); //C++ identifier
 PR stringLiteral() throw(); //C++ string literal
+PR rawStringLiteral() throw(); //C++ raw string literal
 PR hashIncludeImpl() throw(); // include preprocessor directive, with trailing "// impl" marker
 PR hashInclude() throw(); // include preprocessor directive
 PR hash() throw();        // other preprocessor directive

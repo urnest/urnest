@@ -2,6 +2,10 @@
 
 %all.tree==<<
 (jsonschema.py):py3.exec.output
-(pq.py):py3.exec.output
 (rfc2616.py):py3.exec.output
 (xn.py):py3.exec.output
+(etc.py):py3.exec.output
+
+#REVISIT: python3 changes behaviour w.r.t. &nbsp etc
+#what do we do?
+#(pq.py):py3.exec.output

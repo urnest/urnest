@@ -42,6 +42,10 @@ public:
     return val_.toString();
   }
 
+  // Value::
+  // pre: y is a OidValue
+  virtual bool less(Value const& y) const throw() override;
+
   friend bool operator<(OidValue const& x, OidValue const& y) throw()
   {
     return x.val_<y.val_;

@@ -301,7 +301,8 @@ private:
       stopReceiving_.first.get(),
       &socket_.input()};
     while(true){
-      auto const readable{xju::io::select(inputs,xju::steadyEternity())};
+      auto const readable{xju::io::select(
+          inputs,xju::steadyNow()+std::chrono::hours(100))};
       if (readable.find(stopReceiving_.first.get())!=readable.end()){
         return;
       }

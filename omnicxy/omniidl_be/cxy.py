@@ -69,9 +69,14 @@ basicParamTypes=dict(
     }.items()
 )
 
+def isPairType(t):
+    return False #REVISIT
+
 def sequenceUnqualifiedType(t,eclass):
     bound=t.bound()
     if bound==0:
+        if isPairType(t.seqType):
+            pass #REVISIT
         itemType=unqualifiedType(t.seqType(),eclass)
         return 'std::vector< %(itemType)s >'%vars()
     elif bound==1:
@@ -91,13 +96,21 @@ def objrefUnqualifiedType(t,eclass):
     if t=='::CORBA::Object': t='void'
     return '::cxy::IOR< %(t)s >'%vars()
 
+def mappedType(t):
+    'map fully qualified type name {t} where it is well known'
+    if t.startswith('::cxy::chrono::'):
+        t='::std::chrono::'+t[len('::cxy::chrono::'):]
+        pass
+    return t
+
 unqualifiedType_=dict(
     [(idltype.tk_any,lambda t,eclass:'::cxy::Any< {eclass} >'.format(**vars()))]+
     [(idltype.tk_TypeCode,lambda t,eclass:'::cxy::TypeCode')]+
     [(kind,lambda t,eclass:basicParamTypes.get(t.kind()).typename)
      for kind in basicParamTypes]+
-    [(kind,lambda t,eclass:''.join(['::'+_ for _ in t.scopedName()]))
-     for kind in [idltype.tk_alias,
+    [(kind,lambda t,eclass:mappedType(
+        ''.join(['::'+_ for _ in t.scopedName()])))
+     for kind in [idltype.tk_alias, #REVISIT: handle specially for seq->map/set
                   idltype.tk_struct,
                   idltype.tk_enum,
                   idltype.ot_structforward]]+
@@ -107,6 +120,7 @@ unqualifiedType_=dict(
                
 def unqualifiedType(t,eclass):
     assert isinstance(t,idltype.Type),t
+    #REVISIT: do alias explicitly here to handle seq->map/set
     if t.kind() in unqualifiedType_:
         return unqualifiedType_[t.kind()](t,eclass)
     assert False, '%s not implemented, only types %s implemented' % (t.kind(),unqualifiedType_.keys())
@@ -127,7 +141,8 @@ ptype_=dict(
     [(idltype.tk_TypeCode,lambda p,eclass: '::cxy::TypeCode')]+
     [(idltype.tk_union,unionPtype)]+
     [(idltype.tk_objref,objrefPtype)]+
-    [(kind,lambda p,eclass:''.join(['::'+_ for _ in p.paramType().scopedName()]))
+    [(kind,lambda p,eclass:mappedType(
+        ''.join(['::'+_ for _ in p.paramType().scopedName()])))
      for kind in [idltype.tk_alias,
                   idltype.tk_struct,
                   idltype.tk_enum]]+
@@ -147,16 +162,22 @@ def tn(t):
         return t.__class__
     return type(t)
 
+def mappedTypeIncludes(t):
+    '''return list of includes for qualified type {t}'''
+    return []
+
 tincludes_=dict(
     [(idltype.tk_objref, lambda t: ['<cxy/IOR.hh>'])]+
     [(idltype.tk_any, lambda t: ['<cxy/Any.hh>'])]+
     [(idltype.tk_TypeCode, lambda t: ['<cxy/TypeCode.hh>'])]+
     [(kind, lambda t:basicParamTypes.get(t.kind()).includeFiles)
      for kind in basicParamTypes]+
-    [(kind, lambda t: []) 
+    [(idltype.tk_union, lambda t: ['<memory>']+mappedTypeIncludes(
+        ''.join(['::'+_ for _ in t.scopedName()])))]+
+    [(kind, lambda t: mappedTypeIncludes(
+        ''.join(['::'+_ for _ in t.scopedName()])))
      for kind in [idltype.tk_alias,
                   idltype.tk_struct,
-                  idltype.tk_union,
                   idltype.tk_enum,
                   idltype.ot_structforward]]+
     [(idltype.tk_sequence, lambda t: tincludes(t.seqType()))])
@@ -223,40 +244,8 @@ struct %(name)s : public std::pair< %(t1)s, %(t2)s >
      std::pair< %(t1)s, %(t2)s >(p1, p2) {
   }
   template<class T1, class T2>
-  explicit %(name)s(std::pair<T1, T2> const& x) throw():
+  %(name)s(std::pair<T1, T2> const& x) throw():
      std::pair< %(t1)s, %(t2)s >(x.first,%(t2)s(x.second)) {
-  }
-  friend bool operator<(
-    %(name)s const& x, 
-    %(name)s const& y) throw() {
-    if (x.first < y.first) return true;
-    if (y.first < x.first) return false;
-    return false;
-  }
-  friend bool operator>(
-    %(name)s const& x, 
-    %(name)s const& y) throw() {
-    return y<x;
-  }
-  friend bool operator!=(
-    %(name)s const& x, 
-    %(name)s const& y) throw() {
-    return (x<y)||(y<x);
-  }
-  friend bool operator==(
-    %(name)s const& x, 
-    %(name)s const& y) throw() {
-    return !(x!=y);
-  }
-  friend bool operator<=(
-    %(name)s const& x, 
-    %(name)s const& y) throw() {
-    return (x<y)||(x==y);
-  }
-  friend bool operator>=(
-    %(name)s const& x, 
-    %(name)s const& y) throw() {
-    return (x>y)||(x==y);
   }
 };
 '''
@@ -1110,6 +1099,7 @@ def gen_tincludes(decl):
             pass
         elif aliasOf.kind()==idltype.tk_sequence:
             if aliasOf.bound()==0:
+                # REVISIT: XyMap -> <map>
                 result=result+['<vector>']+tincludes(aliasOf)
             elif aliasOf.bound()==1:
                 result=result+['<cxy/optional.hh>']+tincludes(aliasOf)
@@ -1176,7 +1166,7 @@ def gen_tincludes(decl):
             result=[]
             pass
     elif isinstance(decl, idlast.Union):
-        result=tincludes(decl.switchType())
+        result=['<memory>']+tincludes(decl.switchType())
         for c in decl.cases():
             assert c.constrType()==False,c
             for l in c.labels():
@@ -1216,6 +1206,9 @@ def includeSpec(fileName,hpath,hhext):
             return '"%s"'%(os.path.splitext(fileName)[0]+'.'+hhext)
         else:
             return '<%s%s>'%(hpath,os.path.splitext(fileName)[0]+'.'+hhext)
+        pass
+    if fileName=='cxy/chrono.idl':
+        return '<chrono>'
     return '<%s>'%(os.path.splitext(fileName)[0]+'.'+hhext)
 
 def gen_idlincludes(fileNames,hpath,hhext):
