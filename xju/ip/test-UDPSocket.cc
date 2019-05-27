@@ -12,12 +12,14 @@
 #include <iostream>
 #include <xju/assert.hh>
 #include <string>
-#include "xju/ip/v4/getHostAddresses.hh"
+#include <xju/ip/v4/getHostAddresses.hh>
 #include <chrono>
 #include <vector>
 #include <utility>
-#include "xju/next.hh"
-#include "xju/format.hh"
+#include <xju/next.hh>
+#include <xju/format.hh>
+#include <xju/socket.hh>
+#include <xju/steadyNow.hh>
 
 namespace xju
 {
@@ -81,13 +83,59 @@ void test1() {
         xju::assert_startswith(readableRepr(e),"Failed to receive udp datagram (up to 0 bytes) on port "+xju::format::str(p2)+" within ");
         xju::assert_endswith(readableRepr(e),std::string(" because\nbuffer too small."));
       }
-     
       return;
     }
     catch(xju::ip::PortInUse&){
     }
   }
   xju::assert_never_reached();//1000 ports in use?
+}
+
+class SmallBuffer : public UDPSocket
+{
+public:
+  SmallBuffer() throw(xju::Exception)
+  {
+    int i=48000;
+    xju::syscall(xju::setsockopt,XJU_TRACED)(
+      fileDescriptor(), SOL_SOCKET, SO_RCVBUF, &i, sizeof i);
+  }
+};
+void test2()
+{
+  //drops
+
+  std::string const fred(48000,'a');
+        
+  UDPSocket s1;
+  SmallBuffer s2;
+  xju::ip::v4::Address localhost(
+    xju::ip::v4::getHostAddresses(xju::HostName("localhost"))[0]);
+  s1.sendTo(localhost,s2.port(),fred.c_str(),fred.size(),xju::steadyNow());
+  s1.sendTo(localhost,s2.port(),fred.c_str(),fred.size(),xju::steadyNow());
+  s1.sendTo(localhost,s2.port(),fred.c_str(),fred.size(),xju::steadyNow());
+
+  std::vector<char> r(48000,0);
+  {
+    auto const rr(
+      s2.receive(r.data(),r.size(),
+                 std::chrono::steady_clock::now()+std::chrono::seconds(1)));
+    xju::assert_equal(rr.second,48000);
+  }
+  {
+    auto const rr(
+      s2.receive(r.data(),r.size(),
+                 std::chrono::steady_clock::now()+std::chrono::seconds(1)));
+    xju::assert_equal(rr.second,48000);
+  }
+  s1.sendTo(localhost,s2.port(),fred.c_str(),fred.size(),xju::steadyNow());
+  {
+    auto const rr(
+      s2.receive(r.data(),r.size(),
+                 std::chrono::steady_clock::now()+std::chrono::seconds(1)));
+    xju::assert_equal(rr.second,48000);
+    xju::assert_not_equal(s2.drops_.load(),0);
+  }
 }
 
 }
@@ -100,6 +148,7 @@ int main(int argc, char* argv[])
 {
   unsigned int n(0);
   test1(), ++n;
+  test2(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }
