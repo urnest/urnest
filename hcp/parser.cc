@@ -2252,6 +2252,14 @@ PR function_initialiser() throw()
   return result;
 }
 
+PR post_result_type() noexcept
+{
+  static PR result(
+    anon("post result type",
+         parseLiteral("->")+eatWhite()+type_ref()));
+  return result;
+}
+
 PR function_proto() throw()
 {
   static PR result(
@@ -2261,6 +2269,7 @@ PR function_proto() throw()
        typed_function_proto()|
        untyped_function_proto())+
       function_post_qualifiers()+
+      (!parseLiteral("->")|post_result_type())+
       (!parseLiteral("=")|function_initialiser())));
   return result;
 }
