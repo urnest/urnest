@@ -1,6 +1,9 @@
-* test xju/linux/wtmp/LoginOutMonitor
+- xju::Mutex,Lock,Condition
+  x use c++ std::mutex, std::unique_lock<std::mutex>, std::condition_variable
+  - provide std-style wait_until, wait_for
+  - test wait_until(xju::steadyEternity) ...BROKEN
 
-x switch all deadlines to be steady_clock.
+- Mutex constexpr
 
 - what to do about operator<<(std::ostream& s,X) noexcept
   ... when s could throw?
@@ -12,7 +15,7 @@ x switch all deadlines to be steady_clock.
                            std::string const& indent="\t") noexcept;
 
 - xju::test:
-  - top-side
+  x top-side
   - stub generator
   
 snmp/README.txt stuff
@@ -67,7 +70,12 @@ io::Output
   / TCPSocket : IStream,OStream
   x UDPSocket
   - TLSSocket
-    - use pipe+TCPSocket+thread to "run"
+    - use pipe+TCPSocket+thread to "run"?
+
+  x udp DSCP via IP_TOS option (per packet)
+  x udp receieve drops via SO_RXQ_OVFL socket option (see socket(7)),
+    provide read-only counter
+  
   - add ipv6 support
   - maybe an abstract class hierarchy
       Socket
