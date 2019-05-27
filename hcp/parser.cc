@@ -1897,12 +1897,22 @@ PR built_in_type_name() throw()
   return result;
 }
 
+PR decltype_() throw()
+{
+  static PR result(
+    parseLiteral("decltype")+
+    eatWhite()+
+    bracketed());
+  return result;
+}
+
 PR type_name() throw()
 {
   static PR result(
     anon(
       "type name",
       built_in_type_name()|
+      decltype_()|
       scoped_name()));
   return result;
 }
