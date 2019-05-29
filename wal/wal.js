@@ -226,7 +226,7 @@
   wal.queryParams=function(url){
     var result={};
     url=url||window.location.search;
-    if (!url.includes('?')){
+    if (url.indexOf('?')==-1){
       return result;
     }
     wal.each(url.split('?')[1].split('&'),function(i,p){
