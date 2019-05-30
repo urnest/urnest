@@ -91,7 +91,7 @@ Oid operator+(Oid const& a, Oid const& b) throw()
 
 bool Oid::contains(Oid const& y) const throw()
 {
-  return (components_.size()<y.components_.size()) &&
+  return (components_.size()<=y.components_.size()) &&
     (std::mismatch(components_.begin(),components_.end(),
                    y.components_.begin()).first==components_.end());
 }
