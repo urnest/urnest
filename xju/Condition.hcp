@@ -106,6 +106,12 @@ public:
     assert_equal(l.holds(_guard), true);
     _impl.wait_until(l.l_,timeout);
   }
+  void wait(Lock& l,
+            const std::chrono::system_clock::time_point& timeout) throw()
+  {
+    assert_equal(l.holds(_guard), true);
+    _impl.wait_until(l.l_,timeout);
+  }
   
   
   ~Condition() throw()
