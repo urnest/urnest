@@ -37,7 +37,7 @@ public:
   {
     return components_;
   }
-  // y is longer than *this and *this is a prefix of y
+  // *this is a prefix of y or is y
   bool contains(Oid const& y) const throw();
   
 private:
