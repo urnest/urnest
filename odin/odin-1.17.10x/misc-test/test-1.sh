@@ -1,5 +1,7 @@
 #!/bin/sh
 
+#./CLEAN && rm -rf ODINBOOT && rm -rf ~/odin-dev-inst && mkdir ~/odin-dev-inst && ./INSTALL ~/odin-dev-inst
+
 set -x &&
 cd $(dirname "$0") &&
 pwd &&
