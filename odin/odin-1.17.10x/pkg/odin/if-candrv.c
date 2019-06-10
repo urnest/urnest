@@ -623,7 +623,15 @@ Nod_PrmFHdr(
 	  ((tp_LocHdr)Str_PosInt(Sym_Str(Nod_Sym(RootNod))));
 	 break; }/*case*/;
       case WORD: {
-	 FilHdr = HostFN_FilHdr(Sym_Str(Nod_Sym(RootNod)));
+         tp_Str w = Sym_Str(Nod_Sym(RootNod));
+         if (strcmp(w,"Odinfile")==0){
+           /* so that e.g. Odinfile:targets_ptr and .:targets_ptr
+           ** are the same file (otherwise we get confusion when
+           ** e.g. nesting virtual directories)
+           */
+           w = (tp_Str)".";
+         };
+	 FilHdr = HostFN_FilHdr(w);
 	 break; }/*case*/;
       case ABSFIL: {
 	 Key = Sym_Str(Nod_Sym(Nod_Son(1, RootNod)));

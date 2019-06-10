@@ -1,0 +1,304 @@
+zzz==<<
+zzz-contents
+
+%xdir==%x.virdir_spec:vir_dir
+
+%x.virdir_spec==<<
+%x==y
+%z==./Odinfile%zdir
+
+%zdir==%z.virdir_spec:vir_dir
+
+%z.virdir_spec==<<
+%a==()+cmd=echo 'fred':stdout
+
+
+%q1dir==%q1.virdir_spec:vir_dir
+
+%q1.virdir_spec==<<
+%Odinfile==./Odinfile%q2
+
+%q2==<<
+%q3==()+cmd=echo 'q3':stdout
+
+%d1==()+cmd=(%d1.sh):output
+
+%d1.sh == ! <<
+#!/bin/sh
+echo "%d3==()+cmd=echo 'd3':stdout" > Odinfile
+
+
+# ODINVERIFYLEVEL=0 odin maxbuilds=4 "Odinfile%x.virdir_spec:vir_dir:filename>"
+# /home/xju/tmp/oc52-2/xjutv/FILES/a/x.virdir_spec.244624.vir_dir
+
+# should be same file as...
+
+#ODINVERIFYLEVEL=0 odin maxbuilds=4 "%x.virdir_spec:vir_dir:filename>"
+#/home/xju/tmp/oc52-2/xjutv/FILES/a/x.virdir_spec.241162.vir_dir
+
+#... and same as:
+
+#-*- mode: compilation; default-directory: "~/tmp/" -*-
+#Compilation started at Sat Dec 15 20:08:08
+#ODINVERIFYLEVEL=0 odin maxbuilds=4 "tmp%x.virdir_spec:vir_dir:filename>"
+#/home/xju/tmp/oc52-2/xjutv/FILES/a/x.virdir_spec.247469.vir_dir
+
+#... and same as:
+
+#-*- mode: compilation; default-directory: "~/tmp/" -*-
+#Compilation started at Sat Dec 15 20:09:09
+#
+#ODINVERIFYLEVEL=0 odin maxbuilds=4 "tmp/Odinfile%x.virdir_spec:vir_dir:filename>"
+#/home/xju/tmp/oc52-2/xjutv/FILES/b/x.virdir_spec.249858.vir_dir
+
+# ...?
+
+# note:
+
+#-*- mode: compilation; default-directory: "~/tmp/to/" -*-
+#Compilation started at Sat Dec 15 20:18:03
+#
+#ODINVERIFYLEVEL=0 odin maxbuilds=4 "Odinfile%x.virdir_spec:filename>"
+#/home/xju/tmp/oc52-2/xjutv/FILES/a/x.virdir_spec.240089.FILE
+
+#-*- mode: compilation; default-directory: "~/tmp/to/" -*-
+#Compilation started at Sat Dec 15 20:18:41
+#
+#ODINVERIFYLEVEL=0 odin maxbuilds=4 "%x.virdir_spec:filename>"
+#/home/xju/tmp/oc52-2/xjutv/FILES/a/x.virdir_spec.240089.FILE
+
+# whereas:
+
+
+#-*- mode: compilation; default-directory: "~/tmp/to/" -*-
+#Compilation started at Sat Dec 15 20:11:08
+#
+#ODINVERIFYLEVEL=0 odin maxbuilds=4 "Odinfile%y:filename>"
+#/home/xju/tmp/to/y
+
+#-*- mode: compilation; default-directory: "~/tmp/" -*-
+#Compilation started at Sat Dec 15 20:12:59
+#
+#ODINVERIFYLEVEL=0 odin maxbuilds=4 "to%y:filename>"
+#/home/xju/tmp/to/y
+
+%y==y
+
+%notes==<<EOF
+
+# so must be in the :vir_dir derivation? Trace through that, what is its
+# input?
+
+#-*- mode: compilation; default-directory: "~/tmp/to/" -*-
+#Compilation started at Sat Dec 15 20:21:14
+#
+#ODINVERIFYLEVEL=0 odin maxbuilds=4 "Odinfile%x.virdir_spec:vir_dir!:inputs"
+#244360	- /home/xju/tmp/to/Odinfile%x.virdir_spec :odin*vir_tgt.list
+#--- <Odinfile %x.virdir_spec :vir_dir> is not up-to-date ---
+
+#-*- mode: compilation; default-directory: "~/tmp/to/" -*-
+#Compilation started at Sat Dec 15 20:21:57
+#
+#ODINVERIFYLEVEL=0 odin maxbuilds=4 "%x.virdir_spec:vir_dir!:inputs"
+#240898	- /home/xju/tmp/to%x.virdir_spec :odin*vir_tgt.list
+#--- <%x.virdir_spec :vir_dir> is not up-to-date ---
+
+# but they should be the same!
+
+# need to trace %x.virdir_spec :vir_tgt.list
+# v             Odinfile%x.virdir_spec: vir_tgt.list
+
+
+
+# in gdb we seem to stray in Local_OdinExpr_ID:
+# (gdb) p OdinExpr
+# $12 = "Odinfile %x.virdir_spec :vir_dir
+# 585	   Local_OdinExpr_ID(&IDPtr, OdinExpr);
+# ...
+# (gdb) p IDPtr
+# $13 = 5734
+#
+# ... v:
+# (gdb) p OdinExpr
+# $14 = "%x.virdir_spec :vir_dir
+#(gdb) n
+#585	   Local_OdinExpr_ID(&IDPtr, OdinExpr);
+#(gdb) 
+#586	   IPC_Write_Int(IPC_AbortPtr, 1);
+#(gdb) p IDPtr
+#$15 = 7071
+#
+# in Local_OdinExpr_ID
+# 106	   FilHdr = OdinExpr_FilHdr(OdinExpr);
+# (gdb) p (*(*RootNod).Sym)
+# $23 = {Str = 0x15dd280 "Odinfile", Att = 0, Next = 0x0}
+# (gdb) p *FilHdr
+# $26 = {LocHdr = 3609
+
+IPC_Do_Msg
+xju@xjutv:~/to$ ODINVERIFYLEVEL=0 odin maxbuilds=4 'Odinfile:vir_tgt.list:id>'
+4661
+xju@xjutv:~/to$ ODINVERIFYLEVEL=0 odin maxbuilds=4 '.:vir_tgt.list:id>'
+5998
+
+- client calls Do_Alias_Msg twice, once with $ODIN and once with $HOME
+  - this populates the file tree up to /?
+- then Get_Alias_Msg
+  - I think the idea of those two steps is to resolve any soft links
+    affecting $ODIN i.e. map cwd to real path? not sure
+- then Set_Keep_Going, Set_CWD_Msg, Set_MaxJobs_Msg
+- IPC_Get_Msg does the work I think:
+  - reads our target: . :vir_tgt.list :id
+  - Local_Get_Odinfile (if-candrv.c)
+    parses expr
+    Root
+     |
+     (23) . - (14) ----------------- (14)
+               |                       |
+	      (23)vir_tgt.list     (23)id
+
+      23=WORD
+      14=DRVOPR (if-candrv.c Apply_OprNods)
+    ,,, set up a server action then unwind to IPC_Get_Cmds and call
+    ServerAction() (if-client.c)
+      Do_ToDo (if-client.c)
+        Do_1ToDo
+	... seemed to miss something in there
+	 Nod_PrmFHdr from Local_Get_Odinfile? yes!
+	   - gets FilHdr of . which turns out to be to (directory of .)
+	            (via FilHdr = HostFN_FilHdr(Sym_Str(Nod_Sym(RootNod)));)
+	   - Apply_OprNods
+	     Do_Deriv to derive . to :targets_ptr
+	       Get_DrvPth to get steps
+	         . is type FILE
+		 :targets_ptr is itself
+		 -> a list of edges, just one in this case
+	       Do_DrvPth
+	         DrvFilPrm
+		   Extend_FilHdr
+		     - finds the derived file, extending the tree if nec.
+		     5       breakpoint     keep y   0x0000000000414da3 in Extend_FilHdr at if-fhnew.c:147
+                     Insert_FilHdr
+		       ... it's going to make the entry with id ".:targets_ptr"
+		       which is already no good (:targets_ptr hasn't got
+		       anywhere near it yet)
+		       FilHdr knows whether it is a directory or file?
+		         . has:
+			 (gdb) p *BaseFilHdr
+$9 = {LocHdr = 3609, NextHash = 0x0, HdrInf = {LocHdr = 3609, Father = 863, Brother = 1069, Son = 0, FKind = 8, IFilTyp = 11, LocIdent = 1063, LocPrm = 1, LocInp = 3809, DataNum = 0, LocElm = 0, OldLocElm = 0, TgtValLocElm = 0, InpLink = 0, ElmLink = 0, Status = 1, ElmNameStatus = 1, ElmStatus = 1, ErrStatusWord = 0, SysModTime = 0, ModDate = 0, ElmNameModDate = 0, ElmModDate = 0, ConfirmDate = 0, ElmNameConfirmDate = 0, ElmConfirmDate = 0, VerifyDate = 0, ElmNameVerifyDate = 0, ElmVerifyDate = 0, Size = -1, OrigLocHdr = 0, OrigModDate = 0, AliasLocHdr = 0}, FilTyp = 0x1f5a0d0, FilPrm = 0x1faaac0, Ident = 0x1fab140 "to", Cnt = 1, PrevFree = 0x1fab2f0, NextFree = 0x677020 <_UsedFilHdr>, Modified = 1, NextMod = 0x0, Flag = 0, AnyOKDepth = 0, ElmDepth = 0, ElmTag = 0, SCC = 0x0, DepStatus = 1, DepModDate = 0, PndFlag = 0, ElmNamePndFlag = 0, ElmPndFlag = 0}
+                         Odinfile has:
+			 (gdb) p *BaseFilHdr
+$13 = {LocHdr = 4137, NextHash = 0x0, HdrInf = {LocHdr = 4137, Father = 863, Brother = 3609, Son = 0, FKind = 1, IFilTyp = 2, LocIdent = 4337, LocPrm = 1, LocInp = 0, DataNum = 0, LocElm = 0, OldLocElm = 0, TgtValLocElm = 4613, InpLink = 0, ElmLink = 0, Status = 12, ElmNameStatus = 1, ElmStatus = 1, ErrStatusWord = 0, SysModTime = 1559902314, ModDate = 16, ElmNameModDate = 0, ElmModDate = 0, ConfirmDate = 0, ElmNameConfirmDate = 0, ElmConfirmDate = 0, VerifyDate = 16, ElmNameVerifyDate = 0, ElmVerifyDate = 0, Size = -1, OrigLocHdr = 0, OrigModDate = 0, AliasLocHdr = 0}, FilTyp = 0x1f59c50, FilPrm = 0x1faaac0, Ident = 0x1fb2080 "Odinfile", Cnt = 1, PrevFree = 0x1fab2f0, NextFree = 0x1faafd0, Modified = 1, NextMod = 0x0, Flag = 0, AnyOKDepth = 0, ElmDepth = 0, ElmTag = 0, SCC = 0x0, DepStatus = 1, DepModDate = 0, PndFlag = 0, ElmNamePndFlag = 0, ElmPndFlag = 0}
+                         they are different
+         go back to 
+            HostFN_FilHdr(Sym_Str(Nod_Sym(RootNod)))
+	      Do_Keys(cwd,"Odinfile")
+	        Do_Key(cwd,"Odinfile")
+		  handles "." directly
+
+     .. turns out if-candrv.c line 545 has drvtyp-specific code so
+        can put in there, like
+	          else if (FilTyp == TargetsPtrFilTyp &&
+                           (FilHdr->HdrInf.FKind==FK_SrcDir ||
+			   (FilHdr->HdrInf.FKind==FK_SymLinkDir ||
+			   REVIIST: others?
+			     - derived dir
+			     - virdir) {
+                     /* so that  */
+                     /*   ".:targets_ptr:id" and  */
+                     /*    "Odinfile:targets_ptr:id" */
+                     /* end up the same, hopefully avoiding virdir strife */
+                    FilHdr = Do_Key(FilHdr,"Odinfile");
+                  }
+	... but that won't work (consider x:targets_ptr where x is actually
+	a file), I think also src%x:targets_ptr ... we cannot know until
+	we've updated %x that it is a directory? Or can we:
+	- if it is a derived file, we know its type
+	- if it is not derived we can stat it already? If it does not exist
+	  then we don't really care which way we go?
+        ... so what are FKind, IFilTyp?
+        ... another way is to detect Odinfile literal and turn that into
+	containing directory, perhaps that is easier since we know Odinfile
+	is a file, then surely we can get the directory?
+
+    is Nod_PrmFHdr only getting the starting point? compare
+       odin '%d1'
+         case SEGOPR:
+	   FilHdr = Get_BaseVTgtFilHdr(Top_ContextFilHdr());
+	 ... FilHdr becomes "to"
+       odin 'to%d1'
+         case WORD: {
+  	   FilHdr = HostFN_FilHdr(Sym_Str(Nod_Sym(RootNod)));
+         ... FilHdr becomes "to"
+       odin 'to/.%d1'
+         case WORD: {
+	   FilHdr = HostFN_FilHdr(Sym_Str(Nod_Sym(RootNod)));
+         ... FilHdr becomes "to"
+       odin '.%d1'
+         case WORD: {
+	   FilHdr = HostFN_FilHdr(Sym_Str(Nod_Sym(RootNod)));
+         ... FilHdr becomes "to"
+       odin 'to/Odinfile%d1'
+         case WORD: {
+	   FilHdr = HostFN_FilHdr(Sym_Str(Nod_Sym(RootNod)));
+         ... FilHdr becomes "to"
+       odin 'Odinfile%d1'
+         case WORD: {
+	   FilHdr = HostFN_FilHdr(Sym_Str(Nod_Sym(RootNod)));
+         ... FilHdr becomes "Odinfile"
+	 *** we can easily make that '%d1' above? Except it broke
+	 install from scratch, so trace that using:
+	   tps_Str OdinExpr;
+           OC_Unparse(OdinExpr, Root);
+           printf("***** %s",OdinExpr);
+	   
+   then compare what subsequently happens (in Apply_OprNods) with:
+       odin 'to%d1' (FilHdr is "to/")
+	 case SEGOPR: {
+	    FilHdr = Do_VTgt(FilHdr, Sym_Str(Nod_Sym(Nod_Son(1, OprNod))));
+	    FilPrm = RootFilPrm;
+       odin 'to/Odinfile%d1' (FilHdr is "to/")
+	 case ELMOPR: {
+	    ElmNod = Nod_Son(1, OprNod);
+	    FilPrm = RootFilPrm;
+	    FilHdr = Do_Key(FilHdr, "");
+	    FilHdr = Do_Keys(FilHdr, Sym_Str(Nod_Sym(ElmNod)));
+       *** make Do_Keys skip Odinfile so it becomes like 'to%d1'
+       ... that would break 'to/Odinfile>' but we can fix that because
+           'to>' has no meaning currently
+       ... would it break 'to/zzz' ? How does that work anyway? How does it
+           do its dependency on to/Odinfile?
+   
+virdir:
+
+  ODINVERIFYLEVEL=0 odin maxbuilds=4 '%q1dir%q3>'
+  ** Summary of error messages for /home/xju/to%q1dir%q3
+  --- </home/xju/to%q1.virdir_spec :odin*vir_dir :odin*targets> generated errors ---
+  "0 «-ü", line 1: Unexpected EOF
+  --- </home/xju/to%q1dir%q3> does not exist ---
+  
+  ...v:
+
+  -*- mode: compilation; default-directory: "~/to/" -*-
+  Compilation started at Sat Jun  8 17:44:16
+  
+  ODINVERIFYLEVEL=0 odin maxbuilds=4 '%q1dir/Odinfile%q3>'
+  q3
+  
+derived dir:
+  ODINVERIFYLEVEL=0 odin maxbuilds=4 "%d1%d3>"
+  ** Summary of error messages for /home/xju/to%d1%d3
+  --- <() +cmd=(/home/xju/to%d1.sh) :run*output :odin*targets> generated errors ---
+  "0 «-ü", line 1: Unexpected EOF
+  --- </home/xju/to%d1%d3> does not exist ---
+
+  ...v:
+
+  -*- mode: compilation; default-directory: "~/to/" -*-
+  Compilation started at Sat Jun  8 18:16:33
+  
+  ODINVERIFYLEVEL=0 odin maxbuilds=4 "%d1/Odinfile%d3>"
+  echo d3
+  d3
+
+EOF
