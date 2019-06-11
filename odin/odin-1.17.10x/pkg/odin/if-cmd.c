@@ -290,8 +290,17 @@ Display(
    if (!Exists(FileName)) {
       goto done; }/*if*/;
    if (IsDirectory_FileName(FileName)) {
-      SystemError("\"%s\": cannot display a directory.\n", OdinExpr);
-      goto done; }/*if*/;
+      /* we have translated Odinfile to its parent directory so
+         simulate x/Odinfile> if such a file exists */
+      tps_FileName OdinfileName;
+      strcpy(OdinfileName,FileName);
+      strcat(OdinfileName,"/Odinfile");
+      if (!Exists(OdinfileName)){
+        SystemError("\"%s\": cannot display an Odinfile-less directory.\n", OdinExpr);
+        goto done;
+      }
+      strcpy(FileName,OdinfileName);
+   }/*if*/;
    InFD = FileName_RFilDsc(FileName, FALSE);
    if (InFD == ERROR) {
       if (Exists(FileName)) {
