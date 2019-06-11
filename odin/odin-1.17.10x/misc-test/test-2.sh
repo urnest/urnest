@@ -20,6 +20,14 @@ step=$((step+1)) &&
 $d/d2/Odinfile
 $d/d2/X" &&
   echo "Y==()+cmd=echo 'Y':stdout" > d2/Odinfile &&
+  if odin 'd2!:test'
+  then
+    FAIL="directory should depend on contained Odinfile if it exists" && false
+  fi &&    
+  if odin 'd2/Odinfile!:test'
+  then
+    false
+  fi &&
   l=$(odin 'd2:list:ls>') &&
   test "$l" = "\
 $d/d2/Odinfile
