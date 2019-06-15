@@ -1,0 +1,84 @@
+odin 'misc-test/d2!:test'
+
+         OdinExpr_ID_Msg(IPC_AbortPtr);
+ (gdb) p OdinExpr
+$1 = "misc-test/d2
+
+         Test_Msg(IPC_AbortPtr);
+
+if-fhacc.c: Update_SrcFilHdr(FilHdr, FALSE); }/*if*/;
+(gdb) p FilHdr->Ident
+$5 = (tp_Str) 0x15fc030 "d2"
+(gdb) p InitOnly
+$6 = 0
+            :
+            - does Update_SrcFilHdr on all parent directories
+              then the file itself; we have broken it by
+              turning Odinfile into "."; need to fix it by
+              stating dir+Odinfile if we're stating dir (but it is not
+              necessary to do that for parents since odin cannot
+              create directories (perhaps it could?)
+
+next message:
+         Get_Status_Msg(IPC_AbortPtr);
+(gdb) p ID
+$9 = 4457 (d2)
+
+Local_Get_Status(
+
+       ... need to know what the values of Status and ElmStatus mean
+
+initially after cache reset, first time "build" of source file:
+ Status = 12, ElmNameStatus = 1, ElmStatus = 1, ErrStatusWord = 0, SysModTime = 1560245895, ModDate = 19, ElmNameModDate = 0, ElmModDate = 0, ConfirmDate = 0, ElmNameConfirmDate = 0, ElmConfirmDate = 0, VerifyDate = 19, ElmNameVerifyDate = 0, ElmVerifyDate = 0, Size = -1, OrigLocHdr = 0, OrigModDate = 0
+
+rebuild without change:
+ Status = 12, ElmNameStatus = 1, ElmStatus = 12, ErrStatusWord = 0, SysModTime = 1560245895, ModDate = 19, ElmNameModDate = 0, ElmModDate = 0, ConfirmDate = 0, ElmNameConfirmDate = 0, ElmConfirmDate = 0, VerifyDate = 24, ElmNameVerifyDate = 0, ElmVerifyDate = 24, 
+
+
+test-1.sh again:
+
+Local_Test_All
+   CurrentDate += 1;
+   VerifyDate = CurrentDate;
+
+Use_PrmFHdr seems to have updated date fields:
+
+(gdb) p CurrentDate
+$3 = 40
+Status = 12, ElmNameStatus = 1, ElmStatus = 1, ErrStatusWord = 0, SysModTime = 1560244700, ModDate = 40, ElmNameModDate = 0, ElmModDate = 0, ConfirmDate = 0, ElmNameConfirmDate = 0, ElmConfirmDate = 0, VerifyDate = 40, ElmNameVerifyDate = 0, ElmVerifyDate = 0, Size = -1
+
+then Push_AllReqs updates more:
+
+CurrentDate += 1;
+
+Status = 12, ElmNameStatus = 1, ElmStatus = 12, ErrStatusWord = 0, SysModTime = 1560244700, ModDate = 40, ElmNameModDate = 0, ElmModDate = 0, ConfirmDate = 0, ElmNameConfirmDate = 0, ElmConfirmDate = 0, VerifyDate = 41, ElmNameVerifyDate = 0, ElmVerifyDate = 41, Size = -1
+
+Use_PrmFHdr(&FilHdr, &FilPrm, PrmFHdr);
+(gdb) p PrmFHdr
+$7 = (tp_PrmFHdr) 0x21ff1d0
+(gdb) p *PrmFHdr
+$8 = {FilHdr = 0x21f8b50, FilPrm = 0x21f6460, Next = 0x0, InUse = 1}
+(gdb) p *PrmFHdr->FilHdr
+
+has not updated dates etc:
+
+Status = 12, ElmNameStatus = 1, ElmStatus = 12, ErrStatusWord = 0, SysModTime = 1560244700, ModDate = 40, ElmNameModDate = 0, ElmModDate = 0, ConfirmDate = 0, ElmNameConfirmDate = 0, ElmConfirmDate = 0, VerifyDate = 41, ElmNameVerifyDate = 0, ElmVerifyDate = 41, Size = -1
+
+Use_PrmFHdr did not update either
+
+Push_AllReqs does:
+
+Status = 12, ElmNameStatus = 1, ElmStatus = 12, ErrStatusWord = 0, SysModTime = 1560335079, ModDate = 47, ElmNameModDate = 0, ElmModDate = 0, ConfirmDate = 0, ElmNameConfirmDate = 0, ElmConfirmDate = 0, VerifyDate = 47, ElmNameVerifyDate = 0, ElmVerifyDate = 47, Size = -1
+
+What does Push_AllReqs do?
+for test-1.sh:
+  while not up-to-date:
+  ... GetReqs
+     ... GetFile
+         ... Update_SrcFilHdr
+                Update_SrcFilHdr(dir(test-1.sh))
+ 	        FilHdr_DataFileName(FileName, FilHdr);
+
+	        Get_FileInfo(&SKind, &SysModTime, FileName);
+  	          if (HdrInf->SysModTime != SysModTime || HdrInf->ModDate == 0) {
+	          Changed = TRUE; }/*if*/;

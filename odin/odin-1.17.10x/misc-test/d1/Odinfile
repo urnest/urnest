@@ -28,6 +28,8 @@ zzz-contents
 echo "%d3==()+cmd=echo 'd3':stdout" > Odinfile
 
 
+aaa==(zzz)+cmd=cat :stdout
+
 # ODINVERIFYLEVEL=0 odin maxbuilds=4 "Odinfile%x.virdir_spec:vir_dir:filename>"
 # /home/xju/tmp/oc52-2/xjutv/FILES/a/x.virdir_spec.244624.vir_dir
 
