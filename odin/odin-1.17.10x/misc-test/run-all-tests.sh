@@ -12,5 +12,6 @@ export PATH="$d/scratch/bin:$PATH" &&
 
 $d/test-1.sh &&
 $d/test-2.sh &&
+$d/test-3.sh &&
 
 echo PASS
