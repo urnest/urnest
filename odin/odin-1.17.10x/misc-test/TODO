@@ -13,11 +13,7 @@ $5 = (tp_Str) 0x15fc030 "d2"
 $6 = 0
             :
             - does Update_SrcFilHdr on all parent directories
-              then the file itself; we have broken it by
-              turning Odinfile into "."; need to fix it by
-              stating dir+Odinfile if we're stating dir (but it is not
-              necessary to do that for parents since odin cannot
-              create directories (perhaps it could?)
+              then the file itself
 
 next message:
          Get_Status_Msg(IPC_AbortPtr);

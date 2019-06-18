@@ -561,6 +561,157 @@ FilHdr_Ident(
    }/*FilHdr_Ident*/
 
 
+/* Update FilHdr which is a parent directory of an interesting
+ * source file.
+ *
+ * - Note it is not necessary to stat Odinfile in this directory because
+ *   odin cannot create i.e. derive source directories. That is why
+ *   this is a separate function and not a call to Update_SrcFilHdr.
+ * - REVISIT: since we know FilHdr is a directory we can remove code for
+ *   other cases. (I don't think a file or directory's parent can be
+ *   a soft-link?)
+ */
+void
+Update_SrcParentDirFilHdr(
+   GMC_ARG(tp_FilHdr, FilHdr),
+   GMC_ARG(boolean, InitOnly)
+   )
+   GMC_DCL(tp_FilHdr, FilHdr)
+   GMC_DCL(boolean, InitOnly)
+{
+   tp_Date OldModDate;
+   boolean Changed;
+   tp_SKind SKind;
+   tp_FKind FKind;
+   tp_HdrInf HdrInf;
+   tp_Status Status;
+   tps_FileName FileName, SymLinkFileName;
+   int SysModTime;
+   tp_FilHdr DirFilHdr, SymLinkFH;
+   tp_FilElm FilElm;
+   tp_LocHdr SymLocHdr;
+
+
+   FORBIDDEN(FilHdr == ERROR);
+   FORBIDDEN(!IsSource(FilHdr));
+   HdrInf = &(FilHdr->HdrInf);
+
+   if (FilHdr == RootFilHdr) {
+      Set_Status(FilHdr, STAT_OK);
+      return; }/*if*/;
+
+   if (FilHdr_Flag(FilHdr, FLAG_SymLink)) {
+      Set_Status(FilHdr, STAT_Circular);
+      return; }/*if*/;
+   Set_Flag(FilHdr, FLAG_SymLink);
+
+   OldModDate = HdrInf->ModDate;
+   IsAny_ReadyServerAction = TRUE;
+
+   DirFilHdr = FilHdr_Father(Copy_FilHdr(FilHdr));
+   if (!IsSrcUpToDate(DirFilHdr)) {
+      Update_SrcParentDirFilHdr(DirFilHdr, InitOnly); }/*if*/;
+
+   Changed = FALSE;
+   SymLinkFH = NIL;
+   /*select*/{
+      if (IsSymLink(DirFilHdr)) {
+	 SymLinkFH = Extend_FilHdr
+	    (Deref_SymLink(Copy_FilHdr(DirFilHdr)), FK_SrcReg,
+	     FilHdr->FilTyp, RootFilPrm, FilHdr->Ident);
+      }else{
+	 FilHdr_DataFileName(FileName, FilHdr);
+	 Get_FileInfo(&SKind, &SysModTime, FileName);
+	 if (HdrInf->SysModTime != SysModTime || HdrInf->ModDate == 0) {
+	    Changed = TRUE; }/*if*/;
+	 switch (SKind) {
+	    case SK_NoFile: case SK_Reg: case SK_Exec: case SK_Special: {
+	       FKind = (IsBound(FilHdr) ? FK_BoundSrc : FK_SrcReg);
+	       Status = ((SKind == SK_NoFile) ? STAT_NoFile : STAT_OK);
+	       break;}/*case*/;
+	    case SK_Dir: {
+	       FKind = FK_SrcDir;
+	       Status = STAT_OK; break;}/*case*/;
+	    case SK_SymLink: {
+	       Push_ContextFilHdr(Copy_FilHdr(DirFilHdr));
+	       FileName_SymLinkFileName(SymLinkFileName, FileName);
+	       SymLinkFH = HostFN_FilHdr(SymLinkFileName);
+	       /*select*/{
+		  if (SymLinkFH == ERROR) {
+		     FKind = FK_SrcReg;
+		     Status = STAT_NoFile;
+		  }else if (!IsSource(SymLinkFH)) {
+		     SystemError("Symbolic link into cache ignored: %s\n",
+				 SymLinkFileName);
+		     Ret_FilHdr(SymLinkFH);
+		     SymLinkFH = ERROR;
+		     FKind = FK_SrcReg;
+		     Status = STAT_NoFile; };}/*select*/;
+	       Pop_ContextFilHdr(); break;}/*case*/;
+	    default: {
+	       FATALERROR("Unexpected SKind"); };}/*switch*/; };}/*select*/;
+
+   if (SymLinkFH != NIL) {
+      if (!IsSrcUpToDate(SymLinkFH)) {
+	 Update_SrcFilHdr(SymLinkFH, InitOnly); }/*if*/;
+      SymLinkFH = Deref_SymLink(SymLinkFH);
+      if (!IsSrcUpToDate(SymLinkFH)) {
+	 Update_SrcFilHdr(SymLinkFH, InitOnly); }/*if*/;
+      SymLinkFH = Deref_SymLink(SymLinkFH);
+      if (HdrInf->ModDate < SymLinkFH->HdrInf.ModDate) {
+	 Changed = TRUE; }/*if*/;
+
+      FilElm = LocElm_FilElm(HdrInf->LocElm);
+      SymLocHdr = FilElm_LocHdr(FilElm);
+      Ret_FilElm(FilElm);
+      if (SymLocHdr != SymLinkFH->LocHdr) {
+	 Set_LocElm(FilHdr, Make_LocElm(SymLinkFH, RootFilPrm, FilHdr));
+	 Changed = TRUE; }/*if*/;
+
+      if (HdrInf->AliasLocHdr != NIL) {
+	 if (SymLinkFH->HdrInf.AliasLocHdr == NIL) {
+	    Set_AliasLocHdr(SymLinkFH, HdrInf->AliasLocHdr); }/*if*/;
+	 Set_AliasLocHdr(FilHdr, (tp_LocHdr)NIL); }/*if*/;
+
+      FKind = (IsBound(FilHdr) ? FK_BoundSymLink :
+	       (IsDir(SymLinkFH) ? FK_SymLinkDir : FK_SymLinkReg));
+      Status = SymLinkFH->HdrInf.Status;
+      Ret_FilHdr(SymLinkFH); }/*if*/;
+
+   if (HdrInf->FKind == FK_SrcDir && FKind == FK_SymLinkDir) {
+      FilHdr_Error("<%s> has changed from a directory to a symbolic link.\n",
+		   FilHdr);
+      SystemError("The cache should be reset with the -r option.\n");
+      FKind = FK_SrcDir; }/*if*/;
+
+   if (Changed || HdrInf->FKind != FKind) {
+      Set_ModDate(FilHdr);
+      HdrInf->SysModTime = SysModTime;
+      HdrInf->FKind = FKind;
+      if (!IsSymLink(FilHdr)) {
+	 Set_LocElm(FilHdr, (tp_LocElm)NIL); }/*if*/; }/*if*/;
+
+   /*select*/{
+      if (IsDir(FilHdr)) {
+	 Set_TgtValLocElm(FilHdr, (tp_LocElm)NIL);
+      }else if (FilHdr_TgtValLocElm(FilHdr) == NIL) {
+	 Set_DfltTgtValLocElm(FilHdr); };}/*select*/;
+
+   if (OldModDate != 0
+       && (HdrInf->ModDate != OldModDate
+	   || (HdrInf->Status != STAT_Unknown && HdrInf->Status != Status))) {
+      /*select*/{
+	 if (InitOnly) {
+	    Push_ToBroadcast(Copy_FilHdr(FilHdr));
+	 }else{
+	    Broadcast(FilHdr, STAT_Unknown);};}/*select*/; }/*if*/;
+
+   Ret_FilHdr(DirFilHdr);
+   Set_Status(FilHdr, Status);
+   Clr_Flag(FilHdr, FLAG_SymLink);
+   }/*Update_SrcFilHdr*/
+
+
 void
 Update_SrcFilHdr(
    GMC_ARG(tp_FilHdr, FilHdr),
@@ -600,7 +751,7 @@ Update_SrcFilHdr(
 
    DirFilHdr = FilHdr_Father(Copy_FilHdr(FilHdr));
    if (!IsSrcUpToDate(DirFilHdr)) {
-      Update_SrcFilHdr(DirFilHdr, InitOnly); }/*if*/;
+      Update_SrcParentDirFilHdr(DirFilHdr, InitOnly); }/*if*/;
 
    Changed = FALSE;
    SymLinkFH = NIL;
@@ -620,8 +771,16 @@ Update_SrcFilHdr(
 	       Status = ((SKind == SK_NoFile) ? STAT_NoFile : STAT_OK);
 	       break;}/*case*/;
 	    case SK_Dir: {
+               tps_FileName OdinfileName;
+               tp_FilHdr OdinfileFilHdr;
 	       FKind = FK_SrcDir;
-	       Status = STAT_OK; break;}/*case*/;
+	       Status = STAT_OK;
+               strncpy(OdinfileName,FileName,sizeof(OdinfileName));
+               FORBIDDEN(OdinfileName[sizeof(OdinfileName)-1]!=0);
+               OdinfileFilHdr=HostFN_FilHdr(OdinfileName);
+               Update_SrcFilHdr(OdinfileFilHdr,InitOnly);
+               Ret_FilHdr(OdinfileFilHdr);
+               break;}/*case*/;
 	    case SK_SymLink: {
 	       Push_ContextFilHdr(Copy_FilHdr(DirFilHdr));
 	       FileName_SymLinkFileName(SymLinkFileName, FileName);
