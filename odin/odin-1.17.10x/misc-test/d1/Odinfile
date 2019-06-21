@@ -30,60 +30,6 @@ echo "%d3==()+cmd=echo 'd3':stdout" > Odinfile
 
 aaa==(zzz)+cmd=cat :stdout
 
-# ODINVERIFYLEVEL=0 odin maxbuilds=4 "Odinfile%x.virdir_spec:vir_dir:filename>"
-# /home/xju/tmp/oc52-2/xjutv/FILES/a/x.virdir_spec.244624.vir_dir
-
-# should be same file as...
-
-#ODINVERIFYLEVEL=0 odin maxbuilds=4 "%x.virdir_spec:vir_dir:filename>"
-#/home/xju/tmp/oc52-2/xjutv/FILES/a/x.virdir_spec.241162.vir_dir
-
-#... and same as:
-
-#-*- mode: compilation; default-directory: "~/tmp/" -*-
-#Compilation started at Sat Dec 15 20:08:08
-#ODINVERIFYLEVEL=0 odin maxbuilds=4 "tmp%x.virdir_spec:vir_dir:filename>"
-#/home/xju/tmp/oc52-2/xjutv/FILES/a/x.virdir_spec.247469.vir_dir
-
-#... and same as:
-
-#-*- mode: compilation; default-directory: "~/tmp/" -*-
-#Compilation started at Sat Dec 15 20:09:09
-#
-#ODINVERIFYLEVEL=0 odin maxbuilds=4 "tmp/Odinfile%x.virdir_spec:vir_dir:filename>"
-#/home/xju/tmp/oc52-2/xjutv/FILES/b/x.virdir_spec.249858.vir_dir
-
-# ...?
-
-# note:
-
-#-*- mode: compilation; default-directory: "~/tmp/to/" -*-
-#Compilation started at Sat Dec 15 20:18:03
-#
-#ODINVERIFYLEVEL=0 odin maxbuilds=4 "Odinfile%x.virdir_spec:filename>"
-#/home/xju/tmp/oc52-2/xjutv/FILES/a/x.virdir_spec.240089.FILE
-
-#-*- mode: compilation; default-directory: "~/tmp/to/" -*-
-#Compilation started at Sat Dec 15 20:18:41
-#
-#ODINVERIFYLEVEL=0 odin maxbuilds=4 "%x.virdir_spec:filename>"
-#/home/xju/tmp/oc52-2/xjutv/FILES/a/x.virdir_spec.240089.FILE
-
-# whereas:
-
-
-#-*- mode: compilation; default-directory: "~/tmp/to/" -*-
-#Compilation started at Sat Dec 15 20:11:08
-#
-#ODINVERIFYLEVEL=0 odin maxbuilds=4 "Odinfile%y:filename>"
-#/home/xju/tmp/to/y
-
-#-*- mode: compilation; default-directory: "~/tmp/" -*-
-#Compilation started at Sat Dec 15 20:12:59
-#
-#ODINVERIFYLEVEL=0 odin maxbuilds=4 "to%y:filename>"
-#/home/xju/tmp/to/y
-
 %y==y
 
 %notes==<<EOF
