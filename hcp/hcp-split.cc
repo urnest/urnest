@@ -495,11 +495,13 @@ void genFunction(hcp_ast::FunctionDef const& x,
                    hcp_ast::isA_<hcp_ast::FunctionName>));
     xju::assert_not_equal(j, x.items().end());
     
-    std::vector<hcp_ast::IR>::const_iterator k(x.items().begin());
-    if ((*k)->isA<hcp_ast::FunctionQualifiers>()) {
-      k=xju::next(k);
-    }
-    c.copy(x.begin(), x.end());
+    auto const l(std::find_if(j,x.items().end(),
+                              hcp_ast::isA_<hcp_ast::FunctionImpl>));
+    xju::assert_not_equal(l,x.items().end());
+    c.copy(x.begin(),(*j)->begin());
+    c.copyExcluding<hcp_ast::VarInitialiser>(hcp_ast::IRs(j, l));
+    c.copy((*l)->begin(), x.end());
+    c << "\n";
   }
 }
 
