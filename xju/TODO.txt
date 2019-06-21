@@ -2,17 +2,13 @@
   x use c++ std::mutex, std::unique_lock<std::mutex>, std::condition_variable
   - provide std-style wait_until, wait_for
   - test wait_until(xju::steadyEternity) ...BROKEN
-
+    - fix is easy - explicit test for xju::steadyEternity
+    - same fix needed for io::select
+    
 - Mutex constexpr
 
 - what to do about operator<<(std::ostream& s,X) noexcept
   ... when s could throw?
-
-- xju::json
-  - asMap so do not have to know keys; update config-file-example
-  xju::json::format, something like
-    xju::Utf8String format(std::shared_ptr<Element const> const& x,
-                           std::string const& indent="\t") noexcept;
 
 - xju::test:
   x top-side

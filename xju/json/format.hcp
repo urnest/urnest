@@ -1,0 +1,47 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/assert.hh> //impl
+#include <xju/json/Element.hh>
+#include <xju/Utf8String.hh>
+#include <string> //impl
+#include <xju/parse.hh> //impl
+#include <sstream> //impl
+#include <xju/utf8/decodeCodePoint.hh> //impl
+#include <xju/utf8/encodeCodePoint.hh> //impl
+#include <xju/json/False.hh> //impl
+#include <xju/json/True.hh> //impl
+#include <xju/json/String.hh> //impl
+#include <xju/json/Number.hh> //impl
+#include <xju/json/Array.hh> //impl
+#include <xju/json/Object.hh> //impl
+#include <xju/json/Null.hh> //impl
+#include <xju/next.hh> //impl
+
+namespace xju
+{
+namespace json
+{
+
+// Format e as JSON.
+// - result is multi-line if indent.size()
+// - otherwise result is single line with no spacing at all
+xju::Utf8String format(
+  Element const& e,
+  xju::Utf8String const& indent=xju::Utf8String("\t")) noexcept
+{
+  std::ostringstream s;
+  e.formatAsUtf8(s,xju::Utf8String(""),xju::Utf8String(""),indent);
+  return xju::Utf8String(s.str());
+}
+
+}
+}

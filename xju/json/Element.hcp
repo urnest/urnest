@@ -16,6 +16,7 @@
 #include <map>
 #include <xju/Utf8String.hh>
 #include <xju/json/Null.hh> //impl
+#include <iosfwd>
 
 namespace xju
 {
@@ -24,11 +25,12 @@ namespace json
 
 // see corresponding header file for element subclasses:
 //
-//   Bool
+//   True
+//   False
 //   String
 //   Number
 //   Array
-//   Map
+//   Object
 //   Null
 //
 // ... though most applications might only need to use
@@ -202,13 +204,20 @@ public:
     }
   }
 
-  // human readable description of element, no new-lines
+  // Format element as utf8 JSON. See xju::json::format().
+  virtual void formatAsUtf8(
+    std::ostream& to,
+    xju::Utf8String const& firstLineIndent,
+    xju::Utf8String const& otherLinesIndent,
+    xju::Utf8String const& indentStep) const noexcept = 0;
+  
+  // Human readable description of element, no new-lines.
   virtual std::string str() const noexcept = 0;
 
   // true iff (*this) < y
   // - note ordering is arbitrary and surprising especially in the case
   //   of Number elements since is comparison is by literal string value
-  //
+  //   (in fact this means that e.g. 0.6 != .6 and 100 != 1.0e2) REVISIT
   virtual bool lessThan(Element const& y) const noexcept = 0;
   
 protected:

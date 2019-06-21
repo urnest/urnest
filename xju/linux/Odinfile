@@ -13,6 +13,7 @@ ntpd%tests.tree
 ntpd/monitor-ntp-sync
 disk-space/monitor-disk-space
 wtmp/monitor-logins
+(a.cc+(../..%cxx-opts):auto.cxx.exe)
 
 
 %tests.tree == <<

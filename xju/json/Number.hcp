@@ -28,12 +28,23 @@ public:
   {
   }
 
+  virtual void formatAsUtf8(
+    std::ostream& to,
+    xju::Utf8String const& firstLineIndent,
+    xju::Utf8String const& otherLinesIndent,
+    xju::Utf8String const& indentStep) const noexcept override
+  {
+    if (indentStep.size()){
+      to << firstLineIndent;
+    }
+    to << value_;
+  }
   virtual std::string str() const noexcept override
   {
     return value_;
   }
 
-  
+  // note this is not numeric ordering!
   virtual bool lessThan(Element const& y) const noexcept override
   {
     if (typeid(*this)!=typeid(y)){

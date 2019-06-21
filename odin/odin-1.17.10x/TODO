@@ -299,9 +299,9 @@ x some internals:
   Get_OdinFile_Msg is where server side picks up the command to do.
   For a basic derivation eg xxx:yyy, end up in Local_Get_Odinfile("xxx:yyy")
     parses xxx:yyy into Nod, which is a tree:
-       type-8
+       type-8 (DRVFIL - from if-candrv.c)
         |son
-       type-23 -brother- type-14
+       type-23 (WORD) -brother- type-14
         - sym "xxx"        |son
                          type-23
                           -sym "yyy"

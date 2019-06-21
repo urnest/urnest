@@ -15,6 +15,9 @@
 #include <typeinfo> //impl
 #include <xju/format.hh> //impl
 #include <xju/Utf8String.hh>
+#include <iostream> //impl
+#include <xju/utf8/decodeCodePoint.hh> //impl
+#include <xju/utf8/encodeCodePoint.hh> //impl
 
 namespace xju
 {
@@ -28,6 +31,38 @@ public:
   {
   }
 
+  virtual void formatAsUtf8(
+    std::ostream& to,
+    xju::Utf8String const& firstLineIndent,
+    xju::Utf8String const& otherLinesIndent,
+    xju::Utf8String const& indentStep) const noexcept override
+  {
+    if (indentStep.size()){
+      to << firstLineIndent;
+    }
+    std::string const& y{value_};
+    auto i{xju::parse::iterator(y.begin(),y.end())};
+    to << '"';
+    while(!i.atEnd()){
+      auto const c{xju::utf8::decodeCodePoint(i)};
+      switch(c.first){
+      case '"': to << "\\\""; break;
+      case '\\':to << "\\\\"; break;
+      case '/': to << "\\/"; break;
+      case '\a': to << "\\a"; break;
+      case '\b': to << "\\b"; break;
+      case '\f': to << "\\f"; break;
+      case '\n': to << "\\n"; break;
+      case '\r': to << "\\r"; break;
+      case '\t': to << "\\t"; break;
+      default:
+        to << xju::utf8::encodeCodePoint(c.first);
+      }
+      i=c.second;
+    }
+    to << '"';
+  }
+  
   virtual std::string str() const noexcept override
   {
     return xju::format::quote(xju::format::str(value_));

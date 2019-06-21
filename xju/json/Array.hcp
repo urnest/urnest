@@ -13,6 +13,7 @@
 #include <sstream> //impl
 #include <algorithm> //impl
 #include <xju/seq_less.hh> //impl
+#include <xju/next.hh> //impl
 
 namespace xju
 {
@@ -26,6 +27,35 @@ public:
       noexcept
     :value_(elements)
   {
+  }
+
+  virtual void formatAsUtf8(
+    std::ostream& to,
+    xju::Utf8String const& firstLineIndent,
+    xju::Utf8String const& otherLinesIndent,
+    xju::Utf8String const& indentStep) const noexcept override
+  {
+    std::string const sep{indentStep.size()?"\n":""};
+    if (indentStep.size()){
+      to << firstLineIndent;
+    }
+    to << '[';
+    if (value_.size()){
+      to << sep;
+      (*value_.begin())->formatAsUtf8(to,
+                                      otherLinesIndent+indentStep,
+                                      otherLinesIndent+indentStep,
+                                      indentStep);
+      for(auto i{xju::next(value_.begin())}; i != value_.end(); ++i){
+        to << ',' << sep;
+        (*i)->formatAsUtf8(to,
+                           otherLinesIndent+indentStep,
+                           otherLinesIndent+indentStep,
+                           indentStep);
+      }
+      to << sep << otherLinesIndent;
+    }
+    to << ']';
   }
 
   virtual std::string str() const noexcept override

@@ -13,6 +13,8 @@
 #include <sstream> //impl
 #include <algorithm> //impl
 #include <xju/seq_less.hh> //impl
+#include <xju/json/String.hh> //impl
+#include <xju/next.hh> //impl
 
 namespace xju
 {
@@ -28,6 +30,43 @@ public:
   {
   }
 
+  virtual void formatAsUtf8(
+    std::ostream& to,
+    xju::Utf8String const& firstLineIndent,
+    xju::Utf8String const& otherLinesIndent,
+    xju::Utf8String const& indentStep) const noexcept override
+  {
+    std::string const sep{indentStep.size()?"\n":""};
+    if (indentStep.size()){
+      to << firstLineIndent;
+    }
+    to << '{';
+    if (value_.size()){
+      Utf8String empty{""};
+      Utf8String space{" "};
+      to << sep;
+      to << otherLinesIndent << indentStep;
+      json::String((*value_.begin()).first).formatAsUtf8(to,empty,empty,empty);
+      to << ':';
+      (*value_.begin()).second->formatAsUtf8(to,
+                                             space,
+                                             otherLinesIndent+indentStep,
+                                             indentStep);
+      for(auto i{xju::next(value_.begin())}; i != value_.end(); ++i){
+        to << ',' << sep;
+        to << otherLinesIndent << indentStep;
+        json::String((*i).first).formatAsUtf8(to,empty,empty,empty);
+        to << ':';
+        (*i).second->formatAsUtf8(to,
+                                  space,
+                                  otherLinesIndent+indentStep,
+                                  indentStep);
+      }
+      to << sep << otherLinesIndent;
+    }
+    to << '}';
+  }
+  
   virtual std::string str() const noexcept override
   {
     std::ostringstream s;

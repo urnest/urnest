@@ -56,6 +56,11 @@ TODO:
   x does the snmpv1 "set" error handling say to return the original
     values (like v2c says)? do we do that? Yes and yes.
 
+  - snmpv3
+    
+    RFC3414 user-based security model
+    RFC3417 transport
+    
   - higher level:
     UDPClient:
       UDPClient(host,port)

@@ -25,6 +25,17 @@ public:
   {
   }
 
+  virtual void formatAsUtf8(
+    std::ostream& to,
+    xju::Utf8String const& firstLineIndent,
+    xju::Utf8String const& otherLinesIndent,
+    xju::Utf8String const& indentStep) const noexcept override
+  {
+    if (indentStep.size()){
+      to << firstLineIndent;
+    }
+    to << "null";
+  }
   virtual std::string str() const noexcept override
   {
     return "null";
