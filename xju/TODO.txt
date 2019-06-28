@@ -7,12 +7,19 @@
     
 - Mutex constexpr
 
+- snmp NoSuchObject,NoSuchInstance oid is redundant (twice?) (email)
+
 - what to do about operator<<(std::ostream& s,X) noexcept
   ... when s could throw?
 
 - xju::test:
   x top-side
+  - top-side async wrapper:
+    - deadline always
+    - .result()?
   - stub generator
+  - free function support (function pointers)
+  - is calls() actually const?
   
 snmp/README.txt stuff
 

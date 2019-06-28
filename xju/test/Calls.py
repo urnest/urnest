@@ -41,6 +41,7 @@ public:
 
 {methods}
 
+  // Pull out all calls.
   std::deque<std::shared_ptr<CallTo> > calls() noexcept
   {{
     xju::Lock l(guard_);

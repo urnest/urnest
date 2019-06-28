@@ -22,7 +22,7 @@
 //    [2] name ends in underscore to avoid clash with macro
 //        defined in standard header file <assert.h>
 //
-//    [3] we return bool not void so that we can use STL algorithms
+//    [3] return bool not void to allow use with STL algorithms
 //        like std::equal with the function.
 //
 #ifndef _XJU_ASSERT_HH_
@@ -41,11 +41,17 @@ namespace std
 
 namespace xju
 {
-    void assert_abort() noexcept;
-    void assert_never_reached() noexcept;
+    [[noreturn]] void assert_abort() noexcept;
+    [[noreturn]] void assert_never_reached() noexcept;
+
+    template<class T>
+    [[noreturn]] void assert_never_reached(T const& x) noexcept
+    {
+        assert_never_reached();
+    }
     
     template<class A, class B>
-    bool assert_equal(const A& a, const B& b)
+    bool assert_equal(const A& a, const B& b) noexcept
     {
 	if (!(a == b))
 	{
@@ -54,7 +60,7 @@ namespace xju
 	return true;
     }
     template<class A, class B>
-    bool assert_not_equal(const A& a, const B& b)
+    bool assert_not_equal(const A& a, const B& b) noexcept
     {
 	if (!(a != b))
 	{
@@ -63,7 +69,7 @@ namespace xju
 	return true;
     }
     template<class A, class B>
-    bool assert_less(const A& a, const B& b)
+    bool assert_less(const A& a, const B& b) noexcept
     {
 	if (!(a < b))
 	{
@@ -72,7 +78,7 @@ namespace xju
 	return true;
     }
     template<class A, class B>
-    bool assert_less_equal(const A& a, const B& b)
+    bool assert_less_equal(const A& a, const B& b) noexcept
     {
 	if (!(a <= b))
 	{
@@ -81,7 +87,7 @@ namespace xju
 	return true;
     }
     template<class A, class B>
-    bool assert_greater(const A& a, const B& b)
+    bool assert_greater(const A& a, const B& b) noexcept
     {
 	if (!(a > b))
 	{
@@ -90,7 +96,7 @@ namespace xju
 	return true;
     }
     template<class A, class B>
-    bool assert_greater_equal(const A& a, const B& b)
+    bool assert_greater_equal(const A& a, const B& b) noexcept
     {
 	if (!(a >= b))
 	{
@@ -99,7 +105,7 @@ namespace xju
 	return true;
     }
     template<class Operator, class A>
-    bool assert_(const A& a, const Operator& o) // [2]
+    bool assert_(const A& a, const Operator& o) noexcept // [2]
     {
 	if (!o(a))
 	{
@@ -109,7 +115,7 @@ namespace xju
     }
 #if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__==3 && __GNUC_MINOR__<=3))
     template<class Operator, class A, class B>
-    bool assert_(const A& a, Operator o, const B& b) // [2]
+    bool assert_(const A& a, Operator o, const B& b) noexcept // [2]
     {
 	if (!o(a, b))
 	{
@@ -119,7 +125,7 @@ namespace xju
     }
 #else
     template<class Operator, class A, class B>
-    bool assert_(const A& a, const Operator& o, const B& b) // [2]
+    bool assert_(const A& a, const Operator& o, const B& b) noexcept // [2]
     {
 	if (!o(a, b))
 	{
@@ -138,6 +144,7 @@ namespace xju
     //
     template<>
     inline bool assert_equal(const std::string& a, const std::string& b)
+         noexcept
     {
 	std::string commonPrefix;		  // placed so gdb to works reliably
 	
@@ -187,12 +194,14 @@ namespace xju
     typedef char* assert_char_pointer;
     
     template<>
-    inline bool assert_equal(const assert_char_pointer& a, const std::string& b)
+    inline bool assert_equal(const assert_char_pointer& a,
+                             const std::string& b) noexcept
     {
 	return assert_equal(std::string(a), b);
     }
     template<>
-    inline bool assert_equal(const std::string& a, const assert_char_pointer& b)
+    inline bool assert_equal(const std::string& a,
+                             const assert_char_pointer& b) noexcept
     {
 	return assert_equal(a, std::string(b));
     }
@@ -206,8 +215,9 @@ namespace xju
     //
     template<class T>
     inline bool assert_equal(const std::vector<T>& a, const std::vector<T>& b)
+         noexcept
     {
-        std::vector<T> commonPrefix;		  // placed so gdb to works reliably
+        std::vector<T> commonPrefix;	  // placed so gdb to works reliably
         size_t offsetOfFirstMismatch;
         
 	const typename std::vector<T>::size_type size_a(a.size());
