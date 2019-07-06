@@ -1,0 +1,59 @@
+The odin cache (located by $ODIN) is a directory tree containing:
+
+INFO file (if-info.c)
+  - database keyed by file offset (Loc/LocHdr/LocElm/LocInp), entries cover:
+    - current and verify "dates" (sequence numbers, not calendar dates)
+    - tree of source and derived objects, root of tree corresponds to
+      file system root (/) and is global RootLocHdr, where derived
+      objects are children of the file they are derived from, e.g.
+                           "/"                    <--- root
+                          /  \
+                       "src"  "h"                 <--- real directories
+                        /        \
+		       /	 / \
+                     "x.cc"  "x.hh" "y.hh"        <--- real source files
+                     /
+               +inc_sp=/h:o                       <-- derived
+
+      ... shows a single derived file in the tree. Each of the above
+      objects gets an HdrInf entry in the INFO database and its id (Loc) is
+      the offset of that entry within the INFO file.
+
+      The branches in the tree are captured by HdrInf.Son/Brother/Father e.g.:
+        "src".Father is "/"
+	"h".Son is "x.hh"
+	"x.hh".Brother is "y.hh"
+      ... i.e. above is more precisely drawn as:
+                           "/"
+			 Son
+			 /
+			"src"-Brother-"h"
+		       Son           Son
+		       /            /
+		     "x.cc"      "x.hh"-Brother-"y.hh"
+                   Son
+		   /
+		+inc_sp=/h:o
+
+      Each tree entry has a Status (Status_.h) e.g. OK (e.g. derived
+      file built with no warnings), Warning (e.g. dervied file built
+      but with warnings), Error (e.g. derived file build failed).
+
+      Each entry keeps "dates" detailing when it was last modified, when
+      it was last stat'd/updated. REVISIT: what are the 3 dates really?
+      
+FILES directory
+      The content (data) of each derived file like "/src/x.cc+inc_sp=/h:o"
+      (that's its full name) is stored in a file within the FILES subdirectory
+      tree of the $ODIN cache directory. The file name includes the
+      derived file's id (Loc) so that when a derived file is referred
+      to by its data file name odin can get its id (Loc) - see
+      CacheFileName_LocHdr and CacheFileName_FilHdr . The FILES
+      subdirectory tree is multi-level to keep the number of files per
+      directory small. The first time a derived object's data file name is
+      needed it is assigned to a directory (see DataNum, HdrInf.DataNum and
+      FilHdr_DataFileName). A derived file's warnings (and errors), which
+      odin persists, sit alongside the data file (see FilHdr_WarningFileName
+      and FilHdr_ErrorFileName).
+
+ 

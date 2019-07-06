@@ -1,0 +1,8 @@
+
+
+
+%c==%c.vir_dir_spec:vir_dir
+
+%c.vir_dir_spec==<<
+%cc==()+cmd=echo 'cc':stdout
+

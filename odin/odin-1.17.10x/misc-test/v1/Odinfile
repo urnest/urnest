@@ -1,0 +1,31 @@
+%d1==d1.virdir_spec:vir_dir
+
+%d3_==%d3.virdir_spec:vir_dir
+%d3a_==%d3a.virdir_spec:vir_dir
+%d4_==%d4.virdir_spec:vir_dir
+
+%d3.virdir_spec==<<
+%f3==.%f3_
+
+%d3a.virdir_spec==<<
+%f3a==.%f3a_
+
+
+%d4.virdir_spec==<<
+%f4==.%f4_
+
+%f3_ == ()+cmd=echo "f3":stdout
+%f3a_ == ()+cmd=echo "fd3a":stdout
+%f4_ == ()+cmd=echo "fd4":stdout
+
+
+%eighty-files==()+cmd=(%eighty-files.sh):output
+
+%eighty-files.sh == ! <<
+#!/bin/sh
+i=0 &&
+while [ $? = 0 ] && [ $i != 80 ]
+do
+  echo "$i" > $i.txt &&
+  i=$((i+1))
+done

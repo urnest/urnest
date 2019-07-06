@@ -51,6 +51,7 @@ FilHdr_DataFileName(
 	 if (FilHdr->HdrInf.DataNum == 0) {
 	    DataNum += 1;
 	    FilHdr->HdrInf.DataNum = DataNum;
+            SetModified(FilHdr);
 	    New_Flag = TRUE; }/*if*/;
 	 (void)strcpy(FileName, CacheDirName);
 	 Num = (FilHdr->HdrInf.DataNum-1) / 34;
