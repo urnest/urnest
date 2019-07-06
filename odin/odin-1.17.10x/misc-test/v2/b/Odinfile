@@ -1,0 +1,6 @@
+
+
+%b==%b.vir_dir_spec:vir_dir
+
+%b.vir_dir_spec==<<
+%bb==()+cmd=echo 'bb':stdout

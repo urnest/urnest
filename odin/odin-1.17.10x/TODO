@@ -9,7 +9,9 @@
   - %hcp-gen==./Odinfile%hcp-gen... also worked
   - %hcp-gen==.%hcp-gen... did not work
   - fix this odin bug!
-  
+    - search Do_Key investigate the one that has key Odinfile
+      ... can we move the Odinfile special case from Do_Keys to Do_Key?
+    
 - fix race condition when immediately re-invoking odin without
   explicit server, handle and document two use cases:
   - explicit server, where user must ensure server is not stopped/started

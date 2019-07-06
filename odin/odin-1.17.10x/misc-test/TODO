@@ -1,3 +1,43 @@
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "xxx.cc+(%cxx-opts):hash_inc.view_desc>"
+scan_for_includes xxx.cc
+'/home/xju/urnest/omnicxy/hcp/x.h'
+'/home/xju/urnest/hcp/x.h'
+'/home/xju/tmp/oc52-2/xjutv/FILES/hcp-gen.virdir_spec.6108.vir_dir/hcp/x.h'
+'/home/xju/tmp/oc52-2/xjutv/FILES/idl-gen.virdir_spec.44902.vir_dir/hcp/x.h'
+'/home/xju/gcc-5.2.0-run/include/hcp/x.h'
+=''
+
+*** I think that shows that the hash_inc is deficient, it needs the
+intermediate directories, above should be:
+
+'/home/xju/urnest/omnicxy/hcp/x.h'
+'/home/xju/urnest/hcp/x.h'
+'/home/xju/tmp/oc52-2/xjutv/FILES/hcp-gen.virdir_spec.6108.vir_dir/hcp/x.h'
+'/home/xju/tmp/oc52-2/xjutv/FILES/idl-gen.virdir_spec.44902.vir_dir/hcp/x.h'
+'/home/xju/gcc-5.2.0-run/include/hcp/x.h'
+=''
+'/home/xju/urnest/omnicxy/hcp'
+=''
+'/home/xju/urnest/hcp'
+=''
+'/home/xju/tmp/oc52-2/xjutv/FILES/hcp-gen.virdir_spec.6108.vir_dir/hcp'
+=''
+'/home/xju/tmp/oc52-2/xjutv/FILES/idl-gen.virdir_spec.44902.vir_dir/hcp
+=''
+'/home/xju/gcc-5.2.0-run/include/hcp'
+=''
+
+*** need a test for that, a two level vir_dir hierarchy with a #included
+file in the leaf directory (and no other files)
+
+
+trying this to see how it finds FilHdr from cache file name:
+
+-*- mode: compilation; default-directory: "~/urnest/" -*-
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "/home/xju/tmp/oc52-2/xjutv/FILES/hcp-gen.virdir_spec.6108.vir_dir/hcp:filename>"
+
+---------------------
+
 odin 'misc-test/d2!:test'
 
          OdinExpr_ID_Msg(IPC_AbortPtr);

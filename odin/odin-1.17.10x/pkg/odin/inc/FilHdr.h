@@ -4,7 +4,7 @@
 #include "HdrInf.h"
 
 typedef struct _tps_FilHdr {
-   tp_LocHdr LocHdr;
+   tp_LocHdr LocHdr; // long integer offset into INFO file (see if-info.c)
    tp_Item NextHash;
 
    tps_HdrInf HdrInf;

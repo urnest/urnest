@@ -1,0 +1,5 @@
+%x==%x.vir_dir_spec:vir_dir
+
+%x.vir_dir_spec==<<
+%b==b%b
+%a==a%a
