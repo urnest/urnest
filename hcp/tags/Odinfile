@@ -4,7 +4,7 @@
 tag-lookup-service
 hcp-import-symbol-at
 hcp-find-def
-
+hcp-symbol-at
 
 %all==(%all.tree:leaves)
 
@@ -14,6 +14,7 @@ hcp-find-def
 
 tag-lookup-service==tag-lookup-service.cc+(../..%cxx-opts)+lib='omniDynamic4' 'omniORB4' 'omnithread':auto.cxx.exe
 hcp-import-symbol-at==hcp-import-symbol-at.cc+(../..%cxx-opts)+lib='omniDynamic4' 'omniORB4' 'omnithread':auto.cxx.exe
+hcp-symbol-at==hcp-symbol-at.cc+(../..%cxx-opts):auto.cxx.exe
 hcp-find-def==hcp-find-def.cc+(../..%cxx-opts)+lib='omniDynamic4' 'omniORB4' 'omnithread':auto.cxx.exe
 
 %idl-gen==%idl-gen.vir_dir_specs:list:cat:vir_dir
@@ -41,6 +42,7 @@ hcp-find-def==hcp-find-def.cc+(../..%cxx-opts)+lib='omniDynamic4' 'omniORB4' 'om
 ()+cmd=(%test-TagLookupService):exec.output
 ()+cmd=(test-makeRelativeIfPossible.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 %test-importSymbolAt.exe:exec.output
+%test-symbol-at
 
 %test-importSymbolAt.exe==()+cmd=(%test-importSymbolAt)+cmd=(%test-importSymbolAt-x)+cmd=(%test-importSymbolAt-y)+cmd=(%test-importSymbolAt-z)+cmd=(%test-importSymbolAt-a)+cmd=(%test-importSymbolAt-x2)+cmd=(%test-importSymbolAt-y2)+cmd=(%test-importSymbolAt-x3)+cmd=(%test-importSymbolAt-y3):exec
 
@@ -101,5 +103,19 @@ class A : std::ostream { F c;
 class A : std::ostream { F c;
   void c() { Q::Z z; }
 };
+
+%test-symbol-at==()+cmd=(%test-symbol-at.sh) (%test-symbol-at.got):stdout
+
+%test-symbol-at.got==()+cmd=(hcp-symbol-at) (%test-importSymbolAt-y3) 54:exec.output
+
+%test-symbol-at.sh == ! <<
+/bin/sh
+got=$(cat "$1") &&
+if [ "$got" != "std::ostream" ]
+then
+  echo "ERROR: \"$got\" != \"std::ostream\"">&2 &&
+  false
+fi
+
 
 %tags==.:merged-tags
