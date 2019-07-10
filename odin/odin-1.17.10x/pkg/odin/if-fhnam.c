@@ -293,14 +293,7 @@ Do_Keys(
       for (j = 0; Key[i] != 0 && Key[i] != '/'; i += 1, j += 1) {
 	 SubKey[j] = Key[i]; }/*for*/;
       SubKey[j] = 0;
-      /* so that e.g. d1/Odinfile:targets_ptr and d1:targets_ptr
-      ** are the same file (otherwise we get confusion when
-      ** e.g. nesting virtual directories)
-      ** REVISIT: breaks build from scratch?
-      */
-      if (strcmp(SubKey,"Odinfile")!=0){
-         FilHdr = Do_Key(FilHdr, SubKey);
-      }
+      FilHdr = Do_Key(FilHdr, SubKey);
       if (Key[i] == 0) i -= 1; }/*for*/;
    return FilHdr;
    }/*Do_Keys*/

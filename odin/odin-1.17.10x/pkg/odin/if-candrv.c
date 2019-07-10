@@ -574,8 +574,13 @@ Apply_OprNods(
 	    FilHdr = Do_Key(FilHdr, "");
 	    break;}/*case*/;
 	 case SEGOPR: {
+            if (IsDir(FilHdr))
+            {
+              // so that .%x:id == Odinfile%x:id
+              FilHdr = Do_Key(FilHdr, "Odinfile");
+            }
 	    FilHdr = Do_VTgt(FilHdr, Sym_Str(Nod_Sym(Nod_Son(1, OprNod))));
-	    FilPrm = RootFilPrm;
+   	    FilPrm = RootFilPrm;
 	    break;}/*case*/;
 	 default: {
 	    FATALERROR("bad operator node type"); };}/*switch*/;
@@ -623,15 +628,7 @@ Nod_PrmFHdr(
 	  ((tp_LocHdr)Str_PosInt(Sym_Str(Nod_Sym(RootNod))));
 	 break; }/*case*/;
       case WORD: {
-         tp_Str w = Sym_Str(Nod_Sym(RootNod));
-         if (strcmp(w,"Odinfile")==0){
-           /* so that e.g. Odinfile:targets_ptr and .:targets_ptr
-           ** are the same file (otherwise we get confusion when
-           ** e.g. nesting virtual directories)
-           */
-           w = (tp_Str)".";
-         };
-	 FilHdr = HostFN_FilHdr(w);
+	 FilHdr = HostFN_FilHdr(Sym_Str(Nod_Sym(RootNod)));
 	 break; }/*case*/;
       case ABSFIL: {
 	 Key = Sym_Str(Nod_Sym(Nod_Son(1, RootNod)));
@@ -639,7 +636,12 @@ Nod_PrmFHdr(
 	 break; }/*case*/;
       case SEGOPR: {
 	 FilHdr = Get_BaseVTgtFilHdr(Top_ContextFilHdr());
-	 OprNod = RootNod;
+         if (IsDir(FilHdr))
+         {
+           // so that .%x:id == Odinfile%x:id
+           FilHdr = Do_Key(FilHdr, "Odinfile");
+         }
+   	 OprNod = RootNod;
 	 break; }/*case*/;
       case DRVOPR: {
 	 FilHdr = Top_ContextFilHdr();

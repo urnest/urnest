@@ -40,20 +40,32 @@ INFO file (if-info.c)
       but with warnings), Error (e.g. derived file build failed).
 
       Each entry keeps "dates" detailing when it was last modified, when
-      it was last stat'd/updated. REVISIT: what are the 3 dates really?
+      it was last stat'd/updated etc:
+        ModDate - "date" file modified
+	VerifyDate - "date" file last verified up to date
+	  (v global VerifyDate which is the date we want it to be verified at)
+	. REVISIT: what are the dates really?
       
 FILES directory
-      The content (data) of each derived file like "/src/x.cc+inc_sp=/h:o"
-      (that's its full name) is stored in a file within the FILES subdirectory
-      tree of the $ODIN cache directory. The file name includes the
-      derived file's id (Loc) so that when a derived file is referred
-      to by its data file name odin can get its id (Loc) - see
-      CacheFileName_LocHdr and CacheFileName_FilHdr . The FILES
-      subdirectory tree is multi-level to keep the number of files per
-      directory small. The first time a derived object's data file name is
-      needed it is assigned to a directory (see DataNum, HdrInf.DataNum and
-      FilHdr_DataFileName). A derived file's warnings (and errors), which
-      odin persists, sit alongside the data file (see FilHdr_WarningFileName
-      and FilHdr_ErrorFileName).
+    The content (data) of each derived file like "/src/x.cc+inc_sp=/h:o"
+    (that's its full name) is stored in a file within the FILES subdirectory
+    tree of the $ODIN cache directory. The file name includes the
+    derived file's id (Loc) so that when a derived file is referred
+    to by its data file name odin can get its id (Loc) - see
+    CacheFileName_LocHdr and CacheFileName_FilHdr . The FILES
+    subdirectory tree is multi-level to keep the number of files per
+    directory small. The first time a derived object's data file name is
+    needed it is assigned to a directory (see DataNum, HdrInf.DataNum and
+    FilHdr_DataFileName). A derived file's warnings (and errors), which
+    odin persists, sit alongside the data file (see FilHdr_WarningFileName
+    and FilHdr_ErrorFileName).
 
- 
+
+Source and Derived Object Types
+
+  Source File
+    - no inputs
+
+  Derived File
+    - inputs chained off HdrInf.LocInp
+      - is a list of InpInf, each refs a HdrInf via its LocHdr
