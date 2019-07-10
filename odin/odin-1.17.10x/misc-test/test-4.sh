@@ -8,6 +8,7 @@ cd $(dirname "$0") &&
 pwd &&
 d=$(pwd) &&
 which odin &&
+odin -R < /dev/null &&
 step=$((step+1)) &&
 (
   a=$(odin "d1%x.virdir_spec:vir_dir:filename>") &&

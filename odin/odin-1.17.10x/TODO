@@ -1,17 +1,6 @@
-- in urnest/Odinfile:
-  ... had:
-  %hcp-gen==%hcp-gen.virdir_spec:vir_dir
-  ... but that left %hcp-gen pointing to non-existent file, even
-      though +inc_sp=(%hcp-gen) had been used successfully
-  ... changed to:
-  %hcp-gen==Odinfile%hcp-gen.virdir_spec:vir_dir
-  ... and that made it get the same file as +inc_sp=(%hcp-gen) used
-  - %hcp-gen==./Odinfile%hcp-gen... also worked
-  - %hcp-gen==.%hcp-gen... did not work
-  - fix this odin bug!
-    - search Do_Key investigate the one that has key Odinfile
-      ... can we move the Odinfile special case from Do_Keys to Do_Key?
-    
+- fix hash_inc to make sure it includes intermediate directories
+  - need a test that fails first
+  
 - fix race condition when immediately re-invoking odin without
   explicit server, handle and document two use cases:
   - explicit server, where user must ensure server is not stopped/started
@@ -19,14 +8,15 @@
   - on-the-fly server, where the client that forks server waits for it
     exit completely before exiting (to avoid race conditions in scripts
     that have strings of odin invocations)
-
+  ... or if possible make client keep trying till it either gets the
+  server role or contacts the server.
+  
 - make sure ctrl-c on client+server does not result in out-of-sync
 
-x hcp_tags*tree_tags deends on all files in tree, how can we make it
-  depend only :h and :hcp?
-  x perhaps dir_tags_list only depends on :h, :hcp in a directory, in
-    which case manually build tree by merging subdir tree tags
-    at each level?
+- make sure machine shutdown while odin server running does not
+  result in out-of-sync
+  
+- add :dirlist derivation which combines ls + targets of Odinfile
 
 - fix +ignore handling in hash_inc.sh
 
@@ -34,24 +24,8 @@ x hcp_tags*tree_tags deends on all files in tree, how can we make it
 - add +stderr=error to :exec / :py.exec so can capture stderr
   and display it as error messages in :exec.output / :exec.files
 
-x :cxx.impl redo to make it correct, scan_for_impls would
-  give .h and .cpp at once, then recurse on that and then
-  hmm, need o_src back again
-
-x add to hash_impl +impl_sp - if any specified, take impls
-  only from those dirs
-
-x :dirtree:allfiles
-  x seem to use that quite often and it is not obvious how it works
-    doing it in the Odinfile
-
 ~ might be able to put back :cast_hash_incable (not worth it)
   - instead, discuss :cpp scalability issue
-
-x remove ar stuff from cxx, make cxx.sm an sm
-  .cxx.sm => .cxx.exe derivation to distinguish
-  .c.sm => .c.exe 
-  - no .sm => .exe
 
 - hcp-tags package
   x rework so steps are:
@@ -64,8 +38,6 @@ x remove ar stuff from cxx, make cxx.sm an sm
     command line too long; give verbose flag to make it report progress to
     stdout; give it output file name as single arg
   
-x add py package to support python scripts with auto dependencies
-
 - don't hard-code which path, and test for which separately, eg ld.sh
 
 - extract_dir:
@@ -73,8 +45,6 @@ x add py package to support python scripts with auto dependencies
   - extracted is directory -> error
   - extracted is soft-link -> warning+ignore
 - add :cast.tree
-
-x fix example in vir_tree.dg comments
 
 - catch malformed in vir_tree.py (eg leading /)
 
@@ -124,10 +94,6 @@ x fix example in vir_tree.dg comments
 
 - add ODINPKGLIST allowing explicit list of package names to load,
   as list of directories (allowing bash expansion)
-
-x code package: append to archive
-
-x cxx/cc link via .ar to handle long lists
 
 - :LIST +path=(x/y/z):subdir => vir_tree.spec
   ie make a vir_tree.spec placing listed files in the x/y/z subdirectory

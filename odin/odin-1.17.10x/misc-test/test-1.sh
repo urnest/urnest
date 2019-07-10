@@ -7,26 +7,22 @@ set -x &&
 cd $(dirname "$0") &&
 pwd &&
 which odin &&
+odin -R < /dev/null &&
 step=$((step+1)) &&
 (
+id1=$(odin 'd1/Odinfile%x.virdir_spec:vir_dir:id>') &&
+id2=$(odin 'd1%x.virdir_spec:vir_dir:id>') &&
+test "$id1" = "$id2" &&
 cd d1 &&  
-id1=$(odin 'Odinfile:targets_ptr:id>') &&
-id2=$(odin '.:targets_ptr:id>') &&
-test "$id1" = "$id2" &&
+id3=$(odin 'Odinfile%x.virdir_spec:vir_dir:id>') &&
+id4=$(odin '.%x.virdir_spec:vir_dir:id>') &&
+test "$id1" = "$id3" &&
+test "$id1" = "$id4" &&
 true
 ) &&
 
-step=$((step+1))
-(
-id1=$(odin 'd1/Odinfile:targets_ptr:id>') &&
-id2=$(odin 'd1:targets_ptr:id>') &&
-test "$id1" = "$id2" &&
-true
-) &&
-
-# since we have turned Odinfile into . want to be able to display Odinfile
-# (which we'll do when asked to display its directory)
-step=$((step+1))
+# want to be able to display Odinfile an we'll turn .> into that too
+step=$((step+1)) &&
 (
 set +x &&
 o1=$(odin 'd1/Odinfile>') &&
