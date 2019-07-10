@@ -493,7 +493,7 @@ For example, the odin-expression:
 \begin{verbatim}
    src/prog.c
 \end{verbatim}
-selects {\ex prog.c} from the directory {\ex src}.
+selects key {\ex prog.c} from the directory {\ex src}.
 (The careful reader will note that an odin-expression composed entirely
 of selection expressions bears an uncanny resemblance to a standard
 Unix filename.)
@@ -646,13 +646,21 @@ then the odin-expression:
 \end{verbatim}
 associates the {\ex +debug} parameter with {\ex main.c} and {\ex subrs.c}.
 
-Parameters are not inherited forward or backward through derivations.
+Parameters are not inherited forward or backward through explicit derivations.
 Therefore, in the odin-expression:
 \begin{verbatim}
    prog.c +debug :o +optimize=2 :exe
 \end{verbatim}
 the {\ex :o} derivation has debugging, but no optimization,
 while the {\ex :exe} derivation has optimization, but no debugging.
+
+Compare that to the similar expression in which the {\ex :o} is implicit:
+\begin{verbatim}
+   prog.c +debug +optimize=2 :exe
+\end{verbatim}
+both parameters apply to :exe and all implicit steps (e.g. {\ex :o}) in
+between, so prog.c is both compiled and linked with debugging and
+optimization.
 
 Frequently, several odin-expressions share a common set of parameters.
 To support this kind of sharing,
@@ -680,8 +688,12 @@ For example, the odin-expression:
 \begin{verbatim}
    =cxv
 \end{verbatim}
-names the string {\ex cxv}.
-
+names the string {\ex cxv}. For example in the odin-expression:
+\begin{verbatim}
+   prog.c +lib=(mylib.a) +define=FRED:exe
+\end{verbatim}
+{\ex mylib.a} refers to the file of that name in the current directory while
+{\ex FRED} is a string.
 
 \section{Virtual Targets}
 \label{virtualtarget}
@@ -716,14 +728,21 @@ For example, the odin-expression:
 \end{verbatim}
 selects the virtual file {\ex prog} from {\ex src/Odinfile}.
 
-If the directory name preceding the percent-sign is omitted,
-the virtual file is selected from the {\ex Odinfile} in
-the current working directory.  For example, the odin-expressions:
+The explicit {\ex /Odinfile} above may be omitted. For example, the
+odin-expressions:
 \begin{verbatim}
-   %prog
-   ./Odinfile%prog
+   src/Odinfile%prog
+   src/%prog
+   src%prog
 \end{verbatim}
-are equivalent.
+are equivalent, as are:
+\begin{verbatim}
+   ./Odinfile%prog
+   ./%prog
+   .%prog
+   %prog
+\end{verbatim}
+which all reference the current working directory.
 
 Although only a file named {\ex Odinfile} can specify targets,
 any file can contain virtual targets.
@@ -1214,7 +1233,14 @@ For example, the odin-command:
 \begin{verbatim}
    -> prog.c >
 \end{verbatim}
-displays the file named {\ex prog.c}.
+displays the file named {\ex prog.c}. Note that if d1 is a directory:
+\begin{verbatim}
+   -> d1 >
+\end{verbatim}
+is short-hand for:
+\begin{verbatim}
+   -> d1/Odinfile >
+\end{verbatim}
 
 \subsection{Editing with the Copy Odin-Command}
 

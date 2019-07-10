@@ -4,11 +4,11 @@ set -x &&
 cd $(dirname "$0") &&
 pwd &&
 d=$(pwd) &&
-which odin &&
-"$d/clean-install.sh" &&
-
 export ODIN="$d/scratch" &&
 export PATH="$d/scratch/bin:$PATH" &&
+which odin &&
+
+"$d/clean-install.sh" &&
 
 $d/test-1.sh &&
 $d/test-2.sh &&
