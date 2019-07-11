@@ -155,7 +155,7 @@ def validate(schema,x):
                 if len(schema)!=len(x):
                     i=len(schema)
                     j=len(x)
-                    raise 'list {x} does not have {i} elements, it has {j} elements'.format(**vars())
+                    raise Exception('list {x} does not have {i} elements, it has {j} elements'.format(**vars()))
                 for i,v in enumerate(zip(schema,x)):
                     try:
                         validate(v[0],v[1])
