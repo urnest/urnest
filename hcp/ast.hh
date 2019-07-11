@@ -270,6 +270,9 @@ typedef TaggedItem<TargetOfHashIncludeTag> TargetOfHashInclude;
 class OtherPreprocessorTag{};
 typedef TaggedItem<OtherPreprocessorTag> OtherPreprocessor;
 
+class AttributesTag{};
+typedef TaggedItem<AttributesTag> Attributes;
+
 class WhitespaceTag{};
 typedef TaggedItem<WhitespaceTag> Whitespace;
 

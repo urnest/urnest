@@ -1552,6 +1552,15 @@ PR hash() throw()
   return hash;
 }
 
+PR attributes() throw()
+{
+  static PR result{
+    named<hcp_ast::Attributes>(
+      "attributes",
+      parseLiteral("[[")+balanced(parseLiteral("]"),false)+parseLiteral("]]")+
+      eatWhite())};
+  return result;
+}
   
 PR whitespace() throw()
 {
@@ -2654,39 +2663,39 @@ public:
   PR p_;
   
   ParseClass() throw():
-  x_(class_proto()+
+    x_(class_proto()+
        parseOneOfChars("{")+
        eatWhite()+
-     named<hcp_ast::ClassMembers>(
-       "class members",
-       parseUntil(comments()|
-                  access_modifier()|
-                  PR(new SelfParser(*this))|
-                  class_decl()|
-                  (not_class_struct_union_literal()+(
-                    typedef_statement()|
-                    scoped_enum_def()|
-                    enum_def()|
-                    using_statement()|
-                    (not_typedef_using_enum_keyword()+(
-                      function_decl()|
-                      template_function_def()|
-                      function_def()|
-                      static_var_def()|
-                      extern_var_def()|
-                      global_var_def())))),
-                  parseOneOfChars("}")))+
-     parseOneOfChars("}")+
+       named<hcp_ast::ClassMembers>(
+         "class members",
+         parseUntil(comments()|
+                    access_modifier()|
+                    PR(new SelfParser(*this))|
+                    class_decl()|
+                    (not_class_struct_union_literal()+(
+                      typedef_statement()|
+                      scoped_enum_def()|
+                      enum_def()|
+                      using_statement()|
+                      (not_typedef_using_enum_keyword()+(
+                        function_decl()|
+                        template_function_def()|
+                        function_def()|
+                        static_var_def()|
+                        extern_var_def()|
+                        global_var_def())))),
+                    parseOneOfChars("}")))+
+       parseOneOfChars("}")+
        eatWhite()+
        parseOneOfChars(";")+
        eatWhite()),
     tp_(named<hcp_ast::TemplateClassDef>(
-      "template class definition",
-      template_preamble()+
-      x_)),
+          "template class definition",
+          template_preamble()+
+          x_)),
     p_(named<hcp_ast::ClassDef>(
-      "non-template class definition",
-      x_))
+         "non-template class definition",
+         x_))
   {
   }
        

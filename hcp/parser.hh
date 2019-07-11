@@ -397,6 +397,7 @@ PR rawStringLiteral() throw(); //C++ raw string literal
 PR hashIncludeImpl() throw(); // include preprocessor directive, with trailing "// impl" marker
 PR hashInclude() throw(); // include preprocessor directive
 PR hash() throw();        // other preprocessor directive
+PR attributes() throw();  // [[attributes]]
 PR cv() throw(); //C++ const/volatile qualifiers
 PR type_name() throw(); // examples: int, typename x::y::Z, X<Q>::size, Y<Z>
 PR type_qual() throw(); //C++ const/volatile/*/& qualifier + whitespace

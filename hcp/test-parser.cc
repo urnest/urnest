@@ -2040,6 +2040,27 @@ void test47()
   }
 }
 
+void test48()
+{
+  {
+    std::string const x{"[[noreturn]] "};
+    try {
+      auto const root{parseString(
+        x.begin(),x.end(),
+        hcp_parser::attributes(),true)};
+      xju::assert_equal(reconstruct(root), x);
+
+      auto const y(
+        hcp_ast::findChildrenOfType<hcp_ast::Attributes>(root));
+      xju::assert_equal(reconstruct(y[0]),x);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+}
+
 int main(int argc, char* argv[])
 {
   unsigned int n(0);
@@ -2090,6 +2111,7 @@ int main(int argc, char* argv[])
   test45(), ++n;
   test46(), ++n;
   test47(), ++n;
+  test48(), ++n;
   
   xju::assert_equal(atLeastOneReadableReprFailed, false);
   std::cout << "PASS - " << n << " steps" << std::endl;
