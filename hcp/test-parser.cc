@@ -854,6 +854,18 @@ void test21()
   }
   try {
     std::string const x(
+      "template<class T>\n"
+      "[[a1]] void fred() const throw();\n");
+    auto const root{parseString(
+        x.begin(),x.end(),
+        hcp_parser::function_decl())};
+    xju::assert_equal(reconstruct(root), x);
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e), readableRepr(e));
+  }
+  try {
+    std::string const x(
       "void fred() const noexcept;\n");
     auto const root{parseString(
         x.begin(),x.end(),
@@ -1279,24 +1291,47 @@ void test29(std::vector<std::string> const& f)
 
 void test30()
 {
-  std::string const x("static const char* const _user_exns[] = {\n"
-                      "  0\n"
-                      "};  ");
-
-  try {
-    auto const root{parseString(
-        x.begin(),x.end(),
-        hcp_parser::static_var_def())};
-    xju::assert_equal(reconstruct(root), x);
-    xju::assert_equal(root.items()[0]->isA<hcp_ast::StaticVarDef>(),true);
-    auto const y(
-      hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(
-        root.items()[0]->asA<hcp_ast::StaticVarDef>()));
-    xju::assert_equal(reconstruct(y),"_user_exns");
+  {
+    std::string const x("static const char* const _user_exns[] = {\n"
+                        "  0\n"
+                        "};  ");
+    
+    try {
+      auto const root{parseString(
+          x.begin(),x.end(),
+          hcp_parser::static_var_def())};
+      xju::assert_equal(reconstruct(root), x);
+      xju::assert_equal(root.items()[0]->isA<hcp_ast::StaticVarDef>(),true);
+      auto const y(
+        hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(
+          root.items()[0]->asA<hcp_ast::StaticVarDef>()));
+      xju::assert_equal(reconstruct(y),"_user_exns");
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
   }
-  catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "", XJU_TRACED);
-    xju::assert_equal(true,false);
+  {
+    std::string const x("static [[a1]] const char* const _user_exns[[attr1]][] = {\n"
+                        "  0\n"
+                        "};  ");
+    
+    try {
+      auto const root{parseString(
+          x.begin(),x.end(),
+          hcp_parser::static_var_def())};
+      xju::assert_equal(reconstruct(root), x);
+      xju::assert_equal(root.items()[0]->isA<hcp_ast::StaticVarDef>(),true);
+      auto const y(
+        hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(
+          root.items()[0]->asA<hcp_ast::StaticVarDef>()));
+      xju::assert_equal(reconstruct(y),"_user_exns");
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
   }
 }
 
@@ -1382,6 +1417,20 @@ void test31()
    }
  }
  {
+   std::string const x("[[a1]] X y[[a2]]=Z(3);");
+   
+   try {
+     auto const root{parseString(
+        x.begin(),x.end(),
+        hcp_parser::global_var_def())};
+     xju::assert_equal(reconstruct(root), x);
+   }
+   catch(xju::Exception const& e) {
+     assert_readableRepr_equal(e, "", XJU_TRACED);
+     xju::assert_equal(true,false);
+   }
+ }
+ {
    std::string const x("std::chrono::seconds const x{a};");
    
    try {
@@ -1431,13 +1480,36 @@ void test31()
      xju::assert_equal(true,false);
    }
  }
+ {
+   std::string const x("static X (*y[[a1]])(int x, I<p> const& p)=pq;");
+   try {
+     auto const root{parseString(
+        x.begin(),x.end(),
+        hcp_parser::static_var_def())};
+     xju::assert_equal(reconstruct(root), x);
+
+     auto d(hcp_ast::findOnlyChildOfType<hcp_ast::StaticVarDef>(root));
+     hcp_ast::asA_<hcp_ast::StaticVarDef>(*root.items().begin());
+     auto n(hcp_ast::findChildrenOfType<hcp_ast::VarName>(d));
+     xju::assert_equal(reconstruct(n[0]),"y");
+     xju::assert_equal(reconstruct(n[1]),"x");
+     xju::assert_equal(reconstruct(n[2]),"p");
+     xju::assert_equal(n.size(),3);
+     auto i(hcp_ast::findOnlyChildOfType<hcp_ast::VarInitialiser>(d));
+     xju::assert_equal(reconstruct(i),"=pq");
+   }
+   catch(xju::Exception const& e) {
+     assert_readableRepr_equal(e, "", XJU_TRACED);
+     xju::assert_equal(true,false);
+   }
+ }
 }
 
 
 void test32()
 {
   {
-    std::string const x("static pof me;");
+    std::string const x("static pof me[[a2]];");
     
     try {
       auto const root{parseString(
@@ -1477,29 +1549,83 @@ void test33()
   
 void test34()
 {
-  std::string const x(
-    "operator int() const throw()"
-    "{"
-    "  return x_;"
-    "}");
-
-  try {
-    auto const root{parseString(
-        x.begin(),x.end(),
-        hcp_parser::function_def())};
-    xju::assert_equal(reconstruct(root), x);
-    std::vector<hcp_ast::IR>::const_iterator j(
-      std::find_if(root.items()[0]->asA<hcp_ast::FunctionDef>().items().begin(),
-                   root.items()[0]->asA<hcp_ast::FunctionDef>().items().end(),
-                   hcp_ast::isA_<hcp_ast::FunctionName>));
-    xju::assert_not_equal(
-      j, 
-      root.items()[0]->asA<hcp_ast::FunctionDef>().items().end());
-    xju::assert_equal(reconstruct(*j), "operator int");
+  {
+    std::string const x(
+      "operator int() const throw()"
+      "{"
+      "  return x_;"
+      "}");
+    
+    try {
+      auto const root{parseString(
+          x.begin(),x.end(),
+          hcp_parser::function_def())};
+      xju::assert_equal(reconstruct(root), x);
+      std::vector<hcp_ast::IR>::const_iterator j(
+        std::find_if(root.items()[0]->asA<hcp_ast::FunctionDef>().items().begin(),
+                     root.items()[0]->asA<hcp_ast::FunctionDef>().items().end(),
+                     hcp_ast::isA_<hcp_ast::FunctionName>));
+      xju::assert_not_equal(
+        j, 
+        root.items()[0]->asA<hcp_ast::FunctionDef>().items().end());
+      xju::assert_equal(reconstruct(*j), "operator int");
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
   }
-  catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "", XJU_TRACED);
-    xju::assert_equal(true,false);
+  {
+    std::string const x(
+      "operator int() const throw()"
+      "{"
+      "  return x_;"
+      "}");
+    
+    try {
+      auto const root{parseString(
+          x.begin(),x.end(),
+          hcp_parser::function_def())};
+      xju::assert_equal(reconstruct(root), x);
+      std::vector<hcp_ast::IR>::const_iterator j(
+        std::find_if(root.items()[0]->asA<hcp_ast::FunctionDef>().items().begin(),
+                     root.items()[0]->asA<hcp_ast::FunctionDef>().items().end(),
+                     hcp_ast::isA_<hcp_ast::FunctionName>));
+      xju::assert_not_equal(
+        j, 
+        root.items()[0]->asA<hcp_ast::FunctionDef>().items().end());
+      xju::assert_equal(reconstruct(*j), "operator int");
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  {
+    std::string const x(
+      "[[a1]] operator int[[a1]] () const throw()"
+      "{"
+      "  return x_;"
+      "}");
+    
+    try {
+      auto const root{parseString(
+          x.begin(),x.end(),
+          hcp_parser::function_def())};
+      xju::assert_equal(reconstruct(root), x);
+      std::vector<hcp_ast::IR>::const_iterator j(
+        std::find_if(root.items()[0]->asA<hcp_ast::FunctionDef>().items().begin(),
+                     root.items()[0]->asA<hcp_ast::FunctionDef>().items().end(),
+                     hcp_ast::isA_<hcp_ast::FunctionName>));
+      xju::assert_not_equal(
+        j, 
+        root.items()[0]->asA<hcp_ast::FunctionDef>().items().end());
+      xju::assert_equal(reconstruct(*j), "operator int");
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
   }
 }
 
@@ -1668,79 +1794,157 @@ void test38()
 
 void test39()
 {
-  std::string const x(
-    "extern const SyscallF3<int, const char*, int, mode_t> open;");
-  try {
-    auto const root{parseString(
-        x.begin(),x.end(),
-        hcp_parser::extern_var_def())};
-    auto const y(
-      hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(
-        root.items()[0]->asA<hcp_ast::ExternVarDef>()));
-    xju::assert_equal(reconstruct(y),"open");
-    
+  {
+    std::string const x(
+      "extern const SyscallF3<int, const char*, int, mode_t> open;");
+    try {
+      auto const root{parseString(
+          x.begin(),x.end(),
+          hcp_parser::extern_var_def())};
+      auto const y(
+        hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(
+          root.items()[0]->asA<hcp_ast::ExternVarDef>()));
+      xju::assert_equal(reconstruct(y),"open");
+      
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
   }
-  catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "", XJU_TRACED);
-    xju::assert_equal(true,false);
+  {
+    std::string const x(
+      "extern [[a1]] const SyscallF3<int, const char*, int, mode_t> open[[a2]];");
+    try {
+      auto const root{parseString(
+          x.begin(),x.end(),
+          hcp_parser::extern_var_def())};
+      auto const y(
+        hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(
+          root.items()[0]->asA<hcp_ast::ExternVarDef>()));
+      xju::assert_equal(reconstruct(y),"open");
+      
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
   }
 }
 
 void test40()
 {
-  std::string const x(
-    "template<class T>\n"
-    "    inline EventP<T>::EventP() throw():\n"
-    "      m_observers(0)\n"
-    "    {\n"
-    "}\n");
-  try {
-    auto const root{parseString(
-        x.begin(),x.end(),
-        hcp_parser::template_function_def())};
-    xju::assert_equal(reconstruct(root), x);
-    std::vector<hcp_ast::IR>::const_iterator j(
-      std::find_if(
-        root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().begin(),
-        root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().end(),
-        hcp_ast::isA_<hcp_ast::FunctionName>));
-    xju::assert_not_equal(
-      j, 
-      root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().end());
-    xju::assert_equal(reconstruct(*j), "EventP<T>::EventP");
+  {
+    std::string const x(
+      "template<class T>\n"
+      "    inline EventP<T>::EventP() throw():\n"
+      "      m_observers(0)\n"
+      "    {\n"
+      "}\n");
+    try {
+      auto const root{parseString(
+          x.begin(),x.end(),
+          hcp_parser::template_function_def())};
+      xju::assert_equal(reconstruct(root), x);
+      std::vector<hcp_ast::IR>::const_iterator j(
+        std::find_if(
+          root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().begin(),
+          root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().end(),
+          hcp_ast::isA_<hcp_ast::FunctionName>));
+      xju::assert_not_equal(
+        j, 
+        root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().end());
+      xju::assert_equal(reconstruct(*j), "EventP<T>::EventP");
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
   }
-  catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "", XJU_TRACED);
-    xju::assert_equal(true,false);
+  {
+    std::string const x(
+      "template<class T>\n"
+      "    [[a1,a2]] inline EventP<T>::EventP[[a1]]() throw():\n"
+      "      m_observers(0)\n"
+      "    {\n"
+      "}\n");
+    try {
+      auto const root{parseString(
+          x.begin(),x.end(),
+          hcp_parser::template_function_def())};
+      xju::assert_equal(reconstruct(root), x);
+      std::vector<hcp_ast::IR>::const_iterator j(
+        std::find_if(
+          root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().begin(),
+          root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().end(),
+          hcp_ast::isA_<hcp_ast::FunctionName>));
+      xju::assert_not_equal(
+        j, 
+        root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().end());
+      xju::assert_equal(reconstruct(*j), "EventP<T>::EventP");
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
   }
 }
 
 void test41()
 {
-  std::string const x(
-    "template<class T>\n"
-    "inline EventP<T>& EventP<T>::operator=(const EventP& b)\n"
-    "    throw()\n"
-    "{\n"
-    "    return *this;\n"
-    "}\n");
-  try {
-    auto const root{parseString(
-        x.begin(),x.end(),
-        hcp_parser::template_function_def())};
-    std::vector<hcp_ast::IR>::const_iterator j(
-      std::find_if(
-        root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().begin(),
-        root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().end(),
-        hcp_ast::isA_<hcp_ast::FunctionName>));
-    xju::assert_not_equal(
-      j, 
-      root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().end());
-    xju::assert_equal(reconstruct(*j), "EventP<T>::operator=");
+  {
+    std::string const x(
+      "template<class T>\n"
+      "inline EventP<T>& EventP<T>::operator=(const EventP& b)\n"
+      "    throw()\n"
+      "{\n"
+      "    return *this;\n"
+      "}\n");
+    try {
+      auto const root{parseString(
+          x.begin(),x.end(),
+          hcp_parser::template_function_def())};
+      std::vector<hcp_ast::IR>::const_iterator j(
+        std::find_if(
+          root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().begin(),
+          root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().end(),
+          hcp_ast::isA_<hcp_ast::FunctionName>));
+      xju::assert_not_equal(
+        j, 
+        root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().end());
+      xju::assert_equal(reconstruct(*j), "EventP<T>::operator=");
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
   }
-  catch(xju::Exception const& e) {
-    assert_readableRepr_equal(e, "", XJU_TRACED);
-    xju::assert_equal(true,false);
+  {
+    std::string const x(
+      "template<class T>\n"
+      "[[a1]]inline EventP<T>& EventP<T>::operator=[[b1]](const EventP& b)\n"
+      "    throw()\n"
+      "{\n"
+      "    return *this;\n"
+      "}\n");
+    try {
+      auto const root{parseString(
+          x.begin(),x.end(),
+          hcp_parser::template_function_def())};
+      std::vector<hcp_ast::IR>::const_iterator j(
+        std::find_if(
+          root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().begin(),
+          root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().end(),
+          hcp_ast::isA_<hcp_ast::FunctionName>));
+      xju::assert_not_equal(
+        j, 
+        root.items()[0]->asA<hcp_ast::TemplateFunctionDef>().items().end());
+      xju::assert_equal(reconstruct(*j), "EventP<T>::operator=");
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
   }
 }
 
@@ -1792,12 +1996,54 @@ void test42()
       xju::assert_equal(true,false);
     }
   }
+  {
+    std::string const x(
+      "void (T::*f[[x]])() throw()");
+    try {
+      auto const root{parseString(
+        x.begin(),x.end(),
+        hcp_parser::var_fp(),true)};
+      xju::assert_equal(reconstruct(root), x);
+      std::vector<hcp_ast::IR>::const_iterator j(
+        std::find_if(
+          root.items().begin(),
+          root.items().end(),
+          hcp_ast::isA_<hcp_ast::VarName>));
+      xju::assert_not_equal(
+        j, 
+        root.items().end());
+      xju::assert_equal(reconstruct(*j), "f");
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
 }
 void test43()
 {
   {
     std::string const x(
       "xju::Optional<size_t> const& length");
+    try {
+      auto const root{parseString(
+        x.begin(),x.end(),
+        hcp_parser::var_non_fp(),true)};
+      xju::assert_equal(reconstruct(root), x);
+
+      auto const y(
+        hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(
+          root.items()[0]->asA<hcp_ast::Item>()));
+      xju::assert_equal(reconstruct(y),"length");
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  {
+    std::string const x(
+      "xju::Optional<size_t> const& length[[attr1]]");
     try {
       auto const root{parseString(
         x.begin(),x.end(),

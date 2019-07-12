@@ -1430,6 +1430,11 @@ PR doubleQuote() throw()
   static PR doubleQuote(parseOneOfChars("\""));
   return doubleQuote;
 }
+PR doubleOpenSquare() throw()
+{
+  static PR result{parseLiteral("[[")};
+  return result;
+}
 
 PR lessThan() throw()
 {
@@ -2219,6 +2224,7 @@ PR conversion_operator_function_proto() throw()
       "conversion operator name",
       conversion_operator_name())+
     eatWhite()+
+    (!doubleOpenSquare()|attributes())+
     params());
   return result;
 }
@@ -2235,6 +2241,7 @@ PR typed_function_proto() throw()
       operator_name()|
       scoped_name())+
     eatWhite()+
+    (!doubleOpenSquare()|attributes())+
     params());
   return result;
 }
@@ -2249,6 +2256,7 @@ PR untyped_function_proto() throw()
       operator_name()|
       scoped_name())+
     eatWhite()+
+    (!doubleOpenSquare()|attributes())+
     params());
   return result;
 }
@@ -2289,6 +2297,7 @@ PR function_decl() throw()
                             "function declaration",
                             optional(template_empty_preamble()|
                                      template_preamble())+
+                            (!doubleOpenSquare()|attributes())+
                             function_proto()+
                             (eatWhite()+parseOneOfChars(";"))+
                             eatWhite()));
@@ -2310,6 +2319,7 @@ PR function_def() throw()
     named<hcp_ast::FunctionDef>(
       "non-template function definition",
       optional(template_empty_preamble())+
+      (!doubleOpenSquare()|attributes())+
       function_def_unnamed()));
   return function_def;
 }
@@ -2321,6 +2331,7 @@ PR template_function_def() throw()
     named<hcp_ast::TemplateFunctionDef>(
       "template function definition",
       atLeastOne(template_preamble())+
+      (!doubleOpenSquare()|attributes())+
       function_def_unnamed()));
   return template_function_def;
 }
@@ -2476,7 +2487,9 @@ PR var_non_fp() throw()
   static PR result{
     named<hcp_ast::VarNonFp>(
       "non-function pointer var",
-      (type_ref()+var_name()+optional(array_decl())+
+      (type_ref()+var_name()+
+       (!doubleOpenSquare()|attributes())+
+       optional(array_decl())+
        (!parseOneOfChars("={")|var_initialiser())))};
   return result;
 }
@@ -2530,7 +2543,8 @@ PR var_fp() throw()
          type_ref()+
          bracketed(
            scope_ref()+cv()+parseLiteral("*")+eatWhite()+cv()+
-           var_name())+
+           var_name()+
+           (!doubleOpenSquare()|attributes()))+
          params()+
          function_post_qualifiers()+
          (!parseOneOfChars("={")|var_initialiser())+
@@ -2580,6 +2594,7 @@ PR global_var_def() throw()
   static PR global_var_def{
     named<hcp_ast::GlobalVarDef>(
       "global variable definition",
+      (!doubleOpenSquare()|attributes())+
       var_def()+
       parseLiteral(";")+
       eatWhite())};
@@ -2592,6 +2607,7 @@ PR static_var_def() throw()
                              "static variable definition",
                              keyword_static()+
                              eatWhite()+
+                             (!doubleOpenSquare()|attributes())+
                              var_def()+
                              parseLiteral(";")+
                              eatWhite()));
@@ -2604,6 +2620,7 @@ PR extern_var_def() throw()
                      "extern variable definition",
                      keyword_extern()+
                      eatWhite()+
+                     (!doubleOpenSquare()|attributes())+
                      var_def()+
                      parseLiteral(";")+
                      eatWhite()));
