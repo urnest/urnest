@@ -1,0 +1,2978 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"  
+  "http://www.w3.org/TR/html4/loose.dtd">  
+<html > 
+<head><title> THE ODIN SYSTEM
+ REFERENCE MANUAL </title> 
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"> 
+<meta name="generator" content="TeX4ht (http://www.tug.org/tex4ht/)"> 
+<meta name="originator" content="TeX4ht (http://www.tug.org/tex4ht/)"> 
+<!-- html --> 
+<meta name="src" content="odin.tex"> 
+<link rel="stylesheet" type="text/css" href="odin.css"> 
+</head><body 
+>
+   <div class="maketitle">
+
+
+<h2 class="titleHead"> THE ODIN SYSTEM<br />
+REFERENCE MANUAL </h2>
+<div class="author" ><span 
+class="cmr-12">Geoffrey M. Clemm</span></div><br />
+<div class="date" > <span 
+class="cmr-12">*** Odin Version 1.17 ***</span><br />
+<span 
+class="cmr-12">The Odin System is a simpler, more powerful, and more reliable replacement for Make. It</span>
+<span 
+class="cmr-12">computes complete dependency information automatically, making the build scripts shorter</span>
+<span 
+class="cmr-12">and easier to manage. Odin gains efficiency by parallel builds on remote machines, by</span>
+<span 
+class="cmr-12">eliminating most of the file system status queries required by Make, and by sharing from a</span>
+<span 
+class="cmr-12">cache of previously computed derived files. </span></div>
+
+   </div>
+
+   <h2 class="likechapterHead"><a 
+ id="x1-1000"></a>Contents</h2>
+   <div class="tableofcontents">
+   <span class="chapterToc" >1 <a 
+href="#x1-20001" id="QQ2-1-2">Introduction</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.1 <a 
+href="#x1-30001.1" id="QQ2-1-3">Derived Object Managers</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.2 <a 
+href="#x1-40001.2" id="QQ2-1-4">Odin Objects</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >1.2.1 <a 
+href="#x1-50001.2.1" id="QQ2-1-5">Source and Derived Objects</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >1.2.2 <a 
+href="#x1-60001.2.2" id="QQ2-1-6">The Derived Object Cache</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.3 <a 
+href="#x1-70001.3" id="QQ2-1-7">Why Not Just Use Make?</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >1.3.1 <a 
+href="#x1-80001.3.1" id="QQ2-1-8">Dependency Information</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >1.3.2 <a 
+href="#x1-90001.3.2" id="QQ2-1-9">Specifying Build Variants</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >1.3.3 <a 
+href="#x1-100001.3.3" id="QQ2-1-10">Storing Derived File Variants</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >1.3.4 <a 
+href="#x1-110001.3.4" id="QQ2-1-11">Parallel Builds</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >1.3.5 <a 
+href="#x1-120001.3.5" id="QQ2-1-12">Help</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >1.3.6 <a 
+href="#x1-130001.3.6" id="QQ2-1-13">Errors</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >1.3.7 <a 
+href="#x1-140001.3.7" id="QQ2-1-14">Operations on Lists</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >1.3.8 <a 
+href="#x1-150001.3.8" id="QQ2-1-15">Editing while Building</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >1.3.9 <a 
+href="#x1-160001.3.9" id="QQ2-1-16">Recursive Implicit Rules</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >1.3.10 <a 
+href="#x1-170001.3.10" id="QQ2-1-17">Circular Dependencies</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >1.3.11 <a 
+href="#x1-180001.3.11" id="QQ2-1-18">Efficient Dependency Computation</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >1.3.12 <a 
+href="#x1-190001.3.12" id="QQ2-1-19">Tool Dependencies</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >1.3.13 <a 
+href="#x1-200001.3.13" id="QQ2-1-20">Availability</a></span>
+<br />   <span class="chapterToc" >2 <a 
+href="#x1-210002" id="QQ2-1-21">The Odinfile</a></span>
+<br />   &#x00A0;<span class="sectionToc" >2.1 <a 
+href="#x1-220002.1" id="QQ2-1-22">Targets</a></span>
+<br />   &#x00A0;<span class="sectionToc" >2.2 <a 
+href="#x1-230002.2" id="QQ2-1-23">Odin-Expressions</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >2.2.1 <a 
+href="#x1-240002.2.1" id="QQ2-1-24">Lexical Conventions</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >2.2.2 <a 
+href="#x1-250002.2.2" id="QQ2-1-25">Selection Expressions</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >2.2.3 <a 
+href="#x1-260002.2.3" id="QQ2-1-26">Derivation Expressions</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >2.2.4 <a 
+href="#x1-270002.2.4" id="QQ2-1-27">Parameterization Expressions</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >2.2.5 <a 
+href="#x1-280002.2.5" id="QQ2-1-28">String Expressions</a></span>
+<br />   &#x00A0;<span class="sectionToc" >2.3 <a 
+href="#x1-290002.3" id="QQ2-1-29">Virtual Targets</a></span>
+<br />   &#x00A0;<span class="sectionToc" >2.4 <a 
+href="#x1-300002.4" id="QQ2-1-30">Text Targets</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >2.4.1 <a 
+href="#x1-310002.4.1" id="QQ2-1-31">Executable Text Targets</a></span>
+<br />   &#x00A0;<span class="sectionToc" >2.5 <a 
+href="#x1-320002.5" id="QQ2-1-32">Command Targets</a></span>
+<br />   &#x00A0;<span class="sectionToc" >2.6 <a 
+href="#x1-330002.6" id="QQ2-1-33">Nested Target Definitions</a></span>
+<br />   <span class="chapterToc" >3 <a 
+href="#x1-340003" id="QQ2-1-34">Getting Started</a></span>
+<br />   &#x00A0;<span class="sectionToc" >3.1 <a 
+href="#x1-350003.1" id="QQ2-1-35">Systems with Several Files</a></span>
+<br />   &#x00A0;<span class="sectionToc" >3.2 <a 
+href="#x1-360003.2" id="QQ2-1-36">Files in Other Directories</a></span>
+<br />   &#x00A0;<span class="sectionToc" >3.3 <a 
+href="#x1-370003.3" id="QQ2-1-37">Recursive Odin Calls</a></span>
+<br />   &#x00A0;<span class="sectionToc" >3.4 <a 
+href="#x1-380003.4" id="QQ2-1-38">Debugging Your Program</a></span>
+<br />   <span class="chapterToc" >4 <a 
+href="#x1-390004" id="QQ2-1-39">Odin-Commands</a></span>
+<br />   &#x00A0;<span class="sectionToc" >4.1 <a 
+href="#x1-400004.1" id="QQ2-1-40">Query Odin-Commands</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >4.1.1 <a 
+href="#x1-410004.1.1" id="QQ2-1-41">Status of Odin Objects</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >4.1.2 <a 
+href="#x1-420004.1.2" id="QQ2-1-42">Error and Warning Messages</a></span>
+<br />   &#x00A0;<span class="sectionToc" >4.2 <a 
+href="#x1-430004.2" id="QQ2-1-43">Copy Odin-Commands</a></span>
+
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >4.2.1 <a 
+href="#x1-440004.2.1" id="QQ2-1-44">Copying to Standard Output</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >4.2.2 <a 
+href="#x1-450004.2.2" id="QQ2-1-45">Editing with the Copy Odin-Command</a></span>
+<br />   &#x00A0;<span class="sectionToc" >4.3 <a 
+href="#x1-460004.3" id="QQ2-1-46">Execute Odin-Commands</a></span>
+<br />   &#x00A0;<span class="sectionToc" >4.4 <a 
+href="#x1-470004.4" id="QQ2-1-47">Variable Assignment Odin-Commands</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >4.4.1 <a 
+href="#x1-480004.4.1" id="QQ2-1-48">Dir</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >4.4.2 <a 
+href="#x1-490004.4.2" id="QQ2-1-49">BuildHosts, MaxBuilds</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >4.4.3 <a 
+href="#x1-500004.4.3" id="QQ2-1-50">KeepGoing</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >4.4.4 <a 
+href="#x1-510004.4.4" id="QQ2-1-51">History</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >4.4.5 <a 
+href="#x1-520004.4.5" id="QQ2-1-52">ErrLevel, WarnLevel, LogLevel</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >4.4.6 <a 
+href="#x1-530004.4.6" id="QQ2-1-53">HelpLevel</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >4.4.7 <a 
+href="#x1-540004.4.7" id="QQ2-1-54">VerifyLevel</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >4.4.8 <a 
+href="#x1-550004.4.8" id="QQ2-1-55">Size</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >4.4.9 <a 
+href="#x1-560004.4.9" id="QQ2-1-56">Environment Variables</a></span>
+<br />   &#x00A0;<span class="sectionToc" >4.5 <a 
+href="#x1-570004.5" id="QQ2-1-57">Help</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >4.5.1 <a 
+href="#x1-580004.5.1" id="QQ2-1-58">Source Type Help</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >4.5.2 <a 
+href="#x1-590004.5.2" id="QQ2-1-59">Derivation Help</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >4.5.3 <a 
+href="#x1-600004.5.3" id="QQ2-1-60">Parameterization Help</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >4.5.4 <a 
+href="#x1-610004.5.4" id="QQ2-1-61">Variable Help</a></span>
+<br />   <span class="appendixToc" >A <a 
+href="#x1-62000A" id="QQ2-1-62">Dependency Database Utilities</a></span>
+<br />   &#x00A0;<span class="sectionToc" >A.1 <a 
+href="#x1-63000A.1" id="QQ2-1-63">Testing Host Files for Changes</a></span>
+<br />   &#x00A0;<span class="sectionToc" >A.2 <a 
+href="#x1-64000A.2" id="QQ2-1-64">Redoing a Particular Derivation Step</a></span>
+<br />   &#x00A0;<span class="sectionToc" >A.3 <a 
+href="#x1-65000A.3" id="QQ2-1-65">Browsing the Dependency Database</a></span>
+<br />   <span class="appendixToc" >B <a 
+href="#x1-66000B" id="QQ2-1-66">Tool Package Libraries</a></span>
+<br />   &#x00A0;<span class="sectionToc" >B.1 <a 
+href="#x1-67000B.1" id="QQ2-1-67">Tool Packages</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >B.1.1 <a 
+href="#x1-68000B.1.1" id="QQ2-1-68">Versioned Tool Packages</a></span>
+<br />   &#x00A0;<span class="sectionToc" >B.2 <a 
+href="#x1-69000B.2" id="QQ2-1-69">Derivation Graphs</a></span>
+<br />   &#x00A0;<span class="sectionToc" >B.3 <a 
+href="#x1-70000B.3" id="QQ2-1-70">Source Declarations</a></span>
+<br />   &#x00A0;<span class="sectionToc" >B.4 <a 
+href="#x1-71000B.4" id="QQ2-1-71">Object Type Declarations</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >B.4.1 <a 
+href="#x1-72000B.4.1" id="QQ2-1-72">Built-In Supertypes</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >B.4.2 <a 
+href="#x1-73000B.4.2" id="QQ2-1-73">Built-In Derived Object Types</a></span>
+<br />   &#x00A0;<span class="sectionToc" >B.5 <a 
+href="#x1-74000B.5" id="QQ2-1-74">Parameter Type Declarations</a></span>
+<br />   &#x00A0;<span class="sectionToc" >B.6 <a 
+href="#x1-75000B.6" id="QQ2-1-75">Environment Variable Declarations</a></span>
+<br />   &#x00A0;<span class="sectionToc" >B.7 <a 
+href="#x1-76000B.7" id="QQ2-1-76">Tool Declarations</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >B.7.1 <a 
+href="#x1-77000B.7.1" id="QQ2-1-77">Input-Expressions</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >B.7.2 <a 
+href="#x1-78000B.7.2" id="QQ2-1-78">Ignoring the Status of a Tool Input</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >B.7.3 <a 
+href="#x1-79000B.7.3" id="QQ2-1-79">Ignoring Changes to the Value of a Tool Input</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >B.7.4 <a 
+href="#x1-80000B.7.4" id="QQ2-1-80">EXEC Tool</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >B.7.5 <a 
+href="#x1-81000B.7.5" id="QQ2-1-81">COLLECT Tool</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >B.7.6 <a 
+href="#x1-82000B.7.6" id="QQ2-1-82">READ-LIST Tool</a></span>
+<br />   &#x00A0;&#x00A0;<span class="subsectionToc" >B.7.7 <a 
+href="#x1-83000B.7.7" id="QQ2-1-83">READ-REFERENCE Tool</a></span>
+<br />   <span class="appendixToc" >C <a 
+href="#x1-84000C" id="QQ2-1-84">Derivation Graph Syntax</a></span>
+<br />   <span class="appendixToc" >D <a 
+href="#x1-85000D" id="QQ2-1-85">Derivation Graph Example</a></span>
+   </div>
+
+   <h2 class="chapterHead"><span class="titlemark">Chapter&#x00A0;1</span><br /><a 
+ id="x1-20001"></a>Introduction</h2>
+   <h3 class="sectionHead"><span class="titlemark">1.1   </span> <a 
+ id="x1-30001.1"></a>Derived Object Managers</h3>
+<!--l. 39--><p class="noindent" >A software environment can be simplified if the user&#8217;s attention is focused on the information provided by the
+environment rather than the tools that create this information. A <span 
+class="cmti-10">derived object manager </span>provides this focus by
+automating the process of tool invocation. A derived object manager responds to a request for a piece of computed
+information, or <span 
+class="cmti-10">derived object</span>, by invoking the minimal number of tools necessary to produce that object. If
+previously computed objects are automatically stored by the object manager for later re-use, significant
+improvements in response time can be achieved.
+<!--l. 51--><p class="indent" >   In an extensible environment, the kinds of information potentially provided are extended by adding new tools
+that manipulate and generate new kinds of information. A few examples of the kind of information in a software
+environment are program source text, test data, modification histories, attributed syntax trees, compiled object
+code, data flow analysis, and results of symbolic execution.
+<!--l. 59--><p class="indent" >   A derived object manager must provide a language with which a user or a tool can name any desired object, and
+a specification language for describing the kinds of objects to be managed and the tools that produce them. In
+the Odin system, derived objects are named by <span 
+class="cmti-10">odin-expressions</span>, and the specification language is
+an extended production system called a <span 
+class="cmti-10">derivation graph </span>in which each tool is described by a single
+declaration.
+<!--l. 69--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">1.2   </span> <a 
+ id="x1-40001.2"></a>Odin Objects</h3>
+<!--l. 71--><p class="noindent" >Each Odin object is either a <span 
+class="cmti-10">file</span>, a <span 
+class="cmti-10">string</span>, or a <span 
+class="cmti-10">list </span>(an ordered sequence of objects). An example of a file is a file
+containing source code, an executable binary file, or an output file from a test run. An example of a
+string is a command flag. An example of a list is the source files of a program or the arguments to a
+command.
+<!--l. 80--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">1.2.1   </span> <a 
+ id="x1-50001.2.1"></a>Source and Derived Objects</h4>
+<!--l. 82--><p class="noindent" >Source objects are files that can be created or modified directly by the user. They can be regular files, directories, or
+symbolic links. Source objects cannot be automatically recreated by the Odin system, but are the basic building
+blocks from which the Odin system creates all other objects. Every source object is given a type by the Odin system
+based on its host filename, and this type determines what derived objects can be produced from the source
+object.
+<!--l. 92--><p class="indent" >   Derived objects are objects that can be produced from source objects and other derived objects
+through the invocation of one or more tools. Tools are invoked only as needed to create a specified
+derived object. The Odin system automatically saves objects from previous requests, so a given object
+might already exist and therefore be available immediately. Derived objects are created and modified
+only by the Odin system itself, not by users. Examples of objects that can be derived from source
+code are a cross reference listing, executable binary code, or the list of files referenced by <span 
+class="cmtt-10">#include</span>
+statements.
+<!--l. 105--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">1.2.2   </span> <a 
+ id="x1-60001.2.2"></a>The Derived Object Cache</h4>
+<!--l. 108--><p class="noindent" >In the Odin system, all derived objects are stored in a directory called the <span 
+class="cmti-10">derived object cache</span>, or simply the <span 
+class="cmti-10">cache</span>.
+The cache also contains the database that stores the <span 
+class="cmti-10">depends </span>relationship between the output and input files of a
+tool run, and the <span 
+class="cmti-10">contains </span>relationship between a list and its elements.
+
+<!--l. 114--><p class="indent" >   All host files other than those in the cache are source objects. A derived object can be copied from the cache into
+a source directory, but this does <span 
+class="cmti-10">not </span>make the file in the source directory a derived object &#8211; it just creates a source
+object that happens to have the same contents as the derived object.
+<!--l. 120--><p class="indent" >   The default location for the cache is a directory named <span 
+class="cmtt-10">.ODIN </span>in the user&#8217;s home directory. A non-default
+cache location can be specified in the <span 
+class="cmtt-10">$ODIN </span>environment variable, or with the <span 
+class="cmtt-10">-c </span>option to the <span 
+class="cmtt-10">odin</span>
+host-command. The main reasons for specifying a non-default location for the cache are to share a
+common cache with other users, or to locate the cache on a local disk for more efficient access to derived
+files.
+<!--l. 130--><p class="indent" >   The default name for a file in the cache is <span 
+class="cmtt-10">label.id.type</span>, where <span 
+class="cmtt-10">label </span>and <span 
+class="cmtt-10">id </span>are the results of <span 
+class="cmtt-10">:label </span>and
+<span 
+class="cmtt-10">:id </span>derivations (see Section&#x00A0;<a 
+href="#x1-73000B.4.2">B.4.2<!--tex4ht:ref: builtindrv --></a>), and where <span 
+class="cmtt-10">type </span>is the type of the file. If this filename is too long for your
+operating system, set the environment variable $ODIN_SHORTNAMES and a file in the cache will be named simply
+<span 
+class="cmtt-10">id.type</span>.
+<!--l. 138--><p class="indent" >   The default inter-process communication mechanism for the odin cache manager process is TCP/IP. If TCP/IP
+is not available, set the environment variable $ODIN_LOCALIPC and Unix domain sockets will be used
+instead.
+<!--l. 145--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">1.3   </span> <a 
+ id="x1-70001.3"></a>Why Not Just Use Make?</h3>
+<!--l. 147--><p class="noindent" >The most ubiquitous build manager is Stu Feldman&#8217;s Make program<span class="cite">[<span 
+class="cmbx-10">?</span>]</span>, with its many descendents<span class="cite">[<span 
+class="cmbx-10">?</span>]</span><span class="cite">[<span 
+class="cmbx-10">?</span>]</span><span class="cite">[<span 
+class="cmbx-10">?</span>]</span><span class="cite">[<span 
+class="cmbx-10">?</span>]</span>.
+Although ideal for small projects, Make has two major problems when used for large or complex projects: inaccurate
+dependency information and poor support for variant builds (such as builds for different architectures or builds with
+different levels of compiler optimization). Inaccurate dependency information leads to inefficient builds when
+unnecessary recomputations are performed and, more seriously, incorrect builds when necessary recomputations are
+not performed. Poor support for variant builds consists primarily of problems with specifying the variants and with
+storing the intermediate files for the variants. An indication of the difficulty of specifying a complex build variant is
+that often the only way to find out what a given build description means is to run Make and see what kind of
+commands it executes.
+<!--l. 164--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">1.3.1   </span> <a 
+ id="x1-80001.3.1"></a>Dependency Information</h4>
+<!--l. 166--><p class="noindent" >Inaccurate dependency information results from a variety of causes. If the user maintains the dependency
+information by hand, it is virtually guaranteed to be incorrect. A &#8220;make-depend&#8221; tool can automate
+the production of dependency information, but because of the expense of running such a tool on an
+entire system, it is usually not automatically invoked before each build, again leading to builds based
+on incorrect dependency information. If a separate dependency file is created for each source file to
+allow incremental dependency computation, it becomes feasible to automatically compute dependency
+information before each build. Unfortunately, the source directories then become cluttered with dependency
+information files, and the overhead of opening and reading all the dependency information files becomes
+excessive.
+<!--l. 182--><p class="indent" >   In Odin, tools that automatically gather dependency information are as easy to describe as standard tools like
+compilers, and Odin takes care of running them incrementally when they are needed. The results of these tools are
+stored in a persistent database rather than in the user&#8217;s Makefiles, so that this information can be retrieved
+efficiently and does not clutter up source directories.
+<!--l. 190--><p class="indent" >   Other dependency problems stem from Make&#8217;s use of file modification time ordering to determine whether a file
+is up-to-date. Network clock inconsistencies and the use of tools that restore files with their original modification
+dates can result in changed sources files whose modification dates are less than those of derived files that depend on
+them. In Odin, this problem is avoided by storing the date stamps of the inputs to a build step in the
+dependency database, so that any change to the modification time of a file (either earlier or later) triggers a
+re-build.
+
+<!--l. 201--><p class="indent" >   The use of file modification time ordering can also result in inefficient builds when a change to a source file does
+not result in a corresponding change to an intermediate derived file. For example, adding a comment to a source file
+will usually not change the result of compiling that file, which means that there is no reason to relink the unchanged
+object code to form a new executable. Odin avoids this inefficiency by re-running a tool only if the <span 
+class="cmti-10">value </span>of one of its
+inputs has changed. In particular, this allows Odin to build directly from an RCS <span 
+class="cmtt-10">xxx,v </span>or an SCCS
+<span 
+class="cmtt-10">s.xxx </span>file, without first checking out a version into a source directory (the check-out operation is just
+a tool like any other tool). This is not feasible in Make because every time a new version is added
+to the version control file, it would assume everything derived from <span 
+class="cmti-10">any </span>version of that file must be
+recomputed.
+<!--l. 220--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">1.3.2   </span> <a 
+ id="x1-90001.3.2"></a>Specifying Build Variants</h4>
+<!--l. 222--><p class="noindent" >In Make, a derived file variant is specified by changing the values of the appropriate Make variables. For example,
+the <span 
+class="cmtt-10">CC </span>variable can be changed to build with a different C compiler, and the <span 
+class="cmtt-10">CCFLAGS </span>variable can be changed to
+build with different C compiler flags. Unfortunately, the scope of a variable is the entire Makefile, while a build
+variant often involves different variable values for different intermediate files (for example, most of the files are to be
+compiled with debugging on, except for certain files containing time critical routines which are to be compiled with
+optimization on). To work around this problem, in Make you have to introduce a special build rule for each
+intermediate file build variant.
+<!--l. 236--><p class="indent" >   In Odin, a filename can be extended by an arbitrary number of build <span 
+class="cmti-10">parameters</span>, that are then used by Odin to
+customize the way that file is processed in any build step that refers to it. For example,
+
+   <div class="verbatim" id="verbatim-1">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+debug
+</div>
+<!--l. 242--><p class="nopar" > indicates that the debug flag should be set whenever <span 
+class="cmtt-10">prog.c </span>is used in a build step, while
+
+   <div class="verbatim" id="verbatim-2">
+&#x00A0;&#x00A0;&#x00A0;io.c&#x00A0;+optimize=2
+</div>
+<!--l. 247--><p class="nopar" > indicates that optimization level 2 should be set whenever <span 
+class="cmtt-10">io.c </span>is used in a build step. If the parameterized
+filename refers to a list of other files, the parameters are inherited by each of the referenced files. Because of the
+controlled scoping provided by Odin parameters and the expressive power of Odin implicit build rules, explicit build
+rules are hardly ever needed in an Odinfile.
+<!--l. 256--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">1.3.3   </span> <a 
+ id="x1-100001.3.3"></a>Storing Derived File Variants</h4>
+<!--l. 258--><p class="noindent" >Make usually stores a derived file in the directory containing the source file from which it is derived, since this allows
+other builds that reference the source file to reuse that derived file. The main disadvantage of this approach is that
+only one variant of a given derived file can exist at a given time. The build manager can easily mistake which version
+is currently in the directory, leading to an incorrect build. Other disadvantages are that a user must have write
+permission to the source directories in order to re-build derived files, a user can mistakenly delete a source
+file thinking it is a derived file, and a user can mistakenly edit a derived file thinking it is a source
+file.
+<!--l. 271--><p class="indent" >   The usual approach to this problem is to have the user explicitly allocate different directories to contain the
+results of different variant builds. Unfortunately, this makes it difficult for build sharing to take place, and unless
+the version of Make has been extended to write out the variable values used for the builds in a given
+directory, it is easy to get incorrect builds if different variable values are used for builds in the same
+directory.
+<!--l. 280--><p class="indent" >   Another approach to this problem used in ClearMake<span class="cite">[<span 
+class="cmbx-10">?</span>]</span> consists of introducing a a proprietary <span 
+class="cmti-10">multi-version</span>
+<span 
+class="cmti-10">file system</span>. Every file opened for reading during the build and every variable value is tracked by the
+system, and if the same set of files with the same variables are present in a later build request, the
+previously computed results of the build are re-used. Even this approach, though, requires that the user
+explicitly manage variant derived file locations if concurrent variant builds of files local to a view are
+desired.
+<!--l. 291--><p class="indent" >   The alternative approach used by Odin that does not require replacing the native Unix file system is to use a
+derived file cache. In effect, the file namespace is extended to provide names for every derived file variant. For
+example,
+
+   <div class="verbatim" id="verbatim-3">
+&#x00A0;&#x00A0;&#x00A0;/usr/src/prog.c&#x00A0;:exe
+</div>
+<!--l. 299--><p class="nopar" > is the executable computed by compiling and linking <span 
+class="cmtt-10">/usr/src/prog.c</span>,
+
+   <div class="verbatim" id="verbatim-4">
+&#x00A0;&#x00A0;&#x00A0;/usr/src/prog.c&#x00A0;+debug&#x00A0;:exe
+</div>
+<!--l. 303--><p class="nopar" > is the executable with debugging information, and
+
+   <div class="verbatim" id="verbatim-5">
+&#x00A0;&#x00A0;&#x00A0;/usr/src/prog.c&#x00A0;+optimize=2&#x00A0;:exe
+</div>
+<!--l. 307--><p class="nopar" > is the executable compiled with level-2 optimization. These extended names are parsed by the Odin
+interpreter, which either maps the name to a source file or to the correct derived file in the derived file
+cache.
+<!--l. 313--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">1.3.4   </span> <a 
+ id="x1-110001.3.4"></a>Parallel Builds</h4>
+<!--l. 314--><p class="noindent" >Odin provides concurrent parallel builds on local and remote hosts. You just specify a list of build hosts and the
+maximum number of parallel builds.
+<!--l. 318--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">1.3.5   </span> <a 
+ id="x1-120001.3.5"></a>Help</h4>
+<!--l. 319--><p class="noindent" >Odin provides a powerful help system that uses its knowledge of the currently installed set of implicit rules
+(including those added by the local site administrator and an individual user). In particular, it can tell
+you what kinds of file extensions are currently recognized, what kinds of files can be derived from a
+specific type of file, and what parameters can be specified to produce a variant of a given derived
+file.
+<!--l. 328--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">1.3.6   </span> <a 
+ id="x1-130001.3.6"></a>Errors</h4>
+<!--l. 329--><p class="noindent" >Odin maintains a persistent database of all error and warning messages associated with each build step. You can
+request a summary report of all errors and/or warnings associated with all the build steps of a particular derived
+object. For derived object variants, any valid error information from other variants is reused from the database
+rather than recomputed.
+<!--l. 337--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">1.3.7   </span> <a 
+ id="x1-140001.3.7"></a>Operations on Lists</h4>
+<!--l. 338--><p class="noindent" >Enhanced versions of Make each provide their own idiosyncratic set of operations for manipulating filenames and
+lists of filenames. In Odin, these operations are performed by arbitrary Unix tools &#8211; this is feasible because Odin
+caches the results of these tools in the dependency database.
+<!--l. 344--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">1.3.8   </span> <a 
+ id="x1-150001.3.8"></a>Editing while Building</h4>
+<!--l. 345--><p class="noindent" >You can edit files that are currently being used for one or more builds, and Odin will automatically recognize the
+changes and redo the parts of the builds that are affected by the changes, before letting the builds
+complete.
+
+<!--l. 350--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">1.3.9   </span> <a 
+ id="x1-160001.3.9"></a>Recursive Implicit Rules</h4>
+<!--l. 351--><p class="noindent" >Odin allows you to recursively chain implicit rules, so for example, you can specify that the files included by a
+file are the files directly included by the file plus the files included by the files included by the file.
+Even enhanced versions of Make that do support chaining of implicit rules do not allow recursive
+chaining.
+<!--l. 358--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">1.3.10   </span> <a 
+ id="x1-170001.3.10"></a>Circular Dependencies</h4>
+<!--l. 359--><p class="noindent" >Odin allows a file to depend on itself. This may seem unreasonable until you start writing tools that generate code,
+and you find that it would be very useful to have the tool generate part of itself. In this situation, Odin will
+terminate the computation when the tool produces a file that is identical to the one used as input to the
+computation (i.e., when the computation reaches a <span 
+class="cmti-10">fixed-point</span>).
+<!--l. 368--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">1.3.11   </span> <a 
+ id="x1-180001.3.11"></a>Efficient Dependency Computation</h4>
+<!--l. 369--><p class="noindent" >In very large systems, even when a desired derived file is up-to-date, simply <span 
+class="cmtt-10">fstat()</span>&#8217;ing all the source files upon
+which it depends can take Make several minutes. Since Odin can broadcast file change information in its dependency
+database, dependency computation can be made proportional to the number of file dependencies that have <span 
+class="cmti-10">changed</span>
+rather than the total number of file dependencies.
+<!--l. 378--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">1.3.12   </span> <a 
+ id="x1-190001.3.12"></a>Tool Dependencies</h4>
+<!--l. 379--><p class="noindent" >Build steps automatically depend on the tools and scripts that produce them, so if you change a tool, Odin will
+recompute anything produced by that tool the next time you request a build. If the tool change did not affect a
+particular run of that tool, the recomputation is short-circuited, and the rest of the derived files that depend on that
+output of the tool are marked as still being valid.
+<!--l. 387--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">1.3.13   </span> <a 
+ id="x1-200001.3.13"></a>Availability</h4>
+<!--l. 388--><p class="noindent" >Finally, Odin is portable, free, and available in source form. It can be retrieved via anonymous ftp from the
+compressed tar formatted file <span 
+class="cmtt-10">distribs/odin/odin.tar.Z </span>at <span 
+class="cmtt-10">ftp.cs.colorado.edu (128.138.243.151)</span>.
+
+   <h2 class="chapterHead"><span class="titlemark">Chapter&#x00A0;2</span><br /><a 
+ id="x1-210002"></a>The Odinfile</h2>
+   <h3 class="sectionHead"><span class="titlemark">2.1   </span> <a 
+ id="x1-220002.1"></a>Targets</h3>
+<!--l. 401--><p class="noindent" >A build <span 
+class="cmti-10">target </span>in a directory is a source file whose value is computed by the derived object manager. Just as Make
+uses a file named <span 
+class="cmtt-10">Makefile </span>to specify targets for a directory, Odin uses a file named <span 
+class="cmtt-10">Odinfile</span>. When the
+host-command:
+
+   <div class="verbatim" id="verbatim-6">
+&#x00A0;&#x00A0;&#x00A0;odin&#x00A0;prog
+</div>
+<!--l. 408--><p class="nopar" > is executed, Odin checks to see if <span 
+class="cmtt-10">prog </span>is a target in <span 
+class="cmtt-10">./Odinfile</span>. If it is a target, but is not up-to-date, Odin
+invokes whatever tools are necessary to bring it up-to-date. Odin automatically looks in all directories that contain
+the input files for these tools, and if there is an <span 
+class="cmtt-10">Odinfile </span>that contains a target for an input file, Odin ensures that
+the input file is up-to-date before using it.
+<!--l. 419--><p class="indent" >   A target definition in an <span 
+class="cmtt-10">Odinfile </span>consists of a filename followed by two equal-signs and an <span 
+class="cmti-10">odin-expression</span>. For
+example, the <span 
+class="cmtt-10">Odinfile </span>entry:
+
+   <div class="verbatim" id="verbatim-7">
+&#x00A0;&#x00A0;&#x00A0;prog&#x00A0;==&#x00A0;prog.c&#x00A0;+debug&#x00A0;:exe
+</div>
+<!--l. 424--><p class="nopar" > declares that the value of the source file <span 
+class="cmtt-10">prog </span>should always be equal to the value of the file specified by the
+odin-expression <span 
+class="cmtt-10">prog.c+debug:exe</span>.
+<!--l. 429--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">2.2   </span> <a 
+ id="x1-230002.2"></a>Odin-Expressions</h3>
+<!--l. 432--><p class="noindent" >Just as any source file can be named with a source filename, any derived file can be named with an
+<span 
+class="cmti-10">odin-expression</span>. An odin-expression is just like a source filename, except that in addition to the slash operator
+used in source filenames for selecting elements of directories, there is a plus-sign operator for adding
+parameters to an object and a colon operator for selecting a derivation from an object. For example, in the
+odin-expression:
+
+   <div class="verbatim" id="verbatim-8">
+&#x00A0;&#x00A0;&#x00A0;src/prog.c+debug:exe
+</div>
+<!--l. 442--><p class="nopar" > <span 
+class="cmtt-10">prog.c </span>is selected from the <span 
+class="cmtt-10">src </span>directory, the parameter <span 
+class="cmtt-10">+debug </span>is associated with <span 
+class="cmtt-10">src/prog.c</span>, and the <span 
+class="cmtt-10">:exe </span>(i.e.
+executable binary) derivation is selected from <span 
+class="cmtt-10">src/prog.c+debug</span>.
+<!--l. 448--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">2.2.1   </span> <a 
+ id="x1-240002.2.1"></a>Lexical Conventions</h4>
+<!--l. 450--><p class="noindent" >Lexically, an odin-expression is composed of a sequence of <span 
+class="cmti-10">identifier </span>and <span 
+class="cmti-10">operator </span>tokens, and is terminated by a
+new-line character. An odin-expression can be continued on multiple lines by escaping each new-line
+character with a backslash. This backslash (but not the new-line) is deleted before the expression is
+parsed. Multiple odin-expressions can be specified on the same line by separating them with semi-colon
+operators.
+<!--l. 460--><p class="indent" >   An identifier token is just a sequence of characters. The following characters:
+
+   <div class="verbatim" id="verbatim-9">
+&#x00A0;&#x00A0;&#x00A0;:&#x00A0;+&#x00A0;=&#x00A0;(&#x00A0;)&#x00A0;/&#x00A0;%&#x00A0;;&#x00A0;?&#x00A0;$&#x00A0;&#x003C;&#x00A0;&#x003E;&#x00A0;!&#x00A0;&#x003C;space&#x003E;&#x00A0;&#x003C;tab&#x003E;&#x00A0;&#x003C;new-line&#x003E;&#x00A0;#&#x00A0;\&#x00A0;&#8217;
+</div>
+<!--l. 464--><p class="nopar" > must be escaped to be included in an identifier. A single character can be escaped by preceding it with a backslash
+(e.g. <span 
+class="cmtt-10">lost</span><span class="verb"><span 
+class="cmtt-10">\+found</span>). A sequence of characters can be escaped by enclosing them in single quote marks (e.g.
+<span 
+class="cmtt-10">&#8217;lost+found&#8217;</span>).
+<!--l. 471--><p class="indent" >   Unescaped <span 
+class="cmti-10">whitespace </span>characters (spaces, tabs, and new-lines) are ignored during parsing except when they
+separate adjacent identifiers. A comment is indicated by a sharp and is terminated by a new-line character. For
+example, the odin-expression:
+
+   <div class="verbatim" id="verbatim-10">
+&#x00A0;&#x00A0;&#x00A0;#&#x00A0;this&#x00A0;is&#x00A0;a&#x00A0;comment
+</div>
+<!--l. 478--><p class="nopar" > is a comment and is equivalent to whitespace.
+<!--l. 481--><p class="indent" >   An odin-expression can be surrounded by parentheses. Parentheses are required for nested odin-expressions
+(such as values of parameters) or for the empty expression <span 
+class="cmtt-10">() </span>which represents an immutable empty
+file.
+<!--l. 486--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">2.2.2   </span> <a 
+ id="x1-250002.2.2"></a>Selection Expressions</h4>
+<!--l. 489--><p class="noindent" >A selection expression, indicated by the slash operator, selects a file from a directory. The argument to the slash
+operator is the <span 
+class="cmti-10">key </span>of the desired file. For example, the odin-expression:
+
+   <div class="verbatim" id="verbatim-11">
+&#x00A0;&#x00A0;&#x00A0;src/prog.c
+</div>
+<!--l. 495--><p class="nopar" > selects key <span 
+class="cmtt-10">prog.c </span>from the directory <span 
+class="cmtt-10">src</span>. (The careful reader will note that an odin-expression composed
+entirely of selection expressions bears an uncanny resemblance to a standard Unix filename.) Any special
+character in the key must be escaped. For example, <span 
+class="cmtt-10">prog.c++ </span>must be escaped, as in <span 
+class="cmtt-10">prog.c</span><span class="verb"><span 
+class="cmtt-10">\+</span><span class="verb"><span 
+class="cmtt-10">\+ </span>or
+<span 
+class="cmtt-10">&#8217;prog.c++&#8217;</span>.
+<!--l. 504--><p class="indent" >   Odin splits each key into two parts: a <span 
+class="cmti-10">root </span>and a <span 
+class="cmti-10">type-name</span>. The type-name is the longest prefix of the key that
+matches one of the declared source types prefixes (see Section&#x00A0;<a 
+href="#x1-70000B.3">B.3<!--tex4ht:ref: sourcedecl --></a>). If no prefix match is found, the type-name is
+the longest suffix of the key that matches one of the declared source type suffixes. If no suffix match is found, the
+type-name is the empty string.
+<!--l. 512--><p class="indent" >   Assuming that <span 
+class="cmtt-10">s. </span>is the only declared source type prefix and <span 
+class="cmtt-10">.c </span>is the only declared source type suffix, then the
+following relationships hold:
+
+   <div class="verbatim" id="verbatim-12">
+&#x00A0;&#x00A0;&#x00A0;FILENAME&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;KEY&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;ROOT&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;TYPE-NAME
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;src/prog.c&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;prog&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;.c
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;src/s.prog.c&#x00A0;&#x00A0;&#x00A0;&#x00A0;s.prog.c&#x00A0;&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;&#x00A0;&#x00A0;s.
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;src/prog&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;prog&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;prog
+</div>
+<!--l. 520--><p class="nopar" > The type-name is used to determine the object type of the file (see Section&#x00A0;<a 
+href="#x1-70000B.3">B.3<!--tex4ht:ref: sourcedecl --></a>), and the root is used to determine
+the object type of generic objects derived from the file (see Section&#x00A0;<a 
+href="#x1-72000B.4.1">B.4.1<!--tex4ht:ref: builtin --></a>).
+<!--l. 526--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">2.2.3   </span> <a 
+ id="x1-260002.2.3"></a>Derivation Expressions</h4>
+<!--l. 528--><p class="noindent" >A derivation expression, indicated by the colon operator, is used to specify a derived object. The argument to the
+colon operator is an <span 
+class="cmti-10">object type </span>that has been declared in one of the tool packages (see Section&#x00A0;<a 
+href="#x1-71000B.4">B.4<!--tex4ht:ref: objecttype --></a>). For example,
+the odin-expression:
+
+   <div class="verbatim" id="verbatim-13">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;:fmt
+</div>
+<!--l. 536--><p class="nopar" > names a formatted version of <span 
+class="cmtt-10">prog.c</span>, and the odin-expression:
+
+   <div class="verbatim" id="verbatim-14">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;:fmt&#x00A0;:exe
+</div>
+<!--l. 540--><p class="nopar" > names the result of compiling and linking the formatted version of <span 
+class="cmtt-10">prog.c</span>.
+<!--l. 544--><p class="indent" >   A derived object can be a directory, in which case it is called a <span 
+class="cmti-10">derived directory</span>. Elements of a derived directory
+are selected with the same slash operator used to select elements of source directories. For example, if
+<span 
+class="cmtt-10">src/prog.c:output </span>is a derived directory containing the output files from a test run of <span 
+class="cmtt-10">prog.c</span>, and this directory
+contains three files named <span 
+class="cmtt-10">DATA</span>, <span 
+class="cmtt-10">source.listing</span>, and <span 
+class="cmtt-10">source.errors</span>, then these three files are named by the
+odin-expressions:
+
+   <div class="verbatim" id="verbatim-15">
+&#x00A0;&#x00A0;&#x00A0;src/prog.c:output/DATA
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;src/prog.c:output/source.listing
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;src/prog.c:output/source.errors
+</div>
+<!--l. 557--><p class="nopar" > An element of a derived directory cannot be another directory, although it can be a symbolic link to another
+directory.
+<!--l. 561--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">2.2.4   </span> <a 
+ id="x1-270002.2.4"></a>Parameterization Expressions</h4>
+<!--l. 563--><p class="noindent" >A parameterization expression, indicated by the plus-sign operator, extends an object with additional information
+that affects the derived objects produced from that object. The argument to the plus-sign operator is a <span 
+class="cmti-10">parameter</span>
+<span 
+class="cmti-10">type </span>(see Section&#x00A0;<a 
+href="#x1-74000B.5">B.5<!--tex4ht:ref: parametertype --></a>), optionally followed by an equal-sign operator and a sequence of one or more
+identifiers and parenthesized object-expressions. The identifiers specify string objects. For example, in the
+odin-expression:
+
+   <div class="verbatim" id="verbatim-16">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+lib=(support.c.sm&#x00A0;+debug&#x00A0;:a)&#x00A0;+lib=termcap
+</div>
+<!--l. 574--><p class="nopar" > the value of the first <span 
+class="cmtt-10">+lib </span>parameter is the object <span 
+class="cmtt-10">support.c.sm+debug:a </span>and the value of the second <span 
+class="cmtt-10">+lib</span>
+parameter is the string <span 
+class="cmtt-10">termcap</span>. An example of an odin-expression with a parameter value that is a sequence
+is:
+
+   <div class="verbatim" id="verbatim-17">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+lib=dbm&#x00A0;(support.c.sm&#x00A0;+debug&#x00A0;:a)&#x00A0;socket
+</div>
+<!--l. 582--><p class="nopar" > which specifies that the <span 
+class="cmtt-10">+lib </span>parameter has a value that is a sequence consisting of the string <span 
+class="cmtt-10">dbm</span>, the object
+<span 
+class="cmtt-10">support.c.sm+debug:a </span>and the string <span 
+class="cmtt-10">socket</span>.
+<!--l. 587--><p class="indent" >   If the parameter value is omitted, it is equivalent to specifying the identifier consisting of a single space <span 
+class="cmtt-10">&#8217; &#8217; </span>as
+the value. For example, the following two odin-expressions:
+
+   <div class="verbatim" id="verbatim-18">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+debug
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+debug=&#8217;&#x00A0;&#8217;
+</div>
+<!--l. 594--><p class="nopar" > are equivalent.
+<!--l. 597--><p class="indent" >   The parameter values of a given parameter type in an odin-expression form an ordered set, where the order of
+the values is the order specified in the odin-expression. Therefore, the odin-expressions:
+
+   <div class="verbatim" id="verbatim-19">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+lib=dbm&#x00A0;+lib=socket&#x00A0;:exe
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+lib=socket&#x00A0;+lib=dbm&#x00A0;:exe
+</div>
+<!--l. 604--><p class="nopar" > are not equivalent. If multiple copies of the same parameter value appear, only the first of the multiple copies is
+kept. For example, the odin-expressions:
+
+   <div class="verbatim" id="verbatim-20">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+lib=socket&#x00A0;+lib=dbm&#x00A0;+lib=socket&#x00A0;:exe
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+lib=socket&#x00A0;+lib=dbm&#x00A0;:exe
+</div>
+<!--l. 612--><p class="nopar" > are equivalent. If a parameter has a value that is a sequence, that value is only considered the same as another
+identical sequence. For example, the odin-expressions:
+
+   <div class="verbatim" id="verbatim-21">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+lib=socket&#x00A0;dbm&#x00A0;+lib=socket&#x00A0;:exe
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+lib=socket&#x00A0;+lib=dbm&#x00A0;:exe
+</div>
+<!--l. 620--><p class="nopar" > are not equivalent, while the odin-expressions:
+
+   <div class="verbatim" id="verbatim-22">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+lib=socket&#x00A0;dbm&#x00A0;+lib=socket&#x00A0;+lib=socket&#x00A0;dbm&#x00A0;:exe
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+lib=socket&#x00A0;dbm&#x00A0;+lib=socket&#x00A0;:exe
+</div>
+<!--l. 625--><p class="nopar" > are equivalent.
+<!--l. 628--><p class="indent" >   The parameter value lists of each parameter type are disjoint, therefore, the order of parameters of different
+types is not significant. For example, the odin-expressions:
+
+   <div class="verbatim" id="verbatim-23">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+debug&#x00A0;+profile&#x00A0;:exe
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+profile&#x00A0;+debug&#x00A0;:exe
+</div>
+<!--l. 634--><p class="nopar" > are equivalent.
+<!--l. 637--><p class="indent" >   Parameters of a list object are inherited by all the elements of the list. For example, if the odin-expression:
+
+   <div class="verbatim" id="verbatim-24">
+&#x00A0;&#x00A0;&#x00A0;prog.c.sm&#x00A0;:list
+</div>
+<!--l. 641--><p class="nopar" > named a list whose elements were <span 
+class="cmtt-10">main.c </span>and <span 
+class="cmtt-10">subrs.c</span>, then the odin-expression:
+
+   <div class="verbatim" id="verbatim-25">
+&#x00A0;&#x00A0;&#x00A0;prog.c.sm&#x00A0;:list&#x00A0;+debug
+</div>
+<!--l. 646--><p class="nopar" > associates the <span 
+class="cmtt-10">+debug </span>parameter with <span 
+class="cmtt-10">main.c </span>and <span 
+class="cmtt-10">subrs.c</span>.
+<!--l. 649--><p class="indent" >   Parameters are not inherited forward or backward through explicit derivations. Therefore, in the
+odin-expression:
+
+   <div class="verbatim" id="verbatim-26">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+debug&#x00A0;:o&#x00A0;+optimize=2&#x00A0;:exe
+</div>
+<!--l. 653--><p class="nopar" > the <span 
+class="cmtt-10">:o </span>derivation has debugging, but no optimization, while the <span 
+class="cmtt-10">:exe </span>derivation has optimization, but no
+debugging.
+<!--l. 657--><p class="indent" >   Compare that to the similar expression in which the <span 
+class="cmtt-10">:o </span>is implicit:
+
+   <div class="verbatim" id="verbatim-27">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+debug&#x00A0;+optimize=2&#x00A0;:exe
+</div>
+<!--l. 660--><p class="nopar" > both parameters apply to :exe and all implicit steps (e.g. <span 
+class="cmtt-10">:o</span>) in between, so prog.c is both compiled and linked with
+debugging and optimization.
+<!--l. 665--><p class="indent" >   Frequently, several odin-expressions share a common set of parameters. To support this kind of sharing, a
+parameterization expression can take the form of a plus-sign followed by a parenthesized object-expression. The
+common set of parameters are then stored in the file named by the object-expression. For example, if the file
+<span 
+class="cmtt-10">my.prms </span>contained the text:
+
+   <div class="verbatim" id="verbatim-28">
+&#x00A0;&#x00A0;&#x00A0;+debug&#x00A0;+lib_sp=(/local/lib)&#x00A0;+lib=socket&#x00A0;+lib=dbm&#x00A0;+gnu
+</div>
+<!--l. 674--><p class="nopar" > then the odin-expressions:
+
+   <div class="verbatim" id="verbatim-29">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+(my.prms)&#x00A0;:exe
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+debug&#x00A0;+lib_sp=(/local/lib)&#x00A0;+lib=socket&#x00A0;+lib=dbm&#x00A0;+gnu&#x00A0;:exe
+</div>
+<!--l. 679--><p class="nopar" > would be equivalent.
+<!--l. 682--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">2.2.5   </span> <a 
+ id="x1-280002.2.5"></a>String Expressions</h4>
+<!--l. 684--><p class="noindent" >A string expression, indicated by the equal-sign operator followed by an identifier, is used to specify arguments to
+tools that are not filenames. For example, the odin-expression:
+
+   <div class="verbatim" id="verbatim-30">
+&#x00A0;&#x00A0;&#x00A0;=cxv
+</div>
+<!--l. 690--><p class="nopar" > names the string <span 
+class="cmtt-10">cxv</span>. For example in the odin-expression:
+
+   <div class="verbatim" id="verbatim-31">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+lib=(mylib.a)&#x00A0;+define=FRED:exe
+</div>
+<!--l. 694--><p class="nopar" > <span 
+class="cmtt-10">mylib.a </span>refers to the file of that name in the current directory while <span 
+class="cmtt-10">FRED </span>is a string.
+<!--l. 698--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">2.3   </span> <a 
+ id="x1-290002.3"></a>Virtual Targets</h3>
+<!--l. 701--><p class="noindent" >In addition to targets, an <span 
+class="cmtt-10">Odinfile </span>can contain <span 
+class="cmti-10">virtual targets </span>that define a set of <span 
+class="cmti-10">virtual files</span>. A virtual target is
+like a target, except that the value is not copied into a host file, but is simply associated with the specified virtual
+filename. Virtual files provide a mechanism for specifying aliases for complicated odin-expressions, and a mechanism
+for specifying build-support files without cluttering host directories.
+<!--l. 712--><p class="indent" >   A virtual target definition is the same as a target definition (see Section&#x00A0;<a 
+href="#x1-220002.1">2.1<!--tex4ht:ref: target --></a>), except that the filename begins
+with an unescaped percent-sign. For example, the <span 
+class="cmtt-10">Odinfile </span>entry:
+
+   <div class="verbatim" id="verbatim-32">
+&#x00A0;&#x00A0;&#x00A0;%prog&#x00A0;==&#x00A0;prog.c&#x00A0;+debug&#x00A0;:exe
+</div>
+<!--l. 718--><p class="nopar" > binds the odin-expression <span 
+class="cmtt-10">prog.c+debug:exe </span>to the virtual filename <span 
+class="cmtt-10">prog</span>.
+<!--l. 722--><p class="indent" >   The syntax for selecting a virtual file from an <span 
+class="cmtt-10">Odinfile </span>is identical to that for selecting a file from a directory,
+except that a percent-sign is used instead of a slash. For example, the odin-expression:
+
+   <div class="verbatim" id="verbatim-33">
+&#x00A0;&#x00A0;&#x00A0;src/Odinfile%prog
+</div>
+<!--l. 728--><p class="nopar" > selects the virtual file <span 
+class="cmtt-10">prog </span>from <span 
+class="cmtt-10">src/Odinfile</span>.
+<!--l. 731--><p class="indent" >   The explicit <span 
+class="cmtt-10">/Odinfile </span>above may be omitted. For example, the odin-expressions:
+
+   <div class="verbatim" id="verbatim-34">
+&#x00A0;&#x00A0;&#x00A0;src/Odinfile%prog
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;src/%prog
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;src%prog
+</div>
+<!--l. 737--><p class="nopar" > are equivalent, as are:
+
+   <div class="verbatim" id="verbatim-35">
+&#x00A0;&#x00A0;&#x00A0;./Odinfile%prog
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;./%prog
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;.%prog
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;%prog
+</div>
+<!--l. 744--><p class="nopar" > which all reference the current working directory.
+<!--l. 747--><p class="indent" >   Although only a file named <span 
+class="cmtt-10">Odinfile </span>can specify targets, any file can contain virtual targets. For example, if
+<span 
+class="cmtt-10">src/models </span>were a host file containing the text:
+
+   <div class="verbatim" id="verbatim-36">
+&#x00A0;&#x00A0;&#x00A0;%fastprog&#x00A0;==&#x00A0;prog.c&#x00A0;+optimize=2&#x00A0;:exe
+</div>
+<!--l. 752--><p class="nopar" > then the odin-expression:
+
+   <div class="verbatim" id="verbatim-37">
+&#x00A0;&#x00A0;&#x00A0;src/models%fastprog
+</div>
+<!--l. 756--><p class="nopar" > obtains the virtual target for <span 
+class="cmtt-10">%fastprog </span>from <span 
+class="cmtt-10">src/models</span>.
+<!--l. 760--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">2.4   </span> <a 
+ id="x1-300002.4"></a>Text Targets</h3>
+<!--l. 763--><p class="noindent" >The value of a target can be specified directly as lines of text (a <span 
+class="cmti-10">here document</span>), instead of as an odin-expression. In
+this case, the value declaration consists of two left-angle-brackets optionally followed by an arbitrary tag identifier.
+For example, the <span 
+class="cmtt-10">Odinfile </span>entry:
+
+   <div class="verbatim" id="verbatim-38">
+prog.c.sm&#x00A0;==&#x00A0;&#x003C;&#x003C;&#x00A0;END
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;main.c
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;routines.c
+&#x00A0;<br />END
+</div>
+<!--l. 773--><p class="nopar" > declares <span 
+class="cmtt-10">prog.c.sm </span>to be a text target. The value of <span 
+class="cmtt-10">prog.c.sm </span>is then a file containing the text:
+
+   <div class="verbatim" id="verbatim-39">
+&#x00A0;&#x00A0;&#x00A0;&#x00A0;main.c
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;routines.c
+</div>
+<!--l. 779--><p class="nopar" >
+<!--l. 781--><p class="indent" >   If the tag identifier is omitted, the text value ends at the first line containing only whitespace characters. For
+example, the <span 
+class="cmtt-10">Odinfile </span>entry:
+
+   <div class="verbatim" id="verbatim-40">
+prog.c.sm&#x00A0;==&#x00A0;&#x003C;&#x003C;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;main.c
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;routines.c
+</div>
+<!--l. 788--><p class="nopar" > is equivalent to the previous definition.
+<!--l. 791--><p class="indent" >   If the tag identifier begins with a new-line character, the terminating tag identifier does not contain the leading
+new-line character, and the last new-line character in the text value is ignored. For example, the <span 
+class="cmtt-10">Odinfile</span>
+entry:
+
+   <div class="verbatim" id="verbatim-41">
+vowels&#x00A0;==&#x00A0;&#x003C;&#x003C;&#x00A0;\\
+&#x00A0;<br />TAG
+&#x00A0;<br />aeiou
+&#x00A0;<br />TAG
+</div>
+<!--l. 801--><p class="nopar" > defines the contents of the file <span 
+class="cmtt-10">vowels </span>to be the five characters: &#8221;<span 
+class="cmtt-10">aeiou</span>&#8221;.
+<!--l. 805--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">2.4.1   </span> <a 
+ id="x1-310002.4.1"></a>Executable Text Targets</h4>
+<!--l. 808--><p class="noindent" >Execute permission can be set for a text target by specifying it to be an <span 
+class="cmti-10">executable text target</span>. A text target is an
+executable text target if an exclamation-point is specified immediately before the <span 
+class="cmtt-10">&#x003C;&#x003C;</span>. For example, the <span 
+class="cmtt-10">Odinfile</span>
+entry:
+
+   <div class="verbatim" id="verbatim-42">
+&#x00A0;&#x00A0;&#x00A0;%backup&#x00A0;==&#x00A0;!&#x003C;&#x003C;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;backup_name=$1.back
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;mv&#x00A0;$1&#x00A0;$backup_name
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;cp&#x00A0;$backup_name&#x00A0;$1
+</div>
+<!--l. 818--><p class="nopar" > specifies <span 
+class="cmtt-10">%backup </span>to be an executable text target.
+<!--l. 822--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">2.5   </span> <a 
+ id="x1-320002.5"></a>Command Targets</h3>
+<!--l. 825--><p class="noindent" >A target is a <span 
+class="cmti-10">command target </span>if an exclamation-point is specified following the filename. For example, the <span 
+class="cmtt-10">Odinfile</span>
+entry:
+
+   <div class="verbatim" id="verbatim-43">
+&#x00A0;&#x00A0;&#x00A0;prog&#x00A0;!&#x00A0;==&#x00A0;prog.c.sm&#x00A0;+debug&#x00A0;:exe
+</div>
+<!--l. 830--><p class="nopar" > specifies <span 
+class="cmtt-10">prog </span>to be a command target.
+<!--l. 833--><p class="indent" >   Normally, when a filename is specified as an argument to the <span 
+class="cmtt-10">odin </span>host-command, Odin simply ensures
+that the value of the filename is up-to-date. If the filename is a command target, Odin also executes
+the file after it is made up-to-date. For example, with the preceding target definition for <span 
+class="cmtt-10">prog</span>, the
+host-command:
+
+   <div class="verbatim" id="verbatim-44">
+&#x00A0;&#x00A0;&#x00A0;odin&#x00A0;prog
+</div>
+<!--l. 842--><p class="nopar" > makes sure <span 
+class="cmtt-10">prog </span>is up-to-date with respect to <span 
+class="cmtt-10">prog.c.sm+debug:exe</span>, and then executes it.
+<!--l. 847--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">2.6   </span> <a 
+ id="x1-330002.6"></a>Nested Target Definitions</h3>
+<!--l. 850--><p class="noindent" >A file containing additional target definitions can be specified in a <span 
+class="cmti-10">nested target definition</span>. A nested target definition
+consists of two equal-signs followed by an odin-expression. A common use of nested target definitions is to
+pre-process the text of the target definitions. For example, the <span 
+class="cmtt-10">Odinfile </span>entries:
+
+   <div class="verbatim" id="verbatim-45">
+&#x00A0;&#x00A0;&#x00A0;==&#x00A0;%nested&#x00A0;:cpp
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;%nested&#x00A0;==&#x00A0;&#x003C;&#x003C;&#x00A0;EOF
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;#ifdef&#x00A0;linux
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;prog&#x00A0;==&#x00A0;prog.c&#x00A0;+gnu&#x00A0;+debug&#x00A0;:exe
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;#else
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;prog&#x00A0;==&#x00A0;prog.c&#x00A0;+debug&#x00A0;:exe
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;#endif
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;EOF
+</div>
+<!--l. 867--><p class="nopar" > specify that the <span 
+class="cmtt-10">+gnu </span>parameter should be used on the <span 
+class="cmtt-10">linux </span>platform.
+
+   <h2 class="chapterHead"><span class="titlemark">Chapter&#x00A0;3</span><br /><a 
+ id="x1-340003"></a>Getting Started</h2>
+<!--l. 875--><p class="noindent" >To get started using Odin, go to a directory containing your favorite &#8221;hello world&#8221; program.
+
+   <div class="verbatim" id="verbatim-46">
+&#x00A0;&#x00A0;&#x00A0;1%&#x00A0;cd&#x00A0;/u/fred
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;2%&#x00A0;cat&#x00A0;hello.c
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;main()
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;{&#x00A0;printf("Hello&#x00A0;World.\n");&#x00A0;return&#x00A0;0;&#x00A0;}
+</div>
+<!--l. 883--><p class="nopar" > Then create an <span 
+class="cmtt-10">Odinfile </span>containing the line <span 
+class="cmtt-10">hello==hello.c:exe</span>.
+
+   <div class="verbatim" id="verbatim-47">
+&#x00A0;&#x00A0;&#x00A0;3%&#x00A0;ls
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;Odinfile&#x00A0;&#x00A0;&#x00A0;hello.c
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;4%&#x00A0;cat&#x00A0;Odinfile
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;hello&#x00A0;==&#x00A0;hello.c&#x00A0;:exe
+</div>
+<!--l. 891--><p class="nopar" > You are now ready to build <span 
+class="cmtt-10">hello</span>. Just say:
+
+   <div class="verbatim" id="verbatim-48">
+&#x00A0;&#x00A0;&#x00A0;5%&#x00A0;odin&#x00A0;hello
+</div>
+<!--l. 895--><p class="nopar" > By default, Odin issues a message every time it invokes a tool, for example:
+
+   <div class="verbatim" id="verbatim-49">
+&#x00A0;&#x00A0;&#x00A0;scan_for_includes&#x00A0;hello.c
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;cc&#x00A0;-c&#x00A0;hello.c
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;cc&#x00A0;hello.o
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;**&#x00A0;Copying&#x00A0;up-to-date&#x00A0;value&#x00A0;into&#x00A0;/u/fred/hello
+</div>
+<!--l. 902--><p class="nopar" > The first tool scanned the source file for includes; the second generated object code; the third generated an
+executable; and the fourth copied the executable into the file named <span 
+class="cmtt-10">/u/fred/hello</span>.
+<!--l. 907--><p class="indent" >   You have now built your first executable with Odin. Now to test it:
+
+   <div class="verbatim" id="verbatim-50">
+&#x00A0;&#x00A0;&#x00A0;%6&#x00A0;hello
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;Hello&#x00A0;World.
+</div>
+<!--l. 911--><p class="nopar" >
+   <h3 class="sectionHead"><span class="titlemark">3.1   </span> <a 
+ id="x1-350003.1"></a>Systems with Several Files</h3>
+<!--l. 916--><p class="noindent" >Interesting systems will usually consist of more than one file. In Odin, you list the source files that make up the
+system in a file called a <span 
+class="cmti-10">system model</span>. The files named in <span 
+class="cmtt-10">#include </span>statements should not be listed in the system
+model &#8211; Odin will discover them by running a tool that scans the source files looking for <span 
+class="cmtt-10">#include</span>
+statements.
+<!--l. 924--><p class="indent" >   Modify <span 
+class="cmtt-10">hello.c </span>so that it calls a <span 
+class="cmtt-10">print() </span>routine in the file <span 
+class="cmtt-10">print.c</span>.
+
+   <div class="verbatim" id="verbatim-51">
+&#x00A0;&#x00A0;&#x00A0;7%&#x00A0;ls
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;Odinfile&#x00A0;&#x00A0;&#x00A0;hello&#x00A0;&#x00A0;&#x00A0;&#x00A0;hello.c&#x00A0;&#x00A0;&#x00A0;print.c
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;8%&#x00A0;cat&#x00A0;hello.c
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;main()
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;{&#x00A0;print("Hello&#x00A0;");&#x00A0;print("World.\n");&#x00A0;return&#x00A0;0;&#x00A0;}
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;9%&#x00A0;cat&#x00A0;print.c
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;print(s)&#x00A0;char&#x00A0;*s;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;{&#x00A0;printf(s);&#x00A0;}
+</div>
+<!--l. 938--><p class="nopar" > Now you need to create a system model, <span 
+class="cmtt-10">hello.c.sm</span>, for the new <span 
+class="cmtt-10">hello </span>system. The system model can be a
+regular file, but it can equally well be specifed as a <span 
+class="cmti-10">virtual file </span>in the <span 
+class="cmtt-10">Odinfile</span>.
+
+   <div class="verbatim" id="verbatim-52">
+&#x00A0;&#x00A0;&#x00A0;10%&#x00A0;cat&#x00A0;Odinfile
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;hello&#x00A0;==&#x00A0;%hello.c.sm&#x00A0;:exe
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;%hello.c.sm&#x00A0;==&#x00A0;&#x003C;&#x003C;&#x00A0;EOF
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;hello.c;&#x00A0;print.c
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;EOF
+</div>
+<!--l. 952--><p class="nopar" > The new version of <span 
+class="cmtt-10">hello </span>can now be built:
+
+   <div class="verbatim" id="verbatim-53">
+&#x00A0;&#x00A0;&#x00A0;11%&#x00A0;odin&#x00A0;hello
+</div>
+<!--l. 956--><p class="nopar" > You will notice although the file <span 
+class="cmtt-10">hello </span>has changed, no new files have appeared in the source directory.
+
+   <div class="verbatim" id="verbatim-54">
+&#x00A0;&#x00A0;&#x00A0;12%&#x00A0;ls
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;Odinfile&#x00A0;&#x00A0;&#x00A0;hello&#x00A0;&#x00A0;&#x00A0;hello.c&#x00A0;&#x00A0;&#x00A0;print.c
+</div>
+<!--l. 962--><p class="nopar" > This is because all derived files are stored in the derived file cache directory (<span 
+class="cmtt-10">$HOME/.ODIN </span>by default &#8211; a
+non-default location can be specified in the <span 
+class="cmtt-10">$ODIN </span>environment variable).
+<!--l. 967--><p class="indent" >   But the derived files are available for re-use. For example, if you to add a comment to the <span 
+class="cmtt-10">print()</span>
+routine:
+
+   <div class="verbatim" id="verbatim-55">
+&#x00A0;&#x00A0;&#x00A0;13%&#x00A0;cat&#x00A0;print.c
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;/*&#x00A0;print&#x00A0;the&#x00A0;character&#x00A0;sequence&#x00A0;s&#x00A0;to&#x00A0;standard&#x00A0;output&#x00A0;*/
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;print(s)&#x00A0;char&#x00A0;*s;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;{&#x00A0;printf(s);&#x00A0;}
+</div>
+<!--l. 975--><p class="nopar" > and then ask Odin for <span 
+class="cmtt-10">hello </span>again:
+
+   <div class="verbatim" id="verbatim-56">
+&#x00A0;&#x00A0;&#x00A0;14%&#x00A0;odin&#x00A0;hello
+</div>
+<!--l. 979--><p class="nopar" > you will notice a couple of things. First, the previous results of scanning <span 
+class="cmtt-10">hello.c </span>for includes and compiling it are
+both re-used, as you would expect. Somewhat more surprising may be that Odin notices that the compilation of the
+modified <span 
+class="cmtt-10">print.c </span>produced the same object code. Odin then skips the link phase since the old executable is still
+valid.
+<!--l. 989--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">3.2   </span> <a 
+ id="x1-360003.2"></a>Files in Other Directories</h3>
+<!--l. 991--><p class="noindent" >The files in a system model can be in any directory, using either absolute or relative pathnames. Odin knows that
+<span 
+class="cmtt-10">/u/fred/print.c </span>is potentially different from <span 
+class="cmtt-10">/u/jane/print.c </span>so will not be confused if you switch from one to
+the other in your system model.
+
+   <div class="verbatim" id="verbatim-57">
+&#x00A0;&#x00A0;&#x00A0;15%&#x00A0;cat&#x00A0;../jane/print.c
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;print(s)&#x00A0;char&#x00A0;*s;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;{&#x00A0;printf("*%s*",&#x00A0;s);&#x00A0;}
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;%16&#x00A0;cat&#x00A0;Odinfile
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;hello&#x00A0;==&#x00A0;%hello.c.sm&#x00A0;:exe
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;%hello.c.sm&#x00A0;==&#x00A0;&#x003C;&#x003C;&#x00A0;EOF
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;hello.c;&#x00A0;../jane/print.c
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;EOF
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;%17&#x00A0;odin&#x00A0;hello
+</div>
+<!--l. 1010--><p class="nopar" >
+<!--l. 1013--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">3.3   </span> <a 
+ id="x1-370003.3"></a>Recursive Odin Calls</h3>
+<!--l. 1015--><p class="noindent" >Suppose that <span 
+class="cmtt-10">/u/jane/print.c </span>is modified to include a <span 
+class="cmtt-10">y.tab.h </span>file generated by the <span 
+class="cmtt-10">yacc </span>tool from a file named
+<span 
+class="cmtt-10">print.y</span>. The fact that <span 
+class="cmtt-10">y.tab.h </span>is generated from <span 
+class="cmtt-10">print.y </span>is indicated in <span 
+class="cmtt-10">/u/jane/Odinfile</span>.
+
+   <div class="verbatim" id="verbatim-58">
+&#x00A0;&#x00A0;&#x00A0;18%&#x00A0;ls&#x00A0;../jane
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;Odinfile&#x00A0;&#x00A0;&#x00A0;print.c&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;print.y
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;19%&#x00A0;cat&#x00A0;../jane/print.c
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;#include&#x00A0;"y.tab.h"
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;print(s)&#x00A0;char&#x00A0;*s;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;{&#x00A0;printf("*%s*",&#x00A0;s);&#x00A0;}
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;20%&#x00A0;cat&#x00A0;../jane/Odinfile
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;y.tab.h&#x00A0;==&#x00A0;print.y&#x00A0;:h
+</div>
+<!--l. 1031--><p class="nopar" > If you were using <span 
+class="cmtt-10">make</span>, you would have to somehow get <span 
+class="cmtt-10">make ../jane </span>invoked before you tried to <span 
+class="cmtt-10">make hello</span>. In
+Odin, all these dependencies are computed for you, so a simple <span 
+class="cmtt-10">odin hello </span>is sufficient.
+
+   <div class="verbatim" id="verbatim-59">
+&#x00A0;&#x00A0;&#x00A0;21%&#x00A0;odin&#x00A0;hello
+</div>
+<!--l. 1037--><p class="nopar" >
+<!--l. 1040--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">3.4   </span> <a 
+ id="x1-380003.4"></a>Debugging Your Program</h3>
+<!--l. 1042--><p class="noindent" >Odin uses parameters instead of tool flags to modify the behavior of tools. In particular, <span 
+class="cmtt-10">+debug </span>adds debugging
+information. Either the entry for <span 
+class="cmtt-10">hello </span>in the <span 
+class="cmtt-10">Odinfile </span>can be modified, or as is done below, a second entry such as
+<span 
+class="cmtt-10">test-hello </span>can be added.
+
+   <div class="verbatim" id="verbatim-60">
+&#x00A0;&#x00A0;&#x00A0;22%&#x00A0;cat&#x00A0;Odinfile
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;hello&#x00A0;==&#x00A0;%hello.c.sm&#x00A0;:exe
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;test-hello&#x00A0;==&#x00A0;%hello.c.sm&#x00A0;+debug&#x00A0;:exe
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;%hello.c.sm&#x00A0;==&#x00A0;&#x003C;&#x003C;&#x00A0;EOF
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;hello.c;&#x00A0;print.c
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;EOF
+</div>
+<!--l. 1056--><p class="nopar" > At this point, you can build <span 
+class="cmtt-10">test-hello </span>and run the debugger.
+
+   <div class="verbatim" id="verbatim-61">
+&#x00A0;&#x00A0;&#x00A0;23%&#x00A0;odin&#x00A0;test-hello
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;24%&#x00A0;dbx&#x00A0;test-hello
+</div>
+<!--l. 1062--><p class="nopar" > These two steps can be combined by adding an executable <span 
+class="cmtt-10">%dbx </span>entry into the <span 
+class="cmtt-10">Odinfile</span>.
+
+   <div class="verbatim" id="verbatim-62">
+&#x00A0;&#x00A0;&#x00A0;25%&#x00A0;cat&#x00A0;Odinfile
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;hello&#x00A0;==&#x00A0;%hello.c.sm&#x00A0;:exe
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;test-hello&#x00A0;==&#x00A0;%hello.c.sm&#x00A0;+debug&#x00A0;:exe
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;%dbx&#x00A0;!&#x00A0;==&#x00A0;%hello.c.sm&#x00A0;+debug&#x00A0;:dbx
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;%hello.c.sm&#x00A0;==&#x00A0;&#x003C;&#x003C;&#x00A0;EOF
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;hello.c;&#x00A0;print.c
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;EOF
+</div>
+<!--l. 1077--><p class="nopar" > Then the host-command:
+
+   <div class="verbatim" id="verbatim-63">
+&#x00A0;&#x00A0;&#x00A0;26%&#x00A0;odin&#x00A0;%dbx
+</div>
+<!--l. 1081--><p class="nopar" > would build an up-to-date executable from <span 
+class="cmtt-10">%hello.c.sm</span>, build a script for executing dbx on this executable, and
+then because <span 
+class="cmtt-10">%dbx </span>is an executable target, execute the script.
+
+   <h2 class="chapterHead"><span class="titlemark">Chapter&#x00A0;4</span><br /><a 
+ id="x1-390004"></a>Odin-Commands</h2>
+<!--l. 1091--><p class="noindent" >In addition to being used as a means for making source files up-to-date, the Odin system can also be used as a
+command interpreter for <span 
+class="cmti-10">odin-commands</span>. Odin-commands are either given as arguments to the <span 
+class="cmtt-10">odin </span>host-command,
+or, if the <span 
+class="cmtt-10">odin </span>host-command is invoked with no arguments, odin-commands are read interactively from standard
+input.
+<!--l. 1098--><p class="indent" >   When Odin is used as an interactive command interpreter, it first prints out a banner indicating the version of
+Odin you are using, and then an arrow indicating it is ready to accept input. You exit the Odin interpreter by
+typing an end-of-file, commonly the control-D character.
+
+   <div class="verbatim" id="verbatim-64">
+&#x00A0;&#x00A0;&#x00A0;1%&#x00A0;odin
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;Odin&#x00A0;Version&#x00A0;1.17
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;^D
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;2%
+</div>
+<!--l. 1108--><p class="nopar" >
+<!--l. 1110--><p class="indent" >   There are four kinds of odin-commands: <span 
+class="cmti-10">query odin-commands</span>, <span 
+class="cmti-10">copy odin-commands</span>, <span 
+class="cmti-10">execute odin-commands</span>,
+and <span 
+class="cmti-10">variable assignment odin-commands</span>. If the Odin interpreter encounters a question-mark in an
+odin-command, it generates a help message describing what could have been typed at the location of the
+question-mark.
+   <h3 class="sectionHead"><span class="titlemark">4.1   </span> <a 
+ id="x1-400004.1"></a>Query Odin-Commands</h3>
+<!--l. 1121--><p class="noindent" >A <span 
+class="cmti-10">query odin-command </span>consists simply of an odin-expression. A query odin-command causes the Odin object named
+by the odin-expression to be brought up to date, and reports information concerning the status of
+the object (such as error and warning messages produced by tool steps that were run to produce the
+object).
+
+   <div class="verbatim" id="verbatim-65">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;print.c:exe
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;---&#x00A0;&#x003C;/u/fred/print.c&#x00A0;:exe&#x003E;&#x00A0;generated&#x00A0;errors&#x00A0;---
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;ld:&#x00A0;Undefined&#x00A0;symbol
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;_main
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;cc&#x00A0;failed
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;-&#x003E;
+</div>
+<!--l. 1134--><p class="nopar" > The level of detail of this information is controlled by the value of the <span 
+class="cmtt-10">ErrLevel </span>and <span 
+class="cmtt-10">WarnLevel </span>variables (see
+Section&#x00A0;<a 
+href="#x1-520004.4.5">4.4.5<!--tex4ht:ref: errlevel --></a>).
+<!--l. 1138--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">4.1.1   </span> <a 
+ id="x1-410004.1.1"></a>Status of Odin Objects</h4>
+<!--l. 1140--><p class="noindent" >Associated with each Odin object is a status level, where the status level is one of <span 
+class="cmtt-10">OK</span>, <span 
+class="cmtt-10">WARNING</span>, <span 
+class="cmtt-10">ERROR</span>, <span 
+class="cmtt-10">CIRCULAR</span>,
+<span 
+class="cmtt-10">NOFILE</span>, and <span 
+class="cmtt-10">ABORT</span>. <span 
+class="cmtt-10">OK </span>is the maximum status level and <span 
+class="cmtt-10">ABORT </span>the minimum.
+<!--l. 1145--><p class="indent" >   The status of a given derived object depends on the results of the tools that produced that object. If any tool
+generated warning messages, the status level of the given object is at most <span 
+class="cmtt-10">WARNING</span>. If any tool generated error
+messages, the status level of the given object is at most <span 
+class="cmtt-10">ERROR</span>. If an object that was needed to create the given
+object is the object itself, the status level of the given object is at most <span 
+class="cmtt-10">CIRCULAR</span>. If any object that was needed to
+generate the given object did not exist, the status level of the given object is at most <span 
+class="cmtt-10">NOFILE</span>. If any object that was
+needed to generate the given object had status level <span 
+class="cmtt-10">ERROR </span>or less, then the status level of the given object is set to
+be <span 
+class="cmtt-10">ABORT</span>.
+<!--l. 1160--><p class="indent" >   The status of a source object is <span 
+class="cmtt-10">NOFILE </span>if the host file does not exist, the status of the value of its target value
+(see Section&#x00A0;<a 
+href="#x1-220002.1">2.1<!--tex4ht:ref: target --></a>) if it is a target, and otherwise <span 
+class="cmtt-10">OK</span>.
+<!--l. 1165--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">4.1.2   </span> <a 
+ id="x1-420004.1.2"></a>Error and Warning Messages</h4>
+<!--l. 1167--><p class="noindent" >The warning or error messages produced by all tool invocations are saved by the Odin system. The difference
+between an error and a warning is that an error prevents the tool from generating its output, while a warning
+indicates that although output was generated, it might be faulty. An example of an error message from a loader
+is:
+
+   <div class="verbatim" id="verbatim-66">
+&#x00A0;&#x00A0;&#x00A0;Unsatisfied&#x00A0;external&#x00A0;reference:&#x00A0;"proc1".
+</div>
+<!--l. 1176--><p class="nopar" > An example of a warning message from a loader is:
+
+   <div class="verbatim" id="verbatim-67">
+&#x00A0;&#x00A0;&#x00A0;Multiply&#x00A0;defined&#x00A0;external:&#x00A0;"proc2",&#x00A0;first&#x00A0;copy&#x00A0;loaded.
+</div>
+<!--l. 1180--><p class="nopar" >
+<!--l. 1182--><p class="indent" >   A text file containing a summary of all error messages for an object can be obtained by applying the <span 
+class="cmtt-10">:err</span>
+derivation to the object. For example, the file named by the odin-expression:
+
+   <div class="verbatim" id="verbatim-68">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;:exe&#x00A0;:err
+</div>
+<!--l. 1187--><p class="nopar" > contains a summary of all error messages produced by any tool used in the generation of the <span 
+class="cmtt-10">prog.c:exe</span>
+object. The <span 
+class="cmtt-10">:warn </span>derivation produces a text file containing both warning and error messages for an
+object.
+<!--l. 1194--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">4.2   </span> <a 
+ id="x1-430004.2"></a>Copy Odin-Commands</h3>
+<!--l. 1197--><p class="noindent" >A <span 
+class="cmti-10">copy odin-command </span>copies the contents of a specified Odin object into another object (the destination object).
+The copy is performed only if the status level of the specified object is no lower than <span 
+class="cmtt-10">WARNING</span>. The
+destination object must be a source object since only source objects can be directly modified by a
+user.
+<!--l. 1204--><p class="indent" >   There are two forms of the copy odin-command: <span 
+class="cmti-10">copy-to</span>, indicated by a right-angle-bracket, and <span 
+class="cmti-10">copy-from</span>,
+indicated by a left-angle-bracket. Examples of these two odin-commands are:
+
+   <div class="verbatim" id="verbatim-69">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;prog.c&#x00A0;+debug&#x00A0;:exe&#x00A0;&#x003E;&#x00A0;prog
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;prog&#x00A0;&#x003C;&#x00A0;prog.c&#x00A0;+debug&#x00A0;:exe
+</div>
+<!--l. 1211--><p class="nopar" >
+<!--l. 1213--><p class="indent" >   If the destination object is a directory, the <span 
+class="cmti-10">label </span>of the specified object is used to name the new
+copy. The label of a source file is the last component of the pathname of the source file. The label of a
+derived object is <span 
+class="cmti-10">source-label.type-name </span>where <span 
+class="cmti-10">type-name </span>is the name of the output type of the tool that
+produced it (see Section&#x00A0;<a 
+href="#x1-76000B.7">B.7<!--tex4ht:ref: execdecl --></a>). and where <span 
+class="cmti-10">source-label </span>is the label of the source file from which it is
+derived. For example, the label of <span 
+class="cmtt-10">/usr/src/prog.c </span>is <span 
+class="cmtt-10">prog.c </span>and the label of <span 
+class="cmtt-10">/usr/src/prog.c:exe </span>is
+<span 
+class="cmtt-10">prog.c.exe</span>.
+<!--l. 1225--><p class="indent" >   If a list is copied into a directory, each element of the list is copied individually into the directory.
+<!--l. 1228--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">4.2.1   </span> <a 
+ id="x1-440004.2.1"></a>Copying to Standard Output</h4>
+<!--l. 1230--><p class="noindent" >If the destination object is omitted from a copy-to odin-command, the specified object is displayed on the current
+standard output device. For example, the odin-command:
+
+   <div class="verbatim" id="verbatim-70">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;prog.c&#x00A0;&#x003E;
+</div>
+<!--l. 1235--><p class="nopar" > displays the file named <span 
+class="cmtt-10">prog.c</span>. Note that if d1 is a directory:
+
+   <div class="verbatim" id="verbatim-71">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;d1&#x00A0;&#x003E;
+</div>
+<!--l. 1239--><p class="nopar" > is short-hand for:
+
+   <div class="verbatim" id="verbatim-72">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;d1/Odinfile&#x00A0;&#x003E;
+</div>
+<!--l. 1243--><p class="nopar" >
+<!--l. 1245--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">4.2.2   </span> <a 
+ id="x1-450004.2.2"></a>Editing with the Copy Odin-Command</h4>
+<!--l. 1247--><p class="noindent" >If only the destination object is specified in a copy-from odin-command, the specified object is given to the
+host-system editor indicated by the <span 
+class="cmtt-10">$EDITOR </span>environment variable, with the <span 
+class="cmtt-10">vi </span>editor the default. For example, if
+the value of the <span 
+class="cmtt-10">$EDITOR </span>variable is <span 
+class="cmtt-10">emacs</span>, then the odin-command:
+
+   <div class="verbatim" id="verbatim-73">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;prog.c&#x00A0;&#x003C;
+</div>
+<!--l. 1255--><p class="nopar" > invokes the <span 
+class="cmtt-10">emacs </span>editor on the file <span 
+class="cmtt-10">prog.c</span>.
+<!--l. 1259--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">4.3   </span> <a 
+ id="x1-460004.3"></a>Execute Odin-Commands</h3>
+<!--l. 1262--><p class="noindent" >An <span 
+class="cmti-10">execute odin-command </span>consists of an odin-expression followed by an exclamation-point and a host-command line,
+where either the odin-expression or the host-command can be omitted. Examples of execute odin-commands (with
+output omitted) are:
+
+   <div class="verbatim" id="verbatim-74">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;prog.c&#x00A0;+debug&#x00A0;:stdout&#x00A0;!more&#x00A0;-s
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;!&#x00A0;ls&#x00A0;*.c
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;prog.c&#x00A0;:exe&#x00A0;!
+</div>
+<!--l. 1270--><p class="nopar" > The result of the execute odin-command is to make the Odin object up-to-date, append its filename to
+the host-command line, and give the resulting extended host-command line to the host system for
+execution.
+<!--l. 1276--><p class="indent" >   The exclamation-point has the special lexical property that if the first non-whitespace character following it is
+not a colon, a semi-colon, or an equal-sign, then the rest of the line is treated as a single escaped sequence of
+characters. This avoids the confusion resulting from interactions between host-command and Odin character escape
+conventions. A leading colon, equal-sign, or whitespace character can be included in the escaped sequence of
+characters by preceding it with a backslash.
+<!--l. 1287--><p class="indent" >   If the host-command is omitted, the Odin object itself is executed. If execute permission is set for the Odin
+object, it is given to the host operating system for execution; otherwise, the Odin object is assumed to contain
+odin-commands that are to be executed by the Odin interpreter.
+<!--l. 1294--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">4.4   </span> <a 
+ id="x1-470004.4"></a>Variable Assignment Odin-Commands</h3>
+<!--l. 1297--><p class="noindent" >The behavior of the Odin interpreter can be modified by changing the value of an <span 
+class="cmti-10">Odin variable</span>. The functions
+affected by Odin variables are the current working directory, the distributed parallel build facility, the help facility,
+the error and log facility, the file change notification facility, and the maximum total file system space used by
+derived objects.
+<!--l. 1306--><p class="indent" >   A variable assignment odin-command consists of the name of an Odin variable followed by an equal-sign
+operator and an odin-expression. For example, the odin-commands:
+
+   <div class="verbatim" id="verbatim-75">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;dir&#x00A0;=&#x00A0;../src
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;warnlevel&#x00A0;=&#x00A0;4
+</div>
+<!--l. 1312--><p class="nopar" > assign the value <span 
+class="cmtt-10">../src </span>to the <span 
+class="cmtt-10">Dir </span>variable and the value <span 
+class="cmtt-10">4 </span>to the <span 
+class="cmtt-10">WarnLevel </span>variable (Odin variable names are
+case-insensitive).
+<!--l. 1317--><p class="indent" >   If the value is omitted from a variable assignment odin-command, Odin displays the current value of the
+specified variable. For example, after the preceding odin-commands, the odin-command:
+
+   <div class="verbatim" id="verbatim-76">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;warnlevel&#x00A0;=
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;4
+</div>
+<!--l. 1323--><p class="nopar" > can be used to find out the current value of <span 
+class="cmtt-10">WarnLevel</span>.
+<!--l. 1326--><p class="indent" >   The Odin variables and their default values are:
+
+   <div class="verbatim" id="verbatim-77">
+&#x00A0;&#x00A0;&#x00A0;Dir&#x00A0;...........&#x00A0;odin_invocation_directory
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;MaxBuilds&#x00A0;.....&#x00A0;2
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;BuildHosts&#x00A0;....&#x00A0;LOCAL&#x00A0;:&#x00A0;LOCAL
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;Size&#x00A0;..........&#x00A0;0
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;KeepGoing&#x00A0;.....&#x00A0;yes
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;History&#x00A0;.......&#x00A0;yes
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;LogLevel&#x00A0;......&#x00A0;2
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;ErrLevel&#x00A0;......&#x00A0;3
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;WarnLevel&#x00A0;.....&#x00A0;2
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;HelpLevel&#x00A0;.....&#x00A0;1
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;VerifyLevel&#x00A0;...&#x00A0;2
+</div>
+<!--l. 1339--><p class="nopar" >
+<!--l. 1341--><p class="indent" >   An initial value for an Odin variable can be specified in an environment variable whose name is the the Odin
+variable name in capital letters preceded by the string <span 
+class="cmtt-10">ODIN</span>. For example, the initial value for <span 
+class="cmtt-10">MaxBuilds </span>is specified
+in the <span 
+class="cmtt-10">ODINMAXBUILDS </span>environment variable.
+<!--l. 1347--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">4.4.1   </span> <a 
+ id="x1-480004.4.1"></a>Dir</h4>
+<!--l. 1349--><p class="noindent" >The current working directory can be changed by assigning a new value to the <span 
+class="cmtt-10">Dir </span>variable. The value of the current
+working directory is especially significant for Odin, since Odin identifies source objects by their absolute pathname,
+and the current working directory provides the absolute pathname for all relative names given to the Odin
+interpreter.
+<!--l. 1356--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">4.4.2   </span> <a 
+ id="x1-490004.4.2"></a>BuildHosts, MaxBuilds</h4>
+<!--l. 1358--><p class="noindent" >The <span 
+class="cmtt-10">BuildHosts </span>variable specifies the list of hosts that are used to execute the tools that generate the derived
+objects. A tool is executed on the first entry in the <span 
+class="cmtt-10">BuildHosts </span>list that does not have a currently executing tool.
+The name <span 
+class="cmtt-10">LOCAL </span>refers to the local host. The <span 
+class="cmtt-10">MaxBuilds </span>variable specifies the maximum number of tools to execute
+in parallel.
+<!--l. 1366--><p class="indent" >   The hosts in <span 
+class="cmtt-10">BuildHosts </span>must have the same machine architecture and file namespace as the local host. If
+builds on non-equivalent machines are desired, this can be achieved by extending the tool packages (see
+Section&#x00A0;<a 
+href="#x1-67000B.1">B.1<!--tex4ht:ref: package --></a>).
+<!--l. 1372--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">4.4.3   </span> <a 
+ id="x1-500004.4.3"></a>KeepGoing</h4>
+<!--l. 1375--><p class="noindent" >When a build step reports errors, Odin will continue with build steps that do not depend on the failed build step.
+Setting the value of the <span 
+class="cmtt-10">KeepGoing </span>variable to <span 
+class="cmtt-10">no </span>will cause Odin to terminate the build when any build step
+reports an error (similar to the default behavior of Make).
+<!--l. 1381--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">4.4.4   </span> <a 
+ id="x1-510004.4.4"></a>History</h4>
+<!--l. 1384--><p class="noindent" >The <span 
+class="cmtt-10">History </span>variable specifies whether emacs-like history and command line editing is supported by Odin when it is
+used as an interactive command interpreter.
+
+<!--l. 1388--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">4.4.5   </span> <a 
+ id="x1-520004.4.5"></a>ErrLevel, WarnLevel, LogLevel</h4>
+<!--l. 1391--><p class="noindent" >When an odin-command is executed, Odin indicates any errors or warnings associated with the odin-expressions
+specified in that odin-command. The <span 
+class="cmtt-10">ErrLevel </span>and <span 
+class="cmtt-10">WarnLevel </span>variables specify how detailed this report is. In
+particular, the user can choose whether to see final status information, to see messages incrementally as they are
+produced by tools steps, or to see a summary of all relevant messages (including those from previously cached tool
+steps).
+<!--l. 1401--><p class="indent" >   Odin can also produce a variety of information about the activities it is performing, such as a brief description of
+each tool that is invoked to satisfy a given request. The <span 
+class="cmtt-10">LogLevel </span>variable specifies how detailed these messages
+are.
+<!--l. 1406--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">4.4.6   </span> <a 
+ id="x1-530004.4.6"></a>HelpLevel</h4>
+<!--l. 1409--><p class="noindent" >The <span 
+class="cmtt-10">HelpLevel </span>variable specifies what degree of detail is provided when the user asks for a list of possible file or
+parameter types (see Section&#x00A0;<a 
+href="#x1-570004.5">4.5<!--tex4ht:ref: help --></a>). Normally, only commonly used types are described, but the <span 
+class="cmtt-10">HelpLevel </span>can be
+increased to have all possible types described.
+<!--l. 1415--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">4.4.7   </span> <a 
+ id="x1-540004.4.7"></a>VerifyLevel</h4>
+<!--l. 1418--><p class="noindent" >By default, Odin checks the modification dates of all relevant source files at the beginning of an Odin session
+and before each interactive odin-command. If all file modifications during the session are performed
+through copy odin-commands or through an editor that has been upgraded to send a <span 
+class="cmtt-10">filename!:test</span>
+odin-command to Odin whenever <span 
+class="cmtt-10">filename </span>is modified, the <span 
+class="cmtt-10">VerifyLevel </span>variable can be set to <span 
+class="cmtt-10">1 </span>and only the
+check at the beginning of the session is performed. If all file modifications since the last session have
+been performed in the above manner, <span 
+class="cmtt-10">VerifyLevel </span>can be set to <span 
+class="cmtt-10">0 </span>and the initial check is avoided as
+well.
+<!--l. 1431--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">4.4.8   </span> <a 
+ id="x1-550004.4.8"></a>Size</h4>
+<!--l. 1433--><p class="noindent" >The value of the <span 
+class="cmtt-10">Size </span>variable indicates how much disk space (in kilobytes) is currently being used by derived
+files.
+<!--l. 1436--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">4.4.9   </span> <a 
+ id="x1-560004.4.9"></a>Environment Variables</h4>
+<!--l. 1439--><p class="noindent" >Environment variables can be used in odin-commands. For example, if the environment variable <span 
+class="cmtt-10">$HOME </span>has the value
+<span 
+class="cmtt-10">/u/geoff</span>, then the two odin-commands:
+
+   <div class="verbatim" id="verbatim-78">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;$HOME/prog.c&#x00A0;:exe
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;/u/geoff/prog.c&#x00A0;:exe
+</div>
+<!--l. 1445--><p class="nopar" > are equivalent. The value of an environment variable can be quoted by immediately preceding it with a quoted
+identifier. For example, if the value of <span 
+class="cmtt-10">$PATH </span>is <span 
+class="cmtt-10">/bin:/usr/bin</span>, then the two odin-commands:
+
+   <div class="verbatim" id="verbatim-79">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;prog.c&#x00A0;+path=&#8217;/etc:&#8217;$PATH
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;prog.c&#x00A0;+path=&#8217;/etc:/bin:/usr/bin&#8217;
+</div>
+<!--l. 1454--><p class="nopar" > are equivalent.
+<!--l. 1457--><p class="indent" >   The environment variable <span 
+class="cmtt-10">$ODINCACHE </span>is set by Odin to be the location of the cache directory (see
+Section&#x00A0;<a 
+href="#x1-60001.2.2">1.2.2<!--tex4ht:ref: cache --></a>).
+<!--l. 1460--><p class="indent" >   An environment variable is given a new value with a variable assignment odin-command of the
+form:
+
+   <div class="verbatim" id="verbatim-80">
+&#x00A0;&#x00A0;&#x00A0;Variable&#x00A0;=&#x00A0;!Value
+</div>
+<!--l. 1464--><p class="nopar" > For example, the odin-command:
+
+   <div class="verbatim" id="verbatim-81">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;HOME&#x00A0;=&#x00A0;!/u/clemm
+</div>
+<!--l. 1468--><p class="nopar" > sets the value of the environment variable <span 
+class="cmtt-10">$HOME </span>to be <span 
+class="cmtt-10">/u/clemm</span>.
+<!--l. 1471--><p class="indent" >   Although any environment variable can be used in odin-commands, only environment variables declared in a tool
+package (see Section&#x00A0;<a 
+href="#x1-75000B.6">B.6<!--tex4ht:ref: envvardecl --></a>) can be used in <span 
+class="cmtt-10">Odinfile </span>target definitions (see Section&#x00A0;<a 
+href="#x1-220002.1">2.1<!--tex4ht:ref: target --></a>) The value of a declared
+environment variable is obtained from the environment at the time the current cache was created or reset. If the
+variable was not set in that environment, the default value specified in the derivation graph declaration of the
+variable is used.
+<!--l. 1481--><p class="indent" >   The expressions <img 
+src="odin0x.png" alt="~  "  class="tilde" > and <img 
+src="odin1x.png" alt="~  "  class="tilde" ><span 
+class="cmtt-10">name </span>are treated as if they were environment variables, bound respectively to the
+login directory of the current user and the login directory of the user with login <span 
+class="cmtt-10">name</span>.
+<!--l. 1486--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">4.5   </span> <a 
+ id="x1-570004.5"></a>Help</h3>
+<!--l. 1489--><p class="noindent" >A simple context-sensitive help facility is provided to describe the syntax of odin-commands and the currently
+available object types and parameter types. If a user types a question-mark anywhere in an odin-command, Odin
+provides a description of what could appear at that location in the odin-command. For example, the following
+odin-command provides a syntax summary:
+
+   <div class="verbatim" id="verbatim-82">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;?
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;Control-D
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;OdinExpr
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;HostFile
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;+&#x00A0;ParameterType
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;+&#x00A0;ParameterType&#x00A0;=&#x00A0;Identifier
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;+&#x00A0;ParameterType&#x00A0;=&#x00A0;(OdinExpr)
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;:&#x00A0;FileType
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;/&#x00A0;Key
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;%&#x00A0;Key
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;OdinExpr&#x00A0;&#x003E;&#x00A0;OdinExpr
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;OdinExpr&#x00A0;&#x003E;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;OdinExpr&#x00A0;&#x003C;&#x00A0;OdinExpr
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;OdinExpr&#x00A0;&#x003C;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;OdinExpr&#x00A0;!HostCommand
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;OdinExpr&#x00A0;!
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;OdinExpr&#x00A0;!:test
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;!HostCommand
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;!:test
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;Variable&#x00A0;=
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;Variable&#x00A0;=&#x00A0;Value
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;Variable&#x00A0;=&#x00A0;!Value
+</div>
+<!--l. 1519--><p class="nopar" >
+<!--l. 1521--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">4.5.1   </span> <a 
+ id="x1-580004.5.1"></a>Source Type Help</h4>
+<!--l. 1523--><p class="noindent" >If a list of the declared source object type-names is desired, a question-mark can be put in place of the extension for
+a file. For example, the odin-command:
+
+   <div class="verbatim" id="verbatim-83">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;prog?
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;Possible&#x00A0;Base&#x00A0;Types&#x00A0;:
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;.c&#x00A0;.............&#x00A0;C&#x00A0;source&#x00A0;code
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;.f&#x00A0;.............&#x00A0;Fortran77&#x00A0;source&#x00A0;code
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;.c.sm&#x00A0;..........&#x00A0;C&#x00A0;system&#x00A0;model&#x00A0;containing&#x00A0;a&#x00A0;list&#x00A0;of&#x00A0;filenames
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;,v&#x00A0;.............&#x00A0;RCS&#x00A0;version&#x00A0;control&#x00A0;file
+</div>
+<!--l. 1533--><p class="nopar" > describes the currently recognized type suffixes, where the message contents is derived from the installed tool
+packages (see Section&#x00A0;<a 
+href="#x1-70000B.3">B.3<!--tex4ht:ref: sourcedecl --></a>).
+<!--l. 1538--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">4.5.2   </span> <a 
+ id="x1-590004.5.2"></a>Derivation Help</h4>
+<!--l. 1540--><p class="noindent" >If a list of possible derivations is desired, a question-mark can be put in place of the derivation name, and the Odin
+system responds with a list of the possible object types that can appear at that position. For example, the
+odin-command:
+
+   <div class="verbatim" id="verbatim-84">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;prog.c&#x00A0;:fmt&#x00A0;:&#x00A0;?
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;Possible&#x00A0;Derivations&#x00A0;from&#x00A0;an&#x00A0;Object&#x00A0;of&#x00A0;Type&#x00A0;"fmt":
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;o&#x00A0;..........&#x00A0;object&#x00A0;code
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;exe&#x00A0;........&#x00A0;executable&#x00A0;binary
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;fmt&#x00A0;........&#x00A0;formatted&#x00A0;version
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;xref&#x00A0;.......&#x00A0;cross&#x00A0;reference&#x00A0;listing
+</div>
+<!--l. 1552--><p class="nopar" > states that all of the following are acceptable odin-expressions:
+
+   <div class="verbatim" id="verbatim-85">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;:fmt&#x00A0;:o
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;:fmt&#x00A0;:exe
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;:fmt&#x00A0;:fmt
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;:fmt&#x00A0;:xref
+</div>
+<!--l. 1559--><p class="nopar" >
+<!--l. 1561--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">4.5.3   </span> <a 
+ id="x1-600004.5.3"></a>Parameterization Help</h4>
+<!--l. 1563--><p class="noindent" >If a list of the possible parameter types is desired, a question-mark can be put in place of the parameter, and the
+Odin system responds with a list of the possible parameter types that can appear at that position. For example, the
+odin-command:
+
+   <div class="verbatim" id="verbatim-86">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;prog.c&#x00A0;:fmt&#x00A0;+&#x00A0;?
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;Possible&#x00A0;Parameters:
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;lib&#x00A0;........&#x00A0;object&#x00A0;code&#x00A0;library
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;debug&#x00A0;......&#x00A0;flag&#x00A0;to&#x00A0;generate&#x00A0;debugging&#x00A0;information
+</div>
+<!--l. 1573--><p class="nopar" > states that any of the following are acceptable odin-expressions:
+
+   <div class="verbatim" id="verbatim-87">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;:fmt&#x00A0;+lib=(/usr/lib/network.a)
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;:fmt&#x00A0;+debug
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;:fmt&#x00A0;+debug&#x00A0;+lib=(/usr/lib/network.a)
+</div>
+<!--l. 1579--><p class="nopar" >
+<!--l. 1581--><p class="indent" >   A more exact form of parameter help can be specified by indicating which derivation you intend to apply to the
+parameterized object. For example, the odin-command:
+
+   <div class="verbatim" id="verbatim-88">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;prog.c&#x00A0;:fmt&#x00A0;+&#x00A0;?&#x00A0;:o
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;Possible&#x00A0;Parameters:
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;debug&#x00A0;......&#x00A0;flag&#x00A0;to&#x00A0;generate&#x00A0;debugging&#x00A0;information
+</div>
+<!--l. 1588--><p class="nopar" > states that the following is an acceptable odin-expression:
+
+   <div class="verbatim" id="verbatim-89">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;:fmt&#x00A0;+debug&#x00A0;:o
+</div>
+<!--l. 1592--><p class="nopar" > Since the <span 
+class="cmtt-10">+lib </span>parameter is not relevant to the derivation from <span 
+class="cmtt-10">:fmt </span>to <span 
+class="cmtt-10">:o</span>, it is not listed.
+<!--l. 1596--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">4.5.4   </span> <a 
+ id="x1-610004.5.4"></a>Variable Help</h4>
+<!--l. 1598--><p class="noindent" >A list of the available variable names is generated in response to the odin-command,
+
+   <div class="verbatim" id="verbatim-90">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;?&#x00A0;=
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;Dir&#x00A0;MaxBuilds&#x00A0;BuildHosts&#x00A0;Size&#x00A0;KeepGoing&#x00A0;History
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;LogLevel&#x00A0;ErrLevel&#x00A0;WarnLevel&#x00A0;HelpLevel&#x00A0;VerifyLevel
+</div>
+<!--l. 1604--><p class="nopar" > A description of the possible values that can be assigned to a given variable is generated in response to the
+odin-command:
+
+   <div class="verbatim" id="verbatim-91">
+&#x00A0;&#x00A0;&#x00A0;Variable&#x00A0;=&#x00A0;?
+</div>
+<!--l. 1609--><p class="nopar" > For example, the odin-command:
+
+   <div class="verbatim" id="verbatim-92">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;LogLevel&#x00A0;=&#x00A0;?
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;0:&#x00A0;No&#x00A0;log&#x00A0;information&#x00A0;is&#x00A0;generated.
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;1:&#x00A0;Build&#x00A0;commands&#x00A0;are&#x00A0;echoed.
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;2:&#x00A0;And&#x00A0;Odin&#x00A0;commands.
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;3:&#x00A0;And&#x00A0;names&#x00A0;of&#x00A0;objects&#x00A0;with&#x00A0;errors.
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;4:&#x00A0;And&#x00A0;names&#x00A0;of&#x00A0;objects&#x00A0;generated&#x00A0;by&#x00A0;tool&#x00A0;scripts.
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;5:&#x00A0;And&#x00A0;names&#x00A0;of&#x00A0;objects&#x00A0;generated&#x00A0;by&#x00A0;internal&#x00A0;tools.
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;6:&#x00A0;And&#x00A0;names&#x00A0;of&#x00A0;objects&#x00A0;deleted.
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;7:&#x00A0;And&#x00A0;names&#x00A0;of&#x00A0;objects&#x00A0;touched&#x00A0;by&#x00A0;broadcast.
+</div>
+<!--l. 1621--><p class="nopar" > describes the possible values of the <span 
+class="cmtt-10">LogLevel </span>variable.
+
+<a 
+ id="x1-61001r39"></a>
+   <h2 class="appendixHead"><span class="titlemark">Appendix&#x00A0;A</span><br /><a 
+ id="x1-62000A"></a>Dependency Database Utilities</h2>
+<!--l. 1630--><p class="noindent" >Odin provides the following utilities for browsing and modifying the dependency database: <span 
+class="cmtt-10">:test</span>, <span 
+class="cmtt-10">:redo</span>, <span 
+class="cmtt-10">:inputs</span>,
+<span 
+class="cmtt-10">:outputs</span>, <span 
+class="cmtt-10">:elements</span>, <span 
+class="cmtt-10">:element-of</span>, and <span 
+class="cmtt-10">:dpath</span>. These utilities are specified following the exclamation point of an
+execute odin-command. For example, the odin-command:
+
+   <div class="verbatim" id="verbatim-93">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;prog.c&#x00A0;:o&#x00A0;!&#x00A0;:redo
+</div>
+<!--l. 1639--><p class="nopar" > would invoke the <span 
+class="cmtt-10">:redo </span>utility with <span 
+class="cmtt-10">prog.c:o </span>as its argument.
+<!--l. 1643--><p class="indent" >   Unlike objects named in all other kinds of odin-commands, the object specified as an argument to a database
+utility is <span 
+class="cmti-10">not </span>made up-to-date before the database utility is executed. If you wish the database utility to be
+executed on an up-to-date object, first give the object as an argument to a query odin-command. For
+example:
+
+   <div class="verbatim" id="verbatim-94">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;prog.c&#x00A0;:o
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;prog.c&#x00A0;:o&#x00A0;!&#x00A0;:redo
+</div>
+<!--l. 1652--><p class="nopar" >
+   <h3 class="sectionHead"><span class="titlemark">A.1   </span> <a 
+ id="x1-63000A.1"></a>Testing Host Files for Changes</h3>
+<!--l. 1656--><p class="noindent" >Normally Odin checks all host files for changes at the beginning of an Odin session and before each interactive
+odin-command (Odin actually performs these checks lazily, and will <span 
+class="cmtt-10">fstat() </span>a file only when it is needed as input
+to a tool). It also checks a particular host file for changes after it is used as the destination of a copy
+odin-command.
+<!--l. 1664--><p class="indent" >   Odin&#8217;s runtime efficiency can be significantly improved by setting the Odin <span 
+class="cmtt-10">VerifyLevel </span>variable to <span 
+class="cmtt-10">1 </span>(see
+Section&#x00A0;<a 
+href="#x1-540004.4.7">4.4.7<!--tex4ht:ref: verifylevel --></a>). In this mode, the user (or a tool such as the user&#8217;s editor) must notify Odin with the <span 
+class="cmtt-10">:test </span>utility
+whenever a file changes other than through a copy odin-command.
+<!--l. 1671--><p class="indent" >   For example, the odin-command:
+
+   <div class="verbatim" id="verbatim-95">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;/usr/src/prog.c&#x00A0;!&#x00A0;:test
+</div>
+<!--l. 1674--><p class="nopar" > causes Odin to check to see if <span 
+class="cmtt-10">/usr/src/prog.c </span>has changed, to determine whether objects derived from
+this file must be recomputed. If no source is specified for the <span 
+class="cmtt-10">:test </span>utility, i.e. the odin-command is
+just:
+
+   <div class="verbatim" id="verbatim-96">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;!&#x00A0;:test
+</div>
+<!--l. 1681--><p class="nopar" > then all source files known to Odin are checked.
+<!--l. 1684--><p class="indent" >   The Odin distribution includes an <span 
+class="cmtt-10">odin.el </span>file that extends the gnu-emacs editor to issue the appropriate
+<span 
+class="cmti-10">filename</span><span 
+class="cmtt-10">!:test </span>message whenever a file is saved.
+<!--l. 1688--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">A.2   </span> <a 
+ id="x1-64000A.2"></a>Redoing a Particular Derivation Step</h3>
+<!--l. 1690--><p class="noindent" >The <span 
+class="cmtt-10">:redo </span>utility allows the user to tell Odin that a particular step in a derivation should be recomputed when it is
+next requested, even if that step has already been computed and inputs to that step have not changed. For example,
+the odin-commands:
+
+   <div class="verbatim" id="verbatim-97">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;prog.c&#x00A0;+debug&#x00A0;:o&#x00A0;!&#x00A0;:redo
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;prog.c&#x00A0;+debug&#x00A0;:o
+</div>
+<!--l. 1699--><p class="nopar" > causes Odin to redo the <span 
+class="cmtt-10">prog.c+debug:o </span>step. This utility is useful when a transient error in a derivation step
+occurs, but the tool that implements the derivation step did not recognize it as a transient error.
+<!--l. 1705--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">A.3   </span> <a 
+ id="x1-65000A.3"></a>Browsing the Dependency Database</h3>
+<!--l. 1707--><p class="noindent" >The <span 
+class="cmtt-10">:inputs </span>utility displays the direct inputs to the specified derived object. The <span 
+class="cmtt-10">:outputs </span>utility displays the
+direct outputs of the specified object. The <span 
+class="cmtt-10">:elements </span>utility displays the elements of the specified list. The
+<span 
+class="cmtt-10">:element-of </span>utility displays the lists that contain the specified object as an element. For example, the
+odin-command:
+
+   <div class="verbatim" id="verbatim-98">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;prog.c&#x00A0;+debug&#x00A0;:exe&#x00A0;!:&#x00A0;inputs
+</div>
+<!--l. 1718--><p class="nopar" > displays the input objects used to compute the derived object <span 
+class="cmtt-10">prog.c+debug:exe</span>.
+<!--l. 1722--><p class="indent" >   The <span 
+class="cmtt-10">:dpath </span>utility displays the dependency path from one object to another (if there is one). Normally, <span 
+class="cmtt-10">:dpath</span>
+is applied to an object with a trailing <span 
+class="cmtt-10">+depend </span>parameter. For example:
+
+   <div class="verbatim" id="verbatim-99">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;:exe&#x00A0;+depend=(/usr/include/stdio.h)&#x00A0;!&#x00A0;:dpath
+</div>
+<!--l. 1728--><p class="nopar" > would display the dependency path from <span 
+class="cmtt-10">/usr/include/stdio.h </span>to <span 
+class="cmtt-10">prog.c:exe</span>.
+<!--l. 1732--><p class="indent" >   When browsing the dependency database, you may encounter certain internal object types that you
+have not explicitly declared. For example, if you have declared a tool with multiple outputs, there will
+be an object whose type ends with <span 
+class="cmtt-10">*composite </span>which represents the set of output objects from a
+single tool run. Another example is a <span 
+class="cmtt-10">:abstract </span>object which is created for each <span 
+class="cmtt-10">:PIPE </span>and <span 
+class="cmtt-10">:GENERIC</span>
+object.
+
+<a 
+ id="x1-65001r39"></a>
+   <h2 class="appendixHead"><span class="titlemark">Appendix&#x00A0;B</span><br /><a 
+ id="x1-66000B"></a>Tool Package Libraries</h2>
+<!--l. 1744--><p class="noindent" >In the Odin system, all information about tools, object types, and parameter types is specified in special directories
+called <span 
+class="cmti-10">tool package libraries</span>. When a cache (see Section&#x00A0;<a 
+href="#x1-60001.2.2">1.2.2<!--tex4ht:ref: cache --></a>) is created, <span 
+class="cmti-10">tool packages </span>from the tool package
+libraries are installed in the cache. A tool package is just a sub-directory of a tool package library, where the name of
+the package is the name of the sub-directory. The list of tool packages and the order in which they should be
+loaded is specified in a file named <span 
+class="cmtt-10">PKGLST </span>(one package name per line) in the tool package library
+directory.
+<!--l. 1756--><p class="indent" >   A default tool package library that is provided with the Odin distribution is installed into every cache. This
+default library is commonly located in <span 
+class="cmtt-10">/usr/local/lib/Odin</span>. Do not add, delete, or modify packages from this
+library. This ensures that installation of newer versions of Odin will not delete or overwrite any local
+modifications.
+<!--l. 1763--><p class="indent" >   A user can have the packages from additional libraries installed by specifying these libraries (separated by
+colons) in the <span 
+class="cmtt-10">$ODINPATH </span>environment variable. For example, if a user sets the <span 
+class="cmtt-10">$ODINPATH </span>variable to have the value
+<span 
+class="cmtt-10">/project/lib/Odin:/home/geoff/my-pkg-lib</span>, then the packages from <span 
+class="cmtt-10">/project/lib/Odin</span>, from
+<span 
+class="cmtt-10">/home/geoff/my-pkg-lib</span>, and from the default library are installed into every cache the user creates. If a package
+with a given name occurs in several package libraries, the package from the library that occurs earliest in <span 
+class="cmtt-10">$ODINPATH</span>
+is used.
+<!--l. 1774--><p class="indent" >   The entries in <span 
+class="cmtt-10">$ODINPATH </span>can also be individual tool packages rather than tool package libraries, in which case
+those packages are added to the list of packages to be installed into the cache.
+   <h3 class="sectionHead"><span class="titlemark">B.1   </span> <a 
+ id="x1-67000B.1"></a>Tool Packages</h3>
+<!--l. 1783--><p class="noindent" >A tool package is a directory that contains a <span 
+class="cmti-10">derivation graph </span>file and any support files that implement the tools
+declared in the derivation graph. If <span 
+class="cmtt-10">pkgx </span>is the name of the tool package, then <span 
+class="cmtt-10">pkgx.dg </span>is the name of the derivation
+graph file.
+<!--l. 1789--><p class="indent" >   The derivation graph is the mechanism for declaring object types, parameter types, environment varables, and
+tools for the tool package. It is described in detail in Section&#x00A0;<a 
+href="#x1-69000B.2">B.2<!--tex4ht:ref: derivationgraph --></a>.
+<!--l. 1794--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">B.1.1   </span> <a 
+ id="x1-68000B.1.1"></a>Versioned Tool Packages</h4>
+<!--l. 1796--><p class="noindent" >By default, a tool package is symbolically linked into each cache in which it is installed. Since the Odin system
+maintains the dependency of each build step on the package scripts used by that build step, a change to a build
+script will cause the recomputation of all build steps that use that script. In case the script change is an
+enhancement rather than a bug fix, it is often preferable to allow each user to decide when to upgrade his cache to
+use the new packages.
+<!--l. 1806--><p class="indent" >   To provide this functionality, a tool package library can contain a file named <span 
+class="cmtt-10">LIBVER </span>in addition to
+the tool package subdirectories. The <span 
+class="cmtt-10">LIBVER </span>file contains text of the form <span 
+class="cmtt-10">PKGVER.i</span>, where <span 
+class="cmtt-10">i </span>is an
+integer. Each tool package then contains a file named <span 
+class="cmtt-10">PKGVER.i </span>and a set of sub-directories, with one
+sub-directory for each version of the tool package. If changes to a package are made in the form of a new
+version, these changes are not seen by a user until he resets his cache with the <span 
+class="cmtt-10">-R </span>option to the <span 
+class="cmtt-10">odin</span>
+host-command.
+<!--l. 1818--><p class="indent" >   The tool package version installed into a cache is the one specifed by the <span 
+class="cmtt-10">PKGVER.i </span>file. For example,
+if <span 
+class="cmtt-10">LIBVER </span>contained the text <span 
+class="cmtt-10">PKGVER.7</span>, and if a tool package directory named <span 
+class="cmtt-10">pkgx </span>contains three
+tool version directories named <span 
+class="cmtt-10">pkgx/1.0</span>, <span 
+class="cmtt-10">pkgx/1.1-beta</span>, and <span 
+class="cmtt-10">pkgx/1.2</span>, and if the contents of the
+<span 
+class="cmtt-10">pkgx/PKGVER.7 </span>file is the text <span 
+class="cmtt-10">1.1-beta</span>, then any new cache that installs <span 
+class="cmtt-10">pkgx </span>installs the <span 
+class="cmtt-10">1.1-beta </span>version of
+<span 
+class="cmtt-10">pkgx</span>.
+<!--l. 1829--><p class="indent" >   When a new version of the library is installed, the <span 
+class="cmtt-10">i </span>in <span 
+class="cmtt-10">PKGVER.i </span>is incremented, e.g. to <span 
+class="cmtt-10">PKGVER.8</span>, and a
+<span 
+class="cmtt-10">PKGVER.8 </span>file is created in each of the package subdirectories. The library can be reverted back to an earlier version
+of the packages by editing the <span 
+class="cmtt-10">LIBVER </span>file.
+
+<!--l. 1836--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">B.2   </span> <a 
+ id="x1-69000B.2"></a>Derivation Graphs</h3>
+<!--l. 1839--><p class="noindent" >A derivation graph consists of a sequence of source, object type, parameter type, environment variable, and tool
+declarations. A source declaration associates a filename pattern with an object type. An object type declaration
+associates an object type with a set of supertypes. A parameter type declaration associates a parameter type with
+an object type for the parameter values. An environment variable declaration specifies a default value for an
+environment variable. A tool declaration specifies the inputs and outputs of the tool, where the inputs are
+object types, parameter types, odin-expressions, and identifiers, and where the outputs are object
+types.
+<!--l. 1853--><p class="indent" >   In the derivation graph, the following characters are special:
+
+   <div class="verbatim" id="verbatim-100">
+&#x00A0;&#x00A0;&#x00A0;&#x003C;whitespace&#x003E;&#x00A0;#&#x00A0;\&#x00A0;&#8217;&#x00A0;:&#x00A0;+&#x00A0;=&#x00A0;(&#x00A0;)&#x00A0;/&#x00A0;%&#x00A0;;&#x00A0;?&#x00A0;*&#x00A0;&#x003C;&#x00A0;&#x003E;&#x00A0;@&#x00A0;&amp;&#x00A0;$
+</div>
+<!--l. 1856--><p class="nopar" > The quoting and commenting conventions for the derivation graph are the same as those for odin-expressions (see
+Section&#x00A0;<a 
+href="#x1-230002.2">2.2<!--tex4ht:ref: odinexpr --></a>).
+<!--l. 1861--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">B.3   </span> <a 
+ id="x1-70000B.3"></a>Source Declarations</h3>
+<!--l. 1864--><p class="noindent" >A source declaration specifies the type for a host file based on the filename of the host file. It consists of a <span 
+class="cmti-10">filename</span>
+<span 
+class="cmti-10">expression</span>, a right arrow (composed from an equal-sign and a right-angle-bracket), and the name of a
+declared object type. A filename expression consists either of an identifier followed by an asterisk (i.e. all
+filenames that begin with that identifier), an asterisk followed by an identifier (i.e. all filenames that
+end with that identifier), or just an asterisk (i.e. all filenames). For example, the derivation graph
+entries:
+
+   <div class="verbatim" id="verbatim-101">
+&#x00A0;&#x00A0;&#x00A0;*.c&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:c;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;*.c.c&#x00A0;=&#x003E;&#x00A0;:cplusplus;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;s.*&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:sccs;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;*&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:FILE;
+</div>
+<!--l. 1880--><p class="nopar" > declare that the object type of a filename ending with <span 
+class="cmtt-10">.c </span>is <span 
+class="cmtt-10">:c</span>, the object type of a filename ending with <span 
+class="cmtt-10">.c.c </span>is
+<span 
+class="cmtt-10">:cplusplus</span>, the object type of a filename beginning with <span 
+class="cmtt-10">s. </span>is <span 
+class="cmtt-10">:sccs</span>, and the object type of any filename is
+<span 
+class="cmtt-10">:FILE</span>.
+<!--l. 1886--><p class="indent" >   The following disambiguation rules are used to ensure that every host file has a single object type: if a host
+filename matches both a prefix filename expression and a suffix filename expression, then the host file is an instance
+of the prefix filename expression; if a host filename matches two different prefix filename expressions
+or two different suffix filename expressions, then the host file is an instance of the longer filename
+expression. For example, with the previous source declarations, the following object types would be
+assigned:
+
+   <div class="verbatim" id="verbatim-102">
+&#x00A0;&#x00A0;&#x00A0;FILENAME&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;OBJECT-TYPE
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;src/test.c&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;c
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;src/test.c.c&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;cplusplus
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;src/s.test.c.c&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;sccs
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;src/test&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;FILE
+</div>
+<!--l. 1902--><p class="nopar" >
+<!--l. 1905--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">B.4   </span> <a 
+ id="x1-71000B.4"></a>Object Type Declarations</h3>
+<!--l. 1908--><p class="noindent" >An object type declaration consists of the object type being declared, a <span 
+class="cmti-10">help identifier</span>, a right arrow, and the <span 
+class="cmti-10">direct</span>
+<span 
+class="cmti-10">supertypes </span>of the type being declared. For example, the derivation graph entries:
+
+   <div class="verbatim" id="verbatim-103">
+&#x00A0;&#x00A0;&#x00A0;:c&#x00A0;&#8217;C&#x00A0;source&#x00A0;code&#8217;?&#x00A0;=&#x003E;&#x00A0;:source;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:source&#x00A0;&#8217;source&#x00A0;code&#8217;&#x00A0;=&#x003E;&#x00A0;:FILE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:fmt&#x00A0;&#8217;formatted&#x00A0;source&#x00A0;code&#8217;&#x00A0;=&#x003E;&#x00A0;:FILE;
+</div>
+<!--l. 1917--><p class="nopar" > declare that the direct supertype of <span 
+class="cmtt-10">:c </span>is <span 
+class="cmtt-10">:source</span>, the direct supertype of <span 
+class="cmtt-10">:source </span>is <span 
+class="cmtt-10">:FILE</span>, and the direct
+supertype of <span 
+class="cmtt-10">:fmt </span>is <span 
+class="cmtt-10">:FILE</span>.
+<!--l. 1923--><p class="indent" >   The <span 
+class="cmti-10">help identifier </span>is used by the Odin help system to generate messages about the installed types (see
+Section&#x00A0;<a 
+href="#x1-570004.5">4.5<!--tex4ht:ref: help --></a>). The help identifier is followed by a question-mark to indicate that it should be displayed in help
+messages. The user can explictly request to see all help identifiers by increasing the value of the Odin <span 
+class="cmtt-10">HelpLevel</span>
+variable (see Section&#x00A0;<a 
+href="#x1-530004.4.6">4.4.6<!--tex4ht:ref: helplevel --></a>).
+<!--l. 1931--><p class="indent" >   An object type can be declared with multiple direct supertypes, either in a single declaration or in separate
+declarations. For example, the derivation graph entries:
+
+   <div class="verbatim" id="verbatim-104">
+&#x00A0;&#x00A0;&#x00A0;:fmt.c&#x00A0;&#8217;formatted&#x00A0;version&#x00A0;of&#x00A0;C&#x00A0;code&#8217;&#x00A0;=&#x003E;&#x00A0;:c;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:fmt.c&#x00A0;&#8217;formatted&#x00A0;version&#x00A0;of&#x00A0;C&#x00A0;code&#8217;&#x00A0;=&#x003E;&#x00A0;:fmt;
+</div>
+<!--l. 1937--><p class="nopar" > and
+
+   <div class="verbatim" id="verbatim-105">
+&#x00A0;&#x00A0;&#x00A0;:fmt.c&#x00A0;&#8217;formatted&#x00A0;version&#x00A0;of&#x00A0;C&#x00A0;code&#8217;&#x00A0;=&#x003E;&#x00A0;:c&#x00A0;:fmt;
+</div>
+<!--l. 1941--><p class="nopar" > are equivalent.
+<!--l. 1944--><p class="indent" >   The <span 
+class="cmti-10">supertypes </span>of an object type are the transitive closure of the direct supertypes (i.e. the supertypes are the
+direct supertypes and all supertypes of the direct supertypes). For example, from the preceding object type
+declarations, the supertypes of <span 
+class="cmtt-10">:fmt.c </span>are <span 
+class="cmtt-10">:c</span>, <span 
+class="cmtt-10">:fmt</span>, <span 
+class="cmtt-10">:source</span>, and <span 
+class="cmtt-10">:FILE</span>.
+<!--l. 1952--><p class="indent" >   The supertypes of an object type help determine what objects can be derived from an object of that type. In
+particular, if the type of the object <span 
+class="cmtt-10">obj </span>is <span 
+class="cmtt-10">:o</span>, then the odin-expression <span 
+class="cmtt-10">obj:deriv </span>is valid if <span 
+class="cmtt-10">:deriv </span>is a supertype
+of <span 
+class="cmtt-10">:o</span>, if <span 
+class="cmtt-10">:deriv </span>is the output of a tool whose inputs can be derived from <span 
+class="cmtt-10">:o</span>, or if <span 
+class="cmtt-10">:deriv </span>is a supertype of an object
+that can be derived from <span 
+class="cmtt-10">:o</span>.
+<!--l. 1962--><p class="indent" >   In some rare circumstances, a tool produces an object of a specified type, but this object should not be used to
+provide this type as an intermediate step in derivations. In this case, the output type of the tool should be declared
+to be a <span 
+class="cmtt-10">base subtype </span>of the specified type. This is indicated by placing angle brackets around the supertype. For
+example, the derivation graph entry:
+
+   <div class="verbatim" id="verbatim-106">
+&#x00A0;&#x00A0;&#x00A0;:dummy_main.c&#x00A0;&#8217;dummy&#x00A0;main&#x00A0;program&#x00A0;for&#x00A0;a&#x00A0;C&#x00A0;executable&#8217;&#x00A0;=&#x003E;&#x00A0;&#x003C;:c&#x003E;;
+</div>
+<!--l. 1971--><p class="nopar" > declares that the direct base supertype of <span 
+class="cmtt-10">:dummy</span><span 
+class="cmtt-10">_main.c </span>is <span 
+class="cmtt-10">:c</span>. This states that derivations appropriate to objects
+of type <span 
+class="cmtt-10">:c </span>can be applied to objects of type <span 
+class="cmtt-10">:dummy</span><span 
+class="cmtt-10">_main.c</span>, but that a derived object of type <span 
+class="cmtt-10">:dummy</span><span 
+class="cmtt-10">_main.c</span>
+cannot be used for a derivation that must produce an object of type <span 
+class="cmtt-10">:c</span>.
+<!--l. 1979--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">B.4.1   </span> <a 
+ id="x1-72000B.4.1"></a>Built-In Supertypes</h4>
+<!--l. 1982--><p class="noindent" >The following object type declarations are built into the Odin system:
+
+   <div class="verbatim" id="verbatim-107">
+&#x00A0;&#x00A0;&#x00A0;:OBJECT&#x00A0;&#8217;any&#x00A0;object&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:OBJECT;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:FILE&#x00A0;&#8217;a&#x00A0;file&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:OBJECT;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:LIST&#x00A0;&#8217;a&#x00A0;list&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:OBJECT;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:VOID&#x00A0;&#8217;an&#x00A0;object&#x00A0;with&#x00A0;no&#x00A0;value&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:OBJECT;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:REFERENCE&#x00A0;&#8217;a&#x00A0;reference&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:OBJECT;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:EXECUTABLE&#x00A0;&#8217;a&#x00A0;file&#x00A0;that&#x00A0;should&#x00A0;be&#x00A0;executed&#x00A0;when&#x00A0;queried&#8217;&#x00A0;=&#x003E;&#x00A0;:FILE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:GENERIC&#x00A0;&#8217;a&#x00A0;file&#x00A0;whose&#x00A0;type&#x00A0;is&#x00A0;based&#x00A0;on&#x00A0;its&#x00A0;label&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:FILE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:PIPE&#x00A0;&#8217;a&#x00A0;file&#x00A0;produced&#x00A0;by&#x00A0;a&#x00A0;type-preserving&#x00A0;tool&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:FILE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:DERIVED-DIRECTORY&#x00A0;&#8217;a&#x00A0;derived&#x00A0;directory&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:FILE;
+</div>
+<!--l. 1993--><p class="nopar" > Every object type other than the built-in object types must be a subtype of exactly one of <span 
+class="cmtt-10">:FILE</span>, <span 
+class="cmtt-10">:LIST</span>, or
+<span 
+class="cmtt-10">:VOID</span>.
+<!--l. 1998--><p class="indent" >   If the type of an object is a subtype of <span 
+class="cmtt-10">:VOID</span>, the the object does not have a value. These types are useful for
+declaring tools that do not generate an output file, but do have side effects such as printing a file or writing a
+tape.
+<!--l. 2003--><p class="indent" >   If the type of an object is a subtype of <span 
+class="cmtt-10">:REFERENCE</span>, then the object refers to another object. Whenever a
+reference object is used, such as when it is displayed or when it is given as input to a tool, it is automatically
+dereferenced by Odin.
+<!--l. 2009--><p class="indent" >   If the type of an object is a subtype of <span 
+class="cmtt-10">:EXECUTABLE</span>, when the object is specified in a query odin-command (see
+Section&#x00A0;<a 
+href="#x1-400004.1">4.1<!--tex4ht:ref: query --></a>), the object is automatically executed after it has been made up-to-date. Executable types are analagous
+to executable targets (see Section&#x00A0;<a 
+href="#x1-310002.4.1">2.4.1<!--tex4ht:ref: executabletarget --></a>).
+<!--l. 2016--><p class="indent" >   If the type of an object is a subtype of <span 
+class="cmtt-10">:GENERIC</span>, then the object is a derived file whose type is
+based on the root of the source file from which it is derived (see Section&#x00A0;<a 
+href="#x1-250002.2.2">2.2.2<!--tex4ht:ref: selection --></a>). A generic type is
+commonly produced as the result of a checkout operation from a source control file or as the result of an
+uncompress operation on a compressed file. For example, if the root of <span 
+class="cmtt-10">prog.c.sm,v </span>is <span 
+class="cmtt-10">prog.c.sm</span>, if
+the type of a file named <span 
+class="cmtt-10">prog.c.sm </span>is <span 
+class="cmtt-10">:c.sm</span>, and if <span 
+class="cmtt-10">:checkout </span>is declared in the derivation graph
+entry:
+
+   <div class="verbatim" id="verbatim-108">
+&#x00A0;&#x00A0;&#x00A0;:checkout&#x00A0;&#8217;version&#x00A0;checked&#x00A0;out&#x00A0;of&#x00A0;a&#x00A0;version&#x00A0;control&#x00A0;file&#8217;&#x00A0;=&#x003E;&#x00A0;:GENERIC;
+</div>
+<!--l. 2028--><p class="nopar" > then the type of <span 
+class="cmtt-10">prog.c.sm,v :checkout </span>is <span 
+class="cmtt-10">:c.sm</span>.
+<!--l. 2031--><p class="indent" >   If the type of an object is a subtype of <span 
+class="cmtt-10">:PIPE</span>, then the object is a derived file whose type is the same as the
+input object to the tool that produced it. For example, if <span 
+class="cmtt-10">:stdout </span>is declared in the derivation graph
+entry:
+
+   <div class="verbatim" id="verbatim-109">
+&#x00A0;&#x00A0;&#x00A0;:stdout&#x00A0;&#8217;standard&#x00A0;output&#x00A0;file&#x00A0;of&#x00A0;a&#x00A0;tool&#x00A0;run&#8217;&#x00A0;=&#x003E;&#x00A0;:PIPE;
+</div>
+<!--l. 2037--><p class="nopar" > and if the type of <span 
+class="cmtt-10">prog.c </span>is <span 
+class="cmtt-10">:c</span>, then the type of <span 
+class="cmtt-10">prog.c +cmd=&#8217;sed s/a/b/&#8217; :stdout </span>is also <span 
+class="cmtt-10">:c</span>.
+<!--l. 2041--><p class="indent" >   If the type of an object is a subtype of <span 
+class="cmtt-10">:DERIVED-DIRECTORY</span>, then the object must be a directory produced by a
+tool.
+<!--l. 2044--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">B.4.2   </span> <a 
+ id="x1-73000B.4.2"></a>Built-In Derived Object Types</h4>
+
+   <div class="verbatim" id="verbatim-110">
+&#x00A0;&#x00A0;&#x00A0;:err&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;errors&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:FILE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:warn&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;warnings&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:FILE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:targets&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;targets&#x00A0;in&#x00A0;an&#x00A0;Odinfile&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:FILE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:name&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;name&#x00A0;of&#x00A0;an&#x00A0;object&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:FILE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:names&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;names&#x00A0;of&#x00A0;the&#x00A0;elements&#x00A0;of&#x00A0;a&#x00A0;list&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:FILE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:filename&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;filename&#x00A0;of&#x00A0;a&#x00A0;file&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:FILE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:ls&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;filenames&#x00A0;of&#x00A0;the&#x00A0;elements&#x00A0;of&#x00A0;a&#x00A0;list&#8217;&#x00A0;=&#x003E;&#x00A0;:FILE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:cat&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;concatenation&#x00A0;of&#x00A0;the&#x00A0;contents&#x00A0;of&#x00A0;the&#x00A0;elements&#x00A0;of&#x00A0;a&#x00A0;list&#8217;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:FILE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:first&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;first&#x00A0;element&#x00A0;of&#x00A0;a&#x00A0;list&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:OBJECT;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:union&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;list&#x00A0;union&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:LIST;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:id&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;unique&#x00A0;numeric&#x00A0;id&#x00A0;of&#x00A0;an&#x00A0;object&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:FILE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:label&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;label&#x00A0;of&#x00A0;an&#x00A0;object&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:FILE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:labels&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;labels&#x00A0;of&#x00A0;the&#x00A0;elements&#x00A0;of&#x00A0;a&#x00A0;list&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:FILE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:dir&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;directory&#x00A0;containing&#x00A0;a&#x00A0;file&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:REFERENCE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:vir_dir&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;directory&#x00A0;containing&#x00A0;virtual&#x00A0;files&#8217;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:DERIVED-DIRECTORY;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:depend&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;source&#x00A0;dependencies&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:LIST;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:source_names&#x00A0;&#8217;source&#x00A0;components&#x00A0;of&#x00A0;a&#x00A0;system&#x00A0;model&#8217;&#x00A0;=&#x003E;&#x00A0;:FILE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:operation_names&#x00A0;&#8217;operation&#x00A0;components&#x00A0;of&#x00A0;a&#x00A0;system&#x00A0;model&#8217;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:FILE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:view&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;view&#x00A0;from&#x00A0;a&#x00A0;view-path&#x00A0;specification&#8217;&#x00A0;=&#x003E;&#x00A0;:LIST;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:expand_hooks&#x00A0;&#8217;expand&#x00A0;hooks&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:FILE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:apply&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;apply&#x00A0;operations&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:REFERENCE;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:odin_help&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;top&#x00A0;level&#x00A0;help&#x00A0;for&#x00A0;odin&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:EXECUTABLE;
+</div>
+<!--l. 2072--><p class="nopar" >
+<!--l. 2074--><p class="indent" >   The <span 
+class="cmtt-10">:err </span>derivation produces a text file from an arbitrary input object. This text file contains all error messages
+generated by any tool used in the process of creating the input object. The <span 
+class="cmtt-10">:warn </span>derivation produces a text file
+that contains both warning and error messages.
+<!--l. 2080--><p class="indent" >   An <span 
+class="cmtt-10">Odinfile </span>can contain nested target definitions (see Section&#x00A0;<a 
+href="#x1-330002.6">2.6<!--tex4ht:ref: nestedtarget --></a>). The <span 
+class="cmtt-10">:targets </span>derivation produces a
+flattened version of the <span 
+class="cmtt-10">Odinfile </span>containing all target definitions.
+<!--l. 2085--><p class="indent" >   The <span 
+class="cmtt-10">:name </span>derivation produces a text file that contains an odin-expression that specifies the input object. The
+<span 
+class="cmtt-10">:names </span>derivation produces a text file from a list, where the text file contains a sequence of odin-expressions
+corresponding to the elements of the input object.
+<!--l. 2091--><p class="indent" >   The <span 
+class="cmtt-10">:filename </span>derivation produces a text file from a file, where the text file contains the host filename of the
+input object. The <span 
+class="cmtt-10">:ls </span>derivation produces a text file from a list, where the text file contains a sequence of host
+filenames corresponding to the elements of the input object. The filename of a string object is the identifier that
+names the string object.
+<!--l. 2098--><p class="indent" >   The <span 
+class="cmtt-10">:cat </span>derivation produces a text file from a list, where the text file contains the concatenation of the
+contents of the elements of the input object. The contents of a string object is the identifier that names the string
+object.
+<!--l. 2103--><p class="indent" >   The <span 
+class="cmtt-10">:first </span>derivation produces an object from a list, by selecting the first element of the list. This derivations is
+primarily used in parameter type declarations.
+<!--l. 2107--><p class="indent" >   The <span 
+class="cmtt-10">:union </span>derivation produces a list from a list, where each element in the input list appears exactly once in
+the output list.
+<!--l. 2110--><p class="indent" >   The <span 
+class="cmtt-10">:id </span>derivation generates a text file containing a unique integer for the input object. The <span 
+class="cmtt-10">:label </span>derivation
+generates a text file containing the label of the input object. The <span 
+class="cmtt-10">:labels </span>derivation produces a text file from
+a list, where the text file contains a sequence of labels corresponding to the elements of the input
+object.
+
+<!--l. 2118--><p class="indent" >   The <span 
+class="cmtt-10">:dir </span>derivation produces a reference object that refers to the directory containing the input object. If the
+input object is a derived object, then <span 
+class="cmtt-10">:dir </span>produces the directory that contains the source object from which the
+input object is derived.
+<!--l. 2124--><p class="indent" >   The <span 
+class="cmtt-10">:vir</span><span 
+class="cmtt-10">_dir </span>derivation produces a derived directory containing all the virtual targets defined in the input file.
+For the syntax of a virtual target definition, see Section&#x00A0;<a 
+href="#x1-290002.3">2.3<!--tex4ht:ref: virtualtarget --></a>.
+<!--l. 2129--><p class="indent" >   The <span 
+class="cmtt-10">:depend </span>derivation produces a list from an arbitrary input object. This list contains all source objects used
+in the process of creating the input object.
+<!--l. 2134--><p class="indent" >   The <span 
+class="cmtt-10">:source</span><span 
+class="cmtt-10">_names </span>derivation produces a text file from a text file. The format of the input text file is a
+sequence of odin-expressions naming file objects. The output text file contains just the initial source filename
+component of each odin-expression (i.e. the first derivation or parameterization operator and all subsequent
+operations are removed). An example of such an input file would be:
+
+   <div class="verbatim" id="verbatim-111">
+&#x00A0;&#x00A0;&#x00A0;../prog.c&#x00A0;:fmt&#x00A0;+debug
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;test.c&#x00A0;+inc_sp=(..)
+</div>
+<!--l. 2144--><p class="nopar" > The result of applying <span 
+class="cmtt-10">:source</span><span 
+class="cmtt-10">_names </span>to this input file would be:
+
+   <div class="verbatim" id="verbatim-112">
+&#x00A0;&#x00A0;&#x00A0;../prog.c
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;test.c
+</div>
+<!--l. 2149--><p class="nopar" >
+<!--l. 2151--><p class="indent" >   The <span 
+class="cmtt-10">:operation</span><span 
+class="cmtt-10">_names </span>derivation produces a text file from a text file. The format of the input text file is a
+sequence of odin-expressions naming file objects, one odin-expression per line. The output text file contains any text
+following the initial source filename component of each odin-expression (i.e. everything preceding the
+first derivation or parameterization operator is removed). An example of such an input file would
+be:
+
+   <div class="verbatim" id="verbatim-113">
+&#x00A0;&#x00A0;&#x00A0;../prog.c&#x00A0;:fmt&#x00A0;+debug
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;test.c&#x00A0;+inc_sp=(..)
+</div>
+<!--l. 2161--><p class="nopar" > The result of applying <span 
+class="cmtt-10">:operation</span><span 
+class="cmtt-10">_names </span>to this input file would be:
+
+   <div class="verbatim" id="verbatim-114">
+&#x00A0;&#x00A0;&#x00A0;:fmt&#x00A0;+debug
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;+inc_sp=(..)
+</div>
+<!--l. 2166--><p class="nopar" >
+<!--l. 2168--><p class="indent" >   The <span 
+class="cmtt-10">:view </span>derivation produces a list from a text file. The format of the text file is sequences of odin-expressions
+naming file objects, where each sequence is terminated by an odin-expression naming a string object. An example of
+such an input file would be:
+
+   <div class="verbatim" id="verbatim-115">
+#&#x00A0;the&#x00A0;search&#x00A0;sequence&#x00A0;for&#x00A0;test.h
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;test.h
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;test.h,v&#x00A0;:co
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;RCS/test.h,v&#x00A0;:co
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;=&#x00A0;&#8217;test.h&#8217;
+&#x00A0;<br />#&#x00A0;the&#x00A0;search&#x00A0;sequence&#x00A0;for&#x00A0;sys.h
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;sys.h
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;SCCS/s.sys.h&#x00A0;:co
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;=&#x00A0;&#8217;sys.h&#8217;
+</div>
+<!--l. 2183--><p class="nopar" > The <span 
+class="cmtt-10">:view </span>list contains the first file from each sequence whose status is greater than <span 
+class="cmtt-10">ERROR</span>. If none of the files in a
+particular sequence have the appropriate status, the status of the <span 
+class="cmtt-10">:view </span>object is set to <span 
+class="cmtt-10">ERROR</span>, unless the sequence
+is terminated by the empty string odin-expression:
+
+   <div class="verbatim" id="verbatim-116">
+&#x00A0;&#x00A0;&#x00A0;=&#x00A0;&#8217;&#8217;
+</div>
+<!--l. 2191--><p class="nopar" > in which case that sequence is just ignored. The <span 
+class="cmtt-10">:view </span>derivation depends only on the file selected from
+a given sequence and on the files preceding the selected file in the given sequence. This means that
+error messages from these preceding files are included in <span 
+class="cmtt-10">:error </span>reports for the <span 
+class="cmtt-10">:view </span>object, but any
+derived files following a selected files from a given sequence are ignored when the <span 
+class="cmtt-10">:view </span>object is made
+up-to-date.
+<!--l. 2202--><p class="indent" >   The <span 
+class="cmtt-10">:expand</span><span 
+class="cmtt-10">_hooks </span>derivation produces a text file from an input text file by expanding all <span 
+class="cmti-10">hooks </span>found in the
+input file. A hook is a way of linking a message back to an appropriate area in a source file that is relevant to
+understanding the given message.
+<!--l. 2207--><p class="indent" >   A hook is text of the form:
+
+   <div class="verbatim" id="verbatim-117">
+&#x00A0;&#x00A0;&#x00A0;(|&#x00A0;odin-expression&#x00A0;|&#x00A0;hooktype&#x00A0;|&#x00A0;hookdata&#x00A0;|)
+</div>
+<!--l. 2210--><p class="nopar" > where <span 
+class="cmtt-10">odin-expression </span>is the name of the object referenced by the hook, <span 
+class="cmtt-10">hooktype </span>is the type of the hook, and
+<span 
+class="cmtt-10">hookdata </span>is the actual reference. In order to escape the delimiter &#8216;<span 
+class="cmtt-10">(</span><span 
+class="cmsy-10">|</span>&#8217;, &#8216;<span 
+class="cmsy-10">|</span>&#8217;, or &#8216;<span 
+class="cmsy-10">|</span><span 
+class="cmtt-10">)</span>&#8217;, precede it with a
+backslash.
+<!--l. 2217--><p class="indent" >   The <span 
+class="cmtt-10">:expand</span><span 
+class="cmtt-10">_hooks </span>derivation replaces all constructs of this form with the result of applying <span 
+class="cmtt-10">:hooktype </span>to the
+object specified by <span 
+class="cmtt-10">odin-expression</span>. The value of <span 
+class="cmtt-10">hookdata </span>is placed in the <span 
+class="cmtt-10">+hookvalue </span>parameter. Hooks
+appearing in the hookdata string (<span 
+class="cmti-10">nested hooks</span>) are passed unexpanded to the <span 
+class="cmtt-10">:hooktype </span>tool. The result of the
+<span 
+class="cmtt-10">:hooktype </span>derivation should be text that references the appropriate location in a source file. This text can in turn
+contain additional hooks that will be expanded (in particular, this allows for the expansion of nested
+hooks).
+<!--l. 2228--><p class="indent" >   If <span 
+class="cmtt-10">:hooktype </span>cannot be applied to the object specified by <span 
+class="cmtt-10">odin-expression</span>, Odin attempts to apply <span 
+class="cmtt-10">:hooktype</span>
+to any object from which this object can be derived. If all attempts to apply <span 
+class="cmtt-10">:hooktype </span>fail, the result of hook
+expansion is the input text with the delimiters around the hook deleted.
+<!--l. 2235--><p class="indent" >   The <span 
+class="cmtt-10">:apply </span>derivation produces a reference object from an input object and a <span 
+class="cmtt-10">+apply </span>parameter. The value of
+the <span 
+class="cmtt-10">+apply </span>parameter is a file containing an arbitrary sequence of selection, derivation, and parameterization
+expressions, which are applied to the input object by the <span 
+class="cmtt-10">:apply </span>derivation. For example, if the file <span 
+class="cmtt-10">apply.expr</span>
+contained the text:
+
+   <div class="verbatim" id="verbatim-118">
+&#x00A0;&#x00A0;&#x00A0;+debug&#x00A0;:output&#x00A0;/OUT.DAT
+</div>
+<!--l. 2244--><p class="nopar" > the two odin-expressions:
+
+   <div class="verbatim" id="verbatim-119">
+&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+debug&#x00A0;:output&#x00A0;/OUT.DAT
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+apply=(apply.expr)&#x00A0;:apply
+</div>
+<!--l. 2249--><p class="nopar" > would be equivalent.
+<!--l. 2252--><p class="indent" >   The <span 
+class="cmtt-10">:odin</span><span 
+class="cmtt-10">_help </span>derivation produces an executable file from the current working directory. This file is executed
+whenever the user requests help with the odin-command
+
+   <div class="verbatim" id="verbatim-120">
+&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;?
+</div>
+<!--l. 2257--><p class="nopar" > The <span 
+class="cmtt-10">:odin</span><span 
+class="cmtt-10">_help </span>derivation can be overridden in a tool package to provide a different response to this help
+command.
+<!--l. 2262--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">B.5   </span> <a 
+ id="x1-74000B.5"></a>Parameter Type Declarations</h3>
+<!--l. 2265--><p class="noindent" >A parameter type declaration consists of the parameter type being declared, a help identifier, a right
+arrow, and an object type. When a parameter type is used as the input to a tool, the list of values for
+that parameter type is first derived to the specified object type. For example, the derivation graph
+entries:
+
+   <div class="verbatim" id="verbatim-121">
+&#x00A0;&#x00A0;&#x00A0;+define&#x00A0;&#8217;a&#x00A0;macro&#x00A0;definition&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:cat;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;+lib&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#8217;an&#x00A0;object&#x00A0;code&#x00A0;library&#8217;&#x00A0;=&#x003E;&#x00A0;:ls;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;+debug&#x00A0;&#x00A0;&#8217;debug&#x00A0;flag&#8217;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;:first;
+</div>
+<!--l. 2276--><p class="nopar" > declare a <span 
+class="cmtt-10">+define </span>parameter type whose values are <span 
+class="cmtt-10">:cat</span>&#8217;ed, a <span 
+class="cmtt-10">+lib </span>parameter type whose values are <span 
+class="cmtt-10">:ls</span>&#8217;ed, and a
+<span 
+class="cmtt-10">+debug </span>parameter type which is a flag.
+<!--l. 2282--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">B.6   </span> <a 
+ id="x1-75000B.6"></a>Environment Variable Declarations</h3>
+<!--l. 2285--><p class="noindent" >An environment variable declaration consists of the environment variable being declared, a help identifier, an
+equal-sign, and either an identifier or a parenthesized odin-expression. The value following the equal-sign specifies
+the default value for that variable. For example, the derivation graph entries:
+
+   <div class="verbatim" id="verbatim-122">
+&#x00A0;&#x00A0;&#x00A0;$CC&#x00A0;&#8217;name&#x00A0;of&#x00A0;the&#x00A0;C&#x00A0;compiler&#8217;&#x00A0;=&#x00A0;&#8217;gcc&#8217;;
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;$CC_HOME&#x00A0;&#8217;directory&#x00A0;containing&#x00A0;the&#x00A0;C&#x00A0;compiler&#x00A0;tools&#8217;&#x00A0;=&#x00A0;&#8217;/usr/local/bin&#8217;;
+</div>
+<!--l. 2296--><p class="nopar" > specify default values for <span 
+class="cmtt-10">$CC </span>and <span 
+class="cmtt-10">$CC</span><span 
+class="cmtt-10">_HOME</span>. These values can then be overridden by corresponding values in
+the environment when a particular cache is created or reset. For example, if the value of <span 
+class="cmtt-10">$CC</span><span 
+class="cmtt-10">_HOME </span>is
+defined to be <span 
+class="cmtt-10">/usr/public/bin </span>in the environment of the process that resets a cache, then the value of
+<span 
+class="cmtt-10">$CC</span><span 
+class="cmtt-10">_HOME </span>is <span 
+class="cmtt-10">/usr/public/bin </span>whenever it is used in odin-expressions or odin-commands for that
+cache.
+<!--l. 2307--><p class="indent" >   If the default value is a parenthesized odin-expression, the expression is evaluated and the resulting filename is
+used as the default value.
+<!--l. 2311--><p class="indent" >   The current environment variables for a cache can be found in <span 
+class="cmtt-10">$ODINCACHE/ENV</span>.
+<!--l. 2315--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">B.7   </span> <a 
+ id="x1-76000B.7"></a>Tool Declarations</h3>
+<!--l. 2318--><p class="noindent" >A tool declaration consists of a tool name, the tool inputs, a right arrow, and the tool outputs. The tool name is
+either <span 
+class="cmtt-10">EXEC</span>, <span 
+class="cmtt-10">COLLECT</span>, <span 
+class="cmtt-10">READ-LIST</span>, or <span 
+class="cmtt-10">READ-REFERENCE</span>. A tool input is an identifier or an <span 
+class="cmti-10">input-expression </span>in
+parentheses (see Section&#x00A0;<a 
+href="#x1-77000B.7.1">B.7.1<!--tex4ht:ref: input --></a>). A tool output is an object type in parentheses.
+<!--l. 2326--><p class="indent" >   For example, the derivation graph entry:
+
+   <div class="verbatim" id="verbatim-123">
+&#x00A0;&#x00A0;&#x00A0;EXEC&#x00A0;(/bin/yacc)&#x00A0;-dv&#x00A0;(:y)&#x00A0;=&#x003E;&#x00A0;(:y.tab.c)&#x00A0;(:y.tab.h)&#x00A0;(:y.output);
+</div>
+<!--l. 2329--><p class="nopar" > declares an <span 
+class="cmtt-10">EXEC </span>tool that has inputs <span 
+class="cmtt-10">(/bin/yacc)</span>, <span 
+class="cmtt-10">-dv</span>, and <span 
+class="cmtt-10">(:y)</span>, and that has outputs: <span 
+class="cmtt-10">(:y.tab.c)</span>,
+<span 
+class="cmtt-10">(:y.tab.h)</span>, and <span 
+class="cmtt-10">(:y.output)</span>.
+<!--l. 2335--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">B.7.1   </span> <a 
+ id="x1-77000B.7.1"></a>Input-Expressions</h4>
+<!--l. 2338--><p class="noindent" >An <span 
+class="cmti-10">input-expression </span>is just like an odin-expression, except that a <span 
+class="cmti-10">derived input </span>or a <span 
+class="cmti-10">parameter input </span>can
+appear wherever a source filename can appear in an odin-expression. A <span 
+class="cmti-10">derived input </span>consists of a
+declared object type (e.g. <span 
+class="cmtt-10">:o</span>), while a <span 
+class="cmti-10">parameter input </span>consists of a declared parameter type (e.g.
+<span 
+class="cmtt-10">+debug</span>).
+<!--l. 2345--><p class="indent" >   An input-expression can contain references to declared environment variables. For example, the following
+derivation graph entries declare and reference the environment variable <span 
+class="cmtt-10">$YACC</span><span 
+class="cmtt-10">_HOME</span>:
+
+   <div class="verbatim" id="verbatim-124">
+&#x00A0;&#x00A0;&#x00A0;$YACC_HOME&#x00A0;&#8217;directory&#x00A0;containing&#x00A0;yacc&#8217;&#x00A0;=&#x00A0;&#8217;/bin&#8217;;
+&#x00A0;<br />
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;EXEC&#x00A0;($YACC_HOME/yacc)&#x00A0;-dv&#x00A0;(:y)&#x00A0;=&#x003E;&#x00A0;(:y.tab.c)&#x00A0;(:y.tab.h)&#x00A0;(:y.output);
+</div>
+<!--l. 2353--><p class="nopar" >
+<!--l. 2355--><p class="indent" >   An input-expression can contain <span 
+class="cmti-10">second-order derivations</span>. A second-order derivation consists of
+a <span 
+class="cmti-10">second-order object type </span>followed by an equal sign and a derivation expression. For example, the
+input-expression:
+
+   <div class="verbatim" id="verbatim-125">
+&#x00A0;&#x00A0;&#x00A0;:lookup=:o
+</div>
+<!--l. 2362--><p class="nopar" > contains the second-order object type <span 
+class="cmtt-10">:lookup </span>whose argument is the derivation <span 
+class="cmtt-10">:o</span>.
+<!--l. 2366--><p class="indent" >   The five second-order object types are <span 
+class="cmtt-10">:map</span>, <span 
+class="cmtt-10">:recurse</span>, <span 
+class="cmtt-10">:extract</span>, <span 
+class="cmtt-10">:delete</span>, and <span 
+class="cmtt-10">:lookup</span>. The derivation
+<span 
+class="cmtt-10">:map=:type </span>takes a list as input and produces a list containing the application of <span 
+class="cmtt-10">:type </span>to each element of the
+input list. The derivation <span 
+class="cmtt-10">:recurse=:type </span>takes a list as input and produces a list containing the application of
+<span 
+class="cmtt-10">:type :recurse=:type </span>to each element of the input list to which <span 
+class="cmtt-10">:type </span>can be applied, and just the original
+element otherwise. The derivation <span 
+class="cmtt-10">:recurse=:type </span>can also take a file as input, in which case the input is treated as
+if it were a list containing that file as its only member. The derivation <span 
+class="cmtt-10">:extract=:type </span>takes a list as
+input and produces a list containing each element of the input list that is a subtype of <span 
+class="cmtt-10">:type</span>. The
+derivation <span 
+class="cmtt-10">:delete=:type </span>takes a list as input and produces a list containing each element of the
+input list that is not a subtype of <span 
+class="cmtt-10">:type</span>. The derivation <span 
+class="cmtt-10">:lookup=:type </span>takes an object as input and
+produces a reference to an object which is the application of <span 
+class="cmtt-10">:type </span>to the input object, except that each
+parameter value that is a reference or list is replaced by the sequence of files contained by the reference or
+list.
+<!--l. 2389--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">B.7.2   </span> <a 
+ id="x1-78000B.7.2"></a>Ignoring the Status of a Tool Input</h4>
+<!--l. 2391--><p class="noindent" >By default, a tool is not run if any of its inputs have <span 
+class="cmtt-10">ERROR </span>status or less. In case the tool should ignore the status of
+an input object, an ampersand is appended to the declaration of that input. For example, the derivation graph
+entry:
+
+   <div class="verbatim" id="verbatim-126">
+&#x00A0;&#x00A0;&#x00A0;EXEC&#x00A0;(od.sh)&#x00A0;(:FILE)&amp;&#x00A0;=&#x003E;&#x00A0;(:FILE);
+</div>
+<!--l. 2398--><p class="nopar" > declares that the <span 
+class="cmtt-10">od.sh </span>tool does not care what the status of the <span 
+class="cmtt-10">:FILE </span>input object is.
+<!--l. 2402--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">B.7.3   </span> <a 
+ id="x1-79000B.7.3"></a>Ignoring Changes to the Value of a Tool Input</h4>
+<!--l. 2404--><p class="noindent" >If a tool only uses the name of an input file or only uses the names of the elements of an input list, then
+that input is marked with an at-sign. In this case Odin ignores changes to the value(s) of the input
+object, and only reruns the tool if the name(s) change. For example, consider a tool that takes all
+relative names specified in <span 
+class="cmtt-10">#include </span>statements from an input file, and forms the cross product of those
+names with a set of directory names in a specified search path. A derivation graph entry for such a tool
+is:
+
+   <div class="verbatim" id="verbatim-127">
+&#x00A0;&#x00A0;&#x00A0;EXEC&#x00A0;(c_inc.sh)&#x00A0;(:c)&#x00A0;(+search_path)@&#x00A0;=&#x003E;&#x00A0;(:c_inc);
+</div>
+<!--l. 2416--><p class="nopar" > This declares that <span 
+class="cmtt-10">c</span><span 
+class="cmtt-10">_incs.sh </span>should be re-executed if the <span 
+class="cmtt-10">:c </span>file or the names in the <span 
+class="cmtt-10">+search</span><span 
+class="cmtt-10">_path </span>parameter
+change, but not if the contents of the directories in the search path change.
+<!--l. 2421--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">B.7.4   </span> <a 
+ id="x1-80000B.7.4"></a>EXEC Tool</h4>
+<!--l. 2424--><p class="noindent" >The <span 
+class="cmtt-10">EXEC </span>tool passes its inputs to the Unix <span 
+class="cmtt-10">execl() </span>system call and expects its outputs to be placed in current
+working directory. For example, the derivation graph entry:
+
+   <div class="verbatim" id="verbatim-128">
+&#x00A0;&#x00A0;&#x00A0;EXEC&#x00A0;(/bin/ld)&#x00A0;-o&#x00A0;exe&#x00A0;(:o)&#x00A0;=&#x003E;&#x00A0;(:exe);
+</div>
+<!--l. 2429--><p class="nopar" > declares that a file named <span 
+class="cmtt-10">exe </span>is produced in the current working directory by executing the C statement:
+
+   <div class="verbatim" id="verbatim-129">
+&#x00A0;&#x00A0;&#x00A0;status&#x00A0;=&#x00A0;execl("/bin/ld",&#x00A0;"/bin/ld",&#x00A0;"-o",&#x00A0;"exe",&#x00A0;"/xxx/filename.o");
+</div>
+<!--l. 2434--><p class="nopar" > where <span 
+class="cmtt-10">/xxx/filename.o </span>is the name of a file with type <span 
+class="cmtt-10">:o</span>. When the <span 
+class="cmtt-10">execl() </span>completes, Odin moves all output
+files into the cache.
+<!--l. 2439--><p class="indent" >   An identifier input is passed to the <span 
+class="cmtt-10">execl() </span>as a <span 
+class="cmtt-10">C </span>string.
+<!--l. 2441--><p class="indent" >   An input-expression is passed to the <span 
+class="cmtt-10">execl() </span>as an absolute pathname of the file named by the input-expression.
+Any relative source filename in the input-expression refers to a file in the same directory as the derivation graph
+file containing the type expression. For example, if an <span 
+class="cmtt-10">EXEC </span>declaration in the derivation graph file
+<span 
+class="cmtt-10">/usr/local/Odin/misc/1.0/misc.dg </span>contains the input <span 
+class="cmtt-10">(od.sh)</span>, then this input is passed to the <span 
+class="cmtt-10">execl() </span>as
+<span 
+class="cmtt-10">"/usr/local/Odin/misc/1.0/od.sh"</span>.
+<!--l. 2451--><p class="indent" >   The value of a derived or parameter input in the input-expression depends on the input object to which the tool
+is being applied. For example, in the odin-expression:
+
+   <div class="verbatim" id="verbatim-130">
+&#x00A0;&#x00A0;&#x00A0;&#x00A0;prog.c&#x00A0;+debug&#x00A0;:exe
+</div>
+<!--l. 2456--><p class="nopar" > the input object to the <span 
+class="cmtt-10">:exe </span>derivation is <span 
+class="cmtt-10">prog.c+debug</span>.
+<!--l. 2459--><p class="indent" >   Each derived input is replaced by a file that is the result of applying the derived input object type to the input
+object. For example, when the <span 
+class="cmtt-10">:exe </span>object is being computed for <span 
+class="cmtt-10">prog.c+debug:exe</span>, the <span 
+class="cmtt-10">:o </span>derived input is
+replaced by the file <span 
+class="cmtt-10">prog.c+debug:o</span>.
+<!--l. 2466--><p class="indent" >   Each parameter input is replaced by the object resulting from applying the object type specified in the
+parameter declaration for that parameter type, to the list of values of all parameters of that type associated with
+the input object. As a special case, if no parameters of that type are associated with the input object, the parameter
+input is replaced by the empty string.
+<!--l. 2475--><p class="indent" >   Each <span 
+class="cmtt-10">execl() </span>is invoked in an empty directory provided by Odin, and the tool is expected to put its output files
+in that directory. The name of an output file should be the same as the type-name of the output.
+For example, the result of the <span 
+class="cmtt-10">execl() </span>call for the output <span 
+class="cmtt-10">(:exe) </span>should be an output file named
+<span 
+class="cmtt-10">exe</span>.
+<!--l. 2481--><p class="indent" >   In addition to the declared outputs, there are two standard output files named <span 
+class="cmtt-10">ERRORS </span>and <span 
+class="cmtt-10">WARNINGS</span>. Fatal
+errors should be written to <span 
+class="cmtt-10">ERRORS</span>, while recoverable errors should be written to <span 
+class="cmtt-10">WARNINGS</span>. The <span 
+class="cmtt-10">ERRORS </span>and
+<span 
+class="cmtt-10">WARNINGS </span>files are used by Odin to determine if error or warning status should be set for the output of the
+tool.
+<!--l. 2489--><p class="indent" >   Normally, the standard input of the <span 
+class="cmtt-10">execl() </span>is assigned to <span 
+class="cmtt-10">/dev/null </span>and the standard output and error is
+assigned to a temporary file that is written to the standard output of the Odin client process after the <span 
+class="cmtt-10">execl()</span>
+completes. To aid in debugging of an <span 
+class="cmtt-10">EXEC </span>tool, if the Odin variable <span 
+class="cmtt-10">MaxBuilds </span>is set to <span 
+class="cmtt-10">1</span>, the standard input,
+output, and error of the <span 
+class="cmtt-10">execl() </span>are those of the Odin client process.
+<!--l. 2498--><p class="indent" >   If the exit status of the <span 
+class="cmtt-10">execl() </span>call is non-zero, Odin ignores the results of the <span 
+class="cmtt-10">execl()</span>, and aborts the current
+odin-command. Non-zero exit status should therefore only be used to indicate transient failures (such as
+memory or disk errors). This means that most standard Unix tools must be wrapped in shell scripts, so
+that normal error messages are sent to the file <span 
+class="cmtt-10">ERRORS </span>and only transient errors cause a non-zero exit
+status.
+<!--l. 2507--><p class="indent" >   Since the Odin system caches the results of <span 
+class="cmtt-10">EXEC </span>tools and assumes the results are still valid if none of the input
+objects change, the tool writer must ensure that all files referenced during a tool run are specified as inputs to that
+tool. In addition to explicit input files, many tools use additional implicit input files whose names are specified in
+the text of the explicit input to the tool. It is necessary in these cases to provide a dependency scanning tool that
+produces as output a list containing the names of all of these additional input files. These additional inputs are
+specified in the tool declaration separated from the explicit inputs by the keyword <span 
+class="cmtt-10">NEEDS</span>. For example, the
+derivation graph entry:
+
+   <div class="verbatim" id="verbatim-131">
+&#x00A0;&#x00A0;&#x00A0;EXEC&#x00A0;(cc.sh)&#x00A0;(:c)&#x00A0;(+cc_flags)&#x00A0;NEEDS&#x00A0;(:all_c_inc)&#x00A0;=&#x003E;&#x00A0;(:o);
+</div>
+<!--l. 2522--><p class="nopar" > declares that the script <span 
+class="cmtt-10">cc.sh </span>uses as inputs an object of type <span 
+class="cmtt-10">:c </span>and a parameter of type <span 
+class="cmtt-10">+cc</span><span 
+class="cmtt-10">_flags</span>, and
+indirectly uses as input an object of type <span 
+class="cmtt-10">:all</span><span 
+class="cmtt-10">_c</span><span 
+class="cmtt-10">_incs</span>.
+<!--l. 2527--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">B.7.5   </span> <a 
+ id="x1-81000B.7.5"></a>COLLECT Tool</h4>
+<!--l. 2529--><p class="noindent" >When the output type of a <span 
+class="cmtt-10">COLLECT </span>tool declaration is a list, the <span 
+class="cmtt-10">COLLECT </span>tool produces a list whose elements are
+the input objects. For example, the derivation graph entry:
+
+   <div class="verbatim" id="verbatim-132">
+&#x00A0;&#x00A0;&#x00A0;COLLECT&#x00A0;(:c_inc)&#x00A0;(:c_inc&#x00A0;:map=:all_c_inc)&#x00A0;=&#x003E;&#x00A0;(:all_c_inc);
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:all_c_inc&#x00A0;&#8217;all&#x00A0;c&#x00A0;includes&#8217;&#x00A0;=&#x003E;&#x00A0;:LIST;
+</div>
+<!--l. 2535--><p class="nopar" > declares that <span 
+class="cmtt-10">:all</span><span 
+class="cmtt-10">_c</span><span 
+class="cmtt-10">_inc </span>is a list that contains <span 
+class="cmtt-10">:c</span><span 
+class="cmtt-10">_inc </span>and the result of applying <span 
+class="cmtt-10">:all</span><span 
+class="cmtt-10">_c</span><span 
+class="cmtt-10">_inc </span>to each element of
+<span 
+class="cmtt-10">:c</span><span 
+class="cmtt-10">_inc</span>.
+<!--l. 2539--><p class="indent" >   When the output type of a <span 
+class="cmtt-10">COLLECT </span>tool declaration is a reference, the <span 
+class="cmtt-10">COLLECT </span>tool produces a reference to the
+input object. For example, the derivation graph entry:
+
+   <div class="verbatim" id="verbatim-133">
+&#x00A0;&#x00A0;&#x00A0;COLLECT&#x00A0;(:c&#x00A0;+debug&#x00A0;:o)&#x00A0;=&#x003E;&#x00A0;(:debug.o);
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;:debug.o&#x00A0;&#8217;C&#x00A0;compile&#x00A0;with&#x00A0;debug&#x00A0;on&#8217;&#x00A0;=&#x003E;&#x00A0;:REFERENCE;
+</div>
+<!--l. 2545--><p class="nopar" > declares that <span 
+class="cmtt-10">:debug.o </span>is a reference to an object that results from applying <span 
+class="cmtt-10">+debug:o </span>to a <span 
+class="cmtt-10">:c </span>file.
+<!--l. 2549--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">B.7.6   </span> <a 
+ id="x1-82000B.7.6"></a>READ-LIST Tool</h4>
+<!--l. 2551--><p class="noindent" >The <span 
+class="cmtt-10">READ-LIST </span>tool produces a list from an input object. If the input object is a directory, this list contains all the
+files in the directory. If the input object is a file, this list contains the objects named by the odin-expressions in the
+input file. For example, the derivation graph entry:
+
+   <div class="verbatim" id="verbatim-134">
+&#x00A0;&#x00A0;&#x00A0;READ-LIST&#x00A0;(:c.sm)&#x00A0;=&#x003E;&#x00A0;(:c.sm.list)&#x00A0;;
+</div>
+<!--l. 2559--><p class="nopar" > declares that <span 
+class="cmtt-10">:c.sm.list </span>is the list specified by the contents of a file of type <span 
+class="cmtt-10">:c.sm</span>.
+<!--l. 2563--><p class="noindent" >
+   <h4 class="subsectionHead"><span class="titlemark">B.7.7   </span> <a 
+ id="x1-83000B.7.7"></a>READ-REFERENCE Tool</h4>
+<!--l. 2565--><p class="noindent" >The <span 
+class="cmtt-10">READ-REFERENCE </span>tool produces a reference to the object named by the single odin-expression in the input file.
+For example, the derivation graph entry:
+
+   <div class="verbatim" id="verbatim-135">
+&#x00A0;&#x00A0;&#x00A0;READ-REFERENCE&#x00A0;(:stub.name)&#x00A0;=&#x003E;&#x00A0;(:stub.ref)&#x00A0;;
+</div>
+<!--l. 2570--><p class="nopar" > declares that <span 
+class="cmtt-10">:stub.ref </span>will be a reference to the object named by the contents of a file of type
+<span 
+class="cmtt-10">:stub.name</span>.
+
+<a 
+ id="x1-83001r39"></a>
+   <h2 class="appendixHead"><span class="titlemark">Appendix&#x00A0;C</span><br /><a 
+ id="x1-84000C"></a>Derivation Graph Syntax</h2>
+
+   <div class="verbatim" id="verbatim-136">
+DerivationGraph&#x00A0;-&#x003E;&#x00A0;DGEntry&#x00A0;&#8217;;&#8217;&#x00A0;DerivationGraph
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />DGEntry&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;BANNER&#8217;&#x00A0;"Identifier"
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;INCLUDE&#8217;&#x00A0;"Identifier"
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;Pattern&#x00A0;&#8217;=&#8217;&#x00A0;&#8217;&#x003E;&#8217;&#x00A0;ObjectType
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;ObjectType&#x00A0;Description&#x00A0;&#8217;=&#8217;&#x00A0;&#8217;&#x003E;&#8217;&#x00A0;SuperType+
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;ParameterType&#x00A0;Description&#x00A0;&#8217;=&#8217;&#x00A0;&#8217;&#x003E;&#8217;&#x00A0;ObjectType
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;Variable&#x00A0;Description&#x00A0;&#8217;=&#8217;&#x00A0;"Identifier"
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;Tool&#x00A0;Arg+&#x00A0;Needs&#x00A0;&#8217;=&#8217;&#x00A0;&#8217;&#x003E;&#8217;&#x00A0;Result+&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />Pattern&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;"Identifier"&#x00A0;&#8217;*&#8217;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;*&#8217;&#x00A0;"Identifier"
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;*&#8217;&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />ObjectType&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;:&#8217;&#x00A0;"Identifier"&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />ParameterType&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;+&#8217;&#x00A0;"Identifier"&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />Description&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;"Identifier"&#x00A0;&#8217;?&#8217;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;"Identifier"&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />Tool&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;EXEC&#8217;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;COLLECT&#8217;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;READ-LIST&#8217;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;READ-REFERENCE&#8217;&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />SuperType&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;&#x003C;&#8217;&#x00A0;ObjectType&#x00A0;&#8217;&#x003E;&#8217;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;ObjectType&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />Needs&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;NEEDS&#8217;&#x00A0;Arg+
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />Result&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;(&#8217;&#x00A0;ObjectType&#x00A0;&#8217;)&#8217;&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />Arg&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;Word
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;FileArg
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;FileArg&#x00A0;&#8217;@&#8217;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;FileArg&#x00A0;&#8217;&amp;&#8217;&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />FileArg&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;(&#8217;&#x00A0;Root&#x00A0;Operation*&#x00A0;&#8217;)&#8217;&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />Root&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;Word
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;ObjectType
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;ParameterType
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;/&#8217;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;/&#8217;&#x00A0;Word
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;%&#8217;&#x00A0;Word&#x00A0;;
+&#x00A0;<br />
+
+&#x00A0;<br />Operation&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;Parameter
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;ObjectType
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;ObjectType&#x00A0;&#8217;=&#8217;&#x00A0;ObjectType
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;/&#8217;&#x00A0;Word
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;/&#8217;
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;%&#8217;&#x00A0;Word&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />Parameter&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;ParameterType
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;ParameterType&#x00A0;&#8217;=&#8217;&#x00A0;PrmVal+&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />PrmVal&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;Word
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;FileArg&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />Word&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;"Identifier"
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;Variable;
+&#x00A0;<br />
+&#x00A0;<br />Variable&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;&#x00A0;-&#x003E;&#x00A0;&#8217;$&#8217;&#x00A0;"Identifier";
+</div>
+<!--l. 2645--><p class="nopar" >
+
+<a 
+ id="x1-84001r39"></a>
+   <h2 class="appendixHead"><span class="titlemark">Appendix&#x00A0;D</span><br /><a 
+ id="x1-85000D"></a>Derivation Graph Example</h2>
+
+   <div class="verbatim" id="verbatim-137">
+#&#x00A0;Source&#x00A0;Types
+&#x00A0;<br />
+&#x00A0;<br />*.c.sm&#x00A0;=&#x003E;&#x00A0;:c.sm&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />*.c&#x00A0;=&#x003E;&#x00A0;:c&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />*.o&#x00A0;=&#x003E;&#x00A0;:o&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />
+&#x00A0;<br />#&#x00A0;Object&#x00A0;Types
+&#x00A0;<br />
+&#x00A0;<br />:c.sm&#x00A0;&#8217;system&#x00A0;model&#8217;?&#x00A0;=&#x003E;&#x00A0;:FILE&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />:c&#x00A0;&#8217;C&#x00A0;code&#8217;?&#x00A0;=&#x003E;&#x00A0;:FILE&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />:o&#x00A0;&#8217;object&#x00A0;module&#8217;?&#x00A0;=&#x003E;&#x00A0;:FILE&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />:dir&#x00A0;&#8217;directory&#8217;&#x00A0;=&#x003E;&#x00A0;:REFERENCE&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />:c_inc&#x00A0;&#8217;potential&#x00A0;C-style&#x00A0;included&#x00A0;files&#8217;&#x00A0;=&#x003E;&#x00A0;:LIST&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />:all_c_inc&#x00A0;&#8217;C-style&#x00A0;transitively&#x00A0;included&#x00A0;files&#8217;&#x00A0;=&#x003E;&#x00A0;:LIST&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />:c.list&#x00A0;&#8217;c&#x00A0;source&#x00A0;code&#x00A0;list&#x00A0;for&#x00A0;tools&#x00A0;wanting&#x00A0;list&#x00A0;input&#8217;&#x00A0;=&#x003E;&#x00A0;:c.sm.list&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />:c.sm.list&#x00A0;&#8217;list&#8217;&#x00A0;=&#x003E;&#x00A0;:LIST&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />:fmt&#x00A0;&#8217;formatted&#x00A0;version&#x00A0;of&#x00A0;C&#x00A0;code&#8217;&#x00A0;=&#x003E;&#x00A0;:PIPE&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />:exe&#x00A0;&#8217;executable&#x00A0;binary&#8217;?&#x00A0;=&#x003E;&#x00A0;:FILE&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />
+&#x00A0;<br />#&#x00A0;Parameter&#x00A0;Types
+&#x00A0;<br />
+&#x00A0;<br />+search_path&#x00A0;&#8217;name&#x00A0;of&#x00A0;a&#x00A0;directory&#x00A0;in&#x00A0;an&#x00A0;include&#x00A0;search&#x00A0;path&#8217;?&#x00A0;=&#x003E;&#x00A0;:ls&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />+ignore&#x00A0;&#8217;prefix&#x00A0;of&#x00A0;dependencies&#x00A0;to&#x00A0;ignore&#8217;?&#x00A0;=&#x003E;&#x00A0;:ls&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />+debug&#x00A0;&#8217;debug&#x00A0;switch&#8217;?&#x00A0;=&#x003E;&#x00A0;:first&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />+prof&#x00A0;&#8217;profiling&#x00A0;switch&#8217;?&#x00A0;=&#x003E;&#x00A0;:first&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />+gnu&#x00A0;&#8217;use&#x00A0;gnu&#x00A0;tools&#8217;?&#x00A0;=&#x003E;&#x00A0;:first&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />+cc_flags&#x00A0;&#8217;flags&#x00A0;for&#x00A0;cc&#8217;?&#x00A0;=&#x003E;&#x00A0;:cat&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />+ld_flags&#x00A0;&#8217;flags&#x00A0;for&#x00A0;ld&#8217;?&#x00A0;=&#x003E;&#x00A0;:cat&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />
+
+&#x00A0;<br />#&#x00A0;Environment&#x00A0;Variables
+&#x00A0;<br />
+&#x00A0;<br />$CC&#x00A0;&#8217;name&#x00A0;of&#x00A0;C&#x00A0;compiler&#8217;&#x00A0;=&#x00A0;&#8217;gcc&#8217;;
+&#x00A0;<br />
+&#x00A0;<br />$CC_HOME&#x00A0;&#8217;directory&#x00A0;containing&#x00A0;C&#x00A0;compiler&#x00A0;tools&#8217;&#x00A0;=&#x00A0;&#8217;/usr/local/bin&#8217;;
+&#x00A0;<br />
+&#x00A0;<br />
+&#x00A0;<br />#&#x00A0;Tools
+&#x00A0;<br />
+&#x00A0;<br />READ-LIST&#x00A0;(:c.sm)
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;(:c.sm.list)&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />EXEC&#x00A0;(indent.sh)&#x00A0;(:c)
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;(:fmt)&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />EXEC&#x00A0;(c_inc.sh)&#x00A0;(:FILE)&#x00A0;(:FILE&#x00A0;:dir)@&#x00A0;(+search_path)&#x00A0;(+ignore)
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;(:c_inc)&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />COLLECT&#x00A0;(:c_inc&#x00A0;:map=:all_c_inc)&#x00A0;(:c_inc)
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;(:all_c_inc)&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />EXEC&#x00A0;(cc.sh)&#x00A0;(:c)&#x00A0;(:c&#x00A0;:dir)@&#x00A0;(+search_path)
+&#x00A0;<br />&#x00A0;(+debug)&#x00A0;(+prof)&#x00A0;(+gnu)&#x00A0;(+cc_flags)&#x00A0;NEEDS&#x00A0;(:all_c_inc)&amp;&#x00A0;$CC&#x00A0;$CC_HOME
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;(:o)&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />COLLECT&#x00A0;(:c)
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;(:c.list)&#x00A0;;
+&#x00A0;<br />
+&#x00A0;<br />EXEC&#x00A0;(ld.sh)&#x00A0;(:c.sm.list&#x00A0;:map=:o)&#x00A0;(+debug)&#x00A0;(+gnu)&#x00A0;(+prof)&#x00A0;(+ld_flags)
+&#x00A0;<br />&#x00A0;&#x00A0;&#x00A0;=&#x003E;&#x00A0;(:exe)&#x00A0;;
+</div>
+<!--l. 2730--><p class="nopar" >
+    
+</body></html> 
+
+
+

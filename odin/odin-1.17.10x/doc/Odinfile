@@ -1,1 +1,17 @@
 odin.ps == odin.tex :ps 
+
+%odin-html==()+cmd=htlatex (odin.tex):output
+
+odin.html==%odin-html/odin.html
+odin.css==%odin-html/odin.css
+odin0x.png==%odin-html/odin.css
+odin1x.png==%odin-html/odin1x.png
+
+%docs.ls==<<
+odin.html
+odin.css
+odin0x.png
+odin1x.png
+odin.ps
+
+%docs==%docs.ls:list
