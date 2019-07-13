@@ -1,0 +1,7 @@
+
+%x.o==x.cc+inc_sp=(%inc.d):o
+
+%inc.d==%inc.virdir_spec:vir_dir
+
+%inc.virdir_spec==<<
+%hcp==hcp%hcp.d
