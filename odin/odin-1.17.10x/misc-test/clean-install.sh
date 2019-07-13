@@ -10,6 +10,7 @@ mkdir -p scratch &&
 ( cd .. && ./CLEAN && rm -rf ODINBOOT && ./INSTALL "$d/scratch" ) &&
 export ODIN="$d/scratch" &&
 export PATH="$d/scratch/bin:$PATH" &&
+export ODINPATH="$d/../xjupkg" &&
 odin -R </dev/null &&
 
 true

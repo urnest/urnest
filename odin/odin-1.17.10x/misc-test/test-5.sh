@@ -12,15 +12,18 @@ odin -R < /dev/null &&
 step=$((step+1)) &&
 export ODINVERIFYLEVEL=0 &&
 (
-  odin 'v2%x/b/bb' &&
-  odin 'v2%x/b/bb:filename>' &&
-  f=$(odin "v2%x:filename>") &&
-  cat "$f/b/bb" &&
-  odin 'v1%eighty-files' &&
-  sleep 1 &&
-  odin 'v2%x!ls -l' &&
-  odin 'v2%x/a/c/cc' &&
-  cat "$f/a/c/cc" &&
+  odin 'd5%x.o' &&
+  odin 'd5%x.o:depend:ls' &&
+  odin "d5%x.o:depend:ls>" &&
+  odin "d5%x.o:depend:ls>" | fgrep "$d/d5/x.cc" &&
+  odin "d5%x.o:depend:ls>" | fgrep "$d/d5/hcp/tags/x.h" &&
+  odin "d5%x.o:depend:ls>" | fgrep "$d/d5/Odinfile" &&
+  odin "d5%x.o:depend:ls>" | fgrep "$d/d5/hcp/Odinfile" &&
+  odin "d5%x.o:depend:ls>" | fgrep "$d/d5/hcp/tags/Odinfile" &&
+  hcp=$(odin "d5/hcp%hcp.d:filename>") &&
+  odin 'd5%x.o+depend=('$hcp')!:dpath' |fgrep -q 'is an input of' &&
+  tags=$(odin "d5/hcp/tags%tags.d:filename>") &&
+  odin 'd5%x.o+depend=('$tags')!:dpath' |fgrep -q 'is an input of' &&
   true
 ) &&
 

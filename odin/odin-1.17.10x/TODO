@@ -1,5 +1,6 @@
-- fix hash_inc to make sure it includes intermediate directories
-  - need a test that fails first
+~ fix hash_inc to make sure it includes intermediate directories
+  ~ need a test that fails first (added a test and it did not fail,
+    because intermediate dirs become inputs - see misc-test/test-6.sh)
   
 - fix race condition when immediately re-invoking odin without
   explicit server, handle and document two use cases:
@@ -53,6 +54,8 @@
 - resource temporarily unavailable (cygwin)
 
 - :sm.hash_inc_all (?)
+
+- allow :LIST as EXEC tool param, being shorthand for :LIST:ls +need=:LIST
 
 - doc, specific:
   - 2.2.3 ref to xjupkg tree support

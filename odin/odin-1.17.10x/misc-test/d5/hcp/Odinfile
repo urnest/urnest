@@ -1,0 +1,5 @@
+
+%hcp.d==%hcp.virdir_spec:vir_dir
+
+%hcp.virdir_spec==<<
+%tags==tags%tags.d

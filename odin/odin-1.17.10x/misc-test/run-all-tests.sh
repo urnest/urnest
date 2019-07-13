@@ -13,6 +13,8 @@ which odin &&
 $d/test-1.sh &&
 $d/test-2.sh &&
 $d/test-3.sh &&
+$d/test-4.sh &&
 $d/test-5.sh &&
+$d/test-6.sh &&
 
 echo PASS

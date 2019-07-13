@@ -1,0 +1,5 @@
+
+%tags.d==%tags.virdir_spec:vir_dir
+
+%tags.virdir_spec==<<
+%y.h==./x.h
