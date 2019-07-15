@@ -24,6 +24,12 @@ std::vector<uint8_t>const& Value::stringValue() const throw(xju::Exception)
   s << (*this) << " is not a string";
   throw xju::Exception(s.str(),XJU_TRACED);
 }
+std::vector<uint8_t>const& Value::opaqueValue() const throw(xju::Exception)
+{
+  std::ostringstream s;
+  s << (*this) << " is not a opaque value";
+  throw xju::Exception(s.str(),XJU_TRACED);
+}
 int Value::intValue() const throw(xju::Exception)
 {
   std::ostringstream s;

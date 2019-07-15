@@ -10,13 +10,14 @@ TODO:
   - implement all data types (from RFC 2578):
     x Integer32==Integer
     x IpAddress 0
-    - Counter32 1
+    x Counter32 1
     x Gauge32==Unsigned32 2
     x TimeTicks 3
-    - Opaque 4 -> std::vector<uint8_t>
-    - Counter64 6
+    x Opaque 4 -> std::vector<uint8_t>
+    x Counter64 6
     x BITS... is an octet string interpreted implicitly?
-
+    - *Value checking assumes sizeof(int)>=4?
+    
   - decode SnmpV1Trap
   
   - add snmp v2c

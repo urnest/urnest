@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include "Counter32Value.hh"
+#include "Counter64Value.hh"
 
 #include "xju/snmp/encodedLengthOfValue.hh"
 #include "xju/snmp/encodeInt.hh"
@@ -18,12 +18,12 @@ namespace xju
 namespace snmp
 {
 
-Counter32Value::Counter32Value(uint32_t val) throw():
-    Value(encodedLengthOfValue((int64_t)val)),
+Counter64Value::Counter64Value(uint64_t val) throw():
+    Value(encodedLengthOfValue(val)),
     val_(val) {
   }
 
-int Counter32Value::intValue() const throw(xju::Exception)
+int Counter64Value::intValue() const throw(xju::Exception)
 {
   if (val_ > INT_MAX) {
     std::ostringstream s;
@@ -34,12 +34,19 @@ int Counter32Value::intValue() const throw(xju::Exception)
   return val_;
 }
 
-unsigned int Counter32Value::uintValue() const throw()
+unsigned int Counter64Value::uintValue() const throw(xju::Exception)
 {
+  if (val_ > UINT_MAX) {
+    std::ostringstream s;
+    s << (*this)
+      << " is too big to convert to an unsigned integer (UINT_MAX = "
+      << UINT_MAX << ")";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
   return val_;
 }
 
-long Counter32Value::longValue() const throw(xju::Exception)
+long Counter64Value::longValue() const throw(xju::Exception)
 {
   if (val_ > LONG_MAX) {
     std::ostringstream s;
@@ -50,27 +57,34 @@ long Counter32Value::longValue() const throw(xju::Exception)
   return val_;
 }
 
-unsigned long Counter32Value::ulongValue() const throw()
+unsigned long Counter64Value::ulongValue() const throw(xju::Exception)
 {
+  if (val_ > ULONG_MAX) {
+    std::ostringstream s;
+    s << (*this)
+      << " is too big to convert to an unsigned long integer (ULONG_MAX = "
+      << ULONG_MAX << ")";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
   return val_;
 }
 
 
 
-std::vector<uint8_t>::iterator Counter32Value::encodeTo(
+std::vector<uint8_t>::iterator Counter64Value::encodeTo(
   std::vector<uint8_t>::iterator begin) const throw()
 {
-  return encodeInt(begin,0x41,val_);
+  return encodeInt(begin,0x46,val_);
 }
 
-std::string Counter32Value::str() const throw()
+std::string Counter64Value::str() const throw()
 {
   return xju::format::str(val_);
 }
 
-bool Counter32Value::less(Value const& y) const throw()
+bool Counter64Value::less(Value const& y) const throw()
 {
-  return val_ < dynamic_cast<Counter32Value const&>(y).val_;
+  return val_ < dynamic_cast<Counter64Value const&>(y).val_;
 }
 
 }

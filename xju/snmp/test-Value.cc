@@ -16,6 +16,9 @@
 #include "xju/snmp/Counter32Value.hh"
 #include "xju/snmp/StringValue.hh"
 #include "xju/snmp/OidValue.hh"
+#include "xju/snmp/Gauge32Value.hh"
+#include "xju/snmp/Counter64Value.hh"
+#include "xju/snmp/OpaqueValue.hh"
 
 namespace xju
 {
@@ -247,6 +250,30 @@ void test1() throw()
     xju::assert_equal(y.size(),6U);
     xju::assert_equal(x.encodeTo(y.begin()),y.end());
     xju::assert_equal(y,std::vector<uint8_t>{0x41,4,0x7f,0xff,0xff,0xff});
+  }
+  // Gauge32
+  {
+    Gauge32Value const x(0x7fffffff);
+    std::vector<uint8_t> y(x.encodedLength(),0U);
+    xju::assert_equal(y.size(),6U);
+    xju::assert_equal(x.encodeTo(y.begin()),y.end());
+    xju::assert_equal(y,std::vector<uint8_t>{0x42,4,0x7f,0xff,0xff,0xff});
+  }
+  // Counter64
+  {
+    Counter64Value const x(0x7fffffff);
+    std::vector<uint8_t> y(x.encodedLength(),0U);
+    xju::assert_equal(y.size(),6U);
+    xju::assert_equal(x.encodeTo(y.begin()),y.end());
+    xju::assert_equal(y,std::vector<uint8_t>{0x46,4,0x7f,0xff,0xff,0xff});
+  }
+  // OpaqueValue
+  {
+    OpaqueValue const x({'f','r','e','d'});
+    std::vector<uint8_t> y(x.encodedLength(),0U);
+    xju::assert_equal(y.size(),6U);
+    xju::assert_equal(x.encodeTo(y.begin()),y.end());
+    xju::assert_equal(y,std::vector<uint8_t>{0x44,4,'f','r','e','d'});
   }
 
 }

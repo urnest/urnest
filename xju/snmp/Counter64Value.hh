@@ -7,28 +7,22 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef XJU_SNMP_INTVALUE_H
-#define XJU_SNMP_INTVALUE_H
+#ifndef XJU_SNMP_COUNTER64VALUE_H
+#define XJU_SNMP_COUNTER64VALUE_H
 
-#include <xju/snmp/Value.hh>
-#include <vector>
+#include "xju/snmp/Value.hh"
 #include <stdint.h>
-#include <string>
 
 namespace xju
 {
 namespace snmp
 {
 
-//rfc2578 integer-value
-class IntValue : public Value
+class Counter64Value : public Value
 {
 public:
-  ~IntValue() throw(){}
-  
-  explicit IntValue(int64_t const& val) throw();
-  
-  int64_t const val_;
+  explicit Counter64Value(uint64_t val) throw();
+  uint64_t val_;
 
   // Value::
   int intValue() const throw(xju::Exception) override;
@@ -37,41 +31,42 @@ public:
   unsigned long ulongValue() const throw(xju::Exception) override;
 
   // Value::
-  std::vector<uint8_t>::iterator encodeTo(
-    std::vector<uint8_t>::iterator begin) const throw() override;
+  virtual std::vector<uint8_t>::iterator encodeTo(
+    std::vector<uint8_t>::iterator begin) const throw();
 
   // Value::
-  virtual std::string str() const throw() override;
+  virtual std::string str() const throw();
 
   // Value::
-  // pre: y is a IntValue
+  // pre: y is a Counter64Value
   virtual bool less(Value const& y) const throw() override;
-  
-  friend bool operator<(IntValue const& x, IntValue const& y) throw()
+
+  friend bool operator<(Counter64Value const& x, Counter64Value const& y) throw()
   {
     return x.val_<y.val_;
   }
-  friend bool operator>(IntValue const& x, IntValue const& y) throw()
+  friend bool operator>(Counter64Value const& x, Counter64Value const& y) throw()
   {
     return x.val_>y.val_;
   }
-  friend bool operator==(IntValue const& x, IntValue const& y) throw()
+  friend bool operator==(Counter64Value const& x, Counter64Value const& y) throw()
   {
     return x.val_==y.val_;
   }
-  friend bool operator!=(IntValue const& x, IntValue const& y) throw()
+  friend bool operator!=(Counter64Value const& x, Counter64Value const& y) throw()
   {
     return x.val_!=y.val_;
   }
-  friend bool operator<=(IntValue const& x, IntValue const& y) throw()
+  friend bool operator<=(Counter64Value const& x, Counter64Value const& y) throw()
   {
     return x.val_<=y.val_;
   }
-  friend bool operator>=(IntValue const& x, IntValue const& y) throw()
+  friend bool operator>=(Counter64Value const& x, Counter64Value const& y) throw()
   {
     return x.val_>=y.val_;
   }
 };
+
 
 
 }

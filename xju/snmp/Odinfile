@@ -22,6 +22,7 @@
 ()+cmd=(test-decodeSnmpV1SetRequest.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-decodeSnmpV2cGetRequest.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-decodeSnmpV2cGetNextRequest.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-decodeValue.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-validateResponse.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-SnmpV1Table.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-SnmpV1Trap.cc+(../..%cxx-opts):auto.cxx.exe):exec.output

@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include "Counter32Value.hh"
+#include "Gauge32Value.hh"
 
 #include "xju/snmp/encodedLengthOfValue.hh"
 #include "xju/snmp/encodeInt.hh"
@@ -18,12 +18,12 @@ namespace xju
 namespace snmp
 {
 
-Counter32Value::Counter32Value(uint32_t val) throw():
+Gauge32Value::Gauge32Value(uint32_t val) throw():
     Value(encodedLengthOfValue((int64_t)val)),
     val_(val) {
   }
 
-int Counter32Value::intValue() const throw(xju::Exception)
+int Gauge32Value::intValue() const throw(xju::Exception)
 {
   if (val_ > INT_MAX) {
     std::ostringstream s;
@@ -34,12 +34,12 @@ int Counter32Value::intValue() const throw(xju::Exception)
   return val_;
 }
 
-unsigned int Counter32Value::uintValue() const throw()
+unsigned int Gauge32Value::uintValue() const throw()
 {
   return val_;
 }
 
-long Counter32Value::longValue() const throw(xju::Exception)
+long Gauge32Value::longValue() const throw(xju::Exception)
 {
   if (val_ > LONG_MAX) {
     std::ostringstream s;
@@ -50,27 +50,27 @@ long Counter32Value::longValue() const throw(xju::Exception)
   return val_;
 }
 
-unsigned long Counter32Value::ulongValue() const throw()
+unsigned long Gauge32Value::ulongValue() const throw()
 {
   return val_;
 }
 
 
 
-std::vector<uint8_t>::iterator Counter32Value::encodeTo(
+std::vector<uint8_t>::iterator Gauge32Value::encodeTo(
   std::vector<uint8_t>::iterator begin) const throw()
 {
-  return encodeInt(begin,0x41,val_);
+  return encodeInt(begin,0x42,val_);
 }
 
-std::string Counter32Value::str() const throw()
+std::string Gauge32Value::str() const throw()
 {
   return xju::format::str(val_);
 }
 
-bool Counter32Value::less(Value const& y) const throw()
+bool Gauge32Value::less(Value const& y) const throw()
 {
-  return val_ < dynamic_cast<Counter32Value const&>(y).val_;
+  return val_ < dynamic_cast<Gauge32Value const&>(y).val_;
 }
 
 }

@@ -40,6 +40,7 @@ public:
   
   // convenience functions that do type and range checking
   virtual std::vector<uint8_t>const& stringValue() const throw(xju::Exception);
+  virtual std::vector<uint8_t>const& opaqueValue() const throw(xju::Exception);
   virtual int intValue() const throw(xju::Exception);
   virtual unsigned int uintValue() const throw(xju::Exception);
   virtual long longValue() const throw(xju::Exception);
@@ -79,6 +80,26 @@ public:
       return false;
     }
     return x.less(y);
+  }
+  friend bool operator==(Value const& x, Value const& y) noexcept
+  {
+    return !(x<y) && !(y<x);
+  }
+  friend bool operator>(Value const& x, Value const& y) noexcept
+  {
+    return y<x;
+  }
+  friend bool operator<=(Value const& x, Value const& y) noexcept
+  {
+    return x<y || x==y;
+  }
+  friend bool operator>=(Value const& x, Value const& y) noexcept
+  {
+    return x>y || x==y;
+  }
+  friend bool operator!=(Value const& x, Value const& y) noexcept
+  {
+    return !(x==y);
   }
 };
   

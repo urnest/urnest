@@ -21,6 +21,10 @@
 #include <xju/snmp/TimeTicksValue.hh>
 #include <xju/snmp/decodeIPv4AddressValue.hh>
 #include <xju/snmp/IPv4AddressValue.hh>
+#include <xju/snmp/Counter32Value.hh>
+#include <xju/snmp/Gauge32Value.hh>
+#include <xju/snmp/OpaqueValue.hh>
+#include <xju/snmp/Counter64Value.hh>
 
 namespace xju
 {
@@ -75,6 +79,39 @@ std::pair<std::shared_ptr<Value const>, DecodeIterator> decodeValue(
                               new IntValue(v.first)),
                             v.second);
     }
+    case 0x40:
+    {
+      auto v(decodeIPv4AddressValue(i));
+      return std::make_pair(std::shared_ptr<Value const>(
+                              new IPv4AddressValue(v.first)),
+                            v.second);
+    }
+    case 0x41:
+    {
+      auto v(decodeIntValue(i));
+      if (v.first>UINT32_MAX){
+        std::ostringstream s;
+        s << v.first << " is too big to be a Counter32 (UINT32_MAX == "
+          << UINT32_MAX << ")";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      return std::make_pair(std::shared_ptr<Value const>(
+                              new Counter32Value(v.first)),
+                            v.second);
+    }
+    case 0x42:
+    {
+      auto v(decodeIntValue(i));
+      if (v.first>UINT32_MAX){
+        std::ostringstream s;
+        s << v.first << " is too big to be a Gauge32 (UINT32_MAX == "
+          << UINT32_MAX << ")";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      return std::make_pair(std::shared_ptr<Value const>(
+                              new Gauge32Value(v.first)),
+                            v.second);
+    }
     case 0x43:
     {
       auto v(decodeIntValue(i,0x43));
@@ -83,11 +120,18 @@ std::pair<std::shared_ptr<Value const>, DecodeIterator> decodeValue(
                                 std::chrono::milliseconds(v.first*10))),
                             v.second);
     }
-    case 0x40:
+    case 0x44:
     {
-      auto v(decodeIPv4AddressValue(i));
+      auto v(decodeStringValue(i));
       return std::make_pair(std::shared_ptr<Value const>(
-                              new IPv4AddressValue(v.first)),
+                              new OpaqueValue(v.first)),
+                            v.second);
+    }
+    case 0x46:
+    {
+      auto v(decodeIntValue(i));
+      return std::make_pair(std::shared_ptr<Value const>(
+                              new Counter64Value(v.first)),
                             v.second);
     }
     }
