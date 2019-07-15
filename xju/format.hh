@@ -355,13 +355,17 @@ std::string gmTime(
   Formatter a,
   Formatters... b) throw();
 
-class Hour_{};class Hour12_{};class Minute_{};class Second_{};
+class YYYY_{};class MM_{};class DD_{};
 class Year_{};class Month_{};class Day_{};
 class DayName_{};class DayName3_{};
+class Hour_{};class Hour12_{};class Minute_{};class Second_{};
 class ampm_{};class AMPM_{};
 class Millisecond_{};class Microsecond_{};class Nanosecond_{};
 
 // time format selectors for use with localtime, gmtime above
+extern YYYY_ const YYYY;
+extern MM_ const MM;
+extern DD_ const DD;
 extern Year_ const Year;
 extern Month_ const Month;
 extern Day_ const Day;
@@ -713,6 +717,21 @@ std::string int_(I const x,
 template<class ...Formatters>
 std::string formatTm(struct tm const& x,std::chrono::nanoseconds) throw(){
   return std::string();
+}
+template<class ... Formatters>
+std::string formatTm(struct tm const& x,std::chrono::nanoseconds n,
+                     YYYY_, Formatters... bs) throw(){
+  return format::int_(x.tm_year+1900,4)+formatTm(x,n,bs...);
+}
+template<class ... Formatters>
+std::string formatTm(struct tm const& x, std::chrono::nanoseconds n,
+                     MM_, Formatters... bs) throw(){
+  return format::int_(x.tm_mon+1,2)+formatTm(x,n,bs...);
+}
+template<class ... Formatters>
+std::string formatTm(struct tm const& x, std::chrono::nanoseconds n,
+                     DD_, Formatters... bs) throw(){
+  return format::int_(x.tm_mday,2)+formatTm(x,n,bs...);
 }
 template<class ... Formatters>
 std::string formatTm(struct tm const& x,std::chrono::nanoseconds n,

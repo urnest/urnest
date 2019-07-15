@@ -475,6 +475,20 @@ void test11()
                        format::Minute,
                        ':',
                        format::Second),"Wednesday, 3/9/2018  18:12:32");
+    xju::assert_equal(
+      format::formatTm(x,
+                       std::chrono::nanoseconds(0),
+                       format::YYYY,
+                       '-',
+                       format::MM,
+                       '-',
+                       format::DD,
+                       ' ',
+                       format::Hour,
+                       ':',
+                       format::Minute,
+                       ':',
+                       format::Second),"2018-09-03 18:12:32");
   }
   {
     struct tm x{
