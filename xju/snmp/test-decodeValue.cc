@@ -17,6 +17,8 @@
 #include <xju/snmp/OidValue.hh>
 #include <xju/snmp/Counter32Value.hh>
 #include <xju/snmp/Gauge32Value.hh>
+#include <xju/snmp/Counter64Value.hh>
+#include <xju/snmp/OpaqueValue.hh>
 
 namespace xju
 {
@@ -33,7 +35,6 @@ void test1() {
     xju::assert_equal(x.encodeTo(y.begin()),y.end());
     xju::assert_equal(x,*decodeValue(DecodeIterator(y)).first);
   }
-/*   
   // IntValue encoding
   // 0
   {
@@ -42,6 +43,7 @@ void test1() {
     xju::assert_equal(y.size(),3U);
     xju::assert_equal(x.encodeTo(y.begin()),y.end());
     xju::assert_equal(y,std::vector<uint8_t>{0x02,1,0});
+    xju::assert_equal(x,*decodeValue(DecodeIterator(y)).first);
   }
   // StringValue encoding
   {
@@ -50,6 +52,7 @@ void test1() {
     xju::assert_equal(y.size(),6U);
     xju::assert_equal(x.encodeTo(y.begin()),y.end());
     xju::assert_equal(y,std::vector<uint8_t>{0x04,4,'f','r','e','d'});
+    xju::assert_equal(x,*decodeValue(DecodeIterator(y)).first);
   }
   // OidValue encoding
   // .1.3
@@ -59,6 +62,7 @@ void test1() {
     xju::assert_equal(y.size(),3U);
     xju::assert_equal(x.encodeTo(y.begin()),y.end());
     xju::assert_equal(y,std::vector<uint8_t>{0x06,1,40*1+3});
+    xju::assert_equal(x,*decodeValue(DecodeIterator(y)).first);
   }
   // Counter32
   {
@@ -67,6 +71,7 @@ void test1() {
     xju::assert_equal(y.size(),6U);
     xju::assert_equal(x.encodeTo(y.begin()),y.end());
     xju::assert_equal(y,std::vector<uint8_t>{0x41,4,0x7f,0xff,0xff,0xff});
+    xju::assert_equal(x,*decodeValue(DecodeIterator(y)).first);
   }
   // Gauge32
   {
@@ -75,6 +80,7 @@ void test1() {
     xju::assert_equal(y.size(),6U);
     xju::assert_equal(x.encodeTo(y.begin()),y.end());
     xju::assert_equal(y,std::vector<uint8_t>{0x42,4,0x7f,0xff,0xff,0xff});
+    xju::assert_equal(x,*decodeValue(DecodeIterator(y)).first);
   }
   // Counter64
   {
@@ -83,6 +89,7 @@ void test1() {
     xju::assert_equal(y.size(),6U);
     xju::assert_equal(x.encodeTo(y.begin()),y.end());
     xju::assert_equal(y,std::vector<uint8_t>{0x46,4,0x7f,0xff,0xff,0xff});
+    xju::assert_equal(x,*decodeValue(DecodeIterator(y)).first);
   }
   // OpaqueValue
   {
@@ -91,8 +98,8 @@ void test1() {
     xju::assert_equal(y.size(),6U);
     xju::assert_equal(x.encodeTo(y.begin()),y.end());
     xju::assert_equal(y,std::vector<uint8_t>{0x44,4,'f','r','e','d'});
+    xju::assert_equal(x,*decodeValue(DecodeIterator(y)).first);
   }
-*/  
 }
 
 }

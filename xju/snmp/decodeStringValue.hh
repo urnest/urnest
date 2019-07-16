@@ -13,13 +13,15 @@
 #include <utility>
 #include "xju/snmp/DecodeIterator.hh"
 #include "xju/Exception.hh"
+#include <cinttypes>
 
 namespace xju
 {
 namespace snmp
 {
 std::pair<std::vector<uint8_t>,DecodeIterator> decodeStringValue(
-  DecodeIterator const at) throw(xju::Exception);
+  DecodeIterator const at,
+  uint8_t const type_=0x04) throw(xju::Exception);
 
 }
 }

@@ -7,24 +7,27 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include "decodeStringValue.hh"
+#include <xju/snmp/decodeStringValue.hh>
+
 #include <utility>
-#include "xju/snmp/DecodeIterator.hh"
+#include <xju/snmp/DecodeIterator.hh>
 #include <xju/format.hh>
 #include <sstream>
-#include "xju/snmp/decodeLength.hh"
+#include <xju/snmp/decodeLength.hh>
 
 namespace xju
 {
 namespace snmp
 {
 std::pair<std::vector<uint8_t>,DecodeIterator> decodeStringValue(
-  DecodeIterator const at) throw(xju::Exception)
+  DecodeIterator const at,
+  uint8_t const type_) throw(xju::Exception)
 {
   try {
-    if ((*at) != 0x04) {
+    if ((*at) != type_) {
       std::ostringstream s;
-      s << "type is " << xju::format::hex(*at) << " not 0x04";
+      s << "type is " << xju::format::hex(*at) << " not "
+        << xju::format::hex(type_);
       throw xju::Exception(s.str(), XJU_TRACED);
     }
     auto const length(decodeLength(at+1));

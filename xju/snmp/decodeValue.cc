@@ -88,7 +88,7 @@ std::pair<std::shared_ptr<Value const>, DecodeIterator> decodeValue(
     }
     case 0x41:
     {
-      auto v(decodeIntValue(i));
+      auto v(decodeIntValue(i,0x41));
       if (v.first>UINT32_MAX){
         std::ostringstream s;
         s << v.first << " is too big to be a Counter32 (UINT32_MAX == "
@@ -101,7 +101,7 @@ std::pair<std::shared_ptr<Value const>, DecodeIterator> decodeValue(
     }
     case 0x42:
     {
-      auto v(decodeIntValue(i));
+      auto v(decodeIntValue(i,0x42));
       if (v.first>UINT32_MAX){
         std::ostringstream s;
         s << v.first << " is too big to be a Gauge32 (UINT32_MAX == "
@@ -122,14 +122,14 @@ std::pair<std::shared_ptr<Value const>, DecodeIterator> decodeValue(
     }
     case 0x44:
     {
-      auto v(decodeStringValue(i));
+      auto v(decodeStringValue(i,0x44));
       return std::make_pair(std::shared_ptr<Value const>(
                               new OpaqueValue(v.first)),
                             v.second);
     }
     case 0x46:
     {
-      auto v(decodeIntValue(i));
+      auto v(decodeIntValue(i,0x46));
       return std::make_pair(std::shared_ptr<Value const>(
                               new Counter64Value(v.first)),
                             v.second);
