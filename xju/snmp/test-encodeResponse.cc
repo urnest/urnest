@@ -25,6 +25,11 @@
 #include "xju/snmp/SnmpV2cGetRequest.hh"
 #include "xju/snmp/SnmpV2cSetRequest.hh"
 #include "xju/snmp/decodeSnmpV2cResponse.hh"
+#include <xju/snmp/SnmpV2cGetNextRequest.hh>
+#include <xju/snmp/SnmpV2cVarResponse.hh>
+#include <xju/snmp/TimeTicksValue.hh>
+#include <chrono>
+#include <xju/snmp/IntValue.hh>
 
 namespace xju
 {
@@ -500,6 +505,86 @@ void test20() {
   }
 }
 
+void test21() {
+  SnmpV2cGetNextRequest const request(
+    Community("public"),
+    xju::snmp::RequestId(0x31b8e13c),
+    {Oid(".1.3.6.1.2.1.1.9.1.4")});
+  
+  std::vector<uint8_t> const x(
+    encodeResponse(
+      request,
+      {SnmpV2cVarResponse(Oid(".1.3.6.1.2.1.1.9.1.4.1"),
+                             std::shared_ptr<xju::snmp::Value const>(
+                               new xju::snmp::TimeTicksValue(
+                                 std::chrono::milliseconds(30))))}));
+        
+  xju::assert_equal(
+    x,
+    std::vector<uint8_t>({
+        0x30,0x2c,
+        0x02,0x01,0x01, // SNMP V2c
+        0x04,0x06,0x70,0x75,0x62,0x6c,0x69,0x63, // public
+        0xa2,0x1f,
+        0x02,0x04,0x31,0xb8,0xe1,0x3c, //requestid
+        0x02,0x01,0x00, //error
+        0x02,0x01,0x00, //error index
+        0x30,0x11,0x30,0x0f,0x06,0x0a,0x2b,0x06,0x01,0x02,0x01,0x01,0x09,0x01,0x04,0x01,0x43,0x01,0x03
+      }));
+
+  xju::assert_equal(
+    validateResponse(request,decodeSnmpV2cResponse(x)),
+    {SnmpV2cVarResponse(Oid(".1.3.6.1.2.1.1.9.1.4.1"),
+                             std::shared_ptr<xju::snmp::Value const>(
+                               new xju::snmp::TimeTicksValue(
+                                 std::chrono::milliseconds(30))))});
+}
+
+void test22() {
+  SnmpV2cGetNextRequest const request(
+    Community("private"),
+    xju::snmp::RequestId(1),
+    {Oid(".1.3"),Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")});
+  
+  std::vector<uint8_t> const x(
+    encodeResponse(
+      request,
+      TooBig(XJU_TRACED)));
+  try {
+    validateResponse(request,decodeSnmpV2cResponse(x));
+    xju::assert_never_reached();
+  }
+  catch(TooBig const& e) {
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+}
+
+void test23() {
+  SnmpV2cGetNextRequest const request(
+    Community("private"),
+    xju::snmp::RequestId(1),
+    {Oid(".1.3"),Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")});
+  
+  std::vector<uint8_t> const x(
+    encodeResponse(
+      request,
+      {SnmpV2cVarResponse(Oid(".1.3.1"),
+                             std::shared_ptr<xju::snmp::Value const>(
+                               new xju::snmp::TimeTicksValue(
+                                 std::chrono::milliseconds(30)))),
+      SnmpV2cVarResponse(Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.1"),
+                             std::shared_ptr<xju::snmp::Value const>(
+                               new xju::snmp::IntValue(33)))}));
+  
+  try {
+    validateResponse(request,decodeSnmpV2cResponse(x));
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+}
 
 }
 }
@@ -529,6 +614,9 @@ int main(int argc, char* argv[])
   test18(), ++n;
   test19(), ++n;
   test20(), ++n;
+  test21(), ++n;
+  test22(), ++n;
+  test23(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

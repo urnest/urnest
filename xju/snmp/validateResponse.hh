@@ -46,6 +46,7 @@ class SnmpV1GetRequest;
 class SnmpV1SetRequest;
 class SnmpV1GetNextRequest;
 class SnmpV2cGetRequest;
+class SnmpV2cGetNextRequest;
 class SnmpV2cSetRequest;
 class SnmpV2cResponse;
 
@@ -184,9 +185,28 @@ void validateResponse(
     // response malformed eg not all requested oids present in response
     xju::Exception);
 
+// validate reponse to specified request
+// - for each requested oid in order returns its successor oid and its value
+//   or returns the requested oid with value endOfMibView
+// - note that all result  variables might be endOfMibView, which must be
+//   treated as end-of-sequence
+std::vector<SnmpV2cVarResponse> validateResponse(
+  SnmpV2cGetNextRequest const& request,
+  SnmpV2cResponse const& response) throw(
+    // in priority order, eg if both type and id mismatch, ResponseTypeMismatch
+    // is thrown
+    ResponseTypeMismatch,
+    ResponseIdMismatch,
+    TooBig,
+    GenErr,
+    // response malformed eg 
+    // - not all requested oids present in response
+    // - error code was other than those above (which are not explicitly
+    //   associated with SnmpV2cGetNextRequest in RFC 1905)
+    xju::Exception);
+
 
 }
 }
 
 #endif
-

@@ -277,6 +277,27 @@ std::vector<uint8_t> encodeResponse(
   std::vector<Oid> const& paramOrder,
   UndoFailed const& error) throw();
 
+
+// encode response with values for each of the oids in paramOrder, the
+// value for paramOrder[i] being results[i], and with
+// other info (community,id) copied from request
+std::vector<uint8_t> encodeResponse(
+  SnmpV2cGetNextRequest const& request,
+  std::vector<SnmpV2cVarResponse> const& results)
+    throw();
+
+// encode response indicating response would have been too big to encode
+std::vector<uint8_t> encodeResponse(
+  SnmpV2cGetNextRequest const& request,
+  TooBig const& error) throw();
+
+// encode response indicating general server error related to
+// error.param_
+std::vector<uint8_t> encodeResponse(
+  SnmpV2cGetNextRequest const& request,
+  GenErr const& error) throw();
+
+
 // note we cannot encode a AuthorizationError / AUTHORIZATION_ERROR
 // response until some RFC defines how to encode it
 // (see RFC 1901 section 3)

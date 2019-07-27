@@ -33,6 +33,11 @@ public:
   public:
     NoSuchInstance(Oid const& oid, const xju::Traced& trace) throw();
   };
+  class EndOfMibView : public xju::Exception
+  {
+  public:
+    EndOfMibView(Oid const& oid, const xju::Traced& trace) throw();
+  };
 
   SnmpV2cVarResponse(Oid oid, SnmpV2cVarResponse::NoSuchObject e) throw():
       oid_(oid),
@@ -42,6 +47,11 @@ public:
   SnmpV2cVarResponse(Oid oid, SnmpV2cVarResponse::NoSuchInstance e) throw():
       oid_(oid),
       e_(new SnmpV2cVarResponse::NoSuchInstance(e))
+  {
+  }
+  SnmpV2cVarResponse(Oid oid, SnmpV2cVarResponse::EndOfMibView e) throw():
+      oid_(oid),
+      e_(new SnmpV2cVarResponse::EndOfMibView(e))
   {
   }
   //pre: *v is valid
@@ -57,14 +67,17 @@ public:
   }
   xju::snmp::Value const& operator*() const throw(
     NoSuchObject,
-    NoSuchInstance);
+    NoSuchInstance,
+    EndOfMibView);
   xju::snmp::Value const* operator->() const throw(
     NoSuchObject,
-    NoSuchInstance);
+    NoSuchInstance,
+    EndOfMibView);
 
   std::shared_ptr<xju::snmp::Value const> value() const throw(
     NoSuchObject,
-    NoSuchInstance);
+    NoSuchInstance,
+    EndOfMibView);
   
   // return length of encoded value
   // ie return encodeTo(x)-x

@@ -33,9 +33,22 @@ TODO:
     - SnmpV2cGetNextRequest
       x def
       x encode,
-      - validateResponse
+      x test encode
+      - encodeResponse
+	- capture real response and test
+	root@xjutv:/home/xju# snmpgetnext -v2c -c public localhost iso.3.6.1.2.1.1.9.1.4
+iso.3.6.1.2.1.1.9.1.4.1 = Timeticks: (3) 0:00:00.03
+06:45:31.866620 IP localhost.snmp > localhost.43495:  GetResponse(31)  system.9.1.4.1=3
+        0x0000:  4500 004a dad5 4000 4011 61cb 7f00 0001  E..J..@.@.a.....
+        0x0010:  7f00 0001 00a1 a9e7 0036 fe49 302c 0201  .........6.I0,..
+        0x0020:  0104 0670 7562 6c69 63a2 1f02 0431 b8e1  ...public....1..
+        0x0030:  3c02 0100 0201 0030 1130 0f06 0a2b 0601  <......0.0...+..
+        0x0040:  0201 0109 0104 0143 0103                 .......C..
+      / validateResponse
+        x code
+	x unit test
+
     - SnmpV2cTable
-    - SnmpV2cWalk(?)
     - SnmpV2cGetBulk
     x SnmpV2cTrap
     

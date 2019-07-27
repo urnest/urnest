@@ -28,28 +28,41 @@ SnmpV2cVarResponse::NoSuchInstance::NoSuchInstance(
 xju::Exception("no such instance " + xju::format::str(oid), trace)
 {
 }
+SnmpV2cVarResponse::EndOfMibView::EndOfMibView(
+  Oid const& oid, const xju::Traced& trace) throw():
+xju::Exception("end of MIB view " + xju::format::str(oid), trace)
+{
+}
 xju::snmp::Value const& SnmpV2cVarResponse::operator*() const throw(
   NoSuchObject,
-  NoSuchInstance)
+  NoSuchInstance,
+  EndOfMibView)
 {
   if (e_.get()) {
     if (dynamic_cast<NoSuchObject const*>(e_.get())) {
       throw dynamic_cast<NoSuchObject const&>(*e_);
     }
-    throw dynamic_cast<NoSuchInstance const&>(*e_);
+    if (dynamic_cast<NoSuchInstance const*>(e_.get())) {
+      throw dynamic_cast<NoSuchInstance const&>(*e_);
+    }
+    throw dynamic_cast<EndOfMibView const&>(*e_);
   }
   return *v_;
 }
 
 xju::snmp::Value const* SnmpV2cVarResponse::operator->() const throw(
   NoSuchObject,
-  NoSuchInstance)
+  NoSuchInstance,
+  EndOfMibView)
 {
   if (e_.get()) {
     if (dynamic_cast<NoSuchObject const*>(e_.get())) {
       throw dynamic_cast<NoSuchObject const&>(*e_);
     }
-    throw dynamic_cast<NoSuchInstance const&>(*e_);
+    if (dynamic_cast<NoSuchInstance const*>(e_.get())) {
+      throw dynamic_cast<NoSuchInstance const&>(*e_);
+    }
+    throw dynamic_cast<EndOfMibView const&>(*e_);
   }
   return v_.operator->();
 }
@@ -57,13 +70,17 @@ xju::snmp::Value const* SnmpV2cVarResponse::operator->() const throw(
 std::shared_ptr<xju::snmp::Value const> SnmpV2cVarResponse::value() const
   throw(
     NoSuchObject,
-    NoSuchInstance)
+    NoSuchInstance,
+    EndOfMibView)
 {
   if (e_.get()) {
     if (dynamic_cast<NoSuchObject const*>(e_.get())) {
       throw dynamic_cast<NoSuchObject const&>(*e_);
     }
-    throw dynamic_cast<NoSuchInstance const&>(*e_);
+    if (dynamic_cast<NoSuchInstance const*>(e_.get())) {
+      throw dynamic_cast<NoSuchInstance const&>(*e_);
+    }
+    throw dynamic_cast<EndOfMibView const&>(*e_);
   }
   return v_;
 }
@@ -101,6 +118,10 @@ std::vector<uint8_t>::iterator SnmpV2cVarResponse::encodeTo(
     else if (dynamic_cast<NoSuchInstance const*>(e_.get()))
     {
       *at++=0x81; // type
+    }
+    else if (dynamic_cast<EndOfMibView const*>(e_.get()))
+    {
+      *at++=0x82; // type
     }
     else
     {

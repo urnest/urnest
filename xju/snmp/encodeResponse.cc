@@ -35,6 +35,7 @@
 #include "xju/snmp/SnmpV2cSetRequest.hh"
 #include "xju/snmp/SnmpV2cResponse.hh"
 #include <xju/seq_less.hh>
+#include <xju/snmp/SnmpV2cGetNextRequest.hh>
 
 namespace xju
 {
@@ -695,6 +696,68 @@ std::vector<uint8_t> encodeResponse(
                    vars,
                    0xA2);
 }
+
+std::vector<uint8_t> encodeResponse(
+  SnmpV2cGetNextRequest const& request,
+  std::vector<SnmpV2cVarResponse> const& results)
+    throw()
+{
+  return encodePDU(request.community_,
+                   request.id_,
+                   0,//error
+                   0,//errorIndex
+                   results,
+                   0xA2);
+}
+
+std::vector<uint8_t> encodeResponse(
+  SnmpV2cGetNextRequest const& request,
+  TooBig const& error) throw()
+{
+  std::vector<SnmpV2cVarResponse> vars;
+  std::transform(request.oids_.begin(),
+                 request.oids_.end(),
+                 std::back_inserter(vars),
+                 [&](Oid const& oid) {
+                   return SnmpV2cVarResponse(
+                     oid,
+                     vp(new xju::snmp::NullValue));
+                 });
+  
+  return encodePDU(request.community_,
+                   request.id_,
+                   (int)SnmpV2cResponse::ErrorStatus::TOO_BIG,//error
+                   0,//errorIndex
+                   vars,
+                   0xA2);
+}
+
+std::vector<uint8_t> encodeResponse(
+  SnmpV2cGetNextRequest const& request,
+  GenErr const& error) throw()
+{
+  std::vector<SnmpV2cVarResponse> vars;
+  std::transform(request.oids_.begin(),
+                 request.oids_.end(),
+                 std::back_inserter(vars),
+                 [&](Oid const& oid) {
+                   return SnmpV2cVarResponse(
+                     oid,
+                     vp(new xju::snmp::NullValue));
+                 });
+  
+  std::vector<Oid>::const_iterator const errorIndex(
+    std::find(request.oids_.begin(),request.oids_.end(),error.param_));
+  xju::assert_not_equal(errorIndex,request.oids_.end());
+
+  return encodePDU(request.community_,
+                   request.id_,
+                   (int)SnmpV2cResponse::ErrorStatus::GEN_ERR,//error
+                   errorIndex-request.oids_.begin()+1,//errorIndex
+                   vars,
+                   0xA2);
+}
+
 
 }
 }
