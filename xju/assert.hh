@@ -45,6 +45,13 @@ namespace xju
     [[noreturn]] void assert_never_reached() noexcept;
 
     template<class T>
+    [[noreturn]] void assert_never_returns(T const& x) noexcept
+    {
+        assert_never_reached();
+    }
+
+    //deprecated, use assert_never_returns
+    template<class T>
     [[noreturn]] void assert_never_reached(T const& x) noexcept
     {
         assert_never_reached();

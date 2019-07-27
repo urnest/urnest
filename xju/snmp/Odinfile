@@ -25,6 +25,7 @@
 ()+cmd=(test-decodeValue.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-validateResponse.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-SnmpV1Table.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-SnmpV2cTable.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-SnmpV1Trap.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-encodeLength.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-TimeTicksValue.cc+(../..%cxx-opts):auto.cxx.exe):exec.output

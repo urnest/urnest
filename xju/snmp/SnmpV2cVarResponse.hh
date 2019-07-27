@@ -11,9 +11,9 @@
 #define XJU_SNMP_SNMPV2CVARRESPONSE_H
 
 #include <memory>
-#include "xju/snmp/Oid.hh"
-#include "xju/Exception.hh"
-#include "xju/snmp/Value.hh"
+#include <xju/snmp/Oid.hh>
+#include <xju/Exception.hh>
+#include <xju/snmp/Value.hh>
 #include <iostream>
 
 namespace xju
