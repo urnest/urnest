@@ -44,7 +44,22 @@ TODO:
                      std::vector<Oid> getNextNValuesOf,
 		     unsigned int n);
       SnmpV2cGetBulk(std::set<Oid> getValuesOf); // convenience
-      SnmpV2cGetBulk(std::set<Oid> getNextNValuesOf,unsigned int n);//conv
+      SnmpV2cGetBulk(std::vector<Oid> getNextNValuesOf,unsigned int n);//conv
+      5 (Set is 3)
+     BulkPDU ::=                     -- MUST be identical in
+         SEQUENCE {                  -- structure to PDU
+             request-id
+                 Integer32,
+
+             non-repeaters
+                 INTEGER (0..max-bindings),
+
+             max-repetitions
+                 INTEGER (0..max-bindings),
+
+             variable-bindings       -- values are ignored
+                 VarBindList
+         }
       - validateResponse ->
         std::pair<std::map<Oid,SnmpV2cVarResponse>,
 		  std::vector<
