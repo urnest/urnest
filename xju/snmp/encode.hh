@@ -31,6 +31,7 @@ std::vector<uint8_t> encode(SnmpV1Trap const& trap) throw();
 
 class SnmpV2cGetRequest;
 class SnmpV2cGetNextRequest;
+class SnmpV2cGetBulkRequest;
 class SnmpV2cSetRequest;
 class SnmpV2cTrap;
 
