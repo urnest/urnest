@@ -39,6 +39,7 @@ std::vector<uint8_t> encode(SnmpV2cGetRequest const& request) throw();
 std::vector<uint8_t> encode(SnmpV2cGetNextRequest const& request) throw();
 std::vector<uint8_t> encode(SnmpV2cSetRequest const& request) throw();
 std::vector<uint8_t> encode(SnmpV2cTrap const& trap) throw();
+std::vector<uint8_t> encode(SnmpV2cGetBulkRequest const& request) throw();
 
 }
 }

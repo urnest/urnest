@@ -16,11 +16,11 @@
 #include <xju/snmp/RequestId.hh>
 #include <vector>
 #include <utility>
-#include "xju/snmp/Oid.hh"
-#include "xju/snmp/Value.hh"
+#include <xju/snmp/Oid.hh>
+#include <xju/snmp/Value.hh>
 #include <memory>
 #include <iostream>
-#include "xju/Optional.hh"
+#include <xju/Optional.hh>
 
 namespace xju
 {

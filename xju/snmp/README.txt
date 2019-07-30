@@ -45,7 +45,7 @@ TODO:
 		     unsigned int n);
       SnmpV2cGetBulk(std::set<Oid> getValuesOf); // convenience
       SnmpV2cGetBulk(std::vector<Oid> getNextNValuesOf,unsigned int n);//conv
-      x encode - test-encode
+      x encode x test-encode
       - validateResponse ->
         std::pair<std::map<Oid,SnmpV2cVarResponse>,
 		  std::vector<

@@ -11,31 +11,31 @@
 #define XJU_SNMP_VALIDATERESPONSE_H
 
 #include <map>
-#include "xju/snmp/Oid.hh"
-#include "xju/snmp/Value.hh"
+#include <xju/snmp/Oid.hh>
+#include <xju/snmp/Value.hh>
 #include <memory>
-#include "xju/snmp/ResponseTypeMismatch.hh"
-#include "xju/snmp/ResponseIdMismatch.hh"
-#include "xju/snmp/NoSuchName.hh"
-#include "xju/snmp/TooBig.hh"
-#include "xju/snmp/GenErr.hh"
-#include "xju/Exception.hh"
-#include "xju/snmp/ReadOnly.hh"
-#include "xju/snmp/BadValue.hh"
-#include "xju/snmp/SnmpV1Response.hh"
-#include "xju/snmp/SnmpV2cVarResponse.hh"
-#include "xju/snmp/NoAccess.hh"
-#include "xju/snmp/NotWritable.hh"
-#include "xju/snmp/WrongType.hh"
-#include "xju/snmp/WrongLength.hh"
-#include "xju/snmp/WrongEncoding.hh"
-#include "xju/snmp/WrongValue.hh"
-#include "xju/snmp/NoCreation.hh"
-#include "xju/snmp/InconsistentName.hh"
-#include "xju/snmp/InconsistentValue.hh"
-#include "xju/snmp/ResourceUnavailable.hh"
-#include "xju/snmp/CommitFailed.hh"
-#include "xju/snmp/UndoFailed.hh"
+#include <xju/snmp/ResponseTypeMismatch.hh>
+#include <xju/snmp/ResponseIdMismatch.hh>
+#include <xju/snmp/NoSuchName.hh>
+#include <xju/snmp/TooBig.hh>
+#include <xju/snmp/GenErr.hh>
+#include <xju/Exception.hh>
+#include <xju/snmp/ReadOnly.hh>
+#include <xju/snmp/BadValue.hh>
+#include <xju/snmp/SnmpV1Response.hh>
+#include <xju/snmp/SnmpV2cVarResponse.hh>
+#include <xju/snmp/NoAccess.hh>
+#include <xju/snmp/NotWritable.hh>
+#include <xju/snmp/WrongType.hh>
+#include <xju/snmp/WrongLength.hh>
+#include <xju/snmp/WrongEncoding.hh>
+#include <xju/snmp/WrongValue.hh>
+#include <xju/snmp/NoCreation.hh>
+#include <xju/snmp/InconsistentName.hh>
+#include <xju/snmp/InconsistentValue.hh>
+#include <xju/snmp/ResourceUnavailable.hh>
+#include <xju/snmp/CommitFailed.hh>
+#include <xju/snmp/UndoFailed.hh>
 
 namespace xju
 {
@@ -49,6 +49,7 @@ class SnmpV2cGetRequest;
 class SnmpV2cGetNextRequest;
 class SnmpV2cSetRequest;
 class SnmpV2cResponse;
+class SnmpV2cGetBulkRequest;
 
 // validate reponse to specified request
 // post: *result[x] valid for all x in request.oids_
@@ -192,6 +193,32 @@ void validateResponse(
 //   treated as end-of-sequence
 std::vector<SnmpV2cVarResponse> validateResponse(
   SnmpV2cGetNextRequest const& request,
+  SnmpV2cResponse const& response) throw(
+    // in priority order, eg if both type and id mismatch, ResponseTypeMismatch
+    // is thrown
+    ResponseTypeMismatch,
+    ResponseIdMismatch,
+    TooBig,
+    GenErr,
+    // response malformed eg 
+    // - not all requested oids present in response
+    // - error code was other than those above (which are not explicitly
+    //   associated with SnmpV2cGetNextRequest in RFC 1905)
+    xju::Exception);
+
+
+// validate reponse to specified request
+// - response.first has the values of "get" oids
+// - response.second has repeater rows, each in order of request.getNextN_
+// - note that all result  variables might be endOfMibView, which must be
+//   treated as end-of-sequence
+std::pair<
+  std::map<xju::snmp::Oid,SnmpV2cVarResponse>,
+  std::vector<
+    std::vector<SnmpV2cVarResponse> //row
+    >
+  > validateResponse(
+  SnmpV2cGetBulkRequest const& request,
   SnmpV2cResponse const& response) throw(
     // in priority order, eg if both type and id mismatch, ResponseTypeMismatch
     // is thrown

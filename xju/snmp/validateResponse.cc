@@ -20,6 +20,7 @@
 #include <xju/snmp/NullValue.hh>
 #include <xju/snmp/SnmpV2cResponse.hh>
 #include <xju/snmp/SnmpV2cGetNextRequest.hh>
+#include <xju/snmp/SnmpV2cGetBulkRequest.hh>
 
 namespace xju
 {
@@ -840,6 +841,139 @@ std::vector<SnmpV2cVarResponse> validateResponse(
     std::ostringstream s;
     s << "validate SNMP V2c response " << response 
       << " to SNMP V2c GetNext request " << request;
+    e.addContext(s.str(), XJU_TRACED);
+    throw;
+  }
+}
+
+namespace
+{
+SnmpV2cVarResponse convertResponseVar(
+  SnmpV2cResponse::VarResult const& x) throw(
+    SnmpV2cVarResponse::NoSuchObject,
+    SnmpV2cVarResponse::NoSuchInstance,
+    SnmpV2cVarResponse::EndOfMibView,
+    xju::Exception)
+{
+  if (x.e_.valid()) {
+    switch(x.e_.value()) {
+    case SnmpV2cResponse::VarResult::NO_SUCH_OBJECT:
+      return SnmpV2cVarResponse(
+        x.oid_,SnmpV2cVarResponse::NoSuchObject(x.oid_,XJU_TRACED));
+    case SnmpV2cResponse::VarResult::NO_SUCH_INSTANCE:
+      return SnmpV2cVarResponse(
+        x.oid_,SnmpV2cVarResponse::NoSuchInstance(x.oid_,XJU_TRACED));
+    case SnmpV2cResponse::VarResult::END_OF_MIB_VIEW:
+      return SnmpV2cVarResponse(
+        x.oid_,SnmpV2cVarResponse::EndOfMibView(x.oid_,XJU_TRACED));
+    }
+    std::ostringstream s;
+    s << x.e_.value() << " (" <<(int)x.e_.value() << ")"
+      << " (for oid " << x.oid_ << ") is not valid in response to "
+      << "SNMP V2c Get request, only NO_SUCH_OBJECT ("
+      << (int)SnmpV2cResponse::VarResult::NO_SUCH_OBJECT << "), "
+      << "NO_SUCH_INSTANCE (" 
+      << (int)SnmpV2cResponse::VarResult::NO_SUCH_INSTANCE 
+      << ") and "
+      << "END_OF_MIB_VIEW (" 
+      << (int)SnmpV2cResponse::VarResult::END_OF_MIB_VIEW 
+      << ") are valid";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  return SnmpV2cVarResponse(x.oid_,x.v_);
+}
+}
+
+std::pair<
+  std::map<xju::snmp::Oid,SnmpV2cVarResponse>,
+  std::vector<
+    std::vector<SnmpV2cVarResponse> //row
+    >
+  > validateResponse(
+    SnmpV2cGetBulkRequest const& request,
+    SnmpV2cResponse const& response) throw(
+      ResponseTypeMismatch,
+      ResponseIdMismatch,
+      TooBig,
+      GenErr,
+      xju::Exception)
+{
+  try {
+    if (request.id_ != response.id_) {
+      throw ResponseIdMismatch(response.id_,request.id_,XJU_TRACED);
+    }
+    if (response.responseType_!=0xA2) {
+      throw ResponseTypeMismatch(response.responseType_,0xA2,XJU_TRACED);
+    }
+    switch(response.error_) {
+    case SnmpV2cResponse::ErrorStatus::NO_ERROR: break;
+    case SnmpV2cResponse::ErrorStatus::TOO_BIG: throw TooBig(XJU_TRACED);
+    case SnmpV2cResponse::ErrorStatus::GEN_ERR:
+    {
+      throw GenErr(getErrorOid(response.errorIndex_,
+                               response.varResults_,
+                               request.oids_,
+                               "GenErr (5)"),
+                   XJU_TRACED);
+    }
+    default:
+    {
+      std::ostringstream s;
+      s << "response has unknown error status " << (int)response.error_;
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    }
+    if(response.varResults_.size()<request.get_.size()){
+      std::ostringstream s;
+      s << "response contains only " << response.varResults_.size()
+        << " vars, which is less than then number ("
+        << request.get_.size() << ") of \"get\" oids requested";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    std::map<xju::snmp::Oid,SnmpV2cVarResponse> values;
+    auto i{request.get_.begin()};
+    auto n{0};
+    for(;i!=request.get_.end();++i,++n){
+      if (*i != response.varResults_[n]->oid_){
+        std::ostringstream s;
+        s << "expected oid " << (*i) << " as response var[" << n
+          << " but got oid " << response.varResults_[n]->oid_;
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      values.insert({*i,convertResponseVar(response.varResults[n])});
+    }
+    auto const rowSize{request.getNextN_.size()};
+    if (rowSize==0 && n!=response.varResults_.size()){
+      std::ostringstream s;
+      s << "response contains " << (response.varResults_.size()-n)
+        << " extra vars";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    std::vector<
+      std::vector<SnmpV2cVarResponse> //row
+      > nextValues;
+    for(; n!=response.varResults_.size(); n+=rowSize){
+      if (response.varResults_.size()-n < rowSize){
+        std::ostringstream s;
+        s << "\"next values\" row "
+          << (n-request.get_.size())/rowSize
+          << " only has " << response.varResults_.size()-n
+          << " values, which is less than the row size of "
+          << rowSize;
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      nextValues.push_back(std::vector<SnmpV2cVarResponse>());
+      transform(response.varResults_.begin()+n,
+                response.varResults_.begin()+n+rowSize,
+                std::back_inserter(nextValues.back()),
+                convertResponseVar);
+    }
+    return std::make_pair(values,nextValues);
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "validate SNMP V2c response " << response 
+      << " to SNMP V2c GetBulk request " << request;
     e.addContext(s.str(), XJU_TRACED);
     throw;
   }

@@ -7,21 +7,22 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include "xju/snmp/encode.hh"
+#include <xju/snmp/encode.hh>
 
 #include <iostream>
 #include <xju/assert.hh>
-#include "xju/snmp/SnmpV1GetRequest.hh"
-#include "xju/snmp/NullValue.hh"
-#include "xju/snmp/SnmpV1SetRequest.hh"
-#include "xju/snmp/SnmpV1GetNextRequest.hh"
-#include "xju/snmp/SnmpV1Trap.hh"
-#include "xju/snmp/IntValue.hh"
-#include "xju/snmp/StringValue.hh"
-#include "xju/snmp/SnmpV2cGetRequest.hh"
-#include "xju/snmp/SnmpV2cSetRequest.hh"
-#include "xju/snmp/SnmpV2cGetNextRequest.hh"
+#include <xju/snmp/SnmpV1GetRequest.hh>
+#include <xju/snmp/NullValue.hh>
+#include <xju/snmp/SnmpV1SetRequest.hh>
+#include <xju/snmp/SnmpV1GetNextRequest.hh>
+#include <xju/snmp/SnmpV1Trap.hh>
+#include <xju/snmp/IntValue.hh>
+#include <xju/snmp/StringValue.hh>
+#include <xju/snmp/SnmpV2cGetRequest.hh>
+#include <xju/snmp/SnmpV2cSetRequest.hh>
+#include <xju/snmp/SnmpV2cGetNextRequest.hh>
 #include <xju/snmp/SnmpV2cTrap.hh>
+#include <xju/snmp/SnmpV2cGetBulkRequest.hh>
 
 namespace xju
 {
@@ -236,6 +237,62 @@ void test8() throw()
           }));
 }
 
+void test9() throw()
+{
+  {
+    // encode(SnmpV2cGetNexRequest)
+    SnmpV2cGetBulkRequest r(
+      Community("private"),
+      RequestId(1),
+      {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")});
+    std::vector<uint8_t> x(encode(r));
+    xju::assert_equal(
+      x,
+      std::vector<uint8_t>({
+          0x30,0x2c,0x02,0x01,0x01,0x04,0x07,0x70,0x72,0x69,0x76,0x61,0x74,0x65,0xA5,0x1E,0x02,0x01,0x01,0x02,0x01,0x01,0x02,0x01,0x00,0x30,0x13,0x30,0x11,0x06,0x0D,0x2B,0x06,0x01,0x04,0x01,0x94,0x78,0x01,0x02,0x07,0x03,0x02,0x00,0x05,0x00
+        }));
+  }
+  {
+    SnmpV2cGetBulkRequest r(
+      Community("public"),
+      RequestId(0x32f0def9),
+      {Oid(".1.3.6.1.2.1.1.9.1.4")},4U);
+    std::vector<uint8_t> x(encode(r));
+    xju::assert_equal(
+      x,
+      std::vector<uint8_t>({
+          0x30,0x2a,
+          0x02,0x01,0x01, //snmp v2c
+          0x04,0x06,0x70,0x75,0x62,0x6c,0x69,0x63, //public
+          0xa5,0x1d,
+          0x02,0x04,0x32,0xf0,0xde,0xf9, //requestid
+          0x02,0x01,0x00, //repeaters
+          0x02,0x01,0x04, //max-repititions
+          0x30,0x0f,0x30,0x0d,0x06,0x09,0x2b,0x06,0x01,0x02,0x01,0x01,0x09,0x01,0x04,0x05,0x00
+        }));
+  }
+  {
+    SnmpV2cGetBulkRequest r(
+      Community("public"),
+      RequestId(0x32f0def9),
+      {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")},
+      {Oid(".1.3.6.1.2.1.1.9.1.4")},4U);
+    std::vector<uint8_t> x(encode(r));
+    xju::assert_equal(
+      x,
+      std::vector<uint8_t>({
+          0x30,0x3d,
+          0x02,0x01,0x01, //snmp v2c
+          0x04,0x06,0x70,0x75,0x62,0x6c,0x69,0x63, //public
+          0xa5,0x30,
+          0x02,0x04,0x32,0xf0,0xde,0xf9, //requestid
+          0x02,0x01,0x01,0x02,0x01,0x04,
+          0x30,0x22,0x30,0x11,0x06,0x0D,0x2B,0x06,0x01,0x04,0x01,0x94,0x78,0x01,0x02,0x07,0x03,0x02,0x00,0x05,0x00,0x30,0x0d,0x06,0x09,0x2b,0x06,0x01,0x02,0x01,0x01,0x09,0x01,0x04,0x05,0x00
+        }));
+  }
+}
+
+
 }
 }
 
@@ -252,6 +309,7 @@ int main(int argc, char* argv[])
   test6(), ++n;
   test7(), ++n;
   test8(), ++n;
+  test9(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

@@ -7,28 +7,28 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include "encode.hh"
+#include <xju/snmp/encode.hh>
 
 #include <xju/countSignificantBits.hh>
-#include "xju/snmp/SnmpV1GetNextRequest.hh"
-#include "xju/snmp/SnmpV1Trap.hh"
-#include "xju/assert.hh"
+#include <xju/snmp/SnmpV1GetNextRequest.hh>
+#include <xju/snmp/SnmpV1Trap.hh>
+#include <xju/assert.hh>
 #include <algorithm>
 #include <vector>
-#include "xju/snmp/encodedLengthOfLength.hh"
-#include "xju/snmp/encodeLength.hh"
-#include "xju/snmp/SnmpV1SetRequest.hh"
-#include "xju/snmp/SnmpV2cSetRequest.hh"
-#include "xju/snmp/OidValue.hh"
-#include "xju/snmp/IntValue.hh"
-#include "xju/snmp/StringValue.hh"
-#include "xju/snmp/NullValue.hh"
-#include "xju/snmp/IPv4AddressValue.hh"
-#include "xju/snmp/TimeTicksValue.hh"
-#include "xju/snmp/SnmpV1GetRequest.hh"
-#include "xju/snmp/SnmpV2cGetRequest.hh"
-#include "xju/snmp/SnmpV2cGetNextRequest.hh"
-#include "xju/format.hh"
+#include <xju/snmp/encodedLengthOfLength.hh>
+#include <xju/snmp/encodeLength.hh>
+#include <xju/snmp/SnmpV1SetRequest.hh>
+#include <xju/snmp/SnmpV2cSetRequest.hh>
+#include <xju/snmp/OidValue.hh>
+#include <xju/snmp/IntValue.hh>
+#include <xju/snmp/StringValue.hh>
+#include <xju/snmp/NullValue.hh>
+#include <xju/snmp/IPv4AddressValue.hh>
+#include <xju/snmp/TimeTicksValue.hh>
+#include <xju/snmp/SnmpV1GetRequest.hh>
+#include <xju/snmp/SnmpV2cGetRequest.hh>
+#include <xju/snmp/SnmpV2cGetNextRequest.hh>
+#include <xju/format.hh>
 #include <xju/snmp/SnmpV2cTrap.hh>
 #include <xju/snmp/SnmpV2cGetBulkRequest.hh>
 
