@@ -22,6 +22,7 @@
 #include "xju/snmp/SnmpV2cGetRequest.hh"
 #include "xju/snmp/SnmpV2cResponse.hh"
 #include <xju/snmp/SnmpV2cGetNextRequest.hh>
+#include <xju/snmp/SnmpV2cGetBulkRequest.hh>
 
 namespace xju
 {
@@ -1640,10 +1641,447 @@ void test6() throw()
 }
 
 
+// SnmpV2cGetBulkRequest
+void test7() throw()
+{
+  // validateResponse
+  std::vector<SnmpV2cResponse::VarResult> values {
+    SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+                                 new StringValue(fred))),
+    SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
+                                 new IntValue(3)))
+  };
+  auto x=validateResponse(
+    SnmpV2cGetBulkRequest(Community("dje"),
+                          RequestId(23),
+                          std::vector<Oid>({Oid(".1.3.2"),
+                                            Oid(".1.3.9.3300")}),
+                          1U),
+    SnmpV2cResponse(0xA2,
+                    Community("dd2"),
+                    RequestId(23),
+                    SnmpV2cResponse::ErrorStatus(0),
+                    SnmpV2cResponse::ErrorIndex(0),
+                    values));
+    
+  xju::assert_equal(x.first.size(),0U);
+  xju::assert_equal(x.second.size(),1U);
+  xju::assert_equal(x.second[0].size(),2U);
+  auto i(x.second[0].begin());
+  xju::assert_equal((*i++)->stringValue(),fred);
+  xju::assert_equal((*i++)->intValue(),3);
+
+  {
+    std::vector<SnmpV2cResponse::VarResult> values {
+      SnmpV2cResponse::VarResult(Oid(".9.8"),std::shared_ptr<Value const>(
+                                   new StringValue(sal))),
+      SnmpV2cResponse::VarResult(Oid(".9.9"),std::shared_ptr<Value const>(
+                                   new IntValue(8))),
+      SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+                                   new StringValue(fred))),
+      SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
+                                   new IntValue(3))),
+      SnmpV2cResponse::VarResult(Oid(".1.3.4"),std::shared_ptr<Value const>(
+                                   new StringValue(jock))),
+      SnmpV2cResponse::VarResult(Oid(".1.3.9.3343"),std::shared_ptr<Value const>(
+                                   new IntValue(32)))      
+    };
+    auto x=validateResponse(
+      SnmpV2cGetBulkRequest(Community("dje"),
+                            RequestId(23),
+                            std::set<Oid>({Oid(".9.8"),Oid(".9.9")}),
+                            std::vector<Oid>({Oid(".1.3.2"),
+                                              Oid(".1.3.9.3300")}),
+                            1U),
+      SnmpV2cResponse(0xA2,
+                      Community("dd2"),
+                      RequestId(23),
+                      SnmpV2cResponse::ErrorStatus(0),
+                      SnmpV2cResponse::ErrorIndex(0),
+                      values));
+    
+    xju::assert_equal(x.first.size(),2U);
+    {
+      auto i(x.first.begin());
+      xju::assert_equal((*i).first,Oid(".9.8"));
+      xju::assert_equal((*i).second->stringValue(),sal);
+      ++i;
+      xju::assert_equal((*i).first,Oid(".9.9"));
+      xju::assert_equal((*i).second->intValue(),8);
+    }
+    xju::assert_equal(x.second.size(),2U);
+    xju::assert_equal(x.second[0].size(),2U);
+    {
+      auto i(x.second[0].begin());
+      xju::assert_equal((*i++)->stringValue(),fred);
+      xju::assert_equal((*i++)->intValue(),3);
+    }
+    {
+      xju::assert_equal(x.second[1].size(),2U);
+      auto i(x.second[1].begin());
+      xju::assert_equal((*i++)->stringValue(),jock);
+      xju::assert_equal((*i++)->intValue(),32);
+    }
+  }
+  try {
+    std::vector<SnmpV2cResponse::VarResult> values {
+      SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+                                   new StringValue(fred))),
+        SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
+                                     new IntValue(3)))
+        };
+    auto x=validateResponse(
+      SnmpV2cGetBulkRequest(Community("dje"),
+                            RequestId(23),
+                            std::vector<Oid>({Oid(".1.3.2"),
+                                              Oid(".1.3.9.3300")}),
+                            1U),
+      SnmpV2cResponse(0xA0,
+                     Community("dd2"),
+                     RequestId(23),
+                     SnmpV2cResponse::ErrorStatus(0),
+                     SnmpV2cResponse::ErrorIndex(0),
+                     values));
+    
+    xju::assert_never_reached();
+  }
+  catch(ResponseTypeMismatch const& e) {
+    xju::assert_equal(e.got_,0xa0);
+    xju::assert_equal(e.expected_,0xa2);
+    xju::assert_equal(readableRepr(e),"Failed to validate SNMP V2c response type 0xa0, community dd2, id 23, error status 0, error index 0, values .1.3.3: \"fred\", .1.3.9.3333: 3 to SNMP V2c GetBulk request community dje, id 23, oids  and up to 1 values of each of oids .1.3.2, .1.3.9.3300 because\nexpected response of type 0xa2 but got response of type 0xa0.");
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+  
+  try {
+    std::vector<SnmpV2cResponse::VarResult> values {
+      SnmpV2cResponse::VarResult(Oid(".1.3.3"),
+                                 std::shared_ptr<Value const>(
+                                   new StringValue(fred))),
+      SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),
+                                 std::shared_ptr<Value const>(
+                                   new IntValue(3)))
+    };
+    auto x=validateResponse(
+      SnmpV2cGetBulkRequest(Community("dje"),
+                            RequestId(23),
+                            std::vector<Oid>({Oid(".1.3.2"),
+                                              Oid(".1.3.9.3300")}),
+                            1U),
+      SnmpV2cResponse(0xA2,
+                     Community("dd2"),
+                     RequestId(24),
+                     SnmpV2cResponse::ErrorStatus(0),
+                     SnmpV2cResponse::ErrorIndex(0),
+                     values));
+    
+    xju::assert_never_reached();
+  }
+  catch(ResponseIdMismatch const& e) {
+    xju::assert_equal(e.got_,RequestId(24));
+    xju::assert_equal(e.expected_,RequestId(23));
+    xju::assert_equal(readableRepr(e),"Failed to validate SNMP V2c response type 0xa2, community dd2, id 24, error status 0, error index 0, values .1.3.3: \"fred\", .1.3.9.3333: 3 to SNMP V2c GetBulk request community dje, id 23, oids  and up to 1 values of each of oids .1.3.2, .1.3.9.3300 because\nexpected response with id 23 but got response of id 24.");
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+
+  try {
+    std::vector<SnmpV2cResponse::VarResult> values {
+    };
+    auto x=validateResponse(
+      SnmpV2cGetBulkRequest(Community("dje"),
+                            RequestId(23),
+                            std::vector<Oid>({Oid(".1.3.2"),
+                                              Oid(".1.3.9.3300")}),
+                            1U),
+      SnmpV2cResponse(0xA2,
+                     Community("dd2"),
+                     RequestId(23),
+                     SnmpV2cResponse::ErrorStatus(1),
+                     SnmpV2cResponse::ErrorIndex(0),
+                     values));
+    
+    xju::assert_never_reached();
+  }
+  catch(TooBig const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to validate SNMP V2c response type 0xa2, community dd2, id 23, error status 1, error index 0, values  to SNMP V2c GetBulk request community dje, id 23, oids  and up to 1 values of each of oids .1.3.2, .1.3.9.3300 because\nSNMP response would have exceeded server internal limit.");
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+
+  try {
+    std::vector<SnmpV2cResponse::VarResult> values {
+      SnmpV2cResponse::VarResult(Oid(".1.3.2"),
+                                 std::shared_ptr<Value const>(
+                                   new StringValue(fred))),
+        SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),
+                                   std::shared_ptr<Value const>(
+                                     new NullValue))
+        };
+    auto x=validateResponse(
+      SnmpV2cGetBulkRequest(Community("dje"),
+                            RequestId(23),
+                            std::vector<Oid>({Oid(".1.3.2"),
+                                              Oid(".1.3.9.3300")}),
+                            1U),
+      SnmpV2cResponse(0xA2,
+                     Community("dd2"),
+                     RequestId(23),
+                     SnmpV2cResponse::ErrorStatus(5),
+                     SnmpV2cResponse::ErrorIndex(1),
+                     values));
+    
+    xju::assert_never_reached();
+  }
+  catch(GenErr const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to validate SNMP V2c response type 0xa2, community dd2, id 23, error status 5, error index 1, values .1.3.2: \"fred\", .1.3.9.3333: null to SNMP V2c GetBulk request community dje, id 23, oids  and up to 1 values of each of oids .1.3.2, .1.3.9.3300 because\ngeneral error for oid .1.3.2.");
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+
+  try {
+    // too few values
+    std::vector<SnmpV2cResponse::VarResult> values {
+      SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+                                   new StringValue(fred)))
+    };
+    auto x=validateResponse(
+      SnmpV2cGetBulkRequest(Community("dje"),
+                            RequestId(23),
+                            std::vector<Oid>({Oid(".1.3.2"),
+                                              Oid(".1.3.9.3300")}),
+                            1U),
+      SnmpV2cResponse(0xA2,
+                      Community("dd2"),
+                      RequestId(23),
+                      SnmpV2cResponse::ErrorStatus(0),
+                      SnmpV2cResponse::ErrorIndex(0),
+                      values));
+    
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to validate SNMP V2c response type 0xa2, community dd2, id 23, error status 0, error index 0, values .1.3.3: \"fred\" to SNMP V2c GetBulk request community dje, id 23, oids  and up to 1 values of each of oids .1.3.2, .1.3.9.3300 because\n\"next values\" row 0 only has 1 values, which is less than the row size of 2.");
+  }
+
+  try {
+    // too few values
+    std::vector<SnmpV2cResponse::VarResult> values {
+      SnmpV2cResponse::VarResult(Oid(".9.8"),std::shared_ptr<Value const>(
+                                   new StringValue(fred)))
+    };
+    auto x=validateResponse(
+      SnmpV2cGetBulkRequest(Community("dje"),
+                            RequestId(23),
+                            std::set<Oid>({Oid(".9.8"),Oid(".9.9")}),
+                            std::vector<Oid>({Oid(".1.3.2"),
+                                              Oid(".1.3.9.3300")}),
+                            1U),
+      SnmpV2cResponse(0xA2,
+                      Community("dd2"),
+                      RequestId(23),
+                      SnmpV2cResponse::ErrorStatus(0),
+                      SnmpV2cResponse::ErrorIndex(0),
+                      values));
+    
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to validate SNMP V2c response type 0xa2, community dd2, id 23, error status 0, error index 0, values .9.8: \"fred\" to SNMP V2c GetBulk request community dje, id 23, oids .9.8, .9.9 and up to 1 values of each of oids .1.3.2, .1.3.9.3300 because\nresponse contains only 1 value(s), which is less than then number (2) of \"get\" oids requested.");
+  }
+
+  try {
+    // wrong oids in "getters"
+    std::vector<SnmpV2cResponse::VarResult> values {
+      SnmpV2cResponse::VarResult(Oid(".9.7"),std::shared_ptr<Value const>(
+                                   new StringValue(sal))),
+      SnmpV2cResponse::VarResult(Oid(".9.9"),std::shared_ptr<Value const>(
+                                   new IntValue(8))),
+      SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+                                   new StringValue(fred))),
+      SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
+                                   new IntValue(3))),
+      SnmpV2cResponse::VarResult(Oid(".1.3.4"),std::shared_ptr<Value const>(
+                                   new StringValue(jock))),
+      SnmpV2cResponse::VarResult(Oid(".1.3.9.3343"),std::shared_ptr<Value const>(
+                                   new IntValue(32)))      
+    };
+    auto x=validateResponse(
+      SnmpV2cGetBulkRequest(Community("dje"),
+                            RequestId(23),
+                            std::set<Oid>({Oid(".9.8"),Oid(".9.9")}),
+                            std::vector<Oid>({Oid(".1.3.2"),
+                                              Oid(".1.3.9.3300")}),
+                            1U),
+      SnmpV2cResponse(0xA2,
+                      Community("dd2"),
+                      RequestId(23),
+                      SnmpV2cResponse::ErrorStatus(0),
+                      SnmpV2cResponse::ErrorIndex(0),
+                      values));
+    
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to validate SNMP V2c response type 0xa2, community dd2, id 23, error status 0, error index 0, values .9.7: \"sal\", .9.9: 8, .1.3.3: \"fred\", .1.3.9.3333: 3, .1.3.4: \"jock\", .1.3.9.3343: 32 to SNMP V2c GetBulk request community dje, id 23, oids .9.8, .9.9 and up to 1 values of each of oids .1.3.2, .1.3.9.3300 because\nexpected oid .9.8 as response var[0] but got oid .9.7.");
+  }
+
+  try {
+    // too many values
+    std::vector<SnmpV2cResponse::VarResult> values {
+      SnmpV2cResponse::VarResult(Oid(".1.3.3"),
+                                 std::shared_ptr<Value const>(
+                                   new StringValue(fred))),
+      SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),
+                                 std::shared_ptr<Value const>(
+                                   new IntValue(3))),
+      SnmpV2cResponse::VarResult(Oid(".1.3.10.3333"),
+                                 std::shared_ptr<Value const>(
+                                   new IntValue(7)))
+    };
+    auto x=validateResponse(
+      SnmpV2cGetBulkRequest(Community("dje"),
+                            RequestId(23),
+                            std::vector<Oid>({Oid(".1.3.2"),
+                                              Oid(".1.3.9.3300")}),
+                            1U),
+      SnmpV2cResponse(0xA2,
+                      Community("dd2"),
+                      RequestId(23),
+                      SnmpV2cResponse::ErrorStatus(0),
+                      SnmpV2cResponse::ErrorIndex(0),
+                      values));
+    
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_equal(readableRepr(e),"Failed to validate SNMP V2c response type 0xa2, community dd2, id 23, error status 0, error index 0, values .1.3.3: \"fred\", .1.3.9.3333: 3, .1.3.10.3333: 7 to SNMP V2c GetBulk request community dje, id 23, oids  and up to 1 values of each of oids .1.3.2, .1.3.9.3300 because\n\"next values\" row 1 only has 1 values, which is less than the row size of 2.");
+  }
+
+  try {
+    std::vector<SnmpV2cResponse::VarResult> values {
+      SnmpV2cResponse::VarResult(Oid(".1.3.3"),
+                                 std::shared_ptr<Value const>(
+                                   new StringValue(fred))),
+      SnmpV2cResponse::VarResult(Oid(".1.3.9.3300"),
+                                 SnmpV2cResponse::VarResult::NO_SUCH_OBJECT)
+      };
+    auto x=validateResponse(
+      SnmpV2cGetBulkRequest(Community("dje"),
+                            RequestId(23),
+                            std::vector<Oid>({Oid(".1.3.2"),
+                                              Oid(".1.3.9.3300")}),
+                            1U),
+      SnmpV2cResponse(0xA2,
+                     Community("dd2"),
+                     RequestId(23),
+                     SnmpV2cResponse::ErrorStatus(0),
+                     SnmpV2cResponse::ErrorIndex(0),
+                     values));
+    
+    xju::assert_equal(x.first.size(),0U);
+    xju::assert_equal(x.second.size(),1U);
+    auto i{x.second[0].begin()};
+    xju::assert_equal((*i++)->stringValue(),fred);
+    try {
+      (*i++)->intValue();
+      xju::assert_never_reached();
+    }
+    catch(SnmpV2cVarResponse::NoSuchObject const& e) {
+      xju::assert_equal(readableRepr(e),"no such object .1.3.9.3300.");
+    }
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+
+  try {
+    std::vector<SnmpV2cResponse::VarResult> values {
+      SnmpV2cResponse::VarResult(Oid(".1.3.3"),
+                                 std::shared_ptr<Value const>(
+                                   new StringValue(fred))),
+      SnmpV2cResponse::VarResult(Oid(".1.3.9.3300"),
+                                 SnmpV2cResponse::VarResult::NO_SUCH_INSTANCE)
+      };
+    auto x=validateResponse(
+      SnmpV2cGetBulkRequest(Community("dje"),
+                            RequestId(23),
+                            std::vector<Oid>({Oid(".1.3.3"),
+                                              Oid(".1.3.9.3333")}),
+                            1U),
+      SnmpV2cResponse(0xA2,
+                     Community("dd2"),
+                      RequestId(23),
+                      SnmpV2cResponse::ErrorStatus(0),
+                      SnmpV2cResponse::ErrorIndex(0),
+                      values));
+    
+    xju::assert_equal(x.first.size(),0U);
+    xju::assert_equal(x.second.size(),1U);
+    xju::assert_equal(x.second[0].size(),2U);
+    auto i{x.second[0].begin()};
+    xju::assert_equal((*i++)->stringValue(),fred);
+    try {
+      (*i++)->intValue();
+      xju::assert_never_reached();
+    }
+    catch(SnmpV2cVarResponse::NoSuchInstance const& e) {
+      xju::assert_equal(readableRepr(e),"no such instance .1.3.9.3300.");
+    }
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+
+  try {
+    std::vector<SnmpV2cResponse::VarResult> values {
+      SnmpV2cResponse::VarResult(Oid(".1.3.3"),
+                                 std::shared_ptr<Value const>(
+                                   new StringValue(fred))),
+      SnmpV2cResponse::VarResult(Oid(".1.3.9.3300"),
+                                 SnmpV2cResponse::VarResult::END_OF_MIB_VIEW)
+      };
+    auto x=validateResponse(
+      SnmpV2cGetBulkRequest(Community("dje"),
+                            RequestId(23),
+                            std::vector<Oid>({Oid(".1.3.3"),
+                                              Oid(".1.3.9.3300")}),
+                            1U),
+      SnmpV2cResponse(0xA2,
+                      Community("dd2"),
+                      RequestId(23),
+                      SnmpV2cResponse::ErrorStatus(0),
+                      SnmpV2cResponse::ErrorIndex(0),
+                      values));
+    xju::assert_equal(x.first.size(),0U);
+    xju::assert_equal(x.second.size(),1U);
+    xju::assert_equal(x.second[0].size(),2U);
+    auto i{x.second[0].begin()};
+    xju::assert_equal((*i++)->stringValue(),fred);
+    try {
+      (*i++)->intValue();
+      xju::assert_never_reached();
+    }
+    catch(SnmpV2cVarResponse::EndOfMibView const& e) {
+      xju::assert_equal(readableRepr(e),"end of MIB view .1.3.9.3300.");
+    }
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_equal(readableRepr(e),"");
+    xju::assert_never_reached();
+  }
+}
+
+
 }
 }
 
 using namespace xju::snmp;
+
 
 int main(int argc, char* argv[])
 {
@@ -1654,7 +2092,7 @@ int main(int argc, char* argv[])
   test4(), ++n;
   test5(), ++n;
   test6(), ++n;
+  test7(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }
-

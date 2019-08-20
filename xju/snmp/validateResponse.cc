@@ -170,6 +170,33 @@ Oid getErrorOid(SnmpV2cResponse::ErrorIndex const errorIndex,
   
 }
 
+Oid getErrorOid(SnmpV2cResponse::ErrorIndex const errorIndex,
+                std::vector<SnmpV2cResponse::VarResult> const& varResults,
+                std::set<Oid> const& get,
+                std::vector<Oid> const& getNextN,
+                std::string const& error) throw(
+                  xju::Exception)
+{
+  std::set<Oid> requestOids;
+  std::copy(get.begin(),get.end(),
+            std::inserter(requestOids,requestOids.end()));
+  std::copy(getNextN.begin(),getNextN.end(),
+            std::inserter(requestOids,requestOids.end()));
+                
+  std::vector<Oid> resultOids;
+  std::transform(varResults.begin(),varResults.end(),
+                 std::back_inserter(resultOids),
+                 [](decltype(*varResults.begin()) const& x){
+                   return x.oid_;
+                 });
+                 
+  return getErrorOid(errorIndex.value(),
+                     resultOids,
+                     requestOids,
+                     error);
+  
+}
+
 }
 
 
@@ -912,7 +939,8 @@ std::pair<
     {
       throw GenErr(getErrorOid(response.errorIndex_,
                                response.varResults_,
-                               request.oids_,
+                               request.get_,
+                               request.getNextN_,
                                "GenErr (5)"),
                    XJU_TRACED);
     }
@@ -926,7 +954,7 @@ std::pair<
     if(response.varResults_.size()<request.get_.size()){
       std::ostringstream s;
       s << "response contains only " << response.varResults_.size()
-        << " vars, which is less than then number ("
+        << " value(s), which is less than then number ("
         << request.get_.size() << ") of \"get\" oids requested";
       throw xju::Exception(s.str(),XJU_TRACED);
     }
@@ -934,13 +962,13 @@ std::pair<
     auto i{request.get_.begin()};
     auto n{0};
     for(;i!=request.get_.end();++i,++n){
-      if (*i != response.varResults_[n]->oid_){
+      if (*i != response.varResults_[n].oid_){
         std::ostringstream s;
         s << "expected oid " << (*i) << " as response var[" << n
-          << " but got oid " << response.varResults_[n]->oid_;
+          << "] but got oid " << response.varResults_[n].oid_;
         throw xju::Exception(s.str(),XJU_TRACED);
       }
-      values.insert({*i,convertResponseVar(response.varResults[n])});
+      values.insert({*i,convertResponseVar(response.varResults_[n])});
     }
     auto const rowSize{request.getNextN_.size()};
     if (rowSize==0 && n!=response.varResults_.size()){

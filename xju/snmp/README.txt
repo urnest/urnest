@@ -46,11 +46,12 @@ TODO:
       SnmpV2cGetBulk(std::set<Oid> getValuesOf); // convenience
       SnmpV2cGetBulk(std::vector<Oid> getNextNValuesOf,unsigned int n);//conv
       x encode x test-encode
-      - validateResponse ->
+      x validateResponse ->
         std::pair<std::map<Oid,SnmpV2cVarResponse>,
 		  std::vector<
 		    std::vector<SnmpV2cVarResponse> //row
 		  >>
+      - encodeResponse
       
     x SnmpV2cTrap
     
@@ -76,7 +77,10 @@ TODO:
     
     RFC3414 user-based security model
     RFC3417 transport
-    
+
+  - refactor oid_ out of SnmpV2cResponse::Var? I think it results in
+    duplication
+  
   - higher level:
     UDPClient:
       UDPClient(host,port)
@@ -84,6 +88,7 @@ TODO:
       xxx snmpGet(SnmpV1GetRequest,retries,timePerTry)
       xxx snmpGetNext(SnmpV1GetRequest,retries,timePerTry)
       snmpSet(SnmpV1SetRequest,retries,timePerTry)
+      ... etc
       
 references:
   http://www.rane.com/note161.html
