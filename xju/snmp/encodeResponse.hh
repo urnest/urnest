@@ -28,6 +28,7 @@ class SnmpV1GetNextRequest; // see SnmpV1GetNextRequest.hh
 class SnmpV2cGetRequest; // see SnmpV2cGetRequest.hh
 class SnmpV2cSetRequest; // see SnmpV2cSetRequest.hh
 class SnmpV2cGetNextRequest; // see SnmpV2cGetNextRequest.hh
+class SnmpV2cGetBulkRequest; // see SnmpV2cGetBulkRequest.hh
 class SnmpV2cVarResponse; // see SnmpV2cVarResponse.hh
 
 class NoSuchName;          // see NoSuchName.hh
