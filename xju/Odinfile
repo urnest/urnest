@@ -42,6 +42,7 @@ test%tests.tree
 ()+cmd=(test-functional.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-path.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-pipe.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-readThrough.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-seq_less.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-split.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-startsWith.cc+(..%cxx-opts):auto.cxx.exe):exec.output

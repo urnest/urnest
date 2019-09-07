@@ -1,0 +1,93 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <string>
+#include <iostream>
+#include <unistd.h>
+#include <xju/Exception.hh>
+#include <exception>
+#include <sstream> //impl
+#include <xju/format.hh> //impl
+#include <xju/assert.hh> //impl
+
+namespace xju
+{
+// read through until first occurrance of term assuming it occurs
+// within the first max chars read from s
+//
+// post: result.endswith(term)
+// post: s positioned immediately after result
+std::string readThrough(std::istream& s,std::string const& term,size_t max)
+  throw(
+    // max chars exceeded or eof before term; note message includes
+    // what was read
+    xju::Exception,
+    std::bad_alloc,
+    // exception from s
+    std::exception)
+{
+  try{
+    auto m{term.begin()};
+    std::ostringstream result;
+    size_t size{0};
+    while(m!=term.end() && size<max){
+      char c;
+      s.get(c);
+      if (s.eof()){
+        std::ostringstream s;
+        s << "end of file before "
+          << xju::format::quote(xju::format::cEscapeString(term))
+          << " amongst "
+          << xju::format::quote(xju::format::cEscapeString(result.str()));
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      if (s.fail()){
+        std::ostringstream s;
+        s << "read error before "
+          << xju::format::quote(xju::format::cEscapeString(term))
+          << " amongst "
+          << xju::format::quote(xju::format::cEscapeString(result.str()));
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      result << c;
+      ++size;
+      if (*m == c){
+        ++m;
+      }
+      else{
+        m=term.begin();
+        if (*m==c){
+          ++m;
+        }
+      }
+    }
+    if (m!=term.end()){
+      xju::assert_equal(size,max);
+      std::ostringstream s;
+      s << max << " chars read without seeing "
+        << xju::format::quote(xju::format::cEscapeString(term))
+        << " amongst "
+        << xju::format::quote(xju::format::cEscapeString(result.str()));
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    return result.str();
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "read stream until "
+      << xju::format::quote(xju::format::cEscapeString(term))
+      << " reading at most " << max << " chars";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}

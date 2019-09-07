@@ -23,6 +23,51 @@
   
 snmp/README.txt stuff
 
+xju/http http1.1 - rfc7230, rfc7231
+  - timeout exceptions come from istream exception passed through untouched
+  - std::bad_alloc for out-of-memory
+  - all other exceptions are "mal-formed", with specific exceptions where
+    rfc7230 calls for specific action by client/server
+  - parseRequestLine(istream,max) -> (method,target,http-version)
+    -readThrough(istream,"\r\n",max) then parse and decode components
+    
+  - parseStatusLine(istream,max) -> (http-version,status-code,reason)
+  - parseHeaders(istream,max) -> headers
+  - copyBody(size) -> body
+  - copyUnboundedBody(maxSize) -> body   // to eof
+  - copyChunk(maxSize,maxExt,maxTrailerSize) -> (data, ext, trailers)
+      - no data means last chunk
+  - parseRequest(istream,maxRequestLine,maxHeaders,maxBody,maxExt) ->
+      (method,target,http-version,headers,body)
+      throw( specific exceptions for crazy rules)
+      -- applies all crazy rules, de-chunks
+  - parseResponse(istream,requestMethod,requestTarget,requestHeaders,maxResponseLine,maxHeaders,maxBody) ->
+      (http-version,status-code,reason,headers,body)
+      throw( specific exceptions for crazy rules)
+      -- applies all crazy rules including validation, de-chunks
+      
+      - std::string readThrough(istream,term,max) throw(TooBig)
+         - read to and including first occurrance of term
+         - resulting string ends with term
+         - can headers ever have embedded (escaped) CRLF? NO.
+
+      - cont is '[ \t]*(^CRLF)*CRLF', join parts with ' '
+      
+  - ostream
+    - encodeRequestLine(ostream,method,target,http-version)
+    - encodeStatusLine(ostream,http-version,status-code,reason)
+    - encodeHeaders(ostream,headers)
+    - encodeBody(ostream,headers,body)
+    - encodeChunk(ostream,data,ext)
+    - encodeLastChunk(ostream,ext,trailers)
+    - encodeResponse(ostream,http-version,status-code,reason,headers,body)
+    - encodeResponse(ostream,http-version,status-code,reason,headers,body)
+
+  
+http new versions
+web sockets
+  
+
 Int,Float add operator* operator/
 Float add math functions exp, sqrt, log, floor, ceiling etc
 
@@ -87,7 +132,10 @@ io::Output
           TCPListener
 	  UDPSocket
       ... to capture socket options at different levels?
-    
+
+  - istream implementation with movable deadline
+  - ostream implementation with movable deadline
+  
 - make syscall turn ENOMEM into std::bad_alloc
 - move xju::SyscallFailed to SyscallFailed.hh
 
