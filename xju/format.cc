@@ -499,9 +499,9 @@ std::string duration(std::chrono::microseconds const& d) noexcept
 {
   auto const secs(
     std::chrono::duration_cast<std::chrono::seconds>(d));
-  auto const msecs(
+  auto const usecs(
     std::chrono::duration_cast<std::chrono::microseconds>(d-secs));
-  return int_(secs.count(),1)+"."+int_(msecs.count(),6)+"s";
+  return int_(secs.count(),1)+"."+int_(usecs.count(),6)+"s";
 }
 
 std::string duration(std::chrono::nanoseconds const& d) noexcept
