@@ -5,6 +5,7 @@
 snmp%tests.tree
 io%tests.tree
 file%tests.tree
+http%tests.tree
 json%tests.tree
 utf8%tests.tree
 ip%tests.tree
@@ -94,6 +95,7 @@ done
 %io==./io/Odinfile%hcp-gen
 %ip==./ip/Odinfile%hcp-gen
 %file==./file/Odinfile%hcp-gen
+%http==./http/Odinfile%hcp-gen
 %snmp==./snmp/Odinfile%hcp-gen
 %json==./json/Odinfile%hcp-gen
 %utf8==./utf8/Odinfile%hcp-gen
@@ -125,6 +127,7 @@ done
 io%tags
 ip%tags
 file%tags
+http%tags
 snmp%tags
 netflow%tags
 ethernet%tags

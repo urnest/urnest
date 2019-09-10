@@ -13,7 +13,7 @@
 #ifndef XJU_INT_H_
 #define XJU_INT_H_
 
-#include "xju/Exception.hh"
+#include <xju/Exception.hh>
 #include <sstream>
 #include <limits>
 #include <iosfwd>

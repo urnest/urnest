@@ -1,0 +1,36 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/http/HTTPVersion.hh> //impl
+#include <hcp/parser.hh>
+
+namespace xju
+{
+namespace http
+{
+hcp_parser::PR httpVersion_() noexcept
+{
+  static hcp_parser::PR result{
+    new hcp_parser::NamedParser<hcp_ast::TaggedItem<HTTPVersion> >(
+      "http-version",
+      hcp_parser::parseLiteral("HTTP/")+
+      hcp_parser::PR(new hcp_parser::NamedParser<hcp_ast::TaggedItem<HTTPVersion::Major> >(
+        "major",
+        hcp_parser::digit()))+
+      hcp_parser::parseLiteral(".")+
+      hcp_parser::PR(new hcp_parser::NamedParser<hcp_ast::TaggedItem<HTTPVersion::Minor> >(
+        "minor",
+        hcp_parser::digit())))};
+    return result;
+}
+
+}
+}

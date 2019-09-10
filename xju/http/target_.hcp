@@ -1,0 +1,32 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <hcp/parser.hh>
+#include <xju/http/Target.hh> //impl
+#include <hcp/ast.hh> //impl
+
+namespace xju
+{
+namespace http
+{
+
+hcp_parser::PR target_() noexcept
+{
+  static hcp_parser::PR result{
+    new hcp_parser::NamedParser<hcp_ast::TaggedItem<Target> >(
+      "target",
+      hcp_parser::parseUntil(hcp_parser::parseOneOfChars(" \r\n\t\f")))};
+  return result;
+}
+
+
+}
+}

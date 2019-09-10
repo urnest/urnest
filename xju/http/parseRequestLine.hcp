@@ -1,0 +1,63 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/stringToUInt.hh> //impl
+#include <hcp/parser.hh> //impl
+#include <xju/http/Method.hh> //impl
+#include <hcp/ast.hh> //impl
+#include <xju/http/Target.hh> //impl
+#include <xju/http/HTTPVersion.hh> //impl
+#include <xju/http/RequestLine.hh>
+#include <xju/readThrough.hh> //impl
+#include <xju/http/requestLine_.hh> //impl
+
+namespace xju
+{
+namespace http
+{
+
+RequestLine parseRequestLine(std::istream& s, size_t max) throw(
+  xju::Exception,
+  std::exception)
+{
+  try{
+    std::string const l{xju::readThrough(s,"\r\n",max)};
+    auto const x{hcp_parser::parseString(l.begin(),l.end(), requestLine_())};
+    Method const m{
+      hcp_ast::reconstruct(
+        hcp_ast::findOnlyChildOfType<hcp_ast::TaggedItem<Method> >(x))};
+    Target const t{
+      hcp_ast::reconstruct(
+        hcp_ast::findOnlyChildOfType<hcp_ast::TaggedItem<Target> >(x))};
+    auto v{hcp_ast::findOnlyChildOfType<hcp_ast::TaggedItem<HTTPVersion> >(x)};
+    HTTPVersion const version{
+      HTTPVersion::Major(
+        xju::stringToUInt(
+          hcp_ast::reconstruct(
+            hcp_ast::findOnlyChildOfType<hcp_ast::TaggedItem<HTTPVersion::Major> >(v)))),
+      HTTPVersion::Minor(
+        xju::stringToUInt(
+          hcp_ast::reconstruct(
+            hcp_ast::findOnlyChildOfType<hcp_ast::TaggedItem<HTTPVersion::Minor> >(v))))};
+    return RequestLine(m,t,version);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "parse HTTP request-line of max " << max << " chars from stream";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+}
+
+

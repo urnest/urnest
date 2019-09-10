@@ -1,0 +1,32 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <hcp/parser.hh>
+
+namespace xju
+{
+namespace http
+{
+
+// return rfc7320 token parser
+hcp_parser::PR token() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::atLeastOne(
+      hcp_parser::parseOneOfChars("!#$%&'*+-.^_'|~")|
+      hcp_parser::digit()|
+      hcp_parser::charInRange('a','z')|
+      hcp_parser::charInRange('A','Z'))};
+  return result;
+}
+
+}
+}

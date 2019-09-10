@@ -1,0 +1,37 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/http/Method.hh>
+#include <xju/http/Target.hh>
+#include <xju/http/HTTPVersion.hh>
+
+namespace xju
+{
+namespace http
+{
+
+class RequestLine{
+public:
+  RequestLine(Method m, Target t, HTTPVersion v) noexcept:
+      m_(std::move(m)),
+      t_(std::move(t)),
+      v_(v)
+  {
+  }
+  Method m_;
+  Target t_;
+  HTTPVersion v_;
+
+  friend bool operator<(RequestLine const& x, RequestLine const& y) noexcept;
+};
+
+}
+}

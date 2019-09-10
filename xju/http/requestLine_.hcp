@@ -1,0 +1,36 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <hcp/parser.hh>
+#include <xju/http/method_.hh> //impl
+#include <xju/http/target_.hh> //impl
+#include <xju/http/httpVersion_.hh> //impl
+#include <xju/http/crlf.hh> //impl
+
+namespace xju
+{
+namespace http
+{
+
+hcp_parser::PR requestLine_() noexcept
+{
+  static hcp_parser::PR result{
+    method_()+hcp_parser::parseLiteral(" ")+
+    target_()+hcp_parser::parseLiteral(" ")+
+    httpVersion_()+crlf()};
+  return result;
+}
+
+
+}
+}
+
+
