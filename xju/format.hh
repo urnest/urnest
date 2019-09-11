@@ -791,7 +791,7 @@ std::string formatTm(struct tm const& x, std::chrono::nanoseconds n,
   case 0: h=12; break;
   case 12: h=12; break;
   default:
-    h=(x.tm_hour%12)+1;
+    h=(x.tm_hour%12);
   }
   return format::int_(h)+formatTm(x,n,bs...);
 }
