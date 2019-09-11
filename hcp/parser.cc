@@ -1324,6 +1324,12 @@ PR hexDigit() throw()
   return hexDigit;
 }
 
+PR alpha() throw()
+{
+  static PR result{
+    charInRange('a','z')|charInRange('A','Z')};
+  return result;
+}
   
 PR parseUntil(PR match, PR const x) throw()
 {

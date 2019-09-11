@@ -67,6 +67,7 @@ xju/http http1.1 - rfc7230, rfc7231
 http new versions
 web sockets
   
+- bring hcp parser generics back into xju, leaving behind c++ specifics
 
 Int,Float add operator* operator/
 Float add math functions exp, sqrt, log, floor, ceiling etc

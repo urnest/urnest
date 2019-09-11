@@ -385,6 +385,7 @@ PR bracketed(PR x) throw(); //x inside brackets, with optional whitespace preced
 PR digit() throw();
 PR octalDigit() throw();
 PR hexDigit() throw();
+PR alpha() throw();
 
 // rest are C++-specific
 PR doubleSlash() throw(); // "//"
