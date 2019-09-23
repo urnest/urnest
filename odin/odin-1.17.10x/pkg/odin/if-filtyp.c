@@ -89,6 +89,7 @@ IsDerefInput_Tool(
       default: {
 	 FATALERROR("illegal ToolClass"); };}/*switch*/;
    /*NOTREACHED*/
+   return FALSE;
    }/*IsDerefInput_Tool*/
 
 
