@@ -163,10 +163,13 @@ hcp_parser::PR query() noexcept
       hcp_parser::zeroOrMore()*(pchar()|hcp_parser::parseOneOfChars("/?")))};
   return result;
 }
+
+typedef hcp_ast::TaggedItem<Scheme> SchemeItem;
+
 hcp_parser::PR scheme() noexcept
 {
   static hcp_parser::PR result{
-    hcp_parser::named<hcp_ast::TaggedItem<Scheme> >(
+    hcp_parser::named<SchemeItem>(
       "scheme",
       hcp_parser::alpha()+
       hcp_parser::zeroOrMore()*(hcp_parser::alpha()|
@@ -470,7 +473,7 @@ public:
     }
     xju::ip::Port port_;
   };
-  class InvalidPort : hcp_parser::Exception::Cause
+  class InvalidPort : public hcp_parser::Exception::Cause
   {
   public:
     explicit InvalidPort(std::string cause) noexcept:
@@ -530,9 +533,7 @@ public:
 hcp_parser::PR port() noexcept
 {
   static hcp_parser::PR result{
-    hcp_parser::named<PortParser::Item>(
-      "port",
-      hcp_parser::PR(new PortParser()))};
+    hcp_parser::PR(new PortParser())};
   return result;
 }
 
@@ -584,7 +585,7 @@ namespace
     return Host(xju::HostName(hcp_ast::reconstruct(y)));
   }
   xju::Optional<xju::ip::Port> getPort(
-    std::vector<std::reference_wrapper<PortParser::Item>> const& x) noexcept
+    std::vector<std::reference_wrapper<PortParser::Item const>> const& x) noexcept
   {
     xju::Optional<xju::ip::Port> result;
     if (x.size()){
@@ -593,7 +594,7 @@ namespace
     return result;
   }
   xju::Optional<UserInfo> getUserInfo(
-    std::vector<std::reference_wrapper<UserInfoItem>> const& x) noexcept
+    std::vector<std::reference_wrapper<UserInfoItem const>> const& x) noexcept
   {
     xju::Optional<UserInfo> result;
     if (x.size()){
@@ -615,7 +616,7 @@ namespace
           std::transform(segments.begin(),segments.end(),
                          std::back_inserter(result),
                          [](decltype(*segments.begin()) const& x){
-                           return x.get();
+                           return Segment(hcp_ast::reconstruct(x.get()));
                          });
         }
         return result;
@@ -631,7 +632,7 @@ namespace
         std::transform(segments.begin(),segments.end(),
                        std::back_inserter(result),
                        [](decltype(*segments.begin()) const& x){
-                         return x.get();
+                         return Segment(hcp_ast::reconstruct(x.get()));
                        });
         return result;
       }
@@ -645,7 +646,7 @@ namespace
         std::transform(segments.begin(),segments.end(),
                        std::back_inserter(result),
                        [](decltype(*segments.begin()) const& x){
-                         return x.get();
+                         return Segment(hcp_ast::reconstruct(x.get()));
                        });
         return result;
       }
@@ -671,7 +672,7 @@ namespace
     return Fragment("");
   }
   xju::Optional<Authority> getAuthority(
-    std::vector<std::reference_wrapper<AuthorityItem> > const& items) noexcept
+    std::vector<std::reference_wrapper<AuthorityItem const> > const& items) noexcept
   {
     if (items.size()){
       xju::assert_equal(items.size(),1U);
@@ -721,16 +722,24 @@ public:
   {
   }
   
+  virtual std::string target() const throw() override
+  {
+    return "URI";
+  }
   virtual hcp_parser::ParseResult parse_(
     hcp_ast::I const at, 
     hcp_parser::Options const& options) throw() override
   {
     auto const r{p_->parse(at,options)};
     if (!r.failed()){
-      Scheme const scheme{*hcp_ast::findOnlyChildOfType<Scheme>((*r).first)};
+      Scheme const scheme{
+        hcp_ast::reconstruct(
+          hcp_ast::findOnlyChildOfType<SchemeItem>(
+            hcp_ast::Item((*r).first)))};
       
       xju::Optional<Authority> authority{
-        getAuthority(hcp_ast::findChildrenOfType<Authority>((*r).first))};
+        getAuthority(hcp_ast::findChildrenOfType<AuthorityItem>(
+                       hcp_ast::Item((*r).first)))};
 
       Path path{getPath((*r).first)};
 
@@ -757,9 +766,7 @@ private:
 hcp_parser::PR parseURI() noexcept
 {
   static hcp_parser::PR result{
-    new hcp_parser::NamedParser<URIItem>(
-      "URI",
-      hcp_parser::PR(new URIParser()))};
+    hcp_parser::PR(new URIParser)};
   return result;
 }
 
