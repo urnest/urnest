@@ -1,0 +1,60 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/ip/v6/Address.hh>
+#include <xju/ip/v4/Address.hh>
+#include <xju/HostName.hh>
+#include <iostream>
+#include <xju/Optional.hh>
+
+
+namespace xju
+{
+namespace uri
+{
+
+class Host
+{
+public:
+  explicit Host(xju::ip::v6::Address x) noexcept:
+      ipV6Address_(x)
+  {
+  }
+  explicit Host(xju::ip::v4::Address x) noexcept:
+      ipV4Address_(x)
+  {
+  }
+  explicit Host(xju::HostName x) noexcept:
+      hostName_(std::move(x))
+  {
+  }
+  xju::Optional<xju::ip::v6::Address> ipV6Address_;
+  xju::Optional<xju::ip::v4::Address> ipV4Address_;
+  xju::Optional<xju::HostName> hostName_;
+
+  friend std::ostream& operator<<(std::ostream& s, Host const& x) noexcept
+  {
+    if (x.ipV6Address_.valid()){
+      return s << x.ipV6Address_.value();
+    }
+    if (x.ipV4Address_.valid()){
+      return s << x.ipV4Address_.value();
+    }
+    if (x.hostName_.valid()){
+      return s << x.hostName_.value();
+    }
+    return s;
+  }
+  friend bool operator<(Host const& x, Host const& y) noexcept;
+};
+
+}
+}

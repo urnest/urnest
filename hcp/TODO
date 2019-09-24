@@ -1,3 +1,5 @@
+- hcp-tags v typedef?
+
 - support [[noreturn]] so can add to xju::assert_never_reached()
 
 - raw string literal

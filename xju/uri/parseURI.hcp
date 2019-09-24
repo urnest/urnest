@@ -1,0 +1,767 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <hcp/parser.hh>
+#include <list> //impl
+#include <xju/assert.hh> //impl
+#include <utility> //impl
+#include <sstream> //impl
+#include <xju/ip/v4/Address.hh> //impl
+#include <xju/uri/Host.hh>
+#include <xju/uri/Segment.hh>
+#include <xju/uri/Fragment.hh>
+#include <xju/uri/Query.hh>
+#include <xju/uri/Authority.hh>
+#include <xju/uri/URI.hh>
+#include <xju/stringToUInt.hh> //impl
+
+namespace xju
+{
+namespace uri //rfc3986
+{
+
+hcp_parser::PR unreserved() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::parseOneOfChars("-._~")|
+    hcp_parser::digit()|
+    hcp_parser::alpha()};
+  return result;
+}
+hcp_parser::PR pctEncoded() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::parseLiteral("%")+
+    hcp_parser::hexDigit()+
+    hcp_parser::hexDigit()};
+  return result;
+}
+hcp_parser::PR subDelim() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::parseOneOfChars("!$&'()*+,;=")};
+  return result;
+}
+hcp_parser::PR pchar() noexcept
+{
+  static hcp_parser::PR result{
+      unreserved()|
+      pctEncoded()|
+      subDelim()|
+      hcp_parser::parseOneOfChars(":@")};
+  return result;
+}
+
+typedef hcp_ast::TaggedItem<Segment> SegmentItem;
+
+hcp_parser::PR segment() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::named<SegmentItem>(
+      "segment",
+      hcp_parser::zeroOrMore()*(pchar()))};
+  return result;
+}
+
+hcp_parser::PR segmentNz() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::named<SegmentItem>(
+      "segment-nz",
+      hcp_parser::atLeastOne(pchar()))};
+  return result;
+}
+
+hcp_parser::PR segmentNzNc() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::named<SegmentItem>(
+      "segment-nz-nc",
+      hcp_parser::atLeastOne(
+        unreserved()|pctEncoded()|subDelim()|hcp_parser::parseLiteral("@")))};
+  return result;
+}
+
+class PathAbEmptyItemTag{};
+typedef hcp_ast::TaggedItem<PathAbEmptyItemTag> PathAbEmptyItem;
+
+hcp_parser::PR pathAbEmpty() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::named<PathAbEmptyItem>(
+      "path-abempty",
+      hcp_parser::zeroOrMore()*(hcp_parser::parseLiteral("/")+segment()))};
+    return result;
+}
+
+class PathAbsoluteItemTag{};
+typedef hcp_ast::TaggedItem<PathAbsoluteItemTag> PathAbsoluteItem;
+
+hcp_parser::PR pathAbsolute() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::named<PathAbsoluteItem>(
+      "path-absolute",
+      hcp_parser::parseLiteral("/")+segmentNz()+
+      hcp_parser::zeroOrMore()*(hcp_parser::parseLiteral("/")+segment()))};
+    return result;
+}
+
+class PathNoSchemeItemTag{};
+typedef hcp_ast::TaggedItem<PathNoSchemeItemTag> PathNoSchemeItem;
+
+hcp_parser::PR pathNoScheme() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::named<PathNoSchemeItem>(
+      "path-noscheme",
+      segmentNzNc()+
+      hcp_parser::zeroOrMore()*(hcp_parser::parseLiteral("/")+segment()))};
+    return result;
+}
+
+class PathRootlessItemTag{};
+typedef hcp_ast::TaggedItem<PathRootlessItemTag> PathRootlessItem;
+
+hcp_parser::PR pathRootless() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::named<PathRootlessItem>(
+      "path-rootless",
+      segmentNz()+
+      hcp_parser::zeroOrMore()*(hcp_parser::parseLiteral("/")+segment()))};
+    return result;
+}
+
+class PathEmptyItemTag{};
+typedef hcp_ast::TaggedItem<PathEmptyItemTag> PathEmptyItem;
+
+hcp_parser::PR pathEmpty() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::named<PathEmptyItem>(
+      "path-empty",
+      !pchar())};
+    return result;
+}
+
+typedef hcp_ast::TaggedItem<Query> QueryItem;
+
+hcp_parser::PR query() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::named<QueryItem>(
+      "query",
+      hcp_parser::zeroOrMore()*(pchar()|hcp_parser::parseOneOfChars("/?")))};
+  return result;
+}
+hcp_parser::PR scheme() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::named<hcp_ast::TaggedItem<Scheme> >(
+      "scheme",
+      hcp_parser::alpha()+
+      hcp_parser::zeroOrMore()*(hcp_parser::alpha()|
+                                hcp_parser::digit()|
+                                hcp_parser::parseOneOfChars("+-.")))};
+  return result;
+}
+
+typedef hcp_ast::TaggedItem<UserInfo> UserInfoItem;
+
+hcp_parser::PR colon() noexcept
+{
+  static hcp_parser::PR result{hcp_parser::parseLiteral(":")};
+  return result;
+}
+  
+hcp_parser::PR userInfo() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::named<UserInfoItem>(
+      "userinfo",
+      hcp_parser::zeroOrMore()*(
+        unreserved()|pctEncoded()|subDelim()|colon()))};
+  return result;
+}
+
+class IpV4AddressParser : public hcp_parser::Parser
+{
+public:
+  class Item : public hcp_ast::Item
+  {
+  public:
+    Item(xju::ip::v4::Address address,
+         hcp_ast::I begin,
+         hcp_ast::I end) noexcept:
+        hcp_ast::Item(begin,end),
+        address_(std::move(address))
+    {
+    }
+    xju::ip::v4::Address const address_;
+  };
+  explicit IpV4AddressParser(bool traced=false) throw():
+      hcp_parser::Parser(traced),
+      _0_255_(
+        hcp_parser::named<_0_255_Item>(
+          "0..255",
+          (hcp_parser::parseLiteral("2")+(  //200..255
+            (hcp_parser::parseOneOfChars("01234")+hcp_parser::digit())|
+            (hcp_parser::parseLiteral("5")+hcp_parser::parseOneOfChars("012345"))))|
+          (hcp_parser::parseLiteral("1")+ //100..199
+           hcp_parser::digit()+hcp_parser::digit())|
+          (hcp_parser::digit()+hcp_parser::digit())| //0..99
+          hcp_parser::digit() //0..9
+          )
+        ),
+      p_(
+        _0_255_+hcp_parser::parseLiteral(".")+
+        _0_255_+hcp_parser::parseLiteral(".")+
+        _0_255_+hcp_parser::parseLiteral(".")+_0_255_)
+  {
+  }
+  
+  virtual hcp_parser::ParseResult parse_(
+    hcp_ast::I const at, 
+    hcp_parser::Options const& options) throw() override
+  {
+    auto const r{p_->parse(at,options)};
+    if (!r.failed()){
+      uint32_t a;
+      std::vector<uint8_t> bytes;
+      auto const components{
+        hcp_ast::findChildrenOfType<_0_255_Item>(hcp_ast::Item((*r).first))};
+      xju::assert_equal(components.size(),4U);
+      for(auto c: components)
+      {
+        std::string const s{hcp_ast::reconstruct(c.get())};
+        unsigned int const x{xju::stringToUInt(s)};
+        xju::assert_less(x,256U);
+        a=(a<<8)+x;
+      }
+      return hcp_parser::ParseResult(
+        hcp_parser::PV({
+            hcp_ast::IR(new Item(xju::ip::v4::Address(a),
+                                 at,
+                                 (*r).second))},
+          (*r).second));
+    }
+    return r;
+  }
+  virtual std::string target() const throw() override
+  {
+    return "URI-format IPv4 Address";
+  }
+private:
+  class _0_255_ItemTag{};
+  typedef hcp_ast::TaggedItem<_0_255_ItemTag> _0_255_Item;
+  
+  hcp_parser::PR _0_255_;
+  hcp_parser::PR p_;
+};
+
+hcp_parser::PR ipV4Address() noexcept
+{
+  static hcp_parser::PR result{new IpV4AddressParser};
+  return result;
+}
+
+// Parser for URI-format IpV6 address
+// e.g. ::1
+//      ::
+//      1:ef63::2a
+//      ::127.0.0.1
+//      1:ef63::127.0.0.1
+//      001c:76bc:0043:9ad2:0023:bc7f:7762:aa72
+//
+// essentially a sequence of colon-separated 16-bit hex components but:
+//   - last two components can be expressed as in IPv4 dotted notation
+//   - a single empty component is allowed, and it represents enough
+//     zero components to take the total up to 8
+class IpV6AddressParser : public hcp_parser::Parser
+{
+public:
+  class Item : public hcp_ast::Item
+  {
+  public:
+    Item(xju::ip::v6::Address address,
+         hcp_ast::I begin,
+         hcp_ast::I end) noexcept:
+        hcp_ast::Item(begin,end),
+        address_(std::move(address))
+    {
+    }
+    xju::ip::v6::Address const address_;
+  };
+  
+  explicit IpV6AddressParser(bool traced=false) throw():
+      hcp_parser::Parser(traced),
+      hexComp_(
+        (hcp_parser::hexDigit()+hcp_parser::hexDigit()+
+         hcp_parser::hexDigit()+hcp_parser::hexDigit())|
+        (hcp_parser::hexDigit()+hcp_parser::hexDigit()+hcp_parser::hexDigit())|
+        (hcp_parser::hexDigit()+hcp_parser::hexDigit())|
+        (hcp_parser::hexDigit())|
+        (hcp_parser::parseLiteral(""))),
+      p_(hcp_parser::listOf(
+           hcp_parser::named<HexItem>("hex-component",hexComp_), //item
+           colon(), //separator
+           ipV4Address()|!hcp_parser::hexDigit())+ // end of list
+         hcp_parser::optional(ipV4Address()))
+  {
+  }
+  
+  virtual hcp_parser::ParseResult parse_(
+    hcp_ast::I const at, 
+    hcp_parser::Options const& options) throw() override
+  {
+    auto const r{p_->parse(at,options)};
+    if (!r.failed()){
+      std::list<uint16_t> components;
+      auto elision{components.end()};
+      auto const hexes{hcp_ast::findChildrenOfType<HexItem>(
+          hcp_ast::Item((*r).first))};
+      for(auto h{hexes.begin()}; h!=hexes.end(); ++h)
+      {
+        std::string const s{hcp_ast::reconstruct((*h))};
+        if (s.size()==0){
+          elision=components.insert(components.end(),0U);
+        }
+        else{
+          xju::assert_less_equal(s.size(),4U);
+          unsigned int const x{xju::stringToUInt(s,16)};
+          components.insert(components.end(),(uint16_t)x);
+        }
+      }
+      auto const v4a{
+        hcp_ast::findChildrenOfType<IpV4AddressParser::Item>(
+          hcp_ast::Item((*r).first))};
+      if (v4a.size()){
+        xju::assert_equal(v4a.size(),1U);
+        xju::ip::v4::Address const a{v4a.front().get().address_};
+        components.insert(components.end(),
+                          (uint16_t)(a.value()>>16));
+        components.insert(components.end(),
+                          (uint16_t)(a.value()&&0xffff));
+      }
+      if (components.size()<8 && elision!=components.end()){
+        while(components.size()<8){
+          components.insert(elision,0U);
+        }
+      }
+      if (components.size()!=8){
+        std::shared_ptr<hcp_parser::Exception::Cause> cause{
+          new WrongNumberOfComponents(components.size())};
+        hcp_parser::ParseResult rr{
+          hcp_parser::Exception(cause,(*r).second,XJU_TRACED)};
+        return rr;
+      }
+      xju::ip::v6::Address a{0U};
+      std::copy(components.begin(),components.end(),a.begin());
+      return hcp_parser::ParseResult(
+        hcp_parser::PV(
+          {hcp_ast::IR(new Item(a,
+                                at,
+                                (*r).second))},
+          (*r).second));
+    }
+    return r;
+  }
+  virtual std::string target() const throw() override
+  {
+    return "URI-format IPv6 Address";
+  }
+private:
+  class HexItemTag{};
+  typedef hcp_ast::TaggedItem<HexItemTag> HexItem;
+
+  class WrongNumberOfComponents : public hcp_parser::Exception::Cause
+  {
+  public:
+    explicit WrongNumberOfComponents(int n) noexcept:
+        n_(n)
+    {
+    }
+    virtual std::string str() const throw() override
+    {
+      std::ostringstream s;
+      s << "IPv6 address has " << n_ << " components not 8";
+      return s.str();
+    }
+    int const n_;
+  };
+
+  
+  hcp_parser::PR hexComp_;
+  hcp_parser::PR p_;
+};
+
+hcp_parser::PR ipV6Address() noexcept
+{
+  static hcp_parser::PR result{new IpV6AddressParser()};
+  return result;
+}
+
+class IPvFutureTag{};
+typedef hcp_ast::TaggedItem<IPvFutureTag> IPvFutureItem;
+
+hcp_parser::PR ipFuture() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::named<IPvFutureItem>(
+      "ip-future",
+      hcp_parser::parseLiteral("v")+hcp_parser::hexDigit()+
+      hcp_parser::parseLiteral(".")+hcp_parser::atLeastOne(
+        unreserved()|subDelim()|colon()))};
+  return result;
+}
+
+hcp_parser::PR ipLiteral() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::parseLiteral("[")+
+    (ipV6Address()
+     //|ipFuture()
+      )+hcp_parser::parseLiteral("]")};
+  return result;
+}
+
+hcp_parser::PR regName() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::named<hcp_ast::TaggedItem<xju::HostName> >(
+      "reg-name",
+      hcp_parser::zeroOrMore()*(
+        unreserved()|pctEncoded()|subDelim()))};
+  return result;
+}
+
+typedef hcp_ast::TaggedItem<Host> HostItem;
+
+hcp_parser::PR host() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::named<HostItem>(
+      "host",
+      ipLiteral()|ipV4Address()|regName())};
+  return result;
+}
+
+class PortParser : public hcp_parser::Parser
+{
+public:
+  class Item : public hcp_ast::Item
+  {
+  public:
+    Item(xju::ip::Port port,
+         hcp_ast::I begin,
+         hcp_ast::I end) noexcept:
+        hcp_ast::Item(begin,end),
+        port_(port)
+    {
+    }
+    xju::ip::Port port_;
+  };
+  class InvalidPort : hcp_parser::Exception::Cause
+  {
+  public:
+    explicit InvalidPort(std::string cause) noexcept:
+        cause_(cause)
+    {
+    }
+    virtual std::string str() const throw() override
+    {
+      return cause_;
+    }
+    std::string cause_;
+  };
+  explicit PortParser(bool traced=false) throw():
+      hcp_parser::Parser(traced),
+      p_(hcp_parser::atLeastOne(hcp_parser::digit()))
+  {
+  }
+
+  virtual std::string target() const throw() override
+  {
+    return "port";
+  }
+  virtual hcp_parser::ParseResult parse_(
+    hcp_ast::I const at, 
+    hcp_parser::Options const& options) throw() override
+  {
+    auto const r{p_->parse(at,options)};
+    if (!r.failed()){
+      try{
+        auto const port{xju::stringToUInt(hcp_ast::reconstruct((*r).first))};
+        if (port > UINT16_MAX){
+          std::ostringstream s;
+          s << port << " is not a valid i.e. 0..65535 IP port";
+          throw xju::Exception(s.str(),XJU_TRACED);
+        }
+        return hcp_parser::ParseResult(
+          hcp_parser::PV(
+            {hcp_ast::IR(new Item(xju::ip::Port(port),
+                                  at,
+                                  (*r).second))},
+            (*r).second));
+      }
+      catch(xju::Exception const& e){
+        std::shared_ptr<hcp_parser::Exception::Cause> cause{
+          new InvalidPort(readableRepr(e))};
+        hcp_parser::ParseResult rr{hcp_parser::Exception(cause,
+                                                         (*r).second,
+                                                         XJU_TRACED)};
+        return rr;
+      }
+    }
+    return r;
+  }
+  hcp_parser::PR p_;
+};
+
+hcp_parser::PR port() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::named<PortParser::Item>(
+      "port",
+      hcp_parser::PR(new PortParser()))};
+  return result;
+}
+
+typedef hcp_ast::TaggedItem<Authority> AuthorityItem;
+
+hcp_parser::PR authority() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::named<AuthorityItem>(
+      "authority",
+      hcp_parser::optional(userInfo()+hcp_parser::parseLiteral("@"))+
+      host()+
+      ((colon()+port()|!colon())))};
+  return result;
+}
+
+typedef hcp_ast::TaggedItem<Fragment> FragmentItem;
+
+hcp_parser::PR fragment() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::named<FragmentItem>(
+      "fragment",
+      hcp_parser::zeroOrMore()*(pchar()|hcp_parser::parseOneOfChars("/?")))};
+  return result;
+}
+
+namespace
+{
+  Host getHost(HostItem const& x) noexcept
+  {
+    {
+      auto const y{hcp_ast::findChildrenOfType<IpV6AddressParser::Item>(x,2)};
+      if (y.size()){
+        xju::assert_equal(y.size(),1U);
+        return Host(y.front().get().address_);
+      }
+    }
+    {
+      auto const y{hcp_ast::findChildrenOfType<IpV4AddressParser::Item>(x,2)};
+      if (y.size()){
+        xju::assert_equal(y.size(),1U);
+        return Host(y.front().get().address_);
+      }
+    }
+
+    auto const y{
+      hcp_ast::findOnlyChildOfType<hcp_ast::TaggedItem<xju::HostName> >(x)};
+    return Host(xju::HostName(hcp_ast::reconstruct(y)));
+  }
+  xju::Optional<xju::ip::Port> getPort(
+    std::vector<std::reference_wrapper<PortParser::Item>> const& x) noexcept
+  {
+    xju::Optional<xju::ip::Port> result;
+    if (x.size()){
+      result=x.front().get().port_;
+    }
+    return result;
+  }
+  xju::Optional<UserInfo> getUserInfo(
+    std::vector<std::reference_wrapper<UserInfoItem>> const& x) noexcept
+  {
+    xju::Optional<UserInfo> result;
+    if (x.size()){
+      result=UserInfo(hcp_ast::reconstruct(x.front().get()));
+    }
+    return result;
+  }
+  Path getPath(hcp_ast::IRs const& all) noexcept
+  {
+    Path result;
+    {
+      auto const x{hcp_ast::findChildrenOfType<PathAbEmptyItem>(
+          hcp_ast::Item(all),1U)};
+      if (x.size()){
+        auto const segments{hcp_ast::findChildrenOfType<SegmentItem>(
+            x.front().get())};
+        if (segments.size()){
+          result.push_back(Segment(""));
+          std::transform(segments.begin(),segments.end(),
+                         std::back_inserter(result),
+                         [](decltype(*segments.begin()) const& x){
+                           return x.get();
+                         });
+        }
+        return result;
+      }
+    }
+    {
+      auto const x{hcp_ast::findChildrenOfType<PathAbsoluteItem>(
+          hcp_ast::Item(all),1U)};
+      if (x.size()){
+        result.push_back(Segment(""));
+        auto const segments{hcp_ast::findChildrenOfType<SegmentItem>(
+            x.front().get())};
+        std::transform(segments.begin(),segments.end(),
+                       std::back_inserter(result),
+                       [](decltype(*segments.begin()) const& x){
+                         return x.get();
+                       });
+        return result;
+      }
+    }
+    {
+      auto const x{hcp_ast::findChildrenOfType<PathRootlessItem>(
+          hcp_ast::Item(all),1U)};
+      if (x.size()){
+        auto const segments{hcp_ast::findChildrenOfType<SegmentItem>(
+            x.front().get())};
+        std::transform(segments.begin(),segments.end(),
+                       std::back_inserter(result),
+                       [](decltype(*segments.begin()) const& x){
+                         return x.get();
+                       });
+        return result;
+      }
+    }
+    return result;
+  }
+  Query getQuery(hcp_ast::IRs const& all) noexcept
+  {
+    auto const x{hcp_ast::findChildrenOfType<QueryItem>(
+        hcp_ast::Item(all),1)};
+    if (x.size()){
+      return Query(hcp_ast::reconstruct(x.front().get()));
+    }
+    return Query("");
+  }
+  Fragment getFragment(hcp_ast::IRs const& all) noexcept
+  {
+    auto const x{hcp_ast::findChildrenOfType<FragmentItem>(
+        hcp_ast::Item(all),1)};
+    if (x.size()){
+      return Fragment(hcp_ast::reconstruct(x.front().get()));
+    }
+    return Fragment("");
+  }
+  xju::Optional<Authority> getAuthority(
+    std::vector<std::reference_wrapper<AuthorityItem> > const& items) noexcept
+  {
+    if (items.size()){
+      xju::assert_equal(items.size(),1U);
+      return xju::Optional<Authority>(
+        Authority(
+          getHost(
+            hcp_ast::findOnlyChildOfType<HostItem>(items.front().get())),
+          getPort(
+            hcp_ast::findChildrenOfType<PortParser::Item>(items.front().get(),1U)),
+          getUserInfo(
+            hcp_ast::findChildrenOfType<UserInfoItem>(items.front().get(),1U))));
+    }
+    return xju::Optional<Authority>();
+  }
+}
+
+class URIParser : public hcp_parser::Parser
+{
+public:
+  class Item : public hcp_ast::Item
+  {
+  public:
+    Item(URI uri,
+         hcp_ast::I begin,
+         hcp_ast::I end) noexcept:
+        hcp_ast::Item(begin,end),
+        uri_(std::move(uri))
+    {
+    }
+    URI uri_;
+  };
+  
+  explicit URIParser(bool traced=false) throw():
+      hcp_parser::Parser(traced),
+      p_(scheme()+hcp_parser::parseLiteral(":")+
+      (
+        (hcp_parser::parseLiteral("//")+authority()+pathAbEmpty())|
+        pathAbsolute()|
+        pathRootless()|
+        pathEmpty())+
+      (
+        (hcp_parser::parseLiteral("?")+query())|
+        !hcp_parser::parseLiteral("?"))+
+      (
+        (hcp_parser::parseLiteral("#")+fragment())|
+        !hcp_parser::parseLiteral("#")))
+  {
+  }
+  
+  virtual hcp_parser::ParseResult parse_(
+    hcp_ast::I const at, 
+    hcp_parser::Options const& options) throw() override
+  {
+    auto const r{p_->parse(at,options)};
+    if (!r.failed()){
+      Scheme const scheme{*hcp_ast::findOnlyChildOfType<Scheme>((*r).first)};
+      
+      xju::Optional<Authority> authority{
+        getAuthority(hcp_ast::findChildrenOfType<Authority>((*r).first))};
+
+      Path path{getPath((*r).first)};
+
+      Query query{getQuery((*r).first)};
+      Fragment fragment{getFragment((*r).first)};
+      return hcp_parser::ParseResult(
+        hcp_parser::PV(
+          {hcp_ast::IR(new Item(URI(scheme,
+                                    authority,
+                                    path,
+                                    query,
+                                    fragment),
+                                at,
+                                (*r).second))},
+          (*r).second));
+    }
+    return r;
+  }
+private:
+  hcp_parser::PR p_;
+
+};
+  
+hcp_parser::PR parseURI() noexcept
+{
+  static hcp_parser::PR result{
+    new hcp_parser::NamedParser<URIItem>(
+      "URI",
+      hcp_parser::PR(new URIParser()))};
+  return result;
+}
+
+}
+}

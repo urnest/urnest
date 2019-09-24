@@ -1,0 +1,68 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/uri/Scheme.hh>
+#include <xju/Optional.hh>
+#include <xju/uri/Authority.hh>
+#include <xju/uri/Path.hh>
+#include <xju/uri/Query.hh>
+#include <xju/uri/Fragment.hh>
+#include <utility> //impl
+#include <xju/format.hh> //impl
+namespace xju
+{
+namespace uri
+{
+
+//RFC3986 URI
+class URI
+{
+public:
+  // URI from pre-encoded (where applicable) params
+  // pre: params represent a valid RFC3986 URI
+  URI(Scheme scheme,
+      xju::Optional<Authority> authority,
+      Path path,
+      Query query,
+      Fragment fragment) noexcept:
+      scheme_(std::move(scheme)),
+      authority_(std::move(authority)),
+      path_(std::move(path)),
+      query_(std::move(query)),
+      fragment_(std::move(fragment))
+  {
+  }
+
+  Scheme scheme_;
+  xju::Optional<Authority> authority_;
+  Path path_;
+  Query query_;
+  Fragment fragment_;
+  
+  friend std::ostream& operator<<(std::ostream& s,URI const& x)
+  {
+    s << x.scheme_ << ":";
+    if (x.authority_.valid()){
+      s << "//" << x.authority_.value();
+    }
+    s << xju::format::join(x.path_.begin(),x.path_.end(),std::string("/"));
+    if (x.query_.value().size()){
+      s << "?" << x.query_;
+    }
+    if (x.fragment_.value().size()){
+      s << "#" << x.fragment_;
+    }
+    return s;
+  }
+};
+
+}
+}

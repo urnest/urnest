@@ -28,6 +28,7 @@ test-UDPLocalForwardSocket.cc+(../..%cxx-opts):auto.cxx.exe
 
 %hcp-subdir-spec==<<
 %v4==v4/Odinfile%hcp-gen
+%v6==v6/Odinfile%hcp-gen
 %checksum==checksum/Odinfile%hcp-gen
 %icmp==icmp/Odinfile%hcp-gen
 
@@ -36,5 +37,6 @@ test-UDPLocalForwardSocket.cc+(../..%cxx-opts):auto.cxx.exe
 %all.list-of-tags==<<
 .:merged-tags
 v4%tags
+v6%tags
 checksum%tags
 icmp%tags
