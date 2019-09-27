@@ -34,7 +34,7 @@ void ArrayCheckEqual(size_t n,size_t Size) throw(xju::Exception)
 {
   if (n!=Size) {
     std::ostringstream s;
-    s << (n+1) << " elements cannot be placed in Array of size "
+    s << n << " elements cannot be placed in Array of size "
       << Size;
     throw xju::Exception(s.str(),
                          std::make_pair(std::string(__FILE__),__LINE__));

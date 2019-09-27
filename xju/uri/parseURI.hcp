@@ -28,6 +28,13 @@ namespace xju
 namespace uri //rfc3986
 {
 
+using hcp_parser::hexDigit;
+using hcp_parser::listOf;
+using hcp_parser::parseLiteral;
+using hcp_parser::parseOneOfChars;
+using hcp_parser::digit;
+using hcp_parser::alpha;
+
 hcp_parser::PR unreserved() noexcept
 {
   static hcp_parser::PR result{
@@ -40,8 +47,8 @@ hcp_parser::PR pctEncoded() noexcept
 {
   static hcp_parser::PR result{
     hcp_parser::parseLiteral("%")+
-    hcp_parser::hexDigit()+
-    hcp_parser::hexDigit()};
+    hexDigit()+
+    hexDigit()};
   return result;
 }
 hcp_parser::PR subDelim() noexcept
@@ -110,8 +117,10 @@ hcp_parser::PR pathAbsolute() noexcept
   static hcp_parser::PR result{
     hcp_parser::named<PathAbsoluteItem>(
       "path-absolute",
-      hcp_parser::parseLiteral("/")+segmentNz()+
-      hcp_parser::zeroOrMore()*(hcp_parser::parseLiteral("/")+segment()))};
+      hcp_parser::parseLiteral("/")+
+      hcp_parser::optional(
+        segmentNz()+
+        hcp_parser::zeroOrMore()*(hcp_parser::parseLiteral("/")+segment())))};
     return result;
 }
 
@@ -183,6 +192,12 @@ typedef hcp_ast::TaggedItem<UserInfo> UserInfoItem;
 hcp_parser::PR colon() noexcept
 {
   static hcp_parser::PR result{hcp_parser::parseLiteral(":")};
+  return result;
+}
+  
+hcp_parser::PR doubleColon() noexcept
+{
+  static hcp_parser::PR result{hcp_parser::parseLiteral("::")};
   return result;
 }
   
@@ -271,6 +286,8 @@ private:
   hcp_parser::PR p_;
 };
 
+typedef IpV4AddressParser::Item IpV4AddressItem;
+
 hcp_parser::PR ipV4Address() noexcept
 {
   static hcp_parser::PR result{new IpV4AddressParser};
@@ -308,17 +325,17 @@ public:
   explicit IpV6AddressParser(bool traced=false) throw():
       hcp_parser::Parser(traced),
       hexComp_(
-        (hcp_parser::hexDigit()+hcp_parser::hexDigit()+
-         hcp_parser::hexDigit()+hcp_parser::hexDigit())|
-        (hcp_parser::hexDigit()+hcp_parser::hexDigit()+hcp_parser::hexDigit())|
-        (hcp_parser::hexDigit()+hcp_parser::hexDigit())|
-        (hcp_parser::hexDigit())|
-        (hcp_parser::parseLiteral(""))),
-      p_(hcp_parser::listOf(
-           hcp_parser::named<HexItem>("hex-component",hexComp_), //item
-           colon(), //separator
-           ipV4Address()|!hcp_parser::hexDigit())+ // end of list
-         hcp_parser::optional(ipV4Address()))
+        hcp_parser::named<HexItem>(
+          "hex-component",
+          (hexDigit()+hexDigit()+hexDigit()+hexDigit())|
+          (hexDigit()+hexDigit()+hexDigit())|
+          (hexDigit()+hexDigit())|
+          (hexDigit()))),
+      p_(hcp_parser::optional(listOf(hexComp_,colon(),
+                                     hcp_parser::named<HexItem>(
+                                       "hex-component",doubleColon())))+
+         listOf(hexComp_,colon(),
+                ipV4Address()|!(colon()|hexDigit())))
   {
   }
   
@@ -335,7 +352,14 @@ public:
       for(auto h{hexes.begin()}; h!=hexes.end(); ++h)
       {
         std::string const s{hcp_ast::reconstruct((*h))};
-        if (s.size()==0){
+        if (s=="::"){
+          if(elision!=components.end()){
+            std::shared_ptr<hcp_parser::Exception::Cause> cause{
+              new hcp_parser::FixedCause("multiple elisions")};
+            hcp_parser::ParseResult rr{
+              hcp_parser::Exception(cause,(*r).second,XJU_TRACED)};
+            return rr;
+          }            
           elision=components.insert(components.end(),0U);
         }
         else{
@@ -367,7 +391,7 @@ public:
           hcp_parser::Exception(cause,(*r).second,XJU_TRACED)};
         return rr;
       }
-      xju::ip::v6::Address a{0U};
+      xju::ip::v6::Address a(0U);
       std::copy(components.begin(),components.end(),a.begin());
       return hcp_parser::ParseResult(
         hcp_parser::PV(
@@ -407,6 +431,8 @@ private:
   hcp_parser::PR p_;
 };
 
+typedef IpV6AddressParser::Item IpV6AddressItem;
+
 hcp_parser::PR ipV6Address() noexcept
 {
   static hcp_parser::PR result{new IpV6AddressParser()};
@@ -421,7 +447,7 @@ hcp_parser::PR ipFuture() noexcept
   static hcp_parser::PR result{
     hcp_parser::named<IPvFutureItem>(
       "ip-future",
-      hcp_parser::parseLiteral("v")+hcp_parser::hexDigit()+
+      hcp_parser::parseLiteral("v")+hexDigit()+
       hcp_parser::parseLiteral(".")+hcp_parser::atLeastOne(
         unreserved()|subDelim()|colon()))};
   return result;

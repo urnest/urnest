@@ -271,11 +271,13 @@ PR nonEmptyListOf(PR x, PR moreIndicator) throw();
 // Parse list of xs each separated by separator, with
 // list terminated by terminator.
 // - result includes terminator
+// - terminator is tested before separator and item type
 PR listOf(PR x, PR separator, PR terminator) throw();
 
 // Parse list of xs each separated by separator, with
 // list commencing with opener and terminated by terminator.
 // - result includes terminator
+// - terminator is tested before separator and item type
 PR listOf(PR opener, PR x, PR separator, PR terminator) throw();
 
 // not good - prefer listOf/parseUntil
@@ -363,6 +365,7 @@ PR parseLiteral(std::string const& x) throw();
 
 // parse match repeatedly until specified until
 // - does not consume until
+// - tests until before match
 PR parseUntil(PR const match, PR const until) throw();
 
 // shorthand for parseUntil(parseAnyChar(),x)
