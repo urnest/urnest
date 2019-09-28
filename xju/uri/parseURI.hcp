@@ -211,7 +211,7 @@ hcp_parser::PR userInfo() noexcept
   return result;
 }
 
-class IpV4AddressParser : public hcp_parser::Parser
+class IpV4AddressParser : public hcp_parser::NamedParser_
 {
 public:
   class Item : public hcp_ast::Item
@@ -226,8 +226,7 @@ public:
     }
     xju::ip::v4::Address const address_;
   };
-  explicit IpV4AddressParser(bool traced=false) throw():
-      hcp_parser::Parser(traced),
+  explicit IpV4AddressParser() throw():
       _0_255_(
         hcp_parser::named<_0_255_Item>(
           "0..255",
@@ -306,7 +305,7 @@ hcp_parser::PR ipV4Address() noexcept
 //   - last two components can be expressed as in IPv4 dotted notation
 //   - a single empty component is allowed, and it represents enough
 //     zero components to take the total up to 8
-class IpV6AddressParser : public hcp_parser::Parser
+class IpV6AddressParser : public hcp_parser::NamedParser_
 {
 public:
   class Item : public hcp_ast::Item
@@ -322,8 +321,7 @@ public:
     xju::ip::v6::Address const address_;
   };
   
-  explicit IpV6AddressParser(bool traced=false) throw():
-      hcp_parser::Parser(traced),
+  explicit IpV6AddressParser() throw():
       hexComp_(
         hcp_parser::named<HexItem>(
           "hex-component",
@@ -392,7 +390,11 @@ public:
         return rr;
       }
       xju::ip::v6::Address a(0U);
-      std::copy(components.begin(),components.end(),a.begin());
+      auto ai{a.begin()};
+      for(auto c : components){
+        (*ai++)=uint8_t(c>>8);
+        (*ai++)=uint8_t(c);
+      }
       return hcp_parser::ParseResult(
         hcp_parser::PV(
           {hcp_ast::IR(new Item(a,
@@ -435,7 +437,8 @@ typedef IpV6AddressParser::Item IpV6AddressItem;
 
 hcp_parser::PR ipV6Address() noexcept
 {
-  static hcp_parser::PR result{new IpV6AddressParser()};
+  static hcp_parser::PR result{
+    new IpV6AddressParser()};
   return result;
 }
 
@@ -484,7 +487,7 @@ hcp_parser::PR host() noexcept
   return result;
 }
 
-class PortParser : public hcp_parser::Parser
+class PortParser : public hcp_parser::NamedParser_
 {
 public:
   class Item : public hcp_ast::Item
@@ -512,8 +515,7 @@ public:
     }
     std::string cause_;
   };
-  explicit PortParser(bool traced=false) throw():
-      hcp_parser::Parser(traced),
+  explicit PortParser() throw():
       p_(hcp_parser::atLeastOne(hcp_parser::digit()))
   {
   }
@@ -715,7 +717,7 @@ namespace
   }
 }
 
-class URIParser : public hcp_parser::Parser
+class URIParser : public hcp_parser::NamedParser_
 {
 public:
   class Item : public hcp_ast::Item
@@ -731,8 +733,7 @@ public:
     URI uri_;
   };
   
-  explicit URIParser(bool traced=false) throw():
-      hcp_parser::Parser(traced),
+  explicit URIParser() throw():
       p_(scheme()+hcp_parser::parseLiteral(":")+
       (
         (hcp_parser::parseLiteral("//")+authority()+pathAbEmpty())|

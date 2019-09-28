@@ -21,23 +21,31 @@ namespace v6
 {
 
 // address (in host byte order)
-class Address : public xju::Array<uint16_t,8>
+class Address : public xju::Array<uint8_t,16>
 {
 public:
-  using  xju::Array<uint16_t,8>::Array;
+  using  xju::Array<uint8_t,16>::Array;
 
   friend std::ostream& operator<<(std::ostream& s, Address const& x){
     return s << xju::format::hex(x[0],"")
              << xju::format::hex(x[1],"")
-             << ":"
              << xju::format::hex(x[2],"")
              << xju::format::hex(x[3],"")
              << ":"
              << xju::format::hex(x[4],"")
              << xju::format::hex(x[5],"")
-             << ":"
              << xju::format::hex(x[6],"")
-             << xju::format::hex(x[7],"");
+             << xju::format::hex(x[7],"")
+             << ":"
+             << xju::format::hex(x[8],"")
+             << xju::format::hex(x[9],"")
+             << xju::format::hex(x[10],"")
+             << xju::format::hex(x[11],"")
+             << ":"
+             << xju::format::hex(x[12],"")
+             << xju::format::hex(x[13],"")
+             << xju::format::hex(x[14],"")
+             << xju::format::hex(x[15],"");
   }
   friend bool operator<(Address const& x, Address const& y) noexcept;
   

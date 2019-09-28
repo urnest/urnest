@@ -363,7 +363,7 @@ void test11()
     xju::assert_never_reached();
   }
   catch(xju::Exception const& e){
-    xju::assert_equal(readableRepr(e),"Failed to parse \".\" at line 1 column 3 because\nline 1 column 3: expected '.' but found '6'.");
+    xju::assert_equal(readableRepr(e),"Failed to parse URI-format IPv4 Address at line 1 column 1 because\nfailed to parse \".\" at line 1 column 3 because\nline 1 column 3: expected '.' but found '6'.");
   }
   try
   {
@@ -372,7 +372,7 @@ void test11()
     xju::assert_never_reached();
   }
   catch(xju::Exception const& e){
-    xju::assert_equal(readableRepr(e),"Failed to parse 0..255 at line 1 column 6 because\nfailed to parse one of chars '0'..'9' at line 1 column 6 because\nline 1 column 6: 'a' is not one of chars '0'..'9'.");
+    xju::assert_equal(readableRepr(e),"Failed to parse URI-format IPv4 Address at line 1 column 1 because\nfailed to parse 0..255 at line 1 column 6 because\nfailed to parse one of chars '0'..'9' at line 1 column 6 because\nline 1 column 6: 'a' is not one of chars '0'..'9'.");
   }
   try
   {
@@ -381,7 +381,7 @@ void test11()
     xju::assert_never_reached();
   }
   catch(xju::Exception const& e){
-    xju::assert_equal(readableRepr(e),"Failed to parse \".\" at line 1 column 8 because\nline 1 column 8: end of input.");
+    xju::assert_equal(readableRepr(e),"Failed to parse URI-format IPv4 Address at line 1 column 1 because\nfailed to parse \".\" at line 1 column 8 because\nline 1 column 8: end of input.");
   }
 }
 
@@ -394,6 +394,8 @@ void test12()
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<IpV6AddressItem>(r)),
       s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<IpV6AddressItem>(r).address_,xju::ip::v6::Address({0x12,0x34,0x56,0x78,0x9a,0xbc,0xde,0xf0,0x0f,0xed,0xcb,0xa9,0x87,0x65,0x43,0x21}));
+                                                                                                      
   }
   {
     const std::string s{"::1"};
@@ -401,6 +403,35 @@ void test12()
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<IpV6AddressItem>(r)),
       s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<IpV6AddressItem>(r).address_,xju::ip::v6::Address({0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}));
+                                                                                                      
+  }
+  {
+    const std::string s{"::"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),ipV6Address())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<IpV6AddressItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<IpV6AddressItem>(r).address_,xju::ip::v6::Address({0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}));
+                                                                                                      
+  }
+  {
+    const std::string s{"1234:5678::"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),ipV6Address())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<IpV6AddressItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<IpV6AddressItem>(r).address_,xju::ip::v6::Address({1,2,3,4,5,6,7,8,0,0,0,0,0,0,0,0}));
+                                                                                                      
+  }
+  {
+    const std::string s{"1234:5678::4321"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),ipV6Address())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<IpV6AddressItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<IpV6AddressItem>(r).address_,xju::ip::v6::Address({1,2,3,4,5,6,7,8,0,0,0,0,4,3,2,1}));
+                                                                                                      
   }
   {
     const std::string s{"1::3.5.18.2"};
@@ -408,7 +439,8 @@ void test12()
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<IpV6AddressItem>(r)),
       s);
-  }
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<IpV6AddressItem>(r).address_,xju::ip::v6::Address({1,0,0,0,0,0,0,0,0,0,0,0,3,5,18,2}));
+                                                                               }
   try
   {
     const std::string s{"a::abcde"};
@@ -416,7 +448,7 @@ void test12()
     xju::assert_never_reached();
   }
   catch(xju::Exception const& e){
-    xju::assert_equal(readableRepr(e),"");
+    xju::assert_equal(readableRepr(e),"Failed to parse URI-format IPv6 Address at line 1 column 1 because\nfailed to parse \":\"-separated list of hex-component terminated by URI-format IPv4 Address or !\":\" or one of chars '0'..'9' or one of chars 'a'..'f' or one of chars 'A'..'F' at line 1 column 4 because\nfailed to parse \":\" at line 1 column 8 because\nline 1 column 8: expected ':' but found 'e'.");
   }
   try
   {
@@ -425,7 +457,7 @@ void test12()
     xju::assert_never_reached();
   }
   catch(xju::Exception const& e){
-    xju::assert_equal(readableRepr(e),"");
+    xju::assert_equal(readableRepr(e),"Failed to parse URI-format IPv6 Address at line 1 column 1 because\nfailed to parse \":\"-separated list of hex-component terminated by URI-format IPv4 Address or !\":\" or one of chars '0'..'9' or one of chars 'a'..'f' or one of chars 'A'..'F' at line 1 column 4 because\nfailed to parse hex-component at line 1 column 4 because\nfailed to parse one of chars 'A'..'F' at line 1 column 4 because\nline 1 column 4: ':' is not one of chars 'A'..'F'.");
   }
   try
   {
@@ -434,7 +466,7 @@ void test12()
     xju::assert_never_reached();
   }
   catch(xju::Exception const& e){
-    xju::assert_equal(readableRepr(e),"");
+    xju::assert_equal(readableRepr(e),"Failed to parse URI-format IPv6 Address at line 1 column 1 because\nline 1 column 11: IPv6 address has 5 components not 8.");
   }
 }
 
