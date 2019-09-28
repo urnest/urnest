@@ -470,6 +470,51 @@ void test12()
   }
 }
 
+void test13()
+{
+
+  {
+    const std::string s{"fred.our.com"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),host())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<HostItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::reconstruct(
+                        hcp_ast::findOnlyChildOfType<HostNameItem>(r)),
+                      "fred.our.com");
+  }
+  {
+    const std::string s{"18.18.9.1"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),host())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<HostItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::reconstruct(
+                        hcp_ast::findOnlyChildOfType<IpV4AddressItem>(r)),
+                      "18.18.9.1");
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<IpV4AddressItem>(r).address_,
+                      xju::ip::v4::Address("18.18.9.1"));
+  }
+  {
+    const std::string s{"[1234:5678:9abc:def0:0fed:cba9:8765:4321]"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),host())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<HostItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<IpV6AddressItem>(r).address_,
+                      xju::ip::v6::Address({0x12,0x34,0x56,0x78,0x9a,0xbc,0xde,0xf0,0x0f,0xed,0xcb,0xa9,0x87,0x65,0x43,0x21}));
+  }
+  try
+  {
+    const std::string s{"1234:5678:9abc:def0:0fed:cba9:8765:4321"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),host())};
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal(readableRepr(e),"only parsed until line 1 column 5.");
+  }
+}
+
 }
 }
 
@@ -490,6 +535,7 @@ int main(int argc, char* argv[])
   test10(), ++n;
   test11(), ++n;
   test12(), ++n;
+  test13(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }
