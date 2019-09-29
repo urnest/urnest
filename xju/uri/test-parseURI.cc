@@ -515,6 +515,38 @@ void test13()
   }
 }
 
+void test14()
+{
+
+  {
+    const std::string s{"7786"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),port())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<PortItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<PortItem>(r).port_,
+                      xju::ip::Port(7786));
+  }
+  {
+    const std::string s{"65535"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),port())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<PortItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<PortItem>(r).port_,
+                      xju::ip::Port(65535));
+  }
+  try
+  {
+    const std::string s{"66536"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),port())};
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal(readableRepr(e),"Failed to parse port at line 1 column 1 because\nline 1 column 6: 66536 is not a valid i.e. 0..65535 IP port.");
+  }
+}
+
 }
 }
 
@@ -536,6 +568,7 @@ int main(int argc, char* argv[])
   test11(), ++n;
   test12(), ++n;
   test13(), ++n;
+  test14(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

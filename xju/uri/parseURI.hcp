@@ -550,7 +550,7 @@ public:
       }
       catch(xju::Exception const& e){
         std::shared_ptr<hcp_parser::Exception::Cause> cause{
-          new InvalidPort(readableRepr(e))};
+          new InvalidPort(readableRepr(e,false,true))};
         hcp_parser::ParseResult rr{hcp_parser::Exception(cause,
                                                          (*r).second,
                                                          XJU_TRACED)};
@@ -561,6 +561,8 @@ public:
   }
   hcp_parser::PR p_;
 };
+
+typedef PortParser::Item PortItem;
 
 hcp_parser::PR port() noexcept
 {
@@ -755,7 +757,7 @@ public:
   
   virtual std::string target() const throw() override
   {
-    return "URI";
+    return "RFC 3986 URI";
   }
   virtual hcp_parser::ParseResult parse_(
     hcp_ast::I const at, 
