@@ -46,6 +46,8 @@ public:
   Path path_;
   Query query_;
   Fragment fragment_;
+
+  friend bool operator<(URI const& a, URI const& b) noexcept;
   
   friend std::ostream& operator<<(std::ostream& s,URI const& x)
   {

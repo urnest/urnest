@@ -547,6 +547,94 @@ void test14()
   }
 }
 
+void test15()
+{
+
+  {
+    const std::string s{"fred@host.com:3374"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),authority())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<AuthorityItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::reconstruct(
+                        hcp_ast::findOnlyChildOfType<UserInfoItem>(r)),
+                      "fred");
+    xju::assert_equal(hcp_ast::reconstruct(
+                        hcp_ast::findOnlyChildOfType<HostItem>(r)),
+                      "host.com");
+    xju::assert_equal(hcp_ast::reconstruct(
+                        hcp_ast::findOnlyChildOfType<PortItem>(r)),
+                      "3374");
+  }
+}
+
+void test16()
+{
+
+  {
+    const std::string s{"http://fred@host.com:3374/index.html?name=z#top"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),parseURI())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<URIItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<URIItem>(r).uri_,
+                      URI(
+                        Scheme("http"),
+                        Authority(Host(xju::HostName("host.com")),
+                                  xju::ip::Port(3374),
+                                  UserInfo("fred")),
+                        Path({Segment(""),Segment("index.html")}),
+                        Query("name=z"),
+                        Fragment("top")));
+  }
+  {
+    const std::string s{"http:"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),parseURI())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<URIItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<URIItem>(r).uri_,
+                      URI(
+                        Scheme("http"),
+                        xju::Optional<Authority>(),
+                        Path({}),
+                        Query(""),
+                        Fragment("")));
+  }
+  {
+    const std::string s{"http:b/x.txt"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),parseURI())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<URIItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<URIItem>(r).uri_,
+                      URI(
+                        Scheme("http"),
+                        xju::Optional<Authority>(),
+                        Path({Segment("b"),Segment("x.txt")}),
+                        Query(""),
+                        Fragment("")));
+  }
+  try
+  {
+    const std::string s{"/a"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),parseURI())};
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal(readableRepr(e),"Failed to parse RFC 3986 URI at line 1 column 1 because\nfailed to parse scheme at line 1 column 1 because\nfailed to parse one of chars 'A'..'Z' at line 1 column 1 because\nline 1 column 1: '/' is not one of chars 'A'..'Z'.");
+  }
+  try
+  {
+    const std::string s{"http://fred:jock/a"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),parseURI())};
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal(readableRepr(e),"only parsed until line 1 column 7.");
+  }
+}
+
 }
 }
 
@@ -569,6 +657,8 @@ int main(int argc, char* argv[])
   test12(), ++n;
   test13(), ++n;
   test14(), ++n;
+  test15(), ++n;
+  test16(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

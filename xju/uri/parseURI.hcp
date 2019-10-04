@@ -795,7 +795,8 @@ private:
   hcp_parser::PR p_;
 
 };
-  
+typedef URIParser::Item URIItem;
+
 hcp_parser::PR parseURI() noexcept
 {
   static hcp_parser::PR result{

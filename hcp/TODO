@@ -1,3 +1,5 @@
+- parseString needs context
+
 - rework parseOneOfChars to allow correct error message e.g. see
   test-parseURI test8
     ... accept a string that can have embedded .. watching out
