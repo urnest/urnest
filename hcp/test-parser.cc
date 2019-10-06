@@ -119,20 +119,40 @@ void test3()
 
 void test4()
 {
-  std::string const x("abcd");
-  hcp_parser::I at(x.begin(), x.end());
-  auto const r{
-    parse(at, (hcp_parser::zeroOrMore()*hcp_parser::parseOneOfChars("abc")))};
-  xju::assert_equal(reconstruct(r.first), "abc");
-  xju::assert_equal(r.second.atEnd(), false);
-
-  try {
-    hcp_parser::PR p(hcp_parser::parseOneOfChars("abc"));
-    parse(r.second, p);
-    xju::assert_abort();
+  {
+    std::string const x("abcd");
+    hcp_parser::I at(x.begin(), x.end());
+    auto const r{
+      parse(at, (hcp_parser::zeroOrMore()*hcp_parser::parseOneOfChars("abc")))};
+    xju::assert_equal(reconstruct(r.first), "abc");
+    xju::assert_equal(r.second.atEnd(), false);
+    try {
+      hcp_parser::PR p(hcp_parser::parseOneOfChars("abc"));
+      parse(r.second, p);
+      xju::assert_abort();
+    }
+    catch(xju::Exception const& e) {
+      xju::assert_equal(readableRepr(e), "Failed to parse one of chars \"abc\" at line 1 column 4 because\nline 1 column 4: 'd' is not one of chars \"abc\".");
+    }
   }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e), "Failed to parse one of chars \"abc\" at line 1 column 4 because\nline 1 column 4: 'd' is not one of chars \"abc\".");
+  {
+    std::string const x("abcd");
+    hcp_parser::I at(x.begin(), x.end());
+    auto const r{
+      parse(at, (hcp_parser::zeroOrMore()*hcp_parser::parseOneOfChars(
+                   hcp::Chars("a-c"))))};
+    xju::assert_equal(reconstruct(r.first), "abc");
+    xju::assert_equal(r.second.atEnd(), false);
+
+    
+    try {
+      hcp_parser::PR p(hcp_parser::parseOneOfChars(hcp::Chars("a-c")));
+      parse(r.second, p);
+      xju::assert_abort();
+    }
+    catch(xju::Exception const& e) {
+      xju::assert_equal(readableRepr(e), "Failed to parse one of chars \"a-c\" at line 1 column 4 because\nline 1 column 4: 'd' is not one of chars \"a-c\".");
+    }
   }
 }
 

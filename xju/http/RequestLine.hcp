@@ -10,8 +10,9 @@
 
 
 #include <xju/http/Method.hh>
-#include <xju/http/Target.hh>
+#include <xju/http/RequestTarget.hh>
 #include <xju/http/HTTPVersion.hh>
+#include <iostream>
 
 namespace xju
 {
@@ -20,17 +21,22 @@ namespace http
 
 class RequestLine{
 public:
-  RequestLine(Method m, Target t, HTTPVersion v) noexcept:
+  RequestLine(Method m, RequestTarget t, HTTPVersion v) noexcept:
       m_(std::move(m)),
       t_(std::move(t)),
-      v_(v)
+      v_(std::move(v))
   {
   }
   Method m_;
-  Target t_;
+  RequestTarget t_;
   HTTPVersion v_;
 
   friend bool operator<(RequestLine const& x, RequestLine const& y) noexcept;
+
+  friend std::ostream& operator<(std::ostream& s, RequestLine const& x)
+  {
+    return s << x.m_ << " " << x.t_ << " " << x.v_;
+  }
 };
 
 }

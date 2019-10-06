@@ -30,6 +30,7 @@
 #include "xju/Optional.hh"
 #include <map>
 #include <vector>
+#include <hcp/Chars.hh>
 
 namespace hcp_parser
 {
@@ -357,6 +358,7 @@ PR optional(PR x) throw();
 
 PR parseAnyChar() throw();
 PR parseOneOfChars(std::string const& chars) throw();
+PR parseOneOfChars(hcp::Chars const& chars) throw();
 PR parseAnyCharExcept(std::string const& chars) throw();
 PR charInRange(char const min, char const max) throw();
 

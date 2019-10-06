@@ -75,6 +75,7 @@ tags%all.tree
 
 %local-standalone-tests.tree == <<
 ()+(%test-parser-cmd):exec.output
+()+cmd=(%test-Chars):exec.output
 test%all-tests.tree
 tags%all-tests.tree
 
@@ -85,6 +86,7 @@ hcp-tags == hcp-tags.cc+(%opts):auto.cxx.exe
 hcp-scope-at == hcp-scope-at.cc+(%opts):auto.cxx.exe
 hcp-map-to-source == hcp-map-to-source.cc+(%opts):auto.cxx.exe
 
+%test-Chars==(test-Chars.cc)+(%opts):auto.cxx.exe
 
 %scope-at-tests.tree==<<
 %check-scope-at
@@ -251,6 +253,8 @@ hcp/readFile.cc==./readFile.cc
 hcp/trace.cc==./trace.cc
 hcp/translateException.hh==./translateException.hh
 hcp/translateException.cc==./translateException.cc
+hcp/Chars.hh==./Chars.hh
+hcp/Chars.cc==./Chars.cc
 
 %test-xju-tags-no-warnings==()+cmd=cmp (../xju%tags:warn) '-':stdout
 

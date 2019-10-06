@@ -15,8 +15,8 @@
 #include <vector>
 #include <algorithm>
 #include <sstream>
-#include "xju/format.hh"
-#include "xju/JoiningIterator.hh"
+#include <xju/format.hh>
+#include <xju/JoiningIterator.hh>
 #include <hcp/translateException.hh>
 #include <hcp/trace.hh>
 
@@ -374,6 +374,64 @@ public:
     }
     I const at_;
     std::set<char> const chars_;
+  };
+
+};
+
+class ParseOneOfChars2 : public Parser
+{
+public:
+  hcp::Chars const chars_;
+  
+  ~ParseOneOfChars2() throw()
+  {
+  }
+  
+  explicit ParseOneOfChars2(hcp::Chars const chars) throw():
+      chars_(std::move(chars)){
+  }
+  // Parser::
+  virtual ParseResult parse_(I const at, Options const& o) throw()
+  {
+    if (at.atEnd()) {
+      return ParseResult(EndOfInput(at, XJU_TRACED));
+    }
+    if (!chars_.bits().test(*at)) {
+      return ParseResult(
+        Exception(
+          std::shared_ptr<Exception::Cause const>(new UnexpectedChar(at, chars_)), 
+          at, XJU_TRACED));
+    }
+    return ParseResult(
+      std::make_pair(
+        IRs(1U, IR(new hcp_ast::Item(at, xju::next(at)))), xju::next(at)));
+  }
+  // Parser::
+  virtual std::string target() const throw()
+  {
+    std::ostringstream s;
+    s << "one of chars " << chars_;
+    return s.str();
+  }
+
+  class UnexpectedChar : public Exception::Cause
+  {
+  public:
+    UnexpectedChar(I const at, hcp::Chars const& chars) throw():
+        at_(at),
+        chars_(chars) {
+    }
+    ~UnexpectedChar() throw()
+    {
+    }
+    std::string str() const throw()
+    {
+      std::ostringstream s;
+      s << "'" << (*at_) << "'" << " is not one of chars " << chars_;
+      return s.str();
+    }
+    I const at_;
+    hcp::Chars const& chars_;
   };
 
 };
@@ -1285,6 +1343,11 @@ PR parseAnyChar() throw()
 PR parseOneOfChars(std::string const& chars) throw()
 {
   return PR(new ParseOneOfChars(chars));
+}
+
+PR parseOneOfChars(hcp::Chars const& chars) throw()
+{
+  return PR(new ParseOneOfChars2(chars));
 }
 
 PR parseAnyCharExcept(std::string const& chars) throw()

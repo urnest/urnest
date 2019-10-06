@@ -24,6 +24,20 @@
 snmp/README.txt stuff
 
 xju/http http1.1 - rfc7230, rfc7231
+  - %-encoded handling... should we decode/encode anything? e.g.
+    encode xju::path::AbsPath when formatting xju::http::RequestTarget? In
+    which case should we decode when parsing request line? But if
+    encoding/decoding do we always do utf-8? Or do we leave it entirely to
+    application? I think leave entirely to application.
+    - actually decode/encode is better:
+      - uri level: nil
+      - http level:
+          host reg-name
+	  path segment
+	  not query
+	  user info
+	  not fragment
+    
   - timeout exceptions come from istream exception passed through untouched
   - std::bad_alloc for out-of-memory
   - all other exceptions are "mal-formed", with specific exceptions where

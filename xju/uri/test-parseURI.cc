@@ -55,7 +55,7 @@ void test1() {
     xju::assert_never_reached();
   }
   catch(xju::Exception& e){
-    xju::assert_equal(readableRepr(e),"Failed to parse segment-nz at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~\" or one of chars '0'..'9' or one of chars 'a'..'z' or one of chars 'A'..'Z' or (\"%\" then (one of chars '0'..'9' or one of chars 'a'..'f' or one of chars 'A'..'F') then (one of chars '0'..'9' or one of chars 'a'..'f' or one of chars 'A'..'F')) or one of chars \"!$&'()*+,;=\" or one of chars \":@\" at line 1 column 1 because\nfailed to parse one of chars \":@\" at line 1 column 1 because\nline 1 column 1: end of input.");
+    xju::assert_equal(readableRepr(e),"Failed to parse segment-nz at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~\" or one of chars '0'..'9' or one of chars 'a'..'z' or one of chars 'A'..'Z' or pct-encoded or one of chars \"!$&'()*+,;=\" or one of chars \":@\" at line 1 column 1 because\nfailed to parse one of chars \":@\" at line 1 column 1 because\nline 1 column 1: end of input.");
   }
   try{
     const std::string s{""};
@@ -63,7 +63,7 @@ void test1() {
     xju::assert_never_reached();
   }
   catch(xju::Exception& e){
-    xju::assert_equal(readableRepr(e),"Failed to parse segment-nz-nc at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~\" or one of chars '0'..'9' or one of chars 'a'..'z' or one of chars 'A'..'Z' or (\"%\" then (one of chars '0'..'9' or one of chars 'a'..'f' or one of chars 'A'..'F') then (one of chars '0'..'9' or one of chars 'a'..'f' or one of chars 'A'..'F')) or one of chars \"!$&'()*+,;=\" or \"@\" at line 1 column 1 because\nfailed to parse \"@\" at line 1 column 1 because\nline 1 column 1: end of input.");
+    xju::assert_equal(readableRepr(e),"Failed to parse segment-nz-nc at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~\" or one of chars '0'..'9' or one of chars 'a'..'z' or one of chars 'A'..'Z' or pct-encoded or one of chars \"!$&'()*+,;=\" or \"@\" at line 1 column 1 because\nfailed to parse \"@\" at line 1 column 1 because\nline 1 column 1: end of input.");
   }
   try{
     const std::string s{":z"};
@@ -71,7 +71,7 @@ void test1() {
     xju::assert_never_reached();
   }
   catch(xju::Exception& e){
-    xju::assert_equal(readableRepr(e),"Failed to parse segment-nz-nc at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~\" or one of chars '0'..'9' or one of chars 'a'..'z' or one of chars 'A'..'Z' or (\"%\" then (one of chars '0'..'9' or one of chars 'a'..'f' or one of chars 'A'..'F') then (one of chars '0'..'9' or one of chars 'a'..'f' or one of chars 'A'..'F')) or one of chars \"!$&'()*+,;=\" or \"@\" at line 1 column 1 because\nfailed to parse \"@\" at line 1 column 1 because\nline 1 column 1: expected '@' but found ':'.");
+    xju::assert_equal(readableRepr(e),"Failed to parse segment-nz-nc at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~\" or one of chars '0'..'9' or one of chars 'a'..'z' or one of chars 'A'..'Z' or pct-encoded or one of chars \"!$&'()*+,;=\" or \"@\" at line 1 column 1 because\nfailed to parse \"@\" at line 1 column 1 because\nline 1 column 1: expected '@' but found ':'.");
   }
   try{
     const std::string s{"a%2p"};
@@ -192,7 +192,7 @@ void test4() {
     xju::assert_never_reached();
   }
   catch(xju::Exception& e){
-    xju::assert_equal(readableRepr(e),"Failed to parse path-noscheme at line 1 column 1 because\nfailed to parse segment-nz-nc at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~\" or one of chars '0'..'9' or one of chars 'a'..'z' or one of chars 'A'..'Z' or (\"%\" then (one of chars '0'..'9' or one of chars 'a'..'f' or one of chars 'A'..'F') then (one of chars '0'..'9' or one of chars 'a'..'f' or one of chars 'A'..'F')) or one of chars \"!$&'()*+,;=\" or \"@\" at line 1 column 1 because\nfailed to parse \"@\" at line 1 column 1 because\nline 1 column 1: end of input.");
+    xju::assert_equal(readableRepr(e),"Failed to parse path-noscheme at line 1 column 1 because\nfailed to parse segment-nz-nc at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~\" or one of chars '0'..'9' or one of chars 'a'..'z' or one of chars 'A'..'Z' or pct-encoded or one of chars \"!$&'()*+,;=\" or \"@\" at line 1 column 1 because\nfailed to parse \"@\" at line 1 column 1 because\nline 1 column 1: end of input.");
   }
 
 }
@@ -234,7 +234,7 @@ void test5() {
     xju::assert_never_reached();
   }
   catch(xju::Exception& e){
-    xju::assert_equal(readableRepr(e),"Failed to parse path-rootless at line 1 column 1 because\nfailed to parse segment-nz at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~\" or one of chars '0'..'9' or one of chars 'a'..'z' or one of chars 'A'..'Z' or (\"%\" then (one of chars '0'..'9' or one of chars 'a'..'f' or one of chars 'A'..'F') then (one of chars '0'..'9' or one of chars 'a'..'f' or one of chars 'A'..'F')) or one of chars \"!$&'()*+,;=\" or one of chars \":@\" at line 1 column 1 because\nfailed to parse one of chars \":@\" at line 1 column 1 because\nline 1 column 1: end of input.");
+    xju::assert_equal(readableRepr(e),"Failed to parse path-rootless at line 1 column 1 because\nfailed to parse segment-nz at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~\" or one of chars '0'..'9' or one of chars 'a'..'z' or one of chars 'A'..'Z' or pct-encoded or one of chars \"!$&'()*+,;=\" or one of chars \":@\" at line 1 column 1 because\nfailed to parse one of chars \":@\" at line 1 column 1 because\nline 1 column 1: end of input.");
   }
 
 }
@@ -256,7 +256,7 @@ void test6() {
     xju::assert_never_reached();
   }
   catch(xju::Exception& e){
-    xju::assert_equal(readableRepr(e),"Failed to parse path-empty at line 1 column 1 because\nfailed to parse !one of chars \"-._~\" or one of chars '0'..'9' or one of chars 'a'..'z' or one of chars 'A'..'Z' or (\"%\" then (one of chars '0'..'9' or one of chars 'a'..'f' or one of chars 'A'..'F') then (one of chars '0'..'9' or one of chars 'a'..'f' or one of chars 'A'..'F')) or one of chars \"!$&'()*+,;=\" or one of chars \":@\" at line 1 column 1 because\nline 1 column 1: expected parse failure.");
+    xju::assert_equal(readableRepr(e),"Failed to parse path-empty at line 1 column 1 because\nfailed to parse !one of chars \"-._~\" or one of chars '0'..'9' or one of chars 'a'..'z' or one of chars 'A'..'Z' or pct-encoded or one of chars \"!$&'()*+,;=\" or one of chars \":@\" at line 1 column 1 because\nline 1 column 1: expected parse failure.");
   }
 
 }
@@ -484,6 +484,16 @@ void test13()
                       "fred.our.com");
   }
   {
+    const std::string s{"fr%20ed.our.com"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),host())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<HostItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::reconstruct(
+                        hcp_ast::findOnlyChildOfType<HostNameItem>(r)),
+                      "fr%20ed.our.com");
+  }
+  {
     const std::string s{"18.18.9.1"};
     auto const r{hcp_parser::parseString(s.begin(),s.end(),host())};
     xju::assert_equal(
@@ -588,6 +598,22 @@ void test16()
                         Fragment("top")));
   }
   {
+    const std::string s{"http://fred@ho%20st.com:3374/index.html?name=z#top"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),parseURI())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<URIItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<URIItem>(r).uri_,
+                      URI(
+                        Scheme("http"),
+                        Authority(Host(xju::HostName("ho st.com")),
+                                  xju::ip::Port(3374),
+                                  UserInfo("fred")),
+                        Path({Segment(""),Segment("index.html")}),
+                        Query("name=z"),
+                        Fragment("top")));
+  }
+  {
     const std::string s{"http:"};
     auto const r{hcp_parser::parseString(s.begin(),s.end(),parseURI())};
     xju::assert_equal(
@@ -637,6 +663,7 @@ void test16()
 
 }
 }
+
 
 using namespace xju::uri;
 

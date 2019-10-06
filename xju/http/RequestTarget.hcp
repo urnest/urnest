@@ -17,30 +17,28 @@ namespace xju
 namespace http
 {
 
-class RequestTarget {
+class Target{
 public:
   // origin-form
   //pre: path is pre-encoded e.g. " " encoded to %20
-  RequestTarget(xju::path::AbsPath const& path) noexcept;
+  Target(xju::path::AbsPath const& path) noexcept;
 
   // absolute-form
   //pre: authority and path are pre-encoded e.g. " " encoded to %20
-  RequestTarget(xju::uri::Authority const& authority,
+  Target(xju::uri::Authority const& authority,
          xju::path::AbsPath const& path) noexcept;
 
   // authority-form
   //pre: authority is pre-encoded e.g. " " encoded to %20
-  RequestTarget(xju::uri::Authority const& authority) noexcept;
+  Target(xju::uri::Authority const& authority) noexcept;
 
   // asterisk-form
-  RequestTarget() noexcept; // "*"
+  Target() noexcept; // "*"
 
   xju::Optional<xju::uri::Authority> authority_;
   xju::Optional<xju::path::AbsPath> path_;
 
-  friend bool operator<(RequestTarget const& x, RequestTarget const& b) noexcept;
-  
-  friend std::ostream& operator<(std::ostream& s, RequestTarget const& x)
+  friend std::ostream& operator<(std::ostream& s, Target const& x)
   {
     if (authority_.valid() && path_.valid()){
       return s << "http://" << authority_ << xju::path::str(path_);

@@ -49,7 +49,7 @@ public:
       return s << x.ipV4Address_.value();
     }
     if (x.hostName_.valid()){
-      return s << x.hostName_.value();
+      return s << pctEncode(x.hostName_.value(),unreserved_+subdelims_);
     }
     return s;
   }
