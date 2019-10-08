@@ -38,6 +38,13 @@ Chars::Chars(std::string const& pattern) noexcept:
   }
 }
 
+Chars& Chars::operator+=(Chars const& b) noexcept
+{
+  pattern_+=b.pattern_;
+  bits_|=b.bits_;
+  std::copy(b.chars_.begin(),b.chars_.end(),std::inserter(chars_,chars_.begin()));
+}
+
 std::ostream& operator<<(std::ostream& s, Chars const& x)
 {
   return s << xju::format::quote(xju::format::cEscapeString(x.pattern_));

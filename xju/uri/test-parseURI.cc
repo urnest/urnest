@@ -55,7 +55,7 @@ void test1() {
     xju::assert_never_reached();
   }
   catch(xju::Exception& e){
-    xju::assert_equal(readableRepr(e),"Failed to parse segment-nz at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~\" or one of chars '0'..'9' or one of chars 'a'..'z' or one of chars 'A'..'Z' or pct-encoded or one of chars \"!$&'()*+,;=\" or one of chars \":@\" at line 1 column 1 because\nfailed to parse one of chars \":@\" at line 1 column 1 because\nline 1 column 1: end of input.");
+    xju::assert_equal(readableRepr(e),"Failed to parse segment-nz at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~0-9a-zA-Z!$&'()*+,;=:@\" or pct-encoded at line 1 column 1 because\nfailed to parse pct-encoded at line 1 column 1 because\nfailed to parse \"%\" at line 1 column 1 because\nline 1 column 1: end of input.");
   }
   try{
     const std::string s{""};
@@ -63,7 +63,7 @@ void test1() {
     xju::assert_never_reached();
   }
   catch(xju::Exception& e){
-    xju::assert_equal(readableRepr(e),"Failed to parse segment-nz-nc at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~\" or one of chars '0'..'9' or one of chars 'a'..'z' or one of chars 'A'..'Z' or pct-encoded or one of chars \"!$&'()*+,;=\" or \"@\" at line 1 column 1 because\nfailed to parse \"@\" at line 1 column 1 because\nline 1 column 1: end of input.");
+    xju::assert_equal(readableRepr(e),"Failed to parse segment-nz-nc at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~0-9a-zA-Z\" or pct-encoded or one of chars \"!$&'()*+,;=\" or \"@\" at line 1 column 1 because\nfailed to parse \"@\" at line 1 column 1 because\nline 1 column 1: end of input.");
   }
   try{
     const std::string s{":z"};
@@ -71,7 +71,7 @@ void test1() {
     xju::assert_never_reached();
   }
   catch(xju::Exception& e){
-    xju::assert_equal(readableRepr(e),"Failed to parse segment-nz-nc at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~\" or one of chars '0'..'9' or one of chars 'a'..'z' or one of chars 'A'..'Z' or pct-encoded or one of chars \"!$&'()*+,;=\" or \"@\" at line 1 column 1 because\nfailed to parse \"@\" at line 1 column 1 because\nline 1 column 1: expected '@' but found ':'.");
+    xju::assert_equal(readableRepr(e),"Failed to parse segment-nz-nc at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~0-9a-zA-Z\" or pct-encoded or one of chars \"!$&'()*+,;=\" or \"@\" at line 1 column 1 because\nfailed to parse \"@\" at line 1 column 1 because\nline 1 column 1: expected '@' but found ':'.");
   }
   try{
     const std::string s{"a%2p"};
@@ -192,7 +192,7 @@ void test4() {
     xju::assert_never_reached();
   }
   catch(xju::Exception& e){
-    xju::assert_equal(readableRepr(e),"Failed to parse path-noscheme at line 1 column 1 because\nfailed to parse segment-nz-nc at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~\" or one of chars '0'..'9' or one of chars 'a'..'z' or one of chars 'A'..'Z' or pct-encoded or one of chars \"!$&'()*+,;=\" or \"@\" at line 1 column 1 because\nfailed to parse \"@\" at line 1 column 1 because\nline 1 column 1: end of input.");
+    xju::assert_equal(readableRepr(e),"Failed to parse path-noscheme at line 1 column 1 because\nfailed to parse segment-nz-nc at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~0-9a-zA-Z\" or pct-encoded or one of chars \"!$&'()*+,;=\" or \"@\" at line 1 column 1 because\nfailed to parse \"@\" at line 1 column 1 because\nline 1 column 1: end of input.");
   }
 
 }
@@ -234,7 +234,7 @@ void test5() {
     xju::assert_never_reached();
   }
   catch(xju::Exception& e){
-    xju::assert_equal(readableRepr(e),"Failed to parse path-rootless at line 1 column 1 because\nfailed to parse segment-nz at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~\" or one of chars '0'..'9' or one of chars 'a'..'z' or one of chars 'A'..'Z' or pct-encoded or one of chars \"!$&'()*+,;=\" or one of chars \":@\" at line 1 column 1 because\nfailed to parse one of chars \":@\" at line 1 column 1 because\nline 1 column 1: end of input.");
+    xju::assert_equal(readableRepr(e),"Failed to parse path-rootless at line 1 column 1 because\nfailed to parse segment-nz at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"-._~0-9a-zA-Z!$&'()*+,;=:@\" or pct-encoded at line 1 column 1 because\nfailed to parse pct-encoded at line 1 column 1 because\nfailed to parse \"%\" at line 1 column 1 because\nline 1 column 1: end of input.");
   }
 
 }
@@ -256,7 +256,7 @@ void test6() {
     xju::assert_never_reached();
   }
   catch(xju::Exception& e){
-    xju::assert_equal(readableRepr(e),"Failed to parse path-empty at line 1 column 1 because\nfailed to parse !one of chars \"-._~\" or one of chars '0'..'9' or one of chars 'a'..'z' or one of chars 'A'..'Z' or pct-encoded or one of chars \"!$&'()*+,;=\" or one of chars \":@\" at line 1 column 1 because\nline 1 column 1: expected parse failure.");
+    xju::assert_equal(readableRepr(e),"Failed to parse path-empty at line 1 column 1 because\nfailed to parse !one of chars \"-._~0-9a-zA-Z!$&'()*+,;=:@\" or pct-encoded at line 1 column 1 because\nline 1 column 1: expected parse failure.");
   }
 
 }

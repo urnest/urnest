@@ -30,6 +30,11 @@ public:
   std::bitset<256> const& bits() const noexcept { return bits_; }
   std::set<char> const& chars() const noexcept { return chars_; }
 
+  // note that result.pattern_ might not accurately describe
+  // the resulting character set, e.g. Chars("a-")+Chars("b")
+  // will have patter()=="a-b" but cover only the three characters
+  // 'a', '-' and 'b'
+  Chars& operator+=(Chars const& b) noexcept;
 private:
   std::string pattern_;
   std::bitset<256> bits_;
@@ -40,6 +45,12 @@ private:
   }
   friend std::ostream& operator<<(std::ostream& s, Chars const& x);
 
+  friend Chars operator+(Chars const& a, Chars const& b) noexcept
+  {
+    Chars result(a);
+    result+=b;
+    return result;
+  }
 };
 
 }

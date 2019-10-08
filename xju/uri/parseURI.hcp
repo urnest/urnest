@@ -23,6 +23,7 @@
 #include <xju/uri/URI.hh>
 #include <xju/stringToUInt.hh> //impl
 #include <xju/next.hh> //impl
+#include <xju/uri/Subdelims.hh> //impl
 
 namespace xju
 {
@@ -41,9 +42,7 @@ using hcp_parser::zeroOrMore;
 hcp_parser::PR unreserved() noexcept
 {
   static hcp_parser::PR result{
-    parseOneOfChars("-._~")|
-    digit()|
-    alpha()};
+    parseOneOfChars(Unreserved())};
   return result;
 }
 class PctEncodedTag{};
@@ -82,16 +81,14 @@ std::string decodePctEncoded(hcp_ast::Item const& x) noexcept
 hcp_parser::PR subDelim() noexcept
 {
   static hcp_parser::PR result{
-    parseOneOfChars("!$&'()*+,;=")};
+    parseOneOfChars(Subdelims())};
   return result;
 }
 hcp_parser::PR pchar() noexcept
 {
   static hcp_parser::PR result{
-      unreserved()|
-      pctEncoded()|
-      subDelim()|
-      parseOneOfChars(":@")};
+    parseOneOfChars(Unreserved()+Subdelims()+hcp::Chars(":@"))|
+    pctEncoded()};
   return result;
 }
 

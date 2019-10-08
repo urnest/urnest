@@ -1,11 +1,6 @@
 - parseString needs context
 
-- rework parseOneOfChars to allow correct error message e.g. see
-  test-parseURI test8
-    ... accept a string that can have embedded .. watching out
-    for ...x (pre: ... not in string since can always use ./..x)
-    so "a..cZ.1-3" is short for one of "abcZ.123"
-    
+x rework parseOneOfChars to allow correct error message
 x support [[noreturn]] so can add to xju::assert_never_reached()
 
 - raw string literal

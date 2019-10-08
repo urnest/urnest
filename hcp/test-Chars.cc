@@ -43,6 +43,21 @@ void test1() {
     xju::assert_equal(xju::format::str(chars),"\"a3/\"");
   }
   {
+    Chars const chars(Chars("a")+Chars("3/"));
+    xju::assert_equal(chars.pattern(),"a3/");
+    for(int c=0; c<256; ++c){
+      if (c=='a' || c=='3' || c=='/'){
+        xju::assert_not_equal(chars.chars().find(c),chars.chars().end());
+        xju::assert_equal(chars.bits().test(c),true);
+      }
+      else{
+        xju::assert_equal(chars.chars().find(c),chars.chars().end());
+        xju::assert_equal(chars.bits().test(c),false);
+      }
+    }
+    xju::assert_equal(xju::format::str(chars),"\"a3/\"");
+  }
+  {
     Chars const chars("a-f");
     xju::assert_equal(chars.pattern(),"a-f");
     for(int c=0; c<256; ++c){

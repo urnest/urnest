@@ -14,6 +14,9 @@
 #include <xju/HostName.hh>
 #include <iostream>
 #include <xju/Optional.hh>
+#include <xju/uri/Unreserved.hh>
+#include <xju/uri/Subdelims.hh>
+#include <xju/uri/pctEncode.hh>
 
 
 namespace xju
@@ -49,7 +52,8 @@ public:
       return s << x.ipV4Address_.value();
     }
     if (x.hostName_.valid()){
-      return s << pctEncode(x.hostName_.value(),unreserved_+subdelims_);
+      return s << pctEncode(x.hostName_.value().value(),
+                            Unreserved()+Subdelims());
     }
     return s;
   }
