@@ -1,0 +1,61 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <string>
+#include <hcp/Chars.hh>
+#include <sstream> //impl
+#include <xju/stringToUInt.hh> //impl
+#include <xju/next.hh> //impl
+
+namespace xju
+{
+namespace uri
+{
+
+// decode string x, replacing percent-encoded chars with their actual char
+// unless the char is in except (in which case it remains percent-encoded
+// in the output)
+// e.g. pctDecode("a%20 b",Chars("ab "))=="a%20 b"
+//      pctDecode("a%20 b",Chars("ab"))=="a  b"
+std::string pctDecode(std::string const& x, hcp::Chars const& except) noexcept
+{
+  static hcp::Chars const hexDigit("a-fA-F0-9");
+  std::ostringstream s;
+  auto i(x.begin());
+  while(i!=x.end()){
+    if((*i)=='%' &&
+       (xju::next(i)!=x.end() && hexDigit.bits().test((*xju::next(i)))) &&
+       (xju::next(xju::next(i))!=x.end() &&
+        hexDigit.bits().test((*xju::next(xju::next(i)))))){
+      auto c(xju::stringToUInt(std::string(i+1,i+3),16));
+      if (!except.bits().test(c)){
+        s.put(char(c));
+        i+=3;
+      }
+      else{
+        s.put(*i++);
+        s.put(*i++);
+        s.put(*i++);
+      }
+    }
+    else{
+      s.put(*i++);
+    }
+  }
+  return s.str();
+}
+std::string pctDecode(hcp::Chars const& except,std::string const& x) noexcept
+{
+  return pctDecode(x,except);
+}
+
+}
+}

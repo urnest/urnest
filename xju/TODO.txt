@@ -30,14 +30,25 @@ xju/http http1.1 - rfc7230, rfc7231
     encoding/decoding do we always do utf-8? Or do we leave it entirely to
     application? I think leave entirely to application.
     - actually decode/encode is better:
-      - uri level: nil
-      - http level:
-          host reg-name
-	  path segment
-	  not query
-	  user info
-	  not fragment
-    
+      - uri level: all, but only encode disallowed chars for each field type
+      - does that work for http queries?
+        suppose want to query name=Fred&Jock#ette and age=43
+	... obviously the application putting together the xju::uri::Query
+	will have to encode the & to produce Query("name=Fred%38Jock&age=43")
+	which we put into the uri as name=Fred%38Jock%35ette&age=43
+	we'd better not decode %38 or the app will get the wrong string:
+	  name=Fred&Jock#ette&age=43
+        ... so we must only decode the chars we encoded.
+	sal.getFromServer(sal.encodeURL({'name':'Fred&Jock?or#','age':7})
+	sends: "GET /fred?name=Fred%26Jock%3For%23&age=17"
+	sal.getFromServer(sal.encodeURL('fred',{' name%':'Fred&Jock?or#',age:'17'}));
+	... sends:
+	GET /fred?%20name%25=Fred%26Jock%3For%23&age=17&_=1570704581251 HTTP/1.1
+        ... so I think encoding/decoding at URI level will work as long as
+	we only encode/decode invalid chars at that level; note that the
+	client pre-encoding e.g. " " it will be decoded before they get it
+	back (but & and = will not)
+	
   - timeout exceptions come from istream exception passed through untouched
   - std::bad_alloc for out-of-memory
   - all other exceptions are "mal-formed", with specific exceptions where

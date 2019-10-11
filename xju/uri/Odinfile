@@ -6,6 +6,7 @@
 %tests.tree==<<
 ()+cmd=(test-parseURI.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-pctEncode.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-pctDecode.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 %hcp-gen==.:dir.hcp.list+G+hpath='xju/uri':hcp-split-virdir-specs:cat:vir_dir
 

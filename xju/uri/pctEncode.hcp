@@ -32,6 +32,10 @@ std::string pctEncode(std::string const& x, hcp::Chars const& except) noexcept
   }
   return s.str();
 }
+std::string pctEncode(hcp::Chars const& except,std::string const& x) noexcept
+{
+  return pctEncode(x,except);
+}
 
 }
 }

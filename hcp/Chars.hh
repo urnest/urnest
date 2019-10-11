@@ -24,7 +24,7 @@ public:
   // a-f in pattern means abcdef
   // otherwise pattern is individual chars
   // (note f-a means the three chars -fa not fedcba)
-  Chars(std::string const& pattern) noexcept;
+  explicit Chars(std::string const& pattern) noexcept;
   
   std::string const& pattern() const noexcept { return pattern_; }
   std::bitset<256> const& bits() const noexcept { return bits_; }
