@@ -11,6 +11,11 @@
 
 #include <xju/Tagged.hh>
 #include <string>
+#include <iosfwd>
+#include <iostream> //impl
+#include <hcp/Chars.hh> //impl
+#include <xju/uri/pctEncode.hh> //impl
+#include <xju/uri/userInfoChars.hh> //impl
 
 namespace xju
 {
@@ -18,8 +23,13 @@ namespace uri
 {
 
 class UserInfoTag{};
-// e.g. Fred%20Stone:home
+// e.g. "Fred Stone:home"
 typedef xju::Tagged<std::string,UserInfoTag> UserInfo;
+
+std::ostream& operator<<(std::ostream& s, UserInfo const& x)
+{
+  return s << pctEncode(userInfoChars(),x.value());
+}
 
 }
 }

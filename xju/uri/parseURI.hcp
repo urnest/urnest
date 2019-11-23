@@ -24,6 +24,10 @@
 #include <xju/stringToUInt.hh> //impl
 #include <xju/next.hh> //impl
 #include <xju/uri/Subdelims.hh> //impl
+#include <xju/uri/pctDecode.hh> //impl
+#include <xju/uri/queryChars.hh> //impl
+#include <xju/uri/segmentChars.hh> //impl
+#include <xju/uri/userInfoChars.hh> //impl
 
 namespace xju
 {
@@ -57,25 +61,6 @@ hcp_parser::PR pctEncoded() noexcept
       hexDigit()+
       hexDigit())};
   return result;
-}
-
-std::string decodePctEncoded(hcp_ast::Item const& x) noexcept
-{
-  if (x.items().size()){
-    std::ostringstream result;
-    for(auto i: x.items()){
-      if (i->isA<PctEncoded>()){
-        std::string y(xju::next(i->begin().x_),i->end().x_);
-        uint8_t c(xju::stringToUInt(y,16));
-        result << (char)c;
-      }
-      else{
-        result << (*(i->begin().x_));
-      }
-    }
-    return result.str();
-  }
-  return hcp_ast::reconstruct(x);
 }
 
 hcp_parser::PR subDelim() noexcept
@@ -639,7 +624,7 @@ Host getHost(HostItem const& x) noexcept
   
   auto const y{
     hcp_ast::findOnlyChildOfType<hcp_ast::TaggedItem<xju::HostName> >(x)};
-  return Host(xju::HostName(decodePctEncoded(y)));
+  return Host(xju::HostName(pctDecode(regNameChars(),y)));
 }
 xju::Optional<xju::ip::Port> getPort(
   std::vector<std::reference_wrapper<PortParser::Item const>> const& x) noexcept
@@ -655,7 +640,8 @@ xju::Optional<UserInfo> getUserInfo(
 {
   xju::Optional<UserInfo> result;
   if (x.size()){
-    result=UserInfo(hcp_ast::reconstruct(x.front().get()));
+    result=UserInfo(pctDecode(userInfoChars(),
+                              hcp_ast::reconstruct(x.front().get())));
   }
   return result;
 }
@@ -673,7 +659,9 @@ Path getPath(hcp_ast::IRs const& all) noexcept
         std::transform(segments.begin(),segments.end(),
                        std::back_inserter(result),
                        [](decltype(*segments.begin()) const& x){
-                         return Segment(hcp_ast::reconstruct(x.get()));
+                         return Segment(
+                           pctDecode(segmentChars(),
+                                     hcp_ast::reconstruct(x.get())));
                        });
       }
       return result;
@@ -689,7 +677,9 @@ Path getPath(hcp_ast::IRs const& all) noexcept
       std::transform(segments.begin(),segments.end(),
                      std::back_inserter(result),
                      [](decltype(*segments.begin()) const& x){
-                       return Segment(hcp_ast::reconstruct(x.get()));
+                       return Segment(
+                         pctDecode(segmentChars(),
+                                   hcp_ast::reconstruct(x.get()));
                      });
       return result;
     }
@@ -703,7 +693,9 @@ Path getPath(hcp_ast::IRs const& all) noexcept
       std::transform(segments.begin(),segments.end(),
                      std::back_inserter(result),
                      [](decltype(*segments.begin()) const& x){
-                       return Segment(hcp_ast::reconstruct(x.get()));
+                       return Segment(
+                         pctDecode(segmentChars(),
+                                   hcp_ast::reconstruct(x.get()));
                      });
       return result;
     }
@@ -715,7 +707,8 @@ Query getQuery(hcp_ast::IRs const& all) noexcept
   auto const x{hcp_ast::findChildrenOfType<QueryItem>(
       hcp_ast::Item(all),1)};
   if (x.size()){
-    return Query(hcp_ast::reconstruct(x.front().get()));
+    return Query(pctDecode(queryChars(),
+                           hcp_ast::reconstruct(x.front().get())));
   }
   return Query("");
 }
@@ -724,7 +717,9 @@ Fragment getFragment(hcp_ast::IRs const& all) noexcept
   auto const x{hcp_ast::findChildrenOfType<FragmentItem>(
       hcp_ast::Item(all),1)};
   if (x.size()){
-    return Fragment(hcp_ast::reconstruct(x.front().get()));
+    return Fragment(pctDecode(
+                      fragmentChars(),
+                      hcp_ast::reconstruct(x.front().get())));
   }
   return Fragment("");
 }

@@ -11,6 +11,8 @@
 
 #include <string>
 #include <xju/Tagged.hh>
+#include <xju/uri/segmentChars.hh> //impl
+#include <xju/uri/pctEncode.hh> //impl
 
 namespace xju
 {
@@ -19,6 +21,11 @@ namespace uri
 
 class SegmentTag{};
 typedef xju::Tagged<std::string,SegmentTag> Segment;
+
+std::ostream& operator<<(std::ostream& s, Segment const& x)
+{
+  return s << pctEncode(segmentChars(),x.value());
+}
 
 }
 }

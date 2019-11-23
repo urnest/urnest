@@ -129,7 +129,7 @@
   // note special chars in values are escaped
   wal.encodeURL=function(path,paramsDict){
     var params=wal.map(paramsDict,function(n,v){
-      return n+'='+encodeURIComponent(v);
+      return encodeURIComponent(n)+'='+encodeURIComponent(v);
     });
     if (params.length){
       return path+'?'+wal.join('&',params);
@@ -344,6 +344,13 @@
     wal.each(x, function(k, v){
       result.push(f(k, v));
     });
+    return result;
+  };
+  wal.matchWholeString=function(s,regularExpression){
+    var result=s.match(regularExpression);
+    if (result && !result[0].length==s.length){
+      return 'a'.match('b');
+    }
     return result;
   };
   wal.max=function(a,b){

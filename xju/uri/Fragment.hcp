@@ -9,6 +9,10 @@
 //
 #include <xju/Tagged.hh>
 #include <string>
+#include <iosfwd>
+#include <iostream> //impl
+#include <xju/uri/fragmentChars.hh> //impl
+#include <xju/uri/pctEncode.hh> //impl
 
 namespace xju
 {
@@ -17,6 +21,11 @@ namespace uri
 
 class FragmentTag{};
 typedef xju::Tagged<std::string,FragmentTag> Fragment;
+
+std::ostream& operator<<(std::ostream& s, Fragment const& x)
+{
+  return s << pctEncode(fragmentChars(),x.value());
+}
 
 }
 }

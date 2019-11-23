@@ -167,7 +167,7 @@ def makeParams(remote_addr,method,headers,params,url,cookies,f):
     pass
 
 def promoteContent(content):
-    '''promote content object of type {contentType} to a valid Response'''
+    '''promote content object to a valid Response'''
     contentType=type(content)
     try:
         if isinstance(content,pq.Selection):
@@ -269,7 +269,13 @@ class Dispatcher:
                 headers.append( ('Location',result.location) )
                 start_response('301 Moved Permanently',headers)
                 return [''.encode('utf-8')]
-            headers.extend(result.headers)
+            headers.extend([(n,v) for n,v in result.headers
+                            if not n in ('Content-Type','Content-Encoding')])
+            c=dict([ (n,v) for n,v in result.headers
+                     if n in ('Content-Type','Content-Encoding')])
+            if result.contentType: c['Content-Type']=result.contentType
+            if result.contentEncoding: c['Content-Encoding']=result.contentEncoding
+            headers.extend(c.items())
             start_response('200 OK',headers)
             return [result.content]
         except:
@@ -295,22 +301,22 @@ class Dispatcher:
     def notFound(self,path,start_response):
         self.log('INFO: {path} not found'.format(**vars()))
         start_response('404 Not Found', 
-                       [('Content-Type', 'text/plain')])
+                       [('Content-Type', 'text/plain; charset=UTF-8')])
         return ['Not Found'.encode('utf-8')]
     
     def forbidden(self,start_response):
         start_response('403 Forbidden', 
-                       [('Content-Type', 'text/plain')])
+                       [('Content-Type', 'text/plain; charset=UTF-8')])
         return ['Forbidden'.encode('utf-8')]
     
     def serverError(self,start_response):
         start_response('500 Internal Server Error', 
-                       [('Content-Type', 'text/plain')])
+                       [('Content-Type', 'text/plain; charset=UTF-8')])
         return ['Server Error'.encode('utf-8')]
     
     def clientError(self,start_response,e):
         start_response('400 Bad Request', 
-                       [('Content-Type', 'text/plain')])
+                       [('Content-Type', 'text/plain; charset=UTF-8')])
         return [Exception.__str__(e).encode('utf-8')]
     
     pass

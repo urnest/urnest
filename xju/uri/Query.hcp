@@ -11,6 +11,10 @@
 
 #include <xju/Tagged.hh>
 #include <string>
+#include <iosfwd>
+#include <iostream> //impl
+#include <xju/uri/queryChars.hh> //impl
+#include <xju/uri/pctEncode.hh> //impl
 namespace xju
 {
 namespace uri
@@ -18,6 +22,11 @@ namespace uri
 
 class QueryTag{};
 typedef xju::Tagged<std::string,QueryTag> Query;
+
+std::ostream& operator<<(std::ostream& s, Query const& x)
+{
+  return s << pctEncode(queryChars(),x.value());
+}
 
 }
 }

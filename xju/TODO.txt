@@ -46,7 +46,7 @@ xju/http http1.1 - rfc7230, rfc7231
 	GET /fred?%20name%25=Fred%26Jock%3For%23&age=17&_=1570704581251 HTTP/1.1
         ... so I think encoding/decoding at URI level will work as long as
 	we only encode/decode invalid chars at that level; note that the
-	client pre-encoding e.g. " " it will be decoded before they get it
+	client pre-encoded e.g. " " it will be decoded before they get it
 	back (but & and = will not)
 	
   - timeout exceptions come from istream exception passed through untouched
