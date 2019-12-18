@@ -59,5 +59,3 @@ RequestLine parseRequestLine(std::istream& s, size_t max) throw(
 
 }
 }
-
-

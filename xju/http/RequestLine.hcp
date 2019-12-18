@@ -33,7 +33,7 @@ public:
 
   friend bool operator<(RequestLine const& x, RequestLine const& y) noexcept;
 
-  friend std::ostream& operator<(std::ostream& s, RequestLine const& x)
+  friend std::ostream& operator<<(std::ostream& s, RequestLine const& x)
   {
     return s << x.m_ << " " << x.t_ << " " << x.v_;
   }

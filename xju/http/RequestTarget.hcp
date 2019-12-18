@@ -11,43 +11,63 @@
 
 #include <xju/Tagged.hh>
 #include <string>
+#include <xju/path.hh>
+#include <xju/Optional.hh>
+#include <xju/uri/Path.hh> //impl
+#include <xju/format.hh> //impl
 
 namespace xju
 {
 namespace http
 {
 
-class Target{
+namespace
+{
+std::string encode(xju::path::AbsFile const& x) noexcept
+{
+  // convert x to xju::uri::Path so it gets correctly encoded
+  xju::uri::Path p({xju::uri::Segment()}); // means absolute see xju::uri::Path
+  std::transform(x.first.begin(),x.first.end(),
+                 std::back_inserter(p),
+                 [](xju::path::DirName const& y){
+                   return xju::uri::Segment(y.value());
+                 });
+  p.push-back(xju::uri::Segment(x.second.value()));
+  return xju::format::join(p.begin(),p.end(),std::string("/"));
+}
+
+}
+
+class RequestTarget{
 public:
   // origin-form
-  //pre: path is pre-encoded e.g. " " encoded to %20
-  Target(xju::path::AbsPath const& path) noexcept;
+  RequestTarget(xju::path::AbsFile const& path) noexcept;
 
   // absolute-form
-  //pre: authority and path are pre-encoded e.g. " " encoded to %20
-  Target(xju::uri::Authority const& authority,
-         xju::path::AbsPath const& path) noexcept;
+  RequestTarget(xju::uri::Authority const& authority,
+                xju::path::AbsFile const& path) noexcept;
 
   // authority-form
-  //pre: authority is pre-encoded e.g. " " encoded to %20
-  Target(xju::uri::Authority const& authority) noexcept;
+  RequestTarget(xju::uri::Authority const& authority) noexcept;
 
   // asterisk-form
-  Target() noexcept; // "*"
+  RequestTarget() noexcept; // "*"
 
   xju::Optional<xju::uri::Authority> authority_;
-  xju::Optional<xju::path::AbsPath> path_;
+  xju::Optional<xju::path::AbsFile> path_;
 
-  friend std::ostream& operator<(std::ostream& s, Target const& x)
+  friend bool operator<(RequestTarget const& a, RequestTarget const& b) noexcept;
+  
+  friend std::ostream& operator<<(std::ostream& s, RequestTarget const& x)
   {
     if (authority_.valid() && path_.valid()){
-      return s << "http://" << authority_ << xju::path::str(path_);
+      return s << "http://" << authority_ << encode(path_);
     }
     if (authority_.valid()){
       return s << authority_;
     }
     if (path_.valid()){
-      return s << path_;
+      return s << encode(path_);
     }
     return s << "*";
   }
