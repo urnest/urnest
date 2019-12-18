@@ -23,11 +23,13 @@
 #include <xju/uri/URI.hh>
 #include <xju/stringToUInt.hh> //impl
 #include <xju/next.hh> //impl
-#include <xju/uri/Subdelims.hh> //impl
 #include <xju/uri/pctDecode.hh> //impl
 #include <xju/uri/queryChars.hh> //impl
 #include <xju/uri/segmentChars.hh> //impl
 #include <xju/uri/userInfoChars.hh> //impl
+#include <xju/uri/subDelimChars.hh> //impl
+#include <xju/uri/unreservedChars.hh> //impl
+#include <xju/uri/fragmentChars.hh> //impl
 
 namespace xju
 {
@@ -46,7 +48,7 @@ using hcp_parser::zeroOrMore;
 hcp_parser::PR unreserved() noexcept
 {
   static hcp_parser::PR result{
-    parseOneOfChars(Unreserved())};
+    parseOneOfChars(unreservedChars())};
   return result;
 }
 class PctEncodedTag{};
@@ -66,13 +68,13 @@ hcp_parser::PR pctEncoded() noexcept
 hcp_parser::PR subDelim() noexcept
 {
   static hcp_parser::PR result{
-    parseOneOfChars(Subdelims())};
+    parseOneOfChars(subDelimChars())};
   return result;
 }
 hcp_parser::PR pchar() noexcept
 {
   static hcp_parser::PR result{
-    parseOneOfChars(Unreserved()+Subdelims()+hcp::Chars(":@"))|
+    parseOneOfChars(unreservedChars()+subDelimChars()+hcp::Chars(":@"))|
     pctEncoded()};
   return result;
 }
@@ -624,7 +626,7 @@ Host getHost(HostItem const& x) noexcept
   
   auto const y{
     hcp_ast::findOnlyChildOfType<hcp_ast::TaggedItem<xju::HostName> >(x)};
-  return Host(xju::HostName(pctDecode(regNameChars(),y)));
+  return Host(xju::HostName(pctDecode(regNameChars(),reconstruct(y))));
 }
 xju::Optional<xju::ip::Port> getPort(
   std::vector<std::reference_wrapper<PortParser::Item const>> const& x) noexcept
@@ -679,7 +681,7 @@ Path getPath(hcp_ast::IRs const& all) noexcept
                      [](decltype(*segments.begin()) const& x){
                        return Segment(
                          pctDecode(segmentChars(),
-                                   hcp_ast::reconstruct(x.get()));
+                                   hcp_ast::reconstruct(x.get())));
                      });
       return result;
     }
@@ -695,7 +697,7 @@ Path getPath(hcp_ast::IRs const& all) noexcept
                      [](decltype(*segments.begin()) const& x){
                        return Segment(
                          pctDecode(segmentChars(),
-                                   hcp_ast::reconstruct(x.get()));
+                                   hcp_ast::reconstruct(x.get())));
                      });
       return result;
     }
@@ -739,6 +741,7 @@ xju::Optional<Authority> getAuthority(
   }
   return xju::Optional<Authority>();
 }
+
 }
 
 class URIParser : public hcp_parser::NamedParser_
