@@ -6,6 +6,7 @@
 %test3
 %test4
 %test5
+%test7
 %test1b
 %test-simple
 %test-stderr-1
@@ -89,6 +90,21 @@ x: OK
 %test6.got==(xe.py)+py_sp=(sd)+py_sp=(se/a.egg):py.exec.output
 
 %test-simple==(simple.py):py.exec.output
+
+%test7==(%test7.got)+cmd=(%test7.sh) (%test7.expect:list:ls):stdout
+
+%test7.sh==! <<
+#/bin/sh
+sort -u <"$1" > want &&
+sort -u > got &&
+diff -b want got >&2
+
+%test7.got==t2.py+py_sp=(sd):py_import_all:ls
+
+%test7.expect==<<
+r1.py
+r3/__init__.py
+r3/r4/__init__.py
 
 
 %test-stderr-1==()+cmd=grep '"test1 outputtest1 stderr"' (%toutput.zero):stdout

@@ -15,23 +15,30 @@ viewDesc=file('py_import.view_desc','w')
 indent=''
 
 class Scope:
-    def __init__(self,desc):
+    def __init__(self,desc,on=True):
         self.desc=desc
+        self.result_=None
+        self.on=on
         pass
     def __enter__(self):
-        if os.environ.get('ODINVERBOSE',''):
+        if os.environ.get('ODINVERBOSE','') and self.on:
             global indent
             print indent+'{desc}'.format(**self.__dict__)
             indent=indent+'  '
             pass
-        pass
+        return self
     def __exit__(self,exceptionType,exception,traceBack):
-        if os.environ.get('ODINVERBOSE'):
+        if os.environ.get('ODINVERBOSE') and self.on:
             global indent
-            if exception: print indent+'*** failed'
+            if exception:
+                print indent+'*** failed'
+            elif self.result_:
+                print indent+'-> {result_}'.format(**self.__dict__)
             indent=indent[0:-2]
             pass
         pass
+    def result(self,x):
+        self.result_=x
     pass
 
 with Scope('scan for py imports {py}'.format(**vars())):
@@ -115,36 +122,39 @@ with Scope('scan for py imports {py}'.format(**vars())):
         pass
     
     leadingDotsRE=re.compile('^([.]+)(.*)')
-    for module in modules:
-        m=leadingDotsRE.match(module)
-        if m:
-            leadingDots=m.groups()[0]
-            rest=m.groups()[1]
-            rel=['..']*(len(leadingDots)-1)+rest.split('.')
-            sp=[dir_]
+    allModules=set()
+    with Scope('expand modules {modules}'.format(**vars()),False) as scope:
+        for module in modules:
+            m=leadingDotsRE.match(module)
+            if m:
+                leadingDots=m.groups()[0]
+                rest=m.groups()[1]
+                rel=['..']*(len(leadingDots)-1)+rest.split('.') #e.g. ['..','a','b']
+                pass
+            else:
+                rel=module.split('.') # e.g. ['os','path']
+                pass
+            for i in range(0,len(rel)):
+                allModules.add(tuple(rel[0:i+1]))
+                pass
             pass
-        else:
-            sp=[dir_]+pySp # e.g. ['/lib','/home/xju/py']
-            rel=module.split('.') # e.g. ['os','path']
-            pass
-        for d in sp:
-            f=d
-            #when doing multi-level all __init__.py's along the way are read
-            #so generate dependencies on them all but only the last can
-            #mention x.py; others can only specify x/__init__.py
-            for x in rel[0:-1]:
-                f=os.path.normpath(os.path.join(f,x))
-                if not [_ for _ in ignoreREs if _.match(f)]:
-                    viewDesc.write("'"+f+'/__init__.py'+"'\n")
-                    viewDesc.write("=''\n")
+        scope.result(allModules)
+        pass
+    for module in allModules:
+        with Scope('generate {module} viewdesc'.format(**vars()),False):
+            if module[0]=='..':
+                sp=[dir_]
+            else:
+                sp=[dir_]+pySp # e.g. ['/lib','/home/xju/py']
+                pass
+            for d in sp:
+                f=os.path.join(d,*module)
+                if module[-1]!='..':
+                    viewDesc.write("'{f}.py'\n".format(**vars()))
                     pass
+                viewDesc.write("'{f}/__init__.py'\n".format(**vars()))
                 pass
-            f=os.path.normpath(os.path.join(f,rel[-1]))
-            if not [_ for _ in ignoreREs if _.match(f)]:
-                viewDesc.write("'"+f+".py'\n")
-                viewDesc.write("'"+f+"/__init__.py'\n")
-                viewDesc.write("=''\n")
-                pass
+            viewDesc.write("=''\n")
             pass
         pass
     for e in eggs:
