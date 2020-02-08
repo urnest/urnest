@@ -760,7 +760,7 @@ public:
     URI uri_;
   };
   
-  explicit URIParser() throw():
+  explicit URIParser(bool absolute) throw():
       p_(scheme()+parseLiteral(":")+
       (
         (parseLiteral("//")+authority()+pathAbEmpty())|
@@ -770,9 +770,11 @@ public:
       (
         (parseLiteral("?")+query())|
         !parseLiteral("?"))+
-      (
-        (parseLiteral("#")+fragment())|
-        !parseLiteral("#")))
+      (absolute?
+       !parseLiteral("#"):
+       (
+         (parseLiteral("#")+fragment())|
+         !parseLiteral("#"))))
   {
   }
   
@@ -818,10 +820,18 @@ private:
 };
 typedef URIParser::Item URIItem;
 
+
 hcp_parser::PR parseURI() noexcept
 {
   static hcp_parser::PR result{
-    hcp_parser::PR(new URIParser)};
+    hcp_parser::PR(new URIParser(false))};
+  return result;
+}
+
+hcp_parser::PR parseAbsoluteURI() noexcept
+{
+  static hcp_parser::PR result{
+    hcp_parser::PR(new URIParser(true))};
   return result;
 }
 

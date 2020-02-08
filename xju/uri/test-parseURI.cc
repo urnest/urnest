@@ -599,19 +599,30 @@ void test16()
   }
   {
     const std::string s{"http://fred@ho%20st.com:3374/index.html?name=z#top"};
-    auto const r{hcp_parser::parseString(s.begin(),s.end(),parseURI())};
-    xju::assert_equal(
-      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<URIItem>(r)),
-      s);
-    xju::assert_equal(hcp_ast::findOnlyChildOfType<URIItem>(r).uri_,
-                      URI(
-                        Scheme("http"),
-                        Authority(Host(xju::HostName("ho st.com")),
-                                  xju::ip::Port(3374),
-                                  UserInfo("fred")),
-                        Path({Segment(""),Segment("index.html")}),
-                        Query("name=z"),
-                        Fragment("top")));
+    {
+      auto const r{hcp_parser::parseString(s.begin(),s.end(),parseURI())};
+      xju::assert_equal(
+        hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<URIItem>(r)),
+        s);
+      xju::assert_equal(hcp_ast::findOnlyChildOfType<URIItem>(r).uri_,
+                        URI(
+                          Scheme("http"),
+                          Authority(Host(xju::HostName("ho st.com")),
+                                    xju::ip::Port(3374),
+                                    UserInfo("fred")),
+                          Path({Segment(""),Segment("index.html")}),
+                          Query("name=z"),
+                          Fragment("top")));
+    }
+    try{
+      auto const r{hcp_parser::parseString(s.begin(),s.end(),
+                                           parseAbsoluteURI())};
+      xju::assert_never_reached();
+    }
+    catch(xju::Exception const& e)
+    {
+      xju::assert_equal(readableRepr(e),"Failed to parse RFC 3986 URI at line 1 column 1 because\nfailed to parse !\"#\" at line 1 column 47 because\nline 1 column 47: expected parse failure.");
+    }
   }
   {
     const std::string s{"http:"};

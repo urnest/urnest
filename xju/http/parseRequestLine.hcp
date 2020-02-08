@@ -13,11 +13,11 @@
 #include <hcp/parser.hh> //impl
 #include <xju/http/Method.hh> //impl
 #include <hcp/ast.hh> //impl
-#include <xju/http/Target.hh> //impl
 #include <xju/http/HTTPVersion.hh> //impl
 #include <xju/http/RequestLine.hh>
 #include <xju/readThrough.hh> //impl
 #include <xju/http/requestLine_.hh> //impl
+#include <xju/http/RequestTarget.hh> //impl
 
 namespace xju
 {
@@ -34,9 +34,9 @@ RequestLine parseRequestLine(std::istream& s, size_t max) throw(
     Method const m{
       hcp_ast::reconstruct(
         hcp_ast::findOnlyChildOfType<hcp_ast::TaggedItem<Method> >(x))};
-    Target const t{
+    RequestTarget const t{
       hcp_ast::reconstruct(
-        hcp_ast::findOnlyChildOfType<hcp_ast::TaggedItem<Target> >(x))};
+        hcp_ast::findOnlyChildOfType<hcp_ast::TaggedItem<RequestTarget> >(x))};
     auto v{hcp_ast::findOnlyChildOfType<hcp_ast::TaggedItem<HTTPVersion> >(x)};
     HTTPVersion const version{
       HTTPVersion::Major(

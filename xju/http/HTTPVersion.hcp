@@ -11,6 +11,7 @@
 
 #include <xju/assert.hh> //impl
 #include <xju/Int.hh>
+#include <iostream>
 
 namespace xju
 {
@@ -44,6 +45,11 @@ private:
   Minor minor_;
 
   friend bool operator<(HTTPVersion const& x, HTTPVersion const& y) noexcept;
+
+  friend std::ostream& operator<<(std::ostream& s, HTTPVersion const& x)
+  {
+    return s << "HTTP/" << x.major_ << "." << x.minor_;
+  }
 };
 
 }

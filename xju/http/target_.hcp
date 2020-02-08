@@ -10,8 +10,8 @@
 
 
 #include <hcp/parser.hh>
-#include <xju/http/Target.hh> //impl
 #include <hcp/ast.hh> //impl
+#include <xju/http/RequestTarget.hh> //impl
 
 namespace xju
 {
@@ -21,7 +21,7 @@ namespace http
 hcp_parser::PR target_() noexcept
 {
   static hcp_parser::PR result{
-    new hcp_parser::NamedParser<hcp_ast::TaggedItem<Target> >(
+    new hcp_parser::NamedParser<hcp_ast::TaggedItem<RequestTarget> >(
       "target",
       hcp_parser::parseUntil(hcp_parser::parseOneOfChars(" \r\n\t\f")))};
   return result;

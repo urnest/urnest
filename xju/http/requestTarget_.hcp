@@ -1,0 +1,185 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <hcp/ast.hh>
+#include <hcp/parser.hh>
+#include <xju/uri/parseURI.hh> //impl
+
+namespace xju
+{
+namespace http
+{
+class OriginFormTag{};
+class AbsoluteFormTag{};
+class AuthorityFormTag{};
+class AsteriskFormTag{};
+
+namespace
+{
+
+typedef hcp_ast::TaggedItem<OriginFormTag> OriginForm;
+typedef hcp_ast::TaggedItem<AbsoluteFormTag> AbsoluteForm;
+typedef hcp_ast::TaggedItem<AuthorityFormTag> AuthorityForm;
+typedef hcp_ast::TaggedItem<AsteriskFormTag> AsteriskForm;
+
+
+using hcp_parser::hexDigit;
+using hcp_parser::listOf;
+using hcp_parser::parseLiteral;
+using hcp_parser::parseOneOfChars;
+using hcp_parser::digit;
+using hcp_parser::alpha;
+using hcp_parser::atLeastOne;
+using hcp_parser::zeroOrMore;
+
+hcp_parser::PR originForm() noexcept
+{
+  static hcp_parser::PR result(
+    new hcp_parser::NamedParser<OriginForm>(
+      "request-target origin-form",
+      atLeastOne(parseLiteral("/")+xju::uri::segment())+
+      (
+        (parseLiteral("?")+xju::uri::query())|
+        !parseLiteral("?"))));
+  return result;
+}
+
+hcp_praser::PR absoluteform() noexcept
+{
+  static hcp_parser::PR result(
+    new hcp_parser::NamedParser<AbsoluteForm>(
+      "HTTP request-target absolute-form",
+      xju::uri::parseAbsoluteURI()));
+}
+
+hcp_parser::PR authorityForm() noexcept
+{
+  static hcp_parser::PR result(
+    new hcp_parser::NamedParser<AuthorityForm(
+      "HTTP request-target authority-form",
+      xju::uri::authority()));
+}
+
+hcp_parser::PR asteriskForm() noexcept
+{
+  static hcp_parser::PR result(
+    new hcp_parser::NamedParser<AsteriskForm(
+      "HTTP request-target asterisk-form",
+      parseLiteral("*")));
+}
+
+
+}
+
+
+class RequestTargetParser : public hcp_parser::NamedParser_
+{
+public:
+  class Item : public hcp_ast::Item
+  {
+  public:
+    Item(RequestTarget requestTarget,
+         hcp_ast::I begin,
+         hcp_ast::I end) noexcept:
+        hcp_ast::Item(begin,end),
+        requestTarget_(std::move(requestTarget))
+    {
+    }
+    RequestTarget requestTarget_;
+  };
+  
+  explicit RequestTargetParser() throw():
+      p_(
+        originForm()|
+        absoluteForm()|
+        authorityForm()|
+        asteriskForm())
+  {
+  }
+  
+  virtual std::string target() const throw() override
+  {
+    return "RFC7230 (HTTP) Request Target";
+  }
+  virtual hcp_parser::ParseResult parse_(
+    hcp_ast::I const at, 
+    hcp_parser::Options const& options) throw() override
+  {
+    auto const r{p_->parse(at,options)};
+    {
+      auto const f(hcp_ast::findChildrenOfType<OriginForm>((*r).first));
+      if (f.size()){
+        scheme must be http or https;
+        auto path(xju::uri::getPath(*f.begin()));
+        auto query(xju::uri::getQuery(*f.begin()));
+        return hcp_parser::ParseResult(
+          hcp_parser::PV(
+            {hcp_ast::IR(new Item(RequestTarget(
+                                    std::move(path),
+                                    std::move(query)),
+                                  at,
+                                  (*r).second))},
+            (*r).second));
+      }
+    }
+    {
+      auto const f(hcp_ast::findChildrenOfType<AbsoluteForm>((*r).first));
+      if (f.size()){
+        auto authority(xju::uri::getAuthority(*f.begin()));
+        auto path(xju::uri::getPath(*f.begin()));
+        auto query(xju::uri::getQuery(*f.begin()));
+        return hcp_parser::ParseResult(
+          hcp_parser::PV(
+            {hcp_ast::IR(new Item(RequestTarget(std::move(authority),
+                                                std::move(path),
+                                                std::move(query)),
+                                at,
+                                (*r).second))},
+          (*r).second));
+      }
+    }
+    {
+      auto const f(hcp_ast::findChildrenOfType<AuthorityForm>((*r).first));
+      if (f.size()){
+        auto authority(xju::uri::getAuthority(*f.begin()));
+        return hcp_parser::ParseResult(
+          hcp_parser::PV(
+            {hcp_ast::IR(new Item(RequestTarget(std::move(authority)),
+                                  at,
+                                  (*r).second))},
+            (*r).second));
+      }
+    }
+    auto const f(hcp_ast::findChildrenOfType<AsteriskForm>((*r).first));
+    xju::assert_not_equal(f.size(),0U);
+    return hcp_parser::ParseResult(
+      hcp_parser::PV(
+        {hcp_ast::IR(new Item(RequestTarget(std::move(authority)),
+                              at,
+                              (*r).second))},
+        (*r).second));
+  }
+private:
+  hcp_parser::PR p_;
+
+};
+typedef RequestTargetParser::Item RequestTargetItem;
+
+// return RFC7230 (HTTP) request-target parser
+hcp_parser::PR requestTarget_() noexcept
+{
+  static hcp_parser::PR result(
+    hcp_parser::PR(new RequestTargetParser));
+  return result;
+}
+
+}
+}

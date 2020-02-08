@@ -23,7 +23,7 @@ void test1() {
     std::istringstream s{x};
     RequestLine y{parseRequestLine(s,x.size())};
     xju::assert_equal(y.m_,Method("GET"));
-    xju::assert_equal(y.t_,RequestTarget(xju::path::AbsFile(xju::path::AbsolutePath({}),xju::path::FileName("x.html"))));
+    xju::assert_equal(y.t_,RequestTarget(xju::path::AbsFile(xju::path::AbsolutePath(std::vector<xju::path::DirName>()),xju::path::FileName("x.html"))));
     xju::assert_equal(y.v_,HTTPVersion(HTTPVersion::Major(1),
                                        HTTPVersion::Minor(1)));
   }

@@ -11,7 +11,7 @@
 
 #include <hcp/parser.hh>
 #include <xju/http/method_.hh> //impl
-#include <xju/http/target_.hh> //impl
+#include <xju/http/requestTarget_.hh> //impl
 #include <xju/http/httpVersion_.hh> //impl
 #include <xju/http/crlf.hh> //impl
 
@@ -24,7 +24,7 @@ hcp_parser::PR requestLine_() noexcept
 {
   static hcp_parser::PR result{
     method_()+hcp_parser::parseLiteral(" ")+
-    target_()+hcp_parser::parseLiteral(" ")+
+    requestTarget_()+hcp_parser::parseLiteral(" ")+
     httpVersion_()+crlf()};
   return result;
 }

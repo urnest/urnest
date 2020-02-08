@@ -15,62 +15,86 @@
 #include <xju/Optional.hh>
 #include <xju/uri/Path.hh> //impl
 #include <xju/format.hh> //impl
+#include <xju/uri/Authority.hh>
 
 namespace xju
 {
 namespace http
 {
 
-namespace
-{
-std::string encode(xju::path::AbsFile const& x) noexcept
-{
-  // convert x to xju::uri::Path so it gets correctly encoded
-  xju::uri::Path p({xju::uri::Segment()}); // means absolute see xju::uri::Path
-  std::transform(x.first.begin(),x.first.end(),
-                 std::back_inserter(p),
-                 [](xju::path::DirName const& y){
-                   return xju::uri::Segment(y.value());
-                 });
-  p.push-back(xju::uri::Segment(x.second.value()));
-  return xju::format::join(p.begin(),p.end(),std::string("/"));
-}
-
-}
-
 class RequestTarget{
 public:
   // origin-form
-  RequestTarget(xju::path::AbsFile const& path) noexcept;
-
+  RequestTarget(xju::path::AbsFile path,
+                xju::uri::Query query) noexcept:
+      path_(std::move(path)),
+      query_(std::move(query))
+  {
+  }
   // absolute-form
-  RequestTarget(xju::uri::Authority const& authority,
-                xju::path::AbsFile const& path) noexcept;
+  RequestTarget(xju::uri::Authority authority,
+                xju::path::AbsFile path,
+                xju::uri::Query query) noexcept:
+      authority_(std::move(authority)),
+      path_(std::move(path)),
+      query_(std::move(query))
+  {
+  }
 
   // authority-form
-  RequestTarget(xju::uri::Authority const& authority) noexcept;
+  explicit RequestTarget(xju::uri::Authority authority) noexcept:
+      authority_(std::move(authority))
+  {
+  }
 
   // asterisk-form
-  RequestTarget() noexcept; // "*"
+  RequestTarget() noexcept
+  {
+  }
 
   xju::Optional<xju::uri::Authority> authority_;
   xju::Optional<xju::path::AbsFile> path_;
-
-  friend bool operator<(RequestTarget const& a, RequestTarget const& b) noexcept;
+  xju::Optional<query> query_; //only valid if path_.valid()
+  
+  friend bool operator<(RequestTarget const& a,
+                        RequestTarget const& b) noexcept;
   
   friend std::ostream& operator<<(std::ostream& s, RequestTarget const& x)
   {
-    if (authority_.valid() && path_.valid()){
-      return s << "http://" << authority_ << encode(path_);
+    if (x.authority_.valid() && x.path_.valid()){
+      s << "http://" << x.authority_.value()
+        << RequestTarget::encode(x.path_.value());
+      if (x.query_.valid()){
+        s << "?" << x.query_.value();
+      }
+      return s;
     }
-    if (authority_.valid()){
-      return s << authority_;
+    if (x.authority_.valid()){
+      return s << x.authority_.value();
     }
-    if (path_.valid()){
-      return s << encode(path_);
+    if (x.path_.valid()){
+      s << RequestTarget::encode(x.path_.value());
+      if (x.query_.valid()){
+        s << "?" << x.query_.value();
+      }
+      return s;
     }
     return s << "*";
   }
+private:
+  static std::string encode(xju::path::AbsFile const& x) noexcept
+  {
+    // convert x to xju::uri::Path so it gets correctly encoded
+    xju::uri::Path p({xju::uri::Segment("")}); // means absolute see xju::uri::Path
+    std::transform(x.first.begin(),x.first.end(),
+                   std::back_inserter(p),
+                   [](xju::path::DirName const& y){
+                     return xju::uri::Segment(y.value());
+                   });
+    p.push_back(xju::uri::Segment(x.second.value()));
+    return xju::format::join(p.begin(),p.end(),std::string("/"));
+  }
+
 };
 
 }
