@@ -5,7 +5,6 @@
 snmp%tests.tree
 io%tests.tree
 file%tests.tree
-http%tests.tree
 uri%tests.tree
 json%tests.tree
 utf8%tests.tree
@@ -67,8 +66,9 @@ test%tests.tree
 ()+cmd=(print-wordsizes.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 netflow%tests.tree
 (test-xn.py)+(%py-opts):py3.exec.output
-(test-jsonschema.py):py3.exec.output
+(test-jsonschema.py)+(%py-opts):py3.exec.output
 (test-pq.py)+(%py-opts):py3.exec.output
+(wal%all)
 
 %py-opts==<<
 +py_sp=(..)

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # coding: utf-8
 
 # Copyright (c) 2018 Trevor Taylor
@@ -41,38 +40,5 @@ def validateToken(name):
         return name
     except:
         raise inContext(l1(validateToken.__doc__).format(**vars()))
-    pass
-
-if __name__=='__main__':
-    validateToken('fred')
-    try:
-        validateToken('')
-    except Exception as e:
-        assert_.equal(readableRepr(e),'''\
-Failed to validate RFC2616 token '' because
-'' is empty.''')
-    else:
-        assert False
-        pass
-    try:
-        validateToken('fred jones')
-    except Exception as e:
-        assert_.equal(readableRepr(e),'''\
-Failed to validate RFC2616 token 'fred jones' because
-failed to validate char at ...' jones' because
-' ' is a separator.''')
-    else:
-        assert False
-        pass
-    try:
-        validateToken('fred\njones')
-    except Exception as e:
-        assert_.equal(readableRepr(e),'''\
-Failed to validate RFC2616 token 'fred\\njones' because
-failed to validate char at ...'\\njones' because
-'\\n' is a control character.''')
-    else:
-        assert False
-        pass
     pass
 

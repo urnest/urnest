@@ -1,9 +1,9 @@
 %all==%all.tree:leaves
 
 %all.tree==<<
-(rfc2616.py):py3.exec.output
-(etc.py):py3.exec.output
+(test-rfc2616.py)+(%py-opts):py3.exec.output
+(test-etc.py)+(%py-opts):py3.exec.output
 
-#REVISIT: python3 changes behaviour w.r.t. &nbsp etc
-#what do we do?
-#(pq.py):py3.exec.output
+
+%py-opts==<<
++py_sp=(../..)
