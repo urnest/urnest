@@ -16,8 +16,8 @@
 #
 
 import urllib
-from xn import inContext
-from xn import firstLineOf as l1
+from xju.xn import inContext
+from xju.xn import firstLineOf as l1
 
 def parseHeaders(mimePart):
     try:

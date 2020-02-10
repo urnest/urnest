@@ -20,13 +20,13 @@ import sys
 import os
 
 d=os.path.dirname(sys.argv[0])
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(d))))
+sys.path[0:0]=os.path.join(os.path.abspath(d),'../../..')
 
 import app
 
 from wsgiref.simple_server import make_server
 
-import wal
+from xju import wal
 
 port=int(sys.argv[1])
 

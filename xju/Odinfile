@@ -66,6 +66,12 @@ utf8%tests.tree
 test%tests.tree
 ()+cmd=(print-wordsizes.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 netflow%tests.tree
+(test-xn.py)+(%py-opts):py3.exec.output
+(test-jsonschema.py):py3.exec.output
+(test-pq.py)+(%py-opts):py3.exec.output
+
+%py-opts==<<
++py_sp=(..)
 
 %test-check_types_related_2_err==test-check_types_related_2.cc+(..%cxx-opts):auto.cxx.exe:err
 

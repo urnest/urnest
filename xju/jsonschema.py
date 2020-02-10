@@ -16,7 +16,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-from xn import Xn,inContext,firstLineOf,readableRepr
+from .xn import Xn,inContext,firstLineOf,readableRepr
 
 l1=firstLineOf
 

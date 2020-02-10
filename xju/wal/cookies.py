@@ -14,8 +14,8 @@
 #
 # HTTP RFC6265 cookie stuff
 
-import rfc2616
-from xn import inContext,firstLineOf as l1
+from . import rfc2616
+from xju.xn import inContext,firstLineOf as l1
 
 def validateCookieName(name):
     '''validate RFC6265 cookie name {name!r}'''

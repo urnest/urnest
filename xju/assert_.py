@@ -14,6 +14,8 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
+import re
+
 def equal(a,b):
     assert a==b, '{a!r} != {b!r}'.format(**vars())
     pass
@@ -48,6 +50,11 @@ class Assert():
         if not self.x in y:
             raise Exception('{self.x!r} is not in {y!r}'.format(**vars()))
         pass
+    def matches(self,r):
+        c=re.compile(r)
+        if not c.match(self.x):
+            raise Exception('{self.x!r} does not match {r}'.format(**vars()))
+        pass
     def __lt__(self,y):
         if not self.x < y:
             raise Exception('{self.x!r} is not less than {y!r}'.format(**vars()))
@@ -72,17 +79,5 @@ class Assert():
         if not self.x >= y:
             raise Exception('{self.x!r} is not greater than or equal to {y!r}'.format(**vars()))
         return self.x
-    pass
-
-if __name__=='__main__':
-    # unit test
-    try:
-        Assert('fred').isInstanceOf(int)
-    except Exception as e:
-        assert str(e)=="'fred' is not an instance of class int (it is of class str)",str(e)
-        pass
-    else:
-        assert False
-        pass
     pass
 

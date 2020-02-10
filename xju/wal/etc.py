@@ -24,7 +24,7 @@ def toJson(x,cls=json.JSONEncoder):
 def fromJson(x):
     return json.loads(x)
 
-from xn import inContext
+from xju.xn import inContext
 
 class Scope:
     def __init__(self,description,

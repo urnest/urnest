@@ -16,10 +16,10 @@
 import os
 import mimetypes
 
-from xn import firstLineOf as l1,inContext
-import pq
-from etc import fromJson,toJson
-from wsgi import getVariablesFromWSGIenviron, getCookiesFromWSGIenviron, getHTTPHeadersFromWSGIenviron
+from xju.xn import firstLineOf as l1,inContext
+from xju import pq
+from .etc import fromJson,toJson
+from .wsgi import getVariablesFromWSGIenviron, getCookiesFromWSGIenviron, getHTTPHeadersFromWSGIenviron
 
     
 class Response:

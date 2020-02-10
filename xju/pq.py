@@ -33,8 +33,7 @@ from html.entities import codepoint2name as reverseentities
 import sys
 import traceback
 import string
-import xn
-from xn import Xn,inContext
+from .xn import Xn,inContext
 
 class Pos:
     def __init__(self, file, line, col):
@@ -60,7 +59,7 @@ class ParseFailed(Xn):
 def encodeEntity(c):
     x=reverseentities.get(ord(c),None)
     if x is None: return c
-    return '&%(x)s;'%vars()
+    return u'&%(x)s;'%vars()
 
 def encodeEntities(s):
     if s is None: return u''
@@ -242,14 +241,14 @@ class Data(Node):
         self.data=data
         pass
     def __str__(self):
-        return self.data
+        return encodeEntities(self.data)
     def __repr__(self):
         return 'data at %(pos)s, %(data)r' % self.__dict__
     def clone(self, newParent):
         result=Data(self.data, newParent, self.pos)
         return result
     def text(self):
-        return str(self)
+        return self.data
     pass
 
 class EntityRef(Node):
@@ -611,199 +610,3 @@ def loadFile(fileName,encoding='utf-8'):
         return parse(f.read(),fileName)
     pass
 
-def assert_equal(a, b):
-    assert a==b, (u'%(a)r\n!=\n%(b)r' % vars())
-
-html1='''<html>
-<body>
-<p>The best thing about html is simplicity
-<ul class="list">
-<li class="i">item 1
-<li class="i">item 2</li>
-</ul>
-</body>
-</html>'''
-
-#note the spacing is carefully chosen to get the format of html2 (below)
-newitems='''
-<li>item 4
-<li class="item5">item 5
-<li>item 6
-'''
-
-html2='''<html>
-<body>
-<p>The best thing about html is simplicity
-<ul class="list">
-<li>item 4
-<li class="item5">item 5
-<li>item 6
-</ul>
-</body>
-</html>'''
-
-html3='''<html>
-<body>
-<p>The best thing about html is simplicity
-<ul class="list">
-<li>item 4
-<li>item &lt;b&gt;
-<li>item 6
-</ul>
-</body>
-</html>'''
-
-#note the spacing is carefully chosen to get the format of html2 (below)
-newitem5='''<li>item &lt;b&gt;
-'''
-
-def test1():
-    s=parse(html1, 'html1')
-    assert_equal(str(s), html1)
-    s2=s.find(hasClass('list'))
-    s2.html(parse(newitems, 'newitems'))
-    assert_equal(str(s), html2)
-    s2.html(newitems)
-    assert_equal(str(s), html2)
-    s3=s.find(hasClass('item5'))
-    parse(newitem5, 'newitem5').replace(s3)
-    assert_equal(str(s), html3)
-
-html4='''<html>
-<body>
-<p>The best thing about html is simplicity
-
-</body>
-</html>'''
-
-def test2():
-    s=parse(html1, 'html1')
-    sc=s.clone()
-    sc.find(hasClass('list')).detach()
-    assert_equal(str(s), html1)
-    assert_equal(str(sc), html4)
-
-html5='''<html>
-<body>
-<p>The best thing about html is simplicity
-<ul class="list">
-<li class="i">item 1
-<li class="i">item 2</li>
-<li>item &lt;b&gt;
-</ul>
-</body>
-</html>'''
-
-def test3():
-    s=parse(html1, 'html1')
-    s2=parse(newitem5, 'newitem5')
-    assert_equal(str(s2.appendTo(s.find(hasClass('list')))),newitem5)
-    assert_equal(str(s), html5)
-
-script='''
-$(document).ready(function(){
-});
-'''
-def test4():
-    a=parse('<head></head>')
-    parse(encodeEntities(script)).appendTo(a)
-    assert_equal(str(a), '<head>'+script+'</head>')
-    pass
-
-def test5():
-    s=parse('<p>fred</p>')
-    s.text('jock')
-    assert_equal(str(s),u'<p>jock</p>')
-    pass
-
-def test6():
-    s=parse('<p>fred</p>')
-    s.text(u'30x40”')
-    assert_equal(str(s),u'<p>30x40&rdquo;</p>')
-    pass
-
-def test7():
-    s=parse('<p>fred</p>')
-    s.text('30x40”')
-    assert_equal(str(s),u'<p>30x40&rdquo;</p>')
-    pass
-
-def test8():
-    s=parse('<html><p>fred</p><p>jock</p></html>')
-    s=s.children()
-    assert len(s)==2, str(s).encode('utf-8')
-    assert_equal(str(s.first()),u'<p>fred</p>')
-    pass
-
-def test9():
-    s=parse('<td><a href="fred">jock</a> and fred</td>')
-    assert_equal(s.text(), u'jock and fred')
-    pass
-
-def test10():
-    s=parse('<td><a href="fred">jock</a>&nbsp;and fred</td>')
-    assert_equal(s.text(), u'jock\xa0and fred')
-    s1=parse('<td><a href="fred">jock</a>&nbsp;')
-    s2=parse('and fred</td>')
-    assert_equal((s1+s2).text(), u'jock\xa0and fred')
-    pass
-
-def test11():
-    s=parse('<a href="fred">John&nbsp;Walker</a>')
-    s.find(isEntityRef('nbsp')).remove()
-    assert str(s)=='<a href="fred">JohnWalker</a>',s.text()
-    pass
-
-def test12():
-    s=parse('<ul><li class="a">1<li class="b">2</ul>')
-    parse('<li>1.5').addBefore(s.find(hasClass('b')))
-    assert_equal(str(s),u'<ul><li class="a">1<li>1.5<li class="b">2</ul>')
-    
-def test13():
-    s=parse('<ul><li class="a">1<li class="b">2</ul>')
-    parse('<li>0').addBefore(s.find(hasClass('a')))
-    assert_equal(str(s),u'<ul><li>0<li class="a">1<li class="b">2</ul>')
-
-def test14():
-    s=parse('<li>')
-    s.attr('x','"fred&jock"')
-    assert_equal(str(s),u'<li x="&quot;fred&amp;jock&quot;">')
-    assert_equal(s.attr('x'),'"fred&jock"')
-    s=parse('<div><p a="fred"><bold>a</bold>x</p><p a="jock">b</p></div>').find(tagName('p'))
-    assert len(s)==2, s.utf8()
-    assert_equal(s.attr('a'),'fredjock')
-    assert_equal(s.attrs('a'),['fred','jock'])
-    pass
-
-def test15():
-    s=parse('&lambda;')
-    assert s.text()==chr(955), s.text()
-    s=parse('&#955;')
-    assert s.text()==chr(955), s.text()
-
-def test16():
-    s=parse('<div><p><bold>a</bold>x</p><p>b</p></div>').find(tagName('p'))
-    assert len(s)==2, s.utf8()
-    assert Selection(s[0]).find(tagName('bold')).text()=='a'
-    assert s[0].find(tagName('bold')).text()=='a'
-    pass
-
-def test17():
-    s=parse('<div>fred &#x00022;jock&#34;</div>')
-    assert Selection(s[0]).find(tagName('div')).text()=='fred "jock"'
-    pass
-
-def test18():
-    s=parse('<body><div>a</div><div class="mid">b</div><div>c</div></body>')
-    assert s.find(hasClass('mid')).predecessors().text()=='a',utf8(s.find(hasClass('mid')).predecessors())
-    assert s.find(hasClass('mid')).successors().text()=='c',utf8(s.find(hasClass('mid')).predecessors())
-    pass
-
-if __name__=='__main__':
-    tests=[var for name,var in list(vars().items())
-           if name.startswith('test') and callable(var)]
-    for t in tests:
-        t()
-        pass
-    print('PASS - {0} steps'.format(len(tests)))
-    pass

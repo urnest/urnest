@@ -15,8 +15,8 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-from xn import inContext,readableRepr,firstLineOf as l1
-import assert_
+from xju.xn import inContext,readableRepr,firstLineOf as l1
+from xju import assert_
 
 CTLs=set.union(set([chr(n) for n in range(0,32)]),set([chr(127)]))
 separators=set('()<>@,;:\\"{} \t')
