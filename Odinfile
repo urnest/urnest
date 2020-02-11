@@ -104,7 +104,7 @@ test -d "$sourcedir" &&
 cat "$toolstar" | (cd "$INST_BIN" && tar xvf - ) &&
 cat "$idlgentar" | (cd "$INST_SRC" && tar xvf - ) &&
 cat "$hcpgentar" | (cd "$INST_SRC" && tar xvf - ) &&
-sources=$(cd "$sourcedir" && find xju hcp -name '*.idl' -o -name '*.hh' -o -name '*.cc' -o -name '*.h' ) &&
+sources=$(cd "$sourcedir" && find xju hcp \( -name __pycache__ -prune \) -o \( -name '*.idl' -o -name '*.hh' -o -name '*.cc' -o -name '*.h' -o -name '*.py' -o -name '*.html' -o -name '*.js' -o -name '*.css' \) -print ) &&
 (cd "$sourcedir" && tar cf - $sources) | (cd "$INST_SRC" && tar xvf - ) &&
 sources=$(cd "$sourcedir/omnicxy" && find cxy -name '*.idl' -o -name '*.hh' -o -name '*.cc' -o -name '*.h' && find omniidl_be -name '*.py' -o -name '*.sh' ) &&
 (cd "$sourcedir/omnicxy" && tar cf - $sources) | (cd "$INST_SRC" && tar xvf - ) &&

@@ -29,7 +29,7 @@
       count:0,
       done:function(){
 	if (self.count==1){
-	  $x.find('*').andSelf().removeClass(busyClass);
+	  $x.find('*').addBack().removeClass(busyClass);
 	  self.count=0;
 	}
 	else{
@@ -39,7 +39,7 @@
       busy:function(){
 	++self.count;
 	if (self.count=1){
-	  $x.find('*').andSelf().addClass(busyClass);
+	  $x.find('*').addBack().addClass(busyClass);
 	  setTimeout(self.done,minSeconds*1000);
 	  ++self.count;
 	}
@@ -244,9 +244,9 @@
   wal.getBackground=(function(){
     var result=function($item) {
       // jquery is bizarre here, $item.parents() is in "upwards" order,
-      // but $item.parents().andSelf() is in "downward" order. There
+      // but $item.parents().addBack() is in "downward" order. There
       // is no selfAnd().
-      var $items=$item.parents().andSelf();
+      var $items=$item.parents().addBack();
       var result=getBackground_($items);
       return result;
     };
