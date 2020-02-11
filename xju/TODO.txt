@@ -24,14 +24,14 @@
 snmp/README.txt stuff
 
 xju/http http1.1 - rfc7230, rfc7231
-  - %-encoded handling... should we decode/encode anything? e.g.
+  x %-encoded handling... should we decode/encode anything? e.g.
     encode xju::path::AbsPath when formatting xju::http::RequestTarget? In
     which case should we decode when parsing request line? But if
     encoding/decoding do we always do utf-8? Or do we leave it entirely to
     application? I think leave entirely to application.
-    - actually decode/encode is better:
-      - uri level: all, but only encode disallowed chars for each field type
-      - does that work for http queries?
+    x actually decode/encode is better:
+      x uri level: all, but only encode disallowed chars for each field type
+      x does that work for http queries?
         suppose want to query name=Fred&Jock#ette and age=43
 	... obviously the application putting together the xju::uri::Query
 	will have to encode the & to produce Query("name=Fred%38Jock&age=43")
@@ -48,19 +48,24 @@ xju/http http1.1 - rfc7230, rfc7231
 	we only encode/decode invalid chars at that level; note that if the
 	client pre-encoded e.g. " " it will be decoded before they get it
 	back (but & and = will not)
-    / implement that (see xju/uri/test-parseURI)
+    x implement that (see xju/uri/test-parseURI)
   - timeout exceptions come from istream exception passed through untouched
   - std::bad_alloc for out-of-memory
   - all other exceptions are "mal-formed", with specific exceptions where
     rfc7230 calls for specific action by client/server
   - parseRequestLine(istream,max) -> (method,target,http-version)
     -readThrough(istream,"\r\n",max) then parse and decode components
-    
+    / parseRequestTarget
+      x code
+      - test decoding
+      - test 4 variants
+      - test errors
+      
   - parseStatusLine(istream,max) -> (http-version,status-code,reason)
   - parseHeaders(istream,max) -> headers
-  - copyBody(size) -> body
-  - copyUnboundedBody(maxSize) -> body   // to eof
-  - copyChunk(maxSize,maxExt,maxTrailerSize) -> (data, ext, trailers)
+  - copyBody(istream,size) -> body
+  - copyUnboundedBody(istream,maxSize) -> body   // to eof
+  - copyChunk(istream,maxSize,maxExt,maxTrailerSize) -> (data, ext, trailers)
       - no data means last chunk
   - parseRequest(istream,maxRequestLine,maxHeaders,maxBody,maxExt) ->
       (method,target,http-version,headers,body)

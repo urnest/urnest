@@ -27,8 +27,6 @@ x test ClientError
 
 x JsonSchema:
 
-- automate all tests
-
-- wal/__init__.py use PushPath so only add dir for this module
+x automate all tests
 
 - wal.js doco postToServer onwards
