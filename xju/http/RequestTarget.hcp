@@ -16,6 +16,8 @@
 #include <xju/uri/Path.hh> //impl
 #include <xju/format.hh> //impl
 #include <xju/uri/Authority.hh>
+#include <xju/uri/Query.hh>
+#include <xju/uri/Scheme.hh>
 
 namespace xju
 {
@@ -32,9 +34,11 @@ public:
   {
   }
   // absolute-form
-  RequestTarget(xju::uri::Authority authority,
+  RequestTarget(xju::uri::Scheme scheme,
+                xju::uri::Authority authority,
                 xju::path::AbsFile path,
                 xju::uri::Query query) noexcept:
+      scheme_(std::move(scheme)),
       authority_(std::move(authority)),
       path_(std::move(path)),
       query_(std::move(query))
@@ -52,17 +56,20 @@ public:
   {
   }
 
+  xju::Optional<xju::uri::Scheme> scheme_;
   xju::Optional<xju::uri::Authority> authority_;
   xju::Optional<xju::path::AbsFile> path_;
-  xju::Optional<query> query_; //only valid if path_.valid()
+  xju::Optional<xju::uri::Query> query_; //only valid if path_.valid()
   
   friend bool operator<(RequestTarget const& a,
                         RequestTarget const& b) noexcept;
   
   friend std::ostream& operator<<(std::ostream& s, RequestTarget const& x)
   {
-    if (x.authority_.valid() && x.path_.valid()){
-      s << "http://" << x.authority_.value()
+    if (x.scheme_.valid()){
+      xju::assert_equal(x.authority_.valid(),true);
+      xju::assert_equal(x.path_.valid(),true);
+      s << x.scheme_.value() << "//" << x.authority_.value()
         << RequestTarget::encode(x.path_.value());
       if (x.query_.valid()){
         s << "?" << x.query_.value();

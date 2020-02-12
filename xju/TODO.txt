@@ -60,6 +60,7 @@ xju/http http1.1 - rfc7230, rfc7231
       - test decoding
       - test 4 variants
       - test errors
+      - normalise path e.g. a/b/ same result as a/b?
       
   - parseStatusLine(istream,max) -> (http-version,status-code,reason)
   - parseHeaders(istream,max) -> headers

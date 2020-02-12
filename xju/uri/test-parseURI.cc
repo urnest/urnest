@@ -625,6 +625,26 @@ void test16()
     }
   }
   {
+    const std::string s{"http://host.com/a/t%09b/index.html"};
+    {
+      auto const r{hcp_parser::parseString(s.begin(),s.end(),parseURI())};
+      xju::assert_equal(
+        hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<URIItem>(r)),
+        s);
+      auto const uri(hcp_ast::findOnlyChildOfType<URIItem>(r).uri_);
+      xju::assert_equal(uri,
+                        URI(
+                          Scheme("http"),
+                          Authority(Host(xju::HostName("host.com")),
+                                    xju::Optional<xju::ip::Port>(),
+                                    xju::Optional<UserInfo>()),
+                          Path({Segment(""),Segment("a"),Segment("t\tb"),Segment("index.html")}),
+                          Query(""),
+                          Fragment("")));
+      xju::assert_equal(xju::format::str(uri),s);
+    }
+  }
+  {
     const std::string s{"http:"};
     auto const r{hcp_parser::parseString(s.begin(),s.end(),parseURI())};
     xju::assert_equal(

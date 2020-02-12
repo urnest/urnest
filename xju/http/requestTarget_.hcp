@@ -12,6 +12,7 @@
 #include <hcp/ast.hh>
 #include <hcp/parser.hh>
 #include <xju/uri/parseURI.hh> //impl
+#include <xju/http/RequestTarget.hh>
 
 namespace xju
 {
@@ -52,7 +53,7 @@ hcp_parser::PR originForm() noexcept
   return result;
 }
 
-hcp_praser::PR absoluteform() noexcept
+hcp_parser::PR absoluteform() noexcept
 {
   static hcp_parser::PR result(
     new hcp_parser::NamedParser<AbsoluteForm>(
