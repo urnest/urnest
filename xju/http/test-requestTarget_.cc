@@ -23,7 +23,7 @@ namespace http
 void test1() {
   //origin-form
   {
-    const std::string s{"/a/x.txt?name=jock"};
+    const std::string s{"/a/x.txt?name=jock%20allen"};
     auto const r{hcp_parser::parseString(s.begin(),s.end(),
                                          requestTarget_())};
     xju::assert_equal(
@@ -36,7 +36,71 @@ void test1() {
                             xju::path::AbsolutePath(
                               {xju::path::DirName("a")}),
                             xju::path::FileName("x.txt"))),
-                        xju::uri::Query("name=jock")));
+                        xju::uri::Query("name=jock allen")));
+  }
+  {
+    const std::string s{"/"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),
+                                         requestTarget_())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+                      RequestTarget(
+                        xju::path::AbsFile(
+                          std::make_pair(
+                            xju::path::AbsolutePath(
+                              std::vector<xju::path::DirName>()),
+                            xju::path::FileName(""))),
+                        xju::uri::Query("")));
+  }
+  {
+    const std::string s{"/a/b/"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),
+                                         requestTarget_())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+                      RequestTarget(
+                        xju::path::AbsFile(
+                          std::make_pair(
+                            xju::path::AbsolutePath(
+                              {xju::path::DirName("a")}),
+                            xju::path::FileName("b"))),
+                        xju::uri::Query("")));
+  }
+  {
+    const std::string s{"/a/b/"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),
+                                         requestTarget_())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+                      RequestTarget(
+                        xju::path::AbsFile(
+                          std::make_pair(
+                            xju::path::AbsolutePath(
+                              {xju::path::DirName("a")}),
+                            xju::path::FileName("b"))),
+                        xju::uri::Query("")));
+  }
+  {
+    const std::string s{"/a/b/.."};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),
+                                         requestTarget_())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+                      RequestTarget(
+                        xju::path::AbsFile(
+                          std::make_pair(
+                            xju::path::AbsolutePath(
+                              std::vector<xju::path::DirName>()),
+                            xju::path::FileName("a"))),
+                        xju::uri::Query("")));
   }
 }
 

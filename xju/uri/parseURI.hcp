@@ -647,6 +647,9 @@ xju::Optional<UserInfo> getUserInfo(
   }
   return result;
 }
+
+}
+
 Path getPath(hcp_ast::IRs const& all) noexcept
 {
   Path result;
@@ -740,8 +743,6 @@ xju::Optional<Authority> getAuthority(
           hcp_ast::findChildrenOfType<UserInfoItem>(items.front().get(),1U))));
   }
   return xju::Optional<Authority>();
-}
-
 }
 
 class URIParser : public hcp_parser::NamedParser_

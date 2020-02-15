@@ -13,6 +13,8 @@
 #include <hcp/parser.hh>
 #include <xju/uri/parseURI.hh> //impl
 #include <xju/http/RequestTarget.hh>
+#include <xju/uri/pctDecode.hh> //impl
+#include <xju/uri/segmentChars.hh> //impl
 
 namespace xju
 {
@@ -53,30 +55,72 @@ hcp_parser::PR originForm() noexcept
   return result;
 }
 
-hcp_parser::PR absoluteform() noexcept
+hcp_parser::PR absoluteForm() noexcept
 {
   static hcp_parser::PR result(
     new hcp_parser::NamedParser<AbsoluteForm>(
       "HTTP request-target absolute-form",
       xju::uri::parseAbsoluteURI()));
+  return result;
 }
 
 hcp_parser::PR authorityForm() noexcept
 {
   static hcp_parser::PR result(
-    new hcp_parser::NamedParser<AuthorityForm(
+    new hcp_parser::NamedParser<AuthorityForm>(
       "HTTP request-target authority-form",
       xju::uri::authority()));
+  return result;
 }
 
 hcp_parser::PR asteriskForm() noexcept
 {
   static hcp_parser::PR result(
-    new hcp_parser::NamedParser<AsteriskForm(
+    new hcp_parser::NamedParser<AsteriskForm>(
       "HTTP request-target asterisk-form",
       parseLiteral("*")));
+  return result;
 }
 
+xju::path::AbsFile normAbsPath(
+  std::vector<xju::uri::Segment> const& p) noexcept
+{
+  std::vector<xju::uri::Segment> q;
+  std::remove_copy_if(p.begin(),p.end(),
+                      std::back_inserter(q),
+                      [](xju::uri::Segment const& x){
+                        return x._.size()==0;
+                      });
+  auto b(q.begin());
+  auto e(q.end());
+  if (b==e){
+    return xju::path::AbsFile(xju::path::AbsolutePath(
+                                std::vector<xju::path::DirName>()),
+                              xju::path::FileName(""));
+  }
+  --e;
+  xju::path::FileName const f((*e)._);
+  std::vector<xju::path::DirName> d;
+  for(;b!=e;++b){
+    d.push_back(xju::path::DirName((*b)._));
+  }
+  return xju::path::AbsFile(xju::path::AbsolutePath(d),//note removes .. and .
+                            f);
+}
+            
+xju::path::AbsFile getPath(hcp_ast::Item const& in) noexcept
+{
+  auto const segments{hcp_ast::findChildrenOfType<xju::uri::SegmentItem>(in)};
+  std::vector<xju::uri::Segment> result;
+  std::transform(segments.begin(),segments.end(),
+                 std::back_inserter(result),
+                 [](decltype(*segments.begin()) const& x){
+                   return xju::uri::Segment(
+                     xju::uri::pctDecode(xju::uri::segmentChars(),
+                               hcp_ast::reconstruct(x.get())));
+                 });
+  return normAbsPath(result);
+}
 
 }
 
@@ -115,58 +159,76 @@ public:
     hcp_parser::Options const& options) throw() override
   {
     auto const r{p_->parse(at,options)};
-    {
-      auto const f(hcp_ast::findChildrenOfType<OriginForm>((*r).first));
-      if (f.size()){
-        scheme must be http or https;
-        auto path(xju::uri::getPath(*f.begin()));
-        auto query(xju::uri::getQuery(*f.begin()));
-        return hcp_parser::ParseResult(
-          hcp_parser::PV(
-            {hcp_ast::IR(new Item(RequestTarget(
-                                    std::move(path),
-                                    std::move(query)),
-                                  at,
-                                  (*r).second))},
-            (*r).second));
+    if (!r.failed()){
+      {
+        auto const f(hcp_ast::findChildrenOfType<OriginForm>(
+                       hcp_ast::Item((*r).first)));
+        if (f.size()){
+          auto path(getPath(f.front().get()));
+          auto query(xju::uri::getQuery((*r).first));
+          return hcp_parser::ParseResult(
+            hcp_parser::PV(
+              {hcp_ast::IR(new Item(RequestTarget(
+                                      std::move(path),
+                                      std::move(query)),
+                                    at,
+                                    (*r).second))},
+              (*r).second));
+        }
       }
-    }
-    {
-      auto const f(hcp_ast::findChildrenOfType<AbsoluteForm>((*r).first));
-      if (f.size()){
-        auto authority(xju::uri::getAuthority(*f.begin()));
-        auto path(xju::uri::getPath(*f.begin()));
-        auto query(xju::uri::getQuery(*f.begin()));
-        return hcp_parser::ParseResult(
-          hcp_parser::PV(
-            {hcp_ast::IR(new Item(RequestTarget(std::move(authority),
-                                                std::move(path),
-                                                std::move(query)),
+      {
+        auto const f(hcp_ast::findChildrenOfType<AbsoluteForm>(
+                       hcp_ast::Item((*r).first)));
+        if (f.size()){
+          xju::uri::Scheme const scheme{
+            hcp_ast::reconstruct(
+              hcp_ast::findOnlyChildOfType<xju::uri::SchemeItem>(
+                hcp_ast::Item((*f.begin()).get().items())))};
+          auto authority(
+            xju::uri::getAuthority(
+              hcp_ast::findChildrenOfType<xju::uri::AuthorityItem>(
+                *(f.begin()))));
+          auto path(getPath((*f.begin()).get()));
+          auto query(xju::uri::getQuery((*f.begin()).get().items()));
+          return hcp_parser::ParseResult(
+            hcp_parser::PV(
+              {hcp_ast::IR(new Item(RequestTarget(std::move(scheme),
+                                                  std::move(authority.value()),
+                                                  std::move(path),
+                                                  std::move(query)),
+                                    at,
+                                    (*r).second))},
+              (*r).second));
+        }
+      }
+      {
+        auto const f(hcp_ast::findChildrenOfType<AuthorityForm>(
+                       hcp_ast::Item((*r).first)));
+        if (f.size()){
+          auto authority(
+            xju::uri::getAuthority(
+              hcp_ast::findChildrenOfType<xju::uri::AuthorityItem>(
+                *(f.begin()))));
+          return hcp_parser::ParseResult(
+            hcp_parser::PV(
+              {hcp_ast::IR(new Item(RequestTarget(
+                                      std::move(authority.value())),
+                                    at,
+                                    (*r).second))},
+              (*r).second));
+        }
+      }
+      auto const f(hcp_ast::findChildrenOfType<AsteriskForm>(
+                     hcp_ast::Item((*r).first)));
+      xju::assert_not_equal(f.size(),0U);
+      return hcp_parser::ParseResult(
+        hcp_parser::PV(
+          {hcp_ast::IR(new Item(RequestTarget(),
                                 at,
                                 (*r).second))},
           (*r).second));
-      }
     }
-    {
-      auto const f(hcp_ast::findChildrenOfType<AuthorityForm>((*r).first));
-      if (f.size()){
-        auto authority(xju::uri::getAuthority(*f.begin()));
-        return hcp_parser::ParseResult(
-          hcp_parser::PV(
-            {hcp_ast::IR(new Item(RequestTarget(std::move(authority)),
-                                  at,
-                                  (*r).second))},
-            (*r).second));
-      }
-    }
-    auto const f(hcp_ast::findChildrenOfType<AsteriskForm>((*r).first));
-    xju::assert_not_equal(f.size(),0U);
-    return hcp_parser::ParseResult(
-      hcp_parser::PV(
-        {hcp_ast::IR(new Item(RequestTarget(std::move(authority)),
-                              at,
-                              (*r).second))},
-        (*r).second));
+    return r;
   }
 private:
   hcp_parser::PR p_;
