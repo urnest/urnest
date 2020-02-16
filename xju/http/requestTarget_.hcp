@@ -15,6 +15,7 @@
 #include <xju/http/RequestTarget.hh>
 #include <xju/uri/pctDecode.hh> //impl
 #include <xju/uri/segmentChars.hh> //impl
+#include <xju/prev.hh> //impl
 
 namespace xju
 {
@@ -85,27 +86,20 @@ hcp_parser::PR asteriskForm() noexcept
 xju::path::AbsFile normAbsPath(
   std::vector<xju::uri::Segment> const& p) noexcept
 {
-  std::vector<xju::uri::Segment> q;
-  std::remove_copy_if(p.begin(),p.end(),
-                      std::back_inserter(q),
-                      [](xju::uri::Segment const& x){
-                        return x._.size()==0;
-                      });
-  auto b(q.begin());
-  auto e(q.end());
-  if (b==e){
-    return xju::path::AbsFile(xju::path::AbsolutePath(
-                                std::vector<xju::path::DirName>()),
-                              xju::path::FileName(""));
-  }
-  --e;
-  xju::path::FileName const f((*e)._);
   std::vector<xju::path::DirName> d;
-  for(;b!=e;++b){
-    d.push_back(xju::path::DirName((*b)._));
+  std::transform(p.begin(),p.end(),
+                 std::back_inserter(d),
+                 [](xju::uri::Segment const& x){
+                   return xju::path::DirName(x._);
+                 });
+  xju::path::AbsolutePath y(d);
+  if (y.size()){
+    return xju::path::AbsFile(
+      xju::path::AbsolutePath(
+        std::vector<xju::path::DirName>(y.begin(),xju::prev(y.end()))),
+      xju::path::FileName((*(xju::prev(y.end())))._));
   }
-  return xju::path::AbsFile(xju::path::AbsolutePath(d),//note removes .. and .
-                            f);
+  return xju::path::AbsFile(y,xju::path::FileName(""));
 }
             
 xju::path::AbsFile getPath(hcp_ast::Item const& in) noexcept

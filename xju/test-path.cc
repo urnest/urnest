@@ -73,6 +73,15 @@ void test2()
     xju::assert_equal(x.size(), 1);
     xju::assert_equal((*x.begin()), xju::path::DirName("b"));
   }
+  {
+    xju::path::AbsolutePath x({
+        xju::path::DirName("a"),
+        xju::path::DirName(""),
+        xju::path::DirName("c")});
+    xju::assert_equal(x.size(), 2);
+    xju::assert_equal((*x.begin()), xju::path::DirName("a"));
+    xju::assert_equal((*xju::next(x.begin())), xju::path::DirName("c"));
+  }
   try {
     xju::path::AbsolutePath x("/a/../../b");
     xju::assert_abort();

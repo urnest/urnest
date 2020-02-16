@@ -101,6 +101,7 @@ public:
     // x has too many '..' to normalise
     xju::Exception);
 
+  // normalises, ie no component begin()..end() is '..', or '.', or ''
   explicit AbsolutePath(std::vector<DirName> const& x) throw(
     // x has too many '..' to normalise
     xju::Exception);

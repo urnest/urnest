@@ -49,7 +49,7 @@ std::vector<DirName> normalise(std::vector<DirName> const& x) throw(
     for(std::vector<DirName>::const_iterator i=x.begin();
         i != x.end();
         ++i) {
-      if ((*i)._==".") {
+      if ((*i)._=="." || (*i)._=="") {
       }
       else if ((*i)._=="..") {
         if (!result.size()) {
