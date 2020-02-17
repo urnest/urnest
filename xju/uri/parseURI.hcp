@@ -648,8 +648,6 @@ xju::Optional<UserInfo> getUserInfo(
   return result;
 }
 
-}
-
 Path getPath(hcp_ast::IRs const& all) noexcept
 {
   Path result;
@@ -707,6 +705,9 @@ Path getPath(hcp_ast::IRs const& all) noexcept
   }
   return result;
 }
+
+}
+
 Query getQuery(hcp_ast::IRs const& all) noexcept
 {
   auto const x{hcp_ast::findChildrenOfType<QueryItem>(

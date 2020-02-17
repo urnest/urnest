@@ -84,25 +84,38 @@ hcp_parser::PR asteriskForm() noexcept
 }
 
 xju::path::AbsFile normAbsPath(
-  std::vector<xju::uri::Segment> const& p) noexcept
+  std::vector<xju::uri::Segment> const& p) throw(
+    // could not normalise i.e. invalid path
+    xju::Exception)
 {
-  std::vector<xju::path::DirName> d;
-  std::transform(p.begin(),p.end(),
-                 std::back_inserter(d),
-                 [](xju::uri::Segment const& x){
-                   return xju::path::DirName(x._);
-                 });
-  xju::path::AbsolutePath y(d);
-  if (y.size()){
-    return xju::path::AbsFile(
-      xju::path::AbsolutePath(
-        std::vector<xju::path::DirName>(y.begin(),xju::prev(y.end()))),
-      xju::path::FileName((*(xju::prev(y.end())))._));
+  try{
+    std::vector<xju::path::DirName> d;
+    std::transform(p.begin(),p.end(),
+                   std::back_inserter(d),
+                   [](xju::uri::Segment const& x){
+                     return xju::path::DirName(x._);
+                   });
+    xju::path::AbsolutePath y(d);
+    if (y.size()){
+      return xju::path::AbsFile(
+        xju::path::AbsolutePath(
+          std::vector<xju::path::DirName>(y.begin(),xju::prev(y.end()))),
+        xju::path::FileName((*(xju::prev(y.end())))._));
+    }
+    return xju::path::AbsFile(y,xju::path::FileName(""));
   }
-  return xju::path::AbsFile(y,xju::path::FileName(""));
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "normalise absolute path with components "
+      << xju::format::join(p.begin(),p.end(),", ");
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
 }
             
-xju::path::AbsFile getPath(hcp_ast::Item const& in) noexcept
+xju::path::AbsFile getPath(hcp_ast::Item const& in) throw(
+  // could not normalise i.e. invalid path
+  xju::Exception)
 {
   auto const segments{hcp_ast::findChildrenOfType<xju::uri::SegmentItem>(in)};
   std::vector<xju::uri::Segment> result;
@@ -158,16 +171,27 @@ public:
         auto const f(hcp_ast::findChildrenOfType<OriginForm>(
                        hcp_ast::Item((*r).first)));
         if (f.size()){
-          auto path(getPath(f.front().get()));
-          auto query(xju::uri::getQuery((*r).first));
-          return hcp_parser::ParseResult(
-            hcp_parser::PV(
-              {hcp_ast::IR(new Item(RequestTarget(
-                                      std::move(path),
-                                      std::move(query)),
-                                    at,
-                                    (*r).second))},
-              (*r).second));
+          try{
+            auto path(getPath(f.front().get()));
+            auto query(xju::uri::getQuery((*r).first));
+            return hcp_parser::ParseResult(
+              hcp_parser::PV(
+                {hcp_ast::IR(new Item(RequestTarget(
+                                        std::move(path),
+                                        std::move(query)),
+                                      at,
+                                      (*r).second))},
+                (*r).second));
+          }
+          catch(xju::Exception& e){
+            std::string const cause(readableRepr(e,false,true));
+            return hcp_parser::ParseResult(
+              hcp_parser::Exception(
+                std::shared_ptr<hcp_parser::Exception::Cause const>(
+                  new hcp_parser::FixedCause(cause)),
+                f.front().get().begin(),
+                XJU_TRACED));
+          }
         }
       }
       {
@@ -182,17 +206,30 @@ public:
             xju::uri::getAuthority(
               hcp_ast::findChildrenOfType<xju::uri::AuthorityItem>(
                 *(f.begin()))));
-          auto path(getPath((*f.begin()).get()));
-          auto query(xju::uri::getQuery((*f.begin()).get().items()));
-          return hcp_parser::ParseResult(
-            hcp_parser::PV(
-              {hcp_ast::IR(new Item(RequestTarget(std::move(scheme),
-                                                  std::move(authority.value()),
-                                                  std::move(path),
-                                                  std::move(query)),
-                                    at,
-                                    (*r).second))},
-              (*r).second));
+          try{
+            auto path(getPath((*f.begin()).get()));
+            auto query(xju::uri::getQuery((*f.begin()).get().items()));
+            return hcp_parser::ParseResult(
+              hcp_parser::PV(
+                {hcp_ast::IR(new Item(RequestTarget(
+                                        std::move(scheme),
+                                        std::move(authority.value()),
+                                        std::move(path),
+                                        std::move(query)),
+                                      at,
+                                      (*r).second))},
+                (*r).second));
+          }
+          catch(xju::Exception& e){
+            std::string const cause(readableRepr(e,false,true));
+            return hcp_parser::ParseResult(
+              hcp_parser::Exception(
+                std::shared_ptr<hcp_parser::Exception::Cause const>(
+                  new hcp_parser::FixedCause(cause)),
+                f.front().get().begin(),
+                XJU_TRACED));
+          }
+          
         }
       }
       {

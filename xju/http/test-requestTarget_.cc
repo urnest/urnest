@@ -102,6 +102,16 @@ void test1() {
                             xju::path::FileName("a"))),
                         xju::uri::Query("")));
   }
+  try
+  {
+    const std::string s{"/a/../../b"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),
+                                         requestTarget_())};
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal(readableRepr(e),"Failed to parse RFC7230 (HTTP) Request Target at line 1 column 1 because\nline 1 column 1: failed to normalise absolute path with components a, .., .., b because\nfailed to normalise absolute path /a/../../b because\nfailed to normalise path a/../../b because\ntoo many '..'s at component 3.");
+  }
 }
 
 }
