@@ -26,6 +26,8 @@
 
 :py3.output 'output files from a python3 script run'? => :output;
 
+:mypy3 'empty file from mypy static type check'? => :FILE;
+
 #
 # :py.exec is created regardless of exit status of test run, with:
 #   :py.exec/files.tar the files produced by the run
@@ -62,6 +64,10 @@ $ODIN_PYTHONPATH 'colon-separated list of directories to search for python impor
 
 $ODIN_PYTHON3PATH 'colon-separated list of directories to search for python3 imports, after searching +py_sp directories, e.g. /usr/local/python3/site-packages' = '';
 
+$ODIN_MYPY_PATH 'PATH to install when executing mypy, colon separated' = '/bin:/usr/bin';
+$ODIN_MYPY_LD_LIBRARY_PATH 'shared library load path to install when executing command, colon separated' = '';
+$ODIN_MYPY 'name of mypy program' = 'true';
+
 EXEC (py-import.py) (:py) (:py:dir)@ (+py_sp) (+ignore)
    => (:py_import.view_desc);
 
@@ -86,9 +92,13 @@ EXEC (py.exec.sh) (:py) (+cmd :ls) (:env) (+stderr) (+py:dir)@ (+py_sp)
   => (:py.exec);
 
 EXEC (py3.exec.sh) (:py) (+cmd :ls) (:env) (+stderr) (+py:dir)@ (+py_sp)
-  NEEDS (+cmd) (+need) (:py:py_import_all)
+  NEEDS (+cmd) (+need) (:py:py_import_all) (:py:mypy3)
   => (:py3.exec);
 
+EXEC (mypy3.sh) (:py) (:env) (+py:dir)@ (+py_sp)
+  NEEDS (:py:py_import_all)
+  => (:mypy3);
+    
 :py.exec.output.ref ':py.exec.output ref' => :FILE;
 :py.exec.files.ref ':py.exec.files ref' => :FILE;
 

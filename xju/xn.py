@@ -19,17 +19,19 @@
 import traceback
 import sys
 import string
+from typing import Sequence
 
 class FileAndLine(object):
-    def __init__(self,file=None,line=None,readable=True):
+    def __init__(self,file=None,line=None,readable:bool=True):
         self.file=file
         self.line=line
         self.readable=readable
         pass
-    def setTo(self,file,line):
+    def setTo(self,file,line)->None:
         self.file=file
         self.line=line
-    def __str__(self):
+        pass
+    def __str__(self)->str:
         if self.file:
             return '{file}:{line}: '.format(**self.__dict__)
         return ''
@@ -47,7 +49,7 @@ class Xn:
         self.context = [] # (text,FileAndLine)
         pass
 
-    def __str__(self):
+    def __str__(self)->str:
         '''programmer friendly format, each context and cause includes
         file and line, and intermediate stack entries are included
         - see unit test below for example'''
@@ -58,7 +60,7 @@ class Xn:
         y = '{cause[1]}{cause[0]}'.format(**vars(self))
         return x+y
 
-    def readableRepr(self):
+    def readableRepr(self)->str:
         '''human (non-programmer) readable representation, omitting file
         and line, omitting intermediate stack entries, and producing a
         proper sentence i.e. capitalised and ending in full stop
@@ -77,16 +79,17 @@ class Xn:
         return capitalise(x+y+'.')
     pass
 
-def readableRepr(e):
-    if isinstance(e,Xn): return e.readableRepr()
+def readableRepr(e)->str:
+    if callable(getattr(e,'readableRepr',None)):
+        return e.readableRepr()
     return str(e)
 
-def capitalise(s):
+def capitalise(s)->str:
     if s and s[0]!=s[0].upper():
         return s[0].upper()+s[1:]
     return s
 
-def inContext(context, exceptionInfo=None):
+def inContext(context, exceptionInfo=None)->Exception:
     """Make a Xn that includes exception info and context.
     If exceptionInfo[1] is already a Xn just add context,
     otherwise use exceptionInfo as cause for a new Xn.
@@ -116,7 +119,7 @@ def inContext(context, exceptionInfo=None):
                })(r)
         pass
     
-    st=traceback.extract_tb(traceBack)
+    st=[tuple(_) for _ in traceback.extract_tb(traceBack)]
     # fill in most recent file,line (latest context or cause if no context)
     f,l=st[-1][0:2]
     if r.context:
@@ -133,24 +136,26 @@ def inContext(context, exceptionInfo=None):
     return r
 
 
-def firstLineOf(x):
+def firstLineOf(x)->str:
+    '''return first line of str({x})'''
     return str(x).split('\n')[0]
 
-def desentence(s):
+def desentence(s:str)->str:
+    '''remove any trailing '.' and down-case first characters of {s}'''
     if s.endswith('.'): s=s[:-1]
     return s[0:1].lower()+s[1:]
 
-def indent(prefix,s):
+def indent(prefix:str,s:str)->str:
     '''prefix all but first line of s by specified prefix'''
     return s.replace('\n','\n'+prefix)
 
 class AllFailed(Exception):
-    def __init__(self,causes):
+    def __init__(self,causes:Sequence[Exception]):
         self.causes=causes
         pass
     def __str__(self):
         return ', and\n'.join([str(cause) for cause in self.causes])
-    def readableRepr(self):
+    def readableRepr(self)->str:
         return '; and\n'.join(['- '+
                                indent('  ',desentence(readableRepr(cause)))
                                for cause in self.causes])

@@ -16,6 +16,8 @@
 #
 
 from xju.wal.etc import Scope
+from xju.xn import Xn
+from typing import cast
 
 import io
 import sys
@@ -39,14 +41,15 @@ Assert(sys.stdout.getvalue())=='''\
 INFO: + do some stuff
 INFO: - do some stuff = 77
 '''
-def f():
+def f2():
     with Scope('do some stuff') as scope:
         raise Exception('did not work')
     pass
 try:
-    f()
+    f2()
 except Exception as e:
-    Assert(e.readableRepr())=='''\
+    ee:Xn=cast(Xn,e)
+    Assert(ee.readableRepr())=='''\
 Failed to do some stuff because
 did not work.'''
 else:

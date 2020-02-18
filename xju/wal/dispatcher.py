@@ -20,7 +20,7 @@ from xju.xn import firstLineOf as l1,inContext
 from xju import pq
 from .etc import fromJson,toJson
 from .wsgi import getVariablesFromWSGIenviron, getCookiesFromWSGIenviron, getHTTPHeadersFromWSGIenviron
-
+from typing import Set,Callable,Dict
     
 class Response:
     def __init__(self,
@@ -97,9 +97,9 @@ class Response:
         pass
     pass
 
-public_functions=set()
+public_functions:Set[str]=set()
 
-restricted_functions={}
+restricted_functions:Dict[str,Callable]={}
 
 class ClientError(Exception):
     'error to pass back to client'
