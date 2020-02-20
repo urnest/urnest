@@ -9,15 +9,16 @@
 //
 
 
-#include <xju/Tagged.hh>
 #include <string>
-#include <xju/path.hh>
 #include <xju/Optional.hh>
-#include <xju/uri/Path.hh> //impl
+#include <xju/uri/Path.hh>
 #include <xju/format.hh> //impl
 #include <xju/uri/Authority.hh>
 #include <xju/uri/Query.hh>
 #include <xju/uri/Scheme.hh>
+#include <iostream>
+#include <xju/uri/URI.hh>
+#include <xju/uri/Fragment.hh>
 
 namespace xju
 {
@@ -27,7 +28,9 @@ namespace http
 class RequestTarget{
 public:
   // origin-form
-  RequestTarget(xju::path::AbsFile path,
+  // note path is absolute, i.e. always commences with an empty segment
+  // pre: path.size() && path.front.size()==0
+  RequestTarget(xju::uri::Path path,
                 xju::uri::Query query) noexcept:
       path_(std::move(path)),
       query_(std::move(query))
@@ -35,8 +38,8 @@ public:
   }
   // absolute-form
   RequestTarget(xju::uri::Scheme scheme,
-                xju::uri::Authority authority,
-                xju::path::AbsFile path,
+                xju::Optional<xju::uri::Authority> authority,
+                xju::uri::Path path,
                 xju::uri::Query query) noexcept:
       scheme_(std::move(scheme)),
       authority_(std::move(authority)),
@@ -58,8 +61,8 @@ public:
 
   xju::Optional<xju::uri::Scheme> scheme_;
   xju::Optional<xju::uri::Authority> authority_;
-  xju::Optional<xju::path::AbsFile> path_;
-  xju::Optional<xju::uri::Query> query_; //only valid if path_.valid()
+  xju::Optional<xju::uri::Path> path_;
+  xju::Optional<xju::uri::Query> query_;
   
   friend bool operator<(RequestTarget const& a,
                         RequestTarget const& b) noexcept;
@@ -67,41 +70,26 @@ public:
   friend std::ostream& operator<<(std::ostream& s, RequestTarget const& x)
   {
     if (x.scheme_.valid()){
-      xju::assert_equal(x.authority_.valid(),true);
-      xju::assert_equal(x.path_.valid(),true);
-      s << x.scheme_.value() << "//" << x.authority_.value()
-        << RequestTarget::encode(x.path_.value());
-      if (x.query_.valid()){
-        s << "?" << x.query_.value();
-      }
-      return s;
+      return s << xju::uri::URI(x.scheme_.value(),
+                                x.authority_,
+                                x.path_.value(),
+                                x.query_.value(),
+                                xju::uri::Fragment(""));
     }
     if (x.authority_.valid()){
       return s << x.authority_.value();
     }
     if (x.path_.valid()){
-      s << RequestTarget::encode(x.path_.value());
-      if (x.query_.valid()){
+      s << xju::format::join(x.path_.value().begin(),
+                             x.path_.value().end(),
+                             std::string("/"));
+      if (x.query_.valid() && x.query_.value()._.size()){
         s << "?" << x.query_.value();
       }
       return s;
     }
     return s << "*";
   }
-private:
-  static std::string encode(xju::path::AbsFile const& x) noexcept
-  {
-    // convert x to xju::uri::Path so it gets correctly encoded
-    xju::uri::Path p({xju::uri::Segment("")}); // means absolute see xju::uri::Path
-    std::transform(x.first.begin(),x.first.end(),
-                   std::back_inserter(p),
-                   [](xju::path::DirName const& y){
-                     return xju::uri::Segment(y.value());
-                   });
-    p.push_back(xju::uri::Segment(x.second.value()));
-    return xju::format::join(p.begin(),p.end(),std::string("/"));
-  }
-
 };
 
 }

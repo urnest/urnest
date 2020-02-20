@@ -83,42 +83,10 @@ hcp_parser::PR asteriskForm() noexcept
   return result;
 }
 
-xju::path::AbsFile normAbsPath(
-  std::vector<xju::uri::Segment> const& p) throw(
-    // could not normalise i.e. invalid path
-    xju::Exception)
-{
-  try{
-    std::vector<xju::path::DirName> d;
-    std::transform(p.begin(),p.end(),
-                   std::back_inserter(d),
-                   [](xju::uri::Segment const& x){
-                     return xju::path::DirName(x._);
-                   });
-    xju::path::AbsolutePath y(d);
-    if (y.size()){
-      return xju::path::AbsFile(
-        xju::path::AbsolutePath(
-          std::vector<xju::path::DirName>(y.begin(),xju::prev(y.end()))),
-        xju::path::FileName((*(xju::prev(y.end())))._));
-    }
-    return xju::path::AbsFile(y,xju::path::FileName(""));
-  }
-  catch(xju::Exception& e){
-    std::ostringstream s;
-    s << "normalise absolute path with components "
-      << xju::format::join(p.begin(),p.end(),", ");
-    e.addContext(s.str(),XJU_TRACED);
-    throw;
-  }
-}
-            
-xju::path::AbsFile getPath(hcp_ast::Item const& in) throw(
-  // could not normalise i.e. invalid path
-  xju::Exception)
+xju::uri::Path getPath(hcp_ast::Item const& in) noexcept
 {
   auto const segments{hcp_ast::findChildrenOfType<xju::uri::SegmentItem>(in)};
-  std::vector<xju::uri::Segment> result;
+  std::vector<xju::uri::Segment> result({xju::uri::Segment("")});
   std::transform(segments.begin(),segments.end(),
                  std::back_inserter(result),
                  [](decltype(*segments.begin()) const& x){
@@ -126,7 +94,7 @@ xju::path::AbsFile getPath(hcp_ast::Item const& in) throw(
                      xju::uri::pctDecode(xju::uri::segmentChars(),
                                hcp_ast::reconstruct(x.get())));
                  });
-  return normAbsPath(result);
+  return result;
 }
 
 }
@@ -152,8 +120,9 @@ public:
       p_(
         originForm()|
         absoluteForm()|
-        authorityForm()|
-        asteriskForm())
+        asteriskForm()| //note * is a valid authority by rfc3986
+                        //so we reverse order of asterisk, authority
+        authorityForm())
   {
   }
   
@@ -171,51 +140,35 @@ public:
         auto const f(hcp_ast::findChildrenOfType<OriginForm>(
                        hcp_ast::Item((*r).first)));
         if (f.size()){
-          try{
-            auto path(getPath(f.front().get()));
-            auto query(xju::uri::getQuery((*r).first));
-            return hcp_parser::ParseResult(
-              hcp_parser::PV(
-                {hcp_ast::IR(new Item(RequestTarget(
-                                        std::move(path),
-                                        std::move(query)),
-                                      at,
-                                      (*r).second))},
-                (*r).second));
-          }
-          catch(xju::Exception& e){
-            std::string const cause(readableRepr(e,false,true));
-            return hcp_parser::ParseResult(
-              hcp_parser::Exception(
-                std::shared_ptr<hcp_parser::Exception::Cause const>(
-                  new hcp_parser::FixedCause(cause)),
-                f.front().get().begin(),
-                XJU_TRACED));
-          }
+          xju::assert_equal(f.size(),1U);
+          auto path(getPath(f.front().get()));
+          auto query(xju::uri::getQuery((*r).first));
+          return hcp_parser::ParseResult(
+            hcp_parser::PV(
+              {hcp_ast::IR(new Item(RequestTarget(
+                                      std::move(path),
+                                      std::move(query)),
+                                    at,
+                                    (*r).second))},
+              (*r).second));
         }
       }
       {
         auto const f(hcp_ast::findChildrenOfType<AbsoluteForm>(
                        hcp_ast::Item((*r).first)));
         if (f.size()){
-          xju::uri::Scheme const scheme{
-            hcp_ast::reconstruct(
-              hcp_ast::findOnlyChildOfType<xju::uri::SchemeItem>(
-                hcp_ast::Item((*f.begin()).get().items())))};
-          auto authority(
-            xju::uri::getAuthority(
-              hcp_ast::findChildrenOfType<xju::uri::AuthorityItem>(
-                *(f.begin()))));
+          xju::assert_equal(f.size(),1U);
+          xju::uri::URIParser::Item const& u(
+            hcp_ast::findOnlyChildOfType<xju::uri::URIParser::Item>(
+              f.front().get()));
           try{
-            auto path(getPath((*f.begin()).get()));
-            auto query(xju::uri::getQuery((*f.begin()).get().items()));
             return hcp_parser::ParseResult(
               hcp_parser::PV(
                 {hcp_ast::IR(new Item(RequestTarget(
-                                        std::move(scheme),
-                                        std::move(authority.value()),
-                                        std::move(path),
-                                        std::move(query)),
+                                        u.uri_.scheme_,
+                                        u.uri_.authority_,
+                                        u.uri_.path_,
+                                        u.uri_.query_),
                                       at,
                                       (*r).second))},
                 (*r).second));

@@ -31,11 +31,9 @@ void test1() {
       s);
     xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
                       RequestTarget(
-                        xju::path::AbsFile(
-                          std::make_pair(
-                            xju::path::AbsolutePath(
-                              {xju::path::DirName("a")}),
-                            xju::path::FileName("x.txt"))),
+                        {xju::uri::Segment(""),
+                         xju::uri::Segment("a"),
+                         xju::uri::Segment("x.txt")},
                         xju::uri::Query("name=jock allen")));
   }
   {
@@ -47,11 +45,7 @@ void test1() {
       s);
     xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
                       RequestTarget(
-                        xju::path::AbsFile(
-                          std::make_pair(
-                            xju::path::AbsolutePath(
-                              std::vector<xju::path::DirName>()),
-                            xju::path::FileName(""))),
+                        {xju::uri::Segment(""),xju::uri::Segment("")},
                         xju::uri::Query("")));
   }
   {
@@ -63,11 +57,10 @@ void test1() {
       s);
     xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
                       RequestTarget(
-                        xju::path::AbsFile(
-                          std::make_pair(
-                            xju::path::AbsolutePath(
-                              {xju::path::DirName("a")}),
-                            xju::path::FileName("b"))),
+                        {xju::uri::Segment(""),
+                         xju::uri::Segment("a"),
+                         xju::uri::Segment("b"),
+                         xju::uri::Segment("")},
                         xju::uri::Query("")));
   }
   {
@@ -79,11 +72,10 @@ void test1() {
       s);
     xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
                       RequestTarget(
-                        xju::path::AbsFile(
-                          std::make_pair(
-                            xju::path::AbsolutePath(
-                              {xju::path::DirName("a")}),
-                            xju::path::FileName("b"))),
+                        {xju::uri::Segment(""),
+                         xju::uri::Segment("a"),
+                         xju::uri::Segment("b"),
+                         xju::uri::Segment("")},
                         xju::uri::Query("")));
   }
   {
@@ -95,23 +87,125 @@ void test1() {
       s);
     xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
                       RequestTarget(
-                        xju::path::AbsFile(
-                          std::make_pair(
-                            xju::path::AbsolutePath(
-                              std::vector<xju::path::DirName>()),
-                            xju::path::FileName("a"))),
+                        {xju::uri::Segment(""),
+                         xju::uri::Segment("a"),
+                         xju::uri::Segment("b"),
+                         xju::uri::Segment("..")},
                         xju::uri::Query("")));
   }
-  try
+}
+
+void test2() {
+  //absolute-form
   {
-    const std::string s{"/a/../../b"};
+    const std::string s{"sip://a.com/b/../x.txt?name=jock%20allen"};
     auto const r{hcp_parser::parseString(s.begin(),s.end(),
                                          requestTarget_())};
-    xju::assert_never_reached();
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+                      RequestTarget(
+                        xju::uri::Scheme("sip"),
+                        xju::uri::Authority(
+                          xju::uri::Host(xju::HostName("a.com")),
+                          xju::Optional<xju::ip::Port>(),
+                          xju::Optional<xju::uri::UserInfo>()),
+                        {xju::uri::Segment(""),
+                         xju::uri::Segment("b"),
+                         xju::uri::Segment(".."),
+                         xju::uri::Segment("x.txt")},
+                        xju::uri::Query("name=jock allen")));
   }
-  catch(xju::Exception const& e){
-    xju::assert_equal(readableRepr(e),"Failed to parse RFC7230 (HTTP) Request Target at line 1 column 1 because\nline 1 column 1: failed to normalise absolute path with components a, .., .., b because\nfailed to normalise absolute path /a/../../b because\nfailed to normalise path a/../../b because\ntoo many '..'s at component 3.");
+  {
+    const std::string s{"sip://a.com/b/../x.txt"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),
+                                         requestTarget_())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+                      RequestTarget(
+                        xju::uri::Scheme("sip"),
+                        xju::uri::Authority(
+                          xju::uri::Host(xju::HostName("a.com")),
+                          xju::Optional<xju::ip::Port>(),
+                          xju::Optional<xju::uri::UserInfo>()),
+                        {xju::uri::Segment(""),
+                         xju::uri::Segment("b"),
+                         xju::uri::Segment(".."),
+                         xju::uri::Segment("x.txt")},
+                        xju::uri::Query("")));
   }
+  {
+    const std::string s{"sip://a.com"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),
+                                         requestTarget_())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+                      RequestTarget(
+                        xju::uri::Scheme("sip"),
+                        xju::uri::Authority(
+                          xju::uri::Host(xju::HostName("a.com")),
+                          xju::Optional<xju::ip::Port>(),
+                          xju::Optional<xju::uri::UserInfo>()),
+                        xju::uri::Path(),
+                        xju::uri::Query("")));
+  }
+}
+void test3()
+{
+  //authority-form
+  {
+    const std::string s{"a.com"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),
+                                         requestTarget_())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
+      s);
+    xju::assert_equal(
+      hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+      RequestTarget(
+        xju::uri::Authority(
+          xju::uri::Host(xju::HostName("a.com")),
+          xju::Optional<xju::ip::Port>(),
+          xju::Optional<xju::uri::UserInfo>())));
+  }
+  if(false) // a.com:99 is a valid URI with scheme a.com and host 99 :-(
+  {
+    const std::string s{"a.com:99"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),
+                                         requestTarget_())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
+      s);
+    xju::assert_equal(
+      hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+      RequestTarget(
+        xju::uri::Authority(
+          xju::uri::Host(xju::HostName("a.com")),
+          xju::ip::Port(99),
+          xju::Optional<xju::uri::UserInfo>())));
+  }
+  
+}
+void test4()
+{
+  //asterisk-form
+
+  {
+    const std::string s{"*"};
+    auto const r{hcp_parser::parseString(s.begin(),s.end(),
+                                         requestTarget_())};
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+                      RequestTarget());
+  }
+  
 }
 
 }
@@ -123,6 +217,9 @@ int main(int argc, char* argv[])
 {
   unsigned int n(0);
   test1(), ++n;
+  test2(), ++n;
+  test3(), ++n;
+  test4(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }
