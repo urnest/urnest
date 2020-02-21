@@ -16,12 +16,12 @@
 #include <xju/uri/pctDecode.hh> //impl
 #include <xju/uri/segmentChars.hh> //impl
 #include <xju/prev.hh> //impl
+#include <xju/http/originFormParser.hh> //impl
 
 namespace xju
 {
 namespace http
 {
-class OriginFormTag{};
 class AbsoluteFormTag{};
 class AuthorityFormTag{};
 class AsteriskFormTag{};
@@ -29,7 +29,6 @@ class AsteriskFormTag{};
 namespace
 {
 
-typedef hcp_ast::TaggedItem<OriginFormTag> OriginForm;
 typedef hcp_ast::TaggedItem<AbsoluteFormTag> AbsoluteForm;
 typedef hcp_ast::TaggedItem<AuthorityFormTag> AuthorityForm;
 typedef hcp_ast::TaggedItem<AsteriskFormTag> AsteriskForm;
@@ -43,18 +42,6 @@ using hcp_parser::digit;
 using hcp_parser::alpha;
 using hcp_parser::atLeastOne;
 using hcp_parser::zeroOrMore;
-
-hcp_parser::PR originForm() noexcept
-{
-  static hcp_parser::PR result(
-    new hcp_parser::NamedParser<OriginForm>(
-      "request-target origin-form",
-      atLeastOne(parseLiteral("/")+xju::uri::segment())+
-      (
-        (parseLiteral("?")+xju::uri::query())|
-        !parseLiteral("?"))));
-  return result;
-}
 
 hcp_parser::PR absoluteForm() noexcept
 {
@@ -83,20 +70,6 @@ hcp_parser::PR asteriskForm() noexcept
   return result;
 }
 
-xju::uri::Path getPath(hcp_ast::Item const& in) noexcept
-{
-  auto const segments{hcp_ast::findChildrenOfType<xju::uri::SegmentItem>(in)};
-  std::vector<xju::uri::Segment> result({xju::uri::Segment("")});
-  std::transform(segments.begin(),segments.end(),
-                 std::back_inserter(result),
-                 [](decltype(*segments.begin()) const& x){
-                   return xju::uri::Segment(
-                     xju::uri::pctDecode(xju::uri::segmentChars(),
-                               hcp_ast::reconstruct(x.get())));
-                 });
-  return result;
-}
-
 }
 
 
@@ -118,7 +91,7 @@ public:
   
   explicit RequestTargetParser() throw():
       p_(
-        originForm()|
+        originFormParser()|
         absoluteForm()|
         asteriskForm()| //note * is a valid authority by rfc3986
                         //so we reverse order of asterisk, authority
@@ -137,17 +110,15 @@ public:
     auto const r{p_->parse(at,options)};
     if (!r.failed()){
       {
-        auto const f(hcp_ast::findChildrenOfType<OriginForm>(
+        auto const f(hcp_ast::findChildrenOfType<OriginFormItem>(
                        hcp_ast::Item((*r).first)));
         if (f.size()){
           xju::assert_equal(f.size(),1U);
-          auto path(getPath(f.front().get()));
-          auto query(xju::uri::getQuery((*r).first));
           return hcp_parser::ParseResult(
             hcp_parser::PV(
               {hcp_ast::IR(new Item(RequestTarget(
-                                      std::move(path),
-                                      std::move(query)),
+                                      std::move(f.front().get().path_),
+                                      std::move(f.front().get().query_)),
                                     at,
                                     (*r).second))},
               (*r).second));

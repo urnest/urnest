@@ -326,7 +326,6 @@ public:
 
   // Parser::
   // Parse x and:
-  // - if x fails, put name in excetion context
   // - if x succeeds, wrap result in ItemType and return that as result
   virtual ParseResult parse_(I const at, Options const& o) throw() 
   {
