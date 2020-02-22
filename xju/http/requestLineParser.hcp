@@ -10,9 +10,8 @@
 
 
 #include <hcp/parser.hh>
-#include <xju/http/method_.hh> //impl
-#include <xju/http/requestTarget_.hh> //impl
-#include <xju/http/httpVersion_.hh> //impl
+#include <xju/http/methodParser.hh> //impl
+#include <xju/http/httpVersionParser.hh> //impl
 #include <xju/http/crlf.hh> //impl
 
 namespace xju
@@ -20,12 +19,15 @@ namespace xju
 namespace http
 {
 
-hcp_parser::PR requestLine_() noexcept
+std::shared_ptr<hcp_parser::NamedParser<RequestLineItem> > requestLineParser()
+  noexcept
 {
-  static hcp_parser::PR result{
-    method_()+hcp_parser::parseLiteral(" ")+
-    requestTarget_()+hcp_parser::parseLiteral(" ")+
-    httpVersion_()+crlf()};
+  static std::shared_ptr<hcp_parser::NamedParser<RequestLineItem> > result(
+    new hcp_parser::NamedParser<RequestLineItem>(
+      "RFC7230 (HTTP) request-line",
+      methodParser()+hcp_parser::parseLiteral(" ")+
+      requestTargetParser()+hcp_parser::parseLiteral(" ")+
+      httpVersionParser()+crlfParser()));
   return result;
 }
 

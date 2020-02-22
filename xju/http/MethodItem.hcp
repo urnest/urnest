@@ -9,24 +9,26 @@
 //
 
 
-#include <hcp/parser.hh>
+#include <hcp/ast.hh>
+#include <xju/http/Method.hh>
 
 namespace xju
 {
 namespace http
 {
 
-// return rfc7320 token parser
-hcp_parser::PR token() noexcept
+class MethodItem : public hcp_ast::Item
 {
-  static hcp_parser::PR result{
-    hcp_parser::atLeastOne(
-      hcp_parser::parseOneOfChars("!#$%&'*+-.^_'|~")|
-      hcp_parser::digit()|
-      hcp_parser::charInRange('a','z')|
-      hcp_parser::charInRange('A','Z'))};
-  return result;
-}
+public:
+  MethodItem(hcp_ast::IRs const& irs) noexcept:
+      hcp_ast::Item(irs)
+  {
+  }
+  Method get() const noexcept
+  {
+    return Method(hcp_ast::reconstruct(*this));
+  }
+};
 
 }
 }

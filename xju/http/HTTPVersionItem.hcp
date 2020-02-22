@@ -1,0 +1,51 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/http/HTTPVersion.hh>
+#include <hcp/ast.hh>
+#include <hcp/parser.hh>
+#include <xju/stringToInt.hh> //impl
+
+namespace xju
+{
+namespace http
+{
+
+class HTTPVersionItem : public hcp_ast::Item
+{
+  
+public:
+  typedef hcp_ast::TaggedItem<HTTPVersion::Major> MajorItem;
+  typedef hcp_ast::TaggedItem<HTTPVersion::Minor> MinorItem;
+  
+  //pre: irs contains a MajorItem and a MinorItem
+  explicit HTTPVersionItem(hcp_parser::IRs const& irs) noexcept:
+      hcp_ast::Item(irs),
+      major_(hcp_ast::findOnlyChildOfType<MajorItem>(*this)),
+      minor_(hcp_ast::findOnlyChildOfType<MinorItem>(*this))
+  {
+  }
+  HTTPVersion get() const noexcept
+  {
+    return HTTPVersion(
+      HTTPVersion::Major(xju::stringToInt(hcp_ast::reconstruct(major_))),
+      HTTPVersion::Minor(xju::stringToInt(hcp_ast::reconstruct(minor_))));
+  }
+
+private:
+  MajorItem const& major_;
+  MinorItem const& minor_;
+};
+
+}
+}
+
+

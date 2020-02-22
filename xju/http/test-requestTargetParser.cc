@@ -29,7 +29,7 @@ void test1() {
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
-    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).get(),
                       RequestTarget(
                         {xju::uri::Segment(""),
                          xju::uri::Segment("a"),
@@ -43,7 +43,7 @@ void test1() {
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
-    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).get(),
                       RequestTarget(
                         {xju::uri::Segment(""),xju::uri::Segment("")},
                         xju::uri::Query("")));
@@ -55,7 +55,7 @@ void test1() {
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
-    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).get(),
                       RequestTarget(
                         {xju::uri::Segment(""),
                          xju::uri::Segment("a"),
@@ -70,7 +70,7 @@ void test1() {
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
-    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).get(),
                       RequestTarget(
                         {xju::uri::Segment(""),
                          xju::uri::Segment("a"),
@@ -85,7 +85,7 @@ void test1() {
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
-    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).get(),
                       RequestTarget(
                         {xju::uri::Segment(""),
                          xju::uri::Segment("a"),
@@ -104,7 +104,7 @@ void test2() {
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
-    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).get(),
                       RequestTarget(
                         xju::uri::Scheme("sip"),
                         xju::uri::Authority(
@@ -124,7 +124,7 @@ void test2() {
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
-    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).get(),
                       RequestTarget(
                         xju::uri::Scheme("sip"),
                         xju::uri::Authority(
@@ -144,7 +144,7 @@ void test2() {
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
-    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).get(),
                       RequestTarget(
                         xju::uri::Scheme("sip"),
                         xju::uri::Authority(
@@ -166,7 +166,7 @@ void test3()
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
     xju::assert_equal(
-      hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+      hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).get(),
       RequestTarget(
         xju::uri::Authority(
           xju::uri::Host(xju::HostName("a.com")),
@@ -182,7 +182,7 @@ void test3()
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
     xju::assert_equal(
-      hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+      hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).get(),
       RequestTarget(
         xju::uri::Authority(
           xju::uri::Host(xju::HostName("a.com")),
@@ -202,7 +202,7 @@ void test4()
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
-    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).requestTarget_,
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r).get(),
                       RequestTarget());
   }
   

@@ -24,17 +24,19 @@ namespace http
 class RequestTargetItem : public hcp_ast::Item
 {
 public:
+  //pre: irs has exactly one of
+  //     OriginFormItem
+  //     AbsoluteFormItem
+  //     AuthorityFormItem
+  //     AsteriskFormItem
   RequestTargetItem(hcp_ast::IRs const& irs) noexcept:
-      hcp_ast::Item(irs),
-      requestTarget_(RequestTargetItem::get(*this))
+      hcp_ast::Item(irs)
   {
   }
-  RequestTarget requestTarget_;
-private:
-  static RequestTarget get(hcp_ast::Item const& irs) noexcept
+  RequestTarget get() const noexcept
   {
     {
-      auto const f(hcp_ast::findChildrenOfType<OriginFormItem>(irs));
+      auto const f(hcp_ast::findChildrenOfType<OriginFormItem>(*this));
       if (f.size()){
         xju::assert_equal(f.size(),1U);
         return RequestTarget(
@@ -43,7 +45,7 @@ private:
       }
     }
     {
-      auto const f(hcp_ast::findChildrenOfType<AbsoluteFormItem>(irs));
+      auto const f(hcp_ast::findChildrenOfType<AbsoluteFormItem>(*this));
       if (f.size()){
         xju::assert_equal(f.size(),1U);
         xju::uri::URI const& uri(f.front().get().uri_);
@@ -55,14 +57,14 @@ private:
       }
     }
     {
-      auto const f(hcp_ast::findChildrenOfType<AuthorityFormItem>(irs));
+      auto const f(hcp_ast::findChildrenOfType<AuthorityFormItem>(*this));
       if (f.size()){
         xju::assert_equal(f.size(),1U);
         xju::uri::Authority const& authority(f.front().get().authority_);
         return RequestTarget(authority);
       }
     }
-    auto const f(hcp_ast::findChildrenOfType<AsteriskFormItem>(irs));
+    auto const f(hcp_ast::findChildrenOfType<AsteriskFormItem>(*this));
     xju::assert_not_equal(f.size(),0U);
     return RequestTarget();
   }

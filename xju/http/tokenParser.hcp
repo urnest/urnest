@@ -10,21 +10,21 @@
 
 
 #include <hcp/parser.hh>
-#include <xju/http/Method.hh> //impl
-#include <hcp/ast.hh> //impl
-#include <xju/http/token.hh> //impl
 
 namespace xju
 {
 namespace http
 {
 
-hcp_parser::PR method_() noexcept
+// return rfc7320 token parser
+hcp_parser::PR tokenParser() noexcept
 {
   static hcp_parser::PR result{
-    new hcp_parser::NamedParser<hcp_ast::TaggedItem<Method> >(
-      "method",
-      token())};
+    hcp_parser::atLeastOne(
+      hcp_parser::parseOneOfChars("!#$%&'*+-.^_'|~")|
+      hcp_parser::digit()|
+      hcp_parser::charInRange('a','z')|
+      hcp_parser::charInRange('A','Z'))};
   return result;
 }
 
