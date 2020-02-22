@@ -1,0 +1,75 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <hcp/ast.hh>
+#include <xju/http/RequestTarget.hh>
+#include <xju/http/OriginFormItem.hh> //impl
+#include <xju/http/AbsoluteFormItem.hh> //impl
+#include <xju/http/AuthorityFormItem.hh> //impl
+#include <xju/http/AsteriskFormItem.hh> //impl
+
+namespace xju
+{
+namespace http
+{
+
+class RequestTargetItem : public hcp_ast::Item
+{
+public:
+  RequestTargetItem(hcp_ast::IRs const& irs) noexcept:
+      hcp_ast::Item(irs),
+      requestTarget_(RequestTargetItem::get(*this))
+  {
+  }
+  RequestTarget requestTarget_;
+private:
+  static RequestTarget get(hcp_ast::Item const& irs) noexcept
+  {
+    {
+      auto const f(hcp_ast::findChildrenOfType<OriginFormItem>(irs));
+      if (f.size()){
+        xju::assert_equal(f.size(),1U);
+        return RequestTarget(
+          std::move(f.front().get().path_),
+          std::move(f.front().get().query_));
+      }
+    }
+    {
+      auto const f(hcp_ast::findChildrenOfType<AbsoluteFormItem>(irs));
+      if (f.size()){
+        xju::assert_equal(f.size(),1U);
+        xju::uri::URI const& uri(f.front().get().uri_);
+        return RequestTarget(
+          uri.scheme_,
+          uri.authority_,
+          uri.path_,
+          uri.query_);
+      }
+    }
+    {
+      auto const f(hcp_ast::findChildrenOfType<AuthorityFormItem>(irs));
+      if (f.size()){
+        xju::assert_equal(f.size(),1U);
+        xju::uri::Authority const& authority(f.front().get().authority_);
+        return RequestTarget(authority);
+      }
+    }
+    auto const f(hcp_ast::findChildrenOfType<AsteriskFormItem>(irs));
+    xju::assert_not_equal(f.size(),0U);
+    return RequestTarget();
+  }
+};
+
+
+}
+}
+
+

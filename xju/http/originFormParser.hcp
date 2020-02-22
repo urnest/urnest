@@ -16,63 +16,7 @@
 #include <hcp/ast.hh>
 #include <xju/uri/pctDecode.hh> //impl
 #include <xju/uri/segmentChars.hh> //impl
-
-namespace xju
-{
-namespace http
-{
-
-class OriginFormItem : public hcp_ast::Item
-  {
-  public:
-    OriginFormItem(xju::uri::Path path,
-                   xju::uri::Query query,
-                   hcp_ast::I begin,
-                   hcp_ast::I end) noexcept:
-        hcp_ast::Item(begin,end),
-        path_(std::move(path)),
-        query_(std::move(query))
-    {
-    }
-    xju::uri::Path path_;
-    xju::uri::Query query_;
-  };
-}
-}
-
-namespace hcp_parser
-{
-template<>
-hcp_parser::ParseResult hcp_parser::NamedParser<xju::http::OriginFormItem>::parse_(
-  hcp_ast::I const at, 
-  hcp_parser::Options const& options) noexcept
-{
-  auto const r{x_->parse(at,options)};
-  if (!r.failed()){
-    auto const segments{hcp_ast::findChildrenOfType<xju::uri::SegmentItem>(
-        hcp_ast::Item((*r).first))};
-    std::vector<xju::uri::Segment> path({xju::uri::Segment("")});
-    std::transform(segments.begin(),segments.end(),
-                   std::back_inserter(path),
-                   [](decltype(*segments.begin()) const& x){
-                     return xju::uri::Segment(
-                       xju::uri::pctDecode(xju::uri::segmentChars(),
-                                           hcp_ast::reconstruct(x.get())));
-                   });
-    auto query(xju::uri::getQuery((*r).first));
-    return hcp_parser::ParseResult(
-      hcp_parser::PV(
-        {hcp_ast::IR(new xju::http::OriginFormItem(
-                       std::move(path),
-                       std::move(query),
-                       at,
-                       (*r).second))},
-        (*r).second));
-  }
-  return r;
-}
-
-}
+#include <xju/http/OriginFormItem.hh>
 
 namespace xju
 {

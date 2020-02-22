@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/http/requestTarget_.hh>
+#include <xju/http/requestTargetParser.hh>
 
 #include <iostream>
 #include <xju/assert.hh>
@@ -25,7 +25,7 @@ void test1() {
   {
     const std::string s{"/a/x.txt?name=jock%20allen"};
     auto const r{hcp_parser::parseString(s.begin(),s.end(),
-                                         requestTarget_())};
+                                         requestTargetParser())};
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
@@ -39,7 +39,7 @@ void test1() {
   {
     const std::string s{"/"};
     auto const r{hcp_parser::parseString(s.begin(),s.end(),
-                                         requestTarget_())};
+                                         requestTargetParser())};
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
@@ -51,7 +51,7 @@ void test1() {
   {
     const std::string s{"/a/b/"};
     auto const r{hcp_parser::parseString(s.begin(),s.end(),
-                                         requestTarget_())};
+                                         requestTargetParser())};
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
@@ -66,7 +66,7 @@ void test1() {
   {
     const std::string s{"/a/b/"};
     auto const r{hcp_parser::parseString(s.begin(),s.end(),
-                                         requestTarget_())};
+                                         requestTargetParser())};
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
@@ -81,7 +81,7 @@ void test1() {
   {
     const std::string s{"/a/b/.."};
     auto const r{hcp_parser::parseString(s.begin(),s.end(),
-                                         requestTarget_())};
+                                         requestTargetParser())};
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
@@ -100,7 +100,7 @@ void test2() {
   {
     const std::string s{"sip://a.com/b/../x.txt?name=jock%20allen"};
     auto const r{hcp_parser::parseString(s.begin(),s.end(),
-                                         requestTarget_())};
+                                         requestTargetParser())};
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
@@ -120,7 +120,7 @@ void test2() {
   {
     const std::string s{"sip://a.com/b/../x.txt"};
     auto const r{hcp_parser::parseString(s.begin(),s.end(),
-                                         requestTarget_())};
+                                         requestTargetParser())};
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
@@ -140,7 +140,7 @@ void test2() {
   {
     const std::string s{"sip://a.com"};
     auto const r{hcp_parser::parseString(s.begin(),s.end(),
-                                         requestTarget_())};
+                                         requestTargetParser())};
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
@@ -161,7 +161,7 @@ void test3()
   {
     const std::string s{"a.com"};
     auto const r{hcp_parser::parseString(s.begin(),s.end(),
-                                         requestTarget_())};
+                                         requestTargetParser())};
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
@@ -177,7 +177,7 @@ void test3()
   {
     const std::string s{"a.com:99"};
     auto const r{hcp_parser::parseString(s.begin(),s.end(),
-                                         requestTarget_())};
+                                         requestTargetParser())};
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);
@@ -198,7 +198,7 @@ void test4()
   {
     const std::string s{"*"};
     auto const r{hcp_parser::parseString(s.begin(),s.end(),
-                                         requestTarget_())};
+                                         requestTargetParser())};
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<RequestTargetItem>(r)),
       s);

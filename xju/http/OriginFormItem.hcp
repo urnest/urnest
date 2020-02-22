@@ -1,0 +1,62 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <hcp/ast.hh>
+#include <xju/uri/Path.hh>
+#include <xju/uri/parseURI.hh> //impl
+#include <vector> //impl
+#include <algorithm> //impl
+#include <xju/uri/pctDecode.hh> //impl
+#include <xju/uri/segmentChars.hh> //impl
+#include <hcp/parser.hh>
+#include <xju/uri/Query.hh>
+
+namespace xju
+{
+namespace http
+{
+
+class OriginFormItem : public hcp_ast::Item
+{
+public:
+  explicit OriginFormItem(hcp_parser::IRs const& irs) noexcept:
+      hcp_ast::Item(irs),
+      path_(OriginFormItem::getPath(irs)),
+      query_(xju::uri::getQuery(irs))
+  {
+  }
+  xju::uri::Path path_;
+  xju::uri::Query query_;
+
+private:
+  static xju::uri::Path getPath(hcp_parser::IRs const& irs) noexcept
+  {
+    auto const segments{hcp_ast::findChildrenOfType<xju::uri::SegmentItem>(
+        hcp_ast::Item(irs))};
+    std::vector<xju::uri::Segment> path(
+      // origin-form path is always absolute
+      {xju::uri::Segment("")});
+    std::transform(segments.begin(),segments.end(),
+                   std::back_inserter(path),
+                   [](decltype(*segments.begin()) const& x){
+                     return xju::uri::Segment(
+                       xju::uri::pctDecode(xju::uri::segmentChars(),
+                                           hcp_ast::reconstruct(x.get())));
+                   });
+    return path;
+  }
+};
+
+
+
+}
+}
+
+
