@@ -30,7 +30,7 @@ public:
       hcp_ast::Item(irs),
       method_(hcp_ast::findOnlyChildOfType<MethodItem>(*this)),
       requestTarget_(hcp_ast::findOnlyChildOfType<RequestTargetItem>(*this)),
-      httpVersion_(hcp_ast::fndOnlyChildOfType<HTTPVersionItem>(*this))
+      httpVersion_(hcp_ast::findOnlyChildOfType<HTTPVersionItem>(*this))
   {
   }
   RequestLine get() const noexcept

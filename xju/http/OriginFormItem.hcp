@@ -46,9 +46,7 @@ private:
     std::transform(segments.begin(),segments.end(),
                    std::back_inserter(path),
                    [](decltype(*segments.begin()) const& x){
-                     return xju::uri::Segment(
-                       xju::uri::pctDecode(xju::uri::segmentChars(),
-                                           hcp_ast::reconstruct(x.get())));
+                     return x.get().get();
                    });
     return path;
   }

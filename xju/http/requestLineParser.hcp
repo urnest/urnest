@@ -13,6 +13,8 @@
 #include <xju/http/methodParser.hh> //impl
 #include <xju/http/httpVersionParser.hh> //impl
 #include <xju/http/crlf.hh> //impl
+#include <xju/http/RequestLineItem.hh>
+#include <xju/http/requestTargetParser.hh> //impl
 
 namespace xju
 {
@@ -27,12 +29,10 @@ std::shared_ptr<hcp_parser::NamedParser<RequestLineItem> > requestLineParser()
       "RFC7230 (HTTP) request-line",
       methodParser()+hcp_parser::parseLiteral(" ")+
       requestTargetParser()+hcp_parser::parseLiteral(" ")+
-      httpVersionParser()+crlfParser()));
+      httpVersionParser()+crlf()));
   return result;
 }
 
 
 }
 }
-
-

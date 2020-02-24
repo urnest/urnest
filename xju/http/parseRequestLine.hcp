@@ -30,7 +30,8 @@ RequestLine parseRequestLine(std::istream& s, size_t max) throw(
 {
   try{
     std::string const l{xju::readThrough(s,"\r\n",max)};
-    auto const x{hcp_parser::parseString(l.begin(),l.end(), requestLine_())};
+    auto const x{hcp_parser::parseString(l.begin(),l.end(),
+                                         requestLineParser())};
     Method const m{
       hcp_ast::reconstruct(
         hcp_ast::findOnlyChildOfType<hcp_ast::TaggedItem<Method> >(x))};

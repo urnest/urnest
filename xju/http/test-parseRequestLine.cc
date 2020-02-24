@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/http/parseRequestLine.hh>
+#include <xju/http/requestLineParser.hh>
 
 #include <iostream>
 #include <xju/assert.hh>
@@ -19,13 +19,17 @@ namespace http
 
 void test1() {
   {
-    std::string const x{"GET /x.html HTTP/1.1\r\n"};
+    std::string const x{"GET /x.html HTTP/1.0\r\n"};
     std::istringstream s{x};
     RequestLine y{parseRequestLine(s,x.size())};
     xju::assert_equal(y.m_,Method("GET"));
-    xju::assert_equal(y.t_,RequestTarget(xju::path::AbsFile(xju::path::AbsolutePath(std::vector<xju::path::DirName>()),xju::path::FileName("x.html"))));
+    xju::assert_equal(y.t_,RequestTarget(
+                        xju::uri::Path({
+                            xju::uri::Segment(),
+                            xju::uri::Segment("x.html")}),
+                        xju::uri::Query("")));
     xju::assert_equal(y.v_,HTTPVersion(HTTPVersion::Major(1),
-                                       HTTPVersion::Minor(1)));
+                                       HTTPVersion::Minor(0)));
   }
 }
 

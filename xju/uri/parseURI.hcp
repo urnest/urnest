@@ -30,6 +30,7 @@
 #include <xju/uri/subDelimChars.hh> //impl
 #include <xju/uri/unreservedChars.hh> //impl
 #include <xju/uri/fragmentChars.hh> //impl
+#include <xju/uri/SegmentItem.hh>
 
 namespace xju
 {
@@ -79,21 +80,19 @@ hcp_parser::PR pchar() noexcept
   return result;
 }
 
-typedef hcp_ast::TaggedItem<Segment> SegmentItem;
-
-hcp_parser::PR segment() noexcept
+std::shared_ptr<hcp_parser::NamedParser<SegmentItem> > segment() noexcept
 {
-  static hcp_parser::PR result{
-    hcp_parser::named<SegmentItem>(
+  static std::shared_ptr<hcp_parser::NamedParser<SegmentItem> > result{
+    new hcp_parser::NamedParser<SegmentItem>(
       "segment",
       zeroOrMore()*(pchar()))};
   return result;
 }
 
-hcp_parser::PR segmentNz() noexcept
+std::shared_ptr<hcp_parser::NamedParser<SegmentItem> > segmentNz() noexcept
 {
-  static hcp_parser::PR result{
-    hcp_parser::named<SegmentItem>(
+  static std::shared_ptr<hcp_parser::NamedParser<SegmentItem> > result{
+    new hcp_parser::NamedParser<SegmentItem>(
       "segment-nz",
       atLeastOne(pchar()))};
   return result;
@@ -680,9 +679,7 @@ Path getPath(hcp_ast::IRs const& all) noexcept
       std::transform(segments.begin(),segments.end(),
                      std::back_inserter(result),
                      [](decltype(*segments.begin()) const& x){
-                       return Segment(
-                         pctDecode(segmentChars(),
-                                   hcp_ast::reconstruct(x.get())));
+                       return x.get().get();
                      });
       return result;
     }

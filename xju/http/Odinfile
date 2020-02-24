@@ -5,6 +5,7 @@
 
 %tests.tree==<<
 ()+cmd=(test-parseRequestLine.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-requestLineParser.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-requestTargetParser.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-httpVersionParser.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 

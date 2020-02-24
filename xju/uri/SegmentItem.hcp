@@ -1,0 +1,36 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <hcp/ast.hh>
+#include <xju/uri/Segment.hh>
+#include <xju/uri/pctDecode.hh> //impl
+#include <xju/uri/segmentChars.hh> //impl
+
+namespace xju
+{
+namespace uri
+{
+
+class SegmentItem : public hcp_ast::Item
+{
+public:
+  SegmentItem(hcp_ast::IRs const& irs) noexcept:
+      hcp_ast::Item(irs)
+  {
+  }
+  Segment get() const noexcept
+  {
+    return Segment(pctDecode(segmentChars(),hcp_ast::reconstruct(*this)));
+  }
+};
+  
+}
+}
