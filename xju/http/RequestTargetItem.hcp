@@ -48,7 +48,7 @@ public:
       auto const f(hcp_ast::findChildrenOfType<AbsoluteFormItem>(*this));
       if (f.size()){
         xju::assert_equal(f.size(),1U);
-        xju::uri::URI const& uri(f.front().get().uri_);
+        xju::uri::URI uri(f.front().get().get());
         return RequestTarget(
           uri.scheme_,
           uri.authority_,

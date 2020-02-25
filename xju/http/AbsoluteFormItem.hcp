@@ -24,12 +24,14 @@ class AbsoluteFormItem : public hcp_ast::Item
 public:
   //pre: irs contains an xju::uri::URIItem
   explicit AbsoluteFormItem(hcp_parser::IRs const& irs) noexcept:
-      hcp_ast::Item(irs),
-      uri_(hcp_ast::findOnlyChildOfType<xju::uri::URIItem>(
-             hcp_ast::Item(irs)).uri_)
+      hcp_ast::Item(irs)
   {
   }
-  xju::uri::URI uri_;
+  xju::uri::URI get() const noexcept
+  {
+    return hcp_ast::findOnlyChildOfType<xju::uri::URIItem>(
+      hcp_ast::Item(*this)).uri_;
+  }
 };
 
 }

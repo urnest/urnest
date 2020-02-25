@@ -27,19 +27,13 @@ class OriginFormItem : public hcp_ast::Item
 {
 public:
   explicit OriginFormItem(hcp_parser::IRs const& irs) noexcept:
-      hcp_ast::Item(irs),
-      path_(OriginFormItem::getPath(irs)),
-      query_(xju::uri::getQuery(irs))
+      hcp_ast::Item(irs)
   {
   }
-  xju::uri::Path path_;
-  xju::uri::Query query_;
-
-private:
-  static xju::uri::Path getPath(hcp_parser::IRs const& irs) noexcept
+  xju::uri::Path getPath() const noexcept
   {
-    auto const segments{hcp_ast::findChildrenOfType<xju::uri::SegmentItem>(
-        hcp_ast::Item(irs))};
+    auto const segments(
+      hcp_ast::findChildrenOfType<xju::uri::SegmentItem>(*this));
     std::vector<xju::uri::Segment> path(
       // origin-form path is always absolute
       {xju::uri::Segment("")});
@@ -49,6 +43,10 @@ private:
                      return x.get().get();
                    });
     return path;
+  }
+  xju::uri::Query getQuery() const noexcept
+  {
+    return xju::uri::getQuery({*this});
   }
 };
 

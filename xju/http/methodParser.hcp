@@ -10,7 +10,7 @@
 
 
 #include <hcp/parser.hh>
-#include <xju/http/MethodItem.hh> //impl
+#include <xju/http/MethodItem.hh>
 #include <hcp/ast.hh> //impl
 #include <xju/http/tokenParser.hh> //impl
 
@@ -19,10 +19,10 @@ namespace xju
 namespace http
 {
 
-hcp_parser::PR methodParser() noexcept
+std::shared_ptr<hcp_parser::NamedParser<MethodItem> > methodParser() noexcept
 {
-  static hcp_parser::PR result{
-    new hcp_parser::NamedParser<hcp_ast::TaggedItem<MethodItem> >(
+  static std::shared_ptr<hcp_parser::NamedParser<MethodItem> > result{
+    new hcp_parser::NamedParser<MethodItem>(
       "method",
       tokenParser())};
   return result;

@@ -9,15 +9,12 @@
 //
 
 
-#include <xju/stringToUInt.hh> //impl
 #include <hcp/parser.hh> //impl
-#include <xju/http/Method.hh> //impl
 #include <hcp/ast.hh> //impl
-#include <xju/http/HTTPVersion.hh> //impl
 #include <xju/http/RequestLine.hh>
 #include <xju/readThrough.hh> //impl
-#include <xju/http/requestLine_.hh> //impl
-#include <xju/http/RequestTarget.hh> //impl
+#include <xju/http/requestLineParser.hh> //impl
+#include <xju/http/RequestLineItem.hh> //impl
 
 namespace xju
 {
@@ -30,25 +27,9 @@ RequestLine parseRequestLine(std::istream& s, size_t max) throw(
 {
   try{
     std::string const l{xju::readThrough(s,"\r\n",max)};
-    auto const x{hcp_parser::parseString(l.begin(),l.end(),
-                                         requestLineParser())};
-    Method const m{
-      hcp_ast::reconstruct(
-        hcp_ast::findOnlyChildOfType<hcp_ast::TaggedItem<Method> >(x))};
-    RequestTarget const t{
-      hcp_ast::reconstruct(
-        hcp_ast::findOnlyChildOfType<hcp_ast::TaggedItem<RequestTarget> >(x))};
-    auto v{hcp_ast::findOnlyChildOfType<hcp_ast::TaggedItem<HTTPVersion> >(x)};
-    HTTPVersion const version{
-      HTTPVersion::Major(
-        xju::stringToUInt(
-          hcp_ast::reconstruct(
-            hcp_ast::findOnlyChildOfType<hcp_ast::TaggedItem<HTTPVersion::Major> >(v)))),
-      HTTPVersion::Minor(
-        xju::stringToUInt(
-          hcp_ast::reconstruct(
-            hcp_ast::findOnlyChildOfType<hcp_ast::TaggedItem<HTTPVersion::Minor> >(v))))};
-    return RequestLine(m,t,version);
+    auto const x(hcp_parser::parseString(l.begin(),l.end(),
+                                         requestLineParser()));
+    return hcp_ast::findOnlyChildOfType<RequestLineItem>(x).get();
   }
   catch(xju::Exception& e){
     std::ostringstream s;
