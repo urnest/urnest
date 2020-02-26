@@ -587,7 +587,7 @@ void test16()
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<URIItem>(r)),
       s);
-    xju::assert_equal(hcp_ast::findOnlyChildOfType<URIItem>(r).uri_,
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<URIItem>(r).get(),
                       URI(
                         Scheme("http"),
                         Authority(Host(xju::HostName("host.com")),
@@ -604,7 +604,7 @@ void test16()
       xju::assert_equal(
         hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<URIItem>(r)),
         s);
-      xju::assert_equal(hcp_ast::findOnlyChildOfType<URIItem>(r).uri_,
+      xju::assert_equal(hcp_ast::findOnlyChildOfType<URIItem>(r).get(),
                         URI(
                           Scheme("http"),
                           Authority(Host(xju::HostName("ho st.com")),
@@ -621,7 +621,7 @@ void test16()
     }
     catch(xju::Exception const& e)
     {
-      xju::assert_equal(readableRepr(e),"Failed to parse RFC 3986 URI at line 1 column 1 because\nfailed to parse !\"#\" at line 1 column 47 because\nline 1 column 47: expected parse failure.");
+      xju::assert_equal(readableRepr(e),"Failed to parse RFC 3986 Absolute URI at line 1 column 1 because\nfailed to parse !\"#\" at line 1 column 47 because\nline 1 column 47: expected parse failure.");
     }
   }
   {
@@ -631,7 +631,7 @@ void test16()
       xju::assert_equal(
         hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<URIItem>(r)),
         s);
-      auto const uri(hcp_ast::findOnlyChildOfType<URIItem>(r).uri_);
+      auto const uri(hcp_ast::findOnlyChildOfType<URIItem>(r).get());
       xju::assert_equal(uri,
                         URI(
                           Scheme("http"),
@@ -650,7 +650,7 @@ void test16()
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<URIItem>(r)),
       s);
-    xju::assert_equal(hcp_ast::findOnlyChildOfType<URIItem>(r).uri_,
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<URIItem>(r).get(),
                       URI(
                         Scheme("http"),
                         xju::Optional<Authority>(),
@@ -664,7 +664,7 @@ void test16()
     xju::assert_equal(
       hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<URIItem>(r)),
       s);
-    xju::assert_equal(hcp_ast::findOnlyChildOfType<URIItem>(r).uri_,
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<URIItem>(r).get(),
                       URI(
                         Scheme("http"),
                         xju::Optional<Authority>(),

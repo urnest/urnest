@@ -40,8 +40,8 @@ public:
       if (f.size()){
         xju::assert_equal(f.size(),1U);
         return RequestTarget(
-          std::move(f.front().get().path_),
-          std::move(f.front().get().query_));
+          f.front().get().getPath(),
+          f.front().get().getQuery());
       }
     }
     {

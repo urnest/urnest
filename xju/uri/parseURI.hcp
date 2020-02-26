@@ -173,12 +173,23 @@ hcp_parser::PR pathEmpty() noexcept
     return result;
 }
 
-typedef hcp_ast::TaggedItem<Query> QueryItem;
-
-hcp_parser::PR query() noexcept
+class QueryItem : public hcp_ast::Item
 {
-  static hcp_parser::PR result{
-    hcp_parser::named<QueryItem>(
+public:
+  explicit QueryItem(hcp_ast::IRs const& irs) noexcept:
+      hcp_ast::Item(irs)
+  {
+  }
+  Query get() const noexcept
+  {
+    return Query(pctDecode(queryChars(),hcp_ast::reconstruct(*this)));
+  }
+};
+
+std::shared_ptr<hcp_parser::NamedParser<QueryItem> > query() noexcept
+{
+  static std::shared_ptr<hcp_parser::NamedParser<QueryItem> > result{
+    new hcp_parser::NamedParser<QueryItem>(
       "query",
       zeroOrMore()*(pchar()|parseOneOfChars("/?")))};
   return result;
@@ -710,8 +721,7 @@ Query getQuery(hcp_ast::IRs const& all) noexcept
   auto const x{hcp_ast::findChildrenOfType<QueryItem>(
       hcp_ast::Item(all),1)};
   if (x.size()){
-    return Query(pctDecode(queryChars(),
-                           hcp_ast::reconstruct(x.front().get())));
+    return x.front().get().get();
   }
   return Query("");
 }
@@ -743,24 +753,41 @@ xju::Optional<Authority> getAuthority(
   return xju::Optional<Authority>();
 }
 
-class URIParser : public hcp_parser::NamedParser_
+class URIItem : public hcp_ast::Item
 {
 public:
-  class Item : public hcp_ast::Item
+  explicit URIItem(hcp_ast::IRs const& irs) noexcept:
+      hcp_ast::Item(irs)
   {
-  public:
-    Item(URI uri,
-         hcp_ast::I begin,
-         hcp_ast::I end) noexcept:
-        hcp_ast::Item(begin,end),
-        uri_(std::move(uri))
-    {
-    }
-    URI uri_;
-  };
-  
-  explicit URIParser(bool absolute) throw():
-      p_(scheme()+parseLiteral(":")+
+  }
+  URI get() const noexcept
+  {
+    Scheme scheme(
+      hcp_ast::reconstruct(
+        hcp_ast::findOnlyChildOfType<SchemeItem>(*this)));
+      
+    xju::Optional<Authority> authority(
+        getAuthority(hcp_ast::findChildrenOfType<AuthorityItem>(*this)));
+
+    Path path(getPath(items()));
+    
+    Query query(getQuery(items()));
+    Fragment fragment(getFragment(items()));
+    return URI(scheme,
+               authority,
+               path,
+               query,
+               fragment);
+  }
+};
+
+
+std::shared_ptr<hcp_parser::NamedParser<URIItem> > parseURI() noexcept
+{
+  static std::shared_ptr<hcp_parser::NamedParser<URIItem> > result(
+    new hcp_parser::NamedParser<URIItem>(
+      "RFC 3986 URI",
+      scheme()+parseLiteral(":")+
       (
         (parseLiteral("//")+authority()+pathAbEmpty())|
         pathAbsolute()|
@@ -769,68 +796,27 @@ public:
       (
         (parseLiteral("?")+query())|
         !parseLiteral("?"))+
-      (absolute?
-       !parseLiteral("#"):
-       (
-         (parseLiteral("#")+fragment())|
-         !parseLiteral("#"))))
-  {
-  }
-  
-  virtual std::string target() const throw() override
-  {
-    return "RFC 3986 URI";
-  }
-  virtual hcp_parser::ParseResult parse_(
-    hcp_ast::I const at, 
-    hcp_parser::Options const& options) throw() override
-  {
-    auto const r{p_->parse(at,options)};
-    if (!r.failed()){
-      Scheme const scheme{
-        hcp_ast::reconstruct(
-          hcp_ast::findOnlyChildOfType<SchemeItem>(
-            hcp_ast::Item((*r).first)))};
-      
-      xju::Optional<Authority> authority{
-        getAuthority(hcp_ast::findChildrenOfType<AuthorityItem>(
-                       hcp_ast::Item((*r).first)))};
-
-      Path path{getPath((*r).first)};
-
-      Query query{getQuery((*r).first)};
-      Fragment fragment{getFragment((*r).first)};
-      return hcp_parser::ParseResult(
-        hcp_parser::PV(
-          {hcp_ast::IR(new Item(URI(scheme,
-                                    authority,
-                                    path,
-                                    query,
-                                    fragment),
-                                at,
-                                (*r).second))},
-          (*r).second));
-    }
-    return r;
-  }
-private:
-  hcp_parser::PR p_;
-
-};
-typedef URIParser::Item URIItem;
-
-
-hcp_parser::PR parseURI() noexcept
-{
-  static hcp_parser::PR result{
-    hcp_parser::PR(new URIParser(false))};
+      (
+        (parseLiteral("#")+fragment())|
+        !parseLiteral("#"))));
   return result;
 }
 
-hcp_parser::PR parseAbsoluteURI() noexcept
+std::shared_ptr<hcp_parser::NamedParser<URIItem> > parseAbsoluteURI() noexcept
 {
-  static hcp_parser::PR result{
-    hcp_parser::PR(new URIParser(true))};
+  static std::shared_ptr<hcp_parser::NamedParser<URIItem> > result(
+    new hcp_parser::NamedParser<URIItem>(
+      "RFC 3986 Absolute URI",
+      scheme()+parseLiteral(":")+
+      (
+        (parseLiteral("//")+authority()+pathAbEmpty())|
+        pathAbsolute()|
+        pathRootless()|
+        pathEmpty())+
+      (
+        (parseLiteral("?")+query())|
+        !parseLiteral("?"))+
+      !parseLiteral("#")));
   return result;
 }
 

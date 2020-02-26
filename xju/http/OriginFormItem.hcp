@@ -46,7 +46,11 @@ public:
   }
   xju::uri::Query getQuery() const noexcept
   {
-    return xju::uri::getQuery({*this});
+    auto const x(hcp_ast::findChildrenOfType<xju::uri::QueryItem>(*this));
+    if (x.size()){
+      return x.front().get().get();
+    }
+    return xju::uri::Query("");
   }
 };
 
