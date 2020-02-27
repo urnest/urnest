@@ -53,15 +53,16 @@ xju/http http1.1 - rfc7230, rfc7231
   - std::bad_alloc for out-of-memory
   - all other exceptions are "mal-formed", with specific exceptions where
     rfc7230 calls for specific action by client/server
-  - parseRequestLine(istream,max) -> (method,target,http-version)
-    -readThrough(istream,"\r\n",max) then parse and decode components
-    / parseRequestTarget
+  x parseRequestLine(istream,max) -> (method,target,http-version)
+    x readThrough(istream,"\r\n",max) then parse and decode components
+    x parseRequestTarget
       x code
-      - test decoding
-      - test 4 variants
-      - test errors
-      - normalise path e.g. a/b/ same result as a/b?
-      
+      x test decoding
+      x test 4 variants
+      x test errors
+      ~ normalise path e.g. a/b/ same result as a/b? No, we can't
+        interpret path in general; can only really normalise if have
+	whole uri
   - parseStatusLine(istream,max) -> (http-version,status-code,reason)
   - parseHeaders(istream,max) -> headers
   - copyBody(istream,size) -> body

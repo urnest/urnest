@@ -1,0 +1,36 @@
+// Copyright (c) 2019 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <hcp/parser.hh>
+#include <xju/http/httpVersionParser.hh> //impl
+#include <xju/http/crlf.hh> //impl
+#include <xju/http/StatusLineItem.hh>
+
+namespace xju
+{
+namespace http
+{
+
+std::shared_ptr<hcp_parser::NamedParser<StatusLineItem> > statusLineParser()
+  noexcept
+{
+  static std::shared_ptr<hcp_parser::NamedParser<StatusLineItem> > result(
+    new hcp_parser::NamedParser<StatusLineItem>(
+      "RFC7230 (HTTP) status-line",
+      httpVersionParser()+hcp_parser::parseLiteral(" ")+
+      statusCodeParser()+hcp_parser::parseLiteral(" ")+
+      reasonPhraseParser()+crlf()));
+  return result;
+}
+
+
+}
+}
