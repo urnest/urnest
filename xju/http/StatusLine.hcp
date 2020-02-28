@@ -1,0 +1,48 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/http/HTTPVersion.hh>
+#include <xju/http/StatusCode.hh>
+#include <xju/http/ReasonPhrase.hh>
+#include <iostream>
+#include <xju/format.hh>
+
+namespace xju
+{
+namespace http
+{
+
+class StatusLine
+{
+public:
+  StatusLine(HTTPVersion v, StatusCode c, ReasonPhrase p) noexcept:
+      version_(std::move(v)),
+      statusCode_(std::move(c)),
+      reasonPhrase_(std::move(p))
+  {
+  }
+  HTTPVersion version_;
+  StatusCode statusCode_;
+  ReasonPhrase reasonPhrase_;
+
+  friend bool operator<(StatusLine const& x, StatusLine const& y) noexcept;
+
+  //HTTP valid format
+  friend std::ostream& operator<<(std::ostream& s, StatusLine const& x)
+  {
+    return s << x.version_ << " "
+             << xju::format::int_(x.statusCode_.value(),3,'0') << " "
+             << x.reasonPhrase_;
+  }
+};
+
+}
+}

@@ -9,6 +9,9 @@
 ()+cmd=(test-requestTargetParser.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-httpVersionParser.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-statusCodeParser.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-reasonPhraseParser.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-StatusLine.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-statusLineParser.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 %hcp-gen==.:dir.hcp.list+G+hpath='xju/http':hcp-split-virdir-specs:cat:vir_dir
 

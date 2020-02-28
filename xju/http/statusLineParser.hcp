@@ -13,6 +13,8 @@
 #include <xju/http/httpVersionParser.hh> //impl
 #include <xju/http/crlf.hh> //impl
 #include <xju/http/StatusLineItem.hh>
+#include <xju/http/statusCodeParser.hh> //impl
+#include <xju/http/reasonPhraseParser.hh> //impl
 
 namespace xju
 {

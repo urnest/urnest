@@ -10,24 +10,28 @@
 
 
 #include <hcp/ast.hh>
-#include <xju/http/ReasonPhrase.hh>
+#include <xju/http/StatusLine.hh>
+#include <xju/http/HTTPVersionItem.hh> //impl
+#include <xju/http/StatusCodeItem.hh> //impl
+#include <xju/http/ReasonPhraseItem.hh> //impl
 
 namespace xju
 {
 namespace http
 {
 
-class ReasonPhraseItem : public hcp_ast::Item
+class StatusLineItem : public hcp_ast::Item
 {
 public:
   using hcp_ast::Item::Item;
-  ReasonPhrase get() const noexcept
+  StatusLine get() const noexcept
   {
-    return ReasonPhrase(hcp_ast::reconstruct(*this));
+    return StatusLine(
+      hcp_ast::findOnlyChildOfType<HTTPVersionItem>(*this).get(),
+      hcp_ast::findOnlyChildOfType<StatusCodeItem>(*this).get(),
+      hcp_ast::findOnlyChildOfType<ReasonPhraseItem>(*this).get());
   }
 };
 
 }
 }
-
-

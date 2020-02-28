@@ -21,10 +21,7 @@ namespace http
 class StatusCodeItem : public hcp_ast::Item
 {
 public:
-  explicit StatusCodeItem(hcp_ast::IRs const& irs) noexcept:
-      hcp_ast::Item(irs)
-  {
-  }
+  using hcp_ast::Item::Item;
   StatusCode get() const noexcept
   {
     return StatusCode(xju::stringToUInt(hcp_ast::reconstruct(*this)));

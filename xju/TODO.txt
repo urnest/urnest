@@ -63,7 +63,7 @@ xju/http http1.1 - rfc7230, rfc7231
       ~ normalise path e.g. a/b/ same result as a/b? No, we can't
         interpret path in general; can only really normalise if have
 	whole uri
-  - parseStatusLine(istream,max) -> (http-version,status-code,reason)
+  / parseStatusLine(istream,max) -> (http-version,status-code,reason)
   - parseHeaders(istream,max) -> headers
   - copyBody(istream,size) -> body
   - copyUnboundedBody(istream,maxSize) -> body   // to eof
