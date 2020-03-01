@@ -31,24 +31,6 @@ xju/http http1.1 - rfc7230, rfc7231
     application? I think leave entirely to application.
     x actually decode/encode is better:
       x uri level: all, but only encode disallowed chars for each field type
-      x does that work for http queries?
-        suppose want to query name=Fred&Jock#ette and age=43
-	... obviously the application putting together the xju::uri::Query
-	will have to encode the & to produce Query("name=Fred%38Jock&age=43")
-	which we put into the uri as name=Fred%38Jock%35ette&age=43
-	we'd better not decode %38 or the app will get the wrong string:
-	  name=Fred&Jock#ette&age=43
-        ... so we must only decode the chars we encoded.
-	sal.getFromServer(sal.encodeURL({'name':'Fred&Jock?or#','age':7})
-	sends: "GET /fred?name=Fred%26Jock%3For%23&age=17"
-	sal.getFromServer(sal.encodeURL('fred',{' name%':'Fred&Jock?or#',age:'17'}));
-	... sends:
-	GET /fred?%20name%25=Fred%26Jock%3For%23&age=17&_=1570704581251 HTTP/1.1
-        ... so I think encoding/decoding at URI level will work as long as
-	we only encode/decode invalid chars at that level; note that if the
-	client pre-encoded e.g. " " it will be decoded before they get it
-	back (but & and = will not)
-    x implement that (see xju/uri/test-parseURI)
   - timeout exceptions come from istream exception passed through untouched
   - std::bad_alloc for out-of-memory
   - all other exceptions are "mal-formed", with specific exceptions where
@@ -63,7 +45,7 @@ xju/http http1.1 - rfc7230, rfc7231
       ~ normalise path e.g. a/b/ same result as a/b? No, we can't
         interpret path in general; can only really normalise if have
 	whole uri
-  / parseStatusLine(istream,max) -> (http-version,status-code,reason)
+  x parseStatusLine(istream,max) -> (http-version,status-code,reason)
   - parseHeaders(istream,max) -> headers
   - copyBody(istream,size) -> body
   - copyUnboundedBody(istream,maxSize) -> body   // to eof

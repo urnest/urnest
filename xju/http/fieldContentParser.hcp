@@ -1,0 +1,31 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <memory>
+#include <hcp/parser.hh>
+#include <xju/http/FieldContentItem.hh>
+namespace xju
+{
+namespace http
+{
+std::shared_ptr<hcp_parser::NamedParser<FieldContentItem> > fieldContentParser()
+  noexcept
+{
+  std::shared_ptr<hcp_parser::NamedParser<FieldContentItem> > result(
+    new hcp_parser::NamedParser<FieldContentItem>(
+      hcp_parser::parseUntil((hcp_parser::parseOneOfChars(" \t")|
+                              hcp_parser::charInRange(0x21,0x7e)| //VCHAR
+                              hcp_parser::charInRange(0x80,0xff)), //obs-text
+                             ows()+crlf())));
+  return result;
+}
+
+}
+}
