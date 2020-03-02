@@ -11,6 +11,8 @@
 #include <memory>
 #include <hcp/parser.hh>
 #include <xju/http/FieldContentItem.hh>
+#include <xju/http/ows.hh> //impl
+#include <xju/http/crlf.hh> //impl
 namespace xju
 {
 namespace http
@@ -20,6 +22,7 @@ std::shared_ptr<hcp_parser::NamedParser<FieldContentItem> > fieldContentParser()
 {
   std::shared_ptr<hcp_parser::NamedParser<FieldContentItem> > result(
     new hcp_parser::NamedParser<FieldContentItem>(
+      "HTTP field-content",
       hcp_parser::parseUntil((hcp_parser::parseOneOfChars(" \t")|
                               hcp_parser::charInRange(0x21,0x7e)| //VCHAR
                               hcp_parser::charInRange(0x80,0xff)), //obs-text

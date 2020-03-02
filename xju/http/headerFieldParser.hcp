@@ -9,6 +9,14 @@
 //
 
 
+#include <memory>
+#include <hcp/parser.hh>
+#include <xju/http/HeaderFieldItem.hh>
+#include <xju/http/fieldNameParser.hh> //impl
+#include <xju/http/fieldValueParser.hh> //impl
+#include <xju/http/ows.hh> //impl
+#include <xju/http/crlf.hh> //impl
+
 namespace xju
 {
 namespace http
@@ -20,8 +28,9 @@ std::shared_ptr<hcp_parser::NamedParser<HeaderFieldItem> > headerFieldParser()
   static std::shared_ptr<hcp_parser::NamedParser<HeaderFieldItem> > result(
     new hcp_parser::NamedParser<HeaderFieldItem>(
       "HTTP Header Field",
-      fieldNameParser()+parseLiteral(":")+ows()+
-      fieldValueParser()+ows()+crlf()));
+      fieldNameParser()+hcp_parser::parseLiteral(":")+ows()+
+      fieldValueParser()));
+  return result;
 }
 
 }

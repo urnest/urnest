@@ -9,6 +9,10 @@
 //
 
 
+#include <hcp/parser.hh>
+#include <xju/http/FieldNameItem.hh>
+#include <xju/http/tokenParser.hh> //impl
+
 namespace xju
 {
 namespace http
@@ -17,10 +21,10 @@ namespace http
 std::shared_ptr<hcp_parser::NamedParser<FieldNameItem> > fieldNameParser()
   noexcept
 {
-  static std::shared_ptr<hcp_parser::NamedParser<FieldNameItem> >(
+  static std::shared_ptr<hcp_parser::NamedParser<FieldNameItem> > result(
     new hcp_parser::NamedParser<FieldNameItem>(
       "HTTP field-name",
-      token()));
+      tokenParser()));
   return result;
 }
   

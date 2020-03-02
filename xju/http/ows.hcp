@@ -21,7 +21,7 @@ hcp_parser::PR ows() noexcept
   static hcp_parser::PR result(
     hcp_parser::zeroOrMore()*hcp_parser::parseOneOfChars(" \t"));
   return result;
-};
+}
 
 }
 }

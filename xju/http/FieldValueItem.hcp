@@ -11,6 +11,8 @@
 
 #include <hcp/ast.hh>
 #include <sstream> //impl
+#include <xju/http/FieldValue.hh>
+#include <xju/http/FieldContentItem.hh> //impl
 namespace xju
 {
 namespace http
@@ -26,7 +28,7 @@ public:
     std::ostringstream s;
     auto const parts(hcp_ast::findChildrenOfType<FieldContentItem>(*this));
     for(auto p : parts){
-      s << hcp_ast::reconstructs(p.get());
+      s << hcp_ast::reconstruct(p.get());
     }
     return FieldValue(s.str());
   }

@@ -9,6 +9,11 @@
 //
 
 
+#include <hcp/parser.hh>
+#include <xju/http/FieldValueItem.hh>
+#include <xju/http/crlf.hh> //impl
+#include <xju/http/ows.hh> //impl
+#include <xju/http/fieldContentParser.hh> //impl
 namespace xju
 {
 namespace http
@@ -17,14 +22,14 @@ namespace http
 std::shared_ptr<hcp_parser::NamedParser<FieldValueItem> > fieldValueParser()
   noexcept
 {
-  static std::shared_ptr<hcp_parser::NamedParser<FieldValueItem> >(
-    "HTTP field-value",
-    fieldContentParser()+(ows()+crlf())+
-    zeroOrMore()*(parseLiteral(" ")+fieldContentParser()+(ows()+crlf())));
+  static std::shared_ptr<hcp_parser::NamedParser<FieldValueItem> > result(
+    new hcp_parser::NamedParser<FieldValueItem>(
+      "HTTP field-value",
+      fieldContentParser()+(ows()+crlf())+
+      hcp_parser::zeroOrMore()*(
+        hcp_parser::parseLiteral(" ")+fieldContentParser()+(ows()+crlf()))));
   return result;
 }
 
 }
 }
-
-

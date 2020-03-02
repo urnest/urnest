@@ -9,20 +9,14 @@
 //
 
 
-#include <hcp/ast.hh>
-
+#include <xju/Tagged.hh>
+#include <string>
 namespace xju
 {
 namespace http
 {
-
-class FieldContentItem : public hcp_ast::Item
-{
-public:
-  using hcp_ast::Item::Item;
-
-  
-};
+class FieldNameTag{};
+typedef xju::Tagged<std::string,FieldNameTag> FieldName;
 
 }
 }

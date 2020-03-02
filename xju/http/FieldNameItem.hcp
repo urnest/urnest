@@ -10,21 +10,21 @@
 
 
 #include <hcp/ast.hh>
-
+#include <xju/http/FieldName.hh>
 namespace xju
 {
 namespace http
 {
-
-class FieldContentItem : public hcp_ast::Item
+class FieldNameItem : public hcp_ast::Item
 {
 public:
   using hcp_ast::Item::Item;
 
-  
+  FieldName get() const noexcept
+  {
+    return FieldName(hcp_ast::reconstruct(*this));
+  }
 };
 
 }
 }
-
-

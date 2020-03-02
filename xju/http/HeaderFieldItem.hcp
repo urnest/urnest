@@ -10,18 +10,28 @@
 
 
 #include <hcp/ast.hh>
-
+#include <utility>
+#include <xju/http/FieldName.hh>
+#include <xju/http/FieldValue.hh>
+#include <xju/http/FieldNameItem.hh> //impl
+#include <xju/http/FieldValueItem.hh> //impl
 namespace xju
 {
 namespace http
 {
 
-class FieldContentItem : public hcp_ast::Item
+class HeaderFieldItem : public hcp_ast::Item
 {
 public:
+  //pre: irs contains one FieldNameItem and one FieldValueItem
   using hcp_ast::Item::Item;
 
-  
+  std::pair<FieldName, FieldValue> get() const noexcept
+  {
+    return std::make_pair(
+      hcp_ast::findOnlyChildOfType<FieldNameItem>(*this).get(),
+      hcp_ast::findOnlyChildOfType<FieldValueItem>(*this).get());
+  }
 };
 
 }
