@@ -865,10 +865,10 @@
   };
   wal.showElement=function($element,topOffset,then,duration){
     var viewport={
-      top:$('html,body').scrollTop()+(topOffset||0),
-      left:$('html,body').scrollLeft(),
-      height:$(window).height()-(topOffset||0),
-      width:$(window).width()
+      top:$('body').scrollTop()+(topOffset||0),
+      left:$('body').scrollLeft(),
+      height:window.innerHeight-(topOffset||0),
+      width:window.innerWidth
     };
     var newWindowTop=$('html,body').scrollTop();
     var newWindowLeft=$('html,body').scrollLeft();
@@ -881,10 +881,33 @@
     };
     var element=wal.extend(
       {
-	width:$element.outerWidth(),
-	height:$element.outerHeight()
+	width:$element.first().outerWidth(),
+	height:$element.first().outerHeight()
       },
-      $element.offset());
+      $element.first().offset());
+    wal.each($element.toArray(),function(i,e){
+      var $e=$(e);
+      var bottom=element.top+element.height;
+      var right=element.left+element.width;
+      var ew=wal.extend(
+	{
+	  width:$e.outerWidth(),
+	  height:$e.outerHeight()
+	},
+	$e.offset());
+      ew.bottom=ew.top+ew.height;
+      ew.right=ew.left+ew.width;
+      var n={
+	top:wal.min(element.top,ew.top),
+	left:wal.min(element.left,ew.left),
+	bottom:wal.max(bottom,ew.bottom),
+	right:wal.max(right,ew.right)};
+      element={
+	top:n.top,
+	left:n.left,
+	width:n.right-n.left,
+	height:n.bottom-n.top};
+    });
     duration=duration||500;
     if (element.top<viewport.top){
       scrollVert(element.top);
