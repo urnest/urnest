@@ -9,25 +9,15 @@
 //
 
 
-#include <hcp/ast.hh>
-#include <xju/http/FieldContent.hh>
+#include <xju/Tagged.hh>
+#include <string>
 
 namespace xju
 {
 namespace http
 {
-
-class FieldContentItem : public hcp_ast::Item
-{
-public:
-  using hcp_ast::Item::Item;
-
-  FieldContent get() const noexcept
-  {
-    return FieldContent(hcp_ast::reconstruct(*this));
-  }
-};
-
+class FieldContentTag{};
+typedef xju::Tagged<std::string,FieldContentTag> FieldContent;
 }
 }
 

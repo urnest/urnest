@@ -27,9 +27,30 @@ void test1() {
       s);
     xju::assert_equal(hcp_ast::findOnlyChildOfType<HeaderFieldItem>(r).get(),
                       std::make_pair(FieldName("Host-Name"),
-                                     FieldValue("fred.com")));
+                                     FieldValue({FieldContent("fred.com")})));
   }
-  @@@;
+  {
+    std::string const s("Host-Name: fred.com\r\n jock.com.au\r\n");
+    auto const r(hcp_parser::parseString(s.begin(),s.end(),
+                                         headerFieldParser()));
+    xju::assert_equal(
+      hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<HeaderFieldItem>(r)),
+      s);
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<HeaderFieldItem>(r).get(),
+                      std::make_pair(FieldName("Host-Name"),
+                                     FieldValue({FieldContent("fred.com"),
+                                                 FieldContent("jock.com.au")})));
+  }
+  try
+  {
+    std::string const s("Host-Name: fred.com\r\njock.com.au\r\n");
+    auto const r(hcp_parser::parseString(s.begin(),s.end(),
+                                         headerFieldParser()));
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal(readableRepr(e),"only parsed until line 2 column 1.");
+  }
 }
 
 }

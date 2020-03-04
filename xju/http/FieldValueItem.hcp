@@ -13,6 +13,9 @@
 #include <sstream> //impl
 #include <xju/http/FieldValue.hh>
 #include <xju/http/FieldContentItem.hh> //impl
+#include <algorithm> //impl
+#include <iterator> //impl
+
 namespace xju
 {
 namespace http
@@ -25,12 +28,14 @@ public:
 
   FieldValue get() const noexcept
   {
-    std::ostringstream s;
+    FieldValue result;
     auto const parts(hcp_ast::findChildrenOfType<FieldContentItem>(*this));
-    for(auto p : parts){
-      s << hcp_ast::reconstruct(p.get());
-    }
-    return FieldValue(s.str());
+    std::transform(parts.begin(),parts.end(),
+                   std::back_inserter(result),
+                   [](decltype(parts.front()) x){
+                     return x.get().get();
+                   });
+    return result;
   }
   
 };

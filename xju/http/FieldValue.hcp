@@ -11,14 +11,17 @@
 
 #include <xju/Tagged.hh>
 #include <string>
+#include <vector>
+#include <xju/http/FieldContent.hh>
 namespace xju
 {
 namespace http
 {
+//note we don't unfold field values because rfc7230 gives a choice in
+//handling folded field values and we don't want to make that choice on
+//behalf of applications
 class FieldValueTag{};
-typedef xju::Tagged<std::string, FieldValueTag> FieldValue;
+typedef std::vector<FieldContent> FieldValue; // size>1 indicates folding
 
 }
 }
-
-

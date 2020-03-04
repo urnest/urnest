@@ -30,7 +30,7 @@ public:
   xju::uri::URI get() const noexcept
   {
     return hcp_ast::findOnlyChildOfType<xju::uri::URIItem>(
-      hcp_ast::Item(*this)).uri_;
+      hcp_ast::Item(*this)).get();
   }
 };
 
