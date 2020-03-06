@@ -43,11 +43,12 @@ Headers parseHeaders(std::istream& s,size_t max) throw(
       size+=l.size();
       all_<<l;
     };
+    all_<<"\r\n";
     auto const all(all_.str());
     auto const x(hcp_parser::parseString(
                    all.begin(),all.end(),
-                   //REVISIT: use parseUntil
-                   hcp_parser::zeroOrMore()*headerFieldParser()));
+                   hcp_parser::parseUntil(headerFieldParser(),crlf())+
+                   crlf()));
     Headers result;
     auto headers(hcp_ast::findChildrenOfType<HeaderFieldItem>(x));
     std::transform(headers.begin(),headers.end(),

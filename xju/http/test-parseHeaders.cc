@@ -62,7 +62,7 @@ void test1() {
     xju::assert_never_reached();
   }
   catch(xju::Exception const& e){
-    xju::assert_equal(readableRepr(e),"Failed to parse HTTP headers of max 50 chars from stream because\nonly parsed until line 2 column 1.");
+    xju::assert_equal(readableRepr(e),"Failed to parse HTTP headers of max 50 chars from stream because\nfailed to parse \":\" at line 2 column 13 because\nline 2 column 13: expected ':' but found '='.");
   }
 }
 
