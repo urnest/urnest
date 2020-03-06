@@ -1,0 +1,69 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <list>
+#include <utility>
+#include <xju/http/FieldName.hh>
+#include <xju/http/FieldValue.hh>
+#include <iostream>
+#include <unistd.h>
+#include <xju/Exception.hh>
+#include <exception>
+#include <sstream> //impl
+#include <xju/readThrough.hh> //impl
+#include <xju/http/crlf.hh> //impl
+#include <hcp/ast.hh> //impl
+#include <algorithm> //impl
+#include <xju/http/headerFieldParser.hh> //impl
+#include <xju/http/Headers.hh>
+
+namespace xju
+{
+namespace http
+{
+
+Headers parseHeaders(std::istream& s,size_t max) throw(
+  xju::Exception,
+  std::exception)
+{
+  try{
+    std::ostringstream all_;
+    size_t size(0);
+    for(std::string l(xju::readThrough(s,"\r\n",max-size));
+        l.size()>2;
+        l=xju::readThrough(s,"\r\n",max-size)){
+      size+=l.size();
+      all_<<l;
+    };
+    auto const all(all_.str());
+    auto const x(hcp_parser::parseString(
+                   all.begin(),all.end(),
+                   //REVISIT: use parseUntil
+                   hcp_parser::zeroOrMore()*headerFieldParser()));
+    Headers result;
+    auto headers(hcp_ast::findChildrenOfType<HeaderFieldItem>(x));
+    std::transform(headers.begin(),headers.end(),
+                   std::back_inserter(result),
+                   [](decltype(headers.front()) x){
+                     return x.get().get();
+                   });
+    return result;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "parse HTTP headers of max " << max << " chars from stream";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+}

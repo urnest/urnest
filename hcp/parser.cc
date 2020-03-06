@@ -3020,6 +3020,9 @@ hcp_ast::Item parseString(
     s << "only parsed until " << r.second;
     throw xju::Exception(s.str(),XJU_TRACED);
   }
+  if (!r.first.size()){
+    return hcp_ast::Item(startOfElement,I(end,end));
+  }
   return hcp_ast::Item(r.first);
 }
 
