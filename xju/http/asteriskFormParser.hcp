@@ -23,10 +23,9 @@ std::shared_ptr<hcp_parser::NamedParser<AsteriskFormItem> > asteriskFormParser()
   noexcept
 {
   static std::shared_ptr<hcp_parser::NamedParser<AsteriskFormItem> > result(
-    new hcp_parser::NamedParser<AsteriskFormItem>(
+    hcp_parser::named<AsteriskFormItem>(
       "HTTP request-target asterisk-form",
-      hcp_parser::parseLiteral("*"))
-    );
+      "*"));
   return result;
 }
 

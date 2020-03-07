@@ -24,7 +24,7 @@ std::shared_ptr<hcp_parser::NamedParser<AuthorityFormItem> > authorityFormParser
   noexcept
 {
   static std::shared_ptr<hcp_parser::NamedParser<AuthorityFormItem> > result(
-    new hcp_parser::NamedParser<AuthorityFormItem>(
+    hcp_parser::named<AuthorityFormItem>(
       "RFC7230 (HTTP) authority-form Request Target",
       xju::uri::authority())
     );

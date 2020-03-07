@@ -25,11 +25,11 @@ std::shared_ptr<hcp_parser::NamedParser<RequestLineItem> > requestLineParser()
   noexcept
 {
   static std::shared_ptr<hcp_parser::NamedParser<RequestLineItem> > result(
-    new hcp_parser::NamedParser<RequestLineItem>(
+    hcp_parser::named<RequestLineItem>(
       "RFC7230 (HTTP) request-line",
-      methodParser()+hcp_parser::parseLiteral(" ")+
-      requestTargetParser()+hcp_parser::parseLiteral(" ")+
-      httpVersionParser()+crlf()));
+      methodParser()+" "+
+      requestTargetParser+" "+
+      httpVersionParser+crlf));
   return result;
 }
 

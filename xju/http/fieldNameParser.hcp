@@ -22,9 +22,9 @@ std::shared_ptr<hcp_parser::NamedParser<FieldNameItem> > fieldNameParser()
   noexcept
 {
   static std::shared_ptr<hcp_parser::NamedParser<FieldNameItem> > result(
-    new hcp_parser::NamedParser<FieldNameItem>(
+    hcp_parser::named<FieldNameItem>(
       "HTTP field-name",
-      tokenParser()));
+      tokenParser));
   return result;
 }
   

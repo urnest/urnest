@@ -2293,7 +2293,7 @@ void test47()
   }
   {
     std::string const x(R"**(R"--(ABC)**");
-    hcp_parser::PR p{hcp_parser::rawStringLiteral()};
+    hcp_parser::PR p{hcp_parser::rawStringLiteral};
     try {
       auto const root{parseString(
         x.begin(),x.end(),
@@ -2319,6 +2319,26 @@ void test48()
       auto const y(
         hcp_ast::findChildrenOfType<hcp_ast::Attributes>(root));
       xju::assert_equal(reconstruct(y[0]),x);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+}
+
+void test49()
+{
+  {
+    std::string const x{"abcabc."};
+    try {
+      auto const root{
+        parseString(x.begin(),x.end(),
+                    hcp_parser::parseUntil(
+                      hcp_parser::parseOneOfChars("abc"),".")+
+                    ".",
+                    true)};
+      xju::assert_equal(reconstruct(root), x);
     }
     catch(xju::Exception const& e) {
       assert_readableRepr_equal(e, "", XJU_TRACED);
@@ -2378,6 +2398,7 @@ int main(int argc, char* argv[])
   test46(), ++n;
   test47(), ++n;
   test48(), ++n;
+  test49(), ++n;
   
   xju::assert_equal(atLeastOneReadableReprFailed, false);
   std::cout << "PASS - " << n << " steps" << std::endl;

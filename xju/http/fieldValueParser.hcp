@@ -25,9 +25,10 @@ std::shared_ptr<hcp_parser::NamedParser<FieldValueItem> > fieldValueParser()
   static std::shared_ptr<hcp_parser::NamedParser<FieldValueItem> > result(
     new hcp_parser::NamedParser<FieldValueItem>(
       "HTTP field-value",
-      fieldContentParser()+(ows()+crlf())+
-      hcp_parser::zeroOrMore()*(
-        hcp_parser::parseLiteral(" ")+fieldContentParser()+(ows()+crlf()))));
+      fieldContentParser()+ows+crlf+
+      hcp_parser::parseUntil(
+        " "+fieldContentParser()+ows+crlf,
+        !hcp_parser::parseLiteral(" "))));
   return result;
 }
 

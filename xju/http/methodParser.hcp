@@ -22,9 +22,9 @@ namespace http
 std::shared_ptr<hcp_parser::NamedParser<MethodItem> > methodParser() noexcept
 {
   static std::shared_ptr<hcp_parser::NamedParser<MethodItem> > result{
-    new hcp_parser::NamedParser<MethodItem>(
+    hcp_parser::named<MethodItem>(
       "method",
-      tokenParser())};
+      tokenParser)};
   return result;
 }
 

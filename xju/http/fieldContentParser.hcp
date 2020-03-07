@@ -21,12 +21,12 @@ std::shared_ptr<hcp_parser::NamedParser<FieldContentItem> > fieldContentParser()
   noexcept
 {
   std::shared_ptr<hcp_parser::NamedParser<FieldContentItem> > result(
-    new hcp_parser::NamedParser<FieldContentItem>(
+    hcp_parser::named<FieldContentItem>(
       "HTTP field-content",
       hcp_parser::parseUntil((hcp_parser::parseOneOfChars(" \t")|
                               hcp_parser::charInRange(0x21,0x7e)| //VCHAR
                               hcp_parser::charInRange(0x80,0xff)), //obs-text
-                             ows()+crlf())));
+                             ows()+crlf)));
   return result;
 }
 

@@ -23,6 +23,14 @@
 namespace hcp_parser
 {
 
+PR::PR(std::string const& literal) throw(std::bad_alloc):
+    std::shared_ptr<Parser>(parseLiteral(literal))
+{
+}
+PR::PR(const char literal[]) throw(std::bad_alloc):
+    std::shared_ptr<Parser>(parseLiteral(literal))
+{
+}
 
 namespace
 {
@@ -2967,7 +2975,7 @@ PR endOfFile() throw()
 }
 
   
-PR file() throw()
+std::shared_ptr<Parser> file() throw()
 {
   static PR file(named<hcp_ast::File>(
                    "file",

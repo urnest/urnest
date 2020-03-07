@@ -31,9 +31,9 @@ std::shared_ptr<hcp_parser::NamedParser<OriginFormItem> > originFormParser()
     new hcp_parser::NamedParser<OriginFormItem>(
       "RFC7230 (HTTP) origin-form Request Target",
       hcp_parser::atLeastOne(
-        hcp_parser::parseLiteral("/")+xju::uri::segment())+
+        "/"+xju::uri::segment())+
       (
-        (hcp_parser::parseLiteral("?")+xju::uri::query())|
+        ("?"+xju::uri::query())|
         !hcp_parser::parseLiteral("?")))
     );
   return result;

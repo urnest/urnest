@@ -24,7 +24,7 @@ std::shared_ptr<hcp_parser::NamedParser<AbsoluteFormItem> > absoluteFormParser()
   noexcept
 {
   static std::shared_ptr<hcp_parser::NamedParser<AbsoluteFormItem> > result(
-    new hcp_parser::NamedParser<AbsoluteFormItem>(
+    hcp_parser::named<AbsoluteFormItem>(
       "RFC7230 (HTTP) absolute-form Request Target",
       xju::uri::parseAbsoluteURI())
     );

@@ -21,7 +21,7 @@ namespace http
 std::shared_ptr<hcp_parser::NamedParser<ReasonPhraseItem> > reasonPhraseParser() noexcept
 {
   std::shared_ptr<hcp_parser::NamedParser<ReasonPhraseItem> > result(
-    new hcp_parser::NamedParser<ReasonPhraseItem>(
+    hcp_parser::named<ReasonPhraseItem>(
       "HTTP reason-phrase",
       hcp_parser::zeroOrMore()*(
         hcp_parser::parseOneOfChars("\t ")|

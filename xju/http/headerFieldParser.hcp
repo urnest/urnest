@@ -28,8 +28,7 @@ std::shared_ptr<hcp_parser::NamedParser<HeaderFieldItem> > headerFieldParser()
   static std::shared_ptr<hcp_parser::NamedParser<HeaderFieldItem> > result(
     new hcp_parser::NamedParser<HeaderFieldItem>(
       "HTTP Header Field",
-      fieldNameParser()+hcp_parser::parseLiteral(":")+ows()+
-      fieldValueParser()));
+      fieldNameParser()+":"+ows+fieldValueParser()));
   return result;
 }
 

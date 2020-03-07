@@ -22,11 +22,11 @@ std::shared_ptr<hcp_parser::NamedParser<StatusCodeItem> > statusCodeParser()
   noexcept
 {
   static std::shared_ptr<hcp_parser::NamedParser<StatusCodeItem> > result(
-    new hcp_parser::NamedParser<StatusCodeItem>(
+    hcp_parser::named<StatusCodeItem>(
       "HTTP status-code",
       hcp_parser::digit()+
-      hcp_parser::digit()+
-      hcp_parser::digit()));
+      hcp_parser::digit+
+      hcp_parser::digit));
   return result;
 }
 

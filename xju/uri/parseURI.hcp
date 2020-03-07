@@ -60,7 +60,7 @@ hcp_parser::PR pctEncoded() noexcept
   static hcp_parser::PR result{
     hcp_parser::named<PctEncoded>(
       "pct-encoded",
-      parseLiteral("%")+
+      "%"+
       hexDigit()+
       hexDigit())};
   return result;
@@ -104,7 +104,7 @@ hcp_parser::PR segmentNzNc() noexcept
     hcp_parser::named<SegmentItem>(
       "segment-nz-nc",
       atLeastOne(
-        unreserved()|pctEncoded()|subDelim()|parseLiteral("@")))};
+        unreserved()|pctEncoded|subDelim|"@"))};
   return result;
 }
 
@@ -116,7 +116,7 @@ hcp_parser::PR pathAbEmpty() noexcept
   static hcp_parser::PR result{
     hcp_parser::named<PathAbEmptyItem>(
       "path-abempty",
-      zeroOrMore()*(parseLiteral("/")+segment()))};
+      zeroOrMore()*("/"+segment()))};
     return result;
 }
 
@@ -128,10 +128,10 @@ hcp_parser::PR pathAbsolute() noexcept
   static hcp_parser::PR result{
     hcp_parser::named<PathAbsoluteItem>(
       "path-absolute",
-      parseLiteral("/")+
+      "/"+
       hcp_parser::optional(
-        segmentNz()+
-        zeroOrMore()*(parseLiteral("/")+segment())))};
+        segmentNz+
+        zeroOrMore()*("/"+segment())))};
     return result;
 }
 
@@ -143,8 +143,8 @@ hcp_parser::PR pathNoScheme() noexcept
   static hcp_parser::PR result{
     hcp_parser::named<PathNoSchemeItem>(
       "path-noscheme",
-      segmentNzNc()+
-      zeroOrMore()*(parseLiteral("/")+segment()))};
+      segmentNzNc+
+      zeroOrMore()*("/"+segment()))};
     return result;
 }
 
@@ -156,8 +156,8 @@ hcp_parser::PR pathRootless() noexcept
   static hcp_parser::PR result{
     hcp_parser::named<PathRootlessItem>(
       "path-rootless",
-      segmentNz()+
-      zeroOrMore()*(parseLiteral("/")+segment()))};
+      segmentNz+
+      zeroOrMore()*("/"+segment()))};
     return result;
 }
 
@@ -202,10 +202,10 @@ hcp_parser::PR scheme() noexcept
   static hcp_parser::PR result{
     hcp_parser::named<SchemeItem>(
       "scheme",
-      alpha()+
+      alpha+
       zeroOrMore()*(alpha()|
-                                digit()|
-                                parseOneOfChars("+-.")))};
+                    digit|
+                    parseOneOfChars("+-.")))};
   return result;
 }
 
@@ -213,13 +213,13 @@ typedef hcp_ast::TaggedItem<UserInfo> UserInfoItem;
 
 hcp_parser::PR colon() noexcept
 {
-  static hcp_parser::PR result{parseLiteral(":")};
+  static hcp_parser::PR result(":");
   return result;
 }
   
 hcp_parser::PR doubleColon() noexcept
 {
-  static hcp_parser::PR result{parseLiteral("::")};
+  static hcp_parser::PR result("::");
   return result;
 }
   
@@ -229,7 +229,7 @@ hcp_parser::PR userInfo() noexcept
     hcp_parser::named<UserInfoItem>(
       "userinfo",
       zeroOrMore()*(
-        unreserved()|pctEncoded()|subDelim()|colon()))};
+        unreserved()|pctEncoded|subDelim|colon))};
   return result;
 }
 
@@ -252,19 +252,19 @@ public:
       _0_255_(
         hcp_parser::named<_0_255_Item>(
           "0..255",
-          (parseLiteral("2")+(  //200..255
-            (parseOneOfChars("01234")+digit())|
-            (parseLiteral("5")+parseOneOfChars("012345"))))|
-          (parseLiteral("1")+ //100..199
-           digit()+digit())|
-          (digit()+digit())| //0..99
-          digit() //0..9
+          ("2"+(  //200..255
+            (parseOneOfChars("01234")+digit)|
+            ("5"+parseOneOfChars("012345"))))|
+          ("1"+ //100..199
+           digit()+digit)|
+          (digit()+digit)| //0..99
+          digit //0..9
           )
         ),
       p_(
-        _0_255_+parseLiteral(".")+
-        _0_255_+parseLiteral(".")+
-        _0_255_+parseLiteral(".")+_0_255_)
+        _0_255_+"."+
+        _0_255_+"."+
+        _0_255_+"."+_0_255_)
   {
   }
   
@@ -347,15 +347,14 @@ public:
       hexComp_(
         hcp_parser::named<HexItem>(
           "hex-component",
-          (hexDigit()+hexDigit()+hexDigit()+hexDigit())|
-          (hexDigit()+hexDigit()+hexDigit())|
-          (hexDigit()+hexDigit())|
+          (hexDigit()+hexDigit+hexDigit+hexDigit)|
+          (hexDigit()+hexDigit+hexDigit)|
+          (hexDigit()+hexDigit)|
           (hexDigit()))),
       p_(hcp_parser::optional(listOf(hexComp_,colon(),
                                      hcp_parser::named<HexItem>(
                                        "hex-component",doubleColon())))+
-         listOf(hexComp_,colon(),
-                ipV4Address()|!(colon()|hexDigit())))
+         listOf(hexComp_,colon(),ipV4Address|!(colon()|hexDigit)))
   {
   }
   
@@ -472,19 +471,15 @@ hcp_parser::PR ipFuture() noexcept
   static hcp_parser::PR result{
     hcp_parser::named<IPvFutureItem>(
       "ip-future",
-      parseLiteral("v")+hexDigit()+
-      parseLiteral(".")+atLeastOne(
-        unreserved()|subDelim()|colon()))};
+      "v"+hexDigit()+
+      "."+atLeastOne(unreserved()|subDelim|colon))};
   return result;
 }
 
 hcp_parser::PR ipLiteral() noexcept
 {
   static hcp_parser::PR result{
-    parseLiteral("[")+
-    (ipV6Address()
-     //|ipFuture()
-      )+parseLiteral("]")};
+    "["+(ipV6Address() /*|ipFuture()*/)+"]"};
   return result;
 }
 
@@ -507,7 +502,7 @@ hcp_parser::PR host() noexcept
   static hcp_parser::PR result{
     hcp_parser::named<HostItem>(
       "host",
-      ipLiteral()|ipV4Address()|regName())};
+      ipLiteral()|ipV4Address|regName)};
   return result;
 }
 
@@ -598,9 +593,9 @@ hcp_parser::PR authority() noexcept
   static hcp_parser::PR result{
     hcp_parser::named<AuthorityItem>(
       "authority",
-      hcp_parser::optional(userInfo()+parseLiteral("@"))+
+      hcp_parser::optional(userInfo()+"@")+
       host()+
-      ((colon()+port()|!colon())))};
+      ((colon()+port) | !colon()))};
   return result;
 }
 
@@ -789,15 +784,15 @@ std::shared_ptr<hcp_parser::NamedParser<URIItem> > parseURI() noexcept
       "RFC 3986 URI",
       scheme()+parseLiteral(":")+
       (
-        (parseLiteral("//")+authority()+pathAbEmpty())|
-        pathAbsolute()|
-        pathRootless()|
-        pathEmpty())+
+        ("//"+authority()+pathAbEmpty)|
+        pathAbsolute|
+        pathRootless|
+        pathEmpty)+
       (
-        (parseLiteral("?")+query())|
+        ("?"+query())|
         !parseLiteral("?"))+
       (
-        (parseLiteral("#")+fragment())|
+        ("#"+fragment())|
         !parseLiteral("#"))));
   return result;
 }
@@ -807,14 +802,14 @@ std::shared_ptr<hcp_parser::NamedParser<URIItem> > parseAbsoluteURI() noexcept
   static std::shared_ptr<hcp_parser::NamedParser<URIItem> > result(
     new hcp_parser::NamedParser<URIItem>(
       "RFC 3986 Absolute URI",
-      scheme()+parseLiteral(":")+
+      scheme()+":"+
       (
-        (parseLiteral("//")+authority()+pathAbEmpty())|
-        pathAbsolute()|
-        pathRootless()|
-        pathEmpty())+
+        ("//"+authority()+pathAbEmpty)|
+        pathAbsolute|
+        pathRootless|
+        pathEmpty)+
       (
-        (parseLiteral("?")+query())|
+        ("?"+query())|
         !parseLiteral("?"))+
       !parseLiteral("#")));
   return result;

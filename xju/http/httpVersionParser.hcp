@@ -21,18 +21,16 @@ std::shared_ptr<hcp_parser::NamedParser<HTTPVersionItem> > httpVersionParser()
   noexcept
 {
   static std::shared_ptr<hcp_parser::NamedParser<HTTPVersionItem> > result{
-    new hcp_parser::NamedParser<HTTPVersionItem>(
+    hcp_parser::named<HTTPVersionItem>(
       "http-version",
-      hcp_parser::parseLiteral("HTTP/")+
-      hcp_parser::PR(
-        new hcp_parser::NamedParser<hcp_ast::TaggedItem<HTTPVersion::Major> >(
+      "HTTP/"+
+      hcp_parser::named<hcp_ast::TaggedItem<HTTPVersion::Major> >(
           "major",
-          hcp_parser::digit()))+
-      hcp_parser::parseLiteral(".")+
-      hcp_parser::PR(
-        new hcp_parser::NamedParser<hcp_ast::TaggedItem<HTTPVersion::Minor> >(
+          hcp_parser::digit)+
+      "."+
+      hcp_parser::named<hcp_ast::TaggedItem<HTTPVersion::Minor> >(
           "minor",
-          hcp_parser::digit())))};
+          hcp_parser::digit))};
   return result;
 }
 

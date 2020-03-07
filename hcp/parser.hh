@@ -258,7 +258,16 @@ public:
     return *dynamic_cast<T const*>(this);
   }
 };
-typedef std::shared_ptr<Parser> PR;
+typedef std::shared_ptr<Parser> PR_;
+class PR : public std::shared_ptr<Parser>
+{
+public:
+  using PR_::PR_;
+  PR(std::string const& literal) throw(std::bad_alloc);
+  PR(const char literal[]) throw(std::bad_alloc);
+  PR() noexcept:PR_(){}
+  PR(PR (*f)()) throw(std::bad_alloc): PR_((*f)()){}
+};
 
 class ZeroOrMore{};
 
@@ -346,10 +355,55 @@ public:
   }
 };
 
-template<class ItemType>
-PR named(std::string const& name, PR const x) throw()
+//convenience
+inline PR operator+(PR (*a)(), PR b) throw(std::bad_alloc)
 {
-  return PR(new NamedParser<ItemType>(name,x));
+  return (*a)()+b;
+}
+inline PR operator+(PR a, PR (*b)()) throw(std::bad_alloc)
+{
+  return a+(*b)();
+}
+template<class ItemType>
+inline PR operator+(std::shared_ptr<NamedParser<ItemType> > (*a)(),
+             PR b) throw(std::bad_alloc)
+{
+  return (*a)()+b;
+}
+template<class ItemType>
+inline PR operator+(PR a, std::shared_ptr<NamedParser<ItemType> > (*b)())
+  throw(std::bad_alloc)
+{
+  return a+(*b)();
+}
+
+inline PR operator|(PR (*a)(), PR b) throw(std::bad_alloc)
+{
+  return (*a)()|b;
+}
+inline PR operator|(PR a, PR (*b)()) throw(std::bad_alloc)
+{
+  return a|(*b)();
+}
+template<class ItemType>
+inline PR operator|(std::shared_ptr<NamedParser<ItemType> > (*a)(),
+             PR b) throw(std::bad_alloc)
+{
+  return (*a)()|b;
+}
+template<class ItemType>
+inline PR operator|(PR a, std::shared_ptr<NamedParser<ItemType> > (*b)())
+  throw(std::bad_alloc)
+{
+  return a|(*b)();
+}
+
+template<class ItemType>
+std::shared_ptr<NamedParser<ItemType> > named(
+  std::string const& name, PR const x) throw()
+{
+  return std::shared_ptr<NamedParser<ItemType> >(
+    new NamedParser<ItemType>(name,x));
 }
 
 PR atLeastOne(PR const x) throw();

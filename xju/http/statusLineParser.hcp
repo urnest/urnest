@@ -25,14 +25,13 @@ std::shared_ptr<hcp_parser::NamedParser<StatusLineItem> > statusLineParser()
   noexcept
 {
   static std::shared_ptr<hcp_parser::NamedParser<StatusLineItem> > result(
-    new hcp_parser::NamedParser<StatusLineItem>(
+    hcp_parser::named<StatusLineItem>(
       "RFC7230 (HTTP) status-line",
-      httpVersionParser()+hcp_parser::parseLiteral(" ")+
-      statusCodeParser()+hcp_parser::parseLiteral(" ")+
-      reasonPhraseParser()+crlf()));
+      httpVersionParser()+" "+
+      statusCodeParser()+" "+
+      reasonPhraseParser()+crlf));
   return result;
 }
-
 
 }
 }

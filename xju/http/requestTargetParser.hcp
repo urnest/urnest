@@ -33,7 +33,7 @@ requestTargetParser()
   noexcept
 {
   static std::shared_ptr<hcp_parser::NamedParser<RequestTargetItem> > result(
-    new hcp_parser::NamedParser<RequestTargetItem>(
+    hcp_parser::named<RequestTargetItem>(
       "RFC7230 (HTTP) Request Target",
       originFormParser()|
       absoluteFormParser()|

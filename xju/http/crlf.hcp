@@ -17,8 +17,7 @@ namespace http
 
 hcp_parser::PR crlf() noexcept
 {
-  static hcp_parser::PR result{
-    hcp_parser::parseLiteral("\r\n")};
+  static hcp_parser::PR result("\r\n");
   return result;
 }
 
