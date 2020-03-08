@@ -15,6 +15,7 @@
 ()+cmd=(test-statusLineParser.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-headerFieldParser.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-parseHeaders.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-copyBody.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 %hcp-gen==.:dir.hcp.list+G+hpath='xju/http':hcp-split-virdir-specs:cat:vir_dir
 

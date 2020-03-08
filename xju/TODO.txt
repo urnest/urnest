@@ -32,6 +32,8 @@ xju/http http1.1 - rfc7230, rfc7231
     x actually decode/encode is better:
       x uri level: all, but only encode disallowed chars for each field type
   - timeout exceptions come from istream exception passed through untouched
+    REVISIT: exceptions in general v istream, ostream, adapt? pass through?
+             how to specicify?
   - std::bad_alloc for out-of-memory
   - all other exceptions are "mal-formed", with specific exceptions where
     rfc7230 calls for specific action by client/server
@@ -46,8 +48,8 @@ xju/http http1.1 - rfc7230, rfc7231
         interpret path in general; can only really normalise if have
 	whole uri
   x parseStatusLine(istream,max) -> (http-version,status-code,reason)
-  - parseHeaders(istream,max) -> headers
-  - copyBody(istream,size) -> body
+  x parseHeaders(istream,max) -> headers
+  x copyBody(istream,size) -> body
   - copyUnboundedBody(istream,maxSize) -> body   // to eof
   - copyChunk(istream,maxSize,maxExt,maxTrailerSize) -> (data, ext, trailers)
       - no data means last chunk
@@ -65,7 +67,7 @@ xju/http http1.1 - rfc7230, rfc7231
          - resulting string ends with term
          - can headers ever have embedded (escaped) CRLF? NO.
 
-      - cont is '[ \t]*(^CRLF)*CRLF', join parts with ' '
+      x cont is '[ \t]*(^CRLF)*CRLF', join parts with ' '
       
   - ostream
     - encodeRequestLine(ostream,method,target,http-version)
