@@ -50,9 +50,11 @@ xju/http http1.1 - rfc7230, rfc7231
   x parseStatusLine(istream,max) -> (http-version,status-code,reason)
   x parseHeaders(istream,max) -> headers
   x copyBody(istream,size) -> body
-  - copyUnboundedBody(istream,maxSize) -> body   // to eof
-  - copyChunk(istream,maxSize,maxExt,maxTrailerSize) -> (data, ext, trailers)
+  x copyUnboundedBody(istream,maxSize) -> body   // to eof
+  - copyChunk(istream,maxSize) -> (data, ext)
       - no data means last chunk
+  - copyTrailers(istream,maxSize) -> trailers
+      - can use parseHeaders?
   - parseRequest(istream,maxRequestLine,maxHeaders,maxBody,maxExt) ->
       (method,target,http-version,headers,body)
       throw( specific exceptions for crazy rules)
