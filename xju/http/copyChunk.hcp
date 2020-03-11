@@ -19,11 +19,73 @@ namespace xju
 namespace http
 {
 
-// copy chunk from istream
+// copy HTTP chunk from std::istream assuming end of chunk occurs within
+// maxSize bytes
+// - note result.data_.size()==0 indicates no more chunks i.e. trailer follows
+// post:
+//   s is positioned at next chunk size/trailer
 Chunk copyChunk(std::istream& s, size_t maxSize) throw(
+  // post: s position unpredictable
   xju::Exception,
+  // post: s position unpredictable
   std::bad_alloc)
 {
+  try{
+    std::string const l{xju::readThrough(s,"\r\n",maxSize)};
+    auto const x(hcp_parser::parseString(l.begin(),l.end(),
+                                         chunkSizeParser()+
+                                         parseUntil(chunkExtParser(),crlf())+
+                                         crlf()));
+    size_t const size(hcp_ast::findOnlyChildOfType<ChunkSizeItem>(x).get());
+    Chunk::Extensions extensions;
+    for(auto i:hcp_ast::findChildrenOfType<ExtensionItem>(x)){
+      extensions.push_back(i.get().get());
+    }
+    std::vector<uint8_t> data;
+    if(size){
+      if((size+2)>(maxSize-l.size())){
+        std::ostringstream s;
+        s << size " bytes of chunk data would exceed "
+          << maxSize << " total bytes";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      try{
+        data.resize(size);
+        for(size_t i=0; i!=size; ++i)
+        {
+          auto const c(s.get());
+          if (s.fail()){
+            std::ostringstream s;
+            s << "read of next byte failed having read " << i << " bytes";
+            throw xju::Exception(s.str(),XJU_TRACED);
+          }
+          data[i]=c & 0xff;
+        }
+        try{
+          std::string l(xju::readThrough(s,"\r\n",2));
+        }
+        catch(xju::Exception& e){
+          std::ostringstream s;
+          s << "read \\r\\n after data bytes";
+          e.addContext(s.str(),XJU_TRACED);
+          throw;
+        }
+      }
+      catch(xju::Exception& e){
+        std::ostringstream s;
+        s << "read " << size << " bytes of chunk-data then \\r\\n";
+        e.addContext(s.str(),XJU_TRACED);
+        throw;
+      }
+    }
+    return Chunk(std::move(data),std::move(extentions));
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "copy HTTP chunk from specified std::istream assuming end of chunk occurs within " << maxSize << " bytes";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
 }
 
 }

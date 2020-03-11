@@ -53,8 +53,8 @@ xju/http http1.1 - rfc7230, rfc7231
   x copyUnboundedBody(istream,maxSize) -> body   // to eof
   - copyChunk(istream,maxSize) -> (data, ext)
       - no data means last chunk
-  - copyTrailers(istream,maxSize) -> trailers
-      - can use parseHeaders?
+  ~ copyTrailers(istream,maxSize) -> trailers
+      x can use parseHeaders? Yes.
   - parseRequest(istream,maxRequestLine,maxHeaders,maxBody,maxExt) ->
       (method,target,http-version,headers,body)
       throw( specific exceptions for crazy rules)

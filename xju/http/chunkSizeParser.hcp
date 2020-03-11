@@ -1,0 +1,33 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <memory>
+#include <hcp/parser.hh>
+#include <xju/http/ChunkSizeItem.hh>
+namespace xju
+{
+namespace http
+{
+
+std::shared_ptr<hcp_parser::NamedParser<ChunkSizeItem> > chunkSizeParser()
+  noexcept
+{
+  static std::shared_ptr<hcp_parser::NamedParser<ChunkSizeItem> > result(
+    hcp_parser::named<ChunkSizeItem>(
+      "HTTP chunk size",
+      hcp_parser::atLeastOne(hcp_parser::hexDigit())));
+  return result;
+}
+
+}
+}
+
+
