@@ -24,7 +24,7 @@ namespace http
 class ChunkSizeItem: public hcp_ast::Item
 {
 public:
-  using hcp_ast::Item;
+  using hcp_ast::Item::Item;
 
   size_t get() const throw(xju::Exception){
     unsigned long long const result(
@@ -40,5 +40,3 @@ public:
 
 }
 }
-
-
