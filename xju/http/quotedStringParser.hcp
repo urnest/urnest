@@ -1,0 +1,41 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace http
+{
+
+std::shared_ptr<hcp_parser::NamedParser<QuotedStringItem> > quotedStringParser() noexcept
+{
+  std::shared_ptr<hcp_parser::NamedParser<QuotedStringItem> > result(
+    hcp_parser::Named<QuotedStringItem>(
+      "HTTP quoted-string",
+      "\""+
+      hcp_parser::parseUntil(
+        hcp_parser::parseOneOfChars(hcp::Chars("\t "
+                                               "\041" //%x21
+                                               "\043-\133" //%x23-5B
+                                               "\135-\176" //%x5D-7E
+                                               "\200-\377" //obs-text
+                                      ))|
+        //quoted-pair
+        ("\\"+hcp::Chars("\t "
+                         "\041-176"  //%x21-7E
+                         "\200-\377" //obs-text
+          )),
+        "\"")+
+      "\""));
+  return result;
+}
+
+}
+}

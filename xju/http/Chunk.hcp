@@ -31,7 +31,7 @@ public:
   
   // note quoted ExtValue is not encoded
   typedef std::pair<ExtName,ExtValue> Extension;
-  typedef std::vector<Extension> Extension;
+  typedef std::vector<Extension> Extensions;
 
   //pre: all extensions are valid, i.e.:
   // - name is a HTTP token
@@ -46,6 +46,14 @@ public:
   
   friend bool operator<(Chunk const& a, Chunk const& b) noexcept;
 };
+
+std::ostream& operator<<(std::ostream& s, Chunk::ExtValue const& x)
+{
+  if (x.second){
+    return s << xju::quote(encodeQuotedString(x.first));
+  }
+  return s << x.first;
+}
 
 }
 }

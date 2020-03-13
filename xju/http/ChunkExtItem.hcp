@@ -1,0 +1,37 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <hcp/ast.hh>
+#include <xju/http/Chunk.hh>
+
+namespace xju
+{
+namespace http
+{
+
+class ChunkExtItem : public hcp_ast::Item
+{
+public:
+  //pre: irs contains one ChunkExtNameItema and one ChunkExtValueItem
+  using hcp_ast::Item::Item;
+
+  Chunk::Extension get() const noexcept
+  {
+    return Chunk::Extension(
+      hcp_ast::findOnlyChildOfType<ChunkExtNameItem>(*this).get(),
+      hcp_ast::findOnlyChildOfType<ChunkExtValueItem>(*this).get());
+  }
+};
+
+}
+}
+
+
