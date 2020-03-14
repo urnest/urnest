@@ -18,6 +18,7 @@
 ()+cmd=(test-copyBody.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-copyUnboundedBody.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-chunkSizeParser.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-decodeQuotedStringContent.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 %hcp-gen==.:dir.hcp.list+G+hpath='xju/http':hcp-split-virdir-specs:cat:vir_dir
 

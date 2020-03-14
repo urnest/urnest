@@ -1,0 +1,40 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <string>
+#include <xju/assert.hh> //impl
+
+namespace xju
+{
+namespace http
+{
+
+// decode quoted string content i.e. replace \x with just x
+// pre: x is valid rfc7230 quoted-string content excluding opening
+//      and closing double quotes
+std::string decodeQuotedStringContent(std::string const& x) noexcept
+{
+  std::string result(x);
+  auto a(result.cbegin());
+  auto b(result.begin());
+  while(a<result.end()){
+    if (*a == '\\'){
+      ++a;
+      xju::assert_less(a,x.end());
+    }
+    (*b++=*a++);
+  }
+  result.resize(b-result.begin());
+  return result;
+}
+
+}
+}

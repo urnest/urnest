@@ -21,7 +21,7 @@ public:
   //return decoded string content
   std::string get() const noexcept
   {
-    return decodeQuotedString(
+    return decodeQuotedStringContent(
       std::string(xju::next(begin().x_),xju::prev(end().x_)));
   }
 };
