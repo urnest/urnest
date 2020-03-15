@@ -92,6 +92,40 @@ void test1() {
     xju::assert_equal(hcp_ast::findOnlyChildOfType<QuotedStringItem>(r).get(),
                       ss.str());
   }
+  {
+    std::ostringstream ss;
+    std::ostringstream ss2;
+    for(uint8_t i=0x80; i!=0; ++i){
+      ss.put(i);
+      ss2.put('\\');
+      ss2.put(i);
+    }
+    std::string const s("\""+ss2.str()+"\"");
+    auto const r(hcp_parser::parseString(s.begin(),s.end(),
+                                         quotedStringParser()));
+    xju::assert_equal(hcp_ast::findOnlyChildOfType<QuotedStringItem>(r).get(),
+                      ss.str());
+  }
+  try
+  {
+    std::string const s(R"--(""")--");
+    auto const r(hcp_parser::parseString(s.begin(),s.end(),
+                                         quotedStringParser()));
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal(readableRepr(e),"only parsed until line 1 column 3.");
+  }
+  try
+  {
+    std::string const s(R"--("\")--");
+    auto const r(hcp_parser::parseString(s.begin(),s.end(),
+                                         quotedStringParser()));
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal(readableRepr(e),"Failed to parse HTTP quoted-string at line 1 column 1 because\nfailed to parse \"\\\" at line 1 column 4 because\nline 1 column 4: end of input.");
+  }
 }
 
 }

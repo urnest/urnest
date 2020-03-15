@@ -28,7 +28,7 @@ std::string decodeQuotedStringContent(std::string const& x) noexcept
   while(a<result.end()){
     if (*a == '\\'){
       ++a;
-      xju::assert_less(a,x.end());
+      xju::assert_less(a,result.end());
     }
     (*b++=*a++);
   }
