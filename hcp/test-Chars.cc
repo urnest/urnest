@@ -147,6 +147,13 @@ void test1() {
     }
     xju::assert_equal(xju::format::str(chars),"\"f-a\"");
   }
+  {
+    Chars const chars("\200-\202");
+    xju::assert_equal(chars.pattern(),"\200-\202");
+    xju::assert_equal(chars.bits().test(0x80),true);
+    xju::assert_equal(chars.bits().test(0x81),true);
+    xju::assert_equal(chars.bits().test(0x82),true);
+  }
 }
 
 }

@@ -9,6 +9,12 @@
 //
 
 
+#include <hcp/ast.hh>
+#include <string>
+#include <xju/http/decodeQuotedStringContent.hh> //impl
+#include <xju/next.hh> //impl
+#include <xju/prev.hh> //impl
+
 namespace xju
 {
 namespace http
@@ -28,5 +34,3 @@ public:
 
 }
 }
-
-

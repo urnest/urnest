@@ -21,15 +21,15 @@ Chars::Chars(std::string const& pattern) noexcept:
 {
   auto i(pattern_.begin());
   while(i!=pattern_.end()){
-    auto c=(*i);
+    uint8_t c=(*i);
     bits_.set(c);
     chars_.insert(c);
     ++i;
     if (i!=pattern_.end()&&
         (*i)=='-'&&
         (xju::next(i)!=pattern_.end())&&
-        (*xju::next(i)>c)){
-      while((++c)<(*xju::next(i))){
+        (((uint8_t)*xju::next(i))>c)){
+      while((++c)<((uint8_t)*xju::next(i))){
         bits_.set(c);
         chars_.insert(c);
       }

@@ -404,7 +404,7 @@ public:
     if (at.atEnd()) {
       return ParseResult(EndOfInput(at, XJU_TRACED));
     }
-    if (!chars_.bits().test(*at)) {
+    if (!chars_.bits().test((uint8_t)*at)) {
       return ParseResult(
         Exception(
           std::shared_ptr<Exception::Cause const>(new UnexpectedChar(at, chars_)), 

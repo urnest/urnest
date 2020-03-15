@@ -9,15 +9,19 @@
 //
 
 
+#include <memory>
+#include <hcp/parser.hh>
+#include <xju/http/QuotedStringItem.hh>
 namespace xju
 {
 namespace http
 {
 
-std::shared_ptr<hcp_parser::NamedParser<QuotedStringItem> > quotedStringParser() noexcept
+std::shared_ptr<hcp_parser::NamedParser<QuotedStringItem> > quotedStringParser()
+  noexcept
 {
-  std::shared_ptr<hcp_parser::NamedParser<QuotedStringItem> > result(
-    hcp_parser::Named<QuotedStringItem>(
+  static std::shared_ptr<hcp_parser::NamedParser<QuotedStringItem> > result(
+    hcp_parser::named<QuotedStringItem>(
       "HTTP quoted-string",
       "\""+
       hcp_parser::parseUntil(
@@ -28,10 +32,11 @@ std::shared_ptr<hcp_parser::NamedParser<QuotedStringItem> > quotedStringParser()
                                                "\200-\377" //obs-text
                                       ))|
         //quoted-pair
-        ("\\"+hcp::Chars("\t "
-                         "\041-176"  //%x21-7E
-                         "\200-\377" //obs-text
-          )),
+        ("\\"+hcp_parser::parseOneOfChars(
+          hcp::Chars("\t "
+                     "\041-\176"  //%x21-7E
+                     "\200-\377" //obs-text
+            ))),
         "\"")+
       "\""));
   return result;
