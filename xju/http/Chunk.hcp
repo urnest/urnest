@@ -13,6 +13,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <xju/format.hh> //impl
+#include <xju/http/encodeQuotedStringValue.hh> //impl
 
 namespace xju
 {
@@ -26,8 +28,7 @@ public:
   class ExtValueTag{};
 
   typedef xju::Tagged<std::string, ExtNameTag> ExtName;
-  typedef std::pair<xju::Tagged<std::string,ExtValueTag>,
-                    bool/*quoted*/> ExtValue;
+  typedef std::pair<std::string,bool/*quoted*/> ExtValue;
   
   // note quoted ExtValue is not encoded
   typedef std::pair<ExtName,ExtValue> Extension;
@@ -36,13 +37,13 @@ public:
   //pre: all extensions are valid, i.e.:
   // - name is a HTTP token
   // - value is a HTTP token unless quoted
-  Chunk(std::vector<uint8_t> data, Extentions ext) noexcept:
+  Chunk(std::vector<uint8_t> data, Extensions ext) noexcept:
       data_(std::move(data)),
       ext_(std::move(ext))
   {
   }
   std::vector<uint8_t> data_;
-  Extentions ext_;
+  Extensions ext_;
   
   friend bool operator<(Chunk const& a, Chunk const& b) noexcept;
 };
@@ -50,7 +51,7 @@ public:
 std::ostream& operator<<(std::ostream& s, Chunk::ExtValue const& x)
 {
   if (x.second){
-    return s << xju::quote(encodeQuotedString(x.first));
+    return s << xju::format::quote(encodeQuotedStringValue(x.first));
   }
   return s << x.first;
 }

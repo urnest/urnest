@@ -11,6 +11,8 @@
 
 #include <hcp/ast.hh>
 #include <xju/http/Chunk.hh>
+#include <xju/http/ChunkExtNameItem.hh> //impl
+#include <xju/http/ChunkExtValueItem.hh> //impl
 
 namespace xju
 {

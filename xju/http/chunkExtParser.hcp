@@ -9,14 +9,22 @@
 //
 
 
+#include <xju/http/quotedStringParser.hh> //impl
+#include <xju/http/tokenParser.hh> //impl
+#include <memory>
+#include <hcp/parser.hh>
+#include <xju/http/ChunkExtItem.hh>
+#include <xju/http/ChunkExtNameItem.hh> //impl
+#include <xju/http/ChunkExtValueItem.hh> //impl
+
 namespace xju
 {
 namespace http
 {
 
-std::shared<hcp_parser::NamedParser<ChunkExtItem> > chunkExtParser() noexcept
+std::shared_ptr<hcp_parser::NamedParser<ChunkExtItem> > chunkExtParser() noexcept
 {
-  std::shared<hcp_parser::NamedParser<ChunkExtItem> > result(
+  static std::shared_ptr<hcp_parser::NamedParser<ChunkExtItem> > result(
     hcp_parser::named<ChunkExtItem>(
       "HTTP Chunk Extension",
       ";"+

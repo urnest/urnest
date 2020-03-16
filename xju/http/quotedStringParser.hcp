@@ -12,6 +12,7 @@
 #include <memory>
 #include <hcp/parser.hh>
 #include <xju/http/QuotedStringItem.hh>
+#include <xju/http/quotedStringChars.hh> //impl
 namespace xju
 {
 namespace http
@@ -32,11 +33,7 @@ std::shared_ptr<hcp_parser::NamedParser<QuotedStringItem> > quotedStringParser()
                                                "\200-\377" //obs-text
                                       ))|
         //quoted-pair
-        ("\\"+hcp_parser::parseOneOfChars(
-          hcp::Chars("\t "
-                     "\041-\176"  //%x21-7E
-                     "\200-\377" //obs-text
-            ))),
+        ("\\"+hcp_parser::parseOneOfChars(quotedStringChars())),
         "\"")+
       "\""));
   return result;

@@ -9,27 +9,24 @@
 //
 
 
-#include <hcp/ast.hh>
-#include <xju/http/Chunk.hh>
-#include <xju/http/QuotedStringItem.hh> //impl
+#include <string>
+#include <sstream> //impl
+
 namespace xju
 {
 namespace http
 {
-class ChunkExtValueItem: public hcp_ast::Item
+std::string encodeQuotedStringValue(std::string const& v) noexcept
 {
-public:
-  using hcp_ast::Item::Item;
-  
-  Chunk::ExtValue get() const noexcept
-  {
-    auto const x(hcp_ast::findChildrenOfType<QuotedStringItem>(*this));
-    if(x.size()){
-      return Chunk::ExtValue(x.front().get().get(),true);
+  std::ostringstream s;
+  for(auto c: v){
+    if(c=='"'){
+      s << '\\';
     }
-    return Chunk::ExtValue(hcp_ast::reconstruct(*this),false);
+    s.put(c);
   }
-};
+  return s.str();
+}
 
 }
 }

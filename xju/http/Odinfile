@@ -20,6 +20,8 @@
 ()+cmd=(test-chunkSizeParser.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-decodeQuotedStringContent.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-quotedStringParser.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-chunkExtParser.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-copyChunk.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 %hcp-gen==.:dir.hcp.list+G+hpath='xju/http':hcp-split-virdir-specs:cat:vir_dir
 
