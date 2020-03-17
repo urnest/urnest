@@ -102,7 +102,7 @@ void test1() {
     xju::assert_never_reached();
   }
   catch(xju::Exception const& e){
-    xju::assert_equal(readableRepr(e),"Failed to copy HTTP chunk from specified std::istream assuming end of chunk occurs within 1024 bytes because\nfailed to parse HTTP Chunk Extension Value at line 1 column 8 because\nfailed to parse HTTP quoted-string at line 1 column 8 because\nfailed to parse \"\\\" at line 1 column 9 because\nline 1 column 9: expected '\\\\' but found '\\r'.");
+    xju::assert_equal(readableRepr(e),"Failed to copy HTTP chunk from specified std::istream assuming end of chunk occurs within 1024 bytes because\nfailed to parse HTTP Chunk Extension Value at line 1 column 8 because\nfailed to parse HTTP quoted-string at line 1 column 8 because\nfailed to parse backslash at line 1 column 9 because\nline 1 column 9: expected backslash but found '\\r'.");
   }
   // bad size
   try

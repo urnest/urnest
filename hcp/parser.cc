@@ -679,7 +679,7 @@ public:
   
   virtual std::string target() const throw() {
     std::ostringstream s;
-    s << "\"" << x_ << "\"";
+    s << (x_=="\\"?std::string("backslash"):xju::format::quote(x_));
     return s.str();
   }
 
@@ -697,8 +697,13 @@ public:
     std::string str() const throw()
     {
       std::ostringstream s;
-      s << "expected '" << xju::format::cEscapeChar(wanted_) << "'" 
-        << " but found '" << xju::format::cEscapeChar(got_) << "'";
+      
+      s << "expected "
+        << (wanted_=='\\'?std::string("backslash"):
+            xju::format::quote("'",xju::format::cEscapeChar(wanted_)))
+        << " but found "
+        << (got_=='\\'?std::string("backslash"):
+            xju::format::quote("'",xju::format::cEscapeChar(got_)));
       return s.str();
     }
     char const got_;

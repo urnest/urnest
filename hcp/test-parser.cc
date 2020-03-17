@@ -392,7 +392,7 @@ void test11()
     // first x of atLeastOneOf*x that fails to parse but the error message
     // waffles about the optional extras; for "at least one" it will only
     // ever fail on the first one
-    assert_readableRepr_equal(e, "Failed to parse string literal at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"\\\"\" then string literal characters then one of chars \"\\\"\" then optional whitespace at line 1 column 1 because\nfailed to parse string literal characters at line 1 column 2 because\nfailed to parse \"\\\" at line 1 column 7 because\nline 1 column 7: end of input.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse string literal at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"\\\"\" then string literal characters then one of chars \"\\\"\" then optional whitespace at line 1 column 1 because\nfailed to parse string literal characters at line 1 column 2 because\nfailed to parse backslash at line 1 column 7 because\nline 1 column 7: end of input.", XJU_TRACED);
   }
   try
   {
@@ -405,7 +405,7 @@ void test11()
     // first x of atLeastOneOf*x that fails to parse but the error message
     // waffles about the optional extras; for "at least one" it will only
     // ever fail on the first one
-    assert_readableRepr_equal(e, "Failed to parse string literal at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"\\\"\" then string literal characters then one of chars \"\\\"\" then optional whitespace at line 1 column 1 because\nfailed to parse string literal characters at line 1 column 2 because\nfailed to parse \"\\\" at line 1 column 5 because\nline 1 column 5: expected \'\\\\\' but found \'\\n\'.", XJU_TRACED);
+    assert_readableRepr_equal(e, "Failed to parse string literal at line 1 column 1 because\nfailed to parse at least one occurrance of one of chars \"\\\"\" then string literal characters then one of chars \"\\\"\" then optional whitespace at line 1 column 1 because\nfailed to parse string literal characters at line 1 column 2 because\nfailed to parse backslash at line 1 column 5 because\nline 1 column 5: expected backslash but found '\\n'.", XJU_TRACED);
   }
   try
   {
