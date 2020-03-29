@@ -1,0 +1,75 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace ip
+{
+namespace tls
+{
+
+class Socket
+{
+private:
+  std::tuple<
+    std::unique_ptr<xju::io::OStream>,
+    std::unique_ptr<xju::io::IStream>,
+    xju::Optional<std::pair<Certificate,bool> > > x_;
+  
+public:
+  // accept connection (including TLS handshake) on specified listener
+  // by specified deadline using lisener's crypto
+  // pre: lifetime(crypto) includes lifetime(this)
+  Socket(xju::ip::tls::Listener& listener,
+         std::chrono::steady_clock::time_point const& deadline,
+         bool closeOnExec=true) throw(
+           xju::DeadlineReached,
+           xju::Exception):
+      x_(listener.accept(requestClientCertificate,
+                         deadline,
+                         closeOnExec)),
+      output_(std::get<0>(x_)),
+      input_(std::get<1>(x_)),
+      peerCertifiate_(std::get<2>(x_))
+  {
+  }
+  // connect to dest and perform TLS handshake by specified deadline
+  // using specified crypto
+  // pre: lifetime(crypto) includes lifetime(this)
+  Socket(std::pair<xju::ip::v4::Address,xju::ip::Port> const& dest,
+         xju::ip::tls::Crypto& crypto,
+         std::chrono::steady_clock::time_point const& deadline,
+         bool closeOnExec=true) throw(
+           xju::DeadlineReached,
+           // eg connection refused, unreachable
+           xju::Exception):
+      x_(crypto.connect(dest,crypto,deadline,closeOnExec)),
+      output_(std::get<0>(x_)),
+      input_(std::get<1>(x_)),
+      peerCertifiate_(std::get<2>(x_))
+  {
+  }
+  // unencrypted data to encrypt and send to server
+  // note: to gracefully close socket, clear output_
+  //       then read input_ until it closes
+  std::unique_ptr<xju::io::OStream>& output_;
+
+  // decrypted data from server
+  std::unique_ptr<xju::io::OStream> const& input_;
+
+  // peer certificate and whether it is valid
+  // note: client may always decline to supply; server must always supply
+  xju::Optional<std::pair<Certificate,bool> > const& peerCertifiate_;
+};
+
+}
+}
+}

@@ -1,3 +1,9 @@
+- example https app:
+  - login -> session = process running as that user getpwnam_r,setuid
+    getgrnam_r can check user is member of group    
+  - simple page to show real uid, gid, umask, pcap
+  
+
 - xju::Mutex,Lock,Condition
   x use c++ std::mutex, std::unique_lock<std::mutex>, std::condition_variable
   - provide std-style wait_until, wait_for
@@ -51,25 +57,38 @@ xju/http http1.1 - rfc7230, rfc7231
   x parseHeaders(istream,max) -> headers
   x copyBody(istream,size) -> body
   x copyUnboundedBody(istream,maxSize) -> body   // to eof
-  - copyChunk(istream,maxSize) -> (data, ext)
-      - no data means last chunk
+  x copyChunk(istream,maxSize) -> (data, ext)
+      x no data means last chunk
   ~ copyTrailers(istream,maxSize) -> trailers
       x can use parseHeaders? Yes.
   - parseRequest(istream,maxRequestLine,maxHeaders,maxBody,maxExt) ->
       (method,target,http-version,headers,body)
       throw( specific exceptions for crazy rules)
-      -- applies all crazy rules, de-chunks
-  - parseResponse(istream,requestMethod,requestTarget,requestHeaders,maxResponseLine,maxHeaders,maxBody) ->
+      -- applies all crazy rules, de-chunks...
+      - maybe such a function is not valuable; might be better programming
+        applications at the lower level?
+  - parseResponse(istream,requestMethod,requestTarget,requestHeaders,maxResponseSize) ->
       (http-version,status-code,reason,headers,body)
       throw( specific exceptions for crazy rules)
       -- applies all crazy rules including validation, de-chunks
-      
+      - even this one is dodgy? response might be out of order? what do rfcs
+        have to say about concurrent requests?
       - std::string readThrough(istream,term,max) throw(TooBig)
          - read to and including first occurrance of term
          - resulting string ends with term
          - can headers ever have embedded (escaped) CRLF? NO.
 
       x cont is '[ \t]*(^CRLF)*CRLF', join parts with ' '
+  - deflate
+    deflateInit
+    deflateSetHeader
+    n x deflate
+    deflateEnd
+    ... only need to support on client side and only to inflate; in most
+    cases only need to deflate once completely read. Or feed chunks
+    in and save inflated to file?
+    - but would be nice to keep pre-loaded deflated static stuff (html, js,
+      css) deflated in memory
       
   - ostream
     - encodeRequestLine(ostream,method,target,http-version)
@@ -131,14 +150,91 @@ io::Output
   - UnixListener,UnixSocket - like TCPListener,TCPSocket
   - MessageQueue (linux allows select)
   - Ethernet
+  - istreambuf for IStream (maybe rename that to InputStream)
+  - ostreambuf for OStream
   
 - ip:
   / TCPListener : Input
   / TCPSocket : IStream,OStream
   x UDPSocket
   - TLSSocket
-    - use pipe+TCPSocket+thread to "run"?
+    - give listener SNI info and whether to request cert for each server it
+      supports? Plus a single default "requestClientCertificate"
+    
+    - alt might be a Crypter that handles multiple sockets, with the
+      Crypter having a run method?
+      TLSSocket(TCPListener,TLSCrypter&);
+        ssl = SSL_new(ctx);
+        SSL_set_bio(p->ssl, p->rbio, p->wbio);
+      TLSSocket(TCPSocket,TLSCrypter&);
+        ssl = SSL_new(ctx);
+        SSL_set_bio(p->ssl, p->rbio, p->wbio);
+        SSL_set_connect_state(p->ssl);
+      each direction is like a byte stream e.g. write:
+        SSL_set_fd can set a non-blocking fd
+	SSL_connect/SSL_accept then becomes non-blocking, returning
+	  SSL_ERROR_WANT_READ or SSL_ERROR_WANT_WRITE to indicate
+	  what to select for before calling SSL_connect again
+        SSL_read_ex, SSL_write_ex, SSL_shutdown too
 
+        SSL_shutdown (but not after error)
+	SSL_read() will indicate the end of the peer data (i.e. peer shutdown)
+	by returning <= 0 and SSL_get_error() returning SSL_ERROR_ZERO_RETURN.
+
+        SSL_get_peer_certificate
+	SSL_get_verify_result
+
+        TLSSocket
+          TLSSocket(TCPSocket,TLSCrypto&,size_t bufferSize=1472);
+	    SSL_new (std::unique_ptr?)
+	    SSL_set_fd (does not take ownership)
+	    SSL_connect
+	    SSL_do_handshake
+            SSL_get_peer_certificate
+	    SSL_get_verify_result
+
+          TLSSocket(TCPListener,TLSCrypto&,size_t bufferSize=1472);
+	    SSL_new
+	    SSL_set_verify with SSL_VERIFY_PEER
+	    SSL_set_fd
+	    SSL_accept
+	    SSL_do_handshake
+            SSL_get_peer_certificate
+	    SSL_get_verify_result
+
+          xju::Optional<std::pair<Cert,bool> > peerCert() const noexcept;
+	  
+          void close()
+	    SSL_shutdown
+	    SSL_read
+	  
+          ~TLSSocket()
+	    if (!SSL_get_error() has returned SSL_ERROR_SYSCALL or
+	        SSL_ERROR_SSL)
+	    try{
+	      close();
+	    }
+	    catch(xju::Exception const&)
+	    {
+	    }
+	    SSL_free
+
+          std::deque<uint8_t> inbound_;
+	  std::deque<uint8_t> outbound_;
+	  decltype(xju::pipe(true,true)) input_;
+	  decltype(xju::pipe(true,true)) output_;
+	  std::unique_ptr<SSL,xxx> ssl_;
+	  TCPSocket socket_;
+        crypto would do:
+	  readable: socket_ if !inbound.full() +
+	            output_.first.get() if !outbound.full()
+	  writable: socket_ if !outbound.empty() +
+	            output_.second.get() if !inbound.empty()
+	  if (socket_.readable()){
+	    n=SSL_read(
+
+      - both allow access to other end cert and its validity
+      
   x udp DSCP via IP_TOS option (per packet)
   x udp receieve drops via SO_RXQ_OVFL socket option (see socket(7)),
     provide read-only counter

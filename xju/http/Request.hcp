@@ -1,0 +1,37 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/http/RequestLine.hh>
+#include <xju/http/Headers.hh>
+namespace xju
+{
+namespace http
+{
+
+class Request{
+public:
+  Request(RequestLine requestLine,
+          Headers headers,
+          Body body) noexcept:
+      requestLine_(std::move(requestLine)),
+      headers_(std::move(headers)),
+      body_(std::move(body))
+  {
+  }
+  RequestLine requestLine_;
+  Headers headers_;
+  Body body_;
+
+  friend bool operator<(Request const& x, Request const& y) noexcept;
+};
+
+}
+}

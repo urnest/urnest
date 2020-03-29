@@ -96,7 +96,6 @@ public:
             std::chrono::steady_clock::time_point const& deadline,
             bool closeOnExec=true) throw(
               xju::DeadlineReached,
-              // eg connection refused, unreachable
               xju::Exception) try:
     peerAddress_(xju::ip::v4::Address(0),xju::ip::Port(0)),
     fd_(std::move(listener.accept(peerAddress_,deadline,closeOnExec))),

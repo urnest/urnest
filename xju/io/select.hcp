@@ -34,9 +34,10 @@ class Output;
 // - returns those inputs/outputs that are already readable/writable if
 //   deadline has already passed
 // post: result.first.size()||result.second.size()||deadline reached
-std::pair<std::set<Input const*>,std::set<Output const*> > select(
-  std::set<Input const*> const& inputs,
-  std::set<Output const*> const& outputs,
+std::pair<std::set<xju::io::Input const*>,
+          std::set<xju::io::Output const*> > select(
+  std::set<xju::io::Input const*> const& inputs,
+  std::set<xju::io::Output const*> const& outputs,
   std::chrono::steady_clock::time_point const& deadline) throw(
     std::bad_alloc)
 {
