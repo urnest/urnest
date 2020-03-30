@@ -10,6 +10,15 @@
 
 #include <xju/stringToUInt.hh>
 
+struct Sessions
+{
+public:
+  
+private:
+  xju::Mutex guard_;
+  std::map<SessionId,std::unique_ptr<Session> > sessions_;
+};
+
 struct ClosedConns
 {
   ClosedConns() noexcept:
@@ -40,13 +49,58 @@ struct ClosedConns
     closed_.insert(s);
     changed_.signal(l);
   }
-
+  
 private:
   xju::Mutex guard_;
   xju::Condition changed_;
   bool stop_;
   std::deque<xju::ip::TCPSocket const*> closed_;
 };
+
+Sessions::Ref login(xju::io::istream& i,
+                    xju::io::ostream& o,
+                    xju::io::Input& shutdownServer,
+                    Sessions& sessions) throw(
+                      Shutdown,
+                      xju::Exception)
+{
+  auto const deadline(xju::steadyNow()+std::chrono::minutes(1));
+  i.setDeadline(deadline);
+  o.setDeadline(deadline);
+  try{
+    while(xju::steadyNow()<deadline){
+      xju::http::Request const request(
+        xju::http::getRequest(i,4000U));
+      if (request.requestLine.v_!=HTTPVersion(HTTPVersion::Major(1),
+                                              HTTPVersion::Minor(1))){
+        logError("only HTTP 1.1 supported, not "+
+                 xju::format::str(request.requestLine.v_),XJU_TRACED);
+        throw Shutdown(XJU_TRACED);
+      }
+      if (request.requestLine.m_=="GET"&&
+          request.requestLine.t_.path_==xju::uri::Path(
+            {xju::uri::Segment(""),
+             xju::uri::Segment("login.html")})){
+        xju::http::encodeResponse(o,Response());
+        o.flush();
+      }
+      if (request.requestLine.m_=="GET"&&
+          request.requestLine.t_.path_==xju::uri::Path(
+            {xju::uri::Segment(""),
+             xju::uri::Segment("login.js")})){
+        xju::http::encodeResponse(o,Response());
+        o.flush();
+      }
+      if (request.requestLine.m_=="POST"&&
+          request.requestLine.t_.path_==xju::uri::Path(
+            {xju::uri::Segment(""),
+             xju::uri::Segment("login")})){
+        //REVISIT
+      }
+    }
+  }
+  throw Shutdown(XJU_TRACED);
+}
 
 struct Conn
 {
@@ -56,21 +110,23 @@ struct Conn
       s_(s),
       shutdownServer_(shutdownServer),
       closedConns_(closedConns),
-      t_([&]{
+      t_([this&](){
            this->run();
-         }
+         })
   {
   }
 private:
-  std::unique_ptr<xju::ip::TCPSocket> s_;
+  std::unique_ptr<xju::ip::TCPSocket> > const s_;
   xju::io::Input const& shutdownServer_;
-  xju::Thread t_;
+  xju::Thread const t_;
 
   void run() noexcept{
     try{
       TLSSocket s(s_,crypto_,xju::steadyNow()+handshakeTimeout_);
+      xju::io::istream i(s);
+      xju::io::ostream o(s);
       while(true){
-        SessionRef session(login());
+        SessionRef session(login(i,o,shutdownServer_));
         try{
           while(true){
             Request nextRequest();
@@ -113,7 +169,7 @@ int main(int argc, char* argv[])
     
     xju::ip::TCPService listener(port,3,true);
 
-    std::map<SessionId,std::unique_ptr<Session> > sessions;
+    Sessions sessions;
     auto shutdownServer(xju::pipe(true,true));
 
     xju::Mutex connsGuard_;
