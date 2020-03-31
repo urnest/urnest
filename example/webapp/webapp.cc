@@ -60,6 +60,7 @@ private:
 Sessions::Ref login(xju::io::istream& i,
                     xju::io::ostream& o,
                     xju::io::Input& shutdownServer,
+                    Resources const& loginResources,
                     Sessions& sessions) throw(
                       Shutdown,
                       xju::Exception)
@@ -75,27 +76,24 @@ Sessions::Ref login(xju::io::istream& i,
                                               HTTPVersion::Minor(1))){
         logError("only HTTP 1.1 supported, not "+
                  xju::format::str(request.requestLine.v_),XJU_TRACED);
+        //REVISIT: respond with something meaningful?
         throw Shutdown(XJU_TRACED);
       }
-      if (request.requestLine.m_=="GET"&&
-          request.requestLine.t_.path_==xju::uri::Path(
-            {xju::uri::Segment(""),
-             xju::uri::Segment("login.html")})){
-        xju::http::encodeResponse(o,Response());
-        o.flush();
+      auto sessionId(request.cookies.get("WEBAPPSESSION"));
+      if (sessionId.size()){
+        return sessions.get(sessionId);
       }
-      if (request.requestLine.m_=="GET"&&
-          request.requestLine.t_.path_==xju::uri::Path(
-            {xju::uri::Segment(""),
-             xju::uri::Segment("login.js")})){
-        xju::http::encodeResponse(o,Response());
+      try{
+        if (request.requestLine.m_=="POST"&&
+            request.requestLine.t_.path_==xju::uri::Path(
+              {xju::uri::Segment(""),
+               xju::uri::Segment("login")})){
+          //REVISIT
+        }
+        xju::http::encodeResponse(o,request,
+                                  loginResources.get(
+                                    request.requestLine.t_.path));
         o.flush();
-      }
-      if (request.requestLine.m_=="POST"&&
-          request.requestLine.t_.path_==xju::uri::Path(
-            {xju::uri::Segment(""),
-             xju::uri::Segment("login")})){
-        //REVISIT
       }
     }
   }
@@ -106,7 +104,9 @@ struct Conn
 {
   Conn(std::unique_ptr<xju::ip::TCPSocket>&& s,
        xju::io::Input const& shutdownServer,
-       ClosedConns& closedConns):
+       ClosedConns& closedConns,
+       Resources const& loginResources,
+       Sessions const& sessions):
       s_(s),
       shutdownServer_(shutdownServer),
       closedConns_(closedConns),
@@ -118,6 +118,9 @@ struct Conn
 private:
   std::unique_ptr<xju::ip::TCPSocket> > const s_;
   xju::io::Input const& shutdownServer_;
+  ClosedConns& closedConns_;
+  Resources const& loginResources_;
+  Session& sessions_;
   xju::Thread const t_;
 
   void run() noexcept{
@@ -172,9 +175,9 @@ int main(int argc, char* argv[])
     Sessions sessions;
     auto shutdownServer(xju::pipe(true,true));
 
-    xju::Mutex connsGuard_;
-    std::map<xju::ip::Socket const*, std::unique_ptr<Conn> > conns_;
-    xju::Condition connsChanged_;
+    xju::Mutex connsGuard;
+    std::map<xju::ip::Socket const*, std::unique_ptr<Conn> > conns;
+    xju::Condition connsChanged;
 
     ClosedConns closedConns;
 
@@ -202,11 +205,13 @@ int main(int argc, char* argv[])
                                                 listener,
                                                 xju::steadyNow()));
         xju::ip:TCPSocket const* sp(s.get());
-        xju::Lock l(connsGuard_);
-        conns_.insert(std::make_pair(sp,std::unique_ptr<Conn> >(
-                                       std::move(s)),
-                                     *shutdownServer.first.get(),
-                                     closedConns));
+        xju::Lock l(connsGuard);
+        conns.insert(std::make_pair(sp,std::unique_ptr<Conn> >(
+                                      std::move(s),
+                                      *shutdownServer.first.get(),
+                                      closedConns,
+                                      loginResources,
+                                      sessions)));
                                        
       }    
     }
