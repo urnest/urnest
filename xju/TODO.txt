@@ -79,6 +79,21 @@ xju/http http1.1 - rfc7230, rfc7231
          - can headers ever have embedded (escaped) CRLF? NO.
 
       x cont is '[ \t]*(^CRLF)*CRLF', join parts with ' '
+  - transfer encoding:
+    - none unless chunked; to support chunked maybe do
+      class ChunkedResponse {
+        ChunkedResponse(std::ostream& o,
+                        StatusLine const& o,
+	  	        std::vector<TransferEncoding> encodings, //excl chunked
+		        Headers headers) throw(
+          InvalidHeaders, //see 3.3.1, 3.3.2
+	  std::exception); //e.g. send failed
+	  //note must end with empty chunk; each chunk will flush o
+	  void sendChunk(Chunk const& chunk) throw(std::exception);
+	  ~ChunkedResponse() noexcept;
+      };
+      ... and similar ChunkedRequest.
+      
   - deflate
     deflateInit
     deflateSetHeader

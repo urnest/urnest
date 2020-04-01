@@ -20,7 +20,8 @@ class Request{
 public:
   Request(RequestLine requestLine,
           Headers headers,
-          Body body) noexcept:
+          std::vector<uint8_t> body)
+      noexcept:
       requestLine_(std::move(requestLine)),
       headers_(std::move(headers)),
       body_(std::move(body))
