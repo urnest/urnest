@@ -57,47 +57,25 @@ private:
   std::deque<xju::ip::TCPSocket const*> closed_;
 };
 
-Sessions::Ref login(xju::io::istream& i,
-                    xju::io::ostream& o,
-                    xju::io::Input& shutdownServer,
-                    Resources const& loginResources,
-                    Sessions& sessions) throw(
-                      Shutdown,
-                      xju::Exception)
+xju::http::Response login(xju::http::Request const& request,
+                          Sessions& sessions) throw(
+                            Shutdown,
+                            xju::Exception)
 {
-  auto const deadline(xju::steadyNow()+std::chrono::minutes(1));
-  i.setDeadline(deadline);
-  o.setDeadline(deadline);
-  try{
-    while(xju::steadyNow()<deadline){
-      xju::http::Request const request(
-        xju::http::getRequest(i,4000U));
-      if (request.requestLine.v_!=HTTPVersion(HTTPVersion::Major(1),
-                                              HTTPVersion::Minor(1))){
-        logError("only HTTP 1.1 supported, not "+
-                 xju::format::str(request.requestLine.v_),XJU_TRACED);
-        //REVISIT: respond with something meaningful?
-        throw Shutdown(XJU_TRACED);
-      }
-      auto sessionId(request.cookies.get("WEBAPPSESSION"));
-      if (sessionId.size()){
-        return sessions.get(sessionId);
-      }
-      try{
-        if (request.requestLine.m_=="POST"&&
-            request.requestLine.t_.path_==xju::uri::Path(
-              {xju::uri::Segment(""),
-               xju::uri::Segment("login")})){
-          //REVISIT
-        }
-        xju::http::encodeResponse(o,request,
-                                  loginResources.get(
-                                    request.requestLine.t_.path));
-        o.flush();
-      }
-    }
+  if (request.requestLine.m_=="POST"&&
+      request.requestLine.t_.path_==xju::uri::Path(
+        {xju::uri::Segment(""),
+         xju::uri::Segment("login")})){
+    auto const vars(xju::http::decodeMimeRequest(request.headers_,
+                                                 request.body_));
+    Sessions::Ref session(sessions.newSession(
+                            vars.get("user"),
+                            vars.get("password")));
+    return xju::http::redirect(
+      {xju::uri::Segment("")},
+      xju::http::setCookie("WEBAPPSESSION",sessionId));
   }
-  throw Shutdown(XJU_TRACED);
+  return loginResources.get(request.requestLine.t_.path);
 }
 
 struct Conn
@@ -129,21 +107,37 @@ private:
       xju::io::istream i(s);
       xju::io::ostream o(s);
       while(true){
-        SessionRef session(login(i,o,shutdownServer_));
-        try{
-          while(true){
-            Request nextRequest();
-            if (request is logout){
-              respondWith(loggedOut);
-              break;
-            }
-            respondWith(session.handle(request));
-          }
+        auto const deadline(xju::steadyNow()+std::chrono::minutes(1));
+        i.setDeadline(deadline);
+        o.setDeadline(deadline);
+        xju::http::Request const request(xju::http::getRequest(i,4000U));
+        //REVISIT: how does versioning work?
+        if (request.requestLine.v_!=HTTPVersion(HTTPVersion::Major(1),
+                                                HTTPVersion::Minor(1))){
+          logError("only HTTP 1.1 supported, not "+
+                   xju::format::str(request.requestLine.v_),XJU_TRACED);
+          //REVISIT: respond with something meaningful?
+          throw Shutdown(XJU_TRACED);
         }
-        catch(SessionExpired const&)
-        {
+        Cookies const cookies(request.headers_);
+        auto sessionId(cookies.get("WEBAPPSESSION",""));
+        if (sessionId.size()){
+          xju::http::encodeResponse(
+            o,request,
+            sessions.get(sessionId).handle(request).setCookie(
+              "WEBAPPSESSION",""));
         }
+        else{
+          xju::http::encodeResponse(
+            o,request,
+            login(request,loginResources_,sessions_));
+        }
+        o.flush();
       }
+      //REVISIT: session idle timeout? or is that handled by sessions.get()?
+    }
+    catch(xju::DeadlineReached const&){
+      return;
     }
     catch(Shutdown const&){
       return;
