@@ -1,0 +1,42 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/http/StatusLine.hh>
+#include <xju/http/Headers.hh>
+#include <vector>
+#include <cinttypes>
+
+namespace xju
+{
+namespace http
+{
+
+class Response{
+public:
+  Response(StatusLine statusLine,
+           Headers headers,
+           std::vector<uint8_t> body) noexcept:
+      statusLine_(std::move(statusLine)),
+      headers_(std::move(headers)),
+      body_(std::move(body))
+  {
+  }
+  StatusLine statusLine_;
+  Headers headers_;
+  Body body_;
+
+  friend bool operator<(Response const& x, Response const& y) noexcept;
+};
+
+}
+}
+
+

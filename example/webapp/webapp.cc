@@ -10,6 +10,9 @@
 
 #include <xju/stringToUInt.hh>
 
+// send all responses with the http version that this webapp supports
+auto const SUPPORTED_HTTP_VERSION(xju::http::HTTP_1_0);
+
 struct Sessions
 {
 public:
@@ -57,25 +60,39 @@ private:
   std::deque<xju::ip::TCPSocket const*> closed_;
 };
 
+// handle request from out-of-session client
 xju::http::Response login(xju::http::Request const& request,
                           Sessions& sessions) throw(
                             Shutdown,
                             xju::Exception)
 {
-  if (request.requestLine.m_=="POST"&&
-      request.requestLine.t_.path_==xju::uri::Path(
-        {xju::uri::Segment(""),
-         xju::uri::Segment("login")})){
-    auto const vars(xju::http::decodeMimeRequest(request.headers_,
-                                                 request.body_));
-    Sessions::Ref session(sessions.newSession(
-                            vars.get("user"),
-                            vars.get("password")));
-    return xju::http::redirect(
-      {xju::uri::Segment("")},
-      xju::http::setCookie("WEBAPPSESSION",sessionId));
+  try{
+    if (request.requestLine.m_=="POST"&&
+        request.requestLine.t_.path_==xju::uri::Path(
+          {xju::uri::Segment(""),
+           xju::uri::Segment("login")})){
+      auto const vars(xju::http::decodeMimeRequest(request.headers_,
+                                                   request.body_));
+      Sessions::Ref session(sessions.newSession(
+                              vars.get("user"),
+                              vars.get("password")));
+      return xju::http::redirect(
+        {xju::uri::Segment("")},
+        xju::http::setCookie("WEBAPPSESSION",session.id_));
+    }
+    return loginResources.get(request.requestLine.t_.path);
   }
-  return loginResources.get(request.requestLine.t_.path);
+  catch(AuthenticationFailed const& e){
+    logInformation(readableRepr(e),XJU_TRACED);
+    xju::sleepFor(std::chrono::seconds(5));
+    return xju::http::Response(
+      xju::http::StatusLine(
+        SUPPORTED_HTTP_VERSION,
+        xju::http::StatusCode(403), //Forbidden
+        xju::http::ReasonPhrase("Authentication failed for user "+e.user_)),
+      {},
+      {});
+  }
 }
 
 struct Conn
@@ -102,53 +119,71 @@ private:
   xju::Thread const t_;
 
   void run() noexcept{
+    std::ostringstream s;
+    s << "run connection from " << s_->peerAddress().first << ":"
+      << s_->peerAddress.second();
     try{
       TLSSocket s(s_,crypto_,xju::steadyNow()+handshakeTimeout_);
       xju::io::istream i(s);
       xju::io::ostream o(s);
       while(true){
+        //REVISIT: use select here to implement connection idle timeout
+        //         but only if i is empty
         auto const deadline(xju::steadyNow()+std::chrono::minutes(1));
         i.setDeadline(deadline);
         o.setDeadline(deadline);
         xju::http::Request const request(xju::http::getRequest(i,4000U));
-        //REVISIT: how does versioning work?
-        if (request.requestLine.v_!=HTTPVersion(HTTPVersion::Major(1),
-                                                HTTPVersion::Minor(1))){
-          logError("only HTTP 1.1 supported, not "+
+        //versioning from rfc7230:
+        //  1.1 sender must send message such that it will be
+        //      correctly interpreted by 1.0 receiver unless sender
+        //      knows receiver is 1.1 capable
+        //  1.1 receiver can send 1.1 as version in response to 1.0
+        //      (but message must be 1.0 content only) to indicate
+        //      to sender that receiver supports 1.1 features
+        //  1.1 receiver can treat 1.0 request same as 1.1
+        //  1.0 supports Content-Length but Transfer-Encoding is 1.1
+        //      only; so simplest to avoid sending Transfer-Encoding
+        //  1.* precludes Content-Length in:
+        //      - 1xx status responses info
+        //      - 204 status responses no content
+        //      - successful responses to CONNECT
+        //      REVISIT: can we statically encapsulate that somehow? Or do
+        //      we apply it on-the-fly? Former is impossible so do latter.
+        //  - use 400 Bad Request where Content-Length is invalid
+        if (request.requestLine.v_.major()!=xju::http::HTTPVersion::Major(1)){
+          logError("only HTTP 1.x supported, not "+
                    xju::format::str(request.requestLine.v_),XJU_TRACED);
-          //REVISIT: respond with something meaningful?
+          xju::http::encodeResponse(
+            o,
+            xju::http::Response(
+              xju::http::StatusLine(
+                SUPPORTED_HTTP_VERSION,
+                xju::http::StatusCode(505),
+                xju::http::ReasonPhrase("HTTP Version "+
+                                        xju::format::str(
+                                          request.requestLine.v_)+
+                                        " Not supported")),
+              {},
+              {}));
           throw Shutdown(XJU_TRACED);
         }
         Cookies const cookies(request.headers_);
         auto sessionId(cookies.get("WEBAPPSESSION",""));
-        if (sessionId.size()){
-          xju::http::encodeResponse(
-            o,request,
-            sessions.get(sessionId).handle(request).setCookie(
-              "WEBAPPSESSION",""));
-        }
-        else{
-          xju::http::encodeResponse(
-            o,request,
-            login(request,loginResources_,sessions_));
-        }
+        xju::http::encodeResponse(
+          o,
+          (!sessionId.size()?
+           login(request,loginResources_,sessions_):
+           sessions.get(sessionId).handle(request)));
         o.flush();
       }
-      //REVISIT: session idle timeout? or is that handled by sessions.get()?
     }
-    catch(xju::DeadlineReached const&){
-      return;
-    }
-    catch(Shutdown const&){
-      return;
+    catch(Shutdown& e){
+      e.addContext(s.str(),XJU_TRACED);
+      logInformation("close connection",e,XJU_TRACED);
     }
     catch(xju::Exception& e){
-      std::ostringstream s;
-      s << "run connection from " << s_->peerAddress().first << ":"
-        << s_->peerAddress.second();
       e.addContext(s.str(),XJU_TRACED);
-      std::cerr << "ERROR: aborting connection because "
-                << readableRepr(e);
+      logError("close connection",e,XJU_TRACED);
     }
   }
 };

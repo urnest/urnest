@@ -1,0 +1,36 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace example
+{
+namespace webapp
+{
+
+class ResourcesIf
+{
+public:
+  // note returns 405 not found if not such resource
+  virtual xju::http::Response get(xju::http::Path const& path) throw(
+    xju::Exception) = 0;
+
+  // human readable phrase, no newlines
+  virtual std::string str() const noexcept = 0;
+  
+  virtual ~ResourcesIf() noexcept {}
+
+  friend std::ostream& operator<<(std::ostream& s, ResourcesIf const& x)
+  {
+    return x.str();
+  }
+};
+
+}
+}

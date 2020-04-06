@@ -52,5 +52,8 @@ private:
   }
 };
 
+HTTPVersion const HTTP_1_0=HTTPVersion(HTTPVersion::Major(1),HTTPVersion::Minor(0));
+HTTPVersion const HTTP_1_1=HTTPVersion(HTTPVersion::Major(1),HTTPVersion::Minor(1));
+
 }
 }

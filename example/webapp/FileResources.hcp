@@ -1,0 +1,74 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace example
+{
+namespace webapp
+{
+
+class FileResources : public ResourcesIf
+{
+public:
+  FileResources(std::map<xju::http::Path,
+                std::pair<xju::http::ContentType,xju::path::AbsFile> > files)
+      noexcept:
+      files_(files)
+  {
+  }
+
+  //note sets response version to 1.0
+  xju::http::Response get(xju::http::Path const& path) throw(
+    xju::Exception) override
+  {
+    try{
+      auto const i(files_.find(path));
+      if (i==files_.end()){
+        return xju::http::Response(
+          xju::http::StatusLine(xju::http::HTTP_1_0,
+                                xju::http::StatusCode(404),
+                                xju::http::ReasonPhrase(
+                                  "path "+
+                                  xju::format::str(path)+" not found")),
+          {},
+          {});
+      }
+      auto body(xju::file::read((*i).second.second));
+      return xju::http::Response(
+        xju::http::StatusLine(xju::http::HTTP_1_0,
+                              xju::http::StatusCode(200),
+                              xju::http::ReasonPhrase("OK")),
+        {xju::http::Header(xju::http::FieldName("Content-Type"),
+                           (*i).second.first),
+         xju::http::Header(xju::http::FieldName("Content-Length"),
+                           body.size())},
+        std::move(body));
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "get path " << path << " from FileResources " << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+  std::string str() const noexcept override
+  {
+    std::ostringstream s;
+    s << xju::format::join(files_.begin(),files_.end(),
+                           [](decltype(*files_.begin()) const& x){
+                             return xju::format::str(x.first);
+                           });
+    return s.str();
+  }
+};
+
+}
+}
