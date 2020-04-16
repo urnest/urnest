@@ -1,0 +1,52 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace http
+{
+// copy non-chunked message body assuming s is positioned at its
+// first byte
+std::vector<uint8_t> copyNonChunkedBody(
+  std::istream& s,
+  xju::http::Headers const& headers) throw(
+    // headers has no Content-Length
+    Chunked,
+    // e.g. read failed
+    std::exception)
+{
+  try{
+    std::set<FieldValue> contentLengths;
+    for(auto h: headers){
+      if (h.first==FieldName("Content-Length")){
+        contentLengths.insert(h.second);
+      }
+    }
+    if (contentLengths.size()>1){
+      std::ostringstream s;
+      s << "headers has more than one unique value Content-Length: "
+        << xju::format::join(contentLengths.begin(),contentLengths.end()," ");
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    @@@;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "copy non-chunked message body i.e. of size according to Content-Length from istream";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+}
+
+

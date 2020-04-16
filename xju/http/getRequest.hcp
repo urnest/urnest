@@ -14,7 +14,8 @@ namespace xju
 namespace http
 {
 
-
+xju::http::Request getRequest(std::istream& s,size_t const maxBytes)
+  throw
 }
 }
 

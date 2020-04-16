@@ -81,7 +81,7 @@ xju/http http1.1 - rfc7230, rfc7231
       x cont is '[ \t]*(^CRLF)*CRLF', join parts with ' '
   - transfer encoding:
     - none unless chunked; to support chunked maybe do
-      class ChunkedResponse {
+      class ChunkedResponseWriter {
         ChunkedResponse(std::ostream& o,
                         StatusLine const& o,
 	  	        std::vector<TransferEncoding> encodings, //excl chunked
@@ -92,7 +92,7 @@ xju/http http1.1 - rfc7230, rfc7231
 	  void sendChunk(Chunk const& chunk) throw(std::exception);
 	  ~ChunkedResponse() noexcept;
       };
-      ... and similar ChunkedRequest.
+      ... and similar ChunkedRequestWriter/Reader.
       
   - deflate
     deflateInit

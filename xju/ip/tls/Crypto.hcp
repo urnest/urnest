@@ -1,0 +1,72 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace ip
+{
+namespace tls
+{
+
+class Crypto
+{
+public:
+  Crypto() throw(xju::Exception);
+
+  void run() noexcept
+  {
+    xju::Lock l(sessionsGuard_);
+    while(!stop_){
+      std::set<xju::io::Input const*> readable{wake_.first.get()};
+      std::set<xju::io::Input const*> writable;
+      for(auto s: sessions_){
+        readable.insert(s.first);
+        writable.insert(s.first);
+      }
+      auto x(xju::io::select(readable,writable,xju::steadyEternity()));
+      {
+        xju::Lock l(newSessionsGuard_);
+        while(newSessions_.size()){
+          sessions_.insert(newSessions_.pop());
+        }
+      }
+      {
+        uint8_t x;
+        wake_.first->read(&x,1,xju::steadyNow());
+      }
+      do reads and writes @@@;
+    }
+  }
+  void stop(){
+    stop_=true;
+    wake_.write('x',1,xju::steadyNow());
+  }
+private:
+  std::atomic<bool> stop_;
+  struct Session{
+    std::unique_ptr<xju::io::OStream> plainOut_;
+    std::unique_ptr<xju::io::IStream> plainIn_;
+    xju::CircularBuffer<uint8_t> rxBuf_;
+    xju::CircularBuffer<uint8_t> txBuf_;
+    std::unique_ptr<SSL,SSL_Deref> ssl_;
+  };
+             
+  std::pair<std::unique_ptr<xju::io::IStream>,
+            std::unique_ptr<xju::io::OStream> > wake_;
+
+  xju::Mutex sessionsGuard_;
+  std::map<xju::ip::TCPSocket*, std::unique_ptr<Session> > sessions_;
+  
+};
+
+}
+}
+}

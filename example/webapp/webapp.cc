@@ -123,7 +123,7 @@ private:
     s << "run connection from " << s_->peerAddress().first << ":"
       << s_->peerAddress.second();
     try{
-      TLSSocket s(s_,crypto_,xju::steadyNow()+handshakeTimeout_);
+      TLSSocket s(s_,crypto_,false,xju::steadyNow()+handshakeTimeout_);
       xju::io::istream i(s);
       xju::io::ostream o(s);
       while(true){
@@ -233,7 +233,7 @@ int main(int argc, char* argv[])
         std::unique_ptr<xju::ip::TCPSocket> s(new xju::ip::TCPSocket(
                                                 listener,
                                                 xju::steadyNow()));
-        xju::ip:TCPSocket const* sp(s.get());
+        xju::ip::TCPSocket const* sp(s.get());
         xju::Lock l(connsGuard);
         conns.insert(std::make_pair(sp,std::unique_ptr<Conn> >(
                                       std::move(s),

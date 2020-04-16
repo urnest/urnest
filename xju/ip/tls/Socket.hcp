@@ -25,17 +25,21 @@ private:
     xju::Optional<std::pair<Certificate,bool> > > x_;
   
 public:
-  // accept connection (including TLS handshake) on specified listener
+  // accept TLS connection on specified socket
   // by specified deadline using lisener's crypto
+  // pre: lifetime(transport) includes lifetime(this)
   // pre: lifetime(crypto) includes lifetime(this)
-  Socket(xju::ip::tls::Listener& listener,
+  Socket(xju::ip::TCPSocket& transport,
+         xju::ip::tls::Crypto& crypto,
+         bool const requestClientCertificate,
          std::chrono::steady_clock::time_point const& deadline,
          bool closeOnExec=true) throw(
            xju::DeadlineReached,
            xju::Exception):
-      x_(listener.accept(requestClientCertificate,
-                         deadline,
-                         closeOnExec)),
+      x_(crypto.accept(transport,
+                       requestClientCertificate,
+                       deadline,
+                       closeOnExec)),
       output_(std::get<0>(x_)),
       input_(std::get<1>(x_)),
       peerCertifiate_(std::get<2>(x_))
@@ -43,15 +47,16 @@ public:
   }
   // connect to dest and perform TLS handshake by specified deadline
   // using specified crypto
+  // pre: lifetime(transport) includes lifetime(this)
   // pre: lifetime(crypto) includes lifetime(this)
-  Socket(std::pair<xju::ip::v4::Address,xju::ip::Port> const& dest,
+  Socket(xju::ip::TCPSocket& transport,
          xju::ip::tls::Crypto& crypto,
          std::chrono::steady_clock::time_point const& deadline,
          bool closeOnExec=true) throw(
            xju::DeadlineReached,
            // eg connection refused, unreachable
            xju::Exception):
-      x_(crypto.connect(dest,crypto,deadline,closeOnExec)),
+      x_(crypto.connect(transport,crypto,deadline,closeOnExec)),
       output_(std::get<0>(x_)),
       input_(std::get<1>(x_)),
       peerCertifiate_(std::get<2>(x_))
@@ -67,6 +72,7 @@ public:
 
   // peer certificate and whether it is valid
   // note: client may always decline to supply; server must always supply
+  // note: client must perform any required host validation
   xju::Optional<std::pair<Certificate,bool> > const& peerCertifiate_;
 };
 
