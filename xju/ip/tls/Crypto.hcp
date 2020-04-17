@@ -9,6 +9,7 @@
 //
 
 
+#include <atomic>
 namespace xju
 {
 namespace ip
@@ -49,9 +50,51 @@ public:
     stop_=true;
     wake_.write('x',1,xju::steadyNow());
   }
+  //
+  // transport must live until get<1>(result) is closed
+  // - to request closure, close get<0>(result)
+  std::tuple<
+    std::unique_ptr<xju::io::OStream>,
+    std::unique_ptr<xju::io::IStream>,
+    xju::Optional<std::pair<Certificate,bool> > > accept(
+      xju::ip::Socket& transport,
+      bool const requestClientCertificate,
+      std::chrono::steady_clock::time_point const& deadline,
+      bool const closeOnExec) throw(xju::Exception)
+  {
+    try{
+      auto plainOut(xju::pipe());
+      auto plainIn(xju::pipe());
+      xju::CircularBuffer<uint8_t> rxBuf(2048);
+      xju::CircularBuffer<uint8_t> txBuf(2048);
+      std::unique_ptr<SSL,SSL_Deref> ssl(SSL_new(ctx));
+      @@@;
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "accept TLS connection on transport socket by "
+        << deadline
+        << (requestClientCertificate?" ":" without ")
+        << "requesting client certificate";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
 private:
   std::atomic<bool> stop_;
+
   struct Session{
+    Session(std::unique_ptr<xju::io::OStream>&& plainOut_,
+            std::unique_ptr<xju::io::IStream>&& plainIn_,
+            xju::CircularBuffer<uint8_t>&& rxBuf_,
+            xju::CircularBuffer<uint8_t>&& txBuf_,
+            std::unique_ptr<SSL,SSL_Deref> ssl_) noexcept:
+        plainOut_(plainOut),
+        plainIn_(plainIn),
+        rxBuf_(rxBuf),
+        txBuf_(txBuf),
+        ssl_(ssl){
+    }
     std::unique_ptr<xju::io::OStream> plainOut_;
     std::unique_ptr<xju::io::IStream> plainIn_;
     xju::CircularBuffer<uint8_t> rxBuf_;
