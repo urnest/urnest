@@ -1850,7 +1850,10 @@ PR scoped_enum_def() throw()
       enum_keyword()+whitespace()+(parseLiteral("struct")|
                                    parseLiteral("class"))+
       whitespace()+
-      optional(enum_name())+eatWhite()+parseLiteral("{")+
+      optional(enum_name())+eatWhite()+
+      ((":"+eatWhite()+type_name+eatWhite)|
+       !parseLiteral(":"))+
+      parseLiteral("{")+
       balanced(parseOneOfChars("}"))+
       parseOneOfChars("}")+eatWhite()+
       parseOneOfChars(";")+
