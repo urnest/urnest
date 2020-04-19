@@ -16,11 +16,81 @@ namespace ip
 {
 namespace tls
 {
+namespace{
+  // get calling thread error messages, separate them by " and "
+  std::string getCallingThreadErrors() noexcept
+  {
+    std::vector<std::string> errs;
+    auto cb=[errs&](const char *str, size_t len, void *u)->int{
+              errs.push_back(std::string(str,str+len));
+            };
+    ERR_print_errors_cb(cb,0);
+    return xju::format::join(errs.begin(),errs.end()," and ");
+  }
+  
+  std::unique_ptr<SSL_CTX,decltype(&SSL_CTX_free)> createContext(
+    decltype(SSLv23_server_method),//client or server?
+    PrivateKey const& privateKey,
+    std::vector<X509Certificate> const& certificateAndAncestors) throw(
+      xju::Exception)
+  {
+    try{
+      std::unique_ptr<SSL_CTX,decltype(&SSL_CTX_free)> result(
+        SSL_CTX_new(method));
+      if (!result.get()) {
+        throw xju::Exception(getCallingThreadErrors(),XJU_TRACED);
+      }
+      //REVISIT: what type of private key? How does that correspond to cipher list?
+      SSL_CTX_set_cipher_list("HIGH:!aNULL:!kRSA:!PSK:!SRP:!MD5:!RC4:!DSS");//from wiki.openssl.org
+      SSL_CTX_set_ecdh_auto(result.get(), 1);
+      if (certificateAndAncestors.size()){
+        if (SSL_CTX_use_certificate(
+              result.get(),
+              certificateAndAncestors.front().get()) <= 0) {
+          xju::Exception e(getErrors(),XJU_TRACED);
+          e.addContext("set context certificate",XJU_TRACED);
+          throw e;
+        }
+        for(int i=1; i!=certificateAndAncestors.size(); ++i){
+          if (iSSL_CTX_add_extra_chain_cert(
+                result.get(),
+                certificateAndAncestors[i].get()) <= 0) {
+            xju::Exception e(getErrors(),XJU_TRACED);
+            e.addContext(
+              "add ancestor certificate #"+xju::format::str(i),XJU_TRACED);
+            throw e;
+          }
+        }
+      }
+      if (SSL_CTX_use_PrivateKey(result.get(),privateKey.get())<=0){
+        xju::Exception e(getErrors(),XJU_TRACED);
+        e.addContext("set context private key",XJU_TRACED);
+        throw e;
+      }
+      return result;
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "create OpenSSL server-side context";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+}
 
 class Crypto
 {
 public:
-  Crypto() throw(xju::Exception);
+  //server side
+  Crypto(PrivateKey const& privateKey,
+         std::vector<X509Certificate> const& certificateAndAncestors,
+         bool const requestClientCertificate) throw(
+           xju::Exception):
+      ctx_(createContext(privateKey,certificateAndAncestors)),
+      stop_(false),
+      wake_(xju::pipe())
+  {
+  }
 
   void run() noexcept
   {
@@ -39,7 +109,7 @@ public:
           sessions_.insert(newSessions_.pop());
         }
       }
-      {
+      if(x.first.find(wake_.first.get())!=x.first.end()){
         uint8_t x;
         wake_.first->read(&x,1,xju::steadyNow());
       }
@@ -63,12 +133,27 @@ public:
       bool const closeOnExec) throw(xju::Exception)
   {
     try{
-      auto plainOut(xju::pipe());
-      auto plainIn(xju::pipe());
+      auto decrypted(xju::pipe());
+      auto encrypt(xju::pipe());
       xju::CircularBuffer<uint8_t> rxBuf(2048);
       xju::CircularBuffer<uint8_t> txBuf(2048);
-      std::unique_ptr<SSL,SSL_Deref> ssl(SSL_new(ctx));
-      @@@;
+      std::unique_ptr<SSL,SSL_Deref> ssl(SSL_new(ctx_),&SSL_free);
+      //REVISIT: set server method
+      if(requestClientCertificate){
+        SSL_set_verify(result.get(),
+                       SSL_VERIFY_PEER,
+                       [](int preverify_ok, X509_STORE_CTX *x509_ctx)->int {
+                         return 1;
+                       });
+      }
+    REVISIT: requestClientCertificate;
+      std::unique_ptr<Session> session(
+        new Session(decrypted.second,
+                    encrypt.first,
+                    rxBuf,
+                    txBuf,
+                    ssl));
+      
     }
     catch(xju::Exception& e){
       std::ostringstream s;
@@ -81,25 +166,28 @@ public:
     }
   }
 private:
+  std::unique_ptr<SSL_CTX,decltype(&SSL_CTX_free)> const ctx_;
+  
   std::atomic<bool> stop_;
-
+  typedef std::unique_ptr<SSL,SSL_decltype(&SSL_free)> SSLuptr;
+  
   struct Session{
-    Session(std::unique_ptr<xju::io::OStream>&& plainOut_,
-            std::unique_ptr<xju::io::IStream>&& plainIn_,
-            xju::CircularBuffer<uint8_t>&& rxBuf_,
-            xju::CircularBuffer<uint8_t>&& txBuf_,
-            std::unique_ptr<SSL,SSL_Deref> ssl_) noexcept:
-        plainOut_(plainOut),
-        plainIn_(plainIn),
+    Session(std::unique_ptr<xju::io::OStream>&& decrypted,
+            std::unique_ptr<xju::io::IStream>&& encrypt,
+            xju::CircularBuffer<uint8_t>&& rxBuf,
+            xju::CircularBuffer<uint8_t>&& txBuf,
+            SSLuptr ssl_) noexcept:
+        decrypted_(decrypted),
+        encrypt_(encrypt),
         rxBuf_(rxBuf),
         txBuf_(txBuf),
         ssl_(ssl){
     }
-    std::unique_ptr<xju::io::OStream> plainOut_;
-    std::unique_ptr<xju::io::IStream> plainIn_;
+    std::unique_ptr<xju::io::OStream> decrypted_;
+    std::unique_ptr<xju::io::IStream> encrypt_;
     xju::CircularBuffer<uint8_t> rxBuf_;
     xju::CircularBuffer<uint8_t> txBuf_;
-    std::unique_ptr<SSL,SSL_Deref> ssl_;
+    SSLuptr ssl_;
   };
              
   std::pair<std::unique_ptr<xju::io::IStream>,
@@ -107,7 +195,9 @@ private:
 
   xju::Mutex sessionsGuard_;
   std::map<xju::ip::TCPSocket*, std::unique_ptr<Session> > sessions_;
-  
+
+  xju::Mutext newSessionsGuard_;
+  std::deque<std::unique_ptr<Session> > newSessions_;
 };
 
 }
