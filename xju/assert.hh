@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <utility>
 #include <string>
+#include <set>
 
 namespace std
 {
@@ -62,6 +63,18 @@ namespace xju
     {
 	if (!(a == b))
 	{
+	    assert_abort();
+	}
+	return true;
+    }
+    template<class T>
+    bool assert_equal(std::set<T> const& a, std::set<T> const& b) noexcept
+    {
+	if (!(a == b))
+	{
+            // so we can look at elements in gdb
+            std::vector<T> a_(a.begin(),a.end());
+            std::vector<T> b_(b.begin(),b.end());
 	    assert_abort();
 	}
 	return true;

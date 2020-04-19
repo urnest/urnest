@@ -1,0 +1,68 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <sys/types.h>
+#include <xju/path.hh>
+
+#include <fcntl.h> //impl
+#include <unistd.h> //impl
+#include <xju/stat.hh> //impl
+#include <xju/fcntl.hh> //impl
+#include <sys/time.h> //impl
+#include <xju/AutoFd.hh> //impl
+#include <sstream> //impl
+#include <xju/file/Mode.hh>
+#include <xju/format.hh> //impl
+
+
+namespace xju
+{
+namespace file
+{
+namespace
+{
+xju::SyscallF2<int,int,timeval const*> fut{"::futimes",::futimes};
+}
+
+void chmod(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& f,
+           Mode mode)
+  throw(xju::Exception)
+{
+  try {
+    xju::syscall(xju::chmod,XJU_TRACED)(xju::path::str(f).c_str(),
+                                        mode.value());
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "chmod file " << xju::path::str(f) << " to "
+      << xju::format::octal(mode.value());
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+void chmod(xju::path::AbsolutePath const& d,Mode mode)
+  throw(xju::Exception)
+{
+  try {
+    xju::syscall(xju::chmod,XJU_TRACED)(xju::path::str(d).c_str(),
+                                        mode.value());
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "chmod directory " << xju::path::str(d) << " to "
+      << xju::format::octal(mode.value());
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+}
+

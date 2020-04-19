@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/io/DirectoryEntryEvent.h>
+#include <xju/io/DirectoryEntryEvent.hh>
 #include <xju/format.hh>
 
 namespace xju

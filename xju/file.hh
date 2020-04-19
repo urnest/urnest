@@ -17,5 +17,6 @@
 #include <xju/file/write.hh>
 #include <xju/file/rename.hh>
 #include <xju/file/rm.hh>
+#include <xju/file/rmdir.hh>
 
 #endif

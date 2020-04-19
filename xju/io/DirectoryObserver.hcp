@@ -40,27 +40,26 @@ namespace io
 
 namespace
 {
-//REVISIT: use constexpr
-xju::path::FileName const& dot() noexcept{
-  static xju::path::FileName const result(".");
+uint32_t eventsToMask(std::set<DirectoryEntryEvent> const& events) noexcept{
+  uint32_t result(0);
+  for(auto e: events){
+    result|=(uint32_t)e;
+  }
   return result;
-}
-uint32_t eventsToMask(DirectoryEntryEvent const& events) noexcept{
-  return events;
 }
 std::set<DirectoryEntryEvent> maskToEvents(uint32_t const x) noexcept
 {
   std::set<DirectoryEntryEvent> result;
-  if (x&DirectoryEntryEvent::METADATA_CHANGED){
+  if (x&(uint32_t)DirectoryEntryEvent::METADATA_CHANGED){
     result.insert(DirectoryEntryEvent::METADATA_CHANGED);
   }
-  if (x&DirectoryEntryEvent::WRITER_CLOSED){
+  if (x&(uint32_t)DirectoryEntryEvent::WRITER_CLOSED){
     result.insert(DirectoryEntryEvent::WRITER_CLOSED);
   }
-  if (x&DirectoryEntryEvent::ENTRY_ADDED){
+  if (x&(uint32_t)DirectoryEntryEvent::ENTRY_ADDED){
     result.insert(DirectoryEntryEvent::ENTRY_ADDED);
   }
-  if (x&DirectoryEntryEvent::ENTRY_REMOVED){
+  if (x&(uint32_t)DirectoryEntryEvent::ENTRY_REMOVED){
     result.insert(DirectoryEntryEvent::ENTRY_REMOVED);
   }
   return result;
@@ -71,31 +70,6 @@ struct Buffer
   inotify_event event;
   char data[NAME_MAX+1];
 };
-std::map<int,xju::path::AbsolutePath> addWatches(
-  int inotifyFd,
-  std::set<xju::path::AbsolutePath> const& dirs,
-  DirectoryEntryEvent const events) throw(
-    xju::Exception)
-{
-  std::map<int,xju::path::AbsolutePath> result;
-
-  for(auto x:dirs) {
-    try {
-      int const watchId(
-        xju::syscall(xju::inotify_add_watch,XJU_TRACED)(
-          inotifyFd,str(x).c_str(),
-          eventsToMask(events)|IN_ONLYDIR));
-      result.insert(std::make_pair(watchId,x));
-    }
-    catch(xju::Exception& e) {
-      std::ostringstream s;
-      s << "add watch for directory " << xju::path::str(x);
-      e.addContext(s.str(),XJU_TRACED);
-      throw;
-    }
-  }
-  return result;
-}
 
 }
 
@@ -104,20 +78,23 @@ class DirectoryObserver : public xju::io::Input, xju::NonCopyable
 public:
   typedef std::set<DirectoryEntryEvent> Events;
   
-  // watch for modifications to directories
-  // - parent directories of all directories must exist
+  // watch for modifications to existing directory
+  // - excludes changes to directory itself
   //
   // Note you can use xju::io::select() to wait for events; use
   // read() to then read them.
   //
-  DirectoryObserver(std::set<xju::path::AbsolutePath> const& dirs,
+  DirectoryObserver(xju::path::AbsolutePath const& dir,
                     Events events) throw(
     // - no resources (see initify_init1)
     // - missing/unreadable parent directory
     xju::Exception) try:
+      dir_(dir),
+      events_(std::move(events)),
       fd_(xju::syscall(xju::inotify_init1,XJU_TRACED)(IN_NONBLOCK|IN_CLOEXEC)),
-      watches_(addWatches(fd_.fd(),dirs,events)),
-      events_(std::move(events))
+      watch_(xju::syscall(xju::inotify_add_watch,XJU_TRACED)(
+               fd_.fd(),xju::path::str(dir).c_str(),
+               eventsToMask(events_)|IN_ONLYDIR))
   {
   }
   catch(xju::Exception& e) {
@@ -126,8 +103,8 @@ public:
     std::ostringstream s;
     s << "start watching for "
       << xju::format::join(events.begin(),events.end(),"/")
-      << " changes to directories "
-      << xju::format::join(dirs.begin(),dirs.end(),converter,", ");
+      << " changes to directory "
+      << dir;
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }
@@ -161,14 +138,12 @@ public:
         uint8_t* const end(p+thisRead);
         while((end-p)>=sizeof(inotify_event)) {
           auto event((inotify_event const*)p);
-          xju::path::FileName const f(event->name);
-          auto const events(maskToEvents);
-          if (f!=dot() && events.size()){
-            auto i(watches_.find(event->wd));
-            if (i!=watches_.end()) {
-              FileId const x((*i).second,f);
+          if(event->len){ //len is zero if watched directory itself changes
+            xju::path::FileName const f(event->name);
+            auto const events(maskToEvents(event->mask));
+            if (events.size()){
               for(auto e: events){
-                result.insert(std::make_pair(x,f),e);
+                result.insert(std::make_pair(std::make_pair(dir_,f),e));
               }
             }
           }
@@ -189,9 +164,10 @@ public:
   }
   
 private:
-  xju::AutoFd fd_;
+  xju::path::AbsolutePath const dir_;
   Events const events_;
-  std::map<int,xju::path::AbsolutePath> const watches_;
+  xju::AutoFd fd_;
+  int const watch_;
 
   //Input::
   int fileDescriptor() const throw()
@@ -207,21 +183,16 @@ private:
     return s.str();
   }
 
-  friend std::ostream& operator<<(std::ostream& s, FileObserver const& x)
+  friend std::ostream& operator<<(std::ostream& s, DirectoryObserver const& x)
     noexcept
   {
     return s << "observer of "
-             << xju::format::join(events_.begin(),events_.end())
-             << " changes to directories "
-             << xju::format::join(
-               x.watches_.begin(),x.watches_.end(),
-               [](declype(*(watches_.begin())) const& w){
-                 return xju::format::str(w.second);
-               },
-               ", ");
+             << xju::format::join(x.events_.begin(),x.events_.end(),"/")
+             << " changes to directory "
+             << x.dir_;
   }
 
-}
+};
 
   
 }

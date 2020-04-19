@@ -4,6 +4,7 @@
 %tests.tree
 
 %tests.tree==<<
+()+cmd=(test-DirectoryObserver.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-FileObserver.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-FileReader.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-FileWriter.cc+(../..%cxx-opts):auto.cxx.exe):exec.output

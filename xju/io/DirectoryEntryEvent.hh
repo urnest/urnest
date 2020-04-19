@@ -10,6 +10,8 @@
 
 
 #include <iostream>
+#include <sys/inotify.h>
+#include <cinttypes>
 
 namespace xju
 {
