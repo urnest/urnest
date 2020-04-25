@@ -34,11 +34,7 @@
 #include <utility>
 #include <string>
 #include <set>
-
-namespace std
-{
-    template<class T, class U> class vector;
-}
+#include <vector>
 
 namespace xju
 {
@@ -284,6 +280,7 @@ namespace xju
         xju::assert_not_equal(std::search(x.begin(),x.end(),
                                           contains.begin(),
                                           contains.end()),x.end());
+        return true;
     }
     
     // T, U are sequences, eg std::string
@@ -294,6 +291,7 @@ namespace xju
         xju::assert_equal(std::search(x.begin(),x.end(),
                                       contains.begin(),
                                       contains.end()),x.begin());
+        return true;
     }
     
     // T, U are sequences, eg std::string
@@ -304,12 +302,14 @@ namespace xju
         xju::assert_equal(std::search(x.rbegin(),x.rend(),
                                       contains.rbegin(),
                                       contains.rend()),x.rbegin());
+        return true;
     }
 
     template<class T>
     bool assert_empty(T const& x) noexcept
     {
         xju::assert_equal(x.size(),0U);
+        return true;
     }
 }
 

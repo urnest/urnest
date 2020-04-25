@@ -11,12 +11,14 @@
 
 namespace xju
 {
-namespace http
+namespace base64
 {
 
-xju::http::Request getRequest(std::istream& s,size_t const maxBytes)
-// xju::Exception - maxBytes reached or malformed or s throws
-  ;
+// base64 encoded data
+class String : public std::string{
+public:
+  using std::string::string;
+};
 
 }
 }

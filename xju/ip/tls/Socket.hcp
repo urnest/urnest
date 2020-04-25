@@ -30,7 +30,7 @@ public:
   // pre: lifetime(transport) includes lifetime(this)
   // pre: lifetime(crypto) includes lifetime(this)
   Socket(xju::ip::TCPSocket& transport,
-         xju::ip::tls::Crypto& crypto,
+         xju::ip::tls::ServerCrypto& crypto,
          bool const requestClientCertificate,
          std::chrono::steady_clock::time_point const& deadline,
          bool closeOnExec=true) throw(
@@ -50,7 +50,7 @@ public:
   // pre: lifetime(transport) includes lifetime(this)
   // pre: lifetime(crypto) includes lifetime(this)
   Socket(xju::ip::TCPSocket& transport,
-         xju::ip::tls::Crypto& crypto,
+         xju::ip::tls::ClientCrypto& crypto,
          std::chrono::steady_clock::time_point const& deadline,
          bool closeOnExec=true) throw(
            xju::DeadlineReached,

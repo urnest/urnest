@@ -263,6 +263,7 @@ class PR : public std::shared_ptr<Parser>
 {
 public:
   using PR_::PR_;
+  PR(PR_ x) noexcept:std::shared_ptr<Parser>(std::move(x)) {}
   PR(std::string const& literal) throw(std::bad_alloc);
   PR(const char literal[]) throw(std::bad_alloc);
   PR() noexcept:PR_(){}

@@ -17,6 +17,7 @@
 #include <iterator>
 #include <algorithm>
 #include <xju/unix_epoch.hh>
+#include <vector>
 
 namespace xju
 {

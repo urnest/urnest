@@ -33,7 +33,8 @@ public:
     int64_t x;
     (::CORBA::LongLong&)x <<= s;
     std::chrono::milliseconds const y(x);
-    UnixTimeMilli const result(xju::unix_epoch()+y);
+    auto const e(xju::unix_epoch()+y);
+    UnixTimeMilli const result(e);
     return result;
   }
   static void marshal(UnixTimeMilli const x, cdrStream& s)

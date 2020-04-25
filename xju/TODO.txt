@@ -249,7 +249,36 @@ io::Output
 	    n=SSL_read(
 
       - both allow access to other end cert and its validity
+    - admin:
+      - create 2048 bit RSA private key
+        openssl genrsa -out my.key 2048
+	... gives PEM format RSA key
+      - create self-signed certificate:
+        openssl req -new -x509 -days 365 -key my.key -out my.crt \
+        -subj "/C=AU/L=Brisbane/O=xjutv/CN=xjutv"
+        (could also give -extfile to add alternates e.g. wildcards)
+        ... produces PEM format cert.
+      - suite selection by:
+        cipher keyword (essentially on AES,AESGCM) and/or
+	key exchange keyword (various, does not seem much difference)
+	authentication keyword (certs with RSA keys = aRSA)
+	digest alrgorithm (SHA,SHA1,SHA256,SHA384)
+	... but group keyword HIGH selects possibly a suitable bunch and
+	is probably appropriate for an example... but allow it to be set.
+        -> string param to crypto
+    - certs see x509 (7ssl) and PEM_read_PrivateKey PEM_read_bio_X509
+      PEM can contain multiple items of different type, but there
+      is no standard for the order where there are multiple certificates.
+      parsePEM() -> std::vector<tuple<Comments,TypeName,std::string>
+        - or can have parser recognize some but not all
+        - parses all items in file
+	- then parsePEMPrivateKey -> encrypted or not?, parsePEMCertificate etc
+	- note e.g. RSA private key has extra info - what is format exactly?
+	- that is just for encypted i.e. password protected key? if so ignore?
+      ... then can have PrivateKey(std::vector<uint8_t> const& der),
+      Certificate(std::vector<uint8_t> const& der)
       
+        
   x udp DSCP via IP_TOS option (per packet)
   x udp receieve drops via SO_RXQ_OVFL socket option (see socket(7)),
     provide read-only counter

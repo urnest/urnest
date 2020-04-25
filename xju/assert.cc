@@ -7,6 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
+#include <vector>
 #include <xju/assert.hh>
 
 namespace xju

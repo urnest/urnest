@@ -2,6 +2,7 @@
 
 %all.tree==<<
 %tests.tree
+base64%tests.tree
 snmp%tests.tree
 io%tests.tree
 file%tests.tree
@@ -99,6 +100,7 @@ done
 %hcp-local-spec==.:dir.hcp.list+G+hpath='xju':hcp-split-virdir-specs:cat
 
 %hcp-subdir-spec==<<
+%base64==./base64/Odinfile%hcp-gen
 %io==./io/Odinfile%hcp-gen
 %ip==./ip/Odinfile%hcp-gen
 %file==./file/Odinfile%hcp-gen
@@ -134,6 +136,7 @@ done
 .:merged-tags
 io%tags
 ip%tags
+base64%tags
 file%tags
 http%tags
 uri%tags

@@ -44,12 +44,11 @@ namespace
 uint64_t encodedLengthOfItems(
   std::vector<std::shared_ptr<Value const> > const& items) throw()
 {
-  return std::accumulate(
-    items.begin(),
-    items.end(),
-    uint64_t{0},
-    [](uint64_t t, std::shared_ptr<Value const> x){
-      return t+x->encodedLength();});
+  uint64_t result(0);
+  for(auto x:items){
+    result=result+x->encodedLength();
+  }
+  return result;
 }
 
 class Sequence : private Int<Sequence,size_t>, //encoded length of items

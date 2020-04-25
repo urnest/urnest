@@ -1564,7 +1564,7 @@ PR rawStringLiteral() throw()
 {
   static PR result(named<hcp_ast::StringLiteral>(
                      "raw string literal",
-                     std::shared_ptr<hcp_parser::Parser>(
+                     PR(
                        new ParseRawStringLiteral)));
   return result;
 }

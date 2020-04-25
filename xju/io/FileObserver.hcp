@@ -39,11 +39,12 @@ namespace io
 
 namespace
 {
-struct Buffer
+union Buffer
 {
   inotify_event event;
-  char data[NAME_MAX+1];
+  char xdata[sizeof(inotify_event)+NAME_MAX+1];
 };
+
 std::map<int,xju::path::AbsolutePath> addWatches(
   int inotifyFd,
   std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& files) throw(

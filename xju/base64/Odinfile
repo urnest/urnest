@@ -1,0 +1,11 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+%tests.tree
+
+%tests.tree==<<
+()+cmd=(test-decode.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+
+%hcp-gen==.:dir.hcp.list+G+hpath='xju/base64':hcp-split-virdir-specs:cat:vir_dir
+
+%tags==.:merged-tags

@@ -93,6 +93,7 @@ namespace xju
             }
             catch(...) {
                 ::free(x);
+                throw;
             }
         }
         catch(xju::SyscallFailed& e) {

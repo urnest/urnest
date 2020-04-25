@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include "oidDataLength.hh"
+#include <xju/snmp/oidDataLength.hh>
 
 #include <unistd.h>
 #include <algorithm>
@@ -19,14 +19,11 @@ namespace snmp
 {
 size_t oidDataLength(Oid const& oid) throw()
 {
-  return std::accumulate(
-    oid.components().begin()+2,
-    oid.components().end(),
-    uint64_t{1U},/*for 1.3 encoded as 0x2B*/
-    [](uint64_t t, uint32_t c)
-    {
-      return t+encodedLengthOfOidComponent(c);
-    });
+  uint64_t result(1U);
+  for(auto i=oid.components().begin()+2; i!=oid.components().end();++i){
+    result=result+encodedLengthOfOidComponent(*i);
+  }
+  return result;
 }
 
 }

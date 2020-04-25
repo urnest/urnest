@@ -134,12 +134,15 @@ _CORBA_MODULE_BEG
       return *this;
     }
     inline SS_var& operator = (const SS_var& _s) {
-      if (_s._pd_seq) {
-        if (!_pd_seq)  _pd_seq = new SS;
-        *_pd_seq = *_s._pd_seq;
-      } else if (_pd_seq) {
-        delete _pd_seq;
-        _pd_seq = 0;
+      if (&_s != this) {
+        if (_s._pd_seq) {
+          if (!_pd_seq)  _pd_seq = new SS;
+          *_pd_seq = *_s._pd_seq;
+        }
+        else if (_pd_seq) {
+          delete _pd_seq;
+          _pd_seq = 0;
+        }
       }
       return *this;
     }

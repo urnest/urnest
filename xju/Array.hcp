@@ -149,6 +149,7 @@ public:
     std::is_nothrow_copy_assignable<T>::value)
   {
     std::copy(b.begin(),b.end(),begin());
+    return *this;
   }
 
   T const& operator[](size_t const n) const throw(E)

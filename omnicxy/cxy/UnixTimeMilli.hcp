@@ -17,8 +17,11 @@ namespace cxy
 // conversion to idl truncates
 class UnixTimeMilli : public std::chrono::time_point<std::chrono::system_clock>
 {
+public:
   using std::chrono::time_point<std::chrono::system_clock>::time_point;
-
+  UnixTimeMilli(std::chrono::time_point<std::chrono::system_clock> const& t):
+      std::chrono::time_point<std::chrono::system_clock>(t)
+  {}
 };
 std::ostream& operator<<(std::ostream& s, UnixTimeMilli const& x)
   throw(){

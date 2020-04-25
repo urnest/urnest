@@ -11,14 +11,25 @@
 
 namespace xju
 {
-namespace http
+namespace ip
+{
+namespace tls
 {
 
-xju::http::Request getRequest(std::istream& s,size_t const maxBytes)
-// xju::Exception - maxBytes reached or malformed or s throws
-  ;
+class ClientCrypto : public Crypto
+{
+public:
+  // note certificateAndAncestors is optional as we are the client
+  ServerCrypto(
+    PrivateKey const& privateKey,
+    std::vector<X509Certificate> const& certificateAndAncestors) throw(
+      xju::Exception):
+      Crypto(&SSLv23_client_method,privateKey,certificateAndAncestors)
+  {
+  }
+};
+
 
 }
 }
-
-
+}

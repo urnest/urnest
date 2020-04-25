@@ -65,10 +65,10 @@ std::set<DirectoryEntryEvent> maskToEvents(uint32_t const x) noexcept
   return result;
 }
 
-struct Buffer
+union Buffer
 {
   inotify_event event;
-  char data[NAME_MAX+1];
+  char xdata[sizeof(inotify_event)+NAME_MAX+1];
 };
 
 }
