@@ -33,9 +33,38 @@
 #include <sys/types.h>
 #include <xju/strip.hh>
 
-std::string getClassName(hcp_ast::ClassDef const* x) throw()
+class CommandLineOptions
 {
-  return x->className_;
+public:
+  explicit CommandLineOptions(bool const writeBack) throw():
+      writeBack_(writeBack)
+  {
+  }
+  bool writeBack_;
+};
+
+// result.second are remaining arguments
+std::pair<CommandLineOptions, std::vector<std::string> > parseCommandLine(
+  std::vector<std::string> const& x) throw(
+    xju::Exception)
+{
+  std::vector<std::string>::const_iterator i(x.begin());
+  bool writeBack=false;
+  
+  while((i != x.end()) && ((*i)[0]=='-')) {
+    if ((*i)=="-w") {
+      writeBack=true;
+      ++i;
+    }
+    else {
+      std::ostringstream s;
+      s << "unknown option " << (*i)
+        << " (only know -w)";
+      throw xju::Exception(s.str(), XJU_TRACED);
+    }
+  }
+  return std::make_pair(CommandLineOptions(writeBack), 
+                        std::vector<std::string>(i, x.end()));
 }
 
 int main(int argc, char* argv[])
@@ -44,9 +73,9 @@ int main(int argc, char* argv[])
     std::pair<CommandLineOptions, std::vector<std::string> > const cmd_line(
       parseCommandLine(std::vector<std::string>(argv+1, argv+argc)));
     
-    if (cmd_line.second.size() < 3) {
+    if (cmd_line.second.size() <1) {
       std::cerr << "usage: " << argv[0] 
-                << " [-w] <input-file>"
+                << " [-w] <input-file>";
       std::cerr << "-w write back to file instead of to stdout"
                 << std::endl;
       std::cerr << "  replace explicit throw clauses with commented out"
@@ -63,42 +92,29 @@ int main(int argc, char* argv[])
     auto const root{
       hcp_parser::parseString(x.begin(),x.end(), hcp_parser::file())};
 
-    std::string const adjusted(replaceThrowClauses(
-    std::pair<xju::path::AbsolutePath, xju::path::FileName> const outputHH(
-      xju::path::split(cmd_line.second[1]));
-    std::pair<xju::path::AbsolutePath, xju::path::FileName> const outputCC(
-      xju::path::split(cmd_line.second[2]));
-    
-    std::string const guard(
-      cmd_line.first.hpath_.size()?
-        make_guard(cmd_line.first.hpath_+outputHH.second._)
-      : 
-        make_guard(inputFile.first,
-                   outputHH.second,
-                   cmd_line.first.dir_levels_));
-    
     std::ostringstream output;
     
     auto const throwLists(
       hcp_ast::findChildrenOfType<hcp_ast::ThrowList>(root));
     auto i(root.begin().x_);
     for(auto tl: throwLists){
-      output << std::string(i,tl.begin().x_);
+      output << std::string(i,tl.get().begin().x_);
       auto const throwListItems(
         hcp_ast::findChildrenOfType<hcp_ast::ThrowListItem>(tl.get()));
       for(auto tli: throwListItems){
         auto const n(
           hcp_ast::findOnlyChildOfType<hcp_ast::ThrowListItemTypeName>(tli));
-        output << std::string(tli.begin().x_,n.begin().x_);
+        output << std::string(tli.get().begin().x_,n.begin().x_);
         output << "//" << hcp_ast::reconstruct(n);
       }
       auto const tw(
         hcp_ast::findOnlyChildOfType<hcp_ast::ThrowListTrailingWhite>(tl));
       output << hcp_ast::reconstruct(tw);
-      i=tl.end().x_;
+      i=tl.get().end().x_;
     }
-    os << std::string(i.x_,root.end().x_);
-    if (cmd_line.writeBack_)
+    output << std::string(i,root.end().x_);
+    
+    if (cmd_line.first.writeBack_)
     {
       std::ofstream fc(xju::path::str(inputFile).c_str(), 
                        std::ios_base::out|std::ios_base::trunc);

@@ -8,6 +8,7 @@ hcp-tags
 hcp-tags-merge
 hcp-scope-at
 hcp-map-to-source
+hcp-remove-throw-clauses
 tags%tools.tree
 
 %all==%all.tree:leaves
@@ -85,6 +86,7 @@ hcp-what-is-at == hcp-what-is-at.cc+(%opts):auto.cxx.exe
 hcp-tags == hcp-tags.cc+(%opts):auto.cxx.exe
 hcp-scope-at == hcp-scope-at.cc+(%opts):auto.cxx.exe
 hcp-map-to-source == hcp-map-to-source.cc+(%opts):auto.cxx.exe
+hcp-remove-throw-clauses == hcp-remove-throw-clauses.cc+(%opts):auto.cxx.exe
 
 %test-Chars==(test-Chars.cc)+(%opts):auto.cxx.exe
 

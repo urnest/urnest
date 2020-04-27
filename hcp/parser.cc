@@ -2187,7 +2187,8 @@ std::shared_ptr<NamedParser<hcp_ast::ThrowList> > throw_list() noexcept
                  type_name())),
              eatWhite()+parseLiteral(","),
              eatWhite()+")")+
-      named<hcp_ast::ThrowListTrailingWhite>(eatWhite())));
+      named<hcp_ast::ThrowListTrailingWhite>(
+        "throw clause trailing whitespace",eatWhite())));
   return result;
 }
 PR throw_clause() throw()
