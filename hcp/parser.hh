@@ -445,6 +445,9 @@ PR digit() throw();
 PR octalDigit() throw();
 PR hexDigit() throw();
 PR alpha() throw();
+PR cr() throw();
+PR lf() throw();
+PR crlf() throw();
 
 // rest are C++-specific
 PR doubleSlash() throw(); // "//"

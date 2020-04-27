@@ -1,0 +1,115 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace ip
+{
+namespace tls
+{
+
+// parser for rfc7486 "Textual Encodings of PKIX, PKCS, and CMS Structures"
+// text encoding like:
+// ----- BEGIN CERTIFICATE-----
+// MIICLDCCAdKgAwIBAgIBADAKBggqhkjOPQQDAjB9MQswCQYDVQQGEwJCRTEPMA0G
+// A1UEChMGR251VExTMSUwIwYDVQQLExxHbnVUTFMgY2VydGlmaWNhdGUgYXV0aG9y
+// aXR5MQ8wDQYDVQQIEwZMZXV2ZW4xJTAjBgNVBAMTHEdudVRMUyBjZXJ0aWZpY2F0
+// ZSBhdXRob3JpdHkwHhcNMTEwNTIzMjAzODIxWhcNMTIxMjIyMDc0MTUxWjB9MQsw
+// CQYDVQQGEwJCRTEPMA0GA1UEChMGR251VExTMSUwIwYDVQQLExxHbnVUTFMgY2Vy
+// dGlmaWNhdGUgYXV0aG9yaXR5MQ8wDQYDVQQIEwZMZXV2ZW4xJTAjBgNVBAMTHEdu
+// dVRMUyBjZXJ0aWZpY2F0ZSBhdXRob3JpdHkwWTATBgcqhkjOPQIBBggqhkjOPQMB
+// BwNCAARS2I0jiuNn14Y2sSALCX3IybqiIJUvxUpj+oNfzngvj/Niyv2394BWnW4X
+// uQ4RTEiywK87WRcWMGgJB5kX/t2no0MwQTAPBgNVHRMBAf8EBTADAQH/MA8GA1Ud
+// DwEB/wQFAwMHBgAwHQYDVR0OBBYEFPC0gf6YEr+1KLlkQAPLzB9mTigDMAoGCCqG
+// SM49BAMCA0gAMEUCIDGuwD1KPyG+hRf88MeyMQcqOFZD0TbVleF+UsAGQ4enAiEA
+// l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
+// -----END CERTIFICATE-----
+//
+// ... note calling rfc7486 text-encoded items "PEM" is incorrect but
+// convenient
+
+class PEMItemTypeTag{};
+typedef hcp_ast::TaggedItem<PEMItemTypeTag> PEMItemType;
+
+class PEMPayloadTag{};
+typedef hcp_ast::TaggedItem<PEMPayloadTag> PEMPayloadItem;
+
+namespace{
+  hcp::Chars const& base64Char() noexcept
+  {
+    static hcp::Chars const result("a-zA-Z0-9+/");
+    return result;
+  }
+  hcp_parser::PR fourChars() noexcept{
+    static const hcp_parser::PR result(base64char()+
+                                       base64char()+
+                                       base64char()+
+                                       base64char());
+    return result;
+  }
+  hcp_parser::PR pad1() noexcept{
+    static const hcp_parser::PR result(base64char()+
+                                       base64char()+
+                                       base64char()+
+                                       "=");
+    return result;
+  }
+  hcp_parser::PR pad2() noexcept{
+    static const hcp_parser::PR result(base64char()+
+                                       base64char()+
+                                       "==");
+    return result;
+  }
+  hcp_parser::PR pad3() noexcept{
+    static const hcp_parser::PR result(base64char()+
+                                       "===");
+    return result;
+  }
+  
+  using hcp_parser::named;
+  using hcp_parser::NamedParser;
+  using hcp_parser::parserUntil;
+  using hcp_parser::crlf;
+  using hcp_parser::lf;
+  using hcp_parser::eatWhite;
+
+  hcp_parser::PR pemParser_() noexcept
+  {
+    return
+      named<PEMComments>(parseUntil("-----BEGIN "))+
+      "-----BEGIN "+
+      hcp_parser::named<PEMItemType>(
+        "PEM (RFC7468) Item Type",
+        parseUntil("-"))+
+      "-----"+(crlf()|lf())+
+      named<PEMPayloadItem>(
+        "base64 payload",
+        parseUntil(
+          fourChars()+eatWhite(),
+          pad1()|pad2()|pad3()|"-")+
+        (!base64char()|(pad1()|pad2()|pad3())+eatWhite))+
+      "-----END "+parseUntil("-")+"-----"+eatWhite;
+  }
+}
+
+// parser rfc7486 text-encoded generic "item"
+std::shared_ptr<hcp_parser::NamedParser<PEMItem> > pemParser() noexcept
+{
+  static std::shared_ptr<hcp_parser::NamedParser<PEMItem> > const result(
+    hcp_parser::named<PEMItem>(
+      "PEM (RFC7468) Item",
+      pemParser_());
+  return result;
+}
+
+}
+}
+}

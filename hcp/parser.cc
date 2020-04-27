@@ -1406,6 +1406,21 @@ PR alpha() throw()
     charInRange('a','z')|charInRange('A','Z')};
   return result;
 }
+PR cr() throw()
+{
+  static PR result(parseLiteral("\r"));
+  return result;
+}
+PR lf() throw()
+{
+  static PR result(parseLiteral("\n"));
+  return result;
+}
+PR crlf() throw()
+{
+  static PR result(parseLiteral("\r\n"));
+  return result;
+}
   
 PR parseUntil(PR match, PR const x) throw()
 {
@@ -2149,10 +2164,36 @@ PR keyword_throw() throw()
   return result;
 }
 
+std::shared_ptr<NamedParser<hcp_ast::EmptyThrow> > empty_throw() noexcept
+{
+  static std::shared_ptr<NamedParser<hcp_ast::EmptyThrow> > const result(
+    named<hcp_ast::EmptyThrow>(
+      "empty throw clause",
+      keyword_throw()+eatWhite+"("+eatWhite()+")"+eatWhite()));
+  return result;
+}
+std::shared_ptr<NamedParser<hcp_ast::ThrowList> > throw_list() noexcept
+{
+  static auto const result(
+    named<hcp_ast::ThrowList>(
+      "non-empty throw clause",
+      keyword_throw()+eatWhite+
+      listOf(parseLiteral("("),
+             named<hcp_ast::ThrowListItem>(
+               "throw clause item",
+               eatWhite()+
+               named<hcp_ast::ThrowListItemTypeName>(
+                 "type name",
+                 type_name())),
+             eatWhite()+parseLiteral(","),
+             eatWhite()+")")+
+      named<hcp_ast::ThrowListTrailingWhite>(eatWhite())));
+  return result;
+}
 PR throw_clause() throw()
 {
   static PR result(
-    (keyword_throw()+bracketed())|
+    empty_throw()|throw_list()|
     (keyword_noexcept()+(!parseLiteral("(")|bracketed())));
   return result;
 }

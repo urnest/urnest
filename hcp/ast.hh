@@ -516,6 +516,21 @@ typedef TaggedItem<EndOfFileTag> EndOfFile;
 class FileTag{};
 typedef TaggedItem<FileTag> File;
 
+class EmptyThrowTag{};
+typedef TaggedItem<EmptyThrowTag> EmptyThrow;
+
+class ThrowListTag{};
+typedef TaggedItem<ThrowListTag> ThrowList;
+
+class ThrowListItemTag{};
+typedef TaggedItem<ThrowListItemTag> ThrowListItem;
+
+class ThrowListItemTypeNameTag{};
+typedef TaggedItem<ThrowListItemTypeNameTag> ThrowListItemTypeName;
+
+class ThrowListTrailingWhiteTag{};
+typedef TaggedItem<ThrowListTrailingWhiteTag> ThrowListTrailingWhite;
+
 }
 
 
