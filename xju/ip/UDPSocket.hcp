@@ -208,6 +208,7 @@ public:
   
   // receive datagram by deadline, copying into specified buffer of
   // specified size
+  // - returns sender and number of bytes received
   std::pair<UDPSocket::Sender,size_t> receive(
     void* buffer,
     size_t const size,
