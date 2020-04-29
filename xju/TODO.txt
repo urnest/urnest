@@ -10,7 +10,9 @@
   - test wait_until(xju::steadyEternity) ...BROKEN
     - fix is easy - explicit test for xju::steadyEternity
     - same fix needed for io::select
-    
+
+- test-Array copy/move/list v noexcept/except
+
 - Mutex constexpr
 
 - snmp NoSuchObject,NoSuchInstance oid is redundant (twice?) (email)
@@ -184,9 +186,9 @@ io::Output
       It can get both, see following point to distinguish.
     x what does select do if there are errors but no message waiting to
       be received? sets header flag MSG_ERRQUEUE
-    - test via raw send of bad udp message (bad checksum)
-    - use a separate receive call to pick up errors return them via
-      a back_inserter<std::vector<X> > param.
+    - test via raw send of bad udp message (bad checksum) and good
+      message before read
+    - raise MsgError exception on message error
       
   - TLSSocket
     - give listener SNI info and whether to request cert for each server it

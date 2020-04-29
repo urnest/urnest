@@ -40,14 +40,106 @@ void ArrayCheckEqual(size_t n,size_t Size) /*throw(xju::Exception)*/
                          std::make_pair(std::string(__FILE__),__LINE__));
   }
 }
+template<class T, size_t Size, class E, bool noexcept_>
+class ArrayCopyElements
+{
+};
+template<class T, size_t Size, class E>
+class ArrayCopyElements<T,Size,E,true>
+{
+public:
+  static void initElements(xju::Holder<T> to[Size],
+                           T const& initialValueOfAllElements) noexcept
+  {
+    auto i=&to[0];
+    while(i != &to[Size]){
+      new(*i++) T(initialValueOfAllElements);
+    }
+  }
+  static void copyElements(xju::Holder<T> to[Size],
+                           xju::Holder<T> const from[Size]) noexcept
+  {
+    auto i=&to[0];
+    auto j=&from[0];
+    while(i != &to[Size]){
+      new(*i++) T(*(*j++));
+    }
+  }
+  static void moveElements(xju::Holder<T> to[Size],
+                           xju::Holder<T> from[Size]) noexcept
+  {
+    auto i=&to[0];
+    auto j=&from[0];
+    while(i != &to[Size]){
+      new(*i++) T(std::move(*(*j++)));
+    }
+  }
+};
+template<class T, size_t Size, class E>
+class ArrayCopyElements<T,Size,E,false>
+{
+public:
+  static void initElements(xju::Holder<T> to[Size],
+                           T const& initialValueOfAllElements) noexcept(false)
+  {
+    auto i=&to[0];
+    try{
+      while(i != &to[Size]){
+        new(*i++) T(initialValueOfAllElements);
+      }
+    }
+    catch(...){
+      while(i!=&to[0])
+      {
+        (*--i)->~T();
+      }
+      throw;
+    }
+  }
+  
+  static void copyElements(xju::Holder<T> to[Size],
+                           xju::Holder<T> const from[Size]) noexcept(false)
+  {
+    auto i=&to[0];
+    auto j=&from[0];
+    try{
+      while(i != &to[Size]){
+        new(*i++) T(*(*j++));
+      }
+    }
+    catch(...){
+      while(i!=&to[0])
+      {
+        (*--i)->~T();
+      }
+      throw;
+    }
+  }
+  static void moveElements(xju::Holder<T> to[Size],
+                           xju::Holder<T> from[Size]) noexcept(false)
+  {
+    auto i=&to[0];
+    auto j=&from[0];
+    try{
+      while(i != &to[Size]){
+        new(*i++) T(std::move(*(*j++)));
+      }
+    }
+    catch(...){
+      while(i!=&to[0])
+      {
+        (*--i)->~T();
+      }
+      throw;
+    }
+  }
+};
 
 // like C++ array but allows T that does not have default constructor
 // REVISIT: provide zero-size specialisation
 template<class T, size_t Size, class E=xju::Exception>
 class Array
 {
-private:
-
 public:
   typedef size_t   size_type;
 
@@ -72,25 +164,11 @@ public:
   explicit Array(T const& initialValueOfAllElements) noexcept(
     std::is_nothrow_copy_constructible<T>::value)
   {
-
-    auto i=std::begin(elements_);
-    try{
-      while(i != std::end(elements_)){
-        new(*i++) T(initialValueOfAllElements);
-      }
-    }
-    catch(...){
-      while(i!=std::begin(elements_))
-      {
-        (*--i)->~T();
-      }
-      throw;
-    }
+    ArrayCopyElements<T,Size,E,std::is_nothrow_copy_constructible<T>::value>::initElements(elements_,initialValueOfAllElements);
   }
 
   template<class U>
-  Array(std::initializer_list<U> const& x) noexcept(
-    std::is_nothrow_copy_constructible<T>::value)
+  Array(std::initializer_list<U> const& x) noexcept(false)
   {
     ArrayCheckEqual(x.size(),Size);
     auto i=std::begin(elements_);
@@ -112,38 +190,14 @@ public:
   Array(Array const& b) noexcept(
     std::is_nothrow_copy_constructible<T>::value)
   {
-    auto i=std::begin(elements_);
-    auto j=b.begin();
-    try{
-      while(i != std::end(elements_)){
-        new(*i++) T(*j++);
-      }
-    }
-    catch(...){
-      while(i!=std::begin(elements_))
-      {
-        (*--i)->~T();
-      }
-      throw;
-    }
+    ArrayCopyElements<T,Size,E,std::is_nothrow_copy_constructible<T>::value>::copyElements(
+      elements_,b.elements_);
   }
   Array(Array&& b) noexcept(
     std::is_nothrow_move_constructible<T>::value)
   {
-    auto i=std::begin(elements_);
-    auto j=b.begin();
-    try{
-      while(i != std::end(elements_)){
-        new(*i++) T(std::move(*j++));
-      }
-    }
-    catch(...){
-      while(i!=std::begin(elements_))
-      {
-        (*--i)->~T();
-      }
-      throw;
-    }
+    ArrayCopyElements<T,Size,E,std::is_nothrow_move_constructible<T>::value>::moveElements(
+      elements_,b.elements_);
   }
   Array& operator=(Array const& b) noexcept(
     std::is_nothrow_copy_assignable<T>::value)
