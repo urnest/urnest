@@ -25,8 +25,8 @@ namespace icmp
 template<class InputIterator>
 std::pair<Message,xju::ip::decode::Iterator<InputIterator>>
 decodeMessage(
-  xju::ip::decode::Iterator<InputIterator> const at) throw(
-    xju::Exception)
+  xju::ip::decode::Iterator<InputIterator> const at) /*throw(
+    xju::Exception)*/
 {
   try{
     xju::ip::decode::Iterator<InputIterator> i(at);

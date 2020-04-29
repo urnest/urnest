@@ -25,7 +25,7 @@ bool isSurrogateHigh(uint16_t const x) noexcept
   return  0xD800<=x && x<=0xDBFF;
 }
 char32_t decodeSurrogatePair(uint16_t const high,uint16_t const low)
-  throw(xju::Exception)
+  /*throw(xju::Exception)*/
 {
   try{
     if (high<0xD800 || high > 0xDBFF){

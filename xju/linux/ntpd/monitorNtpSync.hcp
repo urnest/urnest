@@ -31,9 +31,9 @@ namespace ntpd
 
 namespace {
 bool isSynced(xju::path::AbsFile const& ntpqCommand,
-              std::chrono::steady_clock::time_point const& deadline) throw(
+              std::chrono::steady_clock::time_point const& deadline) /*throw(
                 xju::DeadlineReached,
-                xju::Exception)
+                xju::Exception)*/
 {
   try{
     std::vector<std::string> const cmd{

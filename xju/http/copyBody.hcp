@@ -22,10 +22,10 @@ namespace http
 {
 
 // note s must only throw std::bad_alloc or xju::Exception
-std::vector<uint8_t> copyBody(std::istream& s, size_t const size) throw(
+std::vector<uint8_t> copyBody(std::istream& s, size_t const size) /*throw(
   // read failed
   xju::Exception,
-  std::bad_alloc)
+  std::bad_alloc)*/
 {
   try{
     std::vector<uint8_t> result;

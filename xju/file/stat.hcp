@@ -20,9 +20,9 @@ namespace xju
 namespace file
 {
 Stat stat(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& file)
-  throw(
+  /*throw(
     // eg ENOENT for no such file
-    xju::SyscallFailed)
+    xju::SyscallFailed)*/
 {
   try{
     Stat result;

@@ -27,8 +27,8 @@ struct AddressTag{};
 
 namespace
 {
-uint32_t parse8BitUInt(std::string x) throw(
-  xju::Exception)
+uint32_t parse8BitUInt(std::string x) /*throw(
+  xju::Exception)*/
 {
   try{
     auto const result{xju::stringToUInt(x)};
@@ -48,8 +48,8 @@ uint32_t parse8BitUInt(std::string x) throw(
   }
 }
 
-uint32_t parseDotted(std::string const& dotted) throw(
-  xju::Exception)
+uint32_t parseDotted(std::string const& dotted) /*throw(
+  xju::Exception)*/
 {
   try{
     auto const v{xju::split(dotted,'.')};
@@ -83,8 +83,8 @@ class Address : public xju::Int<AddressTag,uint32_t>
 public:
   using xju::Int<AddressTag,uint32_t>::Int;
 
-  explicit Address(std::string const& dotted) throw(
-    xju::Exception):
+  explicit Address(std::string const& dotted) /*throw(
+    xju::Exception)*/:
       xju::Int<AddressTag,uint32_t>(parseDotted(dotted))
   {
   }

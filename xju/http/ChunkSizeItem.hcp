@@ -26,7 +26,7 @@ class ChunkSizeItem: public hcp_ast::Item
 public:
   using hcp_ast::Item::Item;
 
-  size_t get() const throw(xju::Exception){
+  size_t get() const /*throw(xju::Exception)*/{
     unsigned long long const result(
       xju::stringToULongLong(hcp_ast::reconstruct(*this),16));
     if(result>std::numeric_limits<size_t>::max()){

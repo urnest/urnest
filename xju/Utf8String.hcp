@@ -24,9 +24,9 @@ namespace xju
 class Utf8String
 {
 public:
-  explicit Utf8String(std::string const& value) throw(
+  explicit Utf8String(std::string const& value) /*throw(
     // value is not valid UTF-8
-    xju::Exception)
+    xju::Exception)*/
       :value_(Utf8String::validate(value))
   {
   }
@@ -45,8 +45,8 @@ public:
 private:
   std::pair<std::string,size_t> value_;
   
-  static std::pair<std::string,size_t> validate(std::string const& value) throw(
-    xju::Exception)
+  static std::pair<std::string,size_t> validate(std::string const& value) /*throw(
+    xju::Exception)*/
   {
     std::ostringstream s;
     size_t size{0};

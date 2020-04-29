@@ -33,11 +33,11 @@ namespace http
 // - note result.data_.size()==0 indicates no more chunks i.e. trailer follows
 // post:
 //   s is positioned at next chunk size/trailer
-Chunk copyChunk(std::istream& s, size_t maxSize) throw(
+Chunk copyChunk(std::istream& s, size_t maxSize) /*throw(
   // post: s position unpredictable
   xju::Exception,
   // post: s position unpredictable
-  std::bad_alloc)
+  std::bad_alloc)*/
 {
   try{
     std::string const l{xju::readThrough(s,"\r\n",maxSize)};

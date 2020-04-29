@@ -32,7 +32,7 @@ xju::SyscallF2<int,int,timeval const*> fut{"::futimes",::futimes};
 
 void chmod(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& f,
            Mode mode)
-  throw(xju::Exception)
+  /*throw(xju::Exception)*/
 {
   try {
     xju::syscall(xju::chmod,XJU_TRACED)(xju::path::str(f).c_str(),
@@ -48,7 +48,7 @@ void chmod(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& f,
 }
 
 void chmod(xju::path::AbsolutePath const& d,Mode mode)
-  throw(xju::Exception)
+  /*throw(xju::Exception)*/
 {
   try {
     xju::syscall(xju::chmod,XJU_TRACED)(xju::path::str(d).c_str(),

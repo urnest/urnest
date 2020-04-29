@@ -33,9 +33,9 @@ public:
          xju::ip::tls::ServerCrypto& crypto,
          bool const requestClientCertificate,
          std::chrono::steady_clock::time_point const& deadline,
-         bool closeOnExec=true) throw(
+         bool closeOnExec=true) /*throw(
            xju::DeadlineReached,
-           xju::Exception):
+           xju::Exception)*/:
       x_(crypto.accept(transport,
                        requestClientCertificate,
                        deadline,
@@ -52,10 +52,10 @@ public:
   Socket(xju::ip::TCPSocket& transport,
          xju::ip::tls::ClientCrypto& crypto,
          std::chrono::steady_clock::time_point const& deadline,
-         bool closeOnExec=true) throw(
+         bool closeOnExec=true) /*throw(
            xju::DeadlineReached,
            // eg connection refused, unreachable
-           xju::Exception):
+           xju::Exception)*/:
       x_(crypto.connect(transport,crypto,deadline,closeOnExec)),
       output_(std::get<0>(x_)),
       input_(std::get<1>(x_)),

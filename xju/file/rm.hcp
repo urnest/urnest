@@ -17,9 +17,9 @@ namespace xju
 namespace file
 {
 void rm(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& file)
-  throw(
+  /*throw(
     // eg no such file -> _errno==ENOENT
-    xju::SyscallFailed)
+    xju::SyscallFailed)*/
 {
   xju::syscall(xju::unlink,XJU_TRACED)(xju::path::str(file).c_str());
 }

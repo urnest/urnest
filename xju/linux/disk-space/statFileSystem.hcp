@@ -30,9 +30,9 @@ namespace disk_space
 
 namespace
 {
-size_t toSizeT(unsigned long long x) throw(
+size_t toSizeT(unsigned long long x) /*throw(
   //overflow
-  xju::Exception)
+  xju::Exception)*/
 {
   size_t const result{x};
   if (result!=x){
@@ -65,16 +65,16 @@ struct FileSystemStat
 
 FileSystemStat statFileSystemOfPath(
   xju::path::AbsolutePath const& path,
-  std::chrono::steady_clock::time_point const& deadline) throw(
-    xju::Exception)
+  std::chrono::steady_clock::time_point const& deadline) /*throw(
+    xju::Exception)*/
 {
   return statFileSystemOfPath(path,deadline,"/usr/bin/stat");
 }
 FileSystemStat statFileSystemOfPath(
   xju::path::AbsolutePath const& path,
   std::chrono::steady_clock::time_point const& deadline,
-  std::string const& stat) throw(
-    xju::Exception)
+  std::string const& stat) /*throw(
+    xju::Exception)*/
 {
   try{
     std::vector<std::string> const cmd{

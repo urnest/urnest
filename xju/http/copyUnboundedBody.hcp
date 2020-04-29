@@ -23,10 +23,10 @@ namespace http
 
 // note s must only throw std::bad_alloc or xju::Exception
 std::vector<uint8_t> copyUnboundedBody(std::istream& s,size_t const maxSize)
-  throw(
+  /*throw(
     //read failed or too big
     xju::Exception,
-    std::bad_alloc)
+    std::bad_alloc)*/
 {
   try{
     std::vector<uint8_t> result;

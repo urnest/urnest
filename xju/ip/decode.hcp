@@ -80,59 +80,59 @@ public:
     return offset_;
   }
 
-  uint8_t get1Bit(std::string const& name) throw(
+  uint8_t get1Bit(std::string const& name) /*throw(
     // at end
-    xju::Exception)
+    xju::Exception)*/
   {
     return getBits(1,name);
   }
   
-  uint8_t get2Bits(std::string const& name) throw(
+  uint8_t get2Bits(std::string const& name) /*throw(
     // at end
-    xju::Exception)
+    xju::Exception)*/
   {
     return getBits(2,name);
   }
   
-  uint8_t get3Bits(std::string const& name) throw(
+  uint8_t get3Bits(std::string const& name) /*throw(
     // at end
-    xju::Exception)
+    xju::Exception)*/
   {
     return getBits(3,name);
   }
   
-  uint8_t get4Bits(std::string const& name) throw(
+  uint8_t get4Bits(std::string const& name) /*throw(
     // at end
-    xju::Exception)
+    xju::Exception)*/
   {
     return getBits(4,name);
   }
   
-  uint8_t get5Bits(std::string const& name) throw(
+  uint8_t get5Bits(std::string const& name) /*throw(
     // at end
-    xju::Exception)
+    xju::Exception)*/
   {
     return getBits(5,name);
   }
   
-  uint8_t get6Bits(std::string const& name) throw(
+  uint8_t get6Bits(std::string const& name) /*throw(
     // at end
-    xju::Exception)
+    xju::Exception)*/
   {
     return getBits(6,name);
   }
   
-  uint8_t get7Bits(std::string const& name) throw(
+  uint8_t get7Bits(std::string const& name) /*throw(
     // at end
-    xju::Exception)
+    xju::Exception)*/
   {
     return getBits(7,name);
   }
 
   //pre: offset().second==0
-  uint8_t get8Bits(std::string const& name) throw(
+  uint8_t get8Bits(std::string const& name) /*throw(
     // at end
-    xju::Exception)
+    xju::Exception)*/
   {
     try{
       verifyNotAtEnd();
@@ -153,9 +153,9 @@ public:
   }
   
   //pre: offset().second==0
-  uint16_t get16Bits(std::string const& name) throw(
+  uint16_t get16Bits(std::string const& name) /*throw(
     // at end
-    xju::Exception)
+    xju::Exception)*/
   {
     try{
       uint16_t result{get8Bits("")};
@@ -173,9 +173,9 @@ public:
   }
   
   //pre: offset().second==0
-  uint32_t get32Bits(std::string const& name) throw(
+  uint32_t get32Bits(std::string const& name) /*throw(
     // at end
-    xju::Exception)
+    xju::Exception)*/
   {
     try{
       uint32_t result{ get16Bits("") };
@@ -197,8 +197,8 @@ public:
     return i_==end_;
   }
 
-  void verifyAtEnd() const throw(
-    xju::Exception)
+  void verifyAtEnd() const /*throw(
+    xju::Exception)*/
   {
     try{
       if (i_!=end_)
@@ -220,8 +220,8 @@ private:
   I i_;
   I end_;
   Offset offset_; //bytes,bits(0..7)
-  void verifyNotAtEnd() const throw(
-    xju::Exception)
+  void verifyNotAtEnd() const /*throw(
+    xju::Exception)*/
   {
     if (i_==end_)
     {
@@ -231,9 +231,9 @@ private:
   //read n bits within current byte
   //pre: 0<N<8
   //pre: N<= 8-currentOffset().bits()
-  uint8_t getBits(uint8_t n,std::string const& name) throw(
+  uint8_t getBits(uint8_t n,std::string const& name) /*throw(
     // at end
-    xju::Exception)
+    xju::Exception)*/
   {
     try{
       xju::assert_greater(n,0);

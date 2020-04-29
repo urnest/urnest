@@ -25,8 +25,8 @@ namespace xju
 namespace file
 {
 std::string read(
-  std::pair<xju::path::AbsolutePath,xju::path::FileName> const& file) throw(
-    xju::Exception)
+  std::pair<xju::path::AbsolutePath,xju::path::FileName> const& file) /*throw(
+    xju::Exception)*/
 {
   try {
     xju::AutoFd fd(xju::syscall(xju::open, XJU_TRACED)(

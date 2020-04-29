@@ -23,8 +23,8 @@ namespace v4
 // - return header plus iterator following header
 template<class I>
 std::pair<Header,xju::ip::decode::Iterator<I> > decodeHeader(
-  xju::ip::decode::Iterator<I> const at) throw(
-    xju::Exception){
+  xju::ip::decode::Iterator<I> const at) /*throw(
+    xju::Exception)*/{
   try{
     xju::ip::decode::Iterator<I> i(at);
     Header::Version version{i.get4Bits("version")};

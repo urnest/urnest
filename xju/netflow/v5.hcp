@@ -101,8 +101,8 @@ struct Flow
 };
 
 std::pair<Header,std::vector<Flow> > decode(
-  std::vector<uint8_t> const& udpMessageContent) throw(
-    xju::Exception)
+  std::vector<uint8_t> const& udpMessageContent) /*throw(
+    xju::Exception)*/
 {
   try {
     auto get8=[&udpMessageContent](size_t const i,std::string const& name) throw(

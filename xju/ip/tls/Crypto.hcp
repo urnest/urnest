@@ -31,8 +31,8 @@ namespace{
   std::unique_ptr<SSL_CTX,decltype(&SSL_CTX_free)> createContext(
     decltype(&SSLv23_server_method),//client or server?
     PrivateKey const& privateKey,
-    std::vector<X509Certificate> const& certificateAndAncestors) throw(
-      xju::Exception)
+    std::vector<X509Certificate> const& certificateAndAncestors) /*throw(
+      xju::Exception)*/
   {
     try{
       std::unique_ptr<SSL_CTX,decltype(&SSL_CTX_free)> result(
@@ -84,8 +84,8 @@ public:
   Crypto(decltype(&SSLv23_server_method),//client or server?
          PrivateKey const& privateKey,
          std::vector<X509Certificate> const& certificateAndAncestors,
-         bool const requestClientCertificate) throw(
-           xju::Exception):
+         bool const requestClientCertificate) /*throw(
+           xju::Exception)*/:
       ctx_(createContext(method,privateKey,certificateAndAncestors)),
       stop_(false),
       wake_(xju::pipe())
@@ -130,7 +130,7 @@ public:
       xju::ip::Socket& transport,
       bool const requestClientCertificate,
       std::chrono::steady_clock::time_point const& deadline,
-      bool const closeOnExec) throw(xju::Exception)
+      bool const closeOnExec) /*throw(xju::Exception)*/
   {
     try{
       auto decrypted(xju::pipe());

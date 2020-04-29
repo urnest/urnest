@@ -21,8 +21,8 @@ class ServerCrypto : public Crypto
 public:
   ServerCrypto(PrivateKey const& privateKey,
                std::vector<X509Certificate> const& certificateAndAncestors,
-               bool const requestClientCertificate) throw(
-                 xju::Exception):
+               bool const requestClientCertificate) /*throw(
+                 xju::Exception)*/:
       Crypto(&SSLv23_server_method,privateKey,certificateAndAncestors)
   {
   }

@@ -56,19 +56,19 @@ public:
 protected:
   // Get the value of this element assuming it is a JSON Number
   // representable as a long double.
-  virtual double asDouble_() const throw(
+  virtual double asDouble_() const /*throw(
     // this element is not a Number or
     // it is too big or small to represent as a long double
-    xju::Exception) override
+    xju::Exception)*/ override
   {
     return xju::stringToDouble(value_);
   }
 
-  int asInt_() const throw(
+  int asInt_() const /*throw(
     // this element is not a Number or
     // its value is not a whole number or
     // its value is too big or small to represent as a std::intmax_t
-    xju::Exception) override
+    xju::Exception)*/ override
   {
     return xju::stringToInt(value_);
   }

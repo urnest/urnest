@@ -71,8 +71,8 @@ class I : public xju::io::IStream
 
 std::pair<std::unique_ptr<xju::io::IStream>, std::unique_ptr<xju::io::OStream> > pipe(
   bool closeReadEndOnExec,
-  bool closeWriteEndOnExec) throw(std::bad_alloc,
-                                  SyscallFailed) {
+  bool closeWriteEndOnExec) /*throw(std::bad_alloc,
+                                  SyscallFailed)*/ {
   std::pair<int,int> fds(xju::pipe_());
   xju::AutoFd fdr(fds.first); //ensure close on exception
   xju::AutoFd fdw(fds.second); //ensure close on exception

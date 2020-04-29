@@ -30,8 +30,8 @@ namespace ntpd
 
 // parse specified ntpqOutput (from ntpq -c associations)
 std::map<AssocId,PeerStatus> parseNtpqAssociations(
-  std::string const& ntpqOutput) throw(
-    xju::Exception)
+  std::string const& ntpqOutput) /*throw(
+    xju::Exception)*/
 {
   typedef hcp_ast::TaggedItem<std::pair<AssocId,PeerStatus>> AssocItem;
   typedef hcp_ast::TaggedItem<AssocId> AssocIdItem;

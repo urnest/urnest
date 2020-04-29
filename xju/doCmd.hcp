@@ -29,8 +29,8 @@ namespace xju
 // - result.second is stderr
 std::pair<std::string,std::string> doCmd(
   std::vector<std::string> const& cmd,
-  std::chrono::steady_clock::time_point const& deadline) throw(
-    std::bad_alloc,xju::Exception)
+  std::chrono::steady_clock::time_point const& deadline) /*throw(
+    std::bad_alloc,xju::Exception)*/
 {
   std::chrono::milliseconds const timeout(
     std::chrono::duration_cast<std::chrono::milliseconds>(

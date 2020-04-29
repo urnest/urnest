@@ -36,9 +36,9 @@ namespace json
 
 // parse s assuming it is valid JSON
 std::shared_ptr<xju::json::Element const> parse(
-  xju::Utf8String const& s) throw(
+  xju::Utf8String const& s) /*throw(
     // x is not valid JSON
-    xju::Exception);
+    xju::Exception)*/;
 
 namespace
 {
@@ -673,8 +673,8 @@ hcp_parser::PR element() noexcept
 
 // (declared above)
 std::shared_ptr<xju::json::Element const> parse(
-  xju::Utf8String const& json) throw(
-    xju::Exception)
+  xju::Utf8String const& json) /*throw(
+    xju::Exception)*/
 {
   std::string const& s{json};
   auto v(hcp_parser::parseString(s.begin(),s.end(),

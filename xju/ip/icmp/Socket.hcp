@@ -39,8 +39,8 @@ namespace icmp
 {
 namespace
 {
-void enableCapSetRaw() throw(
-  xju::Exception)
+void enableCapSetRaw() /*throw(
+  xju::Exception)*/
 {
   try{
     cap_t c{xju::syscall("cap_get_proc",cap_get_proc,XJU_TRACED,true,
@@ -76,9 +76,9 @@ public:
   // Note caller must be CAP_NET_RAW-authorized - see capabilities(7), e.g.
   // run as root or use setcap on executable.
   //
-  Socket() throw(
+  Socket() /*throw(
     xju::Exception,
-    xju::SyscallFailed) try:
+    xju::SyscallFailed)*/ try:
       fd_( (enableCapSetRaw(),xju::syscall(xju::socket,XJU_TRACED)(
             AF_INET, SOCK_RAW|SOCK_CLOEXEC|SOCK_NONBLOCK, IPPROTO_ICMP)) ),
       output_(fd_.fd()),
@@ -102,8 +102,8 @@ public:
   void send(
     xju::ip::v4::Address const& to,
     Message const& x,
-    std::chrono::steady_clock::time_point const& deadline) throw(
-      xju::SyscallFailed) override
+    std::chrono::steady_clock::time_point const& deadline) /*throw(
+      xju::SyscallFailed)*/ override
   {
     try{
       if (xju::io::select({&output_},deadline).size()) {
@@ -145,10 +145,10 @@ public:
     }
   }
 
-  std::tuple<xju::ip::v4::Address,Message> receive() throw(
+  std::tuple<xju::ip::v4::Address,Message> receive() /*throw(
     xju::SyscallFailed,
     // invalid message, e.g. incorrect checksum
-    xju::Exception) override
+    xju::Exception)*/ override
   {
     try{
       sockaddr_in senderAddr;

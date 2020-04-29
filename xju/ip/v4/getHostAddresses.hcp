@@ -33,9 +33,9 @@ namespace v4
 //
 std::vector<xju::ip::v4::Address> getHostAddresses(
   xju::HostName const& hostname)
-  throw(
+  /*throw(
     // failure, including unknown host
-    xju::Exception)
+    xju::Exception)*/
 {
   xju::assert_not_equal(hostname,HostName(""));
   

@@ -43,8 +43,8 @@ namespace
 // bind to specified port (choose a port if specified as Port(0))
 // - returns bound port
 xju::ip::Port bindToPort(xju::AutoFd const& socket,
-                         xju::ip::Port const& port) throw(
-  xju::SyscallFailed)
+                         xju::ip::Port const& port) /*throw(
+  xju::SyscallFailed)*/
 {
   sockaddr_in a;
   a.sin_family=AF_INET;
@@ -58,8 +58,8 @@ xju::ip::Port bindToPort(xju::AutoFd const& socket,
   return xju::ip::Port(::ntohs(a.sin_port));
 }
 void setDSCP(xju::AutoFd const& socket,
-             DSCP const& dscp) throw(
-               xju::Exception)
+             DSCP const& dscp) /*throw(
+               xju::Exception)*/
 {
   try{
     uint8_t tos{0};
@@ -78,8 +78,8 @@ void setDSCP(xju::AutoFd const& socket,
     throw;
   }
 }
-void enableDrops(xju::AutoFd const& socket) throw(
-  xju::Exception)
+void enableDrops(xju::AutoFd const& socket) /*throw(
+  xju::Exception)*/
 {
   try{
     int v{1};
@@ -102,9 +102,9 @@ class UDPSocket : public virtual xju::io::Input,
 {
 public:
   // udp socket bound to some free local port
-  UDPSocket(DSCP const& dscp=DSCP(0)) throw(
+  UDPSocket(DSCP const& dscp=DSCP(0)) /*throw(
     xju::Exception,
-    xju::SyscallFailed) try:
+    xju::SyscallFailed)*/ try:
       fd_(xju::syscall(xju::socket,XJU_TRACED)(
             AF_INET, SOCK_DGRAM|SOCK_CLOEXEC|SOCK_NONBLOCK, 0)),
       port_(bindToPort(fd_,xju::ip::Port(0))),
@@ -122,9 +122,9 @@ public:
   }
     
   // udp socket bound to specific port
-  explicit UDPSocket(xju::ip::Port port,DSCP const& dscp=DSCP(0)) throw(
+  explicit UDPSocket(xju::ip::Port port,DSCP const& dscp=DSCP(0)) /*throw(
     xju::ip::PortInUse,
-    xju::SyscallFailed) try:
+    xju::SyscallFailed)*/ try:
       fd_(xju::syscall(xju::socket,XJU_TRACED)(
           AF_INET, SOCK_DGRAM|SOCK_CLOEXEC|SOCK_NONBLOCK, 0)),
       port_(bindToPort(fd_,port)),
@@ -149,7 +149,7 @@ public:
               void const* const datagram,
               size_t const size,
               std::chrono::steady_clock::time_point const& deadline)
-    throw(xju::DeadlineReached,xju::SyscallFailed)
+    /*throw(xju::DeadlineReached,xju::SyscallFailed)*/
   {
     return sendTo(host_port.first,
                   host_port.second,
@@ -162,7 +162,7 @@ public:
               void const* const datagram,
               size_t const size,
               std::chrono::steady_clock::time_point const& deadline)
-    throw(xju::DeadlineReached,xju::SyscallFailed)
+    /*throw(xju::DeadlineReached,xju::SyscallFailed)*/
   {
     auto const d{deadline-xju::steadyNow()};
     try {
@@ -213,10 +213,10 @@ public:
     void* buffer,
     size_t const size,
     std::chrono::steady_clock::time_point const& deadline)
-    throw(xju::DeadlineReached,
+    /*throw(xju::DeadlineReached,
           xju::SyscallFailed,
           // eg truncation due to buffer too small
-          xju::Exception)
+          xju::Exception)*/
   {
     auto const d{deadline-xju::steadyNow()};
     try {

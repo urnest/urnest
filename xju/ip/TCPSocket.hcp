@@ -36,16 +36,16 @@ namespace ip
 namespace
 {
 std::pair<xju::ip::v4::Address,xju::ip::Port> getSockName(
-  xju::AutoFd const& fd) throw(
-    xju::Exception);
+  xju::AutoFd const& fd) /*throw(
+    xju::Exception)*/;
 
 // connect fd to specified peer
 // - returns *local* address of connection
 // - connection is not yet complete (need to wait till fd writable)
 std::pair<xju::ip::v4::Address,xju::ip::Port> connect(
   xju::AutoFd const& fd,
-  std::pair<xju::ip::v4::Address,xju::ip::Port> const& peer) throw(
-    xju::Exception);
+  std::pair<xju::ip::v4::Address,xju::ip::Port> const& peer) /*throw(
+    xju::Exception)*/;
 }
 
 class TCPService;
@@ -55,10 +55,10 @@ class TCPSocket : public virtual xju::io::IStream,
 public:
   TCPSocket(std::pair<xju::ip::v4::Address,xju::ip::Port> const& connectTo,
             std::chrono::steady_clock::time_point const& deadline,
-            bool closeOnExec=true) throw(
+            bool closeOnExec=true) /*throw(
               xju::DeadlineReached,
               // eg connection refused, unreachable
-              xju::Exception) try:
+              xju::Exception)*/ try:
     peerAddress_(connectTo),
     fd_(xju::syscall(xju::socket,XJU_TRACED)(
           AF_INET,
@@ -94,9 +94,9 @@ public:
 
   TCPSocket(TCPService& listener,
             std::chrono::steady_clock::time_point const& deadline,
-            bool closeOnExec=true) throw(
+            bool closeOnExec=true) /*throw(
               xju::DeadlineReached,
-              xju::Exception) try:
+              xju::Exception)*/ try:
     peerAddress_(xju::ip::v4::Address(0),xju::ip::Port(0)),
     fd_(std::move(listener.accept(peerAddress_,deadline,closeOnExec))),
     localAddress_(getSockName(fd_))
@@ -146,8 +146,8 @@ private:
 namespace
 {
 std::pair<xju::ip::v4::Address,xju::ip::Port> getSockName(
-  xju::AutoFd const& fd) throw(
-    xju::Exception)
+  xju::AutoFd const& fd) /*throw(
+    xju::Exception)*/
 {
   sockaddr_in a;
   socklen_t l(sizeof(a));
@@ -159,8 +159,8 @@ std::pair<xju::ip::v4::Address,xju::ip::Port> getSockName(
 }
 std::pair<xju::ip::v4::Address,xju::ip::Port> connect(
   xju::AutoFd const& fd,
-  std::pair<xju::ip::v4::Address,xju::ip::Port> const& connectTo) throw(
-    xju::Exception)
+  std::pair<xju::ip::v4::Address,xju::ip::Port> const& connectTo) /*throw(
+    xju::Exception)*/
 {
   try{
     sockaddr_in a;

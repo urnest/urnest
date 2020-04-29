@@ -21,9 +21,9 @@ namespace xju
 namespace http
 {
 
-RequestLine parseRequestLine(std::istream& s, size_t max) throw(
+RequestLine parseRequestLine(std::istream& s, size_t max) /*throw(
   xju::Exception,
-  std::exception)
+  std::exception)*/
 {
   try{
     std::string const l{xju::readThrough(s,"\r\n",max)};

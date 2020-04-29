@@ -19,7 +19,7 @@
 namespace xju
 {
 
-size_t ArrayCheckLess(size_t n,size_t Size) throw(xju::Exception)
+size_t ArrayCheckLess(size_t n,size_t Size) /*throw(xju::Exception)*/
 {
   if (n>=Size) {
     std::ostringstream s;
@@ -30,7 +30,7 @@ size_t ArrayCheckLess(size_t n,size_t Size) throw(xju::Exception)
   }
   return n;
 }
-void ArrayCheckEqual(size_t n,size_t Size) throw(xju::Exception)
+void ArrayCheckEqual(size_t n,size_t Size) /*throw(xju::Exception)*/
 {
   if (n!=Size) {
     std::ostringstream s;
@@ -152,11 +152,11 @@ public:
     return *this;
   }
 
-  T const& operator[](size_t const n) const throw(E)
+  T const& operator[](size_t const n) const /*throw(E)*/
   {
     return *elements_[n];
   }
-  T& operator[](size_t const n) throw(E)
+  T& operator[](size_t const n) /*throw(E)*/
   {
     return *elements_[n];
   }

@@ -17,11 +17,11 @@ namespace http
 // first byte
 std::vector<uint8_t> copyNonChunkedBody(
   std::istream& s,
-  xju::http::Headers const& headers) throw(
+  xju::http::Headers const& headers) /*throw(
     // headers has no Content-Length
     Chunked,
     // e.g. read failed
-    std::exception)
+    std::exception)*/
 {
   try{
     std::set<FieldValue> contentLengths;

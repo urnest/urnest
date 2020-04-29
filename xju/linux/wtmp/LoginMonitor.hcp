@@ -63,10 +63,10 @@ class LoginMonitor
 {
 public:
   explicit LoginMonitor(xju::path::AbsFile const& wtmp,
-                        size_t maxRollsTracked) throw(
+                        size_t maxRollsTracked) /*throw(
     // - wtmp.first - i.e. directory of wtmp - does not exist (ENOENT)
     // - no resources
-    xju::SyscallFailed) try:
+    xju::SyscallFailed)*/ try:
       wtmp_(wtmp),
       maxRollsTracked_(maxRollsTracked),
       notifier_({wtmp})
@@ -83,8 +83,8 @@ public:
   // Read until at least one event or deadline reached.
   // not thread safe
   std::vector<UserLoggedIn> readEvents(
-    std::chrono::steady_clock::time_point const& deadline) throw(
-      xju::Exception)
+    std::chrono::steady_clock::time_point const& deadline) /*throw(
+      xju::Exception)*/
   {
     std::vector<UserLoggedIn> result;
     do
@@ -126,7 +126,7 @@ private:
   
   typedef std::vector<UserLoggedIn> Logins;
 
-  void trackRoll() throw(xju::Exception)
+  void trackRoll() /*throw(xju::Exception)*/
   {
     notifier_.read(xju::steadyNow());
     try{
@@ -152,8 +152,8 @@ private:
   // read new entries into specified iterator
   // return number of entries read
   size_t readNewEntries(xju::io::FileReader& file,
-                        std::back_insert_iterator<Logins> into) throw(
-                          xju::Exception)
+                        std::back_insert_iterator<Logins> into) /*throw(
+                          xju::Exception)*/
   {
     size_t result{0};
     try {

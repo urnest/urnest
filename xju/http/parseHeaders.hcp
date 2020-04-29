@@ -30,9 +30,9 @@ namespace xju
 namespace http
 {
 
-Headers parseHeaders(std::istream& s,size_t max) throw(
+Headers parseHeaders(std::istream& s,size_t max) /*throw(
   xju::Exception,
-  std::exception)
+  std::exception)*/
 {
   try{
     std::ostringstream all_;

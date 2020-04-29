@@ -17,9 +17,9 @@ namespace xju
 namespace file
 {
 void rmdir(xju::path::AbsolutePath const& d)
-  throw(
+  /*throw(
     // eg no such dir -> _errno==ENOENT
-    xju::SyscallFailed)
+    xju::SyscallFailed)*/
 {
   xju::syscall(xju::rmdir,XJU_TRACED)(xju::path::str(d).c_str());
 }

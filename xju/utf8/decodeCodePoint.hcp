@@ -28,8 +28,8 @@ uint32_t
 decodeTrailingByte(
   xju::parse::IteratorAdaptor<std::string::const_iterator> const at,
   unsigned int bytesInChar,
-  unsigned int byteOfChar) throw(
-    xju::Exception)
+  unsigned int byteOfChar) /*throw(
+    xju::Exception)*/
 {
   try{
     auto i(at);
@@ -56,8 +56,8 @@ decodeTrailingByte(
 std::pair<
   char32_t,
   xju::parse::IteratorAdaptor<std::string::const_iterator> > decodeCodePoint(
-    xju::parse::IteratorAdaptor<std::string::const_iterator> at) throw(
-      xju::Exception)
+    xju::parse::IteratorAdaptor<std::string::const_iterator> at) /*throw(
+      xju::Exception)*/
 {
   try{
     auto i{at};

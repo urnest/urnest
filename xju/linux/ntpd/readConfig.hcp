@@ -29,8 +29,8 @@ namespace
 {
 std::chrono::milliseconds getMemberAsMillisecond(
   xju::json::Element const& j,
-  xju::Utf8String const& member) throw(
-    xju::Exception)
+  xju::Utf8String const& member) /*throw(
+    xju::Exception)*/
 {
   try{
     std::string const value{j.getMember(member).asString()};
@@ -81,8 +81,8 @@ std::tuple<
   std::chrono::milliseconds, //delayFirstCheckFor
   std::chrono::milliseconds,  //period
   xju::path::AbsFile         //ntpq
-  > readConfig(xju::path::AbsFile const& configFile) throw(
-      xju::Exception)
+  > readConfig(xju::path::AbsFile const& configFile) /*throw(
+      xju::Exception)*/
 {
   try{
     auto const j{

@@ -26,13 +26,13 @@ namespace xju
 // post: result.endswith(term)
 // post: s positioned immediately after result
 std::string readThrough(std::istream& s,std::string const& term,size_t max)
-  throw(
+  /*throw(
     // max chars exceeded or eof before term; note message includes
     // what was read
     xju::Exception,
     std::bad_alloc,
     // exception from s
-    std::exception)
+    std::exception)*/
 {
   try{
     auto m{term.begin()};

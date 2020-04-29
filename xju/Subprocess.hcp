@@ -35,9 +35,9 @@ public:
   // - exitStatus must outlive Subprocess
   // int start() throw()
   template<class F>
-  Subprocess(int& exitStatus, F start) throw(
+  Subprocess(int& exitStatus, F start) /*throw(
     std::bad_alloc,
-    xju::Exception):
+    xju::Exception)*/:
       exitStatus_(exitStatus),
       stop_(new Stop),
       pid_(xju::syscall(xju::fork,XJU_TRACED)())
@@ -52,9 +52,9 @@ public:
   // int start() throw()
   // void stop(pid_t pid) throw()
   template<class F1, class F2>
-  Subprocess(int& exitStatus, F1 start, F2 stop) throw(
+  Subprocess(int& exitStatus, F1 start, F2 stop) /*throw(
     std::bad_alloc,
-    xju::Exception):
+    xju::Exception)*/:
       exitStatus_(exitStatus),
       stop_(new Stop2<F2>(stop)),
       pid_(xju::syscall(xju::fork,XJU_TRACED)())
@@ -63,8 +63,8 @@ public:
       ::exit(start());
     }
   }
-  void kill(int signal) throw(
-    xju::Exception)
+  void kill(int signal) /*throw(
+    xju::Exception)*/
   {
     xju::syscall(xju::kill,XJU_TRACED)(pid_,signal);
   }

@@ -37,9 +37,9 @@ xju::ip::Port bindToPort(
   xju::AutoFd const& socket,
   xju::Optional<xju::ip::v4::Address> const& localAddress,
   xju::ip::Port const& port,
-  bool const reuseAddr) throw(
+  bool const reuseAddr) /*throw(
     xju::ip::PortInUse,
-    xju::SyscallFailed)
+    xju::SyscallFailed)*/
 {
   if (port==Port(0)){
     throw xju::Exception("0 is not a valid ip port number",XJU_TRACED);
@@ -69,8 +69,8 @@ xju::ip::Port bindToPort(
 xju::ip::Port bindToPort(
   xju::AutoFd const& socket,
   xju::Optional<xju::ip::v4::Address> const& localAddress,
-  bool const reuseAddr) throw(
-    xju::SyscallFailed)
+  bool const reuseAddr) /*throw(
+    xju::SyscallFailed)*/
 {
   int v(reuseAddr);
   xju::syscall(xju::setsockopt,XJU_TRACED)(socket.fd(),SOL_SOCKET,SO_REUSEADDR,
@@ -99,9 +99,9 @@ public:
   TCPService(std::pair<xju::ip::v4::Address,xju::ip::Port> const& listenOn,
              Backlog backlog,
              bool reuseAddr,
-             bool closeOnExec=true) throw(
+             bool closeOnExec=true) /*throw(
                xju::ip::PortInUse,
-               xju::SyscallFailed) try:
+               xju::SyscallFailed)*/ try:
     fd_(xju::syscall(xju::socket,XJU_TRACED)(
           AF_INET,
           SOCK_STREAM|
@@ -127,9 +127,9 @@ public:
   TCPService(xju::ip::Port const& listenOn,
              Backlog backlog,
              bool reuseAddr,
-             bool closeOnExec=true) throw(
+             bool closeOnExec=true) /*throw(
                xju::ip::PortInUse,
-               xju::Exception) try:
+               xju::Exception)*/ try:
     fd_(xju::syscall(xju::socket,XJU_TRACED)(
           AF_INET,
           SOCK_STREAM|
@@ -164,8 +164,8 @@ public:
   // choose a port not already in use, listen on all local addresses
   explicit TCPService(Backlog backlog,
                       bool reuseAddr=false,
-                      bool closeOnExec=true) throw(
-                        xju::Exception) try:
+                      bool closeOnExec=true) /*throw(
+                        xju::Exception)*/ try:
     fd_(xju::syscall(xju::socket,XJU_TRACED)(
           AF_INET,
           SOCK_STREAM|
@@ -221,9 +221,9 @@ private:
   
   AutoFd accept(std::pair<xju::ip::v4::Address,xju::ip::Port>& peerAddress,
                 std::chrono::steady_clock::time_point const& deadline,
-                bool closeOnExec) throw(
+                bool closeOnExec) /*throw(
                   xju::DeadlineReached,
-                  xju::Exception)
+                  xju::Exception)*/
   {
     try {
       do{

@@ -31,8 +31,8 @@ DestinationUnreachable decodeDestinationUnreachable(
   xju::ip::v4::Address gateway,
   xju::ip::icmp::Message::Code icmpCode,
   xju::Array<uint8_t,4> const& icmpHeader,
-  std::vector<uint8_t> const& icmpData) throw(
-    xju::Exception)
+  std::vector<uint8_t> const& icmpData) /*throw(
+    xju::Exception)*/
 {
   try{
     auto i{xju::ip::decode::makeIterator(icmpHeader.begin(),icmpHeader.end())};

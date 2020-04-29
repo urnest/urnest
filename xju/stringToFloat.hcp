@@ -26,12 +26,12 @@ namespace util
 //
 // Convert specified string to an float.
 //
-float stringToFloat(const std::string& value) throw(
+float stringToFloat(const std::string& value) /*throw(
   //
   // pre: string = "", or
   //      strtof(3) failure
   //
-  xju::Exception)
+  xju::Exception)*/
 {
   try
   {

@@ -31,7 +31,7 @@ xju::SyscallF2<int,int,timeval const*> fut{"::futimes",::futimes};
 
 void touch(std::pair<xju::path::AbsolutePath,xju::path::FileName> const& f,
            Mode mode)
-  throw(xju::Exception)
+  /*throw(xju::Exception)*/
 {
   try {
     struct timeval n[2];

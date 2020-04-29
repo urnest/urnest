@@ -35,8 +35,8 @@ namespace disk_space
 std::tuple<xju::path::AbsolutePath,
            std::set<Percent>,
            std::chrono::milliseconds> readConfig(
-             xju::path::AbsFile const& configFile) throw(
-               xju::Exception)
+             xju::path::AbsFile const& configFile) /*throw(
+               xju::Exception)*/
 {
   try{
     auto const j{

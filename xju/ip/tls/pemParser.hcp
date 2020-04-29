@@ -79,10 +79,12 @@ namespace{
   using hcp_parser::parserUntil;
   using hcp_parser::crlf;
   using hcp_parser::lf;
-  using hcp_parser::eatWhite;
+  using hcp_parser::zeroOrMore;
+  using hcp_parser::whitespaceChar;
 
   hcp_parser::PR pemParser_() noexcept
   {
+    auto w(zeroOrMore()*whitespaceChar());
     return
       named<PEMComments>(parseUntil("-----BEGIN "))+
       "-----BEGIN "+
@@ -93,10 +95,10 @@ namespace{
       named<PEMPayloadItem>(
         "base64 payload",
         parseUntil(
-          fourChars()+eatWhite(),
+          fourChars()+w,
           pad1()|pad2()|pad3()|"-")+
-        (!base64char()|(pad1()|pad2()|pad3())+eatWhite))+
-      "-----END "+parseUntil("-")+"-----"+eatWhite;
+        (!base64char()|(pad1()|pad2()|pad3())+w))+
+      "-----END "+parseUntil("-")+"-----"+w;
   }
 }
 
@@ -106,7 +108,7 @@ std::shared_ptr<hcp_parser::NamedParser<PEMItem> > pemParser() noexcept
   static std::shared_ptr<hcp_parser::NamedParser<PEMItem> > const result(
     hcp_parser::named<PEMItem>(
       "PEM (RFC7468) Item",
-      pemParser_());
+      pemParser_()));
   return result;
 }
 

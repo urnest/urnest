@@ -77,8 +77,8 @@ public:
   }
 
 protected:
-  virtual xju::Utf8String asString_() const throw(
-    xju::Exception) override
+  virtual xju::Utf8String asString_() const /*throw(
+    xju::Exception)*/ override
   {
     return value_;
   }

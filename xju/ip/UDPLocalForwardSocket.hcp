@@ -39,9 +39,9 @@ namespace ip
 class UDPLocalForwardSocket : public virtual xju::io::Output
 {
 public:
-  UDPLocalForwardSocket() throw(
+  UDPLocalForwardSocket() /*throw(
     xju::Exception,
-    xju::SyscallFailed) try:
+    xju::SyscallFailed)*/ try:
       fd_(xju::syscall(xju::socket,XJU_TRACED)(
             AF_INET, SOCK_RAW|SOCK_CLOEXEC|SOCK_NONBLOCK, IPPROTO_RAW))
   {
@@ -61,8 +61,8 @@ public:
     size_t const size,
     xju::ip::v4::Address const& senderHost,
     xju::ip::Port const& senderPort,
-    std::chrono::steady_clock::time_point const& deadline) throw(
-      xju::DeadlineReached,xju::SyscallFailed)
+    std::chrono::steady_clock::time_point const& deadline) /*throw(
+      xju::DeadlineReached,xju::SyscallFailed)*/
   {
     xju::assert_less_equal(size,65507);
     

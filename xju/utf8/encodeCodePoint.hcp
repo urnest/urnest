@@ -18,9 +18,9 @@ namespace xju
 {
 namespace utf8
 {
-std::string encodeCodePoint(char32_t codePoint) throw(
+std::string encodeCodePoint(char32_t codePoint) /*throw(
   //codePoint > 0x10FFFF
-  xju::Exception)
+  xju::Exception)*/
 {
   uint32_t const x{codePoint};
   //utf-16 surrogate pair code points are invalid unicode characters
