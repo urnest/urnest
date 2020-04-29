@@ -172,6 +172,22 @@ io::Output
   / TCPListener : Input
   / TCPSocket : IStream,OStream
   x UDPSocket
+  - udp IP_RECVERR need to write a test that shows what ip(7) manpage
+    means by "When the user receives an error from a
+              socket  operation,  the  errors  can  be  received  by  calling
+              recvmsg(2)  with  the  MSG_ERRQUEUE  flag  set."
+    - the first bit doesn't specify what kind of error, does it return
+      some particular error code? Particularly for receiving udp messages.
+      - need a test that sends a bad udp checksum (so need IP level sender)
+    x the second bit does not say whether setting MSG_ERRQUEUE limits
+      recvmsg to receiving just errors, or like the drops can it get both?
+      It can get both, see following point to distinguish.
+    x what does select do if there are errors but no message waiting to
+      be received? sets header flag MSG_ERRQUEUE
+    - test via raw send of bad udp message (bad checksum)
+    - use a separate receive call to pick up errors return them via
+      a back_inserter<std::vector<X> > param.
+      
   - TLSSocket
     - give listener SNI info and whether to request cert for each server it
       supports? Plus a single default "requestClientCertificate"
