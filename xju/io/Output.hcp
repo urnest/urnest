@@ -49,8 +49,8 @@ protected:
 friend std::pair<std::set<Input const*>,std::set<Output const* > > select(
   std::set<Input const* > const& inputs,
   std::set<Output const* > const& outputs,
-  std::chrono::steady_clock::time_point const& deadline) throw(
-    std::bad_alloc);
+  std::chrono::steady_clock::time_point const& deadline) /*throw(
+    std::bad_alloc)*/;
 };
 std::ostream& operator<<(std::ostream& s, Output const& x) throw()
 {

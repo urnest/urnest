@@ -47,8 +47,8 @@ union Buffer
 
 std::map<int,xju::path::AbsolutePath> addWatches(
   int inotifyFd,
-  std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& files) throw(
-    xju::Exception)
+  std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& files) /*throw(
+    xju::Exception)*/
 {
   std::map<int,xju::path::AbsolutePath> result;
 
@@ -90,10 +90,10 @@ public:
   // Note you can use xju::io::select() to wait for one or more of files
   // possibly modified; use read() to see which of files if any modified
   //
-  FileObserver(std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& files) throw(
+  FileObserver(std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& files) /*throw(
     // - no resources (see initify_init1)
     // - missing/unreadable parent directory
-    xju::Exception) try:
+    xju::Exception)*/ try:
       fd_(xju::syscall(xju::inotify_init1,XJU_TRACED)(IN_NONBLOCK|IN_CLOEXEC)),
       files_(files),
       watches_(addWatches(fd_.fd(),files))

@@ -38,8 +38,8 @@ std::pair<std::set<xju::io::Input const*>,
           std::set<xju::io::Output const*> > select(
   std::set<xju::io::Input const*> const& inputs,
   std::set<xju::io::Output const*> const& outputs,
-  std::chrono::steady_clock::time_point const& deadline) throw(
-    std::bad_alloc)
+  std::chrono::steady_clock::time_point const& deadline) /*throw(
+    std::bad_alloc)*/
 {
   std::pair<std::set<Input const* >,std::set<Output const* > > result;
   int n;
@@ -100,8 +100,8 @@ std::pair<std::set<xju::io::Input const*>,
 // 
 std::set<Input const* > select(
   std::set<Input const* > const& inputs,
-  std::chrono::steady_clock::time_point const& deadline) throw(
-    xju::SyscallFailed)
+  std::chrono::steady_clock::time_point const& deadline) /*throw(
+    xju::SyscallFailed)*/
 {
   return select(inputs,std::set<Output const* >(),deadline).first;
 }
@@ -110,8 +110,8 @@ std::set<Input const* > select(
 // 
 std::set<Output const* > select(
   std::set<Output const* > const& outputs,
-  std::chrono::steady_clock::time_point const& deadline) throw(
-    std::bad_alloc)
+  std::chrono::steady_clock::time_point const& deadline) /*throw(
+    std::bad_alloc)*/
 {
   return select(std::set<Input const*>(),outputs,deadline).second;
 }

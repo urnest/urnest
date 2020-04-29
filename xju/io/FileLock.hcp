@@ -38,11 +38,11 @@ public:
   // Take out immediate exclusive lock on file x.
   // - wraps flock
   // pre: x will outlive this
-  explicit FileLock(FileReader const& x) throw(
+  explicit FileLock(FileReader const& x) /*throw(
     // x's file is currently locked by another file descriptor
     // (which could be in this process or another process)
     Unavailable,
-    xju::SyscallFailed) try:
+    xju::SyscallFailed)*/ try:
       fd_(x.fd_.fd())
   {
     try{
@@ -63,11 +63,11 @@ public:
     throw;
   }
   
-  explicit FileLock(FileWriter const& x) throw(
+  explicit FileLock(FileWriter const& x) /*throw(
     // x's file is currently locked by another file descriptor
     // (which could be in this process or another process)
     Unavailable,
-    xju::SyscallFailed) try:
+    xju::SyscallFailed)*/ try:
       fd_(x.fd_.fd())
   {
     try{

@@ -117,10 +117,13 @@ int main(int argc, char* argv[])
     auto i(root.begin().x_);
     for(auto tl: throwLists){
       output << std::string(i,tl.get().begin().x_);
-      auto tls(hcp_ast::reconstruct(tl.get()));
+      auto const tw(
+        hcp_ast::findOnlyChildOfType<hcp_ast::ThrowListTrailingWhite>(tl));
+      auto tls(std::string(tl.get().begin().x_,
+                           tw.begin().x_));
       blankCcomments(tls);
       output << "/*" << tls << "*/";
-      i=tl.get().end().x_;
+      i=tw.begin().x_;
     }
     output << std::string(i,root.end().x_);
     

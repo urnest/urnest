@@ -37,9 +37,9 @@ public:
   // - positions at end of file
   explicit FileWriter(
     std::pair<xju::path::AbsolutePath,xju::path::FileName> const& fileName,
-    bool closeOnExec=true) throw(
+    bool closeOnExec=true) /*throw(
       // file not found, no access
-      xju::SyscallFailed) try:
+      xju::SyscallFailed)*/ try:
     fileName_(fileName),
     fd_(xju::syscall(xju::open,XJU_TRACED)(
           xju::path::str(fileName_).c_str(),
@@ -61,9 +61,9 @@ public:
   FileWriter(
     std::pair<xju::path::AbsolutePath,xju::path::FileName> const& fileName,
     xju::file::Mode mode,
-    bool closeOnExec=true) throw(
+    bool closeOnExec=true) /*throw(
       // invalid path, no access
-      xju::SyscallFailed) try:
+      xju::SyscallFailed)*/ try:
     fileName_(fileName),
     fd_(xju::syscall(xju::open,XJU_TRACED)(
           xju::path::str(fileName_).c_str(),
@@ -88,10 +88,10 @@ public:
     std::pair<xju::path::AbsolutePath,xju::path::FileName> const& fileName,
     xju::file::Mode mode,
     Exclusive x,
-    bool closeOnExec=true) throw(
+    bool closeOnExec=true) /*throw(
       // file exists
       // invalid path, no access
-      xju::SyscallFailed) try:
+      xju::SyscallFailed)*/ try:
     fileName_(fileName),
     fd_(xju::syscall(xju::open,XJU_TRACED)(
           xju::path::str(fileName_).c_str(),
@@ -128,8 +128,8 @@ public:
   // - seeks backwards if n<0
   // - returns new pointer value
   // - see lseek(2)
-  off_t seekBy(off_t n) throw(
-    xju::SyscallFailed)
+  off_t seekBy(off_t n) /*throw(
+    xju::SyscallFailed)*/
   {
     try{
       return xju::syscall(xju::lseek,XJU_TRACED)(fileDescriptor(),n,SEEK_CUR);
@@ -144,9 +144,9 @@ public:
 
   // set pointer to n, returns *this
   // - see lseek(2)
-  FileWriter& seekTo(off_t n) throw(
+  FileWriter& seekTo(off_t n) /*throw(
     // eg n < 0
-    xju::SyscallFailed)
+    xju::SyscallFailed)*/
   {
     try{
       xju::syscall(xju::lseek,XJU_TRACED)(fileDescriptor(),n,SEEK_SET);
@@ -161,16 +161,16 @@ public:
   }
 
   // truncate file to specified new size, position at new end of file
-  void truncate(off_t newSize) throw(
-    xju::SyscallFailed)
+  void truncate(off_t newSize) /*throw(
+    xju::SyscallFailed)*/
   {
     xju::syscall(xju::ftruncate,XJU_TRACED)(fileDescriptor(),newSize);
     seekTo(newSize);
   }
 
   // write bufferSize bytes to file at current pointer
-  void write(void const* buffer,size_t bufferSize) throw(
-    xju::Exception)
+  void write(void const* buffer,size_t bufferSize) /*throw(
+    xju::Exception)*/
   {
     try{
       xju::assert_equal(OStream::write(buffer,bufferSize,xju::steadyNow()),
@@ -184,7 +184,7 @@ public:
       throw;
     }
   }
-  void sync() throw(xju::SyscallFailed)
+  void sync() /*throw(xju::SyscallFailed)*/
   {
     xju::syscall(xju::fsync,XJU_TRACED)(fileDescriptor());
   }

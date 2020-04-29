@@ -34,9 +34,9 @@ public:
   
   explicit FileReader(
     std::pair<xju::path::AbsolutePath,xju::path::FileName> const& fileName,
-    bool closeOnExec=true) throw(
+    bool closeOnExec=true) /*throw(
       // eg no access, file not found
-      xju::SyscallFailed) try:
+      xju::SyscallFailed)*/ try:
     fileName_(fileName),
       fd_(xju::syscall(xju::open,XJU_TRACED)(
             xju::path::str(fileName_).c_str(),
@@ -52,10 +52,10 @@ public:
   }
 
   // read up to bufferSize bytes from file starting at current pointer
-  size_t read(void* buffer,size_t bufferSize) throw(
+  size_t read(void* buffer,size_t bufferSize) /*throw(
     // at end of file already (nothing read)
     EndOfFile,
-    xju::Exception)
+    xju::Exception)*/
   {
     try{
       try{
@@ -94,8 +94,8 @@ public:
   // advance pointer by n bytes
   // - seeks backwards if n<0
   // - returns current location if n==0
-  off_t seekBy(off_t n) throw(
-    xju::SyscallFailed)
+  off_t seekBy(off_t n) /*throw(
+    xju::SyscallFailed)*/
   {
     try{
       return xju::syscall(xju::lseek,XJU_TRACED)(fileDescriptor(),n,SEEK_CUR);
@@ -110,9 +110,9 @@ public:
 
   // set pointer to n, returns n
   // - see lseek(2)
-  off_t seekTo(off_t n) throw(
+  off_t seekTo(off_t n) /*throw(
     // eg n < 0
-    xju::SyscallFailed)
+    xju::SyscallFailed)*/
   {
     try{
       return xju::syscall(xju::lseek,XJU_TRACED)(fileDescriptor(),n,SEEK_SET);

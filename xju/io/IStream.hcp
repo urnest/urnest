@@ -33,12 +33,12 @@ public:
   // - return number of bytes read
   // - reads any immediately available bytes if deadline has already passed
   size_t read(void* buffer, size_t bufferSize,
-              std::chrono::steady_clock::time_point const& deadline) throw(
+              std::chrono::steady_clock::time_point const& deadline) /*throw(
                 std::bad_alloc,
                 // end of input before anything was read
                 Input::Closed,
                 // eg disk error
-                xju::Exception) {
+                xju::Exception)*/ {
     std::chrono::duration<float> const timeout(
       deadline-std::chrono::steady_clock::now());
     size_t bytesRead(0);

@@ -85,10 +85,10 @@ public:
   // read() to then read them.
   //
   DirectoryObserver(xju::path::AbsolutePath const& dir,
-                    Events events) throw(
+                    Events events) /*throw(
     // - no resources (see initify_init1)
     // - missing/unreadable parent directory
-    xju::Exception) try:
+    xju::Exception)*/ try:
       dir_(dir),
       events_(std::move(events)),
       fd_(xju::syscall(xju::inotify_init1,XJU_TRACED)(IN_NONBLOCK|IN_CLOEXEC)),
