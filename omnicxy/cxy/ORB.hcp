@@ -169,13 +169,13 @@ private:
     }
     catch(cxy::Exception& e) {
       if (&typeid(cxy::Exception)==&typeid(BaseException)) {
-        throw;
+        xju::assert_never_reached(); //deliberate crash
       }
       BaseException x(e.cause_.first, e.cause_.second);
       copyContext(e.context_.begin(), 
                   e.context_.end(),
                   x);
-      throw x; // deliberate crash
+      xju::assert_never_reached(); //deliberate crash
     }
   }
 

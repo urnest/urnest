@@ -114,7 +114,8 @@ public:
   // - only returns names originally asked for and events originally
   //   asked for
   std::set<std::pair<xju::path::AbsFile,xju::io::DirectoryEntryEvent> > read(
-    std::chrono::steady_clock::time_point deadline) throw()
+    std::chrono::steady_clock::time_point deadline)
+    // xju::Exception
   {
     std::chrono::duration<float> const timeout(
       deadline-std::chrono::steady_clock::now());

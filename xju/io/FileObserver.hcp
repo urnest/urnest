@@ -115,7 +115,8 @@ public:
   // - if deadline has passed, gets any past, unread changes
   // - only returns names originally asked for
   std::set<std::pair<xju::path::AbsolutePath,xju::path::FileName> > read(
-    std::chrono::steady_clock::time_point deadline) throw()
+    std::chrono::steady_clock::time_point deadline)
+    // xju::Exception
   {
     Files result;
     std::chrono::duration<float> const timeout(

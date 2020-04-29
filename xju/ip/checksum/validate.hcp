@@ -24,7 +24,7 @@ void validate(xju::ip::decode::Iterator<I> i) /*throw(
   xju::Exception)*/
 {
   // adapter from https://tools.ietf.org/html/rfc1071
-  register uint32_t sum = 0;
+  uint32_t sum = 0;
   
   while( !i.atEnd() )  {
     uint16_t x{i.get8Bits("")};

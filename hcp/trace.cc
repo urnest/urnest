@@ -32,7 +32,7 @@ Scope::~Scope() throw()
 {
   std::cout << "]"
             << (cached_?"C":" ")
-            << ((std::uncaught_exception()||failed_)?"*":" ")
+            << ((std::uncaught_exceptions()||failed_)?"*":" ")
             << message_ << " "
             << (failed_?"":xju::format::quote(
                   xju::format::cEscapeString(result_))+" ")

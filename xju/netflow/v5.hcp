@@ -105,8 +105,9 @@ std::pair<Header,std::vector<Flow> > decode(
     xju::Exception)*/
 {
   try {
-    auto get8=[&udpMessageContent](size_t const i,std::string const& name) throw(
-      xju::Exception) {
+    auto get8=[&udpMessageContent](size_t const i,std::string const& name)
+      /*throw(
+        xju::Exception)*/ {
       try {
         if (i>=udpMessageContent.size()) {
           std::ostringstream s;
@@ -122,8 +123,9 @@ std::pair<Header,std::vector<Flow> > decode(
         throw;
       }
     };
-    auto get16=[&udpMessageContent](size_t const i,std::string const& name) throw(
-      xju::Exception) {
+    auto get16=[&udpMessageContent](size_t const i,std::string const& name)
+    /*throw(
+        xju::Exception)*/ {
       try {
         if ((i+1)>=udpMessageContent.size()) {
           std::ostringstream s;
@@ -140,8 +142,9 @@ std::pair<Header,std::vector<Flow> > decode(
         throw;
       }
     };
-    auto get32=[&udpMessageContent](size_t const i,std::string const& name) throw(
-      xju::Exception) {
+    auto get32=[&udpMessageContent](size_t const i,std::string const& name)
+    /*throw(
+        xju::Exception)*/ {
       try {
         if ((i+3)>=udpMessageContent.size()) {
           std::ostringstream s;
