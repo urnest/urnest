@@ -41,8 +41,8 @@ std::vector<DirName> split_string(std::string const& x) throw()
   return result;
 }
 
-std::vector<DirName> normalise(std::vector<DirName> const& x) throw(
-  xju::Exception)
+std::vector<DirName> normalise(std::vector<DirName> const& x) /*throw(
+  xju::Exception)*/
 {
   try {
     std::vector<DirName> result;
@@ -74,8 +74,8 @@ std::vector<DirName> normalise(std::vector<DirName> const& x) throw(
 }
 }
 
-RelativePath::RelativePath(std::string x) throw(
-  xju::Exception) try:
+RelativePath::RelativePath(std::string x) /*throw(
+  xju::Exception)*/ try:
   x_(split_string(x))
 {
   if (x.size() && (x[0]=='/')) {
@@ -93,8 +93,8 @@ catch(xju::Exception& e)
   throw;
 }
 
-AbsolutePath::AbsolutePath(std::string const& x) throw(
-  xju::Exception) try
+AbsolutePath::AbsolutePath(std::string const& x) /*throw(
+  xju::Exception)*/ try
 {
   if (!x.size() || (x[0]!='/')) {
     std::ostringstream s;
@@ -123,8 +123,8 @@ std::string str(RelativePath const& x) throw()
   return xju::format::join(y.begin(), y.end(), "/");
 }
 
-AbsolutePath::AbsolutePath(std::vector<DirName> const& x) throw(
-  xju::Exception) try:
+AbsolutePath::AbsolutePath(std::vector<DirName> const& x) /*throw(
+  xju::Exception)*/ try:
   x_(normalise(x))
 {
 }
@@ -142,8 +142,8 @@ std::ostream& operator<<(std::ostream& s,
   return s << str(x);
 }
 
-AbsolutePath operator+(AbsolutePath const& x, RelativePath const& y) throw(
-  xju::Exception)
+AbsolutePath operator+(AbsolutePath const& x, RelativePath const& y) /*throw(
+  xju::Exception)*/
 {
   std::vector<DirName> a;
   std::copy(x.begin(), x.end(), std::back_inserter(a));
@@ -151,8 +151,8 @@ AbsolutePath operator+(AbsolutePath const& x, RelativePath const& y) throw(
   return AbsolutePath(a);
 }
 
-AbsolutePath operator+(AbsolutePath const& x, DirName const& y) throw(
-  xju::Exception)
+AbsolutePath operator+(AbsolutePath const& x, DirName const& y) /*throw(
+  xju::Exception)*/
 {
   std::vector<DirName> a;
   std::copy(x.begin(), x.end(), std::back_inserter(a));
@@ -162,8 +162,8 @@ AbsolutePath operator+(AbsolutePath const& x, DirName const& y) throw(
 
 std::pair<AbsolutePath,FileName> operator+(
   AbsolutePath const& x,
-  FileName const& y) throw(
-    xju::Exception)
+  FileName const& y) /*throw(
+    xju::Exception)*/
 {
   return std::make_pair(x,y);
 }
@@ -246,8 +246,8 @@ DirName basename(AbsolutePath const& x) throw()
   return *x.rbegin();
 }
 
-RelativePath relative_dirname(std::string const& x) throw(
-  xju::Exception)
+RelativePath relative_dirname(std::string const& x) /*throw(
+  xju::Exception)*/
 {
   try {
     if (x.size() && (x[0]=='/')) {
@@ -271,8 +271,8 @@ RelativePath relative_dirname(std::string const& x) throw(
   }
 }
 
-AbsolutePath absolute_dirname(std::string const& x) throw(
-  xju::Exception)
+AbsolutePath absolute_dirname(std::string const& x) /*throw(
+  xju::Exception)*/
 {
   try {
     if (!x.size() || (x[0]!='/')) {
@@ -296,8 +296,8 @@ AbsolutePath absolute_dirname(std::string const& x) throw(
   }
 }
 
-std::pair<AbsolutePath, FileName> split(std::string const& x) throw(
-  xju::Exception)
+std::pair<AbsolutePath, FileName> split(std::string const& x) /*throw(
+  xju::Exception)*/
 {
   try {
     if (x.size() && (x[0]=='/')) {
@@ -314,8 +314,8 @@ std::pair<AbsolutePath, FileName> split(std::string const& x) throw(
   }
 }
 
-AbsolutePath splitdir(std::string const& x) throw(
-  xju::Exception)
+AbsolutePath splitdir(std::string const& x) /*throw(
+  xju::Exception)*/
 {
   try {
     if (x.size() && (x[0]=='/')) {

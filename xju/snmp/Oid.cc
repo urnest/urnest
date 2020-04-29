@@ -23,8 +23,8 @@ namespace snmp
 namespace
 {
 // parse dotted assumed to be an SNMP OID in dotted notation, eg .1.3.6.1.4.364
-std::vector<uint32_t> parseDottedOid(std::string const& dotted) throw(
-  xju::Exception)
+std::vector<uint32_t> parseDottedOid(std::string const& dotted) /*throw(
+  xju::Exception)*/
 {
   try {
     if (dotted.size()==0 || (*dotted.begin())!= '.') {
@@ -64,8 +64,8 @@ std::vector<uint32_t> parseDottedOid(std::string const& dotted) throw(
 
 }
 
-Oid::Oid(std::string const& dotted) throw(
-  xju::Exception):
+Oid::Oid(std::string const& dotted) /*throw(
+  xju::Exception)*/:
     components_(parseDottedOid(dotted))
 {
 }

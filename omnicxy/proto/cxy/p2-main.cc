@@ -45,7 +45,7 @@ public:
     std::string const& d,
     uint8_t const& e,
     uint64_t const& f,
-    bool const& g) throw(cxy::Exception)
+    bool const& g) /*throw(cxy::Exception)*/
   {
     std::cout << "F::f1(" 
               << a << ", "
@@ -58,7 +58,7 @@ public:
     calls_.push_back(std::shared_ptr<Call>(
                        new Call::f1(a,b,c,d,e,f,g)));
   }
-  virtual int16_t f2() throw(cxy::Exception)
+  virtual int16_t f2() /*throw(cxy::Exception)*/
   {
     std::cout << "F::f2() -> 22" << std::endl;
     calls_.push_back(std::shared_ptr<Call>(

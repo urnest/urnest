@@ -32,8 +32,8 @@ public:
   sref_impl(cxy::ORBImplIf& orb, 
             std::string const& name,
             const char* repoId,
-            sref_if& sref) throw(
-              cxy::Exceptions<cxy::Exception>::DuplicateName) try:
+            sref_if& sref) /*throw(
+              cxy::Exceptions<cxy::Exception>::DuplicateName)*/ try:
       orb_(orb),
       repoId_(repoId),
       sref_(sref)
@@ -92,7 +92,7 @@ public:
   // omniServant::
   virtual const char* _mostDerivedRepoId() throw()
   {
-    repoId_;
+    return repoId_;
   }
 
 private:

@@ -35,8 +35,8 @@ public:
   // pre: y is a TimeTicksValue
   virtual bool less(Value const& y) const throw() override;
 
-  virtual std::chrono::milliseconds timeTicksValue() const throw(
-    xju::Exception) {
+  virtual std::chrono::milliseconds timeTicksValue() const /*throw(
+    xju::Exception)*/ {
     return val_;
   }
 

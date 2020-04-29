@@ -15,20 +15,20 @@ class AAA
 public:
   virtual ~AAA() throw();
   virtual int32_t f(
-    int32_t const& x) throw(
+    int32_t const& x) /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
 };
 
 class BBB 
 {
 public:
   virtual ~BBB() throw();
-  virtual ::cxy::IOR< void > get() throw(
+  virtual ::cxy::IOR< void > get() /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
 };
 
 }

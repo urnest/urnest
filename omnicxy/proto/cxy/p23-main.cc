@@ -37,15 +37,15 @@ public:
   {
   }
   
-  virtual std::string fa() throw(cxy::Exception)
+  virtual std::string fa() /*throw(cxy::Exception)*/
   {
     return "fa()";
   }
-  virtual std::string fb() throw(cxy::Exception)
+  virtual std::string fb() /*throw(cxy::Exception)*/
   {
     return "fb()";
   }
-  virtual std::string fc() throw(cxy::Exception)
+  virtual std::string fc() /*throw(cxy::Exception)*/
   {
     return "fc()";
   }

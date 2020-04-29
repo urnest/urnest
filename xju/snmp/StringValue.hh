@@ -33,7 +33,7 @@ public:
   std::vector<uint8_t> const val_;
 
   // Value::
-  std::vector<uint8_t>const& stringValue() const throw(xju::Exception) override
+  std::vector<uint8_t>const& stringValue() const /*throw(xju::Exception)*/ override
   {
     return val_;
   }

@@ -24,13 +24,13 @@ namespace xju
     //
     // Convert specified string to an integer.
     //
-    int stringToInt(const std::string& value) throw(
+    int stringToInt(const std::string& value) /*throw(
 	//
 	// pre: string = "", or
 	//      integer overflow, or
 	//      strtol(3) failure
 	//
-	xju::Exception);
+	xju::Exception)*/;
 }
 
 

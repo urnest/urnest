@@ -14,7 +14,7 @@ namespace cxy
 {
 
 
-void throw_CORBA_BAD_PARAM_InvalidUnionDiscValue ()
+[[noreturn]] void throw_CORBA_BAD_PARAM_InvalidUnionDiscValue ()
 {
   throw CORBA::BAD_PARAM(omni::BAD_PARAM_InvalidUnionDiscValue,
                          ::CORBA::COMPLETED_NO);

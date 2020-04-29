@@ -46,8 +46,8 @@ public:
   {
   }
   
-  virtual cxy::optional<Name> echo(cxy::optional<Name> const& s) throw(
-    cxy::Exception)
+  virtual cxy::optional<Name> echo(cxy::optional<Name> const& s) /*throw(
+    cxy::Exception)*/
   {
     std::cout << "servant: p17::echo(" << str(s) << ")" 
               << std::endl;

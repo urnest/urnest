@@ -17,8 +17,8 @@
 namespace hcp
 {
 std::string readFile(
-  std::pair<xju::path::AbsolutePath,xju::path::FileName> const& file) throw(
-    xju::Exception);
+  std::pair<xju::path::AbsolutePath,xju::path::FileName> const& file) /*throw(
+    xju::Exception)*/;
 
 }
 

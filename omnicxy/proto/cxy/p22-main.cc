@@ -38,7 +38,7 @@ public:
   }
   
   virtual ::cxy::UnixTimeMilli f(
-    ::cxy::UnixTimeMilli const& a) throw(cxy::Exception)
+    ::cxy::UnixTimeMilli const& a) /*throw(cxy::Exception)*/
   {
     std::cout << "::p22::f(" 
               << a << ") -> UnixTimeMilli(33)" << std::endl;

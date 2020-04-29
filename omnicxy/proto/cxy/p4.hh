@@ -62,10 +62,10 @@ class F
 public:
   virtual ~F() throw();
   virtual ::p4::XS1 f1(
-    ::p4::XS1 const& y) throw(
+    ::p4::XS1 const& y) /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
   struct XxPair : public std::pair< int32_t, std::string >
   {
     XxPair(int32_t const& p1, std::string const& p2) throw();
@@ -76,10 +76,10 @@ public:
   };
   
   virtual ::p4::F::XxPair f2(
-    ::p4::F::XxPair const& z) throw(
+    ::p4::F::XxPair const& z) /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
 };
 
 }

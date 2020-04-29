@@ -39,10 +39,10 @@ public:
 
   // p5::F::
   virtual ::p5::JW2s f1(
-    ::p5::JW2s const& p1) throw(
+    ::p5::JW2s const& p1) /*throw(
       // ipc failure
       // - note servant may not throw
-      cxy::Exception)
+      cxy::Exception)*/
   {
     std::cout << "::p5::f1([";
     for(::p5::JW2s::const_iterator i=p1.begin();i!=p1.end();++i) {

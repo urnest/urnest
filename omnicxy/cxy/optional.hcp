@@ -93,6 +93,7 @@ public:
         (*this) = x.value();
       }
     }
+    return *this;
   }
   
 private:

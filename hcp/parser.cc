@@ -23,11 +23,11 @@
 namespace hcp_parser
 {
 
-PR::PR(std::string const& literal) throw(std::bad_alloc):
+PR::PR(std::string const& literal) /*throw(std::bad_alloc)*/:
     std::shared_ptr<Parser>(parseLiteral(literal))
 {
 }
-PR::PR(const char literal[]) throw(std::bad_alloc):
+PR::PR(const char literal[]) /*throw(std::bad_alloc)*/:
     std::shared_ptr<Parser>(parseLiteral(literal))
 {
 }
@@ -3045,9 +3045,9 @@ std::pair<IRs,I> parse(I const startOfElement,
                       std::shared_ptr<Parser> elementType,
                       bool traceToStdout,
                       bool irsAtEnd)
-  throw(
+  /*throw(
     // post: parent unmodified
-    xju::Exception)
+    xju::Exception)*/
 {
   try {
     Options options(traceToStdout,
@@ -3069,8 +3069,8 @@ hcp_ast::Item parseString(
   std::string::const_iterator begin,
   std::string::const_iterator end,
   std::shared_ptr<Parser> parser,
-  bool traceToStdout) throw(
-    xju::Exception)
+  bool traceToStdout) /*throw(
+    xju::Exception)*/
 {
   I const startOfElement(begin,end);
   auto const r{

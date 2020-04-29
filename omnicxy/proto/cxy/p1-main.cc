@@ -37,7 +37,7 @@ public:
   {
   }
   
-  virtual void f1() throw(cxy::Exception)
+  virtual void f1() /*throw(cxy::Exception)*/
   {
     std::cout << "F::f1()" << std::endl;
   }

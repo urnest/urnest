@@ -1,5 +1,5 @@
 //
 int x=1;
-void y(int c) throw(xju::Exception)
+void y(int c) /*throw(xju::Exception)*/
 {
 }

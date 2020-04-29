@@ -206,7 +206,7 @@ public:
     std::cerr << "warning: untested for sizeof(short)" 
               << sizeof(short)
               << std::endl;
-  };
+  }
 };
 
 template<>
@@ -239,7 +239,7 @@ public:
     assert_equal(format::octal((unsigned short)02143), "0002143");
     assert_equal(format::octal((unsigned short)0177777), "0177777");
     
-  };
+  }
 };
 
 template<>
@@ -260,7 +260,7 @@ public:
     assert_equal(format::hex((unsigned short)0x33fc2143), "0x33fc2143");
     assert_equal(format::hex((unsigned short)0xffffffff), "0xffffffff");
     
-  };
+  }
 };
 
 template<int sizeOfInt>
@@ -272,7 +272,7 @@ public:
     std::cerr << "warning: untested for sizeof(int)" 
               << sizeof(int)
               << std::endl;
-  };
+  }
 };
 
 template<>
@@ -293,7 +293,7 @@ public:
     assert_equal(format::hex((unsigned int)0x2143), "0x2143");
     assert_equal(format::hex((unsigned int)0xffff), "0xffff");
     
-  };
+  }
 };
 
 template<>
@@ -314,7 +314,7 @@ public:
     assert_equal(format::hex((unsigned int)0x33fc2143), "0x33fc2143");
     assert_equal(format::hex((unsigned int)0xffffffff), "0xffffffff");
     
-  };
+  }
 };
 
 template<>
@@ -335,7 +335,7 @@ public:
     assert_equal(format::hex((unsigned int)0xaf3933fc2143), "0x0000af3933fc2143");
     assert_equal(format::hex((unsigned int)0xffffffff), "0xffffffffffffffff");
     
-  };
+  }
 };
 
 template<long sizeOfLong>
@@ -347,7 +347,7 @@ public:
     std::cerr << "warning: untested for sizeof(long)" 
               << sizeof(long)
               << std::endl;
-  };
+  }
 };
 
 template<>
@@ -368,7 +368,7 @@ public:
     assert_equal(format::hex((unsigned long)0x33fc2143), "0x33fc2143");
     assert_equal(format::hex((unsigned long)0xffffffff), "0xffffffff");
     
-  };
+  }
 };
 
 template<>
@@ -389,7 +389,7 @@ public:
     assert_equal(format::hex((unsigned long)0xaf3933fc2143), "0x0000af3933fc2143");
     assert_equal(format::hex((unsigned long)0xffffffffffffffff), "0xffffffffffffffff");
     
-  };
+  }
 };
 
 void test7()

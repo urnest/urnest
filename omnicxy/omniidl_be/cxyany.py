@@ -14,7 +14,7 @@ struct_t='''\
 template<>
 struct TypeCodeOf< ::%(name)s >
 {
-  static ::cxy::TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+  static ::cxy::TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
   {
     return ::cxy::TypeCode(
       std::shared_ptr<cxy::TypeCode_>(
@@ -38,7 +38,7 @@ union_t='''\
 template<>
 struct TypeCodeOf< ::std::shared_ptr< ::%(name)s const > >
 {
-  static ::cxy::TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+  static ::cxy::TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
   {
     auto marshalCaseValue( [](%(discriminantType)s const& x ) {
       cxy::MemCdrStream s;
@@ -77,7 +77,7 @@ exception_t='''\
 template<>
 struct TypeCodeOf< ::%(name)s >
 {
-  static ::cxy::TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+  static ::cxy::TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
   {
     return ::cxy::TypeCode(
       std::shared_ptr<cxy::TypeCode_>(
@@ -102,7 +102,7 @@ enum_t='''\
 template<>
 struct TypeCodeOf< ::%(name)s >
 {
-  static ::cxy::TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+  static ::cxy::TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
   {
     return ::cxy::TypeCode(
       std::shared_ptr<cxy::TypeCode_>(

@@ -71,7 +71,7 @@ namespace xju
         "dup2",
         ::dup2};
 
-    std::pair<int,int> pipe_() throw(xju::SyscallFailed)
+    std::pair<int,int> pipe_() /*throw(xju::SyscallFailed)*/
     {
         int fds[2];
         syscall("pipe2",::pipe2, XJU_TRACED, true, -1)(
@@ -79,7 +79,7 @@ namespace xju
         return std::make_pair(fds[0],fds[1]);
     }
     
-    std::string getcwd() throw(std::bad_alloc,xju::SyscallFailed)
+    std::string getcwd() /*throw(std::bad_alloc,xju::SyscallFailed)*/
     {
         try {
             char* x = ::getcwd(0, 0);
@@ -103,8 +103,8 @@ namespace xju
     }
 
     void exec(std::string const& file,
-              std::vector<std::string> const& argv) throw(
-                  xju::SyscallFailed) {
+              std::vector<std::string> const& argv) /*throw(
+                  xju::SyscallFailed)*/ {
         char* f(::strdup(file.c_str()));
         std::vector<char*> a;
         for(auto arg: argv) {

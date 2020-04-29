@@ -52,12 +52,12 @@ namespace xju
     //       result.second is write end
     //       both file descriptors have close-on-exec set (atomically
     //       on creation); both are set non-blocking
-    std::pair<int,int> pipe_() throw(xju::SyscallFailed);
+    std::pair<int,int> pipe_() /*throw(xju::SyscallFailed)*/;
     
-    std::string getcwd() throw(std::bad_alloc,xju::SyscallFailed);
+    std::string getcwd() /*throw(std::bad_alloc,xju::SyscallFailed)*/;
 
     void exec(std::string const& file,
-              std::vector<std::string> const& argv) throw(xju::SyscallFailed);
+              std::vector<std::string> const& argv) /*throw(xju::SyscallFailed)*/;
     
               
 }

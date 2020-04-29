@@ -32,8 +32,8 @@ namespace
 Oid getErrorOid(size_t const errorIndex,
                 std::vector<Oid> const& responseOids,
                 std::set<Oid> const& requestOids,
-                std::string const& error) throw(
-                  xju::Exception)
+                std::string const& error) /*throw(
+                  xju::Exception)*/
 {
   if (errorIndex==0) {
     std::ostringstream s;
@@ -62,8 +62,8 @@ Oid getErrorOid(
   SnmpV1Response::ErrorIndex const errorIndex,
   std::vector<std::pair<Oid, std::shared_ptr<Value const> > > const& responseValues,
   std::set<Oid> const& requestOids,
-  std::string const& error) throw(
-    xju::Exception)
+  std::string const& error) /*throw(
+    xju::Exception)*/
 {
   std::vector<Oid> responseOids;
   std::transform(responseValues.begin(),responseValues.end(),
@@ -82,8 +82,8 @@ Oid getErrorOid(
   SnmpV1Response::ErrorIndex const errorIndex,
   std::vector<std::pair<Oid, std::shared_ptr<Value const> > > const& responseValues,
   std::map<Oid, std::shared_ptr<Value const> > const& values,
-  std::string const& error) throw(
-    xju::Exception)
+  std::string const& error) /*throw(
+    xju::Exception)*/
 {
   std::vector<Oid> responseOids;
   std::set<Oid> requestOids;
@@ -109,8 +109,8 @@ Oid getErrorOid(
 Oid getErrorOid(SnmpV2cResponse::ErrorIndex const errorIndex,
                 std::vector<SnmpV2cResponse::VarResult> const& varResults,
                 std::set<Oid> const& requestOids,
-                std::string const& error) throw(
-                  xju::Exception)
+                std::string const& error) /*throw(
+                  xju::Exception)*/
 {
   std::vector<Oid> responseOids;
                 
@@ -129,8 +129,8 @@ Oid getErrorOid(SnmpV2cResponse::ErrorIndex const errorIndex,
 Oid getErrorOid(SnmpV2cResponse::ErrorIndex const errorIndex,
                 std::vector<SnmpV2cResponse::VarResult> const& varResults,
                 std::map<Oid, std::shared_ptr<Value const> > const& values,
-                std::string const& error) throw(
-                  xju::Exception)
+                std::string const& error) /*throw(
+                  xju::Exception)*/
 {
   std::set<Oid> requestOids;
                 
@@ -149,8 +149,8 @@ Oid getErrorOid(SnmpV2cResponse::ErrorIndex const errorIndex,
 Oid getErrorOid(SnmpV2cResponse::ErrorIndex const errorIndex,
                 std::vector<SnmpV2cResponse::VarResult> const& varResults,
                 std::vector<Oid> const& oids,
-                std::string const& error) throw(
-                  xju::Exception)
+                std::string const& error) /*throw(
+                  xju::Exception)*/
 {
   std::set<Oid> requestOids;
   std::copy(oids.begin(),oids.end(),
@@ -174,8 +174,8 @@ Oid getErrorOid(SnmpV2cResponse::ErrorIndex const errorIndex,
                 std::vector<SnmpV2cResponse::VarResult> const& varResults,
                 std::set<Oid> const& get,
                 std::vector<Oid> const& getNextN,
-                std::string const& error) throw(
-                  xju::Exception)
+                std::string const& error) /*throw(
+                  xju::Exception)*/
 {
   std::set<Oid> requestOids;
   std::copy(get.begin(),get.end(),
@@ -202,14 +202,14 @@ Oid getErrorOid(SnmpV2cResponse::ErrorIndex const errorIndex,
 
 std::map<Oid, std::shared_ptr<Value const> > validateResponse(
   SnmpV1GetRequest const& request,
-  SnmpV1Response const& response) throw(
+  SnmpV1Response const& response) /*throw(
     ResponseTypeMismatch,
     ResponseIdMismatch,
     NoSuchName,
     TooBig,
     GenErr,
     // response malformed eg not all requested oids present in response
-    xju::Exception)
+    xju::Exception)*/
 {
   try {
     if (request.id_ != response.id_) {
@@ -271,7 +271,7 @@ std::map<Oid, std::shared_ptr<Value const> > validateResponse(
 
 void validateResponse(
   SnmpV1SetRequest const& request, 
-  SnmpV1Response const& response) throw(
+  SnmpV1Response const& response) /*throw(
     ResponseTypeMismatch,
     ResponseIdMismatch,
     NoSuchName,
@@ -279,7 +279,7 @@ void validateResponse(
     ReadOnly,
     TooBig,
     GenErr,
-    xju::Exception)
+    xju::Exception)*/
 {
   try {
     if (request.id_ != response.id_) {
@@ -374,12 +374,12 @@ void validateResponse(
 
 std::vector<std::pair<Oid, std::shared_ptr<Value const> > > validateResponse(
   SnmpV1GetNextRequest const& request,
-  SnmpV1Response const& response) throw(
+  SnmpV1Response const& response) /*throw(
     ResponseTypeMismatch,
     ResponseIdMismatch,
     TooBig,
     GenErr,
-    xju::Exception)
+    xju::Exception)*/
 {
   try {
     if (request.id_ != response.id_) {
@@ -460,13 +460,13 @@ std::vector<std::pair<Oid, std::shared_ptr<Value const> > > validateResponse(
 
 std::map<Oid, SnmpV2cVarResponse> validateResponse(
   SnmpV2cGetRequest const& request,
-  SnmpV2cResponse const& response) throw(
+  SnmpV2cResponse const& response) /*throw(
     ResponseTypeMismatch,
     ResponseIdMismatch,
     NoSuchName,
     TooBig,
     GenErr,
-    xju::Exception)
+    xju::Exception)*/
 {
   try {
     if (request.id_ != response.id_) {
@@ -560,7 +560,7 @@ std::map<Oid, SnmpV2cVarResponse> validateResponse(
 
 void validateResponse(
   SnmpV2cSetRequest const& request, 
-  SnmpV2cResponse const& response) throw(
+  SnmpV2cResponse const& response) /*throw(
     ResponseTypeMismatch,
     ResponseIdMismatch,
     TooBig,
@@ -580,7 +580,7 @@ void validateResponse(
     CommitFailed,
     UndoFailed,
     GenErr,
-    xju::Exception)
+    xju::Exception)*/
 {
   try {
     if (request.id_ != response.id_) {
@@ -771,12 +771,12 @@ void validateResponse(
 
 std::vector<SnmpV2cVarResponse> validateResponse(
   SnmpV2cGetNextRequest const& request,
-  SnmpV2cResponse const& response) throw(
+  SnmpV2cResponse const& response) /*throw(
     ResponseTypeMismatch,
     ResponseIdMismatch,
     TooBig,
     GenErr,
-    xju::Exception)
+    xju::Exception)*/
 {
   try {
     if (request.id_ != response.id_) {
@@ -876,11 +876,11 @@ std::vector<SnmpV2cVarResponse> validateResponse(
 namespace
 {
 SnmpV2cVarResponse convertResponseVar(
-  SnmpV2cResponse::VarResult const& x) throw(
+  SnmpV2cResponse::VarResult const& x) /*throw(
     SnmpV2cVarResponse::NoSuchObject,
     SnmpV2cVarResponse::NoSuchInstance,
     SnmpV2cVarResponse::EndOfMibView,
-    xju::Exception)
+    xju::Exception)*/
 {
   if (x.e_.valid()) {
     switch(x.e_.value()) {
@@ -918,12 +918,12 @@ std::pair<
     >
   > validateResponse(
     SnmpV2cGetBulkRequest const& request,
-    SnmpV2cResponse const& response) throw(
+    SnmpV2cResponse const& response) /*throw(
       ResponseTypeMismatch,
       ResponseIdMismatch,
       TooBig,
       GenErr,
-      xju::Exception)
+      xju::Exception)*/
 {
   try {
     if (request.id_ != response.id_) {

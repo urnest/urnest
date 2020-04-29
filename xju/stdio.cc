@@ -28,7 +28,7 @@ namespace xju
         // REVISIT: this implementation does not meet rename's atomicity
         // guarentees.
         //
-        int rename_(const char* from, const char* to)
+        int rename_(const char* from, const char* to) noexcept
         {
             int status(::rename(from, to));
             if (status == -1 && 

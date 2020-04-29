@@ -30,7 +30,7 @@ public:
   virtual ::hcp::tags::FoundIn lookupSymbol(
     ::hcp::tags::Lookup::NamespaceNames const& fromScope,
     ::hcp::tags::Lookup::NamespaceNames const& symbolScope,
-    ::hcp::tags::UnqualifiedSymbol const& symbol) throw(xju::Exception)
+    ::hcp::tags::UnqualifiedSymbol const& symbol) /*throw(xju::Exception)*/
     {
       return f_(fromScope,symbolScope,symbol);
     }

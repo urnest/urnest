@@ -28,9 +28,9 @@ bool isIdentifierChar(char c) throw()
 
 IdentifierRef getIdentifierRefAt(std::string const& text,
                                  std::string::size_type const offset)
-  throw(
+  /*throw(
     // pre: no identifier at offset
-    xju::Exception)
+    xju::Exception)*/
 {
   try {
     if (offset>text.size()) {

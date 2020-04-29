@@ -48,8 +48,8 @@ public:
   {
   }
   
-  virtual cxy::BoundedSequence<int16_t,4> f(cxy::BoundedSequence<int16_t,4> const& s) throw(
-    cxy::Exception)
+  virtual cxy::BoundedSequence<int16_t,4> f(cxy::BoundedSequence<int16_t,4> const& s) /*throw(
+    cxy::Exception)*/
   {
     std::cout << "servant: p21::f(" << str(s) << ")" 
               << std::endl;

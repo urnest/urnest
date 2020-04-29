@@ -20,8 +20,8 @@ namespace hcp
 // - optionally trace parsing to stdout
 hcp_parser::IRs getIrsAtEnd(std::string const& hcp,
                             size_t offset,
-                            bool traceParsing) throw(
-                              xju::Exception)
+                            bool traceParsing) /*throw(
+                              xju::Exception)*/
 {
   hcp_parser::Cache cache(new hcp_parser::CacheVal());
   

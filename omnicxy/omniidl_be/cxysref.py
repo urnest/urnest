@@ -27,16 +27,16 @@ calldesc_t='''
     %(paramMembers)s%(returnMember)s
 
     // omniCallDescriptor::
-    void unmarshalArguments(cdrStream& s) throw(
+    void unmarshalArguments(cdrStream& s) /*throw(
       CORBA::SystemException,
       omni::giopStream::CommFailure
-      )
+      )*/
     {%(paramUnmarshals)s
     }
     // omniCallDescriptor::
-    void marshalReturnedValues(cdrStream& s) throw(
+    void marshalReturnedValues(cdrStream& s) /*throw(
       omni::giopStream::CommFailure
-      )
+      )*/
     {%(returnMarshal)s
     }
   };'''
@@ -105,8 +105,8 @@ public:
   // pre: lifetime(orb) includes lifetime(this)
   sref(cxy::ORB< %(eclass)s >& orb, 
        std::string const& name,
-       ::%(fqn)s& x) throw(
-         cxy::Exceptions< %(eclass)s >::DuplicateName) try:
+       ::%(fqn)s& x) /*throw(
+         cxy::Exceptions< %(eclass)s >::DuplicateName)*/ try:
       name_(name),
       x_(x),
       c_(guard_),

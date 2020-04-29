@@ -17,10 +17,10 @@ public:
   typedef ::xju::Tagged<std::string,Name_tag > Name;
   typedef cxy::optional< ::p17::Name > OptionalName;
   virtual ::p17::OptionalName echo(
-    ::p17::OptionalName const& n) throw(
+    ::p17::OptionalName const& n) /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
 };
 
 

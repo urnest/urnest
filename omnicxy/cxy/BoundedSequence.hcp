@@ -24,7 +24,7 @@ private:
   typedef std::vector<T,Allocator> V;
   static typename V::size_type check(
     typename V::size_type n,
-    std::pair<std::string,unsigned int> const& t) throw(E)
+    std::pair<std::string,unsigned int> const& t) /*throw(E)*/
   {
     if (n>MaxSize) {
       std::ostringstream s;
@@ -409,7 +409,7 @@ public:
         << size() << " elements and cannot accept " << n << " more";
       throw E(s.str(),std::make_pair(__FILE__,__LINE__));
     }      
-    x_.insert(at,n,v);
+    return x_.insert(at,n,v);
   }
   template<typename InputIterator,
            typename = std::_RequireInputIter<InputIterator> >

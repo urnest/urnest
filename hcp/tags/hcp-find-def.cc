@@ -26,8 +26,8 @@
 
 // get tag lookup service - see tag-lookup-service.cc - URL from
 // file
-std::string getTagLookupServiceURL() throw(
-  xju::Exception)
+std::string getTagLookupServiceURL() /*throw(
+  xju::Exception)*/
 {
   try {
     if (::getenv("TAG_LOOKUP_SERVICE_URL_FILE")==0) {

@@ -37,10 +37,10 @@ std::string formatLength(xju::Optional<size_t> const& length) throw()
 
 }
 
-SnmpV2cTrap decodeSnmpV2cTrap(std::vector<uint8_t> const& data) throw(
+SnmpV2cTrap decodeSnmpV2cTrap(std::vector<uint8_t> const& data) /*throw(
     SnmpVersionMismatch,
     RequestTypeMismatch,
-    xju::Exception)
+    xju::Exception)*/
 {
   std::vector<std::string> ok;
   try {

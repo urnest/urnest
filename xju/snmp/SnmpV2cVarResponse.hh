@@ -65,19 +65,19 @@ public:
   {
     return oid_;
   }
-  xju::snmp::Value const& operator*() const throw(
+  xju::snmp::Value const& operator*() const /*throw(
     NoSuchObject,
     NoSuchInstance,
-    EndOfMibView);
-  xju::snmp::Value const* operator->() const throw(
+    EndOfMibView)*/;
+  xju::snmp::Value const* operator->() const /*throw(
     NoSuchObject,
     NoSuchInstance,
-    EndOfMibView);
+    EndOfMibView)*/;
 
-  std::shared_ptr<xju::snmp::Value const> value() const throw(
+  std::shared_ptr<xju::snmp::Value const> value() const /*throw(
     NoSuchObject,
     NoSuchInstance,
-    EndOfMibView);
+    EndOfMibView)*/;
   
   // return length of encoded value
   // ie return encodeTo(x)-x

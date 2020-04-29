@@ -20,7 +20,7 @@ public:
     B,
     C
   };
-  X(Value v) throw(cxy::Exception);
+  X(Value v) /*throw(cxy::Exception)*/;
   friend Value valueOf(X const& x) throw(){ return x.v_; }
 private:
   Value v_;
@@ -104,10 +104,10 @@ class F
 public:
   virtual ~F() throw();
   virtual ::std::shared_ptr< ::U1 const> f1(
-    ::std::shared_ptr< ::U1 const> const& a) throw(
+    ::std::shared_ptr< ::U1 const> const& a) /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
   class Y
   {
   public:
@@ -115,7 +115,7 @@ public:
       U,
       V
     };
-    Y(Value v) throw(cxy::Exception);
+    Y(Value v) /*throw(cxy::Exception)*/;
     friend Value valueOf(Y const& x) throw(){ return x.v_; }
   private:
     Value v_;

@@ -26,7 +26,7 @@
 #include <xju/endsWith.hh> //impl
 
 // get $HCP_HPATH directories
-std::vector<xju::path::AbsolutePath> getHPath() throw(xju::Exception)
+std::vector<xju::path::AbsolutePath> getHPath() /*throw(xju::Exception)*/
 {
   try {
     auto const x(::getenv("HCP_HPATH"));
@@ -59,8 +59,8 @@ struct Options {
 
 // get tag lookup service - see tag-lookup-service.cc - URL from
 // file
-std::string getTagLookupServiceURL() throw(
-  xju::Exception) {
+std::string getTagLookupServiceURL() /*throw(
+  xju::Exception)*/ {
   try {
     if (::getenv("TAG_LOOKUP_SERVICE_URL_FILE")==0) {
       throw xju::Exception("TAG_LOOKUP_SERVICE_URL_FILE environment variable is not set",XJU_TRACED);
@@ -79,8 +79,8 @@ std::string getTagLookupServiceURL() throw(
 }
 
 // get hcp extension mappings
-ExtensionMappings getHcpExtensionMappings() throw(
-  xju::Exception) {
+ExtensionMappings getHcpExtensionMappings() /*throw(
+  xju::Exception)*/ {
   try {
     if (::getenv("HCP_EXTENSION_MAPPINGS")==0) {
       throw xju::Exception("HCP_EXTENSION_MAPPINGS environment variable is not set",XJU_TRACED);
@@ -129,8 +129,8 @@ ExtensionMappings getHcpExtensionMappings() throw(
 
 // result.second are remaining arguments
 std::pair<Options, std::vector<std::string> > parseCommandLine(
-  std::vector<std::string> const& x) throw(
-    xju::Exception)
+  std::vector<std::string> const& x) /*throw(
+    xju::Exception)*/
 {
   std::vector<std::string>::const_iterator i(x.begin());
   bool trace=false;

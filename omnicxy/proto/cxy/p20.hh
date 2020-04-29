@@ -99,20 +99,20 @@ class F
 public:
   virtual ~F() throw();
   virtual ::cxy::Any< cxy::Exception > f1(
-    ::cxy::Any< cxy::Exception > const& x) throw(
+    ::cxy::Any< cxy::Exception > const& x) /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
   virtual int16_t f2(
-    int16_t const& x) throw(
+    int16_t const& x) /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
   virtual ::p20::B f3(
-    ::p20::B const& x) throw(
+    ::p20::B const& x) /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
 };
 
 }

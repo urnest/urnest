@@ -22,7 +22,7 @@ namespace hcp
 std::string getOptionValue(std::string const& option,
                            std::vector<std::string>::const_iterator const i,
                            std::vector<std::string>::const_iterator const end)
-  throw(xju::Exception);
+  /*throw(xju::Exception)*/;
 }
 
 #endif

@@ -44,7 +44,7 @@ std::ostream& operator<<(std::ostream& s, ::U1 const& x) throw()
     ::U1::C const& y(dynamic_cast< ::U1::C const&>(x));
     return s << "::U1::C " << y.c_;
   }
-  
+  return s;
 }
 
 class F_impl : public p11::F
@@ -55,7 +55,7 @@ public:
   }
   
   virtual ::std::shared_ptr< ::U1 const> f1(
-    ::std::shared_ptr< ::U1 const> const& a) throw(cxy::Exception)
+    ::std::shared_ptr< ::U1 const> const& a) /*throw(cxy::Exception)*/
   {
     std::cout << "F::f1(" 
               << (*a) << ")" << std::endl;

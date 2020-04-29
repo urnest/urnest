@@ -53,7 +53,7 @@ public:
   {
   }
   
-  virtual void f1(std::string const& x) throw(cxy::Exception)
+  virtual void f1(std::string const& x) /*throw(cxy::Exception)*/
   {
     std::cout << "F::f1(" << x.size() << ")" << std::endl;
     xju::Lock l(guard_);

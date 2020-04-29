@@ -48,8 +48,8 @@ public:
   
 // result.second are remaining arguments
 std::pair<Options, std::vector<std::string> > parseCommandLine(
-  std::vector<std::string> const& x) throw(
-    xju::Exception)
+  std::vector<std::string> const& x) /*throw(
+    xju::Exception)*/
 {
   std::vector<std::string>::const_iterator i(x.begin());
   bool trace=false;

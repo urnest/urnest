@@ -33,10 +33,10 @@ SnmpV2cVarResponse::EndOfMibView::EndOfMibView(
 xju::Exception("end of MIB view " + xju::format::str(oid), trace)
 {
 }
-xju::snmp::Value const& SnmpV2cVarResponse::operator*() const throw(
+xju::snmp::Value const& SnmpV2cVarResponse::operator*() const /*throw(
   NoSuchObject,
   NoSuchInstance,
-  EndOfMibView)
+  EndOfMibView)*/
 {
   if (e_.get()) {
     if (dynamic_cast<NoSuchObject const*>(e_.get())) {
@@ -50,10 +50,10 @@ xju::snmp::Value const& SnmpV2cVarResponse::operator*() const throw(
   return *v_;
 }
 
-xju::snmp::Value const* SnmpV2cVarResponse::operator->() const throw(
+xju::snmp::Value const* SnmpV2cVarResponse::operator->() const /*throw(
   NoSuchObject,
   NoSuchInstance,
-  EndOfMibView)
+  EndOfMibView)*/
 {
   if (e_.get()) {
     if (dynamic_cast<NoSuchObject const*>(e_.get())) {
@@ -68,10 +68,10 @@ xju::snmp::Value const* SnmpV2cVarResponse::operator->() const throw(
 }
 
 std::shared_ptr<xju::snmp::Value const> SnmpV2cVarResponse::value() const
-  throw(
+  /*throw(
     NoSuchObject,
     NoSuchInstance,
-    EndOfMibView)
+    EndOfMibView)*/
 {
   if (e_.get()) {
     if (dynamic_cast<NoSuchObject const*>(e_.get())) {

@@ -25,9 +25,9 @@ public:
   uint32_t val_;
 
   // Value::
-  int intValue() const throw(xju::Exception) override;
+  int intValue() const /*throw(xju::Exception)*/ override;
   unsigned int uintValue() const throw() override;
-  long longValue() const throw(xju::Exception) override;
+  long longValue() const /*throw(xju::Exception)*/ override;
   unsigned long ulongValue() const throw() override;
 
   // Value::

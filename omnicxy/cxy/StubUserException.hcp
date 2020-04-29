@@ -24,7 +24,7 @@ public:
   {
   }
   // CORBA::Exception::
-  virtual void _raise() const throw(CORBA::UserException)
+  virtual void _raise() const /*throw(CORBA::UserException)*/
   {
     ::abort();
   }

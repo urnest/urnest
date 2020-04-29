@@ -46,9 +46,9 @@ public:
   Config(xju::Utf8String name,
          int port,
          std::set<xju::Utf8String> targets,
-         StatConfig const& statConfig) throw(
+         StatConfig const& statConfig) /*throw(
            //invalid config
-           xju::Exception):
+           xju::Exception)*/:
       name_(name),
       port_(port),
       targets_(std::move(targets)),

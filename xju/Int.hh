@@ -31,8 +31,8 @@ public:
     return value_;
   }
 
-  Int& operator++() throw(
-    E)
+  Int& operator++() /*throw(
+    E)*/
   {
     if (std::numeric_limits<Impl>::max()==value_) {
       std::ostringstream s;
@@ -43,8 +43,8 @@ public:
     return *this;
   }
   
-  Int operator++(int) throw(
-    E)
+  Int operator++(int) /*throw(
+    E)*/
   {
     if (std::numeric_limits<Impl>::max()==value_) {
       std::ostringstream s;
@@ -56,8 +56,8 @@ public:
     return result;
   }
   
-  Int& operator--() throw(
-    E)
+  Int& operator--() /*throw(
+    E)*/
   {
     if (std::numeric_limits<Impl>::min()==value_) {
       std::ostringstream s;
@@ -68,8 +68,8 @@ public:
     return *this;
   }
   
-  Int operator--(int) throw(
-    E)
+  Int operator--(int) /*throw(
+    E)*/
   {
     if (std::numeric_limits<Impl>::min()==value_) {
       std::ostringstream s;
@@ -81,8 +81,8 @@ public:
     return result;
   }
   
-  Int& operator+=(Int const& y) throw(
-    E)
+  Int& operator+=(Int const& y) /*throw(
+    E)*/
   {
     if (y.value_<0) {
       return (*this)-=Int(-y.value_);
@@ -96,8 +96,8 @@ public:
     return *this;
   }
   
-  Int& operator-=(Int const& y) throw(
-    E)
+  Int& operator-=(Int const& y) /*throw(
+    E)*/
   {
     if (y.value_<0) {
       return (*this)+=Int(-y.value_);
@@ -111,18 +111,18 @@ public:
     return *this;
   }
   
-  friend Int operator+(Int const& x, Int const& y) throw(
+  friend Int operator+(Int const& x, Int const& y) /*throw(
     // overflow
-    E) 
+    E)*/ 
   {
       Int result(x);
       result+=y;
       return result;
   }
   
-  friend Int operator-(Int const& x, Int const& y) throw(
+  friend Int operator-(Int const& x, Int const& y) /*throw(
     // underflow
-    E) 
+    E)*/ 
   {
       Int result(x);
       result-=y;

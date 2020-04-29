@@ -34,8 +34,8 @@ public:
   
 };
 
-std::set<Recording> getRecordings() throw(
-  Exception);
+std::set<Recording> getRecordings() /*throw(
+  Exception)*/;
 
 }
 }

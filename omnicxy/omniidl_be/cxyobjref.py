@@ -8,8 +8,8 @@ from cxy import ptype, unqualifiedType,GenerateFailed,DIRECTION_OUT,opParams,opR
 
 objref_operation_t='''
 // %(fqn)s::
-%(returnType)s %(name)s(%(params)s) throw(
-  %(eclass)s)
+%(returnType)s %(name)s(%(params)s) /*throw(
+  %(eclass)s)*/
 {
   try {
     try {

@@ -63,8 +63,8 @@ public:
 };
 
 
-int main_(uint16_t const port, std::string const& testBCxxExe) throw(
-  cxy::Exception)
+int main_(uint16_t const port, std::string const& testBCxxExe) /*throw(
+  cxy::Exception)*/
 {
   try {
     std::string const OBJECT_NAME("client");

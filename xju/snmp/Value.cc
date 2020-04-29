@@ -18,50 +18,50 @@ namespace snmp
 {
 
 
-std::vector<uint8_t>const& Value::stringValue() const throw(xju::Exception)
+std::vector<uint8_t>const& Value::stringValue() const /*throw(xju::Exception)*/
 {
   std::ostringstream s;
   s << (*this) << " is not a string";
   throw xju::Exception(s.str(),XJU_TRACED);
 }
-std::vector<uint8_t>const& Value::opaqueValue() const throw(xju::Exception)
+std::vector<uint8_t>const& Value::opaqueValue() const /*throw(xju::Exception)*/
 {
   std::ostringstream s;
   s << (*this) << " is not a opaque value";
   throw xju::Exception(s.str(),XJU_TRACED);
 }
-int Value::intValue() const throw(xju::Exception)
+int Value::intValue() const /*throw(xju::Exception)*/
 {
   std::ostringstream s;
   s << (*this) << " is not an integer";
   throw xju::Exception(s.str(),XJU_TRACED);
 }
-unsigned int Value::uintValue() const throw(xju::Exception)
+unsigned int Value::uintValue() const /*throw(xju::Exception)*/
 {
   std::ostringstream s;
   s << (*this) << " is not an integer";
   throw xju::Exception(s.str(),XJU_TRACED);
 }
-long Value::longValue() const throw(xju::Exception)
+long Value::longValue() const /*throw(xju::Exception)*/
 {
   std::ostringstream s;
   s << (*this) << " is not an integer";
   throw xju::Exception(s.str(),XJU_TRACED);
 }
-unsigned long Value::ulongValue() const throw(xju::Exception)
+unsigned long Value::ulongValue() const /*throw(xju::Exception)*/
 {
   std::ostringstream s;
   s << (*this) << " is not an integer";
   throw xju::Exception(s.str(),XJU_TRACED);
 }
-Oid Value::oidValue() const throw(xju::Exception)
+Oid Value::oidValue() const /*throw(xju::Exception)*/
 {
   std::ostringstream s;
   s << (*this) << " is not an Oid";
   throw xju::Exception(s.str(),XJU_TRACED);
 }
-std::chrono::milliseconds Value::timeTicksValue() const throw(
-    xju::Exception)
+std::chrono::milliseconds Value::timeTicksValue() const /*throw(
+    xju::Exception)*/
 {
   std::ostringstream s;
   s << (*this) << " is not an TimeTicks";

@@ -156,8 +156,8 @@ void genClassMemberFunctionDef(
   hcp_ast::FunctionDef const& x,
   OStream& h,
   OStream& c,
-  std::vector<hcp_ast::ClassDef const*> const& scope) throw(
-    xju::Exception)
+  std::vector<hcp_ast::ClassDef const*> const& scope) /*throw(
+    xju::Exception)*/
 {
   std::vector<hcp_ast::IR>::const_iterator const i(
     std::find_if(x.items().begin(), x.items().end(),
@@ -200,8 +200,8 @@ void genClassStaticVarDef(
   hcp_ast::StaticVarDef const& x,
   OStream& h,
   OStream& c,
-  std::vector<hcp_ast::ClassDef const*> const& scope) throw(
-    xju::Exception)
+  std::vector<hcp_ast::ClassDef const*> const& scope) /*throw(
+    xju::Exception)*/
 {
   auto i(hcp_ast::findChildrenOfType<hcp_ast::VarInitialiser>(x));
   if (i.size()){
@@ -245,8 +245,8 @@ public:
 };
 
   
-bool isInlineFunction(hcp_ast::FunctionDef const& x) throw(
-  xju::Exception)
+bool isInlineFunction(hcp_ast::FunctionDef const& x) /*throw(
+  xju::Exception)*/
 {
   auto const qualifiers{
     hcp_ast::findChildrenOfType<hcp_ast::FunctionQualifiers>(x)};
@@ -259,8 +259,8 @@ bool isInlineFunction(hcp_ast::FunctionDef const& x) throw(
             isLiteral("inline"))!=qualifiers.front().get().items().end());
 }
 
-bool isFriendFunction(hcp_ast::FunctionDef const& x) throw(
-  xju::Exception)
+bool isFriendFunction(hcp_ast::FunctionDef const& x) /*throw(
+  xju::Exception)*/
 {
   auto const qualifiers{
     hcp_ast::findChildrenOfType<hcp_ast::FunctionQualifiers>(x)};
@@ -273,8 +273,8 @@ bool isFriendFunction(hcp_ast::FunctionDef const& x) throw(
             isLiteral("friend"))!=qualifiers.front().get().items().end());
 }
 
-bool isFriendFunction(hcp_ast::FunctionDecl const& x) throw(
-  xju::Exception)
+bool isFriendFunction(hcp_ast::FunctionDecl const& x) /*throw(
+  xju::Exception)*/
 {
   auto const qualifiers{
     hcp_ast::findChildrenOfType<hcp_ast::FunctionQualifiers>(x)};
@@ -362,8 +362,8 @@ std::vector<std::string> getClassMemberVarNames(hcp_ast::ClassDef const& x)
 void genClass(hcp_ast::ClassDef const& x,
               OStream& h,
               OStream& c,
-              std::vector<hcp_ast::ClassDef const*> const& outerClasses) throw(
-                xju::Exception)
+              std::vector<hcp_ast::ClassDef const*> const& outerClasses) /*throw(
+                xju::Exception)*/
 {
   for(hcp_ast::IRs::const_iterator i=x.items().begin(); 
       i!=x.items().end(); 
@@ -471,8 +471,8 @@ void genClass(hcp_ast::ClassDef const& x,
 
 void genFunction(hcp_ast::FunctionDef const& x,
                  OStream& h,
-                 OStream& c) throw(
-                   xju::Exception)
+                 OStream& c) /*throw(
+                   xju::Exception)*/
 {
   if (isInlineFunction(x)) {
     h.copy(x.begin(),x.end());
@@ -507,8 +507,8 @@ void genFunction(hcp_ast::FunctionDef const& x,
 
 void genGlobalVar(hcp_ast::GlobalVarDef const& x,
                   OStream& h,
-                  OStream& c) throw(
-                    xju::Exception)
+                  OStream& c) /*throw(
+                    xju::Exception)*/
 {
   auto const y(
     hcp_ast::findOnlyChildOfType<hcp_ast::VarInitialiser>(x));
@@ -521,8 +521,8 @@ void genGlobalVar(hcp_ast::GlobalVarDef const& x,
 
 void genAnonymousNamespace(hcp_ast::AnonymousNamespace const& x,
                            OStream& h,
-                           OStream& c) throw(
-                             xju::Exception)
+                           OStream& c) /*throw(
+                             xju::Exception)*/
 {
   c.copy(x.begin(), x.end());
 }
@@ -530,13 +530,13 @@ void genAnonymousNamespace(hcp_ast::AnonymousNamespace const& x,
 
 void genNamespaceContent(hcp_ast::IRs const& x,
                          OStream& h,
-                         OStream& c) throw(
-                           xju::Exception);
+                         OStream& c) /*throw(
+                           xju::Exception)*/;
 
 void genNamespace(hcp_ast::NamespaceDef const& x,
                   OStream& h,
-                  OStream& c) throw(
-                    xju::Exception)
+                  OStream& c) /*throw(
+                    xju::Exception)*/
 {
   std::vector<hcp_ast::IR>::const_iterator i(
     std::find_if(x.items().begin(), x.items().end(),
@@ -557,8 +557,8 @@ void genNamespace(hcp_ast::NamespaceDef const& x,
 
 void genNamespaceContent(hcp_ast::IRs const& x,
                          OStream& h,
-                         OStream& c) throw(
-                           xju::Exception)
+                         OStream& c) /*throw(
+                           xju::Exception)*/
 {
   for(hcp_ast::IRs::const_iterator i=x.begin(); i!=x.end(); ++i) {
     if ((*i)->isA<hcp_ast::AnonymousNamespace>()) {
@@ -607,8 +607,8 @@ public:
 
 // result.second are remaining arguments
 std::pair<CommandLineOptions, std::vector<std::string> > parseCommandLine(
-  std::vector<std::string> const& x) throw(
-    xju::Exception)
+  std::vector<std::string> const& x) /*throw(
+    xju::Exception)*/
 {
   std::vector<std::string>::const_iterator i(x.begin());
   unsigned int dir_levels=0;
@@ -658,8 +658,8 @@ char make_guard_char(char c) throw()
 
 std::string make_guard(xju::path::AbsolutePath const& pathToInputFile,
                        xju::path::FileName const& outputHHFileName,
-                       unsigned int dir_levels) throw(
-                         xju::Exception)
+                       unsigned int dir_levels) /*throw(
+                         xju::Exception)*/
 {
   std::ostringstream s;
   s << "make include-guard from last " << dir_levels

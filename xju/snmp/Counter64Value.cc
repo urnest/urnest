@@ -23,7 +23,7 @@ Counter64Value::Counter64Value(uint64_t val) throw():
     val_(val) {
   }
 
-int Counter64Value::intValue() const throw(xju::Exception)
+int Counter64Value::intValue() const /*throw(xju::Exception)*/
 {
   if (val_ > INT_MAX) {
     std::ostringstream s;
@@ -34,7 +34,7 @@ int Counter64Value::intValue() const throw(xju::Exception)
   return val_;
 }
 
-unsigned int Counter64Value::uintValue() const throw(xju::Exception)
+unsigned int Counter64Value::uintValue() const /*throw(xju::Exception)*/
 {
   if (val_ > UINT_MAX) {
     std::ostringstream s;
@@ -46,7 +46,7 @@ unsigned int Counter64Value::uintValue() const throw(xju::Exception)
   return val_;
 }
 
-long Counter64Value::longValue() const throw(xju::Exception)
+long Counter64Value::longValue() const /*throw(xju::Exception)*/
 {
   if (val_ > LONG_MAX) {
     std::ostringstream s;
@@ -57,7 +57,7 @@ long Counter64Value::longValue() const throw(xju::Exception)
   return val_;
 }
 
-unsigned long Counter64Value::ulongValue() const throw(xju::Exception)
+unsigned long Counter64Value::ulongValue() const /*throw(xju::Exception)*/
 {
   if (val_ > ULONG_MAX) {
     std::ostringstream s;

@@ -20,9 +20,9 @@ namespace xju
 namespace snmp
 {
 
-SnmpV1Response decodeSnmpV1Response(std::vector<uint8_t> const& data) throw(
+SnmpV1Response decodeSnmpV1Response(std::vector<uint8_t> const& data) /*throw(
     // malformed
-    xju::Exception);
+    xju::Exception)*/;
 
 
 }

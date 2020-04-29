@@ -36,7 +36,7 @@ class F_impl : public p1::F
 public:
   ~F_impl() throw() {}
   
-  virtual void f1() throw(cxy::Exception) override
+  virtual void f1() /*throw(cxy::Exception)*/ override
   {
   }
 };
@@ -53,47 +53,47 @@ public:
 
   virtual void bind(
     ::CosNaming::Name const& n,
-    ::cxy::IOR< void > const& obj) throw(
+    ::cxy::IOR< void > const& obj) /*throw(
     CosNaming::NamingContext::NotFound,
     CosNaming::NamingContext::CannotProceed,
     CosNaming::NamingContext::InvalidName,
-    CosNaming::NamingContext::AlreadyBound)
+    CosNaming::NamingContext::AlreadyBound)*/
   {
     xju::assert_never_reached();
   }
   virtual void rebind(
     ::CosNaming::Name const& n,
-    ::cxy::IOR< void > const& obj) throw(
+    ::cxy::IOR< void > const& obj) /*throw(
     CosNaming::NamingContext::NotFound,
     CosNaming::NamingContext::CannotProceed,
-    CosNaming::NamingContext::InvalidName)
+    CosNaming::NamingContext::InvalidName)*/
   {
     xju::assert_never_reached();
   }
   virtual void bind_context(
     ::CosNaming::Name const& n,
-    ::cxy::IOR< ::CosNaming::NamingContext > const& nc) throw(
+    ::cxy::IOR< ::CosNaming::NamingContext > const& nc) /*throw(
     CosNaming::NamingContext::NotFound,
     CosNaming::NamingContext::CannotProceed,
     CosNaming::NamingContext::InvalidName,
-    CosNaming::NamingContext::AlreadyBound)
+    CosNaming::NamingContext::AlreadyBound)*/
   {
     xju::assert_never_reached();
   }
   virtual void rebind_context(
     ::CosNaming::Name const& n,
-    ::cxy::IOR< ::CosNaming::NamingContext > const& nc) throw(
+    ::cxy::IOR< ::CosNaming::NamingContext > const& nc) /*throw(
     CosNaming::NamingContext::NotFound,
     CosNaming::NamingContext::CannotProceed,
-    CosNaming::NamingContext::InvalidName)
+    CosNaming::NamingContext::InvalidName)*/
   {
     xju::assert_never_reached();
   }
   virtual ::cxy::IOR< void > resolve(
-    ::CosNaming::Name const& n) throw(
+    ::CosNaming::Name const& n) /*throw(
     CosNaming::NamingContext::NotFound,
     CosNaming::NamingContext::CannotProceed,
-    CosNaming::NamingContext::InvalidName)
+    CosNaming::NamingContext::InvalidName)*/
   {
     xju::assert_equal(n,CosNaming::Name({
           CosNaming::NameComponent(
@@ -101,10 +101,10 @@ public:
     return x_;
   }
   virtual void unbind(
-    ::CosNaming::Name const& n) throw(
+    ::CosNaming::Name const& n) /*throw(
     CosNaming::NamingContext::NotFound,
     CosNaming::NamingContext::CannotProceed,
-    CosNaming::NamingContext::InvalidName)
+    CosNaming::NamingContext::InvalidName)*/
   {
     xju::assert_never_reached();
   }
@@ -113,16 +113,16 @@ public:
     xju::assert_never_reached();
   }
   virtual ::cxy::IOR< ::CosNaming::NamingContext > bind_new_context(
-    ::CosNaming::Name const& n) throw(
+    ::CosNaming::Name const& n) /*throw(
     CosNaming::NamingContext::NotFound,
     CosNaming::NamingContext::CannotProceed,
     CosNaming::NamingContext::InvalidName,
-    CosNaming::NamingContext::AlreadyBound)
+    CosNaming::NamingContext::AlreadyBound)*/
   {
     xju::assert_never_reached();
   }
-  virtual void destroy() throw(
-    CosNaming::NamingContext::NotEmpty)
+  virtual void destroy() /*throw(
+    CosNaming::NamingContext::NotEmpty)*/
   {
     xju::assert_never_reached();
   }
@@ -156,47 +156,47 @@ public:
 
   virtual void bind(
     ::CosNaming::Name const& n,
-    ::cxy::IOR< void > const& obj) throw(
+    ::cxy::IOR< void > const& obj) /*throw(
     CosNaming::NamingContext::NotFound,
     CosNaming::NamingContext::CannotProceed,
     CosNaming::NamingContext::InvalidName,
-    CosNaming::NamingContext::AlreadyBound)
+    CosNaming::NamingContext::AlreadyBound)*/
   {
     xju::assert_never_reached();
   }
   virtual void rebind(
     ::CosNaming::Name const& n,
-    ::cxy::IOR< void > const& obj) throw(
+    ::cxy::IOR< void > const& obj) /*throw(
     CosNaming::NamingContext::NotFound,
     CosNaming::NamingContext::CannotProceed,
-    CosNaming::NamingContext::InvalidName)
+    CosNaming::NamingContext::InvalidName)*/
   {
     xju::assert_never_reached();
   }
   virtual void bind_context(
     ::CosNaming::Name const& n,
-    ::cxy::IOR< ::CosNaming::NamingContext > const& nc) throw(
+    ::cxy::IOR< ::CosNaming::NamingContext > const& nc) /*throw(
     CosNaming::NamingContext::NotFound,
     CosNaming::NamingContext::CannotProceed,
     CosNaming::NamingContext::InvalidName,
-    CosNaming::NamingContext::AlreadyBound)
+    CosNaming::NamingContext::AlreadyBound)*/
   {
     xju::assert_never_reached();
   }
   virtual void rebind_context(
     ::CosNaming::Name const& n,
-    ::cxy::IOR< ::CosNaming::NamingContext > const& nc) throw(
+    ::cxy::IOR< ::CosNaming::NamingContext > const& nc) /*throw(
     CosNaming::NamingContext::NotFound,
     CosNaming::NamingContext::CannotProceed,
-    CosNaming::NamingContext::InvalidName)
+    CosNaming::NamingContext::InvalidName)*/
   {
     xju::assert_never_reached();
   }
   virtual ::cxy::IOR< void > resolve(
-    ::CosNaming::Name const& n) throw(
+    ::CosNaming::Name const& n) /*throw(
     CosNaming::NamingContext::NotFound,
     CosNaming::NamingContext::CannotProceed,
-    CosNaming::NamingContext::InvalidName)
+    CosNaming::NamingContext::InvalidName)*/
   {
     xju::assert_equal(n,CosNaming::Name({
           CosNaming::NameComponent(
@@ -204,10 +204,10 @@ public:
     return nc1_;
   }
   virtual void unbind(
-    ::CosNaming::Name const& n) throw(
+    ::CosNaming::Name const& n) /*throw(
     CosNaming::NamingContext::NotFound,
     CosNaming::NamingContext::CannotProceed,
-    CosNaming::NamingContext::InvalidName)
+    CosNaming::NamingContext::InvalidName)*/
   {
     xju::assert_never_reached();
   }
@@ -216,16 +216,16 @@ public:
     xju::assert_never_reached();
   }
   virtual ::cxy::IOR< ::CosNaming::NamingContext > bind_new_context(
-    ::CosNaming::Name const& n) throw(
+    ::CosNaming::Name const& n) /*throw(
     CosNaming::NamingContext::NotFound,
     CosNaming::NamingContext::CannotProceed,
     CosNaming::NamingContext::InvalidName,
-    CosNaming::NamingContext::AlreadyBound)
+    CosNaming::NamingContext::AlreadyBound)*/
   {
     xju::assert_never_reached();
   }
-  virtual void destroy() throw(
-    CosNaming::NamingContext::NotEmpty)
+  virtual void destroy() /*throw(
+    CosNaming::NamingContext::NotEmpty)*/
   {
     xju::assert_never_reached();
   }
@@ -270,6 +270,7 @@ public:
     try{
       stdout_.useAsStdout();
       xju::exec(namingClientExe_,args_);
+      return 0;
     }
     catch(xju::Exception& e){
       e.addContext(xju::format::join(args_.begin(),args_.end(),

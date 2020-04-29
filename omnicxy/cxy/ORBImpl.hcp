@@ -36,9 +36,9 @@ namespace
 // post: result.second.first is omniORB insPOA
 //       result.second.second is its manager, which is activated
 std::pair< ::CORBA::ORB*, std::pair< ::PortableServer::POA*, ::PortableServer::POAManager*> > orbInit(
-  std::string const& orbEndPoint) throw(
+  std::string const& orbEndPoint) /*throw(
     cxy::PortInUse,
-    cxy::Exception)
+    cxy::Exception)*/
 {
   char emptyString[]= { 0 };
   char* argv_[]={ emptyString };
@@ -108,9 +108,9 @@ std::pair< ::CORBA::ORB*, std::pair< ::PortableServer::POA*, ::PortableServer::P
 class ORBImpl : public ORBImplIf
 {
 public:
-  explicit ORBImpl(std::string const& orbEndPoint) throw(
+  explicit ORBImpl(std::string const& orbEndPoint) /*throw(
     cxy::PortInUse,
-    cxy::Exception):
+    cxy::Exception)*/:
       orbEndPoint_(orbEndPoint),
       orb_etc_(orbInit(orbEndPoint)),
       orb_(orb_etc_.first),
@@ -126,14 +126,14 @@ public:
     delete orb_;
   }
   // post: lifetime(result) includes lifetime(this)
-  ::PortableServer::POA& insPOA() throw(
+  ::PortableServer::POA& insPOA() /*throw(
     // eg port in use
-    cxy::Exception) override
+    cxy::Exception)*/ override
   {
     return *insPOA_;
   }
-  void run() throw(
-    cxy::Exception) override
+  void run() /*throw(
+    cxy::Exception)*/ override
   {
     try {
       orb_->run();
@@ -146,8 +146,8 @@ public:
       throw e;
     }
   }
-  void stop() throw(
-    cxy::Exception)
+  void stop() /*throw(
+    cxy::Exception)*/
   {
     try {
       orb_->shutdown(true);
@@ -160,10 +160,10 @@ public:
       throw e;
     }
   }
-  void* locate(std::string const& uri, std::string const& repoId) throw(
+  void* locate(std::string const& uri, std::string const& repoId) /*throw(
     cxy::WrongType,
     cxy::NoSuchObject,
-    cxy::Exception)
+    cxy::Exception)*/
   {
     try {
       try {

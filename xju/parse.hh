@@ -50,7 +50,7 @@ namespace xju
             return std::string(i, x.end());
         }
         inline PV<std::string> parseToChar(const std::string& x,
-                                           const char c) throw(xju::Exception)
+                                           const char c) /*throw(xju::Exception)*/
         {
             try
             {
@@ -123,15 +123,15 @@ namespace xju
             {
             }
             typename std::iterator_traits<iterator>::reference const operator*() const
-                throw(xju::Exception);
+                /*throw(xju::Exception)*/;
             
-            IteratorAdaptor operator++(int) throw(xju::Exception)
+            IteratorAdaptor operator++(int) /*throw(xju::Exception)*/
             {
                 IteratorAdaptor result(*this);
                 operator++();
                 return result;
             }
-            IteratorAdaptor& operator++() throw(xju::Exception)
+            IteratorAdaptor& operator++() /*throw(xju::Exception)*/
             {
                 if (atEnd())
                 {
@@ -206,7 +206,7 @@ namespace xju
         template<class iterator>
         typename std::iterator_traits<iterator>::reference const 
         IteratorAdaptor<iterator>::operator*() const
-            throw(xju::Exception)
+            /*throw(xju::Exception)*/
         {
             if (atEnd())
             {

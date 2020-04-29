@@ -40,7 +40,7 @@ public:
   
   // p4::F::
   virtual ::p4::XS1 f1(
-    ::p4::XS1 const& y) throw(cxy::Exception)
+    ::p4::XS1 const& y) /*throw(cxy::Exception)*/
   {
     std::cout << "::p4::f1(XS1(" 
               << y.a_ << ", "

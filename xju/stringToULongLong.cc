@@ -20,7 +20,7 @@
 namespace xju
 {
 unsigned long long stringToULongLong(const std::string& value,
-                                     unsigned int base) throw(xju::Exception)
+                                     unsigned int base) /*throw(xju::Exception)*/
 {
   try
   {

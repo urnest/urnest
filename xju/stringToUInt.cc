@@ -20,7 +20,7 @@
 namespace xju
 {
     unsigned int stringToUInt(const std::string& value,
-                              unsigned int base) throw(xju::Exception)
+                              unsigned int base) /*throw(xju::Exception)*/
     {
 	try
 	{

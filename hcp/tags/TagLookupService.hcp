@@ -64,9 +64,9 @@ public:
   // create tags lookup service covering tagsFiles
   // - tagsFiles need not exist yet, but their parent directories must exist
   explicit TagLookupService(
-    std::vector<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& tagsFiles) throw(
+    std::vector<std::pair<xju::path::AbsolutePath,xju::path::FileName> > const& tagsFiles) /*throw(
       // eg a parent directory does not exist
-      xju::Exception):
+      xju::Exception)*/:
       files_(tagsFiles),
       stop_(false),
       stopper_(xju::pipe(true,true)),

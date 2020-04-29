@@ -31,10 +31,10 @@ public:
 '''
 
 operation_t='''\
-virtual %(returnType)s %(name)s(%(params)s) throw(%(exceptions)s
+virtual %(returnType)s %(name)s(%(params)s) /*throw(%(exceptions)s
   // ipc failure
   // - note servant may not throw
-  %(eclass)s) = 0;'''
+  %(eclass)s)*/ = 0;'''
 
 class TypeInfo:
     def __init__(self, typename, includeFiles):
@@ -441,7 +441,7 @@ class %(name)s
 public:
   enum Value {%(valdecls)s
   };
-  %(name)s(Value v) throw(%(eclass)s):
+  %(name)s(Value v) /*throw(%(eclass)s)*/:
     v_(v) {
     if ((v < %(minValue)s)||(v > %(maxValue)s)){
       std::ostringstream s;

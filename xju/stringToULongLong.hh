@@ -25,13 +25,13 @@ namespace xju
     // Convert specified string to an unsigned long long integer.
     //
     unsigned long long stringToULongLong(const std::string& value,
-                                   unsigned int base = 10) throw(
+                                   unsigned int base = 10) /*throw(
 	//
 	// pre: string = "", or
 	//      integer overflow, or
 	//      strtoul(3) failure
 	//
-	xju::Exception);
+	xju::Exception)*/;
 }
 
 

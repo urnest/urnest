@@ -27,7 +27,7 @@ public:
       data_(&data),
       at_(data.begin()) {
   }
-  uint8_t const& operator*() const throw(xju::Exception)
+  uint8_t const& operator*() const /*throw(xju::Exception)*/
   {
     if (atEnd()) {
       std::ostringstream s;
@@ -36,13 +36,13 @@ public:
     }
     return *at_;
   }
-  DecodeIterator operator++(int) throw(xju::Exception)
+  DecodeIterator operator++(int) /*throw(xju::Exception)*/
   {
     DecodeIterator result(*this);
     operator++();
     return result;
   }
-  DecodeIterator& operator++() throw(xju::Exception)
+  DecodeIterator& operator++() /*throw(xju::Exception)*/
   {
     if (atEnd()) {
       std::ostringstream s;

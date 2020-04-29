@@ -14,10 +14,10 @@ class i24
 public:
   virtual ~i24() throw();
   virtual ::cxy::TypeCode f(
-    ::cxy::TypeCode const& x) throw(
+    ::cxy::TypeCode const& x) /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
   struct Y
   {
     

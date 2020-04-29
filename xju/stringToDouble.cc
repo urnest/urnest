@@ -17,7 +17,7 @@
 
 namespace xju
 {
-    double stringToDouble(const std::string& value) throw(xju::Exception)
+    double stringToDouble(const std::string& value) /*throw(xju::Exception)*/
     {
         try
         {

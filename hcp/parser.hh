@@ -53,9 +53,9 @@ std::pair<IRs,I> parse(I const startOfElement,
                        std::shared_ptr<Parser> parser = file(),
                        bool traceToStdout = false,
                        bool irsAtEnd = false)
-  throw(
+  /*throw(
     // post: parent unmodified
-    xju::Exception);
+    xju::Exception)*/;
 
 // ... or apply parser to begin..end
 // - note parser must consume entire string
@@ -63,8 +63,8 @@ hcp_ast::Item parseString(
   std::string::const_iterator begin,
   std::string::const_iterator end,
   std::shared_ptr<Parser> parser,
-  bool traceToStdout = false) throw(
-    xju::Exception);
+  bool traceToStdout = false) /*throw(
+    xju::Exception)*/;
 
 class Exception
 {
@@ -264,10 +264,10 @@ class PR : public std::shared_ptr<Parser>
 public:
   using PR_::PR_;
   PR(PR_ x) noexcept:std::shared_ptr<Parser>(std::move(x)) {}
-  PR(std::string const& literal) throw(std::bad_alloc);
-  PR(const char literal[]) throw(std::bad_alloc);
+  PR(std::string const& literal) /*throw(std::bad_alloc)*/;
+  PR(const char literal[]) /*throw(std::bad_alloc)*/;
   PR() noexcept:PR_(){}
-  PR(PR (*f)()) throw(std::bad_alloc): PR_((*f)()){}
+  PR(PR (*f)()) /*throw(std::bad_alloc)*/: PR_((*f)()){}
 };
 
 class ZeroOrMore{};
@@ -357,44 +357,44 @@ public:
 };
 
 //convenience
-inline PR operator+(PR (*a)(), PR b) throw(std::bad_alloc)
+inline PR operator+(PR (*a)(), PR b) /*throw(std::bad_alloc)*/
 {
   return (*a)()+b;
 }
-inline PR operator+(PR a, PR (*b)()) throw(std::bad_alloc)
+inline PR operator+(PR a, PR (*b)()) /*throw(std::bad_alloc)*/
 {
   return a+(*b)();
 }
 template<class ItemType>
 inline PR operator+(std::shared_ptr<NamedParser<ItemType> > (*a)(),
-             PR b) throw(std::bad_alloc)
+             PR b) /*throw(std::bad_alloc)*/
 {
   return (*a)()+b;
 }
 template<class ItemType>
 inline PR operator+(PR a, std::shared_ptr<NamedParser<ItemType> > (*b)())
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   return a+(*b)();
 }
 
-inline PR operator|(PR (*a)(), PR b) throw(std::bad_alloc)
+inline PR operator|(PR (*a)(), PR b) /*throw(std::bad_alloc)*/
 {
   return (*a)()|b;
 }
-inline PR operator|(PR a, PR (*b)()) throw(std::bad_alloc)
+inline PR operator|(PR a, PR (*b)()) /*throw(std::bad_alloc)*/
 {
   return a|(*b)();
 }
 template<class ItemType>
 inline PR operator|(std::shared_ptr<NamedParser<ItemType> > (*a)(),
-             PR b) throw(std::bad_alloc)
+             PR b) /*throw(std::bad_alloc)*/
 {
   return (*a)()|b;
 }
 template<class ItemType>
 inline PR operator|(PR a, std::shared_ptr<NamedParser<ItemType> > (*b)())
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   return a|(*b)();
 }

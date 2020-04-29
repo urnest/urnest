@@ -42,25 +42,25 @@ class F
 public:
   virtual ~F() throw();
   virtual ::p3::MyInt f1(
-    ::p3::MyInt const& a) throw(
+    ::p3::MyInt const& a) /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
   virtual ::p3::MyString f2(
-    ::p3::MyString const& a) throw(
+    ::p3::MyString const& a) /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
   virtual ::p3::MyFloat f3(
-    ::p3::MyFloat const& a) throw(
+    ::p3::MyFloat const& a) /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
   virtual ::p3::MyDouble f4(
-    ::p3::MyDouble const& a) throw(
+    ::p3::MyDouble const& a) /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
 };
 
 }

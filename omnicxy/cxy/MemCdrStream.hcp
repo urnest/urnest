@@ -22,7 +22,7 @@ class cdrMemoryStream_;
 class MemCdrStream
 {
 public:
-  MemCdrStream() throw(std::bad_alloc):
+  MemCdrStream() /*throw(std::bad_alloc)*/:
       s_(new cdrMemoryStream_)
   {
   }
@@ -39,12 +39,12 @@ public:
     delete s_;
   }
 
-  MemCdrStream(MemCdrStream const& b) throw(std::bad_alloc):
+  MemCdrStream(MemCdrStream const& b) /*throw(std::bad_alloc)*/:
       s_(new cdrMemoryStream_(*b.s_))
   {
   }
   
-  MemCdrStream& operator=(MemCdrStream const& b) throw(std::bad_alloc)
+  MemCdrStream& operator=(MemCdrStream const& b) /*throw(std::bad_alloc)*/
   {
     if (s_ != b.s_) {
       delete s_;

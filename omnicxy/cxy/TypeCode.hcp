@@ -930,11 +930,11 @@ template<class T>
 struct TypeCodeOf
 {
 private:
-  static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc); //not implemented - must specialise class to provide implementations
+  static TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/; //not implemented - must specialise class to provide implementations
 };
 
 template<class T>
-TypeCode createTypeCodeOf(TypeCodeRefIndex& index) throw(std::bad_alloc){
+TypeCode createTypeCodeOf(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/{
   auto const i(index.insert(TypeCodeRefIndex::value_type(&typeid(T),{})));
   if (i.second){
     auto const result(TypeCodeOf<T>::create(index));
@@ -952,7 +952,7 @@ TypeCode createTypeCodeOf(TypeCodeRefIndex& index) throw(std::bad_alloc){
 }
 
 template<class T>
-TypeCode createTypeCodeOf() throw(std::bad_alloc){
+TypeCode createTypeCodeOf() /*throw(std::bad_alloc)*/{
   TypeCodeRefIndex index;
   return createTypeCodeOf<T>(index);
 }
@@ -960,8 +960,8 @@ TypeCode createTypeCodeOf() throw(std::bad_alloc){
 template<>
 struct TypeCodeOf<void>
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(
-  std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(
+  std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -972,8 +972,8 @@ static TypeCode create(TypeCodeRefIndex& index) throw(
 template<>
 struct TypeCodeOf<int16_t>
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(
-  std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(
+  std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -984,7 +984,7 @@ static TypeCode create(TypeCodeRefIndex& index) throw(
 template<>
 struct TypeCodeOf<int32_t>
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -995,7 +995,7 @@ static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<int64_t>
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -1006,7 +1006,7 @@ static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<uint16_t>
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -1017,7 +1017,7 @@ static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<uint32_t>
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -1028,7 +1028,7 @@ static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<uint64_t>
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -1039,7 +1039,7 @@ static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<float>
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -1050,7 +1050,7 @@ static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<double>
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -1061,7 +1061,7 @@ static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<long double>
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -1072,7 +1072,7 @@ static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<char>
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -1083,7 +1083,7 @@ static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<bool>
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -1094,7 +1094,7 @@ static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<uint8_t>
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -1105,7 +1105,7 @@ static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<char32_t>
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -1116,7 +1116,7 @@ static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 template<class T>
 struct TypeCodeOf<std::vector<T> >
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -1127,7 +1127,7 @@ static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 template<class T,size_t N,class E>
 struct TypeCodeOf<xju::Array<T,N,E> >
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -1138,7 +1138,7 @@ static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 template<>
 struct TypeCodeOf<std::string>
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -1149,7 +1149,7 @@ static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 template<>
 struct TypeCodeOf< TypeCode >
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(
@@ -1160,7 +1160,7 @@ static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
 template<class T>
 struct TypeCodeOf< cxy::IOR<T> >
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(

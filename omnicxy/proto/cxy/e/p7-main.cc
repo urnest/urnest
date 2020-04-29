@@ -36,7 +36,7 @@ public:
   }
   // a way to use BaseException mapping to an idl exception
   // (f2 below shows another way)
-  virtual void f1() throw(::p7::E1)
+  virtual void f1() /*throw(::p7::E1)*/
   {
     try {
       throw E(
@@ -50,7 +50,7 @@ public:
   }
   // another way to use BaseException mapping to an idl exception
   // (see also f1 above)
-  virtual void f2() throw(::p7::E1)
+  virtual void f2() /*throw(::p7::E1)*/
   {
     try {
       throw ::p7::E1("file not readable", std::make_pair(__FILE__,__LINE__));

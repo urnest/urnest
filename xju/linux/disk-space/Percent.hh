@@ -22,9 +22,9 @@ namespace disk_space
 {
 
 struct PercentImpl{
-  explicit PercentImpl(int value) throw(
+  explicit PercentImpl(int value) /*throw(
     //x not in range 0..100
-    xju::Exception):
+    xju::Exception)*/:
       value_(value)
   {
     if (value<0){
@@ -154,9 +154,9 @@ namespace disk_space
 class Percent : public xju::Int<PercentImpl,PercentImpl>
 {
 public:
-  explicit Percent(int x) throw(
+  explicit Percent(int x) /*throw(
     // x not in range 0..100
-    xju::Exception):
+    xju::Exception)*/:
       xju::Int<PercentImpl,PercentImpl>(PercentImpl(x))
   {
   }

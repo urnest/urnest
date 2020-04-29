@@ -76,7 +76,7 @@ namespace xju
             // pre: lifetime(s) > lifetime(this)
             istream(std::istream& s) throw();
             template<class T>
-            T extract() throw(xju::Exception)
+            T extract() /*throw(xju::Exception)*/
             {
                 try
                 {
@@ -109,7 +109,7 @@ namespace xju
         public:
             ostream(std::ostream& s) throw();
             template<class T>
-            void insert(const T& x) throw(xju::Exception)
+            void insert(const T& x) /*throw(xju::Exception)*/
             {
                 try
                 {
@@ -136,13 +136,13 @@ namespace xju
                 _a1(a1)
             {
             }
-            static void insert(std::ostream& s, const T& x) throw(
-                xju::Exception)
+            static void insert(std::ostream& s, const T& x) /*throw(
+                xju::Exception)*/
             {
                 traits<T1>::insert(s, (x.*_a1)());
             }
-            static T extract(std::istream& s) throw(
-                xju::Exception)
+            static T extract(std::istream& s) /*throw(
+                xju::Exception)*/
             {
                 const T1 a1(traits<T1>::extract(s));
                 return T(a1);
@@ -174,8 +174,8 @@ namespace xju
         class Pod
         {
         public:
-            static void insert(std::ostream& s, const T x) throw(
-                xju::Exception)
+            static void insert(std::ostream& s, const T x) /*throw(
+                xju::Exception)*/
             {
                 T y(x);
                 fromHostOrder(y);
@@ -192,7 +192,7 @@ namespace xju
                     }
                 }
             }
-            static T extract(std::istream& s) throw(xju::Exception)
+            static T extract(std::istream& s) /*throw(xju::Exception)*/
             {
                 T result;
                 char* p((char*)&y);
@@ -216,8 +216,8 @@ namespace xju
         template<>
         class traits<std::string>
         {
-            static void insert(std::ostream& s, const std::string& x) throw(
-                xju::Exception)
+            static void insert(std::ostream& s, const std::string& x) /*throw(
+                xju::Exception)*/
             {
                 try
                 {
@@ -246,8 +246,8 @@ namespace xju
                     throw;
                 }
             }
-            static std::string extract(std::istream& s) throw(
-                xju::Exception)
+            static std::string extract(std::istream& s) /*throw(
+                xju::Exception)*/
             {
                 const unsigned long l(traits<unsigned long>::extract(s));
                 std::ostringstream result;
@@ -303,8 +303,8 @@ class xju::serialisation::traits<T>
     {
         return ##T;
     }
-    static void insert(std::ostream& s, const T& x) throw(
-        xju::Exception)
+    static void insert(std::ostream& s, const T& x) /*throw(
+        xju::Exception)*/
     {
         try
         {
@@ -318,8 +318,8 @@ class xju::serialisation::traits<T>
             throw;
         }
     }
-    static T extract(std::istream& s) throw(
-        xju::Exception)
+    static T extract(std::istream& s) /*throw(
+        xju::Exception)*/
     {
         try
         {

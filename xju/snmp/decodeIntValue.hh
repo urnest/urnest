@@ -21,7 +21,7 @@ namespace snmp
 std::pair<uint64_t,DecodeIterator> decodeIntValue(
   DecodeIterator const at,
   uint8_t const type_=0x02)
-  throw(xju::Exception);
+  /*throw(xju::Exception)*/;
 
 }
 }

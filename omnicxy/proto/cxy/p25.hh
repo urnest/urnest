@@ -61,10 +61,10 @@ class I25
 public:
   virtual ~I25() throw();
   virtual ::p25::ThreeTwos f25(
-    ::p25::ThreeTwos const& x) throw(
+    ::p25::ThreeTwos const& x) /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
 };
 
 }

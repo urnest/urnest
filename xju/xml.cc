@@ -19,8 +19,8 @@ namespace xju
     namespace xml
     {
         ExpandedName expandName(UnexpandedName const& name,
-                                NamespaceDefinitions const& ns) throw(
-                                    xju::Exception)
+                                NamespaceDefinitions const& ns) /*throw(
+                                    xju::Exception)*/
         {
             try
             {
@@ -57,8 +57,8 @@ namespace xju
         const std::map<std::string, std::string> predefinedEntities(
             makePredefinedEntities());
         
-        std::string lookupEntity(std::string name) throw(
-            xju::Exception)
+        std::string lookupEntity(std::string name) /*throw(
+            xju::Exception)*/
         {
             std::map<std::string, std::string>::const_iterator i(
                 predefinedEntities.find(name));

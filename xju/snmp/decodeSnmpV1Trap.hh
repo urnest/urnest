@@ -22,13 +22,13 @@ namespace xju
 namespace snmp
 {
 
-SnmpV1Trap decodeSnmpV1Trap(std::vector<uint8_t> const& data) throw(
+SnmpV1Trap decodeSnmpV1Trap(std::vector<uint8_t> const& data) /*throw(
     // not snmp v1
     SnmpVersionMismatch,
     // not a trap
     RequestTypeMismatch,
     // malformed
-    xju::Exception);
+    xju::Exception)*/;
 
 }
 }

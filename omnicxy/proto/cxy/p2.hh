@@ -23,14 +23,14 @@ public:
     std::string const& d,
     uint8_t const& e,
     uint64_t const& f,
-    bool const& g) throw(
+    bool const& g) /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
-  virtual int16_t f2() throw(
+    cxy::Exception)*/ = 0;
+  virtual int16_t f2() /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
 };
 
 }

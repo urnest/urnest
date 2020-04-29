@@ -66,8 +66,8 @@ xju::Exception translate(CORBA::Exception const& e) throw()
   return xju::Exception(s.str(), XJU_TRACED);
 }
 
-CORBA::ORB_var orbInit(int argc, char* argv[]) throw(
-  xju::Exception)
+CORBA::ORB_var orbInit(int argc, char* argv[]) /*throw(
+  xju::Exception)*/
 {
   try {
     return CORBA::ORB_init(argc, argv);

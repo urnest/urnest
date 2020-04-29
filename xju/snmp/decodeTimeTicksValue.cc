@@ -18,7 +18,7 @@ namespace snmp
 {
 
 std::pair<std::chrono::milliseconds,DecodeIterator> decodeTimeTicksValue(
-  DecodeIterator const at) throw(xju::Exception)
+  DecodeIterator const at) /*throw(xju::Exception)*/
 {
   try {
     if ((*at) != 0x43) {

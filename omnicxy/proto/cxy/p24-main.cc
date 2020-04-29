@@ -49,8 +49,8 @@ public:
   }
   
   virtual ::cxy::TypeCode f(
-    ::cxy::TypeCode const& x) throw(
-    cxy::Exception) override
+    ::cxy::TypeCode const& x) /*throw(
+    cxy::Exception)*/ override
   {
     std::cout << "servant: p24::i24::f()"
               << std::endl;

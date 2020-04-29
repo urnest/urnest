@@ -25,13 +25,13 @@ namespace xju
     // Convert specified string to an integer.
     //
     unsigned int stringToUInt(const std::string& value,
-                              unsigned int base = 10) throw(
+                              unsigned int base = 10) /*throw(
 	//
 	// pre: string = "", or
 	//      integer overflow, or
 	//      strtoul(3) failure
 	//
-	xju::Exception);
+	xju::Exception)*/;
 }
 
 

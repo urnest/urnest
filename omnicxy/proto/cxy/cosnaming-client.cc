@@ -46,8 +46,8 @@ std::string format(CosNaming::Name const& x) noexcept
   cxy::ORB<cxy::Exception>& orb,
   cxy::cref<CosNaming::NamingContext> ref,
   std::vector<std::string> const& scope,
-  std::vector<CosNaming::NameComponent> const& rest) throw(
-    cxy::Exception)
+  std::vector<CosNaming::NameComponent> const& rest) /*throw(
+    cxy::Exception)*/
 {
   try{
     if (rest.size()==0){
@@ -88,8 +88,8 @@ std::string format(CosNaming::Name const& x) noexcept
 }
 
 std::string list(std::vector<std::string> const& name,
-                 cxy::cref<CosNaming::NamingContext> ref) throw(
-                   cxy::Exception)
+                 cxy::cref<CosNaming::NamingContext> ref) /*throw(
+                   cxy::Exception)*/
 {
   std::string const prefix{
     xju::format::join(name.begin(),name.end(),std::string("/"))+"/"};
@@ -109,6 +109,8 @@ std::string list(std::vector<std::string> const& name,
   catch(cxy::Exception& e){
     std::ostringstream s;
     s << "list naming context " << prefix << "(" << ref << ")";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
   }
 }
 

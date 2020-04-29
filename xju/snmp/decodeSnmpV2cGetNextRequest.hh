@@ -23,13 +23,13 @@ namespace snmp
 {
 // returns the request
 SnmpV2cGetNextRequest decodeSnmpV2cGetNextRequest(
-  std::vector<uint8_t> const& data) throw(
+  std::vector<uint8_t> const& data) /*throw(
     // not snmp v2c
     SnmpVersionMismatch,
     // not a get next request
     RequestTypeMismatch,
     // malformed
-    xju::Exception);
+    xju::Exception)*/;
 
 }
 }

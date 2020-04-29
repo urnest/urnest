@@ -20,7 +20,7 @@ namespace xju
 namespace snmp
 {
 std::pair<Oid,DecodeIterator> decodeOidValue(
-  DecodeIterator const at) throw(xju::Exception);
+  DecodeIterator const at) /*throw(xju::Exception)*/;
 
 }
 }

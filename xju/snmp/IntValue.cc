@@ -26,7 +26,7 @@ IntValue::IntValue(int64_t const& val) throw():
 {
 }
 
-int IntValue::intValue() const throw(xju::Exception)
+int IntValue::intValue() const /*throw(xju::Exception)*/
 {
   if (val_ > INT_MAX) {
     std::ostringstream s;
@@ -43,7 +43,7 @@ int IntValue::intValue() const throw(xju::Exception)
   return val_;
 }
 
-unsigned int IntValue::uintValue() const throw(xju::Exception)
+unsigned int IntValue::uintValue() const /*throw(xju::Exception)*/
 {
   if (val_ > UINT_MAX) {
     std::ostringstream s;
@@ -59,7 +59,7 @@ unsigned int IntValue::uintValue() const throw(xju::Exception)
   return val_;
 }
 
-long IntValue::longValue() const throw(xju::Exception)
+long IntValue::longValue() const /*throw(xju::Exception)*/
 {
   if (val_ > LONG_MAX) {
     std::ostringstream s;
@@ -76,7 +76,7 @@ long IntValue::longValue() const throw(xju::Exception)
   return val_;
 }
 
-unsigned long IntValue::ulongValue() const throw(xju::Exception)
+unsigned long IntValue::ulongValue() const /*throw(xju::Exception)*/
 {
   if (val_ > ULONG_MAX) {
     std::ostringstream s;

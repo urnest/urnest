@@ -24,8 +24,8 @@ namespace snmp
 // result.first.second is length, if not valid, length is X.690 indefinite form
 // result.second is just after decoded data
 std::pair<std::pair<uint8_t,xju::Optional<size_t> >, DecodeIterator>
-decodeSequenceTypeAndLength(DecodeIterator const at) throw(
-  xju::Exception);
+decodeSequenceTypeAndLength(DecodeIterator const at) /*throw(
+  xju::Exception)*/;
 
 }
 }

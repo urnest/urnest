@@ -39,10 +39,10 @@ std::string formatLength(xju::Optional<size_t> const& length) throw()
 
 }
 std::pair<SnmpV2cGetRequest,std::vector<Oid> > decodeSnmpV2cGetRequest(
-  std::vector<uint8_t> const& data) throw(
+  std::vector<uint8_t> const& data) /*throw(
     SnmpVersionMismatch,
     RequestTypeMismatch,
-    xju::Exception)
+    xju::Exception)*/
 {
   std::vector<std::string> ok;
   try {

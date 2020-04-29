@@ -33,8 +33,8 @@ namespace ntpd
 auto const testDataFile{xju::path::split("statuses.txt")};
 
 // write PeerStatuses to report from ntpq program stub
-void writePeerStatuses(std::vector<PeerStatus> const& sizes) throw(
-  xju::Exception)
+void writePeerStatuses(std::vector<PeerStatus> const& sizes) /*throw(
+  xju::Exception)*/
 {
   auto const x{xju::format::join(sizes.begin(),sizes.end(),std::string(","))};
   try{

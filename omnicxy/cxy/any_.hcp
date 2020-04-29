@@ -35,8 +35,8 @@ public:
     return ::cxy::createTypeCodeOf<T>()->equals(*x.typeCode_);
   }
   
-  static T decode(AnyImpl const& x) throw(
-    cxy::Exception)
+  static T decode(AnyImpl const& x) /*throw(
+    cxy::Exception)*/
   {
     if (!isA(x)) {
       std::ostringstream s;

@@ -30,7 +30,7 @@ class cdrEncapsulationStream_;
 class EncapsulationCdrStream
 {
 public:
-  EncapsulationCdrStream() throw(std::bad_alloc):
+  EncapsulationCdrStream() /*throw(std::bad_alloc)*/:
       s_(new cdrEncapsulationStream_)
   {
   }
@@ -77,18 +77,19 @@ public:
     delete s_;
   }
 
-  EncapsulationCdrStream(EncapsulationCdrStream const& b) throw(std::bad_alloc):
+  EncapsulationCdrStream(EncapsulationCdrStream const& b) /*throw(std::bad_alloc)*/:
       s_(new cdrMemoryStream(*b.s_))
   {
   }
   
-  EncapsulationCdrStream& operator=(EncapsulationCdrStream const& b) throw(
-    std::bad_alloc)
+  EncapsulationCdrStream& operator=(EncapsulationCdrStream const& b) /*throw(
+    std::bad_alloc)*/
   {
     if (s_ != b.s_) {
       delete s_;
       s_=new cdrMemoryStream(*b.s_);
     }
+    return *this;
   }
 
 private:

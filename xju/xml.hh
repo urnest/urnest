@@ -99,8 +99,8 @@ namespace xju
         // 
         template<class RewindableIterator>
         RewindableIterator skipWhiteSpaceAndComments(
-            RewindableIterator const at) throw(
-                xju::Exception);
+            RewindableIterator const at) /*throw(
+                xju::Exception)*/;
 
         // Parse tag opening assumed to commence at "at", augmenting
         // namespaces and applying attributeDefaults.
@@ -118,9 +118,9 @@ namespace xju
             NamespaceDefinitions& namespaces,
             const Attributes& attributeDefaults = Attributes(),
             RewindableIterator (*skip)(RewindableIterator) = 
-              skipWhiteSpaceAndComments) throw(
+              skipWhiteSpaceAndComments) /*throw(
                   // post: namespaces have not been modified
-                  xju::Exception);
+                  xju::Exception)*/;
 
         // - apply skip at *end* to e.g. skip trailing whitespace
         // post: result.second > at
@@ -129,16 +129,16 @@ namespace xju
             RewindableIterator const at,
             NamespaceDefinitions const& namespaces,
             RewindableIterator (*skip)(RewindableIterator) = 
-              skipWhiteSpaceAndComments) throw(
-                xju::Exception);
+              skipWhiteSpaceAndComments) /*throw(
+                xju::Exception)*/;
 
         // - apply skip at *end* to e.g. skip trailing whitespace
         template<class RewindableIterator>
         std::pair<XmlDecl, RewindableIterator> parseXmlDecl(
             RewindableIterator at,
             RewindableIterator (*skip)(RewindableIterator) =
-            skipWhiteSpaceAndComments) throw(
-                xju::Exception);
+            skipWhiteSpaceAndComments) /*throw(
+                xju::Exception)*/;
         
         template<class RewindableIterator>
         std::pair<CData, RewindableIterator> parseCData(
@@ -146,75 +146,75 @@ namespace xju
 
         template<class RewindableIterator>
         std::pair<Comment, RewindableIterator> parseComment(
-            RewindableIterator at) throw(xju::Exception);
+            RewindableIterator at) /*throw(xju::Exception)*/;
 
         template<class RewindableIterator>
         std::pair<WhiteSpace, RewindableIterator> parseWhiteSpace(
-            RewindableIterator at) throw(xju::Exception);
+            RewindableIterator at) /*throw(xju::Exception)*/;
 
         // post: result.second > at
         template<class RewindableIterator>
         std::pair<std::string, RewindableIterator> parseEntityReference(
-            RewindableIterator const at) throw(
-                xju::Exception);
+            RewindableIterator const at) /*throw(
+                xju::Exception)*/;
 
         // post: result.second > at
         template<class RewindableIterator>
         std::pair<char, RewindableIterator> parseDecimalCharacterReference(
-            RewindableIterator at) throw(
-                xju::Exception);
+            RewindableIterator at) /*throw(
+                xju::Exception)*/;
         
         // post: result.second > at
         template<class RewindableIterator>
         std::pair<char, RewindableIterator> parseHexCharacterReference(
-            RewindableIterator at) throw(
-                xju::Exception);
+            RewindableIterator at) /*throw(
+                xju::Exception)*/;
         
         // post: result.second > at
         template<class RewindableIterator>
         std::pair<char, RewindableIterator> parseCharacterReference(
-            RewindableIterator at) throw(
-                xju::Exception);
+            RewindableIterator at) /*throw(
+                xju::Exception)*/;
 
         // post: result.second > at
         template<class RewindableIterator>
         std::pair<NameLocalPart, RewindableIterator> parseNameLocalPart(
-            RewindableIterator at) throw(
-                xju::Exception);
+            RewindableIterator at) /*throw(
+                xju::Exception)*/;
         
         // post: result.second > at
         template<class RewindableIterator>
         std::pair<NamePrefix, RewindableIterator> parseNamePrefix(
-            RewindableIterator at) throw(
-                xju::Exception);
+            RewindableIterator at) /*throw(
+                xju::Exception)*/;
 
         // post: result.second > at
         template<class RewindableIterator>
         std::pair<UnexpandedName, RewindableIterator> parseUnexpandedName(
-            RewindableIterator const at) throw(
-                xju::Exception);
+            RewindableIterator const at) /*throw(
+                xju::Exception)*/;
         
         // post: result.second > at
         template<class RewindableIterator>
         std::pair<AttributeValue, RewindableIterator> parseAttributeValue(
-            RewindableIterator at) throw(
-                xju::Exception);
+            RewindableIterator at) /*throw(
+                xju::Exception)*/;
         
         // post: result.second > at
         template<class RewindableIterator>
         std::pair<std::pair<UnexpandedName, AttributeValue>, 
                   RewindableIterator> parseAttribute(
-                      RewindableIterator const at) throw(
-                          xju::Exception);
+                      RewindableIterator const at) /*throw(
+                          xju::Exception)*/;
 
         // Parse attribute definitions, augmenting namespace definitions.
         template<class RewindableIterator>
         std::pair<Attributes, RewindableIterator> parseAttributes(
             RewindableIterator const at,
             NamespaceDefinitions& namespaceDefinitions,
-            const Attributes& attributeDefaults) throw(
+            const Attributes& attributeDefaults) /*throw(
                 // post: namespaceDefinitions has not been modified
-                xju::Exception);
+                xju::Exception)*/;
         
         template<class T, class Tag>
         class Tagged
@@ -327,16 +327,16 @@ namespace xju
         }
 
         ExpandedName expandName(UnexpandedName const& name,
-                                NamespaceDefinitions const& namespaces) throw(
+                                NamespaceDefinitions const& namespaces) /*throw(
                                     // name not found
-                                    xju::Exception);
+                                    xju::Exception)*/;
 
         
         template<class RewindableIterator>
         std::pair<std::string, RewindableIterator> parseLiteral(
             RewindableIterator const at,
-            std::string literal) throw(
-                xju::Exception)
+            std::string literal) /*throw(
+                xju::Exception)*/
         {
             try
             {
@@ -367,8 +367,8 @@ namespace xju
         template<class RewindableIterator>
         std::pair<std::string, RewindableIterator> parseUntilLiteral(
             RewindableIterator const at,
-            std::string literal) throw(
-                xju::Exception)
+            std::string literal) /*throw(
+                xju::Exception)*/
         {
             try
             {
@@ -404,7 +404,7 @@ namespace xju
         
         template<class RewindableIterator>
         std::pair<Comment, RewindableIterator> parseComment(
-            RewindableIterator const at) throw(xju::Exception)
+            RewindableIterator const at) /*throw(xju::Exception)*/
         {
             try
             {
@@ -437,7 +437,7 @@ namespace xju
         
         template<class RewindableIterator>
         std::pair<WhiteSpace, RewindableIterator> parseWhiteSpace(
-            RewindableIterator at) throw(xju::Exception)
+            RewindableIterator at) /*throw(xju::Exception)*/
         {
             try
             {
@@ -467,8 +467,8 @@ namespace xju
 
         template<class RewindableIterator>
         RewindableIterator skipWhiteSpaceAndComments(
-            RewindableIterator const at) throw(
-                xju::Exception)
+            RewindableIterator const at) /*throw(
+                xju::Exception)*/
         {
             try
             {
@@ -537,8 +537,8 @@ namespace xju
         
         template<class RewindableIterator>
         std::pair<std::string, RewindableIterator> parseName(
-            RewindableIterator const at) throw(
-                xju::Exception)
+            RewindableIterator const at) /*throw(
+                xju::Exception)*/
         {
             try
             {
@@ -570,13 +570,13 @@ namespace xju
             }
         }
 
-        std::string lookupEntity(std::string name) throw(
-            xju::Exception);
+        std::string lookupEntity(std::string name) /*throw(
+            xju::Exception)*/;
         
         template<class RewindableIterator>
         std::pair<std::string, RewindableIterator> parseEntityReference(
-            RewindableIterator const at) throw(
-                xju::Exception)
+            RewindableIterator const at) /*throw(
+                xju::Exception)*/
         {
             try
             {
@@ -604,8 +604,8 @@ namespace xju
         
         template<class RewindableIterator>
         std::pair<char, RewindableIterator> parseDecimalCharacterReference(
-            RewindableIterator at) throw(
-                xju::Exception)
+            RewindableIterator at) /*throw(
+                xju::Exception)*/
         {
             try
             {
@@ -640,8 +640,8 @@ namespace xju
         
         template<class RewindableIterator>
         std::pair<char, RewindableIterator> parseHexCharacterReference(
-            RewindableIterator at) throw(
-                xju::Exception)
+            RewindableIterator at) /*throw(
+                xju::Exception)*/
         {
             try
             {
@@ -676,8 +676,8 @@ namespace xju
         
         template<class RewindableIterator>
         std::pair<char, RewindableIterator> parseCharacterReference(
-            RewindableIterator at) throw(
-                xju::Exception)
+            RewindableIterator at) /*throw(
+                xju::Exception)*/
         {
             try
             {
@@ -711,8 +711,8 @@ namespace xju
 
         template<class RewindableIterator>
         std::pair<NCName, RewindableIterator> parseNCName(
-            RewindableIterator const at) throw(
-                xju::Exception)
+            RewindableIterator const at) /*throw(
+                xju::Exception)*/
         {
             try
             {
@@ -745,8 +745,8 @@ namespace xju
         
         template<class RewindableIterator>
         std::pair<NameLocalPart, RewindableIterator> parseNameLocalPart(
-            RewindableIterator const at) throw(
-                xju::Exception)
+            RewindableIterator const at) /*throw(
+                xju::Exception)*/
         {
             try
             {
@@ -771,8 +771,8 @@ namespace xju
         
         template<class RewindableIterator>
         std::pair<NamePrefix, RewindableIterator> parseNamePrefix(
-            RewindableIterator at) throw(
-                xju::Exception)
+            RewindableIterator at) /*throw(
+                xju::Exception)*/
         {
             try
             {
@@ -798,8 +798,8 @@ namespace xju
         
         template<class RewindableIterator>
         std::pair<UnexpandedName, RewindableIterator> parseUnexpandedName(
-            RewindableIterator const at) throw(
-                xju::Exception)
+            RewindableIterator const at) /*throw(
+                xju::Exception)*/
         {
             try
             {
@@ -832,8 +832,8 @@ namespace xju
         
         template<class RewindableIterator>
         std::pair<AttributeValue, RewindableIterator> parseAttributeValue(
-            RewindableIterator const at) throw(
-                xju::Exception)
+            RewindableIterator const at) /*throw(
+                xju::Exception)*/
         {
             try
             {
@@ -903,8 +903,8 @@ namespace xju
         template<class RewindableIterator>
         std::pair<std::pair<UnexpandedName, AttributeValue>, 
                   RewindableIterator> parseAttribute(
-                      RewindableIterator const at) throw(
-                          xju::Exception)
+                      RewindableIterator const at) /*throw(
+                          xju::Exception)*/
         {
             try
             {
@@ -971,8 +971,8 @@ namespace xju
         std::pair<Attributes, RewindableIterator> parseAttributes(
             RewindableIterator const at,
             NamespaceDefinitions& namespaceDefinitions,
-            const Attributes& attributeDefaults) throw(
-                xju::Exception)
+            const Attributes& attributeDefaults) /*throw(
+                xju::Exception)*/
         {
             try
             {
@@ -1073,8 +1073,8 @@ namespace xju
             RewindableIterator const at,
             NamespaceDefinitions& namespaces,
             const Attributes& attributeDefaults,
-            RewindableIterator (*skip)(RewindableIterator)) throw(
-                  xju::Exception)
+            RewindableIterator (*skip)(RewindableIterator)) /*throw(
+                  xju::Exception)*/
         {
             try
             {
@@ -1116,8 +1116,8 @@ namespace xju
         std::pair<ExpandedName, RewindableIterator> parseTagEnd(
             RewindableIterator const at,
             NamespaceDefinitions const& namespaces,
-            RewindableIterator (*skip)(RewindableIterator)) throw(
-                  xju::Exception)
+            RewindableIterator (*skip)(RewindableIterator)) /*throw(
+                  xju::Exception)*/
         {
             try
             {
@@ -1145,8 +1145,8 @@ namespace xju
 
         template<class RewindableIterator>
         std::pair<std::string, RewindableIterator> parseEitherQuotedLiteral(
-            RewindableIterator at) throw(
-                xju::Exception)
+            RewindableIterator at) /*throw(
+                xju::Exception)*/
         {
             try
             {
@@ -1183,8 +1183,8 @@ namespace xju
 
         template<class RewindableIterator>
         std::pair<xju::Optional<std::string>, RewindableIterator> 
-        parseOptionalEncoding(RewindableIterator at) throw(
-            xju::Exception)
+        parseOptionalEncoding(RewindableIterator at) /*throw(
+            xju::Exception)*/
         {
             try
             {
@@ -1217,8 +1217,8 @@ namespace xju
         template<class RewindableIterator>
         std::pair<XmlDecl, RewindableIterator> parseXmlDecl(
             RewindableIterator at,
-            RewindableIterator (*skip)(RewindableIterator)) throw(
-                xju::Exception)
+            RewindableIterator (*skip)(RewindableIterator)) /*throw(
+                xju::Exception)*/
         {
             try
             {

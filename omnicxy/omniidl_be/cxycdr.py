@@ -213,9 +213,8 @@ public:
   {
     ::%(switchTypeName)s const d(cdr< ::%(switchTypeName)s >::unmarshalFrom(s));
     switch(valueOf(d)){%(unmarshal_cases)s
-    default:
-      ::cxy::throw_CORBA_BAD_PARAM_InvalidUnionDiscValue();
     }
+    ::cxy::throw_CORBA_BAD_PARAM_InvalidUnionDiscValue();
   }  
   static void marshal(std::shared_ptr< ::%(name)s const> const& x, cdrStream& s)
   //to avoid needing CORBA.h in our .hh, excepiton specs are commented

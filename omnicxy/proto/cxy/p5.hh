@@ -20,10 +20,10 @@ class F
 public:
   virtual ~F() throw();
   virtual ::p5::JW2s f1(
-    ::p5::JW2s const& p1) throw(
+    ::p5::JW2s const& p1) /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
 };
 
 typedef std::vector< uint32_t > LS;

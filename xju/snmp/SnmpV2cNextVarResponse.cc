@@ -20,8 +20,8 @@ SnmpV2cNextVarResponse::EndOfMibView::EndOfMibView(
 {
 }
 
-xju::snmp::Value const& SnmpV2cNextVarResponse::operator*() const throw(
-  EndOfMibView)
+xju::snmp::Value const& SnmpV2cNextVarResponse::operator*() const /*throw(
+  EndOfMibView)*/
 {
   if (e_.get()) {
     throw dynamic_cast<EndOfMibView const&>(*e_);

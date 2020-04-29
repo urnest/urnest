@@ -26,8 +26,8 @@ class Oid
 {
 public:
   // construct from dotted, eg .1.3.6.1.4.364
-  explicit Oid(std::string const& dotted) throw(
-    xju::Exception);
+  explicit Oid(std::string const& dotted) /*throw(
+    xju::Exception)*/;
   explicit Oid(std::vector<uint32_t> const& components) throw():
       components_(components)
   {

@@ -46,8 +46,8 @@ public:
   {
     return oid_;
   }
-  xju::snmp::Value const& operator*() const throw(
-    EndOfMibView);
+  xju::snmp::Value const& operator*() const /*throw(
+    EndOfMibView)*/;
   
 private:
   Oid oid_;

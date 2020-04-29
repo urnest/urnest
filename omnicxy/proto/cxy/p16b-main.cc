@@ -36,7 +36,7 @@ class AAA_impl : public virtual p16::AAA
 public:
   // AAA::
   int32_t f(
-    int32_t const& x) throw(cxy::Exception)
+    int32_t const& x) /*throw(cxy::Exception)*/
   {
     std::cout << "AAA::f(" 
               << x << ")" << std::endl;
@@ -80,7 +80,7 @@ public:
 
   // CCC::
   int32_t f2(
-    int32_t const& x) throw(cxy::Exception)
+    int32_t const& x) /*throw(cxy::Exception)*/
   {
     std::cout << "CCC::f2(" 
               << x << ")" << std::endl;

@@ -181,8 +181,8 @@ public:
 };
 
 
-int main_(uint16_t const port, std::string const& testAnyCxxExe) throw(
-  cxy::Exception)
+int main_(uint16_t const port, std::string const& testAnyCxxExe) /*throw(
+  cxy::Exception)*/
 {
   try {
     std::string const OBJECT_NAME("client");

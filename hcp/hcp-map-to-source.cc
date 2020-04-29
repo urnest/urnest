@@ -34,7 +34,7 @@ struct MapOffsetPairTag{};
 typedef hcp_ast::TaggedItem<MapOffsetPairTag> MapOffsetPair;
 
 // get $HCP_HPATH directories
-std::vector<xju::path::AbsolutePath> getHPath() throw(xju::Exception)
+std::vector<xju::path::AbsolutePath> getHPath() /*throw(xju::Exception)*/
 {
   try {
     auto const x(::getenv("HCP_HPATH"));
@@ -59,8 +59,8 @@ struct GeneratedAsTag{};
 typedef hcp_ast::TaggedItem<GeneratedAsTag> GeneratedAs;
 
 std::pair<xju::path::AbsolutePath,xju::path::FileName> const findSmap(
-  std::string const& fileName) throw(
-    xju::Exception)
+  std::string const& fileName) /*throw(
+    xju::Exception)*/
 {
   try{
     try{

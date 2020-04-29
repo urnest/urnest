@@ -120,9 +120,9 @@ std::pair<std::string,IncludeTarget> importSymbolAt(
   std::vector<xju::path::AbsolutePath> const& hpath,
   std::vector<std::pair<xju::path::RelativePath,xju::path::Extension> > const& hcpMappings,
   bool const traceParsing,
-  bool suppressImplMarker) throw(
+  bool suppressImplMarker) /*throw(
     UnknownSymbol,
-    xju::Exception)
+    xju::Exception)*/
 {
   try {
     IdentifierRef const identifier(

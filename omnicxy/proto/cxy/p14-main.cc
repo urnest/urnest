@@ -38,7 +38,7 @@ public:
   }
   
   int32_t f1(
-    int32_t const& x) throw(cxy::Exception)
+    int32_t const& x) /*throw(cxy::Exception)*/
   {
     std::cout << "F::f1(" 
               << x << ")" << std::endl;
@@ -47,7 +47,7 @@ public:
     return x;
   }
   int32_t f2(
-    int32_t const& x) throw(cxy::Exception)
+    int32_t const& x) /*throw(cxy::Exception)*/
   {
     std::cout << "F::f2(" 
               << x << ")" << std::endl;

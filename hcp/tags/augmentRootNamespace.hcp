@@ -54,7 +54,7 @@ PR_ headerName{
 class ParsedLineNumber : public hcp_ast::Item
 {
 public:
-  ParsedLineNumber(std::vector<hcp_ast::IR> const& items) throw(xju::Exception):
+  ParsedLineNumber(std::vector<hcp_ast::IR> const& items) /*throw(xju::Exception)*/:
       Item(items),
       lineNumber_(xju::stringToUInt(hcp_ast::reconstruct(*this)))
   {
@@ -131,9 +131,9 @@ PR_ tagsFile=hcp_parser::listOf(
 void augmentRootNamespace(Namespace& rootNamespace,
                           std::pair<hcp::tags::AbsolutePath, hcp::tags::FileName> const& tagsFileName,
                           bool const traceParser)
-  throw(
+  /*throw(
     // pre: rootNamespace == rootNamespace@pre
-    xju::Exception) {
+    xju::Exception)*/ {
   try {
     std::string const x(xju::file::read(tagsFileName));
     auto const root{hcp_parser::parseString(x.begin(),x.end(),

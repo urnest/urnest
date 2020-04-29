@@ -17,7 +17,7 @@ namespace snmp
 {
 
 std::pair<uint32_t,DecodeIterator> decodeOidComponent(
-  DecodeIterator const at) throw(xju::Exception)
+  DecodeIterator const at) /*throw(xju::Exception)*/
 {
   try {
     uint32_t result(0);

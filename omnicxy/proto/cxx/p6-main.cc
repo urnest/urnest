@@ -51,8 +51,8 @@ std::string makeURI(int port, std::string const& objectName) throw()
   return s.str();
 }
 
-CORBA::ORB_var orbInit(int argc, char* argv[]) throw(
-  xju::Exception)
+CORBA::ORB_var orbInit(int argc, char* argv[]) /*throw(
+  xju::Exception)*/
 {
   try {
     return CORBA::ORB_init(argc, argv);
@@ -64,8 +64,8 @@ CORBA::ORB_var orbInit(int argc, char* argv[]) throw(
 
 void client(int argc, char* argv[], 
             int port, 
-            std::string const& objectName) throw(
-              xju::Exception)
+            std::string const& objectName) /*throw(
+              xju::Exception)*/
 {
   std::ostringstream s;
   s << makeURI(port, objectName) << "->f1()";
@@ -103,7 +103,7 @@ void client(int argc, char* argv[],
 class F_impl : public POA_p6::F
 {
 public:
-  virtual void f1() throw(::p6::EEE)
+  virtual void f1() /*throw(::p6::EEE)*/
   {
     std::cout << "F_impl::f1 raise ::p6::EEE" << std::endl;
     throw ::p6::EEE();
@@ -111,8 +111,8 @@ public:
 };
 
   
-void server(CORBA::ORB_var orb, std::string const& objectName) throw(
-  xju::Exception)
+void server(CORBA::ORB_var orb, std::string const& objectName) /*throw(
+  xju::Exception)*/
 {
   try {
     PortableServer::POA_var root_poa = PortableServer::POA::_narrow(

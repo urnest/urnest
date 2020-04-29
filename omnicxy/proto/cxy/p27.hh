@@ -82,10 +82,10 @@ public:
     ::std::chrono::milliseconds const& ms_,
     ::std::chrono::seconds const& s_,
     ::std::chrono::minutes const& m_,
-    ::std::chrono::hours const& h_) throw(
+    ::std::chrono::hours const& h_) /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
 };
 
 }

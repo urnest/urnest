@@ -78,9 +78,9 @@ public:
   // lookup( {'a'}, {'b','c'}, X) assuming *this is the root namespace
   FoundIn lookup(std::vector<NamespaceName> const& fromScope,
                  std::vector<NamespaceName> const& namespace_,
-                 UnqualifiedSymbol const& symbol) const throw(
+                 UnqualifiedSymbol const& symbol) const /*throw(
                    UnknownNamespace,
-                   UnknownSymbol)
+                   UnknownSymbol)*/
   {
     try {
       return lookup_( std::make_pair(fromScope.begin(),fromScope.end()),
@@ -112,9 +112,9 @@ private:
     std::pair<std::vector<NamespaceName>::const_iterator,
               std::vector<NamespaceName>::const_iterator> const& fromScope,
                                std::vector<NamespaceName> const& namespace_,
-                               UnqualifiedSymbol const& symbol) const throw(
+                               UnqualifiedSymbol const& symbol) const /*throw(
                                  UnknownNamespace,
-                                 UnknownSymbol)
+                                 UnknownSymbol)*/
   {
     if (fromScope.first!=fromScope.second) {
       auto const i=children_.find(*fromScope.first);
@@ -159,7 +159,7 @@ private:
   Namespace const& findNamespace(
     std::pair<std::vector<NamespaceName>::const_iterator,
               std::vector<NamespaceName>::const_iterator> const& path) const
-    throw(UnknownNamespace)
+    /*throw(UnknownNamespace)*/
   {
     try {
       if (path.first==path.second) {
@@ -188,8 +188,8 @@ private:
   }
   
   FoundIn const& findSymbol(
-    UnqualifiedSymbol const& symbol) const throw(
-      UnknownSymbol)
+    UnqualifiedSymbol const& symbol) const /*throw(
+      UnknownSymbol)*/
   {
     try {
       auto i=symbols_.find(symbol);

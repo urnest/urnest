@@ -15,14 +15,14 @@ class cref< ::%(fqn)s >
 {
 public:
   explicit cref(cxy::ORB< %(eclass)s >& orb, 
-                std::string const& uri) throw(
+                std::string const& uri) /*throw(
     // no object with specified uri, including server
     // not reachable and server does not know name
     cxy::Exceptions< %(eclass)s >::NoSuchObject,
     // object with specified uri is not a %(fqn)s
     cxy::Exceptions< %(eclass)s >::WrongType,
     // other failure, eg communication failure
-    %(eclass)s):
+    %(eclass)s)*/ :
       orb_(&orb),
       obj_((&cxy::pof< ::%(fqn)s >::me_(), // force init of static var,
             (cxy::objref< ::%(fqn)s >*)orb.locate(
@@ -32,12 +32,12 @@ public:
   }
 
   explicit cref(cxy::ORB< %(eclass)s >& orb, 
-                cxy::IOR< ::%(fqn)s >const& ior) throw(
+                cxy::IOR< ::%(fqn)s >const& ior) /*throw(
     // no object with specified ior, including server
     // not reachable and server does not know name
     cxy::Exceptions< %(eclass)s >::NoSuchObject,
     // other failure, eg communication failure
-    %(eclass)s):
+    %(eclass)s)*/ :
       orb_(&orb),
       obj_((&cxy::pof< ::%(fqn)s >::me_(), // force init of static var,
             (cxy::objref< ::%(fqn)s >*)orb.locate(
@@ -49,14 +49,14 @@ public:
   // note T must be a %(fqn)s or %(fqn)s must be a T
   template<class T>
   explicit cref(cxy::ORB< %(eclass)s >& orb, 
-                cxy::IOR< T > const& ior) throw(
+                cxy::IOR< T > const& ior) /*throw(
     // no object with specified ior, including server
     // not reachable and server does not know name
     cxy::Exceptions< %(eclass)s >::NoSuchObject,
     // object with specified uri is not a %(fqn)s
     cxy::Exceptions< %(eclass)s >::WrongType,
     // other failure, eg communication failure
-    %(eclass)s):
+    %(eclass)s)*/ :
       orb_(&orb),
       obj_(locate(orb, ior.toString()))
   {
@@ -83,9 +83,9 @@ public:
 
   // pre: T is a %(fqn)s 
   template<class T>
-  cref<T> narrow() const throw(
+  cref<T> narrow() const /*throw(
     // referenced server object is not a T
-    cxy::Exceptions< %(eclass)s >::WrongType) {
+    cxy::Exceptions< %(eclass)s >::WrongType)*/ {
     %(fqn)s const* T_must_be_a_((T const*)0);
     return cref<T>(*orb_, uri());
   }
@@ -130,14 +130,14 @@ private:
 
   static cxy::objref< ::%(fqn)s >* locate(
     cxy::ORB< %(eclass)s >& orb,
-    std::string ior) throw(
+    std::string ior) /*throw(
       // no object with specified ior, including server
       // not reachable and server does not know name
       cxy::Exceptions< %(eclass)s >::NoSuchObject,
       // object with specified uri is not a %(fqn)s
       cxy::Exceptions< %(eclass)s >::WrongType,
       // other failure, eg communication failure
-      %(eclass)s) {
+      %(eclass)s)*/ {
     cxy::pof< ::%(fqn)s >::me_(); // force init of static var
     cxy::objref< ::%(fqn)s >* result(
       (cxy::objref< ::%(fqn)s >*)orb.locate(

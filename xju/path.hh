@@ -34,9 +34,9 @@ public:
   explicit RelativePath(std::vector<DirName> const& x) throw():
     x_(x) {
   }
-  explicit RelativePath(std::string x) throw(
+  explicit RelativePath(std::string x) /*throw(
     // x is not relative (ie starts with '/')
-    xju::Exception);
+    xju::Exception)*/;
 
   typedef std::vector<DirName>::const_iterator const_iterator;
   typedef std::vector<DirName>::const_reverse_iterator const_reverse_iterator;
@@ -96,15 +96,15 @@ class AbsolutePath
 {
 public:
   // normalises, ie no component begin()..end() is '..', or '.', or ''
-  explicit AbsolutePath(std::string const& x) throw(
+  explicit AbsolutePath(std::string const& x) /*throw(
     // x is not absolute, or
     // x has too many '..' to normalise
-    xju::Exception);
+    xju::Exception)*/;
 
   // normalises, ie no component begin()..end() is '..', or '.', or ''
-  explicit AbsolutePath(std::vector<DirName> const& x) throw(
+  explicit AbsolutePath(std::vector<DirName> const& x) /*throw(
     // x has too many '..' to normalise
-    xju::Exception);
+    xju::Exception)*/;
 
   typedef std::vector<DirName>::const_iterator const_iterator;
   typedef std::vector<DirName>::const_reverse_iterator const_reverse_iterator;
@@ -133,17 +133,17 @@ private:
   std::vector<DirName> x_;
   
   friend AbsolutePath operator+(AbsolutePath const& x, 
-                                RelativePath const& y) throw(
-                                  xju::Exception);
+                                RelativePath const& y) /*throw(
+                                  xju::Exception)*/;
 
   friend AbsolutePath operator+(AbsolutePath const& x, 
-                                DirName const& y) throw(
-                                  xju::Exception);
+                                DirName const& y) /*throw(
+                                  xju::Exception)*/;
 
   friend std::pair<AbsolutePath,FileName> operator+(
     AbsolutePath const& x, 
-    FileName const& y) throw(
-      xju::Exception);
+    FileName const& y) /*throw(
+      xju::Exception)*/;
 
   friend std::ostream& operator<<(std::ostream& s,
                                   AbsolutePath const& x) throw();
@@ -176,9 +176,9 @@ private:
 
 
 // result is normalised
-AbsolutePath operator+(AbsolutePath const& x, RelativePath const& y) throw(
+AbsolutePath operator+(AbsolutePath const& x, RelativePath const& y) /*throw(
   // y goes above root
-  xju::Exception);
+  xju::Exception)*/;
 
 AbsolutePath root() throw();
 AbsolutePath working_dir() throw();
@@ -220,26 +220,26 @@ DirName basename(AbsolutePath const& x) throw();
 
 // directory part of x, where x is filename with optional
 // relative directory, e.g. relative_dirname("x/y")==RelativePath("x")
-RelativePath relative_dirname(std::string const& x) throw(
+RelativePath relative_dirname(std::string const& x) /*throw(
   // x has absolute path
-  xju::Exception);
+  xju::Exception)*/;
 
 // directory part of x, where x is filename with absolute directory,
 // e.g. absolute_dirname("/x/y")==AbsolutePath("/x")
-AbsolutePath absolute_dirname(std::string const& x) throw(
+AbsolutePath absolute_dirname(std::string const& x) /*throw(
   // x has relative path only
-  xju::Exception);
+  xju::Exception)*/;
 
 // split x into absolute path (using working dir if necessary) and
 // file name
-std::pair<AbsolutePath, FileName> split(std::string const& x) throw(
+std::pair<AbsolutePath, FileName> split(std::string const& x) /*throw(
   // can't normalise
-  xju::Exception);
+  xju::Exception)*/;
 
 // split x into absolute path (using working dir if necessary)
-AbsolutePath splitdir(std::string const& x) throw(
+AbsolutePath splitdir(std::string const& x) /*throw(
   // can't normalise
-  xju::Exception);
+  xju::Exception)*/;
 
 // parent directory of x
 // post: result==x.first

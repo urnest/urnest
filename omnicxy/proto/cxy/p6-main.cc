@@ -36,7 +36,7 @@ public:
   {
   }
   
-  virtual void f1() throw(::p6::EEE)
+  virtual void f1() /*throw(::p6::EEE)*/
   {
     throw ::p6::EEE(32, "error 32", 
                     "p6 f1 error", std::make_pair(__FILE__,__LINE__));

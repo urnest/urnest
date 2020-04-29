@@ -31,8 +31,8 @@ public:
   Impl value() const throw() {
     return value_;
   }
-  Float& operator+=(Float const& y) throw(
-    E)
+  Float& operator+=(Float const& y) /*throw(
+    E)*/
   {
     if (y.value_<0) {
       return (*this)-=Float(-y.value_);
@@ -46,8 +46,8 @@ public:
     return *this;
   }
   
-  Float& operator-=(Float const& y) throw(
-    E)
+  Float& operator-=(Float const& y) /*throw(
+    E)*/
   {
     if (y.value_<0) {
       return (*this)+=Float(-y.value_);
@@ -61,18 +61,18 @@ public:
     return *this;
   }
   
-  friend Float operator+(Float const& x, Float const& y) throw(
+  friend Float operator+(Float const& x, Float const& y) /*throw(
     // overflow
-    E) 
+    E)*/ 
   {
       Float result(x);
       result+=y;
       return result;
   }
   
-  friend Float operator-(Float const& x, Float const& y) throw(
+  friend Float operator-(Float const& x, Float const& y) /*throw(
     // underflow
-    E) 
+    E)*/ 
   {
       Float result(x);
       result-=y;

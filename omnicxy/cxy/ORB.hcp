@@ -44,9 +44,9 @@ template<class BaseException>
 class ORB
 {
 public:
-  explicit ORB(std::string const& orbEndPoint) throw(
+  explicit ORB(std::string const& orbEndPoint) /*throw(
     typename cxy::Exceptions<BaseException>::PortInUse,
-    BaseException) try:
+    BaseException)*/ try:
     impl_(newORBImpl(orbEndPoint)),
     e_changed_(guard_),
       t_([this](){
@@ -80,9 +80,9 @@ public:
     throw x;
   }
   // monitor ORB until the specified time
-  void monitorUntil(std::chrono::steady_clock::time_point const& t) throw(
+  void monitorUntil(std::chrono::steady_clock::time_point const& t) /*throw(
     // ORB exception
-    BaseException)
+    BaseException)*/
   {
     xju::Lock l(guard_);
     while(!e_.valid() && std::chrono::steady_clock::now()<t) {
@@ -107,14 +107,14 @@ private:
   template<class T>
   friend class sref;
 
-  void* locate(std::string const& uri, std::string const& repoId) throw(
+  void* locate(std::string const& uri, std::string const& repoId) /*throw(
     // no object with specified uri, including server
     // not reachable and server does not know name
     typename cxy::Exceptions<BaseException>::NoSuchObject,
     // object with specified uri is not a p1::F
     typename cxy::Exceptions<BaseException>::WrongType,
     // other failure, eg communication failure
-    BaseException)
+    BaseException)*/
   {
     try {
       return impl_->locate(uri, repoId);

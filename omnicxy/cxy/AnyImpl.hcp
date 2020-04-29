@@ -19,7 +19,7 @@ class AnyImpl
 public:
   // post: *this owns value
   AnyImpl(TypeCode const& typeCode,
-          MemCdrStream const& value) throw(std::bad_alloc):
+          MemCdrStream const& value) /*throw(std::bad_alloc)*/:
       typeCode_(typeCode),
       value_(value) {
   }
@@ -93,7 +93,7 @@ public:
 template<>
 struct TypeCodeOf<AnyImpl>
 {
-static TypeCode create() throw(std::bad_alloc)
+static TypeCode create() /*throw(std::bad_alloc)*/
 {
   return TypeCode(
     std::shared_ptr<TypeCode_>(new AnyTypeCode));

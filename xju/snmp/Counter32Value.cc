@@ -23,7 +23,7 @@ Counter32Value::Counter32Value(uint32_t val) throw():
     val_(val) {
   }
 
-int Counter32Value::intValue() const throw(xju::Exception)
+int Counter32Value::intValue() const /*throw(xju::Exception)*/
 {
   if (val_ > INT_MAX) {
     std::ostringstream s;
@@ -39,7 +39,7 @@ unsigned int Counter32Value::uintValue() const throw()
   return val_;
 }
 
-long Counter32Value::longValue() const throw(xju::Exception)
+long Counter32Value::longValue() const /*throw(xju::Exception)*/
 {
   if (val_ > LONG_MAX) {
     std::ostringstream s;

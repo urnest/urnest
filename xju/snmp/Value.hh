@@ -39,15 +39,15 @@ public:
   size_t const encodedLength_;
   
   // convenience functions that do type and range checking
-  virtual std::vector<uint8_t>const& stringValue() const throw(xju::Exception);
-  virtual std::vector<uint8_t>const& opaqueValue() const throw(xju::Exception);
-  virtual int intValue() const throw(xju::Exception);
-  virtual unsigned int uintValue() const throw(xju::Exception);
-  virtual long longValue() const throw(xju::Exception);
-  virtual unsigned long ulongValue() const throw(xju::Exception);
-  virtual Oid oidValue() const throw(xju::Exception);
-  virtual std::chrono::milliseconds timeTicksValue() const throw(
-    xju::Exception);
+  virtual std::vector<uint8_t>const& stringValue() const /*throw(xju::Exception)*/;
+  virtual std::vector<uint8_t>const& opaqueValue() const /*throw(xju::Exception)*/;
+  virtual int intValue() const /*throw(xju::Exception)*/;
+  virtual unsigned int uintValue() const /*throw(xju::Exception)*/;
+  virtual long longValue() const /*throw(xju::Exception)*/;
+  virtual unsigned long ulongValue() const /*throw(xju::Exception)*/;
+  virtual Oid oidValue() const /*throw(xju::Exception)*/;
+  virtual std::chrono::milliseconds timeTicksValue() const /*throw(
+    xju::Exception)*/;
   
   // return length of encoded value
   // ie return encodeTo(x)-x

@@ -19,7 +19,7 @@
 
 namespace xju
 {
-    int stringToInt(const std::string& value) throw(xju::Exception)
+    int stringToInt(const std::string& value) /*throw(xju::Exception)*/
     {
 	try
 	{

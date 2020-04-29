@@ -37,7 +37,7 @@ public:
   }
   
   virtual ::p3::MyInt f1(
-    ::p3::MyInt const& a) throw(E)
+    ::p3::MyInt const& a) /*throw(E)*/
   {
     std::cout << "::p3::f1(" 
               << a << ") -> MyInt(33)" << std::endl;
@@ -45,7 +45,7 @@ public:
                        new Call::f1(a)));
     return ::p3::MyInt(33);
   }
-  virtual ::p3::MyString f2(::p3::MyString const& a) throw(E)
+  virtual ::p3::MyString f2(::p3::MyString const& a) /*throw(E)*/
   {
     std::cout << "::p3::f2("
               << a << ") -> returning p3::f2" << std::endl;
@@ -53,7 +53,7 @@ public:
                        new Call::f2(a)));
     return ::p3::MyString("returning p3::f2");
   }
-  virtual ::p3::MyFloat f3(::p3::MyFloat const& a) throw(E)
+  virtual ::p3::MyFloat f3(::p3::MyFloat const& a) /*throw(E)*/
   {
     std::cout << "::p3::f3("
               << a << ") -> returning " << a << std::endl;
@@ -61,7 +61,7 @@ public:
                        new Call::f3(a)));
     return a;
   }
-  virtual ::p3::MyDouble f4(::p3::MyDouble const& a) throw(E)
+  virtual ::p3::MyDouble f4(::p3::MyDouble const& a) /*throw(E)*/
   {
     std::cout << "::p3::f4("
               << a << ") -> returning " << a << std::endl;

@@ -11,10 +11,10 @@ class A
 {
 public:
   virtual ~A() throw();
-  virtual std::string fa() throw(
+  virtual std::string fa() /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
 };
 
 class B :
@@ -22,10 +22,10 @@ class B :
 {
 public:
   virtual ~B() throw();
-  virtual std::string fb() throw(
+  virtual std::string fb() /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
 };
 
 class C :
@@ -33,10 +33,10 @@ class C :
 {
 public:
   virtual ~C() throw();
-  virtual std::string fc() throw(
+  virtual std::string fc() /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
 };
 
 class D :

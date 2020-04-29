@@ -5,8 +5,8 @@ namespace mythsleep
 namespace sql
 {
 
-std::set<Recording> getRecordings() throw(
-  Exception)
+std::set<Recording> getRecordings() /*throw(
+  Exception)*/
 {
   try {
     

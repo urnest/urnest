@@ -27,16 +27,16 @@ class ORBImplIf
 public:
   virtual ~ORBImplIf() noexcept {}
 
-  virtual void run() throw(cxy::Exception) = 0;
-  virtual void stop() throw(cxy::Exception) = 0;
+  virtual void run() /*throw(cxy::Exception)*/ = 0;
+  virtual void stop() /*throw(cxy::Exception)*/ = 0;
   virtual void* locate(std::string const& uri,
-                       std::string const& repoId) throw(
+                       std::string const& repoId) /*throw(
                          cxy::WrongType,
                          cxy::NoSuchObject,
-                         cxy::Exception) = 0;
-  virtual ::PortableServer::POA& insPOA() throw(
+                         cxy::Exception)*/ = 0;
+  virtual ::PortableServer::POA& insPOA() /*throw(
     // eg port in use
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
 
   virtual std::string orbEndPoint() const throw() = 0;
 };

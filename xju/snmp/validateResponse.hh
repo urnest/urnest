@@ -56,7 +56,7 @@ class SnmpV2cGetBulkRequest;
 // - returns the requested values
 std::map<Oid, std::shared_ptr<Value const> > validateResponse(
   SnmpV1GetRequest const& request,
-  SnmpV1Response const& response) throw(
+  SnmpV1Response const& response) /*throw(
     // in priority order, eg if both type and id mismatch, ResponseTypeMismatch
     // is thrown
     ResponseTypeMismatch,
@@ -65,14 +65,14 @@ std::map<Oid, std::shared_ptr<Value const> > validateResponse(
     TooBig,
     GenErr,
     // response malformed eg not all requested oids present in response
-    xju::Exception);
+    xju::Exception)*/;
 
 // validate reponse to specified request
 // - note that RFC 1157 says that no values are modified if an error
 //   is returned
 void validateResponse(
   SnmpV1SetRequest const& request, 
-  SnmpV1Response const& response) throw(
+  SnmpV1Response const& response) /*throw(
     // response.responseType_ != 0xA3
     ResponseTypeMismatch,
     // response.id_ != request.id_
@@ -89,7 +89,7 @@ void validateResponse(
     // SNMP General Error
     GenErr,
     // response malformed eg not all requested oids present in response
-    xju::Exception);
+    xju::Exception)*/;
 
 // validate reponse to specified request
 // - result suitable to pass to SnmpV1Table.add()
@@ -97,7 +97,7 @@ void validateResponse(
 //         set to 1.3, to signal end of table (see SnmpV1Table)
 std::vector<std::pair<Oid, std::shared_ptr<Value const> > > validateResponse(
   SnmpV1GetNextRequest const& request,
-  SnmpV1Response const& response) throw(
+  SnmpV1Response const& response) /*throw(
     // in priority order, eg if both type and id mismatch, ResponseTypeMismatch
     // is thrown
     ResponseTypeMismatch,
@@ -105,7 +105,7 @@ std::vector<std::pair<Oid, std::shared_ptr<Value const> > > validateResponse(
     TooBig,
     GenErr,
     // response malformed eg not all requested oids present in response
-    xju::Exception);
+    xju::Exception)*/;
 
 
 // validate reponse to specified request
@@ -113,7 +113,7 @@ std::vector<std::pair<Oid, std::shared_ptr<Value const> > > validateResponse(
 // - returns the requested values
 std::map<Oid, SnmpV2cVarResponse> validateResponse(
   SnmpV2cGetRequest const& request,
-  SnmpV2cResponse const& response) throw(
+  SnmpV2cResponse const& response) /*throw(
     // in priority order, eg if both type and id mismatch, ResponseTypeMismatch
     // is thrown
     ResponseTypeMismatch,
@@ -127,14 +127,14 @@ std::map<Oid, SnmpV2cVarResponse> validateResponse(
     //   associated with SnmpV2cGetRequest in RFC 1905)
     // - one or more var responses was END_OF_MIB_VIEW (which is not 
     //   explicitly associated with SnmpV2cGetRequest in RFC 1905)
-    xju::Exception);
+    xju::Exception)*/;
 
 // validate reponse to specified request
 // - note that RFC  says that no values are modified if an error
 //   is returned
 void validateResponse(
   SnmpV2cSetRequest const& request, 
-  SnmpV2cResponse const& response) throw(
+  SnmpV2cResponse const& response) /*throw(
     // note: exceptions are listed in priority order, eg if both type and 
     // id mismatch, ResponseTypeMismatch is thrown
     //
@@ -184,7 +184,7 @@ void validateResponse(
     // SNMP General Error
     GenErr,
     // response malformed eg not all requested oids present in response
-    xju::Exception);
+    xju::Exception)*/;
 
 // validate reponse to specified request
 // - for each requested oid in order returns its successor oid and its value
@@ -193,7 +193,7 @@ void validateResponse(
 //   treated as end-of-sequence
 std::vector<SnmpV2cVarResponse> validateResponse(
   SnmpV2cGetNextRequest const& request,
-  SnmpV2cResponse const& response) throw(
+  SnmpV2cResponse const& response) /*throw(
     // in priority order, eg if both type and id mismatch, ResponseTypeMismatch
     // is thrown
     ResponseTypeMismatch,
@@ -204,7 +204,7 @@ std::vector<SnmpV2cVarResponse> validateResponse(
     // - not all requested oids present in response
     // - error code was other than those above (which are not explicitly
     //   associated with SnmpV2cGetNextRequest in RFC 1905)
-    xju::Exception);
+    xju::Exception)*/;
 
 
 // validate reponse to specified request
@@ -219,7 +219,7 @@ std::pair<
     >
   > validateResponse(
   SnmpV2cGetBulkRequest const& request,
-  SnmpV2cResponse const& response) throw(
+  SnmpV2cResponse const& response) /*throw(
     // in priority order, eg if both type and id mismatch, ResponseTypeMismatch
     // is thrown
     ResponseTypeMismatch,
@@ -230,7 +230,7 @@ std::pair<
     // - not all requested oids present in response
     // - error code was other than those above (which are not explicitly
     //   associated with SnmpV2cGetNextRequest in RFC 1905)
-    xju::Exception);
+    xju::Exception)*/;
 
 
 }

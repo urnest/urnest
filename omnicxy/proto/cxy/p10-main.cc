@@ -38,7 +38,7 @@ public:
   }
   
   virtual void f1(
-    p10::EN const& a) throw(cxy::Exception)
+    p10::EN const& a) /*throw(cxy::Exception)*/
   {
     std::cout << "F::f1(" 
               << a << ")" << std::endl;

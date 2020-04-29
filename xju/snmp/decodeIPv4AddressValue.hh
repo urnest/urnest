@@ -20,7 +20,7 @@ namespace xju
 namespace snmp
 {
 std::pair<xju::ip::v4::Address,DecodeIterator> decodeIPv4AddressValue(
-  DecodeIterator const at) throw(xju::Exception);
+  DecodeIterator const at) /*throw(xju::Exception)*/;
 
 }
 }

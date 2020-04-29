@@ -44,7 +44,7 @@ public:
     std::chrono::milliseconds const& ms,
     std::chrono::seconds const& s,
     std::chrono::minutes const& m,
-    std::chrono::hours const& h) throw(cxy::Exception) override
+    std::chrono::hours const& h) /*throw(cxy::Exception)*/ override
   {
     std::cout << "F::f(" 
               << xju::format::duration(ns) << ", "

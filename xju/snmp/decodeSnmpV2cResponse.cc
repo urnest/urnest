@@ -39,9 +39,9 @@ std::string formatLength(xju::Optional<size_t> const& length) throw()
 
 }
 
-SnmpV2cResponse decodeSnmpV2cResponse(std::vector<uint8_t> const& data) throw(
+SnmpV2cResponse decodeSnmpV2cResponse(std::vector<uint8_t> const& data) /*throw(
     // malformed
-    xju::Exception)
+    xju::Exception)*/
 {
   std::vector<std::string> ok;
   try {

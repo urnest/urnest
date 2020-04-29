@@ -43,9 +43,9 @@ public:
   void send(
     xju::ip::v4::Address const& to,
     Message const& x,
-    std::chrono::steady_clock::time_point const& deadline) throw(
+    std::chrono::steady_clock::time_point const& deadline) /*throw(
       xju::SyscallFailed,
-      xju::DeadlineReached) override
+      xju::DeadlineReached)*/ override
   {
     std::cout << xju::format::time(xju::now())
               << " send(" << to << ", " << x << ")"<<std::endl;
@@ -56,10 +56,10 @@ public:
                    x,
                    deadline)->awaitReturn();
   }
-  std::tuple<xju::ip::v4::Address,Message> receive() throw(
+  std::tuple<xju::ip::v4::Address,Message> receive() /*throw(
       xju::SyscallFailed,
       // invalid message, e.g. incorrect checksum
-      xju::Exception) override
+      xju::Exception)*/ override
   {
     std::cout << xju::format::time(xju::now())
               << " receive()"<<std::endl;

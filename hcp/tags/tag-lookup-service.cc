@@ -33,8 +33,8 @@ char const usage[]="-u url-file tags-file [tags-file...]\n"
 // result.first is uri-file
 // result.second are remaining arguments
 std::pair<xju::path::AbsFile, std::vector<xju::path::AbsFile> > parseCommandLine(
-  std::vector<std::string> const& x) throw(
-    xju::Exception)
+  std::vector<std::string> const& x) /*throw(
+    xju::Exception)*/
 {
   std::vector<std::string>::const_iterator i(x.begin());
   xju::Optional<std::string> uriFile;

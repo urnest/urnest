@@ -35,7 +35,7 @@ public:
   {
   }
   
-  virtual void f1() throw(E)
+  virtual void f1() /*throw(E)*/
   {
     std::cout << "F::f1()" << std::endl;
   }

@@ -46,7 +46,7 @@ namespace xju
         // does not remove trailing whitespace
         // returns HH 0-23, MM 0-59 as a pair
         PV<std::pair<unsigned int, unsigned int> > parseHHMM(
-            const std::string& x) throw(xju::Exception)
+            const std::string& x) /*throw(xju::Exception)*/
         {
             try
             {
@@ -123,8 +123,8 @@ namespace xju
                 throw;
             }
         }
-        xju::Time format1(const std::string& x) throw(
-            NoMatch)
+        xju::Time format1(const std::string& x) /*throw(
+            NoMatch)*/
         {
             const std::string pattern("YYYYMMDD HH:MMam");
             try
@@ -170,8 +170,8 @@ namespace xju
             }
         }
         // parses e.g. "4:52pm"
-        xju::Time format2(const std::string& s) throw(
-            NoMatch)
+        xju::Time format2(const std::string& s) /*throw(
+            NoMatch)*/
         {
             const std::string pattern("HH:MMam");
             try
@@ -208,8 +208,8 @@ namespace xju
         }
     }
     
-    xju::Time stringToTime(const std::string& s) throw(
-	xju::Exception)
+    xju::Time stringToTime(const std::string& s) /*throw(
+	xju::Exception)*/
     {
 	try
 	{

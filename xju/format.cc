@@ -82,7 +82,7 @@ std::string quote(const std::string& pre,
   return pre + x + post;
 }
 std::string hex(char x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader
@@ -91,7 +91,7 @@ std::string hex(char x, const std::string& leader)
   return s.str();
 }
 std::string hex(signed char x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader
@@ -101,7 +101,7 @@ std::string hex(signed char x, const std::string& leader)
 }
 
 std::string hex(unsigned char x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader
@@ -110,7 +110,7 @@ std::string hex(unsigned char x, const std::string& leader)
   return s.str();
 }
 std::string hex(short x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader
@@ -119,7 +119,7 @@ std::string hex(short x, const std::string& leader)
   return s.str();
 }
 std::string hex(unsigned short x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader
@@ -128,7 +128,7 @@ std::string hex(unsigned short x, const std::string& leader)
   return s.str();
 }
 std::string hex(int x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader
@@ -137,7 +137,7 @@ std::string hex(int x, const std::string& leader)
   return s.str();
 }
 std::string hex(unsigned int x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader
@@ -146,7 +146,7 @@ std::string hex(unsigned int x, const std::string& leader)
   return s.str();
 }
 std::string hex(long x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader
@@ -155,7 +155,7 @@ std::string hex(long x, const std::string& leader)
   return s.str();
 }
 std::string hex(unsigned long x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader
@@ -164,7 +164,7 @@ std::string hex(unsigned long x, const std::string& leader)
   return s.str();
 }
 std::string hex(long long x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader
@@ -173,7 +173,7 @@ std::string hex(long long x, const std::string& leader)
   return s.str();
 }
 std::string hex(unsigned long long x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader
@@ -198,14 +198,14 @@ std::string asOctal(IntType x) noexcept
 }
 
 std::string octal(char x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader << asOctal((unsigned char)x);
   return s.str();
 }
 std::string octal(signed char x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader << asOctal((unsigned char)x);
@@ -213,63 +213,63 @@ std::string octal(signed char x, const std::string& leader)
 }
 
 std::string octal(unsigned char x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader << asOctal(x);
   return s.str();
 }
 std::string octal(short x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader << asOctal((unsigned short)x);
   return s.str();
 }
 std::string octal(unsigned short x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader << asOctal(x);
   return s.str();
 }
 std::string octal(int x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader << asOctal((unsigned int)x);
   return s.str();
 }
 std::string octal(unsigned int x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader << asOctal(x);
   return s.str();
 }
 std::string octal(long x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader << asOctal((unsigned long)x);
   return s.str();
 }
 std::string octal(unsigned long x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader << asOctal(x);
   return s.str();
 }
 std::string octal(long long x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader << asOctal((unsigned long long)x);
   return s.str();
 }
 std::string octal(unsigned long long x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader << asOctal(x);
@@ -286,7 +286,7 @@ std::string octal(unsigned long long x, const std::string& leader)
 
 #if !XJU__IS_AN_ABOVE_TYPE(UINT16_MAX)
 std::string hex(int16_t x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader
@@ -295,7 +295,7 @@ std::string hex(int16_t x, const std::string& leader)
   return s.str();
 }
 std::string hex(uint16_t x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader
@@ -304,14 +304,14 @@ std::string hex(uint16_t x, const std::string& leader)
   return s.str();
 }
 std::string octal(int16_t x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader << asOctal((uint16_t)x);
   return s.str();
 }
 std::string octal(uint16_t x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader << asOctal(x);
@@ -321,7 +321,7 @@ std::string octal(uint16_t x, const std::string& leader)
 
 #if !XJU__IS_AN_ABOVE_TYPE(UINT32_MAX)
 std::string hex(int32_t x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader
@@ -330,7 +330,7 @@ std::string hex(int32_t x, const std::string& leader)
   return s.str();
 }
 std::string hex(uint32_t x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader
@@ -339,14 +339,14 @@ std::string hex(uint32_t x, const std::string& leader)
   return s.str();
 }
 std::string octal(int32_t x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader << asOctal((uint32_t)x);
   return s.str();
 }
 std::string octal(uint32_t x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader << asOctal(x);
@@ -356,7 +356,7 @@ std::string octal(uint32_t x, const std::string& leader)
 
 #if !XJU__IS_AN_ABOVE_TYPE(UINT64_MAX)
 std::string hex(int64_t x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader
@@ -365,7 +365,7 @@ std::string hex(int64_t x, const std::string& leader)
   return s.str();
 }
 std::string hex(uint64_t x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader
@@ -374,14 +374,14 @@ std::string hex(uint64_t x, const std::string& leader)
   return s.str();
 }
 std::string octal(int64_t x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader << asOctal((uint64_t)x);
   return s.str();
 }
 std::string octal(uint64_t x, const std::string& leader) 
-  throw(std::bad_alloc)
+  /*throw(std::bad_alloc)*/
 {
   std::ostringstream s;
   s << leader << asOctal(x);

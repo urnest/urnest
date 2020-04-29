@@ -23,7 +23,7 @@ Gauge32Value::Gauge32Value(uint32_t val) throw():
     val_(val) {
   }
 
-int Gauge32Value::intValue() const throw(xju::Exception)
+int Gauge32Value::intValue() const /*throw(xju::Exception)*/
 {
   if (val_ > INT_MAX) {
     std::ostringstream s;
@@ -39,7 +39,7 @@ unsigned int Gauge32Value::uintValue() const throw()
   return val_;
 }
 
-long Gauge32Value::longValue() const throw(xju::Exception)
+long Gauge32Value::longValue() const /*throw(xju::Exception)*/
 {
   if (val_ > LONG_MAX) {
     std::ostringstream s;

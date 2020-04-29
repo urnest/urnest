@@ -35,10 +35,10 @@ public:
   // note destructor joins thread - see ~Thread() below
   //
   template<class F>
-  explicit Thread(F f) throw(
+  explicit Thread(F f) /*throw(
     std::bad_alloc,
     // other failures, eg thread limit reached
-    xju::Exception) try:
+    xju::Exception)*/ try:
       stop_(trigger([](){})),
       impl_(f)
   {
@@ -63,10 +63,10 @@ public:
   // pre: stop() must not throw
   //
   template<class F, class Stop>
-  Thread(F f, Stop stop) throw(
+  Thread(F f, Stop stop) /*throw(
     std::bad_alloc,
     // other failures, eg thread limit reached
-    xju::Exception) try:
+    xju::Exception)*/ try:
       stop_(trigger(stop)),
       impl_(f)
   {
@@ -123,8 +123,8 @@ private:
     T t_;
   };
   template<class T>
-  std::unique_ptr< TriggerIf > trigger(T f) throw(
-    std::bad_alloc)
+  std::unique_ptr< TriggerIf > trigger(T f) /*throw(
+    std::bad_alloc)*/
   {
     return std::unique_ptr< TriggerIf >(
       new Trigger<T>(f));

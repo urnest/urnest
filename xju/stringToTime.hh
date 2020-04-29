@@ -27,8 +27,8 @@
 
 namespace xju
 {
-    xju::Time stringToTime(const std::string& s) throw(
-	xju::Exception);
+    xju::Time stringToTime(const std::string& s) /*throw(
+	xju::Exception)*/;
 }
 
 

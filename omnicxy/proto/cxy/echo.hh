@@ -12,10 +12,10 @@ class echo
 public:
   virtual ~echo() throw();
   virtual std::string echoString(
-    std::string const& x) throw(
+    std::string const& x) /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
 };
 
 

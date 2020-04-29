@@ -21,7 +21,7 @@ namespace xju
 namespace snmp
 {
 std::pair<std::shared_ptr<Value const>, DecodeIterator> decodeValue(
-  DecodeIterator const i) throw(xju::Exception);
+  DecodeIterator const i) /*throw(xju::Exception)*/;
 
 
 }

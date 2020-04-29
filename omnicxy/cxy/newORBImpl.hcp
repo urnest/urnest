@@ -18,8 +18,8 @@ namespace cxy
 {
 
 // to allow template clients to use include us as //impl
-std::unique_ptr<ORBImplIf> newORBImpl(std::string const& orbEndPoint) throw(
-  cxy::Exception)
+std::unique_ptr<ORBImplIf> newORBImpl(std::string const& orbEndPoint) /*throw(
+  cxy::Exception)*/
 {
   return std::unique_ptr<ORBImplIf>(new ORBImpl(orbEndPoint));
 }

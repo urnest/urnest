@@ -15,7 +15,7 @@ public:
     BB,
     CC
   };
-  EN(Value v) throw(cxy::Exception);
+  EN(Value v) /*throw(cxy::Exception)*/;
   friend Value valueOf(EN const& x) throw(){ return x.v_; }
 private:
   Value v_;
@@ -52,10 +52,10 @@ class F
 public:
   virtual ~F() throw();
   virtual void f1(
-    ::p10::EN const& a) throw(
+    ::p10::EN const& a) /*throw(
     // ipc failure
     // - note servant may not throw
-    cxy::Exception) = 0;
+    cxy::Exception)*/ = 0;
 };
 
 }

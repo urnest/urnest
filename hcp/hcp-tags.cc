@@ -64,11 +64,11 @@ AstClass const& findFirst(
   return (*i)->asA<AstClass>();
 }
 
-std::map<Symbol,LineNumber> genNamespaceContent(hcp_ast::IRs const& x) throw(
-  xju::Exception);
+std::map<Symbol,LineNumber> genNamespaceContent(hcp_ast::IRs const& x) /*throw(
+  xju::Exception)*/;
 
-std::map<Symbol,LineNumber> genClass(hcp_ast::ClassDef const& x) throw(
-  xju::Exception)
+std::map<Symbol,LineNumber> genClass(hcp_ast::ClassDef const& x) /*throw(
+  xju::Exception)*/
 {
   std::map<Symbol,LineNumber> result;
   result.insert(std::make_pair(Symbol(x.className_),
@@ -85,8 +85,8 @@ std::map<Symbol,LineNumber> genClass(hcp_ast::ClassDef const& x) throw(
 }
 
 std::map<Symbol,LineNumber> genTemplateClass(
-  hcp_ast::TemplateClassDef const& x) throw(
-    xju::Exception)
+  hcp_ast::TemplateClassDef const& x) /*throw(
+    xju::Exception)*/
 {
   std::map<Symbol,LineNumber> result;
   std::string const className(hcp_ast::ClassDef::getClassName(x.items()));
@@ -103,8 +103,8 @@ std::map<Symbol,LineNumber> genTemplateClass(
   return result;
 }
 
-std::pair<Symbol,LineNumber> genFunction(hcp_ast::FunctionDef const& x) throw(
-  xju::Exception)
+std::pair<Symbol,LineNumber> genFunction(hcp_ast::FunctionDef const& x) /*throw(
+  xju::Exception)*/
 {
   auto y(findFirst<hcp_ast::FunctionName>(x.items().begin(), x.items().end()));
   Symbol symbol(reconstruct(y));
@@ -113,8 +113,8 @@ std::pair<Symbol,LineNumber> genFunction(hcp_ast::FunctionDef const& x) throw(
 }
 
 std::pair<Symbol,LineNumber> genTemplateFunction(
-  hcp_ast::TemplateFunctionDef const& x) throw(
-    xju::Exception)
+  hcp_ast::TemplateFunctionDef const& x) /*throw(
+    xju::Exception)*/
 {
   auto y(findFirst<hcp_ast::FunctionName>(x.items().begin(), x.items().end()));
   Symbol symbol(reconstruct(y));
@@ -123,8 +123,8 @@ std::pair<Symbol,LineNumber> genTemplateFunction(
 }
 
 std::pair<Symbol,LineNumber> genFunctionDecl(
-  hcp_ast::FunctionDecl const& x) throw(
-    xju::Exception)
+  hcp_ast::FunctionDecl const& x) /*throw(
+    xju::Exception)*/
 {
   auto const y(findFirst<hcp_ast::FunctionName>(
                  x.items().begin(), x.items().end()));
@@ -134,8 +134,8 @@ std::pair<Symbol,LineNumber> genFunctionDecl(
 }
 
 std::pair<Symbol,LineNumber> genTypedef(
-  hcp_ast::Typedef const& x) throw(
-    xju::Exception)
+  hcp_ast::Typedef const& x) /*throw(
+    xju::Exception)*/
 {
   std::vector<hcp_ast::IR>::const_iterator i(
     std::find_if(x.items().begin(), x.items().end(),
@@ -147,8 +147,8 @@ std::pair<Symbol,LineNumber> genTypedef(
 }
 
 std::pair<Symbol,LineNumber> genEnumDef(
-  hcp_ast::EnumDef const& x) throw(
-    xju::Exception)
+  hcp_ast::EnumDef const& x) /*throw(
+    xju::Exception)*/
 {
   std::vector<hcp_ast::IR>::const_iterator i(
     std::find_if(x.items().begin(), x.items().end(),
@@ -159,8 +159,8 @@ std::pair<Symbol,LineNumber> genEnumDef(
   return std::make_pair(symbol,lineNumber);
 }
 
-std::pair<Symbol,LineNumber> genGlobalVar(hcp_ast::GlobalVarDef const& x) throw(
-  xju::Exception)
+std::pair<Symbol,LineNumber> genGlobalVar(hcp_ast::GlobalVarDef const& x) /*throw(
+  xju::Exception)*/
 {
   // might be a function pointer var, in which case the first VarName
   // is what we want (the others being param names)
@@ -170,8 +170,8 @@ std::pair<Symbol,LineNumber> genGlobalVar(hcp_ast::GlobalVarDef const& x) throw(
   return std::make_pair(symbol,lineNumber);
 }
 
-std::map<Symbol,LineNumber> genNamespace(hcp_ast::NamespaceDef const& x) throw(
-  xju::Exception)
+std::map<Symbol,LineNumber> genNamespace(hcp_ast::NamespaceDef const& x) /*throw(
+  xju::Exception)*/
 {
   std::vector<hcp_ast::IR>::const_iterator i(
     std::find_if(x.items().begin(), x.items().end(),
@@ -188,8 +188,8 @@ std::map<Symbol,LineNumber> genNamespace(hcp_ast::NamespaceDef const& x) throw(
   return result;
 }
 
-std::map<Symbol,LineNumber> genNamespaceContent(hcp_ast::IRs const& x) throw(
-  xju::Exception)
+std::map<Symbol,LineNumber> genNamespaceContent(hcp_ast::IRs const& x) /*throw(
+  xju::Exception)*/
 {
   std::map<Symbol,LineNumber> result;
   

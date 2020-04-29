@@ -94,7 +94,7 @@ void test1() {
 class SmallBuffer : public UDPSocket
 {
 public:
-  SmallBuffer() throw(xju::Exception)
+  SmallBuffer() /*throw(xju::Exception)*/
   {
     int i=48000;
     xju::syscall(xju::setsockopt,XJU_TRACED)(

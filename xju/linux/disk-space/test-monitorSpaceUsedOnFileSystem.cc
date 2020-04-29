@@ -35,8 +35,8 @@ namespace disk_space
 auto const testDataFile{xju::path::split("sizes.txt")};
 
 // write sizes to report from stat program stub (note sizes are free space)
-void writeSizes(std::vector<unsigned int> const& sizes) throw(
-                  xju::Exception)
+void writeSizes(std::vector<unsigned int> const& sizes) /*throw(
+                  xju::Exception)*/
 {
   auto const x{xju::format::join(sizes.begin(),sizes.end(),std::string(","))};
   try{

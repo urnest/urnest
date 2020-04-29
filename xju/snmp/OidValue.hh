@@ -27,7 +27,7 @@ public:
   Oid const val_;
 
   // Value::
-  Oid oidValue() const throw(xju::Exception) override
+  Oid oidValue() const /*throw(xju::Exception)*/ override
   {
     return val_;
   }

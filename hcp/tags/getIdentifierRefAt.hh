@@ -24,9 +24,9 @@ namespace tags
 // post: result is a valid C++ identifier ref
 IdentifierRef getIdentifierRefAt(std::string const& text,
                                  std::string::size_type const offset)
-  throw(
+  /*throw(
     // pre: no identifier ref at offset
-    xju::Exception);
+    xju::Exception)*/;
 
 }
 }

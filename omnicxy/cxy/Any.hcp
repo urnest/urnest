@@ -49,9 +49,9 @@ public:
   
   //pre: isA<T>()
   template<class T>
-  T get() const throw(
+  T get() const /*throw(
     //not a T, or value incompatible with T (eg out of range)
-    E)
+    E)*/
   {
     try {
       return ::cxy::any<T>::decode(*impl_);
@@ -117,7 +117,7 @@ public:
 template<class E>
 struct TypeCodeOf<Any<E> >
 {
-static TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+static TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
 {
   // REVISIT: create template AnyTypeCode to translate exceptions?
   return TypeCode(

@@ -20,7 +20,7 @@ namespace cxy
 template<>
 struct TypeCodeOf< ::std::chrono::nanoseconds >
 {
-  static ::cxy::TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+  static ::cxy::TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
   {
     return ::cxy::TypeCodeOf< int64_t >::create(index);
   }
@@ -29,7 +29,7 @@ struct TypeCodeOf< ::std::chrono::nanoseconds >
 template<>
 struct TypeCodeOf< ::std::chrono::microseconds >
 {
-  static ::cxy::TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+  static ::cxy::TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
   {
     return ::cxy::TypeCodeOf< int64_t >::create(index);
   }
@@ -38,7 +38,7 @@ struct TypeCodeOf< ::std::chrono::microseconds >
 template<>
 struct TypeCodeOf< ::std::chrono::milliseconds >
 {
-  static ::cxy::TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+  static ::cxy::TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
   {
     return ::cxy::TypeCodeOf< int64_t >::create(index);
   }
@@ -47,7 +47,7 @@ struct TypeCodeOf< ::std::chrono::milliseconds >
 template<>
 struct TypeCodeOf< ::std::chrono::seconds >
 {
-  static ::cxy::TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+  static ::cxy::TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
   {
     return ::cxy::TypeCodeOf< int64_t >::create(index);
   }
@@ -56,7 +56,7 @@ struct TypeCodeOf< ::std::chrono::seconds >
 template<>
 struct TypeCodeOf< ::std::chrono::minutes >
 {
-  static ::cxy::TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+  static ::cxy::TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
   {
     return ::cxy::TypeCodeOf< int64_t >::create(index);
   }
@@ -65,7 +65,7 @@ struct TypeCodeOf< ::std::chrono::minutes >
 template<>
 struct TypeCodeOf< ::std::chrono::hours >
 {
-  static ::cxy::TypeCode create(TypeCodeRefIndex& index) throw(std::bad_alloc)
+  static ::cxy::TypeCode create(TypeCodeRefIndex& index) /*throw(std::bad_alloc)*/
   {
     return ::cxy::TypeCodeOf< int64_t >::create(index);
   }

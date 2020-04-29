@@ -26,13 +26,13 @@ namespace snmp
 // note that if the request encoded in data contained duplicate oids then
 // result.second.size() != result.first.oids_.size()
 std::pair<SnmpV2cSetRequest,std::vector<Oid> > decodeSnmpV2cSetRequest(
-  std::vector<uint8_t> const& data) throw(
+  std::vector<uint8_t> const& data) /*throw(
     // not snmp v2c
     SnmpVersionMismatch,
     // not a get request
     RequestTypeMismatch,
     // malformed
-    xju::Exception);
+    xju::Exception)*/;
 
 }
 }

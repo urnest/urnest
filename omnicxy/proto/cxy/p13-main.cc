@@ -57,7 +57,7 @@ public:
   }
   
   virtual void f1(
-    ::std::shared_ptr< ::p13::U1 const> const& a) throw(cxy::Exception)
+    ::std::shared_ptr< ::p13::U1 const> const& a) /*throw(cxy::Exception)*/
   {
     std::cout << "F::f1(" 
               << (*a) << ")" << std::endl;

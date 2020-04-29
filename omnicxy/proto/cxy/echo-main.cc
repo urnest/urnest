@@ -37,7 +37,7 @@ public:
   {
   }
   
-  virtual std::string echoString(std::string const& s) throw(cxy::Exception)
+  virtual std::string echoString(std::string const& s) /*throw(cxy::Exception)*/
   {
     std::cout << "servant: echoString(" << xju::format::quote(s) << ")" 
               << std::endl;
