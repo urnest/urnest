@@ -730,6 +730,20 @@ void test18()
         hcp_parser::typedef_statement())};
     xju::assert_equal(reconstruct(root), x);
   }
+  {
+    std::string const x("typedef char Buffer[1024];");
+    auto const root{parseString(
+        x.begin(),x.end(),
+        hcp_parser::typedef_statement())};
+    xju::assert_equal(reconstruct(root), x);
+  }
+  {
+    std::string const x("typedef char (*F[28])(int);");
+    auto const root{parseString(
+        x.begin(),x.end(),
+        hcp_parser::typedef_statement())};
+    xju::assert_equal(reconstruct(root), x);
+  }
   try
   {
     std::string const x("typedefine std::vector<int>\nInts;");

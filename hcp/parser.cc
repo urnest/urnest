@@ -1809,12 +1809,26 @@ PR defined_type() throw(){
   return result;
 }
 
+PR array_decl() throw()
+{
+  static PR array_decl(
+    named<hcp_ast::ArrayDecl>(
+      "array decl",
+      parseOneOfChars("[")+
+      balanced(parseOneOfChars("]"))+
+      parseOneOfChars("]"))+
+    eatWhite());
+  return array_decl;
+}
+
+
 PR typedef_non_fp() throw()
 {
   static PR typedef_statement(
     typedef_keyword()+
     whitespace()+
-    type_ref()+defined_type()+parseOneOfChars(";")+
+    type_ref()+defined_type()+(!parseLiteral("[")|
+                               array_decl())+parseOneOfChars(";")+
     eatWhite());
   return typedef_statement;
 }
@@ -2529,19 +2543,6 @@ PR var_name() throw()
 }
 
 
-PR array_decl() throw()
-{
-  static PR array_decl(
-    named<hcp_ast::ArrayDecl>(
-      "array decl",
-      parseOneOfChars("[")+
-      balanced(parseOneOfChars("]"))+
-      parseOneOfChars("]"))+
-    eatWhite());
-  return array_decl;
-}
-
-
 PR var_intro() throw()
 {
   static PR var_intro(
@@ -2688,7 +2689,8 @@ PR typedef_fp() throw()
          type_ref()+
          bracketed(
            scope_ref()+cv()+parseLiteral("*")+eatWhite()+cv()+
-           defined_type())+
+           defined_type()+(!parseLiteral("[")|
+                           array_decl()))+
          params()+
          function_post_qualifiers()+
          eatWhite()+
