@@ -67,6 +67,24 @@ std::pair<CommandLineOptions, std::vector<std::string> > parseCommandLine(
                         std::vector<std::string>(i, x.end()));
 }
 
+void blankCcomments(std::string& s){
+  std::string const open("/*");
+  std::string const close("*/");
+  auto i(s.begin());
+  while(i!=s.end()){
+    i=std::search(i,s.end(),open.begin(),open.end());
+    if (i!=s.end()){
+      (*i++)=' ';
+      (*i++)=' ';
+      i=std::search(i,s.end(),close.begin(),close.end());
+      if (i!=s.end()){
+        (*i++)=' ';
+        (*i++)=' ';
+      }
+    }
+  }
+}
+
 int main(int argc, char* argv[])
 {
   try {
@@ -99,17 +117,9 @@ int main(int argc, char* argv[])
     auto i(root.begin().x_);
     for(auto tl: throwLists){
       output << std::string(i,tl.get().begin().x_);
-      auto const throwListItems(
-        hcp_ast::findChildrenOfType<hcp_ast::ThrowListItem>(tl.get()));
-      for(auto tli: throwListItems){
-        auto const n(
-          hcp_ast::findOnlyChildOfType<hcp_ast::ThrowListItemTypeName>(tli));
-        output << std::string(tli.get().begin().x_,n.begin().x_);
-        output << "//" << hcp_ast::reconstruct(n);
-      }
-      auto const tw(
-        hcp_ast::findOnlyChildOfType<hcp_ast::ThrowListTrailingWhite>(tl));
-      output << hcp_ast::reconstruct(tw);
+      auto tls(hcp_ast::reconstruct(tl.get()));
+      blankCcomments(tls);
+      output << "/*" << tls << "*/";
       i=tl.get().end().x_;
     }
     output << std::string(i,root.end().x_);
