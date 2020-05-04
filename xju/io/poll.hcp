@@ -61,17 +61,16 @@ std::pair<std::map<xju::io::Input const*,PollInputState>,
 {
   std::pair<std::map<Input const*,PollInputState>,
             std::map<Output const*,PollOutputState > > result;
-  int n;
+  nfds_t const nfds(inputs.size()+outputs.size());
+  struct pollfd p[nfds];
   do {
-    fd_set r;
-    FD_ZERO(&r);
+    auto i(&p[0]);
     for(auto x : inputs) {
-      FD_SET(x->fileDescriptor(),&r);
+      short pri(exceptInputs.find(x)!=exceptInputs.end()?POLLPRI:0);
+      (*i++)={x->fileDescriptor(),POLLIN|pri,0};
     }
-    fd_set w;
-    FD_ZERO(&w);
     for(auto x : outputs) {
-      FD_SET(x->fileDescriptor(),&w);
+      (*i++)={x->fileDescriptor(),POLLOUT,0};
     }
     auto const now(std::chrono::steady_clock::now());
     std::chrono::system_clock::duration timeout(deadline-now);
@@ -80,12 +79,10 @@ std::pair<std::map<xju::io::Input const*,PollInputState>,
     }
     std::chrono::seconds const tv_sec(
       std::chrono::duration_cast<std::chrono::seconds>(timeout));
-    std::chrono::microseconds const tv_usec(
-      std::chrono::duration_cast<std::chrono::microseconds>(timeout-tv_sec));
-    struct timeval timeout_;
-    timeout_.tv_sec=tv_sec.count();
-    timeout_.tv_usec=tv_usec.count();
-    n=::select(FD_SETSIZE,&r,&w,0,&timeout_);
+    auto const tv_nsec(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout-tv_sec));
+    struct timespec timeout_{tv_sec.count(),tv_nsec.count()};
+    int const n=::poll(p,nfds,&timeout_);
     switch(n) {
     case 0:
       break;
@@ -97,16 +94,21 @@ std::pair<std::map<xju::io::Input const*,PollInputState>,
       }
       break;
     default:
+    {
+      auto i(&p[0])
       for(auto x : inputs) {
-        if (FD_ISSET(x->fileDescriptor(),&r)) {
-          result.first.insert(x);
+        if (p[*i].revents & POLLIN|POLLPRI|POLLERR|POLLHUP){
+          result.first.insert({x,(PollInputState)p[*i].revents});
         }
+        ++i;
       }
       for(auto x : outputs) {
-        if (FD_ISSET(x->fileDescriptor(),&w)) {
-          result.second.insert(x);
+        if (p[*i].revents & POLLOUT|POLLERR|POLLHUP){
+          result.second.insert({x,(PollOutputState)p[*i].revents});
         }
+        ++i;
       }
+    }
     }
   }
   while(result.first.size()==0 &&
@@ -115,6 +117,7 @@ std::pair<std::map<xju::io::Input const*,PollInputState>,
   return result;
 }
 
+/* REVISIT
 // as above but without any outputs or excepts
 // 
 std::set<Input const* > select(
@@ -146,7 +149,7 @@ std::set<Output const* > select(
   REVISIT;
   return select(std::set<Input const*>(),outputs,deadline).second;
 }
-
+*/
 
 }
 }
