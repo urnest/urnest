@@ -48,6 +48,13 @@ template<class T, size_t Size, class E>
 class ArrayCopyElements<T,Size,E,true>
 {
 public:
+  static void defaultConstructElements(xju::Holder<T> to[Size]) noexcept
+  {
+    auto i=&to[0];
+    while(i != &to[Size]){
+      new(*i++) T;
+    }
+  }
   static void initElements(xju::Holder<T> to[Size],
                            T const& initialValueOfAllElements) noexcept
   {
@@ -79,6 +86,23 @@ template<class T, size_t Size, class E>
 class ArrayCopyElements<T,Size,E,false>
 {
 public:
+  static void defaultConstructElements(
+    xju::Holder<T> to[Size]) noexcept(false)
+  {
+    auto i=&to[0];
+    try{
+      while(i != &to[Size]){
+        new(*i++) T;
+      }
+    }
+    catch(...){
+      while(i!=&to[0])
+      {
+        (*--i)->~T();
+      }
+      throw;
+    }
+  }
   static void initElements(xju::Holder<T> to[Size],
                            T const& initialValueOfAllElements) noexcept(false)
   {
@@ -146,19 +170,7 @@ public:
   Array() noexcept(
     std::is_nothrow_default_constructible<T>::value)
   {
-    auto i=std::begin(elements_);
-    try{
-      while(i != std::end(elements_)){
-        new(*i++) T;
-      }
-    }
-    catch(...){
-      while(i!=std::begin(elements_))
-      {
-        (*--i)->~T();
-      }
-      throw;
-    }
+    ArrayCopyElements<T,Size,E,std::is_nothrow_default_constructible<T>::value>::defaultConstructElements(elements_);
   }
   
   explicit Array(T const& initialValueOfAllElements) noexcept(

@@ -1,0 +1,240 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace ip
+{
+
+class UDPSocketErrorQueue
+{
+void enableErrors(xju::AutoFd const& socket) /*throw(
+  xju::Exception)*/
+{
+  try{
+    int v{1};
+    socklen_t l{sizeof(v)};
+    xju::syscall(xju::setsockopt,XJU_TRACED)(
+      socket.fd(),IPPROTO_IP,IP_RECVERR,&v,l);
+
+    // now what?
+    // x do we have to also set IP_RECVERR when calling recvmsg? if we do will
+    //   recvmsg only return errors or valid message if no error?
+    //   x MSG_ERRQUEUE on recvmsg only calls
+    //     - ip_recv_error
+    //     ... else calls
+    //     - skb_recv_datagram
+    //   ... so they are two receive functions that must be called separately
+    // - check callers of ip_recv_error (udp.c,raw.c),
+    //   - read recvmsg code (udp.c);
+    //     
+    //   - check sock_common_recvmsg->udp_rcv,udp_err
+    //     - udp.c udp_rcv
+    //       udp.c udp_rcv defers to udp.c __udp4_lib_rcv error cases:
+    //         x no space in socket buffer? Comment is incorrect, actually
+    //           two possibilities:
+    //             x packet too short to contain a UDP header
+    //             x no space to copy header into socket buffer
+    //           ... both: silent drop counts as
+    //           UDP_INC_STATS_BH(UDP_MIB_INERRORS)
+    //         x UDP_INC_STATS_BH(UDP_MIB_INERRORS)?
+    //         x packet too short for udp header stated len:
+    //           UDP_INC_STATS_BH(UDP_MIB_INERRORS)
+    //         x udp4_csum_init error (not actual checksum check just error
+    //           trying to figure out whether to do the checksum check and
+    //           catching some cases where checksum will not be possible)
+    //           UDP_INC_STATS_BH(UDP_MIB_INERRORS)
+    //         x no matching socket and xfrm4_policy_check fails
+    //           UDP_INC_STATS_BH(UDP_MIB_INERRORS)
+    //         x no matching socket and full checksum fails
+    //           UDP_INC_STATS_BH(UDP_MIB_INERRORS)
+    //         x no matching socket -> ICMP_DEST_UNREACH+ICMP_PORT_UNREACH
+    //                                 UDP_INC_STATS_BH(UDP_MIB_NOPORTS)
+    //         - ... else udp_queue_rcv_skb
+    //             x xfrm_policy_check fails drop
+    //               UDP_INC_STATS_BH(UDP_MIB_INERRORS)
+    //             x sk_filter and complete checksum fail
+    //               UDP_INC_STATS_BH(UDP_MIB_INERRORS)
+    //               x what is sk_filter (see below)?
+    //             x sock_queue_rcv_skb returns ENOMEM
+    //               UDP_INC_STATS_BH(UDP_MIB_RCVBUFERRORS)
+    //               UDP_INC_STATS_BH(UDP_MIB_INERRORS)
+    //             x sock_queue_rcv_skb other fail
+    //               UDP_INC_STATS_BH(UDP_MIB_INERRORS)
+    //             x sock_queue_rcv_skb
+    //               returns ENOMEM->above
+    //               or sk_filter fail other above
+    //                 sk_filter security filtering something never mind
+    //       x udp_rcv returns error code, what happens?
+    //         ip_local_deliver moves on to check for other matching
+    //         protocols (sockets?)
+    //     x udp.c udp_err - __udp4_lib_err
+    //       x handles icmp messages eg ICMP_DEST_UNREACH / mtu exc
+    //       x if no sock ICMP_INC_STATS_BH(ICMP_MIB_INERRORS)
+    //       x ip_icmp_error if recverr
+    //         x sock_queue_err_skb SO_EE_ORIGIN_ICMP
+    //           x puts on sk_error_queue
+    //       x sk->sk_error_report(sk) looks like sock_def_error_report
+    //         POLL_ERR i.e. select error
+    //     x SO_EE_ORIGIN_LOCAL from ip_local_error from
+    //       x raw_send_hdrinc EMSGSIZE where packet > dest device mtu
+    //       x ip_append_page when total > 0xffff
+    //           from udp_sendpage
+    //       x ip_append_data
+    //           from udp_sendmsg
+    //
+    // ... so from all that receive side will never get "IP_RECVERR" errors
+    //     it will only get drops. Everything else on the receive side
+    //     increments counters and some things also send back ICMP reports.
+    //     But counters are pretty useless for tracking down problems
+    //     with specific flows: better to use raw socket?
+    //
+    // So mingling IP_RECVERR messages in with UDPSocket::receive is silly.
+    // Should be getSendError() call when select(except). But that makes
+    // it hard to use correctly because if we don't call getSendError we
+    // end up clogging the socket and every send gets rejected and every
+    // in packet gets dropped?
+    // REVISIT: in receive select for error too
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "enable receive drop reporting on UDPSocket";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+  class DeliveryFailure
+  {
+  public:
+    // Local failure, e.g. no route
+    DeliveryFailure(std::pair<xju::ip::v4::Address,xju::ip::Port> to,
+                    uint32_t errno,
+                    uint32_t info // meaning depends on errno REVISIT: as in?
+      ) noexcept
+        :to_(to),
+         errno_(errno),
+         info_(info)
+    {
+    }
+    // Non-local failure, e.g. host unreachable
+    DeliveryFailure(std::pair<xju::ip::v4::Address,xju::ip::Port> to,
+                    uint32_t errno,
+                    uint32_t info, // meaning depends on errno REVISIT: as in?
+                    std::tuple<
+                      xju::ip::v4::Address, // dropped by
+                      xju::ip::icmp::Message::Type, // why
+                      xju::ip::icmp::Message::Code  //  "
+                    > droppedBecause) noexcept
+        :to_(to),
+         errno_(errno),
+         info_(info),
+         droppedBecause_(std::move(droppedBecause)){
+    }
+    std::pair<xju::ip::v4::Address,xju::ip::Port> to_;
+    uint32_t errno_;
+    uint32_t info;
+    xju::Optional<std::tuple<
+                      xju::ip::v4::Address, // dropped by
+                      xju::ip::icmp::Message::Type, // why
+                      xju::ip::icmp::Message::Code  //  "
+                    > > droppedBecause_;
+
+    friend bool operator<(DeliveryFailure const& x, DeliveryFailure const& y)
+      noexcept;
+    
+    friend std::ostream& operator<<(std::ostream& s, DeliveryFailure const& x)
+    {
+      s << "UDP/IP message to " << x.to_.first << " port " << x.to_.second
+        << " delivery failed ";
+      if (x.droppedBecause_.valid()){
+        s << " at " << std::get<0>(x.droppedBecause_) << " which reported "
+          << " ICMP type " << std::get<1>(x.droppedBecause_)
+          << " and ICMP code " << std::get<2>(x.droppedBecause_);
+      }
+      else{
+        s << " locally with errno " << x.errno_ << " and info "
+          << xju::format::int(x.info_);
+      }
+      return s;
+    }
+  };
+
+  std::vector<DeliveryFailure> getDeliveryFailures() noexcept
+  {
+    uint8_t buffer[64];
+    sockaddr_in target_addr;
+    struct iovec v={buffer,size};
+    union {
+      char buf[CMSG_SPACE(sizeof(uint32_t))];
+      struct cmsghdr align;
+    } u;
+    struct msghdr h={
+      &target_addr,sizeof(target_addr),
+      &v,1,
+      u.buf,sizeof(u.buf),
+      IP_RECVERR
+    };
+    ssize_t const bytesRead=xju::syscall(xju::recvmsg,XJU_TRACED)(
+      fileDescriptor(),
+      &h,
+      MSG_NOSIGNAL);
+    std::vector<DeliveryFailure> result;
+    struct cmsghdr* cmsg{CMSG_FIRSTHDR(&h)};
+    //SO_RXQ_OVFL is poorly documented, don't get the
+    // message until there are drops and the counter does not
+    // reset
+    for (; cmsg; cmsg = CMSG_NXTHDR(&h, cmsg)) {
+      if (cmsg->cmsg_level == SOL_SOCKET &&
+          cmsg->cmsg_type == SO_RXQ_OVFL) { //REVISIT: do we get this here?
+        uint32_t drops;
+        memcpy(&drops,CMSG_DATA(cmsg),sizeof(drops));
+        drops_.store(drops);
+      }
+      else if (cmsg->cmsg_level == SOL_IP &&
+               cmsg->cmsg_type == IP_RECVERR) {
+        auto const e((struct sock_extended_err const*)CMSG_DATA(cmsg));
+        switch(e->ee_origin){
+        case SO_EE_ORIGIN_LOCAL:
+          result.push_back(
+            DeliveryFailure(
+              {xju::ip::v4::Address(::ntohl(target_addr.sin_addr.s_addr)),
+               xju::ip::Port(::ntohs(target_addr.sin_port))},
+              ee.ee_errno,
+              ee.ee_info));
+          break;
+        case SO_EE_ORIGIN_ICMP:
+        {
+          if (SO_EE_OFFENDER(ee)->sin_family==AF_INET){
+            auto const sender((struct sockaddr_in const*)SO_EE_OFFENDER(ee));
+            result.push_back(
+              DeliveryFailure(
+                {xju::ip::v4::Address(::ntohl(target_addr.sin_addr.s_addr)),
+                 xju::ip::Port(::ntohs(target_addr.sin_port))},
+                ee.ee_errno,
+                ee.ee_info,
+                decltype(result.front())(
+                  xju::ip::v4::Address(::ntohl(sender.sin_addr.s_addr)),
+                  ee.ee_type,
+                  ee.ee_code)));
+          }
+        }
+        //REVISIT: IPv6 SO_EE_ORIGIN_ICMP6
+        }
+      }
+    }
+    return result;
+  }
+};
+
+}
+}
+
+

@@ -213,10 +213,11 @@ public:
     void* buffer,
     size_t const size,
     std::chrono::steady_clock::time_point const& deadline)
-    /*throw(xju::DeadlineReached,
-          xju::SyscallFailed,
-          // eg truncation due to buffer too small
-          xju::Exception)*/
+    /*throw(
+      xju::DeadlineReached,
+      xju::SyscallFailed,
+      // eg truncation due to buffer too small
+      xju::Exception)*/
   {
     auto const d{deadline-xju::steadyNow()};
     try {

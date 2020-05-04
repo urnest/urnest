@@ -1,0 +1,152 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <utility>
+#include <set>
+#include <chrono>
+#include <new>
+
+#include <xju/io/Input.hh> //impl
+#include <xju/io/Output.hh> //impl
+
+#include <xju/syscall.hh> //impl
+#include <xju/unistd.hh> //impl
+#include <xju/format.hh> //impl
+#include <xju/syscall.hh>
+
+namespace xju
+{
+namespace io
+{
+class Input;
+class Output;
+
+enum class PollInputState
+{
+  IN=POLLIN,
+  PRI=POLLPRI,
+  ERR=POLLERR,
+  HUP=POLLHUP
+};
+enum class PollOutputState
+{
+  OUT=POLLOUT,
+  ERR=POLLERR,
+  HUP=POLLHUP
+};
+
+// wait at most until deadline for one of the specified inputs or outputs
+// to be readable/writable/have an exceptional input condition
+// (see poll(2) manpage) or have an error or hangup condition;
+// return as soon as one is, returning all that are
+// - returns empty sets when deadline is reached
+// - returns those inputs/outputs that are already readable/writable etc if
+//   deadline has already passed
+// post: result.first.size()||result.second.size()||deadline reached
+// post: returned PollInputState/PollOutputState is bit-wise OR of present
+//       states and is never 0
+std::pair<std::map<xju::io::Input const*,PollInputState>,
+          std::map<xju::io::Output const*,PollOutputState> > poll(
+  std::set<xju::io::Input const*> const& inputs,
+  std::set<xju::io::Output const*> const& outputs,
+  std::set<xju::io::Input const*> const& exceptInputs={},
+  std::chrono::steady_clock::time_point const& deadline) /*throw(
+    std::bad_alloc)*/
+{
+  std::pair<std::map<Input const*,PollInputState>,
+            std::map<Output const*,PollOutputState > > result;
+  int n;
+  do {
+    fd_set r;
+    FD_ZERO(&r);
+    for(auto x : inputs) {
+      FD_SET(x->fileDescriptor(),&r);
+    }
+    fd_set w;
+    FD_ZERO(&w);
+    for(auto x : outputs) {
+      FD_SET(x->fileDescriptor(),&w);
+    }
+    auto const now(std::chrono::steady_clock::now());
+    std::chrono::system_clock::duration timeout(deadline-now);
+    if (timeout<std::chrono::seconds(0)){
+      timeout=std::chrono::seconds(0);
+    }
+    std::chrono::seconds const tv_sec(
+      std::chrono::duration_cast<std::chrono::seconds>(timeout));
+    std::chrono::microseconds const tv_usec(
+      std::chrono::duration_cast<std::chrono::microseconds>(timeout-tv_sec));
+    struct timeval timeout_;
+    timeout_.tv_sec=tv_sec.count();
+    timeout_.tv_usec=tv_usec.count();
+    n=::select(FD_SETSIZE,&r,&w,0,&timeout_);
+    switch(n) {
+    case 0:
+      break;
+    case -1:
+      if (errno != EINTR)
+      {
+        xju::assert_equal(errno,ENOMEM);
+        throw std::bad_alloc();
+      }
+      break;
+    default:
+      for(auto x : inputs) {
+        if (FD_ISSET(x->fileDescriptor(),&r)) {
+          result.first.insert(x);
+        }
+      }
+      for(auto x : outputs) {
+        if (FD_ISSET(x->fileDescriptor(),&w)) {
+          result.second.insert(x);
+        }
+      }
+    }
+  }
+  while(result.first.size()==0 &&
+        result.second.size()==0 &&
+        std::chrono::steady_clock::now()<deadline);
+  return result;
+}
+
+// as above but without any outputs or excepts
+// 
+std::set<Input const* > select(
+  std::set<Input const* > const& inputs,
+  std::chrono::steady_clock::time_point const& deadline) /*throw(
+    xju::SyscallFailed)*/
+{
+  return select(inputs,std::set<Output const* >(),deadline).first;
+}
+
+// as above but without any outputs, except per bool
+// 
+std::set<Input const* > select(
+  std::map<Input const*,bool> const& inputs, //bool true selects for pri too
+  std::chrono::steady_clock::time_point const& deadline) /*throw(
+    xju::SyscallFailed)*/
+{
+  REVISIT;
+  return select(inputs,std::set<Output const* >(),deadline).first;
+}
+
+// as above but without any inputs
+// 
+std::set<Output const* > select(
+  std::set<Output const* > const& outputs,
+  std::chrono::steady_clock::time_point const& deadline) /*throw(
+    std::bad_alloc)*/
+{
+  REVISIT;
+  return select(std::set<Input const*>(),outputs,deadline).second;
+}
+
+
+}
+}
