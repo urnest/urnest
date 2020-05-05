@@ -19,6 +19,10 @@
 #include <xju/unistd.hh> //impl
 #include <xju/format.hh> //impl
 #include <xju/syscall.hh>
+#include <poll.h>
+#include <map>
+#include <xju/io/PollInputState.hh>
+#include <xju/io/PollOutputState.hh>
 
 namespace xju
 {
@@ -27,19 +31,6 @@ namespace io
 class Input;
 class Output;
 
-enum class PollInputState
-{
-  IN=POLLIN,
-  PRI=POLLPRI,
-  ERR=POLLERR,
-  HUP=POLLHUP
-};
-enum class PollOutputState
-{
-  OUT=POLLOUT,
-  ERR=POLLERR,
-  HUP=POLLHUP
-};
 
 // wait at most until deadline for one of the specified inputs or outputs
 // to be readable/writable/have an exceptional input condition
@@ -55,8 +46,8 @@ std::pair<std::map<xju::io::Input const*,PollInputState>,
           std::map<xju::io::Output const*,PollOutputState> > poll(
   std::set<xju::io::Input const*> const& inputs,
   std::set<xju::io::Output const*> const& outputs,
-  std::set<xju::io::Input const*> const& exceptInputs={},
-  std::chrono::steady_clock::time_point const& deadline) /*throw(
+  std::chrono::steady_clock::time_point const& deadline,
+  std::set<xju::io::Input const*> const& exceptInputs={}) /*throw(
     std::bad_alloc)*/
 {
   std::pair<std::map<Input const*,PollInputState>,
@@ -67,7 +58,7 @@ std::pair<std::map<xju::io::Input const*,PollInputState>,
     auto i(&p[0]);
     for(auto x : inputs) {
       short pri(exceptInputs.find(x)!=exceptInputs.end()?POLLPRI:0);
-      (*i++)={x->fileDescriptor(),POLLIN|pri,0};
+      (*i++)={x->fileDescriptor(),(short)(POLLIN|pri),0};
     }
     for(auto x : outputs) {
       (*i++)={x->fileDescriptor(),POLLOUT,0};
@@ -82,7 +73,7 @@ std::pair<std::map<xju::io::Input const*,PollInputState>,
     auto const tv_nsec(
       std::chrono::duration_cast<std::chrono::nanoseconds>(timeout-tv_sec));
     struct timespec timeout_{tv_sec.count(),tv_nsec.count()};
-    int const n=::poll(p,nfds,&timeout_);
+    int const n=::ppoll(p,nfds,&timeout_,0);
     switch(n) {
     case 0:
       break;
@@ -95,16 +86,16 @@ std::pair<std::map<xju::io::Input const*,PollInputState>,
       break;
     default:
     {
-      auto i(&p[0])
+      auto i(&p[0]);
       for(auto x : inputs) {
-        if (p[*i].revents & POLLIN|POLLPRI|POLLERR|POLLHUP){
-          result.first.insert({x,(PollInputState)p[*i].revents});
+        if ((*i).revents & (POLLIN|POLLPRI|POLLERR|POLLHUP)){
+          result.first.insert({x,(PollInputState)(*i).revents});
         }
         ++i;
       }
       for(auto x : outputs) {
-        if (p[*i].revents & POLLOUT|POLLERR|POLLHUP){
-          result.second.insert({x,(PollOutputState)p[*i].revents});
+        if ((*i).revents & (POLLOUT|POLLERR|POLLHUP)){
+          result.second.insert({x,(PollOutputState)(*i).revents});
         }
         ++i;
       }
@@ -117,39 +108,44 @@ std::pair<std::map<xju::io::Input const*,PollInputState>,
   return result;
 }
 
-/* REVISIT
 // as above but without any outputs or excepts
 // 
-std::set<Input const* > select(
+std::map<xju::io::Input const*,PollInputState>
+poll(
   std::set<Input const* > const& inputs,
   std::chrono::steady_clock::time_point const& deadline) /*throw(
     xju::SyscallFailed)*/
 {
-  return select(inputs,std::set<Output const* >(),deadline).first;
+  return poll(inputs,std::set<Output const* >(),deadline).first;
 }
 
 // as above but without any outputs, except per bool
 // 
-std::set<Input const* > select(
+std::map<xju::io::Input const*,PollInputState> poll(
   std::map<Input const*,bool> const& inputs, //bool true selects for pri too
   std::chrono::steady_clock::time_point const& deadline) /*throw(
     xju::SyscallFailed)*/
 {
-  REVISIT;
-  return select(inputs,std::set<Output const* >(),deadline).first;
+  std::set<Input const*> r;
+  std::set<Input const*> p;
+  for(auto x: inputs){
+    r.insert(x.first);
+    if (x.second){
+      p.insert(x.first);
+    }
+  }
+  return poll(r,std::set<Output const* >(),deadline,p).first;
 }
 
 // as above but without any inputs
 // 
-std::set<Output const* > select(
+std::map<Output const*,PollOutputState > poll(
   std::set<Output const* > const& outputs,
   std::chrono::steady_clock::time_point const& deadline) /*throw(
     std::bad_alloc)*/
 {
-  REVISIT;
-  return select(std::set<Input const*>(),outputs,deadline).second;
+  return poll(std::set<Input const*>(),outputs,deadline).second;
 }
-*/
 
 }
 }

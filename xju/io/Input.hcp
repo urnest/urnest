@@ -18,12 +18,16 @@
 #include <iosfwd>
 
 #include <iostream> //impl
+#include <xju/io/PollInputState.hh>
+#include <xju/io/PollOutputState.hh>
+#include <map>
 
 
 namespace xju
 {
 namespace io
 {
+
 class Output;
 class Input
 {
@@ -52,6 +56,12 @@ protected:
   std::chrono::steady_clock::time_point const& deadline) /*throw(
     std::bad_alloc)*/;
 
+  friend std::pair<std::map<xju::io::Input const*,PollInputState>,
+                   std::map<xju::io::Output const*,PollOutputState> > poll(
+                     std::set<xju::io::Input const*> const& inputs,
+                     std::set<xju::io::Output const*> const& outputs,
+                     std::chrono::steady_clock::time_point const& deadline,
+                     std::set<xju::io::Input const*> const& exceptInputs);
 };
 std::ostream& operator<<(std::ostream& s, Input const& x) throw()
 {

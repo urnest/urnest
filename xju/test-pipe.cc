@@ -11,6 +11,8 @@
 
 #include <iostream>
 #include <xju/assert.hh>
+#include <xju/io/poll.hh>
+#include <xju/steadyNow.hh>
 
 namespace xju
 {
@@ -21,12 +23,49 @@ void assert_a_contains_b(std::string const& a, std::string const& b)
 }
 
 void test1() {
-  auto const p(xju::pipe(true,true));
+  auto p(xju::pipe(true,true));
   xju::assert_not_equal(nullptr,p.first.get());
   xju::assert_not_equal(nullptr,p.second.get());
   assert_a_contains_b(p.first->str(),"readable end of pipe");
   assert_a_contains_b(p.second->str(),"writeable end of pipe");
-  
+  {
+    auto x(xju::io::poll({p.first.get()},
+                         {p.second.get()},
+                         xju::steadyNow()));
+    xju::assert_equal(x,
+                      decltype(x)(
+                        {},
+                        { {p.second.get(),xju::io::PollOutputState::OUT} }));
+  }
+  p.second->write("f",1U,xju::steadyNow());
+  {
+    auto x(xju::io::poll({p.first.get()},
+                         {p.second.get()},
+                         xju::steadyNow()));
+    xju::assert_equal(x,
+                      decltype(x)(
+                        { {p.first.get(),xju::io::PollInputState::IN} },
+                        { {p.second.get(),xju::io::PollOutputState::OUT} }));
+  }
+  p.second.reset();
+  {
+    auto x(xju::io::poll({p.first.get()},
+                         xju::steadyNow()));
+    xju::assert_equal(x,
+                      decltype(x)(
+                        { {p.first.get(),(xju::io::PollInputState::IN|
+                                          xju::io::PollInputState::HUP)} } ));
+  }
+  {
+    char f;
+    p.first->read(&f,1,xju::steadyNow());
+    xju::assert_equal(f,'f');
+    auto x(xju::io::poll({p.first.get()},
+                         xju::steadyNow()));
+    xju::assert_equal(x,
+                      decltype(x)(
+                        { {p.first.get(),(xju::io::PollInputState::HUP)} } ));
+  }
 }
 
 }
