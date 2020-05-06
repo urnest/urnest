@@ -9,13 +9,26 @@
 //
 
 
+#include <xju/AutoFd.hh> //impl
+#include <sstream> //impl
+#include <xju/ip/UDPSocket.hh> //impl
+#include <cinttypes> //impl
+#include <xju/ip/icmp/Message.hh> //impl
+#include <xju/Optional.hh> //impl
+#include <iostream> //impl
+#include <xju/format.hh> //impl
+#include <vector> //impl
+#include <netinet/ip.h> //impl
+#include <xju/syscall.hh>
+#include <xju/socket.hh> //impl
+#include <arpa/inet.h> //impl
+
 namespace xju
 {
 namespace ip
 {
 
-class UDPSocketErrorQueue
-{
+namespace{
 void enableErrors(xju::AutoFd const& socket) /*throw(
   xju::Exception)*/
 {
@@ -106,18 +119,39 @@ void enableErrors(xju::AutoFd const& socket) /*throw(
   }
   catch(xju::Exception& e){
     std::ostringstream s;
-    s << "enable receive drop reporting on UDPSocket";
+    s << "enable delivery failure notice reporting on UDPSocket " << s;
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }
 }
-  class DeliveryFailure
+
+class UDPDeliveryFailureNoticeQueue
+{
+public:
+  // Collect delivery failures notices:
+  //   - icmp failure notices
+  //   - local failure notices
+  // ... for messages sent out by s.
+  //
+  // Be sure to actually collect notices or they fill s' buffers
+  // and prevent it sending/receiving messages.
+  //
+  // To wait for errors, use xju::io::poll with s as either input, output
+  // or both and check for POLLERR.
+  //
+  // pre: lifetime(s) includes lifetime(this)
+  explicit UDPDeliveryFailureNoticeQueue(UDPSocket& s) noexcept:
+      s_(s)
+  {
+    enableErrors(s_.fd_);
+  }
+  class DeliveryFailureNotice
   {
   public:
     // Local failure, e.g. no route
-    DeliveryFailure(std::pair<xju::ip::v4::Address,xju::ip::Port> to,
-                    uint32_t errno,
-                    uint32_t info // meaning depends on errno REVISIT: as in?
+    DeliveryFailureNotice(std::pair<xju::ip::v4::Address,xju::ip::Port> to,
+                          uint32_t errno,
+                          uint32_t info
       ) noexcept
         :to_(to),
          errno_(errno),
@@ -125,14 +159,14 @@ void enableErrors(xju::AutoFd const& socket) /*throw(
     {
     }
     // Non-local failure, e.g. host unreachable
-    DeliveryFailure(std::pair<xju::ip::v4::Address,xju::ip::Port> to,
-                    uint32_t errno,
-                    uint32_t info, // meaning depends on errno REVISIT: as in?
-                    std::tuple<
-                      xju::ip::v4::Address, // dropped by
-                      xju::ip::icmp::Message::Type, // why
-                      xju::ip::icmp::Message::Code  //  "
-                    > droppedBecause) noexcept
+    DeliveryFailureNotice(std::pair<xju::ip::v4::Address,xju::ip::Port> to,
+                          uint32_t errno,
+                          uint32_t info, 
+                          std::tuple<
+                            xju::ip::v4::Address, // dropped by
+                            xju::ip::icmp::Message::Type, // why
+                            xju::ip::icmp::Message::Code  //  "
+                          > droppedBecause) noexcept
         :to_(to),
          errno_(errno),
          info_(info),
@@ -140,7 +174,8 @@ void enableErrors(xju::AutoFd const& socket) /*throw(
     }
     std::pair<xju::ip::v4::Address,xju::ip::Port> to_;
     uint32_t errno_;
-    uint32_t info;
+    uint32_t info; // MTU where errno is EMSGSIZE; REVIISIT: others?
+
     xju::Optional<std::tuple<
                       xju::ip::v4::Address, // dropped by
                       xju::ip::icmp::Message::Type, // why
@@ -161,76 +196,73 @@ void enableErrors(xju::AutoFd const& socket) /*throw(
       }
       else{
         s << " locally with errno " << x.errno_ << " and info "
-          << xju::format::int(x.info_);
+          << xju::format::int_(x.info_);
       }
       return s;
     }
   };
 
-  std::vector<DeliveryFailure> getDeliveryFailures() noexcept
+  // Get any failure notices received by s since last call to
+  // getFailureNotices/construction.
+  std::vector<DeliveryFailureNotice> getFailureNotices() noexcept
   {
-    uint8_t buffer[64];
-    sockaddr_in target_addr;
-    struct iovec v={buffer,size};
-    union {
-      char buf[CMSG_SPACE(sizeof(uint32_t))];
-      struct cmsghdr align;
-    } u;
-    struct msghdr h={
-      &target_addr,sizeof(target_addr),
-      &v,1,
-      u.buf,sizeof(u.buf),
-      IP_RECVERR
-    };
-    ssize_t const bytesRead=xju::syscall(xju::recvmsg,XJU_TRACED)(
-      fileDescriptor(),
-      &h,
-      MSG_NOSIGNAL);
-    std::vector<DeliveryFailure> result;
-    struct cmsghdr* cmsg{CMSG_FIRSTHDR(&h)};
-    //SO_RXQ_OVFL is poorly documented, don't get the
-    // message until there are drops and the counter does not
-    // reset
-    for (; cmsg; cmsg = CMSG_NXTHDR(&h, cmsg)) {
-      if (cmsg->cmsg_level == SOL_SOCKET &&
-          cmsg->cmsg_type == SO_RXQ_OVFL) { //REVISIT: do we get this here?
-        uint32_t drops;
-        memcpy(&drops,CMSG_DATA(cmsg),sizeof(drops));
-        drops_.store(drops);
+    while(true){
+      uint8_t buffer[64];
+      sockaddr_in target_addr;
+      struct iovec v={buffer,size};
+      union {
+        char buf[CMSG_SPACE(sizeof(uint32_t))];
+        struct cmsghdr align;
+      } u;
+      struct msghdr h={
+        &target_addr,sizeof(target_addr),
+        &v,1,
+        u.buf,sizeof(u.buf),
+        IP_RECVERR
+      };
+      ssize_t const bytesRead=xju::syscall(xju::recvmsg,XJU_TRACED)(
+        s.fileDescriptor(),
+        &h,
+        MSG_NOSIGNAL);
+      if (bytesRead==EAGAIN||bytesRead==EWOULDBLOCK){
+        return result;
       }
-      else if (cmsg->cmsg_level == SOL_IP &&
-               cmsg->cmsg_type == IP_RECVERR) {
-        auto const e((struct sock_extended_err const*)CMSG_DATA(cmsg));
-        switch(e->ee_origin){
-        case SO_EE_ORIGIN_LOCAL:
-          result.push_back(
-            DeliveryFailure(
-              {xju::ip::v4::Address(::ntohl(target_addr.sin_addr.s_addr)),
-               xju::ip::Port(::ntohs(target_addr.sin_port))},
-              ee.ee_errno,
-              ee.ee_info));
-          break;
-        case SO_EE_ORIGIN_ICMP:
-        {
-          if (SO_EE_OFFENDER(ee)->sin_family==AF_INET){
-            auto const sender((struct sockaddr_in const*)SO_EE_OFFENDER(ee));
+      std::vector<DeliveryFailure> result;
+      struct cmsghdr* cmsg{CMSG_FIRSTHDR(&h)};
+      for (; cmsg; cmsg = CMSG_NXTHDR(&h, cmsg)) {
+        if (cmsg->cmsg_level == SOL_IP &&
+            cmsg->cmsg_type == IP_RECVERR) {
+          auto const e((struct sock_extended_err const*)CMSG_DATA(cmsg));
+          switch(e->ee_origin){
+          case SO_EE_ORIGIN_LOCAL:
             result.push_back(
               DeliveryFailure(
                 {xju::ip::v4::Address(::ntohl(target_addr.sin_addr.s_addr)),
                  xju::ip::Port(::ntohs(target_addr.sin_port))},
                 ee.ee_errno,
-                ee.ee_info,
-                decltype(result.front())(
-                  xju::ip::v4::Address(::ntohl(sender.sin_addr.s_addr)),
-                  ee.ee_type,
-                  ee.ee_code)));
+                ee.ee_info));
+            break;
+          case SO_EE_ORIGIN_ICMP:
+          {
+            if (SO_EE_OFFENDER(ee)->sin_family==AF_INET){
+              auto const sender((struct sockaddr_in const*)SO_EE_OFFENDER(ee));
+              result.push_back(
+                DeliveryFailure(
+                  {xju::ip::v4::Address(::ntohl(target_addr.sin_addr.s_addr)),
+                   xju::ip::Port(::ntohs(target_addr.sin_port))},
+                  ee.ee_errno,
+                  ee.ee_info,
+                  decltype(result.front())(
+                    xju::ip::v4::Address(::ntohl(sender.sin_addr.s_addr)),
+                    ee.ee_type,
+                    ee.ee_code)));
+            }
           }
-        }
-        //REVISIT: IPv6 SO_EE_ORIGIN_ICMP6
+          //REVISIT: IPv6 SO_EE_ORIGIN_ICMP6
+          }
         }
       }
     }
-    return result;
   }
 };
 

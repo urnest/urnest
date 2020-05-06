@@ -298,6 +298,8 @@ protected:
   int fileDescriptor() const throw() {
     return fd_.fd();
   }
+
+  friend class UDPDeliveryFailureNoticeQueue;
 };
   
 }
