@@ -1,0 +1,48 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/path.hh>
+#include <set>
+#include <xju/dirent.hh>
+
+namespace xju
+{
+namespace file
+{
+
+// directory entries excluding "." and ".."
+std::set<xju::path::AbsFile> ls(xju::path::AbsolutePath const& directory)
+// xju::SysCallFailed
+{
+  try{
+    std::set<xju::path::AbsFile> result;
+    auto const name(xju::path::str(directory));
+    errno=0;
+    DIR * x(xju::syscall(xju::opendir,XJU_TRACED)(name.c_str()));
+    while(x){
+      xju::path::FileName f(x->d_name);
+      if (f!=xju::path::FileName(".") && f!=xju::path::FileName("..")){
+        result.push_back({directory.first,xju::path::FileName(x->d_name)});
+      }
+      errno=0;
+      x=xju::syscall(xju::readdir,XJU_TRACED)(x);
+    }
+    return result;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "list directory " << directory << " entries excluding '.' and '..'";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+
+}
+}
