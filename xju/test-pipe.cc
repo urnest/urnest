@@ -13,6 +13,9 @@
 #include <xju/assert.hh>
 #include <xju/io/poll.hh>
 #include <xju/steadyNow.hh>
+#include <xju/Thread.hh>
+#include <chrono>
+#include <vector>
 
 namespace xju
 {
@@ -28,6 +31,36 @@ void test1() {
   xju::assert_not_equal(nullptr,p.second.get());
   assert_a_contains_b(p.first->str(),"readable end of pipe");
   assert_a_contains_b(p.second->str(),"writeable end of pipe");
+  {
+    std::vector<uint8_t> data;
+    for(auto i=0; i!=2048;++i){
+      data.push_back((i>>0)&0xff);
+      data.push_back((i>>8)&0xff);
+      data.push_back((i>>16)&0xff);
+      data.push_back((i>>24)&0xff);
+    }
+    auto const deadline(xju::steadyNow()+std::chrono::seconds(10));
+    xju::Thread t(
+      [&data,&p,&deadline](){
+        auto const begin(&data[0]);
+        auto const end(begin+data.size());
+        auto x(begin);
+        while(x<&data[data.size()]){
+          auto s((::rand()%(data.size()-(x-begin)))+1);
+          xju::assert_less_equal(x+s,end);
+          s=p.second->write(x,s,deadline);
+          xju::assert_less(xju::steadyNow(),deadline);
+          std::this_thread::sleep_for(std::chrono::milliseconds(1));
+          x+=s;
+        }
+      });
+    std::vector<uint8_t> out(data.size(),0);
+    size_t bytesRead(0);
+    while(bytesRead<data.size()){
+      bytesRead+=p.first->read(&out[0]+bytesRead,16,deadline);
+    }
+    xju::assert_equal(data,out);
+  }
   {
     auto x(xju::io::poll({p.first.get()},
                          {p.second.get()},

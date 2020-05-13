@@ -43,12 +43,12 @@ public:
       deadline-std::chrono::steady_clock::now());
     size_t bytesRead(0);
     try {
-      uint8_t* p((uint8_t*)buffer);
+      uint8_t* const begin((uint8_t*)buffer);
       while(bytesRead<bufferSize &&
             xju::io::select({this},deadline).size()) {
         size_t const thisRead=xju::syscall(xju::read,XJU_TRACED)(
           fileDescriptor(),
-          p,
+          begin+bytesRead,
           std::min(bufferSize-bytesRead,
                    (size_t)std::numeric_limits<ssize_t>::max()));
         if (thisRead==0) {
