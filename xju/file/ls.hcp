@@ -12,11 +12,23 @@
 #include <xju/path.hh>
 #include <set>
 #include <xju/dirent.hh>
+#include <sys/types.h> //impl
+#include <memory> //impl
 
 namespace xju
 {
 namespace file
 {
+namespace {
+class D
+{
+public:
+  void operator()(DIR* x){
+    xju::syscall(xju::closedir,XJU_TRACED)(x);
+  }
+};
+
+}
 
 // directory entries excluding "." and ".."
 std::set<xju::path::AbsFile> ls(xju::path::AbsolutePath const& directory)
@@ -25,15 +37,16 @@ std::set<xju::path::AbsFile> ls(xju::path::AbsolutePath const& directory)
   try{
     std::set<xju::path::AbsFile> result;
     auto const name(xju::path::str(directory));
-    errno=0;
-    DIR * x(xju::syscall(xju::opendir,XJU_TRACED)(name.c_str()));
-    while(x){
+    std::unique_ptr<DIR,D> d(
+      xju::syscall(xju::opendir,XJU_TRACED,true,(DIR*)0)(name.c_str()));
+    for(auto x=xju::readdir(d.get(),XJU_TRACED);
+        x!=0;
+        x=xju::readdir(d.get(),XJU_TRACED))
+    {
       xju::path::FileName f(x->d_name);
       if (f!=xju::path::FileName(".") && f!=xju::path::FileName("..")){
-        result.push_back({directory.first,xju::path::FileName(x->d_name)});
+        result.insert({directory,f});
       }
-      errno=0;
-      x=xju::syscall(xju::readdir,XJU_TRACED)(x);
     }
     return result;
   }
@@ -43,6 +56,7 @@ std::set<xju::path::AbsFile> ls(xju::path::AbsolutePath const& directory)
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }
+}
 
 }
 }

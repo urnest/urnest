@@ -4,6 +4,7 @@
 %tests.tree
 
 %tests.tree==<<
+()+cmd=(test-ls.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 %hcp-gen==.:dir.hcp.list+G+hpath='xju/file':hcp-split-virdir-specs:cat:vir_dir
 
