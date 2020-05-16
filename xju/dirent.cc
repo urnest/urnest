@@ -11,15 +11,23 @@
 
 namespace xju
 {
-const SyscallF1<DIR*, const char*> opendir(
+const SyscallF1<DIR*, const char*> opendir={
   "opendir",
-  ::opendir,
-  true,
-  (DIR*)0);
-const SyscallF1<DIR*, DIR*> readdir(
-  "readdir",
-  ::readdir,
-  true,
-  (DIR*)0);
+  ::opendir};
+const SyscallF1<int, DIR*> closedir={
+  "closedir",
+  ::closedir};
 
+dirent* readdir(DIR* dir,xju::Traced const& t)
+// throw SyscallFailed
+{
+  errno = 0;
+  auto const result(::readdir(dir));
+  if (result==0 && errno != 0){
+    throw SyscallFailed("readdir",errno, t);
+  }
+  return result;
 }
+      
+}
+

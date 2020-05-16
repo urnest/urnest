@@ -17,7 +17,14 @@
 namespace xju
 {
 extern const SyscallF1<DIR*, const char*> opendir;
-extern const SyscallF1<DIR*, DIR*> readdir;
+extern const SyscallF1<int, DIR*> closedir;
+
+// note readdir does not follow system call error conventions so
+// is not made available like above
+// - returns 0 at end of entries
+dirent* readdir(DIR* dir,xju::Traced const& t)
+// throw SyscallFailed
+  ;
 
 }
 
