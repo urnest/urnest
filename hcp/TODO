@@ -1,5 +1,7 @@
 - parseString needs context
 
+- hcp-tags does not get e.g. xju::recvmsg
+
 x rework parseOneOfChars to allow correct error message
 x support [[noreturn]] so can add to xju::assert_never_reached()
 
