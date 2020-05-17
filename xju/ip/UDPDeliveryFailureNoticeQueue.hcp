@@ -232,19 +232,19 @@ public:
         sockaddr_in target_addr;
         struct iovec v={buffer,sizeof(buffer)};
         union {
-          char buf[CMSG_SPACE(sizeof(uint32_t))];
+          char buf[CMSG_SPACE(sizeof(struct sock_extended_err)+sizeof(struct sockaddr_in))];
           struct cmsghdr align;
         } u;
         struct msghdr h={
           &target_addr,sizeof(target_addr),
           &v,1,
           u.buf,sizeof(u.buf),
-          IP_RECVERR
+          0
         };
         ssize_t const bytesRead=xju::syscall(xju::recvmsg,XJU_TRACED)(
           s_.fileDescriptor(),
           &h,
-          MSG_NOSIGNAL);
+          MSG_NOSIGNAL|MSG_ERRQUEUE);
         struct cmsghdr* cmsg{CMSG_FIRSTHDR(&h)};
         for (; cmsg; cmsg = CMSG_NXTHDR(&h, cmsg)) {
           if (cmsg->cmsg_level == SOL_IP &&
@@ -265,8 +265,9 @@ public:
             break;
             case SO_EE_ORIGIN_ICMP:
             {
-              if (SO_EE_OFFENDER(e)->sa_family==AF_INET){
-                auto const sender((struct sockaddr_in const*)SO_EE_OFFENDER(e));
+              auto const offender(SO_EE_OFFENDER(e));
+              if (offender->sa_family==AF_INET){
+                auto const sender((struct sockaddr_in const*)offender);
                 result.push_back(
                   DeliveryFailureNotice(
                     {xju::ip::v4::Address(::ntohl(target_addr.sin_addr.s_addr)),
