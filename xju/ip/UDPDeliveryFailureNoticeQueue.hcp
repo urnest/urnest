@@ -49,9 +49,9 @@ namespace{
       xju::syscall(xju::setsockopt,XJU_TRACED)(
         socket.fd(),IPPROTO_IP,IP_RECVERR,&v,l);
       
-      // now what?
-      // x do we have to also set IP_RECVERR when calling recvmsg? if we do will
-      //   recvmsg only return errors or valid message if no error?
+      // now what? doco is soo bad have to read the kernel source
+      // x do we have to also set IP_RECVERR when calling recvmsg? if we do
+      //   will recvmsg only return errors or valid message if no error?
       //   x MSG_ERRQUEUE on recvmsg only calls
       //     - ip_recv_error
       //     ... else calls
@@ -121,12 +121,6 @@ namespace{
       //     But counters are pretty useless for tracking down problems
       //     with specific flows: better to use raw socket?
       //
-      // So mingling IP_RECVERR messages in with UDPSocket::receive is silly.
-      // Should be getSendError() call when select(except). But that makes
-      // it hard to use correctly because if we don't call getSendError we
-      // end up clogging the socket and every send gets rejected and every
-      // in packet gets dropped?
-      // REVISIT: in receive select for error too
     }
     catch(xju::Exception& e){
       std::ostringstream s;
