@@ -1,7 +1,7 @@
 - parseString needs context
 
-- hcp-tags does not get e.g. xju::recvmsg
-
+x hcp-tags does not get e.g. xju::recvmsg
+  (it is ExternVarDef)
 x rework parseOneOfChars to allow correct error message
 x support [[noreturn]] so can add to xju::assert_never_reached()
 
@@ -53,6 +53,8 @@ x final
 * constexpr
 
 - utf8? e.g. import stuff gets confused about where to place things
+  when initial comment block has ut8 chars (probably because
+  it returns byte offset to emacs which interprets as char offset?)
 
 - trace should go to stderr
 

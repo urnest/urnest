@@ -170,6 +170,17 @@ std::pair<Symbol,LineNumber> genGlobalVar(hcp_ast::GlobalVarDef const& x) /*thro
   return std::make_pair(symbol,lineNumber);
 }
 
+std::pair<Symbol,LineNumber> genExternVar(hcp_ast::ExternVarDef const& x) /*throw(
+  xju::Exception)*/
+{
+  // might be a function pointer var, in which case the first VarName
+  // is what we want (the others being param names)
+  auto const y(hcp_ast::findChildrenOfType<hcp_ast::VarName>(x));
+  Symbol symbol(reconstruct(y[0]));
+  LineNumber lineNumber(y[0].get().begin().line_);
+  return std::make_pair(symbol,lineNumber);
+}
+
 std::map<Symbol,LineNumber> genNamespace(hcp_ast::NamespaceDef const& x) /*throw(
   xju::Exception)*/
 {
@@ -236,6 +247,10 @@ std::map<Symbol,LineNumber> genNamespaceContent(hcp_ast::IRs const& x) /*throw(
     else if ((*i)->isA<hcp_ast::GlobalVarDef>())
     {
       result.insert(genGlobalVar((*i)->asA<hcp_ast::GlobalVarDef>()));
+    }
+    else if ((*i)->isA<hcp_ast::ExternVarDef>())
+    {
+      result.insert(genExternVar((*i)->asA<hcp_ast::ExternVarDef>()));
     }
   }
   return result;
