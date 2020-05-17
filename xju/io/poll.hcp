@@ -23,6 +23,8 @@
 #include <map>
 #include <xju/io/PollInputState.hh>
 #include <xju/io/PollOutputState.hh>
+#include <algorithm> //impl
+#include <limits> //impl
 
 namespace xju
 {
@@ -72,7 +74,11 @@ std::pair<std::map<xju::io::Input const*,PollInputState>,
       std::chrono::duration_cast<std::chrono::seconds>(timeout));
     auto const tv_nsec(
       std::chrono::duration_cast<std::chrono::nanoseconds>(timeout-tv_sec));
-    struct timespec timeout_{tv_sec.count(),tv_nsec.count()};
+    struct timespec timeout_{
+      std::min(tv_sec.count(),
+               std::numeric_limits<decltype(
+                 ((struct timespec*)0)->tv_sec)>::max()),
+      tv_nsec.count()};
     int const n=::ppoll(p,nfds,&timeout_,0);
     switch(n) {
     case 0:

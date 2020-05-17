@@ -9,9 +9,9 @@
   - provide std-style wait_until, wait_for
   - test wait_until(xju::steadyEternity) ...BROKEN
     - fix is easy - explicit test for xju::steadyEternity
-    - same fix needed for io::select
+    x same fix needed for io::select, io::poll
 
-- test-Array copy/move/list v noexcept/except
+x test-Array copy/move/list v noexcept/except
 
 - Mutex constexpr
 

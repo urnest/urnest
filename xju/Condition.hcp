@@ -48,6 +48,8 @@
 #include <xju/Mutex.hh>
 #include <xju/steadyNow.hh> //impl
 #include <xju/now.hh> //impl
+#include <xju/steadyEternity.hh> //impl
+#include <xju/eternity.hh> //impl
 
 namespace xju
 {
@@ -104,12 +106,18 @@ public:
             const std::chrono::steady_clock::time_point& timeout) throw()
   {
     assert_equal(l.holds(_guard), true);
+    if (timeout==xju::steadyEternity()){ //std library broken
+      return _impl.wait(l.l_);
+    }
     _impl.wait_until(l.l_,timeout);
   }
   void wait(Lock& l,
             const std::chrono::system_clock::time_point& timeout) throw()
   {
     assert_equal(l.holds(_guard), true);
+    if (timeout==xju::eternity()){ //std library broken
+      return _impl.wait(l.l_);
+    }
     _impl.wait_until(l.l_,timeout);
   }
   

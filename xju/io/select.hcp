@@ -20,11 +20,41 @@
 #include <xju/format.hh> //impl
 #include <sys/select.h> //impl
 #include "xju/syscall.hh"
+#include <limits> //impl
+#include <xju/steadyEternity.hh> //impl
 
 namespace xju
 {
 namespace io
 {
+namespace
+{
+timeval makeTimeout(std::chrono::steady_clock::time_point const& deadline)
+  noexcept
+{
+  struct timeval timeout_;
+  if (deadline==xju::steadyEternity()){
+    timeout_.tv_sec=std::numeric_limits<decltype(timeout_.tv_sec)>::max();
+    timeout_.tv_usec=999999;
+  }
+  else{
+    auto const now(std::chrono::steady_clock::now());
+    std::chrono::system_clock::duration timeout(deadline-now);
+    if (timeout<std::chrono::seconds(0)){
+      timeout=std::chrono::seconds(0);
+    }
+    std::chrono::seconds const tv_sec(
+      std::chrono::duration_cast<std::chrono::seconds>(timeout));
+    std::chrono::microseconds const tv_usec(
+      std::chrono::duration_cast<std::chrono::microseconds>(timeout-tv_sec));
+    timeout_.tv_sec=tv_sec.count();
+    timeout_.tv_usec=tv_usec.count();
+  }
+  return timeout_;
+}
+
+}
+
 class Input;
 class Output;
 
@@ -54,18 +84,7 @@ std::pair<std::set<xju::io::Input const*>,
     for(auto x : outputs) {
       FD_SET(x->fileDescriptor(),&w);
     }
-    auto const now(std::chrono::steady_clock::now());
-    std::chrono::system_clock::duration timeout(deadline-now);
-    if (timeout<std::chrono::seconds(0)){
-      timeout=std::chrono::seconds(0);
-    }
-    std::chrono::seconds const tv_sec(
-      std::chrono::duration_cast<std::chrono::seconds>(timeout));
-    std::chrono::microseconds const tv_usec(
-      std::chrono::duration_cast<std::chrono::microseconds>(timeout-tv_sec));
-    struct timeval timeout_;
-    timeout_.tv_sec=tv_sec.count();
-    timeout_.tv_usec=tv_usec.count();
+    auto timeout_(makeTimeout(deadline));
     n=::select(FD_SETSIZE,&r,&w,0,&timeout_);
     switch(n) {
     case 0:

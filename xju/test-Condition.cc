@@ -102,8 +102,7 @@ void test3()
     });
   auto const t1{xju::steadyNow()};
   while(!flag){
-    //REVISIT: broken c.wait(l,xju::steadyNow()+std::chrono::seconds(1));
-    c.wait(l,xju::steadyNow()+std::chrono::seconds(1));
+    c.wait(l,xju::steadyEternity());
   }
   auto const t2{xju::steadyNow()};
   xju::assert_less(t2,t1+std::chrono::milliseconds(500));
