@@ -89,8 +89,22 @@ hcp_parser::I findTrailingWhitespace(hcp_parser::IR x) throw()
   return x->end();
 }
 
-  
+hcp_parser::PR before(){
+  return hcp_parser::PR(
+    hcp_parser::comments()+
+    hcp_parser::zeroOrMore()*(
+      hcp_parser::eatWhite()+(!(hcp_parser::hashInclude()|
+                                hcp_parser::hashIncludeImpl())+
+                              hcp_parser::hash()))+
+    hcp_parser::zeroOrMore()*(hcp_parser::eatWhite()+
+                              hcp_parser::parseHash()+
+                              hcp_parser::parseUntil(
+                                hcp_parser::parseLiteral("\n"))+
+                              hcp_parser::parseLiteral("\n")));
 }
+     
+}
+
 
 
 
@@ -108,6 +122,7 @@ public:
 };
 struct IncludeTargetTag{};
 typedef xju::Tagged<std::string,IncludeTargetTag> IncludeTarget;
+
 
 // return x adjusted to include the header defining the
 // symbol at specified offset, parsing x with tracing if specified
@@ -164,37 +179,14 @@ std::pair<std::string,IncludeTarget> importSymbolAt(
         hcpMappings):
       h[0]._);
 
-    //push empty IR so our following code can insert #include
-    //at the very begining
-    hcp_parser::IRs irsAtEnd{
-      hcp_parser::IR(
-        new hcp_ast::Comments(
-          hcp_parser::IRs(1U,
-                          hcp_ast::IR(
-                            new hcp_ast::Item(
-                              hcp_ast::I(x.begin(),x.end()),
-                              hcp_ast::I(x.begin(),x.end()))))))};
-    std::copy(rirsAtEnd.rbegin(),rirsAtEnd.rend(),
-              std::back_inserter(irsAtEnd));
-    
-    hcp_parser::IR insertAfter(*irsAtEnd.begin());
-
-    auto i(xju::next(irsAtEnd.begin()));
-    // skip over initial comment block if any, then
-    if (i!=irsAtEnd.end() &&
-        (*i)->isA<hcp_ast::Comments>()){
-      insertAfter=*i;
-      ++i;
-    }
-    // irsAtEnd will include all #includes, so check those for
-    // already mentioned
-    while(i!=irsAtEnd.end()){
-      auto const j(std::find_if(i,irsAtEnd.end(),
+    auto i(xju::next(rirsAtEnd.begin()));
+    while(i!=rirsAtEnd.end()){
+      auto const j(std::find_if(i,rirsAtEnd.end(),
                                 [](hcp_ast::IR const x){
                                   return (*x).isA<hcp_ast::HashInclude>()||
                                     (*x).isA<hcp_ast::HashIncludeImpl>();
                                 }));
-      if (j != irsAtEnd.end()){
+      if (j != rirsAtEnd.end()){
         auto const item(*j);
         if (item->isA<hcp_ast::HashInclude>()){
           std::string const existing(targetOfHashInclude(
@@ -212,7 +204,6 @@ std::pair<std::string,IncludeTarget> importSymbolAt(
             return std::make_pair(x,IncludeTarget(includeTarget));
           }
         }
-        insertAfter=(*j); // remember last #include
         i=xju::next(j);
       }
       else{
@@ -221,11 +212,17 @@ std::pair<std::string,IncludeTarget> importSymbolAt(
     }
     
     // insert #include <location> and add //impl if in "impl" scope
-    std::string const hashInclude(
+    std::string hashInclude(
       scope.second&&!suppressImplMarker?
       "#include <"+includeTarget+"> //impl\n":
       "#include <"+includeTarget+">\n");
-    auto const insertAt(findTrailingWhitespace(insertAfter));
+
+    auto const insertAt(hcp_parser::parse(hcp_ast::I(x.begin(),x.end()),
+                                          before()).second);
+    if (insertAt.x_!=x.end() && *(insertAt.x_)!='\n')
+    {
+      hashInclude=hashInclude+"\n";
+    }
     return std::make_pair(
       std::string(x.begin(),insertAt.x_)+hashInclude+
       std::string(insertAt.x_,x.end()),

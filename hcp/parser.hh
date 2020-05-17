@@ -452,6 +452,7 @@ PR crlf() throw();
 // rest are C++-specific
 PR doubleSlash() throw(); // "//"
 PR slashStar() throw(); // "/*"
+PR parseHash() throw(); // '#' but only at beginning of line
 PR comments() throw();
 PR eatWhite() throw(); // matches nothing or something; eats C++ comments
 PR identifier() throw(); //C++ identifier

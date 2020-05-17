@@ -8,8 +8,6 @@
 // implied warranty.
 //
 
-
-#include <xju/AutoFd.hh> //impl
 #include <sstream> //impl
 #include <xju/ip/UDPSocket.hh> //impl
 #include <cinttypes> //impl
@@ -33,6 +31,7 @@
 #include <vector>
 #include <sys/types.h> //impl
 #include <linux/errqueue.h> //impl
+#include <xju/AutoFd.hh> //impl
 
 namespace xju
 {
