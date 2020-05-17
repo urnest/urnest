@@ -89,7 +89,7 @@ void test2(std::string const& x,
   xju::assert_equal(
     importSymbolAt(
       y,
-      32U,
+      33U,
       *l([](::hcp::tags::Lookup::NamespaceNames const& fromScope,
             ::hcp::tags::Lookup::NamespaceNames const& symbolScope,
             ::hcp::tags::UnqualifiedSymbol const& symbol){
@@ -122,7 +122,7 @@ void test3(std::string const& x,
   xju::assert_equal(
     importSymbolAt(
       y,
-      36U,
+      37U,
       *l([](::hcp::tags::Lookup::NamespaceNames const& fromScope,
             ::hcp::tags::Lookup::NamespaceNames const& symbolScope,
             ::hcp::tags::UnqualifiedSymbol const& symbol){
@@ -155,7 +155,7 @@ void test4(std::string const& x,
   xju::assert_equal(
     importSymbolAt(
       z,
-      74U,
+      75U,
       *l([](::hcp::tags::Lookup::NamespaceNames const& fromScope,
             ::hcp::tags::Lookup::NamespaceNames const& symbolScope,
             ::hcp::tags::UnqualifiedSymbol const& symbol){
@@ -195,7 +195,7 @@ void test5(std::string const& x,
   xju::assert_equal(
     importSymbolAt(
       x,
-      31U,
+      32U,
       *l([](::hcp::tags::Lookup::NamespaceNames const& fromScope,
             ::hcp::tags::Lookup::NamespaceNames const& symbolScope,
             ::hcp::tags::UnqualifiedSymbol const& symbol){
@@ -234,7 +234,7 @@ void test6(std::string const& x,
   xju::assert_equal(
     importSymbolAt(
       x,
-      34U,
+      35U,
       *l([](::hcp::tags::Lookup::NamespaceNames const& fromScope,
             ::hcp::tags::Lookup::NamespaceNames const& symbolScope,
             ::hcp::tags::UnqualifiedSymbol const& symbol){

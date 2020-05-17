@@ -91,7 +91,7 @@ hcp_parser::I findTrailingWhitespace(hcp_parser::IR x) throw()
 
 hcp_parser::PR before(){
   return hcp_parser::PR(
-    hcp_parser::comments()+
+    hcp_parser::optional(hcp_parser::comments())+
     hcp_parser::zeroOrMore()*(
       hcp_parser::eatWhite()+(!(hcp_parser::hashInclude()|
                                 hcp_parser::hashIncludeImpl())+

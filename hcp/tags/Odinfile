@@ -42,6 +42,7 @@ hcp-find-def==hcp-find-def.cc+(../..%cxx-opts)+lib='omniDynamic4' 'omniORB4' 'om
 ()+cmd=(%test-TagLookupService):exec.output
 ()+cmd=(test-makeRelativeIfPossible.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 %test-importSymbolAt.exe:exec.output
+%test-importSymbolAt.exe:exec:filename
 %test-symbol-at
 
 %test-importSymbolAt.exe==()+cmd=(%test-importSymbolAt)+cmd=(%test-importSymbolAt-x)+cmd=(%test-importSymbolAt-y)+cmd=(%test-importSymbolAt-z)+cmd=(%test-importSymbolAt-a)+cmd=(%test-importSymbolAt-x2)+cmd=(%test-importSymbolAt-y2)+cmd=(%test-importSymbolAt-x3)+cmd=(%test-importSymbolAt-y3):exec
@@ -53,26 +54,32 @@ class A : class B { F c;
   void c() { Q::Z z; }
 };
 
-%test-importSymbolAt-y==<<
+%test-importSymbolAt-y==<<EOF
 #include <B.hh>
+
 class A : class B { F c;
   void c() { Q::Z z; }
 };
+EOF
 
-%test-importSymbolAt-z==<<
+%test-importSymbolAt-z==<<EOF
 #include <B.hh>
 #include </d1/F.hh>
+
 class A : class B { F c;
   void c() { Q::Z z; }
 };
+EOF
 
-%test-importSymbolAt-a==<<
+%test-importSymbolAt-a==<<EOF
 #include <B.hh>
 #include </d1/F.hh>
 #include <Q/Z.hh> //impl
+
 class A : class B { F c;
   void c() { Q::Z z; }
 };
+EOF
 
 %test-importSymbolAt-x2==<<
 // abstract
@@ -81,13 +88,15 @@ class A : class B { F c;
   void c() { Q::Z z; }
 };
 
-%test-importSymbolAt-y2==<<
+%test-importSymbolAt-y2==<<EOF
 // abstract
 //
 #include <B.hh>
+
 class A : class B { F c;
   void c() { Q::Z z; }
 };
+EOF
 
 %test-importSymbolAt-x3==<<
 // abstract
@@ -96,13 +105,15 @@ class A : std::ostream { F c;
   void c() { Q::Z z; }
 };
 
-%test-importSymbolAt-y3==<<
+%test-importSymbolAt-y3==<<EOF
 // abstract
 //
 #include <iostream>
+
 class A : std::ostream { F c;
   void c() { Q::Z z; }
 };
+EOF
 
 %test-symbol-at==()+cmd=(%test-symbol-at.sh) (%test-symbol-at.got):stdout
 
