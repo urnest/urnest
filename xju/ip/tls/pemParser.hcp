@@ -9,6 +9,11 @@
 //
 
 
+#include <xju/ip/tls/PEMItem.hh>
+#include <hcp/parser.hh>
+#include <memory>
+#include <hcp/Chars.hh> //impl
+
 namespace xju
 {
 namespace ip
@@ -35,12 +40,6 @@ namespace tls
 //
 // ... note calling rfc7486 text-encoded items "PEM" is incorrect but
 // convenient
-
-class PEMItemTypeTag{};
-typedef hcp_ast::TaggedItem<PEMItemTypeTag> PEMItemType;
-
-class PEMPayloadTag{};
-typedef hcp_ast::TaggedItem<PEMPayloadTag> PEMPayloadItem;
 
 namespace{
   hcp::Chars const& base64Char() noexcept
@@ -86,9 +85,9 @@ namespace{
   {
     auto w(zeroOrMore()*whitespaceChar());
     return
-      named<PEMComments>(parseUntil("-----BEGIN "))+
+      named<PEMCommentsItem>(parseUntil("-----BEGIN "))+
       "-----BEGIN "+
-      hcp_parser::named<PEMItemType>(
+      hcp_parser::named<PEMTypeItem>(
         "PEM (RFC7468) Item Type",
         parseUntil("-"))+
       "-----"+(crlf()|lf())+

@@ -187,10 +187,10 @@ io::Output
     
     - alt might be a Crypter that handles multiple sockets, with the
       Crypter having a run method?
-      TLSSocket(TCPListener,TLSCrypter&);
+      TLSSocket(TCPListener,TLSCrypto&);
         ssl = SSL_new(ctx);
         SSL_set_bio(p->ssl, p->rbio, p->wbio);
-      TLSSocket(TCPSocket,TLSCrypter&);
+      TLSSocket(TCPSocket,TLSCrypto&);
         ssl = SSL_new(ctx);
         SSL_set_bio(p->ssl, p->rbio, p->wbio);
         SSL_set_connect_state(p->ssl);
