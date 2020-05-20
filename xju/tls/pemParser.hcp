@@ -9,9 +9,15 @@
 //
 
 
+#include <xju/tls/PEMItem.hh>
+#include <hcp/parser.hh>
+#include <memory>
+#include <hcp/Chars.hh> //impl
+#include <xju/tls/PEMCommentsItem.hh> //impl
+#include <xju/tls/PEMTypeItem.hh> //impl
+#include <xju/tls/PEMPayloadItem.hh> //impl
+
 namespace xju
-{
-namespace ip
 {
 namespace tls
 {
@@ -36,47 +42,46 @@ namespace tls
 // ... note calling rfc7486 text-encoded items "PEM" is incorrect but
 // convenient
 
-class PEMItemTypeTag{};
-typedef hcp_ast::TaggedItem<PEMItemTypeTag> PEMItemType;
-
-class PEMPayloadTag{};
-typedef hcp_ast::TaggedItem<PEMPayloadTag> PEMPayloadItem;
-
 namespace{
   hcp::Chars const& base64Char() noexcept
   {
     static hcp::Chars const result("a-zA-Z0-9+/");
     return result;
   }
+  hcp_parser::PR const& c64() noexcept
+  {
+    static auto const result(hcp_parser::parseOneOfChars(base64Char()));
+    return result;
+  }
   hcp_parser::PR fourChars() noexcept{
-    static const hcp_parser::PR result(base64char()+
-                                       base64char()+
-                                       base64char()+
-                                       base64char());
+    static const hcp_parser::PR result(c64()+
+                                       c64()+
+                                       c64()+
+                                       c64());
     return result;
   }
   hcp_parser::PR pad1() noexcept{
-    static const hcp_parser::PR result(base64char()+
-                                       base64char()+
-                                       base64char()+
+    static const hcp_parser::PR result(c64()+
+                                       c64()+
+                                       c64()+
                                        "=");
     return result;
   }
   hcp_parser::PR pad2() noexcept{
-    static const hcp_parser::PR result(base64char()+
-                                       base64char()+
+    static const hcp_parser::PR result(c64()+
+                                       c64()+
                                        "==");
     return result;
   }
   hcp_parser::PR pad3() noexcept{
-    static const hcp_parser::PR result(base64char()+
+    static const hcp_parser::PR result(c64()+
                                        "===");
     return result;
   }
   
   using hcp_parser::named;
   using hcp_parser::NamedParser;
-  using hcp_parser::parserUntil;
+  using hcp_parser::parseUntil;
   using hcp_parser::crlf;
   using hcp_parser::lf;
   using hcp_parser::zeroOrMore;
@@ -86,9 +91,9 @@ namespace{
   {
     auto w(zeroOrMore()*whitespaceChar());
     return
-      named<PEMComments>(parseUntil("-----BEGIN "))+
+      named<PEMCommentsItem>("PEM comments",parseUntil("-----BEGIN "))+
       "-----BEGIN "+
-      hcp_parser::named<PEMItemType>(
+      hcp_parser::named<PEMTypeItem>(
         "PEM (RFC7468) Item Type",
         parseUntil("-"))+
       "-----"+(crlf()|lf())+
@@ -97,7 +102,7 @@ namespace{
         parseUntil(
           fourChars()+w,
           pad1()|pad2()|pad3()|"-")+
-        (!base64char()|(pad1()|pad2()|pad3())+w))+
+        (!c64()|(pad1()|pad2()|pad3())))+w+
       "-----END "+parseUntil("-")+"-----"+w;
   }
 }
@@ -112,6 +117,5 @@ std::shared_ptr<hcp_parser::NamedParser<PEMItem> > pemParser() noexcept
   return result;
 }
 
-}
 }
 }

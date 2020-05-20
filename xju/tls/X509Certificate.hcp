@@ -1,0 +1,162 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <memory>
+#include <openssl/ossl_typ.h> //impl
+#include <xju/tls/getOpenSSLCallingThreadErrors.hh> //impl
+#include <sstream> //impl
+#include <xju/format.hh> //impl
+#include <vector>
+#include <cinttypes>
+#include <xju/Exception.hh> //impl
+#include <openssl/x509.h>
+#include <xju/assert.hh>
+
+struct x509_st; // typedef struct x509_st X509;
+
+namespace xju
+{
+namespace tls
+{
+class x509_st_Deleter{
+public:
+  void operator()(x509_st* x) noexcept
+  {
+    X509_free(x);
+  }
+};
+class x509_name_Deleter{
+public:
+  void operator()(X509_NAME* x) noexcept
+  {
+    X509_NAME_free(x);
+  }
+};
+
+namespace
+{
+std::unique_ptr<x509_st,x509_st_Deleter> decodeCertificate(
+  std::vector<uint8_t> const& der)
+// throw xju::Exception
+// throw std::bad_alloc
+{
+  try{
+    unsigned char const* data((unsigned char const*)der.data());
+    std::unique_ptr<x509_st,x509_st_Deleter> result(
+      d2i_X509(0,&data,der.size()));
+    if (!result.get()){
+      throw xju::Exception(getOpenSSLCallingThreadErrors(),XJU_TRACED);
+    }
+    return result;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode certificate from DER "
+      << xju::format::join(der.begin(),der.end(),
+                           [](uint8_t x){
+                             return xju::format::hex(x,"0x");
+                           },
+                           " ");
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+}
+
+class X509Certificate
+{
+public:
+  class Name
+  {
+  public:
+    explicit Name(std::unique_ptr<X509_NAME,x509_name_Deleter> x) noexcept:
+        _(std::move(x)){
+    }
+    
+    //result owned by this, i.e. if caller wants to keep result past
+    //life of this, caller must duplicate
+    X509_NAME const* get() const{
+      return _.get();
+    }
+  private:
+    std::shared_ptr<X509_NAME> _;
+
+    friend bool operator<(Name const& x, Name const& y) noexcept
+    {
+      int const r(X509_NAME_cmp(x.get(),y.get()));
+      xju::assert_not_equal(r,-2);
+      return r<0;
+    }
+    friend bool operator>(Name const& a, Name const& b) noexcept
+    {
+      return b<a;
+    }
+    friend bool operator!=(Name const& a, Name const& b) noexcept
+    {
+      return (a<b)||(b<a);
+    }
+    friend bool operator==(Name const& a, Name const& b) noexcept
+    {
+      return !(a<b) && !(b<b);
+    }
+    friend bool operator<=(Name const& a, Name const& b) noexcept
+    {
+      return !(a>b);
+    }
+    friend bool operator>=(Name const& a, Name const& b) noexcept
+    {
+      return !(a<b);
+    }
+  };
+  
+  explicit X509Certificate(std::vector<uint8_t> const& der)
+  // throw xju::Exception
+      :_(decodeCertificate(der))
+  {
+  }
+  explicit X509Certificate(
+    std::unique_ptr<x509_st,x509_st_Deleter> x) noexcept:
+      _(std::move(x))
+  {
+  }
+  //result owned by this, i.e. if caller wants to keep result past
+  //life of this, caller must increment reference count
+  x509_st const* get() const noexcept
+  {
+    return _.get();
+  }
+  //result owned by this, i.e. if caller wants to keep result past
+  //life of this, caller must increment reference count
+  x509_st* get() noexcept
+  {
+    return _.get();
+  }
+
+  X509Certificate::Name getSubjectName() const noexcept
+  {
+    std::unique_ptr<X509_NAME,x509_name_Deleter> x(
+      X509_NAME_dup(X509_get_subject_name(get())));
+    return Name(std::move(x));
+  }
+      
+  X509Certificate::Name getIssuerName() const noexcept
+  {
+    std::unique_ptr<X509_NAME,x509_name_Deleter> x(
+      X509_NAME_dup(X509_get_issuer_name(get())));
+    return Name(std::move(x));
+  }
+      
+private:
+  std::shared_ptr<x509_st> _;
+};
+
+}
+}

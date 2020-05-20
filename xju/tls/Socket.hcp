@@ -11,14 +11,15 @@
 
 namespace xju
 {
-namespace ip
-{
 namespace tls
 {
 
 class Socket
 {
 private:
+  xju::ip::Socket& transport_;
+  xju::tls::ServerCrypto& crypto_;
+  
   std::tuple<
     std::unique_ptr<xju::io::OStream>,
     std::unique_ptr<xju::io::IStream>,
@@ -30,7 +31,7 @@ public:
   // pre: lifetime(transport) includes lifetime(this)
   // pre: lifetime(crypto) includes lifetime(this)
   Socket(xju::ip::TCPSocket& transport,
-         xju::ip::tls::ServerCrypto& crypto,
+         xju::tls::ServerCrypto& crypto,
          bool const requestClientCertificate,
          std::chrono::steady_clock::time_point const& deadline,
          bool closeOnExec=true) /*throw(
@@ -50,7 +51,7 @@ public:
   // pre: lifetime(transport) includes lifetime(this)
   // pre: lifetime(crypto) includes lifetime(this)
   Socket(xju::ip::TCPSocket& transport,
-         xju::ip::tls::ClientCrypto& crypto,
+         xju::tls::ClientCrypto& crypto,
          std::chrono::steady_clock::time_point const& deadline,
          bool closeOnExec=true) /*throw(
            xju::DeadlineReached,
@@ -68,14 +69,34 @@ public:
   std::unique_ptr<xju::io::OStream>& output_;
 
   // decrypted data from server
+  // note that closure of the input_ might indicate an error
+  // has occurred, use shutdown() to collect any error
   std::unique_ptr<xju::io::OStream> const& input_;
 
   // peer certificate and whether it is valid
   // note: client may always decline to supply; server must always supply
   // note: client must perform any required host validation
   xju::Optional<std::pair<Certificate,bool> > const& peerCertifiate_;
+
+  // shutdown the TLS session gracefully, returning up to
+  // maxReturn bytes of data received before completing shutdown
+  // (discarding the rest)
+  std::vector<uint8_t> shutdown(size_t const maxReturn)
+  // throw xju::Exception - error occured during or before shutdown
+  {
+    return crypto_.shutdown(transport_,
+                            std::move(decrypted_),
+                            std::move(encrypt_));
+  }
+
+  // non-graceful unless shutdown has previously been called
+  ~Socket() noexcept
+  {
+    if (decrypted_.get()){
+      crypto_.close(transport_,std::move(decrypted_),std::move(encrypt_));
+    }
+  }
 };
 
-}
 }
 }

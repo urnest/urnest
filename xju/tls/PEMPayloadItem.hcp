@@ -9,28 +9,16 @@
 //
 
 
+#include <hcp/ast.hh>
+
 namespace xju
-{
-namespace ip
 {
 namespace tls
 {
 
-class ServerCrypto : public Crypto
-{
-public:
-  ServerCrypto(PrivateKey const& privateKey,
-               std::vector<X509Certificate> const& certificateAndAncestors,
-               bool const requestClientCertificate) /*throw(
-                 xju::Exception)*/:
-      Crypto(&SSLv23_server_method,privateKey,certificateAndAncestors)
-  {
-  }
-};
+class PEMPayloadTag{};
+typedef hcp_ast::TaggedItem<PEMPayloadTag> PEMPayloadItem;
 
 
 }
 }
-}
-
-

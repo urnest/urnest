@@ -9,21 +9,14 @@
 //
 
 
+#include <memory>
+#include <openssl/ssl.h>
+
 namespace xju
-{
-namespace ip
 {
 namespace tls
 {
-
-class PEMItem : public hcp_ast::Item
-{
-public:
-  using hcp_ast::Item::Item;
-};
+typedef std::unique_ptr<SSL,decltype(&SSL_free)> SSLuptr;
 
 }
 }
-}
-
-

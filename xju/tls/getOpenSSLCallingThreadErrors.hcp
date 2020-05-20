@@ -1,0 +1,46 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <string>
+#include <vector> //impl
+#include <openssl/err.h> //impl
+#include <xju/format.hh> //impl
+
+namespace xju
+{
+namespace tls
+{
+
+namespace
+{
+int cb(const char* str, size_t len, void* u)
+{
+  std::vector<std::string>& errs(
+    *(std::vector<std::string>*)u);
+  errs.push_back(std::string(str,str+len));
+  return 0;
+}
+
+}
+
+// get calling thread error messages, separate them by " and "
+std::string getOpenSSLCallingThreadErrors() noexcept
+{
+  std::vector<std::string> errs;
+  ERR_print_errors_cb(cb,&errs);
+  return xju::format::join(errs.begin(),errs.end()," and ");
+}
+
+
+}
+}
+
+

@@ -1,0 +1,315 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <atomic>
+namespace xju
+{
+namespace tls
+{
+namespace
+{
+
+std::vector<uint8_t> readPendingData(
+  xju::io::IStream& s,
+  size_t const maxReturn) noexcept
+{
+  std::vector<uint8_t> result;
+  if (maxReturn){
+    size_t n(0);
+    do
+    {
+      xju::assert_not_equal(result.size(),maxReturn);
+      size_t const was(result.size());
+      result.resize(std::min(result.size()+128),maxReturn);
+      n=decrypted.read(result.begin()+was,result.size()-was,
+                       xju::steadyNow());
+      result.resize(was+n);
+    }
+    while(n && (result.size()<maxReturn));
+  }
+  return result;
+}
+
+}
+
+class Crypto
+{
+private:
+  typedef std::unique_ptr<SSL,decltype(&SSL_free)> SSLuptr;
+
+public:
+  Crypto(X509Certificate const& certificate,
+         PrivateKey const& privateKeyOfCertificate,
+         std::vector<X509Certificate> const& certificateAncestors) /*throw(
+           xju::Exception)*/:
+      ctx_(createContext(privateKey,certificate,certificateAncestors)),
+      stop_(false),
+      wake_(xju::pipe())
+  {
+  }
+
+  void run() noexcept
+  {
+    xju::Lock l(sessionsGuard_);
+    while(!stop_){
+      std::set<xju::io::Input const*> readable{wake_.first.get()};
+      std::set<xju::io::Input const*> writable;
+      // each session has two pipes above, ssl and a socket below
+      // ssl has top and bottom bios (or two of each?)
+      for(auto s: sessions_){
+        try{
+          //
+          //
+        }
+        catch(xju::Exception const& e){
+          s.second.error(e);
+        }
+      }
+      auto const rw(xju::io::select(readable,writable,xju::steadyEternity()));
+      {
+        xju::Lock l(newSessionsGuard_);
+        while(newSessions_.size()){
+          sessions_.insert(newSessions_.front().first,
+                           std::move(newSessions_.front().second));
+          newSessions_.pop_front();
+        }
+      }
+      {
+        xju::Lock l(releaseSessionsGuard__);
+        for(auto x:releaseSessions_){
+          if (!x.second.get()){
+            auto i(sessions_.find(x.first));
+            xju::assert_not_equal(i,session_.end());
+            x.second=std::move((*i).second);
+            sessions_.erase(i);
+          }
+        }
+        releaseSessionsChanged_.signal(l);
+      }
+      if(x.first.find(wake_.first.get())!=x.first.end()){
+        uint8_t x;
+        wake_.first->read(&x,1,xju::steadyNow());
+      }
+      for(auto s: sessions_){
+        try{
+          //
+          //
+        }
+        catch(xju::Exception const& e){
+          s.second.error_=e;
+          s.second.decrypted_.reset();
+        }
+      }
+    }
+  }
+  void stop(){
+    stop_=true;
+    wake_.write('x',1,xju::steadyNow());
+  }
+  class Session
+  {
+  public:
+    // server side connection over encrypted+decrypt transport
+    // pre: crypto, encrypted and decrypt will outlive this
+    Session(
+      Crypto& crypto,
+      xju::io::OStream& encrypted,
+      xju::io::IStream& decrypt,
+      //REVISIT: not bool but list of acceptable CA names - see
+      //SSL_CTX_set_client_CA_list noting that the (trusted)
+      //certificates of the named CAs must be available to openssl
+      //in $SSL_CERT_FILE or $SSL_CERT_DIR (or their defaults)
+      // - use X509_get_subject_name to get the name from cacert
+      //... which kind of defeats the purpose of SSL_CERT_DIR at least
+      // I guess normally SSL_CERT_DIR is only relevant to client in
+      // order to talk to many public servers. For a server that wants to
+      // verify authenticate client by certificate, probably would ask client
+      // for certificate issued by server-specific or system-specific
+      // authority.
+      // So here we should specify a set of certificates not just names,
+      // and load these certs (only) directly into SSL (can we do that? Yes. SSL_set0_verify_cert_store). I wonder if performance is bad when we build
+      // cert_store every time? Maybe we should have a cert_store wrapper?
+      bool const requestClientCertificate,
+      std::chrono::steady_clock::time_point const& deadline,
+      bool const closeOnExec)
+    //throw xju::DeadlineReached
+    //throw xju::Exception
+    {
+      try{
+        auto decrypted(xju::pipe(closeOnExec,true));
+        auto encrypt(xju::pipe(true,closeOnExec));
+        std::unique_ptr<xju::tls::Session> session(
+          new xju::tls::Session(std::move(decrypted.second),
+                                std::move(encrypt.first),
+                                *ctx_.get(),
+                                requestClientCertificate,
+                                deadline,
+                                encrypted,
+                                decrypt));
+        xju::Lock l(crypto.newSessionsGuard_);
+        crypto.newSessions_.push_back(
+          decltype(crypto.newSessions_.back(this,std::move(session))));
+        peerCertificate_=std::move(newSessions_.back()->peerCertificate_);
+        decrypted_=std::move(decrypted.first());
+        encrypt_=std::move(encrypt.second());
+      }
+      catch(xju::Exception& e){
+        std::ostringstream s;
+        s << "accept TLS connection on transport socket by "
+          << deadline
+          << (requestClientCertificate?" ":" without ")
+          << "requesting client certificate";
+        e.addContext(s.str(),XJU_TRACED);
+        throw;
+      }
+    }
+    // client side connection over encrypted+decrypt transport
+    // pre: crypto, encrypted and decrypt will outlive this
+    Session(
+      Crypto& crypto,
+      xju::io::OStream& encrypted,
+      xju::io::IStream& decrypt,
+      std::chrono::steady_clock::time_point const& deadline,
+      bool const closeOnExec)
+    //throw xju::DeadlineReached
+    //throw xju::Exception
+    {
+      try{
+        auto decrypted(xju::pipe(closeOnExec,true));
+        auto encrypt(xju::pipe(true,closeOnExec));
+        std::unique_ptr<xju::tls::Session> session(
+          new xju::tls::Session(std::move(decrypted.second),
+                                std::move(encrypt.first),
+                                *ctx_.get(),
+                                deadline,
+                                encrypted,
+                                decrypt));
+        xju::Lock l(crypto.newSessionsGuard_);
+        crypto.newSessions_.push_back(
+          decltype(crypto.newSessions_.back(this,std::move(session))));
+        peerCertificate_=std::move(newSessions_.back()->peerCertificate_);
+        decrypted_=std::move(decrypted.first());
+        encrypt_=std::move(encrypt.second());
+      }
+      catch(xju::Exception& e){
+        std::ostringstream s;
+        s << "accept TLS connection on transport socket by "
+          << deadline
+          << (requestClientCertificate?" ":" without ")
+          << "requesting client certificate";
+        e.addContext(s.str(),XJU_TRACED);
+        throw;
+      }
+    }
+    xju::Optional<std::pair<X509Certificate, /*valid:*/bool> > peerCertificate_;
+    // pre: shutdown not previosly called
+    xju::io::IStream& input() const noexcept{return *decrypted_;}
+    xju::io::OStream& output() const noexcept{return *encrypt_;}
+
+    // gracefully shutdown ssl connection on transport by specified deadline
+    // returning at most the next maxReturn bytes of extra decrypted data
+    // prior to shutdown completion (and discarding any further bytes)
+    // pre: decrypted and encrypt are as previously returned by accept() for
+    //      the specified transport
+    // pre: shutdown has not previously been called (succesfully or not)
+    std::vector<uint8_t> shutdown(
+      std::chrono::steady_clock::time_point const& deadline,
+      size_t maxReturn)
+    //throw xju::Exception
+    //- graceful shutdown incomplete at deadline
+    //- graceful shutdown failed (which might be because the ssl
+    //  connection has already failed)
+    {
+      try{
+        xju::assert_not_equal(decrypted_.get(),0);
+        xju::assert_not_equal(encrypt_.get(),0);
+        auto const decrypted(std::move(decrypted_));
+        auto const encrypt(std::move(encrypt_));
+        auto const s(crypto_.releaseSession(this));
+        std::vector<uint8_t> result(readPendingData(*decrypted,maxReturn));
+        s.shutdown(deadline,
+                   std::back_inserter(result),
+                   maxReturn-result.size());
+        return result;
+      }
+      catch(xju::Exception& e){
+        std::ostringstream s;
+        s << "gracefully shutdown TLS session on TCP/IP socket "
+          << transport << " by specified deadline";
+        e.addContext(s.str(),XJU_TRACED);
+        throw;
+      }
+    }
+    
+    ~Session() noexcept
+    {
+      if (encrypt_.get()){
+        try{
+          crypto_.releaseSession(this);
+        }
+        catch(xju::Exception const&){
+        }
+      }
+    }
+  private:
+    Crypto& crypto_;
+    std::unique_ptr<xju::io::IStream> decrypted_;
+    std::unique_ptr<xju::io::OStream> encrypt_;
+  };
+
+private:
+  std::unique_ptr<SSL_CTX,decltype(&SSL_CTX_free)> const ctx_;
+  
+  std::atomic<bool> stop_;
+  typedef std::unique_ptr<SSL,SSL_decltype(&SSL_free)> SSLuptr;
+  
+  std::pair<std::unique_ptr<xju::io::IStream>,
+            std::unique_ptr<xju::io::OStream> > wake_;
+
+  xju::Mutex sessionsGuard_;
+  std::map<Session*, std::unique_ptr<xju::tls::Session> > sessions_;
+
+  xju::Mutex newSessionsGuard_;
+  std::deque<std::pair<Session*,std::unique_ptr<xju::tls::Session> > > newSessions_;
+
+  xju::Mutex releaseSessionsGuard_;
+  xju::Condition releaseSessionsChanged_;
+  std::map<Session*,xju::Exception> deadSessions_;
+  std::map<Session*,std::unique_ptr<Session> > releaseSessions_;
+
+  std::unique_ptr<xju::tls::Session> releaseSession(Session& session)
+  //throw xju::Exception - session failed
+  {
+    xju::Lock l(releaseSessionsGuard_);
+    {
+      auto i(deadSessions_.find(&session));
+      if (i!=deadSessions_.end()){
+        auto e(std::move((*i).second));
+        deadSessions_.erase(i);
+        throw e;
+      }
+    }
+    auto i(releaseSessions_.insert({&transport,std::unique_ptr<Session>()}));
+    xju::assert_equal(i.second,true);
+    wake_.write('x',1,xju::steadyNow());
+    do{
+      releaseSessionsChanged_.wait(l);
+    }
+    while(!(*i.first).second.get());
+    std::unique_ptr<xju::tls::Session> result(std::move(*(*i.first).second));
+    releaseSessions_.erase(i.first);
+    return result;
+  }
+    
+};
+
+}
+}

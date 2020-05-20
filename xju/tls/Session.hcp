@@ -1,0 +1,588 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace tls
+{
+
+namespace
+{
+int preverify(int preverify_ok, X509_STORE_CTX *x509_ctx) noexcept
+{
+  return 1;
+}
+
+class Starved{};
+class Choked{};
+
+void sslAccept(SSL& ssl)
+//throw Starved
+//throw Choked
+//throw xju::Exception - protocol error (fatal)
+{
+  int e = SSL_accept(&ssl);
+  if (e!=1){
+    auto const ee(SSL_get_error(&ssl,e));
+    switch(ee){
+    case SSL_ERROR_WANT_READ:
+      throw Starved();
+      break;
+    case SSL_ERROR_WANT_WRITE:
+      throw Choked();
+    default:
+    {
+      std::ostringstream s;
+      s << "SSL_accept failed with error code " << ee;
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    }
+  }
+}
+
+void sslConnect(SSL& ssl)
+//throw Starved
+//throw Choked
+//throw xju::Exception - protocol error (fatal)
+{
+  int e = SSL_connect(&ssl);
+  if (e!=1){
+    auto const ee(SSL_get_error(&ssl,e));
+    switch(ee){
+    case SSL_ERROR_WANT_READ:
+      throw Starved();
+      break;
+    case SSL_ERROR_WANT_WRITE:
+      throw Choked();
+    default:
+    {
+      std::ostringstream s;
+      s << "SSL_connect failed with error code " << ee;
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    }
+  }
+}
+
+// start/progress shutdown
+// - returns true if shutdown complete
+bool sslShutdown(SSL& ssl)
+//throw Starved
+//throw Choked
+//throw xju::Exception - protocol error (fatal)
+{
+  int e = SSL_shutdown(&ssl);
+  if (e<0){
+    auto const ee(SSL_get_error(&ssl,e));
+    switch(ee){
+    case SSL_ERROR_WANT_READ:
+      throw Starved();
+      break;
+    case SSL_ERROR_WANT_WRITE:
+      throw Choked();
+    default:
+    {
+      std::ostringstream s;
+      s << "SSL_shutdown failed with error code " << ee;
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    }
+  }
+  return e;
+}
+
+// note 0 return for bufSize>0 means SSL session has received close
+// notify from peer (no data, on the other hand, always throws Starved)
+size_t sslRead(SSL& ssl,uint8_t* const buf,size_t const bufSize)
+//throw Starved
+//throw Choked
+//throw xju::Exception - fatal
+{
+  size_t n(0);
+  if (SSL_read_ex(&ssl,buf,bufSize,&n)){
+    return n;
+  }
+  int const ssle(SSL_get_error(&ssl,0));
+  switch(ssle){
+  case SSL_ERROR_WANT_READ:
+    throw Starved();
+  case SSL_ERROR_WANT_WRITE: //can never get this?
+    throw Choked();
+  case SSL_ERROR_ZERO_RETURN:
+    return 0; // SSL session has shut down
+  case SSL_ERROR_SSL:
+    throw xju::Exception(
+      "SSL_read_ex error SSL_ERROR_SSL, i.e. protocol error",XJU_TRACED);
+  }
+  throw xju::Exception(
+    "SSL_read_ex error "+
+    xju::format::int(ssle)+" (see SSL_get_error(3SSL))",XJU_TRACED);
+}
+
+size_t sslWrite(SSL& ssl,uint8_t const* const buf,size_t const bufSize)
+//throw Starved
+//throw Choked
+//throw xju::Exception - fatal
+{
+  size_t n(0);
+  if (SSL_write_ex(&ssl,buf,bufSize,&n)){
+    return n;
+  }
+  int const ssle(SSL_get_error(&ssl,0));
+  switch(ssle){
+  case SSL_ERROR_WANT_READ:
+    throw Starved();
+  case SSL_ERROR_WANT_WRITE: //can never get this?
+    throw Choked();
+  case SSL_ERROR_SSL:
+    throw xju::Exception(
+      "SSL_write_ex error SSL_ERROR_SSL, i.e. protocol error",XJU_TRACED);
+  }
+  throw xju::Exception(
+    "SSL_write_ex error "+
+    xju::format::int(ssle)+" (see SSL_get_error(3SSL))",XJU_TRACED);
+}
+
+xju::Optional<std::pair<X509Certificate, /*valid:*/bool> >
+getPeerCertificate(SSL& ssl) noexcept
+{
+  std::unique_ptr<x509_st,x509_st_Deleter> c(
+    SSL_get_peer_certificate(&ssl));
+  if (c.get()){
+    return xju::Optional<std::pair<X509Certificate, /*valid:*/bool> >(
+      std::move(c),SSL_get_verify_result(&ssl)==X509_V_OK);
+  }
+  return xju::Optional<std::pair<X509Certificate, /*valid:*/bool> >();
+}
+
+}
+
+class Session{
+public:
+  // Accept TLS connection on encrypted+decrypt (the underlying transport)
+  // by specified deadline, connecting unencrypted side to specified
+  // decrypted+encrypt.
+  //
+  //pre: ctx will outlive *this
+  //pre: encrypted will outlive *this
+  //pre: decrypt will outlive *this
+  Session(std::unique_ptr<xju::io::OStream> decrypted,
+          std::unique_ptr<xju::io::IStream> encrypt,
+          SSL_ctx& ctx,
+          bool const requestClientCertificate,
+          std::chrono::steady_clock::time_point const& deadline,
+          xju::io::OStream& encrypted,
+          xju::io::IStream& decrypt)
+  //throw xju::DeadlineReached
+  //throw xju::Exception - other e.g. protocol violation
+  try:
+      encrypted_(encrypted),
+      decrypt_(decrypt),
+      decrypted_(std::move(decrypted)),
+      encrypt_(std::move(encrypt)),
+      botRxBuf_(2048),
+      botTxBuf_(2048),
+      ssl_(SSL_new(&ctx,&SSL_free)),
+      topRxBuf_(2048),
+      topTxBuf_(2048)
+  {
+    if (!ssl_.get()){
+      throw xju::Exception(getOpenSSLCallingThreadErrors(),XJU_TRACED);
+    }
+    SSL_CTX_set_mode(ssl_.get(),SSL_MODE_ENABLE_PARTIAL_WRITE,1);
+    auto ibio(IBIO(botRxBuf_));
+    auto obio(OBIO(botTxBuf_));
+    SSL_set_bio(ssl_.get(),ibio.release(),obio.release());
+    if(requestClientCertificate){
+      SSL_set_verify(ssl_.get(),
+                     SSL_VERIFY_PEER,
+                     preverify);
+    }
+    while(true){
+      std::set<xju::io::Input const*> readable;
+      std::set<xju::io::Input const*> writable;
+      try{
+        sslAccept(*ssl_);
+        break;
+      }
+      catch(Starved const&){
+        readable.insert(&decrypt_);
+      }
+      catch(Choked const&){
+        writable.insert(&encrypted_);
+      }
+      if (botTxBuf_.size()){
+        writable.insert(&encrypted_);
+      }
+      auto const rw(xju::io::select(readable,writable,deadline));
+      if(xju::steadyNow()>=deadline){
+        throw xju::DeadlineReached(
+          xju::Exception("TLS handshake incomplete at deadline",XJU_TRACED));
+      }
+      readDecrypt(rw.first);
+      writeEncrypted(rw.second);
+    }
+    if(requestClientCertificate){
+      peerCertificate_=getPeerCertificate(*ssl_);
+    }
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "accept TLS connection by specified deadline, "
+      << (requestClientCertificate?"not ":"")
+      << "requesting client certificate";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+
+  // Make TLS connection on encrypted+decrypt (the underlying transport)
+  // by specified deadline, connecting unencrypted side to specified
+  // decrypted+encrypt.
+  //
+  //pre: ctx will outlive *this
+  //pre: encrypted will outlive *this
+  //pre: decrypt will outlive *this
+  Session(std::unique_ptr<xju::io::OStream> decrypted,
+          std::unique_ptr<xju::io::IStream> encrypt,
+          SSL_ctx& ctx,
+          xju::io::OStream& encrypted,
+          xju::io::IStream& decrypt)
+  //throw xju::DeadlineReached
+  //throw xju::Exception - other e.g. protocol violation
+  try:
+      encrypted_(encrypted),
+      decrypt_(decrypt),
+      decrypted_(std::move(decrypted)),
+      encrypt_(std::move(encrypt)),
+      botRxBuf_(2048),
+      botTxBuf_(2048),
+      ssl_(SSL_new(&ctx,&SSL_free)),
+      topRxBuf_(2048),
+      topTxBuf_(2048)
+  {
+    if (!ssl_.get()){
+      throw xju::Exception(getOpenSSLCallingThreadErrors(),XJU_TRACED);
+    }
+    SSL_CTX_set_mode(ssl_.get(),SSL_MODE_ENABLE_PARTIAL_WRITE,1);
+    auto ibio(IBIO(botRxBuf_));
+    auto obio(OBIO(botTxBuf_));
+    SSL_set_bio(ssl_.get(),ibio.release(),obio.release());
+    while(true){
+      std::set<xju::io::Input const*> readable;
+      std::set<xju::io::Input const*> writable;
+      try{
+        sslConnect(*ssl_);
+        break;
+      }
+      catch(Starved const&){
+        readable.insert(&decrypt_);
+      }
+      catch(Choked const&){
+        writable.insert(&encrypted_);
+      }
+      if (botTxBuf_.size()){
+        writable.insert(&encrypted_);
+      }
+      auto const rw(xju::io::select(readable,writable,deadline));
+      if(xju::steadyNow()>=deadline){
+        throw xju::DeadlineReached(
+          xju::Exception("TLS handshake incomplete at deadline",XJU_TRACED));
+      }
+      readDecrypt(rw.first);
+      writeEncrypted(rw.second);
+    }
+    peerCertificate_=getPeerCertificate(*ssl_);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "make TLS connection by specified deadline";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+
+  // non-blocking
+  void encrypt(std::inserter<std::set<xju::io::IStream> > wantRead,
+               std::inserter<std::set<xju::io::OStream> > wantWrite)
+  //throw xju::Exception
+  {
+    try{
+      if(topTxBuf_.size()==0){
+        (*wantRead++)=encrypt_.get();//[A]
+        return;
+      }
+      auto const d(topTxBuf_.contigData());
+      auto const n(sslWrite(*ssl_,d.first,d.second));
+      topTxBuf_.consumed(n);
+      (*wantRead++)=encrypt_.get();//[A]
+    }
+    catch(Starved const&){
+      (*wantRead++)=&decrypt_; //[B]
+    }
+    catch(Choked const&){
+        (*wantWrite++)=&encrypted_; //[B]
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "encrypt bytes held in " << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  // non-blocking
+  void readEncrypt(std::set<IStream> const& readable)
+  //throw xju::Exception
+  {
+    try{
+      if (readable.find(encrypt_.get())!=readable.end()){
+        xju::assert_not_equal(topTxBuf_.size(),topTxBuf_.capacity_);//[A]
+        auto const d(topTxBuf_.contigSpace());
+        auto const n(encrypt_->read(d.first,d.second,xju::steadyNow()));
+        topTxBuf_.appended(n);
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "read bytes to encrypt into " << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  // non-blocking
+  void writeEncrypted(std::set<OStream> const& writeable)
+  //throw xju::Exception
+  {
+    try{
+      if (writeable.find(&encrypted_)!=writeable.end()){
+        xju::assert_not_equal(botTxBuf_.size(),0U);//[B]
+        auto const d(botTxBuf_.contigData());
+        auto const n(encrypted_->write(d.first,d.second,xju::steadyNow()));
+        botTxBuf_.consumed(n);
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "write encrypted bytes held in " << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  // non-blocking
+  void decrypt(std::inserter<std::set<xju::io::IStream> > wantRead,
+               std::inserter<std::set<xju::io::OStream> > wantWrite)
+  //throw xju::Exception
+  {
+    try{
+      if(topRxBuf_.size()==capacity){
+        (*wantWrite++)=decrypted_.get();//[A]
+        return;
+      }
+      if (decrypted_.get()){
+        auto const d(topRxBuf_.contigSpace());
+        auto const n(sslRead(*ssl_,d.first,d.second));
+        topRxBuf_.appended(n);
+        (*wantWrite++)=decrypted_.get();//[A]
+      }
+      else{
+        xju::assert_equal(hasReceivedClose(),true);
+      }
+    }
+    catch(Starved const&){
+      (*wantRead++)=&decrypt_; //[B]
+    }
+    catch(Choked const&){
+        (*wantWrite++)=&encrypted_; //[B]
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "decrypt bytes held in " << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  // non-blocking
+  void writeDecrypted(std::set<OStream> const& writeable)
+  //throw xju::Exception
+  {
+    try{
+      if (writeable.find(decrypted_.get())!=writeable.end()){
+        auto const d(topRxBuf_.contigData());
+        auto const n(decrypted_->write(d.first,d.second,xju::steadyNow()));
+        topRxBuf_.consumed(n);
+        if (!topRxBuf_.size()&&hasReceivedClose()){
+          decrypted_.reset();
+        }
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "write decrypted bytes held in " << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  // non-blocking
+  void readDecrypt(std::set<IStream> const& readable)
+  //throw xju::Exception
+  {
+    try{
+      if (readable.find(&decrypt_)!=readable.end()){
+        xju::assert_not_equal(botRxBuf_.size(),botRxBuf_.capacity_);//[D]
+        auto const d(botRxBuf_.contigSpace());
+        auto const n(decrypt_->read(d.first,d.second,xju::steadyNow()));
+        botRxBuf_.appended(n);
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "read bytes to decrypt into " << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  
+  // encrypt remaining unencrypted data by deadline, appending any
+  // decrypted data received before flush completes
+  // return space still left in appendDataTo
+  // pre: write end of encrypt_ has been closed
+  size_t flushOutput(std::chrono::steady_clock::time_point deadline,
+                     std::back_inserter<std::vector<uint8_t> > appendDataTo,
+                     size_t const maxAppend)
+  // throw xju::Exception
+  {
+    try{
+      size_t result(maxAppend);
+      try{
+        while(true){
+          if (xju::now()>deadline){
+            throw xju::DeadlineReached(xju::Exception("deadline reached before remaining bytes could be encrypted and passed to output",XJU_TRACED));
+          }
+          std::set<xju::io::Input const*> wantRead;
+          std::set<xju::io::Input const*> wantWrite;
+          encrypt(wantRead,wantWrite);
+          decrypt(wantRead,wantWrite);
+          auto const rw(xju::io::select(wantRead,wantWrite,deadline));
+          readEncrypt(rw.first);
+          writeEncrypted(rw.second);
+          readDecrypt(rw.first);
+          while(topRxBuf_.size()){
+            auto const d(topRxBuf_.contigData());
+            auto const cn(std::min(d.second,result));
+            std::copy(d.first,d.first+cn,appendDataTo);
+            result-=cn;
+            topRxBuf_.consumed(d.second);
+          }
+        }
+      }
+      catch(xju::io::Input::Closed const&){
+        return result;
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "flush " << (*this)
+        << " output by specified deadline capturing at most "
+        << maxAppend << " bytes of remaining decrypted data";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  // we have received close from peer, which might be unexpected
+  // or because we have shut down the session, i.e. this will
+  // always return true once shutdownSession successfully completes
+  bool hasReceivedClose() const noexcept{
+    return SSL_get_shutdown(ssl_.get()) & SSL_RECEIVED_SHUTDOWN;
+  }
+  // flush and shutdown session by deadline, appending any
+  // decrypted data received before shutdown completes
+  void shutdownSession(std::chrono::steady_clock::time_point deadline,
+                       std::back_inserter<std::vector<uint8_t> > appendDataTo,
+                       size_t const maxAppend)
+  // throw xju::Exception
+  {
+    try{
+      size_t remainingAppend(flushOutput(deadline,appendDataTo,maxAppend));
+      //need to do SSL_shutdown+read until SSL_shutdown returns 1
+      do {
+        std::set<xju::io::Input const*> readable;
+        std::set<xju::io::Input const*> writable;
+        try{
+          while(topRxBuf_.size()){
+            auto const d(topRxBuf_.contigData());
+            auto const n(std::min(d.second,remainingAppend));
+            std::copy(d.first,n,std::back_inserter(appendDataTo));
+            remainingAppend-=n;
+            topRxBuf_.consumed(d.second);
+          }
+          if (!(SSL_get_shutdown(ssl_.get()) & SSL_SENT_SHUTDOWN)){
+            sslShutdown(*ssl_);
+          }
+          if (!hasReceivedClose()){
+            auto const d(topRxBuf_.contigSpace());
+            auto const n(sslRead(*ssl_,d.first,d.second));
+            topRxBuf_.appended(n);
+          }
+        }
+        catch(Starved const&){ readable.insert(&decrypt_); }
+        catch(Choked const&) { writable.insert(&encrypted_); }
+        if (botTxBuf_.size()){
+          writable.insert(&encrypted_);
+        }
+        auto const rw(xju::io::select(readable,writable,deadline));
+        readDecrypt(rw.first);
+        writeEncrypted(rw.second);
+        if(xju::steadyNow()>=deadline){
+          throw xju::DeadlineReached(
+            xju::Exception("TLS handshake incomplete at deadline",XJU_TRACED));
+        }
+      }
+      while(! (hasSentClose() &&
+               hasReceivedClose() &&
+               botTxBuf_.size()==0) // make sure our close gets sent
+        );
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "flush and gracefully shutdown " << (*this)
+        << " by specified deadline";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+  xju::Optional<std::pair<X509Certificate, /*valid:*/bool> > peerCertificate_;
+  
+private:
+  xju::io::OStream& encrypted_;
+  xju::io::IStream& decrypt_;
+
+  std::unique_ptr<xju::io::OStream> decrypted_;
+  std::unique_ptr<xju::io::IStream> encrypt_;
+
+  xju::CircularBuffer<uint8_t> botRxBuf_;
+  xju::CircularBuffer<uint8_t> botTxBuf_;
+  SSLuptr ssl_;
+
+  xju::CircularBuffer<uint8_t> topRxBuf_;
+  xju::CircularBuffer<uint8_t> topTxBuf_;
+
+  friend std::ostream& operator<<(std::ostream& s, Session const& x)
+  {
+    return s << "TLS session holding "
+             << topTxBuf_.size() << " bytes to encrypt, "
+             << botTxBuf_.size() << " encrypted bytes to send, "
+             << botRxBuf_.size() << " bytes to decrypt, "
+             << topRxBuf_.size() << " decrypted bytes";
+  }
+};
+
+
+}
+}

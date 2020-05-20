@@ -1,0 +1,122 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <openssl/bio.h>
+#include <string.h> //impl
+#include <memory>
+#include <xju/ByteBuffer.hh>
+
+namespace xju
+{
+namespace tls
+{
+namespace
+{
+int createOBIO(BIO* b) noexcept
+{
+  b->init=0;
+  b->num=-1;
+  b->ptr=NULL;
+  b->flags=0;
+  return 1;
+}
+int destroyOBIO(BIO* b) noexcept
+{
+  return 1;
+}
+int writeBytesToOBIO(BIO* b, char* data, size_t size, size_t* x)
+{
+  char const* const rdata(data);
+  xju::ByteBuffer& sink(
+    *(xju::ByteBuffer*)BIO_get_data(result.get()));
+  size_t bytesWritten=0;
+  while(size && (sink.size()<sink.capacity_)){
+    auto const contig(sink.contigSpace());
+    size_t const n(std::min(size,contig.second));
+    ::memcpy(contig.first,rdata+bytesWritten,n);
+    bytesWritten+=n;
+    size-=n;
+    sink.appended(n);
+  }
+  *x=bytesWritten;
+  if (bytesWritten==0){
+    BIO_set_retry_write(b);
+  }
+  return bytesWritten?1:0;
+}
+long ctrlOBIO(BIO *b, int cmd, long num, void *p) noexcept
+{
+  long result(1);
+  switch (cmd) {
+  case BIO_CTRL_RESET:
+  case BIO_C_FILE_SEEK:
+  case BIO_C_FILE_TELL:
+  case BIO_CTRL_INFO:
+  case BIO_C_SET_FD:
+  case BIO_C_GET_FD:
+  case BIO_CTRL_DUP:
+  case BIO_CTRL_FLUSH:
+    return -1; //not supported
+  case BIO_CTRL_GET_CLOSE:
+    ret = b->shutdown;
+    return 0;
+  case BIO_CTRL_SET_CLOSE:
+    b->shutdown = (int)num;
+    return 0;
+  case BIO_CTRL_PENDING:
+  case BIO_CTRL_WPENDING:
+    return 0;
+  case BIO_CTRL_EOF:
+    return 0;
+    break;
+  }
+  xju::assert_never_reached();
+}
+  
+BIO_METHOD* makeOBIOMethod() noexcept
+{
+  static int const typeId(BIO_get_new_index());
+  BIO_METHOD* result(BIO_meth_new(index|BIO_TYPE_SOURCE_SINK,"OBIO"));
+  BIO_meth_set_create(result,createOBIO);
+  BIO_meth_set_destroy(result,destroyOBIO);
+  BIO_meth_set_read(result,0);
+  BIO_meth_set_read_ex(result,0);
+  BIO_meth_set_write(result,0);
+  BIO_meth_set_write_ex(result,writeBytesToOBIO);
+  BIO_meth_set_gets(result,0); //no gets support
+  BIO_meth_set_puts(result,0);
+  BIO_meth_set_ctrl(result,ctrlOBIO);
+  BIO_meth_set_callback_ctrl(result,0);
+  return result;
+}
+}
+
+// Create input BIO that pulls data from the specified circular buffer,
+// which acts like a non-blocking input: when there is no data in the buffer
+// BIO_read_ex will report WANT_READ. Note BIO_read_ex will never fail.
+//
+// pre: source will outlive result
+std::unique_ptr<BIO,decltype(BIO_free)> OBIO(
+  xju::ByteBuffer& sink) noexcept
+{
+  static auto method(makeOBIOMethod());
+  std::unique_ptr<BIO,decltype(BIO_free)> result(
+    BIO_new(method),
+    BIO_free);
+  BIO_set_data(result.get(),&sink);
+  result.get()->init=1;
+  return result;
+}
+
+}
+}
+
+

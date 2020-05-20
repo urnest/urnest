@@ -1,0 +1,18 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+%tests.tree
+
+%ssl-cxx-opts==<<
++(../..%cxx-opts)
++lib=ssl
++lib=crypto
+
+%tests.tree == <<
+()+cmd=(test-pemParser.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-PrivateKey.cc+(%ssl-cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-X509Certificate.cc+(%ssl-cxx-opts):auto.cxx.exe):exec.output
+
+%hcp-gen==.:dir.hcp.list+G+hpath='xju/tls':hcp-split-virdir-specs:cat:vir_dir
+
+%tags==.:merged-tags

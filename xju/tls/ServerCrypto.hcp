@@ -11,20 +11,17 @@
 
 namespace xju
 {
-namespace ip
-{
 namespace tls
 {
 
-class ClientCrypto : public Crypto
+class ServerCrypto : public Crypto
 {
 public:
-  // note certificateAndAncestors is optional as we are the client
-  ServerCrypto(
-    PrivateKey const& privateKey,
-    std::vector<X509Certificate> const& certificateAndAncestors) /*throw(
-      xju::Exception)*/:
-      Crypto(&SSLv23_client_method,privateKey,certificateAndAncestors)
+  ServerCrypto(PrivateKey const& privateKey,
+               std::vector<X509Certificate> const& certificateAndAncestors,
+               bool const requestClientCertificate) /*throw(
+                 xju::Exception)*/:
+      Crypto(&SSLv23_server_method,privateKey,certificateAndAncestors)
   {
   }
 };
@@ -32,4 +29,5 @@ public:
 
 }
 }
-}
+
+

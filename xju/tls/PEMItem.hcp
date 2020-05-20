@@ -1,0 +1,50 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/tls/PEMType.hh>
+#include <hcp/ast.hh>
+#include <string>
+#include <vector>
+#include <cinttypes>
+#include <xju/base64/decode.hh> //impl
+#include <xju/tls/pemParser.hh> //impl
+#include <xju/tls/PEMTypeItem.hh> //impl
+#include <xju/tls/PEMCommentsItem.hh> //impl
+#include <xju/tls/PEMPayloadItem.hh> //impl
+
+namespace xju
+{
+namespace tls
+{
+
+class PEMItem : public hcp_ast::Item
+{
+public:
+  using hcp_ast::Item::Item;
+
+  PEMType getType() const noexcept
+  {
+    return hcp_ast::findOnlyChildOfType<PEMTypeItem>(*this).get();
+  }
+  std::string getComments() const noexcept
+  {
+    return hcp_ast::reconstruct(
+      hcp_ast::findOnlyChildOfType<PEMCommentsItem>(*this));
+  }
+  std::vector<uint8_t> getPayload() const noexcept
+  {
+    auto const p(hcp_ast::findOnlyChildOfType<PEMPayloadItem>(*this));
+    return xju::base64::decode(p.begin().x_,p.end().x_);
+  }
+};
+
+}
+}

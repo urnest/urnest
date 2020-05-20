@@ -183,14 +183,16 @@ io::Output
       
   - TLSSocket
     - give listener SNI info and whether to request cert for each server it
-      supports? Plus a single default "requestClientCertificate"
-    
+      supports?
+    - generate test ca cert and derived cert
+    - find a kept-up-to-date list of cyphers and adjust example, defaults
+      to match... or at least mention that place in comments
     - alt might be a Crypter that handles multiple sockets, with the
       Crypter having a run method?
-      TLSSocket(TCPListener,TLSCrypter&);
+      TLSSocket(TCPListener,TLSCrypto&);
         ssl = SSL_new(ctx);
         SSL_set_bio(p->ssl, p->rbio, p->wbio);
-      TLSSocket(TCPSocket,TLSCrypter&);
+      TLSSocket(TCPSocket,TLSCrypto&);
         ssl = SSL_new(ctx);
         SSL_set_bio(p->ssl, p->rbio, p->wbio);
         SSL_set_connect_state(p->ssl);

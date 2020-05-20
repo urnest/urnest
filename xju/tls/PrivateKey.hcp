@@ -1,0 +1,87 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <memory>
+#include <openssl/evp.h> //impl
+#include <xju/tls/getOpenSSLCallingThreadErrors.hh> //impl
+#include <sstream> //impl
+#include <xju/format.hh> //impl
+#include <vector>
+#include <cinttypes>
+#include <memory>
+#include <xju/Exception.hh> //impl
+
+struct evp_pkey_st; // typedef struct evp_pkey_st EVP_PKEY;
+
+namespace xju
+{
+namespace tls
+{
+class evp_pkey_st_Deleter{
+public:
+  void operator()(evp_pkey_st* x) noexcept
+  {
+    EVP_PKEY_free(x);
+  }
+};
+
+namespace
+{
+std::unique_ptr<evp_pkey_st,evp_pkey_st_Deleter> decodePrivateKey(
+  std::vector<uint8_t> const& der)
+// throw xju::Exception
+// throw std::bad_alloc
+{
+  try{
+    unsigned char const* data((unsigned char const*)der.data());
+    std::unique_ptr<evp_pkey_st,evp_pkey_st_Deleter> result(
+      d2i_AutoPrivateKey(0,&data,der.size()));
+    if (!result.get()){
+      throw xju::Exception(getOpenSSLCallingThreadErrors(),XJU_TRACED);
+    }
+    return result;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode private key from DER "
+      << xju::format::join(der.begin(),der.end(),
+                           [](uint8_t x){
+                             return xju::format::hex(x,"0x");
+                           },
+                           " ");
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+}
+
+class PrivateKey
+{
+public:
+  explicit PrivateKey(std::vector<uint8_t> const& der)
+  // throw xju::Exception
+      :_(decodePrivateKey(der))
+  {
+  }
+  evp_pkey_st const* get() const noexcept
+  {
+    return _.get();
+  }
+  evp_pkey_st* get() noexcept
+  {
+    return _.get();
+  }
+private:
+  std::unique_ptr<evp_pkey_st,evp_pkey_st_Deleter> _;
+};
+
+}
+}
