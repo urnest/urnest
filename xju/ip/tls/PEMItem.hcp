@@ -16,6 +16,9 @@
 #include <cinttypes>
 #include <xju/base64/decode.hh> //impl
 #include <xju/ip/tls/pemParser.hh> //impl
+#include <xju/ip/tls/PEMTypeItem.hh> //impl
+#include <xju/ip/tls/PEMCommentsItem.hh> //impl
+#include <xju/ip/tls/PEMPayloadItem.hh> //impl
 
 namespace xju
 {
@@ -41,7 +44,7 @@ public:
   std::vector<uint8_t> getPayload() const noexcept
   {
     auto const p(hcp_ast::findOnlyChildOfType<PEMPayloadItem>(*this));
-    return xju::base64::decode(begin().x_,end().x_);
+    return xju::base64::decode(p.begin().x_,p.end().x_);
   }
 };
 
