@@ -151,6 +151,11 @@ std::vector<uint8_t> decode(std::string::const_iterator const begin,
   }
 }
 
+std::vector<uint8_t> decode(std::string const& x)
+// xju::Exception - base64 input string is invalid
+{
+  return decode(x.begin(),x.end());
+}
 
 }
 }
