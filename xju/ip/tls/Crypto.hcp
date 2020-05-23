@@ -17,26 +17,14 @@ namespace ip
 namespace tls
 {
 namespace{
-  // get calling thread error messages, separate them by " and "
-  std::string getCallingThreadErrors() noexcept
-  {
-    std::vector<std::string> errs;
-    auto cb=[errs&](const char *str, size_t len, void *u)->int{
-              errs.push_back(std::string(str,str+len));
-            };
-    ERR_print_errors_cb(cb,0);
-    return xju::format::join(errs.begin(),errs.end()," and ");
-  }
-  
   std::unique_ptr<SSL_CTX,decltype(&SSL_CTX_free)> createContext(
-    decltype(&SSLv23_server_method),//client or server?
     PrivateKey const& privateKey,
     std::vector<X509Certificate> const& certificateAndAncestors) /*throw(
       xju::Exception)*/
   {
     try{
       std::unique_ptr<SSL_CTX,decltype(&SSL_CTX_free)> result(
-        SSL_CTX_new(method));
+        SSL_CTX_new(TLS_method));
       if (!result.get()) {
         throw xju::Exception(getCallingThreadErrors(),XJU_TRACED);
       }
@@ -81,12 +69,10 @@ namespace{
 class Crypto
 {
 public:
-  Crypto(decltype(&SSLv23_server_method),//client or server?
-         PrivateKey const& privateKey,
-         std::vector<X509Certificate> const& certificateAndAncestors,
-         bool const requestClientCertificate) /*throw(
+  Crypto(PrivateKey const& privateKey,
+         std::vector<X509Certificate> const& certificateAndAncestors) /*throw(
            xju::Exception)*/:
-      ctx_(createContext(method,privateKey,certificateAndAncestors)),
+      ctx_(createContext(privateKey,certificateAndAncestors)),
       stop_(false),
       wake_(xju::pipe())
   {
@@ -113,6 +99,22 @@ public:
         uint8_t x;
         wake_.first->read(&x,1,xju::steadyNow());
       }
+      // each session has two pipes above, ssl and a socket below
+      // ssl has top and bottom bios (or two of each?)
+      // outwards: each sess:
+      //             do out until would block
+      //             if want read add pipe output to readable set
+      //             if want write add socket to writable set
+      //             do in until would block
+      //             if want read add socket to readable set
+      //             if want write add pipe to writable set
+      //           wait readable or writable
+      //           each sess:
+      //             if pipe readable read pipe data into ssl bio
+      //             if socket writable write bio data to socket
+      //             if socket readable read socket data into ssl bio
+      //             if pipe writable write bio data to pipe
+      // 
       do reads and writes @@@;
     }
   }
