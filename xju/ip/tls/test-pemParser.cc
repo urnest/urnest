@@ -46,6 +46,7 @@ jYopyHnOnq0OSdDrMujZRB19rapg+dA=
   {
     std::string const pk=R"--(my private key
 for testing
+openssl ecparam -genkey -name secp384r1 | openssl ec -out ec.key
 -----BEGIN EC PRIVATE KEY-----
 MIGkAgEBBDBG2oN5DamWWRHyC/HfK4NF3E292ahylA9Pdq7TePL26OZjlFc+4T8N
 Yn1yT8vmP06gBwYFK4EEACKhZANiAAS0u6wKpPXur0ZQ6IkzhRX8W7HNYayeodYn
@@ -56,7 +57,7 @@ jYopyHnOnq0OSdDrMujZRB19rapg+dA=
       auto const x(hcp_parser::parseString(pk.begin(),pk.end(),pemParser()));
       auto const y(hcp_ast::findOnlyChildOfType<PEMItem>(x));
       xju::assert_equal(y.getType(),PEMType("EC PRIVATE KEY"));
-      xju::assert_equal(y.getComments(),"my private key\nfor testing\n");
+      xju::assert_equal(y.getComments(),"my private key\nfor testing\nopenssl ecparam -genkey -name secp384r1 | openssl ec -out ec.key\n");
       xju::assert_equal(y.getPayload(),xju::base64::decode(
                           "MIGkAgEBBDBG2oN5DamWWRHyC/HfK4NF3E292ahylA9Pdq7TePL26OZjlFc+4T8NYn1yT8vmP06gBwYFK4EEACKhZANiAAS0u6wKpPXur0ZQ6IkzhRX8W7HNYayeodYnpOSlbLXBNJ1see195nAAoktlWKUZ8l5wHgKmWXhk52AuAyCX7WD0MCsbrtJ8BtI8jYopyHnOnq0OSdDrMujZRB19rapg+dA="));
     }
