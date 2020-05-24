@@ -19,31 +19,31 @@ namespace tls
 namespace{
   std::unique_ptr<SSL_CTX,decltype(&SSL_CTX_free)> createContext(
     PrivateKey const& privateKey,
-    std::vector<X509Certificate> const& certificateAndAncestors) /*throw(
+    X509Certificate const& certificate,
+    std::vector<X509Certificate> const& ancestors) /*throw(
       xju::Exception)*/
   {
     try{
       std::unique_ptr<SSL_CTX,decltype(&SSL_CTX_free)> result(
         SSL_CTX_new(TLS_method));
       if (!result.get()) {
-        throw xju::Exception(getCallingThreadErrors(),XJU_TRACED);
+        throw xju::Exception(getOpenSSLCallingThreadErrors(),XJU_TRACED);
       }
       //REVISIT: what type of private key? How does that correspond to cipher list?
       SSL_CTX_set_cipher_list("HIGH:!aNULL:!kRSA:!PSK:!SRP:!MD5:!RC4:!DSS");//from wiki.openssl.org
       SSL_CTX_set_ecdh_auto(result.get(), 1);
-      if (certificateAndAncestors.size()){
-        if (SSL_CTX_use_certificate(
-              result.get(),
-              certificateAndAncestors.front().get()) <= 0) {
-          xju::Exception e(getErrors(),XJU_TRACED);
+      if (SSL_CTX_use_certificate(
+            result.get(),
+            certificate.get()) <= 0) {
+          xju::Exception e(getOpenSSLCallingThreadErrors(),XJU_TRACED);
           e.addContext("set context certificate",XJU_TRACED);
           throw e;
         }
-        for(int i=1; i!=certificateAndAncestors.size(); ++i){
+        for(int i=0; i!=ancestors.size(); ++i){
           if (iSSL_CTX_add_extra_chain_cert(
                 result.get(),
                 certificateAndAncestors[i].get()) <= 0) {
-            xju::Exception e(getErrors(),XJU_TRACED);
+            xju::Exception e(getOpenSSLCallingThreadErrors(),XJU_TRACED);
             e.addContext(
               "add ancestor certificate #"+xju::format::str(i),XJU_TRACED);
             throw e;
@@ -51,7 +51,7 @@ namespace{
         }
       }
       if (SSL_CTX_use_PrivateKey(result.get(),privateKey.get())<=0){
-        xju::Exception e(getErrors(),XJU_TRACED);
+        xju::Exception e(getOpenSSLCallingThreadErrors(),XJU_TRACED);
         e.addContext("set context private key",XJU_TRACED);
         throw e;
       }
@@ -70,9 +70,10 @@ class Crypto
 {
 public:
   Crypto(PrivateKey const& privateKey,
-         std::vector<X509Certificate> const& certificateAndAncestors) /*throw(
+         X509Certificate const& certificate,
+         std::vector<X509Certificate> const& certificateAncestors) /*throw(
            xju::Exception)*/:
-      ctx_(createContext(privateKey,certificateAndAncestors)),
+      ctx_(createContext(privateKey,certificate,certificateAncestors)),
       stop_(false),
       wake_(xju::pipe())
   {
@@ -84,9 +85,15 @@ public:
     while(!stop_){
       std::set<xju::io::Input const*> readable{wake_.first.get()};
       std::set<xju::io::Input const*> writable;
+      // each session has two pipes above, ssl and a socket below
+      // ssl has top and bottom bios (or two of each?)
       for(auto s: sessions_){
-        readable.insert(s.first);
-        writable.insert(s.first);
+      //             do out until would block
+      //             if want read add pipe output to readable set
+      //             if want write add socket to writable set
+      //             do in until would block
+      //             if want read add socket to readable set
+      //             if want write add pipe to writable set
       }
       auto x(xju::io::select(readable,writable,xju::steadyEternity()));
       {
@@ -99,15 +106,6 @@ public:
         uint8_t x;
         wake_.first->read(&x,1,xju::steadyNow());
       }
-      // each session has two pipes above, ssl and a socket below
-      // ssl has top and bottom bios (or two of each?)
-      // outwards: each sess:
-      //             do out until would block
-      //             if want read add pipe output to readable set
-      //             if want write add socket to writable set
-      //             do in until would block
-      //             if want read add socket to readable set
-      //             if want write add pipe to writable set
       //           wait readable or writable
       //           each sess:
       //             if pipe readable read pipe data into ssl bio
@@ -115,7 +113,6 @@ public:
       //             if socket readable read socket data into ssl bio
       //             if pipe writable write bio data to pipe
       // 
-      do reads and writes @@@;
     }
   }
   void stop(){
@@ -125,6 +122,8 @@ public:
   //
   // transport must live until get<1>(result) is closed
   // - to request closure, close get<0>(result)
+  // REVISIT: how to pass back closure reason e.g.
+  // connection failed v normal closure v tls violation
   std::tuple<
     std::unique_ptr<xju::io::OStream>,
     std::unique_ptr<xju::io::IStream>,
@@ -132,7 +131,9 @@ public:
       xju::ip::Socket& transport,
       bool const requestClientCertificate,
       std::chrono::steady_clock::time_point const& deadline,
-      bool const closeOnExec) /*throw(xju::Exception)*/
+      bool const closeOnExec)
+  //throw xju::DeadlineReached
+  //throw xju::Exception
   {
     try{
       auto decrypted(xju::pipe());
@@ -147,7 +148,35 @@ public:
                          return 1;
                        });
       }
-      REVISIT do handshake;
+      while(true){
+        std::set<xju::io::Input const*> readable;
+        std::set<xju::io::Input const*> writable;
+        int const e(SSL_accept(ssl.get()));
+        switch(e){
+        case 0:
+          throw Shutdown(XJU_TRACED); //REVISIT
+        case 1:
+          break;
+        default:
+          if (SSL_get_error(ssl.get(),e)==SSL_ERROR_WANT_READ){
+            readable.insert(&transport);
+          }
+          if (SSL_get_error(ssl.get(),e)==SSL_ERROR_WANT_WRITE){
+            writable.insert(&transport);
+          }
+        }
+        auto const rw(xju::io::select(readable,writable,deadline));
+        if (readable.size()){
+          REVISIT;//read from socket into ssl BIO
+        }
+        if (writable.size()){
+          REVISIT;//write to socket from ssl BIO
+        }
+        if (!readable.size()&&!writeable.size()&& xju::steadyNow()>deadline){
+          throw xju::DeadlineReached(
+            xju::Exception("TLS handshake incomplete at deadline",XJU_TRACED));
+        }
+      }
       std::unique_ptr<Session> session(
         new Session(decrypted.second,
                     encrypt.first,

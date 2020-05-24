@@ -25,7 +25,8 @@ namespace tls
 void test1() {
 
   {
-    std::string const pk=R"--(Country Name (2 letter code) [AU]:
+    std::string const pk=R"--(openssl req -new -x509 -days 365 -key ~/tmp/tmp.key -out ca.crt
+Country Name (2 letter code) [AU]:
 State or Province Name (full name) [Some-State]:Queensland
 Locality Name (eg, city) []:Brisbane
 Organization Name (eg, company) [Internet Widgits Pty Ltd]:urnest
