@@ -102,9 +102,9 @@ OVERVIEW
     -   odin/test a couple of tests of odin itself
 
 -   xju has my C++ classes etc for things like posix threads, sub-processes
-    exception handling, assertions, io, file+directory, utf8, json, snmp; if
-    there is a theme it is providing classes that are hard to misuse and
-    that leverage C++ strengths:
+    exception handling, assertions, io, file+directory, utf8, json, snmp,
+    ipv4, http, tls; if there is a theme it is providing classes that are
+    hard to misuse and that leverage C++ strengths:
         - type safety
         - RAII
       status: usable
@@ -127,8 +127,9 @@ OVERVIEW
 -   pq is jquery-like functionality for python, useful for doing
     server-side stuff as you might do client-side in javascript with
     jquery. See the tests at the bottom of pq/pq.py for examples.
-    This pq is for python 2.
-
+    This pq is for python 2; wal (below) has a python 3 version of pq.
+      status: legacy
+      
 -   wal is a python3 wsgi library, see wal/test/app.py and wal/test/server.py
     for examples; also contains wal.js which is miscellaneous javascript
     functions I have found useful

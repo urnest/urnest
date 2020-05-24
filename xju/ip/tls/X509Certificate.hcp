@@ -10,7 +10,7 @@
 
 
 #include <memory>
-#include <openssl/evp.h> //impl
+#include <openssl/ossl_typ.h> //impl
 #include <xju/ip/tls/getOpenSSLCallingThreadErrors.hh> //impl
 #include <sstream> //impl
 #include <xju/format.hh> //impl
@@ -18,8 +18,9 @@
 #include <cinttypes>
 #include <memory>
 #include <xju/Exception.hh> //impl
+#include <openssl/x509.h> //impl
 
-struct evp_pkey_st; // typedef struct evp_pkey_st EVP_PKEY;
+struct x509_st; // typedef struct x509_st X509;
 
 namespace xju
 {
@@ -27,25 +28,25 @@ namespace ip
 {
 namespace tls
 {
-class evp_pkey_st_Deleter{
+class x509_st_Deleter{
 public:
-  void operator()(evp_pkey_st* x) noexcept
+  void operator()(x509_st* x) noexcept
   {
-    EVP_PKEY_free(x);
+    X509_free(x);
   }
 };
 
 namespace
 {
-std::unique_ptr<evp_pkey_st,evp_pkey_st_Deleter> decodePrivateKey(
+std::unique_ptr<x509_st,x509_st_Deleter> decodeCertificate(
   std::vector<uint8_t> const& der)
 // throw xju::Exception
 // throw std::bad_alloc
 {
   try{
     unsigned char const* data((unsigned char const*)der.data());
-    std::unique_ptr<evp_pkey_st,evp_pkey_st_Deleter> result(
-      d2i_AutoPrivateKey(0,&data,der.size()));
+    std::unique_ptr<x509_st,x509_st_Deleter> result(
+      d2i_X509(0,&data,der.size()));
     if (!result.get()){
       throw xju::Exception(getOpenSSLCallingThreadErrors(),XJU_TRACED);
     }
@@ -53,7 +54,7 @@ std::unique_ptr<evp_pkey_st,evp_pkey_st_Deleter> decodePrivateKey(
   }
   catch(xju::Exception& e){
     std::ostringstream s;
-    s << "decode private key from DER "
+    s << "decode certificate from DER "
       << xju::format::join(der.begin(),der.end(),
                            [](uint8_t x){
                              return xju::format::hex(x,"0x");
@@ -65,24 +66,24 @@ std::unique_ptr<evp_pkey_st,evp_pkey_st_Deleter> decodePrivateKey(
 }
 }
 
-class PrivateKey
+class X509Certificate
 {
 public:
-  explicit PrivateKey(std::vector<uint8_t> const& der)
+  explicit X509Certificate(std::vector<uint8_t> const& der)
   // throw xju::Exception
-      :_(decodePrivateKey(der))
+      :_(decodeCertificate(der))
   {
   }
-  evp_pkey_st const* get() const noexcept
+  x509_st const* get() const noexcept
   {
     return _.get();
   }
-  evp_pkey_st* get() noexcept
+  x509_st* get() noexcept
   {
     return _.get();
   }
 private:
-  std::unique_ptr<evp_pkey_st,evp_pkey_st_Deleter> _;
+  std::unique_ptr<x509_st,x509_st_Deleter> _;
 };
 
 }
