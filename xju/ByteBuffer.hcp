@@ -1,0 +1,135 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <cinttypes>
+#include <unistd.h>
+#include <utility>
+#include <xju/assert.hh> //impl
+#include <algorithm> //impl
+
+namespace
+{
+// return x, assumed to point within circular buffer starting at
+// buffer and of size capacity, by amount, wrapping at end of buffer
+uint8_t* advance_(uint8_t* x, size_t const amount,
+                  uint8_t* const buffer, size_t const capacity) noexcept
+{
+  xju::assert_greater_equal(x,buffer);
+  xju::assert_less(x,buffer+capacity);
+  uint8_t* const end(buffer+capacity);
+  auto const distanceToEnd(end-x);
+  if (amount==distanceToEnd){
+    return buffer;
+  }
+  if (amount>distanceToEnd){
+    return advance_(buffer,amount-distanceToEnd,
+                    buffer,capacity);
+  }
+  return x+amount;
+}
+
+}
+namespace xju
+{
+// fixed size buffer holding variable number of bytes, suited
+// to storing first-in-first-out queue of bytes that are enqueued
+// and dequeued multiple bytes at a time, e.g. via read/write
+// system calls.
+class ByteBuffer
+{
+public:
+  explicit ByteBuffer(size_t capacity) noexcept:
+      capacity_(capacity),
+      buffer_(new uint8_t[capacity]),
+      begin_(buffer_),
+      size_(0)
+  {
+  }
+  ~ByteBuffer() noexcept
+  {
+    delete[](buffer_);
+  }
+  size_t const capacity_;
+
+  //amount of data currently held
+  size_t size() const noexcept{
+    return size_;
+  }
+  //first contiguous region of data held
+  //post: result.second<=size()
+  std::pair<uint8_t const*,size_t> contigData() const noexcept
+  {
+    size_t const distanceToEnd(endOfStorage()-begin_);
+    return std::make_pair(begin_,std::min(size_,distanceToEnd));
+  }
+  //first contiguous region of contiguous data held
+  //post: result.second<=size()
+  std::pair<uint8_t*,size_t> contigData() noexcept
+  {
+    size_t const distanceToEnd(endOfStorage()-begin_);
+    return std::make_pair(begin_,std::min(size_,distanceToEnd));
+  }
+  //reflect that n bytes have been consumed, i.e. advance start
+  //of data by n places
+  void consumed(size_t n) noexcept
+  {
+    xju::assert_less_equal(n,size_);
+    if(n==size_){
+      begin_=buffer_;
+      size_=0;
+    }
+    else{
+      begin_=advance(begin_,n);
+      size_-=n;
+    }
+  }
+
+  //first contiguous region of free space
+  //post: result.second<=capacity_-size()
+  std::pair<uint8_t const*,size_t> contigSpace() const noexcept
+  {
+    auto const startOfFreeSpace(advance(begin_,size_));
+    size_t const totalFreeSpace(capacity_-size());
+    size_t const distanceToEnd(endOfStorage()-startOfFreeSpace);
+    return std::make_pair(startOfFreeSpace,
+                          std::min(totalFreeSpace,distanceToEnd));
+  }
+  //first contiguous region of free space
+  //post: result.second<=capacity_-size()
+  std::pair<uint8_t*,size_t> contigSpace() noexcept
+  {
+    auto const startOfFreeSpace(advance(begin_,size_));
+    size_t const totalFreeSpace(capacity_-size());
+    size_t const distanceToEnd(endOfStorage()-startOfFreeSpace);
+    return std::make_pair(startOfFreeSpace,
+                          std::min(totalFreeSpace,distanceToEnd));
+  }
+  //reflect that n bytes have been appended, i.e. add n
+  //to size
+  void appended(size_t n) noexcept
+  {
+    xju::assert_less_equal(n,capacity_-size());
+    size_+=n;
+  }
+private:
+  uint8_t* const buffer_; //storage - array of size capacity_
+  uint8_t* begin_;        //start of currently held data
+  size_t size_;           //size of currently held
+
+  uint8_t* endOfStorage() const noexcept{
+    return buffer_+capacity_;
+  }
+  uint8_t* advance(uint8_t const* const x, size_t const n) const noexcept
+  {
+    return advance_(const_cast<uint8_t*>(x),n,buffer_,capacity_);
+  }
+};
+
+}

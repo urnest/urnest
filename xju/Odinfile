@@ -17,6 +17,7 @@ test%tests.tree
 #()+cmd=(%test-serialisation.cxx.sm+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-AutoFd.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-Array.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-ByteBuffer.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-check_types_related.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-countSignificantBits.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=test '-s' (%test-check_types_related_2_err):exec.output

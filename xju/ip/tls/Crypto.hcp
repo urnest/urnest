@@ -16,58 +16,71 @@ namespace ip
 {
 namespace tls
 {
-namespace{
-  std::unique_ptr<SSL_CTX,decltype(&SSL_CTX_free)> createContext(
-    PrivateKey const& privateKey,
-    X509Certificate const& certificate,
-    std::vector<X509Certificate> const& ancestors) /*throw(
-      xju::Exception)*/
-  {
-    try{
-      std::unique_ptr<SSL_CTX,decltype(&SSL_CTX_free)> result(
-        SSL_CTX_new(TLS_method));
-      if (!result.get()) {
-        throw xju::Exception(getOpenSSLCallingThreadErrors(),XJU_TRACED);
-      }
-      //REVISIT: what type of private key? How does that correspond to cipher list?
-      SSL_CTX_set_cipher_list("HIGH:!aNULL:!kRSA:!PSK:!SRP:!MD5:!RC4:!DSS");//from wiki.openssl.org
-      SSL_CTX_set_ecdh_auto(result.get(), 1);
-      if (SSL_CTX_use_certificate(
+namespace
+{
+std::unique_ptr<SSL_CTX,decltype(&SSL_CTX_free)> createContext(
+  PrivateKey const& privateKey,
+  X509Certificate const& certificate,
+  std::vector<X509Certificate> const& ancestors)
+//throw xju::Exception)
+{
+  try{
+    std::unique_ptr<SSL_CTX,decltype(&SSL_CTX_free)> result(
+      SSL_CTX_new(TLS_method));
+    if (!result.get()) {
+      throw xju::Exception(getOpenSSLCallingThreadErrors(),XJU_TRACED);
+    }
+    //REVISIT: what type of private key? How does that correspond to cipher list?
+    SSL_CTX_set_cipher_list("HIGH:!aNULL:!kRSA:!PSK:!SRP:!MD5:!RC4:!DSS");//from wiki.openssl.org
+    SSL_CTX_set_ecdh_auto(result.get(), 1);
+    if (SSL_CTX_use_certificate(
+          result.get(),
+          certificate.get()) <= 0) {
+      xju::Exception e(getOpenSSLCallingThreadErrors(),XJU_TRACED);
+      e.addContext("set context certificate",XJU_TRACED);
+      throw e;
+    }
+    for(int i=0; i!=ancestors.size(); ++i){
+      if (iSSL_CTX_add_extra_chain_cert(
             result.get(),
-            certificate.get()) <= 0) {
-          xju::Exception e(getOpenSSLCallingThreadErrors(),XJU_TRACED);
-          e.addContext("set context certificate",XJU_TRACED);
-          throw e;
-        }
-        for(int i=0; i!=ancestors.size(); ++i){
-          if (iSSL_CTX_add_extra_chain_cert(
-                result.get(),
-                certificateAndAncestors[i].get()) <= 0) {
-            xju::Exception e(getOpenSSLCallingThreadErrors(),XJU_TRACED);
-            e.addContext(
-              "add ancestor certificate #"+xju::format::str(i),XJU_TRACED);
-            throw e;
-          }
-        }
-      }
-      if (SSL_CTX_use_PrivateKey(result.get(),privateKey.get())<=0){
+            certificateAndAncestors[i].get()) <= 0) {
         xju::Exception e(getOpenSSLCallingThreadErrors(),XJU_TRACED);
-        e.addContext("set context private key",XJU_TRACED);
+        e.addContext(
+          "add ancestor certificate #"+xju::format::str(i),XJU_TRACED);
         throw e;
       }
-      return result;
     }
-    catch(xju::Exception& e){
-      std::ostringstream s;
-      s << "create OpenSSL server-side context";
-      e.addContext(s.str(),XJU_TRACED);
-      throw;
+    if (SSL_CTX_use_PrivateKey(result.get(),privateKey.get())<=0){
+      xju::Exception e(getOpenSSLCallingThreadErrors(),XJU_TRACED);
+      e.addContext("set context private key",XJU_TRACED);
+      throw e;
     }
+    return result;
   }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "create OpenSSL server-side context";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+std::unique_ptr<BIO,decltype(BIO_free)> makeBIO(xju::io::OStream& s) noexcept
+{
+  static int const typeId(BIO_get_new_index());
+  static auto method(makeOStreamMethod());
+  std::unique_ptr<BIO,decltype(BIO_free)> result(
+    BIO_new(typeId));
+  BIO_set_data(result.get(),&s);
+  return result;
+}
+
 }
 
 class Crypto
 {
+private:
+  typedef std::unique_ptr<SSL,decltype(&SSL_free)> SSLuptr;
+
 public:
   Crypto(PrivateKey const& privateKey,
          X509Certificate const& certificate,
@@ -140,7 +153,7 @@ public:
       auto encrypt(xju::pipe());
       xju::CircularBuffer<uint8_t> rxBuf(2048);
       xju::CircularBuffer<uint8_t> txBuf(2048);
-      std::unique_ptr<SSL,SSL_Deref> ssl(SSL_new(ctx_),&SSL_free);
+      SSLuptr ssl(SSL_new(ctx_.get()),&SSL_free);
       if(requestClientCertificate){
         SSL_set_verify(result.get(),
                        SSL_VERIFY_PEER,
@@ -148,6 +161,8 @@ public:
                          return 1;
                        });
       }
+      auto bio(makeBIO());
+      SSL_set_bio(bio.release());
       while(true){
         std::set<xju::io::Input const*> readable;
         std::set<xju::io::Input const*> writable;
@@ -167,6 +182,7 @@ public:
         }
         auto const rw(xju::io::select(readable,writable,deadline));
         if (readable.size()){
+          
           REVISIT;//read from socket into ssl BIO
         }
         if (writable.size()){
