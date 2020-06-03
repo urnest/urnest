@@ -22,7 +22,7 @@ namespace tls
 {
 namespace
 {
-int createIBIO(BIO* b) noexcept
+int createOBIO(BIO* b) noexcept
 {
   b->init=0;
   b->num=-1;
@@ -30,30 +30,31 @@ int createIBIO(BIO* b) noexcept
   b->flags=0;
   return 1;
 }
-int destroyIBIO(BIO* b) noexcept
+int destroyOBIO(BIO* b) noexcept
 {
   return 1;
 }
-int readBytesFromIBIO(BIO* b, char* data, size_t size, size_t* x)
+int writeBytesToOBIO(BIO* b, char* data, size_t size, size_t* x)
 {
-  xju::ByteBuffer& source(
+  char const* const rdata(data);
+  xju::ByteBuffer& sink(
     *(xju::ByteBuffer*)BIO_get_data(result.get()));
-  size_t bytesRead=0;
-  while(size && source.size()){
-    auto const contig(source.contigData());
+  size_t bytesWritten=0;
+  while(size && (sink.size()<sink.capacity_)){
+    auto const contig(sink.contigSpace());
     size_t const n(std::min(size,contig.second));
-    ::memcpy(data+bytesRead,contig.first,n);
-    bytesRead+=n;
+    ::memcpy(contig.first,rdata+bytesWritten,n);
+    bytesWritten+=n;
     size-=n;
-    source.removed(n);
+    sink.appended(n);
   }
-  *x=bytesRead;
-  if (bytesRead==0){
-    BIO_set_retry_read(b);
+  *x=bytesWritten;
+  if (bytesWritten==0){
+    BIO_set_retry_write(b);
   }
-  return bytesRead?1:0;
+  return bytesWritten?1:0;
 }
-long ctrlIBIO(BIO *b, int cmd, long num, void *p) noexcept
+long ctrlOBIO(BIO *b, int cmd, long num, void *p) noexcept
 {
   long result(1);
   switch (cmd) {
@@ -82,19 +83,19 @@ long ctrlIBIO(BIO *b, int cmd, long num, void *p) noexcept
   xju::assert_never_reached();
 }
   
-BIO_METHOD* makeIBIOMethod() noexcept
+BIO_METHOD* makeOBIOMethod() noexcept
 {
   static int const typeId(BIO_get_new_index());
-  BIO_METHOD* result(BIO_meth_new(index|BIO_TYPE_SOURCE_SINK,"IBIO"));
-  BIO_meth_set_create(result,createIBIO);
-  BIO_meth_set_destroy(result,destroyIBIO);
+  BIO_METHOD* result(BIO_meth_new(index|BIO_TYPE_SOURCE_SINK,"OBIO"));
+  BIO_meth_set_create(result,createOBIO);
+  BIO_meth_set_destroy(result,destroyOBIO);
   BIO_meth_set_read(result,0);
-  BIO_meth_set_read_ex(result,readBytesFromIBIO);
+  BIO_meth_set_read_ex(result,0);
   BIO_meth_set_write(result,0);
-  BIO_meth_set_write_ex(result,0);
+  BIO_meth_set_write_ex(result,writeBytesToOBIO);
   BIO_meth_set_gets(result,0); //no gets support
   BIO_meth_set_puts(result,0);
-  BIO_meth_set_ctrl(result,ctrlIBIO);
+  BIO_meth_set_ctrl(result,ctrlOBIO);
   BIO_meth_set_callback_ctrl(result,0);
   return result;
 }
@@ -105,14 +106,14 @@ BIO_METHOD* makeIBIOMethod() noexcept
 // BIO_read_ex will report WANT_READ. Note BIO_read_ex will never fail.
 //
 // pre: source will outlive result
-std::unique_ptr<BIO,decltype(BIO_free)> IBIO(
-  xju::ByteBuffer& source) noexcept
+std::unique_ptr<BIO,decltype(BIO_free)> OBIO(
+  xju::ByteBuffer& sink) noexcept
 {
-  static auto method(makeIBIOMethod());
+  static auto method(makeOBIOMethod());
   std::unique_ptr<BIO,decltype(BIO_free)> result(
     BIO_new(method),
     BIO_free);
-  BIO_set_data(result.get(),&source);
+  BIO_set_data(result.get(),&sink);
   result.get()->init=1;
   return result;
 }
@@ -120,3 +121,5 @@ std::unique_ptr<BIO,decltype(BIO_free)> IBIO(
 }
 }
 }
+
+
