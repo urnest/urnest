@@ -30,7 +30,6 @@ std::unique_ptr<SSL_CTX,decltype(&SSL_CTX_free)> createContext(
     if (!result.get()) {
       throw xju::Exception(getOpenSSLCallingThreadErrors(),XJU_TRACED);
     }
-    SSL_CTX_set_mode(SSL_MODE_ENABLE_PARTIAL_WRITE,1);
     //REVISIT: what type of private key? How does that correspond to cipher list?
     SSL_CTX_set_cipher_list("HIGH:!aNULL:!kRSA:!PSK:!SRP:!MD5:!RC4:!DSS");//from wiki.openssl.org
     SSL_CTX_set_ecdh_auto(result.get(), 1);
@@ -66,6 +65,27 @@ std::unique_ptr<SSL_CTX,decltype(&SSL_CTX_free)> createContext(
   }
 }
 
+std::vector<uint8_t> readPendingData(
+  xju::io::IStream& s,
+  size_t const maxReturn) noexcept
+{
+  std::vector<uint8_t> result;
+  if (maxReturn){
+    size_t n(0);
+    do
+    {
+      xju::assert_not_equal(result.size(),maxReturn);
+      size_t const was(result.size());
+      result.resize(std::min(result.size()+128),maxReturn);
+      n=decrypted.read(result.begin()+was,result.size()-was,
+                       xju::steadyNow());
+      result.resize(was+n);
+    }
+    while(n && (result.size()<maxReturn));
+  }
+  return result;
+}
+
 }
 
 class Crypto
@@ -94,59 +114,12 @@ public:
       // ssl has top and bottom bios (or two of each?)
       for(auto s: sessions_){
         try{
-          if(s.second.topTxBuf_.size()){
-            auto ssl=s.second.get();
-            size_t n(0);
-            auto const d(s.second.topTxBuf_.contigData);
-            if (SSL_write_ex(ssl,d.first,d.second,&n)){
-              s.second.topTxBuf_.consumed(n);
-              readable.insert(s.second.encrypt_.get());//[A]
-            }
-            else{
-              int const ssle(SSL_get_error(ssl,0));
-              switch(ssle){
-              case SSL_ERROR_WANT_WRITE:
-                writable.insert(s.first); //[B]
-                break;
-              case SSL_ERROR_SSL:
-              {
-                s.second.error_=xju::Exception("SSL_write_ex failed with SSL_ERROR_SSL, i.e. protocol error",XJU_TRACED);
-                std::ostringstream s;
-                s << "encrypt and send " << d.second
-                  << " bytes of application data on TLS session of TCP socket "
-                  << (*s.first);
-                s.second.error_.value().addContext(s.str(),XJU_TRACED);
-                s.second.decrypted_.reset();
-              }
-              break;
-              default:
-              {
-                s.second.error_=xju::Exception(
-                  "SSL_write_ex failed with unexpected code "+
-                  xju::format::int(ssle)+
-                  " (see SSL_get_error(3SSL))",XJU_TRACED);
-                std::ostringstream s;
-                s << "encrypt and send " << d.second
-                  << " bytes of application data on TLS session of TCP socket "
-                  << (*s.first);
-                s.second.error_.value().addContext(s.str(),XJU_TRACED);
-                s.second.decrypted_.reset();
-              }
-              }
-            }
-          }
-          else{
-            readable.insert(s.second.encrypt_.get());//[A]
-          }
+          //
+          //
         }
         catch(xju::Exception const& e){
           s.second.error(e);
         }
-      }
-      
-      //             do in until would block
-      //             if want read add socket to readable set
-      //             if want write add pipe to writable set
       }
       auto const rw(xju::io::select(readable,writable,xju::steadyEternity()));
       {
@@ -175,42 +148,8 @@ public:
       }
       for(auto s: sessions_){
         try{
-          if (rw.first.find(s.second.encrypt_.get())!=rw.first.end()){
-            xju::assert_not_equal(s.second.topTxBuf_.size(),
-                                  s.second.topTxBuf_.capacity());//[A]
-            auto const d(s.second.topTxBuf_.contigSpace());
-            try{
-              auto const n(s.second.encrypt_->read(d.first,d.second,
-                                                   xju::steadyNow()));
-              s.second.topTxBuf_.appended(n);
-            }
-            catch(xju::Exception& e){
-              std::ostringstream s;
-              s << "read up to " << d.second
-                << " bytes of application data for encryption by TLS session "
-                << " on TCP socket " << (*s.first);
-              e.addContext(s.str(),XJU_TRACED);
-              throw;
-            }
-          }
-          if (rw.second.find(s.first())!=rw.second.end()){
-            xju::assert_not_equal(s.second.botTxBuf_.size(),0U);//[B]
-            auto const d(s.second.botTxBuf_.contigData());
-            try{
-              auto const n((*s.first).write(d.first,d.second,
-                                            xju::steadyNow()));
-              s.second.botTxBuf_.consumed(n);
-            }
-            catch(xju::Exception& e){
-              std::ostringstream s;
-              s << "write up to " << d.second << " TLS-encrypted bytes"
-                << " on " << (*s.first);
-              e.addContext(s.str(),XJU_TRACED);
-              throw;
-            }
-          }
-      //             if socket readable read socket data into ssl bio
-      //             if pipe writable write bio data to pipe
+          //
+          //
         }
         catch(xju::Exception const& e){
           s.second.error_=e;
@@ -290,7 +229,8 @@ public:
         }
       }
       xju::Lock l(newSessionsGuard_);
-      newSessions_.push_back(std::move(session));
+      newSessions_.push_back(decltype(newSession_.front())(
+                               &transport,std::move(session)));
       return std::make_tuple(std::move(decrypted.first()),
                              std::move(encrypt.second()));
     }
@@ -313,8 +253,8 @@ public:
   // pre: shutdown has not previously been called
   std::vector<uint8_t> shutdown(
     xju::ip::Socket& transport,
-    std::unique_ptr<xju::io::IStream>&& decrypted,
-    std::unique_ptr<xju::io::OStream>&& encrypt,
+    std::unique_ptr<xju::io::IStream> decrypted,
+    std::unique_ptr<xju::io::OStream> encrypt,
     std::chrono::steady_clock::time_point const& deadline,
     size_t maxReturn)
   //xju::DeadlineReached
@@ -326,19 +266,15 @@ public:
     try{
       xju::assert_not_equal(decrypted.get(),0);
       xju::assert_not_equal(encrypt.get(),0);
-      Session s(releaseSession_(transport));
-      std::vector<uint8_t> result(Crypto::readPendingData(*decrypted,
-                                    maxReturn));
-      encrypt.reset();
-      flushOutput(s,deadline);
-      shutdownSession(s,deadline,std::back_inserter(result),
-                      maxReturn-result.size());
+      Session s(releaseSession(transport));
+      std::vector<uint8_t> result(readPendingData(*decrypted,maxReturn));
+      s.shutdownSession(deadline,result);
       return result;
     }
     catch(xju::Exception& e){
       std::ostringstream s;
       s << "gracefully shutdown TLS session on TCP/IP socket "
-        << transport_ << " by specified deadline";
+        << transport << " by specified deadline";
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
@@ -353,7 +289,7 @@ public:
   {
     xju::assert_not_equal(decrypted.get(),0);
     xju::assert_not_equal(encrypt.get(),0);
-    releaseSession_(transport);
+    releaseSession(transport);
   }
     
 private:
@@ -362,29 +298,6 @@ private:
   std::atomic<bool> stop_;
   typedef std::unique_ptr<SSL,SSL_decltype(&SSL_free)> SSLuptr;
   
-  struct Session{
-    Session(std::unique_ptr<xju::io::OStream>&& decrypted,
-            std::unique_ptr<xju::io::IStream>&& encrypt,
-            SSLuptr&& ssl) noexcept:
-        decrypted_(decrypted),
-        encrypt_(encrypt),
-        botRxBuf_(2048),
-        botTxBuf_(2048),
-        ssl_(ssl)
-    {
-      auto ibio(IBIO(botRxBuf_));
-      auto obio(OBIO(botTxBuf_));
-      SSL_set_bio(ssl_.get(),ibio.release(),obio.release());
-    }
-    std::unique_ptr<xju::io::OStream> decrypted_;
-    std::unique_ptr<xju::io::IStream> encrypt_;
-    xju::CircularBuffer<uint8_t> botRxBuf_;
-    xju::CircularBuffer<uint8_t> botTxBuf_;
-    SSLuptr ssl_;
-    xju::CircularBuffer<uint8_t> topRxBuf_;
-    xju::CircularBuffer<uint8_t> topTxBuf_;
-  };
-             
   std::pair<std::unique_ptr<xju::io::IStream>,
             std::unique_ptr<xju::io::OStream> > wake_;
 
@@ -398,7 +311,8 @@ private:
   xju::Condition releaseSessionsChanged_;
   std::map<xju::ip::Socket*,std::unique_ptr<Session> > releaseSessions_;
 
-  Session releaseSession() noexcept{
+  Session releaseSession(xju::ip::Socket& transport) noexcept
+  {
     xju::Lock l(releaseSessionsGuard_);
     auto i(releaseSessions_.insert({&transport,std::unique_ptr<Session>()}));
     xju::assert_equal(i.second,true);
@@ -412,26 +326,6 @@ private:
     return result;
   }
     
-  static std::vector<uint8_t> readPendingData(
-    xju::io::IStream& s,
-    size_t const maxReturn) noexcept
-  {
-    std::vector<uint8_t> result;
-    if (maxReturn){
-      size_t n(0);
-      do
-      {
-        xju::assert_not_equal(result.size(),maxReturn);
-        size_t const was(result.size());
-        result.resize(std::min(result.size()+128),maxReturn);
-        n=decrypted.read(result.begin()+was,result.size()-was,
-                         xju::steadyNow());
-        result.resize(was+n);
-      }
-      while(n && (result.size()<maxReturn));
-    }
-    return result;
-  }
 };
 
 }

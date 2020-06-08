@@ -1,0 +1,232 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace ip
+{
+namespace tls
+{
+
+class Session{
+public:
+  std::unique_ptr<xju::io::OStream> decrypted_;
+  std::unique_ptr<xju::io::IStream> encrypt_;
+
+  //pre: encrypted will outlive *this
+  //pre: decrypt will outlive *this
+  Session(std::unique_ptr<xju::io::OStream> decrypted,
+          std::unique_ptr<xju::io::IStream> encrypt,
+          SSLuptr ssl,
+          std::unique_ptr<xju::io::OStream>& encrypted,
+          std::unique_ptr<xju::io::IStream>& decrypt) noexcept:
+      decrypted_(decrypted),
+      encrypt_(encrypt),
+      botRxBuf_(2048),
+      botTxBuf_(2048),
+      ssl_(ssl),
+      encrypted_(encrypted),
+      decrypt_(decrypt),
+      topRxBuf_(2048),
+      topTxBuf_(2048)
+  {
+    SSL_CTX_set_mode(ssl_.get(),SSL_MODE_ENABLE_PARTIAL_WRITE,1);
+    auto ibio(IBIO(botRxBuf_));
+    auto obio(OBIO(botTxBuf_));
+    SSL_set_bio(ssl_.get(),ibio.release(),obio.release());
+  }
+
+  // non-blocking
+  void encrypt(std::inserter<std::set<xju::io::IStream> > wantReadable,
+               std::inserter<std::set<xju::io::OStream> > wantWritable)
+  //throw xju::Exception
+  {
+    try{
+      if(topTxBuf_.size()){
+        auto ssl=ssl_.get();
+        size_t n(0);
+        auto const d(topTxBuf_.contigData);
+        if (SSL_write_ex(ssl,d.first,d.second,&n)){
+          topTxBuf_.consumed(n);
+          readable.insert(encrypt_.get());//[A]
+        }
+        else{
+          int const ssle(SSL_get_error(ssl,0));
+          switch(ssle){
+          case SSL_ERROR_WANT_WRITE:
+            (*wantWritable++)=encrypted_.get(); //[B]
+            break;
+          case SSL_ERROR_SSL:
+          {
+            throw xju::Exception("SSL_write_ex failed with SSL_ERROR_SSL, i.e. protocol error",XJU_TRACED);
+          }
+          break;
+          default:
+          {
+            throw xju::Exception(
+              "SSL_write_ex failed with unexpected code "+
+              xju::format::int(ssle)+
+              " (see SSL_get_error(3SSL))",XJU_TRACED);
+          }
+          }
+        }
+      }
+      else{
+        (*wantReadable++)=encrypt_.get();//[A]
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "encrypt bytes held in " << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  // non-blocking
+  void readEncrypt(std::set<IStream> const& readable)
+  //throw xju::Exception
+  {
+    try{
+      if (readable.find(encrypt_.get())!=readable.end()){
+        xju::assert_not_equal(topTxBuf_.size(),topTxBuf_.capacity_);//[A]
+        auto const d(topTxBuf_.contigSpace());
+        auto const n(encrypt_->read(d.first,d.second,xju::steadyNow()));
+        topTxBuf_.appended(n);
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "read bytes to encrypt into " << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  // non-blocking
+  void writeEncrypted(std::set<OStream> const& writeable)
+  //throw xju::Exception
+  {
+    try{
+      if (writeable.find(encrypted_.get())!=writeable.end()){
+        xju::assert_not_equal(botTxBuf_.size(),0U);//[B]
+        auto const d(botTxBuf_.contigData());
+        auto const n(encrypted_->write(d.first,d.second,xju::steadyNow()));
+        botTxBuf_.consumed(n);
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "write encrypted bytes held in " << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  // non-blocking
+  void decrypt(std::inserter<std::set<xju::io::IStream> > wantReadable,
+               std::inserter<std::set<xju::io::OStream> > wantWritable)
+  //throw xju::Exception
+  {
+    try{
+      REVISIT;
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "decrypt bytes held in " << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  // non-blocking
+  void writeDecrypted(std::set<OStream> const& writeable)
+  //throw xju::Exception
+  {
+    try{
+      if (writeable.find(decrypted_.get())!=writeable.end()){
+        xju::assert_not_equal(topRxBuf_.size(),0U);//[C]
+        auto const d(topRxBuf_.contigData());
+        auto const n(decrypted_->write(d.first,d.second,xju::steadyNow()));
+        topRxBuf_.consumed(n);
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "write decrypted bytes held in " << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  // non-blocking
+  void readDecrypt(std::set<IStream> const& readable)
+  //throw xju::Exception
+  {
+    try{
+      if (readable.find(decrypt_.get())!=readable.end()){
+        xju::assert_not_equal(botRxBuf_.size(),botRxBuf_.capacity_);//[D]
+        auto const d(botRxBuf_.contigSpace());
+        auto const n(decrypt_->read(d.first,d.second,xju::steadyNow()));
+        botRxBuf_.appended(n);
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "read bytes to decrypt into " << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  
+  void flushOutput(std::chrono::steady_clock::time_point deadline)
+  // throw xju::Exception
+  {
+    try{
+      REVISIT;
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "flush " << (*this) << " output";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+  void shutdownSession(std::chrono::steady_clock::time_point deadline,
+                       std::vector<uint8_t>& appendDataTo,
+                       size_t const maxAppend)
+  // throw xju::Exception
+  {
+    flushOutput();
+    REVISIT;
+  }
+  
+private:
+  
+  xju::CircularBuffer<uint8_t> botRxBuf_;
+  xju::CircularBuffer<uint8_t> botTxBuf_;
+  SSLuptr ssl_;
+  std::unique_ptr<xju::io::OStream>& encrypted_;
+  std::unique_ptr<xju::io::IStream>& decrypt_;
+
+  xju::CircularBuffer<uint8_t> topRxBuf_;
+  xju::CircularBuffer<uint8_t> topTxBuf_;
+
+  friend std::ostream& operator<<(std::ostream& s, Session const& x)
+  {
+    return s << "TLS session holding "
+             << topTxBuf_.size() << " bytes to encrypt, "
+             << botTxBuf_.size() << " encrypted bytes to send, "
+             << botRxBuf_.size() << " bytes to decrypt, "
+             << topRxBuf_.size() << " decrypted bytes";
+  }
+};
+
+
+}
+}
+}
