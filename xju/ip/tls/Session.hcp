@@ -45,43 +45,36 @@ public:
   }
 
   // non-blocking
-  void encrypt(std::inserter<std::set<xju::io::IStream> > wantReadable,
-               std::inserter<std::set<xju::io::OStream> > wantWritable)
+  void encrypt(std::inserter<std::set<xju::io::IStream> > wantRead,
+               std::inserter<std::set<xju::io::OStream> > wantWrite)
   //throw xju::Exception
   {
     try{
-      if(topTxBuf_.size()){
-        auto ssl=ssl_.get();
-        size_t n(0);
-        auto const d(topTxBuf_.contigData);
-        if (SSL_write_ex(ssl,d.first,d.second,&n)){
-          topTxBuf_.consumed(n);
-          readable.insert(encrypt_.get());//[A]
-        }
-        else{
-          int const ssle(SSL_get_error(ssl,0));
-          switch(ssle){
-          case SSL_ERROR_WANT_WRITE:
-            (*wantWritable++)=encrypted_.get(); //[B]
-            break;
-          case SSL_ERROR_SSL:
-          {
-            throw xju::Exception("SSL_write_ex failed with SSL_ERROR_SSL, i.e. protocol error",XJU_TRACED);
-          }
-          break;
-          default:
-          {
-            throw xju::Exception(
-              "SSL_write_ex failed with unexpected code "+
-              xju::format::int(ssle)+
-              " (see SSL_get_error(3SSL))",XJU_TRACED);
-          }
-          }
-        }
+      if(topTxBuf_.size()==0){
+        (*wantRead++)=encrypt_.get();//[A]
+        return;
       }
-      else{
-        (*wantReadable++)=encrypt_.get();//[A]
+      auto ssl=ssl_.get();
+      size_t n(0);
+      auto const d(topTxBuf_.contigData());
+      if (SSL_write_ex(ssl,d.first,d.second,&n)){
+        topTxBuf_.consumed(n);
+        (*wantRead++)=encrypt_.get();//[A]
+        return;
       }
+
+      int const ssle(SSL_get_error(ssl,0));
+      switch(ssle){
+      case SSL_ERROR_WANT_WRITE:
+        (*wantWrite++)=encrypted_.get(); //[B]
+        return;
+      case SSL_ERROR_SSL:
+        throw xju::Exception(
+          "SSL_write_ex error SSL_ERROR_SSL, i.e. protocol error",XJU_TRACED);
+      }
+      throw xju::Exception(
+        "SSL_write_ex error "+
+        xju::format::int(ssle)+" (see SSL_get_error(3SSL))",XJU_TRACED);
     }
     catch(xju::Exception& e){
       std::ostringstream s;
@@ -129,12 +122,36 @@ public:
     }
   }
   // non-blocking
-  void decrypt(std::inserter<std::set<xju::io::IStream> > wantReadable,
-               std::inserter<std::set<xju::io::OStream> > wantWritable)
+  void decrypt(std::inserter<std::set<xju::io::IStream> > wantRead,
+               std::inserter<std::set<xju::io::OStream> > wantWrite)
   //throw xju::Exception
   {
     try{
-      REVISIT;
+      if(topRxBuf_.size()==capacity){
+        (*wantWrite++)=decrypted_.get();//[A]
+        return;
+      }
+      auto ssl=ssl_.get();
+      size_t n(0);
+      auto const d(topRxBuf_.contigSpace());
+      if (SSL_read_ex(ssl,d.first,d.second,&n)){
+        topRxBuf_.appended(n);
+        (*wantWrite++)=decrypted_.get();//[A]
+        return;
+      }
+
+      int const ssle(SSL_get_error(ssl,0));
+      switch(ssle){
+      case SSL_ERROR_WANT_READ:
+        (*wantRead++)=decrypt_.get(); //[B]
+        return;
+      case SSL_ERROR_SSL:
+        throw xju::Exception(
+          "SSL_read_ex error SSL_ERROR_SSL, i.e. protocol error",XJU_TRACED);
+      }
+      throw xju::Exception(
+        "SSL_read_ex error "+
+        xju::format::int(ssle)+" (see SSL_get_error(3SSL))",XJU_TRACED);
     }
     catch(xju::Exception& e){
       std::ostringstream s;
@@ -182,11 +199,24 @@ public:
     }
   }
   
-  void flushOutput(std::chrono::steady_clock::time_point deadline)
+  // encrypt remaining unencrypted data by deadline, appending any
+  // decrypted data received before flush completes
+  // return space still left in appendDataTo
+  size_t flushOutput(std::chrono::steady_clock::time_point deadline,
+                     std::vector<uint8_t>& appendDataTo,
+                     size_t const maxAppend)
   // throw xju::Exception
   {
     try{
-      REVISIT;
+      size_t result(maxAppend);
+      try{
+        while(true){
+          REVISIT;
+        }
+      }
+      catch(xju::io::Input::Closed const&){
+        return result;
+      }
     }
     catch(xju::Exception& e){
       std::ostringstream s;
@@ -196,13 +226,24 @@ public:
     }
   }
 
+  // flush and shutdown session by deadline, appending any
+  // decrypted data received before shutdown completes
   void shutdownSession(std::chrono::steady_clock::time_point deadline,
                        std::vector<uint8_t>& appendDataTo,
                        size_t const maxAppend)
   // throw xju::Exception
   {
-    flushOutput();
-    REVISIT;
+    try{
+      size_t remainingAppend(flushOutput(deadline,appendDataTo,maxAppend));
+      REVISIT;
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "flush and gracefully shutdown " << (*this)
+        << " by specified deadline";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
   }
   
 private:
