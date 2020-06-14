@@ -14,32 +14,164 @@ namespace xju
 namespace tls
 {
 
+namespace
+{
+extern "C" {
+  int preverify(int preverify_ok, X509_STORE_CTX *x509_ctx) noexcept
+  {
+    return 1;
+  }
+}
+
+}
+
 class Session{
 public:
-  std::unique_ptr<xju::io::OStream> decrypted_;
-  std::unique_ptr<xju::io::IStream> encrypt_;
-
+  // Accept TLS connection on encrypted+decrypt (the underlying transport)
+  // by specified deadline, connecting unencrypted side to specified
+  // decrypted+encrypt.
+  //
+  //pre: ctx will outlive *this
   //pre: encrypted will outlive *this
   //pre: decrypt will outlive *this
   Session(std::unique_ptr<xju::io::OStream> decrypted,
           std::unique_ptr<xju::io::IStream> encrypt,
-          SSLuptr ssl,
+          SSL_ctx& ctx,
+          bool const requestClientCertificate,
+          std::chrono::steady_clock::time_point const& deadline,
           std::unique_ptr<xju::io::OStream>& encrypted,
-          std::unique_ptr<xju::io::IStream>& decrypt) noexcept:
+          std::unique_ptr<xju::io::IStream>& decrypt)
+  //throw xju::Exception
+  try:
       decrypted_(decrypted),
       encrypt_(encrypt),
       botRxBuf_(2048),
       botTxBuf_(2048),
-      ssl_(ssl),
+      ssl_(SSL_new(&ctx,&SSL_free)),
       encrypted_(encrypted),
       decrypt_(decrypt),
       topRxBuf_(2048),
       topTxBuf_(2048)
   {
+    if (!ssl_.get()){
+      throw xju::Exception(getOpenSSLCallingThreadErrors(),XJU_TRACED);
+    }
     SSL_CTX_set_mode(ssl_.get(),SSL_MODE_ENABLE_PARTIAL_WRITE,1);
     auto ibio(IBIO(botRxBuf_));
     auto obio(OBIO(botTxBuf_));
     SSL_set_bio(ssl_.get(),ibio.release(),obio.release());
+    if(requestClientCertificate){
+      SSL_set_verify(ssl_.get(),
+                     SSL_VERIFY_PEER,
+                     preverify);
+    }
+    while((int e = SSL_accept(ssl_.get()))!=1){
+      auto const ee(SSL_get_error(ssl_.get(),e));
+      std::set<xju::io::Input const*> readable;
+      std::set<xju::io::Input const*> writable;
+      switch(ee){
+      case SSL_ERROR_WANT_READ:
+        readable.insert(decrypt_.get());
+        break;
+      case SSL_ERROR_WANT_WRITE:
+        writable.insert(encrypted_.get());
+      default:
+      {
+        std::ostringstream s;
+        s << "SSL_accept failed with error code " << ee;
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      }
+      if (botTxBuf_.size()){
+        writable.insert(encrypted_.get());
+      }
+      auto const rw(xju::io::select(readable,writable,deadline));
+      if(xju::steadyNow()>=deadline){
+        throw xju::DeadlineReached(
+          xju::Exception("TLS handshake incomplete at deadline",XJU_TRACED));
+      }
+      readDecrypt(readable);
+      writeEncrypted(writable);
+    }
+    if(requestClientCertificate){
+      peerCertificate_= REVISIT: fetch client certificate;
+    }
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "accept TLS connection by specified deadline, "
+      << (requestClientCertificate?"not ":"")
+      << "requesting client certificate";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+
+  // Make TLS connection on encrypted+decrypt (the underlying transport)
+  // by specified deadline, connecting unencrypted side to specified
+  // decrypted+encrypt.
+  //
+  //pre: ctx will outlive *this
+  //pre: encrypted will outlive *this
+  //pre: decrypt will outlive *this
+  Session(std::unique_ptr<xju::io::OStream> decrypted,
+          std::unique_ptr<xju::io::IStream> encrypt,
+          SSL_ctx& ctx,
+          std::unique_ptr<xju::io::OStream>& encrypted,
+          std::unique_ptr<xju::io::IStream>& decrypt)
+  //throw xju::Exception
+  try:
+      decrypted_(decrypted),
+      encrypt_(encrypt),
+      botRxBuf_(2048),
+      botTxBuf_(2048),
+      ssl_(SSL_new(&ctx,&SSL_free)),
+      encrypted_(encrypted),
+      decrypt_(decrypt),
+      topRxBuf_(2048),
+      topTxBuf_(2048)
+  {
+    if (!ssl_.get()){
+      throw xju::Exception(getOpenSSLCallingThreadErrors(),XJU_TRACED);
+    }
+    SSL_CTX_set_mode(ssl_.get(),SSL_MODE_ENABLE_PARTIAL_WRITE,1);
+    auto ibio(IBIO(botRxBuf_));
+    auto obio(OBIO(botTxBuf_));
+    SSL_set_bio(ssl_.get(),ibio.release(),obio.release());
+    while((int e = SSL_connect(ssl_.get()))!=1){
+      auto const ee(SSL_get_error(ssl_.get(),e));
+      std::set<xju::io::Input const*> readable;
+      std::set<xju::io::Input const*> writable;
+      switch(ee){
+      case SSL_ERROR_WANT_READ:
+        readable.insert(decrypt_.get());
+        break;
+      case SSL_ERROR_WANT_WRITE:
+        writable.insert(encrypted_.get());
+      default:
+      {
+        std::ostringstream s;
+        s << "SSL_accept failed with error code " << ee;
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      }
+      if (botTxBuf_.size()){
+        writable.insert(encrypted_.get());
+      }
+      auto const rw(xju::io::select(readable,writable,deadline));
+      if(xju::steadyNow()>=deadline){
+        throw xju::DeadlineReached(
+          xju::Exception("TLS handshake incomplete at deadline",XJU_TRACED));
+      }
+      readDecrypt(readable);
+      writeEncrypted(writable);
+    }
+    peerCertificate_= REVISIT: fetch certificate;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "make TLS connection by specified deadline";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
   }
 
   // non-blocking
@@ -243,9 +375,13 @@ public:
       throw;
     }
   }
+
+  xju::Optional<std::pair<Certificate, /*valid:*/bool> > peerCertificate_;
   
 private:
-  
+  std::unique_ptr<xju::io::OStream> decrypted_;
+  std::unique_ptr<xju::io::IStream> encrypt_;
+
   xju::CircularBuffer<uint8_t> botRxBuf_;
   xju::CircularBuffer<uint8_t> botTxBuf_;
   SSLuptr ssl_;
