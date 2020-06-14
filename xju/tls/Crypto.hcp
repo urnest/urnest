@@ -12,8 +12,6 @@
 #include <atomic>
 namespace xju
 {
-namespace ip
-{
 namespace tls
 {
 namespace
@@ -328,6 +326,5 @@ private:
     
 };
 
-}
 }
 }

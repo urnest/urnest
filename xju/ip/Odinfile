@@ -5,7 +5,6 @@
 v4%tests.tree
 checksum%tests.tree
 icmp%tests.tree
-tls%tests.tree
 
 %tests.tree == <<
 ()+cmd=(test-UDPSocket.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
@@ -33,7 +32,6 @@ test-UDPLocalForwardSocket.cc+(../..%cxx-opts):auto.cxx.exe
 %v6==v6/Odinfile%hcp-gen
 %checksum==checksum/Odinfile%hcp-gen
 %icmp==icmp/Odinfile%hcp-gen
-%tls==tls/Odinfile%hcp-gen
 
 %tags==%all.list-of-tags:merged-tags
 
@@ -43,4 +41,3 @@ v4%tags
 v6%tags
 checksum%tags
 icmp%tags
-tls%tags

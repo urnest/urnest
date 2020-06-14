@@ -13,8 +13,6 @@
 
 namespace xju
 {
-namespace ip
-{
 namespace tls
 {
 
@@ -22,6 +20,5 @@ class PEMPayloadTag{};
 typedef hcp_ast::TaggedItem<PEMPayloadTag> PEMPayloadItem;
 
 
-}
 }
 }

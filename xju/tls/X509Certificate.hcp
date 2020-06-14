@@ -11,7 +11,7 @@
 
 #include <memory>
 #include <openssl/ossl_typ.h> //impl
-#include <xju/ip/tls/getOpenSSLCallingThreadErrors.hh> //impl
+#include <xju/tls/getOpenSSLCallingThreadErrors.hh> //impl
 #include <sstream> //impl
 #include <xju/format.hh> //impl
 #include <vector>
@@ -23,8 +23,6 @@
 struct x509_st; // typedef struct x509_st X509;
 
 namespace xju
-{
-namespace ip
 {
 namespace tls
 {
@@ -86,6 +84,5 @@ private:
   std::unique_ptr<x509_st,x509_st_Deleter> _;
 };
 
-}
 }
 }

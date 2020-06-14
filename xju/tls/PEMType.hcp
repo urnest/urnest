@@ -14,15 +14,12 @@
 
 namespace xju
 {
-namespace ip
-{
 namespace tls
 {
 
 struct PEMTypeTag{};
 typedef xju::Tagged<std::string,PEMTypeTag> PEMType;
 
-}
 }
 }
 

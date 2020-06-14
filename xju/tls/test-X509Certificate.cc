@@ -7,18 +7,16 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/ip/tls/X509Certificate.hh>
+#include <xju/tls/X509Certificate.hh>
 
 
 #include <string>
 #include <hcp/parser.hh>
 #include <hcp/ast.hh>
-#include <xju/ip/tls/pemParser.hh>
-#include <xju/ip/tls/PEMItem.hh>
+#include <xju/tls/pemParser.hh>
+#include <xju/tls/PEMItem.hh>
 
 namespace xju
-{
-namespace ip
 {
 namespace tls
 {
@@ -101,11 +99,10 @@ R0g=
 
 }
 }
-}
 
 
 
-using namespace xju::ip::tls;
+using namespace xju::tls;
 
 int main(int argc, char* argv[])
 {

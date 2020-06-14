@@ -9,12 +9,10 @@
 //
 
 
-#include <xju/ip/tls/PEMType.hh>
+#include <xju/tls/PEMType.hh>
 #include <hcp/ast.hh>
 
 namespace xju
-{
-namespace ip
 {
 namespace tls
 {
@@ -29,7 +27,6 @@ public:
   }
 };
 
-}
 }
 }
 

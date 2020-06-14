@@ -16,8 +16,6 @@
 
 namespace xju
 {
-namespace ip
-{
 namespace tls
 {
 
@@ -42,7 +40,6 @@ std::string getOpenSSLCallingThreadErrors() noexcept
 }
 
 
-}
 }
 }
 

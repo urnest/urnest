@@ -11,7 +11,7 @@
 
 #include <memory>
 #include <openssl/evp.h> //impl
-#include <xju/ip/tls/getOpenSSLCallingThreadErrors.hh> //impl
+#include <xju/tls/getOpenSSLCallingThreadErrors.hh> //impl
 #include <sstream> //impl
 #include <xju/format.hh> //impl
 #include <vector>
@@ -22,8 +22,6 @@
 struct evp_pkey_st; // typedef struct evp_pkey_st EVP_PKEY;
 
 namespace xju
-{
-namespace ip
 {
 namespace tls
 {
@@ -85,6 +83,5 @@ private:
   std::unique_ptr<evp_pkey_st,evp_pkey_st_Deleter> _;
 };
 
-}
 }
 }

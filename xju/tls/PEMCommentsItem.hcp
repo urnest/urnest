@@ -13,8 +13,6 @@
 
 namespace xju
 {
-namespace ip
-{
 namespace tls
 {
 
@@ -24,7 +22,6 @@ public:
   using hcp_ast::Item::Item;
 };
 
-}
 }
 }
 

@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/ip/tls/pemParser.hh>
+#include <xju/tls/pemParser.hh>
 
 #include <iostream>
 #include <xju/assert.hh>
@@ -15,8 +15,6 @@
 #include <xju/Exception.hh>
 
 namespace xju
-{
-namespace ip
 {
 namespace tls
 {
@@ -86,9 +84,8 @@ jYopyHnOnq0OSdDrMujZRB19rapg+dA=
 
 }
 }
-}
 
-using namespace xju::ip::tls;
+using namespace xju::tls;
 
 int main(int argc, char* argv[])
 {

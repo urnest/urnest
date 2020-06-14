@@ -63,6 +63,7 @@ test%tests.tree
 ()+cmd=(test-xml.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 snmp%tests.tree
 json%tests.tree
+tls%tests.tree
 utf8%tests.tree
 test%tests.tree
 ()+cmd=(print-wordsizes.cc+(..%cxx-opts):auto.cxx.exe):exec.output
@@ -113,6 +114,7 @@ done
 %test==./test/Odinfile%hcp-gen
 %netflow==./netflow/Odinfile%hcp-gen
 %linux==./linux/Odinfile%hcp-gen
+%tls==tls/Odinfile%hcp-gen
 
 %test-getHostName==()+cmd=(%test-getHostName.sh) (test-getHostName.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 
@@ -148,3 +150,4 @@ json%tags
 utf8%tags
 test%tags
 linux%tags
+tls%tags

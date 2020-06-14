@@ -11,8 +11,6 @@
 
 namespace xju
 {
-namespace ip
-{
 namespace tls
 {
 
@@ -29,7 +27,6 @@ public:
 };
 
 
-}
 }
 }
 

@@ -7,16 +7,14 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/ip/tls/PrivateKey.hh>
+#include <xju/tls/PrivateKey.hh>
 
 #include <iostream>
 #include <xju/assert.hh>
 #include <hcp/parser.hh>
-#include <xju/ip/tls/pemParser.hh>
+#include <xju/tls/pemParser.hh>
 
 namespace xju
-{
-namespace ip
 {
 namespace tls
 {
@@ -67,9 +65,8 @@ pOSlbLXBNJ1see195nAAoktlWKUZ8l5wHgKmWXhk52AuAyCX7WD0MCsbrtJ8BtI8
 
 }
 }
-}
 
-using namespace xju::ip::tls;
+using namespace xju::tls;
 
 int main(int argc, char* argv[])
 {

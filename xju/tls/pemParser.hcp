@@ -9,17 +9,15 @@
 //
 
 
-#include <xju/ip/tls/PEMItem.hh>
+#include <xju/tls/PEMItem.hh>
 #include <hcp/parser.hh>
 #include <memory>
 #include <hcp/Chars.hh> //impl
-#include <xju/ip/tls/PEMCommentsItem.hh> //impl
-#include <xju/ip/tls/PEMTypeItem.hh> //impl
-#include <xju/ip/tls/PEMPayloadItem.hh> //impl
+#include <xju/tls/PEMCommentsItem.hh> //impl
+#include <xju/tls/PEMTypeItem.hh> //impl
+#include <xju/tls/PEMPayloadItem.hh> //impl
 
 namespace xju
-{
-namespace ip
 {
 namespace tls
 {
@@ -119,6 +117,5 @@ std::shared_ptr<hcp_parser::NamedParser<PEMItem> > pemParser() noexcept
   return result;
 }
 
-}
 }
 }

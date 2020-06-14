@@ -16,8 +16,6 @@
 
 namespace xju
 {
-namespace ip
-{
 namespace tls
 {
 namespace
@@ -117,6 +115,5 @@ std::unique_ptr<BIO,decltype(BIO_free)> IBIO(
   return result;
 }
 
-}
 }
 }

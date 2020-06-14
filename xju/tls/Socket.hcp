@@ -11,8 +11,6 @@
 
 namespace xju
 {
-namespace ip
-{
 namespace tls
 {
 
@@ -20,7 +18,7 @@ class Socket
 {
 private:
   xju::ip::Socket& transport_;
-  xju::ip::tls::ServerCrypto& crypto_;
+  xju::tls::ServerCrypto& crypto_;
   
   std::tuple<
     std::unique_ptr<xju::io::OStream>,
@@ -33,7 +31,7 @@ public:
   // pre: lifetime(transport) includes lifetime(this)
   // pre: lifetime(crypto) includes lifetime(this)
   Socket(xju::ip::TCPSocket& transport,
-         xju::ip::tls::ServerCrypto& crypto,
+         xju::tls::ServerCrypto& crypto,
          bool const requestClientCertificate,
          std::chrono::steady_clock::time_point const& deadline,
          bool closeOnExec=true) /*throw(
@@ -53,7 +51,7 @@ public:
   // pre: lifetime(transport) includes lifetime(this)
   // pre: lifetime(crypto) includes lifetime(this)
   Socket(xju::ip::TCPSocket& transport,
-         xju::ip::tls::ClientCrypto& crypto,
+         xju::tls::ClientCrypto& crypto,
          std::chrono::steady_clock::time_point const& deadline,
          bool closeOnExec=true) /*throw(
            xju::DeadlineReached,
@@ -100,6 +98,5 @@ public:
   }
 };
 
-}
 }
 }

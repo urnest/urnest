@@ -9,20 +9,18 @@
 //
 
 
-#include <xju/ip/tls/PEMType.hh>
+#include <xju/tls/PEMType.hh>
 #include <hcp/ast.hh>
 #include <string>
 #include <vector>
 #include <cinttypes>
 #include <xju/base64/decode.hh> //impl
-#include <xju/ip/tls/pemParser.hh> //impl
-#include <xju/ip/tls/PEMTypeItem.hh> //impl
-#include <xju/ip/tls/PEMCommentsItem.hh> //impl
-#include <xju/ip/tls/PEMPayloadItem.hh> //impl
+#include <xju/tls/pemParser.hh> //impl
+#include <xju/tls/PEMTypeItem.hh> //impl
+#include <xju/tls/PEMCommentsItem.hh> //impl
+#include <xju/tls/PEMPayloadItem.hh> //impl
 
 namespace xju
-{
-namespace ip
 {
 namespace tls
 {
@@ -48,6 +46,5 @@ public:
   }
 };
 
-}
 }
 }
