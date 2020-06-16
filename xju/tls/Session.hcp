@@ -16,11 +16,9 @@ namespace tls
 
 namespace
 {
-extern "C" {
-  int preverify(int preverify_ok, X509_STORE_CTX *x509_ctx) noexcept
-  {
-    return 1;
-  }
+int preverify(int preverify_ok, X509_STORE_CTX *x509_ctx) noexcept
+{
+  return 1;
 }
 
 }
@@ -39,17 +37,17 @@ public:
           SSL_ctx& ctx,
           bool const requestClientCertificate,
           std::chrono::steady_clock::time_point const& deadline,
-          std::unique_ptr<xju::io::OStream>& encrypted,
-          std::unique_ptr<xju::io::IStream>& decrypt)
+          xju::io::OStream& encrypted,
+          xju::io::IStream& decrypt)
   //throw xju::Exception
   try:
-      decrypted_(decrypted),
-      encrypt_(encrypt),
+      encrypted_(encrypted),
+      decrypt_(decrypt),
+      decrypted_(std::move(decrypted)),
+      encrypt_(std::move(encrypt)),
       botRxBuf_(2048),
       botTxBuf_(2048),
       ssl_(SSL_new(&ctx,&SSL_free)),
-      encrypted_(encrypted),
-      decrypt_(decrypt),
       topRxBuf_(2048),
       topTxBuf_(2048)
   {
@@ -71,10 +69,10 @@ public:
       std::set<xju::io::Input const*> writable;
       switch(ee){
       case SSL_ERROR_WANT_READ:
-        readable.insert(decrypt_.get());
+        readable.insert(&decrypt_);
         break;
       case SSL_ERROR_WANT_WRITE:
-        writable.insert(encrypted_.get());
+        writable.insert(&encrypted_);
       default:
       {
         std::ostringstream s;
@@ -83,7 +81,7 @@ public:
       }
       }
       if (botTxBuf_.size()){
-        writable.insert(encrypted_.get());
+        writable.insert(&encrypted_);
       }
       auto const rw(xju::io::select(readable,writable,deadline));
       if(xju::steadyNow()>=deadline){
@@ -116,17 +114,17 @@ public:
   Session(std::unique_ptr<xju::io::OStream> decrypted,
           std::unique_ptr<xju::io::IStream> encrypt,
           SSL_ctx& ctx,
-          std::unique_ptr<xju::io::OStream>& encrypted,
-          std::unique_ptr<xju::io::IStream>& decrypt)
+          xju::io::OStream& encrypted,
+          xju::io::IStream& decrypt)
   //throw xju::Exception
   try:
-      decrypted_(decrypted),
-      encrypt_(encrypt),
+      encrypted_(encrypted),
+      decrypt_(decrypt),
+      decrypted_(std::move(decrypted)),
+      encrypt_(std::move(encrypt)),
       botRxBuf_(2048),
       botTxBuf_(2048),
       ssl_(SSL_new(&ctx,&SSL_free)),
-      encrypted_(encrypted),
-      decrypt_(decrypt),
       topRxBuf_(2048),
       topTxBuf_(2048)
   {
@@ -143,10 +141,10 @@ public:
       std::set<xju::io::Input const*> writable;
       switch(ee){
       case SSL_ERROR_WANT_READ:
-        readable.insert(decrypt_.get());
+        readable.insert(&decrypt_);
         break;
       case SSL_ERROR_WANT_WRITE:
-        writable.insert(encrypted_.get());
+        writable.insert(&encrypted_);
       default:
       {
         std::ostringstream s;
@@ -155,7 +153,7 @@ public:
       }
       }
       if (botTxBuf_.size()){
-        writable.insert(encrypted_.get());
+        writable.insert(&encrypted_);
       }
       auto const rw(xju::io::select(readable,writable,deadline));
       if(xju::steadyNow()>=deadline){
@@ -196,7 +194,7 @@ public:
       int const ssle(SSL_get_error(ssl,0));
       switch(ssle){
       case SSL_ERROR_WANT_WRITE:
-        (*wantWrite++)=encrypted_.get(); //[B]
+        (*wantWrite++)=&encrypted_; //[B]
         return;
       case SSL_ERROR_SSL:
         throw xju::Exception(
@@ -237,7 +235,7 @@ public:
   //throw xju::Exception
   {
     try{
-      if (writeable.find(encrypted_.get())!=writeable.end()){
+      if (writeable.find(&encrypted_)!=writeable.end()){
         xju::assert_not_equal(botTxBuf_.size(),0U);//[B]
         auto const d(botTxBuf_.contigData());
         auto const n(encrypted_->write(d.first,d.second,xju::steadyNow()));
@@ -273,7 +271,7 @@ public:
       int const ssle(SSL_get_error(ssl,0));
       switch(ssle){
       case SSL_ERROR_WANT_READ:
-        (*wantRead++)=decrypt_.get(); //[B]
+        (*wantRead++)=&decrypt_; //[B]
         return;
       case SSL_ERROR_SSL:
         throw xju::Exception(
@@ -314,7 +312,7 @@ public:
   //throw xju::Exception
   {
     try{
-      if (readable.find(decrypt_.get())!=readable.end()){
+      if (readable.find(&decrypt_)!=readable.end()){
         xju::assert_not_equal(botRxBuf_.size(),botRxBuf_.capacity_);//[D]
         auto const d(botRxBuf_.contigSpace());
         auto const n(decrypt_->read(d.first,d.second,xju::steadyNow()));
@@ -332,6 +330,7 @@ public:
   // encrypt remaining unencrypted data by deadline, appending any
   // decrypted data received before flush completes
   // return space still left in appendDataTo
+  // pre: write end of encrypt_ has been closed
   size_t flushOutput(std::chrono::steady_clock::time_point deadline,
                      std::vector<uint8_t>& appendDataTo,
                      size_t const maxAppend)
@@ -341,7 +340,24 @@ public:
       size_t result(maxAppend);
       try{
         while(true){
-          REVISIT;
+          if (xju::now()>deadline){
+            throw xju::DeadlineReached(xju::Exception("deadline reached before remaining bytes could be encrypted and passed to output",XJU_TRACED));
+          }
+          std::set<xju::io::Input const*> wantRead;
+          std::set<xju::io::Input const*> wantWrite;
+          encrypt(wantRead,wantWrite);
+          decrypt(wantRead,wantWrite);
+          auto const rw(xju::io::select(wantRead,wantWrite,deadline));
+          readEncrypt(rw.first);
+          writeEncrypted(rw.second);
+          readDecrypt(rw.first);
+          while(topRxBuf_.size()){
+            auto const d(topRxBuf_.contigData());
+            auto const cn(std::min(d.second,result));
+            std::copy(d.first,d.first+cn,std::back_inserter(appendDataTo));
+            result-=cn;
+            topRxBuf_.consumed(d.second);
+          }
         }
       }
       catch(xju::io::Input::Closed const&){
@@ -350,7 +366,9 @@ public:
     }
     catch(xju::Exception& e){
       std::ostringstream s;
-      s << "flush " << (*this) << " output";
+      s << "flush " << (*this)
+        << " output by specified deadline capturing at most "
+        << maxAppend << " bytes of remaining decrypted data";
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
@@ -365,6 +383,36 @@ public:
   {
     try{
       size_t remainingAppend(flushOutput(deadline,appendDataTo,maxAppend));
+      //need to do SSL_shutdown + read until SSL_shutdown returns 0 or 1
+      // then if 0 do SSL_read until until "closed"(?)
+      while((int e = SSL_shutdown(ssl_.get()))<0){
+        auto const ee(SSL_get_error(ssl_.get(),e));
+        std::set<xju::io::Input const*> readable;
+        std::set<xju::io::Input const*> writable;
+        switch(ee){
+        case SSL_ERROR_WANT_READ:
+          readable.insert(&decrypt_);
+          break;
+        case SSL_ERROR_WANT_WRITE:
+          writable.insert(&encrypted_);
+        default:
+        {
+          std::ostringstream s;
+          s << "SSL_accept failed with error code " << ee;
+          throw xju::Exception(s.str(),XJU_TRACED);
+        }
+        }
+        if (botTxBuf_.size()){
+          writable.insert(&encrypted_);
+        }
+        auto const rw(xju::io::select(readable,writable,deadline));
+        if(xju::steadyNow()>=deadline){
+          throw xju::DeadlineReached(
+            xju::Exception("TLS handshake incomplete at deadline",XJU_TRACED));
+        }
+        readDecrypt(readable);
+        writeEncrypted(writable);
+      }
       REVISIT;
     }
     catch(xju::Exception& e){
@@ -379,14 +427,15 @@ public:
   xju::Optional<std::pair<Certificate, /*valid:*/bool> > peerCertificate_;
   
 private:
+  xju::io::OStream& encrypted_;
+  xju::io::IStream& decrypt_;
+
   std::unique_ptr<xju::io::OStream> decrypted_;
   std::unique_ptr<xju::io::IStream> encrypt_;
 
   xju::CircularBuffer<uint8_t> botRxBuf_;
   xju::CircularBuffer<uint8_t> botTxBuf_;
   SSLuptr ssl_;
-  std::unique_ptr<xju::io::OStream>& encrypted_;
-  std::unique_ptr<xju::io::IStream>& decrypt_;
 
   xju::CircularBuffer<uint8_t> topRxBuf_;
   xju::CircularBuffer<uint8_t> topTxBuf_;
