@@ -21,6 +21,59 @@ int preverify(int preverify_ok, X509_STORE_CTX *x509_ctx) noexcept
   return 1;
 }
 
+class Starved{};
+class Choked{};
+void sslAccept(SSL& ssl)
+//throw Starved
+//throw Choked
+//throw xju::Exception - protocol error (fatal)
+{
+  int e = SSL_accept(&ssl);
+  if (e!=1){
+    auto const ee(SSL_get_error(&ssl,e));
+    switch(ee){
+    case SSL_ERROR_WANT_READ:
+      throw Starved();
+      break;
+    case SSL_ERROR_WANT_WRITE:
+      throw Choked();
+    default:
+    {
+      std::ostringstream s;
+      s << "SSL_accept failed with error code " << ee;
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    }
+  }
+}
+
+// start/progress shutdown
+// - returns true if shutdown complete
+bool sslShutdown(SSL& ssl)
+//throw Starved
+//throw Choked
+//throw xju::Exception - protocol error (fatal)
+{
+  int e = SSL_shutdown(&ssl);
+  if (e<0){
+    auto const ee(SSL_get_error(&ssl,e));
+    switch(ee){
+    case SSL_ERROR_WANT_READ:
+      throw Starved();
+      break;
+    case SSL_ERROR_WANT_WRITE:
+      throw Choked();
+    default:
+    {
+      std::ostringstream s;
+      s << "SSL_shutdown failed with error code " << ee;
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    }
+  }
+  return e;
+}
+
 }
 
 class Session{
@@ -63,22 +116,18 @@ public:
                      SSL_VERIFY_PEER,
                      preverify);
     }
-    while((int e = SSL_accept(ssl_.get()))!=1){
-      auto const ee(SSL_get_error(ssl_.get(),e));
+    while(true){
       std::set<xju::io::Input const*> readable;
       std::set<xju::io::Input const*> writable;
-      switch(ee){
-      case SSL_ERROR_WANT_READ:
-        readable.insert(&decrypt_);
+      try{
+        sslAccept(*ssl_);
         break;
-      case SSL_ERROR_WANT_WRITE:
-        writable.insert(&encrypted_);
-      default:
-      {
-        std::ostringstream s;
-        s << "SSL_accept failed with error code " << ee;
-        throw xju::Exception(s.str(),XJU_TRACED);
       }
+      catch(Starved const&){
+        readable.insert(&decrypt_);
+      }
+      catch(Choked const&){
+        writable.insert(&encrypted_);
       }
       if (botTxBuf_.size()){
         writable.insert(&encrypted_);
@@ -88,8 +137,8 @@ public:
         throw xju::DeadlineReached(
           xju::Exception("TLS handshake incomplete at deadline",XJU_TRACED));
       }
-      readDecrypt(readable);
-      writeEncrypted(writable);
+      readDecrypt(rw.first);
+      writeEncrypted(rw.second);
     }
     if(requestClientCertificate){
       peerCertificate_= REVISIT: fetch client certificate;
@@ -383,25 +432,27 @@ public:
   {
     try{
       size_t remainingAppend(flushOutput(deadline,appendDataTo,maxAppend));
-      //need to do SSL_shutdown + read until SSL_shutdown returns 0 or 1
-      // then if 0 do SSL_read until until "closed"(?)
-      while((int e = SSL_shutdown(ssl_.get()))<0){
-        auto const ee(SSL_get_error(ssl_.get(),e));
+      //need to do SSL_shutdown+read until SSL_shutdown returns 1
+      while(true){
         std::set<xju::io::Input const*> readable;
         std::set<xju::io::Input const*> writable;
-        switch(ee){
-        case SSL_ERROR_WANT_READ:
-          readable.insert(&decrypt_);
-          break;
-        case SSL_ERROR_WANT_WRITE:
-          writable.insert(&encrypted_);
-        default:
-        {
-          std::ostringstream s;
-          s << "SSL_accept failed with error code " << ee;
-          throw xju::Exception(s.str(),XJU_TRACED);
+        try{
+          while(topRxBuf_.size()){
+            auto const d(topRxBuf_.contigData());
+            auto const n(std::min(d.second,remainingAppend));
+            std::copy(d.first,n,std::back_inserter(appendDataTo));
+            remainingAppend-=n;
+            topRxBuf_.consumed(d.second);
+          }
+          if (sslShutdown(*ssl_)){
+            return;
+          }
+          auto const d(topRxBuf_.contigSpace());
+          auto const n(sslRead(*ssl_,d.first,d.second));
+          topRxBuf_.appended(n);
         }
-        }
+        catch(Starved const&){ readable.insert(&decrypt_); }
+        catch(Choked const&) { writable.insert(&encrypted_); }
         if (botTxBuf_.size()){
           writable.insert(&encrypted_);
         }
@@ -410,10 +461,10 @@ public:
           throw xju::DeadlineReached(
             xju::Exception("TLS handshake incomplete at deadline",XJU_TRACED));
         }
-        readDecrypt(readable);
-        writeEncrypted(writable);
+        readDecrypt(rw.first);
+        writeEncrypted(rw.second);
       }
-      REVISIT;
+
     }
     catch(xju::Exception& e){
       std::ostringstream s;
