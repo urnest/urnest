@@ -74,6 +74,34 @@ bool sslShutdown(SSL& ssl)
   return e;
 }
 
+// note 0 return for bufSize>0 means SSL session has received close
+// notify from peer (no data, on the other hand, always throws Starved)
+size_t sslRead(SSL& ssl,uint8_t* const buf,size_t const bufSize)
+//throw Starved
+//throw Choked
+//throw xju::Exception - fatal
+{
+  size_t n(0);
+  if (SSL_read_ex(&ssl,buf,bufSize,&n)){
+    return n;
+  }
+  int const ssle(SSL_get_error(&ssl,0));
+  switch(ssle){
+  case SSL_ERROR_WANT_READ:
+    throw Starved();
+  case SSL_ERROR_WANT_WRITE: //can never get this?
+    throw Choked();
+  case SSL_ERROR_ZERO_RETURN:
+    return 0; // SSL session has shut down
+  case SSL_ERROR_SSL:
+    throw xju::Exception(
+      "SSL_read_ex error SSL_ERROR_SSL, i.e. protocol error",XJU_TRACED);
+  }
+  throw xju::Exception(
+    "SSL_read_ex error "+
+    xju::format::int(ssle)+" (see SSL_get_error(3SSL))",XJU_TRACED);
+}
+
 }
 
 class Session{
@@ -308,27 +336,16 @@ public:
         (*wantWrite++)=decrypted_.get();//[A]
         return;
       }
-      auto ssl=ssl_.get();
-      size_t n(0);
       auto const d(topRxBuf_.contigSpace());
-      if (SSL_read_ex(ssl,d.first,d.second,&n)){
-        topRxBuf_.appended(n);
-        (*wantWrite++)=decrypted_.get();//[A]
-        return;
-      }
-
-      int const ssle(SSL_get_error(ssl,0));
-      switch(ssle){
-      case SSL_ERROR_WANT_READ:
-        (*wantRead++)=&decrypt_; //[B]
-        return;
-      case SSL_ERROR_SSL:
-        throw xju::Exception(
-          "SSL_read_ex error SSL_ERROR_SSL, i.e. protocol error",XJU_TRACED);
-      }
-      throw xju::Exception(
-        "SSL_read_ex error "+
-        xju::format::int(ssle)+" (see SSL_get_error(3SSL))",XJU_TRACED);
+      auto const n(sslRead(*ssl_,d.first,d.second));
+      topRxBuf_.appended(n);
+      (*wantWrite++)=decrypted_.get();//[A]
+    }
+    catch(Starved const&){
+      (*wantRead++)=&decrypt_; //[B]
+    }
+    catch(Choked const&){
+        (*wantWrite++)=&encrypted_; //[B]
     }
     catch(xju::Exception& e){
       std::ostringstream s;
@@ -381,7 +398,7 @@ public:
   // return space still left in appendDataTo
   // pre: write end of encrypt_ has been closed
   size_t flushOutput(std::chrono::steady_clock::time_point deadline,
-                     std::vector<uint8_t>& appendDataTo,
+                     std::back_inserter<std::vector<uint8_t> > appendDataTo,
                      size_t const maxAppend)
   // throw xju::Exception
   {
@@ -403,7 +420,7 @@ public:
           while(topRxBuf_.size()){
             auto const d(topRxBuf_.contigData());
             auto const cn(std::min(d.second,result));
-            std::copy(d.first,d.first+cn,std::back_inserter(appendDataTo));
+            std::copy(d.first,d.first+cn,appendDataTo);
             result-=cn;
             topRxBuf_.consumed(d.second);
           }
@@ -422,7 +439,12 @@ public:
       throw;
     }
   }
-
+  // we have received close from peer, which might be unexpected
+  // or because we have shut down the session, i.e. this will
+  // always return true once shutdownSession successfully completes
+  bool hasReceivedClose() const noexcept{
+    return SSL_get_shutdown(ssl_.get()) & SSL_RECEIVED_SHUTDOWN;
+  }
   // flush and shutdown session by deadline, appending any
   // decrypted data received before shutdown completes
   void shutdownSession(std::chrono::steady_clock::time_point deadline,
@@ -433,7 +455,7 @@ public:
     try{
       size_t remainingAppend(flushOutput(deadline,appendDataTo,maxAppend));
       //need to do SSL_shutdown+read until SSL_shutdown returns 1
-      while(true){
+      do {
         std::set<xju::io::Input const*> readable;
         std::set<xju::io::Input const*> writable;
         try{
@@ -444,12 +466,14 @@ public:
             remainingAppend-=n;
             topRxBuf_.consumed(d.second);
           }
-          if (sslShutdown(*ssl_)){
-            return;
+          if (!(SSL_get_shutdown(ssl_.get()) & SSL_SENT_SHUTDOWN)){
+            sslShutdown(*ssl_);
           }
-          auto const d(topRxBuf_.contigSpace());
-          auto const n(sslRead(*ssl_,d.first,d.second));
-          topRxBuf_.appended(n);
+          if (!hasReceivedClose()){
+            auto const d(topRxBuf_.contigSpace());
+            auto const n(sslRead(*ssl_,d.first,d.second));
+            topRxBuf_.appended(n);
+          }
         }
         catch(Starved const&){ readable.insert(&decrypt_); }
         catch(Choked const&) { writable.insert(&encrypted_); }
@@ -457,14 +481,17 @@ public:
           writable.insert(&encrypted_);
         }
         auto const rw(xju::io::select(readable,writable,deadline));
+        readDecrypt(rw.first);
+        writeEncrypted(rw.second);
         if(xju::steadyNow()>=deadline){
           throw xju::DeadlineReached(
             xju::Exception("TLS handshake incomplete at deadline",XJU_TRACED));
         }
-        readDecrypt(rw.first);
-        writeEncrypted(rw.second);
       }
-
+      while(! (hasSentClose() &&
+               hasReceivedClose() &&
+               botTxBuf_.size()==0) // make sure our close gets sent
+        );
     }
     catch(xju::Exception& e){
       std::ostringstream s;
