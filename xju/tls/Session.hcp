@@ -336,10 +336,15 @@ public:
         (*wantWrite++)=decrypted_.get();//[A]
         return;
       }
-      auto const d(topRxBuf_.contigSpace());
-      auto const n(sslRead(*ssl_,d.first,d.second));
-      topRxBuf_.appended(n);
-      (*wantWrite++)=decrypted_.get();//[A]
+      if (decrypted_.get()){
+        auto const d(topRxBuf_.contigSpace());
+        auto const n(sslRead(*ssl_,d.first,d.second));
+        topRxBuf_.appended(n);
+        (*wantWrite++)=decrypted_.get();//[A]
+      }
+      else{
+        xju::assert_equal(hasReceivedClose(),true);
+      }
     }
     catch(Starved const&){
       (*wantRead++)=&decrypt_; //[B]
@@ -360,10 +365,12 @@ public:
   {
     try{
       if (writeable.find(decrypted_.get())!=writeable.end()){
-        xju::assert_not_equal(topRxBuf_.size(),0U);//[C]
         auto const d(topRxBuf_.contigData());
         auto const n(decrypted_->write(d.first,d.second,xju::steadyNow()));
         topRxBuf_.consumed(n);
+        if (!topRxBuf_.size()&&hasReceivedClose()){
+          decrypted_.reset();
+        }
       }
     }
     catch(xju::Exception& e){
