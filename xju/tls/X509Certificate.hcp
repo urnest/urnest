@@ -72,6 +72,11 @@ public:
       :_(decodeCertificate(der))
   {
   }
+  explicit X509Certificate(
+    std::unique_ptr<x509_st,x509_st_Deleter> x) noexcept:
+      _(std::move(x))
+  {
+  }
   x509_st const* get() const noexcept
   {
     return _.get();

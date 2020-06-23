@@ -46,8 +46,8 @@ private:
   typedef std::unique_ptr<SSL,decltype(&SSL_free)> SSLuptr;
 
 public:
-  Crypto(PrivateKey const& privateKey,
-         X509Certificate const& certificate,
+  Crypto(X509Certificate const& certificate,
+         PrivateKey const& privateKeyOfCertificate,
          std::vector<X509Certificate> const& certificateAncestors) /*throw(
            xju::Exception)*/:
       ctx_(createContext(privateKey,certificate,certificateAncestors)),
@@ -114,94 +114,103 @@ public:
     stop_=true;
     wake_.write('x',1,xju::steadyNow());
   }
-  //
-  // transport must live until get<1>(result) is closed
-  // - to request closure, close get<0>(result)
-  std::tuple<
-    std::unique_ptr<xju::io::OStream>,
-    std::unique_ptr<xju::io::IStream>,
-    xju::Optional<std::pair<Certificate,bool> > > accept(
-      std::unique_ptr<xju::io::OStream>& encrypted,
-      std::unique_ptr<xju::io::IStream>& decrypt,
+  class Session
+  {
+  public:
+    // server side
+    // pre: crypto, encrypted and decrypt will outlive this
+    Session(
+      Crypto& crypto,
+      xju::io::OStream& encrypted,
+      xju::io::IStream& decrypt,
       bool const requestClientCertificate,
       std::chrono::steady_clock::time_point const& deadline,
       bool const closeOnExec)
-  //throw xju::DeadlineReached
-  //throw xju::Exception
-  {
-    try{
-      auto decrypted(xju::pipe(closeOnExec,true));
-      auto encrypt(xju::pipe(true,closeOnExec));
-      std::unique_ptr<Session> session(
-        new Session(std::move(decrypted.second),
-                    std::move(encrypt.first),
-                    *ctx_.get(),
-                    requestClientCertificate,
-                    deadline,
-                    encrypted,
-                    decrypt));
-      xju::Lock l(newSessionsGuard_);
-      newSessions_.push_back(std::move(session));
-      return std::make_tuple(std::move(decrypted.first()),
-                             std::move(encrypt.second()),
-                             newSessions_.back()->peerCertificate_);
+    //throw xju::DeadlineReached
+    //throw xju::Exception
+    {
+      try{
+        auto decrypted(xju::pipe(closeOnExec,true));
+        auto encrypt(xju::pipe(true,closeOnExec));
+        std::unique_ptr<xju::tls::Session> session(
+          new xju::tls::Session(std::move(decrypted.second),
+                                std::move(encrypt.first),
+                                *ctx_.get(),
+                                requestClientCertificate,
+                                deadline,
+                                encrypted,
+                                decrypt));
+        xju::Lock l(crypto.newSessionsGuard_);
+        crypto.newSessions_.push_back(std::move(session));
+        peerCertificate_=std::move(newSessions_.back()->peerCertificate_);
+        decrypted_=std::move(decrypted.first());
+        encrypt_=std::move(encrypt.second());
+      }
+      catch(xju::Exception& e){
+        std::ostringstream s;
+        s << "accept TLS connection on transport socket by "
+          << deadline
+          << (requestClientCertificate?" ":" without ")
+          << "requesting client certificate";
+        e.addContext(s.str(),XJU_TRACED);
+        throw;
+      }
     }
-    catch(xju::Exception& e){
-      std::ostringstream s;
-      s << "accept TLS connection on transport socket by "
-        << deadline
-        << (requestClientCertificate?" ":" without ")
-        << "requesting client certificate";
-      e.addContext(s.str(),XJU_TRACED);
-      throw;
-    }
-  }
+    xju::Optional<std::pair<X509Certificate, /*valid:*/bool> > peerCertificate_;
+    xju::io::IStream& input() const noexcept{return *decrypted_;}
+    xju::io::OStream& output() const noexcept{return *encrypt_;}
 
-  // gracefully shutdown ssl connection on transport by specified deadline
-  // returning at most the next maxReturn bytes of extra decrypted data
-  // prior to shutdown completion (and discarding any further bytes)
-  // pre: decrypted and encrypt are as previously returned by accept() for
-  //      the specified transport
-  // pre: shutdown has not previously been called
-  std::vector<uint8_t> shutdown(
-    std::unique_ptr<xju::io::IStream> decrypted,
-    std::unique_ptr<xju::io::OStream> encrypt,
-    std::chrono::steady_clock::time_point const& deadline,
-    size_t maxReturn)
-  //xju::DeadlineReached
-  //- graceful shutdown incomplete at deadline
-  //throw xju::Exception
-  //- graceful shutdown failed (which might be because the ssl
-  //  connection has already failed)
-  {
-    try{
-      xju::assert_not_equal(decrypted.get(),0);
-      xju::assert_not_equal(encrypt.get(),0);
-      Session s(releaseSession(transport));
-      std::vector<uint8_t> result(readPendingData(*decrypted,maxReturn));
-      s.shutdownSession(deadline,result);
-      return result;
+    // gracefully shutdown ssl connection on transport by specified deadline
+    // returning at most the next maxReturn bytes of extra decrypted data
+    // prior to shutdown completion (and discarding any further bytes)
+    // pre: decrypted and encrypt are as previously returned by accept() for
+    //      the specified transport
+    // pre: shutdown has not previously been called
+    std::vector<uint8_t> shutdown(
+      std::unique_ptr<xju::io::IStream> decrypted,
+      std::unique_ptr<xju::io::OStream> encrypt,
+      std::chrono::steady_clock::time_point const& deadline,
+      size_t maxReturn)
+    //xju::DeadlineReached
+    //- graceful shutdown incomplete at deadline
+    //throw xju::Exception
+    //- graceful shutdown failed (which might be because the ssl
+    //  connection has already failed)
+    {
+      try{
+        xju::assert_not_equal(decrypted_.get(),0);
+        xju::assert_not_equal(encrypt_.get(),0);
+        xju::tls::Session s(crypto_.releaseSession(this));
+        std::vector<uint8_t> result(readPendingData(*decrypted,maxReturn));
+        s.shutdown(deadline,
+                   std::back_inserter(result),
+                   maxReturn-result.size());
+        return result;
+      }
+      catch(xju::Exception& e){
+        std::ostringstream s;
+        s << "gracefully shutdown TLS session on TCP/IP socket "
+          << transport << " by specified deadline";
+        e.addContext(s.str(),XJU_TRACED);
+        throw;
+      }
     }
-    catch(xju::Exception& e){
-      std::ostringstream s;
-      s << "gracefully shutdown TLS session on TCP/IP socket "
-        << transport << " by specified deadline";
-      e.addContext(s.str(),XJU_TRACED);
-      throw;
-    }
-  }
-
-  // close ssl connection that has not previously been shutdown (succesfully or
-  // unsuccessfully) immediately
-  void close(
-    std::unique_ptr<xju::io::IStream> decrypted,
-    std::unique_ptr<xju::io::OStream> encrypt) noexcept
-  {
-    xju::assert_not_equal(decrypted.get(),0);
-    xju::assert_not_equal(encrypt.get(),0);
-    releaseSession(transport);
-  }
     
+    // close ssl connection that has not previously been shutdown (succesfully or
+    // unsuccessfully) immediately
+    ~Session() noexcept
+    {
+      xju::assert_not_equal(decrypted_.get(),0);
+      xju::assert_not_equal(encrypt_.get(),0);
+      crypto_.releaseSession(transport);
+    }
+  private:
+    Crypto& crypto_;
+    std::unique_ptr<xju::io::IStream> decrypted_;
+    std::unique_ptr<xju::io::OStream> encrypt_;
+        
+  };
+
 private:
   std::unique_ptr<SSL_CTX,decltype(&SSL_CTX_free)> const ctx_;
   
