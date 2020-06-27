@@ -54,6 +54,7 @@ R0g=
       auto const x(hcp_parser::parseString(pk.begin(),pk.end(),pemParser()));
       auto const y(hcp_ast::findOnlyChildOfType<PEMItem>(x));
       X509Certificate cacert(y.getPayload());
+      xju::assert_equal(cacert.getSubjectName(),cacert.getIssuerName());
     }
     catch(xju::Exception& e){
       std::cerr << readableRepr(e) << std::endl;

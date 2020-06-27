@@ -117,12 +117,26 @@ public:
   class Session
   {
   public:
-    // server side
+    // server side connection over encrypted+decrypt transport
     // pre: crypto, encrypted and decrypt will outlive this
     Session(
       Crypto& crypto,
       xju::io::OStream& encrypted,
       xju::io::IStream& decrypt,
+      //REVISIT: not bool but list of acceptable CA names - see
+      //SSL_CTX_set_client_CA_list noting that the (trusted)
+      //certificates of the named CAs must be available to openssl
+      //in $SSL_CERT_FILE or $SSL_CERT_DIR (or their defaults)
+      // - use X509_get_subject_name to get the name from cacert
+      //... which kind of defeats the purpose of SSL_CERT_DIR at least
+      // I guess normally SSL_CERT_DIR is only relevant to client in
+      // order to talk to many public servers. For a server that wants to
+      // verify authenticate client by certificate, probably would ask client
+      // for certificate issued by server-specific or system-specific
+      // authority.
+      // So here we should specify a set of certificates not just names,
+      // and load these certs (only) directly into SSL (can we do that? Yes. SSL_set0_verify_cert_store). I wonder if performance is bad when we build
+      // cert_store every time? Maybe we should have a cert_store wrapper?
       bool const requestClientCertificate,
       std::chrono::steady_clock::time_point const& deadline,
       bool const closeOnExec)
@@ -137,6 +151,44 @@ public:
                                 std::move(encrypt.first),
                                 *ctx_.get(),
                                 requestClientCertificate,
+                                deadline,
+                                encrypted,
+                                decrypt));
+        xju::Lock l(crypto.newSessionsGuard_);
+        crypto.newSessions_.push_back(
+          decltype(crypto.newSessions_.back(this,std::move(session))));
+        peerCertificate_=std::move(newSessions_.back()->peerCertificate_);
+        decrypted_=std::move(decrypted.first());
+        encrypt_=std::move(encrypt.second());
+      }
+      catch(xju::Exception& e){
+        std::ostringstream s;
+        s << "accept TLS connection on transport socket by "
+          << deadline
+          << (requestClientCertificate?" ":" without ")
+          << "requesting client certificate";
+        e.addContext(s.str(),XJU_TRACED);
+        throw;
+      }
+    }
+    // client side connection over encrypted+decrypt transport
+    // pre: crypto, encrypted and decrypt will outlive this
+    Session(
+      Crypto& crypto,
+      xju::io::OStream& encrypted,
+      xju::io::IStream& decrypt,
+      std::chrono::steady_clock::time_point const& deadline,
+      bool const closeOnExec)
+    //throw xju::DeadlineReached
+    //throw xju::Exception
+    {
+      try{
+        auto decrypted(xju::pipe(closeOnExec,true));
+        auto encrypt(xju::pipe(true,closeOnExec));
+        std::unique_ptr<xju::tls::Session> session(
+          new xju::tls::Session(std::move(decrypted.second),
+                                std::move(encrypt.first),
+                                *ctx_.get(),
                                 deadline,
                                 encrypted,
                                 decrypt));
