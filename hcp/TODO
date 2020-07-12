@@ -1,3 +1,21 @@
+* handle using base class method/member
+  - eg handle using xju::Exception; in derived class see REVISIT in hcp/tags
+
+- completion in find def (twt_cxx.el)
+  - how to drive in emacs? completing-read, see also Programmed Completion and its completion-table-dynamic call hcp-show-tag-completions
+    - how to get current point to calculate current scope? just (point)?
+  - if no completions show "contains" too?
+  - tag/hcp-tag-completions prefix from-scope
+    -> hcp::tags::Lookup::lookupCompletions
+    - base one hcp-find-def.cc
+    
+- fix C++ constructor indentation
+  - just member(s)
+  - with try
+  ... somehow:
+    hcp-calc-indent-at offset
+   ?
+   
 - parseString needs context
 
 x hcp-tags does not get e.g. xju::recvmsg
@@ -22,11 +40,7 @@ x support [[noreturn]] so can add to xju::assert_never_reached()
 - handle attributes:
   - [[noreturn]] before function proto open '('
 
-- collapse CompositeItem back into Item
-  - give Item children and 2x cons (moving childen down from CompositeItem)
-  - replace String with Item
-  - delete CompositeItem altogether
-  - items_ -> children_
+x collapse CompositeItem back into Item
   
 x parse global like
   namespace x
@@ -98,11 +112,10 @@ x create cxx-opts for use before hcp-split
   - move tags out to urnest/cctags?
   - where to put editing/language tools?
   - split parser into generic parser and c++/hcp specific
+  - hcp_ast -> hcp::ast
+  - hcp_parser -> hcp::parser
   
 - handle enum/scoped enum with fixed type
-
-* handle using base class method/member
-  - eg handle using xju::Exception; in derived class see REVISIT in hcp/tags
 
 x handle scoped enum (non-fixed type)
 
@@ -137,8 +150,6 @@ x handle scoped enum (non-fixed type)
   - test on .hh and .hcp file types
 
   x when importing to .hh or .cc omit //impl
-  - need to back up to start of trailing whitespace of insertion point
-    ... otherwise get spacing before
     
 x when excluding class/struct/union/enum/namespace keywords need to ensure
   it is not them being used to start a valid identifer, eg class_1 f();
@@ -160,7 +171,7 @@ x when excluding class/struct/union/enum/namespace keywords need to ensure
     x add optional<vector<IR>> to exception, set conditionally when
       catch xju::parse::IteratorAdaptor::EndOfInput
     x extend in and exception handler
-    - rename irsAtEnd to scopeIrsAtEnd or just scopeIrs
+    - rename scopeIrs
     x tests:
       global scope after namespace
       global scope after class
@@ -238,7 +249,7 @@ x when excluding class/struct/union/enum/namespace keywords need to ensure
     
   x need to better parse function proto to get param types
 
-  - then look for friend bool operator< with 2x params of type = class name
+  x then look for friend bool operator< with 2x params of type = class name
     (possibly const/ref qualified)
 
 - accept some old-style var init (where cannot be a function decl)
@@ -299,7 +310,7 @@ x fix generation of friend functions
     means re-qualifying param types and it is not possible to tell how much
     to add to each param type?
 
-* no such thing as static var decl, it is a def? for hcp-split, yet, but
+* no such thing as static var decl, it is a def? for hcp-split, yes, but
   want to be able to parse .hh too
   should be OK now, test it
   

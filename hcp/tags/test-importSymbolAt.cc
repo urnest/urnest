@@ -35,6 +35,14 @@ public:
       return f_(fromScope,symbolScope,symbol);
     }
   
+  virtual ::hcp::tags::Lookup::ScopedNames lookupCompletions(
+    ::hcp::tags::Lookup::NamespaceNames const& fromScope,
+    ::hcp::tags::Lookup::NamespaceNames const& symbolScope,
+    ::hcp::tags::UnqualifiedSymbol const& symbol) /*throw(xju::Exception)*/
+    {
+      return {};
+    }
+  
   F f_;
 };
 template<class F>

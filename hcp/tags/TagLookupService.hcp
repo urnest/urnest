@@ -131,7 +131,7 @@ public:
   //
   FoundIn lookupSymbol(NamespaceNames const& fromScope,
                        NamespaceNames const& symbolScope,
-                       UnqualifiedSymbol const& symbol) throw() {
+                       UnqualifiedSymbol const& symbol) throw() override {
     FoundIn result{Locations(),Headers()};
     xju::Lock l(guard_);
     updateFiles(l);
@@ -161,6 +161,16 @@ public:
     return result;
   }
 
+  // lookup completions of symbolScope::symbol referenced from fromScope
+  // 
+  Lookup::ScopedNames lookupCompletions(
+    NamespaceNames const& fromScope,
+    NamespaceNames const& symbolScope,
+    UnqualifiedSymbol const& symbol) throw() override
+  {
+    return ScopedNames(); //REVISIT: implement
+  }
+  
   // update ie reload any tags files that have changed
   // pre: l.holds(guard_)
   void updateFiles(xju::Lock const& l) throw()
