@@ -1,9 +1,19 @@
+// Copyright (c) 2017 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
 #ifndef HCP_TAGS_LOOKUP
 #define HCP_TAGS_LOOKUP
 
 #include <hcp/tags/NamespaceName.idl>
 #include <hcp/tags/FoundIn.idl>
 #include <hcp/tags/UnqualifiedSymbol.idl>
+#include <hcp/tags/ScopedName.idl>
 
 module hcp
 {
@@ -15,6 +25,11 @@ module hcp
       FoundIn lookupSymbol(in NamespaceNames fromScope,
                            in NamespaceNames symbolScope,
                            in UnqualifiedSymbol symbol);
+
+      typedef sequence<ScopedName> ScopedNames;
+      ScopedNames lookupCompletions(in NamespaceNames fromScope,
+                                    in NamespaceNames symbolScope,
+                                    in UnqualifiedSymbol symbol);
     };
   };
 };
