@@ -151,3 +151,22 @@ utf8%tags
 test%tags
 linux%tags
 tls%tags
+
+%test-py-exit.sh== ! <<
+#!/bin/sh
+status=$(cat "$1")
+if [ $status != "1" ]
+then
+  echo "expected exit code 1, got $status" >&2 &&
+  false
+fi &&
+errors=$(cat "$2") &&
+if [ "$errors" != "not found" ]
+then
+  echo "$errors != 'not found'" >&2 &&
+  false
+fi
+
+%test-py-exit.exec==(test-py-exit.py)+(%py-opts):py3.exec
+
+%test-py-exit==()+cmd=(%test-py-exit.sh) (%test-py-exit.exec/status) (%test-py-exit.exec/output):stdout
