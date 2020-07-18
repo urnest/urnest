@@ -46,7 +46,7 @@ class Xn:
         '''cause can also have a readableRepr() method, in which case that'''
         '''will be used by readableRepr() below'''
         self.cause = (cause,FileAndLine()) # file,line set below
-        self.context = [] # (text,FileAndLine)
+        self.context:List[Tuple[str,FileAndLine]] = [] # (text,FileAndLine)
         pass
 
     def __str__(self)->str:
@@ -66,12 +66,12 @@ class Xn:
         proper sentence i.e. capitalised and ending in full stop
         - see unit test below for example'''
         result = ''
-        x = ''.join([
+        x:str = ''.join([
             'failed to {s} because\n'.format(**vars())
             for s,fl in reversed(self.context)
             if fl.readable])
         try:
-            y=self.cause[0].readableRepr()
+            y:str=self.cause[0].readableRepr()
             assert isinstance(y,str)
         except:
             y = str(self.cause[0])
@@ -84,12 +84,12 @@ def readableRepr(e)->str:
         return e.readableRepr()
     return str(e)
 
-def capitalise(s)->str:
+def capitalise(s:str)->str:
     if s and s[0]!=s[0].upper():
         return s[0].upper()+s[1:]
     return s
 
-def inContext(context, exceptionInfo=None)->Exception:
+def inContext(context:str, exceptionInfo=None)->Exception:
     """Make a Xn that includes exception info and context.
     If exceptionInfo[1] is already a Xn just add context,
     otherwise use exceptionInfo as cause for a new Xn.
@@ -104,11 +104,13 @@ def inContext(context, exceptionInfo=None)->Exception:
         name=exceptionType.__name__
         def init(self,v):
             Xn.__init__(self,v)
-            self.__dict__.update(v.__dict__)
+            for a in set.difference(set(dir(v)),set(dir(Xn))):
+                setattr(self,a,getattr(v,a))
+                pass
             pass
-        def str_(self):
+        def str_(self)->str:
             return Xn.__str__(self)
-        def readableRepr(self):
+        def readableRepr(self)->str:
             return Xn.readableRepr(self)
         r=type('Xn{name}'.format(**vars()),
                (Xn,exceptionType),
