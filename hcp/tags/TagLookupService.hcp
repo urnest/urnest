@@ -168,7 +168,31 @@ public:
     NamespaceNames const& symbolScope,
     UnqualifiedSymbol const& symbol) throw() override
   {
-    return ScopedNames(); //REVISIT: implement
+    ScopedNames result;
+    xju::Lock l(guard_);
+    updateFiles(l);
+    for(auto const x:files_) {
+      std::ostringstream s;
+      s << "lookup completions in tags file " << xju::path::str(x);
+      std::cerr << s.str() << std::endl;
+      Namespace const& root(*(*filesMap_.find(x)).second);
+      try {
+        auto const l(root.completions(fromScope,symbolScope,symbol));
+        if (l.size()) {
+          std::cerr << "found " << str(symbolScope) << str(symbol)
+                    << " (referenced from ::"
+                    << str(fromScope)
+                    << ") completions in tags file "
+                    << xju::path::str(x);
+          std::copy(l.begin(),l.end(),std::back_inserter(result));
+        }
+      }
+      catch(xju::Exception& e) {
+        e.addContext(s.str(),XJU_TRACED);
+        std::cerr << readableRepr(e) << std::endl;
+      }
+    }
+    return result;
   }
   
   // update ie reload any tags files that have changed

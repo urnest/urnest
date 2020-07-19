@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Trevor Taylor
+// Copyright (c) 2020 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
 // and its documentation for any purpose is hereby granted without fee,
@@ -48,15 +48,22 @@ std::string getTagLookupServiceURL() /*throw(
 
 int main(int argc, char* argv[])
 {
-  if (argc != 3){
-    std::cerr << "usage: " << argv[0] << " <symbol> <from-scope>\n"
-              << "e.g:\n  " << argv[0] << " impl::Fred mod1::c::Mule\n"
-              << "... find definitions of impl::Fred in the context "
+  bool lisp(false);
+  int i(1);
+  if (argc > i && argv[i]==std::string("-e")){
+    lisp=true;
+    ++i;
+  }
+  if (argc-i != 2) {
+    std::cerr << "usage: " << argv[0] << " [-e] <symbol> <from-scope>\n"
+              << "e.g:\n  " << argv[0] << " impl::Fre mod1::c::Mule\n"
+              << "... find completions of impl::Fre in the context "
               << "of mod1::c::Mule. Prints zero or more lines on stdout "
-              << "each containing <file> <line> of possible definition,e.g.:"
-              << "  /x/impl/Fred.hh 33\n"
-              << "  /y/mod1/impl/Fred 82\n"
+              << "each containing possible completion,e.g.:"
+              << "  impl::Fred\n"
+              << "  impl::Freda\n"
               << "... might be the output of the above example.\n"
+              << "Or if -e specified, returns as an elisp (list) expression.\n"
               << "note: $TAG_LOOKUP_SERVICE_URL_FILE must locate url-file of tag-lookup-service to use - see tag-lookup-service" << std::endl;
     return 1;
   }
@@ -65,16 +72,42 @@ int main(int argc, char* argv[])
     cxy::ORB<xju::Exception> orb("giop:tcp::");
     cxy::cref<hcp::tags::Lookup> ref(orb,url);
 
-    auto const ss(hcp::tags::splitSymbol(argv[1]));
+    int i(1);
+    bool lisp(false);
+    if (argc==4){
+      lisp=true;
+      ++i;
+    }
+    auto const ss(hcp::tags::splitSymbol(argv[i]));
     std::vector<hcp::tags::NamespaceName> fromScope(
-      hcp::tags::splitScope(argv[2]));
-    auto const foundIn(
-      ref->lookupSymbol(fromScope,
-                        ss.first,
-                        ss.second));
-    for(auto const l: foundIn.locations_){
-      std::cout << xju::path::str(std::make_pair(l.directory,l.file))
-                << " " << l.line << std::endl;
+      hcp::tags::splitScope(argv[i+1]));
+    auto const completions(
+      ref->lookupCompletions(fromScope,
+                             ss.first,
+                             ss.second));
+    std::vector<std::string> result;
+    for(auto c: completions){
+      std::vector<std::string> cc;
+      std::transform(c.scope_.begin(),c.scope_.end(),
+                     std::back_inserter(cc),
+                     xju::format::Str<decltype(c.scope_.front())>());
+      cc.push_back(xju::format::str(c.name_));
+
+      result.push_back(
+        xju::format::quote(
+          lisp?"\"":"",
+          xju::format::join(cc.begin(),cc.end(),std::string("::"))));
+    }
+    if (lisp){
+      std::cout << "(list "
+                << xju::format::join(result.begin(),result.end(),
+                                     std::string(" "))
+                << ")" << std::endl;
+    }
+    else{
+      for(auto r:result){
+        std::cout << r << std::endl;
+      }
     }
     return 0;
   }

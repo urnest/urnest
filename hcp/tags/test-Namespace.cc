@@ -98,6 +98,87 @@ void test1() {
   catch(Namespace::UnknownSymbol const& e) {
     xju::assert_equal(readableRepr(e),"Failed to lookup locations of ::anne when it is referenced from :: because\nfailed to find symbol anne amongst fred because\nunknown symbol.");
   }
+
+
+  x.addSymbol({NamespaceName("a")},
+              UnqualifiedSymbol("frederic"),
+              l3);
+
+  x.addSymbol({NamespaceName("a")},
+              UnqualifiedSymbol("freeder"),
+              l3);
+
+  //prefix
+  xju::assert_equal(x.completions(std::vector<NamespaceName>{},
+                                  {NamespaceName("a")},
+                                  UnqualifiedSymbol("fred")),
+                    std::vector<ScopedName>
+                    { ScopedName(
+                        {NamespaceName("a")},
+                        UnqualifiedSymbol("fred")),
+                      ScopedName(
+                        {NamespaceName("a")},
+                        UnqualifiedSymbol("frederic"))});
+
+  //contains
+  xju::assert_equal(x.completions(std::vector<NamespaceName>{},
+                                  {NamespaceName("a")},
+                                  UnqualifiedSymbol("ede")),
+                    std::vector<ScopedName>
+                    { ScopedName(
+                        {NamespaceName("a")},
+                        UnqualifiedSymbol("frederic")),
+                      ScopedName(
+                        {NamespaceName("a")},
+                        UnqualifiedSymbol("freeder"))});
+
+}
+
+
+void test2() {
+  // lookup x::n1::jock by name n1::jock from x::n2
+  Namespace x;
+  std::vector<Location> const l1(
+    1U,
+    Location(AbsolutePath("/"),
+             FileName("fred.hh"),
+             LineNumber(2)));
+  
+  std::vector<Location> const l2(
+    1U,
+    Location(AbsolutePath("/"),
+             FileName("fred.hh"),
+             LineNumber(10)));
+
+  x.addSymbol({NamespaceName("x"),NamespaceName("n1")},
+              UnqualifiedSymbol("jock"),
+              l1);
+  
+  xju::assert_equal(x.lookup({NamespaceName("x"),NamespaceName("n2")},
+                             {NamespaceName("n1")},
+                             UnqualifiedSymbol("jock")),
+                    FoundIn(l1,{}));
+
+  x.addSymbol({NamespaceName("x"),NamespaceName("n2")},
+              UnqualifiedSymbol("jock"),
+              l2);
+  
+  xju::assert_equal(x.lookup({NamespaceName("x"),NamespaceName("n2")},
+                             {NamespaceName("n1")},
+                             UnqualifiedSymbol("jock")),
+                    FoundIn(l1,{}));
+
+  //complete namespace (prefix)
+  xju::assert_equal(x.completions(std::vector<NamespaceName>{},
+                                  {NamespaceName("x")},
+                                  UnqualifiedSymbol("n")),
+                    std::vector<ScopedName>
+                    { ScopedName(
+                        {NamespaceName("x"),NamespaceName("n1")},
+                        UnqualifiedSymbol("")),
+                      ScopedName(
+                        {NamespaceName("x"),NamespaceName("n2")},
+                        UnqualifiedSymbol(""))});
   
 }
 
@@ -110,6 +191,7 @@ int main(int argc, char* argv[])
 {
   unsigned int n(0);
   test1(), ++n;
+  test2(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

@@ -9,6 +9,7 @@
 //
 #include <vector>
 #include <hcp/tags/NamespaceName.hh>
+#include <hcp/tags/ScopedName.hh>
 #include <hcp/tags/UnqualifiedSymbol.hh>
 #include <hcp/tags/Location.hh>
 #include <hcp/tags/Header.hh>
@@ -20,6 +21,7 @@
 #include "xju/next.hh" //impl
 #include <sstream> //impl
 #include <xju/format.hh> //impl
+#include <xju/startsWith.hh> //impl
 
 namespace hcp
 {
@@ -100,6 +102,22 @@ public:
   }
       
         
+  // List possible completions of namespace_::symbol when it is referenced
+  // from scope fromScope_.
+  //
+  // eg to complete X* or *X* in
+  //    namespace a { b::c::X2 f(); }
+  // lookup( {'a'}, {'b','c'}, X) assuming *this is the root namespace
+  std::vector<ScopedName> completions(
+    std::vector<NamespaceName> const& fromScope,
+    std::vector<NamespaceName> const& namespace_,
+    UnqualifiedSymbol const& symbol) const noexcept
+  {
+      return completions_( std::make_pair(fromScope.begin(),fromScope.end()),
+                           namespace_,
+                           symbol);
+  }
+      
 private:
   typedef std::vector<Location> Locations;
   typedef std::vector<Header> Headers;
@@ -137,12 +155,49 @@ private:
   }
   
     
+  // implementation of completions above
+  std::vector<ScopedName> completions_(
+    std::pair<std::vector<NamespaceName>::const_iterator,
+              std::vector<NamespaceName>::const_iterator> const& fromScope,
+    std::vector<NamespaceName> const& namespace_,
+    UnqualifiedSymbol const& symbol) const noexcept
+  {
+    std::vector<ScopedName> result;
+    if (fromScope.first!=fromScope.second) {
+      auto const i=children_.find(*fromScope.first);
+      if (i != children_.end()) {
+        return (*i).second.completions_(
+          std::make_pair(xju::next(fromScope.first),fromScope.second),
+          namespace_,
+          symbol);
+      }
+    }
+    if (namespace_.size()){
+      auto const i(children_.find(namespace_.front()));
+      if (i!=children_.end()){
+        auto const r((*i).second.completions_(
+                       {},
+                       std::vector<NamespaceName>(
+                         xju::next(namespace_.begin()),namespace_.end()),
+                       symbol));
+        for(auto x: r){
+          result.push_back(ScopedName({namespace_.front()},x.name_));
+          ::std::copy(x.scope_.begin(),x.scope_.end(),
+                      std::back_inserter(result.back().scope_));
+        }
+      }
+      return result;
+    }
+    return completions(symbol);
+  }
+  
+    
   // find namespace given by path within this namespace, adding children where
   // necessary
   // post: path.size() || result===root
   Namespace& findNamespace(
     std::pair<std::vector<NamespaceName>::const_iterator,
-              std::vector<NamespaceName>::const_iterator> const& path) throw()
+              std::vector<NamespaceName>::const_iterator> const& path) noexcept
   {
     if (path.first==path.second) {
       return *this;
@@ -209,6 +264,44 @@ private:
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
+  }
+
+  std::vector<ScopedName> completions(
+    UnqualifiedSymbol const& symbol) const noexcept
+  {
+    std::vector<ScopedName> result;
+    for(auto j=symbols_.lower_bound(symbol);
+        j!=symbols_.end() && ::xju::startsWith((*j).first._,symbol._);
+        ++j){
+      result.push_back(ScopedName({},(*j).first));
+    }
+    for(auto j=children_.lower_bound(NamespaceName(symbol._));
+        j!=children_.end() && ::xju::startsWith((*j).first._,symbol._);
+        ++j){
+      result.push_back(ScopedName({NamespaceName((*j).first._)},
+                                  UnqualifiedSymbol("")));
+    }
+    // no symbols match by prefix, try contains
+    if (result.size()==0 && symbol._.size()>1){
+      for(auto x: symbols_){
+        if (::std::search(x.first._.begin(),
+                          x.first._.end(),
+                          symbol._.begin(),
+                          symbol._.end())!=x.first._.end()) {
+          result.push_back(ScopedName({},x.first));
+        }
+      }
+      for(auto x: children_){
+        if (::std::search(x.first._.begin(),
+                          x.first._.end(),
+                          symbol._.begin(),
+                          symbol._.end())!=x.first._.end()) {
+          result.push_back(ScopedName({NamespaceName(x.first._)},UnqualifiedSymbol("")));
+        }
+      }
+    }
+    // REVISIT: try case insensitive contains
+    return result;
   }
 
 };

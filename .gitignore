@@ -208,3 +208,4 @@ xju/linux/wtmp/monitor-logins
 xju/linux/ntpd/monitor-ntp-sync
 hcp/tags/hcp-symbol-at
 .mypy_cache
+hcp/tags/hcp-symbol-completions
