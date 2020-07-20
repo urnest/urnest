@@ -172,6 +172,9 @@ public:
     xju::Lock l(guard_);
     updateFiles(l);
     for(auto const x:files_) {
+      std::ostringstream s;
+      s << "lookup completions in tags file " << xju::path::str(x);
+      std::cerr << s.str() << std::endl;
       Namespace const& root(*(*filesMap_.find(x)).second);
       try {
         auto const l(root.completions(fromScope,symbolScope,symbol));
@@ -185,8 +188,6 @@ public:
         }
       }
       catch(xju::Exception& e) {
-        std::ostringstream s;
-        s << "lookup completions in tags file " << xju::path::str(x);
         e.addContext(s.str(),XJU_TRACED);
         std::cerr << readableRepr(e) << std::endl;
       }
