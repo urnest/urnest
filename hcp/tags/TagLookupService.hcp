@@ -166,14 +166,21 @@ public:
   Lookup::ScopedNames lookupCompletions(
     NamespaceNames const& fromScope,
     NamespaceNames const& symbolScope,
-    UnqualifiedSymbol const& symbol) throw() override
+    UnqualifiedSymbol const& symbol) noexcept override
   {
     ScopedNames result;
     xju::Lock l(guard_);
     updateFiles(l);
     for(auto const x:files_) {
       std::ostringstream s;
-      s << "lookup completions in tags file " << xju::path::str(x);
+      s << "lookup completions of "
+        << xju::format::join(symbolScope.begin(),symbolScope.end(),
+                             std::string("::"))
+        << "::" << symbol
+        << " from scope "
+        << xju::format::join(fromScope.begin(),fromScope.end(),
+                             std::string("::"))
+        << " in tags file " << xju::path::str(x);
       std::cerr << s.str() << std::endl;
       Namespace const& root(*(*filesMap_.find(x)).second);
       try {
