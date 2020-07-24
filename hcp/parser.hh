@@ -408,6 +408,7 @@ std::shared_ptr<NamedParser<ItemType> > named(
 }
 
 PR atLeastOne(PR const x) throw();
+PR nToM(size_t const n, size_t m, PR const x) throw();
 PR optional(PR x) throw();
 
 PR parseAnyChar() throw();

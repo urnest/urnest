@@ -1342,6 +1342,93 @@ PR atLeastOne(PR b) throw()
     b+zeroOrMore()*b);
 }
 
+namespace
+{
+class NToM : public Parser
+{
+public:
+  size_t const n_;
+  size_t const m_;
+  PR const x_;
+  
+  virtual ~NToM() throw() {
+  }
+  explicit NToM(size_t const n, size_t const m, PR const x) throw():
+    n_(n),
+    m_(m),
+    x_(x) {
+  }
+  
+  // Parser::
+  virtual ParseResult parse_(I const at, Options const& options) throw() 
+  {
+    PV result(IRs(), at);
+    for(size_t n=0; n<m_; ++n) {
+      ParseResult const r(x_->parse(result.second, options));
+      if (!r.failed()) {
+        PV const x(*r);
+        std::copy(x.first.begin(), x.first.end(),
+                  std::back_inserter(result.first));
+        result.second=x.second;
+      }
+      else if (n>=n_) {
+        return ParseResult(result);
+      }
+      else{
+        return ParseResult(
+          Exception(
+            std::shared_ptr<Exception::Cause const>(new TooFew(n)),
+            r.e().at_, XJU_TRACED));
+      }
+    }
+    return ParseResult(result);
+  }
+
+  // Parser::
+  virtual std::string target() const throw();
+
+  class TooFew : public Exception::Cause
+  {
+  public:
+    explicit TooFew(size_t const got) throw():
+        got_(got) {
+    }
+    ~TooFew() throw()
+    {
+    }
+    std::string str() const throw()
+    {
+      std::ostringstream s;
+      s << "only got " << got_ << " occurrances";
+      return s.str();
+    }
+    size_t const got_;
+  };
+  
+};
+
+std::string NToM::target() const throw() 
+{
+  // bracket lhs/rhs if ambiguous (and/or/times)
+  std::string const xt(x_->target());
+  std::ostringstream s;
+  s << n_ << ".." << m_ << " occurrances of " 
+    << ((dynamic_cast<ParseOr const*>(&*x_)||
+         dynamic_cast<ParseAnd const*>(&*x_))?
+        std::string("(")+xt+std::string(")"):
+        xt);
+  return s.str();
+}
+
+}
+
+PR nToM(size_t const n, size_t const m, PR const x) throw()
+{
+  std::ostringstream s;
+  s << n << ".." << m << " occurrances of " << x->target();
+  return PR(new NToM(n,m,x));
+}
+
 PR optional(PR x) throw()
 {
   return PR(new Optional(x));
