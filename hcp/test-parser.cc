@@ -206,13 +206,55 @@ void test5()
 
 void test6()
 {
-  std::string const x("abcd");
-  hcp_parser::I at(x.begin(), x.end());
-  auto const r{
-    parse(at, (hcp_parser::atLeastOne(hcp_parser::parseOneOfChars("abc"))))};
-  xju::assert_equal(reconstruct(r.first), "abc");
-  xju::assert_equal(r.second.atEnd(), false);
+  {
+    std::string const x("abcd");
+    hcp_parser::I at(x.begin(), x.end());
+    auto const r{
+      parse(at, (hcp_parser::atLeastOne(hcp_parser::parseOneOfChars("abc"))))};
+    xju::assert_equal(reconstruct(r.first), "abc");
+    xju::assert_equal(r.second.atEnd(), false);
+  }
+  {
+    std::string const x("xxxxxx");
+    hcp_parser::I at(x.begin(), x.end());
+    auto const r{
+      parse(at, (hcp_parser::nToM(2,6,hcp_parser::parseOneOfChars("x"))))};
+    xju::assert_equal(reconstruct(r.first), "xxxxxx");
+    xju::assert_equal(r.second.atEnd(), true);
+  }
+  {
+    std::string const x("xxxxxxf");
+    hcp_parser::I at(x.begin(), x.end());
+    auto const r{
+      parse(at, (hcp_parser::nToM(6,7,hcp_parser::parseOneOfChars("x"))))};
+    xju::assert_equal(reconstruct(r.first), "xxxxxx");
+    xju::assert_equal(r.second.atEnd(), false);
+    xju::assert_equal(std::string(r.second.x_,x.end()), "f");
+  }
+  {
+    std::string const x("xxxxxxf");
+    hcp_parser::I at(x.begin(), x.end());
+    auto const r{
+      parse(at, (hcp_parser::nToM(6,7,hcp_parser::parseOneOfChars("x"))))};
+    xju::assert_equal(reconstruct(r.first), "xxxxxx");
+    xju::assert_equal(r.second.atEnd(), false);
+    xju::assert_equal(std::string(r.second.x_,x.end()), "f");
+  }
+  try
+  {
+    std::string const x("xxxxxxf");
+    hcp_parser::I at(x.begin(), x.end());
+    auto const r{
+      parse(at, (hcp_parser::nToM(2,4,hcp_parser::parseOneOfChars("x"))))};
+    xju::assert_equal(reconstruct(r.first), "xxxx");
+    xju::assert_equal(r.second.atEnd(), false);
+    xju::assert_equal(std::string(r.second.x_,x.end()), "xxf");
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal(readableRepr(e),"Failed to parse 7..8 occurrances of one of chars \"x\" at line 1 column 1 because\nline 1 column 7: only got 6 occurrances.");
+  }
 }
+
 
 void test7()
 {
