@@ -46,6 +46,11 @@ private:
   typedef std::unique_ptr<SSL,decltype(&SSL_free)> SSLuptr;
 
 public:
+  // Create crypto that will use specified certificate, private key
+  // and ancestor chain to assert its identity to peers.
+  //
+  // REVISIT: does client need a certificate? If not then this should
+  // be part of Session constructor and optional for client
   Crypto(X509Certificate const& certificate,
          PrivateKey const& privateKeyOfCertificate,
          std::vector<X509Certificate> const& certificateAncestors) /*throw(
@@ -117,27 +122,16 @@ public:
   class Session
   {
   public:
-    // server side connection over encrypted+decrypt transport
+    // Server side connection over encrypted+decrypt transport,
+    // requesting client supply a certificate chain issuing from
+    // one of the specified certificates if any.
+    // - closeOnExec specified input() and output() closeOnExec flags
     // pre: crypto, encrypted and decrypt will outlive this
     Session(
       Crypto& crypto,
       xju::io::OStream& encrypted,
       xju::io::IStream& decrypt,
-      //REVISIT: not bool but list of acceptable CA names - see
-      //SSL_CTX_set_client_CA_list noting that the (trusted)
-      //certificates of the named CAs must be available to openssl
-      //in $SSL_CERT_FILE or $SSL_CERT_DIR (or their defaults)
-      // - use X509_get_subject_name to get the name from cacert
-      //... which kind of defeats the purpose of SSL_CERT_DIR at least
-      // I guess normally SSL_CERT_DIR is only relevant to client in
-      // order to talk to many public servers. For a server that wants to
-      // verify authenticate client by certificate, probably would ask client
-      // for certificate issued by server-specific or system-specific
-      // authority.
-      // So here we should specify a set of certificates not just names,
-      // and load these certs (only) directly into SSL (can we do that? Yes. SSL_set0_verify_cert_store). I wonder if performance is bad when we build
-      // cert_store every time? Maybe we should have a cert_store wrapper?
-      bool const requestClientCertificate,
+      std::set<X509Certificate> const& requestClientCertificateIssuingFrom,
       std::chrono::steady_clock::time_point const& deadline,
       bool const closeOnExec)
     //throw xju::DeadlineReached
@@ -150,7 +144,7 @@ public:
           new xju::tls::Session(std::move(decrypted.second),
                                 std::move(encrypt.first),
                                 *ctx_.get(),
-                                requestClientCertificate,
+                                requestClientCertificateIssuingFrom,
                                 deadline,
                                 encrypted,
                                 decrypt));
@@ -172,6 +166,7 @@ public:
       }
     }
     // client side connection over encrypted+decrypt transport
+    // - closeOnExec specified input() and output() closeOnExec flags
     // pre: crypto, encrypted and decrypt will outlive this
     Session(
       Crypto& crypto,
@@ -210,6 +205,7 @@ public:
       }
     }
     xju::Optional<std::pair<X509Certificate, /*valid:*/bool> > peerCertificate_;
+    // Application endpoints.
     // pre: shutdown not previosly called
     xju::io::IStream& input() const noexcept{return *decrypted_;}
     xju::io::OStream& output() const noexcept{return *encrypt_;}
@@ -217,8 +213,6 @@ public:
     // gracefully shutdown ssl connection on transport by specified deadline
     // returning at most the next maxReturn bytes of extra decrypted data
     // prior to shutdown completion (and discarding any further bytes)
-    // pre: decrypted and encrypt are as previously returned by accept() for
-    //      the specified transport
     // pre: shutdown has not previously been called (succesfully or not)
     std::vector<uint8_t> shutdown(
       std::chrono::steady_clock::time_point const& deadline,

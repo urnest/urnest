@@ -8,6 +8,9 @@
 // implied warranty.
 //
 
+// A single TLS session. Note this is more of an internal class -
+// see Crypto and Crypto::Session for preferred API.
+//
 
 namespace xju
 {
@@ -16,6 +19,14 @@ namespace tls
 
 namespace
 {
+class x509_store_deleter{
+public:
+  void operator()(X509_STORE* x) noexcept
+  {
+    X509_STORE_free(x);
+  }
+};
+
 int preverify(int preverify_ok, X509_STORE_CTX *x509_ctx) noexcept
 {
   return 1;
@@ -23,6 +34,81 @@ int preverify(int preverify_ok, X509_STORE_CTX *x509_ctx) noexcept
 
 class Starved{};
 class Choked{};
+
+// create SSL that will not assert an identity to peers
+// (such SSL can only be used on client side)
+std::unique_ptr<SSL,decltype(&SSL_free)> createSSL(
+  std::unique_ptr<BIO,decltype(BIO_free)> ibio,
+  std::unique_ptr<BIO,decltype(BIO_free)> obio)
+//throw xju::Exception)
+{
+  try{
+    std::unique_ptr<SSL,decltype(&SSL_free)> result(SSL_new(0));
+    if (!result.get()) {
+      throw xju::Exception(getOpenSSLCallingThreadErrors(),XJU_TRACED);
+    }
+    if(SSL_set_ssl_method(result.ge(),TLS_method)==0){
+      xju::Exception e(getOpenSSLCallingThreadErrors(),XJU_TRACED);
+      e.addContext("set method to TLS_method",XJU_TRACED);
+      throw e;
+    }      
+    //REVISIT: what type of private key? How does that correspond to cipher list?
+    SSL_set_cipher_list("HIGH:!aNULL:!kRSA:!PSK:!SRP:!MD5:!RC4:!DSS");//from wiki.openssl.org
+    SSL_set_ecdh_auto(result.get(), 1);
+    SSL_set_mode(ssl_.get(),SSL_MODE_ENABLE_PARTIAL_WRITE,1);
+    SSL_set_bio(ssl_.get(),ibio.release(),obio.release());
+    return result;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "create OpenSSL anonymous SSL";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+// create SSL that will assert the specified identity to peers
+std::unique_ptr<SSL,decltype(&SSL_free)> createSSL(
+  X509Certificate const& certificate,
+  PrivateKey const& privateKeyOfCertificate,
+  std::vector<X509Certificate> const& ancestors
+  std::unique_ptr<BIO,decltype(BIO_free)> ibio,
+  std::unique_ptr<BIO,decltype(BIO_free)> obio)
+//throw xju::Exception)
+{
+  try{
+    auto const result(createSSL(ibio,obio));
+    if (SSL_use_certificate(
+          result.get(),
+          certificate.get()) <= 0) {
+      xju::Exception e(getOpenSSLCallingThreadErrors(),XJU_TRACED);
+      e.addContext("set context certificate",XJU_TRACED);
+      throw e;
+    }
+    for(int i=0; i!=ancestors.size(); ++i){
+      if (SSL_add_extra_chain_cert(
+            result.get(),
+            certificateAndAncestors[i].get()) <= 0) {
+        xju::Exception e(getOpenSSLCallingThreadErrors(),XJU_TRACED);
+        e.addContext(
+          "add ancestor certificate #"+xju::format::str(i),XJU_TRACED);
+        throw e;
+      }
+    }
+    if (SSL_use_PrivateKey(result.get(),privateKey.get())<=0){
+      xju::Exception e(getOpenSSLCallingThreadErrors(),XJU_TRACED);
+      e.addContext("set context private key",XJU_TRACED);
+      throw e;
+    }
+    return result;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "create OpenSSL SSL with identity"; //REVISIT: include cert
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
 
 void sslAccept(SSL& ssl)
 //throw Starved
@@ -169,15 +255,18 @@ class Session{
 public:
   // Accept TLS connection on encrypted+decrypt (the underlying transport)
   // by specified deadline, connecting unencrypted side to specified
-  // decrypted+encrypt.
+  // decrypted+encrypt, asserting specified identity (certificate) and
+  // requesting that client supply a certificate chain issuing from one of the
+  // specified certificates if any.
   //
-  //pre: ctx will outlive *this
   //pre: encrypted will outlive *this
   //pre: decrypt will outlive *this
-  Session(std::unique_ptr<xju::io::OStream> decrypted,
+  Session(X509Certificate const& certificate,
+          PrivateKey const& privateKeyOfCertificate,
+          std::vector<X509Certificate> const& ancestors,
+          std::unique_ptr<xju::io::OStream> decrypted,
           std::unique_ptr<xju::io::IStream> encrypt,
-          SSL_ctx& ctx,
-          bool const requestClientCertificate,
+          std::set<X509Certificate> const& requestClientCertificateIssuingFrom,
           std::chrono::steady_clock::time_point const& deadline,
           xju::io::OStream& encrypted,
           xju::io::IStream& decrypt)
@@ -190,21 +279,20 @@ public:
       encrypt_(std::move(encrypt)),
       botRxBuf_(2048),
       botTxBuf_(2048),
-      ssl_(SSL_new(&ctx,&SSL_free)),
+      ssl_(createSSL(certificate,privateKeyOfCertificate,ancestors,
+                     IBIO(botRxBuf_),
+                     OBIO(botTxBuf_))),
       topRxBuf_(2048),
       topTxBuf_(2048)
   {
-    if (!ssl_.get()){
-      throw xju::Exception(getOpenSSLCallingThreadErrors(),XJU_TRACED);
-    }
-    SSL_CTX_set_mode(ssl_.get(),SSL_MODE_ENABLE_PARTIAL_WRITE,1);
-    auto ibio(IBIO(botRxBuf_));
-    auto obio(OBIO(botTxBuf_));
-    SSL_set_bio(ssl_.get(),ibio.release(),obio.release());
-    if(requestClientCertificate){
-      SSL_set_verify(ssl_.get(),
-                     SSL_VERIFY_PEER,
-                     preverify);
+    if(requestClientCertificateIssuingFrom.size()){
+      std::unique_ptr<X509_STORE,x509_store_deleter> st(
+        X509_STORE_new());
+      for(auto cert: requestClientCertificateIssuingFrom){
+        xju::assert_equal(X509_STORE_add_cert(ssl_.get(),cert.get()),1);
+      }
+      xju::assert_equal(SSL_set1_verify_cert_store(ssl_.get(),st.get()),1);
+      SSL_set_verify(ssl_.get(),SSL_VERIFY_PEER,preverify);
     }
     while(true){
       std::set<xju::io::Input const*> readable;
@@ -243,16 +331,15 @@ public:
     throw;
   }
 
-  // Make TLS connection on encrypted+decrypt (the underlying transport)
-  // by specified deadline, connecting unencrypted side to specified
-  // decrypted+encrypt.
+  // Make anonymous TLS connection on encrypted+decrypt (the underlying
+  // transport) by specified deadline, connecting unencrypted side to
+  // specified decrypted+encrypt.
   //
-  //pre: ctx will outlive *this
   //pre: encrypted will outlive *this
   //pre: decrypt will outlive *this
   Session(std::unique_ptr<xju::io::OStream> decrypted,
           std::unique_ptr<xju::io::IStream> encrypt,
-          SSL_ctx& ctx,
+          std::chrono::steady_clock::time_point const& deadline,
           xju::io::OStream& encrypted,
           xju::io::IStream& decrypt)
   //throw xju::DeadlineReached
@@ -264,41 +351,50 @@ public:
       encrypt_(std::move(encrypt)),
       botRxBuf_(2048),
       botTxBuf_(2048),
-      ssl_(SSL_new(&ctx,&SSL_free)),
+      ssl_(createSSL(IBIO(botRxBuf_),OBIO(botTxBuf_))),
       topRxBuf_(2048),
       topTxBuf_(2048)
   {
-    if (!ssl_.get()){
-      throw xju::Exception(getOpenSSLCallingThreadErrors(),XJU_TRACED);
-    }
-    SSL_CTX_set_mode(ssl_.get(),SSL_MODE_ENABLE_PARTIAL_WRITE,1);
-    auto ibio(IBIO(botRxBuf_));
-    auto obio(OBIO(botTxBuf_));
-    SSL_set_bio(ssl_.get(),ibio.release(),obio.release());
-    while(true){
-      std::set<xju::io::Input const*> readable;
-      std::set<xju::io::Input const*> writable;
-      try{
-        sslConnect(*ssl_);
-        break;
-      }
-      catch(Starved const&){
-        readable.insert(&decrypt_);
-      }
-      catch(Choked const&){
-        writable.insert(&encrypted_);
-      }
-      if (botTxBuf_.size()){
-        writable.insert(&encrypted_);
-      }
-      auto const rw(xju::io::select(readable,writable,deadline));
-      if(xju::steadyNow()>=deadline){
-        throw xju::DeadlineReached(
-          xju::Exception("TLS handshake incomplete at deadline",XJU_TRACED));
-      }
-      readDecrypt(rw.first);
-      writeEncrypted(rw.second);
-    }
+    connect(deadline);
+    peerCertificate_=getPeerCertificate(*ssl_);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "make TLS connection by specified deadline";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+
+  // Make authenticated TLS connection on encrypted+decrypt (the underlying
+  // transport) by specified deadline, connecting unencrypted side to
+  // specified decrypted+encrypt.
+  //
+  //pre: encrypted will outlive *this
+  //pre: decrypt will outlive *this
+  Session(X509Certificate const& certificate,
+          PrivateKey const& privateKeyOfCertificate,
+          std::vector<X509Certificate> const& ancestors,
+          std::unique_ptr<xju::io::OStream> decrypted,
+          std::unique_ptr<xju::io::IStream> encrypt,
+          std::chrono::steady_clock::time_point const& deadline,
+          xju::io::OStream& encrypted,
+          xju::io::IStream& decrypt)
+  //throw xju::DeadlineReached
+  //throw xju::Exception - other e.g. protocol violation
+  try:
+      encrypted_(encrypted),
+      decrypt_(decrypt),
+      decrypted_(std::move(decrypted)),
+      encrypt_(std::move(encrypt)),
+      botRxBuf_(2048),
+      botTxBuf_(2048),
+      ssl_(createSSL(certificate,privateKeyOfCertificate,ancestors,
+                     IBIO(botRxBuf_),
+                     OBIO(botTxBuf_))),
+      topRxBuf_(2048),
+      topTxBuf_(2048)
+  {
+    connect(deadline);
     peerCertificate_=getPeerCertificate(*ssl_);
   }
   catch(xju::Exception& e){
@@ -573,6 +669,34 @@ private:
   xju::CircularBuffer<uint8_t> topRxBuf_;
   xju::CircularBuffer<uint8_t> topTxBuf_;
 
+  void connect() //throw xju::Exception
+  {
+    while(true){
+      std::set<xju::io::Input const*> readable;
+      std::set<xju::io::Input const*> writable;
+      try{
+        sslConnect(*ssl_);
+        break;
+      }
+      catch(Starved const&){
+        readable.insert(&decrypt_);
+      }
+      catch(Choked const&){
+        writable.insert(&encrypted_);
+      }
+      if (botTxBuf_.size()){
+        writable.insert(&encrypted_);
+      }
+      auto const rw(xju::io::select(readable,writable,deadline));
+      if(xju::steadyNow()>=deadline){
+        throw xju::DeadlineReached(
+          xju::Exception("TLS handshake incomplete at deadline",XJU_TRACED));
+      }
+      readDecrypt(rw.first);
+      writeEncrypted(rw.second);
+    }
+  }
+  
   friend std::ostream& operator<<(std::ostream& s, Session const& x)
   {
     return s << "TLS session holding "
