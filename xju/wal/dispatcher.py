@@ -60,7 +60,7 @@ class Response:
             result.location=rhs.location or lhs.location
             return result
         except:
-            raise inContext(l1(Response.__add__.__doc__).format(**vars()))
+            raise inContext(l1(Response.__add__.__doc__).format(**vars())) from None
         pass
     def __radd__(self,lhs):
         'add Response {self} to {lhs}'
@@ -78,7 +78,7 @@ class Response:
             result.location=rhs.location or lhs.location
             return result
         except:
-            raise inContext(l1(Response.__radd__.__doc__).format(**vars()))
+            raise inContext(l1(Response.__radd__.__doc__).format(**vars())) from None
         pass
     def cookieHeaders(self):
         '''return headers for {self.cookies}'''
@@ -93,7 +93,7 @@ class Response:
             return result
         except:
             raise inContext(
-                l1(Response.cookieHeaders.__doc__).format(**vars()))
+                l1(Response.cookieHeaders.__doc__).format(**vars())) from None
         pass
     pass
 
@@ -136,7 +136,7 @@ def getParam(param_name,
         request_param_names=request_params.keys()
         request_attr_names=request_attrs.keys()
         param_default_names=param_defaults.keys()
-        raise inContext('get value of %(param_name)s from params supplied as json-encoded "json_params" HTTP param (%(json_param_names)s), HTTP params (%(request_param_names)s), webapp2 request attributes (%(request_attr_names)s) or function paramter defaults (%(param_default_names)s)'%vars())
+        raise inContext('get value of %(param_name)s from params supplied as json-encoded "json_params" HTTP param (%(json_param_names)s), HTTP params (%(request_param_names)s), webapp2 request attributes (%(request_attr_names)s) or function paramter defaults (%(param_default_names)s)'%vars()) from None
     pass
 
 def makeParams(remote_addr,method,headers,params,url,cookies,f):
@@ -163,7 +163,7 @@ def makeParams(remote_addr,method,headers,params,url,cookies,f):
                                   param_defaults)) for _ in param_names ])
         return result
     except:
-        raise inContext(l1(makeParams.__doc__)%vars())
+        raise inContext(l1(makeParams.__doc__)%vars()) from None
     pass
 
 def promoteContent(content):
@@ -185,7 +185,7 @@ def promoteContent(content):
                             'text/json; charset=UTF-8')
         raise Exception('do not know what HTTP HTTP CONTENT-TYPE to use for a {contentType} object - return an explicit wal.Response to set CONTENT-TYPE'.format(**vars()))
     except:
-        raise inContext(l1(promoteContent.__doc__).format(**vars()))
+        raise inContext(l1(promoteContent.__doc__).format(**vars())) from None
     pass
 
 class Dispatcher:
@@ -280,7 +280,7 @@ class Dispatcher:
             return [result.content]
         except:
             raise inContext(l1(Dispatcher.dispatchToFunction.__doc__).format(
-                **vars()))
+                **vars())) from None
         pass
     
     def dispatchToFile(self,path,start_response):

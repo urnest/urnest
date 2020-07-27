@@ -35,10 +35,10 @@ def validateToken(name):
                     raise Exception('{c!r} is a separator'.format(**vars()))
             except:
                 rest=name[i:]
-                raise inContext('validate first char' if i==0 else 'validate char at ...{rest!r}'.format(**vars()))
+                raise inContext('validate first char' if i==0 else 'validate char at ...{rest!r}'.format(**vars())) from None
             pass
         return name
     except:
-        raise inContext(l1(validateToken.__doc__).format(**vars()))
+        raise inContext(l1(validateToken.__doc__).format(**vars())) from None
     pass
 

@@ -5,9 +5,9 @@
 
 #include <cxy/Exception.hh>
 #include <stdint.h>
-#include <string>
-#include <cxy/optional.hh>
 #include <vector>
+#include <cxy/optional.hh>
+#include <string>
 
 
 struct E : cxy::Exception

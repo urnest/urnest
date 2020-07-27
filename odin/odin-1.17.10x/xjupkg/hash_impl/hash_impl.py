@@ -15,19 +15,19 @@ else:
     pass
 
 def error(x):
-    with file('ERRORS','w+') as f:
+    with open('ERRORS','w+') as f:
         f.write(x+'\n')
         pass
     pass
 
-ignore=file(ODIN_ignore).read().split() if ODIN_ignore else []
-suffixes=file(ODIN_suffixes).read().split() if ODIN_suffixes else []
+ignore=open(ODIN_ignore).read().split() if ODIN_ignore else []
+suffixes=open(ODIN_suffixes).read().split() if ODIN_suffixes else []
 if not len(suffixes):
     suffixes=os.environ.get('ODIN_O_SRC_SUFFIXES').split()
     pass
 
-incsp=file(ODIN_incsp).read().split() if ODIN_incsp else []
-implsp=file(ODIN_implsp).read().split() if ODIN_implsp else []
+incsp=open(ODIN_incsp).read().split() if ODIN_incsp else []
+implsp=open(ODIN_implsp).read().split() if ODIN_implsp else []
 odincxxi=os.environ.get('ODIN_CXX_I','').split()
 
 relinc=[i for i in incsp if not i.startswith('/')]
@@ -45,7 +45,7 @@ else:
     localdirs=[ODIN_DIR]+dirs
     r=re.compile('[ \t]*#[ 	]*include[ \t]*([<"])([^>"]*).*')
     includes=[]
-    for line in file(ODIN_FILE).readlines():
+    for line in open(ODIN_FILE).readlines():
         m=r.match(line)
         if m:
             if m.groups()[0]=='"':
@@ -55,7 +55,7 @@ else:
                 pass
             pass
         pass
-    with file('hash_impl.view_desc','w') as f:
+    with open('hash_impl.view_desc','w') as f:
         for name,sp in includes:
             prefix='.'.join(name.split('.')[0:-1]) if '.' in name else name
             if name.startswith('/'):

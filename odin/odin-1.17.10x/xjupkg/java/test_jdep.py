@@ -13,7 +13,7 @@ public class k {
     assert len(r)==0, (y, r)
     assert y.fileName=='1.java', y
     assert y.lineNumber==5, y
-    assert string.join(y.lines, '')==x, y.lines
+    assert ''.join(y.lines)==x, y.lines
 
 
 def test2():
@@ -29,7 +29,7 @@ import d.*;
     assert len(r)==3, (y, r)
     assert y.fileName=='1.java', y
     assert y.lineNumber==5, y
-    assert string.join(y.lines+r, '')==x
+    assert ''.join(y.lines+r,)==x
 
 def test3():
     x='''\
@@ -49,10 +49,10 @@ import d.*;
     assert y[1].fileName=='1.java', y[1]
     assert y[1].lineNumber==3, y[1]
    
-    assert string.join(y[0].lines+y[1].lines, '')==x, y.lines
+    assert ''.join(y[0].lines+y[1].lines)==x, y.lines
     
     
 if __name__=='__main__':
     n=len([globals()[x]() for x in globals().keys() if x.startswith('test')])
-    print 'PASS - %(n)s steps' % vars()
+    print('PASS - %(n)s steps' % vars())
     pass

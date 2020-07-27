@@ -9,8 +9,8 @@ odinrbshost=os.environ.get('ODINRBSHOST','')
 
 py,dir_,pySp,ignore=sys.argv[1:]
 
-err=file('ERROR','w')
-viewDesc=file('py_import.view_desc','w')
+err=open('ERROR','w')
+viewDesc=open('py_import.view_desc','w')
 
 indent=''
 
@@ -23,7 +23,7 @@ class Scope:
     def __enter__(self):
         if os.environ.get('ODINVERBOSE','') and self.on:
             global indent
-            print indent+'{desc}'.format(**self.__dict__)
+            print(indent+'{desc}'.format(**self.__dict__))
             indent=indent+'  '
             pass
         return self
@@ -31,9 +31,9 @@ class Scope:
         if os.environ.get('ODINVERBOSE') and self.on:
             global indent
             if exception:
-                print indent+'*** failed'
+                print(indent+'*** failed')
             elif self.result_:
-                print indent+'-> {result_}'.format(**self.__dict__)
+                print(indent+'-> {result_}'.format(**self.__dict__))
             indent=indent[0:-2]
             pass
         pass
@@ -42,17 +42,17 @@ class Scope:
     pass
 
 with Scope('scan for py imports {py}'.format(**vars())):
-    pySp=file(pySp).read().split() if pySp else []
+    pySp=open(pySp).read().split() if pySp else []
     eggs=[_ for _ in pySp if _.endswith('.egg')]
     pySp=[_ for _ in pySp if not _.endswith('.egg')]
 
     rel=' '.join([_ for _ in pySp if not _.startswith('/')])
     if rel:
-        print >>err, '+py_sp entries must be absolute: {rel}'.format(**vars())
+        print('+py_sp entries must be absolute: {rel}'.format(**vars()),file=err)
         sys.exit(0)
         pass
 
-    lines=file(py).read().split('\n')
+    lines=open(py).read().split('\n')
     modules=[]
     
     # pick up lines that start with "import" eg "import os as a, sys, ..d"
@@ -104,7 +104,7 @@ with Scope('scan for py imports {py}'.format(**vars())):
     
     ignoreREs=[]
     if ignore:
-        rs=file(ignore).read().split('\n')
+        rs=open(ignore).read().split('\n')
         for r in [_ for _ in rs if _]:
             with Scope('ignore modules matching +ignore regular expression {r}'.format(
                     **vars())):

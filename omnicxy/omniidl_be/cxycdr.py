@@ -243,7 +243,7 @@ def gen_enum_union(decl,eclass):
                 c.declarator().identifier()))    #name
         pass
     #cases is like [('A', [('int32_t','a_')]), ('B', [])]
-    ds=dict([(_.identifier(),'::%(switchTypeName)s::'%vars()+_.identifier())\
+    ds=dict([(_.identifier(),'::'+switchTypeName+'::'+_.identifier())\
                  for _ in decl.switchType().decl().enumerators()])
     unmarshal_cases=''.join([\
             gen_union_case_unmarshal(\
@@ -402,7 +402,7 @@ def gen(decl,eclass,eheader,causeType,contextType,
             pass
         return result
     except:
-        raise GenerateFailed(decl,sys.exc_info())
+        raise GenerateFailed(decl,sys.exc_info()) from None
     pass
 
 def gen_tincludes(decl,eclass,eheader,causeType,contextType,
@@ -424,7 +424,7 @@ def gen_tincludes(decl,eclass,eheader,causeType,contextType,
             pass
         return result
     except:
-        raise GenerateFailed(decl,sys.exc_info())
+        raise GenerateFailed(decl,sys.exc_info()) from None
     pass
 
 template='''\
@@ -531,5 +531,5 @@ def run(tree, args):
          if _.mainFile()],
         [])))
     
-    print template % vars()
+    print(template % vars())
     pass

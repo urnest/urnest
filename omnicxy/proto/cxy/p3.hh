@@ -4,11 +4,11 @@
 // cxy::Exception from <cxy/Exception.hh> as base class for all ipc exceptions
 
 #include <cxy/Exception.hh>
-#include <xju/Int.hh>
 #include <string>
-#include <stdint.h>
-#include <xju/Tagged.hh>
 #include <xju/Float.hh>
+#include <xju/Tagged.hh>
+#include <xju/Int.hh>
+#include <stdint.h>
 
 
 namespace p3

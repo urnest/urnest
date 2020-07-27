@@ -28,7 +28,7 @@ def parseHeaders(mimePart):
         return dict(headers), rest
     except:
         mps=mimePart[0:256]
-        raise inContext('parse headers from mime part %(mps)s...'%vars())
+        raise inContext('parse headers from mime part %(mps)s...'%vars()) from None
     pass
 
 def parseQuoted(x):
@@ -45,7 +45,7 @@ def parseDisposition(dispositionValue):
         v=[(_[0],parseQuoted(_[1])) for _ in v]
         return dict(v)
     except:
-        raise inContext(parseDisposition.__doc__ % vars())
+        raise inContext(parseDisposition.__doc__ % vars()) from None
     pass
 
 class FileVar(object):
@@ -106,7 +106,7 @@ def getVariablesFromWSGIenviron(wsgiEnv):
                             d.append( (disposition['name'],rest) )
                             pass
                     except:
-                        raise inContext('parse part %(i)s' % vars())
+                        raise inContext('parse part %(i)s' % vars()) from None
                     pass
                 pass
             else:
@@ -128,7 +128,7 @@ def getVariablesFromWSGIenviron(wsgiEnv):
             pass
         return result
     except:
-        raise inContext(l1(getVariablesFromWSGIenviron.__doc__).format(**vars()))
+        raise inContext(l1(getVariablesFromWSGIenviron.__doc__).format(**vars())) from None
     pass
 
 def getCookiesFromWSGIenviron(environ):
@@ -142,7 +142,7 @@ def getCookiesFromWSGIenviron(environ):
         if e: result=dict([_.strip().split('=') for _ in e.split(';')])
         return result
     except:
-        raise inContext(l1(getCookiesFromWSGIenviron.__doc__).format(**vars()))
+        raise inContext(l1(getCookiesFromWSGIenviron.__doc__).format(**vars())) from None
     pass
 
 
@@ -153,5 +153,5 @@ def getHTTPHeadersFromWSGIenviron(environ):
         return dict([(name,value) for name,value in environ.items()
                      if name.startswith('HTTP_')])
     except:
-        raise inContext(l1(getHTTPHeadersFromWSGIenviron.__doc__).format(**vars()))
+        raise inContext(l1(getHTTPHeadersFromWSGIenviron.__doc__).format(**vars())) from None
     pass

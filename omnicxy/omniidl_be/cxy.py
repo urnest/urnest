@@ -62,11 +62,11 @@ basicStringTypes={
     idltype.tk_string: TypeInfo('std::string',['<string>']),
 }
 basicParamTypes=dict(
-    basicIntTypes.items()+
-    basicFloatTypes.items()+
-    basicStringTypes.items()+{
+    list(basicIntTypes.items())+
+    list(basicFloatTypes.items())+
+    list(basicStringTypes.items())+list({
     idltype.tk_void:   TypeInfo('void',[])
-    }.items()
+    }.items())
 )
 
 def isPairType(t):
@@ -783,7 +783,7 @@ def gen_enum_union(decl,eclass):
                 c.declarator().identifier()))    #name
         pass
     #cases is like [('A', [('int32_t','a_')]), ('B', [])]
-    ds=dict([(_.identifier(),'::%(switchTypeName)s::'%vars()+_.identifier())\
+    ds=dict([(_.identifier(),'::'+switchTypeName+'::'+_.identifier())\
                  for _ in decl.switchType().decl().enumerators()])
     union_case_fwds='\n  '.join(['class %(_)s;'%vars() for _ in labels])
     union_case_defs=lambda scopeNames:\
@@ -1066,7 +1066,7 @@ def gen(decl,eclass,eheader,causeType,contextType,indent=''):
             pass
         return result
     except:
-        raise GenerateFailed(decl,sys.exc_info())
+        raise GenerateFailed(decl,sys.exc_info()) from None
     pass
 
 def gen_tincludes(decl):
@@ -1246,9 +1246,9 @@ def run(tree, args):
                                 hpath,
                                 hhext)
     
-    print head % vars()
+    print(head % vars())
     genResults=[gen(_,eclass,eheader,causeType,contextType)
                 for _ in tree.declarations() if _.mainFile()]
-    print '\n'.join([_.code for _ in genResults])
-    print '\n'.join([_.genNamespaceScopeCode('') for _ in genResults])
+    print('\n'.join([_.code for _ in genResults]))
+    print('\n'.join([_.genNamespaceScopeCode('') for _ in genResults]))
     pass

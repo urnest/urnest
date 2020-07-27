@@ -13,5 +13,5 @@ def main(argv):
     return [ODIN_file.replace('+','\\+')+'\n']+[_.replace('+','\\+')+':dirtree\n' for _ in y]
 
 if __name__=='__main__':
-    file('dirtree', 'w').write(string.join(main(sys.argv), ''))
+    open('dirtree', 'w').write(''.join(main(sys.argv)))
     pass

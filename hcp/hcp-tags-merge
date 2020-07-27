@@ -19,8 +19,8 @@ def merge(existing,additions):
 result={}
 for f in sys.argv[1:]:
     try:
-        merge(result,fromJson(file(f).read()))
-    except Exception,e:
+        merge(result,fromJson(open(f).read()))
+    except Exception as e:
         raise Exception('failed to merge tags because failed to read tags from file {f!r} because {e}'.format(**vars()))
     pass
-print toJson(result)
+print(toJson(result))

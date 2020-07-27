@@ -6,19 +6,19 @@ def main(argv):
     ODIN_classpath=argv[1]
 
     if len(argv)==3:
-        out=file(argv[2], 'w')
+        out=open(argv[2], 'w')
     else:
         out=sys.stdout
         pass
 
     classpath=[]
     if ODIN_classpath:
-        classpath=file(ODIN_classpath).read().splitlines()
+        classpath=open(ODIN_classpath).read().splitlines()
         pass
     wild_jars=[x for x in classpath if not (x.endswith('.jar') or \
                  x.endswith('*.JAR')) ]
     for j in wild_jars:
-        print >> out,  "%(j)s" % vars()
+        print("%(j)s" % vars(),file=out)
         pass
     pass
 

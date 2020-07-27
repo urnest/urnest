@@ -5,8 +5,8 @@
 
 #include <cxy/Exception.hh>
 #include <string>
-#include <cxy/optional.hh>
 #include <xju/Tagged.hh>
+#include <cxy/optional.hh>
 
 
 class p17 

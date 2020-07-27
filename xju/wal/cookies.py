@@ -22,7 +22,7 @@ def validateCookieName(name):
     try:
         return rfc2616.validateToken(name)
     except:
-        raise inContext(l1(validateCookieName.__doc__).format(**vars()))
+        raise inContext(l1(validateCookieName.__doc__).format(**vars())) from None
     pass
 
 def validateCookieValue(v):
@@ -44,7 +44,7 @@ def validateCookieValue(v):
             pass
         return v
     except:
-        raise inContext(l1(validateCookieValue.__doc__).format(**vars()))
+        raise inContext(l1(validateCookieValue.__doc__).format(**vars())) from None
     pass
 
 def validateCookiePath(v):
@@ -58,10 +58,10 @@ def validateCookiePath(v):
                     raise Exception('{c!r} is a semicolon'.format(**vars()))
             except:
                 rest=v[i:]
-                raise inContext('validate at ...{rest!r}'.format(**vars()))
+                raise inContext('validate at ...{rest!r}'.format(**vars())) from None
             pass
         return v
     except:
-        raise inContext(l1(validateCookiePath.__doc__).format(**vars()))
+        raise inContext(l1(validateCookiePath.__doc__).format(**vars())) from None
     pass
 
