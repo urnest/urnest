@@ -185,7 +185,7 @@ def gen(decl,eclass,eheader,indent=''):
             pass
         return result
     except:
-        raise GenerateFailed(decl,sys.exc_info())
+        raise GenerateFailed(decl,sys.exc_info()) from None
     pass
 
 template='''\
@@ -246,5 +246,5 @@ def run(tree, args):
         hhinc='"%(baseName)s.%(hhext)s"'%vars()
         objrefhhinc='"%(baseName)s.objref.%(hhext)s"'%vars()
         cdrhhinc='"%(baseName)s.cdr.%(hhext)s"'%vars()
-    print template % vars()
+    print(template % vars())
     pass

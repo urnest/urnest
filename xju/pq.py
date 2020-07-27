@@ -96,7 +96,7 @@ def unicodeOfElements(l):
                 t=type(c).__name__
                 if t=='instance':
                     t=c.__class__.__name__
-                raise inContext('get unicode representation of child %(i)r, %(c)r, which is of type %(t)s'%vars())
+                raise inContext('get unicode representation of child %(i)r, %(c)r, which is of type %(t)s'%vars()) from None
             pass
         return result
 
@@ -596,7 +596,7 @@ def parse(s, origin='unknown'):
         result.detach()
         return result
     except:
-        raise ParseFailed(str(''.join(traceback.format_tb(sys.exc_info()[2])))+'\n'+str(sys.exc_info()[1]), parser.pos())
+        raise ParseFailed(str(''.join(traceback.format_tb(sys.exc_info()[2])))+'\n'+str(sys.exc_info()[1]), parser.pos()) from None
     pass
 
 def parseFile(fileName,encoding='utf-8'):

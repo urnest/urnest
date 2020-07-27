@@ -186,7 +186,7 @@ def gen(decl,eclass,eheader,causeType,contextType,
             pass
         return result
     except:
-        raise GenerateFailed(decl,sys.exc_info())
+        raise GenerateFailed(decl,sys.exc_info()) from None
     pass
 
 template='''\
@@ -248,5 +248,5 @@ def run(tree, args):
         hhinc='"%(baseName)s.%(hhext)s"'%vars()
         hhcdrinc='"%(baseName)s.cdr.%(hhext)s"'%vars()
         pass
-    print template % vars()
+    print(template % vars())
     pass

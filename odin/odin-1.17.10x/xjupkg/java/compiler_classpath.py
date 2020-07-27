@@ -15,14 +15,14 @@ def main(argv):
     if not ODIN_classpath:
         return ''
     unix_paths=[os.environ('ODIN_JAVA_OUTPUT_DIRECTORY')]+\
-                file(ODIN_classpath).read.split('\n')
+                open(ODIN_classpath).read.split('\n')
     if os.environ.getdefault('ODIN_JAVA_WINDOWS_COMPILER', None):
         r=re.compile(to_windows_re)
         paths=[to_windows(_, r) for _ in paths]
-        return string.join(paths, ';')
-    return string.join(unix_paths, ':')
+        return ';'.join(paths)
+    return ':'.join(unix_paths)
     pass
 
 if __name__=='__main__':
-    file('compiler_classpath', 'w').write(main(sys.argv))
+    open('compiler_classpath', 'w').write(main(sys.argv))
     pass

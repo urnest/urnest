@@ -13,7 +13,7 @@ class E:
     pass
 
 def main(ODIN_spec, ODIN_select):
-    spec=file(ODIN_spec).read().splitlines()
+    spec=open(ODIN_spec).read().splitlines()
     select=''
     if ODIN_select:
         select=ODIN_select+'/'
@@ -23,25 +23,25 @@ def main(ODIN_spec, ODIN_select):
                                              parsed) if len(_[1])!=2]
     if len(malformed):
         raise E("the following lines have no '==': " +
-                string.join(malformed, ', '))
+                ', '.join(malformed))
 
     parsed=[(_[0].strip().split('/'), _[1].strip()) for _ in parsed]
     subdirs=set([_[0][0] for _ in parsed if len(_[0])>1])
     files=[(_[0][0], _[1]) for _ in parsed if len(_[0])==1]
     lines=[r'%'+'%s==%s\n' % _ for _ in files]+\
           [r'%'+"%s==%s+select='%s':vir_tree\n"%(_, ODIN_spec, select+_) for _ in subdirs]
-    result=string.join(lines, '')
+    result=''.join(lines)
     return result
     
 if __name__=='__main__':
-    if os.environ.has_key('ODINVERBOSE'):
-        print string.join(sys.argv, ' ')
+    if 'ODINVERBOSE' in os.environ:
+        print(' '.join(sys.argv))
 
     ODIN_spec, ODIN_select=sys.argv[1:3]
     
-    sys.stdout=file('vir_dir_spec', 'w')
+    sys.stdout=open('vir_dir_spec', 'w')
     try:
-        print main(ODIN_spec, ODIN_select)
+        print(main(ODIN_spec, ODIN_select))
     except:
-        traceback.print_exc(file=file("ERRORS", 'w'))
+        traceback.print_exc(file=open("ERRORS", 'w'))
     pass

@@ -26,5 +26,5 @@ from xju.xn import inContext
 try:
     sys.exit('not found')
 except:
-    raise inContext('jock')
+    raise inContext('jock') from None
 pass

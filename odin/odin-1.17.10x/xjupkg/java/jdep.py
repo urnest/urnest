@@ -13,7 +13,7 @@ class Trace:
         pass
     def __call__(self, remainingLines, msg):
         lineNumber=self.totalLines-len(remainingLines)+1
-        print >>sys.stderr, 'jdep@%(lineNumber)s: %(msg)s' % vars()
+        print('jdep@%(lineNumber)s: %(msg)s' % vars(),file=sys.stderr)
         pass
     pass
 
@@ -25,7 +25,7 @@ class Malformed:
         self.reason=reason
         pass
     def __str__(self):
-        return '%s:\n"%s"' % (self.reason, string.join(self.lines[0:4]))
+        return '%s:\n"%s"' % (self.reason, ''.join(self.lines[0:4]))
     pass
 
 class ErrorBlock:
@@ -60,7 +60,7 @@ def parseErrorBlock(lines, lineNumberOfFirstLine):
         try:
             m=requireMatch(ErrorBlock.re_2, lines[0], lines)
         except Malformed, e2:
-            raise Malformed(lines, str(e1)+", "+str(e2))
+            raise Malformed(lines, str(e1)+", "+str(e2)) from None
     fileName=m.groups()[0]
     lineNumber=int(m.groups()[1])
     l=lines[0:1]
@@ -116,7 +116,7 @@ def parse_imported_package(lines):
     if not x:
         raise Malformed(lines, 'line does not match %(pattern)s' % vars())
     terms=x.groups()[0].split('.')
-    return string.join([_.strip() for _ in terms[:-1]], '.')
+    return '.'.join([_.strip() for _ in terms[:-1]])
 
 re_3=re.compile('symbol[ \t]*:[ \t]*variable ([^\r\n]*)')
 re_3b=re.compile('symbol[ \t]*:[ \t]*class ([^\r\n]*)')
@@ -134,7 +134,7 @@ def parse_symbol(lines):
             return []
         raise Malformed(lines, 'line does not match %(pattern)s' % vars())
     elements=x.groups()[-1].split('.')
-    result=[Unresolved(string.join(elements[0:i], '.'),
+    result=[Unresolved('.'.join(elements[0:i]),
                        elements[i])
             for i in range(1, len(elements))]+\
             [Unresolved(None, elements[0])]
@@ -168,7 +168,7 @@ def parse_implicitly_referenced_symbol(lines, name):
         raise Malformed(lines, '%(r)s does not match %(pattern)s' % vars())
     name=name+m.groups()[0]
     elements=[_.strip() for _ in name.split('.')]
-    result=[Unresolved(string.join(elements[0:i], '.'),
+    result=[Unresolved('.'.join(elements[0:i]),
                        elements[i])
             for i in range(1, len(elements))]+\
            [Unresolved(None, elements[0])]
@@ -184,7 +184,7 @@ class E:
 
 getPackageOfFile_re=re.compile('^[ \t]*package[ \t][ \t]*([^;]*)')
 def getPackageOfFile(f):
-    for l in file(f).readlines():
+    for l in open(f).readlines():
         m=getPackageOfFile_re.match(l)
         if m: return m.groups()[-1]
     raise E('no line of file %(f)s matches regular expression %(getPackageOfFile_re)s' % vars())
@@ -217,7 +217,7 @@ class SymbolAccumulator:
                 self.imported_symbols.add(x)
                 y=x.split('.')
                 for i in range(1, len(y)):
-                    z=Unresolved(string.join(y[0:-i], '.'), y[-i])
+                    z=Unresolved('.'.join(y[0:-i]), y[-i])
                     trace(lines, '  %(self)s needs symbol %(z)s' % vars())
                     self.unresolved.append(z)
             except Malformed, e1:
@@ -235,7 +235,7 @@ class SymbolAccumulator:
                     except Malformed, e3:
                         msg=lines[0].split()[0]+" this style of package reference is not yet supported by Odin build tool java package's "+argv[0]+' because '+str([str(_) for _ in [e1, e2, e3]])+')'
                         trace(lines, '    ERROR: '+msg)
-                        raise E(msg)
+                        raise E(msg) from None
                     pass
                 pass
             pass
@@ -248,7 +248,7 @@ class SymbolAccumulator:
                 self.imported_symbols.add(x)
                 y=x.split('.')
                 self.unresolved.append(
-                    Unresolved(string.join(y[0:-1], '.'), y[-1]))
+                    Unresolved('.'.join(y[0:-1]), y[-1]))
                 pass
             except Malformed, e1:
                 trace(lines, str(e1))
@@ -263,7 +263,7 @@ class SymbolAccumulator:
                 except Malformed, e2:
                     msg=lines[0].split()[0]+" this style of package reference is not yet supported by Odin build tool java package's jdep.py because "+str([str(_) for _ in [e1, e2]])+')'
                     trace(lines, '    ERROR: '+msg)
-                    raise E(msg)
+                    raise E(msg) from None
                 pass
             pass
         else:
@@ -300,9 +300,9 @@ def windowsPath(absolute_cygpath):
 def main(argv):
     ODIN_sources, ODIN_raw_errors=argv[1:3]
 
-    realFileNames=file(ODIN_sources).read().splitlines()
+    realFileNames=open(ODIN_sources).read().splitlines()
 
-    lines=file(ODIN_raw_errors).readlines()
+    lines=open(ODIN_raw_errors).readlines()
     
     if False or os.environ.get('JDEP_TRACE'):
         global trace
@@ -332,7 +332,7 @@ def main(argv):
     y=set(y)
     y=list(y)
     y.sort()
-    sys.stdout.write(string.join([_+'\n' for _ in y], ''))
+    sys.stdout.write(''.join([_+'\n' for _ in y]))
     pass
 
 if __name__=='__main__':

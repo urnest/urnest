@@ -225,4 +225,4 @@ includes=''.join(['#include <xju/test/CallTo{nParams}.hh>\n'.format(**vars())
                   for nParams in range(0,maxParams+1)])
 
 methods=''.join(methods)
-print fileTemplate.format(**vars())
+print(fileTemplate.format(**vars()))

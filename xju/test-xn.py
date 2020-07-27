@@ -56,7 +56,7 @@ def test2():
         try:
             raise E()
         except:
-            raise inContext('await message')
+            raise inContext('await message') from None
         pass
     except E as e:
         Assert(readableRepr(e))=='''\
@@ -71,13 +71,13 @@ def test3():
             try:
                 raise E()
             except:
-                raise inContext('await message')
+                raise inContext('await message') from None
             pass
         except E as e:
             try:
                 raise Exception('open failed')
             except:
-                raise AllFailed([e,inContext('read default file')])
+                raise AllFailed([e,inContext('read default file')]) from None
             pass
         pass
     except:
