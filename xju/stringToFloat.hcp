@@ -21,8 +21,6 @@
 
 namespace xju
 {
-namespace util
-{
 //
 // Convert specified string to an float.
 //
@@ -63,5 +61,4 @@ float stringToFloat(const std::string& value) /*throw(
   }
 }
 
-}
 }
