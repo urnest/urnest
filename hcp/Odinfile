@@ -204,6 +204,8 @@ void f() throw(E) {
 %hcp-split-bootstrap.vir_tree_spec==<<
 xju/assert.hh==../xju/assert.hh
 xju/Exception.hh==../xju/Exception.hh
+xju/Holder.hh==../xju/Holder.hh
+xju/MinAlign.hh==../xju/MinAlign.hh
 xju/path.hh==../xju/path.hh
 xju/format.hh==../xju/format.hh
 xju/stringToUInt.hh==../xju/stringToUInt.hh

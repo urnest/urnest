@@ -14,6 +14,8 @@
 #define _XJU_OPTIONAL_HH_
 
 #include <memory>
+#include <xju/Holder.hh>
+#include <xju/assert.hh>
 
 namespace xju
 {
@@ -21,85 +23,90 @@ namespace xju
     class Optional
     {
     public:
-        Optional() throw()
+        Optional() noexcept:
+          x_(0)
         {
         }
-        Optional(T x):
-            m_x(new T(x))
+        Optional(T const& x):
+            x_(new(h_) T(x))
         {
         }
-        Optional(const Optional<T>& x)
+        Optional(T&& x):
+            x_(new(h_) T(x))
         {
-            if (x.valid()) {
-                m_x = std::unique_ptr<T>(new T(*x.m_x));
-            }
         }
-        bool valid() const throw()
+        Optional(const Optional<T>& x):
+            x_(x.valid()?new(h_) T(*x):0)
         {
-            return m_x.get() != 0;
         }
-        T& value() throw()
+        //REVISIT
+        // Optional(const Optional<T>&& x):
+        //     x_(x.valid()?new(h_) T(std::move(*x)):0)
+        // {
+        // }
+        bool valid() const noexcept
         {
-            return *m_x;
+            return x_!=0;
         }
-        const T& value() const throw()
+        T& value() noexcept
         {
-            return *m_x;
+            xju::assert_not_equal(x_,(T*)0);
+            return *x_;
         }
-        const T* get() const throw()
+        const T& value() const noexcept
         {
-            return m_x.get();
+            xju::assert_not_equal(x_,(T*)0);
+            return *x_;
         }
-        T* get() throw()
+        const T* get() const noexcept
         {
-            return m_x.get();
+            return x_;
         }
-        const T& operator*() const throw()
+        T* get() noexcept
         {
-            return *m_x;
+            return x_;
         }
-        T& operator*() throw()
+        const T& operator*() const noexcept
         {
-            return *m_x;
+            return *x_;
+        }
+        T& operator*() noexcept
+        {
+            return *x_;
         }
         
-        void clear() throw()
+        void clear() noexcept
         {
-            m_x.reset();
+            if (x_){
+                x_->~T();
+            }
+            x_=0;
         }
-        void reset() throw()
+        void reset() noexcept
         {
-            return m_x.reset();
+            clear();
         }
         Optional& operator=(const T& x)
         {
-            if (!valid())
-            {
-                m_x = std::unique_ptr<T>(new T(x));
-            }
-            else 
-            {
-                (*m_x) = x;
-            }
+            clear();
+            x_=new(h_) T(x);
             return *this;
         }
         Optional& operator=(const Optional<T>& x)
         {
             if (this != &x)
             {
-                if (!x.valid())
-                {
-                    clear();
-                }
-                else
-                {
-                    (*this) = x.value();
+                clear();
+                if (x.get()){
+                    (*this)=*x;
                 }
             }
+            return *this;
         }
         
     private:
-        std::unique_ptr<T> m_x;
+        Holder<T> h_;
+        T* x_;
     };
     template<class T>
     bool operator<(const Optional<T>& x, const Optional<T>& y) 
