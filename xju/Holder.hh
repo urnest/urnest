@@ -7,6 +7,8 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
+#ifndef XJU_HOLDER_HH
+#define XJU_HOLDER_HH
 
 #include <cinttypes>
 #include <cstddef>
@@ -46,3 +48,4 @@ void* operator new(std::size_t, xju::Holder<T>& holder) throw()
 {
   return &holder.x_;
 }
+#endif

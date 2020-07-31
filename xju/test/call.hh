@@ -7,6 +7,8 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
+#ifndef XJU_TEST_CALL_HH
+#define XJU_TEST_CALL_HH
 
 #include <future>
 #include <chrono>
@@ -57,3 +59,4 @@ auto call(Function&& f,Args&&... args) noexcept
 
 }
 }
+#endif

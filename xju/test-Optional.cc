@@ -14,9 +14,18 @@
 
 namespace xju
 {
+namespace
+{
+struct B
+{
+  B(uint8_t x): x_(x){}
+  uint8_t x_;
+};
+
+}
 
 void test1() {
-  xju::Optional<int> x;
+  Optional<int> x;
   xju::assert_equal(x.valid(),false);
   x=3;
   xju::assert_equal(x.valid(),true);
@@ -25,7 +34,7 @@ void test1() {
   x.clear();
   xju::assert_equal(x.valid(),false);
 
-  xju::Optional<int> y(5);
+  Optional<int> y(5);
   xju::assert_equal(y.valid(),true);
   xju::assert_equal(y.value(),5);
 
@@ -43,6 +52,8 @@ void test1() {
   xju::assert_less(x,y);
   xju::assert_not_equal(x,y);
 
+  Optional<B> z;
+  z=B(8);
 }
 
 }

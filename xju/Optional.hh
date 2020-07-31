@@ -10,8 +10,8 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef _XJU_OPTIONAL_HH_
-#define _XJU_OPTIONAL_HH_
+#ifndef XJU_OPTIONAL_HH
+#define XJU_OPTIONAL_HH
 
 #include <memory>
 #include <xju/Holder.hh>
