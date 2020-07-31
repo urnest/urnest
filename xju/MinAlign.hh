@@ -7,7 +7,8 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-
+#ifndef XJU_MINALIGN_HH
+#define XJU_MINALIGN_HH
 
 // deduce at compile time the POD type to use to correctly align
 // type T with minimal padding
@@ -15,6 +16,7 @@
 
 #include <cinttypes>
 #include <cstddef>
+#include <type_traits>
 
 namespace xju
 {
@@ -51,16 +53,28 @@ struct MinAlignType<8U>
   typedef uint64_t T;
 };
 
-template<class T_>
-struct MinAlign
+template<class T_,bool SL>
+struct MinAlign_
 {
   struct Offset
   {
-    std::max_align_t a;
     uint8_t b;
     T_ c;
   };
   typedef typename MinAlignType< offsetof(Offset,c)-offsetof(Offset,b) >::T T;
 };
 
+template<class T_>
+struct MinAlign_<T_,false>
+{
+  typedef std::max_align_t T;
+};
+
+template<class T_>
+struct MinAlign
+{
+  typedef typename MinAlign_<T_,std::is_standard_layout<T_>::value >::T T;
+};
+
 }
+#endif

@@ -7,6 +7,9 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
+#ifndef XJU_IP_PORTINUSE_H
+#define XJU_IP_PORTINUSE_H
+
 #include "xju/Exception.hh"
 
 namespace xju
@@ -30,3 +33,4 @@ public:
   
 }
 }
+#endif
