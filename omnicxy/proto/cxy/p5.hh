@@ -4,13 +4,13 @@
 // cxy::Exception from <cxy/Exception.hh> as base class for all ipc exceptions
 
 #include <cxy/Exception.hh>
-#include <vector>
-#include <stdint.h>
 #include <cxy/optional.hh>
+#include <stdint.h>
+#include <vector>
 
 // included idl
-#include <omnicxy/proto/p3.hh>
 #include <omnicxy/proto/p4.hh>
+#include <omnicxy/proto/p3.hh>
 
 namespace p5
 {

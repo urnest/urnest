@@ -4,10 +4,10 @@
 // cxy::Exception from <cxy/Exception.hh> as base class for all ipc exceptions
 
 #include <cxy/Exception.hh>
+#include <iostream>
 #include <memory>
 #include <stdint.h>
 #include <string>
-#include <iostream>
 
 
 extern std::string const p11_Z ;

@@ -27,6 +27,8 @@
 
 +ignore 'egrep expression for includes to ignore'? => :ls;
 
+$ODIN_HASH_INC_I 'space-separated list of directories containing default include files (these directories are added as -I options when compiling c/c++/idl)' = '';
+
 # vanilla odin allows eg c_inc on any FILE. Not only does this not make
 # sense - eg :o files - it means :map=:all_c_inc picks up
 # just about every parameter type, including +define because we've then

@@ -4,8 +4,8 @@
 // cxy::Exception from <cxy/Exception.hh> as base class for all ipc exceptions
 
 #include <cxy/Exception.hh>
-#include <string>
 #include <stdint.h>
+#include <string>
 
 // included idl
 #include <omnicxy/proto/p1.hh>

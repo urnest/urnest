@@ -4,8 +4,8 @@
 // cxy::Exception from <cxy/Exception.hh> as base class for all ipc exceptions
 
 #include <cxy/Exception.hh>
-#include <stdint.h>
 #include <cxy/IOR.hh>
+#include <stdint.h>
 
 
 namespace p18

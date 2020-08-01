@@ -1235,7 +1235,7 @@ def run(tree, args):
     else:
         eheader='<%s>'%eheader
     fileName=os.path.basename(tree.file())
-    tincludes='\n'.join(['#include '+_ for _ in set(sum([gen_tincludes(_) for _ in tree.declarations() if _.mainFile()],[]))])
+    tincludes='\n'.join(sorted(['#include '+_ for _ in set(sum([gen_tincludes(_) for _ in tree.declarations() if _.mainFile()],[]))]))
     hpath=([_.split('-hpath=',1)[1] for _ in args \
                 if _.startswith('-hpath')]+\
                [''])[0]
