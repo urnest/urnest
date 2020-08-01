@@ -5,8 +5,8 @@
 
 #include <cxy/Exception.hh>
 #include <cxy/Any.hh>
-#include <vector>
 #include <stdint.h>
+#include <vector>
 
 
 namespace p20

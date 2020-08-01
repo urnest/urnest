@@ -4,9 +4,9 @@
 // cxy::Exception from <cxy/Exception.hh> as base class for all ipc exceptions
 
 #include <cxy/Exception.hh>
+#include <cxy/optional.hh>
 #include <string>
 #include <xju/Tagged.hh>
-#include <cxy/optional.hh>
 
 
 class p17 

@@ -32,7 +32,13 @@ Scope::~Scope() throw()
 {
   std::cout << "]"
             << (cached_?"C":" ")
+    //g++ bug: c++-14 mode should have both std::uncaught_exception
+    //and uncaught_exceptions but only has the former (c++-17 only has latter)
+#if __cplusplus > 201402L
             << ((std::uncaught_exceptions()||failed_)?"*":" ")
+#else
+            << ((std::uncaught_exception()||failed_)?"*":" ")
+#endif
             << message_ << " "
             << (failed_?"":xju::format::quote(
                   xju::format::cEscapeString(result_))+" ")

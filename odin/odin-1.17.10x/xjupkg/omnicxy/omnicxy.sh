@@ -26,7 +26,7 @@ hhext="$1" && shift &&
 
 pflags=$(for x in $bedirs ; do echo "-p$x"; done) &&
 beflags=$(for x in $beopts ; do echo "-Wb$x"; done) &&
-iflags=$(for x in $incsp ; do echo "-I$x"; done) &&
+iflags=$(for x in $incsp $ODIN_HASH_INC_I; do echo "-I$x"; done) &&
 flags="$pflags $iflags" &&
 if [ -n "$hpath" ]
 then

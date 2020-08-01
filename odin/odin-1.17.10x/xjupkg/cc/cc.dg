@@ -69,7 +69,7 @@ $ODIN_CC_FLAGS 'C compiler flags to always include' = '';
 
 $ODIN_CC_DEBUGF 'debug flag for C compiler' = '-g';
 
-$ODIN_CC_I 'directory containing default C include files (these directories are added as -I options when compiling)' = '/usr/include';
+$ODIN_CC_I '(deprecated - use ODIN_HASH_INC_I instead) directory containing default C include files (these directories are added as -I options when compiling)' = '/usr/include';
 
 $ODIN_CC_LD_DEBUGF 'debug flag for C linker' = '-g';
 

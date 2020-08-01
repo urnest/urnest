@@ -89,7 +89,7 @@ $ODIN_CXX_FLAGS 'C++ compiler flags to always include' = '';
 
 $ODIN_CXX_DEBUGF 'debug flag for C++ compiler' = '-g';
 
-$ODIN_CXX_I 'space-separated list of directories containing default C++ include files (these directories are added as -I options when compiling)' = '';
+$ODIN_CXX_I '(deprecated - use ODIN_HASH_INC_I instead) space-separated list of directories containing default C++ include files (these directories are added as -I options when compiling)' = '';
 
 $ODIN_CXX_LD_DEBUGF 'debug flag for C++ linker' = '-g';
 

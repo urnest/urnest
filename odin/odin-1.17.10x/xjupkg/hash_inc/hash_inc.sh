@@ -7,7 +7,7 @@ if [ "$ODINVERBOSE" != "" ] ; then
 
 incsp=""
 if [ "$ODIN_incsp" != "" ] ; then incsp="`cat $ODIN_incsp`"; fi
-incsp="$incsp $ODIN_CXX_I"
+incsp="$incsp $ODIN_HASH_INC_I $ODIN_CXX_I $ODIN_CC_I"
 for header in $incsp; do
    case $header in /*);; *)
       echo "Search path entry must be absolute: $header" >>ERRORS;;

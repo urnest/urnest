@@ -4,10 +4,10 @@
 // cxy::Exception from <cxy/Exception.hh> as base class for all ipc exceptions
 
 #include <cxy/Exception.hh>
-#include <stdint.h>
-#include <vector>
 #include <cxy/optional.hh>
+#include <stdint.h>
 #include <string>
+#include <vector>
 
 
 struct E : cxy::Exception

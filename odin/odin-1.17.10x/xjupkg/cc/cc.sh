@@ -34,6 +34,12 @@ if [ "$ODIN_define" != "" ] ; then
 if [ "$ODIN_incsp" != "" ] ; then
    for sp in `cat $ODIN_incsp`; do
       flags="$flags -I$sp"; done; fi
+if [ "$ODIN_HASH_INC_I" != "" ] ; then
+   for sp in $ODIN_HASH_INC_I ; do
+      flags="$flags -I$sp"; done; fi
+if [ "$ODIN_CC_I" != "" ] ; then
+   for sp in $ODIN_CC_I ; do
+      flags="$flags -I$sp"; done; fi
 if [ "$ODIN_flags" != "" ] ; then flags="$flags `cat $ODIN_flags`"; fi
 flags="$flags $ODIN_CC_FLAGS"
 
