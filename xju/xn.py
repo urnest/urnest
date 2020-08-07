@@ -104,7 +104,10 @@ def inContext(context:str, exceptionInfo=None)->Exception:
         def init(self,v):
             Xn.__init__(self,v)
             for a in set.difference(set(dir(v)),set(dir(Xn))):
-                setattr(self,a,getattr(v,a))
+                try:
+                    setattr(self,a,getattr(v,a))
+                except AttributeError:
+                    pass
                 pass
             pass
         def str_(self)->str:
