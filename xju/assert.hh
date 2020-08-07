@@ -1,5 +1,3 @@
-//     -*- mode: c++ ; c-file-style: "osse" ;  -*-
-//
 // Copyright (c) 1997-2007 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
