@@ -212,7 +212,7 @@ def test18():
 html19='''<html>
 <body>
 <script type="text/javascript">
-var fred="fred";
+var fred="fred&quot;";
 </script>
 </body>
 </html>'''
@@ -220,7 +220,7 @@ var fred="fred";
 def test19():
     s=parse(html19)
     Assert(str(s))==html19
-    Assert(s.find(tagName('script')).text().strip())=='var fred="fred";'
+    Assert(s.find(tagName('script')).text().strip())=='var fred="fred&quot;";'
     pass
 
 html20='''<html>
