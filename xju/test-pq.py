@@ -209,6 +209,39 @@ def test18():
     Assert(s.find(hasClass('mid')).successors().text())=='c',s.find(hasClass('mid')).predecessors()
     pass
 
+html19='''<html>
+<body>
+<script type="text/javascript">
+var fred="fred&quot;";
+</script>
+</body>
+</html>'''
+
+def test19():
+    s=parse(html19)
+    Assert(str(s))==html19
+    Assert(s.find(tagName('script')).text().strip())=='var fred="fred&quot;";'
+    pass
+
+html20='''<html>
+<body>
+<style type="text/css">
+x > 20 {
+  bold;
+}
+</style>
+</body>
+</html>'''
+
+def test20():
+    s=parse(html20)
+    Assert(str(s))==html20
+    Assert(s.find(tagName('style')).text().strip())=='''x > 20 {
+  bold;
+}'''
+    pass
+
+
 if __name__=='__main__':
     tests=[var for name,var in list(vars().items())
            if name.startswith('test') and callable(var)]

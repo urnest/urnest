@@ -1,14 +1,11 @@
-* handle using base class method/member
-  - eg handle using xju::Exception; in derived class see REVISIT in hcp/tags
-
 - completion in find def (twt_cxx.el)
   - how to drive in emacs? completing-read, see also Programmed Completion and its completion-table-dynamic call hcp-show-tag-completions
     - how to get current point to calculate current scope? just (point)?
-  - if no completions show "contains" too?
-  - tag/hcp-tag-completions prefix from-scope
-    -> hcp::tags::Lookup::lookupCompletions
-    - base one hcp-find-def.cc
+  x if no completions show "contains" too?
+  x tag/hcp-tag-completions prefix from-scope
     
+x handle using base class method/member
+
 - fix C++ constructor indentation
   - just member(s)
   - with try

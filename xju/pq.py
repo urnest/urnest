@@ -173,7 +173,11 @@ class Tag(Node):
                       _ in self.attrs.items()]
         encodedAttrs.sort()
         start=' '.join([self.tagName]+encodedAttrs)
-        content=''.join([str(_) for _ in self.children])
+        if self.tagName in ['script','style']:
+            content=self.text()
+        else:
+            content=''.join([str(_) for _ in self.children])
+            pass
         end=self.end
         return '''<%(start)s>%(content)s%(end)s'''%vars()
     def hasClass(self,c):
