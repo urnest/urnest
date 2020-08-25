@@ -20,16 +20,16 @@ from xju.xn import firstLineOf as l1,inContext
 from xju import pq
 from .etc import fromJson,toJson
 from .wsgi import getVariablesFromWSGIenviron, getCookiesFromWSGIenviron, getHTTPHeadersFromWSGIenviron
-from typing import Set,Callable,Dict
+from typing import Set,Callable,Dict,Union
     
 class Response:
     def __init__(self,
-                 content=None,
-                 contentType=None, # e.g. text/html; charset=UTF-8
-                 contentEncoding=None):
+                 content:Union[bytes, #pre-encoded
+                               None]=None, #REVISIT: rules
+                 contentType:Union[str,None]=None, # e.g. text/html; charset=UTF-8
+                 contentEncoding:Union[str,None]=None):
         assert content is None or isinstance(content,bytes),type(content)
         assert contentType is None or content is not None, (contentType,type(content))
-        assert contentType is not None or content is None, (contentType,type(content))
         assert contentEncoding is None or content is not None, (contentEncoding,type(content))
         self.content=content
         self.contentType=contentType
@@ -39,14 +39,15 @@ class Response:
         self.location=None # for redirect
         pass
     def __str__(self):
-        c=self.content[0:150]
-        if len(self.content)>150: c=c+'...'
+        c=(self.content or '')[0:150]
+        if len(self.content or '')>150: c=c+'...'
         h=self.headers
         k=self.cookies
         return 'content {c!r}, headers {h!r}, cookies {k!r}'.format(**vars())
-    def __add__(self,rhs):
-        'add {rhs} to Response {self}'
+    def __add__(self,rhs_):
+        'add {rhs_} to Response {self}'
         try:
+            rhs=promoteContent(rhs_)
             assert isinstance(rhs,Response),type(rhs)
             lhs=self
             assert lhs.content is None or rhs.content is None, 'content specified more than once'
@@ -62,21 +63,10 @@ class Response:
         except:
             raise inContext(l1(Response.__add__.__doc__).format(**vars())) from None
         pass
-    def __radd__(self,lhs):
-        'add Response {self} to {lhs}'
+    def __radd__(self,lhs_):
+        'add Response {self} to {lhs_}'
         try:
-            assert isinstance(lhs,Response)
-            rhs=self
-            assert lhs.content=='' or rhs.content=='', 'content specified more than once'
-            result=Response()
-            result.content=rhs.content or lhs.content
-            result.contentType=rhs.contentType or lhs.contentType
-            result.contentEncoding=rhs.contentEncoding or lhs.contentEncoding
-            result.cookies=lhs.cookies.copy()
-            result.cookies.update(rhs.cookies)
-            result.headers=lhs.headers+rhs.headers
-            result.location=rhs.location or lhs.location
-            return result
+            return promoteContent(lhs_).__add__(self)
         except:
             raise inContext(l1(Response.__radd__.__doc__).format(**vars())) from None
         pass
@@ -87,8 +77,7 @@ class Response:
             for name,va in self.cookies.items():
                 value=va[0]+''.join(['; {an}={av}'.format(**vars())
                                      for an,av in va[1].items()])
-                result.append( ('Set-Cookie',
-                                '''{name}={value[0]}'''.format(**vars())) )
+                result.append( ('Set-Cookie',f'''{name}={value}''') )
                 pass
             return result
         except:
@@ -129,7 +118,7 @@ def getParam(param_name,
                 return request_attrs.get(param_name)
             return param_defaults[param_name]
         except KeyError as e:
-            raise Exception('unknown parameter')
+            raise Exception(f'unknown parameter {param_name}')
         pass
     except:
         json_param_names=json_params.keys()
@@ -140,7 +129,7 @@ def getParam(param_name,
     pass
 
 def makeParams(remote_addr,method,headers,params,url,cookies,f):
-    'make dictionary of params for calling function %(f)s, getting them from remote_addr, method, headers, query params, post body, url, cookies'''
+    'make dictionary of params for calling function %(f)s, getting them from remote_addr, method, headers, GET/POST params, url, cookies'''
     try:
         json_params=fromJson(params.get('json_params','{}'))
         param_names=f.__code__.co_varnames[0:f.__code__.co_argcount]
@@ -166,10 +155,14 @@ def makeParams(remote_addr,method,headers,params,url,cookies,f):
         raise inContext(l1(makeParams.__doc__)%vars()) from None
     pass
 
-def promoteContent(content):
+def promoteContent(content:Union[Response, #already good
+                                 pq.Selection, #text/html
+                                 dict]): #text/json REVISIT: rules
     '''promote content object to a valid Response'''
     contentType=type(content)
     try:
+        if isinstance(content,Response):
+            return content
         if isinstance(content,pq.Selection):
             return Response(content.utf8(),
                             'text/html; charset=UTF-8')
@@ -262,12 +255,11 @@ class Dispatcher:
                                       f))
                 pass
             self.log('INFO: {name} used app.{fname}()'.format(**vars()))
-            result=result if isinstance(result,Response) \
-                else promoteContent(result)
+            result=promoteContent(result)
             headers=result.cookieHeaders()
             if result.location:
                 headers.append( ('Location',result.location) )
-                start_response('301 Moved Permanently',headers)
+                start_response('307 Temporary Redirect',headers)
                 return [''.encode('utf-8')]
             headers.extend([(n,v) for n,v in result.headers
                             if not n in ('Content-Type','Content-Encoding')])

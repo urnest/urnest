@@ -70,7 +70,7 @@ def header(name,value):
     result.headers=[(name,value)]
     return result
 
-def redirect(location,**etc):
+def redirect(location:str,**etc):
     '''HTTP redirect to %(location)s, with extras %(etc)r'''
     cookies=etc.get('cookies',{})
     result=Response()
