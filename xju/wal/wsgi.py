@@ -18,13 +18,17 @@
 import urllib
 from xju.xn import inContext
 from xju.xn import firstLineOf as l1
+from xju.assert_ import Assert
+from typing import Tuple,Dict
 
-def parseHeaders(mimePart):
+def parseHeaders(mimePart:bytes)->Tuple[Dict[str,str],bytes]:
     try:
-        h,rest=mimePart.split('\r\n\r\n', 1)
-        headers=h.split('\r\n',1)
-        headers=[_.split(':',1) for _ in headers]
-        headers=[(_[0], _[1].strip()) for _ in headers]
+        Assert(mimePart).isInstanceOf(bytes)
+        h,rest=mimePart.split(b'\r\n\r\n', 1)
+        headers=h.split(b'\r\n',1)
+        headers=[_.split(b':',1) for _ in headers]
+        headers=[(_[0].decode('utf-8'), _[1].strip().decode('utf-8'))
+                 for _ in headers]
         return dict(headers), rest
     except:
         mps=mimePart[0:256]
@@ -49,8 +53,10 @@ def parseDisposition(dispositionValue):
     pass
 
 class FileVar(object):
-    def __init__(self, filename, content):
+    def __init__(self, filename:str,contentType:str, content:bytes):
+        Assert(content).isInstanceOf(bytes)
         self.filename=filename
+        self.contentType=contentType
         self.content=content
         pass
     pass
@@ -85,33 +91,36 @@ def getVariablesFromWSGIenviron(wsgiEnv):
                       for _ in x])
             elif 'multipart/form-data' in ct:
                 assert ct[1].startswith('boundary='), ct
-                # Firefox client adds extra '--' in front of all occurrances
-                # of bondary (and after last too), not sure
-                # if it's standard or not
-                boundary='\r\n--'+ct[1].split('=',1)[1]
-                rest='\r\n'+wsgiEnv['wsgi.input'].read(
-                    wsgiEnv.get('CONTENT_LENGTH',None)).decode(encoding)
+                # standard adds extra '--' in front of all occurrances
+                # of bondary (and after last too)
+                boundary=('\r\n--'+ct[1].split('=',1)[1]).encode('utf-8')
+                rest=b'\r\n'+wsgiEnv['wsgi.input'].read(
+                    int(wsgiEnv.get('CONTENT_LENGTH',None)))
                 all=rest.split(boundary)[1:-1]
                 for x,i in zip(all,range(0,len(all))):
                     try:
-                        assert x.startswith('\r\n'), x[0:256]
+                        assert x.startswith(b'\r\n'), x[0:256]
                         x=x[2:]
                         headers,rest=parseHeaders(x)
                         disposition=parseDisposition(
                             headers['Content-Disposition'])
-                        if disposition.has_key('filename'):
+                        if 'filename' in disposition:
+                            fileType=headers.get('Content-Type','')
                             d.append( (disposition['name'], 
-                                       FileVar(disposition['filename'], rest)))
+                                       FileVar(disposition['filename'],
+                                               fileType,
+                                               rest)))
                         else:
-                            d.append( (disposition['name'],rest) )
+                            d.append( (disposition['name'],rest.decode('utf-8')) )
                             pass
                     except:
                         raise inContext('parse part %(i)s' % vars()) from None
                     pass
                 pass
             else:
-                raise Exception(
-                    'unimplemented CONTENT_TYPE: '+wsgiEnv['CONTENT_TYPE'])
+                if int(wsgiEnv.get('CONTENT_LENGTH',0)):
+                    raise Exception(
+                        'unimplemented CONTENT_TYPE: '+wsgiEnv['CONTENT_TYPE']+' for POST with non-zero CONTENT_LENGTH')
             pass
         for key, value in d:
             if key in result:
