@@ -17,7 +17,7 @@
 from . import rfc2616
 from xju.xn import inContext,firstLineOf as l1
 
-def validateCookieName(name):
+def validateCookieName(name:str):
     '''validate RFC6265 cookie name {name!r}'''
     try:
         return rfc2616.validateToken(name)

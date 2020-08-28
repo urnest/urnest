@@ -20,7 +20,7 @@ from xju.xn import firstLineOf as l1,inContext
 from xju import pq
 from .etc import fromJson,toJson
 from .wsgi import getVariablesFromWSGIenviron, getCookiesFromWSGIenviron, getHTTPHeadersFromWSGIenviron
-from typing import Set,Callable,Dict,Union
+from typing import Set,Callable,Dict,Union,Tuple,List
     
 class Response:
     def __init__(self,
@@ -31,12 +31,12 @@ class Response:
         assert content is None or isinstance(content,bytes),type(content)
         assert contentType is None or content is not None, (contentType,type(content))
         assert contentEncoding is None or content is not None, (contentEncoding,type(content))
-        self.content=content
-        self.contentType=contentType
-        self.contentEncoding=contentEncoding
-        self.cookies={} # name : (value, {attrName:attrValue} )
-        self.headers=[] # (name,value)
-        self.location=None # for redirect
+        self.content:Union[bytes,None]=content
+        self.contentType:Union[str,None]=contentType
+        self.contentEncoding:Union[str,None]=contentEncoding
+        self.cookies:Dict[str,Tuple[str,Dict[str,str]]]={} # name : (value, {attrName:attrValue} )
+        self.headers:List[Tuple[str,str]]=[] # (name,value)
+        self.location:Union[None,str]=None # for redirect
         pass
     def __str__(self):
         c=(self.content or '')[0:150]

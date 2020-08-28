@@ -19,65 +19,67 @@ import urllib
 from xju.xn import inContext
 from xju.xn import firstLineOf as l1
 from xju.assert_ import Assert
-from typing import Tuple,Dict
+from typing import Tuple,Dict,Mapping,Union,List,Any
+from urllib.parse import unquote as urlunquote
 
 def parseHeaders(mimePart:bytes)->Tuple[Dict[str,str],bytes]:
     try:
         Assert(mimePart).isInstanceOf(bytes)
         h,rest=mimePart.split(b'\r\n\r\n', 1)
         headers=h.split(b'\r\n',1)
-        headers=[_.split(b':',1) for _ in headers]
-        headers=[(_[0].decode('utf-8'), _[1].strip().decode('utf-8'))
-                 for _ in headers]
-        return dict(headers), rest
+        headers2=[_.split(b':',1) for _ in headers]
+        headers3=[(_[0].decode('utf-8'), _[1].strip().decode('utf-8'))
+                 for _ in headers2] #REVISIT: not utf-8 but what?
+        return dict(headers3), rest
     except:
         mps=mimePart[0:256]
         raise inContext('parse headers from mime part %(mps)s...'%vars()) from None
     pass
 
-def parseQuoted(x):
+def parseQuoted(x:str):
     assert x.startswith('"'), x
     assert x.endswith('"'), x
-    return x[1:-1].replace('\"','"')
+    return x[1:-1].replace(r'\"','"')
 
-def parseDisposition(dispositionValue):
-    '''Parse Content-Disposition value %(dispositionValue)s'''
+def parseDisposition(dispositionValue:str):
+    '''Parse Content-Disposition value {dispositionValue}'''
     try:
         assert dispositionValue.strip().startswith('form-data;'), dispositionValue
         v=dispositionValue.split(';')[1:]
-        v=[_.strip().split('=',1) for _ in v]
-        v=[(_[0],parseQuoted(_[1])) for _ in v]
-        return dict(v)
+        v2=[_.strip().split('=',1) for _ in v]
+        v3=[(_[0],parseQuoted(_[1])) for _ in v2]
+        return dict(v3)
     except:
-        raise inContext(parseDisposition.__doc__ % vars()) from None
+        raise inContext(l1(parseDisposition.__doc__).format(**vars())) from None
     pass
 
 class FileVar(object):
     def __init__(self, filename:str,contentType:str, content:bytes):
         Assert(content).isInstanceOf(bytes)
-        self.filename=filename
-        self.contentType=contentType
-        self.content=content
+        self.filename:str=filename
+        self.contentType:str=contentType
+        self.content:bytes=content
         pass
     pass
 
-def getVariablesFromWSGIenviron(wsgiEnv):
+StrOrFileVar=Union[str,FileVar]
+def getVariablesFromWSGIenviron(wsgiEnv:Mapping[str,Any])->Dict[str,Union[str,FileVar,List[StrOrFileVar]]]:
     '''parse query string and wsgi.input into a dictionary from WSGI environ {wsgiEnv}'''
     '''like { varName : str or FileVar or list of str or FileVar }, e.g.:'''
     '''  { "id":"883999", "colours":["red","blue"] }'''
     '''... note list is only used where var has multiple values'''
     try:
-        result={
-        }
-        d=[]
+        result:Dict[str,Union[str,FileVar,List[StrOrFileVar]]]={}
+        d:List[Tuple[str,StrOrFileVar]]=[]
         if wsgiEnv.get('QUERY_STRING',''):
-            x=[_.split('=') for _ in wsgiEnv['QUERY_STRING'].split('&')]
+            nvs=[_.split('=',1) for _ in wsgiEnv['QUERY_STRING'].split('&')]
             d.extend(
-                [ (_[0], urllib.parse.unquote(_[1].replace('+',' ')))
-                  for _ in x])
+                [ (_[0], urlunquote(_[1].replace('+',' ')))
+                  for _ in nvs])
             pass
         if wsgiEnv['REQUEST_METHOD']!='GET':
-            ct=[_.strip() for _ in wsgiEnv['CONTENT_TYPE'].split(';')]
+            #application/javascript; charset=utf-8
+            ct:str=wsgiEnv['CONTENT_TYPE']
             encoding='iso-8859-1'
             if 'charset=' in ct:
                 encoding=ct.split('charset=')[1].split(';')[0]
@@ -85,19 +87,20 @@ def getVariablesFromWSGIenviron(wsgiEnv):
             if 'application/x-www-form-urlencoded' in ct:
                 l=int(wsgiEnv.get('CONTENT_LENGTH',-1))
                 y=wsgiEnv['wsgi.input'].read(l).decode(encoding)
-                x=[_.split('=') for _ in y.split('&')]
+                nvs=[_.split('=') for _ in y.split('&')]
                 d.extend(
                     [ (_[0], urllib.parse.unquote(_[1].replace('+',' ')))
-                      for _ in x])
+                      for _ in nvs])
             elif 'multipart/form-data' in ct:
                 assert ct[1].startswith('boundary='), ct
                 # standard adds extra '--' in front of all occurrances
                 # of bondary (and after last too)
-                boundary=('\r\n--'+ct[1].split('=',1)[1]).encode('utf-8')
-                rest=b'\r\n'+wsgiEnv['wsgi.input'].read(
+                boundary:bytes=('\r\n--'+
+                                ct.split('boundary=')[1]).encode('utf-8')
+                body:bytes=b'\r\n'+wsgiEnv['wsgi.input'].read(
                     int(wsgiEnv.get('CONTENT_LENGTH',None)))
-                all=rest.split(boundary)[1:-1]
-                for x,i in zip(all,range(0,len(all))):
+                all:List[bytes]=body.split(boundary)[1:-1]
+                for i,x in enumerate(all):
                     try:
                         assert x.startswith(b'\r\n'), x[0:256]
                         x=x[2:]
@@ -140,11 +143,10 @@ def getVariablesFromWSGIenviron(wsgiEnv):
         raise inContext(l1(getVariablesFromWSGIenviron.__doc__).format(**vars())) from None
     pass
 
-def getCookiesFromWSGIenviron(environ):
-    '''get cookies from WSGI environ {environ} as dictionary'''
-    '''like { cookieName : str or [ str ] }, e.g.:'''
-    '''  { "emailAddress" : "fred@dot.com", '''
-    '''    "preferredSizes" : [ "L", "XL" ] '''
+def getCookiesFromWSGIenviron(environ:Mapping[str,str])->Dict[str,str]:
+    '''get cookies from WSGI environ {environ} HTTP_COOKIE item as dictionary'''
+    '''like { cookieName : str ] }, e.g.:'''
+    '''  { "emailAddress" : "fred@dot.com" } '''
     try:
         result={}
         e=environ.get('HTTP_COOKIE',None)
@@ -155,8 +157,8 @@ def getCookiesFromWSGIenviron(environ):
     pass
 
 
-def getHTTPHeadersFromWSGIenviron(environ):
-    '''get HTTP_ headers from WSGI environ {environ!r} as dictionary'''
+def getHTTPHeadersFromWSGIenviron(environ)->Dict[str,str]: #name,value
+    '''get HTTP_x headers from WSGI environ {environ!r} as dictionary'''
     '''like { headerName : str }, e.g.:'''
     try:
         return dict([(name,value) for name,value in environ.items()
