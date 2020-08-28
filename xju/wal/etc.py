@@ -38,7 +38,7 @@ class Scope:
         description=self.description
         self.description=None
         if eType:
-            raise inContext(description, (eType,eVal,eTrc))
+            raise inContext(description, (eType,eVal,eTrc)) from None
         return False
     def __del__(self):
         if self.description:

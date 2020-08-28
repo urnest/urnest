@@ -23,19 +23,19 @@ separators=set('()<>@,;:\\"{} \t')
 def validateToken(name):
     '''validate RFC2616 token {name!r}'''
     try:
-        if not len(name): raise Exception('{name!r} is empty'.format(**vars()))
+        if not len(name): raise Exception(f'{name!r} is empty')
         for i,c in enumerate(name):
             o=ord(c)
             try:
                 if ord(c)<0 or ord(c)>127:
-                    raise Exception('{o} not 0..127'.format(**vars()))
+                    raise Exception(f'{o} not 0..127')
                 if c in CTLs:
-                    raise Exception('{c!r} is a control character'.format(**vars()))
+                    raise Exception(f'{c!r} is a control character')
                 if c in separators:
-                    raise Exception('{c!r} is a separator'.format(**vars()))
+                    raise Exception(f'{c!r} is a separator')
             except:
                 rest=name[i:]
-                raise inContext('validate first char' if i==0 else 'validate char at ...{rest!r}'.format(**vars())) from None
+                raise inContext(f'validate first char' if i==0 else f'validate char at ...{rest!r}') from None
             pass
         return name
     except:

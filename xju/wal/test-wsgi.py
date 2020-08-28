@@ -19,6 +19,12 @@
 from xju.wal import wsgi
 
 from xju.assert_ import Assert
+from urllib.parse import urlencode
 
 Assert(wsgi.parseQuoted(r'"fred \"big\" johnson"'))=='fred "big" johnson'
 
+Assert(wsgi.getVariablesFromWSGIenviron({
+    'QUERY_STRING':urlencode({'a':'1','b':'&2'}),
+    'REQUEST_METHOD':'GET'}))=={
+        'a':'1',
+        'b':'&2'}
