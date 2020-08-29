@@ -157,7 +157,7 @@ def makeParams(remote_addr,method,headers,params,url,cookies,f):
 
 def promoteContent(content:Union[Response, #already good
                                  pq.Selection, #text/html
-                                 dict]): #text/json REVISIT: rules
+                                 dict,bool,list,float]): #text/json REVISIT: rules
     '''promote content object to a valid Response'''
     contentType=type(content)
     try:
