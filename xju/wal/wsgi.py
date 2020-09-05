@@ -77,7 +77,7 @@ def getVariablesFromWSGIenviron(wsgiEnv:Mapping[str,Any])->Dict[str,Union[str,Fi
                 [ (_[0], urlunquote(_[1].replace('+',' ')))
                   for _ in nvs])
             pass
-        if wsgiEnv['REQUEST_METHOD']!='GET':
+        if wsgiEnv['REQUEST_METHOD']!='GET' and 'CONTENT_TYPE' in wsgiEnv:
             #application/javascript; charset=utf-8
             ct:str=wsgiEnv['CONTENT_TYPE']
             encoding='iso-8859-1'
@@ -92,7 +92,7 @@ def getVariablesFromWSGIenviron(wsgiEnv:Mapping[str,Any])->Dict[str,Union[str,Fi
                     [ (_[0], urllib.parse.unquote(_[1].replace('+',' ')))
                       for _ in nvs])
             elif 'multipart/form-data' in ct:
-                assert ct[1].startswith('boundary='), ct
+                assert 'boundary=' in ct,ct
                 # standard adds extra '--' in front of all occurrances
                 # of bondary (and after last too)
                 boundary:bytes=('\r\n--'+
