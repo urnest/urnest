@@ -1,3 +1,41 @@
+- libssh2
+    see ssh2_echo.c in examples
+    just want ssh2/Client(xju::ip::v4::Address,xju::ip::Port,
+                          xju::Path::AbsPath publicKey,
+			  xju::Path::AbsPath privateKey,
+			  std::chrono::steady_clock::time_point deadline);
+	std::tuple<std::string,std::string> doCmd(deadline)->stdout,stderr
+	... but what do we do on timeout? We should cancel but that
+	will take time, how long do we wait? If cancel succeeds it's
+	probably ok to keep using the session (Client) but if it times out
+	we should really call it fatal and close the Client and connection.
+	Trouble is libssh2 has no "abort", you cannot free all resources
+	while x_free returns EAGAIN - that is very poor, it means you
+	cannot avoid a memory leak if the other end is recalcitrant i.e. this
+	is a DOS vector. What to do? raise a bug? implement a fix?
+	implement ssh2 at lower level?
+	
+      - pubkey auth
+      - constructor connects, with timeout
+    - when would session_free block/how to avoid:
+      session->free_state
+        libssh2_NB_state_idle -> libssh2_NB_state_created
+	  - free each channel (channel_free)
+	  - free each listener (listener_free)
+	  ... so if none of either then will not block
+
+    ssh 4251 transport 4253:
+      handShake(preamble,softwareId,comment,io::IStream,io::Ostream,deadline)->softareId,comment,preamble,remainingReceivedData
+      negotiateSessionParams(dataAlreadyReceived,pkAlgorithmNames,kexMethodNames,cipherNames,macNames,maxMessageLength,I,O,deadline)->PkAlgorithmName,KexMethodName,iCipherName,oCipherName,iMacName,oMacName
+      i:cipher+mac+seq+io::IStream,receiveMessage(maxSize,deadline)->body
+      o:cipher+mac+seq+io::OStream,sendMessage(body,deadline)
+      exchangeKeys(method,cipherName,macName,i,o,deadline)->I,O,otherReceivedMessges
+      
+    tests: echo "fred ran"
+           sleep 3 ... timeout
+	   /bin/sh -c cat > fred.txt
+	   cat fred.txt
+	   
 - example https app:
   - login -> session = process running as that user getpwnam_r,setuid
     getgrnam_r can check user is member of group    

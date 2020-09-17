@@ -10,6 +10,7 @@ uri%tests.tree
 json%tests.tree
 utf8%tests.tree
 ip%tests.tree
+ssh%tests.tree
 test%tests.tree
 %tags
 
@@ -115,6 +116,7 @@ done
 %test==./test/Odinfile%hcp-gen
 %netflow==./netflow/Odinfile%hcp-gen
 %linux==./linux/Odinfile%hcp-gen
+%ssh==./ssh/Odinfile%hcp-gen
 %tls==tls/Odinfile%hcp-gen
 
 %test-getHostName==()+cmd=(%test-getHostName.sh) (test-getHostName.cc+(..%cxx-opts):auto.cxx.exe):exec.output
@@ -151,6 +153,7 @@ json%tags
 utf8%tags
 test%tags
 linux%tags
+ssh%tags
 tls%tags
 
 %test-py-exit.sh== ! <<
