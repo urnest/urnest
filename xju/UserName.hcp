@@ -13,8 +13,8 @@
 
 namespace xju
 {
-struct HostNameTag{};
+struct UserNameTag{};
 
-typedef xju::Tagged<std::string,HostNameTag> HostName;
+typedef xju::Tagged<std::string,UserNameTag> UserName;
 
 }

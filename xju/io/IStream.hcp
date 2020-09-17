@@ -19,6 +19,8 @@
 #include <algorithm> //impl
 #include <limits> //impl
 #include <xju/io/select.hh> //impl
+#include <xju/steadyNow.hh> //impl
+#include <xju/DeadlineReached.hh> //impl
 
 namespace xju
 {
@@ -73,7 +75,34 @@ public:
       throw;
     }
   }
-
+  // Read exactly bufferSize bytes into buffer by deadline
+  void readAll(void* buffer, size_t bufferSize,
+               std::chrono::steady_clock::time_point const& deadline)
+                // std::bad_alloc,
+                // Input::Closed - end of input before all bytes read
+                // DeadlineReached - deadline reached before all bytes read
+                // xju::Exception - eg disk error
+  {
+    size_t red(0);
+    try{
+      do{
+        red+=read(((uint8_t*)buffer)+red,bufferSize-red,deadline);
+      }
+      while(red<bufferSize && xju::steadyNow()<deadline);
+      
+      if (red<bufferSize){
+        throw xju::DeadlineReached(
+          xju::Exception("deadline reached",XJU_TRACED));
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "read " << (bufferSize-red) << " more bytes, having read " << red
+        << ", from " << (*this) << " by deadline";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
   //point stdin (file descriptor 0) at this input
   void useAsStdin() throw()
   {
@@ -85,5 +114,3 @@ public:
 
 }
 }
-
-

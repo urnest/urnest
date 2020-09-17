@@ -19,6 +19,8 @@
 #include <algorithm> //impl
 #include <limits> //impl
 #include <xju/io/select.hh> //impl
+#include <xju/steadyNow.hh> //impl
+#include <xju/DeadlineReached.hh> //impl
 
 namespace xju
 {
@@ -28,51 +30,89 @@ class OStream : public Output
 {
 public:
   // write bytes from buffer until bufferSize bytes written or
-  // deadline reached or output closed
+  // deadline reached
   // - return number of bytes written
   // - writes what is possible immediately if deadline has already passed
-  // - returns immediately if output closes before deadline
-  size_t write(void const* buffer, 
-               size_t bufferSize,
-               std::chrono::steady_clock::time_point deadline) /*throw(
-                 std::bad_alloc,
-                // eg disk error
-                 xju::Exception)*/ {
-    std::chrono::duration<float> const timeout(
-      deadline-std::chrono::steady_clock::now());
+  // - returns immediately if output closes before deadline but some bytes
+  //   have been written (returns how many)
+  size_t write(
+    void const* buffer, 
+    size_t bufferSize,
+    std::chrono::steady_clock::time_point deadline)
+    // std::bad_alloc
+    // Output::Closed - output closed before any bytes written
+    //   note pipe generates EPIPE by default so to get Output::Closed for
+    //   pipe, ensure EPIPE is blocked
+    // xju::Exception - eg disk error
+  {
     size_t bytesWrote(0);
     try {
       uint8_t const* p((uint8_t const*)buffer);
       while(bytesWrote<bufferSize &&
             xju::io::select({this},deadline).size()) {
-        size_t const thisWrite=xju::syscall(xju::write,XJU_TRACED)(
-          fileDescriptor(),
-          p,
-          std::min(bufferSize-bytesWrote,
-                   (size_t)std::numeric_limits<ssize_t>::max()));
-        if (thisWrite==0) {
-          if (bytesWrote) {
-            return bytesWrote;
+        try{
+          size_t const thisWrite=xju::syscall(xju::write,XJU_TRACED)(
+            fileDescriptor(),
+            p,
+            std::min(bufferSize-bytesWrote,
+                     (size_t)std::numeric_limits<ssize_t>::max()));
+          if (thisWrite==0) {
+            if (bytesWrote) {
+              return bytesWrote;
+            }
+            throw Output::Closed(*this,XJU_TRACED);
           }
-          throw Output::Closed(*this,XJU_TRACED);
+          bytesWrote+=thisWrite;
         }
-        bytesWrote+=thisWrite;
+        catch(xju::SyscallFailed const& e){
+          if (e._errno==EPIPE){
+            if (bytesWrote){
+              return bytesWrote;
+            }
+            throw Output::Closed(*this,XJU_TRACED);
+          }
+          throw;
+        }
       }
       return bytesWrote;
     }
     catch(xju::Exception& e)
     {
       std::ostringstream s;
-      s << "write bytes to " << (*this)
-        << "for " << xju::format::float_(timeout.count()) 
-        << "s or " << (bufferSize-bytesWrote) 
-        << " more (of " << bufferSize << " total) bytes written "
-        << "or output closed";
+      s << "write more of max " << bufferSize << " bytes, having written "
+        << bytesWrote << " bytes, to " << (*this) << " by deadline";
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
   }
 
+  // write bufferSize bytes of buffer by deadline
+  void writeAll(void const* buffer, 
+                size_t bufferSize,
+                std::chrono::steady_clock::time_point deadline)
+    // Output::Closed - output closed, some bytes might have been written
+    // DeadlineReached - before all bytes could be written
+    // xju::Exception - other
+  {
+    size_t rit(0);
+    try{
+      do{
+        rit+=write(((uint8_t const*)buffer)+rit,bufferSize-rit,deadline);
+      }
+      while(xju::steadyNow()<deadline && rit<bufferSize);
+      if (rit!=bufferSize){
+        throw xju::DeadlineReached(
+          xju::Exception("deadline reached",XJU_TRACED));
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "write " << (bufferSize-rit) << " more bytes, having written "
+        << rit << ", to " << (*this) << " by deadline";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
   void useAsStdout() throw()
   {
     xju::syscall(xju::dup2,XJU_TRACED)(fileDescriptor(),1);

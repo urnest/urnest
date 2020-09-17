@@ -1,0 +1,97 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/io/OStream.hh>
+#include <string>
+#include <chrono>
+#include <sstream> //impl
+#include <xju/format.hh> //impl
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+namespace{
+  char const identificationLeader[]="SSH-2.0-";
+}
+
+//pre: softwareVersion valid per rfc4253 'softwareversion' ie
+//     US-ASCII printable excluding whitespace and minus
+//pre: comments contains no \r or \n characters
+void sendIdentificationString(
+  xju::io::OStream& connection,
+  std::string const& softwareVersion,
+  std::string const& comments,
+  std::chrono::steady_clock::time_point const& deadline)
+// throw xju::DeadlineReached
+// throw xju::io::Output::Closed
+// throw xju::Exception
+{
+  std::ostringstream ss;
+  ss << identificationLeader << softwareVersion;
+  if (comments.size()){
+    ss << " " << comments;
+  }
+  ss << "\r\n";
+  std::string const identification(ss.str());
+  try{
+    connection.writeAll(identification.c_str(),identification.size(),deadline);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "write SSH identification string "
+      << xju::format::quote(xju::format::cEscapeString(identification));
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+std::tuple<
+  std::vector<xju::Utf8String>, //preamble lines without trailing \r\n
+  std::string, //ssh version
+  std::string, //software version
+  std::string, //comment
+  std::deque<uint8_t> //remaining data
+  > readIdentificationString(
+    xju::io::IStream& connection,
+    std::chrono::steady_clock::time_point const& deadline)
+// xju::DeadlineReached
+// xju::io::Closed
+// xju::Exception
+{
+  std::vector<xju::Utf8String> preamble;
+  try{
+    xju::io::istr s(connection,deadline);
+    std::string x;
+    for(x=xju::io::readThrough(s,"\r\n");
+        !xju::startsWith(x,"SSH-");
+        xju::io::readThrough(s,"\r\n"))
+    {
+      preamble.push_back(xju::Utf8String(std::string(x.begin(),x.end()-2)));
+    }
+    auto const y(hcp_parser::parseString(x.begin(),x.end(),
+                                         identParser()));
+    std::string sshVersion(REVISIT);
+    std::string softwareVersion(REVISIT);
+    std::string comment(REVISIT);
+    return std::make_tuple(preamble,sshVersion,softwareVersion,comment);
+  }
+  catch(xju::Exception& e){
+    @@@;
+  }
+}
+
+}
+
+}
+}
