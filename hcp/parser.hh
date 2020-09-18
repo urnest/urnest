@@ -149,6 +149,23 @@ public:
   std::string const cause_;
 };
 
+class XjuExceptionCause : public hcp_parser::Exception::Cause
+{
+public:
+  ~XjuExceptionCause() throw()
+  {
+  }
+  explicit XjuExceptionCause(xju::Exception e) throw():
+      cause_(std::move(e))
+  {
+  }
+  virtual std::string str() const throw()
+  {
+    return readableRepr(cause_,false,true);
+  }
+  xju::Exception const cause_;
+};
+
 class ParseResult
 {
 public:
@@ -319,6 +336,8 @@ public:
 };
 
 // pre: ItemType is e.g. a hcp_ast::Item
+// pre: ItemType must have constructor ItemType(IRs), which may
+//      throw xju::Exception
 template<class ItemType>
 class NamedParser : public NamedParser_
 {
@@ -346,7 +365,16 @@ public:
         // composite needs an item
         a.first.push_back(IR(new hcp_ast::Item(at, at)));
       }
-      return ParseResult(PV(IRs(1U, IR(new ItemType(a.first))), a.second));
+      try{
+        return ParseResult(PV(IRs(1U, IR(new ItemType(a.first))), a.second));
+      }
+      catch(xju::Exception& e){
+        return ParseResult(
+          Exception(
+            std::shared_ptr<Exception::Cause const>(
+              new XjuExceptionCause(std::move(e))), 
+          at, XJU_TRACED));
+      }
     }
     return r;
   }

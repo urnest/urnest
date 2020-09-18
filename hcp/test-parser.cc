@@ -13,6 +13,7 @@
 #include <hcp/parser.hh>
 #include "xju/assert.hh"
 #include <hcp/readFile.hh>
+#include <xju/stringToInt.hh>
 
 bool atLeastOneReadableReprFailed=false;
 
@@ -2403,6 +2404,113 @@ void test49()
   }
 }
 
+template<int min, int max>
+class IntItem:public hcp_parser::Item
+{
+public:
+  explicit IntItem(hcp_ast::IRs irs):
+  //xju::Exception
+      hcp_parser::Item( (validate(hcp_ast::reconstruct(irs)),irs) )
+  {
+  }
+private:
+  static void validate(std::string const& x)
+  //xju::Exception
+  {
+    auto const n(xju::stringToInt(x));
+    if (n < min){
+      std::ostringstream s;
+      s << n << "<" << min;
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    if (n > max){
+      std::ostringstream s;
+      s << n << ">" << max;
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+  }
+};
+template<int min, int max>
+hcp_parser::PR intRange() noexcept
+{
+  std::ostringstream s;
+  s << min << ".." << max;
+  return hcp_parser::named<IntItem<min,max>>(
+    s.str(),
+    hcp_parser::optional(hcp_parser::parseLiteral("-"))+
+    hcp_parser::atLeastOne(hcp_parser::digit()));
+}
+
+void test50()
+{
+  {
+    std::string const x{"27"};
+    try {
+      auto const root{
+        parseString(x.begin(),x.end(),
+                    intRange<-1000,1000>())};
+      xju::assert_equal(reconstruct(root), x);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  {
+    std::string const x{"1000"};
+    try {
+      auto const root{
+        parseString(x.begin(),x.end(),
+                    intRange<-1000,1000>())};
+      xju::assert_equal(reconstruct(root), x);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  {
+    std::string const x{"-1000"};
+    try {
+      auto const root{
+        parseString(x.begin(),x.end(),
+                    intRange<-1000,1000>())};
+      xju::assert_equal(reconstruct(root), x);
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "", XJU_TRACED);
+      xju::assert_equal(true,false);
+    }
+  }
+  {
+    std::string const x{"1001"};
+    try {
+      auto const root{
+        parseString(x.begin(),x.end(),
+                    intRange<-1000,1000>())};
+      xju::assert_never_reached();
+    }
+    catch(xju::Exception const& e) {
+      assert_readableRepr_equal(e, "Failed to parse -1000..1000 at line 1 column 1 because\nline 1 column 1: 1001>1000.", XJU_TRACED);
+    }
+  }
+  {
+    std::string const x{"838585833828233832843823823884832842388"};
+    try {
+      auto const root{
+        parseString(x.begin(),x.end(),
+                    intRange<-1000,1000>())};
+      xju::assert_never_reached();
+    }
+    catch(xju::Exception const& e) {
+      std::ostringstream s;
+      s << "Failed to parse -1000..1000 at line 1 column 1 because\nline 1 column 1: failed to convert \"838585833828233832843823823884832842388\" to an integer because\n838585833828233832843823823884832842388 is outside range " << INT_MIN << ".." << INT_MAX << ".";
+      assert_readableRepr_equal(e, s.str(), XJU_TRACED);
+    }
+  }
+}
+
+
 int main(int argc, char* argv[])
 {
   unsigned int n(0);
@@ -2455,6 +2563,7 @@ int main(int argc, char* argv[])
   test47(), ++n;
   test48(), ++n;
   test49(), ++n;
+  test50(), ++n;
   
   xju::assert_equal(atLeastOneReadableReprFailed, false);
   std::cout << "PASS - " << n << " steps" << std::endl;
