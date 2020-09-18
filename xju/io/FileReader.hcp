@@ -18,7 +18,6 @@
 #include <xju/unistd.hh>
 #include <sstream> //impl
 #include <xju/AutoFd.hh>
-#include <xju/io/EndOfFile.hh>
 #include <xju/steadyNow.hh> //impl
 
 namespace xju
@@ -53,8 +52,6 @@ public:
 
   // read up to bufferSize bytes from file starting at current pointer
   size_t read(void* buffer,size_t bufferSize) /*throw(
-    // at end of file already (nothing read)
-    EndOfFile,
     xju::Exception)*/
   {
     try{
@@ -62,7 +59,7 @@ public:
         return IStream::read(buffer,bufferSize,xju::steadyNow());
       }
       catch(xju::io::Input::Closed const& e){
-        throw xju::io::EndOfFile("end of file",XJU_TRACED);
+        return 0;
       }
     }
     catch(xju::Exception& e){

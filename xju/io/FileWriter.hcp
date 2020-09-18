@@ -18,7 +18,6 @@
 #include <xju/unistd.hh>
 #include <sstream> //impl
 #include <xju/AutoFd.hh>
-#include <xju/io/EndOfFile.hh>
 #include <xju/steadyNow.hh> //impl
 #include <xju/file/Mode.hh>
 
