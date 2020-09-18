@@ -47,15 +47,9 @@ void test1() {
   data.resize(x.read(&data[0],3));
   xju::assert_equal(data,"ed");
 
-  try{
-    data.resize(1U);
-    data.resize(x.read(&data[0],1));
-    xju::assert_never_reached();
-  }
-  catch(xju::io::EndOfFile const& e){
-    std::string const r(readableRepr(e));
-    xju::assert_equal(xju::startsWith(r,std::string("Failed to read up to 1 bytes at offset 4 of file")),true);
-  }
+  data.resize(1U);
+  data.resize(x.read(&data[0],1));
+  xju::assert_equal(data,"");
 
   x.seekBy(-1);
   data.resize(4U);
