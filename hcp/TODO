@@ -665,6 +665,33 @@ sys	0m0.000s
 3057
 commit 146e929778ad7e773b49d10962eac93d5daf2950
 
+... 2020 before allowing exception from named ItemType:
+
+ODINVERIFYLEVEL=2 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l && git log | head -1
+end at line 146 column 1
+
+real	0m0.069s
+user	0m0.069s
+sys	0m0.000s
+3542
+commit 4637b5f8668707ec5cab8d4713958ce88465f13d
+
+
+... after
+
+
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l && git log | head -1
+end at line 146 column 1
+
+real	0m0.069s
+user	0m0.064s
+sys	0m0.004s
+3542
+commit 4f5cdb5802ea0acd5c86c9826e09b577776bad7f
+
+Compilation finished at Sat Sep 19 09:09:50
+
+
 
 empty file overhead:
 
