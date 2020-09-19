@@ -52,6 +52,28 @@ public:
       size_(0)
   {
   }
+  ByteBuffer(ByteBuffer const& b) noexcept:
+      capacity_(b.capacity_),
+      buffer_(new uint8_t[capacity_]),
+      begin_(buffer_+(b.begin_-b.buffer_)),
+      size_(b.size_)
+  {
+    std::copy(b.begin_,b.begin_+b.size_,begin_);
+  }
+  //post: b unusable
+  ByteBuffer(ByteBuffer && b) noexcept:
+      capacity_(b.capacity_),
+      buffer_(b.buffer_),
+      begin_(b.begin_),
+      size_(b.size_)
+  {
+    b.buffer_=0;
+    b.size_=0;
+    b.begin_=0;
+  }
+  ByteBuffer& operator=(ByteBuffer const& b) = delete;
+  ByteBuffer& operator=(ByteBuffer && b) = delete;
+  
   ~ByteBuffer() noexcept
   {
     delete[](buffer_);
@@ -91,6 +113,8 @@ public:
     }
   }
 
+  void clear() noexcept { consumed(size()); } //post: size()==0
+  
   //first contiguous region of free space
   //post: result.second<=capacity_-size()
   std::pair<uint8_t const*,size_t> contigSpace() const noexcept
@@ -119,7 +143,7 @@ public:
     size_+=n;
   }
 private:
-  uint8_t* const buffer_; //storage - array of size capacity_
+  uint8_t* buffer_; //storage - array of size capacity_
   uint8_t* begin_;        //start of currently held data
   size_t size_;           //size of currently held
 

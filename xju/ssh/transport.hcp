@@ -61,7 +61,7 @@ std::tuple<
   std::string, //ssh version
   std::string, //software version
   std::string, //comment
-  std::deque<uint8_t> //remaining data
+  xju::ByteBuffer //remaining data
   > readIdentificationString(
     xju::io::IStream& connection,
     std::chrono::steady_clock::time_point const& deadline)
@@ -73,9 +73,9 @@ std::tuple<
   try{
     xju::io::istr s(connection,deadline);
     std::string x;
-    for(x=xju::io::readThrough(s,"\r\n");
+    for(x=xju::readThrough(s,"\r\n");
         !xju::startsWith(x,"SSH-");
-        xju::io::readThrough(s,"\r\n"))
+        xju::readThrough(s,"\r\n"))
     {
       preamble.push_back(xju::Utf8String(std::string(x.begin(),x.end()-2)));
     }
@@ -84,10 +84,26 @@ std::tuple<
     std::string sshVersion(REVISIT);
     std::string softwareVersion(REVISIT);
     std::string comment(REVISIT);
-    return std::make_tuple(preamble,sshVersion,softwareVersion,comment);
+    return std::make_tuple(preamble,
+                           sshVersion,
+                           softwareVersion,
+                           comment,
+                           s.getRemainingData());
   }
   catch(xju::Exception& e){
-    @@@;
+    std::ostringstream s;
+    s << "read SSH identification string from " << connection
+      << " having read " << preamble.size() << " preamble lines: "
+      << xju::format::join(preamble.begin(),
+                           preamble.end(),
+                           [](auto const& x){
+                             return xju::format::quote(
+                               xju::format::cEscapeString(x));
+                           },
+                           ", ");
+
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
   }
 }
 

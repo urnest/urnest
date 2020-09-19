@@ -1,0 +1,106 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <iostream>
+#include <xju/io/IStream.hh>
+#include <chrono>
+#include <xju/ByteBuffer.hh>
+#include <xju/DeadlineReached.hh> //impl
+#include <sstream> //impl
+#include <xju/io/select.hh> //impl
+#include <xju/steadyNow.hh> //impl
+
+namespace xju
+{
+namespace io
+{
+
+class istr : private std::streambuf,public std::istream
+{
+public:
+  istr(xju::io::IStream& x,
+       std::chrono::steady_clock::time_point deadline,
+       xju::ByteBuffer initialData=xju::ByteBuffer(512)) noexcept:
+      std::istream(this),
+      x_(x),
+      deadline_(std::move(deadline)),
+      data_(std::move(initialData))
+  {
+    setg();
+    exceptions(std::istream::failbit |
+               std::istream::badbit |
+               std::istream::eofbit);
+  }
+
+  class DeadlineOverride
+  {
+  public:
+    // override s deadline for lifetime of this
+    DeadlineOverride(istr& s,
+                     std::chrono::steady_clock::time_point deadline):
+        s_(s),
+        old_(s.deadline_)
+    {
+      s.deadline_=deadline;
+    }
+    ~DeadlineOverride() noexcept
+    {
+      s_.deadline_=old_;
+    }
+  private:
+    istr& s_;
+    std::chrono::steady_clock::time_point const old_;
+  };
+
+  //post: *this unusable
+  xju::ByteBuffer getRemainingData() noexcept{
+    return std::move(data_);
+  }
+protected:
+  //std::streambuf::
+  int underflow() override
+  // xju::Exception
+  {
+    try{
+      data_.clear();
+      auto const space(data_.contigSpace());
+      xju::io::select({&x_},deadline_);
+      data_.appended(x_.read(space.first,space.second,xju::steadyNow()));
+      if (data_.size()==0){
+        throw xju::DeadlineReached(xju::Exception("deadline reached",XJU_TRACED));
+      }
+      return *setg();
+    }
+    catch(xju::Exception& e)
+    {
+      std::ostringstream s;
+      s << "read some data into " << x_ << " by deadline";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+private:
+  xju::io::IStream& x_;
+  std::chrono::steady_clock::time_point deadline_;
+  xju::ByteBuffer data_;
+
+  uint8_t* setg() noexcept
+  {
+    auto const data(data_.contigData());
+    std::streambuf::setg((char*)data.first,
+                         (char*)data.first,
+                         (char*)data.first+data.second);
+    return data.first;
+  }
+};
+
+}
+}
