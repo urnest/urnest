@@ -73,9 +73,9 @@ std::tuple<
   try{
     xju::io::istr s(connection,deadline);
     std::string x;
-    for(x=xju::io::readThrough(s,"\r\n");
+    for(x=xju::readThrough(s,"\r\n");
         !xju::startsWith(x,"SSH-");
-        xju::io::readThrough(s,"\r\n"))
+        xju::readThrough(s,"\r\n"))
     {
       preamble.push_back(xju::Utf8String(std::string(x.begin(),x.end()-2)));
     }

@@ -9,6 +9,7 @@
 ()+cmd=(test-FileReader.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-FileWriter.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-FileLock.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-istr.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 %hcp-gen==.:dir.hcp.list+G+hpath='xju/io':hcp-split-virdir-specs:cat:vir_dir
 
