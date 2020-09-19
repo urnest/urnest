@@ -59,7 +59,11 @@ public:
     istr& s_;
     std::chrono::steady_clock::time_point const old_;
   };
-  
+
+  //post: *this unusable
+  xju::ByteBuffer getRemainingData() noexcept{
+    return std::move(data_);
+  }
 protected:
   //std::streambuf::
   int underflow() override
