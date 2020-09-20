@@ -477,6 +477,7 @@ PR alpha() throw();
 PR cr() throw();
 PR lf() throw();
 PR crlf() throw();
+PR usAsciiPrintable() throw(); // 32-127 per US ASCII, ANSI X3.4-1986 (ISO 646)
 
 // rest are C++-specific
 PR doubleSlash() throw(); // "//"
