@@ -12,98 +12,187 @@
 #include <iostream>
 #include <xju/assert.hh>
 #include <xju/pipe.hh>
-#include <xju/async.hh>
-#include <xju/steadyEternity.hh>
-#include <xju/steadyNow.hh>
-#include <xju/DeadlineReached.hh>
-#include <xju/io/Output.hh>
 #include <signal.h>
+#include <sstream>
 
 namespace xju
 {
 namespace ssh
 {
-using namespace std::chrono_literals;
-
 void test1() {
-  // sendIdentificationString
+  // writeIdentificationString
   {
-    auto p(xju::pipe(true,true));
-    xju::async([&](){
-                 return transport::sendIdentificationString(
-                   *p.second,
-                   "fred's-ssh-2.6",
-                   "better than all the rest",
-                   xju::steadyEternity());
-               });
-    std::vector<char> buffer;
-    buffer.resize(1024);
-    xju::io::select({p.first.get()},xju::steadyNow()+1s);
-    buffer.resize(p.first->read(&buffer[0],buffer.size(),xju::steadyNow()+50ms));
+    std::ostringstream s;
+    transport::writeIdentificationString(
+      s,
+      transport::SoftwareVersion("fred's-ssh-2.6"),
+      "slower than all the rest");
+    std::string const buffer(s.str());
     xju::assert_equal(std::string(buffer.begin(),buffer.end()),
-                      "SSH-2.0-fred's-ssh-2.6 better than all the rest\r\n");
+                      "SSH-2.0-fred's-ssh-2.6 slower than all the rest\r\n");
   }
   {
-    auto p(xju::pipe(true,true));
-    xju::async([&](){
-                 return transport::sendIdentificationString(
-                   *p.second,
-                   "fred's-ssh-2.6",
-                   std::string(),
-                   xju::steadyEternity());
-               });
-    std::vector<char> buffer;
-    buffer.resize(1024);
-    xju::io::select({p.first.get()},xju::steadyNow()+1s);
-    buffer.resize(p.first->read(&buffer[0],buffer.size(),xju::steadyNow()+50ms));
+    std::ostringstream s;
+    transport::writeIdentificationString(
+      s,
+      transport::SoftwareVersion("fred's-ssh-2.6"),
+      std::string());
+    std::string const buffer(s.str());
     xju::assert_equal(std::string(buffer.begin(),buffer.end()),
                       "SSH-2.0-fred's-ssh-2.6\r\n");
   }
+}
+void test2()
+{
+  // identParser
   {
-    auto p(xju::pipe(true,true));
-    while(xju::io::select({p.second.get()}, xju::steadyNow()).size()){
-      std::string x("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-      p.second->write(x.c_str(),x.size(),xju::steadyNow());
-    }
-    try{
-      transport::sendIdentificationString(
-        *p.second,
-        "fred's-ssh-2.6",
-        std::string(),
-        xju::steadyNow()+50ms);
-    }
-    catch(xju::DeadlineReached const& e){
-      xju::assert_startswith(readableRepr(e),
-                             std::string("Failed to write SSH identification string \"SSH-2.0-fred's-ssh-2.6\\r\\n\" because\nfailed to write 24 more bytes, having written 0, to writeable end of pipe (file descriptor"));
-      xju::assert_endswith(readableRepr(e),
-                           std::string(") by deadline because\ndeadline reached."));
-    }
+    std::string const x("SSH-2.0-fred's_ssh_2.6 slower than all the rest\r\n");
+    auto const y=hcp_parser::parseString(x.begin(),x.end(),
+                                         ssh::transport::identParser());
+    xju::assert_equal(
+      hcp_ast::reconstruct(
+        hcp_ast::findOnlyChildOfType<ssh::transport::SSHVersionItem>(y)),
+      "2.0");
+    xju::assert_equal(
+      hcp_ast::reconstruct(
+        hcp_ast::findOnlyChildOfType<ssh::transport::SoftwareVersionItem>(y)),
+      "fred's_ssh_2.6");
+    xju::assert_equal(
+      hcp_ast::reconstruct(
+        hcp_ast::findOnlyChildOfType<ssh::transport::IdentCommentItem>(y)),
+      "slower than all the rest");
   }
   {
-    sigset_t ss;
-    sigemptyset(&ss);
-    sigaddset(&ss,SIGPIPE);
-    sigprocmask(SIG_BLOCK,&ss,0);
+    std::string const x("SSH-2.0-fred's_ssh_2.6 \r\n");
+    auto const y=hcp_parser::parseString(x.begin(),x.end(),
+                                         ssh::transport::identParser());
+    xju::assert_equal(
+      hcp_ast::reconstruct(
+        hcp_ast::findOnlyChildOfType<ssh::transport::SSHVersionItem>(y)),
+      "2.0");
+    xju::assert_equal(
+      hcp_ast::reconstruct(
+        hcp_ast::findOnlyChildOfType<ssh::transport::SoftwareVersionItem>(y)),
+      "fred's_ssh_2.6");
+    xju::assert_equal(
+      hcp_ast::reconstruct(
+        hcp_ast::findOnlyChildOfType<ssh::transport::IdentCommentItem>(y)),
+      "");
   }
   {
-    auto p(xju::pipe(true,true));
-    while(xju::io::select({p.second.get()}, xju::steadyNow()).size()){
-      std::string x("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-      p.second->write(x.c_str(),x.size(),xju::steadyNow());
-    }
-    p.first.reset();
+    std::string const x("SSH-2.0- \r\n");
+    auto const y=hcp_parser::parseString(x.begin(),x.end(),
+                                         ssh::transport::identParser());
+    xju::assert_equal(
+      hcp_ast::reconstruct(
+        hcp_ast::findOnlyChildOfType<ssh::transport::SSHVersionItem>(y)),
+      "2.0");
+    xju::assert_equal(
+      hcp_ast::reconstruct(
+        hcp_ast::findOnlyChildOfType<ssh::transport::SoftwareVersionItem>(y)),
+      "");
+    xju::assert_equal(
+      hcp_ast::reconstruct(
+        hcp_ast::findOnlyChildOfType<ssh::transport::IdentCommentItem>(y)),
+      "");
+  }
+  {
+    std::string const x("SSH-1.99-\r\n");
+    auto const y=hcp_parser::parseString(x.begin(),x.end(),
+                                         ssh::transport::identParser());
+    xju::assert_equal(
+      hcp_ast::reconstruct(
+        hcp_ast::findOnlyChildOfType<ssh::transport::SSHVersionItem>(y)),
+      "1.99");
+    xju::assert_equal(
+      hcp_ast::reconstruct(
+        hcp_ast::findOnlyChildOfType<ssh::transport::SoftwareVersionItem>(y)),
+      "");
+    xju::assert_equal(
+      hcp_ast::reconstruct(
+        hcp_ast::findOnlyChildOfType<ssh::transport::IdentCommentItem>(y)),
+      "");
+  }
+  try
+  {
+    std::string const x("SSH-2.0\r\n");
+    auto const y=hcp_parser::parseString(x.begin(),x.end(),
+                                         ssh::transport::identParser());
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal(readableRepr(e),"Failed to parse SSH version at line 1 column 5 because\nfailed to parse one of chars ' '..'\\0177' at line 1 column 8 because\nline 1 column 8: '\\r' is not one of chars ' '..'\\0177'.");
+  }
+  try
+  {
+    std::string const x("SSH-2.0-f\t1\r\n");
+    auto const y=hcp_parser::parseString(x.begin(),x.end(),
+                                         ssh::transport::identParser());
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal(readableRepr(e),"Failed to parse software version at line 1 column 9 because\nfailed to parse one of chars ' '..'\\0177' at line 1 column 10 because\nline 1 column 10: '\\t' is not one of chars ' '..'\\0177'.");
+  }
+}
+void test3() {
+  // readIdentificationString
+  {
+    std::ostringstream s;
+    transport::writeIdentificationString(
+      s,
+      transport::SoftwareVersion("fred's_ssh_2.6"),
+      "slower than all the rest");
+    std::istringstream si(s.str());
+    auto const y(transport::readIdentificationString(si));
+    xju::assert_equal(
+      std::get<0>(y),
+      std::vector<std::string>());
+    xju::assert_equal(
+      std::get<1>(y),
+      transport::SSHVersion("2.0"));
+    xju::assert_equal(
+      std::get<2>(y),
+      transport::SoftwareVersion("fred's_ssh_2.6"));
+    xju::assert_equal(
+      std::get<3>(y),
+      std::string("slower than all the rest"));
+  }
+  {
+    std::ostringstream s;
+    s << "preamble 1\r\n";
+    s << "preamble 2\r\n";
+    transport::writeIdentificationString(
+      s,
+      transport::SoftwareVersion("fred's_ssh_2.6"),
+      "slower than all the rest");
+    std::istringstream si(s.str());
+    auto const y(transport::readIdentificationString(si));
+    xju::assert_equal(
+      std::get<0>(y),
+      std::vector<std::string>({std::string("preamble 1"),
+                                std::string("preamble 2")}));
+    xju::assert_equal(
+      std::get<1>(y),
+      transport::SSHVersion("2.0"));
+    xju::assert_equal(
+      std::get<2>(y),
+      transport::SoftwareVersion("fred's_ssh_2.6"));
+    xju::assert_equal(
+      std::get<3>(y),
+      std::string("slower than all the rest"));
+  }
+  {
+    std::ostringstream s;
+    s << "preamble 1\r\n";
+    s << "preamble 2\r\n";
+    s << "SSH-2.0-incomplete";
+    std::istringstream si(s.str());
     try{
-      transport::sendIdentificationString(
-        *p.second,
-        "fred's-ssh-2.6",
-        std::string(),
-        xju::steadyNow()+50ms);
+      auto const y(transport::readIdentificationString(si));
+      xju::assert_never_reached();
     }
-    catch(xju::io::Output::Closed const& e){
-      xju::assert_startswith(readableRepr(e),
-                             std::string("Failed to write SSH identification string \"SSH-2.0-fred's-ssh-2.6\\r\\n\" because\nfailed to write 24 more bytes, having written 0, to writeable end of pipe (file descriptor"));
-      xju::assert_endswith(readableRepr(e),
-                           std::string(") closed."));
+    catch(xju::Exception const& e){
+      xju::assert_equal(readableRepr(e),"Failed to read SSH identification string from istream having read 2 preamble lines: \"preamble 1\", \"preamble 2\" because\nfailed to read stream until \"\\r\\n\" reading at most 255 chars because\nbasic_ios::clear: iostream error.");
     }
   }
 }
@@ -117,6 +206,8 @@ int main(int argc, char* argv[])
 {
   unsigned int n(0);
   test1(), ++n;
+  test2(), ++n;
+  test3(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

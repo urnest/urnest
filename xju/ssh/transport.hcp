@@ -9,11 +9,17 @@
 //
 
 
-#include <xju/io/OStream.hh>
 #include <string>
-#include <chrono>
 #include <sstream> //impl
 #include <xju/format.hh> //impl
+#include <hcp/ast.hh>
+#include <hcp/parser.hh>
+#include <xju/Tagged.hh>
+#include <xju/Utf8String.hh>
+#include <xju/readThrough.hh> //impl
+#include <xju/startsWith.hh> //impl
+#include <iostream>
+#include <xju/iosthrow.hh> //impl
 
 namespace xju
 {
@@ -21,79 +27,128 @@ namespace ssh
 {
 namespace transport
 {
-namespace{
-  char const identificationLeader[]="SSH-2.0-";
+
+char const identificationLeader[]="SSH-2.0-";
+
+class SSHVersionTag{};
+typedef xju::Tagged<std::string,SSHVersionTag> SSHVersion;
+typedef hcp_ast::TaggedItem<SSHVersionTag> SSHVersionItem;
+class SoftwareVersionTag{};
+typedef xju::Tagged<std::string,SoftwareVersionTag> SoftwareVersion;
+typedef hcp_ast::TaggedItem<SoftwareVersionTag> SoftwareVersionItem;
+class IdentCommentTag{};
+typedef hcp_ast::TaggedItem<IdentCommentTag> IdentCommentItem;
+
+hcp_parser::PR identParser() noexcept
+{
+  using namespace hcp_parser;
+  PR identChars(!parseOneOfChars(" -")+usAsciiPrintable());
+  PR nullChar(charInRange(0,0));
+  PR SP(parseLiteral(" "));
+  static PR result(
+    "SSH-"+named<SSHVersionItem>("SSH version",parseUntil(identChars,"-"))+
+    "-"+named<SoftwareVersionItem>("software version",
+                                   parseUntil(identChars,crlf|SP))+
+    (named<IdentCommentItem>("comment",!SP)| //no comment
+     (SP+named<IdentCommentItem>("comment",parseUntil(!nullChar+parseAnyChar(),
+                                                      crlf))))+
+    crlf);
+  return result;
 }
+
 
 //pre: softwareVersion valid per rfc4253 'softwareversion' ie
 //     US-ASCII printable excluding whitespace and minus
-//pre: comments contains no \r or \n characters
-void sendIdentificationString(
-  xju::io::OStream& connection,
-  std::string const& softwareVersion,
-  std::string const& comments,
-  std::chrono::steady_clock::time_point const& deadline)
-// throw xju::DeadlineReached
-// throw xju::io::Output::Closed
-// throw xju::Exception
+//pre: comments contains no \r, \n or null characters
+void writeIdentificationString(
+  std::ostream& s,
+  SoftwareVersion const& softwareVersion,
+  std::string const& comments)
+// std::bad_alloc
+// xju::Exception - e.g. stream write failed
 {
-  std::ostringstream ss;
-  ss << identificationLeader << softwareVersion;
-  if (comments.size()){
-    ss << " " << comments;
-  }
-  ss << "\r\n";
-  std::string const identification(ss.str());
-  try{
-    connection.writeAll(identification.c_str(),identification.size(),deadline);
+  try
+  {
+    xju::iosthrow x(s);
+    try{
+      s << identificationLeader << softwareVersion;
+      if (comments.size()){
+        s << " " << comments;
+      }
+      s << "\r\n";
+    }
+    catch(std::bad_alloc const&)
+    {
+      throw;
+    }
+    catch(xju::Exception& e){
+      throw;
+    }
+    catch(std::exception const& e){
+      throw xju::Exception(e.what(),XJU_TRACED);
+    }
   }
   catch(xju::Exception& e){
+    std::ostringstream si;
+    writeIdentificationString(si,softwareVersion,comments);
     std::ostringstream s;
     s << "write SSH identification string "
-      << xju::format::quote(xju::format::cEscapeString(identification));
+      << xju::format::quote(xju::format::cEscapeString(si.str()));
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }
 }
 
 std::tuple<
-  std::vector<xju::Utf8String>, //preamble lines without trailing \r\n
-  std::string, //ssh version
-  std::string, //software version
-  std::string, //comment
-  xju::ByteBuffer //remaining data
-  > readIdentificationString(
-    xju::io::IStream& connection,
-    std::chrono::steady_clock::time_point const& deadline)
-// xju::DeadlineReached
-// xju::io::Closed
-// xju::Exception
+  std::vector<std::string>, //preamble lines without trailing \r\n
+  SSHVersion, //ssh version
+  SoftwareVersion, //software version
+  std::string //comment
+  > readIdentificationString(std::istream& s)
+// std::bad_alloc
+// xju::Exception - e.g. stream read failed
 {
-  std::vector<xju::Utf8String> preamble;
+  std::vector<std::string> preamble;
   try{
-    xju::io::istr s(connection,deadline);
-    std::string x;
-    for(x=xju::readThrough(s,"\r\n");
-        !xju::startsWith(x,"SSH-");
-        xju::readThrough(s,"\r\n"))
-    {
-      preamble.push_back(xju::Utf8String(std::string(x.begin(),x.end()-2)));
+    xju::iosthrow x(s);
+    try{
+      std::string x;
+      for(x=xju::readThrough(s,"\r\n",255); //255 from rfc4253
+          !xju::startsWith(x,std::string("SSH-"));
+          x=xju::readThrough(s,"\r\n",255))
+      {
+        preamble.push_back(std::string(x.begin(),x.end()-2));
+      }
+      auto const y(hcp_parser::parseString(x.begin(),x.end(),identParser()));
+      SSHVersion sshVersion(
+        hcp_ast::reconstruct(
+          hcp_ast::findOnlyChildOfType<SSHVersionItem>(y)));
+      SoftwareVersion softwareVersion(
+        hcp_ast::reconstruct(
+          hcp_ast::findOnlyChildOfType<SoftwareVersionItem>(y)));
+      std::string comment(
+        hcp_ast::reconstruct(
+          hcp_ast::findOnlyChildOfType<IdentCommentItem>(y)));
+      return std::make_tuple(preamble,
+                             sshVersion,
+                             softwareVersion,
+                             comment);
     }
-    auto const y(hcp_parser::parseString(x.begin(),x.end(),
-                                         identParser()));
-    std::string sshVersion(REVISIT);
-    std::string softwareVersion(REVISIT);
-    std::string comment(REVISIT);
-    return std::make_tuple(preamble,
-                           sshVersion,
-                           softwareVersion,
-                           comment,
-                           s.getRemainingData());
+    catch(std::bad_alloc const&)
+    {
+      throw;
+    }
+    catch(xju::Exception& e){
+      throw;
+    }
+    catch(std::exception const& e){
+      throw xju::Exception(e.what(),XJU_TRACED);
+    }
   }
   catch(xju::Exception& e){
     std::ostringstream s;
-    s << "read SSH identification string from " << connection
-      << " having read " << preamble.size() << " preamble lines: "
+    s << "read SSH identification string from istream having read "
+      << preamble.size() << " preamble lines: "
       << xju::format::join(preamble.begin(),
                            preamble.end(),
                            [](auto const& x){

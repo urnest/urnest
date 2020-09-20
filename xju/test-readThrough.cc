@@ -63,7 +63,7 @@ void test2() {
       xju::assert_never_reached();
     }
     catch(xju::Exception const& e){
-      xju::assert_equal(readableRepr(e),"Failed to read stream until \"\\r\\n\" reading at most 6 chars because\nend of file before \"\\r\\n\" amongst \"fred\\r\".");
+      xju::assert_equal(readableRepr(e),"Failed to read stream until \"\\r\\n\" reading at most 6 chars because\nbasic_ios::clear: iostream error.");
     }
   }
   {
