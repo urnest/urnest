@@ -1508,7 +1508,12 @@ PR crlf() throw()
   static PR result(parseLiteral("\r\n"));
   return result;
 }
-  
+PR usAsciiPrintable() throw()
+{
+  static PR result(charInRange(32,127));
+  return result;
+}
+
 PR parseUntil(PR match, PR const x) throw()
 {
   return PR(new ParseSpecificUntil(match, x));
