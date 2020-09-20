@@ -17,6 +17,7 @@
 #include <sstream> //impl
 #include <xju/format.hh> //impl
 #include <xju/assert.hh> //impl
+#include <xju/iosthrow.hh> //impl
 
 namespace xju
 {
@@ -26,37 +27,17 @@ namespace xju
 // post: result.endswith(term)
 // post: s positioned immediately after result
 std::string readThrough(std::istream& s,std::string const& term,size_t max)
-  /*throw(
-    // max chars exceeded or eof before term; note message includes
-    // what was read
-    xju::Exception,
-    std::bad_alloc,
-    // exception from s
-    std::exception)*/
+// std::bad_alloc
+// xju::Exception - e.g. eof or max chars before term, or read failed
 {
   try{
+    xju::iosthrow throw_(s);
     auto m{term.begin()};
     std::ostringstream result;
     size_t size{0};
     while(m!=term.end() && size<max){
       char c;
       s.get(c);
-      if (s.eof()){
-        std::ostringstream s;
-        s << "end of file before "
-          << xju::format::quote(xju::format::cEscapeString(term))
-          << " amongst "
-          << xju::format::quote(xju::format::cEscapeString(result.str()));
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
-      if (s.fail()){
-        std::ostringstream s;
-        s << "read error before "
-          << xju::format::quote(xju::format::cEscapeString(term))
-          << " amongst "
-          << xju::format::quote(xju::format::cEscapeString(result.str()));
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
       result << c;
       ++size;
       if (*m == c){
@@ -80,6 +61,9 @@ std::string readThrough(std::istream& s,std::string const& term,size_t max)
     }
     return result.str();
   }
+  catch(std::bad_alloc const&){
+    throw;
+  }
   catch(xju::Exception& e){
     std::ostringstream s;
     s << "read stream until "
@@ -87,6 +71,16 @@ std::string readThrough(std::istream& s,std::string const& term,size_t max)
       << " reading at most " << max << " chars";
     e.addContext(s.str(),XJU_TRACED);
     throw;
+  }
+  catch(std::exception const& ee)
+  {
+    xju::Exception e(ee.what(),XJU_TRACED);
+    std::ostringstream s;
+    s << "read stream until "
+      << xju::format::quote(xju::format::cEscapeString(term))
+      << " reading at most " << max << " chars";
+    e.addContext(s.str(),XJU_TRACED);
+    throw e;
   }
 }
 
