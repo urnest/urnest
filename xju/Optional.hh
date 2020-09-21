@@ -1,4 +1,3 @@
-//     -*- mode: c++ ; c-file-style: "osse" ; -*-
 //
 // Copyright (c) 2004
 // Trevor Taylor
@@ -19,129 +18,145 @@
 
 namespace xju
 {
-    template<class T>
-    class Optional
-    {
-    public:
-        Optional() noexcept:
-          x_(0)
-        {
-        }
-        Optional(T const& x):
-            x_(new(h_) T(x))
-        {
-        }
-        Optional(T&& x):
-            x_(new(h_) T(x))
-        {
-        }
-        Optional(const Optional<T>& x):
-            x_(x.valid()?new(h_) T(*x):0)
-        {
-        }
-        //REVISIT
-        // Optional(const Optional<T>&& x):
-        //     x_(x.valid()?new(h_) T(std::move(*x)):0)
-        // {
-        // }
-        bool valid() const noexcept
-        {
-            return x_!=0;
-        }
-        T& value() noexcept
-        {
-            xju::assert_not_equal(x_,(T*)0);
-            return *x_;
-        }
-        const T& value() const noexcept
-        {
-            xju::assert_not_equal(x_,(T*)0);
-            return *x_;
-        }
-        const T* get() const noexcept
-        {
-            return x_;
-        }
-        T* get() noexcept
-        {
-            return x_;
-        }
-        const T& operator*() const noexcept
-        {
-            return *x_;
-        }
-        T& operator*() noexcept
-        {
-            return *x_;
-        }
-        
-        void clear() noexcept
-        {
-            if (x_){
-                x_->~T();
-            }
-            x_=0;
-        }
-        void reset() noexcept
-        {
-            clear();
-        }
-        Optional& operator=(const T& x)
-        {
-            clear();
-            x_=new(h_) T(x);
-            return *this;
-        }
-        Optional& operator=(const Optional<T>& x)
-        {
-            if (this != &x)
-            {
-                clear();
-                if (x.get()){
-                    (*this)=*x;
-                }
-            }
-            return *this;
-        }
-        
-    private:
-        Holder<T> h_;
-        T* x_;
-    };
-    template<class T>
-    bool operator<(const Optional<T>& x, const Optional<T>& y) 
-    {
-        if (!x.valid())
-        {
-            return y.valid();
-        }
-        return y.valid() && (x.value() < y.value());
+template<class T>
+class Optional
+{
+public:
+  Optional() noexcept:
+  x_(0)
+  {
+  }
+  Optional(T const& x):
+      x_(new(h_) T(x))
+  {
+  }
+  Optional(T&& x):
+      x_(new(h_) T(x))
+  {
+  }
+  Optional(const Optional<T>& x):
+      x_(x.valid()?new(h_) T(*x):0)
+  {
+  }
+  ~Optional() noexcept
+  {
+    clear();
+  }
+  Optional(Optional<T>&& x):
+      x_(x.valid()?new(h_) T(std::move(*x)):0)
+  {
+    x.clear();
+  }
+  bool valid() const noexcept
+  {
+    return x_!=0;
+  }
+  T& value() noexcept
+  {
+    xju::assert_not_equal(x_,(T*)0);
+    return *x_;
+  }
+  const T& value() const noexcept
+  {
+    xju::assert_not_equal(x_,(T*)0);
+    return *x_;
+  }
+  const T* get() const noexcept
+  {
+    return x_;
+  }
+  T* get() noexcept
+  {
+    return x_;
+  }
+  const T& operator*() const noexcept
+  {
+    return *x_;
+  }
+  T& operator*() noexcept
+  {
+    return *x_;
+  }
+  
+  void clear() noexcept
+  {
+    if (x_){
+      x_->~T();
     }
-    template<class T>
-    bool operator>(const Optional<T>& x, const Optional<T>& y)
+    x_=0;
+  }
+  void reset() noexcept
+  {
+    clear();
+  }
+  Optional& operator=(const T& x)
+  {
+    clear();
+    x_=new(h_) T(x);
+    return *this;
+  }
+  Optional& operator=(const Optional<T>& x)
+  {
+    if (this != &x)
     {
-        return y < x;
+      clear();
+      if (x.get()){
+        (*this)=*x;
+      }
     }
-    template<class T>
-    bool operator!=(const Optional<T>& x, const Optional<T>& y)
+    return *this;
+  }
+  Optional& operator=(Optional<T>&& x)
+  {
+    if (this != &x)
     {
-        return x < y || x > y;
+      clear();
+      if (x.get()){
+        (*this)=std::move(*x);
+        x.clear();
+      }
     }
-    template<class T>
-    bool operator==(const Optional<T>& x, const Optional<T>& y)
-    {
-        return !(x != y);
-    }
-    template<class T>
-    bool operator>=(const Optional<T>& x, const Optional<T>& y)
-    {
-        return !(x < y);
-    }
-    template<class T>
-    bool operator<=(const Optional<T>& x, const Optional<T>& y)
-    {
-        return !(x > y);
-    }
+    return *this;
+  }
+  
+private:
+  Holder<T> h_;
+  T* x_;
+};
+template<class T>
+bool operator<(const Optional<T>& x, const Optional<T>& y) 
+{
+  if (!x.valid())
+  {
+    return y.valid();
+  }
+  return y.valid() && (x.value() < y.value());
+}
+template<class T>
+bool operator>(const Optional<T>& x, const Optional<T>& y)
+{
+  return y < x;
+}
+template<class T>
+bool operator!=(const Optional<T>& x, const Optional<T>& y)
+{
+  return x < y || x > y;
+}
+template<class T>
+bool operator==(const Optional<T>& x, const Optional<T>& y)
+{
+  return !(x != y);
+}
+template<class T>
+bool operator>=(const Optional<T>& x, const Optional<T>& y)
+{
+  return !(x < y);
+}
+template<class T>
+bool operator<=(const Optional<T>& x, const Optional<T>& y)
+{
+  return !(x > y);
+}
 }
 
 #endif

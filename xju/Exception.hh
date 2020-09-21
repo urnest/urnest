@@ -1,4 +1,3 @@
-//     -*- mode: c++ ; c-file-style: "osse" ;  -*-
 //
 // Copyright (c) 2007 Trevor Taylor
 //
@@ -97,6 +96,15 @@ namespace xju
                 _cause=x._cause;
                 _context=x._context;
                 what_=std::string();
+            }
+            return *this;
+        }
+        Exception& operator=(Exception && x) throw()
+        {
+            if (this != &x) {
+                _cause=std::move(x._cause);
+                _context=std::move(x._context);
+                what_=std::move(x.what_);
             }
             return *this;
         }
