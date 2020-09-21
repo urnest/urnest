@@ -22,6 +22,14 @@ struct B
   uint8_t x_;
 };
 
+struct C{
+  C():
+      x_("fred")
+  {
+  }
+  std::string x_;
+};
+
 }
 
 void test1() {
@@ -54,6 +62,25 @@ void test1() {
 
   Optional<B> z;
   z=B(8);
+
+  {
+    C c1;
+    xju::assert_equal(c1.x_,"fred");
+    C c2(std::move(c1));
+    xju::assert_equal(c1.x_,"");
+    xju::assert_equal(c2.x_,"fred");
+    Optional<C> x(c2);
+    xju::assert_equal(x.valid(),true);
+    xju::assert_equal(x.value().x_,"fred");
+    Optional<C> y(std::move(x));
+    xju::assert_equal(x.valid(),false);
+    xju::assert_equal(y.valid(),true);
+    xju::assert_equal(y.value().x_,"fred");
+    x=std::move(y);
+    xju::assert_equal(y.valid(),false);
+    xju::assert_equal(x.valid(),true);
+    xju::assert_equal(x.value().x_,"fred");
+  }
 }
 
 }
