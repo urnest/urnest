@@ -23,7 +23,8 @@ namespace xju
 class StrOBuf : public OBuf
 {
 public:
-  // buffer up to max bytes, extending storage space from 0 by inc as needed
+  // buffer up to max bytes, extending storage space from 0 in inc-sized
+  // increments as needed
   StrOBuf(
     size_t const inc,
     size_t const max=std::numeric_limits<size_t>::max()) noexcept:
@@ -42,9 +43,11 @@ public:
   // OBuf::
   // - extends buffer iff it is full and not at max size
   // - returned range empty means we are at max size
+  // - note use flush(0) initially
   virtual std::pair<uint8_t*,uint8_t*> flush(uint8_t* to) override
   // bad_alloc
   {
+    xju::assert_less_equal(to,end());
     if (to>mark()){
       valid_=to-begin();
     }
