@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/StrIBuf.hh>
+#include <xju/MemIBuf.hh>
 
 #include <iostream>
 #include <xju/assert.hh>
@@ -16,7 +16,8 @@ namespace xju
 {
 
 void test1() {
-  StrIBuf x("onetwothree",3);
+  std::string const v("onetwothree");
+  MemIBuf x(v.begin(),v.end(),3);
   auto y(x.underflow());
   xju::assert_equal(y.second-y.first,3U);
   xju::assert_equal(std::string(y.first,y.second),"one");

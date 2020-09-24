@@ -10,22 +10,22 @@
 
 
 #include <unistd.h>
-#include <string>
 #include <xju/assert.hh> //impl
 #include <algorithm> //impl
 #include <utility>
 #include <limits>
 #include <xju/OBuf.hh>
+#include <vector>
 
 namespace xju
 {
 
-class StrOBuf : public OBuf
+class MemOBuf : public OBuf
 {
 public:
   // buffer up to max bytes, extending storage space from 0 in inc-sized
   // increments as needed
-  StrOBuf(
+  MemOBuf(
     size_t const inc,
     size_t const max=std::numeric_limits<size_t>::max()) noexcept:
       inc_(inc),
@@ -36,9 +36,10 @@ public:
   // content flushed-so-far
   // - note this does not include bytes "added" since last flush()
   // - result is valid until next flush
-  std::pair<std::string::const_iterator,std::string::const_iterator> str() const noexcept
+  std::pair<std::vector<uint8_t>::const_iterator,
+            std::vector<uint8_t>::const_iterator> data() const noexcept
   {
-    return std::make_pair(str_.begin(),str_.begin()+valid_);
+    return std::make_pair(buf_.begin(),buf_.begin()+valid_);
   }
   // OBuf::
   // - extends buffer iff it is full and not at max size
@@ -52,8 +53,8 @@ public:
       valid_=to-begin();
     }
     if (mark()==end()){
-      auto const extra(std::min(inc_,max_-str_.size()));
-      str_.resize(str_.size()+extra);
+      auto const extra(std::min(inc_,max_-buf_.size()));
+      buf_.resize(buf_.size()+extra);
     }
     return std::make_pair(mark(),end());
   }
@@ -61,12 +62,15 @@ public:
 private:
   size_t const inc_;
   size_t const max_;
-  std::string str_;
+  std::vector<uint8_t> buf_;
   size_t valid_;
   
-  inline uint8_t* begin() const noexcept{return (uint8_t*)&str_[0];}
-  inline uint8_t* mark() const noexcept {return begin()+valid_;}
-  inline uint8_t* end() const noexcept  {return begin()+str_.size();}
+  inline uint8_t const* begin() const noexcept{return &buf_[0];}
+  inline uint8_t*       begin()       noexcept{return &buf_[0];}
+  inline uint8_t const* mark() const noexcept {return begin()+valid_;}
+  inline uint8_t*       mark()       noexcept {return begin()+valid_;}
+  inline uint8_t const* end() const noexcept  {return begin()+buf_.size();}
+  inline uint8_t*       end()       noexcept  {return begin()+buf_.size();}
 };
 
 }

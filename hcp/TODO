@@ -15,6 +15,13 @@ x handle using base class method/member
    
 - parseString needs context
 
+- import-symbol-at does not work for numeric_limits in:
+  explicit MemIBuf(std::vector<uint8_t> data,
+                   size_t inc=std::numeric_limits<size_t>::max()) noexcept:
+      inc_(inc)
+  {
+  }
+
 x hcp-tags does not get e.g. xju::recvmsg
   (it is ExternVarDef)
 x rework parseOneOfChars to allow correct error message
