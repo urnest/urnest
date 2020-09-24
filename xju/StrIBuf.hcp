@@ -1,0 +1,52 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/IBuf.hh>
+#include <string>
+#include <unistd.h>
+#include <algorithm> //impl
+#include <utility>
+
+namespace xju
+{
+
+class StrIBuf : public IBuf
+{
+public:
+  // provide data in blocks of size inc
+  // - last block might be smaller
+  explicit StrIBuf(std::string data,
+                   size_t inc=std::numeric_limits<size_t>::max()) noexcept:
+      data_(std::move(data)),
+      rem_(data_.size()),
+      inc_(inc)
+  {
+  }
+  // IBuf::
+  // post: result.second-result.first<=inc
+  std::pair<uint8_t const*,uint8_t const*> underflow() override
+  {
+    auto const inc(std::min(inc_,(size_t)(end()-mark())));
+    auto const result(
+      std::make_pair(mark(),mark()+inc));
+    rem_-=inc;
+    return result;
+  }
+
+private:
+  std::string const data_;
+  size_t const inc_;
+  size_t rem_;
+  inline uint8_t* end() noexcept{ return (uint8_t*)&data_[data_.size()];}
+  inline uint8_t* mark() noexcept{ return end()-rem_; }
+};
+
+}
