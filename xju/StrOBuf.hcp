@@ -23,7 +23,8 @@ namespace xju
 class StrOBuf : public OBuf
 {
 public:
-  // buffer up to max bytes, extending storage space from 0 by inc as needed
+  // buffer up to max bytes, extending storage space from 0 in inc-sized
+  // increments as needed
   StrOBuf(
     size_t const inc,
     size_t const max=std::numeric_limits<size_t>::max()) noexcept:
@@ -34,35 +35,38 @@ public:
   }
   // content flushed-so-far
   // - note this does not include bytes "added" since last flush()
-  // - result is valid until next flush that extends buffer
+  // - result is valid until next flush
   std::pair<std::string::const_iterator,std::string::const_iterator> str() const noexcept
   {
     return std::make_pair(str_.begin(),str_.begin()+valid_);
   }
-  // flush count bytes of data
-  // - extends buffer iff it is then full and not at max size
-  // - returned range might be empty, i.e. we are at max size
-  // - flush(0) returns current free space
-  // - pre: count < flush(0).second-flush(0).first
   // OBuf::
-  virtual std::pair<uint8_t*,uint8_t*> flush(size_t const count) override
+  // - extends buffer iff it is full and not at max size
+  // - returned range empty means we are at max size
+  // - note use flush(0) initially
+  virtual std::pair<uint8_t*,uint8_t*> flush(uint8_t* to) override
   // bad_alloc
   {
-    xju::assert_less_equal(count,str_.size()-valid_);
-    valid_+=count;
-    if (valid_==str_.size()){
+    xju::assert_less_equal(to,end());
+    if (to>mark()){
+      valid_=to-begin();
+    }
+    if (mark()==end()){
       auto const extra(std::min(inc_,max_-str_.size()));
       str_.resize(str_.size()+extra);
     }
-    return std::make_pair((uint8_t*)&str_[valid_],
-                          (uint8_t*)&str_[str_.size()]);
+    return std::make_pair(mark(),end());
   }
   
 private:
-  size_t inc_;
-  size_t max_;
+  size_t const inc_;
+  size_t const max_;
   std::string str_;
   size_t valid_;
+  
+  inline uint8_t* begin() const noexcept{return (uint8_t*)&str_[0];}
+  inline uint8_t* mark() const noexcept {return begin()+valid_;}
+  inline uint8_t* end() const noexcept  {return begin()+str_.size();}
 };
 
 }
