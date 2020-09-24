@@ -10,6 +10,7 @@ uri%tests.tree
 json%tests.tree
 utf8%tests.tree
 ip%tests.tree
+net%tests.tree
 ssh%tests.tree
 test%tests.tree
 %tags
@@ -56,6 +57,7 @@ test%tests.tree
 ()+cmd=(test-stringToInt.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-stringToTime.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-stringToUInt.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-StrOBuf.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-Subprocess.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-syscall.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-strip.cc+(..%cxx-opts):auto.cxx.exe):exec.output
@@ -116,6 +118,7 @@ done
 %test==./test/Odinfile%hcp-gen
 %netflow==./netflow/Odinfile%hcp-gen
 %linux==./linux/Odinfile%hcp-gen
+%net==./net/Odinfile%hcp-gen
 %ssh==./ssh/Odinfile%hcp-gen
 %tls==tls/Odinfile%hcp-gen
 
@@ -153,6 +156,7 @@ json%tags
 utf8%tags
 test%tags
 linux%tags
+net%tags
 ssh%tags
 tls%tags
 
