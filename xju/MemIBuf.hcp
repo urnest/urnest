@@ -10,22 +10,31 @@
 
 
 #include <xju/IBuf.hh>
-#include <string>
 #include <unistd.h>
 #include <algorithm> //impl
 #include <utility>
+#include <vector>
+#include <limits>
 
 namespace xju
 {
 
-class StrIBuf : public IBuf
+class MemIBuf : public IBuf
 {
 public:
   // provide data in blocks of size inc
   // - last block might be smaller
-  explicit StrIBuf(std::string data,
+  explicit MemIBuf(std::vector<uint8_t> data,
                    size_t inc=std::numeric_limits<size_t>::max()) noexcept:
       data_(std::move(data)),
+      rem_(data_.size()),
+      inc_(inc)
+  {
+  }
+  template<class InputIterator>
+  MemIBuf(InputIterator begin, InputIterator end,
+          size_t inc=std::numeric_limits<size_t>::max()):
+      data_(begin,end),
       rem_(data_.size()),
       inc_(inc)
   {
@@ -35,17 +44,16 @@ public:
   std::pair<uint8_t const*,uint8_t const*> underflow() override
   {
     auto const inc(std::min(inc_,(size_t)(end()-mark())));
-    auto const result(
-      std::make_pair(mark(),mark()+inc));
+    auto const result(std::make_pair(mark(),mark()+inc));
     rem_-=inc;
     return result;
   }
 
 private:
-  std::string const data_;
+  std::vector<uint8_t> const data_;
   size_t const inc_;
   size_t rem_;
-  inline uint8_t* end() noexcept{ return (uint8_t*)&data_[data_.size()];}
+  inline uint8_t* end() noexcept{ return &data_[data_.size()];}
   inline uint8_t* mark() noexcept{ return end()-rem_; }
 };
 

@@ -57,8 +57,8 @@ test%tests.tree
 ()+cmd=(test-stringToInt.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-stringToTime.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-stringToUInt.cc+(..%cxx-opts):auto.cxx.exe):exec.output
-()+cmd=(test-StrIBuf.cc+(..%cxx-opts):auto.cxx.exe):exec.output
-()+cmd=(test-StrOBuf.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-MemIBuf.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-MemOBuf.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-Subprocess.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-syscall.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-strip.cc+(..%cxx-opts):auto.cxx.exe):exec.output

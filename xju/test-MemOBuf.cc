@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/StrOBuf.hh>
+#include <xju/MemOBuf.hh>
 
 #include <iostream>
 #include <xju/assert.hh>
@@ -18,28 +18,30 @@ namespace xju
 
 void test1() {
   {
-    StrOBuf x(5,12);
+    MemOBuf x(5,12);
     auto space=x.flush(0);
     xju::assert_equal(space.second-space.first,5U);
     std::string four("four");
     space.first=std::copy(four.begin(),four.end(),space.first);
     space=x.flush(space.first);
-    xju::assert_equal(std::string(x.str().first,x.str().second),four);
+    xju::assert_equal(std::string(x.data().first,x.data().second),four);
     xju::assert_equal(space.second-space.first,1U);
     *space.first++=',';
     space=x.flush(space.first);
-    xju::assert_equal(std::string(x.str().first,x.str().second),four+",");
+    xju::assert_equal(std::string(x.data().first,x.data().second),four+",");
     xju::assert_equal(space.second-space.first,5U);
     std::string const five(" five");
     space.first=std::copy(five.begin(),five.end(),space.first);
     xju::assert_equal(space.first,space.second);
     space=x.flush(space.first);
-    xju::assert_equal(std::string(x.str().first,x.str().second),"four, five");
+    xju::assert_equal(std::string(x.data().first,
+                                  x.data().second),"four, five");
     xju::assert_equal(space.second-space.first,2U);
     std::string const seven("67");
     space.first=std::copy(seven.begin(),seven.end(),space.first);
     space=x.flush(space.first);
-    xju::assert_equal(std::string(x.str().first,x.str().second),"four, five67");
+    xju::assert_equal(std::string(x.data().first,
+                                  x.data().second),"four, five67");
     xju::assert_equal(space.second-space.first,0U);
   }
 }
