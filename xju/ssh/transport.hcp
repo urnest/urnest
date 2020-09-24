@@ -16,10 +16,9 @@
 #include <hcp/parser.hh>
 #include <xju/Tagged.hh>
 #include <xju/Utf8String.hh>
-#include <xju/readThrough.hh> //impl
 #include <xju/startsWith.hh> //impl
-#include <iostream>
-#include <xju/iosthrow.hh> //impl
+#include <xju/net/istream.hh>
+#include <xju/net/ostream.hh>
 
 namespace xju
 {
@@ -28,7 +27,7 @@ namespace ssh
 namespace transport
 {
 
-char const identificationLeader[]="SSH-2.0-";
+std::string const identificationLeader{"SSH-2.0-"};
 
 class SSHVersionTag{};
 typedef xju::Tagged<std::string,SSHVersionTag> SSHVersion;
@@ -61,40 +60,29 @@ hcp_parser::PR identParser() noexcept
 //     US-ASCII printable excluding whitespace and minus
 //pre: comments contains no \r, \n or null characters
 void writeIdentificationString(
-  std::ostream& s,
+  xju::net::ostream& s,
   SoftwareVersion const& softwareVersion,
   std::string const& comments)
 // std::bad_alloc
-// xju::Exception - e.g. stream write failed
+// other - stream write failed
 {
   try
   {
-    xju::iosthrow x(s);
-    try{
-      s << identificationLeader << softwareVersion;
-      if (comments.size()){
-        s << " " << comments;
-      }
-      s << "\r\n";
+    s.put(std::begin(identificationLeader),std::end(identificationLeader))
+      .put(softwareVersion.begin(),softwareVersion.end());
+    if (comments.size()){
+      s.put8(' ').put(comments.begin(),comments.end());
     }
-    catch(std::bad_alloc const&)
-    {
-      throw;
-    }
-    catch(xju::Exception& e){
-      throw;
-    }
-    catch(std::exception const& e){
-      throw xju::Exception(e.what(),XJU_TRACED);
-    }
+    s.put8('\r').put8('\n');
   }
   catch(xju::Exception& e){
-    std::ostringstream si;
-    writeIdentificationString(si,softwareVersion,comments);
     std::ostringstream s;
-    s << "write SSH identification string "
-      << xju::format::quote(xju::format::cEscapeString(si.str()));
-    e.addContext(s.str(),XJU_TRACED);
+    s << identificationLeader
+      << softwareVersion
+      << (comments.size():" ":"") << comments;
+    e.addContext(
+      "write SSH identification string " +
+      xju::format::quote(xju::format::cEscapeString(s.str()),XJU_TRACED));
     throw;
   }
 }
@@ -104,18 +92,16 @@ std::tuple<
   SSHVersion, //ssh version
   SoftwareVersion, //software version
   std::string //comment
-  > readIdentificationString(std::istream& s)
+  > readIdentificationString(xju::net::istream& s)
 // std::bad_alloc
 // xju::Exception - e.g. stream read failed
 {
   std::vector<std::string> preamble;
   try{
-    xju::iosthrow x(s);
-    try{
-      std::string x;
-      for(x=xju::readThrough(s,"\r\n",255); //255 from rfc4253
-          !xju::startsWith(x,std::string("SSH-"));
-          x=xju::readThrough(s,"\r\n",255))
+    std::string x;
+    for(x=s.readThrough("\r\n",255); //255 from rfc4253
+        !xju::startsWith(x,std::string("SSH-"));
+        x=s.readThrough("\r\n",255))
       {
         preamble.push_back(std::string(x.begin(),x.end()-2));
       }
@@ -133,17 +119,6 @@ std::tuple<
                              sshVersion,
                              softwareVersion,
                              comment);
-    }
-    catch(std::bad_alloc const&)
-    {
-      throw;
-    }
-    catch(xju::Exception& e){
-      throw;
-    }
-    catch(std::exception const& e){
-      throw xju::Exception(e.what(),XJU_TRACED);
-    }
   }
   catch(xju::Exception& e){
     std::ostringstream s;

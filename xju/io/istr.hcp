@@ -14,7 +14,6 @@
 #include <chrono>
 #include <xju/ByteBuffer.hh>
 #include <xju/DeadlineReached.hh> //impl
-#include <sstream> //impl
 #include <xju/io/select.hh> //impl
 #include <xju/steadyNow.hh> //impl
 
@@ -23,7 +22,7 @@ namespace xju
 namespace io
 {
 
-class istr : private std::streambuf,public std::istream
+class istr : public xju::net::istream
 {
 public:
   istr(xju::io::IStream& x,
@@ -34,10 +33,6 @@ public:
       deadline_(std::move(deadline)),
       data_(std::move(initialData))
   {
-    setg();
-    exceptions(std::istream::failbit |
-               std::istream::badbit |
-               std::istream::eofbit);
   }
 
   class DeadlineOverride
@@ -65,8 +60,8 @@ public:
     return std::move(data_);
   }
 protected:
-  //std::streambuf::
-  int underflow() override
+  //xju::net::underflow
+  std::pair<uint8_t const*, uint8_t const*> underflow() override
   // xju::Exception
   {
     try{
@@ -77,7 +72,8 @@ protected:
       if (data_.size()==0){
         throw xju::DeadlineReached(xju::Exception("deadline reached",XJU_TRACED));
       }
-      return *setg();
+      ByteBuffer const& b(data_);
+      return b.contigData();
     }
     catch(xju::Exception& e)
     {
@@ -91,15 +87,6 @@ private:
   xju::io::IStream& x_;
   std::chrono::steady_clock::time_point deadline_;
   xju::ByteBuffer data_;
-
-  uint8_t* setg() noexcept
-  {
-    auto const data(data_.contigData());
-    std::streambuf::setg((char*)data.first,
-                         (char*)data.first,
-                         (char*)data.first+data.second);
-    return data.first;
-  }
 };
 
 }

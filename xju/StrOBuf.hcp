@@ -1,0 +1,68 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <unistd.h>
+#include <string>
+#include <xju/assert.hh> //impl
+#include <algorithm> //impl
+#include <utility>
+#include <limits>
+#include <xju/OBuf.hh>
+
+namespace xju
+{
+
+class StrOBuf : public OBuf
+{
+public:
+  // buffer up to max bytes, extending storage space from 0 by inc as needed
+  StrOBuf(
+    size_t const inc,
+    size_t const max=std::numeric_limits<size_t>::max()) noexcept:
+      inc_(inc),
+      max_(max),
+      valid_(0)
+  {
+  }
+  // content flushed-so-far
+  // - note this does not include bytes "added" since last flush()
+  // - result is valid until next flush that extends buffer
+  std::pair<std::string::const_iterator,std::string::const_iterator> str() const noexcept
+  {
+    return std::make_pair(str_.begin(),str_.begin()+valid_);
+  }
+  // flush count bytes of data
+  // - extends buffer iff it is then full and not at max size
+  // - returned range might be empty, i.e. we are at max size
+  // - flush(0) returns current free space
+  // - pre: count < flush(0).second-flush(0).first
+  // OBuf::
+  virtual std::pair<uint8_t*,uint8_t*> flush(size_t const count) override
+  // bad_alloc
+  {
+    xju::assert_less_equal(count,str_.size()-valid_);
+    valid_+=count;
+    if (valid_==str_.size()){
+      auto const extra(std::min(inc_,max_-str_.size()));
+      str_.resize(str_.size()+extra);
+    }
+    return std::make_pair((uint8_t*)&str_[valid_],
+                          (uint8_t*)&str_[str_.size()]);
+  }
+  
+private:
+  size_t inc_;
+  size_t max_;
+  std::string str_;
+  size_t valid_;
+};
+
+}
