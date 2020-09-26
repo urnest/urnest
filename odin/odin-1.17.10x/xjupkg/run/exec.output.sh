@@ -17,7 +17,7 @@ then
   echo "$output" > exec.output.ref &&
   cat "$errors" > WARNINGS
 else
-  ( echo "$(cat $name) failed with status $status and output:" &&
+  ( echo "$0:20:ERROR:$(cat $name) failed with status $status and output:" &&
     if [ $stderr = "error" ]
     then
       cat "$errors"
