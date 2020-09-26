@@ -1,0 +1,156 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <utility>
+#include <cinttypes>
+#include <xju/assert.hh> //impl
+#include <algorithm>
+#include <sstream> //impl
+#include <xju/IBuf.hh>
+#include <xju/Exception.hh>
+#include <xju/format.hh> //impl
+
+namespace xju
+{
+namespace net
+{
+
+// input stream using network byte order
+class istream
+{
+public:
+  //pre: lifetime(ibuf) includes lifetime(this)
+  explicit istream(xju::IBuf& ibuf) noexcept: ibuf_(ibuf),data_(0,0){}
+  
+  inline uint8_t get8()
+  // exceptions of underflow
+  {
+    if (empty()){
+      data_=ibuf_.underflow();
+      if(data_.first==data_.second){
+        throw xju::Exception("end of input",XJU_TRACED);
+      }
+    }
+    return *data_.first++;
+  }
+  inline uint16_t get16()
+  // exceptions of ibuf.underflow()
+  {
+    return (((uint16_t)get8())<<8)+(((uint16_t)get8())<<0);
+  }
+  inline uint32_t get32()
+  // exceptions of ibuf.underflow()
+  {
+    return (((uint32_t)get16())<<16)+(((uint32_t)get16())<<0);
+  }
+  inline uint64_t get64()
+  // exceptions of ibuf.underflow()
+  {
+    return (((uint64_t)get32())<<32)+(((uint64_t)get32())<<0);
+  }
+  // get n bytes from stream into o
+  template<class OutputIterator>
+  OutputIterator getN(size_t const n, OutputIterator o)
+  // exceptions of ibuf.underflow()
+  {
+    size_t got(0);
+    try{
+      while(got<n){
+        *o++=get8();
+        ++got;
+      }
+      return o;
+    }
+    catch(xju::Exception& e){
+      istream::addGetNContext(e,n,got);
+      throw;
+    }
+  }
+  // read until token seen expecting it within next max bytes
+  // REVISIT: is this broken for overlapping token and content?
+  // - if token is seen it will be the last output to o
+  template<class InputIterator,class OutputIterator>
+  OutputIterator readThrough(
+    InputIterator tokenBegin, InputIterator const tokenEnd,
+    OutputIterator o,
+    size_t const max)
+  // o likely partially written on exception
+  {
+    auto m{tokenBegin};
+    size_t size{0};
+    while(m!=tokenEnd && size<max){
+      uint8_t c=get8();
+      *o++=c;
+      ++size;
+      if (*m == c){
+        ++m;
+      }
+      else{
+        m=tokenBegin;
+        if (*m==c){
+          ++m;
+        }
+      }
+    }
+    if (m!=tokenEnd){
+      xju::assert_equal(size,max);
+      throw xju::Exception(istream::maxBeforeToken(max),XJU_TRACED);
+    }
+    return o;
+  }
+  // convenience call to above with better exception context
+  // post: result ends with token
+  std::string readThrough(std::string const& token,size_t const maxBytes)
+  {
+    try{
+      std::string result;
+      readThrough(token.begin(),token.end(),
+                  std::back_inserter(result),
+                  maxBytes);
+      return result;
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "read up to and including "
+        << xju::format::quote(xju::format::cEscapeString(token))
+        << " expected within " << maxBytes << " characters";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  
+private:
+  xju::IBuf& ibuf_;
+  std::pair<uint8_t const*,uint8_t const*> data_;
+
+  inline bool empty() const noexcept { return data_.first==data_.second; }
+
+  static void addGetNContext(xju::Exception& e,size_t const n,size_t const got)
+  //std::bad_alloc
+  {
+    std::ostringstream s;
+    s << "get " << (n-got) << " more of " << n << " bytes from stream";
+    e.addContext(s.str(),XJU_TRACED);
+  }
+  static std::string maxBeforeToken(size_t const maxBytes)
+  {
+    std::ostringstream s;
+    s << maxBytes << " bytes read without seeing token";
+    return s.str();
+  }
+                                    
+};
+
+
+}
+}
+
+
