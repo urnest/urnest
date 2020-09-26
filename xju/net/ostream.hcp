@@ -1,0 +1,73 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <exception> //impl
+#include <cinttypes>
+#include <utility>
+#include <xju/OBuf.hh>
+#include <xju/Exception.hh>
+
+namespace xju
+{
+namespace net
+{
+
+// output stream using network byte order
+class ostream
+{
+public:
+  //pre: lifetime(obuf) includes lifetime(this)
+  explicit ostream(xju::OBuf& obuf) noexcept: obuf_(obuf),data_(0,0){}
+
+  //flush obuf if no uncaught exception
+  ~ostream()
+  {
+    if (!std::uncaught_exceptions()){
+      obuf_.flush(data_.first);
+    }
+  }
+
+  inline ostream& put8(uint8_t const x){
+    if (full()){
+      data_=obuf_.flush(data_.first);
+      if (full()){
+        throw xju::Exception("no space",XJU_TRACED);
+      }
+    }
+    *data_.first++=x;
+    return *this;
+  }
+  inline ostream& put16(uint16_t const x){
+    return put8((x>>8)).put8((x&0xff));
+  }
+  inline ostream& put32(uint32_t const x){
+    return put16(x>>16).put16(x&0xffff);
+  }
+  inline ostream& put64(uint64_t const x){
+    return put32(x>>32).put32(x&0xffffffff);
+  }
+  template<class InputIterator> // value_type convertable to uint8_t
+  inline ostream& put(InputIterator begin,InputIterator end)
+  {
+    while(begin!=end){
+      put8(*begin++);
+    }
+    return *this;
+  }
+private:
+  xju::OBuf& obuf_;
+  std::pair<uint8_t*,uint8_t*> data_;
+
+  inline bool full() const noexcept { return data_.first==data_.second; }
+};
+
+}
+}

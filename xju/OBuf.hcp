@@ -22,7 +22,7 @@ public:
   virtual ~OBuf() noexcept {}
 
   // write buffered data up to "to" to destination, return
-  // resulting buffer space, which could be empty
+  // resulting buffer space
   // - use flush(0) initially
   virtual std::pair<uint8_t*,uint8_t*> flush(uint8_t* const to) = 0;
 };
