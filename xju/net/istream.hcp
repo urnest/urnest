@@ -110,8 +110,8 @@ public:
   // post: result ends with token
   std::string readThrough(std::string const& token,size_t const maxBytes)
   {
+    std::string result;
     try{
-      std::string result;
       readThrough(token.begin(),token.end(),
                   std::back_inserter(result),
                   maxBytes);
@@ -121,7 +121,9 @@ public:
       std::ostringstream s;
       s << "read up to and including "
         << xju::format::quote(xju::format::cEscapeString(token))
-        << " expected within " << maxBytes << " characters";
+        << " expected within the next " << (maxBytes-result.size())
+        << " characters having read "
+        << xju::format::quote(xju::format::cEscapeString(result));
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }

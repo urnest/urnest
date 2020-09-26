@@ -9,29 +9,28 @@
 //
 
 
-#include <iostream>
 #include <xju/io/IStream.hh>
 #include <chrono>
 #include <xju/ByteBuffer.hh>
 #include <xju/DeadlineReached.hh> //impl
 #include <xju/io/select.hh> //impl
 #include <xju/steadyNow.hh> //impl
+#include <xju/net/istream.hh>
 
 namespace xju
 {
 namespace io
 {
 
-class istr : public xju::net::istream
+class IBuf : public xju::IBuf
 {
 public:
-  istr(xju::io::IStream& x,
+  IBuf(xju::io::IStream& x,
        std::chrono::steady_clock::time_point deadline,
-       xju::ByteBuffer initialData=xju::ByteBuffer(512)) noexcept:
-      std::istream(this),
+       size_t const size) noexcept:
       x_(x),
       deadline_(std::move(deadline)),
-      data_(std::move(initialData))
+      data_(size)
   {
   }
 
@@ -39,7 +38,7 @@ public:
   {
   public:
     // override s deadline for lifetime of this
-    DeadlineOverride(istr& s,
+    DeadlineOverride(IBuf& s,
                      std::chrono::steady_clock::time_point deadline):
         s_(s),
         old_(s.deadline_)
@@ -51,16 +50,11 @@ public:
       s_.deadline_=old_;
     }
   private:
-    istr& s_;
+    IBuf& s_;
     std::chrono::steady_clock::time_point const old_;
   };
 
-  //post: *this unusable
-  xju::ByteBuffer getRemainingData() noexcept{
-    return std::move(data_);
-  }
-protected:
-  //xju::net::underflow
+  //xju::IBuf::underflow
   std::pair<uint8_t const*, uint8_t const*> underflow() override
   // xju::Exception
   {
@@ -73,7 +67,8 @@ protected:
         throw xju::DeadlineReached(xju::Exception("deadline reached",XJU_TRACED));
       }
       ByteBuffer const& b(data_);
-      return b.contigData();
+      auto const result(b.contigData());
+      return std::make_pair(result.first,result.first+result.second);
     }
     catch(xju::Exception& e)
     {

@@ -53,14 +53,14 @@ void test2() {
     xju::assert_never_reached();
   }
   catch(xju::Exception const& e){
-    xju::assert_equal(readableRepr(e),"Failed to read up to and including \"dog\" expected within 10 characters because\n10 bytes read without seeing token.");
+    xju::assert_equal(readableRepr(e),"Failed to read up to and including \"dog\" expected within the next 0 characters having read \" over the \" because\n10 bytes read without seeing token.");
   }
   try{
     y=s.readThrough("cat",1000);
     xju::assert_never_reached();
   }
   catch(xju::Exception const& e){
-    xju::assert_equal(readableRepr(e),"Failed to read up to and including \"cat\" expected within 1000 characters because\nend of input.");
+    xju::assert_equal(readableRepr(e),"Failed to read up to and including \"cat\" expected within the next 992 characters having read \"lazy dog\" because\nend of input.");
   }
     
 }

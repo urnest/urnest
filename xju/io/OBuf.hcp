@@ -1,0 +1,88 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/OBuf.hh>
+#include <xju/io/OStream.hh>
+#include <chrono>
+#include <unistd.h>
+#include <utility>
+#include <cinttypes>
+#include <xju/DeadlineReached.hh> //impl
+#include <xju/Exception.hh> //impl
+#include <sstream> //impl
+#include <xju/ByteBuffer.hh>
+
+namespace xju
+{
+namespace io
+{
+
+class OBuf: public xju::OBuf
+{
+public:
+  OBuf(xju::io::OStream& x,
+       std::chrono::steady_clock::time_point deadline,
+       size_t const size) noexcept:
+      x_(x),
+      deadline_(std::move(deadline)),
+      data_(size)
+  {
+  }
+  class DeadlineOverride
+  {
+  public:
+    // override s deadline for lifetime of this
+    DeadlineOverride(OBuf& s,
+                     std::chrono::steady_clock::time_point deadline):
+        s_(s),
+        old_(s.deadline_)
+    {
+      s.deadline_=deadline;
+    }
+    ~DeadlineOverride() noexcept
+    {
+      s_.deadline_=old_;
+    }
+  private:
+    OBuf& s_;
+    std::chrono::steady_clock::time_point const old_;
+  };
+
+  std::pair<uint8_t*,uint8_t*> flush(uint8_t* const to) override
+  {
+    auto const data(data_.contigSpace());
+    size_t const n(to-data.first);
+    try{
+      if (n){
+        auto const m(x_.write(data.first,n,deadline_));
+        if (m<n){
+          throw xju::DeadlineReached(
+            "deadline reached having only written " +xju::format::str(n)
+            " bytes", XJU_TRACED);
+        }
+      }
+      return std::make_pair(data.first,data.first+data.second);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "flush " << n << " bytes of data from output buffer to " << x_;
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+private:
+  xju::io::OStream& x_;
+  std::chrono::steady_clock::time_point deadline_;
+  xju::ByteBuffer data_;
+};
+
+}
+}
