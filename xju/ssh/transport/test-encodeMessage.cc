@@ -26,10 +26,11 @@ void test1() {
     xju::MemOBuf b(256);
     {
       xju::net::ostream to(b);
-      encodeMessage({0,1,2,3,4,5,6,7},
-                    to,
-                    7,
-                    0.0);
+      auto const padding(encodeMessage({0,1,2,3,4,5,6,7},
+                                       to,
+                                       7,
+                                       0.0));
+      xju::assert_equal(padding.size(),3);
     }
     std::vector<uint8_t> const x(b.data().first,b.data().second);
     xju::assert_equal(x.size(),16);
@@ -42,10 +43,11 @@ void test1() {
     xju::MemOBuf b(256);
     {
       xju::net::ostream to(b);
-      encodeMessage({0,1,2,3,4,5,6,7,8,9,10},
-                    to,
-                    7,
-                    0.0);
+      auto const padding(encodeMessage({0,1,2,3,4,5,6,7,8,9,10},
+                                       to,
+                                       7,
+                                       0.0));
+      xju::assert_equal(padding.size(),0U);
     }
     std::vector<uint8_t> const x(b.data().first,b.data().second);
     xju::assert_equal(x.size(),16);
@@ -58,10 +60,11 @@ void test1() {
     xju::MemOBuf b(256);
     {
       xju::net::ostream to(b);
-      encodeMessage({0,1,2,3,4,5,6,7,8,9,10},
-                    to,
-                    7,
-                    0.5);
+      auto const padding(encodeMessage({0,1,2,3,4,5,6,7,8,9,10},
+                                       to,
+                                       7,
+                                       0.5));
+      xju::assert_equal(padding.size(),120U);
     }
     std::vector<uint8_t> const x(b.data().first,b.data().second);
     xju::assert_equal(x.size(),136);

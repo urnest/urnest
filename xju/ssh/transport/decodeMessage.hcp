@@ -14,6 +14,7 @@
 #include <xju/net/istream.hh>
 #include <sstream> //impl
 #include <xju/Exception.hh> //impl
+#include <xju/ssh/transport/Padding.hh>
 
 namespace xju
 {
@@ -24,7 +25,7 @@ namespace transport
 
 // Decode SSH message excluding MAC from specified stream.
 // - returns body (discards padding)
-std::vector<uint8_t> decodeMessage(xju::net::istream& from)
+std::pair<std::vector<uint8_t>,Padding> decodeMessage(xju::net::istream& from)
 //std::bad_alloc
 //xju::Exception - e.g. malformed
 {
@@ -43,9 +44,11 @@ std::vector<uint8_t> decodeMessage(xju::net::istream& from)
       throw xju::Exception(s.str(),XJU_TRACED);
     }
     uint32_t const body_length=packet_length-padding_length-1;
-    std::vector<uint8_t> result(body_length);
-    from.getN(body_length,result.begin());
-    return result;
+    std::vector<uint8_t> body(body_length);
+    from.getN(body_length,body.begin());
+    Padding padding(padding_length);
+    from.getN(padding_length,padding.begin());
+    return std::make_pair(body,padding);
   }
   catch(xju::Exception& e){
     std::ostringstream s;
