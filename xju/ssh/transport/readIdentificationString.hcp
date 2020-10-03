@@ -17,6 +17,7 @@
 #include <hcp/parser.hh> //impl
 #include <xju/startsWith.hh> //impl
 #include <sstream> //impl
+#include <xju/Optional.hh>
 
 namespace xju
 {
@@ -28,7 +29,7 @@ std::tuple<
   std::vector<std::string>, //preamble lines without trailing \r\n
   SSHVersion, //ssh version
   SoftwareVersion, //software version
-  std::string //comment
+  xju::Optional<std::string> //comment
   > readIdentificationString(xju::net::istream& s)
 // std::bad_alloc
 // xju::Exception - e.g. stream read failed
@@ -49,9 +50,13 @@ std::tuple<
       SoftwareVersion softwareVersion(
         hcp_ast::reconstruct(
           hcp_ast::findOnlyChildOfType<SoftwareVersionItem>(y)));
-      std::string comment(
-        hcp_ast::reconstruct(
-          hcp_ast::findOnlyChildOfType<IdentCommentItem>(y)));
+      xju::Optional<std::string> comment;
+      {
+        auto const c(hcp_ast::findChildrenOfType<IdentCommentItem>(y));
+        if (c.size()){
+          comment=hcp_ast::reconstruct(c.front());
+        }
+      }
       return std::make_tuple(preamble,
                              sshVersion,
                              softwareVersion,

@@ -29,7 +29,7 @@ void test1() {
       transport::writeIdentificationString(
         s,
         transport::SoftwareVersion("fred's-ssh-2.6"),
-        "slower than all the rest");
+        std::string("slower than all the rest"));
     }
     xju::assert_equal(std::string(buffer.data().first,buffer.data().second),
                       "SSH-2.0-fred's-ssh-2.6 slower than all the rest\r\n");
@@ -41,7 +41,7 @@ void test1() {
       transport::writeIdentificationString(
         s,
         transport::SoftwareVersion("fred's-ssh-2.6"),
-        std::string());
+        xju::Optional<std::string>());
     }
     xju::assert_equal(std::string(buffer.data().first,buffer.data().second),
                       "SSH-2.0-fred's-ssh-2.6\r\n");

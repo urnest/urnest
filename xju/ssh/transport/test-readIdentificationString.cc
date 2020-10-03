@@ -32,7 +32,7 @@ void test1() {
       transport::writeIdentificationString(
         s,
         transport::SoftwareVersion("fred's_ssh_2.6"),
-        "slower than all the rest");
+        std::string("slower than all the rest"));
     }
     xju::MemIBuf ib(std::vector<uint8_t>(b.data().first,b.data().second));
     xju::net::istream si(ib);
@@ -48,7 +48,7 @@ void test1() {
       transport::SoftwareVersion("fred's_ssh_2.6"));
     xju::assert_equal(
       std::get<3>(y),
-      std::string("slower than all the rest"));
+      xju::Optional<std::string>("slower than all the rest"));
   }
   {
     xju::MemOBuf b(256);
@@ -59,7 +59,7 @@ void test1() {
       transport::writeIdentificationString(
         s,
         transport::SoftwareVersion("fred's_ssh_2.6"),
-        "slower than all the rest");
+        xju::Optional<std::string>());
     }
     xju::MemIBuf ib(std::vector<uint8_t>(b.data().first,b.data().second));
     xju::net::istream si(ib);
@@ -77,7 +77,7 @@ void test1() {
       transport::SoftwareVersion("fred's_ssh_2.6"));
     xju::assert_equal(
       std::get<3>(y),
-      std::string("slower than all the rest"));
+      xju::Optional<std::string>());
   }
   {
     xju::MemOBuf b(256);

@@ -42,7 +42,7 @@ hcp_parser::PR identParser() noexcept
     "SSH-"+named<SSHVersionItem>("SSH version",parseUntil(identChars,"-"))+
     "-"+named<SoftwareVersionItem>("software version",
                                    parseUntil(identChars,crlf|SP))+
-    (named<IdentCommentItem>("comment",!SP)| //no comment
+    (!SP| //no comment
      (SP+named<IdentCommentItem>("comment",parseUntil(!nullChar+parseAnyChar(),
                                                       crlf))))+
     crlf);

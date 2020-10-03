@@ -87,9 +87,8 @@ void test1() {
         hcp_ast::findOnlyChildOfType<ssh::transport::SoftwareVersionItem>(y)),
       "");
     xju::assert_equal(
-      hcp_ast::reconstruct(
-        hcp_ast::findOnlyChildOfType<ssh::transport::IdentCommentItem>(y)),
-      "");
+      hcp_ast::findChildrenOfType<ssh::transport::IdentCommentItem>(y).size(),
+      0U);
   }
   try
   {

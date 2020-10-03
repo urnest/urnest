@@ -32,22 +32,9 @@
       exchangeKeys(method,cipherName,macName,i,o,deadline)->I,O,otherReceivedMessges
         x encodeMessage
 	x decodeMessage
-	Cypher:
-	  //returns padding that was written to stream
-	  virtual Padding encryptMessage(std::vector<uint8_t> const& message,
-	                                 xju::net::ostream& to)=0;
-	  virtual void std::pair<std::vector<uint8_t>,Padding> decryptMessage(
-	           xju::net::istream& from);
+	x Cypher:
+	x MessageAuthenticator
 
-	MessageAuthenticator
-	  virtual computeMac(uint32_t const sequenceNumber,
-	                     std::vector<uint8_t> const& body,
-                             Padding const& padding,
-	                     xju::net::ostream& to)=0;
-	  virtual authenticateMessage(uint32_t const sequenceNumber,
-	                              std::vector<uint8_t> const& body,
-	                              Padding const& padding,
-	                              xju::net::istream& from)=0;
 	  
     tests: echo "fred ran"
            sleep 3 ... timeout
