@@ -9,11 +9,9 @@
 //
 
 
-#include <xju/ssh/transport/EncodedMessage.hh>
 #include <vector>
 #include <unistd.h>
-#include <xju/MemOBuf.hh> //impl
-#include <xju/net/ostream.hh> //impl
+#include <xju/net/ostream.hh>
 
 namespace xju
 {
@@ -24,9 +22,10 @@ namespace transport
 
 // Encode body into ssh message suitable for encryption with specified
 // blockSize or 8, whichever is larger.
-EncodedMessage encodeMessage(std::vector<uint8_t> const& body,
-                             size_t const blockSize,
-                             double const randomNumber) //[0..1)
+void encodeMessage(std::vector<uint8_t> const& body,
+                   xju::net::ostream& to,
+                   size_t const blockSize,
+                   double const randomNumber) //[0..1)
 //std::bad_alloc
 {
   size_t const useBlockSize(std::max(blockSize,8UL));
@@ -36,22 +35,18 @@ EncodedMessage encodeMessage(std::vector<uint8_t> const& body,
   size_t const maxExtraBlocks=(255-minPaddingBytes)/useBlockSize;
   size_t const extraBlocks=randomNumber*maxExtraBlocks;
   size_t const actualSize=useBlockSize*(minBlocks+extraBlocks);
-  xju::MemOBuf b(actualSize,actualSize);
 
   //matching rfc4235:
   size_t const n1=body.size();
   size_t const packet_length=actualSize-4;
   size_t const padding_length=packet_length-n1-1; //n2
-  {
-    xju::net::ostream s(b);
-    s.put32(actualSize-4);
-    s.put8(actualSize-minSize);
-    s.put(body.begin(),body.end());
-    for(int i=0;i!=padding_length;++i){
-      s.put8(drand48()*256);
-    }
+
+  to.put32(actualSize-4);
+  to.put8(actualSize-minSize);
+  to.put(body.begin(),body.end());
+  for(int i=0;i!=padding_length;++i){
+    to.put8(drand48()*256);
   }
-  return EncodedMessage(b.data().first,b.data().second);
 }
 
 }

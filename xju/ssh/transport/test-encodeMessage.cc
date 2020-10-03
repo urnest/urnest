@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <xju/assert.hh>
+#include <xju/MemOBuf.hh>
 
 namespace xju
 {
@@ -22,9 +23,15 @@ namespace transport
 void test1() {
 
   {
-    auto const x(encodeMessage({0,1,2,3,4,5,6,7},
-                               7,
-                               0.0));
+    xju::MemOBuf b(256);
+    {
+      xju::net::ostream to(b);
+      encodeMessage({0,1,2,3,4,5,6,7},
+                    to,
+                    7,
+                    0.0);
+    }
+    std::vector<uint8_t> const x(b.data().first,b.data().second);
     xju::assert_equal(x.size(),16);
     xju::assert_equal(std::vector<uint8_t>(x.begin(),x.begin()+13),
                       {0x0,0x0,0x0,12,
@@ -32,9 +39,15 @@ void test1() {
                        0,1,2,3,4,5,6,7});
   }
   {
-    auto const x(encodeMessage({0,1,2,3,4,5,6,7,8,9,10},
-                               7,
-                               0.0));
+    xju::MemOBuf b(256);
+    {
+      xju::net::ostream to(b);
+      encodeMessage({0,1,2,3,4,5,6,7,8,9,10},
+                    to,
+                    7,
+                    0.0);
+    }
+    std::vector<uint8_t> const x(b.data().first,b.data().second);
     xju::assert_equal(x.size(),16);
     xju::assert_equal(std::vector<uint8_t>(x.begin(),x.begin()+16),
                       {0x0,0x0,0x0,12,
@@ -42,9 +55,15 @@ void test1() {
                        0,1,2,3,4,5,6,7,8,9,10});
   }
   {
-    auto const x(encodeMessage({0,1,2,3,4,5,6,7,8,9,10},
-                               7,
-                               0.5));
+    xju::MemOBuf b(256);
+    {
+      xju::net::ostream to(b);
+      encodeMessage({0,1,2,3,4,5,6,7,8,9,10},
+                    to,
+                    7,
+                    0.5);
+    }
+    std::vector<uint8_t> const x(b.data().first,b.data().second);
     xju::assert_equal(x.size(),136);
     xju::assert_equal(std::vector<uint8_t>(x.begin(),x.begin()+16),
                       {0x0,0x0,0x0,132,
