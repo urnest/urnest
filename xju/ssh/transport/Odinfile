@@ -8,6 +8,7 @@
 ()+cmd=(test-writeIdentificationString.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-readIdentificationString.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-encodeMessage.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-decodeMessage.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 
 %hcp-gen==.:dir.hcp.list+G+hpath='xju/ssh/transport':hcp-split-virdir-specs:cat:vir_dir
 
