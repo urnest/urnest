@@ -14,7 +14,7 @@
 	cannot avoid a memory leak if the other end is recalcitrant i.e. this
 	is a DOS vector. What to do? raise a bug? implement a fix?
 	implement ssh2 at lower level?
-	
+
       - pubkey auth
       - constructor connects, with timeout
     - when would session_free block/how to avoid:
@@ -30,7 +30,16 @@
       i:cipher+mac+seq+io::IStream,receiveMessage(maxSize,deadline)->body
       o:cipher+mac+seq+io::OStream,sendMessage(body,deadline)
       exchangeKeys(method,cipherName,macName,i,o,deadline)->I,O,otherReceivedMessges
-      
+        encodeMessage(size_t blockSize,
+	              std::vector<uint8_t> const& body)->EncodedMessage:std::vector<uint8_t>
+	decodeMessage(EncodedMessage const& message)->std::vector<uint8_t>
+	Cypher:
+	  virtual EncryptedMessage:std::vector<uint8_t> encrypt(
+	    EncodedMessage const& message)=0;
+	  virtual size_t blockSize() const=0;
+	MessageAuthenticator
+	  virtual MAC:std::vector<uint8_t> mac(EncryptedMessage const& message)=0;
+	  
     tests: echo "fred ran"
            sleep 3 ... timeout
 	   /bin/sh -c cat > fred.txt
