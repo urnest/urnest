@@ -44,6 +44,27 @@ void test1() {
   }
   {
     xju::MemIBuf b({0x0,0x0,0x0,12,
+                    0,
+                    0,1,2,3,4,5,6,7,8,9,10,
+                    0x0,0x0,0x0,12,
+                    3,
+                    0,1,2,3,4,5,6,7,0xa,0xb,0xc});
+    xju::net::istream from(b);
+    {
+      auto const y(decodeMessage(from));
+      xju::assert_equal(y.first,
+                        {0,1,2,3,4,5,6,7,8,9,10});
+      xju::assert_equal(y.second,Padding{});
+    }
+    {
+      auto const y(decodeMessage(from));
+      xju::assert_equal(y.first,
+                        {0,1,2,3,4,5,6,7});
+      xju::assert_equal(y.second,Padding{0xa,0xb,0xc});
+    }
+  }
+  {
+    xju::MemIBuf b({0x0,0x0,0x0,12,
                     11,
                     0,1,2,3,4,5,6,7,0xa,0xb,0xc});
     xju::net::istream from(b);

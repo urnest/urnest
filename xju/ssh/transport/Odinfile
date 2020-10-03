@@ -2,6 +2,8 @@
 
 %all.tree==<<
 %tests.tree
+mac%all
+cipher%all
 
 %tests.tree==<<
 ()+cmd=(test-identParser.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
@@ -9,7 +11,23 @@
 ()+cmd=(test-readIdentificationString.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-encodeMessage.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-decodeMessage.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
+mac%tests.tree:leaves
+cipher%tests.tree:leaves
 
-%hcp-gen==.:dir.hcp.list+G+hpath='xju/ssh/transport':hcp-split-virdir-specs:cat:vir_dir
+%hcp-gen==%hcp-gen.vir_dir_specs:list:cat:vir_dir
 
-%tags==.:merged-tags
+%hcp-gen.vir_dir_specs==<<
+%hcp-local-spec
+%hcp-subdir-spec
+
+%hcp-local-spec==.:dir.hcp.list+G+hpath='xju/ssh/transport':hcp-split-virdir-specs:cat
+
+%hcp-subdir-spec==<<
+%mac==./mac/Odinfile%hcp-gen
+%cipher==./cipher/Odinfile%hcp-gen
+
+%tags==%all.list-of-tags:merged-tags
+
+%all.list-of-tags==<<
+.:merged-tags
+cipher%tags

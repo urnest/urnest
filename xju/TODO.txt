@@ -44,10 +44,10 @@
 	                     std::vector<uint8_t> const& body,
                              Padding const& padding,
 	                     xju::net::ostream& to)=0;
-	  virtual authenticateMac(uint32_t const sequenceNumber,
-	                          std::vector<uint8_t> const& body,
-	                          Padding const& padding,
-	                          xju::net::istream& from)=0;
+	  virtual authenticateMessage(uint32_t const sequenceNumber,
+	                              std::vector<uint8_t> const& body,
+	                              Padding const& padding,
+	                              xju::net::istream& from)=0;
 	  
     tests: echo "fred ran"
            sleep 3 ... timeout
