@@ -29,13 +29,13 @@ class Cipher{
 public:
   virtual ~Cipher() noexcept {}
 
-  // Encrypt message with specified body to specified stream.
+  // Encrypt packet with specified body to specified stream.
   // - return padding written
-  virtual Padding encryptMessage(std::vector<uint8_t> const& body,
-                                 xju::net::ostream& to)=0;
+  virtual Padding encryptPacket(std::vector<uint8_t> const& body,
+                                xju::net::ostream& to)=0;
   
-  // Decrypt message from specified stream.
-  virtual std::pair<std::vector<uint8_t>,Padding> decryptMessage(
+  // Decrypt packet from specified stream.
+  virtual std::pair<std::vector<uint8_t>,Padding> decryptPacket(
     xju::net::istream& from) =0;
 
 };

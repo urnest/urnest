@@ -10,8 +10,8 @@
 
 
 #include <xju/ssh/transport/cipher/Cipher.hh>
-#include <xju/ssh/transport/encodeMessage.hh> //impl
-#include <xju/ssh/transport/decodeMessage.hh> //impl
+#include <xju/ssh/transport/encodePacket.hh> //impl
+#include <xju/ssh/transport/decodePacket.hh> //impl
 #include <sstream> //impl
 #include <xju/Exception.hh> //impl
 #include <stdlib.h> //impl
@@ -28,30 +28,30 @@ namespace cipher
 class None : public Cipher
 {
 public:
-  Padding encryptMessage(std::vector<uint8_t> const& body,
+  Padding encryptPacket(std::vector<uint8_t> const& body,
                          xju::net::ostream& to) override
   {
     try{
-      return encodeMessage(body,to,8,drand48());
+      return encodePacket(body,to,8,drand48());
     }
     catch(xju::Exception& e){
       std::ostringstream s;
-      s << "write unencrypted SSH transport message of body size "
+      s << "write unencrypted SSH transport packet of body size "
         << body.size()
         << "-bytes to stream";
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
   }
-  std::pair<std::vector<uint8_t>,Padding> decryptMessage(
+  std::pair<std::vector<uint8_t>,Padding> decryptPacket(
     xju::net::istream& from) override
   {
     try{
-      return decodeMessage(from);
+      return decodePacket(from);
     }
     catch(xju::Exception& e){
       std::ostringstream s;
-      s << "read unencrypted SSH transport message from stream";
+      s << "read unencrypted SSH transport packet from stream";
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }

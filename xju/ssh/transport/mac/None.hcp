@@ -9,7 +9,7 @@
 //
 
 
-#include <xju/ssh/transport/mac/MessageAuthenticator.hh>
+#include <xju/ssh/transport/mac/PacketAuthenticator.hh>
 
 namespace xju
 {
@@ -20,7 +20,7 @@ namespace transport
 namespace mac
 {
 
-class None: MessageAuthenticator
+class None: PacketAuthenticator
 {
 public:
   void computeMac(SequenceNumber const& sequenceNumber,
@@ -29,10 +29,10 @@ public:
                   xju::net::ostream& to) noexcept override {
   }
 
-  void authenticateMessage(SequenceNumber const& sequenceNumber,
-                           std::vector<uint8_t> const& body,
-                           Padding const& padding,
-                           xju::net::istream& from) noexcept override {
+  void authenticatePacket(SequenceNumber const& sequenceNumber,
+                          std::vector<uint8_t> const& body,
+                          Padding const& padding,
+                          xju::net::istream& from) noexcept override {
   }
   
 };

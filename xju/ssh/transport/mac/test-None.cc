@@ -41,10 +41,10 @@ void test2() {
   xju::MemIBuf b({});
   {
     xju::net::istream s(b);
-    n.authenticateMessage(SequenceNumber(12),
-                          {},
-                          Padding{},
-                          s);
+    n.authenticatePacket(SequenceNumber(12),
+                         {},
+                         Padding{},
+                         s);
   }
 }
 

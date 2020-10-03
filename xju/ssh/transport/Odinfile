@@ -9,8 +9,8 @@ cipher%all
 ()+cmd=(test-identParser.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-writeIdentificationString.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-readIdentificationString.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
-()+cmd=(test-encodeMessage.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
-()+cmd=(test-decodeMessage.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-encodePacket.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-decodePacket.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 mac%tests.tree:leaves
 cipher%tests.tree:leaves
 

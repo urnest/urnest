@@ -13,7 +13,7 @@
 #include <xju/assert.hh>
 #include <xju/MemOBuf.hh>
 #include <xju/net/ostream.hh>
-#include <xju/ssh/transport/encodeMessage.hh>
+#include <xju/ssh/transport/encodePacket.hh>
 #include <xju/MemIBuf.hh>
 #include <xju/net/istream.hh>
 
@@ -31,13 +31,13 @@ void test1() {
   xju::MemOBuf b(256);
   {
     xju::net::ostream s(b);
-    encodeMessage({'f','r','e','d'},s,8,0.333);
-    encodeMessage({'j','o','n','e','s'},s,8,0.1236);
+    encodePacket({'f','r','e','d'},s,8,0.333);
+    encodePacket({'j','o','n','e','s'},s,8,0.1236);
   }
   xju::MemIBuf bi(std::vector<uint8_t>(b.data().first,b.data().second));
   xju::net::istream s(bi);
-  xju::assert_equal(x.decryptMessage(s).first,{'f','r','e','d'});
-  xju::assert_equal(x.decryptMessage(s).first,{'j','o','n','e','s'});
+  xju::assert_equal(x.decryptPacket(s).first,{'f','r','e','d'});
+  xju::assert_equal(x.decryptPacket(s).first,{'j','o','n','e','s'});
 }
 
 void test2() {
@@ -45,13 +45,13 @@ void test2() {
   xju::MemOBuf b(256);
   {
     xju::net::ostream s(b);
-    x.encryptMessage({'f','r','e','d'},s);
-    x.encryptMessage({'j','o','n','e','s'},s);
+    x.encryptPacket({'f','r','e','d'},s);
+    x.encryptPacket({'j','o','n','e','s'},s);
   }
   xju::MemIBuf bi(std::vector<uint8_t>(b.data().first,b.data().second));
   xju::net::istream s(bi);
-  xju::assert_equal(x.decryptMessage(s).first,{'f','r','e','d'});
-  xju::assert_equal(x.decryptMessage(s).first,{'j','o','n','e','s'});
+  xju::assert_equal(x.decryptPacket(s).first,{'f','r','e','d'});
+  xju::assert_equal(x.decryptPacket(s).first,{'j','o','n','e','s'});
 }
 
 }
