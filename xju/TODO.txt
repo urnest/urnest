@@ -14,7 +14,7 @@
 	cannot avoid a memory leak if the other end is recalcitrant i.e. this
 	is a DOS vector. What to do? raise a bug? implement a fix?
 	implement ssh2 at lower level?
-	
+
       - pubkey auth
       - constructor connects, with timeout
     - when would session_free block/how to avoid:
@@ -25,11 +25,39 @@
 	  ... so if none of either then will not block
 
     ssh 4251 transport 4253:
-      handShake(preamble,softwareId,comment,io::IStream,io::Ostream,deadline)->softareId,comment,preamble,remainingReceivedData
-      negotiateSessionParams(dataAlreadyReceived,pkAlgorithmNames,kexMethodNames,cipherNames,macNames,maxMessageLength,I,O,deadline)->PkAlgorithmName,KexMethodName,iCipherName,oCipherName,iMacName,oMacName
-      i:cipher+mac+seq+io::IStream,receiveMessage(maxSize,deadline)->body
-      o:cipher+mac+seq+io::OStream,sendMessage(body,deadline)
-      exchangeKeys(method,cipherName,macName,i,o,deadline)->I,O,otherReceivedMessges
+      / handShake(preamble,softwareId,comment,xju::net::istream,xju::net::ostream)->softwareId,comment,preamble
+      exchangeKeys(pkAlgorithmNames,kexMethodNames,cipherNames,macNames,maxMessageLength,I,O)->PkAlgorithmName,KexMethodName,iCipherName,oCipherName,iMacName,oMacName - make it a state machine so can pass in-transit messages to client
+      i:cipher+mac+seq+,receiveMessage(maxSize)->body
+      o:cipher+mac+seq+io::OStream,sendMessage(body)
+        x encodeMessage
+	x decodeMessage
+	x Cypher:
+	x MessageAuthenticator
+
+    - authentication via public key only:
+      rfc4252 send SSH_MSG_USERAUTH_REQUEST
+      - includes public key
+      - whole message is signed:
+        - uses private key
+	- pk algorithm specific
+      - is rsa mandatory if so implement it only
+        - ssh-dss is required but need ssh-rsa as in practice will often
+	  only have it
+	- choose pk algs based on key type, perhaps private key is carried
+	  in alg rather than separate
+      - is pk algorithm used for anything else? host check? almost certainly
+        - need sign() and checkSignature() e.g.
+	  Signature: std::vector<uint8_t>
+	  xju::pk::Verifier
+	    checkSignature(uint8_t const* x,size_t len,
+	                   Signature const& signature)
+          xju::pk::Signer
+	    sign(uint8_t const* x,size_t len)->Signature
+	      - sign x
+	  xju::pk::RSASigner(privatekey) : pk::Signer
+	  xju::pk::RSAVerifier(publickey) : pk::Verifier
+	  loadOpenSSHRsaPrivateKey(std::string keyFileContent)->pk::RSASigner()
+	  loadOpenSSHRsaPublicKey(std::string keyFileContent)->pk::RSAVerifier()
       
     tests: echo "fred ran"
            sleep 3 ... timeout

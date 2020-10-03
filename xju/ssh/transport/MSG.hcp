@@ -1,0 +1,57 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#ifndef XJU_SSH_TRANSPORT_MSG_H
+#define XJU_SSH_TRANSPORT_MSG_H
+
+#include <xju/net/ostream.hh>
+#include <xju/ssh/encode.hh>
+#include <xju/ssh/decode.hh>
+#include <xju/net/istream.hh>
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+enum class MSG{
+  DISCONNECT=             1,
+  IGNORE=                 2,
+  UNIMPLEMENTED=          3,
+  DEBUG=                  4,
+  SERVICE_REQUEST=        5,
+  SERVICE_ACCEPT=         6,
+  KEXINIT=               20,
+  NEWKEYS=               21
+};
+
+}
+}
+}
+
+namespace xju
+{
+namespace ssh
+{
+xju::net::ostream& encode(xju::net::ostream& s, transport::MSG const& x){
+  return s.put8((uint8_t)x);
+}
+template<>
+transport::MSG decode<transport::MSG>(xju::net::istream& s){
+  return (transport::MSG)s.get8();
+}
+
+}
+}
+
+
+#endif
+

@@ -1,0 +1,48 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <vector>
+#include <cinttypes>
+#include <iostream>
+#include <xju/format.hh> //impl
+#include <string> //impl
+#include <xju/next.hh> //impl
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+class Message : public std::vector<uint8_t>
+{
+  using std::vector<uint8_t>::vector;
+
+};
+
+std::ostream& operator<<(std::ostream& s,Message const& m)
+{
+  s << "type " << (m.size()?xju::format::hex(m[0]):std::string("*empty*"));
+  if (m.size()>1){
+    s << "["
+      << xju::format::join(xju::next(m.begin()),
+                           m.begin()+std::min(m.size(),4096UL),
+                           xju::format::Hex(""),
+                           std::string(","))
+      << (m.size()>4096 ? "...":"")
+      << "]";
+  }
+  return s;
+}
+}
+}
+}

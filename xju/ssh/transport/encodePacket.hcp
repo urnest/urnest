@@ -1,0 +1,70 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <vector>
+#include <unistd.h>
+#include <xju/net/ostream.hh>
+#include <xju/ssh/transport/Padding.hh>
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+// Encode body into ssh packet suitable for encryption with specified
+// blockSize or 8, whichever is larger.
+// - returns padding written to stream
+Padding encodePacket(std::vector<uint8_t> const& body,
+                     xju::net::ostream& to,
+                     size_t const blockSize,
+                     double const randomNumber) //[0..1)
+//std::bad_alloc
+{
+  size_t const useBlockSize(std::max(blockSize,8UL));
+  size_t const minSize(4+1+body.size());
+  size_t const minBlocks=(minSize+useBlockSize-1)/useBlockSize;
+  size_t const minPaddingBytes=(minBlocks*useBlockSize)-minSize;
+  size_t const maxExtraBlocks=(255-minPaddingBytes)/useBlockSize;
+  size_t const extraBlocks=randomNumber*maxExtraBlocks;
+  size_t actualSize=useBlockSize*(minBlocks+extraBlocks);
+
+  //matching rfc4235:
+  size_t n1=body.size();
+  size_t packet_length=actualSize-4;
+  size_t padding_length=packet_length-n1-1; //n2
+
+  //rfc4235 explicit minimum requirements
+  while(padding_length<4 || actualSize<16){
+    actualSize+=useBlockSize;
+    n1=body.size();
+    packet_length=actualSize-4;
+    padding_length=packet_length-n1-1; //n2
+  }
+
+  to.put32(actualSize-4);
+  to.put8(padding_length);
+  to.put(body.begin(),body.end());
+  Padding result;
+  for(int i=0;i!=padding_length;++i){
+    uint8_t const p(drand48()*256);
+    result.push_back(p);
+    to.put8(p);
+  }
+  return result;
+}
+
+}
+}
+}
+
+

@@ -1,0 +1,47 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/net/ostream.hh>
+#include <xju/net/istream.hh>
+#include <xju/ssh/encode.hh>
+#include <xju/ssh/decode.hh>
+
+namespace xju
+{
+namespace ssh
+{
+namespace userauth
+{
+enum class MSG{
+  REQUEST=      50,
+  FAILURE=      51,
+  SUCCESS=      52,
+  BANNER=       53
+};
+
+}
+}
+}
+
+namespace xju
+{
+namespace ssh
+{
+xju::net::ostream& encode(xju::net::ostream& s, userauth::MSG const& x){
+  return s.put8((uint8_t)x);
+}
+template<>
+userauth::MSG decode<userauth::MSG>(xju::net::istream& s){
+  return (userauth::MSG)s.get8();
+}
+
+}
+}

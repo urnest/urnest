@@ -1,0 +1,128 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <tuple>
+#include <vector>
+#include <xju/ssh/transport/identParser.hh>
+#include <xju/Optional.hh>
+#include <string>
+#include <xju/net/istream.hh>
+#include <xju/net/ostream.hh>
+#include <future> //impl
+#include <xju/ssh/transport/readIdentificationString.hh> //impl
+#include <xju/ssh/transport/writeIdentificationString.hh> //impl
+#include <utility> //impl
+#include <sstream> //impl
+#include <xju/format.hh> //impl
+#include <xju/Exception.hh> //impl
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+std::tuple<
+  std::vector<std::string>, //preamble lines without trailing \r\n
+  SSHVersion, //ssh version
+  SoftwareVersion, //software version
+  xju::Optional<std::string> //comment
+  > shakeHands(xju::net::istream& i,
+               xju::net::ostream& o,
+               SoftwareVersion const& softwareVersion,
+               xju::Optional<std::string> const& comments)
+{
+  try{
+    auto r=std::async(std::launch::deferred,
+                      [&i](){
+                        return readIdentificationString(i);
+                      });
+    auto w=std::async(std::launch::async,
+                      [&writeFailed,&softwareVersion,&comments,&o](){
+                        writeIdentificationString(o,softwareVersion,comments);
+                      });
+    std::exception_ptr readFailed;
+    try{
+      r.get();
+    }
+    catch(...){
+      readFailed=std::move(std::current_exception());
+    }
+    std::exception_ptr writeFailed;
+    try{
+      w.get();
+    }
+    catch(...){
+      writeFailed=std::move(std::current_exception());
+    }
+    if (readFailed || writeFailed){
+      std::ostringstream s;
+      try{
+        r.get();
+        s << "received SSH preeamble "
+          << xju::format::join(std::get<0>(*r.get()).begin(),
+                               std::get<0>(*r.get()).end(),
+                               [](std::string const& x){
+                                 return xju::format::quote(
+                                   xju::format::cEscapeString(x));
+                               },
+                               std::string(", "))
+          << " and SSH version "
+          << xju::format::cEscapeString(std::get<1>(*r.get()))
+          << " and software version "
+          << xju::format::cEscapeString(std::get<2>(*r.get()))
+          << " from peer";
+      }
+      catch(xju::Exception const& e){
+        s << readableRepr(e,false,true);
+      }
+      catch(std::exception const& e){
+        s << "failed to receive SSH software identification strings "
+          << " from peer because " << e.what();
+      }
+      if (writeFailed){
+        s << (readFailed?" and ":" but ");
+        try{
+          w.get();
+        }
+        catch(xju::Exception const& e){
+          s << readableRepr(e,false,true);
+        }
+        catch(std::exception const& e){
+          s << "failed to send to peer because " << e.what();
+        }
+      }
+      else{
+        s << " though send to peer was successful";
+      }
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    return r.get();
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "send SSH software version "
+      << xju::format::cEscapeString(softwareVersion);
+    if (comments.get()){
+      s << " and comments "
+        << xju::format::quote(xju::format::cEscapeString(*comments.get()));
+    }
+    s << " to peer and receive its"
+      << " preamble, SSH software version and comment strings";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+}
+}

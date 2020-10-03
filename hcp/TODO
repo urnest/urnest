@@ -2,7 +2,7 @@
   - how to drive in emacs? completing-read, see also Programmed Completion and its completion-table-dynamic call hcp-show-tag-completions
     - how to get current point to calculate current scope? just (point)?
   x if no completions show "contains" too?
-  x tag/hcp-tag-completions prefix from-scope
+  x tags/hcp-symbol-completions prefix from-scope
     
 x handle using base class method/member
 

@@ -1,0 +1,197 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+class Session
+{
+  Algorithms const algorithms_;
+
+  xju::io::IBuf ibuf_;
+  xju::io::OBuf obuf_;
+
+  std::pair<std::vector<std::string>,Ident> const peerPreambleAndIdent_;
+  
+  I i_;
+  O o_;
+
+  std::ref<Kexer> kexer_;
+
+  bool closeReceived_;
+  bool closeSent_;
+
+public:
+  SessionKey const sessionKey_;
+
+  // Establish buffered, secure, host-authenticated SSH client session with 
+  // server over i+o by deadline, selecting algorithms from only those
+  // specified.
+  //
+  // Note actual buffer sizes used might be larger than those specified to
+  // suit chosen algorithms
+  //
+  // Note session transparently rekeys as necessary.
+  //
+  // pre: i and o will outlive this
+  Session(xju::io::IStream& i,
+          xju::io::OStream& o,
+          size_t const inputBufferSize,
+          size_t const outputBufferSize,
+          Ident ourIdent,
+          Algorithms algorithms,
+          std::map<HostKeyAlgorithmName,std::ref<pk::Verifier> > const& hostAuthenticator, // REVISIT: move into algorithms, needs more than just verifier
+          std::chrono::steady_clock::time_point const deadine):
+      algorithms_(std::move(algorithms)),
+      obuf_(o,deadline,outputBufferSize),
+      ibuf_(i,deadline,inputBufferSize),
+      peerPreambleAndIdent_(
+        shakeHands(xju::net::istream(ibuf_),
+                   xju::net::ostream(obuf_),
+                   ourIdent)),
+      i_(ibuf_,
+         std::unique_ptr<Cipher>(new ciphers::None()),
+         std::unique_ptr<PacketAuthenticator>(new macs::None()),
+         SequenceNumber(0)),
+      o_(obuf_,
+         std::unique_ptr<Cipher>(new ciphers::None()),
+         std::unique_ptr<PacketAuthenticator>(new macs::None()),
+         SequenceNumber(0)),
+      rekeyer_(i_,o_,algorithms_),
+      sessionKey_(rekeyer_.sessionKey_)
+  {
+  }
+
+  class Closed : public xju::Exception
+  {
+    using xju::Exception::Exception;
+  };
+  
+  // Send message by deadline, appending any messages received in the meantime
+  // to receivedMessages.
+  //
+  // This method suits single-threaded clients, which call either
+  // sendMessage or receiveMessage according to their application needs.
+  //
+  // pre: close() has not been called
+  //
+  void sendMessage(
+    Message const& message,
+    std::chrono::steady_clock::time_point const& deadline,
+    std::insert_iterator<std::vector<Message> > receivedMessages)
+    // xju::DeadlineReached - message not completely received by deadline
+    // Closed - other end has closed
+  {
+    try{
+      xju::io::OBuf::DeadlineOverride od(o_.buf_,deadline);
+      xju::io::IBuf::DeadlineOverride iod(i_.buf_,deadline);
+
+      while(!o_.send(message)){
+        try{
+          rekeyer_.finishRekeying();
+        }
+        catch(Message& inTransit)
+        {
+          receivedMessages.push_back(std::move(inTransit));
+        }
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "send " << message.size() << "-byte message to peer of SSH session "
+        << (*this)
+        << " by deadline collecting any messages received in the meantime";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  
+  // Send message by deadline.
+  //
+  // This method is only for multi-threaded clients; receiveMessage must
+  // be called concurrently to avoid deadlock due to e.g. rekeying on the fly
+  //
+  // pre: close() has not been called
+  //
+  void sendMessage(Message message,
+                   std::chrono::steady_clock::time_point const& deadline)
+    // xju::DeadlineReached - message not completely received by deadline
+    // Closed - other end has closed
+  {
+    try{
+      xju::io::OBuf::DeadlineOverride od(o_.buf_,deadline);
+      xju::io::IBuf::DeadlineOverride iod(i_.buf_,deadline);
+
+      while(!o_.send(message)){
+        rekeyer_.waitTillRekeyed(deadline);
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "send " << message.size() << "-byte message to peer of SSH session "
+        << (*this) << " by deadline";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  
+  // Recieve message by deadline.
+  //
+  // pre: close() has not been called
+  //
+  Message receiveMessage(size_t maxSize,deadline)
+    // xju::DeadlineReached - message not completely received by deadline
+    // Closed - other end has closed
+  {
+    xju::io::OBuf::DeadlineOverride od(o_.buf_,deadline);
+    xju::io::IBuf::DeadlineOverride iod(i_.buf_,deadline);
+    while(true){
+      try{
+        Message m(i_.receiveMessage(maxSize));
+        return std::move(m);
+      }
+      catch(Rekeying const&){
+        try{
+          rekeyer_.finishRekeying();
+        }
+        catch(Message& inTransit){
+          return Message(std::move(inTransit));
+        }
+      }
+    }
+  }
+
+  // Notify other end we are done, wait until peer has notified us it
+  // is done (noting it might have already).
+  // - returns messages received before peer's notification (discarding
+  //   further messages once maxResultSize is reached)
+  //
+  // REVISIT: close has no "ack"?
+  //
+  // pre: close() has not been called
+  //
+  std::vector<Body> close(
+    std::chrono::steady_clock::time_point const& deadline,
+    std::size_t maxResultSize)
+  {
+    //REVISIT
+  }
+};
+
+}
+}
+}
+
+

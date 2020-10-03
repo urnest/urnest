@@ -1,0 +1,64 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/ssh/userauth/MSG.hh> //impl
+
+namespace xju
+{
+namespace ssh
+{
+namespace userauth
+{
+namespace messages
+{
+
+class Success
+{
+public:
+  Success() noexcept:
+  {
+  }
+
+  friend bool operator<(Success const& a, Success const& b) noexcept;
+};
+
+}
+}
+}
+}
+
+namespace xju
+{
+namespace ssh
+{
+
+// encode x to s including initial type byte
+xju::net::ostream& encode(xju::net::ostream& s,
+                          userauth::messages::Success const& x)
+{
+  s.put8((uint8_t)userauth::MSG::SUCCESS);
+  return s;
+}
+
+// note assumes type byte (SUCCESS) already read and verified
+template<>
+userauth::messages::Success decoder<userauth::messages::Success>::dec(
+  xju::net::istream& s)
+{
+  using namespace userauth;
+  
+  return Success();
+}
+
+}
+}
+
+    

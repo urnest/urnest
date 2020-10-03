@@ -1,0 +1,55 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <string>
+#include <xju/Tagged.hh>
+#include <hcp/ast.hh>
+#include <hcp/parser.hh>
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+std::string const identificationLeader{"SSH-2.0-"};
+
+class SSHVersionTag{};
+typedef xju::Tagged<std::string,SSHVersionTag> SSHVersion;
+typedef hcp_ast::TaggedItem<SSHVersionTag> SSHVersionItem;
+class SoftwareVersionTag{};
+typedef xju::Tagged<std::string,SoftwareVersionTag> SoftwareVersion;
+typedef hcp_ast::TaggedItem<SoftwareVersionTag> SoftwareVersionItem;
+class IdentCommentTag{};
+typedef hcp_ast::TaggedItem<IdentCommentTag> IdentCommentItem;
+
+hcp_parser::PR identParser() noexcept
+{
+  using namespace hcp_parser;
+  PR identChars(!parseOneOfChars(" -")+usAsciiPrintable());
+  PR nullChar(charInRange(0,0));
+  PR SP(parseLiteral(" "));
+  static PR result(
+    "SSH-"+named<SSHVersionItem>("SSH version",parseUntil(identChars,"-"))+
+    "-"+named<SoftwareVersionItem>("software version",
+                                   parseUntil(identChars,crlf|SP))+
+    (!SP| //no comment
+     (SP+named<IdentCommentItem>("comment",parseUntil(!nullChar+parseAnyChar(),
+                                                      crlf))))+
+    crlf);
+  return result;
+}
+
+
+}
+}
+}

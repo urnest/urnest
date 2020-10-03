@@ -1,0 +1,162 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <utility> //impl
+#include <vector>
+#include <xju/ssh/transport/KexAlgorithmName.hh>
+#include <xju/ssh/transport/HostKeyAlgorithmName.hh>
+#include <utility>
+#include <functional>
+#include <xju/ssh/transport/HostKeyAlgorithm.hh>
+#include <xju/ssh/transport/Kexer.hh>
+#include <xju/ssh/transport/CipherName.hh>
+#include <xju/ssh/transport/CipherAlgorithm.hh>
+#include <xju/ssh/transport/PacketAuthenticatorName.hh>
+#include <xju/ssh/transport/PacketAuthenticationAlgorithm.hh>
+#include <xju/ssh/transport/messages/KexInit.hh>
+#include <xju/assert.hh> //impl
+#include <xju/Exception.hh> //impl
+#include <algorithm> //impl
+#include <xju/set/intersection.hh> //impl
+#include <xju/set/makeSet.hh> //impl
+#include <sstream> //impl
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+namespace
+{
+template<class A> class FirstEquals{
+public:
+  explicit FirstEquals(A const& x) noexcept: x_(x){}
+  A const& x_;
+  template<class B>
+  bool operator()(std::pair<A,B> const& x){
+    return x.first==x_;
+  }
+};
+template<class A>
+FirstEquals<A> firstEquals(A const& x){
+  return FirstEquals<A>(x);
+}
+
+}
+
+struct Algorithms
+{
+  typedef std::vector<std::pair<KexAlgorithmName,
+                                std::reference_wrapper<Kexer> > > Kexers;
+  typedef std::vector<
+    std::pair<HostKeyAlgorithmName,
+              std::reference_wrapper<HostKeyAlgorithm> > > HostKeyAlgorithms;
+  typedef std::vector<
+    std::pair<CipherName,
+              std::reference_wrapper<CipherAlgorithm> > > CipherAlgorithms;
+  typedef std::vector<
+    std::pair<
+      PacketAuthenticatorName,
+      std::reference_wrapper<
+        PacketAuthenticationAlgorithm> > > PacketAuthenticationAlgorithms;
+  
+  Algorithms(
+    Kexers kexers,
+    HostKeyAlgorithms hostKeyers,
+    CipherAlgorithms ciphers,
+    PacketAuthenticationAlgorithms packetAuthenticators) noexcept:
+      kexers_(std::move(kexers)),
+      hostKeyers_(std::move(hostKeyers)),
+      ciphers_(std::move(ciphers)),
+      packetAuthenticators_(std::move(packetAuthenticators))
+  {
+  }
+  Kexers kexers_;
+  HostKeyAlgorithms hostKeyers_;
+  CipherAlgorithms ciphers_;
+  PacketAuthenticationAlgorithms packetAuthenticators_;
+
+  virtual messages::KexInit const& chooseClientKexInit(
+    messages::KexInit const& ourKexInit,
+    messages::KexInit const& peerKexInit) = 0;
+
+  virtual messages::KexInit const& chooseServerKexInit(
+    messages::KexInit const& ourKexInit,
+    messages::KexInit const& peerKexInit) = 0;
+  
+  virtual CipherAlgorithm& chooseEncryptionCipher(
+    messages::KexInit const& ourKexInit,
+    messages::KexInit const& peerKexInit) = 0;
+  
+  virtual CipherAlgorithm& chooseDecryptionCipher(
+    messages::KexInit const& ourKexInit,
+    messages::KexInit const& peerKexInit) = 0;
+  
+  CipherAlgorithm& chooseServerEncryptionCipher(
+    messages::KexInit const& clientKexInit,
+    messages::KexInit const& serverKexInit)
+  {
+    return ciphers_.find(
+      chooseAlgorithm(
+        "server-to-client cipher",
+        clientKexInit.serverOutCipherNames_,
+        xju::set::makeSet(serverKexInit.serverOutCipherNames_)))
+      ->second.get();
+  }
+  
+  CipherAlgorithm& chooseClientEncryptionCipher(
+    messages::KexInit const& clientKexInit,
+    messages::KexInit const& serverKexInit)
+  {
+    return ciphers_.find(
+      chooseAlgorithm(
+        "client-to-server cipher",
+        clientKexInit.clientOutCipherNames_,
+        xju::set::makeSet(serverKexInit.clientOutCipherNames_)))
+      ->second.get();
+  }
+
+  virtual PacketAuthenticationAlgorithm& chooseMacVerifierAlgorithm(
+    messages::KexInit const& ourKexInit,
+    messages::KexInit const& peerKexInit) = 0;
+  
+  virtual PacketAuthenticationAlgorithm& chooseMacCalculatorAlgorithm(
+    messages::KexInit const& ourKexInit,
+    messages::KexInit const& peerKexInit) = 0;
+  
+  PacketAuthenticationAlgorithm& chooseServerMacAlgorithm(
+    messages::KexInit const& clientKexInit,
+    messages::KexInit const& serverKexInit)
+  {
+    return packetAuthenticators_.find(
+      chooseAlgorithm(
+        "server-to-client MAC algorithm",
+        clientKexInit.serverOutPacketAuthenticatorNames_,
+        xju::set::makeSet(serverKexInit.serverOutPacketAuthenticatorNames_)))
+      ->second.get();
+  }
+  
+  PacketAuthenticationAlgorithm& chooseClientMacAlgorithm(
+    messages::KexInit const& clientKexInit,
+    messages::KexInit const& serverKexInit)
+  {
+    return packetAuthenticators_.find(
+      chooseAlgorithm(
+        "client-to-server MAC algorithm",
+        clientKexInit.clientOutPacketAuthenticatorNames_,
+        xju::set::makeSet(serverKexInit.clientOutPacketAuthenticatorNames_)))
+      ->second.get();
+  }
+};
+
+}
+}
+}

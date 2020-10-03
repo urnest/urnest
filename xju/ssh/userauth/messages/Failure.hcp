@@ -1,0 +1,75 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/ssh/userauth/MethodName.hh>
+#include <xju/ssh/userauth/MSG.hh> //impl
+#include <vector>
+
+namespace xju
+{
+namespace ssh
+{
+namespace userauth
+{
+namespace messages
+{
+
+class Failure
+{
+public:
+  Failure(std::vector<MethodName> canContinue,bool partialSuccess) noexcept:
+      canContinue_(std::move(canContinue)),
+      partialSuccess_(partialSuccess)
+  {
+  }
+
+  std::vector<xju::MethodName> canContinue_;
+  bool partialSuccess_;
+  
+  friend bool operator<(Failure const& a, Failure const& b) noexcept;
+};
+
+}
+}
+}
+}
+
+namespace xju
+{
+namespace ssh
+{
+
+// encode x to s including initial type byte
+xju::net::ostream& encode(xju::net::ostream& s,
+                          userauth::messages::Failure const& x)
+{
+  s.put8((uint8_t)userauth::MSG::FAILURE);
+  encode(s,x.canContinue_);
+  encode(s,x.partialSuccess_);
+  return s;
+}
+
+// note assumes type byte (FAILURE) already read and verified
+template<>
+userauth::messages::Failure decoder<userauth::messages::Failure>::dec(
+  xju::net::istream& s)
+{
+  using namespace userauth;
+  
+  auto canContinue(decode<std::vector<xju::MethodName> >(s));
+  auto partialSuccess(decode<bool>(s));
+  return Failure(std::move(canContinue,partialSuccess));
+}
+
+}
+}
+
+    

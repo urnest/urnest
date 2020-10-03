@@ -1,0 +1,175 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+class Rekeyer
+{
+public:
+  // performs initial key exchange
+  // pre: i, o, algorithms will outlive this
+  Rekeyer(I& i, O& o, Algorithms const& algorithms,
+          Ident ourIdent,
+          std::pair<std::vector<std::string>,Ident> peerPreambleAndIdent):
+      ourIdent_(std::move(ourIdent)),
+      peerPreambleAndIdent_(std::move(peerPreambleAndIdent)),
+      o_(o),
+      i_(i),
+      algorithms_(algorithms),
+      changed_(guard_),
+      sessionId_(doInitialKex())
+  {
+  }
+  Ident const ourIdent_;
+  std::pair<std::vector<std::string>,Ident> const peerPreambleAndIdent_;
+  
+  SessionId const sessionId_;
+  
+  // commences rekeying
+  void startRekeying()
+  {
+    xju::Lock l(guard_);
+    xju::assert_equal(ol_.valid(),false);
+    ol_=std::unique_ptr<O::RekeyLock>(
+      new O::RekeyLock(o_,algorithms_.makeKexInitRequest()));
+  }
+
+  // pre: calling thread has caught I::Rekeying
+  void finishRekeying()
+  // Message - in transit message received - call again
+  {
+    xju::Lock l(guard_);
+    if (ol_.get()){
+      // since this method always runs to completion in the case
+      // of peer-initiated rekey, this must be a local-initiated rekey
+      // (via startRekeying above) and we cannot have recieved
+      // peer KexInit yet
+      xju::assert_equal(il_.valid(),false);
+      changed_.signal(l);
+      I::RekeyLock il(i_);
+      auto ol(std::move(ol_));
+      doKex(l,*ol,il);
+    }
+    else{
+      // Not local, so must be peer-initiated, and we can't ever be
+      // be called with il_.valid() already (because once we receive
+      // the peer KexInit we always finish rekey before returning
+      // Note that even though there is a window where a receiver
+      // thread can catch a Rekeying but another thread could finish
+      // that rekeying before the first thread calls finishRekeying, it
+      // won't happen because no other thread will call rekeying (only
+      // one receive thread + one transmit thread allowed, and only the
+      // receive thread is allowed to call finishRekeying).
+      xju::assert_equal(il_.valid(),false);
+      changed_.signal(l);
+      I::RekeyLock il(i_);
+      O::RekeyLock ol(algorithms_.makeKexInitResponse(il.peerKexInit_));
+      doKex(l,ol,il);
+    }
+  }
+  
+  void waitTillRekeyed(std::chrono::steady_clock const& deadline)
+  {
+    xju::Lock l(guard_);
+    //REVISIT: what if fail during rekeying?
+    while(ol_.get())
+    {
+      if (xju::steadyNow()>deadline){
+        throw xju::DeadlineReached(xju::Exception("deadline reached",XJU_TRACED));
+      }
+      changed_.wait(l,deadline);
+    }
+  }
+  
+private:
+  I& i_;
+  O& o_;
+  Algorithms_ const& algorithms_;
+  
+  xju::Mutex guard_;
+  xju::Condition changed_;
+  std::unique_ptr<O::RekeyLock> ol_;
+
+  SessionKey doKex(xju::Lock const& l,
+                   I::RekeyLock& il,
+                   O::RekeyLock& ol)
+  {
+    xju::assert_equal(l.holds(guard_),true);
+    
+    auto kexer=algorithms_.chooseKexer(ol.sent_,il.peerKexInit_);
+    
+    auto const clientKexInit(algorithms_.chooseClientKexInit(
+                               ol.sent_,
+                               il.peerKexInit_));
+    auto const serverKexInit(algorithms_.chooseServerKexInit(
+                               ol.sent_,
+                               il.peerKexInit_));
+    ol_=std::unique_ptr<O::RekeyLock>(
+      new O::RekeyLock(chooseKexer(clientKexInit.kexAlgorithms_,
+                                   serverKexInit.kexAlgorithms_,
+                                   clientKexInit.serverHostKeyAlgorithmNames_,
+                                   serverKexInit.serverHostKeyAlgorithmNames_,
+                                   algorithms_.kexers_,
+                                   algorithms_.hostKeyers_)));
+    
+    std::pair<K,H> kh(
+      kexer.first.get().exchangeKeys(
+        il,ol,
+        ourIdent_,
+        peerPreambleAndIdent_,
+        clientKexInit,
+        serverKexInit,
+        chooseHostKeyAlgorithm(
+          clientKexInit.serverHostKeyAlgorithmNames_,
+          serverKexInit.serverHostKeyAlgorithmNames_,
+          kexer.first.requiresEncryptionCapableHostKey(),
+          kexer.first.requiresSignatureCapableHostKey(),
+          algorithms_.hostKeyers_),
+        ol.peerKexInit_.firstKexPacketFollows_&&!kexer.second));
+    il.setDecrypter(
+      algorithms_.chooseDecryptionCipher(il.sent_,ol.peerKexInit_).decrypter(
+        kh.first,kh.second,sessionId_));
+    ol.setEncrypter(
+      algorithms_.chooseEncryptionCipher(il.sent_,ol.peerKexInit_).encrypter(
+        kh.first,kh.second,sessionId_);
+    il.setMacVerifier(
+      algorithms_.chooseMacVerifierAlgorithm().macVerifier());
+    ol.setMacCalculator(
+      algorithms_.chooseMacCalculatorAlgorithm().macCalculator());
+    
+    return result;
+  }
+
+  SessionId doInitialKex()
+  {
+    xju::Lock l(guard_);
+    O::RekeyLock ol(o_,algorithms_.makeKexInitRequest());
+    try{
+      auto m(i_.receiveMessage(REVISIT));
+      std::ostringstream s;
+      s << "expected KexInit (type "
+        << xju::format::hex((char)MSG::KEXINIT)<< ") message, received " << m;
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    catch(I::Rekeying const&){
+      I::RekeyLock il(i_);
+      return doKex(l,il,ol);
+    }
+  }
+};
+
+}
+}
+}

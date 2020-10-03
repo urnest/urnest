@@ -1,0 +1,151 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/IBuf.hh>
+#include <memory>
+#include <xju/ssh/transport/Decrypter.hh>
+#include <xju/ssh/transport/SequenceNumber.hh>
+#include <xju/ssh/transport/MacVerifier.hh>
+#include <utility> //impl
+#include <xju/ssh/transport/messages/KexInit.hh>
+#include <xju/ssh/transport/Message.hh>
+#include <xju/Lock.hh> //impl
+#include <xju/Mutex.hh>
+#include <xju/net/istream.hh>
+#include <xju/Optional.hh>
+#include <vector>
+#include <sstream> //impl
+#include <xju/assert.hh> //impl
+#include <xju/Lock.hh>
+#include <xju/ssh/transport/MSG.hh> //impl
+#include <xju/MemRefIBuf.hh> //impl
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+class I
+{
+public:
+  I(xju::IBuf& b,
+    std::unique_ptr<Decrypter> decrypter,
+    std::unique_ptr<MacVerifier> packetAuthenticator,
+    SequenceNumber nextSeq) noexcept:
+      s_(b),
+      decrypter_(std::move(decrypter)),
+      packetAuthenticator_(std::move(packetAuthenticator)),
+      nextSeq_(std::move(nextSeq))
+  {
+  }
+  class Rekeying{};
+  
+  class RekeyLock
+  {
+  public:
+    messages::KexInit const peerKexInit_;
+
+    RekeyLock(RekeyLock const&) = delete;
+    RekeyLock(RekeyLock &&) = delete;
+    
+    //pre: caller has caught Rekeying
+    RekeyLock(I& i)
+        : i_(i),
+          peerKexInit_(i.retrievePeerKexInit())
+    {
+    }
+    ~RekeyLock() noexcept
+    {
+      xju::Lock l(i_.guard_);
+      xju::assert_equal(i_.peerKexInit_.valid(),true);
+      i_.peerKexInit_.clear();
+    }
+    Message receiveMessage(size_t const maxBytes)
+    {
+      xju::Lock l(i_.guard_);
+      return i_.receiveMessage(maxBytes,l);
+    }
+    void setDecrypter(std::unique_ptr<Decrypter> decrypter) noexcept
+    {
+      xju::Lock l(i_.guard_);
+      i_.decrypter_=std::move(decrypter);
+    }
+    
+    void setPacketAuthenticator(
+      std::unique_ptr<MacVerifier> packetAuthenticator) noexcept
+    {
+      xju::Lock l(i_.guard_);
+      i_.packetAuthenticator_=std::move(packetAuthenticator);
+    }
+    
+  private:
+    I& i_;
+  };
+  
+  Message receiveMessage(size_t const maxBytes)
+  //Rekeying - rekeying in progress, may retry
+  {
+    xju::Lock l(guard_);
+    if (peerKexInit_.valid()){
+      throw Rekeying();
+    }
+    return receiveMessage(maxBytes,l);
+  }
+
+private:
+  mutable xju::Mutex guard_;
+  xju::net::istream s_;
+  std::unique_ptr<Decrypter> decrypter_;
+  std::unique_ptr<MacVerifier> packetAuthenticator_;
+  SequenceNumber nextSeq_;
+  xju::Optional<Message> peerKexInit_;
+  
+  //pre: l.holds(guard_)
+  Message receiveMessage(size_t const maxBytes,xju::Lock const& l){
+    // Rekeying - peer KexInit received, see retrievePeerKexInit below
+    try{
+      auto x(decrypter_->decryptPacket(s_,maxBytes));
+      packetAuthenticator_->verifyPacket(nextSeq_,x.first,x.second,s_);
+      ++nextSeq_;
+      if (x.first.size()&&
+          (MSG(x.first[0])==MSG::KEXINIT)&&!peerKexInit_.valid()){
+        peerKexInit_=x.first;
+        throw Rekeying();
+      }
+      return std::move(x.first);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "receive and authenticate SSH message of max "
+        << maxBytes << " bytes";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  messages::KexInit const retrievePeerKexInit() const
+  {
+    xju::Lock l(guard_);
+    xju::assert_equal(peerKexInit_.valid(),true);
+    xju::MemRefIBuf b(&peerKexInit_.value()[0],
+                      &peerKexInit_.value()[peerKexInit_.value().size()],
+                      peerKexInit_.value().size());
+    xju::net::istream s(b);
+    return decode<messages::KexInit>(s);
+  }
+};
+
+}
+}
+}
+
+

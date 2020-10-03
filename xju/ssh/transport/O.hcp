@@ -1,0 +1,137 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/net/ostream.hh>
+#include <memory>
+#include <xju/ssh/transport/Encrypter.hh>
+#include <xju/ssh/transport/MacCalculator.hh>
+#include <xju/OBuf.hh>
+#include <xju/ssh/transport/SequenceNumber.hh>
+#include <utility> //impl
+#include <xju/Lock.hh> //impl
+#include <xju/assert.hh> //impl
+#include <xju/ssh/transport/Message.hh>
+#include <xju/Exception.hh> //impl
+#include <sstream> //impl
+#include <xju/Lock.hh>
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+class O
+{
+public:
+  //pre: b will outlive this
+  O(xju::OBuf& b,
+    std::unique_ptr<Encrypter> encrypter,
+    std::unique_ptr<MacCalculator> macCalculator,
+    SequenceNumber nextSeq) noexcept:
+      b_(b),
+      encrypter_(std::move(encrypter)),
+      macCalculator_(std::move(macCalculator)),
+      nextSeq_(std::move(nextSeq)),
+      rekeying_(false)
+  {
+  }
+  class Rekeying{};
+  class RekeyLock
+  {
+  public:
+    RekeyLock(RekeyLock const&) = delete;
+    RekeyLock(RekeyLock &&) = delete;
+    
+    RekeyLock(O& o):
+        o_(o)
+    {
+      xju::Lock l(o_.guard_);
+      xju::assert_equal(o_.rekeying_,false);
+      o_.rekeying_=true;
+    }
+    ~RekeyLock() noexcept
+    {
+      xju::Lock l(o_.guard_);
+      o_.rekeying_=false;
+    }
+    void sendMessage(Message body)
+    {
+      xju::Lock l(o_.guard_);
+      o_.sendMessage(body,l);
+    }
+    
+    void setEncrypter(std::unique_ptr<Encrypter> encrypter,
+                      RekeyLock const&) noexcept
+    {
+      xju::Lock l(o_.guard_);
+      xju::assert_equal(o_.rekeying_,true);
+      o_.encrypter_=std::move(encrypter);
+    }
+    
+    void setMacCalculator(
+      std::unique_ptr<MacCalculator> macCalculator,
+      RekeyLock const&) noexcept
+    {
+      xju::Lock l(o_.guard_);
+      xju::assert_equal(o_.rekeying_,true);
+      o_.macCalculator_=std::move(macCalculator);
+    }
+  
+  private:
+    O& o_;
+  };
+
+  // send message unless rekeying
+  void sendMessage(Message const& message)
+  // Rekeying - can retry
+  {
+    xju::Lock l(guard_);
+    if (rekeying_){
+      throw Rekeying();
+    }
+    sendMessage(message,l);
+  }
+
+private:
+  xju::OBuf& b_;
+
+  mutable xju::Mutex     guard_;
+  std::unique_ptr<Encrypter> encrypter_;
+  std::unique_ptr<MacCalculator> macCalculator_;
+  SequenceNumber nextSeq_;
+  bool           rekeying_;
+
+  //pre: l.holds(guard_)
+  void sendMessage(Message const& message,xju::Lock const& l)
+  {
+    try{
+      xju::net::ostream s(b_);
+      auto const padding(encrypter_->encryptPacket(message,s));
+      macCalculator_->calculateMac(nextSeq_,message,padding,s);
+      ++nextSeq_;
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "send " << message.size() << "-byte SSH message";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  
+};
+
+}
+}
+}
+
+

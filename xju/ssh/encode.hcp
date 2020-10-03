@@ -1,0 +1,66 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/net/ostream.hh>
+#include <string>
+#include <xju/Tagged.hh>
+#include <xju/format.hh>
+#include <xju/Int.hh>
+#include <cinttypes>
+
+namespace xju
+{
+namespace ssh
+{
+
+xju::net::ostream& encode(xju::net::ostream& s, bool const x)
+{
+  return s.put8(x?1:0);
+}
+xju::net::ostream& encode(xju::net::ostream& s, uint8_t const x)
+{
+  return s.put8(x);
+}
+xju::net::ostream& encode(xju::net::ostream& s, uint16_t const x)
+{
+  return s.put16(x);
+}
+xju::net::ostream& encode(xju::net::ostream& s, uint32_t const x)
+{
+  return s.put32(x);
+}
+xju::net::ostream& encode(xju::net::ostream& s, std::string const& x)
+{
+  return s.put32(x.size()).put(x.begin(),x.end());
+}
+
+template<class Tag>
+xju::net::ostream& encode(xju::net::ostream& s,xju::Tagged<std::string,Tag> const& x)
+{
+  return encode(s,x.value());
+}
+template<class Tag>
+xju::net::ostream& encode(xju::net::ostream& s,
+                          std::vector<xju::Int<Tag,uint32_t> > const& x)
+{
+  
+  return s.put32(x.value());
+}
+
+template<class Tag>
+xju::net::ostream& encode(xju::net::ostream& s,std::vector<xju::Tagged<std::string,Tag> > const& x)
+{
+  
+  return encode(s,xju::format::join(x.begin(),x.end(),std::string(",")));
+}
+
+}
+}

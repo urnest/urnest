@@ -264,6 +264,8 @@ namespace xju
 	    {
 		commonPrefix = std::vector<T>(a.begin(), r.first);
                 offsetOfFirstMismatch=r.first-a.begin();
+                T ax(*r.first);
+                T bx(*r.second);
 		assert_abort();
 	    }
 	}

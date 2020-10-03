@@ -11,6 +11,7 @@ json%tests.tree
 utf8%tests.tree
 ip%tests.tree
 net%tests.tree
+set%tests.tree
 ssh%tests.tree
 test%tests.tree
 %tags
@@ -120,6 +121,7 @@ done
 %netflow==./netflow/Odinfile%hcp-gen
 %linux==./linux/Odinfile%hcp-gen
 %net==./net/Odinfile%hcp-gen
+%set==./set/Odinfile%hcp-gen
 %ssh==./ssh/Odinfile%hcp-gen
 %tls==tls/Odinfile%hcp-gen
 
@@ -158,6 +160,7 @@ utf8%tags
 test%tags
 linux%tags
 net%tags
+set%tags
 ssh%tags
 tls%tags
 

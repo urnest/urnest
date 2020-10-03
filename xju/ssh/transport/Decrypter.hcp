@@ -1,0 +1,41 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/ssh/transport/Padding.hh>
+#include <vector>
+#include <cinttypes>
+#include <xju/net/ostream.hh>
+#include <utility>
+#include <xju/net/istream.hh>
+#include <xju/ssh/transport/Message.hh>
+#include <unistd.h>
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+class Decrypter{
+public:
+  virtual ~Decrypter() noexcept {}
+
+  // Decrypt packet from specified stream.
+  virtual std::pair<Message,Padding> decryptPacket(
+    xju::net::istream& from,
+    size_t const maxBytes) =0;
+
+};
+
+}
+}
+}

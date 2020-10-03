@@ -1,0 +1,136 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <utility>
+#include <functional>
+#include <xju/ssh/transport/Kexer.hh>
+#include <vector>
+#include <xju/ssh/transport/KexAlgorithmName.hh>
+#include <set>
+#include <xju/ssh/transport/HostKeyAlgorithmName.hh>
+#include <map>
+#include <xju/ssh/transport/HostKeyAlgorithm.hh>
+#include <xju/Exception.hh> //impl
+#include <xju/assert.hh> //impl
+#include <algorithm> //impl
+#include <xju/set/intersection.hh> //impl
+#include <sstream> //impl
+#include <xju/format.hh> //impl
+#include <string> //impl
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+//result.second == correct guess
+std::pair<std::reference_wrapper<Kexer>,bool> chooseKexer(
+  std::vector<KexAlgorithmName> const& clientRequested,
+  std::vector<KexAlgorithmName> const& serverProposed,
+  std::set<HostKeyAlgorithmName> const& clientRequestedHostKeyAlgorithms,
+  std::set<HostKeyAlgorithmName> const& serverProposedHostKeyAlgorithms,
+  std::map<KexAlgorithmName,std::reference_wrapper<Kexer> > const& kexers,
+  std::map<HostKeyAlgorithmName,std::reference_wrapper<HostKeyAlgorithm> > const& hostKeyers)
+{
+  try{
+    if (clientRequested.size()==0){
+      throw xju::Exception("client KexInit contains no kex algorithm names",XJU_TRACED);
+    }
+    if (serverProposed.size()==0){
+      throw xju::Exception("server KexInit contains no kex algorithm names",XJU_TRACED);
+    }
+    
+    if (clientRequested[0]==serverProposed[0]){
+      //The first algorithm MUST be the preferred (and guessed) algorithm.
+      auto const i(kexers.find(clientRequested[0]));
+      xju::assert_not_equal(i,kexers.end());
+      return {(*i).second,true};
+    }
+    //Iterate over client's kex algorithms, one at a time.
+    for(auto const& n: clientRequested){
+      // the server also proposes the algorithm
+      if (std::find(serverProposed.begin(),serverProposed.end(),n)!=
+          serverProposed.end())
+      {
+        Kexer& a(kexers.find(n)->second);
+        //if the algorithm requires an encryption-capable host key algorithm
+        if (a.requiresEncryptionCapableHostKey()){
+          // there is an encryption-capable algorithm on the server's
+          // server_host_key_algorithms that is also proposed by the
+          // client
+          auto const common(
+            xju::set::intersection(
+              clientRequestedHostKeyAlgorithms,
+              serverProposedHostKeyAlgorithms));
+          if (std::find_if(
+                hostKeyers.begin(),hostKeyers.end(),
+                [&](auto const& nv){
+                  return common.count(nv.first) &&
+                    nv.second.get().isEncryptionCapable();
+                })==hostKeyers.end()){
+            continue;
+          }
+        }
+        //if the algorithm requires an signature-capable host key algorithm
+        if (a.requiresSignatureCapableHostKey()){
+          // there is an signature-capable algorithm on the server's
+          // server_host_key_algorithms that is also proposed by the
+          // client
+          auto const common(
+            xju::set::intersection(
+              clientRequestedHostKeyAlgorithms,
+              serverProposedHostKeyAlgorithms));
+          if (std::find_if(
+                hostKeyers.begin(),hostKeyers.end(),
+                [&](auto const& nv){
+                  return common.count(nv.first) &&
+                    nv.second.get().isSignatureCapable();
+                })==hostKeyers.end()){
+            continue;
+          }
+        }
+        return {a,false};
+      }
+    }
+    //REVISIT: need analysis for each of client's algorithms
+    throw xju::Exception("client and server have no common key-exchange and/or required host key algorithm",XJU_TRACED);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "choose key exchange method given client proposes "
+      << "key exchange algorithms "
+      << xju::format::join(clientRequested.begin(),clientRequested.end(),
+                           std::string("; "))
+      << " and host key algorithms "
+      << xju::format::join(clientRequestedHostKeyAlgorithms.begin(),
+                           clientRequestedHostKeyAlgorithms.end(),
+                           std::string("; "))
+      << " while server proposes "
+      << "key exchange algorithms "
+      << xju::format::join(serverProposed.begin(),serverProposed.end(),
+                           std::string("; "))
+      << " and host key algorithms "
+      << xju::format::join(serverProposedHostKeyAlgorithms.begin(),
+                           serverProposedHostKeyAlgorithms.end(),
+                           std::string("; "));
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+
+}
+}
+}
+
+

@@ -1,0 +1,82 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/net/istream.hh>
+#include <cinttypes>
+#include <xju/Tagged.hh>
+#include <vector>
+#include <xju/split.hh>
+
+namespace xju
+{
+namespace ssh
+{
+
+template<class T>
+struct decoder{
+  static T dec(xju::net::istream& s); // must specialise
+};
+
+template<class T> T decode(xju::net::istream& s)
+{
+  return decoder<T>::dec(s);
+}
+
+// specialisations
+template<> bool decoder<bool>::dec(xju::net::istream& s)
+{
+  return s.get8()!=0;
+}
+template<> uint8_t decoder<uint8_t>::dec(xju::net::istream& s)
+{
+  return s.get8();
+}
+template<> uint16_t decoder<uint16_t>::dec(xju::net::istream& s)
+{
+  return s.get16();
+}
+template<> uint32_t decoder<uint32_t>::dec(xju::net::istream& s)
+{
+  return s.get32();
+}
+template<> std::string decoder<std::string>::dec(xju::net::istream& s)
+{
+  std::string result;
+  result.resize(s.get32());
+  s.getN(result.size(),result.begin());
+  return result;
+}
+template<class T>
+struct decoder<xju::Tagged<std::string,T> >
+{
+  static xju::Tagged<std::string,T> dec(xju::net::istream& s)
+  {
+    return xju::Tagged<std::string,T>(decode<std::string>(s));
+  }
+};
+
+// decode name-list
+template<class T>
+struct decoder<std::vector<xju::Tagged<std::string,T> > >
+{
+  static std::vector<xju::Tagged<std::string,T> > dec(xju::net::istream& s)
+  {
+    auto const y(xju::split(decode<std::string>(s),','));
+    std::vector<xju::Tagged<std::string,T> > result;
+    for(auto const& x:y){
+      result.push_back(xju::Tagged<std::string,T>(x));
+    }
+    return result;
+  }
+};
+
+}
+}

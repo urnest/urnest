@@ -1,0 +1,74 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <vector>
+#include <cinttypes>
+#include <xju/net/istream.hh>
+#include <sstream> //impl
+#include <xju/Exception.hh> //impl
+#include <xju/ssh/transport/Padding.hh>
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+// Decode SSH packet of max body size maxBodyBytes, excluding MAC,
+// from specified stream.
+// - returns body (discards padding)
+std::pair<std::vector<uint8_t>,Padding> decodePacket(xju::net::istream& from,
+                                                     size_t const maxBodyBytes)
+//std::bad_alloc
+//xju::Exception - e.g. malformed
+{
+  try{
+    uint32_t const packet_length(from.get32());
+    // note we don't enforce the 4-byte minimum padding, nor the 16-byte
+    // minimum packet size
+    if (packet_length<1){
+      std::ostringstream s;
+      s << "SSH packet length 0 is not valid";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    uint32_t padding_length(from.get8());
+    if (padding_length>(packet_length-1)){
+      std::ostringstream s;
+      s << "SSH padding length " << padding_length
+        << " overruns packet with length " << packet_length;
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    uint32_t const body_length=packet_length-padding_length-1;
+    if (body_length>maxBodyBytes){
+      std::ostringstream s;
+      s << "actual packet length " << body_length << " exceeds "
+        << maxBodyBytes;
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    std::vector<uint8_t> body(body_length);
+    from.getN(body_length,body.begin());
+    Padding padding(padding_length);
+    from.getN(padding_length,padding.begin());
+    return std::make_pair(body,padding);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode SSH " << maxBodyBytes 
+      << "-max-bytes packet excluding MAC from stream";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+}
+}

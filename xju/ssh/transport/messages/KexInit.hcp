@@ -1,0 +1,201 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/Array.hh>
+#include <cinttypes>
+#include <vector>
+#include <xju/ssh/transport/KexAlgorithmName.hh>
+#include <xju/ssh/transport/HostKeyAlgorithmName.hh>
+#include <xju/ssh/transport/CipherName.hh>
+#include <xju/ssh/transport/PacketAuthenticatorName.hh>
+#include <xju/ssh/transport/CompressorName.hh>
+#include <xju/ssh/transport/LanguageName.hh>
+#include <xju/net/ostream.hh>
+#include <xju/net/istream.hh>
+#include <xju/ssh/decode.hh>
+#include <xju/ssh/transport/MSG.hh> //impl
+#include <xju/ssh/encode.hh> //impl
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+namespace messages
+{
+
+class KexInit
+{
+public:
+  KexInit(
+    xju::Array<uint8_t,16> cookie,
+    std::vector<KexAlgorithmName> kexAlgorithms,
+    std::vector<HostKeyAlgorithmName> serverHostKeyAlgorithmNames,
+    std::vector<CipherName> clientOutCipherNames,
+    std::vector<CipherName> serverOutCipherNames,
+    std::vector<PacketAuthenticatorName> clientOutPacketAuthenticatorNames,
+    std::vector<PacketAuthenticatorName> serverOutPacketAuthenticatorNames,
+    std::vector<CompressorName>  clientOutCompressorName,
+    std::vector<CompressorName>  serverOutCompressorName,
+    std::vector<LanguageName> clientOutLanguageName,
+    std::vector<LanguageName> serverOutLanguageName,
+    bool firstKexPacketFollows) noexcept:
+      cookie_(cookie),
+      kexAlgorithms_(kexAlgorithms),
+      serverHostKeyAlgorithmNames_(serverHostKeyAlgorithmNames),
+      clientOutCipherNames_(clientOutCipherNames),
+      serverOutCipherNames_(serverOutCipherNames),
+      clientOutPacketAuthenticatorNames_(clientOutPacketAuthenticatorNames),
+      serverOutPacketAuthenticatorNames_(serverOutPacketAuthenticatorNames),
+      clientOutCompressorNames_(clientOutCompressorName),
+      serverOutCompressorNames_(serverOutCompressorName),
+      clientOutLanguageNames_(clientOutLanguageName),
+      serverOutLanguageNames_(serverOutLanguageName),
+      firstKexPacketFollows_(firstKexPacketFollows)
+  {
+  }
+
+  xju::Array<uint8_t,16> cookie_;
+  std::vector<KexAlgorithmName> kexAlgorithms_;
+  std::vector<HostKeyAlgorithmName> serverHostKeyAlgorithmNames_;
+  std::vector<CipherName> clientOutCipherNames_;
+  std::vector<CipherName> serverOutCipherNames_;
+  std::vector<PacketAuthenticatorName> clientOutPacketAuthenticatorNames_;
+  std::vector<PacketAuthenticatorName> serverOutPacketAuthenticatorNames_;
+  std::vector<CompressorName>  clientOutCompressorNames_;
+  std::vector<CompressorName>  serverOutCompressorNames_;
+  std::vector<LanguageName> clientOutLanguageNames_;
+  std::vector<LanguageName> serverOutLanguageNames_;
+  bool firstKexPacketFollows_;
+
+  friend bool operator<(KexInit const& x,KexInit const& y) noexcept;
+};
+
+std::ostream& operator<<(std::ostream& s, KexInit const& x)
+{
+  return s << "kex algorithms "
+           << xju::format::join(x.kexAlgorithms_.begin(),
+                                x.kexAlgorithms_.end(),
+                                std::string(", "))
+           << "; host key algorithms "
+           << xju::format::join(x.serverHostKeyAlgorithmNames_.begin(),
+                                x.serverHostKeyAlgorithmNames_.end(),
+                                std::string(", "))
+           << "; client-to-server ciphers "
+           << xju::format::join(x.clientOutCipherNames_.begin(),
+                                x.clientOutCipherNames_.end(),
+                                std::string(", "))
+           << "; server-to-client ciphers "
+           << xju::format::join(x.serverOutCipherNames_.begin(),
+                                x.serverOutCipherNames_.end(),
+                                std::string(", "))
+           << "; client-to-server mac algorithms "
+           << xju::format::join(x.clientOutPacketAuthenticatorNames_.begin(),
+                                x.clientOutPacketAuthenticatorNames_.end(),
+                                std::string(", "))
+           << "; server-to-client mac algorithms "
+           << xju::format::join(x.serverOutPacketAuthenticatorNames_.begin(),
+                                x.serverOutPacketAuthenticatorNames_.end(),
+                                std::string(", "))
+           << "; client-to-server compressors "
+           << xju::format::join(x.clientOutCompressorNames_.begin(),
+                                x.clientOutCompressorNames_.end(),
+                                std::string(", "))
+           << "; server-to-client compressors "
+           << xju::format::join(x.serverOutCompressorNames_.begin(),
+                                x.serverOutCompressorNames_.end(),
+                                std::string(", "))
+           << "; client-to-server languages "
+           << xju::format::join(x.clientOutLanguageNames_.begin(),
+                                x.clientOutLanguageNames_.end(),
+                                std::string(", "))
+           << "; server-to-client languages "
+           << xju::format::join(x.serverOutLanguageNames_.begin(),
+                                x.serverOutLanguageNames_.end(),
+                                std::string(", "));
+}
+
+
+}
+}
+}
+}
+
+namespace xju
+{
+namespace ssh
+{
+
+// encode x to s including initial type byte
+xju::net::ostream& encode(xju::net::ostream& s,
+                          transport::messages::KexInit const& x)
+{
+  s.put8((uint8_t)transport::MSG::KEXINIT);
+  s.put(x.cookie_.begin(),x.cookie_.end());
+  encode(s,x.kexAlgorithms_);
+  encode(s,x.serverHostKeyAlgorithmNames_);
+  encode(s,x.clientOutCipherNames_);
+  encode(s,x.serverOutCipherNames_);
+  encode(s,x.clientOutPacketAuthenticatorNames_);
+  encode(s,x.serverOutPacketAuthenticatorNames_);
+  encode(s,x.clientOutCompressorNames_);
+  encode(s,x.serverOutCompressorNames_);
+  encode(s,x.clientOutLanguageNames_);
+  encode(s,x.serverOutLanguageNames_);
+  encode(s,x.firstKexPacketFollows_);
+  return s;
+}
+
+// note assumes type byte (KEXINIT) already read and verified
+template<>
+transport::messages::KexInit decoder<transport::messages::KexInit>::dec(
+  xju::net::istream& s)
+{
+  using namespace transport;
+  
+  xju::Array<uint8_t,16> cookie;
+  s.getN(cookie.size(),cookie.begin());
+  auto kexAlgorithms(decode<std::vector<KexAlgorithmName> >(s));
+  auto serverHostKeyAlgorithmNames(
+    decode<std::vector<HostKeyAlgorithmName> >(s));
+  auto clientOutCipherNames(decode<std::vector<CipherName> >(s));
+  auto serverOutCipherNames(decode<std::vector<CipherName> >(s));
+  auto clientOutPacketAuthenticatorNames(
+    decode<std::vector<PacketAuthenticatorName> >(s));
+  auto serverOutPacketAuthenticatorNames(
+    decode<std::vector<PacketAuthenticatorName> >(s));
+  auto clientOutCompressorName(
+    decode<std::vector<CompressorName> >(s));
+  auto serverOutCompressorName(
+    decode<std::vector<CompressorName> >(s));
+  auto clientOutLanguageName(
+    decode<std::vector<LanguageName> >(s));
+  auto serverOutLanguageName(decode<std::vector<LanguageName> >(s));
+  auto firstKexPacketFollows(decode<bool>(s));
+
+  return messages::KexInit(
+    std::move(cookie),
+    std::move(kexAlgorithms),
+    std::move(serverHostKeyAlgorithmNames),
+    std::move(clientOutCipherNames),
+    std::move(serverOutCipherNames),
+    std::move(clientOutPacketAuthenticatorNames),
+    std::move(serverOutPacketAuthenticatorNames),
+    std::move(clientOutCompressorName),
+    std::move(serverOutCompressorName),
+    std::move(clientOutLanguageName),
+    std::move(serverOutLanguageName),
+    std::move(firstKexPacketFollows));
+}
+
+}
+}

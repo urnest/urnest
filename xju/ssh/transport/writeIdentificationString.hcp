@@ -1,0 +1,64 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/net/ostream.hh>
+#include <sstream> //impl
+#include <xju/format.hh> //impl
+#include <xju/ssh/transport/identParser.hh>
+#include <string>
+#include <xju/Optional.hh>
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+//pre: softwareVersion valid per rfc4253 'softwareversion' ie
+//     US-ASCII printable excluding whitespace and minus
+//pre: comments contains no \r, \n or null characters
+void writeIdentificationString(
+  xju::net::ostream& s,
+  SoftwareVersion const& softwareVersion,
+  xju::Optional<std::string> const& comments)
+// std::bad_alloc
+// other - stream write failed
+{
+  try
+  {
+    s.put(std::begin(identificationLeader),std::end(identificationLeader))
+      .put(softwareVersion.value());
+    if (comments.get()){
+      s.put8(' ').put(comments.get()->begin(),comments.get()->end());
+    }
+    s.put8('\r').put8('\n');
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << identificationLeader
+      << softwareVersion;
+    if (comments.get()){
+      s << ' ' << comments.value();
+    }
+    e.addContext(
+      "write SSH identification string " +
+      xju::format::quote(xju::format::cEscapeString(s.str())),XJU_TRACED);
+    throw;
+  }
+}
+
+
+}
+}
+}
+
+
