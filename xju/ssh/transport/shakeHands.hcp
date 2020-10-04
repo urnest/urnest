@@ -9,6 +9,21 @@
 //
 
 
+#include <tuple>
+#include <vector>
+#include <xju/ssh/transport/identParser.hh>
+#include <xju/Optional.hh>
+#include <string>
+#include <xju/net/istream.hh>
+#include <xju/net/ostream.hh>
+#include <future> //impl
+#include <xju/ssh/transport/readIdentificationString.hh> //impl
+#include <xju/ssh/transport/writeIdentificationString.hh> //impl
+#include <utility> //impl
+#include <sstream> //impl
+#include <xju/format.hh> //impl
+#include <xju/Exception.hh> //impl
+
 namespace xju
 {
 namespace ssh
@@ -26,43 +41,83 @@ std::tuple<
                SoftwareVersion const& softwareVersion,
                xju::Optional<std::string> const& comments)
 {
-  xju::Optional<decltype(readIdentificationString(i))> result;
   try{
+    auto r=std::async(std::launch::deferred,
+                      [&i](){
+                        return readIdentificationString(i);
+                      });
+    auto w=std::async(std::launch::async,
+                      [&writeFailed,&softwareVersion,&comments,&o](){
+                        writeIdentificationString(o,softwareVersion,comments);
+                      });
+    std::exception_ptr readFailed;
+    try{
+      r.get();
+    }
+    catch(...){
+      readFailed=std::move(std::current_exception());
+    }
     std::exception_ptr writeFailed;
-    {
-      xju::Thread t(
-        [&writeFailed,&softwareVersion,&comments,&o](){
-          try{
-            writeIdentificationString(o,softwareVersion,comments);
-          }
-          catch(...){
-            writeFailed=std::move(std::current_exception());
-          }
-        });
-      result=readIdentificationString(i);
+    try{
+      w.get();
     }
-    if (writeFailed){
-      std::rethrow_exception(writeFailed);
+    catch(...){
+      writeFailed=std::move(std::current_exception());
     }
-    return result;
+    if (readFailed || writeFailed){
+      std::ostringstream s;
+      try{
+        r.get();
+        s << "received SSH preeamble "
+          << xju::format::join(std::get<0>(*r.get()).begin(),
+                               std::get<0>(*r.get()).end(),
+                               [](std::string const& x){
+                                 return xju::format::quote(
+                                   xju::format::cEscapeString(x));
+                               },
+                               std::string(", "))
+          << " and SSH version "
+          << xju::format::cEscapeString(std::get<1>(*r.get()))
+          << " and software version "
+          << xju::format::cEscapeString(std::get<2>(*r.get()))
+          << " from peer";
+      }
+      catch(xju::Exception const& e){
+        s << readableRepr(e,false,true);
+      }
+      catch(std::exception const& e){
+        s << "failed to receive SSH software identification strings "
+          << " from peer because " << e.what();
+      }
+      if (writeFailed){
+        s << (readFailed?" and ":" but ");
+        try{
+          w.get();
+        }
+        catch(xju::Exception const& e){
+          s << readableRepr(e,false,true);
+        }
+        catch(std::exception const& e){
+          s << "failed to send to peer because " << e.what();
+        }
+      }
+      else{
+        s << " though send to peer was successful";
+      }
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    return r.get();
   }
   catch(xju::Exception& e){
-    std::ostream s;
-    s << "exchange SSH software identificaton strings with peer";
-    if (result.get()){
-      s << " having received SSH preeamble "
-        << xju::format::join(std::get<0>(result.value()).begin(),
-                             std::get<0>(result.value()).end(),
-                             [](std::string const& x){
-                               return xju::format::quote(
-                                 xju::format::cEscapeString(x));
-                             },
-                             std::string(", "))
-        << " and SSH version " << std::get<1>(result.value())
-        << " and software version " << std::get<2>(result.value())
-        << " from peer";
+    std::ostringstream s;
+    s << "send SSH software version "
+      << xju::format::cEscapeString(softwareVersion);
+    if (comments.get()){
+      s << " and comments "
+        << xju::format::quote(xju::format::cEscapeString(*comments.get()));
     }
-    
+    s << " to peer and receive its"
+      << " preamble, SSH software version and comment strings";
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }
@@ -71,5 +126,3 @@ std::tuple<
 }
 }
 }
-
-
