@@ -25,9 +25,9 @@
 	  ... so if none of either then will not block
 
     ssh 4251 transport 4253:
-      handShake(preamble,softwareId,comment,io::IStream,io::Ostream,deadline)->softareId,comment,preamble,remainingReceivedData
-      negotiateSessionParams(dataAlreadyReceived,pkAlgorithmNames,kexMethodNames,cipherNames,macNames,maxMessageLength,I,O,deadline)->PkAlgorithmName,KexMethodName,iCipherName,oCipherName,iMacName,oMacName
-      i:cipher+mac+seq+io::IStream,receiveMessage(maxSize,deadline)->body
+      handShake(preamble,softwareId,comment,xju::net::istream,xju::net::ostream)->softwareId,comment,preamble
+      negotiateSessionParams(dataAlreadyReceived,pkAlgorithmNames,kexMethodNames,cipherNames,macNames,maxMessageLength,I,O)->PkAlgorithmName,KexMethodName,iCipherName,oCipherName,iMacName,oMacName
+      i:cipher+mac+seq+,receiveMessage(maxSize,deadline)->body
       o:cipher+mac+seq+io::OStream,sendMessage(body,deadline)
       exchangeKeys(method,cipherName,macName,i,o,deadline)->I,O,otherReceivedMessges
         x encodeMessage

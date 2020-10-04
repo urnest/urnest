@@ -1,0 +1,75 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+std::tuple<
+  std::vector<std::string>, //preamble lines without trailing \r\n
+  SSHVersion, //ssh version
+  SoftwareVersion, //software version
+  xju::Optional<std::string> //comment
+  > shakeHands(xju::net::istream& i,
+               xju::net::ostream& o,
+               SoftwareVersion const& softwareVersion,
+               xju::Optional<std::string> const& comments)
+{
+  xju::Optional<decltype(readIdentificationString(i))> result;
+  try{
+    std::exception_ptr writeFailed;
+    {
+      xju::Thread t(
+        [&writeFailed,&softwareVersion,&comments,&o](){
+          try{
+            writeIdentificationString(o,softwareVersion,comments);
+          }
+          catch(...){
+            writeFailed=std::move(std::current_exception());
+          }
+        });
+      result=readIdentificationString(i);
+    }
+    if (writeFailed){
+      std::rethrow_exception(writeFailed);
+    }
+    return result;
+  }
+  catch(xju::Exception& e){
+    std::ostream s;
+    s << "exchange SSH software identificaton strings with peer";
+    if (result.get()){
+      s << " having received SSH preeamble "
+        << xju::format::join(std::get<0>(result.value()).begin(),
+                             std::get<0>(result.value()).end(),
+                             [](std::string const& x){
+                               return xju::format::quote(
+                                 xju::format::cEscapeString(x));
+                             },
+                             std::string(", "))
+        << " and SSH version " << std::get<1>(result.value())
+        << " and software version " << std::get<2>(result.value())
+        << " from peer";
+    }
+    
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+}
+}
+
+
