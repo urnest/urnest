@@ -1,0 +1,128 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+class I
+{
+public:
+  I(xju::IBuf& b,
+    std::unique_ptr<Cipher> cipher,
+    std::unique_ptr<MessageAuthenticator> packetAuthenticator,
+    SequenceNumber nextSeq) noexcept:
+      b_(b),
+      cipher_(std::move(cipher)),
+      packetAuthenticator_(std::move(packetAuthenticator)),
+      nextSeq_(std::move(nextSeq))
+  {
+  }
+  class Rekeying{};
+  
+  class RekeyLock
+  {
+  public:
+    messages::Kexinit const peerKexInit_;
+
+    //pre: caller has caught Rekeying
+    RekeyLock(I& i)
+        : i_(i),
+          peerKexInit_(i.retrievePeerKexInit());
+    {
+    }
+    ~RekeyLock() noexcept
+    {
+      xju::Lock l(i_.guard_);
+      xju::assert_equal(i_.peerKexInit_.valid(),true);
+      i_.peerKexInit_.clear();
+    }
+    Message receiveMessage(size_t const maxBytes)
+    {
+      xju::Lock l(i_.guard_);
+      return i_.receiveMessage(maxBytes,l);
+    }
+    void setCipher(std::unique_ptr<Cipher> cipher) noexcept
+    {
+      xju::Lock l(i_.guard_);
+      i_.cipher_=std::move(cipher);
+    }
+    
+    void setPacketAuthenticator(
+      std::unique_ptr<PacketAuthenticator> packetAuthenticator) noexcept
+    {
+      xju::Lock l(i_.guard_);
+      i_.packetAuthenticator_=std::move(packetAuthenticator);
+    }
+    
+  private:
+    I& i_;
+  };
+  
+  Message receiveMessage(size_t const maxBytes)
+  //Rekeying - rekeying in progress, may retry
+  {
+    xju::Lock l(guard_);
+    if (i_.peerKexInit_.valid()){
+      throw Rekeying();
+    }
+    return i_.receiveMessage(maxBytes,l);
+  }
+
+private:
+  xju::Mutex guard_;
+
+  xju::net::istream s_;
+  std::unique_ptr<Cipher> cipher_;
+  std::unique_ptr<MessageAuthenticator> packetAuthenticator_;
+  SequenceNumber nextSeq_;
+  xju::Optional<Message> peerKexInit_;
+  
+  //pre: l.holds(guard_)
+  std::vector<uint8_t> recieveMessage(size_t const maxBytes,
+                                      xju::Lock const& l){
+    // Rekeying - peer KexInit received, see retrievePeerKexInit below
+    try{
+      auto x(cipher_->decryptPacket(s_,maxBytes));
+      packetAuthenticator_->authenticatePacket(nextSeq_,x.first,x.second,s_);
+      ++nextSeq_;
+      if (x.size()&&(MSG(x.first[0])==MSG::KEXINIT)&&!peerKexInit_.valid()){
+        peerKexInit_=x;
+        throw Rekeying();
+      }
+      return std::move(x.first);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "recieve and authenticate SSH message of max "
+        << maxBytes << " bytes";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  messages::Kexinit const retrievePeerKexInit() const
+  {
+    xju::Lock l(guard_);
+    xju::assert_equal(peerKexInit_.valid(),true);
+    xju::MemRefIBuf b(&peerKexInit_.value()[0],
+                      peerKexInit_.value()[peerKexInit_.value().size()]);
+    return decode<messages::KexInit>(xju::net::istream(b));
+  }
+};
+
+}
+}
+}
+
+

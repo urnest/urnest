@@ -1,0 +1,54 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+
+class DhGroup1SHA1 : Kexer
+{
+public:
+  SessionKey exchangeKeys(I& i,O& o,
+                   messages::KexInit const& ourRequest,
+                   messages::KexInit const& peerRequest)
+  {
+    state_=Peer
+    while(true){
+      try{
+        return finishRekeying_(i_,o_,algorithms_,state_);
+      }
+      catch(std::unique_ptr<State>& s){
+        state_=std::move(s);
+      }
+    }
+  }
+    // Init(messageSent):Kex
+    //         InitReceived:Kex
+    //           - sent
+    //           - received
+    //         KexDone
+    //           - new ciphers
+    //           - new packetAuthenticators
+    //           ... might as well update i and o directly.
+
+private:
+  std::unique_ptr<KexState> state_;
+};
+
+}
+}
+}
+
+

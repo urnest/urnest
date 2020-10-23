@@ -35,8 +35,9 @@ public:
                                 xju::net::ostream& to)=0;
   
   // Decrypt packet from specified stream.
-  virtual std::pair<std::vector<uint8_t>,Padding> decryptPacket(
-    xju::net::istream& from) =0;
+  virtual std::pair<Message,Padding> decryptPacket(
+    xju::net::istream& from,
+    size_t const maxBytes) =0;
 
 };
 

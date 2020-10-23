@@ -9,7 +9,7 @@
 //
 
 
-#include <xju/ssh/transport/mac/PacketAuthenticator.hh>
+#include <xju/ssh/transport/PacketAuthenticator.hh>
 
 namespace xju
 {
@@ -17,7 +17,7 @@ namespace ssh
 {
 namespace transport
 {
-namespace mac
+namespace macs
 {
 
 class None: PacketAuthenticator

@@ -27,7 +27,7 @@ void test1() {
                     0,
                     0,1,2,3,4,5,6,7,8,9,10});
     xju::net::istream from(b);
-    auto const y(decodePacket(from));
+    auto const y(decodePacket(from,11));
     xju::assert_equal(y.first,
                       {0,1,2,3,4,5,6,7,8,9,10});
     xju::assert_equal(y.second,Padding{});
@@ -37,7 +37,7 @@ void test1() {
                     3,
                     0,1,2,3,4,5,6,7,0xa,0xb,0xc});
     xju::net::istream from(b);
-    auto const y(decodePacket(from));
+    auto const y(decodePacket(from,8));
     xju::assert_equal(y.first,
                       {0,1,2,3,4,5,6,7});
     xju::assert_equal(y.second,Padding{0xa,0xb,0xc});
@@ -51,13 +51,13 @@ void test1() {
                     0,1,2,3,4,5,6,7,0xa,0xb,0xc});
     xju::net::istream from(b);
     {
-      auto const y(decodePacket(from));
+      auto const y(decodePacket(from,11));
       xju::assert_equal(y.first,
                         {0,1,2,3,4,5,6,7,8,9,10});
       xju::assert_equal(y.second,Padding{});
     }
     {
-      auto const y(decodePacket(from));
+      auto const y(decodePacket(from,8));
       xju::assert_equal(y.first,
                         {0,1,2,3,4,5,6,7});
       xju::assert_equal(y.second,Padding{0xa,0xb,0xc});
@@ -68,7 +68,7 @@ void test1() {
                     11,
                     0,1,2,3,4,5,6,7,0xa,0xb,0xc});
     xju::net::istream from(b);
-    auto const y(decodePacket(from));
+    auto const y(decodePacket(from,0));
     xju::assert_equal(y.first,
                       {});
     xju::assert_equal(y.second,Padding{0,1,2,3,4,5,6,7,0xa,0xb,0xc});
@@ -79,11 +79,11 @@ void test1() {
                     0,1,2,3,4,5,6,7,0xa,0xb,0xc});
     xju::net::istream from(b);
     try{
-      auto const y(decodePacket(from));
+      auto const y(decodePacket(from,1024));
       xju::assert_never_reached();
     }
     catch(xju::Exception const& e){
-      xju::assert_equal(readableRepr(e),"Failed to decode SSH packet excluding MAC from stream because\nSSH padding length 12 overruns packet with length 12.");
+      xju::assert_equal(readableRepr(e),"Failed to decode SSH 1024-max-bytes packet excluding MAC from stream because\nSSH padding length 12 overruns packet with length 12.");
     }
   }
   {
@@ -92,11 +92,11 @@ void test1() {
                     0,1,2,3,4,5,6,7,0xa,0xb,0xc});
     xju::net::istream from(b);
     try{
-      auto const y(decodePacket(from));
+      auto const y(decodePacket(from,1024));
       xju::assert_never_reached();
     }
     catch(xju::Exception const& e){
-      xju::assert_equal(readableRepr(e),"Failed to decode SSH packet excluding MAC from stream because\nSSH packet length 0 is not valid.");
+      xju::assert_equal(readableRepr(e),"Failed to decode SSH 1024-max-bytes packet excluding MAC from stream because\nSSH packet length 0 is not valid.");
     }
   }
 }

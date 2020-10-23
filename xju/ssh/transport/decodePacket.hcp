@@ -23,9 +23,11 @@ namespace ssh
 namespace transport
 {
 
-// Decode SSH packet excluding MAC from specified stream.
+// Decode SSH packet of max body size maxBodyBytes, excluding MAC,
+// from specified stream.
 // - returns body (discards padding)
-std::pair<std::vector<uint8_t>,Padding> decodePacket(xju::net::istream& from)
+std::pair<std::vector<uint8_t>,Padding> decodePacket(xju::net::istream& from,
+                                                     size_t const maxBodyBytes)
 //std::bad_alloc
 //xju::Exception - e.g. malformed
 {
@@ -46,6 +48,12 @@ std::pair<std::vector<uint8_t>,Padding> decodePacket(xju::net::istream& from)
       throw xju::Exception(s.str(),XJU_TRACED);
     }
     uint32_t const body_length=packet_length-padding_length-1;
+    if (body_length>maxBodyBytes){
+      std::ostringstream s;
+      s << "actual packet length " << body_length << " exceeds "
+        << maxBodyBytes;
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
     std::vector<uint8_t> body(body_length);
     from.getN(body_length,body.begin());
     Padding padding(padding_length);
@@ -54,7 +62,8 @@ std::pair<std::vector<uint8_t>,Padding> decodePacket(xju::net::istream& from)
   }
   catch(xju::Exception& e){
     std::ostringstream s;
-    s << "decode SSH packet excluding MAC from stream";
+    s << "decode SSH " << maxBodyBytes 
+      << "-max-bytes packet excluding MAC from stream";
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }

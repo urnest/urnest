@@ -621,6 +621,13 @@ std::string hex(long long x, const std::string& leader = "0x")
 std::string hex(unsigned long long x, const std::string& leader = "0x") 
   /*throw(std::bad_alloc)*/;
 
+// convenient for use in join()
+struct Hex{
+  std::string leader_;
+  explicit Hex(std::string leader="0x") noexcept:leader_(std::move(leader)){}
+  template<class T> std::string operator()(T const& x){return hex(x,leader_);}
+};
+
 // format as fixed width octal with leading "0"
 std::string octal(char x, const std::string& leader = "0") 
   /*throw(std::bad_alloc)*/;
@@ -644,6 +651,13 @@ std::string octal(long long x, const std::string& leader = "0")
   /*throw(std::bad_alloc)*/;
 std::string octal(unsigned long long x, const std::string& leader = "0") 
   /*throw(std::bad_alloc)*/;
+
+// convenient for use in join()
+struct Octal{
+  std::string leader_;
+  explicit Octal(std::string leader="0") noexcept:leader_(std::move(leader)){}
+  template<class T> std::string operator()(T const& x){return octal(x,leader_);}
+};
 
 // we can't define a hex function where the type of x is a typedef
 // of a type that we've done above, but the above does not necessarily

@@ -9,7 +9,7 @@
 //
 
 
-#include <xju/ssh/transport/cipher/Cipher.hh>
+#include <xju/ssh/transport/Cipher.hh>
 #include <xju/ssh/transport/encodePacket.hh> //impl
 #include <xju/ssh/transport/decodePacket.hh> //impl
 #include <sstream> //impl
@@ -22,7 +22,7 @@ namespace ssh
 {
 namespace transport
 {
-namespace cipher
+namespace ciphers
 {
 
 class None : public Cipher
@@ -44,7 +44,8 @@ public:
     }
   }
   std::pair<std::vector<uint8_t>,Padding> decryptPacket(
-    xju::net::istream& from) override
+    xju::net::istream& from,
+    size_t const maxBytes) override
   {
     try{
       return decodePacket(from);

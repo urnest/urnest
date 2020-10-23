@@ -6,6 +6,6 @@
 %tests.tree==<<
 ()+cmd=(test-None.cc+(../../../..%cxx-opts):auto.cxx.exe):exec.output
 
-%hcp-gen==.:dir.hcp.list+G+hpath='xju/ssh/transport/cipher':hcp-split-virdir-specs:cat:vir_dir
+%hcp-gen==.:dir.hcp.list+G+hpath='xju/ssh/transport/ciphers':hcp-split-virdir-specs:cat:vir_dir
 
 %tags==.:merged-tags
