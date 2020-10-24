@@ -9,6 +9,25 @@
 //
 
 
+#include <xju/IBuf.hh>
+#include <memory>
+#include <xju/ssh/transport/Decrypter.hh>
+#include <xju/ssh/transport/SequenceNumber.hh>
+#include <xju/ssh/transport/MacVerifier.hh>
+#include <utility> //impl
+#include <xju/ssh/transport/messages/KexInit.hh>
+#include <xju/ssh/transport/Message.hh>
+#include <xju/Lock.hh> //impl
+#include <xju/Mutex.hh>
+#include <xju/net/istream.hh>
+#include <xju/Optional.hh>
+#include <vector>
+#include <sstream> //impl
+#include <xju/assert.hh> //impl
+#include <xju/Lock.hh>
+#include <xju/ssh/transport/MSG.hh> //impl
+#include <xju/MemRefIBuf.hh> //impl
+
 namespace xju
 {
 namespace ssh
@@ -20,11 +39,11 @@ class I
 {
 public:
   I(xju::IBuf& b,
-    std::unique_ptr<Cipher> cipher,
-    std::unique_ptr<MessageAuthenticator> packetAuthenticator,
+    std::unique_ptr<Decrypter> decrypter,
+    std::unique_ptr<MacVerifier> packetAuthenticator,
     SequenceNumber nextSeq) noexcept:
-      b_(b),
-      cipher_(std::move(cipher)),
+      s_(b),
+      decrypter_(std::move(decrypter)),
       packetAuthenticator_(std::move(packetAuthenticator)),
       nextSeq_(std::move(nextSeq))
   {
@@ -34,12 +53,15 @@ public:
   class RekeyLock
   {
   public:
-    messages::Kexinit const peerKexInit_;
+    messages::KexInit const peerKexInit_;
 
+    RekeyLock(RekeyLock const&) = delete;
+    RekeyLock(RekeyLock &&) = delete;
+    
     //pre: caller has caught Rekeying
     RekeyLock(I& i)
         : i_(i),
-          peerKexInit_(i.retrievePeerKexInit());
+          peerKexInit_(i.retrievePeerKexInit())
     {
     }
     ~RekeyLock() noexcept
@@ -53,14 +75,14 @@ public:
       xju::Lock l(i_.guard_);
       return i_.receiveMessage(maxBytes,l);
     }
-    void setCipher(std::unique_ptr<Cipher> cipher) noexcept
+    void setDecrypter(std::unique_ptr<Decrypter> decrypter) noexcept
     {
       xju::Lock l(i_.guard_);
-      i_.cipher_=std::move(cipher);
+      i_.decrypter_=std::move(decrypter);
     }
     
     void setPacketAuthenticator(
-      std::unique_ptr<PacketAuthenticator> packetAuthenticator) noexcept
+      std::unique_ptr<MacVerifier> packetAuthenticator) noexcept
     {
       xju::Lock l(i_.guard_);
       i_.packetAuthenticator_=std::move(packetAuthenticator);
@@ -74,50 +96,51 @@ public:
   //Rekeying - rekeying in progress, may retry
   {
     xju::Lock l(guard_);
-    if (i_.peerKexInit_.valid()){
+    if (peerKexInit_.valid()){
       throw Rekeying();
     }
-    return i_.receiveMessage(maxBytes,l);
+    return receiveMessage(maxBytes,l);
   }
 
 private:
-  xju::Mutex guard_;
-
+  mutable xju::Mutex guard_;
   xju::net::istream s_;
-  std::unique_ptr<Cipher> cipher_;
-  std::unique_ptr<MessageAuthenticator> packetAuthenticator_;
+  std::unique_ptr<Decrypter> decrypter_;
+  std::unique_ptr<MacVerifier> packetAuthenticator_;
   SequenceNumber nextSeq_;
   xju::Optional<Message> peerKexInit_;
   
   //pre: l.holds(guard_)
-  std::vector<uint8_t> recieveMessage(size_t const maxBytes,
-                                      xju::Lock const& l){
+  Message receiveMessage(size_t const maxBytes,xju::Lock const& l){
     // Rekeying - peer KexInit received, see retrievePeerKexInit below
     try{
-      auto x(cipher_->decryptPacket(s_,maxBytes));
-      packetAuthenticator_->authenticatePacket(nextSeq_,x.first,x.second,s_);
+      auto x(decrypter_->decryptPacket(s_,maxBytes));
+      packetAuthenticator_->verifyPacket(nextSeq_,x.first,x.second,s_);
       ++nextSeq_;
-      if (x.size()&&(MSG(x.first[0])==MSG::KEXINIT)&&!peerKexInit_.valid()){
-        peerKexInit_=x;
+      if (x.first.size()&&
+          (MSG(x.first[0])==MSG::KEXINIT)&&!peerKexInit_.valid()){
+        peerKexInit_=x.first;
         throw Rekeying();
       }
       return std::move(x.first);
     }
     catch(xju::Exception& e){
       std::ostringstream s;
-      s << "recieve and authenticate SSH message of max "
+      s << "receive and authenticate SSH message of max "
         << maxBytes << " bytes";
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
   }
-  messages::Kexinit const retrievePeerKexInit() const
+  messages::KexInit const retrievePeerKexInit() const
   {
     xju::Lock l(guard_);
     xju::assert_equal(peerKexInit_.valid(),true);
     xju::MemRefIBuf b(&peerKexInit_.value()[0],
-                      peerKexInit_.value()[peerKexInit_.value().size()]);
-    return decode<messages::KexInit>(xju::net::istream(b));
+                      &peerKexInit_.value()[peerKexInit_.value().size()],
+                      peerKexInit_.value().size());
+    xju::net::istream s(b);
+    return decode<messages::KexInit>(s);
   }
 };
 

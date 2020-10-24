@@ -22,30 +22,20 @@ namespace ssh
 {
 namespace transport
 {
-namespace mac
-{
 
-class PacketAuthenticator
+class MacVerifier
 {
 public:
-  virtual ~PacketAuthenticator() noexcept {}
-
-  // Compute mac for packet with specified sequence number, body
-  // and padding, writing it to specified stream.
-  virtual void computeMac(SequenceNumber const& sequenceNumber,
-                          std::vector<uint8_t> const& body,
-                          Padding const& padding,
-                          xju::net::ostream& to)=0;
+  virtual ~MacVerifier() noexcept {}
 
   // Authenticate packet with specified sequence number, body
   // and padding against mac from specified stream.
-  virtual void authenticatePacket(SequenceNumber const& sequenceNumber,
-                                  std::vector<uint8_t> const& body,
-                                  Padding const& padding,
-                                  xju::net::istream& from)=0;
+  virtual void verifyPacket(SequenceNumber const& sequenceNumber,
+                            std::vector<uint8_t> const& body,
+                            Padding const& padding,
+                            xju::net::istream& from)=0;
 };
 
-}
 }
 }
 }

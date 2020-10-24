@@ -9,22 +9,25 @@
 //
 
 
-#include <cinttypes>
-#include <vector>
+#include <set>
 
 namespace xju
 {
-namespace ssh
+namespace set
 {
-namespace transport
+
+template<class T>
+std::set<typename T::value_type> makeSet(T const& x)
 {
-struct SessionKey: std::vector<uint8_t>
+  return std::set<typename T::value_type>(std::begin(x),std::end(x));
+}
+
+template<class I>
+std::set<decltype(*I())> makeSet(I begin, I end)
 {
-  using std::vector<uint8_t>::vector;
-};
+  return std::set<decltype(*I())>(begin,end);
+}
 
 }
 }
-}
-
 

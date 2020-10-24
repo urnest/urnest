@@ -23,7 +23,7 @@ class Session
   xju::io::IBuf ibuf_;
   xju::io::OBuf obuf_;
 
-  std::pair<std::vector<std::string>,Ident> Ident const peerPreambleAndIdent_;
+  std::pair<std::vector<std::string>,Ident> const peerPreambleAndIdent_;
   
   I i_;
   O o_;

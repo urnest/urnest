@@ -11,6 +11,17 @@
 
 #include <xju/net/ostream.hh>
 #include <memory>
+#include <xju/ssh/transport/Encrypter.hh>
+#include <xju/ssh/transport/MacCalculator.hh>
+#include <xju/OBuf.hh>
+#include <xju/ssh/transport/SequenceNumber.hh>
+#include <utility> //impl
+#include <xju/Lock.hh> //impl
+#include <xju/assert.hh> //impl
+#include <xju/ssh/transport/Message.hh>
+#include <xju/Exception.hh> //impl
+#include <sstream> //impl
+#include <xju/Lock.hh>
 
 namespace xju
 {
@@ -24,37 +35,58 @@ class O
 public:
   //pre: b will outlive this
   O(xju::OBuf& b,
-    std::unique_ptr<Cipher> cipher,
-    std::unique_ptr<PacketAuthenticator> packetAuthenticator,
+    std::unique_ptr<Encrypter> encrypter,
+    std::unique_ptr<MacCalculator> macCalculator,
     SequenceNumber nextSeq) noexcept:
       b_(b),
-      cipher_(std::move(cipher)),
-      packetAuthenticator_(std::move(packetAuthenticator)),
+      encrypter_(std::move(encrypter)),
+      macCalculator_(std::move(macCalculator)),
       nextSeq_(std::move(nextSeq)),
       rekeying_(false)
   {
   }
+  class Rekeying{};
   class RekeyLock
   {
   public:
-    RekeyLock(O& o_):
+    RekeyLock(RekeyLock const&) = delete;
+    RekeyLock(RekeyLock &&) = delete;
+    
+    RekeyLock(O& o):
         o_(o)
     {
       xju::Lock l(o_.guard_);
       xju::assert_equal(o_.rekeying_,false);
       o_.rekeying_=true;
     }
-    @@@not movable, not copyable
     ~RekeyLock() noexcept
     {
       xju::Lock l(o_.guard_);
-      --o_.rekeying_;
+      o_.rekeying_=false;
     }
     void sendMessage(Message body)
     {
       xju::Lock l(o_.guard_);
       o_.sendMessage(body,l);
     }
+    
+    void setEncrypter(std::unique_ptr<Encrypter> encrypter,
+                      RekeyLock const&) noexcept
+    {
+      xju::Lock l(o_.guard_);
+      xju::assert_equal(o_.rekeying_,true);
+      o_.encrypter_=std::move(encrypter);
+    }
+    
+    void setMacCalculator(
+      std::unique_ptr<MacCalculator> macCalculator,
+      RekeyLock const&) noexcept
+    {
+      xju::Lock l(o_.guard_);
+      xju::assert_equal(o_.rekeying_,true);
+      o_.macCalculator_=std::move(macCalculator);
+    }
+  
   private:
     O& o_;
   };
@@ -70,29 +102,12 @@ public:
     sendMessage(message,l);
   }
 
-  void setCipher(std::unique_ptr<Cipher> cipher,
-                 RekeyLock const&) noexcept
-  {
-    xju::Lock l(guard_);
-    xju::assert_equal(rekeying_,true);
-    cipher_=std::move(cipher)
-  }
-  
-  void setPacketAuthenticator(
-    std::unique_ptr<PacketAuthenticator> packetAuthenticator,
-    RekeyLock const&) noexcept
-  {
-    xju::Lock l(guard_);
-    xju::assert_equal(rekeying_,true);
-    packetAuthenticator_=std::move(packetAuthenticator)
-  }
-  
 private:
   xju::OBuf& b_;
 
-  xju::Mutex     guard_;
-  std::unique_ptr<Cipher> cipher_;
-  std::unique_ptr<PacketAuthenticator> packetAuthenticator_;
+  mutable xju::Mutex     guard_;
+  std::unique_ptr<Encrypter> encrypter_;
+  std::unique_ptr<MacCalculator> macCalculator_;
   SequenceNumber nextSeq_;
   bool           rekeying_;
 
@@ -101,13 +116,13 @@ private:
   {
     try{
       xju::net::ostream s(b_);
-      auto const padding(cipher_->encryptPacket(body,s));
-      packetAuthenticator_->computeMac(nextSeq_,body,padding,s);
+      auto const padding(encrypter_->encryptPacket(message,s));
+      macCalculator_->calculateMac(nextSeq_,message,padding,s);
       ++nextSeq_;
     }
     catch(xju::Exception& e){
       std::ostringstream s;
-      s << "send " << body.size() << "-byte SSH message";
+      s << "send " << message.size() << "-byte SSH message";
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }

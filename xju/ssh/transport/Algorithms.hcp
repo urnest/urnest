@@ -8,6 +8,26 @@
 // implied warranty.
 //
 
+#include <utility> //impl
+#include <vector>
+#include <xju/ssh/transport/KexAlgorithmName.hh>
+#include <xju/ssh/transport/HostKeyAlgorithmName.hh>
+#include <utility>
+#include <functional>
+#include <xju/ssh/transport/HostKeyAlgorithm.hh>
+#include <xju/ssh/transport/Kexer.hh>
+#include <xju/ssh/transport/CipherName.hh>
+#include <xju/ssh/transport/CipherAlgorithm.hh>
+#include <xju/ssh/transport/PacketAuthenticatorName.hh>
+#include <xju/ssh/transport/PacketAuthenticationAlgorithm.hh>
+#include <xju/ssh/transport/messages/KexInit.hh>
+#include <xju/assert.hh> //impl
+#include <xju/Exception.hh> //impl
+#include <algorithm> //impl
+#include <xju/set/intersection.hh> //impl
+#include <xju/set/makeSet.hh> //impl
+#include <sstream> //impl
+
 namespace xju
 {
 namespace ssh
@@ -17,6 +37,8 @@ namespace transport
 namespace
 {
 template<class A,class B> class FirstEquals{
+public:
+  explicit FirstEquals(A const& x) noexcept: x_(x){}
   A const& x_;
   bool operator()(std::pair<A,B> const& x){
     return x.first==x_;
@@ -27,24 +49,41 @@ FirstEquals<A,B> firstEquals(A const& x){
   return FirstEquals<A,B>(x);
 }
 
+}
+
 struct Algorithms
 {
+  typedef std::vector<std::pair<KexAlgorithmName,
+                                std::reference_wrapper<Kexer> > > Kexers;
+  typedef std::vector<
+    std::pair<HostKeyAlgorithmName,
+              std::reference_wrapper<HostKeyAlgorithm> > > HostKeyAlgorithms;
+  typedef std::vector<
+    std::pair<CipherName,
+              std::reference_wrapper<CipherAlgorithm> > > CipherAlgorithms;
+  typedef std::vector<
+    std::pair<
+      PacketAuthenticatorName,
+      std::reference_wrapper<
+        PacketAuthenticationAlgorithm> > > PacketAuthenticationAlgorithms;
+  
   Algorithms(
-    std::vector<std::pair<KexAlgorithmName,std::ref<Kexer> > kexers,
-    std::vector<std::pair<HostKeyAlgorithmName,std::ref<HostKeyAlgorithm> > hostKeyers,
-    std::vector<std::pair<CipherName,std::ref<CipherAlgorithm> > ciphers,
-    std::vector<std::pair<PacketAuthenticatorName,std::ref<PacketAuthenticatorAlgorithm> > packetAuthenticators) noexcept:
+    Kexers kexers,
+    HostKeyAlgorithms hostKeyers,
+    CipherAlgorithms ciphers,
+    PacketAuthenticationAlgorithms packetAuthenticators) noexcept:
       kexers_(std::move(kexers)),
       hostKeyers_(std::move(hostKeyers)),
       packetAuthenticators_(std::move(packetAuthenticators))
   {
   }
-  std::vector<std::pair<KexAlgorithmName,std::ref<Kexer> > kexers_;
-  std::vector<std::pair<HostKeyAlgorithmName,std::ref<HostKeyAlgorithm> > hostKeyers_;
-  std::vector<std::pair<CipherName,std::ref<CipherAlgorithm> > ciphers_;
-  std::vector<std::pair<PacketAuthenticatorName,std::ref<PacketAuthenticatorAlgorithm> > packetAuthenticators_;
+  Kexers kexers_;
+  HostKeyAlgorithms hostKeyers_;
+  CipherAlgorithms ciphers_;
+  PacketAuthenticationAlgorithms packetAuthenticators_;
 
-  Kexer& chooseKexer(
+  //result.second == ignore first message from peer
+  std::pair<std::reference_wrapper<Kexer>,bool> chooseKexer(
     messages::KexInit const& ourKexInit,
     messages::KexInit const& peerKexInit)
   {
@@ -58,44 +97,40 @@ struct Algorithms
       
       if (clientKexInit.kexAlgorithms_[0]==serverKexInit.kexAlgorithms_[0]){
         //The first algorithm MUST be the preferred (and guessed) algorithm.
-        auto const i(std::find_if(
-                       kexers_.begin(),kexers_.end(),
-                       firstEquals<KexAlgorithmName,std::ref<Kexer>>(
-                         clientKexInit.kexAlgorithms_[0])));
+        auto const i(
+          std::find_if(
+            kexers_.begin(),kexers_.end(),
+            firstEquals<KexAlgorithmName,std::reference_wrapper<Kexer>>(
+              clientKexInit.kexAlgorithms_[0])));
         xju::assert_not_equal(i,kexers_.end());
-        return (*i).second.get();
+        return {(*i).second,false};
       }
       //Iterate over client's kex algorithms, one at a time.
       for(auto const& n: clientKexInit.kexAlgorithms_){
         // the server also supports the algorithm
-        if (std::find(serverKexInit.kexers_.begin(),
-                      serverKexInit.kexers_.end(),
+        if (std::find(serverKexInit.kexAlgorithms_.begin(),
+                      serverKexInit.kexAlgorithms_.end(),
                       n)
-            !=serverKexInit.kexers_.end()){
+            !=serverKexInit.kexAlgorithms_.end())
+        {
           Kexer& a(
             std::find_if(
               kexers_.begin(),kexers_.end(),
-              firstEquals<KexAlgorithmName,std::ref<Kexer>>(n))->second.get());
+              firstEquals<KexAlgorithmName,
+                std::reference_wrapper<Kexer> >(n))->second);
           //if the algorithm requires an encryption-capable host key algorithm
           if (a.requiresEncryptionCapableHostKey()){
             // there is an encryption-capable algorithm on the server's
             // server_host_key_algorithms that is also supported by the
             // client
-            std::set<HostKeyAlgorithmName> us(
-              clientKexInit.hostKeyers_.begin(),
-              clientKexInit.hostKeyers_.end());
-            std::set<HostKeyAlgorithmName> them(
-              serverKexInit.hostKeyers_.begin(),
-              serverKexInit.hostKeyers_.end());
-            std::set<HostKeyAlgorithmName> supportedByClient;
-            std::set_intersection(us.begin(),us.end(),them.begin(),then.end(),
-                                  std::inserter(supportedByClient.end()));
+            auto const supportedByClient(
+              xju::set::intersection(
+                xju::set::makeSet(clientKexInit.serverHostKeyAlgorithmNames_),
+                xju::set::makeSet(serverKexInit.serverHostKeyAlgorithmNames_)));
             if (std::find_if(
                   hostKeyers_.begin(),hostKeyers_.end(),
                   [&](auto const& nv){
-                    return
-                      (supportedByClient.find(nv.first)!=
-                       supportedByClient.end())&&
+                    return supportedByClient.count(nv.first) &&
                       nv.second.get().isEncryptionCapable();
                   })==hostKeyers_.end()){
               continue;
@@ -106,27 +141,20 @@ struct Algorithms
             // there is an signature-capable algorithm on the server's
             // server_host_key_algorithms that is also supported by the
             // client
-            std::set<HostKeyAlgorithmName> us(
-              clientKexInit.hostKeyers_.begin(),
-              clientKexInit.hostKeyers_.end());
-            std::set<HostKeyAlgorithmName> them(
-              serverKexInit.hostKeyers_.begin(),
-              serverKexInit.hostKeyers_.end());
-            std::set<HostKeyAlgorithmName> supportedByClient;
-            std::set_intersection(us.begin(),us.end(),them.begin(),then.end(),
-                                  std::inserter(supportedByClient.end()));
+            auto const supportedByClient(
+              xju::set::intersection(
+                xju::set::makeSet(clientKexInit.serverHostKeyAlgorithmNames_),
+                xju::set::makeSet(serverKexInit.serverHostKeyAlgorithmNames_)));
             if (std::find_if(
                   hostKeyers_.begin(),hostKeyers_.end(),
                   [&](auto const& nv){
-                    return
-                      (supportedByClient.find(nv.first)!=
-                       supportedByClient.end())&&
+                    return supportedByClient.count(nv.first) &&
                       nv.second.get().isSignatureCapable();
                   })==hostKeyers_.end()){
               continue;
             }
           }
-          return a;
+          return {a,peerKexInit.firstKexPacketFollows_};
         }
       }
       //REVISIT: need analysis for each of client's algorithms
@@ -135,8 +163,8 @@ struct Algorithms
     catch(xju::Exception& e){
       std::ostringstream s;
       s << "choose key exchange method given our KexInit message "
-        << clientKexInit
-        << " and peer KexInit message " << serverKexInit;
+        << ourKexInit
+        << " and peer KexInit message " << peerKexInit;
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }

@@ -9,12 +9,10 @@
 //
 
 
+#include <xju/ssh/transport/MacVerifier.hh>
+#include <xju/ssh/transport/MacCalculator.hh>
 #include <xju/ssh/transport/SessionKey.hh>
-#include <xju/ssh/transport/I.hh>
-#include <xju/ssh/transport/O.hh>
-#include <xju/ssh/transport/Ident.hh>
-#include <utility>
-#include <string>
+#include <memory>
 
 namespace xju
 {
@@ -22,24 +20,20 @@ namespace ssh
 {
 namespace transport
 {
-
-class Kexer
+class PacketAuthenticationAlgorithm
 {
 public:
-  virtual ~Kexer() noexcept
-  {
-  }
-  virtual SessionKey exchangeKeys(
-    I::RekeyLock& i,
-    O::RekeyLock& o,
-    Ident const& ourIdent,
-    std::pair<std::string,Ident> const& peerPreambleAndIdent) = 0;
+  virtual ~PacketAuthenticationAlgorithm() noexcept {}
 
-  virtual bool requiresEncryptionCapableHostKey() const noexcept = 0;
-  virtual bool requiresSignatureCapableHostKey() const noexcept = 0;
+  virtual std::unique_ptr<MacVerifier> macVerifier(
+    SessionKey const& sessionKey) = 0;
+  virtual std::unique_ptr<MacCalculator> macCalculator(
+    SessionKey const& sessionKey) = 0;
   
 };
 
 }
 }
 }
+
+

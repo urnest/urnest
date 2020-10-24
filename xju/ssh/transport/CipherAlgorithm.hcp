@@ -9,12 +9,10 @@
 //
 
 
+#include <memory>
 #include <xju/ssh/transport/SessionKey.hh>
-#include <xju/ssh/transport/I.hh>
-#include <xju/ssh/transport/O.hh>
-#include <xju/ssh/transport/Ident.hh>
-#include <utility>
-#include <string>
+#include <xju/ssh/transport/Encrypter.hh>
+#include <xju/ssh/transport/Decrypter.hh>
 
 namespace xju
 {
@@ -23,20 +21,13 @@ namespace ssh
 namespace transport
 {
 
-class Kexer
+class CipherAlgorithm
 {
 public:
-  virtual ~Kexer() noexcept
-  {
-  }
-  virtual SessionKey exchangeKeys(
-    I::RekeyLock& i,
-    O::RekeyLock& o,
-    Ident const& ourIdent,
-    std::pair<std::string,Ident> const& peerPreambleAndIdent) = 0;
+  virtual ~CipherAlgorithm() noexcept{}
 
-  virtual bool requiresEncryptionCapableHostKey() const noexcept = 0;
-  virtual bool requiresSignatureCapableHostKey() const noexcept = 0;
+  virtual std::unique_ptr<Encrypter> encrypter(SessionKey const& k) = 0;
+  virtual std::unique_ptr<Decrypter> decrypter(SessionKey const& k) = 0;
   
 };
 

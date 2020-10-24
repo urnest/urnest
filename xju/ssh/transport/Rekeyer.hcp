@@ -32,9 +32,9 @@ public:
   }
   Ident const ourIdent_;
   std::pair<std::vector<std::string>,Ident> const peerPreambleAndIdent_;
-                                          
+  
   SessionKey const sessionKey_;
-
+  
   // commences rekeying
   void startRekeying()
   {
@@ -101,26 +101,25 @@ private:
 
   SessionKey doKex(xju::Lock const& l,
                    I::RekeyLock& il,
-                   O::RekeyLock& ol,
-    )
+                   O::RekeyLock& ol)
   {
     xju::assert_equal(l.holds(guard_),true);
-
+    
     auto kexer=algorithms_.chooseKexer(ol.sent_,il.peerKexInit_);
     
     auto const SessionKey result(kexer.exchangeKeys(il,ol,
                                                     ourIdent_,
                                                     peerPreambleAndIdent_));
-    il.setCipher(
-      algorithms_.chooseStoCipher(il.sent_,ol.peerKexInit_).cipher(
+    il.setDecrypter(
+      algorithms_.chooseDecrypter(il.sent_,ol.peerKexInit_).encrypter(
         sessionKey_));
-    ol.setCipher(
-      algorithms_.chooseCtoCipher(il.sent_,ol.peerKexInit_).cipher(
+    ol.setEncrypter(
+      algorithms_.chooseEncrypter(il.sent_,ol.peerKexInit_).decrypter(
         sessionKey_));
-    il.setPacketAuthenticator(
-      algorithms_.chooseStoPacketAuthenticator().mac(sessionKey_);
-    ol.setPacketAuthenticator(
-      algorithms_.chooseCtoPacketAuthenticator().mac(sessionKey_);
+    il.setMacVerifier(
+      algorithms_.chooseMacVerifier().mac(sessionKey_));
+    ol.setMacCalculator(
+      algorithms_.chooseMacCalculator().mac(sessionKey_));
     return result;
   }
 

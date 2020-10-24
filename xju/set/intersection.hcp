@@ -9,22 +9,22 @@
 //
 
 
-#include <cinttypes>
-#include <vector>
+#include <set>
+#include <algorithm>
 
 namespace xju
 {
-namespace ssh
+namespace set{
+
+template<class T>
+std::set<T> intersection(std::set<T> const& a, std::set<T> const& b)
 {
-namespace transport
-{
-struct SessionKey: std::vector<uint8_t>
-{
-  using std::vector<uint8_t>::vector;
-};
+  std::set<T> result;
+  std::set_intersection(a.begin(),a.end(),b.begin(),b.end(),
+                        std::inserter(result,result.end()));
+  return result;
+}
 
 }
 }
-}
-
 

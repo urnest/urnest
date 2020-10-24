@@ -56,10 +56,10 @@ public:
       serverOutCipherNames_(serverOutCipherNames),
       clientOutPacketAuthenticatorNames_(clientOutPacketAuthenticatorNames),
       serverOutPacketAuthenticatorNames_(serverOutPacketAuthenticatorNames),
-      clientOutCompressorName_(clientOutCompressorName),
-      serverOutCompressorName_(serverOutCompressorName),
-      clientOutLanguageName_(clientOutLanguageName),
-      serverOutLanguageName_(serverOutLanguageName),
+      clientOutCompressorNames_(clientOutCompressorName),
+      serverOutCompressorNames_(serverOutCompressorName),
+      clientOutLanguageNames_(clientOutLanguageName),
+      serverOutLanguageNames_(serverOutLanguageName),
       firstKexPacketFollows_(firstKexPacketFollows)
   {
   }
@@ -71,14 +71,58 @@ public:
   std::vector<CipherName> serverOutCipherNames_;
   std::vector<PacketAuthenticatorName> clientOutPacketAuthenticatorNames_;
   std::vector<PacketAuthenticatorName> serverOutPacketAuthenticatorNames_;
-  std::vector<CompressorName>  clientOutCompressorName_;
-  std::vector<CompressorName>  serverOutCompressorName_;
-  std::vector<LanguageName> clientOutLanguageName_;
-  std::vector<LanguageName> serverOutLanguageName_;
+  std::vector<CompressorName>  clientOutCompressorNames_;
+  std::vector<CompressorName>  serverOutCompressorNames_;
+  std::vector<LanguageName> clientOutLanguageNames_;
+  std::vector<LanguageName> serverOutLanguageNames_;
   bool firstKexPacketFollows_;
 
   friend bool operator<(KexInit const& x,KexInit const& y) noexcept;
 };
+
+std::ostream& operator<<(std::ostream& s, KexInit const& x)
+{
+  return s << "kex algorithms "
+           << xju::format::join(x.kexAlgorithms_.begin(),
+                                x.kexAlgorithms_.end(),
+                                std::string(", "))
+           << "; host key algorithms "
+           << xju::format::join(x.serverHostKeyAlgorithmNames_.begin(),
+                                x.serverHostKeyAlgorithmNames_.end(),
+                                std::string(", "))
+           << "; client-to-server ciphers "
+           << xju::format::join(x.clientOutCipherNames_.begin(),
+                                x.clientOutCipherNames_.end(),
+                                std::string(", "))
+           << "; server-to-client ciphers "
+           << xju::format::join(x.serverOutCipherNames_.begin(),
+                                x.serverOutCipherNames_.end(),
+                                std::string(", "))
+           << "; client-to-server mac algorithms "
+           << xju::format::join(x.clientOutPacketAuthenticatorNames_.begin(),
+                                x.clientOutPacketAuthenticatorNames_.end(),
+                                std::string(", "))
+           << "; server-to-client mac algorithms "
+           << xju::format::join(x.serverOutPacketAuthenticatorNames_.begin(),
+                                x.serverOutPacketAuthenticatorNames_.end(),
+                                std::string(", "))
+           << "; client-to-server compressors "
+           << xju::format::join(x.clientOutCompressorNames_.begin(),
+                                x.clientOutCompressorNames_.end(),
+                                std::string(", "))
+           << "; server-to-client compressors "
+           << xju::format::join(x.serverOutCompressorNames_.begin(),
+                                x.serverOutCompressorNames_.end(),
+                                std::string(", "))
+           << "; client-to-server languages "
+           << xju::format::join(x.clientOutLanguageNames_.begin(),
+                                x.clientOutLanguageNames_.end(),
+                                std::string(", "))
+           << "; server-to-client languages "
+           << xju::format::join(x.serverOutLanguageNames_.begin(),
+                                x.serverOutLanguageNames_.end(),
+                                std::string(", "));
+}
 
 
 }
@@ -103,10 +147,10 @@ xju::net::ostream& encode(xju::net::ostream& s,
   encode(s,x.serverOutCipherNames_);
   encode(s,x.clientOutPacketAuthenticatorNames_);
   encode(s,x.serverOutPacketAuthenticatorNames_);
-  encode(s,x.clientOutCompressorName_);
-  encode(s,x.serverOutCompressorName_);
-  encode(s,x.clientOutLanguageName_);
-  encode(s,x.serverOutLanguageName_);
+  encode(s,x.clientOutCompressorNames_);
+  encode(s,x.serverOutCompressorNames_);
+  encode(s,x.clientOutLanguageNames_);
+  encode(s,x.serverOutLanguageNames_);
   encode(s,x.firstKexPacketFollows_);
   return s;
 }

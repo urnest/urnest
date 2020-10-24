@@ -9,8 +9,14 @@
 //
 
 
-#include <cinttypes>
+#include <xju/ssh/transport/Padding.hh>
 #include <vector>
+#include <cinttypes>
+#include <xju/net/ostream.hh>
+#include <utility>
+#include <xju/net/istream.hh>
+#include <xju/ssh/transport/Message.hh>
+#include <unistd.h>
 
 namespace xju
 {
@@ -18,13 +24,18 @@ namespace ssh
 {
 namespace transport
 {
-struct SessionKey: std::vector<uint8_t>
-{
-  using std::vector<uint8_t>::vector;
+
+class Decrypter{
+public:
+  virtual ~Decrypter() noexcept {}
+
+  // Decrypt packet from specified stream.
+  virtual std::pair<Message,Padding> decryptPacket(
+    xju::net::istream& from,
+    size_t const maxBytes) =0;
+
 };
 
 }
 }
 }
-
-
