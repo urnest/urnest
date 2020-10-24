@@ -79,6 +79,7 @@ void test1() {
   KexAlgorithmName K1("K1");
   K k1(true,true);
   xju::Array<uint8_t,16> cookie;
+  // client and server guess correctly
   {
     auto const x(Algorithms(
                    { {K1,std::ref(k1)} },
@@ -98,7 +99,73 @@ void test1() {
     xju::assert_equal(&x.first.get(),&k1);
     xju::assert_equal(x.second,false);
   }
+  KexAlgorithmName K2("K2");
+  K k2(false,false);
+  // mis-guess but no encryption or signature host key algorithms needed
+  {
+    auto const x(Algorithms(
+                   { {K1,std::ref(k1)},
+                     {K2,std::ref(k2)}},
+                   {},
+                   {},
+                   {}).chooseKexer(
+                   messages::KexInit(
+                     cookie,
+                     {K1,K2},
+                     {},{},{},{},{},{},{},{},{},
+                     false),
+                   messages::KexInit(
+                     cookie,
+                     {K2},
+                     {},{},{},{},{},{},{},{},{},
+                     true)));
+    xju::assert_equal(&x.first.get(),&k2);
+    xju::assert_equal(x.second,true);
+  }
+  {
+    auto const x(Algorithms(
+                   { {K1,std::ref(k1)},
+                     {K2,std::ref(k2)}},
+                   {},
+                   {},
+                   {}).chooseKexer(
+                   messages::KexInit(
+                     cookie,
+                     {K1,K2},
+                     {},{},{},{},{},{},{},{},{},
+                     false),
+                   messages::KexInit(
+                     cookie,
+                     {K2},
+                     {},{},{},{},{},{},{},{},{},
+                     false)));
+    xju::assert_equal(&x.first.get(),&k2);
+    xju::assert_equal(x.second,false);
+  }
+  {
+    auto const x(Algorithms(
+                   { {K2,std::ref(k2)}},
+                   {},
+                   {},
+                   {}).chooseKexer(
+                   messages::KexInit(
+                     cookie,
+                     {K2},
+                     {},{},{},{},{},{},{},{},{},
+                     false),
+                   messages::KexInit(
+                     cookie,
+                     {K1,K2},
+                     {},{},{},{},{},{},{},{},{},
+                     true)));
+    xju::assert_equal(&x.first.get(),&k2);
+    xju::assert_equal(x.second,true);
+  }
   @@@;
+  // encrption capable host key needed
+  // signature capable host key needed
+
+  // no common ground
 }
 
 }
