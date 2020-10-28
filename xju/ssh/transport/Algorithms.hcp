@@ -36,17 +36,18 @@ namespace transport
 {
 namespace
 {
-template<class A,class B> class FirstEquals{
+template<class A> class FirstEquals{
 public:
   explicit FirstEquals(A const& x) noexcept: x_(x){}
   A const& x_;
+  template<class B>
   bool operator()(std::pair<A,B> const& x){
     return x.first==x_;
   }
 };
-template<class A,class B>
-FirstEquals<A,B> firstEquals(A const& x){
-  return FirstEquals<A,B>(x);
+template<class A>
+FirstEquals<A> firstEquals(A const& x){
+  return FirstEquals<A>(x);
 }
 
 }
@@ -100,8 +101,7 @@ struct Algorithms
         auto const i(
           std::find_if(
             kexers_.begin(),kexers_.end(),
-            firstEquals<KexAlgorithmName,std::reference_wrapper<Kexer>>(
-              clientKexInit.kexAlgorithms_[0])));
+            firstEquals(clientKexInit.kexAlgorithms_[0])));
         xju::assert_not_equal(i,kexers_.end());
         return {(*i).second,false};
       }
@@ -116,8 +116,7 @@ struct Algorithms
           Kexer& a(
             std::find_if(
               kexers_.begin(),kexers_.end(),
-              firstEquals<KexAlgorithmName,
-                std::reference_wrapper<Kexer> >(n))->second);
+              firstEquals(n))->second);
           //if the algorithm requires an encryption-capable host key algorithm
           if (a.requiresEncryptionCapableHostKey()){
             // there is an encryption-capable algorithm on the server's
@@ -158,7 +157,7 @@ struct Algorithms
         }
       }
       //REVISIT: need analysis for each of client's algorithms
-      throw xju::Exception("no compatible kex algorithm",XJU_TRACED);
+      throw xju::Exception("client and server have no common key-exchange and/or required host key algorithm",XJU_TRACED);
     }
     catch(xju::Exception& e){
       std::ostringstream s;
@@ -169,7 +168,50 @@ struct Algorithms
       throw;
     }
   }
-  
+
+  HostKeyAlgorithm& chooseHostKeyAlgorithm(
+    messages::KexInit const& ourKexInit,
+    messages::KexInit const& peerKexInit,
+    bool const requiresEncryptionCapableHostKey,
+    bool const requiresSignatureCapableHostKey)
+  {
+    try{
+      messages::KexInit const& clientKexInit(ourKexInit);
+      messages::KexInit const& serverKexInit(peerKexInit);
+
+      for(auto c: clientKexInit.serverHostKeyAlgorithmNames_){
+        if (std::find(serverKexInit.serverHostKeyAlgorithmNames_.begin(),
+                      serverKexInit.serverHostKeyAlgorithmNames_.end(),
+                      c)!=serverKexInit.serverHostKeyAlgorithmNames_.end()){
+          auto const i(
+            std::find_if(hostKeyers_.begin(),hostKeyers_.end(),
+                         firstEquals(c)));
+          xju::assert_not_equal(i,hostKeyers_.end());
+          if ((!requiresEncryptionCapableHostKey||
+               (*i).second.get().isEncryptionCapable())&&
+              (!requiresSignatureCapableHostKey||
+               (*i).second.get().isSignatureCapable())){
+            return (*i).second.get();
+          }
+        }
+      }
+      //REVISIT: need analysis
+      throw xju::Exception("client and server have no common host key algorithm that meets the encryption and signature requirements",XJU_TRACED);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "choose host key algorithm given our KexInit message "
+        << ourKexInit
+        << ", peer KexInit message " << peerKexInit
+        << " noting encryption capable algorithm is "
+        << (requiresEncryptionCapableHostKey?"":"not ")
+        << "required and signature capable algorithm is "
+        << (requiresSignatureCapableHostKey?"":"not ")
+        << "required";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
 };
 
 }

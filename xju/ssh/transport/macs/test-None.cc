@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/ssh/transport/mac/None.hh>
+#include <xju/ssh/transport/macs/None.hh>
 
 #include <iostream>
 #include <xju/assert.hh>

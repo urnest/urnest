@@ -107,9 +107,17 @@ private:
     
     auto kexer=algorithms_.chooseKexer(ol.sent_,il.peerKexInit_);
     
-    auto const SessionKey result(kexer.exchangeKeys(il,ol,
-                                                    ourIdent_,
-                                                    peerPreambleAndIdent_));
+    auto const SessionKey result(
+      kexer.first.get().exchangeKeys(
+        il,ol,
+        ourIdent_,
+        peerPreambleAndIdent_,
+        algorithms_.chooseHostKeyAlgorithm(
+          ol.sent_,
+          il.peerKexInit_,
+          kexer.first.requiresEncryptionCapableHostKey(),
+          kexer.first.requiresSignatureCapableHostKey()).get(),
+        kexer.second));
     il.setDecrypter(
       algorithms_.chooseDecrypter(il.sent_,ol.peerKexInit_).encrypter(
         sessionKey_));
@@ -120,6 +128,7 @@ private:
       algorithms_.chooseMacVerifier().mac(sessionKey_));
     ol.setMacCalculator(
       algorithms_.chooseMacCalculator().mac(sessionKey_));
+    
     return result;
   }
 
