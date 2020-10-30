@@ -119,10 +119,10 @@ private:
           kexer.first.requiresSignatureCapableHostKey()).get(),
         kexer.second));
     il.setDecrypter(
-      algorithms_.chooseDecrypter(il.sent_,ol.peerKexInit_).encrypter(
+      algorithms_.chooseDecryptionCipher(il.sent_,ol.peerKexInit_).decrypter(
         sessionKey_));
     ol.setEncrypter(
-      algorithms_.chooseEncrypter(il.sent_,ol.peerKexInit_).decrypter(
+      algorithms_.chooseEncryptionCipher(il.sent_,ol.peerKexInit_).encrypter(
         sessionKey_));
     il.setMacVerifier(
       algorithms_.chooseMacVerifier().mac(sessionKey_));

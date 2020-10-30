@@ -257,8 +257,6 @@ void test1() {
 
 // chooseHostKeyAlgorithm
 void test2(){
-  // client requests HK1,HK2,HK3
-  // server offers HK2 that does not do encryption or signature and HK3
   HostKeyAlgorithmName HK1("HK1");
   HK hk1(true,true);
   HostKeyAlgorithmName HK2("HK2");
@@ -382,7 +380,95 @@ void test2(){
     xju::assert_equal(readableRepr(e),"Failed to choose host key algorithm given our KexInit message kex algorithms ; host key algorithms HK1, HK2, HK3; client-to-server ciphers ; server-to-client ciphers ; client-to-server mac algorithms ; server-to-client mac algorithms ; client-to-server compressors ; server-to-client compressors ; client-to-server languages ; server-to-client languages , peer KexInit message kex algorithms ; host key algorithms HK2; client-to-server ciphers ; server-to-client ciphers ; client-to-server mac algorithms ; server-to-client mac algorithms ; client-to-server compressors ; server-to-client compressors ; client-to-server languages ; server-to-client languages  noting encryption capable algorithm is required and signature capable algorithm is not required because\nclient and server have no common host key algorithm that meets the encryption and signature requirements.");
   }
 }
-  
+
+class C : public CipherAlgorithm
+{
+  std::unique_ptr<Encrypter> encrypter(SessionKey const& k) override{
+    xju::assert_never_reached();
+  }
+  std::unique_ptr<Decrypter> decrypter(SessionKey const& k) override{
+    xju::assert_never_reached();
+  }
+};
+
+void test3(){
+  CipherName C1("C1");
+  CipherName C2("C2");
+  C c1;
+  C c2;
+  CipherName C3("C3");
+  CipherName C4("C4");
+
+  xju::Array<uint8_t,16> cookie;
+  {
+    auto const& x(Algorithms(
+                   { },
+                   { },
+                   { {C1,std::ref(c1)},
+                     {C2,std::ref(c2)} },
+                   {}).chooseEncryptionCipher(
+                     messages::KexInit(
+                       cookie,
+                       {},
+                       {},
+                       {C1,C2},{C3,C4},{},{},{},{},{},{},
+                       false),
+                     messages::KexInit(
+                       cookie,
+                       {},
+                       {},
+                       {C2,C1},{C3,C4},{},{},{},{},{},{},
+                       true)));
+    xju::assert_equal(&x,&c1);
+  }
+  {
+    auto const& x(Algorithms(
+                   { },
+                   { },
+                   { {C1,std::ref(c1)},
+                     {C2,std::ref(c2)} },
+                   {}).chooseEncryptionCipher(
+                     messages::KexInit(
+                       cookie,
+                       {},
+                       {},
+                       {C1,C2},{C3,C4},{},{},{},{},{},{},
+                       false),
+                     messages::KexInit(
+                       cookie,
+                       {},
+                       {},
+                       {C2,C3},{C3,C4},{},{},{},{},{},{},
+                       true)));
+    xju::assert_equal(&x,&c2);
+  }
+  try
+  {
+    auto const& x(Algorithms(
+                   { },
+                   { },
+                   { {C1,std::ref(c1)},
+                     {C2,std::ref(c2)} },
+                   {}).chooseEncryptionCipher(
+                     messages::KexInit(
+                       cookie,
+                       {},
+                       {},
+                       {C1,C2},{C3,C4},{},{},{},{},{},{},
+                       false),
+                     messages::KexInit(
+                       cookie,
+                       {},
+                       {},
+                       {C4,C3},{C3,C4},{},{},{},{},{},{},
+                       true)));
+    xju::assert_never_reached();
+  }
+  catch(xju::Exception const& e){
+    xju::assert_equal(readableRepr(e),"Failed to choose our encryption cipher given our KexInit message kex algorithms ; host key algorithms ; client-to-server ciphers C1, C2; server-to-client ciphers C3, C4; client-to-server mac algorithms ; server-to-client mac algorithms ; client-to-server compressors ; server-to-client compressors ; client-to-server languages ; server-to-client languages , peer KexInit message kex algorithms ; host key algorithms ; client-to-server ciphers C4, C3; server-to-client ciphers C3, C4; client-to-server mac algorithms ; server-to-client mac algorithms ; client-to-server compressors ; server-to-client compressors ; client-to-server languages ; server-to-client languages  because\nwe have no us-to-peer cipher in common.");
+  }
+}
+
 }
 }
 }
@@ -394,6 +480,7 @@ int main(int argc, char* argv[])
   unsigned int n(0);
   test1(), ++n;
   test2(), ++n;
+  test3(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }
