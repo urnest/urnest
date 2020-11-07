@@ -15,9 +15,10 @@ namespace ssh
 {
 namespace transport
 {
+namespace kexers
+{
 
-
-class DhGroup1SHA1 : Kexer
+class DhGroup1SHA1Client : Kexer
 {
 public:
   SessionKey exchangeKeys(I& i,O& o,
@@ -50,5 +51,4 @@ private:
 }
 }
 }
-
-
+}

@@ -113,9 +113,26 @@ public:
     std::vector<NamespaceName> const& namespace_,
     UnqualifiedSymbol const& symbol) const noexcept
   {
-      return completions_( std::make_pair(fromScope.begin(),fromScope.end()),
-                           namespace_,
-                           symbol);
+    std::vector<ScopedName> result;
+    for(auto i(fromScope.end()); i!=fromScope.begin(); --i){
+      try{
+        std::vector<NamespaceName> const scope(fromScope.begin(),i);
+        auto const r(
+          findNamespace(std::make_pair(fromScope.begin(),i)).completions_(
+            namespace_,symbol));
+        for(auto const& rr:r){
+          std::vector<NamespaceName> ss(fromScope.begin(),i);
+          std::copy(rr.scope_.begin(),rr.scope_.end(),std::back_inserter(ss));
+          result.push_back(ScopedName(ss,rr.name_));
+        }
+      }
+      catch(UnknownNamespace const&)
+      {
+      }
+    }
+    auto const r(completions_(namespace_,symbol));
+    std::copy(r.begin(),r.end(),std::back_inserter(result));
+    return result;
   }
       
 private:
@@ -157,28 +174,14 @@ private:
     
   // implementation of completions above
   std::vector<ScopedName> completions_(
-    std::pair<std::vector<NamespaceName>::const_iterator,
-              std::vector<NamespaceName>::const_iterator> const& fromScope,
     std::vector<NamespaceName> const& namespace_,
     UnqualifiedSymbol const& symbol) const noexcept
   {
     std::vector<ScopedName> result;
-    if (fromScope.first!=fromScope.second) {
-      auto const i=children_.find(*fromScope.first);
-      if (i != children_.end()) {
-        auto const r(
-          (*i).second.completions_(
-            std::make_pair(xju::next(fromScope.first),fromScope.second),
-            namespace_,
-            symbol));
-        std::copy(r.begin(),r.end(),std::back_inserter(result));
-      }
-    }
     if (namespace_.size()){
       auto const i(children_.find(namespace_.front()));
       if (i!=children_.end()){
         auto const r((*i).second.completions_(
-                       {},
                        std::vector<NamespaceName>(
                          xju::next(namespace_.begin()),namespace_.end()),
                        symbol));
