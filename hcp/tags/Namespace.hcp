@@ -108,6 +108,7 @@ public:
   // eg to complete X* or *X* in
   //    namespace a { b::c::X2 f(); }
   // lookup( {'a'}, {'b','c'}, X) assuming *this is the root namespace
+  // result does not include scope but does include namespace_
   std::vector<ScopedName> completions(
     std::vector<NamespaceName> const& fromScope,
     std::vector<NamespaceName> const& namespace_,
@@ -120,11 +121,7 @@ public:
         auto const r(
           findNamespace(std::make_pair(fromScope.begin(),i)).completions_(
             namespace_,symbol));
-        for(auto const& rr:r){
-          std::vector<NamespaceName> ss(fromScope.begin(),i);
-          std::copy(rr.scope_.begin(),rr.scope_.end(),std::back_inserter(ss));
-          result.push_back(ScopedName(ss,rr.name_));
-        }
+        std::copy(r.begin(),r.end(),std::back_inserter(result));
       }
       catch(UnknownNamespace const&)
       {
