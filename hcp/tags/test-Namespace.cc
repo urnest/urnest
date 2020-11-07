@@ -222,6 +222,47 @@ void test3(){
   
 }
 
+void test4(){
+  //completions of fo from scope xju
+  Namespace x;
+  std::vector<Location> const l1(
+    1U,
+    Location(AbsolutePath("/"),
+             FileName("fred.hh"),
+             LineNumber(2)));
+  
+  std::vector<Location> const l2(
+    1U,
+    Location(AbsolutePath("/"),
+             FileName("fred.hh"),
+             LineNumber(10)));
+
+  x.addSymbol({NamespaceName("xju"),NamespaceName("format")},
+              UnqualifiedSymbol("str"),
+              l1);
+
+  //complete symbol
+  xju::assert_equal(x.completions(
+                      {NamespaceName("xju"),NamespaceName("format")},
+                      {},
+                      UnqualifiedSymbol("s")),
+                    std::vector<ScopedName>
+                    { ScopedName(
+                        {NamespaceName("xju"),NamespaceName("format")},
+                        UnqualifiedSymbol("str"))});
+  
+  
+  //complete namespace (prefix)
+  xju::assert_equal(x.completions({NamespaceName("xju")},
+                                  {},
+                                  UnqualifiedSymbol("form")),
+                    std::vector<ScopedName>
+                    { ScopedName(
+                        {NamespaceName("xju"),NamespaceName("format")},
+                        UnqualifiedSymbol(""))});
+  
+}
+
 }
 }
 
@@ -233,6 +274,7 @@ int main(int argc, char* argv[])
   test1(), ++n;
   test2(), ++n;
   test3(), ++n;
+  test4(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }
