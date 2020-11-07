@@ -21,31 +21,27 @@ namespace kexers
 class DhGroup1SHA1Client : Kexer
 {
 public:
-  SessionKey exchangeKeys(I& i,O& o,
-                   messages::KexInit const& ourRequest,
-                   messages::KexInit const& peerRequest)
+  virtual std::pair<K,H> exchangeKeys(
+    I::RekeyLock& i,
+    O::RekeyLock& o,
+    Ident const& ourIdent,
+    std::pair<std::string,Ident> const& peerPreambleAndIdent,
+    messages::KexInit const& ourKexInit,
+    messages::KexInit const& peerKexInit,
+    HostKeyAlgorithm& hostKeyAlgorithm,
+    bool ignoreFirstMessageReceived) override
   {
-    state_=Peer
-    while(true){
-      try{
-        return finishRekeying_(i_,o_,algorithms_,state_);
-      }
-      catch(std::unique_ptr<State>& s){
-        state_=std::move(s);
-      }
-    }
   }
-    // Init(messageSent):Kex
-    //         InitReceived:Kex
-    //           - sent
-    //           - received
-    //         KexDone
-    //           - new ciphers
-    //           - new packetAuthenticators
-    //           ... might as well update i and o directly.
 
-private:
-  std::unique_ptr<KexState> state_;
+  virtual bool requiresEncryptionCapableHostKey() const noexcept override
+  {
+    REVISIT;
+  }
+  virtual bool requiresSignatureCapableHostKey() const noexcept override
+  {
+    REVISIT;
+  }
+
 };
 
 }
