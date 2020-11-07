@@ -9,10 +9,8 @@
 //
 
 
-#include <memory>
-#include <xju/ssh/transport/SessionId.hh>
-#include <xju/ssh/transport/Encrypter.hh>
-#include <xju/ssh/transport/Decrypter.hh>
+#include <cinttypes>
+#include <vector>
 
 namespace xju
 {
@@ -20,19 +18,13 @@ namespace ssh
 {
 namespace transport
 {
-
-class CipherAlgorithm
+struct SessionId: std::vector<uint8_t>
 {
-public:
-  virtual ~CipherAlgorithm() noexcept{}
-
-  virtual std::unique_ptr<Encrypter> encrypter(
-    K const& k, H const& h, SessionId const& sessionId) = 0;
-  virtual std::unique_ptr<Decrypter> decrypter(
-    K const& k, H const& h, SessionId const& sessionId) = 0;
-  
+  using std::vector<uint8_t>::vector;
 };
 
 }
 }
 }
+
+

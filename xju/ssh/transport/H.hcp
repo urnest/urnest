@@ -9,8 +9,8 @@
 //
 
 
-#include <cinttypes>
 #include <vector>
+#include <cinttypes>
 
 namespace xju
 {
@@ -18,7 +18,7 @@ namespace ssh
 {
 namespace transport
 {
-struct SessionKey: std::vector<uint8_t>
+class H: std::vector<uint8_t>
 {
   using std::vector<uint8_t>::vector;
 };

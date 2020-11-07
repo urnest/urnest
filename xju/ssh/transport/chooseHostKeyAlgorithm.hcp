@@ -1,0 +1,77 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <map>
+#include <xju/ssh/transport/HostKeyAlgorithmName.hh>
+#include <functional>
+#include <xju/ssh/transport/HostKeyAlgorithm.hh>
+#include <vector>
+#include <set>
+#include <xju/assert.hh> //impl
+#include <xju/Exception.hh> //impl
+#include <xju/format.hh> //impl
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+
+HostKeyAlgorithm& chooseHostKeyAlgorithm(
+  std::vector<HostKeyAlgorithmName> const& clientRequested,
+  std::set<HostKeyAlgorithmName> const& serverSupports,
+  bool const requiresEncryptionCapableHostKey,
+  bool const requiresSignatureCapableHostKey,
+  std::map<HostKeyAlgorithmName,std::reference_wrapper<HostKeyAlgorithm> > const& hostKeyers)
+{
+  try{
+    for(auto c: clientRequested){
+      if (serverSupports.count(c))
+      {
+        auto const i(hostKeyers.find(c));
+        xju::assert_not_equal(i,hostKeyers.end());
+        if ((!requiresEncryptionCapableHostKey||
+             (*i).second.get().isEncryptionCapable())&&
+            (!requiresSignatureCapableHostKey||
+             (*i).second.get().isSignatureCapable())){
+          return (*i).second.get();
+        }
+      }
+    }
+    //REVISIT: need analysis
+    throw xju::Exception("client and server have no common host key algorithm that meets the encryption and signature requirements",XJU_TRACED);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "choose host key algorithm given client requested "
+      << xju::format::join(clientRequested.begin(),clientRequested.end(),
+                           std::string("; "))
+      << ", server supports "
+      << xju::format::join(serverSupports.begin(),serverSupports.end(),
+                           std::string("; "))
+      << " noting encryption capable algorithm is "
+      << (requiresEncryptionCapableHostKey?"":"not ")
+      << "required and signature capable algorithm is "
+      << (requiresSignatureCapableHostKey?"":"not ")
+      << "required";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+
+}
+}
+}
+
+

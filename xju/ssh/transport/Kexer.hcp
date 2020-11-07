@@ -9,13 +9,15 @@
 //
 
 
-#include <xju/ssh/transport/SessionKey.hh>
 #include <xju/ssh/transport/I.hh>
 #include <xju/ssh/transport/O.hh>
 #include <xju/ssh/transport/Ident.hh>
 #include <utility>
 #include <string>
 #include <xju/ssh/transport/HostKeyAlgorithm.hh>
+#include <vector>
+#include <xju/ssh/transport/K.hh>
+#include <xju/ssh/transport/H.hh>
 
 namespace xju
 {
@@ -30,11 +32,13 @@ public:
   virtual ~Kexer() noexcept
   {
   }
-  virtual SessionKey exchangeKeys(
+  virtual std::pair<K,H> exchangeKeys(
     I::RekeyLock& i,
     O::RekeyLock& o,
     Ident const& ourIdent,
     std::pair<std::string,Ident> const& peerPreambleAndIdent,
+    messages::KexInit const& ourKexInit,
+    messages::KexInit const& peerKexInit,
     HostKeyAlgorithm& hostKeyAlgorithm,
     bool ignoreFirstMessageReceived) = 0;
 

@@ -1,0 +1,58 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <string>
+#include <vector>
+#include <sstream>
+#include <xju/Exception.hh>
+#include <xju/format.hh>
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+template<class AlgorithmName>
+AlgorithmName chooseAlgorithm(
+  std::string const& algorithmType, //e.g. client-to-server cipher
+  std::vector<AlgorithmName> const& clientRequests,
+  std::set<AlgorithmName> const& serverSupports)
+{
+  try{
+    for(auto const& n: clientRequests){
+      if (serverSupports.count(n)){
+        return n;
+      }
+    }
+    std::ostringstream s;
+    s << "client and server have no " << algorithmType << " in common";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "choose " << algorithmType << " given client requested "
+      << xju::format::join(clientRequests.begin(),clientRequests.end(),
+                           std::string("; "))
+      << " and server supports "
+      << xju::format::join(serverSupports.begin(),serverSupports.end(),
+                           std::string("; "));
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+}
+}
+
+

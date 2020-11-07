@@ -1,0 +1,131 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+class ClientAlgorithms : public Algorithms
+{
+public:
+  using Algorithm::Algorithm;
+  
+  virtual messages::KexInit const& chooseClientKexInit(
+    messages::KexInit const& ourKexInit,
+    messages::KexInit const& peerKexInit) override
+  {
+    return ourKexInit;
+  }
+  virtual messages::KexInit const& chooseServerKexInit(
+    messages::KexInit const& ourKexInit,
+    messages::KexInit const& peerKexInit) override
+  {
+    return peerKexInit;
+  }
+  virtual CipherAlgorithm& chooseEncryptionCipher(
+    messages::KexInit const& ourKexInit,
+    messages::KexInit const& peerKexInit) override
+  {
+    try{
+      xju::assert_not_equal(ourKexInit.clientOutCipherNames_.size(),0);
+      xju::assert_not_equal(ourKexInit.serverOutCipherNames_.size(),0);
+      if (peerKexInit.clientOutCipherNames_.size()==0){
+        throw xju::Exception("peer KexInit contains no client-out cipher names",XJU_TRACED);
+      }
+      if (peerKexInit.serverOutCipherNames_.size()==0){
+        throw xju::Exception("peer KexInit contains no server-out cipher names",XJU_TRACED);
+      }
+      return chooseClientEncryptionCipher(ourKexInit,peerKexInit);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "choose client encrypter algorithm";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+  virtual CipherAlgorithm& chooseDecryptionCipher(
+    messages::KexInit const& ourKexInit,
+    messages::KexInit const& peerKexInit) override
+  {
+    try{
+      xju::assert_not_equal(ourKexInit.clientOutCipherNames_.size(),0);
+      xju::assert_not_equal(ourKexInit.serverOutCipherNames_.size(),0);
+      if (peerKexInit.clientOutCipherNames_.size()==0){
+        throw xju::Exception("peer KexInit contains no client-out cipher names",XJU_TRACED);
+      }
+      if (peerKexInit.serverOutCipherNames_.size()==0){
+        throw xju::Exception("peer KexInit contains no server-out cipher names",XJU_TRACED);
+      }
+      return chooseServerEncryptionCipher(ourKexInit,peerKexInit);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "choose client decrypter algorithm";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  virtual PacketAuthenticationAlgorithm& chooseMacCalculatorAlgorithm(
+    messages::KexInit const& ourKexInit,
+    messages::KexInit const& peerKexInit) override
+  {
+    try{
+      xju::assert_not_equal(ourKexInit.clientOutPacketAuthenticatorNames_.size(),0);
+      xju::assert_not_equal(ourKexInit.serverOutPacketAuthenticatorNames_.size(),0);
+      if (peerKexInit.clientOutPacketAuthenticatorNames_.size()==0){
+        throw xju::Exception("peer KexInit contains no client-out packet authenticator names",XJU_TRACED);
+      }
+      if (peerKexInit.serverOutPacketAuthenticatorNames_.size()==0){
+        throw xju::Exception("peer KexInit contains no server-out packet authenticator names",XJU_TRACED);
+      }
+      return chooseClientMacAlgorithm(ourKexInit,peerKexInit);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "choose client MAC calculator algorithm";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  virtual PacketAuthenticationAlgorithm& chooseMacVerifierAlgorithm(
+    messages::KexInit const& ourKexInit,
+    messages::KexInit const& peerKexInit) override
+  {
+    try{
+      xju::assert_not_equal(ourKexInit.clientOutPacketAuthenticatorNames_.size(),0);
+      xju::assert_not_equal(ourKexInit.serverOutPacketAuthenticatorNames_.size(),0);
+      if (peerKexInit.clientOutPacketAuthenticatorNames_.size()==0){
+        throw xju::Exception("peer KexInit contains no client-out packet authenticator names",XJU_TRACED);
+      }
+      if (peerKexInit.serverOutPacketAuthenticatorNames_.size()==0){
+        throw xju::Exception("peer KexInit contains no server-out packet authenticator names",XJU_TRACED);
+      }
+      return chooseServerMacAlgorithm(ourKexInit,peerKexInit);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "choose client MAC verifier algorithm";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+};
+
+}
+}
+}
+
+
