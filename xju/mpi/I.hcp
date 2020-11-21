@@ -1,0 +1,236 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <vector>
+#include <sstream> //impl
+#include <xju/format.hh> //impl
+#include <gcrypt.h>
+#include <new> //impl
+#include <cinttypes>
+#include <xju/Exception.hh> //impl
+#include <xju/mpi/verifySuccessful.hh> //impl
+
+namespace xju
+{
+namespace mpi
+{
+
+class I
+{
+private:
+  gcry_mpi_t x_;
+  
+public:
+  explicit I(std::vector<uint8_t> const& bigEndianValue):
+      x_(0)
+  {
+    try{
+      size_t scanned(0);
+      verifySuccessful(gcry_mpi_scan(&x_,GCRYMPI_FMT_STD,
+                                     bigEndianValue.data(),
+                                     bigEndianValue.size(),
+                                     &scanned),
+                       XJU_TRACED);
+      if (scanned!=bigEndianValue.size()){
+        std::ostringstream s;
+        s << "only scanned " << scanned << " bytes of "
+          << bigEndianValue.size();
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "construct mpi::I from big-endian 2s-complement bytes "
+        << xju::format::join(bigEndianValue.begin(),
+                             bigEndianValue.end(),
+                             xju::format::Hex(""),
+                             std::string());
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  // value as big-endian 2s complement value
+  std::vector<uint8_t> value() const
+  {
+    std::vector<uint8_t> result(16,0);
+    size_t s(0);
+    while(gcry_mpi_print(GCRYMPI_FMT_STD,
+                         result.data(),
+                         result.size(),
+                         &s,
+                         x_)!=GPG_ERR_NO_ERROR){
+      result.resize(result.size()*2);
+    }
+    result.resize(s);
+    return std::move(result);
+  }
+      
+  I(unsigned long const x):
+      x_(gcry_mpi_set_ui(0, x))
+  {
+    if (x_==0){
+      throw std::bad_alloc();
+    }
+  }
+  ~I() noexcept
+  {
+    gcry_mpi_release(x_);
+  }
+  I(I const& y):
+      x_(gcry_mpi_set(0,y.x_))
+  {
+    if (x_==0){
+      throw std::bad_alloc();
+    }
+  }
+  I(I&& y) noexcept:
+      x_(y.x_)
+  {
+    y.x_=0;
+  }
+  I& operator=(I const& y)
+  {
+    if (this != &y)
+    {
+      if (y.x_==0){
+        gcry_mpi_release(x_);
+      }
+      else{
+        if (gcry_mpi_set(x_,y.x_)==0){
+          throw std::bad_alloc();
+        }
+      }
+    }
+    return *this;
+  }
+  I& operator=(I&& y) noexcept
+  {
+    if (this!=&y){
+      gcry_mpi_release(x_);
+      x_=y.x_;
+      y.x_=0;
+    }
+    return *this;
+  }
+  
+  friend I abs(I const& x)
+  {
+    I result(x);
+    gcry_mpi_abs(result.x_);
+    return std::move(result);
+  }
+  friend I neg(I const& x)
+  {
+    I result(x);
+    gcry_mpi_neg(result.x_,result.x_);
+    return std::move(result);
+  }
+  void swap(I& y) noexcept
+  {
+    gcry_mpi_swap(x_,y.x_);
+  }
+  friend I operator+(I const& x,I const& y)
+  {
+    I result(0);
+    gcry_mpi_add(result.x_, x.x_,y.x_);
+    return std::move(result);
+  }
+  friend I operator-(I const& x,I const& y)
+  {
+    I result(0);
+    gcry_mpi_sub(result.x_, x.x_,y.x_);
+    return std::move(result);
+  }
+  friend I operator*(I const& x,I const& y)
+  {
+    I result(0);
+    gcry_mpi_mul(result.x_, x.x_,y.x_);
+    return std::move(result);
+  }
+  friend I operator/(I const& x,I const& y)
+  {
+    I result(0);
+    gcry_mpi_div(result.x_,0,x.x_,y.x_,0);
+    return std::move(result);
+  }
+  friend I operator%(I const& x,I const& y)
+  {
+    I result(0);
+    gcry_mpi_mod(result.x_,x.x_,y.x_);
+    return std::move(result);
+  }
+  // x*2^e
+  friend I mul_2exp(I const& x, unsigned long const e)
+  {
+    I result(0);
+    gcry_mpi_mul_2exp(result.x_,x.x_,e);
+    return std::move(result);
+  }
+  // x/y -> quotient,remainder
+  friend std::pair<I,I> div(I const& x, I const& y)
+  {
+    I q(0);
+    I r(0);
+    gcry_mpi_div(q.x_,r.x_,x.x_,y.x_,0);
+    return std::move(std::pair<I,I>(q,r));
+  }
+  // b^e % m
+  friend I powm(I const& b, I const& e, I const& m)
+  {
+    I result(0);
+    gcry_mpi_powm(result.x_,b.x_,e.x_,m.x_);
+    return std::move(result);
+  }
+  friend I gcd(I const& x, I const& y)
+  {
+    I result(0);
+    gcry_mpi_gcd(result.x_,x.x_,y.x_);
+    return std::move(result);
+  }
+
+  friend bool operator<(I const& x, I const& y) noexcept
+  {
+    return gcry_mpi_cmp(x.x_,y.x_)<0;
+  }
+  friend bool operator>(I const& x, I const& y) noexcept
+  {
+    return y<x;
+  }
+  friend bool operator!=(I const& x, I const& y) noexcept
+  {
+    return y<x || x<y;
+  }
+  friend bool operator==(I const& x, I const& y) noexcept
+  {
+    return !(x!=y);
+  }
+  friend bool operator<=(I const& x, I const& y) noexcept
+  {
+    return !(x>y);
+  }
+  friend bool operator>=(I const& x, I const& y) noexcept
+  {
+    return !(x<y);
+  }
+  
+};
+
+}
+}
+namespace std
+{
+void swap(::xju::mpi::I& x, ::xju::mpi::I& y) noexcept
+{
+  x.swap(y);
+}
+}
+
+
