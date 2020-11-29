@@ -27,6 +27,10 @@
 #include <xju/Lock.hh>
 #include <xju/ssh/transport/MSG.hh> //impl
 #include <xju/MemRefIBuf.hh> //impl
+#include <xju/MemIBuf.hh>
+#include <sstream>
+#include <xju/format.hh>
+#include <xju/Exception.hh>
 
 namespace xju
 {
@@ -74,6 +78,28 @@ public:
     {
       xju::Lock l(i_.guard_);
       return i_.receiveMessage(maxBytes,l);
+    }
+    template<class M>
+    Message receiveAndDecode(size_t const maxBytes)
+    {
+      auto const m(receiveMessage(maxBytes));
+      xju::MemIBuf bi(m);
+      {
+        xju::net::istream s(bi);
+        MSG const t(s.get8());
+        if (M::type_){
+          std::ostringstream s;
+          s << "expected message of type " << xju::format::hex(M::type_())
+            << ", got message of type " << xju::format::hex(t)
+            << " and data " << xju::format::join(
+              m.begin(),
+              m.end(),
+              xju::format::Hex(""),
+              std::string(""));
+          throw xju::Exception(s.str(),XJU_TRACED);
+        }
+        return decode<M>(s);
+      }
     }
     void setDecrypter(std::unique_ptr<Decrypter> decrypter) noexcept
     {
