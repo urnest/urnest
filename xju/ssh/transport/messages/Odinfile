@@ -1,11 +1,17 @@
 %all==%all.tree:leaves
 
+%cxx-opts==<<
++(../../../..%cxx-opts)
++lib=gcrypt
+
 %all.tree==<<
 %tests.tree
 
 %tests.tree==<<
 ()+cmd=(test-None.cc+(../../../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-KexInit.cc+(../../../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-KexDHInit.cc+(%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-KexDHReply.cc+(%cxx-opts):auto.cxx.exe):exec.output
 
 %hcp-gen==.:dir.hcp.list+G+hpath='xju/ssh/transport/messages':hcp-split-virdir-specs:cat:vir_dir
 

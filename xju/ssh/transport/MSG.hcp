@@ -30,7 +30,9 @@ enum class MSG{
   SERVICE_REQUEST=        5,
   SERVICE_ACCEPT=         6,
   KEXINIT=               20,
-  NEWKEYS=               21
+  NEWKEYS=               21,
+  KEXDH_INIT=            30,
+  KEXDH_REPLY=           31
 };
 
 }

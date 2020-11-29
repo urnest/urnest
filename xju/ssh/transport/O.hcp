@@ -22,6 +22,7 @@
 #include <xju/Exception.hh> //impl
 #include <sstream> //impl
 #include <xju/Lock.hh>
+#include <xju/MemOBuf.hh>
 
 namespace xju
 {
@@ -68,6 +69,16 @@ public:
     {
       xju::Lock l(o_.guard_);
       o_.sendMessage(body,l);
+    }
+    template<class M>
+    void encodeAndSend(M const& message)
+    {
+      xju::MemOBuf b(1024);
+      {
+        xju::net::ostream s(b);
+        encode(s,message);
+      }
+      sendMessage(b.data());
     }
     
     void setEncrypter(std::unique_ptr<Encrypter> encrypter,

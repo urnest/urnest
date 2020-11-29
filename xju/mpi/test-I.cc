@@ -29,6 +29,18 @@ void test1() {
   xju::assert_greater_equal(x,x);
   xju::assert_equal(I(x),x);
   {
+    I x(255);
+    xju::assert_equal(x.value(),std::vector<uint8_t>({0,255}));
+  }
+  {
+    I x(0);
+    xju::assert_equal(x.value(),std::vector<uint8_t>());
+  }
+  {
+    I x(1);
+    xju::assert_equal(neg(x).value(),std::vector<uint8_t>({0xff}));
+  }
+  {
     I y(1);
     xju::assert_not_equal(y,x);
     y=x;
