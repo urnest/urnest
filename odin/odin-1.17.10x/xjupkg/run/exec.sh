@@ -45,12 +45,16 @@ fi
       false
     fi
   ) &&
-  if [ -z "`ls files`" ]
+  rm -f files.tar &&
+  if [ -z "`ls -a files`" ]
   then
-    ( cd files && tar cf - . )
+    ( cd files && tar cf ../files.tar . )
   else
-    ( cd files && tar cf - * )
-  fi > files.tar &&
+    ( cd files &&
+      find . -mindepth 1 -maxdepth 1 -print0 | sort -z |
+	sed -z -e 's=^[.]/\(.*\)=\1=g' |
+        xargs -0 tar --append -f ../files.tar --owner=65534 --group=65534 --mtime='UTC 2020-01-01' )
+  fi &&
   rm -rf files
 
 ) <$ODIN_FILE 2>WARNINGS ||
