@@ -8,6 +8,8 @@
 %test3b
 %test3c
 %test3d
+%verify-exec-tar-idempotent
+%verify-exec-captures-hidden-files
 
 %test1a==()+cmd=cmp (%test.output) (%test1.output):stdout
 %test1b==()+cmd=cmp (%test.ls) (%test1.ls):stdout
@@ -52,4 +54,13 @@ eval "$1"
 #!/bin/sh
 echo "warning: fred" >&2 &&
 test -z "$1" || ( echo "error: jock" >&2 && false)
+
+%verify-exec-tar-idempotent==()+cmd=cmp (%ta) (%tb):stdout
+
+%ta==()+cmd=(/bin/touch) '-t' '202001031230.22' 'a' 'b':exec.files
+%tb==()+cmd=(/bin/touch) '-t' '202001031230.23' 'b' 'a':exec.files
+
+%verify-exec-captures-hidden-files==()+cmd=tar xf (%dot) '.fred':output
+
+%dot==()+cmd=(/bin/touch) '.fred':exec.files
 

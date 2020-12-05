@@ -67,7 +67,12 @@ public:
     o.encodeAndSend(messages::KexDHInit(e));
     
     //S sends (K_S || f || s) to C
-    KexDHReply const r(i.receiveAndDecode<messages::KexDH_Reply>(100000));
+    messages::KexDHReply const r(
+      i.receiveAndDecode<messages::KexDH_Reply>(100000));
+
+    hostKeyAlgorithm.verifyAuthenticateHost(r.hostKeyAndCertificates_,
+                                            f_,
+                                            hostSignature);
     
 Ylonen &  Lonvick           Standards Track                    [Page 21]
 
