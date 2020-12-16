@@ -143,7 +143,7 @@ private:
         kh.first,kh.second,sessionId_));
     ol.setEncrypter(
       algorithms_.chooseEncryptionCipher(il.sent_,ol.peerKexInit_).encrypter(
-        kh.first,kh.second,sessionId_);
+        kh.first,kh.second,sessionId_));
     il.setMacVerifier(
       algorithms_.chooseMacVerifierAlgorithm().macVerifier());
     ol.setMacCalculator(

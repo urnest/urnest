@@ -8,7 +8,7 @@ io%tests.tree
 ip%tests.tree
 json%tests.tree
 net%tests.tree
-mpi%tests.tree
+crypt%tests.tree
 set%tests.tree
 snmp%tests.tree
 ssh%tests.tree
@@ -110,7 +110,7 @@ done
 %ip==./ip/Odinfile%hcp-gen
 %json==./json/Odinfile%hcp-gen
 %linux==./linux/Odinfile%hcp-gen
-%mpi==./mpi/Odinfile%hcp-gen
+%crypt==./crypt/Odinfile%hcp-gen
 %net==./net/Odinfile%hcp-gen
 %netflow==./netflow/Odinfile%hcp-gen
 %set==./set/Odinfile%hcp-gen
@@ -150,7 +150,7 @@ io%tags
 ip%tags
 json%tags
 linux%tags
-mpi%tags
+crypt%tags
 net%tags
 netflow%tags
 set%tags

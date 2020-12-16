@@ -16,11 +16,11 @@
 #include <new> //impl
 #include <cinttypes>
 #include <xju/Exception.hh> //impl
-#include <xju/mpi/verifySuccessful.hh> //impl
+#include <xju/crypt/verifySuccessful.hh> //impl
 
 namespace xju
 {
-namespace mpi
+namespace crypt
 {
 
 class I
@@ -227,7 +227,7 @@ public:
 }
 namespace std
 {
-void swap(::xju::mpi::I& x, ::xju::mpi::I& y) noexcept
+void swap(::xju::crypt::I& x, ::xju::crypt::I& y) noexcept
 {
   x.swap(y);
 }

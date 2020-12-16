@@ -28,10 +28,7 @@ class Session
   I i_;
   O o_;
 
-  std::ref<Kexer> kexer_;
-
-  bool closeReceived_;
-  bool closeSent_;
+  Rekeyer rekeyer_;
 
 public:
   SessionKey const sessionKey_;
@@ -51,8 +48,7 @@ public:
           size_t const inputBufferSize,
           size_t const outputBufferSize,
           Ident ourIdent,
-          Algorithms algorithms,
-          std::map<HostKeyAlgorithmName,std::ref<pk::Verifier> > const& hostAuthenticator, // REVISIT: move into algorithms, needs more than just verifier
+          ClientAlgorithms algorithms,
           std::chrono::steady_clock::time_point const deadine):
       algorithms_(std::move(algorithms)),
       obuf_(o,deadline,outputBufferSize),

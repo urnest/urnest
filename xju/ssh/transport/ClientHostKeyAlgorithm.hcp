@@ -1,0 +1,42 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/ssh/transport/HostKeyAlgorithm.hh>
+#include <memory>
+#include <vector>
+#include <cinttypes>
+#include <xju/crypt/sig/Verifier.hh>
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+class ClientHostKeyAlgorithm : public HostKeyAlgorithm
+{
+public:
+  //verify the hostKeyAndCertificates belongs to connected host
+  // hostKeyAndCertificates is the encoded format identifier plus
+  // format-specific parameters, see rfc4253 6.6, e.g. ssh-rsa
+  // comprises (encoded):
+  //    string "ssh-rsa"
+  //    mpint e
+  //    mping n
+  //pre: isSignatureCapable()
+  virtual std::unique_ptr<xju::crypt::sig::Verifier> verifyBonafide(
+    std::vector<uint8_t> const& hostKeyAndCertificates) const=0;
+};
+
+}
+}
+}

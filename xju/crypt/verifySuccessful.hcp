@@ -14,7 +14,7 @@
 
 namespace xju
 {
-namespace mpi
+namespace crypt
 {
 void verifySuccessful(gcry_error_t const& e,xju::Traced const& at)
 {

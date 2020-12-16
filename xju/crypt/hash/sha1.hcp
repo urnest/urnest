@@ -9,26 +9,27 @@
 //
 
 
-#include <cinttypes>
 #include <vector>
+#include <gcrypt.h> //impl
+#include <utility> //impl
+#include <cinttypes>
 
 namespace xju
 {
-namespace ssh
+namespace crypt
 {
-namespace transport
+namespace hash
 {
 
-class HostKeyAlgorithm
+std::vector<uint8_t> sha1(std::vector<uint8_t> const& data)
 {
-public:
-  virtual ~HostKeyAlgorithm() noexcept{}
-
-  virtual bool isEncryptionCapable() const noexcept = 0;
-  virtual bool isSignatureCapable() const noexcept = 0;
-
-};
+  std::vector<uint8_t> result(gcry_md_get_algo_dlen(GCRY_MD_SHA1));
+  gcry_md_hash_buffer(GCRY_MD_SHA1,result.data(),data.data(),data.size());
+  return std::move(result);
+}
 
 }
 }
 }
+
+

@@ -19,7 +19,22 @@ namespace transport
 class ClientAlgorithms : public Algorithms
 {
 public:
-  using Algorithm::Algorithm;
+  typedef std::vector<std::pair<
+                        HostKeyAlgorithmName,
+                        std::reference_wrapper<ClientHostKeyAlgorithm> >
+                      > ClientHostKeyAlgorithms;
+  
+  ClientAlgorithms(
+    Algorithms::Kexers kexers,
+    ClientHostKeyAlgorithms hostKeyers,
+    Algorithms::CipherAlgorithms ciphers,
+    Algorithms::PacketAuthenticationAlgorithms packetAuthenticators):
+      Algorithms(std::move(kexers),
+                 hostKeyers,
+                 std::move(ciphers),
+                 std::move(packetAuthenticators))
+  {
+  }
   
   virtual messages::KexInit const& chooseClientKexInit(
     messages::KexInit const& ourKexInit,
