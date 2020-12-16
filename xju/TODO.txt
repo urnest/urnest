@@ -48,22 +48,27 @@
       - is pk algorithm used for anything else? host check? almost certainly
         - need sign() and checkSignature() e.g.
 	  Signature: std::vector<uint8_t>
-	  xju::pk::Verifier
+	  xju::crypt::sig::Verifier
 	    checkSignature(uint8_t const* x,size_t len,
 	                   Signature const& signature)
-          xju::pk::Signer
+          xju::crypt::sig::Signer
 	    sign(uint8_t const* x,size_t len)->Signature
 	      - sign x
-	  xju::pk::RSASigner(privatekey) : pk::Signer
-	  xju::pk::RSAVerifier(publickey) : pk::Verifier
+	  xju::crypt::sig::signers::RSASigner(privatekey) : Signer
+	  xju::crypt::sig::verifiers::RSAVerifier(publickey) : Verifier
 	  loadOpenSSHRsaPrivateKey(std::string keyFileContent)->pk::RSASigner()
 	  loadOpenSSHRsaPublicKey(std::string keyFileContent)->pk::RSAVerifier()
-      
+        for RSA use gcrypt gcry_sexp_build etc like libssh2 libgcrypt.c
+	
     tests: echo "fred ran"
            sleep 3 ... timeout
 	   /bin/sh -c cat > fred.txt
 	   cat fred.txt
-	   
+
+    - efficiencies:
+       - RefIBuf
+       - HashOBuf<Hasher>
+       
 - example https app:
   - login -> session = process running as that user getpwnam_r,setuid
     getgrnam_r can check user is member of group    

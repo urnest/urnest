@@ -18,8 +18,9 @@ namespace ssh
 {
 namespace transport
 {
-class H: std::vector<uint8_t>
+class H: public std::vector<uint8_t>
 {
+public:
   using std::vector<uint8_t>::vector;
 };
 

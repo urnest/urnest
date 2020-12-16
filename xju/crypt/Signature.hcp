@@ -7,24 +7,21 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <gcrypt.h>
-#include <xju/Traced.hh>
-#include <sstream> //impl
-#include <xju/Exception.hh> //impl
+
+
+#include <vector>
+#include <cinttypes>
 
 namespace xju
 {
-namespace mpi
+namespace crypt
 {
-void verifySuccessful(gcry_error_t const& e,xju::Traced const& at)
+
+class Signature : public std::vector<uint8_t>
 {
-  if (e!=GPG_ERR_NO_ERROR){
-    std::ostringstream s;
-    s << gcry_strsource(e) << " failed because " << gcry_strerror(e)
-      << " (error code " << gcry_err_code(e) << ")";
-    throw xju::Exception(s.str(),XJU_TRACED);
-  }
-}
+public:
+  using std::vector<uint8_t>::vector;
+};
 
 }
 }

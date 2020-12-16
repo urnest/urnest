@@ -7,14 +7,14 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/mpi/I.hh>
+#include <xju/crypt/I.hh>
 
 #include <iostream>
 #include <xju/assert.hh>
 
 namespace xju
 {
-namespace mpi
+namespace crypt
 {
 
 void test1() {
@@ -98,7 +98,7 @@ void test1() {
 }
 }
 
-using namespace xju::mpi;
+using namespace xju::crypt;
 
 int main(int argc, char* argv[])
 {

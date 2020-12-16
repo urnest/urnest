@@ -1,0 +1,50 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/crypt/I.hh>
+#include <xju/BitCount.hh>
+
+namespace xju
+{
+namespace crypt
+{
+namespace rsa
+{
+
+class PublicKey{
+public:
+  PublicKey(xju::BitCount keySize,
+            xju::crypt::mpi::I e,
+            xju::crypt::mpi::I n) noexcept:
+      keySize_(keySize),
+      e_(std::move(e)),
+      n_(std::move(n))
+  {
+  }
+  xju::BitCount keySize_;
+  xju::crypt::I e_;
+  xju::crypt::I n_;
+
+  friend bool operator<(PublicKey const& a, PublicKey const& b) noexcept;
+
+  friend std::ostream& operator<<(std::ostream& s, PublicKey const& x)
+  {
+    //REVISIT: print in same encoding as id_rsa.pub?
+    return s << "e: " << xju::format::hex(e,"")
+             << ", n (" << keySize << "-bit): "
+             << xju::format::hex(n,""); //REVISIT: pad with leading 00s
+  }
+  
+};
+
+}
+}
+}

@@ -9,26 +9,17 @@
 //
 
 
-#include <cinttypes>
-#include <vector>
-
 namespace xju
 {
-namespace ssh
+namespace crypt
 {
-namespace transport
-{
-
-class HostKeyAlgorithm
+class SigVerifier
 {
 public:
-  virtual ~HostKeyAlgorithm() noexcept{}
-
-  virtual bool isEncryptionCapable() const noexcept = 0;
-  virtual bool isSignatureCapable() const noexcept = 0;
-
+  virtual ~SigVerifier() noexcept {}
+  virtual void verifySignature(uint8_t const* x,size_t len,
+                               Signature const& signature) = 0;
 };
 
-}
 }
 }

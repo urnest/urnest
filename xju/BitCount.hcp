@@ -9,26 +9,11 @@
 //
 
 
-#include <cinttypes>
-#include <vector>
+#include <xju/Int.hh>
 
 namespace xju
 {
-namespace ssh
-{
-namespace transport
-{
+class BitCountTag{};
+typedef xju::Int<BitCountTag,unsigned int> BitCount;
 
-class HostKeyAlgorithm
-{
-public:
-  virtual ~HostKeyAlgorithm() noexcept{}
-
-  virtual bool isEncryptionCapable() const noexcept = 0;
-  virtual bool isSignatureCapable() const noexcept = 0;
-
-};
-
-}
-}
 }

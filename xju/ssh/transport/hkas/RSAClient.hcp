@@ -1,0 +1,101 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+namespace hkas
+{
+
+class RSAClient : public ClientHostKeyAlgorithm
+{
+public:
+  RSAClient(std::set<xju::crypt::rsa::PublicKey> acceptableKeys) noexcept:
+      acceptableKeys_(acceptableKeys)
+  {
+  }
+  virtual std::unique_ptr<xju::crypt::sig::Verifier> verifyBonafide(
+    std::vector<uint8_t> const& hostKeyAndCertificates) const override
+  {
+    try{
+      xju::MemIBuf b(hostKeyAndCertificates);
+      xju::net::istream s(b);
+      auto const  identifier(xju::ssh::decode<std::string>(s));
+      if (identifier!="ssh-rsa"){
+        std::ostringstream s;
+        s << "expected SSH key type identifier \"ssh-rsa\" but got "
+          << xju::format::quote(xju::format::cEscapeString(identifier));
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      try{
+        auto const e(xju::ssh::decode<xju::crypt::mpi::I>(s));
+        try{
+          auto const n(xju::ssh::decode<xju::crypt::mpi::I>(s));
+          try{
+            xju::crypt::rsa::PublicKey key(e,n);
+            if (acceptableKeys_.count(key)==0){
+              std::ostringstream s;
+              s << "RSA public key " << key
+                << " is not a known key of connected host";
+              throw xju::Exception(s.str(),XJU_TRACED);
+            }
+            return std::unique_ptr<xju::crypt::sig::Verifier>(
+              new xju::ssh::crypt::rsa::SigVerifier(std::move(key)));
+          }
+          catch(xju::Exception& e){
+            std::ostringstream s;
+            s << "progress having decoded parameter 'n' " << n;
+            e.addContext(s.str(),XJU_TRACED);
+            throw;
+          }
+          
+        }
+        catch(xju::Exception& e){
+          std::ostringstream s;
+          s << "progress having decoded parameter 'e' " << e;
+          e.addContext(s.str(),XJU_TRACED);
+          throw;
+        }
+      }
+      catch(xju::Exception& e){
+        std::ostringstream s;
+        s << "decode and verify RSA public key having decoded "
+          << "key type identifier \"ssh-rsa\" as expected";
+        e.addContext(s.str(),XJU_TRACED);
+        throw;
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "verify that SSH-encoded host key and certificates "
+        << xju::format::join(hostKeyAndCertificates.begin(),
+                             hostKeyAndCertificates.end(),
+                             xju::format::Hex(""),
+                             std::string(""))
+        << " represents one of connected host's known public keys "
+        << xju::format::join(acceptableKeys_.begin(),
+                             acceptableKeys_.end(),
+                             ", ");
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+};
+
+}
+}
+}
+}
+
+

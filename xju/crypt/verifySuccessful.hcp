@@ -7,28 +7,26 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-
-
-#include <cinttypes>
-#include <vector>
+#include <gcrypt.h>
+#include <xju/Traced.hh>
+#include <sstream> //impl
+#include <xju/Exception.hh> //impl
 
 namespace xju
 {
-namespace ssh
+namespace crypt
 {
-namespace transport
+void verifySuccessful(gcry_error_t const& e,xju::Traced const& at)
 {
-
-class HostKeyAlgorithm
-{
-public:
-  virtual ~HostKeyAlgorithm() noexcept{}
-
-  virtual bool isEncryptionCapable() const noexcept = 0;
-  virtual bool isSignatureCapable() const noexcept = 0;
-
-};
+  if (e!=GPG_ERR_NO_ERROR){
+    std::ostringstream s;
+    s << gcry_strsource(e) << " failed because " << gcry_strerror(e)
+      << " (error code " << gcry_err_code(e) << ")";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+}
 
 }
 }
-}
+
+
