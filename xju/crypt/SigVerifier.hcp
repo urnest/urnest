@@ -9,6 +9,9 @@
 //
 
 
+#include <xju/crypt/Signature.hh>
+#include <unistd.h>
+
 namespace xju
 {
 namespace crypt
@@ -17,7 +20,7 @@ class SigVerifier
 {
 public:
   virtual ~SigVerifier() noexcept {}
-  virtual void verifySignature(uint8_t const* x,size_t len,
+  virtual void verifySignature(void const* x,size_t len,
                                Signature const& signature) = 0;
 };
 

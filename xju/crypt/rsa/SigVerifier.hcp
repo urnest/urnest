@@ -10,6 +10,14 @@
 
 
 #include <xju/crypt/SigVerifier.hh>
+#include <xju/crypt/rsa/PublicKey.hh>
+#include <utility> //impl
+#include <xju/Exception.hh> //impl
+#include <xju/crypt/verifySuccessful.hh> //impl
+#include <xju/format.hh> //impl
+#include <memory>
+#include <xju/crypt/hash/sha1.hh> //impl
+#include <xju/crypt/sexp_ptr.hh>
 
 namespace xju
 {
@@ -18,63 +26,68 @@ namespace crypt
 namespace rsa
 {
 
-class SigVerifier : public xju::crypt::SigVerifier
+namespace
 {
-public:
-  explicit SigVerifier(xju::crypt::rsa::PublicKey publicKey) noexcept:
-      publicKey_(std::move(publicKey))
-  {
-    try{
-      auto const n(publicKey.n_.data());
-      auto const e(publicKey.e_.data());
-      gcry_sexp_t sexp(0);
-      rc = gcry_sexp_build(&sexp, NULL, "(public-key(rsa(n%b)(e%b)))",
-                           n.size(), n.data(),
-                           e.size(), e.data());
-      xju::crypt::verifySuccessful(rc,XJU_TRACED);
-      sexp_=std::unique_ptr<decltype(*sexp)>(sexp,gcry_sexp_release);
-    }
+sexp_ptr makeGcryPublicKey(xju::crypt::rsa::PublicKey const& k)
+{
+  try{
+    auto const n(k.n_.value());
+    auto const e(k.e_.value());
+    return sexp_ptr("(public-key(rsa(n%b)(e%b)))",
+                    n.size(), n.data(),
+                    e.size(), e.data());
+  }
     catch(xju::Exception& e){
       std::ostringstream s;
       s << "build libgcrypt rsa public key context for RSA public key "
-        << publicKey_;
+        << k;
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
+}
+
+}
+
+class SigVerifier : public xju::crypt::SigVerifier
+{
+public:
+  explicit SigVerifier(xju::crypt::rsa::PublicKey publicKey):
+      publicKey_(std::move(publicKey)),
+      sexp_(makeGcryPublicKey(publicKey_))
+  {
   }
-  virtual void verifySignature(uint8_t const* x,size_t len,
+  virtual void verifySignature(void const* x,size_t len,
                                Signature const& signature) override
   {
     try{
-      auto const h(xju::crypt::hash::sha1(x,len)); //rfc4253 6.6
-
       // rfc8017 8.2.2 step 1
-      if (signature.size()!=publicKey.keySize_.value()/8){
+      if (signature.size()!=publicKey_.keySize_.value()/8){
         std::ostringstream s;
         s << "signature size (" << signature.size()
           << " bytes) is not equal to key size ("
-          << publicKey.keySize_.value()/8
+          << publicKey_.keySize_.value()/8
           << " bytes)";
-        throw xju::format::join(s.str(),XJU_TRACED);
+        throw xju::Exception(s.str(),XJU_TRACED);
       }
-      //REVISIT: use gcrypt sexp stuff
-      gcry_sexp_t s_hash_(0);
-      verifySuccessful(gcry_sexp_build(&s_hash_, NULL,
-                                       "(data (flags pkcs1) (hash sha1 %b))",
-                                       h.size(),h.data()));
-      std::unique_ptr<decltype(*s_sig_)> s_hash(s_hash_,gcry_sexp_release);
 
-      gcry_sexp_t s_sig_(0);
-      verifySuccessful(gcry_sexp_build(&s_sig_, NULL,
-                                       "(sig-val(rsa(s %b)))",
-                                       signature.size(),siganture.data()));
-      std::unique_ptr<decltype(*s_sig_)> s_sig(s_sig_,gcry_sexp_release);
+      std::vector<uint8_t> messageHash(
+        xju::crypt::hash::sha1(
+          std::vector<uint8_t>((uint8_t const*)x,
+                               ((uint8_t const*)x)+len)));
       
-      verifySuccessful(gcry_pk_verify(s_sig.operator->(),
-                                      s_hash.operator->(),
-                                      sexp_.operator->()));
+      //sign message with private key
+      xju::crypt::sexp_ptr data("(data (flags pkcs1) (hash sha1 %b))",
+                                messageHash.size(),messageHash.data());
+      
+      xju::crypt::sexp_ptr sig(
+        "(sig-val(rsa(s %b)))",
+        signature.size(),signature.data());
+      
+      verifySuccessful(gcry_pk_verify(sig.get(),
+                                      data.get(),
+                                      sexp_.get()),XJU_TRACED);
     }
-    catch(xju::Explicit& e){
+    catch(xju::Exception& e){
       std::ostringstream s;
       s << "verify that signature "
         << xju::format::join(signature.begin(),
@@ -90,7 +103,7 @@ public:
   }
 private:
   xju::crypt::rsa::PublicKey publicKey_;
-  std::unique_ptr<decltype(*(gcry_sexp_t)0)> sexp_;
+  xju::crypt::sexp_ptr sexp_;
   
 };
 

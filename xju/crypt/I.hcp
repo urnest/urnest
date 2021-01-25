@@ -29,6 +29,10 @@ private:
   gcry_mpi_t x_;
   
 public:
+  explicit I(gcry_mpi_t x) noexcept:
+      x_(x)
+  {
+  }
   explicit I(std::vector<uint8_t> const& bigEndianValue):
       x_(0)
   {
@@ -139,59 +143,59 @@ public:
   }
   friend I operator+(I const& x,I const& y)
   {
-    I result(0);
+    I result(0UL);
     gcry_mpi_add(result.x_, x.x_,y.x_);
     return std::move(result);
   }
   friend I operator-(I const& x,I const& y)
   {
-    I result(0);
+    I result(0UL);
     gcry_mpi_sub(result.x_, x.x_,y.x_);
     return std::move(result);
   }
   friend I operator*(I const& x,I const& y)
   {
-    I result(0);
+    I result(0UL);
     gcry_mpi_mul(result.x_, x.x_,y.x_);
     return std::move(result);
   }
   friend I operator/(I const& x,I const& y)
   {
-    I result(0);
+    I result(0UL);
     gcry_mpi_div(result.x_,0,x.x_,y.x_,0);
     return std::move(result);
   }
   friend I operator%(I const& x,I const& y)
   {
-    I result(0);
+    I result(0UL);
     gcry_mpi_mod(result.x_,x.x_,y.x_);
     return std::move(result);
   }
   // x*2^e
   friend I mul_2exp(I const& x, unsigned long const e)
   {
-    I result(0);
+    I result(0UL);
     gcry_mpi_mul_2exp(result.x_,x.x_,e);
     return std::move(result);
   }
   // x/y -> quotient,remainder
   friend std::pair<I,I> div(I const& x, I const& y)
   {
-    I q(0);
-    I r(0);
+    I q(0UL);
+    I r(0UL);
     gcry_mpi_div(q.x_,r.x_,x.x_,y.x_,0);
     return std::move(std::pair<I,I>(q,r));
   }
   // b^e % m
   friend I powm(I const& b, I const& e, I const& m)
   {
-    I result(0);
+    I result(0UL);
     gcry_mpi_powm(result.x_,b.x_,e.x_,m.x_);
     return std::move(result);
   }
   friend I gcd(I const& x, I const& y)
   {
-    I result(0);
+    I result(0UL);
     gcry_mpi_gcd(result.x_,x.x_,y.x_);
     return std::move(result);
   }

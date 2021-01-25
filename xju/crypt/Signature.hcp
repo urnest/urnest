@@ -21,6 +21,11 @@ class Signature : public std::vector<uint8_t>
 {
 public:
   using std::vector<uint8_t>::vector;
+
+  explicit Signature(std::vector<uint8_t> x) noexcept:
+      std::vector<uint8_t>(std::move(x))
+  {
+  }
 };
 
 }

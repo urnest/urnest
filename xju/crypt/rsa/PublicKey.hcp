@@ -11,6 +11,7 @@
 
 #include <xju/crypt/I.hh>
 #include <xju/BitCount.hh>
+#include <xju/format.hh>
 
 namespace xju
 {
@@ -22,8 +23,8 @@ namespace rsa
 class PublicKey{
 public:
   PublicKey(xju::BitCount keySize,
-            xju::crypt::mpi::I e,
-            xju::crypt::mpi::I n) noexcept:
+            xju::crypt::I e,
+            xju::crypt::I n) noexcept:
       keySize_(keySize),
       e_(std::move(e)),
       n_(std::move(n))
@@ -38,9 +39,12 @@ public:
   friend std::ostream& operator<<(std::ostream& s, PublicKey const& x)
   {
     //REVISIT: print in same encoding as id_rsa.pub?
-    return s << "e: " << xju::format::hex(e,"")
-             << ", n (" << keySize << "-bit): "
-             << xju::format::hex(n,""); //REVISIT: pad with leading 00s
+    auto const e(x.e_.value());
+    auto const n(x.n_.value());
+    return s << "e: "
+             << xju::format::join(e.begin(),e.end(),xju::format::Hex(""),"")
+             << ", n (" << x.keySize_ << "-bit): "
+             << xju::format::join(n.begin(),n.end(),xju::format::Hex(""),""); //REVISIT: pad with leading 00s
   }
   
 };

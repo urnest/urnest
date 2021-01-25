@@ -1,0 +1,154 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <memory>
+#include <gcrypt.h>
+#include <xju/Exception.hh>
+#include <xju/crypt/verifySuccessful.hh>
+#include <xju/crypt/I.hh>
+#include <xju/format.hh>
+
+namespace xju
+{
+namespace crypt
+{
+
+class sexp_ptr: public std::unique_ptr<gcry_sexp,decltype(&gcry_sexp_release)>
+{
+public:
+  explicit sexp_ptr(gcry_sexp_t x=0) noexcept:
+      std::unique_ptr<gcry_sexp,decltype(&gcry_sexp_release)>(
+        x,&gcry_sexp_release)
+  {
+  }
+  //see gcry_build_sexp
+  template<class ...Params>
+  explicit sexp_ptr(std::string const& desc, Params... params):
+    std::unique_ptr<gcry_sexp,decltype(&gcry_sexp_release)>(
+      0,&gcry_sexp_release)
+  {
+    try{
+      gcry_sexp_t result(0);
+      verifySuccessful(
+        gcry_sexp_build(&result,NULL,desc.c_str(),params...),XJU_TRACED);
+      *this=sexp_ptr(result);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "build sexp " << desc;
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  sexp_ptr getCdrOf(std::string const& name)
+  {
+    try{
+      gcry_sexp_t cons(
+        gcry_sexp_find_token(get(), name.c_str(),0));
+      if (cons==0){
+        std::ostringstream s;
+        s << name << " not found";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      return sexp_ptr(gcry_sexp_cdr(sexp_ptr(cons).get()));
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "get cdr i.e. data of first " << xju::format::quote(name)
+        << " in sexp " << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  sexp_ptr getCons(std::string const& name)
+  {
+    try{
+      sexp_ptr cons(gcry_sexp_find_token(get(), name.c_str(),0));
+      if (cons.get()==0){
+        std::ostringstream s;
+        s << name << " not found";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      return cons;
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "get first cons with car i.e. name " << xju::format::quote(name)
+        << " in sexp " << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  I getI(std::string const& name)
+  {
+    try{
+      sexp_ptr cons(gcry_sexp_find_token(get(), name.c_str(),0));
+      if (cons.get()==0){
+        std::ostringstream s;
+        s << name << " not found";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      gcry_mpi_t result(gcry_sexp_nth_mpi(cons.get(),1,GCRYMPI_FMT_USG));
+      if (result==0){
+        std::ostringstream s;
+        s << "gcry_sexp_nth_mpi failed to extract value of cons sexp " << cons
+          << " as MPI in GCRYMPI_FMT_USG format";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      return I(result);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "get first " << xju::format::quote(name) << " MPI in sexp "
+        << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  std::vector<uint8_t> getDataOf(std::string const& name)
+  {
+    try{
+      sexp_ptr cons(gcry_sexp_find_token(get(), name.c_str(),0));
+      if (cons.get()==0){
+        std::ostringstream s;
+        s << name << " not found";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      size_t datalen(0);
+      char const* const data(
+        gcry_sexp_nth_data(cons.get(), 1, &datalen));
+      if (data==0){
+        std::ostringstream s;
+        s << "gcry_sexp_nth_data failed to extract raw data of cons sexp "
+          << cons;
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      return std::vector<uint8_t>(data,data+datalen);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "get data of first " << xju::format::quote(name) << " in sexp "
+        << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  friend std::ostream& operator<<(std::ostream& s, sexp_ptr const& x)
+  {
+    std::string y;
+    y.resize(gcry_sexp_sprint(x.get(),GCRYSEXP_FMT_CANON,0,0));
+    y.resize(gcry_sexp_sprint(x.get(),GCRYSEXP_FMT_CANON,y.data(),y.size()));
+    return s << xju::format::cEscapeString(y);
+  }
+};
+
+}
+}
