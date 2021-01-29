@@ -1,0 +1,61 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/crypt/rsa/PrivateKey.hh>
+#include <xju/BitCount.hh>
+#include <xju/crypt/sexp_ptr.hh> //impl
+#include <xju/crypt/verifySuccessful.hh> //impl
+
+namespace xju
+{
+namespace crypt
+{
+namespace rsa
+{
+
+PrivateKey generateKey(xju::BitCount keySize)
+{
+  try{
+    gcry_sexp_t key_(0);
+    
+    xju::crypt::sexp_ptr params("(genkey (rsa(nbits %u)))",keySize.value());
+    
+    verifySuccessful(gcry_pk_genkey(&key_, params.get()),XJU_TRACED);
+    sexp_ptr key(key_);
+
+    std::cerr << "AAAA\n";
+    gcry_sexp_dump(key.get());
+    
+    sexp_ptr privateKey(key.getCdrOf("private-key").getCons("rsa"));
+    std::cerr << "BBBB\n";
+
+    return PrivateKey(xju::BitCount(keySize),
+                      privateKey.getI("e"),
+                      privateKey.getI("n"),
+                      privateKey.getI("d"),
+                      privateKey.getI("p"),
+                      privateKey.getI("q"),
+                      privateKey.getI("u"));
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "generateo " << keySize << "-bit RSA key";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+
+}
+}
+}
+
+

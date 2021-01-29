@@ -5,6 +5,7 @@
 
 %tests.tree==<<
 ()+cmd=(test-SigVerifier.cc+(%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-Signer.cc+(%cxx-opts):auto.cxx.exe):exec.output
 
 %cxx-opts==<<
 +(..%cxx-opts)

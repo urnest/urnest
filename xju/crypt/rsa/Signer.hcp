@@ -1,0 +1,96 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/crypt/Signer.hh>
+#include <cinttypes>
+#include <vector>
+#include <xju/crypt/Signature.hh>
+#include <xju/crypt/rsa/PrivateKey.hh>
+#include <xju/crypt/sexp_ptr.hh>
+#include <xju/crypt/hash/sha1.hh> //impl
+#include <xju/crypt/verifySuccessful.hh> //impl
+
+namespace xju
+{
+namespace crypt
+{
+namespace rsa
+{
+
+namespace
+{
+sexp_ptr makeSexp(PrivateKey const& privateKey){
+  gcry_mpi_t const& e(privateKey.e_);
+  gcry_mpi_t const& n(privateKey.n_);
+  gcry_mpi_t const& d(privateKey.d_);
+  gcry_mpi_t const& p(privateKey.p_);
+  gcry_mpi_t const& q(privateKey.q_);
+  gcry_mpi_t const& u(privateKey.u_);
+  sexp_ptr result(
+    "(private-key (rsa (n %M) (e %M) (d %M) (p %M) (q %M) (u %M)))",
+    n,e,d,p,q,u);
+  return result;
+}
+
+}
+
+class Signer: public xju::crypt::Signer
+{
+public:
+  Signer(PrivateKey privateKey):
+      privateKey_(privateKey),
+      sexp_(makeSexp(privateKey_))
+  {
+    try{
+      verifySuccessful(gcry_pk_testkey(sexp_.get()),XJU_TRACED);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "verify private key " << privateKey_;
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  Signature sign(void const* x,size_t len) override
+  {
+    try{
+      std::vector<uint8_t> messageHash(
+        xju::crypt::hash::sha1(
+          std::vector<uint8_t>((uint8_t const*)x,
+                               ((uint8_t const*)x)+len)));
+      //sign message with private key
+      xju::crypt::sexp_ptr data("(data (flags pkcs1) (hash sha1 %b))",
+                                messageHash.size(),messageHash.data());
+      gcry_sexp_t sig_(0);
+      verifySuccessful(
+        gcry_pk_sign(&sig_, data.get(), sexp_.get()),XJU_TRACED);
+      xju::crypt::sexp_ptr sig(sig_);
+      
+      return Signature(sig.getCdrOf("sig-val").getDataOf("s"));
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "sign " << len << "-byte message with private key "
+        << privateKey_;
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+private:
+  PrivateKey privateKey_;
+  sexp_ptr sexp_;
+};
+
+}
+}
+}
+
+

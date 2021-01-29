@@ -41,10 +41,14 @@ public:
     //REVISIT: print in same encoding as id_rsa.pub?
     auto const e(x.e_.value());
     auto const n(x.n_.value());
+    std::string const nn(
+      xju::format::join(n.begin(),n.end(),xju::format::Hex(""),""));
+    std::string const nPad(
+      std::max((size_t)x.keySize_.value()/4,nn.size())-nn.size(),'0');
     return s << "e: "
              << xju::format::join(e.begin(),e.end(),xju::format::Hex(""),"")
              << ", n (" << x.keySize_ << "-bit): "
-             << xju::format::join(n.begin(),n.end(),xju::format::Hex(""),""); //REVISIT: pad with leading 00s
+             << nPad << nn;
   }
   
 };

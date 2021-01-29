@@ -1,0 +1,89 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/crypt/I.hh>
+#include <xju/BitCount.hh>
+#include <xju/format.hh>
+#include <xju/crypt/rsa/PublicKey.hh>
+
+namespace xju
+{
+namespace crypt
+{
+namespace rsa
+{
+
+class PrivateKey{
+public:
+  PrivateKey(xju::BitCount keySize,
+            xju::crypt::I e,
+            xju::crypt::I n,
+            xju::crypt::I d,
+            xju::crypt::I p,
+            xju::crypt::I q,
+            xju::crypt::I u) noexcept:
+      keySize_(keySize),
+      e_(std::move(e)),
+      n_(std::move(n)),
+      d_(std::move(d)),
+      p_(std::move(p)),
+      q_(std::move(q)),
+      u_(std::move(u))
+  {
+  }
+  xju::BitCount keySize_;
+  xju::crypt::I e_;
+  xju::crypt::I n_;
+  xju::crypt::I d_;
+  xju::crypt::I p_;
+  xju::crypt::I q_;
+  xju::crypt::I u_;
+
+  PublicKey publicKey() const
+  {
+    return PublicKey(keySize_,e_,n_);
+  }
+  
+  friend bool operator<(PrivateKey const& a, PrivateKey const& b) noexcept;
+
+  friend std::ostream& operator<<(std::ostream& s, PrivateKey const& x)
+  {
+    //REVISIT: print in same encoding as id_rsa?
+    auto const e(x.e_.value());
+    auto const n(x.n_.value());
+    auto const d(x.d_.value());
+    auto const p(x.p_.value());
+    auto const q(x.q_.value());
+    auto const u(x.u_.value());
+    
+    std::string const nn(
+      xju::format::join(n.begin(),n.end(),xju::format::Hex(""),""));
+    std::string const nPad(
+      std::max((size_t)x.keySize_.value()/4,nn.size())-nn.size(),'0');
+    return s << "e: "
+             << xju::format::join(e.begin(),e.end(),xju::format::Hex(""),"")
+             << ", n (" << x.keySize_ << "-bit): "
+             << nPad << nn
+             << ", d: "
+             << xju::format::join(d.begin(),d.end(),xju::format::Hex(""),"")
+             << ", p: "
+             << xju::format::join(p.begin(),p.end(),xju::format::Hex(""),"")
+             << ", q: "
+             << xju::format::join(q.begin(),q.end(),xju::format::Hex(""),"")
+             << ", u: "
+             << xju::format::join(u.begin(),u.end(),xju::format::Hex(""),"");
+  }
+  
+};
+
+}
+}
+}

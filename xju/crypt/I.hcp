@@ -224,7 +224,9 @@ public:
   {
     return !(x<y);
   }
-  
+  operator gcry_mpi_t const&() const{
+    return x_;
+  }
 };
 
 }
