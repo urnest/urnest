@@ -17,6 +17,7 @@
 #include <cinttypes>
 #include <xju/Exception.hh> //impl
 #include <xju/crypt/verifySuccessful.hh> //impl
+#include <iostream>
 
 namespace xju
 {
@@ -61,6 +62,10 @@ public:
       throw;
     }
   }
+  gcry_mpi_t const& gcry() const{
+    return x_;
+  }
+
   // value as big-endian 2s complement value
   std::vector<uint8_t> value() const
   {
@@ -224,10 +229,13 @@ public:
   {
     return !(x<y);
   }
-  operator gcry_mpi_t const&() const{
-    return x_;
-  }
 };
+std::ostream& operator<<(std::ostream& s, I const& x){
+  auto const v(x.value());
+  return s << "0x" << xju::format::join(v.begin(),v.end(),
+                                        xju::format::Hex(""),
+                                        "");
+}
 
 }
 }

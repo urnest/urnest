@@ -54,6 +54,7 @@ public:
   
   friend bool operator<(PrivateKey const& a, PrivateKey const& b) noexcept;
 
+  
   friend std::ostream& operator<<(std::ostream& s, PrivateKey const& x)
   {
     //REVISIT: print in same encoding as id_rsa?

@@ -82,7 +82,8 @@ public:
       std::unique_ptr<xju::crypt::sig::Verifier> sigVerifier(
         dynamic_cast<ClientHostKeyAlgorithm const&>(
           hostKeyAlgorithm).verifyBonafide(
-            r.hostKeyAndCertificates_));
+            r.hostKeyAndCertificates_,
+            xju::BitCount(r.hostSignature_.size()*8)));
       
       K const k(xju::crypt::powm(r.f_,x,p)); // K = f^x mod p
       

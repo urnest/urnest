@@ -28,15 +28,14 @@ namespace rsa
 namespace
 {
 sexp_ptr makeSexp(PrivateKey const& privateKey){
-  gcry_mpi_t const& e(privateKey.e_);
-  gcry_mpi_t const& n(privateKey.n_);
-  gcry_mpi_t const& d(privateKey.d_);
-  gcry_mpi_t const& p(privateKey.p_);
-  gcry_mpi_t const& q(privateKey.q_);
-  gcry_mpi_t const& u(privateKey.u_);
   sexp_ptr result(
     "(private-key (rsa (n %M) (e %M) (d %M) (p %M) (q %M) (u %M)))",
-    n,e,d,p,q,u);
+    privateKey.n_.gcry(),
+    privateKey.e_.gcry(),
+    privateKey.d_.gcry(),
+    privateKey.p_.gcry(),
+    privateKey.q_.gcry(),
+    privateKey.u_.gcry());
   return result;
 }
 

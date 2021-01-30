@@ -94,7 +94,7 @@ public:
                              signature.end(),
                              xju::format::Hex(""),
                              "")
-        << " on " << len << " supplied data bytes "
+        << " on " << len << " supplied data bytes"
         << " was signed by owner of RSA public key "
         << publicKey_;
       e.addContext(s.str(),XJU_TRACED);

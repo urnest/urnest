@@ -9,6 +9,21 @@
 //
 
 
+#include <xju/crypt/rsa/SigVerifier.hh> //impl
+#include <xju/crypt/rsa/PublicKey.hh> //impl
+#include <xju/ssh/transport/ClientHostKeyAlgorithm.hh>
+#include <xju/MemIBuf.hh> //impl
+#include <xju/net/istream.hh> //impl
+#include <sstream> //impl
+#include <xju/format.hh> //impl
+#include <xju/Exception.hh> //impl
+#include <xju/ssh/decode.hh> //impl
+#include <xju/crypt/I.hh> //impl
+#include <xju/crypt/SigVerifier.hh> //impl
+#include <utility> //impl
+#include <set>
+#include <xju/crypt/rsa/PublicKey.hh>
+
 namespace xju
 {
 namespace ssh
@@ -21,12 +36,17 @@ namespace hkas
 class RSAClient : public ClientHostKeyAlgorithm
 {
 public:
-  RSAClient(std::set<xju::crypt::rsa::PublicKey> acceptableKeys) noexcept:
+  explicit RSAClient(
+    std::set<xju::crypt::rsa::PublicKey> acceptableKeys) noexcept:
       acceptableKeys_(acceptableKeys)
   {
   }
-  virtual std::unique_ptr<xju::crypt::sig::Verifier> verifyBonafide(
-    std::vector<uint8_t> const& hostKeyAndCertificates) const override
+  virtual bool isEncryptionCapable() const noexcept override { return true; }
+  virtual bool isSignatureCapable() const noexcept override { return true; }
+  
+  virtual std::unique_ptr<xju::crypt::SigVerifier> verifyBonafide(
+    std::vector<uint8_t> const& hostKeyAndCertificates,
+    xju::BitCount const& signatureSize) const override
   {
     try{
       xju::MemIBuf b(hostKeyAndCertificates);
@@ -39,40 +59,40 @@ public:
         throw xju::Exception(s.str(),XJU_TRACED);
       }
       try{
-        auto const e(xju::ssh::decode<xju::crypt::mpi::I>(s));
+        auto const e(xju::ssh::decode<xju::crypt::I>(s));
         try{
-          auto const n(xju::ssh::decode<xju::crypt::mpi::I>(s));
+          auto const n(xju::ssh::decode<xju::crypt::I>(s));
           try{
-            xju::crypt::rsa::PublicKey key(e,n);
+            //RSA signature size == RSA key size
+            xju::crypt::rsa::PublicKey key(signatureSize,e,n);
             if (acceptableKeys_.count(key)==0){
               std::ostringstream s;
               s << "RSA public key " << key
                 << " is not a known key of connected host";
               throw xju::Exception(s.str(),XJU_TRACED);
             }
-            return std::unique_ptr<xju::crypt::sig::Verifier>(
-              new xju::ssh::crypt::rsa::SigVerifier(std::move(key)));
+            return std::unique_ptr<xju::crypt::SigVerifier>(
+              new xju::crypt::rsa::SigVerifier(std::move(key)));
           }
-          catch(xju::Exception& e){
+          catch(xju::Exception& ex){
             std::ostringstream s;
             s << "progress having decoded parameter 'n' " << n;
-            e.addContext(s.str(),XJU_TRACED);
+            ex.addContext(s.str(),XJU_TRACED);
             throw;
           }
-          
         }
-        catch(xju::Exception& e){
+        catch(xju::Exception& ex){
           std::ostringstream s;
           s << "progress having decoded parameter 'e' " << e;
-          e.addContext(s.str(),XJU_TRACED);
+          ex.addContext(s.str(),XJU_TRACED);
           throw;
         }
       }
-      catch(xju::Exception& e){
+      catch(xju::Exception& ex){
         std::ostringstream s;
         s << "decode and verify RSA public key having decoded "
           << "key type identifier \"ssh-rsa\" as expected";
-        e.addContext(s.str(),XJU_TRACED);
+        ex.addContext(s.str(),XJU_TRACED);
         throw;
       }
     }
@@ -91,11 +111,11 @@ public:
       throw;
     }
   }
+private:
+  std::set<xju::crypt::rsa::PublicKey> acceptableKeys_;
 };
 
 }
 }
 }
 }
-
-

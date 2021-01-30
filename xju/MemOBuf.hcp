@@ -26,7 +26,7 @@ class MemOBuf : public OBuf
 public:
   // buffer up to max bytes, extending storage space from 0 in inc-sized
   // increments as needed
-  MemOBuf(
+  explicit MemOBuf(
     size_t const inc,
     size_t const max=std::numeric_limits<size_t>::max()) noexcept:
       inc_(inc),

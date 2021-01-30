@@ -1,4 +1,6 @@
 - libssh2
+    * what uses SigVerifier? implement and test it
+    
     see ssh2_echo.c in examples
     just want ssh2/Client(xju::ip::v4::Address,xju::ip::Port,
                           xju::Path::AbsPath publicKey,

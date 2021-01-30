@@ -13,7 +13,8 @@
 #include <memory>
 #include <vector>
 #include <cinttypes>
-#include <xju/crypt/sig/Verifier.hh>
+#include <xju/BitCount.hh>
+#include <xju/crypt/SigVerifier.hh>
 
 namespace xju
 {
@@ -25,16 +26,20 @@ namespace transport
 class ClientHostKeyAlgorithm : public HostKeyAlgorithm
 {
 public:
-  //verify the hostKeyAndCertificates belongs to connected host
+  // Verify the hostKeyAndCertificates belongs to connected host
   // hostKeyAndCertificates is the encoded format identifier plus
   // format-specific parameters, see rfc4253 6.6, e.g. ssh-rsa
   // comprises (encoded):
   //    string "ssh-rsa"
   //    mpint e
   //    mping n
+  // ... signatureSize is the size of the signature apparently
+  // signed by the connected host using hostKeyAndCertificates, in
+  // case it helps verification.
   //pre: isSignatureCapable()
-  virtual std::unique_ptr<xju::crypt::sig::Verifier> verifyBonafide(
-    std::vector<uint8_t> const& hostKeyAndCertificates) const=0;
+  virtual std::unique_ptr<xju::crypt::SigVerifier> verifyBonafide(
+    std::vector<uint8_t> const& hostKeyAndCertificates,
+    xju::BitCount const& signatureSize) const=0;
 };
 
 }

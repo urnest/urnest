@@ -15,12 +15,15 @@
 #include <xju/format.hh>
 #include <xju/Int.hh>
 #include <cinttypes>
+#include <xju/crypt/I.hh>
 
 namespace xju
 {
 namespace ssh
 {
 
+// Encode x to s per RFC4251's
+// "Data Type Representations Used in the SSH Protocols".
 xju::net::ostream& encode(xju::net::ostream& s, bool const x)
 {
   return s.put8(x?1:0);
@@ -60,6 +63,12 @@ xju::net::ostream& encode(xju::net::ostream& s,std::vector<xju::Tagged<std::stri
 {
   
   return encode(s,xju::format::join(x.begin(),x.end(),std::string(",")));
+}
+
+xju::net::ostream& encode(xju::net::ostream& s, xju::crypt::I const& x)
+{
+  auto v(x.value());
+  return s.put32(v.size()).put(v.begin(),v.end());
 }
 
 }
