@@ -61,11 +61,11 @@ public:
   {
     try{
       // rfc8017 8.2.2 step 1
-      if (signature.size()!=publicKey_.keySize_.value()/8){
+      if (signature.size()!=publicKey_.keySize().value()/8){
         std::ostringstream s;
         s << "signature size (" << signature.size()
           << " bytes) is not equal to key size ("
-          << publicKey_.keySize_.value()/8
+          << publicKey_.keySize().value()/8
           << " bytes)";
         throw xju::Exception(s.str(),XJU_TRACED);
       }

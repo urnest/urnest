@@ -33,7 +33,7 @@ void test1() {
     xju::assert_equal(x.value(),std::vector<uint8_t>({0,255}));
   }
   {
-    I x(0);
+    I x(0UL);
     xju::assert_equal(x.value(),std::vector<uint8_t>());
   }
   {
@@ -79,7 +79,7 @@ void test1() {
     xju::assert_equal(b-11,a);
     xju::assert_equal(a/2,I(11));
     xju::assert_equal(a*2,I(44));
-    xju::assert_equal(a%2,I(0));
+    xju::assert_equal(a%2,I(0UL));
     xju::assert_equal(a%21,I(1));
     xju::assert_equal(mul_2exp(a,2),I(88));
     xju::assert_equal(div(a,I(9)),std::pair<I,I>(2,4));
@@ -88,8 +88,8 @@ void test1() {
     xju::assert_equal(div(neg(a),I(9)),std::pair<I,I>(neg(I(2)),neg(I(4))));
     xju::assert_equal(div(a,neg(I(9))),std::pair<I,I>(neg(I(2)),I(4)));
   }
-  xju::assert_equal(powm(I(2),I(4),I(1)),I(0));
-  xju::assert_equal(powm(I(2),I(4),I(16)),I(0));
+  xju::assert_equal(powm(I(2),I(4),I(1)),I(0UL));
+  xju::assert_equal(powm(I(2),I(4),I(16)),I(0UL));
   xju::assert_equal(powm(I(2),I(4),I(7)),I(2));
 
   xju::assert_equal(gcd(I(27),I(24)),I(3));

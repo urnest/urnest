@@ -10,8 +10,8 @@
 
 
 #include <xju/crypt/I.hh>
-#include <xju/BitCount.hh>
 #include <xju/format.hh>
+#include <xju/BitCount.hh>
 
 namespace xju
 {
@@ -22,15 +22,18 @@ namespace rsa
 
 class PublicKey{
 public:
-  PublicKey(xju::BitCount keySize,
-            xju::crypt::I e,
+  PublicKey(xju::crypt::I e,
             xju::crypt::I n) noexcept:
-      keySize_(keySize),
       e_(std::move(e)),
       n_(std::move(n))
   {
   }
-  xju::BitCount keySize_;
+  xju::BitCount keySize() const{
+    auto const v(n_.value());
+    xju::assert_equal(v[0],(uint8_t)0); //leading zero
+    xju::assert_greater_equal(v[1],(uint8_t)0x80); //should have high bit set
+    return xju::BitCount((v.size()-1)*8);
+  }
   xju::crypt::I e_;
   xju::crypt::I n_;
 
@@ -43,12 +46,9 @@ public:
     auto const n(x.n_.value());
     std::string const nn(
       xju::format::join(n.begin(),n.end(),xju::format::Hex(""),""));
-    std::string const nPad(
-      std::max((size_t)x.keySize_.value()/4,nn.size())-nn.size(),'0');
     return s << "e: "
              << xju::format::join(e.begin(),e.end(),xju::format::Hex(""),"")
-             << ", n (" << x.keySize_ << "-bit): "
-             << nPad << nn;
+             << ", n: " << nn;
   }
   
 };

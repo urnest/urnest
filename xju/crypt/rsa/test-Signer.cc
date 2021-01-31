@@ -28,6 +28,10 @@ void test1() {
 
   //create key
   PrivateKey privateKey(generateKey(xju::BitCount(3072)));
+
+  std::cout << "n size:" << (privateKey.n_.value().size()*8) << std::endl;
+  std::cout << "n[0]" << (xju::format::hex(privateKey.n_.value()[0])) << std::endl;
+  std::cout << "n[1]" << (xju::format::hex(privateKey.n_.value()[1])) << std::endl;
   
   auto const publicKey(privateKey.publicKey());
   

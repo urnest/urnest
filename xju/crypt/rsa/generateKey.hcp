@@ -31,14 +31,9 @@ PrivateKey generateKey(xju::BitCount keySize)
     verifySuccessful(gcry_pk_genkey(&key_, params.get()),XJU_TRACED);
     sexp_ptr key(key_);
 
-    std::cerr << "AAAA\n";
-    gcry_sexp_dump(key.get());
-    
     sexp_ptr privateKey(key.getCdrOf("private-key").getCons("rsa"));
-    std::cerr << "BBBB\n";
 
-    return PrivateKey(xju::BitCount(keySize),
-                      privateKey.getI("e"),
+    return PrivateKey(privateKey.getI("e"),
                       privateKey.getI("n"),
                       privateKey.getI("d"),
                       privateKey.getI("p"),
@@ -47,7 +42,7 @@ PrivateKey generateKey(xju::BitCount keySize)
   }
   catch(xju::Exception& e){
     std::ostringstream s;
-    s << "generateo " << keySize << "-bit RSA key";
+    s << "generated " << keySize << "-bit RSA key";
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }

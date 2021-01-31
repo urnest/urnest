@@ -64,7 +64,7 @@ public:
           auto const n(xju::ssh::decode<xju::crypt::I>(s));
           try{
             //RSA signature size == RSA key size
-            xju::crypt::rsa::PublicKey key(signatureSize,e,n);
+            xju::crypt::rsa::PublicKey key(e,n);
             if (acceptableKeys_.count(key)==0){
               std::ostringstream s;
               s << "RSA public key " << key

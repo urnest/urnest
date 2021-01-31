@@ -35,8 +35,7 @@ void test1() {
   sexp_ptr privateKey(keyPair.getCons("private-key"));
   sexp_ptr publicKey_(keyPair.getCdrOf("public-key"));
 
-  PublicKey publicKey(xju::BitCount(3072),
-                      publicKey_.getI("e"),
+  PublicKey publicKey(publicKey_.getI("e"),
                       publicKey_.getCdrOf("rsa").getI("n"));
   
   std::string const message("the quick brown fox");

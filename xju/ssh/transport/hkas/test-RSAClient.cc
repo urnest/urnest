@@ -36,14 +36,14 @@ void test1() {
     xju::crypt::rsa::generateKey(xju::BitCount(2048)));
 
   //generate RSA key of same size as target key; make a key from one
-  //by halving key size but keeping e and n (not a valid key
+  //by changing it slightly (not a valid key
   //but does not matter, we want to check we do not pick it)
   std::set<xju::crypt::rsa::PublicKey> acceptableKeys;
   acceptableKeys.insert(
     xju::crypt::rsa::generateKey(xju::BitCount(2048)).publicKey());
-  acceptableKeys.insert(xju::crypt::rsa::PublicKey(xju::BitCount(1024),
-                                                   targetKey.e_,
-                                                   targetKey.n_));
+  acceptableKeys.insert(xju::crypt::rsa::PublicKey(
+                          targetKey.e_,
+                          targetKey.n_+xju::crypt::I(1)));
   acceptableKeys.insert(targetKey.publicKey());
   
   //encode target key per verifyBonafide
@@ -106,7 +106,7 @@ void test1() {
         atLeastOne(hexDigit())+
         " represents one of connected host's known public keys "+
         listOf(("e: "+atLeastOne(hexDigit())+
-                ", n ("+atLeastOne(digit())+"-bit): "+atLeastOne(hexDigit())),
+                ", n: "+atLeastOne(hexDigit())),
                parseLiteral(", "),
                parseLiteral(" "))+
         "because\nfailed to decode and verify RSA public key having decoded key type identifier \"ssh-rsa\" as expected because\nfailed to progress having decoded parameter 'e' 0x"+atLeastOne(hexDigit())+
@@ -114,7 +114,7 @@ void test1() {
         atLeastOne(hexDigit())+
         " because\nRSA public key e: "+
         atLeastOne(hexDigit())+
-        ", n (2048-bit): "+
+        ", n: "+
         atLeastOne(hexDigit())+
         " is not a known key of connected host.");
     }

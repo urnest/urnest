@@ -6,6 +6,7 @@
 
 %all.tree==<<
 %tests.tree
+rsa%tests.tree:leaves
 
 %tests.tree==<<
 ()+cmd=(test-I.cc+(%cxx-opts):auto.cxx.exe):exec.output

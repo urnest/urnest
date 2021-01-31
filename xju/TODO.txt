@@ -1,6 +1,27 @@
 - libssh2
-    * what uses SigVerifier? implement and test it
-    
+    * what uses RSAClient? implement and test it
+      kexers/DhGroup1SHA1Client.hcp
+      ... toward Session, which needs ClientAlgorithms, which needs:
+
+      - examples/read-openssh-rsa-key-files
+        read private and public keys, sign and verify a message
+          libssh2 file_read_publickey reads id_rsa.pub
+          openssh sshkey.c:
+  	  case KEY_RSA:
+		if ((ret = sshbuf_put_cstring(b, typename)) != 0 ||
+		      POKE_U32 len = 32bit big-endian unsigned int
+		      then bytes verbatim
+		    (ret = sshbuf_put_bignum2(b, rsa_e)) != 0 ||
+		      32bit big-endian unsigned (with leading zero if nec)
+		      note xju::crypt::I::value() adds leading zero if nec
+		    (ret = sshbuf_put_bignum2(b, rsa_n)) != 0)
+		      32bit big-endian unsigned (with leading zero if nec)
+                ... but we do not no keysize? must not need it at least for
+		public key.
+      - test kex via "examples/exchange-keys-rsa host-rsa-public-key-file"
+      -  session host-rsa-public-key-file"
+        which would establish a session with localhost sshd
+
     see ssh2_echo.c in examples
     just want ssh2/Client(xju::ip::v4::Address,xju::ip::Port,
                           xju::Path::AbsPath publicKey,
