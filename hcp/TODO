@@ -1,9 +1,13 @@
+- hcp-split parseOpenSSHPublicKey gives wrong offset map
+  at header std::pair<PublicKey?
 - completion in find def (twt_cxx.el)
-  - how to drive in emacs? completing-read, see also Programmed Completion and its completion-table-dynamic call hcp-show-tag-completions
-    - how to get current point to calculate current scope? just (point)?
+  x how to drive in emacs? completing-read, see also Programmed Completion and its completion-table-dynamic call hcp-show-tag-completions
+    x how to get current point to calculate current scope? just (point)?
   x if no completions show "contains" too?
   x tags/hcp-symbol-completions prefix from-scope
-    
+
+- complete type (try that first on ctrl-/)
+
 x handle using base class method/member
 
 - fix C++ constructor indentation

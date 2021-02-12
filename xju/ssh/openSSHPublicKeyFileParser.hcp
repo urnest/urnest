@@ -1,0 +1,113 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <utility>
+#include <xju/crypt/rsa/PublicKey.hh>
+#include <xju/net/istream.hh> //impl
+#include <hcp/parser.hh> //impl
+#include <xju/base64/parsers.hh> //impl
+#include <xju/base64/decode.hh> //impl
+#include <xju/MemIBuf.hh> //impl
+#include <tuple> //impl
+#include <xju/ssh/KeyTypeName.hh>
+#include <xju/ssh/EncodedPublicKey.hh>
+#include <hcp/ast.hh>
+#include <hcp/parser.hh>
+
+namespace xju
+{
+namespace ssh
+{
+
+namespace open_ssh_public_key_file_parser
+{
+class KeyTypeTag{};
+typedef hcp_ast::TaggedItem<KeyTypeTag> KeyTypeItem;
+class Base64ContentTag{};
+typedef hcp_ast::TaggedItem<Base64ContentTag> Base64ContentItem;
+class CommentTag{};
+typedef hcp_ast::TaggedItem<CommentTag> CommentItem;
+
+class Item: public hcp_ast::Item
+{
+public:
+
+  explicit Item(hcp_ast::IRs irs) noexcept:
+  //xju::Exception
+      hcp_parser::Item(std::move(irs)),
+      keyTypeItem_(hcp_ast::findOnlyChildOfType<KeyTypeItem>(*this)),
+      base64Content_(hcp_ast::findOnlyChildOfType<Base64ContentItem>(*this)),
+      comment_(hcp_ast::findChildrenOfType<CommentItem>(*this))
+  {
+  }
+  // Get SSH-encoded public key, key type and comment.
+  std::tuple<KeyTypeName,EncodedPublicKey,std::string> get() const
+  // throw std::bad_alloc
+  {
+    KeyTypeName const keyTypeName(
+      hcp_ast::reconstruct(keyTypeItem_));
+    auto const k(hcp_ast::reconstruct(base64Content_));
+    EncodedPublicKey const publicKey(xju::base64::decode(k.begin(),k.end()));
+    auto const comment(comment_.size()?
+                       hcp_ast::reconstruct(comment_.front()):
+                       std::string(""));
+    return {keyTypeName,publicKey,comment};
+  }
+public:
+  hcp_ast::Item const& keyTypeItem_;
+  hcp_ast::Item const& base64Content_;
+  std::vector<std::reference_wrapper<CommentItem const> > const comment_;
+};
+
+}
+
+// Parse OpenSSH public key i.e. id_rsa.pub content e.g.:
+// ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDC01TZzrY8c8DQaMAjrsvZYxK40rxaf/kxNkdkViA6GkY1pn6l5yQ4V7Unm99qSyUIgqwrIZieeLXv5PK0IjFRaNUCD4q4/zGqI7XcoK6p0NF1PCWj5Aek9vxQkTpKZhlSZDrwtBcdI55f2EJJ/4RoVohJGXXgAoh/xVZJW7yuW9qsUgJwOuMKgmY/d63fOjimqLqHrv7cXDY2MMaK7/VeG+AhLAqKCIxFq7ySV/nhklsxF6AP0ATYi+b+Q87CQhI+aFEP/xx5vIS1aM5VYacRRCK4dmY3nQM33NYRnxK4r6Ygt39beJ0aqL2TblAFT4U2/ZMtqHXdbiF0jXR3U+PN xju@xjutv
+//
+std::shared_ptr<hcp_parser::NamedParser<xju::ssh::open_ssh_public_key_file_parser::Item> >
+openSSHPublicKeyFileParser()
+{
+  using hcp_parser::atLeastOne;
+  using hcp_parser::optional;
+  using hcp_parser::parseUntil;
+  using hcp_parser::parseAnyCharExcept;
+  using hcp_parser::endOfFile;
+  using hcp_parser::whitespaceChar;;
+  using hcp_parser::named;
+  using open_ssh_public_key_file_parser::KeyTypeItem;
+  using open_ssh_public_key_file_parser::Base64ContentItem;
+  using open_ssh_public_key_file_parser::CommentItem;
+  using xju::base64::parsers::pad1;
+  using xju::base64::parsers::pad2;
+  using xju::base64::parsers::pad3;
+  using xju::base64::parsers::c64;
+  static auto const result(
+    named<open_ssh_public_key_file_parser::Item>(
+      "OpenSSH format public key",
+      named<KeyTypeItem>(
+        "key type",
+        parseUntil(parseAnyCharExcept(" \r\n\t"),atLeastOne(" ")))+
+      atLeastOne(" ")+
+      hcp_parser::named<Base64ContentItem>(
+        "public key",
+        parseUntil(
+          xju::base64::parsers::fourChars(),
+          pad1()|pad2()|pad3()|whitespaceChar()|endOfFile())+
+        (!c64()|(pad1()|pad2()|pad3())))+
+      optional(atLeastOne(" ")+
+               hcp_parser::named<CommentItem>(
+                 "comment",
+                 parseUntil(endOfFile())))));
+  return result;
+}
+
+}
+}

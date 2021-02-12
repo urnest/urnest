@@ -3,9 +3,8 @@
       kexers/DhGroup1SHA1Client.hcp
       ... toward Session, which needs ClientAlgorithms, which needs:
 
-      - examples/read-openssh-rsa-key-files
+      * examples/read-openssh-rsa-key-files
         read private and public keys, sign and verify a message
-          libssh2 file_read_publickey reads id_rsa.pub
           openssh sshkey.c:
   	  case KEY_RSA:
 		if ((ret = sshbuf_put_cstring(b, typename)) != 0 ||
@@ -18,6 +17,36 @@
 		      32bit big-endian unsigned (with leading zero if nec)
                 ... but we do not no keysize? must not need it at least for
 		public key.
+	  sshkey_private_to_blob2
+            (r = sshbuf_put(encoded, AUTH_MAGIC, sizeof(AUTH_MAGIC))) != 0 ||
+	    (r = sshbuf_put_cstring(encoded, ciphername)) != 0 ||
+	    (r = sshbuf_put_cstring(encoded, kdfname)) != 0 ||
+	    (r = sshbuf_put_stringb(encoded, kdf)) != 0 ||
+	    (r = sshbuf_put_u32(encoded, 1)) != 0 ||	/* number of keys */
+	    (r = sshkey_to_blob(prv, &pubkeyblob, &pubkeylen)) != 0 ||
+	    (r = sshbuf_put_string(encoded, pubkeyblob, pubkeylen)) != 0
+	      (ret = sshbuf_put_cstring(b, typename)) != 0 ||
+		    (ret = sshbuf_put_bignum2(b, rsa_e)) != 0 ||
+		    (ret = sshbuf_put_bignum2(b, rsa_n)) != 0)
+
+	    ((r = sshbuf_put_u32(encrypted, check)) != 0 ||
+	    (r = sshbuf_put_u32(encrypted, check)) != 0)
+	    sshkey_private_serialize_opt(encrypted)
+	      ((r = sshbuf_put_cstring(b, sshkey_ssh_name(key))) != 0)
+		if ((r = sshbuf_put_bignum2(b, rsa_n)) != 0 ||
+		    (r = sshbuf_put_bignum2(b, rsa_e)) != 0 ||
+		    (r = sshbuf_put_bignum2(b, rsa_d)) != 0 ||
+		    (r = sshbuf_put_bignum2(b, rsa_iqmp)) != 0 ||
+		    (r = sshbuf_put_bignum2(b, rsa_p)) != 0 ||
+		    (r = sshbuf_put_bignum2(b, rsa_q)) != 0)
+	    (r = sshbuf_put_cstring(encrypted, comment)) != 0)
+	while (sshbuf_len(encrypted) % blocksize) {
+		if ((r = sshbuf_put_u8(encrypted, ++i & 0xff)) != 0)
+        ((r = sshbuf_put_u32(encoded, sshbuf_len(encrypted))) != 0)
+	if ((r = cipher_crypt(ciphercontext, 0, cp,
+	    sshbuf_ptr(encrypted), sshbuf_len(encrypted), 0, authlen)) != 0)
+
+            	      
       - test kex via "examples/exchange-keys-rsa host-rsa-public-key-file"
       -  session host-rsa-public-key-file"
         which would establish a session with localhost sshd

@@ -16,6 +16,7 @@
 #include <xju/tls/PEMCommentsItem.hh> //impl
 #include <xju/tls/PEMTypeItem.hh> //impl
 #include <xju/tls/PEMPayloadItem.hh> //impl
+#include <xju/base64/parsers.hh> //impl
 
 namespace xju
 {
@@ -99,10 +100,7 @@ namespace{
       "-----"+(crlf()|lf())+
       named<PEMPayloadItem>(
         "base64 payload",
-        parseUntil(
-          fourChars()+w,
-          pad1()|pad2()|pad3()|"-")+
-        (!c64()|(pad1()|pad2()|pad3())))+w+
+        xju::base64::parsers::string())+w+
       "-----END "+parseUntil("-")+"-----"+w;
   }
 }

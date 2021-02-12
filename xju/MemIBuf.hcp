@@ -41,7 +41,7 @@ public:
   }
   // IBuf::
   // post: result.second-result.first<=inc
-  std::pair<uint8_t const*,uint8_t const*> underflow() override
+  std::pair<uint8_t const*,uint8_t const*> underflow() noexcept override
   {
     auto const inc(std::min(inc_,(size_t)(end()-mark())));
     auto const result(std::make_pair(mark(),mark()+inc));

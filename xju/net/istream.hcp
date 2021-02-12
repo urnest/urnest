@@ -31,7 +31,7 @@ public:
   explicit istream(xju::IBuf& ibuf) noexcept: ibuf_(ibuf),data_(0,0){}
   
   inline uint8_t get8()
-  // exceptions of underflow
+  // exceptions of underflow plus xju::Exception at end of input
   {
     if (empty()){
       data_=ibuf_.underflow();
@@ -128,7 +128,7 @@ public:
       throw;
     }
   }
-  
+
 private:
   xju::IBuf& ibuf_;
   std::pair<uint8_t const*,uint8_t const*> data_;

@@ -9,23 +9,15 @@
 //
 
 
-#include <utility>
-#include <cinttypes>
+#include <xju/Tagged.hh>
 
 namespace xju
 {
-
-class IBuf
+namespace ssh
 {
-public:
-  virtual ~IBuf() noexcept {}
 
-  // pull more data from stream source
-  // - assumes all of previous data has been consumed
-  // - result.first==result.second means end of data
-  // post: result.second>=result.first
-  virtual std::pair<uint8_t const*,uint8_t const*> underflow() = 0;
+class KeyTypeNameTag{};
+typedef xju::Tagged<std::string,KeyTypeNameTag> KeyTypeName;
 
-};
-  
+}
 }

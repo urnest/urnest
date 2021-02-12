@@ -15,6 +15,12 @@
 #include <vector>
 #include <xju/split.hh>
 #include <xju/crypt/I.hh>
+#include <utility>
+#include <xju/crypt/rsa/PrivateKey.hh>
+#include <string>
+#include <xju/crypt/Signer.hh>
+#include <memory>
+#include <xju/crypt/rsa/Signer.hh> //impl
 
 namespace xju
 {
@@ -48,9 +54,21 @@ template<> uint32_t decoder<uint32_t>::dec(xju::net::istream& s)
 {
   return s.get32();
 }
+template<> uint64_t decoder<uint64_t>::dec(xju::net::istream& s)
+{
+  return s.get64();
+}
 template<> std::string decoder<std::string>::dec(xju::net::istream& s)
 {
   std::string result;
+  result.resize(s.get32());
+  s.getN(result.size(),result.begin());
+  return result;
+}
+template<> std::vector<uint8_t> decoder<std::vector<uint8_t>>::dec(
+  xju::net::istream& s)
+{
+  std::vector<uint8_t> result;
   result.resize(s.get32());
   s.getN(result.size(),result.begin());
   return result;
@@ -87,6 +105,158 @@ xju::crypt::I decoder<xju::crypt::I>::dec(xju::net::istream& s)
   result.resize(s.get32());
   s.getN(result.size(),result.begin());
   return xju::crypt::I(result);
+}
+
+// decode OpenSSH-encoded private key and comment from s assuming
+// key type name "ssh-rsa" has been decoded already
+template<>
+std::pair<xju::crypt::rsa::PrivateKey,std::string>
+decoder<std::pair<xju::crypt::rsa::PrivateKey,std::string>>::dec(
+  xju::net::istream& s)
+{
+  try{
+    // layout derived from openSSH source code
+    auto const n(xju::ssh::decode<xju::crypt::I>(s));
+    auto const e(xju::ssh::decode<xju::crypt::I>(s));
+    auto const d(xju::ssh::decode<xju::crypt::I>(s));
+    auto const iqmp(xju::ssh::decode<xju::crypt::I>(s)); // invm(q,p)?
+    auto p(xju::ssh::decode<xju::crypt::I>(s));
+    auto q(xju::ssh::decode<xju::crypt::I>(s));
+    auto const comment(xju::ssh::decode<std::string>(s));
+    if (q<p){ //see gcrypt rsa parameters documentation
+      std::swap(q,p);
+    }
+    auto const u(invm(p,q));
+    bool const notSure(u==iqmp);
+    return {xju::crypt::rsa::PrivateKey(e,n,d,p,q,u),comment};
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode SSH-encoded private key and comment assuming "
+      << "key type name \"ssh-rsa\" has been decoded already";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+// decode private key to produce signer
+template<>
+std::unique_ptr<xju::crypt::Signer>
+decoder<std::unique_ptr<xju::crypt::Signer>>::dec(
+  xju::net::istream& s)
+{
+  try{
+    auto const checkBytes(xju::ssh::decode<uint64_t>(s));
+    auto const keyTypeName(xju::ssh::decode<std::string>(s));
+    if (keyTypeName=="ssh-rsa"){
+      auto const k(decode<std::pair<xju::crypt::rsa::PrivateKey,std::string>>(s).first);
+      return std::unique_ptr<xju::crypt::Signer>(
+        new xju::crypt::rsa::Signer(k));
+    }
+    else{
+      std::ostringstream s;
+      s << "key type name "
+        << xju::format::quote(xju::format::cEscapeString(keyTypeName))
+        << " not implemented";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode SSH-encoded private key from stream to produce signer";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+namespace
+{
+
+std::string decodeKeyTypeName(xju::net::istream& s)
+{
+  try{
+    std::string keyTypeName;
+    s.getN(s.get32(),std::back_inserter(keyTypeName));
+    return keyTypeName;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode key type name";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+xju::crypt::I decodeE(xju::net::istream& s,std::string const& keyTypeName)
+{
+  try{
+    std::vector<uint8_t> e;
+    s.getN(s.get32(),std::back_inserter(e));
+    return xju::crypt::I(e);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode \"e\" having decoded key type name "
+      << xju::format::quote(xju::format::cEscapeString(keyTypeName));
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+xju::crypt::I decodeN(xju::net::istream& s,
+                    std::string const& keyTypeName,
+                    xju::crypt::I const& e)
+{
+  try{
+    std::vector<uint8_t> n;
+    s.getN(s.get32(),std::back_inserter(n));
+    return xju::crypt::I(n);
+  }
+  catch(xju::Exception& ee){
+    std::ostringstream s;
+    s << "decode \"e\" having decoded key type name "
+      << xju::format::quote(xju::format::cEscapeString(keyTypeName))
+      << " and \"e\" " << e;
+    ee.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+
+template<>
+xju::crypt::rsa::PublicKey
+decoder<xju::crypt::rsa::PublicKey>::dec(
+  xju::net::istream& s)
+{
+  try{
+    std::string const keyTypeName(decodeKeyTypeName(s));
+    auto const e(decodeE(s,keyTypeName));
+    auto const n(decodeN(s,keyTypeName,e));
+
+    if (keyTypeName!="ssh-rsa"){
+      std::ostringstream s;
+      s << "expected key type name \"rsa\" but got "
+        << xju::format::quote(xju::format::cEscapeString(keyTypeName))
+        << ", having decoded \"e\" " << e << " and \"n\" " << n;
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    try{
+      s.get8();
+      std::ostringstream s;
+      s << "there are extra bytes of data";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    catch(xju::Exception const&){
+      //only exception possible for xju::MemIBuf is end-of-data
+    }
+    return xju::crypt::rsa::PublicKey(e,n);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode RSA public key";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
 }
 
 }

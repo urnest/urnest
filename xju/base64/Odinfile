@@ -5,6 +5,7 @@
 
 %tests.tree==<<
 ()+cmd=(test-decode.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-parsers.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 %hcp-gen==.:dir.hcp.list+G+hpath='xju/base64':hcp-split-virdir-specs:cat:vir_dir
 

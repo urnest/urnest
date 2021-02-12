@@ -14,6 +14,7 @@
 #define XJU_TAGGED_HH_
 
 #include <iosfwd>
+#include <utility>
 
 namespace xju
 {
@@ -23,10 +24,11 @@ class Tagged
 public:
   T _;
   
-  explicit Tagged(T const& x):
-    _(x) {
+  explicit Tagged(T x) noexcept:
+      _(std::move(x))
+  {
   }
-
+  
   T const& value() const throw() {
     return _;
   }

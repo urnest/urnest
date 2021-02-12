@@ -198,6 +198,13 @@ public:
     gcry_mpi_powm(result.x_,b.x_,e.x_,m.x_);
     return std::move(result);
   }
+  // x^-1 % m
+  friend I invm(I const& x, I const& m)
+  {
+    I result(0UL);
+    gcry_mpi_invm(result.x_,x.x_,m.x_);
+    return std::move(result);
+  }
   friend I gcd(I const& x, I const& y)
   {
     I result(0UL);

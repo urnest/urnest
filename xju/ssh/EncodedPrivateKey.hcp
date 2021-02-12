@@ -9,23 +9,26 @@
 //
 
 
-#include <utility>
+#include <vector>
 #include <cinttypes>
 
 namespace xju
 {
+namespace ssh
+{
 
-class IBuf
+// SSH-encoded private key.
+class EncodedPrivateKey
 {
 public:
-  virtual ~IBuf() noexcept {}
-
-  // pull more data from stream source
-  // - assumes all of previous data has been consumed
-  // - result.first==result.second means end of data
-  // post: result.second>=result.first
-  virtual std::pair<uint8_t const*,uint8_t const*> underflow() = 0;
-
+  std::vector<uint8_t> value_;
+  explicit EncodedPrivateKey(std::vector<uint8_t> value) noexcept:
+      value_(value)
+  {
+  }
+  friend bool operator<(EncodedPrivateKey const&,EncodedPrivateKey const&)
+    noexcept;
 };
-  
+
+}
 }

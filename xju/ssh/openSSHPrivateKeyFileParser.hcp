@@ -1,0 +1,194 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/crypt/rsa/PrivateKey.hh>
+#include <string> //impl
+#include <hcp/ast.hh> //impl
+#include <hcp/ast.hh>
+#include <utility> //impl
+#include <utility>
+#include <xju/MemIBuf.hh> //impl
+#include <xju/base64/decode.hh> //impl
+#include <xju/net/istream.hh> //impl
+#include <xju/format.hh> //impl
+#include <memory>
+#include <hcp/parser.hh>
+#include <xju/base64/parsers.hh> //impl
+#include <xju/ssh/EncodedPrivateKey.hh>
+#include <xju/ssh/decode.hh> //impl
+
+namespace xju
+{
+namespace ssh
+{
+namespace
+{
+std::string const AUTH_MAGIC="openssh-key-v1";
+
+// OpenSSH format private key wraps at 70 base-64 characters
+// per line, not a multiple of 4 as required by xju::base64::parsers
+// so we have looser base64 parsers here
+
+hcp_parser::PR const& c64() noexcept
+{
+  using hcp_parser::zeroOrMore;
+  using hcp_parser::whitespaceChar;
+  using hcp_parser::parseOneOfChars;
+  static auto const result(parseOneOfChars(
+                             xju::base64::parsers::base64Char())+
+                           zeroOrMore()*whitespaceChar());
+  return result;
+}
+hcp_parser::PR pad1() noexcept{
+  static const hcp_parser::PR result(c64()+
+                                     c64()+
+                                     c64()+
+                                     "=");
+  return result;
+}
+hcp_parser::PR pad2() noexcept{
+  static const hcp_parser::PR result(c64()+
+                                     c64()+
+                                     "==");
+  return result;
+}
+hcp_parser::PR pad3() noexcept{
+  static const hcp_parser::PR result(c64()+
+                                     "===");
+  return result;
+}
+
+hcp_parser::PR fourChars() noexcept{
+  static const hcp_parser::PR result(c64()+
+                                     c64()+
+                                     c64()+
+                                     c64());
+  return result;
+}
+
+// parse base64 string allowing embedded whitespace between
+// any base64 char
+hcp_parser::PR base64string() noexcept{
+  using hcp_parser::named;
+  using hcp_parser::NamedParser;
+  using hcp_parser::parseUntil;
+  using hcp_parser::crlf;
+  using hcp_parser::lf;
+  using hcp_parser::zeroOrMore;
+  using hcp_parser::whitespaceChar;
+  using hcp_parser::endOfFile;
+
+  static const hcp_parser::PR result(
+    parseUntil(
+      fourChars(),
+      pad1()|pad2()|pad3()|"-")+
+    (!c64()|(pad1()|pad2()|pad3())));
+  return result;
+}
+
+}
+
+namespace open_ssh_private_key_file_parser{
+
+class Base64ContentTag{};
+typedef hcp_ast::TaggedItem<Base64ContentTag> Base64ContentItem;
+
+class Item:public hcp_ast::Item
+{
+public:
+  explicit Item(hcp_ast::IRs irs) noexcept:
+  //xju::Exception
+      hcp_parser::Item(std::move(irs)),
+      base64Content_(hcp_ast::findOnlyChildOfType<Base64ContentItem>(*this))
+  {
+  }
+  // Get SSH-encoded private key.
+  EncodedPrivateKey getEncodedPrivateKey() const{
+    try{
+      xju::MemIBuf b(xju::base64::decode(
+                       hcp_ast::reconstruct(base64Content_)));
+      xju::net::istream s(b);
+      std::string magic(AUTH_MAGIC);
+      s.getN(magic.size(),magic.begin());
+      if (magic!=AUTH_MAGIC){
+        std::ostringstream s;
+        s << "expected initial " << xju::format::quote(AUTH_MAGIC)
+          << " but got "
+          << xju::format::quote(xju::format::cEscapeString(magic));
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      s.get8(); // AUTH_MAGIC encoded is null-terminated
+      auto const cipherName(xju::ssh::decode<std::string>(s));
+      if (cipherName!="none"){
+        std::ostringstream s;
+        s << "private key " << xju::format::quote(
+          xju::format::cEscapeString(cipherName))
+          << " encryption not implemented";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      
+      auto const kdfName(xju::ssh::decode<std::string>(s));
+      if (kdfName!="none"){
+        std::ostringstream s;
+        s << "private key " << xju::format::quote(
+          xju::format::cEscapeString(cipherName))
+          << " kdf not implemented";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      auto const kdf(xju::ssh::decode<std::vector<uint8_t>>(s));
+      
+      auto const numberOfKeys(s.get32());
+      if (numberOfKeys!=1){
+        std::ostringstream s;
+        s << "expected 1 key but got " << numberOfKeys;
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      auto const publicKey(xju::ssh::decode<std::vector<uint8_t>>(s));
+      return EncodedPrivateKey(xju::ssh::decode<std::vector<uint8_t>>(s));
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "get private key and comment from parsed OpenSSH private key file "
+        << "content "
+        << (*this);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+private:
+  hcp_ast::Item const& base64Content_;
+};
+
+}
+
+std::shared_ptr<hcp_parser::NamedParser<xju::ssh::open_ssh_private_key_file_parser::Item> >
+openSSHPrivateKeyFileParser()
+{
+  using open_ssh_private_key_file_parser::Base64ContentItem;
+  using hcp_parser::named;
+  
+  static auto const result(
+    named<xju::ssh::open_ssh_private_key_file_parser::Item>(
+      "OpenSSH format private key",
+      "-----BEGIN OPENSSH PRIVATE KEY-----\n"+
+      hcp_parser::named<Base64ContentItem>(
+        "base-64 content",
+        //Hmm... perhaps not quite right. as it allows arbitrary
+        //whitespace embedded and trailing but perhaps the actual
+        //format only allows embedded single newlines and must
+        //have exactly one trailing newline?
+        base64string())+hcp_parser::optional("\n")+
+      "-----END OPENSSH PRIVATE KEY-----\n"));
+  return result;
+}
+
+}
+}

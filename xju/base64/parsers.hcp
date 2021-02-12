@@ -1,0 +1,82 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <hcp/Chars.hh>
+#include <hcp/parser.hh>
+
+namespace xju
+{
+namespace base64
+{
+namespace parsers
+{
+
+hcp::Chars const& base64Char() noexcept
+{
+  static hcp::Chars const result("a-zA-Z0-9+/");
+  return result;
+}
+hcp_parser::PR const& c64() noexcept
+{
+  static auto const result(hcp_parser::parseOneOfChars(base64Char()));
+  return result;
+}
+hcp_parser::PR fourChars() noexcept{
+  static const hcp_parser::PR result(c64()+
+                                     c64()+
+                                     c64()+
+                                     c64());
+  return result;
+}
+hcp_parser::PR pad1() noexcept{
+  static const hcp_parser::PR result(c64()+
+                                     c64()+
+                                     c64()+
+                                     "=");
+  return result;
+}
+hcp_parser::PR pad2() noexcept{
+  static const hcp_parser::PR result(c64()+
+                                     c64()+
+                                     "==");
+  return result;
+}
+hcp_parser::PR pad3() noexcept{
+  static const hcp_parser::PR result(c64()+
+                                     "===");
+  return result;
+}
+
+// parse base64 string allowing embedded whitespace between 4-char
+// boundaries
+hcp_parser::PR string() noexcept{
+  using hcp_parser::named;
+  using hcp_parser::NamedParser;
+  using hcp_parser::parseUntil;
+  using hcp_parser::crlf;
+  using hcp_parser::lf;
+  using hcp_parser::zeroOrMore;
+  using hcp_parser::whitespaceChar;
+  using hcp_parser::endOfFile;
+
+  static const hcp_parser::PR result(
+    parseUntil(
+      fourChars()+zeroOrMore()*whitespaceChar(),
+      pad1()|pad2()|pad3()|"-"|endOfFile())+
+    (!c64()|(pad1()|pad2()|pad3())));
+  return result;
+}
+
+}
+}
+}
+
+
