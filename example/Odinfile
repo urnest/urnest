@@ -1,0 +1,4 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+ssh%all.tree:leaves
