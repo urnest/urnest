@@ -1,0 +1,7 @@
+%all==%all.tree:leaves
+
+%cxx-opts==<<
++(../..%cxx-opts)
+
+%all.tree==<<
+stress-chromedriver-startup.cc+(%cxx-opts):auto.cxx.exe
