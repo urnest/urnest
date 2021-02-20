@@ -22,43 +22,9 @@ namespace messages
 
 class Success
 {
-public:
-  Success() noexcept:
-  {
-  }
-
-  friend bool operator<(Success const& a, Success const& b) noexcept;
 };
 
 }
 }
 }
 }
-
-namespace xju
-{
-namespace ssh
-{
-
-// encode x to s including initial type byte
-xju::net::ostream& encode(xju::net::ostream& s,
-                          userauth::messages::Success const& x)
-{
-  s.put8((uint8_t)userauth::MSG::SUCCESS);
-  return s;
-}
-
-// note assumes type byte (SUCCESS) already read and verified
-template<>
-userauth::messages::Success decoder<userauth::messages::Success>::dec(
-  xju::net::istream& s)
-{
-  using namespace userauth;
-  
-  return Success();
-}
-
-}
-}
-
-    

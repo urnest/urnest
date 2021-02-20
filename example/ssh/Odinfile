@@ -7,3 +7,4 @@
 
 %all.tree==<<
 ()+cmd=(ssh-rsa-key.cc+(%cxx-opts):auto.cxx.exe) (id_rsa) (id_rsa.pub):exec.output
+localhost-session.cc+(%cxx-opts):auto.cxx.exe

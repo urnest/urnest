@@ -10,32 +10,27 @@
 
 
 #include <memory>
-#include <xju/ssh/transport/CipherKey.hh>
-#include <xju/ssh/transport/CipherIV.hh>
-#include <xju/ssh/transport/Encrypter.hh>
-#include <xju/ssh/transport/Decrypter.hh>
+#include <gcrypt.h>
 
 namespace xju
 {
-namespace ssh
+namespace crypt
 {
-namespace transport
+namespace macs
 {
 
-class CipherAlgorithm
+class gcry_mac_hd_ptr:  public std::unique_ptr<gcry_mac_handle,decltype(&gcry_mac_close)>
 {
 public:
-  virtual ~CipherAlgorithm() noexcept{}
-
-  virtual std::unique_ptr<Encrypter> encrypter(
-    CipherKey cipherKey,
-    CipherIV cipherIV) = 0;
-  virtual std::unique_ptr<Decrypter> decrypter(
-    CipherKey cipherKey,
-    CipherIV cipherIV) = 0;
-  
+  explicit gcry_mac_hd_ptr(gcry_mac_hd_t x=0) noexcept:
+      std::unique_ptr<gcry_mac_handle,decltype(&gcry_mac_close)>(
+        x,&gcry_mac_close)
+  {
+  }
 };
 
 }
 }
 }
+
+

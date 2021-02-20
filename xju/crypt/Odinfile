@@ -7,6 +7,7 @@
 %all.tree==<<
 %tests.tree
 rsa%tests.tree:leaves
+macs%tests.tree:leaves
 
 %tests.tree==<<
 ()+cmd=(test-I.cc+(%cxx-opts):auto.cxx.exe):exec.output
@@ -22,6 +23,7 @@ rsa%tests.tree:leaves
 %hcp-subdir-spec==<<
 %hash==./hash/Odinfile%hcp-gen
 %rsa==./rsa/Odinfile%hcp-gen
+%macs==./macs/Odinfile%hcp-gen
 
 %tags==%all.list-of-tags:merged-tags
 
@@ -29,4 +31,4 @@ rsa%tests.tree:leaves
 .:merged-tags
 hash%tags
 rsa%tags
-
+macs%tags

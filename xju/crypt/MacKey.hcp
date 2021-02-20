@@ -9,19 +9,19 @@
 //
 
 
+#include <xju/Tagged.hh>
+#include <vector>
+#include <cinttypes>
+
 namespace xju
 {
-namespace ssh
+namespace crypt
 {
-namespace userauth
-{
-enum class MSG{
-  REQUEST=      50,
-  FAILURE=      51,
-  SUCCESS=      52,
-  BANNER=       53
-};
+
+class MacKeyTag{};
+typedef xju::Tagged<std::vector<uint8_t>,MacKeyTag> MacKey;
 
 }
 }
-}
+
+

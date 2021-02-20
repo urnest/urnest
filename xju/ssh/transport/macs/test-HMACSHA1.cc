@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/ssh/transport/macs/None.hh>
+#include <xju/ssh/transport/macs/HMACSHA1.hh>
 
 #include <iostream>
 #include <xju/assert.hh>
@@ -24,16 +24,16 @@ namespace macs
 {
 
 void test1() {
-  None n;
-  xju::assert_equal(n.keySize_,BitCount(0));
-  auto const c(n.macCalculator(xju::crypt::MacKey({})));
-  xju::assert_equal(c->macSize(),0U);
-  auto const mac(c->calculateMac({}));
-  xju::assert_equal(mac,xju::crypt::Mac({}));
+  HMACSHA1 n;
+  xju::assert_equal(n.keySize_,BitCount(20*8));
+  xju::crypt::MacKey const key({0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9});
+  auto const c(n.macCalculator(key));
+  xju::assert_equal(c->macSize(),20U);
+  auto const mac(c->calculateMac({1,2}));
 
-  auto const v(n.macVerifier(xju::crypt::MacKey({})));
-  xju::assert_equal(c->macSize(),0U);
-  v->verifyMac(mac,{});
+  auto const v(n.macVerifier(key));
+  xju::assert_equal(c->macSize(),20U);
+  v->verifyMac(mac,{1,2});
 }
 
 }

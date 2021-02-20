@@ -1,0 +1,14 @@
+%all==%all.tree:leaves
+
+%cxx-opts==<<
++(../../../..%cxx-opts)
++lib=gcrypt
+
+%all.tree==<<
+%tests.tree
+
+%tests.tree==<<
+
+%hcp-gen==.:dir.hcp.list+G+hpath='xju/ssh/transport/kexers':hcp-split-virdir-specs:cat:vir_dir
+
+%tags==.:merged-tags

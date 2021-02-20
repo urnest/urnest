@@ -3,3 +3,4 @@
 %all.tree==<<
 ssh%all.tree:leaves
 chromedriver%all.tree:leaves
+%watch-file==watch-file.cc+(..%cxx-opts):auto.cxx.exe

@@ -9,7 +9,7 @@
 //
 
 
-#include <xju/ssh/transport/PacketAuthenticator.hh>
+#include <xju/ssh/transport/PacketAuthenticationAlgorithm.hh>
 
 namespace xju
 {
@@ -20,20 +20,45 @@ namespace transport
 namespace macs
 {
 
-class None: PacketAuthenticator
+class None: public PacketAuthenticationAlgorithm
 {
 public:
-  void computeMac(SequenceNumber const& sequenceNumber,
-                  std::vector<uint8_t> const& body,
-                  Padding const& padding,
-                  xju::net::ostream& to) noexcept override {
+  None() noexcept:
+    PacketAuthenticationAlgorithm(BitCount(0))
+  {
+  }
+  virtual std::unique_ptr<xju::crypt::MacVerifier> macVerifier(
+    xju::crypt::MacKey key) override
+  {
+    return std::unique_ptr<xju::crypt::MacVerifier>(new Verifier);
   }
 
-  void authenticatePacket(SequenceNumber const& sequenceNumber,
-                          std::vector<uint8_t> const& body,
-                          Padding const& padding,
-                          xju::net::istream& from) noexcept override {
+  virtual std::unique_ptr<xju::crypt::MacCalculator> macCalculator(
+    xju::crypt::MacKey key) override
+  {
+    return std::unique_ptr<xju::crypt::MacCalculator>(new Calculator);
   }
+
+private:
+  class Verifier: public xju::crypt::MacVerifier
+  {
+  public:
+    virtual size_t macSize() const noexcept override { return 0; }
+    virtual void verifyMac(xju::crypt::Mac const& mac,
+                           std::vector<uint8_t> const& message) override
+    {
+    }
+  };
+  class Calculator: public xju::crypt::MacCalculator
+  {
+  public:
+    virtual size_t macSize() const noexcept override { return 0; }
+    virtual xju::crypt::Mac calculateMac(
+      std::vector<uint8_t> const& message) override
+    {
+      return xju::crypt::Mac({});
+    }
+  };
   
 };
 

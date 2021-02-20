@@ -21,8 +21,6 @@ namespace ssh
 namespace transport
 {
 
-std::string const identificationLeader{"SSH-2.0-"};
-
 class SSHVersionTag{};
 typedef xju::Tagged<std::string,SSHVersionTag> SSHVersion;
 typedef hcp_ast::TaggedItem<SSHVersionTag> SSHVersionItem;

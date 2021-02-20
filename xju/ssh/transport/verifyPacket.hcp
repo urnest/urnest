@@ -1,0 +1,63 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/crypt/MacVerifier.hh>
+#include <xju/ssh/transport/SequenceNumber.hh>
+#include <vector>
+#include <xju/ssh/transport/Padding.hh>
+#include <xju/MemOBuf.hh> //impl
+#include <xju/net/ostream.hh> //impl
+#include <xju/format.hh> //impl
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+void verifyPacket(xju::crypt::MacVerifier const& macVerifier,
+                  SequenceNumber const& sequenceNumber,
+                  std::vector<uint8_t> const& body,
+                  Padding const& padding,
+                  xju::crypt::Mac const& mac)
+{
+  try{
+    xju::MemOBuf b(4+1+body.size()+padding.size());
+    {
+      xju::net::ostream s(b);
+      s.put32(sequenceNumber.value());
+      s.put8(padding.size());
+      s.put(body.begin(),body.end());
+      s.put(padding.begin(),padding.end());
+    }
+    macVerifier.verifyMac(mac,std::vector<uint8_t>(b.data().first,
+                                                   b.data().second));
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "verify mac of " << body.size() << "-byte "
+      << "message with sequence number "
+      << sequenceNumber
+      << " and " << padding.size() << " bytes of padding is "
+      << xju::format::join(mac.value().begin(),mac.value().end(),
+                           xju::format::Hex(),
+                           std::string());
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+}
+}
+
+

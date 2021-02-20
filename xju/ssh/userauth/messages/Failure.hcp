@@ -31,7 +31,7 @@ public:
   {
   }
 
-  std::vector<xju::MethodName> canContinue_;
+  std::vector<MethodName> canContinue_;
   bool partialSuccess_;
   
   friend bool operator<(Failure const& a, Failure const& b) noexcept;
@@ -39,36 +39,6 @@ public:
 
 }
 }
-}
-}
-
-namespace xju
-{
-namespace ssh
-{
-
-// encode x to s including initial type byte
-xju::net::ostream& encode(xju::net::ostream& s,
-                          userauth::messages::Failure const& x)
-{
-  s.put8((uint8_t)userauth::MSG::FAILURE);
-  encode(s,x.canContinue_);
-  encode(s,x.partialSuccess_);
-  return s;
-}
-
-// note assumes type byte (FAILURE) already read and verified
-template<>
-userauth::messages::Failure decoder<userauth::messages::Failure>::dec(
-  xju::net::istream& s)
-{
-  using namespace userauth;
-  
-  auto canContinue(decode<std::vector<xju::MethodName> >(s));
-  auto partialSuccess(decode<bool>(s));
-  return Failure(std::move(canContinue,partialSuccess));
-}
-
 }
 }
 

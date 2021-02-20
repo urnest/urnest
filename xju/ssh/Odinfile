@@ -7,7 +7,7 @@ transport%tests.tree:leaves
 userauth%tests.tree:leaves
 
 %cxx-opts==<<
-+(../..%cxx-opts)
++(../crypt%cxx-opts)
 +lib=gcrypt
 
 %tests.tree==<<

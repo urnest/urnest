@@ -1,0 +1,65 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/crypt/Mac.hh>
+#include <xju/crypt/MacCalculator.hh>
+#include <xju/ssh/transport/SequenceNumber.hh>
+#include <vector>
+#include <xju/ssh/transport/Padding.hh>
+#include <xju/assert.hh> //impl
+#include <xju/MemOBuf.hh> //impl
+#include <xju/net/ostream.hh> //impl
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+// Calculate packet MAC per RFC4253 6.4 Data Integrity and
+// 6. Binary Packet Protocol.
+//
+// constraints per RFC4253 6. Binary Packet Protocol:
+// pre: padding.size()>=4
+// pre: padding.size()<=255
+xju::crypt::Mac calculatePacketMac(xju::crypt::MacCalculator& calculator,
+                                   SequenceNumber const& sequenceNumber,
+                                   std::vector<uint8_t> const& body,
+                                   Padding const& padding)
+{
+  xju::assert_less_equal(padding.size(),255U);
+  xju::assert_greater_equal(padding.size(),4U);
+  try{
+    xju::MemOBuf b(4+1+body.size()+padding.size());
+    {
+      xju::net::ostream s(b);
+      s.put32(sequenceNumber.value());
+      s.put8(padding.size());
+      s.put(body.begin(),body.end());
+      s.put(padding.begin(),padding.end());
+    }
+    return calculator.calculateMac(std::vector<uint8_t>(b.data().first,
+                                                        b.data().second));
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "calculate MAC of packet with " << body.size() << "-byte body, "
+      << padding.size() << "-byte padding and sequence number "
+      << sequenceNumber;
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+}
+}

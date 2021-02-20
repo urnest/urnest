@@ -7,21 +7,12 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
+#ifndef LOAD_ID_RSA_PUB_H
+#define LOAD_ID_RSA_PUB_H
 
+#include <xju/path.hh>
+#include <xju/crypt/rsa/PublicKey.hh>
 
-namespace xju
-{
-namespace ssh
-{
-namespace userauth
-{
-enum class MSG{
-  REQUEST=      50,
-  FAILURE=      51,
-  SUCCESS=      52,
-  BANNER=       53
-};
+xju::crypt::rsa::PublicKey load_id_rsa_pub(xju::path::AbsFile const& path);
 
-}
-}
-}
+#endif

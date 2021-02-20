@@ -4,7 +4,8 @@
 %tests.tree
 
 %tests.tree==<<
-()+cmd=(test-None.cc+(../../../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-None.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-HMACSHA1.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 %hcp-gen==.:dir.hcp.list+G+hpath='xju/ssh/transport/macs':hcp-split-virdir-specs:cat:vir_dir
 

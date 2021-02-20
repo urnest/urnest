@@ -13,7 +13,7 @@
 #include <memory>
 #include <xju/ssh/transport/Decrypter.hh>
 #include <xju/ssh/transport/SequenceNumber.hh>
-#include <xju/ssh/transport/MacVerifier.hh>
+#include <xju/crypt/MacVerifier.hh>
 #include <utility> //impl
 #include <xju/ssh/transport/messages/KexInit.hh>
 #include <xju/ssh/transport/Message.hh>
@@ -31,6 +31,9 @@
 #include <sstream>
 #include <xju/format.hh>
 #include <xju/Exception.hh>
+#include <xju/ssh/transport/verifyPacket.hh> //impl
+#include <xju/ssh/transport/MSG.hh>
+#include <xju/ssh/decode.hh>
 
 namespace xju
 {
@@ -44,7 +47,7 @@ class I
 public:
   I(xju::IBuf& b,
     std::unique_ptr<Decrypter> decrypter,
-    std::unique_ptr<MacVerifier> packetAuthenticator,
+    std::unique_ptr<xju::crypt::MacVerifier> packetAuthenticator,
     SequenceNumber nextSeq) noexcept:
       s_(b),
       decrypter_(std::move(decrypter)),
@@ -80,17 +83,18 @@ public:
       return i_.receiveMessage(maxBytes,l);
     }
     template<class M>
-    Message receiveAndDecode(size_t const maxBytes)
+    M receiveAndDecode(size_t const maxBytes)
     {
       auto const m(receiveMessage(maxBytes));
       xju::MemIBuf bi(m);
       {
         xju::net::istream s(bi);
-        MSG const t(s.get8());
-        if (M::type_){
+        MSG const t((MSG)s.get8());
+        if (M::type_ != t){
           std::ostringstream s;
-          s << "expected message of type " << xju::format::hex(M::type_())
-            << ", got message of type " << xju::format::hex(t)
+          s << "expected message of type "
+            << xju::format::hex((unsigned int)M::type_)
+            << ", got message of type " << xju::format::hex((unsigned int)t)
             << " and data " << xju::format::join(
               m.begin(),
               m.end(),
@@ -108,7 +112,7 @@ public:
     }
     
     void setPacketAuthenticator(
-      std::unique_ptr<MacVerifier> packetAuthenticator) noexcept
+      std::unique_ptr<xju::crypt::MacVerifier> packetAuthenticator) noexcept
     {
       xju::Lock l(i_.guard_);
       i_.packetAuthenticator_=std::move(packetAuthenticator);
@@ -132,7 +136,7 @@ private:
   mutable xju::Mutex guard_;
   xju::net::istream s_;
   std::unique_ptr<Decrypter> decrypter_;
-  std::unique_ptr<MacVerifier> packetAuthenticator_;
+  std::unique_ptr<xju::crypt::MacVerifier> packetAuthenticator_;
   SequenceNumber nextSeq_;
   xju::Optional<Message> peerKexInit_;
   
@@ -141,7 +145,10 @@ private:
     // Rekeying - peer KexInit received, see retrievePeerKexInit below
     try{
       auto x(decrypter_->decryptPacket(s_,maxBytes));
-      packetAuthenticator_->verifyPacket(nextSeq_,x.first,x.second,s_);
+      xju::crypt::Mac mac({});
+      mac.value().resize(packetAuthenticator_->macSize());
+      s_.getN(mac.value().size(),mac.value().begin());
+      verifyPacket(*packetAuthenticator_,nextSeq_,x.first,x.second,mac);
       ++nextSeq_;
       if (x.first.size()&&
           (MSG(x.first[0])==MSG::KEXINIT)&&!peerKexInit_.valid()){

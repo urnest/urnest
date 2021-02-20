@@ -1,0 +1,70 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/ssh/transport/CipherAlgorithm.hh>
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+namespace ciphers
+{
+
+namespace
+{
+class AES256ctrEncrypter : public xju::ssh::transport::Encrypter
+{
+public:
+  virtual Padding encryptPacket(std::vector<uint8_t> const& body,
+                                xju::net::ostream& to) override
+  {
+    xju::assert_never_reached(); // REVISIT: to be implemented
+  }
+};
+class AES256ctrDecrypter : public xju::ssh::transport::Decrypter
+{
+public:
+  virtual std::pair<Message,Padding> decryptPacket(
+    xju::net::istream& from,
+    size_t const maxBytes) override
+  {
+    xju::assert_never_reached(); // REVISIT: to be implemented
+  }
+};
+
+}
+
+class AES256ctr: public xju::ssh::transport::CipherAlgorithm
+{
+public:
+  virtual std::unique_ptr<xju::ssh::transport::Encrypter> encrypter(
+    CipherKey cipherKey,
+    CipherIV cipherIV) override
+  {
+    return std::unique_ptr<xju::ssh::transport::Encrypter>(
+      new AES256ctrEncrypter);
+  }
+  virtual std::unique_ptr<xju::ssh::transport::Decrypter> decrypter(
+    CipherKey cipherKey,
+    CipherIV cipherIV) override
+  {
+    return std::unique_ptr<xju::ssh::transport::Decrypter>(
+      new AES256ctrDecrypter);
+  }
+  
+};
+
+}
+}
+}
+}

@@ -36,14 +36,18 @@ public:
     I::RekeyLock& i,
     O::RekeyLock& o,
     Ident const& ourIdent,
-    std::pair<std::string,Ident> const& peerPreambleAndIdent,
+    std::pair<std::vector<std::string>, //preamble lines without trailing \r\n
+              Ident> const& peerPreambleAndIdent,
     messages::KexInit const& ourKexInit,
     messages::KexInit const& peerKexInit,
-    HostKeyAlgorithm& hostKeyAlgorithm,
+    HostKeyAlgorithm const& hostKeyAlgorithm,
     bool ignoreFirstMessageReceived) = 0;
 
   virtual bool requiresEncryptionCapableHostKey() const noexcept = 0;
   virtual bool requiresSignatureCapableHostKey() const noexcept = 0;
+
+  // has data using Kexer's hash algorithm
+  virtual std::vector<uint8_t> hash(std::vector<uint8_t> const& data) const=0;
   
 };
 

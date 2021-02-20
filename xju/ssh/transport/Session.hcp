@@ -9,16 +9,54 @@
 //
 
 
+#include <xju/ssh/transport/Algorithms.hh>
+#include <xju/io/IBuf.hh>
+#include <xju/io/OBuf.hh>
+#include <utility>
+#include <vector>
+#include <xju/ssh/transport/Ident.hh>
+#include <xju/ssh/transport/I.hh>
+#include <xju/ssh/transport/O.hh>
+#include <xju/ssh/transport/Rekeyer.hh>
+#include <xju/io/IStream.hh>
+#include <xju/io/OStream.hh>
+#include <unistd.h>
+#include <xju/ssh/transport/ClientAlgorithms.hh>
+#include <chrono>
+#include <xju/ssh/transport/shakeHands.hh> //impl
+#include <xju/Exception.hh>
+#include <xju/ssh/transport/Message.hh>
+#include <sstream> //impl
+#include <xju/ssh/transport/PacketAuthenticationAlgorithm.hh> //impl
+#include <xju/ssh/transport/CipherAlgorithm.hh> //impl
+#include <xju/ssh/transport/ciphers/None.hh> //impl
+#include <xju/ssh/transport/macs/None.hh> //impl
+
 namespace xju
 {
 namespace ssh
 {
 namespace transport
 {
+namespace
+{
+std::tuple<
+  std::vector<std::string>, //preamble lines without trailing \r\n
+  Ident
+> shakeHands_(xju::io::IBuf& ibuf,
+              xju::io::OBuf& obuf,
+              Ident const& ourIdent)
+{
+  xju::net::istream i(ibuf);
+  xju::net::ostream o(obuf);
+  return shakeHands(i,o,ourIdent);
+}
+
+}
 
 class Session
 {
-  Algorithms const algorithms_;
+  Algorithms const& algorithms_;
 
   xju::io::IBuf ibuf_;
   xju::io::OBuf obuf_;
@@ -31,7 +69,7 @@ class Session
   Rekeyer rekeyer_;
 
 public:
-  SessionKey const sessionKey_;
+  SessionId const sessionKey_;
 
   // Establish buffered, secure, host-authenticated SSH client session with 
   // server over i+o by deadline, selecting algorithms from only those
@@ -42,28 +80,28 @@ public:
   //
   // Note session transparently rekeys as necessary.
   //
-  // pre: i and o will outlive this
+  // pre: algorithms, i and o will outlive this
   Session(xju::io::IStream& i,
           xju::io::OStream& o,
           size_t const inputBufferSize,
           size_t const outputBufferSize,
           Ident ourIdent,
-          ClientAlgorithms algorithms,
-          std::chrono::steady_clock::time_point const deadine):
-      algorithms_(std::move(algorithms)),
+          ClientAlgorithms const& algorithms,
+          std::chrono::steady_clock::time_point const deadline):
+      algorithms_(algorithms),
       obuf_(o,deadline,outputBufferSize),
       ibuf_(i,deadline,inputBufferSize),
       peerPreambleAndIdent_(
-        shakeHands(xju::net::istream(ibuf_),
-                   xju::net::ostream(obuf_),
-                   ourIdent)),
+        shakeHands_(ibuf_,
+                    obuf_,
+                    ourIdent)),
       i_(ibuf_,
-         std::unique_ptr<Cipher>(new ciphers::None()),
-         std::unique_ptr<PacketAuthenticator>(new macs::None()),
+         std::unique_ptr<CipherAlgorithm>(new ciphers::None),
+         std::unique_ptr<PacketAuthenticationAlgorithm>(new macs::None),
          SequenceNumber(0)),
       o_(obuf_,
-         std::unique_ptr<Cipher>(new ciphers::None()),
-         std::unique_ptr<PacketAuthenticator>(new macs::None()),
+         std::unique_ptr<CipherAlgorithm>(new ciphers::None),
+         std::unique_ptr<PacketAuthenticationAlgorithm>(new macs::None),
          SequenceNumber(0)),
       rekeyer_(i_,o_,algorithms_),
       sessionKey_(rekeyer_.sessionKey_)
@@ -72,6 +110,7 @@ public:
 
   class Closed : public xju::Exception
   {
+  public:
     using xju::Exception::Exception;
   };
   
@@ -86,7 +125,7 @@ public:
   void sendMessage(
     Message const& message,
     std::chrono::steady_clock::time_point const& deadline,
-    std::insert_iterator<std::vector<Message> > receivedMessages)
+    std::back_insert_iterator<std::vector<Message> > receivedMessages)
     // xju::DeadlineReached - message not completely received by deadline
     // Closed - other end has closed
   {
@@ -147,7 +186,8 @@ public:
   //
   // pre: close() has not been called
   //
-  Message receiveMessage(size_t maxSize,deadline)
+  Message receiveMessage(size_t maxSize,
+                         std::chrono::steady_clock::time_point const& deadline)
     // xju::DeadlineReached - message not completely received by deadline
     // Closed - other end has closed
   {
@@ -178,12 +218,12 @@ public:
   //
   // pre: close() has not been called
   //
-  std::vector<Body> close(
-    std::chrono::steady_clock::time_point const& deadline,
-    std::size_t maxResultSize)
-  {
-    //REVISIT
-  }
+  // std::vector<Body> close(
+  //   std::chrono::steady_clock::time_point const& deadline,
+  //   std::size_t maxResultSize)
+  // {
+  //   //REVISIT
+  // }
 };
 
 }

@@ -11,7 +11,7 @@
 
 #include <xju/LanguageName.hh>
 #include <xju/ssh/userauth/MSG.hh> //impl
-#include <xju/Utf8String.hh> //impl
+#include <xju/Utf8String.hh>
 
 namespace xju
 {
@@ -40,36 +40,5 @@ public:
 
 }
 }
-}
-}
-
-namespace xju
-{
-namespace ssh
-{
-
-// encode x to s including initial type byte
-xju::net::ostream& encode(xju::net::ostream& s,
-                          userauth::messages::Banner const& x)
-{
-  s.put8((uint8_t)userauth::MSG::BANNER);
-  encode(s,x.message_);
-  encode(s,x.language_);
-  return s;
-}
-
-// note assumes type byte (BANNER) already read and verified
-template<>
-userauth::messages::Banner decoder<userauth::messages::Banner>::dec(
-  xju::net::istream& s)
-{
-  using namespace userauth;
-  
-  auto message(decode<xju::Utf8String>(s));
-  auto language(decode<xju::LanguageName>(s));
-  return Banner(std::move(message),
-                std::move(language));
-}
-
 }
 }

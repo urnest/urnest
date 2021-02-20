@@ -9,6 +9,16 @@
 //
 
 
+#include <xju/ssh/transport/Algorithms.hh>
+#include <vector>
+#include <utility>
+#include <xju/ssh/transport/HostKeyAlgorithmName.hh>
+#include <functional>
+#include <xju/ssh/transport/ClientHostKeyAlgorithm.hh>
+#include <xju/ssh/transport/messages/KexInit.hh>
+#include <xju/Exception.hh> //impl
+#include <sstream> //impl
+
 namespace xju
 {
 namespace ssh
@@ -26,11 +36,11 @@ public:
   
   ClientAlgorithms(
     Algorithms::Kexers kexers,
-    ClientHostKeyAlgorithms hostKeyers,
+    ClientAlgorithms::ClientHostKeyAlgorithms hostKeyers,
     Algorithms::CipherAlgorithms ciphers,
     Algorithms::PacketAuthenticationAlgorithms packetAuthenticators):
       Algorithms(std::move(kexers),
-                 hostKeyers,
+                 HostKeyAlgorithms(hostKeyers.begin(),hostKeyers.end()),
                  std::move(ciphers),
                  std::move(packetAuthenticators))
   {
@@ -38,19 +48,19 @@ public:
   
   virtual messages::KexInit const& chooseClientKexInit(
     messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) override
+    messages::KexInit const& peerKexInit) const override
   {
     return ourKexInit;
   }
   virtual messages::KexInit const& chooseServerKexInit(
     messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) override
+    messages::KexInit const& peerKexInit) const override
   {
     return peerKexInit;
   }
   virtual CipherAlgorithm& chooseEncryptionCipher(
     messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) override
+    messages::KexInit const& peerKexInit) const override
   {
     try{
       xju::assert_not_equal(ourKexInit.clientOutCipherNames_.size(),0);
@@ -73,7 +83,7 @@ public:
 
   virtual CipherAlgorithm& chooseDecryptionCipher(
     messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) override
+    messages::KexInit const& peerKexInit) const override
   {
     try{
       xju::assert_not_equal(ourKexInit.clientOutCipherNames_.size(),0);
@@ -95,7 +105,7 @@ public:
   }
   virtual PacketAuthenticationAlgorithm& chooseMacCalculatorAlgorithm(
     messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) override
+    messages::KexInit const& peerKexInit) const override
   {
     try{
       xju::assert_not_equal(ourKexInit.clientOutPacketAuthenticatorNames_.size(),0);
@@ -117,7 +127,7 @@ public:
   }
   virtual PacketAuthenticationAlgorithm& chooseMacVerifierAlgorithm(
     messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) override
+    messages::KexInit const& peerKexInit) const override
   {
     try{
       xju::assert_not_equal(ourKexInit.clientOutPacketAuthenticatorNames_.size(),0);

@@ -1,0 +1,155 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/assert.hh> //impl
+#include <xju/crypt/verifySuccessful.hh> //impl
+#include <xju/format.hh> //impl
+#include <xju/crypt/MacCalculator.hh>
+#include <utility> //impl
+#include <xju/crypt/macs/gcry_mac_hd_ptr.hh>
+#include <xju/crypt/MacVerifier.hh>
+#include <xju/Exception.hh> //impl
+#include <xju/crypt/MacKey.hh>
+
+namespace xju
+{
+namespace crypt
+{
+namespace macs
+{
+namespace hmacsha1
+{
+
+namespace
+{
+gcry_mac_hd_ptr makeImpl(MacKey const& key)
+{
+  try{
+    xju::assert_equal(key.value().size(),20U);
+    gcry_mac_hd_ptr result(0);
+    {
+      gcry_mac_hd_t x(0);
+      xju::crypt::verifySuccessful(
+        gcry_mac_open(&x,GCRY_MAC_HMAC_SHA1,0,0),XJU_TRACED);
+      result=std::move(gcry_mac_hd_ptr(x));
+    }
+    xju::crypt::verifySuccessful(
+      gcry_mac_setkey(result.get(),key.value().data(),key.value().size()),XJU_TRACED);
+    return result;
+  }
+  catch(xju::Exception& e)
+  {
+    std::ostringstream s;
+    s << "create gcrypt HMAC SHA1 mac with key "
+      << xju::format::join(key.value().begin(),key.value().end(),xju::format::Hex(""),"");
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+
+class Calculator : public MacCalculator
+{
+public:
+  // pre: key.value().size()==20
+  explicit Calculator(MacKey key) noexcept:
+      key_(std::move(key)),
+      impl_(makeImpl(key_))
+  {
+  }
+  
+  virtual size_t macSize() const noexcept override{
+    return 20;
+  }
+
+  virtual Mac calculateMac(std::vector<uint8_t> const& message) const override
+  {
+    try{
+      verifySuccessful(gcry_mac_reset(impl_.get()),XJU_TRACED);
+      verifySuccessful(
+        gcry_mac_write(impl_.get(),message.data(),message.size()),XJU_TRACED);
+      std::vector<uint8_t> result;
+      result.resize(20);
+      size_t length(result.size());
+      verifySuccessful(
+        gcry_mac_read(impl_.get(),result.data(),&length),XJU_TRACED);
+      return Mac(std::move(result));
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "calculate hmac-sha1 MAC of " << message.size() << "-byte message"
+        << " using MAC key " 
+        << xju::format::join(key_.value().begin(),key_.value().end(),xju::format::Hex(""),"");
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+private:
+  MacKey const key_;
+  gcry_mac_hd_ptr const impl_;
+};
+
+class Verifier : public MacVerifier
+{
+public:
+  // pre: key.size()==20
+  explicit Verifier(MacKey key) noexcept:
+      key_(std::move(key)),
+      impl_(makeImpl(key_))
+  {
+  }
+
+  virtual size_t macSize() const noexcept override{
+    return 20;
+  }
+
+  // pre: mac.size()==20
+  virtual void verifyMac(Mac const& mac,
+                         std::vector<uint8_t> const& message) const override
+  {
+    try{
+      verifySuccessful(gcry_mac_reset(impl_.get()),XJU_TRACED);
+      verifySuccessful(
+        gcry_mac_write(impl_.get(),message.data(),message.size()),XJU_TRACED);
+      std::vector<uint8_t> v;
+      v.resize(20);
+      size_t length(v.size());
+      verifySuccessful(gcry_mac_read(impl_.get(),v.data(),&length),XJU_TRACED);
+      if (v!=mac.value()){
+        std::ostringstream s;
+        s << "MAC is "
+          << xju::format::join(v.begin(),v.end(),xju::format::Hex(""),"");
+        throw xju::Exception(s,XJU_TRACED);
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "verify hmac-sha1 MAC of " << message.size() << "-byte message"
+        << " using MAC key " 
+        << xju::format::join(key_.value().begin(),key_.value().end(),xju::format::Hex(""),"")
+        << " is " 
+        << xju::format::join(mac.value().begin(),mac.value().end(),xju::format::Hex(""),"");
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+private:
+  MacKey const key_;
+  gcry_mac_hd_ptr const impl_;
+};
+
+}
+}
+}
+}

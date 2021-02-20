@@ -25,7 +25,7 @@ namespace transport
 
 // Decode SSH packet of max body size maxBodyBytes, excluding MAC,
 // from specified stream.
-// - returns body (discards padding)
+// - returns body and padding
 std::pair<std::vector<uint8_t>,Padding> decodePacket(xju::net::istream& from,
                                                      size_t const maxBodyBytes)
 //std::bad_alloc

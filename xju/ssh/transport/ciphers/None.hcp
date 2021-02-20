@@ -9,7 +9,7 @@
 //
 
 
-#include <xju/ssh/transport/Cipher.hh>
+#include <xju/ssh/transport/CipherAlgorithm.hh>
 #include <xju/ssh/transport/encodePacket.hh> //impl
 #include <xju/ssh/transport/decodePacket.hh> //impl
 #include <sstream> //impl
@@ -25,7 +25,9 @@ namespace transport
 namespace ciphers
 {
 
-class None : public Cipher
+namespace
+{
+class NoneEncrypter : public xju::ssh::transport::Encrypter
 {
 public:
   Padding encryptPacket(std::vector<uint8_t> const& body,
@@ -43,12 +45,17 @@ public:
       throw;
     }
   }
-  std::pair<std::vector<uint8_t>,Padding> decryptPacket(
+};
+class NoneDecrypter : public xju::ssh::transport::Decrypter
+{
+public:
+  std::pair<Message,Padding> decryptPacket(
     xju::net::istream& from,
     size_t const maxBytes) override
   {
     try{
-      return decodePacket(from);
+      auto x(decodePacket(from, maxBytes));
+      return {Message(std::move(x.first)),x.second};
     }
     catch(xju::Exception& e){
       std::ostringstream s;
@@ -58,6 +65,24 @@ public:
     }
   }
   
+};
+}
+
+class None: public xju::ssh::transport::CipherAlgorithm
+{
+public:
+  virtual std::unique_ptr<xju::ssh::transport::Encrypter> encrypter(
+    K const& k, H const& h, SessionId const& sessionId) override
+  {
+    return std::unique_ptr<xju::ssh::transport::Encrypter>(
+      new NoneEncrypter);
+  }
+  virtual std::unique_ptr<xju::ssh::transport::Decrypter> decrypter(
+    K const& k, H const& h, SessionId const& sessionId) override
+  {
+    return std::unique_ptr<xju::ssh::transport::Decrypter>(
+      new NoneDecrypter);
+  }
 };
 
 }

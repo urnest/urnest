@@ -13,8 +13,11 @@
 #include <xju/ssh/transport/Kexer.hh>
 #include <xju/ssh/transport/messages/KexDHInit.hh> //impl
 #include <xju/ssh/transport/messages/KexDHReply.hh> //impl
-#include <xju/crypt/sig/Verifier.hh> //impl
 #include <xju/MemOBuf.hh> //impl
+#include <xju/crypt/SigVerifier.hh> //impl
+#include <xju/crypt/I.hh> //impl
+#include <xju/ssh/transport/ClientHostKeyAlgorithm.hh> //impl
+#include <xju/ssh/encode.hh> //impl
 
 namespace xju
 {
@@ -35,7 +38,7 @@ uint32_t strongRandomUint8(){
 
 }
 
-class DhGroup1SHA1Client : public Kexer
+class DHGroup1SHA1Client : public Kexer
 {
 public:
   //pre: hostKeyAlgorithm is a ClientHostKeyAlgorithm
@@ -43,7 +46,8 @@ public:
     I::RekeyLock& i,
     O::RekeyLock& o,
     Ident const& ourIdent,
-    std::pair<std::string,Ident> const& peerPreambleAndIdent,
+    std::pair<std::vector<std::string>, //preamble lines without trailing \r\n
+              Ident> const& peerPreambleAndIdent,
     messages::KexInit const& ourKexInit,
     messages::KexInit const& peerKexInit,
     HostKeyAlgorithm const& hostKeyAlgorithm,
@@ -52,7 +56,7 @@ public:
     try{
       static int const q = 128; //order of subgroup (from libssh2)
       static int const g = 2; //  rfc2409 - generator for a subgroup of GF(p)
-      static std::vector<uint8_t> const p({
+      static xju::crypt::I const p({
           0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
           0xC9,0x0F,0xDA,0xA2,0x21,0x68,0xC2,0x34,
           0xC4,0xC6,0x62,0x8B,0x80,0xDC,0x1C,0xD1,
@@ -69,23 +73,23 @@ public:
           0xAE,0x9F,0x24,0x11,0x7C,0x4B,0x1F,0xE6,
           0x49,0x28,0x66,0x51,0xEC,0xE6,0x53,0x81,
           0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF});
-      uint32_t const x=strongRandomUint8()%(q-2)+2; // 1<x<q
-      auto const e(xju::crypt::powm(g,x,p)); // e = g^x mod p;
+      xju::crypt::I const x=strongRandomUint8()%(q-2)+2; // 1<x<q
+      auto const e(xju::crypt::powm(xju::crypt::I(g),x,p)); // e = g^x mod p;
       
       //C sends e to S.
       o.encodeAndSend(messages::KexDHInit(e));
       
       //S sends (K_S || f || s) to C
       messages::KexDHReply const r(
-        i.receiveAndDecode<messages::KexDH_Reply>(100000));
+        i.receiveAndDecode<messages::KexDHReply>(100000));
       
-      std::unique_ptr<xju::crypt::sig::Verifier> sigVerifier(
+      std::unique_ptr<xju::crypt::SigVerifier> sigVerifier(
         dynamic_cast<ClientHostKeyAlgorithm const&>(
           hostKeyAlgorithm).verifyBonafide(
             r.hostKeyAndCertificates_,
             xju::BitCount(r.hostSignature_.size()*8)));
       
-      K const k(xju::crypt::powm(r.f_,x,p)); // K = f^x mod p
+      auto const k(xju::crypt::powm(r.f_,x,p)); // K = f^x mod p
       
       xju::MemOBuf b(1024);
       {
@@ -94,23 +98,27 @@ public:
         xju::ssh::encode(s,peerPreambleAndIdent.second);
         xju::ssh::encode(s,ourKexInit);
         xju::ssh::encode(s,peerKexInit);
-        xju::ssh::encode(s,r.hostKeyAndCertificates_);
+        s.put32(r.hostKeyAndCertificates_.size())
+          .put(r.hostKeyAndCertificates_.begin(),
+               r.hostKeyAndCertificates_.end());
         xju::ssh::encode(s,e);
         xju::ssh::encode(s,r.f_);
-        xju::ssh::encode(k);
+        xju::ssh::encode(s,k);
       }
-      H const h(xju::crypt::hash::sha1(b.data().begin(),b.data().end()));
-      sigVerifier.verifySignature(h,r.hostSignature_);
-      return std::pair<K,H>(std::move(k),std::move(h));
+      H const h(xju::crypt::hash::sha1(
+                  std::vector<uint8_t>(b.data().first,b.data().second)));
+      sigVerifier->verifySignature(h.value().data(),h.value().size(),
+                                   r.hostSignature_);
+      return std::pair<K,H>(K(k.value()),std::move(h));
     }
     catch(xju::Exception& e){
       std::ostringstream s;
-      s << "exchange keys with "
+      s << "exchange keys with SSH-"
         << peerPreambleAndIdent.second.sshVersion_.value()
-        << " "
+        << "-"
         << peerPreambleAndIdent.second.softwareVersion_.value()
-        << (peerPreambleAndIdent.second.valid()?
-            " "+peerPreambleAndIdent.second.value():
+        << (peerPreambleAndIdent.second.comment_.valid()?
+            " "+peerPreambleAndIdent.second.comment_.value():
             std::string())
         << " via Diffie-Hellman Group1 SHA1 exchange";
       e.addContext(s.str(),XJU_TRACED);
@@ -124,6 +132,11 @@ public:
   virtual bool requiresSignatureCapableHostKey() const noexcept override
   {
     return true;
+  }
+  virtual std::vector<uint8_t> hash(std::vector<uint8_t> const& data) const
+    override
+  {
+    return xju::crypt::hash::sha1(data);
   }
 
 };

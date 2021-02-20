@@ -9,10 +9,11 @@
 //
 
 
-#include <xju/ssh/transport/MacVerifier.hh>
-#include <xju/ssh/transport/MacCalculator.hh>
-#include <xju/ssh/transport/SessionKey.hh>
+#include <xju/crypt/MacVerifier.hh>
+#include <xju/crypt/MacCalculator.hh>
 #include <memory>
+#include <xju/BitCount.hh>
+#include <xju/crypt/MacKey.hh>
 
 namespace xju
 {
@@ -25,10 +26,19 @@ class PacketAuthenticationAlgorithm
 public:
   virtual ~PacketAuthenticationAlgorithm() noexcept {}
 
-  virtual std::unique_ptr<MacVerifier> macVerifier(
-    SessionKey const& sessionKey) = 0;
-  virtual std::unique_ptr<MacCalculator> macCalculator(
-    SessionKey const& sessionKey) = 0;
+  explicit PacketAuthenticationAlgorithm(xju::BitCount keySize) noexcept:
+      keySize_(std::move(keySize))
+  {
+  }
+  xju::BitCount const keySize_;
+
+  // pre: key.value().size()*8 >= keySize_
+  virtual std::unique_ptr<xju::crypt::MacVerifier> macVerifier(
+    xju::crypt::MacKey key) = 0;
+
+  // pre: key.size()*8 >= keySize_
+  virtual std::unique_ptr<xju::crypt::MacCalculator> macCalculator(
+    xju::crypt::MacKey key) = 0;
   
 };
 

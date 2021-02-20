@@ -13,19 +13,62 @@
 #include <cinttypes>
 #include <xju/Tagged.hh>
 #include <vector>
-#include <xju/split.hh>
-#include <xju/crypt/I.hh>
 #include <utility>
-#include <xju/crypt/rsa/PrivateKey.hh>
 #include <string>
-#include <xju/crypt/Signer.hh>
 #include <memory>
+#include <xju/split.hh>
+#include <xju/crypt/I.hh> //impl
+#include <xju/crypt/rsa/PrivateKey.hh> //impl
+#include <xju/crypt/Signer.hh> //impl
 #include <xju/crypt/rsa/Signer.hh> //impl
+#include <xju/ssh/userauth/MSG.hh> //impl
+#include <xju/ssh/userauth/messages/Banner.hh> //impl
+#include <xju/ssh/userauth/messages/Failure.hh> //impl
+#include <xju/ssh/userauth/messages/Success.hh> //impl
+#include <xju/ssh/userauth/messages/Request.hh> //impl
+#include <xju/ssh/transport/MSG.hh> //impl
+#include <xju/ssh/transport/Ident.hh> //impl
+#include <xju/ssh/transport/messages/KexInit.hh> //impl
+#include <xju/ssh/transport/messages/KexDHReply.hh> //impl
+#include <xju/ssh/transport/messages/KexDHInit.hh> //impl
+#include <xju/crypt/rsa/PublicKey.hh> //impl
 
 namespace xju
 {
+namespace crypt
+{
+class I;
+class Signer;
+namespace rsa
+{
+class Signer;
+class PrivateKey;
+class PublicKey;
+}
+}
 namespace ssh
 {
+namespace userauth
+{
+enum class MSG;
+namespace messages
+{
+class Banner;
+class Failure;
+class Request;
+class Success;
+}
+}
+namespace transport
+{
+enum class MSG;
+class Ident;
+namespace messages{
+class KexInit;
+class KexDHReply;
+class KexDHInit;
+}
+}
 
 template<class T>
 struct decoder{
@@ -254,6 +297,196 @@ decoder<xju::crypt::rsa::PublicKey>::dec(
   catch(xju::Exception& e){
     std::ostringstream s;
     s << "decode RSA public key";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+template<>
+userauth::MSG decoder<userauth::MSG>::dec(xju::net::istream& s)
+{
+  return (userauth::MSG)s.get8();
+}
+
+// note assumes type byte (BANNER) already read and verified
+template<>
+userauth::messages::Banner decoder<userauth::messages::Banner>::dec(
+  xju::net::istream& s)
+{
+  using namespace userauth;
+  
+  auto message(decode<xju::Utf8String>(s));
+  auto language(decode<xju::LanguageName>(s));
+  return userauth::messages::Banner(std::move(message),
+                                    std::move(language));
+}
+
+// note assumes type byte (FAILURE) already read and verified
+template<>
+userauth::messages::Failure decoder<userauth::messages::Failure>::dec(
+  xju::net::istream& s)
+{
+  using namespace userauth;
+  
+  auto canContinue(decode<std::vector<userauth::MethodName> >(s));
+  auto partialSuccess(decode<bool>(s));
+  return userauth::messages::Failure(std::move(canContinue),partialSuccess);
+}
+
+// note assumes type byte (SUCCESS) already read and verified
+template<>
+userauth::messages::Success decoder<userauth::messages::Success>::dec(
+  xju::net::istream& s)
+{
+  using namespace userauth;
+  
+  return userauth::messages::Success();
+}
+
+// note assumes type byte (REQUEST) already read and verified
+template<>
+userauth::messages::Request decoder<userauth::messages::Request>::dec(
+  xju::net::istream& s)
+{
+  using namespace userauth;
+  
+  xju::UserName userName(decode<xju::UserName>(s));
+  userauth:ServiceName serviceName(decode<userauth::ServiceName>(s));
+  userauth::MethodName methodName(decode<userauth::MethodName>(s));
+  return userauth::messages::Request(std::move(userName),
+                                     std::move(serviceName),
+                                     std::move(methodName));
+}
+
+template<>
+transport::MSG decode<transport::MSG>(xju::net::istream& s){
+  return (transport::MSG)s.get8();
+}
+
+// note assumes type byte (KEXINIT) already read and verified
+template<>
+transport::messages::KexInit decoder<transport::messages::KexInit>::dec(
+  xju::net::istream& s)
+{
+  using namespace transport;
+  
+  xju::Array<uint8_t,16> cookie;
+  s.getN(cookie.size(),cookie.begin());
+  auto kexAlgorithms(decode<std::vector<KexAlgorithmName> >(s));
+  auto serverHostKeyAlgorithmNames(
+    decode<std::vector<HostKeyAlgorithmName> >(s));
+  auto clientOutCipherNames(decode<std::vector<CipherName> >(s));
+  auto serverOutCipherNames(decode<std::vector<CipherName> >(s));
+  auto clientOutPacketAuthenticatorNames(
+    decode<std::vector<PacketAuthenticatorName> >(s));
+  auto serverOutPacketAuthenticatorNames(
+    decode<std::vector<PacketAuthenticatorName> >(s));
+  auto clientOutCompressorName(
+    decode<std::vector<CompressorName> >(s));
+  auto serverOutCompressorName(
+    decode<std::vector<CompressorName> >(s));
+  auto clientOutLanguageName(
+    decode<std::vector<LanguageName> >(s));
+  auto serverOutLanguageName(decode<std::vector<LanguageName> >(s));
+  auto firstKexPacketFollows(decode<bool>(s));
+
+  return messages::KexInit(
+    std::move(cookie),
+    std::move(kexAlgorithms),
+    std::move(serverHostKeyAlgorithmNames),
+    std::move(clientOutCipherNames),
+    std::move(serverOutCipherNames),
+    std::move(clientOutPacketAuthenticatorNames),
+    std::move(serverOutPacketAuthenticatorNames),
+    std::move(clientOutCompressorName),
+    std::move(serverOutCompressorName),
+    std::move(clientOutLanguageName),
+    std::move(serverOutLanguageName),
+    std::move(firstKexPacketFollows));
+}
+
+// note assumes type byte (KEXREPLY) already read and verified
+template<>
+transport::messages::KexDHReply decoder<transport::messages::KexDHReply>::dec(
+  xju::net::istream& s)
+{
+  try{
+    using namespace transport;
+    std::vector<uint8_t> hostKeyAndCertificates;
+    try{
+      hostKeyAndCertificates.resize(s.get32());
+      s.getN(hostKeyAndCertificates.size(),hostKeyAndCertificates.begin());
+    }
+    catch(xju::Exception& e){
+      e.addContext("get host key and certificates",XJU_TRACED);
+      throw;
+    }
+    std::vector<uint8_t> f;
+    try{
+      f.resize(s.get32());
+      s.getN(f.size(),f.begin());
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "get f having got host key and certificates "
+        << xju::format::join(
+          hostKeyAndCertificates.begin(),
+          hostKeyAndCertificates.end(),
+          [](uint8_t const& x){ return xju::format::hex(x,"");},
+          std::string());
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+    xju::crypt::Signature hostSignature;
+    try{
+      hostSignature.resize(s.get32());      
+      s.getN(hostSignature.size(),hostSignature.begin());
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "get host signature having got host key and certificates "
+        << xju::format::join(
+          hostKeyAndCertificates.begin(),
+          hostKeyAndCertificates.end(),
+          [](uint8_t const& x){ return xju::format::hex(x,"");},
+          std::string())
+        << " and f 0x"
+        << xju::format::join(
+          f.begin(),
+          f.end(),
+          [](uint8_t const& x){ return xju::format::hex(x,"");},
+          std::string());
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+    return transport::messages::KexDHReply(
+      std::move(hostKeyAndCertificates),
+      xju::crypt::I(std::move(f)),
+      std::move(hostSignature));
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode KexDHReply from input stream";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+// note assumes type byte (KEXINIT) already read and verified
+template<>
+transport::messages::KexDHInit decoder<transport::messages::KexDHInit>::dec(
+  xju::net::istream& s)
+{
+  try{
+    using namespace transport;
+    std::vector<uint8_t> v(s.get32());
+  
+    s.getN(v.size(),v.begin());
+    return transport::messages::KexDHInit(xju::crypt::I(v));
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode KexDHInit from input stream";
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }

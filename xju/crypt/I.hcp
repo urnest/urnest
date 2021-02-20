@@ -192,12 +192,8 @@ public:
     return std::move(std::pair<I,I>(q,r));
   }
   // b^e % m
-  friend I powm(I const& b, I const& e, I const& m)
-  {
-    I result(0UL);
-    gcry_mpi_powm(result.x_,b.x_,e.x_,m.x_);
-    return std::move(result);
-  }
+  friend I powm(I const& b, I const& e, I const& m);
+
   // x^-1 % m
   friend I invm(I const& x, I const& m)
   {
@@ -242,6 +238,13 @@ std::ostream& operator<<(std::ostream& s, I const& x){
   return s << "0x" << xju::format::join(v.begin(),v.end(),
                                         xju::format::Hex(""),
                                         "");
+}
+
+I powm(I const& b, I const& e, I const& m)
+{
+  I result(0UL);
+  gcry_mpi_powm(result.x_,b.x_,e.x_,m.x_);
+  return std::move(result);
 }
 
 }

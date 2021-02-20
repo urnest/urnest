@@ -20,9 +20,8 @@
 #include <xju/ssh/transport/LanguageName.hh>
 #include <xju/net/ostream.hh>
 #include <xju/net/istream.hh>
-#include <xju/ssh/decode.hh>
 #include <xju/ssh/transport/MSG.hh> //impl
-#include <xju/ssh/encode.hh> //impl
+#include <xju/format.hh> //impl
 
 namespace xju
 {
@@ -127,75 +126,5 @@ std::ostream& operator<<(std::ostream& s, KexInit const& x)
 
 }
 }
-}
-}
-
-namespace xju
-{
-namespace ssh
-{
-
-// encode x to s including initial type byte
-xju::net::ostream& encode(xju::net::ostream& s,
-                          transport::messages::KexInit const& x)
-{
-  s.put8((uint8_t)transport::MSG::KEXINIT);
-  s.put(x.cookie_.begin(),x.cookie_.end());
-  encode(s,x.kexAlgorithms_);
-  encode(s,x.serverHostKeyAlgorithmNames_);
-  encode(s,x.clientOutCipherNames_);
-  encode(s,x.serverOutCipherNames_);
-  encode(s,x.clientOutPacketAuthenticatorNames_);
-  encode(s,x.serverOutPacketAuthenticatorNames_);
-  encode(s,x.clientOutCompressorNames_);
-  encode(s,x.serverOutCompressorNames_);
-  encode(s,x.clientOutLanguageNames_);
-  encode(s,x.serverOutLanguageNames_);
-  encode(s,x.firstKexPacketFollows_);
-  return s;
-}
-
-// note assumes type byte (KEXINIT) already read and verified
-template<>
-transport::messages::KexInit decoder<transport::messages::KexInit>::dec(
-  xju::net::istream& s)
-{
-  using namespace transport;
-  
-  xju::Array<uint8_t,16> cookie;
-  s.getN(cookie.size(),cookie.begin());
-  auto kexAlgorithms(decode<std::vector<KexAlgorithmName> >(s));
-  auto serverHostKeyAlgorithmNames(
-    decode<std::vector<HostKeyAlgorithmName> >(s));
-  auto clientOutCipherNames(decode<std::vector<CipherName> >(s));
-  auto serverOutCipherNames(decode<std::vector<CipherName> >(s));
-  auto clientOutPacketAuthenticatorNames(
-    decode<std::vector<PacketAuthenticatorName> >(s));
-  auto serverOutPacketAuthenticatorNames(
-    decode<std::vector<PacketAuthenticatorName> >(s));
-  auto clientOutCompressorName(
-    decode<std::vector<CompressorName> >(s));
-  auto serverOutCompressorName(
-    decode<std::vector<CompressorName> >(s));
-  auto clientOutLanguageName(
-    decode<std::vector<LanguageName> >(s));
-  auto serverOutLanguageName(decode<std::vector<LanguageName> >(s));
-  auto firstKexPacketFollows(decode<bool>(s));
-
-  return messages::KexInit(
-    std::move(cookie),
-    std::move(kexAlgorithms),
-    std::move(serverHostKeyAlgorithmNames),
-    std::move(clientOutCipherNames),
-    std::move(serverOutCipherNames),
-    std::move(clientOutPacketAuthenticatorNames),
-    std::move(serverOutPacketAuthenticatorNames),
-    std::move(clientOutCompressorName),
-    std::move(serverOutCompressorName),
-    std::move(clientOutLanguageName),
-    std::move(serverOutLanguageName),
-    std::move(firstKexPacketFollows));
-}
-
 }
 }

@@ -36,8 +36,8 @@ public:
   }
 
   xju::UserName userName_;
-  xju::ServiceName serviceName_;
-  xju::MethodName methodName_;
+  ServiceName serviceName_;
+  MethodName methodName_;
   
   friend bool operator<(Request const& a, Request const& b) noexcept;
 };
@@ -46,39 +46,3 @@ public:
 }
 }
 }
-
-namespace xju
-{
-namespace ssh
-{
-
-// encode x to s including initial type byte
-xju::net::ostream& encode(xju::net::ostream& s,
-                          userauth::messages::Request const& x)
-{
-  s.put8((uint8_t)userauth::MSG::REQUEST);
-  encode(s,x.userName_);
-  encode(s,x.serviceName_);
-  encode(s,x.methodName_);
-  return s;
-}
-
-// note assumes type byte (REQUEST) already read and verified
-template<>
-userauth::messages::Request decoder<userauth::messages::Request>::dec(
-  xju::net::istream& s)
-{
-  using namespace userauth;
-  
-  xju::UserName userName(decode<xju::UserName>(s));
-  xju::ServiceName serviceName(decode<xju::ServiceName>(s));
-  xju::MethodName methodName(decode<xju::MethodName>(s));
-  return Request(std::move(userName),
-                 std::move(serviceName),
-                 std::move(methodName));
-}
-
-}
-}
-
-    

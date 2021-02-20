@@ -27,6 +27,10 @@
 #include <xju/set/intersection.hh> //impl
 #include <xju/set/makeSet.hh> //impl
 #include <sstream> //impl
+#include <xju/ssh/transport/chooseAlgorithm.hh> //impl
+#include <xju/ssh/transport/K.hh>
+#include <xju/ssh/transport/H.hh>
+#include <xju/ssh/transport/SessionId.hh>
 
 namespace xju
 {
@@ -86,75 +90,112 @@ struct Algorithms
 
   virtual messages::KexInit const& chooseClientKexInit(
     messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) = 0;
+    messages::KexInit const& peerKexInit) const = 0;
 
   virtual messages::KexInit const& chooseServerKexInit(
     messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) = 0;
+    messages::KexInit const& peerKexInit) const = 0;
   
   virtual CipherAlgorithm& chooseEncryptionCipher(
     messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) = 0;
+    messages::KexInit const& peerKexInit) const = 0;
   
   virtual CipherAlgorithm& chooseDecryptionCipher(
     messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) = 0;
+    messages::KexInit const& peerKexInit) const = 0;
   
   CipherAlgorithm& chooseServerEncryptionCipher(
     messages::KexInit const& clientKexInit,
-    messages::KexInit const& serverKexInit)
+    messages::KexInit const& serverKexInit) const
   {
-    return ciphers_.find(
+    auto algorithmName(
       chooseAlgorithm(
         "server-to-client cipher",
         clientKexInit.serverOutCipherNames_,
-        xju::set::makeSet(serverKexInit.serverOutCipherNames_)))
-      ->second.get();
+        xju::set::makeSet(serverKexInit.serverOutCipherNames_)));
+    return std::find_if(ciphers_.begin(),
+                        ciphers_.end(),
+                        [&](auto const& x){
+                          return x.first==algorithmName;
+                        })->second.get();
   }
   
   CipherAlgorithm& chooseClientEncryptionCipher(
     messages::KexInit const& clientKexInit,
-    messages::KexInit const& serverKexInit)
+    messages::KexInit const& serverKexInit) const
   {
-    return ciphers_.find(
+    auto algorithmName(
       chooseAlgorithm(
         "client-to-server cipher",
         clientKexInit.clientOutCipherNames_,
-        xju::set::makeSet(serverKexInit.clientOutCipherNames_)))
-      ->second.get();
+        xju::set::makeSet(serverKexInit.clientOutCipherNames_)));
+    return std::find_if(ciphers_.begin(),
+                        ciphers_.end(),
+                        [&](auto const& x){
+                          return x.first==algorithmName;
+                        })->second.get();
   }
 
   virtual PacketAuthenticationAlgorithm& chooseMacVerifierAlgorithm(
     messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) = 0;
+    messages::KexInit const& peerKexInit) const = 0;
   
   virtual PacketAuthenticationAlgorithm& chooseMacCalculatorAlgorithm(
     messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) = 0;
+    messages::KexInit const& peerKexInit) const = 0;
   
   PacketAuthenticationAlgorithm& chooseServerMacAlgorithm(
     messages::KexInit const& clientKexInit,
-    messages::KexInit const& serverKexInit)
+    messages::KexInit const& serverKexInit) const
   {
-    return packetAuthenticators_.find(
+    auto const algorithmName(
       chooseAlgorithm(
         "server-to-client MAC algorithm",
         clientKexInit.serverOutPacketAuthenticatorNames_,
-        xju::set::makeSet(serverKexInit.serverOutPacketAuthenticatorNames_)))
-      ->second.get();
+        xju::set::makeSet(serverKexInit.serverOutPacketAuthenticatorNames_)));
+    return std::find_if(packetAuthenticators_.begin(),
+                        packetAuthenticators_.end(),
+                        [&](auto const& x){
+                          return x.first==algorithmName;
+                        })->second.get();
   }
   
   PacketAuthenticationAlgorithm& chooseClientMacAlgorithm(
     messages::KexInit const& clientKexInit,
-    messages::KexInit const& serverKexInit)
+    messages::KexInit const& serverKexInit) const
   {
-    return packetAuthenticators_.find(
+    auto const algorithmName(
       chooseAlgorithm(
         "client-to-server MAC algorithm",
         clientKexInit.clientOutPacketAuthenticatorNames_,
-        xju::set::makeSet(serverKexInit.clientOutPacketAuthenticatorNames_)))
-      ->second.get();
+        xju::set::makeSet(serverKexInit.clientOutPacketAuthenticatorNames_)));
+    return std::find_if(packetAuthenticators_.begin(),
+                        packetAuthenticators_.end(),
+                        [&](auto const& x){
+                          return x.first==algorithmName;
+                        })->second.get();
   }
+
+  // REVISIT: tie these to rfc
+  virtual std::vector<uint8_t> decryptionCipherKeyData(
+    K const& k,
+    H const& h,
+    SessionId const& sessionId) const = 0;
+
+  virtual std::vector<uint8_t> decryptionCipherIVData(
+    K const& k,
+    H const& h,
+    SessionId const& sessionId) const = 0;
+
+  virtual std::vector<uint8_t> encryptionCipherKeyData(
+    K const& k,
+    H const& h,
+    SessionId const& sessionId) const = 0;
+
+  virtual std::vector<uint8_t> encryptionCipherIVData(
+    K const& k,
+    H const& h,
+    SessionId const& sessionId) const = 0;
 };
 
 }

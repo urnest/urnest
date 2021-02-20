@@ -9,18 +9,14 @@
 //
 
 
-#include <xju/ssh/transport/SequenceNumber.hh>
 #include <vector>
 #include <cinttypes>
-#include <xju/ssh/transport/Padding.hh>
-#include <xju/net/ostream.hh>
-#include <xju/net/istream.hh>
+#include <xju/crypt/Mac.hh>
+#include <unistd.h>
 
 namespace xju
 {
-namespace ssh
-{
-namespace transport
+namespace crypt
 {
 
 class MacVerifier
@@ -28,15 +24,13 @@ class MacVerifier
 public:
   virtual ~MacVerifier() noexcept {}
 
-  // Authenticate packet with specified sequence number, body
-  // and padding against mac from specified stream.
-  virtual void verifyPacket(SequenceNumber const& sequenceNumber,
-                            std::vector<uint8_t> const& body,
-                            Padding const& padding,
-                            xju::net::istream& from)=0;
+  virtual size_t macSize() const noexcept = 0;
+  
+  // Verify message is authentic according to mac.
+  virtual void verifyMac(Mac const& mac,
+                         std::vector<uint8_t> const& message) const =0;
 };
 
-}
 }
 }
 

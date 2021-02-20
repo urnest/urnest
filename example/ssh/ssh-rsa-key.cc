@@ -8,50 +8,18 @@
 // implied warranty.
 //
 
-#include <xju/crypt/rsa/PublicKey.hh>
+#include "load_id_rsa_pub.hh"
 #include <xju/path.hh>
 #include <xju/file/read.hh>
 #include <hcp/parser.hh>
-#include <xju/ssh/openSSHPublicKeyFileParser.hh>
-#include <sstream>
-#include <xju/format.hh>
+#include <xju/ssh/openSSHPrivateKeyFileParser.hh>
 #include <xju/MemIBuf.hh>
 #include <xju/net/istream.hh>
 #include <xju/ssh/decode.hh>
-#include <memory>
-#include <xju/crypt/Signer.hh>
-#include <xju/ssh/openSSHPrivateKeyFileParser.hh>
+#include <sstream>
+#include <string>
 #include <xju/crypt/rsa/SigVerifier.hh>
 
-xju::crypt::rsa::PublicKey load_id_rsa_pub(xju::path::AbsFile const& path)
-{
-  try{
-    auto const x(xju::file::read(path));
-    auto const r(hcp_parser::parseString(
-                   x.begin(),x.end(),
-                   xju::ssh::openSSHPublicKeyFileParser()));
-    auto const i(
-      hcp_ast::findOnlyChildOfType<xju::ssh::open_ssh_public_key_file_parser::Item>(r));
-    if (std::get<0>(i.get())!=xju::ssh::KeyTypeName("ssh-rsa")){
-      std::ostringstream s;
-      s << "expected key type (name) \"ssh-rsa\" but got "
-        << xju::format::quote(
-          xju::format::cEscapeString(std::get<0>(i.get()).value()));
-      throw xju::Exception(s.str(),XJU_TRACED);
-    }
-    auto const encodedKey(std::get<1>(i.get()));
-    xju::MemIBuf b(encodedKey.encodedValue_);
-    xju::net::istream s(b);
-    return xju::ssh::decode<xju::crypt::rsa::PublicKey>(s);
-  }
-  catch(xju::Exception& e){
-    std::ostringstream s;
-    s << "read OpenSSH Public Key file "
-      << xju::path::str(path) << std::endl;
-    e.addContext(s.str(),XJU_TRACED);
-    throw;
-  }
-}
 std::unique_ptr<xju::crypt::Signer> load_id_rsa(xju::path::AbsFile const& path)
 {
   try{

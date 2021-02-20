@@ -9,16 +9,14 @@
 //
 
 
-#include <xju/mpi/I.hh>
 #include <utility> //impl
 #include <iostream>
 #include <xju/format.hh> //impl
-#include <xju/net/ostream.hh>
 #include <sstream> //impl
-#include <xju/net/istream.hh>
-#include <xju/ssh/decode.hh>
 #include <xju/ssh/transport/MSG.hh>
-#include <xju/crypt/sig/Signature.hh>
+#include <xju/crypt/I.hh> //impl
+#include <xju/crypt/Signature.hh>
+#include <xju/crypt/I.hh>
 
 namespace xju
 {
@@ -37,16 +35,16 @@ public:
   //REVISIT: is hostKeyAndCertificates encoded format identifier and blob
   //         or just blob?
   explicit KexDHReply(std::vector<uint8_t> hostKeyAndCertificates,
-                      xju::mpi::I f,
-                      xju::crypt::sig::Signature hostSignature) noexcept:
+                      xju::crypt::I f,
+                      xju::crypt::Signature hostSignature) noexcept:
       hostKeyAndCertificates_(hostKeyAndCertificates),
       f_(std::move(f)),
       hostSignature_(hostSignature)
   {
   }
   std::vector<uint8_t> hostKeyAndCertificates_;
-  xju::mpi::I f_;
-  xju::crypt::sig::Signature hostSignature_;
+  xju::crypt::I f_;
+  xju::crypt::Signature hostSignature_;
 
   friend bool operator<(KexDHReply const& a, KexDHReply const& b) noexcept;
 };
@@ -77,107 +75,5 @@ std::ostream& operator<<(std::ostream& s, KexDHReply const& x)
 
 }
 }
-}
-}
-
-namespace xju
-{
-namespace ssh
-{
-
-// encode x to s including initial type byte
-xju::net::ostream& encode(xju::net::ostream& s,
-                          transport::messages::KexDHReply const& x)
-{
-  try{
-    s.put8((uint8_t)transport::messages::KexDHReply::type_);
-    s.put32(x.hostKeyAndCertificates_.size());
-    s.put(x.hostKeyAndCertificates_.begin(),
-          x.hostKeyAndCertificates_.end());
-
-    auto const v(x.f_.value());
-    s.put32(v.size());
-    s.put(v.begin(),v.end());
-    
-    s.put32(x.hostSignature_.size());
-    s.put(x.hostSignature_.begin(),
-          x.hostSignature_.end());
-    return s;
-  }
-  catch(xju::Exception& e){
-    std::ostringstream s;
-    s << "encode KexDHReply " << x << " to output stream";
-    e.addContext(s.str(),XJU_TRACED);
-    throw;
-  }
-}
-
-// note assumes type byte (KEXREPLY) already read and verified
-template<>
-transport::messages::KexDHReply decoder<transport::messages::KexDHReply>::dec(
-  xju::net::istream& s)
-{
-  try{
-    using namespace transport;
-    std::vector<uint8_t> hostKeyAndCertificates;
-    try{
-      hostKeyAndCertificates.resize(s.get32());
-      s.getN(hostKeyAndCertificates.size(),hostKeyAndCertificates.begin());
-    }
-    catch(xju::Exception& e){
-      e.addContext("get host key and certificates",XJU_TRACED);
-      throw;
-    }
-    std::vector<uint8_t> f;
-    try{
-      f.resize(s.get32());
-      s.getN(f.size(),f.begin());
-    }
-    catch(xju::Exception& e){
-      std::ostringstream s;
-      s << "get f having got host key and certificates "
-        << xju::format::join(
-          hostKeyAndCertificates.begin(),
-          hostKeyAndCertificates.end(),
-          [](uint8_t const& x){ return xju::format::hex(x,"");},
-          std::string());
-      e.addContext(s.str(),XJU_TRACED);
-      throw;
-    }
-    xju::crypt::sig::Signature hostSignature;
-    try{
-      hostSignature.resize(s.get32());      
-      s.getN(hostSignature.size(),hostSignature.begin());
-    }
-    catch(xju::Exception& e){
-      std::ostringstream s;
-      s << "get host signature having got host key and certificates "
-        << xju::format::join(
-          hostKeyAndCertificates.begin(),
-          hostKeyAndCertificates.end(),
-          [](uint8_t const& x){ return xju::format::hex(x,"");},
-          std::string())
-        << " and f 0x"
-        << xju::format::join(
-          f.begin(),
-          f.end(),
-          [](uint8_t const& x){ return xju::format::hex(x,"");},
-          std::string());
-      e.addContext(s.str(),XJU_TRACED);
-      throw;
-    }
-    return transport::messages::KexDHReply(
-      std::move(hostKeyAndCertificates),
-      xju::mpi::I(std::move(f)),
-      std::move(hostSignature));
-  }
-  catch(xju::Exception& e){
-    std::ostringstream s;
-    s << "decode KexDHReply from input stream";
-    e.addContext(s.str(),XJU_TRACED);
-    throw;
-  }
-}
-
 }
 }

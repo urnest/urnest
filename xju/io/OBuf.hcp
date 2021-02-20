@@ -19,6 +19,7 @@
 #include <xju/Exception.hh> //impl
 #include <sstream> //impl
 #include <xju/ByteBuffer.hh>
+#include <xju/format.hh> //impl
 
 namespace xju
 {
@@ -65,8 +66,9 @@ public:
         auto const m(x_.write(data.first,n,deadline_));
         if (m<n){
           throw xju::DeadlineReached(
-            "deadline reached having only written " +xju::format::str(n)
-            " bytes", XJU_TRACED);
+            xju::Exception(
+              "deadline reached having only written "+
+              xju::format::str(n)+" bytes", XJU_TRACED));
         }
       }
       return std::make_pair(data.first,data.first+data.second);

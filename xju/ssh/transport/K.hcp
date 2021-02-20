@@ -11,6 +11,7 @@
 
 #include <vector>
 #include <cinttypes>
+#include <xju/Tagged.hh>
 
 namespace xju
 {
@@ -19,12 +20,10 @@ namespace ssh
 namespace transport
 {
 
-class K: public std::vector<uint8_t>
-{
-public:
-  using std::vector<uint8_t>::vector;
-};
+class KTag{};
 
+// rfc4253 7.2 Output of Key Exchange - shared secret
+typedef xju::Tagged<std::vector<uint8_t>,KTag> K;
 
 }
 }

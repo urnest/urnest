@@ -23,6 +23,7 @@
 #include <sstream> //impl
 #include <xju/format.hh> //impl
 #include <xju/Exception.hh> //impl
+#include <xju/ssh/transport/Ident.hh>
 
 namespace xju
 {
@@ -33,13 +34,10 @@ namespace transport
 
 std::tuple<
   std::vector<std::string>, //preamble lines without trailing \r\n
-  SSHVersion, //ssh version
-  SoftwareVersion, //software version
-  xju::Optional<std::string> //comment
+  Ident
   > shakeHands(xju::net::istream& i,
                xju::net::ostream& o,
-               SoftwareVersion const& softwareVersion,
-               xju::Optional<std::string> const& comments)
+               Ident const& ourIdent)
 {
   try{
     auto r=std::async(std::launch::deferred,
@@ -48,7 +46,7 @@ std::tuple<
                       });
     auto w=std::async(std::launch::async,
                       [&writeFailed,&softwareVersion,&comments,&o](){
-                        writeIdentificationString(o,softwareVersion,comments);
+                        writeIdentificationString(o,ourIdent);
                       });
     std::exception_ptr readFailed;
     try{
@@ -110,12 +108,7 @@ std::tuple<
   }
   catch(xju::Exception& e){
     std::ostringstream s;
-    s << "send SSH software version "
-      << xju::format::cEscapeString(softwareVersion);
-    if (comments.get()){
-      s << " and comments "
-        << xju::format::quote(xju::format::cEscapeString(*comments.get()));
-    }
+    s << "send SSH Ident " << ourIdent
     s << " to peer and receive its"
       << " preamble, SSH software version and comment strings";
     e.addContext(s.str(),XJU_TRACED);

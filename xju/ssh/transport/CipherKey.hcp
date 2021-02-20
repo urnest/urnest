@@ -9,11 +9,9 @@
 //
 
 
-#include <memory>
-#include <xju/ssh/transport/CipherKey.hh>
-#include <xju/ssh/transport/CipherIV.hh>
-#include <xju/ssh/transport/Encrypter.hh>
-#include <xju/ssh/transport/Decrypter.hh>
+#include <vector>
+#include <xju/Tagged.hh>
+#include <cinttypes>
 
 namespace xju
 {
@@ -22,20 +20,11 @@ namespace ssh
 namespace transport
 {
 
-class CipherAlgorithm
-{
-public:
-  virtual ~CipherAlgorithm() noexcept{}
-
-  virtual std::unique_ptr<Encrypter> encrypter(
-    CipherKey cipherKey,
-    CipherIV cipherIV) = 0;
-  virtual std::unique_ptr<Decrypter> decrypter(
-    CipherKey cipherKey,
-    CipherIV cipherIV) = 0;
-  
-};
+class CipherKeyTag{};
+typedef xju::Tagged<std::vector<uint8_t>,CipherKeyTag> CipherKey;
 
 }
 }
 }
+
+

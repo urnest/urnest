@@ -7,9 +7,10 @@
         read private and public keys, sign and verify a message
             	      
       - test kex via "examples/exchange-keys-rsa host-rsa-public-key-file"
-      -  session host-rsa-public-key-file"
-        which would establish a session with localhost sshd
-
+      -  session host-rsa-public-key-file
+         which would establish a session with localhost sshd
+      x implement and test HMACSHA1 v libgcrypt raw
+      
     see ssh2_echo.c in examples
     just want ssh2/Client(xju::ip::v4::Address,xju::ip::Port,
                           xju::Path::AbsPath publicKey,

@@ -1,0 +1,55 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/crypt/macs/hmacsha1.hh> //impl
+#include <xju/ssh/transport/PacketAuthenticationAlgorithm.hh>
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+namespace macs
+{
+
+// rfc4253 6.4 hmac-sha1
+class HMACSHA1: public PacketAuthenticationAlgorithm
+{
+public:
+  HMACSHA1() noexcept:
+  PacketAuthenticationAlgorithm(xju::BitCount(20*8))
+  {
+  }
+  virtual std::unique_ptr<xju::crypt::MacVerifier> macVerifier(
+    xju::crypt::MacKey key) override
+  {
+    xju::assert_greater_equal(key.value().size(),20);
+    key.value().resize(20); // rfc4253 6.4
+    return std::unique_ptr<xju::crypt::MacVerifier>(
+      new xju::crypt::macs::hmacsha1::Verifier(std::move(key)));
+  }
+  
+  virtual std::unique_ptr<xju::crypt::MacCalculator> macCalculator(
+    xju::crypt::MacKey key) override
+  {
+    xju::assert_greater_equal(key.value().size(),20);
+    key.value().resize(20); // rfc4253 6.4
+    return std::unique_ptr<xju::crypt::MacCalculator>(
+      new xju::crypt::macs::hmacsha1::Calculator(std::move(key)));
+  }
+};
+
+}
+}
+}
+}

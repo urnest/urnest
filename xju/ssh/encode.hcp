@@ -15,12 +15,55 @@
 #include <xju/format.hh>
 #include <xju/Int.hh>
 #include <cinttypes>
-#include <xju/crypt/I.hh>
+
+#include <xju/crypt/I.hh> //impl
+#include <xju/ssh/userauth/MSG.hh> //impl
+#include <xju/ssh/userauth/messages/Banner.hh> //impl
+#include <xju/ssh/userauth/messages/Failure.hh> //impl
+#include <xju/ssh/userauth/messages/Request.hh> //impl
+#include <xju/ssh/transport/MSG.hh> //impl
+#include <xju/ssh/transport/Ident.hh> //impl
+#include <xju/ssh/transport/messages/KexInit.hh> //impl
+#include <xju/ssh/transport/messages/KexDHReply.hh> //impl
+#include <xju/ssh/transport/messages/KexDHInit.hh> //impl
+#include <xju/ssh/userauth/messages/Success.hh> //impl
 
 namespace xju
 {
+namespace crypt
+{
+class I;
+class Signer;
+namespace rsa
+{
+class Signer;
+class PrivateKey;
+class PublicKey;
+}
+}
 namespace ssh
 {
+namespace userauth
+{
+enum class MSG;
+namespace messages
+{
+class Banner;
+class Failure;
+class Request;
+class Success;
+}
+}
+namespace transport
+{
+enum class MSG;
+class Ident;
+namespace messages{
+class KexInit;
+class KexDHReply;
+class KexDHInit;
+}
+}
 
 // Encode x to s per RFC4251's
 // "Data Type Representations Used in the SSH Protocols".
@@ -70,6 +113,140 @@ xju::net::ostream& encode(xju::net::ostream& s, xju::crypt::I const& x)
   auto v(x.value());
   return s.put32(v.size()).put(v.begin(),v.end());
 }
+
+xju::net::ostream& encode(xju::net::ostream& s, userauth::MSG const& x){
+  return s.put8((uint8_t)x);
+}
+
+// encode x to s including initial type byte
+xju::net::ostream& encode(xju::net::ostream& s,
+                          userauth::messages::Banner const& x)
+{
+  s.put8((uint8_t)userauth::MSG::BANNER);
+  encode(s,x.message_);
+  encode(s,x.language_);
+  return s;
+}
+
+// encode x to s including initial type byte
+xju::net::ostream& encode(xju::net::ostream& s,
+                          userauth::messages::Failure const& x)
+{
+  s.put8((uint8_t)userauth::MSG::FAILURE);
+  encode(s,x.canContinue_);
+  encode(s,x.partialSuccess_);
+  return s;
+}
+
+// encode x to s including initial type byte
+xju::net::ostream& encode(xju::net::ostream& s,
+                          userauth::messages::Success const& x)
+{
+  s.put8((uint8_t)userauth::MSG::SUCCESS);
+  return s;
+}
+
+// encode x to s including initial type byte
+xju::net::ostream& encode(xju::net::ostream& s,
+                          userauth::messages::Request const& x)
+{
+  s.put8((uint8_t)userauth::MSG::REQUEST);
+  encode(s,x.userName_);
+  encode(s,x.serviceName_);
+  encode(s,x.methodName_);
+  return s;
+}
+
+xju::net::ostream& encode(xju::net::ostream& s, transport::MSG const& x){
+  return s.put8((uint8_t)x);
+}
+
+// encode x to s including initial type byte
+xju::net::ostream& encode(xju::net::ostream& s,
+                          transport::messages::KexInit const& x)
+{
+  try{
+    s.put8((uint8_t)transport::MSG::KEXINIT);
+    s.put(x.cookie_.begin(),x.cookie_.end());
+    encode(s,x.kexAlgorithms_);
+    encode(s,x.serverHostKeyAlgorithmNames_);
+    encode(s,x.clientOutCipherNames_);
+    encode(s,x.serverOutCipherNames_);
+    encode(s,x.clientOutPacketAuthenticatorNames_);
+    encode(s,x.serverOutPacketAuthenticatorNames_);
+    encode(s,x.clientOutCompressorNames_);
+    encode(s,x.serverOutCompressorNames_);
+    encode(s,x.clientOutLanguageNames_);
+    encode(s,x.serverOutLanguageNames_);
+    encode(s,x.firstKexPacketFollows_);
+    return s;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "encode KexInit message " << x;
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+// encode x to s including initial type byte
+xju::net::ostream& encode(xju::net::ostream& s,
+                          transport::messages::KexDHReply const& x)
+{
+  try{
+    s.put8((uint8_t)transport::messages::KexDHReply::type_);
+    s.put32(x.hostKeyAndCertificates_.size());
+    s.put(x.hostKeyAndCertificates_.begin(),
+          x.hostKeyAndCertificates_.end());
+
+    auto const v(x.f_.value());
+    s.put32(v.size());
+    s.put(v.begin(),v.end());
+    
+    s.put32(x.hostSignature_.size());
+    s.put(x.hostSignature_.begin(),
+          x.hostSignature_.end());
+    return s;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "encode KexDHReply " << x << " to output stream";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+// encode x to s including initial type byte
+xju::net::ostream& encode(xju::net::ostream& s,
+                          transport::messages::KexDHInit const& x)
+{
+  try{
+    auto const v(x.e_.value());
+    s.put8((uint8_t)transport::messages::KexDHInit::type_);
+    s.put32(v.size());
+    s.put(v.begin(),v.end());
+    return s;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "encode KexDHInit " << x << " to output stream";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+xju::net::ostream& encode(xju::net::ostream& s, transport::Ident const& x)
+{
+  std::ostringstream st;
+  st << "SSH-" << x.sshVersion_.value() << "-" << x.softwareVersion_;
+  if (x.comment_.get()){
+    st << " " << x.comment_.get();
+  }
+  encode(s,st.str());
+  return s;
+}
+
+
 
 }
 }

@@ -9,15 +9,12 @@
 //
 
 
-#include <xju/mpi/I.hh>
 #include <utility> //impl
 #include <iostream>
 #include <xju/format.hh> //impl
-#include <xju/net/ostream.hh>
 #include <sstream> //impl
-#include <xju/net/istream.hh>
-#include <xju/ssh/decode.hh>
 #include <xju/ssh/transport/MSG.hh>
+#include <xju/crypt/I.hh>
 
 namespace xju
 {
@@ -33,11 +30,11 @@ class KexDHInit
 public:
   static const MSG type_{MSG::KEXDH_INIT};
   
-  explicit KexDHInit(xju::mpi::I e) noexcept:
+  explicit KexDHInit(xju::crypt::I e) noexcept:
       e_(std::move(e))
   {
   }
-  xju::mpi::I e_;
+  xju::crypt::I e_;
 
   friend bool operator<(KexDHInit const& a, KexDHInit const& b) noexcept;
 };
@@ -55,52 +52,5 @@ std::ostream& operator<<(std::ostream& s, KexDHInit const& x)
 
 }
 }
-}
-}
-
-namespace xju
-{
-namespace ssh
-{
-
-// encode x to s including initial type byte
-xju::net::ostream& encode(xju::net::ostream& s,
-                          transport::messages::KexDHInit const& x)
-{
-  try{
-    auto const v(x.e_.value());
-    s.put8((uint8_t)transport::messages::KexDHInit::type_);
-    s.put32(v.size());
-    s.put(v.begin(),v.end());
-    return s;
-  }
-  catch(xju::Exception& e){
-    std::ostringstream s;
-    s << "encode KexDHInit " << e << " to output stream";
-    e.addContext(s.str(),XJU_TRACED);
-    throw;
-  }
-}
-
-// note assumes type byte (KEXINIT) already read and verified
-template<>
-transport::messages::KexDHInit decoder<transport::messages::KexDHInit>::dec(
-  xju::net::istream& s)
-{
-  try{
-    using namespace transport;
-    std::vector<uint8_t> v(s.get32());
-  
-    s.getN(v.size(),v.begin());
-    return transport::messages::KexDHInit(xju::mpi::I(v));
-  }
-  catch(xju::Exception& e){
-    std::ostringstream s;
-    s << "decode KexDHInit " << e << " from input stream";
-    e.addContext(s.str(),XJU_TRACED);
-    throw;
-  }
-}
-
 }
 }

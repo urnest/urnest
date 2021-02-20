@@ -9,19 +9,26 @@
 //
 
 
+#include <xju/crypt/Mac.hh>
+#include <vector>
+#include <cinttypes>
+#include <unistd.h>
+
 namespace xju
 {
-namespace ssh
+namespace crypt
 {
-namespace userauth
+
+class MacCalculator
 {
-enum class MSG{
-  REQUEST=      50,
-  FAILURE=      51,
-  SUCCESS=      52,
-  BANNER=       53
+public:
+  virtual ~MacCalculator() noexcept {}
+
+  virtual size_t macSize() const noexcept = 0;
+
+  virtual Mac calculateMac(std::vector<uint8_t> const& message) const =0;
 };
 
 }
 }
-}
+

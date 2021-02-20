@@ -9,19 +9,14 @@
 //
 
 
+#include <xju/Tagged.hh>
+#include <string>
+
 namespace xju
 {
-namespace ssh
-{
-namespace userauth
-{
-enum class MSG{
-  REQUEST=      50,
-  FAILURE=      51,
-  SUCCESS=      52,
-  BANNER=       53
-};
+class LanguageNameTag{};
+typedef xju::Tagged<std::string,LanguageNameTag> LanguageName;
 
 }
-}
-}
+
+

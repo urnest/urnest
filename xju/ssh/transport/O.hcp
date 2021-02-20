@@ -23,6 +23,10 @@
 #include <sstream> //impl
 #include <xju/Lock.hh>
 #include <xju/MemOBuf.hh>
+#include <xju/crypt/MacCalculator.hh>
+#include <xju/ssh/transport/calculatePacketMac.hh> //impl
+#include <xju/ssh/encode.hh>
+#include <xju/ssh/transport/messages/KexInit.hh>
 
 namespace xju
 {
@@ -37,7 +41,7 @@ public:
   //pre: b will outlive this
   O(xju::OBuf& b,
     std::unique_ptr<Encrypter> encrypter,
-    std::unique_ptr<MacCalculator> macCalculator,
+    std::unique_ptr<xju::crypt::MacCalculator> macCalculator,
     SequenceNumber nextSeq) noexcept:
       b_(b),
       encrypter_(std::move(encrypter)),
@@ -53,12 +57,16 @@ public:
     RekeyLock(RekeyLock const&) = delete;
     RekeyLock(RekeyLock &&) = delete;
     
-    RekeyLock(O& o):
+    messages::KexInit const sent_;
+
+    explicit RekeyLock(O& o,messages::KexInit kexInit):
+        sent_(std::move(kexInit)),
         o_(o)
     {
       xju::Lock l(o_.guard_);
       xju::assert_equal(o_.rekeying_,false);
       o_.rekeying_=true;
+      encodeAndSend(sent_);
     }
     ~RekeyLock() noexcept
     {
@@ -78,7 +86,7 @@ public:
         xju::net::ostream s(b);
         encode(s,message);
       }
-      sendMessage(b.data());
+      sendMessage(Message(b.data().first,b.data().second));
     }
     
     void setEncrypter(std::unique_ptr<Encrypter> encrypter,
@@ -90,7 +98,7 @@ public:
     }
     
     void setMacCalculator(
-      std::unique_ptr<MacCalculator> macCalculator,
+      std::unique_ptr<xju::crypt::MacCalculator> macCalculator,
       RekeyLock const&) noexcept
     {
       xju::Lock l(o_.guard_);
@@ -118,7 +126,7 @@ private:
 
   mutable xju::Mutex     guard_;
   std::unique_ptr<Encrypter> encrypter_;
-  std::unique_ptr<MacCalculator> macCalculator_;
+  std::unique_ptr<xju::crypt::MacCalculator> macCalculator_;
   SequenceNumber nextSeq_;
   bool           rekeying_;
 
@@ -128,7 +136,9 @@ private:
     try{
       xju::net::ostream s(b_);
       auto const padding(encrypter_->encryptPacket(message,s));
-      macCalculator_->calculateMac(nextSeq_,message,padding,s);
+      auto const mac(
+        calculatePacketMac(*macCalculator_,nextSeq_,message,padding));
+      s.put(mac.value().begin(),mac.value().end());
       ++nextSeq_;
     }
     catch(xju::Exception& e){

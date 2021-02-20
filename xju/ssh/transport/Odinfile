@@ -6,6 +6,7 @@ macs%all
 ciphers%all
 messages%all
 hkas%all
+kexers%all
 
 %tests.tree==<<
 ()+cmd=(test-identParser.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
@@ -20,6 +21,7 @@ macs%tests.tree:leaves
 ciphers%tests.tree:leaves
 messages%tests.tree:leaves
 hkas%tests.tree:leaves
+kexers%tests.tree:leaves
 
 %hcp-gen==%hcp-gen.vir_dir_specs:list:cat:vir_dir
 
@@ -34,6 +36,7 @@ hkas%tests.tree:leaves
 %ciphers==./ciphers/Odinfile%hcp-gen
 %messages==./messages/Odinfile%hcp-gen
 %hkas==./hkas/Odinfile%hcp-gen
+%kexers==./kexers/Odinfile%hcp-gen
 
 %tags==%all.list-of-tags:merged-tags
 
@@ -43,3 +46,4 @@ macs%tags
 ciphers%tags
 messages%tags
 hkas%tags
+kexers%tags

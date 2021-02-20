@@ -25,8 +25,12 @@ namespace transport
 
 class Message : public std::vector<uint8_t>
 {
+public:
   using std::vector<uint8_t>::vector;
-
+  explicit Message(std::vector<uint8_t> x):
+      std::vector<uint8_t>(std::move(x))
+  {
+  }
 };
 
 std::ostream& operator<<(std::ostream& s,Message const& m)

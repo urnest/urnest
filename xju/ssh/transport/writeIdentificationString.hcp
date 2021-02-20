@@ -15,6 +15,7 @@
 #include <xju/ssh/transport/identParser.hh>
 #include <string>
 #include <xju/Optional.hh>
+#include <xju/ssh/transport/Ident.hh>
 
 namespace xju
 {
@@ -23,35 +24,49 @@ namespace ssh
 namespace transport
 {
 
+namespace
+{
+std::string makeLeader(SSHVersion const& sshVersion)
+// std::bad_alloc
+{
+  std::ostringstream s;
+  s << "SSH-" << sshVersion.value() << "-";
+  return s.str();
+}
+
+}
+
 //pre: softwareVersion valid per rfc4253 'softwareversion' ie
 //     US-ASCII printable excluding whitespace and minus
 //pre: comments contains no \r, \n or null characters
 void writeIdentificationString(
   xju::net::ostream& s,
-  SoftwareVersion const& softwareVersion,
-  xju::Optional<std::string> const& comments)
+  Ident const& ident)
 // std::bad_alloc
 // other - stream write failed
 {
+  std::string const identificationLeader(makeLeader(ident.sshVersion_));
   try
   {
     s.put(std::begin(identificationLeader),std::end(identificationLeader))
-      .put(softwareVersion.value());
-    if (comments.get()){
-      s.put8(' ').put(comments.get()->begin(),comments.get()->end());
+      .put(ident.softwareVersion_.value());
+    if (ident_.comments.get()){
+      s.put8(' ').put(ident_.comments.get()->begin(),
+                      ident_.comments.get()->end());
     }
     s.put8('\r').put8('\n');
   }
   catch(xju::Exception& e){
     std::ostringstream s;
-    s << identificationLeader
-      << softwareVersion;
-    if (comments.get()){
-      s << ' ' << comments.value();
+    s << ident_.identificationLeader
+      << ident_.softwareVersion;
+    if (ident_.comments.get()){
+      s << ' ' << ident_.comments.value();
     }
     e.addContext(
       "write SSH identification string " +
-      xju::format::quote(xju::format::cEscapeString(s.str())),XJU_TRACED);
+      xju::format::quote(xju::format::cEscapeString(s.str())),XJU_TRACED)
+      +" to output stream";
     throw;
   }
 }

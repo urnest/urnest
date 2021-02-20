@@ -1,0 +1,77 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/ssh/transport/messages/KexInit.hh>
+#include <xju/ssh/transport/Algorithms.hh>
+#include <xju/Array.hh> //impl
+#include <cinttypes> //impl
+#include <gcrypt.h> //impl
+#include <algorithm> //impl
+#include <xju/functional.hh> //impl
+#include <iterator> //impl
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+messages::KexInit makeKexInitRequest(Algorithms const& algorithms)
+// std::bad_alloc
+{
+  xju::Array<uint8_t,16> cookie;
+  gcry_randomize(&cookie[0],16,GCRY_STRONG_RANDOM);
+  std::vector<KexAlgorithmName> kexAlgorithms;
+  std::transform(algorithms.kexers_.begin(),algorithms.kexers_.end(),
+                 std::back_inserter(kexAlgorithms),
+                 xju::functional::First());
+  std::vector<HostKeyAlgorithmName> serverHostKeyAlgorithmNames;
+  std::transform(algorithms.hostKeyers_.begin(),algorithms.hostKeyers_.end(),
+                 std::back_inserter(serverHostKeyAlgorithmNames),
+                 xju::functional::First());
+  std::vector<CipherName> clientOutCipherNames;
+  std::transform(algorithms.ciphers_.begin(),algorithms.ciphers_.end(),
+                 std::back_inserter(clientOutCipherNames),
+                 xju::functional::First());
+  std::vector<CipherName> serverOutCipherNames(clientOutCipherNames);
+  std::vector<PacketAuthenticatorName> clientOutPacketAuthenticatorNames;
+  std::transform(algorithms.packetAuthenticators_.begin(),
+                 algorithms.packetAuthenticators_.end(),
+                 std::back_inserter(clientOutPacketAuthenticatorNames),
+                 xju::functional::First());
+  std::vector<PacketAuthenticatorName> serverOutPacketAuthenticatorNames(
+    clientOutPacketAuthenticatorNames);
+  std::vector<CompressorName>  clientOutCompressorNames{ // rfc4253 6.2
+    CompressorName("none")};
+  std::vector<CompressorName>  serverOutCompressorNames{ // rfc4253 6.2
+    CompressorName("none")};
+  std::vector<LanguageName> clientOutLanguageNames; // rfc4253 7.1
+  std::vector<LanguageName> serverOutLanguageNames; // rfc4253 7.1
+  return messages::KexInit(
+    cookie,
+    kexAlgorithms,
+    serverHostKeyAlgorithmNames,
+    clientOutCipherNames,
+    serverOutCipherNames,
+    clientOutPacketAuthenticatorNames,
+    serverOutPacketAuthenticatorNames,
+    clientOutCompressorNames,
+    serverOutCompressorNames,
+    clientOutLanguageNames,
+    serverOutLanguageNames,
+    false);
+}
+
+}
+}
+}
+
+
