@@ -1997,6 +1997,19 @@ PR enum_def() throw()
   return enum_def;
 }
 
+PR enum_decl() throw()
+{
+  static PR result(named<hcp_ast::EnumForwardDecl>(
+                     "enum forward-declaration",
+                     enum_keyword()+whitespace()+
+                     optional((parseLiteral("struct")|
+                               parseLiteral("class"))+
+                              whitespace())+
+                     enum_name()+eatWhite()+
+                     parseOneOfChars(";")+
+                     eatWhite()));
+  return result;
+}
   
 PR bracketed() throw()
 {
@@ -2909,6 +2922,7 @@ public:
          parseUntil(comments()|
                     access_modifier()|
                     PR(new SelfParser(*this))|
+                    enum_decl()|
                     class_decl()|
                     (not_class_struct_union_literal()+(
                       typedef_statement()|
@@ -2973,6 +2987,7 @@ PR namespace_leaf() throw()
     hashInclude()|
     hash()|
     class_def()| // note recursive
+    enum_decl()|
     class_decl()|
     (not_class_struct_union_literal()+(
       typedef_statement()|

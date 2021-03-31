@@ -2510,6 +2510,34 @@ void test50()
   }
 }
 
+void test51()
+{
+  // forward decls
+  try
+  {
+    std::string const x(
+      "class X;");
+    auto const root{parseString(
+        x.begin(),x.end(),
+        hcp_parser::class_decl())};
+    xju::assert_equal(reconstruct(root), x);
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e), readableRepr(e));
+  }
+  try
+  {
+    std::string const x(
+      "enum class X;");
+    auto const root{parseString(
+        x.begin(),x.end(),
+        hcp_parser::enum_decl())};
+    xju::assert_equal(reconstruct(root), x);
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e), readableRepr(e));
+  }
+}
 
 int main(int argc, char* argv[])
 {
@@ -2564,6 +2592,7 @@ int main(int argc, char* argv[])
   test48(), ++n;
   test49(), ++n;
   test50(), ++n;
+  test51(), ++n;
   
   xju::assert_equal(atLeastOneReadableReprFailed, false);
   std::cout << "PASS - " << n << " steps" << std::endl;

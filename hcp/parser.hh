@@ -500,6 +500,7 @@ PR typedef_statement() throw();    // restriction: no anon class/struct/enum
 PR using_statement() throw();       // using statement
 PR scoped_enum_def() throw();
 PR enum_def() throw();
+PR enum_decl() throw();
 PR conversion_operator_name() throw(); // eg operator constT&
 PR function_initialiser() throw(); // eg pure virtual function "=0"
 PR function_proto() throw();

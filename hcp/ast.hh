@@ -291,6 +291,9 @@ typedef TaggedItem<EnumDefTag> EnumDef;
 class EnumNameTag{};
 typedef TaggedItem<EnumNameTag> EnumName;
 
+class EnumForwardDeclTag{};
+typedef TaggedItem<EnumForwardDeclTag> EnumForwardDecl;
+
 class FunctionNameTag{};
 typedef TaggedItem<FunctionNameTag> FunctionName;
 

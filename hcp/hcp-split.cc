@@ -32,6 +32,7 @@
 #include <xju/startsWith.hh>
 #include <sys/types.h>
 #include <xju/strip.hh>
+#include <xju/prev.hh>
 
 std::string getClassName(hcp_ast::ClassDef const* x) throw()
 {
@@ -113,43 +114,15 @@ OStream& operator<<(OStream& s, T const& x)
   return s;
 }
 
-std::string reconstructWithoutTrailingWhitespace(
-  std::vector<hcp_ast::IR>::const_iterator begin,
-  std::vector<hcp_ast::IR>::const_iterator end) throw()
+hcp_ast::I findStartOfTrailingWhitespace(hcp_ast::IR const x) throw()
 {
-  if (begin==end){
-    return std::string();
+  if (hcp_ast::isA_<hcp_ast::WhiteSpace>(x)){
+    return x->begin();
   }
-  --end;
-  std::string result(reconstruct(hcp_ast::IRs(begin,end)));
-  if (hcp_ast::isA_<hcp_ast::WhiteSpace>(*end)){
-    return result;
+  if (x->items().size()){
+    return findStartOfTrailingWhitespace(*xju::prev(x->items().end()));
   }
-  if ((**end).items().size()){
-    return result+reconstructWithoutTrailingWhitespace(
-      (**end).items().begin(),
-      (**end).items().end());
-  }
-  return result+reconstruct(*end);
-}
-
-std::string reconstructTrailingWhitespace(
-  std::vector<hcp_ast::IR>::const_iterator begin,
-  std::vector<hcp_ast::IR>::const_iterator end) throw()
-{
-  if (begin==end){
-    return std::string();
-  }
-  --end;
-  if (hcp_ast::isA_<hcp_ast::WhiteSpace>(*end)){
-    return reconstruct(*end);
-  }
-  if ((**end).items().size()){
-    return reconstructTrailingWhitespace(
-      (**end).items().begin(),
-      (**end).items().end());
-  }
-  return "";
+  return x->end();
 }
 
 void genClassMemberFunctionDef(
@@ -163,14 +136,17 @@ void genClassMemberFunctionDef(
     std::find_if(x.items().begin(), x.items().end(),
                  hcp_ast::isA_<hcp_ast::FunctionImpl>));
   xju::assert_not_equal(i, x.items().end());
+  xju::assert_not_equal(i, x.items().begin());
 
-  std::string proto(reconstructWithoutTrailingWhitespace(
-                      x.items().begin(), i));
-  h << proto << ";";
-
-  std::string const implTrailingWhite(
-    reconstructTrailingWhitespace(i,x.items().end()));
-  h << implTrailingWhite;
+  hcp_ast::I const startOfProtoTrailingWhitespace(
+    findStartOfTrailingWhitespace(*xju::prev(i)));
+  
+  hcp_ast::I const startOfImplTrailingWhitespace(
+    findStartOfTrailingWhitespace(*i));
+  
+  h.copy(x.begin(),startOfProtoTrailingWhitespace);
+  h << ";";
+  h.copy(startOfImplTrailingWhitespace,x.end());
   
   std::vector<hcp_ast::IR>::const_iterator k(x.items().begin());
   if ((*k)->isA<hcp_ast::FunctionQualifiers>()) {
@@ -482,13 +458,17 @@ void genFunction(hcp_ast::FunctionDef const& x,
       std::find_if(x.items().begin(), x.items().end(),
                    hcp_ast::isA_<hcp_ast::FunctionImpl>));
     xju::assert_not_equal(i, x.items().end());
-    std::string proto(reconstructWithoutTrailingWhitespace(
-                        x.items().begin(), i));
-    h << proto << ";";
+    xju::assert_not_equal(i, x.items().begin());
     
-    std::string const implTrailingWhite(
-      reconstructTrailingWhitespace(i,x.items().end()));
-    h << implTrailingWhite;
+    hcp_ast::I const startOfProtoTrailingWhitespace(
+      findStartOfTrailingWhitespace(*xju::prev(i)));
+    
+    hcp_ast::I const startOfImplTrailingWhitespace(
+      findStartOfTrailingWhitespace(*i));
+    
+    h.copy(x.begin(),startOfProtoTrailingWhitespace);
+    h << ";";
+    h.copy(startOfImplTrailingWhitespace,x.end());
     
     std::vector<hcp_ast::IR>::const_iterator j(
       std::find_if(x.items().begin(), x.items().end(),
