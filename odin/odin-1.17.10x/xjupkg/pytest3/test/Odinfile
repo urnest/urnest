@@ -1,0 +1,25 @@
+%all==%all-tests.tree:leaves
+
+%all-tests.tree==<<
+%test-that-passes
+%test-that-fails
+
+%test-that-passes==()+cmd=(%cmp.sh) (%test-that-passes.output) (%test-that-passes.output.expect):stdout
+
+%test-that-passes.output==(test1.py):pytest3.exec.output
+%test-that-passes.output.expect==<<
+output of run
+.
+1 passed in 0.00 seconds
+starting some testing
+
+%cmp.sh==! <<
+#/bin/sh
+diff -b "$1" "$2" >&2
+
+
+%test-that-fails==(%test-that-fails.errors)+cmd=fgrep '"assert 1 == 2"':stdout
+
+%test-that-fails.errors==(test-that-fails.py):pytest3.exec.output:err
+
+

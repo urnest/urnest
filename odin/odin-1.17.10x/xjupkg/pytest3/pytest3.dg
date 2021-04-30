@@ -1,0 +1,49 @@
+#
+# Python
+#
+
+:pytest3.stdout 'output from a python3 script run'? => :stdout;
+
+:pytest3.output 'output files from a python3 script run'? => :output;
+
+#
+# :pytest3.exec is created regardless of exit status of test run, with:
+#   :pytest3.exec/files.tar the files produced by the run
+#   :pytest3.exec/status - file containing status as single line, eg 0, and either
+#   :pytest3.exec/output - the stdout+stderr* if command exits with 0 status, or
+#   :pytest3.exec/errors - the stderr* if command exits with non-zero status
+#
+# * depending on +stderr, see below
+#
+:pytest3.exec 'results of a pytest-3 script run'? => :DERIVED-DIRECTORY;
+
+:pytest3.exec.output ':pytest3.exec/output where :py3.exec/status is 0'? => :REFERENCE;
+
+:pytest3.exec.files ':pytest3.exec/files.tar where :py3.exec/status is 0'? => :REFERENCE;
+
++pytest3conf 'config file, default $ODIN_PYTEST3_CONF' => :first;
+
++stderr 'what to do with command stderr: "output" to combine with stdout (default), "warn" to generate warnings, "error" to display as errors if command fails and command trace otherwise, "trace" to show as command trace'? => :first;
+
+$ODIN_PYTEST3 'pytest-3 command' = 'pytest-3 -x -q -s --basetemp=./pytesttmp';
+
+$ODIN_PYTEST3_CONF 'pytest-3 config file' = '/dev/null';
+
+$ODIN_PYTEST3_PLUGINS 'PYTEST_PLUGINS to set for each run' = '';
+
+EXEC (pytest3.exec.sh) (+pytest3conf) (:py) (:env) (+stderr) (+py:dir)@ (+py_sp)
+  NEEDS (+need) (:py:py_import_all) (:py:mypy3)
+  => (:pytest3.exec);
+
+:pytest3.exec.output.ref ':pytest3.exec.output ref' => :FILE;
+:pytest3.exec.files.ref ':pytest3.exec.files ref' => :FILE;
+
+EXEC (pytest3.exec.output.sh) (:pytest3.exec/output) (:pytest3.exec/errors) (:pytest3.exec/status) (:pytest3.exec:name) (+stderr)
+  => (:pytest3.exec.output.ref);
+
+READ-REFERENCE (:pytest3.exec.output.ref) => (:pytest3.exec.output);
+
+EXEC (pytest3.exec.files.sh) (:pytest3.exec/files.tar) (:pytest3.exec/errors) (:pytest3.exec/status) (:pytest3.exec:name) (:pytest3.exec/output) (+stderr)
+  => (:pytest3.exec.files.ref);
+
+READ-REFERENCE (:pytest3.exec.files.ref) => (:pytest3.exec.files);
