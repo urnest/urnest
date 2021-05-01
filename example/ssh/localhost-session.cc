@@ -28,18 +28,22 @@
 #include <chrono>
 #include <xju/ssh/transport/KexAlgorithmName.hh>
 #include <xju/ssh/transport/Session.hh>
+#include <xju/stringToUInt.hh>
+#include <xju/ssh/transport/kexers/DhGroup14SHA1Client.hh>
 
 int main(int argc, char* argv[]){
-  if (argc != 2){
-    std::cerr << "usage: " << argv[0] << " <localhost-rsa-public-key-file>\n";
+  if (argc < 2){
+    std::cerr << "usage: " << argv[0] << " <localhost-rsa-public-key-file> [port]\n";
     return 1;
   }
+  xju::ip::Port const port(argc>2?xju::stringToUInt(argv[2]):22U);
+  
   try{
     xju::path::AbsFile hostRSAPublicKeyFile(xju::path::split(argv[1]));
     auto const hostPublicKey(load_id_rsa_pub(hostRSAPublicKeyFile));
     
     xju::ip::TCPSocket socket(
-      {xju::ip::v4::Address("127.0.0.1"),xju::ip::Port(22)},
+      {xju::ip::v4::Address("127.0.0.1"),port},
       xju::steadyNow()+std::chrono::seconds(10));
     
     xju::ssh::transport::Ident const ourIdent(
@@ -48,8 +52,10 @@ int main(int argc, char* argv[]){
       xju::Optional<std::string>());
     
     xju::ssh::transport::kexers::DHGroup1SHA1Client kexer1;
+    xju::ssh::transport::kexers::DHGroup14SHA1Client kexer2;
     xju::ssh::transport::Algorithms::Kexers kexers;
     kexers.push_back({xju::ssh::transport::KexAlgorithmName("diffie-hellman-group1-sha1"),std::ref(kexer1)});
+    kexers.push_back({xju::ssh::transport::KexAlgorithmName("diffie-hellman-group14-sha1"),std::ref(kexer2)});
     
     xju::ssh::transport::hkas::RSAClient hka1({hostPublicKey});
     
@@ -80,7 +86,8 @@ int main(int argc, char* argv[]){
       1024,
       ourIdent,
       algorithms,
-      xju::steadyNow()+std::chrono::seconds(10));
+      xju::steadyNow()+std::chrono::seconds(10),
+      200000U);
       
   }
   catch(xju::Exception& e){

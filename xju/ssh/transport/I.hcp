@@ -34,6 +34,7 @@
 #include <xju/ssh/transport/verifyPacket.hh> //impl
 #include <xju/ssh/transport/MSG.hh>
 #include <xju/ssh/decode.hh>
+#include <xju/ssh/transport/PeerKexInit.hh>
 
 namespace xju
 {
@@ -60,7 +61,7 @@ public:
   class RekeyLock
   {
   public:
-    messages::KexInit const peerKexInit_;
+    PeerKexInit const peerKexInit_;
 
     RekeyLock(RekeyLock const&) = delete;
     RekeyLock(RekeyLock &&) = delete;
@@ -165,7 +166,7 @@ private:
       throw;
     }
   }
-  messages::KexInit const retrievePeerKexInit() const
+  PeerKexInit const retrievePeerKexInit() const
   {
     xju::Lock l(guard_);
     xju::assert_equal(peerKexInit_.valid(),true);
@@ -173,7 +174,8 @@ private:
                       &peerKexInit_.value()[peerKexInit_.value().size()],
                       peerKexInit_.value().size());
     xju::net::istream s(b);
-    return decode<messages::KexInit>(s);
+    xju::assert_equal(MSG(s.get8()),MSG::KEXINIT);
+    return PeerKexInit(decode<messages::KexInit>(s));
   }
 };
 

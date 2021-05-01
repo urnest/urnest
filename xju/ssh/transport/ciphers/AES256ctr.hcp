@@ -47,6 +47,10 @@ public:
 class AES256ctr: public xju::ssh::transport::CipherAlgorithm
 {
 public:
+  AES256ctr() noexcept:
+    CipherAlgorithm(BitCount(256U),16U)
+  {
+  }
   virtual std::unique_ptr<xju::ssh::transport::Encrypter> encrypter(
     CipherKey cipherKey,
     CipherIV cipherIV) override

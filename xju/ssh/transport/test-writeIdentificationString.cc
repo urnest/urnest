@@ -28,8 +28,9 @@ void test1() {
       xju::net::ostream s(buffer);
       transport::writeIdentificationString(
         s,
-        transport::SoftwareVersion("fred's-ssh-2.6"),
-        std::string("slower than all the rest"));
+        Ident(SSHVersion("2.0"),
+              SoftwareVersion("fred's-ssh-2.6"),
+              std::string("slower than all the rest")));
     }
     xju::assert_equal(std::string(buffer.data().first,buffer.data().second),
                       "SSH-2.0-fred's-ssh-2.6 slower than all the rest\r\n");
@@ -40,11 +41,25 @@ void test1() {
       xju::net::ostream s(buffer);
       transport::writeIdentificationString(
         s,
-        transport::SoftwareVersion("fred's-ssh-2.6"),
-        xju::Optional<std::string>());
+        Ident(SSHVersion("1.99"),
+              SoftwareVersion("fred's-ssh-2.6"),
+              xju::Optional<std::string>()));
     }
     xju::assert_equal(std::string(buffer.data().first,buffer.data().second),
-                      "SSH-2.0-fred's-ssh-2.6\r\n");
+                      "SSH-1.99-fred's-ssh-2.6\r\n");
+  }
+  {
+    xju::MemOBuf buffer(256);
+    {
+      xju::net::ostream s(buffer);
+      transport::writeIdentificationString(
+        s,
+        Ident(SSHVersion("2.0"),
+              SoftwareVersion("fred's-ssh-2.6"),
+              std::string("")));
+    }
+    xju::assert_equal(std::string(buffer.data().first,buffer.data().second),
+                      "SSH-2.0-fred's-ssh-2.6 \r\n");
   }
 
 }

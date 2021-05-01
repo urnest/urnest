@@ -12,6 +12,9 @@
 #include <cinttypes>
 #include <vector>
 #include <xju/Tagged.hh>
+#include <iosfwd>
+#include <iostream> //impl
+#include <xju/format.hh> //impl
 
 namespace xju
 {
@@ -22,6 +25,14 @@ namespace transport
 
 class SessionIdTag{};
 typedef xju::Tagged<std::vector<uint8_t>,SessionIdTag> SessionId;
+
+std::ostream& operator<<(std::ostream& s, SessionId const& x)
+{
+  return s << xju::format::join(x.value().begin(),
+                                x.value().end(),
+                                [](uint8_t x){ return xju::format::hex(x,"");},
+                                std::string());
+}
 
 }
 }

@@ -179,6 +179,7 @@ xju::net::ostream& encode(xju::net::ostream& s,
     encode(s,x.clientOutLanguageNames_);
     encode(s,x.serverOutLanguageNames_);
     encode(s,x.firstKexPacketFollows_);
+    s.put32(0);
     return s;
   }
   catch(xju::Exception& e){

@@ -1,0 +1,66 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <vector>
+#include <xju/BitCount.hh>
+#include <xju/ssh/transport/K.hh>
+#include <xju/ssh/transport/H.hh>
+#include <xju/MemOBuf.hh>
+#include <xju/assert.hh>
+#include <xju/net/ostream.hh>
+#include <algorithm>
+#include <xju/ssh/encode.hh>
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+// Resize hash to exactly requiredSize/8 according to
+// rfc4523 7.2. Output from Key Exchange Key data algorithm.
+//
+// hashFunction(std::vector<uint8_t>) -> std::vector<uint8_t>
+//
+// pre: requiredSize % 8 == 0
+template<class HashFunction>
+std::vector<uint8_t> resizeHash(
+  std::vector<uint8_t> hash,
+  BitCount const& requiredSize,
+  K const& k,
+  H const& h,
+  HashFunction hashFunction)
+{
+  xju::assert_equal(hash.size() % 8, 0U);
+  while(BitCount(hash.size()*8) < requiredSize)
+  {
+    xju::MemOBuf b(1024);
+    {
+      xju::net::ostream s(b);
+      encode(s,k.value());
+      s.put32(h.value().size());
+      s.put(h.value().begin(),h.value().end());
+      s.put(hash.begin(),hash.end());
+    }
+    auto const more(hashFunction(std::vector<uint8_t>(b.data().first,
+                                                      b.data().second)));
+    std::copy(more.begin(),more.end(),std::back_inserter(hash));
+  }
+  hash.resize(requiredSize.value()/8);
+  return hash;
+}
+
+}
+}
+}
+
+

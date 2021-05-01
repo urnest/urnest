@@ -31,8 +31,9 @@ void test1() {
       xju::net::ostream s(b);
       transport::writeIdentificationString(
         s,
-        transport::SoftwareVersion("fred's_ssh_2.6"),
-        std::string("slower than all the rest"));
+        Ident(SSHVersion("2.0"),
+              transport::SoftwareVersion("fred's_ssh_2.6"),
+              std::string("slower than all the rest")));
     }
     xju::MemIBuf ib(std::vector<uint8_t>(b.data().first,b.data().second));
     xju::net::istream si(ib);
@@ -58,8 +59,9 @@ void test1() {
         .put("preamble 2\r\n");
       transport::writeIdentificationString(
         s,
-        transport::SoftwareVersion("fred's_ssh_2.6"),
-        xju::Optional<std::string>());
+        Ident(SSHVersion("2.0"),
+              transport::SoftwareVersion("fred's_ssh_2.6"),
+              xju::Optional<std::string>()));
     }
     xju::MemIBuf ib(std::vector<uint8_t>(b.data().first,b.data().second));
     xju::net::istream si(ib);

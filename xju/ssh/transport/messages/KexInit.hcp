@@ -43,10 +43,10 @@ public:
     std::vector<CipherName> serverOutCipherNames,
     std::vector<PacketAuthenticatorName> clientOutPacketAuthenticatorNames,
     std::vector<PacketAuthenticatorName> serverOutPacketAuthenticatorNames,
-    std::vector<CompressorName>  clientOutCompressorName,
-    std::vector<CompressorName>  serverOutCompressorName,
-    std::vector<LanguageName> clientOutLanguageName,
-    std::vector<LanguageName> serverOutLanguageName,
+    std::vector<CompressorName>  clientOutCompressorNames,
+    std::vector<CompressorName>  serverOutCompressorNames,
+    std::vector<LanguageName> clientOutLanguageNames,
+    std::vector<LanguageName> serverOutLanguageNames,
     bool firstKexPacketFollows) noexcept:
       cookie_(cookie),
       kexAlgorithms_(kexAlgorithms),
@@ -55,10 +55,10 @@ public:
       serverOutCipherNames_(serverOutCipherNames),
       clientOutPacketAuthenticatorNames_(clientOutPacketAuthenticatorNames),
       serverOutPacketAuthenticatorNames_(serverOutPacketAuthenticatorNames),
-      clientOutCompressorNames_(clientOutCompressorName),
-      serverOutCompressorNames_(serverOutCompressorName),
-      clientOutLanguageNames_(clientOutLanguageName),
-      serverOutLanguageNames_(serverOutLanguageName),
+      clientOutCompressorNames_(clientOutCompressorNames),
+      serverOutCompressorNames_(serverOutCompressorNames),
+      clientOutLanguageNames_(clientOutLanguageNames),
+      serverOutLanguageNames_(serverOutLanguageNames),
       firstKexPacketFollows_(firstKexPacketFollows)
   {
   }

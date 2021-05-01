@@ -14,6 +14,8 @@
 #include <xju/MemOBuf.hh>
 #include <xju/MemIBuf.hh>
 #include <xju/ssh/transport/MSG.hh>
+#include <xju/ssh/encode.hh>
+#include <xju/ssh/decode.hh>
 
 namespace xju
 {
@@ -47,10 +49,10 @@ void test1() {
   xju::assert_equal(x.serverOutCipherNames_,{CipherName("c2")});
   xju::assert_equal(x.clientOutPacketAuthenticatorNames_,{PacketAuthenticatorName("a1")});
   xju::assert_equal(x.serverOutPacketAuthenticatorNames_,{PacketAuthenticatorName("a2")});
-  xju::assert_equal(x.clientOutCompressorName_,{CompressorName("z1")});
-  xju::assert_equal(x.serverOutCompressorName_,{CompressorName("z2")});
-  xju::assert_equal(x.clientOutLanguageName_,{LanguageName("l1")});
-  xju::assert_equal(x.serverOutLanguageName_,{LanguageName("l2")});
+  xju::assert_equal(x.clientOutCompressorNames_,{CompressorName("z1")});
+  xju::assert_equal(x.serverOutCompressorNames_,{CompressorName("z2")});
+  xju::assert_equal(x.clientOutLanguageNames_,{LanguageName("l1")});
+  xju::assert_equal(x.serverOutLanguageNames_,{LanguageName("l2")});
   xju::assert_equal(x.firstKexPacketFollows_,true);
 
   xju::MemOBuf b(1024,1024);

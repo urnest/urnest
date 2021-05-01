@@ -71,14 +71,21 @@ public:
 class None: public xju::ssh::transport::CipherAlgorithm
 {
 public:
+  None() noexcept:
+    CipherAlgorithm(BitCount(0U),0U)
+  {
+  }
+  
   virtual std::unique_ptr<xju::ssh::transport::Encrypter> encrypter(
-    K const& k, H const& h, SessionId const& sessionId) override
+    CipherKey cipherKey,
+    CipherIV cipherIV) override
   {
     return std::unique_ptr<xju::ssh::transport::Encrypter>(
       new NoneEncrypter);
   }
   virtual std::unique_ptr<xju::ssh::transport::Decrypter> decrypter(
-    K const& k, H const& h, SessionId const& sessionId) override
+    CipherKey cipherKey,
+    CipherIV cipherIV) override
   {
     return std::unique_ptr<xju::ssh::transport::Decrypter>(
       new NoneDecrypter);

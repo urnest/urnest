@@ -14,6 +14,8 @@
 #include <xju/ssh/transport/CipherIV.hh>
 #include <xju/ssh/transport/Encrypter.hh>
 #include <xju/ssh/transport/Decrypter.hh>
+#include <xju/BitCount.hh>
+#include <unistd.h>
 
 namespace xju
 {
@@ -25,6 +27,15 @@ namespace transport
 class CipherAlgorithm
 {
 public:
+  explicit CipherAlgorithm(BitCount const keySize,
+                           size_t const ivSize) noexcept:
+      keySize_(keySize),
+      ivSize_(ivSize)
+  {
+  }
+  BitCount const keySize_;
+  size_t const ivSize_;
+  
   virtual ~CipherAlgorithm() noexcept{}
 
   virtual std::unique_ptr<Encrypter> encrypter(

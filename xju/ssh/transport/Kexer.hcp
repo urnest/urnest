@@ -18,6 +18,8 @@
 #include <vector>
 #include <xju/ssh/transport/K.hh>
 #include <xju/ssh/transport/H.hh>
+#include <xju/ssh/transport/ClientKexInit.hh>
+#include <xju/ssh/transport/ServerKexInit.hh>
 
 namespace xju
 {
@@ -38,8 +40,8 @@ public:
     Ident const& ourIdent,
     std::pair<std::vector<std::string>, //preamble lines without trailing \r\n
               Ident> const& peerPreambleAndIdent,
-    messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit,
+    ClientKexInit const& clientKexInit,
+    ServerKexInit const& serverKexInit,
     HostKeyAlgorithm const& hostKeyAlgorithm,
     bool ignoreFirstMessageReceived) = 0;
 

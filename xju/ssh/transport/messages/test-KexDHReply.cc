@@ -15,6 +15,8 @@
 #include <xju/MemIBuf.hh>
 #include <xju/net/ostream.hh>
 #include <xju/net/istream.hh>
+#include <xju/ssh/encode.hh>
+#include <xju/ssh/decode.hh>
 
 namespace xju
 {
@@ -29,10 +31,10 @@ void test1() {
   xju::assert_equal(KexDHReply::type_,MSG::KEXDH_REPLY);
   
   KexDHReply const x({0x23,0x24},
-                     xju::mpi::I(33),
+                     xju::crypt::I(33),
                      {0x25,0x26,0x27});
   xju::assert_equal(x.hostKeyAndCertificates_,std::vector<uint8_t>{0x23,0x24});
-  xju::assert_equal(x.f_,xju::mpi::I(33));
+  xju::assert_equal(x.f_,xju::crypt::I(33));
   xju::assert_equal(x.hostSignature_,std::vector<uint8_t>{0x25,0x26,0x27});
   
   xju::MemOBuf b(1024,1024);

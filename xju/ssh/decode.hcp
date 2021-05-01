@@ -32,6 +32,7 @@
 #include <xju/ssh/transport/messages/KexDHReply.hh> //impl
 #include <xju/ssh/transport/messages/KexDHInit.hh> //impl
 #include <xju/crypt/rsa/PublicKey.hh> //impl
+#include <xju/Utf8String.hh>
 
 namespace xju
 {
@@ -122,6 +123,14 @@ struct decoder<xju::Tagged<std::string,T> >
   static xju::Tagged<std::string,T> dec(xju::net::istream& s)
   {
     return xju::Tagged<std::string,T>(decode<std::string>(s));
+  }
+};
+template<>
+struct decoder<xju::Utf8String>
+{
+  static xju::Utf8String dec(xju::net::istream& s)
+  {
+    return xju::Utf8String(decode<std::string>(s));
   }
 };
 
@@ -389,6 +398,7 @@ transport::messages::KexInit decoder<transport::messages::KexInit>::dec(
     decode<std::vector<LanguageName> >(s));
   auto serverOutLanguageName(decode<std::vector<LanguageName> >(s));
   auto firstKexPacketFollows(decode<bool>(s));
+  auto reserved(decode<uint32_t>(s));
 
   return messages::KexInit(
     std::move(cookie),

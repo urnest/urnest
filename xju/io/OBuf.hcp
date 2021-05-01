@@ -18,8 +18,9 @@
 #include <xju/DeadlineReached.hh> //impl
 #include <xju/Exception.hh> //impl
 #include <sstream> //impl
-#include <xju/ByteBuffer.hh>
 #include <xju/format.hh> //impl
+#include <xju/assert.hh> //impl
+#include <vector>
 
 namespace xju
 {
@@ -58,32 +59,36 @@ public:
   };
 
   std::pair<uint8_t*,uint8_t*> flush(uint8_t* const to) override
+  // xju::DeadlineReached
   {
-    auto const data(data_.contigSpace());
-    size_t const n(to-data.first);
-    try{
-      if (n){
-        auto const m(x_.write(data.first,n,deadline_));
-        if (m<n){
-          throw xju::DeadlineReached(
-            xju::Exception(
-              "deadline reached having only written "+
-              xju::format::str(n)+" bytes", XJU_TRACED));
+    if (to!=0){
+      xju::assert_less_equal(to,&data_[data_.size()]);
+      xju::assert_greater_equal(to,&data_[0]);
+      size_t const n(to-&data_[0]);
+      try{
+        if (n){
+          auto const m(x_.write(&data_[0],n,deadline_));
+          if (m<n){
+            throw xju::DeadlineReached(
+              xju::Exception(
+                "deadline reached having only written "+
+                xju::format::str(n)+" bytes", XJU_TRACED));
+          }
         }
       }
-      return std::make_pair(data.first,data.first+data.second);
+      catch(xju::Exception& e){
+        std::ostringstream s;
+        s << "flush " << n << " bytes of data from output buffer to " << x_;
+        e.addContext(s.str(),XJU_TRACED);
+        throw;
+      }
     }
-    catch(xju::Exception& e){
-      std::ostringstream s;
-      s << "flush " << n << " bytes of data from output buffer to " << x_;
-      e.addContext(s.str(),XJU_TRACED);
-      throw;
-    }
+    return std::make_pair(&data_[0],&data_[data_.size()]);
   }
 private:
   xju::io::OStream& x_;
   std::chrono::steady_clock::time_point deadline_;
-  xju::ByteBuffer data_;
+  std::vector<uint8_t> data_;
 };
 
 }

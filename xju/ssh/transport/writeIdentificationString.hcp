@@ -50,23 +50,23 @@ void writeIdentificationString(
   {
     s.put(std::begin(identificationLeader),std::end(identificationLeader))
       .put(ident.softwareVersion_.value());
-    if (ident_.comments.get()){
-      s.put8(' ').put(ident_.comments.get()->begin(),
-                      ident_.comments.get()->end());
+    if (ident.comment_.valid()){
+      s.put8(' ').put(ident.comment_.value().begin(),
+                      ident.comment_.value().end());
     }
     s.put8('\r').put8('\n');
   }
   catch(xju::Exception& e){
     std::ostringstream s;
-    s << ident_.identificationLeader
-      << ident_.softwareVersion;
-    if (ident_.comments.get()){
-      s << ' ' << ident_.comments.value();
+    s << identificationLeader
+      << ident.softwareVersion_.value();
+    if (ident.comment_.valid()){
+      s << ' ' << ident.comment_.value();
     }
     e.addContext(
       "write SSH identification string " +
-      xju::format::quote(xju::format::cEscapeString(s.str())),XJU_TRACED)
-      +" to output stream";
+      xju::format::quote(xju::format::cEscapeString(s.str()))
+      +" to output stream",XJU_TRACED);
     throw;
   }
 }

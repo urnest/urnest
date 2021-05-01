@@ -11,6 +11,7 @@
 
 #include <xju/ssh/transport/identParser.hh>
 #include <xju/Optional.hh>
+#include <iostream>
 
 namespace xju
 {
@@ -35,6 +36,16 @@ struct Ident
 
   friend bool operator<(Ident const& x,Ident const& y) noexcept;
 };
+std::ostream& operator<<(std::ostream& s, Ident const& y){
+  s << "SSH-"
+    << xju::format::cEscapeString(y.sshVersion_.value())
+    << "-"
+    << xju::format::cEscapeString(y.softwareVersion_.value());
+  if (y.comment_.valid()){
+    s << " " << xju::format::cEscapeString(y.comment_.value());
+  }
+  return s;
+}
 
 }
 }

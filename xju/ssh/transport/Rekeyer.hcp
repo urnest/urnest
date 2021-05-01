@@ -32,6 +32,9 @@
 #include <xju/ssh/transport/makeKexInitRequest.hh> //impl
 #include <xju/ssh/transport/chooseKexer.hh> //impl
 #include <xju/ssh/transport/chooseHostKeyAlgorithm.hh> //impl
+#include <xju/ssh/transport/resizeHash.hh> //impl
+#include <xju/ssh/transport/CipherKey.hh> //impl
+#include <xju/ssh/transport/CipherIV.hh> //impl
 
 namespace xju
 {
@@ -47,9 +50,11 @@ public:
   // pre: i, o, algorithms will outlive this
   Rekeyer(I& i, O& o, Algorithms const& algorithms,
           Ident ourIdent,
-          std::pair<std::vector<std::string>,Ident> peerPreambleAndIdent):
+          std::pair<std::vector<std::string>,Ident> peerPreambleAndIdent,
+          size_t maxAcceptedKexInitSize):
       ourIdent_(std::move(ourIdent)),
       peerPreambleAndIdent_(std::move(peerPreambleAndIdent)),
+      maxAcceptedKexInitSize_(maxAcceptedKexInitSize),
       o_(o),
       i_(i),
       algorithms_(algorithms),
@@ -59,14 +64,24 @@ public:
   }
   Ident const ourIdent_;
   std::pair<std::vector<std::string>,Ident> const peerPreambleAndIdent_;
+  size_t maxAcceptedKexInitSize_;
   
   // commences rekeying
   void startRekeying()
   {
     xju::Lock l(guard_);
-    xju::assert_equal(ol_.get(),false);
-    ol_=std::unique_ptr<O::RekeyLock>(
-      new O::RekeyLock(o_,makeKexInitRequest(algorithms_)));
+    try{
+      xju::assert_equal(!ol_.get(),true);
+      ol_=std::unique_ptr<O::RekeyLock>(
+        new O::RekeyLock(o_,OurKexInit(makeKexInitRequest(algorithms_))));
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "start rekeying SSH session "
+        << sessionId_;
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
   }
 
   // pre: calling thread has caught I::Rekeying
@@ -95,7 +110,7 @@ public:
       // receive thread is allowed to call finishRekeying).
       changed_.signal(l);
       I::RekeyLock il(i_);
-      O::RekeyLock ol(o_,makeKexInitRequest(algorithms_));
+      O::RekeyLock ol(o_,OurKexInit(makeKexInitRequest(algorithms_)));
       doKex(l,il,ol,sessionId_);
     }
   }
@@ -133,127 +148,154 @@ private:
                   std::optional<SessionId> const& sessionId)
   {
     xju::assert_equal(l.holds(guard_),true);
-    
-    auto const clientKexInit(algorithms_.chooseClientKexInit(
-                               ol.sent_,
-                               il.peerKexInit_));
-    auto const serverKexInit(algorithms_.chooseServerKexInit(
-                               ol.sent_,
-                               il.peerKexInit_));
-    std::set<HostKeyAlgorithmName> const clientRequestedHostKeyAlgorithmNames(
-      clientKexInit.serverHostKeyAlgorithmNames_.begin(),
-      clientKexInit.serverHostKeyAlgorithmNames_.end());
-    std::set<HostKeyAlgorithmName> const serverProposedHostKeyAlgorithmNames(
-      serverKexInit.serverHostKeyAlgorithmNames_.begin(),
-      serverKexInit.serverHostKeyAlgorithmNames_.end());
-    
-    auto kexer=chooseKexer(
-      clientKexInit.kexAlgorithms_,
-      serverKexInit.kexAlgorithms_,
-      clientRequestedHostKeyAlgorithmNames,
-      serverProposedHostKeyAlgorithmNames,
-      std::map<KexAlgorithmName,std::reference_wrapper<Kexer> >(
-        algorithms_.kexers_.begin(),
-        algorithms_.kexers_.end()),
-      std::map<HostKeyAlgorithmName,std::reference_wrapper<HostKeyAlgorithm> >(
-        algorithms_.hostKeyers_.begin(),
-        algorithms_.hostKeyers_.end()));
-    
-    std::pair<K,H> kh(
-      kexer.first.get().exchangeKeys(
-        il,ol,
-        ourIdent_,
-        peerPreambleAndIdent_,
-        clientKexInit,
-        serverKexInit,
-        chooseHostKeyAlgorithm(
-          clientKexInit.serverHostKeyAlgorithmNames_,
-          std::set<HostKeyAlgorithmName>(
-            serverKexInit.serverHostKeyAlgorithmNames_.begin(),
-            serverKexInit.serverHostKeyAlgorithmNames_.end()),
-          kexer.first.get().requiresEncryptionCapableHostKey(),
-          kexer.first.get().requiresSignatureCapableHostKey(),
-          std::map<HostKeyAlgorithmName,
-                   std::reference_wrapper<HostKeyAlgorithm> >(
-            algorithms_.hostKeyers_.begin(),
-            algorithms_.hostKeyers_.end())),
-        il.peerKexInit_.firstKexPacketFollows_&&!kexer.second));
-
-    SessionId result(sessionId.has_value()?sessionId.value():
-                     SessionId(kh.second.value()));
-    auto const& k(kh.first);
-    auto const& h(kh.second);
-    
-    auto& decryptionCipherAlgorithm(
-      algorithms_.chooseDecryptionCipher(ol.sent_,il.peerKexInit_));
-    il.setDecrypter(
-      decryptionCipherAlgorithm.decrypter(
-        CipherKey(
-          resizeHash(
-            kexer.first.get().hash(
-              algorithms_.decryptionCipherKeyData(k,h,result)),
-            decryptionCipherAlgorithm.keySize_,
-            k,h,kexer)),
-        CipherIV(
-          resizeHash(
-            kexer.first.get().hash(
-              algorithms_.decryptionCipherIVData(k,h,result)),
-            decryptionCipherAlgorithm.ivSize_,
-            k,h,kexer))));
-
-    auto& encryptionCipherAlgorithm(
-      algorithms_.chooseEncryptionCipher(ol.sent_,il.peerKexInit_));
-    ol.setEncrypter(
-      encryptionCipherAlgorithm.encrypter(
-        CipherKey(
-          resizeHash(
-            kexer.first.get().hash(
-              algorithms_.encryptionCipherKeyData(k,h,result)),
-            encryptionCipherAlgorithm.keySize_,
-            k,h,kexer)),
-        CipherIV(
-          resizeHash(
-            kexer.first.get().hash(
-              algorithms_.encryptionCipherIVData(k,h,result)),
-            encryptionCipherAlgorithm.ivSize_,
-            k,h,kexer))));
-
-    auto& macVerifierAlgorithm(algorithms_.chooseMacVerifierAlgorithm());
-    il.setMacVerifier(
-      algorithms_.chooseMacVerifierAlgorithm().macVerifier(
-        xju::crypt::MacKey(
-          resizeHash(
-            kexer.first.get().hash(algorithms_.macVerifierKeyData(k,h,result)),
-            macVerifierAlgorithm.keySize_,
-            k,h,kexer))));
-
-    auto& macCalculatorAlgorithm(algorithms_.chooseMacCalculatorAlgorithm());
-    ol.setMacCalculator(
-      macCalculatorAlgorithm.macCalculator(
-        xju::crypt::MacKey(
-          resizeHash(
-            kexer.first.get().hash(
-              algorithms_.macCalculatorKeyData(k,h,result)),
-            macCalculatorAlgorithm.keySize_,
-            k,h,kexer))));
-    
-    return result;
+    try{
+      ClientKexInit const clientKexInit(algorithms_.chooseClientKexInit(
+                                          ol.sent_,
+                                          il.peerKexInit_));
+      ServerKexInit const serverKexInit(algorithms_.chooseServerKexInit(
+                                          ol.sent_,
+                                          il.peerKexInit_));
+      std::set<HostKeyAlgorithmName> const clientRequestedHostKeyAlgorithmNames(
+        clientKexInit.value().serverHostKeyAlgorithmNames_.begin(),
+        clientKexInit.value().serverHostKeyAlgorithmNames_.end());
+      std::set<HostKeyAlgorithmName> const serverProposedHostKeyAlgorithmNames(
+        serverKexInit.value().serverHostKeyAlgorithmNames_.begin(),
+        serverKexInit.value().serverHostKeyAlgorithmNames_.end());
+      
+      auto kexer=chooseKexer(
+        clientKexInit.value().kexAlgorithms_,
+        serverKexInit.value().kexAlgorithms_,
+        clientRequestedHostKeyAlgorithmNames,
+        serverProposedHostKeyAlgorithmNames,
+        std::map<KexAlgorithmName,std::reference_wrapper<Kexer> >(
+          algorithms_.kexers_.begin(),
+          algorithms_.kexers_.end()),
+        std::map<HostKeyAlgorithmName,std::reference_wrapper<HostKeyAlgorithm> >(
+          algorithms_.hostKeyers_.begin(),
+          algorithms_.hostKeyers_.end()));
+      
+      std::pair<K,H> kh(
+        kexer.first.get().exchangeKeys(
+          il,ol,
+          ourIdent_,
+          peerPreambleAndIdent_,
+          clientKexInit,
+          serverKexInit,
+          chooseHostKeyAlgorithm(
+            clientKexInit.value().serverHostKeyAlgorithmNames_,
+            std::set<HostKeyAlgorithmName>(
+              serverKexInit.value().serverHostKeyAlgorithmNames_.begin(),
+              serverKexInit.value().serverHostKeyAlgorithmNames_.end()),
+            kexer.first.get().requiresEncryptionCapableHostKey(),
+            kexer.first.get().requiresSignatureCapableHostKey(),
+            std::map<HostKeyAlgorithmName,
+            std::reference_wrapper<HostKeyAlgorithm> >(
+              algorithms_.hostKeyers_.begin(),
+              algorithms_.hostKeyers_.end())),
+          il.peerKexInit_.value().firstKexPacketFollows_&&!kexer.second));
+      
+      SessionId result(sessionId.has_value()?sessionId.value():
+                       SessionId(kh.second.value()));
+      auto const& k(kh.first);
+      auto const& h(kh.second);
+      auto hashFunction([&kexer](std::vector<uint8_t> const& data){
+                          return kexer.first.get().hash(data);});
+      auto& decryptionCipherAlgorithm(
+        algorithms_.chooseDecryptionCipher(ol.sent_,il.peerKexInit_));
+      il.setDecrypter(
+        decryptionCipherAlgorithm.decrypter(
+          CipherKey(
+            resizeHash(
+              kexer.first.get().hash(
+                algorithms_.decryptionCipherKeyData(k,h,result)),
+              decryptionCipherAlgorithm.keySize_,
+              k,h,
+              hashFunction)),
+          CipherIV(
+            resizeHash(
+              hashFunction(algorithms_.decryptionCipherIVData(k,h,result)),
+              BitCount(decryptionCipherAlgorithm.ivSize_*8),
+              k,h,
+              hashFunction))));
+      
+      auto& encryptionCipherAlgorithm(
+        algorithms_.chooseEncryptionCipher(ol.sent_,il.peerKexInit_));
+      ol.setEncrypter(
+        encryptionCipherAlgorithm.encrypter(
+          CipherKey(
+            resizeHash(
+              hashFunction(algorithms_.encryptionCipherKeyData(k,h,result)),
+              encryptionCipherAlgorithm.keySize_,
+              k,h,
+              hashFunction)),
+          CipherIV(
+            resizeHash(
+              hashFunction(algorithms_.encryptionCipherIVData(k,h,result)),
+              BitCount(encryptionCipherAlgorithm.ivSize_*8),
+              k,h,hashFunction))));
+      
+      auto& macVerifierAlgorithm(algorithms_.chooseMacVerifierAlgorithm(
+                                   ol.sent_,
+                                   il.peerKexInit_));
+      il.setPacketAuthenticator(
+        macVerifierAlgorithm.macVerifier(
+          xju::crypt::MacKey(
+            resizeHash(
+              hashFunction(algorithms_.macVerifierKeyData(k,h,result)),
+              macVerifierAlgorithm.keySize_,
+              k,h,hashFunction))));
+      
+      auto& macCalculatorAlgorithm(algorithms_.chooseMacCalculatorAlgorithm(
+                                     ol.sent_,
+                                     il.peerKexInit_));
+      ol.setMacCalculator(
+        macCalculatorAlgorithm.macCalculator(
+          xju::crypt::MacKey(
+            resizeHash(
+              hashFunction(algorithms_.macCalculatorKeyData(k,h,result)),
+              macCalculatorAlgorithm.keySize_,
+              k,h,hashFunction))));
+      
+      return result;
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "do key exchange on SSH session";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
   }
 
   SessionId doInitialKex()
   {
-    xju::Lock l(guard_);
-    O::RekeyLock ol(o_,makeKexInitRequest(algorithms_));
     try{
-      auto m(i_.receiveMessage(REVISIT));
-      std::ostringstream s;
-      s << "expected KexInit (type "
-        << xju::format::hex((char)MSG::KEXINIT)<< ") message, received " << m;
-      throw xju::Exception(s.str(),XJU_TRACED);
+      O::RekeyLock ol(o_,OurKexInit(makeKexInitRequest(algorithms_)));
+      xju::Lock l(guard_);
+      try{
+        try{
+          auto m(i_.receiveMessage(maxAcceptedKexInitSize_));
+          std::ostringstream s;
+          s << "expected KexInit (type "
+            << xju::format::hex((char)MSG::KEXINIT)<< ") message, received " << m;
+          throw xju::Exception(s.str(),XJU_TRACED);
+        }
+        catch(xju::Exception& e){
+          std::ostringstream s;
+          s << "receive expected KexInit message";
+          e.addContext(s.str(),XJU_TRACED);
+          throw;
+        }
+      }
+      catch(I::Rekeying const&){
+        I::RekeyLock il(i_);
+        return doKex(l,il,ol,std::optional<SessionId>());
+      }
     }
-    catch(I::Rekeying const&){
-      I::RekeyLock il(i_);
-      return doKex(l,il,ol,std::optional<SessionId>());
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "do initial key exchange on SSH session";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
     }
   }
 };

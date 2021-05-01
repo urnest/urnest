@@ -10,7 +10,7 @@
 
 
 #include <xju/Tagged.hh>
-#include <xju/crypt/I.hh>
+#include <xju/ssh/transport/messages/KexInit.hh>
 
 namespace xju
 {
@@ -18,12 +18,8 @@ namespace ssh
 {
 namespace transport
 {
-
-class KTag{};
-
-// rfc4253 7.2 Output of Key Exchange - shared secret
-typedef xju::Tagged<xju::crypt::I,KTag> K;
-
+class OurKexInitTag{};
+typedef xju::Tagged<messages::KexInit, OurKexInitTag> OurKexInit;
 }
 }
 }

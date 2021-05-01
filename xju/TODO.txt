@@ -7,8 +7,12 @@
         read private and public keys, sign and verify a message
             	      
       - test kex via "examples/exchange-keys-rsa host-rsa-public-key-file"
-      -  session host-rsa-public-key-file
+      /  session host-rsa-public-key-file
          which would establish a session with localhost sshd
+	 v sshd -d -d -d -p 9999 -h hostkeyfile
+	 
+      x add OurKexInit, PeerKexInit, ClientKexInit, ServerKexInit types and
+        promote everything (start with Algorithms)
       x implement and test HMACSHA1 v libgcrypt raw
       
     see ssh2_echo.c in examples

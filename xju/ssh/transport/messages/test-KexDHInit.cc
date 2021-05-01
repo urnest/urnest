@@ -14,6 +14,10 @@
 #include <xju/ssh/transport/MSG.hh>
 #include <xju/MemOBuf.hh>
 #include <xju/MemIBuf.hh>
+#include <xju/net/ostream.hh>
+#include <xju/net/istream.hh>
+#include <xju/ssh/encode.hh>
+#include <xju/ssh/decode.hh>
 
 namespace xju
 {
@@ -27,8 +31,8 @@ namespace messages
 void test1() {
   xju::assert_equal(KexDHInit::type_,MSG::KEXDH_INIT);
   
-  KexDHInit const x(xju::mpi::I(33));
-  xju::assert_equal(x.e_,xju::mpi::I(33));
+  KexDHInit const x(xju::crypt::I(33));
+  xju::assert_equal(x.e_,xju::crypt::I(33));
   xju::MemOBuf b(1024,1024);
   {
     xju::net::ostream s(b);

@@ -31,6 +31,10 @@
 #include <xju/ssh/transport/K.hh>
 #include <xju/ssh/transport/H.hh>
 #include <xju/ssh/transport/SessionId.hh>
+#include <xju/ssh/transport/OurKexInit.hh>
+#include <xju/ssh/transport/PeerKexInit.hh>
+#include <xju/ssh/transport/ClientKexInit.hh>
+#include <xju/ssh/transport/ServerKexInit.hh>
 
 namespace xju
 {
@@ -89,30 +93,30 @@ struct Algorithms
   PacketAuthenticationAlgorithms packetAuthenticators_;
 
   virtual messages::KexInit const& chooseClientKexInit(
-    messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) const = 0;
+    OurKexInit const& ourKexInit,
+    PeerKexInit const& peerKexInit) const = 0;
 
   virtual messages::KexInit const& chooseServerKexInit(
-    messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) const = 0;
+    OurKexInit const& ourKexInit,
+    PeerKexInit const& peerKexInit) const = 0;
   
   virtual CipherAlgorithm& chooseEncryptionCipher(
-    messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) const = 0;
+    OurKexInit const& ourKexInit,
+    PeerKexInit const& peerKexInit) const = 0;
   
   virtual CipherAlgorithm& chooseDecryptionCipher(
-    messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) const = 0;
+    OurKexInit const& ourKexInit,
+    PeerKexInit const& peerKexInit) const = 0;
   
   CipherAlgorithm& chooseServerEncryptionCipher(
-    messages::KexInit const& clientKexInit,
-    messages::KexInit const& serverKexInit) const
+    ClientKexInit const& clientKexInit,
+    ServerKexInit const& serverKexInit) const
   {
     auto algorithmName(
       chooseAlgorithm(
         "server-to-client cipher",
-        clientKexInit.serverOutCipherNames_,
-        xju::set::makeSet(serverKexInit.serverOutCipherNames_)));
+        clientKexInit.value().serverOutCipherNames_,
+        xju::set::makeSet(serverKexInit.value().serverOutCipherNames_)));
     return std::find_if(ciphers_.begin(),
                         ciphers_.end(),
                         [&](auto const& x){
@@ -121,14 +125,15 @@ struct Algorithms
   }
   
   CipherAlgorithm& chooseClientEncryptionCipher(
-    messages::KexInit const& clientKexInit,
-    messages::KexInit const& serverKexInit) const
+    ClientKexInit const& clientKexInit,
+    ServerKexInit const& serverKexInit) const
   {
     auto algorithmName(
       chooseAlgorithm(
         "client-to-server cipher",
-        clientKexInit.clientOutCipherNames_,
-        xju::set::makeSet(serverKexInit.clientOutCipherNames_)));
+        clientKexInit.value().clientOutCipherNames_,
+        xju::set::makeSet(
+          serverKexInit.value().clientOutCipherNames_)));
     return std::find_if(ciphers_.begin(),
                         ciphers_.end(),
                         [&](auto const& x){
@@ -137,22 +142,23 @@ struct Algorithms
   }
 
   virtual PacketAuthenticationAlgorithm& chooseMacVerifierAlgorithm(
-    messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) const = 0;
+    OurKexInit const& ourKexInit,
+    PeerKexInit const& peerKexInit) const = 0;
   
   virtual PacketAuthenticationAlgorithm& chooseMacCalculatorAlgorithm(
-    messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) const = 0;
+    OurKexInit const& ourKexInit,
+    PeerKexInit const& peerKexInit) const = 0;
   
   PacketAuthenticationAlgorithm& chooseServerMacAlgorithm(
-    messages::KexInit const& clientKexInit,
-    messages::KexInit const& serverKexInit) const
+    ClientKexInit const& clientKexInit,
+    ServerKexInit const& serverKexInit) const
   {
     auto const algorithmName(
       chooseAlgorithm(
         "server-to-client MAC algorithm",
-        clientKexInit.serverOutPacketAuthenticatorNames_,
-        xju::set::makeSet(serverKexInit.serverOutPacketAuthenticatorNames_)));
+        clientKexInit.value().serverOutPacketAuthenticatorNames_,
+        xju::set::makeSet(
+          serverKexInit.value().serverOutPacketAuthenticatorNames_)));
     return std::find_if(packetAuthenticators_.begin(),
                         packetAuthenticators_.end(),
                         [&](auto const& x){
@@ -161,14 +167,15 @@ struct Algorithms
   }
   
   PacketAuthenticationAlgorithm& chooseClientMacAlgorithm(
-    messages::KexInit const& clientKexInit,
-    messages::KexInit const& serverKexInit) const
+    ClientKexInit const& clientKexInit,
+    ServerKexInit const& serverKexInit) const
   {
     auto const algorithmName(
       chooseAlgorithm(
         "client-to-server MAC algorithm",
-        clientKexInit.clientOutPacketAuthenticatorNames_,
-        xju::set::makeSet(serverKexInit.clientOutPacketAuthenticatorNames_)));
+        clientKexInit.value().clientOutPacketAuthenticatorNames_,
+        xju::set::makeSet(
+          serverKexInit.value().clientOutPacketAuthenticatorNames_)));
     return std::find_if(packetAuthenticators_.begin(),
                         packetAuthenticators_.end(),
                         [&](auto const& x){
@@ -176,13 +183,21 @@ struct Algorithms
                         })->second.get();
   }
 
-  // REVISIT: tie these to rfc
-  virtual std::vector<uint8_t> decryptionCipherKeyData(
+  // rfc4253 7.2 Output from Key Exchange
+  // Initial IV
+  virtual std::vector<uint8_t> decryptionCipherIVData(
     K const& k,
     H const& h,
     SessionId const& sessionId) const = 0;
 
-  virtual std::vector<uint8_t> decryptionCipherIVData(
+  virtual std::vector<uint8_t> encryptionCipherIVData(
+    K const& k,
+    H const& h,
+    SessionId const& sessionId) const = 0;
+
+  // rfc4253 7.2 Output from Key Exchange
+  // Initial cipher key
+  virtual std::vector<uint8_t> decryptionCipherKeyData(
     K const& k,
     H const& h,
     SessionId const& sessionId) const = 0;
@@ -192,10 +207,18 @@ struct Algorithms
     H const& h,
     SessionId const& sessionId) const = 0;
 
-  virtual std::vector<uint8_t> encryptionCipherIVData(
+  // rfc4253 7.2 Output from Key Exchange
+  // Initial MAC key
+  virtual std::vector<uint8_t> macVerifierKeyData(
     K const& k,
     H const& h,
     SessionId const& sessionId) const = 0;
+
+  virtual std::vector<uint8_t> macCalculatorKeyData(
+    K const& k,
+    H const& h,
+    SessionId const& sessionId) const = 0;
+
 };
 
 }

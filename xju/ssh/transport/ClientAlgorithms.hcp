@@ -18,6 +18,8 @@
 #include <xju/ssh/transport/messages/KexInit.hh>
 #include <xju/Exception.hh> //impl
 #include <sstream> //impl
+#include <xju/MemOBuf.hh> //impl
+#include <xju/net/ostream.hh> //impl
 
 namespace xju
 {
@@ -47,31 +49,32 @@ public:
   }
   
   virtual messages::KexInit const& chooseClientKexInit(
-    messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) const override
+    OurKexInit const& ourKexInit,
+    PeerKexInit const& peerKexInit) const override
   {
-    return ourKexInit;
+    return ourKexInit.value();
   }
   virtual messages::KexInit const& chooseServerKexInit(
-    messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) const override
+    OurKexInit const& ourKexInit,
+    PeerKexInit const& peerKexInit) const override
   {
-    return peerKexInit;
+    return peerKexInit.value();
   }
   virtual CipherAlgorithm& chooseEncryptionCipher(
-    messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) const override
+    OurKexInit const& ourKexInit,
+    PeerKexInit const& peerKexInit) const override
   {
     try{
-      xju::assert_not_equal(ourKexInit.clientOutCipherNames_.size(),0);
-      xju::assert_not_equal(ourKexInit.serverOutCipherNames_.size(),0);
-      if (peerKexInit.clientOutCipherNames_.size()==0){
+      xju::assert_not_equal(ourKexInit.value().clientOutCipherNames_.size(),0);
+      xju::assert_not_equal(ourKexInit.value().serverOutCipherNames_.size(),0);
+      if (peerKexInit.value().clientOutCipherNames_.size()==0){
         throw xju::Exception("peer KexInit contains no client-out cipher names",XJU_TRACED);
       }
-      if (peerKexInit.serverOutCipherNames_.size()==0){
+      if (peerKexInit.value().serverOutCipherNames_.size()==0){
         throw xju::Exception("peer KexInit contains no server-out cipher names",XJU_TRACED);
       }
-      return chooseClientEncryptionCipher(ourKexInit,peerKexInit);
+      return chooseClientEncryptionCipher(ClientKexInit(ourKexInit.value()),
+                                          ServerKexInit(peerKexInit.value()));
     }
     catch(xju::Exception& e){
       std::ostringstream s;
@@ -82,19 +85,20 @@ public:
   }
 
   virtual CipherAlgorithm& chooseDecryptionCipher(
-    messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) const override
+    OurKexInit const& ourKexInit,
+    PeerKexInit const& peerKexInit) const override
   {
     try{
-      xju::assert_not_equal(ourKexInit.clientOutCipherNames_.size(),0);
-      xju::assert_not_equal(ourKexInit.serverOutCipherNames_.size(),0);
-      if (peerKexInit.clientOutCipherNames_.size()==0){
+      xju::assert_not_equal(ourKexInit.value().clientOutCipherNames_.size(),0);
+      xju::assert_not_equal(ourKexInit.value().serverOutCipherNames_.size(),0);
+      if (peerKexInit.value().clientOutCipherNames_.size()==0){
         throw xju::Exception("peer KexInit contains no client-out cipher names",XJU_TRACED);
       }
-      if (peerKexInit.serverOutCipherNames_.size()==0){
+      if (peerKexInit.value().serverOutCipherNames_.size()==0){
         throw xju::Exception("peer KexInit contains no server-out cipher names",XJU_TRACED);
       }
-      return chooseServerEncryptionCipher(ourKexInit,peerKexInit);
+      return chooseServerEncryptionCipher(ClientKexInit(ourKexInit.value()),
+                                          ServerKexInit(peerKexInit.value()));
     }
     catch(xju::Exception& e){
       std::ostringstream s;
@@ -104,19 +108,20 @@ public:
     }
   }
   virtual PacketAuthenticationAlgorithm& chooseMacCalculatorAlgorithm(
-    messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) const override
+    OurKexInit const& ourKexInit,
+    PeerKexInit const& peerKexInit) const override
   {
     try{
-      xju::assert_not_equal(ourKexInit.clientOutPacketAuthenticatorNames_.size(),0);
-      xju::assert_not_equal(ourKexInit.serverOutPacketAuthenticatorNames_.size(),0);
-      if (peerKexInit.clientOutPacketAuthenticatorNames_.size()==0){
+      xju::assert_not_equal(ourKexInit.value().clientOutPacketAuthenticatorNames_.size(),0);
+      xju::assert_not_equal(ourKexInit.value().serverOutPacketAuthenticatorNames_.size(),0);
+      if (peerKexInit.value().clientOutPacketAuthenticatorNames_.size()==0){
         throw xju::Exception("peer KexInit contains no client-out packet authenticator names",XJU_TRACED);
       }
-      if (peerKexInit.serverOutPacketAuthenticatorNames_.size()==0){
+      if (peerKexInit.value().serverOutPacketAuthenticatorNames_.size()==0){
         throw xju::Exception("peer KexInit contains no server-out packet authenticator names",XJU_TRACED);
       }
-      return chooseClientMacAlgorithm(ourKexInit,peerKexInit);
+      return chooseClientMacAlgorithm(ClientKexInit(ourKexInit.value()),
+                                      ServerKexInit(peerKexInit.value()));
     }
     catch(xju::Exception& e){
       std::ostringstream s;
@@ -126,19 +131,20 @@ public:
     }
   }
   virtual PacketAuthenticationAlgorithm& chooseMacVerifierAlgorithm(
-    messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit) const override
+    OurKexInit const& ourKexInit,
+    PeerKexInit const& peerKexInit) const override
   {
     try{
-      xju::assert_not_equal(ourKexInit.clientOutPacketAuthenticatorNames_.size(),0);
-      xju::assert_not_equal(ourKexInit.serverOutPacketAuthenticatorNames_.size(),0);
-      if (peerKexInit.clientOutPacketAuthenticatorNames_.size()==0){
+      xju::assert_not_equal(ourKexInit.value().clientOutPacketAuthenticatorNames_.size(),0);
+      xju::assert_not_equal(ourKexInit.value().serverOutPacketAuthenticatorNames_.size(),0);
+      if (peerKexInit.value().clientOutPacketAuthenticatorNames_.size()==0){
         throw xju::Exception("peer KexInit contains no client-out packet authenticator names",XJU_TRACED);
       }
-      if (peerKexInit.serverOutPacketAuthenticatorNames_.size()==0){
+      if (peerKexInit.value().serverOutPacketAuthenticatorNames_.size()==0){
         throw xju::Exception("peer KexInit contains no server-out packet authenticator names",XJU_TRACED);
       }
-      return chooseServerMacAlgorithm(ourKexInit,peerKexInit);
+      return chooseServerMacAlgorithm(ClientKexInit(ourKexInit.value()),
+                                      ServerKexInit(peerKexInit.value()));
     }
     catch(xju::Exception& e){
       std::ostringstream s;
@@ -147,6 +153,115 @@ public:
       throw;
     }
   }
+
+  // rfc4253 Initial IV server to client (before hash)
+  virtual std::vector<uint8_t> decryptionCipherIVData(
+    K const& k,
+    H const& h,
+    SessionId const& sessionId) const override
+  {
+    xju::MemOBuf b(1024);
+    {
+      xju::net::ostream s(b);
+      encode(s,k.value());
+      s.put(h.value().begin(),h.value().end());
+      s.put8('B');
+      s.put(sessionId.value().begin(),sessionId.value().end());
+    }
+    auto const data(b.data());
+    return std::vector<uint8_t>(data.first,data.second);
+  }
+
+  // rfc4253 Initial IV client to server (before hash)
+  virtual std::vector<uint8_t> encryptionCipherIVData(
+    K const& k,
+    H const& h,
+    SessionId const& sessionId) const override
+  {
+    xju::MemOBuf b(1024);
+    {
+      xju::net::ostream s(b);
+      encode(s,k.value());
+      s.put(h.value().begin(),h.value().end());
+      s.put8('A');
+      s.put(sessionId.value().begin(),sessionId.value().end());
+    }
+    auto const data(b.data());
+    return std::vector<uint8_t>(data.first,data.second);
+  }
+
+  // rfc4253 Encryption key server to client (before hash)
+  virtual std::vector<uint8_t> decryptionCipherKeyData(
+    K const& k,
+    H const& h,
+    SessionId const& sessionId) const override
+  {
+    xju::MemOBuf b(1024);
+    {
+      xju::net::ostream s(b);
+      encode(s,k.value());
+      s.put(h.value().begin(),h.value().end());
+      s.put8('D');
+      s.put(sessionId.value().begin(),sessionId.value().end());
+    }
+    auto const data(b.data());
+    return std::vector<uint8_t>(data.first,data.second);
+  }
+
+  // rfc4253 Encryption key client to server (before hash)
+  virtual std::vector<uint8_t> encryptionCipherKeyData(
+    K const& k,
+    H const& h,
+    SessionId const& sessionId) const override
+  {
+    xju::MemOBuf b(1024);
+    {
+      xju::net::ostream s(b);
+      encode(s,k.value());
+      s.put(h.value().begin(),h.value().end());
+      s.put8('C');
+      s.put(sessionId.value().begin(),sessionId.value().end());
+    }
+    auto const data(b.data());
+    return std::vector<uint8_t>(data.first,data.second);
+  }
+  
+  // rfc4253 Integrity key server to client (before hash)
+  virtual std::vector<uint8_t> macVerifierKeyData(
+    K const& k,
+    H const& h,
+    SessionId const& sessionId) const override
+  {
+    xju::MemOBuf b(1024);
+    {
+      xju::net::ostream s(b);
+      encode(s,k.value());
+      s.put(h.value().begin(),h.value().end());
+      s.put8('F');
+      s.put(sessionId.value().begin(),sessionId.value().end());
+    }
+    auto const data(b.data());
+    return std::vector<uint8_t>(data.first,data.second);
+  }
+
+  // rfc4253 Integrity key client to server (before hash)
+  virtual std::vector<uint8_t> macCalculatorKeyData(
+    K const& k,
+    H const& h,
+    SessionId const& sessionId) const override
+  {
+    xju::MemOBuf b(1024);
+    {
+      xju::net::ostream s(b);
+      encode(s,k.value());
+      s.put(h.value().begin(),h.value().end());
+      s.put8('E');
+      s.put(sessionId.value().begin(),sessionId.value().end());
+    }
+    auto const data(b.data());
+    return std::vector<uint8_t>(data.first,data.second);
+  }
+  
 };
 
 }

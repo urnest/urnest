@@ -34,10 +34,10 @@ public:
     I::RekeyLock& i,
     O::RekeyLock& o,
     Ident const& ourIdent,
-    std::pair<std::string,Ident> const& peerPreambleAndIdent,
-    messages::KexInit const& ourKexInit,
-    messages::KexInit const& peerKexInit,
-    HostKeyAlgorithm& hostKeyAlgorithm,
+    std::pair<std::vector<std::string>,Ident> const& peerPreambleAndIdent,
+    ClientKexInit const& clientKexInit,
+    ServerKexInit const& serverKexInit,
+    HostKeyAlgorithm const& hostKeyAlgorithm,
     bool ignoreFirstMessageReceived) override
   {
     xju::assert_never_reached();
@@ -52,6 +52,11 @@ public:
     return y_;
   }
 
+  virtual std::vector<uint8_t> hash(std::vector<uint8_t> const& data) const
+    override
+  {
+    xju::assert_never_reached();
+  }
 private:
   bool x_;
   bool y_;

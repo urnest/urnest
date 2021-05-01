@@ -27,6 +27,8 @@
 #include <xju/ssh/transport/calculatePacketMac.hh> //impl
 #include <xju/ssh/encode.hh>
 #include <xju/ssh/transport/messages/KexInit.hh>
+#include <xju/io/OBuf.hh>
+#include <xju/ssh/transport/OurKexInit.hh>
 
 namespace xju
 {
@@ -57,26 +59,26 @@ public:
     RekeyLock(RekeyLock const&) = delete;
     RekeyLock(RekeyLock &&) = delete;
     
-    messages::KexInit const sent_;
+    OurKexInit const sent_;
 
-    explicit RekeyLock(O& o,messages::KexInit kexInit):
-        sent_(std::move(kexInit)),
+    explicit RekeyLock(O& o,OurKexInit ourKexInit):
+        sent_(std::move(ourKexInit)),
         o_(o)
     {
       xju::Lock l(o_.guard_);
       xju::assert_equal(o_.rekeying_,false);
       o_.rekeying_=true;
-      encodeAndSend(sent_);
+      xju::MemOBuf b(1024);
+      {
+        xju::net::ostream s(b);
+        encode(s,sent_.value());
+      }
+      o_.sendMessage(Message(b.data().first,b.data().second),l);
     }
     ~RekeyLock() noexcept
     {
       xju::Lock l(o_.guard_);
       o_.rekeying_=false;
-    }
-    void sendMessage(Message body)
-    {
-      xju::Lock l(o_.guard_);
-      o_.sendMessage(body,l);
     }
     template<class M>
     void encodeAndSend(M const& message)
@@ -89,8 +91,13 @@ public:
       sendMessage(Message(b.data().first,b.data().second));
     }
     
-    void setEncrypter(std::unique_ptr<Encrypter> encrypter,
-                      RekeyLock const&) noexcept
+    void sendMessage(Message body)
+    {
+      xju::Lock l(o_.guard_);
+      xju::assert_equal(o_.rekeying_,true);
+      o_.sendMessage(body,l);
+    }
+    void setEncrypter(std::unique_ptr<Encrypter> encrypter) noexcept
     {
       xju::Lock l(o_.guard_);
       xju::assert_equal(o_.rekeying_,true);
@@ -98,8 +105,7 @@ public:
     }
     
     void setMacCalculator(
-      std::unique_ptr<xju::crypt::MacCalculator> macCalculator,
-      RekeyLock const&) noexcept
+      std::unique_ptr<xju::crypt::MacCalculator> macCalculator) noexcept
     {
       xju::Lock l(o_.guard_);
       xju::assert_equal(o_.rekeying_,true);
@@ -110,7 +116,7 @@ public:
     O& o_;
   };
 
-  // send message unless rekeying
+  // send message
   void sendMessage(Message const& message)
   // Rekeying - can retry
   {

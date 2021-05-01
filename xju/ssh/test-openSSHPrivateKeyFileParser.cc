@@ -14,6 +14,7 @@
 #include <xju/MemIBuf.hh>
 #include <xju/net/istream.hh>
 #include <xju/ssh/decode.hh>
+#include <xju/crypt/Signer.hh>
 
 namespace xju
 {

@@ -7,7 +7,6 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/ssh/transport/cipher/None.hh>
 
 #include <iostream>
 #include <xju/assert.hh>
@@ -16,6 +15,7 @@
 #include <xju/ssh/transport/encodePacket.hh>
 #include <xju/MemIBuf.hh>
 #include <xju/net/istream.hh>
+#include <xju/ssh/transport/ciphers/None.hh>
 
 namespace xju
 {
@@ -23,7 +23,7 @@ namespace ssh
 {
 namespace transport
 {
-namespace cipher
+namespace ciphers
 {
 
 void test1() {
@@ -36,8 +36,9 @@ void test1() {
   }
   xju::MemIBuf bi(std::vector<uint8_t>(b.data().first,b.data().second));
   xju::net::istream s(bi);
-  xju::assert_equal(x.decryptPacket(s).first,{'f','r','e','d'});
-  xju::assert_equal(x.decryptPacket(s).first,{'j','o','n','e','s'});
+  auto y(x.decrypter(CipherKey({}), CipherIV({})));
+  xju::assert_equal(y->decryptPacket(s,4).first,{'f','r','e','d'});
+  xju::assert_equal(y->decryptPacket(s,5).first,{'j','o','n','e','s'});
 }
 
 void test2() {
@@ -45,13 +46,15 @@ void test2() {
   xju::MemOBuf b(256);
   {
     xju::net::ostream s(b);
-    x.encryptPacket({'f','r','e','d'},s);
-    x.encryptPacket({'j','o','n','e','s'},s);
+    auto y(x.encrypter(CipherKey({}), CipherIV({})));
+    y->encryptPacket({'f','r','e','d'},s);
+    y->encryptPacket({'j','o','n','e','s'},s);
   }
   xju::MemIBuf bi(std::vector<uint8_t>(b.data().first,b.data().second));
   xju::net::istream s(bi);
-  xju::assert_equal(x.decryptPacket(s).first,{'f','r','e','d'});
-  xju::assert_equal(x.decryptPacket(s).first,{'j','o','n','e','s'});
+  auto y(x.decrypter(CipherKey({}), CipherIV({})));
+  xju::assert_equal(y->decryptPacket(s,4).first,{'f','r','e','d'});
+  xju::assert_equal(y->decryptPacket(s,5).first,{'j','o','n','e','s'});
 }
 
 }
@@ -59,7 +62,7 @@ void test2() {
 }
 }
 
-using namespace xju::ssh::transport::cipher;
+using namespace xju::ssh::transport::ciphers;
 
 int main(int argc, char* argv[])
 {

@@ -24,9 +24,8 @@ namespace xju
 class Utf8String
 {
 public:
-  explicit Utf8String(std::string const& value) /*throw(
-    // value is not valid UTF-8
-    xju::Exception)*/
+  explicit Utf8String(std::string const& value)
+    // xju::Exception - value is not valid UTF-8
       :value_(Utf8String::validate(value))
   {
   }

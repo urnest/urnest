@@ -31,6 +31,7 @@
 #include <xju/ssh/transport/CipherAlgorithm.hh> //impl
 #include <xju/ssh/transport/ciphers/None.hh> //impl
 #include <xju/ssh/transport/macs/None.hh> //impl
+#include <iostream>
 
 namespace xju
 {
@@ -40,7 +41,7 @@ namespace transport
 {
 namespace
 {
-std::tuple<
+std::pair<
   std::vector<std::string>, //preamble lines without trailing \r\n
   Ident
 > shakeHands_(xju::io::IBuf& ibuf,
@@ -56,6 +57,8 @@ std::tuple<
 
 class Session
 {
+  xju::io::IStream& is_;
+  xju::io::OStream& os_;
   Algorithms const& algorithms_;
 
   xju::io::IBuf ibuf_;
@@ -87,7 +90,10 @@ public:
           size_t const outputBufferSize,
           Ident ourIdent,
           ClientAlgorithms const& algorithms,
-          std::chrono::steady_clock::time_point const deadline):
+          std::chrono::steady_clock::time_point const deadline,
+          size_t maxAcceptedKexInitSize):
+      is_(i),
+      os_(o),
       algorithms_(algorithms),
       obuf_(o,deadline,outputBufferSize),
       ibuf_(i,deadline,inputBufferSize),
@@ -96,15 +102,26 @@ public:
                     obuf_,
                     ourIdent)),
       i_(ibuf_,
-         std::unique_ptr<CipherAlgorithm>(new ciphers::None),
-         std::unique_ptr<PacketAuthenticationAlgorithm>(new macs::None),
+         std::unique_ptr<Decrypter>(ciphers::None().decrypter(
+                                      CipherKey({}),
+                                      CipherIV({}))),
+         std::unique_ptr<xju::crypt::MacVerifier>(macs::None().macVerifier(
+                                                    xju::crypt::MacKey({}))),
          SequenceNumber(0)),
       o_(obuf_,
-         std::unique_ptr<CipherAlgorithm>(new ciphers::None),
-         std::unique_ptr<PacketAuthenticationAlgorithm>(new macs::None),
+         std::unique_ptr<Encrypter>(ciphers::None().encrypter(
+                                      CipherKey({}),
+                                      CipherIV({}))),
+         std::unique_ptr<xju::crypt::MacCalculator>(
+           macs::None().macCalculator(xju::crypt::MacKey({}))),
          SequenceNumber(0)),
-      rekeyer_(i_,o_,algorithms_),
-      sessionKey_(rekeyer_.sessionKey_)
+      rekeyer_(i_,
+               o_,
+               algorithms_,
+               ourIdent,
+               peerPreambleAndIdent_,
+               maxAcceptedKexInitSize),
+      sessionKey_(rekeyer_.sessionId_)
   {
   }
 
@@ -130,16 +147,22 @@ public:
     // Closed - other end has closed
   {
     try{
-      xju::io::OBuf::DeadlineOverride od(o_.buf_,deadline);
-      xju::io::IBuf::DeadlineOverride iod(i_.buf_,deadline);
+      xju::io::IBuf::DeadlineOverride ido(ibuf_,deadline);
+      xju::io::OBuf::DeadlineOverride odo(obuf_,deadline);
 
-      while(!o_.send(message)){
+      while(true){
         try{
-          rekeyer_.finishRekeying();
+          o_.sendMessage(message);
+          return;
         }
-        catch(Message& inTransit)
-        {
-          receivedMessages.push_back(std::move(inTransit));
+        catch(O::Rekeying const&){
+          try{
+            rekeyer_.finishRekeying();
+          }
+          catch(Message& inTransit)
+          {
+            *receivedMessages++=(std::move(inTransit));
+          }
         }
       }
     }
@@ -166,11 +189,17 @@ public:
     // Closed - other end has closed
   {
     try{
-      xju::io::OBuf::DeadlineOverride od(o_.buf_,deadline);
-      xju::io::IBuf::DeadlineOverride iod(i_.buf_,deadline);
+      xju::io::OBuf::DeadlineOverride odo(obuf_,deadline);
+      xju::io::IBuf::DeadlineOverride ido(ibuf_,deadline);
 
-      while(!o_.send(message)){
-        rekeyer_.waitTillRekeyed(deadline);
+      while(true){
+        try{
+          o_.sendMessage(message);
+          return;
+        }
+        catch(O::Rekeying const&){
+          rekeyer_.waitTillRekeyed(deadline);
+        }
       }
     }
     catch(xju::Exception& e){
@@ -191,14 +220,14 @@ public:
     // xju::DeadlineReached - message not completely received by deadline
     // Closed - other end has closed
   {
-    xju::io::OBuf::DeadlineOverride od(o_.buf_,deadline);
-    xju::io::IBuf::DeadlineOverride iod(i_.buf_,deadline);
+    xju::io::OBuf::DeadlineOverride odo(obuf_,deadline);
+    xju::io::IBuf::DeadlineOverride ido(ibuf_,deadline);
     while(true){
       try{
         Message m(i_.receiveMessage(maxSize));
         return std::move(m);
       }
-      catch(Rekeying const&){
+      catch(I::Rekeying const&){
         try{
           rekeyer_.finishRekeying();
         }
@@ -224,7 +253,15 @@ public:
   // {
   //   //REVISIT
   // }
+
+  friend std::ostream& operator<<(std::ostream& s, Session const& x);
 };
+
+std::ostream& operator<<(std::ostream& s, Session const& x)
+{
+  s << x.is_ << "/" << x.os_;
+  return s;
+}
 
 }
 }
