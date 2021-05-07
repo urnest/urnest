@@ -38,7 +38,7 @@ fi
 
 L=""
 if [ "$ODINVERBOSE" != "" ] ; then
-   echo ${ODINRBSHOST}env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHON3PATH" \`cat "$ODIN_env"\` PYTEST_PLUGINS="$ODIN_PYTEST3_PLUGINS" $ODIN_extra_env $pytest3 -c $ODIN_pytest3conf "$ODIN_FILE"; 
+   echo ${ODINRBSHOST}env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHON3PATH" \`cat "$ODIN_env"\` PYTEST_PLUGINS="$ODIN_PYTEST3_PLUGINS" PYTHONUNBUFFERED=1 $ODIN_extra_env $pytest3 -c $ODIN_pytest3conf "$ODIN_FILE"; 
 fi
 (
   mkdir pytest3.exec &&
@@ -50,19 +50,19 @@ fi
     cd files &&
     if [ $ODIN_stderr = "trace" ]
     then
-      eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHON3PATH" `cat "$ODIN_env"`  PYTEST_PLUGINS="$ODIN_PYTEST3_PLUGINS" $ODIN_extra_env $pytest3 -c $ODIN_pytest3conf "$ODIN_FILE" 2>&1 >../output
+      eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHON3PATH" `cat "$ODIN_env"`  PYTEST_PLUGINS="$ODIN_PYTEST3_PLUGINS" PYTHONUNBUFFERED=1 $ODIN_extra_env $pytest3 -c $ODIN_pytest3conf "$ODIN_FILE" 2>&1 >../output
       echo $? > ../status
     elif  [ $ODIN_stderr = "output" ]
     then
-      eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHON3PATH" `cat "$ODIN_env"` PYTEST_PLUGINS="$ODIN_PYTEST3_PLUGINS" $pytest3 -c $ODIN_pytest3conf "$ODIN_FILE" >../output 2>&1
+      eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHON3PATH" `cat "$ODIN_env"` PYTEST_PLUGINS="$ODIN_PYTEST3_PLUGINS" PYTHONUNBUFFERED=1 $ODIN_extra_env $pytest3 -c $ODIN_pytest3conf "$ODIN_FILE" >../output 2>&1
       echo $? > ../status
     elif  [ $ODIN_stderr = "error" ]
     then
-      eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHON3PATH" `cat "$ODIN_env"` PYTEST_PLUGINS="$ODIN_PYTEST3_PLUGINS" $pytest3 -c $ODIN_pytest3conf "$ODIN_FILE" >../output 2>../errors
+      eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHON3PATH" `cat "$ODIN_env"` PYTEST_PLUGINS="$ODIN_PYTEST3_PLUGINS" PYTHONUNBUFFERED=1 $ODIN_extra_env $pytest3 -c $ODIN_pytest3conf "$ODIN_FILE" >../output 2>../errors
       echo $? > ../status
     elif [ $ODIN_stderr = "warn" ]
     then
-      eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHON3PATH" `cat "$ODIN_env"` PYTEST_PLUGINS="$ODIN_PYTEST3_PLUGINS" $pytest3 -c $ODIN_pytest3conf "$ODIN_FILE" >../output
+      eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHON3PATH" `cat "$ODIN_env"` PYTEST_PLUGINS="$ODIN_PYTEST3_PLUGINS" PYTHONUNBUFFERED=1 $ODIN_extra_env $pytest3 -c $ODIN_pytest3conf "$ODIN_FILE" >../output
       echo $? > ../status
     else
       echo "error: +stderr, \"$ODIN_stderr\" is not one of trace, output, error, warn.">&2 &&

@@ -6,16 +6,15 @@
 
 %test-that-passes==()+cmd=(%cmp.sh) (%test-that-passes.output) (%test-that-passes.output.expect):stdout
 
-%test-that-passes.output==(test1.py):pytest3.output
+%test-that-passes.output==test1.py+env='TEST_PORT=9999':pytest3.output
 %test-that-passes.output.expect==<<
+starting some testing
 output of run
 .
-1 passed in 0.00 seconds
-starting some testing
 
 %cmp.sh==! <<
 #/bin/sh
-diff -b "$1" "$2" >&2
+cat "$1" | grep -v '1 passed in' | diff -b - "$2" >&2
 
 
 %test-that-fails==(%test-that-fails.errors)+cmd=fgrep '"assert 1 == 2"':stdout
