@@ -90,6 +90,56 @@ Failed to get content because
         pass
     pass
 
+from inspect import currentframe, getframeinfo
+
+class Scope():
+    def __init__(self,s):
+        self.s=s
+        frameinfo = getframeinfo(currentframe().f_back)
+        self.fl=(frameinfo.filename, frameinfo.lineno)
+        pass
+    def __enter__(self):
+        pass
+    def __exit__(self,t,e,b):
+        if e:
+            raise inContext(self.s,(t,e,b),self.fl) from None
+        pass
+
+def test4(prog=sys.argv[0]):
+    def a():
+        raise Exception('fred')
+    def b():
+        with Scope('b'):
+            True
+            a()
+            pass
+        pass
+    def c():
+        b()
+        pass
+    try:
+        c()
+    except:
+        e=inContext('jock')
+    else:
+        assert False, 'c should have raised?'
+        pass
+    Assert(str(e)).matches('''\
+failed to jock because
+[^:]*:121: failed to c[(][)] because
+[^:]*:118: failed to b[(][)] because
+[^:]*:115: failed to pass because
+[^:]*:105: failed to raise inContext[(]self.s,[(]t,e,b[)],self.fl[)] from None because
+[^:]*:112: failed to b because
+[^:]*:114: failed to a[(][)] because
+[^:]*:110: fred''')
+    Assert(e.readableRepr())=='''\
+Failed to jock because
+failed to b because
+fred.\
+'''
+    pass
+
 tests=[var for name,var in sorted(vars().items())
        if name.startswith('test') and callable(var)]
 for t in tests: t()

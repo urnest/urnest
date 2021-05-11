@@ -88,7 +88,7 @@ def capitalise(s:str)->str:
         return s[0].upper()+s[1:]
     return s
 
-def inContext(context:str, exceptionInfo=None)->Exception:
+def inContext(context:str, exceptionInfo=None, fl=None)->Exception:
     """Make a Xn that includes exception info and context.
     If exceptionInfo[1] is already a Xn just add context,
     otherwise use exceptionInfo as cause for a new Xn.
@@ -121,13 +121,13 @@ def inContext(context:str, exceptionInfo=None)->Exception:
                    '__str__':str_,
                    'readableRepr':readableRepr
                })(r)
-        pass
     
     st=[tuple(_) for _ in traceback.extract_tb(traceBack)]
     # fill in most recent file,line (latest context or cause if no context)
     f,l=st[-1][0:2]
     if r.context:
-        r.context[-1][1].setTo(f,l)
+        if not r.context[-1][1]:
+            r.context[-1][1].setTo(f,l)
     else:
         r.cause[1].setTo(f,l)
         pass
@@ -136,7 +136,10 @@ def inContext(context:str, exceptionInfo=None)->Exception:
                 for file,line,fname,text in reversed(st[0:-1])]
     r.context.extend(newContext)
     # add the supplied context, with unknown file and line
-    r.context.append((context,FileAndLine()))
+    f2=fl[0] if fl else None
+    l2=fl[1] if fl else None
+    r.context.append( (context,FileAndLine(f2,l2)) )
+    traceBack.tb_next=None
     return r
 
 
