@@ -75,6 +75,14 @@
 	  loadOpenSSHRsaPrivateKey(std::string keyFileContent)->pk::RSASigner()
 	  loadOpenSSHRsaPublicKey(std::string keyFileContent)->pk::RSAVerifier()
         for RSA use gcrypt gcry_sexp_build etc like libssh2 libgcrypt.c
+
+    - what is order of subgroup for DhGroup14Sha1 eg
+      libssh gcry_mpi_randomize uses two quite different randoms:
+        gcrypt impl apears to use 256*8-bit random, i.e. 0..2^2048-1
+	   but might be assuming it is doign 0..2^2047-1
+	ssl impl uses 256*8-1-bit random with top bit set, i.e. 2^2046..2^2047-1
+	what does ssh actually do? It uses openssl but not sure how as
+	q is buried.
 	
     tests: echo "fred ran"
            sleep 3 ... timeout

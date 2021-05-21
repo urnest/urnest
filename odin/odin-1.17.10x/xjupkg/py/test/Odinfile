@@ -37,7 +37,7 @@ d/z.py
 b/q.py
 sd/i.py
 
-%test1b==x.py+py_sp=(sd):py.exec.output
+%test1b==x.py+py_sp=(sd):py3.exec.output
 
 %test2==()+py=(x.py)+py_sp=(sd):py.stdout
 
@@ -46,7 +46,7 @@ sd/i.py
 %test3.want==<<
 fred
 
-%test3.got==(t1.py)+cmd='fred'+py_sp=(sd):py.exec.output
+%test3.got==(t1.py)+cmd='fred'+py_sp=(sd):py3.exec.output
 
 %cmp.sh==! <<
 #/bin/sh
@@ -87,9 +87,9 @@ se/a.egg
 e1
 x: OK
 
-%test6.got==(xe.py)+py_sp=(sd)+py_sp=(se/a.egg):py.exec.output
+%test6.got==(xe.py)+py_sp=(sd)+py_sp=(se/a.egg):py3.exec.output
 
-%test-simple==(simple.py):py.exec.output
+%test-simple==(simple.py):py3.exec.output
 
 %test7==(%test7.got)+cmd=(%test7.sh) (%test7.expect:list:ls):stdout
 
@@ -116,15 +116,15 @@ r3/r4/__init__.py
 %test-stderr-7==()+cmd=grep '"test1 output "' (%ttrace.zero):stdout
 %test-stderr-8==()+cmd=grep '"test1 output "' (%ttrace.one):stdout
 
-%toutput.zero==(%test1.py)+cmd='0':py.exec.output
-%toutput.one==(%test1.py)+cmd='1':py.exec.output:err
-%twarn.zero.o==(%test1.py)+cmd='0'+stderr=warn:py.exec.output
-%twarn.zero.w==(%test1.py)+cmd='0'+stderr=warn:py.exec.output:warn
-%twarn.one==(%test1.py)+cmd='1'+stderr=warn:py.exec.output:err
-%terror.zero==(%test1.py)+cmd='0'+stderr=error:py.exec.output:warn
-%terror.one==(%test1.py)+cmd='1'+stderr=error:py.exec.output:err
-%ttrace.zero==(%test1.py)+cmd='0'+stderr=trace:py.exec.output
-%ttrace.one==(%test1.py)+cmd='1'+stderr=trace:py.exec.output:err
+%toutput.zero==(%test1.py)+cmd='0':py3.exec.output
+%toutput.one==(%test1.py)+cmd='1':py3.exec.output:err
+%twarn.zero.o==(%test1.py)+cmd='0'+stderr=warn:py3.exec.output
+%twarn.zero.w==(%test1.py)+cmd='0'+stderr=warn:py3.exec.output:warn
+%twarn.one==(%test1.py)+cmd='1'+stderr=warn:py3.exec.output:err
+%terror.zero==(%test1.py)+cmd='0'+stderr=error:py3.exec.output:warn
+%terror.one==(%test1.py)+cmd='1'+stderr=error:py3.exec.output:err
+%ttrace.zero==(%test1.py)+cmd='0'+stderr=trace:py3.exec.output
+%ttrace.one==(%test1.py)+cmd='1'+stderr=trace:py3.exec.output:err
 
 %test1.py== !<<
 #!/bin/env python
