@@ -30,7 +30,7 @@ $ODIN_PYTEST3_CONF 'pytest-3 config file' = '/dev/null';
 $ODIN_PYTEST3_PLUGINS 'PYTEST_PLUGINS to set for each run' = '';
 
 EXEC (pytest3.exec.sh) (+pytest3conf) (:py) (:env) (+stderr) (+py:dir)@ (+py_sp) (+env)
-  NEEDS (+need) (:py:py_import_all) (:py:mypy3)
+  NEEDS (+need) (:py:py_import_all) (:py:mypy3) (:py:py_import_all:map=:py.stylecheck)
   => (:pytest3.exec);
 
 :pytest3.output.ref ':pytest3.output ref' => :FILE;

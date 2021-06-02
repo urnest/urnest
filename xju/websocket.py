@@ -22,29 +22,36 @@ with xju.time.steadyNow()+10 as deadline,
   pass
 '''
 
-from typing import Optional
+from typing import Optional, Union, Callable
 
 from autobahn.asyncio.websocket import WebSocketClientProtocol, WebSocketClientFactory
 from asyncio import AbstractEventLoop
-from autobahn.websocket.types import TransportDetails
+from autobahn.websocket.types import TransportDetails as _TransportDetails
 
-from xju.time import Timepoint as Deadline
 from xju import inContext
 
-Message=bytes
+Deadline=Callable[ [], float]  # seconds until deadline, or 0 if passed
+Message=Union[bytes,                              # binary message
+              int, float, str, bool, dict, list]  # json-decoded message
+
+class Timeout(Exception):
+    pass
+
+class AbstractTransportDetails(Object):
+    pass
+
+class TLSTransportDetails(AbstractTransportDetails):
+    def __init__(self, x:_TransportDetails):
+        self.x:_TransportDetails = x
+        pass
+    pass
 
 class TLSWebSocket(Connection):
-    class TransportDetails(AbstractTransportDetails):
-        def __init__(self, x:TransportDetails):
-            self.x = x
-            pass
-        pass
-
     def __init__(self,loop,deadline,host,port,headers:Headers={}):
         self.host = host
         self.port = port
         self.headers = headers
-        self.transportDetails:Optional[TransportDetails] = None
+        self.transportDetails:Optional[TLSTransportDetails] = None
         Connection.__init__(self,loop,deadline,self._connect_via,headers)
         pass
 
@@ -64,14 +71,13 @@ class TLSWebSocket(Connection):
             self,
             loop:AbstractEventLoop,
             deadline:Deadline) -> Tuple[_Protocol,AbstractTransportDetails]:
-        '''connect {self} via {loop} by {deadline}'''
+        '''connect {self} via {loop} by {deadline()}s'''
         try:
-            protocol = _ClientProtocol(loop)
+            protocol = _ClientProtocol(loop, str(self))
             connected = loop.create_future()
-            def on_transport_connected(transportDetails:TransportDetails):
+            def on_transport_connected(transportDetails:_TransportDetails):
                 protocol.clear_handlers()
-                connected.set_result(TLSWebSocket.TransportDetails(
-                    transportDetails))
+                connected.set_result(TLSTransportDetails(transportDetails))
                 pass
             def on_close(was_clean:bool, code:Optional[int], reason:Optional[str]):
                 protocol.clear_handlers()
@@ -98,18 +104,16 @@ class TLSWebSocket(Connection):
                     return protocol
                 pass
 
-            loop.connectSSL(self.host,self.port,F(deadline.remaining()))
+            loop.connectSSL(self.host,self.port,F(deadline()))
             transportDetails = await connected
             return (protocol, transportDetails)
         except Exception as e:
             raise inContext(l1(TLSConnector.connectVia.__doc__).format(**vars())) from e
         pass
     pass
+
 class Connector():
     '''see e.g. TLSConnector below'''
-    pass
-
-class AbstractTransportDetails(Object):
     pass
 
 class Connection():
@@ -146,6 +150,9 @@ class Connection():
         pass
     
     async def receive_message(self, deadline:Deadline) -> Message:
+        '''receive message within {deadline()}s'''
+        '''Timeout - deadline reached before message received'''
+        '''Connection.Closed - connection closed before message reached'''
         result:Message = Message()
         future = self.loop.create_future()
         def deadline_reached(self):
@@ -153,7 +160,7 @@ class Connection():
             result.set_exception(
                 Timeout(f'deadline reached before message received'))
             pass
-        timer = self.loop.callLater(deadline.remaining(),deadline_reached)
+        timer = self.loop.callLater(deadline(),deadline_reached)
         def on_message(message:Message):
             self._protocol.clear_handlers()
             timer.cancel()
@@ -185,12 +192,12 @@ class Connection():
         pass
 
     async def close(self, deadline:Deadline) -> Sequence[Message]:
-        '''close connection to peer {self.peer} by {deadline}, returning any intervening received messages'''
+        '''close connection to peer {self.peer} by {deadline()}s, returning any intervening received messages'''
         try:
             intervening_messages = []
             if not protocol.closed:
                 protocol.setOptions(
-                    closingHandshakeTimeout=deadline.remaining())
+                    closingHandshakeTimeout=deadline())
                 result = self.loop.create_future()
                 def on_message(message:Message):
                     intervening_messages.append(message)                    
@@ -208,7 +215,7 @@ class Connection():
                 pass
             return intervening_messages
         except Exception as e:
-            raise inContext(l1(Connection.close.__doc__.format(**vars())))) from e
+            raise inContext(l1(Connection.close.__doc__.format(**vars()))) from e
             pass
         pass
     pass
@@ -218,7 +225,6 @@ class _Protocol():
     OnMessage=Callable[ [Message],None ]
     OnClose=Callable[ [bool,Optional[int],Optional[str]],None ]
     def __init__(self, loop:AbstractEventLoop, peer:str):
-                    
         self.loop = loop
         self.peer = peer
         self._on_transport_connected:OnTransportConnected = self._unexpected_transport_connected
@@ -254,12 +260,20 @@ class _Protocol():
         raise Exception(f'received close (clean={was_clean}, code={code}, reason={reason!r}) from {self.peer} when no callback registered')
         pass
 
+    # autobahn.websocket.interfaces.IWebSocketChannel
     def onConnecting(self, transport_details:TransportDetails):
         self._on_transport_connected(transport_details)
         pass
-    def onMessage(self, message:Message)->None:
-        self._on_message(message)
+    #REVISIT: onConnect useful?
+
+    # autobahn.websocket.interfaces.IWebSocketChannel
+    def onMessage(self, payload, isBinary)->None:
+        if isBinary:
+            assert isinstance(payload:bytes), payload.__class__
+        self._on_message(payload)
         pass
+
+    # autobahn.websocket.interfaces.IWebSocketChannel
     def onClose(was_clean:bool,code:Optional[int],reason:Optional[str])->None:
         self.closed = True
         self._on_close(was_clean,code,reason)
@@ -270,6 +284,78 @@ class _ClientProtocol(WebSocketClientProtocol,_Protocol):
     def __init__(self, loop:AbstractEventLoop, peer:str):
         _Protocol.__init__(self, loop, peer)
         WebSocketClientProtocol.__init__(self)
+        pass
+    pass
+
+class _ServerProtocol(WebSocketServerProtocol,_Protocol):
+    def __init__(self, loop:AbstractEventLoop, peer:str):
+        _Protocol.__init__(self, loop, peer)
+        WebSocketServerProtocol.__init__(self)
+        pass
+    pass
+
+
+
+class TLSWebSocketServer():
+    def __init__(self,loop,deadline,localaddress,localport):
+        self.host = localaddress
+        self.port = port
+        pass
+
+    def __enter__(self) -> TLSWebSocketServer:
+        try:
+            Connection.__enter__(self)
+            return self
+        except Exception as e:
+            raise inContext(
+                f'connect websocket over TLS to {self.host}:{self.port} with headers {self.headers}') from e
+        pass
+
+    def __str__(self):
+        return f'websocket over TLS to {self.host}:{self.port} with headers {self.headers}'
+
+    async def _connect_via(
+            self,
+            loop:AbstractEventLoop,
+            deadline:Deadline) -> Tuple[_Protocol,AbstractTransportDetails]:
+        '''connect {self} via {loop} by {deadline()}s'''
+        try:
+            protocol = _ClientProtocol(loop, str(self))
+            connected = loop.create_future()
+            def on_transport_connected(transportDetails:_TransportDetails):
+                protocol.clear_handlers()
+                connected.set_result(TLSTransportDetails(transportDetails))
+                pass
+            def on_close(was_clean:bool, code:Optional[int], reason:Optional[str]):
+                protocol.clear_handlers()
+                if was_clean:
+                    raise Exception(f'unexpected "clean" websocket closure apparently before connection established, noting code {code} and reason {reason}')
+                else:
+                    connected.set_exception(
+                        Exception(f'closed before connected, WebSocketProtocol onClose code {code}, reason {reason!r}'))
+                    pass
+                pass
+            protocol.replace_handlers(
+                on_transport_connected,
+                protocol._unexpected_message,
+                on_close)
+
+            class F(WebSocketClientFactory):
+                def __init__(self,openingHandshakeTimeout:float):
+                    super().__init__(self)
+                    self.setOpeningHandshakeTimeout(openingHandshakeTimeout)
+                    self.setHeaders(headers)
+                    pass
+                def buildProtocol(self):
+                    protocol.factory = self
+                    return protocol
+                pass
+
+            loop.connectSSL(self.host,self.port,F(deadline()))
+            transportDetails = await connected
+            return (protocol, transportDetails)
+        except Exception as e:
+            raise inContext(l1(TLSConnector.connectVia.__doc__).format(**vars())) from e
         pass
     pass
 
