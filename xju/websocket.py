@@ -50,34 +50,22 @@ class TLSWebSocket(Connection):
     def __init__(self,loop,deadline,host,port,headers:Headers={}):
         self.host = host
         self.port = port
-        self.headers = headers
+        self.headers:Headers = headers
         self.transportDetails:Optional[TLSTransportDetails] = None
-        Connection.__init__(self,loop,deadline,self._connect_via,headers)
+        self.deadline:Deadline = deadline
+        self.headers = headers
+        self._protocol:Optional[_Protocol] = None
+        Connection.__init__(self,loop)
         pass
 
-    def __enter__(self) -> TLSWebSocket:
+    async def __aenter__(self) -> TLSWebSocket:
         try:
-            Connection.__enter__(self)
-            return self
-        except Exception as e:
-            raise inContext(
-                f'connect websocket over TLS to {self.host}:{self.port} with headers {self.headers}') from e
-        pass
-
-    def __str__(self):
-        return f'websocket over TLS to {self.host}:{self.port} with headers {self.headers}'
-
-    async def _connect_via(
-            self,
-            loop:AbstractEventLoop,
-            deadline:Deadline) -> Tuple[_Protocol,AbstractTransportDetails]:
-        '''connect {self} via {loop} by {deadline()}s'''
-        try:
-            protocol = _ClientProtocol(loop, str(self))
+            self._protocol = _ClientProtocol(loop, str(self))
             connected = loop.create_future()
             def on_transport_connected(transportDetails:_TransportDetails):
                 protocol.clear_handlers()
-                connected.set_result(TLSTransportDetails(transportDetails))
+                self.transportDetails = TLSTransportDetails(transportDetails)
+                connected.set_result(self)
                 pass
             def on_close(was_clean:bool, code:Optional[int], reason:Optional[str]):
                 protocol.clear_handlers()
@@ -97,16 +85,35 @@ class TLSWebSocket(Connection):
                 def __init__(self,openingHandshakeTimeout:float):
                     super().__init__(self)
                     self.setOpeningHandshakeTimeout(openingHandshakeTimeout)
-                    self.setHeaders(headers)
+                    self.setHeaders(self.headers)
                     pass
                 def buildProtocol(self):
                     protocol.factory = self
                     return protocol
                 pass
 
-            loop.connectSSL(self.host,self.port,F(deadline()))
-            transportDetails = await connected
-            return (protocol, transportDetails)
+            self.loop.connectSSL(self.host,self.port,F(self.deadline()))
+            return connected
+        except Exception as e:
+            raise inContext(
+                f'connect websocket over TLS to {self.host}:{self.port} with headers {self.headers}') from e
+        pass
+
+    def __aexit__(self,t,e,b) -> None:
+        if not self._protocol.closed:
+            self._protocol.abort()
+            pass
+        pass
+    
+    def __str__(self):
+        return f'websocket over TLS to {self.host}:{self.port} with headers {self.headers}'
+
+    async def _connect_via(
+            self,
+            loop:AbstractEventLoop,
+            deadline:Deadline) -> Tuple[_Protocol,AbstractTransportDetails]:
+        '''connect {self} via {loop} by {deadline()}s'''
+        try:
         except Exception as e:
             raise inContext(l1(TLSConnector.connectVia.__doc__).format(**vars())) from e
         pass
@@ -123,38 +130,15 @@ class Connection():
             pass
         pass
 
-    def __init__(self,
-                 loop:AbstractEventLoop,
-                 deadline:Deadline,
-                 connect_via:Callable[[AbstractEventLoop,Deadline],
-                                      Tuple[_Protocol,
-                                            AbstractTransportDetails]],
-                 headers={}):
-        self.deadline:Deadline = deadline
+    def __init__(self,loop:AbstractEventLoop):
         self.loop:AbstractEventLoop = loop
-        self.connect_via = connect_via
-        self.headers = headers
-        self._protocol:Optional[_Protocol] = None
-        self._transportDetails:Optional[AbstractTransportDetails] = None
-        pass
-    
-    async def __enter__(self) -> Connection:
-        self._protocol, self._transportDetails = await self.connect_via(
-            self.loop,self.deadline)
-        return self
-    
-    async def __exit__(self,t,e,b) -> None:
-        if not self._protocol.closed:
-            self._protocol.abort()
-            pass
         pass
     
     async def receive_message(self, deadline:Deadline) -> Message:
         '''receive message within {deadline()}s'''
         '''Timeout - deadline reached before message received'''
         '''Connection.Closed - connection closed before message reached'''
-        result:Message = Message()
-        future = self.loop.create_future()
+        result = self.loop.create_future()
         def deadline_reached(self):
             self._protocol.clear_handlers()
             result.set_exception(
@@ -164,8 +148,7 @@ class Connection():
         def on_message(message:Message):
             self._protocol.clear_handlers()
             timer.cancel()
-            result = message
-            future.set_result(None)
+            result.set_result(message)
             pass
         def on_close(was_clean:bool, code:Optional[int], reason:Optional[str]):
             self._protocol.clear_handlers()
@@ -179,8 +162,7 @@ class Connection():
             self._unexpected_transport_connected,
             on_message,
             on_close)
-        await future
-        return result
+        return future
 
     def send_message(self, message:Message) -> None:
         '''send Message {message} to {self}'s peer'''
@@ -194,26 +176,28 @@ class Connection():
     async def close(self, deadline:Deadline) -> Sequence[Message]:
         '''close connection to peer {self.peer} by {deadline()}s, returning any intervening received messages'''
         try:
+            result = self.loop.create_future()
             intervening_messages = []
             if not protocol.closed:
                 protocol.setOptions(
                     closingHandshakeTimeout=deadline())
-                result = self.loop.create_future()
                 def on_message(message:Message):
                     intervening_messages.append(message)                    
                     pass
                 def on_close(was_clean:bool, code:Optional[int], reason:Optional[str]):
                     self._protocol.clear_handlers()
-                    result.set_result()
+                    result.set_result(intervening_messages)
                     pass
                 protocol.replace_handlers(
                     protocol._unexpected_transport_connected,
                     on_message,
                     on_close)
                 protocol.sendClose()
-                await result
                 pass
-            return intervening_messages
+            else:
+                result.set_result(intervening_messages)
+                pass
+            return result
         except Exception as e:
             raise inContext(l1(Connection.close.__doc__.format(**vars()))) from e
             pass
@@ -297,14 +281,28 @@ class _ServerProtocol(WebSocketServerProtocol,_Protocol):
 
 
 class TLSWebSocketServer():
-    def __init__(self,loop,deadline,localaddress,localport):
+    def __init__(self,loop,localaddress,localport):
+        self.loop = loop
         self.host = localaddress
         self.port = port
+        self.server:Optinal[REVISIT] = None
         pass
 
     def __enter__(self) -> TLSWebSocketServer:
         try:
-            Connection.__enter__(self)
+            protocol = _ServerProtcool(loop, str(self))
+            class F(WebSocketServerFactory):
+                def __init__(self,openingHandshakeTimeout:float):
+                    super().__init__(self)
+                    self.setOpeningHandshakeTimeout(openingHandshakeTimeout)
+                    self.setHeaders(headers)
+                    pass
+                def buildProtocol(self):
+                    protocol.factory = self
+                    return protocol
+                pass
+
+            self.server = self.loop.create_server(factory, REVISIT)
             return self
         except Exception as e:
             raise inContext(
