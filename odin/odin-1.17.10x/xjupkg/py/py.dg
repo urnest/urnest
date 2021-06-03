@@ -73,7 +73,9 @@ $ODIN_PYSTYLECHECK 'name of python style check program, e.g. flake8' = 'true';
 $ODIN_PYSTYLECHECK_PATH 'PATH to install when executing python style check program, colon separated' = '/bin:/usr/bin';
 $ODIN_PYSTYLECHECK_LD_LIBRARY_PATH 'shared library load path to install when executing python style check program, colon separated' = '';
 
-EXEC (py-import.py) (:py) (:py:dir)@ (+py_sp) (+ignore)
+# note we use :FILE not :py so we can use :py_import_all on
+# python script that has no .py extension
+EXEC (py-import.py) (:FILE) (:FILE:dir)@ (+py_sp) (+ignore)
    => (:py_import.view_desc);
 
 EXEC (empty-import.sh) (:egg) => (:egg.py_import.view_desc);
@@ -97,7 +99,7 @@ EXEC (py.exec.sh) (:py) (+cmd :ls) (:env) (+stderr) (+py:dir)@ (+py_sp)
   => (:py.exec);
 
 EXEC (py3.exec.sh) (:py) (+cmd :ls) (:env) (+stderr) (+py:dir)@ (+py_sp)
-  NEEDS (+cmd) (+need) (:py:py_import_all) (:py:mypy3) (:py:py_import_all:map=:py.stylecheck)
+  NEEDS (+cmd) (+need) (:py:py_import_all) (:py:mypy3) (:py:py.stylecheck) (:py:py_import_all:map=:py.stylecheck)
   => (:py3.exec);
 
 EXEC (mypy3.sh) (:py) (:env) (+py:dir)@ (+py_sp)

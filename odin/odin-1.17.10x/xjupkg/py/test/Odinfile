@@ -106,6 +106,21 @@ r1.py
 r3/__init__.py
 r3/r4/__init__.py
 
+%test9==(%test9.got)+cmd=(%test9.sh) (%test9.expect:list:ls):stdout
+
+%test9.sh==! <<
+#/bin/sh
+sort -u <"$1" > want &&
+sort -u > got &&
+diff -b want got >&2
+
+%test9.got==t2+py_sp=(sd):py_import_all:ls
+
+%test9.expect==<<
+r1.py
+r3/__init__.py
+r3/r4/__init__.py
+
 
 %test-stderr-1==()+cmd=grep '"test1 outputtest1 stderr"' (%toutput.zero):stdout
 %test-stderr-2==()+cmd=grep '"test1 outputtest1 stderr"' (%toutput.one):stdout
