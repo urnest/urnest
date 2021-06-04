@@ -23,6 +23,7 @@ with xju.time.steadyNow()+10 as deadline,
 '''
 
 from typing import Optional, Union, Callable
+from collections.abc import Awaitable
 
 from autobahn.asyncio.websocket import WebSocketClientProtocol, WebSocketClientFactory
 from asyncio import AbstractEventLoop
@@ -47,7 +48,12 @@ class TLSTransportDetails(AbstractTransportDetails):
     pass
 
 class TLSWebSocket(Connection):
-    def __init__(self,loop,deadline,host,port,headers:Headers={}):
+    'websocket over TLS to {self.host}:{self.port} with headers {self.headers}'
+    
+    def __init__(self,
+                 loop:AbstractEventLoop,
+                 connect_deadline:Deadline,
+                 host,port,headers:Headers={}):
         self.host = host
         self.port = port
         self.headers:Headers = headers
@@ -58,7 +64,10 @@ class TLSWebSocket(Connection):
         Connection.__init__(self,loop)
         pass
 
-    async def __aenter__(self) -> TLSWebSocket:
+    def __str__(self):
+        return l1(TLSWebSocket.__doc__).format(**vars())
+
+    async def __aenter__(self) -> Awaitable[Connection]:
         try:
             self._protocol = _ClientProtocol(loop, str(self))
             connected = loop.create_future()
@@ -105,22 +114,6 @@ class TLSWebSocket(Connection):
             pass
         pass
     
-    def __str__(self):
-        return f'websocket over TLS to {self.host}:{self.port} with headers {self.headers}'
-
-    async def _connect_via(
-            self,
-            loop:AbstractEventLoop,
-            deadline:Deadline) -> Tuple[_Protocol,AbstractTransportDetails]:
-        '''connect {self} via {loop} by {deadline()}s'''
-        try:
-        except Exception as e:
-            raise inContext(l1(TLSConnector.connectVia.__doc__).format(**vars())) from e
-        pass
-    pass
-
-class Connector():
-    '''see e.g. TLSConnector below'''
     pass
 
 class Connection():
@@ -133,7 +126,13 @@ class Connection():
     def __init__(self,loop:AbstractEventLoop):
         self.loop:AbstractEventLoop = loop
         pass
-    
+
+    def __exit__(self, t, e, b):
+        if not self._protocol.closed:
+            self._protocol.abort()
+            pass
+        pass
+
     async def receive_message(self, deadline:Deadline) -> Message:
         '''receive message within {deadline()}s'''
         '''Timeout - deadline reached before message received'''
@@ -173,13 +172,16 @@ class Connection():
                 l1(Connection.send_message.doc.format(**vars()))) from e
         pass
 
-    async def close(self, deadline:Deadline) -> Sequence[Message]:
-        '''close connection to peer {self.peer} by {deadline()}s, returning any intervening received messages'''
+    async def close(self,
+                    deadline:Deadline,
+                    code:Optional[int],
+                    reason:Optional[str]) -> Sequence[Message]:
+        '''close websocket to peer {self.peer} sending close code {code}, reason {reason} by {deadline()}s, returning any intervening received messages'''
         try:
             result = self.loop.create_future()
             intervening_messages = []
-            if not protocol.closed:
-                protocol.setOptions(
+            if not self._protocol.closed:
+                self._protocol.setOptions(
                     closingHandshakeTimeout=deadline())
                 def on_message(message:Message):
                     intervening_messages.append(message)                    
@@ -188,11 +190,11 @@ class Connection():
                     self._protocol.clear_handlers()
                     result.set_result(intervening_messages)
                     pass
-                protocol.replace_handlers(
-                    protocol._unexpected_transport_connected,
+                self._protocol.replace_handlers(
+                    self._protocol._unexpected_transport_connected,
                     on_message,
                     on_close)
-                protocol.sendClose()
+                self._protocol.sendClose()
                 pass
             else:
                 result.set_result(intervening_messages)
@@ -281,23 +283,38 @@ class _ServerProtocol(WebSocketServerProtocol,_Protocol):
 
 
 class TLSWebSocketServer():
-    def __init__(self,loop,localaddress,localport):
-        self.loop = loop
+    'TLS websocket server on local address {self.localddress}:{self.port}'
+    def __init__(self,loop:AbstractEventLoop,
+                 localaddress,
+                 localport):
+        self.loop:AbstractEventLoop = loop
         self.host = localaddress
         self.port = port
-        self.server:Optinal[REVISIT] = None
+        self.server:Optional[REVISIT] = None
+        self.handshaking = list[_ServerProtcol]
+        self.backlog:list[TLSConnection] = []
+        self.next_connection:Awaitable[TLSConnection] = loop.create_future()
         pass
+
+    def __str__(self):
+        return l1(TLSWebSocketServer.__doc__).format(**vars())
 
     def __enter__(self) -> TLSWebSocketServer:
         try:
-            protocol = _ServerProtcool(loop, str(self))
             class F(WebSocketServerFactory):
-                def __init__(self,openingHandshakeTimeout:float):
+                def __init__(self,openingHandshakeTimeout:float,
+                             server:TLSWebSocketServer):
                     super().__init__(self)
                     self.setOpeningHandshakeTimeout(openingHandshakeTimeout)
-                    self.setHeaders(headers)
+                    self.server = server
                     pass
                 def buildProtocol(self):
+                    protocol = _ServerProtcool(self.loop, REVISIT)
+                    self.server.handshaking.append(protocol)
+                    def on_connected():
+                        self.server.handshaking.remove(protocol)
+                        self.server.
+                    REVISIT
                     protocol.factory = self
                     return protocol
                 pass
@@ -309,9 +326,16 @@ class TLSWebSocketServer():
                 f'connect websocket over TLS to {self.host}:{self.port} with headers {self.headers}') from e
         pass
 
-    def __str__(self):
-        return f'websocket over TLS to {self.host}:{self.port} with headers {self.headers}'
+    def __exit__(self, t, e, b):
+        REVISIT: abort all handshaking
+        self.server.close()
+        pass
 
+    async def accept_connection(self, deadline:Deadline) -> Awaitable[TLSConnection]:
+        result = loop.create_future()
+        REVISIT
+        return result
+        
     async def _connect_via(
             self,
             loop:AbstractEventLoop,
