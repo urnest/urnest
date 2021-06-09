@@ -24,7 +24,7 @@ fi
 (
   eval env - LD_LIBRARY_PATH="$ODIN_MYPY_LD_LIBRARY_PATH" PATH="$ODIN_MYPY_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHON3PATH" `cat "$ODIN_env"` "$ODIN_MYPY" $ODIN_FILE &&
   touch mypy3
-) </dev/null 2>WARNINGS ||
+) </dev/null 2>WARNINGS 1>&2 ||
 mv WARNINGS ERRORS
 
 exit 0
