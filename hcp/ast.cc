@@ -96,7 +96,7 @@ std::string ClassDef::getClassName(std::vector<IR> const& items) throw()
   return std::string(result.begin(), e);
 }
 
-bool ClassDef::getIsTemplateSpeicialisation(std::vector<IR> const& items) throw()
+bool ClassDef::getIsTemplateSpecialisation(std::vector<IR> const& items) throw()
 {
   std::vector<IR>::const_iterator i(
     std::find_if(items.begin(), items.end(),

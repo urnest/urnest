@@ -339,13 +339,13 @@ public:
   explicit ClassDef(std::vector<IR> const& items) throw():
     Item(items),
     className_(getClassName(items)),
-    isTemplateSpecialisation_(getIsTemplateSpeicialisation(items))
+    isTemplateSpecialisation_(getIsTemplateSpecialisation(items))
   {
   }
   virtual ~ClassDef() throw() {
   }
   static std::string getClassName(std::vector<IR> const& items) throw();
-  static bool getIsTemplateSpeicialisation(std::vector<IR> const& items) throw();
+  static bool getIsTemplateSpecialisation(std::vector<IR> const& items) throw();
   virtual std::string str() const throw()
   {
     return typeid(ClassDef).name() + std::string(" ") + Item::str();
@@ -425,8 +425,23 @@ typedef TaggedItem<VarInitialiserTag> VarInitialiser;
 class AccessModifierTag{};
 typedef TaggedItem<AccessModifierTag> AccessModifier;
 
-class TemplateClassDefTag{};
-typedef TaggedItem<TemplateClassDefTag> TemplateClassDef;
+class TemplateClassDef : public Item
+{
+public:
+  std::string const className_;
+  
+  explicit TemplateClassDef(std::vector<IR> const& items) throw():
+    Item(items),
+    className_(ClassDef::getClassName(items))
+  {
+  }
+  virtual ~TemplateClassDef() throw() {
+  }
+  virtual std::string str() const throw()
+  {
+    return typeid(TemplateClassDef).name() + std::string(" ") + Item::str();
+  }
+};
 
 class ClassForwardDeclTag{};
 typedef TaggedItem<ClassForwardDeclTag> ClassForwardDecl;

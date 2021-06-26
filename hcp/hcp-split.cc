@@ -445,6 +445,84 @@ void genClass(hcp_ast::ClassDef const& x,
   }
 }
 
+std::vector<std::string> getTemplateClassMemberVarNames(
+  hcp_ast::TemplateClassDef const& x) noexcept
+{
+  auto const globalVars{
+    hcp_ast::findChildrenOfType<hcp_ast::GlobalVarDef>(x)};
+  std::vector<std::string> result;
+  for(auto c : globalVars){
+    result.push_back(
+      hcp_ast::reconstruct(
+        hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(c)));
+  }
+  return result;
+}
+
+void genTemplateClass(hcp_ast::TemplateClassDef const& x,
+                      OStream& h,
+                      OStream& c) /*throw(
+                xju::Exception)*/
+{
+  for(hcp_ast::IRs::const_iterator i=x.items().begin(); 
+      i!=x.items().end(); 
+      ++i) 
+  {
+    if ((*i)->isA<hcp_ast::ClassMembers>()) {
+      for(auto const m: (*i)->asA<hcp_ast::ClassMembers>().items()) {
+        if (m->isA<hcp_ast::FunctionDecl>() &&
+            isFriendOperatorLessDecl(m->asA<hcp_ast::FunctionDecl>(),
+                                     x.className_)){
+          std::vector<std::string> const memberVarNames{
+            getTemplateClassMemberVarNames(x)};
+
+          h << "friend bool operator<(" << x.className_ << " const& x, "
+            << x.className_ << " const& y) noexcept\n{\n";
+          for(auto v:memberVarNames){
+            h << "  if (x." << v << " < y." << v << ") return true;\n";
+            h << "  if (y." << v << " < x." << v << ") return false;\n";
+          }
+          h << "  return false;\n"
+            << "}\n";
+
+          h << "friend bool operator>(" << x.className_ << " const& x, "
+            << x.className_ << " const& y) noexcept {\n"
+            << "  return y<x;\n"
+            << "}\n";
+
+          h << "friend bool operator!=(" << x.className_ << " const& x, "
+            << x.className_ << " const& y) noexcept {\n"
+            << "  return y<x||x<y;\n"
+            << "}\n";
+
+          h << "friend bool operator==(" << x.className_ << " const& x, "
+            << x.className_ << " const& y) noexcept {\n"
+            << "  return !(y<x||x<y);\n"
+            << "}\n";
+
+          h << "friend bool operator<=(" << x.className_ << " const& x, "
+            << x.className_ << " const& y) noexcept {\n"
+            << "  return !(x>y);\n"
+            << "}\n";
+
+
+          h << "friend bool operator>=(" << x.className_ << " const& x, "
+            << x.className_ << " const& y) noexcept {\n"
+            << "  return !(x<y);\n"
+            << "}\n";
+
+        }
+        else {
+          h.copy(m->begin(), m->end());
+        }
+      }
+    }
+    else {
+      h.copy((*i)->begin(), (*i)->end());
+    }
+  }
+}
+
 void genFunction(hcp_ast::FunctionDef const& x,
                  OStream& h,
                  OStream& c) /*throw(
@@ -546,6 +624,9 @@ void genNamespaceContent(hcp_ast::IRs const& x,
     }
     else if ((*i)->isA<hcp_ast::NamespaceDef>()) {
       genNamespace((*i)->asA<hcp_ast::NamespaceDef>(), h, c);
+    }
+    else if ((*i)->isA<hcp_ast::TemplateClassDef>()) {
+      genTemplateClass((*i)->asA<hcp_ast::TemplateClassDef>(), h, c);
     }
     else if ((*i)->isA<hcp_ast::ClassDef>()) {
       genClass((*i)->asA<hcp_ast::ClassDef>(), h, c, 
