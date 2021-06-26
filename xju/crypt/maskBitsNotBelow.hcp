@@ -1,0 +1,29 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <cinttypes>
+#include <xju/BitCount.hh>
+
+namespace xju
+{
+namespace crypt
+{
+
+// mask bits of x not below bit n
+// e.g. maskBitsNotBelow(0xff, xju::BitCount(6)) == 0x3f
+// pre: 0 <= n < 8
+uint8_t maskBitsNotBelow(uint8_t const x, xju::BitCount const& n)
+{
+  return x & (((uint8_t)0xff)>>(8-n.value()));
+}
+
+}
+}

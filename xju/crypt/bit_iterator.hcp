@@ -1,0 +1,127 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <cinttypes>
+#include <vector>
+#include <xju/assert.hh>
+
+namespace xju
+{
+namespace crypt
+{
+
+template<class container_type>
+class bit_iterator_
+{
+public:
+  // iterator at bit n of container, assuming container is
+  // big-endian i.e. container[0] has last bits to iterator over
+  // container is either std::vector<uint8_t> or std::vector<uint8_t> const
+  // pre: lifetime(container) includes lifetime(this)
+  bit_iterator_(container_type& container, size_t n):
+      container_(&container),
+      at_(n)
+  {
+  }
+  bool operator*() const
+  {
+    return get();
+  }
+  bool get() const
+  {
+    return containingByte() & (((uint8_t)1) << (at_%8));
+  }
+  void set(bool const x) // only available for non-const container
+  {
+    uint8_t const mask(((uint8_t)1) << (at_%8));
+    if (x){
+      containingByte() |= mask;
+    }
+    else{
+      containingByte() &= ~mask;
+    }
+  }
+
+  bit_iterator_& operator++()
+  {
+    ++at_;
+    return *this;
+  }
+  bit_iterator_& operator--()
+  {
+    --at_;
+    return *this;
+  }
+  bit_iterator_ operator++(int)
+  {
+    return bit_iterator_(*container_, at_++);
+  }
+  bit_iterator_ operator--(int)
+  {
+    return bit_iterator_(*container_, at_--);
+  }
+
+  // get reference to uint8_t that *this is within
+  // e.g. bit_iterator_ i(x, 21);
+  //      assert_equal(i.containingByte(),&x[x.size()-3])
+  decltype(container_type()[0]) containingByte() const
+  {
+    return (*container_)[container_->size()-1-at_/8];
+  }
+
+private:
+  container_type* container_;
+  size_t at_;
+
+  friend size_t operator-(bit_iterator_ const& x, bit_iterator_ const& y)
+    noexcept
+  {
+    xju::assert_equal(x.container_, y.container_);
+    return x.at_-y.at_;
+  }
+  friend bool operator<(bit_iterator_ const& x, bit_iterator_ const& y);
+};
+
+typedef bit_iterator_<std::vector<uint8_t> > bit_iterator;
+typedef bit_iterator_<std::vector<uint8_t> const > bit_const_iterator;
+
+bit_iterator bit_begin(std::vector<uint8_t>& x)
+{
+  return bit_iterator(x, 0U);
+}
+
+bit_iterator bit_end(std::vector<uint8_t>& x)
+{
+  return bit_iterator(x, x.size()*8);
+}
+
+bit_const_iterator bit_const_begin(std::vector<uint8_t> const& x)
+{
+  return bit_const_iterator(x, 0U);
+}
+
+bit_const_iterator bit_const_end(std::vector<uint8_t> const& x)
+{
+  return bit_const_iterator(x, x.size()*8);
+}
+
+bit_const_iterator bit_begin(std::vector<uint8_t> const& x)
+{
+  return bit_const_begin(x);
+}
+
+bit_const_iterator bit_end(std::vector<uint8_t> const& x)
+{
+  return bit_const_end(x);
+}
+
+}
+}

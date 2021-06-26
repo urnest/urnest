@@ -1,0 +1,34 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/BitCount.hh>
+#include <vector>
+#include <cinttypes>
+#include <xju/crypt/bit_iterator.hh> //impl
+
+namespace xju
+{
+namespace crypt
+{
+
+xju::BitCount countBitsSetIn(std::vector<uint8_t> const& x) noexcept
+{
+  xju::BitCount result(0);
+  for(auto i(bit_const_begin(x)); i!=bit_const_end(x); ++i){
+    if (*i){
+      ++result;
+    }
+  }
+  return result;
+}
+
+}
+}

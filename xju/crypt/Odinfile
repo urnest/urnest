@@ -11,6 +11,12 @@ macs%tests.tree:leaves
 
 %tests.tree==<<
 ()+cmd=(test-I.cc+(%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-bit_iterator.cc+(%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-countBitsSetIn.cc+(%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-findNthOne.cc+(%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-maskBitsNotBelow.cc+(%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-randl.cc+(%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-randle.cc+(%cxx-opts):auto.cxx.exe):exec.output
 
 %hcp-gen==%hcp-gen.vir_dir_specs:list:cat:vir_dir
 

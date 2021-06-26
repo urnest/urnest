@@ -1,0 +1,40 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <cinttypes>
+#include <gcrypt.h> //impl
+
+namespace xju
+{
+namespace crypt
+{
+
+// return GCRY_STRONG_RANDOM random number < x
+// pre: x>0
+uint32_t randl(uint32_t x)
+{
+  uint32_t result;
+  gcry_randomize(&result, 4, GCRY_STRONG_RANDOM);
+  return result % x;
+}
+// pre: x>0
+uint64_t randl(uint64_t x)
+{
+  uint64_t result;
+  gcry_randomize(&result, 8, GCRY_STRONG_RANDOM);
+  return result % x;
+}
+
+
+}
+}
+
+

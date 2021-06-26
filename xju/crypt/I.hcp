@@ -18,6 +18,11 @@
 #include <xju/Exception.hh> //impl
 #include <xju/crypt/verifySuccessful.hh> //impl
 #include <iostream>
+#include <xju/crypt/countBitsSetIn.hh> //impl
+#include <xju/BitCount.hh> //impl
+#include <xju/crypt/findNthOne.hh> //impl
+#include <xju/crypt/maskBitsNotBelow.hh> //impl
+#include <xju/crypt/randl.hh> //impl
 
 namespace xju
 {
@@ -146,6 +151,10 @@ public:
   {
     gcry_mpi_swap(x_,y.x_);
   }
+  void strongRandomiseBytes() noexcept
+  {
+    gcry_mpi_randomize(gcry(),gcry_mpi_get_nbits(gcry()),GCRY_STRONG_RANDOM);
+  }
   friend I operator+(I const& x,I const& y)
   {
     I result(0UL);
@@ -246,6 +255,16 @@ I powm(I const& b, I const& e, I const& m)
   gcry_mpi_powm(result.x_,b.x_,e.x_,m.x_);
   return std::move(result);
 }
+
+// return GCRY_STRONG_RANDOM random number < x
+// pre: x>0
+I randl(I const& x)
+{
+  I y(x);
+  y.strongRandomiseBytes();
+  return y%x;
+}
+
 
 }
 }

@@ -1,0 +1,42 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/crypt/bit_iterator.hh>
+#include <xju/BitCount.hh>
+#include <xju/assert.hh> //impl
+
+namespace xju
+{
+namespace crypt
+{
+
+//pre: n>0
+//pre: there are at least n ones at or after from
+bit_iterator findNthOne(xju::BitCount const& n, bit_iterator from)
+{
+  xju::assert_greater(n, BitCount(0));
+  while(!*from){
+    ++from;
+  }
+  xju::assert_equal(from.get(), true);
+  xju::BitCount i(1);
+  while(i!=n){
+    while(!*++from);
+    ++i;
+  }
+  xju::assert_equal(from.get(), true);
+  return from;
+}
+
+}
+}
+
+

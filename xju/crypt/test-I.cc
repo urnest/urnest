@@ -95,6 +95,13 @@ void test1() {
   xju::assert_equal(gcd(I(27),I(24)),I(3));
 }
 
+void test2()
+{
+  I const x(std::vector<uint8_t>({0x1f,0xff}));
+  I b(randl(x));
+  xju::assert_less(b,x);
+}
+
 }
 }
 
@@ -104,6 +111,7 @@ int main(int argc, char* argv[])
 {
   unsigned int n(0);
   test1(), ++n;
+  test2(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }
