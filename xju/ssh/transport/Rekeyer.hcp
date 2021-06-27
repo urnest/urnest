@@ -35,6 +35,7 @@
 #include <xju/ssh/transport/resizeHash.hh> //impl
 #include <xju/ssh/transport/CipherKey.hh> //impl
 #include <xju/ssh/transport/CipherIV.hh> //impl
+#include <xju/ssh/transport/messages/NewKeys.hh> //impl
 
 namespace xju
 {
@@ -194,67 +195,86 @@ private:
               algorithms_.hostKeyers_.end())),
           il.peerKexInit_.value().firstKexPacketFollows_&&!kexer.second));
       
+      // rfc4253 7.2.  Output from Key Exchange
       SessionId result(sessionId.has_value()?sessionId.value():
                        SessionId(kh.second.value()));
       auto const& k(kh.first);
       auto const& h(kh.second);
       auto hashFunction([&kexer](std::vector<uint8_t> const& data){
                           return kexer.first.get().hash(data);});
+
       auto& decryptionCipherAlgorithm(
         algorithms_.chooseDecryptionCipher(ol.sent_,il.peerKexInit_));
-      il.setDecrypter(
-        decryptionCipherAlgorithm.decrypter(
-          CipherKey(
-            resizeHash(
-              kexer.first.get().hash(
-                algorithms_.decryptionCipherKeyData(k,h,result)),
-              decryptionCipherAlgorithm.keySize_,
-              k,h,
-              hashFunction)),
-          CipherIV(
-            resizeHash(
-              hashFunction(algorithms_.decryptionCipherIVData(k,h,result)),
-              BitCount(decryptionCipherAlgorithm.ivSize_*8),
-              k,h,
-              hashFunction))));
-      
       auto& encryptionCipherAlgorithm(
         algorithms_.chooseEncryptionCipher(ol.sent_,il.peerKexInit_));
-      ol.setEncrypter(
-        encryptionCipherAlgorithm.encrypter(
-          CipherKey(
-            resizeHash(
-              hashFunction(algorithms_.encryptionCipherKeyData(k,h,result)),
-              encryptionCipherAlgorithm.keySize_,
-              k,h,
-              hashFunction)),
-          CipherIV(
-            resizeHash(
-              hashFunction(algorithms_.encryptionCipherIVData(k,h,result)),
-              BitCount(encryptionCipherAlgorithm.ivSize_*8),
-              k,h,hashFunction))));
-      
       auto& macVerifierAlgorithm(algorithms_.chooseMacVerifierAlgorithm(
                                    ol.sent_,
                                    il.peerKexInit_));
-      il.setPacketAuthenticator(
-        macVerifierAlgorithm.macVerifier(
-          xju::crypt::MacKey(
-            resizeHash(
-              hashFunction(algorithms_.macVerifierKeyData(k,h,result)),
-              macVerifierAlgorithm.keySize_,
-              k,h,hashFunction))));
-      
       auto& macCalculatorAlgorithm(algorithms_.chooseMacCalculatorAlgorithm(
                                      ol.sent_,
                                      il.peerKexInit_));
+
+      CipherKey decrypterKey(
+        resizeHash(
+          kexer.first.get().hash(
+            algorithms_.decryptionCipherKeyData(k,h,result)),
+          decryptionCipherAlgorithm.keySize_,
+          k,h,
+          hashFunction));
+
+      CipherIV decrypterIV(
+        resizeHash(
+          hashFunction(algorithms_.decryptionCipherIVData(k,h,result)),
+          BitCount(decryptionCipherAlgorithm.ivSize_*8),
+          k,h,
+          hashFunction));
+      
+      CipherKey encrypterKey(
+        resizeHash(
+          hashFunction(algorithms_.encryptionCipherKeyData(k,h,result)),
+          encryptionCipherAlgorithm.keySize_,
+          k,h,
+          hashFunction));
+      
+      CipherIV encrypterIV(
+        resizeHash(
+          hashFunction(algorithms_.encryptionCipherIVData(k,h,result)),
+          BitCount(encryptionCipherAlgorithm.ivSize_*8),
+          k,h,hashFunction));
+
+      xju::crypt::MacKey packetAuthenticatorMacKey(
+        resizeHash(
+          hashFunction(algorithms_.macVerifierKeyData(k,h,result)),
+          macVerifierAlgorithm.keySize_,
+          k,h,hashFunction));
+
+      xju::crypt::MacKey macCalculatorKey(
+        resizeHash(
+          hashFunction(algorithms_.macCalculatorKeyData(k,h,result)),
+          macCalculatorAlgorithm.keySize_,
+          k,h,hashFunction));
+        
+      // rfc4253 7.3.  Taking Keys Into Use
+      ol.encodeAndSend(messages::NewKeys());
+      il.receiveAndDecode<messages::NewKeys>(2048); //REVISIT: how much?
+      
+      il.setDecrypter(
+        decryptionCipherAlgorithm.decrypter(
+          std::move(decrypterKey),
+          std::move(decrypterIV)));
+      
+      ol.setEncrypter(
+        encryptionCipherAlgorithm.encrypter(
+          std::move(encrypterKey),
+          std::move(encrypterIV)));
+        
+      il.setPacketAuthenticator(
+        macVerifierAlgorithm.macVerifier(
+          std::move(packetAuthenticatorMacKey)));
+      
       ol.setMacCalculator(
         macCalculatorAlgorithm.macCalculator(
-          xju::crypt::MacKey(
-            resizeHash(
-              hashFunction(algorithms_.macCalculatorKeyData(k,h,result)),
-              macCalculatorAlgorithm.keySize_,
-              k,h,hashFunction))));
+          std::move(macCalculatorKey)));
       
       return result;
     }

@@ -1,0 +1,80 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/crypt/SigVerifier.hh>
+#include <xju/crypt/rsa/PublicKey.hh>
+#include <xju/MemIBuf.hh> //impl
+#include <xju/net/istream.hh> //impl
+#include <xju/format.hh> //impl
+#include <xju/ssh/decode.hh> //impl
+#include <xju/crypt/rsa/SigVerifier.hh>
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+namespace hkas
+{
+// verify signature that is encoded per rfc4253 5.6 ssh-rsa
+class SSHRSASigVerifier : public xju::crypt::SigVerifier
+{
+public:
+  explicit SSHRSASigVerifier(xju::crypt::rsa::PublicKey publicKey):
+    v_(publicKey)
+  {
+  }
+  virtual void verifySignature(
+    void const* x,size_t len,
+    xju::crypt::Signature const& signature) override
+  {
+    try{
+      xju::MemIBuf b(signature);
+      xju::net::istream s(b);
+      auto const identifier(xju::ssh::decode<std::string>(s));
+      if (identifier!="ssh-rsa"){
+        std::ostringstream s;
+        s << "expected SSH key type identifier \"ssh-rsa\" but got "
+          << xju::format::quote(xju::format::cEscapeString(identifier));
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      xju::crypt::Signature const rsasig(
+        xju::ssh::decode<std::vector<uint8_t> >(s));
+      v_.verifySignature(x,len,rsasig);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "verify that signature "
+        << xju::format::join(signature.begin(),
+                             signature.end(),
+                             xju::format::Hex(""),
+                             "")
+        << " is in ssh-rsa format (rfc4253 6.6) and that "
+        << " on " << len << " supplied data bytes"
+        << " was signed by owner of RSA public key "
+        << v_.publicKey_;
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+      
+  }
+  
+private:
+  xju::crypt::rsa::SigVerifier v_;
+};
+
+}
+}
+}
+}
+
+

@@ -12,8 +12,8 @@
 #include <iostream>
 #include <xju/assert.hh>
 #include <xju/crypt/verifySuccessful.hh>
-#include <xju/crypt/hash/sha1.hh>
 #include <xju/crypt/Signature.hh>
+#include <xju/crypt/hashers/SHA1.hh>
 
 namespace xju
 {
@@ -40,7 +40,8 @@ void test1() {
   
   std::string const message("the quick brown fox");
 
-  std::vector<uint8_t> messageHash(xju::crypt::hash::sha1(
+  xju::crypt::hashers::SHA1 sha1;
+  std::vector<uint8_t> messageHash(sha1.hash(
                                      std::vector<uint8_t>(message.begin(),
                                                           message.end())));
   //sign message with private key

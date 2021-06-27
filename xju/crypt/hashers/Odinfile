@@ -11,7 +11,7 @@
 %hcp-local-spec
 %hcp-subdir-spec
 
-%hcp-local-spec==.:dir.hcp.list+G+hpath='xju/crypt/hash':hcp-split-virdir-specs:cat
+%hcp-local-spec==.:dir.hcp.list+G+hpath='xju/crypt/hashers':hcp-split-virdir-specs:cat
 
 %hcp-subdir-spec==<<
 

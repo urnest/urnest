@@ -9,7 +9,6 @@
 //
 
 
-#include <xju/crypt/rsa/SigVerifier.hh> //impl
 #include <xju/crypt/rsa/PublicKey.hh> //impl
 #include <xju/ssh/transport/ClientHostKeyAlgorithm.hh>
 #include <xju/MemIBuf.hh> //impl
@@ -23,6 +22,7 @@
 #include <utility> //impl
 #include <set>
 #include <xju/crypt/rsa/PublicKey.hh>
+#include <xju/ssh/transport/hkas/SSHRSASigVerifier.hh> //impl
 
 namespace xju
 {
@@ -33,6 +33,7 @@ namespace transport
 namespace hkas
 {
 
+// ssh-rsa public key algorithm, rfc4253 5.6
 class RSAClient : public ClientHostKeyAlgorithm
 {
 public:
@@ -72,7 +73,7 @@ public:
               throw xju::Exception(s.str(),XJU_TRACED);
             }
             return std::unique_ptr<xju::crypt::SigVerifier>(
-              new xju::crypt::rsa::SigVerifier(std::move(key)));
+              new SSHRSASigVerifier(std::move(key)));
           }
           catch(xju::Exception& ex){
             std::ostringstream s;

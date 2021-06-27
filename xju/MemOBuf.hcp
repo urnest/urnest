@@ -42,6 +42,11 @@ public:
   {
     return std::make_pair(buf_.begin(),buf_.begin()+valid_);
   }
+  std::pair<std::vector<uint8_t>::iterator,
+            std::vector<uint8_t>::iterator> data() noexcept
+  {
+    return std::make_pair(buf_.begin(),buf_.begin()+valid_);
+  }
   // OBuf::
   // - extends buffer iff it is full and not at max size
   // - returned range empty means we are at max size

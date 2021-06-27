@@ -9,25 +9,23 @@
 //
 
 
-#include <vector>
-#include <gcrypt.h> //impl
-#include <utility> //impl
-#include <cinttypes>
+#include <xju/ssh/transport/MSG.hh>
 
 namespace xju
 {
-namespace crypt
+namespace ssh
 {
-namespace hash
+namespace transport
 {
+namespace messages
+{
+class NewKeys
+{
+public:
+  static const MSG type_{MSG::NEWKEYS};
+};
 
-std::vector<uint8_t> sha1(std::vector<uint8_t> const& data)
-{
-  std::vector<uint8_t> result(gcry_md_get_algo_dlen(GCRY_MD_SHA1));
-  gcry_md_hash_buffer(GCRY_MD_SHA1,result.data(),data.data(),data.size());
-  return std::move(result);
 }
-
 }
 }
 }

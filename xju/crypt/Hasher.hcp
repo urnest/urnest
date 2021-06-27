@@ -7,30 +7,29 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/crypt/randle.hh>
 
-#include <iostream>
-#include <xju/assert.hh>
+
+#include <vector>
+#include <cinttypes>
+#include <string>
 
 namespace xju
 {
 namespace crypt
 {
 
-void test1() {
-
-}
-
-}
-}
-
-using namespace xju::crypt;
-
-int main(int argc, char* argv[])
+class Hasher
 {
-  unsigned int n(0);
-  test1(), ++n;
-  std::cout << "PASS - " << n << " steps" << std::endl;
-  return 0;
+public:
+  virtual ~Hasher() noexcept {}
+
+  virtual std::vector<uint8_t> hash(std::vector<uint8_t> const& data) = 0;
+
+  virtual std::string name() const = 0;
+};
+
+
 }
+}
+
 

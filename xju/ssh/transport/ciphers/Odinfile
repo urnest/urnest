@@ -5,6 +5,7 @@
 
 %tests.tree==<<
 ()+cmd=(test-None.cc+(../../../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-AES256ctr.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 %hcp-gen==.:dir.hcp.list+G+hpath='xju/ssh/transport/ciphers':hcp-split-virdir-specs:cat:vir_dir
 

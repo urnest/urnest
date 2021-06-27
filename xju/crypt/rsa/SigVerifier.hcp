@@ -16,8 +16,8 @@
 #include <xju/crypt/verifySuccessful.hh> //impl
 #include <xju/format.hh> //impl
 #include <memory>
-#include <xju/crypt/hash/sha1.hh> //impl
 #include <xju/crypt/sexp_ptr.hh>
+#include <xju/crypt/hashers/SHA1.hh> //impl
 
 namespace xju
 {
@@ -70,8 +70,9 @@ public:
         throw xju::Exception(s.str(),XJU_TRACED);
       }
 
+      xju::crypt::hashers::SHA1 sha1;
       std::vector<uint8_t> messageHash(
-        xju::crypt::hash::sha1(
+        sha1.hash(
           std::vector<uint8_t>((uint8_t const*)x,
                                ((uint8_t const*)x)+len)));
       
@@ -101,8 +102,10 @@ public:
       throw;
     }
   }
+
+  xju::crypt::rsa::PublicKey const publicKey_;
+  
 private:
-  xju::crypt::rsa::PublicKey publicKey_;
   xju::crypt::sexp_ptr sexp_;
   
 };

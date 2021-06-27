@@ -11,7 +11,6 @@
 #include <iostream>
 #include <xju/assert.hh>
 #include <xju/crypt/verifySuccessful.hh>
-#include <xju/crypt/hash/sha1.hh>
 #include <xju/crypt/Signature.hh>
 #include <xju/crypt/rsa/PrivateKey.hh>
 #include <xju/crypt/rsa/generateKey.hh>

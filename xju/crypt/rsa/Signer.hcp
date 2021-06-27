@@ -15,8 +15,8 @@
 #include <xju/crypt/Signature.hh>
 #include <xju/crypt/rsa/PrivateKey.hh>
 #include <xju/crypt/sexp_ptr.hh>
-#include <xju/crypt/hash/sha1.hh> //impl
 #include <xju/crypt/verifySuccessful.hh> //impl
+#include <xju/crypt/hashers/SHA1.hh> //impl
 
 namespace xju
 {
@@ -61,8 +61,10 @@ public:
   Signature sign(void const* x,size_t len) override
   {
     try{
+      xju::crypt::hashers::SHA1 sha1;
+      
       std::vector<uint8_t> messageHash(
-        xju::crypt::hash::sha1(
+        sha1.hash(
           std::vector<uint8_t>((uint8_t const*)x,
                                ((uint8_t const*)x)+len)));
       //sign message with private key

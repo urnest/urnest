@@ -19,6 +19,7 @@
 #include <sstream>
 #include <string>
 #include <xju/crypt/rsa/SigVerifier.hh>
+#include <xju/crypt/Signer.hh>
 
 std::unique_ptr<xju::crypt::Signer> load_id_rsa(xju::path::AbsFile const& path)
 {

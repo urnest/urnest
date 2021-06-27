@@ -27,6 +27,7 @@
 #include <xju/ssh/transport/messages/KexDHReply.hh> //impl
 #include <xju/ssh/transport/messages/KexDHInit.hh> //impl
 #include <xju/ssh/userauth/messages/Success.hh> //impl
+#include <xju/ssh/transport/messages/NewKeys.hh>
 
 namespace xju
 {
@@ -62,6 +63,7 @@ namespace messages{
 class KexInit;
 class KexDHReply;
 class KexDHInit;
+class NewKeys;
 }
 }
 
@@ -236,12 +238,28 @@ xju::net::ostream& encode(xju::net::ostream& s,
   }
 }
 
+// encode x to s including initial type byte
+xju::net::ostream& encode(xju::net::ostream& s,
+                          transport::messages::NewKeys const& x)
+{
+  try{
+    s.put8((uint8_t)transport::messages::NewKeys::type_);
+    return s;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "encode NewKeys to output stream";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
 xju::net::ostream& encode(xju::net::ostream& s, transport::Ident const& x)
 {
   std::ostringstream st;
   st << "SSH-" << x.sshVersion_.value() << "-" << x.softwareVersion_;
-  if (x.comment_.get()){
-    st << " " << x.comment_.get();
+  if (x.comment_.valid()){
+    st << " " << x.comment_.value();
   }
   encode(s,st.str());
   return s;

@@ -29,7 +29,9 @@
 #include <xju/ssh/transport/KexAlgorithmName.hh>
 #include <xju/ssh/transport/Session.hh>
 #include <xju/stringToUInt.hh>
-#include <xju/ssh/transport/kexers/DhGroup14SHA1Client.hh>
+#include <xju/crypt/hashers/SHA1.hh>
+#include <xju/ssh/transport/kexers/DhGroup14Client.hh>
+#include <xju/crypt/hashers/SHA256.hh>
 
 int main(int argc, char* argv[]){
   if (argc < 2){
@@ -50,12 +52,17 @@ int main(int argc, char* argv[]){
       xju::ssh::transport::SSHVersion("2.0"),
       xju::ssh::transport::SoftwareVersion("xju::ssh::1"),
       xju::Optional<std::string>());
+
+    xju::crypt::hashers::SHA1 sha1;
+    xju::crypt::hashers::SHA256 sha256;
     
     xju::ssh::transport::kexers::DHGroup1SHA1Client kexer1;
-    xju::ssh::transport::kexers::DHGroup14SHA1Client kexer2;
+    xju::ssh::transport::kexers::DHGroup14Client dh_group14_sha1(sha1);
+    xju::ssh::transport::kexers::DHGroup14Client dh_group14_sha256(sha256);
     xju::ssh::transport::Algorithms::Kexers kexers;
     kexers.push_back({xju::ssh::transport::KexAlgorithmName("diffie-hellman-group1-sha1"),std::ref(kexer1)});
-    kexers.push_back({xju::ssh::transport::KexAlgorithmName("diffie-hellman-group14-sha1"),std::ref(kexer2)});
+    kexers.push_back({xju::ssh::transport::KexAlgorithmName("diffie-hellman-group14-sha1"),std::ref(dh_group14_sha1)});
+    kexers.push_back({xju::ssh::transport::KexAlgorithmName("diffie-hellman-group14-sha256"),std::ref(dh_group14_sha256)});
     
     xju::ssh::transport::hkas::RSAClient hka1({hostPublicKey});
     

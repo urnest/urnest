@@ -33,6 +33,7 @@
 #include <xju/ssh/transport/messages/KexDHInit.hh> //impl
 #include <xju/crypt/rsa/PublicKey.hh> //impl
 #include <xju/Utf8String.hh>
+#include <xju/ssh/transport/messages/NewKeys.hh>
 
 namespace xju
 {
@@ -68,6 +69,7 @@ namespace messages{
 class KexInit;
 class KexDHReply;
 class KexDHInit;
+class NewKeys;
 }
 }
 
@@ -497,6 +499,22 @@ transport::messages::KexDHInit decoder<transport::messages::KexDHInit>::dec(
   catch(xju::Exception& e){
     std::ostringstream s;
     s << "decode KexDHInit from input stream";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+// note assumes type byte (NEWKEYS) already read and verified
+template<>
+transport::messages::NewKeys decoder<transport::messages::NewKeys>::dec(
+  xju::net::istream& s)
+{
+  try{
+    return transport::messages::NewKeys();
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode NewKeys from input stream";
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }

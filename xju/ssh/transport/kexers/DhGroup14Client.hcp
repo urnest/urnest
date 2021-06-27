@@ -9,7 +9,6 @@
 //
 
 
-#include <xju/crypt/hash/sha1.hh> //impl
 #include <xju/ssh/transport/Kexer.hh>
 #include <xju/ssh/transport/messages/KexDHInit.hh> //impl
 #include <xju/ssh/transport/messages/KexDHReply.hh> //impl
@@ -21,6 +20,8 @@
 #include <xju/ssh/transport/OurKexInit.hh>
 #include <xju/ssh/transport/ClientKexInit.hh>
 #include <xju/ssh/transport/ServerKexInit.hh>
+#include <xju/crypt/countBitsSetIn.hh> //impl
+#include <xju/crypt/Hasher.hh>
 
 namespace xju
 {
@@ -42,9 +43,16 @@ uint32_t weakRandomUint16(){
 }
 
 // RFC4253 8. Diffie-Hellman Key Exchange
-class DHGroup14SHA1Client : public Kexer
+class DHGroup14Client : public Kexer
 {
 public:
+  xju::crypt::Hasher* const hasher_; // non null
+
+  explicit DHGroup14Client(xju::crypt::Hasher& hasher) noexcept:
+      hasher_(&hasher)
+  {
+  }
+  
   //pre: hostKeyAlgorithm is a ClientHostKeyAlgorithm
   virtual std::pair<K,H> exchangeKeys(
     I::RekeyLock& i,
@@ -57,11 +65,10 @@ public:
     HostKeyAlgorithm const& hostKeyAlgorithm,
     bool ignoreFirstMessageReceived) override
   {
-    uint32_t const nBits(2048);
-    uint32_t const nBytes(nBits/8);
     try{
-      static int const g = 2; //  rfc3526 - generator for a subgroup of GF(p)
+      static xju::crypt::I const g(2); //  rfc3526 - generator for a subgroup of GF(p)
       static xju::crypt::I const p({
+          0x00,
           0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
           0xC9,0x0F,0xDA,0xA2,0x21,0x68,0xC2,0x34,
           0xC4,0xC6,0x62,0x8B,0x80,0xDC,0x1C,0xD1,
@@ -100,13 +107,11 @@ public:
       // libssh at time of writing could use libgrypt or openssl libcrypto
       // and the random range used was different depending which; both seemed
       // wrong, so follow openssl/openssh.
-      // To get random number x in range 1 < x < q we can use random y in range
-      // 0..q-2 then add 2; to get a random number in range 0..q-2, start
-      // with q-2, keep (from MSb) a random number of bits that is followed
-      // by a 1, then randomise remaining bits. libgcrypt randomise works at
-      // byte granularity so over do it and put back the significant bits
-      // of that byte.
-      static xju::crypt::I const q({
+      // To get random number x in range 1 < x < q use random y in range
+      // 0 <= y < q-2 then add 2.
+      static xju::crypt::I const q_minus_2(
+        xju::crypt::I({
+          0x00,
           0xFF,0xFF,0xFF,0xFF,0x7F,0xFF,0xFF,0xFF,
           0x45,0x56,0x55,0x34,0x0A,0xB9,0x47,0x2D,
           0x4C,0x7D,0x02,0x88,0x8A,0xE9,0x13,0x0C,
@@ -138,32 +143,19 @@ public:
           0x45,0x33,0xE6,0x3A,0x94,0x81,0x27,0x04,
           0xC0,0x6E,0x0E,0x68,0x62,0x63,0x31,0x45,
           0x10,0xB4,0x61,0x1A,0xE4,0x87,0xED,0x51,
-          0xFF,0xFF,0xFF,0xFF,0x7F,0xFF,0xFF,0xFF});
+          0xFF,0xFF,0xFF,0xFF,0x7F,0xFF,0xFF,0xFF})-2);
           
-      xju::crypt::I x(q-2);
-      {
-        //REVISIT: use a bitset?
-        auto xv(x.value());
-        uint32_t const randBits(weakRandomUint16()%nBits); //0..nBits-1
-        // REVISIT: decrease randBits till msb is 1 (or we hit 0)
-        uint32_t const randBytes((randBits+7)/8); //0..nBytes
-        uint32_t const restoreBits(randBytes*8 - randBits); //0..7
-        uint8_t const restoreBitsFrom(restoreBits?xv[nBytes-randBytes]:0);
-        uint8_t const restoreMask((1U<<(8-restoreBits))-1);
-        gcry_randomize(xv.data()+nBytes-randBytes,randBytes,GCRY_WEAK_RANDOM);
-        if (restoreBits){
-          uint8_t b(xv[nBytes-randBytes]);
-          b&=restoreMask;
-          b|=(restoreBitsFrom&~restoreMask);
-          xv[nBytes-randBytes]=b;
-        }
-        x=xju::crypt::I(xv);
-      }
-      auto const e(xju::crypt::powm(xju::crypt::I(g),x,p)); // e = g^x mod p;
+      xju::crypt::I x(randl(q_minus_2)+2);
+      auto e(xju::crypt::powm(g,x,p)); // e = g^x mod p;
 
-      // REVISIT: ssh will reject e if it has < 4 x 1-bits so redo above until
-      // we achieve that
-      
+      // openssh will reject e if it has < 4 x 1-bits so redo above until
+      // we achieve that REVISIT: where did we see that?
+      while(xju::crypt::countBitsSetIn(e.value())<xju::BitCount(4))
+      {
+        x=randl(q_minus_2)+2;
+        e=xju::crypt::powm(g,x,p); // e = g^x mod p;
+      }
+
       // C sends e to S.
       o.encodeAndSend(messages::KexDHInit(e));
       
@@ -178,6 +170,8 @@ public:
             r.hostKeyAndCertificates_,
             xju::BitCount(r.hostSignature_.size()*8)));
 
+      // REVISIT: check f in range [1, p-1], see rfc4253 8.
+      
       // C then computes K = f^x mod p,
       K k(xju::crypt::powm(r.f_,x,p)); // K = f^x mod p
 
@@ -187,8 +181,26 @@ public:
         xju::net::ostream s(b);
         xju::ssh::encode(s,ourIdent);
         xju::ssh::encode(s,peerPreambleAndIdent.second);
-        xju::ssh::encode(s,clientKexInit.value());
-        xju::ssh::encode(s,serverKexInit.value());
+        // rfc4253 does not make it clear, but I_C and I_S
+        // are encoded as strings, i.e. with a preceding length
+        {
+          xju::MemOBuf b(1024);
+          {
+            xju::net::ostream s(b);
+            xju::ssh::encode(s,clientKexInit.value());
+          }
+          s.put32(b.data().second-b.data().first)
+            .put(b.data().first,b.data().second);
+        }
+        {
+          xju::MemOBuf b(1024);
+          {
+            xju::net::ostream s(b);
+            xju::ssh::encode(s,serverKexInit.value());
+          }
+          s.put32(b.data().second-b.data().first)
+            .put(b.data().first,b.data().second);
+        }
         s.put32(r.hostKeyAndCertificates_.size())
           .put(r.hostKeyAndCertificates_.begin(),
                r.hostKeyAndCertificates_.end());
@@ -196,13 +208,43 @@ public:
         xju::ssh::encode(s,r.f_);
         xju::ssh::encode(s,k.value());
       }
-      H const h(xju::crypt::hash::sha1(
-                  std::vector<uint8_t>(b.data().first,b.data().second)));
-
-      // and verifies the signature s on H.
-      sigVerifier->verifySignature(h.value().data(),h.value().size(),
-                                   r.hostSignature_);
-      return std::pair<K,H>(std::move(k),std::move(h));
+      std::vector<uint8_t> data(b.data().first,b.data().second);
+      try{
+        H const h(hasher_->hash(data));
+        try{
+          // and verifies the signature s on H.
+          sigVerifier->verifySignature(h.value().data(),h.value().size(),
+                                       r.hostSignature_);
+          return std::pair<K,H>(std::move(k),std::move(h));
+        }
+        catch(xju::Exception& e){
+          std::ostringstream s;
+          s << "verify signature on " << hasher_->name() << " hash "
+            << "(" << h.value().size() << " bytes)"
+            << xju::format::join(h.value().begin(),h.value().end(),xju::format::Hex(""), "");
+          e.addContext(s.str(),XJU_TRACED);
+          throw;
+        }
+      }
+      catch(xju::Exception& ee){
+        auto const pval(p.value());
+        auto const gval(g.value());
+        auto const eval(e.value());
+          
+        std::ostringstream s;
+        s << "verify signature on hash of V_C || V_S || I_C || I_S || K_S || e || f || K "
+          << "(" << data.size() << " bytes) "
+          << xju::format::join(data.begin(),data.end(),xju::format::Hex(""), "")
+          << " noting our signed p="
+          << xju::format::join(pval.begin(),pval.end(),
+                               xju::format::Hex(""),"") << ", g="
+          << xju::format::join(gval.begin(),gval.end(),
+                               xju::format::Hex(""),"") << " and e="
+          << xju::format::join(eval.begin(),eval.end(),
+                               xju::format::Hex(""),"");
+        ee.addContext(s.str(),XJU_TRACED);
+        throw;
+      }
     }
     catch(xju::Exception& e){
       std::ostringstream s;
@@ -213,7 +255,8 @@ public:
         << (peerPreambleAndIdent.second.comment_.valid()?
             " "+peerPreambleAndIdent.second.comment_.value():
             std::string())
-        << " via Diffie-Hellman Group1 SHA1 exchange";
+        << " via Diffie-Hellman Group14 "
+        << hasher_->name() << " exchange";
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
@@ -229,7 +272,7 @@ public:
   virtual std::vector<uint8_t> hash(std::vector<uint8_t> const& data) const
     override
   {
-    return xju::crypt::hash::sha1(data);
+    return hasher_->hash(data);
   }
 
 };

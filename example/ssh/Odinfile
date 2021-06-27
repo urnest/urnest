@@ -3,7 +3,8 @@
 %cxx-opts==<<
 +(../..%cxx-opts)
 +lib=gcrypt
-
++lib=ssl
++lib=crypto
 
 %all.tree==<<
 ()+cmd=(ssh-rsa-key.cc+(%cxx-opts):auto.cxx.exe) (id_rsa) (id_rsa.pub):exec.output

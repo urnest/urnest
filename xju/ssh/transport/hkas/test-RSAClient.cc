@@ -60,7 +60,17 @@ void test1() {
   //sign a message with the target key (see crypt::rsa::test-SigVerifier)
   std::string message("the quick brown fox");
   xju::crypt::rsa::Signer signer(targetKey);
-  xju::crypt::Signature const sig(signer.sign(message.data(),message.size()));
+  xju::crypt::Signature const rawsig(
+    signer.sign(message.data(),message.size()));
+  xju::MemOBuf c(1024);
+  {
+    xju::net::ostream s(c);
+    xju::ssh::encode(s,std::string("ssh-rsa"));
+    s.put32(rawsig.size());
+    s.put(rawsig.begin(),rawsig.end());
+  }
+  xju::crypt::Signature const sig(
+    std::vector<uint8_t>(c.data().first,c.data().second));
   
   //verifyBonafide
   RSAClient client(acceptableKeys);

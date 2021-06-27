@@ -33,6 +33,14 @@ void test1() {
     xju::assert_equal(x.value(),std::vector<uint8_t>({0,255}));
   }
   {
+    I x({0xff});
+    xju::assert_equal(x.value(),std::vector<uint8_t>({0,255}));
+  }
+  {
+    I x(0x80);
+    xju::assert_equal(x.value(),std::vector<uint8_t>({0,0x80}));
+  }
+  {
     I x(0UL);
     xju::assert_equal(x.value(),std::vector<uint8_t>());
   }

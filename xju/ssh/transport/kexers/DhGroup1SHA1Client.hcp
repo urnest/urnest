@@ -9,7 +9,6 @@
 //
 
 
-#include <xju/crypt/hash/sha1.hh> //impl
 #include <xju/ssh/transport/Kexer.hh>
 #include <xju/ssh/transport/messages/KexDHInit.hh> //impl
 #include <xju/ssh/transport/messages/KexDHReply.hh> //impl
@@ -21,6 +20,7 @@
 #include <xju/ssh/transport/OurKexInit.hh>
 #include <xju/ssh/transport/ClientKexInit.hh>
 #include <xju/ssh/transport/ServerKexInit.hh>
+#include <xju/crypt/hashers/SHA1.hh> //impl
 
 namespace xju
 {
@@ -112,7 +112,8 @@ public:
         xju::ssh::encode(s,r.f_);
         xju::ssh::encode(s,k.value());
       }
-      H const h(xju::crypt::hash::sha1(
+      xju::crypt::hashers::SHA1 sha1;
+      H const h(sha1.hash(
                   std::vector<uint8_t>(b.data().first,b.data().second)));
 
       // and verifies the signature s on H.
@@ -145,7 +146,7 @@ public:
   virtual std::vector<uint8_t> hash(std::vector<uint8_t> const& data) const
     override
   {
-    return xju::crypt::hash::sha1(data);
+    return xju::crypt::hashers::SHA1().hash(data);
   }
 
 };
