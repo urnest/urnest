@@ -1,13 +1,18 @@
 - libssh2
-    * what uses RSAClient? implement and test it
+    - user auth via public key
+    
+    - factor out generic dh stuff
+
+    - what will trigger rekeying overall if anything?
+    
+    x what uses RSAClient? implement and test it
       kexers/DhGroup1SHA1Client.hcp
       ... toward Session, which needs ClientAlgorithms, which needs:
 
       x examples/ssh/ssh-rsa-key.cc
         read private and public keys, sign and verify a message
             	      
-      - test kex via "examples/exchange-keys-rsa host-rsa-public-key-file"
-      /  session host-rsa-public-key-file
+      x  session host-rsa-public-key-file
          which would establish a session with localhost sshd
 	 v sshd -d -d -d -p 9999 -h hostkeyfile
 	 
@@ -33,36 +38,144 @@
 
       - pubkey auth
       - constructor connects, with timeout
-    - when would session_free block/how to avoid:
+    x when would session_free block/how to avoid:
       session->free_state
         libssh2_NB_state_idle -> libssh2_NB_state_created
-	  - free each channel (channel_free)
-	  - free each listener (listener_free)
+	  x free each channel (channel_free)
+	  x free each listener (listener_free)
 	  ... so if none of either then will not block
 
     ssh 4251 transport 4253:
-      / handShake(preamble,softwareId,comment,xju::net::istream,xju::net::ostream)->softwareId,comment,preamble
-      exchangeKeys(pkAlgorithmNames,kexMethodNames,cipherNames,macNames,maxMessageLength,I,O)->PkAlgorithmName,KexMethodName,iCipherName,oCipherName,iMacName,oMacName - make it a state machine so can pass in-transit messages to client
-      i:cipher+mac+seq+,receiveMessage(maxSize)->body
-      o:cipher+mac+seq+io::OStream,sendMessage(body)
+      x handShake(preamble,softwareId,comment,xju::net::istream,xju::net::ostream)->softwareId,comment,preamble
+      x exchangeKeys(pkAlgorithmNames,kexMethodNames,cipherNames,macNames,maxMessageLength,I,O)->PkAlgorithmName,KexMethodName,iCipherName,oCipherName,iMacName,oMacName - make it a state machine so can pass in-transit messages to client
+      x i:cipher+mac+seq+,receiveMessage(maxSize)->body
+      x o:cipher+mac+seq+io::OStream,sendMessage(body)
         x encodeMessage
 	x decodeMessage
 	x Cypher:
 	x MessageAuthenticator
 
     - authentication via public key only:
-      rfc4252 send SSH_MSG_USERAUTH_REQUEST
-      - includes public key
-      - whole message is signed:
-        - uses private key
-	- pk algorithm specific
+
+      xju::ssh::userauth::Pk {
+        xju::ssh::PkAlgorithmName const& pkAlgorithm,
+        xju::crypt::Signer const& signer,
+	std::vector<uint8_t> const& publicKey,
+      }
+    - can only authenticate once per transport session, so
+      xju::ssh::client::Connection(
+        userauth::Pk const& key,
+	std::vector<userauth::Pk> const& alternateKeys,
+	<params of client transport::Session>,
+	unsigned int maxConcurrentChannels)
+	{
+	  void run();
+	  void stop();
+
+          // pre: exitStatus valid until std::get<1>(result)
+          std::tuple<std::unique_ptr<xju::io::OStream stdin>, //stdin
+	             std::unique_ptr<xju::io::IStream stdout>, //stdout
+	             std::unique_ptr<xju::io::IStream stdout> > //stderr
+  	  startCommand(std::string const& command,
+	               std::optional<int>& exitStatus)
+          {
+	  }
+
+          unsigned int size() const; // current number of channels
+	  
+          private:
+  	    transport::Session transport_;
+
+	    xju::Mutex guard_;
+	    unsigned int maxConcurrentChannels;
+	    typedef xju::Int<ChannelNumberTag, uint32_t> ChannelNumber;
+	    std::deque<ChannelNumber> freeList;
+	    CommandChannel{
+	      std::optional<int>& exitStatus_;
+	      std::unique_ptr<xju::io::IStream stdin> stdin_;
+	      std::unique_ptr<xju::io::IStream stdout>, //stdout
+	             std::unique_ptr<xju::io::IStream stdout>
+	    };
+	    std::map<ChannelNumber, CommandChannel> starting_;
+	    std::map<ChannelNumber, std::pair<CommandChannel, ChannelNumber> > inProgress_;
+	}
+	... implemented using (with "ssh-connection"):
+	// pre: no other thread accessing session
+	void xju::ssh::userauth::authenticate(
+	  transport::Session& session,
+	  userauth::ServiceName const& requestedService, "ssh-connection" for below use
+          xju::ssh::PkAlgorithmName const& pkAlgorithm,
+          xju::crypt::Signer const& signer,
+  	  std::vector<uint8_t> const& publicKey)
+
+          - note ignore SSH_MSG_USERAUTH_BANNER
+        - use is:
+	  open interactive session channel, maybe request pty
+      byte      SSH_MSG_CHANNEL_OPEN
+      string    "session"
+      uint32    sender channel
+      uint32    initial window size
+      uint32    maximum packet size
+
+      byte      SSH_MSG_CHANNEL_SUCCESS
+      uint32    recipient channel
+
+
+      byte      SSH_MSG_CHANNEL_FAILURE
+      uint32    recipient channel
+
+
+	      start command
+      byte      SSH_MSG_CHANNEL_REQUEST
+      uint32    recipient channel
+      string    "exec"
+      boolean   want reply
+      string    command
+
+      ... can only do one command per channel, so just have:
+        ssh::Command(ssh::client::Connection& connection,
+	             std::string const& command,
+	             ssh::connection::WindowSize windowSize,
+		     size_t maxPacketSize,
+		     std::chrono::steady_click::time_point deadline)
+        {
+	  std::unique_ptr<xju::io::Ostream> stdin_;
+	  std::unique_ptr<xju::io::Istream> stdout_;
+	  std::unique_ptr<xju::io::Istream> stdout_;
+	  int status()
+	    // raise InProgress until stdout_ closed
+	  private:
+	    // 3 pipes
+	    // register with ssh::client::Connection
+	}
+
+        and convenience:
+	  typedef std::vector<uint8_t> Bytes;
+	  std::pair<Bytes, Bytes> doCmd(std::string const& command,
+		     Bytes const& input,
+	             std::chrono::steady_click::time_point deadline)
+		     // CommandFailed unless status==0, capturing out,err,status
+		     // DeadlineReached, capturing out,err,status
+	
+   Data transfer for a session is done using SSH_MSG_CHANNEL_DATA and
+   SSH_MSG_CHANNEL_EXTENDED_DATA packets and the window mechanism.  The
+   extended data type SSH_EXTENDED_DATA_STDERR has been defined for
+   stderr data.
+
+
+
+      - rfc4252 send SSH_MSG_USERAUTH_REQUEST
+        - includes public key
+        - whole message is signed:
+          - uses private key
+	  - pk algorithm specific
       - is rsa mandatory if so implement it only
-        - ssh-dss is required but need ssh-rsa as in practice will often
-	  only have it
+        ~ ssh-dss is required but need ssh-rsa as in practice will often
+	  only have it; ssh-dss is obsolete, use ecdss
 	- choose pk algs based on key type, perhaps private key is carried
 	  in alg rather than separate
-      - is pk algorithm used for anything else? host check? almost certainly
-        - need sign() and checkSignature() e.g.
+      x is pk algorithm used for anything else? host check? almost certainly
+        x need sign() and checkSignature() e.g.
 	  Signature: std::vector<uint8_t>
 	  xju::crypt::sig::Verifier
 	    checkSignature(uint8_t const* x,size_t len,
@@ -74,9 +187,9 @@
 	  xju::crypt::sig::verifiers::RSAVerifier(publickey) : Verifier
 	  loadOpenSSHRsaPrivateKey(std::string keyFileContent)->pk::RSASigner()
 	  loadOpenSSHRsaPublicKey(std::string keyFileContent)->pk::RSAVerifier()
-        for RSA use gcrypt gcry_sexp_build etc like libssh2 libgcrypt.c
+        x for RSA use gcrypt gcry_sexp_build etc like libssh2 libgcrypt.c
 
-    - what is order of subgroup for DhGroup14Sha1 eg
+    x what is order of subgroup for DhGroup14Sha1 eg
       libssh gcry_mpi_randomize uses two quite different randoms:
         gcrypt impl apears to use 256*8-bit random, i.e. 0..2^2048-1
 	   but might be assuming it is doign 0..2^2047-1
