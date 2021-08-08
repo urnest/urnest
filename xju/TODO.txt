@@ -63,6 +63,8 @@
 	std::vector<uint8_t> const& publicKey,
       }
     - can only authenticate once per transport session, so
+      x note abort() stops us simply returning future with stdin/stdout/stderr
+      
       xju::ssh::client::Connection(
         userauth::Pk const& key,
 	std::vector<userauth::Pk> const& alternateKeys,
@@ -73,31 +75,77 @@
 	  void stop();
 
           // pre: exitStatus valid until std::get<1>(result)
-          std::tuple<std::unique_ptr<xju::io::OStream stdin>, //stdin
+          std::tuple<ChannelNumber, // command id - see collectStatus
+	             std::unique_ptr<xju::io::OStream stdin>, //stdin
 	             std::unique_ptr<xju::io::IStream stdout>, //stdout
 	             std::unique_ptr<xju::io::IStream stdout> > //stderr
   	  startCommand(std::string const& command,
 	               std::optional<int>& exitStatus)
+            // xju::Flatout - size() == maxConcurrentChannel()
+	    // xju::Exception - 
           {
 	  }
+	  // Collect exit status of command of specified id
+	  // pre: stdout of ChannelNumber has closed
+	  // pre: collectExitStatus(c) has not been called
+	  // pre: abort has not been called
+          int collectExitStatus(ChannelNumber const& id)
+	    // StartFailed - failed to start command, e.g. server rejected
+	    //               (nothing done on server)
+	    // xju::Exception - failed e.g. protocol error; unknown how much
+	    //                  server has done if anything
 
-          unsigned int size() const; // current number of channels
+          // abort command
+          // pre: collectExitStatus not yet called for id
+          void abort(ChannelNumber const id){
+	  }
 	  
-          private:
-  	    transport::Session transport_;
+          // current number of commands in progress / awaiting collection
+	  // of exit status
+          unsigned int size() const noexcept {
+	    xju::Lock l(guard_);
+	    return starting_.size()+
+	           inProgress_.size()+
+	           exited_.size()+
+		   abort_.size();
+	  }
 
+          private:
 	    xju::Mutex guard_;
+	    
+	    bool stopRunning_;
+
+	    std::pair<std::unique_ptr<xju::io::Istream>,
+	              std::unique_ptr<xju::io::Ostream> > wake_;
+
+  	    transport::Session transport_;
+	    std::set<xju::io::Input> r_;
+	    std::set<xju::io::Output> w_;
+
 	    unsigned int maxConcurrentChannels;
 	    typedef xju::Int<ChannelNumberTag, uint32_t> ChannelNumber;
 	    std::deque<ChannelNumber> freeList;
 	    CommandChannel{
-	      std::optional<int>& exitStatus_;
-	      std::unique_ptr<xju::io::IStream stdin> stdin_;
-	      std::unique_ptr<xju::io::IStream stdout>, //stdout
-	             std::unique_ptr<xju::io::IStream stdout>
+	      std::unique_ptr<xju::io::IStream stdin stdin_;
+	      std::unique_ptr<xju::io::IStream stdout stdout_;
+	      std::unique_ptr<xju::io::IStream stdout stderr_;
 	    };
 	    std::map<ChannelNumber, CommandChannel> starting_;
 	    std::map<ChannelNumber, std::pair<CommandChannel, ChannelNumber> > inProgress_;
+	    std::map<ChannelNumber, std::future<int> > exited_; // awaiting getExitStatus()
+	    std::set<ChannelNumber> abort_; // to be aborted
+
+            std::pair<std::set<xju::io::Input>, std::set<xju::io::Output> >
+	      action(std::set<xju::io::Input> readable,
+	             std::set<xju::io::Output> writable) {
+		     // hmm, how does fairness work e.g. how to stop
+		     // a blocked command (window full) blocking other
+		     // commands? Is it ok to rely on the server to
+		     // accept window size worth of data on each channel
+		     // and then do not try to send more than that?
+		     // Probably have no choice as have to serialise packets
+		     // at some point.
+	    }
 	}
 	... implemented using (with "ssh-connection"):
 	// pre: no other thread accessing session
@@ -136,17 +184,27 @@
         ssh::Command(ssh::client::Connection& connection,
 	             std::string const& command,
 	             ssh::connection::WindowSize windowSize,
-		     size_t maxPacketSize,
-		     std::chrono::steady_click::time_point deadline)
+		     size_t maxPacketSize)
         {
+          ~Command(){
+	    if (!exitStatus_) {
+	      connection_.abort(id_);
+	    }
+	  }
 	  std::unique_ptr<xju::io::Ostream> stdin_;
 	  std::unique_ptr<xju::io::Istream> stdout_;
-	  std::unique_ptr<xju::io::Istream> stdout_;
-	  int status()
-	    // raise InProgress until stdout_ closed
+	  std::unique_ptr<xju::io::Istream> stderr_;
+
+          // pre: stdout_ has closed
+	  int commandExitStatus() const;
+
 	  private:
-	    // 3 pipes
-	    // register with ssh::client::Connection
+	    ssh::client::Connection& connection_;
+
+	    ChannelNumber const id_; // ssh::client::Connection
+
+	    xju::Mutex guard_;
+	    mutable xju::Optional<int> exitStatus_;
 	}
 
         and convenience:
