@@ -30,7 +30,6 @@ class Schema:
     def validate(self,x):
         'verify that %(x)r conforms to jsonschema.Schema %(self)r'%vars()
         return validate(self.x,x)
-        return
     pass
 
 class OneOf:
@@ -132,9 +131,15 @@ def validate(schema,x):
             for name, y in schema.items():
                 try:
                     if not name in x:
-                        keys=list(x.keys())
-                        raise Exception('%(name)r is not in %(keys)r'%vars())
-                    validate(y,x[name])
+                        try:
+                            validate(y,None)
+                        except:
+                            keys=list(x.keys())
+                            raise Exception('%(name)r is not in %(keys)r and %(name)r is not optional'%vars())
+                        pass
+                    else:
+                        validate(y,x[name])
+                        pass
                 except:
                     raise inContext('validate dictionary item %(name)r'%vars()) from None
                 pass
