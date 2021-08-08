@@ -29,6 +29,9 @@ namespace xju
 {
 namespace ssh
 {
+namespace misc
+{
+
 namespace
 {
 std::string const AUTH_MAGIC="openssh-key-v1";
@@ -169,14 +172,14 @@ private:
 
 }
 
-std::shared_ptr<hcp_parser::NamedParser<xju::ssh::open_ssh_private_key_file_parser::Item> >
+std::shared_ptr<hcp_parser::NamedParser<xju::ssh::misc::open_ssh_private_key_file_parser::Item> >
 openSSHPrivateKeyFileParser()
 {
   using open_ssh_private_key_file_parser::Base64ContentItem;
   using hcp_parser::named;
   
   static auto const result(
-    named<xju::ssh::open_ssh_private_key_file_parser::Item>(
+    named<xju::ssh::misc::open_ssh_private_key_file_parser::Item>(
       "OpenSSH format private key",
       "-----BEGIN OPENSSH PRIVATE KEY-----\n"+
       hcp_parser::named<Base64ContentItem>(
@@ -190,5 +193,6 @@ openSSHPrivateKeyFileParser()
   return result;
 }
 
+}
 }
 }

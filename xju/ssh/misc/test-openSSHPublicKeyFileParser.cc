@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/ssh/openSSHPublicKeyFileParser.hh>
+#include <xju/ssh/misc/openSSHPublicKeyFileParser.hh>
 
 #include <iostream>
 #include <xju/assert.hh>
@@ -19,12 +19,14 @@ namespace xju
 {
 namespace ssh
 {
+namespace misc
+{
 
 void test1() {
   std::string const x("ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDKIk2gmAJL+vKD6WLDQYvBHSlcfKTZxlHnoOTZwX02nifUDGxJkC7QYuAQJg/dwI+7TdU/WJhwrZ/cfLHDNCsYY6o83AdbMZLEacQoCdGA6ORkAte6AosTKFx3K4BPH9BYvSrFVCyURTZFzs/ZYA4uhgY07j/+4CugID5nC7ERJ/SlOldvO52XyD+jo/obyFizQH31A0E2jyZAiYAxF7u092s+Qn7QFKdH+0UuhfUPqN0dpv4TFeQjhljG3tTm/q4OS2enuQAO/CzY5WQIKRrOhplAhANqRtqTIllPxoPDilGMnK4/hyLFdIN5VCigjYDYCnDZ6aXZYih6G8vV8m5t xju@xjutv");
   auto const r(hcp_parser::parseString(x.begin(),x.end(),
                                        openSSHPublicKeyFileParser()));
-  auto const i(hcp_ast::findOnlyChildOfType<xju::ssh::open_ssh_public_key_file_parser::Item>(r));
+  auto const i(hcp_ast::findOnlyChildOfType<xju::ssh::misc::open_ssh_public_key_file_parser::Item>(r));
   xju::assert_equal(std::get<0>(i.get()),KeyTypeName("ssh-rsa"));
   xju::assert_equal(std::get<2>(i.get()),std::string("xju@xjutv"));
   auto const encodedKey(std::get<1>(i.get()));
@@ -35,8 +37,9 @@ void test1() {
 
 }
 }
+}
 
-using namespace xju::ssh;
+using namespace xju::ssh::misc;
 
 int main(int argc, char* argv[])
 {

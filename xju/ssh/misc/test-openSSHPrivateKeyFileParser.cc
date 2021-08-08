@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/ssh/openSSHPrivateKeyFileParser.hh>
+#include <xju/ssh/misc/openSSHPrivateKeyFileParser.hh>
 
 #include <iostream>
 #include <xju/assert.hh>
@@ -19,6 +19,8 @@
 namespace xju
 {
 namespace ssh
+{
+namespace misc
 {
 
 void test1() {
@@ -63,8 +65,9 @@ B1Eno5M3rVirhyhRAAAACXhqdUB4anV0dgE=
 
 }
 }
+}
 
-using namespace xju::ssh;
+using namespace xju::ssh::misc;
 
 int main(int argc, char* argv[])
 {

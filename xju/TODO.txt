@@ -87,17 +87,18 @@
 	  }
 	  // Collect exit status of command of specified id
 	  // pre: stdout of ChannelNumber has closed
-	  // pre: collectExitStatus(c) has not been called
-	  // pre: abort has not been called
-          int collectExitStatus(ChannelNumber const& id)
+	  // pre: release has not been called
+          int getExitStatus(ChannelNumber const& id)
 	    // StartFailed - failed to start command, e.g. server rejected
 	    //               (nothing done on server)
 	    // xju::Exception - failed e.g. protocol error; unknown how much
 	    //                  server has done if anything
+	  {
+	  }
 
-          // abort command
+          // Release channel with specified id
           // pre: collectExitStatus not yet called for id
-          void abort(ChannelNumber const id){
+          void release(ChannelNumber const id){
 	  }
 	  
           // current number of commands in progress / awaiting collection
@@ -187,7 +188,7 @@
 		     size_t maxPacketSize)
         {
           ~Command(){
-	    if (!exitStatus_) {
+	    if (!exitStatus_.valid()) {
 	      connection_.abort(id_);
 	    }
 	  }
@@ -203,8 +204,8 @@
 
 	    ChannelNumber const id_; // ssh::client::Connection
 
-	    xju::Mutex guard_;
-	    mutable xju::Optional<int> exitStatus_;
+	    mutable xju::Mutex guard_;
+	    mutable std::future<int> exitStatus_;
 	}
 
         and convenience:

@@ -26,6 +26,8 @@ namespace xju
 {
 namespace ssh
 {
+namespace misc
+{
 
 namespace open_ssh_public_key_file_parser
 {
@@ -72,7 +74,7 @@ public:
 // Parse OpenSSH public key i.e. id_rsa.pub content e.g.:
 // ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDC01TZzrY8c8DQaMAjrsvZYxK40rxaf/kxNkdkViA6GkY1pn6l5yQ4V7Unm99qSyUIgqwrIZieeLXv5PK0IjFRaNUCD4q4/zGqI7XcoK6p0NF1PCWj5Aek9vxQkTpKZhlSZDrwtBcdI55f2EJJ/4RoVohJGXXgAoh/xVZJW7yuW9qsUgJwOuMKgmY/d63fOjimqLqHrv7cXDY2MMaK7/VeG+AhLAqKCIxFq7ySV/nhklsxF6AP0ATYi+b+Q87CQhI+aFEP/xx5vIS1aM5VYacRRCK4dmY3nQM33NYRnxK4r6Ygt39beJ0aqL2TblAFT4U2/ZMtqHXdbiF0jXR3U+PN xju@xjutv
 //
-std::shared_ptr<hcp_parser::NamedParser<xju::ssh::open_ssh_public_key_file_parser::Item> >
+std::shared_ptr<hcp_parser::NamedParser<xju::ssh::misc::open_ssh_public_key_file_parser::Item> >
 openSSHPublicKeyFileParser()
 {
   using hcp_parser::atLeastOne;
@@ -109,5 +111,6 @@ openSSHPublicKeyFileParser()
   return result;
 }
 
+}
 }
 }
