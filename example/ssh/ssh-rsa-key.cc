@@ -12,7 +12,7 @@
 #include <xju/path.hh>
 #include <xju/file/read.hh>
 #include <hcp/parser.hh>
-#include <xju/ssh/openSSHPrivateKeyFileParser.hh>
+#include <xju/ssh/misc/openSSHPrivateKeyFileParser.hh>
 #include <xju/MemIBuf.hh>
 #include <xju/net/istream.hh>
 #include <xju/ssh/decode.hh>
@@ -27,9 +27,9 @@ std::unique_ptr<xju::crypt::Signer> load_id_rsa(xju::path::AbsFile const& path)
     auto const x(xju::file::read(path));
     auto const r(hcp_parser::parseString(
                    x.begin(),x.end(),
-                   xju::ssh::openSSHPrivateKeyFileParser()));
+                   xju::ssh::misc::openSSHPrivateKeyFileParser()));
     auto const i(
-      hcp_ast::findOnlyChildOfType<xju::ssh::open_ssh_private_key_file_parser::Item>(r));
+      hcp_ast::findOnlyChildOfType<xju::ssh::misc::open_ssh_private_key_file_parser::Item>(r));
     xju::ssh::EncodedPrivateKey k(i.getEncodedPrivateKey());
     xju::MemIBuf b(k.value_);
     xju::net::istream s(b);

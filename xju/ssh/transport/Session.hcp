@@ -18,11 +18,8 @@
 #include <xju/ssh/transport/I.hh>
 #include <xju/ssh/transport/O.hh>
 #include <xju/ssh/transport/Rekeyer.hh>
-#include <xju/io/IStream.hh>
-#include <xju/io/OStream.hh>
 #include <unistd.h>
 #include <xju/ssh/transport/ClientAlgorithms.hh>
-#include <chrono>
 #include <xju/ssh/transport/shakeHands.hh> //impl
 #include <xju/Exception.hh>
 #include <xju/ssh/transport/Message.hh>
@@ -57,8 +54,6 @@ std::pair<
 
 class Session
 {
-  xju::io::IStream& is_;
-  xju::io::OStream& os_;
   Algorithms const& algorithms_;
 
   xju::io::IBuf ibuf_;
@@ -74,29 +69,21 @@ class Session
 public:
   SessionId const sessionKey_;
 
-  // Establish buffered, secure, host-authenticated SSH client session with 
-  // server over i+o by deadline, selecting algorithms from only those
-  // specified.
-  //
-  // Note actual buffer sizes used might be larger than those specified to
-  // suit chosen algorithms
+  // Establish secure, host-authenticated SSH client with 
+  // server over i+o, using specified SSH ident and selecting
+  // algorithms from only those specified.
   //
   // Note session transparently rekeys as necessary.
   //
   // pre: algorithms, i and o will outlive this
-  Session(xju::io::IStream& i,
-          xju::io::OStream& o,
-          size_t const inputBufferSize,
-          size_t const outputBufferSize,
+  Session(xju::IBuf& i,
+          xju::OBuf& o,
           Ident ourIdent,
           ClientAlgorithms const& algorithms,
-          std::chrono::steady_clock::time_point const deadline,
           size_t maxAcceptedKexInitSize):
-      is_(i),
-      os_(o),
       algorithms_(algorithms),
-      obuf_(o,deadline,outputBufferSize),
-      ibuf_(i,deadline,inputBufferSize),
+      ibuf_(i),
+      obuf_(o),
       peerPreambleAndIdent_(
         shakeHands_(ibuf_,
                     obuf_,
@@ -131,7 +118,7 @@ public:
     using xju::Exception::Exception;
   };
   
-  // Send message by deadline, appending any messages received in the meantime
+  // Send message, appending any messages received in the meantime
   // to receivedMessages.
   //
   // This method suits single-threaded clients, which call either
@@ -141,15 +128,9 @@ public:
   //
   void sendMessage(
     Message const& message,
-    std::chrono::steady_clock::time_point const& deadline,
     std::back_insert_iterator<std::vector<Message> > receivedMessages)
-    // xju::DeadlineReached - message not completely received by deadline
-    // Closed - other end has closed
   {
     try{
-      xju::io::IBuf::DeadlineOverride ido(ibuf_,deadline);
-      xju::io::OBuf::DeadlineOverride odo(obuf_,deadline);
-
       while(true){
         try{
           o_.sendMessage(message);
@@ -170,58 +151,47 @@ public:
       std::ostringstream s;
       s << "send " << message.size() << "-byte message to peer of SSH session "
         << (*this)
-        << " by deadline collecting any messages received in the meantime";
+        << " collecting any messages received in the meantime";
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
   }
   
-  // Send message by deadline.
+  // Send message.
   //
   // This method is only for multi-threaded clients; receiveMessage must
   // be called concurrently to avoid deadlock due to e.g. rekeying on the fly
   //
   // pre: close() has not been called
   //
-  void sendMessage(Message message,
-                   std::chrono::steady_clock::time_point const& deadline)
-    // xju::DeadlineReached - message not completely received by deadline
-    // Closed - other end has closed
+  void sendMessage(Message message)
   {
     try{
-      xju::io::OBuf::DeadlineOverride odo(obuf_,deadline);
-      xju::io::IBuf::DeadlineOverride ido(ibuf_,deadline);
-
       while(true){
         try{
           o_.sendMessage(message);
           return;
         }
         catch(O::Rekeying const&){
-          rekeyer_.waitTillRekeyed(deadline);
+          rekeyer_.waitTillRekeyed();
         }
       }
     }
     catch(xju::Exception& e){
       std::ostringstream s;
       s << "send " << message.size() << "-byte message to peer of SSH session "
-        << (*this) << " by deadline";
+        << (*this);
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
   }
   
-  // Recieve message by deadline.
+  // Recieve message.
   //
   // pre: close() has not been called
   //
-  Message receiveMessage(size_t maxSize,
-                         std::chrono::steady_clock::time_point const& deadline)
-    // xju::DeadlineReached - message not completely received by deadline
-    // Closed - other end has closed
+  Message receiveMessage(size_t maxSize)
   {
-    xju::io::OBuf::DeadlineOverride odo(obuf_,deadline);
-    xju::io::IBuf::DeadlineOverride ido(ibuf_,deadline);
     while(true){
       try{
         Message m(i_.receiveMessage(maxSize));
@@ -248,7 +218,6 @@ public:
   // pre: close() has not been called
   //
   // std::vector<Body> close(
-  //   std::chrono::steady_clock::time_point const& deadline,
   //   std::size_t maxResultSize)
   // {
   //   //REVISIT
@@ -259,7 +228,7 @@ public:
 
 std::ostream& operator<<(std::ostream& s, Session const& x)
 {
-  s << x.is_ << "/" << x.os_;
+  s << " with " << x.peerPreambleAndIdent_.second
   return s;
 }
 

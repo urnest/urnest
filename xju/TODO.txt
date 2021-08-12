@@ -71,16 +71,66 @@
 	<params of client transport::Session>,
 	unsigned int maxConcurrentChannels)
 	{
-	  void run();
-	  void stop();
+          void recv(std::future<void>& reuslt){
+	        try{
+	          while(true){
+		    msg=session_.getMessage();
+		    xju::Lock l(guard_);
+		    // ... find Channel and post message, or drop/reject
+		  }
+	        }
+		catch(xju::io::Shutdown&){
+		  p.set_result();
+		}
+	        catch(std::exception& e){
+	          p.set_exception(e);
+		  stopRunning_.set(true);
+		  o_.shutdown();
+	        }
+	  }
+	  
+	  void run(){
+	    std::future<void> f(p);
+	    {
+  	      xju::Thread t([&](){ recv(p); }, [&](){ i_.shutdown(); });
+	      try{
+	        while(true){
+  	          auto x(xju::io::select(inputs_, outputs_, {}));
+	          if (stopRunning_.get()){
+		    return;
+		  }
+		  Lock l(guard_);
+		  for(auto input: x.first()){
+		    auto const c=byStdin_.find(input);
+		    if (c != channels_.end()){
+		      (*c).second.inputReady();
+		    }
+		  }
+		  for(auto output: x.second()){
+		    auto const c=byStdoutAndStderr_.find(output);
+		    if (c != channels_.end()){
+		      (*c).second.outputReady(x);
+		    }
+		  }
+                }
+	      }
+	      catch(xju::io::Shutdown&)
+	      {
+	      }
+	    }
+	    f.get_result();
+	  }
+	  void stop() {
+	    stopRunning_.set(true);
+	    ibuf_.shutdown();
+	    obuf_.shutdown();
+	  }
 
-          // pre: exitStatus valid until std::get<1>(result)
           std::tuple<ChannelNumber, // command id - see collectStatus
 	             std::unique_ptr<xju::io::OStream stdin>, //stdin
 	             std::unique_ptr<xju::io::IStream stdout>, //stdout
 	             std::unique_ptr<xju::io::IStream stdout> > //stderr
-  	  startCommand(std::string const& command,
-	               std::optional<int>& exitStatus)
+  	  startCommand(std::string const& command)
             // xju::Flatout - size() == maxConcurrentChannel()
 	    // xju::Exception - 
           {
@@ -105,35 +155,45 @@
 	  // of exit status
           unsigned int size() const noexcept {
 	    xju::Lock l(guard_);
-	    return starting_.size()+
-	           inProgress_.size()+
-	           exited_.size()+
-		   abort_.size();
+	    return channels_.size();
 	  }
 
           private:
 	    xju::Mutex guard_;
 	    
-	    bool stopRunning_;
-
-	    std::pair<std::unique_ptr<xju::io::Istream>,
-	              std::unique_ptr<xju::io::Ostream> > wake_;
+	    std::atomic<bool> stopRunning_;
 
   	    transport::Session transport_;
-	    std::set<xju::io::Input> r_;
-	    std::set<xju::io::Output> w_;
+	    std::set<xju::io::Input const*> r_;
+	    std::set<xju::io::Output cosnt*> w_;
 
-	    unsigned int maxConcurrentChannels;
+	    unsigned int const maxConcurrentChannels;
 	    typedef xju::Int<ChannelNumberTag, uint32_t> ChannelNumber;
-	    std::deque<ChannelNumber> freeList;
-	    CommandChannel{
-	      std::unique_ptr<xju::io::IStream stdin stdin_;
-	      std::unique_ptr<xju::io::IStream stdout stdout_;
-	      std::unique_ptr<xju::io::IStream stdout stderr_;
+	    ChannelNumber nextChannelNumber_;
+	    CommandChannel{  // standalone testable
+	      CommandChannel(ChannelNumber,
+	                     std::set<xju::io::Input const*>& inputs,
+	                     std::set<xju::io::Input const*>& outputs,
+			     std::io::Ostream& wake,
+			     xju::TriggerIf<void, msg>& send);
+	      std::unique_ptr<xju::io::IStream> stdin_;
+	      std::unique_ptr<xju::io::OStream> stdout_;
+	      std::unique_ptr<xju::io::OStream> stderr_;
+	      xju::Optional<PeerChannelNumber> peerChannelNumber_;
+	      std::future<int> result_;
+
+              void messageReceived(PeerChannelNumber const& from, msg);
+	      void inputReady();
+	      void outputReady(xju::io::Output const* which);
 	    };
-	    std::map<ChannelNumber, CommandChannel> starting_;
-	    std::map<ChannelNumber, std::pair<CommandChannel, ChannelNumber> > inProgress_;
-	    std::map<ChannelNumber, std::future<int> > exited_; // awaiting getExitStatus()
+	    std::map<ChannelNumber, CommandChannel> channels_;
+	    typedef decltype(channels_)::iterator ChannelRef;
+	    
+	    typedef xju::Int<ChannelNumberTag, uint32_t> PeerChannelNumber;
+
+	    std::map<xju::io::Input const*, ChannelRef> byStdin_;
+	    std::map<xju::io::Output const*, ChannelRef> byStdoutAndStderr_;
+
 	    std::set<ChannelNumber> abort_; // to be aborted
 
             std::pair<std::set<xju::io::Input>, std::set<xju::io::Output> >
@@ -152,7 +212,7 @@
 	// pre: no other thread accessing session
 	void xju::ssh::userauth::authenticate(
 	  transport::Session& session,
-	  userauth::ServiceName const& requestedService, "ssh-connection" for below use
+	  userauth::ServiceName const& requestedService, //"ssh-connection" for below use
           xju::ssh::PkAlgorithmName const& pkAlgorithm,
           xju::crypt::Signer const& signer,
   	  std::vector<uint8_t> const& publicKey)

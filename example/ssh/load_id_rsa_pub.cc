@@ -12,7 +12,7 @@
 
 #include <xju/file/read.hh> //impl
 #include <hcp/parser.hh> //impl
-#include <xju/ssh/openSSHPublicKeyFileParser.hh> //impl
+#include <xju/ssh/misc/openSSHPublicKeyFileParser.hh> //impl
 #include <xju/format.hh> //impl
 #include <xju/Exception.hh> //impl
 #include <xju/MemIBuf.hh> //impl
@@ -26,9 +26,9 @@ xju::crypt::rsa::PublicKey load_id_rsa_pub(xju::path::AbsFile const& path)
     auto const x(xju::file::read(path));
     auto const r(hcp_parser::parseString(
                    x.begin(),x.end(),
-                   xju::ssh::openSSHPublicKeyFileParser()));
+                   xju::ssh::misc::openSSHPublicKeyFileParser()));
     auto const i(
-      hcp_ast::findOnlyChildOfType<xju::ssh::open_ssh_public_key_file_parser::Item>(r));
+      hcp_ast::findOnlyChildOfType<xju::ssh::misc::open_ssh_public_key_file_parser::Item>(r));
     if (std::get<0>(i.get())!=xju::ssh::KeyTypeName("ssh-rsa")){
       std::ostringstream s;
       s << "expected key type (name) \"ssh-rsa\" but got "
@@ -49,6 +49,3 @@ xju::crypt::rsa::PublicKey load_id_rsa_pub(xju::path::AbsFile const& path)
     throw;
   }
 }
-
-
-

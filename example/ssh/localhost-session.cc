@@ -32,6 +32,8 @@
 #include <xju/crypt/hashers/SHA1.hh>
 #include <xju/ssh/transport/kexers/DhGroup14Client.hh>
 #include <xju/crypt/hashers/SHA256.hh>
+#include <xju/io/IBuf.hh>
+#include <xju/io/OBuf.hh>
 
 int main(int argc, char* argv[]){
   if (argc < 2){
@@ -85,17 +87,16 @@ int main(int argc, char* argv[]){
       hostKeyers,
       ciphers,
       packetAuthenticators);
-    
+
+    auto const deadline(xju::steadyNow()+std::chrono::seconds(10));
+    xju::io::IBuf i(socket, deadline);
+    xju::io::OBuf o(socket, deadline);
     xju::ssh::transport::Session session(
-      socket,
-      socket,
-      1024,
-      1024,
+      i,
+      o,
       ourIdent,
       algorithms,
-      xju::steadyNow()+std::chrono::seconds(10),
       200000U);
-      
   }
   catch(xju::Exception& e){
     std::ostringstream s;
