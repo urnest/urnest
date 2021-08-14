@@ -1,0 +1,48 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace xju
+{
+namespace ssh
+{
+namespace userauth
+{
+namespace messages
+{
+
+class RSAPublicKeyRequest : public Request
+{
+public:
+  // rfc4253 "ssh-rsa" algorithm
+  explicit RSAPublicKeyRequest(
+    Request r,
+    xju::crypt::rsa::PublicKey publicKey,
+    xju::crypt::Signature signature):
+      Request(r),
+      publicKey_(std::move(publicKey)),
+      signature_(std::move(signature))
+  {
+  }
+
+  virtual ~RSAPublicKeyRequest() noexcept{}
+  
+  xju::crypt::rsa::PublicKey publicKey_;
+  xju::crypt::Signature      signature_;
+  
+  friend bool operator<(RSAPublicKeyRequest const& a,
+                        RSAPublicKeyRequest const& b) noexcept;
+};
+
+
+}
+}
+}
+}

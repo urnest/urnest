@@ -26,6 +26,8 @@ namespace messages
 class Request
 {
 public:
+  virtual ~Request() noexcept {}
+  
   Request(xju::UserName userName,
           ServiceName serviceName,
           MethodName methodName) noexcept:

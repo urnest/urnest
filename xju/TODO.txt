@@ -66,8 +66,8 @@
       x note abort() stops us simply returning future with stdin/stdout/stderr
       
       xju::ssh::client::Connection(
-        userauth::Pk const& key,
-	std::vector<userauth::Pk> const& alternateKeys,
+        userauth::Authenticator const& authenticator, //e.g. authenticators::RSAPublicKeyAuthenticator
+	std::vector<std::ref<userauth::Authenticator> > const& alternateAuthenticators,
 	<params of client transport::Session>,
 	unsigned int maxConcurrentChannels)
 	{
@@ -96,10 +96,14 @@
 	      try{
 	        while(true){
   	          auto x(xju::io::select(inputs_, outputs_, {}));
+		  Lock l(guard_);
 	          if (stopRunning_.get()){
 		    return;
 		  }
-		  Lock l(guard_);
+		  for(auto c: released_){
+		    releaseFds(c.second.stdin_,c.second.stdout_,c.second.stderr_);
+		    channels_.erase(c);
+		  }
 		  for(auto input: x.first()){
 		    auto const c=byStdin_.find(input);
 		    if (c != channels_.end()){
@@ -242,7 +246,7 @@
       string    command
 
       ... can only do one command per channel, so just have:
-        ssh::Command(ssh::client::Connection& connection,
+        ssh::Command(MsgSender& msgSender,
 	             std::string const& command,
 	             ssh::connection::WindowSize windowSize,
 		     size_t maxPacketSize)
@@ -252,20 +256,33 @@
 	      connection_.abort(id_);
 	    }
 	  }
-	  std::unique_ptr<xju::io::Ostream> stdin_;
-	  std::unique_ptr<xju::io::Istream> stdout_;
-	  std::unique_ptr<xju::io::Istream> stderr_;
 
+          void handleStdin();
+	  void handleStdoutStderr(Input*);
+	  void handleMessage(Fields...);
+	  void updateFdSets(std::set<Input*>& r, std::set<Output*>& w) const;
+
+          Ouput const* stdin() const;
+          Input const* stdout() const;
+	  Input const* stderr() const;
+	  
           // pre: stdout_ has closed
 	  int commandExitStatus() const;
 
 	  private:
 	    ssh::client::Connection& connection_;
 
-	    ChannelNumber const id_; // ssh::client::Connection
+	    std::unique_ptr<xju::io::Ostream> stdin_;
+  	    std::unique_ptr<xju::io::Istream> stdout_;
+	    std::unique_ptr<xju::io::Istream> stderr_;
+
+	    PeerChannelNumber const id_; // ssh::client::Connection
 
 	    mutable xju::Mutex guard_;
 	    mutable std::future<int> exitStatus_;
+
+            // two buffers of size pipebuf to avoid blocking on
+	    // recieve, do we need one for send too or just a counter?
 	}
 
         and convenience:

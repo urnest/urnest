@@ -28,6 +28,9 @@
 #include <xju/ssh/transport/messages/KexDHInit.hh> //impl
 #include <xju/ssh/userauth/messages/Success.hh> //impl
 #include <xju/ssh/transport/messages/NewKeys.hh>
+#include <xju/ssh/userauth/messages/RSAPublicKeyRequest.hh>
+#include <xju/crypt/rsa/PublicKey.hh>
+#include <xju/crypt/Signature.hh>
 
 namespace xju
 {
@@ -156,6 +159,37 @@ xju::net::ostream& encode(xju::net::ostream& s,
   encode(s,x.userName_);
   encode(s,x.serviceName_);
   encode(s,x.methodName_);
+  return s;
+}
+
+// encode x to s per rfc4253 ssh-rsa encoding rule
+xju::net::ostream& encode(xju::net::ostream& s,
+                          xju::crypt::rsa::PublicKey const& x)
+{
+  encode(s, std::string("ssh-rsa"));
+  encode(s, x.e_);
+  encode(s, x.n_);
+}
+
+// encode x and y to s per rfc4253 ssh-rsa encoding rules
+xju::net::ostream& encode(xju::net::ostream& s,
+                          xju::crypt::rsa::PublicKey const& x,
+                          xju::crypt::Signature      const& signature)
+{
+  encode(s, x);
+  encode(s, std::string("ssh-rsa"));
+  encode(s, signature_);
+}
+
+// encode x to s including initial type byte
+xju::net::ostream& encode(xju::net::ostream& s,
+                          userauth::messages::RSAPublicKeyRequest const& x)
+{
+  encode(s, (userauth::messages::Request const&)x);
+  encode(s, std::string("publickey"));
+  encode(s, true);
+  encode(s, std::string("ssh-rsa"));
+  encode(s, x.publicKey_, x.signature_);
   return s;
 }
 
