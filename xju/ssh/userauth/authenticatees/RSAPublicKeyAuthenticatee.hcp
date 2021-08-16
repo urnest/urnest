@@ -11,6 +11,9 @@
 
 #include <xju/ssh/userauth/Authenticatee.hh>
 #include <xju/crypt/rsa/PublicKey.hh>
+#include <xju/UserName.hh>
+#include <xju/crypt/Signer.hh>
+#include <unistd.h>
 
 namespace xju
 {
@@ -20,28 +23,133 @@ namespace userauth
 {
 namespace authenticatees
 {
+namespace{
+  // sign public-key authenticate request per rfc4252
+  xju::crypt::Signature signRequest(
+    xju::crypt::Signer& signer,
+    xju::ssh::transport::SessionId const& sessionId,
+    xju::UserName const& userName,
+    ServiceName const& serviceName,
+    xju::crypt::rsa::PublicKey publicKey)
+  {
+    xju::MemOBuf b(1024U);
+    {
+      xju::net::ostream s(b);
+      xju::ssh::encode(s, sessionId);
+      xju::ssh::encode(s, xju::ssh::userauth::MSG::Request);
+      xju::ssh::encode(s, userName);
+      xju::ssh::encode(s, serviceName);
+      xju::ssh::encode(s, publicKey);
+    }
+    return xju::crypt::Signature(b.data().first,
+                                 b.data().second);
+  }
+}
+
 class RSAPublicKeyAuthenticatee : public Authenticatee
 {
 public:
   // rfc4252 ssh-rsa public key authenticatee
   // - signer is e.g. xju::crypt::rsa::Signer
   // pre: signer will outlive this
-  RSAPublicKeyAuthenticatee(xju::crypt::rsa::PublicKey publicKey,
-                            xju::crypt::Signer& signer) noexcept:
+  RSAPublicKeyAuthenticatee(xju::UserName userName,
+                            xju::crypt::rsa::PublicKey publicKey,
+                            xju::crypt::Signer& signer,
+                            size_t const maxMessageSize) noexcept:
+      userName_(std::move(userName)),
       publicKey_(std::move(publicKey)),
-      signer_(std::move(signer))
+      signer_(std::move(signer)),
+      maxMessageSize_(maxMessageSize)
   {
   }
 
-  void authenticate(xju::ssh::transport::SingleTheadedInterface& session,
-                    ServiceName const& serviceName) override
+  std::vector<transport::Message> authenticate(
+    xju::ssh::transport::SingleThreadedSendInterface& sender,
+    xju::ssh::transport::ReceiveInterface& receiver,
+    ServiceName const& serviceName) override
   {
-    REVISIT;
+    try{
+      auto const signature(signRequest(signer_,
+                                       sessionId,
+                                       userName_,
+                                       serviceName,
+                                       publicKey));
+      std::vector<Message> receivedMessages;
+      sender.sendMessage(xju::ssh::userauth::messages::RSAPublicKeyRequest(
+                           xju::ssh::userauth::messages::Request(
+                             userName_,
+                             serviceName,
+                             "publickey"),
+                           publicKey_,
+                           signature),
+                         std::back_inseter(receivedMessages));
+      auto const m(receiver.receiveMessage(maxMessageSize_));
+      xju::MemIBuf b(m);
+      {
+        xju::net::istream s(b);
+        uint8_t const messageType(xju::ssh::decode<uint8_t>(s));
+        switch (messageType){
+        case (uint8_t)xju::ssh::userauth::MSG::FAILURE:
+        {
+          auto const failure(
+            xju::ssh::decode<xju::ssh::userauth::messages::Failure>(s));
+          std::ostringstream s;
+          s << "server responded with ";
+          if (failure.partialSuccess_){
+            s << "partial success, can continue with "
+              < xju::format::join(failure.canContinue_.begin(),
+                                  failure.canContinue_.end(),
+                                  "/");
+          }
+          else{
+            " outright failure";
+          }
+          throw xju::Exception(s.str(),XJU_TRACED);
+        }
+        case (uint8_t)xju::ssh::userauth::MSG::Success:
+        {
+          return;
+        }
+        default:
+        {
+          std::ostringstream s;
+          s << "unexpected response of type " << xju::format::int(messageType)
+            << " from server";
+          if (receivedMessages.size()){
+            std::ostringstream s;
+            s << " noting preceding received messages of types "
+              << xju::format::join(
+                receivedMessages.begin(),
+                receivedMessages.end(),
+                [](Message const& m){
+                  return xju::format::int_(m[0]);
+                },
+                ", ");
+          }
+          throw xju::Exception(s.str(),XJU_TRACED);
+        }
+        }
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "authenticate "
+        << userName_
+        << " with server via RSA public key "
+        << publicKey_ << " for SSH service "
+        << serviceName
+        << ", rejecting responses greater than "
+        << maxMessageSize_ << " bytes";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
   }
 
 private:
+  xju::UserName userName_;
   xju::crypt::rsa::PublicKey publicKey_;
   xju::crypt::Signer& signer_;
+  size_t maxMessageSize_;
 };
 
 }

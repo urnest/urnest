@@ -9,8 +9,11 @@
 //
 
 
-#include <xju/ssh/transport/Session.hh>
 #include <xju/ssh/userauth/ServiceName.hh>
+#include <xju/ssh/transport/SingleThreadedSendInterface.hh>
+#include <xju/ssh/transport/ReceiveInterface.hh>
+#include <vector>
+#include <xju/ssh/transport/Message.hh>
 
 namespace xju
 {
@@ -24,9 +27,12 @@ class Authenticatee
 public:
   virtual ~Authenticatee() noexcept{}
 
-  // perform rfc4252 authentication on session for specified service
-  virtual void authenticate(xju::ssh::transport::Session& session,
-                            ServiceName const& serviceName) = 0;
+  // perform rfc4252 authentication on session for specified service,
+  // returning any non-userauth messages received before completion
+  virtual std::vector<transport::Message> authenticate(
+    xju::ssh::transport::SingleThreadedSendInterface& sender,
+    xju::ssh::transport::ReceiveInterface& receiver,
+    ServiceName const& serviceName) = 0;
 };
 
 }

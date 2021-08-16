@@ -52,7 +52,9 @@ std::pair<
 
 }
 
-class Session
+class Session : public ReceiveInterface,
+                public SingleThreadedSendInterface,
+                public MultiThreadedSendInterface
 {
   Algorithms const& algorithms_;
 
@@ -128,7 +130,7 @@ public:
   //
   void sendMessage(
     Message const& message,
-    std::back_insert_iterator<std::vector<Message> > receivedMessages)
+    std::back_insert_iterator<std::vector<Message> > receivedMessages) override
   {
     try{
       while(true){
@@ -164,7 +166,7 @@ public:
   //
   // pre: close() has not been called
   //
-  void sendMessage(Message message)
+  void sendMessage(Message message) override
   {
     try{
       while(true){
@@ -190,7 +192,7 @@ public:
   //
   // pre: close() has not been called
   //
-  Message receiveMessage(size_t maxSize)
+  Message receiveMessage(size_t maxSize) override
   {
     while(true){
       try{

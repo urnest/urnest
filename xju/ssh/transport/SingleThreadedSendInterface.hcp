@@ -1,0 +1,39 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/ssh/transport/Message.hh>
+#include <iterator>
+#include <vector>
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+class SingleThreadedSendInterface
+{
+public:
+  virtual ~SingleThreadedSendInterface() noexcept{}
+
+  // post: all messages added to receivedMessages are at least one byte long
+  virtual void sendMessage(
+    Message const& message,
+    std::back_insert_iterator<std::vector<Message> > receivedMessages) = 0;
+  
+};
+
+}
+}
+}
+
+
