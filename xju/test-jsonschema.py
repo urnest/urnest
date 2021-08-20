@@ -118,7 +118,7 @@ def test():
         x={'a':int,'c':int}
         Schema(x).validate({'a':1})
     except Exception as e:
-        Assert(readableRepr(e))=='''Failed to verify {'a': 1} conforms to json schema '''+repr(x)+''' because\nfailed to validate dictionary item 'c' because\n'c' is not in ['a'].'''
+        Assert(readableRepr(e))=='''Failed to verify {'a': 1} conforms to json schema '''+repr(x)+''' because\nfailed to validate dictionary item 'c' because\n'c' is not in ['a'] and 'c' is not optional.'''
     else:
         assert None
         pass
