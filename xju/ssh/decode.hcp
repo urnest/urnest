@@ -523,13 +523,13 @@ transport::messages::NewKeys decoder<transport::messages::NewKeys>::dec(
 
 // note assumes type byte (DISCONNECT) already read and verified
 template<>
-transport::messages::NewKeys decoder<transport::messages::Disconnect>::dec(
+transport::messages::Disconnect decoder<transport::messages::Disconnect>::dec(
   xju::net::istream& s)
 {
   try{
     uint32_t reason(decode<uint32_t>(s));
     std::string description(decode<std::string>(s));
-    LanguageTag languageTag(decode<std::string>(s));
+    LanguageName languageTag(decode<std::string>(s));
     return transport::messages::Disconnect(std::move(reason),
                                            std::move(description),
                                            std::move(languageTag));

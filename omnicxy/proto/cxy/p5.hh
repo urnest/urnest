@@ -9,8 +9,8 @@
 #include <vector>
 
 // included idl
-#include <omnicxy/proto/p3.hh>
 #include <omnicxy/proto/p4.hh>
+#include <omnicxy/proto/p3.hh>
 
 namespace p5
 {

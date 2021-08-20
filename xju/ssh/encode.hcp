@@ -170,6 +170,7 @@ xju::net::ostream& encode(xju::net::ostream& s,
   encode(s, std::string("ssh-rsa"));
   encode(s, x.e_);
   encode(s, x.n_);
+  return s;
 }
 
 // encode x and y to s per rfc4253 ssh-rsa encoding rules
@@ -179,7 +180,7 @@ xju::net::ostream& encode(xju::net::ostream& s,
 {
   encode(s, x);
   encode(s, std::string("ssh-rsa"));
-  encode(s, signature_);
+  return s.put32(signature.size()).put(signature.begin(),signature.end());
 }
 
 // encode x to s including initial type byte

@@ -9,6 +9,11 @@
 //
 
 
+#include <xju/ssh/userauth/messages/Request.hh>
+#include <xju/crypt/rsa/PublicKey.hh>
+#include <xju/crypt/Signature.hh>
+#include <utility> //impl
+
 namespace xju
 {
 namespace ssh

@@ -12,7 +12,8 @@
 #include <iostream>
 #include <cinttypes>
 #include <string>
-#include <xju/ssh/transport/LanguageName.hh>
+#include <xju/format.hh>
+#include <xju/LanaguageName.hh>
 
 namespace xju
 {
@@ -28,10 +29,10 @@ class Disconnect
 public:
   Disconnect(uint32_t reason,
              std::string description,
-             LanguageName languageTag) noexcept:
+             xju::LanguageName languageTag) noexcept:
       reason_(reason),
-      description_(description),
-      languageTag_(languageTag)
+      description_(std::move(description)),
+      languageTag_(std::move(languageTag))
   {
   }
   uint32_t     reason_;
@@ -47,7 +48,7 @@ private:
     return s << "reason "
              << x.reason_ << ", description "
              << xju::format::cEscapeString(x.description_) << ", languageTag "
-             << xju::format::cEscapeString(x.languageTag_);
+             << xju::format::cEscapeString(x.languageTag_.value());
   }
 };
 

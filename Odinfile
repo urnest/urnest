@@ -12,7 +12,7 @@ xju%all.tree
 omnicxy%all.tree
 hcp%all.tree
 %tags
-example%all.tree:leaves
+example%all.tree
 
 %cxx-opts==<<
 +inc_sp=(omnicxy)
