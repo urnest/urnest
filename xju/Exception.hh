@@ -71,11 +71,11 @@ namespace xju
 	// post: cause() = cause
 	//       context().size() = 0
 	//
-	Exception(const std::string& cause, const xju::Traced& trace) throw();
-	Exception(const std::string& cause,
-                  std::pair<std::string,unsigned int> const& trace) throw();
+	Exception(std::string cause, xju::Traced trace) throw();
+	Exception(std::string cause,
+                  std::pair<std::string,unsigned int> trace) throw();
 	Exception(const std::ostringstream& cause,
-                  const xju::Traced& trace) throw();
+                  xju::Traced trace) throw();
 	Exception(Exception const& x) throw():
             _cause(x._cause),
             _context(x._context) {
@@ -85,10 +85,10 @@ namespace xju
             _context(std::move(x._context)),
             what_(std::move(x.what_)) {
         }
-        Exception(std::pair<std::string, xju::Traced> const& cause,
-                  std::vector<std::pair<std::string, xju::Traced> > const& context) throw():
-            _cause(cause),
-            _context(context){
+        Exception(std::pair<std::string, xju::Traced> cause,
+                  std::vector<std::pair<std::string, xju::Traced> > context) throw():
+            _cause(std::move(cause)),
+            _context(std::move(context)){
         }
         Exception& operator=(Exception const& x) throw()
         {

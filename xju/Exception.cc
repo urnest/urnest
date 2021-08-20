@@ -1,5 +1,3 @@
-//     -*- mode: c++ ; c-file-style: "osse" ;  -*-
-//
 // Copyright (c) 2007 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -32,20 +30,20 @@ namespace
 
 namespace xju
 {
-    Exception::Exception(const std::string& cause, const xju::Traced& trace) 
+    Exception::Exception(std::string cause, xju::Traced trace) 
 	throw():
-	_cause(std::make_pair(cause, trace))
+	_cause(std::make_pair(std::move(cause), std::move(trace)))
     {
     }
     Exception::Exception(
-        const std::string& cause,
-        std::pair<std::string,unsigned int> const& trace) throw():
-        _cause(std::make_pair(cause, Traced(trace)))
+        std::string cause,
+        std::pair<std::string,unsigned int> trace) throw():
+        _cause(std::make_pair(std::move(cause), Traced(trace)))
     {
     }
     Exception::Exception(const std::ostringstream& cause,
-                         const xju::Traced& trace) throw():
-	_cause(std::make_pair(cause.str(), trace))
+                         xju::Traced trace) throw():
+	_cause(std::make_pair(cause.str(), std::move(trace)))
     {
     }
     
