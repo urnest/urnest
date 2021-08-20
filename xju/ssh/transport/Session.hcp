@@ -29,6 +29,8 @@
 #include <xju/ssh/transport/ciphers/None.hh> //impl
 #include <xju/ssh/transport/macs/None.hh> //impl
 #include <iostream>
+#include <xju/ssh/transport/PeerDisconnect.hh> //impl
+#include <xju/ssh/transport/messages/Disconnect.hh> //impl
 
 namespace xju
 {
@@ -114,12 +116,6 @@ public:
   {
   }
 
-  class Closed : public xju::Exception
-  {
-  public:
-    using xju::Exception::Exception;
-  };
-  
   // Send message, appending any messages received in the meantime
   // to receivedMessages.
   //
@@ -190,13 +186,27 @@ public:
   
   // Recieve message.
   //
-  // pre: close() has not been called
+  // post: result.size()>0
   //
   Message receiveMessage(size_t maxSize) override
+  // PeerDisconnect - peer sent disconnect
   {
     while(true){
       try{
         Message m(i_.receiveMessage(maxSize));
+        if (m.size()==0){
+          std::ostringstream s;
+          s << "peer sent zero-byte message";
+          throw xju::Exception(s.str(),XJU_TRACED);
+        }
+        if (m[0]==(uint8_t)MSG::DISCONNECT){
+          xju::MemIBuf b(m);
+          {
+            xju::net::istream s(b);
+            auto d(xju::ssh::decode<messages::Disconnect>(s));
+            throw PeerDisconnect(std::move(d),XJU_TRACED);
+          }
+        }
         return std::move(m);
       }
       catch(I::Rekeying const&){
@@ -210,20 +220,24 @@ public:
     }
   }
 
-  // Notify other end we are done, wait until peer has notified us it
-  // is done (noting it might have already).
-  // - returns messages received before peer's notification (discarding
-  //   further messages once maxResultSize is reached)
-  //
-  // REVISIT: close has no "ack"?
-  //
-  // pre: close() has not been called
-  //
-  // std::vector<Body> close(
-  //   std::size_t maxResultSize)
-  // {
-  //   //REVISIT
-  // }
+  // Notify other end we are done.
+  void sendDisconnect(messages::Disconnect const& x)
+  {
+    try{
+      xju::MemOBuf b(1024);
+      {
+        xju::net::ostream s(b);
+        encode(s,x);
+      }
+      sendMessage(Message(b.data().first,b.data().second));
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "send disconnect (" << x << ") to peer";
+      e.addContext(s,XJU_TRACED);
+      throw;
+    }
+  }
 
   friend std::ostream& operator<<(std::ostream& s, Session const& x);
 };

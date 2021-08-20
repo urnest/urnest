@@ -1,0 +1,59 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <iostream>
+#include <cinttypes>
+#include <string>
+#include <xju/ssh/transport/LanguageName.hh>
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+namespace messages
+{
+
+class Disconnect
+{
+public:
+  Disconnect(uint32_t reason,
+             std::string description,
+             LanguageName languageTag) noexcept:
+      reason_(reason),
+      description_(description),
+      languageTag_(languageTag)
+  {
+  }
+  uint32_t     reason_;
+  std::string  description_;
+  LanguageName languageTag_;
+
+private:
+
+  friend bool operator<(Disconnect const& x, Disconnect const& y) noexcept;
+
+  friend std::ostream& operator<<(std::ostream& s, Disconnect const& x)
+  {
+    return s << "reason "
+             << x.reason_ << ", description "
+             << xju::format::cEscapeString(x.description_) << ", languageTag "
+             << xju::format::cEscapeString(x.languageTag_);
+  }
+};
+
+}
+}
+}
+}
+
+

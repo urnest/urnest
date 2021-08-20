@@ -31,6 +31,7 @@
 #include <xju/ssh/userauth/messages/RSAPublicKeyRequest.hh>
 #include <xju/crypt/rsa/PublicKey.hh>
 #include <xju/crypt/Signature.hh>
+#include <xju/ssh/transport/messages/Disconnect.hh>
 
 namespace xju
 {
@@ -283,6 +284,25 @@ xju::net::ostream& encode(xju::net::ostream& s,
   catch(xju::Exception& e){
     std::ostringstream s;
     s << "encode NewKeys to output stream";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+// encode x to s including initial type byte
+xju::net::ostream& encode(xju::net::ostream& s,
+                          transport::messages::Disconnect const& x)
+{
+  try{
+    encode(s, xju::ssh::transport::MSG::DISCONNECT);
+    encode(s, x.reason_);
+    encode(s, x.description_);
+    encode(s, x.languageTag_);
+    return s;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "encode Disconnect (" << x << ") to output stream";
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }
