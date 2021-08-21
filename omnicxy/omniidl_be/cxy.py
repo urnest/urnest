@@ -1215,7 +1215,7 @@ def gen_idlincludes(fileNames,hpath,hhext):
     if not len(fileNames):
         return ''
     return '\n// included idl'+''.join(
-        ['\n#include %s'%includeSpec(_,hpath,hhext) for _ in fileNames])
+        sorted(['\n#include %s'%includeSpec(_,hpath,hhext) for _ in fileNames]))
 
 def run(tree, args):
     eclass,eheader=([_.split('-e',1)[1].split('=',1) for _ in args \
