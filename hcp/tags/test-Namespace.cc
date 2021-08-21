@@ -223,7 +223,7 @@ void test3(){
 }
 
 void test4(){
-  //completions of fo from scope xju
+  //completions of symbol from scope
   Namespace x;
   std::vector<Location> const l1(
     1U,
@@ -241,24 +241,44 @@ void test4(){
               UnqualifiedSymbol("str"),
               l1);
 
-  //complete symbol
+  //complete symbol from same scope
   xju::assert_equal(x.completions(
                       {NamespaceName("xju"),NamespaceName("format")},
                       {},
                       UnqualifiedSymbol("s")),
                     std::vector<ScopedName>
                     { ScopedName(
-                        {NamespaceName("xju"),NamespaceName("format")},
+                        {},
                         UnqualifiedSymbol("str"))});
   
   
-  //complete namespace (prefix)
+  //complete namespace (prefix) from same scope
   xju::assert_equal(x.completions({NamespaceName("xju")},
                                   {},
                                   UnqualifiedSymbol("form")),
                     std::vector<ScopedName>
                     { ScopedName(
-                        {NamespaceName("xju"),NamespaceName("format")},
+                        {NamespaceName("format")},
+                        UnqualifiedSymbol(""))});
+  
+  //complete symbol in nested scope from outer scope
+  xju::assert_equal(x.completions(
+                      {NamespaceName("xju")},
+                      {NamespaceName("format")},
+                      UnqualifiedSymbol("s")),
+                    std::vector<ScopedName>
+                    { ScopedName(
+                        {NamespaceName("format")},
+                        UnqualifiedSymbol("str"))});
+  
+  
+  //complete namespace (prefix) from contaning scope
+  xju::assert_equal(x.completions({NamespaceName("xju")},
+                                  {},
+                                  UnqualifiedSymbol("form")),
+                    std::vector<ScopedName>
+                    { ScopedName(
+                        {NamespaceName("format")},
                         UnqualifiedSymbol(""))});
   
 }
