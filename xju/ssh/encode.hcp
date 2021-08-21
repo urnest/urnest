@@ -32,6 +32,8 @@
 #include <xju/crypt/rsa/PublicKey.hh>
 #include <xju/crypt/Signature.hh>
 #include <xju/ssh/transport/messages/Disconnect.hh>
+#include <xju/ssh/transport/messages/ServiceRequest.hh>
+#include <xju/ssh/transport/messages/ServiceAccept.hh>
 
 namespace xju
 {
@@ -304,6 +306,40 @@ xju::net::ostream& encode(xju::net::ostream& s,
   catch(xju::Exception& e){
     std::ostringstream s;
     s << "encode Disconnect (" << x << ") to output stream";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+// encode x to s including initial type byte
+xju::net::ostream& encode(xju::net::ostream& s,
+                          transport::messages::ServiceRequest const& x)
+{
+  try{
+    encode(s, xju::ssh::transport::MSG::SERVICE_REQUEST);
+    encode(s, x.service_);
+    return s;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "encode Service Request " << x << " to output stream";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+// encode x to s including initial type byte
+xju::net::ostream& encode(xju::net::ostream& s,
+                          transport::messages::ServiceAccept const& x)
+{
+  try{
+    encode(s, xju::ssh::transport::MSG::SERVICE_ACCEPT);
+    encode(s, x.service_);
+    return s;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "encode Service Accept " << x << " to output stream";
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }

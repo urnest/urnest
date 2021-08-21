@@ -38,19 +38,43 @@ void test1() {
 }
 
 void test2() {
-  xju::MemOBuf b(256,1024);
   {
-    xju::net::ostream s(b);
-    encode(s,xju::ssh::transport::messages::Disconnect(
-             27,
-             "shrug",
-             xju::LanguageName("SP")));
+    xju::MemOBuf b(256,1024);
+    {
+      xju::net::ostream s(b);
+      encode(s,xju::ssh::transport::messages::Disconnect(
+               27,
+               "shrug",
+               xju::LanguageName("SP")));
+    }
+    xju::assert_equal(std::vector<uint8_t>(b.data().first,b.data().second),
+                      {1,
+                       0,0,0,27,
+                       0,0,0,5,'s','h','r','u','g',
+                       0,0,0,2,'S','P'});
   }
-  xju::assert_equal(std::vector<uint8_t>(b.data().first,b.data().second),
-                    {1,
-                     0,0,0,27,
-                     0,0,0,5,'s','h','r','u','g',
-                     0,0,0,2,'S','P'});
+  {
+    xju::MemOBuf b(256,1024);
+    {
+      xju::net::ostream s(b);
+      encode(s,xju::ssh::transport::messages::ServiceRequest(
+               xju::ssh::misc::ServiceName("userauth")));
+    }
+    xju::assert_equal(std::vector<uint8_t>(b.data().first,b.data().second),
+                      {5,
+                       0,0,0,8,'u','s','e','r','a','u','t','h'});
+  }
+  {
+    xju::MemOBuf b(256,1024);
+    {
+      xju::net::ostream s(b);
+      encode(s,xju::ssh::transport::messages::ServiceAccept(
+               xju::ssh::misc::ServiceName("userauth")));
+    }
+    xju::assert_equal(std::vector<uint8_t>(b.data().first,b.data().second),
+                      {6,
+                       0,0,0,8,'u','s','e','r','a','u','t','h'});
+  }
 }
 
 }

@@ -222,7 +222,11 @@
   	  std::vector<uint8_t> const& publicKey)
 
           - note ignore SSH_MSG_USERAUTH_BANNER
+	  - have to send ServiceRequest("ssh-userauth") first and await
+	    ServiceAccept?
         - use is:
+	  ServiceRequest("ssh-connection") first and await response? No I
+	  think that is implied by the service in userauth
 	  open interactive session channel, maybe request pty
       byte      SSH_MSG_CHANNEL_OPEN
       string    "session"

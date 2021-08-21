@@ -35,6 +35,8 @@
 #include <xju/Utf8String.hh>
 #include <xju/ssh/transport/messages/NewKeys.hh>
 #include <xju/ssh/transport/messages/Disconnect.hh>
+#include <xju/ssh/transport/messages/ServiceRequest.hh>
+#include <xju/ssh/transport/messages/ServiceAccept.hh>
 
 namespace xju
 {
@@ -363,7 +365,8 @@ userauth::messages::Request decoder<userauth::messages::Request>::dec(
   using namespace userauth;
   
   xju::UserName userName(decode<xju::UserName>(s));
-  userauth:ServiceName serviceName(decode<userauth::ServiceName>(s));
+  xju::ssh::misc::ServiceName serviceName(
+    decode<xju::ssh::misc::ServiceName>(s));
   userauth::MethodName methodName(decode<userauth::MethodName>(s));
   return userauth::messages::Request(std::move(userName),
                                      std::move(serviceName),
@@ -533,6 +536,40 @@ transport::messages::Disconnect decoder<transport::messages::Disconnect>::dec(
     return transport::messages::Disconnect(std::move(reason),
                                            std::move(description),
                                            std::move(languageTag));
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode Disconnect from input stream";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+// note assumes type byte (SERVICE_REQUEST) already read and verified
+template<>
+transport::messages::ServiceRequest decoder<transport::messages::ServiceRequest>::dec(
+  xju::net::istream& s)
+{
+  try{
+    xju::ssh::misc::ServiceName service(decode<std::string>(s));
+    return transport::messages::ServiceRequest(std::move(service));
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode Disconnect from input stream";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+// note assumes type byte (SERVICE_ACCEPT) already read and verified
+template<>
+transport::messages::ServiceAccept decoder<transport::messages::ServiceAccept>::dec(
+  xju::net::istream& s)
+{
+  try{
+    xju::ssh::misc::ServiceName service(decode<std::string>(s));
+    return transport::messages::ServiceAccept(std::move(service));
   }
   catch(xju::Exception& e){
     std::ostringstream s;

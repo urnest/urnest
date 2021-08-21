@@ -1,0 +1,50 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/ssh/misc/ServiceName.hh>
+#include <utility> //impl
+#include <xju/format.hh>
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+namespace messages
+{
+
+class ServiceAccept
+{
+public:
+  explicit ServiceAccept(xju::ssh::misc::ServiceName service) noexcept:
+      service_(std::move(service))
+  {
+  }
+  xju::ssh::misc::ServiceName service_;
+
+  friend std::ostream& operator<<(std::ostream& s, ServiceAccept const& x)
+  {
+    return s << xju::format::quote(
+      xju::format::cEscapeString(x.service_.value()));
+  }
+  
+  friend bool operator<(ServiceAccept const& a,
+                        ServiceAccept const& b) noexcept;
+
+};
+
+}
+}
+}
+}
+
+

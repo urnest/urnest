@@ -15,6 +15,7 @@
 #include <xju/MemOBuf.hh>
 #include <xju/net/ostream.hh>
 #include <xju/ssh/encode.hh>
+#include <xju/ssh/transport/messages/ServiceAccept.hh>
 
 namespace xju
 {
@@ -37,19 +38,48 @@ void test1() {
 }
 
 void test2() {
-  xju::ssh::transport::messages::Disconnect const x(
-    27,
-    "shrug",
-    xju::LanguageName("SP"));
-  xju::MemOBuf b(256,1024);
   {
-    xju::net::ostream s(b);
-    encode(s,x);
+    xju::ssh::transport::messages::Disconnect const x(
+      27,
+      "shrug",
+      xju::LanguageName("SP"));
+    xju::MemOBuf b(256,1024);
+    {
+      xju::net::ostream s(b);
+      encode(s,x);
+    }
+    xju::MemIBuf c(b.data().first,b.data().second);
+    xju::net::istream s(c);
+    xju::assert_equal(decode<uint8_t>(s),(uint8_t)xju::ssh::transport::MSG::DISCONNECT);
+    xju::assert_equal(decode<xju::ssh::transport::messages::Disconnect>(s),x);
   }
-  xju::MemIBuf c(b.data().first,b.data().second);
-  xju::net::istream s(c);
-  xju::assert_equal(decode<uint8_t>(s),(uint8_t)xju::ssh::transport::MSG::DISCONNECT);
-  xju::assert_equal(decode<xju::ssh::transport::messages::Disconnect>(s),x);
+  {
+    xju::ssh::transport::messages::ServiceRequest const x(
+      xju::ssh::misc::ServiceName("userauth"));
+    xju::MemOBuf b(256,1024);
+    {
+      xju::net::ostream s(b);
+      encode(s,x);
+    }
+    xju::MemIBuf c(b.data().first,b.data().second);
+    xju::net::istream s(c);
+    xju::assert_equal(decode<uint8_t>(s),(uint8_t)xju::ssh::transport::MSG::SERVICE_REQUEST);
+    xju::assert_equal(decode<xju::ssh::transport::messages::ServiceRequest>(s),x);
+  }
+  {
+    xju::ssh::transport::messages::ServiceAccept const x(
+      xju::ssh::misc::ServiceName("userauth"));
+    xju::MemOBuf b(256,1024);
+    {
+      xju::net::ostream s(b);
+      encode(s,x);
+    }
+    xju::MemIBuf c(b.data().first,b.data().second);
+    xju::net::istream s(c);
+    xju::assert_equal(decode<uint8_t>(s),(uint8_t)xju::ssh::transport::MSG::SERVICE_ACCEPT);
+    xju::assert_equal(decode<xju::ssh::transport::messages::ServiceAccept>(s),x);
+  }
+  
 }
 
 }

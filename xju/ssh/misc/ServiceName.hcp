@@ -16,14 +16,13 @@ namespace xju
 {
 namespace ssh
 {
-namespace userauth
+namespace misc
 {
 
 class ServiceNameTag{};
-typedef xju::Tagged<std::string,ServiceNameTag> ServiceName;
+typedef xju::Tagged<std::string, ServiceNameTag> ServiceName;
+
 
 }
 }
 }
-
-

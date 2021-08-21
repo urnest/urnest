@@ -47,8 +47,10 @@ private:
   {
     return s << "reason "
              << x.reason_ << ", description "
-             << xju::format::cEscapeString(x.description_) << ", languageTag "
-             << xju::format::cEscapeString(x.languageTag_.value());
+             << xju::format::quote(
+               xju::format::cEscapeString(x.description_)) << ", languageTag "
+             << xju::format::quote(
+               xju::format::cEscapeString(x.languageTag_.value()));
   }
 };
 

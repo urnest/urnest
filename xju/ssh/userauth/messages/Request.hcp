@@ -10,7 +10,7 @@
 
 
 #include <xju/UserName.hh>
-#include <xju/ssh/userauth/ServiceName.hh>
+#include <xju/ssh/misc/ServiceName.hh>
 #include <xju/ssh/userauth/MethodName.hh>
 #include <xju/ssh/userauth/MSG.hh> //impl
 
@@ -29,7 +29,7 @@ public:
   virtual ~Request() noexcept {}
   
   Request(xju::UserName userName,
-          ServiceName serviceName,
+          xju::ssh::misc::ServiceName serviceName,
           MethodName methodName) noexcept:
       userName_(std::move(userName)),
       serviceName_(std::move(serviceName)),
@@ -38,7 +38,7 @@ public:
   }
 
   xju::UserName userName_;
-  ServiceName serviceName_;
+  xju::ssh::misc::ServiceName serviceName_;
   MethodName methodName_;
   
   friend bool operator<(Request const& a, Request const& b) noexcept;
