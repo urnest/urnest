@@ -31,6 +31,9 @@
 #include <iostream>
 #include <xju/ssh/transport/PeerDisconnect.hh> //impl
 #include <xju/ssh/transport/messages/Disconnect.hh> //impl
+#include <xju/ssh/transport/ReceiveInterface.hh>
+#include <xju/ssh/transport/SingleThreadedSendInterface.hh>
+#include <xju/ssh/transport/MultiThreadedSendInterface.hh>
 
 namespace xju
 {
@@ -43,8 +46,8 @@ namespace
 std::pair<
   std::vector<std::string>, //preamble lines without trailing \r\n
   Ident
-> shakeHands_(xju::io::IBuf& ibuf,
-              xju::io::OBuf& obuf,
+> shakeHands_(xju::IBuf& ibuf,
+              xju::OBuf& obuf,
               Ident const& ourIdent)
 {
   xju::net::istream i(ibuf);
@@ -60,8 +63,8 @@ class Session : public ReceiveInterface,
 {
   Algorithms const& algorithms_;
 
-  xju::io::IBuf ibuf_;
-  xju::io::OBuf obuf_;
+  xju::IBuf& ibuf_;
+  xju::OBuf& obuf_;
 
   std::pair<std::vector<std::string>,Ident> const peerPreambleAndIdent_;
   
@@ -244,7 +247,7 @@ public:
 
 std::ostream& operator<<(std::ostream& s, Session const& x)
 {
-  s << " with " << x.peerPreambleAndIdent_.second
+  s << " with " << x.peerPreambleAndIdent_.second;
   return s;
 }
 

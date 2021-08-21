@@ -89,8 +89,8 @@ int main(int argc, char* argv[]){
       packetAuthenticators);
 
     auto const deadline(xju::steadyNow()+std::chrono::seconds(10));
-    xju::io::IBuf i(socket, deadline);
-    xju::io::OBuf o(socket, deadline);
+    xju::io::IBuf i(socket, deadline, 2048U);
+    xju::io::OBuf o(socket, deadline, 2048U);
     xju::ssh::transport::Session session(
       i,
       o,

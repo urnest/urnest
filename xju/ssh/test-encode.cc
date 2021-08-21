@@ -13,6 +13,7 @@
 #include <xju/assert.hh>
 #include <vector>
 #include <xju/MemOBuf.hh>
+#include <xju/LanguageName.hh>
 
 namespace xju
 {
@@ -36,6 +37,22 @@ void test1() {
                      0,0,0,8,'a','l','l',',','n','o','n','e'});
 }
 
+void test2() {
+  xju::MemOBuf b(256,1024);
+  {
+    xju::net::ostream s(b);
+    encode(s,xju::ssh::transport::messages::Disconnect(
+             27,
+             "shrug",
+             xju::LanguageName("SP")));
+  }
+  xju::assert_equal(std::vector<uint8_t>(b.data().first,b.data().second),
+                    {1,
+                     0,0,0,27,
+                     0,0,0,5,'s','h','r','u','g',
+                     0,0,0,2,'S','P'});
+}
+
 }
 }
 
@@ -45,6 +62,7 @@ int main(int argc, char* argv[])
 {
   unsigned int n(0);
   test1(), ++n;
+  test2(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

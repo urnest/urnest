@@ -12,6 +12,9 @@
 #include <iostream>
 #include <xju/assert.hh>
 #include <xju/MemIBuf.hh>
+#include <xju/MemOBuf.hh>
+#include <xju/net/ostream.hh>
+#include <xju/ssh/encode.hh>
 
 namespace xju
 {
@@ -33,6 +36,22 @@ void test1() {
                     { S("all"),S("none")});
 }
 
+void test2() {
+  xju::ssh::transport::messages::Disconnect const x(
+    27,
+    "shrug",
+    xju::LanguageName("SP"));
+  xju::MemOBuf b(256,1024);
+  {
+    xju::net::ostream s(b);
+    encode(s,x);
+  }
+  xju::MemIBuf c(b.data().first,b.data().second);
+  xju::net::istream s(c);
+  xju::assert_equal(decode<uint8_t>(s),(uint8_t)xju::ssh::transport::MSG::DISCONNECT);
+  xju::assert_equal(decode<xju::ssh::transport::messages::Disconnect>(s),x);
+}
+
 }
 }
 
@@ -42,6 +61,7 @@ int main(int argc, char* argv[])
 {
   unsigned int n(0);
   test1(), ++n;
+  test2(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

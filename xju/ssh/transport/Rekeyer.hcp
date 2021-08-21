@@ -116,16 +116,13 @@ public:
     }
   }
   
-  void waitTillRekeyed(std::chrono::steady_clock::time_point const& deadline)
+  void waitTillRekeyed()
   {
     xju::Lock l(guard_);
     //REVISIT: what if fail during rekeying?
     while(ol_.get())
     {
-      if (xju::steadyNow()>deadline){
-        throw xju::DeadlineReached(xju::Exception("deadline reached",XJU_TRACED));
-      }
-      changed_.wait(l,deadline);
+      changed_.wait(l);
     }
   }
   

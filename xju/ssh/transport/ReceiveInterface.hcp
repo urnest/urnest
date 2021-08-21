@@ -22,13 +22,21 @@ class ReceiveInterface
 {
 public:
   virtual ~ReceiveInterface() noexcept{}
-  //post: result.size()>0
+
+  // Receive message.
+  //
+  // As well as non-transport i.e. non rfc4253
+  // messages i.e. non xju::ssh::transport::MSG messages, result could
+  // also be xju::ssh::transport::MSG:: IGNORE, UNIMPLEMENTED, DEBUG
+  // SERVICE_REQUEST, SERVICE_ACCEPT. All other transport messages are
+  // handled internally (except see PeerDisconnect below) and never returned.
+  //
+  // post: result.size()>0
   virtual Message receiveMessage(size_t maxSize) = 0;
+    // PeerDisconnect - peer sent DISCONNECT
   
 };
 
 }
 }
 }
-
-

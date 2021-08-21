@@ -17,11 +17,11 @@
 #include <xju/ssh/transport/CipherName.hh>
 #include <xju/ssh/transport/PacketAuthenticatorName.hh>
 #include <xju/ssh/transport/CompressorName.hh>
-#include <xju/ssh/transport/LanguageName.hh>
 #include <xju/net/ostream.hh>
 #include <xju/net/istream.hh>
 #include <xju/ssh/transport/MSG.hh> //impl
 #include <xju/format.hh> //impl
+#include <xju/LanguageName.hh>
 
 namespace xju
 {

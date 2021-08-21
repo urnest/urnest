@@ -15,8 +15,6 @@
 namespace xju
 {
 class LanguageNameTag{};
-typedef xju::Tagged<std::string,LanguageNameTag> LanguageName;
+typedef xju::Tagged<std::string,LanguageNameTag> LanguageName;//RFC3066
 
 }
-
-

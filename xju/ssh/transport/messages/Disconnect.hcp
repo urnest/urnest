@@ -13,7 +13,7 @@
 #include <cinttypes>
 #include <string>
 #include <xju/format.hh>
-#include <xju/LanaguageName.hh>
+#include <xju/LanguageName.hh>
 
 namespace xju
 {

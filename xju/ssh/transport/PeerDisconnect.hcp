@@ -12,7 +12,7 @@
 #include <xju/Exception.hh>
 #include <xju/format.hh> //impl
 #include <utility> //impl
-#include <xju/ssh/transport/messages/Disconnect.hh> //impl
+#include <xju/ssh/transport/messages/Disconnect.hh>
 
 namespace xju
 {
@@ -25,8 +25,8 @@ class PeerDisconnect : public xju::Exception
 public:
   PeerDisconnect(messages::Disconnect d, xju::Traced trace):
       xju::Exception(std::string("peer sent disconnect "+
-                                 xju::format::quote(xju::format::str(d)),
-                                 std::move(traced))),
+                                 xju::format::quote(xju::format::str(d))),
+                                 std::move(trace)),
       d_(std::move(d))
   {
   }
