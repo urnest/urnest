@@ -1,0 +1,38 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/ssh/transport/Message.hh>
+#include <unistd.h>
+#include <xju/MemOBuf.hh>
+#include <xju/net/ostream.hh>
+#include <xju/ssh/encode.hh>
+
+namespace xju
+{
+namespace ssh
+{
+
+template<class T>
+xju::ssh::transport::Message encodeMessage(T const& m, size_t inc = 1024U)
+{
+  xju::MemOBuf b(inc);
+  {
+    xju::net::ostream s(b);
+    xju::ssh::encode(s, m);
+  }
+  return xju::ssh::transport::Message(b.data().first,
+                                      b.data().second);
+}
+
+}
+}
+
+

@@ -1,0 +1,112 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <vector>
+#include <xju/ssh/transport/Message.hh>
+#include <xju/ssh/transport/SingleThreadedSendInterface.hh>
+#include <xju/ssh/transport/ReceiveInterface.hh>
+#include <xju/ssh/transport/messages/ServiceRequest.hh> //impl
+#include <iterator> //impl
+#include <xju/MemIBuf.hh> //impl
+#include <xju/net/istream.hh> //impl
+#include <xju/ssh/decode.hh> //impl
+#include <xju/ssh/transport/messages/ServiceAccept.hh> //impl
+#include <xju/format.hh> //impl
+#include <xju/ssh/transport/MSG.hh> //impl
+#include <sstream> //impl
+#include <xju/ssh/misc/ServiceName.hh>
+#include <xju/ssh/encodeMessage.hh> //impl
+
+namespace xju
+{
+namespace ssh
+{
+namespace transport
+{
+
+// Request via sender and receiver that server start specified ssh service.
+std::vector<transport::Message> startService(
+  xju::ssh::misc::ServiceName const& service,
+  xju::ssh::transport::SingleThreadedSendInterface& sender,
+  xju::ssh::transport::ReceiveInterface& receiver)
+{
+  try{
+    std::vector<Message> result;
+    
+    messages::ServiceRequest request(service);
+    sender.sendMessage(encodeMessage(request),std::back_inserter(result));
+    try{
+      while(true){
+        // only thing large we might (unexpected) receive is Disconnect
+        // and we would want the detail, noting receiver turns that into
+        // PeerDisconnect exception - but only if we let it receive the full
+        // message
+        auto m(receiver.receiveMessage(4096U));
+        xju::MemIBuf b(m);
+        {
+          xju::net::istream s(b);
+          auto const t(decode<uint8_t>(s));
+          switch(t){
+          case (uint8_t)MSG::SERVICE_ACCEPT:
+          {
+            auto response(decode<messages::ServiceAccept>(s));
+            if (response.service_ != service){
+              std::ostringstream s;
+              s << "server sent service accept but with wrong service, "
+                << xju::format::quote(xju::format::cEscapeString(
+                                        response.service_.value()))
+                << " not " << xju::format::quote(service.value());
+              throw xju::Exception(s.str(),XJU_TRACED);
+            }
+            return result;
+          }
+          case (uint8_t)MSG::IGNORE: break;
+          case (uint8_t)MSG::DEBUG: break;
+          default:
+          {
+            std::ostringstream s;
+            s << "server sent unexpected message, type "
+              << xju::format::int_(t);
+            throw xju::Exception(s.str(),XJU_TRACED);
+          }
+          }
+        }
+        result.push_back(m);
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "await server accept sent service request " << request
+        << " and received messages "
+        << xju::format::join(
+          result.begin(),result.end(),
+          [](Message const& m){
+            return xju::format::join(m.begin(),m.end(),
+                                     [](uint8_t b){
+                                       return xju::format::hex(b,"");
+                                     }," ");
+          },
+          ", ");
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "have server start service " << service;
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+}
+}

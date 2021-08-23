@@ -1,0 +1,51 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <cinttypes>
+#include <xju/ssh/transport/Message.hh>
+#include <xju/MemIBuf.hh>
+#include <xju/net/istream.hh>
+#include <xju/ssh/decode.hh>
+#include <sstream>
+#include <typeinfo>
+
+namespace xju
+{
+namespace ssh
+{
+
+template<class T>
+T decodeMessage(uint8_t expectedType, xju::ssh::transport::Message const& m)
+{
+  try{
+    xju::MemIBuf b(m);
+    {
+      xju::net::istream s(b);
+      uint8_t const actuallType(xju::ssh::decode<uint8_t>(s));
+      if (actuallType != expectedType){
+        std::ostringstream s;
+        s << "expected message of type " << xju::format::int_(expectedType)
+          << " but got message of type " << xju::format::int_(actuallType);
+        throw xju::Exception(s.str(), XJU_TRACED);
+      }
+      return xju::ssh::decode<T>(s);
+    }
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode message assumed to be of type " << typeid(T).name();
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+                
+}
+}
