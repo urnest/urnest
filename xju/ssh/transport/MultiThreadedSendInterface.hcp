@@ -23,6 +23,9 @@ class MultiThreadedSendInterface
 public:
   virtual ~MultiThreadedSendInterface() noexcept{}
 
+  // Note any exception is "fatal", sendMessage may not be called
+  // again after exception.
+  //
   virtual void sendMessage(Message message) = 0;
 };
 

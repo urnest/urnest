@@ -31,6 +31,9 @@ public:
   // SERVICE_REQUEST, SERVICE_ACCEPT. All other transport messages are
   // handled internally (except see PeerDisconnect below) and never returned.
   //
+  // Note any exception is "fatal", receiveMessage may not be called
+  // again after exception.
+  //
   // post: result.size()>0
   virtual Message receiveMessage(size_t maxSize) = 0;
     // PeerDisconnect - peer sent DISCONNECT

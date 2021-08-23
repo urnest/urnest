@@ -79,6 +79,19 @@ void test2() {
     xju::assert_equal(decode<uint8_t>(s),(uint8_t)xju::ssh::transport::MSG::SERVICE_ACCEPT);
     xju::assert_equal(decode<xju::ssh::transport::messages::ServiceAccept>(s),x);
   }
+  {
+    xju::ssh::transport::messages::Ignore const x(
+      std::vector<uint8_t>({1,2,3,4}));
+    xju::MemOBuf b(256,1024);
+    {
+      xju::net::ostream s(b);
+      encode(s,x);
+    }
+    xju::MemIBuf c(b.data().first,b.data().second);
+    xju::net::istream s(c);
+    xju::assert_equal(decode<uint8_t>(s),(uint8_t)xju::ssh::transport::MSG::IGNORE);
+    xju::assert_equal(decode<xju::ssh::transport::messages::Ignore>(s),x);
+  }
   
 }
 

@@ -25,6 +25,9 @@ class SingleThreadedSendInterface
 public:
   virtual ~SingleThreadedSendInterface() noexcept{}
 
+  // Note any exception is "fatal", sendMessage may not be called
+  // again after exception.
+  //
   // post: all messages added to receivedMessages are at least one byte long
   virtual void sendMessage(
     Message const& message,

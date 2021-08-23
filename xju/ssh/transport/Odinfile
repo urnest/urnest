@@ -9,14 +9,15 @@ hkas%all
 kexers%all
 
 %tests.tree==<<
-()+cmd=(test-identParser.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
-()+cmd=(test-writeIdentificationString.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
-()+cmd=(test-readIdentificationString.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
-()+cmd=(test-encodePacket.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
-()+cmd=(test-decodePacket.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
-()+cmd=(test-chooseHostKeyAlgorithm.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
-()+cmd=(test-chooseKexer.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
-()+cmd=(test-chooseAlgorithm.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-identParser.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-writeIdentificationString.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-readIdentificationString.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-encodePacket.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-decodePacket.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-chooseHostKeyAlgorithm.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-chooseKexer.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-chooseAlgorithm.cc+(..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-startService.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 macs%tests.tree:leaves
 ciphers%tests.tree:leaves
 messages%tests.tree:leaves

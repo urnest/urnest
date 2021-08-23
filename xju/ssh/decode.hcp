@@ -37,6 +37,7 @@
 #include <xju/ssh/transport/messages/Disconnect.hh>
 #include <xju/ssh/transport/messages/ServiceRequest.hh>
 #include <xju/ssh/transport/messages/ServiceAccept.hh>
+#include <xju/ssh/transport/messages/Ignore.hh>
 
 namespace xju
 {
@@ -574,6 +575,23 @@ transport::messages::ServiceAccept decoder<transport::messages::ServiceAccept>::
   catch(xju::Exception& e){
     std::ostringstream s;
     s << "decode Disconnect from input stream";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+// note assumes type byte (IGNORE) already read and verified
+template<>
+transport::messages::Ignore decoder<transport::messages::Ignore>::dec(
+  xju::net::istream& s)
+{
+  try{
+    auto data(decode<std::vector<uint8_t>>(s));
+    return transport::messages::Ignore(std::move(data));
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode Ignore from input stream";
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }

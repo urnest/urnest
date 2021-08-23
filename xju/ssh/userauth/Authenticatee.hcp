@@ -27,8 +27,10 @@ class Authenticatee
 public:
   virtual ~Authenticatee() noexcept{}
 
-  // perform rfc4252 authentication on session for specified service,
-  // returning any non-userauth messages received before completion
+  // perform rfc4252 authentication as client on session for specified
+  // service, returning any non-userauth messages received before completion,
+  // assuming ssh-userauth ServiceRequest has already been accepted
+  // by server
   virtual std::vector<transport::Message> authenticate(
     xju::ssh::transport::SingleThreadedSendInterface& sender,
     xju::ssh::transport::ReceiveInterface& receiver,

@@ -75,6 +75,17 @@ void test2() {
                       {6,
                        0,0,0,8,'u','s','e','r','a','u','t','h'});
   }
+  {
+    xju::MemOBuf b(256,1024);
+    {
+      xju::net::ostream s(b);
+      encode(s,xju::ssh::transport::messages::Ignore(
+               std::vector<uint8_t>({1,2,3,4})));
+    }
+    xju::assert_equal(std::vector<uint8_t>(b.data().first,b.data().second),
+                      {2,
+                       0,0,0,4,1,2,3,4});
+  }
 }
 
 }
