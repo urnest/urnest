@@ -23,7 +23,7 @@
 #include <xju/ssh/transport/MSG.hh> //impl
 #include <sstream> //impl
 #include <xju/ssh/misc/ServiceName.hh>
-#include <xju/ssh/encodeMessage.hh> //impl
+#include <xju/ssh/transport/encodeMessage.hh> //impl
 
 namespace xju
 {
@@ -42,7 +42,8 @@ std::vector<transport::Message> startService(
     std::vector<Message> result;
     
     messages::ServiceRequest request(service);
-    sender.sendMessage(encodeMessage(request),std::back_inserter(result));
+    sender.sendMessage(transport::encodeMessage(request),
+                       std::back_inserter(result));
     try{
       while(true){
         // only thing large we might (unexpected) receive is Disconnect
@@ -84,7 +85,7 @@ std::vector<transport::Message> startService(
     }
     catch(xju::Exception& e){
       std::ostringstream s;
-      s << "await server accept sent service request " << request
+      s << "await server accept having sent service request " << request
         << " and received messages "
         << xju::format::join(
           result.begin(),result.end(),

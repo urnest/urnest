@@ -21,7 +21,10 @@ namespace xju
 {
 namespace ssh
 {
+namespace transport
+{
 
+// Decode expected type constant and subsequent message of type T.
 template<class T>
 T decodeMessage(uint8_t expectedType, xju::ssh::transport::Message const& m)
 {
@@ -47,5 +50,6 @@ T decodeMessage(uint8_t expectedType, xju::ssh::transport::Message const& m)
   }
 }
                 
+}
 }
 }

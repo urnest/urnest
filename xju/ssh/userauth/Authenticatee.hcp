@@ -9,7 +9,7 @@
 //
 
 
-#include <xju/ssh/userauth/ServiceName.hh>
+#include <xju/ssh/misc/ServiceName.hh>
 #include <xju/ssh/transport/SingleThreadedSendInterface.hh>
 #include <xju/ssh/transport/ReceiveInterface.hh>
 #include <vector>
@@ -34,7 +34,7 @@ public:
   virtual std::vector<transport::Message> authenticate(
     xju::ssh::transport::SingleThreadedSendInterface& sender,
     xju::ssh::transport::ReceiveInterface& receiver,
-    ServiceName const& serviceName) = 0;
+    xju::ssh::misc::ServiceName const& serviceName) = 0;
 };
 
 }

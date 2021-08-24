@@ -89,6 +89,10 @@ public:
         xju::net::istream s(b);
         uint8_t const messageType(xju::ssh::decode<uint8_t>(s));
         switch (messageType){
+        case (uint8_t)xju::ssh::userauth::MSG::SUCCESS:
+        {
+          return receivedMessages;
+        }
         case (uint8_t)xju::ssh::userauth::MSG::FAILURE:
         {
           auto const failure(
@@ -106,15 +110,23 @@ public:
           }
           throw xju::Exception(s.str(),XJU_TRACED);
         }
-        case (uint8_t)xju::ssh::userauth::MSG::Success:
+        case (uint8_t)xju::ssh::transport::MSG::IGNORE;
+        case (uint8_t)xju::ssh::transport::MSG::DEBUG;
         {
-          return;
+          receivedMessages.push_back(m);
+          break;
         }
         default:
         {
           std::ostringstream s;
           s << "unexpected response of type " << xju::format::int(messageType)
-            << " from server";
+            << " from server (message bytes including type byte "
+            << xju::format::join(m.begin(),m.end(),
+                                 [](uint8_t b){
+                                   return xju::format::hex(b,"");
+                                 },
+                                 " ")
+            << ")";
           if (receivedMessages.size()){
             std::ostringstream s;
             s << " noting preceding received messages of types "

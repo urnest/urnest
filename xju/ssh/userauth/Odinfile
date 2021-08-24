@@ -3,9 +3,11 @@
 %all.tree==<<
 %tests.tree
 messages%all
+authenticatees%all
 
 %tests.tree==<<
 messages%tests.tree:leaves
+authenticatees%tests.tree:leaves
 
 %hcp-gen==%hcp-gen.vir_dir_specs:list:cat:vir_dir
 
@@ -17,9 +19,11 @@ messages%tests.tree:leaves
 
 %hcp-subdir-spec==<<
 %messages==./messages/Odinfile%hcp-gen
+%authenticatees==./authenticatees/Odinfile%hcp-gen
 
 %tags==%all.list-of-tags:merged-tags
 
 %all.list-of-tags==<<
 .:merged-tags
 messages%tags
+authenticatees%tags

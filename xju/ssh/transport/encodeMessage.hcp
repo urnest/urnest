@@ -19,7 +19,11 @@ namespace xju
 {
 namespace ssh
 {
+namespace transport
+{
 
+// Encode m returning encoded form using inc as increment for size of
+// encode buffer.
 template<class T>
 xju::ssh::transport::Message encodeMessage(T const& m, size_t inc = 1024U)
 {
@@ -34,5 +38,4 @@ xju::ssh::transport::Message encodeMessage(T const& m, size_t inc = 1024U)
 
 }
 }
-
-
+}
