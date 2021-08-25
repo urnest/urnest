@@ -29,6 +29,8 @@
 :mypy3 'empty file from mypy static type check'? => :FILE;
 
 :py.stylecheck 'empty file from style checker'? => :FILE;
+:py.py.stylecheck 'empty file from style checker'? => :py.stylecheck;
+:egg.py.stylecheck 'empty file from style checker'? => :py.stylecheck;
 
 #
 # :py.exec is created regardless of exit status of test run, with:
@@ -53,6 +55,8 @@
 
 +py_sp 'name of a directory in a PYTHONPATH'? => :ls;
 
++py_r 'directory of main python program'? => :first;
+
 +ignore 'egrep expression for imports to ignore'? => :ls;
 
 +py 'python file to execute'? => :first;
@@ -75,7 +79,7 @@ $ODIN_PYSTYLECHECK_LD_LIBRARY_PATH 'shared library load path to install when exe
 
 # note we use :FILE not :py so we can use :py_import_all on
 # python script that has no .py extension
-EXEC (py-import.py) (:FILE) (:FILE:dir)@ (+py_sp) (+ignore)
+EXEC (py-import.py) (:FILE) (:FILE:dir)@ (+py_r) (+py_sp) (+ignore)
    => (:py_import.view_desc);
 
 EXEC (empty-import.sh) (:egg) => (:egg.py_import.view_desc);
@@ -86,29 +90,36 @@ COLLECT (:py_import.view_desc :view)
 COLLECT (:py_import :map=:py_import_all) (:py_import)
    => (:py_import_all);
 
+:py_rd_r 'intermediate toward py_rd' => :FILE;
+
+:py_rd 'file plus directory of file as +py_r option' => :REFERENCE;
+
+EXEC (py_rd_r.sh) (:FILE) (:FILE:dir)@
+   => (:py_rd_r);
+
+READ-REFERENCE (:FILE:py_rd_r)
+   => (:py_rd);
+   
 #:FILE is stdin
-EXEC (py.pipe.run.sh) (:FILE) (+py) (+cmd :ls) (+py:dir)@ (+py_sp) NEEDS (+cmd) (+need) (+py:py_import_all)
-   => (:py.stdout) (:py.output);
-EXEC (py3.pipe.run.sh) (:FILE) (+py) (+cmd :ls) (+py:dir)@ (+py_sp) NEEDS (+cmd) (+need) (+py:py_import_all)
+EXEC (py3.pipe.run.sh) (:FILE) (+py) (+cmd :ls) (+py:dir)@ (+py_sp) NEEDS (+cmd) (+need) (+py:py_rd:py_import_all)
    => (:py3.stdout) (:py3.output);
 
 
 # :FILE is stdin to command
-EXEC (py.exec.sh) (:py) (+cmd :ls) (:env) (+stderr) (+py:dir)@ (+py_sp)
-  NEEDS (+cmd) (+need) (:py:py_import_all)
-  => (:py.exec);
-
 EXEC (py3.exec.sh) (:py) (+cmd :ls) (:env) (+stderr) (+py:dir)@ (+py_sp)
-  NEEDS (+cmd) (+need) (:py:py_import_all) (:py:mypy3) (:py:py.stylecheck) (:py:py_import_all:map=:py.stylecheck)
+  NEEDS (+cmd) (+need) (:py:py_rd:py_import_all) (:py:mypy3) (:py:py.stylecheck) (:py:py_rd:py_import_all:map=:py.stylecheck)
   => (:py3.exec);
 
 EXEC (mypy3.sh) (:py) (:env) (+py:dir)@ (+py_sp)
-  NEEDS (:py:py_import_all)
+  NEEDS (:py:py_rd:py_import_all)
   => (:mypy3);
     
 EXEC (py.stylecheck.sh) (:py) (:env) (+py:dir)@ (+py_sp)
-  => (:py.stylecheck);
-    
+  => (:py.py.stylecheck);
+
+EXEC (/usr/bin/touch) 'egg.py.stylecheck' (:egg)
+  => (:egg.py.stylecheck);
+
 :py.exec.output.ref ':py.exec.output ref' => :FILE;
 :py.exec.files.ref ':py.exec.files ref' => :FILE;
 

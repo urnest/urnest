@@ -7,6 +7,10 @@
 %test4
 %test5
 %test7
+%test8
+%test8b
+%test8c
+%test9
 %test1b
 %test-simple
 %test-stderr-1
@@ -26,7 +30,7 @@ sort -u <"$1" > want &&
 sort -u > got &&
 diff -b want got >&2
 
-%test1.got==x.py+py_sp=(sd):py_import_all:ls
+%test1.got==x.py:py_rd+py_sp=(sd):py_import_all:ls
 
 %test1.expect==<<
 y.py
@@ -35,11 +39,11 @@ c/__init__.py
 d/__init__.py
 d/z.py
 b/q.py
-sd/i.py
+i.py
 
 %test1b==x.py+py_sp=(sd):py3.exec.output
 
-%test2==()+py=(x.py)+py_sp=(sd):py.stdout
+%test2==()+py=(x.py)+py_sp=(sd):py3.stdout
 
 %test3==()+cmd=(%cmp.sh) (%test3.want) (%test3.got):stdout
 
@@ -57,7 +61,7 @@ diff -b want got >&2
 
 %test4==(%test4.got)+cmd=(%test1.sh) (%test4.expect:list:ls):stdout
 
-%test4.got==x.py:py_import_all:ls
+%test4.got==x.py:py_rd:py_import_all:ls
 
 %test4.expect==<<
 y.py
@@ -66,10 +70,11 @@ c/__init__.py
 d/__init__.py
 d/z.py
 b/q.py
+i.py
 
 %test5==(%test5.got)+cmd=(%test1.sh) (%test5.expect:list:ls):stdout
 
-%test5.got==x.py+py_sp=(se/a.egg):py_import_all:ls
+%test5.got==x.py:py_rd+py_sp=(se/a.egg):py_import_all:ls
 
 %test5.expect==<<
 y.py
@@ -79,7 +84,7 @@ d/__init__.py
 d/z.py
 b/q.py
 se/a.egg
-
+i.py
 
 %test6==()+cmd=(%cmp.sh) (%test6.want) (%test6.got):stdout
 
@@ -87,7 +92,7 @@ se/a.egg
 e1
 x: OK
 
-%test6.got==(xe.py)+py_sp=(sd)+py_sp=(se/a.egg):py3.exec.output
+%test6.got==xe.py+py_sp=(sd)+py_sp=(se/a.egg):py3.exec.output
 
 %test-simple==(simple.py):py3.exec.output
 
@@ -99,12 +104,40 @@ sort -u <"$1" > want &&
 sort -u > got &&
 diff -b want got >&2
 
-%test7.got==t2.py+py_sp=(sd):py_import_all:ls
+%test7.got==t2.py:py_rd+py_sp=(sd):py_import_all:ls
 
 %test7.expect==<<
 r1.py
 r3/__init__.py
 r3/r4/__init__.py
+
+%test8==(%test8.got)+cmd=(%test8.sh) (%test8.expect:list:ls):stdout
+%test8b==t8.py:py3.exec.output
+
+%test8.sh==! <<
+#/bin/sh
+sort -u <"$1" > want &&
+sort -u > got &&
+diff -b want got >&2
+
+%test8.got==t8.py:py_rd:py_import_all:ls
+
+%test8.expect==<<
+pullup/__init__.py
+pullup/a.py
+pullup/b.py
+
+%test8c==(%test8c.got)+cmd=(%test8c.sh) (%test8c.expect:list:ls):stdout
+%test8c.sh==! <<
+#/bin/sh
+sort -u <"$1" > want &&
+sort -u > got &&
+diff -b want got >&2
+
+%test8c.got==pullup/b.py+py_r=(.):py_import_all:ls
+
+%test8c.expect==<<
+pullup/a.py
 
 %test9==(%test9.got)+cmd=(%test9.sh) (%test9.expect:list:ls):stdout
 
@@ -114,7 +147,7 @@ sort -u <"$1" > want &&
 sort -u > got &&
 diff -b want got >&2
 
-%test9.got==t2+py_sp=(sd):py_import_all:ls
+%test9.got==t2:py_rd+py_sp=(sd):py_import_all:ls
 
 %test9.expect==<<
 r1.py

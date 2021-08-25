@@ -7,9 +7,9 @@ import os.path
 
 odinrbshost=os.environ.get('ODINRBSHOST','')
 
-py,dir_,pySp,ignore=sys.argv[1:]
+py,dirOfPy,pyMainDir,pySp,ignore=sys.argv[1:]
 
-err=open('ERROR','w')
+err=open('ERRORS','w')
 viewDesc=open('py_import.view_desc','w')
 
 indent=''
@@ -41,7 +41,11 @@ class Scope:
         self.result_=x
     pass
 
-with Scope('scan for py imports {py}'.format(**vars())):
+with Scope('scan for py imports {py} noting main dir {pyMainDir}'.format(**vars())):
+    if not pyMainDir:
+        print(f'+py_r must be specified e.g. via {py}:py_rd rather than just {py}',file=err)
+        sys.exit(0)
+        pass
     pySp=open(pySp).read().split() if pySp else []
     eggs=[_ for _ in pySp if _.endswith('.egg')]
     pySp=[_ for _ in pySp if not _.endswith('.egg')]
@@ -129,7 +133,7 @@ with Scope('scan for py imports {py}'.format(**vars())):
             if m:
                 leadingDots=m.groups()[0]
                 rest=m.groups()[1]
-                rel=['..']*(len(leadingDots)-1)+rest.split('.') #e.g. ['..','a','b']
+                rel=['.']+['..']*(len(leadingDots)-1)+rest.split('.') #e.g. ['..','a','b']
                 pass
             else:
                 rel=module.split('.') # e.g. ['os','path']
@@ -142,17 +146,21 @@ with Scope('scan for py imports {py}'.format(**vars())):
         pass
     for module in allModules:
         with Scope('generate {module} viewdesc'.format(**vars()),False):
-            if module[0]=='..':
-                sp=[dir_]
+            if module[0]=='.':
+                sp=[dirOfPy]
             else:
-                sp=[dir_]+pySp # e.g. ['/lib','/home/xju/py']
+                sp=[pyMainDir]+pySp # e.g. ['/lib','/home/xju/py']
                 pass
             for d in sp:
-                f=os.path.join(d,*module)
-                if module[-1]!='..':
-                    viewDesc.write("'{f}.py'\n".format(**vars()))
+                f=os.path.normpath(os.path.join(d,*module))
+                viewDesc.write("'{f}.py'\n".format(**vars()))
+                # import from file's or ancestor's module does not depend on
+                # that module's __init__.py
+                #  e.g. f might be /a/b/c
+                # and our file might be /a/b/c/d/q.py so dirOfPy /a/b/c/d
+                if os.path.split(dirOfPy)[0:len(os.path.split(f))]!=os.path.split(f):
+                    viewDesc.write("'{f}/__init__.py'\n".format(**vars()))
                     pass
-                viewDesc.write("'{f}/__init__.py'\n".format(**vars()))
                 pass
             viewDesc.write("=''\n")
             pass

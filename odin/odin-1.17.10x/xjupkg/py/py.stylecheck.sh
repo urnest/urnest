@@ -23,7 +23,7 @@ if [ "$ODINVERBOSE" != "" ] ; then
 fi
 (
   eval env - LD_LIBRARY_PATH="$ODIN_PYSTYLECHECK_LD_LIBRARY_PATH" PATH="$ODIN_PYSTYLECHECK_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHON3PATH" `cat "$ODIN_env"` "$ODIN_PYSTYLECHECK" $ODIN_FILE &&
-  touch py.stylecheck
+  touch py.py.stylecheck
 ) </dev/null 2>WARNINGS 1>&2 ||
 mv WARNINGS ERRORS
 
