@@ -205,7 +205,7 @@ methodN='''\
 
 maxParams=int(sys.argv[1])
 
-methods=[]
+methods_=[]
 for nParams in range(0,maxParams+1):
     pClasses=''.join([',class P{n}'.format(**vars())
                       for n in range(1,nParams+1)])
@@ -219,10 +219,10 @@ for nParams in range(0,maxParams+1):
                       for n in range(1,nParams+1)])
     paramNames=''.join([',\n        p{n}'.format(**vars())
                         for n in range(1,nParams+1)])
-    methods.append(methodN.format(**vars()))
+    methods_.append(methodN.format(**vars()))
     pass
 includes=''.join(['#include <xju/test/CallTo{nParams}.hh>\n'.format(**vars())
                   for nParams in range(0,maxParams+1)])
 
-methods=''.join(methods)
+methods=''.join(methods_)
 print(fileTemplate.format(**vars()))

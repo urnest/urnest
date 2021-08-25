@@ -21,14 +21,14 @@ CallTo5.hcp
 CallTo6.hcp
 CallTo7.hcp
 
-CallTo0.hcp==(CallToPn.py)+cmd='0':py.exec.output
-CallTo1.hcp==(CallToPn.py)+cmd='1':py.exec.output
-CallTo2.hcp==(CallToPn.py)+cmd='2':py.exec.output
-CallTo3.hcp==(CallToPn.py)+cmd='3':py.exec.output
-CallTo4.hcp==(CallToPn.py)+cmd='4':py.exec.output
-CallTo5.hcp==(CallToPn.py)+cmd='5':py.exec.output
-CallTo6.hcp==(CallToPn.py)+cmd='6':py.exec.output
-CallTo7.hcp==(CallToPn.py)+cmd='7':py.exec.output
-Calls.hcp==(Calls.py)+cmd='7':py.exec.output
+CallTo0.hcp==(CallToPn.py)+cmd='0':py3.exec.output
+CallTo1.hcp==(CallToPn.py)+cmd='1':py3.exec.output
+CallTo2.hcp==(CallToPn.py)+cmd='2':py3.exec.output
+CallTo3.hcp==(CallToPn.py)+cmd='3':py3.exec.output
+CallTo4.hcp==(CallToPn.py)+cmd='4':py3.exec.output
+CallTo5.hcp==(CallToPn.py)+cmd='5':py3.exec.output
+CallTo6.hcp==(CallToPn.py)+cmd='6':py3.exec.output
+CallTo7.hcp==(CallToPn.py)+cmd='7':py3.exec.output
+Calls.hcp==(Calls.py)+cmd='7':py3.exec.output
 
 %tags==.:merged-tags
