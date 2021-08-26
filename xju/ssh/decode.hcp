@@ -38,6 +38,7 @@
 #include <xju/ssh/transport/messages/ServiceRequest.hh>
 #include <xju/ssh/transport/messages/ServiceAccept.hh>
 #include <xju/ssh/transport/messages/Ignore.hh>
+#include <xju/ssh/userauth/messages/RSAPublicKeyRequest.hh>
 
 namespace xju
 {
@@ -374,6 +375,50 @@ userauth::messages::Request decoder<userauth::messages::Request>::dec(
                                      std::move(methodName));
 }
 
+// note assumes type byte (REQUEST) already read and verified
+template<>
+userauth::messages::RSAPublicKeyRequest
+decoder<userauth::messages::RSAPublicKeyRequest>::dec(
+  xju::net::istream& s)
+{
+  try{
+    auto r(decode<userauth::messages::Request>(s));
+    auto const b(decode<bool>(s));
+    if (!b){
+      std::ostringstream s;
+      s << "expected true as credentials present flag, got false";
+      throw xju::Exception(s,XJU_TRACED);
+    }
+    auto const algorithm(decode<std::string>(s));
+    if (algorithm != "ssh-rsa"){
+      std::ostringstream s;
+      s << "expected \"ssh-rsa\" algorithm, got "
+        << xju::format::quote(xju::format::cEscapeString(algorithm));
+      throw xju::Exception(s,XJU_TRACED);
+    }
+    auto publicKey(
+      decode<xju::crypt::rsa::PublicKey>(s));
+    auto const sigType(decode<std::string>(s));
+    if (sigType != "ssh-rsa"){
+      std::ostringstream s;
+      s << "expected \"ssh-rsa\" signature type, got "
+        << xju::format::quote(xju::format::cEscapeString(sigType));
+      throw xju::Exception(s,XJU_TRACED);
+    }
+    auto signature(decode<xju::crypt::Signature>(s));
+    return userauth::messages::RSAPublicKeyRequest(r,publicKey,signature);
+    @@@;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode RSA public key userauth request from input stream";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+
+
 template<>
 transport::MSG decode<transport::MSG>(xju::net::istream& s){
   return (transport::MSG)s.get8();
@@ -596,7 +641,6 @@ transport::messages::Ignore decoder<transport::messages::Ignore>::dec(
     throw;
   }
 }
-
 
 }
 }

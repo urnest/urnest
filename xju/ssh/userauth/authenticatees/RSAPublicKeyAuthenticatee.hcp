@@ -14,6 +14,21 @@
 #include <xju/UserName.hh>
 #include <xju/crypt/Signer.hh>
 #include <unistd.h>
+#include <xju/MemOBuf.hh> //impl
+#include <xju/ssh/misc/ServiceName.hh> //impl
+#include <xju/net/ostream.hh> //impl
+#include <xju/crypt/Signature.hh> //impl
+#include <xju/ssh/encode.hh> //impl
+#include <xju/ssh/userauth/MSG.hh> //impl
+#include <iterator> //impl
+#include <xju/ssh/transport/encodeMessage.hh> //impl
+#include <xju/MemIBuf.hh> //impl
+#include <xju/net/istream.hh> //impl
+#include <xju/ssh/userauth/messages/Failure.hh> //impl
+#include <sstream> //impl
+#include <xju/format.hh> //impl
+#include <xju/ssh/decode.hh> //impl
+#include <xju/ssh/transport/MSG.hh> //impl
 
 namespace xju
 {
@@ -29,20 +44,19 @@ namespace{
     xju::crypt::Signer& signer,
     xju::ssh::transport::SessionId const& sessionId,
     xju::UserName const& userName,
-    ServiceName const& serviceName,
-    xju::crypt::rsa::PublicKey publicKey)
+    xju::ssh::misc::ServiceName const& serviceName,
+    xju::crypt::rsa::PublicKey const& publicKey)
   {
     xju::MemOBuf b(1024U);
     {
       xju::net::ostream s(b);
       xju::ssh::encode(s, sessionId);
-      xju::ssh::encode(s, xju::ssh::userauth::MSG::Request);
+      xju::ssh::encode(s, xju::ssh::userauth::MSG::REQUEST);
       xju::ssh::encode(s, userName);
       xju::ssh::encode(s, serviceName);
       xju::ssh::encode(s, publicKey);
     }
-    return xju::crypt::Signature(b.data().first,
-                                 b.data().second);
+    return signer.sign(&*(b.data().first),b.data().second-b.data().first);
   }
 }
 
@@ -58,88 +72,93 @@ public:
                             size_t const maxMessageSize) noexcept:
       userName_(std::move(userName)),
       publicKey_(std::move(publicKey)),
-      signer_(std::move(signer)),
+      signer_(signer),
       maxMessageSize_(maxMessageSize)
   {
   }
 
   std::vector<transport::Message> authenticate(
+    xju::ssh::transport::SessionId const& sessionId,
     xju::ssh::transport::SingleThreadedSendInterface& sender,
     xju::ssh::transport::ReceiveInterface& receiver,
-    ServiceName const& serviceName) override
+    xju::ssh::misc::ServiceName const& serviceName) override
   {
     try{
       auto const signature(signRequest(signer_,
                                        sessionId,
                                        userName_,
                                        serviceName,
-                                       publicKey));
-      std::vector<Message> receivedMessages;
-      sender.sendMessage(xju::ssh::userauth::messages::RSAPublicKeyRequest(
-                           xju::ssh::userauth::messages::Request(
-                             userName_,
-                             serviceName,
-                             "publickey"),
-                           publicKey_,
-                           signature),
-                         std::back_inseter(receivedMessages));
-      auto const m(receiver.receiveMessage(maxMessageSize_));
-      xju::MemIBuf b(m);
-      {
-        xju::net::istream s(b);
-        uint8_t const messageType(xju::ssh::decode<uint8_t>(s));
-        switch (messageType){
-        case (uint8_t)xju::ssh::userauth::MSG::SUCCESS:
+                                       publicKey_));
+      std::vector<transport::Message> receivedMessages;
+      sender.sendMessage(
+        transport::encodeMessage(
+          xju::ssh::userauth::messages::RSAPublicKeyRequest(
+            xju::ssh::userauth::messages::Request(
+              userName_,
+              serviceName,
+              MethodName("publickey")),
+            publicKey_,
+            signature)),
+          std::back_inserter(receivedMessages));
+      while(true){
+        auto const m(receiver.receiveMessage(maxMessageSize_));
+        xju::MemIBuf b(m);
         {
-          return receivedMessages;
-        }
-        case (uint8_t)xju::ssh::userauth::MSG::FAILURE:
-        {
-          auto const failure(
-            xju::ssh::decode<xju::ssh::userauth::messages::Failure>(s));
-          std::ostringstream s;
-          s << "server responded with ";
-          if (failure.partialSuccess_){
-            s << "partial success, can continue with "
-              < xju::format::join(failure.canContinue_.begin(),
-                                  failure.canContinue_.end(),
-                                  "/");
+          xju::net::istream s(b);
+          uint8_t const messageType(xju::ssh::decode<uint8_t>(s));
+          switch (messageType){
+          case (uint8_t)xju::ssh::userauth::MSG::SUCCESS:
+          {
+            return receivedMessages;
           }
-          else{
-            " outright failure";
-          }
-          throw xju::Exception(s.str(),XJU_TRACED);
-        }
-        case (uint8_t)xju::ssh::transport::MSG::IGNORE;
-        case (uint8_t)xju::ssh::transport::MSG::DEBUG;
-        {
-          receivedMessages.push_back(m);
-          break;
-        }
-        default:
-        {
-          std::ostringstream s;
-          s << "unexpected response of type " << xju::format::int(messageType)
-            << " from server (message bytes including type byte "
-            << xju::format::join(m.begin(),m.end(),
-                                 [](uint8_t b){
-                                   return xju::format::hex(b,"");
-                                 },
-                                 " ")
-            << ")";
-          if (receivedMessages.size()){
+          case (uint8_t)xju::ssh::userauth::MSG::FAILURE:
+          {
+            auto const failure(
+              xju::ssh::decode<messages::Failure>(s));
             std::ostringstream s;
-            s << " noting preceding received messages of types "
-              << xju::format::join(
-                receivedMessages.begin(),
-                receivedMessages.end(),
-                [](Message const& m){
-                  return xju::format::int_(m[0]);
-                },
-                ", ");
+            s << "server responded with ";
+            if (failure.partialSuccess_){
+              s << "partial success, can continue with "
+                << xju::format::join(failure.canContinue_.begin(),
+                                     failure.canContinue_.end(),
+                                     "/");
+            }
+            else{
+              " outright failure";
+            }
+            throw xju::Exception(s.str(),XJU_TRACED);
           }
-          throw xju::Exception(s.str(),XJU_TRACED);
-        }
+          case (uint8_t)xju::ssh::transport::MSG::IGNORE:
+          case (uint8_t)xju::ssh::transport::MSG::DEBUG:
+          {
+            receivedMessages.push_back(m);
+            break;
+          }
+          default:
+          {
+            std::ostringstream s;
+            s << "unexpected response of type " << xju::format::int_(messageType)
+              << " from server (message bytes including type byte "
+              << xju::format::join(m.begin(),m.end(),
+                                   [](uint8_t b){
+                                     return xju::format::hex(b,"");
+                                   },
+                                   " ")
+              << ")";
+            if (receivedMessages.size()){
+              std::ostringstream s;
+              s << " noting preceding received messages of types "
+                << xju::format::join(
+                  receivedMessages.begin(),
+                  receivedMessages.end(),
+                  [](transport::Message const& m){
+                    return xju::format::int_(m[0]);
+                  },
+                  ", ");
+            }
+            throw xju::Exception(s.str(),XJU_TRACED);
+          }
+          }
         }
       }
     }

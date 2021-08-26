@@ -35,6 +35,7 @@
 #include <xju/ssh/transport/messages/ServiceRequest.hh>
 #include <xju/ssh/transport/messages/ServiceAccept.hh>
 #include <xju/ssh/transport/messages/Ignore.hh>
+#include <vector>
 
 namespace xju
 {
@@ -108,6 +109,11 @@ xju::net::ostream& encode(xju::net::ostream& s,
 {
   
   return s.put32(x.value());
+}
+template<class Tag>
+xju::net::ostream& encode(xju::net::ostream& s,xju::Tagged<std::vector<uint8_t>,Tag> const& x)
+{
+  return s.put32(x._.size()).put(x._.begin(),x._.end());
 }
 
 template<class Tag>
@@ -183,7 +189,8 @@ xju::net::ostream& encode(xju::net::ostream& s,
 {
   encode(s, x);
   encode(s, std::string("ssh-rsa"));
-  return s.put32(signature.size()).put(signature.begin(),signature.end());
+  encode(s, signature);
+  return s;
 }
 
 // encode x to s including initial type byte
@@ -191,7 +198,6 @@ xju::net::ostream& encode(xju::net::ostream& s,
                           userauth::messages::RSAPublicKeyRequest const& x)
 {
   encode(s, (userauth::messages::Request const&)x);
-  encode(s, std::string("publickey"));
   encode(s, true);
   encode(s, std::string("ssh-rsa"));
   encode(s, x.publicKey_, x.signature_);
