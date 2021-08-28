@@ -111,6 +111,18 @@ r1.py
 r3/__init__.py
 r3/r4/__init__.py
 
+#
+# python is a convoluted with its package importing v __init__.py, which
+# can define stuff for that package and is often used to "pull up" submodule
+# definitions to __init__.py package level
+# But sub-packages can import other sub-packages (or the definitions from
+# the package itself.
+# It turns out sub-packages, when importing other sub-packages or definitions
+# from the package itself, ignore __init__.py.
+# test8 sets up such an arrangement to verify out import handling follows
+# this rule. (If we don't ignore __init__.py we get circular dependencies, but
+# it needs to only be ignore for imports from sub-packages.)
+#
 %test8==(%test8.got)+cmd=(%test8.sh) (%test8.expect:list:ls):stdout
 %test8b==t8.py:py3.exec.output
 

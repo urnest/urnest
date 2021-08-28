@@ -247,8 +247,6 @@ PKGLST
     - idea is that environment is controlled, repeatable, predictable
     - ! needs display, how to do that?
 
-- update odin manual
-
 - odin packages are self-documenting but need cookbook/tutorial/example
   information somewhere (odin/example directory?), needs to be searchable
   ie indexed by google (eg blog posts)
