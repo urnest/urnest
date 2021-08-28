@@ -10,6 +10,7 @@
 %test8
 %test8b
 %test8c
+%test8d
 %test9
 %test1b
 %test-simple
@@ -124,7 +125,6 @@ r3/r4/__init__.py
 # it needs to only be ignore for imports from sub-packages.)
 #
 %test8==(%test8.got)+cmd=(%test8.sh) (%test8.expect:list:ls):stdout
-%test8b==t8.py:py3.exec.output
 
 %test8.sh==! <<
 #/bin/sh
@@ -139,6 +139,8 @@ pullup/__init__.py
 pullup/a.py
 pullup/b.py
 
+%test8b==t8.py:py3.exec.output
+
 %test8c==(%test8c.got)+cmd=(%test8c.sh) (%test8c.expect:list:ls):stdout
 %test8c.sh==! <<
 #/bin/sh
@@ -150,6 +152,25 @@ diff -b want got >&2
 
 %test8c.expect==<<
 pullup/a.py
+
+%test8d==(%test8d.got)+cmd=(%test8.sh) (%test8d.expect:list:ls):stdout
+
+# +py_r, the directory of the main python program, is the first place
+# to look for imports. It is automatically calculated but can be overridden.
+# Overriding can reduce dependency calculations, e.g. where tests are
+# never in the same directory as source code there is no need to search the
+# directory containg each test, since where tests are spread accross multiple
+# directories the dependency calculation is officially different for each
+# test directory. By explicitly specifying py_r say as a non-existent
+# directory we avoid recalculating dependencies for each test directory.
+#
+# test8d verifies that we really are overriding the automatic value.
+%test8d.got==t8.py+py_r=(pullup/altroot)+py_sp=(.):py_rd:py_import_all:ls
+
+%test8d.expect==<<
+pullup/__init__.py
+pullup/altroot/pullup/a.py
+pullup/b.py
 
 %test9==(%test9.got)+cmd=(%test9.sh) (%test9.expect:list:ls):stdout
 

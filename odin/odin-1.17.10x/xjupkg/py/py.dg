@@ -94,7 +94,7 @@ COLLECT (:py_import :map=:py_import_all) (:py_import)
 
 :py_rd 'file plus directory of file as +py_r option' => :REFERENCE;
 
-EXEC (py_rd_r.sh) (:FILE) (:FILE:dir)@
+EXEC (py_rd_r.sh) (:FILE) (+py_r)@ (:FILE:dir)@
    => (:py_rd_r);
 
 READ-REFERENCE (:FILE:py_rd_r)
