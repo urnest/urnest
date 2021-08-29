@@ -13,6 +13,8 @@
 #include <xju/ssh/misc/ServiceName.hh>
 #include <xju/ssh/userauth/MethodName.hh>
 #include <xju/ssh/userauth/MSG.hh> //impl
+#include <xju/format.hh>
+#include <iostream>
 
 namespace xju
 {
@@ -42,6 +44,14 @@ public:
   MethodName methodName_;
   
   friend bool operator<(Request const& a, Request const& b) noexcept;
+
+  friend std::ostream& operator<<(std::ostream& s, Request const& x){
+    using namespace xju::format;
+    return
+      s << "username " << quote(cEscapeString(x.userName_.value()))
+        << ", service name " << quote(cEscapeString(x.serviceName_.value()))
+        << ", method name " << quote(cEscapeString(x.methodName_.value()));
+  }
 };
 
 }

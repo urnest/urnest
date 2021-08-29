@@ -39,6 +39,7 @@
 #include <xju/ssh/transport/messages/ServiceAccept.hh>
 #include <xju/ssh/transport/messages/Ignore.hh>
 #include <xju/ssh/userauth/messages/RSAPublicKeyRequest.hh>
+#include <xju/ssh/userauth/AlgorithmName.hh> //impl
 
 namespace xju
 {
@@ -299,15 +300,6 @@ decoder<xju::crypt::rsa::PublicKey>::dec(
         << ", having decoded \"e\" " << e << " and \"n\" " << n;
       throw xju::Exception(s.str(),XJU_TRACED);
     }
-    try{
-      s.get8();
-      std::ostringstream s;
-      s << "there are extra bytes of data";
-      throw xju::Exception(s.str(),XJU_TRACED);
-    }
-    catch(xju::Exception const&){
-      //only exception possible for xju::MemIBuf is end-of-data
-    }
     return xju::crypt::rsa::PublicKey(e,n);
   }
   catch(xju::Exception& e){
@@ -359,20 +351,211 @@ userauth::messages::Success decoder<userauth::messages::Success>::dec(
   return userauth::messages::Success();
 }
 
+namespace
+{
+xju::UserName decodeUserName(xju::net::istream& s)
+{
+  try{
+    return decode<xju::UserName>(s);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode user name";
+    e.addContext(s,XJU_TRACED);
+    throw;
+  }
+}
+xju::ssh::misc::ServiceName decodeServiceName(
+  xju::net::istream& s,
+  xju::UserName const& userName){
+  try{
+    return decode<xju::ssh::misc::ServiceName>(s);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode service name having decoded user name " << userName;
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+userauth::MethodName decodeMethodName(
+  xju::net::istream& s,
+  xju::UserName const& userName,
+  xju::ssh::misc::ServiceName const& serviceName)
+{
+  try{
+    return decode<userauth::MethodName>(s);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode user authentication method name having decode user name "
+      << userName << " and serviceName " << serviceName;
+    e.addContext(s,XJU_TRACED);
+    throw;
+  }
+}
+}
+
 // note assumes type byte (REQUEST) already read and verified
 template<>
 userauth::messages::Request decoder<userauth::messages::Request>::dec(
   xju::net::istream& s)
 {
-  using namespace userauth;
-  
-  xju::UserName userName(decode<xju::UserName>(s));
-  xju::ssh::misc::ServiceName serviceName(
-    decode<xju::ssh::misc::ServiceName>(s));
-  userauth::MethodName methodName(decode<userauth::MethodName>(s));
-  return userauth::messages::Request(std::move(userName),
-                                     std::move(serviceName),
-                                     std::move(methodName));
+  try{
+    xju::UserName userName(decodeUserName(s));
+    xju::ssh::misc::ServiceName serviceName(decodeServiceName(s,userName));
+    userauth::MethodName methodName(decodeMethodName(s,userName,serviceName));
+    return userauth::messages::Request(std::move(userName),
+                                       std::move(serviceName),
+                                       std::move(methodName));
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode userauth request";
+    e.addContext(s,XJU_TRACED);
+    throw;
+  }
+}
+
+// note assumes type byte (REQUEST) already read and verified
+template<>
+xju::crypt::Signature
+decoder<xju::crypt::Signature>::dec(
+  xju::net::istream& s)
+{
+  try{
+    std::vector<uint8_t> n;
+    s.getN(s.get32(),std::back_inserter(n));
+    return xju::crypt::Signature(std::move(n));
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode signature";
+    e.addContext(s,XJU_TRACED);
+    throw;
+  }
+}
+
+namespace
+{
+void decodeTrue(xju::net::istream& s,
+                xju::ssh::userauth::messages::Request const& request)
+{
+  try{
+    auto const x(decode<uint8_t>(s));
+    if (x!=1){
+      std::ostringstream s;
+      s << "expected 1, got " << xju::format::int_(x);
+      throw xju::Exception(s,XJU_TRACED);
+    }
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode true indicating signed userauth request having decode "
+      << request;
+    e.addContext(s,XJU_TRACED);
+    throw;
+  }
+}
+
+xju::ssh::userauth::AlgorithmName decodeSshRsaAlgorithm(
+  xju::net::istream& s,
+  xju::ssh::userauth::messages::Request const& request)
+{
+  try{
+    auto const algorithm(decode<xju::ssh::userauth::AlgorithmName>(s));
+    if (algorithm != userauth::AlgorithmName("ssh-rsa")){
+      std::ostringstream s;
+      s << "expected \"ssh-rsa\" algorithm, got "
+        << xju::format::quote(xju::format::cEscapeString(algorithm.value()));
+      throw xju::Exception(s,XJU_TRACED);
+    }
+    return algorithm;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode \"ssh-rsa\" ssh userauth publickey algorithm name "
+      << " having received userauth request " << request;
+    e.addContext(s,XJU_TRACED);
+    throw;
+  }
+}
+xju::crypt::rsa::PublicKey decodeSshRsaPublicKey(
+  xju::net::istream& s,
+  xju::ssh::userauth::messages::Request const& request,
+  xju::ssh::userauth::AlgorithmName const& algorithm)
+{
+  try{
+    auto publicKey(decode<xju::crypt::rsa::PublicKey>(s));
+    return publicKey;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode ssh rsa public key having received userauth request "
+      << request
+      << " and having decoded \"ssh-rsa\" publickey algorithm name.";
+    e.addContext(s,XJU_TRACED);
+    throw;
+  }
+}
+
+std::string decodeSshRsaSignatureType(
+  xju::net::istream& s)
+{
+  try{
+    auto const sigType(decode<std::string>(s));
+    if (sigType != "ssh-rsa"){
+      std::ostringstream s;
+      s << "expected \"ssh-rsa\" signature type, got "
+        << xju::format::quote(xju::format::cEscapeString(sigType));
+      throw xju::Exception(s,XJU_TRACED);
+    }
+    return sigType;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode signature type indicator \"ssh-rsa\"";
+    e.addContext(s,XJU_TRACED);
+    throw;
+  }
+}
+xju::crypt::Signature decodeSshRsaSignatureValue(
+  xju::net::istream& s,
+  std::string const& sigType)
+{
+  try{
+    return decode<xju::crypt::Signature>(s);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode ssh-rsa signature value having decoded signature type "
+      << xju::format::quote(xju::format::cEscapeString(sigType));
+    e.addContext(s,XJU_TRACED);
+    throw;
+  }
+}
+
+xju::crypt::Signature decodeSshRsaSignature(
+  xju::net::istream& s,
+  xju::ssh::userauth::messages::Request const& request,
+  xju::ssh::userauth::AlgorithmName const& algorithm,
+  xju::crypt::rsa::PublicKey const& publicKey)
+{
+  try{
+    auto const sigType(decodeSshRsaSignatureType(s));
+    return decodeSshRsaSignatureValue(s, sigType);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode ssh rsa signature having received userauth request "
+      << request
+      << " and having decoded \"ssh-rsa\" publickey algorithm name "
+      << " and having decoded rsa public public key " << publicKey;
+    e.addContext(s,XJU_TRACED);
+    throw;
+  }
+}
+
 }
 
 // note assumes type byte (REQUEST) already read and verified
@@ -382,42 +565,32 @@ decoder<userauth::messages::RSAPublicKeyRequest>::dec(
   xju::net::istream& s)
 {
   try{
-    auto r(decode<userauth::messages::Request>(s));
-    auto const b(decode<bool>(s));
-    if (!b){
+    auto request(decode<userauth::messages::Request>(s));
+    if (request.methodName_ != xju::ssh::userauth::MethodName("publickey")){
       std::ostringstream s;
-      s << "expected true as credentials present flag, got false";
+      s << "expected \"publickey\" as method name, got "
+        << xju::format::quote(
+          xju::format::cEscapeString(request.methodName_.value()));
       throw xju::Exception(s,XJU_TRACED);
     }
-    auto const algorithm(decode<std::string>(s));
-    if (algorithm != "ssh-rsa"){
-      std::ostringstream s;
-      s << "expected \"ssh-rsa\" algorithm, got "
-        << xju::format::quote(xju::format::cEscapeString(algorithm));
-      throw xju::Exception(s,XJU_TRACED);
-    }
-    auto publicKey(
-      decode<xju::crypt::rsa::PublicKey>(s));
-    auto const sigType(decode<std::string>(s));
-    if (sigType != "ssh-rsa"){
-      std::ostringstream s;
-      s << "expected \"ssh-rsa\" signature type, got "
-        << xju::format::quote(xju::format::cEscapeString(sigType));
-      throw xju::Exception(s,XJU_TRACED);
-    }
-    auto signature(decode<xju::crypt::Signature>(s));
-    return userauth::messages::RSAPublicKeyRequest(r,publicKey,signature);
-    @@@;
+    decodeTrue(s,request);
+    auto algorithm(decodeSshRsaAlgorithm(s,request));
+    auto publicKey(decodeSshRsaPublicKey(s,request,algorithm));
+    auto signature(decodeSshRsaSignature(s,request,algorithm,publicKey));
+    
+    return userauth::messages::RSAPublicKeyRequest(
+      std::move(request.userName_),
+      std::move(request.serviceName_),
+      std::move(publicKey),
+      std::move(signature));
   }
   catch(xju::Exception& e){
     std::ostringstream s;
-    s << "decode RSA public key userauth request from input stream";
+    s << "decode signed RSA public key userauth request from input stream";
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }
 }
-
-
 
 template<>
 transport::MSG decode<transport::MSG>(xju::net::istream& s){

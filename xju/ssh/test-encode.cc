@@ -14,6 +14,7 @@
 #include <vector>
 #include <xju/MemOBuf.hh>
 #include <xju/LanguageName.hh>
+#include <xju/ssh/userauth/messages/RSAPublicKeyRequest.hh>
 
 namespace xju
 {
@@ -85,6 +86,32 @@ void test2() {
     xju::assert_equal(std::vector<uint8_t>(b.data().first,b.data().second),
                       {2,
                        0,0,0,4,1,2,3,4});
+  }
+  {
+    xju::MemOBuf b(256,1024);
+    {
+      xju::net::ostream s(b);
+      encode(s,xju::ssh::userauth::messages::RSAPublicKeyRequest(
+               xju::UserName("fred"),
+               xju::ssh::misc::ServiceName("s1"),
+               xju::crypt::rsa::PublicKey(
+                 xju::crypt::I(1U),
+                 xju::crypt::I(2U)),
+               xju::crypt::Signature(std::vector<uint8_t>({3,4,5,6}))));
+                 
+    }
+    xju::assert_equal(std::vector<uint8_t>(b.data().first,b.data().second),
+                      {50,
+                       0,0,0,4,'f','r','e','d',
+                       0,0,0,2,'s','1',
+                       0,0,0,9,'p','u','b','l','i','c','k','e','y',
+                       1, //TRUE
+                       0,0,0,7,'s','s','h','-','r','s','a',
+                       0,0,0,7,'s','s','h','-','r','s','a',
+                       0,0,0,1,1,
+                       0,0,0,1,2,
+                       0,0,0,7,'s','s','h','-','r','s','a',
+                       0,0,0,4,3,4,5,6});
   }
 }
 

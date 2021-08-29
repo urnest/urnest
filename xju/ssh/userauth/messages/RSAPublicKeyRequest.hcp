@@ -28,10 +28,13 @@ class RSAPublicKeyRequest : public Request
 public:
   // rfc4253 "ssh-rsa" algorithm
   explicit RSAPublicKeyRequest(
-    Request r,
+    xju::UserName userName,
+    xju::ssh::misc::ServiceName serviceName,
     xju::crypt::rsa::PublicKey publicKey,
     xju::crypt::Signature signature):
-      Request(r),
+      Request(std::move(userName),
+              std::move(serviceName),
+              MethodName("publickey")),
       publicKey_(std::move(publicKey)),
       signature_(std::move(signature))
   {

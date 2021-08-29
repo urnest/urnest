@@ -16,6 +16,8 @@
 #include <xju/net/ostream.hh>
 #include <xju/ssh/encode.hh>
 #include <xju/ssh/transport/messages/ServiceAccept.hh>
+#include <xju/ssh/userauth/messages/RSAPublicKeyRequest.hh>
+#include <xju/ssh/userauth/MSG.hh>
 
 namespace xju
 {
@@ -91,6 +93,24 @@ void test2() {
     xju::net::istream s(c);
     xju::assert_equal(decode<uint8_t>(s),(uint8_t)xju::ssh::transport::MSG::IGNORE);
     xju::assert_equal(decode<xju::ssh::transport::messages::Ignore>(s),x);
+  }
+  {
+    xju::ssh::userauth::messages::RSAPublicKeyRequest const x(
+               xju::UserName("fred"),
+               xju::ssh::misc::ServiceName("s1"),
+               xju::crypt::rsa::PublicKey(
+                 xju::crypt::I(1U),
+                 xju::crypt::I(2U)),
+               xju::crypt::Signature(std::vector<uint8_t>({3,4,5,6})));
+    xju::MemOBuf b(256,1024);
+    {
+      xju::net::ostream s(b);
+      encode(s,x);
+    }
+    xju::MemIBuf c(b.data().first,b.data().second);
+    xju::net::istream s(c);
+    xju::assert_equal(decode<uint8_t>(s),(uint8_t)xju::ssh::userauth::MSG::REQUEST);
+    xju::assert_equal(decode<xju::ssh::userauth::messages::RSAPublicKeyRequest>(s),x);
   }
   
 }

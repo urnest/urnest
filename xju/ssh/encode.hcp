@@ -116,6 +116,11 @@ xju::net::ostream& encode(xju::net::ostream& s,xju::Tagged<std::vector<uint8_t>,
   return s.put32(x._.size()).put(x._.begin(),x._.end());
 }
 
+xju::net::ostream& encode(xju::net::ostream& s,xju::crypt::Signature const& x)
+{
+  return s.put32(x.size()).put(x.begin(),x.end());
+}
+
 template<class Tag>
 xju::net::ostream& encode(xju::net::ostream& s,std::vector<xju::Tagged<std::string,Tag> > const& x)
 {
