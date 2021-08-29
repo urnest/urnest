@@ -29,6 +29,7 @@
 #include <xju/format.hh> //impl
 #include <xju/ssh/decode.hh> //impl
 #include <xju/ssh/transport/MSG.hh> //impl
+#include <xju/ssh/userauth/AlgorithmName.hh> //impl
 
 namespace xju
 {
@@ -51,9 +52,12 @@ namespace{
     {
       xju::net::ostream s(b);
       xju::ssh::encode(s, sessionId);
-      xju::ssh::encode(s, xju::ssh::userauth::MSG::REQUEST);
+      xju::ssh::encode(s, (uint8_t)xju::ssh::userauth::MSG::REQUEST);
       xju::ssh::encode(s, userName);
       xju::ssh::encode(s, serviceName);
+      xju::ssh::encode(s, std::string("publickey"));
+      xju::ssh::encode(s, true);
+      xju::ssh::encode(s, xju::ssh::userauth::AlgorithmName("ssh-rsa")),
       xju::ssh::encode(s, publicKey);
     }
     return signer.sign(&*(b.data().first),b.data().second-b.data().first);
@@ -93,10 +97,8 @@ public:
       sender.sendMessage(
         transport::encodeMessage(
           xju::ssh::userauth::messages::RSAPublicKeyRequest(
-            xju::ssh::userauth::messages::Request(
-              userName_,
-              serviceName,
-              MethodName("publickey")),
+            userName_,
+            serviceName,
             publicKey_,
             signature)),
           std::back_inserter(receivedMessages));

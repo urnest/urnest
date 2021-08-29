@@ -26,6 +26,7 @@
 #include <xju/ssh/encode.hh>
 #include <xju/ssh/transport/encodeMessage.hh>
 #include <xju/ssh/userauth/messages/Success.hh>
+#include <xju/ssh/userauth/AlgorithmName.hh>
 
 namespace xju
 {
@@ -111,7 +112,7 @@ void test1() {
       encode(s,serviceName);
       encode(s,std::string("publickey"));
       encode(s,true);
-      encode(s,"ssh-rsa");
+      encode(s,xju::ssh::userauth::AlgorithmName("ssh-rsa"));
       encode(s,publicKey);
     }
     sigVerifier.verifySignature(&*(b.data().first),
@@ -132,7 +133,7 @@ void test1() {
     c=receiver.calls_.awaitCall(
       receiver,&transport::ReceiveInterface::receiveMessage,
       xju::steadyNow()+leeway);
-    xju::assert_equal(c->p1_,4096U);
+    xju::assert_equal(c->p1_,2048U);
     c->return_(transport::encodeMessage(messages::Success()));
   }
   std::vector<transport::Message> const messages(

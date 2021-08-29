@@ -52,6 +52,10 @@ public:
     try{
       xju::MemIBuf b(hostKeyAndCertificates);
       xju::net::istream s(b);
+
+      // REVISIT: refactor following code like in xju::ssh::decode
+      // with function for each step taking all params from previous
+      // steps (and using those in exception context)
       auto const  identifier(xju::ssh::decode<std::string>(s));
       if (identifier!="ssh-rsa"){
         std::ostringstream s;
