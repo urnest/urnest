@@ -67,4 +67,4 @@ EXEC (exec.files.sh) (:exec/files.tar) (:exec/errors) (:exec/status) (:exec:name
 
 READ-REFERENCE (:exec.files.ref) => (:exec.files);
 
-EXEC (env.sh) (env.cc:exe) ($ODINCACHE/ENV) => (:env);
+EXEC (env.sh) (env.cc) ($ODINCACHE/ENV) => (:env);
