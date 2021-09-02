@@ -86,6 +86,7 @@ extern void Local_Set_WarnLevel(GMC_P1(int));
 extern void Local_Set_LogLevel(GMC_P1(tp_LogLevel));
 extern void Local_Set_HelpLevel(GMC_P1(int));
 extern void Local_Set_MaxJobs(GMC_P1(int));
+extern int Local_Get_NumJobs();
 extern void Local_Get_UseCount(GMC_P1(int *));
 /* if-cmd.c */
 extern void CommandInterpreter(GMC_P1(boolean *) GMC_PN(tp_Nod) GMC_PN(boolean));

@@ -651,6 +651,7 @@ Add_Job(
    CurrentClient->Job = Job;
    CurrentClient->NumJobs += 1;
    FORBIDDEN(CurrentClient->NumJobs > CurrentClient->MaxJobs);
+   Do_Log("Added Job ", FilHdr, LOGLEVEL_Process);
    return Job;
    }/*Add_Job*/
 
@@ -665,6 +666,7 @@ Del_Job(
 
    FORBIDDEN(Job == NIL);
    FORBIDDEN(Is_PRB_Status(FilHdr_Status(Job->FilHdr)) && !Job->Canceled);
+   Do_Log("Deleting Job ", Job->FilHdr, LOGLEVEL_Process);
    Ret_FilHdr(Job->FilHdr);
    Job->FilHdr = NIL;
    /*select*/{
@@ -994,6 +996,14 @@ Local_Set_MaxJobs(
    GMC_DCL(int, MaxJobs)
 {
    CurrentClient->MaxJobs = MaxJobs;
+   }/*Local_Set_MaxJobs*/
+
+
+int
+Local_Get_NumJobs(
+   )
+{
+  return CurrentClient->NumJobs;
    }/*Local_Set_MaxJobs*/
 
 

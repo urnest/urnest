@@ -449,10 +449,21 @@ IPC_Get_Commands(
 	    if (Host_FD(Host) > 0) {
 	       FD_SET(Host_FD(Host), readfds); }/*if*/; }/*for*/; }/*if*/;
 
+
       if (IsServer) {
 	 FD_SET(ListenFD, readfds);
 	 FOREACH_CLIENT(Client) {
 	    if (!Is_LocalClient(Client)) {
+               if (Client_LogLevel(Client) >= 7) {
+                 tps_Str StrBuf;
+                 struct timeval now;
+                 OldCurrentClient = CurrentClient;
+                 CurrentClient = Client;
+                 gettimeofday(&now, 0);
+                 (void)sprintf(StrBuf, "** %d.%03d Client->NumJobs %d", now.tv_sec, now.tv_usec/1000, Local_Get_NumJobs());
+                 LogMessage(StrBuf);
+                 CurrentClient = OldCurrentClient;
+               }
 	       FD_SET(Client_FD(Client), readfds); }/*if*/; }/*for*/; }/*if*/;
 
       Unblock_Signals();
