@@ -130,7 +130,7 @@ Local_Test_All(GMC_ARG_VOID)
       FilHdr = Client_FilHdr(CurrentClient);
       if (FilHdr != NIL) {
 	 Ret_ToDo();
-	 Push_AllReqs(&AllDone);
+	 Push_AllReqs();
 	 Ret_FilHdr(FilHdr); }/*if*/; }/*for*/;
    CurrentClient = OldCurrentClient;
    }/*Local_Test_All*/

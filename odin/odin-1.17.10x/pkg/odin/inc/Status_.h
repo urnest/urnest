@@ -3,7 +3,11 @@
 
 #define				STAT_Unknown 1
 #define				STAT_Pending 2
+
+// Ready to perform its update action:
 #define				STAT_Ready 3
+
+// Its update action is in progress
 #define				STAT_Busy 4
 #define				STAT_SysAbort 5
 #define				STAT_NoFile 6

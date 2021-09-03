@@ -156,7 +156,7 @@ GetFile(
 		  InpStatus = STAT_OK;
 		  Push_Pending(Copy_FilHdr(InpFilHdr), InpKind);
 	       }else if (InpStatus < STAT_TgtValError
-			 && !Is_PRB_Status(InpStatus)) {
+			 && !Is_PendingReadyOrBusy_Status(InpStatus)) {
 		  InpStatus = STAT_TgtValError; };}/*select*/; }/*if*/;
          if (MinStatus > InpStatus) {
 	    MinStatus = InpStatus; }/*if*/; }/*if*/;
@@ -169,7 +169,7 @@ GetFile(
       goto done; }/*if*/;
    if (IsUpToDate(FilHdr)) {
       FORBIDDEN(!(IsStructMem(FilHdr) || IsKeyListElm(FilHdr) || FilHdr_Status(FilHdr) == STAT_Circular));
-      if (Is_PRB_Status(MinStatus)) {
+      if (Is_PendingReadyOrBusy_Status(MinStatus)) {
 	 Set_ListStatus(FilHdr, STAT_Pending);
 	 Broadcast_Mod(FilHdr, MODKIND_Input, STAT_Pending); }/*if*/;
       goto done; }/*if*/;

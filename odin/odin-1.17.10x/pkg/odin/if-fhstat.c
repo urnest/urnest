@@ -22,14 +22,14 @@ geoff@boulder.colorado.edu
 
 
 boolean
-Is_PRB_Status(
+Is_PendingReadyOrBusy_Status(
    GMC_ARG(tp_Status, Status)
    )
    GMC_DCL(tp_Status, Status)
 {
    return (Status == STAT_Pending || Status == STAT_Ready
 	   || Status == STAT_Busy);
-   }/*Is_PRB_Status*/
+   }/*Is_PendingReadyOrBusy_Status*/
 
 
 void

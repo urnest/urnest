@@ -127,7 +127,7 @@ Get_ToolStatus(
 
    FORBIDDEN(DepStatus <= STAT_Unknown);
 
-   if (Is_PRB_Status(DepStatus)) {
+   if (Is_PendingReadyOrBusy_Status(DepStatus)) {
       return STAT_Pending; }/*if*/;
 
    switch (Tool_TClass(Tool)) {

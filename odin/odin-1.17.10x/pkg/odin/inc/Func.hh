@@ -51,7 +51,7 @@ extern tp_LogLevel Client_LogLevel(GMC_P1(tp_Client));
 extern tp_FilHdr Client_FilHdr(GMC_P1(tp_Client));
 extern void Set_Client_FilHdr(GMC_P1(tp_Client) GMC_PN(tp_FilHdr) GMC_PN(boolean));
 extern boolean Client_NeedsData(GMC_P1(tp_Client));
-extern void Push_AllReqs(GMC_P1(boolean *));
+extern boolean Push_AllReqs();
 extern tp_FHLst Client_ToDo(GMC_P1(tp_Client));
 extern void Push_ToDo(GMC_P1(tp_FilHdr));
 extern void Push_Pending(GMC_P1(tp_FilHdr) GMC_PN(tp_InpKind));
@@ -263,7 +263,7 @@ extern tp_FilHdr Get_Copy_DestFilHdr(GMC_P1(tp_FilHdr));
 extern tp_LocElm Make_CopyLocElm(GMC_P1(tp_FilHdr) GMC_PN(tp_FilHdr) GMC_PN(tp_FilHdr));
 extern void Exec_CopyCmd(GMC_P1(tp_FilHdr) GMC_PN(tp_FilHdr) GMC_PN(tp_FilHdr));
 /* if-fhstat.c */
-extern boolean Is_PRB_Status(GMC_P1(tp_Status));
+extern boolean Is_PendingReadyOrBusy_Status(GMC_P1(tp_Status));
 extern void Clr_ErrStatus(GMC_P1(tp_FilHdr));
 extern void Add_ErrStatus(GMC_P1(tp_FilHdr) GMC_PN(tp_Status));
 extern boolean FilHdr_HasErrStatus(GMC_P1(tp_FilHdr) GMC_PN(tp_Status));

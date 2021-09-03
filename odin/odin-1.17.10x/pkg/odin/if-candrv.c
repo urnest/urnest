@@ -806,7 +806,7 @@ Local_Get_OdinFile(
       LocalEnd_Get_OdinFile("", STAT_Unknown, FALSE);
       return; }/*if*/;
    Set_Client_FilHdr(CurrentClient, FilHdr, NeedsData);
-   Push_AllReqs(&AllDone);
+   Push_AllReqs();
    Ret_FilHdr(FilHdr);
    IsAny_ReadyServerAction = TRUE;
    }/*Local_Get_OdinFile*/

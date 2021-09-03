@@ -884,8 +884,8 @@ IsAllDone(
    GMC_DCL(tp_FilHdr, FilHdr)
    GMC_DCL(tp_InpKind, InpKind)
 {
-   return (IsAllUpToDate(FilHdr, InpKind)
-	   && !Is_PRB_Status(FilHdr_MinStatus(FilHdr, InpKind)));
+   return (IsAllUpToDate(FilHdr, InpKind) &&
+           !Is_PendingReadyOrBusy_Status(FilHdr_MinStatus(FilHdr, InpKind)));
    }/*IsAllDone*/
 
 
@@ -931,9 +931,10 @@ IsUpToDate(
    FORBIDDEN(FilHdr == ERROR);
    if (FilHdr->HdrInf.VerifyDate < VerifyDate) {
       return FALSE; }/*if*/;
-   if (!IsTgtValUpToDate(FilHdr)
-       || ((Is_PRB_Status(FilHdr->HdrInf.Status) || FilHdr->PndFlag)
-	   && FilHdr->HdrInf.VerifyDate < PendingDate)) {
+   if (!IsTgtValUpToDate(FilHdr) ||
+       ((Is_PendingReadyOrBusy_Status(FilHdr->HdrInf.Status) ||
+         FilHdr->PndFlag)
+        && FilHdr->HdrInf.VerifyDate < PendingDate)) {
       return FALSE; }/*if*/;
    return (FilHdr->HdrInf.Status > STAT_Unknown);
    }/*IsUpToDate*/
@@ -951,7 +952,8 @@ IsElmNameUpToDate(
       return TRUE; }/*if*/;
    if (FilHdr->HdrInf.ElmNameVerifyDate < VerifyDate) {
       return FALSE; }/*if*/;
-   if ((Is_PRB_Status(FilHdr->HdrInf.ElmNameStatus) || FilHdr->ElmNamePndFlag)
+   if ((Is_PendingReadyOrBusy_Status(FilHdr->HdrInf.ElmNameStatus) ||
+        FilHdr->ElmNamePndFlag)
        && FilHdr->HdrInf.ElmNameVerifyDate < PendingDate) {
       return FALSE; }/*if*/;
    return (FilHdr->HdrInf.ElmNameStatus > STAT_Unknown);
@@ -970,7 +972,8 @@ IsElmUpToDate(
       return TRUE; }/*if*/;
    if (FilHdr->HdrInf.ElmVerifyDate < VerifyDate) {
       return FALSE; }/*if*/;
-   if ((Is_PRB_Status(FilHdr->HdrInf.ElmStatus) || FilHdr->ElmPndFlag)
+   if ((Is_PendingReadyOrBusy_Status(FilHdr->HdrInf.ElmStatus) ||
+        FilHdr->ElmPndFlag)
        && FilHdr->HdrInf.ElmVerifyDate < PendingDate) {
       return FALSE; }/*if*/;
    return (FilHdr->HdrInf.ElmStatus > STAT_Unknown);
@@ -988,7 +991,8 @@ IsTgtValUpToDate(
       return TRUE; }/*if*/;
    if (FilHdr->HdrInf.ElmVerifyDate < VerifyDate) {
       return FALSE; }/*if*/;
-   if ((Is_PRB_Status(FilHdr->HdrInf.ElmStatus) || FilHdr->ElmPndFlag)
+   if ((Is_PendingReadyOrBusy_Status(FilHdr->HdrInf.ElmStatus) ||
+        FilHdr->ElmPndFlag)
        && FilHdr->HdrInf.ElmVerifyDate < PendingDate) {
       return FALSE; }/*if*/;
    return (FilHdr->HdrInf.ElmStatus > STAT_Unknown);

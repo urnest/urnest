@@ -616,4 +616,20 @@ info should be able to reduce recalculation
   Do_1ToDo calls Exec on jobs till NumJobs == MaxJobs
   if-exec.c Exec calls Add_Job, which incs NumJobs
 
-  ... it looks like it should work
+  ... it looks like it should work but I think the devil is in the
+  (Do_ToDo v PushAllReqs) detail.
+  - review refactoring
+  - use it for a while
+  - figure out what pending is about, maybe untangle
+  - depending on result of that, hopefully simplify
+    Do_ToDo based on its REVISIT
+
+  - only call Push_AllReqs in ServerAction and
+    make ServerAction be:
+      Push_AllReqs
+      if (!AllUpToDate()){
+        LaunchSome();
+	return False;
+      }
+      return False;
+	
