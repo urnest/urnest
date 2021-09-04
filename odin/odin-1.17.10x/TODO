@@ -582,49 +582,28 @@ info should be able to reduce recalculation
 
 * how does max builds work? It seems like maybe if I have maxbuilds=4
   it kicks off 4 e.g. compiles then waits for those 4 to finish before
-  kicking off any more?
+  kicking off any more? Sometimes.
 
-  b Local_Get_OdinFile
+  x where in code is maxbuilds used? Might be quicker or interesting too.
 
-  %a==(a)+cmd=cat:stdout
-  %b==(b)+cmd=cat:stdout
-  %c==(c)+cmd=cat:stdout
-  %x==()+cmd=cat (%a) (%b) (%c):stdout
-  
-  odin '%c>'
-  echo "x">>a
-  echo "x">>b
-  echo "x">>c
-  ... then step through odin maxbuilds=2 '%x' IPC_Get_Commands with
-  breakpoints at the event points:
-    client msg
-    sigchild
-    ServerAction
-    
-  to see where it does what (see below).
+    if-ipc.c IPC_Get_Commands loop catches SIGCHILD, calls ChildAction
+    calls if-build.c Build_Done calls Job_Done calls Local_Job_Done
 
-  where in code is maxbuilds used? Might be quicker or interesting too.
+    if-exec.c Local_Job_Done sets IsAny_ReadyServerAction and decrements
+    if-client.c Client->NumJobs in Del_Job
 
-  if-ipc.c IPC_Get_Commands loop catches SIGCHILD, calls ChildAction
-  calls if-build.c Build_Done calls Job_Done calls Local_Job_Done
-
-  if-exec.c Local_Job_Done sets IsAny_ReadyServerAction and decrements
-  if-client.c Client->NumJobs in Del_Job
-
-  if-ipc.c IPC_Get_Commands sees IsAny_ReadyServerAction, calls
-  if-client.c ServerAction calls Do_ToDo calls Do_1ToDo
-  Do_1ToDo calls Exec on jobs till NumJobs == MaxJobs
-  if-exec.c Exec calls Add_Job, which incs NumJobs
+    if-ipc.c IPC_Get_Commands sees IsAny_ReadyServerAction, calls
+    if-client.c ServerAction calls Do_ToDo calls Do_1ToDo
+    Do_1ToDo calls Exec on jobs till NumJobs == MaxJobs
+    if-exec.c Exec calls Add_Job, which incs NumJobs
 
   ... it looks like it should work but I think the devil is in the
   (Do_ToDo v PushAllReqs) detail.
-  - review refactoring
-  - use it for a while
-  - figure out what pending is about, maybe untangle
-  - depending on result of that, hopefully simplify
-    Do_ToDo based on its REVISIT
 
-  - only call Push_AllReqs in ServerAction and
+  x review refactoring
+  x use it for a while
+  x figure out what pending is about
+  x only call Push_AllReqs in ServerAction and
     make ServerAction be:
       Push_AllReqs
       if (!AllUpToDate()){
@@ -632,4 +611,18 @@ info should be able to reduce recalculation
 	return False;
       }
       return False;
-	
+  - make pending use a stack variable not global, use C++ vector
+  - make MaxJobs and NumJobs global (i.e. per server)
+  - make client a C++ class, get rid of CurrentClient (always pass)
+    - build all as C++
+    - remove extern "C"
+  - fix up LastToDo:
+    make ToDo a vector, LastToDo an index, then LaunchSome becomes:
+      size_t const StartAt(LastToDo);
+      for(size_t i=0; i!=ToDo.size(); ++i){
+        LastToDo=(StartAt+i)%ToDo.size();
+        xxx;
+      }
+      LastToDo=ToDo.size();
+   ... and Push_ToDo always push_back(); never fiddle with LastToDo
+    

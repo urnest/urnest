@@ -37,7 +37,7 @@
 main.cc
 
 %odin.c.sm == <<
-   if-bcast.c; if-candrv.c; if-build.c; if-client.c; if-cmd.c;
+   if-bcast.c; if-candrv.c; if-build.c; if-client.cc; if-cmd.c;
    if-depend.c; if-drvgrf.c; if-dir.c; if-drvpth.c; if-drvspc.c;
    if-edg.c; if-env.c; if-err.c; if-exec.c; if-execint.c; if-execspc.c;
    if-fhacc.c; if-fhnam.c; if-fhnew.c; if-fhsrc.c;

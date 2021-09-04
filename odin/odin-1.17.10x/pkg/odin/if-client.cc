@@ -12,7 +12,8 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 geoff@boulder.colorado.edu
 */
-
+extern "C"
+{
 #include "inc/GMC.h"
 #include "inc/Client.h"
 #include "inc/FileName.h"
@@ -23,6 +24,7 @@ geoff@boulder.colorado.edu
 #include "inc/Status_.h"
 #include "inc/Str.h"
 #include "inc/Func.hh"
+}
 
 tp_Client	FirstClient = NIL;
 tp_Client	CurrentClient = NIL;
@@ -111,10 +113,8 @@ IsAllPendingUpToDate(GMC_ARG_VOID)
    }/*IsAllPendingUpToDate*/
 
 
-/*
-// add ToDo entries for everything on Pending list
+// Add ToDo entries for everything on Pending list
 // - note this is "recursive", GetAllReqs might add to pending
-*/
 static void
 GetAllPending(GMC_ARG_VOID)
 {
@@ -454,48 +454,31 @@ Client_NeedsData(
    }/*Client_NeedsData*/
 
 
-/*
-// returns TRUE iff CurrentClient->FilHdr is up to date. REVISIT:
-// is that what IsAllDone means? Or could there still be jobs in progress?
-// i.e. Busy
-// in any case that's not right as it doesn't take pending into account.
-// what is pending anyway? GetFile calls Push_ToDo (=> means only caller)
+// Put entries to update CurrentClient's target onto CurrentClient's ToDo list.
+//
+// Note this might not be all entries required to update CurrentClient's
+// target, since some entries might need to be completed to determine
+// further required updates.
+//
+// Note that "pending" is a temporary staging list used by Push_AllReqs et al
+// and is cleared before Push_AllReqs returns.
+//
 // Push_AllReqs ------------- => GetAllReqs => GetReqs => GetFile => Push_ToDo
 //       \=> GetAllPending-/
-// - note there are various recursive paths within above path
-// Do_ToDo is only called before Push_AllReqs in ServerAction which is
-// only called from ipc IPC_Get_Commands and Do_1ToDo is only called from
-//   Do_ToDo
-// Do_1ToDo cannot call Push_AllReqs
-// Do_1ToDo is the only thing that advances CurrentClient->LastToDo
-// All external calls to Push_AllReqs are made with CurrentClient->LastToDo
-//   NIL or at head of ToDo, so therefore Push_ToDo always inserts at head
-//   even though the code seems to try to insert "later".
-// Do_1ToDo just launches ready ToDo entries; if an entry is ready it
-// doesn't need anything else to happen before launch, so the order of
-// Do_1ToDo launching does not matter. LastToDo is just to reduce re-scanning
-// of ToDo, but REVISIT let's find a better way of doing that so that
-// we can call Push_AllReqs before Do_1ToDo gets to the end of ToDo:
-//   - keep a Ready list (=launchable) and make ToDo be ToDoButNotReady
-//   - each pass can be just one pass through entire ToDoButNotReady
-//     with subsequent LaunchSome
-//   - only pass through ToDoButNotReady if something has been done
-//     since last pass
-*/
-boolean
+//       \=> Clr_Pending
+// (=> indicates only caller of)
+//
+void
 Push_AllReqs()
 {
-   boolean result;
-   
    CurrentDate += 1;
    PendingDate = CurrentDate;
    while (!(IsAllUpToDate(CurrentClient->FilHdr, IK_Trans)
 	    && IsAllPendingUpToDate())) {
       GetAllReqs(CurrentClient->FilHdr, IK_Trans);
       GetAllPending(); }/*while*/;
-   result = Clr_Pending() && IsAllDone(CurrentClient->FilHdr, IK_Trans);
+   Clr_Pending();
    CurrentClient->LastToDo = CurrentClient->ToDo;
-   return result;
    }/*Push_AllReqs*/
 
 
@@ -507,11 +490,9 @@ Client_ToDo(
 {
    return Client->ToDo; }/*Client_ToDo*/
 
-/*
 // Insert FilHdr into CurrentClient->ToDo list at
 // CurrentClient->LastToDo (at head if that is NIL) such
 // post: CurrentClient->LastToDo points to FilHdr
-*/
 void
 Push_ToDo(
    GMC_ARG(tp_FilHdr, FilHdr)
@@ -745,101 +726,31 @@ Clr_Status(
    }/*Clr_Status*/
 
 
-/*
 // Launch jobs off CurrentClient->ToDo from CurrentClient->LastToDo
 // until we've check the entire to-do list or we have CurrentClient->MaxJobs
-// in progress. Leaves CurrentClinet->LastToDo at position of next job to
-// check.
-// - returns TRUE when entire CurrentClient->ToDo list is "done" i.e.
-//   we've check the hole list and there's nothing to launch and
-//   no jobs in progress.
-//
-// REVISIT: this is a convoluted mess, that's why it is so hard
-// to explain. How to untangle it?
-// - what sets LastToDo? and if we skip an item because it is not
-//   ready, what resets LastToDo so we check again later? A few
-//   things set LastToDo:
-//     Push_AllReqs resets it to start of ToDo list
-//     Push_ToDo uses it as insertion point for what it pushes
-//     GetAllPending sets it to Nil (what is pending about?)
-*/
-static boolean
-Do_1ToDo()
+// in progress or we're interrupted. Leaves CurrentClinet->LastToDo at
+// position of next job to check.
+static void
+LaunchSomeToDos()
 {
    tp_FHLst FHLst;
    tp_FilHdr FilHdr;
 
    for (;
-	CurrentClient->LastToDo != NIL;
-	CurrentClient->LastToDo = CurrentClient->LastToDo->Next) {
-      if (CurrentClient->NumJobs >= CurrentClient->MaxJobs) {
-        /*
-        // REVISIT: rework to not return early, with assertion
-        // that if we don't find a Busy job below then NumJobs must be 0
-        */
-	 return FALSE; }/*if*/;
-      FilHdr = CurrentClient->LastToDo->FilHdr;
-      Do_Log("Processing", FilHdr, LOGLEVEL_Process);
-      if (FilHdr_Status(FilHdr) == STAT_Ready) {
-	 Exec(FilHdr);
-	 if (CurrentClient->Interrupted) {
-	    return FALSE; }/*if*/; }/*if*/; }/*for*/;
-   for (FHLst = CurrentClient->ToDo; FHLst != NIL; FHLst = FHLst->Next) {
-      if (FilHdr_Status(FHLst->FilHdr) == STAT_Busy) {
-        /*
-        // assuming we cannot be "running" unless our status is Busy,
-        // surely we can't get to here if NumJobs == 0, why don't
-        // we just test that? Ah, we might be running under some other
-        // client, in which case we're Busy but not counted again
-        // our NumJobs. You'd think MaxJobs would be for the server not
-        // per client, because it is generally how many things the server
-        // can do at once. REVISIT: make NumJobs and MaxJobs global.
-        */
-	 return FALSE; }/*if*/; }/*for*/;
-   FORBIDDEN(CurrentClient->LastToDo != NIL);
-   return TRUE;
-   }/*Do_1ToDo*/
-
-/*
-// REVISIT: This function should be just:
-// - Push_AllReqs, which is really PushAsManyReqsAsWeCan
-// - LaunchAsManyJobsAsWeCan (which is all Do_1ToDo should do)
-// - return AreWeAllDone? i.e. Push_AllReqs does not push anything
-//   and there are no busy on ToDo
-// ... but REVISIT first need to ensure we can call Push_AllReqs where there
-// is something busy already on ToDo
-*/
-static boolean
-Do_ToDo()
-{
-   if (!Do_1ToDo()) {
-     return FALSE; }/*if*/;
-   // INVARIANT: CurrentClient->LastToDo == NIL
-   FORBIDDEN(CurrentClient->LastToDo != NIL);
-
-   /*
-   // REVISIT: why is Push_AllReqs in a loop? Surely if we pushed all reqs
-   // we wouldn't have to call it again? Unless Do_1ToDo can uncover some
-   // more? But I don't think it can? It only launches ready jobs?
-   // If it doesn't actually push all reqs, we won't push any more
-   // until all current jobs are done because Do_1ToDo returns False if
-   // there are any jobs in progress.
-   */
-   while(!Push_AllReqs()){
-      if (!Do_1ToDo()) {
-	 return FALSE; }/*if*/; }/*for*/;
-   if (CurrentClient->Job != NIL) {
-     /*
-     // REVISIT: redundant because Do_1ToDo has already
-     // checked if we have any busy jobs, and lucky it
-     // has because we might be waiting on a job that
-     // is running under another client. Replace with an assert:
-     // assert busy-jobs || (CurrentClient->Job == NIL)
-     */
-     return FALSE; }/*if*/;
-   Ret_ToDo();
-   return TRUE;
-   }/*Do_ToDo*/
+	CurrentClient->LastToDo != NIL &&
+          CurrentClient->NumJobs < CurrentClient->MaxJobs;
+	CurrentClient->LastToDo = CurrentClient->LastToDo->Next)
+   {
+     FilHdr = CurrentClient->LastToDo->FilHdr;
+     Do_Log("Processing", FilHdr, LOGLEVEL_Process);
+     if (FilHdr_Status(FilHdr) == STAT_Ready) {
+       Exec(FilHdr);
+       if (CurrentClient->Interrupted) {
+         return;
+       }
+     }
+   }
+}
 
 
 boolean
@@ -871,20 +782,27 @@ FilHdr_TgtValFilHdr(
    }/*FilHdr_TgtValFilHdr*/
 
 
+// Progress updates for CurrentClient's target.
 void
 ServerAction(GMC_ARG_VOID)
 {
-   if (CurrentClient->FilHdr == NIL
-       || CurrentClient->NumJobs >= CurrentClient->MaxJobs) {
+   if (CurrentClient->FilHdr == NIL) {
       return; }/*if*/;
    if (CurrentClient->Interrupted) {
       if (CurrentClient->NumJobs == 0) {
 	 Ret_ToDo();
 	 End_Get_OdinFile(); }/*if*/;
       return; }/*if*/;
-   if (Do_ToDo()) {
-      End_Get_OdinFile(); }/*if*/;
-   }/*ServerAction*/
+
+   Push_AllReqs();
+   if (!IsAllDone(CurrentClient->FilHdr, IK_Trans)){
+     LaunchSomeToDos();
+   }
+   else {
+     Ret_ToDo();
+     End_Get_OdinFile();
+   }
+}/*ServerAction*/
 
 
 void

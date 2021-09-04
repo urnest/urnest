@@ -19,6 +19,7 @@ geoff@boulder.colorado.edu
 #include "inc/Flag_.h"
 #include "inc/Status_.h"
 #include "inc/Str.h"
+#include "inc/InpKind_.h"
 
 
 void
@@ -131,6 +132,7 @@ Local_Test_All(GMC_ARG_VOID)
       if (FilHdr != NIL) {
 	 Ret_ToDo();
 	 Push_AllReqs();
+         IsAllDone(CurrentClient->FilHdr, IK_Trans);// REVISIT: do we need?
 	 Ret_FilHdr(FilHdr); }/*if*/; }/*for*/;
    CurrentClient = OldCurrentClient;
    }/*Local_Test_All*/

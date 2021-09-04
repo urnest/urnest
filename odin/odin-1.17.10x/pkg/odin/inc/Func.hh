@@ -51,7 +51,7 @@ extern tp_LogLevel Client_LogLevel(GMC_P1(tp_Client));
 extern tp_FilHdr Client_FilHdr(GMC_P1(tp_Client));
 extern void Set_Client_FilHdr(GMC_P1(tp_Client) GMC_PN(tp_FilHdr) GMC_PN(boolean));
 extern boolean Client_NeedsData(GMC_P1(tp_Client));
-extern boolean Push_AllReqs();
+extern void Push_AllReqs();
 extern tp_FHLst Client_ToDo(GMC_P1(tp_Client));
 extern void Push_ToDo(GMC_P1(tp_FilHdr));
 extern void Push_Pending(GMC_P1(tp_FilHdr) GMC_PN(tp_InpKind));
@@ -167,10 +167,11 @@ extern void Reset_Err(GMC_P1(void));
 extern void Increment_Errors(GMC_P1(void));
 extern int Num_Errors(GMC_P1(void));
 extern void SysCallError(GMC_P1(tp_FilDsc) GMC_PN(char *));
-extern void FatalError(GMC_P1(char *) GMC_PN(char *) GMC_PN(int));
+void
+FatalError(const char* Message,const char* FileName,int LineNum);
 extern void SystemError(GMC_P1(char *) GMC_PN(...));
 extern void Local_ErrMessage(GMC_P1(tp_Str));
-extern void fatal_err(GMC_P1(char *));
+extern void fatal_err(const char *);
 /* if-exec.c */
 extern void Exec(GMC_P1(tp_FilHdr));
 extern void Local_Job_Done(GMC_P1(tp_JobID) GMC_PN(boolean));

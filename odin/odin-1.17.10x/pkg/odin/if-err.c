@@ -148,14 +148,7 @@ SysCallError(
 
 
 void
-FatalError(
-   GMC_ARG(char*, Message),
-   GMC_ARG(char*, FileName),
-   GMC_ARG(int, LineNum)
-   )
-   GMC_DCL(char*, Message)
-   GMC_DCL(char*, FileName)
-   GMC_DCL(int, LineNum)
+FatalError(const char* Message,const char* FileName,int LineNum)
 {
    tps_Str Msg;
 
@@ -244,9 +237,9 @@ Local_ErrMessage(
 
 void
 fatal_err(
-   GMC_ARG(char*, Message)
+   GMC_ARG(const char*, Message)
    )
-   GMC_DCL(char*, Message)
+   GMC_DCL(const char*, Message)
 {
    (void)fprintf(stderr, "%s\n", Message);
    (void)fprintf(stderr, "Anomalous Internal State Detected\n");
