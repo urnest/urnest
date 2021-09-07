@@ -1,3 +1,7 @@
+- pdflatex package that runs pdflatex until output stable
+  (otherwise tocs and cross references aren't correct)
+  use that for manual
+  
 ~ fix hash_inc to make sure it includes intermediate directories
   ~ need a test that fails first (added a test and it did not fail,
     because intermediate dirs become inputs - see misc-test/test-6.sh)
@@ -18,6 +22,14 @@
   result in out-of-sync
   
 - add :dirlist derivation which combines ls + targets of Odinfile
+  ... not sure why we would want that?
+
+- add :asdir => :DIRECTORY built-in that produces self after verifying
+  it is a directory so can do :dirtree without evaluating virtual
+  directory files, or is there a better solution? Is a VIRTUAL-DIRECTORY
+  a DIRECTORY too? (:asdir could be used with :filter in dirtree.db?)
+  I don't think :filter=:DIRECTORY works? That will invoke :dir on anything?
+  Test it.
 
 - fix +ignore handling in hash_inc.sh
 
@@ -60,7 +72,7 @@
 - doc, specific:
   - 2.2.3 ref to xjupkg tree support
   - replace 3.4:
-    - much simpler to just use odin 'test-hello!gdb'
+    x much simpler to just use odin 'test-hello!gdb'
     - provide a reference to using xjupkg to run and debug unit tests,
       including a discussion of environments
   - 4.3 add %stuff.tar!tar tf
@@ -68,10 +80,11 @@
   - A.3 "the dependency path" -> "a dependency path"
   - B.1 described in Section . -> described below
   - B.1 explain how package loading works:
-    - odin -R installs tool packages into the cache that creates, and
-      listing the packages that it loads. By default, odin -R loads
-      packages from its install directory, but you can load packages
-      from other directories using ODINPKG environment variable.
+    - odin -R installs tool packages into the cache that command creates, and
+      lists the packages that it loads. By default, odin -R loads
+      packages from odin's install directory e.g. /usr/lib/Odin, but you
+      can load packages from other directories using ODINPKG environment
+      variable.
       ODINPKG is a colon-separated list of directories to search, and
       odin looks for a PKGLST file in each of these in turn. From each
       directory it loads the packages listed for that directory, but
@@ -96,7 +109,8 @@
   examples (actually it is in the doc already)
 
 - add ODINPKGLIST allowing explicit list of package names to load,
-  as list of directories (allowing bash expansion)
+  as list of directories (allowing bash expansion), or maybe let PKGLST
+  specify .dg files explicitly as well as directories.
 
 - :LIST +path=(x/y/z):subdir => vir_tree.spec
   ie make a vir_tree.spec placing listed files in the x/y/z subdirectory
@@ -580,7 +594,7 @@ info should be able to reduce recalculation
   (gdb) 
 
 
-* how does max builds work? It seems like maybe if I have maxbuilds=4
+x how does max builds work? It seems like maybe if I have maxbuilds=4
   it kicks off 4 e.g. compiles then waits for those 4 to finish before
   kicking off any more? Sometimes.
 
@@ -611,18 +625,17 @@ info should be able to reduce recalculation
 	return False;
       }
       return False;
-  - make pending use a stack variable not global, use C++ vector
-  - make MaxJobs and NumJobs global (i.e. per server)
-  - make client a C++ class, get rid of CurrentClient (always pass)
-    - build all as C++
-    - remove extern "C"
-  - fix up LastToDo:
-    make ToDo a vector, LastToDo an index, then LaunchSome becomes:
-      size_t const StartAt(LastToDo);
-      for(size_t i=0; i!=ToDo.size(); ++i){
-        LastToDo=(StartAt+i)%ToDo.size();
-        xxx;
-      }
-      LastToDo=ToDo.size();
+- make pending use a stack variable not global, use C++ vector
+- make MaxJobs and NumJobs global (i.e. per server)
+- make client a C++ class, get rid of CurrentClient (always pass)
+  - build all as C++
+  - remove extern "C"
+- fix up LastToDo:
+  make ToDo a vector, LastToDo an index, then LaunchSome becomes:
+    size_t const StartAt(LastToDo);
+    for(size_t i=0; i!=ToDo.size(); ++i){
+      LastToDo=(StartAt+i)%ToDo.size();
+      xxx;
+    }
+    LastToDo=ToDo.size();
    ... and Push_ToDo always push_back(); never fiddle with LastToDo
-    

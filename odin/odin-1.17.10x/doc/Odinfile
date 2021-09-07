@@ -1,17 +1,43 @@
-odin.ps == odin.tex :ps 
-
 %odin-html==()+cmd=htlatex (odin.tex):output
+%odin-pdf==()+cmd=(%pdflatex) (odin.tex):output
 
-odin.html==%odin-html/odin.html
+odin.pdf==%odin-pdf/odin.pdf
 odin.css==%odin-html/odin.css
-odin0x.png==%odin-html/odin.css
+odin0x.png==%odin-html/odin0x.png
 odin1x.png==%odin-html/odin1x.png
-
 %docs.ls==<<
 odin.html
 odin.css
 odin0x.png
 odin1x.png
-odin.ps
+odin.pdf
 
 %docs==%docs.ls:list
+
+
+%pdflatex == ! <<
+#!/bin/sh
+# run pdflatex repeatedly until same pdf is produced twice in a row,
+# ignoring ModDate, CreationDate and ID and trying at most 10 times
+# then if successful produce final pdf under the normal name
+set -e
+devar(){
+  sed -e "s=^/CreationDate (D:[^)]*)==g" |
+  sed -e "s=^/ModDate (D:[^)]*)==g" |
+  sed -e "s=^/ID \[<[0-9A-F]*> <[0-9A-F]*>\]==g"
+}
+pdflatex "$@"
+cat *.pdf | devar > a
+i=0
+while
+  [ $? = 0 ] &&
+  i=$((i+1)) &&
+  [ $i != 10 ] &&
+  pdflatex "$@" &&
+  cat *.pdf | devar > b &&
+  ! diff -q a b
+do
+  mv b a
+done
+diff -q a b
+pdflatex "$@"

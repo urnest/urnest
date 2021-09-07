@@ -1054,34 +1054,13 @@ or as is done below, a second entry such as {\ex test-hello} can be added.
       hello.c; print.c
    EOF
 \end{verbatim}
-At this point, you can build {\ex test-hello} and run the debugger.
+At this point, you can build {\ex test-hello} and run the debugger (the first step is redundant but illustrative).
 \begin{verbatim}
    23% odin test-hello
 
-   24% dbx test-hello
+   24% odin test-hello!gdb
 \end{verbatim}
-These two steps can be combined by adding an executable {\ex \%dbx} entry
-into the {\ex Odinfile}.
-\begin{verbatim}
-   25% cat Odinfile
 
-   hello == %hello.c.sm :exe
-
-   test-hello == %hello.c.sm +debug :exe
-
-   %dbx ! == %hello.c.sm +debug :dbx
-
-   %hello.c.sm == << EOF
-      hello.c; print.c
-   EOF
-\end{verbatim}
-Then the host-command:
-\begin{verbatim}
-   26% odin %dbx
-\end{verbatim}
-would build an up-to-date executable from {\ex \%hello.c.sm},
-build a script for executing dbx on this executable,
-and then because {\ex \%dbx} is an executable target, execute the script.
 
 
 \chapter{Odin-Commands}
