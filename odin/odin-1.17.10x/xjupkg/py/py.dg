@@ -105,7 +105,6 @@ EXEC (py3.pipe.run.sh) (:FILE) (+py) (+cmd :ls) (+py:dir)@ (+py_sp) NEEDS (+cmd)
    => (:py3.stdout) (:py3.output);
 
 
-# :FILE is stdin to command
 EXEC (py3.exec.sh) (:py) (+cmd :ls) (:env) (+stderr) (+py:dir)@ (+py_sp)
   NEEDS (+cmd) (+need) (:py:py_rd:py_import_all) (:py:mypy3) (:py:py.stylecheck) (:py:py_rd:py_import_all:map=:py.stylecheck)
   => (:py3.exec);

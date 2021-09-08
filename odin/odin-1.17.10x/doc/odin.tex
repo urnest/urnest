@@ -1698,7 +1698,7 @@ For example, the odin-command:
 displays the input objects used to compute the derived object
 {\ex prog.c+debug:exe}.
 
-The {\ex :dpath} utility displays the dependency path from one object
+The {\ex :dpath} utility displays a dependency path from one object
 to another (if there is one).
 Normally, {\ex :dpath} is applied to an object with a trailing
 {\ex +depend} parameter.  For example:
@@ -1769,6 +1769,33 @@ The derivation graph is the mechanism for declaring
 object types, parameter types, environment varables,
 and tools for the tool package.
 It is described in detail in Section~\ref{derivationgraph}.
+
+\subsection{Tool Package Selection}
+
+The {\ex odin -R} command installs tool packages into the cache that it
+creates, listing on standard output the packages that it installs. By
+default, {\ex odin -R} loads packages from odin's install directory
+e.g. {\ex /usr/local/lib/Odin}. You can load packages from other directories
+using the {\ex ODINPKG} environment variable.
+
+{\ex ODINPKG} is a colon-separated list of directories to search, and
+odin looks for a {\ex PKGLST} file in each of these in turn. PKGLST
+lists, one per line, the packages to load from that directory.
+
+Odin does not load "duplicate" packages, eg where a {\ex PKGLST} file
+specifies package X, but package X has already been loaded via
+a {\ex PKGLST} from a directory earlier in the {\ex ODINPKG} list,
+the latter X is ignored. You can therefor "replace" standard odin
+packages with your own package of the same name.
+
+Note that although you cannot tell odin not to load a particular
+standard package, you can achieve the affect by creating your
+own package of the same name with an empty .dg file.
+
+Note that the standard Odin packages are not detailed in this manual,
+even though the tutorial makes use of them. Browse the .dg files
+to see the capabilities of the standard odin packages. Also look
+for their use in others' Odinfiles (including in the odin distribution).
 
 \subsection{Versioned Tool Packages}
 
@@ -2503,6 +2530,20 @@ declares that the script {\ex cc.sh} uses as inputs an object of type {\ex :c}
 and a parameter of type {\ex +cc\_flags},
 and indirectly uses as input an object of type {\ex :all\_c\_incs}.
 
+\subsection{READ-LIST Tool}
+
+The {\ex READ-LIST} tool produces a list from an input object.
+If the input object is a directory, this list contains all the files in
+the directory.
+If the input object is a file, this list contains
+the objects named by the odin-expressions in the input file.
+For example, the derivation graph entry:
+\begin{verbatim}
+   READ-LIST (:c.sm) => (:c.sm.list) ;
+\end{verbatim}
+declares that {\ex :c.sm.list} is the list specified by the contents of
+a file of type {\ex :c.sm}.
+
 \subsection{COLLECT Tool}
 
 When the output type of a {\ex COLLECT} tool declaration is a list,
@@ -2525,20 +2566,6 @@ For example, the derivation graph entry:
 declares that {\ex :debug.o} is a reference to an object that
 results from applying {\ex +debug:o} to a {\ex :c} file.
 
-\subsection{READ-LIST Tool}
-
-The {\ex READ-LIST} tool produces a list from an input object.
-If the input object is a directory, this list contains all the files in
-the directory.
-If the input object is a file, this list contains
-the objects named by the odin-expressions in the input file.
-For example, the derivation graph entry:
-\begin{verbatim}
-   READ-LIST (:c.sm) => (:c.sm.list) ;
-\end{verbatim}
-declares that {\ex :c.sm.list} is the list specified by the contents of
-a file of type {\ex :c.sm}.
-
 \subsection{READ-REFERENCE Tool}
 
 The {\ex READ-REFERENCE} tool produces a reference to
@@ -2551,6 +2578,9 @@ declares that {\ex :stub.ref} will be a reference
 to the object named by the contents of
 a file of type {\ex :stub.name}.
 
+Unlike {\ex COLLECT}, {\ex READ-REFERENCE} allows the referee to be selected
+and/or ratified programmatically by using an {\ex EXEC} script with
+arbitrary inputs to produce the file containing the reference.
 
 \chapter{Derivation Graph Syntax}
 

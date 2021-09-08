@@ -1,7 +1,15 @@
-- pdflatex package that runs pdflatex until output stable
+- merge xjupkg into pkg
+  - verify build and install odin from scratch
+  - test eli
+
+~ pdflatex package that runs pdflatex until output stable
   (otherwise tocs and cross references aren't correct)
   use that for manual
-  
+
+/ produce pdf manual instead of postscript
+  x produce manual
+  - get TOC and xrefs to work as pdf links
+
 ~ fix hash_inc to make sure it includes intermediate directories
   ~ need a test that fails first (added a test and it did not fail,
     because intermediate dirs become inputs - see misc-test/test-6.sh)
@@ -34,7 +42,7 @@
 - fix +ignore handling in hash_inc.sh
 
 - add +stdin to :exec / :py.exec
-- add +stderr=error to :exec / :py.exec so can capture stderr
+x add +stderr=error to :exec / :py.exec so can capture stderr
   and display it as error messages in :exec.output / :exec.files
 
 ~ might be able to put back :cast_hash_incable (not worth it)
@@ -76,11 +84,10 @@
     - provide a reference to using xjupkg to run and debug unit tests,
       including a discussion of environments
   - 4.3 add %stuff.tar!tar tf
-  - 4.4 ~ name -> ~name
-  - A.3 "the dependency path" -> "a dependency path"
-  - B.1 described in Section . -> described below
-  - B.1 explain how package loading works:
-    - odin -R installs tool packages into the cache that command creates, and
+  ~ 4.4 ~ name -> ~name (latex broken)
+  x A.3 "the dependency path" -> "a dependency path"
+  x B.1 explain how package loading works:
+      odin -R installs tool packages into the cache that command creates, and
       lists the packages that it loads. By default, odin -R loads
       packages from odin's install directory e.g. /usr/lib/Odin, but you
       can load packages from other directories using ODINPKG environment
@@ -96,13 +103,15 @@
       Note that although you cannot tell odin not to load a particular
       standard package, you can achieve the affect by creating your
       own package of the same name with an empty .dg file.
-  - B.1 note that the standard odin packages are not documented here,
+  x B.1 note that the standard odin packages are not documented here,
       even though the tutorial makes use of them; browse the .dg files
       to see the capabilities of the standard odin packages. Also look
       for others' Odinfile use (including in the odin distribution).
   - B.4 "rare circumstance" example (use FILE:exec.output v 
-      FILE:java.exec.output)
-  - B.7.7 provide some discussion: when is this useful for example?
+      FILE:java.exec.output) except that I can't remember why
+      that is one.
+      
+  x B.7.7 provide some discussion: when is this useful for example?
 
 - add more explanations/examples in doc, doc more of the semantics
   of eg param handling (ordering, propogation); include more
@@ -241,6 +250,7 @@ PKGLST
   ... so that can generate all headers then
   put them into a virtual subtree for relative path includes
   - this aligns with having several .idl files in each directory
+
 - separate omniidl / taoidl packages that know about the generation
   style? Yes I think so.
 

@@ -2,9 +2,11 @@
 %odin-pdf==()+cmd=(%pdflatex) (odin.tex):output
 
 odin.pdf==%odin-pdf/odin.pdf
+odin.html==%odin-html/odin.html
 odin.css==%odin-html/odin.css
 odin0x.png==%odin-html/odin0x.png
 odin1x.png==%odin-html/odin1x.png
+
 %docs.ls==<<
 odin.html
 odin.css
