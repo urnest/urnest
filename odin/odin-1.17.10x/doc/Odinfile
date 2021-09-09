@@ -28,18 +28,25 @@ devar(){
   sed -e "s=^/ModDate (D:[^)]*)==g" |
   sed -e "s=^/ID \[<[0-9A-F]*> <[0-9A-F]*>\]==g"
 }
-pdflatex "$@"
+pl(){
+  if ! x=$(pdflatex "$@" 2>&1)
+  then
+    echo "$x" >&2
+    false
+  fi
+}
+pl "$@"
 cat *.pdf | devar > a
 i=0
 while
   [ $? = 0 ] &&
   i=$((i+1)) &&
   [ $i != 10 ] &&
-  pdflatex "$@" &&
+  pl "$@" &&
   cat *.pdf | devar > b &&
   ! diff -q a b
 do
   mv b a
 done
 diff -q a b
-pdflatex "$@"
+pl "$@"
