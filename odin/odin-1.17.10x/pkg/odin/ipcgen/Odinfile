@@ -3,8 +3,10 @@
 %lint! == <<
    %ipcgen.c.sm +debug +ignore=\\.hh\$ :lint >
 
+%ipcgen.c == ipcgen.ygi+inc_sp=(.) :c
+
 %ipcgen.c.sm == <<
-   ipcgen.ygi
+   %ipcgen.c
    ig-main.c; ig-gen.c; ig-yylex.c
    ../if-err.c +define=NO_IPC
    ../if-file.c; ../if-io.c; ../if-nod.c; ../if-symbol.c

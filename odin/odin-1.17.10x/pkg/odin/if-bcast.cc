@@ -13,6 +13,8 @@ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 geoff@boulder.colorado.edu
 */
 
+extern "C"
+{
 #include "inc/GMC.h"
 #include "inc/FileName.h"
 #include "inc/InpKind_.h"
@@ -21,6 +23,7 @@ geoff@boulder.colorado.edu
 #include "inc/Status_.h"
 #include "inc/Str.h"
 #include "inc/TClass_.h"
+}
 
 
 static boolean
