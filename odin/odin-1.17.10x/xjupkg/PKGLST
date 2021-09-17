@@ -9,7 +9,6 @@ path
 tar
 code
 cc
-cpp
 hash_inc
 hash_impl
 cxx
