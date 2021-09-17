@@ -3244,7 +3244,7 @@ tps_EnvVar _EnvVarS [38] = {
   {"ODIN_CXX_HOME", "directory containing the C++ compiler", 2, "", 0},
   {"ODIN_CXX_DEBUGF", "debug flag for C++ compiler", 2, "-g", 0},
   {"ODIN_CXX_I", "directory containing default C++ include files", 2, "/usr/lib/CC/include", 0},
-  {"ODIN_CXX_PTR", "template repository directory", 2, "1", 0},
+  {"ODIN_CXX_PTR", "template repository directory", 2, "0", 0},
   {"ODIN_CXX_LD_DEBUGF", "debug flag for C++ linker", 2, "-g", 0},
   {"ODIN_CXX_LD_LIBRARY_PATH", "load library path for C++", 2, "/usr/lib/CC", 0},
   {"ODIN_CXX_IGNORE_ERR", "egrep expression for errors to ignore", 2, "", 0},
