@@ -1,5 +1,7 @@
-TokTyp_.h == (..%fsys.ygi) :tok.h
+TokTyp_.h == (%cast-to.ygi)+cmd=cat (../fsys.ygi,c:cpp):stdout :tok.h
 
-NodTyp_.h == (..%fsys.ygi):stdout :nod.h
+NodTyp_.h == (%cast-to.ygi)+cmd=cat (../fsys.ygi,c:cpp):stdout :nod.h
 
-OC_NodTyp_.h == (..%client.ygi) +yaccid=oc :nod.h
+OC_NodTyp_.h == (%cast-to.ygi)+cmd=cat (../client.ygi,c:cpp):stdout +yaccid=oc :nod.h
+
+%cast-to.ygi==<<

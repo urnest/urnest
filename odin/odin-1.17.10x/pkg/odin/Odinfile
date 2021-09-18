@@ -12,17 +12,17 @@
    %rbs-exe > $ODINPKG/rbs.exe
 
 %lint! == <<
-   %odinlib.cxx.sm +debug +ignore=\\.hh\$ +stub=(extra.c) :lint >
+   %odin.cxx.sm +debug +ignore=\\.hh\$ +stub=(extra.c) :lint >
 
 %etags! == !<<
 #!/bin/csh
    etags ipcgen/ig-gen.c *.c ../dg/*.c {inc,../dg/inc}/*.{h,hh}
 
+%size == () +cmd= wc `cat (%src-files)` :stdout
+
 %src-files == %exe :depend :ls +cmd=egrep -v "ODIN|os9|boot|dg\/if|h\$" :stdout
 
-%exe == %odin.cxx.sm +ignore=\\.hh\$ +lib=(%odinlib)+(%extra-lib) :exe
-
-%odinlib == %odinlib.cxx.sm+inc_sp=(.):a
+%exe == %odin.cxx.sm +ignore=\\.hh\$ +lib=(%odin.c.sm:a)+(%extra-lib) :exe
 
 %rbs-exe == %rbs.c.sm +ignore=\\.hh\$ +(%extra-lib) :exe
 
@@ -36,8 +36,8 @@
 %odin.cxx.sm == <<
 main.cc
 
-%odinlib.cxx.sm == <<
-   if-bcast.cc; if-candrv.c; if-build.c; if-client.cc; if-cmd.c;
+%odin.c.sm == <<
+   if-bcast.c; if-candrv.c; if-build.c; if-client.cc; if-cmd.c;
    if-depend.c; if-drvgrf.c; if-dir.c; if-drvpth.c; if-drvspc.c;
    if-edg.c; if-env.c; if-err.c; if-exec.c; if-execint.c; if-execspc.c;
    if-fhacc.c; if-fhnam.c; if-fhnew.c; if-fhsrc.c;
@@ -48,7 +48,7 @@ main.cc
    if-pfilhdr.c; if-prmtyp.c; if-rbs.c;
    if-symbol.c; if-sysdep.c; if-system.c; if-systools.c;
    if-update.c; if-util.c; if-var.c; if-yylex.c;
-   editline%editline.cxx.sm; boot%boot.cxx.sm; LookupPlainAbsPath.cc;
+   editline%editline.sm; boot%boot.sm;
 
 %rbs.c.sm == <<
    rbs.c; if-dir.c; if-err.c +define=NO_IPC; if-file.c; if-io.c;
@@ -56,8 +56,3 @@ main.cc
 
 version == \
    inc/Version.h  +cmd='sed \'s/^.*VERSION_STR "\\(.*\\)"/\\1/\'' :stdout
-
-%fsys.ygi == fsys.ygi,c :gnc.cpp +cmd=sed -e 's=DOUBLESLASH=//=g' :stdout
-
-%client.ygi == client.ygi,c :gnc.cpp +cmd=sed -e 's=DOUBLESLASH=//=g' :stdout
-

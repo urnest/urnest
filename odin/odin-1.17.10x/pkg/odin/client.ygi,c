@@ -14,7 +14,7 @@ NODES
 RULES
 
 Command
-   -> SingleCommand DOUBLESLASH ';'		=> "CMANDS"?;
+   -> SingleCommand // ';'		=> "CMANDS"?;
 
 SingleCommand
    -> ()				=> "NULLCD"
