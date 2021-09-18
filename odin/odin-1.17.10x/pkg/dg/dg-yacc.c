@@ -1,22 +1,23 @@
-#ifndef lint
-static const char yysccsid[] = "@(#)yaccpar	1.9 (Berkeley) 02/21/93";
-#endif
+/* original parser id follows */
+/* yysccsid[] = "@(#)yaccpar	1.9 (Berkeley) 02/21/93" */
+/* (use YYMAJOR/YYMINOR for ifdefs dependent on parser version) */
 
 #define YYBYACC 1
 #define YYMAJOR 1
 #define YYMINOR 9
-#define YYPATCH 20100610
+#define YYPATCH 20140715
 
 #define YYEMPTY        (-1)
 #define yyclearin      (yychar = YYEMPTY)
 #define yyerrok        (yyerrflag = 0)
 #define YYRECOVERING() (yyerrflag != 0)
-
+#define YYENOMEM       (-2)
+#define YYEOF          0
 #define YYPREFIX "yy"
 
 #define YYPURE 0
 
-#line 2 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 2 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 #include "inc/GMC.h"
 extern int num_ParseErrors;
 tp_Nod YY_Parse() {tp_Nod Nod;
@@ -26,10 +27,12 @@ return Nod;}
 void yyerror(GMC_ARG(char*, s)) GMC_DCL(char*, s) 
 {num_ParseErrors++; ParseError(s);}
 int yylex() {return YY_Lex();}
-#line 29 "y.tab.c"
+#line 31 "y.tab.c"
 
-#ifndef YYSTYPE
+#if ! defined(YYSTYPE) && ! defined(YYSTYPE_IS_DECLARED)
+/* Default: YYSTYPE is the semantic value type. */
 typedef int YYSTYPE;
+# define YYSTYPE_IS_DECLARED 1
 #endif
 
 /* compatibility with bison */
@@ -53,8 +56,15 @@ typedef int YYSTYPE;
 # define YYLEX yylex()
 #endif
 
+/* Parameters sent to yyerror. */
+#ifndef YYERROR_DECL
+#define YYERROR_DECL() yyerror(const char *s)
+#endif
+#ifndef YYERROR_CALL
+#define YYERROR_CALL(msg) yyerror(msg)
+#endif
+
 extern int YYPARSE_DECL();
-extern int YYLEX_DECL();
 
 #define TOK_BANNER 2
 #define TOK_NEEDS 3
@@ -75,7 +85,8 @@ extern int YYLEX_DECL();
 #define TOK_Asterisk 18
 #define TOK_Dollar 19
 #define YYERRCODE 256
-static const short yylhs[] = {                           -1,
+typedef short YYINT;
+static const YYINT yylhs[] = {                           -1,
     0,    1,    1,    2,    2,    2,    2,    2,    2,    2,
     7,    7,    4,    4,   14,   14,    8,    5,   15,    6,
     6,   13,   13,   10,   16,   16,   11,   11,   18,   18,
@@ -84,7 +95,7 @@ static const short yylhs[] = {                           -1,
    25,   26,   26,   26,   26,   26,   26,   26,   27,   27,
    28,   29,   29,    9,    9,   22,   22,    3,
 };
-static const short yylen[] = {                            2,
+static const YYINT yylen[] = {                            2,
     1,    3,    1,    0,    2,    4,    5,    5,    5,    6,
     2,    1,    2,    2,    1,    0,    2,    2,    4,    2,
     1,    3,    1,    1,    2,    1,    2,    0,    2,    1,
@@ -93,7 +104,7 @@ static const short yylen[] = {                            2,
     2,    2,    2,    1,    3,    2,    1,    2,    1,    0,
     2,    2,    1,    1,    1,    1,    2,    1,
 };
-static const short yydefred[] = {                         0,
+static const YYINT yydefred[] = {                         0,
     0,   68,    0,    0,    0,    0,    0,    0,    3,    0,
     0,    0,    0,    5,   18,   17,   15,   14,    0,    0,
     0,   13,    0,   66,    0,    0,   26,   37,    0,    0,
@@ -106,12 +117,12 @@ static const short yydefred[] = {                         0,
     0,    0,   10,    0,   32,   34,    0,   11,   62,    0,
     0,    0,    0,   33,   22,    0,   35,   36,    0,   19,
 };
-static const short yydgoto[] = {                          7,
+static const YYINT yydgoto[] = {                          7,
     8,    9,   24,   11,   12,   32,   86,   13,   71,   25,
    46,   93,   87,   18,  102,   26,   27,   66,   94,   95,
    96,   28,   29,   42,   43,   64,   80,   81,   91,
 };
-static const short yysindex[] = {                        30,
+static const YYINT yysindex[] = {                        30,
     8,    0,    8,    8,    8,    8,    0,    5,    0,   34,
    15,    8,    8,    0,    0,    0,    0,    0,    8,   30,
    88,    0,    8,    0,   36,   57,    0,    0,   50,   65,
@@ -124,7 +135,7 @@ static const short yysindex[] = {                        30,
    57,  120,    0,  130,    0,    0,  137,    0,    0,    8,
   136,  144,   90,    0,    0,  114,    0,    0,    8,    0,
 };
-static const short yyrindex[] = {                        60,
+static const YYINT yyrindex[] = {                        60,
     0,    0,    0,    0,  132,    0,    0,  146,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,   60,
     0,    0,    0,    0,  150,   97,    0,    0,   51,    0,
@@ -137,13 +148,13 @@ static const short yyrindex[] = {                        60,
   145,    0,    0,   63,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,  153,    0,    0,    0,    0,
 };
-static const short yygindex[] = {                         0,
+static const YYINT yygindex[] = {                         0,
     0,  140,    1,    0,  -13,   28,    0,  -11,  -75,    0,
     0,    0,   75,    0,    0,    0,  -26,    0,    0,    0,
    69,  -10,  -45,  128,    0,    0,    0,    0,    0,
 };
 #define YYTABLESIZE 164
-static const short yytable[] = {                         47,
+static const YYINT yytable[] = {                         47,
    10,   14,   90,   15,   16,   17,   19,   39,   73,   40,
    41,    2,   31,   31,    2,   99,   20,   79,   65,   31,
    10,   30,   39,   44,   40,   41,   57,   58,   62,   23,
@@ -162,7 +173,7 @@ static const short yytable[] = {                         47,
    61,  105,  108,   61,   61,   61,   28,   21,   27,   35,
    98,   18,  104,   56,
 };
-static const short yycheck[] = {                         26,
+static const YYINT yycheck[] = {                         26,
     0,    1,   78,    3,    4,    5,    6,   21,   54,   21,
    21,    4,   12,   13,    4,   91,   12,   63,   45,   19,
    20,    7,   36,   23,   36,   36,   37,   38,   42,   19,
@@ -185,16 +196,25 @@ static const short yycheck[] = {                         26,
 #ifndef YYDEBUG
 #define YYDEBUG 0
 #endif
-#define YYMAXTOKEN 19
+#define YYMAXTOKEN 256
+#define YYUNDFTOKEN 288
+#define YYTRANSLATE(a) ((a) > YYMAXTOKEN ? YYUNDFTOKEN : (a))
 #if YYDEBUG
-static const char *yyname[] = {
+static const char *const yyname[] = {
 
 "end-of-file",0,"TOK_BANNER","TOK_NEEDS","TOK_Word","TOK_Colon","TOK_Plus",
 "TOK_Equals","TOK_LeftParen","TOK_RightParen","TOK_Percent","TOK_Slash",
 "TOK_Semicolon","TOK_Question","TOK_LeftAngle","TOK_RightAngle","TOK_Ampersand",
-"TOK_At","TOK_Asterisk","TOK_Dollar",
+"TOK_At","TOK_Asterisk","TOK_Dollar",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,"illegal-symbol",
 };
-static const char *yyrule[] = {
+static const char *const yyrule[] = {
 "$accept : xDerivationGraph",
 "xDerivationGraph : xDerivationGraph_1",
 "xDerivationGraph_1 : xDerivationGraph_1 TOK_Semicolon xDGEntry",
@@ -267,6 +287,15 @@ static const char *yyrule[] = {
 
 };
 #endif
+
+int      yydebug;
+int      yynerrs;
+
+int      yyerrflag;
+int      yychar;
+YYSTYPE  yyval;
+YYSTYPE  yylval;
+
 /* define the initial stack-sizes */
 #ifdef YYSTACKSIZE
 #undef YYMAXDEPTH
@@ -275,29 +304,21 @@ static const char *yyrule[] = {
 #ifdef YYMAXDEPTH
 #define YYSTACKSIZE YYMAXDEPTH
 #else
-#define YYSTACKSIZE 500
-#define YYMAXDEPTH  500
+#define YYSTACKSIZE 10000
+#define YYMAXDEPTH  10000
 #endif
 #endif
 
-#define YYINITSTACKSIZE 500
-
-int      yydebug;
-int      yynerrs;
+#define YYINITSTACKSIZE 200
 
 typedef struct {
     unsigned stacksize;
-    short    *s_base;
-    short    *s_mark;
-    short    *s_last;
+    YYINT    *s_base;
+    YYINT    *s_mark;
+    YYINT    *s_last;
     YYSTYPE  *l_base;
     YYSTYPE  *l_mark;
 } YYSTACKDATA;
-int      yyerrflag;
-int      yychar;
-YYSTYPE  yyval;
-YYSTYPE  yylval;
-
 /* variables for the parser stack */
 static YYSTACKDATA yystack;
 
@@ -313,31 +334,27 @@ static int yygrowstack(YYSTACKDATA *data)
 {
     int i;
     unsigned newsize;
-    short *newss;
+    YYINT *newss;
     YYSTYPE *newvs;
 
     if ((newsize = data->stacksize) == 0)
         newsize = YYINITSTACKSIZE;
     else if (newsize >= YYMAXDEPTH)
-        return -1;
+        return YYENOMEM;
     else if ((newsize *= 2) > YYMAXDEPTH)
         newsize = YYMAXDEPTH;
 
-    i = data->s_mark - data->s_base;
-    newss = (data->s_base != 0)
-          ? (short *)realloc(data->s_base, newsize * sizeof(*newss))
-          : (short *)malloc(newsize * sizeof(*newss));
+    i = (int) (data->s_mark - data->s_base);
+    newss = (YYINT *)realloc(data->s_base, newsize * sizeof(*newss));
     if (newss == 0)
-        return -1;
+        return YYENOMEM;
 
     data->s_base = newss;
     data->s_mark = newss + i;
 
-    newvs = (data->l_base != 0)
-          ? (YYSTYPE *)realloc(data->l_base, newsize * sizeof(*newvs))
-          : (YYSTYPE *)malloc(newsize * sizeof(*newvs));
+    newvs = (YYSTYPE *)realloc(data->l_base, newsize * sizeof(*newvs));
     if (newvs == 0)
-        return -1;
+        return YYENOMEM;
 
     data->l_base = newvs;
     data->l_mark = newvs + i;
@@ -387,7 +404,7 @@ YYPARSE_DECL()
     memset(&yystack, 0, sizeof(yystack));
 #endif
 
-    if (yystack.s_base == NULL && yygrowstack(&yystack)) goto yyoverflow;
+    if (yystack.s_base == NULL && yygrowstack(&yystack) == YYENOMEM) goto yyoverflow;
     yystack.s_mark = yystack.s_base;
     yystack.l_mark = yystack.l_base;
     yystate = 0;
@@ -397,13 +414,11 @@ yyloop:
     if ((yyn = yydefred[yystate]) != 0) goto yyreduce;
     if (yychar < 0)
     {
-        if ((yychar = YYLEX) < 0) yychar = 0;
+        if ((yychar = YYLEX) < 0) yychar = YYEOF;
 #if YYDEBUG
         if (yydebug)
         {
-            yys = 0;
-            if (yychar <= YYMAXTOKEN) yys = yyname[yychar];
-            if (!yys) yys = "illegal-symbol";
+            yys = yyname[YYTRANSLATE(yychar)];
             printf("%sdebug: state %d, reading %d (%s)\n",
                     YYPREFIX, yystate, yychar, yys);
         }
@@ -417,7 +432,7 @@ yyloop:
             printf("%sdebug: state %d, shifting to state %d\n",
                     YYPREFIX, yystate, yytable[yyn]);
 #endif
-        if (yystack.s_mark >= yystack.s_last && yygrowstack(&yystack))
+        if (yystack.s_mark >= yystack.s_last && yygrowstack(&yystack) == YYENOMEM)
         {
             goto yyoverflow;
         }
@@ -436,7 +451,7 @@ yyloop:
     }
     if (yyerrflag) goto yyinrecovery;
 
-    yyerror("syntax error");
+    YYERROR_CALL("syntax error");
 
     goto yyerrlab;
 
@@ -457,7 +472,7 @@ yyinrecovery:
                     printf("%sdebug: state %d, error recovery shifting\
  to state %d\n", YYPREFIX, *yystack.s_mark, yytable[yyn]);
 #endif
-                if (yystack.s_mark >= yystack.s_last && yygrowstack(&yystack))
+                if (yystack.s_mark >= yystack.s_last && yygrowstack(&yystack) == YYENOMEM)
                 {
                     goto yyoverflow;
                 }
@@ -481,13 +496,11 @@ yyinrecovery:
     }
     else
     {
-        if (yychar == 0) goto yyabort;
+        if (yychar == YYEOF) goto yyabort;
 #if YYDEBUG
         if (yydebug)
         {
-            yys = 0;
-            if (yychar <= YYMAXTOKEN) yys = yyname[yychar];
-            if (!yys) yys = "illegal-symbol";
+            yys = yyname[YYTRANSLATE(yychar)];
             printf("%sdebug: state %d, error recovery discards token %d (%s)\n",
                     YYPREFIX, yystate, yychar, yys);
         }
@@ -510,194 +523,194 @@ yyreduce:
     switch (yyn)
     {
 case 1:
-#line 36 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 36 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(1,1);}
 break;
 case 2:
-#line 42 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 42 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(0,2);}
 break;
 case 4:
-#line 47 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 47 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(0,0);}
 break;
 case 5:
-#line 50 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 50 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(2,1);}
 break;
 case 6:
-#line 55 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 55 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(3,2);}
 break;
 case 7:
-#line 61 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 61 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(5,3);}
 break;
 case 8:
-#line 67 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 67 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(4,3);}
 break;
 case 9:
-#line 73 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 73 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(7,3);}
 break;
 case 10:
-#line 80 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 80 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(6,4);}
 break;
 case 11:
-#line 85 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 85 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(0,2);}
 break;
 case 13:
-#line 92 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 92 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(8,1);}
 break;
 case 14:
-#line 95 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 95 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(9,1);}
 break;
 case 16:
-#line 102 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 102 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(0,0);}
 break;
 case 19:
-#line 119 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 119 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(0,2);}
 break;
 case 21:
-#line 126 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 126 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(10,1);}
 break;
 case 22:
-#line 132 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 132 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(11,1);}
 break;
 case 24:
-#line 138 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 138 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(12,1);}
 break;
 case 25:
-#line 143 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 143 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(0,2);}
 break;
 case 27:
-#line 150 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 150 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(13,1);}
 break;
 case 28:
-#line 151 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 151 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(13,0);}
 break;
 case 29:
-#line 156 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 156 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(0,2);}
 break;
 case 31:
-#line 162 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 162 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(16,1);}
 break;
 case 32:
-#line 164 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 164 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(16,1);}
 break;
 case 33:
-#line 169 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 169 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(0,2);}
 break;
 case 36:
-#line 183 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 183 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(17,1);}
 break;
 case 39:
-#line 192 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 192 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(14,1);}
 break;
 case 40:
-#line 195 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 195 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(15,1);}
 break;
 case 41:
-#line 201 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 201 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(18,1);}
 break;
 case 43:
-#line 208 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 208 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(0,2);}
 break;
 case 45:
-#line 217 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 217 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(21,0);}
 break;
 case 47:
-#line 221 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 221 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(19,1);}
 break;
 case 48:
-#line 223 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 223 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(20,1);}
 break;
 case 49:
-#line 225 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 225 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(22,0);}
 break;
 case 50:
-#line 228 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 228 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(23,1);}
 break;
 case 51:
-#line 231 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 231 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(30,1);}
 break;
 case 52:
-#line 236 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 236 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(24,2);}
 break;
 case 53:
-#line 239 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 239 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(25,2);}
 break;
 case 54:
-#line 241 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 241 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(27,1);}
 break;
 case 55:
-#line 245 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 245 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(28,2);}
 break;
 case 56:
-#line 248 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 248 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(31,1);}
 break;
 case 57:
-#line 250 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 250 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(32,0);}
 break;
 case 58:
-#line 253 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 253 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(30,1);}
 break;
 case 60:
-#line 260 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 260 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(0,0);}
 break;
 case 61:
-#line 265 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 265 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(26,1);}
 break;
 case 62:
-#line 270 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 270 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(0,2);}
 break;
 case 67:
-#line 285 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 285 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(33,1);}
 break;
 case 68:
-#line 287 "/data/xju/tmp/u1c/xjutv/FILES/l/drvgrf.ygi.469598.y"
+#line 287 "/home/xju/tmp/odc930/xjutv/FILES/a/drvgrf.ygi.105969.y"
 	{Action(34,-1);}
 break;
-#line 700 "y.tab.c"
+#line 714 "y.tab.c"
     }
     yystack.s_mark -= yym;
     yystate = *yystack.s_mark;
@@ -715,19 +728,17 @@ break;
         *++yystack.l_mark = yyval;
         if (yychar < 0)
         {
-            if ((yychar = YYLEX) < 0) yychar = 0;
+            if ((yychar = YYLEX) < 0) yychar = YYEOF;
 #if YYDEBUG
             if (yydebug)
             {
-                yys = 0;
-                if (yychar <= YYMAXTOKEN) yys = yyname[yychar];
-                if (!yys) yys = "illegal-symbol";
+                yys = yyname[YYTRANSLATE(yychar)];
                 printf("%sdebug: state %d, reading %d (%s)\n",
                         YYPREFIX, YYFINAL, yychar, yys);
             }
 #endif
         }
-        if (yychar == 0) goto yyaccept;
+        if (yychar == YYEOF) goto yyaccept;
         goto yyloop;
     }
     if ((yyn = yygindex[yym]) && (yyn += yystate) >= 0 &&
@@ -740,16 +751,16 @@ break;
         printf("%sdebug: after reduction, shifting from state %d \
 to state %d\n", YYPREFIX, *yystack.s_mark, yystate);
 #endif
-    if (yystack.s_mark >= yystack.s_last && yygrowstack(&yystack))
+    if (yystack.s_mark >= yystack.s_last && yygrowstack(&yystack) == YYENOMEM)
     {
         goto yyoverflow;
     }
-    *++yystack.s_mark = (short) yystate;
+    *++yystack.s_mark = (YYINT) yystate;
     *++yystack.l_mark = yyval;
     goto yyloop;
 
 yyoverflow:
-    yyerror("yacc stack overflow");
+    YYERROR_CALL("yacc stack overflow");
 
 yyabort:
     yyfreestack(&yystack);
