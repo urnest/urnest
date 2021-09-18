@@ -13,6 +13,9 @@
 ()+cmd=(test-PrivateKey.cc+(%ssl-cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-X509Certificate.cc+(%ssl-cxx-opts):auto.cxx.exe):exec.output
 
-%hcp-gen==.:dir.hcp.list+G+hpath='xju/tls':hcp-split-virdir-specs:cat:vir_dir
+%hcp-opts==<<
++(..%hcp-opts)
+
+%hcp-gen==.:dir.hcp.list+(%hcp-opts)+hpath='xju/tls':hcp-split-virdir-specs:cat:vir_dir
 
 %tags==.:merged-tags

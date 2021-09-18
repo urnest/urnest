@@ -94,13 +94,16 @@ do
   i=$((i+1))
 done
 
+%hcp-opts == <<
++(..%hcp-opts)
+
 %hcp-gen==%hcp-gen.vir_dir_specs:list:cat:vir_dir
 
 %hcp-gen.vir_dir_specs==<<
 %hcp-local-spec
 %hcp-subdir-spec
 
-%hcp-local-spec==.:dir.hcp.list+G+hpath='xju':hcp-split-virdir-specs:cat
+%hcp-local-spec==.:dir.hcp.list+(%hcp-opts)+hpath='xju':hcp-split-virdir-specs:cat
 
 %hcp-subdir-spec==<<
 %base64==./base64/Odinfile%hcp-gen
@@ -133,7 +136,10 @@ done
 %idl-local-spec
 %idl-subdir-spec
 
-%idl-local-spec==.:dir.idl.list+G+hpath='xju':omnicxy.virdir-specs:cat
+%hcp-opts==<<
++(..%hcp-opts)
+
+%idl-local-spec==.:dir.idl.list+(%hcp-opts)+hpath='xju':omnicxy.virdir-specs:cat
 
 %idl-subdir-spec==<<
 %linux==./linux/Odinfile%idl-gen

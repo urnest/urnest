@@ -9,6 +9,9 @@
 
 %tests.tree==<<
 
-%hcp-gen==.:dir.hcp.list+G+hpath='xju/ssh/transport/kexers':hcp-split-virdir-specs:cat:vir_dir
+%hcp-opts==<<
++(..%hcp-opts)
+
+%hcp-gen==.:dir.hcp.list+(%hcp-opts)+hpath='xju/ssh/transport/kexers':hcp-split-virdir-specs:cat:vir_dir
 
 %tags==.:merged-tags

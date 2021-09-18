@@ -26,7 +26,10 @@ example%all.tree
 +inc_sp=(.)
 +inc_sp=(omnicxy)
 +cxy='-exju::Exception=xju/Exception.hh'
-+hcp-split=(hcp/hcp-split)
++hcp-split=(hcp%hcp-split)
+
+%hcp-opts==<<
++G +hcp-split=(hcp%hcp-split)
 
 %hcp-gen==Odinfile%hcp-gen.virdir_spec:vir_dir
 

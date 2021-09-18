@@ -8,6 +8,9 @@
 ()+cmd=(test-decodeHeader.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-encodeHeader.cc+(../../..%cxx-opts):auto.cxx.exe):exec.output
 
-%hcp-gen==.:dir.hcp.list+G+hpath='xju/ip/v4':hcp-split-virdir-specs:cat:vir_dir
+%hcp-opts==<<
++(..%hcp-opts)
+
+%hcp-gen==.:dir.hcp.list+(%hcp-opts)+hpath='xju/ip/v4':hcp-split-virdir-specs:cat:vir_dir
 
 %tags==.:merged-tags

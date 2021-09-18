@@ -7,7 +7,10 @@
 ()+cmd=(test-Calls.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 
-%hcp-gen==%all.hcp.sm:hcp.list+G+hpath='xju/test':hcp-split-virdir-specs:cat:vir_dir
+%hcp-opts==<<
++(..%hcp-opts)
+
+%hcp-gen==%all.hcp.sm:hcp.list+(%hcp-opts)+hpath='xju/test':hcp-split-virdir-specs:cat:vir_dir
 
 %all.hcp.sm==<<
 CallTo.hcp

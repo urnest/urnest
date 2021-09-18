@@ -14,6 +14,9 @@
 #note test-Socket requires CAP_NET_RAW capability (see capability(7) manpage)
 %test-Socket==()+cmd=(test-Socket.cc+(../../..%cxx-opts)+lib_sp=(/usr/lib/x86_64-linux-gnu)+lib=cap:auto.cxx.exe):exec.output
 
-%hcp-gen==.:dir.hcp.list+G+hpath='xju/ip/icmp':hcp-split-virdir-specs:cat:vir_dir
+%hcp-opts==<<
++(..%hcp-opts)
+
+%hcp-gen==.:dir.hcp.list+(%hcp-opts)+hpath='xju/ip/icmp':hcp-split-virdir-specs:cat:vir_dir
 
 %tags==.:merged-tags

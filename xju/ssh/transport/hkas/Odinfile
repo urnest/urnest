@@ -10,6 +10,9 @@
 %tests.tree==<<
 ()+cmd=(test-RSAClient.cc+(%cxx-opts):auto.cxx.exe):exec.output
 
-%hcp-gen==.:dir.hcp.list+G+hpath='xju/ssh/transport/hkas':hcp-split-virdir-specs:cat:vir_dir
+%hcp-opts==<<
++(..%hcp-opts)
+
+%hcp-gen==.:dir.hcp.list+(%hcp-opts)+hpath='xju/ssh/transport/hkas':hcp-split-virdir-specs:cat:vir_dir
 
 %tags==.:merged-tags

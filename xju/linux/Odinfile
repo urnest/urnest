@@ -23,7 +23,10 @@ wtmp/monitor-logins
 %hcp-local-spec
 %hcp-subdir-spec
 
-%hcp-local-spec==.:dir.hcp.list+G+hpath='xju/linux':hcp-split-virdir-specs:cat
+%hcp-opts==<<
++(..%hcp-opts)
+
+%hcp-local-spec==.:dir.hcp.list+(%hcp-opts)+hpath='xju/linux':hcp-split-virdir-specs:cat
 
 %hcp-subdir-spec==<<
 %wtmp==wtmp/Odinfile%hcp-gen
@@ -36,7 +39,7 @@ wtmp/monitor-logins
 %idl-local-spec
 %idl-subdir-spec
 
-%idl-local-spec==.:dir.idl.list+G+hpath='xju/linux':omnicxy.virdir-specs:cat
+%idl-local-spec==.:dir.idl.list+(%hcp-opts)+hpath='xju/linux':omnicxy.virdir-specs:cat
 
 %idl-subdir-spec==<<
 %wtmp==./wtmp/Odinfile%idl-gen

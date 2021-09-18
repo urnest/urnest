@@ -7,6 +7,9 @@
 ()+cmd=(test-istream.cc+(../..%cxx-opts) :auto.cxx.exe):exec.output
 ()+cmd=(test-ostream.cc+(../..%cxx-opts) :auto.cxx.exe):exec.output
 
-%hcp-gen==.:dir.hcp.list+G+hpath='xju/net':hcp-split-virdir-specs:cat:vir_dir
+%hcp-opts==<<
++(..%hcp-opts)
+
+%hcp-gen==.:dir.hcp.list+(%hcp-opts)+hpath='xju/net':hcp-split-virdir-specs:cat:vir_dir
 
 %tags==.:merged-tags

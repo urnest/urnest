@@ -1,14 +1,14 @@
 %tools==%tools.tree:leaves
 
 %tools.tree==<<
-hcp-split
-hcp-parse-file
-hcp-what-is-at
-hcp-tags
+%hcp-split
+%hcp-parse-file
+%hcp-what-is-at
+%hcp-tags
 hcp-tags-merge
-hcp-scope-at
-hcp-map-to-source
-hcp-remove-throw-clauses
+%hcp-scope-at
+%hcp-map-to-source
+%hcp-remove-throw-clauses
 tags%tools.tree
 
 %all==%all.tree:leaves
@@ -34,13 +34,16 @@ tags%all.tree
 %opts == <<
 +(%cxx-opts)
 
+%hcp-opts==<<
++(..%hcp-opts)
+
 %hcp-gen==%hcp-gen.vir_dir_specs:list:cat:vir_dir
 
 %hcp-gen.vir_dir_specs==<<
 %hcp-local-spec
 %hcp-subdir-spec
 
-%hcp-local-spec==.:dir.hcp.list+G+hpath='hcp':hcp-split-virdir-specs:cat
+%hcp-local-spec==.:dir.hcp.list+(%hcp-opts)+hpath='hcp':hcp-split-virdir-specs:cat
 
 %hcp-subdir-spec==<<
 %tags==./tags/Odinfile%hcp-gen
@@ -51,7 +54,7 @@ tags%all.tree
 %idl-local-spec
 %idl-subdir-spec
 
-%idl-local-spec==.:dir.idl.list+G+hpath='hcp':omnicxy.virdir-specs:cat
+%idl-local-spec==.:dir.idl.list+(%hcp-opts)+hpath='hcp':omnicxy.virdir-specs:cat
 
 %idl-subdir-spec==<<
 %tags==./tags/Odinfile%idl-gen
@@ -80,13 +83,13 @@ tags%all.tree
 test%all-tests.tree
 tags%all-tests.tree
 
-hcp-split == hcp-split.cc+(%bootstrap-cxx-opts):auto.cxx.exe
-hcp-parse-file == hcp-parse-file.cc+(%opts):auto.cxx.exe
-hcp-what-is-at == hcp-what-is-at.cc+(%opts):auto.cxx.exe
-hcp-tags == hcp-tags.cc+(%opts):auto.cxx.exe
-hcp-scope-at == hcp-scope-at.cc+(%opts):auto.cxx.exe
-hcp-map-to-source == hcp-map-to-source.cc+(%opts):auto.cxx.exe
-hcp-remove-throw-clauses == hcp-remove-throw-clauses.cc+(%opts):auto.cxx.exe
+%hcp-split == hcp-split.cc+(%bootstrap-cxx-opts):auto.cxx.exe
+%hcp-parse-file == hcp-parse-file.cc+(%opts):auto.cxx.exe
+%hcp-what-is-at == hcp-what-is-at.cc+(%opts):auto.cxx.exe
+%hcp-tags == hcp-tags.cc+(%opts):auto.cxx.exe
+%hcp-scope-at == hcp-scope-at.cc+(%opts):auto.cxx.exe
+%hcp-map-to-source == hcp-map-to-source.cc+(%opts):auto.cxx.exe
+%hcp-remove-throw-clauses == hcp-remove-throw-clauses.cc+(%opts):auto.cxx.exe
 
 %test-Chars==(test-Chars.cc)+(%opts):auto.cxx.exe
 
@@ -114,7 +117,7 @@ hcp-remove-throw-clauses == hcp-remove-throw-clauses.cc+(%opts):auto.cxx.exe
 %test-scope-at-509
 %test-scope-at-2-15
 
-%check-scope-at==()+cmd=(hcp-parse-file) (%test-scope-at.hcp):exec.output
+%check-scope-at==()+cmd=(%hcp-parse-file) (%test-scope-at.hcp):exec.output
 
 %test-scope-at-0==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '0' 'header ::':exec.output
 %test-scope-at-30==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '30' 'header ::':exec.output

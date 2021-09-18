@@ -9,6 +9,9 @@
 ()+cmd=(test-surrogate.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 
-%hcp-gen==.:dir.hcp.list+G+hpath='xju/utf8':hcp-split-virdir-specs:cat:vir_dir
+%hcp-opts==<<
++(..%hcp-opts)
+
+%hcp-gen==.:dir.hcp.list+(%hcp-opts)+hpath='xju/utf8':hcp-split-virdir-specs:cat:vir_dir
 
 %tags==.:merged-tags

@@ -3,12 +3,15 @@
 %all.tree==<<
 %tests.tree
 
+%hcp-opts==<<
++(..%hcp-opts)
+
 %hcp-gen==%hcp-gen.vir_dir_specs:list:cat:vir_dir
 
 %hcp-gen.vir_dir_specs==<<
 %hcp-local-spec
 
-%hcp-local-spec==.:dir.hcp.list+G+hpath='cxy':hcp-split-virdir-specs:cat
+%hcp-local-spec==.:dir.hcp.list+(%hcp-opts)+hpath='cxy':hcp-split-virdir-specs:cat
 
 %idl-gen==%idl-gen.vir_dir_specs:list:cat:vir_dir
 

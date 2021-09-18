@@ -68,13 +68,16 @@ omnicxy/proto==.%gen
 %test-no-such-object==test-no-such-object.cc+(%cxx-opts):auto.cxx.exe
 %test-wrong-type==test-wrong-type.cc+(%cxx-opts):auto.cxx.exe
 
+%hcp-opts==<<
++(..%hcp-opts)
+
 %hcp-gen==%hcp-gen.vir_dir_specs:list:cat:vir_dir
 
 %hcp-gen.vir_dir_specs==<<
 %hcp-local-spec
 
 
-%hcp-local-spec==.:dir.hcp.list+G+hpath='omnicxy/proto/cxy/e':hcp-split-virdir-specs:cat
+%hcp-local-spec==.:dir.hcp.list+(%hcp-opts)+hpath='omnicxy/proto/cxy/e':hcp-split-virdir-specs:cat
 
 %test-transient==()+cmd=(%test-transient.sh) (%p1-main):exec.output
 

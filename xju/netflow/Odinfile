@@ -11,6 +11,9 @@
 %hcp-gen.vir_dir_specs==<<
 %hcp-local-spec
 
-%hcp-local-spec==.:dir.hcp.list+G+hpath='xju/netflow':hcp-split-virdir-specs:cat
+%hcp-opts==<<
++(..%hcp-opts)
+
+%hcp-local-spec==.:dir.hcp.list+(%hcp-opts)+hpath='xju/netflow':hcp-split-virdir-specs:cat
 
 %tags==.:merged-tags

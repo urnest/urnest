@@ -9,6 +9,9 @@ proto%all.tree
 %cxx-opts==<<
 +(..%cxx-opts)+lib='omniDynamic4' 'omniORB4' 'omnithread'
 
+%hcp-opts==<<
++(..%hcp-opts)
+
 %tools==%tools.tree:leaves
 
 %tools.tree==<<

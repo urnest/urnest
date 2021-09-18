@@ -13,7 +13,10 @@ monitor-disk-space==monitor-disk-space.cc+(../../..%cxx-opts):auto.cxx.exe
 
 %tests.tree == <<
 
-%hcp-gen==.:dir.hcp.list+G+hpath='xju/linux/disk-space':hcp-split-virdir-specs:cat:vir_dir
+%hcp-opts==<<
++(..%hcp-opts)
+
+%hcp-gen==.:dir.hcp.list+(%hcp-opts)+hpath='xju/linux/disk-space':hcp-split-virdir-specs:cat:vir_dir
 
 %tags==%all.list-of-tags:merged-tags
 
