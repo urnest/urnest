@@ -25,7 +25,7 @@
 %idl-gen.vir_dir_specs==<<
 %idl-local-spec
 
-%idl-local-spec==.:dir.idl.list+inc_sp=(../..)+hcp-split=(../hcp-split)+hpath='hcp/tags'+cxy='-exju::Exception=xju/Exception.hh':omnicxy.virdir-specs:cat
+%idl-local-spec==.:dir.idl.list+inc_sp=(../..)+hcp-split=(..%hcp-split)+hpath='hcp/tags'+cxy='-exju::Exception=xju/Exception.hh':omnicxy.virdir-specs:cat
 
 %hcp-opts==<<
 +(..%hcp-opts)

@@ -18,7 +18,7 @@
 %idl-gen.vir_dir_specs==<<
 %idl-local-spec
 
-%idl-local-spec==.:dir.idl.list+inc_sp=(../..)+hcp-split=(../hcp-split)+hpath='cxy':omnicxy.virdir-specs:cat
+%idl-local-spec==.:dir.idl.list+inc_sp=(../..)+hcp-split=(../../hcp%hcp-split)+hpath='cxy':omnicxy.virdir-specs:cat
 
 
 %tests.tree==<<

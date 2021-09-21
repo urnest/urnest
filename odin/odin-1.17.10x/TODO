@@ -9,26 +9,23 @@
         if (verifiedAt_ < verifyAt){
           // REVISIT
           for(input : inputs){
-	    while(true){
-  	      try{
-	        input.update(verifyAt, maxJobs, awaitingJobs);
-		break;
-	      }
-	      catch(AwaitingJobs const& a){
-	        if (awaitingJobs.size() == maxJobs){
-	          waitOneOf(awaitingJobs);
-	        }
-	      }
+	        update(input, verifyAt, maxJobs, awaitingJobs);
 	    }
 	  }
-	  waitForAll(awaitingJobs);
 	  if (maxVintage(inputs) > vintage_){
 	    if (inputsOK){
-  	      awaitingJobs.append(queueMe());
-	      throw awaitingJobs;
+	      startCalc(verifyAt, maxJobs, awaitingJobs));
 	    }
-	    else (
+	    else {
+	      setStatus(verifyAt, minStatus(inputs));
+	    }
 	  }
+	}
+      }
+      calcDone(job, verifyAt, result) {
+        store(result);
+	setStatus(result);
+      }
       
 
 - merge xjupkg into pkg
