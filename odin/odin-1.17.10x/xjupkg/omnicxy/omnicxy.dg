@@ -67,7 +67,7 @@ COLLECT (:omnicxy.virdir-specs:cat:vir_dir) => (:omnicxy.virdir);
 COLLECT (:idl.list:map=:omnicxy.virdir-spec) => (:omnicxy.virdir-specs);
 
 #hh-ext, cc-ext, basename, hpath come from hcp.dg
-EXEC (omnicxy.virdir-spec.sh) (:IDL)@ (:omnicxy)@ (+hh-ext) (+cc-ext) (+basename) (+hpath) => (:omnicxy.virdir-spec);
+EXEC (omnicxy.virdir-spec.sh) (:IDL)@ (:omnicxy)@ (+hh-ext) (+cc-ext) (+basename) (+hpath)  (+hcp-split) => (:omnicxy.virdir-spec);
 
 :omnicxy.targets-spec 'odinfile with targets for hh and cc files generated from a .idl file'? => :FILE;
 
@@ -78,6 +78,6 @@ EXEC (omnicxy.virdir-spec.sh) (:IDL)@ (:omnicxy)@ (+hh-ext) (+cc-ext) (+basename
 COLLECT (:idl.list:map=:omnicxy.targets-spec) => (:omnicxy.targets-specs);
 
 #hh-ext, cc-ext, basename, hpath come from hcp.dg
-EXEC (omnicxy.targets-spec.sh) (:IDL)@ (:omnicxy)@ (+hh-ext) (+cc-ext) (+basename) (+hpath) => (:omnicxy.targets-spec);
+EXEC (omnicxy.targets-spec.sh) (:IDL)@ (:omnicxy)@ (+hh-ext) (+cc-ext) (+basename) (+hpath) (+hcp-split) => (:omnicxy.targets-spec);
 
 COLLECT (:omnicxy.targets-specs:cat) => (:omnicxy.targets);

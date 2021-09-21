@@ -14,13 +14,15 @@ monitor-logins==monitor-logins.cc+(../../..%cxx-opts):auto.cxx.exe
 
 %hcp-gen==.:dir.hcp.list+(%hcp-opts)+hpath='xju/linux/wtmp':hcp-split-virdir-specs:cat:vir_dir
 
-%idl-gen==%idl-gen.vir_dir_specs:list:cat:vir_dir
+%idl-gen==%idl-gen.vir_dir_spec:vir_dir
+
+%idl-gen.vir_dir_spec==%idl-gen.vir_dir_specs:list:cat
 
 %idl-gen.vir_dir_specs==<<
 %idl-local-spec
 %idl-subdir-spec
 
-%idl-local-spec==.:dir.idl.list+(%hcp-opts)+hpath='xju/linux/wtmp'+(../../..%idl-opts):omnicxy.virdir-specs:cat
+%idl-local-spec==.:dir.idl.list+(%hcp-opts)+hpath='xju/linux/wtmp'+(../../..%idl-opts)+hcp-split=(../../../hcp%hcp-split):omnicxy.virdir-specs:cat
 
 %idl-subdir-spec==<<
 
