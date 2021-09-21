@@ -171,7 +171,7 @@ Broadcast_Mod(
 	    case STAT_Pending: {
 	       if (!FilHdr_PndFlag(OutFilHdr)) {
 		  Set_PndFlag(OutFilHdr, TRUE);
-		  Do_Log("Setting pnd flag for", OutFilHdr, LOGLEVEL_Status);
+		  Do_Log("Setting pnd flag of", OutFilHdr, LOGLEVEL_Status);
 		  Broadcast_Mod(OutFilHdr, MODKIND_Input, Status); }/*if*/;
 	       break; }/*case*/;
 	    case STAT_TgtValError: {

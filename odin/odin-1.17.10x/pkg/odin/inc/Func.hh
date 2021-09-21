@@ -228,6 +228,14 @@ extern void FilHdr_Error(GMC_P1(tp_Str) GMC_PN(tp_FilHdr));
 extern boolean IsAllDone(GMC_P1(tp_FilHdr) GMC_PN(tp_InpKind));
 extern boolean IsAllUpToDate(GMC_P1(tp_FilHdr) GMC_PN(tp_InpKind));
 extern boolean IsSrcUpToDate(GMC_P1(tp_FilHdr));
+extern void SPrint_VerifyDate(tp_Str To,
+                              tp_Str Leader,
+                              tp_FilHdr FilHdr,
+                              tp_Str Trailer);
+extern void SPrint_TgtValVerifyDate(tp_Str To,
+                                    tp_Str Leader,
+                                    tp_FilHdr FilHdr,
+                                    tp_Str Trailer);
 extern boolean IsUpToDate(GMC_P1(tp_FilHdr));
 extern boolean IsElmNameUpToDate(GMC_P1(tp_FilHdr));
 extern boolean IsElmUpToDate(GMC_P1(tp_FilHdr));

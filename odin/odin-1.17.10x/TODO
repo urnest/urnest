@@ -1,3 +1,36 @@
+- re-design update algorithm, because it is pretty brain-dead and
+  tends to go over and over the same checks many times unnecssarily
+  (ODINLOGLEVEL=7 gives *massive* output even if nothing needs to be updated
+
+  - when getting (i.e. loading from persistent db) a FilHdr, promote it
+    to a C++ class for its type and make update (i.e. what is now
+    ServerAction) a recursive, blocking function specific to type, essentially
+      update(Date verifyAt, int maxJobs, awaitingJobs&) {
+        if (verifiedAt_ < verifyAt){
+          // REVISIT
+          for(input : inputs){
+	    while(true){
+  	      try{
+	        input.update(verifyAt, maxJobs, awaitingJobs);
+		break;
+	      }
+	      catch(AwaitingJobs const& a){
+	        if (awaitingJobs.size() == maxJobs){
+	          waitOneOf(awaitingJobs);
+	        }
+	      }
+	    }
+	  }
+	  waitForAll(awaitingJobs);
+	  if (maxVintage(inputs) > vintage_){
+	    if (inputsOK){
+  	      awaitingJobs.append(queueMe());
+	      throw awaitingJobs;
+	    }
+	    else (
+	  }
+      
+
 - merge xjupkg into pkg
   - verify build and install odin from scratch
   - test eli
@@ -309,6 +342,52 @@ x some internals:
         Do_DrvPath
      (DrvPath stands for "derivation path")
 
+    Set_Client_FilHdr - only sets CurrentClient->FilHdr
+    
+    
+  Doing an update:
+    Above sets CurrentClient->FilHdr and if-client.cc:ServerAction
+    gets invoked repeatedly to do it, which essentially does Push_AllReqs
+    and Do_1ToDo repeatedly until request is satisfied.
+      Push_AllReqs increments CurrentDate (and sets PendingDate to match.
+        - what are these?
+      Push_AllReqs:
+        Gets all reqs of CurrentClient->FilHdr (GetAllReqs). With IK_Trans, what does?
+	Get all reqs of Pending list.
+	  Both use GetAllReqs
+	    - only collects req where it is not "up to date" (IsUpToDate), (up to date
+	      means its VerifyDate >= (desired)VerifyDate and
+	      its target value is up to date (REVISIT) and
+	          not in pending, ready or busy state and
+	          not pending flag set and
+	        ... unless its VerifyDate == current VerifyDate
+	      and its status is known (i.e. not STAT_Unknown))
+            - if req is ready or busy it goes straight onto ToDo and
+	      its verify date is set to current date and its pending flag is cleared
+	      Why bother? It would work out to go via pending?
+	    - if source file updates on-the-fly, meaning simplisticly
+	      checking if file has changed since last looked (fstat mod time has
+	      changed or we have never looked); if so record new mod time, increments
+	      CurrentDate (why?) and sets ModDate = CurrentDate (why ModDate and not
+	      VerifyDate?). I guess the inc CurrenDate is because of above setting
+	      VerifyDate to current date? Arrg I don't think that makes sense? REVISIT
+	      I guess it's to ensure that it ends up newer than anything that depends
+	      on it (otherwise it will look like file derived from old value is
+	      up to date w.r.t new value).
+	      (The whole date scheme could be simpler?)
+	        source file can also be target, I think that's where TgtVal comes in?)
+		see IsTgtValUpToDate for example.
+		If tgt val is not up to date (like "up to date" above.) it
+		does GetReqs on it and if status is Unknown then pushes tgv val
+		onto pending with IK_Simple.
+	      Sets verify date to current date.
+	    - if not source... REVISIT
+
+... so break at if-get.c:83 and see what it does. Does it push tgtval to ToDo or
+pending? (Maybe instrument so we can see from trace.)
+		
+
+	      
 x best way to debug:
   odin -s
     x starts server process
@@ -649,7 +728,7 @@ x how does max builds work? It seems like maybe if I have maxbuilds=4
     }
     LastToDo=ToDo.size();
    ... and Push_ToDo always push_back(); never fiddle with LastToDo
-
+   BUT it's more subtle than that I think.
 
 get pkg/*/Odinfile targets to work, to make it easier to work on odin
 internals
@@ -664,673 +743,32 @@ internals
   - need way to build a test installation and use it without trashing
     the good odin install, do we only need to override which odin?
 
-log of configure and install
+
+x IsAllDone v TgtVal
+  x check IsAllUpToDate v TgtVal, has:
+     if (!IsTgtValUpToDate(FilHdr)) {
+        return FALSE; }/*if*/;
+  x IsAllUpToDate calls that
+  x so why does it not pick up tgtval? Because for STAT_Unknown tgt val
+    GetFile sets FilHdr status to OK and pushes tgt val onto ToDo via Pending,
+    so we're not all done until there is nothing still to do on ToDo.
+
+  log /home/xju/urnest/odin/odin-1.17.10x/pkg/odin/boot :odin*act_tgt.list/default-dg.c +copy_dest=(\04868) :odin*copy ... analyse
+
+- seems target of TgtVal is listed as a req of :copy that updates it. That
+  does not make any sense and seems to introduce a cycle:
+** 1632205292.845 { GetFile: get not-up-to-date /home/xju/urnest/odin/odin-1.17.10x/pkg/odin/boot/default-dg.c [OK@25/Unknown@62]
+** 1632205292.845 { Get reqs of /home/xju/urnest/odin/odin-1.17.10x/pkg/odin/boot :odin*act_tgt.list/default-dg.c +copy_dest=(\04868) :odin*copy [Unknown@0/OK@0]
+** 1632205292.845 { GetFile: get not-up-to-date /home/xju/urnest/odin/odin-1.17.10x/pkg/odin/boot :odin*act_tgt.list/default-dg.c +copy_dest=(\04868) :odin*copy [Unknown@0/OK@0]
+** 1632205292.849 { Get reqs of /home/xju/urnest/odin/odin-1.17.10x/pkg/odin/boot/default-dg.c [OK@62/Unknown@62]
+** 1632205292.849 { GetFile: get not-up-to-date /home/xju/urnest/odin/odin-1.17.10x/pkg/odin/boot/default-dg.c [OK@62/Unknown@62]
+... but maybe the depenency is on the name only. Ajust trace to show that.
+No, adjusted trace suggests it really is broken.
 
 
-xju@xjutv:~/urnest/odin/odin-1.17.10x$ ./configure
-checking for gcc... gcc
-checking whether the C compiler works... yes
-checking for C compiler default output file name... a.out
-checking for suffix of executables... 
-checking whether we are cross compiling... no
-checking for suffix of object files... o
-checking whether we are using the GNU C compiler... yes
-checking whether gcc accepts -g... yes
-checking for gcc option to accept ISO C89... none needed
-checking how to run the C preprocessor... gcc -E -x c-header
-checking for g++... g++
-checking whether we are using the GNU C++ compiler... yes
-checking whether g++ accepts -g... yes
-checking for flex... no
-checking for lex... no
-checking whether ln -s works... yes
-checking whether make sets $(MAKE)... yes
-checking for ranlib... ranlib
-checking for bison... no
-checking for byacc... byacc
-checking for library containing t_accept... no
-checking for library containing socket... none required
-checking for grep that handles long lines and -e... /bin/grep
-checking for egrep... /bin/grep -E
-checking for ANSI C header files... yes
-checking for sys/types.h... yes
-checking for sys/stat.h... yes
-checking for stdlib.h... yes
-checking for string.h... yes
-checking for memory.h... yes
-checking for strings.h... yes
-checking for inttypes.h... yes
-checking for stdint.h... yes
-checking for unistd.h... yes
-checking for size_t... yes
-checking for working alloca.h... yes
-checking for alloca... yes
-checking dirent.h usability... yes
-checking dirent.h presence... yes
-checking for dirent.h... yes
-checking process.h usability... no
-checking process.h presence... no
-checking for process.h... no
-checking termio.h usability... yes
-checking termio.h presence... yes
-checking for termio.h... yes
-checking termios.h usability... yes
-checking termios.h presence... yes
-checking for termios.h... yes
-checking for unistd.h... (cached) yes
-checking unix.h usability... no
-checking unix.h presence... no
-checking for unix.h... no
-checking for mode_t... yes
-checking for pid_t... yes
-checking for size_t... (cached) yes
-checking for stdlib.h... (cached) yes
-checking for GNU libc compatible malloc... yes
-checking for stdlib.h... (cached) yes
-checking for GNU libc compatible realloc... yes
-checking for wait3 that fills in rusage... yes
-checking for getcwd... yes
-checking for putenv... yes
-checking for sigaction... yes
-checking for waitpid... yes
-configure: creating ./config.status
-config.status: creating pkg/config/boot.sh
-config.status: creating pkg/config/config.dg
-config.status: creating pkg/config/version
-config.status: creating pkg/odin/inc/config.hh
-config.status: pkg/odin/inc/config.hh is unchanged
-xju@xjutv:~/urnest/odin/odin-1.17.10x$ ./INSTALL ~/x-bin
-Installing odin packages into /home/xju/x-bin/lib/Odin.
-Installing odin command into /home/xju/x-bin/bin/odin.
-Installing odin man page into /home/xju/x-bin/man/man1/odin.1.
-(cd boot; make CC=gcc CFLAGS='-g');
-make[1]: Entering directory '/home/xju/urnest/odin/odin-1.17.10x/pkg/odin/boot'
-gcc -g   -c -o client-yacc.o client-yacc.c
-gcc -g   -c -o default-dg.o default-dg.c
-gcc -g   -c -o fsys-yacc.o fsys-yacc.c
-gcc -g   -c -o stub-in.o stub-in.c
-gcc -g   -c -o stub-out.o stub-out.c
-make[1]: Leaving directory '/home/xju/urnest/odin/odin-1.17.10x/pkg/odin/boot'
-(cd editline; make CC=gcc CFLAGS='-g')
-make[1]: Entering directory '/home/xju/urnest/odin/odin-1.17.10x/pkg/odin/editline'
-gcc -g   -c -o editline.o editline.c
-gcc -g   -c -o complete.o complete.c
-gcc -g   -c -o sysunix.o sysunix.c
-make[1]: Leaving directory '/home/xju/urnest/odin/odin-1.17.10x/pkg/odin/editline'
-g++ -g   -c -o main.o main.cc
-gcc -g   -c -o if-bcast.o if-bcast.c
-gcc -g   -c -o if-build.o if-build.c
-gcc -g   -c -o if-candrv.o if-candrv.c
-g++ -g   -c -o if-client.o if-client.cc
-gcc -g   -c -o if-cmd.o if-cmd.c
-gcc -g   -c -o if-depend.o if-depend.c
-gcc -g   -c -o if-drvgrf.o if-drvgrf.c
-gcc -g   -c -o if-dir.o if-dir.c
-gcc -g   -c -o if-drvpth.o if-drvpth.c
-gcc -g   -c -o if-drvspc.o if-drvspc.c
-gcc -g   -c -o if-edg.o if-edg.c
-gcc -g   -c -o if-env.o if-env.c
-gcc -g   -c -o if-err.o if-err.c
-gcc -g   -c -o if-exec.o if-exec.c
-gcc -g   -c -o if-execint.o if-execint.c
-gcc -g   -c -o if-execspc.o if-execspc.c
-gcc -g   -c -o if-fhacc.o if-fhacc.c
-gcc -g   -c -o if-fhnam.o if-fhnam.c
-gcc -g   -c -o if-fhnew.o if-fhnew.c
-gcc -g   -c -o if-fhsrc.o if-fhsrc.c
-gcc -g   -c -o if-fhstat.o if-fhstat.c
-gcc -g   -c -o if-file.o if-file.c
-gcc -g   -c -o if-filelm.o if-filelm.c
-gcc -g   -c -o if-filhdr.o if-filhdr.c
-gcc -g   -c -o if-filinp.o if-filinp.c
-gcc -g   -c -o if-filprm.o if-filprm.c
-gcc -g   -c -o if-filpval.o if-filpval.c
-gcc -g   -c -o if-filtyp.o if-filtyp.c
-gcc -g   -c -o if-ft.o if-ft.c
-gcc -g   -c -o if-get.o if-get.c
-gcc -g   -c -o if-help.o if-help.c
-gcc -g   -c -o if-hook.o if-hook.c
-gcc -g   -c -o if-info.o if-info.c
-gcc -g   -c -o if-io.o if-io.c
-gcc -g   -c -o if-ipc.o if-ipc.c
-gcc -g   -c -o if-lex.o if-lex.c
-gcc -g   -c -o if-lvl.o if-lvl.c
-gcc -g   -c -o if-main.o if-main.c
-gcc -g   -c -o if-nod.o if-nod.c
-gcc -g   -c -o if-oclex.o if-oclex.c
-gcc -g   -c -o if-pfilhdr.o if-pfilhdr.c
-gcc -g   -c -o if-prmtyp.o if-prmtyp.c
-gcc -g   -c -o if-rbs.o if-rbs.c
-gcc -g   -c -o if-symbol.o if-symbol.c
-gcc -g   -c -o if-sysdep.o if-sysdep.c
-gcc -g   -c -o if-system.o if-system.c
-gcc -g   -c -o if-systools.o if-systools.c
-gcc -g   -c -o if-update.o if-update.c
-gcc -g   -c -o if-util.o if-util.c
-gcc -g   -c -o if-var.o if-var.c
-gcc -g   -c -o if-yylex.o if-yylex.c
-g++ -g   -c -o LookupPlainAbsPath.o LookupPlainAbsPath.cc
-g++ -g  -o odin.exe main.o if-bcast.o if-build.o if-candrv.o if-client.o if-cmd.o if-depend.o if-drvgrf.o if-dir.o if-drvpth.o if-drvspc.o if-edg.o if-env.o if-err.o if-exec.o if-execint.o if-execspc.o if-fhacc.o if-fhnam.o if-fhnew.o if-fhsrc.o if-fhstat.o if-file.o if-filelm.o if-filhdr.o if-filinp.o if-filprm.o if-filpval.o if-filtyp.o if-ft.o if-get.o if-help.o if-hook.o if-info.o if-io.o if-ipc.o if-lex.o if-lvl.o if-main.o if-nod.o if-oclex.o if-pfilhdr.o if-prmtyp.o if-rbs.o if-symbol.o if-sysdep.o if-system.o if-systools.o if-update.o if-util.o if-var.o if-yylex.o LookupPlainAbsPath.o boot/fsys-yacc.o boot/client-yacc.o boot/default-dg.o boot/stub-in.o boot/stub-out.o editline/editline.o editline/complete.o editline/sysunix.o \
-         `if [ $ODINBOOT_CONFIG ] ; then echo $ODINBOOT_SOCKET_LIBS; \
-  elif [ -f /usr/lib/libsocket.* ] ; then echo '-lsocket -lnsl'; \
-  else true; fi`
-cc-1.12.6 package created.
-code-1.11.18 package created.
-config-1.17.11 package created.
-ls: cannot access '*.exe': No such file or directory
-cpp-1.12.6 package created.
-cxx-1.12.6 package created.
-dbx-1.13.4 package created.
-ls: cannot access '*.exe': No such file or directory
-dg-1.16.11 package created.
-f77-1.11.10 package created.
-idl-1.13.3 package created.
-lex-1.11.10 package created.
-lint-1.12.6 package created.
-misc-1.12.6 package created.
-odi-1.11.15 package created.
-odin-1.17.9 package created.
-prof-1.13.4 package created.
-roff-1.12.6 package created.
-run-1.13.4 package created.
-tex-3.0.0 package created.
-ls: cannot access '*.exe': No such file or directory
-tregrm-1.15 package created.
-vc-1.11.19 package created.
-yacc-1.15 package created.
-New cache created at /home/xju/urnest/odin/odin-1.17.10x/ODINBOOT/xjutv.
-Clearing Tool Packages for /home/xju/urnest/odin/odin-1.17.10x/ODINBOOT/xjutv.
-Installing Tool Package /home/xju/x-bin/lib/Odin/config/1.17.11/config.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/odin/1.17.9/odin.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/vc/1.11.19/vc.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/code/1.11.18/code.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/cc/1.12.6/cc.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/cpp/1.12.6/cpp.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/cxx/1.12.6/cxx.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/odi/1.11.15/odi.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/f77/1.11.10/f77.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/lex/1.11.10/lex.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/yacc/1.15/yacc.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/tregrm/1.15/tregrm.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/dg/1.16.11/dg.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/idl/1.13.3/idl.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/prof/1.13.4/prof.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/lint/1.12.6/lint.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/misc/1.12.6/misc.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/roff/1.12.6/roff.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/tex/3.0.0/tex.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/dbx/1.13.4/dbx.dg.
-Installing Tool Package /home/xju/x-bin/lib/Odin/run/1.13.4/run.dg.
-Using bootstrap derivation graph.
-<> pkg/odin %odin-install !
-<>    %rbs-exe > $ODINPKG/rbs.exe
-sh
-scan_for_includes if-symbol.c
-scan_for_includes if-io.c
-scan_for_includes if-system.c
-scan_for_includes if-dir.c
-scan_for_includes if-file.c
-scan_for_includes if-err.c
-scan_for_includes rbs.c
-scan_for_includes if-sysdep.c
-scan_for_includes Sym.h
-scan_for_includes FileName.h
-scan_for_includes SKind_.h
-scan_for_includes Str.h
-scan_for_includes GMC.h
-scan_for_includes Build.h
-scan_for_includes sys_param.h
-scan_for_includes Macro.h
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/odin -g if-file.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/odin -g rbs.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/odin -g if-io.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/odin -g if-sysdep.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/odin -g if-dir.c
-gcc -c -DNO_IPC -I/home/xju/urnest/odin/odin-1.17.10x/pkg/odin -g if-err.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/odin -g if-symbol.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/odin -g if-system.c
-gcc -g
-** Copied up-to-date value into: /home/xju/x-bin/lib/Odin/odin/1.17.9/rbs.exe
-odin-1.17.9 package created (phase 2).
-Using bootstrap derivation graph.
-if [ "$ODINBOOT" = "" ] ; then echo " tregrm-yacc.c == tregrm.ygi :c +default=(tregrm-yacc.c.dflt) :boot "; fi
-<> pkg/tregrm %odin-install !
-<>    %exe > $ODINPKG/tregrm.exe
-scan_for_includes tg-gen_lex.c
-scan_for_includes tg-att.c
-scan_for_includes tg-main.c
-scan_for_includes tg-gen_nod.c
-scan_for_includes tg-anal.c
-scan_for_includes tg-gen_grm.c
-scan_for_includes tg-dummy.c
-tregrm.exe tregrm.ygi
-** Verified up-to-date: /home/xju/urnest/odin/odin-1.17.10x/pkg/tregrm/inc/NodTyp_.h
-scan_for_includes tg-nod_grm.c
-scan_for_includes tg-yylex.c
-scan_for_includes Lex_.h
-scan_for_includes if-nod.c
-** Verified up-to-date: /home/xju/urnest/odin/odin-1.17.10x/pkg/tregrm/inc/TokTyp_.h
-scan_for_includes GMC.h
-scan_for_includes AttTyp_.h
-scan_for_includes tregrm-yacc.c
-scan_for_includes NodTyp_.h
-scan_for_includes MarkTyp_.h
-scan_for_includes TokTyp_.h
-scan_for_includes Macro.h
-scan_for_includes Str.h
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/tregrm -g tg-anal.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/tregrm -g tg-main.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/tregrm -g tg-dummy.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/tregrm -g tg-gen_lex.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/tregrm -g tg-att.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/odin -g if-nod.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/tregrm -g tg-gen_nod.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/tregrm -g tg-gen_grm.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/tregrm -g tg-yylex.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/tregrm -g tregrm-yacc.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/tregrm -g tg-nod_grm.c
-gcc -g
-** Copied up-to-date value into: /home/xju/x-bin/lib/Odin/tregrm/1.15/tregrm.exe
-tregrm.exe tregrm.ygi
-tregrm-1.15 package created (phase 2).
-Using bootstrap derivation graph.
-if [ "$ODINBOOT" = "" ] ; then echo " dg-yacc.c == drvgrf.ygi :c "; fi
-<> pkg/dg %odin-install !
-<>    %exe > $ODINPKG/dg.exe
-scan_for_includes dg-envvar.c
-scan_for_includes dg-edg.c
-scan_for_includes dg-build.c
-scan_for_includes dg-analyze.c
-scan_for_includes main.cxx
-scan_for_includes dg-filtyp.c
-scan_for_includes dg-main.c
-scan_for_includes dg-prmtyp.c
-tregrm.exe drvgrf.ygi
-scan_for_includes GMC.h
-scan_for_includes CastEdg.h
-scan_for_includes DPType_.h
-scan_for_includes dg-main.h
-scan_for_includes FilTyp.h
-scan_for_includes FKind_.h
-scan_for_includes EqvEdg.h
-scan_for_includes DrvEdg.h
-scan_for_includes FTClass_.h
-scan_for_includes Macro.h
-scan_for_includes InpSpc.h
-scan_for_includes ISKind_.h
-scan_for_includes InpEdg.h
-scan_for_includes InpKind_.h
-scan_for_includes MemEdg.h
-** Verified up-to-date: /home/xju/urnest/odin/odin-1.17.10x/pkg/dg/inc/NodTyp_.h
-scan_for_includes PrmTyp.h
-g++ -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/dg -g main.cxx
-scan_for_includes TClass_.h
-scan_for_includes tc-map-prm-info.h
-scan_for_includes Str.h
-scan_for_includes Tool.h
-scan_for_includes Entry.h
-scan_for_includes DG_Version.h
-scan_for_includes PrmTypLst.h
-scan_for_includes NodTyp_.h
-scan_for_includes EnvVar.h
-scan_for_includes EnvVarLst.h
-scan_for_includes tagged.h
-scan_for_includes SrcTyp.h
-scan_for_includes dg-main.h
-scan_for_includes dg-tool.c
-scan_for_includes dg-valid.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/dg -g dg-main.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/dg -g dg-edg.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/dg -g dg-prmtyp.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/dg -g dg-envvar.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/dg -g dg-filtyp.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/dg -g dg-analyze.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/dg -g dg-build.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/dg -g dg-tool.c
-scan_for_includes dg-yylex.c
-scan_for_includes IOTyp.h
-scan_for_includes dg-yacc.c
-scan_for_includes if-ft.c
-** Verified up-to-date: /home/xju/urnest/odin/odin-1.17.10x/pkg/dg/inc/TokTyp_.h
-scan_for_includes if-lvl.c
-scan_for_includes tc-map-prm-info.cxx
-scan_for_includes assert.cxx
-scan_for_includes if-drvpth.c
-scan_for_includes TokTyp_.h
-scan_for_includes DrvPth.h
-scan_for_includes Lvl.h
-scan_for_includes PType_.h
-scan_for_includes Pos.h
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/dg -g dg-valid.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/dg -g dg-yacc.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/dg -g if-ft.c
-scan_for_includes tc-map-prm-info.h
-scan_for_includes TClass_.h
-scan_for_includes assert.h
-scan_for_includes PrmTyp.h
-scan_for_includes Tool.h
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/dg -g dg-yylex.c
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/dg -g if-drvpth.c
-scan_for_includes GMC.h
-scan_for_includes DPType_.h
-scan_for_includes CastEdg.h
-scan_for_includes EqvEdg.h
-scan_for_includes DrvEdg.h
-scan_for_includes tagged.h
-scan_for_includes PrmTypLst.h
-scan_for_includes Macro.h
-scan_for_includes FilTyp.h
-gcc -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/dg -g if-lvl.c
-g++ -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/dg -g assert.cxx
-g++ -c -I/home/xju/urnest/odin/odin-1.17.10x/pkg/dg -g tc-map-prm-info.cxx
-g++ -g o/assert.o o/dg-analyze.o o/dg-build.o o/dg-edg.o o/dg-envvar.o o/dg-filtyp.o o/dg-main.o o/dg-prmtyp.o o/dg-tool.o o/dg-valid.o o/dg-yacc.o o/dg-yylex.o o/if-drvpth.o o/if-err.o o/if-file.o o/if-ft.o o/if-io.o o/if-lvl.o o/if-nod.o o/if-symbol.o o/main.o o/tc-map-prm-info.o
-** Copied up-to-date value into: /home/xju/x-bin/lib/Odin/dg/1.16.11/dg.exe
-dg-1.16.11 package created (phase 2).
-xju@xjutv:~/urnest/odin/odin-1.17.10x$ find ~/x-bin
-/home/xju/x-bin
-/home/xju/x-bin/lib
-/home/xju/x-bin/lib/Odin
-/home/xju/x-bin/lib/Odin/tex
-/home/xju/x-bin/lib/Odin/tex/3.0.0
-/home/xju/x-bin/lib/Odin/tex/3.0.0/texscan.sh
-/home/xju/x-bin/lib/Odin/tex/3.0.0/texauxin.sh
-/home/xju/x-bin/lib/Odin/tex/3.0.0/bibtex.sh
-/home/xju/x-bin/lib/Odin/tex/3.0.0/tex.sh
-/home/xju/x-bin/lib/Odin/tex/3.0.0/version
-/home/xju/x-bin/lib/Odin/tex/3.0.0/fmtcmd.sh
-/home/xju/x-bin/lib/Odin/tex/3.0.0/tex_view.sh
-/home/xju/x-bin/lib/Odin/tex/3.0.0/texsp.sh
-/home/xju/x-bin/lib/Odin/tex/3.0.0/texscan.c
-/home/xju/x-bin/lib/Odin/tex/3.0.0/tex.dg
-/home/xju/x-bin/lib/Odin/tex/3.0.0/oneTex.sh
-/home/xju/x-bin/lib/Odin/tex/3.0.0/dvips.sh
-/home/xju/x-bin/lib/Odin/tex/3.0.0/root.sh
-/home/xju/x-bin/lib/Odin/tex/PKGVER.4
-/home/xju/x-bin/lib/Odin/tex/PKGVER.1
-/home/xju/x-bin/lib/Odin/tex/PKGVER.5
-/home/xju/x-bin/lib/Odin/tex/PKGVER.3
-/home/xju/x-bin/lib/Odin/tex/PKGVER.2
-/home/xju/x-bin/lib/Odin/tex/PKGVER.6
-/home/xju/x-bin/lib/Odin/tex/PKGVER
-/home/xju/x-bin/lib/Odin/cxx
-/home/xju/x-bin/lib/Odin/cxx/PKGVER.4
-/home/xju/x-bin/lib/Odin/cxx/PKGVER.1
-/home/xju/x-bin/lib/Odin/cxx/PKGVER.5
-/home/xju/x-bin/lib/Odin/cxx/PKGVER.3
-/home/xju/x-bin/lib/Odin/cxx/PKGVER.2
-/home/xju/x-bin/lib/Odin/cxx/PKGVER.6
-/home/xju/x-bin/lib/Odin/cxx/1.12.6
-/home/xju/x-bin/lib/Odin/cxx/1.12.6/abort_msgs
-/home/xju/x-bin/lib/Odin/cxx/1.12.6/CC.sh
-/home/xju/x-bin/lib/Odin/cxx/1.12.6/version
-/home/xju/x-bin/lib/Odin/cxx/1.12.6/ptr_of
-/home/xju/x-bin/lib/Odin/cxx/1.12.6/cxx.dg
-/home/xju/x-bin/lib/Odin/cxx/1.12.6/ld.sh
-/home/xju/x-bin/lib/Odin/cxx/1.12.6/cxx_inc.sh
-/home/xju/x-bin/lib/Odin/cxx/PKGVER
-/home/xju/x-bin/lib/Odin/config
-/home/xju/x-bin/lib/Odin/config/PKGVER.4
-/home/xju/x-bin/lib/Odin/config/PKGVER.1
-/home/xju/x-bin/lib/Odin/config/PKGVER.5
-/home/xju/x-bin/lib/Odin/config/1.17.11
-/home/xju/x-bin/lib/Odin/config/1.17.11/config.dg~
-/home/xju/x-bin/lib/Odin/config/1.17.11/boot.sh
-/home/xju/x-bin/lib/Odin/config/1.17.11/version
-/home/xju/x-bin/lib/Odin/config/1.17.11/boot.sh~
-/home/xju/x-bin/lib/Odin/config/1.17.11/config.dg
-/home/xju/x-bin/lib/Odin/config/PKGVER.3
-/home/xju/x-bin/lib/Odin/config/PKGVER.2
-/home/xju/x-bin/lib/Odin/config/PKGVER.6
-/home/xju/x-bin/lib/Odin/config/PKGVER
-/home/xju/x-bin/lib/Odin/cpp
-/home/xju/x-bin/lib/Odin/cpp/PKGVER.4
-/home/xju/x-bin/lib/Odin/cpp/PKGVER.1
-/home/xju/x-bin/lib/Odin/cpp/PKGVER.5
-/home/xju/x-bin/lib/Odin/cpp/PKGVER.3
-/home/xju/x-bin/lib/Odin/cpp/PKGVER.2
-/home/xju/x-bin/lib/Odin/cpp/PKGVER.6
-/home/xju/x-bin/lib/Odin/cpp/1.12.6
-/home/xju/x-bin/lib/Odin/cpp/1.12.6/cpp.sh
-/home/xju/x-bin/lib/Odin/cpp/1.12.6/cpp.dg
-/home/xju/x-bin/lib/Odin/cpp/PKGVER
-/home/xju/x-bin/lib/Odin/dg
-/home/xju/x-bin/lib/Odin/dg/PKGVER.4
-/home/xju/x-bin/lib/Odin/dg/PKGVER.1
-/home/xju/x-bin/lib/Odin/dg/PKGVER.5
-/home/xju/x-bin/lib/Odin/dg/1.16.11
-/home/xju/x-bin/lib/Odin/dg/1.16.11/dg_out.sh
-/home/xju/x-bin/lib/Odin/dg/1.16.11/dg.dg
-/home/xju/x-bin/lib/Odin/dg/1.16.11/dg.exe
-/home/xju/x-bin/lib/Odin/dg/PKGVER.3
-/home/xju/x-bin/lib/Odin/dg/PKGVER.2
-/home/xju/x-bin/lib/Odin/dg/PKGVER.6
-/home/xju/x-bin/lib/Odin/dg/PKGVER
-/home/xju/x-bin/lib/Odin/code
-/home/xju/x-bin/lib/Odin/code/PKGVER.4
-/home/xju/x-bin/lib/Odin/code/PKGVER.1
-/home/xju/x-bin/lib/Odin/code/1.11.18
-/home/xju/x-bin/lib/Odin/code/1.11.18/version
-/home/xju/x-bin/lib/Odin/code/1.11.18/libraries.sh
-/home/xju/x-bin/lib/Odin/code/1.11.18/code.dg
-/home/xju/x-bin/lib/Odin/code/1.11.18/o_of.sh
-/home/xju/x-bin/lib/Odin/code/1.11.18/ar.sh
-/home/xju/x-bin/lib/Odin/code/PKGVER.5
-/home/xju/x-bin/lib/Odin/code/PKGVER.3
-/home/xju/x-bin/lib/Odin/code/PKGVER.2
-/home/xju/x-bin/lib/Odin/code/PKGVER.6
-/home/xju/x-bin/lib/Odin/code/PKGVER
-/home/xju/x-bin/lib/Odin/LIBVER
-/home/xju/x-bin/lib/Odin/dbx
-/home/xju/x-bin/lib/Odin/dbx/PKGVER.4
-/home/xju/x-bin/lib/Odin/dbx/PKGVER.1
-/home/xju/x-bin/lib/Odin/dbx/PKGVER.5
-/home/xju/x-bin/lib/Odin/dbx/1.13.4
-/home/xju/x-bin/lib/Odin/dbx/1.13.4/version
-/home/xju/x-bin/lib/Odin/dbx/1.13.4/dbx.dg
-/home/xju/x-bin/lib/Odin/dbx/1.13.4/dbx.sh
-/home/xju/x-bin/lib/Odin/dbx/PKGVER.3
-/home/xju/x-bin/lib/Odin/dbx/PKGVER.2
-/home/xju/x-bin/lib/Odin/dbx/PKGVER.6
-/home/xju/x-bin/lib/Odin/dbx/PKGVER
-/home/xju/x-bin/lib/Odin/idl
-/home/xju/x-bin/lib/Odin/idl/PKGVER.4
-/home/xju/x-bin/lib/Odin/idl/PKGVER.1
-/home/xju/x-bin/lib/Odin/idl/1.13.3
-/home/xju/x-bin/lib/Odin/idl/1.13.3/idl_inc.sh
-/home/xju/x-bin/lib/Odin/idl/1.13.3/version
-/home/xju/x-bin/lib/Odin/idl/1.13.3/idl_tgts.sh
-/home/xju/x-bin/lib/Odin/idl/1.13.3/idl.dg
-/home/xju/x-bin/lib/Odin/idl/1.13.3/idl.sh
-/home/xju/x-bin/lib/Odin/idl/PKGVER.5
-/home/xju/x-bin/lib/Odin/idl/PKGVER.3
-/home/xju/x-bin/lib/Odin/idl/PKGVER.2
-/home/xju/x-bin/lib/Odin/idl/PKGVER.6
-/home/xju/x-bin/lib/Odin/idl/PKGVER
-/home/xju/x-bin/lib/Odin/vc
-/home/xju/x-bin/lib/Odin/vc/PKGVER.4
-/home/xju/x-bin/lib/Odin/vc/PKGVER.1
-/home/xju/x-bin/lib/Odin/vc/PKGVER.5
-/home/xju/x-bin/lib/Odin/vc/PKGVER.3
-/home/xju/x-bin/lib/Odin/vc/PKGVER.2
-/home/xju/x-bin/lib/Odin/vc/PKGVER.6
-/home/xju/x-bin/lib/Odin/vc/1.11.19
-/home/xju/x-bin/lib/Odin/vc/1.11.19/vw.of.sh
-/home/xju/x-bin/lib/Odin/vc/1.11.19/rcs_co.sh
-/home/xju/x-bin/lib/Odin/vc/1.11.19/rcs.log.sh
-/home/xju/x-bin/lib/Odin/vc/1.11.19/version
-/home/xju/x-bin/lib/Odin/vc/1.11.19/sccs_co.sh
-/home/xju/x-bin/lib/Odin/vc/1.11.19/vc.dg
-/home/xju/x-bin/lib/Odin/vc/1.11.19/vw.sh
-/home/xju/x-bin/lib/Odin/vc/1.11.19/merge.sh
-/home/xju/x-bin/lib/Odin/vc/1.11.19/sccs.log.sh
-/home/xju/x-bin/lib/Odin/vc/PKGVER
-/home/xju/x-bin/lib/Odin/prof
-/home/xju/x-bin/lib/Odin/prof/PKGVER.4
-/home/xju/x-bin/lib/Odin/prof/PKGVER.1
-/home/xju/x-bin/lib/Odin/prof/PKGVER.5
-/home/xju/x-bin/lib/Odin/prof/1.13.4
-/home/xju/x-bin/lib/Odin/prof/1.13.4/prof.dg
-/home/xju/x-bin/lib/Odin/prof/1.13.4/version
-/home/xju/x-bin/lib/Odin/prof/1.13.4/profile.sh
-/home/xju/x-bin/lib/Odin/prof/PKGVER.3
-/home/xju/x-bin/lib/Odin/prof/PKGVER.2
-/home/xju/x-bin/lib/Odin/prof/PKGVER.6
-/home/xju/x-bin/lib/Odin/prof/PKGVER
-/home/xju/x-bin/lib/Odin/f77
-/home/xju/x-bin/lib/Odin/f77/PKGVER.4
-/home/xju/x-bin/lib/Odin/f77/PKGVER.1
-/home/xju/x-bin/lib/Odin/f77/PKGVER.5
-/home/xju/x-bin/lib/Odin/f77/PKGVER.3
-/home/xju/x-bin/lib/Odin/f77/PKGVER.2
-/home/xju/x-bin/lib/Odin/f77/PKGVER.6
-/home/xju/x-bin/lib/Odin/f77/1.11.10
-/home/xju/x-bin/lib/Odin/f77/1.11.10/version
-/home/xju/x-bin/lib/Odin/f77/1.11.10/f77.dg
-/home/xju/x-bin/lib/Odin/f77/1.11.10/f_obj.sh
-/home/xju/x-bin/lib/Odin/f77/PKGVER
-/home/xju/x-bin/lib/Odin/roff
-/home/xju/x-bin/lib/Odin/roff/PKGVER.4
-/home/xju/x-bin/lib/Odin/roff/PKGVER.1
-/home/xju/x-bin/lib/Odin/roff/PKGVER.5
-/home/xju/x-bin/lib/Odin/roff/PKGVER.3
-/home/xju/x-bin/lib/Odin/roff/PKGVER.2
-/home/xju/x-bin/lib/Odin/roff/PKGVER.6
-/home/xju/x-bin/lib/Odin/roff/1.12.6
-/home/xju/x-bin/lib/Odin/roff/1.12.6/nroff.sh
-/home/xju/x-bin/lib/Odin/roff/1.12.6/so_inc.sh
-/home/xju/x-bin/lib/Odin/roff/1.12.6/version
-/home/xju/x-bin/lib/Odin/roff/1.12.6/tbl.sh
-/home/xju/x-bin/lib/Odin/roff/1.12.6/roff.dg
-/home/xju/x-bin/lib/Odin/roff/1.12.6/eqn.sh
-/home/xju/x-bin/lib/Odin/roff/PKGVER
-/home/xju/x-bin/lib/Odin/lint
-/home/xju/x-bin/lib/Odin/lint/PKGVER.4
-/home/xju/x-bin/lib/Odin/lint/PKGVER.1
-/home/xju/x-bin/lib/Odin/lint/PKGVER.5
-/home/xju/x-bin/lib/Odin/lint/PKGVER.3
-/home/xju/x-bin/lib/Odin/lint/PKGVER.2
-/home/xju/x-bin/lib/Odin/lint/PKGVER.6
-/home/xju/x-bin/lib/Odin/lint/1.12.6
-/home/xju/x-bin/lib/Odin/lint/1.12.6/version
-/home/xju/x-bin/lib/Odin/lint/1.12.6/lint.sh
-/home/xju/x-bin/lib/Odin/lint/1.12.6/lint.dg
-/home/xju/x-bin/lib/Odin/lint/1.12.6/lint1.sh
-/home/xju/x-bin/lib/Odin/lint/PKGVER
-/home/xju/x-bin/lib/Odin/run
-/home/xju/x-bin/lib/Odin/run/PKGVER.4
-/home/xju/x-bin/lib/Odin/run/PKGVER.1
-/home/xju/x-bin/lib/Odin/run/PKGVER.5
-/home/xju/x-bin/lib/Odin/run/1.13.4
-/home/xju/x-bin/lib/Odin/run/1.13.4/version
-/home/xju/x-bin/lib/Odin/run/1.13.4/run.dg
-/home/xju/x-bin/lib/Odin/run/1.13.4/run.sh
-/home/xju/x-bin/lib/Odin/run/1.13.4/pipe.run.sh
-/home/xju/x-bin/lib/Odin/run/PKGVER.3
-/home/xju/x-bin/lib/Odin/run/PKGVER.2
-/home/xju/x-bin/lib/Odin/run/PKGVER.6
-/home/xju/x-bin/lib/Odin/run/PKGVER
-/home/xju/x-bin/lib/Odin/PKGLST
-/home/xju/x-bin/lib/Odin/yacc
-/home/xju/x-bin/lib/Odin/yacc/PKGVER.4
-/home/xju/x-bin/lib/Odin/yacc/PKGVER.1
-/home/xju/x-bin/lib/Odin/yacc/PKGVER.5
-/home/xju/x-bin/lib/Odin/yacc/1.15
-/home/xju/x-bin/lib/Odin/yacc/1.15/yacc.dg
-/home/xju/x-bin/lib/Odin/yacc/1.15/version
-/home/xju/x-bin/lib/Odin/yacc/1.15/yacc.sh
-/home/xju/x-bin/lib/Odin/yacc/PKGVER.3
-/home/xju/x-bin/lib/Odin/yacc/PKGVER.2
-/home/xju/x-bin/lib/Odin/yacc/PKGVER.6
-/home/xju/x-bin/lib/Odin/yacc/PKGVER
-/home/xju/x-bin/lib/Odin/lex
-/home/xju/x-bin/lib/Odin/lex/PKGVER.4
-/home/xju/x-bin/lib/Odin/lex/PKGVER.1
-/home/xju/x-bin/lib/Odin/lex/PKGVER.5
-/home/xju/x-bin/lib/Odin/lex/PKGVER.3
-/home/xju/x-bin/lib/Odin/lex/PKGVER.2
-/home/xju/x-bin/lib/Odin/lex/PKGVER.6
-/home/xju/x-bin/lib/Odin/lex/1.11.10
-/home/xju/x-bin/lib/Odin/lex/1.11.10/lex.dg
-/home/xju/x-bin/lib/Odin/lex/1.11.10/version
-/home/xju/x-bin/lib/Odin/lex/1.11.10/lex.sh
-/home/xju/x-bin/lib/Odin/lex/PKGVER
-/home/xju/x-bin/lib/Odin/cc
-/home/xju/x-bin/lib/Odin/cc/PKGVER.4
-/home/xju/x-bin/lib/Odin/cc/PKGVER.1
-/home/xju/x-bin/lib/Odin/cc/PKGVER.5
-/home/xju/x-bin/lib/Odin/cc/PKGVER.3
-/home/xju/x-bin/lib/Odin/cc/PKGVER.2
-/home/xju/x-bin/lib/Odin/cc/PKGVER.6
-/home/xju/x-bin/lib/Odin/cc/1.12.6
-/home/xju/x-bin/lib/Odin/cc/1.12.6/version
-/home/xju/x-bin/lib/Odin/cc/1.12.6/c.h.sh
-/home/xju/x-bin/lib/Odin/cc/1.12.6/cc.dg
-/home/xju/x-bin/lib/Odin/cc/1.12.6/c_inc.sh
-/home/xju/x-bin/lib/Odin/cc/1.12.6/header_c.sed
-/home/xju/x-bin/lib/Odin/cc/1.12.6/c_inc.c
-/home/xju/x-bin/lib/Odin/cc/1.12.6/cc.sh
-/home/xju/x-bin/lib/Odin/cc/1.12.6/ld.sh
-/home/xju/x-bin/lib/Odin/cc/1.12.6/fmt.c.sh
-/home/xju/x-bin/lib/Odin/cc/PKGVER
-/home/xju/x-bin/lib/Odin/odi
-/home/xju/x-bin/lib/Odin/odi/PKGVER.4
-/home/xju/x-bin/lib/Odin/odi/PKGVER.1
-/home/xju/x-bin/lib/Odin/odi/PKGVER.5
-/home/xju/x-bin/lib/Odin/odi/PKGVER.3
-/home/xju/x-bin/lib/Odin/odi/PKGVER.2
-/home/xju/x-bin/lib/Odin/odi/1.11.15
-/home/xju/x-bin/lib/Odin/odi/1.11.15/app_schema.sh
-/home/xju/x-bin/lib/Odin/odi/1.11.15/version
-/home/xju/x-bin/lib/Odin/odi/1.11.15/com_schema.sh
-/home/xju/x-bin/lib/Odin/odi/1.11.15/odi.dg
-/home/xju/x-bin/lib/Odin/odi/PKGVER.6
-/home/xju/x-bin/lib/Odin/odi/PKGVER
-/home/xju/x-bin/lib/Odin/misc
-/home/xju/x-bin/lib/Odin/misc/PKGVER.4
-/home/xju/x-bin/lib/Odin/misc/PKGVER.1
-/home/xju/x-bin/lib/Odin/misc/PKGVER.5
-/home/xju/x-bin/lib/Odin/misc/PKGVER.3
-/home/xju/x-bin/lib/Odin/misc/PKGVER.2
-/home/xju/x-bin/lib/Odin/misc/PKGVER.6
-/home/xju/x-bin/lib/Odin/misc/1.12.6
-/home/xju/x-bin/lib/Odin/misc/1.12.6/boot.sh
-/home/xju/x-bin/lib/Odin/misc/1.12.6/version
-/home/xju/x-bin/lib/Odin/misc/1.12.6/redo.sh
-/home/xju/x-bin/lib/Odin/misc/1.12.6/diff.sh
-/home/xju/x-bin/lib/Odin/misc/1.12.6/misc.dg
-/home/xju/x-bin/lib/Odin/misc/1.12.6/rcp.sh
-/home/xju/x-bin/lib/Odin/misc/1.12.6/redo_errs.sh
-/home/xju/x-bin/lib/Odin/misc/PKGVER
-/home/xju/x-bin/lib/Odin/tregrm
-/home/xju/x-bin/lib/Odin/tregrm/PKGVER.4
-/home/xju/x-bin/lib/Odin/tregrm/PKGVER.1
-/home/xju/x-bin/lib/Odin/tregrm/PKGVER.5
-/home/xju/x-bin/lib/Odin/tregrm/1.15
-/home/xju/x-bin/lib/Odin/tregrm/1.15/tregrm.dg
-/home/xju/x-bin/lib/Odin/tregrm/1.15/ygt.sh
-/home/xju/x-bin/lib/Odin/tregrm/1.15/tregrm.exe
-/home/xju/x-bin/lib/Odin/tregrm/PKGVER.3
-/home/xju/x-bin/lib/Odin/tregrm/PKGVER.2
-/home/xju/x-bin/lib/Odin/tregrm/PKGVER.6
-/home/xju/x-bin/lib/Odin/tregrm/PKGVER
-/home/xju/x-bin/lib/Odin/odin
-/home/xju/x-bin/lib/Odin/odin/1.17.9
-/home/xju/x-bin/lib/Odin/odin/1.17.9/rbs-local.sh
-/home/xju/x-bin/lib/Odin/odin/1.17.9/odin.dg
-/home/xju/x-bin/lib/Odin/odin/1.17.9/help.sh
-/home/xju/x-bin/lib/Odin/odin/1.17.9/rbs.exe
-/home/xju/x-bin/lib/Odin/odin/1.17.9/odin.exe
-/home/xju/x-bin/lib/Odin/odin/1.17.9/copy.sh
-/home/xju/x-bin/lib/Odin/odin/1.17.9/rbs.sh
-/home/xju/x-bin/lib/Odin/odin/PKGVER.4
-/home/xju/x-bin/lib/Odin/odin/PKGVER.1
-/home/xju/x-bin/lib/Odin/odin/PKGVER.5
-/home/xju/x-bin/lib/Odin/odin/PKGVER.3
-/home/xju/x-bin/lib/Odin/odin/PKGVER.2
-/home/xju/x-bin/lib/Odin/odin/PKGVER.6
-/home/xju/x-bin/lib/Odin/odin/PKGVER
-/home/xju/x-bin/bin
-/home/xju/x-bin/bin/odin
-/home/xju/x-bin/man
-/home/xju/x-bin/man/man1
-/home/xju/x-bin/man/man1/odin.1
+- refinement:
+** 1632203016.599 {get not-up-to-date /home/xju/urnest/odin/odin-1.17.10x/pkg/odin/boot/Odinfile [OK/Unknown]
+** 1632203046.535 { Get reqs of /home/xju/urnest/odin/odin-1.17.10x/pkg/odin/boot :odin*act_tgt.list [Unknown/OK]
+... we can skip act_tgt.list as req of Odinfile because Odinfile cannot
+generate itself.
+

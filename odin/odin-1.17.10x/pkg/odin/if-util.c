@@ -149,6 +149,36 @@ Local_ID_LongOdinExpr(
    Ret_FilHdr(FilHdr);
    }/*Local_ID_LongOdinExpr*/
 
+void SPrint_Status(tp_Str To, tp_Str Leader, tp_Status Status, tp_Str Trailer){
+  switch(Status){
+  case STAT_Unknown:
+    sprintf(To, "%sUnknown%s", Leader, Trailer); break;
+  case STAT_Pending:
+    sprintf(To, "%sPending%s", Leader, Trailer); break;
+  case STAT_Ready:
+    sprintf(To, "%sReady%s", Leader, Trailer); break;
+  case STAT_Busy:
+    sprintf(To, "%sBusy%s", Leader, Trailer); break;
+  case STAT_SysAbort:
+    sprintf(To, "%sSysAbort%s", Leader, Trailer); break;
+  case STAT_NoFile:
+    sprintf(To, "%sNoFile%s", Leader, Trailer); break;
+  case STAT_Circular:
+    sprintf(To, "%sCircular%s", Leader, Trailer); break;
+  case STAT_ElmCircular:
+    sprintf(To, "%sElmCircular%s", Leader, Trailer); break;
+  case STAT_Error:
+    sprintf(To, "%sError%s", Leader, Trailer); break;
+  case STAT_TgtValError:
+    sprintf(To, "%sTgtValError%s", Leader, Trailer); break;
+  case STAT_Warning:
+    sprintf(To, "%sWarning%s", Leader, Trailer); break;
+  case STAT_OK:
+    sprintf(To, "%sOK%s", Leader, Trailer); break;
+  default:
+    sprintf(To, "%s?%d?%s", Leader, Status, Trailer);
+  }
+}
 
 void
 Do_Log(
@@ -168,6 +198,11 @@ Do_Log(
    gettimeofday(&now, 0);
    (void)sprintf(StrBuf, "** %d.%03d %s ", now.tv_sec, now.tv_usec/1000, Message);
    SPrint_FilHdr(Tail(StrBuf), FilHdr);
+   SPrint_Status(Tail(StrBuf), " [",FilHdr_Status(FilHdr), "");
+   SPrint_VerifyDate(Tail(StrBuf), "@", FilHdr, "");
+   SPrint_Status(Tail(StrBuf), "/",FilHdr_TgtValStatus(FilHdr), "");
+   SPrint_TgtValVerifyDate(Tail(StrBuf), "@", FilHdr, "]");
+   
    LogMessage(StrBuf);
    }/*Do_Log*/
 

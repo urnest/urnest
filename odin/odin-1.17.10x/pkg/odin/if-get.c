@@ -50,10 +50,7 @@ Is_CopyDone(
 
 
 static void
-GetFile(
-   GMC_ARG(tp_FilHdr, FilHdr)
-   )
-   GMC_DCL(tp_FilHdr, FilHdr)
+GetNotUpToDateFile(tp_FilHdr FilHdr)
 {
    tp_FilHdr TgtValFilHdr, InpFilHdr;
    tp_Status Status, MinStatus, InpStatus;
@@ -63,15 +60,14 @@ GetFile(
    tp_FilInp FilInp;
    tp_InpKind InpKind;
 
-   if (IsUpToDate(FilHdr)) {
-      return; }/*if*/;
-
    Status = FilHdr_Status(FilHdr);
    if (Status == STAT_Ready || Status == STAT_Busy) {
       FORBIDDEN(FilHdr_DepStatus(FilHdr) <= STAT_Error && !IsSource(FilHdr));
       Set_Status(FilHdr, Status);
       Set_PndFlag(FilHdr, FALSE);
       if (!IsTgtValUpToDate(FilHdr)) {
+        // REVISIT: why do this conditionally? It means we won't update
+        // its verify date even though we just verified it at the currnet date?
 	 Set_TgtValStatus(FilHdr, FilHdr_TgtValStatus(FilHdr));
 	 Set_TgtValPndFlag(FilHdr, FALSE); }/*if*/;
       Push_ToDo(Copy_FilHdr(FilHdr));
@@ -164,7 +160,7 @@ GetFile(
    FORBIDDEN(MinStatus < STAT_Unknown);
 
    if (MinStatus == STAT_Unknown) {
-      Do_Log("Pending circular computation for", FilHdr, LOGLEVEL_Circular);
+      Do_Log("Pending circular computation for min-status Uknown", FilHdr, LOGLEVEL_Circular);
       Set_ListStatus(FilHdr, STAT_Unknown);
       goto done; }/*if*/;
    if (IsUpToDate(FilHdr)) {
@@ -176,7 +172,7 @@ GetFile(
    Tool = FilHdr_Tool(FilHdr);
    MinStatus = Get_ToolStatus(Tool, MinStatus);
    if (MinStatus < STAT_Error) {
-      Do_Log((MinStatus == STAT_Pending) ? "Pending" : "Aborting",
+      Do_Log((MinStatus == STAT_Pending) ? "got min-status Pending" : "got min-status Aborting",
 	     FilHdr, LOGLEVEL_Process);
       Set_ListStatus(FilHdr, MinStatus);
       goto done; }/*if*/;
@@ -209,6 +205,22 @@ done:;
    Set_ListPndFlag(FilHdr, FALSE);
    Clr_Flag(FilHdr, FLAG_Get);
    }/*GetFile*/
+
+
+  
+static void
+GetFile(
+   GMC_ARG(tp_FilHdr, FilHdr)
+   )
+   GMC_DCL(tp_FilHdr, FilHdr)
+{
+   if (IsUpToDate(FilHdr)) {
+      return; }/*if*/;
+
+   Do_Log("{ GetFile: get not-up-to-date", FilHdr, LOGLEVEL_Process);
+   GetNotUpToDateFile(FilHdr);
+   Do_Log("} GetFile: get not-up-to-date", FilHdr, LOGLEVEL_Process);
+}
 
 
 static void
@@ -275,6 +287,20 @@ GetReqs(
    tp_Status Status, MinStatus, MinNameStatus;
    tp_Date ModDate, MaxModDate, MaxNameModDate;
 
+   if (Client_LogLevel(CurrentClient) >= LOGLEVEL_Process) {
+     if (NameFlag && DataFlag){
+       Do_Log("{ Get name and data reqs of", FilHdr, LOGLEVEL_Process);
+     }
+     else if (NameFlag){
+       Do_Log("{ Get name reqs of", FilHdr, LOGLEVEL_Process);
+     }
+     else if (DataFlag){
+       Do_Log("{ Get data reqs of", FilHdr, LOGLEVEL_Process);
+     }
+     else {
+       Do_Log("{ Get reqs of", FilHdr, LOGLEVEL_Process);
+     }
+   }
    DepthSet = FALSE;
    if (FilHdr_AnyOKDepth(FilHdr) == 0) {
       Set_AnyOKDepth(FilHdr, AnyOKDepth);
@@ -427,6 +453,9 @@ GetReqs(
 done:;
    if (DepthSet) {
       Set_AnyOKDepth(FilHdr, 0); }/*if*/;
+
+   Do_Log("} Get reqs of", FilHdr, LOGLEVEL_Process);
+
    }/*GetReqs*/
 
 
@@ -440,12 +469,15 @@ GetAllReqs(
 {
    boolean DataFlag, NameFlag;
 
+   Do_Log("{ Get all reqs of", FilHdr, LOGLEVEL_Process);
+   
    DataFlag = NeedsElmData(FilHdr, InpKind);
    NameFlag = (DataFlag || NeedsElmNameData(FilHdr, InpKind));
 
    while (!IsAllUpToDate(FilHdr, InpKind)) {
       GetReqs(FilHdr, NameFlag, DataFlag, (int *)0);
       Do_ToBroadcast(); }/*while*/;
+
+   Do_Log("} Get all reqs of", FilHdr, LOGLEVEL_Process);
+
    }/*GetAllReqs*/
-
-

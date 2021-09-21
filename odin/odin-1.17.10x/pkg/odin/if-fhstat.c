@@ -746,6 +746,7 @@ Set_PndFlag(
    GMC_DCL(boolean, PndFlag)
 {
    FORBIDDEN(FilHdr == ERROR);
+   Do_Log(PndFlag?"set pending flag of":"clear pending flag of", FilHdr, LOGLEVEL_Process);
    FilHdr->PndFlag = PndFlag;
    }/*Set_PndFlag*/
 
@@ -771,6 +772,7 @@ Set_ElmNamePndFlag(
 {
    FORBIDDEN(FilHdr == ERROR);
    if (ElmNamePndFlag) Set_ElmPndFlag(FilHdr, TRUE);
+   Do_Log(ElmNamePndFlag?"set elem name pending flag of":"clear elem name pending flag of", FilHdr, LOGLEVEL_Process);
    FilHdr->ElmNamePndFlag = ElmNamePndFlag;
    }/*Set_ElmNamePndFlag*/
 
@@ -796,6 +798,7 @@ Set_ElmPndFlag(
 {
    FORBIDDEN(FilHdr == ERROR);
    FORBIDDEN(IsSource(FilHdr));
+   Do_Log(ElmPndFlag?"set elem pending flag of":"clear elem pending flag of", FilHdr, LOGLEVEL_Process);
    FilHdr->ElmPndFlag = ElmPndFlag;
    }/*Set_ElmPndFlag*/
 
@@ -823,6 +826,7 @@ Set_TgtValPndFlag(
 {
    FORBIDDEN(FilHdr == ERROR);
    FORBIDDEN(!IsSource(FilHdr));
+   Do_Log(TgtValPndFlag?"set tgt val pending flag of":"clear tgt val pending flag of", FilHdr, LOGLEVEL_Process);
    FilHdr->ElmPndFlag = TgtValPndFlag;
    }/*Set_TgtValPndFlag*/
 

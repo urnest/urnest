@@ -1,11 +1,8 @@
 #include "inc/GMC.h"
-#include "inc/Str.h"
-#include "inc/FileName.h"
 
 extern boolean IPC_Do_Return;
 extern int *IPC_IArg1, *IPC_IArg2, *IPC_IArg3;
-extern tp_FileName IPC_SArg1;
-extern tp_Str IPC_SArg2, IPC_SArg3;
+extern tp_Str IPC_SArg1, IPC_SArg2, IPC_SArg3;
 
 #ifndef CLIENT_ONLY
 void
@@ -384,8 +381,6 @@ Get_Alias(
    boolean IPC_Abort;
 
    boolean IPC_Cmd_Abort;
-   tps_Str buf;
-   size_t sz;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -400,13 +395,8 @@ Get_Alias(
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
    IPC_Do_Return = FALSE;
-   IPC_Read_Str(&IPC_Abort, buf);
+   IPC_Read_Str(&IPC_Abort, OutFileName);
    if (IPC_Abort) IPC_Do_Abort();
-   sz = snprintf(OutFileName, MAX_FileName, "%s", buf);
-   if (sz >= MAX_FileName) {
-      (void)fprintf(stderr, "File name too long (MAX_FileName=%d): %s\n",
-                  MAX_FileName, buf);
-      exit(1); }/*if*/;
 #ifndef CLIENT_ONLY
    };
 #endif
@@ -514,8 +504,6 @@ Get_OdinFile(
    boolean IPC_Abort;
 
    boolean IPC_Cmd_Abort;
-   tps_Str buf;
-   size_t sz;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -547,13 +535,8 @@ Get_OdinFile(
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
    IPC_Do_Return = FALSE;
-   IPC_Read_Str(&IPC_Abort, buf);
+   IPC_Read_Str(&IPC_Abort, FileName);
    if (IPC_Abort) IPC_Do_Abort();
-   sz = snprintf(FileName, MAX_FileName, "%s", buf);
-   if (sz >= MAX_FileName) {
-      (void)fprintf(stderr, "File name too long (MAX_FileName=%d): %s\n",
-                  MAX_FileName, buf);
-      exit(1); }/*if*/;
    IPC_Read_Int(&IPC_Abort, StatusPtr);
    if (IPC_Abort) IPC_Do_Abort();
    IPC_Read_Int(&IPC_Abort, ExecFlagPtr);
@@ -606,8 +589,6 @@ Push_Context(
    boolean IPC_Abort;
 
    boolean IPC_Cmd_Abort;
-   tps_Str buf;
-   size_t sz;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -622,13 +603,8 @@ Push_Context(
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
    IPC_Do_Return = FALSE;
-   IPC_Read_Str(&IPC_Abort, buf);
+   IPC_Read_Str(&IPC_Abort, DirName);
    if (IPC_Abort) IPC_Do_Abort();
-   sz = snprintf(DirName, MAX_FileName, "%s", buf);
-   if (sz >= MAX_FileName) {
-      (void)fprintf(stderr, "File name too long (MAX_FileName=%d): %s\n",
-                  MAX_FileName, buf);
-      exit(1); }/*if*/;
 #ifndef CLIENT_ONLY
    };
 #endif
@@ -645,8 +621,6 @@ Pop_Context(
    boolean IPC_Abort;
 
    boolean IPC_Cmd_Abort;
-   tps_Str buf;
-   size_t sz;
 
 #ifndef CLIENT_ONLY
    if (IsServer && Is_LocalClient(CurrentClient)) {
@@ -659,13 +633,8 @@ Pop_Context(
    FORBIDDEN(IPC_Cmd_Abort);
    FORBIDDEN(!IPC_Do_Return);
    IPC_Do_Return = FALSE;
-   IPC_Read_Str(&IPC_Abort, buf);
+   IPC_Read_Str(&IPC_Abort, DirName);
    if (IPC_Abort) IPC_Do_Abort();
-   sz = snprintf(DirName, MAX_FileName, "%s", buf);
-   if (sz >= MAX_FileName) {
-      (void)fprintf(stderr, "File name too long (MAX_FileName=%d): %s\n",
-                  MAX_FileName, buf);
-      exit(1); }/*if*/;
 #ifndef CLIENT_ONLY
    };
 #endif

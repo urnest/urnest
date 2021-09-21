@@ -709,7 +709,7 @@ Update_SrcParentDirFilHdr(
    Ret_FilHdr(DirFilHdr);
    Set_Status(FilHdr, Status);
    Clr_Flag(FilHdr, FLAG_SymLink);
-   }/*Update_SrcFilHdr*/
+  }/*Update_SrcParentDirFilHdr*/
 
 
 void
@@ -909,6 +909,14 @@ IsAllUpToDate(
    }/*IsAllUpToDate*/
 
 
+void SPrint_VerifyDate(tp_Str To,
+                       tp_Str Leader,
+                       tp_FilHdr FilHdr,
+                       tp_Str Trailer)
+{
+  sprintf(To, "%s%d%s", Leader, FilHdr->HdrInf.VerifyDate, Trailer);
+}
+
 boolean
 IsSrcUpToDate(
    GMC_ARG(tp_FilHdr, FilHdr)
@@ -979,6 +987,14 @@ IsElmUpToDate(
    return (FilHdr->HdrInf.ElmStatus > STAT_Unknown);
    }/*IsElmUpToDate*/
 
+
+void SPrint_TgtValVerifyDate(tp_Str To,
+                             tp_Str Leader,
+                             tp_FilHdr FilHdr,
+                             tp_Str Trailer)
+{
+  sprintf(To, "%s%d%s", Leader, FilHdr->HdrInf.ElmVerifyDate, Trailer);
+}
 
 boolean
 IsTgtValUpToDate(

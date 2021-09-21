@@ -78,7 +78,7 @@ Push_Pending(
       Ret_FilHdr(FilHdr);
       return; }/*if*/;
    Set_Flag(FilHdr, FLAG_Pending);
-   Do_Log("Queuing delayed processing for", FilHdr, LOGLEVEL_Queue);
+   Do_Log("Pushing pending-flagged to pending: ", FilHdr, LOGLEVEL_Queue);
    /*select*/{
       if (FreePendingS == NIL) {
 	 Pending = (tp_Pending)malloc(sizeof(tps_Pending));
@@ -113,8 +113,8 @@ IsAllPendingUpToDate(GMC_ARG_VOID)
    }/*IsAllPendingUpToDate*/
 
 
-// Add ToDo entries for everything on Pending list
-// - note this is "recursive", GetAllReqs might add to pending
+// Gather reqs for entries for everything on Pending list, putting
+// those reqs on the to-do or pending list.
 static void
 GetAllPending(GMC_ARG_VOID)
 {
@@ -123,8 +123,11 @@ GetAllPending(GMC_ARG_VOID)
 
    for (Pending = FirstPending; Pending != NIL; Pending = Pending->Next) {
      /* Set Push_ToDo insertion point to head of ToDo list */
+     // REVISIT: why do we do that here? This function does not put anything
+     // into ToDo, only int Pending? Should only do this is Clr, which
+     // transfers Pending to ToDo?
       CurrentClient->LastToDo = NIL;
-      Do_Log("Starting delayed processing for", Pending->FilHdr, LOGLEVEL_Queue);
+      Do_Log("{ Gather all reqs of pending ", Pending->FilHdr, LOGLEVEL_Queue);
       GetAllReqs(Pending->FilHdr, Pending->InpKind);
       Status = FilHdr_MinStatus(Pending->FilHdr, Pending->InpKind);
       /*select*/{
@@ -140,7 +143,10 @@ GetAllPending(GMC_ARG_VOID)
 	 }else if (Status != STAT_Unknown && Status <= STAT_TgtValError
 		   && !Is_PendingReadyOrBusy_Status(Status)) {
 	    Broadcast(Pending->FilHdr, STAT_TgtValError);
-	    };}/*select*/; }/*for*/;
+	    };
+         }/*select*/;
+      Do_Log("} Gather all reqs of pending ", Pending->FilHdr, LOGLEVEL_Queue);
+      }/*for*/;
    }/*GetAllPending*/
 
 
@@ -155,6 +161,7 @@ Clr_Pending()
    if (FirstPending == NIL) {
       return result; }/*if*/;
    for (Pending = FirstPending; Pending != NIL; Pending = Pending->Next) {
+      Do_Log("{ Pop from pending: ", Pending->FilHdr, LOGLEVEL_Queue);
       LastPending = Pending;
       FilHdr = Pending->FilHdr;
       /*select*/{
@@ -163,7 +170,9 @@ Clr_Pending()
 	    Broadcast(FilHdr, STAT_Pending);
 	 }else if (Is_TgtValErrStatus(FilHdr)) {
 	    Broadcast(FilHdr, STAT_TgtValError); };}/*select*/;
+      Do_Log("Clearing pnd flag of", FilHdr, LOGLEVEL_Status);
       Clr_Flag(FilHdr, FLAG_Pending);
+      Do_Log("} Pop from pending: ", Pending->FilHdr, LOGLEVEL_Queue);
       Ret_FilHdr(FilHdr); }/*for*/;
    LastPending->Next = FreePendingS;
    FreePendingS = FirstPending;
@@ -471,6 +480,8 @@ Client_NeedsData(
 void
 Push_AllReqs()
 {
+   Do_Log("{ Push all reqs of", CurrentClient->FilHdr, LOGLEVEL_Process);
+  
    CurrentDate += 1;
    PendingDate = CurrentDate;
    while (!(IsAllUpToDate(CurrentClient->FilHdr, IK_Trans)
@@ -479,7 +490,14 @@ Push_AllReqs()
       GetAllPending(); }/*while*/;
    Clr_Pending();
    CurrentClient->LastToDo = CurrentClient->ToDo;
-   }/*Push_AllReqs*/
+
+   if (Client_LogLevel(CurrentClient) >= LOGLEVEL_Process) {
+     tps_Str StrBuf;
+     (void)sprintf(StrBuf, "CurrentDate now %d", CurrentDate);
+     LogMessage(StrBuf);
+   }
+   Do_Log("} Push all reqs of", CurrentClient->FilHdr, LOGLEVEL_Process);
+}
 
 
 tp_FHLst
@@ -501,7 +519,7 @@ Push_ToDo(
 {
    tp_FHLst FHLst;
 
-   Do_Log("Queuing", FilHdr, LOGLEVEL_Queue);
+   Do_Log("Pushing to ToDo ", FilHdr, LOGLEVEL_Queue);
    FHLst = New_FHLst(FilHdr);
    /*select*/{
       if (CurrentClient->LastToDo == NIL) {
@@ -727,23 +745,23 @@ Clr_Status(
 
 
 // Launch jobs off CurrentClient->ToDo from CurrentClient->LastToDo
-// until we've check the entire to-do list or we have CurrentClient->MaxJobs
-// in progress or we're interrupted. Leaves CurrentClinet->LastToDo at
-// position of next job to check.
+// until we're interrupted or we've checked the entire to-do list or
+// we can't launch a job because we have CurrentClient->MaxJobs
+// in progress. Unless we're interrupted, leaves CurrentClinet->LastToDo at
+// a ready-to-launch job or at the end.
 static void
 LaunchSomeToDos()
 {
-   tp_FHLst FHLst;
-   tp_FilHdr FilHdr;
-
    for (;
-	CurrentClient->LastToDo != NIL &&
-          CurrentClient->NumJobs < CurrentClient->MaxJobs;
+	CurrentClient->LastToDo != NIL;
 	CurrentClient->LastToDo = CurrentClient->LastToDo->Next)
    {
-     FilHdr = CurrentClient->LastToDo->FilHdr;
+     tp_FilHdr FilHdr = CurrentClient->LastToDo->FilHdr;
      Do_Log("Processing", FilHdr, LOGLEVEL_Process);
      if (FilHdr_Status(FilHdr) == STAT_Ready) {
+       if (CurrentClient->NumJobs == CurrentClient->MaxJobs){
+         return;
+       }
        Exec(FilHdr);
        if (CurrentClient->Interrupted) {
          return;
@@ -752,6 +770,17 @@ LaunchSomeToDos()
    }
 }
 
+static boolean
+ToDoIsAllDone()
+{
+  for(tp_FHLst X = CurrentClient->LastToDo; X != NIL; X=X->Next){
+    if (!IsAllDone(X->FilHdr, IK_Trans))
+    {
+      return FALSE;
+    }
+  }
+  return TRUE;
+}
 
 boolean
 Is_TgtValErrStatus(
@@ -794,13 +823,42 @@ ServerAction(GMC_ARG_VOID)
 	 End_Get_OdinFile(); }/*if*/;
       return; }/*if*/;
 
-   Push_AllReqs();
-   if (!IsAllDone(CurrentClient->FilHdr, IK_Trans)){
-     LaunchSomeToDos();
+   // If LastToDo is non-NIL there are ready jobs on to-do that
+   // LaunchSomeToDos could not launch last time because max-jobs
+   // were already launched. So make sure we've launched everything
+   // on LastToDo before pushing more reqs.
+   if (CurrentClient->LastToDo == NIL){
+     Push_AllReqs();
    }
-   else {
-     Ret_ToDo();
-     End_Get_OdinFile();
+   LaunchSomeToDos();
+
+   if (CurrentClient->Interrupted){
+      if (CurrentClient->NumJobs == 0) {
+	 Ret_ToDo();
+	 End_Get_OdinFile();
+      }
+      return;
+   }
+   // Not interrupted, so LaunchSomeToDos will go to end of to-do
+   // unless it cannot launch a job as max jobs already launched i.e.:
+   if (CurrentClient->NumJobs < CurrentClient->MaxJobs){
+     FORBIDDEN(CurrentClient->LastToDo != NIL);
+   }
+   // ... and so we cannot be all done if not at end of to-do
+   if (CurrentClient->LastToDo == NIL)
+   {
+     // We could be all done, note that LaunchSomeToDos might have
+     // skipped over pending stuff, so have to check whole to-do.
+     // (You'd think that IsAllDone would be enough, but it's not, because
+     // where an input (or target val) is unkown when setting FilHdr status
+     // the status is set to OK but the unknown input is put onto to-do -
+     // see GetFile STAT_Unknown handling.
+     if (CurrentClient->NumJobs == 0 &&
+         IsAllDone(CurrentClient->FilHdr, IK_Trans) &&
+         ToDoIsAllDone()){
+       Ret_ToDo();
+       End_Get_OdinFile();
+     }
    }
 }/*ServerAction*/
 
