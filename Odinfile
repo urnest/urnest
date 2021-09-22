@@ -57,31 +57,34 @@ omnicxy/cxy%tags
 
 %idl-gen.tar==()+cmd=(%vir-tree-tar.sh) (%idl-gen)+need=(%idl-gen:vir_tree_list):stdout
 
+%tools.tar==()+cmd=(%vir-tree-tar.sh) (%tools-inst-bin.vir_dir)+need=(%tools-inst-bin.vir_dir:vir_tree_list):stdout
+
 %vir-tree-tar.sh == ! <<
 #!/bin/sh
 cd "$1" &&
 tar chf - .
 
-%tools.tar==()+cmd=(%tools-tar.sh) (hcp%tools:leaves:ls) (omnicxy%tools:leaves:ls) (xju/linux%tools:leaves:ls) +need=(hcp%tools:leaves) (omnicxy%tools:leaves) (xju/linux%tools:leaves) :stdout
+%tools-inst-bin.vir_dir == %tools-inst-bin.vir_dir_spec:vir_dir
 
-%tools-tar.sh == ! <<
-#!/bin/sh
-(
-mkdir x &&
-cd x &&
-test -r "$1" &&
-while [ $? = 0 ] && [ -r "$1" ]
-do
-  cat "$1" |
-  while [ $? = 0 ] && read n
-  do
-    b=$(basename "$n") &&
-    ln -s "$n" "$b"
-  done &&
-  shift
-done &&
-tar chf - .
-)
+%tools-inst-bin.vir_dir_spec == <<
+%hcp-split==hcp%hcp-split
+%hcp-parse-file==hcp%hcp-parse-file
+%hcp-what-is-at==hcp%hcp-what-is-at
+%hcp-tags==hcp%hcp-tags
+%hcp-tags-merge==hcp/hcp-tags-merge
+%hcp-scope-at==hcp%hcp-scope-at
+%hcp-map-to-source==hcp%hcp-map-to-source
+%hcp-remove-throw-clauses==hcp%hcp-remove-throw-clauses
+%tag-lookup-service==hcp/tags%tag-lookup-service
+%hcp-import-symbol-at==hcp/tags%hcp-import-symbol-at
+%hcp-find-def==hcp/tags%hcp-find-def
+%hcp-symbol-completions==hcp/tags%hcp-symbol-completions
+%hcp-symbol-at==hcp/tags%hcp-symbol-at
+%cosnaming-client==omnicxy/cosnaming-client
+%monitor-ntp-sync==xju/linux/ntpd/monitor-ntp-sync
+%monitor-disk-space==xju/linux/disk-space/monitor-disk-space
+%monitor-logins==xju/linux/wtmp/monitor-logins
+
 
 %installer.sh == ! <<
 #!/bin/sh

@@ -40,7 +40,7 @@ omnicxy/proto==.%gen
 %gen-opts==<<
 +inc_sp=(../../..)
 +inc_sp=(../../../omnicxy)
-+hcp-split=(../../../hcp/hcp-split)
++hcp-split=(../../../hcp/%hcp-split)
 +hpath='omnicxy/proto'
 +cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext'
 
