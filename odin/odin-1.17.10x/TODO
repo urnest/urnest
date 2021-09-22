@@ -5,29 +5,89 @@
   - when getting (i.e. loading from persistent db) a FilHdr, promote it
     to a C++ class for its type and make update (i.e. what is now
     ServerAction) a recursive, blocking function specific to type, essentially
-      update(Date verifyAt, int maxJobs, awaitingJobs&) {
-        if (verifiedAt_ < verifyAt){
-          // REVISIT
+      // pre: verifiedAt_ < verifyAt
+      // returns true if calc needed
+      bool updateInputs(Date now, &executor) {
+	  awaiting = {}
           for(input : inputs){
-	        update(input, verifyAt, maxJobs, awaitingJobs);
+	    try{
+	       update(input, verifyAt, maxJobs, awaitingJobs);
+	    }
+	    catch(Awaiting& x){
+               awaiting.extend(x);
+	       if (executor.flatOut()){
+	         awaitOneJob(awaiting);
+	       }
 	    }
 	  }
-	  if (maxVintage(inputs) > vintage_){
-	    if (inputsOK){
-	      startCalc(verifyAt, maxJobs, awaitingJobs));
-	    }
-	    else {
-	      setStatus(verifyAt, minStatus(inputs));
+	  if (awaiting.size()){
+	    throw awaiting;
+	  }
+	  return (maxVintage(inputs) > vintage_);
+      }
+      startCalc(&executor, Date now)
+        // throw Awaiting if calc starts async job
+      {
+        if (inputsGood){
+	  myJob=...;
+	  executor.start(myJob, now);
+	}
+	else {
+	  status_ = minStatus(inputs);
+	}
+      }
+      calcDone(job, result) {
+        status = result.status;
+        store(result.value);
+      }
+
+      void update(Node& n, Date now, &executor){
+        if (n.verifiedAt_ < now){
+	  while(true){
+            try{
+	      if (n.updateInputs(now, executor)){
+	        if (executor.flatOut()){
+	          awaitOneJob(executor);
+	        }
+                n.startCalc(executor); // throws Awaiting
+	      }
+	      else{
+	        n.verifiedAt_ = now;
+		return;
+	      }
+            }
+	    catch(Awaiting& awaiting){
+	      if (executor.flatOut()){
+	        executor.awaitOneJob(awaiting);
+	      }
+	      else{
+	        throw;
+	      }
 	    }
 	  }
 	}
-      }
-      calcDone(job, verifyAt, result) {
-        store(result);
-	setStatus(result);
-      }
-      
+     }
+     void jobDone(Node n, result, Date now) {
+	  n.calcDone(result);
+	  n.verifiedAt_ = now;
+     }
 
+     void build(Node& n, &executor) {
+        ++now_;
+        while(n.verifiedAt_ < now_){
+	  try{
+	    update(n, now_, executor);
+	  }
+	  catch(Awaiting& awaiting)
+	  {
+	    executor.awaitOneJobOrCancel(awaiting, xju::io::Input cancel);
+	  }
+	}
+	catch(Cancelled&) {
+	  ...;
+	}
+     }
+     
 - merge xjupkg into pkg
   - verify build and install odin from scratch
   - test eli
