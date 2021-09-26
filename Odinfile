@@ -11,6 +11,7 @@
 xju%all.tree
 omnicxy%all.tree
 hcp%all.tree
+dion%all.tree
 %tags
 example%all.tree
 
@@ -37,6 +38,7 @@ example%all.tree
 %xju==./xju/Odinfile%hcp-gen
 %hcp==./hcp/Odinfile%hcp-gen
 %cxy==./omnicxy/cxy/Odinfile%hcp-gen
+%dion==./dion/Odinfile%hcp-gen
 
 %idl-gen==Odinfile%idl-gen.virdir_spec:vir_dir
 
@@ -52,6 +54,7 @@ example%all.tree
 xju%tags
 hcp%tags
 omnicxy/cxy%tags
+dion%tags
 
 %hcp-gen.tar==()+cmd=(%vir-tree-tar.sh) (%hcp-gen)+need=(%hcp-gen:vir_tree_list):stdout
 
