@@ -5,18 +5,20 @@
   - when getting (i.e. loading from persistent db) a FilHdr, promote it
     to a C++ class for its type and make update (i.e. what is now
     ServerAction) a recursive, blocking function specific to type, essentially
+
+   // REVISIT: example Node implementation
       // pre: verifiedAt_ < verifyAt
       // returns true if calc needed
-      bool updateInputs(Date now, &executor) {
-	  awaiting = {}
+      bool derivs::Stdout::updateInputs(Date now, Jobs done, &executor) {
+          Awaiting awaiting{};
           for(input : inputs){
 	    try{
-	       update(input, verifyAt, maxJobs, awaitingJobs);
+	       update(input, now, jobsDone, executor);
 	    }
 	    catch(Awaiting& x){
                awaiting.extend(x);
 	       if (executor.flatOut()){
-	         awaitOneJob(awaiting);
+	         executor.awaitOneJob(awaiting);
 	       }
 	    }
 	  }
@@ -25,7 +27,7 @@
 	  }
 	  return (maxVintage(inputs) > vintage_);
       }
-      startCalc(&executor, Date now)
+      derivs::Stdout startCalc(&executor, Date now)
         // throw Awaiting if calc starts async job
       {
         if (inputsGood){
@@ -41,36 +43,6 @@
         store(result.value);
       }
 
-      void update(Node& n, Date now, &executor){
-        if (n.verifiedAt_ < now){
-	  while(true){
-            try{
-	      if (n.updateInputs(now, executor)){
-	        if (executor.flatOut()){
-	          awaitOneJob(executor);
-	        }
-                n.startCalc(executor); // throws Awaiting
-	      }
-	      else{
-	        n.verifiedAt_ = now;
-		return;
-	      }
-            }
-	    catch(Awaiting& awaiting){
-	      if (executor.flatOut()){
-	        executor.awaitOneJob(awaiting);
-	      }
-	      else{
-	        throw;
-	      }
-	    }
-	  }
-	}
-     }
-     void jobDone(Node n, result, Date now) {
-	  n.calcDone(result);
-	  n.verifiedAt_ = now;
-     }
 
      void build(Node& n, &executor) {
         ++now_;
@@ -80,14 +52,29 @@
 	  }
 	  catch(Awaiting& awaiting)
 	  {
-	    executor.awaitOneJobOrCancel(awaiting, xju::io::Input cancel);
+	    executor.awaitOneJob(awaiting);
 	  }
 	}
 	catch(Cancelled&) {
 	  ...;
 	}
      }
-     
+  - add cycle detection (by checking now == calculatingAt_ on entry)
+    - add cycle traceback via vector param
+  - add stdin (stdout,stderr are always via getErrors(), getWarnings())
+  - add cancellation
+    - need to broadcast cancellation to clear affected node awaiting_
+      ... or can use similar mech as awaiting?
+  - add concurrent clients (tricky as they will have different "now" and
+    might do their jobs out of order and what does it mean in that case?)
+      ... could we detect on entry and cancel existing job and proceed?
+      Are other branches a problem then? Maybe other branches are a problem
+      for done, because it naturally only cleans up one branch "awaiting_"?
+      And by the time we go to clean up other branches that job might have
+      been kicked off again for some other node?
+  - add test() facility
+  - add getErrors() and getWarnings()
+    
 - merge xjupkg into pkg
   - verify build and install odin from scratch
   - test eli

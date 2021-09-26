@@ -1,0 +1,92 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace dion
+{
+class Node
+{
+private:
+  JobIds awaiting_;
+  std::pair<Status, Date> state_; // status, vintage
+  Date verifiedAt_;
+  optional<Date> calculatingAt_;
+  
+public:
+  Node():
+      awaiting_(JobIds.alwaysDoneJob())
+  {
+  }
+  // bring all inputs and own state up to date now
+  // - to update an input, call input->update(now, executor)
+  virtual State updateInputsAndState(Date now, Executor& executor)
+  // throws JobIds if inputs are awaiting jobs
+  // throws JobSpec if needs external command run
+  = 0;
+  
+  // update this node now given specified JobIds are done
+  // returns new done.
+  //
+  void update(Date now, &executor)
+  // throws JobIds if update awaits jobs but executor is not flat-out
+  {
+    while(verifiedAt_ < now){
+      xju::assert_not_equal(calculatingAt_.valid());
+      try{
+        if ((awaiting_ - executor_.jobsInProgress()).size())
+        {
+          awaiting_ = JobIds();
+          state_ = updateInputsAndState();
+          verifiedAt_ = now;
+          return;
+        }
+        xju::assert_not_equal(awaiting_.size(),0U);
+        throw awaiting_;
+      }
+      catch(JobIds awaiting){
+        awaiting_ = awaiting_ + awaiting;
+        if (executor.flatOut() && (awaiting_ & executor.jobsInProgress())){
+          // executor is flat out and at least one job is in our
+          // sub-branch so wait here in case the next job done is ours
+          executor.awaitOneJob(awaiting);
+        }
+        else{
+          // dependent nodes might be able to queue more jobs
+          throw awaiting_;
+        }
+      }
+      catch(JobSpec const& j){
+        // note startJob might have to wait for a job to
+        // finish, in which case it will call forgetJobs
+        // on all via
+        calcuatingAt_ = now;
+        awaiting_ = executor.startJob(j, *this, via);
+        throw awaiting_;
+      }
+    }
+  }
+  void jobDone()
+  {
+    state_ = executor.collectResultOf(onlyJob(awaiting_), state_,
+                                      valuePath_,
+                                      infoPath_);
+    awaiting_ = JobIds();
+    verifiedAt_ = calculatingAt_.value();
+    calculatingAt_.clear();
+  }
+  void forgetJob(JobIds const& jobs){
+    if (jobs & awaiting_){
+      tellAncestorsToForgetJobs(jobs & awaiting_);
+      awaiting_ = (awaiting_ & ~jobs) | JobsId.alwaysDoneJob();
+    }
+  }
+};
+
+}
