@@ -17,7 +17,7 @@
 
 %gen-opts==<<
 +inc_sp=(../../../..)
-+hcp-split=(../../../../hcp/hcp-split)
++hcp-split=(../../../../hcp%hcp-split)
 +hh-ext='h'
 +cc-ext='cpp'
 +hpath='omnicxy/proto'

@@ -130,9 +130,9 @@ int main(int argc, char* argv[])
         x.changed_.wait(l,onlyWaitUntil);
       }
       xju::assert_equal(x.calls_.size(),3);
-      xju::assert_equal(x.calls_[0],"fred");
-      xju::assert_equal(x.calls_[1],std::string(6000,'a'));
-      xju::assert_equal(x.calls_[2],std::string(10000,'a'));
+      xju::assert_not_equal(std::find(x.calls_.begin(),x.calls_.end(),std::string("fred")),x.calls_.end());
+      xju::assert_not_equal(std::find(x.calls_.begin(),x.calls_.end(),std::string(6000,'a')),x.calls_.end());
+      xju::assert_not_equal(std::find(x.calls_.begin(),x.calls_.end(),std::string(10000,'a')),x.calls_.end());
     }
 
     return 0;

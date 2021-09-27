@@ -40,17 +40,17 @@ omnicxy/proto==.%gen
 %gen-opts==<<
 +inc_sp=(../../..)
 +inc_sp=(../../../omnicxy)
-+hcp-split=(../../../hcp/%hcp-split)
++hcp-split=(../../../hcp%hcp-split)
 +hpath='omnicxy/proto'
 +cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext'
 
 %gen==(..%all.idl.sm)+(%gen-opts):omnicxy.virdir
 
-%gen.1==(../p14.idl)+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy.virdir
+%gen.1==(../p14.idl)+inc_sp=(../../..)+hcp-split=(../../../hcp%hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy.virdir
 
 #above %gen assumes OMNICXY_BE_DIR environment variable passed to cache
 #creation, otherwise could use
-#%gen==(..%all.idl.sm)+hcp-split=(../../../hcp/hcp-split)+cxy-be-dir=(../../omniidl_be)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy.virdir
+#%gen==(..%all.idl.sm)+hcp-split=(../../../hcp%hcp-split)+cxy-be-dir=(../../omniidl_be)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy.virdir
 
 #code referenced by ../../README.txt
 p2.hh==%gen/p2.hh
