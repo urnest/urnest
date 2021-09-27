@@ -24,86 +24,217 @@ template='''\
 #include <xju/test/CallTo.hh>
 
 namespace xju
-{{
+{
 namespace test
-{{
+{
 
-template<class T,class U{pClasses}>
-class CallToV{nParams} : public CallToVoid
-{{
+template<class T,class U`pClasses`>
+class CallToV`nParams` : public CallToVoid
+{
 public:
-  explicit CallToV{nParams}(
-    T& x,void 
-    (U::*f)({fParams}){params})
-      : x_(x),
-        f_(f){paramInits}
-  {{
-  }}
-  T& x_;
-  void (U::* const f_)({fParams});{paramMembers}
-}};
-
-
-template<class T,class U,class R{pClasses}>
-class CallToR{nParams} : public CallToR<R>
-{{
-public:
-  explicit CallToR{nParams}(
+  explicit CallToV`nParams`(
     T& x,
-    R (U::*f)({fParams}){params})
+    void (U::*f)(`fParams`)`params`)
       : x_(x),
-        f_(f){paramInits}
-  {{
-  }}
+        f_(f)`paramInits`
+  {
+  }
   T& x_;
-  R (U::* const f_)({fParams});{paramMembers}
-}};
+  void (U::* const f_)(`fParams`);`paramMembers`
+};
 
-template<class T,class U{pClasses}>
-class CallToVc{nParams} : public CallToVoid
-{{
+template<class T,class U`pClasses`>
+class CallToV`nParams`_ : public CallToVoid
+{
 public:
-  explicit CallToVc{nParams}(
-    T const& x,void 
-    (U::*f)({fParams}) const{params})
+  explicit CallToV`nParams`_(
+    T& x,
+    void (U::*f)(`fParams`))
       : x_(x),
-        f_(f){paramInits}
-  {{
-  }}
-  T const& x_;
-  void (U::* const f_)({fParams}) const;{paramMembers}
-}};
+        f_(f)
+  {
+  }
+  T& x_;
+  void (U::* const f_)(`fParams`);
 
+  std::shared_ptr<CallToV`nParams`<T,U`pTypes`> > operator()(`params2`){
+    return std::shared_ptr<CallToV`nParams`<T,U`pTypes`> >(
+      new CallToV`nParams`<T,U`pTypes`>(x_, f_`paramNames`));
+  }
+};
 
-template<class T,class U,class R{pClasses}>
-class CallToRc{nParams} : public CallToR<R>
-{{
+template<class T,class U`pClasses`>
+CallToV`nParams`_<T,U`pTypes`> callTo(
+    T& x,
+    void (U::*f)(`fParams`))
+{
+  return CallToV`nParams`_<T,U`pTypes`>(x,f);
+}
+
+template<class T,class U,class R`pClasses`>
+class CallToR`nParams` : public CallToR<R>
+{
 public:
-  explicit CallToRc{nParams}(
-    T const& x,
-    R (U::*f)({fParams}) const{params})
+  explicit CallToR`nParams`(
+    T& x,
+    R (U::*f)(`fParams`)`params`)
       : x_(x),
-        f_(f){paramInits}
-  {{
-  }}
-  T const& x_;
-  R (U::* const f_)({fParams}) const;{paramMembers}
-}};
+        f_(f)`paramInits`
+  {
+  }
+  T& x_;
+  R (U::* const f_)(`fParams`);`paramMembers`
 
-}}
-}}
+};
+
+template<class T,class U,class R`pClasses`>
+class CallToR`nParams`_ : public CallToR<R>
+{
+public:
+  explicit CallToR`nParams`_(
+    T& x,
+    R (U::*f)(`fParams`))
+      : x_(x),
+        f_(f)
+  {
+  }
+  T& x_;
+  R (U::* const f_)(`fParams`);
+
+  std::shared_ptr<CallToR`nParams`<T,U,R`pTypes`> > operator()(`params2`){
+    return std::shared_ptr<CallToR`nParams`<T,U,R`pTypes`> >(
+      new CallToR`nParams`<T,U,R`pTypes`>(x_, f_`paramNames`));
+  }
+};
+
+template<class T,class U,class R`pClasses`>
+CallToR`nParams`_<T,U,R`pTypes`> callTo(
+    T& x, 
+    R (U::*f)(`fParams`))
+{
+  return CallToR`nParams`_<T,U,R`pTypes`>(x,f);
+}
+
+
+template<class T,class U`pClasses`>
+class CallToVc`nParams` : public CallToVoid
+{
+public:
+  explicit CallToVc`nParams`(
+    T& x,
+    void (U::*f)(`fParams`) const `params`)
+      : x_(x),
+        f_(f)`paramInits`
+  {
+  }
+  T& x_;
+  void (U::* const f_)(`fParams`) const;`paramMembers`
+};
+
+template<class T,class U`pClasses`>
+class CallToVc`nParams`_ : public CallToVoid
+{
+public:
+  explicit CallToVc`nParams`_(
+    T& x,
+    void (U::*f)(`fParams`) const)
+      : x_(x),
+        f_(f)
+  {
+  }
+  T& x_;
+  void (U::* const f_)(`fParams`) const;
+
+  std::shared_ptr<CallToVc`nParams`<T,U`pTypes`> > operator()(`params2`){
+    return std::shared_ptr<CallToVc`nParams`<T,U`pTypes`> >(
+      new CallToVc`nParams`<T,U`pTypes`>(x_, f_`paramNames`));
+  }
+};
+
+template<class T,class U`pClasses`>
+CallToVc`nParams`_<T,U`pTypes`> callTo(
+    T& x,
+    void (U::*f)(`fParams`) const)
+{
+  return CallToVc`nParams`_<T,U`pTypes`>(x,f);
+}
+
+template<class T,class U,class R`pClasses`>
+class CallToRc`nParams` : public CallToR<R>
+{
+public:
+  explicit CallToRc`nParams`(
+    T& x,
+    R (U::*f)(`fParams`) const `params`)
+      : x_(x),
+        f_(f)`paramInits`
+  {
+  }
+  T& x_;
+  R (U::* const f_)(`fParams`) const;`paramMembers`
+
+};
+
+template<class T,class U,class R`pClasses`>
+class CallToRc`nParams`_ : public CallToR<R>
+{
+public:
+  explicit CallToRc`nParams`_(
+    T& x,
+    R (U::*f)(`fParams`) const)
+      : x_(x),
+        f_(f)
+  {
+  }
+  T& x_;
+  R (U::* const f_)(`fParams`) const;
+
+  std::shared_ptr<CallToRc`nParams`<T,U,R`pTypes`> > operator()(`params2`){
+    return std::shared_ptr<CallToRc`nParams`<T,U,R`pTypes`> >(
+      new CallToRc`nParams`<T,U,R`pTypes`>(x_, f_`paramNames`));
+  }
+};
+
+template<class T,class U,class R`pClasses`>
+CallToRc`nParams`_<T,U,R`pTypes`> callTo(
+    T& x, 
+    R (U::*f)(`fParams`) const)
+{
+  return CallToRc`nParams`_<T,U,R`pTypes`>(x,f);
+}
+
+
+}
+}
 '''
 
-nParams=int(sys.argv[1])
-pClasses=''.join([',class P{n}'.format(**vars())
-                  for n in range(1,nParams+1)])
-fParams=','.join(['P{n}'.format(**vars())
-                  for n in range(1,nParams+1)])
-params=  ''.join([',\n    P{n} const& p{n}'.format(**vars())
-                  for n in range(1,nParams+1)])
-paramInits=''.join([',\n        p{n}_(p{n})'.format(**vars())
-                    for n in range(1,nParams+1)])
-paramMembers=''.join(['\n  P{n} const& p{n}_;'.format(**vars())
-                      for n in range(1,nParams+1)])
+def expandTemplate(t, vars):
+    '''expand `X` in t with vars['X']'''
+    rest=t
+    result=''
+    while '`' in rest:
+        before,name,rest=rest.split('`',2)
+        result=result+before+str(vars[name])
+        pass
+    result=result+rest
+    return result
 
-print(template.format(**vars()))
+nParams=int(sys.argv[1])
+pClasses=''.join([f',class P{n}'
+                  for n in range(1,nParams+1)])
+pTypes=''.join([f', P{n}'
+                  for n in range(1,nParams+1)])
+fParams=','.join([f'P{n}'
+                  for n in range(1,nParams+1)])
+params=  ''.join([f',\n    P{n} const& p{n}'
+                  for n in range(1,nParams+1)])
+params2=  ','.join([f'\n    P{n} p{n}'
+                  for n in range(1,nParams+1)])
+paramInits=''.join([f',\n        p{n}_(p{n})'
+                    for n in range(1,nParams+1)])
+paramMembers=''.join([f'\n  P{n} p{n}_;'
+                      for n in range(1,nParams+1)])
+paramNames=''.join([f', p{n}'
+                    for n in range(1,nParams+1)])
+
+print(expandTemplate(template,vars()))

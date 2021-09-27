@@ -12,8 +12,8 @@ class CallToV0 : public CallToVoid
 {
 public:
   explicit CallToV0(
-    T& x,void 
-    (U::*f)())
+    T& x,
+    void (U::*f)())
       : x_(x),
         f_(f)
   {
@@ -22,6 +22,33 @@ public:
   void (U::* const f_)();
 };
 
+template<class T,class U>
+class CallToV0_ : public CallToVoid
+{
+public:
+  explicit CallToV0_(
+    T& x,
+    void (U::*f)())
+      : x_(x),
+        f_(f)
+  {
+  }
+  T& x_;
+  void (U::* const f_)();
+
+  std::shared_ptr<CallToV0<T,U> > operator()(){
+    return std::shared_ptr<CallToV0<T,U> >(
+      new CallToV0<T,U>(x_, f_));
+  }
+};
+
+template<class T,class U>
+CallToV0_<T,U> callTo(
+    T& x,
+    void (U::*f)())
+{
+  return CallToV0_<T,U>(x,f);
+}
 
 template<class T,class U,class R>
 class CallToR0 : public CallToR<R>
@@ -36,38 +63,125 @@ public:
   }
   T& x_;
   R (U::* const f_)();
+
 };
+
+template<class T,class U,class R>
+class CallToR0_ : public CallToR<R>
+{
+public:
+  explicit CallToR0_(
+    T& x,
+    R (U::*f)())
+      : x_(x),
+        f_(f)
+  {
+  }
+  T& x_;
+  R (U::* const f_)();
+
+  std::shared_ptr<CallToR0<T,U,R> > operator()(){
+    return std::shared_ptr<CallToR0<T,U,R> >(
+      new CallToR0<T,U,R>(x_, f_));
+  }
+};
+
+template<class T,class U,class R>
+CallToR0_<T,U,R> callTo(
+    T& x, 
+    R (U::*f)())
+{
+  return CallToR0_<T,U,R>(x,f);
+}
+
 
 template<class T,class U>
 class CallToVc0 : public CallToVoid
 {
 public:
   explicit CallToVc0(
-    T const& x,void 
-    (U::*f)() const)
+    T& x,
+    void (U::*f)() const )
       : x_(x),
         f_(f)
   {
   }
-  T const& x_;
+  T& x_;
   void (U::* const f_)() const;
 };
 
+template<class T,class U>
+class CallToVc0_ : public CallToVoid
+{
+public:
+  explicit CallToVc0_(
+    T& x,
+    void (U::*f)() const)
+      : x_(x),
+        f_(f)
+  {
+  }
+  T& x_;
+  void (U::* const f_)() const;
+
+  std::shared_ptr<CallToVc0<T,U> > operator()(){
+    return std::shared_ptr<CallToVc0<T,U> >(
+      new CallToVc0<T,U>(x_, f_));
+  }
+};
+
+template<class T,class U>
+CallToVc0_<T,U> callTo(
+    T& x,
+    void (U::*f)() const)
+{
+  return CallToVc0_<T,U>(x,f);
+}
 
 template<class T,class U,class R>
 class CallToRc0 : public CallToR<R>
 {
 public:
   explicit CallToRc0(
-    T const& x,
+    T& x,
+    R (U::*f)() const )
+      : x_(x),
+        f_(f)
+  {
+  }
+  T& x_;
+  R (U::* const f_)() const;
+
+};
+
+template<class T,class U,class R>
+class CallToRc0_ : public CallToR<R>
+{
+public:
+  explicit CallToRc0_(
+    T& x,
     R (U::*f)() const)
       : x_(x),
         f_(f)
   {
   }
-  T const& x_;
+  T& x_;
   R (U::* const f_)() const;
+
+  std::shared_ptr<CallToRc0<T,U,R> > operator()(){
+    return std::shared_ptr<CallToRc0<T,U,R> >(
+      new CallToRc0<T,U,R>(x_, f_));
+  }
 };
+
+template<class T,class U,class R>
+CallToRc0_<T,U,R> callTo(
+    T& x, 
+    R (U::*f)() const)
+{
+  return CallToRc0_<T,U,R>(x,f);
+}
+
 
 }
 }

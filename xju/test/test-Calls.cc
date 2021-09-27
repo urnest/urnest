@@ -30,13 +30,13 @@ void test0() {
   
   A a;
   {
-    c.enqueue(a,&A::f1);
+    c.enqueue(callTo(a,&A::f1)());
     auto call{c.awaitCall(a,&A::f1,xju::steadyNow())};
     call->return_();
     call->awaitReturn(xju::steadyNow());
   }
   {
-    c.enqueue(a,&A::f1);
+    c.enqueue(callTo(a,&A::f1)());
     auto call{c.awaitCall(a,&A::f1,xju::steadyNow())};
     xju::Exception e{"fred",XJU_TRACED};
     call->raise(e);
@@ -49,13 +49,13 @@ void test0() {
     }
   }
   {
-    c.enqueue(a,&A::f2);
+    c.enqueue(callTo(a,&A::f2)());
     auto call{c.awaitCall(a,&A::f2,xju::steadyNow())};
     call->return_(3);
     xju::assert_equal(call->awaitResult(xju::steadyNow()),3);
   }
   {
-    c.enqueue(a,&A::f2);
+    c.enqueue(callTo(a,&A::f2)());
     auto call{c.awaitCall(a,&A::f2,xju::steadyNow())};
     xju::Exception e{"fred",XJU_TRACED};
     call->raise(e);
@@ -78,18 +78,19 @@ void test1() {
     void f1(int x) {}
     int f2(int x) {return x;}
     void f3(std::string const& x) {};
+    void f4(std::string& x) {};
   };
   
   A a;
   {
-    c.enqueue(a,&A::f1,3);
+    c.enqueue(callTo(a,&A::f1)(3));
     auto call{c.awaitCall(a,&A::f1,xju::steadyNow())};
     xju::assert_equal(call->p1_,3);
     call->return_();
     call->awaitReturn(xju::steadyNow());
   }
   {
-    c.enqueue(a,&A::f1,4);
+    c.enqueue(callTo(a,&A::f1)(4));
     auto call{c.awaitCall(a,&A::f1,xju::steadyNow())};
     xju::Exception e{"fred",XJU_TRACED};
     call->raise(e);
@@ -102,14 +103,14 @@ void test1() {
     }
   }
   {
-    c.enqueue(a,&A::f2,5);
+    c.enqueue(callTo(a,&A::f2)(5));
     auto call{c.awaitCall(a,&A::f2,xju::steadyNow())};
     xju::assert_equal(call->p1_,5);
     call->return_(3);
     xju::assert_equal(call->awaitResult(xju::steadyNow()),3);
   }
   {
-    c.enqueue(a,&A::f2,5);
+    c.enqueue(callTo(a,&A::f2)(5));
     auto call{c.awaitCall(a,&A::f2,xju::steadyNow())};
     xju::Exception e{"fred",XJU_TRACED};
     call->raise(e);
@@ -122,9 +123,17 @@ void test1() {
     }
   }
   {
-    c.enqueue(a,&A::f3,std::string("fred"));
+    c.enqueue(callTo(a,&A::f3)(std::string("fred")));
     auto call{c.awaitCall(a,&A::f3,xju::steadyNow())};
     xju::assert_equal(call->p1_,std::string("fred"));
+    call->return_();
+    call->awaitReturn(xju::steadyNow());
+  }
+  {
+    std::string fred("fred");
+    c.enqueue(callTo(a,&A::f4)(fred));
+    auto call{c.awaitCall(a,&A::f4,xju::steadyNow())};
+    xju::assert_equal(&call->p1_,&fred);
     call->return_();
     call->awaitReturn(xju::steadyNow());
   }
@@ -142,7 +151,7 @@ void test2() {
   
   A a;
   {
-    c.enqueue(a,&A::f1,3,'a');
+    c.enqueue(callTo(a,&A::f1)(3,'a'));
     auto call{c.awaitCall(a,&A::f1,xju::steadyNow())};
     xju::assert_equal(call->p1_,3);
     xju::assert_equal(call->p2_,'a');
@@ -150,7 +159,7 @@ void test2() {
     call->awaitReturn(xju::steadyNow());
   }
   {
-    c.enqueue(a,&A::f1,4,'b');
+    c.enqueue(callTo(a,&A::f1)(4,'b'));
     auto call{c.awaitCall(a,&A::f1,xju::steadyNow())};
     xju::Exception e{"fred",XJU_TRACED};
     call->raise(e);
@@ -163,7 +172,7 @@ void test2() {
     }
   }
   {
-    c.enqueue(a,&A::f2,5,'b');
+    c.enqueue(callTo(a,&A::f2)(5,'b'));
     auto call{c.awaitCall(a,&A::f2,xju::steadyNow())};
     xju::assert_equal(call->p1_,5);
     xju::assert_equal(call->p2_,'b');
@@ -171,7 +180,7 @@ void test2() {
     xju::assert_equal(call->awaitResult(xju::steadyNow()),3);
   }
   {
-    c.enqueue(a,&A::f2,5,'b');
+    c.enqueue(callTo(a,&A::f2)(5,'b'));
     auto call{c.awaitCall(a,&A::f2,xju::steadyNow())};
     xju::Exception e{"fred",XJU_TRACED};
     call->raise(e);
@@ -197,13 +206,13 @@ void test0c() {
   
   A a;
   {
-    c.enqueue(a,&A::f1);
+    c.enqueue(callTo(a,&A::f1)());
     auto call{c.awaitCall(a,&A::f1,xju::steadyNow())};
     call->return_();
     call->awaitReturn(xju::steadyNow());
   }
   {
-    c.enqueue(a,&A::f1);
+    c.enqueue(callTo(a,&A::f1)());
     auto call{c.awaitCall(a,&A::f1,xju::steadyNow())};
     xju::Exception e{"fred",XJU_TRACED};
     call->raise(e);
@@ -216,13 +225,13 @@ void test0c() {
     }
   }
   {
-    c.enqueue(a,&A::f2);
+    c.enqueue(callTo(a,&A::f2)());
     auto call{c.awaitCall(a,&A::f2,xju::steadyNow())};
     call->return_(3);
     xju::assert_equal(call->awaitResult(xju::steadyNow()),3);
   }
   {
-    c.enqueue(a,&A::f2);
+    c.enqueue(callTo(a,&A::f2)());
     auto call{c.awaitCall(a,&A::f2,xju::steadyNow())};
     xju::Exception e{"fred",XJU_TRACED};
     call->raise(e);
@@ -245,18 +254,28 @@ void test1c() {
   public:
     void f1(int x) const {}
     int f2(int x) const {return x;}
+    int f3(std::string& x) { return 1;};
+    void f4(int& x) const {}
   };
   
   A a;
   {
-    c.enqueue(a,&A::f1,3);
+    c.enqueue(callTo(a,&A::f1)(3));
     auto call{c.awaitCall(a,&A::f1,xju::steadyNow())};
     xju::assert_equal(call->p1_,3);
     call->return_();
     call->awaitReturn(xju::steadyNow());
   }
   {
-    c.enqueue(a,&A::f1,4);
+    int p(7);
+    c.enqueue(callTo(a,&A::f4)(p));
+    auto call{c.awaitCall(a,&A::f4,xju::steadyNow())};
+    xju::assert_equal(&call->p1_,&p);
+    call->return_();
+    call->awaitReturn(xju::steadyNow());
+  }
+  {
+    c.enqueue(callTo(a,&A::f1)(4));
     auto call{c.awaitCall(a,&A::f1,xju::steadyNow())};
     xju::Exception e{"fred",XJU_TRACED};
     call->raise(e);
@@ -269,14 +288,22 @@ void test1c() {
     }
   }
   {
-    c.enqueue(a,&A::f2,5);
+    c.enqueue(callTo(a,&A::f2)(5));
     auto call{c.awaitCall(a,&A::f2,xju::steadyNow())};
     xju::assert_equal(call->p1_,5);
     call->return_(3);
     xju::assert_equal(call->awaitResult(xju::steadyNow()),3);
   }
   {
-    c.enqueue(a,&A::f2,5);
+    std::string jock("jock");
+    c.enqueue(callTo(a,&A::f3)(jock));
+    auto call{c.awaitCall(a,&A::f3,xju::steadyNow())};
+    xju::assert_equal(&call->p1_,&jock);
+    call->return_(3);
+    xju::assert_equal(call->awaitResult(xju::steadyNow()),3);
+  }
+  {
+    c.enqueue(callTo(a,&A::f2)(5));
     auto call{c.awaitCall(a,&A::f2,xju::steadyNow())};
     xju::Exception e{"fred",XJU_TRACED};
     call->raise(e);
@@ -302,7 +329,7 @@ void test2c() {
   
   A a;
   {
-    c.enqueue(a,&A::f1,3,'a');
+    c.enqueue(callTo(a,&A::f1)(3,'a'));
     auto call{c.awaitCall(a,&A::f1,xju::steadyNow())};
     xju::assert_equal(call->p1_,3);
     xju::assert_equal(call->p2_,'a');
@@ -310,7 +337,7 @@ void test2c() {
     call->awaitReturn(xju::steadyNow());
   }
   {
-    c.enqueue(a,&A::f1,4,'b');
+    c.enqueue(callTo(a,&A::f1)(4,'b'));
     auto call{c.awaitCall(a,&A::f1,xju::steadyNow())};
     xju::Exception e{"fred",XJU_TRACED};
     call->raise(e);
@@ -323,7 +350,7 @@ void test2c() {
     }
   }
   {
-    c.enqueue(a,&A::f2,5,'b');
+    c.enqueue(callTo(a,&A::f2)(5,'b'));
     auto call{c.awaitCall(a,&A::f2,xju::steadyNow())};
     xju::assert_equal(call->p1_,5);
     xju::assert_equal(call->p2_,'b');
@@ -331,7 +358,7 @@ void test2c() {
     xju::assert_equal(call->awaitResult(xju::steadyNow()),3);
   }
   {
-    c.enqueue(a,&A::f2,5,'b');
+    c.enqueue(callTo(a,&A::f2)(5,'b'));
     auto call{c.awaitCall(a,&A::f2,xju::steadyNow())};
     xju::Exception e{"fred",XJU_TRACED};
     call->raise(e);

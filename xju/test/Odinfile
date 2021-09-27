@@ -5,6 +5,7 @@
 
 %tests.tree == <<
 ()+cmd=(test-Calls.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(concept.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
 
 %hcp-opts==<<

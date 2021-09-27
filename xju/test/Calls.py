@@ -24,184 +24,183 @@ fileTemplate='''\
 #include <stdlib.h>
 #include <chrono>
 #include <xju/steadyNow.hh>
-{includes}
+`includes`
 
 namespace xju
-{{
+{
 namespace test
-{{
+{
 
 class Calls
-{{
+{
 public:
   Calls() noexcept
     : changed_(guard_)
-  {{
-  }}
+  {
+  }
 
-{methods}
+`methods`
 
   // Pull out all calls.
   std::deque<std::shared_ptr<CallTo> > calls() noexcept
-  {{
+  {
     xju::Lock l(guard_);
     std::deque<std::shared_ptr<CallTo> > result;
     std::swap(calls_,result);
     return result;
-  }}
+  }
 private:
   mutable xju::Mutex guard_;
   xju::Condition changed_;
   std::deque<std::shared_ptr<CallTo> > calls_;
-}};
+};
 
-}}
-}}
+}
+}
 '''
 
 
 methodN='''\
-  template<class T,class U{pClasses}{p_Classes}>
-  std::shared_ptr<CallToV{nParams}<T,U{paramTypes}> > enqueue(
-    T& x, 
-    void (U::*f)({fParams}){params}) noexcept
-  {{
+  template<class T,class U`pClasses`>
+  std::shared_ptr<CallToV`nParams`<T,U`paramTypes`> > enqueue(
+    std::shared_ptr<CallToV`nParams`<T,U`paramTypes`> > x) noexcept
+  {
     xju::Lock l(guard_);
-    std::shared_ptr<CallToV{nParams}<T,U{paramTypes}> > result{{
-      new CallToV{nParams}<T,U{paramTypes}>(x,f{paramNames})}};
-    calls_.push_back(result);
+    calls_.push_back(x);
     changed_.signal(l);
-    return result;
-  }}
-  template<class T,class U,class R{pClasses}{p_Classes}>
-  std::shared_ptr<CallToR{nParams}<T,U,R{paramTypes}> > enqueue(
-    T& x, 
-    R (U::*f)({fParams}){params}) noexcept
-  {{
+    return x;
+  }
+  template<class T,class U,class R`pClasses`>
+  std::shared_ptr<CallToR`nParams`<T,U,R`paramTypes`> > enqueue(
+    std::shared_ptr<CallToR`nParams`<T,U,R`paramTypes`> > x) noexcept
+  {
     xju::Lock l(guard_);
-    std::shared_ptr<CallToR{nParams}<T,U,R{paramTypes}> > result{{
-      new CallToR{nParams}<T,U,R{paramTypes}>(x,f{paramNames})}};
-    calls_.push_back(result);
+    calls_.push_back(x);
     changed_.signal(l);
-    return result;
-  }}
+    return x;
+  }
 
-  template<class T,class U{pClasses}>
-  std::shared_ptr<CallToV{nParams}<T,U{paramTypes}> > awaitCall(
+  template<class T,class U`pClasses`>
+  std::shared_ptr<CallToV`nParams`<T,U`paramTypes`> > awaitCall(
     T& x,
-    void (U::*f)({fParams}),
+    void (U::*f)(`fParams`),
     std::chrono::steady_clock::time_point deadline) noexcept
-  {{
+  {
     xju::Lock l(guard_);
-    while(!calls_.size()&&xju::steadyNow()<deadline){{
+    while(!calls_.size()&&xju::steadyNow()<deadline){
       changed_.wait(l,deadline);
-    }}
+    }
     xju::assert_not_equal(calls_.size(),0U);
     std::shared_ptr<CallTo> const call(calls_.front());
     calls_.pop_front();
-    auto result{{std::dynamic_pointer_cast<CallToV{nParams}<T,U{paramTypes}> >(call)}};
-    if (!result.get()){{
-      std::string actualType{{typeid(*call).name()}};
+    auto result{std::dynamic_pointer_cast<CallToV`nParams`<T,U`paramTypes`> >(call)};
+    if (!result.get()){
+      std::string actualType{typeid(*call).name()};
       ::abort();
-    }}
+    }
     xju::assert_equal(&x,&result->x_);
     xju::assert_equal(f,result->f_);
     return result;
-  }}
+  }
 
-  template<class T,class U,class R{pClasses}>
-  std::shared_ptr<CallToR{nParams}<T,U,R{paramTypes}> > awaitCall(
-    T& x, R (U::*f)({fParams}),
+  template<class T,class U,class R`pClasses`>
+  std::shared_ptr<CallToR`nParams`<T,U,R`paramTypes`> > awaitCall(
+    T& x, R (U::*f)(`fParams`),
     std::chrono::steady_clock::time_point deadline) noexcept
-  {{
+  {
     xju::Lock l(guard_);
-    while(!calls_.size()&&xju::steadyNow()<deadline){{
+    while(!calls_.size()&&xju::steadyNow()<deadline){
       changed_.wait(l,deadline);
-    }}
+    }
     xju::assert_not_equal(calls_.size(),0U);
     auto call(calls_.front());
     calls_.pop_front();
-    auto result{{std::dynamic_pointer_cast<CallToR{nParams}<T,U,R{paramTypes}> >(call)}};
-    if (!result.get()){{
-      std::string actualType{{typeid(*call).name()}};
+    auto result{std::dynamic_pointer_cast<CallToR`nParams`<T,U,R`paramTypes`> >(call)};
+    if (!result.get()){
+      std::string actualType{typeid(*call).name()};
       abort();
-    }}
+    }
     xju::assert_equal(&result->x_,&x);
     xju::assert_equal(result->f_,f);
     return result;
-  }}
+  }
 
-  template<class T,class U{pClasses}{p_Classes}>
-  std::shared_ptr<CallToVc{nParams}<T,U{paramTypes}> > enqueue(
-    T const& x, 
-    void (U::*f)({fParams}) const{params}) noexcept
-  {{
+  template<class T,class U`pClasses`>
+  std::shared_ptr<CallToVc`nParams`<T,U`paramTypes`> > enqueue(
+    std::shared_ptr<CallToVc`nParams`<T,U`paramTypes`> > x) noexcept
+  {
     xju::Lock l(guard_);
-    std::shared_ptr<CallToVc{nParams}<T,U{paramTypes}> > result{{
-      new CallToVc{nParams}<T,U{paramTypes}>(x,f{paramNames})}};
-    calls_.push_back(result);
+    calls_.push_back(x);
     changed_.signal(l);
-    return result;
-  }}
-  template<class T,class U,class R{pClasses}{p_Classes}>
-  std::shared_ptr<CallToRc{nParams}<T,U,R{paramTypes}> > enqueue(
-    T const& x, 
-    R (U::*f)({fParams}) const{params}) noexcept
-  {{
+    return x;
+  }
+  template<class T,class U,class R`pClasses`>
+  std::shared_ptr<CallToRc`nParams`<T,U,R`paramTypes`> > enqueue(
+    std::shared_ptr<CallToRc`nParams`<T,U,R`paramTypes`> > x) noexcept
+  {
     xju::Lock l(guard_);
-    std::shared_ptr<CallToRc{nParams}<T,U,R{paramTypes}> > result{{
-      new CallToRc{nParams}<T,U,R{paramTypes}>(x,f{paramNames})}};
-    calls_.push_back(result);
+    calls_.push_back(x);
     changed_.signal(l);
-    return result;
-  }}
+    return x;
+  }
 
-  template<class T,class U{pClasses}>
-  std::shared_ptr<CallToVc{nParams}<T,U{paramTypes}> > awaitCall(
+  template<class T,class U`pClasses`>
+  std::shared_ptr<CallToVc`nParams`<T,U`paramTypes`> > awaitCall(
     T const& x,
-    void (U::*f)({fParams}) const,
+    void (U::*f)(`fParams`) const,
     std::chrono::steady_clock::time_point deadline) noexcept
-  {{
+  {
     xju::Lock l(guard_);
-    while(!calls_.size()&&xju::steadyNow()<deadline){{
+    while(!calls_.size()&&xju::steadyNow()<deadline){
       changed_.wait(l,deadline);
-    }}
+    }
     xju::assert_not_equal(calls_.size(),0U);
     std::shared_ptr<CallTo> const call(calls_.front());
     calls_.pop_front();
-    auto result{{std::dynamic_pointer_cast<CallToVc{nParams}<T,U{paramTypes}> >(call)}};
-    if (!result.get()){{
-      std::string actualType{{typeid(*call).name()}};
+    auto result{std::dynamic_pointer_cast<CallToVc`nParams`<T,U`paramTypes`> >(call)};
+    if (!result.get()){
+      std::string actualType{typeid(*call).name()};
       ::abort();
-    }}
+    }
     xju::assert_equal(&x,&result->x_);
     xju::assert_equal(f,result->f_);
     return result;
-  }}
+  }
 
-  template<class T,class U,class R{pClasses}>
-  std::shared_ptr<CallToRc{nParams}<T,U,R{paramTypes}> > awaitCall(
-    T const& x, R (U::*f)({fParams}) const,
+  template<class T,class U,class R`pClasses`>
+  std::shared_ptr<CallToRc`nParams`<T,U,R`paramTypes`> > awaitCall(
+    T const& x, R (U::*f)(`fParams`) const,
     std::chrono::steady_clock::time_point deadline) noexcept
-  {{
+  {
     xju::Lock l(guard_);
-    while(!calls_.size()&&xju::steadyNow()<deadline){{
+    while(!calls_.size()&&xju::steadyNow()<deadline){
       changed_.wait(l,deadline);
-    }}
+    }
     xju::assert_not_equal(calls_.size(),0U);
     auto call(calls_.front());
     calls_.pop_front();
-    auto result{{std::dynamic_pointer_cast<CallToRc{nParams}<T,U,R{paramTypes}> >(call)}};
-    if (!result.get()){{
-      std::string actualType{{typeid(*call).name()}};
+    auto result{std::dynamic_pointer_cast<CallToRc`nParams`<T,U,R`paramTypes`> >(call)};
+    if (!result.get()){
+      std::string actualType{typeid(*call).name()};
       abort();
-    }}
+    }
     xju::assert_equal(&result->x_,&x);
     xju::assert_equal(result->f_,f);
     return result;
-  }}
+  }
 
 '''
+
+def expandTemplate(t, vars):
+    '''expand `X` in t with vars['X']'''
+    rest=t
+    result=''
+    while '`' in rest:
+        before,name,rest=rest.split('`',2)
+        result=result+before+str(vars[name])
+        pass
+    result=result+rest
+    return result
 
 maxParams=int(sys.argv[1])
 
@@ -209,20 +208,14 @@ methods_=[]
 for nParams in range(0,maxParams+1):
     pClasses=''.join([',class P{n}'.format(**vars())
                       for n in range(1,nParams+1)])
-    p_Classes=''.join([',class P{n}_'.format(**vars())
-                      for n in range(1,nParams+1)])
     paramTypes=''.join([',P{n}'.format(**vars())
                         for n in range(1,nParams+1)])
     fParams=','.join(['P{n}'.format(**vars())
                         for n in range(1,nParams+1)])
-    params=  ''.join([',\n    P{n}_ const& p{n}'.format(**vars())
-                      for n in range(1,nParams+1)])
-    paramNames=''.join([',\n        p{n}'.format(**vars())
-                        for n in range(1,nParams+1)])
-    methods_.append(methodN.format(**vars()))
+    methods_.append(expandTemplate(methodN,vars()))
     pass
-includes=''.join(['#include <xju/test/CallTo{nParams}.hh>\n'.format(**vars())
+includes=''.join([f'#include <xju/test/CallTo{nParams}.hh>\n'
                   for nParams in range(0,maxParams+1)])
 
 methods=''.join(methods_)
-print(fileTemplate.format(**vars()))
+print(expandTemplate(fileTemplate,vars()))

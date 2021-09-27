@@ -8,7 +8,7 @@
 +(../..%cxx-opts)
 
 
-%x==()+cmd=(../../hcp-split) '-hpath' 'hcp/test/hpath_option' (x.hcp) 'x.hh' 'x.cc':exec.files
+%x==()+cmd=(../..%hcp-split) '-hpath' 'hcp/test/hpath_option' (x.hcp) 'x.hh' 'x.cc':exec.files
 
 x.hh==%x+member='x.hh':extract_file
 x.cc==%x+member='x.cc':extract_file

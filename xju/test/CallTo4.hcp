@@ -12,8 +12,8 @@ class CallToV4 : public CallToVoid
 {
 public:
   explicit CallToV4(
-    T& x,void 
-    (U::*f)(P1,P2,P3,P4),
+    T& x,
+    void (U::*f)(P1,P2,P3,P4),
     P1 const& p1,
     P2 const& p2,
     P3 const& p3,
@@ -28,12 +28,43 @@ public:
   }
   T& x_;
   void (U::* const f_)(P1,P2,P3,P4);
-  P1 const& p1_;
-  P2 const& p2_;
-  P3 const& p3_;
-  P4 const& p4_;
+  P1 p1_;
+  P2 p2_;
+  P3 p3_;
+  P4 p4_;
 };
 
+template<class T,class U,class P1,class P2,class P3,class P4>
+class CallToV4_ : public CallToVoid
+{
+public:
+  explicit CallToV4_(
+    T& x,
+    void (U::*f)(P1,P2,P3,P4))
+      : x_(x),
+        f_(f)
+  {
+  }
+  T& x_;
+  void (U::* const f_)(P1,P2,P3,P4);
+
+  std::shared_ptr<CallToV4<T,U, P1, P2, P3, P4> > operator()(
+    P1 p1,
+    P2 p2,
+    P3 p3,
+    P4 p4){
+    return std::shared_ptr<CallToV4<T,U, P1, P2, P3, P4> >(
+      new CallToV4<T,U, P1, P2, P3, P4>(x_, f_, p1, p2, p3, p4));
+  }
+};
+
+template<class T,class U,class P1,class P2,class P3,class P4>
+CallToV4_<T,U, P1, P2, P3, P4> callTo(
+    T& x,
+    void (U::*f)(P1,P2,P3,P4))
+{
+  return CallToV4_<T,U, P1, P2, P3, P4>(x,f);
+}
 
 template<class T,class U,class R,class P1,class P2,class P3,class P4>
 class CallToR4 : public CallToR<R>
@@ -56,19 +87,53 @@ public:
   }
   T& x_;
   R (U::* const f_)(P1,P2,P3,P4);
-  P1 const& p1_;
-  P2 const& p2_;
-  P3 const& p3_;
-  P4 const& p4_;
+  P1 p1_;
+  P2 p2_;
+  P3 p3_;
+  P4 p4_;
+
 };
+
+template<class T,class U,class R,class P1,class P2,class P3,class P4>
+class CallToR4_ : public CallToR<R>
+{
+public:
+  explicit CallToR4_(
+    T& x,
+    R (U::*f)(P1,P2,P3,P4))
+      : x_(x),
+        f_(f)
+  {
+  }
+  T& x_;
+  R (U::* const f_)(P1,P2,P3,P4);
+
+  std::shared_ptr<CallToR4<T,U,R, P1, P2, P3, P4> > operator()(
+    P1 p1,
+    P2 p2,
+    P3 p3,
+    P4 p4){
+    return std::shared_ptr<CallToR4<T,U,R, P1, P2, P3, P4> >(
+      new CallToR4<T,U,R, P1, P2, P3, P4>(x_, f_, p1, p2, p3, p4));
+  }
+};
+
+template<class T,class U,class R,class P1,class P2,class P3,class P4>
+CallToR4_<T,U,R, P1, P2, P3, P4> callTo(
+    T& x, 
+    R (U::*f)(P1,P2,P3,P4))
+{
+  return CallToR4_<T,U,R, P1, P2, P3, P4>(x,f);
+}
+
 
 template<class T,class U,class P1,class P2,class P3,class P4>
 class CallToVc4 : public CallToVoid
 {
 public:
   explicit CallToVc4(
-    T const& x,void 
-    (U::*f)(P1,P2,P3,P4) const,
+    T& x,
+    void (U::*f)(P1,P2,P3,P4) const ,
     P1 const& p1,
     P2 const& p2,
     P3 const& p3,
@@ -81,22 +146,53 @@ public:
         p4_(p4)
   {
   }
-  T const& x_;
+  T& x_;
   void (U::* const f_)(P1,P2,P3,P4) const;
-  P1 const& p1_;
-  P2 const& p2_;
-  P3 const& p3_;
-  P4 const& p4_;
+  P1 p1_;
+  P2 p2_;
+  P3 p3_;
+  P4 p4_;
 };
 
+template<class T,class U,class P1,class P2,class P3,class P4>
+class CallToVc4_ : public CallToVoid
+{
+public:
+  explicit CallToVc4_(
+    T& x,
+    void (U::*f)(P1,P2,P3,P4) const)
+      : x_(x),
+        f_(f)
+  {
+  }
+  T& x_;
+  void (U::* const f_)(P1,P2,P3,P4) const;
+
+  std::shared_ptr<CallToVc4<T,U, P1, P2, P3, P4> > operator()(
+    P1 p1,
+    P2 p2,
+    P3 p3,
+    P4 p4){
+    return std::shared_ptr<CallToVc4<T,U, P1, P2, P3, P4> >(
+      new CallToVc4<T,U, P1, P2, P3, P4>(x_, f_, p1, p2, p3, p4));
+  }
+};
+
+template<class T,class U,class P1,class P2,class P3,class P4>
+CallToVc4_<T,U, P1, P2, P3, P4> callTo(
+    T& x,
+    void (U::*f)(P1,P2,P3,P4) const)
+{
+  return CallToVc4_<T,U, P1, P2, P3, P4>(x,f);
+}
 
 template<class T,class U,class R,class P1,class P2,class P3,class P4>
 class CallToRc4 : public CallToR<R>
 {
 public:
   explicit CallToRc4(
-    T const& x,
-    R (U::*f)(P1,P2,P3,P4) const,
+    T& x,
+    R (U::*f)(P1,P2,P3,P4) const ,
     P1 const& p1,
     P2 const& p2,
     P3 const& p3,
@@ -109,13 +205,47 @@ public:
         p4_(p4)
   {
   }
-  T const& x_;
+  T& x_;
   R (U::* const f_)(P1,P2,P3,P4) const;
-  P1 const& p1_;
-  P2 const& p2_;
-  P3 const& p3_;
-  P4 const& p4_;
+  P1 p1_;
+  P2 p2_;
+  P3 p3_;
+  P4 p4_;
+
 };
+
+template<class T,class U,class R,class P1,class P2,class P3,class P4>
+class CallToRc4_ : public CallToR<R>
+{
+public:
+  explicit CallToRc4_(
+    T& x,
+    R (U::*f)(P1,P2,P3,P4) const)
+      : x_(x),
+        f_(f)
+  {
+  }
+  T& x_;
+  R (U::* const f_)(P1,P2,P3,P4) const;
+
+  std::shared_ptr<CallToRc4<T,U,R, P1, P2, P3, P4> > operator()(
+    P1 p1,
+    P2 p2,
+    P3 p3,
+    P4 p4){
+    return std::shared_ptr<CallToRc4<T,U,R, P1, P2, P3, P4> >(
+      new CallToRc4<T,U,R, P1, P2, P3, P4>(x_, f_, p1, p2, p3, p4));
+  }
+};
+
+template<class T,class U,class R,class P1,class P2,class P3,class P4>
+CallToRc4_<T,U,R, P1, P2, P3, P4> callTo(
+    T& x, 
+    R (U::*f)(P1,P2,P3,P4) const)
+{
+  return CallToRc4_<T,U,R, P1, P2, P3, P4>(x,f);
+}
+
 
 }
 }

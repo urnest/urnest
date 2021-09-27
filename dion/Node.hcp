@@ -8,58 +8,55 @@
 // implied warranty.
 //
 
-// REVISIT: replace alwaysDoneJob with needUpdate flag?
+#include <dion/JobIds.hh>
+#include <dion/Date.hh>
+#include <xju/Optional.hh>
+#include <dion/Executor.hh>
+#include <xju/assert.hh> //impl
 
 namespace dion
 {
 class Node
 {
 private:
-  xju::path::AbsFile const valuePath_;
-  xju::path::AbsFile const infoPath_;
-  
   // we (directly or due to an input) are awaiting one or more
   // in-progress jobs in order to bring our state up to date.
   JobIds awaiting_;
-  std::pair<Status, Date> state_; // status, vintage
   Date verifiedAt_;
 
   // job in progress that will bring us up to date calculatingAt_.value()
-  optional<Date> calculatingAt_;
+  xju::Optional<Date> calculatingAt_;
   
 public:
-  // valuePath_ stores the object value, e.g. .o produced by compiler
-  //            note it might be derived directory; content is not valid
-  //            if status_.first == Status::ERROR
-  // infoPath_ stores warnings/errors of the local derivation, e.g.
-  //           compilcation warnings, according to status_.first; content
-  //           not valid if state_.first is Status::OK
-  Node(xju::path::AbsFile valuePath,
-       xju::path::AbsFile infoPath,
-       JobIds awaiting,
-       std::pair<Status, Date> state,
+  Node(JobIds awaiting,
        Date verifiedAt):
-      valuePath_(std::move(valuePath)),
-      infoPath_(std::move(infoPath)),
       awaiting_(std::move(awaiting)),
-      state_(std::move(state_)),
-      verifiedAt_(std::move(verifiedAt))
+      verifiedAt_(std::move(verifiedAt)),
+      callMeWhenExecutorNotBusy_(false)
   {
   }
 
   virtual ~Node() noexcept {}
+
+  // Node wants update() called as soon as executor is not busy
+  bool callMeWhenExecutorNotBusy_;
   
-  // bring all inputs and own state up to date now
+  // Bring all inputs and own state up to date now.
   // - to update an input, call input->update(now, executor)
-  virtual State updateInputsAndState(Date now, Executor& executor)
+  // - do not start job (throw JobSpec to start job)
+  virtual void updateInputsAndState(Date now, Executor& executor)
     // throws JobIds if inputs are awaiting jobs
-    // throws JobSpec if needs external command run
+    // throws JobSpec if needs external command job run
     // throws Executor::FlatOut passed through from input update()
     = 0;
 
   // Tell any relevant inputs that js is done by calling
   // each's jobsDone(js).
   virtual void tellInputsThatJobsAreDone(JobIds const& js) noexcept = 0;
+
+  // Collect result of job j completing state update.
+  virtual void collectResultOfJob(Executor& e,
+                                  JobId const& j) noexcept = 0;
   
   // Bring this node up to date now.
   // - makes use of type-specific updateInputsAndState above as appropriate
@@ -67,59 +64,54 @@ public:
   // throws JobIds if update awaits jobs
   {
     while(verifiedAt_ < now){
-      xju::assert_not_equal(calculatingAt_.valid());
+      xju::assert_equal(calculatingAt_.valid(), false);
       try{
         // anything we were waiting for no longer in progress?
-        auto const noLongerInPrgoress(awaiting_ - executor_.jobsInProgress());
-        if (noLongerInPrgoress.size())
+        auto const noLongerInPrgoress(awaiting_ - executor.jobsInProgress());
+        if ((noLongerInPrgoress != JobIds()) || callMeWhenExecutorNotBusy_)
         {
-          state_ = updateInputsAndState();
+          callMeWhenExecutorNotBusy_ = false;
+          updateInputsAndState(now, executor);
           awaiting_ = JobIds();
-          // all of our inputs might have been newer than now
-          // in which case our state is valid beyond now; otherwise
-          // it is valid to now
-          verifiedAt_ = std::max(now, state_.second);
+          verifiedAt_ = now;
           return;
         }
-        xju::assert_not_equal(awaiting_.size(),0U);
+        xju::assert_not_equal(awaiting_, JobIds());
         throw awaiting_;
       }
       catch(JobIds awaiting){
         awaiting_ = awaiting;
         throw;
       }
-      catch(JobSpec const& s){
+      catch(Executor::JobSpec const& s){
         try{
           awaiting_ = executor.startJob(now, s);
           throw awaiting_;
         }
         catch(Executor::FlatOut const&){
-          awaiting_ = JobIds::alwaysDoneJob_;
+          callMeWhenExecutorNotBusy_ = true;
           throw;
         }
       }
     }
   }
-  // pre: JobIds::alwaysDoneJob_ not in j
-  void jobsDone(JobIds const& j) noexcept
+  void jobsDone(JobIds const& j, Executor& e) noexcept
   {
     auto relevant = awaiting_ & j;
-    if (relevant.size()){
+    if (relevant != JobIds()){
       if (calculatingAt_.valid()){
         // since we were calculating, the only thing we
         // can be awaiting is our own job
         xju::assert_equal(relevant, awaiting_);
-        executor.collectResultOf(onlyJob(awaiting_),
-                                 state_,
-                                 valuePath_,
-                                 infoPath_);
+        collectResultOfJob(e,relevant.onlyJob());
         verifiedAt_ = calculatingAt_.value();
         calculatingAt_.clear();
       }
       else{
         tellInputsThatJobsAreDone(relevant);
-        awaiting_ = JobIds::alwaysDoneJob();
+        callMeWhenExecutorNotBusy_ = true;
       }
+      awaiting_.remove(j);
     }
   }
 };

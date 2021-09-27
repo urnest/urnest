@@ -12,8 +12,8 @@ class CallToV3 : public CallToVoid
 {
 public:
   explicit CallToV3(
-    T& x,void 
-    (U::*f)(P1,P2,P3),
+    T& x,
+    void (U::*f)(P1,P2,P3),
     P1 const& p1,
     P2 const& p2,
     P3 const& p3)
@@ -26,11 +26,41 @@ public:
   }
   T& x_;
   void (U::* const f_)(P1,P2,P3);
-  P1 const& p1_;
-  P2 const& p2_;
-  P3 const& p3_;
+  P1 p1_;
+  P2 p2_;
+  P3 p3_;
 };
 
+template<class T,class U,class P1,class P2,class P3>
+class CallToV3_ : public CallToVoid
+{
+public:
+  explicit CallToV3_(
+    T& x,
+    void (U::*f)(P1,P2,P3))
+      : x_(x),
+        f_(f)
+  {
+  }
+  T& x_;
+  void (U::* const f_)(P1,P2,P3);
+
+  std::shared_ptr<CallToV3<T,U, P1, P2, P3> > operator()(
+    P1 p1,
+    P2 p2,
+    P3 p3){
+    return std::shared_ptr<CallToV3<T,U, P1, P2, P3> >(
+      new CallToV3<T,U, P1, P2, P3>(x_, f_, p1, p2, p3));
+  }
+};
+
+template<class T,class U,class P1,class P2,class P3>
+CallToV3_<T,U, P1, P2, P3> callTo(
+    T& x,
+    void (U::*f)(P1,P2,P3))
+{
+  return CallToV3_<T,U, P1, P2, P3>(x,f);
+}
 
 template<class T,class U,class R,class P1,class P2,class P3>
 class CallToR3 : public CallToR<R>
@@ -51,18 +81,51 @@ public:
   }
   T& x_;
   R (U::* const f_)(P1,P2,P3);
-  P1 const& p1_;
-  P2 const& p2_;
-  P3 const& p3_;
+  P1 p1_;
+  P2 p2_;
+  P3 p3_;
+
 };
+
+template<class T,class U,class R,class P1,class P2,class P3>
+class CallToR3_ : public CallToR<R>
+{
+public:
+  explicit CallToR3_(
+    T& x,
+    R (U::*f)(P1,P2,P3))
+      : x_(x),
+        f_(f)
+  {
+  }
+  T& x_;
+  R (U::* const f_)(P1,P2,P3);
+
+  std::shared_ptr<CallToR3<T,U,R, P1, P2, P3> > operator()(
+    P1 p1,
+    P2 p2,
+    P3 p3){
+    return std::shared_ptr<CallToR3<T,U,R, P1, P2, P3> >(
+      new CallToR3<T,U,R, P1, P2, P3>(x_, f_, p1, p2, p3));
+  }
+};
+
+template<class T,class U,class R,class P1,class P2,class P3>
+CallToR3_<T,U,R, P1, P2, P3> callTo(
+    T& x, 
+    R (U::*f)(P1,P2,P3))
+{
+  return CallToR3_<T,U,R, P1, P2, P3>(x,f);
+}
+
 
 template<class T,class U,class P1,class P2,class P3>
 class CallToVc3 : public CallToVoid
 {
 public:
   explicit CallToVc3(
-    T const& x,void 
-    (U::*f)(P1,P2,P3) const,
+    T& x,
+    void (U::*f)(P1,P2,P3) const ,
     P1 const& p1,
     P2 const& p2,
     P3 const& p3)
@@ -73,21 +136,51 @@ public:
         p3_(p3)
   {
   }
-  T const& x_;
+  T& x_;
   void (U::* const f_)(P1,P2,P3) const;
-  P1 const& p1_;
-  P2 const& p2_;
-  P3 const& p3_;
+  P1 p1_;
+  P2 p2_;
+  P3 p3_;
 };
 
+template<class T,class U,class P1,class P2,class P3>
+class CallToVc3_ : public CallToVoid
+{
+public:
+  explicit CallToVc3_(
+    T& x,
+    void (U::*f)(P1,P2,P3) const)
+      : x_(x),
+        f_(f)
+  {
+  }
+  T& x_;
+  void (U::* const f_)(P1,P2,P3) const;
+
+  std::shared_ptr<CallToVc3<T,U, P1, P2, P3> > operator()(
+    P1 p1,
+    P2 p2,
+    P3 p3){
+    return std::shared_ptr<CallToVc3<T,U, P1, P2, P3> >(
+      new CallToVc3<T,U, P1, P2, P3>(x_, f_, p1, p2, p3));
+  }
+};
+
+template<class T,class U,class P1,class P2,class P3>
+CallToVc3_<T,U, P1, P2, P3> callTo(
+    T& x,
+    void (U::*f)(P1,P2,P3) const)
+{
+  return CallToVc3_<T,U, P1, P2, P3>(x,f);
+}
 
 template<class T,class U,class R,class P1,class P2,class P3>
 class CallToRc3 : public CallToR<R>
 {
 public:
   explicit CallToRc3(
-    T const& x,
-    R (U::*f)(P1,P2,P3) const,
+    T& x,
+    R (U::*f)(P1,P2,P3) const ,
     P1 const& p1,
     P2 const& p2,
     P3 const& p3)
@@ -98,12 +191,45 @@ public:
         p3_(p3)
   {
   }
-  T const& x_;
+  T& x_;
   R (U::* const f_)(P1,P2,P3) const;
-  P1 const& p1_;
-  P2 const& p2_;
-  P3 const& p3_;
+  P1 p1_;
+  P2 p2_;
+  P3 p3_;
+
 };
+
+template<class T,class U,class R,class P1,class P2,class P3>
+class CallToRc3_ : public CallToR<R>
+{
+public:
+  explicit CallToRc3_(
+    T& x,
+    R (U::*f)(P1,P2,P3) const)
+      : x_(x),
+        f_(f)
+  {
+  }
+  T& x_;
+  R (U::* const f_)(P1,P2,P3) const;
+
+  std::shared_ptr<CallToRc3<T,U,R, P1, P2, P3> > operator()(
+    P1 p1,
+    P2 p2,
+    P3 p3){
+    return std::shared_ptr<CallToRc3<T,U,R, P1, P2, P3> >(
+      new CallToRc3<T,U,R, P1, P2, P3>(x_, f_, p1, p2, p3));
+  }
+};
+
+template<class T,class U,class R,class P1,class P2,class P3>
+CallToRc3_<T,U,R, P1, P2, P3> callTo(
+    T& x, 
+    R (U::*f)(P1,P2,P3) const)
+{
+  return CallToRc3_<T,U,R, P1, P2, P3>(x,f);
+}
+
 
 }
 }
