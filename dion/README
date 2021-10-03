@@ -1,0 +1,16 @@
+Dion is a compatible* re-implementation of odin (hence the anagram.) to
+make code easier to understand and modify.
+
+* possibly excluding cyclic dependency swallowing
+
+This involves:
+
+  - writing in clean C++
+  - reduce unnecessary rechecking
+  - adding comprehensive unit tests
+
+... hopefully then can improve and extend functionality more easily, e.g.:
+
+  - support "incremental"  derivations
+  - better represent directories
+

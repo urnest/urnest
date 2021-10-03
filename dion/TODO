@@ -1,0 +1,105 @@
+* factor JobCollection interface out of Executor
+* make a SomeJobIds subclass of JobIds and use for clarify of specs
+* test-JobIds.cc
+
+- simplest derivation, what are the types involved:
+  odin /
+  (gdb) p *Root
+$10 = {NodTyp = 8 DRVFIL, Sym = 0x0, Brother = 0x0, Son = 0x1248be0}
+(gdb) p *Root->Son
+$11 = {NodTyp = 10 ARTFIL
+  ... and Nod_PrmFHdr(Root) sees 10 and does:
+  FilHdr = Copy_FilHdr(RootFilHdr);
+  618        OprNod = Nod_Brother(RootNod); -> 0
+  Apply_OprNods(FilHdr, RootFilPrm, OprNod);
+
+  Use_PrmFHdr(&FilHdr, &FilPrm, PrmFHdr) sets FilHdr to:
+    FKind = 2 FK_SrcDir 2
+    IFilTyp = 1 FTC_None 1
+    p *FilHdr->FilTyp {FTClass = 1, FTName = 0x122fae0 "OBJECT"...}
+    FilHdr->TgtValFilHdr is 0 i.e. no TgtVal
+
+    (gdb) p FilPrm->PrmInf.IPrmTyp $24 = 0  (none I guess)
+    x what is FilPrm then used for? Does not appear to be used.
+    
+    ~ write our own Nod_PrmFHdr equivalent that -> Node, Params
+    - write a getNode(FilHdr) -> std::shared_ptr<Node> and use
+      that after Use_PrmFHdr
+
+  - odin /x
+    
+
+x move error and info paths to be type-specific because some
+  node types do not need files, this will allow state return
+  from collectResultOf and updateInputsAndState
+
+x go back to bool callMe_ instead of alwaysDoneJob_
+
+
+  - when getting (i.e. loading from persistent db) a FilHdr, promote it
+    to a C++ class for its type and make update (i.e. what is now
+    ServerAction) a recursive, blocking function specific to type, essentially
+
+   // REVISIT: example Node implementation
+      // pre: verifiedAt_ < verifyAt
+      // returns true if calc needed
+      bool derivs::Stdout::updateInputs(Date now, Jobs done, &executor) {
+          Awaiting awaiting{};
+          for(input : inputs){
+	    try{
+	       update(input, now, jobsDone, executor);
+	    }
+	    catch(Awaiting& x){
+               awaiting.extend(x);
+	       if (executor.flatOut()){
+	         executor.awaitOneJob(awaiting);
+	       }
+	    }
+	  }
+	  if (awaiting.size()){
+	    throw awaiting;
+	  }
+	  return (maxVintage(inputs) > vintage_);
+      }
+      derivs::Stdout startCalc(&executor, Date now)
+        // throw Awaiting if calc starts async job
+      {
+        if (inputsGood){
+	  myJob=...;
+	  executor.start(myJob, now);
+	}
+	else {
+	  status_ = minStatus(inputs);
+	}
+      }
+      calcDone(job, result) {
+        status = result.status;
+        store(result.value);
+      }
+
+
+     void build(Node& n, &executor) {
+        ++now_;
+        while(n.verifiedAt_ < now_){
+	  try{
+	    update(n, now_, executor);
+	  }
+	  catch(Awaiting& awaiting)
+	  {
+	    executor.awaitOneJob(awaiting);
+	  }
+	}
+	catch(Cancelled&) {
+	  ...;
+	}
+     }
+  - add cycle detection (by checking now == calculatingAt_ on entry)
+    - add cycle traceback via vector param
+  - add stdin (stdout,stderr are always via getErrors(), getWarnings())
+  - add cancellation
+    - need to broadcast cancellation to clear affected node awaiting_
+      ... or can use similar mech as awaiting?
+  - add concurrent clients
+  - add test() facility
+  - add redo() facility
+  - add Node::getErrors() and Node::getWarnings()

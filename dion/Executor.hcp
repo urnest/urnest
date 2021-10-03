@@ -1,0 +1,53 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <dion/JobIds.hh>
+#include <dion/Date.hh>
+#include <set>
+#include <xju/io/Input.hh>
+
+namespace dion
+{
+
+class Executor
+{
+public:
+  virtual ~Executor() noexcept{}
+
+  virtual JobIds jobsInProgress() const noexcept = 0;
+
+  class JobSpec
+  {
+    // REVISIT
+  };
+
+  // Job that signals executor is not busy.
+  // - jobsInProgress() will include this job where executor has max jobs
+  //   in progress
+  virtual JobIds executorNotBusyJob() const noexcept = 0;
+  
+  // post: result.count() == 1
+  // post: result != executorNotBusyJob()
+  virtual JobIds startJob(Date now, JobSpec const& spec)
+    // throw executorNotBusyJob() - executor has enough to do already
+    = 0;
+
+  // Read outputs from specified jobs, returns any that are now done.
+  // - result will include executorNotBusyJob() if executor has room
+  //   for more jobs
+  virtual JobIds readOutputs(JobIds const& jobs)
+    = 0;
+
+  virtual std::set<xju::io::Input const*> jobOutputs(JobIds const& jobs)
+    = 0;
+};
+
+}
