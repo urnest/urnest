@@ -13,9 +13,9 @@
   (otherwise tocs and cross references aren't correct)
   use that for manual
 
-/ produce pdf manual instead of postscript
+x produce pdf manual instead of postscript
   x produce manual
-  - get TOC and xrefs to work as pdf links
+  x get TOC and xrefs to work as pdf links
 
 ~ fix hash_inc to make sure it includes intermediate directories
   ~ need a test that fails first (added a test and it did not fail,

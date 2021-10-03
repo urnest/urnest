@@ -31,23 +31,27 @@ public:
   Node(JobIds awaiting,
        Date verifiedAt):
       awaiting_(std::move(awaiting)),
-      verifiedAt_(std::move(verifiedAt)),
-      callMeWhenExecutorNotBusy_(false)
+      verifiedAt_(std::move(verifiedAt))
   {
   }
 
   virtual ~Node() noexcept {}
 
-  // Node wants update() called as soon as executor is not busy
-  bool callMeWhenExecutorNotBusy_;
+  JobIds awaiting() const noexcept
+  {
+    return awaiting_;
+  }
+  Date verifiedAt() const noexcept
+  {
+    return verifiedAt_;
+  }
   
   // Bring all inputs and own state up to date now.
   // - to update an input, call input->update(now, executor)
-  // - do not start job (throw JobSpec to start job)
+  // - do not start job, instead throw JobSpec to start job
   virtual void updateInputsAndState(Date now, Executor& executor)
     // throws JobIds if inputs are awaiting jobs
     // throws JobSpec if needs external command job run
-    // throws Executor::FlatOut passed through from input update()
     = 0;
 
   // Tell any relevant inputs that js is done by calling
@@ -60,58 +64,67 @@ public:
   
   // Bring this node up to date now.
   // - makes use of type-specific updateInputsAndState above as appropriate
+  // post: awaiting() == JobIds() && verifiedAt() >= now
   void update(Date now, Executor& executor)
-  // throws JobIds if update awaits jobs
+  // throws awaiting() if update awaits jobs
   {
-    while(verifiedAt_ < now){
-      xju::assert_equal(calculatingAt_.valid(), false);
-      try{
+    try{
+      if(verifiedAt_ < now){
+        // result of our job is always delivered via jobsDone before
+        // our calculate is called again
+        
+        xju::assert_equal(calculatingAt_.valid(), false);
         // anything we were waiting for no longer in progress?
-        auto const noLongerInPrgoress(awaiting_ - executor.jobsInProgress());
-        if ((noLongerInPrgoress != JobIds()) || callMeWhenExecutorNotBusy_)
+        auto const noLongerInProgress(awaiting_ - executor.jobsInProgress());
+        if (noLongerInProgress != JobIds())
         {
-          callMeWhenExecutorNotBusy_ = false;
-          updateInputsAndState(now, executor);
-          awaiting_ = JobIds();
-          verifiedAt_ = now;
-          return;
+          try{
+            updateInputsAndState(now, executor);
+            awaiting_ = JobIds();
+            verifiedAt_ = now;
+          }
+          catch(Executor::JobSpec const& s){
+            JobIds j(executor.startJob(now, s));
+            calculatingAt_=now;
+            throw j;
+          }
         }
-        xju::assert_not_equal(awaiting_, JobIds());
-        throw awaiting_;
-      }
-      catch(JobIds awaiting){
-        awaiting_ = awaiting;
-        throw;
-      }
-      catch(Executor::JobSpec const& s){
-        try{
-          awaiting_ = executor.startJob(now, s);
+        else{
+          xju::assert_not_equal(awaiting_, JobIds());
           throw awaiting_;
-        }
-        catch(Executor::FlatOut const&){
-          callMeWhenExecutorNotBusy_ = true;
-          throw;
         }
       }
     }
+    catch(JobIds const& awaiting){
+      awaiting_ = awaiting;
+      throw;
+    }
   }
+
+  // note to avoid unecessary tree traversal, exclude
+  // e.executorNotBusyJob() from j before calling
   void jobsDone(JobIds const& j, Executor& e) noexcept
   {
     auto relevant = awaiting_ & j;
     if (relevant != JobIds()){
+      awaiting_.remove(relevant);
       if (calculatingAt_.valid()){
         // since we were calculating, the only thing we
         // can be awaiting is our own job
-        xju::assert_equal(relevant, awaiting_);
+        xju::assert_equal(awaiting_, JobIds());
         collectResultOfJob(e,relevant.onlyJob());
         verifiedAt_ = calculatingAt_.value();
         calculatingAt_.clear();
       }
       else{
         tellInputsThatJobsAreDone(relevant);
-        callMeWhenExecutorNotBusy_ = true;
+        // some node in our subtree has collected job
+        // result, so we might be able to progess other nodes
+        // in the tree (or ourself) so make sure our update()
+        // gets called as soon as executor has room for more
+        // jobs
+        awaiting_.add(e.executorNotBusyJob());
       }
-      awaiting_.remove(j);
     }
   }
 };
