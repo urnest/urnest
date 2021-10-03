@@ -9,32 +9,34 @@
 //
 
 
-#include <dion/JobId.hh>
 #include <cinttypes>
+#include <dion/job/Id.hh>
 
 namespace dion
 {
+namespace job
+{
 
-// Set of a limited range [0..JobIds::maxJobId_] of JobId
-class JobIds
+// Set of a limited range [0..Ids::maxId_] of Id
+class Ids
 {
 public:
-  explicit JobIds(uint64_t value=0):
+  explicit Ids(uint64_t value=0):
       value_(value)
   {
   }
-  // pre: x <= maxJobId__
+  // pre: x <= maxId__
   // post: onlyJob() == x
-  explicit JobIds(JobId const& x):
+  explicit Ids(Id const& x):
       value_(1 << x.value())
   {
-    xju::assert_less_equal(x, maxJobId_);
+    xju::assert_less_equal(x, maxId_);
   }
   // pre: count() == 1
-  JobId onlyJob() const noexcept
+  Id onlyJob() const noexcept
   {
     uint64_t value(value_);
-    for(JobId i=JobId(0); i <= JobIds::maxJobId_; ++i){
+    for(Id i=Id(0); i <= Ids::maxId_; ++i){
       if (value_ & 1UL){
         xju::assert_equal(value_, 1UL);
         return i;
@@ -42,39 +44,40 @@ public:
     }
     xju::assert_never_reached(); // should have been a job
   }
-  JobIds& remove(JobIds const& y) noexcept
+  Ids& remove(Ids const& y) noexcept
   {
     value_ = value_ & ~y.value_;
     return *this;
   }
 
-  JobIds& add(JobIds const& y) noexcept
+  Ids& add(Ids const& y) noexcept
   {
     value_ = value_ + ~y.value_;
     return *this;
   }
 
-  static const JobId maxJobId_=JobId(sizeof(uint64_t)*8-1);
+  static const Id maxId_=Id(sizeof(uint64_t)*8-1);
 
-  // how many JobIds in set
+  // how many Ids in set
   unsigned int count() const noexcept; // not implemented
 
 private:
   uint64_t value_;
 
-  friend JobIds operator-(JobIds const& a, JobIds const& b)
+  friend Ids operator-(Ids const& a, Ids const& b)
   {
-    JobIds result(a);
+    Ids result(a);
     result.remove(b);
     return result;
   }
-  friend JobIds operator+(JobIds const& a, JobIds const& b){
-    return JobIds(a.value_ | b.value_);
+  friend Ids operator+(Ids const& a, Ids const& b){
+    return Ids(a.value_ | b.value_);
   }
-  friend JobIds operator&(JobIds const& a, JobIds const& b){
-    return JobIds(a.value_ & b.value_);
+  friend Ids operator&(Ids const& a, Ids const& b){
+    return Ids(a.value_ & b.value_);
   }
-  friend bool operator<(JobIds const& a, JobIds const& b) noexcept;
+  friend bool operator<(Ids const& a, Ids const& b) noexcept;
 };
 
+}
 }

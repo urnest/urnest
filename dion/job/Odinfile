@@ -10,16 +10,11 @@
 
 %hcp-gen.vir_dir_specs==<<
 %hcp-local-spec
-%hcp-subdir-spec
 
-%hcp-subdir-spec==<<
-%job==./job/Odinfile%hcp-gen
-
-%hcp-local-spec==.:dir.hcp.list+(%hcp-opts)+hpath='dion':hcp-split-virdir-specs:cat
+%hcp-local-spec==.:dir.hcp.list+(%hcp-opts)+hpath='dion/job':hcp-split-virdir-specs:cat
 
 %tests.tree==<<
-()+cmd=(test-Node.cc+(%cxx-opts):auto.cxx.exe):stdout
-job%tests.tree
+()+cmd=(test-JobIds.cc+(%cxx-opts):auto.cxx.exe):stdout
 
 %cxx-opts==<<
 +(..%cxx-opts)
@@ -28,5 +23,4 @@ job%tests.tree
 
 %all.list-of-tags==<<
 .:merged-tags
-job%tags
 

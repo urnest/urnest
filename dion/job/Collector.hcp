@@ -9,12 +9,24 @@
 //
 
 
-#include <xju/Int.hh>
+#include <dion/job/Ids.hh>
 
 namespace dion
 {
+namespace job
+{
 
-class JobIdTag{};
-typedef xju::Int<JobIdTag, unsigned int> JobId;
+class Collector
+{
+public:
+  virtual ~Collector() noexcept {}
+  
+  virtual Ids executorNotBusyJob() const noexcept
+  = 0;
+};
+
 
 }
+}
+
+

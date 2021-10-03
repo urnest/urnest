@@ -14,6 +14,7 @@
 #include <xju/test/Calls.hh>
 #include <xju/async.hh>
 #include <xju/test/call.hh>
+#include <dion/job/Executor.hh>
 
 namespace dion
 {
@@ -23,59 +24,60 @@ class NodeStub : public Node
 public:
   using Node::Node;
   
-  virtual void updateInputsAndState(Date now, Executor& executor) override
-    // throws JobIds if inputs are awaiting jobs
-    // throws JobSpec if needs external command run
+  virtual void updateInputsAndState(Date now, job::Starter& starter) override
+    // throws job::Ids if inputs are awaiting jobs
+    // throws Job::Spec if needs external command run
   {
     calls_.enqueue(xju::test::callTo(*this, &Node::updateInputsAndState)(
-                     now, executor))->awaitReturn();
+                     now, starter))->awaitReturn();
   }
-  virtual void tellInputsThatJobsAreDone(JobIds const& js) noexcept
+  virtual void tellInputsThatJobsAreDone(job::Collector& c,
+                                         job::Ids const& js) noexcept
     override
   {
     calls_.enqueue(xju::test::callTo(*this, &Node::tellInputsThatJobsAreDone)(
-                     js))->awaitReturn();
+                     c,js))->awaitReturn();
   }
 
-  virtual void collectResultOfJob(Executor& e, JobId const& j) noexcept
+  virtual void collectResultOfJob(job::Collector& c, job::Id const& j) noexcept
     override
   {
     calls_.enqueue(xju::test::callTo(*this, &Node::collectResultOfJob)(
-                     e, j))->awaitReturn();
+                     c, j))->awaitReturn();
   }
   
   mutable xju::test::Calls calls_;
 };
 
-class ExecutorStub : public Executor
+class ExecutorStub : public job::Executor
 {
 public:
-  virtual JobIds jobsInProgress() const noexcept override
+  virtual job::Ids jobsInProgress() const noexcept override
   {
     return calls_.enqueue(
       xju::test::callTo(*this, &Executor::jobsInProgress)())
       ->awaitResult();
   }
-  virtual JobIds executorNotBusyJob() const noexcept override
+  virtual job::Ids executorNotBusyJob() const noexcept override
   {
     return calls_.enqueue(
-      xju::test::callTo(*this, &Executor::executorNotBusyJob)())
+      xju::test::callTo(*this, &job::Executor::executorNotBusyJob)())
       ->awaitResult();
   }
-  virtual JobIds startJob(Date now, JobSpec const& spec) override
+  virtual job::Ids startJob(Date now, job::Spec const& spec) override
     // throw executorNotBusyJob() - executor has enough to do already
   {
     return calls_.enqueue(
       xju::test::callTo(*this, &Executor::startJob)(now, spec))
       ->awaitResult();
   }
-  virtual JobIds readOutputs(JobIds const& jobs) override
+  virtual job::Ids readOutputs(job::Ids const& jobs) override
   {
     return calls_.enqueue(
       xju::test::callTo(*this, &Executor::readOutputs)(jobs))
       ->awaitResult();
   }
-  virtual std::set<xju::io::Input const*> jobOutputs(JobIds const& jobs) override
+  virtual std::set<xju::io::Input const*> jobOutputs(job::Ids const& jobs) override
   {
     return calls_.enqueue(
       xju::test::callTo(*this, &Executor::jobOutputs)(jobs))
@@ -94,7 +96,7 @@ int main(int argc, char* argv[])
   {
     auto const deadline(xju::steadyNow()+std::chrono::seconds(5));
 
-    NodeStub n(JobIds(),Date(1));
+    NodeStub n(job::Ids(),Date(1));
     ExecutorStub e;
     
     auto c(xju::test::call([&](){
