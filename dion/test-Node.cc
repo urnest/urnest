@@ -25,14 +25,14 @@ public:
   using Node::Node;
   
   virtual void updateInputsAndState(Date now, job::Starter& starter) override
-    // throws job::Ids if inputs are awaiting jobs
+    // throws job::SomeIds if inputs are awaiting jobs
     // throws Job::Spec if needs external command run
   {
     calls_.enqueue(xju::test::callTo(*this, &Node::updateInputsAndState)(
                      now, starter))->awaitReturn();
   }
   virtual void tellInputsThatJobsAreDone(job::Collector& c,
-                                         job::Ids const& js) noexcept
+                                         job::SomeIds const& js) noexcept
     override
   {
     calls_.enqueue(xju::test::callTo(*this, &Node::tellInputsThatJobsAreDone)(
@@ -58,13 +58,13 @@ public:
       xju::test::callTo(*this, &Executor::jobsInProgress)())
       ->awaitResult();
   }
-  virtual job::Ids executorNotBusyJob() const noexcept override
+  virtual job::SomeIds executorNotBusyJob() const noexcept override
   {
     return calls_.enqueue(
       xju::test::callTo(*this, &job::Executor::executorNotBusyJob)())
       ->awaitResult();
   }
-  virtual job::Ids startJob(Date now, job::Spec const& spec) override
+  virtual job::Id startJob(Date now, job::Spec const& spec) override
     // throw executorNotBusyJob() - executor has enough to do already
   {
     return calls_.enqueue(

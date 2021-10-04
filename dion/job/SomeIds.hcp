@@ -10,29 +10,27 @@
 
 
 #include <dion/job/Ids.hh>
-#include <dion/job/Spec.hh>
-#include <dion/Date.hh>
-#include <dion/job/SomeIds.hh>
 
 namespace dion
 {
 namespace job
 {
-class Starter
+
+class SomeIds : public Ids
 {
 public:
-  virtual SomeIds executorNotBusyJob() const noexcept = 0;
+  // pre: x != Ids()
+  explicit SomeIds(Ids x):
+      Ids(std::move(x))
+  {
+    xju::assert_not_equal(*this, Ids());
+  }
+  Ids& remove(Ids const& y) noexcept = delete;
+  Ids& add(Ids const& y) noexcept = delete;
   
-  virtual ~Starter() noexcept {}
-  
-  virtual job::Ids jobsInProgress() const noexcept = 0;
-
-  // post: result.count() == 1
-  // post: result != executorNotBusyJob()
-  virtual Id startJob(Date now, Spec const& spec)
-    // throw executorNotBusyJob() - executor has enough to do already
-    = 0;
 };
 
 }
 }
+
+

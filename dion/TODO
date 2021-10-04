@@ -1,6 +1,6 @@
 x factor JobCollection interface out of Executor
-* make a SomeJobIds subclass of JobIds and use for clarify of specs
-* test-JobIds.cc
+x make a SomeJobIds subclass of JobIds and use for clarify of specs
+x test-JobIds.cc
 
 - simplest derivation, what are the types involved:
   odin /

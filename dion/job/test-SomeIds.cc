@@ -7,32 +7,31 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-
-
-#include <dion/job/Ids.hh>
-#include <dion/job/Spec.hh>
-#include <dion/Date.hh>
 #include <dion/job/SomeIds.hh>
+
+#include <iostream>
+#include <xju/assert.hh>
 
 namespace dion
 {
 namespace job
 {
-class Starter
+
+void test1() {
+
+  SomeIds x(Id(1));
+}
+
+}
+}
+
+using namespace dion::job;
+
+int main(int argc, char* argv[])
 {
-public:
-  virtual SomeIds executorNotBusyJob() const noexcept = 0;
-  
-  virtual ~Starter() noexcept {}
-  
-  virtual job::Ids jobsInProgress() const noexcept = 0;
-
-  // post: result.count() == 1
-  // post: result != executorNotBusyJob()
-  virtual Id startJob(Date now, Spec const& spec)
-    // throw executorNotBusyJob() - executor has enough to do already
-    = 0;
-};
-
+  unsigned int n(0);
+  test1(), ++n;
+  std::cout << "PASS - " << n << " steps" << std::endl;
+  return 0;
 }
-}
+

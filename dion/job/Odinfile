@@ -15,6 +15,7 @@
 
 %tests.tree==<<
 ()+cmd=(test-Ids.cc+(%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-SomeIds.cc+(%cxx-opts):auto.cxx.exe):stdout
 
 %cxx-opts==<<
 +(..%cxx-opts)

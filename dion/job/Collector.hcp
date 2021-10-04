@@ -9,7 +9,7 @@
 //
 
 
-#include <dion/job/Ids.hh>
+#include <dion/job/SomeIds.hh>
 
 namespace dion
 {
@@ -21,7 +21,7 @@ class Collector
 public:
   virtual ~Collector() noexcept {}
   
-  virtual Ids executorNotBusyJob() const noexcept
+  virtual SomeIds executorNotBusyJob() const noexcept
   = 0;
 };
 
