@@ -1,4 +1,4 @@
-* factor JobCollection interface out of Executor
+x factor JobCollection interface out of Executor
 * make a SomeJobIds subclass of JobIds and use for clarify of specs
 * test-JobIds.cc
 
@@ -25,6 +25,7 @@ $11 = {NodTyp = 10 ARTFIL
     ~ write our own Nod_PrmFHdr equivalent that -> Node, Params
     - write a getNode(FilHdr) -> std::shared_ptr<Node> and use
       that after Use_PrmFHdr
+      - how to unit test with that in place?
 
   - odin /x
     

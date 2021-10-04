@@ -21,13 +21,13 @@ namespace job
 class Ids
 {
 public:
-  explicit Ids(uint64_t value=0):
-      value_(value)
+  explicit Ids():
+      value_(0)
   {
   }
   // pre: x <= maxId__
   // post: onlyJob() == x
-  explicit Ids(Id const& x):
+  Ids(Id const& x):
       value_(1 << x.value())
   {
     xju::assert_less_equal(x, maxId_);
@@ -37,10 +37,11 @@ public:
   {
     uint64_t value(value_);
     for(Id i=Id(0); i <= Ids::maxId_; ++i){
-      if (value_ & 1UL){
-        xju::assert_equal(value_, 1UL);
+      if (value & 1UL){
+        xju::assert_equal(value, 1UL);
         return i;
       }
+      value = value >> 1;
     }
     xju::assert_never_reached(); // should have been a job
   }
@@ -52,7 +53,7 @@ public:
 
   Ids& add(Ids const& y) noexcept
   {
-    value_ = value_ + ~y.value_;
+    value_ = value_ + y.value_;
     return *this;
   }
 
@@ -71,10 +72,14 @@ private:
     return result;
   }
   friend Ids operator+(Ids const& a, Ids const& b){
-    return Ids(a.value_ | b.value_);
+    Ids result;
+    result.value_ = a.value_ | b.value_;
+    return result;
   }
   friend Ids operator&(Ids const& a, Ids const& b){
-    return Ids(a.value_ & b.value_);
+    Ids result;
+    result.value_ = a.value_ & b.value_;
+    return result;
   }
   friend bool operator<(Ids const& a, Ids const& b) noexcept;
 };

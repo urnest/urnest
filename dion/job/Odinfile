@@ -14,7 +14,7 @@
 %hcp-local-spec==.:dir.hcp.list+(%hcp-opts)+hpath='dion/job':hcp-split-virdir-specs:cat
 
 %tests.tree==<<
-()+cmd=(test-JobIds.cc+(%cxx-opts):auto.cxx.exe):stdout
+()+cmd=(test-Ids.cc+(%cxx-opts):auto.cxx.exe):stdout
 
 %cxx-opts==<<
 +(..%cxx-opts)
