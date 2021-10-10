@@ -10,16 +10,24 @@
 - Database
   - mmap db file
     // not quite straight forward for growing file:
-    //  - can't mmap more than current file size
     //  - mmap size is fixed
-    //  so grow file e.g. by n*sysconf(_SC_PAGE_SIZE)
-    //  and remap, which means getNode can't return pointer directly
-    //  and have to keep track of real end (persistently so need header)
-    Header:
-      NodeId nextUnused_;
+    //  - but can mmap more than file size
+    //  - and mmap "in advance" gets to see stuff appended to file
+    //  - but more efficient to grow file by n*sysconf(_SC_PAGE_SIZE)
+    //    just by writing last byte, grow mmap to match and write
+    //    new db entries direct to mmap
+    //  and remap which means getNode can't return pointer directly
+    //  and have to keep track of real end (persistently)
+    //  - use separate file to keep nextUnused_, delete that file when
+    //    after opening db and write after sync, that way if we crash
+    //    we can tell corrupt; use separate lock file for mutex
 
+    //  root will be Id(0) and will always exist
+    
+    NodeId nextUnused_;
       
     NodeRef:
+      MMap&
       NodeId id_;
       Node& operator->()
 
@@ -27,8 +35,6 @@
     NodeRef addNode()
     void writeChanges();
     
-    also lock file and use to detect corrupt db v cached files
-
 - NodeCache:
     NodeCache(Database& database);
     NodeRef getRootNode()

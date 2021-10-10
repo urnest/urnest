@@ -15,6 +15,7 @@
 #include <xju/file/read.hh>
 #include <xju/path.hh>
 #include <xju/io/FileWriter.hh>
+#include <xju/io/FileReader.hh>
 
 namespace xju
 {
@@ -78,6 +79,30 @@ void test2() {
 
 }
 
+void test3(){
+  // mmap bigger than file (3 pages), then grow file to three pages
+  // check we can write to 2nd page (which is a hole in the file)
+  // via mmap and it puts the data into file (filling hole)
+  auto const fred(xju::path::split("fred.txt"));
+  xju::io::FileWriter y(fred, xju::file::Mode(0666));
+  y.truncate(0);
+
+  MMap x(fred, 0, 3*sysconf(_SC_PAGE_SIZE));
+  y.seekTo(2*_SC_PAGE_SIZE+3);
+  y.write(".",1);
+  y.sync();
+  xju::assert_equal(x.addr<char>()[2*_SC_PAGE_SIZE+3],'.');
+  x.addr<char>()[_SC_PAGE_SIZE]=',';
+  x.sync();
+  {
+    xju::io::FileReader r(fred);
+    r.seekTo(_SC_PAGE_SIZE);
+    char c;
+    r.read(&c, 1);
+    xju::assert_equal(c, ',');
+  }
+}
+
 }
 
 using namespace xju;
@@ -87,6 +112,7 @@ int main(int argc, char* argv[])
   unsigned int n(0);
   test1(), ++n;
   test2(), ++n;
+  test3(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }
