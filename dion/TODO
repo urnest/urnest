@@ -1,3 +1,53 @@
+- NodeType - enum class
+- NodeId - off_t file offset
+
+- node_data::SrcFile, Dir, SoftLink, etc
+  - pod types for each node type
+  - All has type, size, firstChild_, sibling_ as NodeId?
+  - all have vintage_, status_, verifiedAt_, fileName_?
+  - ChildNode has parent_ (RootNode does not)
+
+- Database
+  - mmap db file
+    // not quite straight forward for growing file:
+    //  - can't mmap more than current file size
+    //  - mmap size is fixed
+    //  so grow file e.g. by n*sysconf(_SC_PAGE_SIZE)
+    //  and remap, which means getNode can't return pointer directly
+    //  and have to keep track of real end (persistently so need header)
+    Header:
+      NodeId nextUnused_;
+
+      
+    NodeRef:
+      NodeId id_;
+      Node& operator->()
+
+    NodeRef getNode(NodeId);
+    NodeRef addNode()
+    void writeChanges();
+    
+    also lock file and use to detect corrupt db v cached files
+
+- NodeCache:
+    NodeCache(Database& database);
+    NodeRef getRootNode()
+    NodeRef getHostFileNode(xju::path::AbsFile const& f); // like HostFN_FileHdr
+    NodeRef getHostFileNode(Node const& wd, xju::path::RelPath const& path);
+    NodeRef doDeriv(Node const& from, Nod?); // like Do_Deriv
+
+    NodeRef Node&
+    writeChanges() function and clear(), which would be run when all
+      clients are done.
+
+    std::map<NodeId, std::unique_ptr<Node> > live_;
+
+- Root : Node
+- ChildNode : Node
+- SrcFile: ChildNode
+  
+      
+    
 x factor JobCollection interface out of Executor
 x make a SomeJobIds subclass of JobIds and use for clarify of specs
 x test-JobIds.cc
@@ -24,11 +74,815 @@ $11 = {NodTyp = 10 ARTFIL
     
     ~ write our own Nod_PrmFHdr equivalent that -> Node, Params
     - write a getNode(FilHdr) -> std::shared_ptr<Node> and use
-      that after Use_PrmFHdr
+      that after Use_PrmFHdr ... not quite
       - how to unit test with that in place?
 
   - odin /x
+    - its quite complicated, better to start with simpler
+      odin '%x'
+      ... where %x == <<
+         fred
+
+    - but anyway, make FK_SrcReg like:
+      /Odinfile:act_tgt.list/x referee (Job: copy, vintage now unless
+                                        value unchanged)
+      /Odinfile:act_tgt.list/x acttgt ... "source" tgtval
+        /Odinfile:act_tgt.list
+	  /Odinfile
+	    /:list:ls ... does Odinfile exist?
+      /:list:ls ... does x plain file/dir/link exist?
+      noting: Odinfile cannot produce a softlink or directory as x
+
+    ... but seems a bit different, see
+    Installing target /tmp :odin*act_tgt.list/x [OK@0/OK@0]
+** 1633596627.523    for /tmp/x [NoFile@81720/Unknown@81714]
+    ... in sequences below. What does that do exactly?
+
     
+    - is /x FilHdr
+    
+    (gdb) p *CurrentClient->FilHdr
+$4 = {LocHdr = 38596815, NextHash = 0x0, HdrInf = {LocHdr = 38596815, 
+    Father = 44, Brother = 6781492, Son = 0, FKind = 1 (FK_SrcReg "host file"), IFilTyp = 2, 
+    LocIdent = 38597015, LocPrm = 1, LocInp = 0, DataNum = 0, LocElm = 0, 
+    OldLocElm = 0, TgtValLocElm = 29482380, InpLink = 0, ElmLink = 0, 
+    Status = 6, ElmNameStatus = 1, ElmStatus = 1, ErrStatusWord = 0, 
+    SysModTime = 0, ModDate = 81340, ElmNameModDate = 0, ElmModDate = 0, 
+    ConfirmDate = 0, ElmNameConfirmDate = 0, ElmConfirmDate = 0, 
+    VerifyDate = 81340, ElmNameVerifyDate = 0, ElmVerifyDate = 0, Size = -1, 
+    OrigLocHdr = 0, OrigModDate = 0, AliasLocHdr = 0}, FilTyp = 0x1c07b70, 
+  FilPrm = 0x1c5d700, Ident = 0x1c66ce0 "x", Cnt = 1, PrevFree = 0x1c5e6c0, 
+  NextFree = 0x1c5d8f0, Modified = 1, NextMod = 0x0, Flag = 0, 
+  AnyOKDepth = 0, ElmDepth = 0, ElmTag = 0, SCC = 0x0, DepStatus = 1, 
+  DepModDate = 0, PndFlag = 0, ElmNamePndFlag = 0, ElmPndFlag = 0}
+(gdb) p *CurrentClient->FilHdr.FilTyp
+$5 = {FTClass = 2 (FTC_Atmc), FTName = 0x1c49b20 "FILE", Desc = 0x1c49b40 "", 
+  HelpLevel = 3, ArgFilTyp = 0x0, Tool = 0x0, MemEdg = 0x0, EqvEdg = 0x0, 
+  CastEdg = 0x1c27140, DrvEdg = 0x1c2a030, MapPrmTypLst = 0x1c2b750, 
+  IsCopy = 0, IsGrouping = 0, IsGroupingInput = 0, Reach = 0, Mark = 0, 
+  Pos = 0x0, IFilTyp = 2}
+
+  - checks IsSrcUpToDate(FilHdr->HdrInf.VerifyDate >= VerifyDate and status known
+    if not updates that via complicated Update_SrcFilHdr (lots of cases
+    with soft links and directories)
+    
+  - then checks if TgtVal is up to date:
+    - (double) checks is Src
+    - check FilHdr->HdrInf.ElmVerifyDate, so for FK_SrcReg Elm is TgtVal
+      and Src FilHdr keeps (copies of?) TgtVal VerifyDate and Status
+      - why?
+    - then if TgtVal not known to be up to date:
+      fetches TgtVal FilHdr by FilHdr_TgtValFilHdr(Copy_FilHdr(FilHdr))
+      (gdb) p *TgtValFilHdr
+$16 = {LocHdr = 38597284, NextHash = 0x0, HdrInf = {LocHdr = 38597284, 
+    Father = 38597020, Brother = 0, Son = 0, FKind = 8 FK_User "produced by user tool", IFilTyp = 13, 
+    LocIdent = 1, LocPrm = 1, LocInp = 38597484, DataNum = 0, LocElm = 0, 
+    OldLocElm = 0, TgtValLocElm = 0, InpLink = 0, ElmLink = 29482380, 
+    Status = 1, ElmNameStatus = 1, ElmStatus = 1, ErrStatusWord = 0, 
+    SysModTime = 0, ModDate = 0, ElmNameModDate = 0, ElmModDate = 0, 
+    ConfirmDate = 0, ElmNameConfirmDate = 0, ElmConfirmDate = 0, 
+    VerifyDate = 0, ElmNameVerifyDate = 0, ElmVerifyDate = 0, Size = -1, 
+    OrigLocHdr = 0, OrigModDate = 0, AliasLocHdr = 0}, FilTyp = 0x1c080f0, 
+  FilPrm = 0x1c5d700, Ident = 0x0, Cnt = 1, PrevFree = 0x1c5fdb0, 
+  NextFree = 0x47a240 <_UsedFilHdr>, Modified = 1, NextMod = 0x1c5fdb0, 
+  Flag = 0, AnyOKDepth = 0, ElmDepth = 0, ElmTag = 0, SCC = 0x0, 
+  DepStatus = 1, DepModDate = 0, PndFlag = 0, ElmNamePndFlag = 0, 
+  ElmPndFlag = 0}
+
+(gdb) p *TgtValFilHdr.FilTyp
+$17 = {FTClass = 3 FTC_List, FTName = 0x1c49de0 "odin*act_tgt.list", 
+  Desc = 0x1c49e00 "", HelpLevel = 3, ArgFilTyp = 0x0, Tool = 0x1c204a8, 
+  MemEdg = 0x0, EqvEdg = 0x1c26d40, CastEdg = 0x0, DrvEdg = 0x0, 
+  MapPrmTypLst = 0x1c2b750, IsCopy = 0, IsGrouping = 0, IsGroupingInput = 0, 
+  Reach = 0, Mark = 0, Pos = 0x0, IFilTyp = 13}
+
+  with no /tmp/x and no /tmp/Odinfile:
+    xju@xjutv:~/urnest$ ODINVERIFYLEVEL=2 ODINLOGLEVEL=7 odin maxbuilds=4 '/tmp/x'
+** 1633596158.327 Client->NumJobs 0
+** 1633596158.327 Client->NumJobs 0
+** 1633596158.327 Client->NumJobs 0
+** 1633596158.371 Client->NumJobs 0
+** 1633596158.371 Client->NumJobs 0
+** 1633596158.371 Client->NumJobs 0
+** 1633596158.459 Client->NumJobs 0
+** 1633596158.459 Client->NumJobs 0
+** 1633596158.503 Client->NumJobs 0
+** 1633596158.503 Client->NumJobs 0
+** 1633596158.547 { Push all reqs of /tmp/x [NoFile@81697/Unknown@0]
+** 1633596158.547 { Get all reqs of /tmp/x [NoFile@81697/Unknown@0]
+** 1633596158.547 { Get reqs of /tmp/x [NoFile@81697/Unknown@0]
+** 1633596158.547 { GetFile: get not-up-to-date /tmp/x [NoFile@81697/Unknown@0]
+** 1633596163.205 { Get reqs of /tmp :odin*act_tgt.list [Unknown@0/OK@0]
+** 1633596163.205 { GetFile: get not-up-to-date /tmp :odin*act_tgt.list [Unknown@0/OK@0]
+** 1633596165.365 { Get name and data reqs of /tmp :odin*targets_ptr [Unknown@0/OK@0]
+** 1633596165.365 { GetFile: get not-up-to-date /tmp :odin*targets_ptr [Unknown@0/OK@0]
+** 1633596167.069 { Get reqs of /tmp [OK@81696/Unknown@0]
+** 1633596167.069 { GetFile: get not-up-to-date /tmp [OK@81696/Unknown@0]
+** 1633596168.565 clear pending flag of /tmp [OK@81698/OK@81698]
+** 1633596168.565 clear tgt val pending flag of /tmp [OK@81698/OK@81698]
+** 1633596168.565 } GetFile: get not-up-to-date /tmp [OK@81698/OK@81698]
+** 1633596168.565 } Get reqs of /tmp [OK@81698/OK@81698]
+** 1633596168.565 {Generating /tmp :odin*targets_ptr [Unknown@0/OK@0]
+** 1633596168.565 {Do_Update /tmp :odin*targets_ptr [Unknown@0/OK@0]
+** 1633596168.565 }Do_Update /tmp :odin*targets_ptr [OK@81700/OK@0]
+** 1633596168.565 }Generating /tmp :odin*targets_ptr [OK@81700/OK@0]
+** 1633596168.565 clear pending flag of /tmp :odin*targets_ptr [OK@81700/OK@0]
+** 1633596168.565 } GetFile: get not-up-to-date /tmp :odin*targets_ptr [OK@81700/OK@0]
+** 1633596168.565 { Get name and data reqs of /tmp/Odinfile :odin*targets_ptr [Unknown@0/OK@0]
+** 1633596168.565 { GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_ptr [Unknown@0/OK@0]
+** 1633596171.117 { Get reqs of /tmp/Odinfile [NoFile@81699/Unknown@0]
+** 1633596171.117 { GetFile: get not-up-to-date /tmp/Odinfile [NoFile@81699/Unknown@0]
+** 1633596173.717 { Get reqs of /tmp :odin*act_tgt.list [Unknown@0/OK@0]
+** 1633596173.717 { GetFile: get not-up-to-date /tmp :odin*act_tgt.list [Unknown@0/OK@0]
+** 1633596175.285 clear pending flag of /tmp :odin*act_tgt.list [Unknown@0/OK@0]
+** 1633596175.285 } GetFile: get not-up-to-date /tmp :odin*act_tgt.list [Unknown@0/OK@0]
+** 1633596175.285 } Get reqs of /tmp :odin*act_tgt.list [Unknown@0/OK@0]
+** 1633596175.285 Pushing pending-flagged to pending:  /tmp :odin*act_tgt.list [Unknown@0/OK@0]
+** 1633596175.285 clear pending flag of /tmp/Odinfile [NoFile@81700/OK@81700]
+** 1633596175.285 clear tgt val pending flag of /tmp/Odinfile [NoFile@81700/OK@81700]
+** 1633596175.285 } GetFile: get not-up-to-date /tmp/Odinfile [NoFile@81700/OK@81700]
+** 1633596175.285 } Get reqs of /tmp/Odinfile [NoFile@81700/OK@81700]
+** 1633596175.285 {Generating /tmp/Odinfile :odin*targets_ptr [Unknown@0/OK@0]
+** 1633596175.285 {Do_Update /tmp/Odinfile :odin*targets_ptr [Unknown@0/OK@0]
+** 1633596175.285 }Do_Update /tmp/Odinfile :odin*targets_ptr [OK@81701/OK@0]
+** 1633596175.285 }Generating /tmp/Odinfile :odin*targets_ptr [OK@81701/OK@0]
+** 1633596175.285 clear pending flag of /tmp/Odinfile :odin*targets_ptr [OK@81701/OK@0]
+** 1633596175.285 } GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_ptr [OK@81701/OK@0]
+** 1633596175.285 { Get name and data reqs of /tmp/Odinfile [NoFile@81700/OK@81700]
+** 1633596175.285 } Get reqs of /tmp/Odinfile [NoFile@81700/OK@81700]
+** 1633596175.285 clear elem name pending flag of /tmp/Odinfile :odin*targets_ptr [OK@81701/OK@81701]
+** 1633596175.285 clear elem pending flag of /tmp/Odinfile :odin*targets_ptr [OK@81701/OK@81701]
+** 1633596175.285 } Get reqs of /tmp/Odinfile :odin*targets_ptr [OK@81701/OK@81701]
+** 1633596175.285 clear elem name pending flag of /tmp :odin*targets_ptr [OK@81700/OK@81701]
+** 1633596175.285 clear elem pending flag of /tmp :odin*targets_ptr [OK@81700/OK@81701]
+** 1633596175.285 } Get reqs of /tmp :odin*targets_ptr [OK@81700/OK@81701]
+** 1633596175.285 {Generating /tmp :odin*act_tgt.list [Unknown@0/OK@0]
+** 1633596175.286 {Do_Update /tmp :odin*act_tgt.list [Unknown@0/OK@0]
+** 1633596175.286 }Do_Update /tmp :odin*act_tgt.list [OK@81701/OK@0]
+** 1633596175.286 }Generating /tmp :odin*act_tgt.list [OK@81701/OK@0]
+** 1633596175.286 clear pending flag of /tmp :odin*act_tgt.list [OK@81701/OK@0]
+** 1633596175.286 } GetFile: get not-up-to-date /tmp :odin*act_tgt.list [OK@81701/OK@0]
+** 1633596175.286 } Get reqs of /tmp :odin*act_tgt.list [OK@81701/OK@0]
+** 1633596175.286 clear pending flag of /tmp/x [NoFile@81698/OK@81702]
+** 1633596175.286 clear tgt val pending flag of /tmp/x [NoFile@81698/OK@81702]
+** 1633596175.286 } GetFile: get not-up-to-date /tmp/x [NoFile@81698/OK@81702]
+** 1633596175.286 } Get reqs of /tmp/x [NoFile@81698/OK@81702]
+** 1633596175.286 } Get all reqs of /tmp/x [NoFile@81698/OK@81702]
+** 1633596175.286 { Gather all reqs of pending  /tmp :odin*act_tgt.list [OK@81701/OK@0]
+** 1633596175.286 { Get all reqs of /tmp :odin*act_tgt.list [OK@81701/OK@0]
+** 1633596175.286 } Get all reqs of /tmp :odin*act_tgt.list [OK@81701/OK@0]
+** 1633596175.286 Changed cycle input: /tmp :odin*act_tgt.list [OK@81701/OK@0]
+** 1633596175.286 Modifying TgtVal status of /tmp/x [NoFile@81698/Unknown@81702]
+** 1633596175.286 Modifying TgtVal status of /tmp/Odinfile [NoFile@81700/Unknown@81700]
+** 1633596175.286 Clearing status of /tmp/Odinfile :odin*targets_ptr [OK@81701/OK@81701]
+** 1633596175.286 Modifying element-name status of /tmp :odin*targets_ptr [OK@81700/OK@81701]
+** 1633596175.286 Clearing status of /tmp :odin*act_tgt.list [OK@81701/OK@0]
+** 1633596175.286 } Gather all reqs of pending  /tmp :odin*act_tgt.list [Unknown@81701/OK@0]
+** 1633596175.286 { Get all reqs of /tmp/x [NoFile@81698/Unknown@81702]
+** 1633596175.286 { Get reqs of /tmp/x [NoFile@81698/Unknown@81702]
+** 1633596175.286 { GetFile: get not-up-to-date /tmp/x [NoFile@81698/Unknown@81702]
+** 1633596178.053 { Get reqs of /tmp :odin*act_tgt.list [Unknown@81701/OK@0]
+** 1633596178.053 { GetFile: get not-up-to-date /tmp :odin*act_tgt.list [Unknown@81701/OK@0]
+** 1633596182.629 { Get name and data reqs of /tmp :odin*targets_ptr [OK@81700/OK@81701]
+** 1633596182.629 { Get name and data reqs of /tmp/Odinfile :odin*targets_ptr [Unknown@81701/OK@81701]
+** 1633596182.629 { GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_ptr [Unknown@81701/OK@81701]
+** 1633596186.981 { Get reqs of /tmp/Odinfile [NoFile@81700/Unknown@81700]
+** 1633596186.981 { GetFile: get not-up-to-date /tmp/Odinfile [NoFile@81700/Unknown@81700]
+** 1633596187.941 { Get reqs of /tmp :odin*act_tgt.list [Unknown@81701/OK@0]
+** 1633596187.941 { GetFile: get not-up-to-date /tmp :odin*act_tgt.list [Unknown@81701/OK@0]
+** 1633596189.637 clear pending flag of /tmp :odin*act_tgt.list [Unknown@81701/OK@0]
+** 1633596189.637 } GetFile: get not-up-to-date /tmp :odin*act_tgt.list [Unknown@81701/OK@0]
+** 1633596189.637 } Get reqs of /tmp :odin*act_tgt.list [Unknown@81701/OK@0]
+** 1633596189.637 clear pending flag of /tmp/Odinfile [NoFile@81702/OK@81702]
+** 1633596189.638 clear tgt val pending flag of /tmp/Odinfile [NoFile@81702/OK@81702]
+** 1633596189.638 } GetFile: get not-up-to-date /tmp/Odinfile [NoFile@81702/OK@81702]
+** 1633596189.638 } Get reqs of /tmp/Odinfile [NoFile@81702/OK@81702]
+** 1633596189.638 Verifying /tmp/Odinfile :odin*targets_ptr [Unknown@81701/OK@81701]
+** 1633596189.638 clear pending flag of /tmp/Odinfile :odin*targets_ptr [OK@81702/OK@81701]
+** 1633596189.638 } GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_ptr [OK@81702/OK@81701]
+** 1633596189.638 { Get name and data reqs of /tmp/Odinfile [NoFile@81702/OK@81702]
+** 1633596189.638 } Get reqs of /tmp/Odinfile [NoFile@81702/OK@81702]
+** 1633596189.638 clear elem name pending flag of /tmp/Odinfile :odin*targets_ptr [OK@81702/OK@81702]
+** 1633596189.638 clear elem pending flag of /tmp/Odinfile :odin*targets_ptr [OK@81702/OK@81702]
+** 1633596189.638 } Get reqs of /tmp/Odinfile :odin*targets_ptr [OK@81702/OK@81702]
+** 1633596189.638 clear elem name pending flag of /tmp :odin*targets_ptr [OK@81700/OK@81702]
+** 1633596189.638 clear elem pending flag of /tmp :odin*targets_ptr [OK@81700/OK@81702]
+** 1633596189.638 } Get reqs of /tmp :odin*targets_ptr [OK@81700/OK@81702]
+** 1633596189.638 Verifying /tmp :odin*act_tgt.list [Unknown@81701/OK@0]
+** 1633596189.638 clear pending flag of /tmp :odin*act_tgt.list [OK@81702/OK@0]
+** 1633596189.638 } GetFile: get not-up-to-date /tmp :odin*act_tgt.list [OK@81702/OK@0]
+** 1633596189.638 } Get reqs of /tmp :odin*act_tgt.list [OK@81702/OK@0]
+** 1633596189.638 clear pending flag of /tmp/x [NoFile@81702/OK@81702]
+** 1633596189.638 clear tgt val pending flag of /tmp/x [NoFile@81702/OK@81702]
+** 1633596189.638 } GetFile: get not-up-to-date /tmp/x [NoFile@81702/OK@81702]
+** 1633596189.638 } Get reqs of /tmp/x [NoFile@81702/OK@81702]
+** 1633596189.638 } Get all reqs of /tmp/x [NoFile@81702/OK@81702]
+** 1633596189.638 { Gather all reqs of pending  /tmp :odin*act_tgt.list [OK@81702/OK@0]
+** 1633596189.638 { Get all reqs of /tmp :odin*act_tgt.list [OK@81702/OK@0]
+** 1633596189.638 } Get all reqs of /tmp :odin*act_tgt.list [OK@81702/OK@0]
+** 1633596189.638 } Gather all reqs of pending  /tmp :odin*act_tgt.list [OK@81702/OK@0]
+** 1633596189.638 { Pop from pending:  /tmp :odin*act_tgt.list [OK@81702/OK@0]
+** 1633596189.638 Clearing pnd flag of /tmp :odin*act_tgt.list [OK@81702/OK@0]
+** 1633596189.638 } Pop from pending:  /tmp :odin*act_tgt.list [OK@81702/OK@0]
+CurrentDate now 81702
+** 1633596189.638 } Push all reqs of /tmp/x [NoFile@81702/OK@81702]
+** 1633596189.638 Client->NumJobs 0
+** 1633596189.638 { Push all reqs of /tmp/x :odin*err [Unknown@0/OK@0]
+** 1633596189.638 { Get all reqs of /tmp/x :odin*err [Unknown@0/OK@0]
+** 1633596189.638 { Get reqs of /tmp/x :odin*err [Unknown@0/OK@0]
+** 1633596189.638 { GetFile: get not-up-to-date /tmp/x :odin*err [Unknown@0/OK@0]
+** 1633596192.781 { Get reqs of /tmp/x [NoFile@81702/OK@81702]
+** 1633596192.781 } Get reqs of /tmp/x [NoFile@81702/OK@81702]
+** 1633596192.781 {Generating /tmp/x :odin*err [Unknown@0/OK@0]
+** 1633596192.782 {Do_Update /tmp/x :odin*err [Unknown@0/OK@0]
+** 1633596192.782 }Do_Update /tmp/x :odin*err [OK@81704/OK@0]
+** 1633596192.782 }Generating /tmp/x :odin*err [OK@81704/OK@0]
+** 1633596192.782 clear pending flag of /tmp/x :odin*err [OK@81704/OK@0]
+** 1633596192.782 } GetFile: get not-up-to-date /tmp/x :odin*err [OK@81704/OK@0]
+** 1633596192.782 } Get reqs of /tmp/x :odin*err [OK@81704/OK@0]
+** 1633596192.782 } Get all reqs of /tmp/x :odin*err [OK@81704/OK@0]
+CurrentDate now 81704
+** 1633596192.782 } Push all reqs of /tmp/x :odin*err [OK@81704/OK@0]
+** Summary of error messages for /tmp/x
+--- </tmp/x> does not exist ---
+
+
+  with /tmp/Odinfile (but no x == in it):
+xju@xjutv:~/urnest$ ODINVERIFYLEVEL=2 ODINLOGLEVEL=7 odin maxbuilds=4 '/tmp/x'
+** 1633596211.983 Client->NumJobs 0
+** 1633596211.983 Client->NumJobs 0
+** 1633596211.983 Client->NumJobs 0
+** 1633596212.027 Client->NumJobs 0
+** 1633596212.027 Client->NumJobs 0
+** 1633596212.027 Client->NumJobs 0
+** 1633596212.115 Client->NumJobs 0
+** 1633596212.115 Client->NumJobs 0
+** 1633596212.159 Client->NumJobs 0
+** 1633596212.159 Client->NumJobs 0
+** 1633596212.203 { Push all reqs of /tmp/x [NoFile@81702/Unknown@81702]
+** 1633596212.203 { Get all reqs of /tmp/x [NoFile@81702/Unknown@81702]
+** 1633596212.203 { Get reqs of /tmp/x [NoFile@81702/Unknown@81702]
+** 1633596212.203 { GetFile: get not-up-to-date /tmp/x [NoFile@81702/Unknown@81702]
+** 1633596219.902 { Get reqs of /tmp :odin*act_tgt.list [Unknown@81702/OK@0]
+** 1633596219.902 { GetFile: get not-up-to-date /tmp :odin*act_tgt.list [Unknown@81702/OK@0]
+** 1633596222.134 { Get name and data reqs of /tmp :odin*targets_ptr [Unknown@81700/OK@81702]
+** 1633596222.134 { GetFile: get not-up-to-date /tmp :odin*targets_ptr [Unknown@81700/OK@81702]
+** 1633596224.630 { Get reqs of /tmp [OK@81709/OK@81698]
+** 1633596224.630 { GetFile: get not-up-to-date /tmp [OK@81709/OK@81698]
+** 1633596226.518 clear pending flag of /tmp [OK@81709/OK@81709]
+** 1633596226.518 clear tgt val pending flag of /tmp [OK@81709/OK@81709]
+** 1633596226.518 } GetFile: get not-up-to-date /tmp [OK@81709/OK@81709]
+** 1633596226.518 } Get reqs of /tmp [OK@81709/OK@81709]
+** 1633596226.518 {Generating /tmp :odin*targets_ptr [Unknown@81700/OK@81702]
+** 1633596226.518 {Do_Update /tmp :odin*targets_ptr [Unknown@81700/OK@81702]
+** 1633596226.519 }Do_Update /tmp :odin*targets_ptr [OK@81709/OK@81702]
+** 1633596226.519 }Generating /tmp :odin*targets_ptr [OK@81709/OK@81702]
+** 1633596226.519 clear pending flag of /tmp :odin*targets_ptr [OK@81709/OK@81702]
+** 1633596226.519 } GetFile: get not-up-to-date /tmp :odin*targets_ptr [OK@81709/OK@81702]
+** 1633596226.519 { Get name and data reqs of /tmp/Odinfile :odin*targets_ptr [Unknown@81702/OK@81702]
+** 1633596226.519 { GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_ptr [Unknown@81702/OK@81702]
+** 1633596230.494 { Get reqs of /tmp/Odinfile [OK@81705/Unknown@81702]
+** 1633596230.494 { GetFile: get not-up-to-date /tmp/Odinfile [OK@81705/Unknown@81702]
+** 1633596233.798 { Get reqs of /tmp :odin*act_tgt.list [Unknown@81702/OK@0]
+** 1633596233.798 { GetFile: get not-up-to-date /tmp :odin*act_tgt.list [Unknown@81702/OK@0]
+** 1633596244.886 clear pending flag of /tmp :odin*act_tgt.list [Unknown@81702/OK@0]
+** 1633596244.886 } GetFile: get not-up-to-date /tmp :odin*act_tgt.list [Unknown@81702/OK@0]
+** 1633596244.887 } Get reqs of /tmp :odin*act_tgt.list [Unknown@81702/OK@0]
+** 1633596244.887 Pushing pending-flagged to pending:  /tmp :odin*act_tgt.list [Unknown@81702/OK@0]
+** 1633596244.887 clear pending flag of /tmp/Odinfile [OK@81709/OK@81709]
+** 1633596244.887 clear tgt val pending flag of /tmp/Odinfile [OK@81709/OK@81709]
+** 1633596244.887 } GetFile: get not-up-to-date /tmp/Odinfile [OK@81709/OK@81709]
+** 1633596244.887 } Get reqs of /tmp/Odinfile [OK@81709/OK@81709]
+** 1633596244.887 {Generating /tmp/Odinfile :odin*targets_ptr [Unknown@81702/OK@81702]
+** 1633596244.887 {Do_Update /tmp/Odinfile :odin*targets_ptr [Unknown@81702/OK@81702]
+** 1633596244.887 }Do_Update /tmp/Odinfile :odin*targets_ptr [OK@81710/OK@81702]
+** 1633596244.887 }Generating /tmp/Odinfile :odin*targets_ptr [OK@81710/OK@81702]
+** 1633596244.887 clear pending flag of /tmp/Odinfile :odin*targets_ptr [OK@81710/OK@81702]
+** 1633596244.887 } GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_ptr [OK@81710/OK@81702]
+** 1633596244.887 { Get name and data reqs of /tmp/Odinfile :odin*targets [Unknown@0/OK@0]
+** 1633596244.887 { GetFile: get not-up-to-date /tmp/Odinfile :odin*targets [Unknown@0/OK@0]
+** 1633596247.038 { Get reqs of /tmp/Odinfile [OK@81709/OK@81709]
+** 1633596247.038 } Get reqs of /tmp/Odinfile [OK@81709/OK@81709]
+** 1633596247.038 { Get name and data reqs of /tmp/Odinfile :odin*all_targets_inc [Unknown@0/OK@0]
+** 1633596247.039 { GetFile: get not-up-to-date /tmp/Odinfile :odin*all_targets_inc [Unknown@0/OK@0]
+** 1633596250.998 {Generating /tmp/Odinfile :odin*all_targets_inc [Unknown@0/OK@0]
+** 1633596250.999 {Do_Update /tmp/Odinfile :odin*all_targets_inc [Unknown@0/OK@0]
+** 1633596250.999 }Do_Update /tmp/Odinfile :odin*all_targets_inc [OK@81711/OK@0]
+** 1633596250.999 }Generating /tmp/Odinfile :odin*all_targets_inc [OK@81711/OK@0]
+** 1633596250.999 clear pending flag of /tmp/Odinfile :odin*all_targets_inc [OK@81711/OK@0]
+** 1633596250.999 } GetFile: get not-up-to-date /tmp/Odinfile :odin*all_targets_inc [OK@81711/OK@0]
+** 1633596250.999 { Get name and data reqs of /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [Unknown@0/OK@0]
+** 1633596250.999 { GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [Unknown@0/OK@0]
+** 1633596255.903 { Get name reqs of /tmp/Odinfile :odin*targets_inc [Unknown@0/OK@0]
+** 1633596255.903 { GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_inc [Unknown@0/OK@0]
+** 1633596491.667 { Get reqs of /tmp/Odinfile [OK@81709/OK@81709]
+** 1633596491.667 } Get reqs of /tmp/Odinfile [OK@81709/OK@81709]
+** 1633596491.667 {Generating /tmp/Odinfile :odin*targets_inc [Unknown@0/OK@0]
+** 1633596491.667 {Do_Update /tmp/Odinfile :odin*targets_inc [Unknown@0/OK@0]
+** 1633596491.668 }Do_Update /tmp/Odinfile :odin*targets_inc [OK@81711/OK@0]
+** 1633596491.668 }Generating /tmp/Odinfile :odin*targets_inc [OK@81711/OK@0]
+** 1633596491.668 clear pending flag of /tmp/Odinfile :odin*targets_inc [OK@81711/OK@0]
+** 1633596491.668 } GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_inc [OK@81711/OK@0]
+** 1633596491.668 clear elem name pending flag of /tmp/Odinfile :odin*targets_inc [OK@81711/OK@0]
+** 1633596491.668 } Get reqs of /tmp/Odinfile :odin*targets_inc [OK@81711/OK@0]
+** 1633596491.668 {Generating /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [Unknown@0/OK@0]
+** 1633596491.668 {Do_Update /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [Unknown@0/OK@0]
+** 1633596491.668 }Do_Update /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [OK@81712/OK@0]
+** 1633596491.668 }Generating /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [OK@81712/OK@0]
+** 1633596491.668 clear pending flag of /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [OK@81712/OK@0]
+** 1633596491.668 } GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [OK@81712/OK@0]
+** 1633596491.668 clear elem name pending flag of /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [OK@81712/OK@81713]
+** 1633596491.668 clear elem pending flag of /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [OK@81712/OK@81713]
+** 1633596491.668 } Get reqs of /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [OK@81712/OK@81713]
+** 1633596491.668 { Get name and data reqs of /tmp/Odinfile :odin*targets_inc [OK@81711/OK@0]
+** 1633596491.668 clear elem name pending flag of /tmp/Odinfile :odin*targets_inc [OK@81711/OK@81713]
+** 1633596491.668 clear elem pending flag of /tmp/Odinfile :odin*targets_inc [OK@81711/OK@81713]
+** 1633596491.668 } Get reqs of /tmp/Odinfile :odin*targets_inc [OK@81711/OK@81713]
+** 1633596491.668 clear elem name pending flag of /tmp/Odinfile :odin*all_targets_inc [OK@81711/OK@81711]
+** 1633596491.668 clear elem pending flag of /tmp/Odinfile :odin*all_targets_inc [OK@81711/OK@81713]
+** 1633596491.668 } Get reqs of /tmp/Odinfile :odin*all_targets_inc [OK@81711/OK@81713]
+** 1633596491.668 {Generating /tmp/Odinfile :odin*targets [Unknown@0/OK@0]
+** 1633596491.668 {Do_Update /tmp/Odinfile :odin*targets [Unknown@0/OK@0]
+** 1633596491.668 }Do_Update /tmp/Odinfile :odin*targets [OK@81714/OK@0]
+** 1633596491.668 }Generating /tmp/Odinfile :odin*targets [OK@81714/OK@0]
+** 1633596491.668 clear pending flag of /tmp/Odinfile :odin*targets [OK@81714/OK@0]
+** 1633596491.668 } GetFile: get not-up-to-date /tmp/Odinfile :odin*targets [OK@81714/OK@0]
+** 1633596491.668 } Get reqs of /tmp/Odinfile :odin*targets [OK@81714/OK@0]
+** 1633596491.668 clear elem name pending flag of /tmp/Odinfile :odin*targets_ptr [OK@81710/OK@81714]
+** 1633596491.668 clear elem pending flag of /tmp/Odinfile :odin*targets_ptr [OK@81710/OK@81714]
+** 1633596491.668 } Get reqs of /tmp/Odinfile :odin*targets_ptr [OK@81710/OK@81714]
+** 1633596491.668 clear elem name pending flag of /tmp :odin*targets_ptr [OK@81709/OK@81709]
+** 1633596491.668 clear elem pending flag of /tmp :odin*targets_ptr [OK@81709/OK@81714]
+** 1633596491.668 } Get reqs of /tmp :odin*targets_ptr [OK@81709/OK@81714]
+** 1633596491.668 {Generating /tmp :odin*act_tgt.list [Unknown@81702/OK@0]
+** 1633596491.668 {Do_Update /tmp :odin*act_tgt.list [Unknown@81702/OK@0]
+** 1633596491.668 }Do_Update /tmp :odin*act_tgt.list [OK@81714/OK@0]
+** 1633596491.668 }Generating /tmp :odin*act_tgt.list [OK@81714/OK@0]
+** 1633596491.668 clear pending flag of /tmp :odin*act_tgt.list [OK@81714/OK@0]
+** 1633596491.668 } GetFile: get not-up-to-date /tmp :odin*act_tgt.list [OK@81714/OK@0]
+** 1633596491.668 } Get reqs of /tmp :odin*act_tgt.list [OK@81714/OK@0]
+** 1633596491.668 clear pending flag of /tmp/x [NoFile@81709/OK@81714]
+** 1633596491.668 clear tgt val pending flag of /tmp/x [NoFile@81709/OK@81714]
+** 1633596491.669 } GetFile: get not-up-to-date /tmp/x [NoFile@81709/OK@81714]
+** 1633596491.669 } Get reqs of /tmp/x [NoFile@81709/OK@81714]
+** 1633596491.669 } Get all reqs of /tmp/x [NoFile@81709/OK@81714]
+** 1633596491.669 { Gather all reqs of pending  /tmp :odin*act_tgt.list [OK@81714/OK@0]
+** 1633596491.669 { Get all reqs of /tmp :odin*act_tgt.list [OK@81714/OK@0]
+** 1633596491.669 } Get all reqs of /tmp :odin*act_tgt.list [OK@81714/OK@0]
+** 1633596491.669 } Gather all reqs of pending  /tmp :odin*act_tgt.list [OK@81714/OK@0]
+** 1633596491.669 { Pop from pending:  /tmp :odin*act_tgt.list [OK@81714/OK@0]
+** 1633596491.669 Clearing pnd flag of /tmp :odin*act_tgt.list [OK@81714/OK@0]
+** 1633596491.669 } Pop from pending:  /tmp :odin*act_tgt.list [OK@81714/OK@0]
+CurrentDate now 81714
+** 1633596491.669 } Push all reqs of /tmp/x [NoFile@81709/OK@81714]
+** 1633596491.669 Client->NumJobs 0
+** 1633596491.669 Client->NumJobs 0
+** 1633596491.669 Client->NumJobs 0
+** 1633596491.669 Client->NumJobs 0
+** 1633596491.711 { Push all reqs of /tmp/x :odin*err [Unknown@81704/OK@0]
+** 1633596491.711 { Get all reqs of /tmp/x :odin*err [Unknown@81704/OK@0]
+** 1633596491.711 { Get reqs of /tmp/x :odin*err [Unknown@81704/OK@0]
+** 1633596491.711 { GetFile: get not-up-to-date /tmp/x :odin*err [Unknown@81704/OK@0]
+
+  - with Odinfile having x == y (but no y):
+xju@xjutv:~/urnest$ ODINVERIFYLEVEL=2 ODINLOGLEVEL=7 odin maxbuilds=4 '/tmp/x'
+** 1633596570.551 Client->NumJobs 0
+** 1633596570.551 Client->NumJobs 0
+** 1633596570.551 Client->NumJobs 0
+** 1633596570.595 Client->NumJobs 0
+** 1633596570.595 Client->NumJobs 0
+** 1633596570.595 Client->NumJobs 0
+** 1633596570.683 Client->NumJobs 0
+** 1633596570.683 Client->NumJobs 0
+** 1633596570.727 Client->NumJobs 0
+** 1633596570.727 Client->NumJobs 0
+** 1633596570.771 { Push all reqs of /tmp/x [NoFile@81709/Unknown@81714]
+** 1633596570.771 { Get all reqs of /tmp/x [NoFile@81709/Unknown@81714]
+** 1633596570.771 { Get reqs of /tmp/x [NoFile@81709/Unknown@81714]
+** 1633596570.771 { GetFile: get not-up-to-date /tmp/x [NoFile@81709/Unknown@81714]
+** 1633596577.477 { Get reqs of /tmp :odin*act_tgt.list [Unknown@81714/OK@0]
+** 1633596577.477 { GetFile: get not-up-to-date /tmp :odin*act_tgt.list [Unknown@81714/OK@0]
+** 1633596578.925 { Get name and data reqs of /tmp :odin*targets_ptr [Unknown@81709/OK@81714]
+** 1633596578.925 { GetFile: get not-up-to-date /tmp :odin*targets_ptr [Unknown@81709/OK@81714]
+** 1633596579.621 { Get reqs of /tmp [OK@81720/OK@81709]
+** 1633596579.621 { GetFile: get not-up-to-date /tmp [OK@81720/OK@81709]
+** 1633596582.165 clear pending flag of /tmp [OK@81720/OK@81720]
+** 1633596582.165 clear tgt val pending flag of /tmp [OK@81720/OK@81720]
+** 1633596582.165 } GetFile: get not-up-to-date /tmp [OK@81720/OK@81720]
+** 1633596582.165 } Get reqs of /tmp [OK@81720/OK@81720]
+** 1633596582.165 {Generating /tmp :odin*targets_ptr [Unknown@81709/OK@81714]
+** 1633596582.165 {Do_Update /tmp :odin*targets_ptr [Unknown@81709/OK@81714]
+** 1633596582.165 }Do_Update /tmp :odin*targets_ptr [OK@81720/OK@81714]
+** 1633596582.165 }Generating /tmp :odin*targets_ptr [OK@81720/OK@81714]
+** 1633596582.165 clear pending flag of /tmp :odin*targets_ptr [OK@81720/OK@81714]
+** 1633596582.165 } GetFile: get not-up-to-date /tmp :odin*targets_ptr [OK@81720/OK@81714]
+** 1633596582.165 { Get name and data reqs of /tmp/Odinfile :odin*targets_ptr [Unknown@81710/OK@81714]
+** 1633596582.165 { GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_ptr [Unknown@81710/OK@81714]
+** 1633596585.133 { Get reqs of /tmp/Odinfile [OK@81716/Unknown@81709]
+** 1633596585.133 { GetFile: get not-up-to-date /tmp/Odinfile [OK@81716/Unknown@81709]
+** 1633596590.333 { Get reqs of /tmp :odin*act_tgt.list [Unknown@81714/OK@0]
+** 1633596590.333 { GetFile: get not-up-to-date /tmp :odin*act_tgt.list [Unknown@81714/OK@0]
+** 1633596591.365 clear pending flag of /tmp :odin*act_tgt.list [Unknown@81714/OK@0]
+** 1633596591.365 } GetFile: get not-up-to-date /tmp :odin*act_tgt.list [Unknown@81714/OK@0]
+** 1633596591.365 } Get reqs of /tmp :odin*act_tgt.list [Unknown@81714/OK@0]
+** 1633596591.366 Pushing pending-flagged to pending:  /tmp :odin*act_tgt.list [Unknown@81714/OK@0]
+** 1633596591.366 clear pending flag of /tmp/Odinfile [OK@81720/OK@81720]
+** 1633596591.366 clear tgt val pending flag of /tmp/Odinfile [OK@81720/OK@81720]
+** 1633596591.366 } GetFile: get not-up-to-date /tmp/Odinfile [OK@81720/OK@81720]
+** 1633596591.366 } Get reqs of /tmp/Odinfile [OK@81720/OK@81720]
+** 1633596591.366 {Generating /tmp/Odinfile :odin*targets_ptr [Unknown@81710/OK@81714]
+** 1633596591.366 {Do_Update /tmp/Odinfile :odin*targets_ptr [Unknown@81710/OK@81714]
+** 1633596591.366 }Do_Update /tmp/Odinfile :odin*targets_ptr [OK@81720/OK@81714]
+** 1633596591.366 }Generating /tmp/Odinfile :odin*targets_ptr [OK@81720/OK@81714]
+** 1633596591.366 clear pending flag of /tmp/Odinfile :odin*targets_ptr [OK@81720/OK@81714]
+** 1633596591.366 } GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_ptr [OK@81720/OK@81714]
+** 1633596591.366 { Get name and data reqs of /tmp/Odinfile :odin*targets [Unknown@81714/OK@0]
+** 1633596591.366 { GetFile: get not-up-to-date /tmp/Odinfile :odin*targets [Unknown@81714/OK@0]
+** 1633596592.845 { Get reqs of /tmp/Odinfile [OK@81720/OK@81720]
+** 1633596592.845 } Get reqs of /tmp/Odinfile [OK@81720/OK@81720]
+** 1633596592.845 { Get name and data reqs of /tmp/Odinfile :odin*all_targets_inc [OK@81711/OK@81713]
+** 1633596592.845 { GetFile: get not-up-to-date /tmp/Odinfile :odin*all_targets_inc [OK@81711/OK@81713]
+** 1633596596.725 Verifying /tmp/Odinfile :odin*all_targets_inc [OK@81711/OK@81713]
+** 1633596596.726 clear pending flag of /tmp/Odinfile :odin*all_targets_inc [OK@81720/OK@81713]
+** 1633596596.726 } GetFile: get not-up-to-date /tmp/Odinfile :odin*all_targets_inc [OK@81720/OK@81713]
+** 1633596596.726 { Get name and data reqs of /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [Unknown@81712/OK@81713]
+** 1633596596.726 { GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [Unknown@81712/OK@81713]
+** 1633596615.318 { Get name reqs of /tmp/Odinfile :odin*targets_inc [Unknown@81711/OK@81713]
+** 1633596615.318 { GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_inc [Unknown@81711/OK@81713]
+** 1633596627.518 { Get reqs of /tmp/Odinfile [OK@81720/OK@81720]
+** 1633596627.518 } Get reqs of /tmp/Odinfile [OK@81720/OK@81720]
+** 1633596627.518 {Generating /tmp/Odinfile :odin*targets_inc [Unknown@81711/OK@81713]
+** 1633596627.518 {Do_Update /tmp/Odinfile :odin*targets_inc [Unknown@81711/OK@81713]
+** 1633596627.518 }Do_Update /tmp/Odinfile :odin*targets_inc [OK@81720/OK@81713]
+** 1633596627.518 }Generating /tmp/Odinfile :odin*targets_inc [OK@81720/OK@81713]
+** 1633596627.518 clear pending flag of /tmp/Odinfile :odin*targets_inc [OK@81720/OK@81713]
+** 1633596627.518 } GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_inc [OK@81720/OK@81713]
+** 1633596627.518 clear elem name pending flag of /tmp/Odinfile :odin*targets_inc [OK@81720/OK@81713]
+** 1633596627.518 } Get reqs of /tmp/Odinfile :odin*targets_inc [OK@81720/OK@81713]
+** 1633596627.518 Verifying /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [Unknown@81712/OK@81713]
+** 1633596627.518 clear pending flag of /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [OK@81720/OK@81713]
+** 1633596627.518 } GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [OK@81720/OK@81713]
+** 1633596627.518 clear elem name pending flag of /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [OK@81720/OK@81720]
+** 1633596627.518 clear elem pending flag of /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [OK@81720/OK@81720]
+** 1633596627.518 } Get reqs of /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [OK@81720/OK@81720]
+** 1633596627.518 { Get name and data reqs of /tmp/Odinfile :odin*targets_inc [OK@81720/OK@81713]
+** 1633596627.518 clear elem name pending flag of /tmp/Odinfile :odin*targets_inc [OK@81720/OK@81720]
+** 1633596627.518 clear elem pending flag of /tmp/Odinfile :odin*targets_inc [OK@81720/OK@81720]
+** 1633596627.518 } Get reqs of /tmp/Odinfile :odin*targets_inc [OK@81720/OK@81720]
+** 1633596627.519 clear elem name pending flag of /tmp/Odinfile :odin*all_targets_inc [OK@81720/OK@81720]
+** 1633596627.519 clear elem pending flag of /tmp/Odinfile :odin*all_targets_inc [OK@81720/OK@81720]
+** 1633596627.519 } Get reqs of /tmp/Odinfile :odin*all_targets_inc [OK@81720/OK@81720]
+** 1633596627.519 {Generating /tmp/Odinfile :odin*targets [Unknown@81714/OK@0]
+** 1633596627.519 {Do_Update /tmp/Odinfile :odin*targets [Unknown@81714/OK@0]
+** 1633596627.519 }Do_Update /tmp/Odinfile :odin*targets [OK@81721/OK@0]
+** 1633596627.519 }Generating /tmp/Odinfile :odin*targets [OK@81721/OK@0]
+** 1633596627.519 clear pending flag of /tmp/Odinfile :odin*targets [OK@81721/OK@0]
+** 1633596627.519 } GetFile: get not-up-to-date /tmp/Odinfile :odin*targets [OK@81721/OK@0]
+** 1633596627.519 } Get reqs of /tmp/Odinfile :odin*targets [OK@81721/OK@0]
+** 1633596627.519 clear elem name pending flag of /tmp/Odinfile :odin*targets_ptr [OK@81720/OK@81721]
+** 1633596627.519 clear elem pending flag of /tmp/Odinfile :odin*targets_ptr [OK@81720/OK@81721]
+** 1633596627.519 } Get reqs of /tmp/Odinfile :odin*targets_ptr [OK@81720/OK@81721]
+** 1633596627.519 clear elem name pending flag of /tmp :odin*targets_ptr [OK@81720/OK@81720]
+** 1633596627.519 clear elem pending flag of /tmp :odin*targets_ptr [OK@81720/OK@81721]
+** 1633596627.519 } Get reqs of /tmp :odin*targets_ptr [OK@81720/OK@81721]
+** 1633596627.519 {Generating /tmp :odin*act_tgt.list [Unknown@81714/OK@0]
+** 1633596627.523 Queuing for broadcast /tmp/x [NoFile@81720/Unknown@81714]
+** 1633596627.523 Installing target /tmp :odin*act_tgt.list/x [OK@0/OK@0]
+** 1633596627.523    for /tmp/x [NoFile@81720/Unknown@81714]
+** 1633596627.523 {Do_Update /tmp :odin*act_tgt.list [Unknown@81714/OK@0]
+** 1633596627.523 }Do_Update /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596627.523 }Generating /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596627.523 clear pending flag of /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596627.523 clear pending flag of /tmp :odin*act_tgt.list/x [OK@81724/OK@0]
+** 1633596627.523 } GetFile: get not-up-to-date /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596627.523 } Get reqs of /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596627.523 clear pending flag of /tmp/x [NoFile@81720/OK@81724]
+** 1633596627.523 clear tgt val pending flag of /tmp/x [NoFile@81720/OK@81724]
+** 1633596627.523 } GetFile: get not-up-to-date /tmp/x [NoFile@81720/OK@81724]
+** 1633596627.523 } Get reqs of /tmp/x [NoFile@81720/OK@81724]
+** 1633596627.523 Modifying TgtVal status of /tmp/x [NoFile@81720/Unknown@81724]
+** 1633596627.523 { Get reqs of /tmp/x [NoFile@81720/Unknown@81724]
+** 1633596627.523 { GetFile: get not-up-to-date /tmp/x [NoFile@81720/Unknown@81724]
+** 1633596759.969 { Get reqs of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@0/OK@0]
+** 1633596759.969 { GetFile: get not-up-to-date /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@0/OK@0]
+** 1633596775.065 { Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin/copy.sh [OK@81162/OK@81162]
+** 1633596775.065 { GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin/copy.sh [OK@81162/OK@81162]
+** 1633596779.243 Queuing for broadcast /home/xju/gcc-9.3.0-run/lib/Odin/odin/1.17.9 [Circular@81724/Unknown@0]
+** 1633596779.243 { Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [OK@81162/OK@0]
+** 1633596779.243 { GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [OK@81162/OK@0]
+** 1633596785.785 { Get name and data reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*targets_ptr [OK@81162/OK@81162]
+** 1633596785.785 { GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*targets_ptr [OK@81162/OK@81162]
+** 1633596789.721 { Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin [OK@81724/OK@81160]
+** 1633596789.721 { GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin [OK@81724/OK@81160]
+** 1633596794.841 clear pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin [OK@81724/OK@81724]
+** 1633596794.841 clear tgt val pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin [OK@81724/OK@81724]
+** 1633596794.841 } GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin [OK@81724/OK@81724]
+** 1633596794.842 } Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin [OK@81724/OK@81724]
+** 1633596794.842 Verifying /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*targets_ptr [OK@81162/OK@81162]
+** 1633596794.842 clear pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*targets_ptr [OK@81724/OK@81162]
+** 1633596794.842 } GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*targets_ptr [OK@81724/OK@81162]
+** 1633596794.842 { Get name and data reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile :odin*targets_ptr [OK@81162/OK@81162]
+** 1633596794.842 { GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile :odin*targets_ptr [OK@81162/OK@81162]
+** 1633596800.153 { Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile [NoFile@81162/OK@81162]
+** 1633596800.154 { GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile [NoFile@81162/OK@81162]
+** 1633596802.282 { Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [OK@81162/OK@0]
+** 1633596802.282 { GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [OK@81162/OK@0]
+** 1633596804.474 clear pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [Unknown@81162/OK@0]
+** 1633596804.474 } GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [Unknown@81162/OK@0]
+** 1633596804.474 } Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [Unknown@81162/OK@0]
+** 1633596804.474 Pushing pending-flagged to pending:  /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [Unknown@81162/OK@0]
+** 1633596804.474 clear pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile [NoFile@81724/OK@81724]
+** 1633596804.474 clear tgt val pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile [NoFile@81724/OK@81724]
+** 1633596804.474 } GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile [NoFile@81724/OK@81724]
+** 1633596804.474 } Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile [NoFile@81724/OK@81724]
+** 1633596804.474 Verifying /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile :odin*targets_ptr [OK@81162/OK@81162]
+** 1633596804.474 clear pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile :odin*targets_ptr [OK@81724/OK@81162]
+** 1633596804.474 } GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile :odin*targets_ptr [OK@81724/OK@81162]
+** 1633596804.474 { Get name and data reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile [NoFile@81724/OK@81724]
+** 1633596804.474 } Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile [NoFile@81724/OK@81724]
+** 1633596804.474 clear elem name pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596804.474 clear elem pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596804.474 } Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596804.474 clear elem name pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596804.474 clear elem pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596804.474 } Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596804.474 Verifying /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [Unknown@81162/OK@0]
+** 1633596804.474 clear pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596804.474 } GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596804.474 } Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596804.474 clear pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin/copy.sh [OK@81724/OK@81724]
+** 1633596804.474 clear tgt val pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin/copy.sh [OK@81724/OK@81724]
+** 1633596804.474 } GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin/copy.sh [OK@81724/OK@81724]
+** 1633596804.474 } Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin/copy.sh [OK@81724/OK@81724]
+** 1633596804.474 { Get name and data reqs of /tmp :odin*act_tgt.list/x [OK@81724/OK@0]
+** 1633596804.474 { Get name and data reqs of /tmp/y [NoFile@81722/Unknown@0]
+** 1633596804.474 { GetFile: get not-up-to-date /tmp/y [NoFile@81722/Unknown@0]
+** 1633596809.106 { Get reqs of /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596809.106 } Get reqs of /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596809.106 clear pending flag of /tmp/y [NoFile@81724/OK@81724]
+** 1633596809.106 clear tgt val pending flag of /tmp/y [NoFile@81724/OK@81724]
+** 1633596809.106 } GetFile: get not-up-to-date /tmp/y [NoFile@81724/OK@81724]
+** 1633596809.106 } Get reqs of /tmp/y [NoFile@81724/OK@81724]
+** 1633596809.106 clear elem name pending flag of /tmp :odin*act_tgt.list/x [OK@81724/OK@81724]
+** 1633596809.106 clear elem pending flag of /tmp :odin*act_tgt.list/x [OK@81724/OK@81724]
+** 1633596809.106 } Get reqs of /tmp :odin*act_tgt.list/x [OK@81724/OK@81724]
+** 1633596809.106 { Get reqs of /tmp/x [NoFile@81724/Unknown@81724]
+** 1633596809.106 { GetFile: get not-up-to-date /tmp/x [NoFile@81724/Unknown@81724]
+** 1633596812.282 { Get reqs of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@0/OK@0]
+** 1633596812.282 { GetFile: get not-up-to-date /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@0/OK@0]
+** 1633596838.818 clear pending flag of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@0/OK@0]
+** 1633596838.818 } GetFile: get not-up-to-date /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@0/OK@0]
+** 1633596838.818 } Get reqs of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@0/OK@0]
+** 1633596838.819 Pushing pending-flagged to pending:  /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@0/OK@0]
+** 1633596838.819 clear pending flag of /tmp/x [NoFile@81724/OK@81724]
+** 1633596838.819 clear tgt val pending flag of /tmp/x [NoFile@81724/OK@81724]
+** 1633596838.819 } GetFile: get not-up-to-date /tmp/x [NoFile@81724/OK@81724]
+** 1633596838.819 } Get reqs of /tmp/x [NoFile@81724/OK@81724]
+** 1633596838.819 got min-status Aborting /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@0/OK@0]
+** 1633596838.819 clear pending flag of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [SysAbort@81724/OK@0]
+** 1633596838.819 } GetFile: get not-up-to-date /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [SysAbort@81724/OK@0]
+** 1633596838.819 } Get reqs of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [SysAbort@81724/OK@0]
+** 1633596838.819 clear pending flag of /tmp/x [NoFile@81724/TgtValError@81724]
+** 1633596838.819 clear tgt val pending flag of /tmp/x [NoFile@81724/TgtValError@81724]
+** 1633596838.819 } GetFile: get not-up-to-date /tmp/x [NoFile@81724/TgtValError@81724]
+** 1633596838.819 } Get reqs of /tmp/x [NoFile@81724/TgtValError@81724]
+** 1633596838.819 Clearing status of /home/xju/tmp/oc930/xjutv/PKGS/odin [Unknown@81724/OK@81724]
+** 1633596838.819 Clearing status of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596838.819 Clearing status of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596838.819 Modifying TgtVal status of /home/xju/tmp/oc930/xjutv/PKGS/odin/copy.sh [OK@81724/Unknown@81724]
+** 1633596838.821 Clearing status of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [SysAbort@81724/OK@0]
+** 1633596838.821 Modifying TgtVal status of /tmp/x [NoFile@81724/Unknown@81724]
+** 1633596838.821 Modifying TgtVal status of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile [NoFile@81724/Unknown@81724]
+** 1633596838.821 Clearing status of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596838.821 { Get reqs of /tmp/x [NoFile@81724/Unknown@81724]
+** 1633596838.821 { GetFile: get not-up-to-date /tmp/x [NoFile@81724/Unknown@81724]
+** 1633596841.274 { Get reqs of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@81724/OK@0]
+** 1633596841.274 { GetFile: get not-up-to-date /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@81724/OK@0]
+** 1633596843.354 { Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin/copy.sh [OK@81724/Unknown@81724]
+** 1633596843.354 { GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin/copy.sh [OK@81724/Unknown@81724]
+** 1633596845.754 { Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [Unknown@81724/OK@0]
+** 1633596845.754 { GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [Unknown@81724/OK@0]
+** 1633596846.899 { Get name and data reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*targets_ptr [Unknown@81724/OK@81724]
+** 1633596846.899 { GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*targets_ptr [Unknown@81724/OK@81724]
+** 1633596848.018 { Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin [Unknown@81724/OK@81724]
+** 1633596848.018 { GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin [Unknown@81724/OK@81724]
+** 1633596849.210 clear pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin [OK@81724/OK@81724]
+** 1633596849.211 clear tgt val pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin [OK@81724/OK@81724]
+** 1633596849.211 } GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin [OK@81724/OK@81724]
+** 1633596849.211 } Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin [OK@81724/OK@81724]
+** 1633596849.211 Verifying /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*targets_ptr [Unknown@81724/OK@81724]
+** 1633596849.211 clear pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596849.211 } GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596849.211 { Get name and data reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile :odin*targets_ptr [Unknown@81724/OK@81724]
+** 1633596849.211 { GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile :odin*targets_ptr [Unknown@81724/OK@81724]
+** 1633596850.731 { Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile [NoFile@81724/Unknown@81724]
+** 1633596850.731 { GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile [NoFile@81724/Unknown@81724]
+** 1633596852.474 { Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [Unknown@81724/OK@0]
+** 1633596852.475 { GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [Unknown@81724/OK@0]
+** 1633596854.083 clear pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [Unknown@81724/OK@0]
+** 1633596854.083 } GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [Unknown@81724/OK@0]
+** 1633596854.083 } Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [Unknown@81724/OK@0]
+** 1633596854.083 clear pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile [NoFile@81724/OK@81724]
+** 1633596854.083 clear tgt val pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile [NoFile@81724/OK@81724]
+** 1633596854.083 } GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile [NoFile@81724/OK@81724]
+** 1633596854.083 } Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile [NoFile@81724/OK@81724]
+** 1633596854.083 Verifying /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile :odin*targets_ptr [Unknown@81724/OK@81724]
+** 1633596854.083 clear pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596854.083 } GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596854.083 { Get name and data reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile [NoFile@81724/OK@81724]
+** 1633596854.083 } Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile [NoFile@81724/OK@81724]
+** 1633596854.083 clear elem name pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596854.083 clear elem pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596854.083 } Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin/Odinfile :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596854.083 clear elem name pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596854.083 clear elem pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596854.083 } Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596854.083 Verifying /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [Unknown@81724/OK@0]
+** 1633596854.083 clear pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596854.083 } GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596854.083 } Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596854.083 clear pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin/copy.sh [OK@81724/OK@81724]
+** 1633596854.083 clear tgt val pending flag of /home/xju/tmp/oc930/xjutv/PKGS/odin/copy.sh [OK@81724/OK@81724]
+** 1633596854.083 } GetFile: get not-up-to-date /home/xju/tmp/oc930/xjutv/PKGS/odin/copy.sh [OK@81724/OK@81724]
+** 1633596854.083 } Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin/copy.sh [OK@81724/OK@81724]
+** 1633596854.083 { Get name and data reqs of /tmp :odin*act_tgt.list/x [OK@81724/OK@81724]
+** 1633596854.083 } Get reqs of /tmp :odin*act_tgt.list/x [OK@81724/OK@81724]
+** 1633596854.083 { Get reqs of /tmp/x [NoFile@81724/Unknown@81724]
+** 1633596854.083 { GetFile: get not-up-to-date /tmp/x [NoFile@81724/Unknown@81724]
+** 1633596855.883 { Get reqs of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@81724/OK@0]
+** 1633596855.883 { GetFile: get not-up-to-date /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@81724/OK@0]
+** 1633596857.035 clear pending flag of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@81724/OK@0]
+** 1633596857.035 } GetFile: get not-up-to-date /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@81724/OK@0]
+** 1633596857.035 } Get reqs of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@81724/OK@0]
+** 1633596857.035 clear pending flag of /tmp/x [NoFile@81724/OK@81724]
+** 1633596857.035 clear tgt val pending flag of /tmp/x [NoFile@81724/OK@81724]
+** 1633596857.035 } GetFile: get not-up-to-date /tmp/x [NoFile@81724/OK@81724]
+** 1633596857.035 } Get reqs of /tmp/x [NoFile@81724/OK@81724]
+** 1633596857.035 got min-status Aborting /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@81724/OK@0]
+** 1633596857.035 clear pending flag of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [SysAbort@81724/OK@0]
+** 1633596857.035 } GetFile: get not-up-to-date /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [SysAbort@81724/OK@0]
+** 1633596857.035 } Get reqs of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [SysAbort@81724/OK@0]
+** 1633596857.035 clear pending flag of /tmp/x [NoFile@81724/TgtValError@81724]
+** 1633596857.035 clear tgt val pending flag of /tmp/x [NoFile@81724/TgtValError@81724]
+** 1633596857.035 } GetFile: get not-up-to-date /tmp/x [NoFile@81724/TgtValError@81724]
+** 1633596857.035 } Get reqs of /tmp/x [NoFile@81724/TgtValError@81724]
+** 1633596857.035 } Get all reqs of /tmp/x [NoFile@81724/TgtValError@81724]
+** 1633596857.035 { Gather all reqs of pending  /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596857.035 { Get all reqs of /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596857.035 } Get all reqs of /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596857.035 Changed cycle input: /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596857.035 Clearing status of /tmp :odin*act_tgt.list/x [OK@81724/OK@81724]
+** 1633596857.035 Clearing status of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [SysAbort@81724/OK@0]
+** 1633596857.035 Modifying TgtVal status of /tmp/x [NoFile@81724/Unknown@81724]
+** 1633596857.035 Modifying TgtVal status of /tmp/y [NoFile@81724/Unknown@81724]
+** 1633596857.035 Modifying TgtVal status of /tmp/Odinfile [OK@81720/Unknown@81720]
+** 1633596857.035 Clearing status of /tmp/Odinfile :odin*targets_ptr [OK@81720/OK@81721]
+** 1633596857.035 Modifying element-name status of /tmp :odin*targets_ptr [OK@81720/OK@81721]
+** 1633596857.035 Clearing status of /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596857.035 Clearing status of /tmp/Odinfile :odin*targets [OK@81721/OK@0]
+** 1633596857.035 Clearing status of /tmp/Odinfile :odin*targets_inc [OK@81720/OK@81720]
+** 1633596857.035 Clearing status of /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [OK@81720/OK@81720]
+** 1633596857.035 Modifying element-name status of /tmp/Odinfile :odin*all_targets_inc [OK@81720/OK@81720]
+** 1633596857.035 } Gather all reqs of pending  /tmp :odin*act_tgt.list [Unknown@81724/OK@0]
+** 1633596857.035 { Gather all reqs of pending  /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596857.035 { Get all reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596857.036 } Get all reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596857.036 } Gather all reqs of pending  /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596857.036 { Gather all reqs of pending  /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@81724/OK@0]
+** 1633596857.036 { Get all reqs of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@81724/OK@0]
+** 1633596857.036 { Get reqs of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@81724/OK@0]
+** 1633596857.036 { GetFile: get not-up-to-date /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@81724/OK@0]
+** 1633596858.035 { Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin/copy.sh [OK@81724/OK@81724]
+** 1633596858.035 } Get reqs of /home/xju/tmp/oc930/xjutv/PKGS/odin/copy.sh [OK@81724/OK@81724]
+** 1633596858.035 { Get name and data reqs of /tmp :odin*act_tgt.list/x [Unknown@81724/OK@81724]
+** 1633596858.035 { GetFile: get not-up-to-date /tmp :odin*act_tgt.list/x [Unknown@81724/OK@81724]
+** 1633596859.219 { Get reqs of /tmp :odin*act_tgt.list [Unknown@81724/OK@0]
+** 1633596859.219 { GetFile: get not-up-to-date /tmp :odin*act_tgt.list [Unknown@81724/OK@0]
+** 1633596860.115 { Get name and data reqs of /tmp :odin*targets_ptr [OK@81720/OK@81721]
+** 1633596860.115 { Get name and data reqs of /tmp/Odinfile :odin*targets_ptr [Unknown@81720/OK@81721]
+** 1633596860.115 { GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_ptr [Unknown@81720/OK@81721]
+** 1633596861.115 { Get reqs of /tmp/Odinfile [OK@81720/Unknown@81720]
+** 1633596861.115 { GetFile: get not-up-to-date /tmp/Odinfile [OK@81720/Unknown@81720]
+** 1633596862.011 { Get reqs of /tmp :odin*act_tgt.list [Unknown@81724/OK@0]
+** 1633596862.011 { GetFile: get not-up-to-date /tmp :odin*act_tgt.list [Unknown@81724/OK@0]
+** 1633596863.275 clear pending flag of /tmp :odin*act_tgt.list [Unknown@81724/OK@0]
+** 1633596863.275 clear pending flag of /tmp :odin*act_tgt.list/x [Unknown@81724/OK@81724]
+** 1633596863.275 } GetFile: get not-up-to-date /tmp :odin*act_tgt.list [Unknown@81724/OK@0]
+** 1633596863.275 } Get reqs of /tmp :odin*act_tgt.list [Unknown@81724/OK@0]
+** 1633596863.275 clear pending flag of /tmp/Odinfile [OK@81724/OK@81724]
+** 1633596863.275 clear tgt val pending flag of /tmp/Odinfile [OK@81724/OK@81724]
+** 1633596863.275 } GetFile: get not-up-to-date /tmp/Odinfile [OK@81724/OK@81724]
+** 1633596863.275 } Get reqs of /tmp/Odinfile [OK@81724/OK@81724]
+** 1633596863.275 Verifying /tmp/Odinfile :odin*targets_ptr [Unknown@81720/OK@81721]
+** 1633596863.275 clear pending flag of /tmp/Odinfile :odin*targets_ptr [OK@81724/OK@81721]
+** 1633596863.275 } GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_ptr [OK@81724/OK@81721]
+** 1633596863.275 { Get name and data reqs of /tmp/Odinfile :odin*targets [Unknown@81721/OK@0]
+** 1633596863.275 { GetFile: get not-up-to-date /tmp/Odinfile :odin*targets [Unknown@81721/OK@0]
+** 1633596864.259 { Get reqs of /tmp/Odinfile [OK@81724/OK@81724]
+** 1633596864.259 } Get reqs of /tmp/Odinfile [OK@81724/OK@81724]
+** 1633596864.259 { Get name and data reqs of /tmp/Odinfile :odin*all_targets_inc [OK@81720/OK@81720]
+** 1633596864.259 { Get name and data reqs of /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [Unknown@81720/OK@81720]
+** 1633596864.259 { GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [Unknown@81720/OK@81720]
+** 1633596870.067 { Get name reqs of /tmp/Odinfile :odin*targets_inc [Unknown@81720/OK@81720]
+** 1633596870.067 { GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_inc [Unknown@81720/OK@81720]
+** 1633596874.307 { Get reqs of /tmp/Odinfile [OK@81724/OK@81724]
+** 1633596874.307 } Get reqs of /tmp/Odinfile [OK@81724/OK@81724]
+** 1633596874.307 Verifying /tmp/Odinfile :odin*targets_inc [Unknown@81720/OK@81720]
+** 1633596874.307 clear pending flag of /tmp/Odinfile :odin*targets_inc [OK@81724/OK@81720]
+** 1633596874.307 } GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_inc [OK@81724/OK@81720]
+** 1633596874.307 clear elem name pending flag of /tmp/Odinfile :odin*targets_inc [OK@81724/OK@81720]
+** 1633596874.307 } Get reqs of /tmp/Odinfile :odin*targets_inc [OK@81724/OK@81720]
+** 1633596874.307 Verifying /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [Unknown@81720/OK@81720]
+** 1633596874.307 clear pending flag of /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [OK@81724/OK@81720]
+** 1633596874.307 } GetFile: get not-up-to-date /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [OK@81724/OK@81720]
+** 1633596874.307 clear elem name pending flag of /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [OK@81724/OK@81724]
+** 1633596874.307 clear elem pending flag of /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [OK@81724/OK@81724]
+** 1633596874.307 } Get reqs of /tmp/Odinfile :odin*targets_inc :map=:all_targets_inc [OK@81724/OK@81724]
+** 1633596874.307 { Get name and data reqs of /tmp/Odinfile :odin*targets_inc [OK@81724/OK@81720]
+** 1633596874.307 clear elem name pending flag of /tmp/Odinfile :odin*targets_inc [OK@81724/OK@81724]
+** 1633596874.307 clear elem pending flag of /tmp/Odinfile :odin*targets_inc [OK@81724/OK@81724]
+** 1633596874.307 } Get reqs of /tmp/Odinfile :odin*targets_inc [OK@81724/OK@81724]
+** 1633596874.307 clear elem name pending flag of /tmp/Odinfile :odin*all_targets_inc [OK@81720/OK@81724]
+** 1633596874.307 clear elem pending flag of /tmp/Odinfile :odin*all_targets_inc [OK@81720/OK@81724]
+** 1633596874.307 } Get reqs of /tmp/Odinfile :odin*all_targets_inc [OK@81720/OK@81724]
+** 1633596874.307 Verifying /tmp/Odinfile :odin*targets [Unknown@81721/OK@0]
+** 1633596874.307 clear pending flag of /tmp/Odinfile :odin*targets [OK@81724/OK@0]
+** 1633596874.307 } GetFile: get not-up-to-date /tmp/Odinfile :odin*targets [OK@81724/OK@0]
+** 1633596874.307 } Get reqs of /tmp/Odinfile :odin*targets [OK@81724/OK@0]
+** 1633596874.307 clear elem name pending flag of /tmp/Odinfile :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596874.307 clear elem pending flag of /tmp/Odinfile :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596874.307 } Get reqs of /tmp/Odinfile :odin*targets_ptr [OK@81724/OK@81724]
+** 1633596874.307 clear elem name pending flag of /tmp :odin*targets_ptr [OK@81720/OK@81724]
+** 1633596874.307 clear elem pending flag of /tmp :odin*targets_ptr [OK@81720/OK@81724]
+** 1633596874.307 } Get reqs of /tmp :odin*targets_ptr [OK@81720/OK@81724]
+** 1633596874.307 Verifying /tmp :odin*act_tgt.list [Unknown@81724/OK@0]
+** 1633596874.308 clear pending flag of /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596874.308 clear pending flag of /tmp :odin*act_tgt.list/x [OK@81724/OK@81724]
+** 1633596874.308 } GetFile: get not-up-to-date /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596874.308 } Get reqs of /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596874.308 clear pending flag of /tmp :odin*act_tgt.list/x [OK@81724/OK@81724]
+** 1633596874.308 } GetFile: get not-up-to-date /tmp :odin*act_tgt.list/x [OK@81724/OK@81724]
+** 1633596874.308 { Get name and data reqs of /tmp/y [NoFile@81724/Unknown@81724]
+** 1633596874.308 { GetFile: get not-up-to-date /tmp/y [NoFile@81724/Unknown@81724]
+** 1633596875.939 { Get reqs of /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596875.939 } Get reqs of /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596875.939 clear pending flag of /tmp/y [NoFile@81724/OK@81724]
+** 1633596875.939 clear tgt val pending flag of /tmp/y [NoFile@81724/OK@81724]
+** 1633596875.939 } GetFile: get not-up-to-date /tmp/y [NoFile@81724/OK@81724]
+** 1633596875.939 } Get reqs of /tmp/y [NoFile@81724/OK@81724]
+** 1633596875.939 clear elem name pending flag of /tmp :odin*act_tgt.list/x [OK@81724/OK@81724]
+** 1633596875.939 clear elem pending flag of /tmp :odin*act_tgt.list/x [OK@81724/OK@81724]
+** 1633596875.939 } Get reqs of /tmp :odin*act_tgt.list/x [OK@81724/OK@81724]
+** 1633596875.939 { Get reqs of /tmp/x [NoFile@81724/Unknown@81724]
+** 1633596875.939 { GetFile: get not-up-to-date /tmp/x [NoFile@81724/Unknown@81724]
+** 1633596878.875 { Get reqs of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@81724/OK@0]
+** 1633596878.875 { GetFile: get not-up-to-date /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@81724/OK@0]
+** 1633596880.843 clear pending flag of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@81724/OK@0]
+** 1633596880.843 } GetFile: get not-up-to-date /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@81724/OK@0]
+** 1633596880.843 } Get reqs of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@81724/OK@0]
+** 1633596880.843 clear pending flag of /tmp/x [NoFile@81724/OK@81724]
+** 1633596880.843 clear tgt val pending flag of /tmp/x [NoFile@81724/OK@81724]
+** 1633596880.843 } GetFile: get not-up-to-date /tmp/x [NoFile@81724/OK@81724]
+** 1633596880.843 } Get reqs of /tmp/x [NoFile@81724/OK@81724]
+** 1633596880.843 got min-status Aborting /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [Unknown@81724/OK@0]
+** 1633596880.843 clear pending flag of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [SysAbort@81724/OK@0]
+** 1633596880.843 } GetFile: get not-up-to-date /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [SysAbort@81724/OK@0]
+** 1633596880.843 } Get reqs of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [SysAbort@81724/OK@0]
+** 1633596880.843 } Get all reqs of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [SysAbort@81724/OK@0]
+** 1633596880.844 Modifying TgtVal status of /tmp/x [NoFile@81724/TgtValError@81724]
+** 1633596880.844 } Gather all reqs of pending  /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [SysAbort@81724/OK@0]
+** 1633596880.844 { Pop from pending:  /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596880.844 Clearing pnd flag of /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596880.844 } Pop from pending:  /tmp :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596880.844 { Pop from pending:  /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596880.844 Clearing pnd flag of /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596880.844 } Pop from pending:  /home/xju/tmp/oc930/xjutv/PKGS/odin :odin*act_tgt.list [OK@81724/OK@0]
+** 1633596880.844 { Pop from pending:  /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [SysAbort@81724/OK@0]
+** 1633596880.844 Clearing pnd flag of /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [SysAbort@81724/OK@0]
+** 1633596880.844 } Pop from pending:  /tmp :odin*act_tgt.list/x +copy_dest=(\038598495) :odin*copy [SysAbort@81724/OK@0]
+CurrentDate now 81724
+** 1633596880.844 } Push all reqs of /tmp/x [NoFile@81724/TgtValError@81724]
+** 1633596880.844 Client->NumJobs 0
+** 1633596880.844 Client->NumJobs 0
+** 1633596880.887 { Push all reqs of /tmp/x :odin*err [Unknown@81715/OK@0]
+** 1633596880.887 { Get all reqs of /tmp/x :odin*err [Unknown@81715/OK@0]
+** 1633596880.887 { Get reqs of /tmp/x :odin*err [Unknown@81715/OK@0]
+** 1633596880.887 { GetFile: get not-up-to-date /tmp/x :odin*err [Unknown@81715/OK@0]
+** 1633596884.051 { Get reqs of /tmp/x [NoFile@81724/TgtValError@81724]
+** 1633596884.051 } Get reqs of /tmp/x [NoFile@81724/TgtValError@81724]
+** 1633596884.051 {Generating /tmp/x :odin*err [Unknown@81715/OK@0]
+** 1633596884.052 {Do_Update /tmp/x :odin*err [Unknown@81715/OK@0]
+** 1633596884.052 }Do_Update /tmp/x :odin*err [OK@81726/OK@0]
+** 1633596884.052 }Generating /tmp/x :odin*err [OK@81726/OK@0]
+** 1633596884.052 clear pending flag of /tmp/x :odin*err [OK@81726/OK@0]
+** 1633596884.052 } GetFile: get not-up-to-date /tmp/x :odin*err [OK@81726/OK@0]
+** 1633596884.052 } Get reqs of /tmp/x :odin*err [OK@81726/OK@0]
+** 1633596884.052 } Get all reqs of /tmp/x :odin*err [OK@81726/OK@0]
+CurrentDate now 81726
+** 1633596884.052 } Push all reqs of /tmp/x :odin*err [OK@81726/OK@0]
+** Summary of error messages for /tmp/x
+--- </tmp/y> does not exist ---
+  
 
 x move error and info paths to be type-specific because some
   node types do not need files, this will allow state return

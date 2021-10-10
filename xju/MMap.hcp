@@ -1,0 +1,108 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <memory>
+#include <sys/mman.h>
+#include <xju/syscall.hh> //impl
+#include <sstream> //impl
+#include <iostream>
+#include <functional>
+#include <xju/format.hh> //impl
+#include <xju/path.hh>
+#include <xju/AutoFd.hh>
+#include <utility>
+#include <xju/fcntl.hh> //impl
+
+namespace xju
+{
+
+class MMap
+{
+public:
+  // mmap read-write shared
+  // - caution: offset+length may be past end of file, but access to
+  //   addr()[x] past end of file will be undefined behaviour
+  // - destructor will schedule sync, to gaurantee changes
+  //   are written before destruction completes, explicitly call sync()
+  //   before destruction.
+  // pre: file will outlive *this
+  explicit MMap(
+    std::pair<xju::path::AbsolutePath, xju::path::FileName> fileName,
+    off_t const offset,
+    size_t const length) try:
+        fileName_(std::move(fileName)),
+        offset_(offset),
+        length_(length),
+        fd_(xju::syscall(xju::open,XJU_TRACED)(
+          xju::path::str(fileName_).c_str(),
+          O_RDWR|O_CLOEXEC,
+          0)),
+        addr_(xju::syscall("mmap", ::mmap, XJU_TRACED, true, MAP_FAILED)(
+            0,
+            length,
+            PROT_READ|PROT_WRITE,MAP_SHARED_VALIDATE,
+            fd_.fd(),
+            offset),
+          [&](void* x) -> void{
+            ::munmap(x, this->length_);
+          })
+  {
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "mmap " << length << " bytes at offset " << offset << " of file "
+      << xju::path::str(fileName_) << " read-write shared";
+    e.addContext(s,XJU_TRACED);
+    throw;
+  }
+  // get pointer to first mapped location
+  // - obviously, there is not bounds checking on access file content
+  //   via pointer (behaviour is undefined, e.g. crash but not always)
+  // post: result valid until next resize()
+  template<class T>
+  T const* addr() const noexcept { return (T const*)addr_.get(); }
+
+  // get const pointer to first mapped location
+  // - obviously, there is not bounds checking on access file content
+  //   via pointer (behaviour is undefined, e.g. crash but not always)
+  // post: result valid until next resize()
+  template<class T>
+  T* addr() noexcept { return (T*)addr_.get(); }
+
+  void sync(bool async=false)
+  {
+    try{
+      xju::syscall("msync",::msync, XJU_TRACED)(
+        addr_.get(),length_,async?MS_ASYNC:MS_SYNC);
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << (async?"schedule write of ":"write") << (*this) << "changes";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+private:
+  std::pair<xju::path::AbsolutePath, xju::path::FileName> fileName_;
+  off_t offset_;
+  size_t length_;
+  xju::AutoFd fd_;
+
+  std::unique_ptr<void, std::function<void (void*)>> addr_;
+
+  friend std::ostream& operator<<(std::ostream& s, xju::MMap const& x){
+    return s << x.length_ << " bytes at offset " << x.offset_
+             << " of file " << xju::path::str(x.fileName_)
+             << " read-write shared";
+  }
+};
+
+}

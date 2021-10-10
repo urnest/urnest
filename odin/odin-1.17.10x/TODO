@@ -317,7 +317,10 @@ x some internals:
      (DrvPath stands for "derivation path")
 
     Set_Client_FilHdr - only sets CurrentClient->FilHdr
-    
+
+  How does it get cwd node? Set_CWD_Msg(IPC_AbortPtr) -> Local_Set_CWD
+  	   FilHdr = HostFN_FilHdr(FileName);
+
     
   Doing an update:
     Above sets CurrentClient->FilHdr and if-client.cc:ServerAction
