@@ -127,6 +127,8 @@ public:
   // - seeks backwards if n<0
   // - returns new pointer value
   // - see lseek(2)
+  // - note seeking past end of file is OK, but does not
+  //   extend file until data is written
   off_t seekBy(off_t n) /*throw(
     xju::SyscallFailed)*/
   {
@@ -143,6 +145,8 @@ public:
 
   // set pointer to n, returns *this
   // - see lseek(2)
+  // - note seeking past end of file is OK, but does not
+  //   extend file until data is written
   FileWriter& seekTo(off_t n) /*throw(
     // eg n < 0
     xju::SyscallFailed)*/
@@ -188,7 +192,7 @@ public:
     xju::syscall(xju::fsync,XJU_TRACED)(fileDescriptor());
   }
   friend class FileLock;
-  
+
 private:
   xju::AutoFd fd_;
 

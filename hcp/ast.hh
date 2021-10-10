@@ -48,8 +48,8 @@ public:
       end_(end)
   {
   }
-  virtual ~Item() throw() {
-  }
+  virtual ~Item() throw() {}
+  
   // Item::
   virtual I begin() const throw() {
     return items_.size()?items_.front()->begin():begin_;
@@ -178,8 +178,8 @@ class TaggedItem : public Item
 {
 public:
   using Item::Item;
-  virtual ~TaggedItem() throw() {
-  }
+  virtual ~TaggedItem() throw() {}
+  
 
   virtual std::string str() const throw()
   {
@@ -342,8 +342,8 @@ public:
     isTemplateSpecialisation_(getIsTemplateSpecialisation(items))
   {
   }
-  virtual ~ClassDef() throw() {
-  }
+  virtual ~ClassDef() throw() {}
+  
   static std::string getClassName(std::vector<IR> const& items) throw();
   static bool getIsTemplateSpecialisation(std::vector<IR> const& items) throw();
   virtual std::string str() const throw()
@@ -435,8 +435,8 @@ public:
     className_(ClassDef::getClassName(items))
   {
   }
-  virtual ~TemplateClassDef() throw() {
-  }
+  virtual ~TemplateClassDef() throw() {}
+  
   virtual std::string str() const throw()
   {
     return typeid(TemplateClassDef).name() + std::string(" ") + Item::str();
@@ -461,8 +461,8 @@ public:
     namespaceName_(getNamespaceName(items))
   {
   }
-  virtual ~NamespaceDef() throw() {
-  }
+  virtual ~NamespaceDef() throw() {}
+  
   static std::string getNamespaceName(std::vector<IR> const& items) throw();
 
   virtual std::string str() const throw()

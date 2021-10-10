@@ -34,9 +34,8 @@ std::string makeURI(int port, std::string const& objectName) throw()
 class F_impl : public p4::F
 {
 public:
-  ~F_impl() throw()
-  {
-  }
+  ~F_impl() throw() {}
+  
   
   // p4::F::
   virtual ::p4::XS1 f1(
@@ -66,17 +65,15 @@ public:
 
   struct Call
   {
-    virtual ~Call() throw()
-    {
-    }
+    virtual ~Call() throw() {}
+    
     struct f1;
     struct f2;
   };
   struct Call::f1 : Call
   {
-    ~f1() throw()
-    {
-    }
+    ~f1() throw() {}
+    
     f1(::p4::XS1 const& a) throw():
         a_(a) {
     }
@@ -89,9 +86,8 @@ public:
   };
   struct Call::f2 : Call
   {
-    ~f2() throw()
-    {
-    }
+    ~f2() throw() {}
+    
     f2(::p4::F::XxPair const& a) throw():
         a_(a) {
     }

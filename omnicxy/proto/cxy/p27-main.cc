@@ -34,9 +34,8 @@ std::string makeURI(int port, std::string const& objectName) throw()
 class F_impl : public p27::I
 {
 public:
-  ~F_impl() throw()
-  {
-  }
+  ~F_impl() throw() {}
+  
   
   virtual ::p27::I::R f(
     std::chrono::nanoseconds const& ns,
@@ -60,16 +59,14 @@ public:
   }
   struct Call
   {
-    virtual ~Call() throw()
-    {
-    }
+    virtual ~Call() throw() {}
+    
     struct f;
   };
   struct Call::f : Call
   {
-    ~f() throw()
-    {
-    }
+    ~f() throw() {}
+    
     f(::p27::I::R a) throw():
         a_(a)
     {

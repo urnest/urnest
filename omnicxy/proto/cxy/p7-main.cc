@@ -32,9 +32,8 @@ std::string makeURI(int port, std::string const& objectName) throw()
 class F_impl : public p7::F
 {
 public:
-  ~F_impl() throw()
-  {
-  }
+  ~F_impl() throw() {}
+  
   // a way to use BaseException mapping to an idl exception
   // (f2 below shows another way)
   virtual void f1() /*throw(::p7::E1)*/

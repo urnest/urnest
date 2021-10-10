@@ -40,9 +40,8 @@ public:
   int const step_;
   bool done_;
   
-  ~server_impl() throw()
-  {
-  }
+  ~server_impl() throw() {}
+  
   
   //omnicxy::proto::interop::b::server::
   virtual void run(

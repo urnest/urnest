@@ -29,9 +29,8 @@ namespace xju
     public:
 	virtual void trigger(T) throw() = 0;
 	
-	virtual ~SafeTriggerPIf()
-	{
-	}
+	virtual ~SafeTriggerPIf() {}
+        
     };
     template<class T1, class T2>
     class SafeTriggerP2If
@@ -39,9 +38,8 @@ namespace xju
     public:
 	virtual void trigger(T1, T2) throw() = 0;
 	
-	virtual ~SafeTriggerP2If()
-	{
-	}
+	virtual ~SafeTriggerP2If() {}
+        
     };
     template<class T1, class T2, class T3>
     class SafeTriggerP3If
@@ -49,9 +47,8 @@ namespace xju
     public:
 	virtual void trigger(T1, T2, T3) throw() = 0;
 	
-	virtual ~SafeTriggerP3If()
-	{
-	}
+	virtual ~SafeTriggerP3If() {}
+        
     };
     template<class T1, class T2, class T3, class T4>
     class SafeTriggerP4If
@@ -59,9 +56,8 @@ namespace xju
     public:
 	virtual void trigger(T1, T2, T3, T4) throw() = 0;
 	
-	virtual ~SafeTriggerP4If()
-	{
-	}
+	virtual ~SafeTriggerP4If() {}
+        
     };
     template<class T1, class T2, class T3, class T4, class T5>
     class SafeTriggerP5If
@@ -69,9 +65,8 @@ namespace xju
     public:
 	virtual void trigger(T1, T2, T3, T4, T5) throw() = 0;
 	
-	virtual ~SafeTriggerP5If()
-	{
-	}
+	virtual ~SafeTriggerP5If() {}
+        
     };
 }
 

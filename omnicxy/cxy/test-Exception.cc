@@ -65,9 +65,8 @@ public:
       Exception(cause, std::make_pair(__FILE__, __LINE__))
   {
   }
-  ~E() throw()
-  {
-  }
+  ~E() throw() {}
+    
 };
 
 #define vl(v) (sizeof(v)/sizeof(v[0]))

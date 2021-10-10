@@ -34,9 +34,8 @@ std::string makeURI(int port, std::string const& objectName) throw()
 class I26_impl : public p26::I26
 {
 public:
-  ~I26_impl() throw()
-  {
-  }
+  ~I26_impl() throw() {}
+  
   virtual int32_t e() throw() {
     return (int32_t)'e';
   }

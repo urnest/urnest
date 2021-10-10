@@ -47,16 +47,14 @@ public:
 
   struct Call
   {
-    virtual ~Call() throw()
-    {
-    }
+    virtual ~Call() throw() {}
+    
     struct f1;
   };
   struct Call::f1 : Call
   {
-    ~f1() throw()
-    {
-    }
+    ~f1() throw() {}
+    
     f1(::int32_t const& a) throw():
         a_(a) {
     }
@@ -74,9 +72,8 @@ class CCC_impl : public virtual p16::CCC,
                  public virtual AAA_impl
 {
 public:
-  ~CCC_impl() throw()
-  {
-  }
+  ~CCC_impl() throw() {}
+  
 
   // CCC::
   int32_t f2(
@@ -91,9 +88,8 @@ public:
 
   struct Call_f2 : Call
   {
-    ~Call_f2() throw()
-    {
-    }
+    ~Call_f2() throw() {}
+    
     Call_f2(::int32_t const& a) throw():
         a_(a) {
     }
@@ -115,9 +111,8 @@ public:
   {
   }
   
-  ~BBB_impl() throw()
-  {
-  }
+  ~BBB_impl() throw() {}
+  
 
   ::cxy::IOR< ::p16::AAA const> aaa_;
   

@@ -118,9 +118,8 @@ public:
       throw E(s.str(),std::make_pair(__FILE__,__LINE__));
     }
   }
-  ~BoundedSequence() noexcept
-  {
-  }
+  ~BoundedSequence() noexcept {}
+  
 
   BoundedSequence& operator=(const BoundedSequence& x)
   {

@@ -52,9 +52,8 @@ std::ostream& operator<<(std::ostream& s, ::p13::U1 const& x) throw()
 class F_impl : public p13::F
 {
 public:
-  ~F_impl() throw()
-  {
-  }
+  ~F_impl() throw() {}
+  
   
   virtual void f1(
     ::std::shared_ptr< ::p13::U1 const> const& a) /*throw(cxy::Exception)*/
@@ -66,16 +65,14 @@ public:
   }
   struct Call
   {
-    virtual ~Call() throw()
-    {
-    }
+    virtual ~Call() throw() {}
+    
     struct f1;
   };
   struct Call::f1 : Call
   {
-    ~f1() throw()
-    {
-    }
+    ~f1() throw() {}
+    
     f1(::std::shared_ptr< ::p13::U1 const> const& a) throw():
         a_(a) {
     }

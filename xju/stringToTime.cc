@@ -29,9 +29,8 @@ namespace xju
         class NoMatch : public xju::Exception
         {
         public:
-            ~NoMatch() throw()
-            {
-            }
+            ~NoMatch() throw() {}
+            
             NoMatch(const std::string& pattern,
                     xju::Exception e) throw():
                 xju::Exception(e),

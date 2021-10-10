@@ -122,9 +122,8 @@ public:
   }
   
   
-  ~Condition() throw()
-  {
-  }
+  ~Condition() throw() {}
+  
   
 private:
   Mutex& _guard;

@@ -100,9 +100,8 @@ public:
 private:
   struct TriggerIf
   {
-    virtual ~TriggerIf() throw()
-    {
-    }
+    virtual ~TriggerIf() throw() {}
+    
     virtual void operator()() throw() = 0;
   };
     

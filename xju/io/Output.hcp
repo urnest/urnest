@@ -31,9 +31,8 @@ class Input;
 class Output
 {
 public:
-  virtual ~Output() throw()
-  {
-  }
+  virtual ~Output() throw() {}
+  
   // in-line human readable description
   virtual std::string str() const throw()=0;
 

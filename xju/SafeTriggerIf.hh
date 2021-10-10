@@ -25,9 +25,8 @@ namespace xju
     public:
 	virtual void trigger() throw() = 0;
 	
-	virtual ~SafeTriggerIf()
-	{
-	}
+	virtual ~SafeTriggerIf() {}
+        
     };
 }
 

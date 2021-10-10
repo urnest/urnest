@@ -81,9 +81,8 @@ private:
   class Stop
   {
   public:
-    virtual ~Stop() noexcept
-    {
-    }
+    virtual ~Stop() noexcept {}
+    
     virtual void operator()(pid_t pid) noexcept
     {
       xju::syscall(xju::kill,XJU_TRACED)(pid, 9);

@@ -72,9 +72,8 @@ public:
   class Cause
   {
   public:
-    virtual ~Cause() throw()
-    {
-    }
+    virtual ~Cause() throw() {}
+    
     virtual std::string str() const throw() = 0;
   };
     
@@ -135,9 +134,8 @@ std::string readableRepr(Exception const& e) throw();
 class FixedCause : public hcp_parser::Exception::Cause
 {
 public:
-  ~FixedCause() throw()
-  {
-  }
+  ~FixedCause() throw() {}
+  
   explicit FixedCause(std::string const& cause) throw():
       cause_(cause)
   {
@@ -152,9 +150,8 @@ public:
 class XjuExceptionCause : public hcp_parser::Exception::Cause
 {
 public:
-  ~XjuExceptionCause() throw()
-  {
-  }
+  ~XjuExceptionCause() throw() {}
+  
   explicit XjuExceptionCause(xju::Exception e) throw():
       cause_(std::move(e))
   {
@@ -245,8 +242,7 @@ public:
   Parser(bool traced=false) throw():
       traced_(traced){
   }
-  virtual ~Parser() throw() {
-  }
+  virtual ~Parser() throw() {}
   
   // post: 
   virtual ParseResult parse_(
@@ -330,9 +326,8 @@ public:
   NamedParser_() throw():
     Parser(true){
   }
-  virtual ~NamedParser_() throw()
-  {
-  }
+  virtual ~NamedParser_() throw() {}
+  
 };
 
 // pre: ItemType is e.g. a hcp_ast::Item
@@ -345,8 +340,8 @@ public:
   std::string const name_;
   PR x_;
   
-  virtual ~NamedParser() throw() {
-  }
+  virtual ~NamedParser() throw() {}
+  
 
   explicit NamedParser(std::string const& name, PR const x) throw():
     name_(name),

@@ -34,9 +34,8 @@ std::string makeURI(int port, std::string const& objectName) throw()
 class I25_impl : public p25::I25
 {
 public:
-  ~I25_impl() throw()
-  {
-  }
+  ~I25_impl() throw() {}
+  
   virtual p25::ThreeTwos f25(p25::ThreeTwos const& a) noexcept
   {
     return a;

@@ -33,9 +33,8 @@ std::string makeURI(int port, std::string const& objectName) throw()
 class F_impl : public nb::B1
 {
 public:
-  ~F_impl() throw()
-  {
-  }
+  ~F_impl() throw() {}
+  
   
   int32_t f1(
     int32_t const& x) /*throw(cxy::Exception)*/
@@ -57,17 +56,15 @@ public:
   }
   struct Call
   {
-    virtual ~Call() throw()
-    {
-    }
+    virtual ~Call() throw() {}
+    
     struct f1;
     struct f2;
   };
   struct Call::f1 : Call
   {
-    ~f1() throw()
-    {
-    }
+    ~f1() throw() {}
+    
     f1(::int32_t const& a) throw():
         a_(a) {
     }
@@ -80,9 +77,8 @@ public:
   };
   struct Call::f2 : Call
   {
-    ~f2() throw()
-    {
-    }
+    ~f2() throw() {}
+    
     f2(::int32_t const& a) throw():
         a_(a) {
     }

@@ -34,9 +34,8 @@ std::string makeURI(int port, std::string const& objectName) throw()
 class CCC_impl : public p16::CCC
 {
 public:
-  ~CCC_impl() throw()
-  {
-  }
+  ~CCC_impl() throw() {}
+  
 
   // AAA::
   int32_t f(
@@ -62,17 +61,15 @@ public:
 
   struct Call
   {
-    virtual ~Call() throw()
-    {
-    }
+    virtual ~Call() throw() {}
+    
     struct f1;
     struct f2;
   };
   struct Call::f1 : Call
   {
-    ~f1() throw()
-    {
-    }
+    ~f1() throw() {}
+    
     f1(::int32_t const& a) throw():
         a_(a) {
     }
@@ -85,9 +82,8 @@ public:
   };
   struct Call::f2 : Call
   {
-    ~f2() throw()
-    {
-    }
+    ~f2() throw() {}
+    
     f2(::int32_t const& a) throw():
         a_(a) {
     }
@@ -110,9 +106,8 @@ public:
   {
   }
   
-  ~BBB_impl() throw()
-  {
-  }
+  ~BBB_impl() throw() {}
+  
 
   ::cxy::IOR< ::p16::AAA const> aaa_;
   

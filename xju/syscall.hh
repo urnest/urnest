@@ -513,10 +513,12 @@ namespace xju
     public:
 	Syscall4(const SyscallF4<R, P1, P2, P3, P4>& f,
 		 const bool retryIfInterrupted,
-		 const Traced& location) throw():
+		 const Traced& location,
+		 const R errorIndicator = -1) throw():
 	    _f(f),
 	    _retryIfInterrupted(retryIfInterrupted),
-	    _location(location)
+	    _location(location),
+	    _errorIndicator(errorIndicator)
 	{
 	}
 	R operator()(P1 p1, P2 p2, P3 p3, P4 p4) const /*throw(
@@ -530,6 +532,7 @@ namespace xju
 	const SyscallF4<R, P1, P2, P3, P4> _f;
 	const bool _retryIfInterrupted;
 	const Traced _location;
+	const R _errorIndicator;
     };
     
     
@@ -539,10 +542,12 @@ namespace xju
     public:
 	Syscall5(const SyscallF5<R, P1, P2, P3, P4, P5>& f,
 		 const bool retryIfInterrupted,
-		 const Traced& location) throw():
+		 const Traced& location,
+		 const R errorIndicator = -1) throw():
 	    _f(f),
 	    _retryIfInterrupted(retryIfInterrupted),
-	    _location(location)
+	    _location(location),
+	    _errorIndicator(errorIndicator)
 	{
 	}
 	R operator()(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5) const /*throw(
@@ -556,6 +561,7 @@ namespace xju
 	const SyscallF5<R, P1, P2, P3, P4, P5> _f;
 	const bool _retryIfInterrupted;
 	const Traced _location;
+	const R _errorIndicator;
     };
     
     
@@ -565,10 +571,12 @@ namespace xju
     public:
 	Syscall6(const SyscallF6<R, P1, P2, P3, P4, P5, P6>& f,
 		 const bool retryIfInterrupted,
-		 const Traced& location) throw():
+		 const Traced& location,
+		 const R errorIndicator = -1) throw():
 	    _f(f),
 	    _retryIfInterrupted(retryIfInterrupted),
-	    _location(location)
+	    _location(location),
+	    _errorIndicator(errorIndicator)
 	{
 	}
 	R operator()(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6) const /*throw(
@@ -582,6 +590,7 @@ namespace xju
 	const SyscallF6<R, P1, P2, P3, P4, P5, P6> _f;
 	const bool _retryIfInterrupted;
 	const Traced _location;
+	const R _errorIndicator;
     };
     
     
@@ -670,7 +679,7 @@ namespace xju
 	SyscallFailed)*/
     {
 	R status;
-	while(((status=(*_f._f)(p1, p2, p3)) == -1) &&
+	while(((status=(*_f._f)(p1, p2, p3)) == _errorIndicator) &&
 	      (errno == EINTR) &&
 	      _retryIfInterrupted);
 	if (status == _errorIndicator)
@@ -696,10 +705,10 @@ namespace xju
 	SyscallFailed)*/
     {
 	R status;
-	while(((status=(*_f._f)(p1, p2, p3, p4)) == -1) &&
+	while(((status=(*_f._f)(p1, p2, p3, p4)) == _errorIndicator) &&
 	      (errno == EINTR) &&
 	      _retryIfInterrupted);
-	if (status == -1)
+	if (status == _errorIndicator)
 	{
 	    if (errno == EINTR)
 	    {
@@ -722,10 +731,10 @@ namespace xju
 	SyscallFailed)*/
     {
 	R status;
-	while(((status=(*_f._f)(p1, p2, p3, p4, p5)) == -1) &&
+	while(((status=(*_f._f)(p1, p2, p3, p4, p5)) == _errorIndicator) &&
 	      (errno == EINTR) &&
 	      _retryIfInterrupted);
-	if (status == -1)
+	if (status == _errorIndicator)
 	{
 	    if (errno == EINTR)
 	    {
@@ -748,10 +757,10 @@ namespace xju
 	SyscallFailed)*/
     {
 	R status;
-	while(((status=(*_f._f)(p1, p2, p3, p4, p5, p6)) == -1) &&
+	while(((status=(*_f._f)(p1, p2, p3, p4, p5, p6)) == _errorIndicator) &&
 	      (errno == EINTR) &&
 	      _retryIfInterrupted);
-	if (status == -1)
+	if (status == _errorIndicator)
 	{
 	    if (errno == EINTR)
 	    {
@@ -961,6 +970,27 @@ namespace xju
 	    location);
     }
 
+    template<class R, class P1, class P2, class P3, class P4>
+    Syscall4<R, P1, P2, P3, P4>
+    syscall(const char* name,
+	    R (*const f)(P1, P2, P3, P4),
+	    const Traced& location,
+	    bool retryIfInterrupted,
+            R errorIndicator) /*throw(
+		//
+		// pre: !retryIfInterrupted &&
+		//      signal interrupted the system call
+		//
+		SyscallInterrupted,
+		SyscallFailed)*/
+    {
+	return Syscall4<R, P1, P2, P3, P4>(
+	    {name, f},
+	    retryIfInterrupted,
+	    location,
+            errorIndicator);
+    }
+
     template<class R, class P1, class P2, class P3, class P4, class P5>
     Syscall5<R, P1, P2, P3, P4, P5>
     syscall(const SyscallF5<R, P1, P2, P3, P4, P5>& f,
@@ -998,6 +1028,27 @@ namespace xju
 	    location);
     }
 
+    template<class R, class P1, class P2, class P3, class P4, class P5>
+    Syscall5<R, P1, P2, P3, P4, P5>
+    syscall(const char* name,
+	    R (*const f)(P1, P2, P3, P4, P5),
+	    const Traced& location,
+	    bool retryIfInterrupted,
+            R errorIndicator) /*throw(
+		//
+		// pre: !retryIfInterrupted &&
+		//      signal interrupted the system call
+		//
+		SyscallInterrupted,
+		SyscallFailed)*/
+    {
+	return Syscall5<R, P1, P2, P3, P4, P5>(
+	    {name, f},
+	    retryIfInterrupted,
+	    location,
+            errorIndicator);
+    }
+
     template<class R, class P1, class P2, class P3, class P4, class P5, class P6>
     Syscall6<R, P1, P2, P3, P4, P5, P6>
     syscall(const SyscallF6<R, P1, P2, P3, P4, P5, P6>& f,
@@ -1033,6 +1084,27 @@ namespace xju
 	    {name, f},
 	    retryIfInterrupted,
 	    location);
+    }
+
+    template<class R, class P1, class P2, class P3, class P4, class P5, class P6>
+    Syscall6<R, P1, P2, P3, P4, P5, P6>
+    syscall(const char* name,
+	    R (*const f)(P1, P2, P3, P4, P5, P6),
+	    const Traced& location,
+	    bool retryIfInterrupted,
+            R errorIndicator) /*throw(
+		//
+		// pre: !retryIfInterrupted &&
+		//      signal interrupted the system call
+		//
+		SyscallInterrupted,
+		SyscallFailed)*/
+    {
+	return Syscall6<R, P1, P2, P3, P4, P5, P6>(
+	    {name, f},
+	    retryIfInterrupted,
+	    location,
+            errorIndicator);
     }
 }
 

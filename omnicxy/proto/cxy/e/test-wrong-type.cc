@@ -32,9 +32,8 @@ std::string makeURI(int port, std::string const& objectName) throw()
 class F_impl : public p2::F
 {
 public:
-  ~F_impl() throw()
-  {
-  }
+  ~F_impl() throw() {}
+  
   
   virtual void f1(
     int16_t const& a, 

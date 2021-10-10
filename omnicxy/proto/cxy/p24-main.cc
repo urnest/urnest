@@ -44,9 +44,8 @@ std::string str(cxy::BoundedSequence<int16_t,4> const& x) throw()
 class p24_impl : public p24::i24
 {
 public:
-  ~p24_impl() throw()
-  {
-  }
+  ~p24_impl() throw() {}
+  
   
   virtual ::cxy::TypeCode f(
     ::cxy::TypeCode const& x) /*throw(
@@ -61,16 +60,14 @@ public:
 
   struct Call
   {
-    virtual ~Call() throw()
-    {
-    }
+    virtual ~Call() throw() {}
+    
     struct f1;
   };
   struct Call::f1 : Call
   {
-    ~f1() throw()
-    {
-    }
+    ~f1() throw() {}
+    
     f1(::cxy::TypeCode const& x):
         x_(x) {
     }

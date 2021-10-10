@@ -86,9 +86,8 @@ p15::AAA::_nil()
 const char* p15::AAA::_PD_repoId = "IDL:p15/AAA:1.0";
 
 
-p15::_objref_AAA::~_objref_AAA() {
-  
-}
+p15::_objref_AAA::~_objref_AAA() {}
+
 
 
 p15::_objref_AAA::_objref_AAA(omniIOR* ior, omniIdentity* id) :
@@ -332,9 +331,8 @@ p15::BBB::_nil()
 const char* p15::BBB::_PD_repoId = "IDL:p15/BBB:1.0";
 
 
-p15::_objref_BBB::~_objref_BBB() {
-  
-}
+p15::_objref_BBB::~_objref_BBB() {}
+
 
 
 p15::_objref_BBB::_objref_BBB(omniIOR* ior, omniIdentity* id) :

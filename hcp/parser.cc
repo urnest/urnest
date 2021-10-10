@@ -75,8 +75,8 @@ class Optional : public Parser
 public:
   PR x_;
   
-  virtual ~Optional() throw() {
-  }
+  virtual ~Optional() throw() {}
+  
   explicit Optional(PR x) throw():
     x_(x) {
   }
@@ -103,8 +103,8 @@ class ParseZeroOrMore : public Parser
 public:
   PR const x_;
   
-  virtual ~ParseZeroOrMore() throw() {
-  }
+  virtual ~ParseZeroOrMore() throw() {}
+  
   explicit ParseZeroOrMore(PR x) throw():
     x_(x) {
   }
@@ -136,8 +136,8 @@ class ParseAnd : public Parser
 public:
   std::vector<PR> terms_;
   
-  virtual ~ParseAnd() throw() {
-  }
+  virtual ~ParseAnd() throw() {}
+  
   // Parser::
   virtual ParseResult parse_(I const at, Options const& options) throw() 
   {
@@ -174,8 +174,8 @@ class ParseOr : public Parser
 public:
   std::vector<PR> terms_;
   
-  virtual ~ParseOr() throw() {
-  }
+  virtual ~ParseOr() throw() {}
+  
 
   // Parser::
   virtual ParseResult parse_(I const at, Options const& options) throw() 
@@ -215,8 +215,8 @@ public:
   }
   PR term_;
   
-  virtual ~ParseNot() throw() {
-  }
+  virtual ~ParseNot() throw() {}
+  
 
   // Parser::
   virtual ParseResult parse_(I const at, Options const& options) throw() 
@@ -329,9 +329,8 @@ class ParseOneOfChars : public Parser
 public:
   std::set<char> const chars_;
   
-  ~ParseOneOfChars() throw()
-  {
-  }
+  ~ParseOneOfChars() throw() {}
+  
   
   explicit ParseOneOfChars(std::string const& chars) throw():
     chars_(chars.begin(), chars.end()) {
@@ -369,9 +368,8 @@ public:
         at_(at),
         chars_(chars) {
     }
-    ~UnexpectedChar() throw()
-    {
-    }
+    ~UnexpectedChar() throw() {}
+    
     std::string str() const throw()
     {
       std::ostringstream s;
@@ -391,9 +389,8 @@ class ParseOneOfChars2 : public Parser
 public:
   hcp::Chars const chars_;
   
-  ~ParseOneOfChars2() throw()
-  {
-  }
+  ~ParseOneOfChars2() throw() {}
+  
   
   explicit ParseOneOfChars2(hcp::Chars const chars) throw():
       chars_(std::move(chars)){
@@ -429,9 +426,8 @@ public:
         at_(at),
         chars_(chars) {
     }
-    ~UnexpectedChar() throw()
-    {
-    }
+    ~UnexpectedChar() throw() {}
+    
     std::string str() const throw()
     {
       std::ostringstream s;
@@ -449,9 +445,8 @@ class ParseAnyCharExcept : public Parser
 public:
   std::set<char> const chars_;
   
-  ~ParseAnyCharExcept() throw()
-  {
-  }
+  ~ParseAnyCharExcept() throw() {}
+  
   
   explicit ParseAnyCharExcept(std::string const& chars) throw():
     chars_(chars.begin(), chars.end()) {
@@ -489,9 +484,8 @@ public:
         at_(at),
         chars_(chars) {
     }
-    ~UnexpectedChar() throw()
-    {
-    }
+    ~UnexpectedChar() throw() {}
+    
     std::string str() const throw()
     {
       std::ostringstream s;
@@ -550,9 +544,8 @@ public:
         min_(min),
         max_(max) {
     }
-    ~CharNotInRange() throw()
-    {
-    }
+    ~CharNotInRange() throw() {}
+    
     std::string str() const throw()
     {
       std::ostringstream s;
@@ -647,8 +640,7 @@ class ParseLiteral : public Parser
 public:
   std::string const x_;
   
-  virtual ~ParseLiteral() throw() {
-  }
+  virtual ~ParseLiteral() throw() {}
   
   explicit ParseLiteral(std::string const& x) throw():
     x_(x) {
@@ -691,9 +683,8 @@ public:
         wanted_(wanted)
     {
     }
-    ~Mismatch() throw()
-    {
-    }
+    ~Mismatch() throw() {}
+    
     std::string str() const throw()
     {
       std::ostringstream s;
@@ -724,8 +715,8 @@ bool isIdentifierContChar(char c) throw(){
 class ParseIdentifier : public Parser
 {
 public:
-  virtual ~ParseIdentifier() throw() {
-  }
+  virtual ~ParseIdentifier() throw() {}
+  
   
   // Parser::
   virtual ParseResult parse_(I const at, Options const& o) throw()
@@ -761,9 +752,8 @@ public:
         got_(got)
     {
     }
-    ~NotIdentifierChar() throw()
-    {
-    }
+    ~NotIdentifierChar() throw() {}
+    
     std::string str() const throw()
     {
       std::ostringstream s;
@@ -780,8 +770,8 @@ class ParseHash : public Parser
 public:
   static std::shared_ptr<Exception::Cause const> not_at_column_1;
   
-  virtual ~ParseHash() throw() {
-  }
+  virtual ~ParseHash() throw() {}
+  
   
   // Parser::
   virtual ParseResult parse_(I const at, Options const& o) throw()
@@ -817,9 +807,8 @@ public:
         got_(got)
     {
     }
-    ~NotHash() throw()
-    {
-    }
+    ~NotHash() throw() {}
+    
     std::string str() const throw()
     {
       std::ostringstream s;
@@ -940,9 +929,8 @@ public:
     InvalidDelimeterChar(I const at) throw():
         at_(at) {
     }
-    ~InvalidDelimeterChar() throw()
-    {
-    }
+    ~InvalidDelimeterChar() throw() {}
+    
     std::string str() const throw()
     {
       std::ostringstream s;
@@ -959,9 +947,8 @@ public:
     TooManyDelimeterChars() throw()
     {
     }
-    ~TooManyDelimeterChars() throw()
-    {
-    }
+    ~TooManyDelimeterChars() throw() {}
+    
     std::string str() const throw()
     {
       std::ostringstream s;
@@ -976,9 +963,8 @@ public:
     explicit EndDelimeterNotFound(std::string const& endDelimeter) throw():
         endDelimeter_(endDelimeter) {
     }
-    ~EndDelimeterNotFound() throw()
-    {
-    }
+    ~EndDelimeterNotFound() throw() {}
+    
     std::string str() const throw()
     {
       std::ostringstream s;
@@ -1139,8 +1125,7 @@ public:
   std::string const name_;
   PR x_;
   
-  virtual ~AnonParser() throw() {
-  }
+  virtual ~AnonParser() throw() {}
   
   explicit AnonParser(std::string const& name, PR const x) throw():
     name_(name),
@@ -1351,8 +1336,8 @@ public:
   size_t const m_;
   PR const x_;
   
-  virtual ~NToM() throw() {
-  }
+  virtual ~NToM() throw() {}
+  
   explicit NToM(size_t const n, size_t const m, PR const x) throw():
     n_(n),
     m_(m),
@@ -1393,9 +1378,8 @@ public:
     explicit TooFew(size_t const got) throw():
         got_(got) {
     }
-    ~TooFew() throw()
-    {
-    }
+    ~TooFew() throw() {}
+    
     std::string str() const throw()
     {
       std::ostringstream s;
@@ -3111,9 +3095,8 @@ public:
         got_(got)
     {
     }
-    ~NotEndOfInput() throw()
-    {
-    }
+    ~NotEndOfInput() throw() {}
+    
     std::string str() const throw()
     {
       std::ostringstream s;

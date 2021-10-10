@@ -33,9 +33,8 @@ std::string makeURI(int port, std::string const& objectName) throw()
 class echo_impl : public echo
 {
 public:
-  ~echo_impl() throw()
-  {
-  }
+  ~echo_impl() throw() {}
+  
   
   virtual std::string echoString(std::string const& s) /*throw(cxy::Exception)*/
   {

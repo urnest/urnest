@@ -33,9 +33,8 @@ std::string makeURI(int port, std::string const& objectName) throw()
 class D_impl : public D
 {
 public:
-  ~D_impl() throw()
-  {
-  }
+  ~D_impl() throw() {}
+  
   
   virtual std::string fa() /*throw(cxy::Exception)*/
   {

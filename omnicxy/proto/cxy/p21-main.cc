@@ -44,9 +44,8 @@ std::string str(cxy::BoundedSequence<int16_t,4> const& x) throw()
 class p21_impl : public p21
 {
 public:
-  ~p21_impl() throw()
-  {
-  }
+  ~p21_impl() throw() {}
+  
   
   virtual cxy::BoundedSequence<int16_t,4> f(cxy::BoundedSequence<int16_t,4> const& s) /*throw(
     cxy::Exception)*/
@@ -60,16 +59,14 @@ public:
 
   struct Call
   {
-    virtual ~Call() throw()
-    {
-    }
+    virtual ~Call() throw() {}
+    
     struct f1;
   };
   struct Call::f1 : Call
   {
-    ~f1() throw()
-    {
-    }
+    ~f1() throw() {}
+    
     f1(cxy::BoundedSequence<int16_t,4> const& x):
         x_(x) {
     }

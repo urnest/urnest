@@ -49,9 +49,8 @@ public:
   {
   }
   
-  ~F_impl() throw()
-  {
-  }
+  ~F_impl() throw() {}
+  
   
   virtual void f1(std::string const& x) /*throw(cxy::Exception)*/
   {

@@ -65,9 +65,8 @@ public:
 	Exception(cause, XJU_TRACED)
     {
     }
-    ~E() throw()
-    {
-    }
+    ~E() throw() {}
+    
 };
 
 #define vl(v) (sizeof(v)/sizeof(v[0]))

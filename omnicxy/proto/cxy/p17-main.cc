@@ -42,9 +42,8 @@ std::string str(cxy::optional<p17::Name> const& x) throw()
 class p17_impl : public p17
 {
 public:
-  ~p17_impl() throw()
-  {
-  }
+  ~p17_impl() throw() {}
+  
   
   virtual cxy::optional<Name> echo(cxy::optional<Name> const& s) /*throw(
     cxy::Exception)*/
@@ -58,17 +57,15 @@ public:
 
   struct Call
   {
-    virtual ~Call() throw()
-    {
-    }
+    virtual ~Call() throw() {}
+    
     struct f1;
     struct f2;
   };
   struct Call::f1 : Call
   {
-    ~f1() throw()
-    {
-    }
+    ~f1() throw() {}
+    
     f1(cxy::optional<Name> const& x):
         x_(x) {
     }
