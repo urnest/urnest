@@ -1,11 +1,4 @@
 - NodeType - enum class
-- NodeId - off_t file offset
-
-- node_data::SrcFile, Dir, SoftLink, etc
-  - pod types for each node type
-  - All has type, size, firstChild_, sibling_ as NodeId?
-  - all have vintage_, status_, verifiedAt_, fileName_?
-  - ChildNode has parent_ (RootNode does not)
 
 - Database
   - mmap db file
@@ -22,37 +15,55 @@
     //    after opening db and write after sync, that way if we crash
     //    we can tell corrupt; use separate lock file for mutex
 
-    //  root will be Id(0) and will always exist
+    //  root will be Id(0) and will always exist and be up-to-date
     
-    NodeId nextUnused_;
-      
+    RecordId nextUnused_; // alignment - use xju::MinAlign<node_data::Any>::boundary()?
+
     NodeRef:
       MMap&
-      NodeId id_;
-      Node& operator->()
+      RecordId id_;
+      NodeType getType() const;
+      template<class RecordType> RecordType& asA() const;
 
-    NodeRef getNode(NodeId);
-    NodeRef addNode()
+    NodeRef operator[](RecordId id);
     void writeChanges();
-    
+
+  - node_data::Root, SrcFile:Child, Dir:Child, SoftLink:Child, etc
+    - pod types for each node type
+    - Any has type, size, firstChild_, sibling_ as NodeId,
+      vintage_, status_, verifiedAt_, fileName_?
+    - Child:Any has parent_ (RootNode does not)
+    template<class T> NodeRef addNode(T const& x); T is node_data type
+
+
 - NodeCache:
     NodeCache(Database& database);
-    NodeRef getRootNode()
-    NodeRef getHostFileNode(xju::path::AbsFile const& f); // like HostFN_FileHdr
-    NodeRef getHostFileNode(Node const& wd, xju::path::RelPath const& path);
-    NodeRef doDeriv(Node const& from, Nod?); // like Do_Deriv
+    Node& getRootNode()
+    Node& getHostFileNode(xju::path::AbsFile const& f); // like HostFN_FileHdr
+    Node& getHostFileNode(Node const& wd, xju::path::RelPath const& path);
+    Node& doDeriv(Node const& from, Nod?); // like Do_Deriv
 
-    NodeRef Node&
     writeChanges() function and clear(), which would be run when all
       clients are done.
 
     std::map<NodeId, std::unique_ptr<Node> > live_;
 
 - Root : Node
+    std::pair<ChildIter,ChildIter> children();
+    
 - ChildNode : Node
+    Node& parent();
+    std::pair<ChildIter,ChildIter> children();
+
 - SrcFile: ChildNode
-  
-      
+    // represents /x/y? Could y be dir or soft-link too?
+    // need a SrcAny that uses a view_spec to handle the variants?
+    // ... need complementation :as_dir derivation whose type is not
+    // FILE but DIRECTORY (which must be a directory if it exists)
+    // or could we just use :DIRECTORY to get self as directory
+    // as opposed to :dir which is parent directory (and should be
+    // called :parent_directory)?
+     
     
 x factor JobCollection interface out of Executor
 x make a SomeJobIds subclass of JobIds and use for clarify of specs

@@ -31,25 +31,21 @@ private:
 template<>
 struct MinAlignType<1U>
 {
-  // must specialise
   typedef uint8_t T;
 };
 template<>
 struct MinAlignType<2U>
 {
-  // must specialise
   typedef uint16_t T;
 };
 template<>
 struct MinAlignType<4U>
 {
-  // must specialise
   typedef uint32_t T;
 };
 template<>
 struct MinAlignType<8U>
 {
-  // must specialise
   typedef uint64_t T;
 };
 
@@ -61,12 +57,23 @@ struct MinAlign_
     uint8_t b;
     T_ c;
   };
+  static size_t boundary() noexcept{
+    return offsetof(Offset,c)-offsetof(Offset,b);
+  }
   typedef typename MinAlignType< offsetof(Offset,c)-offsetof(Offset,b) >::T T;
 };
 
 template<class T_>
 struct MinAlign_<T_,false>
 {
+  struct Offset
+  {
+    uint8_t b;
+    std::max_align_t c;
+  };
+  static size_t boundary() noexcept{
+    return offsetof(Offset,c)-offsetof(Offset,b);
+  }
   typedef std::max_align_t T;
 };
 
@@ -74,6 +81,10 @@ template<class T_>
 struct MinAlign
 {
   typedef typename MinAlign_<T_,std::is_standard_layout<T_>::value >::T T;
+  static size_t boundary() noexcept
+  {
+    return MinAlign_<T_,std::is_standard_layout<T_>::value >::boundary();
+  }
 };
 
 }

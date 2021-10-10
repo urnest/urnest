@@ -17,9 +17,13 @@ namespace xju
 
 void test1() {
   xju::assert_equal(sizeof(MinAlign<uint8_t>::T),1U);
+  xju::assert_equal(MinAlign<uint8_t>::boundary(),1U);
   xju::assert_equal(sizeof(MinAlign<uint16_t>::T),2U);
+  xju::assert_equal(MinAlign<uint16_t>::boundary(),2U);
   xju::assert_equal(sizeof(MinAlign<uint32_t>::T),4U);
+  xju::assert_equal(MinAlign<uint32_t>::boundary(),4U);
   xju::assert_equal(sizeof(MinAlign<uint64_t>::T),8U);
+  xju::assert_equal(MinAlign<uint64_t>::boundary(),8U);
 }
 
 struct A
