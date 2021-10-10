@@ -27,7 +27,7 @@
 %proto.v==<<
 %interop==.%cxygen
 
-%cxygen==(%cxy.idl.sm)+inc_sp=(../../..)+hcp-split=(../../../hcp/hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy.virdir
+%cxygen==(%cxy.idl.sm)+inc_sp=(../../..)+hcp-split=(../../../hcp%hcp-split)+cxy='-causeType=::p7::ExceptionCause'+cxy='-contextType=::p7::ExceptionContext':omnicxy.virdir
 
 %cxy.idl.sm==<<
 a.idl
