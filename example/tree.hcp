@@ -1,0 +1,207 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace example
+{
+namespace tree
+{
+
+template<class node_type, class tag=void>
+struct config
+{
+  // defaults, specialise if you like
+  typedef std::vector<node_type> children_type;
+};
+
+enum class disposition{
+  no, // node does not match, and no child will
+  yes, // node matches, but no child will
+  no_recurse, // node does not match, but children might
+  yes_recurse, // node matches and so might its children
+};
+
+template<class value_type, class tag=void>
+  class node;
+
+template<class value_type, class tag=void>
+class node
+{
+public:
+  typedef config<node, tag>::children_type children_type;
+
+  value_type value_;
+  children_type children_;
+
+  // REVISIT: make path a class, get its methods and friends
+  // from static functions below
+  typedef std::vector<
+    std::pair<std::ref<children_type const>,
+              typename children_type::const_iterator> > const_path;
+
+  // return true if node or any of its children are selected by p
+  bool has_some(std::function<disposition, value_type const&> const& p) const
+  {
+    auto const d(p(value_));
+    switch(d){
+    case yes:
+    case yes_recurse:
+      return true;
+    case no_recurse:
+      for(auto node: children_){
+        if (node.has_some(p)){
+          return true;
+        }
+      }
+      break;
+    case no:
+      break;
+    default:
+      xju::assert_never_reached();
+    }
+    return false;    
+  }
+  // return true if tree has at least one node that matches p
+  bool has_some(std::function<disposition, const_path const&> const& p) const
+  {
+    auto const d(p(value_));
+    switch(d){
+    case yes:
+    case yes_recurse:
+      return true;
+    case no_recurse:
+      for(auto node: children_){
+        if (node.has_some(p)){
+          return true;
+        }
+      }
+      break;
+    case no:
+      break;
+    default:
+      xju::assert_never_reached();
+    }
+    return false;    
+  }
+
+  typedef std::function<disposition, value_type const&> select_by_value;
+  typedef std::function<disposition, Node const&, const_path const&> select_by_path;
+  
+  // find values (self and nested) of all nodes selected by s
+  // - result valid until hierarchy modified
+  std::vector<std::ref<value_type const> > find_all(
+    select_by_value const& s) const;
+  
+  std::vector<std::ref<value_type const> > find_all(
+    select_by_path const& s) const;
+
+  std::vector<std::ref<value_type> > find_all(
+    select_by_value const& p);
+  
+  std::vector<std::ref<value_type> > find_all(
+    select_by_path const& p);
+
+  // find all non-overlapping (sub)trees whose root is a node
+  // selected by p
+  // - results valid at least until any ancestor of any returned node
+  //   is pruned-from or grafted-to. (Depending on children_type
+  //   results may remain valid under broader conditions.)
+  std::vector<std::pair<std::ref<node const>, const_path> > find(
+    select_by_value const& p) const;
+
+  std::vector<std::pair<std::ref<node const>, const_path> > find(
+    select_by_path const& p) const;
+
+  std::vector<std::pair<std::ref<node>, const_path> > find(
+    select_by_value const& p);
+
+  std::vector<std::pair<std::ref<node>, const_path> > find(
+    select_by_path const& p);
+
+  // remove all descendents selected by selector
+  // - returns the removed nodes maintaining order
+  // - note never recurses into selected nodes
+  children_type remove_selected(
+    select_by_value const& selector);
+  children_type remove_selected(
+    select_by_path const& selector);
+
+  // REVISIT: add copy_selected and transform_selected
+
+  typedef std::vector<
+    std::pair<std::ref<children_type>,
+              typename children_type::iterator> > path;
+
+  // call f(node.value_) for each node selected by selector
+  void apply_to_selected(
+    select_by_value const& selector,
+    std::function<void, value_type const&> f) const;
+  // call f(node.value_) for each node selected by selector
+  void apply_to_selected(
+    select_by_value const& selector,
+    std::function<void, value_type&> f);
+
+  typedef std::function<const_path, const_path> const_node_f;
+  typedef std::function<path, path> f node_f;
+  
+  // calls f on each root node, calling f on result (advanced to next
+  // valid node) until end is returned, where f's signature is:
+  //   const_path f(node const& n, const_path path_to_n, const_path const& end)
+  // notes:
+  // - returning a parent of n is prohibited
+  // - where f returns end-of-siblings, next() is applied before again
+  //   calling f
+  // - where f returns path unmodified, next() is applied before again
+  //   calling f
+  void tour(std::function<const_path, node const&, const_path, const_path const&> f) const;
+  void tour(std::function<path, node&, path, path const&> f);
+
+  static bool has_value(const_path const& p) {
+    return p.first.size() && p.back().first.end() != p.back.second;
+  }
+  static bool end_of_siblings(const_path const& p) {
+    return !is_empty(p) && p.back().second != p.back().first.end(); }
+  static bool has_children(const_path const& p) {
+    return p.back().second->children_.size(); }
+
+  
+  // conveniences for implementing f for apply()
+  // pre: pre: p != end
+  // post: has_value(result)
+  static const_path parent_of(const_path p, const_path const& end) noexcept;
+  // pre: !end_of_siblings(p)
+  static const_path next_sibling_of(const_path p) noexcept;
+  static path       next_sibling_of(path p) noexcept;
+  // pre: has_children(p)
+  static const_path first_child_of(const_path p) noexcept;
+  static path first_child_of(path p) noexcept;
+
+  // depth first order
+  // pre: p != end
+  // post: has_value(result) || result == end
+  static const_path next(const_path p, const_path const& end) noexcept
+  {
+    if (has_children(p)){
+      return first_child_of(std::move(p));
+    }
+    if (!end_of_siblings(p)){
+      p = next_sibling_of(p);
+    }
+    while (p != end && !has_value(p)){
+      p = next_sibling_of(parent_of(p, end));
+    }
+    return next(parent_of(p, end), end);
+  }
+};
+
+
+}
+}
+}
