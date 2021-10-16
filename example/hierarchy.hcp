@@ -1,0 +1,161 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+namespace home
+{
+namespace xju
+{
+namespace tmp
+{
+
+template<class node_type, class tag=void>
+struct hierarchy_config
+{
+  // defaults, specialise if you like
+  typedef std::vector<node_type> children_type;
+};
+template<class value_type, class tag=void>
+class hierarchy
+{
+public:
+  enum class disposition{
+    no,
+    yes,
+    recurse
+  };
+
+  class node;
+  typedef hierarchy_config<node, tag> children_type;
+  class node{
+    value_type value_;
+    children_type children_;
+  };
+  children_type roots_;
+
+  typedef std::vector<std::pair<std::ref<children_type const>, typename std::ref<children_type>::const_iterator> > const_path;
+
+  // return true if tree has at least one node that matches p
+  bool has_some(std::function<disposition, value_type const&> p) const
+  {
+    for(auto node: roots_){
+      if (has_some(node, p)){
+        return true;
+      }
+    }
+    return false;
+  }
+  // return true if tree has at least one node that matches p
+  bool has_some(std::function<disposition, const_path const&> p) const
+  {
+    for(auto i(roots_.begin()); i != roots_end(); ++i){
+      if (has_some((*i), const_path(roots_, i), p)){
+        return true;
+      }
+    }
+    return false;
+  }
+
+  
+  typedef std::vector<
+    std::pair<std::ref<children_type>,
+              typename children_type::iterator> > path;
+
+  typedef std::function<value_type const&> const_value_f;
+  typedef std::function<void, value_type&> value_f;
+  
+  // call f for each node that p returns yes
+  void apply(std::function<disposition, value_type const&> p,
+             std::function<value_type const&> f) const;
+  // call f for each node that p returns yes
+  void apply(std::function<disposition, value_type const&> p,
+             std::function<void, value_type&> f);
+
+  typedef std::function<const_path, const_path> const_node_f;
+  typedef std::function<path, path> f node_f;
+  
+  // calls f on each non-empty root, calling f on result (advanced to next
+  // valid node) until empty path returned
+  // - f is only ever called with a valid node
+  // - where f returns end-of-siblings, next() is applied before again
+  //   calling f
+  // - where f returns p, next() is applied before again calling f
+  void apply(std::function<const_path, const_path> f) const;
+  void apply(std::function<path, path> f);
+
+  // pre: !p.empty()
+  static bool has_sibling(const_path const& p) {
+    return p.back().second != p.back().first.end(); }
+  static bool has_sibling(path const& p) {
+    return p.back().second != p.back().first.end(); }
+  static bool has_children(const_path const& p) {
+    return p.back().children_.size(); }
+  static bool has_children(path const& p) {
+    return p.back().children_.size(); }
+  
+  // conveniences for implementing f for apply()
+  // pre: !p.empty()
+  static const_path parent(const_path p) noexcept;
+  static path parent(path p) noexcept;
+  // pre: has_sibling(p)
+  static const_path sibling(const_path p) noexcept;
+  static path sibling(path p) noexcept;
+  // pre: has_children(p)
+  static const_path first_child(const_path p) noexcept;
+  static path first_child(path p) noexcept;
+
+  // depth first order
+  // pre: !p.empty()
+  static const_path next(const_path p) noexcept
+  {
+    if (has_children(p)){
+      return first_child(std::move(p));
+    }
+    if (has_sibling(p)){
+      return sibling(std::move(p));
+    }
+    return next(parent(p));
+  }
+  static path next(path p) noexcept
+  {
+    if (has_children(p)){
+      return first_child(std::move(p));
+    }
+    if (has_sibling(p)){
+      return sibling(std::move(p));
+    }
+    return next(parent(p));
+  }
+
+private:
+  bool has_some(node const& node,
+                std::function<disposition, value_type const&> p) const
+  {
+    switch(p(node.value_)){
+    case yes:
+      return true;
+    case recurse:
+    {
+      for (auto c: node.children_){
+        if (c.has_some(p)){
+          return true;
+        }
+      }
+    }
+    }
+    return false;
+  }
+
+};
+
+
+}
+}
+}
