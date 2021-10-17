@@ -14,14 +14,13 @@
 
 namespace example
 {
-namespace tree{
 
 struct config_tag{};
 template<>
 struct config<std::string,config_tag>{
   typedef std::list<std::string> children_type;
 };
-typedef node<std::string, config_tag> Tree;
+typedef tree<std::string, config_tag> Tree;
 
 void test1() {
   Tree const page_template_(
@@ -40,14 +39,33 @@ void test1() {
 
   auto page = page_template_;
 
-  const Tree qa_template(
-    page_.remove_all([](std::string const& x)
-                     {
-                       return x == "div class=q" ?
-                         H::disposition::yes:
-                         H::disposition::no_recurse;
-                     }).front());
+  auto qa_template(
+    remove(
+      select_non_nested(page,
+                        [](std::string const& x)
+                        {
+                          return x == "div class=q" ?
+                            H::disposition::yes:
+                            H::disposition::no_recurse;
+                        })).front());
 
+  {
+    auto x(
+      select(q, [](std::string const& value){
+                  return value == "p class=q" ?
+                    Tree::disposition::yes:
+                    Tree::disposition::no_recurse;
+                }));
+    x = narrow(x, [](std::string const& value){
+                    return value == "cdata" ?
+                      Tree::disposition::yes:
+                      Tree::disposition::no_recurse;
+                  });
+    for(auto& v: values_non_nested(x)){
+      v = "?";
+    }
+  }
+  
   // put in real questions with no answers
   Tree::children_type qs;
   std::transform(real_questions.begin(),
@@ -55,7 +73,18 @@ void test1() {
                  std::inserter(qs, qs.end()),
                  [](auto const& qa){
                    auto q = qa_template;
-                   q.find_only("p class=a").find_only("cdata") = "?";
+                   auto x(
+                     select(q, [](std::string const& value){
+                                 return value == "p class=a" ?
+                                   Tree::disposition::yes:
+                                   Tree::disposition::no_recurse;
+                               }));
+                   x = narrow(x, [](std::string const& value){
+                                   return value == "cdata" ?
+                                     Tree::disposition::yes:
+                                     Tree::disposition::no_recurse;
+                                 });
+                   values_non_nested(x).first() = real_question.first;
                    return q;
                  });
 
@@ -64,7 +93,7 @@ void test1() {
   // in place, can either append rows after header or perhaps better
   // is to leave one row (the template) in place and replace that
   // with the real rows.
-  page.children_=qs;
+  replace(children_of(page), qs);
 
   Tree const expect({
     { "html",
@@ -82,17 +111,11 @@ void test1() {
   xju::assert_equal(page, expect);
 }
 
-// demonstrate css selector as a select_by_path function, using
-// it with find, find_all, remove_selected, apply_to_selected etc
-// including inserting and removing nodes
+// demonstrate css selector as a select_by_path
 void test2(){
 }
 
-// demonstrate same css selector use with tour to "precede" and "follow"
-void test2(){
-}
-
-// demonstrate same css selector use with tour is more efficient
+// demonstrate same css selector used with walk is more efficient
 void test3(){
 }
 

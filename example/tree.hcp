@@ -11,34 +11,44 @@
 
 namespace example
 {
-namespace tree
-{
-
 template<class node_type, class tag=void>
-struct config
+struct tree_config
 {
   // defaults, specialise if you like
   typedef std::vector<node_type> children_type;
-};
-
-enum class disposition{
-  no, // node does not match, and no child will
-  yes, // node matches, but no child will
-  no_recurse, // node does not match, but children might
-  yes_recurse, // node matches and so might its children
 };
 
 template<class value_type, class tag=void>
   class node;
 
 template<class value_type, class tag=void>
-class node
+class tree
 {
 public:
+  explicit tree(value_type root) noexcept:
+      root_(std:move(node))
+  {
+  }
+  
   typedef config<node, tag>::children_type children_type;
 
-  value_type value_;
-  children_type children_;
+  class node
+  {
+  public:
+    explicit node(value_type value) noexcept: value_(std::move(value)){}
+
+    value_type value_;
+    children_type children_;
+  };
+
+  node root_;
+  
+  enum class disposition{
+    no, // node does not match, and no child will
+    yes, // node matches, but no child will
+    no_recurse, // node does not match, but children might
+    yes_recurse, // node matches and so might its children
+  };
 
   // REVISIT: make path a class, get its methods and friends
   // from static functions below
@@ -46,110 +56,89 @@ public:
     std::pair<std::ref<children_type const>,
               typename children_type::const_iterator> > const_path;
 
-  // return true if node or any of its children are selected by p
-  bool has_some(std::function<disposition, value_type const&> const& p) const
-  {
-    auto const d(p(value_));
-    switch(d){
-    case yes:
-    case yes_recurse:
-      return true;
-    case no_recurse:
-      for(auto node: children_){
-        if (node.has_some(p)){
-          return true;
-        }
-      }
-      break;
-    case no:
-      break;
-    default:
-      xju::assert_never_reached();
-    }
-    return false;    
-  }
-  // return true if tree has at least one node that matches p
-  bool has_some(std::function<disposition, const_path const&> const& p) const
-  {
-    auto const d(p(value_));
-    switch(d){
-    case yes:
-    case yes_recurse:
-      return true;
-    case no_recurse:
-      for(auto node: children_){
-        if (node.has_some(p)){
-          return true;
-        }
-      }
-      break;
-    case no:
-      break;
-    default:
-      xju::assert_never_reached();
-    }
-    return false;    
-  }
-
   typedef std::function<disposition, value_type const&> select_by_value;
-  typedef std::function<disposition, Node const&, const_path const&> select_by_path;
+  typedef std::function<disposition, node const&, const_path const&> select_by_path;
+    
+  class const_selection{
+  public:
+    explicit const_selection(tree const& tree) noexcept: tree_(tree) {}
+    std::ref<tree const> tree_;
+
+    std::vector<const_path> selected_nodes_;
+
+    // find values (self and nested) of all nodes selected by s
+    // - result valid until hierarchy modified
+    const_selection select_all(select_by_value const& s) const;
+    const_selection select_all(select_by_path const& s) const;
+
+    const_selection select_non_nested(select_by_value const& s) const;
+    const_selection select_non_nested(select_by_path const& s) const;
+    
+  };
+
+  // select nodes from candidates where s including nested matches
+  // - result can include tree
+  const_selection select_all(const_selection const& candidates, select_by_value const& s) const;
+  const_selection select_all(const_selection const& candidates, select_by_path const& s) const;
+
+  // select nodes from candidates where s excluding nested matches
+  // - result can include tree (and if so, result is tree only)
+  const_selection select_non_nested(const_selection const& candidates, select_by_value const& s) const;
+  const_selection select_non_nested(const_selection const& candidates, select_by_path const& s) const;
   
-  // find values (self and nested) of all nodes selected by s
-  // - result valid until hierarchy modified
-  std::vector<std::ref<value_type const> > find_all(
-    select_by_value const& s) const;
+  // return true if s selects any nodes from candidates
+  bool selects_some(const_selection const& candidates, select_by_value const& s) const;
+  bool selects_some(node const& tree, select_by_path const& s) const;
+
   
-  std::vector<std::ref<value_type const> > find_all(
-    select_by_path const& s) const;
-
-  std::vector<std::ref<value_type> > find_all(
-    select_by_value const& p);
-  
-  std::vector<std::ref<value_type> > find_all(
-    select_by_path const& p);
-
-  // find all non-overlapping (sub)trees whose root is a node
-  // selected by p
-  // - results valid at least until any ancestor of any returned node
-  //   is pruned-from or grafted-to. (Depending on children_type
-  //   results may remain valid under broader conditions.)
-  std::vector<std::pair<std::ref<node const>, const_path> > find(
-    select_by_value const& p) const;
-
-  std::vector<std::pair<std::ref<node const>, const_path> > find(
-    select_by_path const& p) const;
-
-  std::vector<std::pair<std::ref<node>, const_path> > find(
-    select_by_value const& p);
-
-  std::vector<std::pair<std::ref<node>, const_path> > find(
-    select_by_path const& p);
-
-  // remove all descendents selected by selector
-  // - returns the removed nodes maintaining order
-  // - note never recurses into selected nodes
-  children_type remove_selected(
-    select_by_value const& selector);
-  children_type remove_selected(
-    select_by_path const& selector);
-
-  // REVISIT: add copy_selected and transform_selected
-
+  // REVISIT: make path a class, get its methods and friends
+  // from static functions below
   typedef std::vector<
     std::pair<std::ref<children_type>,
               typename children_type::iterator> > path;
 
-  // call f(node.value_) for each node selected by selector
-  void apply_to_selected(
-    select_by_value const& selector,
-    std::function<void, value_type const&> f) const;
-  // call f(node.value_) for each node selected by selector
-  void apply_to_selected(
-    select_by_value const& selector,
-    std::function<void, value_type&> f);
+  class selection{
+  public:
+    selection(tree& tree) noexcept: tree_(tree) {}
+    std::ref<tree> tree_;
 
-  typedef std::function<const_path, const_path> const_node_f;
-  typedef std::function<path, path> f node_f;
+    std::vector<path> selected_nodes_;
+  };
+
+  // return all tree nodes selected by s excluding nested matches
+  // - result can include tree (and if so, result is tree only)
+  // pre: no selection or const_selection references tree
+  selection select(tree& tree, select_by_value const& s);
+  selection select(tree& tree, select_by_path const& s);
+
+  // narrow selection to just nodes selected by s
+  selection narrow(selection&& selection, select_by_value const& s);
+  selection narrow(selection&& selection, select_by_path const& s);
+
+  // remove selection, returns liberated nodes (branches)
+  children_type prune(selection&& selection);
+  
+  // place copies of nodes before each node (non-nested) of selection
+  selection precede(selection&& selection, children_type nodes);
+
+  // replace each selected node (non-nested) with copy of nodes
+  selection replace(selection&& selection, children_type nodes);
+
+  class values{
+    values(tree& tree) noexcept: tree_(tree) {}
+    std::vector<std::ref<value_type> > selected_values_;
+  };
+
+  // values of all nodes in selection including/excluding descendents
+  values values_nested(selection&& selection);
+  values values_non_nested(selection&& selection);
+
+  // convenience wrappers
+
+  // direct children of tree
+  // pre: no existing const_selection/selection/values refer to tree
+  selection children_of(tree& tree);
+  selection children_of(selection&& selection);
   
   // calls f on each root node, calling f on result (advanced to next
   // valid node) until end is returned, where f's signature is:
@@ -160,8 +149,9 @@ public:
   //   calling f
   // - where f returns path unmodified, next() is applied before again
   //   calling f
-  void tour(std::function<const_path, node const&, const_path, const_path const&> f) const;
-  void tour(std::function<path, node&, path, path const&> f);
+  // pre: no exsiting const_selection, selection or values refers to tree
+  void walk(std::function<const_path, node const&, const_path, const_path const&> f) const;
+  void walk(std::function<path, node&, path, path const&> f);
 
   static bool has_value(const_path const& p) {
     return p.first.size() && p.back().first.end() != p.back.second;
@@ -201,7 +191,32 @@ public:
   }
 };
 
+template<class value_type, class tag=void>
+bool tree<value_type, tag>::selects_some(
+  tree<value_type, tag>::const_selection const& candidates,
+  tree<value_type, tag>::select_by_value const& s) const
+{
+  auto const d(p(value_));
+  switch(d){
+  case yes:
+  case yes_recurse:
+    return true;
+  case no_recurse:
+    for(auto node: children_){
+      if (node.has_some(p)){
+        return true;
+      }
+    }
+    break;
+  case no:
+    break;
+  default:
+    xju::assert_never_reached();
+  }
+  return false;    
+}
+
 
 }
-}
-}
+
+
