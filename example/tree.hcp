@@ -85,6 +85,22 @@ public:
   // - result can include tree (and if so, result is tree only)
   const_selection select_non_nested(const_selection const& candidates, select_by_value const& s) const;
   const_selection select_non_nested(const_selection const& candidates, select_by_path const& s) const;
+
+  // narrow selection to just nodes selected by s
+  const_selection narrow(const_selection const& selection, select_by_value const& s);
+  const_selection narrow(const_selection const& selection, select_by_path const& s);
+
+  
+  class const_values{
+    explicit const_values(tree const& tree) noexcept: tree_(tree) {}
+
+    std::ref<tree const> tree_;
+    std::vector<std::ref<value_type const> > selected_values_;
+  };
+
+  // values of all nodes in selection including/excluding descendents
+  const_values values_nested(selection const& selection);
+  const_values values_non_nested(selection const& selection);
   
   // return true if s selects any nodes from candidates
   bool selects_some(const_selection const& candidates, select_by_value const& s) const;
@@ -125,7 +141,9 @@ public:
   selection replace(selection&& selection, children_type nodes);
 
   class values{
-    values(tree& tree) noexcept: tree_(tree) {}
+    explicit values(tree& tree) noexcept: tree_(tree) {}
+
+    std::ref<tree> tree_;
     std::vector<std::ref<value_type> > selected_values_;
   };
 
