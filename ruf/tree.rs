@@ -10,10 +10,10 @@
 
 mod tree
 {
-    struct Disposition
+    pub struct Disposition
     {
-	select: bool,
-	recurse: bool
+	pub select: bool,
+	pub recurse: bool
     }
 
     pub trait SelectByValue<T> {
@@ -21,52 +21,67 @@ mod tree
     }
 	
     
-    struct Node<T>
+    pub struct Node<T>
     {
-	value : T,
-	children : Vec<Node<T> >,
+	pub value : T,
+	pub children : Vec<Node<T> >,
     }
     
-    impl<'a> Node<'a,T>
+    pub struct Path<'a,T>
+    {
+	root : &'a mut Node<T>,
+	indices_from_root: Vec<usize>
+    }
+
+    impl<'a,T> Path<'a,T>
+    {
+	fn target(self : &'a mut Path<'a,T>) -> &'a mut Node<T>
+	{
+	    let mut result : &'a mut Node<T> = self.root;
+	    for i in &self.indices_from_root {
+		result = &mut result.children[*i];
+	    }
+	    return result;
+	}
+    }
+	    
+/*
+    pub impl<'a> Node<'a,T>
     {
 	fn value(self : &'a Node<'a,T>) -> &'a T { self.value }
 	fn value(self : &'a mut Node<'a,T>) -> &'a mut T { self.value }
-	fn find(self : &'a mut Node<'a,T>, path : &Vec<usize>) -> &'a mut Node<'a,T>
+	fn select_children(self : &'a mut Node<'a,T>,
+			   selector : &SelectByValue<T>) -> Vec<'a,Path>
 	{
-	    if (path.size() == 0){
-		return self;
+	    let result : Vec<'a,Path> = new Vec<'a, Path>{};
+	    for(i, child : enumerate(self.children) )
+	    {
+		let disposition = selector(child.value);
+		if (disposition.select){
+		    result.push(Path{
+			root: self,
+			indices_from_root : [i] } );
+		}
+		if (disposition.recurse){
+		    let child_paths = child.select_children(selector);
+		    for p in child_paths {
+			result.push_back(Path{
+			    root: self,
+			    indices_from_root: [i]+p.indices_from_root } );
+		    }
+		}
 	    }
-	    return self.children[path[0]].find(path[1:]);
-	}
-    }
-    
-    struct Tree<T>
-    {
-	root: Option<Node<T>>
-    }
-
-    struct Path
-    {
-	indices_from_root: Vec<usize>
-    }
-    
-    impl<'a> Tree<'a,T>
-    {
-	fn new(T root) { root: root }
-	fn find(self : &'a mut Tree<'a,T>, p : &Path) -> &'a Node<T>
-	{
-	    assert(self.root.valid());
-	    return self.root.value().find(p);
+	    return result;
 	}
     }
     
     struct MutableSelection<T>
     {
-	tree : &mut Tree<T>,
-	// paths from tree root of selected sub-trees, note
+	root : &'a mut Node<'a,T>,
+	// paths from root of selected sub-trees, note
 	// a selected path might be nested in other selected paths
-	// empty path means tree root itself
-	selected_paths : Vec<Path>
+	// paths may not be empty
+	selected_paths : Vec<'a,Path>
     }
 
     impl<'a, T> MutableSelection<'a, T>
@@ -125,7 +140,7 @@ mod tree
 	}
 
 	// REVISIT: mutable references version of values
-
+*/
     }
 
     // convenience wrappers
@@ -184,7 +199,7 @@ mod tree
   //   }
   //   return next(parent_of(p, end), end);
   // }
-}
+//}
 
 // Template<class value_type, class tag=void>
 // bool tree<value_type, tag>::selects_some(
