@@ -35,7 +35,7 @@ mod tree
 
     impl<'a,T> Path<'a,T>
     {
-	fn target(self : &'a mut Path<'a,T>) -> &'a mut Node<T>
+	pub fn target(self : &'a mut Path<'a,T>) -> &'a mut Node<T>
 	{
 	    let mut result : &'a mut Node<T> = self.root;
 	    for i in &self.indices_from_root {
@@ -230,3 +230,29 @@ mod tree
 // }
 
 
+fn n(value:i32) -> tree::Node<i32> {
+    let result = tree::Node::<i32>{ value : value, children : vec![] };
+    return result;
+}
+fn nc(value:i32, children:Vec<tree::Node<i32>>) -> tree::Node<i32> {
+    tree::Node::<i32>{ value, children }
+}
+
+fn main() {
+    let nk : Vec<tree::Node<i32>> = vec![];
+    
+    let x = tree::Node::<i32> {
+	value : 1,
+	children : vec![
+	    n(2),
+	    tree::Node::<i32>{ value : 3,
+		       children : vec![
+			   tree::Node::<i32>{ value : 4, children: nk },
+			   tree::Node::<i32>{ value : 5, children: nk }] } ] };
+
+    let p = tree::Path {
+	root : &mut x,
+	indices_from_root : vec![] };
+
+    assert_eq!(p.target(), &x);
+}
