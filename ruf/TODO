@@ -1,0 +1,52 @@
+- can't use assert for just anything? Do we need a proper, core-dump-always assert?
+
+- how to integrate with odin?
+  - dependencies?
+  - compile v link? (does it make any sense? Maybe with rlib?)
+    so maybe:
+      tree.rs produces tree.rlib crate
+      html.rs uses tree.rlib crate and produces html.rlib
+      ... does rustc html.rs only need tree.rlib? (Or needs tree.rs?)
+      - use a.rs + b.rs as a test and strace to see what it does
+        - no generics
+	- generics
+	
+
+- modules:
+    https://www.sheshbabu.com/posts/rust-module-system
+
+    It is a clear explanation of Rust's module system, so why is it still
+    impossible to second guess?
+
+    One problem is that in the explanation, it shows how to do:
+      main.rs =>
+      routes/user_route.rs =>
+      models/user_model.rs
+    ... and it shows how to do:
+      main.rs =>
+      config.rs
+    ... but as soon as I try to do the equivalent one level up:
+      main.rs =>
+      config.rs =>
+      log.rs
+    ... um, err, it wants a declaration of log in config.rs, but there
+    is nowhere to put it. You'd think that if I main.rs declares config
+    because it uses it, then config could declare log because it needs it.
+    But apparently it can't? Another thought would be to declare it in the
+    top-level mod.rs.
+
+    So then we find https://doc.rust-lang.org/edition-guide/rust-2018/path-changes.html, which says:
+    
+      There's a root cause for why it's so confusing to many: while there are
+      simple and consistent rules defining the module system, their
+      consequences can feel inconsistent, counterintuitive and mysterious.
+
+    ... which sounds like "all the users are wrong, what I've implemented is
+    right". Really, if the simple and consistent rules defining the module
+    system cause such confusion, they're probably the wrong rules, throw them
+    out. There is another possible root cause: that the simple and consistent
+    rules defining the module system are simply and consistently not
+    documented.
+
+    So when I get into the above situation there's no description I can
+    follow that allows me to step through as the compiler would.
