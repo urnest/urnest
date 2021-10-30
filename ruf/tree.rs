@@ -8,44 +8,105 @@
 // implied warranty.
 //
 
-mod tree
+pub struct Disposition
 {
-    pub struct Disposition
+    pub select: bool,
+    pub recurse: bool
+}
+
+pub trait SelectByValue<T> {
+    fn select_by_value(&self, value: &T) -> bool;
+}
+
+
+pub struct Node<T>
+{
+    pub value : T,
+    pub children : Vec<Node<T> >,
+}
+
+// selected set of sub-trees of a Node<T> that allows
+// tree mutation
+pub struct MutableSelection<T>
+{
+    root : &'a mut Node<'a,T>,
+    // paths from root of selected sub-trees, each being a non-empty
+    // list of indices capturing the path from root to the selected node
+    selected_paths : Vec<Vec<usize> >
+}
+
+impl<'a, T, F1> MutableSelection<'a, T>
+{
+    // select descendants of root per selector
+    pub fn by_value<F1>(root : &'a mut Node<T>,
+			selector: F) -> MutableSelection<'a, T>
+    where
+	F1: Fn(&T) -> bool
     {
-	pub select: bool,
-	pub recurse: bool
+	let mut selected_paths : Vec<Vec<usize>> = {}
+	for i in [0..root.children.size()] {
+	    selected_paths.extend(select_by_value(root,i,selector));
+	}
+	MutableSelection<'a, T>{ root, selected_paths }
     }
 
-    pub trait SelectByValue<T> {
-	fn select_by_value(&self, value: &T) -> Disposition;
-    }
-	
-    
-    pub struct Node<T>
+    pub get_selected_values(self : &MutableSelection) -> Vec<T>
     {
-	pub value : T,
-	pub children : Vec<Node<T> >,
+	let result : Vec<T> = vec![];
+	for p in &self.selected_paths {
+	    result.push(self.resolve(p));
+	}
     }
-    
+
+    fn get_value(self : &MutableSelection, &Vec<usize> p) -> T
+    {
+	let mut result : &Node<T> = self.root;
+	for i in &p {
+	    result = &result.children[*i];
+	}
+	return result.value;
+    }
+}
+
+// get paths from parent of nodes from the subtree parent.children[index]
+// that are selected by selector
+fn select_by_value<T, F1>(
+    parent : & Node<T>,
+    index : usize,
+    F1 selector) -> Vec<Vec<usize>>
+where
+    F1: Fn(&T) -> bool
+{
+    let node = &parent.children[i];
+    let path_to_node : Vec<usize> = vec![ index ];
+    let mut result : Vec<Vec<usize>>{};
+    if selector(node.value){
+	result.push( path_to_node );
+    }
+    for i in [0..node.children.size()] {
+	let selected_children = select_by_value(node, i, selector);
+	for c in selected_children {
+	    c.extend(path_to_node.iter());
+	    result.push(c);
+	}
+    }
+    return result;
+}
+
+
     pub struct Path<'a,T>
     {
-	root : &'a mut Node<T>,
-	indices_from_root: Vec<usize>
+	pub root : &'a mut Node<T>,
+	pub indices_from_root: Vec<usize>
     }
 
     impl<'a,T> Path<'a,T>
     {
 	pub fn target(self : &'a mut Path<'a,T>) -> &'a mut Node<T>
 	{
-	    let mut result : &'a mut Node<T> = self.root;
-	    for i in &self.indices_from_root {
-		result = &mut result.children[*i];
-	    }
-	    return result;
 	}
     }
 	    
-/*
     pub impl<'a> Node<'a,T>
     {
 	fn value(self : &'a Node<'a,T>) -> &'a T { self.value }
@@ -75,15 +136,6 @@ mod tree
 	}
     }
     
-    struct MutableSelection<T>
-    {
-	root : &'a mut Node<'a,T>,
-	// paths from root of selected sub-trees, note
-	// a selected path might be nested in other selected paths
-	// paths may not be empty
-	selected_paths : Vec<'a,Path>
-    }
-
     impl<'a, T> MutableSelection<'a, T>
     {
 	// selects tree's root (if any)
@@ -141,7 +193,6 @@ mod tree
 
 	// REVISIT: mutable references version of values
 */
-    }
 
     // convenience wrappers
 
@@ -230,29 +281,3 @@ mod tree
 // }
 
 
-fn n(value:i32) -> tree::Node<i32> {
-    let result = tree::Node::<i32>{ value : value, children : vec![] };
-    return result;
-}
-fn nc(value:i32, children:Vec<tree::Node<i32>>) -> tree::Node<i32> {
-    tree::Node::<i32>{ value, children }
-}
-
-fn main() {
-    let nk : Vec<tree::Node<i32>> = vec![];
-    
-    let x = tree::Node::<i32> {
-	value : 1,
-	children : vec![
-	    n(2),
-	    tree::Node::<i32>{ value : 3,
-		       children : vec![
-			   tree::Node::<i32>{ value : 4, children: nk },
-			   tree::Node::<i32>{ value : 5, children: nk }] } ] };
-
-    let p = tree::Path {
-	root : &mut x,
-	indices_from_root : vec![] };
-
-    assert_eq!(p.target(), &x);
-}

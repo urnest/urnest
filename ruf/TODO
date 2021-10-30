@@ -18,14 +18,14 @@
     It is a clear explanation of Rust's module system, so why is it still
     impossible to second guess?
 
-    One problem is that in the explanation, it shows how to do:
+    One problem is that in the explanation, it shows how to do [A]:
       main.rs =>
       routes/user_route.rs =>
       models/user_model.rs
-    ... and it shows how to do:
+    ... and it shows how to do [B]:
       main.rs =>
       config.rs
-    ... but as soon as I try to do the equivalent one level up:
+    ... but as soon as I try to do the equivalent one level up [C]:
       main.rs =>
       config.rs =>
       log.rs
@@ -33,7 +33,11 @@
     is nowhere to put it. You'd think that if I main.rs declares config
     because it uses it, then config could declare log because it needs it.
     But apparently it can't? Another thought would be to declare it in the
-    top-level mod.rs.
+    top-level mod.rs, but that is not read. It turns out that it does
+    work if I declare the "transitively required" log module in the
+    main.rs, but that goes against the grain somehow, because in the
+    other example case [A] the transitively required is declared where it
+    is required not somewhere else.
 
     So then we find https://doc.rust-lang.org/edition-guide/rust-2018/path-changes.html, which says:
     
@@ -41,12 +45,87 @@
       simple and consistent rules defining the module system, their
       consequences can feel inconsistent, counterintuitive and mysterious.
 
-    ... which sounds like "all the users are wrong, what I've implemented is
-    right". Really, if the simple and consistent rules defining the module
-    system cause such confusion, they're probably the wrong rules, throw them
-    out. There is another possible root cause: that the simple and consistent
-    rules defining the module system are simply and consistently not
-    documented.
+    ... which incidentally could be read as "all the users are wrong, what
+    I've implemented is right", it just doesn't add up. Really, if the
+    simple and consistent rules defining the module system cause such
+    confusion, they're probably the wrong rules, throw them out.
 
-    So when I get into the above situation there's no description I can
-    follow that allows me to step through as the compiler would.
+    There is another possible root cause: that the simple and consistent
+    rules defining the module system are simply and consistently not
+    documented. So when I get into the above situation there's no
+    description I can follow that allows me to step through as the
+    compiler would.
+
+    After more experimentation and head scratching I would documnt it like
+    this:
+
+      The rust compiler takes a single file, and builds eg executable.
+      That source file might use "local" code that is not in that source
+      file and also might use "external" code that is... err... not in that
+      source file either. You tell the compiler where to find external code
+      by telling it which "crates" the external code is in (either by
+      "extern create x;" statements in the file or "local" code or implicitly
+      via "use ::" statements) and where to find those crates (via
+      compiler options -L(?), --extern).
+
+      For "local" code, there are no compiler options, it is all done by
+      the source code itself. (This is a big shift if you come from many
+      other languages, e.g. python, C++, C, java, javascript; those languages
+      give the "what" and "where" separately, normally in the code for the
+      "what" and via compiler options and/or environment for the "where").
+
+      With rust, the what is in "use" and "mod" statements, and implicitly
+      in path references like "fred::f1()" and "super/self/crate::f2()".
+      
+      How do I tell rustc where to find the local code? The file you
+      pass to rustc - let's call it the "main source file" - *must*
+      explicitly list all the top-level modules that contain local code
+      for the run of rustc. By default rustc expects those modules to be
+      in the same directory as the file itself, e.g. if we have main.rs
+      that says:
+         mod fred;
+      ... then "rustc x/y/main.rs" will expect module fred to be in
+      x/y, as either x/y/fred.rs (or the out of favour x/y/fred/mod.rs).
+
+      Once we put "mod fred;" in main.rs, main.rs can happily refer to code
+      in module fred, e.g. "fred::f1()". x/y/fred.rs can tell the compiler
+      about its child modules via e.g. "mod jude; mod jock;".
+
+      Only a child module's parent module can introduce siblings. Top-level
+      modules are not "child modules". *Only the main file can introduce
+      top level modules*. (Which can get wierd in a sense because my
+      main file's top level modules *can* be children - descendants - of
+      another main file's top level modules.)
+
+      In a sense there is there is another seeming anomoly: a child module
+      can "use" ancestors and there siblings and children, even though it
+      can't introduce them. And it's not till we learn that little-mentioned
+      [path] facility that we can see why that "limitation" is not removed.
+
+      So what does [path] do? Well, *by default* rustc expects our root
+      module's source code (e.g. fred.rs) in the same directory as
+      the main file. But the main file (and only the main file) can
+      override that using #[path], e.g.:
+      
+        #[path fred=/somewhere/else/the_real_fred.rs]
+	mod fred;
+
+      ... now rustc, when looking for fred, ignores the directory of the
+      main file and uses the_real_fred.rs from /somewhere/else/ as the
+      code for fred. It also looks for fred's children in /somewhere/else,
+      e.g. /somewhere/else/jude.rs and /somewhere/else/jock/mod.rs.
+
+      That perhaps reveals why a child module cannot introduce its
+      siblings: if rustc allowed that there could be ambiguity over where
+      to find that module.
+
+      Simple, isn't it?
+
+      Note that the fact that fred.rs cannot introduce
+      siblings or ancestors or grand-descendants is
+      seemingly never pointed out clearly in the official documentation nor
+      (as far as I can find) unofficial how-tos, tutorials, faqs, forums.
+      For me this omission caused days of head-scratching and I imagine
+      is behind some of the fustrated questions on the net. But rust
+      has enough unique valuable features (lifetime checking - one is enough)
+      that I will get over it.
