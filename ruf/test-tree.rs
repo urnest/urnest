@@ -1,6 +1,5 @@
 
-#[path="./mod.rs"]
-mod ruf;
+#[path="./mod.rs"] mod ruf;
 
 use ruf::tree;
 use ruf::assert;
@@ -18,22 +17,49 @@ fn nk() -> Vec<tree::Node<i32>> {
 }
 
 fn main() {
-    let mut x = tree::Node::<i32> {
+    let orig = tree::Node::<i32> {
 	value : 1,
 	children : vec![
 	    n(2),
-	    tree::Node::<i32>{ value : 3,
-		       children : vec![
-			   nc(4, nk() ),
-			   tree::Node::<i32>{ value : 5, children: nk() }] } ] };
+	    nc(3, vec![
+		nc(4, nk() ),
+		nc(5, nk() )] ),
+	    nc(6, vec![
+		nc(3, nk() ),
+		nc(3, vec![
+		    nc(4, nk() ),
+		    nc(5, nk() )] ),
+		nc(7, nk() )] ) ] };
+
+    let mut x = orig;
 
     let is_ten = |value:&i32| value.eq(&10);
-    let selection = tree::MutableSelection::<i32>::by_value(
-	&mut x,
-	&is_ten);
+    let selection = x.select_by_value(&is_ten);
 
     assert::equal(&selection.get_selected_values(), &Vec::<i32>::new());
 
-    let selection = x.select_by_value(&|value:&i32| value==&3);
-    assert::equal(&selection.get_selected_values(), &vec![3]);
+    let mut selection = x.select_by_value(&|value:&i32| value==&3);
+    assert::equal(&selection.get_selected_values(), &vec![3,3,3]);
+
+    let removed = selection.prune();
+
+    let y = tree::Node::<i32> {
+	value : 1,
+	children : vec![
+	    n(2),
+	    nc(6, vec![
+		nc(7, nk() )] ) ] };
+
+    assert::equal(&x, &y);
+    
+    let r = vec![
+	nc(3, vec![
+	    nc(4, nk() ),
+	    nc(5, nk() )] ),
+	nc(3, nk() ),
+	nc(3, vec![
+	    nc(4, nk() ),
+	    nc(5, nk() )] )];
+
+    assert::equal(&removed, &r);
 }
