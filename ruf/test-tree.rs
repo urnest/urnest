@@ -31,7 +31,7 @@ fn main() {
 		    nc(5, nk() )] ),
 		nc(7, nk() )] ) ] };
 
-    let mut x = orig;
+    let mut x = orig.clone();
 
     let is_ten = |value:&i32| value.eq(&10);
     let selection = x.select_by_value(&is_ten);
@@ -62,4 +62,31 @@ fn main() {
 	    nc(5, nk() )] )];
 
     assert::equal(&removed, &r);
+
+    let mut x = orig.clone();
+
+    let mut selection = x.select_by_value(&|value:&i32| value==&2);
+
+    let removed = selection.extend(&|value:&i32| value==&3).prune();
+    
+    let y = tree::Node::<i32> {
+	value : 1,
+	children : vec![
+	    nc(6, vec![
+		nc(7, nk() )] ) ] };
+
+    assert::equal(&x, &y);
+    
+    let r = vec![
+	n(2),
+	nc(3, vec![
+	    nc(4, nk() ),
+	    nc(5, nk() )] ),
+	nc(3, nk() ),
+	nc(3, vec![
+	    nc(4, nk() ),
+	    nc(5, nk() )] ) ];
+
+    assert::equal(&removed, &r);
+
 }

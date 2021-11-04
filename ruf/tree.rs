@@ -16,12 +16,7 @@ pub struct Disposition
     pub recurse: bool
 }
 
-pub trait SelectByValue<T> {
-    fn select_by_value(&self, value: &T) -> bool;
-}
-
-
-#[derive(PartialEq)]
+#[derive(PartialEq,Clone)]
 pub struct Node<T>
 {
     pub value : T,
@@ -41,18 +36,32 @@ impl<'a, T> MutableSelection<'a, T>
 {
     /* REVISIT
     /// narrow selection per selector
-    pub fn narrow<F1>(self : &'a mut MutableSelection<'a, T>,
-                      selector: &F1) -> &'a mut MutableSelection<'a, T>
+    pub fn narrow<F>(self : &'a mut MutableSelection<'a, T>,
+                      selector: &F) -> &'a mut MutableSelection<'a, T>
     where
-        F1: Fn(&T) -> bool
+        F: Fn(&T) -> bool
     {
         REVISIT
     }
      */
 
+    /// Append children of self.root that are selected by selector to
+    /// currently selected nodes.
+    pub fn extend<F>(self : &'a mut MutableSelection<'a, T>,
+                      selector: &F) -> &'a mut MutableSelection<'a, T>
+    where
+        F: Fn(&T) -> bool
+    {
+        for i in 0..self.root.children.len() {
+            self.selected_paths.extend(select_by_value(self.root,i,selector));
+        }
+        return self;
+    }
+    
     /// Prune selected nodes (subtrees) from tree, returning
     /// non-nested removed nodes (with nested selected nodes left
     /// within their removed subtree root nodes).
+    /// Result order mirrors selection order.
     pub fn prune(self : &'a mut MutableSelection<'a, T>) -> Vec<Node<T> >
     {
         let mut result : Vec<Node<T>> = vec![];
@@ -69,6 +78,7 @@ impl<'a, T> MutableSelection<'a, T>
             self.selected_paths.pop();
         }
         assert::equal(&self.selected_paths, &vec![]);
+	result.reverse();
         return result;
     }
 
@@ -107,9 +117,13 @@ impl<'a, T> MutableSelection<'a, T>
 
 impl<'a, T> Node<T>
 {
-    pub fn select_by_value<F1>(self : &'a mut Node<T>,
-                               selector: &F1) -> MutableSelection<'a,T>
-    where F1: Fn(&T) -> bool
+    /// Select all descendants of self per selector.
+    /// - includes nested matches
+    /// - includes parents before their ancestors
+    /// - includes matching siblings in left-to-right order
+    pub fn select_by_value<F>(self : &'a mut Node<T>,
+                               selector: &F) -> MutableSelection<'a,T>
+    where F: Fn(&T) -> bool
     {
         let mut selected_paths : Vec<Vec<usize>> = Vec::new();
         for i in 0..self.children.len() {
@@ -117,6 +131,24 @@ impl<'a, T> Node<T>
         }
         MutableSelection::<'a, T>{ root: self, selected_paths }
     }
+
+    /* REVISIT:
+    pub fn select_by_path<F>(self : &'a mut Node<T>,
+                             selector: &F) -> MutableSelection<'a,T>
+    where F: Fn(
+	// - path is, from root, index of child + that child, repeated
+	//   so path.last() will be included in result if result.select is true
+	// - selector will only be called on path descendants if result.recurse
+	//   is true, regardless of result.select
+	&Vec<(usize,&Node<T>)> path) -> Disposition
+    {
+        let mut selected_paths : Vec<Vec<usize>> = Vec::new();
+        for i in 0..self.children.len() {
+            selected_paths.extend(select_by_value(self,i,selector));
+        }
+        MutableSelection::<'a, T>{ root: self, selected_paths }
+    }
+     */
 }
 
 // Does a contain (or equal) b?
@@ -126,12 +158,12 @@ fn contains(a : &Vec<usize>, b: &Vec<usize>) -> bool {
 
 // get paths from parent of nodes from the subtree parent.children[index]
 // that are selected by selector
-fn select_by_value<T, F1>(
+fn select_by_value<T, F>(
     parent : & Node<T>,
     index : usize,
-    selector:&F1) -> Vec<Vec<usize>>
+    selector:&F) -> Vec<Vec<usize>>
 where
-    F1: Fn(&T) -> bool
+    F: Fn(&T) -> bool
 {
     let node = &parent.children[index];
     let path_to_node : Vec<usize> = vec![ index ];
