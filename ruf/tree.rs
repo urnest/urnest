@@ -36,8 +36,8 @@ impl<'a, T> MutableSelection<'a, T>
 {
     /* REVISIT
     /// narrow selection per selector
-    pub fn narrow<F>(self : &'a mut MutableSelection<'a, T>,
-                      selector: &F) -> &'a mut MutableSelection<'a, T>
+    pub fn narrow<F>(mut self : MutableSelection<'a, T>,
+                      selector: &F) -> MutableSelection<'a, T>
     where
         F: Fn(&T) -> bool
     {
@@ -46,9 +46,9 @@ impl<'a, T> MutableSelection<'a, T>
      */
 
     /// Append children of self.root that are selected by selector to
-    /// currently selected nodes.
-    pub fn extend<F>(self : &'a mut MutableSelection<'a, T>,
-                      selector: &F) -> &'a mut MutableSelection<'a, T>
+    /// currently selected nodes returning resulting (extended) selection.
+    pub fn extend<F>(mut self : MutableSelection<'a, T>,
+                     selector: &F) -> MutableSelection<'a, T>
     where
         F: Fn(&T) -> bool
     {
@@ -125,11 +125,10 @@ impl<'a, T> Node<T>
                                selector: &F) -> MutableSelection<'a,T>
     where F: Fn(&T) -> bool
     {
-        let mut selected_paths : Vec<Vec<usize>> = Vec::new();
-        for i in 0..self.children.len() {
-            selected_paths.extend(select_by_value(self,i,selector));
-        }
-        MutableSelection::<'a, T>{ root: self, selected_paths }
+	let result = MutableSelection::<'a, T>{
+	    root: self,
+	    selected_paths : vec![] };
+	return result.extend(selector);
     }
 
     /* REVISIT:
