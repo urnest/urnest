@@ -74,7 +74,7 @@ fn main() {
 	let mut x = orig.clone();
 	
 	let removed = x.select_by_value(&|v| v==&2)
-	    .extend(&|v| v==&3).prune();
+	    .extend_by_value(&|v| v==&3).prune();
 	
 	let y = tree::Node::<i32> {
 	    value : 1,
