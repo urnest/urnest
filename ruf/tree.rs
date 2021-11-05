@@ -48,38 +48,38 @@ impl<'a, T> MutableSelection<'a, T>
 
     /// Append descendants of self.root that are selected by selector to
     /// currently selected nodes returning resulting (extended) selection.
-    pub fn extend_by_value<F>(mut self : MutableSelection<'a, T>,
+    pub fn extend_by_value<F>(self : MutableSelection<'a, T>,
 			      selector: &F) -> MutableSelection<'a, T>
     where
         F: Fn(&T) -> bool
     {
-        for i in 0..self.root.children.len() {
-            self.selected_paths.extend(select_by_value(self.root,i,selector));
-        }
-        return self;
+	return self.extend_by_path(
+	    &|_ancestors, _path, node : &Node<T>|
+	    Disposition { select: selector(&node.value),
+			  recurse: true });
     }
     
     /// Append descendants of self.root that are selected by selector to
     /// currently selected nodes returning resulting (extended) selection.
     /// - selector gets:
     ///   ancestors from (including) root down to (excluding) node
-    ///   path from indix-of-child-of-root down to index-of-node
+    ///   path from index-of-child-of-root down to index-of-node
     ///   node in question
     pub fn extend_by_path<F>(mut self : MutableSelection<'a, T>,
 			     selector: &F) -> MutableSelection<'a,T>
     where
-	F: Fn(ancestors: &Vec<&T>,
-	      path: &Vec<usize>,
-	      node: &Node<T>) -> Disposition
+	F: Fn(&Vec<&T>, //ancestors
+	      &Vec<usize>, //path
+	      &Node<T> //node
+             ) -> Disposition
     {
 	let mut ancestors : Vec<&T> = vec![&self.root.value];
 	let mut path : Vec<usize> = vec![];
         for i in 0..self.root.children.len() {
 	    path.push(i);
-	    let node = &self.root.children[i];
             self.selected_paths.extend(select_by_path(
-		&mut ancestors, &mut path, &node, selector));
-	    path.pop(i);
+		&mut ancestors, &mut path, &self.root.children[i], selector));
+	    path.pop();
         }
         return self;
     }
@@ -157,12 +157,21 @@ impl<'a, T> Node<T>
 	return result.extend_by_value(selector);
     }
 
+    /// Select all descendants of self per selector.
+    /// - includes nested matches
+    /// - includes parents before their ancestors
+    /// - includes matching siblings in left-to-right order
+    /// - selector gets:
+    ///   ancestors from (including) root down to (excluding) node
+    ///   path from index-of-child-of-root down to index-of-node
+    ///   node in question
     pub fn select_by_path<F>(self : &'a mut Node<T>,
                              selector: &F) -> MutableSelection<'a,T>
     where
-	F: Fn(ancestors: &Vec<&T>,
-	      path: &Vec<usize>,
-	      node: &Node<T>) -> Disposition
+	F: Fn(&Vec<&T>,  // ancestors
+	      &Vec<usize>, // path
+	      &Node<T> // node
+             ) -> Disposition
     {
 	let result = MutableSelection::<'a, T>{
 	    root: self,
@@ -176,60 +185,41 @@ fn contains(a : &Vec<usize>, b: &Vec<usize>) -> bool {
     (a.len() >= b.len()) && (a[..] == b[0..a.len()])
 }
 
-// get paths from parent of nodes from the subtree parent.children[index]
-// that are selected by selector
-fn select_by_value<T, F>(
-    parent : & Node<T>,
-    index : usize,
-    selector:&F) -> Vec<Vec<usize>>
-where
-    F: Fn(&T) -> bool
-{
-    let node = &parent.children[index];
-    let path_to_node : Vec<usize> = vec![ index ];
-    let mut result : Vec<Vec<usize>> = Vec::new();
-    if selector(&node.value){
-        result.push( path_to_node.clone() );
-    }
-    for i in 0..node.children.len() {
-        let selected_children = select_by_value(node, i, selector);
-        for c in selected_children {
-            let mut cc = path_to_node.clone();
-            cc.extend(c.iter());
-            result.push(cc);
-        }
-    }
-    return result;
-}
-
-// get paths from parent of nodes from the subtree parent.children[index]
-// that are selected by selector
-fn select_by_path<T, F>(
-    ancestors: &mut Vec<&T>,
+// Get paths from root of those of node and its descendants that are
+// selected by selector.
+// - selector gets:
+//   ancestors from (including) root down to (excluding) node
+//   path from index-of-child-of-root down to index-of-node
+//   node in question
+fn select_by_path<'a, T, F>(
+    ancestors: &mut Vec<&'a T>,
     path : &mut Vec<usize>,
-    node: &Node<T>,
-    selector:&F) -> Vec<Vec<usize>>
+    node: &'a Node<T>,
+    selector: &F) -> Vec<Vec<usize>>
 where
-    F: Fn(ancestors: &Vec<&T>,
-	  path: &Vec<usize>,
-	  node: &Node<T>) -> Disposition
+    F: Fn(&Vec<&T>, // ancestors
+	  &Vec<usize>, // path
+	  &Node<T> // node
+         ) -> Disposition
 {
     let mut result : Vec<Vec<usize>> = Vec::new();
-    if selector(ancestors, path, node){
+    let disposition = selector(ancestors, path, node);
+    if disposition.select {
         result.push( path.clone() );
     }
-    for i in 0..node.children.len() {
-	path.push(i);
-	ancestors.push(&node.value);
-        let selected_descendants = select_by_path(
-	    ancestors, path, &node.children[i], selector);
-        for c in selected_children {
-            let mut cc = path.clone();
-            cc.extend(c.iter());
-            result.push(cc);
-        }
-	ancestors.pop();
-	path.pop();
+    if disposition.recurse {
+	for i in 0..node.children.len() {
+	    path.push(i);
+	    ancestors.push(&node.value);
+            let mut selected_descendants = select_by_path(
+		ancestors, path, &node.children[i], selector);
+	    for c in &mut selected_descendants {
+		result.push(Vec::<usize>::new());
+		std::mem::swap(c, result.last_mut().unwrap());
+	    }
+	    ancestors.pop();
+	    path.pop();
+	}
     }
     return result;
 }
