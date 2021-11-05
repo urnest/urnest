@@ -1,7 +1,27 @@
-- can't use assert for just anything? Do we need a proper, core-dump-always assert?
+* tree:
+  x add tests:
+    x select_by_path
+    x select by path via parent value
+    x select by path via index (select rest)
+  
+  more functions:
+    append_child
+    prepend_child
+    insert_before
+    insert_after
+    wrap?
+    mut_selected_values?
+      how to do lifetimes such that we can continue using selection
+      once the values have been adjusted?
 
+- can't use assert for just anything? Do we need a proper, core-dump-always assert? yes
+  - add all the assert functions from C++ xju::assert
+  - also need abort on panic always on
+  
 - how to integrate with odin?
   - dependencies?
+    - treat main file different to others? #[path] handling is tricky
+
   - compile v link? (does it make any sense? Maybe with rlib?)
     so maybe:
       tree.rs produces tree.rlib crate
