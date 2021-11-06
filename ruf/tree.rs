@@ -139,7 +139,7 @@ impl<'a, T> MutableSelection<'a, T>
 
 impl<'a, T> Node<T>
 {
-    /// Select all descendants of self per selector.
+    /// Select descendants of self per selector.
     /// - includes nested matches
     /// - includes parents before their ancestors
     /// - includes matching siblings in left-to-right order
@@ -153,7 +153,7 @@ impl<'a, T> Node<T>
 	return result.extend_by_value(selector);
     }
 
-    /// Select all descendants of self per selector.
+    /// Select descendants of self per selector.
     /// - includes nested matches
     /// - includes parents before their ancestors
     /// - includes matching siblings in left-to-right order
