@@ -1,9 +1,26 @@
 * tree:
+
+  - something better than Disposition? (bool, bool)? constants?
+    default params?
+
   x add tests:
     x select_by_path
     x select by path via parent value
     x select by path via index (select rest)
-  
+
+    /* REVISIT
+    /// Narrow selection to those of the currently selected nodes and their
+    /// descendants that match selector.
+    pub fn refine_by_value<F>(mut self : MutableSelection<'a, T>,
+                              selector: &F) -> MutableSelection<'a, T>
+    where
+        F: Fn(&T) -> bool
+    {
+        REVISIT
+    }
+     */
+
+
   more functions:
     append_child
     prepend_child
@@ -13,7 +30,8 @@
     mut_selected_values?
       how to do lifetimes such that we can continue using selection
       once the values have been adjusted?
-
+  immutable Selection
+  
 - can't use assert for just anything? Do we need a proper, core-dump-always assert? yes
   - add all the assert functions from C++ xju::assert
   - also need abort on panic always on

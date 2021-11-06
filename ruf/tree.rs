@@ -10,6 +10,7 @@
 
 use ruf::assert;
 
+/// A tree of T.
 #[derive(PartialEq,Clone)]
 pub struct Node<T>
 {
@@ -18,7 +19,12 @@ pub struct Node<T>
 }
 
 /// Selected list of sub-trees of a Node<T> that allows mutation of the
-/// Node<T>.
+/// Node<T>. Use via Node<T>'s select* methods e.g.:
+///   tree : Node<i32> = ...;
+///   tree.select_by_value(&|v:&i32| v == &6).prune(); // remove all 6s
+///   tree.select_by_value(&|v:&i32| v == &100)
+///       .extend_by_value(&|v:&i32| v < 50).prune(); // remove 100s and < 50s
+///   
 pub struct MutableSelection<'a,T>
 {
     root : &'a mut Node<T>,
@@ -74,18 +80,6 @@ impl<'a, T> MutableSelection<'a, T>
         return self;
     }
 
-    /* REVISIT
-    /// Narrow selection to those of the currently selected nodes and their
-    /// descendants that match selector.
-    pub fn refine_by_value<F>(mut self : MutableSelection<'a, T>,
-                              selector: &F) -> MutableSelection<'a, T>
-    where
-        F: Fn(&T) -> bool
-    {
-        REVISIT
-    }
-     */
-
     /// Prune selected nodes (subtrees) from tree, returning
     /// non-nested removed nodes (with nested selected nodes left
     /// within their removed subtree root nodes).
@@ -124,6 +118,7 @@ impl<'a, T> MutableSelection<'a, T>
 impl<'a, T> MutableSelection<'a, T>
     where T: std::marker::Copy
 {
+    /// Get values of all selected nodes, in selection order.
     pub fn get_selected_values(self : &MutableSelection<'a,T>) -> Vec<T>
     {
         let mut result : Vec<T> = vec![];
