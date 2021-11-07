@@ -1,0 +1,5 @@
+
+%test-tree == ()+cmd=rustc -o test-tree -g (test-tree.rs) +need=(tree.rs) (assert.rs) (mod.rs):output/test-tree
+
+%test-tree.output == ()+cmd=RUST_BACKTRACE\=full (%test-tree):exec.output
+
