@@ -168,4 +168,94 @@ fn main() {
 	
 	assert::equal(&removed, &r);
     }
+    // refine_by_path using value (parent in this case)
+    {
+	let mut x = tree::Node::<i32> {
+	    value : 1,
+	    children : vec![
+		n(2),
+		nc(3, vec![
+		    n(4),
+		    n(5)] ),
+		nc(6, vec![
+		    n(3),
+		    nc(3, vec![
+			n(4),
+			n(5)] ),
+		    n(7)] ) ] };
+	
+	let removed = x.select_by_value(&|v| v==&6)
+	    .refine_by_path(
+		&|_ancestors, _path, node|
+		tree::Disposition{
+		    select: &3 == &node.value,
+		    recurse: true}).prune();
+	
+	let y = tree::Node::<i32> {
+	    value : 1,
+	    children : vec![
+		n(2),
+		nc(3, vec![
+		    n(4),
+		    n(5)]),
+		nc(6, vec![
+		    n(7)] ) ] };
+
+	
+	assert::equal(&x, &y);
+	
+	let r = vec![
+	    n(3),
+	    nc(3, vec![
+		n(4),
+		n(5)] ),
+	];
+	
+	assert::equal(&removed, &r);
+    }
+
+    
+    // refine_by_value
+    {
+	let mut x = tree::Node::<i32> {
+	    value : 1,
+	    children : vec![
+		n(2),
+		nc(3, vec![
+		    n(4),
+		    n(5)] ),
+		nc(6, vec![
+		    n(3),
+		    nc(3, vec![
+			n(4),
+			n(5)] ),
+		    n(7)] ) ] };
+	
+	let removed = x.select_by_value(&|v| v==&3)
+	    .refine_by_value(&|v| v==&5).prune();
+	
+	let y = tree::Node::<i32> {
+	    value : 1,
+	    children : vec![
+		n(2),
+		nc(3, vec![
+		    n(4)] ),
+		nc(6, vec![
+		    n(3),
+		    nc(3, vec![
+			n(4)] ),
+		    n(7)] ) ] };
+
+	
+	assert::equal(&x, &y);
+	
+	let r = vec![
+	    n(5),
+	    n(5),
+	];
+	
+	assert::equal(&removed, &r);
+    }
+
+    
 }

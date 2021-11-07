@@ -80,6 +80,44 @@ impl<'a, T> MutableSelection<'a, T>
         return self;
     }
 
+    /// Refine selection to those of the currently selected nodes and their
+    /// descendants that match selector.
+    pub fn refine_by_value<F>(self : MutableSelection<'a, T>,
+                              selector: &F) -> MutableSelection<'a, T>
+    where
+        F: Fn(&T) -> bool
+    {
+	return self.refine_by_path(
+	    &|_ancestors, _path, node : &Node<T>|
+	    Disposition { select: selector(&node.value),
+			  recurse: true });
+    }
+    
+    /// Refine selection to those of the currently selected nodes and their
+    /// descendants that match selector.
+    pub fn refine_by_path<F>(mut self : MutableSelection<'a, T>,
+                             selector: &F) -> MutableSelection<'a, T>
+    where
+	F: Fn(&Vec<&T>, //ancestors
+	      &Vec<usize>, //path
+	      &Node<T> //node
+             ) -> Disposition
+    {
+        let mut was = Vec::<Vec<usize>>::new();
+	std::mem::swap(&mut was, &mut self.selected_paths);
+	for mut path in was {
+	    assert::not_equal(&path.len(), &0);
+	    let mut ancestors : Vec<&T> = vec![];
+	    let node = follow_path(&mut ancestors,
+				   &self.root,
+				   &path[..]);
+	    assert::equal(&ancestors.len(), &path.len());
+            self.selected_paths.extend(select_by_path(
+		&mut ancestors, &mut path, node, selector));
+	}
+	return self;
+    }
+
     /// Prune selected nodes (subtrees) from tree, returning
     /// non-nested removed nodes (with nested selected nodes left
     /// within their removed subtree root nodes).
@@ -222,4 +260,19 @@ where
 	}
     }
     return result;
+}
+
+// get leaf of path from node, appending
+// each traversed node's value to ancestors
+fn follow_path<'a,T>(ancestors: &mut Vec<&'a T>,
+		     mut node: &'a Node<T>,
+		     path: &[usize]) -> &'a Node<T>
+{
+    if path.len() > 0 {
+	ancestors.push(&node.value);
+	node = follow_path(ancestors,
+			   &node.children[path[0]],
+			   &path[1..]);
+    }
+    return node;
 }

@@ -8,19 +8,8 @@
     x select by path via parent value
     x select by path via index (select rest)
 
-    /* REVISIT
-    /// Narrow selection to those of the currently selected nodes and their
-    /// descendants that match selector.
-    pub fn refine_by_value<F>(mut self : MutableSelection<'a, T>,
-                              selector: &F) -> MutableSelection<'a, T>
-    where
-        F: Fn(&T) -> bool
-    {
-        REVISIT
-    }
-     */
-
-
+  * css selector
+  
   more functions:
     append_child
     prepend_child
@@ -30,6 +19,7 @@
     mut_selected_values?
       how to do lifetimes such that we can continue using selection
       once the values have been adjusted?
+
   immutable Selection
   
 - can't use assert for just anything? Do we need a proper, core-dump-always assert? yes
@@ -68,8 +58,8 @@
       config.rs =>
       log.rs
     ... um, err, it wants a declaration of log in config.rs, but there
-    is nowhere to put it. You'd think that if I main.rs declares config
-    because it uses it, then config could declare log because it needs it.
+    is nowhere to put it. You'd think that if main.rs declares config
+    because it uses config, then config could declare log because it uses log.
     But apparently it can't? Another thought would be to declare it in the
     top-level mod.rs, but that is not read. It turns out that it does
     work if I declare the "transitively required" log module in the
@@ -94,68 +84,106 @@
     description I can follow that allows me to step through as the
     compiler would.
 
-    After more experimentation and head scratching I would documnt it like
-    this:
 
-      The rust compiler takes a single file, and builds eg executable.
-      That source file might use "local" code that is not in that source
-      file and also might use "external" code that is... err... not in that
-      source file either. You tell the compiler where to find external code
-      by telling it which "crates" the external code is in (either by
-      "extern create x;" statements in the file or "local" code or implicitly
-      via "use ::" statements) and where to find those crates (via
-      compiler options -L(?), --extern).
+    Like others here I came unstuck with rust modules. I read the nice
+    section in the rust book but when I tried to apply what I read there
+    I quickly got into trouble and the book didn't seem to help. A web
+    search suggested I wasn't the only one to get into trouble, but nothing
+    I found gave me the info I needed to see where I was going wrong.
+    
+    With head scratching and experimentation and re-reading I think I
+    see it now so will try to write it down and ask "is this correct?":
 
-      For "local" code, there are no compiler options, it is all done by
-      the source code itself. (This is a big shift if you come from many
-      other languages, e.g. python, C++, C, java, javascript; those languages
-      give the "what" and "where" separately, normally in the code for the
-      "what" and via compiler options and/or environment for the "where").
-
-      With rust, the what is in "use" and "mod" statements, and implicitly
-      in path references like "fred::f1()" and "super/self/crate::f2()".
+      The rust compiler works from a single source file - the "crate root"
+      file - and builds something. For example "rustc server.rs" builds an
+      executable from the server.rs crate root file.
       
-      How do I tell rustc where to find the local code? The file you
-      pass to rustc - let's call it the "main source file" - *must*
-      explicitly list all the top-level modules that contain local code
-      for the run of rustc. By default rustc expects those modules to be
-      in the same directory as the file itself, e.g. if we have main.rs
-      that says:
+      Rust code in the crate root file can use modules defined elsewhere,
+      either "local" modules - defined in other local source files - or
+      "external" modules.
+
+      For "external" modules, you tell the compiler what "crates" they are
+      in and where to find those crates. ("What" either by "extern crate x;"
+      statements in the crate root file or other local source files,
+      or implicitly via "use ::" statements. "Where" via compiler options
+      -L, --extern).
+
+      "Local" modules must be "introduced" to rustc via "mod" statements.
+      Where rustc looks for those modules' source code takes a bit
+      of explaining.
+
+      First, the crate root file must explicitly list - i.e. introduce -
+      via mod statements all the top level modules that contain local
+      code for the run of rustc. By default rustc expects the source code for
+      those modules to be in the same directory as the crate root file
+      itself, e.g. if we have /x/y/main.rs that says:
+
          mod fred;
-      ... then "rustc x/y/main.rs" will expect module fred to be in
-      x/y, as either x/y/fred.rs (or the out of favour x/y/fred/mod.rs).
+
+      ... then "rustc /x/y/main.rs" will expect the code for module fred
+      to be in /x/y, as either /x/y/fred.rs or the out-of-favour
+      /x/y/fred/mod.rs.
 
       Once we put "mod fred;" in main.rs, main.rs can happily refer to code
-      in module fred, e.g. "fred::f1()". x/y/fred.rs can tell the compiler
-      about its child modules via e.g. "mod jude; mod jock;".
-
-      Only a child module's parent module can introduce siblings. Top-level
-      modules are not "child modules". *Only the main file can introduce
-      top level modules*. (Which can get wierd in a sense because my
-      main file's top level modules *can* be children - descendants - of
-      another main file's top level modules.)
-
-      In a sense there is there is another seeming anomoly: a child module
-      can "use" ancestors and there siblings and children, even though it
-      can't introduce them. And it's not till we learn that little-mentioned
-      [path] facility that we can see why that "limitation" is not removed.
-
-      So what does [path] do? Well, *by default* rustc expects our root
-      module's source code (e.g. fred.rs) in the same directory as
-      the main file. But the main file (and only the main file) can
-      override that using #[path], e.g.:
+      in module fred, e.g. "fred::f1()". Module fred can (and must) introduce
+      its child modules via e.g. "mod jude; mod jock;", but cannot introduce
+      grand-children or sibling modules:
       
+      - only a child module's parent module can introduce siblings of the
+      child module; top level modules are not "child modules"
+
+      - only the crate root file can introduce top level modules
+      (This can seem anomolous in a sense because my crate root file's top
+      level modules can be children - descendants - of another crate root
+      file's top level modules.)
+
+      There is another seeming anomoly: a child module
+      can "use" ancestors and their siblings and children even though it
+      can't introduce them. It's not untill we come across the
+      #[path] facility that "limitation" makes sense.
+
+      So what does #[path] do? Well, *by default* rustc expects our top
+      level module's source code (e.g. fred.rs) to be in the same directory as
+      the crate root file. But the crate root file (and only the crate root
+      file) can override that default location using #[path]. For example:
+      
+        #[path "/somewhere/else/the_real_fred/mod.rs"]
+	mod fred;
+
+      ... will make rustc, when looking for fred, ignore the directory of the
+      crate root file and use /somewhere/else/the_real_fred/mod.rs as the
+      code for fred. rustc also then looks for fred's child modules
+      in /somewhere/else, e.g. /somewhere/else/jude.rs and
+      /somewhere/else/jock/mod.rs.
+
+      That perhaps reveals why a child module cannot introduce its
+      siblings: if rustc allowed it there could be ambiguity over where
+      to find that module.
+
+      Note that modules themselves can use #[path] when introducing their
+      children.
+
+      There is one more catch:
+
         #[path fred=/somewhere/else/the_real_fred.rs]
 	mod fred;
 
-      ... now rustc, when looking for fred, ignores the directory of the
-      main file and uses the_real_fred.rs from /somewhere/else/ as the
-      code for fred. It also looks for fred's children in /somewhere/else,
-      e.g. /somewhere/else/jude.rs and /somewhere/else/jock/mod.rs.
+      ... in my crate root file did not work. I expected it to make
+      rustc look for my 2nd level modules in /somewhere/else/the_real_fred/
+      but it did not. It insisted that I use:
 
-      That perhaps reveals why a child module cannot introduce its
-      siblings: if rustc allowed that there could be ambiguity over where
-      to find that module.
+        #[path fred=/somewhere/else/the_real_fred/mod.rs]
+	mod fred;
+
+      This is just be a limitation of the rustc version I was
+      using, 1.41.1, in any case it does not inhibit my use of rustc.
+
+      Note also that unlike say python or C++, there are no compiler options
+      or environment variables to tell rustc where to find the code for
+      local modules.
+
+  Did I get that right? Have I missed anything?
+  
 
       Simple, isn't it?
 
