@@ -21,6 +21,18 @@ fn nc(value:i32, children:Vec<tree::Node<i32>>) -> tree::Node<i32> {
     tree::Node::<i32>{ value, children }
 }
 
+enum SelectorTerm
+{
+    Value(i32),
+    ChildrenOnly,
+};
+type Selector : Vec<SelectorTerm>;
+
+fn select(node: &i32, s: &[SelectorTerm]) -> tree::Disposition
+{
+}
+
+	  
 fn main() {
     let orig = tree::Node::<i32> {
 	value : 1,
@@ -42,10 +54,10 @@ fn main() {
 	let is_ten = |value:&i32| value.eq(&10);
 	let selection = x.select_by_value(&is_ten);
 	
-	assert::equal(&selection.get_selected_values(), &Vec::<i32>::new());
+	assert::equal(&selection.copy_selected_values(), &Vec::<i32>::new());
 	
 	let mut selection = x.select_by_value(&|v| v==&3);
-	assert::equal(&selection.get_selected_values(), &vec![3,3,3]);
+	assert::equal(&selection.copy_selected_values(), &vec![3,3,3]);
 	
 	let removed = selection.prune();
 	

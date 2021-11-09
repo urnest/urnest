@@ -3,3 +3,5 @@
 
 %test-tree.output == ()+cmd=RUST_BACKTRACE\=full (%test-tree):exec.output
 
+%test-refs == ()+cmd=rustc -o test-refs -g (test-refs.rs):output/test-refs
+%test-refs.output == ()+cmd=RUST_BACKTRACE\=full (%test-refs):exec.output

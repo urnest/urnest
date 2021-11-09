@@ -9,7 +9,21 @@
     x select by path via index (select rest)
 
   * css selector
-  
+    hm is $(x).find('> a') relative? yes it is, so need to know the
+    starting point, so add starting_from to Fn params
+
+    strategy:
+      - on each root node, do the search, collecting
+        set of matching paths in a BTreeSet
+	- use starting_from to detect root nodes
+      - then our select function is just stepping through the already
+        determined matches, effectively validating our paths before accepting
+	them into the set and it can optimise via recurse true/false
+
+      Selector:
+        Vec<Term> terms;
+        fn select(at: &Node<T>) -> Vec<Vec<usize> >
+	
   more functions:
     children
     append_child

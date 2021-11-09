@@ -10,7 +10,7 @@
 
 use ruf::assert;
 
-/// A tree of T.
+/// A tree of Ts.
 #[derive(PartialEq,Clone)]
 pub struct Node<T>
 {
@@ -95,6 +95,10 @@ impl<'a, T> MutableSelection<'a, T>
     
     /// Refine selection to those of the currently selected nodes and their
     /// descendants that match selector.
+    /// - selector gets:
+    ///   ancestors from (including) root down to (excluding) node
+    ///   path from index-of-child-of-root down to index-of-node
+    ///   node in question
     pub fn refine_by_path<F>(mut self : MutableSelection<'a, T>,
                              selector: &F) -> MutableSelection<'a, T>
     where
@@ -156,16 +160,16 @@ impl<'a, T> MutableSelection<'a, T>
 impl<'a, T> MutableSelection<'a, T>
     where T: std::marker::Copy
 {
-    /// Get values of all selected nodes, in selection order.
-    pub fn get_selected_values(self : &MutableSelection<'a,T>) -> Vec<T>
+    /// Copy values of all selected nodes, in selection order.
+    pub fn copy_selected_values(self : &MutableSelection<'a,T>) -> Vec<T>
     {
         let mut result : Vec<T> = vec![];
         for p in self.selected_paths.as_slice() {
-            result.push(self.get_value(&p));
+            result.push(self.copy_value(&p));
         }
         return result;
     }
-    fn get_value(self : &MutableSelection<'a,T>, p: &Vec<usize>) -> T
+    fn copy_value(self : &MutableSelection<'a,T>, p: &Vec<usize>) -> T
     {
         let mut result : &Node<T> = self.root;
         for i in p.as_slice() {
@@ -182,7 +186,7 @@ impl<'a, T> Node<T>
     /// - includes parents before their ancestors
     /// - includes matching siblings in left-to-right order
     pub fn select_by_value<F>(self : &'a mut Node<T>,
-                               selector: &F) -> MutableSelection<'a,T>
+                              selector: &F) -> MutableSelection<'a,T>
     where F: Fn(&T) -> bool
     {
 	let result = MutableSelection::<'a, T>{
@@ -225,7 +229,7 @@ fn contains(a : &Vec<usize>, b: &Vec<usize>) -> bool {
 //     ancestors from (including) root down to (excluding) node
 //     path from index-of-child-of-root down to index-of-node
 //     node in question
-///  ... note neither ancestors nor path are empty
+//  ... note neither ancestors nor path are empty
 fn select_by_path<'a, T, F>(
     ancestors: &mut Vec<&'a T>,
     path : &mut Vec<usize>,
@@ -251,9 +255,9 @@ where
 	    ancestors.push(&node.value);
             let mut selected_descendants = select_by_path(
 		ancestors, path, &node.children[i], selector);
-	    for c in &mut selected_descendants {
+	    for s in &mut selected_descendants {
 		result.push(Vec::<usize>::new());
-		std::mem::swap(c, result.last_mut().unwrap());
+		std::mem::swap(s, result.last_mut().unwrap());
 	    }
 	    ancestors.pop();
 	    path.pop();
