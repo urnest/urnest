@@ -10,11 +10,6 @@ fn xx(x : &X) -> i32
     x.x
 }
 
-fn xxx(x : X) -> X
-{
-    x
-}
-
 fn a()
 {
     let y = X{ x: 5 };   // variable x is immutable
@@ -137,12 +132,17 @@ struct D<'a>
     d : &'a mut i32
 }
 
-impl<'a, 'b> D<'a>
-    where 'a : 'b   // a outlives b
+impl<'a> D<'a>
 {
-    fn dref(self: &'a D<'a>) -> &'b i32
-    {
-	return self.d;
+    fn dref(self: &'a D<'a>) -> &'a i32     
+    {   //                       |
+        // there is some automatic coersion here I think?
+	//                       |
+	let result :            &&'a mut i32 = &self.d;
+	return result;
+
+	// and in fact rust will do it all for us like:
+	// return self.d;
     }
 }
 
@@ -150,10 +150,13 @@ fn d()
 {
     let mut x : i32 = 3;
 
-    let mut d = D{ d: &mut x };
+    let d = D{ d: &mut x };
 
-    println!("{}", d.dref());
+    let y: &i32 = d.dref();
+    println!("{}", y);
 
+    // even though the result of d.dref() remains valid while d is valid,
+    // rust "drops" it for us when it sees the next line
     *d.d = 8;
 }
 
@@ -162,4 +165,5 @@ fn main()
     a();
     b();
     c();
+    d();
 }
