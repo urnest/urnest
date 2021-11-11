@@ -40,12 +40,13 @@ pub struct Disposition
     pub recurse: bool
 }
 
-impl<'a, T> MutableSelection<'a, T>
+impl<'a, 'b, T> MutableSelection<'a, T>
+    where 'a : 'b
 {
     /// Append descendants of self.root that are selected by selector to
     /// currently selected nodes returning resulting (extended) selection.
-    pub fn extend_by_value<F>(self : MutableSelection<'a, T>,
-			      selector: &F) -> MutableSelection<'a, T>
+    pub fn extend_by_value<F>(self : &'b mut MutableSelection<'a, T>,
+			      selector: &F) -> &'b mut MutableSelection<'a, T>
     where
         F: Fn(&T) -> bool
     {
@@ -61,8 +62,8 @@ impl<'a, T> MutableSelection<'a, T>
     ///   ancestors from (including) root down to (excluding) node
     ///   path from index-of-child-of-root down to index-of-node
     ///   node in question
-    pub fn extend_by_path<F>(mut self : MutableSelection<'a, T>,
-			     selector: &F) -> MutableSelection<'a,T>
+    pub fn extend_by_path<F>(self : &'b mut MutableSelection<'a, T>,
+			     selector: &F) -> &'b mut MutableSelection<'a,T>
     where
 	F: Fn(&Vec<&T>, //ancestors
 	      &Vec<usize>, //path
@@ -82,8 +83,8 @@ impl<'a, T> MutableSelection<'a, T>
 
     /// Refine selection to those of the currently selected nodes and their
     /// descendants that match selector.
-    pub fn refine_by_value<F>(self : MutableSelection<'a, T>,
-                              selector: &F) -> MutableSelection<'a, T>
+    pub fn refine_by_value<F>(self : &'b mut MutableSelection<'a, T>,
+                              selector: &F) -> &'b mut MutableSelection<'a, T>
     where
         F: Fn(&T) -> bool
     {
@@ -99,8 +100,8 @@ impl<'a, T> MutableSelection<'a, T>
     ///   ancestors from (including) root down to (excluding) node
     ///   path from index-of-child-of-root down to index-of-node
     ///   node in question
-    pub fn refine_by_path<F>(mut self : MutableSelection<'a, T>,
-                             selector: &F) -> MutableSelection<'a, T>
+    pub fn refine_by_path<F>(self : &'b mut MutableSelection<'a, T>,
+                             selector: &F) -> &'b mut MutableSelection<'a, T>
     where
 	F: Fn(&Vec<&T>, //ancestors
 	      &Vec<usize>, //path
@@ -189,10 +190,11 @@ impl<'a, T> Node<T>
                               selector: &F) -> MutableSelection<'a,T>
     where F: Fn(&T) -> bool
     {
-	let result = MutableSelection::<'a, T>{
+	let mut result = MutableSelection::<'a, T>{
 	    root: self,
 	    selected_paths : vec![] };
-	return result.extend_by_value(selector);
+	result.extend_by_value(selector);
+	return result;
     }
 
     /// Select descendants of self per selector.
@@ -211,10 +213,11 @@ impl<'a, T> Node<T>
 	      &Node<T> // node
              ) -> Disposition
     {
-	let result = MutableSelection::<'a, T>{
+	let mut result = MutableSelection::<'a, T>{
 	    root: self,
 	    selected_paths : vec![] };
-	return result.extend_by_path(selector);
+	result.extend_by_path(selector);
+	return result;
     }
 }
 

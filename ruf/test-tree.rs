@@ -21,17 +21,19 @@ fn nc(value:i32, children:Vec<tree::Node<i32>>) -> tree::Node<i32> {
     tree::Node::<i32>{ value, children }
 }
 
+/*
 enum SelectorTerm
 {
     Value(i32),
     ChildrenOnly,
-};
-type Selector : Vec<SelectorTerm>;
+}
+
+type Selector = Vec<SelectorTerm>;
 
 fn select(node: &i32, s: &[SelectorTerm]) -> tree::Disposition
 {
 }
-
+*/
 	  
 fn main() {
     let orig = tree::Node::<i32> {
@@ -94,9 +96,9 @@ fn main() {
     // select_by_value
     {
 	let mut x = orig.clone();
-	
-	let removed = x.select_by_value(&|v| v==&2)
-	    .extend_by_value(&|v| v==&3).prune();
+
+	let mut s = x.select_by_value(&|v| v==&2);
+	let removed = s.extend_by_value(&|v| v==&3).prune();
 	
 	let y = tree::Node::<i32> {
 	    value : 1,
