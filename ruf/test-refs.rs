@@ -146,11 +146,22 @@ impl<'a> D<'a>
     }
 }
 
+// and this is how to return mut reference to self
+impl<'a, 'b> D<'a>
+    where 'a: 'b
+{
+    fn adjust_self(self: &'b mut D<'a>) -> &'b mut D<'a>
+    {
+	*self.d += 1;
+	self
+    }
+}
+
 fn d()
 {
     let mut x : i32 = 3;
 
-    let d = D{ d: &mut x };
+    let mut d = D{ d: &mut x };
 
     let y: &i32 = d.dref();
     println!("{}", y);
@@ -158,6 +169,11 @@ fn d()
     // even though the result of d.dref() remains valid while d is valid,
     // rust "drops" it for us when it sees the next line
     *d.d = 8;
+
+    d.adjust_self().adjust_self();
+    //d.adjust_self();
+
+    println!("{}",d.d);
 }
 
 fn main()
