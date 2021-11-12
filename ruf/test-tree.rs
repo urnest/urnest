@@ -127,7 +127,7 @@ fn main() {
 	
 	let removed = x.select_by_path(
 	    &|_ancestors, path, _node|
-	    tree::Disposition{ select: path == &vec![1, 1], // path-from-root
+	    tree::Disposition{ select: path == [1,1], // path-from-root
 			       recurse: true}).prune();
 	
 	let y = tree::Node::<i32> {

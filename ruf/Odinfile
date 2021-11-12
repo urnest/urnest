@@ -1,3 +1,8 @@
+%all == %all.tree:leaves
+
+%all.tree == <<
+%test-tree.output
+%test-refs.output
 
 %test-tree == ()+cmd=rustc -o test-tree -g (test-tree.rs) +need=(tree.rs) (assert.rs) (mod.rs):output/test-tree
 

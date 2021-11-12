@@ -66,7 +66,7 @@ impl<'a, 'b, T> MutableSelection<'a, T>
 			     selector: &F) -> &'b mut MutableSelection<'a,T>
     where
 	F: Fn(&Vec<&T>, //ancestors
-	      &Vec<usize>, //path
+	      &[usize], //path
 	      &Node<T> //node
              ) -> Disposition
     {
@@ -104,7 +104,7 @@ impl<'a, 'b, T> MutableSelection<'a, T>
                              selector: &F) -> &'b mut MutableSelection<'a, T>
     where
 	F: Fn(&Vec<&T>, //ancestors
-	      &Vec<usize>, //path
+	      &[usize], //path
 	      &Node<T> //node
              ) -> Disposition
     {
@@ -149,7 +149,7 @@ impl<'a, 'b, T> MutableSelection<'a, T>
 
     // Remove node at specified path.
     fn remove(self : &mut MutableSelection<'a, T>,
-              path: &Vec<usize>) -> Node<T> {
+              path: &[usize]) -> Node<T> {
         let mut parent: &mut Node<T> = self.root;
         for i in 0..(path.len()-1) {
             parent = &mut parent.children[path[i]];
@@ -170,10 +170,10 @@ impl<'a, T> MutableSelection<'a, T>
         }
         return result;
     }
-    fn copy_value(self : &MutableSelection<'a,T>, p: &Vec<usize>) -> T
+    fn copy_value(self : &MutableSelection<'a,T>, p: &[usize]) -> T
     {
         let mut result : &Node<T> = self.root;
-        for i in p.as_slice() {
+        for i in p {
             result = &result.children[*i];
         }
         return result.value;
@@ -209,7 +209,7 @@ impl<'a, T> Node<T>
                              selector: &F) -> MutableSelection<'a,T>
     where
 	F: Fn(&Vec<&T>,  // ancestors
-	      &Vec<usize>, // path
+	      &[usize], // path
 	      &Node<T> // node
              ) -> Disposition
     {
@@ -222,7 +222,7 @@ impl<'a, T> Node<T>
 }
 
 // Does a contain (or equal) b?
-fn contains(a : &Vec<usize>, b: &Vec<usize>) -> bool {
+fn contains(a : &[usize], b: &[usize]) -> bool {
     (a.len() >= b.len()) && (a[..] == b[0..a.len()])
 }
 
@@ -240,7 +240,7 @@ fn select_by_path<'a, T, F>(
     selector: &F) -> Vec<Vec<usize>>
 where
     F: Fn(&Vec<&T>, // ancestors
-	  &Vec<usize>, // path
+	  &[usize], // path
 	  &Node<T> // node
          ) -> Disposition
 {
