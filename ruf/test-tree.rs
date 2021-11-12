@@ -126,9 +126,11 @@ fn main() {
 	let mut x = orig.clone();
 	
 	let removed = x.select_by_path(
-	    &|_ancestors, path, _node|
-	    tree::Disposition{ select: path == [1,1], // path-from-root
-			       recurse: true}).prune();
+	    &|_ancestors, path, starting_from, _node| {
+		assert::equal(&starting_from, &1);
+		tree::Disposition{ select: path == [1,1], // path-from-root
+				   recurse: true}
+	    }).prune();
 	
 	let y = tree::Node::<i32> {
 	    value : 1,
@@ -156,7 +158,7 @@ fn main() {
 	let mut x = orig.clone();
 	
 	let removed = x.select_by_path(
-	    &|ancestors, _path, _node|
+	    &|ancestors, _path, _starting_from, _node|
 	    tree::Disposition{
 		select: 3 == **ancestors.last().unwrap(), // parent
 		recurse: true}).prune();
@@ -200,10 +202,12 @@ fn main() {
 	
 	let removed = x.select_by_value(&|v| v==&6)
 	    .refine_by_path(
-		&|_ancestors, _path, node|
-		tree::Disposition{
-		    select: &3 == &node.value,
-		    recurse: true}).prune();
+		&|_ancestors, _path, starting_from, node| {
+		    assert::equal(&starting_from, &1);
+		    tree::Disposition{
+			select: &3 == &node.value,
+			recurse: true}
+		}).prune();
 	
 	let y = tree::Node::<i32> {
 	    value : 1,

@@ -51,7 +51,7 @@ impl<'a, 'b, T> MutableSelection<'a, T>
         F: Fn(&T) -> bool
     {
 	return self.extend_by_path(
-	    &|_ancestors, _path, node : &Node<T>|
+	    &|_ancestors, _path, _starting_from, node : &Node<T>|
 	    Disposition { select: selector(&node.value),
 			  recurse: true });
     }
@@ -61,12 +61,15 @@ impl<'a, 'b, T> MutableSelection<'a, T>
     /// - selector gets:
     ///   ancestors from (including) root down to (excluding) node
     ///   path from index-of-child-of-root down to index-of-node
+    ///   starting_from is how many of ancestors are outside the search
+    ///    i.e. the select started at (ancestors + [node.value])[starting_from]
     ///   node in question
     pub fn extend_by_path<F>(self : &'b mut MutableSelection<'a, T>,
 			     selector: &F) -> &'b mut MutableSelection<'a,T>
     where
-	F: Fn(&Vec<&T>, //ancestors
+	F: Fn(&[&T], //ancestors
 	      &[usize], //path
+	      usize, // starting_from
 	      &Node<T> //node
              ) -> Disposition
     {
@@ -75,7 +78,8 @@ impl<'a, 'b, T> MutableSelection<'a, T>
         for i in 0..self.root.children.len() {
 	    path.push(i);
             self.selected_paths.extend(select_by_path(
-		&mut ancestors, &mut path, &self.root.children[i], selector));
+		&mut ancestors, &mut path, 1,
+		&self.root.children[i], selector));
 	    path.pop();
         }
         return self;
@@ -89,7 +93,7 @@ impl<'a, 'b, T> MutableSelection<'a, T>
         F: Fn(&T) -> bool
     {
 	return self.refine_by_path(
-	    &|_ancestors, _path, node : &Node<T>|
+	    &|_ancestors, _path, _starting_from, node : &Node<T>|
 	    Disposition { select: selector(&node.value),
 			  recurse: true });
     }
@@ -99,12 +103,15 @@ impl<'a, 'b, T> MutableSelection<'a, T>
     /// - selector gets:
     ///   ancestors from (including) root down to (excluding) node
     ///   path from index-of-child-of-root down to index-of-node
+    ///   starting_from is how many of ancestors are outside the search
+    ///    i.e. the select started at (ancestors + [node.value])[starting_from]
     ///   node in question
     pub fn refine_by_path<F>(self : &'b mut MutableSelection<'a, T>,
                              selector: &F) -> &'b mut MutableSelection<'a, T>
     where
-	F: Fn(&Vec<&T>, //ancestors
+	F: Fn(&[&T], //ancestors
 	      &[usize], //path
+	      usize, // starting_from
 	      &Node<T> //node
              ) -> Disposition
     {
@@ -116,9 +123,10 @@ impl<'a, 'b, T> MutableSelection<'a, T>
 	    let node = follow_path(&mut ancestors,
 				   &self.root,
 				   &path[..]);
+	    let starting_from = ancestors.len();
 	    assert::equal(&ancestors.len(), &path.len());
             self.selected_paths.extend(select_by_path(
-		&mut ancestors, &mut path, node, selector));
+		&mut ancestors, &mut path, starting_from, node, selector));
 	}
 	return self;
     }
@@ -204,13 +212,16 @@ impl<'a, T> Node<T>
     /// - selector gets:
     ///   ancestors from (including) root down to (excluding) node
     ///   path from index-of-child-of-root down to index-of-node
+    ///   starting_from is how many of ancestors are outside the search
+    ///    i.e. the select started at (ancestors + [node.value])[starting_from]
     ///   node in question
     pub fn select_by_path<F>(self : &'a mut Node<T>,
                              selector: &F) -> MutableSelection<'a,T>
     where
-	F: Fn(&Vec<&T>,  // ancestors
+	F: Fn(&[&T],  // ancestors
 	      &[usize], // path
-	      &Node<T> // node
+	      usize, // starting_from
+	      &Node<T>  // node
              ) -> Disposition
     {
 	let mut result = MutableSelection::<'a, T>{
@@ -231,16 +242,20 @@ fn contains(a : &[usize], b: &[usize]) -> bool {
 // - selector gets:
 //     ancestors from (including) root down to (excluding) node
 //     path from index-of-child-of-root down to index-of-node
+//     starting_from is how many of ancestors are outside the search
+//       i.e. the select started at (ancestors + [node.value])[starting_from]
 //     node in question
 //  ... note neither ancestors nor path are empty
 fn select_by_path<'a, T, F>(
     ancestors: &mut Vec<&'a T>,
     path : &mut Vec<usize>,
+    starting_from: usize,
     node: &'a Node<T>,
     selector: &F) -> Vec<Vec<usize>>
 where
-    F: Fn(&Vec<&T>, // ancestors
+    F: Fn(&[&T], // ancestors
 	  &[usize], // path
+	  usize, // starting_from
 	  &Node<T> // node
          ) -> Disposition
 {
@@ -248,7 +263,7 @@ where
     assert::not_equal(&path.len(), &0);
     
     let mut result : Vec<Vec<usize>> = Vec::new();
-    let disposition = selector(ancestors, path, node);
+    let disposition = selector(ancestors, path, starting_from, node);
     if disposition.select {
         result.push( path.clone() );
     }
@@ -257,7 +272,7 @@ where
 	    path.push(i);
 	    ancestors.push(&node.value);
             let mut selected_descendants = select_by_path(
-		ancestors, path, &node.children[i], selector);
+		ancestors, path, starting_from, &node.children[i], selector);
 	    for s in &mut selected_descendants {
 		result.push(Vec::<usize>::new());
 		std::mem::swap(s, result.last_mut().unwrap());
