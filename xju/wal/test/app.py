@@ -16,6 +16,8 @@
 from xju import wal
 from xju import pq
 
+import threading
+
 @wal.public
 def public_html():
     return wal.html('<html><body>public</body></html>')
@@ -81,3 +83,31 @@ def onlyIfLoggedIn(url,cookies):
 @wal.restricted(onlyIfLoggedIn)
 def login_required():
     return wal.plainText('OK')
+
+
+lock = threading.Lock()
+flag = [ False ]
+flag_changed = threading.Condition(lock)
+
+@wal.public
+def await_flag(lock = lock, flag = flag, flag_changed = flag_changed):
+    print('+ await-flag')
+    with lock:
+        flag[0] = False
+        while not flag[0]:
+            flag_changed.wait()
+            pass
+        pass
+    print('- await-flag')
+    return True
+
+@wal.public
+def set_flag(lock = lock, flag = flag, flag_changed = flag_changed):
+    print('+ set-flag')
+    with lock:
+        flag[0] = True
+        flag_changed.notify_all()
+        pass
+    print('- set-flag')
+    return True
+

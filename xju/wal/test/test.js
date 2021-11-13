@@ -37,4 +37,21 @@ $(document).ready(function(){
   wal.trackTextInput($('input.tracked'),function(x){
     $('span.input-value').text(x);
   });
+  $('a[href="await-flag"]').click(function(){
+    let $result = $('.flagged');
+    $result.text('Waiting...');
+    wal.postToServer('await-flag',{})
+      .then(function(result){
+	$result.text('Flagged');
+      });
+    return false;
+  });
+  $('a[href="set-flag"]').click(function(){
+    let $result = $('.flagged');
+    wal.postToServer('set-flag',{})
+      .then(function(result){
+	$result.text('Flagged');
+      });
+    return false;
+  });
 });
