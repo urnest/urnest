@@ -10,3 +10,6 @@
 
 %test-refs == ()+cmd=rustc -o test-refs -g (test-refs.rs):output/test-refs
 %test-refs.output == ()+cmd=RUST_BACKTRACE\=full (%test-refs):exec.output
+
+%test-context == ()+cmd=rustc -o test-context -g  -L (../../anyhow/target/debug) (test-context.rs):output/test-context
+%test-context.output == ()+cmd=RUST_BACKTRACE\=full (%test-context):exec.output

@@ -21,20 +21,13 @@ fn nc(value:i32, children:Vec<tree::Node<i32>>) -> tree::Node<i32> {
     tree::Node::<i32>{ value, children }
 }
 
-/*
 enum SelectorTerm
 {
     Value(i32),
+    Star,
     ChildrenOnly,
 }
 
-type Selector = Vec<SelectorTerm>;
-
-fn select(node: &i32, s: &[SelectorTerm]) -> tree::Disposition
-{
-}
-*/
-	  
 fn main() {
     let orig = tree::Node::<i32> {
 	value : 1,
