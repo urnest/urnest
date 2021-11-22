@@ -44,17 +44,21 @@
 - how to integrate with odin?
   - dependencies?
     - treat main file different to others? #[path] handling is tricky
-
+    - use https://github.com/dtolnay/syn/blob/master/examples/dump-syntax/src/main.rs
+      ... err, no because it expects well-formed source code and uses lots of other
+      modules, maybe write a scanner in c++? Does that still have "bootstrap" trouble?
+      should be able to avoid bootstrap trouble.
+    
   - compile v link? (does it make any sense? Maybe with rlib?)
     so maybe:
       tree.rs produces tree.rlib crate
       html.rs uses tree.rlib crate and produces html.rlib
-      ... does rustc html.rs only need tree.rlib? (Or needs tree.rs?)
-      - use a.rs + b.rs as a test and strace to see what it does
-        - no generics
-	- generics
-	
+      ... does rustc html.rs only need tree.rlib? Yes.
+    - so organise into libraries and link against them, can do
+      local libraries (in fact use that for downloaded stuff too)
 
+  - rust-gdb via keystroke
+  
 - modules:
     https://www.sheshbabu.com/posts/rust-module-system
 
@@ -210,3 +214,7 @@
       is behind some of the fustrated questions on the net. But rust
       has enough unique valuable features (lifetime checking - one is enough)
       that I will get over it.
+
+
+- mio has select, rustls, serde-json, websocket
+  - learn websocket protocol

@@ -3,13 +3,20 @@
 %all.tree == <<
 %test-tree.output
 %test-refs.output
+%test-cssish-selector.output
 
-%test-tree == ()+cmd=rustc -o test-tree -g (test-tree.rs) +need=(tree.rs) (assert.rs) (mod.rs):output/test-tree
+%ropts == <<
++cmd=rustc -A dead_code
 
+%test-tree == ()+(%ropts) +cmd=-o test-tree -g (test-tree.rs) +need=(tree.rs) (assert.rs) (mod.rs):output/test-tree
 %test-tree.output == ()+cmd=RUST_BACKTRACE\=full (%test-tree):exec.output
 
-%test-refs == ()+cmd=rustc -o test-refs -g (test-refs.rs):output/test-refs
+%test-refs == ()+(%ropts) +cmd=-o test-refs -g (test-refs.rs):output/test-refs
 %test-refs.output == ()+cmd=RUST_BACKTRACE\=full (%test-refs):exec.output
 
-%test-context == ()+cmd=rustc -o test-context -g  -L (../../anyhow/target/debug) (test-context.rs):output/test-context
+%test-context == ()+(%ropts) +cmd=-o test-context -g  -L (../../anyhow/target/debug) (test-context.rs) +need=(../../anyhow/target/debug/libanyhow.rlib):output/test-context
 %test-context.output == ()+cmd=RUST_BACKTRACE\=full (%test-context):exec.output
+
+%test-cssish-selector == ()+(%ropts) +cmd=-o test-cssish-selector -g (test-cssish-selector.rs) +need=(tree.rs) (assert.rs) (mod.rs):output/test-cssish-selector
+%test-cssish-selector.output == ()+cmd=RUST_BACKTRACE\=full (%test-cssish-selector):exec.output
+

@@ -36,10 +36,23 @@ pub struct MutableSelection<'a,T>
 /// Disposition of a path selector.
 pub struct Disposition
 {
-    pub select: bool,
+    // paths to select relative to the current node
+    pub select: Vec<Vec<usize> >,
     pub recurse: bool
 }
-
+impl Disposition
+{
+    pub fn select_this_node_and_recurse(select_this_node: bool,
+					recurse: bool) -> Disposition {
+	match select_this_node {
+	    true => Disposition{ select: vec![Vec::<usize>::new()],
+				 recurse: recurse },
+	    false => Disposition{ select: Vec::<Vec<usize>>::new(),
+				  recurse: recurse }
+	}
+    }
+}
+    
 impl<'a, 'b, T> MutableSelection<'a, T>
     where 'a : 'b
 {
@@ -52,8 +65,9 @@ impl<'a, 'b, T> MutableSelection<'a, T>
     {
 	return self.extend_by_path(
 	    &|_ancestors, _path, _starting_from, node : &Node<T>|
-	    Disposition { select: selector(&node.value),
-			  recurse: true });
+	    Disposition::select_this_node_and_recurse(
+		selector(&node.value),
+		true));
     }
     
     /// Append descendants of self.root that are selected by selector to
@@ -94,8 +108,9 @@ impl<'a, 'b, T> MutableSelection<'a, T>
     {
 	return self.refine_by_path(
 	    &|_ancestors, _path, _starting_from, node : &Node<T>|
-	    Disposition { select: selector(&node.value),
-			  recurse: true });
+	    Disposition::select_this_node_and_recurse(
+		selector(&node.value),
+		true));
     }
     
     /// Refine selection to those of the currently selected nodes and their
@@ -264,8 +279,11 @@ where
     
     let mut result : Vec<Vec<usize>> = Vec::new();
     let disposition = selector(ancestors, path, starting_from, node);
-    if disposition.select {
-        result.push( path.clone() );
+    for rel_path in &disposition.select {
+	assert_path_valid(node, &rel_path[..]);
+	let mut p = path.clone();
+	p.extend(rel_path);
+        result.push(p);
     }
     if disposition.recurse {
 	for i in 0..node.children.len() {
@@ -282,6 +300,17 @@ where
 	}
     }
     return result;
+}
+fn assert_path_valid<T>(node: &Node<T>, path: &[usize])
+{
+    match path.len() {
+	0 => (),
+	_ => {
+	    let i = path[0];
+	    assert::less(&i, &node.children.len());
+	    assert_path_valid(&node.children[i], &path[1..])
+	}
+    }
 }
 
 // get leaf of path from node, appending

@@ -32,3 +32,19 @@ pub fn not_equal<T>(a: &T, b: &T)
 	::std::process::abort();
     }
 }
+
+pub fn less<T>(a: &T, b: &T)
+    where T: std::cmp::PartialOrd
+{
+    if !(*a < *b) {
+	::std::process::abort();
+    }
+}
+
+pub fn less_equal<T>(a: &T, b: &T)
+    where T: std::cmp::PartialOrd
+{
+    if !(*a <= *b) {
+	::std::process::abort();
+    }
+}

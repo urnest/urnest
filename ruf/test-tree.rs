@@ -21,13 +21,6 @@ fn nc(value:i32, children:Vec<tree::Node<i32>>) -> tree::Node<i32> {
     tree::Node::<i32>{ value, children }
 }
 
-enum SelectorTerm
-{
-    Value(i32),
-    Star,
-    ChildrenOnly,
-}
-
 fn main() {
     let orig = tree::Node::<i32> {
 	value : 1,
@@ -121,8 +114,9 @@ fn main() {
 	let removed = x.select_by_path(
 	    &|_ancestors, path, starting_from, _node| {
 		assert::equal(&starting_from, &1);
-		tree::Disposition{ select: path == [1,1], // path-from-root
-				   recurse: true}
+		tree::Disposition::select_this_node_and_recurse(
+		    path == [1,1], // path-from-root
+		    true)
 	    }).prune();
 	
 	let y = tree::Node::<i32> {
@@ -152,9 +146,9 @@ fn main() {
 	
 	let removed = x.select_by_path(
 	    &|ancestors, _path, _starting_from, _node|
-	    tree::Disposition{
-		select: 3 == **ancestors.last().unwrap(), // parent
-		recurse: true}).prune();
+	    tree::Disposition::select_this_node_and_recurse(
+		3 == **ancestors.last().unwrap(), // parent
+		true)).prune();
 	
 	let y = tree::Node::<i32> {
 	    value : 1,
@@ -197,9 +191,9 @@ fn main() {
 	    .refine_by_path(
 		&|_ancestors, _path, starting_from, node| {
 		    assert::equal(&starting_from, &1);
-		    tree::Disposition{
-			select: &3 == &node.value,
-			recurse: true}
+		    tree::Disposition::select_this_node_and_recurse(
+			&3 == &node.value,
+			true)
 		}).prune();
 	
 	let y = tree::Node::<i32> {
