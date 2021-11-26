@@ -233,7 +233,7 @@ impl<'a, T> Node<T>
 }
 
 // Does a contain (or equal) b?
-fn contains(a : &[usize], b: &[usize]) -> bool {
+pub fn contains(a : &[usize], b: &[usize]) -> bool {
     (a.len() >= b.len()) && (a[..] == b[0..a.len()])
 }
 
