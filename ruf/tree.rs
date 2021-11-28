@@ -89,11 +89,11 @@ impl<'a, 'b, T> MutableSelection<'a, T>
     {
 	let mut ancestors : Vec<&T> = vec![&self.root.value];
 	let mut path : Vec<usize> = vec![];
-        for i in 0..self.root.children.len() {
+        for (i, child) in self.root.children.iter().enumerate() {
 	    path.push(i);
             self.selected_paths.extend(select_by_path(
 		&mut ancestors, &mut path, 1,
-		&self.root.children[i], selector));
+		child, selector));
 	    path.pop();
         }
         return self;
@@ -286,11 +286,11 @@ where
         result.push(p);
     }
     if disposition.recurse {
-	for i in 0..node.children.len() {
+	for (i, child) in node.children.iter().enumerate() {
 	    path.push(i);
 	    ancestors.push(&node.value);
             let mut selected_descendants = select_by_path(
-		ancestors, path, starting_from, &node.children[i], selector);
+		ancestors, path, starting_from, child, selector);
 	    for s in &mut selected_descendants {
 		result.push(Vec::<usize>::new());
 		std::mem::swap(s, result.last_mut().unwrap());

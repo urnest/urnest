@@ -50,8 +50,8 @@ fn select(
 		result.push(vec![]);
 	    }
 	    _ => {
-		for i in 0..node.children.len() {
-		    for m in select(&node.children[i], &rest_of_terms[0], &rest_of_terms[1..]) {
+		for (i, child) in node.children.iter().enumerate() {
+		    for m in select(child, &rest_of_terms[0], &rest_of_terms[1..]) {
 			let mut c : Vec<usize> = vec![i];
 			c.extend(m.iter());
 			result.push(c);
@@ -61,8 +61,8 @@ fn select(
 	}
     }
     if recurse {
-	for i in 0..node.children.len() {
-	    for m in select(&node.children[i], current_term, &rest_of_terms){
+	for (i, child) in node.children.iter().enumerate() {
+	    for m in select(child, current_term, &rest_of_terms){
 		let mut c : Vec<usize> = vec![i];
 		c.extend(m.iter());
 		result.push(c);
