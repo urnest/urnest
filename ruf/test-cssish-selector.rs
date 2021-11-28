@@ -34,7 +34,6 @@ fn matches(node: &tree::Node<String>, term: &SelectorTerm) -> bool
 }
 
 // Get paths from node to all nodes matching selector.
-// pre: current_term is not ChildrenOnly
 fn select(
     node: &tree::Node<String>,
     current_term : &(bool, SelectorTerm),

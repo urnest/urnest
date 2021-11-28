@@ -1,5 +1,9 @@
 * tree:
 
+  - rename it to ruf_tree, publish to crates.io
+    - need cargo build wrapper  ... maybe let odin produce the package dynamically and auto-verify?
+    - also do (first) ruf_assert (used by ruf_tree)
+    
   - something better than Disposition? (bool, bool)? constants?
     default params?
 
@@ -8,34 +12,23 @@
     x select by path via parent value
     x select by path via index (select rest)
 
-  * css selector
-    hm is $(x).find('> a') relative? yes it is, so need to know the
-    starting point, so add starting_from to Fn params
-
-    strategy:
-      - on each root node, do the search, collecting
-        set of matching paths in a BTreeSet
-	- use starting_from to detect root nodes
-      - then our select function is just stepping through the already
-        determined matches, effectively validating our paths before accepting
-	them into the set and it can optimise via recurse true/false
-
-      Selector:
-        Vec<Term> terms;
-        fn select(at: &Node<T>) -> Vec<Vec<usize> >
+  x css selector
 	
-  more functions:
+  - more functions:
     children
     append_child
     prepend_child
     insert_before
     insert_after
+    invert_selection?
     wrap?
     mut_selected_values?
       how to do lifetimes such that we can continue using selection
       once the values have been adjusted?
 
-  immutable Selection
+  - immutable Selection
+    - instead of modify in place like prune, can produce a new tree with equivalent
+      mods (e.g. by cloning tree and modifying via mutable selection)
   
 - can't use assert for just anything? Do we need a proper, core-dump-always assert? yes
   - add all the assert functions from C++ xju::assert
@@ -48,6 +41,8 @@
       ... err, no because it expects well-formed source code and uses lots of other
       modules, maybe write a scanner in c++? Does that still have "bootstrap" trouble?
       should be able to avoid bootstrap trouble.
+      https://doc.rust-lang.org/stable/reference/items.html shows what scanner should
+      consider; initially ignore any macros, but maybe support commonly used macros
     
   - compile v link? (does it make any sense? Maybe with rlib?)
     so maybe:
@@ -58,7 +53,15 @@
       local libraries (in fact use that for downloaded stuff too)
 
   - rust-gdb via keystroke
-  
+
+- ruf_tagged
+  - only need one struct, with conditional impls per the traits of the value type?
+    e.g. if value type implements Add we implement Add to (redirecting); maybe use
+    macros to make it managable?
+
+- ruf_parser
+  - like hcp, maybe make use of tree?
+
 - modules:
     https://www.sheshbabu.com/posts/rust-module-system
 
