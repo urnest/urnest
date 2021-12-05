@@ -20,18 +20,15 @@ xju::Exception translateException(hcp_parser::Exception const& e) noexcept
   
   std::vector<std::pair<std::string, xju::Traced> > context;
   xju::Exception ee(s.str(), XJU_TRACED);
-  typedef std::pair<std::pair<hcp_parser::Parser const*, hcp_parser::I>, xju::Traced> C;
-  std::vector<C>::const_iterator i;
   
-  for(i=e.context_.begin(); i!=e.context_.end(); ++i) {
+  for(auto i=e.context_.begin(); i!=e.context_.end(); ++i) {
     // to get a less verbose but hopefully detailed enough
     // error message, we only add context from NamedParsers
     // and from the root-cause parser (whether it is a NamedParser
     // or not)
-    if (i==e.context_.begin() ||
-        dynamic_cast<hcp_parser::NamedParser_ const*>((*i).first.first)) {
+    if (i==e.context_.begin() || (*i).first.first.first) {
       std::ostringstream s;
-      s << "parse " << (*i).first.first->target() 
+      s << "parse " << (*i).first.first.second
         << " at " << (*i).first.second;
       ee.addContext(s.str(), (*i).second);
     }

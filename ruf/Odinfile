@@ -20,3 +20,32 @@
 %test-cssish-selector == ()+(%ropts) +cmd=-o test-cssish-selector -g (test-cssish-selector.rs) +need=(tree.rs) (assert.rs) (mod.rs):output/test-cssish-selector
 %test-cssish-selector.output == ()+cmd=RUST_BACKTRACE\=full (%test-cssish-selector):exec.output
 
+%rs-dep == (rs-dep.cc)+(..%cxx-opts):auto.cxx.exe
+
+
+%rs1 == <<
+mod x;
+#[path="fred/y.rs"]
+mod y;
+extern crate julie;
+use ruf::tree;
+fn a(y: i32) -> i32 { 1 }
+extern "C" fn a(y: i32) -> i32 { 1 }
+extern r##"c#"## fn a(y: i32) -> i32 { 1 }
+type x = i32;
+struct UnitStruct;
+struct TupleStruct(i32, i32)
+struct RegularStruct{ x: i32, y: String}
+enum Enum{ Dog(String, f64), Cat { name: String, weight: f64 },x: i32}
+union MyUnion { f1: u32, f2: f32, }
+#[repr(C)] union MyUnion { f1: u32, f2: f32, }
+const BIT1: u32 = 1 << 0;
+const BITS_N_STRINGS: BitsNStrings<'static> = BitsNStrings { mybits: BITS, mystring: STRING, };
+
+%test-rs-dep-1 == ()+cmd=(%rs-dep)+cmd=(%rs1):exec.output
+
+
+%rs2 == <<
+const BITS_N_STRINGS: BitsNStrings<'static> = BitsNStrings { mybits: BITS, mystring: STRING, };
+
+%test-rs-dep-2 == ()+cmd=(%rs-dep)+cmd=(%rs2):exec.output

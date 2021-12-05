@@ -32,13 +32,21 @@ PR::PR(const char literal[]) /*throw(std::bad_alloc)*/:
 {
 }
 
+void Exception::addContext(Parser const& parser, I at, xju::Traced const& trace) throw()
+{
+  bool const isNamedParser(dynamic_cast<hcp_parser::NamedParser_ const*>(&parser));
+  context_.push_back(std::make_pair(std::make_pair(
+                                      std::make_pair(isNamedParser,
+                                                     parser.target()), at), trace));
+}
+
 namespace
 {
 std::string contextReadableRepr(
-  std::pair<std::pair<Parser const*, I>, xju::Traced> const& c) throw()
+  std::pair<std::pair<std::pair<bool, std::string>, I>, xju::Traced> const& c) throw()
 {
   std::ostringstream s;
-  s << c.first.second << ": failed to parse " << c.first.first->target();
+  s << c.first.second << ": failed to parse " << c.first.first.second;
   return s.str();
 }
 }
@@ -194,7 +202,7 @@ public:
     if (options.trace_) {
       std::ostringstream s;
       s << "ParseOr choosing exception of " 
-        << (*(*failures.rbegin()).second.context_.rbegin()).first.first->target()
+        << (*(*failures.rbegin()).second.context_.rbegin()).first.first.second
         << " which got to " << (*failures.rbegin()).first;
       hcp_trace::milestone(s.str(), XJU_TRACED);
     }
@@ -301,10 +309,6 @@ std::string ParseNot::target() const throw() {
 
 std::shared_ptr<Exception::Cause const> const end_of_input(
   new FixedCause("end of input"));
-Exception EndOfInput(I at, xju::Traced const& trace) throw()
-{
-  return Exception(end_of_input, at, trace, true);
-}
 
 class ParseAnyChar : public Parser
 {
@@ -1150,6 +1154,11 @@ public:
 
 }
 
+Exception EndOfInput(I at, xju::Traced const& trace) throw()
+{
+  return Exception(end_of_input, at, trace, true);
+}
+
 ParseResult Parser::parse(I const at, Options const& options) throw() 
 {
   std::unique_ptr<hcp_trace::Scope> scope;
@@ -1623,6 +1632,12 @@ PR greaterThan() throw()
 PR doubleColon() throw()
 {
   static PR result(parseLiteral("::")+!parseOneOfChars(":"));
+  return result;
+}
+
+PR semicolon() throw()
+{
+  static PR result(parseLiteral(";"));
   return result;
 }
 

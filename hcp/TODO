@@ -1,3 +1,7 @@
+- pre-expanding hcp_parser::Exception::context_ to std::pair<bool, std::string>
+  halves performance, see "after making context non-lazy pair<bool, std::string>" below,
+  need to get the performance back somehow
+
 - hcp-split parseOpenSSHPublicKey gives wrong offset map
   at header std::pair<PublicKey?
 - completion in find def (twt_cxx.el)
@@ -714,6 +718,31 @@ sys	0m0.012s
 commit 9de3b61d05cdf827d783e0bc5533cd6659207729
 
 Compilation finished at Sat Sep 19 17:23:14
+
+
+Compilation started at Sun Dec  5 10:57:35
+
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "%hcp-parse-file>hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l && git log | head -1
+
+end at line 146 column 1
+
+real	0m0.042s
+user	0m0.042s
+sys	0m0.000s
+3570
+commit 7c75ceab2123f3e83c7ccda3b939bc398d71d7bc
+
+... after making context non-lazy pair<bool, std::string>:
+
+ODINVERIFYLEVEL=0 odin maxbuilds=4 "%hcp-parse-file>hcp-parse-file" && time ./hcp-parse-file test/xju/JoiningIterator.hcp && ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l && git log | head -1
+
+end at line 146 column 1
+
+real	0m0.071s
+user	0m0.067s
+sys	0m0.004s
+3570
+commit 7c75ceab2123f3e83c7ccda3b939bc398d71d7bc
 
 
 empty file overhead:

@@ -96,12 +96,12 @@ public:
       irsAtEnd_(b.irsAtEnd_) {
   }
 
-  //pre: lifetime(parser) includes lifetime(this)
-  void addContext(Parser const& parser, I at, xju::Traced const& trace) throw()
-  {
-    context_.push_back(std::make_pair(std::make_pair(&parser, at), trace));
-  }
-  std::vector<std::pair<std::pair<Parser const*, I>, xju::Traced> > context_;
+  void addContext(Parser const& parser, I at, xju::Traced const& trace) throw();
+  
+  std::vector<std::pair<std::pair<std::pair<bool,          // named parser
+                                            std::string>,  // target
+                                  I>,  // at
+                        xju::Traced> > context_;
 
   std::shared_ptr<Cause const> const cause_;
   I const at_;
@@ -162,6 +162,8 @@ public:
   }
   xju::Exception const cause_;
 };
+
+Exception EndOfInput(I at, xju::Traced const& trace) throw();
 
 class ParseResult
 {
@@ -461,6 +463,7 @@ PR balanced(PR until, bool angles=false) throw();
 PR whitespaceChar() throw();
 PR doubleQuote() throw();
 PR doubleColon() throw();
+PR semicolon() throw();
 PR backslash() throw();
 PR oneChar() throw(); //any single char
 PR bracketed(PR x) throw(); //x inside brackets, with optional whitespace preceding x
@@ -481,6 +484,7 @@ PR parseHash() throw(); // '#' but only at beginning of line
 PR comments() throw();
 PR eatWhite() throw(); // matches nothing or something; eats C++ comments
 PR identifier() throw(); //C++ identifier
+PR identifierContChar() throw(); //C++ identifier continuation character
 PR stringLiteral() throw(); //C++ string literal
 PR rawStringLiteral() throw(); //C++ raw string literal
 PR hashIncludeImpl() throw(); // include preprocessor directive, with trailing "// impl" marker

@@ -18,10 +18,6 @@
 
 :egg.py_import.view_desc 'empty list of imported files'? => :py_import.view_desc;
 
-:py.stdout 'output from a python script run'? => :stdout;
-
-:py.output 'output files from a python script run'? => :output;
-
 :py3.stdout 'output from a python3 script run'? => :stdout;
 
 :py3.output 'output files from a python3 script run'? => :output;
@@ -41,12 +37,6 @@
 #
 # * depending on +stderr, see below
 #
-:py.exec 'results of a python script run'? => :DERIVED-DIRECTORY;
-
-:py.exec.output ':py.exec/output where :py.exec/status is 0'? => :REFERENCE;
-
-:py.exec.files ':py.exec/files.tar where :py.exec/status is 0'? => :REFERENCE;
-
 :py3.exec 'results of a python3 script run'? => :DERIVED-DIRECTORY;
 
 :py3.exec.output ':py3.exec/output where :py3.exec/status is 0'? => :REFERENCE;
@@ -65,13 +55,13 @@
 
 $ODIN_PY_IGNORE 'egrep expression for python imports to ignore, e.g. "^os$|^sys$"' = '';
 
-$ODIN_PYTHONPATH 'colon-separated list of directories to search for python imports, after searching +py_sp directories, e.g. /usr/local/python2.7/site-packages' = '';
-
 $ODIN_PYTHON3PATH 'colon-separated list of directories to search for python3 imports, after searching +py_sp directories, e.g. /usr/local/python3/site-packages' = '';
 
 $ODIN_MYPY_PATH 'PATH to install when executing mypy, colon separated' = '/bin:/usr/bin';
 $ODIN_MYPY_LD_LIBRARY_PATH 'shared library load path to install when executing command, colon separated' = '';
 $ODIN_MYPY 'name of mypy program' = 'true';
+
+$ODIN_MYPYPATH 'as ODIN_PYTHON3PATH above but sets MYPYPATH' = '';
 
 $ODIN_PYSTYLECHECK 'name of python style check program, e.g. flake8' = 'true';
 $ODIN_PYSTYLECHECK_PATH 'PATH to install when executing python style check program, colon separated' = '/bin:/usr/bin';
@@ -119,26 +109,15 @@ EXEC (py.stylecheck.sh) (:py) (:env) (+py:dir)@ (+py_sp)
 EXEC (/usr/bin/touch) 'egg.py.stylecheck' (:egg)
   => (:egg.py.stylecheck);
 
-:py.exec.output.ref ':py.exec.output ref' => :FILE;
-:py.exec.files.ref ':py.exec.files ref' => :FILE;
-
 :py3.exec.output.ref ':py3.exec.output ref' => :FILE;
 :py3.exec.files.ref ':py3.exec.files ref' => :FILE;
-
-EXEC (py.exec.output.sh) (:py.exec/output) (:py.exec/errors) (:py.exec/status) (:py.exec:name) (+stderr)
-  => (:py.exec.output.ref);
 
 EXEC (py3.exec.output.sh) (:py3.exec/output) (:py3.exec/errors) (:py3.exec/status) (:py3.exec:name) (+stderr)
   => (:py3.exec.output.ref);
 
-READ-REFERENCE (:py.exec.output.ref) => (:py.exec.output);
 READ-REFERENCE (:py3.exec.output.ref) => (:py3.exec.output);
-
-EXEC (py.exec.files.sh) (:py.exec/files.tar) (:py.exec/errors) (:py.exec/status) (:py.exec:name) (:py.exec/output) (+stderr)
-  => (:py.exec.files.ref);
 
 EXEC (py3.exec.files.sh) (:py3.exec/files.tar) (:py3.exec/errors) (:py3.exec/status) (:py3.exec:name) (:py3.exec/output) (+stderr)
   => (:py3.exec.files.ref);
 
-READ-REFERENCE (:py.exec.files.ref) => (:py.exec.files);
 READ-REFERENCE (:py3.exec.files.ref) => (:py3.exec.files);
