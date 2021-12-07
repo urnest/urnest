@@ -15,7 +15,7 @@
 
 // miscellaneous utilities
 //
-(function( sal, undefined ) {
+(function( wal, undefined ) {
   // give old browswers Date.now()
   if (!Date.now) {
     Date.now = function() { return new Date().getTime(); }
