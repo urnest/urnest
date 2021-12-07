@@ -41,7 +41,7 @@
       ... err, no because it expects well-formed source code and uses lots of other
       modules, maybe write a scanner in c++? Does that still have "bootstrap" trouble?
       should be able to avoid bootstrap trouble.
-      https://doc.rust-lang.org/stable/reference/items.html shows what scanner should
+      https://doc.rust-lang.org/reference/ shows what scanner should
       consider; initially ignore any macros, but maybe support commonly used macros
     
   - compile v link? (does it make any sense? Maybe with rlib?)

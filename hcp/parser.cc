@@ -857,14 +857,6 @@ PR s_char() throw()
   return s_char;
 }
 
-PR c_char() throw()
-{
-  static PR s_char(
-    parseAnyCharExcept("\\'\n")|
-    stringEscapeSequence());
-  return s_char;
-}
-
 class ParseRawStringLiteral : public Parser
 {
 public:
@@ -982,15 +974,11 @@ public:
 
 };
 
-namespace
-{
 bool lookingAt(I i,std::string const& x) noexcept
 {
   auto xi{x.begin()};
   for(; !i.atEnd() && (xi!=x.end()) && (*i == *xi); ++i, ++xi);
   return (xi==x.end());
-}
-
 }
 
 class ParseBalanced : public Parser
@@ -1153,6 +1141,14 @@ public:
 
 
 }
+PR c_char() throw()
+{
+  static PR s_char(
+    parseAnyCharExcept("\\'\n")|
+    stringEscapeSequence());
+  return s_char;
+}
+
 
 Exception EndOfInput(I at, xju::Traced const& trace) throw()
 {

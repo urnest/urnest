@@ -4,6 +4,7 @@
 %test-tree.output
 %test-refs.output
 %test-cssish-selector.output
+%test-rs-dep-1
 
 %ropts == <<
 +cmd=rustc -A dead_code
@@ -26,10 +27,11 @@
 %rs1 == <<
 mod x;
 #[path="fred/y.rs"]
-mod y;
+pub mod y;
+pub mod z { }
 extern crate julie;
 use ruf::tree;
-fn a(y: i32) -> i32 { 1 }
+pub fn a(y: i32) -> i32 { 1 }
 extern "C" fn a(y: i32) -> i32 { 1 }
 extern r##"c#"## fn a(y: i32) -> i32 { 1 }
 type x = i32;
@@ -41,11 +43,9 @@ union MyUnion { f1: u32, f2: f32, }
 #[repr(C)] union MyUnion { f1: u32, f2: f32, }
 const BIT1: u32 = 1 << 0;
 const BITS_N_STRINGS: BitsNStrings<'static> = BitsNStrings { mybits: BITS, mystring: STRING, };
+static COUNTER: AtomicUsize = AtomicUsize::new(0);
+trait Example { const CONST: i32; fn method(&self); fn method_with_dflt(&self) {} }
+impl Color { pub const WHITE: Color = Color(255, 255, 255); }
+unsafe extern "stdcall" { }
 
 %test-rs-dep-1 == ()+cmd=(%rs-dep)+cmd=(%rs1):exec.output
-
-
-%rs2 == <<
-const BITS_N_STRINGS: BitsNStrings<'static> = BitsNStrings { mybits: BITS, mystring: STRING, };
-
-%test-rs-dep-2 == ()+cmd=(%rs-dep)+cmd=(%rs2):exec.output

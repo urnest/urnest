@@ -42,6 +42,11 @@ PR kw_path() noexcept
   static PR result(keyword("path"));
   return result;
 }
+PR kw_pub() noexcept
+{
+  static PR result(keyword("pub"));
+  return result;
+}
 PR kw_mod() noexcept
 {
   static PR result(keyword("mod"));
@@ -90,34 +95,6 @@ PR modDecl() noexcept
       "mod decl",
       optional(pathAttr())+eatWhite()+
       optional(kw_unsafe())+kw_mod()+eatWhite()+name()+eatWhite()+";"));
-  return result;
-}
-
-PR modDef() noexcept
-{
-  static PR result(
-    named<ModDef>(
-      "mod def",
-      optional(kw_unsafe())+kw_mod()+name()+eatWhite()+
-      "{" + balanced("}",false)+ "}")); // REVISIT: want nested modules too via item
-  return result;
-}
-
-PR externCrate() noexcept
-{
-  static PR result(
-    named<ExternCrate>(
-      "extern crate",
-      kw_extern()+eatWhite()+kw_crate()+eatWhite()+
-      name()+parseUntil(parseLiteral(";"))+";"));
-  return result;
-}
-
-PR use() noexcept
-{
-  static PR result(
-    keyword("use")+parseUntil(semicolon())+
-    semicolon());
   return result;
 }
 
@@ -221,6 +198,198 @@ PR rustRawStringLiteral() noexcept
   return result;
 }
 
+bool lookingAt(I i,std::string const& x) noexcept
+{
+  auto xi{x.begin()};
+  for(; !i.atEnd() && (xi!=x.end()) && (*i == *xi); ++i, ++xi);
+  return (xi==x.end());
+}
+
+class ParseRustBalanced : public Parser
+{
+public:
+  PR const until_;
+  bool angles_;
+  
+  explicit ParseRustBalanced(PR const until, bool angles) throw():
+    until_(until),
+    angles_(angles) {
+  }
+  
+  // Parser::
+  virtual ParseResult parse_(I const at, Options const& o) throw() 
+  {
+    I end(at);
+    while(true) {
+      ParseResult const r1(until_->parse_(end, o));
+      if (!r1.failed()) {
+        return ParseResult(
+          std::make_pair(IRs(1U,IR(new hcp_ast::Item(at, end))),end));
+      }
+      if (end.atEnd()) {
+        return ParseResult(EndOfInput(end, XJU_TRACED));
+      }
+      if (lookingAt(end,"r"))
+      {
+        ParseResult const r2(rustRawStringLiteral()->parse_(end, o));
+        if (!r2.failed()) {
+          end=(*r2).second;
+        }
+        else {
+          ++end;
+        }
+      }
+      else{
+        switch(*end) {
+        case '\'':
+        {
+          ParseResult const r2(
+            (parseOneOfChars("'")+c_char()+parseOneOfChars("'"))->parse_(
+              end, o));
+          if (!r2.failed()) {
+            end=(*r2).second;
+          }
+          else {
+            ++end;
+          }
+        }
+        break;
+        case '"':
+        {
+          ParseResult const r2(stringLiteral()->parse_(end, o));
+          if (r2.failed()) {
+            return r2;
+          }
+          end=(*r2).second;
+        }
+        break;
+        case '{':
+        {
+          ParseResult const r2(ParseRustBalanced(parseOneOfChars("}"), angles_).parse_(xju::next(end),o));
+          if (r2.failed()) {
+            return r2;
+          }
+          end=xju::next((*r2).second);
+        }
+        break;
+        case '<':
+          if (angles_) {
+            ParseResult const r2(
+              ParseRustBalanced(parseOneOfChars(">"), angles_).parse_(
+                xju::next(end),o));
+            if (r2.failed()) {
+              return r2;
+            }
+            end=xju::next((*r2).second);
+          }
+          else {
+            ++end;
+          }
+          break;
+        case '[':
+        {
+          ParseResult const r2(
+            ParseRustBalanced(parseOneOfChars("]"), angles_).parse_(
+              xju::next(end),o));
+          if (r2.failed()) {
+            return r2;
+          }
+          end=xju::next((*r2).second);
+        }
+        break;
+        case '(':
+        {
+          ParseResult const r2(
+            ParseRustBalanced(parseOneOfChars(")"), angles_).parse_(
+              xju::next(end),o));
+          if (r2.failed()) {
+            return r2;
+          }
+          end=xju::next((*r2).second);
+        }
+        break;
+        case '/':
+        {
+          ParseResult const r2(
+            comments()->parse_(end,o));
+          if (!r2.failed()) {
+            end=(*r2).second;
+          }
+          else
+          {
+            ++end;
+          }
+        }
+        break;
+        default:
+          ++end;
+        }
+      }
+    }
+  }
+  virtual std::string target() const throw() {
+    std::ostringstream s;
+    s << "parse text, balancing (), [], {}, <>, stringLiteral, up to but "
+      << "not including " << until_->target();
+    return s.str();
+  }
+};
+
+PR rustBalanced(PR until, bool angles=false) throw()
+{
+  return PR(new ParseRustBalanced(until, angles));
+}
+
+class RecurseItem : public Parser
+{
+public:
+  explicit RecurseItem() throw()
+  {
+  }
+
+  // Parser::
+  virtual ParseResult parse_(I const at, Options const& o) throw() override;
+
+  // Parser::
+  virtual std::string target() const throw() override;
+};
+
+PR recurseItem() noexcept
+{
+  static PR result(
+    new RecurseItem());
+  return result;
+}
+
+PR modDef() noexcept
+{
+  static PR result(
+    named<ModDef>(
+      "mod def",
+      optional(kw_unsafe())+kw_mod()+eatWhite()+name()+eatWhite()+
+      "{" + eatWhite()+
+      parseUntil(recurseItem()+eatWhite(),"}")+"}"));
+  return result;
+}
+
+PR externCrate() noexcept
+{
+  static PR result(
+    named<ExternCrate>(
+      "extern crate",
+      kw_extern()+eatWhite()+kw_crate()+eatWhite()+
+      name()+parseUntil(parseLiteral(";"))+";"));
+  return result;
+}
+
+PR use() noexcept
+{
+  static PR result(
+    keyword("use")+parseUntil(semicolon())+
+    semicolon());
+  return result;
+}
+
 PR abi() noexcept
 {
   static PR result(
@@ -232,10 +401,10 @@ PR functionQualifiers() noexcept
 {
   static PR result(
     zeroOrMore()*(
-      keyword("const") |
-      keyword("async") |
-      kw_unsafe() |
-      (kw_extern()+eatWhite()+abi())));
+      (keyword("const") |
+       keyword("async") |
+       kw_unsafe() |
+       (kw_extern()+eatWhite()+abi()))+eatWhite()));
   return result;
 }
 
@@ -243,14 +412,14 @@ PR fn() noexcept
 {
   static PR result(
     functionQualifiers()+eatWhite()+
-    keyword("fn")+parseUntil("(")+"("+balanced(")")+")"+
-    parseUntil("{")+"{"+balanced("}")+"}"+eatWhite());
+    keyword("fn")+parseUntil("(")+"("+rustBalanced(")")+")"+
+    parseUntil("{")+"{"+rustBalanced("}")+"}"+eatWhite());
   return result;
 }
 PR typeAlias() noexcept
 {
   static PR result(
-    keyword("type")+balanced(";")+
+    keyword("type")+rustBalanced(";")+
     ";");
   return result;
 }
@@ -264,7 +433,7 @@ PR structTerminator()
 PR someStructIntro()
 {
   static PR result(
-    keyword("struct")+balanced(structTerminator()));
+    keyword("struct")+rustBalanced(structTerminator()));
   return result;
 }
 PR unitStruct() noexcept
@@ -278,7 +447,7 @@ PR tupleStruct() noexcept
 {
   static PR result(
     someStructIntro()+"("+
-    balanced(")")+")");
+    rustBalanced(")")+")");
   return result;
 }
 
@@ -286,7 +455,7 @@ PR regularStruct() noexcept
 {
   static PR result(
     someStructIntro()+"{"+
-    balanced("}")+"}");
+    rustBalanced("}")+"}");
   return result;
 }
 
@@ -302,35 +471,63 @@ PR struct_() noexcept
 PR enum_() noexcept
 {
   static PR result(
-    keyword("enum")+balanced("{")+"{"+balanced("}")+"}");
+    keyword("enum")+rustBalanced("{")+"{"+rustBalanced("}")+"}");
   return result;
 }
 
 PR union_() noexcept
 {
   static PR result(
-    keyword("union")+balanced("{")+"{"+balanced("}")+"}");
+    keyword("union")+rustBalanced("{")+"{"+rustBalanced("}")+"}");
   return result;
 }
 
 PR constant() noexcept
 {
   static PR result(
-    keyword("const")+balanced(";")+";");
+    keyword("const")+rustBalanced(";")+";");
   return result;
 }
 
 PR attr() noexcept
 {
   static PR result(
-    "#"+eatWhite()+"["+balanced("]")+"]");
+    "#"+eatWhite()+"["+rustBalanced("]")+"]");
+  return result;
+}
+
+PR static_() noexcept
+{
+  static PR result(
+    keyword("static")+rustBalanced(";")+";");
+  return result;
+}
+  
+PR trait() noexcept
+{
+  static PR result(
+    optional(kw_unsafe()+eatWhite())+keyword("trait")+rustBalanced("{")+"{"+rustBalanced("}")+"}");
+  return result;
+}
+
+PR impl() noexcept
+{
+  static PR result(
+    optional(kw_unsafe()+eatWhite())+keyword("impl")+rustBalanced("{")+"{"+rustBalanced("}")+"}");
+  return result;
+}
+
+PR externBlock() noexcept
+{
+  static PR result(
+    optional(kw_unsafe()+eatWhite())+kw_extern()+eatWhite()+abi()+rustBalanced("{")+"{"+rustBalanced("}")+"}");
   return result;
 }
 
 PR item() noexcept
 {
   static PR result(
-    
+    kw_pub() |
     modDecl() |
     modDef() |
     externCrate() |
@@ -341,15 +538,23 @@ PR item() noexcept
     enum_()  |
     union_() |
     constant() |
-/*
     static_() |
     trait() |
     impl() |
     externBlock() |
- */
     attr());  // note last to allow items e.g. externCrate to pick up specific attributes
   return result;
 }
+
+ParseResult RecurseItem::parse_(I const at, Options const& o) throw()
+{
+  return item()->parse_(at, o);
+}
+std::string RecurseItem::target() const throw() {
+  return item()->target();
+}
+  
+
 PR utf8BOM() noexcept
 {
   static PR result(

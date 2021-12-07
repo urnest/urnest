@@ -485,6 +485,7 @@ PR comments() throw();
 PR eatWhite() throw(); // matches nothing or something; eats C++ comments
 PR identifier() throw(); //C++ identifier
 PR identifierContChar() throw(); //C++ identifier continuation character
+PR c_char() throw();
 PR stringLiteral() throw(); //C++ string literal
 PR rawStringLiteral() throw(); //C++ raw string literal
 PR hashIncludeImpl() throw(); // include preprocessor directive, with trailing "// impl" marker
