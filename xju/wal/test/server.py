@@ -34,4 +34,5 @@ httpd=make_server('', port, wal.Dispatcher(app,d).main)
 print("Serving HTTP on port {port}...".format(**vars()))
 
 # Respond to requests until process is killed
-httpd.serve_forever()
+while not app.quit_requested:
+    httpd.handle_request()

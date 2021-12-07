@@ -18,6 +18,8 @@ from xju import pq
 
 import threading
 
+quit_requested = False
+
 @wal.public
 def public_html():
     return wal.html('<html><body>public</body></html>')
@@ -54,7 +56,7 @@ def post(params):
          sorted(params.items())]) }
 
 @wal.public
-def post_json(type_,name,age):
+def post_json(type_: str, name: str,age: int):
     return { 'result': {
         'type':type_,
         'name':name,
@@ -71,6 +73,12 @@ def login():
 @wal.public
 def logout():
     return wal.plainText('OK')+wal.cookie('some-session','')
+
+@wal.public
+def quit():
+    '''make server exit'''
+    global quit_requested
+    quit_requested = True
 
 def isLoggedIn(cookies):
     return cookies.get('some-session',None)=='3'
