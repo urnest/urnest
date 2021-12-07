@@ -100,7 +100,7 @@ EXEC (py3.exec.sh) (:py) (+cmd :ls) (:env) (+stderr) (+py:dir)@ (+py_sp)
   => (:py3.exec);
 
 EXEC (mypy3.sh) (:py) (:env) (+py:dir)@ (+py_sp)
-  NEEDS (:py:py_rd:py_import_all)
+  NEEDS (:py:py_rd:py_import_all:map=:mypy3)
   => (:mypy3);
     
 EXEC (py.stylecheck.sh) (:py) (:env) (+py:dir)@ (+py_sp)
