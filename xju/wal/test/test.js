@@ -54,4 +54,90 @@ $(document).ready(function(){
       });
     return false;
   });
+  $('a.async-post').click(async function(){
+    let result = await wal.asyncPostToServer(wal.asyncTimeout(2.0), 'post-json', {
+	'type_':'json',  // note no special meaning
+	'name':'jock',
+      'age':30});
+    $('div.result').text('POST result (json)'+wal.json.encode(
+      result));
+    return false;
+  });
+  $('a.async-post-5s').click(async function(){
+    try{
+      let result = await wal.asyncPostToServer(wal.asyncTimeout(2.0), 'post-json-5s', {
+	'type_':'json',  // note no special meaning
+	'name':'jock',
+	'age':30});
+      $('div.result').text('UNEXPECTED: POST result (json)'+wal.json.encode(
+	result));
+    }
+    catch(e){
+      $('div.result').text('POST error (expected deadline reached): '+e.message);
+    }
+    return false;
+  });
+  $('a.async-get').click(async function(){
+    let result = await wal.asyncGetFromServer(wal.asyncTimeout(2.0), 'post-json', {
+	'type_':'json',  // note no special meaning
+	'name':'jock',
+      'age':30});
+    $('div.result').text('GET result (json)'+wal.json.encode(
+      result));
+    return false;
+  });
+  $('a.async-get-5s').click(async function(){
+    try{
+      let result = await wal.asyncGetFromServer(wal.asyncTimeout(2.0), 'post-json-5s', {
+	'type_':'json',  // note no special meaning
+	'name':'jock',
+	'age':30});
+      $('div.result').text('UNEXPECTED: GET result (json)'+wal.json.encode(
+	result));
+    }
+    catch(e){
+      $('div.result').text('GET error (expected deadline reached): '+e.message);
+    }
+    return false;
+  });
+  $('a.poll-for-condition-met').click(function(){
+    $('div.result').text('');
+    let t = setTimeout(function(){
+      $('div.result').text('condition met');
+    }, 1000);
+    setTimeout(async function(){
+      let result = await wal.asyncPollFor(wal.asyncTimeout(5.0),
+					  function(){
+					    if ($('div.result').text()!='condition met'){
+					      throw Error('condition not met');
+					    }
+					    return 'condition met and verified';
+					  });
+      $('div.result').text(result);
+    });
+    return false;
+  });
+  $('a.poll-for-condition-timeout').click(function(){
+    $('div.result').text('');
+    let t = setTimeout(function(){
+      $('div.result').text('condition met');
+    }, 5000);
+    setTimeout(async function(){
+      try{
+	let result = await wal.asyncPollFor(wal.asyncTimeout(2.0),
+					    function(){
+					      if ($('div.result').text()!='condition met'){
+						throw Error('condition not met');
+					      }
+					      return 'condition met and verified';
+					    });
+	$('div.result').text('UNEXPECTED: '+result);
+      }
+      catch(e){
+	$('div.result').text('expected condition not met, got: '+e.message);
+	clearTimeout(t);
+      }
+    });
+    return false;
+  });
 });

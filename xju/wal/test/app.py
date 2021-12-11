@@ -16,6 +16,7 @@
 from xju import wal
 from xju import pq
 
+import time
 import threading
 
 quit_requested = False
@@ -57,6 +58,14 @@ def post(params):
 
 @wal.public
 def post_json(type_: str, name: str,age: int):
+    return { 'result': {
+        'type':type_,
+        'name':name,
+        'age':age}}
+
+@wal.public
+def post_json_5s(type_: str, name: str,age: int):
+    time.sleep(5)
     return { 'result': {
         'type':type_,
         'name':name,

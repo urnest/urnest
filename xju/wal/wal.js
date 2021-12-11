@@ -20,6 +20,102 @@
   if (!Date.now) {
     Date.now = function() { return new Date().getTime(); }
   }
+
+  // Promise to return result of post to url with specified params
+  // - params is json-encoded and sent as as json_params value in json content post to server
+  // - result is json-decoded post response's result attribute
+  // - exception is Error with json-decoded post response's error attribute as message
+  //   or other Error:
+  //     - timeout before response received (from asyncTimeout)
+  //     - response is not json or not a dictionary or has neither result nor error attribute
+  //     - post failed
+  // - note post is not cancelled on timeout
+  wal.asyncPostToServer=function(asyncTimeout,  //:Promise e.g. see wal.asyncTimeout
+				 url,           //:str
+				 params)        //:JsonObject
+  {
+    let result = [ asyncTimeout,
+		   new Promise( (yay,nay)=>{
+		     wal.postToServer(url, params)
+		       .then( result=> { asyncTimeout.cancel && asyncTimeout.cancel();
+					 yay(result); })
+		       .or( error=> { asyncTimeout.cacnel && asyncTimeout.cancel();
+				      nay(result); });
+		   }) ];
+    return Promise.race(result);
+  };
+
+  // like asyncPostToServer above but HTTP GET instead of POST
+  wal.asyncGetFromServer=function(asyncTimeout,  //:Promise e.g. see wal.asyncTimeout
+				  url,           //:str
+				  params)        //:JsonObject
+  {
+    let result = [ asyncTimeout,
+		   new Promise( (yay,nay)=>{
+		     wal.getFromServer(url, params)
+		       .then( result=> { asyncTimeout.cancel && asyncTimeout.cancel();
+					 yay(result); })
+		       .or( error=> { asyncTimeout.cacnel && asyncTimeout.cancel();
+				      nay(result); });
+		   }) ];
+    return Promise.race(result);
+  };
+  
+  // Poll f() every seconds (or fraction of) between polls, until
+  // f succeeds or timeout.
+  // - on success returns result of successful f
+  // - on timeout raises last failure of f
+  // Does at least two calls to f(): one immediately and one on timeout.
+  wal.asyncPollFor=async function(asyncTimeout,         //:Promise e.g. see wal.asyncTimeout
+				  f,                    //:function(timeout)
+				  secondsBetweenPolls)  //:float e.g. 0.75, default 0.5
+  {
+    let pollTimer = null;
+    let result = Promise.race(
+      [ asyncTimeout,
+	new Promise( (yay,nay)=>{
+	  let poll = function(){
+	    try{
+	      if (pollTimer){
+		yay(f());
+	      }
+	    }
+	    catch(e){
+	      pollTimer = setTimeout(poll, secondsBetweenPolls*1000);
+	    }
+	  };
+	  poll();
+	}) ]);
+    try{
+      return await result;
+    }
+    catch(e){
+      return f();
+    }
+    finally{
+      asyncTimeout.cancel();
+      pollTimer = null;
+    }
+  }
+
+  // Promise to raise Error after specified (float) number of seconds.
+  // - result.cancel() cancels any still-running timer
+  wal.asyncTimeout=function(seconds){
+    let t={ t: null };
+    let result = new Promise( (yay, nay)=>{
+      t=setTimeout(()=>{t.t=null; nay(Error('deadline reached'))},
+		   seconds*1000);
+    });
+    result.t=t;
+    result.cancel=function(){
+      if (this.t['t']){
+	this.t['t']=null;
+	cancelTimeout(this.t['t']);
+      }
+    };
+    return result;
+  };
+  
   // add busyClass to $x (a jquery object) DOM objects and all their children,
   // until matching result.done() called, holding class for at least
   // specified minSeconds (a float)

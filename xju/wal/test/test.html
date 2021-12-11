@@ -22,13 +22,29 @@
       <li><a href="html">public function returning pq.Selection (HTML)</a>
       <li><a href="redirect">public function redirecting html</a>
       <li><a href="client-error?e=doh">client error</a>
-      <li><a class="ajax-post" href="#">params via ajax - POST</a>/<a class="ajax-get" href="#">params via ajax - GET</a>, result:
-	<div class="result"></div>
+	  <li><a class="ajax-post" href="#">params via ajax - POST</a>/<a class="ajax-get" href="#">params via ajax - GET</a>
+    </ul>
+    <ul>
+	  <li><a class="async-post" href="#">params via async post</a>
+	  <li><a class="async-post-5s" href="#">timeout async post after 2s</a>
+	  <li><a class="async-get" href="#">params via async get</a>
+	  <li><a class="async-get-5s" href="#">timeout async get after 2s</a>
+    </ul>
+    <ul>
       <li><a href="login">login</a>
       <li><a href="login-required">login-required</a>
-      <li><a href="logout">logout</a>
+	  <li><a href="logout">logout</a>
+    </ul>
+    <ul>
       <li><a href="quit">quit server</a>
     </ul>
+    <ul>
+      <li><a class="poll-for-condition-met" href="#">poll for condition - met</a>
+	  <li><a class="poll-for-condition-timeout" href="#">poll for condition - timeout</a>
+    </ul>
+	<p>Result:
+	  <div class="result"></div>
+	</p>
     <p>query params:</p>
     <pre class="query-params"></pre>
     <p>input: <input type="text" class="tracked"></p>
