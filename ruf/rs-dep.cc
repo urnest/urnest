@@ -14,6 +14,8 @@
 #include <iostream>
 #include <xju/path.hh>
 #include <xju/Exception.hh>
+#include <optional>
+#include <vector>
 
 struct ModDefTag {};
 typedef hcp_ast::TaggedItem<ModDefTag> ModDef;
@@ -576,16 +578,82 @@ PR parseRS() noexcept
   return result;
 }
 
+struct CrateDirItemTag{};
+typedef hcp_ast::TaggedItem<CrateDirItemTag> CrateDirItem;
+
+PR parseCrateDir() noexcept
+{
+  static PR result(
+    named<CrateDirItem>(
+      "crate dir",
+      parseUntil("\n"))+"\n");
+  return result;
+}
+
+std::vector<xju::path::AbsolutePath> readCrateDirsFile(xju::path::AbsFile const& f)
+{
+  try{
+    std::vector<xju::path::AbsolutePath> result;
+    auto const s(xju::file::read(f));
+    auto const p((zeroOrMore()*parseCrateDir()).parseString(s));
+    auto const dirNames(hcp_ast::findOnlyChildOfType<CrateDirItem>(p));
+    std::transform(dirNames.begin(), dirNames.end(),
+                   std::back_inserter(result),
+                   [](auto const& x){
+                     hcp_ast::reconstruct(x);
+                   });
+    return result;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "read crate search directories (for rustc -L) one per line from " << f;
+    e.addContext(s.str(), XJU_TRACED);
+    throw;
+  }
+}
+
 int main(int argc, char* argv[])
 {
-  if (argc != 2) {
-    std::cerr << "usage: " << argv[0] << " file.rs" << std::endl;
+  if (argc < 2) {
+    std::cerr << "usage: " << argv[0]
+              << "[-m mods.view_spec] [-c crates.view-spec] [-L crate-dir-ls-file] file.rs"
+              << std::endl;
     return 1;
   }
   try{
+    std::optional<xju::path::AbsFile> > mods_view_spec_file;
+    std::optional<xju::path::AbsFile> > crates_view_spec_file;
+    std::vector<xju::path::AbsolutePath> crates_search_directories;
+    
+    auto i(argv+1);
+    auto const end(argv+argc);
+    while (i!=end && xju::startsWith(std::string(*i), std::string("-"))){
+      if (*i == std::string("-m")){
+        if (++i==end){
+          throw xju::Exception("expected mods.view_spec output filename after -m",XJU_TRACED);
+        }
+        mods_view_spec_file=xju::path::split(*i);
+      }
+      else if (*i == std::string("-c")){
+        if (++i==end){
+          throw xju::Exception("expected crates.view_spec output filename after -c",XJU_TRACED);
+        }
+        crates_view_spec_file=xju::path::split(*i);
+      }
+      else if (*i == std::string("-L")){
+        if (++i==end){
+          throw xju::Exception("expected crates.view_spec output filename after -c",XJU_TRACED);
+        }
+        crates_search_directories = readCrateDirsFile(xju::path::split(*++i));
+      }
+      ++i;
+    }
+          
     std::string const content(xju::file::read(xju::path::split(argv[1])));
     
     auto const r(parseString(content.begin(), content.end(), parseRS()));
+
+    
     return 0;
   }
   catch(xju::Exception& e){

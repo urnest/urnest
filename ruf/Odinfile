@@ -5,6 +5,8 @@
 %test-refs.output
 %test-cssish-selector.output
 %test-rs-dep-1
+%test-rs-dep-2
+%test-rs-dep-3
 
 %ropts == <<
 +cmd=rustc -A dead_code
@@ -23,12 +25,19 @@
 
 %rs-dep == (rs-dep.cc)+(..%cxx-opts):auto.cxx.exe
 
+%test-rs-dep-1 == ()+cmd=(%rs-dep)+cmd=(%rs1):exec.output
+%test-rs-dep-2 == ()+cmd=(%rs-dep)+cmd=(test-tree.rs):exec.output
+%test-rs-dep-3 == ()+cmd=(%rs-dep)+cmd=(test-context.rs):exec.output
 
 %rs1 == <<
 mod x;
 #[path="fred/y.rs"]
 pub mod y;
 pub mod z { }
+pub mod q {
+  #[path="src/q/y.rs"]
+  pub mod y;
+}
 extern crate julie;
 use ruf::tree;
 pub fn a(y: i32) -> i32 { 1 }
@@ -48,4 +57,3 @@ trait Example { const CONST: i32; fn method(&self); fn method_with_dflt(&self) {
 impl Color { pub const WHITE: Color = Color(255, 255, 255); }
 unsafe extern "stdcall" { }
 
-%test-rs-dep-1 == ()+cmd=(%rs-dep)+cmd=(%rs1):exec.output
