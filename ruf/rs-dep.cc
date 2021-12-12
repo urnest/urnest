@@ -16,6 +16,7 @@
 #include <xju/Exception.hh>
 #include <optional>
 #include <vector>
+#include <xju/startsWith.hh>
 
 struct ModDefTag {};
 typedef hcp_ast::TaggedItem<ModDefTag> ModDef;
@@ -595,21 +596,45 @@ std::vector<xju::path::AbsolutePath> readCrateDirsFile(xju::path::AbsFile const&
   try{
     std::vector<xju::path::AbsolutePath> result;
     auto const s(xju::file::read(f));
-    auto const p((zeroOrMore()*parseCrateDir()).parseString(s));
-    auto const dirNames(hcp_ast::findOnlyChildOfType<CrateDirItem>(p));
+    auto const p(hcp_parser::parseString(s.begin(),s.end(),(zeroOrMore()*parseCrateDir())));
+    auto const dirNames(hcp_ast::findChildrenOfType<CrateDirItem>(p));
     std::transform(dirNames.begin(), dirNames.end(),
                    std::back_inserter(result),
                    [](auto const& x){
-                     hcp_ast::reconstruct(x);
+                     return xju::path::splitdir(hcp_ast::reconstruct(x));
                    });
     return result;
   }
   catch(xju::Exception& e){
     std::ostringstream s;
-    s << "read crate search directories (for rustc -L) one per line from " << f;
+    s << "read crate search directories (for rustc -L) one per line from " << xju::path::str(f);
     e.addContext(s.str(), XJU_TRACED);
     throw;
   }
+}
+
+void genModViewSpec(hcp_ast::Item cons& r, xju::path::AbsolutePath const& rDir,
+                    std::ostream& mod_view_spec)
+{
+  for(hcp_ast::IR c: r.items()){
+    auto const modDef(dynamic_cast<ModDef const*>(&c));
+    auto const modDecl(dynamic_cast<ModDecl const*>(&c));
+    if (modDef){
+      std::string const modName(hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<Name>(*modDef)));
+      genModViewSpec(*modDef, REVISIT: rDir + xju::path::DirName(modName), mod_view_spec);
+      return;
+    }
+    if (modDecl){
+      REVISIT
+    /*
+'/home/xju/urnest/omnicxy/xju/Array.hh'
+'/home/xju/urnest/xju/Array.hh'
+'/home/xju/tmp/oc930/xjutv/FILES/hcp-gen.virdir_spec.17441.vir_dir/xju/Array.hh'
+'/home/xju/tmp/oc930/xjutv/FILES/h/idl-gen.virdir_spec.19274.vir_dir/xju/Array.hh'
+'/home/xju/gcc-9.3.0-run/include/xju/Array.hh'
+=''
+    */
+        }
 }
 
 int main(int argc, char* argv[])
@@ -621,8 +646,8 @@ int main(int argc, char* argv[])
     return 1;
   }
   try{
-    std::optional<xju::path::AbsFile> > mods_view_spec_file;
-    std::optional<xju::path::AbsFile> > crates_view_spec_file;
+    std::optional<xju::path::AbsFile> mods_view_spec_file;
+    std::optional<xju::path::AbsFile> crates_view_spec_file;
     std::vector<xju::path::AbsolutePath> crates_search_directories;
     
     auto i(argv+1);
@@ -648,12 +673,23 @@ int main(int argc, char* argv[])
       }
       ++i;
     }
-          
-    std::string const content(xju::file::read(xju::path::split(argv[1])));
+
+    auto const thisFile(xju::path::split(argv[1]));
+    auto const thisModDir(
+      xju::path::basename(thisFile) == xju::path::FileName("mod.rs")?
+      xju::path::dirname(thisFile) :
+      xju::path::dirname(thisFile)+xju::path::DirName(
+        xju::path::split(xju::path::basename(thisFile)).first._));
+
+    std::string const content(xju::file::read(thisFile));
     
     auto const r(parseString(content.begin(), content.end(), parseRS()));
 
-    
+    std::ostringstream mod_view_spec;
+    genModViewSpec(r, thisModDir, mod_view_spec);
+
+    std::ostringstream crates_view_spec;
+    genCrateViewSpec(r, crates_view_spec);
     return 0;
   }
   catch(xju::Exception& e){
