@@ -613,6 +613,14 @@ std::vector<xju::path::AbsolutePath> readCrateDirsFile(xju::path::AbsFile const&
   }
 }
 
+    /*
+'/home/xju/urnest/omnicxy/xju/Array.hh'
+'/home/xju/urnest/xju/Array.hh'
+'/home/xju/tmp/oc930/xjutv/FILES/hcp-gen.virdir_spec.17441.vir_dir/xju/Array.hh'
+'/home/xju/tmp/oc930/xjutv/FILES/h/idl-gen.virdir_spec.19274.vir_dir/xju/Array.hh'
+'/home/xju/gcc-9.3.0-run/include/xju/Array.hh'
+=''
+    */
 void genModViewSpec(hcp_ast::Item cons& r, xju::path::AbsolutePath const& rDir,
                     std::ostream& mod_view_spec)
 {
@@ -622,19 +630,26 @@ void genModViewSpec(hcp_ast::Item cons& r, xju::path::AbsolutePath const& rDir,
     if (modDef){
       std::string const modName(hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<Name>(*modDef)));
       genModViewSpec(*modDef, REVISIT: rDir + xju::path::DirName(modName), mod_view_spec);
-      return;
     }
     if (modDecl){
-      REVISIT
-    /*
-'/home/xju/urnest/omnicxy/xju/Array.hh'
-'/home/xju/urnest/xju/Array.hh'
-'/home/xju/tmp/oc930/xjutv/FILES/hcp-gen.virdir_spec.17441.vir_dir/xju/Array.hh'
-'/home/xju/tmp/oc930/xjutv/FILES/h/idl-gen.virdir_spec.19274.vir_dir/xju/Array.hh'
-'/home/xju/gcc-9.3.0-run/include/xju/Array.hh'
-=''
-    */
-        }
+      auto const explicitPath(hcp_ast::findChildrenOfType<Path>(*modDecl));
+      if (explicitPath.size()){
+        mod_view_spec << "'" << xju::path::split(explicitPath.front(), rDir) << "'" << "\n"
+                      << "=''\n";
+      }
+      else{
+        std::string const modName(hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<Name>(*modDef)));
+        mod_view_spec
+          << "'" << xju::path::str(
+            xju::path::AbsFile(
+              rDir, xju::path::FileName(modName+".rs"))) << "'" << "\n"
+          << "'" << xju::path::str(
+            xju::path::AbsFile(
+              rDir+xju::path::DirName(modName), xju::path::FileName("mod.rs"))) << "'" << "\n"
+          << "=''\n";
+      }
+    }
+  }
 }
 
 int main(int argc, char* argv[])

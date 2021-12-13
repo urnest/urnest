@@ -314,6 +314,25 @@ std::pair<AbsolutePath, FileName> split(std::string const& x) /*throw(
   }
 }
 
+std::pair<AbsolutePath, FileName> split(std::string const& x,
+                                        xju::path::AbsolutePath const& working_dir) /*throw(
+  xju::Exception)*/
+{
+  try {
+    if (x.size() && (x[0]=='/')) {
+      return std::make_pair(absolute_dirname(x), basename(x));
+    }
+    return std::make_pair(working_dir+relative_dirname(x), basename(x));
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "split " << x << " into absolute path and filename, from working "
+      << "directory " << working_dir;
+    e.addContext(s.str(), XJU_TRACED);
+    throw;
+  }
+}
+
 AbsolutePath splitdir(std::string const& x) /*throw(
   xju::Exception)*/
 {
