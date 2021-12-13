@@ -621,7 +621,7 @@ std::vector<xju::path::AbsolutePath> readCrateDirsFile(xju::path::AbsFile const&
 '/home/xju/gcc-9.3.0-run/include/xju/Array.hh'
 =''
     */
-void genModViewSpec(hcp_ast::Item cons& r, xju::path::AbsolutePath const& rDir,
+void genModViewSpec(hcp_ast::Item const& r, xju::path::AbsolutePath const& rDir,
                     std::ostream& mod_view_spec)
 {
   for(hcp_ast::IR c: r.items()){
@@ -647,6 +647,40 @@ void genModViewSpec(hcp_ast::Item cons& r, xju::path::AbsolutePath const& rDir,
             xju::path::AbsFile(
               rDir+xju::path::DirName(modName), xju::path::FileName("mod.rs"))) << "'" << "\n"
           << "=''\n";
+      }
+    }
+  }
+}
+
+std::vector<std::string> permuteUnderscores(std::string x){
+  std::vector<std::string> result(1, x);
+  for(auto i(std::find(x.begin(),x.end(),'_')); i!=x.end(); i=std::find(++i,x.end(),'_'))
+  {
+    auto const y(permuteUnderscores(std::string(i+1,x.end())));
+    std::transform(y.begin(), y.end(),
+                   std::back_inserter(result),
+                   [&](auto const& z){
+                     result.push_back(std::string(x.begin(),i)+"_"+std::string(i+1,x.end()));
+                     result.push_back(std::string(x.begin(),i)+"-"+std::string(i+1,x.end()));
+                   });
+  }
+  return result;
+}
+
+void genCrateViewSpec(hcp_ast::Item const& r,
+                      std::vector<xju::path::AbsolutePath> const& crateDirs,
+                      std::ostream& mod_view_spec)
+{
+  for(hcp_ast::IR c: r.items()){
+    auto const externCrate(dynamic_cast<ExternCrate const*>(&c));
+    if (externCrate){
+      std::string const mod(hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<Name>(*externCrate)));
+      for(auto p: createDirs){
+        for(n: permuteUnderscores(mod)){
+          s << "'" << xju::path::str(std::make_pair(p,xju::path::FileName("rlib"+n+".a"))) << "'\n"
+            << "'" << xju::path::str(std::make_pair(p,xju::path::FileName(n+".so"))) << "'\n";
+        }
+        s << "='" << name <, "'\n";
       }
     }
   }
