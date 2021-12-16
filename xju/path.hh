@@ -236,12 +236,19 @@ std::pair<AbsolutePath, FileName> split(std::string const& x) /*throw(
   // can't normalise
   xju::Exception)*/;
 
+// split x into absolute path (using working dir if necessary) and
+// file name
 std::pair<AbsolutePath, FileName> split(std::string const& x,
-                                        xju::AbsolutePath const& working_dir) /*throw(
+                                        AbsolutePath const& working_dir) /*throw(
   // can't normalise
   xju::Exception)*/;
 
 // split x into absolute path (using working dir if necessary)
+AbsolutePath splitdir(std::string const& x,
+                      AbsolutePath const& working_dir) /*throw(
+  // can't normalise
+  xju::Exception)*/;
+
 AbsolutePath splitdir(std::string const& x) /*throw(
   // can't normalise
   xju::Exception)*/;

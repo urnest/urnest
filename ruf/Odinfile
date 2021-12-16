@@ -25,9 +25,15 @@
 
 %rs-dep == (rs-dep.cc)+(..%cxx-opts):auto.cxx.exe
 
-%test-rs-dep-1 == ()+cmd=(%rs-dep)+cmd=(%rs1):exec.output
+%test-rs-dep-1 == ()+cmd=(%rs-dep) -L (%test-rs-crate-dirs:list:ls) (%rs1):exec.output
 %test-rs-dep-2 == ()+cmd=(%rs-dep)+cmd=(test-tree.rs):exec.output
 %test-rs-dep-3 == ()+cmd=(%rs-dep)+cmd=(test-context.rs):exec.output
+
+%test-rs-crate-dirs == <<
+(.)
+(..)
+
+#REVISIT: need a test for rs-dep on file called mod.rs
 
 %rs1 == <<
 mod x;
@@ -35,7 +41,7 @@ mod x;
 pub mod y;
 pub mod z { }
 pub mod q {
-  #[path="src/q/y.rs"]
+  #[path="src/q/qq.rs"]
   pub mod y;
 }
 extern crate julie;
@@ -56,4 +62,16 @@ static COUNTER: AtomicUsize = AtomicUsize::new(0);
 trait Example { const CONST: i32; fn method(&self); fn method_with_dflt(&self) {} }
 impl Color { pub const WHITE: Color = Color(255, 255, 255); }
 unsafe extern "stdcall" { }
-
+//
+// from rust reference modules section
+mod inline {
+    #[path = "other.rs"]
+    mod inner;
+}
+#[path = "thread_files"]
+mod thread {
+    // Load the `local_data` module from `thread_files/tls.rs` relative to
+    // this source file's directory.
+    #[path = "tls.rs"]
+    mod local_data;
+}

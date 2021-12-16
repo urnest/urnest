@@ -17,6 +17,13 @@
 #include <optional>
 #include <vector>
 #include <xju/startsWith.hh>
+#include <xju/file/write.hh>
+
+struct ModIntroTag {};
+typedef hcp_ast::TaggedItem<ModIntroTag> ModIntro;
+
+struct ModImplTag {};
+typedef hcp_ast::TaggedItem<ModImplTag> ModImpl;
 
 struct ModDefTag {};
 typedef hcp_ast::TaggedItem<ModDefTag> ModDef;
@@ -91,13 +98,22 @@ PR pathAttr() noexcept
   return result;
 }
 
+PR modIntro() noexcept
+{
+  static PR result(
+    named<ModIntro>(
+      "mod into",
+      optional(pathAttr())+eatWhite()+
+      optional(kw_pub)+eatWhite()+optional(kw_unsafe())+kw_mod()+eatWhite()+name()));
+  return result;
+}
+    
 PR modDecl() noexcept
 {
   static PR result(
     named<ModDecl>(
       "mod decl",
-      optional(pathAttr())+eatWhite()+
-      optional(kw_unsafe())+kw_mod()+eatWhite()+name()+eatWhite()+";"));
+      modIntro()+eatWhite()+";"));
   return result;
 }
 
@@ -369,9 +385,11 @@ PR modDef() noexcept
   static PR result(
     named<ModDef>(
       "mod def",
-      optional(kw_unsafe())+kw_mod()+eatWhite()+name()+eatWhite()+
-      "{" + eatWhite()+
-      parseUntil(recurseItem()+eatWhite(),"}")+"}"));
+      modIntro()+
+      eatWhite()+"{" + eatWhite()+named<ModImpl>(
+        "mod impl",
+        parseUntil(recurseItem()+eatWhite(),"}"))+
+      "}"));
   return result;
 }
 
@@ -625,28 +643,46 @@ void genModViewSpec(hcp_ast::Item const& r, xju::path::AbsolutePath const& rDir,
                     std::ostream& mod_view_spec)
 {
   for(hcp_ast::IR c: r.items()){
-    auto const modDef(dynamic_cast<ModDef const*>(&c));
-    auto const modDecl(dynamic_cast<ModDecl const*>(&c));
-    if (modDef){
-      std::string const modName(hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<Name>(*modDef)));
-      genModViewSpec(*modDef, REVISIT: rDir + xju::path::DirName(modName), mod_view_spec);
-    }
-    if (modDecl){
-      auto const explicitPath(hcp_ast::findChildrenOfType<Path>(*modDecl));
-      if (explicitPath.size()){
-        mod_view_spec << "'" << xju::path::split(explicitPath.front(), rDir) << "'" << "\n"
-                      << "=''\n";
+    {
+      auto const modDef(dynamic_cast<ModDef const*>(&*c));
+      if (modDef){
+        auto const modIntro(hcp_ast::findChildrenOfType<ModIntro>(*modDef)[0]);
+        auto const explicitPath(hcp_ast::findChildrenOfType<Path>(modIntro));
+        std::string const modName(hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<Name>(modIntro)));
+        if (explicitPath.size()){
+          xju::assert_equal(explicitPath.size(),1U);
+          auto const absExplicitPath(xju::path::splitdir(reconstruct(explicitPath[0]),rDir));
+          genModViewSpec(hcp_ast::findOnlyChildOfType<ModImpl>(*modDef),
+                         absExplicitPath + xju::path::DirName(modName),
+                         mod_view_spec);
+        }
+        else{
+          genModViewSpec(hcp_ast::findOnlyChildOfType<ModImpl>(*modDef),
+                         rDir + xju::path::DirName(modName),
+                         mod_view_spec);
+        }
       }
-      else{
-        std::string const modName(hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<Name>(*modDef)));
-        mod_view_spec
-          << "'" << xju::path::str(
-            xju::path::AbsFile(
-              rDir, xju::path::FileName(modName+".rs"))) << "'" << "\n"
-          << "'" << xju::path::str(
-            xju::path::AbsFile(
-              rDir+xju::path::DirName(modName), xju::path::FileName("mod.rs"))) << "'" << "\n"
+    }
+    {
+      auto const modDecl(dynamic_cast<ModDecl const*>(&*c));
+      if (modDecl){
+        auto const explicitPath(hcp_ast::findChildrenOfType<Path>(*modDecl));
+        if (explicitPath.size()){
+          auto const p(xju::path::split(reconstruct(explicitPath.front()), rDir));
+          mod_view_spec << "'" << xju::path::str(p) << "'" << "\n"
+                        << "=''\n";
+        }
+        else{
+          std::string const modName(hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<Name>(*modDecl)));
+          mod_view_spec
+            << "'" << xju::path::str(
+              xju::path::AbsFile(
+                rDir, xju::path::FileName(modName+".rs"))) << "'" << "\n"
+            << "'" << xju::path::str(
+              xju::path::AbsFile(
+                rDir+xju::path::DirName(modName), xju::path::FileName("mod.rs"))) << "'" << "\n"
           << "=''\n";
+        }
       }
     }
   }
@@ -657,12 +693,11 @@ std::vector<std::string> permuteUnderscores(std::string x){
   for(auto i(std::find(x.begin(),x.end(),'_')); i!=x.end(); i=std::find(++i,x.end(),'_'))
   {
     auto const y(permuteUnderscores(std::string(i+1,x.end())));
-    std::transform(y.begin(), y.end(),
-                   std::back_inserter(result),
-                   [&](auto const& z){
-                     result.push_back(std::string(x.begin(),i)+"_"+std::string(i+1,x.end()));
-                     result.push_back(std::string(x.begin(),i)+"-"+std::string(i+1,x.end()));
-                   });
+    std::for_each(y.begin(), y.end(),
+                  [&](auto const& z){
+                    result.push_back(std::string(x.begin(),i)+"_"+std::string(i+1,x.end()));
+                    result.push_back(std::string(x.begin(),i)+"-"+std::string(i+1,x.end()));
+                  });
   }
   return result;
 }
@@ -672,16 +707,17 @@ void genCrateViewSpec(hcp_ast::Item const& r,
                       std::ostream& mod_view_spec)
 {
   for(hcp_ast::IR c: r.items()){
-    auto const externCrate(dynamic_cast<ExternCrate const*>(&c));
+    auto const externCrate(dynamic_cast<ExternCrate const*>(&*c));
     if (externCrate){
       std::string const mod(hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<Name>(*externCrate)));
-      for(auto p: createDirs){
-        for(n: permuteUnderscores(mod)){
-          s << "'" << xju::path::str(std::make_pair(p,xju::path::FileName("rlib"+n+".a"))) << "'\n"
+      for(auto p: crateDirs){
+        for(auto n: permuteUnderscores(mod)){
+          mod_view_spec
+            << "'" << xju::path::str(std::make_pair(p,xju::path::FileName("rlib"+n+".a"))) << "'\n"
             << "'" << xju::path::str(std::make_pair(p,xju::path::FileName(n+".so"))) << "'\n";
         }
-        s << "='" << name <, "'\n";
       }
+      mod_view_spec << "='" << mod << "'\n";
     }
   }
 }
@@ -714,16 +750,21 @@ int main(int argc, char* argv[])
         }
         crates_view_spec_file=xju::path::split(*i);
       }
-      else if (*i == std::string("-L")){
+      else if (std::string(*i) == std::string("-L")){
         if (++i==end){
           throw xju::Exception("expected crates.view_spec output filename after -c",XJU_TRACED);
         }
-        crates_search_directories = readCrateDirsFile(xju::path::split(*++i));
+        crates_search_directories = readCrateDirsFile(xju::path::split(*i));
       }
       ++i;
     }
+    if (i==end){
+      std::ostringstream s;
+      s << "missing .rs file name as last argument, or options have consumed it";
+      throw xju::Exception(s.str(), XJU_TRACED);
+    }
 
-    auto const thisFile(xju::path::split(argv[1]));
+    auto const thisFile(xju::path::split(*i));
     auto const thisModDir(
       xju::path::basename(thisFile) == xju::path::FileName("mod.rs")?
       xju::path::dirname(thisFile) :
@@ -738,7 +779,30 @@ int main(int argc, char* argv[])
     genModViewSpec(r, thisModDir, mod_view_spec);
 
     std::ostringstream crates_view_spec;
-    genCrateViewSpec(r, crates_view_spec);
+    genCrateViewSpec(r, crates_search_directories, crates_view_spec);
+
+    std::string const mod_view_spec_content(mod_view_spec.str());
+    if (mods_view_spec_file.has_value()){
+      xju::file::write(mods_view_spec_file.value(),
+                       &mod_view_spec_content[0],
+                       mod_view_spec_content.size(),
+                       xju::file::Mode(0666));
+    }
+    else{
+      std::cout << "mod deps: " << mod_view_spec_content << std::endl;
+    }
+    
+    std::string const crate_view_spec_content(crates_view_spec.str());
+    if (crates_view_spec_file.has_value()){
+      xju::file::write(crates_view_spec_file.value(),
+                       &crate_view_spec_content[0],
+                       crate_view_spec_content.size(),
+                       xju::file::Mode(0666));
+    }
+    else{
+      std::cout << "crate deps: " << crate_view_spec_content << std::endl;
+    }
+    
     return 0;
   }
   catch(xju::Exception& e){
