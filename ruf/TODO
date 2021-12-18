@@ -36,14 +36,22 @@
   
 - how to integrate with odin?
   - dependencies?
-    - treat main file different to others? #[path] handling is tricky
-    - use https://github.com/dtolnay/syn/blob/master/examples/dump-syntax/src/main.rs
+    x treat main file different to others? #[path] handling is tricky
+    x use https://github.com/dtolnay/syn/blob/master/examples/dump-syntax/src/main.rs
       ... err, no because it expects well-formed source code and uses lots of other
       modules, maybe write a scanner in c++? Does that still have "bootstrap" trouble?
       should be able to avoid bootstrap trouble.
       https://doc.rust-lang.org/reference/ shows what scanner should
       consider; initially ignore any macros, but maybe support commonly used macros
-    
+    - rs.dg:
+      :mod-deps
+      :crate-deps
+      :all-mod-deps
+      :all-crate-deps
+      :rlib
+      :rexe => :exe
+      :cargo
+      
   - compile v link? (does it make any sense? Maybe with rlib?)
     so maybe:
       tree.rs produces tree.rlib crate

@@ -1,0 +1,96 @@
+#
+#    Package for rust compilation (library and executable building).
+#
+# Source Types
+
+*.rs => :rs;
+
+# Input Object Types
+
+:rs 'rust source code'? => :FILE;
+
+# Output Object Types
+
+:rlib 'static-link library'? => :FILE;
+
+:exe 'executable binary'? => :FILE;
+
++debug 'debug switch, rustc -g'? => :first;
+
++optimize 'optimization flag, rustc -O'? => :first;
+
++L 'crate search directory'? => :ls;
+
++rs_flags 'flags for rust compilation'? => :cat;
+
++rs_dep 'rs-dep exe, default to ODIN_RS_DEP on ODIN_RS_DEP_PATH' ? => :first;
+
+$ODIN_RS_DEP 'name of rs-dep program' = 'rs-dep';
+$ODIN_RS_DEP_PATH 'path to install when running $RS_DEP' = '/usr/bin:/bin';
+$ODIN_RS_DEP_LD_LIBRARY_PATH 'LD_LIBRARY_PATH when running $RS_DEP' = '';
+$ODIN_RS_L 'space-separated list of directories to search for crates (these diretories are added via -L after +L option directories when compiling .rs files)' = '';
+
+:which-rs-dep 'rs-dep exe from +rs_dep or ODIN_RS_DEP_PATH ODIN_RS_DEP'
+  => :REFERENCE;
+:which-rs-dep-viewspec 'viewspec to locate rs-dep exe' => :FILE;
+
+EXEC (which-rs-dep-viewspec.sh) (+rs_dep) => (:which-rs-dep-viewspec);
+
+COLLECT (:which-rs-dep-viewspec:view:first) => (:which-rs-dep);
+
+
+
+# Dependency handling
+
+# "crate root" files (i.e. file explicitly passed to compiler) have special directory
+# handling rules, so need to be treated separately.
+#
+:cr-mod-deps.view_desc 'view description of crate root submodule file deps'? => :FILE;
+:cr-mod-deps 'list of crate-root directly required .rs module files'? => <:mod-deps>;
+
+:cr-crate-deps.view_desc 'view description of extern crate deps'? => :FILE;
+:cr-crate-deps 'list of crates directly required by crate root file'? => <:crate-deps>;
+
+EXEC (cr-rs-dep.sh) (:which-rs-dep) (+L) (:rs)
+   => (:cr-mod-deps.view_desc) (:cr-crate-deps.view_desc);
+
+COLLECT (:cr-mod-deps.view_desc :view)
+   => (:cr-mod-deps);
+
+COLLECT (:cr-crate-deps.view_desc :view)
+   => (:cr-crate-deps);
+
+# non-"crate root" file rules
+
+:mod-deps.view_desc 'view description of non-crate root file submodule file deps'? => :FILE;
+:mod-deps 'list of .rs module files required by a non-crate-root file'? => :LIST;
+:mod-deps-all 'list of transitively required .rs module files'? => :LIST;
+
+:crate-deps.view_desc 'view description of non-crate root file extern crate deps'? => :FILE;
+:crate-deps 'list of non-crate root file directly required crates'? => :LIST;
+:crate-deps-all 'transitive list of required crates'? => :LIST;
+
+EXEC (rs-dep.sh) (:which-rs-dep) (+L) (:rs)
+   => (:mod-deps.view_desc) (:crate-deps.view_desc);
+
+COLLECT (:mod-deps.view_desc :view)
+   => (:mod-deps);
+
+COLLECT (:mod-deps :map=:mod-deps-all) (:mod-deps)
+   => (:mod-deps-all);
+
+COLLECT (:crate-deps.view_desc :view)
+   => (:crate-deps);
+
+COLLECT (:crate-deps :map=:crate-deps-all) (:crate-deps)
+   => (:crate-deps-all);
+
+EXEC (rustc-exe.sh) (:rs) (+L)
+   NEEDS (:cr-mod-deps:mod-deps-all)
+         (:cr-crate-deps:crate-deps-all)
+   => (:exe);
+   
+EXEC (rustc-rlib.sh) (:rs) (+L) (+debug) (+optimize) (+rs_flags)
+   NEEDS (:cr-mod-deps:mod-deps-all)
+         (:cr-crate-deps:crate-deps-all)
+   => (:rlib);

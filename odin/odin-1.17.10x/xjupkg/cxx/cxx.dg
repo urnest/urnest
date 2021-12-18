@@ -1,6 +1,4 @@
 #
-# Abstract
-#
 #    Package for managing C++ compilation, library building and linking
 #    to executable.
 #    
