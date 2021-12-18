@@ -689,15 +689,19 @@ void genModViewSpec(hcp_ast::Item const& r, xju::path::AbsolutePath const& rDir,
 }
 
 std::vector<std::string> permuteUnderscores(std::string x){
-  std::vector<std::string> result(1, x);
-  for(auto i(std::find(x.begin(),x.end(),'_')); i!=x.end(); i=std::find(++i,x.end(),'_'))
+  std::vector<std::string> result;
+  auto i(std::find(x.begin(),x.end(),'_'));
+  if (i!=x.end())
   {
     auto const y(permuteUnderscores(std::string(i+1,x.end())));
     std::for_each(y.begin(), y.end(),
                   [&](auto const& z){
-                    result.push_back(std::string(x.begin(),i)+"_"+std::string(i+1,x.end()));
-                    result.push_back(std::string(x.begin(),i)+"-"+std::string(i+1,x.end()));
+                    result.push_back(std::string(x.begin(),i)+"_"+z);
+                    result.push_back(std::string(x.begin(),i)+"-"+z);
                   });
+  }
+  else{
+    result.push_back(x);
   }
   return result;
 }
@@ -717,7 +721,7 @@ void genCrateViewSpec(hcp_ast::Item const& r,
             << "'" << xju::path::str(std::make_pair(p,xju::path::FileName(n+".so"))) << "'\n";
         }
       }
-      mod_view_spec << "='" << mod << "'\n";
+      mod_view_spec << "=''\n";
     }
   }
 }
@@ -725,16 +729,23 @@ void genCrateViewSpec(hcp_ast::Item const& r,
 int main(int argc, char* argv[])
 {
   if (argc < 2) {
-    std::cerr << "usage: " << argv[0]
-              << "[-m mods.view_spec] [-c crates.view-spec] [-L crate-dir-ls-file] file.rs"
-              << std::endl;
+    std::cerr
+      << "usage: " << argv[0]
+      << "[-C] [-m mods.view_spec] [-c crates.view-spec] [-L crate-dir-ls-file] file.rs" << "\n"
+      << " Scan file.rs for module and crate dependencies, producing an odin view_specs for each type\n"
+      << "  -C  treat file.rs as crate root\n"
+      << "  -m f1 write Odin view spec for mod dependencies to f1; otherwise stdout\n"
+      << "  -c f2 write Odin view spec for crate dependendencies to f2; otherwise stdout\n"
+      << "  -L f3 use list of directories (one per line) as crate search path for crate deps\n"
+      << std::endl;
     return 1;
   }
   try{
     std::optional<xju::path::AbsFile> mods_view_spec_file;
     std::optional<xju::path::AbsFile> crates_view_spec_file;
     std::vector<xju::path::AbsolutePath> crates_search_directories;
-    
+    bool crateRoot(false);
+                   
     auto i(argv+1);
     auto const end(argv+argc);
     while (i!=end && xju::startsWith(std::string(*i), std::string("-"))){
@@ -756,6 +767,14 @@ int main(int argc, char* argv[])
         }
         crates_search_directories = readCrateDirsFile(xju::path::split(*i));
       }
+      else if (std::string(*i) == "-C"){
+        crateRoot=true;
+      }
+      else{
+        std::ostringstream s;
+        s << "unknown option " << (*i) << ", run with no params for usage";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
       ++i;
     }
     if (i==end){
@@ -766,7 +785,7 @@ int main(int argc, char* argv[])
 
     auto const thisFile(xju::path::split(*i));
     auto const thisModDir(
-      xju::path::basename(thisFile) == xju::path::FileName("mod.rs")?
+      crateRoot || xju::path::basename(thisFile) == xju::path::FileName("mod.rs")?
       xju::path::dirname(thisFile) :
       xju::path::dirname(thisFile)+xju::path::DirName(
         xju::path::split(xju::path::basename(thisFile)).first._));
@@ -789,7 +808,8 @@ int main(int argc, char* argv[])
                        xju::file::Mode(0666));
     }
     else{
-      std::cout << "mod deps: " << mod_view_spec_content << std::endl;
+      std::cout << "mod deps:\n"
+                << mod_view_spec_content;
     }
     
     std::string const crate_view_spec_content(crates_view_spec.str());
@@ -800,7 +820,8 @@ int main(int argc, char* argv[])
                        xju::file::Mode(0666));
     }
     else{
-      std::cout << "crate deps: " << crate_view_spec_content << std::endl;
+      std::cout << "crate deps:\n"
+                << crate_view_spec_content;
     }
     
     return 0;
