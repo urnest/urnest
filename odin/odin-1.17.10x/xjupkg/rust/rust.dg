@@ -30,6 +30,12 @@ $ODIN_RS_DEP_PATH 'path to install when running $RS_DEP' = '/usr/bin:/bin';
 $ODIN_RS_DEP_LD_LIBRARY_PATH 'LD_LIBRARY_PATH when running $RS_DEP' = '';
 $ODIN_RS_L 'space-separated list of directories to search for crates (these diretories are added via -L after +L option directories when compiling .rs files)' = '';
 
+$ODIN_RUSTC 'name of rustc program' = 'rustc';
+$ODIN_RUSTC_PATH 'path to install when running $RUSTC' = '/usr/bin:/bin';
+$ODIN_RUSTC_LD_LIBRARY_PATH 'LD_LIBRARY_PATH when running $RUSTC' = '';
+
+$ODIN_RUSTC_FLAGS 'rustc flags (passed after +rs_flags params)' = '';
+
 :which-rs-dep 'rs-dep exe from +rs_dep or ODIN_RS_DEP_PATH ODIN_RS_DEP'
   => :REFERENCE;
 :which-rs-dep-viewspec 'viewspec to locate rs-dep exe' => :FILE;
@@ -85,7 +91,7 @@ COLLECT (:crate-deps.view_desc :view)
 COLLECT (:crate-deps :map=:crate-deps-all) (:crate-deps)
    => (:crate-deps-all);
 
-EXEC (rustc-exe.sh) (:rs) (+L)
+EXEC (rustc-exe.sh) (:rs) (+L) (+debug) (+optimize) (+rs_flags)
    NEEDS (:cr-mod-deps:mod-deps-all)
          (:cr-crate-deps:crate-deps-all)
    => (:exe);
