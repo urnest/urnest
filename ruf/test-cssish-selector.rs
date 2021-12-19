@@ -8,10 +8,11 @@
 // implied warranty.
 //
 
-#[path="./mod.rs"] mod ruf;
+extern crate ruf_tree;
+extern crate ruf_assert;
 
-use ruf::tree;
-use ruf::assert;
+use ruf_tree as tree;
+use ruf_assert as assert;
 
 type Disp = tree::Disposition;
 
@@ -21,9 +22,6 @@ pub enum SelectorTerm
     Value(String),
     Star,
 }
-
-type Selector = Vec<(bool, // recurse, i.e. not preceded by >
-		     SelectorTerm)>;
 
 fn matches(node: &tree::Node<String>, term: &SelectorTerm) -> bool
 {

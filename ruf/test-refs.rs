@@ -80,8 +80,9 @@ fn b()
     // can make y hold a new value
     y = X{ x: 7 };
 
-    // can make a mutable reference to y
-    let yy : &mut X = &mut y;
+    // can make a mutable reference to y (note leading _ v line commented
+    // out below; leading _ to suppress unused variable warning)
+    let _yy : &mut X = &mut y;
 
     // we can't use both our reference and original as reference is mutable
     // can't println!("{} {}", y.x, yy.x);

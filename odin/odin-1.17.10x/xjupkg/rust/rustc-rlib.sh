@@ -4,7 +4,7 @@ d=$(cd $(dirname "$0") && pwd)
 
 rs=$1; shift
 
-cmd="$ODIN_RUSTC --crate-type bin"
+cmd="$ODIN_RUSTC --crate-type rlib"
 
 cmd="$cmd -L $1"; shift  # local crates virdir
 
@@ -33,5 +33,5 @@ then
   false
 fi
 
-$cmd -o exe $rs 2>> WARNINGS || mv WARNINGS ERRORS
+$cmd -o rlib $rs 2>> WARNINGS || mv WARNINGS ERRORS
 )

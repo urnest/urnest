@@ -7,8 +7,9 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
+extern crate ruf_assert;
 
-use ruf::assert;
+use ruf_assert as assert;
 
 /// A tree of Ts.
 #[derive(PartialEq,Clone)]

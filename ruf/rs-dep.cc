@@ -681,7 +681,7 @@ void genModViewSpec(hcp_ast::Item const& r, xju::path::AbsolutePath const& rDir,
             << "'" << xju::path::str(
               xju::path::AbsFile(
                 rDir+xju::path::DirName(modName), xju::path::FileName("mod.rs"))) << "'" << "\n"
-          << "=''\n";
+            << "=''\n";
         }
       }
     }
@@ -707,21 +707,23 @@ std::vector<std::string> permuteUnderscores(std::string x){
 }
 
 void genCrateViewSpec(hcp_ast::Item const& r,
-                      std::vector<xju::path::AbsolutePath> const& crateDirs,
-                      std::ostream& mod_view_spec)
+                      std::vector<xju::path::AbsolutePath> const& crateSrcDirs,
+                      std::ostream& crates_src_view_spec)
 {
-  for(hcp_ast::IR c: r.items()){
-    auto const externCrate(dynamic_cast<ExternCrate const*>(&*c));
-    if (externCrate){
-      std::string const mod(hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<Name>(*externCrate)));
-      for(auto p: crateDirs){
-        for(auto n: permuteUnderscores(mod)){
-          mod_view_spec
-            << "'" << xju::path::str(std::make_pair(p,xju::path::FileName("rlib"+n+".a"))) << "'\n"
-            << "'" << xju::path::str(std::make_pair(p,xju::path::FileName(n+".so"))) << "'\n";
+  if (crateSrcDirs.size()){
+    for(hcp_ast::IR c: r.items()){
+      auto const externCrate(dynamic_cast<ExternCrate const*>(&*c));
+      if (externCrate){
+        std::string const mod(hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<Name>(*externCrate)));
+        for(auto p: crateSrcDirs){
+          for(auto n: permuteUnderscores(mod)){
+            crates_src_view_spec
+              << "'" << xju::path::str(std::make_pair(p,xju::path::FileName(n+".rs"))) << "'\n"
+              << "'" << xju::path::str(std::make_pair(p,xju::path::FileName(n+"/mod.rs"))) << "'\n";
+          }
         }
+        crates_src_view_spec << "=''\n";
       }
-      mod_view_spec << "=''\n";
     }
   }
 }
@@ -731,19 +733,19 @@ int main(int argc, char* argv[])
   if (argc < 2) {
     std::cerr
       << "usage: " << argv[0]
-      << "[-C] [-m mods.view_spec] [-c crates.view-spec] [-L crate-dir-ls-file] file.rs" << "\n"
+      << "[-C] [-m mods.view_spec] [-cs crates.view-spec] [-I crate-src-dir-ls-file] file.rs" << "\n"
       << " Scan file.rs for module and crate dependencies, producing an odin view_specs for each type\n"
       << "  -C  treat file.rs as crate root\n"
       << "  -m f1 write Odin view spec for mod dependencies to f1; otherwise stdout\n"
-      << "  -c f2 write Odin view spec for crate dependendencies to f2; otherwise stdout\n"
-      << "  -L f3 use list of directories (one per line) as crate search path for crate deps\n"
+      << "  -cs f2 write Odin view spec for crate src dependendencies to f2; otherwise stdout\n"
+      << "  -I f3 list of directories (one per line) as crate source search path for crate deps\n"
       << std::endl;
     return 1;
   }
   try{
     std::optional<xju::path::AbsFile> mods_view_spec_file;
-    std::optional<xju::path::AbsFile> crates_view_spec_file;
-    std::vector<xju::path::AbsolutePath> crates_search_directories;
+    std::optional<xju::path::AbsFile> crates_src_view_spec_file;
+    std::vector<xju::path::AbsolutePath> crates_src_search_directories;
     bool crateRoot(false);
                    
     auto i(argv+1);
@@ -755,17 +757,17 @@ int main(int argc, char* argv[])
         }
         mods_view_spec_file=xju::path::split(*i);
       }
-      else if (*i == std::string("-c")){
+      else if (*i == std::string("-cs")){
         if (++i==end){
-          throw xju::Exception("expected crates.view_spec output filename after -c",XJU_TRACED);
+          throw xju::Exception("expected crates.view_spec output filename after -cs",XJU_TRACED);
         }
-        crates_view_spec_file=xju::path::split(*i);
+        crates_src_view_spec_file=xju::path::split(*i);
       }
-      else if (std::string(*i) == std::string("-L")){
+      else if (std::string(*i) == std::string("-I")){
         if (++i==end){
-          throw xju::Exception("expected crates.view_spec output filename after -c",XJU_TRACED);
+          throw xju::Exception("expected crate src dirs filename after -I",XJU_TRACED);
         }
-        crates_search_directories = readCrateDirsFile(xju::path::split(*i));
+        crates_src_search_directories = readCrateDirsFile(xju::path::split(*i));
       }
       else if (std::string(*i) == "-C"){
         crateRoot=true;
@@ -797,8 +799,10 @@ int main(int argc, char* argv[])
     std::ostringstream mod_view_spec;
     genModViewSpec(r, thisModDir, mod_view_spec);
 
-    std::ostringstream crates_view_spec;
-    genCrateViewSpec(r, crates_search_directories, crates_view_spec);
+    std::ostringstream crates_src_view_spec;
+    genCrateViewSpec(r,
+                     crates_src_search_directories,
+                     crates_src_view_spec);
 
     std::string const mod_view_spec_content(mod_view_spec.str());
     if (mods_view_spec_file.has_value()){
@@ -812,23 +816,23 @@ int main(int argc, char* argv[])
                 << mod_view_spec_content;
     }
     
-    std::string const crate_view_spec_content(crates_view_spec.str());
-    if (crates_view_spec_file.has_value()){
-      xju::file::write(crates_view_spec_file.value(),
-                       &crate_view_spec_content[0],
-                       crate_view_spec_content.size(),
+    std::string const crate_src_view_spec_content(crates_src_view_spec.str());
+    if (crates_src_view_spec_file.has_value()){
+      xju::file::write(crates_src_view_spec_file.value(),
+                       &crate_src_view_spec_content[0],
+                       crate_src_view_spec_content.size(),
                        xju::file::Mode(0666));
     }
     else{
-      std::cout << "crate deps:\n"
-                << crate_view_spec_content;
+      std::cout << "crate src deps:\n"
+                << crate_src_view_spec_content;
     }
     
     return 0;
   }
   catch(xju::Exception& e){
     std::ostringstream s;
-    s << "scan " << argv[1] << " for module and crate dependencies";
+    s << "scan " << argv[argc-1] << " for module and crate dependencies";
     e.addContext(s.str(),XJU_TRACED);
     std::cerr << xju::readableRepr(e) << std::endl;
     return 1;

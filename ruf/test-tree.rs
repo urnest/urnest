@@ -8,10 +8,11 @@
 // implied warranty.
 //
 
-#[path="./mod.rs"] mod ruf;
+extern crate ruf_tree;
+extern crate ruf_assert;
 
-use ruf::tree;
-use ruf::assert;
+use ruf_tree as tree;
+use ruf_assert as assert;
 
 fn n(value:i32) -> tree::Node<i32> {
     let result = tree::Node::<i32>{ value : value, children : vec![] };

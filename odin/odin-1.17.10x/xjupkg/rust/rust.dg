@@ -11,7 +11,7 @@
 
 # Output Object Types
 
-:rlib 'static-link library'? => :FILE;
+:rlib 'rustc-generated crate rlib file'? => :FILE;
 
 :exe 'executable binary'? => :FILE;
 
@@ -19,7 +19,9 @@
 
 +optimize 'optimization flag, rustc -O'? => :first;
 
-+L 'crate search directory'? => :ls;
++I 'crate src search directory'? => :ls;
+
++L 'crate lib search directory'? => :ls;
 
 +rs_flags 'flags for rust compilation'? => :cat;
 
@@ -53,18 +55,17 @@ COLLECT (:which-rs-dep-viewspec:view:first) => (:which-rs-dep);
 #
 :cr-mod-deps.view_desc 'view description of crate root submodule file deps'? => :FILE;
 :cr-mod-deps 'list of crate-root directly required .rs module files'? => <:mod-deps>;
+:cr-crate-src-deps.view_desc 'view description of .rs extern crate deps'? => :FILE;
+:cr-crate-src-deps 'view description of .rs extern crate deps'? => <:crate-src-deps>;
 
-:cr-crate-deps.view_desc 'view description of extern crate deps'? => :FILE;
-:cr-crate-deps 'list of crates directly required by crate root file'? => <:crate-deps>;
-
-EXEC (cr-rs-dep.sh) (:which-rs-dep) (+L) (:rs)
-   => (:cr-mod-deps.view_desc) (:cr-crate-deps.view_desc);
+EXEC (cr-rs-dep.sh) (:which-rs-dep) (+I) (:rs)
+   => (:cr-mod-deps.view_desc) (:cr-crate-src-deps.view_desc);
 
 COLLECT (:cr-mod-deps.view_desc :view)
    => (:cr-mod-deps);
 
-COLLECT (:cr-crate-deps.view_desc :view)
-   => (:cr-crate-deps);
+COLLECT (:cr-crate-src-deps.view_desc :view)
+   => (:cr-crate-src-deps);
 
 # non-"crate root" file rules
 
@@ -72,12 +73,12 @@ COLLECT (:cr-crate-deps.view_desc :view)
 :mod-deps 'list of .rs module files required by a non-crate-root file'? => :LIST;
 :mod-deps-all 'list of transitively required .rs module files'? => :LIST;
 
-:crate-deps.view_desc 'view description of non-crate root file extern crate deps'? => :FILE;
-:crate-deps 'list of non-crate root file directly required crates'? => :LIST;
-:crate-deps-all 'transitive list of required crates'? => :LIST;
+:crate-src-deps.view_desc 'view description of .rs extern crate deps'? => :FILE;
+:crate-src-deps 'list of .rs directly required crates'? => :LIST;
+:crate-src-deps-all 'transitive list of required crates'? => :LIST;
 
-EXEC (rs-dep.sh) (:which-rs-dep) (+L) (:rs)
-   => (:mod-deps.view_desc) (:crate-deps.view_desc);
+EXEC (rs-dep.sh) (:which-rs-dep) (+I) (:rs)
+   => (:mod-deps.view_desc) (:crate-src-deps.view_desc);
 
 COLLECT (:mod-deps.view_desc :view)
    => (:mod-deps);
@@ -85,18 +86,32 @@ COLLECT (:mod-deps.view_desc :view)
 COLLECT (:mod-deps :map=:mod-deps-all) (:mod-deps)
    => (:mod-deps-all);
 
-COLLECT (:crate-deps.view_desc :view)
-   => (:crate-deps);
+COLLECT (:crate-src-deps.view_desc :view)
+   => (:crate-src-deps);
 
-COLLECT (:crate-deps :map=:crate-deps-all) (:crate-deps)
-   => (:crate-deps-all);
+COLLECT (:crate-src-deps :map=:crate-src-deps-all) (:crate-src-deps)
+   => (:crate-src-deps-all);
 
-EXEC (rustc-exe.sh) (:rs) (+L) (+debug) (+optimize) (+rs_flags)
+:rlib.vir_dir_spec '' => :FILE;
+:rlib.vir_dir_specs '' => :LIST;
+
+EXEC (rustc-exe.sh) (:rs)
+ (:rs:cr-crate-src-deps:crate-src-deps-all:rlib.vir_dir_specs:cat:vir_dir)
+ (+L) (+debug) (+optimize) (+rs_flags)
    NEEDS (:cr-mod-deps:mod-deps-all)
-         (:cr-crate-deps:crate-deps-all)
+         (:rs:cr-crate-src-deps:crate-src-deps-all:map=:rlib)
+	 (+L:list)
    => (:exe);
-   
-EXEC (rustc-rlib.sh) (:rs) (+L) (+debug) (+optimize) (+rs_flags)
+
+EXEC (rustc-rlib.sh) (:rs)
+ (:rs:cr-crate-src-deps:crate-src-deps-all:rlib.vir_dir_specs:cat:vir_dir)
+ (+L) (+debug) (+optimize) (+rs_flags)
    NEEDS (:cr-mod-deps:mod-deps-all)
-         (:cr-crate-deps:crate-deps-all)
+         (:rs:cr-crate-src-deps:crate-src-deps-all:map=:rlib)
+	 (+L:list)
    => (:rlib);
+
+
+COLLECT (:crate-src-deps-all:map=:rlib.vir_dir_spec) => (:rlib.vir_dir_specs);
+
+EXEC (rlib.vir_dir_spec.sh) (:rs)@ (:rlib)@ => (:rlib.vir_dir_spec);

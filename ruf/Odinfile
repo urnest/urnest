@@ -12,23 +12,28 @@
 %ropts == <<
 +cmd=rustc -A dead_code
 
-%test-tree == ()+(%ropts) +cmd=-o test-tree -g (test-tree.rs) +need=(tree.rs) (assert.rs) (mod.rs):output/test-tree
+%rs_flags==<<
++rs_dep=(%rs-dep)
++I=(.)
+
+%test-tree == test-tree.rs+(%rs_flags):exe
+
 %test-tree.output == ()+cmd=RUST_BACKTRACE\=full (%test-tree):exec.output
 
-%test-refs == ()+(%ropts) +cmd=-o test-refs -g (test-refs.rs):output/test-refs
+%test-refs == test-refs.rs+(%rs_flags):exe
 %test-refs.output == ()+cmd=RUST_BACKTRACE\=full (%test-refs):exec.output
 
-%test-context == ()+(%ropts) +cmd=-o test-context -g  -L (../../anyhow/target/debug) (test-context.rs) +need=(../../anyhow/target/debug/libanyhow.rlib):output/test-context
-%test-context.output == ()+cmd=RUST_BACKTRACE\=full (%test-context):exec.output
+%test-context == test-context.rs+(%rs_flags)+L=(../../anyhow/target/debug):exe
+%test-context.output == ()+cmd=RUST_BACKTRACE\=full (%test-context):exec.output:err
 
-%test-cssish-selector == ()+(%ropts) +cmd=-o test-cssish-selector -g (test-cssish-selector.rs) +need=(tree.rs) (assert.rs) (mod.rs):output/test-cssish-selector
+%test-cssish-selector == test-cssish-selector.rs+(%rs_flags):exe
 %test-cssish-selector.output == ()+cmd=RUST_BACKTRACE\=full (%test-cssish-selector):exec.output
 
 %rs-dep == (rs-dep.cc)+(..%cxx-opts):auto.cxx.exe
 
 %test-rs-dep-1==(%rs-dep-1-out:name)+cmd=diff (%rs-dep-1-got) (%rs-dep-1-expect):exec.output
 %rs-dep-1-got==()+cmd=(%ignore-prefixes.sh) (%rs-dep-1-out) '/.*/rs1.[^/]*' (.) (..):stdout
-%rs-dep-1-out==()+cmd=(%rs-dep) -L (%test-rs-dep-crate-dirs:list:ls) (%rs1):exec.output
+%rs-dep-1-out==()+cmd=(%rs-dep) -I (%test-rs-dep-crate-src-dirs:list:ls) (%rs1):exec.output
 
 %test-rs-dep-2==(%rs-dep-2-out:name)+cmd=diff (%rs-dep-2-got) (%rs-dep-2-expect):exec.output
 %rs-dep-2-got==()+cmd=(%ignore-prefixes.sh) (%rs-dep-2-out) '/.*/rs1.[^/]*' (.) (..):stdout
@@ -40,12 +45,11 @@
 
 %test-rs-dep-mod==(%rs-dep-mod-out:name)+cmd=diff (%rs-dep-mod-got) (%rs-dep-mod-expect):exec.output
 %rs-dep-mod-got==()+cmd=(%ignore-prefixes.sh) (%rs-dep-mod-out) '/.*/rs-lib-src.[^/]*' (.) (..):stdout
-%rs-dep-mod-out == ()+cmd=(%test-rs-dep-mod.sh) (%rs-dep) (%test-rs-dep-crate-dirs:list:ls) (%rs-lib-src)+need=(%rs-lib-src/mod.rs):exec.output
+%rs-dep-mod-out == ()+cmd=(%test-rs-dep-mod.sh) (%rs-dep) (%test-rs-dep-crate-src-dirs:list:ls) (%rs-lib-src)+need=(%rs-lib-src/mod.rs):exec.output
 
-%test-rs-dep-crate-dirs == <<
+%test-rs-dep-crate-src-dirs == <<
 (.)
 (..)
-
 
 %rs1 == <<
 mod x;
@@ -102,47 +106,44 @@ mod deps:
 =''
 '__prefix_1__/thread_files/thread/tls.rs'
 =''
-crate deps:
-'__prefix_2__/rlibjulie.a'
-'__prefix_2__/julie.so'
-'__prefix_3__/rlibjulie.a'
-'__prefix_3__/julie.so'
+crate src deps:
+'__prefix_2__/julie.rs'
+'__prefix_2__/julie/mod.rs'
+'__prefix_3__/julie.rs'
+'__prefix_3__/julie/mod.rs'
 =''
-'__prefix_2__/rlibif_then_else.a'
-'__prefix_2__/if_then_else.so'
-'__prefix_2__/rlibif-then_else.a'
-'__prefix_2__/if-then_else.so'
-'__prefix_2__/rlibif_then-else.a'
-'__prefix_2__/if_then-else.so'
-'__prefix_2__/rlibif-then-else.a'
-'__prefix_2__/if-then-else.so'
-'__prefix_3__/rlibif_then_else.a'
-'__prefix_3__/if_then_else.so'
-'__prefix_3__/rlibif-then_else.a'
-'__prefix_3__/if-then_else.so'
-'__prefix_3__/rlibif_then-else.a'
-'__prefix_3__/if_then-else.so'
-'__prefix_3__/rlibif-then-else.a'
-'__prefix_3__/if-then-else.so'
+'__prefix_2__/if_then_else.rs'
+'__prefix_2__/if_then_else/mod.rs'
+'__prefix_2__/if-then_else.rs'
+'__prefix_2__/if-then_else/mod.rs'
+'__prefix_2__/if_then-else.rs'
+'__prefix_2__/if_then-else/mod.rs'
+'__prefix_2__/if-then-else.rs'
+'__prefix_2__/if-then-else/mod.rs'
+'__prefix_3__/if_then_else.rs'
+'__prefix_3__/if_then_else/mod.rs'
+'__prefix_3__/if-then_else.rs'
+'__prefix_3__/if-then_else/mod.rs'
+'__prefix_3__/if_then-else.rs'
+'__prefix_3__/if_then-else/mod.rs'
+'__prefix_3__/if-then-else.rs'
+'__prefix_3__/if-then-else/mod.rs'
 =''
 
 %rs-dep-2-expect==<<
 mod deps:
-'__prefix_2__/mod.rs'
-=''
-crate deps:
+crate src deps:
 
 %rs-dep-3-expect==<<
 mod deps:
-crate deps:
-=''
+crate src deps:
 
 %rs-dep-mod-expect==<<
 mod deps:
 '__prefix_1__/z.rs'
 '__prefix_1__/z/mod.rs'
 =''
-crate deps:
+crate src deps:
 
 #
 #a test for rs-dep on file called mod.rs, because rustc treats that
@@ -153,11 +154,11 @@ crate deps:
 rsdep=$1; shift
 L=$1; shift
 srcdir=$1; shift
-$rsdep -L $L $srcdir/mod.rs
+$rsdep -I $L $srcdir/mod.rs
 
-%rs-lib-src==%rs-lib-src.virdir_spec:vir_dir
+%rs-lib-src==%rs-lib-src.vir_dir_spec:vir_dir
 
-%rs-lib-src.virdir_spec==<<
+%rs-lib-src.vir_dir_spec==<<
 %mod.rs==.%rs2.rs
 
 %rs2.rs == <<
