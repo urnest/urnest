@@ -1,0 +1,61 @@
+%all==%all.tree:leaves
+
+# separate execution of each test case that verifies a assert functions aborts when
+# the assertion is false
+%all.tree==<<
+()+cmd=(%fails)+cmd=(%test-x-equal.rs+(%rs-opts):exe):stdout
+()+cmd=(%fails)+cmd=(%test-x-not-equal.rs+(%rs-opts):exe):stdout
+()+cmd=(%fails)+cmd=(%test-x-less.rs+(%rs-opts):exe):stdout
+()+cmd=(%fails)+cmd=(%test-x-greater.rs+(%rs-opts):exe):stdout
+()+cmd=(%fails)+cmd=(%test-x-less_equal.rs+(%rs-opts):exe):stdout
+()+cmd=(%fails)+cmd=(%test-x-greater_equal.rs+(%rs-opts):exe):stdout
+()+cmd=(%fails)+cmd=(%test-x-starts_with.rs+(%rs-opts):exe):stdout
+
+%rs-opts==<<
++(..%rs-opts)
+
+
+%fails== ! <<
+#!/bin/sh -e
+if ! test -x "$1"
+then
+  echo "$1 is not executable"
+  false
+fi
+ulimit -c 0
+if $@ >/dev/null 2>/dev/null
+then
+  echo "unexpected success: $@"
+  echo "output was:"
+  $@ >&2
+  false
+fi
+
+%test-x-equal.rs==<<
+extern crate ruf_assert;
+fn main(){ ruf_assert::equal(&1,&2); }
+
+%test-x-not-equal.rs==<<
+extern crate ruf_assert;
+fn main(){ ruf_assert::not_equal(&1,&1); }
+
+%test-x-less.rs==<<
+extern crate ruf_assert;
+fn main(){ ruf_assert::less(&3,&3); }
+
+%test-x-greater.rs==<<
+extern crate ruf_assert;
+fn main(){ ruf_assert::greater(&1,&1); }
+
+
+%test-x-less_equal.rs==<<
+extern crate ruf_assert;
+fn main(){ ruf_assert::less(&3,&2); }
+
+%test-x-greater_equal.rs==<<
+extern crate ruf_assert;
+fn main(){ ruf_assert::greater_equal(&1,&2); }
+
+%test-x-starts_with.rs==<<
+extern crate ruf_assert;
+fn main(){ ruf_assert::slice_starts_with(&[1,2,3],&[4,5]); }

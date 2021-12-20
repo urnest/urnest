@@ -12,21 +12,21 @@
 %ropts == <<
 +cmd=rustc -A dead_code
 
-%rs_flags==<<
+%rs-opts==<<
 +rs_dep=(%rs-dep)
 +I=(.)
 
-%test-tree == test-tree.rs+(%rs_flags):exe
+%test-tree == test-tree.rs+(%rs-opts):exe
 
 %test-tree.output == ()+cmd=RUST_BACKTRACE\=full (%test-tree):exec.output
 
-%test-refs == test-refs.rs+(%rs_flags):exe
+%test-refs == test-refs.rs+(%rs-opts):exe
 %test-refs.output == ()+cmd=RUST_BACKTRACE\=full (%test-refs):exec.output
 
-%test-context == test-context.rs+(%rs_flags)+L=(../../anyhow/target/debug):exe
+%test-context == test-context.rs+(%rs-opts)+L=(../../anyhow/target/debug):exe
 %test-context.output == ()+cmd=RUST_BACKTRACE\=full (%test-context):exec.output:err
 
-%test-cssish-selector == test-cssish-selector.rs+(%rs_flags):exe
+%test-cssish-selector == test-cssish-selector.rs+(%rs-opts):exe
 %test-cssish-selector.output == ()+cmd=RUST_BACKTRACE\=full (%test-cssish-selector):exec.output
 
 %rs-dep == (rs-dep.cc)+(..%cxx-opts):auto.cxx.exe

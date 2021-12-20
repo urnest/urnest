@@ -48,3 +48,30 @@ pub fn less_equal<T>(a: &T, b: &T)
 	::std::process::abort();
     }
 }
+
+pub fn greater<T>(a: &T, b: &T)
+    where T: std::cmp::PartialOrd
+{
+    if !(*a > *b) {
+	::std::process::abort();
+    }
+}
+
+pub fn greater_equal<T>(a: &T, b: &T)
+    where T: std::cmp::PartialOrd
+{
+    if !(*a >= *b) {
+	::std::process::abort();
+    }
+}
+
+/// a starts with prefix
+pub fn slice_starts_with<T>(a: &[T], prefix: &[T])
+    where T: std::cmp::PartialEq
+{
+    greater_equal(&a.len(), &prefix.len());
+    if a[0..prefix.len()] != *prefix
+    {
+	::std::process::abort();
+    }
+}

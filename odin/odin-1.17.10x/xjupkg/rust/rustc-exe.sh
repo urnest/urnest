@@ -20,6 +20,10 @@ if [ -n "$1" ]; then cmd="$cmd -g"; fi; shift # +debug
 if [ -n "$1" ]; then cmd="$cmd -O"; fi; shift # +optimize
 if [ -n "$1" ]; then cmd="$cmd $(cat $1)"; fi; shift # +rs_flags
 
+crate_name=$(basename $rs | sed -e 's=\([^.]*\).*=\1=g' -e 's=-=_=g')
+
+cmd="$cmd --crate-name $crate_name"
+
 verbose(){
   test -z "$ODINVERBOSE"||echo "$@"
 }
