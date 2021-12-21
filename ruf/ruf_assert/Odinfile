@@ -9,7 +9,9 @@
 ()+cmd=(%fails)+cmd=(%test-x-greater.rs+(%rs-opts):exe):stdout
 ()+cmd=(%fails)+cmd=(%test-x-less_equal.rs+(%rs-opts):exe):stdout
 ()+cmd=(%fails)+cmd=(%test-x-greater_equal.rs+(%rs-opts):exe):stdout
-()+cmd=(%fails)+cmd=(%test-x-starts_with.rs+(%rs-opts):exe):stdout
+()+cmd=(%fails)+cmd=(%test-x-slice_equal.rs+(%rs-opts):exe):stdout
+()+cmd=(%fails)+cmd=(%test-x-slice_starts_with.rs+(%rs-opts):exe):stdout
+()+cmd=(%fails)+cmd=(%test-x-str_starts_with.rs+(%rs-opts):exe):stdout
 
 %rs-opts==<<
 +(..%rs-opts)
@@ -56,6 +58,14 @@ fn main(){ ruf_assert::less(&3,&2); }
 extern crate ruf_assert;
 fn main(){ ruf_assert::greater_equal(&1,&2); }
 
-%test-x-starts_with.rs==<<
+%test-x-slice_equal.rs==<<
+extern crate ruf_assert;
+fn main(){ ruf_assert::slice_equal(&[1,2,3],&[4,5]); }
+
+%test-x-slice_starts_with.rs==<<
 extern crate ruf_assert;
 fn main(){ ruf_assert::slice_starts_with(&[1,2,3],&[4,5]); }
+
+%test-x-str_starts_with.rs==<<
+extern crate ruf_assert;
+fn main(){ ruf_assert::str_starts_with(&"fred", &"red"); }

@@ -65,6 +65,16 @@ pub fn greater_equal<T>(a: &T, b: &T)
     }
 }
 
+pub fn slice_equal<T>(a: &[T], b: &[T])
+    where T: std::cmp::PartialEq
+{
+    equal(&a.len(), &b.len());
+    for (x, y) in a.iter().zip(b.iter()) {
+	equal(&x, &y);
+    }
+}
+
+
 /// a starts with prefix
 pub fn slice_starts_with<T>(a: &[T], prefix: &[T])
     where T: std::cmp::PartialEq
@@ -74,4 +84,10 @@ pub fn slice_starts_with<T>(a: &[T], prefix: &[T])
     {
 	::std::process::abort();
     }
+}
+
+/// a starts with prefix
+pub fn str_starts_with(a: &str, prefix: &str)
+{
+    equal(&a.starts_with(prefix), &true);
 }
