@@ -1,0 +1,19 @@
+%all == %all.tree:leaves
+
+%all.tree == <<
+%test-newtype.output
+%test-newtype-compile-error:err+cmd=fgrep ':6:33':stdout
+
+%test-newtype == test-newtype.rs+(..%rs-opts):exe
+
+%test-newtype.output == ()+cmd=RUST_BACKTRACE\=full (%test-newtype):exec.output
+
+%test-newtype-compile-error == %test-newtype-compile-error.rs+(..%rs-opts):exe
+
+%test-newtype-compile-error.rs==<<
+extern crate ruf_newtype;
+struct I1Tag{}
+struct I2Tag{}
+type I1 = ruf_newtype::T<i32, I1Tag>;
+type I2 = ruf_newtype::T<i32, I2Tag>;
+fn main(){ let a = I1::new(2) + I2::new(3); }

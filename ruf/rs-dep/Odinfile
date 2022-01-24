@@ -1,0 +1,156 @@
+%all==%all.tree:leaves
+
+%all.tree == <<
+%test-rs-dep-1
+%test-rs-dep-2
+%test-rs-dep-3
+%test-rs-dep-mod
+
+%rs-dep == (rs-dep.cc)+(../..%cxx-opts):auto.cxx.exe
+
+%test-rs-dep-1==(%rs-dep-1-out:name)+cmd=diff (%rs-dep-1-got) (%rs-dep-1-expect):exec.output
+%rs-dep-1-got==()+cmd=(%ignore-prefixes.sh) (%rs-dep-1-out) '/.*/rs1.[^/]*' (.) (..):stdout
+%rs-dep-1-out==()+cmd=(%rs-dep) -I (%test-rs-dep-crate-src-dirs:list:ls) (%rs1):exec.output
+
+%test-rs-dep-2==(%rs-dep-2-out:name)+cmd=diff (%rs-dep-2-got) (%rs-dep-2-expect):exec.output
+%rs-dep-2-got==()+cmd=(%ignore-prefixes.sh) (%rs-dep-2-out) '/.*/rs1.[^/]*' (.) (..):stdout
+%rs-dep-2-out==()+cmd=(%rs-dep) -C (../ruf_tree/test-tree.rs):exec.output
+
+%test-rs-dep-3==(%rs-dep-3-out:name)+cmd=diff (%rs-dep-3-got) (%rs-dep-3-expect):exec.output
+%rs-dep-3-got==()+cmd=(%ignore-prefixes.sh) (%rs-dep-3-out) '/.*/rs1.[^/]*' (.) (..):stdout
+%rs-dep-3-out == ()+cmd=(%rs-dep) -C (../test-context.rs):exec.output
+
+%test-rs-dep-mod==(%rs-dep-mod-out:name)+cmd=diff (%rs-dep-mod-got) (%rs-dep-mod-expect):exec.output
+%rs-dep-mod-got==()+cmd=(%ignore-prefixes.sh) (%rs-dep-mod-out) '/.*/rs-lib-src.[^/]*' (.) (..):stdout
+%rs-dep-mod-out == ()+cmd=(%test-rs-dep-mod.sh) (%rs-dep) (%test-rs-dep-crate-src-dirs:list:ls) (%rs-lib-src)+need=(%rs-lib-src/mod.rs):exec.output
+
+%test-rs-dep-crate-src-dirs == <<
+(.)
+(..)
+
+%rs1 == <<
+mod x;
+#[path="fred/y.rs"]
+pub mod y;
+pub mod z { }
+pub mod q {
+  #[path="src/q/qq.rs"]
+  pub mod y;
+}
+extern crate julie;
+use ruf::tree;
+extern crate if_then_else;
+pub fn a(y: i32) -> i32 { 1 }
+extern "C" fn a(y: i32) -> i32 { 1 }
+extern r##"c#"## fn a(y: i32) -> i32 { 1 }
+type x = i32;
+struct UnitStruct;
+struct TupleStruct(i32, i32)
+struct RegularStruct{ x: i32, y: String}
+enum Enum{ Dog(String, f64), Cat { name: String, weight: f64 },x: i32}
+union MyUnion { f1: u32, f2: f32, }
+#[repr(C)] union MyUnion { f1: u32, f2: f32, }
+const BIT1: u32 = 1 << 0;
+const BITS_N_STRINGS: BitsNStrings<'static> = BitsNStrings { mybits: BITS, mystring: STRING, };
+static COUNTER: AtomicUsize = AtomicUsize::new(0);
+trait Example { const CONST: i32; fn method(&self); fn method_with_dflt(&self) {} }
+impl Color { pub const WHITE: Color = Color(255, 255, 255); }
+unsafe extern "stdcall" { }
+//
+// from rust reference modules section
+mod inline {
+    #[path = "other.rs"]
+    mod inner;
+}
+#[path = "thread_files"]
+mod thread {
+    // Load the `local_data` module from `thread_files/tls.rs` relative to
+    // this source file's directory.
+    #[path = "tls.rs"]
+    mod local_data;
+}
+
+%rs-dep-1-expect==<<
+mod deps:
+'__prefix_1__/x.rs'
+'__prefix_1__/x/mod.rs'
+=''
+'__prefix_1__/fred/y.rs'
+=''
+'__prefix_1__/q/src/q/qq.rs'
+=''
+'__prefix_1__/inline/other.rs'
+=''
+'__prefix_1__/thread_files/thread/tls.rs'
+=''
+crate src deps:
+'__prefix_2__/julie.rs'
+'__prefix_2__/julie/mod.rs'
+'__prefix_3__/julie.rs'
+'__prefix_3__/julie/mod.rs'
+=''
+'__prefix_2__/if_then_else.rs'
+'__prefix_2__/if_then_else/mod.rs'
+'__prefix_2__/if-then_else.rs'
+'__prefix_2__/if-then_else/mod.rs'
+'__prefix_2__/if_then-else.rs'
+'__prefix_2__/if_then-else/mod.rs'
+'__prefix_2__/if-then-else.rs'
+'__prefix_2__/if-then-else/mod.rs'
+'__prefix_3__/if_then_else.rs'
+'__prefix_3__/if_then_else/mod.rs'
+'__prefix_3__/if-then_else.rs'
+'__prefix_3__/if-then_else/mod.rs'
+'__prefix_3__/if_then-else.rs'
+'__prefix_3__/if_then-else/mod.rs'
+'__prefix_3__/if-then-else.rs'
+'__prefix_3__/if-then-else/mod.rs'
+=''
+
+%rs-dep-2-expect==<<
+mod deps:
+crate src deps:
+
+%rs-dep-3-expect==<<
+mod deps:
+crate src deps:
+
+%rs-dep-mod-expect==<<
+mod deps:
+'__prefix_1__/z.rs'
+'__prefix_1__/z/mod.rs'
+=''
+crate src deps:
+
+#
+#a test for rs-dep on file called mod.rs, because rustc treats that
+#specially when calculating sub-module locations
+#
+%test-rs-dep-mod.sh == ! <<
+#!/bin/sh -e
+rsdep=$1; shift
+L=$1; shift
+srcdir=$1; shift
+$rsdep -I $L $srcdir/mod.rs
+
+%rs-lib-src==%rs-lib-src.vir_dir_spec:vir_dir
+
+%rs-lib-src.vir_dir_spec==<<
+%mod.rs==.%rs2.rs
+
+%rs2.rs == <<
+pub mod z;
+
+
+%ignore-prefixes.sh == ! <<
+#!/bin/sh -e
+got="$1"; shift
+cat "$got" > got
+i=1
+for ignore_prefix in $@
+do
+  cat got | sed -e "s=$ignore_prefix=__prefix_${i}__=g" > got.new
+  mv got.new got
+  i=$((i+1))
+done
+cat got

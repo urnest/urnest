@@ -1,0 +1,12 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+%test-tree.output
+%test-cssish-selector.output
+
+%test-tree == test-tree.rs+(..%rs-opts):exe
+
+%test-tree.output == ()+cmd=RUST_BACKTRACE\=full (%test-tree):exec.output
+
+%test-cssish-selector == test-cssish-selector.rs+(..%rs-opts):exe
+%test-cssish-selector.output == ()+cmd=RUST_BACKTRACE\=full (%test-cssish-selector):exec.output
