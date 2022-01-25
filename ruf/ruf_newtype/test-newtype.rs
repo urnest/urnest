@@ -13,18 +13,20 @@ extern crate ruf_assert;
 
 use ruf_assert as assert;
 
-struct I1Tag{}
-struct I2Tag{}
+struct I1_; impl ruf_newtype::Tag for I1_ { type BaseType = i32; }
+struct I2_; impl ruf_newtype::Tag for I2_ { type BaseType = f64; }
 
-type I1 = ruf_newtype::T<i32, I1Tag>;
-type I2 = ruf_newtype::T<f64, I2Tag>;
+type I1 = ruf_newtype::T<I1_>;
+type I2 = ruf_newtype::T<I2_>;
+
+// REVISIT: macro so that can write ruf_newtype::NewType!(I1,i32);
 
 fn main() {
-    let a = I1::new(22);
-    let b = I1::new(-6);
+    let a = I1 {value: 22};
+    let b = I1 {value: -6};
 
     let c = a + b;
-    assert::equal(&c, &I1::new(16));
+    assert::equal(&c, &I1{value:16});
 
-    assert::equal(&(I2::new(0.0) + I2::new(66.0)), &I2::new(66.0));
+    assert::equal(&(I2{value:0.0} + I2::new(66.0)), &I2::new(66.0));
 }

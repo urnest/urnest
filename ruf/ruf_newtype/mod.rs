@@ -1,31 +1,35 @@
 // new-type trait class
 
-pub struct T<BaseType, TagType>
+pub trait Tag
 {
-    value : BaseType,
-    phantom : std::marker::PhantomData<TagType>
+    type BaseType;
+}
+    
+pub struct T<U: Tag>
+{
+    pub value : U::BaseType,
 }
 
-impl<BaseType, TagType> T<BaseType, TagType>
+impl<U: Tag> T<U>
 {
-    pub fn new(value : BaseType) -> T<BaseType, TagType> {
-	T::<BaseType, TagType>{ value: value, phantom: std::marker::PhantomData{} }
+    pub fn new(value : U::BaseType) -> T<U> {
+	T::<U>{ value: value }
     }
 }
 
-impl<BaseType, TagType> std::cmp::PartialEq for T<BaseType, TagType>
-where BaseType : std::cmp::PartialEq
+impl<U: Tag> std::cmp::PartialEq for T<U>
+where U::BaseType : std::cmp::PartialEq
 {
     fn eq(&self, other: &Self) -> bool { self.value == other.value }
 }
 
-impl<BaseType, TagType> std::cmp::Eq for T<BaseType, TagType>
-where BaseType : std::cmp::Eq
+impl<U: Tag> std::cmp::Eq for T<U>
+where U::BaseType : std::cmp::Eq
 {
 }
 
-impl<BaseType, TagType> std::ops::Add for T<BaseType, TagType>
-where BaseType : std::ops::Add<Output = BaseType>
+impl<U: Tag> std::ops::Add for T<U>
+where U::BaseType : std::ops::Add<Output = U::BaseType>
 {
     type Output = Self;
     
