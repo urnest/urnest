@@ -39,7 +39,7 @@ fn main() {
     
     assert::equal(&(I2{value:0.0} + I2::new(66.0)), &I2::new(66.0));
 
-    assert::equal(&format!("{:b}", I1{value:8}).as_str(), &"1000");
+    assert::equal(&format!("{:b}", I1{value:8}).as_str(), &"1000"); // Binary
     assert::equal(&(I1{value:2} & I1::new(3)), &I1::new(2));
     let mut d = I1 {value: 3};
     d &= I1{value:2};
@@ -49,4 +49,36 @@ fn main() {
     let mut d = I1 {value: 6};
     d |= I1{value:3};
     assert::equal(&d, &I1::new(7));
+
+    assert::equal(&(I1{value:6} ^ I1::new(3)), &I1::new(5));
+    let mut d = I1 {value: 6};
+    d ^= I1{value:3};
+    assert::equal(&d, &I1::new(5));
+
+    let mut d = I1 {value: 6}.clone();
+    assert::equal(&d, &I1::new(6));
+
+    d.clone_from(&I1::new(7));
+    assert::equal(&d, &I1::new(7));
+
+    let c = I1 {value: 6};
+    let d = c; // copy
+    assert::equal(&c, &d);
+
+    assert::equal(&format!("{:?}", I1{value:8}).as_str(), &"8"); // Debug
+
+    let c = I1::default();
+    assert::equal(&c, &I1{value: Default::default()});
+    
+    assert::equal(&format!("{}", I1{value:8}).as_str(), &"8"); // Display
+
+    let a = I1 {value: 22};
+    let b = I1 {value: 11};
+    let c = a / b;
+    assert::equal(&c, &I1{value:2});
+
+    let mut d = I1 {value: 8};
+    d /= I1{value:2};
+    assert::equal(&d, &I1{value:4});
+    
 }
