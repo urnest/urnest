@@ -21,6 +21,9 @@ type I2 = ruf_newtype::T<I2_>;
 
 // REVISIT: macro so that can write ruf_newtype::NewType!(I1,i32);
 
+use std::hash::Hasher;
+use std::hash::Hash;
+
 fn main() {
     let a = I1 {value: 22};
     let b = I1 {value: -6};
@@ -80,5 +83,16 @@ fn main() {
     let mut d = I1 {value: 8};
     d /= I1{value:2};
     assert::equal(&d, &I1{value:4});
+
+    //let d = NonZeroI32{ 6 };
+    //REVISIT: awaits implementation assert::equal(&I1::from(d), &I1{value:6});
+
+    let mut d = I1 {value: 8};
+    let mut h1 = std::collections::hash_map::DefaultHasher::new();
+    d.hash(&mut h1);
     
+    let mut h2 = std::collections::hash_map::DefaultHasher::new();
+    let f : i32 = 8;
+    f.hash(&mut h2);
+    assert::equal(&h1.finish(), &h2.finish());
 }

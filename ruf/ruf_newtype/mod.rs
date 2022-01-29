@@ -146,3 +146,23 @@ where U::BaseType : std::ops::DivAssign
     fn div_assign(&mut self, other: Self) { self.value /= other.value }
 }
 
+// no useful implementation of FloatToInt
+
+//REVISIT: how to avoid clash with std impl<T> From<T> for T?
+//         can we somehow constraint such that V != T<U>?
+//impl<U: Tag, V> std::convert::From<V> for T<U>
+//where U::BaseType : std::convert::From<V>
+//{
+//    fn from(x: V) -> Self { Self { value: U::BaseType::from(x) } }
+//}
+
+impl<U: Tag> std::hash::Hash for T<U>
+where U::BaseType : std::hash::Hash
+{
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: std::hash::Hasher
+    {
+	self.value.hash(state);
+    }
+}
