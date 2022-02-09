@@ -166,3 +166,36 @@ where U::BaseType : std::hash::Hash
 	self.value.hash(state);
     }
 }
+
+impl<U: Tag> std::fmt::LowerExp for T<U>
+where U::BaseType : std::fmt::LowerExp {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {	self.value.fmt(f) }
+}
+
+impl<U: Tag> std::fmt::LowerHex for T<U>
+where U::BaseType : std::fmt::LowerHex {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {	self.value.fmt(f) }
+}
+
+impl<U: Tag> std::ops::Mul for T<U>
+where U::BaseType : std::ops::Mul<Output = U::BaseType>
+{
+    type Output = Self;
+    
+    fn mul(self, other: Self) -> Self { Self::new(self.value * other.value) }
+}
+
+impl<U: Tag> std::ops::MulAssign for T<U>
+where U::BaseType : std::ops::MulAssign
+{
+    fn mul_assign(&mut self, other: Self) { self.value *= other.value }
+}
+
+impl<U: Tag> std::ops::Neg for T<U>
+where U::BaseType : std::ops::Neg<Output = U::BaseType>
+{
+    type Output = Self;
+    
+    fn neg(self) -> Self { Self::new(- self.value) }
+}
+

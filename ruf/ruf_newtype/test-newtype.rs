@@ -95,4 +95,16 @@ fn main() {
     let f : i32 = 8;
     f.hash(&mut h2);
     assert::equal(&h1.finish(), &h2.finish());
+
+    assert::equal(&format!("{:e}", I1{value:42}).as_str(), &"4.2e1"); // LowerExp
+    assert::equal(&format!("{:x}", I1{value:42}).as_str(), &"2a"); // LowerHex
+
+    assert::equal(&(I2{value:2.0} * I2::new(66.0)), &I2::new(132.0));
+
+    let mut d = I1 {value: 3};
+    d *= I1{value:4};
+    assert::equal(&d, &I1{value:12});
+    
+    assert::equal(& -I2{value:2.0}, &I2::new(-2.0));
+
 }
