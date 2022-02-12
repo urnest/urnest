@@ -1,0 +1,180 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <security/pam_appl.h>
+#include <string>
+#include <xju/UserName.hh>
+#include <optional>
+#include <xju/linux/pam/verifySuccessful.hh> //impl
+#include <sstream> //impl
+#include <xju/format.hh> //impl
+#include <xju/Exception.hh> //impl
+#include <iostream> //impl
+#include <vector> //impl
+#include <memory> //impl
+#include <algorithm> //impl
+#include <xju/Exception.hh>
+
+namespace xju
+{
+namespace linux
+{
+namespace pam
+{
+
+class Transaction
+{
+public:
+  friend class Authentic; // authenticates user under this transaction
+
+  Transaction(std::string serviceName,
+              xju::UserName userName,
+              std::optional<std::string> password) try:
+    serviceName_(std::move(serviceName)),
+    userName_(std::move(userName)),
+    password_(std::move(password)),
+    pam_conv_( { &Transaction::conv_, this } )
+  {
+    verifySuccessfull("pam_start", pam_start(
+                        serviceName_.c_str(), userName_._.c_str(), &pam_conv_, &handle_));
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "open PAM transaction for " << (*this);
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+
+  ~Transaction() noexcept
+  {
+    pam_end(handle_, PAM_SUCCESS);
+  }
+
+  std::string getSecret(std::string const& prompt){
+    if (!password_.has_value()){
+      std::ostringstream s;
+      s << xju::format::quote(prompt) << " requested but password not supplied on command line";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    std::cout << "returning supplied password in response to " << xju::format::quote(prompt) << "\n";
+    return password_.value();
+  }
+  std::string getPublic(std::string const& prompt){
+    std::ostringstream s;
+    s << xju::format::quote(prompt) << " requested but is not supported by this test program";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  void displayError(std::string const& error){
+    std::cout << "pam service requested display of error " << xju::format::quote(error) << "\n";
+  }
+  void displayInfo(std::string const& info){
+    std::cout << "pam service requested display of info " << xju::format::quote(info) << "\n";
+  }
+
+  friend std::ostream& operator<<(std::ostream& s, Transaction const& x)
+  {
+    return s << "pam service " << x.serviceName_ << " user " << x.userName_;
+  }
+
+private:
+  std::string const serviceName_;
+  xju::UserName const userName_;
+  std::optional<std::string> const password_;
+
+  pam_handle_t * handle_;
+  
+  pam_conv const pam_conv_;
+
+  std::optional<xju::Exception> e_; // error from conv_ callback
+
+  void verifyNoCallbackException() {
+    if (e_.has_value()){
+      xju::Exception e(e_.value());
+      throw e;
+    }
+  }
+  
+/*
+from pam_conv(3):
+       struct pam_message {
+           int msg_style;
+           const char *msg;
+       };
+
+       struct pam_response {
+           char *resp;
+           int resp_retcode;
+       };
+
+       struct pam_conv {
+           int (*conv)(int num_msg, const struct pam_message **msg,
+                       struct pam_response **resp, void *appdata_ptr);
+           void *appdata_ptr;
+       };
+*/  
+  static int conv_(int num_msg, const struct pam_message **msg,
+                   struct pam_response **resp, void *appdata_ptr)
+  {
+    auto convertString = [](std::string const& s) -> std::unique_ptr<char[]> {
+                           auto result(std::make_unique<char[]>(s.size()+1));
+                           std::copy(s.begin(), s.end(), result.get());
+                           return result;
+                         };
+    Transaction& self(*(Transaction*)appdata_ptr);
+    try{
+      std::vector<std::unique_ptr<char[]> > responses;
+      for(int i=0; i!=num_msg; ++i){
+        pam_message const& m(*msg[i]);
+        std::string const description(m.msg);
+        switch(m.msg_style){
+        case PAM_PROMPT_ECHO_OFF:
+          responses.push_back(convertString(self.getSecret(description)));
+          break;
+        case PAM_PROMPT_ECHO_ON:
+          responses.push_back(convertString(self.getPublic(description)));
+          break;
+        case PAM_ERROR_MSG:
+        {
+          self.displayError(std::string(description));
+          std::unique_ptr<char[]> x;
+          responses.push_back(std::move(x));
+          break;
+        }
+        case PAM_TEXT_INFO:
+        {
+          self.displayInfo(std::string(description));
+          std::unique_ptr<char[]> x;
+          responses.push_back(std::move(x));
+          break;
+        }
+        }
+      }
+      auto result = std::make_unique<pam_response[]>(responses.size());
+      for(auto j(0); j!=responses.size(); ++j){
+        (result.get())[j].resp = responses[j].release();
+        (result.get())[j].resp_retcode = 0;
+      }
+      *resp = result.release();
+      return PAM_SUCCESS;
+    }
+    catch(std::bad_alloc&){
+      return PAM_BUF_ERR;
+    }
+    catch(xju::Exception& e){
+      self.e_ = e;
+      return PAM_CONV_ERR;
+    }
+  }
+
+};
+
+
+}
+}
+}

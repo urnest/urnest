@@ -1,0 +1,47 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/linux/pam/verifySuccessful.hh> //impl
+#include <xju/assert.hh> //impl
+#include <xju/linux/pam/Account.hh>
+
+namespace xju
+{
+namespace linux
+{
+namespace pam
+{
+class Session
+{
+public:
+  // A session under account.
+  explicit Session(Account& account):
+      account_(account)
+  {
+    verifySuccessfull("pam_open_session",
+                      pam_open_session(account_.handle(),0));
+    account_.verifyNoCallbackException();
+  }
+
+  ~Session() noexcept
+  {
+    verifySuccessfull("pam_close_session",
+                      pam_close_session(account_.handle(), PAM_SUCCESS));
+    account_.verifyNoCallbackException();
+  }
+private:
+  Account& account_;
+};
+
+
+}
+}
+}

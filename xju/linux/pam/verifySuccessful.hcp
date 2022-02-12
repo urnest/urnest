@@ -1,0 +1,37 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <string>
+#include <sstream> //impl
+#include <security/pam_appl.h> //impl
+#include <xju/format.hh> //impl
+#include <xju/Exception.hh> //impl
+
+namespace xju
+{
+namespace linux
+{
+namespace pam
+{
+void verifySuccessfull(std::string const& call, int pam_status)
+{
+  if (pam_status != PAM_SUCCESS){
+    std::ostringstream s;
+    s << call << " failed with status " << pam_status << " which means "
+      << xju::format::quote(pam_strerror(0, pam_status));
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+}
+
+
+}
+}
+}

@@ -1,0 +1,45 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/linux/pam/Transaction.hh>
+#include <xju/linux/pam/verifySuccessful.hh> //impl
+
+namespace xju
+{
+namespace linux
+{
+namespace pam
+{
+
+class Authentic
+{
+public:
+  friend class Account; // validates account of Authentic user
+
+  explicit Authentic(Transaction& transaction):
+      transaction_(transaction)
+  {
+    verifySuccessfull("pam_authenticate", pam_authenticate(transaction.handle_, 0));
+    verifyNoCallbackException();
+  }
+private:
+  Transaction& transaction_;
+
+  pam_handle* handle() const noexcept { return transaction_.handle_; }
+  void verifyNoCallbackException() {
+    transaction_.verifyNoCallbackException();
+  }
+};
+
+
+}
+}
+}
