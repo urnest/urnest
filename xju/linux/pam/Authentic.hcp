@@ -27,7 +27,15 @@ public:
   explicit Authentic(Transaction& transaction):
       transaction_(transaction)
   {
-    verifySuccessfull("pam_authenticate", pam_authenticate(transaction.handle_, 0));
+    try{
+      verifySuccessfull("pam_authenticate", pam_authenticate(transaction.handle_, 0));
+    }
+    catch(xju::Exception& e){
+      if (transaction_.e_.has_value()){
+        throw transaction_.e_.value();
+      }
+      throw;
+    }
     verifyNoCallbackException();
   }
 private:

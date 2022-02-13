@@ -169,12 +169,12 @@ where U::BaseType : std::hash::Hash
 
 impl<U: Tag> std::fmt::LowerExp for T<U>
 where U::BaseType : std::fmt::LowerExp {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {	self.value.fmt(f) }
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> { self.value.fmt(f) }
 }
 
 impl<U: Tag> std::fmt::LowerHex for T<U>
 where U::BaseType : std::fmt::LowerHex {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {	self.value.fmt(f) }
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> { self.value.fmt(f) }
 }
 
 impl<U: Tag> std::ops::Mul for T<U>
@@ -199,3 +199,46 @@ where U::BaseType : std::ops::Neg<Output = U::BaseType>
     fn neg(self) -> Self { Self::new(- self.value) }
 }
 
+
+impl<U: Tag> std::ops::Not for T<U>
+where U::BaseType : std::ops::Not<Output = U::BaseType>
+{
+    type Output = Self;
+    
+    fn not(self) -> Self { Self::new(!self.value) }
+}
+impl<U: Tag> std::fmt::Octal for T<U>
+where U::BaseType : std::fmt::Octal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> { self.value.fmt(f) }
+}
+
+
+struct IA<I: Iterator>
+{
+    i : I
+}
+
+impl<I: Iterator> IA<I>
+{
+    fn new(I i) > IA<I> { IA;:<I>{ i: i} }
+}
+
+impl<U: Tag, I: Iterator> Iterator for IA<I>
+where I::Item: T<U>
+{
+    type Item = U::BaseType;
+    fn next(&mut self) -> Option<Self::Item> {
+	match(self.i.next()) {
+	    Some(v) { Some(v.value) },
+	    None { None }
+	}
+    }
+}
+
+impl<U: Tag, I: Iterator> std::iter::Product for IA<I>
+where I::Item: T<U>
+{
+    fn product<I: Iterator<Item=Self>>(iter: I) -> Self { Self {
+	Self{value: product(IA<I>::new(iter))}
+    }
+}

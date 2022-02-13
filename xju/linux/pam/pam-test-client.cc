@@ -64,10 +64,13 @@ int main(int argc, char* argv[])
     xju::linux::pam::Account account(authentic);
     std::cout << "pam_acct_mgmt OK\n";
     
-    //Credentials credentials(account);
+    //REVISIT: what does credentials do? Credentials credentials(account);
     //Session s(credentials);
-    xju::linux::pam::Session s(account);
-    std::cout << "pam_open_session and pam_close_session OK" << std::endl;
+    {
+      xju::linux::pam::Session s(account);
+      std::cout << "pam_open_session OK" << std::endl;
+    }
+    std::cout << "pam_close_session OK" << std::endl;
   }
   catch(xju::Exception& e){
     std::ostringstream s;

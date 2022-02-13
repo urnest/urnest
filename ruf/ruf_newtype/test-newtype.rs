@@ -15,9 +15,11 @@ use ruf_assert as assert;
 
 struct I1_; impl ruf_newtype::Tag for I1_ { type BaseType = i32; }
 struct I2_; impl ruf_newtype::Tag for I2_ { type BaseType = f64; }
+struct B1_; impl ruf_newtype::Tag for B1_ { type BaseType = bool; }
 
 type I1 = ruf_newtype::T<I1_>;
 type I2 = ruf_newtype::T<I2_>;
+type B1 = ruf_newtype::T<B1_>;
 
 // REVISIT: macro so that can write ruf_newtype::NewType!(I1,i32);
 
@@ -107,4 +109,7 @@ fn main() {
     
     assert::equal(& -I2{value:2.0}, &I2::new(-2.0));
 
+    assert::equal(& !B1{value:true}, &B1::new(false));
+
+    assert::equal(&format!("{:o}", I1{value:42}).as_str(), &"52"); // Octal
 }
