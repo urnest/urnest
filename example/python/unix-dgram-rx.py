@@ -2,6 +2,7 @@
 
 import sys
 import asyncio
+import socket
 
 class Protocol:
     def connection_made(self, transport):
@@ -12,6 +13,7 @@ class Protocol:
         message = data.decode()
         print(f'Received %{message!r} from {addr}')
 
+socket_file, = sys.argv[1:]
 
 async def main(prog):
     print(prog)
@@ -24,7 +26,7 @@ async def main(prog):
     # client requests.
     transport, protocol = await loop.create_datagram_endpoint(
         lambda: Protocol(),
-        local_addr=('127.0.0.1', 9999))
+        local_addr=socket_file, family=socket.AF_UNIX)
 
     try:
         await asyncio.sleep(3600)  # Serve for 1 hour.
