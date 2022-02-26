@@ -4,7 +4,7 @@ pub trait Tag
 {
     type BaseType;
 }
-    
+
 pub struct T<U: Tag>
 {
     pub value : U::BaseType,
@@ -16,6 +16,16 @@ impl<U: Tag> T<U>
 	T::<U>{ value: value }
     }
 }
+
+pub trait Value
+{
+    type ValueType;
+}
+impl<U: Tag> Value for T<U>
+{
+    type ValueType = U::BaseType;
+}
+
 
 impl<U: Tag> std::cmp::PartialEq for T<U>
 where U::BaseType : std::cmp::PartialEq
@@ -212,33 +222,33 @@ where U::BaseType : std::fmt::Octal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> { self.value.fmt(f) }
 }
 
-
-struct IA<I: Iterator>
+struct IA<I: Iterator, N>
 {
-    i : I
+    i : I,
+    phantom: std::marker::PhantomData<N>
 }
 
-impl<I: Iterator> IA<I>
+impl<'a, U:'a + Tag, I> Iterator for IA<I, T<U>>
+    where I: Iterator<Item=&'a T<U> >
 {
-    fn new(I i) > IA<I> { IA;:<I>{ i: i} }
-}
-
-impl<U: Tag, I: Iterator> Iterator for IA<I>
-where I::Item: T<U>
-{
-    type Item = U::BaseType;
+    type Item = &'a U::BaseType;
     fn next(&mut self) -> Option<Self::Item> {
-	match(self.i.next()) {
-	    Some(v) { Some(v.value) },
-	    None { None }
+	match self.i.next() {
+	    Some(v) => { Some(&v.value) },
+	    None => { None }
 	}
     }
 }
 
-impl<U: Tag, I: Iterator> std::iter::Product for IA<I>
-where I::Item: T<U>
+impl<'a, U:'a> std::iter::Product<&'a T<U>> for T<U>
+where
+    U: Tag, <U as Tag>::BaseType:std::iter::Product<&'a <U as Tag>::BaseType>
 {
-    fn product<I: Iterator<Item=Self>>(iter: I) -> Self { Self {
-	Self{value: product(IA<I>::new(iter))}
+    fn product<I>(iter: I) -> T<U>
+    where
+        I: Iterator<Item = &'a T<U> >
+    {
+	T::<U>{ value: <U::BaseType as std::iter::Product<&'a U::BaseType>>::product(IA { i: iter, phantom: std::marker::PhantomData }) }
     }
 }
+

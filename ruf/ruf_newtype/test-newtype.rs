@@ -89,7 +89,7 @@ fn main() {
     //let d = NonZeroI32{ 6 };
     //REVISIT: awaits implementation assert::equal(&I1::from(d), &I1{value:6});
 
-    let mut d = I1 {value: 8};
+    let d = I1 {value: 8};
     let mut h1 = std::collections::hash_map::DefaultHasher::new();
     d.hash(&mut h1);
     
@@ -112,4 +112,8 @@ fn main() {
     assert::equal(& !B1{value:true}, &B1::new(false));
 
     assert::equal(&format!("{:o}", I1{value:42}).as_str(), &"52"); // Octal
+
+    let d = [ I1{value:2}, I1{value:3} ];
+    let e = d.iter().product();
+    assert::equal(&e, &I1{value:6});
 }
