@@ -116,4 +116,36 @@ fn main() {
     let d = [ I1{value:2}, I1{value:3} ];
     let e = d.iter().product();
     assert::equal(&e, &I1{value:6});
+
+    assert::equal(& (I1{value: 10} % I1{value: 3}), &I1{value: 1});
+
+    let mut d = I1{value: 10};
+    d %= I1{value: 3};
+    assert::equal(&d, &I1{value: 1});
+
+    assert::equal(& (I1{value: 1} << 2), &I1{value: 4});
+
+    let mut d = I1{value: 1};
+    d <<= 2;
+    assert::equal(&d, &I1{value: 4});
+
+    assert::equal(& (I1{value: 4} >> 2), &I1{value: 1});
+
+    let mut d = I1{value: 4};
+    d >>= 2;
+    assert::equal(&d, &I1{value: 1});
+
+    assert::equal(& (I1{value: 4} - I1{value: 2}), &I1{value: 2});
+
+    let mut d = I1{value: 4};
+    d -= I1{value:2};
+    assert::equal(&d, &I1{value: 2});
+
+    let d = [ I1{value:2}, I1{value:3} ];
+    let e = d.iter().sum();
+    assert::equal(&e, &I1{value:5});
+
+    assert::equal(&format!("{:E}", I1{value:42}).as_str(), &"4.2E1"); // LowerExp
+    assert::equal(&format!("{:X}", I1{value:42}).as_str(), &"2A"); // LowerHex
+
 }

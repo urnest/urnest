@@ -240,3 +240,98 @@ where
 	T::<U>{ value: <U::BaseType as std::iter::Product<&'a U::BaseType>>::product(IA { i: iter }) }
     }
 }
+
+impl<U: Tag> std::ops::Rem for T<U>
+where U::BaseType : std::ops::Rem<Output = U::BaseType>
+{
+    type Output = Self;
+    
+    fn rem(self, other: Self) -> Self { Self::new(self.value % other.value) }
+}
+
+impl<U: Tag> std::ops::RemAssign for T<U>
+where U::BaseType : std::ops::RemAssign
+{
+    fn rem_assign(&mut self, other: Self) { self.value %= other.value }
+}
+
+impl<U: Tag, R> std::ops::Shl<R> for T<U>
+where U::BaseType: std::ops::Shl<R, Output = U::BaseType>
+{
+    type Output = Self;
+    fn shl(self, rhs: R) -> Self::Output { T::<U>{ value: self.value.shl(rhs) } }
+}
+
+impl<U: Tag, R> std::ops::ShlAssign<R> for T<U>
+where U::BaseType: std::ops::ShlAssign<R>
+{
+    fn shl_assign(&mut self, rhs: R) { self.value.shl_assign(rhs); }
+}
+
+impl<U: Tag, R> std::ops::Shr<R> for T<U>
+where U::BaseType: std::ops::Shr<R, Output = U::BaseType>
+{
+    type Output = Self;
+    fn shr(self, rhs: R) -> Self::Output { T::<U>{ value: self.value.shr(rhs) } }
+}
+
+impl<U: Tag, R> std::ops::ShrAssign<R> for T<U>
+where U::BaseType: std::ops::ShrAssign<R>
+{
+    fn shr_assign(&mut self, rhs: R) { self.value.shr_assign(rhs); }
+}
+
+impl<U: Tag> std::ops::Sub for T<U>
+where U::BaseType : std::ops::Sub<Output = U::BaseType>
+{
+    type Output = Self;
+    
+    fn sub(self, other: Self) -> Self { Self::new(self.value - other.value) }
+}
+
+impl<U: Tag> std::ops::SubAssign for T<U>
+where U::BaseType : std::ops::SubAssign
+{
+    fn sub_assign(&mut self, other: Self) { self.value -= other.value }
+}
+
+impl<'a, U:'a> std::iter::Sum<&'a T<U>> for T<U>
+where
+    U: Tag, <U as Tag>::BaseType:std::iter::Sum<&'a <U as Tag>::BaseType>
+{
+    fn sum<I>(iter: I) -> T<U>
+    where
+        I: Iterator<Item = &'a T<U> >
+    {
+	T::<U>{ value: <U::BaseType as std::iter::Sum<&'a U::BaseType>>::sum(IA { i: iter }) }
+    }
+}
+
+/*
+    = note: conflicting implementation in crate `core`:
+            - impl<T, U> TryFrom<U> for T
+              where U: Into<T>;
+
+impl<U:Tag, B> std::convert::TryFrom<B> for T<U> where U::BaseType: std::convert::TryFrom<B> {
+    type Error = <U::BaseType as std::convert::TryFrom<B>>::Error;
+    
+    fn try_from(value: B) -> Result<Self, Self::Error> {
+	let result = U::BaseType::try_from(value);
+	match result {
+	    Err(e) => e,
+	    Ok(x) => Self { value: x }
+	}
+    }
+}
+ */
+
+impl<U: Tag> std::fmt::UpperExp for T<U>
+where U::BaseType : std::fmt::UpperExp {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> { self.value.fmt(f) }
+}
+
+impl<U: Tag> std::fmt::UpperHex for T<U>
+where U::BaseType : std::fmt::UpperHex {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> { self.value.fmt(f) }
+}
+
