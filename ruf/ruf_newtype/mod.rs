@@ -17,16 +17,6 @@ impl<U: Tag> T<U>
     }
 }
 
-pub trait Value
-{
-    type ValueType;
-}
-impl<U: Tag> Value for T<U>
-{
-    type ValueType = U::BaseType;
-}
-
-
 impl<U: Tag> std::cmp::PartialEq for T<U>
 where U::BaseType : std::cmp::PartialEq
 {
@@ -222,13 +212,12 @@ where U::BaseType : std::fmt::Octal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> { self.value.fmt(f) }
 }
 
-struct IA<I: Iterator, N>
+struct IA<I: Iterator>
 {
-    i : I,
-    phantom: std::marker::PhantomData<N>
+    i : I
 }
 
-impl<'a, U:'a + Tag, I> Iterator for IA<I, T<U>>
+impl<'a, U:'a + Tag, I> Iterator for IA<I>
     where I: Iterator<Item=&'a T<U> >
 {
     type Item = &'a U::BaseType;
@@ -248,7 +237,6 @@ where
     where
         I: Iterator<Item = &'a T<U> >
     {
-	T::<U>{ value: <U::BaseType as std::iter::Product<&'a U::BaseType>>::product(IA { i: iter, phantom: std::marker::PhantomData }) }
+	T::<U>{ value: <U::BaseType as std::iter::Product<&'a U::BaseType>>::product(IA { i: iter }) }
     }
 }
-
