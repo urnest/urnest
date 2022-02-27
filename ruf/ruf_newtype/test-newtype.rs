@@ -13,13 +13,15 @@ extern crate ruf_assert;
 
 use ruf_assert as assert;
 
-struct I1_; impl ruf_newtype::Tag for I1_ { type BaseType = i32; }
-struct I2_; impl ruf_newtype::Tag for I2_ { type BaseType = f64; }
-struct B1_; impl ruf_newtype::Tag for B1_ { type BaseType = bool; }
+struct I1_; impl ruf_newtype::Tag for I1_ { type BaseType = i32;}
+struct I2_; impl ruf_newtype::Tag for I2_ { type BaseType = f64;}
+struct B1_; impl ruf_newtype::Tag for B1_ { type BaseType = bool;}
+struct S1_; impl ruf_newtype::Tag for S1_ { type BaseType = String;}
 
 type I1 = ruf_newtype::T<I1_>;
 type I2 = ruf_newtype::T<I2_>;
 type B1 = ruf_newtype::T<B1_>;
+type S1 = ruf_newtype::T<S1_>;
 
 // REVISIT: macro so that can write ruf_newtype::NewType!(I1,i32);
 
@@ -36,11 +38,24 @@ fn main() {
     assert::less_equal(&c, &I1{value:17});
     assert::less_equal(&c, &I1{value:16});
 
+    /* 
+    ** does not work see "two strings added together" comment in mod.rs
+
+    assert::equal(& (S1{value: String::from("fred")}+S1{value: String::from(" jones")}),
+		  & S1{value: String::from("fred jones")});
+     */
+    
     let mut d = I1 {value: 3};
     d += I1{value:4};
     assert::greater_equal(&d, &I1{value:7});
     assert::greater(&d, &I1{value:6});
     assert::equal(&d, &I1{value:7});
+
+    /* REVISIT: wtf?
+    let mut d = S1{value: String::from("fred")};
+    d += S1{value: String::from(" jones")};
+    assert::equal(&d, & S1{value: String::from("fred jones")});
+     */
     
     assert::equal(&(I2{value:0.0} + I2::new(66.0)), &I2::new(66.0));
 
@@ -148,4 +163,8 @@ fn main() {
     assert::equal(&format!("{:E}", I1{value:42}).as_str(), &"4.2E1"); // LowerExp
     assert::equal(&format!("{:X}", I1{value:42}).as_str(), &"2A"); // LowerHex
 
+    let d = S1{value: String::from("fred")};
+    let mut e = d.clone();
+
+    assert::equal(&I1 {value: -6}.abs(), &I1{value:6});
 }

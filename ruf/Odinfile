@@ -3,6 +3,7 @@
 %all.tree == <<
 ruf_assert%all.tree:leaves
 ruf_tree%all.tree:leaves
+ruf_newtype%all.tree:leaves
 rs-dep%all.tree:leaves
 %test-refs.output
 

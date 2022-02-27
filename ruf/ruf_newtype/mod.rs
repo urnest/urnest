@@ -2,7 +2,7 @@
 
 pub trait Tag
 {
-    type BaseType;
+    type BaseType; // e.g. i32
 }
 
 pub struct T<U: Tag>
@@ -41,6 +41,33 @@ where U::BaseType : std::cmp::Ord
 {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering { self.value.cmp(&other.value) }
 }
+
+/*
+// Rust does not allow two strings added together, wow. I guess that makes it
+// an easy language to learn... not :-(
+// Sure it is not efficient, but really should we obfuscate 99.99% of code
+// to avoid the 0.01% being accidentally too inefficient for its own purpose? Just seems
+// to be trying to take over the world: instead of sticking to making a safe language
+// that can be used to write efficient code, rust is trying to force everyone to only
+// write super efficient code at the expense of actually being able to write code without
+// having a PHD in something-or-other? Surely counter productive in the big picture.
+// Shrug, let's try to get back to sanity. And we already have += anyway?
+//
+// But it doesn't work, because rust has no concept of "more specialized"... yet as at 1.59?
+//
+impl<'a, U: Tag> std::ops::Add for T<U>
+where U::BaseType : std::ops::Add<&'a str>
+{
+    type Output = Self;
+    
+    fn add(self, other: Self) -> Self {
+	let mut result = Self { value: String::with_capacity(self.value.len()+other.value.len()) };
+	result.value += self.value;
+	result.value += other.value;
+	result
+    }
+}
+*/
 
 impl<U: Tag> std::ops::Add for T<U>
 where U::BaseType : std::ops::Add<Output = U::BaseType>
@@ -335,3 +362,9 @@ where U::BaseType : std::fmt::UpperHex {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> { self.value.fmt(f) }
 }
 
+// int-methods REVISIT: use macro to implement for all int types
+impl<U: Tag> T<U>
+where U:Tag<BaseType=i32>
+{
+    pub fn abs(self) -> Self { Self{value: self.value.abs() } }
+}
