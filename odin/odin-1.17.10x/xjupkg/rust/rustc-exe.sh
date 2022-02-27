@@ -23,6 +23,7 @@ if [ -n "$1" ]; then cmd="$cmd $(cat $1)"; fi; shift # +rs_flags
 crate_name=$(basename $rs | sed -e 's=\([^.]*\).*=\1=g' -e 's=-=_=g')
 
 cmd="$cmd --crate-name $crate_name"
+if [ -n "$ODIN_RUSTC_FLAGS" ]; then cmd="$cmd $ODIN_RUSTC_FLAGS"; fi
 
 verbose(){
   test -z "$ODINVERBOSE"||echo "$@"

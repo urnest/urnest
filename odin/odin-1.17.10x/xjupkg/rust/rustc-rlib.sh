@@ -19,13 +19,13 @@ cmd="$cmd $L"  # crate dirs
 if [ -n "$1" ]; then cmd="$cmd -g"; fi; shift # +debug
 if [ -n "$1" ]; then cmd="$cmd -O"; fi; shift # +optimize
 if [ -n "$1" ]; then cmd="$cmd $(cat $1)"; fi; shift # +rs_flags
-
 # unbelievably, even though a file might be called libxxx.rlib, if it was compiled from
 # the kosher xxx/mod.rs location, it will be rejected as crate xxx?
 if [ $(basename $rs) = "mod.rs" ]
 then
   cmd="$cmd --crate-name $(basename $(dirname $rs))"
 fi
+if [ -n "$ODIN_RUSTC_FLAGS" ]; then cmd="$cmd $ODIN_RUSTC_FLAGS"; fi
 
 verbose(){
   test -z "$ODINVERBOSE"||echo "$@"
