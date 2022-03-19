@@ -295,9 +295,10 @@ public:
     }
     return r;
   }
-  virtual std::string target() const throw() override
-  {
-    return "URI-format IPv4 Address";
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw() {
+    static std::shared_ptr<hcp_parser::Exception::Target const> const result(
+      hcp_parser::fixed_target("URI-format IPv4 Address"));
+    return result;
   }
 private:
   class _0_255_ItemTag{};
@@ -425,9 +426,10 @@ public:
     }
     return r;
   }
-  virtual std::string target() const throw() override
-  {
-    return "URI-format IPv6 Address";
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw() {
+    static std::shared_ptr<hcp_parser::Exception::Target const> const result(
+      hcp_parser::fixed_target("URI-format IPv6 Address"));
+    return result;
   }
 private:
   class HexItemTag{};
@@ -539,9 +541,10 @@ public:
   {
   }
 
-  virtual std::string target() const throw() override
-  {
-    return "port";
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw() {
+    static std::shared_ptr<hcp_parser::Exception::Target const> const result(
+      hcp_parser::fixed_target("port"));
+    return result;
   }
   virtual hcp_parser::ParseResult parse_(
     hcp_ast::I const at, 

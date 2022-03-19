@@ -362,9 +362,34 @@ where U::BaseType : std::fmt::UpperHex {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> { self.value.fmt(f) }
 }
 
-// int-methods REVISIT: use macro to implement for all int types
+// int-methods REVISIT: use macro to implement for all int types, just steal
+// the standard library code
 impl<U: Tag> T<U>
 where U:Tag<BaseType=i32>
 {
     pub fn abs(self) -> Self { Self{value: self.value.abs() } }
 }
+
+impl<'a, U> Extend<&'a T<U>> for T<U>
+where U:'a, U:Tag, <U as Tag>::BaseType : std::iter::Extend<&'a <U as Tag>::BaseType> {
+    fn extend<X>(&mut self, iterable: X)
+    where
+        X: IntoIterator<Item = &'a T<U> >
+    {
+	let ia = IA{ i: iterable.into_iter()};
+	self.value.extend(ia);
+    }
+}
+/*
+impl<'a, U:'a> std::iter::Product<&'a T<U>> for T<U>
+where
+    U: Tag, <U as Tag>::BaseType:std::iter::Product<&'a <U as Tag>::BaseType>
+{
+    fn product<I>(iter: I) -> T<U>
+    where
+        I: Iterator<Item = &'a T<U> >
+    {
+	T::<U>{ value: <U::BaseType as std::iter::Product<&'a U::BaseType>>::product(IA { i: iter }) }
+    }
+}
+*/

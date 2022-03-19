@@ -536,8 +536,10 @@ struct StringLiteralParser : public hcp_parser::Parser
     }
   }
     
-  virtual std::string target() const throw() {
-    return "JSON string";
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw() {
+    static std::shared_ptr<hcp_parser::Exception::Target const> const result(
+      hcp_parser::fixed_target("JSON string"));
+    return result;
   }
 
   class C1 : public hcp_parser::Exception::Cause
@@ -613,8 +615,10 @@ struct RecurseElement : public hcp_parser::Parser
   {
     return element()->parse_(at,o);
   }
-  virtual std::string target() const throw() {
-    return "element (recurse)";
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw() {
+    static std::shared_ptr<hcp_parser::Exception::Target const> const result(
+      hcp_parser::fixed_target("element (recurse)"));
+    return result;
   }
 };
 hcp_parser::PR elementRecurse() noexcept

@@ -28,7 +28,7 @@ xju::Exception translateException(hcp_parser::Exception const& e) noexcept
     // or not)
     if (i==e.context_.begin() || (*i).first.first.first) {
       std::ostringstream s;
-      s << "parse " << (*i).first.first.second
+      s << "parse " << (*i).first.first.second->target()
         << " at " << (*i).first.second;
       ee.addContext(s.str(), (*i).second);
     }

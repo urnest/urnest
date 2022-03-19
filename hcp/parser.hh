@@ -76,7 +76,14 @@ public:
     
     virtual std::string str() const throw() = 0;
   };
+  class Target
+  {
+  public:
+    virtual ~Target() throw() {}
     
+    virtual std::string target() const throw() = 0;
+  };
+  
   Exception(std::shared_ptr<Cause const> cause, 
             I at, 
             xju::Traced const& trace,
@@ -99,7 +106,7 @@ public:
   void addContext(Parser const& parser, I at, xju::Traced const& trace) throw();
   
   std::vector<std::pair<std::pair<std::pair<bool,          // named parser
-                                            std::string>,  // target
+                                            std::shared_ptr<Target const> >,  // target
                                   I>,  // at
                         xju::Traced> > context_;
 
@@ -140,12 +147,35 @@ public:
       cause_(cause)
   {
   }
+  // hcp_parser::Exception::Cause::
   virtual std::string str() const throw()
   {
     return cause_;
   }
   std::string const cause_;
 };
+
+class FixedTarget : public hcp_parser::Exception::Target
+{
+public:
+  ~FixedTarget() throw() {}
+  
+  explicit FixedTarget(std::string const& target) throw():
+      target_(target)
+  {
+  }
+  // hcp_parser::Exception::Target::
+  virtual std::string target() const throw()
+  {
+    return target_;
+  }
+  std::string const target_;
+};
+inline std::shared_ptr<hcp_parser::Exception::Target const> fixed_target(std::string t)
+{
+  return std::unique_ptr<hcp_parser::Exception::Target const>(
+    new FixedTarget(t));
+}
 
 class XjuExceptionCause : public hcp_parser::Exception::Cause
 {
@@ -252,7 +282,7 @@ public:
     Options const& options) throw() = 0;
 
   // What the parser matches, e.g. "string literal", "typedef", "class"
-  virtual std::string target() const throw() = 0;
+  virtual std::shared_ptr<Exception::Target const> target() const throw() = 0;
 
   // post: result contains references to at or beyond, even if parsing
   //       fails (ie if result.failed())
@@ -376,8 +406,8 @@ public:
     return r;
   }
   // Parser::
-  virtual std::string target() const throw() {
-    return name_;
+  virtual std::shared_ptr<Exception::Target const> target() const throw(){
+    return std::unique_ptr<Exception::Target const>(new FixedTarget(name_));
   }
 };
 

@@ -160,6 +160,16 @@ void test4()
 void test5()
 {
   {
+    auto const p(hcp_parser::parseOneOfChars("ab")|
+                 hcp_parser::parseOneOfChars("cd"));
+    xju::assert_equal(p->target()->target(), "one of chars \"ab\" or one of chars \"cd\"");
+  }
+  {
+    auto const p(atLeastOne(hcp_parser::parseOneOfChars("ab")|
+                            hcp_parser::parseOneOfChars("cd")));
+    xju::assert_equal(p->target()->target(), "at least one occurrance of one of chars \"ab\" or one of chars \"cd\"");
+  }
+  {
     std::string const x("abcad");
     hcp_parser::I at(x.begin(), x.end());
     auto const r{

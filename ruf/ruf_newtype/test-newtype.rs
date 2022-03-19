@@ -167,4 +167,9 @@ fn main() {
     let mut e = d.clone();
 
     assert::equal(&I1 {value: -6}.abs(), &I1{value:6});
+
+    let d = [ S1{value: String::from("fred")}, S1{value: String::from(" jones")} ];
+
+    let mut s = S1{ value: String::from("Mr ") };
+    s.extend(d.iter());
 }

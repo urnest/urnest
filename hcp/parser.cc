@@ -43,10 +43,10 @@ void Exception::addContext(Parser const& parser, I at, xju::Traced const& trace)
 namespace
 {
 std::string contextReadableRepr(
-  std::pair<std::pair<std::pair<bool, std::string>, I>, xju::Traced> const& c) throw()
+  std::pair<std::pair<std::pair<bool, std::shared_ptr<const hcp_parser::Exception::Target>>, I>, xju::Traced> const& c) throw()
 {
   std::ostringstream s;
-  s << c.first.second << ": failed to parse " << c.first.first.second;
+  s << c.first.second << ": failed to parse " << c.first.first.second->target();
   return s.str();
 }
 }
@@ -103,9 +103,27 @@ public:
     return ParseResult(result);
   }
 
+  class Target : public hcp_parser::Exception::Target
+  {
+  public:
+    explicit Target(PR x):
+        x_(std::move(x))
+    {
+    }
+    PR x_;
+
+    // hcp_parser::Exception::Target::
+    std::string target() const throw();
+  };
+  
   // Parser::
-  virtual std::string target() const throw();
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    return std::unique_ptr<hcp_parser::Exception::Target const>(
+      new Target(x_));
+  }
 };
+
 class ParseZeroOrMore : public Parser
 {
 public:
@@ -135,8 +153,25 @@ public:
     }
   }
 
+  class Target : public hcp_parser::Exception::Target
+  {
+  public:
+    explicit Target(PR x):
+        x_(std::move(x))
+    {
+    }
+    PR x_;
+
+    // hcp_parser::Exception::Target::
+    std::string target() const throw();
+  };
+  
   // Parser::
-  virtual std::string target() const throw();
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    return std::unique_ptr<hcp_parser::Exception::Target const>(
+      new Target(x_));
+  }
 };
 
 class ParseAnd : public Parser
@@ -173,8 +208,25 @@ public:
     return ParseResult(result);
   }
 
+  class Target : public hcp_parser::Exception::Target
+  {
+  public:
+    explicit Target(std::vector<PR> terms):
+        terms_(std::move(terms))
+    {
+    }
+    std::vector<PR> terms_;
+
+    // hcp_parser::Exception::Target::
+    std::string target() const throw();
+  };
+  
   // Parser::
-  virtual std::string target() const throw();
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    return std::unique_ptr<hcp_parser::Exception::Target const>(
+      new Target(terms_));
+  }
 };
 
 class ParseOr : public Parser
@@ -209,8 +261,25 @@ public:
     return ParseResult((*failures.rbegin()).second);
   }
 
+  class Target : public hcp_parser::Exception::Target
+  {
+  public:
+    explicit Target(std::vector<PR> terms):
+        terms_(std::move(terms))
+    {
+    }
+    std::vector<PR> terms_;
+
+    // hcp_parser::Exception::Target::
+    std::string target() const throw();
+  };
+  
   // Parser::
-  virtual std::string target() const throw();
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    return std::unique_ptr<hcp_parser::Exception::Target const>(
+      new Target(terms_));
+  }
 };
 
 class ParseNot : public Parser
@@ -237,17 +306,34 @@ public:
       Exception(ParseNot::expected_parse_failure, at, XJU_TRACED));
   }
 
+  class Target : public hcp_parser::Exception::Target
+  {
+  public:
+    explicit Target(PR x):
+        x_(std::move(x))
+    {
+    }
+    PR x_;
+
+    // hcp_parser::Exception::Target::
+    std::string target() const throw();
+  };
+  
   // Parser::
-  virtual std::string target() const throw();
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    return std::unique_ptr<hcp_parser::Exception::Target const>(
+      new Target(term_));
+  }
 
 };
 std::shared_ptr<Exception::Cause const> const ParseNot::expected_parse_failure(
   new FixedCause("expected parse failure"));
 
-std::string Optional::target() const throw()
+std::string  Optional::Target::target() const throw()
 {
   // bracket lhs/rhs if ambiguous (and/or/times)
-  std::string const xt(x_->target());
+  std::string const xt(x_->target()->target());
   std::ostringstream s;
   s << "optional " 
     << ((dynamic_cast<ParseOr const*>(&*x_)||
@@ -257,10 +343,10 @@ std::string Optional::target() const throw()
   return s.str();
 }
 
-std::string ParseZeroOrMore::target() const throw() 
+std::string ParseZeroOrMore::Target::target() const throw() 
 {
   // bracket lhs/rhs if ambiguous (and/or/times)
-  std::string const xt(x_->target());
+  std::string const xt(x_->target()->target());
   std::ostringstream s;
   s << "zero or more occurrances of " 
     << ((dynamic_cast<ParseOr const*>(&*x_)||
@@ -270,12 +356,12 @@ std::string ParseZeroOrMore::target() const throw()
   return s.str();
 }
 
-std::string ParseAnd::target() const throw() 
+std::string ParseAnd::Target::target() const throw() 
 {
   std::vector<std::string> x;
   for(std::vector<PR>::const_iterator i=terms_.begin(); i!=terms_.end(); ++i) {
     // bracket lhs/rhs if ambiguous (and/or/times)
-    std::string const at((*i)->target());
+    std::string const at((*i)->target()->target());
     std::ostringstream s;
     s << ((dynamic_cast<ParseOr const*>(&**i)||
            ((xju::next(i)!=terms_.end())&&
@@ -287,11 +373,11 @@ std::string ParseAnd::target() const throw()
   return xju::format::join(x.begin(), x.end(), " then ");
 }
 
-std::string ParseOr::target() const throw() {
+std::string ParseOr::Target::target() const throw() {
   std::vector<std::string> x;
   for(std::vector<PR>::const_iterator i=terms_.begin(); i!=terms_.end(); ++i) {
     // bracket term if ambiguous (and/or/times)
-    std::string const at((*i)->target());
+    std::string const at((*i)->target()->target());
     std::ostringstream s;
     s << ((dynamic_cast<ParseAnd const*>(&**i)||
            ((xju::next(i)!=terms_.end())&&
@@ -303,8 +389,8 @@ std::string ParseOr::target() const throw() {
   return xju::format::join(x.begin(), x.end(), " or ");
 }
 
-std::string ParseNot::target() const throw() {
-  return "!"+term_->target();
+std::string ParseNot::Target::target() const throw() {
+  return "!"+x_->target()->target();
 }
 
 std::shared_ptr<Exception::Cause const> const end_of_input(
@@ -323,8 +409,11 @@ public:
       std::make_pair(IRs(1U, IR(new hcp_ast::Item(at, xju::next(at)))), 
                      xju::next(at)));
   }
-  virtual std::string target() const throw() {
-    return "any char";
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    static std::shared_ptr<hcp_parser::Exception::Target const> const result(
+      fixed_target("any char"));
+    return result;
   }
 };
 
@@ -334,7 +423,6 @@ public:
   std::set<char> const chars_;
   
   ~ParseOneOfChars() throw() {}
-  
   
   explicit ParseOneOfChars(std::string const& chars) throw():
     chars_(chars.begin(), chars.end()) {
@@ -355,14 +443,31 @@ public:
       std::make_pair(
         IRs(1U, IR(new hcp_ast::Item(at, xju::next(at)))), xju::next(at)));
   }
-  // Parser::
-  virtual std::string target() const throw()
+  class Target : public hcp_parser::Exception::Target
   {
-    std::ostringstream s;
-    s << "one of chars "
-      << xju::format::quote(xju::format::cEscapeString(
-                              std::string(chars_.begin(),chars_.end())));
-    return s.str();
+  public:
+    std::set<char> chars_;
+    
+    explicit Target(std::set<char> chars):
+        chars_(std::move(chars))
+    {
+    }
+
+    // hcp_parser::Exception::Target::
+    std::string target() const throw()
+    {
+      std::ostringstream s;
+      s << "one of chars "
+        << xju::format::quote(xju::format::cEscapeString(
+                                std::string(chars_.begin(),chars_.end())));
+      return s.str();
+    }
+  };
+  
+  // Parser::
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    return std::unique_ptr<hcp_parser::Exception::Target const>(new Target(chars_));
   }
 
   class UnexpectedChar : public Exception::Cause
@@ -415,12 +520,29 @@ public:
       std::make_pair(
         IRs(1U, IR(new hcp_ast::Item(at, xju::next(at)))), xju::next(at)));
   }
-  // Parser::
-  virtual std::string target() const throw()
+  class Target : public hcp_parser::Exception::Target
   {
-    std::ostringstream s;
-    s << "one of chars " << chars_;
-    return s.str();
+  public:
+    hcp::Chars const chars_;
+    
+    explicit Target(hcp::Chars chars):
+        chars_(std::move(chars))
+    {
+    }
+
+    // hcp_parser::Exception::Target::
+    virtual std::string target() const throw()
+    {
+      std::ostringstream s;
+      s << "one of chars " << chars_;
+      return s.str();
+    }
+  };
+  
+  // Parser::
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    return std::unique_ptr<hcp_parser::Exception::Target const>(new Target(chars_));
   }
 
   class UnexpectedChar : public Exception::Cause
@@ -451,7 +573,6 @@ public:
   
   ~ParseAnyCharExcept() throw() {}
   
-  
   explicit ParseAnyCharExcept(std::string const& chars) throw():
     chars_(chars.begin(), chars.end()) {
   }
@@ -471,14 +592,31 @@ public:
       std::make_pair(
         IRs(1U, IR(new hcp_ast::Item(at, xju::next(at)))), xju::next(at)));
   }
-  // Parser::
-  virtual std::string target() const throw()
+  class Target : public hcp_parser::Exception::Target
   {
-    std::ostringstream s;
-    s << "any char except " 
-      << xju::format::quote(xju::format::cEscapeString(
-                              std::string(chars_.begin(),chars_.end())));
-    return s.str();
+  public:
+    std::set<char> chars_;
+    
+    explicit Target(std::set<char> chars):
+        chars_(std::move(chars))
+    {
+    }
+
+    // hcp_parser::Exception::Target::
+    virtual std::string target() const throw()
+    {
+      std::ostringstream s;
+      s << "any char except " 
+        << xju::format::quote(xju::format::cEscapeString(
+                                std::string(chars_.begin(),chars_.end())));
+      return s.str();
+    }
+  };
+  
+  // Parser::
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    return std::unique_ptr<hcp_parser::Exception::Target const>(new Target(chars_));
   }
 
   class UnexpectedChar : public Exception::Cause
@@ -531,15 +669,35 @@ public:
       std::make_pair(
         IRs(1U, IR(new hcp_ast::Item(at, xju::next(at)))), xju::next(at)));
   }
-  // Parser::
-  virtual std::string target() const throw()
+  class Target : public hcp_parser::Exception::Target
   {
-    std::ostringstream s;
-    s << "one of chars '"
-      << xju::format::cEscapeChar(min_) <<"'..'"
-      << xju::format::cEscapeChar(max_) <<"'";
-    return s.str();
+  public:
+    char const min_;
+    char const max_;
+    
+    explicit Target(char const min, char const max):
+        min_(min),
+        max_(max)
+    {
+    }
+
+    // hcp_parser::Exception::Target::
+    virtual std::string target() const throw()
+    {
+      std::ostringstream s;
+      s << "one of chars '"
+        << xju::format::cEscapeChar(min_) <<"'..'"
+        << xju::format::cEscapeChar(max_) <<"'";
+      return s.str();
+    }
+  };
+  
+  // Parser::
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    return std::unique_ptr<hcp_parser::Exception::Target const>(new Target(min_, max_));
   }
+
   class CharNotInRange : public Exception::Cause
   {
   public:
@@ -592,10 +750,29 @@ public:
     }
     while(true);
   }
-  virtual std::string target() const throw() {
-    std::ostringstream s;
-    s << "up to but not including " << x_->target();
-    return s.str();
+
+  class Target : public hcp_parser::Exception::Target
+  {
+  public:
+    explicit Target(PR x):
+        x_(std::move(x))
+    {
+    }
+    PR x_;
+
+    // hcp_parser::Exception::Target::
+    virtual std::string target() const throw() {
+      std::ostringstream s;
+      s << "up to but not including " << x_->target()->target();
+      return s.str();
+    }
+  };
+  
+  // Parser::
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    return std::unique_ptr<hcp_parser::Exception::Target const>(
+      new Target(x_));
   }
 };
 
@@ -632,11 +809,33 @@ public:
       result.second=x.second;
     }
   }
-  virtual std::string target() const throw() {
-    std::ostringstream s;
-    s << match_->target() << "'s up to but not including " << x_->target();
-    return s.str();
+  class Target : public hcp_parser::Exception::Target
+  {
+  public:
+    PR const match_;
+    PR const x_;
+
+    explicit Target(PR match, PR x):
+        match_(std::move(match)),
+        x_(std::move(x))
+    {
+    }
+
+    // hcp_parser::Exception::Target::
+    virtual std::string target() const throw() {
+      std::ostringstream s;
+      s << match_->target()->target() << "'s up to but not including " << x_->target()->target();
+      return s.str();
+    }
+  };
+  
+  // Parser::
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    return std::unique_ptr<hcp_parser::Exception::Target const>(
+      new Target(match_, x_));
   }
+  
 };
 
 class ParseLiteral : public Parser
@@ -672,11 +871,29 @@ public:
     }
   }
   
+  class Target : public hcp_parser::Exception::Target
+  {
+  public:
+    std::string const x_;
+
+    explicit Target(std::string x):
+        x_(std::move(x))
+    {
+    }
+
+    // hcp_parser::Exception::Target::
+    virtual std::string target() const throw() {
+      std::ostringstream s;
+      s << (x_=="\\"?std::string("backslash"):xju::format::quote(x_));
+      return s.str();
+    }
+  };
   
-  virtual std::string target() const throw() {
-    std::ostringstream s;
-    s << (x_=="\\"?std::string("backslash"):xju::format::quote(x_));
-    return s.str();
+  // Parser::
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    return std::unique_ptr<hcp_parser::Exception::Target const>(
+      new Target(x_));
   }
 
   class Mismatch : public Exception::Cause
@@ -745,8 +962,11 @@ public:
                      i));
   }
   
-  virtual std::string target() const throw() {
-    return "identifier";
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    static std::shared_ptr<hcp_parser::Exception::Target const> const result(
+      fixed_target("identifier"));
+    return result;
   }
 
   class NotIdentifierChar : public Exception::Cause
@@ -798,10 +1018,11 @@ public:
       std::make_pair(IRs(1U, IR(new hcp_ast::Item(at, nowAt))), nowAt));
   }
   
-  virtual std::string target() const throw() {
-    std::ostringstream s;
-    s << "'#' at start of line";
-    return s.str();
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    static std::shared_ptr<hcp_parser::Exception::Target const> const result(
+      fixed_target("'#' at start of line"));
+    return result;
   }
 
   class NotHash : public Exception::Cause
@@ -914,9 +1135,11 @@ public:
       return ParseResult(EndOfInput(x.at_, XJU_TRACED));
     }
   }
-  // Parser::
-  virtual std::string target() const throw() {
-    return "raw string literal";
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    static std::shared_ptr<hcp_parser::Exception::Target const> const result(
+      fixed_target("raw string literal"));
+    return result;
   }
 
   class InvalidDelimeterChar : public Exception::Cause
@@ -1103,12 +1326,32 @@ public:
       }
     }
   }
-  virtual std::string target() const throw() {
-    std::ostringstream s;
-    s << "parse text, balancing (), [], {}, <>, stringLiteral, up to but "
-      << "not including " << until_->target();
-    return s.str();
+  class Target : public hcp_parser::Exception::Target
+  {
+  public:
+    PR const until_;
+
+    explicit Target(PR until):
+        until_(std::move(until))
+    {
+    }
+
+    // hcp_parser::Exception::Target::
+    virtual std::string target() const throw() {
+      std::ostringstream s;
+      s << "parse text, balancing (), [], {}, <>, stringLiteral, up to but "
+        << "not including " << until_->target()->target();
+      return s.str();
+    }
+  };
+  
+  // Parser::
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    return std::unique_ptr<hcp_parser::Exception::Target const>(
+      new Target(until_));
   }
+
 };
 
 class AnonParser : public NamedParser_
@@ -1133,9 +1376,9 @@ public:
     }
     return r;
   }
-  // Parser::
-  virtual std::string target() const throw() {
-    return name_;
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    return fixed_target(name_);
   }
 };
 
@@ -1160,7 +1403,7 @@ ParseResult Parser::parse(I const at, Options const& options) throw()
   std::unique_ptr<hcp_trace::Scope> scope;
   if (options.trace_ && traced_) {
     std::ostringstream s;
-    s << "parse " << target() << " at " << at;
+    s << "parse " << target()->target() << " at " << at;
     scope = std::unique_ptr<hcp_trace::Scope>(
       new hcp_trace::Scope(s.str(), XJU_TRACED));
   }
@@ -1227,10 +1470,31 @@ public:
     }
   }
 
+  class Target : public hcp_parser::Exception::Target
+  {
+  public:
+    PR const x_;
+
+    explicit Target(PR x):
+        x_(std::move(x))
+    {
+    }
+
+    // hcp_parser::Exception::Target::
+    virtual std::string target() const throw() {
+      std::ostringstream s;
+      s << "non-empty list of " << x_->target()->target();
+      return s.str();
+    }
+  };
+  
   // Parser::
-  virtual std::string target() const throw() {
-    return "non-empty list";
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    return std::unique_ptr<hcp_parser::Exception::Target const>(
+      new Target(x_));
   }
+
   PR const x_;
   PR const moreIndicator_;
 };
@@ -1242,17 +1506,17 @@ PR nonEmptyListOf(PR x, PR moreIndicator) throw()
 
 PR listOf(PR x, PR separator, PR terminator) throw()
 {
-  return anon(separator->target()+"-separated list of "+x->target()+
-              " terminated by "+terminator->target(),
+  return anon(separator->target()->target()+"-separated list of "+x->target()->target()+
+              " terminated by "+terminator->target()->target(),
               terminator|
               (x+parseUntil(separator+x,terminator)+terminator));
 }
 
 PR listOf(PR opener, PR x, PR separator, PR terminator) throw()
 {
-  return anon(separator->target()+"-separated list of "+x->target()+
-              " commencing with "+opener->target()+
-              " and terminated by "+terminator->target(),
+  return anon(separator->target()->target()+"-separated list of "+x->target()->target()+
+              " commencing with "+opener->target()->target()+
+              " and terminated by "+terminator->target()->target(),
               opener+(
                 terminator|
                 (x+parseUntil(separator+x,terminator)+terminator)));
@@ -1328,7 +1592,7 @@ PR anon(std::string const& name, PR const x) throw()
 PR atLeastOne(PR b) throw()
 {
   return anon(
-    "at least one occurrance of "+b->target(),
+    "at least one occurrance of "+b->target()->target(),
     b+zeroOrMore()*b);
 }
 
@@ -1374,8 +1638,41 @@ public:
     return ParseResult(result);
   }
 
+  class Target : public hcp_parser::Exception::Target
+  {
+  public:
+    size_t const n_;
+    size_t const m_;
+    PR const x_;
+
+    explicit Target(size_t n, size_t m, PR x):
+        n_(n),
+        m_(m),
+        x_(std::move(x))
+    {
+    }
+
+    // hcp_parser::Exception::Target::
+    std::string target() const throw() 
+    {
+      // bracket lhs/rhs if ambiguous (and/or/times)
+      std::string const xt(x_->target()->target());
+      std::ostringstream s;
+      s << n_ << ".." << m_ << " occurrances of " 
+        << ((dynamic_cast<ParseOr const*>(&*x_)||
+             dynamic_cast<ParseAnd const*>(&*x_))?
+            std::string("(")+xt+std::string(")"):
+            xt);
+      return s.str();
+    }
+  };
+  
   // Parser::
-  virtual std::string target() const throw();
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    return std::unique_ptr<hcp_parser::Exception::Target const>(
+      new Target(n_, m_, x_));
+  }
 
   class TooFew : public Exception::Cause
   {
@@ -1396,25 +1693,12 @@ public:
   
 };
 
-std::string NToM::target() const throw() 
-{
-  // bracket lhs/rhs if ambiguous (and/or/times)
-  std::string const xt(x_->target());
-  std::ostringstream s;
-  s << n_ << ".." << m_ << " occurrances of " 
-    << ((dynamic_cast<ParseOr const*>(&*x_)||
-         dynamic_cast<ParseAnd const*>(&*x_))?
-        std::string("(")+xt+std::string(")"):
-        xt);
-  return s.str();
-}
-
 }
 
 PR nToM(size_t const n, size_t const m, PR const x) throw()
 {
   std::ostringstream s;
-  s << n << ".." << m << " occurrances of " << x->target();
+  s << n << ".." << m << " occurrances of " << x->target()->target();
   return PR(new NToM(n,m,x));
 }
 
@@ -2731,8 +3015,11 @@ struct VarFpBackref : public Parser
   {
     return var_fp()->parse_(at,o);
   }
-  virtual std::string target() const throw() {
-    return "function pointer var (backref)";
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    static std::shared_ptr<hcp_parser::Exception::Target const> const result(
+      fixed_target("function pointer var (backref)"));
+    return result;
   }
 };
 PR var_fp_backref() throw()
@@ -2895,8 +3182,8 @@ public:
     return self_.parse_(at, o);
   }
 
-  // Parser::
-  virtual std::string target() const throw() {
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
     return self_.target();
   }
 };
@@ -2952,9 +3239,11 @@ public:
     return (tp_|p_)->parse_(at, o);
   }
 
-  // Parser::
-  virtual std::string target() const throw() {
-    return "class definition";
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    static std::shared_ptr<hcp_parser::Exception::Target const> const result(
+      fixed_target("class definition"));
+    return result;
   }
   
 };
@@ -3094,9 +3383,11 @@ public:
   }
 
 
-  // Parser::
-  virtual std::string target() const throw() {
-    return "end of file";
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    static std::shared_ptr<hcp_parser::Exception::Target const> const result(
+      fixed_target("end of file"));
+    return result;
   }
 
   class NotEndOfInput : public Exception::Cause
