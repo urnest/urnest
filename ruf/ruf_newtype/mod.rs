@@ -362,7 +362,7 @@ where U::BaseType : std::fmt::UpperHex {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> { self.value.fmt(f) }
 }
 
-// int-methods REVISIT: use macro to implement for all int types, just steal
+// i* methods REVISIT: use macro to implement for all int types, just steal
 // the standard library code
 impl<U: Tag> T<U>
 where U:Tag<BaseType=i32>
@@ -370,26 +370,68 @@ where U:Tag<BaseType=i32>
     pub fn abs(self) -> Self { Self{value: self.value.abs() } }
 }
 
-impl<'a, U> Extend<&'a T<U>> for T<U>
-where U:'a, U:Tag, <U as Tag>::BaseType : std::iter::Extend<&'a <U as Tag>::BaseType> {
-    fn extend<X>(&mut self, iterable: X)
-    where
-        X: IntoIterator<Item = &'a T<U> >
-    {
-	let ia = IA{ i: iterable.into_iter()};
-	self.value.extend(ia);
-    }
-}
-/*
-impl<'a, U:'a> std::iter::Product<&'a T<U>> for T<U>
-where
-    U: Tag, <U as Tag>::BaseType:std::iter::Product<&'a <U as Tag>::BaseType>
+// String methods
+impl<U: Tag> T<U>
+where U:Tag<BaseType=String>
 {
-    fn product<I>(iter: I) -> T<U>
-    where
-        I: Iterator<Item = &'a T<U> >
+    pub fn as_bytes(&self) -> &[u8] { self.value.as_bytes() }
+    pub fn capacity(&self) -> usize { self.value.capacity() }
+    pub fn with_capacity(capacity: usize) -> T<U> { T::<U> { value: String::with_capacity(capacity) } }
+    pub fn clear(&mut self) { self.value.clear(); }
+    pub fn drain<R>(&mut self, range: R) -> std::string::Drain<'_>
+      where R: std::ops::RangeBounds<usize>
     {
-	T::<U>{ value: <U::BaseType as std::iter::Product<&'a U::BaseType>>::product(IA { i: iter }) }
+	self.value.drain(range)
+    }
+    pub unsafe fn from_raw_parts(
+	buf: *mut u8,
+	length: usize,
+	capacity: usize
+    ) -> T<U> { Self{value:String::from_raw_parts(buf, length, capacity)} }
+    pub fn from_utf16(v: &[u16]) -> Result<T<U>, std::string::FromUtf16Error>
+    {
+	let r = String::from_utf16(v);
+	match r{
+	    Err(e) => Err(e),
+	    Ok(x) => Ok(T::<U>{value:x})
+	}
+    }
+    pub fn from_utf16_lossy(v: &[u16]) -> T<U> { T::<U>{value: String::from_utf16_lossy(v)} }
+    pub fn from_utf8(v: Vec<u8>) -> Result<T<U>, std::string::FromUtf8Error>
+    {
+	let r = String::from_utf8(v);
+	match r{
+	    Err(e) => Err(e),
+	    Ok(x) => Ok(T::<U>{value:x})
+	}
+    }
+    pub unsafe fn from_utf8_unchecked(bytes: Vec<u8>) -> T<U>
+    {
+	Self{value: String::from_utf8_unchecked(bytes) }
+    }
+    pub fn into_bytes(self) -> Vec<u8> {
+	self.value.into_bytes()
+    }
+    pub fn reserve(&mut self, additional: usize){
+	self.value.reserve(additional)
+    }
+    pub fn reserve_exact(&mut self, additional: usize){
+	self.value.reserve_exact(additional);
+    }
+    pub fn try_reserve(&mut self, additional: usize) -> Result<(), std::collections::TryReserveError>
+    {
+	self.value.try_reserve(additional)
+    }
+    pub fn try_reserve_exact(&mut self,
+			     additional: usize) -> Result<(), std::collections::TryReserveError>
+    {
+	self.value.try_reserve_exact(additional)
     }
 }
-*/
+
+impl<U: Tag> std::convert::From<&str> for T<U>
+where U:Tag<BaseType=String>
+{
+    fn from(x: &str) -> Self { Self { value: String::from(x) } }
+}
+

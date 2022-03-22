@@ -163,13 +163,67 @@ fn main() {
     assert::equal(&format!("{:E}", I1{value:42}).as_str(), &"4.2E1"); // LowerExp
     assert::equal(&format!("{:X}", I1{value:42}).as_str(), &"2A"); // LowerHex
 
-    let d = S1{value: String::from("fred")};
-    let mut e = d.clone();
-
+    let mut d = S1{value: String::from("fred")};
+    let e = d.clone();
+    assert::equal(&d, &e);
+    d.clear();
+    assert::not_equal(&d, &e);
+    assert::equal(&d, &S1::from(""));
+    
     assert::equal(&I1 {value: -6}.abs(), &I1{value:6});
 
-    let d = [ S1{value: String::from("fred")}, S1{value: String::from(" jones")} ];
+    assert::equal(&S1::from("fred").as_bytes(), &String::from("fred").as_bytes());
 
-    let mut s = S1{ value: String::from("Mr ") };
-    s.extend(d.iter());
+    assert::equal(&S1::with_capacity(10).capacity(), &10);
+
+    let mut d = S1{value: String::from("fred")};
+    d.drain(2..);
+    assert::equal(&d, &S1::from("fr"));
+
+    // 𝄞music
+    let v = &[0xD834, 0xDD1E, 0x006d, 0x0075,
+              0x0073, 0x0069, 0x0063];
+    assert::equal(&S1::from("𝄞music"), &S1::from_utf16(v).unwrap());
+    
+    // 𝄞mu<invalid>ic
+    let v = &[0xD834, 0xDD1E, 0x006d, 0x0075,
+              0xD800, 0x0069, 0x0063];
+    assert::equal(&S1::from_utf16(v).is_err(), &true);
+
+    // 𝄞mus<invalid>ic<invalid>
+    let v = &[0xD834, 0xDD1E, 0x006d, 0x0075,
+              0x0073, 0xDD1E, 0x0069, 0x0063,
+              0xD834];
+
+    // REVISIT: rs-dep needs update
+    //assert::equal(S1::from("𝄞mus\u{FFFD}ic\u{FFFD}"),S1::from_utf16_lossy(v));
+
+    // some bytes, in a vector
+    let sparkle_heart = vec![240, 159, 146, 150];
+
+    // We know these bytes are valid, so we'll use `unwrap()`.
+    let sparkle_heart = S1::from_utf8(sparkle_heart).unwrap();
+    
+    assert::equal(&S1::from("💖"), &sparkle_heart);
+
+    // some bytes, in a vector
+    let sparkle_heart = vec![240, 159, 146, 150];
+    
+    let sparkle_heart = unsafe {
+	S1::from_utf8_unchecked(sparkle_heart)
+    };
+    
+    assert::equal(&S1::from("💖"), &sparkle_heart);
+
+    let s = S1::from("hello");
+    let bytes = s.into_bytes();
+    
+    assert::equal(&bytes[1], &101);
+
+    let mut s = S1::from("fred");
+    s.reserve(3);
+    assert::greater_equal(&s.capacity(), &7);
+    let mut s = S1::from("fred");
+    s.reserve_exact(3);
+    assert::greater_equal(&s.capacity(), &7);
 }

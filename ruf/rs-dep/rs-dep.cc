@@ -166,8 +166,9 @@ public:
     }
   }
   // Parser::
-  virtual std::string target() const throw() {
-    return "raw string literal";
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    return hcp_parser::fixed_target("raw string literal");
   }
 
   class InvalidDelimeterChar : public Exception::Cause
@@ -346,11 +347,29 @@ public:
       }
     }
   }
-  virtual std::string target() const throw() {
-    std::ostringstream s;
-    s << "parse text, balancing (), [], {}, <>, stringLiteral, up to but "
-      << "not including " << until_->target();
-    return s.str();
+  class Target : public hcp_parser::Exception::Target
+  {
+  public:
+    explicit Target(PR until):
+        until_(std::move(until))
+    {
+    }
+    PR until_;
+
+    // hcp_parser::Exception::Target::
+    std::string target() const throw(){
+      std::ostringstream s;
+      s << "parse text, balancing (), [], {}, <>, stringLiteral, up to but "
+        << "not including " << until_->target();
+      return s.str();
+    }
+  };
+  
+  // Parser::
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    return std::unique_ptr<hcp_parser::Exception::Target const>(
+      new Target(until_));
   }
 };
 
@@ -369,8 +388,19 @@ public:
   // Parser::
   virtual ParseResult parse_(I const at, Options const& o) throw() override;
 
+  class Target : public hcp_parser::Exception::Target
+  {
+  public:
+    // hcp_parser::Exception::Target::
+    std::string target() const throw();
+  };
+  
   // Parser::
-  virtual std::string target() const throw() override;
+  virtual std::shared_ptr<hcp_parser::Exception::Target const> target() const throw()
+  {
+    return std::unique_ptr<hcp_parser::Exception::Target const>(
+      new Target);
+  }
 };
 
 PR recurseItem() noexcept
@@ -571,8 +601,8 @@ ParseResult RecurseItem::parse_(I const at, Options const& o) throw()
 {
   return item()->parse_(at, o);
 }
-std::string RecurseItem::target() const throw() {
-  return item()->target();
+std::string RecurseItem::Target::target() const throw() {
+  return item()->target()->target();
 }
   
 
