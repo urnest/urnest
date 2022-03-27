@@ -11,8 +11,12 @@
 extern crate ruf_newtype;
 extern crate ruf_assert;
 
-use ruf_assert as assert;
-
+// Unique* types each based on specified BaseType. Where BaseType is a
+// primitive type, the new type will have most of the methods of the base type
+// (but cannot be used where the BaseType is required).
+//
+// * For example, I1 cannot be used where I2 is required and vice-versa.
+// 
 struct I1_; impl ruf_newtype::Tag for I1_ { type BaseType = i32;}
 struct I2_; impl ruf_newtype::Tag for I2_ { type BaseType = f64;}
 struct B1_; impl ruf_newtype::Tag for B1_ { type BaseType = bool;}
@@ -27,6 +31,7 @@ type S1 = ruf_newtype::T<S1_>;
 
 use std::hash::Hasher;
 use std::hash::Hash;
+use ruf_assert as assert;
 
 fn main() {
     let a = I1 {value: 22};
