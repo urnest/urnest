@@ -1,0 +1,26 @@
+Various rust crates, including:
+
+- ruf_new_type
+    create new types having most methods of base types, e.g. FullName that has most String methods;
+    see test-newtype.rs for more info and examples
+- ruf_tree
+    generic tree with fully safe mutation interface (no pointers, no numeric indices that can end up
+    pointing to wrong / non-existent items)
+- ruf_assert
+    always core dump capturing arguments (LHS and RHS) as variables
+
+... plus a rust crate-dependency scanner for rust source files (rs-dep). The dependency scanner
+looks for "extern crate" statements and generate an odin view-spec for the referenced crates.
+
+Notes on the directory hierarchy and the code:
+
+- crate xxx is implemented xxx/mod.rs not xxx.rs because rustc 1.59 cannot handle xxx.rs properly
+  as a crate root file (I forget the details)
+- crate ruf_xxx unit tests are in separate files, e.g. ruf_xxx/test-xxx.rs because otherwise we end up
+  recompiling dependend modules even if we only add a test case to a module.
+- each "feature" is a separate crate, rather than a module because rust has no concept of
+  compiling a module, it can only compile whole crates. (So rust crate is the equivalent of a
+  C++ compilation unit, and rust dependency only makes sense at crate level, not individual .rs
+  file level.)
+- each create has prefix ruf_ because rust has no concept of structured crate namespaces, i.e.
+  I would rather have crates called ruf/assert, ruf/tree etc but rust cannot do that.
