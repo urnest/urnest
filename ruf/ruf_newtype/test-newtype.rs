@@ -194,9 +194,7 @@ fn main() {
     let v = &[0xD834, 0xDD1E, 0x006d, 0x0075,
               0x0073, 0xDD1E, 0x0069, 0x0063,
               0xD834];
-
-    // REVISIT: rs-dep needs update
-    //assert::equal(S1::from("𝄞mus\u{FFFD}ic\u{FFFD}"),S1::from_utf16_lossy(v));
+    assert::equal(&S1::from("𝄞mus\u{FFFD}ic\u{FFFD}"),&S1::from_utf16_lossy(v));
 
     // some bytes, in a vector
     let sparkle_heart = vec![240, 159, 146, 150];
@@ -226,4 +224,23 @@ fn main() {
     let mut s = S1::from("fred");
     s.reserve_exact(3);
     assert::greater_equal(&s.capacity(), &7);
+
+    let mut x = S1::from("");
+    x.push('a');
+    assert::equal(&x, &S1::from("a"));
+    assert::equal(&x.pop().unwrap(), &'a');
+    
+    let mut x = S1::from("fred");
+    x.remove(2);
+    assert::equal(&x, &S1::from("frd"));
+    x.retain(|c| c != 'r');
+    assert::equal(&x, &S1::from("fd"));
+
+    assert::equal(&x.split_off(1), &S1::from("d"));
+    assert::equal(&x, &S1::from("f"));
+
+    let mut x = S1::from("fred");
+    x.truncate(2);
+    assert::equal(&x, &S1::from("fr"));
+    
 }

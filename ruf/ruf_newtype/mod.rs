@@ -388,6 +388,17 @@ where U:Tag<BaseType=String>
 	length: usize,
 	capacity: usize
     ) -> T<U> { Self{value:String::from_raw_parts(buf, length, capacity)} }
+    pub fn is_empty(&self) -> bool { self.value.is_empty() }
+    pub fn len(&self) -> usize { self.len() }
+    pub fn pop(&mut self) -> Option<char> { self.value.pop() }
+    pub fn push(&mut self, ch: char) { self.value.push(ch) }
+    pub fn remove(&mut self, idx: usize) -> char { self.value.remove(idx) }
+    pub fn retain<F>(&mut self, f: F) where F: std::ops::FnMut(char) -> bool {
+	self.value.retain(f)
+    }
+    pub fn split_off(&mut self, at: usize) -> T<U> { Self {value:self.value.split_off(at)} }
+    pub fn truncate(&mut self, new_len: usize) { self.value.truncate(new_len) }
+    
     pub fn from_utf16(v: &[u16]) -> Result<T<U>, std::string::FromUtf16Error>
     {
 	let r = String::from_utf16(v);

@@ -1061,7 +1061,7 @@ PR stringEscapeSequence() throw()
 {
   static PR stringEscapeSequence(
     parseLiteral("\\")+(
-      parseOneOfChars("'\"?\\abfnrtv")|
+      parseOneOfChars("'\"?\\abfnrtvuU")|
       (octalDigit()+octalDigit()+octalDigit())|
       (octalDigit()+octalDigit())|
       octalDigit()|
