@@ -177,10 +177,37 @@ fn d()
     println!("{}",d.d);
 }
 
+// dyn trait with lifetime
+struct R<'a>
+{
+    x : &'a str
+}
+
+impl<'a> std::fmt::Display for R<'a>
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+    {
+	write!(f, "{}", self.x)
+    }
+}
+
+fn e<'a>(x: &'a str) -> Box<dyn std::fmt::Display+'a>
+    //                          ^^^^^^^^^^^^^^^^^^^^ trait object
+{
+    Box::new(R::<'a>{x:x})
+}
+
+fn ee()
+{
+    let x = e("fred");
+    println!("{}", x);
+}
+
 fn main()
 {
     a();
     b();
     c();
     d();
+    ee();
 }

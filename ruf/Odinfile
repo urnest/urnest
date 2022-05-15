@@ -16,5 +16,3 @@ rs-dep%all.tree:leaves
 
 %test-context == test-context.rs+(%rs-opts)+L=(../../anyhow/target/debug):exe
 %test-context.output == ()+cmd=RUST_BACKTRACE\=full (%test-context):exec.output:err
-
-

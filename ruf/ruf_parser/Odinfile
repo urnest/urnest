@@ -1,0 +1,7 @@
+%all==%all.parser:leaves
+
+%all.parser==<<
+%test-parser.output
+
+%test-parser == test-parser.rs+(..%rs-opts):exe
+%test-parser.output == ()+cmd=RUST_BACKTRACE\=full (%test-parser):exec.output
