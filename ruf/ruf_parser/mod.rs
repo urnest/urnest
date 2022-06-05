@@ -30,8 +30,8 @@ pub struct Context<'text, 'goal>
 
 pub struct ParseFailed<'text, 'goals, 'parser>
 {
-    pub context: Vec< Context<'text, 'goals> >,
-    pub cause: Box<dyn std::fmt::Display+'parser>
+    pub cause: Box<dyn std::fmt::Display+'parser>,
+    pub context: Vec< Context<'text, 'goals> >    // outermost is last
 }
 
 pub type ParseResult<'text, 'goals, 'parser> = std::result::Result<
@@ -45,6 +45,7 @@ pub trait Parser
       where 'text: 'parser, 'parser: 'goals;
 }
 
+pub type Ref<'parser> = std::sync::Arc<dyn Parser+'parser>;
 
 pub mod parse
 {
@@ -58,7 +59,7 @@ pub mod parse
 	    // REVISIT: need a rust-escape-string formatting function so that e.g.
 	    // Literal{ x: "the \"big\" bird" } formats as:
 	    // parse "the \"big\" bird"
-	    write!(f, "parse \"{}\"", self.x)
+	    write!(f, "\"{}\"", self.x)
 	}
     }
     pub struct LiteralNotFound<'cause> {
@@ -97,19 +98,70 @@ pub mod parse
 	    crate::ParseResult<'text, 'goals, 'parser>
 	where 'text: 'parser, 'parser: 'goals, 'literal: 'parser
 	{
-	    if text.starts_with(self.x) {
-		let (x, y) = text.split_at(self.x.len());
-		return crate::ParseResult::<'text, 'goals, 'parser>::Ok(
-		    ( crate::AST{ value: crate::ast::Item { tag: None, text: x },
-				  children: vec!() }, y) );
+	    let result = {
+		if text.starts_with(self.x) {
+		    let (x, y) = text.split_at(self.x.len());
+		    crate::ParseResult::<'text, 'goals, 'parser>::Ok(
+			( crate::AST{ value: crate::ast::Item { tag: None, text: x },
+				      children: vec!() }, y) )
+		}
+		else {
+		    let goal = crate::Context{ goal: self, at: &text};
+		    crate::ParseResult::<'text, 'goals, 'parser>::Err(
+			crate::ParseFailed::<'text, 'goals, 'parser>{
+			    context: vec!( goal ),
+			    cause: LiteralNotFound::new(&self.x, &text)
+			})
+		}
+	    };
+	    match result {
+		crate::ParseResult::Ok(x) => crate::ParseResult::Ok(x),
+		crate::ParseResult::Err(mut e) => {
+		    e.context.push( crate::Context::<'text, 'goals> { at: text, goal: self } );
+		    crate::ParseResult::Err(e)
+		}
 	    }
-	    let goal = crate::Context{ goal: self, at: &text};
-	    return crate::ParseResult::<'text, 'goals, 'parser>::Err(
-		crate::ParseFailed::<'text, 'goals, 'parser>{
-		    context: vec!( goal ),
-		    cause: LiteralNotFound::new(&self.x, &text)
-		});
 	}
     }
 
+    pub struct Tagged<'content> {
+	pub tag: &'static str,
+	pub content: crate::Ref<'content>
+    }
+    impl<'content> std::fmt::Display for Tagged<'content>
+    {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+	{
+	    write!(f, "{}", self.tag)
+	}
+    }
+    impl<'content> crate::Parser for Tagged<'content>
+    {
+	fn parse_some_of<'text, 'goals, 'parser>(self: &'parser Self, text: &'text str) ->
+	    crate::ParseResult<'text, 'goals, 'parser>
+	where 'text: 'parser, 'parser: 'goals, 'content: 'parser
+	{
+	    let result = self.content.parse_some_of(text);
+	    match result {
+		crate::ParseResult::Ok(x) => crate::ParseResult::Ok(
+		    ( crate::AST{ value: crate::ast::Item{ tag: Some(self.tag), text: x.0.value.text },
+				  children: vec!(x.0) },
+		      x.1 )),
+		crate::ParseResult::Err(mut e) => {
+		    e.context.push( crate::Context::<'text, 'goals> { at: text, goal: self } );
+		    crate::ParseResult::Err(e)
+		}
+	    }
+	}
+    }
+}
+
+pub fn literal(x: &'static str) -> Ref<'static>
+{
+    std::sync::Arc::new(parse::Literal{x: x})
+}
+
+pub fn tagged<'parser>(tag: &'static str, content: Ref<'parser>) -> Ref<'parser>
+{
+    std::sync::Arc::new(parse::Tagged{ tag: tag, content: content })
 }
