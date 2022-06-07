@@ -1,6 +1,6 @@
-%all==%all.parser:leaves
+%all==%all.parser.tree:leaves
 
-%all.parser==<<
+%all.parser.tree==<<
 %test-parser.output
 
 %test-parser == test-parser.rs+(..%rs-opts):exe
