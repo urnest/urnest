@@ -2,6 +2,10 @@
 
 %all.parser.tree==<<
 %test-parser.output
+%test-separated_by.output
 
 %test-parser == test-parser.rs+(..%rs-opts):exe
 %test-parser.output == ()+cmd=RUST_BACKTRACE\=full (%test-parser):exec.output
+
+%test-separated_by == test-separated_by.rs+(..%rs-opts):exe
+%test-separated_by.output == ()+cmd=RUST_BACKTRACE\=full (%test-separated_by):exec.output
