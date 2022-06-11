@@ -63,14 +63,15 @@ impl<'text, 'goals, 'parser> std::fmt::Display for ParseFailed<'text, 'goals, 'p
     {
         if f.alternate() {
             // multi-line format with preceding line, col phrase with inline line, col info, e.g.
-            // failed to parse "fred" at line 3 column 5 because "jock..." does not start with "fred"
+            // 3:5: failed to parse "fred" because
+            // 3:5: "jock..." does not start with "fred"
             let mut lc = LineCol { line: 1, col: 1};
             let mut prev_context = self.context.iter().rev().next();
             self.context.iter().rev().try_for_each(|context| {
                 let prev_text = prev_context.unwrap().at;
                 lc.advance_through(prev_text.split_at(prev_text.len()-context.at.len()).0);
                 prev_context = Some(context);
-                write!(f, "{line}:{col}: failed to {goal} because \n",
+                write!(f, "{line}:{col}: failed to {goal} because\n",
                        goal = context.goal.to_string().as_str(),
                        line = lc.line,
                        col = lc.col)

@@ -40,6 +40,7 @@ fn main() {
 	},
 	Some(result) => {
 	    assert::equal(&result.cause.to_string().as_str(), &"\"fred w...\" does not start with \"freddy\"");
+	    assert::equal(&format!("{:#}", result).as_str(), &"1:1: failed to parse \"freddy\" because\n1:1: \"fred w...\" does not start with \"freddy\"");
 	}
     }
     let p = parser::tagged("jock", parser::literal("fred"));
