@@ -109,8 +109,7 @@ pub trait Parser
         ParseResult<'text, 'goals, 'parser>
     where 'text: 'parser, 'parser: 'goals;
     
-    fn goal<'parser, 'goal>(self: &'parser Self) -> &'goal dyn std::fmt::Display
-        where 'parser: 'goal;
+    fn goal(self: & Self) -> & dyn std::fmt::Display;
 
     fn parse_some_of<'text, 'goals, 'parser>(&'parser self, text: &'text str) ->
         ParseResult<'text, 'goals, 'parser>
@@ -126,7 +125,6 @@ pub trait Parser
             }
         
     }
-    
 }
 
 #[derive(Clone)]
@@ -215,8 +213,7 @@ pub mod parse
                     })
             }
         }
-        fn goal<'parser, 'goal>(self: &'parser Self) -> &'goal dyn std::fmt::Display
-        where 'parser: 'goal
+        fn goal(self: & Self) -> & dyn std::fmt::Display
         {
             self
         }
@@ -250,8 +247,7 @@ pub mod parse
                 }
             }
         }
-        fn goal<'parser, 'goal>(self: &'parser Self) -> &'goal dyn std::fmt::Display
-        where 'parser: 'goal
+        fn goal(self: & Self) -> & dyn std::fmt::Display
         {
             self
         }
@@ -259,7 +255,7 @@ pub mod parse
 
     pub struct And<'parser>
     {
-        pub terms: Vec<crate::Ref<'parser> >
+        pub terms: Vec<std::sync::Arc<dyn crate::Parser+'parser>>
     }
     struct DisplayThen {}
     impl<'parser> std::fmt::Display for DisplayThen
@@ -306,8 +302,7 @@ pub mod parse
             result.value.text = text.split_at(text.len() - rest.len()).0;
             return crate::ParseResult::Ok( (result, rest) );
         }
-        fn goal<'parser, 'goal>(self: &'parser Self) -> &'goal dyn std::fmt::Display
-        where 'parser: 'goal
+        fn goal(self: & Self) -> & dyn std::fmt::Display
         {
             self
         }
@@ -324,10 +319,46 @@ pub fn tagged<'parser>(tag: &'static str, content: Ref<'parser>) -> Ref<'parser>
     Ref::new(parse::Tagged{ tag: tag, content: content })
 }
 
-impl<'parser> std::ops::Add for Ref<'parser> {
-    type Output = Self;
+pub struct AndRef<'parser>
+{
+    x: std::sync::Arc<parse::And<'parser>>
+}
+impl<'parser> std::ops::Deref for AndRef<'parser>
+{
+    type Target = dyn Parser+'parser;
+    fn deref(&self) -> &Self::Target { &*self.x }
+}
 
-    fn add(self, other: Self) -> Self {
-        Ref::new(parse::And{ terms : vec!( self, other ) })
+impl<'parser> std::ops::Add for Ref<'parser> {
+    type Output = AndRef<'parser>;
+
+    fn add(self, other: Ref<'parser>) -> Self::Output {
+        AndRef::<'parser>{
+            x: std::sync::Arc::<parse::And<'parser>>::new(
+                parse::And::<'parser>{ terms : vec!( self.x.clone(), other.x.clone() ) }) }
+    }
+}
+
+impl<'parser> std::ops::Add<Ref<'parser>> for AndRef<'parser> {
+    type Output = AndRef<'parser>;
+
+    fn add(self, other: Ref<'parser>) -> Self::Output {
+        let mut terms = self.x.terms.clone();
+        terms.push(other.x.clone());
+        AndRef::<'parser>{
+            x: std::sync::Arc::<parse::And<'parser>>::new(
+                parse::And::<'parser>{ terms : terms }) }
+    }
+}
+
+impl<'parser> std::ops::Add for AndRef<'parser> {
+    type Output = AndRef<'parser>;
+
+    fn add(self, other: AndRef<'parser>) -> Self::Output {
+        let mut terms = self.x.terms.clone();
+        terms.append(&mut other.x.terms.clone());
+        AndRef::<'parser>{
+            x: std::sync::Arc::<parse::And<'parser>>::new(
+                parse::And::<'parser>{ terms : terms }) }
     }
 }

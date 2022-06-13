@@ -102,7 +102,7 @@ fn main() {
     lc.advance_through("\n\t");
     assert::equal(&lc, &parser::LineCol{ line:8, col:8 });
 
-    let p = parser::literal("fred") + parser::literal(" was");
+    let p = parser::literal("fred").clone() + parser::literal(" was").clone();
     assert::equal(&p.goal().to_string().as_str(), &"parse \"fred\" then parse \" was\"");
     let y = p.parse_some_of(x);
     match y {
@@ -125,6 +125,39 @@ fn main() {
                 ),
             });
 	    assert::equal(&rest, &" very good");
+	},
+	parser::ParseResult::Err(_e) => {
+	    assert::equal(&true, &false);
+	}
+    }
+    let p = parser::literal("fred") + parser::literal(" was") + parser::literal(" very");
+    assert::equal(&p.goal().to_string().as_str(), &"parse \"fred\" then parse \" was\" then parse \" very\"");
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( (ast, rest) ) => {
+	    assert::equal(&ast, &parser::AST{
+		value: parser::ast::Item{
+		    tag: None,
+		    text: "fred was very" },
+		children: vec!(
+                    parser::AST{
+		        value: parser::ast::Item{
+			    tag: None,
+			    text: "fred"},
+		        children: vec!() },
+                    parser::AST{
+		        value: parser::ast::Item{
+			    tag: None,
+			    text: " was"},
+		        children: vec!() },
+                    parser::AST{
+		        value: parser::ast::Item{
+			    tag: None,
+			    text: " very"},
+		        children: vec!() }
+                ),
+            });
+	    assert::equal(&rest, &" good");
 	},
 	parser::ParseResult::Err(_e) => {
 	    assert::equal(&true, &false);
