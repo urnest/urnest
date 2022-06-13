@@ -127,25 +127,6 @@ pub trait Parser
     }
 }
 
-#[derive(Clone)]
-pub struct Ref<'parser>
-{
-    x: std::sync::Arc<dyn Parser+'parser>
-}
-impl<'parser> Ref<'parser>
-{
-    pub fn new<T>(data: T) -> Ref<'parser>
-    where T: Parser+'parser
-    {
-        Ref::<'parser>{ x: std::sync::Arc::new(data) }
-    }
-}
-impl<'parser> std::ops::Deref for Ref<'parser>
-{
-    type Target = dyn Parser+'parser;
-    fn deref(&self) -> &Self::Target { &*self.x }
-}
-
 pub mod parse
 {
     use crate::separated_by::IteratorSeparatedBy;
@@ -221,7 +202,7 @@ pub mod parse
 
     pub struct Tagged<'content> {
         pub tag: &'static str,
-        pub content: crate::Ref<'content>
+        pub content: std::sync::Arc<dyn crate::Parser+'content>
     }
     impl<'content> std::fmt::Display for Tagged<'content>
     {
@@ -309,6 +290,38 @@ pub mod parse
     }
 }
 
+#[derive(Clone)]
+enum Operator<'parser>
+{
+    None,
+    And(std::sync::Arc<parse::And<'parser>>)
+}
+
+#[derive(Clone)]
+pub struct Ref<'parser>
+{
+    x: std::sync::Arc<dyn Parser+'parser>,
+    op: Operator<'parser>
+}
+impl<'parser> Ref<'parser>
+{
+    pub fn new<T>(data: T) -> Ref<'parser>
+    where T: Parser+'parser
+    {
+        Ref::<'parser>{ x: std::sync::Arc::new(data), op: Operator::None }
+    }
+    pub fn new_and(terms: Vec<std::sync::Arc<dyn crate::Parser+'parser>>) -> Ref<'parser>
+    {
+        let and = std::sync::Arc::new(parse::And::<'parser>{ terms: terms});
+        Ref::<'parser>{ x: and.clone(), op: Operator::And(and) }
+    }
+}
+impl<'parser> std::ops::Deref for Ref<'parser>
+{
+    type Target = dyn Parser+'parser;
+    fn deref(&self) -> &Self::Target { &*self.x }
+}
+
 pub fn literal(x: &'static str) -> Ref<'static>
 {
     Ref::new(parse::Literal{x: x})
@@ -316,49 +329,35 @@ pub fn literal(x: &'static str) -> Ref<'static>
 
 pub fn tagged<'parser>(tag: &'static str, content: Ref<'parser>) -> Ref<'parser>
 {
-    Ref::new(parse::Tagged{ tag: tag, content: content })
-}
-
-pub struct AndRef<'parser>
-{
-    x: std::sync::Arc<parse::And<'parser>>
-}
-impl<'parser> std::ops::Deref for AndRef<'parser>
-{
-    type Target = dyn Parser+'parser;
-    fn deref(&self) -> &Self::Target { &*self.x }
+    Ref::new(parse::Tagged{ tag: tag, content: content.x })
 }
 
 impl<'parser> std::ops::Add for Ref<'parser> {
-    type Output = AndRef<'parser>;
+    type Output = Ref<'parser>;
 
     fn add(self, other: Ref<'parser>) -> Self::Output {
-        AndRef::<'parser>{
-            x: std::sync::Arc::<parse::And<'parser>>::new(
-                parse::And::<'parser>{ terms : vec!( self.x.clone(), other.x.clone() ) }) }
-    }
-}
-
-impl<'parser> std::ops::Add<Ref<'parser>> for AndRef<'parser> {
-    type Output = AndRef<'parser>;
-
-    fn add(self, other: Ref<'parser>) -> Self::Output {
-        let mut terms = self.x.terms.clone();
-        terms.push(other.x.clone());
-        AndRef::<'parser>{
-            x: std::sync::Arc::<parse::And<'parser>>::new(
-                parse::And::<'parser>{ terms : terms }) }
-    }
-}
-
-impl<'parser> std::ops::Add for AndRef<'parser> {
-    type Output = AndRef<'parser>;
-
-    fn add(self, other: AndRef<'parser>) -> Self::Output {
-        let mut terms = self.x.terms.clone();
-        terms.append(&mut other.x.terms.clone());
-        AndRef::<'parser>{
-            x: std::sync::Arc::<parse::And<'parser>>::new(
-                parse::And::<'parser>{ terms : terms }) }
+        match (self.op.clone(), other.op.clone()) {
+            (Operator::None, Operator::None) => {
+                let terms: Vec<std::sync::Arc<dyn crate::Parser+'parser>> = vec!(
+                    self.x.clone(), other.x.clone());
+                Ref::<'parser>::new_and(terms)
+            },
+            (Operator::None, Operator::And(and2)) => {
+                let mut terms: Vec<std::sync::Arc<dyn crate::Parser+'parser>> = vec!(
+                    self.x.clone());
+                terms.append(&mut and2.terms.clone());
+                Ref::<'parser>::new_and(terms)
+            },
+            (Operator::And(and), Operator::None) => {
+                let mut terms: Vec<std::sync::Arc<dyn crate::Parser+'parser>> = and.terms.clone();
+                terms.push(other.x.clone());
+                Ref::<'parser>::new_and(terms)
+            },
+            (Operator::And(and), Operator::And(and2)) => {
+                let mut terms: Vec<std::sync::Arc<dyn crate::Parser+'parser>> = and.terms.clone();
+                terms.append(&mut and2.terms.clone());
+                Ref::<'parser>::new_and(terms)
+            }
+        }
     }
 }
