@@ -15,6 +15,24 @@ use ruf_parser as parser;
 use ruf_assert as assert;
 use parser::Parser;
 
+// This is just to demonstrate that we can combine parsers of different
+// lifetime (can't just create a static parser::Ref as it doesn't meet
+// the "const" function limitations of static variables).
+// In practice there's no significant advantage creating lazy static parsers as they
+// are cheap to create anyway and unlikely to ever lead to optimisation.
+fn static_parse_very() -> parser::Ref<'static>
+{
+    unsafe{ // replace with std::lazy::Lazy when it becomes main stream
+        static mut P: Option<parser::Ref> = None;
+        static O: std::sync::Once = std::sync::Once::new();
+        O.call_once(|| {
+            P = Some(parser::literal(" very"));
+        });
+        return P.as_ref().unwrap().clone();
+    }
+}
+
+        
 fn main() {
     let x = "fred was very good";
     let y = parser::parse::Literal{ x: "fred" }.parse_some_of(x);
@@ -131,6 +149,40 @@ fn main() {
 	}
     }
     let p = parser::literal("fred") + parser::literal(" was") + parser::literal(" very");
+    assert::equal(&p.goal().to_string().as_str(), &"parse \"fred\" then parse \" was\" then parse \" very\"");
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( (ast, rest) ) => {
+	    assert::equal(&ast, &parser::AST{
+		value: parser::ast::Item{
+		    tag: None,
+		    text: "fred was very" },
+		children: vec!(
+                    parser::AST{
+		        value: parser::ast::Item{
+			    tag: None,
+			    text: "fred"},
+		        children: vec!() },
+                    parser::AST{
+		        value: parser::ast::Item{
+			    tag: None,
+			    text: " was"},
+		        children: vec!() },
+                    parser::AST{
+		        value: parser::ast::Item{
+			    tag: None,
+			    text: " very"},
+		        children: vec!() }
+                ),
+            });
+	    assert::equal(&rest, &" good");
+	},
+	parser::ParseResult::Err(_e) => {
+	    assert::equal(&true, &false);
+	}
+    }
+
+    let p = parser::literal("fred") + parser::literal(" was") + static_parse_very();
     assert::equal(&p.goal().to_string().as_str(), &"parse \"fred\" then parse \" was\" then parse \" very\"");
     let y = p.parse_some_of(x);
     match y {
