@@ -13,7 +13,6 @@ extern crate ruf_assert;
 
 use ruf_parser as parser;
 use ruf_assert as assert;
-use parser::Parser;
 
 // This is just to demonstrate that we can combine parsers of different
 // lifetime (can't just create a static parser::Ref as it doesn't meet
@@ -35,7 +34,8 @@ fn static_parse_very() -> parser::Ref<'static>
         
 fn main() {
     let x = "fred was very good";
-    let y = parser::parse::Literal{ x: "fred" }.parse_some_of(x);
+    let p = parser::literal("fred");
+    let y = p.parse_some_of(x);
     match y.ok() {
 	None => {
 	    assert::equal(&true, &false);
@@ -51,7 +51,8 @@ fn main() {
 			      x.get(4..).unwrap() ) );
 	}
     }
-    let y = parser::parse::Literal{ x: "freddy" }.parse_some_of(x);
+    let p = parser::literal("freddy");
+    let y = p.parse_some_of(x);
     match y.err() {
 	None => {
 	    assert::equal(&true, &false);
