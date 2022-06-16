@@ -216,4 +216,71 @@ fn main() {
 	    assert::equal(&true, &false);
 	}
     }
+
+    let p = parser::literal("fred") | parser::literal(" was") | static_parse_very();
+    assert::equal(&p.goal().to_string().as_str(), &"parse \"fred\" or parse \" was\" or parse \" very\"");
+    let x = "fred was very good";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( (ast, rest) ) => {
+	    assert::equal(&ast, &parser::AST{
+		value: parser::ast::Item{
+		    tag: None,
+		    text: "fred" },
+		children: vec!(),
+            });
+	    assert::equal(&rest, &" was very good");
+	},
+	parser::ParseResult::Err(_e) => {
+	    assert::equal(&true, &false);
+	}
+    }
+
+    let p = parser::literal("fred") | parser::literal(" was") | static_parse_very();
+    assert::equal(&p.goal().to_string().as_str(), &"parse \"fred\" or parse \" was\" or parse \" very\"");
+    let x = " was very good";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( (ast, rest) ) => {
+	    assert::equal(&ast, &parser::AST{
+		value: parser::ast::Item{
+		    tag: None,
+		    text: " was" },
+		children: vec!(),
+            });
+	    assert::equal(&rest, &" very good");
+	},
+	parser::ParseResult::Err(_e) => {
+	    assert::equal(&true, &false);
+	}
+    }
+
+    let p = parser::literal("fred") + (parser::literal(" was") | static_parse_very());
+    assert::equal(&p.goal().to_string().as_str(), &"parse \"fred\" then parse \" was\" or parse \" very\"");
+    let x = "fred very good";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( (ast, rest) ) => {
+	    assert::equal(&ast, &parser::AST{
+		value: parser::ast::Item{
+		    tag: None,
+		    text: "fred very" },
+		children: vec!(
+                    parser::AST{
+		        value: parser::ast::Item{
+			    tag: None,
+			    text: "fred"},
+		        children: vec!() },
+                    parser::AST{
+		        value: parser::ast::Item{
+			    tag: None,
+			    text: " very"},
+		        children: vec!() }),
+            });
+	    assert::equal(&rest, &" good");
+	},
+	parser::ParseResult::Err(_e) => {
+	    assert::equal(&true, &false);
+	}
+    }
 }
