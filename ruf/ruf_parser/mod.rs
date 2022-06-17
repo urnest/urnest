@@ -97,8 +97,7 @@ impl<'text, 'goals, 'parser> std::fmt::Display for ParseFailed<'text, 'goals, 'p
 }
 
 pub type ParseResult<'text, 'goals, 'parser> = std::result::Result<
-        ( crate::AST<'text>,  // what we parsed
-          &'text str ),       // rest of text
+        crate::AST<'text>,  // what we parsed
     ParseFailed<'text, 'goals, 'parser> >;
 
 pub trait Parser

@@ -42,13 +42,11 @@ fn main() {
 	},
 	Some(result) => {
 	    assert::equal(&result,
-			  &(
-			      parser::AST{
-				  value: parser::ast::Item{
-				      tag: None,
-				      text: x.get(0..4).unwrap() },
-				  children: vec!() },
-			      x.get(4..).unwrap() ) );
+			  &parser::AST{
+			      value: parser::ast::Item{
+				  tag: None,
+				  text: x.get(0..4).unwrap() },
+			      children: vec!() } );
 	}
     }
     let p = parser::literal("freddy");
@@ -67,7 +65,7 @@ fn main() {
     let y = p.parse_some_of(x);
     
     match y {
-	parser::ParseResult::Ok( (ast, rest) ) => {
+	parser::ParseResult::Ok( ast ) => {
 	    assert::equal(&ast, &parser::AST{
 		value: parser::ast::Item{
 		    tag: Some("jock"),
@@ -77,7 +75,6 @@ fn main() {
 			tag: None,
 			text: x.get(0..4).unwrap() },
 		    children: vec!() } ) });
-	    assert::equal(&rest, &x.get(4..).unwrap());
 	},
 	parser::ParseResult::Err(_e) => {
 	    assert::equal(&true, &false);
@@ -125,7 +122,7 @@ fn main() {
     assert::equal(&p.goal().to_string().as_str(), &"parse \"fred\" then parse \" was\"");
     let y = p.parse_some_of(x);
     match y {
-	parser::ParseResult::Ok( (ast, rest) ) => {
+	parser::ParseResult::Ok( ast ) => {
 	    assert::equal(&ast, &parser::AST{
 		value: parser::ast::Item{
 		    tag: None,
@@ -143,7 +140,6 @@ fn main() {
 		        children: vec!() }
                 ),
             });
-	    assert::equal(&rest, &" very good");
 	},
 	parser::ParseResult::Err(_e) => {
 	    assert::equal(&true, &false);
@@ -153,7 +149,7 @@ fn main() {
     assert::equal(&p.goal().to_string().as_str(), &"parse \"fred\" then parse \" was\" then parse \" very\"");
     let y = p.parse_some_of(x);
     match y {
-	parser::ParseResult::Ok( (ast, rest) ) => {
+	parser::ParseResult::Ok( ast ) => {
 	    assert::equal(&ast, &parser::AST{
 		value: parser::ast::Item{
 		    tag: None,
@@ -176,7 +172,6 @@ fn main() {
 		        children: vec!() }
                 ),
             });
-	    assert::equal(&rest, &" good");
 	},
 	parser::ParseResult::Err(_e) => {
 	    assert::equal(&true, &false);
@@ -187,7 +182,7 @@ fn main() {
     assert::equal(&p.goal().to_string().as_str(), &"parse \"fred\" then parse \" was\" then parse \" very\"");
     let y = p.parse_some_of(x);
     match y {
-	parser::ParseResult::Ok( (ast, rest) ) => {
+	parser::ParseResult::Ok( ast ) => {
 	    assert::equal(&ast, &parser::AST{
 		value: parser::ast::Item{
 		    tag: None,
@@ -210,7 +205,6 @@ fn main() {
 		        children: vec!() }
                 ),
             });
-	    assert::equal(&rest, &" good");
 	},
 	parser::ParseResult::Err(_e) => {
 	    assert::equal(&true, &false);
@@ -222,14 +216,13 @@ fn main() {
     let x = "fred was very good";
     let y = p.parse_some_of(x);
     match y {
-	parser::ParseResult::Ok( (ast, rest) ) => {
+	parser::ParseResult::Ok( ast ) => {
 	    assert::equal(&ast, &parser::AST{
 		value: parser::ast::Item{
 		    tag: None,
 		    text: "fred" },
 		children: vec!(),
             });
-	    assert::equal(&rest, &" was very good");
 	},
 	parser::ParseResult::Err(_e) => {
 	    assert::equal(&true, &false);
@@ -241,14 +234,13 @@ fn main() {
     let x = " was very good";
     let y = p.parse_some_of(x);
     match y {
-	parser::ParseResult::Ok( (ast, rest) ) => {
+	parser::ParseResult::Ok( ast ) => {
 	    assert::equal(&ast, &parser::AST{
 		value: parser::ast::Item{
 		    tag: None,
 		    text: " was" },
 		children: vec!(),
             });
-	    assert::equal(&rest, &" very good");
 	},
 	parser::ParseResult::Err(_e) => {
 	    assert::equal(&true, &false);
@@ -260,7 +252,7 @@ fn main() {
     let x = "fred very good";
     let y = p.parse_some_of(x);
     match y {
-	parser::ParseResult::Ok( (ast, rest) ) => {
+	parser::ParseResult::Ok( ast ) => {
 	    assert::equal(&ast, &parser::AST{
 		value: parser::ast::Item{
 		    tag: None,
@@ -277,7 +269,6 @@ fn main() {
 			    text: " very"},
 		        children: vec!() }),
             });
-	    assert::equal(&rest, &" good");
 	},
 	parser::ParseResult::Err(_e) => {
 	    assert::equal(&true, &false);

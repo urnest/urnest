@@ -1,3 +1,36 @@
+* parser:
+  - always return completed IRs on failure
+    - as a tree or vec or with each context entry?
+  - include tag in context
+  - result cache
+  - primitives from hcp::parser:
+    listOf(open, x, sep, term)
+    nonEmptyListOf(x, moreflag)
+    none
+    match
+    not
+    and/or &str
+    n_to_m (could use 0..3 * xx()?)
+    optional
+    PR parseAnyChar() throw();
+PR parseOneOfChars(std::string const& chars) throw();
+PR parseOneOfChars(hcp::Chars const& chars) throw();
+PR parseAnyCharExcept(std::string const& chars) throw();
+PR charInRange(char const min, char const max) throw();
+PR parseUntil(PR const match, PR const until) throw();
+PR balanced(PR until, bool angles=false) throw();
+PR bracketed(PR x) throw(); //x inside brackets, with optional whitespace preceding x
+PR whitespaceChar() throw();
+PR digit() throw();
+PR octalDigit() throw();
+PR hexDigit() throw();
+PR alpha() throw();
+PR cr() throw();
+PR lf() throw();
+PR crlf() throw();
+PR usAsciiPrintable() throw(); // 32-127 per US ASCII, ANSI X3.4-1986 (ISO 646)
+
+  
 * tree:
 
   - rename it to ruf_tree, publish to crates.io
