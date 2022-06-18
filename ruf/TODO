@@ -1,7 +1,6 @@
 * parser:
-  - always return completed IRs on failure
-    - as a tree or vec or with each context entry?
-  - include tag in context
+  x always return completed IRs on failure
+    x with each context entry?
   - result cache
   - primitives from hcp::parser:
     listOf(open, x, sep, term)
@@ -33,8 +32,10 @@ PR usAsciiPrintable() throw(); // 32-127 per US ASCII, ANSI X3.4-1986 (ISO 646)
   
 * tree:
 
-  - rename it to ruf_tree, publish to crates.io
-    - need cargo build wrapper  ... maybe let odin produce the package dynamically and auto-verify?
+  x rename it to ruf_tree,
+  - publish to crates.io
+    - need cargo build wrapper
+      - let odin produce the package dynamically verify?
     - also do (first) ruf_assert (used by ruf_tree)
     
   - something better than Disposition? (bool, bool)? constants?
@@ -99,9 +100,6 @@ PR usAsciiPrintable() throw(); // 32-127 per US ASCII, ANSI X3.4-1986 (ISO 646)
   - only need one struct, with conditional impls per the traits of the value type?
     e.g. if value type implements Add we implement Add to (redirecting); maybe use
     macros to make it managable?
-
-- ruf_parser
-  - like hcp, maybe make use of tree?
 
 - modules:
     https://www.sheshbabu.com/posts/rust-module-system

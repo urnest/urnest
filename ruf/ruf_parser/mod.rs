@@ -22,10 +22,12 @@ pub mod ast
 }
 pub type AST<'text> = tree::Node<ast::Item<'text>>;
 
+// failed to parse {goal} at {at} because, having parsed {having_parsed}, ...
 pub struct Context<'text, 'goal>
 {
     pub at: &'text str,
-    pub goal: &'goal dyn std::fmt::Display
+    pub goal: &'goal dyn std::fmt::Display,
+    pub having_parsed: Vec<AST<'text>>
 }
 
 pub struct ParseFailed<'text, 'goals, 'parser>
@@ -69,27 +71,61 @@ impl<'text, 'goals, 'parser> std::fmt::Display for ParseFailed<'text, 'goals, 'p
                 let prev_text = prev_context.unwrap().at;
                 lc.advance_through(prev_text.split_at(prev_text.len()-context.at.len()).0);
                 prev_context = Some(context);
-                write!(f, "{line}:{col}: failed to {goal} because\n",
+                write!(f, "{line}:{col}: failed to parse {goal} because",
                        goal = context.goal.to_string().as_str(),
                        line = lc.line,
-                       col = lc.col)
+                       col = lc.col)?;
+                if context.having_parsed.len() > 0 {
+                    match &context.having_parsed[0].value.tag {
+                        &None => write!(f, ", having parsed {}",
+                                        context.having_parsed[0].value.text),
+                        Some(tag) => write!(f, ", having parsed \"{}\"", tag)}?;
+                    context.having_parsed[1..].iter().try_for_each(|ast| {
+                        match &ast.value.tag {
+                            &None => write!(f, " and parsed \"{}\"", ast.value.text),
+                            Some(tag) => write!(f, " and parsed {}", tag)}})?;
+                    write!(f, ",\n")?;
+                }
+                else {
+                    write!(f, "\n")?;
+                }
+                std::fmt::Result::Ok( () )
             })?;
             write!(f, "{line}:{col}: {cause}", line = lc.line, col = lc.col, cause = self.cause)
         }
         else
         {
             // single line human readable phrase with inline line, col info, e.g.
-            // failed to parse "fred" at line 3 column 5 because "jock..." does not start with "fred"
+            //  failed to parse "fred" at line 3 column 5 because "jock..." does not start with "fred"
+            // ... another example with partial completion (wrapped here for readability):
+            //  failed to parse "fred" then parse " alan" at line 3 column 5 because, having parsed
+            //  "fred", failed to parse " alan" at line 3 column 9 because " jock..." does not start
+            //  with " alan"
             let mut lc = LineCol { line: 1, col: 1};
             let mut prev_context = self.context.iter().rev().next();
             self.context.iter().rev().try_for_each(|context| {
                 let prev_text = prev_context.unwrap().at;
                 lc.advance_through(prev_text.split_at(prev_text.len()-context.at.len()).0);
                 prev_context = Some(context);
-                write!(f, "failed to {goal} at line {line} column {col} because ",
+                write!(f, "failed to parse {goal} at line {line} column {col} because",
                        goal = context.goal.to_string().as_str(),
                        line = lc.line,
-                       col = lc.col)
+                       col = lc.col)?;
+                if context.having_parsed.len() > 0 {
+                    match &context.having_parsed[0].value.tag {
+                        &None => write!(f, ", having parsed {}",
+                                        context.having_parsed[0].value.text),
+                        Some(tag) => write!(f, ", having parsed \"{}\"", tag)}?;
+                    context.having_parsed[1..].iter().try_for_each(|ast| {
+                        match &ast.value.tag {
+                            &None => write!(f, " and parsed \"{}\"", ast.value.text),
+                            Some(tag) => write!(f, " and parsed {}", tag)}})?;
+                    write!(f, ", ")?;
+                }
+                else {
+                    write!(f, " ")?;
+                }
+                std::fmt::Result::Ok( () )
             })?;
             write!(f, "{}", self.cause)
         }
@@ -100,10 +136,16 @@ pub type ParseResult<'text, 'goals, 'parser> = std::result::Result<
         crate::AST<'text>,  // what we parsed
     ParseFailed<'text, 'goals, 'parser> >;
 
+type ParseResult_<'text, 'goals, 'parser> =
+    std::result::Result<crate::AST<'text>,  // what we parsed
+                        ( ParseFailed<'text, 'goals, 'parser>,
+                          Vec<AST<'text>> // having_parsed
+                        ) >;
+
 pub trait Parser
 {
     fn parse_some_of_<'text, 'goals, 'parser>(&'parser self, text: &'text str) ->
-        ParseResult<'text, 'goals, 'parser>
+        ParseResult_<'text, 'goals, 'parser>
     where 'text: 'parser, 'parser: 'goals;
     
     fn goal(self: & Self) -> & dyn std::fmt::Display;
@@ -112,15 +154,19 @@ pub trait Parser
         ParseResult<'text, 'goals, 'parser>
     where 'text: 'parser, 'parser: 'goals
     {
-            let result = self.parse_some_of_::<'text, 'goals, 'parser>(text);
-            match result {
-                crate::ParseResult::Ok(x) => crate::ParseResult::Ok(x),
-                crate::ParseResult::Err(mut e) => {
-                    e.context.push( crate::Context::<'text, 'goals> { at: text, goal: self.goal() } );
-                    crate::ParseResult::Err(e)
-                }
+        let result = self.parse_some_of_::<'text, 'goals, 'parser>(text);
+        match result {
+            crate::ParseResult_::Ok(x) => crate::ParseResult::Ok(x),
+            crate::ParseResult_::Err( (mut e, having_parsed) ) => {
+                e.context.push(
+                    crate::Context::<'text, 'goals> {
+                        at: text,
+                        goal: self.goal(),
+                        having_parsed: having_parsed }
+                );
+                crate::ParseResult::Err(e)
             }
-        
+        }
     }
 }
 

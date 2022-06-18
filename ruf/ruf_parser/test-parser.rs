@@ -119,7 +119,7 @@ fn main() {
     assert::equal(&lc, &parser::LineCol{ line:8, col:8 });
 
     let p = parser::literal("fred").clone() + parser::literal(" was").clone();
-    assert::equal(&p.goal().to_string().as_str(), &"parse \"fred\" then parse \" was\"");
+    assert::equal(&p.goal().to_string().as_str(), &"\"fred\" then \" was\"");
     let y = p.parse_some_of(x);
     match y {
 	parser::ParseResult::Ok( ast ) => {
@@ -146,7 +146,7 @@ fn main() {
 	}
     }
     let p = parser::literal("fred") + parser::literal(" was") + parser::literal(" very");
-    assert::equal(&p.goal().to_string().as_str(), &"parse \"fred\" then parse \" was\" then parse \" very\"");
+    assert::equal(&p.goal().to_string().as_str(), &"\"fred\" then \" was\" then \" very\"");
     let y = p.parse_some_of(x);
     match y {
 	parser::ParseResult::Ok( ast ) => {
@@ -179,7 +179,7 @@ fn main() {
     }
 
     let p = parser::literal("fred") + parser::literal(" was") + static_parse_very();
-    assert::equal(&p.goal().to_string().as_str(), &"parse \"fred\" then parse \" was\" then parse \" very\"");
+    assert::equal(&p.goal().to_string().as_str(), &"\"fred\" then \" was\" then \" very\"");
     let y = p.parse_some_of(x);
     match y {
 	parser::ParseResult::Ok( ast ) => {
@@ -211,8 +211,20 @@ fn main() {
 	}
     }
 
+    let x = "fred was really good";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( _ast ) => {
+	    assert::equal(&true, &false);
+	},
+	parser::ParseResult::Err(e) => {
+	    assert::equal(&e.to_string().as_str(), &"failed to parse \"fred\" then \" was\" then \" very\" at line 1 column 1 because, having parsed fred and parsed \" was\", failed to parse \" very\" at line 1 column 9 because \" real...\" does not start with \" very\"");
+	    assert::equal(&format!("{:#}", e).as_str(), &"1:1: failed to parse \"fred\" then \" was\" then \" very\" because, having parsed fred and parsed \" was\",\n1:9: failed to parse \" very\" because\n1:9: \" real...\" does not start with \" very\"");
+	}
+    }
+
     let p = parser::literal("fred") | parser::literal(" was") | static_parse_very();
-    assert::equal(&p.goal().to_string().as_str(), &"parse \"fred\" or parse \" was\" or parse \" very\"");
+    assert::equal(&p.goal().to_string().as_str(), &"\"fred\" or \" was\" or \" very\"");
     let x = "fred was very good";
     let y = p.parse_some_of(x);
     match y {
@@ -230,7 +242,7 @@ fn main() {
     }
 
     let p = parser::literal("fred") | parser::literal(" was") | static_parse_very();
-    assert::equal(&p.goal().to_string().as_str(), &"parse \"fred\" or parse \" was\" or parse \" very\"");
+    assert::equal(&p.goal().to_string().as_str(), &"\"fred\" or \" was\" or \" very\"");
     let x = " was very good";
     let y = p.parse_some_of(x);
     match y {
@@ -248,7 +260,7 @@ fn main() {
     }
 
     let p = parser::literal("fred") + (parser::literal(" was") | static_parse_very());
-    assert::equal(&p.goal().to_string().as_str(), &"parse \"fred\" then parse \" was\" or parse \" very\"");
+    assert::equal(&p.goal().to_string().as_str(), &"\"fred\" then \" was\" or \" very\"");
     let x = "fred very good";
     let y = p.parse_some_of(x);
     match y {

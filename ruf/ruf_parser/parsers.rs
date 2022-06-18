@@ -8,7 +8,7 @@ impl<'literal> std::fmt::Display for Literal<'literal>
         // REVISIT: need a rust-escape-string formatting function so that e.g.
         // Literal{ x: "the \"big\" bird" } formats as:
         // parse "the \"big\" bird"
-        write!(f, "parse \"{}\"", self.x)
+        write!(f, "\"{}\"", self.x)
     }
 }
 pub struct LiteralNotFound<'cause> {
@@ -44,20 +44,20 @@ impl<'cause> std::fmt::Display for LiteralNotFound<'cause> {
 impl<'literal> crate::Parser for Literal<'literal>
 {
     fn parse_some_of_<'text, 'goals, 'parser>(self: &'parser Self, text: &'text str) ->
-        crate::ParseResult<'text, 'goals, 'parser>
+        crate::ParseResult_<'text, 'goals, 'parser>
     where 'text: 'parser, 'parser: 'goals, 'literal: 'parser
     {
         if text.starts_with(self.x) {
-            crate::ParseResult::<'text, 'goals, 'parser>::Ok(
+            crate::ParseResult_::<'text, 'goals, 'parser>::Ok(
                 crate::AST{ value: crate::ast::Item { tag: None, text: &text[0..self.x.len()] },
                             children: vec!() })
         }
         else {
-            crate::ParseResult::<'text, 'goals, 'parser>::Err(
-                crate::ParseFailed::<'text, 'goals, 'parser>{
+            crate::ParseResult_::<'text, 'goals, 'parser>::Err(
+                ( crate::ParseFailed::<'text, 'goals, 'parser>{
                     context: vec!(),
-                    cause: LiteralNotFound::new(&self.x, &text)
-                })
+                    cause: LiteralNotFound::new(&self.x, &text) },
+                  vec!() ) )
         }
     }
     fn goal(self: & Self) -> & dyn std::fmt::Display
@@ -74,22 +74,22 @@ impl<'content> std::fmt::Display for Tagged<'content>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
     {
-        write!(f, "parse {}", self.tag)
+        write!(f, "{}", self.tag)
     }
 }
 impl<'content> crate::Parser for Tagged<'content>
 {
     fn parse_some_of_<'text, 'goals, 'parser>(self: &'parser Self, text: &'text str) ->
-        crate::ParseResult<'text, 'goals, 'parser>
+        crate::ParseResult_<'text, 'goals, 'parser>
     where 'text: 'parser, 'parser: 'goals, 'content: 'parser
     {
         let result = self.content.parse_some_of(text);
         match result {
-            crate::ParseResult::Ok(x) => crate::ParseResult::Ok(
+            crate::ParseResult::Ok(x) => crate::ParseResult_::Ok(
                 crate::AST{ value: crate::ast::Item{ tag: Some(self.tag), text: x.value.text },
                             children: vec!(x) }),
             crate::ParseResult::Err(e) => {
-                crate::ParseResult::Err(e)
+                crate::ParseResult_::Err( (e, vec!()) )
             }
         }
     }
@@ -117,31 +117,35 @@ impl<'parser> std::fmt::Display for And<'parser>
 impl<'and> crate::Parser for And<'and>
 {
     fn parse_some_of_<'text, 'goals, 'parser>(self: &'parser Self, text: &'text str) ->
-        crate::ParseResult<'text, 'goals, 'parser>
+        crate::ParseResult_<'text, 'goals, 'parser>
     where 'text: 'parser, 'parser: 'goals, 'and: 'parser
     {
-        let result = self.first_term.parse_some_of(text)?;
-        let mut rest = &text[result.value.text.len()..];
-        let mut items = vec!( result );
-        for term in self.other_terms.iter() {
-            match term.parse_some_of(rest) {
-                crate::ParseResult::Ok(x) => {
-                    rest = &rest[x.value.text.len()..];
-                    items.push(x);
-                },
-                crate::ParseResult::Err(e) => {
-                    return crate::ParseResult::Err(e);
+        match self.first_term.parse_some_of(text) {
+            crate::ParseResult::Err(e) => crate::ParseResult_::Err( (e, vec!()) ),
+            crate::ParseResult::Ok(result) => {
+                let mut rest = &text[result.value.text.len()..];
+                let mut items = vec!( result );
+                for term in self.other_terms.iter() {
+                    match term.parse_some_of(rest) {
+                        crate::ParseResult::Ok(x) => {
+                            rest = &rest[x.value.text.len()..];
+                            items.push(x);
+                        },
+                        crate::ParseResult::Err(e) => {
+                            return crate::ParseResult_::Err( (e, items) );
+                        }
+                    }
                 }
+                crate::ParseResult_::Ok(
+                    crate::AST::<'text>{
+                        value: crate::ast::Item::<'text>{
+                            tag: None,
+                            text: &text[0..(text.len() - rest.len())]
+                        },
+                        children: items }
+                )
             }
         }
-        return crate::ParseResult::Ok(
-            crate::AST::<'text>{
-                value: crate::ast::Item::<'text>{
-                    tag: None,
-                    text: &text[0..(text.len() - rest.len())]
-                },
-                children: items }
-        );
     }
     fn goal(self: & Self) -> & dyn std::fmt::Display
     {
@@ -167,17 +171,17 @@ impl<'parser> std::fmt::Display for Or<'parser>
 impl<'and> crate::Parser for Or<'and>
 {
     fn parse_some_of_<'text, 'goals, 'parser>(self: &'parser Self, text: &'text str) ->
-        crate::ParseResult<'text, 'goals, 'parser>
+        crate::ParseResult_<'text, 'goals, 'parser>
     where 'text: 'parser, 'parser: 'goals, 'and: 'parser
     {
         let result = self.first_term.parse_some_of(text);
         match result {
-            crate::ParseResult::Ok(_) => return result,
+            crate::ParseResult::Ok(result) => crate::ParseResult_::Ok(result),
             crate::ParseResult::Err(mut e1) => {
                 for term in self.other_terms.iter() {
                     let x = term.parse_some_of(text);
                     match x {
-                        crate::ParseResult::Ok(_) => return x,
+                        crate::ParseResult::Ok(result) => return crate::ParseResult_::Ok(result),
                         crate::ParseResult::Err(e) => {
                             // keep error for term that got farthest, i.e. with shortest text
                             if e.context[0].at.len() < e1.context[0].at.len() {
@@ -186,7 +190,7 @@ impl<'and> crate::Parser for Or<'and>
                         }
                     }
                 }
-                return crate::ParseResult::Err(e1);
+                return crate::ParseResult_::Err( (e1, vec!()) );
             }
         }
     }
