@@ -199,3 +199,29 @@ impl<'and> crate::Parser for Or<'and>
         self
     }
 }
+
+pub struct None
+{
+}
+impl std::fmt::Display for None
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+    {
+        write!(f, "nothing")
+    }
+}
+impl crate::Parser for None
+{
+    fn parse_some_of_<'text, 'goals, 'parser>(self: &'parser Self, text: &'text str) ->
+        crate::ParseResult_<'text, 'goals, 'parser>
+    where 'text: 'parser, 'parser: 'goals
+    {
+        crate::ParseResult_::<'text, 'goals, 'parser>::Ok(
+            crate::AST{ value: crate::ast::Item { tag: None, text: &text[0..0] },
+                        children: vec!() })
+    }
+    fn goal(self: & Self) -> & dyn std::fmt::Display
+    {
+        self
+    }
+}

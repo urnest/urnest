@@ -283,3 +283,8 @@ impl<'parser> std::ops::BitOr for Ref<'parser> {
         }
     }
 }
+
+pub fn none() -> Ref<'static>
+{
+    Ref::new(parsers::None{})
+}

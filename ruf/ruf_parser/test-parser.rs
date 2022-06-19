@@ -259,6 +259,7 @@ fn main() {
 	}
     }
 
+
     let p = parser::literal("fred") + (parser::literal(" was") | static_parse_very());
     assert::equal(&p.goal().to_string().as_str(), &"\"fred\" then \" was\" or \" very\"");
     let x = "fred very good";
@@ -274,6 +275,39 @@ fn main() {
 		        value: parser::ast::Item{
 			    tag: None,
 			    text: "fred"},
+		        children: vec!() },
+                    parser::AST{
+		        value: parser::ast::Item{
+			    tag: None,
+			    text: " very"},
+		        children: vec!() }),
+            });
+	},
+	parser::ParseResult::Err(_e) => {
+	    assert::equal(&true, &false);
+	}
+    }
+
+    let p = parser::literal("fred") + parser::none()+(parser::literal(" was") | static_parse_very());
+    assert::equal(&p.goal().to_string().as_str(), &"\"fred\" then nothing then \" was\" or \" very\"");
+    let x = "fred very good";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( ast ) => {
+	    assert::equal(&ast, &parser::AST{
+		value: parser::ast::Item{
+		    tag: None,
+		    text: "fred very" },
+		children: vec!(
+                    parser::AST{
+		        value: parser::ast::Item{
+			    tag: None,
+			    text: "fred"},
+		        children: vec!() },
+                    parser::AST{
+		        value: parser::ast::Item{
+			    tag: None,
+			    text: ""},
 		        children: vec!() },
                     parser::AST{
 		        value: parser::ast::Item{

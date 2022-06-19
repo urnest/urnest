@@ -3,9 +3,9 @@
     x with each context entry?
   - result cache
   - primitives from hcp::parser:
+    x none
     listOf(open, x, sep, term)
     nonEmptyListOf(x, moreflag)
-    none
     match
     not
     and/or &str
