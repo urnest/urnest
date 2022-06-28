@@ -68,6 +68,10 @@ def getVariablesFromWSGIenviron(wsgiEnv:Mapping[str,Any])->Dict[str,Union[str,Fi
     '''like { varName : str or FileVar or list of str or FileVar }, e.g.:'''
     '''  { "id":"883999", "colours":["red","blue"] }'''
     '''... note list is only used where var has multiple values'''
+    '''- where Content-Type is application/octet-stream, result dictiony'''
+    '''  includes "body", a tuple ( content_length, file )'''
+    '''  where content length is from Content-Length header (or -1) and'''
+    '''  file is a file-like readable that presents the body of the request'''
     try:
         result:Dict[str,Union[str,FileVar,List[StrOrFileVar]]]={}
         d:List[Tuple[str,StrOrFileVar]]=[]
@@ -98,7 +102,7 @@ def getVariablesFromWSGIenviron(wsgiEnv:Mapping[str,Any])->Dict[str,Union[str,Fi
                 boundary:bytes=('\r\n--'+
                                 ct.split('boundary=')[1]).encode('utf-8')
                 body:bytes=b'\r\n'+wsgiEnv['wsgi.input'].read(
-                    int(wsgiEnv.get('CONTENT_LENGTH',None)))
+                    int(wsgiEnv.get('CONTENT_LENGTH',-1)))
                 all:List[bytes]=body.split(boundary)[1:-1]
                 for i,x in enumerate(all):
                     try:
@@ -120,6 +124,11 @@ def getVariablesFromWSGIenviron(wsgiEnv:Mapping[str,Any])->Dict[str,Union[str,Fi
                         raise inContext('parse part %(i)s' % vars()) from None
                     pass
                 pass
+            elif 'application/octet-stream' in ct:
+                length=int(wsgiEnv.get('CONTENT_LENGTH',-1))
+                print(f'application/octet-stream, length {length}')
+                
+                d.append( ('body', (length, wsgiEnv['wsgi.input'])) )
             else:
                 if int(wsgiEnv.get('CONTENT_LENGTH',0)):
                     raise Exception(

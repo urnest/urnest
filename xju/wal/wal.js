@@ -942,6 +942,42 @@
     });
     return result;
   };
+  wal.postBinaryToServer=function(url,data,sync){
+    var result={
+      then_: function(){},
+      error_:function(e){
+	alert(e);
+      },
+      always_:function(){
+      }
+    };
+    result.then=function(then){
+      result.then_=then;
+      return result;
+    };
+    result.or=function(error){
+      result.error_=error;
+      return result;
+    };
+    result.always=function(always){
+      result.always_=always;
+      return result;
+    }
+    var req = new XMLHttpRequest();
+    req.addEventListener("load",function(){
+      if (req.status == 200){
+        result.then_();
+      }
+      else {
+        result.error_(req.status);
+      }
+      result.always_();
+    });
+    req.open("POST", url, sync ? false:true);
+    req.setRequestHeader('Content-Type', 'application/octet-stream');
+    req.send(data);
+    return result;
+  };
   wal.rendering=function($x){
     var $overlay=$('<div class="wal-busy-cursor">&nbsp;</div>').css({
       position:'absolute',

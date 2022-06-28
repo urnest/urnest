@@ -94,10 +94,17 @@ class ClientError(Exception):
     'error to pass back to client'
     def __init__(self,s):
         Exception.__init__(self,s)
+        self.error=s
         pass
     pass
 
 class Forbidden(Exception):
+    def __init__(self,description):
+        Exception.__init__(self,description)
+        pass
+    pass
+
+class NotFound(Exception):
     def __init__(self,description):
         Exception.__init__(self,description)
         pass
@@ -110,6 +117,8 @@ def getParam(param_name,
              param_defaults):
     try:
         try:
+            if param_name=='json_params':
+                return json_params
             if param_name in json_params:
                 return json_params.get(param_name)
             if param_name in request_params:
@@ -128,7 +137,7 @@ def getParam(param_name,
         raise inContext('get value of %(param_name)s from params supplied as json-encoded "json_params" HTTP param (%(json_param_names)s), HTTP params (%(request_param_names)s), webapp2 request attributes (%(request_attr_names)s) or function paramter defaults (%(param_default_names)s)'%vars()) from None
     pass
 
-def makeParams(remote_addr,method,headers,params,url,cookies,f):
+def makeParams(remote_addr,method,headers,params,url,referer,cookies,f):
     'make dictionary of params for calling function %(f)s, getting them from remote_addr, method, headers, GET/POST params, url, cookies'''
     try:
         json_params=fromJson(params.get('json_params','{}'))
@@ -142,6 +151,7 @@ def makeParams(remote_addr,method,headers,params,url,cookies,f):
             'cookies':cookies,
             'headers':headers,
             'method':method,
+            'referer':referer,
             'url':url,
             'remote_addr':remote_addr,
             }
@@ -212,6 +222,10 @@ class Dispatcher:
             self.log('INFO: '+str(
                 inContext(l1(Dispatcher.main.__doc__).format(**vars()))))
             return self.forbidden(start_response)
+        except NotFound as e:
+            self.log(str(
+                inContext(l1(Dispatcher.main.__doc__).format(**vars()))))
+            return self.notFound(path,start_response)
         except ClientError as e:
             return self.clientError(start_response,e)
         except Exception as e:
@@ -244,13 +258,15 @@ class Dispatcher:
             if not result:
                 params=getVariablesFromWSGIenviron(environ)
                 headers=getHTTPHeadersFromWSGIenviron(environ)
-                method=environ['REQUEST_METHOD'], #e.g. 'GET', 'POST'
+                method=environ['REQUEST_METHOD'] #e.g. 'GET', 'POST'
+                referer=environ.get('HTTP_REFERER',None)
                 remote_addr=environ['REMOTE_ADDR']
                 result=f(**makeParams(remote_addr,
                                       method,
                                       headers,
                                       params,
                                       url,
+                                      referer,
                                       cookies,
                                       f))
                 pass
@@ -259,7 +275,7 @@ class Dispatcher:
             headers=result.cookieHeaders()
             if result.location:
                 headers.append( ('Location',result.location) )
-                start_response('307 Temporary Redirect',headers)
+                start_response('303 See Other',headers)
                 return [''.encode('utf-8')]
             headers.extend([(n,v) for n,v in result.headers
                             if not n in ('Content-Type','Content-Encoding')])
