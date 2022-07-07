@@ -36,6 +36,19 @@ pub struct ParseFailed<'text, 'goals, 'parser>
     pub context: Vec< Context<'text, 'goals> >    // outermost is last
 }
 
+pub fn best_of<'text, 'goals, 'parser>(
+    e1: ParseFailed<'text, 'goals, 'parser>,
+    e2: ParseFailed<'text, 'goals, 'parser>) -> ParseFailed<'text, 'goals, 'parser>
+{
+    // note shorter means it got further along
+    if e1.context[0].at.len() < e2.context[0].at.len() {
+        return e1;
+    }
+    else{
+        return e2;
+    }
+}
+
 #[derive(PartialEq)]
 pub struct LineCol
 {
@@ -288,3 +301,16 @@ pub fn none() -> Ref<'static>
 {
     Ref::new(parsers::None{})
 }
+
+pub fn list_of<'parser>(start: Ref<'parser>,
+                        item: Ref<'parser>,
+                        separator: Ref<'parser>,
+                        end: Ref<'parser>) -> Ref<'parser>
+{
+    Ref::new(parsers::ListOf{
+        start: start.x,
+        item: item.x,
+        separator: separator.x,
+        end: end.x })
+}
+

@@ -1,28 +1,30 @@
 // crate::Parser implementations
 
+extern crate ruf_assert;
+
 use ruf_assert as assert;
 
-struct AllOf
+struct AllOf<'x>
 {
-    x: &str
+    x: &'x str
 }
-fn all_of(x: &str) { AllOf {x:x} }
-impl AllOf
+fn all_of<'x>(x: &'x str) -> AllOf<'x>{ AllOf {x:x} }
+
+impl<'x> AllOf<'x>
 {
     // return remainder of self after removing leading y
-    fn after(&self, y: &str) => &str
+    fn after(&self, y: &str) -> &'x str
     {
         assert::equal(&self.x.as_ptr(), &y.as_ptr());
         assert::less_equal(&y.len(), &self.x.len());
-        return x[y.len()..];
+        return &self.x[y.len()..];
     }
-    // return self up to y
-    fn up_to(&self, y: &str) => &str
+    // return self up to trailing y
+    fn up_to(&self, y: &str) -> &'x str
     {
         assert::less_equal(&y.len(), &self.x.len());
         assert::less_equal(&self.x.as_ptr(), &y.as_ptr());
-        assert::less_equal(&y.as_ptr(), &self.x.as_ptr()+self.x.len());
-        return x[0..(y.as_ptr()-x.as_ptr())];
+        return &self.x[0..self.x.len()-y.len()]
     }
 }
 pub struct Literal<'literal> {
@@ -150,7 +152,7 @@ impl<'and> crate::Parser for And<'and>
         match self.first_term.parse_some_of(text) {
             crate::ParseResult::Err(e) => crate::ParseResult_::Err( (e, vec!()) ),
             crate::ParseResult::Ok(result) => {
-                let mut rest = all_of(text).after(result.value.text);
+                let mut rest: &str = all_of(text).after(result.value.text);
                 let mut items = vec!( result );
                 for term in self.other_terms.iter() {
                     match term.parse_some_of(rest) {
@@ -253,89 +255,88 @@ impl crate::Parser for None
     }
 }
 
-pub struct ListOf
+pub struct ListOf<'p1>
 {
-    pub start: std::sync::Arc<dyn crate::Parser+Send+Sync+'parser>,
-    pub item: std::sync::Arc<dyn crate::Parser+Send+Sync+'parser>,
-    pub separator: std::sync::Arc<dyn crate::Parser+Send+Sync+'parser>,
-    pub end: std::sync::Arc<dyn crate::Parser+Send+Sync+'parser>,
+    pub start: std::sync::Arc<dyn crate::Parser+Send+Sync+'p1>,
+    pub item: std::sync::Arc<dyn crate::Parser+Send+Sync+'p1>,
+    pub separator: std::sync::Arc<dyn crate::Parser+Send+Sync+'p1>,
+    pub end: std::sync::Arc<dyn crate::Parser+Send+Sync+'p1>,
 }
-impl std::fmt::Display for None
+
+impl<'p1> std::fmt::Display for ListOf<'p1>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
     {
-        write!(f, "list of {separator}-separated {item}s inside {start}+{end} pair",
-               separator = self.separator,
-               item = self.item,
-               start = self.start,
-               end = self.end);
+        write!(f, "list of {separator}-separated {item} items inside {start}..{end}",
+               separator = self.separator.goal(),
+               item = self.item.goal(),
+               start = self.start.goal(),
+               end = self.end.goal())
     }
 }
-impl crate::Parser for ListOf
+impl<'p1> crate::Parser for ListOf<'p1>
 {
     fn parse_some_of_<'text, 'goals, 'parser>(self: &'parser Self, text: &'text str) ->
         crate::ParseResult_<'text, 'goals, 'parser>
-    where 'text: 'parser, 'parser: 'goals
+    where 'text: 'parser, 'parser: 'goals, 'p1: 'parser
     {
-        match self.start.parse_some_of(text) {
+        let mut rest = text;
+        match self.start.parse_some_of(rest) {
             crate::ParseResult::Err(e) => crate::ParseResult_::Err( (e, vec!()) ),
             crate::ParseResult::Ok(start_ast) => {
-                let mut rest = all_of(text).after(start_ast.value.text);
+                rest = all_of(text).after(start_ast.value.text);
+                let text_after_start_ast = rest;
                 match self.item.parse_some_of(rest) {
                     crate::ParseResult::Err(e) => {
-                        return crate::ParseResult_::Err(e, vec!(start_ast));
+                        return crate::ParseResult_::Err( (e, vec!(start_ast)) );
                     }
                     crate::ParseResult::Ok(first_item_ast) => {
-                        let mut items = vec!(first_item_ast);
                         rest = all_of(rest).after(first_item_ast.value.text);
-                        while true {
+                        let mut items = vec!(first_item_ast);
+                        let err_ = |e: crate::ParseFailed::<'text, 'goals, 'parser>,
+                                    items: Vec<crate::AST<'text>>,
+                                    rest: &str|
+                        {
+                            // collapse items to single "having parsed" entry
+                            // to avoid lengthy error
+                            let having_parsed = vec!(
+                                start_ast,
+                                crate::AST{
+                                    value: crate::ast::Item{
+                                        tag: Some("some items"),
+                                        text: all_of(text_after_start_ast).up_to(rest)},
+                                    children: items });
+                            return crate::ParseResult_::Err( (e, having_parsed) );
+                        };
+                        loop {
                             match self.separator.parse_some_of(rest) {
                                 crate::ParseResult::Err(e) => {
                                     match self.end.parse_some_of(rest) {
-                                        crate::ParseResult::Err(e1) {
-                                            // collapse items to single "having parsed" entry
-                                            // to avoid lengthy error
-                                            let after_start = all_of(text).up_to(
-                                                first_item_ast.value.text);
-                                            let having_parsed = vec!(
-                                                start_ast,
-                                                crate::ast::AST{
-                                                    value: crate::ast::Item{
-                                                        tag: "some items",
-                                                        text: all_of(after_start).up_to(rest)}});
-                                            // use longest error
-                                            if e.context[0].at.len() > e1.context[0].at.len() {
-                                                return crate::ParseResult_::Err(e, having_parsed);
-                                            }
-                                            else {
-                                                return crate::ParseResult_::Err(e1, having_parsed);
-                                            }
+                                        crate::ParseResult::Err(e1) => {
+                                            return err_(crate::best_of(e, e1), items, rest);
                                         },
                                         crate::ParseResult::Ok(end_ast) => {
-                                            rest = all_of(text).after(end_ast.value.text);
+                                            rest = all_of(rest).after(end_ast.value.text);
+                                            items.push(end_ast);
                                             return crate::ParseResult_::Ok(
-                                                crate::AST::{
-                                                    value: all_of(text).up_to(rest),
+                                                crate::AST{
+                                                    value: crate::ast::Item{
+                                                        tag: None,
+                                                        text: all_of(text).up_to(rest)},
                                                     children: items});
                                         }
                                     }
                                 }
                                 crate::ParseResult::Ok(sep_ast) => {
-                                    items.push(sep_ast);
                                     rest = all_of(rest).after(sep_ast.value.text);
+                                    items.push(sep_ast);
                                     match self.item.parse_some_of(rest) {
-                                        crate::ParseResult::Err(e) {
-                                            // collapse items to single "having parsed" entry
-                                            // to avoid lengthy error
-                                            let after_start = all_of(text).up_to(
-                                                first_item_ast.value.text);
-                                            let having_parsed = vec!(
-                                                start_ast,
-                                                crate::ast::AST{
-                                                    value: crate::ast::Item{
-                                                        tag: "some items",
-                                                        text: all_of(after_start).up_to(rest)}});
-                                            return crate::ParseResult_::Err(e, having_parsed);
+                                        crate::ParseResult::Err(e) => {
+                                            return err_(e, items, rest);
+                                        },
+                                        crate::ParseResult::Ok(item) => {
+                                            rest = all_of(rest).up_to(item.value.text);
+                                            items.push(item);
                                         }
                                     }
                                 }
