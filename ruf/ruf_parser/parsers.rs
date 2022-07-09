@@ -76,17 +76,43 @@ impl<'literal> crate::Parser for Literal<'literal>
         crate::ParseResult_<'text, 'goals, 'parser>
     where 'text: 'parser, 'parser: 'goals, 'literal: 'parser
     {
-        if text.starts_with(self.x) {
-            crate::ParseResult_::<'text, 'goals, 'parser>::Ok(
-                crate::AST{ value: crate::ast::Item { tag: None, text: &text[0..self.x.len()] },
-                            children: vec!() })
-        }
-        else {
-            crate::ParseResult_::<'text, 'goals, 'parser>::Err(
-                ( crate::ParseFailed::<'text, 'goals, 'parser>{
-                    context: vec!(),
-                    cause: LiteralNotFound::new(&self.x, &text) },
-                  vec!() ) )
+        // we would use starts_with but when it doesn't start with we want the longest
+        // having_parsed we can in error, so we use our own loop.
+        // REVISIT: this also ignores unicode grapheme clusters
+        let mut i = self.x.char_indices();
+        let mut j = text.char_indices();
+        loop {
+            match (i.next(), j.next()) {
+                (None, None) => {
+                    return crate::ParseResult_::<'text, 'goals, 'parser>::Ok(
+                        crate::AST{ value: crate::ast::Item { tag: None, text: text },
+                                    children: vec!() })
+                },
+                (None, Some((m, _))) => {
+                    return crate::ParseResult_::<'text, 'goals, 'parser>::Ok(
+                        crate::AST{ value: crate::ast::Item { tag: None, text: &text[0..m] },
+                                    children: vec!() })
+                },
+                (Some( (n, c1)), b) => {
+                    match b {
+                        Some( (_, c2) ) => {
+                            if c1 == c2 { continue; }
+                        },
+                        _ => ()
+                    }
+                    return crate::ParseResult_::<'text, 'goals, 'parser>::Err(
+                        ( crate::ParseFailed::<'text, 'goals, 'parser>{
+                            context: vec!(),
+                            cause: LiteralNotFound::new(&self.x[n..], &text[n..]) },
+                          match n {
+                              0 => { vec!() },
+                              _ => { vec!(crate::AST{
+                                  value: crate::ast::Item{
+                                      tag: None,
+                                      text: &text[0..n]},
+                                  children: vec!() } ) } } ));
+                }
+            }
         }
     }
     fn goal(self: & Self) -> & dyn std::fmt::Display
@@ -212,10 +238,7 @@ impl<'and> crate::Parser for Or<'and>
                     match x {
                         crate::ParseResult::Ok(result) => return crate::ParseResult_::Ok(result),
                         crate::ParseResult::Err(e) => {
-                            // keep error for term that got farthest, i.e. with shortest text
-                            if e.context[0].at.len() < e1.context[0].at.len() {
-                                e1 = e;
-                            }
+                            e1 = crate::best_of(e, e1);
                         }
                     }
                 }
@@ -292,13 +315,14 @@ impl<'p1> crate::Parser for ListOf<'p1>
                     }
                     crate::ParseResult::Ok(first_item_ast) => {
                         rest = all_of(rest).after(first_item_ast.value.text);
-                        let mut items = vec!(first_item_ast);
+                        let mut items = vec!(start_ast, first_item_ast);
                         let err_ = |e: crate::ParseFailed::<'text, 'goals, 'parser>,
-                                    items: Vec<crate::AST<'text>>,
+                                    mut items: Vec<crate::AST<'text>>,
                                     rest: &str|
                         {
                             // collapse items to single "having parsed" entry
                             // to avoid lengthy error
+                            let start_ast = items.remove(0);
                             let having_parsed = vec!(
                                 start_ast,
                                 crate::AST{
@@ -335,7 +359,7 @@ impl<'p1> crate::Parser for ListOf<'p1>
                                             return err_(e, items, rest);
                                         },
                                         crate::ParseResult::Ok(item) => {
-                                            rest = all_of(rest).up_to(item.value.text);
+                                            rest = all_of(rest).after(item.value.text);
                                             items.push(item);
                                         }
                                     }

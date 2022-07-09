@@ -4,10 +4,10 @@
   - result cache
   - primitives from hcp::parser:
     x none
-    listOf(open, x, sep, term)
+    x listOf(open, x, sep, term)
     nonEmptyListOf(x, moreflag)
     match
-    not
+    not?
     and/or &str
     n_to_m (could use 0..3 * xx()?)
     optional
@@ -24,11 +24,11 @@ PR digit() throw();
 PR octalDigit() throw();
 PR hexDigit() throw();
 PR alpha() throw();
-PR cr() throw();
+x PR cr() throw(); tagged(CR, literal("\r"));
 PR lf() throw();
 PR crlf() throw();
 PR usAsciiPrintable() throw(); // 32-127 per US ASCII, ANSI X3.4-1986 (ISO 646)
-
+    some_space()
   
 * tree:
 

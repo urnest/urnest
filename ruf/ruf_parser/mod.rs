@@ -23,6 +23,7 @@ pub mod ast
 pub type AST<'text> = tree::Node<ast::Item<'text>>;
 
 // failed to parse {goal} at {at} because, having parsed {having_parsed}, ...
+// (having_parsed represents progress beyond at toward goal)
 pub struct Context<'text, 'goal>
 {
     pub at: &'text str,
@@ -40,8 +41,12 @@ pub fn best_of<'text, 'goals, 'parser>(
     e1: ParseFailed<'text, 'goals, 'parser>,
     e2: ParseFailed<'text, 'goals, 'parser>) -> ParseFailed<'text, 'goals, 'parser>
 {
-    // note shorter means it got further along
-    if e1.context[0].at.len() < e2.context[0].at.len() {
+    // note shorter means it got further along and at excludes having_parsed
+    let l1:usize = e1.context[0].having_parsed.iter().map(|x| x.value.text.len()).sum::<usize>();
+    let l2:usize = e2.context[0].having_parsed.iter().map(|x| x.value.text.len()).sum::<usize>();
+    if e1.context[0].at.len() - l1 <
+        e2.context[0].at.len() - l2
+    {
         return e1;
     }
     else{
@@ -90,9 +95,9 @@ impl<'text, 'goals, 'parser> std::fmt::Display for ParseFailed<'text, 'goals, 'p
                        col = lc.col)?;
                 if context.having_parsed.len() > 0 {
                     match &context.having_parsed[0].value.tag {
-                        &None => write!(f, ", having parsed {}",
+                        &None => write!(f, ", having parsed \"{}\"",
                                         context.having_parsed[0].value.text),
-                        Some(tag) => write!(f, ", having parsed \"{}\"", tag)}?;
+                        Some(tag) => write!(f, ", having parsed {}", tag)}?;
                     context.having_parsed[1..].iter().try_for_each(|ast| {
                         match &ast.value.tag {
                             &None => write!(f, " and parsed \"{}\"", ast.value.text),
@@ -126,9 +131,9 @@ impl<'text, 'goals, 'parser> std::fmt::Display for ParseFailed<'text, 'goals, 'p
                        col = lc.col)?;
                 if context.having_parsed.len() > 0 {
                     match &context.having_parsed[0].value.tag {
-                        &None => write!(f, ", having parsed {}",
+                        &None => write!(f, ", having parsed \"{}\"",
                                         context.having_parsed[0].value.text),
-                        Some(tag) => write!(f, ", having parsed \"{}\"", tag)}?;
+                        Some(tag) => write!(f, ", having parsed {}", tag)}?;
                     context.having_parsed[1..].iter().try_for_each(|ast| {
                         match &ast.value.tag {
                             &None => write!(f, " and parsed \"{}\"", ast.value.text),
@@ -307,10 +312,13 @@ pub fn list_of<'parser>(start: Ref<'parser>,
                         separator: Ref<'parser>,
                         end: Ref<'parser>) -> Ref<'parser>
 {
-    Ref::new(parsers::ListOf{
-        start: start.x,
-        item: item.x,
-        separator: separator.x,
-        end: end.x })
+    Ref::new(parsers::ListOf{start: start.x, item: item.x, separator: separator.x, end: end.x })
 }
 
+pub static CR: &str = "carriage-return";
+pub static LF: &str = "line-feed";
+pub static CRLF: &str = "carriage-return-line-feed";
+
+pub fn cr() -> Ref<'static> { tagged(CR, literal("\r")) }
+pub fn lf() -> Ref<'static> { tagged(LF, literal("\n")) }
+pub fn crlf() -> Ref<'static> { tagged(CRLF, cr()+lf()) }

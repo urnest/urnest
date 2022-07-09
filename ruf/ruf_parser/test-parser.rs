@@ -56,8 +56,8 @@ fn main() {
 	    assert::equal(&true, &false);
 	},
 	Some(result) => {
-	    assert::equal(&result.cause.to_string().as_str(), &"\"fred w...\" does not start with \"freddy\"");
-	    assert::equal(&format!("{:#}", result).as_str(), &"1:1: failed to parse \"freddy\" because\n1:1: \"fred w...\" does not start with \"freddy\"");
+	    assert::equal(&result.cause.to_string().as_str(), &"\" w...\" does not start with \"dy\"");
+	    assert::equal(&format!("{:#}", result).as_str(), &"1:1: failed to parse \"freddy\" because, having parsed \"fred\",\n1:1: \" w...\" does not start with \"dy\"");
 	}
     }
     let p = parser::tagged("jock", parser::literal("fred"));
@@ -89,10 +89,8 @@ fn main() {
 	    assert::equal(&true, &false);
 	},
 	parser::ParseResult::Err(e) => {
-	    assert::equal(&e.cause.to_string().as_str(),
-			  &"\"fred w...\" does not start with \"freddy\"");
 	    assert::equal(&e.to_string().as_str(),
-			  &"failed to parse jock at line 1 column 1 because failed to parse \"freddy\" at line 1 column 1 because \"fred w...\" does not start with \"freddy\"");
+			  &"failed to parse jock at line 1 column 1 because failed to parse \"freddy\" at line 1 column 1 because, having parsed \"fred\", \" w...\" does not start with \"dy\"");
 	}
     }
 
@@ -218,8 +216,8 @@ fn main() {
 	    assert::equal(&true, &false);
 	},
 	parser::ParseResult::Err(e) => {
-	    assert::equal(&e.to_string().as_str(), &"failed to parse \"fred\" then \" was\" then \" very\" at line 1 column 1 because, having parsed fred and parsed \" was\", failed to parse \" very\" at line 1 column 9 because \" real...\" does not start with \" very\"");
-	    assert::equal(&format!("{:#}", e).as_str(), &"1:1: failed to parse \"fred\" then \" was\" then \" very\" because, having parsed fred and parsed \" was\",\n1:9: failed to parse \" very\" because\n1:9: \" real...\" does not start with \" very\"");
+	    assert::equal(&e.to_string().as_str(), &"failed to parse \"fred\" then \" was\" then \" very\" at line 1 column 1 because, having parsed \"fred\" and parsed \" was\", failed to parse \" very\" at line 1 column 9 because, having parsed \" \", \"real...\" does not start with \"very\"");
+	    assert::equal(&format!("{:#}", e).as_str(), &"1:1: failed to parse \"fred\" then \" was\" then \" very\" because, having parsed \"fred\" and parsed \" was\",\n1:9: failed to parse \" very\" because, having parsed \" \",\n1:9: \"real...\" does not start with \"very\"");
 	}
     }
 
@@ -318,6 +316,118 @@ fn main() {
 	},
 	parser::ParseResult::Err(_e) => {
 	    assert::equal(&true, &false);
+	}
+    }
+
+    let p = parser::list_of(parser::literal("{"),
+                            parser::literal("aa") | parser::literal("ab") |
+                            parser::literal("ac") | parser::literal("add"),
+                            parser::literal(","), parser::literal("}"));
+    assert::equal(&p.goal().to_string().as_str(), &"list of \",\"-separated \"aa\" or \"ab\" or \"ac\" or \"add\" items inside \"{\"..\"}\"");
+    let x = "{aa,ab,aa}";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( ast ) => {
+	    assert::equal(&ast, &parser::AST{
+		value: parser::ast::Item{
+		    tag: None,
+		    text: "{aa,ab,aa}" },
+		children: vec!(
+                    parser::AST{value: parser::ast::Item{tag: None,text: "{"},children: vec!() },
+                    parser::AST{value: parser::ast::Item{tag: None,text: "aa"},children: vec!() },
+                    parser::AST{value: parser::ast::Item{tag: None,text: ","},children: vec!() },
+                    parser::AST{value: parser::ast::Item{tag: None,text: "ab"},children: vec!() },
+                    parser::AST{value: parser::ast::Item{tag: None,text: ","},children: vec!() },
+                    parser::AST{value: parser::ast::Item{tag: None,text: "aa"},children: vec!() },
+                    parser::AST{value: parser::ast::Item{tag: None,text: "}"},children: vec!() })
+            });
+	},
+	parser::ParseResult::Err(_e) => {
+	    assert::equal(&true, &false);
+	}
+    }
+    let x = "{az,ab,aa}";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( _ast ) => {
+	    assert::equal(&true, &false);
+	},
+	parser::ParseResult::Err(e) => {
+	    assert::equal(&e.to_string().as_str(), &"failed to parse list of \",\"-separated \"aa\" or \"ab\" or \"ac\" or \"add\" items inside \"{\"..\"}\" at line 1 column 1 because, having parsed \"{\", failed to parse \"aa\" or \"ab\" or \"ac\" or \"add\" at line 1 column 2 because failed to parse \"aa\" at line 1 column 2 because, having parsed \"a\", \"z...\" does not start with \"a\"");
+	}
+    }
+    let x = "{aa;ab,aa}";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( _ast ) => {
+	    assert::equal(&true, &false);
+	},
+	parser::ParseResult::Err(e) => {
+	    assert::equal(&e.to_string().as_str(), &"failed to parse list of \",\"-separated \"aa\" or \"ab\" or \"ac\" or \"add\" items inside \"{\"..\"}\" at line 1 column 1 because, having parsed \"{\" and parsed some items, failed to parse \"}\" at line 1 column 4 because \";...\" does not start with \"}\"");
+	}
+    }
+    let x = "{aa,ab;aa}";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( _ast ) => {
+	    assert::equal(&true, &false);
+	},
+	parser::ParseResult::Err(e) => {
+	    assert::equal(&e.to_string().as_str(), &"failed to parse list of \",\"-separated \"aa\" or \"ab\" or \"ac\" or \"add\" items inside \"{\"..\"}\" at line 1 column 1 because, having parsed \"{\" and parsed some items, failed to parse \"}\" at line 1 column 7 because \";...\" does not start with \"}\"");
+	}
+    }
+    let x = "{aa,adq,aa}";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( _ast ) => {
+	    assert::equal(&true, &false);
+	},
+	parser::ParseResult::Err(e) => {
+	    assert::equal(&e.to_string().as_str(), &"failed to parse list of \",\"-separated \"aa\" or \"ab\" or \"ac\" or \"add\" items inside \"{\"..\"}\" at line 1 column 1 because, having parsed \"{\" and parsed some items, failed to parse \"aa\" or \"ab\" or \"ac\" or \"add\" at line 1 column 5 because failed to parse \"add\" at line 1 column 5 because, having parsed \"ad\", \"q...\" does not start with \"d\"");
+	}
+    }
+    let x = "{aa,add,aa,}";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( _ast ) => {
+	    assert::equal(&true, &false);
+	},
+	parser::ParseResult::Err(e) => {
+	    assert::equal(&e.to_string().as_str(), &"failed to parse list of \",\"-separated \"aa\" or \"ab\" or \"ac\" or \"add\" items inside \"{\"..\"}\" at line 1 column 1 because, having parsed \"{\" and parsed some items, failed to parse \"aa\" or \"ab\" or \"ac\" or \"add\" at line 1 column 12 because failed to parse \"aa\" at line 1 column 12 because \"}\" does not start with \"aa\"");
+	}
+    }
+
+
+    let p = parser::cr();
+    assert::equal(&p.goal().to_string().as_str(), &"carriage-return");
+    let x = "\r";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( ast ) => {
+	    assert::equal(&ast, &parser::AST{
+		value: parser::ast::Item{
+		    tag: Some(parser::CR),
+		    text: "\r" },
+		children: vec!(parser::AST{
+		    value: parser::ast::Item{
+		        tag: None,
+		        text: "\r" },
+		    children: vec!()
+                })
+            });
+	},
+	parser::ParseResult::Err(_e) => {
+	    assert::equal(&true, &false);
+	}
+    }
+    let x = "fred\n";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( _ast ) => {
+	    assert::equal(&true, &false);
+	},
+	parser::ParseResult::Err(e) => {
+	    assert::equal(&e.to_string().as_str(), &"failed to parse carriage-return at line 1 column 1 because failed to parse \"\r\" at line 1 column 1 because \"f...\" does not start with \"\r\"");
 	}
     }
 }
