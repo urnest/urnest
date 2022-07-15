@@ -27,6 +27,16 @@ impl<'x> AllOf<'x>
         return &self.x[0..self.x.len()-y.len()]
     }
 }
+
+struct EndOfInput {}
+impl std::fmt::Display for EndOfInput {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+    {
+        write!(f, "end of input")
+    }
+}
+fn end_of_input() -> Box<dyn std::fmt::Display> { Box::new(EndOfInput{}) }
+
 pub struct Literal<'literal> {
     pub x: &'literal str
 }
@@ -368,6 +378,72 @@ impl<'p1> crate::Parser for ListOf<'p1>
                         }
                     }
                 }
+            }
+        }
+    }
+    fn goal(self: & Self) -> & dyn std::fmt::Display
+    {
+        self
+    }
+}
+pub struct Char {
+    pub tag: Option<&'static str>,
+    pub x: char
+}
+impl std::fmt::Display for Char
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+    {
+        match self.tag {
+            // REVISIT: need rust-escape-char function so \n displays as '\n'
+            None => { write!(f, "'{}'", self.x) },
+            Some(tag) => { write!(f, "{}", tag) }
+        }
+    }
+}
+struct WrongChar {
+    wanted: char,
+    got: char
+}
+fn wrong_char(wanted: char, got: char) -> Box<dyn std::fmt::Display>
+{
+    Box::new(WrongChar{wanted: wanted, got: got})
+}
+
+impl std::fmt::Display for WrongChar {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+    {
+        // REVISIT: need a rust-escape-string formatting function so that e.g. \n
+        // formats as '\n'
+        write!(f, "expected '{x}' not '{y}'", x=self.wanted, y=self.got)
+    }
+}
+
+impl crate::Parser for Char
+{
+    fn parse_some_of_<'text, 'goals, 'parser>(self: &'parser Self, text: &'text str) ->
+        crate::ParseResult_<'text, 'goals, 'parser>
+    where 'text: 'parser, 'parser: 'goals
+    {
+        match text.chars().next() {
+            Some(c) => {
+                if c == self.x {
+                    return crate::ParseResult_::<'text, 'goals, 'parser>::Ok(
+                        crate::AST{ value: crate::ast::Item { tag: self.tag, text: &text[0..1] },
+                                    children: vec!() });
+                }
+                crate::ParseResult_::<'text, 'goals, 'parser>::Err(
+                    ( crate::ParseFailed::<'text, 'goals, 'parser>{
+                        context: vec!(),
+                        cause: wrong_char(self.x, c) },
+                      vec!()))
+            },
+            None => {
+                crate::ParseResult_::<'text, 'goals, 'parser>::Err(
+                    ( crate::ParseFailed::<'text, 'goals, 'parser>{
+                        context: vec!(),
+                        cause: end_of_input() },
+                      vec!()))
             }
         }
     }

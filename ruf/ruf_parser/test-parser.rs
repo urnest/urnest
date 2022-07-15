@@ -408,12 +408,7 @@ fn main() {
 		value: parser::ast::Item{
 		    tag: Some(parser::CR),
 		    text: "\r" },
-		children: vec!(parser::AST{
-		    value: parser::ast::Item{
-		        tag: None,
-		        text: "\r" },
-		    children: vec!()
-                })
+		children: vec!()
             });
 	},
 	parser::ParseResult::Err(_e) => {
@@ -427,7 +422,80 @@ fn main() {
 	    assert::equal(&true, &false);
 	},
 	parser::ParseResult::Err(e) => {
-	    assert::equal(&e.to_string().as_str(), &"failed to parse carriage-return at line 1 column 1 because failed to parse \"\r\" at line 1 column 1 because \"f...\" does not start with \"\r\"");
+	    assert::equal(&e.to_string().as_str(), &"failed to parse carriage-return at line 1 column 1 because expected '\r' not 'f'");
+	}
+    }
+
+
+    let p = parser::lf();
+    assert::equal(&p.goal().to_string().as_str(), &"line-feed");
+    let x = "\n";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( ast ) => {
+	    assert::equal(&ast, &parser::AST{
+		value: parser::ast::Item{
+		    tag: Some(parser::LF),
+		    text: "\n" },
+		children: vec!()
+            });
+	},
+	parser::ParseResult::Err(_e) => {
+	    assert::equal(&true, &false);
+	}
+    }
+    let x = "fred\r";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( _ast ) => {
+	    assert::equal(&true, &false);
+	},
+	parser::ParseResult::Err(e) => {
+	    assert::equal(&e.to_string().as_str(), &"failed to parse line-feed at line 1 column 1 because expected '\n' not 'f'");
+	}
+    }
+
+
+    let p = parser::crlf();
+    assert::equal(&p.goal().to_string().as_str(), &"CRLF");
+    let x = "\r\n";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( ast ) => {
+	    assert::equal(&ast, &parser::AST{
+		value: parser::ast::Item{
+		    tag: Some(parser::CRLF),
+		    text: "\r\n" },
+		children: vec!(
+                    parser::AST{
+		        value: parser::ast::Item{
+		            tag: None,
+		            text: "\r\n" },
+		        children: vec!(
+                            parser::AST{
+		                value: parser::ast::Item{
+		                    tag: Some(parser::CR),
+		                    text: "\r" },
+		                children: vec!()},
+                            parser::AST{
+		                value: parser::ast::Item{
+		                    tag: Some(parser::LF),
+		                    text: "\n" },
+		                children: vec!()})})
+            });
+	},
+	parser::ParseResult::Err(_e) => {
+	    assert::equal(&true, &false);
+	}
+    }
+    let x = "fred\r";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( _ast ) => {
+	    assert::equal(&true, &false);
+	},
+	parser::ParseResult::Err(e) => {
+	    assert::equal(&e.to_string().as_str(), &"failed to parse CRLF at line 1 column 1 because failed to parse carriage-return then line-feed at line 1 column 1 because failed to parse carriage-return at line 1 column 1 because expected '\r' not 'f'");
 	}
     }
 }

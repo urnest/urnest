@@ -317,8 +317,8 @@ pub fn list_of<'parser>(start: Ref<'parser>,
 
 pub static CR: &str = "carriage-return";
 pub static LF: &str = "line-feed";
-pub static CRLF: &str = "carriage-return-line-feed";
+pub static CRLF: &str = "CRLF";
 
-pub fn cr() -> Ref<'static> { tagged(CR, literal("\r")) }
-pub fn lf() -> Ref<'static> { tagged(LF, literal("\n")) }
+pub fn cr() -> Ref<'static> { Ref::new(parsers::Char{tag: Some(CR), x:'\r'}) }
+pub fn lf() -> Ref<'static> { Ref::new(parsers::Char{tag: Some(LF), x:'\n'}) }
 pub fn crlf() -> Ref<'static> { tagged(CRLF, cr()+lf()) }
