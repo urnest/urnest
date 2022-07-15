@@ -86,7 +86,7 @@ impl CssSelector
 			     rest_of_terms };
     }
 
-    // function for use with tree::select_by_value
+    // function for use with tree::mut_select_by_value
     pub fn tree_selector(self : &CssSelector,
 			 ancestors: &[&String],
 			 _path: &[usize],
@@ -113,7 +113,7 @@ impl CssSelector
 }
 
 /* REVISIT: it would be nice to just pass a &CssSelector to 
-   tree::select_by_path, but it seems rust cannot do that yet, e.g.
+   tree::mut_select_by_path, but it seems rust cannot do that yet, e.g.
    at Nov 2021 none of below works, and
     https://users.rust-lang.org/t/how-i-can-implement-fnonce-on-rust-stable/49854/3
 impl Fn(&[&String], // ancestors
@@ -204,7 +204,7 @@ fn main()
 		  vec![1, 4, 0, 1, 0]]);
 
 	let mut x = orig.clone();
-	let mut selection = x.select_by_path(
+	let mut selection = x.mut_select_by_path(
 	    &|ancestors, path, starting_from, node| {
 		cs.tree_selector(ancestors, path, starting_from, node)
 	    });
@@ -241,7 +241,7 @@ fn main()
 	    &vec![]);
 
 	let mut x = orig.clone();
-	let mut selection = x.select_by_path(
+	let mut selection = x.mut_select_by_path(
 	    &|ancestors, path, starting_from, node| {
 		cs.tree_selector(ancestors, path, starting_from, node)
 	    });
@@ -263,7 +263,7 @@ fn main()
 	    &vec![vec![1, 2, 0]]);
 
 	let mut x = orig.clone();
-	let mut selection = x.select_by_path(
+	let mut selection = x.mut_select_by_path(
 	    &|ancestors, path, starting_from, node| {
 		cs.tree_selector(ancestors, path, starting_from, node)
 	    });
@@ -303,7 +303,7 @@ fn main()
 	    &vec![vec![1, 4, 0, 1, 0],
 		  vec![1, 4, 0, 1, 0]]);
 	let mut x = orig.clone();
-	let mut selection = x.select_by_path(
+	let mut selection = x.mut_select_by_path(
 	    &|ancestors, path, starting_from, node| {
 		cs.tree_selector(ancestors, path, starting_from, node)
 	    });
@@ -340,7 +340,7 @@ fn main()
 		    &cs.rest_of_terms[..]),
 	    &vec![vec![1, 4, 0, 1, 0]]);
 	let mut x = orig.clone();
-	let mut selection = x.select_by_path(
+	let mut selection = x.mut_select_by_path(
 	    &|ancestors, path, starting_from, node| {
 		cs.tree_selector(ancestors, path, starting_from, node)
 	    });

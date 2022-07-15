@@ -37,15 +37,60 @@ fn main() {
 		    n(5)] ),
 		n(7)] ) ] };
 
+    // immutable selection
+    {
+	let selection = orig.select_by_value(&|v| v==&4).extend_by_value(&|v| v>&6);
+        let selected: Vec<&tree::Node<i32>> = selection.iter().collect();
+        assert::equal(&selected,
+                      &vec!(
+                          &orig.children[1].children[0], //n(4) ),
+                          &orig.children[2].children[1].children[0], //n(4) ),
+                          &orig.children[2].children[2] //n(7)
+                      ));
+	let selection = orig.select_by_value(&|v| v==&6).refine_by_value(&|v| v>&6);
+        let selected: Vec<&tree::Node<i32>> = selection.iter().collect();
+        assert::equal(&selected,
+                      &vec!(
+                          &orig.children[2].children[2] //n(7)
+                      ));
+
+	let selection = orig.select_by_path(
+	    &|_ancestors, path, starting_from, _node| {
+		assert::equal(&starting_from, &1);
+		tree::Disposition::select_this_node_and_recurse(
+		    path == [1,1], // path-from-root
+		    true)
+	    });
+        let selected: Vec<&tree::Node<i32>> = selection.iter().collect();
+        assert::equal(&selected,
+                      &vec!(
+                          &orig.children[1].children[1]
+                      ));
+        
+	let selection = orig.select_by_value(&|v| v==&6)
+	    .refine_by_path(
+		&|_ancestors, _path, starting_from, node| {
+		    assert::equal(&starting_from, &1);
+		    tree::Disposition::select_this_node_and_recurse(
+			&3 == &node.value,
+			true)
+		});
+        let selected: Vec<&tree::Node<i32>> = selection.iter().collect();
+        assert::equal(&selected,
+                      &vec!(
+                          &orig.children[2].children[0],
+                          &orig.children[2].children[1],
+                      ));
+    }                                                         
     {
 	let mut x = orig.clone();
 	
 	let is_ten = |value:&i32| value.eq(&10);
-	let selection = x.select_by_value(&is_ten);
+	let selection = x.mut_select_by_value(&is_ten);
 	
 	assert::equal(&selection.copy_selected_values(), &Vec::<i32>::new());
 	
-	let mut selection = x.select_by_value(&|v| v==&3);
+	let mut selection = x.mut_select_by_value(&|v| v==&3);
 	assert::equal(&selection.copy_selected_values(), &vec![3,3,3]);
 	
 	let removed = selection.prune();
@@ -70,7 +115,7 @@ fn main() {
 	
 	assert::equal(&removed, &r);
 	
-	x.select_by_value(&|v| v==&2).prune();
+	x.mut_select_by_value(&|v| v==&2).prune();
 	let y = tree::Node::<i32> {
 	    value : 1,
 	    children : vec![
@@ -80,11 +125,11 @@ fn main() {
 	assert::equal(&x, &y);
     }
 
-    // select_by_value
+    // mut_select_by_value
     {
 	let mut x = orig.clone();
 
-	let mut s = x.select_by_value(&|v| v==&2);
+	let mut s = x.mut_select_by_value(&|v| v==&2);
 	let removed = s.extend_by_value(&|v| v==&3).prune();
 	
 	let y = tree::Node::<i32> {
@@ -108,11 +153,11 @@ fn main() {
 	assert::equal(&removed, &r);
     }
 
-    // select_by_path using index
+    // mut_select_by_path using index
     {
 	let mut x = orig.clone();
 	
-	let removed = x.select_by_path(
+	let removed = x.mut_select_by_path(
 	    &|_ancestors, path, starting_from, _node| {
 		assert::equal(&starting_from, &1);
 		tree::Disposition::select_this_node_and_recurse(
@@ -141,11 +186,11 @@ fn main() {
 	assert::equal(&removed, &r);
     }
 
-    // select_by_path using ancestor (parent in this case)
+    // mut_select_by_path using ancestor (parent in this case)
     {
 	let mut x = orig.clone();
 	
-	let removed = x.select_by_path(
+	let removed = x.mut_select_by_path(
 	    &|ancestors, _path, _starting_from, _node|
 	    tree::Disposition::select_this_node_and_recurse(
 		3 == **ancestors.last().unwrap(), // parent
@@ -188,7 +233,7 @@ fn main() {
 			n(5)] ),
 		    n(7)] ) ] };
 	
-	let removed = x.select_by_value(&|v| v==&6)
+	let removed = x.mut_select_by_value(&|v| v==&6)
 	    .refine_by_path(
 		&|_ancestors, _path, starting_from, node| {
 		    assert::equal(&starting_from, &1);
@@ -237,7 +282,7 @@ fn main() {
 			n(5)] ),
 		    n(7)] ) ] };
 	
-	let removed = x.select_by_value(&|v| v==&3)
+	let removed = x.mut_select_by_value(&|v| v==&3)
 	    .refine_by_value(&|v| v==&5).prune();
 	
 	let y = tree::Node::<i32> {
