@@ -389,7 +389,7 @@ where U:Tag<BaseType=String>
 	capacity: usize
     ) -> T<U> { Self{value:String::from_raw_parts(buf, length, capacity)} }
     pub fn is_empty(&self) -> bool { self.value.is_empty() }
-    pub fn len(&self) -> usize { self.len() }
+    pub fn len(&self) -> usize { self.value.len() }
     pub fn pop(&mut self) -> Option<char> { self.value.pop() }
     pub fn push(&mut self, ch: char) { self.value.push(ch) }
     pub fn remove(&mut self, idx: usize) -> char { self.value.remove(idx) }
