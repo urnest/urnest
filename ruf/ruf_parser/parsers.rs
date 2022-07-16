@@ -1333,3 +1333,59 @@ impl<'p1> crate::Parser for Optional<'p1>
         self
     }
 }
+
+pub struct Select<'p1>
+{
+    pub preferred: (std::sync::Arc<dyn crate::Parser+Send+Sync+'p1>, std::sync::Arc<dyn crate::Parser+Send+Sync+'p1>),
+    pub alternatives: Vec< (std::sync::Arc<dyn crate::Parser+Send+Sync+'p1>, std::sync::Arc<dyn crate::Parser+Send+Sync+'p1>) >
+}
+
+impl<'p1> std::fmt::Display for Select<'p1>
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+    {
+        let mut result = write!(f, "{k} => {v}",
+                                k = self.preferred.0.goal(),
+                                v = self.preferred.1.goal())?;
+        for (k,v) in self.alternatives.iter() {
+            result = write!(f, " or {k} => {v}", k=k.goal(), v=v.goal())?
+        }
+        std::fmt::Result::Ok(result)
+    }
+}
+impl<'p1> crate::Parser for Select<'p1>
+{
+    fn parse_some_of_<'text, 'goals, 'parser>(self: &'parser Self, text: &'text str) ->
+        crate::ParseResult_<'text, 'goals, 'parser>
+    where 'text: 'parser, 'parser: 'goals, 'p1: 'parser
+    {
+        match self.preferred.0.parse_some_of(text) {
+            crate::ParseResult::Ok(_ast) => {
+                match self.preferred.1.parse_some_of(text) {
+                    crate::ParseResult::Ok(ast) => {return crate::ParseResult_::Ok(ast)},
+                    crate::ParseResult::Err(e) => {return crate::ParseResult_::Err((e, vec!()))}
+                }
+            },
+            crate::ParseResult::Err(mut e) => {
+                for alt in self.alternatives.iter() {
+                    match alt.0.parse_some_of(text) {
+                        crate::ParseResult::Ok(_ast) => {
+                            match alt.1.parse_some_of(text) {
+                                crate::ParseResult::Ok(ast) => {return crate::ParseResult_::Ok(ast)},
+                                crate::ParseResult::Err(e) => {return crate::ParseResult_::Err((e,vec!()))}
+                            }
+                        },
+                        crate::ParseResult::Err(e2) => {
+                            e = crate::best_of(e, e2);
+                        }
+                    }
+                }
+                crate::ParseResult_::Err((e,vec!()))
+            }
+        }
+    }
+    fn goal(self: & Self) -> & dyn std::fmt::Display
+    {
+        self
+    }
+}

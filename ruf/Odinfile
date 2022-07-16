@@ -1,10 +1,11 @@
 %all == %all.tree:leaves
 
 %all.tree == <<
-ruf_assert%all.tree:leaves
-ruf_tree%all.tree:leaves
-ruf_newtype%all.tree:leaves
-rs-dep%all.tree:leaves
+ruf_assert%all
+ruf_newtype%all
+ruf_parser%all
+ruf_tree%all
+rs-dep%all
 %test-refs.output
 
 %rs-opts==<<

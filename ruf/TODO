@@ -1,13 +1,15 @@
 * parser:
   - new type Tag
   - should all parser creation functions (and parsers) accept an Option<Tag>?
+    - maybe provide tagged_x for each function x?
+    - maybe let common function put tag in (give Parser a tag() -> Option<Tag> method)?
   x always return completed IRs on failure
     x with each context entry?
   - result cache
   - primitives from hcp::parser:
     x none
     x listOf(open, x, sep, term)
-    match
+    x match
     maybe nonEmptyListOf(x, moreflag)
     maybe not?
     maybe and/or &str

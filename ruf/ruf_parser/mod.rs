@@ -362,3 +362,17 @@ pub fn optional<'parser>(x: Ref<'parser>) -> Ref<'parser>
 {
     Ref::new(parsers::Optional{x:x.x})
 }
+
+// tries each term.0 in turn until a success, result is then result of trying that term.1
+// *at same point as term.0 was tried*, i.e. term.1 should always commence by re-parsing
+// term.0
+pub fn select<'parser>(preferred: (Ref<'parser>, Ref<'parser>),
+                       alternatives: Vec<(Ref<'parser>, Ref<'parser>)>) -> Ref<'parser>
+{
+    let mut x = parsers::Select::<'parser>{preferred: (preferred.0.x, preferred.1.x),
+                                           alternatives: vec!()};
+    for (k,v) in alternatives.into_iter() {
+        x.alternatives.push( (k.x, v.x) );
+    }
+    Ref::new(x)
+}

@@ -1083,4 +1083,98 @@ fn main() {
 	    assert::equal(&true, &false);
 	}
     }
+
+    let p = parser::select(
+        (parser::literal("22"),
+         parser::literal("22a")),
+        vec!(
+            (parser::literal("2")+parser::digit(),
+             parser::literal("2")+parser::digit()+parser::literal("b")),
+            (parser::literal("3"),
+             parser::literal("3")+parser::digit())));
+    let x = "22ax";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( ast ) => {
+	        assert::equal(&ast, &parser::AST{
+		    value: parser::ast::Item{
+		        tag: None,
+		        text: &"22a" },
+		    children: vec!()
+                });
+	},
+	parser::ParseResult::Err(_e) => {
+	    assert::equal(&true, &false);
+	}
+    }
+    let x = "27bx";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( ast ) => {
+	        assert::equal(&ast, &parser::AST{
+		    value: parser::ast::Item{
+		        tag: None,
+		        text: &x[0..3] },
+		    children: vec!(
+                        parser::AST{
+		            value: parser::ast::Item{
+		                tag: None,
+		                text: &"2" },
+		            children: vec!()
+                        },
+                        parser::AST{
+		            value: parser::ast::Item{
+		                tag: Some("digit"),
+		                text: &"7" },
+		            children: vec!()
+                        },
+                        parser::AST{
+		            value: parser::ast::Item{
+		                tag: None,
+		                text: &"b" },
+		            children: vec!()
+                        })
+                });
+	},
+	parser::ParseResult::Err(_e) => {
+	    assert::equal(&true, &false);
+	}
+    }
+    let x = "39";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( ast ) => {
+	        assert::equal(&ast, &parser::AST{
+		    value: parser::ast::Item{
+		        tag: None,
+		        text: &x[0..2] },
+		    children: vec!(
+                        parser::AST{
+		            value: parser::ast::Item{
+		                tag: None,
+		                text: &"3" },
+		            children: vec!()
+                        },
+                        parser::AST{
+		            value: parser::ast::Item{
+		                tag: Some("digit"),
+		                text: &"9" },
+		            children: vec!()
+                        })
+                });
+	},
+	parser::ParseResult::Err(_e) => {
+	    assert::equal(&true, &false);
+	}
+    }
+    let x = "22b";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( _ast ) => {
+	    assert::equal(&true, &false);
+	},
+	parser::ParseResult::Err(e) => {
+	    assert::equal(&e.to_string().as_str(), &"failed to parse \"22\" => \"22a\" or \"2\" then digit => \"2\" then digit then \"b\" or \"3\" => \"3\" then digit at line 1 column 1 because failed to parse \"22a\" at line 1 column 1 because, having parsed \"22\", \"b\" does not start with \"a\"");
+	}
+    }
 }
