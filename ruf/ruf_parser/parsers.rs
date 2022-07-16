@@ -959,3 +959,377 @@ impl crate::Parser for OneOfChars
         self
     }
 }
+
+struct CharInPattern {
+    did_not_want: crate::CharSet,
+    got: char
+}
+fn char_in_pattern(did_not_want: crate::CharSet, got: char) -> Box<dyn std::fmt::Display>
+{
+    Box::new(CharInPattern{did_not_want: did_not_want, got: got})
+}
+
+impl std::fmt::Display for CharInPattern {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+    {
+        // REVISIT: need a rust-escape-string formatting function so that e.g. \n
+        // formats as '\n'
+        write!(f, "'{y}' is one of characters {pattern}", pattern=self.did_not_want.value, y=self.got)
+    }
+}
+
+pub struct AnyCharExcept {
+    pub pattern: crate::CharSet,
+    pub chars: std::collections::HashSet<char>
+}
+impl std::fmt::Display for AnyCharExcept
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+    {
+        write!(f, "any character except {pattern}", pattern=self.pattern)
+    }
+}
+impl crate::Parser for AnyCharExcept
+{
+    fn parse_some_of_<'text, 'goals, 'parser>(self: &'parser Self, text: &'text str) ->
+        crate::ParseResult_<'text, 'goals, 'parser>
+    where 'text: 'parser, 'parser: 'goals
+    {
+        match text.chars().next() {
+            Some(c) => {
+                if self.chars.contains(&c) {
+                    return crate::ParseResult_::<'text, 'goals, 'parser>::Err(
+                        ( crate::ParseFailed::<'text, 'goals, 'parser>{
+                            context: vec!(),
+                            cause: char_in_pattern(self.pattern, c) },
+                          vec!()));
+                }
+                crate::ParseResult_::<'text, 'goals, 'parser>::Ok(
+                    crate::AST{ value: crate::ast::Item { tag: None, text: &text[0..1] },
+                                children: vec!() })
+            },
+            None => {
+                crate::ParseResult_::<'text, 'goals, 'parser>::Err(
+                    ( crate::ParseFailed::<'text, 'goals, 'parser>{
+                        context: vec!(),
+                        cause: end_of_input() },
+                      vec!()))
+            }
+        }
+    }
+    fn goal(self: & Self) -> & dyn std::fmt::Display
+    {
+        self
+    }
+}
+
+struct NotWhitespaceChar {
+    got: char
+}
+fn not_whitespace_char(got: char) -> Box<dyn std::fmt::Display>
+{
+    Box::new(NotWhitespaceChar{got: got})
+}
+
+impl std::fmt::Display for NotWhitespaceChar {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+    {
+        // REVISIT: need a rust-escape-string formatting function so that e.g. \n
+        // formats as '\n'
+        write!(f, "expected space, tab, newline or carriage-return not '{y}'", y=self.got)
+    }
+}
+
+pub struct WhitespaceChar {
+    pub tag: Option<&'static str>
+}
+impl std::fmt::Display for WhitespaceChar
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+    {
+        match self.tag {
+            Some(tag) => { write!(f, "{}", tag) },
+            None => { write!(f, "whitespace character") }
+        }
+    }
+}
+impl crate::Parser for WhitespaceChar
+{
+    fn parse_some_of_<'text, 'goals, 'parser>(self: &'parser Self, text: &'text str) ->
+        crate::ParseResult_<'text, 'goals, 'parser>
+    where 'text: 'parser, 'parser: 'goals
+    {
+        match text.chars().next() {
+            Some(c) => {
+                if " \t\n\r".contains(c) {
+                    return crate::ParseResult_::<'text, 'goals, 'parser>::Ok(
+                        crate::AST{ value: crate::ast::Item { tag: self.tag, text: &text[0..1] },
+                                    children: vec!() });
+                }
+                crate::ParseResult_::<'text, 'goals, 'parser>::Err(
+                    ( crate::ParseFailed::<'text, 'goals, 'parser>{
+                        context: vec!(),
+                        cause: not_whitespace_char(c) },
+                      vec!()))
+            },
+            None => {
+                crate::ParseResult_::<'text, 'goals, 'parser>::Err(
+                    ( crate::ParseFailed::<'text, 'goals, 'parser>{
+                        context: vec!(),
+                        cause: end_of_input() },
+                      vec!()))
+            }
+        }
+    }
+    fn goal(self: & Self) -> & dyn std::fmt::Display
+    {
+        self
+    }
+}
+
+
+pub struct ParseXUntilY<'p1>
+{
+    pub x: std::sync::Arc<dyn crate::Parser+Send+Sync+'p1>,
+    pub y: std::sync::Arc<dyn crate::Parser+Send+Sync+'p1>,
+}
+
+impl<'p1> std::fmt::Display for ParseXUntilY<'p1>
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+    {
+        write!(f, "{x} repeatedly until {y}",
+               x = self.x.goal(),
+               y = self.y.goal())
+    }
+}
+impl<'p1> crate::Parser for ParseXUntilY<'p1>
+{
+    fn parse_some_of_<'text, 'goals, 'parser>(self: &'parser Self, text: &'text str) ->
+        crate::ParseResult_<'text, 'goals, 'parser>
+    where 'text: 'parser, 'parser: 'goals, 'p1: 'parser
+    {
+        let mut rest = text;
+        let mut items = vec!();
+        let err_ = |e: crate::ParseFailed::<'text, 'goals, 'parser>,
+                    items: Vec<crate::AST<'text>>,
+                    rest: &str|
+        {
+            let having_parsed = match items.len() > 0 {
+                true => vec!(
+                    crate::AST{
+                        value: crate::ast::Item{
+                            tag: Some("some items"),
+                            text: all_of(text).up_to(rest)},
+                        children: items }),
+                false => vec!()
+            };
+            return crate::ParseResult_::Err( (e, having_parsed) );
+        };
+        loop {
+            match self.x.parse_some_of(rest) {
+                crate::ParseResult::Ok(item) => {
+                    rest = all_of(rest).after(item.value.text);
+                    items.push(item);
+                },
+                crate::ParseResult::Err(e) => {
+                    match self.y.parse_some_of(rest) {
+                        crate::ParseResult::Err(e1) => {
+                            return err_(crate::best_of(e, e1), items, rest);
+                        },
+                        crate::ParseResult::Ok(end_ast) => {
+                            rest = all_of(rest).after(end_ast.value.text);
+                            items.push(end_ast);
+                            return crate::ParseResult_::Ok(
+                                crate::AST{
+                                    value: crate::ast::Item{
+                                        tag: None,
+                                        text: all_of(text).up_to(rest)},
+                                    children: items});
+                        }
+                    }
+                }
+            }
+        }
+    }
+    fn goal(self: & Self) -> & dyn std::fmt::Display
+    {
+        self
+    }
+}
+
+pub struct ZeroOrMore<'p1>
+{
+    pub x: std::sync::Arc<dyn crate::Parser+Send+Sync+'p1>,
+}
+
+impl<'p1> std::fmt::Display for ZeroOrMore<'p1>
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+    {
+        write!(f, "zero or more {item}", item = self.x.goal())
+    }
+}
+impl<'p1> crate::Parser for ZeroOrMore<'p1>
+{
+    fn parse_some_of_<'text, 'goals, 'parser>(self: &'parser Self, text: &'text str) ->
+        crate::ParseResult_<'text, 'goals, 'parser>
+    where 'text: 'parser, 'parser: 'goals, 'p1: 'parser
+    {
+        let mut rest = text;
+        let mut items = vec!();
+        loop {
+            match self.x.parse_some_of(rest) {
+                crate::ParseResult::Err(_) => {
+                    return crate::ParseResult_::Ok(
+                        crate::AST{
+                            value: crate::ast::Item{
+                                tag: None,
+                                text: all_of(text).up_to(rest)},
+                            children: items});
+                },
+                crate::ParseResult::Ok(item) => {
+                    rest = all_of(rest).after(item.value.text);
+                    items.push(item);
+                }
+            }
+        }
+    }
+    fn goal(self: & Self) -> & dyn std::fmt::Display
+    {
+        self
+    }
+}
+
+pub struct SomeSpace<'p1>
+{
+    pub whitespace_char: std::sync::Arc<dyn crate::Parser+Send+Sync+'p1>
+}
+
+impl<'p1> std::fmt::Display for SomeSpace<'p1>
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+    {
+        write!(f, "some space")
+    }
+}
+impl<'p1> crate::Parser for SomeSpace<'p1>
+{
+    fn parse_some_of_<'text, 'goals, 'parser>(self: &'parser Self, text: &'text str) ->
+        crate::ParseResult_<'text, 'goals, 'parser>
+    where 'text: 'parser, 'parser: 'goals, 'p1: 'parser
+    {
+        let mut rest = text;
+        match self.whitespace_char.parse_some_of(rest) {
+            crate::ParseResult::Err(e) => crate::ParseResult_::Err( (e, vec!()) ),
+            crate::ParseResult::Ok(first_item_ast) => {
+                rest = all_of(rest).after(first_item_ast.value.text);
+                loop {
+                    match self.whitespace_char.parse_some_of(rest) {
+                        crate::ParseResult::Err(_) => {
+                            return crate::ParseResult_::Ok(
+                                crate::AST{
+                                    value: crate::ast::Item{
+                                        tag: None,
+                                        text: all_of(text).up_to(rest)},
+                                    children: vec!()});
+                        }
+                        crate::ParseResult::Ok(item) => {
+                            rest = all_of(rest).after(item.value.text);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    fn goal(self: & Self) -> & dyn std::fmt::Display
+    {
+        self
+    }
+}
+
+pub struct AnySpace<'p1>
+{
+    pub whitespace_char: std::sync::Arc<dyn crate::Parser+Send+Sync+'p1>,
+}
+
+impl<'p1> std::fmt::Display for AnySpace<'p1>
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+    {
+        write!(f, "any space")
+    }
+}
+impl<'p1> crate::Parser for AnySpace<'p1>
+{
+    fn parse_some_of_<'text, 'goals, 'parser>(self: &'parser Self, text: &'text str) ->
+        crate::ParseResult_<'text, 'goals, 'parser>
+    where 'text: 'parser, 'parser: 'goals, 'p1: 'parser
+    {
+        let mut rest = text;
+        loop {
+            match self.whitespace_char.parse_some_of(rest) {
+                crate::ParseResult::Err(_) => {
+                    return crate::ParseResult_::Ok(
+                        crate::AST{
+                            value: crate::ast::Item{
+                                tag: None,
+                                text: all_of(text).up_to(rest)},
+                            children: vec!()});
+                },
+                crate::ParseResult::Ok(item) => {
+                    rest = all_of(rest).after(item.value.text);
+                }
+            }
+        }
+    }
+    fn goal(self: & Self) -> & dyn std::fmt::Display
+    {
+        self
+    }
+}
+
+pub struct Optional<'p1>
+{
+    pub x: std::sync::Arc<dyn crate::Parser+Send+Sync+'p1>,
+}
+
+impl<'p1> std::fmt::Display for Optional<'p1>
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result
+    {
+        write!(f, "optional {x}", x=self.x.goal())
+    }
+}
+impl<'p1> crate::Parser for Optional<'p1>
+{
+    fn parse_some_of_<'text, 'goals, 'parser>(self: &'parser Self, text: &'text str) ->
+        crate::ParseResult_<'text, 'goals, 'parser>
+    where 'text: 'parser, 'parser: 'goals, 'p1: 'parser
+    {
+        let mut rest = text;
+        match self.x.parse_some_of(rest) {
+            crate::ParseResult::Err(_) => {
+                return crate::ParseResult_::Ok(
+                    crate::AST{
+                        value: crate::ast::Item{
+                            tag: None,
+                            text: all_of(text).up_to(rest)},
+                        children: vec!()});
+            },
+            crate::ParseResult::Ok(item) => {
+                rest = all_of(rest).after(item.value.text);
+                return crate::ParseResult_::Ok(
+                    crate::AST{
+                        value: crate::ast::Item{
+                            tag: None,
+                            text: all_of(text).up_to(rest)},
+                        children: vec!(item)});
+            }
+        }
+    }
+    fn goal(self: & Self) -> & dyn std::fmt::Display
+    {
+        self
+    }
+}

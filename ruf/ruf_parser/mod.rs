@@ -1,3 +1,4 @@
+
 // Copyright (c) 2022 Trevor Taylor
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -319,6 +320,7 @@ pub fn list_of<'parser>(start: Ref<'parser>,
 
 pub static CRLF: &str = "CRLF";
 
+pub fn whitespace_char() -> Ref<'static> {Ref::new(parsers::WhitespaceChar{tag: None})}
 pub fn cr() -> Ref<'static> { Ref::new(parsers::Char{tag: Some("carriage-return"), x:'\r'}) }
 pub fn lf() -> Ref<'static> { Ref::new(parsers::Char{tag: Some("line-feed"), x:'\n'}) }
 pub fn crlf() -> Ref<'static> { tagged(CRLF, cr()+lf()) }
@@ -329,10 +331,8 @@ pub fn us_ascii_printable() -> Ref<'static> { Ref::new(parsers::UsAsciiPrintable
     tag: Some("US ASCII printable character")}) }
 
 pub fn any_char() -> Ref<'static> { Ref::new(parsers::AnyChar{}) }
-pub fn at_least_one<'parser>(x: Ref<'parser>) -> Ref<'parser>
-{
-    Ref::new(parsers::AtLeastOne{x: x.x})
-}
+pub fn at_least_one<'parser>(x: Ref<'parser>) -> Ref<'parser>{Ref::new(parsers::AtLeastOne{x: x.x})}
+pub fn zero_or_more<'parser>(x: Ref<'parser>) -> Ref<'parser>{Ref::new(parsers::ZeroOrMore{x: x.x})}
 
 // CharSet is any string but a-f anywhere in the string is interpreted as abcdef, note
 //   f-a (anywhere in the string) just means the three characters f, - and a
@@ -344,4 +344,21 @@ pub type CharSet = newtype::T<CharSet_>;
 pub fn one_of_chars(chars: CharSet) -> Ref<'static> {
     let s = parsers::parse_charset(&chars);
     Ref::new(parsers::OneOfChars{ pattern: chars, chars: s })
+}
+
+pub fn any_char_except(chars: CharSet) -> Ref<'static> {
+    let s = parsers::parse_charset(&chars);
+    Ref::new(parsers::AnyCharExcept{ pattern: chars, chars: s })
+}
+
+pub fn parse_x_until_y<'parser>(x: Ref<'parser>, y: Ref<'parser>) -> Ref<'parser>
+{
+    Ref::new(parsers::ParseXUntilY{x:x.x, y:y.x})
+}
+
+pub fn some_space() -> Ref<'static> {Ref::new(parsers::SomeSpace{whitespace_char:whitespace_char().x})}
+pub fn any_space() -> Ref<'static> {Ref::new(parsers::AnySpace{whitespace_char:whitespace_char().x})}
+pub fn optional<'parser>(x: Ref<'parser>) -> Ref<'parser>
+{
+    Ref::new(parsers::Optional{x:x.x})
 }

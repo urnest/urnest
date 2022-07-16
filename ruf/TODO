@@ -7,20 +7,20 @@
   - primitives from hcp::parser:
     x none
     x listOf(open, x, sep, term)
-    nonEmptyListOf(x, moreflag)
     match
-    not?
-    and/or &str
-    n_to_m (could use 0..3 * xx()?)
-    optional
-    PR parseAnyChar() throw();
+    maybe nonEmptyListOf(x, moreflag)
+    maybe not?
+    maybe and/or &str
+    maybe n_to_m (could use 0..3 * xx()?)
+    x optional
+    x PR parseAnyChar() throw();
 x at_least_one
+x zero_or_more
 x one_of_chars like PR parseOneOfChars(hcp::Chars const& chars) throw();
-PR parseAnyCharExcept(std::string const& chars) throw();
-PR parseUntil(PR const match, PR const until) throw();
-PR balanced(PR until, bool angles=false) throw();
-PR bracketed(PR x) throw(); //x inside brackets, with optional whitespace preceding x
-PR whitespaceChar() throw();
+x any_char_except like PR parseAnyCharExcept(hcp::Chars const& chars) throw();
+x parse_x_until_y PR parseUntil(PR const match, PR const until) throw();
+PR balanced(PR until, pairs, content) throw();
+x whitespace_char like PR whitespaceChar() throw();
 x PR digit() throw();
 x PR octalDigit() throw();
 x PR hexDigit() throw();
@@ -29,8 +29,8 @@ x PR cr() throw(); tagged(CR, literal("\r"));
 x PR lf() throw();
 x PR crlf() throw();
 x PR usAsciiPrintable() throw(); // 32-127 per US ASCII, ANSI X3.4-1986 (ISO 646)
-some_space()
-any_space()
+x some_space()
+x any_space()
 
 * tree:
 
@@ -62,7 +62,7 @@ any_space()
       how to do lifetimes such that we can continue using selection
       once the values have been adjusted?
 
-  - immutable Selection
+  / immutable Selection
     - instead of modify in place like prune, can produce a new tree with equivalent
       mods (e.g. by cloning tree and modifying via mutable selection)
   
@@ -93,10 +93,11 @@ any_space()
       tree.rs produces tree.rlib crate
       html.rs uses tree.rlib crate and produces html.rlib
       ... does rustc html.rs only need tree.rlib? Yes.
-    - so organise into libraries and link against them, can do
-      local libraries (in fact use that for downloaded stuff too)
+    x so organise into libraries and link against them, can do
+      local libraries
+    - use that for downloaded stuff too)
 
-  - rust-gdb via keystroke
+  x rust-gdb via keystroke
 
 - ruf_tagged
   - only need one struct, with conditional impls per the traits of the value type?
@@ -116,7 +117,7 @@ any_space()
     ... and it shows how to do [B]:
       main.rs =>
       config.rs
-    ... but as soon as I try to do the equivalent one level up [C]:
+    ... but as soon as I try to do a multi-level equivalent [C]:
       main.rs =>
       config.rs =>
       log.rs
@@ -149,7 +150,7 @@ any_space()
 
 
     Like others here I came unstuck with rust modules. I read the nice
-    section in the rust book but when I tried to apply what I read there
+    section in the rust book but when I tried to apply what I read
     I quickly got into trouble and the book didn't seem to help. A web
     search suggested I wasn't the only one to get into trouble, but nothing
     I found gave me the info I needed to see where I was going wrong.
@@ -172,14 +173,14 @@ any_space()
       -L, --extern).
 
       "Local" modules must be "introduced" to rustc via "mod" statements.
-      Where rustc looks for those modules' source code takes a bit
+      *Where* rustc looks for those modules' source code takes a bit
       of explaining.
 
       First, the crate root file must explicitly list - i.e. introduce -
       via mod statements all the top level modules that contain local
       code for the run of rustc. By default rustc expects the source code for
       those modules to be in the same directory as the crate root file
-      itself, e.g. if we have /x/y/main.rs that says:
+      itself, e.g. if we have crate root file /x/y/main.rs that says:
 
          mod fred;
 
@@ -203,7 +204,7 @@ any_space()
       There is another seeming anomoly: a child module
       can "use" ancestors and their siblings and children even though it
       can't introduce them. It's not untill we come across the
-      #[path] facility that "limitation" makes sense.
+      #[path] facility that this "limitation" makes sense.
 
       So what does #[path] do? Well, *by default* rustc expects our top
       level module's source code (e.g. fred.rs) to be in the same directory as
@@ -238,7 +239,7 @@ any_space()
         #[path fred=/somewhere/else/the_real_fred/mod.rs]
 	mod fred;
 
-      This is just be a limitation of the rustc version I was
+      This might just be a limitation of the rustc version I was
       using, 1.41.1, in any case it does not inhibit my use of rustc.
 
       Note also that unlike say python or C++, there are no compiler options
@@ -256,9 +257,14 @@ any_space()
       (as far as I can find) unofficial how-tos, tutorials, faqs, forums.
       For me this omission caused days of head-scratching and I imagine
       is behind some of the fustrated questions on the net. But rust
-      has enough unique valuable features (lifetime checking - one is enough)
-      that I will get over it.
+      has enough unique valuable features that I will get over it (e.g.
+      lifetime checking - just that one is enough).
 
+      I have come to terms with rust modules by keeping executables and
+      libraries separated, e.g. if I was to write an ssh implementation
+      I would do it as an ssh library "crate" plus a separate "crate"
+      with client and server programs (each built from a single file).
+      The modules system isn't so confusing then.
 
 - mio has select, rustls, serde-json, websocket
   - learn websocket protocol
