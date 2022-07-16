@@ -406,7 +406,7 @@ fn main() {
 	parser::ParseResult::Ok( ast ) => {
 	    assert::equal(&ast, &parser::AST{
 		value: parser::ast::Item{
-		    tag: Some(parser::CR),
+		    tag: Some("carriage-return"),
 		    text: "\r" },
 		children: vec!()
             });
@@ -435,7 +435,7 @@ fn main() {
 	parser::ParseResult::Ok( ast ) => {
 	    assert::equal(&ast, &parser::AST{
 		value: parser::ast::Item{
-		    tag: Some(parser::LF),
+		    tag: Some("line-feed"),
 		    text: "\n" },
 		children: vec!()
             });
@@ -474,12 +474,12 @@ fn main() {
 		        children: vec!(
                             parser::AST{
 		                value: parser::ast::Item{
-		                    tag: Some(parser::CR),
+		                    tag: Some("carriage-return"),
 		                    text: "\r" },
 		                children: vec!()},
                             parser::AST{
 		                value: parser::ast::Item{
-		                    tag: Some(parser::LF),
+		                    tag: Some("line-feed"),
 		                    text: "\n" },
 		                children: vec!()})})
             });
@@ -496,6 +496,249 @@ fn main() {
 	},
 	parser::ParseResult::Err(e) => {
 	    assert::equal(&e.to_string().as_str(), &"failed to parse CRLF at line 1 column 1 because failed to parse carriage-return then line-feed at line 1 column 1 because failed to parse carriage-return at line 1 column 1 because expected '\r' not 'f'");
+	}
+    }
+
+
+    let p = parser::digit();
+    assert::equal(&p.goal().to_string().as_str(), &"digit");
+    for c in "0123456789".chars() {
+        let a = format!("{c}x", c=c);
+        let x = a.as_str();
+        let y = p.parse_some_of(x);
+        match y {
+	    parser::ParseResult::Ok( ast ) => {
+	    assert::equal(&ast, &parser::AST{
+		value: parser::ast::Item{
+		    tag: Some("digit"),
+		    text: &x[0..1] },
+		children: vec!()
+            });
+	    },
+	    parser::ParseResult::Err(_e) => {
+	        assert::equal(&true, &false);
+	    }
+        }
+    }
+    let x = "A34";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( _ast ) => {
+	    assert::equal(&true, &false);
+	},
+	parser::ParseResult::Err(e) => {
+	    assert::equal(&e.to_string().as_str(), &"failed to parse digit at line 1 column 1 because expected 0..9 not 'A'");
+	}
+    }
+
+
+    let p = parser::octal_digit();
+    assert::equal(&p.goal().to_string().as_str(), &"octal digit");
+    for c in "01234567".chars() {
+        let a = format!("{c}x", c=c);
+        let x = a.as_str();
+        let y = p.parse_some_of(x);
+        match y {
+	    parser::ParseResult::Ok( ast ) => {
+	    assert::equal(&ast, &parser::AST{
+		value: parser::ast::Item{
+		    tag: Some("octal digit"),
+		    text: &x[0..1] },
+		children: vec!()
+            });
+	    },
+	    parser::ParseResult::Err(_e) => {
+	        assert::equal(&true, &false);
+	    }
+        }
+    }
+    let x = "834";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( _ast ) => {
+	    assert::equal(&true, &false);
+	},
+	parser::ParseResult::Err(e) => {
+	    assert::equal(&e.to_string().as_str(), &"failed to parse octal digit at line 1 column 1 because expected 0..7 not '8'");
+	}
+    }
+
+
+    let p = parser::hex_digit();
+    assert::equal(&p.goal().to_string().as_str(), &"hex digit");
+    for c in "01234567abcdefABCDEF".chars() {
+        let a = format!("{c}x", c=c);
+        let x = a.as_str();
+        let y = p.parse_some_of(x);
+        match y {
+	    parser::ParseResult::Ok( ast ) => {
+	    assert::equal(&ast, &parser::AST{
+		value: parser::ast::Item{
+		    tag: Some("hex digit"),
+		    text: &x[0..1] },
+		children: vec!()
+            });
+	    },
+	    parser::ParseResult::Err(_e) => {
+	        assert::equal(&true, &false);
+	    }
+        }
+    }
+    let x = "g";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( _ast ) => {
+	    assert::equal(&true, &false);
+	},
+	parser::ParseResult::Err(e) => {
+	    assert::equal(&e.to_string().as_str(), &"failed to parse hex digit at line 1 column 1 because expected 0..7, a..f or A..F not 'g'");
+	}
+    }
+
+
+    let p = parser::us_ascii_printable();
+    assert::equal(&p.goal().to_string().as_str(), &"US ASCII printable character");
+    for i in 32..127 {
+        let a = format!("{c}x", c=char::from_u32(i).unwrap());
+        let x = a.as_str();
+        let y = p.parse_some_of(x);
+        match y {
+	    parser::ParseResult::Ok( ast ) => {
+	    assert::equal(&ast, &parser::AST{
+		value: parser::ast::Item{
+		    tag: Some("US ASCII printable character"),
+		    text: &x[0..1] },
+		children: vec!()
+            });
+	    },
+	    parser::ParseResult::Err(_e) => {
+	        assert::equal(&true, &false);
+	    }
+        }
+    }
+    let x = "\t";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( _ast ) => {
+	    assert::equal(&true, &false);
+	},
+	parser::ParseResult::Err(e) => {
+	    assert::equal(&e.to_string().as_str(), &"failed to parse US ASCII printable character at line 1 column 1 because expected a..z, A..Z, 0..9, space, one of !\"#$%&'()*+,-./:;<=>?@[\\]^_{|}~ or delete '\t'");
+	}
+    }
+
+
+    let p = parser::any_char();
+    assert::equal(&p.goal().to_string().as_str(), &"any character");
+    let x = "f";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( ast ) => {
+	    assert::equal(&ast, &parser::AST{
+		value: parser::ast::Item{
+		    tag: None,
+		    text: &x[0..1] },
+		children: vec!()
+            });
+	},
+	parser::ParseResult::Err(_e) => {
+	    assert::equal(&true, &false);
+	}
+    }
+    let x = "";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( _ast ) => {
+	    assert::equal(&true, &false);
+	},
+	parser::ParseResult::Err(e) => {
+	    assert::equal(&e.to_string().as_str(), &"failed to parse any character at line 1 column 1 because end of input");
+	}
+    }
+
+
+    let p = parser::at_least_one(parser::digit());
+    assert::equal(&p.goal().to_string().as_str(), &"at least one digit");
+    let x = "1234a";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( ast ) => {
+	    assert::equal(&ast, &parser::AST{
+		value: parser::ast::Item{
+		    tag: None,
+		    text: &x[0..4] },
+		children: vec!(
+                    parser::AST{
+		        value: parser::ast::Item{
+		            tag: Some("digit"),
+		            text: "1" },
+		        children: vec!()
+                    },
+                    parser::AST{
+		        value: parser::ast::Item{
+		            tag: Some("digit"),
+		            text: "2" },
+		        children: vec!()
+                    },
+                    parser::AST{
+		        value: parser::ast::Item{
+		            tag: Some("digit"),
+		            text: "3" },
+		        children: vec!()
+                    },
+                    parser::AST{
+		        value: parser::ast::Item{
+		            tag: Some("digit"),
+		            text: "4" },
+		        children: vec!()
+                    })
+            });
+	},
+	parser::ParseResult::Err(_e) => {
+	    assert::equal(&true, &false);
+	}
+    }
+    let x = "a";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( _ast ) => {
+	    assert::equal(&true, &false);
+	},
+	parser::ParseResult::Err(e) => {
+	    assert::equal(&e.to_string().as_str(), &"failed to parse at least one digit at line 1 column 1 because failed to parse digit at line 1 column 1 because expected 0..9 not 'a'");
+	}
+    }
+
+
+
+    let p = parser::one_of_chars(parser::CharSet{value: "a-z0-9_-"});
+    assert::equal(&p.goal().to_string().as_str(), &"one of characters a-z0-9_-");
+    for c in "01234567abcdefghijklmnopqrstuvwxyz_-".chars() {
+        let a = format!("{c}x", c=c);
+        let x = a.as_str();
+        let y = p.parse_some_of(x);
+        match y {
+	    parser::ParseResult::Ok( ast ) => {
+	    assert::equal(&ast, &parser::AST{
+		value: parser::ast::Item{
+		    tag: None,
+		    text: &x[0..1] },
+		children: vec!()
+            });
+	    },
+	    parser::ParseResult::Err(_e) => {
+	        assert::equal(&true, &false);
+	    }
+        }
+    }
+    let x = "!";
+    let y = p.parse_some_of(x);
+    match y {
+	parser::ParseResult::Ok( _ast ) => {
+	    assert::equal(&true, &false);
+	},
+	parser::ParseResult::Err(e) => {
+	    assert::equal(&e.to_string().as_str(), &"failed to parse one of characters a-z0-9_- at line 1 column 1 because expected one of characters a-z0-9_- not '!'");
 	}
     }
 }

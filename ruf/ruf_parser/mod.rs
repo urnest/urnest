@@ -8,8 +8,10 @@
 // implied warranty.
 //
 extern crate ruf_tree;
+extern crate ruf_newtype;
 
 use ruf_tree as tree;
+use ruf_newtype as newtype;
 
 pub mod ast
 {
@@ -315,10 +317,31 @@ pub fn list_of<'parser>(start: Ref<'parser>,
     Ref::new(parsers::ListOf{start: start.x, item: item.x, separator: separator.x, end: end.x })
 }
 
-pub static CR: &str = "carriage-return";
-pub static LF: &str = "line-feed";
 pub static CRLF: &str = "CRLF";
 
-pub fn cr() -> Ref<'static> { Ref::new(parsers::Char{tag: Some(CR), x:'\r'}) }
-pub fn lf() -> Ref<'static> { Ref::new(parsers::Char{tag: Some(LF), x:'\n'}) }
+pub fn cr() -> Ref<'static> { Ref::new(parsers::Char{tag: Some("carriage-return"), x:'\r'}) }
+pub fn lf() -> Ref<'static> { Ref::new(parsers::Char{tag: Some("line-feed"), x:'\n'}) }
 pub fn crlf() -> Ref<'static> { tagged(CRLF, cr()+lf()) }
+pub fn digit() -> Ref<'static> { Ref::new(parsers::Digit{tag: Some("digit")}) }
+pub fn octal_digit() -> Ref<'static> { Ref::new(parsers::OctalDigit{tag: Some("octal digit")}) }
+pub fn hex_digit() -> Ref<'static> { Ref::new(parsers::HexDigit{tag: Some("hex digit")}) }
+pub fn us_ascii_printable() -> Ref<'static> { Ref::new(parsers::UsAsciiPrintable{
+    tag: Some("US ASCII printable character")}) }
+
+pub fn any_char() -> Ref<'static> { Ref::new(parsers::AnyChar{}) }
+pub fn at_least_one<'parser>(x: Ref<'parser>) -> Ref<'parser>
+{
+    Ref::new(parsers::AtLeastOne{x: x.x})
+}
+
+// CharSet is any string but a-f anywhere in the string is interpreted as abcdef, note
+//   f-a (anywhere in the string) just means the three characters f, - and a
+//   f-f (anywhere in the string) just means f
+//   - at beginning or end of string just means the - character
+pub struct CharSet_; impl newtype::Tag for CharSet_ { type BaseType = &'static str;}
+pub type CharSet = newtype::T<CharSet_>;
+
+pub fn one_of_chars(chars: CharSet) -> Ref<'static> {
+    let s = parsers::parse_charset(&chars);
+    Ref::new(parsers::OneOfChars{ pattern: chars, chars: s })
+}
