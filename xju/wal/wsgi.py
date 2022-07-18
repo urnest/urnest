@@ -62,8 +62,11 @@ class FileVar(object):
         pass
     pass
 
-StrOrFileVar=Union[str,FileVar]
-def getVariablesFromWSGIenviron(wsgiEnv:Mapping[str,Any])->Dict[str,Union[str,FileVar,List[StrOrFileVar]]]:
+StrOrFileVar=Union[str,
+                   FileVar, # for each part of multi-part/form-data
+                   Tuple[int, Any]]     #  (length, wsgi.input) for application/octet-stream
+
+def getVariablesFromWSGIenviron(wsgiEnv:Mapping[str,Any])->Dict[str,Union[str,FileVar,Tuple[int,Any],List[StrOrFileVar]]]:
     '''parse query string and wsgi.input into a dictionary from WSGI environ {wsgiEnv}'''
     '''like { varName : str or FileVar or list of str or FileVar }, e.g.:'''
     '''  { "id":"883999", "colours":["red","blue"] }'''
@@ -73,7 +76,7 @@ def getVariablesFromWSGIenviron(wsgiEnv:Mapping[str,Any])->Dict[str,Union[str,Fi
     '''  where content length is from Content-Length header (or -1) and'''
     '''  file is a file-like readable that presents the body of the request'''
     try:
-        result:Dict[str,Union[str,FileVar,List[StrOrFileVar]]]={}
+        result:Dict[str,Union[str,FileVar,Tuple[int,Any],List[StrOrFileVar]]]={}
         d:List[Tuple[str,StrOrFileVar]]=[]
         if wsgiEnv.get('QUERY_STRING',''):
             nvs=[_.split('=',1) for _ in wsgiEnv['QUERY_STRING'].split('&')]
