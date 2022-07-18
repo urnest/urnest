@@ -33,7 +33,7 @@ READ-LIST (:odi.cxx.sm)
 
 EXEC (com_schema.sh) (+schema_src :ls) (+schema_src :map=:dir :ls)
  (+schema_dir)@ (+inc_sp) (:com_schema_standin)@
- NEEDS (+schema_src) (+schema_src :map=:all_cxx_inc)
+ NEEDS (+schema_src) (+schema_src :map=:hash_inc_all)
   => (:com_schema_standin);
 
 EXEC (app_schema.sh) (+schema_dir)@

@@ -4,7 +4,14 @@ ODIN_lib=$1;shift; ODIN_libsp=$1;shift;
 
 lib_names=''
 if [ "$ODIN_lib" != "" ] ; then lib_names=`cat $ODIN_lib`; fi
-flags=''; bases=''
+flags=''; bases="$ODIN_LIB_SP"
+if [ ! -z "$ODIN_LIB_SP" ]
+then
+  for x in $ODIN_LIB_SP
+  do
+    flags="$flags -L$x"
+  done
+fi
 if [ "$ODIN_libsp" != "" ] ; then
    flags=`cat $ODIN_libsp | sed 's/^/-L/'`
    bases="$bases `cat $ODIN_libsp`"; fi
@@ -25,7 +32,7 @@ for lib_name in `echo $lib_names | sed 's/-L /-L/g'`; do
       -* )
          flags="$flags $lib_name";;
       * )
-	 for lib_base in $bases $ODIN_LIB_SP; do
+	 for lib_base in $bases; do
             for ext in `echo so sl a`; do
 	       lib=$lib_base/lib${lib_name}.$ext
 	       echo "'$lib'" >>libraries.view_desc

@@ -3,6 +3,8 @@ odin
 vc
 code
 cc
+hash_inc
+hash_impl
 cpp
 cxx
 odi
@@ -19,3 +21,17 @@ roff
 tex
 dbx
 run
+omnicxy
+hcp
+hcp_tags
+py
+pytest3
+rust
+dirtree
+fluid
+java
+path
+sql
+tar
+tree
+vir_tree

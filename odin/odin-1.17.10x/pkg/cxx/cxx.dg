@@ -1,6 +1,25 @@
+#
+#    Package for managing C++ compilation, library building and linking
+#    to executable.
+#    
+#    Sources are normally specified as either a single C++ source file, or
+#    as a C++ "system model" (a list of source files and system models).
+#
+#    Typically either archive library or executable are derived from these.
+#
 # Source Types
 
+*.hh => :h;
+
+*.h => :h;
+
+*.H => :h;
+
+*.hpp => :h;
+
 *.cxx => :cxx;
+
+*.cpp => :cxx;
 
 *.C => :cxx;
 
@@ -18,47 +37,37 @@
 
 *.SM => :cxx.sm;
 
-
 # Input Object Types
 
-:cxx 'C++ source code'? => :o_src;
+:cxx 'C++ source code'? => :hash_incable :o_src;
 
 :cxx.sm 'system model for a C++ program'? => :FILE;
 
-
 # Intermediate Object Types
 
-:cxx_inc.view_desc 'view description of C++ style included files' => :FILE;
+:cxx.one.list 'list of a single C++ file' => :cxx.code.list;
 
-:cxx_inc 'list of potential C++ style included files' => :LIST;
+:cxx.sm.list 'list of files in a C++ system' => :sm.list;
 
-:all_cxx_inc 'list of C++ style transitively included files' => :LIST;
-
-:cxx.one.list 'list of a single C++ file' => :code.list :cxx.exe.list;
-
-:cxx.sm.list 'list of files in a C++ system model' => :sm.list :cxx.exe.list;
-
-:cxx.exe.list 'list of files in a C++ system' => :LIST;
-
+:cxx.code.list 'list of :o from cxx.sm' => :code.list;
 
 # Output Object Types
 
 :exe 'executable binary'? => :FILE;
 
+:a 'object library archive'? => :FILE;
+
+:auto.cxx.sm 'sm calculated from #includes'? => <:cxx.sm.list>;
+
+:auto.cxx.exe 'exe from :auto.cxx.sm'? => :REFERENCE;
 
 # Parameter Types
-
-+purify 'purify flag'? => :cat;
 
 +define 'macro definition'? => :cat;
 
 +debug 'debug switch'? => :first;
 
 +optimize 'optimization flag'? => :first;
-
-+prof 'profiling flag'? => :first;
-
-+eprof 'profiling flag for linking'? => :first;
 
 +cxx 'name of the C++ compiler'? => :first;
 
@@ -68,27 +77,25 @@
 
 +inc_sp 'name of a directory in an include search path'? => :ls;
 
-+ignore 'egrep expression for includes to ignore'? => :ls;
-
-+home 'home directory for relative pathnames' => :first;
-
-
 # Environment Variables
 
-$ODIN_CXX_HOME 'directory containing the C++ compiler' = '';
+$ODIN_CXX_PATH 'PATH to set when running C++ compiler' = '/usr/bin:/bin';
+
+$ODIN_CXX 'name of the C++ compiler' = 'g++';
+
+$ODIN_CXX_FLAGS 'C++ compiler flags to always include' = '';
 
 $ODIN_CXX_DEBUGF 'debug flag for C++ compiler' = '-g';
 
-$ODIN_CXX_I 'directory containing default C++ include files' = '/usr/lib/CC/include';
-
-$ODIN_CXX_PTR 'template repository directory' = '';
+$ODIN_CXX_I '(deprecated - use ODIN_HASH_INC_I instead) space-separated list of directories containing default C++ include files (these directories are added as -I options when compiling)' = '';
 
 $ODIN_CXX_LD_DEBUGF 'debug flag for C++ linker' = '-g';
 
-$ODIN_CXX_LD_LIBRARY_PATH 'load library path for C++' = '/usr/lib/CC';
+$ODIN_CXX_LD_LIBRARY_PATH 'load library path for C++ compiler, linker' = '';
 
-$ODIN_CXX_IGNORE_ERR 'egrep expression for errors to ignore' = '';
+$ODIN_CXX_IGNORE_ERR 'egrep expression for compile/link errors to ignore' = '';
 
+$ODIN_CXX_LD_EXTRA_LIBS 'extra library flags to add to every ld command (at the end)' = '';
 
 # Tools
 
@@ -98,22 +105,25 @@ COLLECT (:cxx)
 READ-LIST (:cxx.sm)
    => (:cxx.sm.list);
 
-EXEC (cxx_inc.sh) (:FILE) (:FILE :dir)@ (+home)@ (+inc_sp) (+ignore)
-   => (:cxx_inc.view_desc);
+COLLECT (:cxx.sm.list :recurse=:cxx.sm.list)
+   => (:cxx.code.list);
 
-COLLECT (:cxx_inc.view_desc :view)
-   => (:cxx_inc);
-
-COLLECT (:cxx_inc :map=:all_cxx_inc) (:cxx_inc)
-   => (:all_cxx_inc);
-
-EXEC (CC.sh) (:cxx) (ptr_of :vir_dir) (:cxx :dir)@ (+inc_sp)
- (+gnu) (+debug) (+prof) (+optimize) (+define) (+cxx) (+cxx_flags) (abort_msgs)
- NEEDS (:cxx +home=(:cxx :dir) :lookup=:all_cxx_inc)
+EXEC (CC.sh) (:cxx) (+inc_sp)
+ (+debug) (+optimize) (+define) (+cxx) (+cxx_flags) (abort_msgs)
+ NEEDS (:cxx:lookup=:hash_inc_all)
    => (:o);
 
-EXEC (ld.sh) (:o_of :vir_dir) (:library_flags) (ptr_of :vir_dir)
- (+define) (+inc_sp) (+gnu) (+purify) (+debug) (+prof) (+eprof)
+# note we go via :a in case we have lots of files - it avoids
+# "command too long" when trying to pass all the .o files on the
+# command line and makes no significant difference to build times
+#
+EXEC (ld.sh) (:cxx.code.list:a) (:library_flags)
+ (+define) (+inc_sp) (+debug)
  (+cxx) (+ld_flags)
- NEEDS (:o_of :vir_tgt.list) (:libraries) (:cxx.exe.list)@
+ NEEDS (:libraries)
    => (:exe);
+
+
+COLLECT (:cxx:hash_impl_all:extract=:o_src) => (:auto.cxx.sm);
+
+COLLECT (:cxx+lib=(:cxx:auto.cxx.sm:a):exe) => (:auto.cxx.exe);

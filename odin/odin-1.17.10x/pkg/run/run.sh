@@ -10,6 +10,6 @@ cmd=`cat $ODIN_cmd`
 echo '#!/bin/sh' >run
 echo cd $ODIN_dir >>run
 echo $cmd >>run
-chmod +x run
+chmod a+x run
 
 exit 0

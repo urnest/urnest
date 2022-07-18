@@ -9,24 +9,18 @@
 
 # Input Object Types
 
-:c 'C source code'? => :o_src;
+:c 'C source code'? => :hash_incable :o_src;
 
 :c.sm 'system model for a C program'? => :FILE;
 
 
 # Intermediate Object Types
 
-:c.one.list 'list of a single C file' => :code.list :c.exe.list;
+:c.one.list 'list of a single C file' => :c.code.list;
 
-:c.sm.list 'list of files in a C system model' => :sm.list :c.exe.list;
+:c.sm.list 'list of files in a C system model' => :sm.list;
 
-:c.exe.list 'list of files in a C system' => :LIST;
-
-:c_inc.view_desc 'view description of C-style included files' => :FILE;
-
-:c_inc 'list of potential C-style included files' => :LIST;
-
-:all_c_inc 'list of C-style transitively included files' => :LIST;
+:c.code.list 'list of :o from c.sm / .c' => :code.list;
 
 
 # Output Object Types
@@ -36,6 +30,10 @@
 :fmt 'formatted version' => :PIPE;
 
 :c.h 'C function declarations' => :FILE;
+
+:auto.c.sm 'sm calculated from #includes'? => <:c.sm.list>;
+
+:auto.c.exe 'exe from :auto.c.sm'? => :REFERENCE;
 
 
 # Parameter Types
@@ -48,8 +46,6 @@
 
 +prof 'profiling flag'? => :first;
 
-+eprof 'profiling flag for linking'? => :first;
-
 +cc_home 'directory containing the C compiler'? => :first;
 
 +cc 'name of the C compiler'? => :first;
@@ -60,29 +56,74 @@
 
 +inc_sp 'name of a directory in an include search path'? => :ls;
 
-+ignore 'egrep expression for includes to ignore'? => :ls;
-
-+purify 'purify flag'? => :cat;
-
 +home 'home directory for relative pathnames' => :first;
 
 
 # Environment Variables
 
-$ODIN_CC_HOME 'directory containing the C compiler' = '';
+$ODIN_CC_PATH 'PATH to set when running C compiler' = '/usr/bin:/bin';
+
+$ODIN_CC 'name of the C++ compiler' = 'gcc';
+
+$ODIN_CC_FLAGS 'C compiler flags to always include' = '';
 
 $ODIN_CC_DEBUGF 'debug flag for C compiler' = '-g';
 
-$ODIN_CC_I 'directory containing default C include files' = '/usr/include';
+$ODIN_CC_I '(deprecated - use ODIN_HASH_INC_I instead) directory containing default C include files (these directories are added as -I options when compiling)' = '/usr/include';
+
+$ODIN_CC_LD_DEBUGF 'debug flag for C linker' = '-g';
+
+$ODIN_CC_LD_LIBRARY_PATH 'load library path for C compiler' = '';
+
+$ODIN_CC_IGNORE_ERR 'egrep expression for compile/link errors to ignore' = '';
+
+$ODIN_CC_LD_EXTRA_LIBS 'extra library flags to add to every ld command (at the end)' = '';
 
 
 # Tools
 
+READ-LIST (:c.sm)
+   => (:c.sm.list);
+
+COLLECT (:c.sm.list :recurse=:c.sm.list)
+   => (:c.code.list);
+
+#REVISIT: prof is hard-coded to suit gcc, should be generic
+EXEC (cc.sh) (:c) (+inc_sp) (+cc_home)@ (+gnu) (+debug) (+prof)
+ (+optimize) (+define) (+cc) (+cc_flags)
+ NEEDS (:c:lookup=:hash_inc_all)
+   => (:o);
+
+#REVISIT: prof is hard-coded to suit gcc, should be generic
+EXEC (ld.sh) (:c.code.list:a) (:library_flags)
+ (+cc_home)@ (+gnu) (+debug) (+prof) (+cc) (+ld_flags)
+ NEEDS (:libraries)
+   => (:exe);
+
+# this turns a single .c source file into a c.code.list, so that
+# we can go direct from .c to .exe using the above compile and link
+# tools
 COLLECT (:c)
    => (:c.one.list);
 
-READ-LIST (:c.sm)
-   => (:c.sm.list);
+
+EXEC (fmt.c.sh) (:c)
+   => (:fmt);
+
+EXEC (c.h.sh) (:c) (:c :dir)@ (header_c.sed)
+   => (:c.h);
+
+
+# although we have general hash_inc package, we keep :all_c_inc because it
+# is part of the built-in derivation graph
+#
+:c_inc.view_desc 'view description of C-style included files' => :FILE;
+
+:c_inc 'list of potential C-style included files' => :LIST;
+
+:all_c_inc 'list of C-style transitively included files' => :LIST;
+
++ignore 'egrep expression for includes to ignore'? => :ls;
 
 EXEC (c_inc.sh) (:FILE) (:FILE :dir)@ (+home)@ (+inc_sp) (+ignore)
    => (:c_inc.view_desc);
@@ -93,19 +134,7 @@ COLLECT (:c_inc.view_desc :view)
 COLLECT (:c_inc :map=:all_c_inc) (:c_inc)
    => (:all_c_inc);
 
-EXEC (cc.sh) (:c) (:c :dir)@ (+inc_sp) (+cc_home)@ (+gnu) (+debug) (+prof)
- (+optimize) (+define) (+cc) (+cc_flags)
- NEEDS (:c +home=(:c :dir) :lookup=:all_c_inc)
-   => (:o);
 
-EXEC (ld.sh) (:o_of :vir_dir) (:library_flags)
- (+cc_home)@ (+gnu) (+purify) (+debug) (+prof) (+eprof) (+cc) (+ld_flags)
- NEEDS (:o_of :vir_tgt.list) (:libraries) (:c.exe.list)@
-   => (:exe);
+COLLECT (:c:hash_impl_all:extract=:o_src) => (:auto.c.sm);
 
-EXEC (fmt.c.sh) (:c)
-   => (:fmt);
-
-EXEC (c.h.sh) (:c) (:c :dir)@ (header_c.sed)
-   => (:c.h);
-
+COLLECT (:c+lib=(:c:auto.c.sm:a):exe) => (:auto.c.exe);

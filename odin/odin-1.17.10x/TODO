@@ -1,11 +1,16 @@
+- get dg.exe to escape "s in help strings then remove \\s from 
+  hcp, java, run, py
+
 - re-design update algorithm, because it is pretty brain-dead and
   tends to go over and over the same checks many times unnecssarily
   (ODINLOGLEVEL=7 gives *massive* output even if nothing needs to be updated.
-  If nothing needs to be updated we should visi every node exactly once.
+  If nothing needs to be updated we should visit every node exactly once.
 
   see ../../dion
   
 - merge xjupkg into pkg
+  - add missing version files (recover and bump version if old package had version)
+  - bump versions of changed packages
   - verify build and install odin from scratch
   - test eli
 

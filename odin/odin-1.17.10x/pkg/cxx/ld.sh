@@ -1,25 +1,30 @@
 #!/bin/sh
+#
+ODIN_a=$1 && shift &&
+ODIN_lib=$1 && shift &&
+ODIN_define=$1;shift; ODIN_incsp=$1;shift;
+ODIN_debug=$1;shift; ODIN_cxx=$1;shift; ODIN_flags=$1;shift;
 
-ODIN_o=$1;shift; ODIN_lib=$1;shift; ODIN_ptr=$1;shift;
-ODIN_define=$1;shift; ODIN_incsp=$1;shift; ODIN_gnu=$1;shift;
-ODIN_purify=$1;shift; ODIN_debug=$1;shift; ODIN_prof=$1;shift;
-ODIN_eprof=$1;shift; ODIN_cxx=$1;shift; ODIN_flags=$1;shift;
-
-if [ "$ODIN_CXX_HOME" != "" ] ; then
-   PATH="$ODIN_CXX_HOME:$PATH"; export PATH; fi
-
-if [ "$ODIN_CXX_LD_LIBRARY_PATH" != "" ] ; then
-   LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ODIN_CXX_LD_LIBRARY_PATH;
-   export LD_LIBRARY_PATH; fi
-
-compiler=$ODIN_CXX
-if [ "$ODIN_cxx" != "" ] ; then compiler=$ODIN_cxx; fi
-if [ "$ODIN_gnu" != "" ] ; then compiler='g++'; fi
-if [ "$ODIN_purify" != "" ] ; then compiler="purify `cat $ODIN_purify` $compiler"; fi
+if [ -n "$ODIN_cxx" ]
+then
+  x=`PATH="$ODIN_CXX_PATH" /usr/bin/which "$ODIN_cxx" 2>&1`
+  if [ $? != 0 ] ; then
+    ( echo "Error: Failed to locate executable named by +cxx option '$ODIN_cc' on path specified by ODIN_CXX_PATH (specified when Odin cache was created as'$ODIN_CXX_PATH') because"
+      echo "$x" ) >&2
+    exit 1
+  fi
+  compiler="$ODIN_cxx"
+else
+  x=`PATH="$ODIN_CXX_PATH" /usr/bin/which "$ODIN_CXX" 2>&1`
+  if [ $? != 0 ] ; then
+    ( echo "Error: Failed to locate executable named by ODIN_CXX on path specified by ODIN_CXX_PATH (specified when Odin cache was created as '$ODIN_CXX' and '$ODIN_CXX_PATH' respectively) because"
+      echo "$x" ) >&2
+    exit 1
+  fi
+  compiler="$ODIN_CXX"
+fi
 
 flags=""
-if [ "$ODIN_CXX_PTR" = "1" -a "$ODIN_gnu" = "" ] ; then
-   flags="$flags -ptr$ODIN_ptr"; fi
 if [ "$ODIN_define" != "" ] ; then
    for def in `cat $ODIN_define`; do
       flags="$flags -D$def"; done; fi
@@ -27,21 +32,29 @@ if [ "$ODIN_incsp" != "" ] ; then
    for sp in `cat $ODIN_incsp`; do
       flags="$flags -I$sp"; done; fi
 if [ "$ODIN_debug" != "" ] ; then flags="$flags $ODIN_CXX_LD_DEBUGF"; fi
-if [ "$ODIN_prof" != "" ] ; then flags="$flags -pg"; fi
 if [ "$ODIN_flags" != "" ] ; then flags="$flags `cat $ODIN_flags`"; fi
 flags="$flags $ODIN_CXX_FLAGS"
-
-ln -s $ODIN_o o
-objs=`ls o/*`
 
 libs=""
 if [ "$ODIN_lib" != "" ] ; then libs=`cat $ODIN_lib`; fi
 
 if [ "$ODINVERBOSE" != "" ] ; then
-   echo ${ODINRBSHOST}$compiler $flags $objs $libs; fi
+   echo ${ODINRBSHOST}$compiler $flags $ODIN_a $libs  $ODIN_CXX_LD_EXTRA_LIBS; fi
 
 exe=`pwd`/exe
-(cd $ODIN_o; $compiler $flags * $libs -o $exe) >MESSAGES 2>WARNINGS || {
+(
+   PATH="$ODIN_CXX_PATH" \
+   LD_LIBRARY_PATH="$ODIN_CXX_LD_LIBRARY_PATH" \
+   $compiler $flags $ODIN_a $libs $ODIN_CXX_LD_EXTRA_LIBS -o $exe &&
+   #
+   # for windows, e.g. mingw
+   #
+   if [ -f $exe.exe ]
+   then
+      /bin/mv $exe.exe $exe
+   fi
+) \
+>MESSAGES 2>WARNINGS || {
    cat MESSAGES WARNINGS >ERRORS; rm MESSAGES WARNINGS;
    if [ ! -s ERRORS ] ; then 
       echo "$compiler failed" >>ERRORS; fi;
@@ -49,13 +62,5 @@ exe=`pwd`/exe
       if egrep -s -e "$ODIN_CXX_IGNORE_ERR" ERRORS; then
 	 mv ERRORS WARNINGS; fi; fi; }
 if [ -f MESSAGES ] ; then cat MESSAGES; rm MESSAGES; fi
-
-if [ "$ODIN_purify" != "" ] ; then
-   cd $ODIN_o
-   for file in *; do
-      if [ ! -h $file ] ; then
-         rm -f $file; fi; done; fi
-
-if [ -x exe.exe ] ; then mv exe.exe exe; fi
 
 exit 0

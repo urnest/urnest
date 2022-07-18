@@ -12,7 +12,7 @@ $ODIN_CPP_FLAGS 'cpp flags' = '';
 
 # Input Object Types
 
-:cpp_in 'cpp input'? => :FILE;
+:cpp_in 'cpp input'? => :hash_incable :FILE;
 
 
 # Output Object Types
@@ -34,10 +34,10 @@ $ODIN_CPP_FLAGS 'cpp flags' = '';
 # Tools
 
 EXEC (cpp.sh) cpp (:FILE) (:FILE :dir)@ (+inc_sp) (+define)
- NEEDS (:FILE +home=(:FILE :dir) :lookup=:all_c_inc)
+ NEEDS (:FILE +home=(:FILE :dir) :lookup=:hash_inc_all)
    => (:cpp);
 
 EXEC (cpp.sh) gnc.cpp (:cpp_in) (:cpp_in :dir)@ (+inc_sp) (+define)
- NEEDS (:cpp_in +home=(:cpp_in :dir) :lookup=:all_c_inc)
+ NEEDS (:cpp_in +home=(:cpp_in :dir) :lookup=:hash_inc_all)
    => (:gnc.cpp);
 

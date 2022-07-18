@@ -9,9 +9,9 @@
 
 # Input Object Types
 
-:o 'object module' => <:o_src>;
+:o_src 'file that :o can be derived from' => :FILE;
 
-:o_src 'source code for object module' => :FILE;
+:o 'object module' => :FILE;
 
 :sm 'system model of source code files'? => :FILE;
 
@@ -26,8 +26,6 @@
 
 
 # Output Object Types
-
-:o_of 'odinfile containing the object modules' => :FILE;
 
 :a 'object library archive'? => :FILE;
 
@@ -49,6 +47,11 @@ $ODIN_IGNORE 'egrep expression for includes to ignore' = '/usr/include';
 
 $ODIN_LIB_SP 'default library search path' = '/lib /usr/lib';
 
+$ODIN_RANLIB 'archive symbol table program' = '';
+
+$ODIN_AR 'ar program' = 'ar';
+
+$ODIN_AR_PATH 'path to set when invoking ar (and ranlib)' = '/usr/bin:/bin';
 
 # Tools
 
@@ -58,10 +61,7 @@ READ-LIST (:sm)
 COLLECT (:sm.list :recurse=:sm.list)
    => (:code.list);
 
-EXEC (o_of.sh) (:code.list :map=:o_src :ls) (:code.list :map=:o :ls)
-   => (:o_of);
-
-EXEC (ar.sh) (:o_of :vir_dir) NEEDS (:o_of :vir_tgt.list)
+EXEC (ar.sh) (:code.list :map=:o :ls) NEEDS (:code.list :map=:o)
    => (:a);
 
 EXEC (libraries.sh) (+lib) (+lib_sp) NEEDS (:libraries.view_desc :libraries)&
@@ -69,3 +69,15 @@ EXEC (libraries.sh) (+lib) (+lib_sp) NEEDS (:libraries.view_desc :libraries)&
 
 COLLECT (:libraries.view_desc :view)
    => (:libraries);
+
+
+# build :a from set of files calculated via :hash_impl_all
+# see ../cxx/test/Odinfile for example use
+#
+:auto.a 'object library archive, with files calculated by :hash_impl_all)'? => :REFERENCE;
+
+:auto.sm 'sm calculated from #includes' => <:sm.list>;
+
+COLLECT (:hash_incable:hash_impl_all:extract=:o_src) => (:auto.sm);
+
+COLLECT (:auto.sm:a) => (:auto.a);

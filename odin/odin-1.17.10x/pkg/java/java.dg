@@ -1,0 +1,257 @@
+#
+#   Java language handling.
+#
+#   This package has targets to compile and run java programs. 
+#
+#   *RESTRICTION* requires that all classes are in packages
+#
+#   The simplest case is where the program x.java depends on various
+#   other .java files and some .jar files, and the .java files have no 
+#   dependency cycles amongst themselves. We can then run x.java without 
+#   naming any of the .java files that it needs: we only need to specify where 
+#   to look for .java files and which .jar files to compile against, eg:
+#     odin 'a.java+sp=(.)+jar=(jar/fred.jar):class'
+#   ... builds a.class, building any other class files from the appropriate
+#   file in src/ along the way.
+#   We can then run class a, eg:
+#     odin '()+cmd=a+need=(a.java+sp=(.)+jar=(jar/fred.jar):class):java.stdout>'
+#         REVISIT: need +jar to :java.stdout?
+#
+#   ... which says to run class a with stdin from the empty file and display
+#   the output (standard output) from the run.
+#     - () is an empty file that odin provides as a built-in
+#     - the 'need' bit says where we want class a to come from
+#
+#   Where to find source files - +sp=(x)
+#   - you can give multiple +sp() options to specify multiple directories
+#     to search; the package searches them in order
+#   - the directory given to +sp is the root of the source tree, ie
+#     if we say +sp=(.) then class com.fred.X is searched for in 
+#     ./com/fred/X.java
+#
+#   Cyclic Dependencies
+#
+#   This package is not (yet) smart enough to automatically handle .java files
+#   that depend on each other. We have to tell it about those files:
+#     - provide a list of them
+#     - point to that list as part of the compilation
+#   So continuing the above example: if a.java depends on x.java and y.java,
+#   and x.java, we need to tell odin that x.java and y.java must be built
+#   as one, via +source_group to the compilation of a. This simples way via
+#   some definitions in an Odinfile, eg in ./Odinfile:
+#      %cyclic.java.sm==<<
+#      x.java
+#      y.java
+#
+#      %a.class==a.java+source_group=(%cyclic.java.sm)+sp=(.)+jar=(jar/fred.jar):class
+#
+#   - the expression to compile a.java was getting a bit long so we've
+#   defined %a.class as shorthand for it, so now we can run a eg:
+#      odin '()+cmd=a+need=(%a.class):java.stdout>'
+#
+#   - we build the source_group with the same options as we build a.java, including
+#     the self reference
+#
+#   To avoid duplicating the compile options all over the place, define 
+#   shorthand for that too, eg ./Odinfile becomes:
+#      %j-opts==<<
+#      +source_group=(%cyclic.java.sm)
+#      +sp=(.)
+#      +jar=(jar/fred.jar)
+#
+#      %cyclic.java.sm==<<
+#      x.java
+#      y.java
+#
+#      %a.class==a.java+(%j-opts):class
+#
+#   ... which is almost managable :-)
+#
+#   The shorthand make the 'run' expression simpler too:
+#     odin '()+cmd=a+need=(%a.class):java.stdout>'
+#   ... and of course shorthand can help with that too, eg in ./Odinfile:
+#     %a.stdout==()+cmd=a+need=(%a.class):java.stdout
+#   ... allows:
+#     odin '%a.stdout>'
+#
+#   More tips:
+#
+#     - build *all* your classes with the same compile options, ie define
+#       %j-opts only once and pass it to all :java and :java.stdout
+#       expressions
+#
+#     - you can specify multiple +source_group REVISIT: need to test this
+#       
+
+# Source Types
+*.java => :java;
+*.java.view_desc => :java.view_desc;
+*.java.sm => :java.sm;
+*.java.syms => :java.syms;
+
+# Input Object Types
+:java 'Java source file'? => :FILE;
+:cast.java 'cast of file to :java'? => <:java>;
+:java.sm 'File listing Java source files, one per line'? => :FILE;
+:tar.java 'java file extracted from a tar file'? => <:java>;
+:java.syms 'file listing symbols'? => :FILE;
+
+# Intermediate Object Types
+
+:symbol 'Symbol of a .java file'? => <:symbols>;
+:syms.symbol ':symbol from :java.syms' => :symbol;
+:java.list 'list of Java source files' => :LIST;
+:java.one.list 'list of a single Java file' => :java.list;
+:java.sm.list 'list of files in a Java system model' => :java.list;
+:java.view_desc 'view description of java referenced classes' => :FILE;
+:java.sm.view_desc 'java.view_desc of multiple source files' => :java.view_desc;
+:java.dep 'list of directly referenced sources'? => :LIST;
+:java.dep.all 'list of transitively referenced sources'? => :LIST;
+:java.source_group 'file of Odin virtual targets mapping class names to the compilation that produces them'? => :FILE;
+:java.inventories 'list of inventories'? => :LIST;
+:required_classes 'transitively referenced classes'? => :LIST;
+:classpath.single.jarlist.sm 'jars explicitly named by classpath' => :FILE;
+:classpath.single.jarlist 'classpath.single.jarlist.sm list representation' => :LIST;
+
+:classpath.dir.jarlist.sm 'classpath.dir.jarlist.sm list of directories containing jars' => :FILE;
+:classpath.dir.jarlist 'list representation' => :LIST;
+:classnames 'file mapping .java file names to their public class names' => :FILE;
+:sm.classnames 'classnames produced from .java.sm' => :classnames;
+
+:wildcard.jarlist.sm 'jars in a directory' => :FILE;
+:wildcard.jarlist 'wildcard.jarlist.sm list representation' => :LIST;
+:classpath.wildcard.jarlist 'list of jars from +jardir directories' => :LIST;
+:compiler_classpath 'windows/unix classpath (;/: separated etc)' => :FILE;
+
+:raw_errors 'errors from isolated java compile' => :FILE;
+:file.raw_errors 'errors from isolated java compile of .java' => :raw_errors;
+:sm.raw_errors 'errors from isolated java compile of .java.sm' => :raw_errors;
+:symbols 'file listing java fully-qualified symbol names' => :FILE;
+:sm.symbols ':symbols from .java.sm' => :symbols;
+
+# Output Object Types
+
+:jar 'Java class archive'? => :FILE;
+:class 'Java class file'? => :FILE;
+:sm.class '\\"class file\\" of multiple source files'? => :class;
+:java.runner 'script to run a java class'? => <:run>;
+# note we don't make :java.stdout => :stdout because the derivation
+# produces :java.stdout from a :FILE, as does run*stdout (ie ambiguity)
+:java.stdout 'standard output from running a java class'? => :PIPE;
+# we use <:tar> for same reason as above
+:java.output 'output files from running a java class'? => <:tar>;
+:java.exec 'directory containing output or errors, files.tar and status'? => <:exec>;
+:java.launcher 'script to defer run'? => :EXECUTABLE;
+
+# Parameter Types
+
++source_group 'source_group directories (see :java.list:class derivation)'? => :LIST;
++sp 'search path for .java source files to automatically compile to get required classes (where they are not in any +source_group)'? => :ls;
++classpath 'directories in which to search for pre-built classes'? => :ls;
++runclasspath 'run-time only search directories'? => :ls;
++jar 'jar files to search (after +classpath dirs)'? => :ls;
++jardir 'search all jar files in these directories (after +jar files)'? => : ls;
++debug 'debug switch'? => :first;
++driver 'driver program'? => :first;
++vmopt 'java vm options'? => :LIST;
++symbol 'java symbol'? => :LIST;
++sym 'literal symbol'? => :ls;
++syms 'file containing literal symbols' => :cat;
++stdin 'files concatenated to form stdin for :java.exec' => :cat;
+
+# Environment Variables
+
+$ODIN_JAVA_PATH 'path covering javac, java, python, colon-separated' = '';
+
+$ODIN_JAVA_OUTPUT_DIRECTORY 'root of directory structure in which to place compiled class files' = '';
+
+$ODIN_JAVA_WINDOWS_COMPILER 'set not-empty to pass windows paths as javac compiler classpath' = '';
+
+# Derivations
+
+READ-LIST (:java.sm)
+   => (:java.sm.list);
+
+EXEC (singlejars.py) (+jar) 'classpath.single.jarlist.sm' => (:classpath.single.jarlist.sm);
+
+READ-LIST (:classpath.single.jarlist.sm) => (:classpath.single.jarlist);
+
+EXEC (wildjars.py) (+jar) 'classpath.dir.jarlist.sm' => (:classpath.dir.jarlist.sm);
+
+READ-LIST (:classpath.dir.jarlist.sm) => (:classpath.dir.jarlist);
+
+EXEC (jarlist.sh) (:FILE) => (:wildcard.jarlist.sm);
+
+READ-LIST (:wildcard.jarlist.sm) => (:wildcard.jarlist);
+
+COLLECT (:classpath.dir.jarlist:map=:wildcard.jarlist) => (:classpath.wildcard.jarlist);
+
+EXEC (classnames.py) (:java:filename) (:raw_errors) 'classnames' 
+   => (:classnames);
+
+EXEC (jdep.sh) (:java:filename) (:raw_errors) (+source_group:map=:java.source_group:cat:vir_dir:filename) (+sp) 'symbols' 'classnames' NEEDS (jdep.py) (:java)
+   => (:symbols);
+
+EXEC (classnames.py) (:java.list:ls) (:raw_errors) 'sm.classnames'
+   => (:sm.classnames);
+
+EXEC (jdep.sh) (:java.list:ls) (:raw_errors) (+source_group:map=:java.source_group:cat:vir_dir:filename) (+sp) 'sm.symbols' 'sm.classnames' NEEDS (:java.list) (jdep.py)
+   => (:sm.symbols);
+
+EXEC (view_desc.py) (:symbols) (+source_group:map=:java.source_group:cat:vir_dir:filename) (+sp)
+   => (:java.view_desc);
+
+COLLECT (:java.view_desc :view)
+   => (:java.dep);
+
+COLLECT (:java.dep :map=:java.dep.all) (:java.dep) => (:java.dep.all);
+
+COLLECT (:symbol:java.dep.all:map=:class) => (:required_classes);
+
+# compile a .java source file
+EXEC (javac.sh) (:java) (:classnames) (+classpath) (+jar) (+debug) 
+  NEEDS (:java.dep:map=:class) 
+        (:classpath.single.jarlist) 
+        (:classpath.wildcard.jarlist)
+   => (:class);
+
+# create an empty jar file with most basic manifest
+EXEC (emptyjar.sh) (:FILE) (+debug) (+classpath) => (:jar);
+
+EXEC (compiler_classpath.py) (+classpath) => (:compiler_classpath);
+
+EXEC (source_group.sh) (:java.sm.list:classnames) (:java.sm) 'java.source_group' NEEDS (:java.list)
+  => (:java.source_group);
+
+EXEC (javac.sm.sh) (:java.list:ls) (:classnames) (+classpath) (+jar) (+debug)
+  NEEDS (:java.list)
+        (:java.dep:map=:class)
+        (:classpath.single.jarlist)
+	(:classpath.wildcard.jarlist)
+  => (:sm.class);
+
+EXEC (sm.raw_errors.sh) (:java:filename) 'file.raw_errors' NEEDS (:java) 
+  => (:file.raw_errors);
+
+EXEC (sm.raw_errors.sh) (:java.sm.list:ls) 'sm.raw_errors' NEEDS (:java.sm.list) => (:sm.raw_errors);
+
+EXEC (symbol.py) (:java) (:classnames) (+source_group:map=:java.source_group:cat:vir_dir:filename) (+sp) (+sym) (+syms) => (:symbol);
+
+EXEC (/bin/cp) (:java.syms) 'syms.symbol' => (:syms.symbol);
+
+# run cat (:FILE) | [driver] java -cp xxx <first symbol> (+cmd)
+# ... where xxx is composed from the classes output directory
+# $ODIN_JAVA_OUTPUT_DIRECTORY and the +classpath and +jar options, driver
+# is an optional driver program
+EXEC (run.sh) (:FILE) (+classpath) (+runclasspath) (+jar) (+cmd:ls) (+driver) (+vmopt:ls) (+symbol:map=:symbol:cat) NEEDS (+cmd) (+need) (+vmopt) (+symbol:map=:required_classes)
+  => (:java.stdout) (:java.output);
+
+EXEC (exec.sh) (exec2.sh) (:symbol) (+stdin) (+classpath) (+runclasspath) (+jar) (+cmd:ls) (+driver) (+vmopt:ls) '/dev/null' 'java.exec' NEEDS (+cmd) (+need) (+vmopt) (+symbol:map=:required_classes) (:symbol:required_classes)
+  => (:java.exec);
+
+EXEC (launcher.sh) (exec2.sh) (:symbol) (+classpath) (+runclasspath) (+jar) (+cmd:ls) (+driver) (+vmopt:ls) NEEDS (+cmd) (+need) (+vmopt) (+symbol:map=:required_classes) (:symbol:required_classes)
+  => (:java.launcher);
+
+EXEC (../tar/extract.sh) (:tar) (+member) 'tar.java' => (:tar.java);
+
+EXEC (/bin/cp) (:FILE) 'cast.java' => (:cast.java);

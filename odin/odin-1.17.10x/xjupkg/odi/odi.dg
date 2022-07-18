@@ -1,3 +1,0 @@
-# dummy package to prevent loading of Odin distributed odi package,
-# which makes some assumptions about other packages that no longer
-# hold with our implementations.
