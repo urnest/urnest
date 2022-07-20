@@ -11,8 +11,28 @@
 - merge xjupkg into pkg
   - add missing version files (recover and bump version if old package had version)
   - bump versions of changed packages
-  - verify build and install odin from scratch
+  x verify build and install odin from scratch
   - test eli
+
+- fedora rpm
+  - create spec file with %files -f filelist.txt and
+    then have %install generate filelist.txt as last step
+    with xju-odin.spec in top level
+
+    ...
+    %prep
+    %build
+      cd pkg/odin
+      ./configure
+    %install
+      ./INSTALL %{buildroot}
+      find %{buildroot} | sed -e 's=^%{bildroot}/==g' > filelist.txt
+    %files -f filelist.txt
+    
+    see https://docs.fedoraproject.org/en-US/packaging-guidelines/RPMMacros/
+    for macros that control the various directories, might be possible to
+    have to experiment to see which dir applies to which stage
+
 
 ~ pdflatex package that runs pdflatex until output stable
   (otherwise tocs and cross references aren't correct)
