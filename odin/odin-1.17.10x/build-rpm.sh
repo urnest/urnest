@@ -17,7 +17,7 @@ License:        BSD
 BuildRequires: gcc g++
 
 %description
-odin-build fork see https://github/urnest/urnest
+odin-build fork see https://github.com/urnest/urnest
 
 %prep
 
@@ -50,9 +50,9 @@ odin-build fork see https://github/urnest/urnest
   )
 
 %files
-%doc /man
-/bin
-/lib
+%doc /man/man1/odin.1
+/bin/odin
+/lib/Odin
 
 EOF
 

@@ -55,13 +55,13 @@
 
 $ODIN_PY_IGNORE 'egrep expression for python imports to ignore, e.g. \\"^os$|^sys$\\"' = '';
 
-$ODIN_PYTHON3PATH 'colon-separated list of directories to search for python3 imports, after searching +py_sp directories, e.g. /usr/local/python3/site-packages' = '';
+$ODIN_PYTHONPATH 'colon-separated list of directories to search for python3 imports, after searching +py_sp directories, e.g. /usr/local/python3/site-packages' = '';
 
 $ODIN_MYPY_PATH 'PATH to install when executing mypy, colon separated' = '/bin:/usr/bin';
 $ODIN_MYPY_LD_LIBRARY_PATH 'shared library load path to install when executing command, colon separated' = '';
 $ODIN_MYPY 'name of mypy program' = 'true';
 
-$ODIN_MYPYPATH 'as ODIN_PYTHON3PATH above but sets MYPYPATH' = '';
+$ODIN_MYPYPATH 'as ODIN_PYTHONPATH above but sets MYPYPATH' = '';
 
 $ODIN_PYSTYLECHECK 'name of python style check program, e.g. flake8' = 'true';
 $ODIN_PYSTYLECHECK_PATH 'PATH to install when executing python style check program, colon separated' = '/bin:/usr/bin';

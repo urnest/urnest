@@ -21,7 +21,7 @@ if [ "$ODIN_cmd" != "" ] ; then
 if [ "$ODINVERBOSE" != "" ] ; then
    echo ${ODINRBSHOST}python3 $ODIN_py $cmd; fi
 
-(mkdir output; cd output; LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHON3PATH" eval python3 "$ODIN_py" $cmd) \
+(mkdir output; cd output; LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHONPATH" eval python3 "$ODIN_py" $cmd) \
  <$ODIN_STDIN >py3.stdout 2>WARNINGS ||
  { mv WARNINGS ERRORS; echo $cmd failed. >>ERRORS; }
 
