@@ -16,28 +16,11 @@
 
 - fedora rpm
   x add bild-rpm.sh
-  - test instalation
-  - figure out why .src.rpm only has xju-odin.spec
+  x test instalation
+  x figure out why .src.rpm only has xju-odin.spec
   - add code to get version from git tag
-  - sign with what cert?
-
-%{buildroot} %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}
-same as $BUILDROOT
-
-%{_topdir} %{getenv:HOME}/rpmbuild
-%{_builddir} %{_topdir}/BUILD
-%{_rpmdir} %{_topdir}/RPMS
-%{_sourcedir} %{_topdir}/SOURCES
-	
-
-%{_specdir} %{_topdir}/SPECS
-	
-
-%{_srcrpmdir} %{_topdir}/SRPMS
-	
-
-%{_buildrootdir} %{_topdir}/BUILDROOT
-
+  - sign with what cert? where to get one of those?
+  - publish on github?
 
 ~ pdflatex package that runs pdflatex until output stable
   (otherwise tocs and cross references aren't correct)

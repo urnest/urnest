@@ -4,7 +4,7 @@ d=$(cd $(dirname "$0") && pwd)
 
 set -ex
 
-mkdir BUILD  BUILDROOT  RPMS  SRPMS
+mkdir SOURCES BUILD  BUILDROOT  RPMS  SRPMS
 
 cat > xju-odin.spec <<EOF
 Name:           xju-odin
@@ -13,6 +13,7 @@ Release:        1%{?dist}
 Summary:        odin-build fork
 
 License:        BSD
+Source:         xju-odin.tar.gz
 
 BuildRequires: gcc g++
 
@@ -20,6 +21,10 @@ BuildRequires: gcc g++
 odin-build fork see https://github.com/urnest/urnest
 
 %prep
+  cd $d
+  ./CLEAN
+  cd ..
+  tar czf %{_sourcedir}/xju-odin.tar.gz xju-odin 
 
 %build
   echo "!!!build: \$(pwd)"
@@ -57,4 +62,4 @@ odin-build fork see https://github.com/urnest/urnest
 EOF
 
 
-rpmbuild --define="_topdir $(pwd)" --define="_sourcedir $d" --define="_build_id_links none" xju-odin.spec -ba
+rpmbuild --define="_topdir $(pwd)" --define="_build_id_links none" xju-odin.spec -ba

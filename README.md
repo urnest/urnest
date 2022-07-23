@@ -9,7 +9,7 @@ LICENSING
   licence - see omnicxy/README.txt
 
 - the odin sub-directory is derived from (and includes a copy of) odin and
-  uses its licence - see odin-1.17.10x/README
+  uses its licence - see xju-odin/README
 
 - all other sub-directories, including xju, hcp and pq are licensed under
   the following terms:
@@ -21,40 +21,25 @@ LICENSING
 
 OVERVIEW
 
--   odin/ has my customisations to and extras for excellent build tool
+-   odin/xju-odin is my fork of the excellent build tool
     from [sourceforge/projects/odin-build] 
-    (http://sourceforge.net/projects/odin-build/)
-
-    -	odin/odin-1.17.10x has my customisations:
-        - optimise :map=:xy to only propogate relevant param types, in
- 	  order to scale well in some scenarios eg:
+    (http://sourceforge.net/projects/odin-build/), including:
+      - optimise :map=:xy to only propogate relevant param types, in
+        order to scale well in some scenarios eg:
 	       - building windows C++ software that uses different
 	         +define options for building dlls v clients of dlls, which
 		 would cause (unnecessary) generation of odin :map 
 		 deriviations for #include dependencies, causing long
 		 delays in building
-        - note that in order to realise the potential of this optimisation,
-	  you should use the xjupkg packages (see below) rather than the
-	  standard odin packages, because the standard packages have
-	  FILE -> .h etc derivations (via :GENERIC), which causes
-	  them to propogate *all* param types to :map=:c_inc_all
 
-        - allow odin to clean up subdirectories eg JOB temporary directories
-          when build is aborted via Ctrl-C
+      - allow odin to clean up subdirectories eg JOB temporary directories
+        when build is aborted via Ctrl-C
 
-        - message adjustments in odin shell script output to align with
-	  naming used in the Odin reference manual
+      - message adjustments in odin shell script output to align with
+        naming used in the Odin reference manual
 
-    -   odin/odin-1.17.10x/xjupkg has my odin packages.
+      - updated packages:
 
-        Some of these are extended/adjusted versions of the standard 
-        odin packages
-        (and these have the same names as the standard odin packages in
-        [odin-1.17.10x/pkg] (odin/odin-1.17.10x/pkg)). They are not 
-        guarenteed to be backward compatible with the standard odin packages.
-    
-        Highlights:
-    
         - add generalised hash_inc package to avoid duplicating it 
           in C, C++, IDL etc. (see hash_inc.dg)
 
@@ -94,6 +79,9 @@ OVERVIEW
 	  (or wait to rebuild everything); the java build environment
 	  was windows, which made the package more convoluted
 
+        - py package has dependency based run of python programs and
+          dependency-based mypy checking
+          
         For more info on the above packages, see 
         odin/odin-1.17.10x/xjupkg/*.dg; also in many packages there
         is a test/Odinfile that illustrates and sometimes even comments
@@ -147,3 +135,4 @@ OVERVIEW
 		 'postcode': postcode }
     ... which would return a text/json encoded result to the client.
 
+-   ruf is baby rust steps
