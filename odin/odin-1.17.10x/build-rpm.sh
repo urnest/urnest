@@ -41,12 +41,15 @@ odin-build fork
       mv \$n.new \$n
     done
   find %{buildroot} | xargs chmod u+w
-  find %{buildroot} -mindepth 2 | sed -e 's=^%{buildroot}/==g' > filelist.txt
+  find %{buildroot} -mindepth 2 | sed -e 's=^%{buildroot}==g' > filelist.txt
   
 
 %clean
   echo "!!!clean: \$(pwd)"
-  ./CLEAN
+  ( 
+    cd $d
+    ./CLEAN
+  )
 
 %files -f filelist.txt
 
