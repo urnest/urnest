@@ -17,7 +17,7 @@ License:        BSD
 BuildRequires: gcc g++
 
 %description
-odin-build fork
+odin-build fork see https://github/urnest/urnest
 
 %prep
 
@@ -41,20 +41,20 @@ odin-build fork
       mv \$n.new \$n
     done
   find %{buildroot} | xargs chmod u+w
-  find %{buildroot} -mindepth 2 | sed -e 's=^%{buildroot}==g' > filelist.txt
-  
+  find %{buildroot} -name .build-id | xargs rm -rf
 
 %clean
   echo "!!!clean: \$(pwd)"
   ( 
     cd $d
-    ./CLEAN
   )
 
-%files -f filelist.txt
-
+%files
+%doc /man
+/bin
+/lib
 
 EOF
 
 
-rpmbuild --define="_topdir $(pwd)" --define="_sourcedir $d" xju-odin.spec -ba
+rpmbuild --define="_topdir $(pwd)" --define="_sourcedir $d" --define="_build_id_links none" xju-odin.spec -ba
