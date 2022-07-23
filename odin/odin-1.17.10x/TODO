@@ -15,45 +15,11 @@
   - test eli
 
 - fedora rpm
-  - create spec file with %files -f filelist.txt and
-    then have %install generate filelist.txt as last step
-    with xju-odin.spec in top level
-
-    Name:           xju-odin
-    Version:        1.17.11
-    Release:        1%{?dist}
-    Summary:
-
-    License:
-
-    BuildRequires: gcc
-    Requires:
-
-    %prep
-    %build
-      cd pkg/odin
-      ./configure
-    %install
-      ./INSTALL %{buildroot}
-      find %{buildroot} | sed -e 's=^%{bildroot}/==g' > filelist.txt
-    %files -f filelist.txt
-    
-    https://rpm-packaging-guide.github.io/
-    see https://docs.fedoraproject.org/en-US/packaging-guidelines/RPMMacros/
-    for macros that control the various directories, might be possible to
-    have to experiment to see which dir applies to which stage
-    experiment shows:
-      prep: /home/xju/rpmbuild/BUILD
-      build: /home/xju/rpmbuild/BUILD
-      install: /home/xju/rpmbuild/BUILD
-      clean: /home/xju/rpmbuild/BUILD
-
-    ... and the outputs ended up in:
-      [xju@etlt odin-1.17.10x]$ ls ~/rpmbuild/SRPMS/xju-odin-1.17.11-1.fc35.src.rpm 
-      /home/xju/rpmbuild/SRPMS/xju-odin-1.17.11-1.fc35.src.rpm
-      [xju@etlt odin-1.17.10x]$ ls ~/rpmbuild/RPMS/x86_64/xju-odin-1.17.11-1.fc35.x86_64.rpm 
-      /home/xju/rpmbuild/RPMS/x86_64/xju-odin-1.17.11-1.fc35.x86_64.rpm
-
+  x add bild-rpm.sh
+  - test instalation
+  - figure out why .src.rpm only has xju-odin.spec
+  - add code to get version from git tag
+  - sign with what cert?
 
 %{buildroot} %{_buildrootdir}/%{name}-%{version}-%{release}.%{_arch}
 same as $BUILDROOT
