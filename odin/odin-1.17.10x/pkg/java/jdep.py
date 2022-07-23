@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/bin/env python3
 
 # Parse Sun java compiler errors to extract dependencies.
 import sys

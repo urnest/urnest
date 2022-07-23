@@ -208,7 +208,7 @@ r3/r4/__init__.py
 %ttrace.one==(%test1.py)+cmd='1'+stderr=trace:py3.exec.output:err
 
 %test1.py== !<<
-#!/bin/env python
+#!/bin/env python3
 import sys
 sys.stderr.write('x')
 sys.stderr.flush()

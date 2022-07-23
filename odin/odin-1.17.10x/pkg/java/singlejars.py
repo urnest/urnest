@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/bin/env python3
 
 import sys
 
@@ -20,7 +20,7 @@ def main(argv):
                  x.endswith('*.JAR')]
     for j in single_jars:
         print(, "%(j)s" % vars(),file=out)
-        pass(    )
+        pass
     pass
 
 if __name__=='__main__':
