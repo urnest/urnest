@@ -122,6 +122,8 @@ def test():
     else:
         assert None
         pass
+    x={'a':int,'c':OneOf(int,None)}
+    Schema(x).validate({'a':1})
     try:
         Schema(False).validate(True)
     except Exception as e:
