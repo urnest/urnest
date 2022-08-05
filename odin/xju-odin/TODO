@@ -18,9 +18,18 @@
   x add bild-rpm.sh
   x test instalation
   x figure out why .src.rpm only has xju-odin.spec
-  - add code to get version from git tag
-  - sign with what cert? where to get one of those?
-  - publish on github?
+  ~ add code to get version from git tag
+  ~ sign with what cert? where to get one of those?
+  ~ publish on github?
+  - upload source tarball package to github so can be fetched
+    - use git tag for versioning
+    - version like gcc-c++-11.2.1-1.fc35.x86_64.rpm
+      ... the tag would be 11.2.1, the -1 etc would be added by fedora
+  - adjust spec file to work from that using Source and
+    %prep
+      %setup -q
+  - look into becoming fedora package maintainer for xju-odin
+
 
 ~ pdflatex package that runs pdflatex until output stable
   (otherwise tocs and cross references aren't correct)
