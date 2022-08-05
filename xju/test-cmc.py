@@ -13,73 +13,133 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-from xju.cmc import namedtuple
-from typing import Optional, Any, NamedTuple
-import collections
+import xju.cmc
 
-step =1
-class A:
-    entered_at_step:Optional[int] = None
-    exited_at_step:Optional[int] = None
+from xju.assert_ import Assert
+import dataclasses
 
-    def __init__(self,
-                 value:Any,
-                 ee:Optional[Exception]=None,
-                 xe:Optional[Exception]=None):
-        self.value = value
-        self.entered_at_step:Optional[int] = None
-        self.exited_at_step:Optional[int] = None
-        self.ee=ee
-        self.xe=xe
-    def __str__(self):
-        return f'entered value: {self.value}, entered step: {self.entered_at_step}, exited step: {self.exited_at_step}'
-    def __repr__(self):
-        return str(self)
+# python behaviour checks
+class A():
+    a: int
+    pass
+
+class B(A):
+    b: str
+    def set_b_b(self, s: str) -> None:
+        self.b = s
+        pass
+    pass
+
+Assert(A.__annotations__) == {'a': int}
+Assert(B.__annotations__) == {'b': str}
+Assert(B.__bases__) == (A, )
+
+class C(B, A):
+    b: str
+    def set_c_b(self, s: str) -> None:
+        self.b = s
+        pass
+    pass
+
+Assert(B.__annotations__) == {'b': str}
+Assert(C.__annotations__) == {'b': str} #[2]
+
+c = C()
+
+c.set_c_b('_c_')
+c.set_b_b('_b_')
+Assert(c.b) == '_b_' #[1]
+
+Assert(c.__dict__) == { 'b': '_b_'} #[3]
+c.a = 5 # [4]
+Assert(c.__dict__) == { 'b': '_b_', 'a': 5}
+Assert(C.__mro__) == [C,B,A]
+
+# [1] + [2] is interesting: even though there is only one actual b attribute there are
+# two annotations; would be better if mypy disallowed, because with multi-level
+# inheritance can easily stomp on lower-level attribute, especially as in practice noone
+# much uses private attributes; for our cmclass decorator we reject such overriding altogether
+# this will naturally disallow multiple inheritance of class that has a resource attribute, which
+# is good; but only for attrs that implement context management
+
+# [3] no mention of a because it has not been initialised, disallow at compile time too
+# [4] that's dangerous from a resource perspective, might enter one resource and exit some
+#     other resource; block __setattr__ and __delattr__ after ___enter__ succeeds
+
+# @cmclass tests
+step = 1
+class Resource:
+    entered_at: Optional[int] = None
+    exited_at: Optional[int] = None
+    ee: Optional[Exception]
+    xe: Optional[Exception]
+
+    def __init__(self, ee:Optional[Exception], xe:Optional[Exception]):
+        self.ee = ee
+        self.xe = xe
+        pass
+
     def __enter__(self):
         global step
-        self.entered_at_step = step
+        self.entered_at = step
         step = step + 1
         if self.ee: raise self.ee
-        return self.value
-
-    def __exit__(self, t, e, b):
+        return self
+    
+    def __exit__(self):
         global step
-        self.exited_at_step = step
+        self.entered_at = step
         step = step + 1
         if self.xe: raise self.xe
+        return self
 
-X = namedtuple(NamedTuple('X', [('a',A), ('b',A), ('c',A)]))
+@cmclass
+@dataclasses.dataclass
+class B1:
+    a: Resource
+    b: int
+    pass
 
-with X(A(7), A(8), A(9)) as x:
-    assert x.a.value == 7, x.a.value
-    assert x.b.value == 8, x.a.value
-    assert x.b.value == 9, x.a.value
-    assert x.a.entered_at_step == 1, (x.a, x.b, x.c)
-    assert x.b.entered_at_step == 2, (x.a, x.b, x.c)
-    assert x.c.entered_at_step == 3, (x.a, x.b, x.c)
-    assert x.a.exited_at_step == None, (x.a, x.b, x.c)
-    assert x.b.exited_at_step == None, (x.a, x.b, x.c)
-    assert x.c.exited_at_step == None, (x.a, x.b, x.c)
+@cmclass
+@dataclasses.dataclass
+class B2:
+    c: str
+    d: Resource
+    e: Resource
+    pass
 
-assert x.a.entered_at_step == 1, (x.a, x.b, x.c)
-assert x.b.entered_at_step == 2, (x.a, x.b, x.c)
-assert x.c.entered_at_step == 3, (x.a, x.b, x.c)
-assert x.a.exited_at_step == 6, (x.a, x.b, x.c)
-assert x.b.exited_at_step == 5, (x.a, x.b, x.c)
-assert x.c.exited_at_step == 4, (x.a, x.b, x.c)
-    
-step=11
+@cmclass
+@dataclasses.dataclass
+class D(B2, B1):
+    f: Resource
+    pass
 
-try:
-    with X(a=A(17), b=A(18,ee=Exception('fred')), c=A(19)) as x:
-        pass
-except Exception as e:
-    assert str(e) == 'fred', str(e)
-    assert x.a.entered_at_step == 11, (x.a, x.b, x.c)
-    assert x.b.entered_at_step == 12, (x.a, x.b, x.c)
-    assert x.c.entered_at_step == None, (x.a, x.b, x.c)
-    assert x.a.exited_at_step == 14, (x.a, x.b, x.c)
-    assert x.b.exited_at_step == 13, (x.a, x.b, x.c)
-    assert x.c.exited_at_step == None, (x.a, x.b, x.c)
-else:
-    assert False, 'should not get to here'
+with D(Resource(ee=None, xe=None), #f
+       Resource(ee=None, xe=None), #a
+       1, #b
+       'c', #c
+       Resource(ee=None, xe=None), #d
+       Resource(ee=None, xe=None) #e
+       ) as x:
+    Assert(x.a.entered_at) == 1
+    Assert(x.a.exited_at) == None
+    Assert(x.d.entered_at) == 2
+    Assert(x.d.exited_at) == None
+    Assert(x.e.entered_at) == 3
+    Assert(x.e.exited_at) == None
+    Assert(x.f.entered_at) == 4
+    Assert(x.f.exited_at) == None
+    pass
+
+Assert(x.a.entered_at) == 1
+Assert(x.a.exited_at) == 8
+Assert(x.d.entered_at) == 2
+Assert(x.d.exited_at) == 7
+Assert(x.e.entered_at) == 3
+Assert(x.e.exited_at) == 6
+Assert(x.f.entered_at) == 4
+Assert(x.f.exited_at) == 5
+
+assert False, 'tests for partial entry; tests for exception on exit including multiple'
+assert False, 'tests for [1]+[2]'
+assert False, 'tests for [4]'
