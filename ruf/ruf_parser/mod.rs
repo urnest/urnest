@@ -14,15 +14,8 @@ extern crate ruf_newtype;
 use ruf_tree as tree;
 use ruf_newtype as newtype;
 
-pub mod ast
-{
-    #[derive(PartialEq)]
-    pub struct Item<'text>
-    {
-        pub tag: Option<&'static str>,
-        pub text: &'text str
-    }
-}
+pub mod ast;
+
 pub type AST<'text> = tree::Node<ast::Item<'text>>;
 
 // failed to parse {goal} at {at} because, having parsed {having_parsed}, ...
@@ -38,23 +31,6 @@ pub struct ParseFailed<'text, 'goals, 'parser>
 {
     pub cause: Box<dyn std::fmt::Display+'parser>,
     pub context: Vec< Context<'text, 'goals> >    // outermost is last
-}
-
-pub fn best_of<'text, 'goals, 'parser>(
-    e1: ParseFailed<'text, 'goals, 'parser>,
-    e2: ParseFailed<'text, 'goals, 'parser>) -> ParseFailed<'text, 'goals, 'parser>
-{
-    // note shorter means it got further along and at excludes having_parsed
-    let l1:usize = e1.context[0].having_parsed.iter().map(|x| x.value.text.len()).sum::<usize>();
-    let l2:usize = e2.context[0].having_parsed.iter().map(|x| x.value.text.len()).sum::<usize>();
-    if e1.context[0].at.len() - l1 <
-        e2.context[0].at.len() - l2
-    {
-        return e1;
-    }
-    else{
-        return e2;
-    }
 }
 
 #[derive(PartialEq)]
@@ -237,16 +213,6 @@ impl<'parser> std::ops::Deref for Ref<'parser>
     fn deref(&self) -> &Self::Target { &*self.x }
 }
 
-pub fn literal(x: &'static str) -> Ref<'static>
-{
-    Ref::new(parsers::Literal{x: x})
-}
-
-pub fn tagged<'parser>(tag: &'static str, content: Ref<'parser>) -> Ref<'parser>
-{
-    Ref::new(parsers::Tagged{ tag: tag, content: content.x })
-}
-
 impl<'parser> std::ops::Add for Ref<'parser> {
     type Output = Ref<'parser>;
 
@@ -305,11 +271,25 @@ impl<'parser> std::ops::BitOr for Ref<'parser> {
     }
 }
 
+// parses x, literally
+pub fn literal(x: &'static str) -> Ref<'static>
+{
+    Ref::new(parsers::Literal{x: x})
+}
+
+// wraps AST produced by content in AST with tag
+pub fn tagged<'parser>(tag: &'static str, content: Ref<'parser>) -> Ref<'parser>
+{
+    Ref::new(parsers::Tagged{ tag: tag, content: content.x })
+}
+
+// always matches, consumes nothing
 pub fn none() -> Ref<'static>
 {
     Ref::new(parsers::None{})
 }
 
+// repeated separate-separated items inside start, end pair
 pub fn list_of<'parser>(start: Ref<'parser>,
                         item: Ref<'parser>,
                         separator: Ref<'parser>,
@@ -320,18 +300,38 @@ pub fn list_of<'parser>(start: Ref<'parser>,
 
 pub static CRLF: &str = "CRLF";
 
+// one of ' ', '\t', '\n', '\r'
 pub fn whitespace_char() -> Ref<'static> {Ref::new(parsers::WhitespaceChar{tag: None})}
+
+// '\r'
 pub fn cr() -> Ref<'static> { Ref::new(parsers::Char{tag: Some("carriage-return"), x:'\r'}) }
+
+// '\n'
 pub fn lf() -> Ref<'static> { Ref::new(parsers::Char{tag: Some("line-feed"), x:'\n'}) }
+
+// "\v\n"
 pub fn crlf() -> Ref<'static> { tagged(CRLF, cr()+lf()) }
+
+// 0..9
 pub fn digit() -> Ref<'static> { Ref::new(parsers::Digit{tag: Some("digit")}) }
+
+// 0..7
 pub fn octal_digit() -> Ref<'static> { Ref::new(parsers::OctalDigit{tag: Some("octal digit")}) }
+
+// 0..9/a..f/A..F
 pub fn hex_digit() -> Ref<'static> { Ref::new(parsers::HexDigit{tag: Some("hex digit")}) }
+
+// ascii 32..127
 pub fn us_ascii_printable() -> Ref<'static> { Ref::new(parsers::UsAsciiPrintable{
     tag: Some("US ASCII printable character")}) }
 
+// any character
 pub fn any_char() -> Ref<'static> { Ref::new(parsers::AnyChar{}) }
+
+// at least one x
 pub fn at_least_one<'parser>(x: Ref<'parser>) -> Ref<'parser>{Ref::new(parsers::AtLeastOne{x: x.x})}
+
+// zero or more x
 pub fn zero_or_more<'parser>(x: Ref<'parser>) -> Ref<'parser>{Ref::new(parsers::ZeroOrMore{x: x.x})}
 
 // CharSet is any string but a-f anywhere in the string is interpreted as abcdef, note
@@ -341,23 +341,31 @@ pub fn zero_or_more<'parser>(x: Ref<'parser>) -> Ref<'parser>{Ref::new(parsers::
 pub struct CharSet_; impl newtype::Tag for CharSet_ { type BaseType = &'static str;}
 pub type CharSet = newtype::T<CharSet_>;
 
+// one char in chars
 pub fn one_of_chars(chars: CharSet) -> Ref<'static> {
     let s = parsers::parse_charset(&chars);
     Ref::new(parsers::OneOfChars{ pattern: chars, chars: s })
 }
 
+// one char not in chars
 pub fn any_char_except(chars: CharSet) -> Ref<'static> {
     let s = parsers::parse_charset(&chars);
     Ref::new(parsers::AnyCharExcept{ pattern: chars, chars: s })
 }
 
+// repeated x until y
+// note tests for x before y, so if x is a prefix of y this function does not suit
 pub fn parse_x_until_y<'parser>(x: Ref<'parser>, y: Ref<'parser>) -> Ref<'parser>
 {
     Ref::new(parsers::ParseXUntilY{x:x.x, y:y.x})
 }
 
+// at least one whitespace char
 pub fn some_space() -> Ref<'static> {Ref::new(parsers::SomeSpace{whitespace_char:whitespace_char().x})}
+
+// zero or more whitespace char
 pub fn any_space() -> Ref<'static> {Ref::new(parsers::AnySpace{whitespace_char:whitespace_char().x})}
+
 pub fn optional<'parser>(x: Ref<'parser>) -> Ref<'parser>
 {
     Ref::new(parsers::Optional{x:x.x})
@@ -376,3 +384,4 @@ pub fn select<'parser>(preferred: (Ref<'parser>, Ref<'parser>),
     }
     Ref::new(x)
 }
+

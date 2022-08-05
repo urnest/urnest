@@ -1177,4 +1177,27 @@ fn main() {
 	    assert::equal(&e.to_string().as_str(), &"failed to parse \"22\" => \"22a\" or \"2\" then digit => \"2\" then digit then \"b\" or \"3\" => \"3\" then digit at line 1 column 1 because failed to parse \"22a\" at line 1 column 1 because, having parsed \"22\", \"b\" does not start with \"a\"");
 	}
     }
+
+    let x = r###"
+{
+  "a": 1,
+  "b": {
+    "c": 2
+  }
+}
+"###;
+    let ___ = parser::any_space();
+    let comma = parser::literal(",");
+    let name_p = parser::tagged(
+        "name", parser::literal(r#"""#)+parser::one_of_chars("a-z")+parser::literal(r#"""#));
+    let s = parser::back_ref();
+    let p = parser::select(
+        (parser::literal("{"), (
+            parser::tagger("object",
+                           parser::list_of(parser::literal("{")+___,
+                                           name_p+___+s+___+comma+___,
+                                           parser::literal("}")+___)))),
+        vec!((parser::digit(), (parser::tagger("int",parser::digit()+___)))));
+    s.recurse_to(p);
+    @@@;
 }

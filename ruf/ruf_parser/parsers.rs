@@ -10,6 +10,23 @@ struct AllOf<'x>
 }
 fn all_of<'x>(x: &'x str) -> AllOf<'x>{ AllOf {x:x} }
 
+pub fn best_of<'text, 'goals, 'parser>(
+    e1: crate::ParseFailed<'text, 'goals, 'parser>,
+    e2: crate::ParseFailed<'text, 'goals, 'parser>) -> crate::ParseFailed<'text, 'goals, 'parser>
+{
+    // note shorter means it got further along and at excludes having_parsed
+    let l1:usize = e1.context[0].having_parsed.iter().map(|x| x.value.text.len()).sum::<usize>();
+    let l2:usize = e2.context[0].having_parsed.iter().map(|x| x.value.text.len()).sum::<usize>();
+    if e1.context[0].at.len() - l1 < e2.context[0].at.len() - l2
+    {
+        return e1;
+    }
+    else{
+        return e2;
+    }
+}
+
+
 impl<'x> AllOf<'x>
 {
     // return remainder of self after removing leading y
@@ -242,7 +259,7 @@ impl<'or> crate::Parser for Or<'or>
                     match x {
                         crate::ParseResult::Ok(result) => return crate::ParseResult_::Ok(result),
                         crate::ParseResult::Err(e) => {
-                            e1 = crate::best_of(e, e1);
+                            e1 = best_of(e, e1);
                         }
                     }
                 }
@@ -341,7 +358,7 @@ impl<'p1> crate::Parser for ListOf<'p1>
                                 crate::ParseResult::Err(e) => {
                                     match self.end.parse_some_of(rest) {
                                         crate::ParseResult::Err(e1) => {
-                                            return err_(crate::best_of(e, e1), items, rest);
+                                            return err_(best_of(e, e1), items, rest);
                                         },
                                         crate::ParseResult::Ok(end_ast) => {
                                             rest = all_of(rest).after(end_ast.value.text);
@@ -1135,7 +1152,7 @@ impl<'p1> crate::Parser for ParseXUntilY<'p1>
                 crate::ParseResult::Err(e) => {
                     match self.y.parse_some_of(rest) {
                         crate::ParseResult::Err(e1) => {
-                            return err_(crate::best_of(e, e1), items, rest);
+                            return err_(best_of(e, e1), items, rest);
                         },
                         crate::ParseResult::Ok(end_ast) => {
                             rest = all_of(rest).after(end_ast.value.text);
@@ -1376,7 +1393,7 @@ impl<'p1> crate::Parser for Select<'p1>
                             }
                         },
                         crate::ParseResult::Err(e2) => {
-                            e = crate::best_of(e, e2);
+                            e = best_of(e, e2);
                         }
                     }
                 }

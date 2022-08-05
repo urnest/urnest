@@ -1,8 +1,11 @@
 * parser:
-  - new type Tag
+  ~ new type Tag
+    x risk of mixing up tag with something else seem minimal
   - should all parser creation functions (and parsers) accept an Option<Tag>?
     - maybe provide tagged_x for each function x?
     - maybe let common function put tag in (give Parser a tag() -> Option<Tag> method)?
+      - yes, and only put in tags via tagged()
+      
   x always return completed IRs on failure
     x with each context entry?
   - result cache
