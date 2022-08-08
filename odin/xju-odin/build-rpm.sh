@@ -42,7 +42,7 @@ odin-build fork see https://github.com/urnest/urnest
     do
       cp \$n \$n.new
       cat \$n |
-        python -c "import sys; sys.stdout.write(sys.stdin.read().replace('%{buildroot}',''))" > \$n.new
+        python3 -c "import sys; sys.stdout.write(sys.stdin.read().replace('%{buildroot}',''))" > \$n.new
       mv \$n.new \$n
     done
   find %{buildroot} | xargs chmod u+w

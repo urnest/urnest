@@ -33,6 +33,7 @@ echo $libver > $ODINPKGS/LIBVER
 cp pkg/PKGLST $ODINPKGS; chmod +w $ODINPKGS/PKGLST
 newpkgs=`cd ./pkg; ls | sed -e s/PKGLST// -e s/CVS// -e 's/^[.]*//'`
 for pkg in $newpkgs; do
+   if [ ! -d pkg/$pkg ] ; then continue ; fi
    if [ ! -d $ODINPKGS/$pkg ] ; then mkdir $ODINPKGS/$pkg || exit 1; fi
    ver=`cat pkg/$pkg/version`
    echo $ver > $ODINPKGS/$pkg/$libver
@@ -45,6 +46,7 @@ for pkg in $newpkgs; do
       else
 	 files=`(cd ./pkg/$pkg; ls) | sed -e s/CVS// -e 's/.*\.in//'`; fi
    for file in $files; do
+      if [ -d pkg/$pkg/$file ] ; then continue; fi
       cmp -s pkg/$pkg/$file $destpkg/$file ||
        cp pkg/$pkg/$file $destpkg/$file; done
    chmod +w $destpkg/*

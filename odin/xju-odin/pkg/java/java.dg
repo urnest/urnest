@@ -161,7 +161,7 @@
 
 # Environment Variables
 
-$ODIN_JAVA_PATH 'path covering javac, java, python, colon-separated' = '';
+$ODIN_JAVA_PATH 'path covering javac, java, python3, colon-separated' = '';
 
 $ODIN_JAVA_OUTPUT_DIRECTORY 'root of directory structure in which to place compiled class files' = '';
 

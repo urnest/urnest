@@ -22,7 +22,7 @@
 
 %src-files == %exe :depend :ls +cmd=egrep -v "ODIN|os9|boot|dg\/if|h\$" :stdout
 
-%exe == %odin.cxx.sm +ignore=\\.hh\$ +lib=(%odin.c.sm:a)+(%extra-lib) :exe
+%exe == %odin.cxx.sm +ignore=\\.hh\$ +lib=(%odin.cxx.sm:a)+(%extra-lib) :exe
 
 %rbs-exe == %rbs.c.sm +ignore=\\.hh\$ +(%extra-lib) :exe
 
@@ -34,9 +34,7 @@
       else true; fi
 
 %odin.cxx.sm == <<
-main.cc
-
-%odin.c.sm == <<
+main.cc;
    if-bcast.c; if-candrv.c; if-build.c; if-client.cc; if-cmd.c;
    if-depend.c; if-drvgrf.c; if-dir.c; if-drvpth.c; if-drvspc.c;
    if-edg.c; if-env.c; if-err.c; if-exec.c; if-execint.c; if-execspc.c;
@@ -48,7 +46,7 @@ main.cc
    if-pfilhdr.c; if-prmtyp.c; if-rbs.c;
    if-symbol.c; if-sysdep.c; if-system.c; if-systools.c;
    if-update.c; if-util.c; if-var.c; if-yylex.c;
-   editline%editline.sm; boot%boot.sm;
+   editline%editline.cxx.sm; boot%boot.cxx.sm; LookupPlainAbsPath.cc;
 
 %rbs.c.sm == <<
    rbs.c; if-dir.c; if-err.c +define=NO_IPC; if-file.c; if-io.c;

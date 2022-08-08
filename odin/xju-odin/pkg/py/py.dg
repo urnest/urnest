@@ -60,6 +60,7 @@ $ODIN_PYTHONPATH 'colon-separated list of directories to search for python3 impo
 $ODIN_MYPY_PATH 'PATH to install when executing mypy, colon separated' = '/bin:/usr/bin';
 $ODIN_MYPY_LD_LIBRARY_PATH 'shared library load path to install when executing command, colon separated' = '';
 $ODIN_MYPY 'name of mypy program' = 'true';
+$ODIN_MYPY_FLAGS 'flags to pass to $ODIN_MYPY' = '';
 
 $ODIN_MYPYPATH 'as ODIN_PYTHONPATH above but sets MYPYPATH' = '';
 

@@ -14,7 +14,7 @@ RULES
 
 Parser
    -> Definition
-   -> OdinExprNull // ';'		=> "DRVFLS"?;
+   -> OdinExprNull DOUBLE_SLASH ';'		=> "DRVFLS"?;
 
 Definition
    -> '=' '=' OdinExpr			=> "NSTDEF"

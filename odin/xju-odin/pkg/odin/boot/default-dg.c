@@ -6324,8 +6324,8 @@ tps_PrmTypLst _PrmTypLstS [5430] = {
   {&_PrmTypS[9], &_PrmTypLstS[5426]},
   {&_PrmTypS[8], &_PrmTypLstS[5427]},
   {&_PrmTypS[7], &_PrmTypLstS[5428]} };
-int num_EnvVarS = 86;
-tps_EnvVar _EnvVarS [86] = {
+int num_EnvVarS = 87;
+tps_EnvVar _EnvVarS [87] = {
   {"ODIN_VERSION_STR", "odin-build release number", 2, "1.17.11", 0},
   {"ODIN_CC", "name of the C compiler", 2, "gcc", 0},
   {"ODIN_CC_FLAGS", "C compiler flags", 2, "-g", 0},
@@ -6380,11 +6380,12 @@ tps_EnvVar _EnvVarS [86] = {
   {"ODIN_HCP_TAGS", "name of the hcp-tags program", 2, "hcp-tags", 0},
   {"ODIN_HCP_TAGS_MERGE", "name of the hcp-tags-merge program", 2, "hcp-tags-merge", 0},
   {"ODIN_PY_IGNORE", "egrep expression for python imports to ignore, e.g. \"^os$|^sys$\"", 2, "", 0},
-  {"ODIN_PYTHON3PATH", "colon-separated list of directories to search for python3 imports, after searching +py_sp directories, e.g. /usr/local/python3/site-packages", 2, "", 0},
+  {"ODIN_PYTHONPATH", "colon-separated list of directories to search for python3 imports, after searching +py_sp directories, e.g. /usr/local/python3/site-packages", 2, "", 0},
   {"ODIN_MYPY_PATH", "PATH to install when executing mypy, colon separated", 2, "/bin:/usr/bin", 0},
   {"ODIN_MYPY_LD_LIBRARY_PATH", "shared library load path to install when executing command, colon separated", 2, "", 0},
   {"ODIN_MYPY", "name of mypy program", 2, "true", 0},
-  {"ODIN_MYPYPATH", "as ODIN_PYTHON3PATH above but sets MYPYPATH", 2, "", 0},
+  {"ODIN_MYPY_FLAGS", "flags to pass to $ODIN_MYPY", 2, "", 0},
+  {"ODIN_MYPYPATH", "as ODIN_PYTHONPATH above but sets MYPYPATH", 2, "", 0},
   {"ODIN_PYSTYLECHECK", "name of python style check program, e.g. flake8", 2, "true", 0},
   {"ODIN_PYSTYLECHECK_PATH", "PATH to install when executing python style check program, colon separated", 2, "/bin:/usr/bin", 0},
   {"ODIN_PYSTYLECHECK_LD_LIBRARY_PATH", "shared library load path to install when executing python style check program, colon separated", 2, "", 0},
@@ -6402,7 +6403,7 @@ tps_EnvVar _EnvVarS [86] = {
   {"ODIN_FLUID", "default for +fluid", 2, "fluid", 0},
   {"ODIN_FLUID_PATH", "PATH to install when running fluid", 2, "/usr/bin:/bin", 0},
   {"ODIN_FLUID_LD_LIBRARY_PATH", "LD_LIBRARY_PATH to install when running fluid", 2, "", 0},
-  {"ODIN_JAVA_PATH", "path covering javac, java, python, colon-separated", 2, "", 0},
+  {"ODIN_JAVA_PATH", "path covering javac, java, python3, colon-separated", 2, "", 0},
   {"ODIN_JAVA_OUTPUT_DIRECTORY", "root of directory structure in which to place compiled class files", 2, "", 0},
   {"ODIN_JAVA_WINDOWS_COMPILER", "set not-empty to pass windows paths as javac compiler classpath", 2, "", 0},
   {"ODIN_SQL_CLIENT", "sql command-line client, taking database name, username and password params, reading statements from stdin and writing info/warnings/errors to stdout and/or stderr", 2, "", 0},

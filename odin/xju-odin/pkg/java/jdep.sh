@@ -14,9 +14,9 @@ if [ $? != 0 ] ; then
       echo "$x" ) >&2
     exit 1
 fi
-x=`PATH="$ODIN_JAVA_PATH" /usr/bin/which "python" 2>&1`
+x=`PATH="$ODIN_JAVA_PATH" /usr/bin/which "python3" 2>&1`
 if [ $? != 0 ] ; then
-    ( echo "Error: Failed to locate executable python on path specified by ODIN_JAVA_PATH (specified when Odin cache was created as '$ODIN_JAVA_PATH') because"
+    ( echo "Error: Failed to locate executable python3 on path specified by ODIN_JAVA_PATH (specified when Odin cache was created as '$ODIN_JAVA_PATH') because"
       echo "$x" ) >&2
     exit 1
 fi

@@ -20,7 +20,7 @@ geoff@boulder.colorado.edu
 tp_Str		Author = "odin-build-users@lists.sourceforge.net";
 
 
-main()
+int main()
 {
    tp_Nod Root;
    tp_FilDsc FilDsc;

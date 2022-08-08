@@ -1,9 +1,9 @@
-%boot.sm == <<
+%boot.cxx.sm == <<
    client-yacc.c; fsys-yacc.c; default-dg.c; stub-in.c; stub-out.c
 
-%client.ygi == %cast.ygi +cmd=cat (../client.ygi,c +yaccid=oc :cpp) :stdout
+%client.ygi == %cast.ygi +cmd=(../inc%keep-double-slash.sh) (../client.ygi,c:cpp) :stdout
 
-client-yacc.c == %client.ygi :c \
+client-yacc.c == %client.ygi +yaccid=oc :c \
    +cmd='sed -e "/extern char/d" -e "/^# *line/d"' :stdout
 
 default-dg.c == () +cmd=(../../dg%exe) (../../PKGLST) (../..) 0 \
@@ -12,7 +12,7 @@ default-dg.c == () +cmd=(../../dg%exe) (../../PKGLST) (../..) 0 \
 
 %cast.ygi == <<
 
-%fsys.ygi == %cast.ygi +cmd=cat (../fsys.ygi,c :cpp) :stdout
+%fsys.ygi == %cast.ygi +cmd=(../inc%keep-double-slash.sh) (../fsys.ygi,c :cpp) :stdout
 
 fsys-yacc.c == %fsys.ygi :c \
    +cmd='sed -e "/extern char/d" -e "/^# *line/d"' :stdout
@@ -20,4 +20,3 @@ fsys-yacc.c == %fsys.ygi :c \
 stub-in.c == ../if-stub.c +cmd=(../ipcgen%exe) :output/IN.c
 
 stub-out.c == ../if-stub.c +cmd=(../ipcgen%exe) :output/OUT.c
-

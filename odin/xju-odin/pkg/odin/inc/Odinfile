@@ -1,7 +1,13 @@
-TokTyp_.h == (%cast-to.ygi)+cmd=cat (../fsys.ygi,c:cpp):stdout :tok.h
+TokTyp_.h == (%cast-to.ygi)+cmd=(%keep-double-slash.sh) (../fsys.ygi,c:cpp):stdout :tok.h
 
-NodTyp_.h == (%cast-to.ygi)+cmd=cat (../fsys.ygi,c:cpp):stdout :nod.h
+NodTyp_.h == (%cast-to.ygi)+cmd=(%keep-double-slash.sh) (../fsys.ygi,c:cpp):stdout :nod.h
 
-OC_NodTyp_.h == (%cast-to.ygi)+cmd=cat (../client.ygi,c:cpp):stdout +yaccid=oc :nod.h
+OC_NodTyp_.h == (%cast-to.ygi)+cmd=(%keep-double-slash.sh) (../client.ygi,c:cpp):stdout +yaccid=oc :nod.h
 
 %cast-to.ygi==<<
+
+
+# modern cpp removes //... as it is a C++ comment
+%keep-double-slash.sh == ! <<
+#!/bin/sh
+cat "$1" | sed -e 's=DOUBLE_SLASH=//=g'
