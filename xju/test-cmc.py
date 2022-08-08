@@ -13,10 +13,12 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-import xju.cmc
+from xju import cmc
 
 from xju.assert_ import Assert
 import dataclasses
+from typing import Optional
+import contextlib
 
 # python behaviour checks
 class A():
@@ -53,7 +55,7 @@ Assert(c.b) == '_b_' #[1]
 Assert(c.__dict__) == { 'b': '_b_'} #[3]
 c.a = 5 # [4]
 Assert(c.__dict__) == { 'b': '_b_', 'a': 5}
-Assert(C.__mro__) == [C,B,A]
+Assert(C.__mro__) == (C,B,A,object)
 
 # [1] + [2] is interesting: even though there is only one actual b attribute there are
 # two annotations; would be better if mypy disallowed, because with multi-level
@@ -81,18 +83,254 @@ class Resource:
 
     def __enter__(self):
         global step
+        Assert(self.entered_at)==None
         self.entered_at = step
         step = step + 1
         if self.ee: raise self.ee
         return self
     
-    def __exit__(self):
+    def __exit__(self, t, e, b):
         global step
-        self.entered_at = step
+        Assert(self.entered_at)!=None
+        Assert(self.exited_at)==None
+        self.exited_at = step
         step = step + 1
         if self.xe: raise self.xe
-        return self
+        pass
 
+x = cmc.Dict({'c':Resource(None,None)})
+x['b'] = Resource(None,None)
+Assert(None)==x['b'].entered_at
+Assert(None)==x['c'].entered_at
+Assert(x.keys())=={'c':None,'b':None}.keys()
+Assert(list(x))==list({'c':None,'b':None})
+Assert(len(x))==2
+del x['b']
+del x['c']
+
+x = cmc.Dict({'c':Resource(None,None)})
+x['b'] = Resource(None,None)
+Assert(None)==x['b'].entered_at
+Assert(None)==x['c'].entered_at
+Assert('c').isIn(x)
+Assert(x.keys())=={'c':None,'b':None}.keys()
+Assert(x.items())=={'c':x['c'],'b':x['b']}.items()
+k,bb=x.popitem()
+Assert(k)=='b'
+Assert(None)==bb.entered_at
+cc=x.pop('c')
+Assert(None)==cc.entered_at
+
+x = cmc.Dict({'c':Resource(None,None)})
+x['b'] = Resource(None,None)
+x.clear()
+
+with cmc.Dict() as x:
+    x['c'] = Resource(None,None)
+    x['b'] = Resource(None,None)
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+Assert(1)==x['c'].entered_at
+Assert(2)==x['b'].entered_at
+Assert(3)==x['b'].exited_at
+Assert(4)==x['c'].exited_at
+
+step = 1
+with cmc.Dict({'c':Resource(None,None)}) as x:
+    x['b'] = Resource(None,None)
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+Assert(1)==x['c'].entered_at
+Assert(2)==x['b'].entered_at
+Assert(3)==x['b'].exited_at
+Assert(4)==x['c'].exited_at
+
+step = 1
+with cmc.Dict() as x:
+    x['c'] = Resource(None,None)
+    x['b'] = Resource(None,None)
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+    del x['c']
+Assert(2)==x['b'].entered_at
+Assert(4)==x['b'].exited_at
+
+step = 1
+with cmc.Dict() as x:
+    x['c'] = Resource(None,None)
+    x['b'] = Resource(None,None)
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+    k,b = x.popitem()
+    Assert(k)=='b'
+    Assert(b.exited_at)==3
+Assert(1)==x['c'].entered_at
+Assert(4)==x['c'].exited_at
+
+
+step = 1
+with cmc.Dict() as x:
+    x['c'] = Resource(None,None)
+    x['b'] = Resource(None,None)
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+    cc = x.pop('c')
+    Assert(cc.entered_at)==1
+    Assert(cc.exited_at)==3
+Assert(2)==x['b'].entered_at
+Assert(4)==x['b'].exited_at
+
+step = 1
+with cmc.Dict() as x:
+    x['c'] = Resource(None,None)
+    x['b'] = Resource(None,None)
+    Assert(x.keys())=={'c':None,'b':None}.keys()
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+    cc = x.get('c')
+    Assert(cc.entered_at)==1
+    Assert(cc.exited_at)==None
+    cc = x.pop('c')
+    dd = x.get('d',Resource(None,None))
+    Assert(None)==dd.entered_at
+    Assert(None)==dd.exited_at
+    dd = x.pop('d',Resource(None,None))
+    Assert(cc.entered_at)==1
+    Assert(cc.exited_at)==3
+    Assert(None)==dd.entered_at
+    Assert(None)==dd.exited_at
+Assert(2)==x['b'].entered_at
+Assert(4)==x['b'].exited_at
+
+step = 1
+with cmc.Dict() as x:
+    x['c'] = Resource(None,None)
+    x.setdefault('b',Resource(None,None))
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+    bb=x['b']
+    x['b'] = bb
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+    d=Resource(None,None)
+    x.setdefault('b',d)
+    Assert(None)==d.entered_at
+    cc=x['c']
+    bb=x['b']
+    x.clear()
+    Assert(1)==cc.entered_at
+    Assert(2)==bb.entered_at
+    Assert(3)==bb.exited_at
+    Assert(4)==cc.exited_at
+    pass
+
+step=1
+with cmc.Dict() as x:
+    x['c'] = Resource(None,None)
+    x['b'] = Resource(None,None)
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+    bb=x['b']
+    x.update({'b':bb, 'd':Resource(None,None)})
+    pass
+
+Assert(1)==x['c'].entered_at
+Assert(2)==x['b'].entered_at
+Assert(3)==x['d'].entered_at
+Assert(4)==x['d'].exited_at
+Assert(5)==x['b'].exited_at
+Assert(6)==x['c'].exited_at
+
+step=1
+with cmc.Dict() as x:
+    x['c'] = Resource(None,None)
+    x['b'] = Resource(None,None)
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+    bb=x['b']
+    x.update([('b',bb), ('d',Resource(None,None))])
+    pass
+
+Assert(1)==x['c'].entered_at
+Assert(2)==x['b'].entered_at
+Assert(3)==x['d'].entered_at
+Assert(4)==x['d'].exited_at
+Assert(5)==x['b'].exited_at
+Assert(6)==x['c'].exited_at
+
+step=1
+bbb=Resource(None,None)
+ccc=Resource(Exception('fred'),None)
+try:
+    with cmc.Dict({'b':bbb,'c':ccc}) as x:
+        pass
+    pass
+except Exception as e:
+    Assert(str(e))=='fred'
+    Assert(bbb.entered_at)==1
+    Assert(ccc.entered_at)==2
+    Assert(ccc.exited_at)==None
+    Assert(bbb.exited_at)==3
+else:
+    assert False, x
+    pass
+
+step=1
+bbb=Resource(None,None)
+ccc=Resource(None,Exception('fred'))
+try:
+    with cmc.Dict({'b':bbb,'c':ccc}) as x:
+        pass
+    pass
+except Exception as e:
+    Assert(str(e))=='fred'
+    Assert(bbb.entered_at)==1
+    Assert(ccc.entered_at)==2
+    Assert(ccc.exited_at)==3
+    Assert(bbb.exited_at)==4
+else:
+    assert False, x
+    pass
+
+step=1
+bbb=Resource(None,Exception('fred'))
+ccc=Resource(None,None)
+try:
+    with cmc.Dict({'b':bbb,'c':ccc}) as x:
+        pass
+    pass
+except Exception as e:
+    Assert(str(e))=='fred'
+    Assert(bbb.entered_at)==1
+    Assert(ccc.entered_at)==2
+    Assert(ccc.exited_at)==3
+    Assert(bbb.exited_at)==4
+else:
+    assert False, x
+    pass
+
+
+'''REVISIT
 @cmclass
 @dataclasses.dataclass
 class B1:
@@ -108,18 +346,18 @@ class B2:
     e: Resource
     pass
 
-@cmclass
+@cmc.cmclass
 @dataclasses.dataclass
 class D(B2, B1):
     f: Resource
     pass
 
-with D(Resource(ee=None, xe=None), #f
-       Resource(ee=None, xe=None), #a
+with D(Resource(ee=None, xe=None), #a
        1, #b
        'c', #c
        Resource(ee=None, xe=None), #d
-       Resource(ee=None, xe=None) #e
+       Resource(ee=None, xe=None), #e
+       Resource(ee=None, xe=None), #f
        ) as x:
     Assert(x.a.entered_at) == 1
     Assert(x.a.exited_at) == None
@@ -143,3 +381,4 @@ Assert(x.f.exited_at) == 5
 assert False, 'tests for partial entry; tests for exception on exit including multiple'
 assert False, 'tests for [1]+[2]'
 assert False, 'tests for [4]'
+'''
