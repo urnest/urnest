@@ -351,6 +351,8 @@ class DD(B2, B1):
     f: Resource
     pass
 
+step=1
+
 with DD(Resource(ee=None, xe=None), #a
        1, #b
        'c', #c
@@ -358,22 +360,22 @@ with DD(Resource(ee=None, xe=None), #a
        Resource(ee=None, xe=None), #e
        Resource(ee=None, xe=None), #f
        ) as z:
-    Assert(z.a.entered_at) == 1
+    Assert(z.a.entered_at) == 3
     Assert(z.a.exited_at) == None
-    Assert(z.d.entered_at) == 2
+    Assert(z.d.entered_at) == 1
     Assert(z.d.exited_at) == None
-    Assert(z.e.entered_at) == 3
+    Assert(z.e.entered_at) == 2
     Assert(z.e.exited_at) == None
     Assert(z.f.entered_at) == 4
     Assert(z.f.exited_at) == None
     pass
 
-Assert(z.a.entered_at) == 1
-Assert(z.a.exited_at) == 8
-Assert(z.d.entered_at) == 2
-Assert(z.d.exited_at) == 7
-Assert(z.e.entered_at) == 3
-Assert(z.e.exited_at) == 6
+Assert(z.a.entered_at) == 3
+Assert(z.a.exited_at) == 6
+Assert(z.d.entered_at) == 1
+Assert(z.d.exited_at) == 8
+Assert(z.e.entered_at) == 2
+Assert(z.e.exited_at) == 7
 Assert(z.f.entered_at) == 4
 Assert(z.f.exited_at) == 5
 

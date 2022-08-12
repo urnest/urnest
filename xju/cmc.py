@@ -18,49 +18,59 @@
 import contextlib
 from typing import TypeVar, Iterable, Dict as _Dict, overload, Tuple, Sequence, Union, Optional
 from typing import ItemsView, KeysView
-from typing import Mapping, Type, Generic
+from typing import Mapping, Type, List
 
 from xju.assert_ import Assert
 from collections import OrderedDict
 od = OrderedDict
 
-def class_cm(cls):
-    @contextlib.contextmanager
-    def result(x):
-        yield cls.__enter__(x)
-        return cls.__exit__(x, *sys.exc_info())
-    return result
-
+class ClassCm(contextlib.AbstractContextManager):
+    def __init__(self, cls, x):
+        self.cls=cls
+        self.x=x
+        pass
+    def __enter__(self):
+        self.cls.__enter__(self.x)
+        return self
+    def __exit__(self, t, e, b):
+        return self.cls.__exit__(self.x, t, e, b)
+    pass
 
 T = TypeVar('T')
 
-class CC(Generic[T], contextlib.AbstractContextManager):
-    __resources:Optional[contextlib.AbstractContextManager] = None
-    __base_classes_to_enter = [ base_class for base_class in T.__bases__
-                                if issubclass(base_class, contextlib.AbstractContextManager) ]
-    __attrs_to_enter = [ n for n, t in T.__annotations__.items()
-                         if issubclass(t, contextlib.AbstractContextManager)]
-    def __enter__(self) -> CC:
-        with contextlib.ExitStack() as tentative:
-            for base_class in self.base_classes_to_enter:
-                cm = class_cm(base_class)
-                tentative.enter_context(cm)
-            for n in self.attrs_to_enter:
-                tentative.enter_context(getattr(self, n))
-                pass
-            self.__resources = tentative.pop_all()
-        return self
-    def __exit__(self) -> None:
-        with contextlib.ExitStack() as to_free:
-            for r in self.__resources:
-                to_free.push(r)
-        pass
-    pass
-
 # class decorator that adds context management __enter__ and __exit__
 # that enter and exit all type-hinted attributes implementing context management
-def cmclass(cls:Type[T]) -> Type[CC[T]]:
-    return CC[T]
+def cmclass(cls:Type[T]) -> Type[T]:
+    resources:List[contextlib.ExitStack] = []
+    base_classes_to_enter = [ base_class for base_class in cls.__bases__
+                              if issubclass(base_class, contextlib.AbstractContextManager) ]
+    attrs_to_enter = [ n for n, t in cls.__annotations__.items()
+                         if issubclass(t, contextlib.AbstractContextManager)]
+    def enter(self,
+              base_classes_to_enter=base_classes_to_enter,
+              attrs_to_enter=attrs_to_enter,
+              resources=resources) -> Type[T]:
+        with contextlib.ExitStack() as tentative:
+            for base_class in base_classes_to_enter:
+                cm = ClassCm(base_class, self)
+                tentative.enter_context(cm)
+                pass
+            for n in attrs_to_enter:
+                tentative.enter_context(getattr(self, n))
+                pass
+            resources.append(tentative.pop_all())
+        return self
+    def exit(self, t, e, b, resources=resources) -> None:
+        if resources is not None:
+            with contextlib.closing(resources[0]):
+                pass
+            pass
+        pass
+    setattr(cls, '__enter__', enter)
+    setattr(cls, '__exit__', exit)
+    cls.__annotations__['__enter__'] = type(enter)
+    cls.__annotations__['__exit__'] = type(exit)
+    return cls
 
 K = TypeVar('K')
 V = TypeVar('V', bound=contextlib.AbstractContextManager)
