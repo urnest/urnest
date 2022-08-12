@@ -22,7 +22,7 @@
 
 :py3.output 'output files from a python3 script run'? => :output;
 
-:mypy3 'empty file from mypy static type check'? => :FILE;
+:mypy3 'file from mypy static type check'? => :FILE;
 
 :py.stylecheck 'empty file from style checker'? => :FILE;
 :py.py.stylecheck 'empty file from style checker'? => :py.stylecheck;
