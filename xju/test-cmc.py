@@ -330,15 +330,14 @@ else:
     pass
 
 
-'''REVISIT
-@cmclass
+@cmc.cmclass
 @dataclasses.dataclass
 class B1:
     a: Resource
     b: int
     pass
 
-@cmclass
+@cmc.cmclass
 @dataclasses.dataclass
 class B2:
     c: str
@@ -348,37 +347,36 @@ class B2:
 
 @cmc.cmclass
 @dataclasses.dataclass
-class D(B2, B1):
+class DD(B2, B1):
     f: Resource
     pass
 
-with D(Resource(ee=None, xe=None), #a
+with DD(Resource(ee=None, xe=None), #a
        1, #b
        'c', #c
        Resource(ee=None, xe=None), #d
        Resource(ee=None, xe=None), #e
        Resource(ee=None, xe=None), #f
-       ) as x:
-    Assert(x.a.entered_at) == 1
-    Assert(x.a.exited_at) == None
-    Assert(x.d.entered_at) == 2
-    Assert(x.d.exited_at) == None
-    Assert(x.e.entered_at) == 3
-    Assert(x.e.exited_at) == None
-    Assert(x.f.entered_at) == 4
-    Assert(x.f.exited_at) == None
+       ) as z:
+    Assert(z.a.entered_at) == 1
+    Assert(z.a.exited_at) == None
+    Assert(z.d.entered_at) == 2
+    Assert(z.d.exited_at) == None
+    Assert(z.e.entered_at) == 3
+    Assert(z.e.exited_at) == None
+    Assert(z.f.entered_at) == 4
+    Assert(z.f.exited_at) == None
     pass
 
-Assert(x.a.entered_at) == 1
-Assert(x.a.exited_at) == 8
-Assert(x.d.entered_at) == 2
-Assert(x.d.exited_at) == 7
-Assert(x.e.entered_at) == 3
-Assert(x.e.exited_at) == 6
-Assert(x.f.entered_at) == 4
-Assert(x.f.exited_at) == 5
+Assert(z.a.entered_at) == 1
+Assert(z.a.exited_at) == 8
+Assert(z.d.entered_at) == 2
+Assert(z.d.exited_at) == 7
+Assert(z.e.entered_at) == 3
+Assert(z.e.exited_at) == 6
+Assert(z.f.entered_at) == 4
+Assert(z.f.exited_at) == 5
 
 assert False, 'tests for partial entry; tests for exception on exit including multiple'
 assert False, 'tests for [1]+[2]'
 assert False, 'tests for [4]'
-'''

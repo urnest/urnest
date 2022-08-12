@@ -18,19 +18,52 @@
 import contextlib
 from typing import TypeVar, Iterable, Dict as _Dict, overload, Tuple, Sequence, Union, Optional
 from typing import ItemsView, KeysView
-from typing import Mapping
+from typing import Mapping, Type, Generic
 
+from xju.assert_ import Assert
 from collections import OrderedDict
 od = OrderedDict
 
+def class_cm(cls):
+    @contextlib.contextmanager
+    def result(x):
+        yield cls.__enter__(x)
+        return cls.__exit__(x, *sys.exc_info())
+    return result
+
+
+T = TypeVar('T')
+
+class CC(Generic[T], contextlib.AbstractContextManager):
+    __resources:Optional[contextlib.AbstractContextManager] = None
+    __base_classes_to_enter = [ base_class for base_class in T.__bases__
+                                if issubclass(base_class, contextlib.AbstractContextManager) ]
+    __attrs_to_enter = [ n for n, t in T.__annotations__.items()
+                         if issubclass(t, contextlib.AbstractContextManager)]
+    def __enter__(self) -> CC:
+        with contextlib.ExitStack() as tentative:
+            for base_class in self.base_classes_to_enter:
+                cm = class_cm(base_class)
+                tentative.enter_context(cm)
+            for n in self.attrs_to_enter:
+                tentative.enter_context(getattr(self, n))
+                pass
+            self.__resources = tentative.pop_all()
+        return self
+    def __exit__(self) -> None:
+        with contextlib.ExitStack() as to_free:
+            for r in self.__resources:
+                to_free.push(r)
+        pass
+    pass
+
 # class decorator that adds context management __enter__ and __exit__
 # that enter and exit all type-hinted attributes implementing context management
-def cmlass():
-    pass
+def cmclass(cls:Type[T]) -> Type[CC[T]]:
+    return CC[T]
 
 K = TypeVar('K')
 V = TypeVar('V', bound=contextlib.AbstractContextManager)
-T = TypeVar('T')
 
 # REVISIT: incomplete, untested, get all methods from help(dict), expand
 # constructors like dict for strong typing
