@@ -332,14 +332,14 @@ else:
 
 @cmc.cmclass
 @dataclasses.dataclass
-class B1:
+class B1(cmc.CM):
     a: Resource
     b: int
     pass
 
 @cmc.cmclass
 @dataclasses.dataclass
-class B2:
+class B2(cmc.CM):
     c: str
     d: Resource
     e: Resource

@@ -24,19 +24,13 @@ from xju.assert_ import Assert
 from collections import OrderedDict
 od = OrderedDict
 
-class ClassCm(contextlib.AbstractContextManager):
-    def __init__(self, cls, x):
-        self.cls=cls
-        self.x=x
-        pass
-    def __enter__(self):
-        self.cls.__enter__(self.x)
-        return self
-    def __exit__(self, t, e, b):
-        return self.cls.__exit__(self.x, t, e, b)
-    pass
+T = TypeVar('T', bound=contextlib.AbstractContextManager)
 
-T = TypeVar('T')
+class CM(contextlib.AbstractContextManager):
+    def __enter__(self):
+        return self
+    def __exit__(self, t, e, b) -> None:
+        pass
 
 # class decorator that adds context management __enter__ and __exit__
 # that enter and exit all type-hinted attributes implementing context management
@@ -52,7 +46,7 @@ def cmclass(cls:Type[T]) -> Type[T]:
               resources=resources) -> Type[T]:
         with contextlib.ExitStack() as tentative:
             for base_class in base_classes_to_enter:
-                cm = ClassCm(base_class, self)
+                cm = __ClassCm(base_class, self)
                 tentative.enter_context(cm)
                 pass
             for n in attrs_to_enter:
@@ -258,3 +252,23 @@ class Dict(Mapping[K, V], contextlib.AbstractContextManager):
                 pass
             pass
         pass
+
+class __ClassCm(contextlib.AbstractContextManager):
+    '''target object {x} subclass {cls} context management methods
+       - so for x: X where X(Y), __ClassCM(Y, x) will call Y.__enter__
+         and Y.__exit__ directly avoiding any X.__enter__/__exit__
+         overrides'''
+    cls:Type
+    x:object
+
+    def __init__(self, cls, x):
+        self.cls=cls
+        self.x=x
+        pass
+    def __enter__(self):
+        self.cls.__enter__(self.x)
+        return self
+    def __exit__(self, t, e, b):
+        return self.cls.__exit__(self.x, t, e, b)
+    pass
+
