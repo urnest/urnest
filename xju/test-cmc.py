@@ -643,4 +643,44 @@ Assert(zz.f.exited_at) == 5
 
 
 'test for [1]+[2] - see test-cmc.x1.py'
-'REVISIT: implementation and tests for [4]'
+
+step=1
+
+d1=Resource('d1',ee=None, xe=None)
+z=DD(Resource('a',ee=None, xe=None), #a
+     1, #b
+     'c', #c
+     d1, #d
+     Resource('e',ee=None, xe=None), #e
+     Resource('f',ee=None, xe=None), #f
+)
+z.d=Resource('d2',ee=None,xe=None)
+with z:
+    Assert(z.a.entered_at) == 3
+    Assert(z.a.exited_at) == None
+    Assert(z.d.entered_at) == 1
+    Assert(z.d.exited_at) == None
+    Assert(z.e.entered_at) == 2
+    Assert(z.e.exited_at) == None
+    Assert(z.f.entered_at) == 4
+    Assert(z.f.exited_at) == None
+    try:
+        z.d=d1
+    except Exception as e:
+        Assert(str(e)).matches(
+            r'xju.cmc DD[(].*[)] has been entered so cannot replace '
+            r'context-managed attribute __main__.B2.d')
+    else:
+        assert False, 'should not be able to modify entered cm attribute'
+    pass
+
+Assert(z.a.entered_at) == 3
+Assert(z.a.exited_at) == 6
+Assert(z.d.entered_at) == 1
+Assert(z.d.exited_at) == 8
+Assert(z.e.entered_at) == 2
+Assert(z.e.exited_at) == 7
+Assert(z.f.entered_at) == 4
+Assert(z.f.exited_at) == 5
+
+z.d=Resource('d2',ee=None,xe=None)

@@ -26,14 +26,11 @@ od = OrderedDict
 
 T = TypeVar('T', bound=contextlib.AbstractContextManager)
 
-class CM(contextlib.AbstractContextManager):
-    def __enter__(self):
-        return self
-    def __exit__(self, t, e, b) -> None:
-        pass
-
 # class decorator that adds context management __enter__ and __exit__
 # that enter and exit all type-hinted attributes implementing context management
+# note that to satisfy mypy, the decorated class must already
+# implement contextlib.AbstractContextManager and the preferred way to do that is
+# to inherit from CM - see test-cmc.py for examples
 def cmclass(cls:Type[T]) -> Type[T]:
     base_classes_to_enter = [ base_class for base_class in cls.__bases__
                               if issubclass(base_class, contextlib.AbstractContextManager) ]
@@ -50,32 +47,53 @@ def cmclass(cls:Type[T]) -> Type[T]:
               resources_attr_name=resources_attr_name) -> Type[T]:
         with contextlib.ExitStack() as tentative:
             for base_class in base_classes_to_enter:
-                cm = __ClassCm(base_class, self)
-                tentative.enter_context(cm)
+                if base_class is not CM:
+                    cm = __ClassCm(base_class, self)
+                    tentative.enter_context(cm)
+                    pass
                 pass
             for n in attrs_to_enter:
                 tentative.enter_context(getattr(self, n))
                 pass
-            assert getattr(self,resources_attr_name, None) is None, f'{cls.__module__}.{cls.__name__} has a f{resources_attr_name} attribute already. Perhaps it inherited multiple times (which is not allowed by xju.cmc.cmclass)?'
+            assert getattr(self,resources_attr_name, None) is None, f'{cls.__module__}.{cls.__name__} has a f{resources_attr_name} attribute already. Perhaps it is inherited multiple times (which is not allowed by xju.cmc.cmclass decorator)?'
             setattr(self,resources_attr_name,tentative.pop_all())
         return self
     def exit(self,t,e,b,resources_attr_name=resources_attr_name) -> None:
         resources = getattr(self,resources_attr_name)
-        if resources:
-            with contextlib.closing(resources):
-                pass
+        setattr(self,resources_attr_name,None)
+        with contextlib.closing(resources):
             pass
         pass
+    old_sa=cls.__setattr__
+    def sa(self, name, value, attrs_to_enter=attrs_to_enter):
+        if getattr(self,resources_attr_name,None) and name in attrs_to_enter:
+            assert False, f'xju.cmc {self} has been entered so cannot replace context-managed attribute {cls.__module__}.{cls.__name__}.{name}'
+        return old_sa(self,name,value)
     setattr(cls, '__enter__', enter)
     setattr(cls, '__exit__', exit)
+    setattr(cls, '__setattr__', sa)
     cls.__annotations__['__enter__'] = type(enter)
     cls.__annotations__['__exit__'] = type(exit)
     return cls
+
+class CM(contextlib.AbstractContextManager):
+    def __enter__(self):
+        assert False, f'{CM.__module__}.CM.__enter__ not overridden, have you forgotten @cmclass on {self.__module__}.{self.__class__.__name__}?'
+        return self
+    def __exit__(self, t, e, b) -> None:
+        assert False, f'{CM.__module__}.CM.__exit__ not overridden, have you forgotten @cmclass on {self.__module__}.{self.__class__.__name__}?'
+        pass
 
 K = TypeVar('K')
 V = TypeVar('V', bound=contextlib.AbstractContextManager)
 
 class Dict(Mapping[K, V], contextlib.AbstractContextManager):
+    '''dictionary that enters and exits its values, all of which must be context managers
+       note that values may be added and removed before and/or after self is entered:
+         before: the value will be entered when self is entered
+         after:  the value will be entered before it is added (noting that any existing
+                 value will be exited once (if) it is removed) - the enter-new-exit-old 
+                 order might be important to you i.e. might not be what you need!'''
     entered = False
 
     @overload
@@ -142,18 +160,21 @@ class Dict(Mapping[K, V], contextlib.AbstractContextManager):
 
     def __setitem__(self, key:K, value:V) -> None:
         '''replace any current value of {key} with {value}'''
-        '''- "enters" the new value and "exits" any old value'''
-        old = self.x.get(key)
+        '''- "enters" the new value and then "exits" any old value'''
+        old = self.x.get(key,None)
         if old is not value:
-            self.x[key]=value
             if self.entered:
+                value.__enter__()
                 if old is None:
-                    value.__enter__()
+                    self.x[key]=value
                 else:
                     with contextlib.ExitStack() as f:
                         f.push(old)
+                        self.x[key]=value
                     pass
                 pass
+            else:
+                self.x[key]=value
             pass
         pass
     
