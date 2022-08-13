@@ -26,11 +26,11 @@ od = OrderedDict
 
 T = TypeVar('T', bound=contextlib.AbstractContextManager)
 
-# class decorator that adds context management __enter__ and __exit__
-# that enter and exit all type-hinted attributes implementing context management
-# note that to satisfy mypy, the decorated class must already
+# Class decorator that adds context management __enter__ and __exit__
+# that enter and exit all type-hinted attributes implementing contextlib.AbstractContextManager.
+# Note that to satisfy mypy, the decorated class must already
 # implement contextlib.AbstractContextManager and the preferred way to do that is
-# to inherit from CM - see test-cmc.py for examples
+# to inherit from xju.cmc.CM - see test-cmc.py for examples.
 def cmclass(cls:Type[T]) -> Type[T]:
     base_classes_to_enter = [ base_class for base_class in cls.__bases__
                               if issubclass(base_class, contextlib.AbstractContextManager) ]
