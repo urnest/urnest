@@ -35,15 +35,19 @@ class CM(contextlib.AbstractContextManager):
 # class decorator that adds context management __enter__ and __exit__
 # that enter and exit all type-hinted attributes implementing context management
 def cmclass(cls:Type[T]) -> Type[T]:
-    resources:List[contextlib.ExitStack] = []
     base_classes_to_enter = [ base_class for base_class in cls.__bases__
                               if issubclass(base_class, contextlib.AbstractContextManager) ]
     attrs_to_enter = [ n for n, t in cls.__annotations__.items()
                          if issubclass(t, contextlib.AbstractContextManager)]
+    # need a unique place to keep resources acquired by enter so exit can
+    # exit them, only want resources for self, not subclasses (which do their own
+    # handling). Note replacing . with _ could lead to clashes but there's no
+    # way to avoid all clashes.
+    resources_attr_name=f'{cls.__module__}.{cls.__name__}'.replace('.','_')
     def enter(self,
               base_classes_to_enter=base_classes_to_enter,
               attrs_to_enter=attrs_to_enter,
-              resources=resources) -> Type[T]:
+              resources_attr_name=resources_attr_name) -> Type[T]:
         with contextlib.ExitStack() as tentative:
             for base_class in base_classes_to_enter:
                 cm = __ClassCm(base_class, self)
@@ -52,11 +56,13 @@ def cmclass(cls:Type[T]) -> Type[T]:
             for n in attrs_to_enter:
                 tentative.enter_context(getattr(self, n))
                 pass
-            resources.append(tentative.pop_all())
+            assert getattr(self,resources_attr_name, None) is None, f'{cls.__module__}.{cls.__name__} has a f{resources_attr_name} attribute already. Perhaps it inherited multiple times (which is not allowed by xju.cmc.cmclass)?'
+            setattr(self,resources_attr_name,tentative.pop_all())
         return self
-    def exit(self, t, e, b, resources=resources) -> None:
-        if resources is not None:
-            with contextlib.closing(resources[0]):
+    def exit(self,t,e,b,resources_attr_name=resources_attr_name) -> None:
+        resources = getattr(self,resources_attr_name)
+        if resources:
+            with contextlib.closing(resources):
                 pass
             pass
         pass
@@ -69,8 +75,6 @@ def cmclass(cls:Type[T]) -> Type[T]:
 K = TypeVar('K')
 V = TypeVar('V', bound=contextlib.AbstractContextManager)
 
-# REVISIT: incomplete, untested, get all methods from help(dict), expand
-# constructors like dict for strong typing
 class Dict(Mapping[K, V], contextlib.AbstractContextManager):
     entered = False
 
