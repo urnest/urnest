@@ -15,11 +15,11 @@ version=$(git describe --tags --exact-match  |grep 'xju-cmc-' || true)
 test $(echo $version | wc -w) -lt 2
 if [ -z "$version" ]
 then
-  version="unknown"
+  version="xju-cmc-unknown"
 else
   if [ $(git status -s |wc -l) != 0 ]
   then
-    version="unknown"
+    version="xju-cmc-unknown"
   fi
 fi  
 
@@ -33,6 +33,6 @@ fi
     false
   fi
 )  
-tar czf "$outd/xju-cmc-$version.tar.gz" xju/cmc.py
+tar czf "$outd/$version.tar.gz" xju/cmc.py
 
-echo "created $outd/xju-cmc-$version.tar.gz"
+echo "created $outd/$version.tar.gz"
