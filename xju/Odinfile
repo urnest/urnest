@@ -70,6 +70,9 @@ test%tests.tree
 ()+cmd=test '-s' (%test-check_types_related_2_err):exec.output
 ()+cmd=(print-wordsizes.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 netflow%tests.tree
+%py-tests.tree:leaves
+
+%py-tests.tree==<<
 (test-xn.py)+(%py-opts):py3.exec.output
 (test-jsonschema.py)+(%py-opts):py3.exec.output
 (test-pq.py)+(%py-opts):py3.exec.output

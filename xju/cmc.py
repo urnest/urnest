@@ -20,7 +20,6 @@ from typing import TypeVar, Iterable, Dict as _Dict, overload, Tuple, Sequence, 
 from typing import ItemsView, KeysView
 from typing import Mapping, Type, List
 
-from xju.assert_ import Assert
 from collections import OrderedDict
 od = OrderedDict
 
