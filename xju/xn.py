@@ -114,7 +114,7 @@ def inContext(context:str, exceptionInfo=None, fl=None)->Exception:
             return Xn.__str__(self)
         def readableRepr(self)->str:
             return Xn.readableRepr(self)
-        r=type('Xn{name}'.format(**vars()),
+        r=type(name,
                (Xn,exceptionType),
                {
                    '__init__':init,
