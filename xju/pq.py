@@ -612,4 +612,3 @@ def loadFile(fileName,encoding='utf-8'):
     with open(fileName,encoding=encoding) as f:
         return parse(f.read(),fileName)
     pass
-

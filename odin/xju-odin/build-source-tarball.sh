@@ -14,18 +14,19 @@ cd "$d"
 
 version=$(git describe --tags --exact-match  |grep 'xju-odin-' || true)
 
-test $(echo $version | wc -c) -lt 2
+test $(echo $version | wc -w) -lt 2
 if [ -z "$version" ]
 then
-  version="unknown"
+  version="xju-odin-unknown"
 else
   if [ $(git status -s |wc -l) != 0 ]
   then
-    version="unknown"
+    version="xju-odin-unknown"
   fi
 fi  
+
 cd ".."
 
-tar czf "$outd/xju-odin-$version.tar.gz" xju-odin
+tar czf "$outd/$version.tar.gz" xju-odin
 
-echo "created $outd/xju-odin-$version.tar.gz"
+echo "created $outd/$version.tar.gz"
