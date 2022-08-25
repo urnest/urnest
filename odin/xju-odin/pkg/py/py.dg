@@ -46,6 +46,7 @@
 +py_sp 'name of a directory in a PYTHONPATH'? => :ls;
 
 +py_r 'directory of main python program'? => :first;
++py_main 'name of main python program'? => :first;
 
 +ignore 'egrep expression for imports to ignore'? => :ls;
 
@@ -70,7 +71,7 @@ $ODIN_PYSTYLECHECK_LD_LIBRARY_PATH 'shared library load path to install when exe
 
 # note we use :FILE not :py so we can use :py_import_all on
 # python script that has no .py extension
-EXEC (py-import.py) (:FILE) (:FILE:dir)@ (+py_r)@ (+py_sp) (+ignore)
+EXEC (py-import.py) (:FILE) (:FILE:dir)@ (+py_r)@ (+py_main) (+py_sp) (+ignore)
    => (:py_import.view_desc);
 
 EXEC (empty-import.sh) (:egg) => (:egg.py_import.view_desc);
@@ -81,11 +82,11 @@ COLLECT (:py_import.view_desc :view)
 COLLECT (:py_import :map=:py_import_all) (:py_import)
    => (:py_import_all);
 
-:py_rd_r 'intermediate toward py_rd, adds :py_dir as +py_r' => :FILE;
+:py_rd_r 'intermediate toward py_rd, adds :py:dir as +py_r and :py:label as +py_main' => :FILE;
 
 :py_rd 'file plus directory of file as +py_r option' => :REFERENCE;
 
-EXEC (py_rd_r.sh) (:FILE) (+py_r)@ (:FILE:dir)@
+EXEC (py_rd_r.sh) (:FILE) (+py_r)@ (:FILE:dir)@ (:FILE:label)
    => (:py_rd_r);
 
 READ-REFERENCE (:FILE:py_rd_r)

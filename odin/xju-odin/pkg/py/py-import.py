@@ -7,7 +7,7 @@ import os.path
 
 odinrbshost=os.environ.get('ODINRBSHOST','')
 
-py,dirOfPy,pyMainDir,pySp,ignore=sys.argv[1:]
+py,dirOfPy,pyMainDir,pyMainLabel,pySp,ignore=sys.argv[1:]
 
 err=open('ERRORS','w')
 viewDesc=open('py_import.view_desc','w')
@@ -41,7 +41,7 @@ class Scope:
         self.result_=x
     pass
 
-with Scope('scan for py imports {py} noting main dir {pyMainDir}'.format(**vars())):
+with Scope('scan for py imports {py} from {dirOfPy} noting main {pyMainLabel} from dir {pyMainDir} and search path {pySp}'.format(**vars())):
     if not pyMainDir:
         print(f'+py_r must be specified e.g. via {py}:py_rd rather than just {py}',file=err)
         sys.exit(0)
@@ -155,10 +155,11 @@ with Scope('scan for py imports {py} noting main dir {pyMainDir}'.format(**vars(
                 f=os.path.normpath(os.path.join(d,*module))
                 viewDesc.write("'{f}.py'\n".format(**vars()))
                 # import from file's or ancestor's module does not depend on
-                # that module's __init__.py
+                # that module's __init__.py, unless we are the main file
                 #  e.g. f might be /a/b/c
                 # and our file might be /a/b/c/d/q.py so dirOfPy /a/b/c/d
-                if os.path.split(dirOfPy)[0:len(os.path.split(f))]!=os.path.split(f):
+                if os.path.basename(py) == pyMainLabel or \
+                        os.path.split(dirOfPy)[0:len(os.path.split(f))]!=os.path.split(f):
                     viewDesc.write("'{f}/__init__.py'\n".format(**vars()))
                     pass
                 pass
