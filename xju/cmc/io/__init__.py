@@ -21,7 +21,7 @@
 import os
 from typing import overload
 import typing
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
 import pathlib
 import io
 import contextlib
@@ -31,11 +31,11 @@ from xju.xn import inContext, firstLineOf as l1
 
 class FileReader(contextlib.AbstractContextManager):
     '''{self.path} reader with close-on-exec {self.close_on_exec}'''
-    self.path:pathlib.Path
-    self.close_on_exec:bool
-    self.input:io.RawIOBase
+    path:pathlib.Path
+    close_on_exec:bool
+    input:io.RawIOBase
 
-    def __init__(self, path: pathlib:Path, close_on_exec:bool=True):
+    def __init__(self, path: pathlib.Path, close_on_exec:bool=True):
         self.path = path
         self.close_on_exec = close_on_exec
         pass
@@ -50,7 +50,8 @@ class FileReader(contextlib.AbstractContextManager):
             if self.close_on_exec:
                 if getattr(os, 'O_CLOEXEC'):
                     flags=flags|os.O_CLOEXEC
-            self.input = os.open(self.path, flags, self.mode)
+            self.__fd = os.open(self.path, flags, 0)
+            self.input = io.FileIO(self.__fd, closefd=False)
             return self.input
         except Exception:
             raise inContext(l1(FileReader.__enter__.__doc__).format(**vars())) from None
@@ -59,7 +60,7 @@ class FileReader(contextlib.AbstractContextManager):
     def __exit__(self, t, e, b):
         '''close {self}'''
         try:
-            self.input.close()
+            os.close(self.__fd)
         except Exception:
             raise inContext(l1(FileReader.__exit__.__doc__).format(**vars())) from None
         pass
@@ -67,25 +68,25 @@ class FileReader(contextlib.AbstractContextManager):
 
 class FileWriter(contextlib.AbstractContextManager):
     '''{"exclusive " if self.exclusive else ""}file writer for {self.path} {"with create-mode "+mode+" " if mode else ""}with close-on-exec {self.close_on_exec}'''
-    self.path:pathlib.Path
-    self.mode:Optional[int]
-    self.exclusive:bool
-    self.close_on_exec:bool
-    self.output:io.RawIOBase
+    path:pathlib.Path
+    mode:Optional[int]
+    exclusive:bool
+    close_on_exec:bool
+    output:io.RawIOBase
 
     @overload
-    def __init__(self, path: pathlib:Path, close_on_exec:bool=True):
+    def __init__(self, path: pathlib.Path, mode:int, exclusive:Literal[True], close_on_exec:bool):
+        '''non-existent {path} writer creating with mode {mode}, with close-on-exec {close_on_exec}'''
+        pass
+    @overload
+    def __init__(self, path: pathlib.Path, mode:Literal[None], exclusive:Literal[False], close_on_exec:bool):
         '''existing {path} writer, with close-on-exec {close_on_exec}'''
         pass
     @overload
-    def __init__(self, path: pathlib:Path, mode:int, close_on_exec:bool=True):
+    def __init__(self, path: pathlib.Path, mode:int, exclusive:Literal[False], close_on_exec:bool):
         '''{path} writer creating with mode {mode} if {path} does not exist, with close-on-exec {close_on_exec}'''
         pass
-    @overload
-    def __init__(self, path: pathlib:Path, mode:int, exclusive:Literal[True], close_on_exec:bool=True):
-        '''non-existent {path} writer creating with mode {mode}, with close-on-exec {close_on_exec}'''
-        pass
-    def __init__(self, path: pathlib:Path, mode=None, exclusive=False,close_on_exec:bool=True):
+    def __init__(self, path: pathlib.Path, mode=None, exclusive=False, close_on_exec=True):
         self.path = path
         self.mode = mode
         self.exclusive = exclusive
@@ -100,14 +101,17 @@ class FileWriter(contextlib.AbstractContextManager):
         try:
             if self.mode is None:
                 flags=os.O_WRONLY
-            else if self.exclusive:
+            elif self.exclusive:
                 flags=os.O_WRONLY|os.O_CREAT|os.O_EXCL
             else:
                 flags=os.O_WRONLY|os.O_CREAT
             if self.close_on_exec:
                 if getattr(os, 'O_CLOEXEC'):
                     flags=flags|os.O_CLOEXEC
-            self.output = os.open(self.path, flags, self.mode)
+                    pass
+                pass
+            self.__fd = os.open(self.path, flags, self.mode or 0)
+            self.output = io.FileIO(self.__fd, mode='w')
             return self.output
         except Exception:
             raise inContext(l1(FileWriter.__enter__.__doc__).format(**vars())) from None
@@ -116,7 +120,7 @@ class FileWriter(contextlib.AbstractContextManager):
     def __exit__(self, t, e, b):
         '''close {self}'''
         try:
-            self.output.close()
+            os.close(self.__fd)
         except Exception:
             raise inContext(l1(FileWriter.__exit__.__doc__).format(**vars())) from None
 
@@ -124,7 +128,7 @@ class FileWriter(contextlib.AbstractContextManager):
 @dataclass
 class FileLock(contextlib.AbstractContextManager):
     '''non-blocking "flock" lock {self.target}'''
-    self.target:Union[FileReader,FileWriter]
+    target:Union[FileReader,FileWriter]
     def __init__(self, target:Union[FileReader,FileWriter]):
         self.target = target
         pass

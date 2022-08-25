@@ -18,26 +18,43 @@
 
 
 from pathlib import Path
-from typing import NewType, Union, Literal
+from typing import NewType, Union, Literal, List
 
-ColName=NewType(str)
-ColType=Union[Literal[str],Literal[int],Literal[float]],List
-ByteCount=NewType(int)
+ColName=NewType('ColName',str)
+ColType=Union[ Literal[str], Literal[int], Literal[float] ]
+ByteCount=NewType('ByteCount',int)
+Timestamp=NewType('Timestamp',float)
+RelPath=NewType('RelPath',Path)
 
-class PerfLog:
+@cmclass
+class PerfLog(xju.cmc.CM):
     storage:Path,
     max_size:ByteCount,
     schema:Dict[ColName,ColType]
 
-    def __init__(self, storage:Path, max_size:ByteCount, schema:Dict[ColName,ColType]):
-        self.files:Dict[timestamp, ByteCount] = enumerate_files(storage)
-        # if no schema or existing schema does not match, delete all data and write current schema
-        # trim to max_size
+    __files:Dict[ Timestamp, ByteCount ]
+    __writer:xju.cmc.Dict[ Timestamp, xju.io.FileWriter ]
+    __current_size: int
+
+    def __postinit__(self):
+        self.__files, self.__current_size = enumerate_files(storage)
+        self.trim()
+        pass
 
     def add(timestamp:float, record:List):
         '''add {record} conforming to {type(self.schema)} with timestamp {timestamp}
            - trims oldest data to stay under {self.max_size}
            - syncs file system before returning'''
+        data = encode_record(timestamp, record, self.schema)
+        self.trim(len(data))
+        if not timestamp in __writer:
+            __writer.popall()
+            __writer[timestamp] = xju::io::FileWriter(self.path_of(timestamp), mode=0o777)
+        writer = __writer[timestamp]
+        writer.seek_to_end()
+        writer.write(data)
+        writer.sync()
+        self.files[timestamp] = self.files[timestamp]+len(data)
         pass
 
     def fetch(timestamp:from_, timestamp: to, max_records:int) -> Iter[Tuple[float, List[Union[str,int,float]]]]
@@ -62,18 +79,18 @@ class PerfLog:
                 pass
         pass
 
-    def relative_file_of(timestamp: float) -> Path:
+    def relative_file_of(timestamp: float) -> RelPath:
         '''return relative path to file containing timestamp'''
         x = time.gmtime(timestamp)
         return f'{x.tm_year}/{x.tm_month:02}/{x.tm_mday:02}/{x.tm_hour:02}/data.txt'
 
-def encode_record(timestamp, record, schema):
+def encode_record(timestamp:Timestamp, record:List, schema:Dict[ColName,ColType]) -> bytes:
     validate_record(record, schema)
-    return json.dumps([timestamp]+record)
+    return (json.dumps([timestamp]+record)+'\n').encode('utf-8')
 
-def decode_record(s:str, schema):
-    x=json.loads(s)
-    assert isinstance(s, list), s
+def decode_record(data:bytes, schema:Dict[ColName,ColType]):
+    x=json.loads(data.decode('utf-8'))
+    assert isinstance(x, list), x
     assert isinstance(x[0], float)
     timestamp=x[0]
     values=list(x[1:])

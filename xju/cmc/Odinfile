@@ -1,0 +1,8 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+(io%all)
+
+
+%py-opts==<<
++(..%py-opts)

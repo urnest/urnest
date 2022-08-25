@@ -79,6 +79,7 @@ netflow%tests.tree
 (test-cmc.py)+(%py-opts):py3.exec.output
 %verify-test-cmc.x1-fail
 (wal%all)
+(cmc%all)
 
 %verify-test-cmc.x1-fail==(%test-cmc.x1.errs)+cmd=grep -q '"Cannot determine consistent method resolution order"':stdout
 
