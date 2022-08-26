@@ -28,6 +28,7 @@ import contextlib
 import fcntl
 from dataclasses import dataclass
 from xju.xn import inContext, firstLineOf as l1
+from xju import ByteCount
 
 class FileReader(contextlib.AbstractContextManager):
     '''{self.path} reader with close-on-exec {self.close_on_exec}'''
@@ -43,7 +44,7 @@ class FileReader(contextlib.AbstractContextManager):
     def __str__(self):
         return l1(FileReader.__doc__).format(**vars())
 
-    def __enter__(self) -> io.RawIOBase:
+    def __enter__(self):
         '''open {self}'''
         try:
             flags=os.O_RDONLY
@@ -52,7 +53,7 @@ class FileReader(contextlib.AbstractContextManager):
                     flags=flags|os.O_CLOEXEC
             self.__fd = os.open(self.path, flags, 0)
             self.input = io.FileIO(self.__fd, closefd=False)
-            return self.input
+            return self
         except Exception:
             raise inContext(l1(FileReader.__enter__.__doc__).format(**vars())) from None
         pass
@@ -60,48 +61,82 @@ class FileReader(contextlib.AbstractContextManager):
     def __exit__(self, t, e, b):
         '''close {self}'''
         try:
+            del self.input
             os.close(self.__fd)
+            del self.__fd
         except Exception:
             raise inContext(l1(FileReader.__exit__.__doc__).format(**vars())) from None
         pass
 
+    def seek_to(self, offset:int):
+        '''position so next write occurs {offset} bytes from start of file
+           - returns self'''
+        try:
+            self.input.seek(offset, io.SEEK_SET)
+            return self
+        except:
+            raise inContext(l1(FileWriter.seek_to.__doc__).format(**vars())) from None
+        pass
+    
+    def seek_by(self, offset:int):
+        '''position so next write occurs {offset} bytes from current position
+           - returns self'''
+        try:
+            self.input.seek(offset, io.SEEK_CUR)
+            return self
+        except:
+            raise inContext(l1(FileWriter.seek_by.__doc__).format(**vars())) from None
+        pass
+    
+    def size(self) -> ByteCount:
+        '''return size of file'''
+        try:
+            return ByteCount(os.fstat(self.__fd).st_size)
+        except:
+            raise inContext(l1(FileWriter.size.__doc__).format(**vars())) from None
+        pass
+    def fd(self) -> int:
+        return self.__fd
+    pass
+
 
 class FileWriter(contextlib.AbstractContextManager):
-    '''{"exclusive " if self.exclusive else ""}file writer for {self.path} {"with create-mode "+mode+" " if mode else ""}with close-on-exec {self.close_on_exec}'''
+    '''file writer for {self.path} with with create mode {self.mode}, must not exist {self.must_not_exist}, close-on-exec {self.close_on_exec}'''
     path:pathlib.Path
     mode:Optional[int]
-    exclusive:bool
+    must_not_exist:bool
     close_on_exec:bool
     output:io.RawIOBase
 
     @overload
-    def __init__(self, path: pathlib.Path, mode:int, exclusive:Literal[True], close_on_exec:bool):
+    def __init__(self, path: pathlib.Path, mode:int, must_not_exist:Literal[True]=True, close_on_exec:bool=True):
         '''non-existent {path} writer creating with mode {mode}, with close-on-exec {close_on_exec}'''
         pass
     @overload
-    def __init__(self, path: pathlib.Path, mode:Literal[None], exclusive:Literal[False], close_on_exec:bool):
+    def __init__(self, path: pathlib.Path, mode:Literal[None]=None, must_not_exist:Literal[False]=False, close_on_exec:bool=True):
         '''existing {path} writer, with close-on-exec {close_on_exec}'''
         pass
     @overload
-    def __init__(self, path: pathlib.Path, mode:int, exclusive:Literal[False], close_on_exec:bool):
+    def __init__(self, path: pathlib.Path, mode:int, must_not_exist:Literal[False], close_on_exec:bool):
         '''{path} writer creating with mode {mode} if {path} does not exist, with close-on-exec {close_on_exec}'''
         pass
-    def __init__(self, path: pathlib.Path, mode=None, exclusive=False, close_on_exec=True):
+    def __init__(self, path: pathlib.Path, mode=None, must_not_exist=False, close_on_exec=True):
         self.path = path
         self.mode = mode
-        self.exclusive = exclusive
+        self.must_not_exist = must_not_exist
         self.close_on_exec = close_on_exec
         pass
 
     def __str__(self):
         return l1(FileWriter.__doc__).format(**vars())
 
-    def __enter__(self) -> io.RawIOBase:
-        '''open {self}'''
+    def __enter__(self):
+        '''open {self}
+           - returns self'''
         try:
             if self.mode is None:
                 flags=os.O_WRONLY
-            elif self.exclusive:
+            elif self.must_not_exist:
                 flags=os.O_WRONLY|os.O_CREAT|os.O_EXCL
             else:
                 flags=os.O_WRONLY|os.O_CREAT
@@ -111,8 +146,8 @@ class FileWriter(contextlib.AbstractContextManager):
                     pass
                 pass
             self.__fd = os.open(self.path, flags, self.mode or 0)
-            self.output = io.FileIO(self.__fd, mode='w')
-            return self.output
+            self.output = io.FileIO(self.__fd, mode='w', closefd=False)
+            return self
         except Exception:
             raise inContext(l1(FileWriter.__enter__.__doc__).format(**vars())) from None
         pass
@@ -120,10 +155,44 @@ class FileWriter(contextlib.AbstractContextManager):
     def __exit__(self, t, e, b):
         '''close {self}'''
         try:
+            del self.output
             os.close(self.__fd)
+            del self.__fd
         except Exception:
             raise inContext(l1(FileWriter.__exit__.__doc__).format(**vars())) from None
+        pass
+    
+    def seek_to(self, offset:int):
+        '''position so next write occurs {offset} bytes from start of file
+           - returns self'''
+        try:
+            self.output.seek(offset, io.SEEK_SET)
+            return self
+        except:
+            raise inContext(l1(FileWriter.seek_to.__doc__).format(**vars())) from None
+        pass
+    
+    def seek_by(self, offset:int):
+        '''position so next write occurs {offset} bytes from current position
+           - returns self'''
+        try:
+            self.output.seek(offset, io.SEEK_SET)
+            return self
+        except:
+            raise inContext(l1(FileWriter.seek_by.__doc__).format(**vars())) from None
+        pass
+    
+    def size(self) -> ByteCount:
+        '''return size of file'''
+        try:
+            return ByteCount(os.fstat(self.__fd).st_size)
+        except:
+            raise inContext(l1(FileWriter.size.__doc__).format(**vars())) from None
+        pass
 
+    def fd(self) -> int:
+        return self.__fd
+    pass
 
 @dataclass
 class FileLock(contextlib.AbstractContextManager):
@@ -139,7 +208,7 @@ class FileLock(contextlib.AbstractContextManager):
     def __enter__(self):
         '''acquire {self}'''
         try:
-            fcntl.flock(self.target, fcntl.LOCK_EX|fcntl.LOCK_NB)
+            fcntl.flock(self.target.fd(), fcntl.LOCK_EX|fcntl.LOCK_NB)
             return self
         except Exception:
             raise inContext(l1(FileLock.__enter__.__doc__).format(**vars())) from None
@@ -148,6 +217,6 @@ class FileLock(contextlib.AbstractContextManager):
     def __exit__(self, t, e, b):
         '''release {self}'''
         try:
-            fcntl.flock(self.target, fcntl.LOCK_UN)
+            fcntl.flock(self.target.fd(), fcntl.LOCK_UN)
         except Exception:
             raise inContext(l1(FileLock.__exit__.__doc__).format(**vars())) from None

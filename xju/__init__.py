@@ -17,7 +17,9 @@
 import subprocess
 import os
 from .xn import Xn,inContext,firstLineOf
-from typing import Tuple,Sequence
+from typing import Tuple,Sequence,NewType
+
+ByteCount=NewType('ByteCount',int)
 
 class CmdFailed(Exception):
     def __init__(self,argv,status,stderr):

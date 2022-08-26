@@ -2,6 +2,8 @@
 
 %all.tree==<<
 (test-FileReader.py)+(%py-opts):py3.exec.output
+(test-FileWriter.py)+(%py-opts):py3.exec.output
+(test-FileLock.py)+(%py-opts):py3.exec.output
 
 %py-opts==<<
 +(..%py-opts)

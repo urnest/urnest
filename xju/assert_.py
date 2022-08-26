@@ -50,7 +50,7 @@ class Assert():
         if not self.x in y:
             raise Exception('{self.x!r} is not in {y!r}'.format(**vars()))
         pass
-    def matches(self,r):
+    def matches(self,r:str):
         c=re.compile(r)
         if not c.match(self.x):
             raise Exception('{self.x!r} does not match {r}'.format(**vars()))
@@ -80,4 +80,3 @@ class Assert():
             raise Exception('{self.x!r} is not greater than or equal to {y!r}'.format(**vars()))
         return self.x
     pass
-
