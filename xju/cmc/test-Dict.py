@@ -1,0 +1,292 @@
+# Copyright (c) 2022 Trevor Taylor
+# coding: utf-8
+# 
+# Permission to use, copy, modify, and/or distribute this software for
+# any purpose with or without fee is hereby granted, provided that all
+# copyright notices and this permission notice appear in all copies.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+from xju.cmc import Dict
+
+from typing import Optional
+import contextlib
+from xju.assert_ import Assert
+
+step = 1
+class Resource:
+    name: str
+    entered_at: Optional[int] = None
+    exited_at: Optional[int] = None
+    ee: Optional[Exception]
+    xe: Optional[Exception]
+
+    def __init__(self, name:str, ee:Optional[Exception], xe:Optional[Exception]):
+        self.name = name
+        self.ee = ee
+        self.xe = xe
+        pass
+
+    def __enter__(self):
+        global step
+        print(f'+ enter {self.name} @ {step}')
+        Assert(self.entered_at)==None
+        self.entered_at = step
+        step = step + 1
+        if self.ee:
+            print(f'E enter {self.name} @{step-1}')
+            raise self.ee
+        print(f'- enter {self.name} @{step-1}')
+        return self
+    
+    def __exit__(self, t, e, b):
+        global step
+        print(f'+ exit {self.name} @ {step}')
+        Assert(self.entered_at)!=None
+        Assert(self.exited_at)==None
+        self.exited_at = step
+        step = step + 1
+        if self.xe:
+            print(f'E exit {self.name} @{step-1}')
+            raise self.xe
+        print(f'- exit {self.name} @{step-1}')
+        pass
+
+x = Dict({'c':Resource('c',None,None)})
+x['b'] = Resource('b',None,None)
+Assert(None)==x['b'].entered_at
+Assert(None)==x['c'].entered_at
+Assert(x.keys())=={'c':None,'b':None}.keys()
+Assert(list(x))==list({'c':None,'b':None})
+Assert(len(x))==2
+del x['b']
+del x['c']
+
+x = Dict({'c':Resource('c',None,None)})
+x['b'] = Resource('b',None,None)
+Assert(None)==x['b'].entered_at
+Assert(None)==x['c'].entered_at
+Assert('c').isIn(x)
+Assert(x.keys())=={'c':None,'b':None}.keys()
+Assert(x.items())=={'c':x['c'],'b':x['b']}.items()
+k,bb=x.popitem()
+Assert(k)=='b'
+Assert(None)==bb.entered_at
+cc=x.pop('c')
+Assert(None)==cc.entered_at
+
+x = Dict({'c':Resource('c',None,None)})
+x['b'] = Resource('b',None,None)
+x.clear()
+
+with Dict() as x:
+    x['c'] = Resource('c',None,None)
+    x['b'] = Resource('b',None,None)
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+Assert(1)==x['c'].entered_at
+Assert(2)==x['b'].entered_at
+Assert(3)==x['b'].exited_at
+Assert(4)==x['c'].exited_at
+
+step = 1
+with Dict({'c':Resource('c',None,None)}) as x:
+    x['b'] = Resource('b',None,None)
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+Assert(1)==x['c'].entered_at
+Assert(2)==x['b'].entered_at
+Assert(3)==x['b'].exited_at
+Assert(4)==x['c'].exited_at
+
+step = 1
+with Dict() as x:
+    x['c'] = Resource('c',None,None)
+    x['b'] = Resource('b',None,None)
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+    del x['c']
+Assert(2)==x['b'].entered_at
+Assert(4)==x['b'].exited_at
+
+step = 1
+with Dict() as x:
+    x['c'] = Resource('c',None,None)
+    x['b'] = Resource('b',None,None)
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+    k,b = x.popitem()
+    Assert(k)=='b'
+    Assert(b.exited_at)==3
+Assert(1)==x['c'].entered_at
+Assert(4)==x['c'].exited_at
+
+
+step = 1
+with Dict() as x:
+    x['c'] = Resource('c',None,None)
+    x['b'] = Resource('b',None,None)
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+    cc = x.pop('c')
+    Assert(cc.entered_at)==1
+    Assert(cc.exited_at)==3
+Assert(2)==x['b'].entered_at
+Assert(4)==x['b'].exited_at
+
+step = 1
+with Dict() as x:
+    x['c'] = Resource('c',None,None)
+    x['b'] = Resource('b',None,None)
+    Assert(x.keys())=={'c':None,'b':None}.keys()
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+    cc = x.get('c')
+    Assert(cc.entered_at)==1
+    Assert(cc.exited_at)==None
+    cc = x.pop('c')
+    dd = x.get('d',Resource('d',None,None))
+    Assert(None)==dd.entered_at
+    Assert(None)==dd.exited_at
+    dd = x.pop('d',Resource('d',None,None))
+    Assert(cc.entered_at)==1
+    Assert(cc.exited_at)==3
+    Assert(None)==dd.entered_at
+    Assert(None)==dd.exited_at
+Assert(2)==x['b'].entered_at
+Assert(4)==x['b'].exited_at
+
+step = 1
+with Dict() as x:
+    x['c'] = Resource('c',None,None)
+    x.setdefault('b',Resource('b',None,None))
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+    bb=x['b']
+    x['b'] = bb
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+    d=Resource('d',None,None)
+    x.setdefault('b',d)
+    Assert(None)==d.entered_at
+    cc=x['c']
+    bb=x['b']
+    x.clear()
+    Assert(1)==cc.entered_at
+    Assert(2)==bb.entered_at
+    Assert(3)==bb.exited_at
+    Assert(4)==cc.exited_at
+    pass
+
+step=1
+with Dict() as x:
+    x['c'] = Resource('c',None,None)
+    x['b'] = Resource('b',None,None)
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+    bb=x['b']
+    x.update({'b':bb, 'd':Resource('d',None,None)})
+    pass
+
+Assert(1)==x['c'].entered_at
+Assert(2)==x['b'].entered_at
+Assert(3)==x['d'].entered_at
+Assert(4)==x['d'].exited_at
+Assert(5)==x['b'].exited_at
+Assert(6)==x['c'].exited_at
+
+step=1
+with Dict() as x:
+    x['c'] = Resource('c',None,None)
+    x['b'] = Resource('b',None,None)
+    Assert(1)==x['c'].entered_at
+    Assert(2)==x['b'].entered_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+    bb=x['b']
+    x.update([('b',bb), ('d',Resource('b',None,None))])
+    pass
+
+Assert(1)==x['c'].entered_at
+Assert(2)==x['b'].entered_at
+Assert(3)==x['d'].entered_at
+Assert(4)==x['d'].exited_at
+Assert(5)==x['b'].exited_at
+Assert(6)==x['c'].exited_at
+
+step=1
+bbb=Resource('bb',None,None)
+ccc=Resource('cc',Exception('fred'),None)
+try:
+    with Dict({'b':bbb,'c':ccc}) as x:
+        pass
+    pass
+except Exception as e:
+    Assert(str(e))=='fred'
+    Assert(bbb.entered_at)==1
+    Assert(ccc.entered_at)==2
+    Assert(ccc.exited_at)==None
+    Assert(bbb.exited_at)==3
+else:
+    assert False, x
+    pass
+
+step=1
+bbb=Resource('bbb',None,None)
+ccc=Resource('ccc',None,Exception('fred'))
+try:
+    with Dict({'b':bbb,'c':ccc}) as x:
+        pass
+    pass
+except Exception as e:
+    Assert(str(e))=='fred'
+    Assert(bbb.entered_at)==1
+    Assert(ccc.entered_at)==2
+    Assert(ccc.exited_at)==3
+    Assert(bbb.exited_at)==4
+else:
+    assert False, x
+    pass
+
+step=1
+bbb=Resource('bbb',None,Exception('fred'))
+ccc=Resource('ccc',None,None)
+try:
+    with Dict({'b':bbb,'c':ccc}) as x:
+        pass
+    pass
+except Exception as e:
+    Assert(str(e))=='fred'
+    Assert(bbb.entered_at)==1
+    Assert(ccc.entered_at)==2
+    Assert(ccc.exited_at)==3
+    Assert(bbb.exited_at)==4
+else:
+    assert False, x
+    pass
+
+

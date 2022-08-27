@@ -76,7 +76,6 @@ netflow%tests.tree
 (test-xn.py)+(%py-opts):py3.exec.output
 (test-jsonschema.py)+(%py-opts):py3.exec.output
 (test-pq.py)+(%py-opts):py3.exec.output
-(test-cmc.py)+(%py-opts):py3.exec.output
 %verify-test-cmc.x1-fail
 (wal%all)
 (cmc%all)
