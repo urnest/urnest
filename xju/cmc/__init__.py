@@ -27,6 +27,8 @@ T = TypeVar('T', bound=contextlib.AbstractContextManager)
 
 # Class decorator that adds context management __enter__ and __exit__
 # that enter and exit all type-hinted attributes implementing contextlib.AbstractContextManager.
+# If cls has a xju_cmc_post_enter method it is called at the end of the added __enter__, with
+# no parameters.
 # Note that to satisfy mypy, the decorated class must already
 # implement contextlib.AbstractContextManager and the preferred way to do that is
 # to inherit from xju.cmc.CM - see test-cmc.py for examples.
@@ -40,10 +42,12 @@ def cmclass(cls:Type[T]) -> Type[T]:
     # handling). Note replacing . with _ could lead to clashes but there's no
     # way to avoid all clashes.
     resources_attr_name=f'{cls.__module__}.{cls.__name__}'.replace('.','_')
+    post_enter=cls.__dict__.get('xju_cmc_post_enter',lambda self: None)
     def enter(self,
               base_classes_to_enter=base_classes_to_enter,
               attrs_to_enter=attrs_to_enter,
-              resources_attr_name=resources_attr_name) -> Type[T]:
+              resources_attr_name=resources_attr_name,
+              post_enter=post_enter) -> Type[T]:
         with contextlib.ExitStack() as tentative:
             for base_class in base_classes_to_enter:
                 if base_class is not CM:
@@ -55,6 +59,7 @@ def cmclass(cls:Type[T]) -> Type[T]:
                 tentative.enter_context(getattr(self, n))
                 pass
             assert getattr(self,resources_attr_name, None) is None, f'{cls.__module__}.{cls.__name__} has a f{resources_attr_name} attribute already. Perhaps it is inherited multiple times (which is not allowed by xju.cmc.cmclass decorator)?'
+            post_enter(self)
             setattr(self,resources_attr_name,tentative.pop_all())
         return self
     def exit(self,t,e,b,resources_attr_name=resources_attr_name) -> None:

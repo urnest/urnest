@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Copyright (c) 2022 Trevor Taylor
 # coding: utf-8
 # 
@@ -121,6 +123,12 @@ class B2(cmc.CM):
     c: str
     d: Resource
     e: Resource
+    def xju_cmc_post_enter(self):
+        global step
+        print(f'B2 post entered @{step}')
+        self.b2_post_entered_at=step
+        step = step + 1
+        pass
     pass
 
 @cmc.cmclass
@@ -138,24 +146,25 @@ with DD(Resource('a',ee=None, xe=None), #a
        Resource('e',ee=None, xe=None), #e
        Resource('f',ee=None, xe=None), #f
        ) as z:
-    Assert(z.a.entered_at) == 3
+    Assert(z.a.entered_at) == 4
     Assert(z.a.exited_at) == None
     Assert(z.d.entered_at) == 1
     Assert(z.d.exited_at) == None
     Assert(z.e.entered_at) == 2
+    Assert(z.b2_post_entered_at) == 3
     Assert(z.e.exited_at) == None
-    Assert(z.f.entered_at) == 4
+    Assert(z.f.entered_at) == 5
     Assert(z.f.exited_at) == None
     pass
 
-Assert(z.a.entered_at) == 3
-Assert(z.a.exited_at) == 6
+Assert(z.a.entered_at) == 4
+Assert(z.a.exited_at) == 7
 Assert(z.d.entered_at) == 1
-Assert(z.d.exited_at) == 8
+Assert(z.d.exited_at) == 9
 Assert(z.e.entered_at) == 2
-Assert(z.e.exited_at) == 7
-Assert(z.f.entered_at) == 4
-Assert(z.f.exited_at) == 5
+Assert(z.e.exited_at) == 8
+Assert(z.f.entered_at) == 5
+Assert(z.f.exited_at) == 6
 
 print('test partial entry')
 step=1
@@ -176,12 +185,13 @@ else:
     assert 'should not be here'
     pass
 
-Assert(zz.a.entered_at) == 3
+Assert(zz.a.entered_at) == 4
 Assert(zz.a.exited_at) == None
 Assert(zz.d.entered_at) == 1
-Assert(zz.d.exited_at) == 5
+Assert(zz.d.exited_at) == 6
 Assert(zz.e.entered_at) == 2
-Assert(zz.e.exited_at) == 4
+Assert(zz.b2_post_entered_at) == 3
+Assert(zz.e.exited_at) == 5
 Assert(zz.f.entered_at) == None
 Assert(zz.f.exited_at) == None
 
@@ -260,13 +270,14 @@ else:
     assert 'should not be here'
     pass
 
-Assert(zz.a.entered_at) == 3
-Assert(zz.a.exited_at) == 5
+Assert(zz.a.entered_at) == 4
+Assert(zz.a.exited_at) == 6
 Assert(zz.d.entered_at) == 1
-Assert(zz.d.exited_at) == 7
+Assert(zz.d.exited_at) == 8
 Assert(zz.e.entered_at) == 2
-Assert(zz.e.exited_at) == 6
-Assert(zz.f.entered_at) == 4
+Assert(z.b2_post_entered_at) == 3
+Assert(zz.e.exited_at) == 7
+Assert(zz.f.entered_at) == 5
 Assert(zz.f.exited_at) == None
 
 
@@ -288,14 +299,15 @@ else:
     assert 'should not be here'
     pass
 
-Assert(zz.a.entered_at) == 3
-Assert(zz.a.exited_at) == 6
+Assert(zz.a.entered_at) == 4
+Assert(zz.a.exited_at) == 7
 Assert(zz.d.entered_at) == 1
-Assert(zz.d.exited_at) == 8
+Assert(zz.d.exited_at) == 9
 Assert(zz.e.entered_at) == 2
-Assert(zz.e.exited_at) == 7
-Assert(zz.f.entered_at) == 4
-Assert(zz.f.exited_at) == 5
+Assert(zz.e.exited_at) == 8
+Assert(zz.b2_post_entered_at) == 3
+Assert(zz.f.entered_at) == 5
+Assert(zz.f.exited_at) == 6
 
 
 step=1
@@ -316,14 +328,15 @@ else:
     assert 'should not be here'
     pass
 
-Assert(zz.a.entered_at) == 3
-Assert(zz.a.exited_at) == 6
+Assert(zz.a.entered_at) == 4
+Assert(zz.a.exited_at) == 7
 Assert(zz.d.entered_at) == 1
-Assert(zz.d.exited_at) == 8
+Assert(zz.d.exited_at) == 9
 Assert(zz.e.entered_at) == 2
-Assert(zz.e.exited_at) == 7
-Assert(zz.f.entered_at) == 4
-Assert(zz.f.exited_at) == 5
+Assert(z.b2_post_entered_at) == 3
+Assert(zz.e.exited_at) == 8
+Assert(zz.f.entered_at) == 5
+Assert(zz.f.exited_at) == 6
 
 
 step=1
@@ -344,14 +357,15 @@ else:
     assert 'should not be here'
     pass
 
-Assert(zz.a.entered_at) == 3
-Assert(zz.a.exited_at) == 6
+Assert(zz.a.entered_at) == 4
+Assert(zz.a.exited_at) == 7
 Assert(zz.d.entered_at) == 1
-Assert(zz.d.exited_at) == 8
+Assert(zz.d.exited_at) == 9
 Assert(zz.e.entered_at) == 2
-Assert(zz.e.exited_at) == 7
-Assert(zz.f.entered_at) == 4
-Assert(zz.f.exited_at) == 5
+Assert(z.b2_post_entered_at) == 3
+Assert(zz.e.exited_at) == 8
+Assert(zz.f.entered_at) == 5
+Assert(zz.f.exited_at) == 6
 
 
 step=1
@@ -372,14 +386,15 @@ else:
     assert 'should not be here'
     pass
 
-Assert(zz.a.entered_at) == 3
-Assert(zz.a.exited_at) == 6
+Assert(zz.a.entered_at) == 4
+Assert(zz.a.exited_at) == 7
 Assert(zz.d.entered_at) == 1
-Assert(zz.d.exited_at) == 8
+Assert(zz.d.exited_at) == 9
 Assert(zz.e.entered_at) == 2
-Assert(zz.e.exited_at) == 7
-Assert(zz.f.entered_at) == 4
-Assert(zz.f.exited_at) == 5
+Assert(z.b2_post_entered_at) == 3
+Assert(zz.e.exited_at) == 8
+Assert(zz.f.entered_at) == 5
+Assert(zz.f.exited_at) == 6
 
 
 step=1
@@ -400,14 +415,15 @@ else:
     assert 'should not be here'
     pass
 
-Assert(zz.a.entered_at) == 3
-Assert(zz.a.exited_at) == 6
+Assert(zz.a.entered_at) == 4
+Assert(zz.a.exited_at) == 7
 Assert(zz.d.entered_at) == 1
-Assert(zz.d.exited_at) == 8
+Assert(zz.d.exited_at) == 9
 Assert(zz.e.entered_at) == 2
-Assert(zz.e.exited_at) == 7
-Assert(zz.f.entered_at) == 4
-Assert(zz.f.exited_at) == 5
+Assert(z.b2_post_entered_at) == 3
+Assert(zz.e.exited_at) == 8
+Assert(zz.f.entered_at) == 5
+Assert(zz.f.exited_at) == 6
 
 
 'test for [1]+[2] - see test-cmc.x1.py'
@@ -424,13 +440,14 @@ z=DD(Resource('a',ee=None, xe=None), #a
 )
 z.d=Resource('d2',ee=None,xe=None)
 with z:
-    Assert(z.a.entered_at) == 3
+    Assert(z.a.entered_at) == 4
     Assert(z.a.exited_at) == None
     Assert(z.d.entered_at) == 1
     Assert(z.d.exited_at) == None
     Assert(z.e.entered_at) == 2
+    Assert(z.b2_post_entered_at) == 3
     Assert(z.e.exited_at) == None
-    Assert(z.f.entered_at) == 4
+    Assert(z.f.entered_at) == 5
     Assert(z.f.exited_at) == None
     try:
         z.d=d1
@@ -442,13 +459,17 @@ with z:
         assert False, 'should not be able to modify entered cm attribute'
     pass
 
-Assert(z.a.entered_at) == 3
-Assert(z.a.exited_at) == 6
+Assert(z.a.entered_at) == 4
+Assert(z.a.exited_at) == 7
 Assert(z.d.entered_at) == 1
-Assert(z.d.exited_at) == 8
+Assert(z.d.exited_at) == 9
 Assert(z.e.entered_at) == 2
-Assert(z.e.exited_at) == 7
-Assert(z.f.entered_at) == 4
-Assert(z.f.exited_at) == 5
+Assert(z.b2_post_entered_at) == 3
+Assert(z.e.exited_at) == 8
+Assert(z.f.entered_at) == 5
+Assert(z.f.exited_at) == 6
 
 z.d=Resource('d2',ee=None,xe=None)
+
+
+
