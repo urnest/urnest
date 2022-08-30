@@ -69,7 +69,7 @@ class PerfLog(xju.cmc.CM):
         self.synchronous_writes=synchronous_writes
         self.file_creation_mode=file_creation_mode
 
-    def __enter__(self):
+    def xju_cmc_post_enter(self):
         '''create/open PerfLog {self}
            - clears existing data if {self.schema} or {self.hours_per_file} have changed
            - trims existing data to self.{max_size}'''
@@ -102,7 +102,7 @@ class PerfLog(xju.cmc.CM):
                 pass
             self.get_or_create_file(timestamp).size+=len(data)
             self.__current_size+=len(data)
-        except Exception as e:
+        except Exception:
             raise inContext(l1(PerfLog.add.__doc__).format(**vars())) from None
         pass
 
@@ -114,32 +114,11 @@ class PerfLog(xju.cmc.CM):
                   Tuple[float, List[Union[str,int,float,None]]]]
         '''yield each record with timestamp at or after {from_} excluding records with timestamp at or after {to} and all further records once {max_bytes} bytes have already been yielded or {max_records} records have been yielded
            - note that records returned are in addition order, which is not necessarily time order'''
-        records_yielded = 0
-        bytes_yielded = 0
-        for t in self.files[lower_bound(self.files.keys(), from_):upper_bound(self.files.keys())];
-            try:
-                with open(self.storage / self.relative_file_of(t), 'r') as f:
-                    for l in f.readlines():
-                        try:
-                            assert l.endswith('\n')
-                            timestamp, col_value, sizes=decode_record(l[:-1], self.schema)
-                        except Exception as e:
-                            pass
-                        else:
-                            if timestamp >= from_ and timestamp < to:
-                                yield (timestamp, col_values)
-                                records_yielded += 1
-                                bytes_yielded += size
-                                if count==max_records or bytes_yielded>=max_bytes:
-                                    return
-                                pass
-                            pass
-                        pass
-                    pass
-                pass
-            except Exception as e:
-                pass
-            pass
+        try:
+            return __private.fetch(from_,to,max_records,max_bytes,self.__files,self.hours_per_file,
+                                   corruption_handler)
+        except Exception:
+            raise inContext(l1(PerfLog.fetch.__doc__).format(**vars())) from None
         pass
 
     def get_some_unseen_data(
@@ -325,3 +304,49 @@ class __File:
     uid:UID,
     path:Path
     size:ByteCount
+    pass
+
+class __private:
+    @classmethod
+    def fetch(from_:Timestamp,
+              to:Timestamp,
+              max_records:int,
+              max_bytes:ByteCount,
+              files:Dict[ Timestamp, __File ],
+              hours_per_file:int,
+              schema:Dict[ColName,ColType],
+              corruption_handler:Callable[[Exception],Any]) -> Iter[
+                  Tuple[float, List[Union[str,int,float,None]]]]
+        '''yield each record with timestamp at or after {from_} excluding records with timestamp at or after {to} and all further records once {max_bytes} bytes have already been yielded or {max_records} records have been yielded
+           - note that records returned are in addition order, which is not necessarily time order'''
+        records_yielded = 0
+        bytes_yielded = 0
+        sorted_timestamps=sorted(list(files.keys()))
+        bucket_from=timegm(bucket_of(from_,hours_per_file))
+        bucket_to=timegm(bucket_to(to,hours_per_file))
+        for t in sorted_timestamps[lower_bound(sorted_timestamps,bucket_from):
+                                   upper_bound(sorted_timestamps,bucket_to)]:
+            try:
+                with open(files[t].path, 'r') as f:
+                    for l in f.readlines():
+                        try:
+                            assert l.endswith('\n')
+                            timestamp, col_value, sizes=decode_record(l[:-1], schema)
+                        except Exception as e:
+                            pass
+                        else:
+                            if timestamp >= from_ and timestamp < to:
+                                yield (timestamp, col_values)
+                                records_yielded += 1
+                                bytes_yielded += size
+                                if count==max_records or bytes_yielded>=max_bytes:
+                                    return
+                                pass
+                            pass
+                        pass
+                    pass
+                pass
+            except Exception as e:
+                pass
+            pass
+        pass
