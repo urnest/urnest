@@ -112,10 +112,12 @@ class PerfLog(xju.cmc.CM):
               max_bytes:ByteCount,
               corruption_handler:Callable[[Exception],Any]) -> Iter[
                   Tuple[float, List[Union[str,int,float,None]]]]
-        '''yield each record with timestamp at or after {from_} excluding records with timestamp at or after {to} and all further records once {max_bytes} bytes have already been yielded or {max_records} records have been yielded
+        '''yield each record of PerfLog {self} with timestamp at or after {from_} excluding records with timestamp at or after {to} and all further records once {max_bytes} bytes have already been yielded or {max_records} records have been yielded
            - note that records returned are in addition order, which is not necessarily time order'''
         try:
-            return __private.fetch(from_,to,max_records,max_bytes,self.__files,self.hours_per_file,
+            return __private.fetch(from_,to,max_records,max_bytes,
+                                   self.__files,
+                                   self.hours_per_file,
                                    corruption_handler)
         except Exception:
             raise inContext(l1(PerfLog.fetch.__doc__).format(**vars())) from None
@@ -174,42 +176,6 @@ class PerfLog(xju.cmc.CM):
             raise inContext(l1(PerfLog.get_some_unseen_data.__doc__).format(**vars()))
         pass
     
-    def __bucket_of(self, timestamp:Timestamp) -> struct_time:
-        x = time.gmtime(timestamp)
-        h = int(x.tm_hour/self.hours_per_file)*self.hours_per_file
-        return struct_time(x.tm_year,x.tm_mon,x.tm_mday,h,0,0,0,0,0)
-
-    def __bucket_path(self, bucket:struct_time) -> Path:
-        return self.storage_path / f'{bucket.tm_year}'/f'{bucket.tm_month:02}'/f'{bucket.tm_mday:02}'/f'{bucket.tm_hour:02}'
-    
-    def __home_of(self, timestamp:Timestamp) -> Tuple[Path,Timestamp]:
-        '''directory containing record with timestamp {timestamp} and its "from" timestmap'''
-        bucket = self.__bucket_of(timestamp)
-        return (self.__bucket_path(bucket),timegm(bucket))
-
-    def __get_file_of(self, timestamp:Timestamp) -> __File:
-        '''get PerfLog {self} file of record with timestamp {timestamp}
-           - creates any missing parent directories but not file itself
-        '''
-        try:
-            bucket = self.__bucket_of(timestamp)
-            from_ = timegm(bucket)
-            f = self.__files.get(from_,None)
-            if isinstance(f, __File):
-                return f
-            dir=self.__bucket_path(bucket)
-            os.makedirs(dir)
-            while True:
-                uid=uuid4()
-                path=dir / f'{uid}.txt'
-                if not path.exists():
-                    break
-                pass
-           return self.__files.setdefault(from_,__File(from_,uid,path,0))
-        except Exception as e:
-            raise inContext(l1(PerfLog.__get_file_of.__doc__).format(**vars())) from None
-        pass
-    
     def __get_writer(self, timestamp:Timestamp) -> xju::io:FileWriter:
         '''get PerfLog {self} writer for file of record with timestamp {timestamp}
            - creates any missing file and parent directories'''
@@ -224,28 +190,6 @@ class PerfLog(xju.cmc.CM):
         except Exception as e:
             raise inContext(l1(PerfLog.__get_writer.__doc__)).format(**vars()) from None
         pass
-
-    def __trim(self, headroom:int):
-        '''trim {self} storage to {self.max_bytes} - {headroom} bytes if it currently exceeds that'''
-        try:
-            assert headroom <= self.max_bytes
-            if self.__current_size + headroom > self.max_bytes:
-                for from_, file in sorted(list(self.__files.items())):
-                    if from_ in self.__writers:
-                        self.__writers.pop(from_)
-                        pass
-                    file.path.unlink()
-                    self.__current_size -= file.size
-                    self.__files.pop(from_)
-                    if self.__current_size + headroom <= self.max_bytes:
-                        return
-                    pass
-                pass
-            pass
-        except Exception as e:
-            raise inContext(l1(PerfLog.__doc__).format(**vars())) from None
-        pass
-    pass
 
 def validate_record(record:List, schema:schema:Dict[ColName,ColType]) -> List:
     '''validate record {record} against schema {schema}
@@ -306,47 +250,104 @@ class __File:
     size:ByteCount
     pass
 
-class __private:
-    @classmethod
-    def fetch(from_:Timestamp,
-              to:Timestamp,
-              max_records:int,
-              max_bytes:ByteCount,
-              files:Dict[ Timestamp, __File ],
-              hours_per_file:int,
-              schema:Dict[ColName,ColType],
-              corruption_handler:Callable[[Exception],Any]) -> Iter[
-                  Tuple[float, List[Union[str,int,float,None]]]]
-        '''yield each record with timestamp at or after {from_} excluding records with timestamp at or after {to} and all further records once {max_bytes} bytes have already been yielded or {max_records} records have been yielded
-           - note that records returned are in addition order, which is not necessarily time order'''
-        records_yielded = 0
-        bytes_yielded = 0
-        sorted_timestamps=sorted(list(files.keys()))
-        bucket_from=timegm(bucket_of(from_,hours_per_file))
-        bucket_to=timegm(bucket_to(to,hours_per_file))
-        for t in sorted_timestamps[lower_bound(sorted_timestamps,bucket_from):
-                                   upper_bound(sorted_timestamps,bucket_to)]:
-            try:
-                with open(files[t].path, 'r') as f:
-                    for l in f.readlines():
-                        try:
-                            assert l.endswith('\n')
-                            timestamp, col_value, sizes=decode_record(l[:-1], schema)
-                        except Exception as e:
-                            pass
-                        else:
-                            if timestamp >= from_ and timestamp < to:
-                                yield (timestamp, col_values)
-                                records_yielded += 1
-                                bytes_yielded += size
-                                if count==max_records or bytes_yielded>=max_bytes:
-                                    return
-                                pass
+def __bucket_of(hours_per_file:int, timestamp:Timestamp) -> struct_time:
+    x = time.gmtime(timestamp)
+    h = int(x.tm_hour/hours_per_file)*hours_per_file
+    return struct_time(x.tm_year,x.tm_mon,x.tm_mday,h,0,0,0,0,0)
+
+def __bucket_path(storage_path:Path, bucket:struct_time) -> Path:
+    return storage_path / f'{bucket.tm_year}'/f'{bucket.tm_month:02}'/f'{bucket.tm_mday:02}'/f'{bucket.tm_hour:02}'
+    
+def __home_of(storage_path:Path, hours_per_file:int, timestamp:Timestamp) -> Tuple[Path,Timestamp]:
+    '''directory containing record with timestamp {timestamp} and its "from" timestmap'''
+    bucket = __bucket_of(hours_per_file:Path,timestamp)
+    return (__bucket_path(storage_path,bucket),timegm(bucket))
+
+def __get_file_of(storage_path:Path,
+                  files::Dict[ Timestamp, __File ],
+                  hours_per_file:int,
+                  timestamp:Timestamp) -> __File:
+    '''get {storage_path} file of record with timestamp {timestamp}
+           - creates any missing parent directories but not file itself'''
+    try:
+        bucket = __bucket_of(hours_per_file,timestamp)
+        from_ = timegm(bucket)
+        f = files.get(from_,None)
+        if isinstance(f, __File):
+            return f
+        dir=__bucket_path(storage_path,bucket)
+        os.makedirs(dir)
+        while True:
+            uid=uuid4()
+            path=dir / f'{uid}.txt'
+            if not path.exists():
+                break
+            pass
+        return files.setdefault(from_,__File(from_,uid,path,0))
+    except Exception as e:
+        raise inContext(l1(__get_file_of.__doc__).format(**vars())) from None
+    pass
+    
+def __fetch(from_:Timestamp,
+            to:Timestamp,
+            max_records:int,
+            max_bytes:ByteCount,
+            files:Dict[ Timestamp, __File ],
+            hours_per_file:int,
+            schema:Dict[ColName,ColType],
+            corruption_handler:Callable[[Exception],Any]) -> Iter[
+                Tuple[float, List[Union[str,int,float,None]]]]:
+    records_yielded = 0
+    bytes_yielded = 0
+    sorted_timestamps=sorted(list(files.keys()))
+    bucket_from=timegm(bucket_of(hours_per_file,from_))
+    bucket_to=timegm(bucket_to(hours_per_file,to))
+    for t in sorted_timestamps[lower_bound(sorted_timestamps,bucket_from):
+                               upper_bound(sorted_timestamps,bucket_to)]:
+        try:
+            with open(files[t].path, 'r') as f:
+                for l in f.readlines():
+                    try:
+                        assert l.endswith('\n')
+                        timestamp, col_value, sizes=decode_record(l[:-1], schema)
+                    except Exception as e:
+                        pass
+                    else:
+                        if timestamp >= from_ and timestamp < to:
+                            yield (timestamp, col_values)
+                            records_yielded += 1
+                            bytes_yielded += size
+                            if count==max_records or bytes_yielded>=max_bytes:
+                                return
                             pass
                         pass
                     pass
                 pass
-            except Exception as e:
+            pass
+        except Exception as e:
+            pass
+        pass
+    pass
+
+def __trim(files::Dict[ Timestamp, __File ],
+           current_size:ByteCount, ensure_below:ByteCount):
+    '''trim {self} storage currently {current_size} bytes to ensure it is below {ensure_below}'''
+    try:
+        if current_size > ensure_below:
+            for from_, file in sorted(list(self.__files.items())):
+                if from_ in self.__writers:
+                    self.__writers.pop(from_)
+                    pass
+                file.path.unlink()
+                self.__current_size -= file.size
+                self.__files.pop(from_)
+                if self.__current_size + headroom <= self.max_bytes:
+                    return
                 pass
             pass
         pass
+    except Exception as e:
+        raise inContext(l1(PerfLog.__doc__).format(**vars())) from None
+    pass
+pass
+

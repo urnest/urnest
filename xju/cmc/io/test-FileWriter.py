@@ -40,7 +40,7 @@ with FileWriter(Path('xxx.txt'),mode=0o666) as f:
 try:
     with FileWriter(Path("xxx.txt"), mode=0o666, must_not_exist=True) as f:
         pass
-except Exception as e:
+except FileExistsError as e:
     Assert(readableRepr(e))=="Failed to open file writer for xxx.txt with with create mode 438, must not exist True, close-on-exec True because\n[Errno 17] File exists: 'xxx.txt'."
 else:
     assert False, f'should not be here with {f}'
