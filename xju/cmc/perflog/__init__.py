@@ -26,15 +26,17 @@
 #
 
 from pathlib import Path
-from typing import NewType, Union, Literal, List
+from typing import NewType, Union, Literal, List, Optional
 import xju.cmc
-from xju import ByteCount
-from xju.xn import inContext
+from xju.misc import ByteCount
+from xju.xn import in_context
 from time import gmtime,struct_time
 from calendar import timegm
 
 ColName=NewType('ColName',str)
-ColType=Union[ Literal[str], Literal[int], Literal[float] ]
+ColType=Union[ Literal[str], Literal[Optional[str]],
+               Literal[int], Literal[Optional[int]],
+               Literal[float],Literal[Optional[float]] ]
 ByteCount=NewType('ByteCount',int)
 Timestamp=NewType('Timestamp',float)
 RelPath=NewType('RelPath',Path)
@@ -42,44 +44,87 @@ UID=NewType('UID',str)
 
 @xju.cmc.cmclass
 class PerfLog(xju.cmc.CM):
-    '''{storage_path} size limited to {max_size} bytes with record schema {self.schema}, '''
-    '''{self.hours_per_file} hours-per-file, file creation mode {self.file_creation_mode} '''
+    '''{storage_path} size limited to {max_size} bytes with record schema {self.schema}, ''' \
+    '''{self.hours_per_file} hours-per-file, file creation mode {self.file_creation_mode} ''' \
     '''and syncrhonous_writes {self.synchronous_writes}'''
     storage_path:Path,
-    max_size:ByteCount,
     schema:Dict[ColName,ColType]
-    hours_per_file:int
     synchronous_writes:bool
-    file_creation_mode:int
 
-    __files:Dict[ Timestamp, __File ]
-    __writers:xju.cmc.Dict[ Timestamp, xju.io.FileWriter ]
-    __current_size: ByteCount
+    __tstore:tstore.TStore
+    __writers:xju.cmc.Dict[ Timestamp, tstore.Writer ]
 
-    def __init__(self, storage_path:Path,
-                 max_size:ByteCount,
+    @overload
+    def __init__(self,
+                 storage_path:Path,
                  schema:Dict[ColName,ColType],
-                 hours_per_file:int=3,
-                 synchronous_writes:bool=True,
-                 file_creation_mode:int=0x666):
-        self.storage_path=storage_path
-        self.max_size=max_size
-        self.schema=schema
-        self.hours_per_file=hours_per_file
-        self.synchronous_writes=synchronous_writes
-        self.file_creation_mode=file_creation_mode
-
-    def xju_cmc_post_enter(self):
-        '''create/open PerfLog {self}
-           - clears existing data if {self.schema} or {self.hours_per_file} have changed
-           - trims existing data to self.{max_size}'''
-        try:
-            __private.apply_hours_per_file(storage_path,hours_per_file)
-            __private.apply_schema(storage_path,schema)
-            self.__files, self.__current_size = __private.enumerate_files(storage, hours_per_file)
-            self.__trim()
-        except Exception as e:
-            raise inContext(l1(PerfLog.__enter__.__doc__).format(**vars())) from None
+                 synchronous_writes:bool,
+                 hours_per_bucket:Hours,
+                 max_buckets: int,
+                 max_size:ByteCount,
+                 file_creation_mode:FileMode):
+        '''create non-existent PerfLog with schema {schema} at {storage_path} with mode ''' \
+        '''0o{file_creation_mode:o}, {hours_per_bucket} hours per bucket, max buckets ''' \
+        '''{max_buckets}, max size {max_size} bytes
+           - hours_per_bucket must be a factor of 24
+           - raises FileExistsError if perflog exists at {storage_path}'''
+        pass
+    @overload
+    def __init__(self,
+                 storage_path:Path,
+                 schema:Literal[None]=None,
+                 synchronous_writes:Literal[None]=None,
+                 hours_per_bucket:Literal[None]=None,
+                 max_buckets:Literal[None]=None,
+                 max_size:Literal[None]=None,
+                 file_creation_mode:Literal[None]=None):
+        '''open existing PerfLog at {storage_path} reading attributes from its perflog.json file
+           - raises FileNotFoundError if PerfLog does not exist'''
+        pass
+    def __init__(self,
+                 storage_path:Path,
+                 schema,
+                 synchronous_writes,
+                 hours_per_bucket,
+                 max_buckets,
+                 max_size,
+                 file_creation_mode):
+        self.storage_path = storage_path
+        if (isinstance(schema,Dict[ColName,ColType]) and
+            isinstance(synchronous_writes,bool) and
+            isinstance(hours_per_bucket,Hours) and
+            isinstance(max_buckets, int) and
+            isinstance(max_size,ByteCount) and
+            isinstance(file_creation_mode,FileMode)):
+            try:
+                self.schema=schema
+                self.synchronous_writes=synchronous_writes
+                os.makedirs(storage_path, file_creation_mode)
+                __write_attrs(storage_path / 'perflog.json', schema, synchronous_writes)
+                try:
+                    self.__tstore=tstore.TStore(storage_path / 'tstore',
+                                                hours_per_bucket,
+                                                max_buckets,
+                                                max_size,
+                                                file_creation_mode)
+                finally:
+                    os.unlink(storage_path / 'perflog.json')
+                    pass
+                pass
+            except Exception as e:
+                raise in_context(
+                    '''create non-existent PerfLog with schema {schema} at {storage_path} with ''' \
+                    '''mode 0o{file_creation_mode:o}, {hours_per_bucket} hours per bucket, max ''' \
+                    '''buckets {max_buckets}, max size {max_size} bytes'''.format(**vars())) from None
+            pass
+        else:
+            try:
+                self.__tstore=tstore.TStore(storage_path / 'tstore')
+                self.schema,self.synchronous_writes=__read_attrs(storage_path / 'perflog.json')
+            except Exception as e:
+                raise in_context(
+                    '''open existing PerfLog at {storage_path} reading attributes from its perflog.json file'''.format(**vars())) from None
+            pass
         pass
 
     def __str__(self) -> str:
@@ -103,7 +148,7 @@ class PerfLog(xju.cmc.CM):
             self.get_or_create_file(timestamp).size+=len(data)
             self.__current_size+=len(data)
         except Exception:
-            raise inContext(l1(PerfLog.add.__doc__).format(**vars())) from None
+            raise in_context(l1(PerfLog.add.__doc__).format(**vars())) from None
         pass
 
     def fetch(from_:Timestamp,
@@ -115,12 +160,39 @@ class PerfLog(xju.cmc.CM):
         '''yield each record of PerfLog {self} with timestamp at or after {from_} excluding records with timestamp at or after {to} and all further records once {max_bytes} bytes have already been yielded or {max_records} records have been yielded
            - note that records returned are in addition order, which is not necessarily time order'''
         try:
-            return __private.fetch(from_,to,max_records,max_bytes,
-                                   self.__files,
-                                   self.hours_per_file,
-                                   corruption_handler)
+            records_yielded = 0
+            bytes_yielded = 0
+            sorted_timestamps=sorted(list(files.keys()))
+            bucket_from=timegm(bucket_of(hours_per_file,from_))
+            bucket_to=timegm(bucket_to(hours_per_file,to))
+            for t in sorted_timestamps[lower_bound(sorted_timestamps,bucket_from):
+                                       upper_bound(sorted_timestamps,bucket_to)]:
+                try:
+                    with open(files[t].path, 'r') as f:
+                        for l in f.readlines():
+                            try:
+                                assert l.endswith('\n')
+                                timestamp, col_value, sizes=decode_record(l[:-1], schema)
+                            except Exception as e:
+                                pass
+                            else:
+                                if timestamp >= from_ and timestamp < to:
+                                    yield (timestamp, col_values)
+                                    records_yielded += 1
+                                    bytes_yielded += size
+                                    if count==max_records or bytes_yielded>=max_bytes:
+                                        return
+                                    pass
+                                pass
+                            pass
+                        pass
+                    pass
+                except Exception as e:
+                    corruption_handler(e)
+                pass
+            pass
         except Exception:
-            raise inContext(l1(PerfLog.fetch.__doc__).format(**vars())) from None
+            raise in_context(l1(PerfLog.fetch.__doc__).format(**vars())) from None
         pass
 
     def get_some_unseen_data(
@@ -173,7 +245,7 @@ class PerfLog(xju.cmc.CM):
                 pass
             return new_data, corrupt_files
         except Exception as e:
-            raise inContext(l1(PerfLog.get_some_unseen_data.__doc__).format(**vars()))
+            raise in_context(l1(PerfLog.get_some_unseen_data.__doc__).format(**vars()))
         pass
     
     def __get_writer(self, timestamp:Timestamp) -> xju::io:FileWriter:
@@ -188,7 +260,7 @@ class PerfLog(xju.cmc.CM):
             return self.__writers.setdefault(
                 from_,xju::io::FileWriter(f.path,mode=self.file_creation_mode))
         except Exception as e:
-            raise inContext(l1(PerfLog.__get_writer.__doc__)).format(**vars()) from None
+            raise in_context(l1(PerfLog.__get_writer.__doc__)).format(**vars()) from None
         pass
 
 def validate_record(record:List, schema:schema:Dict[ColName,ColType]) -> List:
@@ -204,7 +276,7 @@ def validate_record(record:List, schema:schema:Dict[ColName,ColType]) -> List:
                     f'value {value!r} for {col_name} has type {type(r)} which is not a {col_type}')
             pass
     except Exception as e:
-        raise inContext(l1(validate_record.__doc__).format(**vars())) from None
+        raise in_context(l1(validate_record.__doc__).format(**vars())) from None
     pass
 
 def encode_timestampeed_record(time_delta:float, record:List, schema:Dict[ColName,ColType]) -> bytes:
@@ -213,7 +285,7 @@ def encode_timestampeed_record(time_delta:float, record:List, schema:Dict[ColNam
         assert time_delta>=0
         return (json.dumps([timestamp]+validate_record(record, schema))+'\n').encode('utf-8')
     except:
-        raise inContext(l1(encode_record.__doc__).format(**vars())) from None
+        raise in_context(l1(encode_record.__doc__).format(**vars())) from None
     pass
 
 def decode_timestamped_record(data:bytes, schema:Dict[ColName,ColType]) -> Tuple[
@@ -239,7 +311,7 @@ def decode_timestamped_record(data:bytes, schema:Dict[ColName,ColType]) -> Tuple
             raise Exception(f'{x} is of type {type(x)}, which is not a list')
             pass
     except Exception as e:
-        raise inContext(l1(decode_timestamped_record.__doc__).format(**vars())) from None
+        raise in_context(l1(decode_timestamped_record.__doc__).format(**vars())) from None
     pass
 
 @dataclass
@@ -285,69 +357,59 @@ def __get_file_of(storage_path:Path,
             pass
         return files.setdefault(from_,__File(from_,uid,path,0))
     except Exception as e:
-        raise inContext(l1(__get_file_of.__doc__).format(**vars())) from None
+        raise in_context(l1(__get_file_of.__doc__).format(**vars())) from None
     pass
     
-def __fetch(from_:Timestamp,
-            to:Timestamp,
-            max_records:int,
-            max_bytes:ByteCount,
-            files:Dict[ Timestamp, __File ],
-            hours_per_file:int,
-            schema:Dict[ColName,ColType],
-            corruption_handler:Callable[[Exception],Any]) -> Iter[
-                Tuple[float, List[Union[str,int,float,None]]]]:
-    records_yielded = 0
-    bytes_yielded = 0
-    sorted_timestamps=sorted(list(files.keys()))
-    bucket_from=timegm(bucket_of(hours_per_file,from_))
-    bucket_to=timegm(bucket_to(hours_per_file,to))
-    for t in sorted_timestamps[lower_bound(sorted_timestamps,bucket_from):
-                               upper_bound(sorted_timestamps,bucket_to)]:
-        try:
-            with open(files[t].path, 'r') as f:
-                for l in f.readlines():
-                    try:
-                        assert l.endswith('\n')
-                        timestamp, col_value, sizes=decode_record(l[:-1], schema)
-                    except Exception as e:
-                        pass
-                    else:
-                        if timestamp >= from_ and timestamp < to:
-                            yield (timestamp, col_values)
-                            records_yielded += 1
-                            bytes_yielded += size
-                            if count==max_records or bytes_yielded>=max_bytes:
-                                return
-                            pass
-                        pass
-                    pass
-                pass
-            pass
-        except Exception as e:
-            pass
-        pass
-    pass
 
-def __trim(files::Dict[ Timestamp, __File ],
-           current_size:ByteCount, ensure_below:ByteCount):
-    '''trim {self} storage currently {current_size} bytes to ensure it is below {ensure_below}'''
+__attrs_schema=xju.jsonschema.Schema({
+    'schema':[ [str,OneOf('str','int','float','(str)','(int)','(float)')] ],
+    'synchronous_writes':bool
+})
+
+__str_col_type:Dict[str,ColType]={
+    'str':str,
+    'int':int,
+    'float':float,
+    '(str)':Optional[str],
+    '(int)':Optional[int],
+    '(float)':Optional[float]
+}
+__col_type_str={ t:s for s,t in __str_col_type.items() }
+
+__PERFLOG_ATTRS='perflog.json'
+
+def __read_attrs(storage_path:Path,
+                 attrs_file=__PERFLOG_ATTRS) -> Tuple[Dict[ColName,ColType],  # schema
+                                                      bool]:                  # synchronous_writes
+    '''read PerfLog attrs from {storage_path}/{attrs_file}'''
     try:
-        if current_size > ensure_below:
-            for from_, file in sorted(list(self.__files.items())):
-                if from_ in self.__writers:
-                    self.__writers.pop(from_)
-                    pass
-                file.path.unlink()
-                self.__current_size -= file.size
-                self.__files.pop(from_)
-                if self.__current_size + headroom <= self.max_bytes:
-                    return
-                pass
-            pass
-        pass
+        with xju.io.cmc.FileReader(storage_path / attrs_file) as f:
+            attrs=__attrs_schema.validate(json.loads(f.read()))
+            if (isinstance(attrs,dict) and
+                isinstance(_schema:=attrs['schema'],list) and
+                isinstance(synchronous_writes:=attrs['synchronous_writes'],bool)):
+                schema={ColName(col_name): __str_col_type[type_spec] for col_name,type_spec in _schema}
+                return schema,synchronous_writes
+            assert False, f'should not be here: {attrs_} was validated against {__attrs_schema}'
     except Exception as e:
-        raise inContext(l1(PerfLog.__doc__).format(**vars())) from None
+        raise in_context(__read_attrs,vars()) from None
     pass
-pass
 
+def __write_attrs(storage_path:Path, schema:Dict[ColName,ColType],
+                  synchronous_writes:bool,
+                  attrs_file=__PERFLOG_ATTRS):
+    '''write PerfLog attrs schema {schema}, synchronous_writes {synchronous_writes} to ''' \
+    '''{storage_path}/{attrs_file}'''
+    try:
+        x=__attrs_schema.validate({
+            'schema':[ [col_name,__col_type_str[col_type]] for col_name, col_type in schema.items()],
+            'synchronous_writes':synchronous_writes
+        })
+        with xju.io.cmc.FileWriter(storage_path / 'perflog.json',
+                                   mode=file_creation_mode,
+                                   must_not_exist=True) as f:
+            f.write(json.dumps(x))
+            pass
+    except Exception as e:
+        raise in_context(__write_attrs,vars()) from None
+    pass

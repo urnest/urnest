@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
+# Copyright (c) 2022 Trevor Taylor
 # coding: utf-8
-
-# Copyright (c) 2020 Trevor Taylor
 # 
 # Permission to use, copy, modify, and/or distribute this software for
 # any purpose with or without fee is hereby granted, provided that all
@@ -15,16 +13,6 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
+from typing import NewType
 
-import sys
-from xju.xn import in_context
-
-#test program used to verify that we can use sys.exit()
-#within a try/catch that uses in_context and the program
-#exits with the correct status
-#(see Odinfile for use)
-try:
-    sys.exit('not found')
-except:
-    raise in_context('jock') from None
-pass
+ByteCount=NewType('ByteCount',int)

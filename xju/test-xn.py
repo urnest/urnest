@@ -17,7 +17,7 @@
 #
 
 import sys
-from xju.xn import inContext,readableRepr,AllFailed
+from xju.xn import in_context,readableRepr,AllFailed
 from xju.assert_ import Assert
 
 def test1(prog=sys.argv[0]):
@@ -32,7 +32,7 @@ def test1(prog=sys.argv[0]):
     try:
         c()
     except:
-        e=inContext('jock')
+        e=in_context('jock')
         Assert(e.readableRepr())=='''\
 Failed to jock because
 fred.\
@@ -56,7 +56,7 @@ def test2():
         try:
             raise E()
         except:
-            raise inContext('await message') from None
+            raise in_context('await message') from None
         pass
     except E as e:
         Assert(readableRepr(e))=='''\
@@ -71,17 +71,17 @@ def test3():
             try:
                 raise E()
             except:
-                raise inContext('await message') from None
+                raise in_context('await message') from None
             pass
         except E as e:
             try:
                 raise Exception('open failed')
             except:
-                raise AllFailed([e,inContext('read default file')]) from None
+                raise AllFailed([e,in_context('read default file')]) from None
             pass
         pass
     except:
-        Assert(readableRepr(inContext('get content')))=='''\
+        Assert(readableRepr(in_context('get content')))=='''\
 Failed to get content because
 - failed to await message because
   deadline reached; and
@@ -102,7 +102,7 @@ class Scope():
         pass
     def __exit__(self,t,e,b):
         if e:
-            raise inContext(self.s,(t,e,b),self.fl) from None
+            raise in_context(self.s,(t,e,b),self.fl) from None
         pass
 
 def test4(prog=sys.argv[0]):
@@ -120,7 +120,7 @@ def test4(prog=sys.argv[0]):
     try:
         c()
     except:
-        e=inContext('jock')
+        e=in_context('jock')
     else:
         assert False, 'c should have raised?'
         pass
@@ -129,7 +129,7 @@ failed to jock because
 [^:]*:121: failed to c[(][)] because
 [^:]*:118: failed to b[(][)] because
 [^:]*:115: failed to pass because
-[^:]*:105: failed to raise inContext[(]self.s,[(]t,e,b[)],self.fl[)] from None because
+[^:]*:105: failed to raise in_context[(]self.s,[(]t,e,b[)],self.fl[)] from None because
 [^:]*:112: failed to b because
 [^:]*:114: failed to a[(][)] because
 [^:]*:110: fred''')

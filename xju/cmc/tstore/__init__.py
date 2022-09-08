@@ -103,14 +103,14 @@ class TStore:
                                                                              max_size,
                                                                              file_creation_mode)
                 except Exception as e:
-                    raise inContext('create non-existent TStore at {storage_path} with mode 0o{file_creation_mode:o}, {hours_per_bucket} hours per bucket, max buckets {max_buckets}, max size {max_size} bytes').format(**vars())) from None
+                    raise in_context('create non-existent TStore at {storage_path} with mode 0o{file_creation_mode:o}, {hours_per_bucket} hours per bucket, max buckets {max_buckets}, max size {max_size} bytes').format(**vars())) from None
                 pass
             else:
                 try:
                     self.hours_per_bucket, self.max_buckets, \
                         self.max_size, self.file_creation_mode=__read_attrs(storage_path)
                 except Exception as e:
-                    raise inContext('open existing TStore at {storage_path} reading attributes from its tstore.json file').format(**vars())) from None
+                    raise in_context('open existing TStore at {storage_path} reading attributes from its tstore.json file').format(**vars())) from None
                 pass
             pass
         pass
@@ -195,9 +195,30 @@ class TStore:
                     pass
                 pass
         except Exception as e:
-            raise inContext(l1(TStore.__trim_buckets.__doc__).format(**vars()))
+            raise in_context(l1(TStore.__trim_buckets.__doc__).format(**vars()))
+        pass
+
+    def __trim_bytes(ensure_at_most:ByteCount):
+        '''trim {self} storage currently {self.__current_size} bytes to ensure it is at most ''' \
+            '''{at_most} bytes'''
+        try:
+            if current_size > ensure_below:
+                for from_, file in sorted(list(self.__files.items())):
+                    if from_ in self.__writers:
+                        self.__writers.pop(from_)
+                        pass
+                    file.path.unlink()
+                    self.__current_size -= file.size
+                    self.__files.pop(from_)
+                    if self.__current_size + headroom <= self.max_bytes:
+                    return
+                pass
+            pass
+        except Exception as e:
+            raise in_context(l1(PerfLog.__doc__).format(**vars())) from None
         pass
     pass
+
 
 @xju.cmc.cmclass
 class Reader(xju.cmc.CM):
@@ -215,7 +236,7 @@ class Reader(xju.cmc.CM):
             self.bucket=bucket
             self.__impl=xju.cmc.io.FileReader(self.store.get_bucket(*bucket))
         except Exception as e:
-            raise inContext(l1(Reader.__init__.__doc__).format(**vars()))
+            raise in_context(l1(Reader.__init__.__doc__).format(**vars()))
         pass
 
     def __str__(self):
@@ -228,7 +249,7 @@ class Reader(xju.cmc.CM):
             self.__impl.seek(offset, io.SEEK_SET)
             return self
         except:
-            raise inContext(l1(Reader.seek_to.__doc__).format(**vars())) from None
+            raise in_context(l1(Reader.seek_to.__doc__).format(**vars())) from None
         pass
     
     def seek_by(self, offset:ByteCount):
@@ -238,7 +259,7 @@ class Reader(xju.cmc.CM):
             self.input.seek(offset, io.SEEK_CUR)
             return self
         except:
-            raise inContext(l1(Reader.seek_by.__doc__).format(**vars())) from None
+            raise in_context(l1(Reader.seek_by.__doc__).format(**vars())) from None
         pass
     
     def size(self) -> ByteCount:
@@ -246,7 +267,7 @@ class Reader(xju.cmc.CM):
         try:
             return self.__impl.size()
         except:
-            raise inContext(l1(Reader.size.__doc__).format(**vars())) from None
+            raise in_context(l1(Reader.size.__doc__).format(**vars())) from None
         pass
 
     def read(self, max_bytes:ByteCount) -> bytes:
@@ -280,7 +301,7 @@ class Writer(xju.cmc.CM):
                 pass
         pass
         except Exception as e:
-            raise inContext(l1(Reader.__init__.__doc__).format(**vars()))
+            raise in_context(l1(Reader.__init__.__doc__).format(**vars()))
         pass
 
     def seek_to(self, position:ByteCount):
@@ -290,7 +311,7 @@ class Writer(xju.cmc.CM):
             self.__impl.seek(position, io.SEEK_SET)
             return self
         except:
-            raise inContext(l1(Writer.seek_to.__doc__).format(**vars())) from None
+            raise in_context(l1(Writer.seek_to.__doc__).format(**vars())) from None
         pass
     
     def seek_by(self, offset:ByteCount):
@@ -300,7 +321,7 @@ class Writer(xju.cmc.CM):
             self.input.seek(offset, io.SEEK_CUR)
             return self
         except:
-            raise inContext(l1(Writer.seek_by.__doc__).format(**vars())) from None
+            raise in_context(l1(Writer.seek_by.__doc__).format(**vars())) from None
         pass
     
     def size(self) -> ByteCount:
@@ -308,7 +329,7 @@ class Writer(xju.cmc.CM):
         try:
             return self.__impl.size()
         except:
-            raise inContext(l1(Writer.size.__doc__).format(**vars())) from None
+            raise in_context(l1(Writer.size.__doc__).format(**vars())) from None
         pass
 
     def write(self, data:bytes):
@@ -344,7 +365,7 @@ def __read_attrs(storage_path:Path) -> Tuple[Hours, BucketCount, ByteCount, File
                 pass
             pass
     except Exception as e:
-        raise inContext(l1(__read_attrs.__doc__).format(**vars())) from None
+        raise in_context(l1(__read_attrs.__doc__).format(**vars())) from None
     pass
 
 
@@ -359,8 +380,8 @@ def __read_attrs(storage_path:Path) -> Tuple[Hours, BucketCount, ByteCount, File
         except Exception as e:
             if isinstance(mode,FileMode):
                 if must_not_exist:
-                    raise inContext('create non-existent TStore at {storage_path} with mode 0o{file_creation_mode:o}, {hours_per_bucket} hours per bucket, max buckets {max_buckets}, max size {max_size} bytes').format(**vars())) from None
+                    raise in_context('create non-existent TStore at {storage_path} with mode 0o{file_creation_mode:o}, {hours_per_bucket} hours per bucket, max buckets {max_buckets}, max size {max_size} bytes').format(**vars())) from None
                 else:
-                    raise inContext('create or open existing writable (with mode 0o{file_creation_mode}) TStore at {storage_path} with {hours_per_bucket} hours per bucket, max buckets {max_buckets}, max size {max_size} bytes').format(**vars())) from None
+                    raise in_context('create or open existing writable (with mode 0o{file_creation_mode}) TStore at {storage_path} with {hours_per_bucket} hours per bucket, max buckets {max_buckets}, max size {max_size} bytes').format(**vars())) from None
             else:
             pass

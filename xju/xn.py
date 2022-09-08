@@ -14,7 +14,6 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-
 import traceback
 import sys
 import string
@@ -88,7 +87,7 @@ def capitalise(s:str)->str:
         return s[0].upper()+s[1:]
     return s
 
-def inContext(context:str, exceptionInfo=None, fl=None)->Exception:
+def in_context(context:str, exceptionInfo=None, fl=None)->Exception:
     """Make a Xn that includes exception info and context.
     If exceptionInfo[1] is already a Xn just add context,
     otherwise use exceptionInfo as cause for a new Xn.

@@ -15,7 +15,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-from .xn import Xn,inContext,firstLineOf,readableRepr
+from .xn import Xn,in_context,firstLineOf,readableRepr
 
 l1=firstLineOf
 
@@ -57,7 +57,7 @@ def validateSchemaElement(x):
                     assert type(name) is str, type(name)
                     validateSchemaElement(y)
                 except:
-                    raise inContext('validate dict schema item %(name)r'%vars()) from None
+                    raise in_context('validate dict schema item %(name)r'%vars()) from None
                 pass
             return
         if type(x) is list:
@@ -71,7 +71,7 @@ def validateSchemaElement(x):
                 try:
                     validateSchemaElement(y)
                 except:
-                    raise inContext('validate tuple schema item %(i)r'%vars()) from None
+                    raise in_context('validate tuple schema item %(i)r'%vars()) from None
                 pass
             return
         if isinstance(x,OneOf):
@@ -88,7 +88,7 @@ def validateSchemaElement(x):
         if t is object: t=x.__class__
         raise Exception('jsonschema element may not be a %(t)s, it must be a list, a dictionary or int, str, float, bool, tuple or None'%vars())
     except:
-        raise inContext(l1(validateSchemaElement.__doc__)%vars()) from None
+        raise in_context(l1(validateSchemaElement.__doc__)%vars()) from None
     pass
 
 def validate(schema,x):
@@ -125,7 +125,7 @@ def validate(schema,x):
                         validate(list(schema.keys())[0],key)
                         validate(list(schema.values())[0],y)
                     except:
-                        raise inContext('validate dictionary item %(key)r'%vars()) from None
+                        raise in_context('validate dictionary item %(key)r'%vars()) from None
                     pass
                 return x
             for name, y in schema.items():
@@ -141,7 +141,7 @@ def validate(schema,x):
                         validate(y,x[name])
                         pass
                 except:
-                    raise inContext('validate dictionary item %(name)r'%vars()) from None
+                    raise in_context('validate dictionary item %(name)r'%vars()) from None
                 pass
             return x
         if type(schema) is list:
@@ -152,7 +152,7 @@ def validate(schema,x):
                     try:
                         validate(schema[0],y)
                     except:
-                        raise inContext('validate list item %(i)r'%vars()) from None
+                        raise in_context('validate list item %(i)r'%vars()) from None
                     pass
                 pass
             else:
@@ -164,7 +164,7 @@ def validate(schema,x):
                     try:
                         validate(v[0],v[1])
                     except:
-                        raise inContext('validate list element {i}'.format(**vars())) from None
+                        raise in_context('validate list element {i}'.format(**vars())) from None
                 pass
             pass
         if type(schema) is tuple:
@@ -176,7 +176,7 @@ def validate(schema,x):
                 try:
                     validate(schema[i],y)
                 except:
-                    raise inContext('validate tuple schema element %(i)s'%vars()) from None
+                    raise in_context('validate tuple schema element %(i)s'%vars()) from None
                 pass
             pass
         if isinstance(schema,OneOf):
@@ -200,7 +200,7 @@ def validate(schema,x):
             pass
         return x
     except:
-        raise inContext(l1(validate.__doc__)%vars()) from None
+        raise in_context(l1(validate.__doc__)%vars()) from None
     pass
                     
 

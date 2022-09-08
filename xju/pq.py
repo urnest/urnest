@@ -32,7 +32,7 @@ from html.entities import codepoint2name as reverseentities
 import sys
 import traceback
 import string
-from .xn import Xn,inContext
+from .xn import Xn,in_context
 
 class Pos:
     def __init__(self, file, line, col):
@@ -96,7 +96,7 @@ def unicodeOfElements(l):
                 t=type(c).__name__
                 if t=='instance':
                     t=c.__class__.__name__
-                raise inContext('get unicode representation of child %(i)r, %(c)r, which is of type %(t)s'%vars()) from None
+                raise in_context('get unicode representation of child %(i)r, %(c)r, which is of type %(t)s'%vars()) from None
             pass
         return result
 
