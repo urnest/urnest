@@ -195,7 +195,7 @@ class TStore:
                     pass
                 pass
         except Exception as e:
-            raise in_context(l1(TStore.__trim_buckets.__doc__).format(**vars()))
+            raise in_function_context(TStore.__trim_buckets,vars()) from None
         pass
 
     def __trim_bytes(ensure_at_most:ByteCount):
@@ -215,7 +215,7 @@ class TStore:
                 pass
             pass
         except Exception as e:
-            raise in_context(l1(PerfLog.__doc__).format(**vars())) from None
+            raise in_function_context(PerfLog.__trim_bytes,vars()) from None
         pass
     pass
 
@@ -236,7 +236,7 @@ class Reader(xju.cmc.CM):
             self.bucket=bucket
             self.__impl=xju.cmc.io.FileReader(self.store.get_bucket(*bucket))
         except Exception as e:
-            raise in_context(l1(Reader.__init__.__doc__).format(**vars()))
+            raise in_function_context(Reader.__init__,vars()) from None
         pass
 
     def __str__(self):
@@ -249,7 +249,7 @@ class Reader(xju.cmc.CM):
             self.__impl.seek(offset, io.SEEK_SET)
             return self
         except:
-            raise in_context(l1(Reader.seek_to.__doc__).format(**vars())) from None
+            raise in_function_context(Reader.seek_to,vars()) from None
         pass
     
     def seek_by(self, offset:ByteCount):
@@ -259,7 +259,7 @@ class Reader(xju.cmc.CM):
             self.input.seek(offset, io.SEEK_CUR)
             return self
         except:
-            raise in_context(l1(Reader.seek_by.__doc__).format(**vars())) from None
+            raise in_function_context(Reader.seek_by,vars()) from None
         pass
     
     def size(self) -> ByteCount:
@@ -267,7 +267,7 @@ class Reader(xju.cmc.CM):
         try:
             return self.__impl.size()
         except:
-            raise in_context(l1(Reader.size.__doc__).format(**vars())) from None
+            raise in_function_context(Reader.size,vars()) from None
         pass
 
     def read(self, max_bytes:ByteCount) -> bytes:
@@ -301,7 +301,7 @@ class Writer(xju.cmc.CM):
                 pass
         pass
         except Exception as e:
-            raise in_context(l1(Reader.__init__.__doc__).format(**vars()))
+            raise in_function_context(Writer.__init__,vars()) from None
         pass
 
     def seek_to(self, position:ByteCount):
@@ -311,7 +311,7 @@ class Writer(xju.cmc.CM):
             self.__impl.seek(position, io.SEEK_SET)
             return self
         except:
-            raise in_context(l1(Writer.seek_to.__doc__).format(**vars())) from None
+            raise in_function_context(Writer.seek_to,vars()) from None
         pass
     
     def seek_by(self, offset:ByteCount):
@@ -321,7 +321,7 @@ class Writer(xju.cmc.CM):
             self.input.seek(offset, io.SEEK_CUR)
             return self
         except:
-            raise in_context(l1(Writer.seek_by.__doc__).format(**vars())) from None
+            raise in_function_context(Writer.seek_by,vars()) from None
         pass
     
     def size(self) -> ByteCount:
@@ -329,7 +329,7 @@ class Writer(xju.cmc.CM):
         try:
             return self.__impl.size()
         except:
-            raise in_context(l1(Writer.size.__doc__).format(**vars())) from None
+            raise in_function_context(Writer.size,vars()) from None
         pass
 
     def write(self, data:bytes):
@@ -365,7 +365,7 @@ def __read_attrs(storage_path:Path) -> Tuple[Hours, BucketCount, ByteCount, File
                 pass
             pass
     except Exception as e:
-        raise in_context(l1(__read_attrs.__doc__).format(**vars())) from None
+        raise in_function_context(__read_attrs,vars()) from None
     pass
 
 

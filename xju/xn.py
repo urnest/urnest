@@ -17,7 +17,7 @@
 import traceback
 import sys
 import string
-from typing import Sequence
+from typing import Sequence,Callable,Literal,Dict
 
 class FileAndLine(object):
     def __init__(self,file=None,line=None,readable:bool=True):
@@ -86,6 +86,17 @@ def capitalise(s:str)->str:
     if s and s[0]!=s[0].upper():
         return s[0].upper()+s[1:]
     return s
+
+def in_function_context(function:Callable, vars:Dict={}, exceptionInfo=None, fl=None)->Exception:
+    """Make a Xn that includes exception info and context as firstLineOf(f.__doc__).format(**vars()).
+    If exceptionInfo[1] is already a Xn just add context,
+    otherwise use exceptionInfo as cause for a new Xn.
+
+    exceptionInfo is as returned by sys.exc_info()
+    """
+    return in_context(firstLineOf(function.__doc__).format(**vars),
+                      exceptionInfo=exceptionInfo,
+                      fl=fl)
 
 def in_context(context:str, exceptionInfo=None, fl=None)->Exception:
     """Make a Xn that includes exception info and context.

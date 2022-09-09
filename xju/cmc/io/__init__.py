@@ -27,7 +27,7 @@ import io
 import contextlib
 import fcntl
 from dataclasses import dataclass
-from xju.xn import in_context, firstLineOf as l1
+from xju.xn import in_function_context, firstLineOf as l1
 from xju import ByteCount
 
 FilePosition=NewType('FilePosition',int)
@@ -59,7 +59,7 @@ class FileReader(contextlib.AbstractContextManager):
             self.input = io.FileIO(self.__fd, closefd=False)
             return self
         except Exception:
-            raise in_context(l1(FileReader.__enter__.__doc__).format(**vars())) from None
+            raise in_function_context(FileReader.__enter__,vars()) from None
         pass
 
     def __exit__(self, t, e, b):
@@ -69,7 +69,7 @@ class FileReader(contextlib.AbstractContextManager):
             os.close(self.__fd)
             del self.__fd
         except Exception:
-            raise in_context(l1(FileReader.__exit__.__doc__).format(**vars())) from None
+            raise in_function_context(FileReader.__exit__,vars()) from None
         pass
 
     def seek_to(self, position:FilePosition):
@@ -79,7 +79,7 @@ class FileReader(contextlib.AbstractContextManager):
             self.input.seek(position, io.SEEK_SET)
             return self
         except:
-            raise in_context(l1(FileReader.seek_to.__doc__).format(**vars())) from None
+            raise in_function_context(FileReader.seek_to,vars()) from None
         pass
     
     def seek_by(self, offset:FilePositionDelta):
@@ -89,7 +89,7 @@ class FileReader(contextlib.AbstractContextManager):
             self.input.seek(offset, io.SEEK_CUR)
             return self
         except:
-            raise in_context(l1(FileReader.seek_by.__doc__).format(**vars())) from None
+            raise in_function_context(FileReader.seek_by,vars()) from None
         pass
     
     def size(self) -> ByteCount:
@@ -97,7 +97,7 @@ class FileReader(contextlib.AbstractContextManager):
         try:
             return ByteCount(os.fstat(self.__fd).st_size)
         except:
-            raise in_context(l1(FileReader.size.__doc__).format(**vars())) from None
+            raise in_function_context(FileReader.size,vars()) from None
         pass
     def fd(self) -> int:
         return self.__fd
@@ -154,7 +154,7 @@ class FileWriter(contextlib.AbstractContextManager):
             self.output = io.FileIO(self.__fd, mode='w', closefd=False)
             return self
         except Exception:
-            raise in_context(l1(FileWriter.__enter__.__doc__).format(**vars())) from None
+            raise in_function_context(FileWriter.__enter__,vars()) from None
         pass
     
     def __exit__(self, t, e, b):
@@ -164,7 +164,7 @@ class FileWriter(contextlib.AbstractContextManager):
             os.close(self.__fd)
             del self.__fd
         except Exception:
-            raise in_context(l1(FileWriter.__exit__.__doc__).format(**vars())) from None
+            raise in_function_context(FileWriter.__exit__,vars()) from None
         pass
     
     def seek_to(self, position:FilePosition):
@@ -174,7 +174,7 @@ class FileWriter(contextlib.AbstractContextManager):
             self.output.seek(position, io.SEEK_SET)
             return self
         except:
-            raise in_context(l1(FileWriter.seek_to.__doc__).format(**vars())) from None
+            raise in_function_context(FileWriter.seek_to,vars()) from None
         pass
     
     def seek_by(self, offset:FilePositionDelta):
@@ -184,7 +184,7 @@ class FileWriter(contextlib.AbstractContextManager):
             self.output.seek(offset, io.SEEK_SET)
             return self
         except:
-            raise in_context(l1(FileWriter.seek_by.__doc__).format(**vars())) from None
+            raise in_function_context(FileWriter.seek_by,vars()) from None
         pass
     
     def size(self) -> ByteCount:
@@ -192,7 +192,7 @@ class FileWriter(contextlib.AbstractContextManager):
         try:
             return ByteCount(os.fstat(self.__fd).st_size)
         except:
-            raise in_context(l1(FileWriter.size.__doc__).format(**vars())) from None
+            raise in_function_context(FileWriter.size,vars()) from None
         pass
 
     def fd(self) -> int:
@@ -216,7 +216,7 @@ class FileLock(contextlib.AbstractContextManager):
             fcntl.flock(self.target.fd(), fcntl.LOCK_EX|fcntl.LOCK_NB)
             return self
         except Exception:
-            raise in_context(l1(FileLock.__enter__.__doc__).format(**vars())) from None
+            raise in_function_context(FileLock.__enter__,vars()) from None
         pass
 
     def __exit__(self, t, e, b):
@@ -224,4 +224,4 @@ class FileLock(contextlib.AbstractContextManager):
         try:
             fcntl.flock(self.target.fd(), fcntl.LOCK_UN)
         except Exception:
-            raise in_context(l1(FileLock.__exit__.__doc__).format(**vars())) from None
+            raise in_function_context(FileLock.__exit__,vars()) from None

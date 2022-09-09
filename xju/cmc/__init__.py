@@ -26,9 +26,8 @@ od = OrderedDict
 T = TypeVar('T', bound=contextlib.AbstractContextManager)
 
 # Class decorator that adds context management __enter__ and __exit__
-# that enter and exit all type-hinted attributes implementing contextlib.AbstractContextManager.
-# If cls has a xju_cmc_post_enter method it is called at the end of the added __enter__, with
-# no parameters.
+# that enter and exit all type-hinted attributes implementing contextlib.AbstractContextManager
+# then any existing __enter__.
 # Note that to satisfy mypy, the decorated class must already
 # implement contextlib.AbstractContextManager and the preferred way to do that is
 # to inherit from xju.cmc.CM - see test-cmc.py for examples.
@@ -42,12 +41,12 @@ def cmclass(cls:Type[T]) -> Type[T]:
     # handling). Note replacing . with _ could lead to clashes but there's no
     # way to avoid all clashes.
     resources_attr_name=f'{cls.__module__}.{cls.__name__}'.replace('.','_')
-    post_enter=cls.__dict__.get('xju_cmc_post_enter',lambda self: None)
+    orig_enter=cls.__dict__.get('__enter__',lambda self: self)
     def enter(self,
               base_classes_to_enter=base_classes_to_enter,
               attrs_to_enter=attrs_to_enter,
               resources_attr_name=resources_attr_name,
-              post_enter=post_enter) -> Type[T]:
+              orig_enter=orig_enter) -> Type[T]:
         with contextlib.ExitStack() as tentative:
             for base_class in base_classes_to_enter:
                 if base_class is not CM:
@@ -59,15 +58,15 @@ def cmclass(cls:Type[T]) -> Type[T]:
                 tentative.enter_context(getattr(self, n))
                 pass
             assert getattr(self,resources_attr_name, None) is None, f'{cls.__module__}.{cls.__name__} has a f{resources_attr_name} attribute already. Perhaps it is inherited multiple times (which is not allowed by xju.cmc.cmclass decorator)?'
-            post_enter(self)
+            orig_enter(self)
             setattr(self,resources_attr_name,tentative.pop_all())
         return self
+    orig_exit=cls.__dict__.get('__exit__',lambda self,t,e,b: None)
     def exit(self,t,e,b,resources_attr_name=resources_attr_name) -> None:
         resources = getattr(self,resources_attr_name)
         setattr(self,resources_attr_name,None)
         with contextlib.closing(resources):
-            pass
-        pass
+            return orig_exit(self,t,e,b)
     old_sa=cls.__setattr__
     def sa(self, name, value, attrs_to_enter=attrs_to_enter):
         if getattr(self,resources_attr_name,None) and name in attrs_to_enter:

@@ -17,7 +17,7 @@
 #
 
 import sys
-from xju.xn import in_context,readableRepr,AllFailed
+from xju.xn import in_context,readableRepr,AllFailed,in_function_context
 from xju.assert_ import Assert
 
 def test1(prog=sys.argv[0]):
@@ -138,6 +138,26 @@ Failed to jock because
 failed to b because
 fred.\
 '''
+    pass
+
+def test6():
+    class X:
+        def jump(self, height:int):
+            '''jump {height}m in the air
+               - from a standing start'''
+            try:
+                raise Exception('I have lead feet')
+            except Exception as e:
+                raise in_function_context(X.jump,vars()) from None
+            pass
+        pass
+    try:
+        X().jump(10)
+    except Exception as e:
+        Assert(e.readableRepr())=='Failed to jump 10m in the air because\nI have lead feet.'
+    else:
+        assert False, 'should not be here'
+        pass
     pass
 
 tests=[var for name,var in sorted(vars().items())

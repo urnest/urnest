@@ -43,7 +43,7 @@ class OneOf:
     pass
 
 def validateSchemaElement(x):
-    'verify that %(x)r is a valid json schema element'
+    'verify that {x!r} is a valid json schema element'
     try:
         if x is None: return
         if x in [int,str,float,bool]: return
@@ -88,11 +88,11 @@ def validateSchemaElement(x):
         if t is object: t=x.__class__
         raise Exception('jsonschema element may not be a %(t)s, it must be a list, a dictionary or int, str, float, bool, tuple or None'%vars())
     except:
-        raise in_context(l1(validateSchemaElement.__doc__)%vars()) from None
+        raise in_function_context(validateSchemaElement,vars()) from None
     pass
 
 def validate(schema,x):
-    'verify %(x)r conforms to json schema %(schema)r'
+    'verify {x!r} conforms to json schema {schema!}'
     try:
         if schema is None and not x is None:
             raise Exception('%(x)r is not None'%vars())
@@ -200,7 +200,7 @@ def validate(schema,x):
             pass
         return x
     except:
-        raise in_context(l1(validate.__doc__)%vars()) from None
+        raise in_function_context(validate,vars()) from None
     pass
                     
 

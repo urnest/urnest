@@ -15,18 +15,18 @@
 #
 import subprocess
 from typing import Sequence,Tuple
-from xju.xn import in_context,firstLineOf as l1
+from xju.xn import in_function_context
 
 class CmdFailed(Exception):
     def __init__(self,argv,status,stderr):
         self.argv=argv
         self.status=status
         self.stderr=stderr
-        Exception.__init__(self,'non-shell command {argv!r} failed with exit status {status} and stderr {stderr}'.format(**locals()))
+        Exception.__init__(self,'non-shell command {argv!r} failed with exit status {status} and stderr {stderr}'.format(**vars()))
         pass
     pass
 
-def doCmd(argv:Sequence[str])->Tuple[bytes,str]:
+def do_cmd(argv:Sequence[str])->Tuple[bytes,str]:
     '''do non-shell command {argv!r}'''
     '''returns (stdout,stderr) on zero exit status'''
     '''raises CmdFailed on non-zero exit'''
@@ -46,5 +46,5 @@ def doCmd(argv:Sequence[str])->Tuple[bytes,str]:
             raise CmdFailed(argv,status,err.decode('utf-8'))
         return out,err.decode('utf-8')
     except:
-        raise in_context(l1(doCmd.__doc__).format(**locals())) from None
+        raise in_function_context(do_cmd,vars()) from None
     pass

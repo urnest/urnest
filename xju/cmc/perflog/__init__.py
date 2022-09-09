@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import NewType, Union, Literal, List, Optional
 import xju.cmc
 from xju.misc import ByteCount
-from xju.xn import in_context
+from xju.xn import in_context,in_function_context,firstLineOf as l1
 from time import gmtime,struct_time
 from calendar import timegm
 
@@ -148,7 +148,7 @@ class PerfLog(xju.cmc.CM):
             self.get_or_create_file(timestamp).size+=len(data)
             self.__current_size+=len(data)
         except Exception:
-            raise in_context(l1(PerfLog.add.__doc__).format(**vars())) from None
+            raise in_function_context(PerfLog.add,vars()) from None
         pass
 
     def fetch(from_:Timestamp,
@@ -192,7 +192,7 @@ class PerfLog(xju.cmc.CM):
                 pass
             pass
         except Exception:
-            raise in_context(l1(PerfLog.fetch.__doc__).format(**vars())) from None
+            raise in_function_context(PerfLog.fetch,vars()) from None
         pass
 
     def get_some_unseen_data(
@@ -245,7 +245,7 @@ class PerfLog(xju.cmc.CM):
                 pass
             return new_data, corrupt_files
         except Exception as e:
-            raise in_context(l1(PerfLog.get_some_unseen_data.__doc__).format(**vars()))
+            raise in_function_context(PerfLog.get_some_unseen_data,vars()) from None
         pass
     
     def __get_writer(self, timestamp:Timestamp) -> xju::io:FileWriter:
@@ -260,7 +260,7 @@ class PerfLog(xju.cmc.CM):
             return self.__writers.setdefault(
                 from_,xju::io::FileWriter(f.path,mode=self.file_creation_mode))
         except Exception as e:
-            raise in_context(l1(PerfLog.__get_writer.__doc__)).format(**vars()) from None
+            raise in_function_context(PerfLog.__get_writer,vars()) from None
         pass
 
 def validate_record(record:List, schema:schema:Dict[ColName,ColType]) -> List:
@@ -276,7 +276,7 @@ def validate_record(record:List, schema:schema:Dict[ColName,ColType]) -> List:
                     f'value {value!r} for {col_name} has type {type(r)} which is not a {col_type}')
             pass
     except Exception as e:
-        raise in_context(l1(validate_record.__doc__).format(**vars())) from None
+        raise in_function_context(validate_record,vars()) from None
     pass
 
 def encode_timestampeed_record(time_delta:float, record:List, schema:Dict[ColName,ColType]) -> bytes:
@@ -285,7 +285,7 @@ def encode_timestampeed_record(time_delta:float, record:List, schema:Dict[ColNam
         assert time_delta>=0
         return (json.dumps([timestamp]+validate_record(record, schema))+'\n').encode('utf-8')
     except:
-        raise in_context(l1(encode_record.__doc__).format(**vars())) from None
+        raise in_function_context(encode_record,vars()) from None
     pass
 
 def decode_timestamped_record(data:bytes, schema:Dict[ColName,ColType]) -> Tuple[
@@ -311,7 +311,7 @@ def decode_timestamped_record(data:bytes, schema:Dict[ColName,ColType]) -> Tuple
             raise Exception(f'{x} is of type {type(x)}, which is not a list')
             pass
     except Exception as e:
-        raise in_context(l1(decode_timestamped_record.__doc__).format(**vars())) from None
+        raise in_function_context(decode_timestamped_record,vars()) from None
     pass
 
 @dataclass
@@ -357,7 +357,7 @@ def __get_file_of(storage_path:Path,
             pass
         return files.setdefault(from_,__File(from_,uid,path,0))
     except Exception as e:
-        raise in_context(l1(__get_file_of.__doc__).format(**vars())) from None
+        raise in_function_context(__get_file_of,vars()) from None
     pass
     
 
