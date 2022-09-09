@@ -16,7 +16,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 from xju.assert_ import Assert
 from xju.jsonschema import Schema,OneOf
-from xju.xn import readableRepr
+from xju.xn import readable_repr
 
 def test():
     Schema(None).validate(None)
@@ -44,81 +44,81 @@ def test():
         Schema(int).validate('fred')
         assert None
     except Exception as e:
-        assert readableRepr(e)=="Failed to verify 'fred' conforms to json schema <class 'int'> because\n'fred' is not an Int.",repr(readableRepr(e))
+        assert readable_repr(e)=="Failed to verify 'fred' conforms to json schema <class 'int'> because\n'fred' is not an Int.",repr(readable_repr(e))
     try:
         Schema(float).validate('fred')
         assert None
     except Exception as e:
-        assert readableRepr(e)=="Failed to verify 'fred' conforms to json schema <class 'float'> because\n'fred' is not a Float.",repr(readableRepr(e))
+        assert readable_repr(e)=="Failed to verify 'fred' conforms to json schema <class 'float'> because\n'fred' is not a Float.",repr(readable_repr(e))
     try:
         Schema(str).validate(4)
         assert None
     except Exception as e:
-        assert readableRepr(e)=="Failed to verify 4 conforms to json schema <class 'str'> because\n4 is not a String.",repr(readableRepr(e))
+        assert readable_repr(e)=="Failed to verify 4 conforms to json schema <class 'str'> because\n4 is not a String.",repr(readable_repr(e))
     try:
         Schema([str]).validate([4])
         assert None
     except Exception as e:
-        assert readableRepr(e)=="Failed to verify [4] conforms to json schema [<class 'str'>] because\nfailed to validate list item 0 because\nfailed to verify 4 conforms to json schema <class 'str'> because\n4 is not a String.",repr(readableRepr(e))
+        assert readable_repr(e)=="Failed to verify [4] conforms to json schema [<class 'str'>] because\nfailed to validate list item 0 because\nfailed to verify 4 conforms to json schema <class 'str'> because\n4 is not a String.",repr(readable_repr(e))
     try:
         Schema([str]).validate(['fred',4])
         assert None
     except Exception as e:
-        assert readableRepr(e)=="Failed to verify ['fred', 4] conforms to json schema [<class 'str'>] because\nfailed to validate list item 1 because\nfailed to verify 4 conforms to json schema <class 'str'> because\n4 is not a String.",repr(readableRepr(e))
+        assert readable_repr(e)=="Failed to verify ['fred', 4] conforms to json schema [<class 'str'>] because\nfailed to validate list item 1 because\nfailed to verify 4 conforms to json schema <class 'str'> because\n4 is not a String.",repr(readable_repr(e))
     try:
         Schema({'a':int,'b':str}).validate({'a':8,'b':6})
         assert None
     except Exception as e:
-        assert readableRepr(e)=="Failed to verify {'a': 8, 'b': 6} conforms to json schema {'a': <class 'int'>, 'b': <class 'str'>} because\nfailed to validate dictionary item 'b' because\nfailed to verify 6 conforms to json schema <class 'str'> because\n6 is not a String."or readableRepr(e)=="Failed to verify {'b': 6, 'a': 8} conforms to json schema {'b': <class 'str'>, 'a': <class 'int'>} because\nfailed to validate dictionary item 'b' because\nfailed to verify 6 conforms to json schema <class 'str'> because\n6 is not a String.",repr(readableRepr(e))
+        assert readable_repr(e)=="Failed to verify {'a': 8, 'b': 6} conforms to json schema {'a': <class 'int'>, 'b': <class 'str'>} because\nfailed to validate dictionary item 'b' because\nfailed to verify 6 conforms to json schema <class 'str'> because\n6 is not a String."or readable_repr(e)=="Failed to verify {'b': 6, 'a': 8} conforms to json schema {'b': <class 'str'>, 'a': <class 'int'>} because\nfailed to validate dictionary item 'b' because\nfailed to verify 6 conforms to json schema <class 'str'> because\n6 is not a String.",repr(readable_repr(e))
         pass
     try:
         Schema({int:str}).validate({'sal':'fred',2:'jock'})
         assert None
     except Exception as e:
-        assert readableRepr(e)=="Failed to verify "+repr({'sal':'fred',2:'jock'})+" conforms to json schema {<class 'int'>: <class 'str'>} because\nfailed to validate dictionary item 'sal' because\nfailed to verify 'sal' conforms to json schema <class 'int'> because\n'sal' is not an Int.",repr(readableRepr(e))
+        assert readable_repr(e)=="Failed to verify "+repr({'sal':'fred',2:'jock'})+" conforms to json schema {<class 'int'>: <class 'str'>} because\nfailed to validate dictionary item 'sal' because\nfailed to verify 'sal' conforms to json schema <class 'int'> because\n'sal' is not an Int.",repr(readable_repr(e))
         pass
     try:
         Schema(OneOf(int,str)).validate(None)
         assert None
     except Exception as e:
-        assert readableRepr(e)=="Failed to verify None conforms to json schema one of (<class 'int'>, <class 'str'>) because\nFailed to verify None conforms to json schema <class 'int'> because\nNone is not an Int. and Failed to verify None conforms to json schema <class 'str'> because\nNone is not a String..",repr(readableRepr(e))
+        assert readable_repr(e)=="Failed to verify None conforms to json schema one of (<class 'int'>, <class 'str'>) because\nFailed to verify None conforms to json schema <class 'int'> because\nNone is not an Int. and Failed to verify None conforms to json schema <class 'str'> because\nNone is not a String..",repr(readable_repr(e))
         
         pass
     try:
         Schema(None).validate(True)
         assert None
     except Exception as e:
-        assert readableRepr(e)=='Failed to verify True conforms to json schema None because\nTrue is not None.',repr(readableRepr(e))
+        assert readable_repr(e)=='Failed to verify True conforms to json schema None because\nTrue is not None.',repr(readable_repr(e))
         pass
     try:
         Schema(2).validate(3)
         assert None
     except Exception as e:
-        assert readableRepr(e)=='Failed to verify 3 conforms to json schema 2 because\n3 is not 2.',repr(readableRepr(e))
+        assert readable_repr(e)=='Failed to verify 3 conforms to json schema 2 because\n3 is not 2.',repr(readable_repr(e))
         pass
     try:
         Schema(2).validate('jock')
         assert None
     except Exception as e:
-        assert readableRepr(e)=='''Failed to verify 'jock' conforms to json schema 2 because\n'jock' is not an integer.''',repr(readableRepr(e))
+        assert readable_repr(e)=='''Failed to verify 'jock' conforms to json schema 2 because\n'jock' is not an integer.''',repr(readable_repr(e))
         pass
     try:
         Schema('fred').validate(1)
         assert None
     except Exception as e:
-        assert readableRepr(e)=='''Failed to verify 1 conforms to json schema 'fred' because\n1 is not a string.''',repr(readableRepr(e))
+        assert readable_repr(e)=='''Failed to verify 1 conforms to json schema 'fred' because\n1 is not a string.''',repr(readable_repr(e))
         pass
     try:
         Schema('fred').validate('jock')
         assert None
     except Exception as e:
-        assert readableRepr(e)=='''Failed to verify 'jock' conforms to json schema 'fred' because\n'jock' is not 'fred'.''',repr(readableRepr(e))
+        assert readable_repr(e)=='''Failed to verify 'jock' conforms to json schema 'fred' because\n'jock' is not 'fred'.''',repr(readable_repr(e))
         pass
     try:
         x={'a':int,'c':int}
         Schema(x).validate({'a':1})
     except Exception as e:
-        Assert(readableRepr(e))=='''Failed to verify {'a': 1} conforms to json schema '''+repr(x)+''' because\nfailed to validate dictionary item 'c' because\n'c' is not in ['a'] and 'c' is not optional.'''
+        Assert(readable_repr(e))=='''Failed to verify {'a': 1} conforms to json schema '''+repr(x)+''' because\nfailed to validate dictionary item 'c' because\n'c' is not in ['a'] and 'c' is not optional.'''
     else:
         assert None
         pass
@@ -127,7 +127,7 @@ def test():
     try:
         Schema(False).validate(True)
     except Exception as e:
-        assert readableRepr(e)=='''Failed to verify True conforms to json schema False because\nTrue is not False.''',repr(readableRepr(e))
+        assert readable_repr(e)=='''Failed to verify True conforms to json schema False because\nTrue is not False.''',repr(readable_repr(e))
     else:
         assert None
         pass

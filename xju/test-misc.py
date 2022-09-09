@@ -1,5 +1,6 @@
-# Copyright (c) 2022 Trevor Taylor
-# coding: utf-8
+#!/usr/bin/env python3
+
+# Copyright (c) 2018 Trevor Taylor
 # 
 # Permission to use, copy, modify, and/or distribute this software for
 # any purpose with or without fee is hereby granted, provided that all
@@ -13,14 +14,4 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-from typing import NewType
-import json
-
-ByteCount=NewType('ByteCount',int)
-
-def toJson(x,cls=json.JSONEncoder):
-    return json.dumps(x,sort_keys=True,indent=4,separators=(',',': '),
-                      cls=cls)
-def fromJson(x):
-    return json.loads(x)
 

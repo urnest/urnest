@@ -17,19 +17,19 @@
 #
 
 
-from xju.cmc.io import FileLock,FileWriter,FileReader
+from xju.cmc.io import FileLock,FileWriter,FileReader,FileMode
 from pathlib import Path
 from xju.assert_ import Assert
-from xju.xn import readableRepr
+from xju.xn import readable_repr
 
-with FileWriter(Path('xxx.txt'),mode=0o666) as f:
+with FileWriter(Path('xxx.txt'),mode=FileMode(0o666)) as f:
     with FileLock(f) as l1:
         with FileReader(Path('xxx.txt')) as f2:
             try:
                 with FileLock(f2) as l2:
                     pass
             except Exception as e:
-                Assert(readableRepr(e))=='Failed to acquire non-blocking "flock" lock xxx.txt reader with close-on-exec True because\n[Errno 11] Resource temporarily unavailable.'
+                Assert(readable_repr(e))=='Failed to acquire non-blocking "flock" lock xxx.txt reader with close-on-exec True because\n[Errno 11] Resource temporarily unavailable.'
             else:
                 assert False, 'should not be here with {l2}'
                 pass

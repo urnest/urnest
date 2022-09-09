@@ -41,8 +41,8 @@ class Xn:
     def __init__(self, cause):
         '''cause is convertable to a string using str'''
         ''' e.g. cause can be an exception or a string like "file not found"'''
-        '''cause can also have a readableRepr() method, in which case that'''
-        '''will be used by readableRepr() below'''
+        '''cause can also have a readable_repr() method, in which case that'''
+        '''will be used by readable_repr() below'''
         self.cause = (cause,FileAndLine()) # file,line set below
         self.context:List[Tuple[str,FileAndLine]] = [] # (text,FileAndLine)
         pass
@@ -58,7 +58,7 @@ class Xn:
         y = '{cause[1]}{cause[0]}'.format(**vars(self))
         return x+y
 
-    def readableRepr(self)->str:
+    def readable_repr(self)->str:
         '''human (non-programmer) readable representation, omitting file
         and line, omitting intermediate stack entries, and producing a
         proper sentence i.e. capitalised and ending in full stop
@@ -69,7 +69,7 @@ class Xn:
             for s,fl in reversed(self.context)
             if fl.readable])
         try:
-            y:str=self.cause[0].readableRepr()
+            y:str=self.cause[0].readable_repr()
             assert isinstance(y,str)
         except:
             y = str(self.cause[0])
@@ -77,9 +77,9 @@ class Xn:
         return capitalise(x+y+'.')
     pass
 
-def readableRepr(e)->str:
-    if callable(getattr(e,'readableRepr',None)):
-        return e.readableRepr()
+def readable_repr(e)->str:
+    if callable(getattr(e,'readable_repr',None)):
+        return e.readable_repr()
     return str(e)
 
 def capitalise(s:str)->str:
@@ -122,14 +122,14 @@ def in_context(context:str, exceptionInfo=None, fl=None)->Exception:
             pass
         def str_(self)->str:
             return Xn.__str__(self)
-        def readableRepr(self)->str:
-            return Xn.readableRepr(self)
+        def readable_repr(self)->str:
+            return Xn.readable_repr(self)
         r=type(name,
                (Xn,exceptionType),
                {
                    '__init__':init,
                    '__str__':str_,
-                   'readableRepr':readableRepr
+                   'readable_repr':readable_repr
                })(r)
     
     st=[tuple(_) for _ in traceback.extract_tb(traceBack)]
@@ -172,9 +172,36 @@ class AllFailed(Exception):
         pass
     def __str__(self):
         return ', and\n'.join([str(cause) for cause in self.causes])
-    def readableRepr(self)->str:
+    def readable_repr(self)->str:
         return '; and\n'.join(['- '+
-                               indent('  ',desentence(readableRepr(cause)))
+                               indent('  ',desentence(readable_repr(cause)))
                                for cause in self.causes])
+    pass
+
+class Scope:
+    def __init__(self,description,
+                 log=lambda s: print('INFO: {s}'.format(**vars()))):
+        self.description=description
+        self.log=log
+        self.result_=None
+        log('+ '+self.description)
+        pass
+    def __enter__(self):
+        return self
+    def __exit__(self,eType,eVal,eTrc):
+        self.log('- '+self.description+' = '+ (str(eType) if eType else repr(self.result_)))
+        description=self.description
+        self.description=None
+        if eType:
+            raise in_context(description, (eType,eVal,eTrc)) from None
+        return False
+    def __del__(self):
+        if self.description:
+            self.log('- '+self.description+' = '+repr(self.result_))
+            pass
+        pass
+    def result(self,result):
+        self.result_=result
+        return result
     pass
 

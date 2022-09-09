@@ -19,13 +19,13 @@
 from xju.cmc.io import FileReader, FilePositionDelta
 from pathlib import Path
 from xju.assert_ import Assert
-from xju.xn import readableRepr
+from xju.xn import readable_repr
 
 try:
     with FileReader(Path("xxx.txt")) as f:
         pass
 except Exception as e:
-    Assert(readableRepr(e))=="Failed to open xxx.txt reader with close-on-exec True because\n[Errno 2] No such file or directory: 'xxx.txt'."
+    Assert(readable_repr(e))=="Failed to open xxx.txt reader with close-on-exec True because\n[Errno 2] No such file or directory: 'xxx.txt'."
 else:
     assert False, f'should not be here with {f}'
     pass
@@ -45,7 +45,7 @@ with FileReader(Path("xxx.txt")) as f:
     try:
         f.seek_to(FilePositionDelta(-1))
     except Exception as e:
-        Assert(readableRepr(e).replace('\n',' ')).matches(
+        Assert(readable_repr(e).replace('\n',' ')).matches(
             'Failed to position so next read occurs -1 bytes from start of file because.* Invalid argument.')
     else:
         assert False, 'should not b here'

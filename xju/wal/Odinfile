@@ -1,8 +1,6 @@
 %all==%all.tree:leaves
 
 %all.tree==<<
-(test-rfc2616.py)+(%py-opts):py3.exec.output
-(test-etc.py)+(%py-opts):py3.exec.output
 (test-wsgi.py)+(%py-opts):py3.exec.output
 
 

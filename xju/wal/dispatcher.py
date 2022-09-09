@@ -16,100 +16,12 @@
 import os
 import mimetypes
 
-from xju.xn import firstLineOf as l1,inContext
+from xju.xn import firstLineOf as l1,in_context
 from xju import pq
-from .etc import fromJson,toJson
+from xju.misc import fromJson,toJson
 from .wsgi import getVariablesFromWSGIenviron, getCookiesFromWSGIenviron, getHTTPHeadersFromWSGIenviron
 from typing import Set,Callable,Dict,Union,Tuple,List
     
-class Response:
-    def __init__(self,
-                 content:Union[bytes, #pre-encoded
-                               None]=None, #REVISIT: rules
-                 contentType:Union[str,None]=None, # e.g. text/html; charset=UTF-8
-                 contentEncoding:Union[str,None]=None):
-        assert content is None or isinstance(content,bytes),type(content)
-        assert contentType is None or content is not None, (contentType,type(content))
-        assert contentEncoding is None or content is not None, (contentEncoding,type(content))
-        self.content:Union[bytes,None]=content
-        self.contentType:Union[str,None]=contentType
-        self.contentEncoding:Union[str,None]=contentEncoding
-        self.cookies:Dict[str,Tuple[str,Dict[str,str]]]={} # name : (value, {attrName:attrValue} )
-        self.headers:List[Tuple[str,str]]=[] # (name,value)
-        self.location:Union[None,str]=None # for redirect
-        pass
-    def __str__(self):
-        c=(self.content or '')[0:150]
-        if len(self.content or '')>150: c=c+'...'
-        h=self.headers
-        k=self.cookies
-        return 'content {c!r}, headers {h!r}, cookies {k!r}'.format(**vars())
-    def __add__(self,rhs_):
-        'add {rhs_} to Response {self}'
-        try:
-            rhs=promoteContent(rhs_)
-            assert isinstance(rhs,Response),type(rhs)
-            lhs=self
-            assert lhs.content is None or rhs.content is None, 'content specified more than once'
-            result=Response()
-            result.content=rhs.content or lhs.content
-            result.contentType=rhs.contentType or lhs.contentType
-            result.contentEncoding=rhs.contentEncoding or lhs.contentEncoding
-            result.cookies=lhs.cookies.copy()
-            result.cookies.update(rhs.cookies)
-            result.headers=lhs.headers+rhs.headers
-            result.location=rhs.location or lhs.location
-            return result
-        except:
-            raise inContext(l1(Response.__add__.__doc__).format(**vars())) from None
-        pass
-    def __radd__(self,lhs_):
-        'add Response {self} to {lhs_}'
-        try:
-            return promoteContent(lhs_).__add__(self)
-        except:
-            raise inContext(l1(Response.__radd__.__doc__).format(**vars())) from None
-        pass
-    def cookieHeaders(self):
-        '''return headers for {self.cookies}'''
-        try:
-            result=[] # ('Set-Cookie', xxxx }
-            for name,va in self.cookies.items():
-                value=va[0]+''.join(['; {an}={av}'.format(**vars())
-                                     for an,av in va[1].items()])
-                result.append( ('Set-Cookie',f'''{name}={value}''') )
-                pass
-            return result
-        except:
-            raise inContext(
-                l1(Response.cookieHeaders.__doc__).format(**vars())) from None
-        pass
-    pass
-
-public_functions:Set[str]=set()
-
-restricted_functions:Dict[str,Callable]={}
-
-class ClientError(Exception):
-    'error to pass back to client'
-    def __init__(self,s):
-        Exception.__init__(self,s)
-        self.error=s
-        pass
-    pass
-
-class Forbidden(Exception):
-    def __init__(self,description):
-        Exception.__init__(self,description)
-        pass
-    pass
-
-class NotFound(Exception):
-    def __init__(self,description):
-        Exception.__init__(self,description)
-        pass
-    pass
-
 def getParam(param_name,
              json_params,
              request_params,
@@ -134,7 +46,7 @@ def getParam(param_name,
         request_param_names=request_params.keys()
         request_attr_names=request_attrs.keys()
         param_default_names=param_defaults.keys()
-        raise inContext('get value of %(param_name)s from params supplied as json-encoded "json_params" HTTP param (%(json_param_names)s), HTTP params (%(request_param_names)s), webapp2 request attributes (%(request_attr_names)s) or function paramter defaults (%(param_default_names)s)'%vars()) from None
+        raise in_context('get value of %(param_name)s from params supplied as json-encoded "json_params" HTTP param (%(json_param_names)s), HTTP params (%(request_param_names)s), webapp2 request attributes (%(request_attr_names)s) or function paramter defaults (%(param_default_names)s)'%vars()) from None
     pass
 
 def makeParams(remote_addr,method,headers,params,url,referer,cookies,f):
@@ -162,7 +74,7 @@ def makeParams(remote_addr,method,headers,params,url,referer,cookies,f):
                                   param_defaults)) for _ in param_names ])
         return result
     except:
-        raise inContext(l1(makeParams.__doc__)%vars()) from None
+        raise in_context(l1(makeParams.__doc__)%vars()) from None
     pass
 
 def promoteContent(content:Union[Response, #already good
@@ -188,7 +100,7 @@ def promoteContent(content:Union[Response, #already good
                             'text/json; charset=UTF-8')
         raise Exception('do not know what HTTP HTTP CONTENT-TYPE to use for a {contentType} object - return an explicit wal.Response to set CONTENT-TYPE'.format(**vars()))
     except:
-        raise inContext(l1(promoteContent.__doc__).format(**vars())) from None
+        raise in_context(l1(promoteContent.__doc__).format(**vars())) from None
     pass
 
 class Dispatcher:
@@ -220,17 +132,17 @@ class Dispatcher:
                 self.notFound(path,start_response)
         except Forbidden as e:
             self.log('INFO: '+str(
-                inContext(l1(Dispatcher.main.__doc__).format(**vars()))))
+                in_context(l1(Dispatcher.main.__doc__).format(**vars()))))
             return self.forbidden(start_response)
         except NotFound as e:
             self.log(str(
-                inContext(l1(Dispatcher.main.__doc__).format(**vars()))))
+                in_context(l1(Dispatcher.main.__doc__).format(**vars()))))
             return self.notFound(path,start_response)
         except ClientError as e:
             return self.clientError(start_response,e)
         except Exception as e:
             self.logError('ERROR: '+str(
-                inContext(l1(Dispatcher.main.__doc__).format(**vars()))))
+                in_context(l1(Dispatcher.main.__doc__).format(**vars()))))
             return self.serverError(start_response)
         pass
     def dispatchToFunction(self,name,environ,start_response):
@@ -287,7 +199,7 @@ class Dispatcher:
             start_response('200 OK',headers)
             return [result.content]
         except:
-            raise inContext(l1(Dispatcher.dispatchToFunction.__doc__).format(
+            raise in_context(l1(Dispatcher.dispatchToFunction.__doc__).format(
                 **vars())) from None
         pass
     

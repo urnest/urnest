@@ -15,7 +15,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-from .xn import Xn,in_context,firstLineOf,readableRepr
+from .xn import Xn,in_context,in_function_context,firstLineOf,readable_repr
 
 l1=firstLineOf
 
@@ -92,7 +92,7 @@ def validateSchemaElement(x):
     pass
 
 def validate(schema,x):
-    'verify {x!r} conforms to json schema {schema!}'
+    'verify {x!r} conforms to json schema {schema!r}'
     try:
         if schema is None and not x is None:
             raise Exception('%(x)r is not None'%vars())
@@ -191,7 +191,7 @@ def validate(schema,x):
                     pass
                 choices=choices[1:]
                 pass
-            raise Exception(' and '.join([readableRepr(_) for _ in failures]))
+            raise Exception(' and '.join([readable_repr(_) for _ in failures]))
         if type(schema) is bool:
             if x==schema: return x
             raise Exception('{x!r} is not {schema!r}'.format(**vars()))

@@ -17,31 +17,31 @@
 #
 
 
-from xju.cmc.io import FileWriter,FileReader
+from xju.cmc.io import FileWriter,FileReader,FileMode
 from pathlib import Path
 from xju.assert_ import Assert
-from xju.xn import readableRepr
+from xju.xn import readable_repr
 
 try:
     with FileWriter(Path("xxx.txt")) as f:
         pass
 except Exception as e:
-    Assert(readableRepr(e))=="Failed to open file writer for xxx.txt with with create mode None, must not exist False, close-on-exec True because\n[Errno 2] No such file or directory: 'xxx.txt'."
+    Assert(readable_repr(e))=="Failed to open file writer for xxx.txt with with create mode None, must not exist False, close-on-exec True because\n[Errno 2] No such file or directory: 'xxx.txt'."
 else:
     assert False, f'should not be here with {f}'
     pass
 
-with FileWriter(Path('xxx.txt'),mode=0o666) as f:
+with FileWriter(Path('xxx.txt'),mode=FileMode(0o666)) as f:
     f.output.write(b'fred')
     Assert(f.size())==4
     f.output.write(b'ward')
     pass
 
 try:
-    with FileWriter(Path("xxx.txt"), mode=0o666, must_not_exist=True) as f:
+    with FileWriter(Path("xxx.txt"), mode=FileMode(0o666), must_not_exist=True) as f:
         pass
 except FileExistsError as e:
-    Assert(readableRepr(e))=="Failed to open file writer for xxx.txt with with create mode 438, must not exist True, close-on-exec True because\n[Errno 17] File exists: 'xxx.txt'."
+    Assert(readable_repr(e))=="Failed to open file writer for xxx.txt with with create mode 438, must not exist True, close-on-exec True because\n[Errno 17] File exists: 'xxx.txt'."
 else:
     assert False, f'should not be here with {f}'
     pass

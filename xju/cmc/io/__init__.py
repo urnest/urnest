@@ -28,7 +28,7 @@ import contextlib
 import fcntl
 from dataclasses import dataclass
 from xju.xn import in_function_context, firstLineOf as l1
-from xju import ByteCount
+from xju.misc import ByteCount
 
 FilePosition=NewType('FilePosition',int)
 FilePositionDelta=NewType('FilePositionDelta',int)

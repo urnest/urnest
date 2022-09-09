@@ -14,7 +14,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-from xju.xn import inContext,readableRepr,firstLineOf as l1
+from xju.xn import in_function_context,in_context,firstLineOf as l1
 from xju import assert_
 
 CTLs=set.union(set([chr(n) for n in range(0,32)]),set([chr(127)]))
@@ -35,10 +35,10 @@ def validateToken(name):
                     raise Exception(f'{c!r} is a separator')
             except:
                 rest=name[i:]
-                raise inContext(f'validate first char' if i==0 else f'validate char at ...{rest!r}') from None
+                raise in_context(f'validate first char' if i==0 else f'validate char at ...{rest!r}') from None
             pass
         return name
     except:
-        raise inContext(l1(validateToken.__doc__).format(**vars())) from None
+        raise in_function_context(validateToken,vars()) from None
     pass
 

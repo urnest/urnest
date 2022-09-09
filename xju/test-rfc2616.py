@@ -16,8 +16,8 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-from xju.wal.rfc2616 import validateToken
-from xju.xn import readableRepr
+from xju.rfc2616 import validateToken
+from xju.xn import readable_repr
 from xju import assert_
 
 if __name__=='__main__':
@@ -25,7 +25,7 @@ if __name__=='__main__':
     try:
         validateToken('')
     except Exception as e:
-        assert_.equal(readableRepr(e),'''\
+        assert_.equal(readable_repr(e),'''\
 Failed to validate RFC2616 token '' because
 '' is empty.''')
     else:
@@ -34,7 +34,7 @@ Failed to validate RFC2616 token '' because
     try:
         validateToken('fred jones')
     except Exception as e:
-        assert_.equal(readableRepr(e),'''\
+        assert_.equal(readable_repr(e),'''\
 Failed to validate RFC2616 token 'fred jones' because
 failed to validate char at ...' jones' because
 ' ' is a separator.''')
@@ -44,7 +44,7 @@ failed to validate char at ...' jones' because
     try:
         validateToken('fred\njones')
     except Exception as e:
-        assert_.equal(readableRepr(e),'''\
+        assert_.equal(readable_repr(e),'''\
 Failed to validate RFC2616 token 'fred\\njones' because
 failed to validate char at ...'\\njones' because
 '\\n' is a control character.''')
