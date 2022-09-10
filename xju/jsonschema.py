@@ -15,9 +15,9 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-from .xn import Xn,in_context,in_function_context,firstLineOf,readable_repr
+from .xn import Xn,in_context,in_function_context,first_line_of,readable_repr
 
-l1=firstLineOf
+l1=first_line_of
 
 class Schema:
     def __init__(self,x):

@@ -88,13 +88,13 @@ def capitalise(s:str)->str:
     return s
 
 def in_function_context(function:Callable, vars:Dict={}, exceptionInfo=None, fl=None)->Exception:
-    """Make a Xn that includes exception info and context as firstLineOf(f.__doc__).format(**vars()).
+    """Make a Xn that includes exception info and context as first_line_of(f.__doc__).format(**vars()).
     If exceptionInfo[1] is already a Xn just add context,
     otherwise use exceptionInfo as cause for a new Xn.
 
     exceptionInfo is as returned by sys.exc_info()
     """
-    return in_context(firstLineOf(function.__doc__).format(**vars),
+    return in_context(first_line_of(function.__doc__).format(**vars),
                       exceptionInfo=exceptionInfo,
                       fl=fl)
 
@@ -153,7 +153,7 @@ def in_context(context:str, exceptionInfo=None, fl=None)->Exception:
     return r
 
 
-def firstLineOf(x)->str:
+def first_line_of(x)->str:
     '''return first line of str({x})'''
     return str(x).split('\n')[0]
 

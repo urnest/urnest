@@ -17,7 +17,7 @@
 
 import urllib
 from xju.xn import in_context
-from xju.xn import firstLineOf as l1
+from xju.xn import first_line_of as l1
 from xju.assert_ import Assert
 from typing import Tuple,Dict,Mapping,Union,List,Any
 from urllib.parse import unquote as urlunquote
@@ -50,7 +50,7 @@ def parseDisposition(dispositionValue:str):
         v3=[(_[0],parseQuoted(_[1])) for _ in v2]
         return dict(v3)
     except:
-        raise in_context(l1(parseDisposition.__doc__).format(**vars())) from None
+        raise in_function_context(parseDisposition,vars()) from None
     pass
 
 class FileVar(object):
@@ -152,7 +152,7 @@ def getVariablesFromWSGIenviron(wsgiEnv:Mapping[str,Any])->Dict[str,Union[str,Fi
             pass
         return result
     except:
-        raise in_context(l1(getVariablesFromWSGIenviron.__doc__).format(**vars())) from None
+        raise in_function_context(getVariablesFromWSGIenviron,vars()) from None
     pass
 
 def getCookiesFromWSGIenviron(environ:Mapping[str,str])->Dict[str,str]:
@@ -165,7 +165,7 @@ def getCookiesFromWSGIenviron(environ:Mapping[str,str])->Dict[str,str]:
         if e: result=dict([_.strip().split('=') for _ in e.split(';')])
         return result
     except:
-        raise in_context(l1(getCookiesFromWSGIenviron.__doc__).format(**vars())) from None
+        raise in_function_context(getCookiesFromWSGIenviron,vars()) from None
     pass
 
 
@@ -176,5 +176,5 @@ def getHTTPHeadersFromWSGIenviron(environ)->Dict[str,str]: #name,value
         return dict([(name,value) for name,value in environ.items()
                      if name.startswith('HTTP_')])
     except:
-        raise in_context(l1(getHTTPHeadersFromWSGIenviron.__doc__).format(**vars())) from None
+        raise in_function_context(getHTTPHeadersFromWSGIenviron,vars()) from None
     pass

@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import NewType, Union, Literal, List, Optional
 import xju.cmc
 from xju.misc import ByteCount
-from xju.xn import in_context,in_function_context,firstLineOf as l1
+from xju.xn import in_context,in_function_context,first_line_of as l1
 from time import gmtime,struct_time
 from calendar import timegm
 

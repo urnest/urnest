@@ -16,7 +16,7 @@
 import os
 import mimetypes
 
-from xju.xn import firstLineOf as l1,in_context
+from xju.xn import first_line_of as l1,in_context
 from xju import pq
 from xju.misc import fromJson,toJson
 from .wsgi import getVariablesFromWSGIenviron, getCookiesFromWSGIenviron, getHTTPHeadersFromWSGIenviron
