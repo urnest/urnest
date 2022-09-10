@@ -21,7 +21,8 @@ from xju import pq
 from xju.misc import fromJson,toJson
 from .wsgi import getVariablesFromWSGIenviron, getCookiesFromWSGIenviron, getHTTPHeadersFromWSGIenviron
 from typing import Set,Callable,Dict,Union,Tuple,List
-    
+from . import public_functions, restricted_functions, ClientError,Forbidden,NotFound,Response,promoteContent
+
 def getParam(param_name,
              json_params,
              request_params,
@@ -75,32 +76,6 @@ def makeParams(remote_addr,method,headers,params,url,referer,cookies,f):
         return result
     except:
         raise in_context(l1(makeParams.__doc__)%vars()) from None
-    pass
-
-def promoteContent(content:Union[Response, #already good
-                                 pq.Selection, #text/html
-                                 dict,bool,list,float]): #text/json REVISIT: rules
-    '''promote content object to a valid Response'''
-    contentType=type(content)
-    try:
-        if isinstance(content,Response):
-            return content
-        if isinstance(content,pq.Selection):
-            return Response(content.utf8(),
-                            'text/html; charset=UTF-8')
-        if isinstance(content,dict) and (
-            'result' in content or
-            'error' in content):
-            return Response(toJson(content).encode('utf-8'),
-                            'text/json; charset=UTF-8')
-        if content is None or \
-           isinstance(content,dict) or isinstance(content,list) or \
-           isinstance(content,int) or isinstance(content,float):
-            return Response(toJson({'result':content}).encode('utf-8'),
-                            'text/json; charset=UTF-8')
-        raise Exception('do not know what HTTP HTTP CONTENT-TYPE to use for a {contentType} object - return an explicit wal.Response to set CONTENT-TYPE'.format(**vars()))
-    except:
-        raise in_context(l1(promoteContent.__doc__).format(**vars())) from None
     pass
 
 class Dispatcher:

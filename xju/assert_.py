@@ -30,6 +30,12 @@ class Assert():
             yc=y.__name__
             raise Exception('{self.x!r} is not an instance of class {yc} (it is of class {xc})'.format(**vars()))
         return self.x
+    def isNotInstanceOf(self,y):
+        if isinstance(self.x,y):
+            xc=self.x.__class__.__name__
+            yc=y.__name__
+            raise Exception('{self.x!r} is unexpectedly an instance of class {yc} (it is of class {xc})'.format(**vars()))
+        return self.x
     def isGreaterThan(self,y):
         if not self.x > y:
             raise Exception('{self.x!r} is not greater than {y!r}'.format(**vars()))

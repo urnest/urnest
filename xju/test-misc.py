@@ -14,4 +14,24 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
+import xju.misc
 
+from xju.assert_ import Assert
+
+x={
+    'fred':xju.misc.ByteCount(3),
+    'jock':[1,2,4.5,None,'x'],
+}
+y=xju.misc.toJson(x)
+Assert(y)=='''{
+    "fred": 3,
+    "jock": [
+        1,
+        2,
+        4.5,
+        null,
+        "x"
+    ]
+}'''
+
+Assert(xju.misc.fromJson(y))==x

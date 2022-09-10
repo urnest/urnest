@@ -26,11 +26,11 @@ import app
 
 from wsgiref.simple_server import make_server
 
-from xju import wal
+from xju.wal.dispatcher import Dispatcher
 
 port=int(sys.argv[1])
 
-httpd=make_server('', port, wal.Dispatcher(app,d).main)
+httpd=make_server('', port, Dispatcher(app,d).main)
 print("Serving HTTP on port {port}...".format(**vars()))
 
 # Respond to requests until process is killed

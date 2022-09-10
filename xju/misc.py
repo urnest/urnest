@@ -13,14 +13,16 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-from typing import NewType
+from typing import NewType,Union,List,Dict
 import json
 
 ByteCount=NewType('ByteCount',int)
 
-def toJson(x,cls=json.JSONEncoder):
-    return json.dumps(x,sort_keys=True,indent=4,separators=(',',': '),
-                      cls=cls)
-def fromJson(x):
-    return json.loads(x)
+def toJson(x:Union[str,int,float,None,List,Dict],cls=json.JSONEncoder) -> str:
+    '''JSON-encode {x}
+       - produces multi-line format with 4-space indent'''
+    return json.dumps(x,sort_keys=True,indent=4,separators=(',',': '),cls=cls)
 
+def fromJson(x) -> Union[str,int,float,None,List,Dict]:
+    '''JSON-decode {x}'''
+    return json.loads(x)
