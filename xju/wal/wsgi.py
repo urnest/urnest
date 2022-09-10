@@ -16,7 +16,7 @@
 #
 
 import urllib
-from xju.xn import in_context
+from xju.xn import in_context,in_function_context
 from xju.xn import first_line_of as l1
 from xju.assert_ import Assert
 from typing import Tuple,Dict,Mapping,Union,List,Any
