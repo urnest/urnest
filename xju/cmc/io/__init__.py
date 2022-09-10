@@ -78,7 +78,7 @@ class FileReader(contextlib.AbstractContextManager):
         try:
             self.input.seek(position, io.SEEK_SET)
             return self
-        except:
+        except Exception:
             raise in_function_context(FileReader.seek_to,vars()) from None
         pass
     
@@ -88,7 +88,7 @@ class FileReader(contextlib.AbstractContextManager):
         try:
             self.input.seek(offset, io.SEEK_CUR)
             return self
-        except:
+        except Exception:
             raise in_function_context(FileReader.seek_by,vars()) from None
         pass
     
@@ -96,9 +96,18 @@ class FileReader(contextlib.AbstractContextManager):
         '''return size of file'''
         try:
             return ByteCount(os.fstat(self.__fd).st_size)
-        except:
+        except Exception:
             raise in_function_context(FileReader.size,vars()) from None
         pass
+
+    def position(self) -> ByteCount:
+        '''get current position'''
+        try:
+            return ByteCount(self.input.seek(0, io.SEEK_CUR))
+        except Exception:
+            raise in_function_context(FileReader.position,vars()) from None
+        pass
+
     def fd(self) -> int:
         return self.__fd
     pass
@@ -193,6 +202,14 @@ class FileWriter(contextlib.AbstractContextManager):
             return ByteCount(os.fstat(self.__fd).st_size)
         except:
             raise in_function_context(FileWriter.size,vars()) from None
+        pass
+
+    def position(self) -> ByteCount:
+        '''get current position'''
+        try:
+            return ByteCount(self.output.seek(0, io.SEEK_CUR))
+        except Exception:
+            raise in_function_context(FileWriter.position,vars()) from None
         pass
 
     def fd(self) -> int:

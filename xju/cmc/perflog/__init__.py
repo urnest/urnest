@@ -83,12 +83,12 @@ class PerfLog(xju.cmc.CM):
         pass
     def __init__(self,
                  storage_path:Path,
-                 schema,
-                 synchronous_writes,
-                 hours_per_bucket,
-                 max_buckets,
-                 max_size,
-                 file_creation_mode):
+                 schema=Optional[Dict[ColName,ColType]]=None,
+                 synchronous_writes:Optional[bool]=None,
+                 hours_per_bucket:Optional[Hours]=None,
+                 max_buckets:Optiona[int]=None,
+                 max_size:Optional[ByteCount]=None,
+                 file_creation_mode:Optional[FileMode]=None):
         self.storage_path = storage_path
         if (isinstance(schema,Dict[ColName,ColType]) and
             isinstance(synchronous_writes,bool) and
@@ -162,27 +162,21 @@ class PerfLog(xju.cmc.CM):
         try:
             records_yielded = 0
             bytes_yielded = 0
-            sorted_timestamps=sorted(list(files.keys()))
-            bucket_from=timegm(bucket_of(hours_per_file,from_))
-            bucket_to=timegm(bucket_to(hours_per_file,to))
-            for t in sorted_timestamps[lower_bound(sorted_timestamps,bucket_from):
-                                       upper_bound(sorted_timestamps,bucket_to)]:
-                try:
-                    with open(files[t].path, 'r') as f:
-                        for l in f.readlines():
-                            try:
-                                assert l.endswith('\n')
-                                timestamp, col_value, sizes=decode_record(l[:-1], schema)
-                            except Exception as e:
-                                pass
-                            else:
-                                if timestamp >= from_ and timestamp < to:
-                                    yield (timestamp, col_values)
-                                    records_yielded += 1
-                                    bytes_yielded += size
-                                    if count==max_records or bytes_yielded>=max_bytes:
-                                        return
-                                    pass
+            for bucket_start,bucket_id in self.__tstore.get_buckets_of(self, from_, to):
+                with tstore.Reader(self.__tstore, (bucket_start,bucket_id)) as r:
+                    for l in TextReader(r).readlines():
+                        try:
+                            assert l.endswith('\n')
+                            timestamp, col_values, size=decode_record(l[:-1], schema)
+                        except Exception as e:
+                            corruption_handler(e)
+                        else:
+                            if timestamp >= from_ and timestamp < to:
+                                yield (timestamp, col_values)
+                                records_yielded += 1
+                                bytes_yielded += size
+                                if records_yielded==max_records or bytes_yielded>=max_bytes:
+                                    return
                                 pass
                             pass
                         pass
@@ -197,53 +191,50 @@ class PerfLog(xju.cmc.CM):
 
     def get_some_unseen_data(
             self,
-            seen:Dict[Tuple[Timestamp,UID], ByteCount],
+            seen:Dict[Tuple[BucketStart,BucketUID], ByteCount],
             max_bytes:ByteCount,
-            read_failed:Callable[[Timestamp,UID,Exception],Any]
-    ) -> Tuple[Dict[Tuple[Timestamp,UID], bytes], #new_data
-               List[Tuple[Timestamp,UID]]]:       #corrupt_files
-        '''return up to {max_bytes} bytes of unseen data from {self} given have seen {seen}
-           - new_data bytes end on record boundary i.e. always returns complete records
-           - new_data bytes are incremental to corresponding seen if UIDs match, otherwise
-             (if new_data has a different UID for same Timestamp) then
-              that seen data series is old; we have started a new one for that series)
-           - corrupt_files lists seen files that are corrupt (too large or don't end
-             on a record boundary); delete them for subsequent refetch
+            read_failed:Callable[[BucketStart,BucketUID,Exception],Any]
+    ) -> Dict[Tuple[BucketStart,BucketUID], (ByteCount,bytes)] #position,bytes
+        '''return up to {max_bytes} bytes of unseen data from {self} having seen {seen}
+           - new data ends on record boundary i.e. always returns complete records
+           - new data might truncate seen data
+           - new data size 0 means bucket does not exist (any longer)
            - read failures are passed to read_failed, skipping that file if read_failed returns
         '''
         try:
-            new_data={}
-            corrupt_files=[]
-            new_data_size:ByteCount=0
-            for from_, file in self.__files:
-                if new_data_size >= max_bytes:
-                    break
-                start_at=seen.get( (from_,file.uid), 0)
-                limit=min(max_bytes-new_data_size, file.size-start_at)
-                if start_at > file.size:
-                    corrupt_files.append( (from_,file.uid) )
-                    continue
-                if start_at == file.size:
-                    continue
-                try:
-                    with FileReader(file.path) as f:
-                        if start_at > 0:
-                            f.seek_to(start_at-1)
-                            b = f.read(1)
-                            if b != b'\n':
-                                corrupt_files.append( (from_.file.uid) )
-                                continue
-                            pass
-                        data=f.read(limit)
-                        data=data[:data.rfind(b'\n')+1]
-                        new_data[(from_,file.uid)]=data
-                        new_data_size+=len(data)
-                        pass
-                except Exception as e:
-                    read_failed(from_,file.uid,e)
+            result={}
+            result_size=0
+            for bucket, size in self.__tstore.list_unseen(seen).items():
+                bucket_start, bucket_id=*bucket
+                seen_size=seen.get(bucket,ByteCount(0))
+                if seen_size>size:
+                    seen_size=0
                     pass
+                with tstore.Reader(self.__tstore, bucket) as r:
+                    try:
+                        if seen_size>0:
+                            r.seek_to(seen_size-1)
+                            b=r.read(1)
+                            if b!=b'\n':
+                                seen_size=0
+                                pass
+                            pass
+                        read_size=size-seen_size
+                        if read_size>max_bytes-result_size:
+                            read_size=max_bytes-result_size
+                            pass
+                        r.seek_to(seen_size)
+                        data=r.read(read_size)
+                        result[bucket]=(seen_size,data)
+                        result_size+=len(data)
+                    except Exception as e:
+                        read_failed(bucket_start,bucket_id,e)
+                        pass
+                    pass
+                if result_size=max_bytes:
+                    break
                 pass
-            return new_data, corrupt_files
+            return result
         except Exception as e:
             raise in_function_context(PerfLog.get_some_unseen_data,vars()) from None
         pass
@@ -314,51 +305,6 @@ def decode_timestamped_record(data:bytes, schema:Dict[ColName,ColType]) -> Tuple
         raise in_function_context(decode_timestamped_record,vars()) from None
     pass
 
-@dataclass
-class __File:
-    from_:Timestamp
-    uid:UID,
-    path:Path
-    size:ByteCount
-    pass
-
-def __bucket_of(hours_per_file:int, timestamp:Timestamp) -> struct_time:
-    x = time.gmtime(timestamp)
-    h = int(x.tm_hour/hours_per_file)*hours_per_file
-    return struct_time(x.tm_year,x.tm_mon,x.tm_mday,h,0,0,0,0,0)
-
-def __bucket_path(storage_path:Path, bucket:struct_time) -> Path:
-    return storage_path / f'{bucket.tm_year}'/f'{bucket.tm_month:02}'/f'{bucket.tm_mday:02}'/f'{bucket.tm_hour:02}'
-    
-def __home_of(storage_path:Path, hours_per_file:int, timestamp:Timestamp) -> Tuple[Path,Timestamp]:
-    '''directory containing record with timestamp {timestamp} and its "from" timestmap'''
-    bucket = __bucket_of(hours_per_file:Path,timestamp)
-    return (__bucket_path(storage_path,bucket),timegm(bucket))
-
-def __get_file_of(storage_path:Path,
-                  files::Dict[ Timestamp, __File ],
-                  hours_per_file:int,
-                  timestamp:Timestamp) -> __File:
-    '''get {storage_path} file of record with timestamp {timestamp}
-           - creates any missing parent directories but not file itself'''
-    try:
-        bucket = __bucket_of(hours_per_file,timestamp)
-        from_ = timegm(bucket)
-        f = files.get(from_,None)
-        if isinstance(f, __File):
-            return f
-        dir=__bucket_path(storage_path,bucket)
-        os.makedirs(dir)
-        while True:
-            uid=uuid4()
-            path=dir / f'{uid}.txt'
-            if not path.exists():
-                break
-            pass
-        return files.setdefault(from_,__File(from_,uid,path,0))
-    except Exception as e:
-        raise in_function_context(__get_file_of,vars()) from None
-    pass
     
 
 __attrs_schema=xju.jsonschema.Schema({
