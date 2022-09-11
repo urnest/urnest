@@ -19,18 +19,18 @@ from typing import NewType
 from xju.io import FileReader,FileWriter,FileMode
 
 BucketStart=NewType('BucketStart',int)
-BucketUID=NewType('BucketUID',str)
+BucketID=NewType('BucketID',str)
 
 @dataclass
 class BucketInfo:
-    uid:BucketUID
+    uid:BucketID
     size:ByteCount
     pass
 
 class NoSuchBucket(Exception):
     bucket_start:BucketStart
-    bucket_id:BucketUID
-    def __init__(self, bucket_start:BucketStart, bucket_id:BucketUID):
+    bucket_id:BucketID
+    def __init__(self, bucket_start:BucketStart, bucket_id:BucketID):
         super.init(f'no bucket {bucket_id} starting at {bucket_start} yet')
         self.bucket_start = bucket_start
         self.bucket_id = bucket_id
@@ -39,11 +39,11 @@ class NoSuchBucket(Exception):
 
 class BucketAlreadyExists(Exception):
     bucket_start:BucketStart
-    bucket_info:BucketInfo
-    def __init__(self, bucket_start:BucketStart, bucket_info:BucketInfo):
-        super.init(f'no bucket {bucket_id} starting at {bucket_start} yet')
+    bucket_id:BucketID
+    def __init__(self, bucket_start:BucketStart, bucket_id:BucketID):
+        super.init(f'bucket at {bucket_start} already exists (it has uid {bucket_id})')
         self.bucket_start = bucket_start
-        self.bucket_info = bucket_info
+        self.bucket_id = bucket_id
         pass
     pass
 
@@ -122,14 +122,6 @@ class TStore:
         h = int(x.tm_hour/self.hours_per_file)*self.hours_per_file
         return timegm(struct_time(x.tm_year,x.tm_mon,x.tm_mday,h,0,0,0,0,0))
         
-    def get_bucket_of(self, Timestamp timestamp) -> Tuple[BucketStart, BucketInfo]:
-        '''Get start and id of TStore {self}'s bucket for timestamp {timestamp}
-           - raises NoSuchBucket if bucket does not exist'''
-        info = self.__buckets.get(self.calc_bucket_start(timestamp), None)
-        if isinstance(info, BucketInfo):
-            return info.uid
-        raise NoSuchBucket(timestamp)
-
     def get_buckets_of(self, Timestamp begin, Timestamp end) -> Sequence[Tuple[BucketStart,UID]]:
         '''get starts and ids of TStore {self}'s existing buckets covering time range [{begin},{end})'''
         begin_bucket=self.calc_bucket_start(begin)
@@ -139,13 +131,13 @@ class TStore:
         all_starts=[start for start,uid in all_buckets]
         return all_buckets[bisect_left(begin_bucket,all_starts):bisect_right(end_bucket,all_starts)]
 
-    def list_unseen(self,seen:Dict[Tuple[BucketStart,BucketUID], ByteCount]) -> Dict[Tuple[BucketStart,BucketUID], ByteCount]:
+    def list_unseen(self,seen:Dict[Tuple[BucketStart,BucketID], ByteCount]) -> Dict[Tuple[BucketStart,BucketID], ByteCount]:
         '''list sizes of TStore {self} buckets with unseen data having seen {seen}
            - note where an item in seen is past the end of our current
              data, result will include that bucket with its current size
            - where seen item does not exist (e.g. any more) it will appear in result 
              with size 0'''
-        result:Dict[Tuple[BucketStart,BucketUID], ByteCount]={}
+        result:Dict[Tuple[BucketStart,BucketID], ByteCount]={}
         seen_keys=set(seen.keys())
         bucket_keys=set([(start,info.uid) for start,info in self.__buckets.items()])
         # new
@@ -166,38 +158,54 @@ class TStore:
             pass
         return result
 
-    def get_bucket(self,bucket_start:BucketStart,bucket_id:BucketUID) -> Tuple[BucketInfo,Path]:
-        '''get {self} existing bucket {bucket_id} (start {bucket_start})
+    def get_bucket(self,bucket_start:BucketStart) -> BucketID:
+        '''get {self} existing bucket with start {bucket_start}
            - raises NoSuchBucket if bucket does not exist'''
         if bucket_start in self.__buckets:
-            info = self.__buckets[bucket_start]
-            if info.uid==bucket_id:
-                return info,self.__get_path_of(bucket_start,bucket_id)
-            pass
-        raise NoSuchBucket(bucket_start,bucket_id)
+            return self.__buckets[bucket_start]
+        raise NoSuchBucket(bucket_start)
 
-    def create_bucket(self,bucket_start:BucketStart,bucket_id:BucketUID) -> Tuple[BucketInfo,Path]:
-        '''create {self} bucket {bucket_id} (start {bucket_start})
-           - raises BucketAlreadyExists if bucket already exists
-           - does not create bucket file itself (see Writer below)'''
+    def create_bucket(self,bucket_start:BucketStart,bucket_id:BucketID):
+        '''create {self} bucket with start {bucket_start} and id {bucket_id}
+           - bucket can then be read and writtern with Reader and Writer
+           - raises BucketAlreadyExists if bucket already exists with specified start'''
         try:
             if bucket_start in self.__buckets:
-                bucket_info = self.__buckets[bucket_start]
-                if bucket_info.uid==bucket_id:
-                    raise BucketAlreadyExists(bucket_start,bucket_info)
-                self.delete_bucket(bucket_start,bucket_info)
-                assert not bucket_start in self.__buckets
+                raise BucketAlreadyExists(bucket_start,self.__buckets[bucket_start].uid)
                 pass
             self.__trim_buckets(self.max_buckets-1)
             bucket_info = self.__buckets.set_default(bucket_start,BucketInfo(bucket_id,ByteCount(0)))
             path=self.__get_path_of(bucket_start, bucket_id)
             os.makedirs(path.parent)
-            return bucket_info,path
+            with xju.cmc.io.FileWriter(path,
+                                       mode=self.store.file_creation_mode,
+                                       must_not_exist=True):
+                pass
         except Exception as e:
             raise in_function_context(TStore.create_bucket,vars())
         pass
 
-    def __get_path_of(self, bucket_start:BucketStart, bucket_id:BucketUID) -> Path:
+    def make_room_for(self, byte_count:ByteCount):
+        '''make room in TStore {self} for {byte_count} bytes of data
+           - deletes just enough buckets with oldest start times to make room'''
+        Assert(byte_count)<self.max_bytes
+        self.__trim_bytes(self.max_bytes-byte_count)
+        pass
+
+    def __get_bucket_info(self, bucket_start:BucketStart, bucket_id:BucketID):
+        '''get info for TStore {self}'s bucket with start {bucket_start} and id {bucket_id}
+           - raise NoSuchBucket if TStore has no bucket with start {bucket_start}
+           - raise BucketAlreadyExists if TStore's bucket with start {buckeet_start} has different id'''
+        try:
+            bucket_id=self.get_bucket(bucket_start)
+            if bucket_id != bucket_id:
+                raise BucketAlreadyExists(bucket_start,bucket_id)
+            return self.__buckets[bucket_start]
+        except Exception:
+            raise in_function_context(TStore.__get_bucket_info,vars())
+        pass
+    
+    def __get_path_of(self, bucket_start:BucketStart, bucket_id:BucketID) -> Path:
         '''get path to TStore {self}'s bucket with start {bucket_start} and id {bucket_id}'''
         '''- bucket need not exist'''
         x = time.gmtime(bucket_start)
@@ -247,19 +255,23 @@ class TStore:
 
 @xju.cmc.cmclass
 class Reader(xju.cmc.CM):
-    '''TStore {self.store} bucket {self.bucket[1]} (start {self.bucket[0]}) reader'''
+    '''TStore {self.store} reader for bucket with start {bucket_start} and id {bucket_id}'''
     store:Store
-    bucket:Tuple[BucketStart,UID]
+    bucket_start:BucketStart
+    bucket_id:BucketID
 
+    __info:BucketInfo
     __impl:xju.cmc.io.FileReader
     
-    def __init__(self, store:Store, bucket:Tuple[BucketStart,UID]):
-        '''create reader for TStore {self.store}'s bucket with start {bucket[0]} and id {bucket[1]}
+    def __init__(self, store:Store, bucket_start:BucketStart, bucket_id:BucketId):
+        '''create reader for TStore {self.store}'s bucket with start {bucket_start} and id {bucket_id}
            - raises NoSuchBucket if such a bucket does not yet exist'''
         try:
             self.store=store
-            self.bucket=bucket
-            self.__impl=xju.cmc.io.FileReader(self.store.get_bucket(*bucket))
+            self.bucket_start=bucket_start
+            self.bucket_id=bucket_id
+            self.info=self.__get_bucket_info(bucket_start,bucket_id)
+            self.__impl=xju.cmc.io.FileReader(self.store.__get_path_of(bucket_start,bucket_id))
         except Exception as e:
             raise in_function_context(Reader.__init__,vars()) from None
         pass
@@ -290,41 +302,38 @@ class Reader(xju.cmc.CM):
     def size(self) -> ByteCount:
         '''return size of bucket'''
         try:
-            return self.__impl.size()
+            return self.__info.size
         except:
             raise in_function_context(Reader.size,vars()) from None
         pass
 
     def read(self, max_bytes:ByteCount) -> bytes:
-        '''read up to {max_bytes} of data from current position'''
+        '''read up to {max_bytes} of data from TStore reader {self} current position'''
         pass
     pass
 
 
 @xju.cmc.cmclass
 class Writer(xju.cmc.CM):
-    '''TStore {self.store} bucket {self.bucket[0]} (start {self.bucket[1]}) writer'''
+    '''writer for TStore {self.store}' bucket with start {self.bucket_start} and id {self.bucket_id}'''
     store:Store
-    bucket:Tuple[BucketStart,UID]
+    bucket_start:BucketStart
+    bucket_id:BucketID
 
+    __info:BucketInfo
     __impl:xju.cmc.io.FileWriter
 
-    def __init__(self,store:Store,bucket:tuple[BucketStart,UID]):
-        '''create writer for TStore {self.store}'s bucket with start {bucket[0]} and id {bucket[1]}
-           - creates bucket if it does not exist yet
-           - deletes any existing bucket with same start but different id
+    def __init__(self,store:Store,bucket_start:BucketStart,bucket_id:BucketID):
+        '''create writer for TStore {self.store}'s bucket with start {bucket_start} and id {bucket_id}
+           - bucket must exist
            - ensures store stays within max_buckets along the way'''
         try:
             self.store=store
-            self.bucket=bucket
-            try:
-                self.__impl=xju.cmc.io.FileWriter(self.store.create_bucket(*self.bucket),
-                                                  mode=self.store.file_creation_mode,
-                                                  must_not_exist=True)
-            except BucketAlreadyExists as e:
-                self.__impl=xju.cmc.io.FileWriter(self.store.get_bucket(*self.bucket))
-                pass
-        pass
+            self.bucket_start=bucket_start
+            self.bucket_id=bucket_id
+            self.__info=self.store.__get_bucket_info(bucket_start,bucket_id)
+            self.__impl=xju.cmc.io.FileWriter(
+                self.store.__get_path_of(self.bucket_start,self.bucket_id))
         except Exception as e:
             raise in_function_context(Writer.__init__,vars()) from None
         pass
@@ -352,7 +361,7 @@ class Writer(xju.cmc.CM):
     def size(self) -> ByteCount:
         '''return size of bucket'''
         try:
-            return self.__impl.size()
+            return self.__info.size()
         except Exception:
             raise in_function_context(Writer.size,vars()) from None
         pass
@@ -366,37 +375,37 @@ class Writer(xju.cmc.CM):
         pass
 
     def append(self, data:bytes):
-        '''TStore writer {self} append {len(data)} bytes of data
+        '''TStore writer {self} append {len(data)} bytes of data assuming there is room
            - raises NoSuchBucket if bucket does not exist, which might be because:
              - trimming to make room for data deleted it
              - it was otherwise deleted since this Writer was created'''
         try:
-            Assert(len(data))<=self.store.max_bytes
-            self.store.__trim_bytes(self.store.max_bytes-delta)
-            bucket_info,_=self.store.get_bucket(*self.bucket)
-            self.__impl.seek(self.__impl.size())
+            Assert(len(data))<=self.store.max_bytes-self.store.current_size
+            self.__impl.seek_to(self.size())
             self.__impl.write(data)
-            self.store.current_size+=delta
-            bucket_info.size+=delta
+            self.store.current_size+=len(data)
+            bucket_info.size+=len(data)
         except Exception:
-            raise in_function_context(Writer.write,vars()) from None
+            raise in_function_context(Writer.append,vars()) from None
         pass
     pass
 
     def write(self, data:bytes):
-        '''TStore writer {self} write {len(data)} bytes of data at current position
+        '''TStore writer {self} write {len(data)} bytes of data at current position ''' \
+        '''assuming there is room
+           - assumes our bucket still in tstore
            - raises NoSuchBucket if bucket does not exist, which might be because:
              - trimming to make room for data deleted it
              - it was otherwise deleted since this Writer was created'''
         try:
             new_size=max(self.size(),self.position()+len(data))
             delta=new_size-self.size()
-            Assert(delta)<=self.store.max_bytes
-            self.store.__trim_bytes(self.store.max_bytes-delta)
-            bucket_info,path=self.store.get_bucket(*self.bucket)
+            Assert(delta)<=self.store.max_bytes-self.store.current_size
+            Assert(self.bucket_start).isIn(self.store.__buckets)
+            Assert(self.store.__buckets[self.bucket_start]).isInFact(self.info)
             self.__impl.write(data)
             self.store.current_size+=delta
-            bucket_info.size+=delta
+            self.__info.size+=delta
         except Exception:
             raise in_function_context(Writer.write,vars()) from None
         pass

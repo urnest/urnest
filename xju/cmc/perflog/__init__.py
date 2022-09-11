@@ -52,7 +52,6 @@ class PerfLog(xju.cmc.CM):
     synchronous_writes:bool
 
     __tstore:tstore.TStore
-    __writers:xju.cmc.Dict[ Timestamp, tstore.Writer ]
 
     @overload
     def __init__(self,
@@ -151,27 +150,28 @@ class PerfLog(xju.cmc.CM):
             raise in_function_context(PerfLog.add,vars()) from None
         pass
 
-    def fetch(from_:Timestamp,
-              to:Timestamp,
+    def fetch(begin:Timestamp,
+              end:Timestamp,
               max_records:int,
               max_bytes:ByteCount,
               corruption_handler:Callable[[Exception],Any]) -> Iter[
                   Tuple[float, List[Union[str,int,float,None]]]]
-        '''yield each record of PerfLog {self} with timestamp at or after {from_} excluding records with timestamp at or after {to} and all further records once {max_bytes} bytes have already been yielded or {max_records} records have been yielded
+        '''yield each record of PerfLog {self} with timestamp at or after {begin} excluding records with timestamp at or after {end} and all further records once {max_bytes} bytes have already been yielded or {max_records} records have been yielded
            - note that records returned are in addition order, which is not necessarily time order'''
         try:
             records_yielded = 0
             bytes_yielded = 0
-            for bucket_start,bucket_id in self.__tstore.get_buckets_of(self, from_, to):
+            for bucket_start,bucket_id in self.__tstore.get_buckets_of(self, begin, end):
                 with tstore.Reader(self.__tstore, (bucket_start,bucket_id)) as r:
-                    for l in TextReader(r).readlines():
+                    for l in __read_lines(r):
                         try:
-                            assert l.endswith('\n')
-                            timestamp, col_values, size=decode_record(l[:-1], schema)
+                            if not l.endswith(b'\n'):
+                                raise Exception(f'{l!r} does not end in \\n')
+                            timestamp, col_values, size=decode_timestamped_record(l[:-1], schema)
                         except Exception as e:
                             corruption_handler(e)
                         else:
-                            if timestamp >= from_ and timestamp < to:
+                            if timestamp >= begin and timestamp < end:
                                 yield (timestamp, col_values)
                                 records_yielded += 1
                                 bytes_yielded += size
@@ -191,10 +191,10 @@ class PerfLog(xju.cmc.CM):
 
     def get_some_unseen_data(
             self,
-            seen:Dict[Tuple[BucketStart,BucketUID], ByteCount],
+            seen:Dict[Tuple[BucketStart,BucketID], ByteCount],
             max_bytes:ByteCount,
-            read_failed:Callable[[BucketStart,BucketUID,Exception],Any]
-    ) -> Dict[Tuple[BucketStart,BucketUID], (ByteCount,bytes)] #position,bytes
+            read_failed:Callable[[BucketStart,BucketID,Exception],Any]
+    ) -> Dict[Tuple[BucketStart,BucketID], (ByteCount,bytes)] #position,bytes
         '''return up to {max_bytes} bytes of unseen data from {self} having seen {seen}
            - new data ends on record boundary i.e. always returns complete records
            - new data might truncate seen data
@@ -238,21 +238,91 @@ class PerfLog(xju.cmc.CM):
         except Exception as e:
             raise in_function_context(PerfLog.get_some_unseen_data,vars()) from None
         pass
-    
-    def __get_writer(self, timestamp:Timestamp) -> xju::io:FileWriter:
-        '''get PerfLog {self} writer for file of record with timestamp {timestamp}
-           - creates any missing file and parent directories'''
-        try:
-            file, from_ = self.__get_file_of(timstamp)
-            x = self.__writers.get(from_,None)
-            if x is not None:
-                return x
-            self.__writers.popall() #only keep 1 writer
-            return self.__writers.setdefault(
-                from_,xju::io::FileWriter(f.path,mode=self.file_creation_mode))
-        except Exception as e:
-            raise in_function_context(PerfLog.__get_writer,vars()) from None
+    pass
+
+class Recorder:
+    '''record appender for PerfLog {self.perflog}'''
+    perflog;PerfLog
+    __writers:xju.cmc.Dict[ Tuple[BucketStart,BucketID], tstore.Writer ]
+
+    def __init__(self, perflog:PerfLog):
+        self.perflog=perflog
         pass
+
+    def record(timestamp:Timestamp, record:List):
+        '''record in PerfLog {self.perflog} at timestamp {timestamp} record {record!r}'''
+        try:
+            bucket_start=self.perflog.tstore.calc_bucket_start(timestamp)
+            encoded_record=encode_timestamped_record(timestamp-bucket_start,
+                                                     record,
+                                                     self.perflog.schema)
+            self.perflog.tstore.make_room_for(len(encoded_record))
+            try:
+                bucket_id=self.perflog.__tstore.get_bucket(bucket_start)
+            except tstore.NoSuchBucket:
+                bucket_id=BucketID(f'{time.time():.06f}')
+                self.perflog.__tstore.create_bucket(bucket_start,bucket_id)
+                pass
+            if (bucket_start,bucket_id) not in self.__writers:
+                # only keep one writer because most records will go into same or new bucket
+                self.__writers.pop_all()
+                self.__writers[(bucket_start,bucket_id)]=tstore.Writer(
+                    self.perflog.__tstore,
+                    bucket_start,
+                    bucket_id)
+                pass
+            self.__writers[(bucket_start,bucket_id)].append(encoded_record)
+        except Exception:
+            raise in_function_context(Recorder.record,vars())
+        pass
+    pass
+
+
+class Tracker:
+    '''tracker updating PerfLog {self.perlog} with unseen data
+       - tracker assumes {self.perflog} has same max bytes and max buckets as source'''
+    perflog:PerfLog
+
+    def __init__(self,perflog:Perflog):
+        self.perflog=perflog
+        pass
+
+    def write_unseen_data(self, data:Dict[Tuple[BucketStart,BucketID], (ByteCount,bytes)]):
+        '''write unseen data to PerfLog {self.perflog}'''
+        try:
+            for bucket_start, bucket_id in data:
+                position,data=data[(bucket_start,bucket_id)]
+                try:
+                    try:
+                        existing_id=self.perflog.__tstore.get_bucket(bucket_start)
+                        if existing_id != bucket_id:
+                            self.perflog.__tstore.delete_bucket(bucket_start,existing_id)
+                            self.perflog.__tstore.get_bucket(bucket_start,bucket_id) # will raise
+                            pass
+                    except NoSuchBucket:
+                        self.perflog.create_bucket(bucket_start,bucket_id)
+                        pass
+                    if position==0 and len(data)==0:
+                        self.perflog.__tstore.delete_bucket(bucket_start,bucket_id)
+                    else:
+                        # there is room (as long as self.perflog has same max_bytes, max_buckets
+                        # as source)
+                        with tstore.Writer(self.perflog.tstore,bucket_start,bucket_id) as writer:
+                            writer.seek_to(position)
+                            writer.write(data)
+                            writer.truncate()
+                            pass
+                        pass
+                    pass
+                except Exception:
+                    raise in_context(f'write {len(data)} bytes of data at position {position} '
+                                     f'of bucket with start {bucket_start} and id {bucket_id}')
+                pass
+            pass
+        except Exception:
+            raise in_function_context(Tracker.write_unseen_data,vars()) from None
+        pass
+
 
 def validate_record(record:List, schema:schema:Dict[ColName,ColType]) -> List:
     '''validate record {record} against schema {schema}
@@ -306,7 +376,33 @@ def decode_timestamped_record(data:bytes, schema:Dict[ColName,ColType]) -> Tuple
     pass
 
     
-
+def __read_lines(r:Reader) -> Iter[bytes]:
+    r'''read all \n-separated lines from PerLog reader {r}
+        - yield one record at a time, including any terminating "\n"
+          * where the file does not end in \n the last record yielded will have no "\n"'''
+    try:
+        buffered=io.BytesIO()
+        next:bytes=r.read(1024)
+        while len(next):
+            recs=next.split(b'\n')
+            while len(recs)>1:
+                buffered.write(recs[0])
+                buffered.write(b'\n')
+                yield buffered.getvalue()
+                buffered=io.BytesIO()
+                recs=recs[1:]
+                pass
+            if len(next):
+                buffered.write(recs[0])
+                yield buffered.getvalue()
+                pass
+            pass
+        pass
+    except Exception as e:
+        raise in_function_context(__read_records,vars())
+    pass
+                
+                
 __attrs_schema=xju.jsonschema.Schema({
     'schema':[ [str,OneOf('str','int','float','(str)','(int)','(float)')] ],
     'synchronous_writes':bool
