@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -ex
+set -e
 
 ODIN_file="$1"
 ODIN_py_r="$2"
