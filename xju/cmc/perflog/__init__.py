@@ -15,15 +15,13 @@
 #
 # perflog stores time-series data in a size-limited structured directory of plain text
 # files suited to low-rate writes (e.g. 1 record every 5 seconds) and retrieval by
-# time period, with each record being a sequence of int, float, str values
+# time period, with each record being a sequence of optional int/float/str values
 # to a specified schema
 #
 # perflog supports incremental mirroring of data (one-way-sync), e.g. supporting
 # incremental remote backup
 #
-# perflog deletes existing data on schema change (on startup) or hours_per_file changed
 # perflog can perform all writes synchronously
-#
 
 from pathlib import Path
 from typing import NewType, Union, Literal, List, Optional
@@ -44,15 +42,23 @@ UID=NewType('UID',str)
 
 @xju.cmc.cmclass
 class PerfLog(xju.cmc.CM):
-    '''{storage_path} size limited to {max_size} bytes with record schema {self.schema}, ''' \
-    '''{self.hours_per_file} hours-per-file, file creation mode {self.file_creation_mode} ''' \
-    '''and syncrhonous_writes {self.synchronous_writes}'''
+    '''{storage_path} size limited to {selff.max_size()} bytes/{self.max_files()} files with ''' \
+        '''record schema {self.schema}, {self.hours_per_bucket()} hours per file and ''' \
+        '''filecreation mode 0o{self.file_creation_mode():o} ''' \
+        '''and syncrhonous_writes {self.synchronous_writes}'''
     storage_path:Path,
     schema:Dict[ColName,ColType]
     synchronous_writes:bool
 
     __tstore:tstore.TStore
 
+    def hours_per_file(self):
+        return self.__tstore.hours_per_bucket
+    def max_size(self):
+        return self.__tstore.max_bytes
+    def max_files(self):
+        return self.__tstore.max_buckets
+    
     @overload
     def __init__(self,
                  storage_path:Path,
@@ -99,7 +105,7 @@ class PerfLog(xju.cmc.CM):
                 self.schema=schema
                 self.synchronous_writes=synchronous_writes
                 os.makedirs(storage_path, file_creation_mode)
-                __write_attrs(storage_path / 'perflog.json', schema, synchronous_writes)
+                write_attrs(storage_path / 'perflog.json', schema, synchronous_writes)
                 try:
                     self.__tstore=tstore.TStore(storage_path / 'tstore',
                                                 hours_per_bucket,
@@ -119,7 +125,7 @@ class PerfLog(xju.cmc.CM):
         else:
             try:
                 self.__tstore=tstore.TStore(storage_path / 'tstore')
-                self.schema,self.synchronous_writes=__read_attrs(storage_path / 'perflog.json')
+                self.schema,self.synchronous_writes=read_attrs(storage_path / 'perflog.json')
             except Exception as e:
                 raise in_context(
                     '''open existing PerfLog at {storage_path} reading attributes from its perflog.json file'''.format(**vars())) from None
@@ -129,27 +135,6 @@ class PerfLog(xju.cmc.CM):
     def __str__(self) -> str:
         return l1(PerfLog.__doc__).format(**vars())
     
-    def add(timestamp:float, record:List):
-        '''add {record} with timestamp {timestamp}
-           - verifies record conforms to {self.schema}
-           - trims oldest data to stay under {self.max_size}
-           - sync file system before returning if self.synchronous_writes'''
-        try:
-            file = self.__get_file_of(timestamp)
-            data = encode_timestamped_record(timestamp-file.from_, record, self.schema)
-            self.__trim(headroom=len(data))
-            write=self.__get_writer(timestamp)
-            writer.seek(writer.size())
-            writer.output.write(data)
-            if self.synchronous_writes:
-                writer.sync()
-                pass
-            self.get_or_create_file(timestamp).size+=len(data)
-            self.__current_size+=len(data)
-        except Exception:
-            raise in_function_context(PerfLog.add,vars()) from None
-        pass
-
     def fetch(begin:Timestamp,
               end:Timestamp,
               max_records:int,
@@ -163,7 +148,7 @@ class PerfLog(xju.cmc.CM):
             bytes_yielded = 0
             for bucket_start,bucket_id in self.__tstore.get_buckets_of(self, begin, end):
                 with tstore.Reader(self.__tstore, (bucket_start,bucket_id)) as r:
-                    for l in __read_lines(r):
+                    for l in read_lines(r):
                         try:
                             if not l.endswith(b'\n'):
                                 raise Exception(f'{l!r} does not end in \\n')
@@ -323,7 +308,6 @@ class Tracker:
             raise in_function_context(Tracker.write_unseen_data,vars()) from None
         pass
 
-
 def validate_record(record:List, schema:schema:Dict[ColName,ColType]) -> List:
     '''validate record {record} against schema {schema}
        - returns record'''
@@ -346,7 +330,7 @@ def encode_timestampeed_record(time_delta:float, record:List, schema:Dict[ColNam
         assert time_delta>=0
         return (json.dumps([timestamp]+validate_record(record, schema))+'\n').encode('utf-8')
     except:
-        raise in_function_context(encode_record,vars()) from None
+        raise in_function_context(encode_timestampeed_record,vars()) from None
     pass
 
 def decode_timestamped_record(data:bytes, schema:Dict[ColName,ColType]) -> Tuple[
@@ -376,7 +360,7 @@ def decode_timestamped_record(data:bytes, schema:Dict[ColName,ColType]) -> Tuple
     pass
 
     
-def __read_lines(r:Reader) -> Iter[bytes]:
+def read_lines(r:Reader) -> Iter[bytes]:
     r'''read all \n-separated lines from PerLog reader {r}
         - yield one record at a time, including any terminating "\n"
           * where the file does not end in \n the last record yielded will have no "\n"'''
@@ -399,16 +383,16 @@ def __read_lines(r:Reader) -> Iter[bytes]:
             pass
         pass
     except Exception as e:
-        raise in_function_context(__read_records,vars())
+        raise in_function_context(__read_records,vars()) from None
     pass
                 
                 
-__attrs_schema=xju.jsonschema.Schema({
+attrs_schema=xju.jsonschema.Schema({
     'schema':[ [str,OneOf('str','int','float','(str)','(int)','(float)')] ],
     'synchronous_writes':bool
 })
 
-__str_col_type:Dict[str,ColType]={
+str_col_type:Dict[str,ColType]={
     'str':str,
     'int':int,
     'float':float,
@@ -416,42 +400,45 @@ __str_col_type:Dict[str,ColType]={
     '(int)':Optional[int],
     '(float)':Optional[float]
 }
-__col_type_str={ t:s for s,t in __str_col_type.items() }
+col_type_str={ t:s for s,t in str_col_type.items() }
 
-__PERFLOG_ATTRS='perflog.json'
+PERFLOG_ATTRS='perflog.json'
 
-def __read_attrs(storage_path:Path,
-                 attrs_file=__PERFLOG_ATTRS) -> Tuple[Dict[ColName,ColType],  # schema
-                                                      bool]:                  # synchronous_writes
+def read_attrs(storage_path:Path,
+               attrs_file=PERFLOG_ATTRS) -> Tuple[Dict[ColName,ColType],  # schema
+                                                    bool]:                  # synchronous_writes
     '''read PerfLog attrs from {storage_path}/{attrs_file}'''
     try:
         with xju.io.cmc.FileReader(storage_path / attrs_file) as f:
-            attrs=__attrs_schema.validate(json.loads(f.read()))
+            attrs=attrs_schema.validate(json.loads(f.read()))
             if (isinstance(attrs,dict) and
                 isinstance(_schema:=attrs['schema'],list) and
                 isinstance(synchronous_writes:=attrs['synchronous_writes'],bool)):
-                schema={ColName(col_name): __str_col_type[type_spec] for col_name,type_spec in _schema}
+                schema={ColName(col_name): str_col_type[type_spec] for col_name,type_spec in _schema}
                 return schema,synchronous_writes
-            assert False, f'should not be here: {attrs_} was validated against {__attrs_schema}'
+            assert False, f'should not be here: {attrs_} was validated against {attrs_schema}'
     except Exception as e:
-        raise in_context(__read_attrs,vars()) from None
+        raise in_function_context(read_attrs,vars()) from None
     pass
 
-def __write_attrs(storage_path:Path, schema:Dict[ColName,ColType],
-                  synchronous_writes:bool,
-                  attrs_file=__PERFLOG_ATTRS):
+def write_attrs(storage_path:Path, schema:Dict[ColName,ColType],
+                synchronous_writes:bool,
+                attrs_file=PERFLOG_ATTRS) -> ByteCount:
     '''write PerfLog attrs schema {schema}, synchronous_writes {synchronous_writes} to ''' \
-    '''{storage_path}/{attrs_file}'''
+    '''{storage_path}/{attrs_file}
+       - returns number of bytes written'''
     try:
-        x=__attrs_schema.validate({
-            'schema':[ [col_name,__col_type_str[col_type]] for col_name, col_type in schema.items()],
+        x=attrs_schema.validate({
+            'schema':[ [col_name,col_type_str[col_type]] for col_name, col_type in schema.items()],
             'synchronous_writes':synchronous_writes
         })
+        y=json.dumps(x).encode('utf-8')
         with xju.io.cmc.FileWriter(storage_path / 'perflog.json',
                                    mode=file_creation_mode,
                                    must_not_exist=True) as f:
-            f.write(json.dumps(x))
+            f.write(y)
             pass
+        return len(y)
     except Exception as e:
-        raise in_context(__write_attrs,vars()) from None
+        raise in_function_context(write_attrs,vars()) from None
     pass
