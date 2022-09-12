@@ -15,25 +15,27 @@
 #
 # Time based store.
 #
-from typing import NewType
+from typing import NewType,Tuple,Dict,Literal,overload
 from xju.io import FileReader,FileWriter,FileMode
+import os
+from pathlib import Path
+from xju.misc import ByteCount,Hours
+from xju.cmc import cmclass
+from xju.io import FileReader,FileWriter,FileMode
+from xju.xn import in_context,in_function_context
+import time
+from time import struct_time
+from calendar import timegm
+import io
 
 BucketStart=NewType('BucketStart',int)
 BucketID=NewType('BucketID',str)
 
-@dataclass
-class BucketInfo:
-    uid:BucketID
-    size:ByteCount
-    pass
-
 class NoSuchBucket(Exception):
     bucket_start:BucketStart
-    bucket_id:BucketID
-    def __init__(self, bucket_start:BucketStart, bucket_id:BucketID):
-        super.init(f'no bucket {bucket_id} starting at {bucket_start} yet')
+    def __init__(self, bucket_start:BucketStart):
+        super.init(f'no bucket {bucket_id} starting at {bucket_start}')
         self.bucket_start = bucket_start
-        self.bucket_id = bucket_id
         pass
     pass
 
@@ -55,7 +57,8 @@ class TStore:
     max_size:ByteCount
     file_creation_mode:FileMode
     
-    __buckets:Dict[BucketStart,BucketInfo]
+    __buckets:Dict[BucketStart,BucketID]
+    __bucket_sizes:Dict[Tuple[BucketStart,BucketID],ByteCount]
     __current_size:ByteCount
 
     def __str__(self):
@@ -76,7 +79,7 @@ class TStore:
     def __init__(self,
                  storage_path: Path,
                  hours_per_bucket:Literal[None]=None,
-                 max_buckets: Literao[None]=None,
+                 max_buckets: Literal[None]=None,
                  max_size:Literal[None]=None,
                  file_creation_mode:Literal[None]=None):
         '''open existing TStore at {storage_path} reading attributes from its tstore.json file
@@ -126,9 +129,9 @@ class TStore:
         '''get starts and ids of TStore {self}'s existing buckets covering time range [{begin},{end})'''
         begin_bucket=self.calc_bucket_start(begin)
         end_bucket=self.calc_bucket_start(end)
-        all_buckets=[start,info.uid for start,info in self.__buckets.items()]
+        all_buckets=[bucket_start,bucket_id for bucket_start,bucket_id in self.__buckets.items()]
         all_buckets.sort()
-        all_starts=[start for start,uid in all_buckets]
+        all_starts=[start for bucket_start,bucket_id in all_buckets]
         return all_buckets[bisect_left(begin_bucket,all_starts):bisect_right(end_bucket,all_starts)]
 
     def list_unseen(self,seen:Dict[Tuple[BucketStart,BucketID], ByteCount]) -> Dict[Tuple[BucketStart,BucketID], ByteCount]:
@@ -139,22 +142,22 @@ class TStore:
              with size 0'''
         result:Dict[Tuple[BucketStart,BucketID], ByteCount]={}
         seen_keys=set(seen.keys())
-        bucket_keys=set([(start,info.uid) for start,info in self.__buckets.items()])
-        # new
-        for bucket_start,bucket_id in bucket_keys-seen_keys:
-            current_size=self.__buckets[bucket_start].size
-            result[(bucket_start,bucket_id)]=current_size
-            pass
-        # still exist
-        for bucket_start,bucket_id in set.intersection(seen_keys,bucket_keys):
-            current_size=self.__buckets[bucket_start].size
-            if current_size != seen[(bucket_start,bucket_id)]:
-                result[(bucket_start,bucket_id)]=self.__buckets[bucket_start].size
-                pass
-            pass
+        bucket_keys=set([(bucket_start,bucket_id) for bucket_start,bucket_id in self.__buckets.items()])
         # no longer exist
         for bucket_start,bucket_id in seen_keys-bucket_keys:
             result[(bucket_start,bucket_id)]=ByteCount(0)
+            pass
+        # still exist
+        for bucket_start,bucket_id in set.intersection(seen_keys,bucket_keys):
+            current_size=self.__bucket_sizes[(bucket_start,buckeet_id)]
+            if current_size != seen[(bucket_start,bucket_id)]:
+                result[(bucket_start,bucket_id)]=current_size
+                pass
+            pass
+        # new
+        for bucket_start,bucket_id in bucket_keys-seen_keys:
+            current_size=self.__bucket_sizes[(bucket_start,bucket_id)]
+            result[(bucket_start,bucket_id)]=current_size
             pass
         return result
 
@@ -165,22 +168,35 @@ class TStore:
             return self.__buckets[bucket_start]
         raise NoSuchBucket(bucket_start)
 
+    def verify_bucket_exists(self,bucket_start:BucketStart,bucket_id:BucketID):
+        '''verify that bucket with start {bucket_start} exists and has id {bucket_id}'''
+        try:
+            if bucket_start not in self.__buckets:
+                raise NoSuchBucket(bucket_start)
+            if (bucket_start,bucket_id) not in self.__bucket_sizes:
+                raise BucketAlreadyExists(bucket_start,self.__buckets[bucket_start])
+            pass
+        except Exception:
+            raise in_function_context(TStore.verify_bucket_exists,vars()) from None
+        pass
+    
     def create_bucket(self,bucket_start:BucketStart,bucket_id:BucketID):
         '''create {self} bucket with start {bucket_start} and id {bucket_id}
            - bucket can then be read and writtern with Reader and Writer
            - raises BucketAlreadyExists if bucket already exists with specified start'''
         try:
             if bucket_start in self.__buckets:
-                raise BucketAlreadyExists(bucket_start,self.__buckets[bucket_start].uid)
+                raise BucketAlreadyExists(bucket_start,self.__buckets[bucket_start])
                 pass
             self.__trim_buckets(self.max_buckets-1)
-            bucket_info = self.__buckets.set_default(bucket_start,BucketInfo(bucket_id,ByteCount(0)))
             path=get_path_of(self.storage_path,bucket_start,bucket_id,self.hours_per_bucket)
             os.makedirs(path.parent)
             with xju.cmc.io.FileWriter(path,
                                        mode=self.store.file_creation_mode,
                                        must_not_exist=True):
                 pass
+            self.__buckets[bucket_start]=bucket_id
+            self.__bucket_sizes[(bucket_start,bucket_id)]=0
         except Exception as e:
             raise in_function_context(TStore.create_bucket,vars())
         pass
@@ -196,48 +212,34 @@ class TStore:
         '''delete {self} bucket with start {bucket_start} and id {bucket_id}
            - synchronises deletion to disk'''
         try:
-            Assert((bucket_start,bucket_id)).isIn(self.__buckets)
+            bucket_size=self.bucket_sizes[(bucket_start,bucket_id)]
             path=get_path_of(self.storage_path,bucket_start,bucket_id,self.hours_per_bucket)
-            with xju.cmc.FileReader(path) as f:
-                size=f.size()
-                pass
-            with xju.cmc.DirWriter(path) as d:
-                d.delete(path.basename())
+            with xju.cmc.FileReader(path) as f, xju.cmc.FileWriter(path.parent) as d:
+                f.unlink()
                 d.sync()
                 pass
-            self.current_size-=size
+            self.current_size-=bucket_size
             del self.__buckets[(bucket_start,bucket_id)]
+            del self.__bucket_sizes[(bucket_start,bucket_id)]
         except Exception:
             raise in_function_context(TStore.delete_bucket,vars()) from None
         pass
             
-    def __get_bucket_info(self, bucket_start:BucketStart, bucket_id:BucketID):
-        '''get info for TStore {self}'s bucket with start {bucket_start} and id {bucket_id}
-           - raise NoSuchBucket if TStore has no bucket with start {bucket_start}
-           - raise BucketAlreadyExists if TStore's bucket with start {buckeet_start} has different id'''
-        try:
-            bucket_id=self.get_bucket(bucket_start)
-            if bucket_id != bucket_id:
-                raise BucketAlreadyExists(bucket_start,bucket_id)
-            return self.__buckets[bucket_start]
-        except Exception:
-            raise in_function_context(TStore.__get_bucket_info,vars())
-        pass
-    
     def __trim_buckets(self, max_buckets):
         '''trim TStore {self}'s buckets so that there are at most {max_buckets} of them
            - deletes buckets with oldest start'''
         try:
             xju.Assert(max_buckets)>0
             if len(self.__buckets>max_buckets):
-                all_starts=list(self.__buckets.items())
-                all_starts.sort()
-                for bucket_start,bucket_info in all_starts:
-                    self.delete_bucket(bucket_start,bucket_info)
+                all_buckets=list(self.__buckets.items())
+                all_buckets.sort()
+                for bucket_start,bucket_id in all_buckets:
+                    self.delete_bucket(bucket_start,bucket_id)
                     if len(self.__buckets<=max_buckets):
-                        break
+                        return
                     pass
                 pass
+            pass
         except Exception as e:
             raise in_function_context(TStore.__trim_buckets,vars()) from None
         pass
@@ -246,20 +248,16 @@ class TStore:
         '''trim {self} storage currently {self.__current_size} bytes to ensure it is at most ''' \
             '''{at_most} bytes'''
         try:
-            if current_size > ensure_below:
-                for from_, file in sorted(list(self.__files.items())):
-                    if from_ in self.__writers:
-                        self.__writers.pop(from_)
-                        pass
-                    file.path.unlink()
-                    self.__current_size -= file.size
-                    self.__files.pop(from_)
-                    if self.__current_size + headroom <= self.max_bytes:
-                    return
+            if current_size > ensure_at_most:
+                for bucket,size in sorted(list(self.__bucket_sizes)):
+                    self.delete_bucket(*bucket)
+                    if self.__current_size <= ensure_at_most:
+                        return
+                    pass
                 pass
             pass
         except Exception as e:
-            raise in_function_context(PerfLog.__trim_bytes,vars()) from None
+            raise in_function_context(TStore.__trim_bytes,vars()) from None
         pass
     pass
 
@@ -271,19 +269,19 @@ class Reader(xju.cmc.CM):
     bucket_start:BucketStart
     bucket_id:BucketID
 
-    __info:BucketInfo
     __impl:xju.cmc.io.FileReader
     
     def __init__(self, store:Store, bucket_start:BucketStart, bucket_id:BucketId):
         '''create reader for TStore {self.store}'s bucket with start {bucket_start} and id {bucket_id}
-           - raises NoSuchBucket if such a bucket does not yet exist'''
+           - raises NoSuchBucket if such a bucket does not yet exist
+           - raises BucketAlreadyExists if bucket with start {bucket_start} has different id'''
         try:
             self.store=store
             self.bucket_start=bucket_start
             self.bucket_id=bucket_id
-            self.info=self.__get_bucket_info(bucket_start,bucket_id)
+            self.store.verify_bucket_exists(bucket_start,bucket_id)
             self.__impl=xju.cmc.io.FileReader(
-                get_path_of(self.store.storage_path,bucket_start,bucket_id,self.store.hours_per_bucket)
+                get_path_of(self.store.storage_path,bucket_start,bucket_id,self.store.hours_per_bucket))
         except Exception as e:
             raise in_function_context(Reader.__init__,vars()) from None
         pass
@@ -314,13 +312,17 @@ class Reader(xju.cmc.CM):
     def size(self) -> ByteCount:
         '''return size of bucket'''
         try:
-            return self.__info.size
+            return self.store.bucket_sizes((self.bucket_start,self.bucket_id))
         except:
             raise in_function_context(Reader.size,vars()) from None
         pass
 
     def read(self, max_bytes:ByteCount) -> bytes:
         '''read up to {max_bytes} of data from TStore reader {self} current position'''
+        try:
+            return self.__impl.read(max_bytes)
+        except Exception:
+            raise in_function_context(Reader.read,vars()) from None
         pass
     pass
 
@@ -332,7 +334,6 @@ class Writer(xju.cmc.CM):
     bucket_start:BucketStart
     bucket_id:BucketID
 
-    __info:BucketInfo
     __impl:xju.cmc.io.FileWriter
 
     def __init__(self,store:Store,bucket_start:BucketStart,bucket_id:BucketID):
@@ -343,9 +344,9 @@ class Writer(xju.cmc.CM):
             self.store=store
             self.bucket_start=bucket_start
             self.bucket_id=bucket_id
-            self.__info=self.store.__get_bucket_info(bucket_start,bucket_id)
+            self.store.verify_bucket_exists(bucket_start,bucket_id)
             self.__impl=xju.cmc.io.FileWriter(
-                get_path_of(self.store.storage_path,bucket_start,bucket_id,self.store.hours_per_bucket)
+                get_path_of(self.store.storage_path,bucket_start,bucket_id,self.store.hours_per_bucket))
         except Exception as e:
             raise in_function_context(Writer.__init__,vars()) from None
         pass
@@ -373,7 +374,8 @@ class Writer(xju.cmc.CM):
     def size(self) -> ByteCount:
         '''return size of bucket'''
         try:
-            return self.__info.size()
+            self.store.verify_bucket_exists(self.bucket_start,self.bucket_id)
+            return self.store.__bucket_sizes[(self.bucket_start,self.bucket_id)]
         except Exception:
             raise in_function_context(Writer.size,vars()) from None
         pass
@@ -388,15 +390,15 @@ class Writer(xju.cmc.CM):
 
     def append(self, data:bytes):
         '''TStore writer {self} append {len(data)} bytes of data assuming there is room
-           - raises NoSuchBucket if bucket does not exist, which might be because:
-             - trimming to make room for data deleted it
-             - it was otherwise deleted since this Writer was created'''
+           - assumes our bucket still in tstore
+           - raises NoSuchBucket if bucket no longer exists
+           - raises BucketAlreadyExists if bucket now has different id'''
         try:
             Assert(len(data))<=self.store.max_bytes-self.store.current_size
             self.__impl.seek_to(self.size())
             self.__impl.write(data)
             self.store.current_size+=len(data)
-            bucket_info.size+=len(data)
+            self.store.__buckets[(self.bucket_start,self.bucket_id)]+=len(data)
         except Exception:
             raise in_function_context(Writer.append,vars()) from None
         pass
@@ -406,18 +408,15 @@ class Writer(xju.cmc.CM):
         '''TStore writer {self} write {len(data)} bytes of data at current position ''' \
         '''assuming there is room
            - assumes our bucket still in tstore
-           - raises NoSuchBucket if bucket does not exist, which might be because:
-             - trimming to make room for data deleted it
-             - it was otherwise deleted since this Writer was created'''
+           - raises NoSuchBucket if bucket no longer exists
+           - raises BucketAlreadyExists if bucket now has different id'''
         try:
             new_size=max(self.size(),self.position()+len(data))
             delta=new_size-self.size()
             Assert(delta)<=self.store.max_bytes-self.store.current_size
-            Assert(self.bucket_start).isIn(self.store.__buckets)
-            Assert(self.store.__buckets[self.bucket_start]).isInFact(self.info)
             self.__impl.write(data)
             self.store.current_size+=delta
-            self.__info.size+=delta
+            self.store.__buckets[(self.bucket_start,self.bucket_info)]+=delta
         except Exception:
             raise in_function_context(Writer.write,vars()) from None
         pass
@@ -425,7 +424,10 @@ class Writer(xju.cmc.CM):
     def truncate(self):
         '''TStore writer {self} truncate bucket at current position'''
         try:
+            bucket_size=self.size()
             self.__impl.truncate()
+            self.store.__current_size-=bucket_size
+            self.store.__bucket_sizes[(self.bucket_start,self.bucket_id)]=0
         except Exception:
             raise in_function_context(Writer.truncate,vars())
         pass
@@ -490,16 +492,14 @@ def write_attrs(storage_path:Path,
         raise in_function_context(write_attrs,vars()) from None
     pass
 
-def get_path_of(self,
-                storage_path:Path,
+def get_path_of(storage_path:Path,
                 bucket_start:BucketStart,
                 bucket_id:BucketID,
                 hours_per_bucket:Hours) -> Path:
-    '''get path to {self.storage_path} bucket with start {bucket_start} and id {bucket_id} ''' \
+    '''get path to {storage_path} bucket with start {bucket_start} and id {bucket_id} ''' \
         '''where storage has {hours_per_bucket} hours per bucket'''
     '''- bucket need not exist'''
     x = time.gmtime(bucket_start)
     h = int(x.tm_hour/hours_per_bucket)*hours_per_bucket
     s = struct_time(x.tm_year,x.tm_mon,x.tm_mday,h,0,0,0,0,0)
-    return self.storage_path / f'{s.tm_year}'/f'{s.tm_month:02}'/f'{s.tm_mday:02}'/f'{s.tm_hour:02}'/f'{bucket_id}.txt'
-
+    return storage_path / f'{s.tm_year}'/f'{s.tm_month:02}'/f'{s.tm_mday:02}'/f'{s.tm_hour:02}'/f'{bucket_id}.txt'
