@@ -15,18 +15,22 @@
 #
 # Time based store.
 #
-from typing import NewType,Tuple,Dict,Literal,overload
-from xju.io import FileReader,FileWriter,FileMode
+from typing import NewType,Tuple,Dict,Literal,overload,Sequence
+from xju.cmc.io import FileReader,FileWriter,FileMode,FilePosition,FilePositionDelta
 import os
 from pathlib import Path
-from xju.misc import ByteCount,Hours
-from xju.cmc import cmclass
-from xju.io import FileReader,FileWriter,FileMode
+from xju.misc import ByteCount
+from xju.time import Hours,Timestamp
+from xju.cmc import cmclass,CM
 from xju.xn import in_context,in_function_context
 import time
 from time import struct_time
 from calendar import timegm
 import io
+from bisect import bisect_left,bisect_right
+from xju.assert_ import Assert
+from xju import jsonschema
+import json
 
 BucketStart=NewType('BucketStart',int)
 BucketID=NewType('BucketID',str)
@@ -34,7 +38,7 @@ BucketID=NewType('BucketID',str)
 class NoSuchBucket(Exception):
     bucket_start:BucketStart
     def __init__(self, bucket_start:BucketStart):
-        super.init(f'no bucket {bucket_id} starting at {bucket_start}')
+        super().__init__(self,f'no bucket starting at {bucket_start}')
         self.bucket_start = bucket_start
         pass
     pass
@@ -43,7 +47,7 @@ class BucketExists(Exception):
     bucket_start:BucketStart
     bucket_id:BucketID
     def __init__(self, bucket_start:BucketStart, bucket_id:BucketID):
-        super.init(f'bucket at {bucket_start} exists with uid {bucket_id}')
+        super().__init__(self,f'bucket at {bucket_start} exists with uid {bucket_id}')
         self.bucket_start = bucket_start
         self.bucket_id = bucket_id
         pass
@@ -94,51 +98,49 @@ class TStore:
                  max_buckets,
                  max_size,
                  file_creation_mode):
-        try:
-            self.storage_path=storage_path
-            if (isinstance(hours_per_bucket,Hours) and
-                isinstance(max_buckes,int) and
-                isinstance(max_size,ByteCount) and
-                isinstance(mode,FileMode)):
-                try:
-                    assert hours_per_bucket in [1,2,3,4,6,8,12,24] # factor of 24
-                    self.hours_per_bucket, self.max_buckets, \
-                        self.max_size, self.file_creation_mode=write_attrs(storage_path,
-                                                                             hours_per_bucket,
-                                                                             max_buckets,
-                                                                             max_size,
-                                                                             file_creation_mode)
-                except Exception as e:
-                    raise in_context('create non-existent TStore at {storage_path} with mode 0o{file_creation_mode:o}, {hours_per_bucket} hours per bucket, max buckets {max_buckets}, max size {max_size} bytes').format(**vars())) from None
-                pass
-            else:
-                try:
-                    self.hours_per_bucket, self.max_buckets, \
-                        self.max_size, self.file_creation_mode=read_attrs(storage_path)
-                    self.__bucket_sizes = read_files(storage_path)
-                    self.__buckets={bucket_start:bucket_id
-                                    for bucket_start,bucket_id in self.__bucket_sizes}
-                except Exception as e:
-                    raise in_context('open existing TStore at {storage_path} reading attributes from its tstore.json file').format(**vars())) from None
-                pass
+        self.storage_path=storage_path
+        if (isinstance(hours_per_bucket,int) and
+            isinstance(max_buckets,int) and
+            isinstance(max_size,int) and
+            isinstance(file_creation_mode,int)):
+            try:
+                assert hours_per_bucket in [1,2,3,4,6,8,12,24] # factor of 24
+                self.hours_per_bucket, self.max_buckets, \
+                    self.max_size, self.file_creation_mode=write_attrs(storage_path,
+                                                                       Hours(hours_per_bucket),
+                                                                       max_buckets,
+                                                                       ByteCount(max_size),
+                                                                       FileMode(file_creation_mode))
+            except Exception as e:
+                raise in_context('create non-existent TStore at {storage_path} with mode 0o{file_creation_mode:o}, {hours_per_bucket} hours per bucket, max buckets {max_buckets}, max size {max_size} bytes'.format(**vars())) from None
+            pass
+        else:
+            try:
+                self.hours_per_bucket, self.max_buckets, \
+                    self.max_size, self.file_creation_mode=read_attrs(storage_path)
+                self.__bucket_sizes = read_files(storage_path)
+                self.__buckets={bucket_start:bucket_id
+                                for bucket_start,bucket_id in self.__bucket_sizes}
+            except Exception as e:
+                raise in_context('open existing TStore at {storage_path} reading attributes from its tstore.json file'.format(**vars())) from None
             pass
         pass
-
-    def calc_bucket_start(self, Timestamp timestamp) -> BucketStart:
+            
+    def calc_bucket_start(self, timestamp:Timestamp) -> BucketStart:
         '''calculate start of TStore {self}'s bucket for timestamp {timestamp}
            - bucket need not exist'''
         x = time.gmtime(timestamp)
         h = int(x.tm_hour/self.hours_per_bucket)*self.hours_per_bucket
-        return timegm(struct_time(x.tm_year,x.tm_mon,x.tm_mday,h,0,0,0,0,0))
+        return BucketStart(int(timegm(struct_time( (x.tm_year,x.tm_mon,x.tm_mday,h,0,0,0,0) ))))
         
-    def get_buckets_of(self, Timestamp begin, Timestamp end) -> Sequence[Tuple[BucketStart,UID]]:
+    def get_buckets_of(self, begin:Timestamp, end:Timestamp) -> Sequence[Tuple[BucketStart,BucketID]]:
         '''get starts and ids of TStore {self}'s existing buckets covering time range [{begin},{end})'''
         begin_bucket=self.calc_bucket_start(begin)
         end_bucket=self.calc_bucket_start(end)
-        all_buckets=[bucket_start,bucket_id for bucket_start,bucket_id in self.__buckets.items()]
+        all_buckets=[(bucket_start,bucket_id) for bucket_start,bucket_id in self.__buckets.items()]
         all_buckets.sort()
-        all_starts=[start for bucket_start,bucket_id in all_buckets]
-        return all_buckets[bisect_left(begin_bucket,all_starts):bisect_right(end_bucket,all_starts)]
+        all_starts=[bucket_start for bucket_start,bucket_id in all_buckets]
+        return all_buckets[bisect_left(all_starts,begin_bucket):bisect_right(all_starts,end_bucket)]
 
     def list_unseen(self,seen:Dict[Tuple[BucketStart,BucketID], ByteCount]) -> Dict[Tuple[BucketStart,BucketID], ByteCount]:
         '''list sizes of TStore {self} buckets with unseen data having seen {seen}
@@ -155,7 +157,7 @@ class TStore:
             pass
         # still exist
         for bucket_start,bucket_id in set.intersection(seen_keys,bucket_keys):
-            current_size=self.__bucket_sizes[(bucket_start,buckeet_id)]
+            current_size=self.__bucket_sizes[(bucket_start,bucket_id)]
             if current_size != seen[(bucket_start,bucket_id)]:
                 result[(bucket_start,bucket_id)]=current_size
                 pass
@@ -197,12 +199,12 @@ class TStore:
             self.__trim_buckets(self.max_buckets-1)
             path=get_path_of(self.storage_path,bucket_start,bucket_id,self.hours_per_bucket)
             os.makedirs(path.parent)
-            with xju.cmc.io.FileWriter(path,
-                                       mode=self.store.file_creation_mode,
-                                       must_not_exist=True):
+            with FileWriter(path,
+                            mode=self.file_creation_mode,
+                            must_not_exist=True):
                 pass
             self.__buckets[bucket_start]=bucket_id
-            self.__bucket_sizes[(bucket_start,bucket_id)]=0
+            self.__bucket_sizes[(bucket_start,bucket_id)]=ByteCount(0)
         except Exception as e:
             raise in_function_context(TStore.create_bucket,vars())
         pass
@@ -210,22 +212,22 @@ class TStore:
     def make_room_for(self, byte_count:ByteCount):
         '''make room in TStore {self} for {byte_count} bytes of data
            - deletes just enough buckets with oldest start times to make room'''
-        Assert(byte_count)<self.max_bytes
-        self.__trim_bytes(self.max_bytes-byte_count)
+        Assert(byte_count)<self.max_size
+        self.__trim_bytes(ByteCount(self.max_size-byte_count))
         pass
 
-    def delete_bucket(self, bucket_start:BucketStart,bucket_id:BucketId):
+    def delete_bucket(self, bucket_start:BucketStart,bucket_id:BucketID):
         '''delete {self} bucket with start {bucket_start} and id {bucket_id}
            - synchronises deletion to disk'''
         try:
-            bucket_size=self.bucket_sizes[(bucket_start,bucket_id)]
+            bucket_size=self.__bucket_sizes[(bucket_start,bucket_id)]
             path=get_path_of(self.storage_path,bucket_start,bucket_id,self.hours_per_bucket)
-            with xju.cmc.FileReader(path) as f, xju.cmc.FileWriter(path.parent) as d:
+            with FileReader(path) as f, FileWriter(path.parent) as d:
                 f.unlink()
                 d.sync()
                 pass
-            self.current_size-=bucket_size
-            del self.__buckets[(bucket_start,bucket_id)]
+            self.__current_size=ByteCount(self.__current_size-bucket_size)
+            del self.__buckets[bucket_start]
             del self.__bucket_sizes[(bucket_start,bucket_id)]
         except Exception:
             raise in_function_context(TStore.delete_bucket,vars()) from None
@@ -235,7 +237,7 @@ class TStore:
         '''trim TStore {self}'s buckets so that there are at most {max_buckets} of them
            - deletes buckets with oldest start'''
         try:
-            xju.Assert(max_buckets)>0
+            Assert(max_buckets)>0
             if len(self.__buckets>max_buckets):
                 all_buckets=list(self.__buckets.items())
                 all_buckets.sort()
@@ -250,12 +252,12 @@ class TStore:
             raise in_function_context(TStore.__trim_buckets,vars()) from None
         pass
 
-    def __trim_bytes(ensure_at_most:ByteCount):
+    def __trim_bytes(self,ensure_at_most:ByteCount):
         '''trim {self} storage currently {self.__current_size} bytes to ensure it is at most ''' \
             '''{at_most} bytes'''
         try:
-            if current_size > ensure_at_most:
-                for bucket,size in sorted(list(self.__bucket_sizes)):
+            if self.__current_size > ensure_at_most:
+                for bucket,size in sorted(list(self.__bucket_sizes.items())):
                     self.delete_bucket(*bucket)
                     if self.__current_size <= ensure_at_most:
                         return
@@ -268,16 +270,16 @@ class TStore:
     pass
 
 
-@xju.cmc.cmclass
-class Reader(xju.cmc.CM):
+@cmclass
+class Reader(CM):
     '''TStore {self.store} reader for bucket with start {bucket_start} and id {bucket_id}'''
-    store:Store
+    store:TStore
     bucket_start:BucketStart
     bucket_id:BucketID
 
-    __impl:xju.cmc.io.FileReader
+    __impl:FileReader
     
-    def __init__(self, store:Store, bucket_start:BucketStart, bucket_id:BucketId):
+    def __init__(self, store:TStore, bucket_start:BucketStart, bucket_id:BucketID):
         '''create reader for TStore {self.store}'s bucket with start {bucket_start} and id {bucket_id}
            - raises NoSuchBucket if such a bucket does not yet exist
            - raises BucketExists if bucket with start {bucket_start} has different id'''
@@ -286,7 +288,7 @@ class Reader(xju.cmc.CM):
             self.bucket_start=bucket_start
             self.bucket_id=bucket_id
             self.store.verify_bucket_exists(bucket_start,bucket_id)
-            self.__impl=xju.cmc.io.FileReader(
+            self.__impl=FileReader(
                 get_path_of(self.store.storage_path,bucket_start,bucket_id,self.store.hours_per_bucket))
         except Exception as e:
             raise in_function_context(Reader.__init__,vars()) from None
@@ -295,11 +297,11 @@ class Reader(xju.cmc.CM):
     def __str__(self):
         return l1(Reader.__doc__).format(**vars())
 
-    def seek_to(self, position:ByteCount):
+    def seek_to(self, position:FilePosition):
         '''position TStore reader {self} so next read occurs {position} bytes from start of bucket data
            - returns self'''
         try:
-            self.__impl.seek(offset, io.SEEK_SET)
+            self.__impl.seek_to(position)
             return self
         except:
             raise in_function_context(Reader.seek_to,vars()) from None
@@ -309,7 +311,7 @@ class Reader(xju.cmc.CM):
         '''position TStore reader {self} so next read occurs {offset} bytes from current position
            - returns self'''
         try:
-            self.input.seek(offset, io.SEEK_CUR)
+            self.__impl.seek_by(FilePositionDelta(offset))
             return self
         except:
             raise in_function_context(Reader.seek_by,vars()) from None
@@ -318,7 +320,7 @@ class Reader(xju.cmc.CM):
     def size(self) -> ByteCount:
         '''return size of bucket'''
         try:
-            return self.store.bucket_sizes((self.bucket_start,self.bucket_id))
+            return self.store.__bucket_sizes[(self.bucket_start,self.bucket_id)]
         except:
             raise in_function_context(Reader.size,vars()) from None
         pass
@@ -326,23 +328,26 @@ class Reader(xju.cmc.CM):
     def read(self, max_bytes:ByteCount) -> bytes:
         '''read up to {max_bytes} of data from TStore reader {self} current position'''
         try:
-            return self.__impl.read(max_bytes)
+            result=self.__impl.input.read(max_bytes)
+            if isinstance(result,bytes):
+                return result
+            assert False
         except Exception:
             raise in_function_context(Reader.read,vars()) from None
         pass
     pass
 
 
-@xju.cmc.cmclass
-class Writer(xju.cmc.CM):
+@cmclass
+class Writer(CM):
     '''writer for TStore {self.store}' bucket with start {self.bucket_start} and id {self.bucket_id}'''
-    store:Store
+    store:TStore
     bucket_start:BucketStart
     bucket_id:BucketID
 
-    __impl:xju.cmc.io.FileWriter
+    __impl:FileWriter
 
-    def __init__(self,store:Store,bucket_start:BucketStart,bucket_id:BucketID):
+    def __init__(self,store:TStore,bucket_start:BucketStart,bucket_id:BucketID):
         '''create writer for TStore {self.store}'s bucket with start {bucket_start} and id {bucket_id}
            - bucket must exist
            - ensures store stays within max_buckets along the way'''
@@ -351,7 +356,7 @@ class Writer(xju.cmc.CM):
             self.bucket_start=bucket_start
             self.bucket_id=bucket_id
             self.store.verify_bucket_exists(bucket_start,bucket_id)
-            self.__impl=xju.cmc.io.FileWriter(
+            self.__impl=FileWriter(
                 get_path_of(self.store.storage_path,bucket_start,bucket_id,self.store.hours_per_bucket))
         except Exception as e:
             raise in_function_context(Writer.__init__,vars()) from None
@@ -372,17 +377,18 @@ class Writer(xju.cmc.CM):
            - raises NoSuchBucket if bucket no longer exists
            - raises BucketExists if bucket now has different id'''
         try:
-            Assert(len(data))<=self.store.max_bytes-self.store.current_size
-            self.__impl.seek_to(self.size())
-            self.__impl.write(data)
-            self.store.current_size+=len(data)
-            self.store.__buckets[(self.bucket_start,self.bucket_id)]+=len(data)
+            Assert(len(data))<=self.store.max_size-self.store.__current_size
+            self.__impl.seek_to(FilePosition(self.size()))
+            self.__impl.output.write(data)
+            self.store.__current_size=ByteCount(self.store.__current_size+len(data))
+            self.store.__bucket_sizes[(self.bucket_start,self.bucket_id)]=ByteCount(
+                self.store.__bucket_sizes[(self.bucket_start,self.bucket_id)]+len(data))
         except Exception:
             raise in_function_context(Writer.append,vars()) from None
         pass
     pass
 
-attrs_schema=xju.json_schema.Schema({
+attrs_schema=jsonschema.Schema({
     'hours_per_bucket':int,
     'max_buckets':int,
     'max_size':int,
@@ -391,7 +397,7 @@ attrs_schema=xju.json_schema.Schema({
 TSTORE_ATTRS='tstore.json'
 
 def read_attrs(storage_path:Path,
-               attrs_file=TSTORE_ATTRS) -> Tuple[Hours, BucketCount, ByteCount, FileMode]:
+               attrs_file=TSTORE_ATTRS) -> Tuple[Hours, int, ByteCount, FileMode]:
     '''read TStore attributes from {storage_path}/{attrs_file}'''
     try:
         with FileReader(storage_path/attrs_file) as f:
@@ -406,11 +412,11 @@ def read_attrs(storage_path:Path,
                 isinstance(max_size,int) and
                 isinstance(file_creation_mode,int)):
                 return (Hours(hours_per_bucket),
-                        BucketCount(max_buckets),
+                        max_buckets,
                         ByteCount(max_size),
                         FileMode(file_creation_mode))
             else:
-                assert False, f'{x} was validated against {__attrs_schema}, so should not be here'
+                assert False, f'{x} was validated against {attrs_schema}, so should not be here'
                 pass
             pass
     except Exception as e:
@@ -432,10 +438,10 @@ def write_attrs(storage_path:Path,
             'max_buckets':max_buckets,
             'max_size':max_size,
             'file_creation_mode':file_creation_mode})
-        with FileWriter(self.storage_path/attrs_file,
-                        must_not_exist=must_not_exist,
+        with FileWriter(storage_path/attrs_file,
+                        must_not_exist=True,
                         mode=file_creation_mode) as f:
-            f.write(to_json(attrs).encode('utf-8'))
+            f.write(json.dumps(attrs).encode('utf-8'))
             pass
     except Exception as e:
         raise in_function_context(write_attrs,vars()) from None
@@ -450,35 +456,36 @@ def get_path_of(storage_path:Path,
     '''- bucket need not exist'''
     x = time.gmtime(bucket_start)
     h = int(x.tm_hour/hours_per_bucket)*hours_per_bucket
-    s = struct_time(x.tm_year,x.tm_mon,x.tm_mday,h,0,0,0,0,0)
-    return storage_path / f'{s.tm_year}'/f'{s.tm_month:02}'/f'{s.tm_mday:02}'/f'{s.tm_hour:02}'/f'{bucket_id}.txt'
+    s = struct_time( (x.tm_year,x.tm_mon,x.tm_mday,h,0,0,0,0,0) )
+    return storage_path / f'{s.tm_year}'/f'{s.tm_mon:02}'/f'{s.tm_mday:02}'/f'{s.tm_hour:02}'/f'{bucket_id}.txt'
 
-def read_files(storage_path:Path) -> Dict[Tuple[BucketStart,BucketId],ByteCount]:
+def read_files(storage_path:Path) -> Dict[Tuple[BucketStart,BucketID],ByteCount]:
     '''read tstore files in {storage_path}'''
     try:
         result={}
         for ydir in [y for y in storage_path.iterdir() if y.is_dir()]:
             year=int(ydir.name)
             try:
-                for mdir in [m for m in year.iterdir() if m.is_dir()]:
+                for mdir in [m for m in ydir.iterdir() if m.is_dir()]:
                     month=int(mdir.name)
                     try:
-                        for ddir in [d for d in month.iterdir() if d.is_dir()]:
+                        for ddir in [d for d in mdir.iterdir() if d.is_dir()]:
                             mday=int(ddir.name)
                             try:
-                                for hdir in [h for h in mday.iterdir() if h.is_dir()]:
+                                for hdir in [h for h in ddir.iterdir() if h.is_dir()]:
                                     hour=int(hdir.name)
                                     try:
-                                        bucket_start=timegm(struct_time(year,month,mday,hour,0,0,0,0,0))
-                                        buckets_ids=[BucketID(b.name) for b in hdir.iterdir()
-                                                     if b.is_file()]
+                                        bucket_start=BucketStart(timegm(struct_time(
+                                            (year,month,mday,hour,0,0,0,0,0))))
+                                        bucket_ids=[BucketID(b.name) for b in hdir.iterdir()
+                                                    if b.is_file()]
                                         if len(bucket_ids)>1:
                                             raise Exception(
                                                 f'expected at most one bucket data file, not {bucket_ids}')
                                         if len(bucket_ids):
                                             bucket_id=bucket_ids[0]
                                             result[(bucket_start,bucket_id)]=ByteCount(
-                                                (hdir/bucket_id).st_size)
+                                                (hdir/bucket_id).stat().st_size)
                                             pass
                                         pass
                                     except Exception:

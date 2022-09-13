@@ -18,3 +18,5 @@ from typing import NewType
 Hours=NewType('Hours',int)
 Minutes=NewType('Minutes',int)
 Seconds=NewType('Seconds',int)
+
+Timestamp=NewType('Timestamp',float)
