@@ -39,11 +39,11 @@ class NoSuchBucket(Exception):
         pass
     pass
 
-class BucketAlreadyExists(Exception):
+class BucketExists(Exception):
     bucket_start:BucketStart
     bucket_id:BucketID
     def __init__(self, bucket_start:BucketStart, bucket_id:BucketID):
-        super.init(f'bucket at {bucket_start} already exists (it has uid {bucket_id})')
+        super.init(f'bucket at {bucket_start} exists with uid {bucket_id}')
         self.bucket_start = bucket_start
         self.bucket_id = bucket_id
         pass
@@ -63,7 +63,10 @@ class TStore:
 
     def __str__(self):
         return l1(TStore.__doc__).format(**vars())
-    
+
+    def current_size(self):
+        return self.__current_size
+
     @overload
     def __init__(self,
                  storage_path:Path,
@@ -71,7 +74,7 @@ class TStore:
                  max_buckets: int,
                  max_size:ByteCount,
                  file_creation_mode:FileMode):
-        '''create non-existent TStore at {storage_path} with mode 0o{file_creation_mode:o}, {hours_per_bucket} hours per bucket, max buckets {max_buckets}, max size {max_size} bytes
+        '''create non-existent TStore at {storage_path} with mode 0o{file_creation_mode:o}, {hours_per_bucket} hours per bucket, {max_buckets} buckets max,  {max_size} total bytes max
            - hours_per_bucket must be a factor of 24
            - raises FileExistsError if TStore exists'''
         pass
@@ -112,6 +115,9 @@ class TStore:
                 try:
                     self.hours_per_bucket, self.max_buckets, \
                         self.max_size, self.file_creation_mode=read_attrs(storage_path)
+                    self.__bucket_sizes = read_files(storage_path)
+                    self.__buckets={bucket_start:bucket_id
+                                    for bucket_start,bucket_id in self.__bucket_sizes}
                 except Exception as e:
                     raise in_context('open existing TStore at {storage_path} reading attributes from its tstore.json file').format(**vars())) from None
                 pass
@@ -174,7 +180,7 @@ class TStore:
             if bucket_start not in self.__buckets:
                 raise NoSuchBucket(bucket_start)
             if (bucket_start,bucket_id) not in self.__bucket_sizes:
-                raise BucketAlreadyExists(bucket_start,self.__buckets[bucket_start])
+                raise BucketExists(bucket_start,self.__buckets[bucket_start])
             pass
         except Exception:
             raise in_function_context(TStore.verify_bucket_exists,vars()) from None
@@ -183,10 +189,10 @@ class TStore:
     def create_bucket(self,bucket_start:BucketStart,bucket_id:BucketID):
         '''create {self} bucket with start {bucket_start} and id {bucket_id}
            - bucket can then be read and writtern with Reader and Writer
-           - raises BucketAlreadyExists if bucket already exists with specified start'''
+           - raises BucketExists if bucket already exists with specified start'''
         try:
             if bucket_start in self.__buckets:
-                raise BucketAlreadyExists(bucket_start,self.__buckets[bucket_start])
+                raise BucketExists(bucket_start,self.__buckets[bucket_start])
                 pass
             self.__trim_buckets(self.max_buckets-1)
             path=get_path_of(self.storage_path,bucket_start,bucket_id,self.hours_per_bucket)
@@ -274,7 +280,7 @@ class Reader(xju.cmc.CM):
     def __init__(self, store:Store, bucket_start:BucketStart, bucket_id:BucketId):
         '''create reader for TStore {self.store}'s bucket with start {bucket_start} and id {bucket_id}
            - raises NoSuchBucket if such a bucket does not yet exist
-           - raises BucketAlreadyExists if bucket with start {bucket_start} has different id'''
+           - raises BucketExists if bucket with start {bucket_start} has different id'''
         try:
             self.store=store
             self.bucket_start=bucket_start
@@ -351,26 +357,6 @@ class Writer(xju.cmc.CM):
             raise in_function_context(Writer.__init__,vars()) from None
         pass
 
-    def seek_to(self, position:ByteCount):
-        '''position TStore reader {self} so next write occurs {position} bytes from start of bucket data
-           - returns self'''
-        try:
-            self.__impl.seek(position, io.SEEK_SET)
-            return self
-        except Exception:
-            raise in_function_context(Writer.seek_to,vars()) from None
-        pass
-    
-    def seek_by(self, offset:ByteCount):
-        '''position TStore reader {self} so next write occurs {offset} bytes from current position
-           - returns self'''
-        try:
-            self.input.seek(offset, io.SEEK_CUR)
-            return self
-        except Exception:
-            raise in_function_context(Writer.seek_by,vars()) from None
-        pass
-
     def size(self) -> ByteCount:
         '''return size of bucket'''
         try:
@@ -380,19 +366,11 @@ class Writer(xju.cmc.CM):
             raise in_function_context(Writer.size,vars()) from None
         pass
 
-    def position(self) -> ByteCount:
-        '''return TStore writer {self}'s current position'''
-        try:
-            return self.__impl.position()
-        except Exception:
-            raise in_function_context(Writer.position,vars()) from None
-        pass
-
     def append(self, data:bytes):
         '''TStore writer {self} append {len(data)} bytes of data assuming there is room
            - assumes our bucket still in tstore
            - raises NoSuchBucket if bucket no longer exists
-           - raises BucketAlreadyExists if bucket now has different id'''
+           - raises BucketExists if bucket now has different id'''
         try:
             Assert(len(data))<=self.store.max_bytes-self.store.current_size
             self.__impl.seek_to(self.size())
@@ -401,35 +379,6 @@ class Writer(xju.cmc.CM):
             self.store.__buckets[(self.bucket_start,self.bucket_id)]+=len(data)
         except Exception:
             raise in_function_context(Writer.append,vars()) from None
-        pass
-    pass
-
-    def write(self, data:bytes):
-        '''TStore writer {self} write {len(data)} bytes of data at current position ''' \
-        '''assuming there is room
-           - assumes our bucket still in tstore
-           - raises NoSuchBucket if bucket no longer exists
-           - raises BucketAlreadyExists if bucket now has different id'''
-        try:
-            new_size=max(self.size(),self.position()+len(data))
-            delta=new_size-self.size()
-            Assert(delta)<=self.store.max_bytes-self.store.current_size
-            self.__impl.write(data)
-            self.store.current_size+=delta
-            self.store.__buckets[(self.bucket_start,self.bucket_info)]+=delta
-        except Exception:
-            raise in_function_context(Writer.write,vars()) from None
-        pass
-
-    def truncate(self):
-        '''TStore writer {self} truncate bucket at current position'''
-        try:
-            bucket_size=self.size()
-            self.__impl.truncate()
-            self.store.__current_size-=bucket_size
-            self.store.__bucket_sizes[(self.bucket_start,self.bucket_id)]=0
-        except Exception:
-            raise in_function_context(Writer.truncate,vars())
         pass
     pass
 
@@ -503,3 +452,52 @@ def get_path_of(storage_path:Path,
     h = int(x.tm_hour/hours_per_bucket)*hours_per_bucket
     s = struct_time(x.tm_year,x.tm_mon,x.tm_mday,h,0,0,0,0,0)
     return storage_path / f'{s.tm_year}'/f'{s.tm_month:02}'/f'{s.tm_mday:02}'/f'{s.tm_hour:02}'/f'{bucket_id}.txt'
+
+def read_files(storage_path:Path) -> Dict[Tuple[BucketStart,BucketId],ByteCount]:
+    '''read tstore files in {storage_path}'''
+    try:
+        result={}
+        for ydir in [y for y in storage_path.iterdir() if y.is_dir()]:
+            year=int(ydir.name)
+            try:
+                for mdir in [m for m in year.iterdir() if m.is_dir()]:
+                    month=int(mdir.name)
+                    try:
+                        for ddir in [d for d in month.iterdir() if d.is_dir()]:
+                            mday=int(ddir.name)
+                            try:
+                                for hdir in [h for h in mday.iterdir() if h.is_dir()]:
+                                    hour=int(hdir.name)
+                                    try:
+                                        bucket_start=timegm(struct_time(year,month,mday,hour,0,0,0,0,0))
+                                        buckets_ids=[BucketID(b.name) for b in hdir.iterdir()
+                                                     if b.is_file()]
+                                        if len(bucket_ids)>1:
+                                            raise Exception(
+                                                f'expected at most one bucket data file, not {bucket_ids}')
+                                        if len(bucket_ids):
+                                            bucket_id=bucket_ids[0]
+                                            result[(bucket_start,bucket_id)]=ByteCount(
+                                                (hdir/bucket_id).st_size)
+                                            pass
+                                        pass
+                                    except Exception:
+                                        raise in_context('stat bucket files in hour {hdir.name} directory'.format(**vars()))
+                                    pass
+                                pass
+                            except Exception:
+                                raise in_context(
+                                    f'read hour directories in mday {ddir.name} directory'.format(**vars()))
+                            pass
+                        pass
+                    except Exception:
+                        raise in_context(f'read day directories in month {mdir.name} directory'.format(**vars()))
+                    pass
+                pass
+            except Exception:
+                raise in_context(f'read month directories in year {ydir.name} directory'.format(**vars()))
+            pass
+        return result
+    except Exception:
+        raise in_function_context(read_files,vars())
+    pass

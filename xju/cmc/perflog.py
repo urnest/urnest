@@ -272,11 +272,15 @@ class Tracker:
         self.perflog=perflog
         pass
 
-    def write_unseen_data(self, data:Dict[Tuple[BucketStart,BucketID], (ByteCount,bytes)]):
-        '''write unseen data to PerfLog {self.perflog}'''
+    def write_unseen_data(self, unseen:Dict[Tuple[BucketStart,BucketID], (ByteCount,bytes)]):
+        '''write unseen data to PerfLog {self.perflog}
+           - caller must ensure that unseen data with non-zero position matches
+             current data size for that bucket
+           - caller must ensure that underlying tstore max_size, max_buckets and hours_per_bucket
+             matches that of the source data'''
         try:
-            for bucket_start, bucket_id in data:
-                position,data=data[(bucket_start,bucket_id)]
+            for bucket_start, bucket_id in unseen:
+                position,data=unseen[(bucket_start,bucket_id)]
                 try:
                     try:
                         existing_id=self.perflog.__tstore.get_bucket(bucket_start)
@@ -292,11 +296,19 @@ class Tracker:
                     else:
                         # there is room (as long as self.perflog has same max_bytes, max_buckets
                         # as source)
-                        with tstore.Writer(self.perflog.tstore,bucket_start,bucket_id) as writer:
-                            writer.seek_to(position)
-                            writer.write(data)
-                            writer.truncate()
+                        if position==0:
+                            try:
+                                self.__tstore.delete_bucket(bucket_id,bucket_start)
+                            except tstore.NoSuchBucket:
+                                pass
                             pass
+                        try:
+                            self.__tstore.create_bucket(bucket_id,bucket_start)
+                        except tstore.BucketExists:
+                            pass
+                        with tstore.Writer(self.perflog.tstore,bucket_start,bucket_id) as writer:
+                            Assert(writer.size())==position
+                            writer.append(data)
                         pass
                     pass
                 except Exception:
