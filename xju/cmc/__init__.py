@@ -20,22 +20,34 @@ from typing import TypeVar, Iterable, Dict as _Dict, overload, Tuple, Sequence, 
 from typing import ItemsView, KeysView
 from typing import Mapping, Type, List
 
+from xju.xn import in_function_context
+
 from collections import OrderedDict
 od = OrderedDict
 
 T = TypeVar('T', bound=contextlib.AbstractContextManager)
 
+def is_subclass(n, t1, t2):
+    '''check whether {n}, a {t1}, (of type {t1.__class__}) is a sub-class of {t2} (of type {t2.__class__})'''
+    try:
+        return issubclass(t1, t2)
+    except Exception:
+        raise in_function_context(is_subclass,vars()) from None
+    pass
+
 # Class decorator that adds context management __enter__ and __exit__
 # that enter and exit all type-hinted attributes implementing contextlib.AbstractContextManager
 # then any existing __enter__.
+#
 # Note that to satisfy mypy, the decorated class must already
 # implement contextlib.AbstractContextManager and the preferred way to do that is
 # to inherit from xju.cmc.CM - see test-cmc.py for examples.
+#
 def cmclass(cls:Type[T]) -> Type[T]:
     base_classes_to_enter = [ base_class for base_class in cls.__bases__
                               if issubclass(base_class, contextlib.AbstractContextManager) ]
     attrs_to_enter = [ n for n, t in cls.__annotations__.items()
-                         if issubclass(t, contextlib.AbstractContextManager)]
+                         if isinstance(t,type) and is_subclass(n, t, contextlib.AbstractContextManager)]
     # need a unique place to keep resources acquired by enter so exit can
     # exit them, only want resources for self, not subclasses (which do their own
     # handling). Note replacing . with _ could lead to clashes but there's no

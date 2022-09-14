@@ -94,10 +94,10 @@ class TStore:
         pass
     def __init__(self,
                  storage_path:Path,
-                 hours_per_bucket,
-                 max_buckets,
-                 max_size,
-                 file_creation_mode):
+                 hours_per_bucket=None,
+                 max_buckets=None,
+                 max_size=None,
+                 file_creation_mode=None):
         self.storage_path=storage_path
         if (isinstance(hours_per_bucket,int) and
             isinstance(max_buckets,int) and
