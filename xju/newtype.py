@@ -64,7 +64,7 @@ class RunTimeStr:
         return self.value.__ge__(other.value)
     pass
 
-S=TypeVar('S',bound=RunTimeStr,covariant=True)
+S=TypeVar('S')
 
 class StringLike(Container[str],Reversible[str],Protocol[S]):
     @overload
@@ -149,7 +149,7 @@ class StringLike(Container[str],Reversible[str],Protocol[S]):
         ...
     def __hash__(self) -> int:
         ...
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other:StringLike[S]) -> bool:
         ...
     def __le__(self, other) -> bool:
         ...
