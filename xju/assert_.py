@@ -48,6 +48,18 @@ class Assert():
         if not self.x[0:len(y)]==y:
             raise Exception('{self.x!r} does not start with {y!r}'.format(**vars()))
         return self.x
+    def startswith(self,y):
+        return self.startsWith(y)
+    def starts_with(self,y):
+        return self.startsWith(y)
+    def endsWith(self,y):
+        if not self.x[0:len(y)]==y:
+            raise Exception('{self.x!r} does not start with {y!r}'.format(**vars()))
+        return self.x
+    def endswith(self,y):
+        return self.endsWith(y)
+    def ends_with(self,y):
+        return self.endsWith(y)
     def isNotIn(self,y):
         if self.x in y:
             raise Exception('{self.x!r} is in {y!r}'.format(**vars()))
