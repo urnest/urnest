@@ -13,17 +13,25 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-from typing import Iterable,Sized,Container,Collection,Reversible,Protocol,cast,Type
+# Utilities for creating distinct types mirroring a subset of a basic
+# type (str, int, float, bytes).
+#
+# Unlike typing.NewType:
+#   - works with isinstance (at runtime)
+#   - many methods of the basic type are provided directly, e.g. for
+#     new int type A, A+A->A
 
+from typing import Iterable,Sized,Container,Collection,Reversible,Protocol,cast,Type,overload,TypeVar
+from dataclasses import dataclass
+
+@dataclass
 class RunTimeStr:
-    def __init__(self, s:str):
-        self.value=s
-        pass
-    
+    value:str
     def __str__(self):
         return self.value
     
     def __getattr__(self, n, *args, **argv):
+        return getattr(self.value,n)
         if n=='__init__':
             self.__dict__.__init__(self,*args,**argv)
         else:
@@ -40,13 +48,121 @@ class RunTimeStr:
         return self.value.__reversed__()
     def __contains__(self, item):
         return self.value.__contains__(item)
+    def __hash__(self) -> int:
+        return self.value.__hash__()
+    def __lt__(self, other) -> bool:
+        return self.value.__lt__(other)
+    def __le__(self, other) -> bool:
+        return self.value.__le__(other)
+    def __eq__(self, other) -> bool:
+        return self.value.__eq__(other)
+    def __ne__(self, other) -> bool:
+        return self.value.__ne__(other)
+    def __gt__(self, other) -> bool:
+        return self.value.__gt__(other)
+    def __ge__(self, other) -> bool:
+        return self.value.__ge__(other)
     pass
 
+S=TypeVar('S',bound=RunTimeStr,covariant=True)
 
-class StringLike(Container[str],Reversible[str],Protocol):
-    def encode(self,encoding='utf-8', errors='strict'):
+class StringLike(Container[str],Reversible[str],Protocol[S]):
+    @overload
+    def count(self,sub:str) -> int:
         ...
+    @overload
+    def count(self,sub:str, start:int) -> int:
+        ...
+    @overload
+    def count(self,sub:str, start:int, end:int) -> int:
+        ...
+    def encode(self,encoding='utf-8', errors='strict') -> bytes:
+        ...
+    @overload
+    def endswith(self,suffix:str) -> bool:
+        ...
+    @overload
+    def endswith(self,suffix:str, start:int) -> bool:
+        ...
+    @overload
+    def endswith(self,suffix:str, start:int, end:int) -> bool:
+        ...
+    @overload
+    def find(self,sub:str) -> int:
+        ...
+    @overload
+    def find(self,sub:str, start:int) -> int:
+        ...
+    @overload
+    def find(self,sub:str, start:int, end:int) -> int:
+        ...
+    def isalnum(self) -> bool:
+        ...
+    def isalpha(self) -> bool:
+        ...
+    def isascii(self) -> bool:
+        ...
+    def isdecimal(self) -> bool:
+        ...
+    def isdigit(self) -> bool:
+        ...
+    def isidentifier(self) -> bool:
+        ...
+    def islower(self) -> bool:
+        ...
+    def isnumeric(self) -> bool:
+        ...
+    def isprintable(self) -> bool:
+        ...
+    def isspace(self) -> bool:
+        ...
+    def istitle(self) -> bool:
+        ...
+    def isupper(self) -> bool:
+        ...
+    @overload
+    def rfind(self,sub:str) -> int:
+        ...
+    @overload
+    def rfind(self,sub:str, start:int) -> int:
+        ...
+    @overload
+    def rfind(self,sub:str, start:int, end:int) -> int:
+        ...
+    @overload
+    def rindex(self,sub:str) -> int:
+        ...
+    @overload
+    def rindex(self,sub:str, start:int) -> int:
+        ...
+    @overload
+    def rindex(self,sub:str, start:int, end:int) -> int:
+        ...
+    @overload
+    def startswith(self,prefix:str, start:int, end:int) -> bool:
+        ...
+    @overload
+    def startswith(self,prefix:str) -> bool:
+        ...
+    @overload
+    def startswith(self,prefix:str, start:int) -> bool:
+        ...
+    def __hash__(self) -> int:
+        ...
+    def __lt__(self, other) -> bool:
+        ...
+    def __le__(self, other) -> bool:
+        ...
+    def __eq__(self, other) -> bool:
+        ...
+    def __ne__(self, other) -> bool:
+        ...
+    def __gt__(self, other) -> bool:
+        ...
+    def __ge__(self, other) -> bool:
+        ...
+
     pass
 
-def stringlike(cls:Type[RunTimeStr]) -> StringLike:
-    return cast(StringLike,cls)
+def stringlike(cls:Type[S]) -> StringLike[S]:
+    return cast(StringLike[S],cls)
