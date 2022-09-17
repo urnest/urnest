@@ -134,7 +134,7 @@ def test4(prog=sys.argv[0]):
 failed to jock because
 [^:]*:127: failed to c[(][)] because
 [^:]*:124: failed to b[(][)] because
-[^:]*:121: failed to pass because
+[^:]*:118: failed to with _Scope[(]'b'[)]: because
 [^:]*:111: failed to raise in_context[(]self.s,[(]t,e,b[)],self.fl[)] from None because
 [^:]*:118: failed to b because
 [^:]*:120: failed to a[(][)] because
