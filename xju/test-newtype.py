@@ -34,3 +34,5 @@ last_name=LastName('jones')
 
 Assert(full_name(first_name,last_name))=='fred jones'
 Assert(first_name).startsWith('fr')
+Assert(first_name).isInstanceOf(FirstName)
+Assert(first_name).isNotInstanceOf(LastName)
