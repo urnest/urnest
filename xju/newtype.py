@@ -51,17 +51,17 @@ class RunTimeStr:
     def __hash__(self) -> int:
         return self.value.__hash__()
     def __lt__(self, other) -> bool:
-        return self.value.__lt__(other)
+        return self.value.__lt__(other.value)
     def __le__(self, other) -> bool:
-        return self.value.__le__(other)
+        return self.value.__le__(other.value)
     def __eq__(self, other) -> bool:
-        return self.value.__eq__(other)
+        return self.value.__eq__(other.value)
     def __ne__(self, other) -> bool:
-        return self.value.__ne__(other)
+        return self.value.__ne__(other.value)
     def __gt__(self, other) -> bool:
-        return self.value.__gt__(other)
+        return self.value.__gt__(other.value)
     def __ge__(self, other) -> bool:
-        return self.value.__ge__(other)
+        return self.value.__ge__(other.value)
     pass
 
 S=TypeVar('S',bound=RunTimeStr,covariant=True)
