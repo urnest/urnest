@@ -78,13 +78,24 @@ netflow%tests.tree
 (test-pq.py)+(%py-opts):py3.exec.output
 (test-rfc2616.py)+(%py-opts):py3.exec.output
 (test-misc.py)+(%py-opts):py3.exec.output
+(test-newtype.py)+(%py-opts):py3.exec.output
 %verify-test-cmc.x1-fail
+%verify-test-newtype.x1-fail
+%verify-test-newtype.x2-fail
 (wal%all)
 (cmc%all)
 
 %verify-test-cmc.x1-fail==(%test-cmc.x1.errs)+cmd=grep -q '"Cannot determine consistent method resolution order"':stdout
 
 %test-cmc.x1.errs==(test-cmc.x1.py)+(%py-opts):py3.exec.output:err
+
+%verify-test-newtype.x1-fail==(%test-newtype.x1.errs)+cmd=grep -q '"Argument 1 to \\"f\\" has incompatible type \\"str\\"; expected \\"FirstName\\""':stdout
+
+%test-newtype.x1.errs==(test-newtype.x1.py)+(%py-opts):py3.exec.output:err
+
+%verify-test-newtype.x2-fail==(%test-newtype.x2.errs)+cmd=grep -q '"Argument 1 to \\"f\\" has incompatible type \\"FirstName\\"; expected \\"str\\""':stdout
+
+%test-newtype.x2.errs==(test-newtype.x2.py)+(%py-opts):py3.exec.output:err
 
 %py-opts==<<
 +py_sp=(..)
