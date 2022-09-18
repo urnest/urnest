@@ -13,16 +13,14 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-from xju.newtype import Str
+from xju.newtype import Int
 from xju.assert_ import Assert
 
-class FirstNameType:pass
-class FirstName(Str[FirstName]):pass
+class HoursTag: pass
+class MinutesTag: pass
 
-def f(street:str, first_name:FirstName):
-    pass
+Hours=Int[HoursTag]
+Minutes=Int[MinutesTag]
 
-first_name=FirstName('fred')
-f('baker',first_name)  # good
-f(first_name,'baker')  # wrong param order
-
+v1=Hours(7)
+v1=Minutes(8)

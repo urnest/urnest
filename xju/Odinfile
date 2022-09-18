@@ -78,29 +78,38 @@ netflow%tests.tree
 (test-pq.py)+(%py-opts):py3.exec.output
 (test-rfc2616.py)+(%py-opts):py3.exec.output
 (test-misc.py)+(%py-opts):py3.exec.output
-(test-newtype.py)+(%py-opts):py3.exec.output
 %verify-test-cmc.x1-fail
+(wal%all)
+(cmc%all)
+%py-newtype-tests.tree:leaves
+
+%py-newtype-tests.tree==<<
+(test-newtype.py)+(%py-opts):py3.exec.output
 %verify-test-newtype.x1-fail
 %verify-test-newtype.x2-fail
 %verify-test-newtype.x3-fail
-(wal%all)
-(cmc%all)
+%verify-test-newtype.x3-fail
+%verify-test-newtype.x4-fail
+%verify-test-newtype.x5-fail
 
 %verify-test-cmc.x1-fail==(%test-cmc.x1.errs)+cmd=grep -q '"Cannot determine consistent method resolution order"':stdout
 
 %test-cmc.x1.errs==(test-cmc.x1.py)+(%py-opts):py3.exec.output:err
 
-%verify-test-newtype.x1-fail==(%test-newtype.x1.errs)+cmd=grep -q '"Argument 1 to \\"f\\" has incompatible type \\"str\\"; expected \\"FirstName\\""':stdout
-
+%verify-test-newtype.x1-fail==(%test-newtype.x1.errs)+cmd=fgrep -q '"Argument 1 to \\"f\\" has incompatible type \\"str\\"; expected \\"FirstName\\""':stdout
 %test-newtype.x1.errs==(test-newtype.x1.py)+(%py-opts):py3.exec.output:err
 
-%verify-test-newtype.x2-fail==(%test-newtype.x2.errs)+cmd=grep -q '"Argument 1 to \\"f\\" has incompatible type \\"FirstName\\"; expected \\"str\\""':stdout
-
+%verify-test-newtype.x2-fail==(%test-newtype.x2.errs)+cmd=fgrep -q '"Argument 1 to \\"f\\" has incompatible type \\"FirstName\\"; expected \\"str\\""':stdout
 %test-newtype.x2.errs==(test-newtype.x2.py)+(%py-opts):py3.exec.output:err
 
-%verify-test-newtype.x3-fail==(%test-newtype.x3.errs)+cmd=grep -q '"Argument 1 to \\"f\\" has incompatible type \\"FirstName\\"; expected \\"str\\""':stdout
-
+%verify-test-newtype.x3-fail==(%test-newtype.x3.errs)+cmd=fgrep -q '"Unsupported operand types for < (\\"FirstName\\" and \\"SecondName\\")"':stdout
 %test-newtype.x3.errs==(test-newtype.x3.py)+(%py-opts):py3.exec.output:err
+
+%verify-test-newtype.x4-fail==(%test-newtype.x4.errs)+cmd=fgrep -q '"Incompatible types in assignment (expression has type \\"Int[MinutesTag]\\", variable has type \\"Int[HoursTag]\\")"':stdout
+%test-newtype.x4.errs==(test-newtype.x4.py)+(%py-opts):py3.exec.output:err
+
+%verify-test-newtype.x5-fail==(%test-newtype.x5.errs)+cmd=fgrep -q '"Unsupported operand types for < (\\"Int[HoursType]\\" and \\"Int[MinutesType]\\")"':stdout
+%test-newtype.x5.errs==(test-newtype.x5.py)+(%py-opts):py3.exec.output:err
 
 %py-opts==<<
 +py_sp=(..)

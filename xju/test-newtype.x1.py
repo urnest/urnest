@@ -13,11 +13,11 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-from xju.newtype import stringlike,RunTimeStr
+from xju.newtype import Str
 from xju.assert_ import Assert
 
-@stringlike
-class FirstName(RunTimeStr):
+class FirstNameType:pass
+class FirstName(Str[FirstNameType]):
     pass
 
 def f(first_name:FirstName):
