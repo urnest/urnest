@@ -15,25 +15,18 @@
 #
 # CMC - Context Manager Complete/Crap
 #
+import sys
 import contextlib
 from typing import TypeVar, Iterable, Dict as _Dict, overload, Tuple, Sequence, Union, Optional
 from typing import ItemsView, KeysView
 from typing import Mapping, Type, List
+from collections import OrderedDict
+import builtins
 
 from xju.xn import in_function_context
-
-from collections import OrderedDict
-od = OrderedDict
+from xju.assert_ import Assert
 
 T = TypeVar('T', bound=contextlib.AbstractContextManager)
-
-def is_subclass(n, t1, t2):
-    '''check whether {n}, a {t1}, (of type {t1.__class__}) is a sub-class of {t2} (of type {t2.__class__})'''
-    try:
-        return issubclass(t1, t2)
-    except Exception:
-        raise in_function_context(is_subclass,vars()) from None
-    pass
 
 # Class decorator that adds context management __enter__ and __exit__
 # that enter and exit all type-hinted attributes implementing contextlib.AbstractContextManager
@@ -47,7 +40,7 @@ def cmclass(cls:Type[T]) -> Type[T]:
     base_classes_to_enter = [ base_class for base_class in cls.__bases__
                               if issubclass(base_class, contextlib.AbstractContextManager) ]
     attrs_to_enter = [ n for n, t in cls.__annotations__.items()
-                         if isinstance(t,type) and is_subclass(n, t, contextlib.AbstractContextManager)]
+                         if is_subclass(n, t, contextlib.AbstractContextManager)]
     # need a unique place to keep resources acquired by enter so exit can
     # exit them, only want resources for self, not subclasses (which do their own
     # handling). Note replacing . with _ could lead to clashes but there's no
@@ -312,3 +305,15 @@ class __ClassCm(contextlib.AbstractContextManager):
         return self.cls.__exit__(self.x, t, e, b)
     pass
 
+def is_subclass(n:str, t1, t2:type):
+    '''check whether {n}'s type {t1} is a sub-class of {t2}'''
+    try:
+        Assert(t2).isInstanceOf(type)
+        if isinstance(t1,type):
+            return issubclass(t1, t2)
+        else:
+            return False
+        pass
+    except Exception:
+        raise in_function_context(is_subclass,vars()) from None
+    pass

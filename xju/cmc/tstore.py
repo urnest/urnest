@@ -213,7 +213,7 @@ class TStore:
         '''make room in TStore {self} for {byte_count} bytes of data
            - deletes just enough buckets with oldest start times to make room'''
         Assert(byte_count)<self.max_size
-        self.__trim_bytes(ByteCount(self.max_size-byte_count))
+        self.__trim_bytes(self.max_size-byte_count)
         pass
 
     def delete_bucket(self, bucket_start:BucketStart,bucket_id:BucketID):
@@ -311,7 +311,7 @@ class Reader(CM):
         '''position TStore reader {self} so next read occurs {offset} bytes from current position
            - returns self'''
         try:
-            self.__impl.seek_by(FilePositionDelta(offset))
+            self.__impl.seek_by(FilePositionDelta(offset.value()))
             return self
         except:
             raise in_function_context(Reader.seek_by,vars()) from None
@@ -328,7 +328,7 @@ class Reader(CM):
     def read(self, max_bytes:ByteCount) -> bytes:
         '''read up to {max_bytes} of data from TStore reader {self} current position'''
         try:
-            result=self.__impl.input.read(max_bytes)
+            result=self.__impl.input.read(max_bytes.value())
             if isinstance(result,bytes):
                 return result
             assert False
@@ -378,11 +378,11 @@ class Writer(CM):
            - raises BucketExists if bucket now has different id'''
         try:
             Assert(len(data))<=self.store.max_size-self.store.__current_size
-            self.__impl.seek_to(FilePosition(self.size()))
+            self.__impl.seek_to(FilePosition(self.size().value()))
             self.__impl.output.write(data)
-            self.store.__current_size=ByteCount(self.store.__current_size+len(data))
-            self.store.__bucket_sizes[(self.bucket_start,self.bucket_id)]=ByteCount(
-                self.store.__bucket_sizes[(self.bucket_start,self.bucket_id)]+len(data))
+            self.store.__current_size=self.store.__current_size+ByteCount(len(data))
+            self.store.__bucket_sizes[(self.bucket_start,self.bucket_id)]=\
+                self.store.__bucket_sizes[(self.bucket_start,self.bucket_id)]+ByteCount(len(data))
         except Exception:
             raise in_function_context(Writer.append,vars()) from None
         pass

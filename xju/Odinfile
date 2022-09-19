@@ -222,3 +222,74 @@ fi
 %test-py-exit.exec==(test-py-exit.py)+(%py-opts):py3.exec
 
 %test-py-exit==()+cmd=(%test-py-exit.sh) (%test-py-exit.exec/status) (%test-py-exit.exec/output):stdout
+
+
+newtype.py==(%make-newtype.py)+(%py-opts)+cmd=(newtype.template.py):py3.exec.output
+
+%make-newtype.py==!<<
+#/usr/bin/env python3
+import sys
+int_methods=''
+all=set(dir(int))
+a=['__abs__','__invert__', '__neg__','__pos__', '__trunc__','__round__', '__ceil__','__floor__', 'conjugate']
+for n in a:
+    int_methods=int_methods+f'''
+    def {n}(self):
+        return Int[Tag](self.value().{n}())'''
+b=['__int__', '__sizeof__', 'bit_count', 'bit_length','__index__','__hash__']
+for n in b:
+    int_methods=int_methods+f'''
+    def {n}(self)->int:
+        return self.value().{n}()'''
+c=['__bool__']
+for n in c:
+    int_methods=int_methods+f'''
+    def {n}(self)->bool:
+        return self.value().{n}()'''
+d=['__ror__', '__rrshift__', '__lshift__', '__rlshift__', '__rshift__']
+for n in d:
+    int_methods=int_methods+f'''
+    def {n}(self,n:int):
+        return Int[Tag](self.value().{n}(n))'''
+e=['__gt__', '__lt__', '__le__', '__ge__']
+for n in e:
+    int_methods=int_methods+f'''
+    def {n}(self,other:OtherInt[Tag])->bool:
+        return self.value().{n}(other.value())'''
+e2=['__eq__', '__ne__']
+for n in e2:
+    int_methods=int_methods+f'''
+    def {n}(self,other)->bool:
+        if other.__class__==self.__class__:
+            return self.value().{n}(other.value())
+        return False'''
+f=['__add__', '__sub__', '__rsub__', '__radd__', '__and__', '__or__', '__rfloordiv__','__xor__']
+for n in f:
+    int_methods=int_methods+f'''
+    def {n}(self,other:OtherInt[Tag]):
+        return Int[Tag](self.value().{n}(other.value()))'''
+g=['as_integer_ratio']
+for n in g:
+    int_methods=int_methods+f'''
+    def {n}(self)->Tuple[int,int]:
+        return self.value().{n}()'''
+h=['__mod__', '__divmod__', '__floordiv__','__truediv__', '__mul__','__rdivmod__', '__rtruediv__', '__rmul__', '__rmod__']
+for n in h:
+    int_methods=int_methods+f'''
+    @overload
+    def {n}(self, other:float):
+        ...
+    @overload
+    def {n}(self, other:OtherInt[Tag])->float:
+        ...
+    def {n}(self, other):
+        if type(other) is int or type(other) is float:
+            return Int[Tag](int(self.value().{n}(other)))
+        else:
+            return self.value().{n}(other)'''
+i=['__rpow__', '__dir__', '__rand__', '__reduce__', '__rxor__', '__pow__', '__str__', '__init_subclass__', '__reduce_ex__', '__getattribute__', '__doc__', '__setattr__', 'denominator', '__init__', '__delattr__', 'from_bytes', '__float__', '__format__', 'to_bytes', '__class__', '__repr__', '__new__', '__getnewargs__', 'numerator','real', '__subclasshook__','imag']
+# i functions not implemented or hand-coded
+rem=list(all-set(a)-set(b)-set(c)-set(d)-set(e)-set(e2)-set(f)-set(g)-set(h)-set(i))
+#print(rem)
+assert len(rem)==0
+print(open(sys.argv[1]).read().replace('# generated Int methods here...',int_methods))

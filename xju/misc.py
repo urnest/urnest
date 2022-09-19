@@ -13,10 +13,13 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-from typing import NewType,Union,List,Dict
+from typing import Union,List,Dict
 import json
+from xju.newtype import Int
 
-ByteCount=NewType('ByteCount',int)
+class ByteCountTag:pass
+class ByteCount(Int[ByteCountTag]):
+    pass
 
 def toJson(x:Union[str,int,float,None,List,Dict],cls=json.JSONEncoder) -> str:
     '''JSON-encode {x}
