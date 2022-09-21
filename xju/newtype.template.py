@@ -22,15 +22,15 @@
 #     new int type A, A+A->A
 
 from typing import Iterable,Sized,Container,Collection,Reversible,Protocol,cast,Type,overload,TypeVar
-from typing import Generic,Tuple
+from typing import Generic,Tuple,Mapping,Optional,List,Literal,Union
 
 Tag=TypeVar('Tag',covariant=True)
 
-class OtherInt(Generic[Tag]):
+class Int_(Generic[Tag]):
     __value:int
 
     def __init__(self, value:int):
-        self.__=value
+        self.__value=value
         pass
 
     def value(self)->int:
@@ -38,7 +38,11 @@ class OtherInt(Generic[Tag]):
 
     pass
 
-class Int(Generic[Tag],OtherInt[Tag]):
+# mypy does not understand @classmethod
+def Int_from_bytes(b:bytes, byteorder:Literal['little','big'], *, signed=False):
+    return Int[Tag](int.from_bytes(b,byteorder,signed=signed))
+
+class Int(Generic[Tag],Int_[Tag]):
     def __str__(self)->str:
         return str(self.value())
 
@@ -57,31 +61,178 @@ class Int(Generic[Tag],OtherInt[Tag]):
     def to_bytes(self,length,byteorder,*,signed=False)->bytes:
         return self.value().to_bytes(length,byteorder,signed=signed)
 
-    @classmethod
-    def from_bytes(bytes, byteorder, *, signed=False):
-        return Int[Tag](int.from_bytes(bytes,byteorder,signed))
+    from_bytes=Int_from_bytes
+
+    def conjugate(self):
+        return self.value().conjugate()
+
+    @overload
+    def __divmod__(self, x:int) -> Tuple:  # Tuple[Self,Self]
+        ...
+    @overload
+    def __divmod__(self, x:float) -> Tuple[float,float]:
+        ...
+    @overload
+    def __divmod__(self, x:Int_[Tag]) -> Tuple:  # Tuple[int,int]
+        ...
+    def __divmod__(self, x):
+        if isinstance(x,int):
+            q,r=self.value().__divmod__(x)
+            return Int[Tag](q),Int[Tag](r)
+        else:
+            return self.value().__divmod__(x.value())
+        pass
+
+    @overload
+    def __floordiv__(self, x:int):  # -> Int[Tag]
+        ...
+    @overload
+    def __floordiv__(self, x:float) -> float:
+        ...
+    @overload
+    def __floordiv__(self, x:Int_[Tag]) -> int:
+        ...
+    def __floordiv__(self, x):
+        if isinstance(x,int):
+            return Int[Tag](self.value().__floordiv__(x))
+        else:
+            return self.value().__floordiv__(x.value())
+        pass
+
+    def __truediv__(self, x:Union[float,int,Int_[Tag]]) -> float:
+        if isinstance(x,float) or isinstance(x,int):
+            return self.value()/x
+        else:
+            return self.value()/x.value()
+        pass
+    
+    @overload
+    def __mull__(self, x:int):  # -> Int[Tag]
+        ...
+    @overload
+    def __mull__(self, x:float) -> float:
+        ...
+    def __mull__(self, x):
+        if isinstance(x,int):
+            return Int[Tag](self.value().__mull__(x))
+        else:
+            return self.value().__mull__(x.value())
+        pass
+
+    @overload
+    def __mod__(self, other:int):  #->Int[Tag]
+        ...
+    @overload
+    def __mod__(self, other:float)->float:
+        ...
+    @overload
+    def __mod__(self, other:Int_[Tag])->int:
+        ...
+    def __mod__(self, other):
+        if type(other) is int:
+            return Int[Tag](self.value()%other)
+        if type(other) is float:
+            return self.value()%other
+        else:
+            return self.value()%other.value()
 
     # generated Int methods here...
 
     pass
 
 
-class OtherStr(Protocol[Tag]):
-    def value(self)->str:
-        ...
+class Float_(Generic[Tag]):
+    __value:float
+
+    def __init__(self, value:float):
+        self.__value=value
+        pass
+
+    def value(self)->float:
+        return self.__value
+
     pass
 
-class Str(Generic[Tag],OtherStr[Tag]):
+def Float_fromhex(s:str):
+    return Float[Tag](float.fromhex(s))
+
+class Float(Generic[Tag],Float_[Tag]):
+    def __str__(self)->str:
+        return str(self.value())
+
+    def __repr__(self)->str:
+        return repr(self.value())
+
+    def __reduce__(self)->Tuple:
+        return (Float[Tag], (self.value(),))
+
+    def __format__(self, format_spec:str)->str:
+        return self.value().__format__(format_spec)
+
+    def __int__(self)->int:
+        return self.value().__int__()
+    
+    def __float__(self)->float:
+        return self.value().__float__()
+    
+    def hex(self)->str:
+        return self.value().hex()
+    
+    fromhex=Float_fromhex
+
+    # generated Float methods here...
+
+    pass
+
+
+class Str_(Generic[Tag]):
+    __value:str
+    
     def __init__(self, value:str):
         self.__value=value
         pass
 
     def value(self)->str:
         return self.__value
-    
-    def __str__(self)->str:
-        return self.__value
+    pass
 
-    def __lt__(self, other:OtherStr[Tag]) -> bool:
-        return self.value()<other.value()
+class Str(Generic[Tag],Str_[Tag]):
+    def __str__(self)->str:
+        return str(self.value())
+
+    def __repr__(self)->str:
+        return repr(self.value())
+
+    def __reduce__(self)->Tuple:
+        return (Str[Tag], (self.value(),))
+
+    def __format__(self, format_spec:str)->str:
+        return self.value().__format__(format_spec)
+
+    def splitlines(self,keepends=False)->List:
+        return [Str[Tag](_) for _ in self.value().splitlines()]
+
+    def encode(self,encoding:str='utf-8', errors:str='strict')->bytes:
+        return self.value().encode()
+
+    def __contains__(self,other:str)->bool:
+        return self.value().__contains__(other)
+
+    def zfill(self,width:int):
+        return Str[Tag](self.value().zfill(width))
+
+    def format_map(self,mapping:Mapping):
+        return Str[Tag](self.value().format_map(mapping))
+
+    def rjust(self,width:int,fillchar=' '):
+        return Str[Tag](self.value().rjust(width,fillchar))
+
+    def format(self,*args,**kwargs):
+        return Str[Tag](self.value().format(*args,**kwargs))
+    
+    def expandtabs(self,tabsize=8):
+        return Str[Tag](self.value().expandtabs(tabsize))
+
+    # generated Str methods here...
+
     pass

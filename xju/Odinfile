@@ -230,66 +230,207 @@ newtype.py==(%make-newtype.py)+(%py-opts)+cmd=(newtype.template.py):py3.exec.out
 #/usr/bin/env python3
 import sys
 int_methods=''
-all=set(dir(int))
-a=['__abs__','__invert__', '__neg__','__pos__', '__trunc__','__round__', '__ceil__','__floor__', 'conjugate']
-for n in a:
+rem=set(dir(int))
+for n in ['__abs__','__invert__', '__neg__','__pos__', '__trunc__','__round__', '__ceil__','__floor__']:
+    rem.remove(n)
     int_methods=int_methods+f'''
     def {n}(self):
         return Int[Tag](self.value().{n}())'''
-b=['__int__', '__sizeof__', 'bit_count', 'bit_length','__index__','__hash__']
-for n in b:
+for n in ['__int__', '__sizeof__', 'bit_count', 'bit_length','__index__','__hash__']:
+    rem.remove(n)
     int_methods=int_methods+f'''
     def {n}(self)->int:
         return self.value().{n}()'''
-c=['__bool__']
-for n in c:
+for n in ['__bool__']:
+    rem.remove(n)
     int_methods=int_methods+f'''
     def {n}(self)->bool:
         return self.value().{n}()'''
-d=['__ror__', '__rrshift__', '__lshift__', '__rlshift__', '__rshift__']
-for n in d:
+for n in ['__ror__', '__rrshift__', '__lshift__', '__rlshift__', '__rshift__']:
+    rem.remove(n)
     int_methods=int_methods+f'''
     def {n}(self,n:int):
         return Int[Tag](self.value().{n}(n))'''
-e=['__gt__', '__lt__', '__le__', '__ge__']
-for n in e:
+for n in ['__gt__', '__lt__', '__le__', '__ge__']:
+    rem.remove(n)
     int_methods=int_methods+f'''
-    def {n}(self,other:OtherInt[Tag])->bool:
+    def {n}(self,other:Int_[Tag])->bool:
         return self.value().{n}(other.value())'''
-e2=['__eq__', '__ne__']
-for n in e2:
+for n in ['__eq__', '__ne__']:
+    rem.remove(n)
     int_methods=int_methods+f'''
     def {n}(self,other)->bool:
         if other.__class__==self.__class__:
             return self.value().{n}(other.value())
         return False'''
-f=['__add__', '__sub__', '__rsub__', '__radd__', '__and__', '__or__', '__rfloordiv__','__xor__']
-for n in f:
+for n in ['__add__', '__sub__', '__rsub__', '__radd__', '__and__', '__or__','__xor__']:
+    rem.remove(n)
     int_methods=int_methods+f'''
-    def {n}(self,other:OtherInt[Tag]):
+    def {n}(self,other:Int_[Tag]):
         return Int[Tag](self.value().{n}(other.value()))'''
-g=['as_integer_ratio']
-for n in g:
+for n in ['as_integer_ratio']:
+    rem.remove(n)
     int_methods=int_methods+f'''
     def {n}(self)->Tuple[int,int]:
         return self.value().{n}()'''
-h=['__mod__', '__divmod__', '__floordiv__','__truediv__', '__mul__','__rdivmod__', '__rtruediv__', '__rmul__', '__rmod__']
-for n in h:
-    int_methods=int_methods+f'''
+for n in ['__rpow__', '__dir__', '__rand__', '__reduce__', '__rxor__', '__pow__', '__str__', '__init_subclass__', '__reduce_ex__', '__getattribute__', '__doc__', '__setattr__', 'denominator', '__init__', '__delattr__', 'from_bytes', '__float__', '__format__', 'to_bytes', '__class__', '__repr__', '__new__', '__getnewargs__', 'numerator','real', '__subclasshook__','imag','conjugate', '__floordiv__','__rfloordiv__','__divmod__','__rdivmod__','__truediv__','__rtruediv__', '__mul__', '__rmul__', '__rmod__','__mod__']:
+    rem.remove(n)
+    # i functions not implemented or hand-coded
+assert len(rem)==0,rem
+float_methods=''
+rem=set(dir(float))
+for n in ['__abs__','__neg__','__pos__', '__trunc__','__round__', '__ceil__','__floor__', 'conjugate']:
+    rem.remove(n)
+    float_methods=float_methods+f'''
+    def {n}(self):
+        return Float[Tag](self.value().{n}())'''
+for n in ['__sizeof__','__hash__']:
+    rem.remove(n)
+    float_methods=float_methods+f'''
+    def {n}(self)->int:
+        return self.value().{n}()'''
+for n in ['__bool__','is_integer']:
+    rem.remove(n)
+    float_methods=float_methods+f'''
+    def {n}(self)->bool:
+        return self.value().{n}()'''
+for n in ['__gt__', '__lt__', '__le__', '__ge__']:
+    rem.remove(n)
+    float_methods=float_methods+f'''
+    def {n}(self,other:Float_[Tag])->bool:
+        return self.value().{n}(other.value())'''
+for n in ['__eq__', '__ne__']:
+    rem.remove(n)
+    float_methods=float_methods+f'''
+    def {n}(self,other)->bool:
+        if other.__class__==self.__class__:
+            return self.value().{n}(other.value())
+        return False'''
+for n in ['__add__', '__sub__', '__rsub__', '__radd__', '__rfloordiv__']:
+    rem.remove(n)
+    float_methods=float_methods+f'''
+    def {n}(self,other:Float_[Tag]):
+        return Float[Tag](self.value().{n}(other.value()))'''
+for n in ['as_integer_ratio']:
+    rem.remove(n)
+    float_methods=float_methods+f'''
+    def {n}(self)->Tuple[float,float]:
+        return self.value().{n}()'''
+for n in ['__mod__', '__divmod__', '__floordiv__','__truediv__', '__mul__','__rdivmod__', '__rtruediv__', '__rmul__', '__rmod__']:
+    rem.remove(n)
+    float_methods=float_methods+f'''
     @overload
     def {n}(self, other:float):
         ...
     @overload
-    def {n}(self, other:OtherInt[Tag])->float:
+    def {n}(self, other:Float_[Tag])->float:
         ...
     def {n}(self, other):
-        if type(other) is int or type(other) is float:
-            return Int[Tag](int(self.value().{n}(other)))
+        if type(other) is float or type(other) is float:
+            return Float[Tag](float(self.value().{n}(other)))
         else:
             return self.value().{n}(other)'''
-i=['__rpow__', '__dir__', '__rand__', '__reduce__', '__rxor__', '__pow__', '__str__', '__init_subclass__', '__reduce_ex__', '__getattribute__', '__doc__', '__setattr__', 'denominator', '__init__', '__delattr__', 'from_bytes', '__float__', '__format__', 'to_bytes', '__class__', '__repr__', '__new__', '__getnewargs__', 'numerator','real', '__subclasshook__','imag']
-# i functions not implemented or hand-coded
-rem=list(all-set(a)-set(b)-set(c)-set(d)-set(e)-set(e2)-set(f)-set(g)-set(h)-set(i))
-#print(rem)
+for n in ['__rpow__', '__dir__', '__reduce__', '__pow__', '__str__', '__init_subclass__', '__reduce_ex__', '__getattribute__', '__doc__', '__setattr__', '__init__', '__delattr__', '__float__', '__format__', '__class__', '__repr__', '__new__', '__getnewargs__','real', '__subclasshook__','imag','fromhex', 'hex', '__int__', '__setformat__', '__getformat__']:
+    rem.remove(n)
+    # i functions not implemented or hand-coded
+assert len(rem)==0,rem
+rem=set(dir(str))
+str_methods=''
+for n in ['__setattr__', '__repr__', '__reduce_ex__', '__init__', '__getattribute__', '__class__', '__init_subclass__', '__doc__', '__getitem__', '__dir__', '__getnewargs__', '__iter__', '__subclasshook__', '__new__', '__str__', '__reduce__', 'encode', 'splitlines','__contains__','maketrans','__format__','join','__mod__','zfill','format_map','__delattr__','rjust','format','expandtabs','__rmod__']:
+    rem.remove(n)
+    # n not implemented or hand-coded
+for n in ['capitalize','lower', 'center', 'swapcase', 'title', 'casefold','upper', 'ljust']:
+    rem.remove(n)
+    str_methods=str_methods+f'''
+    def {n}(self):
+        return Str[Tag](self.value().{n}())'''
+for n in ['__len__', '__sizeof__','__hash__']:
+    rem.remove(n)
+    str_methods=str_methods+f'''
+    def {n}(self)->int:
+        return self.value().{n}()'''
+for n in ['isalnum', 'isdecimal', 'isidentifier', 'isprintable', 'isascii', 'islower', 'isnumeric', 'isspace', 'isupper', 'isalpha', 'isdigit', 'istitle']:
+    rem.remove(n)
+    str_methods=str_methods+f'''
+    def {n}(self)->bool:
+        return self.value().{n}()'''
+for n in ['__mul__', '__rmul__']:
+    rem.remove(n)
+    str_methods=str_methods+f'''
+    def {n}(self,n:int):
+        return Str[Tag](self.value().{n}(n))'''
+for n in ['__gt__', '__lt__', '__le__', '__ge__']:
+    rem.remove(n)
+    str_methods=str_methods+f'''
+    def {n}(self,other:Str_[Tag])->bool:
+        return self.value().{n}(other.value())'''
+for n in ['__eq__', '__ne__']:
+    rem.remove(n)
+    str_methods=str_methods+f'''
+    def {n}(self,other)->bool:
+        if other.__class__==self.__class__:
+            return self.value().{n}(other.value())
+        return False'''
+for n in ['__add__']:
+    rem.remove(n)
+    str_methods=str_methods+f'''
+    def {n}(self,other:Str_[Tag]):
+        return Str[Tag](self.value().{n}(other.value()))'''
+for n in ['rfind', 'find', 'rindex', 'index', 'count', 'translate']:
+    rem.remove(n)
+    str_methods=str_methods+f'''
+    @overload
+    def {n}(self, sub:str) -> int:
+        ...
+    @overload
+    def {n}(self, sub:str, start:int)->int:
+        ...
+    @overload
+    def {n}(self, sub:str, start:int, end:int)->int:
+        ...
+    def {n}(self, sub, *args):
+        return self.value().{n}(sub,*args)'''
+for n in ['endswith', 'startswith']:
+    rem.remove(n)
+    str_methods=str_methods+f'''
+    @overload
+    def {n}(self, s:str) -> bool:
+        ...
+    @overload
+    def {n}(self, s:str, start:int)->bool:
+        ...
+    @overload
+    def {n}(self, s:str, start:int, end:int)->bool:
+        ...
+    def {n}(self, s, *args):
+        return self.value().{n}(s,*args)'''
+for n in ['strip', 'lstrip', 'rstrip']:
+    rem.remove(n)
+    str_methods=str_methods+f'''
+    def {n}(self, chars:Optional[str]=None):
+        return Str[Tag](self.value().{n}(chars))'''
+for n in ['replace']:
+    rem.remove(n)
+    str_methods=str_methods+f'''
+    def {n}(self, old:str, new:str, count=-1)->str:
+        return self.value().{n}(old,new,count)'''
+for n in ['split', 'rsplit']:
+    rem.remove(n)
+    str_methods=str_methods+f'''
+    def {n}(self, sep:Optional[str]=None, max_split=-1)->List[str]:
+        return self.value().{n}(sep,max_split)'''
+for n in ['partition','rpartition']:
+    rem.remove(n)
+    str_methods=str_methods+f'''
+    def {n}(self,sep:str) -> Tuple[str,str,str]:
+        return self.value().{n}(sep)'''
+for n in ['removeprefix','removesuffix']:
+    rem.remove(n)
+    str_methods=str_methods+f'''
+    def {n}(self,sub:str):
+        return Str[Tag](self.value().{n}(sub))'''
+print(list(rem))
 assert len(rem)==0
-print(open(sys.argv[1]).read().replace('# generated Int methods here...',int_methods))
+print(open(sys.argv[1]).read().replace('# generated Int methods here...',int_methods).replace(
+    '# generated Str methods here...',str_methods).replace(
+    '# generated Float methods here...',float_methods))

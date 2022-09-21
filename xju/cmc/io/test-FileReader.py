@@ -20,6 +20,7 @@ from xju.cmc.io import FileReader, FilePositionDelta
 from pathlib import Path
 from xju.assert_ import Assert
 from xju.xn import readable_repr
+from xju.misc import ByteCount
 
 try:
     with FileReader(Path("xxx.txt")) as f:
@@ -36,7 +37,7 @@ with open('xxx.txt','w') as f2:
 
 with FileReader(Path("xxx.txt")) as f:
     Assert(f.input.readall().decode('utf-8'))=="fredward"
-    Assert(f.size())==8
+    Assert(f.size())==ByteCount(8)
     Assert(f.seek_by(-2).input.read(2))==b'rd'
     Assert(f.seek_to(2).input.read(3))==b'edw'
     # seeking past end is not an error, even if it makes no sense

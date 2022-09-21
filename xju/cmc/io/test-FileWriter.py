@@ -21,6 +21,7 @@ from xju.cmc.io import FileWriter,FileReader,FileMode
 from pathlib import Path
 from xju.assert_ import Assert
 from xju.xn import readable_repr
+from xju.misc import ByteCount
 
 try:
     with FileWriter(Path("xxx.txt")) as f:
@@ -33,7 +34,7 @@ else:
 
 with FileWriter(Path('xxx.txt'),mode=FileMode(0o666)) as f:
     f.output.write(b'fred')
-    Assert(f.size())==4
+    Assert(f.size())==ByteCount(4)
     f.output.write(b'ward')
     pass
 

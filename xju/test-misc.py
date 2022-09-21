@@ -19,7 +19,7 @@ import xju.misc
 from xju.assert_ import Assert
 
 x={
-    'fred':xju.misc.ByteCount(3),
+    'fred':xju.misc.ByteCount(3).value(),
     'jock':[1,2,4.5,None,'x'],
 }
 y=xju.misc.toJson(x)
