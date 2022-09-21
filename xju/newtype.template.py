@@ -79,8 +79,10 @@ class Int(Generic[Tag],Int_[Tag]):
         if isinstance(x,int):
             q,r=self.value().__divmod__(x)
             return Int[Tag](q),Int[Tag](r)
+        if isinstance(x,float):
+            return divmod(self.value(),x)
         else:
-            return self.value().__divmod__(x.value())
+            return divmod(self.value(),x.value())
         pass
 
     @overload
@@ -94,9 +96,11 @@ class Int(Generic[Tag],Int_[Tag]):
         ...
     def __floordiv__(self, x):
         if isinstance(x,int):
-            return Int[Tag](self.value().__floordiv__(x))
+            return Int[Tag](self.value()//x)
+        elif isinstance(x,float):
+            return self.value()//x
         else:
-            return self.value().__floordiv__(x.value())
+            return self.value()//x.value()
         pass
 
     def __truediv__(self, x:Union[float,int,Int_[Tag]]) -> float:
@@ -107,16 +111,16 @@ class Int(Generic[Tag],Int_[Tag]):
         pass
     
     @overload
-    def __mull__(self, x:int):  # -> Int[Tag]
+    def __mul__(self, x:int):  # -> Int[Tag]
         ...
     @overload
-    def __mull__(self, x:float) -> float:
+    def __mul__(self, x:float) -> float:
         ...
-    def __mull__(self, x):
+    def __mul__(self, x):
         if isinstance(x,int):
-            return Int[Tag](self.value().__mull__(x))
+            return Int[Tag](self.value()*x)
         else:
-            return self.value().__mull__(x.value())
+            return self.value()*x
         pass
 
     @overload
@@ -153,18 +157,12 @@ class Float_(Generic[Tag]):
 
     pass
 
-def Float_fromhex(s:str):
-    return Float[Tag](float.fromhex(s))
-
 class Float(Generic[Tag],Float_[Tag]):
     def __str__(self)->str:
         return str(self.value())
 
     def __repr__(self)->str:
         return repr(self.value())
-
-    def __reduce__(self)->Tuple:
-        return (Float[Tag], (self.value(),))
 
     def __format__(self, format_spec:str)->str:
         return self.value().__format__(format_spec)
@@ -178,7 +176,81 @@ class Float(Generic[Tag],Float_[Tag]):
     def hex(self)->str:
         return self.value().hex()
     
-    fromhex=Float_fromhex
+    def conjugate(self):
+        return self.value().conjugate()
+
+    @overload
+    def __divmod__(self, x:int) -> Tuple:  # Tuple[Self,Self]
+        ...
+    @overload
+    def __divmod__(self, x:float) -> Tuple:  # Tuple[Self,Self]
+        ...
+    @overload
+    def __divmod__(self, x:Float_[Tag]) -> Tuple:  # Tuple[float,float]
+        ...
+    def __divmod__(self, x):
+        if isinstance(x,int) or isinstance(x,float):
+            q,r=self.value().__divmod__(x)
+            return Float[Tag](q),Float[Tag](r)
+        else:
+            return divmod(self.value(),x.value())
+        pass
+
+    @overload
+    def __floordiv__(self, x:int):  # -> Float[Tag]
+        ...
+    @overload
+    def __floordiv__(self, x:float):  # -> Float[Tag]
+        ...
+    @overload
+    def __floordiv__(self, x:Float_[Tag]) -> float:
+        ...
+    def __floordiv__(self, x):
+        if isinstance(x,int) or isinstance(x,float):
+            return Float[Tag](self.value()//x)
+        else:
+            return self.value()//x.value()
+        pass
+
+    @overload
+    def __truediv__(self, x:Union[float,int]): # -> Float[Tag]
+        ...
+    @overload
+    def __truediv__(self, x:Float_[Tag]) -> float:
+        ...
+    def __truediv__(self, x):
+        if isinstance(x,int) or isinstance(x,float):
+            return Float[Tag](self.value()/x)
+        else:
+            return self.value()/x.value()
+        pass
+    
+    @overload
+    def __mul__(self, x:int):  # -> Float[Tag]
+        ...
+    @overload
+    def __mul__(self, x:float):  # -> Float[Tag]
+        ...
+    def __mul__(self, x):
+        return Float[Tag](self.value()*x)
+
+    @overload
+    def __mod__(self, other:int):  #->Float[Tag]
+        ...
+    @overload
+    def __mod__(self, other:float):  #->Float[Tag]
+        ...
+    @overload
+    def __mod__(self, other:Float_[Tag])->float:
+        ...
+    def __mod__(self, other):
+        if isinstance(other,int) or isinstance(other,float):
+            return Float[Tag](self.value()%other)
+        else:
+            return self.value()%other.value()
+
+    def __round__(self, ndigits:int):  #->Float[Tag]
+        return Float[Tag](self.value().__round__(ndigits))
 
     # generated Float methods here...
 
