@@ -21,7 +21,7 @@
 import os
 from typing import overload
 import typing
-from typing import Literal, Optional, Union, NewType
+from typing import Literal, Optional, Union
 import pathlib
 import io
 import contextlib
@@ -29,10 +29,14 @@ import fcntl
 from dataclasses import dataclass
 from xju.xn import in_function_context, first_line_of as l1
 from xju.misc import ByteCount
+from xju.newtype import Int
 
-FilePosition=NewType('FilePosition',int)
-FilePositionDelta=NewType('FilePositionDelta',int)
-FileMode=NewType('FileMode',int)
+class FilePositionTag:pass
+class FilePositionDeltaTag:pass
+class FileModeTag:pass
+class FilePosition(Int[FilePositionTag]):pass
+class FilePositionDelta(Int[FilePositionDeltaTag]):pass
+class FileMode(Int[FileModeTag]):pass
 
 class FileReader(contextlib.AbstractContextManager):
     '''{self.path} reader with close-on-exec {self.close_on_exec}'''
@@ -76,7 +80,7 @@ class FileReader(contextlib.AbstractContextManager):
         '''position so next read occurs {position} bytes from start of file
            - returns self'''
         try:
-            self.input.seek(position, io.SEEK_SET)
+            self.input.seek(int(position), io.SEEK_SET)
             return self
         except Exception:
             raise in_function_context(FileReader.seek_to,vars()) from None
@@ -86,7 +90,7 @@ class FileReader(contextlib.AbstractContextManager):
         '''position so next read occurs {offset} bytes from current position
            - returns self'''
         try:
-            self.input.seek(offset, io.SEEK_CUR)
+            self.input.seek(int(offset), io.SEEK_CUR)
             return self
         except Exception:
             raise in_function_context(FileReader.seek_by,vars()) from None
@@ -100,10 +104,10 @@ class FileReader(contextlib.AbstractContextManager):
             raise in_function_context(FileReader.size,vars()) from None
         pass
 
-    def position(self) -> ByteCount:
+    def position(self) -> FilePosition:
         '''get current position'''
         try:
-            return ByteCount(self.input.seek(0, io.SEEK_CUR))
+            return FilePosition(self.input.seek(0, io.SEEK_CUR))
         except Exception:
             raise in_function_context(FileReader.position,vars()) from None
         pass
@@ -159,7 +163,7 @@ class FileWriter(contextlib.AbstractContextManager):
                     flags=flags|os.O_CLOEXEC
                     pass
                 pass
-            self.__fd = os.open(self.path, flags, self.mode or 0)
+            self.__fd = os.open(self.path, flags, int(self.mode or 0))
             self.output = io.FileIO(self.__fd, mode='w', closefd=False)
             return self
         except Exception:
@@ -180,7 +184,7 @@ class FileWriter(contextlib.AbstractContextManager):
         '''position so next write occurs {position} bytes from start of file
            - returns self'''
         try:
-            self.output.seek(position, io.SEEK_SET)
+            self.output.seek(int(position), io.SEEK_SET)
             return self
         except:
             raise in_function_context(FileWriter.seek_to,vars()) from None
@@ -190,7 +194,7 @@ class FileWriter(contextlib.AbstractContextManager):
         '''position so next write occurs {offset} bytes from current position
            - returns self'''
         try:
-            self.output.seek(offset, io.SEEK_SET)
+            self.output.seek(int(offset), io.SEEK_SET)
             return self
         except:
             raise in_function_context(FileWriter.seek_by,vars()) from None

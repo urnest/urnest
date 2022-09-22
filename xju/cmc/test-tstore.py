@@ -13,16 +13,39 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-import xju.cmc.tstore
+from xju.cmc.tstore import TStore
 
+from tempfile import TemporaryDirectory
+from pathlib import Path
+from xju.assert_ import Assert
+from xju.time import Hours
+from xju.cmc.io import FileMode
+from xju.misc import ByteCount
 
-# read non-existent
+with TemporaryDirectory() as d_:
+    d=Path(d_)
+    # read non-existent
+    try:
+        tstore=TStore(d/'x.tstore')
+    except FileNotFoundError as e:
+        Assert(f"No such file or directory: '{d}/x.tstore/tstore.json'").isIn(str(e))
+        pass
+    else:
+        assert False, tstore
+        pass
 
-
-# create max 3 buckets, max 30 bytes
-
-# create exists
-
+    # create max 3 buckets, max 30 bytes
+    tstore=TStore(d/'x.tstore',Hours(1),3,ByteCount(30),FileMode(0o666))
+    
+    # create exists
+    try:
+        x=TStore(d/'x.tstore',Hours(1),3,ByteCount(30),FileMode(0o666))
+    except FileExistsError as e:
+        Assert(f"File exists: '{d}/x.tstore'").isIn(str(e))
+    else:
+        assert False, x
+        pass
+    
 # create bucket @t1
 # write 30 bytes @t1
 

@@ -88,11 +88,7 @@ class TStore:
         pass
     @overload
     def __init__(self,
-                 storage_path: Path,
-                 hours_per_bucket:Literal[None]=None,
-                 max_buckets: Literal[None]=None,
-                 max_size:Literal[None]=None,
-                 file_creation_mode:Literal[None]=None):
+                 storage_path: Path):
         '''open existing TStore at {storage_path} reading attributes from its tstore.json file
            - raises FileNotFoundError if TStore does not exist'''
         pass
@@ -103,18 +99,19 @@ class TStore:
                  max_size=None,
                  file_creation_mode=None):
         self.storage_path=storage_path
-        if (isinstance(hours_per_bucket,int) and
+        if (isinstance(hours_per_bucket,Hours) and
             isinstance(max_buckets,int) and
-            isinstance(max_size,int) and
-            isinstance(file_creation_mode,int)):
+            isinstance(max_size,ByteCount) and
+            isinstance(file_creation_mode,FileMode)):
             try:
-                assert hours_per_bucket in [1,2,3,4,6,8,12,24] # factor of 24
+                os.mkdir(storage_path)
+                assert hours_per_bucket.value() in [1,2,3,4,6,8,12,24] # factor of 24
                 self.hours_per_bucket, self.max_buckets, \
                     self.max_size, self.file_creation_mode=write_attrs(storage_path,
-                                                                       Hours(hours_per_bucket),
+                                                                       hours_per_bucket,
                                                                        max_buckets,
-                                                                       ByteCount(max_size),
-                                                                       FileMode(file_creation_mode))
+                                                                       max_size,
+                                                                       file_creation_mode)
             except Exception as e:
                 raise in_context('create non-existent TStore at {storage_path} with mode 0o{file_creation_mode:o}, {hours_per_bucket} hours per bucket, max buckets {max_buckets}, max size {max_size} bytes'.format(**vars())) from None
             pass
@@ -432,21 +429,21 @@ def write_attrs(storage_path:Path,
                 max_buckets:int,
                 max_size:ByteCount,
                 file_creation_mode:FileMode,
-                attrs_file=TSTORE_ATTRS):
+                attrs_file=TSTORE_ATTRS) -> Tuple[Hours,int,ByteCount,FileMode]:
     '''write TStore attrs hours per bucket {hours_per_bucket}, ''' \
         '''max_buckets {max_buckets}, max size {max_size} bytes, file creation mode ''' \
         '''0o{file_creation_mode:o} to {storage_path}/{attrs_file}'''
     try:
         attrs=attrs_schema.validate({
-            'hours_per_bucket':hours_per_bucket,
+            'hours_per_bucket':hours_per_bucket.value(),
             'max_buckets':max_buckets,
-            'max_size':max_size,
-            'file_creation_mode':file_creation_mode})
+            'max_size':max_size.value(),
+            'file_creation_mode':file_creation_mode.value()})
         with FileWriter(storage_path/attrs_file,
                         must_not_exist=True,
                         mode=file_creation_mode) as f:
-            f.write(json.dumps(attrs).encode('utf-8'))
-            pass
+            f.output.write(json.dumps(attrs).encode('utf-8'))
+            return (hours_per_bucket,max_buckets,max_size,file_creation_mode)
     except Exception as e:
         raise in_function_context(write_attrs,vars()) from None
     pass
