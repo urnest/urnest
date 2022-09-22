@@ -85,9 +85,9 @@ netflow%tests.tree
 
 %py-newtype-tests.tree==<<
 (test-newtype.py)+(%py-opts):py3.exec.output
-%verify-test-newtype.x1-fail
-%verify-test-newtype.x2-fail-1
-%verify-test-newtype.x2-fail-2
+%verify-test-newtype.x1-fail-1
+%verify-test-newtype.x1-fail-2
+%verify-test-newtype.x2-fail
 %verify-test-newtype.x3-fail
 %verify-test-newtype.x3-fail
 %verify-test-newtype.x4-fail
@@ -97,11 +97,11 @@ netflow%tests.tree
 
 %test-cmc.x1.errs==(test-cmc.x1.py)+(%py-opts):py3.exec.output:err
 
-%verify-test-newtype.x1-fail==(%test-newtype.x1.errs)+cmd=fgrep -q '"Argument 1 to \\"f\\" has incompatible type \\"str\\"; expected \\"FirstName\\""':stdout
+%verify-test-newtype.x1-fail-1==(%test-newtype.x1.errs)+cmd=fgrep -q '"Argument 1 to \\"f\\" has incompatible type \\"str\\"; expected \\"FirstName\\""':stdout
+%verify-test-newtype.x1-fail-2==(%test-newtype.x1.errs)+cmd=fgrep -q '"Argument 1 to \\"f\\" has incompatible type \\"LastName\\"; expected \\"FirstName\\""':stdout
 %test-newtype.x1.errs==(test-newtype.x1.py)+(%py-opts):py3.exec.output:err
 
-%verify-test-newtype.x2-fail-1==(%test-newtype.x2.errs)+cmd=fgrep -q '"Argument 1 to \\"f\\" has incompatible type \\"FirstName\\"; expected \\"str\\""':stdout
-%verify-test-newtype.x3-fail-2==(%test-newtype.x2.errs)+cmd=fgrep -q '"Argument 1 to \\"f\\" has incompatible type \\"LastName\\"; expected \\"FirstName\\""':stdout
+%verify-test-newtype.x2-fail==(%test-newtype.x2.errs)+cmd=fgrep -q '"Argument 1 to \\"f\\" has incompatible type \\"FirstName\\"; expected \\"str\\""':stdout
 %test-newtype.x2.errs==(test-newtype.x2.py)+(%py-opts):py3.exec.output:err
 
 %verify-test-newtype.x3-fail==(%test-newtype.x3.errs)+cmd=fgrep -q '"Unsupported operand types for < (\\"FirstName\\" and \\"SecondName\\")"':stdout

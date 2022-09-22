@@ -13,7 +13,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-from xju.newtype import Int
+from xju.newtype import Int,Float
 from typing import NewType
 
 class HoursTag:pass
@@ -24,4 +24,5 @@ class Hours(Int[HoursTag]): pass
 class Minutes(Int[MinutesTag]): pass
 class Seconds(Int[SecondsTag]): pass
 
-Timestamp=NewType('Timestamp',float)
+class TimestampTag:pass
+class Timestamp(Float[TimestampTag]):pass

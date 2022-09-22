@@ -15,7 +15,7 @@
 #
 # Time based store.
 #
-from typing import NewType,Tuple,Dict,Literal,overload,Sequence
+from typing import Tuple,Dict,Literal,overload,Sequence
 from xju.cmc.io import FileReader,FileWriter,FileMode,FilePosition,FilePositionDelta
 import os
 from pathlib import Path
@@ -31,9 +31,13 @@ from bisect import bisect_left,bisect_right
 from xju.assert_ import Assert
 from xju import jsonschema
 import json
+from xju.newtype import Int,Str
 
-BucketStart=NewType('BucketStart',int)
-BucketID=NewType('BucketID',str)
+class BucketStartTag:pass
+class BucketIDTag:pass
+
+class BucketStart(Int[BucketStartTag]):pass
+class BucketID(Str[BucketIDTag]):pass
 
 class NoSuchBucket(Exception):
     bucket_start:BucketStart
@@ -129,9 +133,9 @@ class TStore:
     def calc_bucket_start(self, timestamp:Timestamp) -> BucketStart:
         '''calculate start of TStore {self}'s bucket for timestamp {timestamp}
            - bucket need not exist'''
-        x = time.gmtime(timestamp)
-        h = int(x.tm_hour/self.hours_per_bucket)*self.hours_per_bucket
-        return BucketStart(int(timegm(struct_time( (x.tm_year,x.tm_mon,x.tm_mday,h,0,0,0,0) ))))
+        x = time.gmtime(float(timestamp))
+        h = self.hours_per_bucket*(Hours(x.tm_hour)//self.hours_per_bucket)
+        return BucketStart(int(timegm(struct_time( (x.tm_year,x.tm_mon,x.tm_mday,int(h),0,0,0,0) ))))
         
     def get_buckets_of(self, begin:Timestamp, end:Timestamp) -> Sequence[Tuple[BucketStart,BucketID]]:
         '''get starts and ids of TStore {self}'s existing buckets covering time range [{begin},{end})'''
@@ -454,9 +458,9 @@ def get_path_of(storage_path:Path,
     '''get path to {storage_path} bucket with start {bucket_start} and id {bucket_id} ''' \
         '''where storage has {hours_per_bucket} hours per bucket'''
     '''- bucket need not exist'''
-    x = time.gmtime(bucket_start)
-    h = int(x.tm_hour/hours_per_bucket)*hours_per_bucket
-    s = struct_time( (x.tm_year,x.tm_mon,x.tm_mday,h,0,0,0,0,0) )
+    x = time.gmtime(int(bucket_start))
+    h = hours_per_bucket*(Hours(x.tm_hour)//hours_per_bucket)
+    s = struct_time( (x.tm_year,x.tm_mon,x.tm_mday,int(h),0,0,0,0,0) )
     return storage_path / f'{s.tm_year}'/f'{s.tm_mon:02}'/f'{s.tm_mday:02}'/f'{s.tm_hour:02}'/f'{bucket_id}.txt'
 
 def read_files(storage_path:Path) -> Dict[Tuple[BucketStart,BucketID],ByteCount]:
@@ -485,7 +489,7 @@ def read_files(storage_path:Path) -> Dict[Tuple[BucketStart,BucketID],ByteCount]
                                         if len(bucket_ids):
                                             bucket_id=bucket_ids[0]
                                             result[(bucket_start,bucket_id)]=ByteCount(
-                                                (hdir/bucket_id).stat().st_size)
+                                                (hdir/str(bucket_id)).stat().st_size)
                                             pass
                                         pass
                                     except Exception:
