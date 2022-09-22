@@ -15,6 +15,7 @@
 #
 from xju.newtype import Int,Float
 from typing import NewType
+import time
 
 class HoursTag:pass
 class MinutesTag:pass
@@ -26,3 +27,6 @@ class Seconds(Int[SecondsTag]): pass
 
 class TimestampTag:pass
 class Timestamp(Float[TimestampTag]):pass
+
+def now()->Timestamp:
+    return Timestamp(time.time())

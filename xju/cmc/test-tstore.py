@@ -46,45 +46,176 @@ with TemporaryDirectory() as d_:
         assert False, x
         pass
     
-# create bucket @t1
-# write 30 bytes @t1
+    # create bucket @t1
+    t1=now()
+    s1=tstore.calc_bucket_start(t1)
+    id1=BucketID('1')
+    tstore.create_bucket(s1,id1)
+    try:
+        tstore.create_bucket(s1,id1)
+    except BucketExists as e:
+        Assert(f'').isIn(str(e))
+        pass
+    else:
+        assert False, 'no BucketExists'
+        pass
+    # write 30 bytes @t1
+    with Writer(tstore,s1,id1) as w:
+        thirty_bytes:bytes=b''.join([i for i in range(0,30)])
+        w.append(thirty_bytes)
 
-# read back via get_buckets_of t1..t1+1
+        # read back via get_buckets_of t1..t1+1
+        buckets=tstore.get_buckets_of(s1,s1+1)
+        Assert(buckets)==buckets[0:1]
+        for bucket_start,bucket_id in buckets:
+            with Reader(tstore,bucket_start,bucket_id) as r:
+                Assert(r.size())==ByteCount(30)
+                Assert(r.read(15))==thirty_bytes[0:15]
+                r.seek_to(10)
+                Assert(r.read(5))==thirty_bytes[10:15]
+                r.seek_by(8)
+                Assert(r.read(13))==thirty_bytes[18:]
+                pass
+            pass
+        pass
+    
+    # list unseen having seen nothing
+    Assert(tstore.list_unseen({}))=={ (s1,id1):ByteCount(30) }
+    
+    # list unseen having seen half
+    Assert(tstore.list_unseen({(s1,id1):ByteCount(15)}))=={ (s1,id1):ByteCount(30) }
 
-# list unseen having seen nothing
+    # list unseen having seen all
+    Assert(tstore.list_unseen({(s1,id1):ByteCount(30)}))=={}
 
-# list unseen having seen half
+    # list unseen having seen non-existent
+    Assert(tstore.list_unseen({(s1,BucketID('2')):30}))=={ (s1,BucketID('2')): ByteCount(0)}
 
-# verify can't write 1 byte
+    tstore.verify_bucket_exists(s1,id1)
+    try:
+        tstore.verify_bucket_exists(s1,BucketID('2'))
+    except BucketExists as e:
+        Assert(f"REVISIT").isIn(str(e))
+        pass
+    else:
+        assert False, f'BucketID('2') should not exist at {s1}'
+        pass
 
-# delete bucket
+    s2=tstore.calc_bucket_start(t1+3600)
+    Assert(s1)<s2
+    
+    # verify can't write 1 byte
+    Assert(tstore.current_size())==ByteCount(30)
+    
+    # delete bucket
+    tstore.delete_bucket(s1,id1)
 
-# write 10 bytes
+    Assert(tstore.current_size())==ByteCount(0)
+    Assert(tstore.list_unseen({}))=={}
+    try:
+        tstore.verify_bucket_exists(s1,id1)
+    except NoSuchBucket as e:
+        Assert(f"REVISIT").isIn(str(e))
+        pass
+    else:
+        assert False, f'bucket {id1} should not exist at {s1}'
+        pass
+    
+    s3=tstore.calc_bucket_start(t1+2*3600)
+    Assert(s3)>s2
+    id3=BucketID('3')
 
-# write 10 bytes @bucket_start(t1)+3600
+    tstore.create_bucket(s1,id1)
+    tstore.create_bucket(s2,id2)
+    tstore.create_bucket(s3,id3)
+    
+    # write 10 bytes
+    with Writer(tstore,s1,id1) as w:
+        w.append(b'0123456789')
+        Assert(tstore.current_size())==ByteCount(10)
+        pass
+    
+    # write 10 bytes @bucket_start(t1)+3600
+    with Writer(tstore,s2,id2) as w:
+        w.append(b'abcdefghij')
+        Assert(tstore.current_size())==ByteCount(20)
+        pass
 
-# write 10 bytes @t1+2*3600
+    # write 10 bytes @t1+2*3600
+    with Writer(tstore,s3,id3) as w:
+        w.append(b'abcde01234')
+        Assert(tstore.current_size())==ByteCount(30)
+        pass
 
-# list unseen t1 - 3600..t1+3*3600 -> 3 buckets, 10 bytes each
+    # list unseen t1 - 3600..t1+3*3600 -> 3 buckets, 10 bytes each
+    Assert(tstore.list_unseen({}))=={ (s1,id1): ByteCount(10),
+                                      (s2,id2): ByteCount(10),
+                                      (s3,id3): ByteCount(10) }
+    
 
-# read data and verify
+    # read data and verify
+    with Reader(tstore,s1,id1) as r:
+        Assert(r.read(11))==b'0123456789'
+        pass
+    with Reader(tstore,s2,id2) as r:
+        Assert(r.read(11))==b'abcdefghij'
+        pass
+    with Reader(tstore,s3,id3) as r:
+        Assert(r.read(11))==b'abcde01234'
+        pass
 
-# verify full
+    # make room for 1 byte
+    tstore.make_room_for(1)
 
-# make room for 1 byte
+    # verify 2 buckets
+    Assert(tstore.list_unseen({}))=={ (s2,id2): ByteCount(10),
+                                      (s3,id3): ByteCount(10) }
 
-# verify 2 buckets
+    # make room for 10 bytes
+    tstore.make_room_for(10)
 
-# make room for 10 bytes
+    # verify 2 buckets
+    Assert(tstore.list_unseen({}))=={ (s2,id2): ByteCount(10),
+                                      (s3,id3): ByteCount(10) }
 
-# verify 2 buckets
+    # write 10 bytes to t2 bucket
+    with Writer(tstore,s2,id2) as w:
+        w.append(b'poiuytrewq')
+        Assert(w.size())==ByteCount(20)
+        pass
+    
+    # verify 10 bytes + 20 bytes
+    with Reader(tstore,s1,id1) as r:
+        Assert(r.read(11))==b'0123456789'
+        pass
+    with Reader(tstore,s2,id2) as r:
+        Assert(r.read(11))==b'abcdefghijpoiuytrewq'
+        pass
 
-# write 10 bytes to t2 bucket
+    # close - nothing to do
 
-# verify 10 bytes + 20 bytes
-
-# close
-
-# open existing
-
-# verify 10 bytes + 20 bytes
+    # open existing
+    tstore=TStore(d/'x.tstore')
+    Assert(tstore.path)==d/'x.tstore'
+    Assert(tstore.hours_per_bucket)==Hours(1)
+    Assert(tstore.max_buckets)==3
+    Assert(tstore.max_size)==ByteCount(30)
+    Assert(tstore.file_creation_mode)==FileMode(0o666)
+    Assert(tstore.calc_bucket_start(t1))==s1
+    Assert(tstore.calc_bucket_start(t1+3600))==s1
+    Assert(tstore.calc_bucket_start(t1+2*3600))==s1
+    id1=get_bucket(s1)
+    id2=get_bucket(s2)
+    id3=get_bucket(s3)
+    Assert(tstore.current_size())==ByteCount(30)
+    # verify 2 buckets
+    Assert(tstore.list_unseen({}))=={ (s2,id2): ByteCount(10),
+                                      (s3,id3): ByteCount(10) }
+    # verify 10 bytes + 20 bytes
+    with Reader(tstore,s1,id1) as r:
+        Assert(r.read(11))==b'0123456789'
+        pass
+    with Reader(tstore,s2,id2) as r:
+        Assert(r.read(11))==b'abcdefghijpoiuytrewq'
+        pass
+    pass
