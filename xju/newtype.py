@@ -66,6 +66,9 @@ class Int(Generic[Tag],Int_[Tag]):
     def __repr__(self)->str:
         return repr(self.value())
 
+    def __reduce__(self)->Tuple:
+        return (self.__class__, (self.value(),))
+
     def __format__(self, format_spec:str)->str:
         return self.value().__format__(format_spec)
 
@@ -258,6 +261,9 @@ class Float(Generic[Tag],Float_[Tag]):
     def __repr__(self)->str:
         return repr(self.value())
 
+    def __reduce__(self)->Tuple:
+        return (self.__class__, (self.value(),))
+
     def __format__(self, format_spec:str)->str:
         return self.value().__format__(format_spec)
 
@@ -422,6 +428,9 @@ class Str(Generic[Tag],Str_[Tag]):
 
     def __repr__(self)->str:
         return repr(self.value())
+
+    def __reduce__(self)->Tuple:
+        return (self.__class__, (self.value(),))
 
     def __format__(self, format_spec:str)->str:
         return self.value().__format__(format_spec)
