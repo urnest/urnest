@@ -39,19 +39,32 @@ class Int_(Generic[Tag]):
 
     pass
 
-# mypy does not understand @classmethod
-def Int_from_bytes(b:bytes, byteorder:Literal['little','big'], *, signed=False):
-    return Int[Tag](int.from_bytes(b,byteorder,signed=signed))
-
 class Int(Generic[Tag],Int_[Tag]):
+    def __eq__(self,other)->bool:
+        '''equality test ignores possible subclass relationships, i.e. only valid
+           for two object of exactly the same class; except that python insists
+           supporting __eq__ for objects of any type, so this functions supports
+           comparing any Int[X] with any non-Int but if you want to use Int[X] in
+           a multi-level class hierarchy you'll need write your own __eq__ to suit
+           your specific circumstances'''
+        '''i.e. recommend stick to using Int[X] like:
+              class Hours(Int[HoursTag]):pass
+           ... and not inherit from Hours.
+           If you choose to inherit from Hours, make sure you write your own __eq__'''
+        assert (other.__class__ is self.__class__) or not isinstance(other,Int)  # see above
+        if other.__class__==self.__class__:
+            return self.value().__eq__(other.value())
+        return False
+    def __ne__(self,other)->bool:
+        assert (other.__class__ is self.__class__) or not isinstance(other,Int)  # see __eq__ above
+        if other.__class__==self.__class__:
+            return self.value()!=other.value()
+        return True
     def __str__(self)->str:
         return str(self.value())
 
     def __repr__(self)->str:
         return repr(self.value())
-
-    def __reduce__(self)->Tuple:
-        return (Int[Tag], (self.value(),))
 
     def __format__(self, format_spec:str)->str:
         return self.value().__format__(format_spec)
@@ -59,11 +72,6 @@ class Int(Generic[Tag],Int_[Tag]):
     def __float__(self)->float:
         return self.value().__float__()
     
-    def to_bytes(self,length,byteorder,*,signed=False)->bytes:
-        return self.value().to_bytes(length,byteorder,signed=signed)
-
-    from_bytes=Int_from_bytes
-
     def conjugate(self):
         return self.value().conjugate()
 
@@ -79,7 +87,7 @@ class Int(Generic[Tag],Int_[Tag]):
     def __divmod__(self, x):
         if isinstance(x,int):
             q,r=self.value().__divmod__(x)
-            return Int[Tag](q),Int[Tag](r)
+            return self.__class__(q),self.__class__(r)
         if isinstance(x,float):
             return divmod(self.value(),x)
         else:
@@ -97,7 +105,7 @@ class Int(Generic[Tag],Int_[Tag]):
         ...
     def __floordiv__(self, x):
         if isinstance(x,int):
-            return Int[Tag](self.value()//x)
+            return self.__class__(self.value()//x)
         elif isinstance(x,float):
             return self.value()//x
         else:
@@ -119,7 +127,7 @@ class Int(Generic[Tag],Int_[Tag]):
         ...
     def __mul__(self, x):
         if isinstance(x,int):
-            return Int[Tag](self.value()*x)
+            return self.__class__(self.value()*x)
         else:
             return self.value()*x
         pass
@@ -135,7 +143,7 @@ class Int(Generic[Tag],Int_[Tag]):
         ...
     def __mod__(self, other):
         if type(other) is int:
-            return Int[Tag](self.value()%other)
+            return self.__class__(self.value()%other)
         if type(other) is float:
             return self.value()%other
         else:
@@ -143,21 +151,21 @@ class Int(Generic[Tag],Int_[Tag]):
 
     
     def __abs__(self):
-        return Int[Tag](self.value().__abs__())
+        return self.__class__(self.value().__abs__())
     def __invert__(self):
-        return Int[Tag](self.value().__invert__())
+        return self.__class__(self.value().__invert__())
     def __neg__(self):
-        return Int[Tag](self.value().__neg__())
+        return self.__class__(self.value().__neg__())
     def __pos__(self):
-        return Int[Tag](self.value().__pos__())
+        return self.__class__(self.value().__pos__())
     def __trunc__(self):
-        return Int[Tag](self.value().__trunc__())
+        return self.__class__(self.value().__trunc__())
     def __round__(self):
-        return Int[Tag](self.value().__round__())
+        return self.__class__(self.value().__round__())
     def __ceil__(self):
-        return Int[Tag](self.value().__ceil__())
+        return self.__class__(self.value().__ceil__())
     def __floor__(self):
-        return Int[Tag](self.value().__floor__())
+        return self.__class__(self.value().__floor__())
     def __int__(self)->int:
         return self.value().__int__()
     def __sizeof__(self)->int:
@@ -173,15 +181,15 @@ class Int(Generic[Tag],Int_[Tag]):
     def __bool__(self)->bool:
         return self.value().__bool__()
     def __ror__(self,n:int):
-        return Int[Tag](self.value().__ror__(n))
+        return self.__class__(self.value().__ror__(n))
     def __rrshift__(self,n:int):
-        return Int[Tag](self.value().__rrshift__(n))
+        return self.__class__(self.value().__rrshift__(n))
     def __lshift__(self,n:int):
-        return Int[Tag](self.value().__lshift__(n))
+        return self.__class__(self.value().__lshift__(n))
     def __rlshift__(self,n:int):
-        return Int[Tag](self.value().__rlshift__(n))
+        return self.__class__(self.value().__rlshift__(n))
     def __rshift__(self,n:int):
-        return Int[Tag](self.value().__rshift__(n))
+        return self.__class__(self.value().__rshift__(n))
     def __gt__(self,other:Int_[Tag])->bool:
         return self.value().__gt__(other.value())
     def __lt__(self,other:Int_[Tag])->bool:
@@ -190,28 +198,20 @@ class Int(Generic[Tag],Int_[Tag]):
         return self.value().__le__(other.value())
     def __ge__(self,other:Int_[Tag])->bool:
         return self.value().__ge__(other.value())
-    def __eq__(self,other)->bool:
-        if other.__class__==self.__class__:
-            return self.value().__eq__(other.value())
-        return False
-    def __ne__(self,other)->bool:
-        if other.__class__==self.__class__:
-            return self.value().__ne__(other.value())
-        return False
     def __add__(self,other:Int_[Tag]):
-        return Int[Tag](self.value().__add__(other.value()))
+        return self.__class__(self.value().__add__(other.value()))
     def __sub__(self,other:Int_[Tag]):
-        return Int[Tag](self.value().__sub__(other.value()))
+        return self.__class__(self.value().__sub__(other.value()))
     def __rsub__(self,other:Int_[Tag]):
-        return Int[Tag](self.value().__rsub__(other.value()))
+        return self.__class__(self.value().__rsub__(other.value()))
     def __radd__(self,other:Int_[Tag]):
-        return Int[Tag](self.value().__radd__(other.value()))
+        return self.__class__(self.value().__radd__(other.value()))
     def __and__(self,other:Int_[Tag]):
-        return Int[Tag](self.value().__and__(other.value()))
+        return self.__class__(self.value().__and__(other.value()))
     def __or__(self,other:Int_[Tag]):
-        return Int[Tag](self.value().__or__(other.value()))
+        return self.__class__(self.value().__or__(other.value()))
     def __xor__(self,other:Int_[Tag]):
-        return Int[Tag](self.value().__xor__(other.value()))
+        return self.__class__(self.value().__xor__(other.value()))
     def as_integer_ratio(self)->Tuple[int,int]:
         return self.value().as_integer_ratio()
 
@@ -231,6 +231,27 @@ class Float_(Generic[Tag]):
     pass
 
 class Float(Generic[Tag],Float_[Tag]):
+    def __eq__(self,other)->bool:
+        '''equality test ignores possible subclass relationships, i.e. only valid
+           for two object of exactly the same class; except that python insists
+           supporting __eq__ for objects of any type, so this functions supports
+           comparing any Float[X] with any non-Float but if you want to use Float[X] in
+           a multi-level class hierarchy you'll need write your own __eq__ to suit
+           your specific circumstances'''
+        '''i.e. recommend stick to using Float[X] like:
+              class Timestamp(Float[TimestampTag]):pass
+           ... and not inherit from Timestamp.
+           If you choose to inherit from Timestamp, make sure you write your own __eq__'''
+        assert (other.__class__ is self.__class__) or not isinstance(other,Float)  # see above
+        if other.__class__==self.__class__:
+            return self.value().__eq__(other.value())
+        return False
+    def __ne__(self,other)->bool:
+        assert (other.__class__ is self.__class__) or not isinstance(other,Float)  # see __eq__ above
+        if other.__class__==self.__class__:
+            return self.value()!=other.value()
+        return True
+
     def __str__(self)->str:
         return str(self.value())
 
@@ -354,14 +375,6 @@ class Float(Generic[Tag],Float_[Tag]):
         return self.value().__le__(other.value())
     def __ge__(self,other:Float_[Tag])->bool:
         return self.value().__ge__(other.value())
-    def __eq__(self,other)->bool:
-        if other.__class__==self.__class__:
-            return self.value().__eq__(other.value())
-        return False
-    def __ne__(self,other)->bool:
-        if other.__class__==self.__class__:
-            return self.value().__ne__(other.value())
-        return False
     def __add__(self,other:Float_[Tag]):
         return Float[Tag](self.value().__add__(other.value()))
     def __sub__(self,other:Float_[Tag]):
@@ -374,7 +387,6 @@ class Float(Generic[Tag],Float_[Tag]):
 
 class Str_(Generic[Tag]):
     __value:str
-    
     def __init__(self, value:str):
         self.__value=value
         pass
@@ -384,20 +396,38 @@ class Str_(Generic[Tag]):
     pass
 
 class Str(Generic[Tag],Str_[Tag]):
+    def __eq__(self,other)->bool:
+        '''equality test ignores possible subclass relationships, i.e. only valid
+           for two object of exactly the same class; except that python insists
+           supporting __eq__ for objects of any type, so this functions supports
+           comparing any Str[X] with any non-Str but if you want to use Str[X] in
+           a multi-level class hierarchy you'll need write your own __eq__ to suit
+           your specific circumstances'''
+        '''i.e. recommend stick to using Str[X] like:
+              class FirstName(Str[FirstNameTag]):pass
+           ... and not inherit from FirstName.
+           If you choose to inherit from Timestamp, make sure you write your own __eq__'''
+        assert (other.__class__ is self.__class__) or not isinstance(other,Str)  # see above
+        if other.__class__==self.__class__:
+            return self.value().__eq__(other.value())
+        return False
+    def __ne__(self,other)->bool:
+        assert (other.__class__ is self.__class__) or not isinstance(other,Str)  # see __eq__ above
+        if other.__class__==self.__class__:
+            return self.value()!=other.value()
+        return True
+
     def __str__(self)->str:
         return str(self.value())
 
     def __repr__(self)->str:
         return repr(self.value())
 
-    def __reduce__(self)->Tuple:
-        return (Str[Tag], (self.value(),))
-
     def __format__(self, format_spec:str)->str:
         return self.value().__format__(format_spec)
 
     def splitlines(self,keepends=False)->List:
-        return [Str[Tag](_) for _ in self.value().splitlines()]
+        return [self.__class__(_) for _ in self.value().splitlines()]
 
     def encode(self,encoding:str='utf-8', errors:str='strict')->bytes:
         return self.value().encode()
@@ -406,37 +436,33 @@ class Str(Generic[Tag],Str_[Tag]):
         return self.value().__contains__(other)
 
     def zfill(self,width:int):
-        return Str[Tag](self.value().zfill(width))
+        return self.__class__(self.value().zfill(width))
 
     def format_map(self,mapping:Mapping):
-        return Str[Tag](self.value().format_map(mapping))
-
-    def rjust(self,width:int,fillchar=' '):
-        return Str[Tag](self.value().rjust(width,fillchar))
+        return self.__class__(self.value().format_map(mapping))
 
     def format(self,*args,**kwargs):
-        return Str[Tag](self.value().format(*args,**kwargs))
+        return self.__class__(self.value().format(*args,**kwargs))
     
     def expandtabs(self,tabsize=8):
-        return Str[Tag](self.value().expandtabs(tabsize))
+        return self.__class__(self.value().expandtabs(tabsize))
+
+    def __getitem__(self,key):
+        return self.value().__getitem__(key)
 
     
     def capitalize(self):
-        return Str[Tag](self.value().capitalize())
+        return self.__class__(self.value().capitalize())
     def lower(self):
-        return Str[Tag](self.value().lower())
-    def center(self):
-        return Str[Tag](self.value().center())
+        return self.__class__(self.value().lower())
     def swapcase(self):
-        return Str[Tag](self.value().swapcase())
+        return self.__class__(self.value().swapcase())
     def title(self):
-        return Str[Tag](self.value().title())
+        return self.__class__(self.value().title())
     def casefold(self):
-        return Str[Tag](self.value().casefold())
+        return self.__class__(self.value().casefold())
     def upper(self):
-        return Str[Tag](self.value().upper())
-    def ljust(self):
-        return Str[Tag](self.value().ljust())
+        return self.__class__(self.value().upper())
     def __len__(self)->int:
         return self.value().__len__()
     def __sizeof__(self)->int:
@@ -468,9 +494,7 @@ class Str(Generic[Tag],Str_[Tag]):
     def istitle(self)->bool:
         return self.value().istitle()
     def __mul__(self,n:int):
-        return Str[Tag](self.value().__mul__(n))
-    def __rmul__(self,n:int):
-        return Str[Tag](self.value().__rmul__(n))
+        return self.__class__(self.value().__mul__(n))
     def __gt__(self,other:Str_[Tag])->bool:
         return self.value().__gt__(other.value())
     def __lt__(self,other:Str_[Tag])->bool:
@@ -479,16 +503,8 @@ class Str(Generic[Tag],Str_[Tag]):
         return self.value().__le__(other.value())
     def __ge__(self,other:Str_[Tag])->bool:
         return self.value().__ge__(other.value())
-    def __eq__(self,other)->bool:
-        if other.__class__==self.__class__:
-            return self.value().__eq__(other.value())
-        return False
-    def __ne__(self,other)->bool:
-        if other.__class__==self.__class__:
-            return self.value().__ne__(other.value())
-        return False
     def __add__(self,other:Str_[Tag]):
-        return Str[Tag](self.value().__add__(other.value()))
+        return self.__class__(self.value().__add__(other.value()))
     @overload
     def rfind(self, sub:str) -> int:
         ...
@@ -578,13 +594,13 @@ class Str(Generic[Tag],Str_[Tag]):
     def startswith(self, s, *args):
         return self.value().startswith(s,*args)
     def strip(self, chars:Optional[str]=None):
-        return Str[Tag](self.value().strip(chars))
+        return self.__class__(self.value().strip(chars))
     def lstrip(self, chars:Optional[str]=None):
-        return Str[Tag](self.value().lstrip(chars))
+        return self.__class__(self.value().lstrip(chars))
     def rstrip(self, chars:Optional[str]=None):
-        return Str[Tag](self.value().rstrip(chars))
-    def replace(self, old:str, new:str, count=-1)->str:
-        return self.value().replace(old,new,count)
+        return self.__class__(self.value().rstrip(chars))
+    def replace(self, old:str, new:str, count=-1):
+        return self.__class__(self.value().replace(old,new,count))
     def split(self, sep:Optional[str]=None, max_split=-1)->List[str]:
         return self.value().split(sep,max_split)
     def rsplit(self, sep:Optional[str]=None, max_split=-1)->List[str]:
@@ -594,9 +610,15 @@ class Str(Generic[Tag],Str_[Tag]):
     def rpartition(self,sep:str) -> Tuple[str,str,str]:
         return self.value().rpartition(sep)
     def removeprefix(self,sub:str):
-        return Str[Tag](self.value().removeprefix(sub))
+        return self.__class__(self.value().removeprefix(sub))
     def removesuffix(self,sub:str):
-        return Str[Tag](self.value().removesuffix(sub))
+        return self.__class__(self.value().removesuffix(sub))
+    def center(self,width:int,fillchar:str=' '):
+        return self.__class__(self.value().center(width,fillchar))
+    def ljust(self,width:int,fillchar:str=' '):
+        return self.__class__(self.value().ljust(width,fillchar))
+    def rjust(self,width:int,fillchar:str=' '):
+        return self.__class__(self.value().rjust(width,fillchar))
 
     pass
 

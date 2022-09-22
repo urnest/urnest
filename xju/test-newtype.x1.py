@@ -23,4 +23,10 @@ class FirstName(Str[FirstNameType]):
 def f(first_name:FirstName):
     pass
 
-f('fred')
+f('fred')  # not a FirstName
+
+class LastNameType:pass
+class LastName(Str[LastNameType]):
+    pass
+
+f(LastName('fred'))  # not a FirstName

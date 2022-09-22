@@ -18,7 +18,6 @@ from xju.newtype import Str,Int,Float
 from xju.assert_ import Assert
 
 from typing import Dict
-import pickle
 
 class FirstNameType:pass
 class LastNameType:pass
@@ -29,38 +28,112 @@ class LastName(Str[LastNameType]):pass
 def full_name(first_name:FirstName,last_name:LastName)->str:
     return f'{first_name} {last_name}'
 
+def f(x:FirstName)->FirstName:
+    return x
+
 first_name=FirstName('fred')
 last_name=LastName('jones')
 
 Assert(full_name(first_name,last_name))=='fred jones'
-#Assert(first_name).startsWith('fr')
+Assert(first_name.startswith('fr'))==True
 Assert(first_name).isInstanceOf(FirstName)
 Assert(first_name).isNotInstanceOf(LastName)
 
 another_first_name=FirstName('louise')
 
 Assert(first_name)<another_first_name
-#z:Dict[FirstName,int]={ first_name: 1, another_first_name:2}
-#Assert(z[first_name])==1
+z:Dict[FirstName,int]={ first_name: 1, another_first_name:2}
+Assert(z[first_name])==1
 
 a=FirstName('robertalertaberta')
 
-#assert a.count('be')==2,a
-#assert a.count('ert',4)==2,a
-#assert a.count('e',4,10)==1,a
+b=a.rjust(0)
+Assert(b).isInstanceOf(FirstName)
+Assert(f(b))==b
+Assert(b)==a
 
-#Assert(a.endswith('rta'))==True
-#Assert(a.endswith('rta',14))==True
-#Assert(a.endswith('rta',15))==False
-#Assert(a.endswith('rta',3,7))==True
-#Assert(a.endswith('rta',5,7))==False
+Assert(repr(first_name))==repr('fred')
+Assert(f'{first_name:6}')=='fred  '
+Assert(first_name.splitlines())==[FirstName('fred')]
+Assert(first_name.encode('utf-8'))=='fred'.encode('utf-8')
+Assert('re').isIn(first_name)
+Assert(FirstName('7').zfill(3))==FirstName('007')
+Assert(FirstName('{l}').format_map({'l':'fred'}))==FirstName('fred')
+Assert(first_name.rjust(6,'_'))==FirstName('__fred')
+Assert(FirstName('{l}').format(l='fred'))==FirstName('fred')
+Assert(FirstName('J\tQ').expandtabs())==FirstName('J       Q')
+Assert(first_name[1:3])=='re'
+Assert(first_name.capitalize())==FirstName('Fred')
+Assert(FirstName('FreD').lower())==FirstName('fred')
+Assert(FirstName('FreD').center(8,fillchar='='))==FirstName('==FreD==')
+Assert(FirstName('FreD').swapcase())==FirstName('fREd')
+Assert(first_name.title())==FirstName('Fred')
+Assert(FirstName('FreD').casefold())==FirstName('FreD'.casefold())
+Assert(FirstName('FreD').upper())==FirstName('FRED')
+Assert(FirstName('FreD').ljust(6,'9'))==FirstName('FreD'.ljust(6,'9'))
+Assert(len(first_name))==4
+Assert(first_name.__sizeof__())>=4
+Assert(first_name.isalnum())==True
+Assert(first_name.isdecimal())==False
+Assert(first_name.isidentifier())==True
+Assert(first_name.isprintable())==True
+Assert(first_name.isascii())==True
+Assert(first_name.islower())==True
+Assert(first_name.isnumeric())==False
+Assert(first_name.isspace())==False
+Assert(first_name.isupper())==False
+Assert(first_name.isalnum())==True
+Assert(first_name.isdigit())==False
+Assert(first_name.istitle())==False
+Assert(first_name*2)==FirstName('fredfred')
+Assert(first_name)==first_name
+Assert(first_name)!=another_first_name
+Assert(first_name)<another_first_name
+Assert(first_name)<=another_first_name
+Assert(first_name)<=first_name
+Assert(another_first_name)>first_name
+Assert(another_first_name)>=first_name
+Assert(first_name)>=first_name
+Assert(first_name+another_first_name)==FirstName('fredlouise')
+Assert(first_name.rfind('re'))==1
+Assert(first_name.find('re'))==1
+Assert(first_name.rindex('re'))==1
+Assert(first_name.index('re'))==1
+Assert(a.count('be'))==2
+Assert(a.count('ert',4))==2
+Assert(a.count('e',4,10))==1
+Assert(first_name.translate('abc'))=='fred'.translate('abc')
+Assert(a.endswith('rta'))==True
+Assert(a.endswith('rta',14))==True
+Assert(a.endswith('rta',15))==False
+Assert(a.endswith('rta',3,7))==True
+Assert(a.endswith('rta',5,7))==False
+Assert(a.startswith('ro'))==True
+Assert(a.startswith('ro',1))==False
+Assert(a.startswith('ob',1,3))==True
+Assert(a.startswith('ob',1,4))==True
+Assert(FirstName(' fred ').strip())==first_name
+Assert(FirstName(' fred ').lstrip())==FirstName('fred ')
+Assert(FirstName(' fred ').rstrip())==FirstName(' fred')
+Assert(FirstName('freddy').replace('dy',''))==FirstName('fred')
+Assert(FirstName('freddy').replace('d','b',count=1))==FirstName('frebdy')
+Assert(FirstName('J fred').split())==['J','fred']
+Assert(FirstName('J P fred').rsplit(sep=None,max_split=1))==['J P','fred']
+Assert(FirstName('J P fred').rsplit(sep=' P ',max_split=1))==['J','fred']
+Assert(FirstName('J P fred').partition(sep=' P '))==('J',' P ','fred')
+Assert(FirstName('J P fred').rpartition(sep=' P '))==('J',' P ','fred')
+Assert(FirstName('J P fred').removeprefix('J '))==FirstName('P fred')
+Assert(FirstName('J P fred').removesuffix('ed'))==FirstName('J P fr')
 
+
+
+# Int[X]
 
 class HoursTag: pass
 class MinutesTag: pass
 
-Hours=Int[HoursTag]
-Minutes=Int[MinutesTag]
+class Hours(Int[HoursTag]):pass
+class Minutes(Int[MinutesTag]):pass
 
 h1=Hours(7)
 h2=Hours(8)
@@ -73,10 +146,8 @@ Assert(h2)<=h2
 
 Assert(str(h1))=='7'
 Assert(repr(h1))=='7'
-Assert(pickle.loads(pickle.dumps(h1)))==h1
 Assert('{:02d}'.format(h1))=='07'
 Assert(h1.__float__())==7.0
-Assert(Hours.from_bytes(h1.to_bytes(4,'big'),'big'))==h1
 Assert(abs(Hours(-5)))==Hours(5)
 Assert(~h1)==Hours(~h1.value())
 Assert(h1.conjugate())==h1.value().conjugate()
