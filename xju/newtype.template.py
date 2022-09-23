@@ -135,6 +135,19 @@ class Int(Generic[Tag],Int_[Tag]):
         pass
 
     @overload
+    def __rmul__(self, x:int):  # -> Int[Tag]
+        ...
+    @overload
+    def __rmul__(self, x:float) -> float:
+        ...
+    def __rmul__(self, x):
+        if isinstance(x,int):
+            return self.__class__(x*self.value())
+        else:
+            return x*self.value()
+        pass
+
+    @overload
     def __mod__(self, other:int):  #->Int[Tag]
         ...
     @overload
@@ -268,6 +281,15 @@ class Float(Generic[Tag],Float_[Tag]):
         ...
     def __mul__(self, x):
         return Float[Tag](self.value()*x)
+
+    @overload
+    def __rmul__(self, x:int):  # -> Float[Tag]
+        ...
+    @overload
+    def __rmul__(self, x:float):  # -> Float[Tag]
+        ...
+    def __rmul__(self, x):
+        return Float[Tag](x*self.value())
 
     @overload
     def __mod__(self, other:int):  #->Float[Tag]

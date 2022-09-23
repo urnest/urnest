@@ -15,14 +15,14 @@
 #
 # Time based store.
 #
-from typing import Tuple,Dict,Literal,overload,Sequence
+from typing import Tuple,Dict,Literal,overload,Sequence,Callable,Any
 from xju.cmc.io import FileReader,FileWriter,FileMode,FilePosition,FilePositionDelta
 import os
 from pathlib import Path
 from xju.misc import ByteCount
 from xju.time import Hours,Timestamp
 from xju.cmc import cmclass,CM
-from xju.xn import in_context,in_function_context
+from xju.xn import in_context,in_function_context,first_line_of as l1
 import time
 from time import struct_time
 from calendar import timegm
@@ -54,6 +54,122 @@ class BucketExists(Exception):
         super().__init__(self,f'bucket at {bucket_start} exists with uid {bucket_id}')
         self.bucket_start = bucket_start
         self.bucket_id = bucket_id
+        pass
+    pass
+
+@cmclass
+class Reader(CM):
+    '''TStore {self.storage_path} reader for bucket with start {self.bucket_start} and id {self.bucket_id}'''
+    storage_path:Path
+    bucket_start:BucketStart
+    bucket_id:BucketID
+
+    __file_reader:FileReader
+    
+    def __init__(self,
+                 storage_path:Path,
+                 bucket_start:BucketStart,
+                 bucket_id:BucketID,
+                 get_bucket_size:Callable[[],ByteCount],
+                 file_reader:FileReader):
+        self.storage_path=storage_path
+        self.bucket_start=bucket_start
+        self.bucket_id=bucket_id
+        self.__get_bucket_size=get_bucket_size
+        self.__file_reader=file_reader
+        pass
+
+    def __str__(self):
+        return l1(Reader.__doc__).format(**vars())
+
+    def seek_to(self, position:FilePosition):
+        '''position TStore reader {self} so next read occurs {position} bytes from start of bucket data
+           - returns self'''
+        try:
+            self.__file_reader.seek_to(position)
+            return self
+        except:
+            raise in_function_context(Reader.seek_to,vars()) from None
+        pass
+    
+    def seek_by(self, offset:ByteCount):
+        '''position TStore reader {self} so next read occurs {offset} bytes from current position
+           - returns self'''
+        try:
+            self.__file_reader.seek_by(FilePositionDelta(offset.value()))
+            return self
+        except:
+            raise in_function_context(Reader.seek_by,vars()) from None
+        pass
+    
+    def size(self) -> ByteCount:
+        '''return size of bucket'''
+        try:
+            return self.__get_bucket_size()
+        except:
+            raise in_function_context(Reader.size,vars()) from None
+        pass
+
+    def read(self, max_bytes:ByteCount) -> bytes:
+        '''read up to {max_bytes} of data from TStore reader {self} current position'''
+        try:
+            result=self.__file_reader.input.read(max_bytes.value())
+            if isinstance(result,bytes):
+                return result
+            assert False
+        except Exception:
+            raise in_function_context(Reader.read,vars()) from None
+        pass
+    pass
+
+
+@cmclass
+class Writer(CM):
+    '''writer for TStore {self.storage_path}' bucket with start {self.bucket_start} and id {self.bucket_id}'''
+    storage_path:Path
+    bucket_start:BucketStart
+    bucket_id:BucketID
+
+    __file_writer:FileWriter
+    
+    def __init__(self,
+                 storage_path:Path,
+                 bucket_start:BucketStart,
+                 bucket_id:BucketID,
+                 get_bucket_size:Callable[[],ByteCount],
+                 get_room:Callable[[],ByteCount],
+                 file_writer:FileWriter,
+                 appended:Callable[[ByteCount],Any]):
+        self.storage_path=storage_path
+        self.bucket_start=bucket_start
+        self.bucket_id=bucket_id
+        self.__get_bucket_size=get_bucket_size
+        self.__get_room=get_room
+        self.__file_writer=file_writer
+        self.__appended=appended
+        pass
+    
+    def size(self) -> ByteCount:
+        '''return size of bucket'''
+        try:
+            return self.__get_bucket_size()
+        except Exception:
+            raise in_function_context(Writer.size,vars()) from None
+        pass
+
+    def append(self, data:bytes):
+        '''TStore writer {self} append {len_data} bytes of data assuming there is room
+           - assumes our bucket still in tstore
+           - raises NoSuchBucket if bucket no longer exists
+           - raises BucketExists if bucket now has different id'''
+        len_data=len(data)
+        try:
+            Assert(self.__get_room()>=ByteCount(len(data)))
+            self.__file_writer.seek_to(FilePosition(self.size().value()))
+            self.__file_writer.output.write(data)
+            self.__appended(ByteCount(len(data)))
+        except Exception:
+            raise in_function_context(Writer.append,vars()) from None
         pass
     pass
 
@@ -112,6 +228,9 @@ class TStore:
                                                                        max_buckets,
                                                                        max_size,
                                                                        file_creation_mode)
+                self.__buckets={}
+                self.__bucket_sizes={}
+                self.__current_size=ByteCount(0)
             except Exception as e:
                 raise in_context('create non-existent TStore at {storage_path} with mode 0o{file_creation_mode:o}, {hours_per_bucket} hours per bucket, max buckets {max_buckets}, max size {max_size} bytes'.format(**vars())) from None
             pass
@@ -132,7 +251,7 @@ class TStore:
            - bucket need not exist'''
         x = time.gmtime(float(timestamp))
         h = self.hours_per_bucket*(Hours(x.tm_hour)//self.hours_per_bucket)
-        return BucketStart(int(timegm(struct_time( (x.tm_year,x.tm_mon,x.tm_mday,int(h),0,0,0,0) ))))
+        return BucketStart(int(timegm(struct_time( (x.tm_year,x.tm_mon,x.tm_mday,int(h),0,0,0,0,0) ))))
         
     def get_buckets_of(self, begin:Timestamp, end:Timestamp) -> Sequence[Tuple[BucketStart,BucketID]]:
         '''get starts and ids of TStore {self}'s existing buckets covering time range [{begin},{end})'''
@@ -239,7 +358,7 @@ class TStore:
            - deletes buckets with oldest start'''
         try:
             Assert(max_buckets)>0
-            if len(self.__buckets>max_buckets):
+            if len(self.__buckets)>max_buckets:
                 all_buckets=list(self.__buckets.items())
                 all_buckets.sort()
                 for bucket_start,bucket_id in all_buckets:
@@ -268,126 +387,57 @@ class TStore:
         except Exception as e:
             raise in_function_context(TStore.__trim_bytes,vars()) from None
         pass
-    pass
 
+    def get_bucket_size(self,bucket_start:BucketStart,bucket_id:BucketID)->ByteCount:
+        return self.__bucket_sizes[(bucket_start,bucket_id)]
 
-@cmclass
-class Reader(CM):
-    '''TStore {self.store} reader for bucket with start {bucket_start} and id {bucket_id}'''
-    store:TStore
-    bucket_start:BucketStart
-    bucket_id:BucketID
-
-    __impl:FileReader
-    
-    def __init__(self, store:TStore, bucket_start:BucketStart, bucket_id:BucketID):
-        '''create reader for TStore {self.store}'s bucket with start {bucket_start} and id {bucket_id}
+    def new_reader(self,bucket_start:BucketStart, bucket_id:BucketID)->Reader:
+        '''create reader for TStore {self}'s bucket with start {bucket_start} and id {bucket_id}
            - raises NoSuchBucket if such a bucket does not yet exist
            - raises BucketExists if bucket with start {bucket_start} has different id'''
         try:
-            self.store=store
-            self.bucket_start=bucket_start
-            self.bucket_id=bucket_id
-            self.store.verify_bucket_exists(bucket_start,bucket_id)
-            self.__impl=FileReader(
-                get_path_of(self.store.storage_path,bucket_start,bucket_id,self.store.hours_per_bucket))
+            self.verify_bucket_exists(bucket_start,bucket_id)
+            def get_bucket_size():
+                return self.__bucket_sizes[(bucket_start,bucket_id)]
+            return Reader(
+                self.storage_path,
+                bucket_start,
+                bucket_id,
+                get_bucket_size,
+                FileReader(get_path_of(self.storage_path,bucket_start,bucket_id,self.hours_per_bucket)))
         except Exception as e:
-            raise in_function_context(Reader.__init__,vars()) from None
+            raise in_function_context(TStore.new_reader,vars()) from None
         pass
 
-    def __str__(self):
-        return l1(Reader.__doc__).format(**vars())
-
-    def seek_to(self, position:FilePosition):
-        '''position TStore reader {self} so next read occurs {position} bytes from start of bucket data
-           - returns self'''
-        try:
-            self.__impl.seek_to(position)
-            return self
-        except:
-            raise in_function_context(Reader.seek_to,vars()) from None
-        pass
-    
-    def seek_by(self, offset:ByteCount):
-        '''position TStore reader {self} so next read occurs {offset} bytes from current position
-           - returns self'''
-        try:
-            self.__impl.seek_by(FilePositionDelta(offset.value()))
-            return self
-        except:
-            raise in_function_context(Reader.seek_by,vars()) from None
-        pass
-    
-    def size(self) -> ByteCount:
-        '''return size of bucket'''
-        try:
-            return self.store.__bucket_sizes[(self.bucket_start,self.bucket_id)]
-        except:
-            raise in_function_context(Reader.size,vars()) from None
-        pass
-
-    def read(self, max_bytes:ByteCount) -> bytes:
-        '''read up to {max_bytes} of data from TStore reader {self} current position'''
-        try:
-            result=self.__impl.input.read(max_bytes.value())
-            if isinstance(result,bytes):
-                return result
-            assert False
-        except Exception:
-            raise in_function_context(Reader.read,vars()) from None
-        pass
-    pass
-
-
-@cmclass
-class Writer(CM):
-    '''writer for TStore {self.store}' bucket with start {self.bucket_start} and id {self.bucket_id}'''
-    store:TStore
-    bucket_start:BucketStart
-    bucket_id:BucketID
-
-    __impl:FileWriter
-
-    def __init__(self,store:TStore,bucket_start:BucketStart,bucket_id:BucketID):
-        '''create writer for TStore {self.store}'s bucket with start {bucket_start} and id {bucket_id}
+    def new_writer(self,bucket_start:BucketStart, bucket_id:BucketID)->Writer:
+        '''create writer for TStore {self}'s bucket with start {bucket_start} and id {bucket_id}
            - bucket must exist
            - ensures store stays within max_buckets along the way'''
         try:
-            self.store=store
-            self.bucket_start=bucket_start
-            self.bucket_id=bucket_id
-            self.store.verify_bucket_exists(bucket_start,bucket_id)
-            self.__impl=FileWriter(
-                get_path_of(self.store.storage_path,bucket_start,bucket_id,self.store.hours_per_bucket))
+            self.verify_bucket_exists(bucket_start,bucket_id)
+            def get_bucket_size():
+                return self.__bucket_sizes[(bucket_start,bucket_id)]
+            def get_room():
+                return self.max_size-self.current_size()
+            def appended(number_of_bytes:ByteCount):
+                self.__current_size=self.__current_size+number_of_bytes
+                self.__bucket_sizes[(bucket_start,bucket_id)]=\
+                    self.__bucket_sizes[(bucket_start,bucket_id)]+number_of_bytes
+                pass
+            return Writer(
+                self.storage_path,
+                bucket_start,
+                bucket_id,
+                get_bucket_size,
+                get_room,
+                FileWriter(
+                    get_path_of(self.storage_path,bucket_start,bucket_id,self.hours_per_bucket)),
+                appended)
         except Exception as e:
-            raise in_function_context(Writer.__init__,vars()) from None
-        pass
-
-    def size(self) -> ByteCount:
-        '''return size of bucket'''
-        try:
-            self.store.verify_bucket_exists(self.bucket_start,self.bucket_id)
-            return self.store.__bucket_sizes[(self.bucket_start,self.bucket_id)]
-        except Exception:
-            raise in_function_context(Writer.size,vars()) from None
-        pass
-
-    def append(self, data:bytes):
-        '''TStore writer {self} append {len(data)} bytes of data assuming there is room
-           - assumes our bucket still in tstore
-           - raises NoSuchBucket if bucket no longer exists
-           - raises BucketExists if bucket now has different id'''
-        try:
-            Assert(len(data))<=self.store.max_size-self.store.__current_size
-            self.__impl.seek_to(FilePosition(self.size().value()))
-            self.__impl.output.write(data)
-            self.store.__current_size=self.store.__current_size+ByteCount(len(data))
-            self.store.__bucket_sizes[(self.bucket_start,self.bucket_id)]=\
-                self.store.__bucket_sizes[(self.bucket_start,self.bucket_id)]+ByteCount(len(data))
-        except Exception:
-            raise in_function_context(Writer.append,vars()) from None
+            raise in_function_context(TStore.new_writer,vars()) from None
         pass
     pass
+
 
 attrs_schema=jsonschema.Schema({
     'hours_per_bucket':int,
