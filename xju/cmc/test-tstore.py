@@ -243,3 +243,19 @@ with TemporaryDirectory() as d_:
     Assert(tstore.list_unseen({}))=={ (s3,id3): ByteCount(10) }
 
     pass
+
+# how long to sort 10000 bucket starts?
+def time_sort():
+    import random
+    import bisect
+    buckets={ (BucketStart(int(random.random()*1000000)), BucketID(i)) : f'{i}' for i in range(0,10000) }
+
+    before=now()
+    all_buckets=[bucket_start for bucket_start,bucket_id in buckets.keys()]
+    all_buckets.sort()
+    bisect.bisect_left(all_buckets,BucketStart(int(1000000*random.random())))
+    bisect.bisect_right(all_buckets,BucketStart(int(1000000*random.random())))
+    after=now()
+    return after-before
+
+print(f'time to sort 10000 buckets: '+str(time_sort()))

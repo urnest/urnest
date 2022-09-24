@@ -15,6 +15,11 @@
 #
 # Time based store.
 #
+# Provides storage as append-only "bucket" files, each covering a specified number of hours.
+# Bucket file content is up to client. Bucket files are append-only to support
+# mirroring. Lookup is by time range. Total storage size is constrained by total byte count
+# and number of buckets.
+#
 from typing import Tuple,Dict,Literal,overload,Sequence,Callable,Any
 from xju.cmc.io import FileReader,FileWriter,FileMode,FilePosition,FilePositionDelta
 import os
