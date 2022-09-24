@@ -279,14 +279,16 @@ class TStore:
         # still exist
         for bucket_start,bucket_id in set.intersection(seen_keys,bucket_keys):
             current_size=self.__bucket_sizes[(bucket_start,bucket_id)]
-            if current_size != seen[(bucket_start,bucket_id)]:
+            if current_size and (current_size != seen[(bucket_start,bucket_id)]):
                 result[(bucket_start,bucket_id)]=current_size
                 pass
             pass
         # new
         for bucket_start,bucket_id in bucket_keys-seen_keys:
             current_size=self.__bucket_sizes[(bucket_start,bucket_id)]
-            result[(bucket_start,bucket_id)]=current_size
+            if current_size:
+                result[(bucket_start,bucket_id)]=current_size
+                pass
             pass
         return result
 

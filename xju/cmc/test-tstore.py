@@ -229,19 +229,17 @@ with TemporaryDirectory() as d_:
     
     tstore.create_bucket(s4,id4)
     
-    # verify 3 buckets
+    # verify 2 non-empty buckets
     Assert(tstore.list_unseen({}))=={ (s2,id2): ByteCount(20),
-                                      (s3,id3): ByteCount(10),
-                                      (s4,id4): ByteCount(0) }
+                                      (s3,id3): ByteCount(10) }
 
     s5=tstore.calc_bucket_start(t1+5*Timestamp(3600))
     id5=BucketID('5')
-    
+
+    # deletes oldest bucket as max_buckets is three
     tstore.create_bucket(s5,id5)
     
-    # verify 3 buckets
-    Assert(tstore.list_unseen({}))=={ (s3,id3): ByteCount(10),
-                                      (s4,id4): ByteCount(0),
-                                      (s5,id5): ByteCount(0) }
+    # verify 1 non-empty buckets
+    Assert(tstore.list_unseen({}))=={ (s3,id3): ByteCount(10) }
 
     pass
