@@ -51,7 +51,7 @@ class Int(Generic[Tag],Int_[Tag]):
            ... and not inherit from Hours.
            If you choose to inherit from Hours, make sure you write your own __eq__'''
         assert (other.__class__ is self.__class__) or not isinstance(other,Int)  # see above
-        if other.__class__==self.__class__:
+        if other.__class__ is self.__class__:
             return self.value().__eq__(other.value())
         return False
     def __ne__(self,other)->bool:
@@ -194,7 +194,7 @@ class Float(Generic[Tag],Float_[Tag]):
            ... and not inherit from Timestamp.
            If you choose to inherit from Timestamp, make sure you write your own __eq__'''
         assert (other.__class__ is self.__class__) or not isinstance(other,Float)  # see above
-        if other.__class__==self.__class__:
+        if other.__class__ is self.__class__:
             return self.value().__eq__(other.value())
         return False
     def __ne__(self,other)->bool:
@@ -337,7 +337,7 @@ class Str(Generic[Tag],Str_[Tag]):
            ... and not inherit from FirstName.
            If you choose to inherit from Timestamp, make sure you write your own __eq__'''
         assert (other.__class__ is self.__class__) or not isinstance(other,Str)  # see above
-        if other.__class__==self.__class__:
+        if other.__class__ is self.__class__:
             return self.value().__eq__(other.value())
         return False
     def __ne__(self,other)->bool:

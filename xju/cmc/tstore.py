@@ -188,7 +188,7 @@ class TStore:
     def __str__(self):
         return l1(TStore.__doc__).format(**vars())
 
-    def current_size(self):
+    def current_size(self) -> ByteCount:
         return self.__current_size
 
     @overload
@@ -241,6 +241,7 @@ class TStore:
                 self.__bucket_sizes = read_files(storage_path)
                 self.__buckets={bucket_start:bucket_id
                                 for bucket_start,bucket_id in self.__bucket_sizes}
+                self.__current_size=sum(self.__bucket_sizes.values(),ByteCount(0))
             except Exception as e:
                 raise in_context('open existing TStore at {storage_path} reading attributes from its tstore.json file'.format(**vars())) from None
             pass
@@ -318,7 +319,7 @@ class TStore:
                 pass
             self.__trim_buckets(self.max_buckets-1)
             path=get_path_of(self.storage_path,bucket_start,bucket_id,self.hours_per_bucket)
-            os.makedirs(path.parent)
+            os.makedirs(path.parent,exist_ok=True)
             with FileWriter(path,
                             mode=self.file_creation_mode,
                             must_not_exist=True):
@@ -342,11 +343,8 @@ class TStore:
         try:
             bucket_size=self.__bucket_sizes[(bucket_start,bucket_id)]
             path=get_path_of(self.storage_path,bucket_start,bucket_id,self.hours_per_bucket)
-            with FileReader(path) as f, FileWriter(path.parent) as d:
-                f.unlink()
-                d.sync()
-                pass
-            self.__current_size=ByteCount(self.__current_size-bucket_size)
+            os.unlink(path)
+            self.__current_size=self.__current_size-bucket_size
             del self.__buckets[bucket_start]
             del self.__bucket_sizes[(bucket_start,bucket_id)]
         except Exception:
@@ -363,7 +361,7 @@ class TStore:
                 all_buckets.sort()
                 for bucket_start,bucket_id in all_buckets:
                     self.delete_bucket(bucket_start,bucket_id)
-                    if len(self.__buckets<=max_buckets):
+                    if len(self.__buckets)<=max_buckets:
                         return
                     pass
                 pass
@@ -452,7 +450,7 @@ def read_attrs(storage_path:Path,
     '''read TStore attributes from {storage_path}/{attrs_file}'''
     try:
         with FileReader(storage_path/attrs_file) as f:
-            x=json.loads(f.read().decode('utf-8'))
+            x=json.loads(f.input.read().decode('utf-8'))
             attrs_schema.validate(x)
             hours_per_bucket=x['hours_per_bucket']
             max_buckets=x['max_buckets']
@@ -528,7 +526,8 @@ def read_files(storage_path:Path) -> Dict[Tuple[BucketStart,BucketID],ByteCount]
                                     try:
                                         bucket_start=BucketStart(timegm(struct_time(
                                             (year,month,mday,hour,0,0,0,0,0))))
-                                        bucket_ids=[BucketID(b.name) for b in hdir.iterdir()
+                                        bucket_ids=[BucketID(b.name).removesuffix('.txt')
+                                                    for b in hdir.iterdir()
                                                     if b.is_file()]
                                         if len(bucket_ids)>1:
                                             raise Exception(
@@ -536,7 +535,7 @@ def read_files(storage_path:Path) -> Dict[Tuple[BucketStart,BucketID],ByteCount]
                                         if len(bucket_ids):
                                             bucket_id=bucket_ids[0]
                                             result[(bucket_start,bucket_id)]=ByteCount(
-                                                (hdir/str(bucket_id)).stat().st_size)
+                                                (hdir/f'{bucket_id}.txt').stat().st_size)
                                             pass
                                         pass
                                     except Exception:

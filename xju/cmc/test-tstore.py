@@ -100,7 +100,7 @@ with TemporaryDirectory() as d_:
     try:
         tstore.verify_bucket_exists(s1,BucketID('2'))
     except BucketExists as e:
-        Assert(f"REVISIT").isIn(str(e))
+        Assert(f"bucket at {s1} exists with uid 1").isIn(str(e))
         pass
     else:
         assert False, f"BucketID('2') should not exist at {s1}"
@@ -121,7 +121,7 @@ with TemporaryDirectory() as d_:
     try:
         tstore.verify_bucket_exists(s1,id1)
     except NoSuchBucket as e:
-        Assert(f"REVISIT").isIn(str(e))
+        Assert(f"no bucket starting at {s1}").isIn(str(e))
         pass
     else:
         assert False, f'bucket {id1} should not exist at {s1}'
@@ -191,11 +191,11 @@ with TemporaryDirectory() as d_:
         pass
     
     # verify 10 bytes + 20 bytes
-    with tstore.new_reader(s1,id1) as r:
-        Assert(r.read(ByteCount(11)))==b'0123456789'
-        pass
     with tstore.new_reader(s2,id2) as r:
         Assert(r.read(ByteCount(21)))==b'abcdefghijpoiuytrewq'
+        pass
+    with tstore.new_reader(s3,id3) as r:
+        Assert(r.read(ByteCount(11)))==b'abcde01234'
         pass
 
     # close - nothing to do
@@ -208,21 +208,20 @@ with TemporaryDirectory() as d_:
     Assert(tstore.max_size)==ByteCount(30)
     Assert(tstore.file_creation_mode)==FileMode(0o666)
     Assert(tstore.calc_bucket_start(t1))==s1
-    Assert(tstore.calc_bucket_start(t1+Timestamp(3600)))==s1
-    Assert(tstore.calc_bucket_start(t1+2*Timestamp(3600)))==s1
-    id1=tstore.get_bucket(s1)
+    Assert(tstore.calc_bucket_start(t1+Timestamp(3600)))==s2
+    Assert(tstore.calc_bucket_start(t1+2*Timestamp(3600)))==s3
     id2=tstore.get_bucket(s2)
     id3=tstore.get_bucket(s3)
     Assert(tstore.current_size())==ByteCount(30)
     # verify 2 buckets
-    Assert(tstore.list_unseen({}))=={ (s2,id2): ByteCount(10),
+    Assert(tstore.list_unseen({}))=={ (s2,id2): ByteCount(20),
                                       (s3,id3): ByteCount(10) }
     # verify 10 bytes + 20 bytes
-    with tstore.new_reader(s1,id1) as r:
-        Assert(r.read(ByteCount(11)))==b'0123456789'
-        pass
     with tstore.new_reader(s2,id2) as r:
         Assert(r.read(ByteCount(21)))==b'abcdefghijpoiuytrewq'
+        pass
+    with tstore.new_reader(s3,id3) as r:
+        Assert(r.read(ByteCount(11)))==b'abcde01234'
         pass
 
     s4=tstore.calc_bucket_start(t1+3*Timestamp(3600))
@@ -231,7 +230,7 @@ with TemporaryDirectory() as d_:
     tstore.create_bucket(s4,id4)
     
     # verify 3 buckets
-    Assert(tstore.list_unseen({}))=={ (s2,id2): ByteCount(10),
+    Assert(tstore.list_unseen({}))=={ (s2,id2): ByteCount(20),
                                       (s3,id3): ByteCount(10),
                                       (s4,id4): ByteCount(0) }
 
