@@ -14,7 +14,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 from xju.newtype import Int,Float
-from typing import NewType
+from typing import overload
 import time
 
 class HoursTag:pass
@@ -25,8 +25,35 @@ class Hours(Int[HoursTag]): pass
 class Minutes(Int[MinutesTag]): pass
 class Seconds(Int[SecondsTag]): pass
 
-class TimestampTag:pass
-class Timestamp(Float[TimestampTag]):pass
+class DurationTag:pass
+class Duration(Float[DurationTag]):pass
+
+class TimestampBase:pass
+class Timestamp(TimestampBase):
+    __value:float
+    def __init__(self,value:float):
+        self.__value=value
+        pass
+    def value(self):
+        return __value
+    def __add__(self, duration:Duration):
+        return Timestamp(self.value()+duration.value())
+    @overload
+    def __sub__(self, t2:TimestampBase)->Duration:
+        ...
+    @overload
+    def __sub__(self, duration:Duration):
+        ...
+    def __sub__(self, x):
+        if isinstance(x,Duration):
+            return Timestamp(self.value()-x.value())
+        elif isinstance(x,Timestamp):
+            return Duration(self.value()-x.value())
+        x_type=type(x)
+        assert False, f'cannot subtract {x} of type {x_type} from Timestamp'
+    def __float__(self):
+        return self.__value
+    pass
 
 def now()->Timestamp:
     return Timestamp(time.time())

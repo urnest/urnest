@@ -15,7 +15,40 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-from xju import perflog
+from xju.cmc import perflog
 
 from xju.assert_ import Assert
 
+# create
+
+# create - exists
+
+# fetch (nothing)
+
+# record 10 records over 3 hours
+
+# fetch all
+
+# fetch some - whole hour
+
+# fetch some covering hour plus part either side
+
+# fetch some - max bytes limited
+
+# fetch some - max records limited
+
+# get unseen - seen none
+
+# get unseen - seen some
+
+# get unseen - see all
+
+# get unseen - max byes limited
+
+# tracker - write unseen, multiple buckets
+
+# read back records
+
+# get unseen - read failed in middle
+
+# get unseen - decode failed in middle

@@ -21,36 +21,165 @@
 # perflog supports incremental mirroring of data (one-way-sync), e.g. supporting
 # incremental remote backup
 #
-# perflog can perform all writes synchronously
 
 from pathlib import Path
-from typing import NewType, Union, Literal, List, Optional
-import xju.cmc
+from typing import Union, Literal,List,Optional,Dict,Tuple,overload,Callable,Any,Generator
 from xju.misc import ByteCount
 from xju.xn import in_context,in_function_context,first_line_of as l1
-from time import gmtime,struct_time
-from calendar import timegm
+from xju.cmc.tstore import TStore,Reader,Writer,BucketStart,BucketID,NoSuchBucket,BucketExists
+from xju.cmc.io import FilePosition,FileMode
+from xju.time import Timestamp,now,Hours,Duration
+from xju.cmc import cmclass,CM,Dict as CMDict
+from xju.cmc.io import FileReader,FileWriter
+from xju.newtype import Str
+from xju.assert_ import Assert
+from xju import jsonschema
+from xju.jsonschema import OneOf
+import os
+import json
+import io
 
-ColName=NewType('ColName',str)
-ColType=Union[ Literal[str], Literal[Optional[str]],
-               Literal[int], Literal[Optional[int]],
-               Literal[float],Literal[Optional[float]] ]
-ByteCount=NewType('ByteCount',int)
-Timestamp=NewType('Timestamp',float)
-RelPath=NewType('RelPath',Path)
-UID=NewType('UID',str)
+class ColNameType:pass
+class ColName(Str[ColNameType]):pass
 
-@xju.cmc.cmclass
-class PerfLog(xju.cmc.CM):
+ColType=Literal[
+    'str','int','float',       # not allowed to be None
+    '(str)','(int)','(float)'  # optional, i.e. value can be None
+]
+
+# mypy can't do isinstance on instance of generic (even though all types
+# involved are concretate, workaround is to use a concrete subclass
+class Writers(CMDict[ Tuple[BucketStart,BucketID], Writer ]):pass
+
+@cmclass
+class Recorder(CM):
+    '''recorder recording records to PerfLog {storage_path}'''
+    storage_path:Path
+    schema:Dict[ColName,ColType]
+
+    __tstore:TStore
+    __writers:Writers
+
+    def __init__(self,
+                 storage_path:Path,
+                 schema:Dict[ColName,ColType],
+                 tstore:TStore):
+        self.storage_path=storage_path
+        self.schema=schema
+        self.__tstore=tstore
+        self.__writers=Writers()
+        pass
+
+    def __str__(self):
+        return l1(Recorder.__doc__).format(**self.__dict__)
+
+    def record(self,timestamp:Timestamp, record:List):
+        '''{self} record at timestamp {timestamp} record {record!r}'''
+        try:
+            bucket_start=self.__tstore.calc_bucket_start(timestamp)
+            encoded_record=encode_timestamped_record(timestamp-Timestamp(bucket_start.value()),
+                                                     record,
+                                                     self.schema)
+            self.__tstore.make_room_for(ByteCount(len(encoded_record)))
+            try:
+                bucket_id=self.__tstore.get_bucket(bucket_start)
+            except NoSuchBucket:
+                t=now()
+                bucket_id=BucketID(f'{t:.06f}')
+                self.__tstore.create_bucket(bucket_start,bucket_id)
+                pass
+            if (bucket_start,bucket_id) not in self.__writers:
+                # only keep one writer because most records will go into same or new bucket
+                self.__writers.clear()
+                self.__writers[(bucket_start,bucket_id)]=self.__tstore.new_writer(
+                    bucket_start,
+                    bucket_id)
+                pass
+            self.__writers[(bucket_start,bucket_id)].append(encoded_record)
+        except Exception:
+            raise in_function_context(Recorder.record,vars())
+        pass
+    pass
+
+
+class Tracker:
+    '''tracker updating PerfLog {storage_path} with unseen data
+       - tracker assumes PerfLog has same max bytes and max buckets as source'''
+    storage_path:Path
+    schema:Dict[ColName,ColType]
+
+    __tstore:TStore
+
+    def __init__(self,
+                 storage_path:Path,
+                 tstore:TStore):
+        self.storage_path=storage_path
+        self.__tstore=tstore
+        pass
+
+    def __str__(self):
+        return l1(Tracker.__doc__).format(**self.__dict__)
+
+    def write_unseen_data(self, unseen:Dict[Tuple[BucketStart,BucketID],
+                                            Tuple[FilePosition,bytes]]):
+        '''write unseen data to PerfLog {self.storage_path}
+           - caller must ensure that unseen data with non-zero position matches
+             current data size for that bucket
+           - caller must ensure that underlying tstore max_size, max_buckets and hours_per_bucket
+             matches that of the source data'''
+        try:
+            writer:Writer
+            for bucket_start, bucket_id in unseen:
+                position,data=unseen[(bucket_start,bucket_id)]
+                data_len=len(data)
+                try:
+                    try:
+                        existing_id=self.__tstore.get_bucket(bucket_start)
+                        if existing_id != bucket_id:
+                            self.__tstore.delete_bucket(bucket_start,existing_id)
+                            self.__tstore.get_bucket(bucket_start) # will raise
+                            pass
+                    except NoSuchBucket:
+                        self.__tstore.create_bucket(bucket_start,bucket_id)
+                        pass
+                    if position==0 and len(data)==0:
+                        self.__tstore.delete_bucket(bucket_start,bucket_id)
+                    else:
+                        # there is room (as long as __tstore has same max_bytes, max_buckets
+                        # as source)
+                        if position==0:
+                            try:
+                                self.__tstore.delete_bucket(bucket_start,bucket_id)
+                            except NoSuchBucket:
+                                pass
+                            pass
+                        try:
+                            self.__tstore.create_bucket(bucket_start,bucket_id)
+                        except BucketExists:
+                            pass
+                        with self.__tstore.new_writer(bucket_start,bucket_id) as writer:
+                            Assert(writer.size())==position
+                            writer.append(data)
+                        pass
+                    pass
+                except Exception:
+                    raise in_context(f'write {data_len} bytes of data at position {position} '
+                                     f'of bucket with start {bucket_start} and id {bucket_id}')
+                pass
+            pass
+        except Exception:
+            raise in_function_context(Tracker.write_unseen_data,vars()) from None
+        pass
+
+
+class PerfLog:
     '''{storage_path} size limited to {selff.max_size()} bytes/{self.max_files()} files with ''' \
         '''record schema {self.schema}, {self.hours_per_bucket()} hours per file and ''' \
-        '''filecreation mode 0o{self.file_creation_mode():o} ''' \
-        '''and syncrhonous_writes {self.synchronous_writes}'''
-    storage_path:Path,
+        '''filecreation mode 0o{self.file_creation_mode():o}'''
+    storage_path:Path
     schema:Dict[ColName,ColType]
-    synchronous_writes:bool
 
-    __tstore:tstore.TStore
+    __tstore:TStore
 
     def hours_per_file(self):
         return self.__tstore.hours_per_bucket
@@ -63,7 +192,6 @@ class PerfLog(xju.cmc.CM):
     def __init__(self,
                  storage_path:Path,
                  schema:Dict[ColName,ColType],
-                 synchronous_writes:bool,
                  hours_per_bucket:Hours,
                  max_buckets: int,
                  max_size:ByteCount,
@@ -75,43 +203,33 @@ class PerfLog(xju.cmc.CM):
            - raises FileExistsError if perflog exists at {storage_path}'''
         pass
     @overload
-    def __init__(self,
-                 storage_path:Path,
-                 schema:Literal[None]=None,
-                 synchronous_writes:Literal[None]=None,
-                 hours_per_bucket:Literal[None]=None,
-                 max_buckets:Literal[None]=None,
-                 max_size:Literal[None]=None,
-                 file_creation_mode:Literal[None]=None):
+    def __init__(self,storage_path:Path):
         '''open existing PerfLog at {storage_path} reading attributes from its perflog.json file
            - raises FileNotFoundError if PerfLog does not exist'''
         pass
     def __init__(self,
                  storage_path:Path,
-                 schema=Optional[Dict[ColName,ColType]]=None,
-                 synchronous_writes:Optional[bool]=None,
+                 schema:Optional[Dict[ColName,ColType]]=None,
                  hours_per_bucket:Optional[Hours]=None,
-                 max_buckets:Optiona[int]=None,
+                 max_buckets:Optional[int]=None,
                  max_size:Optional[ByteCount]=None,
                  file_creation_mode:Optional[FileMode]=None):
         self.storage_path = storage_path
-        if (isinstance(schema,Dict[ColName,ColType]) and
-            isinstance(synchronous_writes,bool) and
+        if (isinstance(schema,dict) and
             isinstance(hours_per_bucket,Hours) and
             isinstance(max_buckets, int) and
             isinstance(max_size,ByteCount) and
             isinstance(file_creation_mode,FileMode)):
             try:
                 self.schema=schema
-                self.synchronous_writes=synchronous_writes
-                os.makedirs(storage_path, file_creation_mode)
-                write_attrs(storage_path / 'perflog.json', schema, synchronous_writes)
+                os.makedirs(storage_path, mode=file_creation_mode.value())
+                write_attrs(storage_path / 'perflog.json', schema, file_creation_mode)
                 try:
-                    self.__tstore=tstore.TStore(storage_path / 'tstore',
-                                                hours_per_bucket,
-                                                max_buckets,
-                                                max_size,
-                                                file_creation_mode)
+                    self.__tstore=TStore(storage_path / 'tstore',
+                                         hours_per_bucket,
+                                         max_buckets,
+                                         max_size,
+                                         file_creation_mode)
                 finally:
                     os.unlink(storage_path / 'perflog.json')
                     pass
@@ -124,8 +242,8 @@ class PerfLog(xju.cmc.CM):
             pass
         else:
             try:
-                self.__tstore=tstore.TStore(storage_path / 'tstore')
-                self.schema,self.synchronous_writes=read_attrs(storage_path / 'perflog.json')
+                self.__tstore=TStore(storage_path / 'tstore')
+                self.schema=read_attrs(storage_path / 'perflog.json')
             except Exception as e:
                 raise in_context(
                     '''open existing PerfLog at {storage_path} reading attributes from its perflog.json file'''.format(**vars())) from None
@@ -135,39 +253,46 @@ class PerfLog(xju.cmc.CM):
     def __str__(self) -> str:
         return l1(PerfLog.__doc__).format(**vars())
     
-    def fetch(begin:Timestamp,
+    def fetch(self,
+              begin:Timestamp,
               end:Timestamp,
               max_records:int,
               max_bytes:ByteCount,
-              corruption_handler:Callable[[Exception],Any]) -> Iter[
-                  Tuple[float, List[Union[str,int,float,None]]]]
+              corruption_handler:Callable[[Exception],Any]) -> Generator[
+                  Tuple[float, List[Union[str,int,float,None]]],None,None]:
         '''yield each record of PerfLog {self} with timestamp at or after {begin} excluding records with timestamp at or after {end} and all further records once {max_bytes} bytes have already been yielded or {max_records} records have been yielded
-           - note that records returned are in addition order, which is not necessarily time order'''
+           - note that records returned are in addition order, which is not necessarily time order
+           - note max_bytes is applied to the pre-decoded (stored) record data'''
         try:
             records_yielded = 0
-            bytes_yielded = 0
-            for bucket_start,bucket_id in self.__tstore.get_buckets_of(self, begin, end):
-                with tstore.Reader(self.__tstore, (bucket_start,bucket_id)) as r:
-                    for l in read_lines(r):
-                        try:
-                            if not l.endswith(b'\n'):
-                                raise Exception(f'{l!r} does not end in \\n')
-                            timestamp, col_values, size=decode_timestamped_record(l[:-1], schema)
-                        except Exception as e:
-                            corruption_handler(e)
-                        else:
-                            if timestamp >= begin and timestamp < end:
-                                yield (timestamp, col_values)
-                                records_yielded += 1
-                                bytes_yielded += size
-                                if records_yielded==max_records or bytes_yielded>=max_bytes:
-                                    return
+            bytes_yielded = ByteCount(0)
+            r:Reader
+            for bucket_start,bucket_id in self.__tstore.get_buckets_of(begin, end):
+                with self.__tstore.new_reader(bucket_start,bucket_id) as r:
+                    try:
+                        for l in read_lines(r):
+                            try:
+                                if not l.endswith(b'\n'):
+                                    raise Exception(f'{l!r} does not end in \\n')
+                                time_delta, col_values, size=decode_timestamped_record(l[:-1],
+                                                                                       self.schema)
+                            except Exception as e:
+                                corruption_handler(e)
+                            else:
+                                timestamp=Timestamp(bucket_start.value())+time_delta
+                                if timestamp >= begin and timestamp < end:
+                                    yield (timestamp, col_values)
+                                    records_yielded += 1
+                                    bytes_yielded += size
+                                    if records_yielded==max_records or bytes_yielded>=max_bytes:
+                                        return
+                                    pass
                                 pass
                             pass
                         pass
+                    except Exception as e:
+                        corruption_handler(e)
                     pass
-                except Exception as e:
-                    corruption_handler(e)
                 pass
             pass
         except Exception:
@@ -179,7 +304,7 @@ class PerfLog(xju.cmc.CM):
             seen:Dict[Tuple[BucketStart,BucketID], ByteCount],
             max_bytes:ByteCount,
             read_failed:Callable[[BucketStart,BucketID,Exception],Any]
-    ) -> Dict[Tuple[BucketStart,BucketID], (ByteCount,bytes)] #position,bytes
+    ) -> Dict[Tuple[BucketStart,BucketID], Tuple[FilePosition,bytes]]:
         '''return up to {max_bytes} bytes of unseen data from {self} having seen {seen}
            - new data ends on record boundary i.e. always returns complete records
            - new data might truncate seen data
@@ -188,139 +313,52 @@ class PerfLog(xju.cmc.CM):
         '''
         try:
             result={}
-            result_size=0
+            result_size=ByteCount(0)
             for bucket, size in self.__tstore.list_unseen(seen).items():
-                bucket_start, bucket_id=*bucket
+                bucket_start, bucket_id=bucket
                 seen_size=seen.get(bucket,ByteCount(0))
                 if seen_size>size:
-                    seen_size=0
+                    seen_size=ByteCount(0)
                     pass
-                with tstore.Reader(self.__tstore, bucket) as r:
+                r:Reader
+                with self.__tstore.new_reader(bucket_start,bucket_id) as r:
                     try:
-                        if seen_size>0:
-                            r.seek_to(seen_size-1)
-                            b=r.read(1)
+                        if seen_size>ByteCount(0):
+                            r.seek_to(FilePosition((seen_size-ByteCount(1)).value()))
+                            b=r.read(ByteCount(1))
                             if b!=b'\n':
-                                seen_size=0
+                                seen_size=ByteCount(0)
                                 pass
                             pass
                         read_size=size-seen_size
                         if read_size>max_bytes-result_size:
                             read_size=max_bytes-result_size
                             pass
-                        r.seek_to(seen_size)
+                        r.seek_to(FilePosition(seen_size.value()))
                         data=r.read(read_size)
-                        result[bucket]=(seen_size,data)
-                        result_size+=len(data)
+                        result[bucket]=(FilePosition(seen_size.value()),data)
+                        result_size+=ByteCount(len(data))
                     except Exception as e:
                         read_failed(bucket_start,bucket_id,e)
                         pass
                     pass
-                if result_size=max_bytes:
+                if result_size==max_bytes:
                     break
                 pass
             return result
         except Exception as e:
             raise in_function_context(PerfLog.get_some_unseen_data,vars()) from None
         pass
+
+    def new_recorder(self):
+        return Recorder(self.storage_path,self.schema,self.__tstore)
+
+    def new_tracker(self):
+        return Tracker(self,storage_path,self.__tstore)
+
     pass
 
-class Recorder:
-    '''record appender for PerfLog {self.perflog}'''
-    perflog;PerfLog
-    __writers:xju.cmc.Dict[ Tuple[BucketStart,BucketID], tstore.Writer ]
-
-    def __init__(self, perflog:PerfLog):
-        self.perflog=perflog
-        pass
-
-    def record(timestamp:Timestamp, record:List):
-        '''record in PerfLog {self.perflog} at timestamp {timestamp} record {record!r}'''
-        try:
-            bucket_start=self.perflog.tstore.calc_bucket_start(timestamp)
-            encoded_record=encode_timestamped_record(timestamp-bucket_start,
-                                                     record,
-                                                     self.perflog.schema)
-            self.perflog.tstore.make_room_for(len(encoded_record))
-            try:
-                bucket_id=self.perflog.__tstore.get_bucket(bucket_start)
-            except tstore.NoSuchBucket:
-                bucket_id=BucketID(f'{time.time():.06f}')
-                self.perflog.__tstore.create_bucket(bucket_start,bucket_id)
-                pass
-            if (bucket_start,bucket_id) not in self.__writers:
-                # only keep one writer because most records will go into same or new bucket
-                self.__writers.pop_all()
-                self.__writers[(bucket_start,bucket_id)]=tstore.Writer(
-                    self.perflog.__tstore,
-                    bucket_start,
-                    bucket_id)
-                pass
-            self.__writers[(bucket_start,bucket_id)].append(encoded_record)
-        except Exception:
-            raise in_function_context(Recorder.record,vars())
-        pass
-    pass
-
-
-class Tracker:
-    '''tracker updating PerfLog {self.perlog} with unseen data
-       - tracker assumes {self.perflog} has same max bytes and max buckets as source'''
-    perflog:PerfLog
-
-    def __init__(self,perflog:Perflog):
-        self.perflog=perflog
-        pass
-
-    def write_unseen_data(self, unseen:Dict[Tuple[BucketStart,BucketID], (ByteCount,bytes)]):
-        '''write unseen data to PerfLog {self.perflog}
-           - caller must ensure that unseen data with non-zero position matches
-             current data size for that bucket
-           - caller must ensure that underlying tstore max_size, max_buckets and hours_per_bucket
-             matches that of the source data'''
-        try:
-            for bucket_start, bucket_id in unseen:
-                position,data=unseen[(bucket_start,bucket_id)]
-                try:
-                    try:
-                        existing_id=self.perflog.__tstore.get_bucket(bucket_start)
-                        if existing_id != bucket_id:
-                            self.perflog.__tstore.delete_bucket(bucket_start,existing_id)
-                            self.perflog.__tstore.get_bucket(bucket_start,bucket_id) # will raise
-                            pass
-                    except NoSuchBucket:
-                        self.perflog.create_bucket(bucket_start,bucket_id)
-                        pass
-                    if position==0 and len(data)==0:
-                        self.perflog.__tstore.delete_bucket(bucket_start,bucket_id)
-                    else:
-                        # there is room (as long as self.perflog has same max_bytes, max_buckets
-                        # as source)
-                        if position==0:
-                            try:
-                                self.__tstore.delete_bucket(bucket_id,bucket_start)
-                            except tstore.NoSuchBucket:
-                                pass
-                            pass
-                        try:
-                            self.__tstore.create_bucket(bucket_id,bucket_start)
-                        except tstore.BucketExists:
-                            pass
-                        with tstore.Writer(self.perflog.tstore,bucket_start,bucket_id) as writer:
-                            Assert(writer.size())==position
-                            writer.append(data)
-                        pass
-                    pass
-                except Exception:
-                    raise in_context(f'write {len(data)} bytes of data at position {position} '
-                                     f'of bucket with start {bucket_start} and id {bucket_id}')
-                pass
-            pass
-        except Exception:
-            raise in_function_context(Tracker.write_unseen_data,vars()) from None
-        pass
-
-def validate_record(record:List, schema:schema:Dict[ColName,ColType]) -> List:
+def validate_record(record:List, schema:Dict[ColName,ColType]) -> List:
     '''validate record {record} against schema {schema}
        - returns record'''
     try:
@@ -328,57 +366,64 @@ def validate_record(record:List, schema:schema:Dict[ColName,ColType]) -> List:
             raise Exception(f'schema expects {len(schema)} values but record has {len(record)}')
         for value,s in zip(record, schema.items()):
             col_name, col_type = s
-            if not r.isinstance(col_type):
-                raise Exception(
-                    f'value {value!r} for {col_name} has type {type(r)} which is not a {col_type}')
+            try:
+                validate_col(value,col_type)
+            except Exception:
+                raise in_context(f'validate {col_name} value')
             pass
+        return record
     except Exception as e:
         raise in_function_context(validate_record,vars()) from None
     pass
 
-def encode_timestampeed_record(time_delta:float, record:List, schema:Dict[ColName,ColType]) -> bytes:
+def encode_timestamped_record(time_delta:Duration, record:List, schema:Dict[ColName,ColType]) -> bytes:
     '''encode record {record} and time delta {time_delta} assuming record conforms to schema {schema}'''
     try:
-        assert time_delta>=0
-        return (json.dumps([timestamp]+validate_record(record, schema))+'\n').encode('utf-8')
+        assert time_delta>=Duration(0)
+        return (json.dumps([time_delta]+validate_record(record, schema))+'\n').encode('utf-8')
     except:
-        raise in_function_context(encode_timestampeed_record,vars()) from None
+        raise in_function_context(encode_timestamped_record,vars()) from None
     pass
 
 def decode_timestamped_record(data:bytes, schema:Dict[ColName,ColType]) -> Tuple[
-        float, #time_delta
-        List[Union[str,int,float,None]]]: #record
+        Duration, #time_delta
+        List[Union[str,int,float,None]], #record
+        ByteCount]: # len(data)
     '''decode time delta and record from {data!r} assuming record conforms to schema {schema}'''
     try:
+        t:type
         assert data.endswith(b'\n')
         x=json.loads(data.decode('utf-8')[:-1])
+        record:List[Union[str,int,float,None]]=[]
         if isinstance(x, list):
             if isinstance(x[0], float):
-                time_delta=x[0]
-                assert time_delta>0, time_delta
+                time_delta=Duration(x[0])
+                assert time_delta>Duration(0), time_delta
                 values=x[1:]
-                for i, t in enumerate(schema.values()):
-                    assert isinstance(x[i],t), (i, x[i], t)
+                for i, col_type_spec in enumerate(schema.values()):
+                    record.append(validate_col(values[i],col_type_spec))
                     pass
-                return time_delta, values
+                return time_delta, record, ByteCount(len(data))
             else:
-                raise Exception(f'time delta {x[0]} is of type {type(x[0])}, which is not a float')
+                t=type(x[0])
+                raise Exception(f'time delta {x[0]} is of type {t}, which is not a float')
             pass
         else:
-            raise Exception(f'{x} is of type {type(x)}, which is not a list')
+            t=type(x)
+            raise Exception(f'{x} is of type {t}, which is not a list')
             pass
     except Exception as e:
         raise in_function_context(decode_timestamped_record,vars()) from None
     pass
 
     
-def read_lines(r:Reader) -> Iter[bytes]:
+def read_lines(r:Reader) -> Generator[bytes,None,None]:
     r'''read all \n-separated lines from PerLog reader {r}
         - yield one record at a time, including any terminating "\n"
           * where the file does not end in \n the last record yielded will have no "\n"'''
     try:
         buffered=io.BytesIO()
-        next:bytes=r.read(1024)
+        next:bytes=r.read(ByteCount(1024))
         while len(next):
             recs=next.split(b'\n')
             while len(recs)>1:
@@ -395,62 +440,100 @@ def read_lines(r:Reader) -> Iter[bytes]:
             pass
         pass
     except Exception as e:
-        raise in_function_context(__read_records,vars()) from None
+        raise in_function_context(read_lines,vars()) from None
     pass
                 
                 
-attrs_schema=xju.jsonschema.Schema({
-    'schema':[ [str,OneOf('str','int','float','(str)','(int)','(float)')] ],
-    'synchronous_writes':bool
+attrs_schema=jsonschema.Schema({
+    'schema':[ [str,OneOf('str','int','float','(str)','(int)','(float)')] ]
 })
 
-str_col_type:Dict[str,ColType]={
-    'str':str,
-    'int':int,
-    'float':float,
-    '(str)':Optional[str],
-    '(int)':Optional[int],
-    '(float)':Optional[float]
-}
-col_type_str={ t:s for s,t in str_col_type.items() }
+def validate_str(value)->str:
+    if isinstance(value,str):
+        return value
+    t=type(value)
+    raise Exception(f'{value} (of type {t}) is not a str')
+
+def validate_int(value)->int:
+    if isinstance(value,int):
+        return value
+    t=type(value)
+    raise Exception(f'{value} (of type {t}) is not a int')
+
+def validate_float(value)->float:
+    if isinstance(value,float):
+        return value
+    t=type(value)
+    raise Exception(f'{value} (of type {t}) is not a float')
+
+def validate_optional_str(value)->Optional[str]:
+    if value is None:
+        return value
+    return validate_str(value)
+
+def validate_optional_int(value)->Optional[int]:
+    if value is None:
+        return value
+    return validate_int(value)
+
+def validate_optional_float(value)->Optional[float]:
+    if value is None:
+        return value
+    return validate_float(value)
+
+def validate_col(value:Any,col_type:ColType)->Union[str,int,float,None]:
+    if col_type=='str':
+        return validate_str(value)
+    if col_type=='int':
+        return validate_int(value)
+    if col_type=='float':
+        return validate_float(value)
+    if col_type=='(str)':
+        return validate_optional_str(value)
+    if col_type=='(int)':
+        return validate_optional_int(value)
+    if col_type=='(float)':
+        return validate_optional_float(value)
+    assert False, f'unknown col type {col_type}'
 
 PERFLOG_ATTRS='perflog.json'
 
 def read_attrs(storage_path:Path,
-               attrs_file=PERFLOG_ATTRS) -> Tuple[Dict[ColName,ColType],  # schema
-                                                    bool]:                  # synchronous_writes
+               attrs_file=PERFLOG_ATTRS) -> Dict[ColName,ColType]:  # schema
     '''read PerfLog attrs from {storage_path}/{attrs_file}'''
     try:
-        with xju.io.cmc.FileReader(storage_path / attrs_file) as f:
+        with FileReader(storage_path / attrs_file) as f:
             attrs=attrs_schema.validate(json.loads(f.read()))
             if (isinstance(attrs,dict) and
-                isinstance(_schema:=attrs['schema'],list) and
-                isinstance(synchronous_writes:=attrs['synchronous_writes'],bool)):
-                schema={ColName(col_name): str_col_type[type_spec] for col_name,type_spec in _schema}
-                return schema,synchronous_writes
-            assert False, f'should not be here: {attrs_} was validated against {attrs_schema}'
+                isinstance(_schema:=attrs['schema'],list)):
+                schema={ColName(col_name): col_type for col_name,col_type in _schema}
+                return schema
+            assert False, f'should not be here: {attrs} was validated against {attrs_schema}'
     except Exception as e:
         raise in_function_context(read_attrs,vars()) from None
     pass
 
-def write_attrs(storage_path:Path, schema:Dict[ColName,ColType],
-                synchronous_writes:bool,
+def write_attrs(storage_path:Path,
+                schema:Dict[ColName,ColType],
+                file_creation_mode:FileMode,
                 attrs_file=PERFLOG_ATTRS) -> ByteCount:
-    '''write PerfLog attrs schema {schema}, synchronous_writes {synchronous_writes} to ''' \
+    '''write PerfLog attrs schema {schema} to ''' \
     '''{storage_path}/{attrs_file}
        - returns number of bytes written'''
     try:
+        col_name:ColName
+        col_type:ColType
         x=attrs_schema.validate({
-            'schema':[ [col_name,col_type_str[col_type]] for col_name, col_type in schema.items()],
-            'synchronous_writes':synchronous_writes
+            'schema':[ [col_name.value(),col_type] for col_name, col_type in schema.items()]
         })
         y=json.dumps(x).encode('utf-8')
-        with xju.io.cmc.FileWriter(storage_path / 'perflog.json',
-                                   mode=file_creation_mode,
-                                   must_not_exist=True) as f:
+        
+        with FileWriter(storage_path / 'perflog.json',
+                        mode=file_creation_mode,
+                        must_not_exist=True) as f:
             f.write(y)
             pass
-        return len(y)
+        return ByteCount(len(y))
     except Exception as e:
         raise in_function_context(write_attrs,vars()) from None
     pass
