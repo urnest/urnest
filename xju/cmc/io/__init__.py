@@ -33,10 +33,34 @@ from xju.newtype import Int
 
 class FilePositionTag:pass
 class FilePositionDeltaTag:pass
-class FileModeTag:pass
 class FilePosition(Int[FilePositionTag]):pass
 class FilePositionDelta(Int[FilePositionDeltaTag]):pass
-class FileMode(Int[FileModeTag]):pass
+
+class FileModeBase:  # until typing.Self
+    __value:int
+    def __init__(self,x:int):
+        self.__value=x
+        pass
+    def value(self):
+        return self.__value
+    pass
+
+class FileMode(FileModeBase):
+    def __str__(self):
+        return f'0o{self.value():03o}'
+    def __add__(self,x:FileModeBase):
+        return FileMode(self.value()|x.value())
+    def __sub__(self,x:FileModeBase):
+        return FileMode(self.value()&(~x.value()))
+    def __eq__(self,x):
+        if type(x) is FileMode:
+            return self.value()==x.value()
+        return NotImplemented
+    def __ne__(self,x):
+        if type(x) is FileMode:
+            return self.value()!=x.value()
+        return NotImplemented
+    pass
 
 class FileReader(contextlib.AbstractContextManager):
     '''{self.path} reader with close-on-exec {self.close_on_exec}'''
@@ -163,7 +187,7 @@ class FileWriter(contextlib.AbstractContextManager):
                     flags=flags|os.O_CLOEXEC
                     pass
                 pass
-            self.__fd = os.open(self.path, flags, int(self.mode or 0))
+            self.__fd = os.open(self.path, flags, int((self.mode or FileMode(0)).value()))
             self.output = io.FileIO(self.__fd, mode='w', closefd=False)
             return self
         except Exception:

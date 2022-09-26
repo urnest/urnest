@@ -13,7 +13,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-from xju.newtype import Int,Float
+from xju.newtype import Int,Float,Union
 from typing import overload
 import time
 
@@ -28,26 +28,43 @@ class Seconds(Int[SecondsTag]): pass
 class DurationTag:pass
 class Duration(Float[DurationTag]):pass
 
-class TimestampBase:pass
+class TimestampBase:pass  # until typing.Self
 class Timestamp(TimestampBase):
     __value:float
     def __init__(self,value:float):
         self.__value=value
         pass
     def value(self):
-        return __value
-    def __add__(self, duration:Duration):
-        return Timestamp(self.value()+duration.value())
+        return self.__value
+    def __format__(self,f:str)->str:
+        return f.format(self.__value)
+    def __add__(self, x:Union[Duration,Hours,Minutes,Seconds]):
+        if isinstance(x,Hours):
+            return Timestamp(self.value()+x.value()*3600)
+        if isinstance(x,Minutes):
+            return Timestamp(self.value()+x.value()*60)
+        if isinstance(x,Seconds):
+            return Timestamp(self.value()+x.value())
+        return Timestamp(self.value()+x.value())
+    def __radd__(self, duration:Union[Duration,Hours,Minutes,Seconds]):
+        return self.__add__(duration)
+
     @overload
     def __sub__(self, t2:TimestampBase)->Duration:
         ...
     @overload
-    def __sub__(self, duration:Duration):
+    def __sub__(self, duration:Union[Duration,Hours,Minutes,Seconds]):  # -> Timestamp
         ...
     def __sub__(self, x):
         if isinstance(x,Duration):
             return Timestamp(self.value()-x.value())
-        elif isinstance(x,Timestamp):
+        if isinstance(x,Hours):
+            return Timestamp(self.value()-x.value()*3600)
+        if isinstance(x,Minutes):
+            return Timestamp(self.value()-x.value()*60)
+        if isinstance(x,Seconds):
+            return Timestamp(self.value()-x.value())
+        if isinstance(x,Timestamp):
             return Duration(self.value()-x.value())
         x_type=type(x)
         assert False, f'cannot subtract {x} of type {x_type} from Timestamp'

@@ -173,9 +173,9 @@ class Tracker:
 
 
 class PerfLog:
-    '''{storage_path} size limited to {selff.max_size()} bytes/{self.max_files()} files with ''' \
+    '''{self.storage_path} size limited to {self.max_size()} bytes/{self.max_files()} files with ''' \
         '''record schema {self.schema}, {self.hours_per_bucket()} hours per file and ''' \
-        '''filecreation mode 0o{self.file_creation_mode():o}'''
+        '''filecreation mode {self.file_creation_mode()}'''
     storage_path:Path
     schema:Dict[ColName,ColType]
 
@@ -197,7 +197,7 @@ class PerfLog:
                  max_size:ByteCount,
                  file_creation_mode:FileMode):
         '''create non-existent PerfLog with schema {schema} at {storage_path} with mode ''' \
-        '''0o{file_creation_mode:o}, {hours_per_bucket} hours per bucket, max buckets ''' \
+        '''{file_creation_mode}, {hours_per_bucket} hours per bucket, max buckets ''' \
         '''{max_buckets}, max size {max_size} bytes
            - hours_per_bucket must be a factor of 24
            - raises FileExistsError if perflog exists at {storage_path}'''
@@ -223,7 +223,7 @@ class PerfLog:
             try:
                 self.schema=schema
                 os.makedirs(storage_path, mode=file_creation_mode.value())
-                write_attrs(storage_path / 'perflog.json', schema, file_creation_mode)
+                write_attrs(storage_path, schema, file_creation_mode)
                 try:
                     self.__tstore=TStore(storage_path / 'tstore',
                                          hours_per_bucket,
@@ -237,13 +237,13 @@ class PerfLog:
             except Exception as e:
                 raise in_context(
                     '''create non-existent PerfLog with schema {schema} at {storage_path} with ''' \
-                    '''mode 0o{file_creation_mode:o}, {hours_per_bucket} hours per bucket, max ''' \
+                    '''mode {file_creation_mode}, {hours_per_bucket} hours per bucket, max ''' \
                     '''buckets {max_buckets}, max size {max_size} bytes'''.format(**vars())) from None
             pass
         else:
             try:
                 self.__tstore=TStore(storage_path / 'tstore')
-                self.schema=read_attrs(storage_path / 'perflog.json')
+                self.schema=read_attrs(storage_path)
             except Exception as e:
                 raise in_context(
                     '''open existing PerfLog at {storage_path} reading attributes from its perflog.json file'''.format(**vars())) from None
@@ -380,7 +380,7 @@ def encode_timestamped_record(time_delta:Duration, record:List, schema:Dict[ColN
     '''encode record {record} and time delta {time_delta} assuming record conforms to schema {schema}'''
     try:
         assert time_delta>=Duration(0)
-        return (json.dumps([time_delta]+validate_record(record, schema))+'\n').encode('utf-8')
+        return (json.dumps([time_delta.value()]+validate_record(record, schema))+'\n').encode('utf-8')
     except:
         raise in_function_context(encode_timestamped_record,vars()) from None
     pass
@@ -463,6 +463,8 @@ def validate_int(value)->int:
 def validate_float(value)->float:
     if isinstance(value,float):
         return value
+    if isinstance(value,int):
+        return value
     t=type(value)
     raise Exception(f'{value} (of type {t}) is not a float')
 
@@ -529,9 +531,9 @@ def write_attrs(storage_path:Path,
         y=json.dumps(x).encode('utf-8')
         
         with FileWriter(storage_path / 'perflog.json',
-                        mode=file_creation_mode,
+                        mode=file_creation_mode-FileMode(0o111),
                         must_not_exist=True) as f:
-            f.write(y)
+            f.output.write(y)
             pass
         return ByteCount(len(y))
     except Exception as e:
