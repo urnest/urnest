@@ -26,6 +26,11 @@ from xju.misc import ByteCount
 from xju.cmc.io import FileMode
 from pathlib import Path
 
+def verify_permissions(path:Path, mode:FileMode):
+    '''verify recursively that all files in {path} have at most permissions {mode} and that files are not executable'''
+    # REVISIT
+    pass
+
 d=Path(os.getcwd())
 # create
 
@@ -102,6 +107,9 @@ with perflog.new_recorder() as recorder:
     recorder.record(t9, r9)
     recorder.record(t10, r10)
     recorder.record(t11, r11)
+    pass
+
+verify_permissions(d/'perflog', FileMode(0o700))
 
 # fetch all
 
@@ -166,7 +174,7 @@ perflog_mirror=PerfLog(d/'perflog_mirror',
                        perflog.hours_per_bucket,
                        perflog.max_buckets,
                        perflog.max_size,
-                       FileMode(0o700))
+                       FileMode(0o770))
 
 tracker:Tracker
 tracker=perflog_mirror.new_tracker()
@@ -175,9 +183,9 @@ while True:
     if unseen=={}:
         break
     tracker.write_unseen_data(unseen)
-    list(perflog_mirror.fetch(t1,t20,100000,ByteCount(100000),abort_on_corruption))
     pass
-pass
+
+verify_permissions(d/'perflog', FileMode(0o600))
 
 # read back records
 Assert(list(perflog_mirror.fetch(t1,t20,100000,ByteCount(100000),abort_on_corruption)))==[
@@ -194,6 +202,27 @@ Assert(list(perflog_mirror.fetch(t1,t20,100000,ByteCount(100000),abort_on_corrup
 ]
     
 
+# re-open read back records
+perflog_mirror=PerfLog(d/'perflog_mirror')
+
+Assert(list(perflog_mirror.fetch(t1,t20,100000,ByteCount(100000),abort_on_corruption)))==[
+    (t2,r2),
+    (t3,r3),
+    (t4,r4),
+    (t5,r5),
+    (t6,r6),
+    (t7,r7),
+    (t8,r8),
+    (t9,r9),
+    (t10,r10),
+    (t11,r11),
+]
+    
+
+# test trim_trailing_partial_record
+
 # get unseen - read failed in middle
 
 # get unseen - decode failed in middle
+
+# test mirroring to zip

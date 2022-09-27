@@ -19,7 +19,7 @@
 # to a specified schema
 #
 # perflog supports incremental mirroring of data (one-way-sync), e.g. supporting
-# incremental remote backup
+# incremental remote backup/mirroring
 #
 
 from pathlib import Path
@@ -54,7 +54,7 @@ class Writers(CMDict[ Tuple[BucketStart,BucketID], Writer ]):pass
 
 @cmclass
 class Recorder(CM):
-    '''recorder recording records to PerfLog {storage_path}'''
+    '''recorder recording records to PerfLog {self.storage_path}'''
     storage_path:Path
     schema:Dict[ColName,ColType]
 
@@ -72,7 +72,7 @@ class Recorder(CM):
         pass
 
     def __str__(self):
-        return l1(Recorder.__doc__).format(**self.__dict__)
+        return l1(Recorder.__doc__).format(**vars())
 
     def record(self,timestamp:Timestamp, record:List):
         '''{self} record at timestamp {timestamp} record {record!r}'''
@@ -104,7 +104,7 @@ class Recorder(CM):
 
 
 class Tracker:
-    '''tracker updating PerfLog {storage_path} with unseen data
+    '''tracker updating PerfLog {self.storage_path} with unseen data
        - tracker assumes PerfLog has same max bytes and max buckets as source'''
     storage_path:Path
     schema:Dict[ColName,ColType]
@@ -119,7 +119,7 @@ class Tracker:
         pass
 
     def __str__(self):
-        return l1(Tracker.__doc__).format(**self.__dict__)
+        return l1(Tracker.__doc__).format(**vars())
 
     def get_seen(self) -> Dict[Tuple[BucketStart,BucketID], ByteCount]:
         return self.__tstore.get_bucket_sizes()
@@ -315,7 +315,7 @@ class PerfLog:
             read_failed:Callable[[BucketStart,BucketID,Exception],Any]
     ) -> Dict[Tuple[BucketStart,BucketID], Tuple[FilePosition,bytes]]:
         '''return up to {max_bytes} bytes of unseen data from {self} having seen {seen}
-           - new data ends on record boundary i.e. always returns complete records
+           - new data might end with a partial record i.e. not record-aware
            - new data might truncate seen data
            - new data size 0 means bucket does not exist (any longer)
            - read failures are passed to read_failed, skipping that file if read_failed returns
@@ -332,13 +332,6 @@ class PerfLog:
                 r:Reader
                 with self.__tstore.new_reader(bucket_start,bucket_id) as r:
                     try:
-                        if seen_size>ByteCount(0):
-                            r.seek_to(FilePosition((seen_size-ByteCount(1)).value()))
-                            b=r.read(ByteCount(1))
-                            if b!=b'\n':
-                                seen_size=ByteCount(0)
-                                pass
-                            pass
                         read_size=size-seen_size
                         if read_size>max_bytes-result_size:
                             read_size=max_bytes-result_size
@@ -353,18 +346,6 @@ class PerfLog:
                     pass
                 if result_size==max_bytes:
                     break
-                pass
-            if result_size==max_bytes:
-                # hit max_bytes
-                bucket,last_data=list(result.items())[-1]
-                data=last_data[1][0:last_data[1].rfind(b'\n')+1]
-                if len(data)==0:
-                    del result[bucket]
-                else:
-                    result[bucket]=(last_data[0],data)
-                    pass
-                if not len(result):
-                    raise Exception(f'{max_bytes} is not large enough to return the next unseen record')
                 pass
             return result
         except Exception as e:
@@ -527,7 +508,7 @@ def read_attrs(storage_path:Path,
     '''read PerfLog attrs from {storage_path}/{attrs_file}'''
     try:
         with FileReader(storage_path / attrs_file) as f:
-            attrs=attrs_schema.validate(json.loads(f.read()))
+            attrs=attrs_schema.validate(json.loads(f.input.read()))
             if (isinstance(attrs,dict) and
                 isinstance(_schema:=attrs['schema'],list)):
                 schema={ColName(col_name): col_type for col_name,col_type in _schema}
@@ -560,4 +541,23 @@ def write_attrs(storage_path:Path,
         return ByteCount(len(y))
     except Exception as e:
         raise in_function_context(write_attrs,vars()) from None
+    pass
+
+def trim_trailing_partial_record(
+        data:Dict[Tuple[BucketStart,BucketID], Tuple[FilePosition,bytes]])->None:
+    '''trim data so it ends with a complete record
+       - note you can use this to ensure Tracker always writes complete records'''
+    try:
+        if not len(data):
+            return
+        last_bucket=list(data.keys())[-1]
+        position,d=data[last_bucket]
+        trimmed=d[0:d.rfind(b'\n')+1]
+        if len(trimmed)==0:
+            del data[last_bucket]
+        else:
+            data[last_bucket]=(position,trimmed)
+            pass
+    except Exception:
+        raise in_function_context(trim_trailing_partial_record,vars())
     pass
