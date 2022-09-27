@@ -36,8 +36,12 @@ class Timestamp(TimestampBase):
         pass
     def value(self):
         return self.__value
+    def __str__(self):
+        return str(self.__value)
+    def __repr__(self):
+        return repr(self.__value)
     def __format__(self,f:str)->str:
-        return f.format(self.__value)
+        return self.__value.__format__(f)
     def __add__(self, x:Union[Duration,Hours,Minutes,Seconds]):
         if isinstance(x,Hours):
             return Timestamp(self.value()+x.value()*3600)
@@ -70,6 +74,30 @@ class Timestamp(TimestampBase):
         assert False, f'cannot subtract {x} of type {x_type} from Timestamp'
     def __float__(self):
         return self.__value
+    def __eq__(self, x):
+        if type(x) is Timestamp:
+            return self.value()==x.value()
+        return NotImplemented
+    def __ne__(self, x):
+        if type(x) is Timestamp:
+            return self.value()!=x.value()
+        return NotImplemented
+    def __le__(self, x):
+        if type(x) is Timestamp:
+            return self.value()<=x.value()
+        return NotImplemented
+    def __ge__(self, x):
+        if type(x) is Timestamp:
+            return self.value()>=x.value()
+        return NotImplemented
+    def __lt__(self, x):
+        if type(x) is Timestamp:
+            return self.value()<x.value()
+        return NotImplemented
+    def __gt__(self, x):
+        if type(x) is Timestamp:
+            return self.value()>x.value()
+        return NotImplemented
     pass
 
 def now()->Timestamp:

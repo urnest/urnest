@@ -38,6 +38,7 @@ from xju.jsonschema import OneOf
 import os
 import json
 import io
+import shutil
 
 class ColNameType:pass
 class ColName(Str[ColNameType]):pass
@@ -85,7 +86,7 @@ class Recorder(CM):
                 bucket_id=self.__tstore.get_bucket(bucket_start)
             except NoSuchBucket:
                 t=now()
-                bucket_id=BucketID(f'{t:.06f}')
+                bucket_id=BucketID(f'{t:0.06f}')
                 self.__tstore.create_bucket(bucket_start,bucket_id)
                 pass
             if (bucket_start,bucket_id) not in self.__writers:
@@ -119,6 +120,9 @@ class Tracker:
 
     def __str__(self):
         return l1(Tracker.__doc__).format(**self.__dict__)
+
+    def get_seen(self) -> Dict[Tuple[BucketStart,BucketID], ByteCount]:
+        return self.__tstore.get_bucket_sizes()
 
     def write_unseen_data(self, unseen:Dict[Tuple[BucketStart,BucketID],
                                             Tuple[FilePosition,bytes]]):
@@ -158,7 +162,7 @@ class Tracker:
                         except BucketExists:
                             pass
                         with self.__tstore.new_writer(bucket_start,bucket_id) as writer:
-                            Assert(writer.size())==position
+                            Assert(FilePosition(0)+writer.size())==position
                             writer.append(data)
                         pass
                     pass
@@ -173,21 +177,18 @@ class Tracker:
 
 
 class PerfLog:
-    '''{self.storage_path} size limited to {self.max_size()} bytes/{self.max_files()} files with ''' \
-        '''record schema {self.schema}, {self.hours_per_bucket()} hours per file and ''' \
-        '''filecreation mode {self.file_creation_mode()}'''
+    '''{self.storage_path} size limited to {self.max_size} bytes/{self.max_buckets} files with ''' \
+        '''record schema {self.schema}, {self.hours_per_bucket} hours per file and ''' \
+        '''filecreation mode {self.file_creation_mode}'''
     storage_path:Path
     schema:Dict[ColName,ColType]
-
+    hours_per_bucket:Hours
+    max_size:ByteCount
+    max_buckets:int
+    file_creation_mode:FileMode
+    
     __tstore:TStore
 
-    def hours_per_file(self):
-        return self.__tstore.hours_per_bucket
-    def max_size(self):
-        return self.__tstore.max_bytes
-    def max_files(self):
-        return self.__tstore.max_buckets
-    
     @overload
     def __init__(self,
                  storage_path:Path,
@@ -222,17 +223,21 @@ class PerfLog:
             isinstance(file_creation_mode,FileMode)):
             try:
                 self.schema=schema
+                self.hours_per_bucket=hours_per_bucket
+                self.max_size=max_size
+                self.max_buckets=max_buckets
+                self.file_creation_mode=file_creation_mode
                 os.makedirs(storage_path, mode=file_creation_mode.value())
-                write_attrs(storage_path, schema, file_creation_mode)
                 try:
+                    write_attrs(storage_path, schema, file_creation_mode)
                     self.__tstore=TStore(storage_path / 'tstore',
                                          hours_per_bucket,
                                          max_buckets,
                                          max_size,
                                          file_creation_mode)
-                finally:
-                    os.unlink(storage_path / 'perflog.json')
-                    pass
+                except Exception:
+                    shutil.rmtree(storage_path)
+                    raise
                 pass
             except Exception as e:
                 raise in_context(
@@ -243,6 +248,10 @@ class PerfLog:
         else:
             try:
                 self.__tstore=TStore(storage_path / 'tstore')
+                self.hours_per_bucket=self.__tstore.hours_per_bucket
+                self.max_size=self.__tstore.max_size
+                self.max_buckets=self.__tstore.max_buckets
+                self.file_creation_mode=self.__tstore.file_creation_mode
                 self.schema=read_attrs(storage_path)
             except Exception as e:
                 raise in_context(
@@ -269,17 +278,17 @@ class PerfLog:
             r:Reader
             for bucket_start,bucket_id in self.__tstore.get_buckets_of(begin, end):
                 with self.__tstore.new_reader(bucket_start,bucket_id) as r:
+                    ts=Timestamp(float(bucket_start.value()))
                     try:
                         for l in read_lines(r):
                             try:
                                 if not l.endswith(b'\n'):
                                     raise Exception(f'{l!r} does not end in \\n')
-                                time_delta, col_values, size=decode_timestamped_record(l[:-1],
-                                                                                       self.schema)
+                                time_delta, col_values, size=decode_timestamped_record(l,self.schema)
                             except Exception as e:
                                 corruption_handler(e)
                             else:
-                                timestamp=Timestamp(bucket_start.value())+time_delta
+                                timestamp=ts+time_delta
                                 if timestamp >= begin and timestamp < end:
                                     yield (timestamp, col_values)
                                     records_yielded += 1
@@ -345,6 +354,18 @@ class PerfLog:
                 if result_size==max_bytes:
                     break
                 pass
+            if result_size==max_bytes:
+                # hit max_bytes
+                bucket,last_data=list(result.items())[-1]
+                data=last_data[1][0:last_data[1].rfind(b'\n')+1]
+                if len(data)==0:
+                    del result[bucket]
+                else:
+                    result[bucket]=(last_data[0],data)
+                    pass
+                if not len(result):
+                    raise Exception(f'{max_bytes} is not large enough to return the next unseen record')
+                pass
             return result
         except Exception as e:
             raise in_function_context(PerfLog.get_some_unseen_data,vars()) from None
@@ -354,7 +375,7 @@ class PerfLog:
         return Recorder(self.storage_path,self.schema,self.__tstore)
 
     def new_tracker(self):
-        return Tracker(self,storage_path,self.__tstore)
+        return Tracker(self.storage_path,self.__tstore)
 
     pass
 
@@ -392,7 +413,7 @@ def decode_timestamped_record(data:bytes, schema:Dict[ColName,ColType]) -> Tuple
     '''decode time delta and record from {data!r} assuming record conforms to schema {schema}'''
     try:
         t:type
-        assert data.endswith(b'\n')
+        assert data.endswith(b'\n'), data
         x=json.loads(data.decode('utf-8')[:-1])
         record:List[Union[str,int,float,None]]=[]
         if isinstance(x, list):
@@ -433,11 +454,12 @@ def read_lines(r:Reader) -> Generator[bytes,None,None]:
                 buffered=io.BytesIO()
                 recs=recs[1:]
                 pass
-            if len(next):
-                buffered.write(recs[0])
-                yield buffered.getvalue()
-                pass
+            buffered.write(recs[0])
+            next=r.read(ByteCount(1024))
             pass
+        rem=buffered.getvalue()
+        if len(rem):
+            yield rem
         pass
     except Exception as e:
         raise in_function_context(read_lines,vars()) from None
@@ -530,7 +552,7 @@ def write_attrs(storage_path:Path,
         })
         y=json.dumps(x).encode('utf-8')
         
-        with FileWriter(storage_path / 'perflog.json',
+        with FileWriter(storage_path / attrs_file,
                         mode=file_creation_mode-FileMode(0o111),
                         must_not_exist=True) as f:
             f.output.write(y)

@@ -21,7 +21,7 @@
 # and number of buckets.
 #
 from typing import Tuple,Dict,Literal,overload,Sequence,Callable,Any
-from xju.cmc.io import FileReader,FileWriter,FileMode,FilePosition,FilePositionDelta
+from xju.cmc.io import FileReader,FileWriter,FileMode,FilePosition
 import os
 from pathlib import Path
 from xju.misc import ByteCount
@@ -101,7 +101,7 @@ class Reader(CM):
         '''position TStore reader {self} so next read occurs {offset} bytes from current position
            - returns self'''
         try:
-            self.__file_reader.seek_by(FilePositionDelta(offset.value()))
+            self.__file_reader.seek_by(offset)
             return self
         except:
             raise in_function_context(Reader.seek_by,vars()) from None
@@ -195,6 +195,9 @@ class TStore:
 
     def current_size(self) -> ByteCount:
         return self.__current_size
+
+    def get_bucket_sizes(self) -> Dict[Tuple[BucketStart,BucketID],ByteCount]:
+        return self.__bucket_sizes.copy()
 
     @overload
     def __init__(self,

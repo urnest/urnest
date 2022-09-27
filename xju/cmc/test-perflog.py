@@ -15,101 +15,184 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-from xju.cmc.perflog import PerfLog,ColName,Recorder,Tracker
+from xju.cmc.perflog import PerfLog,ColName,Recorder,Tracker,BucketStart,BucketID
+from typing import List,Tuple
+
+import os
 
 from xju.assert_ import Assert
 from xju.time import Hours,now,Duration
 from xju.misc import ByteCount
 from xju.cmc.io import FileMode
-from tempfile import TemporaryDirectory
 from pathlib import Path
 
-with TemporaryDirectory() as d_:
-    d=Path(d_)
-    # create
+d=Path(os.getcwd())
+# create
 
-    perflog=PerfLog(d/'perflog',
-                    {ColName('Tx Rate'): 'float',
-                     ColName('Tx Bytes'): 'int',
-                     ColName('Peer'): '(str)',
-                     ColName('Protocol'): 'str',
-                     ColName('mag'): '(float)',
-                     ColName('Peer Id'):'(int)'},
-                    Hours(2),
-                    3,
-                    ByteCount(120),
-                    FileMode(0o700))
-    # create - exists
-    try:
-        x=PerfLog(d/'perflog',
-                  {ColName('Tx Rate'): 'float',
-                   ColName('Tx Bytes'): 'int',
-                   ColName('Peer'): '(str)',
-                   ColName('Protocol'): 'str',
-                   ColName('mag'): '(float)',
-                   ColName('Peer Id'):'(int)'},
-                  Hours(2),
-                  3,
-                  ByteCount(120),
-                  FileMode(0o700))
-    except FileExistsError as e:
-        Assert(f"File exists: '{d}/perflog'").isIn(str(e))
-    else:
-        assert False,x
-        pass
-    
-                     
-    # fetch (nothing)
-    t1=now()-Hours(10)
-    t20=now()+Hours(10)
+perflog=PerfLog(d/'perflog',
+                {ColName('Tx Rate'): 'float',
+                 ColName('Tx Bytes'): 'int',
+                 ColName('Peer'): '(str)',
+                 ColName('Protocol'): 'str',
+                 ColName('mag'): '(float)',
+                 ColName('Peer Id'):'(int)'},
+                Hours(2),
+                3,
+                ByteCount(1200),
+                FileMode(0o700))
 
-    def abort_on_corruption(e:Exception):
-        raise e
+# create - exists
+try:
+    x=PerfLog(d/'perflog',
+              {ColName('Tx Rate'): 'float',
+               ColName('Tx Bytes'): 'int',
+               ColName('Peer'): '(str)',
+               ColName('Protocol'): 'str',
+               ColName('mag'): '(float)',
+               ColName('Peer Id'):'(int)'},
+              Hours(2),
+              3,
+              ByteCount(120),
+              FileMode(0o700))
+except FileExistsError as e:
+    Assert(f"File exists: '{d}/perflog'").isIn(str(e))
+else:
+    assert False,x
+    pass
 
-    Assert(list(perflog.fetch(t1,t20,1,ByteCount(1),abort_on_corruption)))==[]
-    
-    # record 10 records over 3 hours
-    t2=t1+Hours(10)
-    t3,t4,t5,t6,t7,t8,t9,t10,t11=[t2+Duration(_) for _ in
-                                  [50, 1000, 3599,
-                                   3600, 3700, 3800,
-                                   2*3600, 2*3700, 2*3800]]
-    recorder:Recorder
-    with perflog.new_recorder() as recorder:
-        recorder.record(t2, [7.6,700,None,'p',None,None])
-        recorder.record(t3, [17.8,1000,'peer','p',9.9,888])
-        recorder.record(t3, [0,0,'peer','p',9.9,888])
-        recorder.record(t4, [2.0,665,'peer','p',9.9,888])
-        recorder.record(t5, [1.1,655,'peer','p',9.9,888])
-        recorder.record(t6, [3.0,765,'peer','p',9.9,888])
-        recorder.record(t6, [6.3,10,'peer','p',9.9,888])
-        recorder.record(t7, [88,70,'peer','p',9.9,888])
-        recorder.record(t8, [88,70,'peer','p',9.9,888])
-        recorder.record(t9, [33,55,'peer','p',9.9,888])
-        recorder.record(t10, [99.7,77,'peer','p',9.9,888])
-        recorder.record(t11, [1.7,36,'peer','p',9.9,888])
-        
+
+# fetch (nothing)
+t1=now()-Hours(10)
+t20=now()+Hours(10)
+
+def abort_on_corruption(e:Exception):
+    raise e
+
+Assert(list(perflog.fetch(t1,t20,1,ByteCount(1),abort_on_corruption)))==[]
+
+# record 10 records over 3 hours
+t2=t1+Hours(10)
+t3,t4,t5,t6,t7,t8,t9,t10,t11=[t2+Duration(_) for _ in
+                              [50, 1000, 3599,
+                               3600, 3700, 3800,
+                               2*3600, 2*3700, 2*3800]]
+
+
+recorder:Recorder
+r2=[7.6,700,None,'p',None,None]
+r3=[17.8,1000,'peer','p',9.9,888]
+r4=[2.0,665,'peer','p',9.9,888]
+r5=[1.1,655,'peer','p',9.9,888]
+r6=[3.0,765,'peer','p',9.9,888]
+r6=[6.3,10,'peer','p',9.9,888]
+r7=[88,70,'peer','p',9.9,888]
+r8=[88,70,'peer','p',9.9,888]
+r9=[33,55,'peer','p',9.9,888]
+r10= [99.7,77,'peer','p',9.9,888]
+r11= [1.7,36,'peer','p',9.9,888]
+
+with perflog.new_recorder() as recorder:
+    recorder.record(t2, r2)
+    recorder.record(t3, r3)
+    recorder.record(t4, r4)
+    recorder.record(t5, r5)
+    recorder.record(t6, r6)
+    recorder.record(t7, r7)
+    recorder.record(t8, r8)
+    recorder.record(t9, r9)
+    recorder.record(t10, r10)
+    recorder.record(t11, r11)
+
 # fetch all
 
+Assert(list(perflog.fetch(t1,t20,100000,ByteCount(100000),abort_on_corruption)))==[
+    (t2,r2),
+    (t3,r3),
+    (t4,r4),
+    (t5,r5),
+    (t6,r6),
+    (t7,r7),
+    (t8,r8),
+    (t9,r9),
+    (t10,r10),
+    (t11,r11),
+]
+    
 # fetch some - whole hour
+Assert(list(perflog.fetch(t2,t2+Hours(1),100000,ByteCount(100000),abort_on_corruption)))==[
+    (t2,r2),
+    (t3,r3),
+    (t4,r4),
+    (t5,r5),
+]
+    
 
 # fetch some covering hour plus part either side
+# fetch some - whole hour
+Assert(list(perflog.fetch(t2+Duration(1500),t2+Duration(2*3700),100000,ByteCount(100000),abort_on_corruption)))==[
+    (t5,r5),
+    (t6,r6),
+    (t7,r7),
+    (t8,r8),
+    (t9,r9),
+]
+    
+
 
 # fetch some - max bytes limited
+Assert(list(perflog.fetch(t1,t20,100000,ByteCount(200),abort_on_corruption)))==[
+    (t2,r2),
+    (t3,r3),
+    (t4,r4),
+    (t5,r5),
+]
+    
 
 # fetch some - max records limited
+Assert(list(perflog.fetch(t1,t20,2,ByteCount(100000),abort_on_corruption)))==[
+    (t2,r2),
+    (t3,r3),
+]
+    
 
 # get unseen - seen none
+read_fails:List[Tuple[BucketStart,BucketID,Exception]]=[]
+def abort_on_read_failed(bucket_start:BucketStart, bucket_id:BucketID, e:Exception, r=read_fails):
+    r.append( (bucket_start,bucket_id,e) )
+    pass
 
-# get unseen - seen some
+perflog_mirror=PerfLog(d/'perflog_mirror',
+                       perflog.schema,
+                       perflog.hours_per_bucket,
+                       perflog.max_buckets,
+                       perflog.max_size,
+                       FileMode(0o700))
 
-# get unseen - see all
-
-# get unseen - max byes limited
-
-# tracker - write unseen, multiple buckets
+tracker:Tracker
+tracker=perflog_mirror.new_tracker()
+while True:
+    unseen=perflog.get_some_unseen_data(tracker.get_seen(),ByteCount(256),abort_on_read_failed)
+    if unseen=={}:
+        break
+    tracker.write_unseen_data(unseen)
+    list(perflog_mirror.fetch(t1,t20,100000,ByteCount(100000),abort_on_corruption))
+    pass
+pass
 
 # read back records
+Assert(list(perflog_mirror.fetch(t1,t20,100000,ByteCount(100000),abort_on_corruption)))==[
+    (t2,r2),
+    (t3,r3),
+    (t4,r4),
+    (t5,r5),
+    (t6,r6),
+    (t7,r7),
+    (t8,r8),
+    (t9,r9),
+    (t10,r10),
+    (t11,r11),
+]
+    
 
 # get unseen - read failed in middle
 

@@ -32,10 +32,67 @@ from xju.misc import ByteCount
 from xju.newtype import Int
 
 class FilePositionTag:pass
-class FilePositionDeltaTag:pass
-class FilePosition(Int[FilePositionTag]):pass
-class FilePositionDelta(Int[FilePositionDeltaTag]):pass
+class FilePositionBase:pass  # until typing.Self
+class FilePosition(FilePositionBase):
+    __value:int
+    def __init__(self,value:int):
+        self.__value=value
+        pass
+    def value(self):
+        return self.__value
+    def __str__(self):
+        return str(self.__value)
+    def __repr__(self):
+        return repr(self.__value)
+    def __format__(self,f:str)->str:
+        return self.__value.__format__(f)
+    def __add__(self, x:ByteCount):
+        return FilePosition(self.value()+x.value())
+    def __radd__(self, x:ByteCount):
+        return self.__add__(x)
 
+    @overload
+    def __sub__(self, x:FilePositionBase)->ByteCount:
+        ...
+    @overload
+    def __sub__(self, x:ByteCount):  # -> FilePosition
+        ...
+    def __sub__(self, x):
+        if isinstance(x,FilePosition):
+            return ByteCount(self.value()-x.value())
+        if isinstance(x,ByteCount):
+            return FilePosition(self.value()-x.value())
+        x_type=type(x)
+        assert False, f'cannot subtract {x} of type {x_type} from FilePosition'
+    def __int__(self):
+        return self.__value
+    def __eq__(self, x):
+        if type(x) is FilePosition:
+            return self.value()==x.value()
+        return NotImplemented
+    def __ne__(self, x):
+        if type(x) is FilePosition:
+            return self.value()!=x.value()
+        return NotImplemented
+    def __le__(self, x):
+        if type(x) is FilePosition:
+            return self.value()<=x.value()
+        return NotImplemented
+    def __ge__(self, x):
+        if type(x) is FilePosition:
+            return self.value()>=x.value()
+        return NotImplemented
+    def __lt__(self, x):
+        if type(x) is FilePosition:
+            return self.value()<x.value()
+        return NotImplemented
+    def __gt__(self, x):
+        if type(x) is FilePosition:
+            return self.value()>x.value()
+        return NotImplemented
+    pass
+
+    
 class FileModeBase:  # until typing.Self
     __value:int
     def __init__(self,x:int):
@@ -110,7 +167,7 @@ class FileReader(contextlib.AbstractContextManager):
             raise in_function_context(FileReader.seek_to,vars()) from None
         pass
     
-    def seek_by(self, offset:FilePositionDelta):
+    def seek_by(self, offset:ByteCount):
         '''position so next read occurs {offset} bytes from current position
            - returns self'''
         try:
@@ -214,7 +271,7 @@ class FileWriter(contextlib.AbstractContextManager):
             raise in_function_context(FileWriter.seek_to,vars()) from None
         pass
     
-    def seek_by(self, offset:FilePositionDelta):
+    def seek_by(self, offset:ByteCount):
         '''position so next write occurs {offset} bytes from current position
            - returns self'''
         try:
