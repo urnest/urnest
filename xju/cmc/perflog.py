@@ -227,7 +227,7 @@ class PerfLog:
                 self.max_size=max_size
                 self.max_buckets=max_buckets
                 self.file_creation_mode=file_creation_mode
-                os.makedirs(storage_path, mode=file_creation_mode.value())
+                storage_path.mkdir(mode=file_creation_mode.value())
                 try:
                     write_attrs(storage_path, schema, file_creation_mode)
                     self.__tstore=TStore(storage_path / 'tstore',
@@ -277,9 +277,9 @@ class PerfLog:
             bytes_yielded = ByteCount(0)
             r:Reader
             for bucket_start,bucket_id in self.__tstore.get_buckets_of(begin, end):
-                with self.__tstore.new_reader(bucket_start,bucket_id) as r:
-                    ts=Timestamp(float(bucket_start.value()))
-                    try:
+                try:
+                    with self.__tstore.new_reader(bucket_start,bucket_id) as r:
+                        ts=Timestamp(float(bucket_start.value()))
                         for l in read_lines(r):
                             try:
                                 if not l.endswith(b'\n'):
@@ -299,9 +299,9 @@ class PerfLog:
                                 pass
                             pass
                         pass
-                    except Exception as e:
-                        corruption_handler(e)
                     pass
+                except Exception as e:
+                    corruption_handler(e)
                 pass
             pass
         except Exception:
@@ -312,7 +312,7 @@ class PerfLog:
             self,
             seen:Dict[Tuple[BucketStart,BucketID], ByteCount],
             max_bytes:ByteCount,
-            read_failed:Callable[[BucketStart,BucketID,Exception],Any]
+            read_failed:Callable[[Exception],Any]
     ) -> Dict[Tuple[BucketStart,BucketID], Tuple[FilePosition,bytes]]:
         '''return up to {max_bytes} bytes of unseen data from {self} having seen {seen}
            - new data might end with a partial record i.e. not record-aware
@@ -330,8 +330,8 @@ class PerfLog:
                     seen_size=ByteCount(0)
                     pass
                 r:Reader
-                with self.__tstore.new_reader(bucket_start,bucket_id) as r:
-                    try:
+                try:
+                    with self.__tstore.new_reader(bucket_start,bucket_id) as r:
                         read_size=size-seen_size
                         if read_size>max_bytes-result_size:
                             read_size=max_bytes-result_size
@@ -340,9 +340,9 @@ class PerfLog:
                         data=r.read(read_size)
                         result[bucket]=(FilePosition(seen_size.value()),data)
                         result_size+=ByteCount(len(data))
-                    except Exception as e:
-                        read_failed(bucket_start,bucket_id,e)
                         pass
+                except Exception as e:
+                    read_failed(e)
                     pass
                 if result_size==max_bytes:
                     break
@@ -400,7 +400,7 @@ def decode_timestamped_record(data:bytes, schema:Dict[ColName,ColType]) -> Tuple
         if isinstance(x, list):
             if isinstance(x[0], float):
                 time_delta=Duration(x[0])
-                assert time_delta>Duration(0), time_delta
+                assert time_delta>=Duration(0), time_delta
                 values=x[1:]
                 for i, col_type_spec in enumerate(schema.values()):
                     record.append(validate_col(values[i],col_type_spec))

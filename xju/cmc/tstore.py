@@ -228,7 +228,7 @@ class TStore:
             isinstance(max_size,ByteCount) and
             isinstance(file_creation_mode,FileMode)):
             try:
-                os.mkdir(storage_path,mode=file_creation_mode.value())
+                storage_path.mkdir(mode=file_creation_mode.value())
                 assert hours_per_bucket.value() in [1,2,3,4,6,8,12,24] # factor of 24
                 self.hours_per_bucket, self.max_buckets, \
                     self.max_size, self.file_creation_mode=write_attrs(storage_path,
@@ -329,7 +329,8 @@ class TStore:
                 pass
             self.__trim_buckets(self.max_buckets-1)
             path=get_path_of(self.storage_path,bucket_start,bucket_id,self.hours_per_bucket)
-            os.makedirs(path.parent,mode=self.file_creation_mode.value(),exist_ok=True)
+
+            make_path_dirs(path,self.storage_path,self.file_creation_mode,True)
             with FileWriter(path,
                             mode=self.file_creation_mode-FileMode(0o111),
                             must_not_exist=True):
@@ -353,7 +354,7 @@ class TStore:
         try:
             bucket_size=self.__bucket_sizes[(bucket_start,bucket_id)]
             path=get_path_of(self.storage_path,bucket_start,bucket_id,self.hours_per_bucket)
-            os.unlink(path)
+            path.unlink()
             self.__current_size=self.__current_size-bucket_size
             del self.__buckets[bucket_start]
             del self.__bucket_sizes[(bucket_start,bucket_id)]
@@ -567,4 +568,16 @@ def read_files(storage_path:Path) -> Dict[Tuple[BucketStart,BucketID],ByteCount]
         return result
     except Exception:
         raise in_function_context(read_files,vars())
+    pass
+
+def make_path_dirs(path:Path, root:Path, mode:FileMode, exist_ok:bool):
+    '''make directories of {path} that are not in {root} (assumed to be a parent directory)'''
+    try:
+        rel=path.relative_to(root)
+        for d in reversed(rel.parents):
+            (root/d).mkdir(mode=mode.value(),exist_ok=exist_ok)
+            pass
+        pass
+    except Exception:
+        raise in_function_context(make_path_dirs,vars()) from None
     pass

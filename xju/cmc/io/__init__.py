@@ -105,6 +105,8 @@ class FileModeBase:  # until typing.Self
 class FileMode(FileModeBase):
     def __str__(self):
         return f'0o{self.value():03o}'
+    def __repr__(self):
+        return str(self)
     def __add__(self,x:FileModeBase):
         return FileMode(self.value()|x.value())
     def __sub__(self,x:FileModeBase):
