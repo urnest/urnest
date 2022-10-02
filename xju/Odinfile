@@ -226,7 +226,7 @@ fi
 %test-py-exit==()+cmd=(%test-py-exit.sh) (%test-py-exit.exec/status) (%test-py-exit.exec/output):stdout
 
 
-newtype.py==(%make-newtype.py)+(%py-opts)+cmd=(newtype.template.py):py3.exec.output
+newtype.py==()+(%py-opts)+cmd=(%make-newtype.py)+cmd=(newtype.template.py):py3.stdout
 
 %make-newtype.py==!<<
 #/usr/bin/env python3
@@ -401,8 +401,7 @@ for n in ['center','ljust','rjust']:
     str_methods=str_methods+f'''
     def {n}(self,width:int,fillchar:str=' '):
         return self.__class__(self.value().{n}(width,fillchar))'''
-print(list(rem))
-assert len(rem)==0
+assert rem==set()
 print(open(sys.argv[1]).read().replace('# generated Int methods here...',int_methods).replace(
     '# generated Str methods here...',str_methods).replace(
     '# generated Float methods here...',float_methods))

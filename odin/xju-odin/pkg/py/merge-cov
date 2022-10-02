@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+
+import sys
+from pathlib import Path
+import pickle
+
+if len(sys.argv)==1:
+    print(f'usage: {sys.argv[0]} out.cov [in.cov...]',file=sys.stderr)
+    print(f'  create/update out.cov merging in.cov...')
+    sys.exit(1)
+    pass
+
+out=Path(sys.argv[1])
+ins=[Path(p) for p in sys.argv[2:]]
+
+if out.exists():
+    with out.open('rb') as f:
+        counts, calledfuncs, callers = pickle.load(f)
+        pass
+else:
+    counts, calledfuncs, callers = {}, {}, {}
+    pass
+
+for i in ins:
+    with i.open('rb') as f:
+        other_counts, other_calledfuncs, other_callers = pickle.load(f)
+
+        for key in other_counts:
+            counts[key] = counts.get(key, 0) + other_counts[key]
+
+        for key in other_calledfuncs:
+            calledfuncs[key] = 1
+
+        for key in other_callers:
+            callers[key] = 1
+        pass
+    pass
+
+with out.open('wb') as f:
+    pickle.dump( (counts, calledfuncs, callers), f, 1)
+    pass
+pass

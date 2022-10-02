@@ -1,4 +1,3 @@
-[]
 # Copyright (c) 2022 Trevor Taylor
 # coding: utf-8
 # 
