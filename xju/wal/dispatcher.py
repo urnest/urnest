@@ -102,7 +102,7 @@ class Dispatcher:
                 path='index.html'
                 pass
             return \
-                self.dispatchToFunction(path,environ,start_response) or \
+                self.dispatchToFunction(path,environ,start_response,self.app) or \
                 self.dispatchToFile(path,start_response) or \
                 self.notFound(path,start_response)
         except Forbidden as e:
@@ -120,12 +120,19 @@ class Dispatcher:
                 in_context(l1(Dispatcher.main.__doc__).format(**vars()))))
             return self.serverError(start_response)
         pass
-    def dispatchToFunction(self,name,environ,start_response):
-        'dispatch {name} to function in {self.app} a name->function dictionary'
+    def dispatchToFunction(self,name,environ,start_response,mod):
+        'dispatch {name} to function in {mod} a name->function dictionary'
         'e.g. app can be a module'
         try:
+            if '/' in name:
+                m,n=name.split('/',1)
+                if m in mod.__dict__:
+                    return self.dispatchToFunction(n,environ,start_response,mod.__dict__[m])
+                else:
+                    return None
+                pass
             fname=name.replace('-','_').replace(' ','_').replace('.','_')
-            f=self.app.__dict__.get(fname,None)
+            f=mod.__dict__.get(fname,None)
             if not f: return None
             if not callable(f):
                 raise Forbidden('%(fname)s is not callable ie not a function like "def %(fname)s():"'%vars())
@@ -157,7 +164,7 @@ class Dispatcher:
                                       cookies,
                                       f))
                 pass
-            self.log('INFO: {name} used app.{fname}()'.format(**vars()))
+            self.log('INFO: {name} used {mod.__name__}.{fname}()'.format(**vars()))
             result=promoteContent(result)
             headers=result.cookieHeaders()
             if result.location:

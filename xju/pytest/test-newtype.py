@@ -54,7 +54,6 @@ Assert(f(b))==b
 Assert(b)==a
 
 Assert(repr(first_name))==repr('fred')
-Assert(pickle.loads(pickle.dumps(first_name)))==first_name
 Assert(f'{first_name:6}')=='fred  '
 Assert(first_name.splitlines())==[FirstName('fred')]
 Assert(first_name.encode('utf-8'))=='fred'.encode('utf-8')
@@ -148,7 +147,6 @@ Assert(h2)<=h2
 
 Assert(str(h1))=='7'
 Assert(repr(h1))=='7'
-Assert(pickle.loads(pickle.dumps(h1)))==h1
 Assert('{:02d}'.format(h1))=='07'
 Assert(h1.__float__())==7.0
 Assert(abs(Hours(-5)))==Hours(5)

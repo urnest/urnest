@@ -53,8 +53,8 @@ class Assert():
     def starts_with(self,y):
         return self.startsWith(y)
     def endsWith(self,y):
-        if not self.x[0:len(y)]==y:
-            raise Exception('{self.x!r} does not start with {y!r}'.format(**vars()))
+        if not self.x[-len(y):]==y:
+            raise Exception('{self.x!r} does not end with {y!r}'.format(**vars()))
         return self.x
     def endswith(self,y):
         return self.endsWith(y)
@@ -87,7 +87,7 @@ class Assert():
         return self.x
     def __ne__(self,y):
         if self.x == y:
-            raise Exception('{self.x!r} is equal to {y!r}'.format(**vars()))
+            raise Exception('{self.x!r} is unexpectedly equal to {y!r}'.format(**vars()))
         return self.x
     def __gt__(self,y):
         if not self.x > y:

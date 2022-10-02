@@ -1,10 +1,7 @@
 %all==%all.tree:leaves
 
 %all.tree==<<
-(test-cmclass.py)+(%py-opts):py3.exec.output
-(test-Dict.py)+(%py-opts):py3.exec.output
-(test-tstore.py)+(%py-opts):py3.exec.output
-(test-perflog.py)+(%py-opts):py3.exec.output
+pytest%all.tree:leaves
 (io%all)
 
 

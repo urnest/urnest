@@ -20,7 +20,7 @@
 
 :egg.py_import.view_desc 'empty list of imported files'? => :py_import.view_desc;
 
-:py3.stdout 'output from a python3 script run'? => :stdout;
+:py3.stdout 'output from a python3 script run'? => <:stdout>;
 
 :py3.output 'output files from a python3 script run'? => :output;
 
@@ -55,6 +55,9 @@
 
 :py3.cov.summary 'python coverage summary' => :FILE;
 :py3.cov.report 'python coverage report' => :DERIVED-DIRECTORY;
+
+:py3.cov.list 'list of python coverage reports' => <:LIST>;
+
 
 +py_sp 'name of a directory in a PYTHONPATH'? => :ls;
 
@@ -140,9 +143,13 @@ EXEC (py3.exec.files.sh) (:py3.exec/files.tar) (:py3.exec/errors) (:py3.exec/sta
 
 READ-REFERENCE (:py3.exec.files.ref) => (:py3.exec.files);
 
-EXEC (py3.exec.cov.sh) (:py3.exec/run.py3.cov) (:py3.exec/errors) (:py3.exec/status) (:py3.exec:name) (+stderr)
+EXEC (py3.exec.cov.sh) (:py3.exec/run.py3.cov) (:py3.exec/output) (:py3.exec/errors) (:py3.exec/status) (:py3.exec:name) (+stderr)
   => (:py3.exec.cov.ref);
 
 READ-REFERENCE (:py3.exec.cov.ref) => (:py3.exec.cov);
 
 EXEC (cov-report.sh) (:py3.cov) => (:py3.cov.summary) (:py3.cov.report);
+
+EXEC (cov-merge.sh) (:py3.cov.list:ls) (merge-cov) NEEDS (:py3.cov.list) => (:agg.py3.cov);
+
+COLLECT (:LIST:extract=:py3.cov) => (:py3.cov.list);

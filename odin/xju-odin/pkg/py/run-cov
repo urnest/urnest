@@ -32,9 +32,8 @@ globs = {
 
 try:
     t.runctx(code, globs, globs)
-except SystemExit:
-    pass
-
-with out.open('wb') as f:
-    pickle.dump( (t.counts, t._calledfuncs, t._callers), f, 1)
+finally:
+    with out.open('wb') as f:
+        pickle.dump( (t.counts, t._calledfuncs, t._callers), f, 1)
+        pass
     pass

@@ -1,0 +1,10 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+(test-cmclass.py)+(%py-opts):py3.exec.cov
+(test-Dict.py)+(%py-opts):py3.exec.cov
+(test-tstore.py)+(%py-opts):py3.exec.cov
+(test-perflog.py)+(%py-opts):py3.exec.cov
+
+%py-opts==<<
++(..%py-opts)

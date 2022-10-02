@@ -1,6 +1,5 @@
 #!/bin/sh
 
-set -x &&
 ODIN_FILE=$1;shift &&
 ODIN_cmd=$1;shift &&
 ODIN_env=$1;shift &&

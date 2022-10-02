@@ -16,7 +16,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-from xju.cmc.io import FileReader, FilePositionDelta
+from xju.cmc.io import FileReader, FilePosition
 from pathlib import Path
 from xju.assert_ import Assert
 from xju.xn import readable_repr
@@ -44,7 +44,7 @@ with FileReader(Path("xxx.txt")) as f:
     Assert(f.seek_to(9).input.tell())==9
 
     try:
-        f.seek_to(FilePositionDelta(-1))
+        f.seek_to(FilePosition(-1))
     except Exception as e:
         Assert(readable_repr(e).replace('\n',' ')).matches(
             'Failed to position so next read occurs -1 bytes from start of file because.* Invalid argument.')

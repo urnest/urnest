@@ -1,5 +1,8 @@
 %all==%all.tree:leaves
 
+%all.py3cov.summary==%all:py3.cov.list:agg.py3.cov:py3.cov.summary
+%all.py3cov.report-dir==%all:py3.cov.list:agg.py3.cov:py3.cov.report
+
 %all.tree==<<
 %tests.tree
 base64%tests.tree
@@ -70,48 +73,10 @@ test%tests.tree
 ()+cmd=test '-s' (%test-check_types_related_2_err):exec.output
 ()+cmd=(print-wordsizes.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 netflow%tests.tree
-%py-tests.tree:leaves
+pytest%py-tests.tree:leaves
+wal%all.tree:leaves
+cmc%all.tree:leaves
 
-%py-tests.tree==<<
-(test-xn.py)+(%py-opts):py3.exec.output
-(test-jsonschema.py)+(%py-opts):py3.exec.output
-(test-pq.py)+(%py-opts):py3.exec.output
-(test-rfc2616.py)+(%py-opts):py3.exec.output
-(test-misc.py)+(%py-opts):py3.exec.output
-%verify-test-cmc.x1-fail
-(wal%all)
-(cmc%all)
-%py-newtype-tests.tree:leaves
-
-%py-newtype-tests.tree==<<
-(test-newtype.py)+(%py-opts):py3.exec.output
-%verify-test-newtype.x1-fail-1
-%verify-test-newtype.x1-fail-2
-%verify-test-newtype.x2-fail
-%verify-test-newtype.x3-fail
-%verify-test-newtype.x3-fail
-%verify-test-newtype.x4-fail
-%verify-test-newtype.x5-fail
-
-%verify-test-cmc.x1-fail==(%test-cmc.x1.errs)+cmd=grep -q '"Cannot determine consistent method resolution order"':stdout
-
-%test-cmc.x1.errs==(test-cmc.x1.py)+(%py-opts):py3.exec.output:err
-
-%verify-test-newtype.x1-fail-1==(%test-newtype.x1.errs)+cmd=fgrep -q '"Argument 1 to \\"f\\" has incompatible type \\"str\\"; expected \\"FirstName\\""':stdout
-%verify-test-newtype.x1-fail-2==(%test-newtype.x1.errs)+cmd=fgrep -q '"Argument 1 to \\"f\\" has incompatible type \\"LastName\\"; expected \\"FirstName\\""':stdout
-%test-newtype.x1.errs==(test-newtype.x1.py)+(%py-opts):py3.exec.output:err
-
-%verify-test-newtype.x2-fail==(%test-newtype.x2.errs)+cmd=fgrep -q '"Argument 1 to \\"f\\" has incompatible type \\"FirstName\\"; expected \\"str\\""':stdout
-%test-newtype.x2.errs==(test-newtype.x2.py)+(%py-opts):py3.exec.output:err
-
-%verify-test-newtype.x3-fail==(%test-newtype.x3.errs)+cmd=fgrep -q '"Unsupported operand types for < (\\"FirstName\\" and \\"SecondName\\")"':stdout
-%test-newtype.x3.errs==(test-newtype.x3.py)+(%py-opts):py3.exec.output:err
-
-%verify-test-newtype.x4-fail==(%test-newtype.x4.errs)+cmd=fgrep -q '"Incompatible types in assignment (expression has type \\"Int[MinutesTag]\\", variable has type \\"Int[HoursTag]\\")"':stdout
-%test-newtype.x4.errs==(test-newtype.x4.py)+(%py-opts):py3.exec.output:err
-
-%verify-test-newtype.x5-fail==(%test-newtype.x5.errs)+cmd=fgrep -q '"Unsupported operand types for < (\\"Int[HoursType]\\" and \\"Int[MinutesType]\\")"':stdout
-%test-newtype.x5.errs==(test-newtype.x5.py)+(%py-opts):py3.exec.output:err
 
 %py-opts==<<
 +py_sp=(..)
@@ -205,26 +170,6 @@ test%tags
 tls%tags
 uri%tags
 utf8%tags
-
-%test-py-exit.sh== ! <<
-#!/bin/sh
-status=$(cat "$1")
-if [ $status != "1" ]
-then
-  echo "expected exit code 1, got $status" >&2 &&
-  false
-fi &&
-errors=$(cat "$2") &&
-if [ "$errors" != "not found" ]
-then
-  echo "$errors != 'not found'" >&2 &&
-  false
-fi
-
-%test-py-exit.exec==(test-py-exit.py)+(%py-opts):py3.exec
-
-%test-py-exit==()+cmd=(%test-py-exit.sh) (%test-py-exit.exec/status) (%test-py-exit.exec/output):stdout
-
 
 newtype.py==()+(%py-opts)+cmd=(%make-newtype.py)+cmd=(newtype.template.py):py3.stdout
 

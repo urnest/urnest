@@ -1,12 +1,16 @@
 #!/bin/sh
 V="$ODINVERBOSE" &&
 
-
+if [ $# != 6 ]
+then
+  echo "assertion failure, $0 passed $# params, not 6"
+  false
+fi &&
 cov="$1" &&
-errors="$2" &&
-status=$(cat "$3") &&
-name="$4" &&
-output="$5" &&
+output="$2" &&
+errors="$3" &&
+status=$(cat "$4") &&
+name="$5" &&
 stderr="$6" &&
 if [ -z "$stderr" ]
 then

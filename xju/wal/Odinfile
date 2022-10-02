@@ -1,8 +1,7 @@
 %all==%all.tree:leaves
 
 %all.tree==<<
-(test-wsgi.py)+(%py-opts):py3.exec.output
-
+pytest%all.tree:leaves
 
 %py-opts==<<
-+py_sp=(../..)
++(..%py-opts)
