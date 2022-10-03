@@ -37,6 +37,7 @@ from xju.assert_ import Assert
 from xju import jsonschema
 import json
 from xju.newtype import Int,Str
+import shutil
 
 class BucketStartTag:pass
 class BucketIDTag:pass
@@ -209,13 +210,13 @@ class TStore:
         '''create non-existent TStore at {storage_path} with mode {file_creation_mode}, {hours_per_bucket} hours per bucket, {max_buckets} buckets max,  {max_size} total bytes max
            - hours_per_bucket must be a factor of 24
            - raises FileExistsError if TStore exists'''
-        pass
+        ...
     @overload
     def __init__(self,
                  storage_path: Path):
         '''open existing TStore at {storage_path} reading attributes from its tstore.json file
            - raises FileNotFoundError if TStore does not exist'''
-        pass
+        ...
     def __init__(self,
                  storage_path:Path,
                  hours_per_bucket=None,
@@ -229,16 +230,20 @@ class TStore:
             isinstance(file_creation_mode,FileMode)):
             try:
                 storage_path.mkdir(mode=file_creation_mode.value())
-                assert hours_per_bucket.value() in [1,2,3,4,6,8,12,24] # factor of 24
-                self.hours_per_bucket, self.max_buckets, \
-                    self.max_size, self.file_creation_mode=write_attrs(storage_path,
-                                                                       hours_per_bucket,
-                                                                       max_buckets,
-                                                                       max_size,
-                                                                       file_creation_mode)
-                self.__buckets={}
-                self.__bucket_sizes={}
-                self.__current_size=ByteCount(0)
+                try:
+                    assert hours_per_bucket.value() in [1,2,3,4,6,8,12,24] # factor of 24
+                    self.hours_per_bucket, self.max_buckets, \
+                        self.max_size, self.file_creation_mode=write_attrs(storage_path,
+                                                                           hours_per_bucket,
+                                                                           max_buckets,
+                                                                           max_size,
+                                                                           file_creation_mode)
+                    self.__buckets={}
+                    self.__bucket_sizes={}
+                    self.__current_size=ByteCount(0)
+                except Exception:
+                    shutil.rmtree(str(storage_path))
+                    raise
             except Exception as e:
                 raise in_context('create non-existent TStore at {storage_path} with mode {file_creation_mode}, {hours_per_bucket} hours per bucket, max buckets {max_buckets}, max size {max_size} bytes'.format(**vars())) from None
             pass
@@ -370,10 +375,10 @@ class TStore:
             if len(self.__buckets)>max_buckets:
                 all_buckets=list(self.__buckets.items())
                 all_buckets.sort()
-                for bucket_start,bucket_id in all_buckets:
-                    self.delete_bucket(bucket_start,bucket_id)
-                    if len(self.__buckets)<=max_buckets:
-                        return
+                i=0
+                while len(self.__buckets)>max_buckets and i<len(all_buckets):
+                    self.delete_bucket(*all_buckets[i])
+                    i+=1
                     pass
                 pass
             pass
@@ -386,11 +391,12 @@ class TStore:
             '''{at_most} bytes'''
         try:
             if self.__current_size > ensure_at_most:
-                for bucket,size in sorted(list(self.__bucket_sizes.items())):
-                    self.delete_bucket(*bucket)
-                    if self.__current_size <= ensure_at_most:
-                        return
-                    pass
+                ordered=list(self.__bucket_sizes)
+                ordered.sort()
+                i=0
+                while self.__current_size > ensure_at_most and i<len(ordered):
+                    self.delete_bucket(*ordered[i])
+                    i+=1
                 pass
             pass
         except Exception as e:
@@ -407,7 +413,7 @@ class TStore:
         try:
             self.verify_bucket_exists(bucket_start,bucket_id)
             def get_bucket_size():
-                return self.__bucket_sizes[(bucket_start,bucket_id)]
+                return self.get_bucket_size(bucket_start,bucket_id)
             return Reader(
                 self.storage_path,
                 bucket_start,
@@ -425,7 +431,7 @@ class TStore:
         try:
             self.verify_bucket_exists(bucket_start,bucket_id)
             def get_bucket_size():
-                return self.__bucket_sizes[(bucket_start,bucket_id)]
+                return self.get_bucket_size(bucket_start,bucket_id)
             def get_room():
                 return self.max_size-self.current_size()
             def appended(number_of_bytes:ByteCount):
@@ -575,7 +581,10 @@ def make_path_dirs(path:Path, root:Path, mode:FileMode, exist_ok:bool):
     try:
         rel=path.relative_to(root)
         for d in reversed(rel.parents):
-            (root/d).mkdir(mode=mode.value(),exist_ok=exist_ok)
+            try:
+                (root/d).mkdir(mode=mode.value(),exist_ok=exist_ok)
+            except Exception as e:
+                raise in_context(f'make directory {root/d}') from None
             pass
         pass
     except Exception:

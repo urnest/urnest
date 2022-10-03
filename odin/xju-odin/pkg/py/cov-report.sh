@@ -1,6 +1,5 @@
 #!/bin/sh
 
-set -x &&
 cov="$1" && shift &&
 
 if [ "$ODINVERBOSE" != "" ]

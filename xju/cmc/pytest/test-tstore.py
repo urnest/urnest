@@ -19,9 +19,16 @@ from typing import cast
 from pathlib import Path
 from xju.assert_ import Assert
 from xju.time import Hours,now,Timestamp,Seconds
-from xju.cmc.io import FileMode,FilePosition
+from xju.cmc.io import FileMode,FilePosition,FileWriter,FileReader
 from xju.misc import ByteCount
+from xju.patch import PatchAttr
+from xju.xn import readable_repr
 import os
+import json
+
+def raise_some_error(*args, **kwargs):
+    raise Exception('some error')
+
 
 r:Reader
 w:Writer
@@ -38,6 +45,14 @@ else:
     pass
 
 # create max 3 buckets, max 30 bytes
+with PatchAttr(json,'dumps',raise_some_error):
+    try:
+        tstore=TStore(d/'x.tstore',Hours(1),3,ByteCount(30),FileMode(0o777))
+    except Exception as e:
+        Assert('some error').isIn(readable_repr(e))
+        pass
+    pass
+
 tstore=TStore(d/'x.tstore',Hours(1),3,ByteCount(30),FileMode(0o777))
 
 # create exists
@@ -53,6 +68,18 @@ else:
 t1=now()
 s1=tstore.calc_bucket_start(t1)
 id1=BucketID('1')
+
+with PatchAttr(Path, 'mkdir', raise_some_error):
+    try:
+        tstore.create_bucket(s1,id1)
+    except Exception as e:
+        Assert('some error').isIn(readable_repr(e))
+        pass
+    else:
+        assert False
+        pass
+    pass
+
 tstore.create_bucket(s1,id1)
 try:
     tstore.create_bucket(s1,id1)
@@ -72,6 +99,7 @@ with tstore.new_writer(s1,id1) as w:
     Assert(buckets)==buckets[0:1]
     for bucket_start,bucket_id in buckets:
         with cast(Reader,tstore.new_reader(bucket_start,bucket_id)) as r:
+            Assert(str(r))==f'TStore {r.storage_path} reader for bucket with start {bucket_start} and id {bucket_id}'
             Assert(r.size())==ByteCount(30)
             Assert(r.read(ByteCount(15)))==thirty_bytes[0:15]
             r.seek_to(FilePosition(10))
@@ -184,12 +212,33 @@ Assert(tstore.list_unseen({}))=={ (s2,id2): ByteCount(10),
                                   (s3,id3): ByteCount(10) }
 
 # write 10 bytes to t2 bucket
+with PatchAttr(FileWriter,'__init__',raise_some_error):
+    try:
+        w=tstore.new_writer(s2,id2)
+    except Exception as e:
+        Assert('some error').isIn(readable_repr(e))
+    else:
+        assert False,w
+        pass
+    pass
+
 with tstore.new_writer(s2,id2) as w:
     w.append(b'poiuytrewq')
     Assert(w.size())==ByteCount(20)
     pass
 
 # verify 10 bytes + 20 bytes
+with PatchAttr(FileReader,'__init__',raise_some_error):
+    try:
+        r=tstore.new_reader(s2,id2)
+    except Exception as e:
+        Assert('some error').isIn(readable_repr(e))
+        pass
+    else:
+        assert False,r
+        pass
+    pass
+
 with tstore.new_reader(s2,id2) as r:
     Assert(r.read(ByteCount(21)))==b'abcdefghijpoiuytrewq'
     pass
@@ -200,6 +249,15 @@ with tstore.new_reader(s3,id3) as r:
 # close - nothing to do
 
 # open existing
+with PatchAttr(json,'loads',raise_some_error):
+    try:
+        tstore=TStore(d/'x.tstore')
+    except Exception as e:
+        Assert('some error').isIn(readable_repr(e))
+    else:
+        assert False
+        pass
+    pass
 tstore=TStore(d/'x.tstore')
 Assert(tstore.storage_path)==d/'x.tstore'
 Assert(tstore.hours_per_bucket)==Hours(1)
@@ -240,6 +298,8 @@ tstore.create_bucket(s5,id5)
 
 # verify 1 non-empty buckets
 Assert(tstore.list_unseen({}))=={ (s3,id3): ByteCount(10) }
+
+    
 
 # how long to sort 10000 bucket starts?
 def time_sort():

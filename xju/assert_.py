@@ -37,6 +37,9 @@ class Assert():
             yc=y.__name__
             raise Exception('{self.x!r} is unexpectedly an instance of class {yc} (it is of class {xc})'.format(**vars()))
         return self.x
+    def hasAttr(self,y:str):
+        if not hasattr(self.x,y):
+            raise Exception('{self.x!r} has no {y!r} attribute')
     def startsWith(self,y):
         if not self.x[0:len(y)]==y:
             raise Exception('{self.x!r} does not start with {y!r}'.format(**vars()))
