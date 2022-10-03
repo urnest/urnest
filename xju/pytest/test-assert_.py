@@ -15,6 +15,8 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 from xju.assert_ import Assert
+import re
+from typing import cast
 
 Assert('fred').startswith('f')
 Assert('fred').startsWith('f')
@@ -28,6 +30,12 @@ Assert(7)>6
 Assert(7)>=6
 Assert(7)<=8
 Assert(7)<8
+Assert(7).isIn([7,8,9])
+Assert(7).isNotIn([8,9])
+Assert('fred').matches('fr[ef]d')
+Assert('fred').matches(re.compile('fr[ef]d'))
+Assert('frgd').doesNotMatch('fr[ef]d')
+Assert('frgd').doesNotMatch(re.compile('fr[ef]d'))
 
 try:
     Assert('fred').startsWith('g')
@@ -108,3 +116,40 @@ except Exception as e:
 else:
     assert False
     pass
+
+try:
+    Assert(7).isIn([8,9])
+except Exception as e:
+    assert "7 is not in [8, 9]" in str(e), str(e)
+    pass
+
+try:
+    Assert(7).isNotIn([7,8,9])
+except Exception as e:
+    assert "7 is unexpectedly in [7, 8, 9]" in str(e), str(e)
+    pass
+
+try:
+    Assert('frgd').matches('fr[ef]d')
+except Exception as e:
+    assert "'frgd' does not match regular expression 'fr[ef]d'" in str(e), str(e)
+    pass
+
+try:
+    Assert('fred').doesNotMatch('fr[ef]d')
+except Exception as e:
+    assert "'fred' unexpectedly matches regular expression 'fr[ef]d'" in str(e), str(e)
+    pass
+
+try:
+    Assert('fred').matches(cast(str,7))
+except Exception as e:
+    assert "?" in str(e), str(e)
+    pass
+
+try:
+    Assert('fred').doesNotMatch(cast(str,7))
+except Exception as e:
+    assert "?" in str(e), str(e)
+    pass
+

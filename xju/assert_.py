@@ -15,6 +15,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 import re
+from typing import Union
 
 def equal(a,b):
     assert a==b, '{a!r} != {b!r}'.format(**vars())
@@ -36,14 +37,6 @@ class Assert():
             yc=y.__name__
             raise Exception('{self.x!r} is unexpectedly an instance of class {yc} (it is of class {xc})'.format(**vars()))
         return self.x
-    def isGreaterThan(self,y):
-        if not self.x > y:
-            raise Exception('{self.x!r} is not greater than {y!r}'.format(**vars()))
-        return self.x
-    def isLessThan(self,y):
-        if not self.x < y:
-            raise Exception('{self.x!r} is not less than {y!r}'.format(**vars()))
-        return self.x
     def startsWith(self,y):
         if not self.x[0:len(y)]==y:
             raise Exception('{self.x!r} does not start with {y!r}'.format(**vars()))
@@ -62,16 +55,39 @@ class Assert():
         return self.endsWith(y)
     def isNotIn(self,y):
         if self.x in y:
-            raise Exception('{self.x!r} is in {y!r}'.format(**vars()))
+            raise Exception('{self.x!r} is unexpectedly in {y!r}'.format(**vars()))
         pass
     def isIn(self,y):
         if not self.x in y:
             raise Exception('{self.x!r} is not in {y!r}'.format(**vars()))
         pass
-    def matches(self,r:str):
-        c=re.compile(r)
+    def matches(self,x:Union[str,re.Pattern]):
+        c:re.Pattern
+        pattern:str
+        if isinstance(x,re.Pattern):
+            pattern=x.pattern
+            c=x
+        elif isinstance(x,str):
+            pattern=x
+            c=re.compile(pattern)
+        else:
+            assert False, '?'
         if not c.match(self.x):
-            raise Exception('{self.x!r} does not match {r}'.format(**vars()))
+            raise Exception(f'{self.x!r} does not match regular expression {pattern!r}')
+        pass
+    def doesNotMatch(self,x:Union[str,re.Pattern]):
+        c:re.Pattern
+        pattern:str
+        if isinstance(x,re.Pattern):
+            pattern=x.pattern
+            c=x
+        elif isinstance(x,str):
+            pattern=x
+            c=re.compile(pattern)
+        else:
+            assert False, '?'
+        if c.match(self.x):
+            raise Exception(f'{self.x!r} unexpectedly matches regular expression {pattern!r}')
         pass
     def __lt__(self,y):
         if not self.x < y:
