@@ -508,7 +508,7 @@ def read_attrs(storage_path:Path,
     '''read PerfLog attrs from {storage_path}/{attrs_file}'''
     try:
         with FileReader(storage_path / attrs_file) as f:
-            attrs=attrs_schema.validate(json.loads(f.input.read()))
+            attrs=attrs_schema.validate(json.loads(f.read(f.size())))
             if (isinstance(attrs,dict) and
                 isinstance(_schema:=attrs['schema'],list)):
                 schema={ColName(col_name): col_type for col_name,col_type in _schema}

@@ -19,7 +19,7 @@
 # (the __enter__ methods acquire resources, e.g. open files)
 
 import os
-from typing import overload
+from typing import overload,cast
 import typing
 from typing import Literal, Optional, Union
 import pathlib
@@ -193,6 +193,15 @@ class FileReader(contextlib.AbstractContextManager):
             return FilePosition(self.input.seek(0, io.SEEK_CUR))
         except Exception:
             raise in_function_context(FileReader.position,vars()) from None
+        pass
+
+    def read(self, read_at_most:ByteCount) -> bytes:
+        '''read at most {read_at_most} bytes from current position of {self}'''
+        try:
+            # files are always blocking, so input.read will never return None
+            return cast(bytes,self.input.read(read_at_most.value()))
+        except Exception:
+            raise in_function_context(FileReader.read,vars())
         pass
 
     def fd(self) -> int:

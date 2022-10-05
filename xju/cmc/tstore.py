@@ -108,6 +108,14 @@ class Reader(CM):
             raise in_function_context(Reader.seek_by,vars()) from None
         pass
     
+    def position(self) -> FilePosition:
+        '''get current position'''
+        try:
+            return self.__file_reader.position()
+        except Exception:
+            raise in_function_context(Reader.position,vars()) from None
+        pass
+
     def size(self) -> ByteCount:
         '''return size of bucket'''
         try:
@@ -119,10 +127,8 @@ class Reader(CM):
     def read(self, max_bytes:ByteCount) -> bytes:
         '''read up to {max_bytes} of data from TStore reader {self} current position'''
         try:
-            result=self.__file_reader.input.read(max_bytes.value())
-            if isinstance(result,bytes):
-                return result
-            assert False
+            result=self.__file_reader.read(max_bytes)
+            return result
         except Exception:
             raise in_function_context(Reader.read,vars()) from None
         pass
@@ -327,7 +333,8 @@ class TStore:
     def create_bucket(self,bucket_start:BucketStart,bucket_id:BucketID):
         '''create {self} bucket with start {bucket_start} and id {bucket_id}
            - bucket can then be read and writtern with Reader and Writer
-           - raises BucketExists if bucket already exists with specified start'''
+           - raises BucketExists if bucket already exists with specified start
+           - deletes bucket with oldest start to make room if already at max_buckets'''
         try:
             if bucket_start in self.__buckets:
                 raise BucketExists(bucket_start,self.__buckets[bucket_start])
@@ -387,8 +394,7 @@ class TStore:
         pass
 
     def __trim_bytes(self,ensure_at_most:ByteCount):
-        '''trim {self} storage currently {self.__current_size} bytes to ensure it is at most ''' \
-            '''{at_most} bytes'''
+        '''trim {self} storage to ensure it is at most {ensure_at_most} bytes'''
         try:
             if self.__current_size > ensure_at_most:
                 ordered=list(self.__bucket_sizes)

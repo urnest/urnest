@@ -15,7 +15,7 @@
 #
 from xju.cmc.tstore import TStore,BucketID,BucketStart,BucketExists,NoSuchBucket,Writer,Reader
 
-from typing import cast
+from typing import cast,Callable
 from pathlib import Path
 from xju.assert_ import Assert
 from xju.time import Hours,now,Timestamp,Seconds
@@ -23,6 +23,7 @@ from xju.cmc.io import FileMode,FilePosition,FileWriter,FileReader
 from xju.misc import ByteCount
 from xju.patch import PatchAttr
 from xju.xn import readable_repr
+from io import FileIO
 import os
 import json
 
@@ -64,8 +65,9 @@ else:
     assert False, x
     pass
 
-# create bucket @t1
 t1=now()
+
+# create bucket @t1
 s1=tstore.calc_bucket_start(t1)
 id1=BucketID('1')
 
@@ -102,6 +104,16 @@ with tstore.new_writer(s1,id1) as w:
             Assert(str(r))==f'TStore {r.storage_path} reader for bucket with start {bucket_start} and id {bucket_id}'
             Assert(r.size())==ByteCount(30)
             Assert(r.read(ByteCount(15)))==thirty_bytes[0:15]
+            with PatchAttr(FileReader,'position',raise_some_error):
+                try:
+                    r.position()
+                except Exception as e:
+                    Assert('some error').isIn(str(e))
+                    pass
+                else:
+                    assert False
+                    pass
+                pass
             r.seek_to(FilePosition(10))
             Assert(r.read(ByteCount(5)))==thirty_bytes[10:15]
             r.seek_by(ByteCount(8))
@@ -154,16 +166,45 @@ else:
     assert False, f'bucket {id1} should not exist at {s1}'
     pass
 
+t0=t1-Hours(2)
+s0=tstore.calc_bucket_start(t0)
+id0=BucketID('0')
+
 s3=tstore.calc_bucket_start(t1+Hours(2))
 Assert(s3)>s2
 id3=BucketID('3')
 
+tstore.create_bucket(s0,id0)
 tstore.create_bucket(s1,id1)
 tstore.create_bucket(s2,id2)
+# fail to remove bucket s0 to make room
+with PatchAttr(Path,'unlink',raise_some_error):
+    try:
+        tstore.create_bucket(s3,id3)
+    except Exception as e:
+        Assert('some error').isIn(str(e))
+        pass
+    pass
+
 tstore.create_bucket(s3,id3)
 
 # write 10 bytes
 with tstore.new_writer(s1,id1) as w:
+    with PatchAttr(FileWriter,'seek_to',raise_some_error):
+        try:
+            w.append(b'0123456789')
+        except Exception as e:
+            Assert('some error').isIn(str(e))
+            pass
+        pass
+    with PatchAttr(TStore,'get_bucket_size',raise_some_error):
+        try:
+            w.size()
+        except Exception as e:
+            Assert('some error').isIn(str(e))
+            pass
+        pass
+            
     w.append(b'0123456789')
     Assert(tstore.current_size())==ByteCount(10)
     pass
@@ -198,6 +239,13 @@ with tstore.new_reader(s3,id3) as r:
     pass
 
 # make room for 1 byte
+with PatchAttr(Path,'unlink',raise_some_error):
+    try:
+        tstore.make_room_for(ByteCount(10))
+    except Exception as e:
+        Assert('some error').isIn(str(e))
+        pass
+    pass
 tstore.make_room_for(ByteCount(1))
 
 # verify 2 buckets
@@ -240,10 +288,46 @@ with PatchAttr(FileReader,'__init__',raise_some_error):
     pass
 
 with tstore.new_reader(s2,id2) as r:
+    with PatchAttr(TStore,'get_bucket_size',raise_some_error):
+        try:
+            r.size()
+        except Exception as e:
+            Assert('some error').isIn(str(e))
+            pass
+        pass
+    with PatchAttr(FileReader,'read',raise_some_error):
+        try:
+            r.read(ByteCount(21))
+        except Exception as e:
+            Assert('some error').isIn(readable_repr(e))
+        else:
+            assert False
+            pass
+        pass
+    
     Assert(r.read(ByteCount(21)))==b'abcdefghijpoiuytrewq'
     pass
 with tstore.new_reader(s3,id3) as r:
-    Assert(r.read(ByteCount(11)))==b'abcde01234'
+    with PatchAttr(FileReader,'seek_by',raise_some_error):
+        try:
+            r.seek_by(ByteCount(3))
+        except Exception as e:
+            Assert('some error').isIn(str(e))
+            pass
+        pass
+    with PatchAttr(FileReader,'seek_to',raise_some_error):
+        try:
+            r.seek_to(FilePosition(3))
+        except Exception as e:
+            Assert('some error').isIn(str(e))
+            pass
+        pass
+    r.seek_to(FilePosition(2))
+    r.seek_by(ByteCount(1))
+    Assert(r.read(ByteCount(11-3)))==b'de01234'
+    Assert(r.position())==FilePosition(10)
+    r.seek_by(ByteCount(-10))
+    Assert(r.read(ByteCount(3)))==b'abc'
     pass
 
 # close - nothing to do
@@ -258,6 +342,24 @@ with PatchAttr(json,'loads',raise_some_error):
         assert False
         pass
     pass
+
+p=[Path(dir) for dir,dirnames,filenames in os.walk(d/'x.tstore')
+   if len(filenames) and any(f for f in filenames if f.endswith('.txt'))][0]
+try:
+    with FileWriter(p/'13.txt',mode=FileMode(0o777)):
+        pass
+    try:
+        tstore=TStore(d/'x.tstore')
+    except Exception as e:
+        Assert('expected at most one bucket data file').isIn(readable_repr(e))
+    else:
+        assert False
+        pass
+    pass
+finally:
+    (p/'13.txt').unlink()
+    pass
+
 tstore=TStore(d/'x.tstore')
 Assert(tstore.storage_path)==d/'x.tstore'
 Assert(tstore.hours_per_bucket)==Hours(1)
