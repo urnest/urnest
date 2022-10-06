@@ -20,7 +20,7 @@
 # mirroring. Lookup is by time range. Total storage size is constrained by total byte count
 # and number of buckets.
 #
-from typing import Tuple,Dict,Literal,overload,Sequence,Callable,Any
+from typing import Tuple,Dict,Literal,overload,Sequence,Callable,Any,cast
 from xju.cmc.io import FileReader,FileWriter,FileMode,FilePosition
 import os
 from pathlib import Path
@@ -216,13 +216,13 @@ class TStore:
         '''create non-existent TStore at {storage_path} with mode {file_creation_mode}, {hours_per_bucket} hours per bucket, {max_buckets} buckets max,  {max_size} total bytes max
            - hours_per_bucket must be a factor of 24
            - raises FileExistsError if TStore exists'''
-        ...
+
     @overload
     def __init__(self,
                  storage_path: Path):
         '''open existing TStore at {storage_path} reading attributes from its tstore.json file
            - raises FileNotFoundError if TStore does not exist'''
-        ...
+
     def __init__(self,
                  storage_path:Path,
                  hours_per_bucket=None,
@@ -479,18 +479,15 @@ def read_attrs(storage_path:Path,
             max_buckets=x['max_buckets']
             max_size=x['max_size']
             file_creation_mode=x['file_creation_mode']
-            if (isinstance(hours_per_bucket,int) and
-                isinstance(max_buckets,int) and
-                isinstance(max_size,int) and
-                isinstance(file_creation_mode,int)):
-                return (Hours(hours_per_bucket),
-                        max_buckets,
-                        ByteCount(max_size),
-                        FileMode(file_creation_mode))
-            else:
-                assert False, f'{x} was validated against {attrs_schema}, so should not be here'
-                pass
+            Assert(hours_per_bucket).isInstanceOf(int)
+            Assert(max_buckets).isInstanceOf(int)
+            Assert(max_size).isInstanceOf(int)
+            Assert(file_creation_mode).isInstanceOf(int)
             pass
+        return (Hours(cast(int,hours_per_bucket)),
+                cast(int,max_buckets),
+                ByteCount(cast(int,max_size)),
+                FileMode(cast(int,file_creation_mode)))
     except Exception as e:
         raise in_function_context(read_attrs,vars()) from None
     pass
@@ -514,7 +511,8 @@ def write_attrs(storage_path:Path,
                         must_not_exist=True,
                         mode=file_creation_mode-FileMode(0o111)) as f:
             f.output.write(json.dumps(attrs).encode('utf-8'))
-            return (hours_per_bucket,max_buckets,max_size,file_creation_mode)
+            pass
+        return (hours_per_bucket,max_buckets,max_size,file_creation_mode)
     except Exception as e:
         raise in_function_context(write_attrs,vars()) from None
     pass
