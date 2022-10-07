@@ -24,8 +24,13 @@ import os
 from xju.assert_ import Assert
 from xju.time import Hours,now,Duration
 from xju.misc import ByteCount
+from xju.patch import PatchAttr
+from xju.cmc.tstore import TStore,BucketID
 from xju.cmc.io import FileMode,FileWriter
 from pathlib import Path
+
+def raise_some_error(*args, **kwargs):
+    raise Exception('some error')
 
 def verify_permissions(path:Path, mode:FileMode):
     '''verify recursively that all files in {path} have at most permissions {mode} and that files are not executable'''
@@ -85,7 +90,6 @@ def abort_on_corruption(e:Exception):
 
 Assert(list(perflog.fetch(t1,t20,1,ByteCount(1),abort_on_corruption)))==[]
 
-# record 10 records over 3 hours
 t2=t1+Hours(10)
 t3,t4,t5,t6,t7,t8,t9,t10,t11=[t2+Duration(_) for _ in
                               [50, 1000, 3599,
@@ -107,6 +111,16 @@ r10= [99.7,77,'peer','p',9.9,888]
 r11= [1.7,36,'peer','p',9.9,888]
 
 with perflog.new_recorder() as recorder:
+    # record 10 records over 3 hours
+    with PatchAttr(TStore,'get_bucket',raise_some_error):
+        try:
+            recorder.record(t2, r2)
+        except Exception as e:
+            Assert('some error').isIn(str(e))
+        else:
+            assert False
+            pass
+        pass
     recorder.record(t2, r2)
     recorder.record(t3, r3)
     recorder.record(t4, r4)
@@ -186,8 +200,14 @@ perflog_mirror=PerfLog(d/'perflog_mirror',
                        perflog.max_size,
                        FileMode(0o770))
 
+# so we trigger replacing of a stale bucket
+with perflog_mirror.new_recorder() as recorder:
+    recorder.record(t2, r2)
+    pass
+
 tracker:Tracker
 tracker=perflog_mirror.new_tracker()
+
 while True:
     unseen=perflog.get_some_unseen_data(tracker.get_seen(),ByteCount(256),abort_on_read_failed)
     if unseen=={}:

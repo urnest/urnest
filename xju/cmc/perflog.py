@@ -146,21 +146,15 @@ class Tracker:
                     except NoSuchBucket:
                         self.__tstore.create_bucket(bucket_start,bucket_id)
                         pass
-                    if position==0 and len(data)==0:
+                    if position==FilePosition(0):
                         self.__tstore.delete_bucket(bucket_start,bucket_id)
-                    else:
-                        # there is room (as long as __tstore has same max_bytes, max_buckets
-                        # as source)
-                        if position==0:
-                            try:
-                                self.__tstore.delete_bucket(bucket_start,bucket_id)
-                            except NoSuchBucket:
-                                pass
-                            pass
+                    if len(data):
                         try:
                             self.__tstore.create_bucket(bucket_start,bucket_id)
                         except BucketExists:
                             pass
+                        # there is room (as long as __tstore has same max_bytes, max_buckets
+                        # as source)
                         with self.__tstore.new_writer(bucket_start,bucket_id) as writer:
                             Assert(FilePosition(0)+writer.size())==position
                             writer.append(data)
@@ -324,6 +318,9 @@ class PerfLog:
             result={}
             result_size=ByteCount(0)
             for bucket, size in self.__tstore.list_unseen(seen).items():
+                if size==ByteCount(0):
+                    result[bucket]=(FilePosition(0),b'')
+                    continue
                 bucket_start, bucket_id=bucket
                 seen_size=seen.get(bucket,ByteCount(0))
                 if seen_size>size:
