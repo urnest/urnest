@@ -23,7 +23,7 @@
 #
 
 from pathlib import Path
-from typing import Union, Literal,List,Optional,Dict,Tuple,overload,Callable,Any,Generator
+from typing import Union, Literal,List,Optional,Dict,Tuple,overload,Callable,Any,Generator,cast
 from xju.misc import ByteCount
 from xju.xn import in_context,in_function_context,first_line_of as l1
 from xju.cmc.tstore import TStore,Reader,Writer,BucketStart,BucketID,NoSuchBucket,BucketExists
@@ -126,7 +126,7 @@ class Tracker:
 
     def write_unseen_data(self, unseen:Dict[Tuple[BucketStart,BucketID],
                                             Tuple[FilePosition,bytes]]):
-        '''write unseen data to PerfLog {self.storage_path}
+        '''{self} write unseen data to PerfLog {self.storage_path}
            - caller must ensure that unseen data with non-zero position matches
              current data size for that bucket
            - caller must ensure that underlying tstore max_size, max_buckets and hours_per_bucket
@@ -142,7 +142,6 @@ class Tracker:
                         if existing_id != bucket_id:
                             self.__tstore.delete_bucket(bucket_start,existing_id)
                             self.__tstore.get_bucket(bucket_start) # will raise
-                            pass
                     except NoSuchBucket:
                         self.__tstore.create_bucket(bucket_start,bucket_id)
                         pass
@@ -196,12 +195,12 @@ class PerfLog:
         '''{max_buckets}, max size {max_size} bytes
            - hours_per_bucket must be a factor of 24
            - raises FileExistsError if perflog exists at {storage_path}'''
-        pass
+
     @overload
     def __init__(self,storage_path:Path):
         '''open existing PerfLog at {storage_path} reading attributes from its perflog.json file
            - raises FileNotFoundError if PerfLog does not exist'''
-        pass
+
     def __init__(self,
                  storage_path:Path,
                  schema:Optional[Dict[ColName,ColType]]=None,
@@ -391,7 +390,7 @@ def decode_timestamped_record(data:bytes, schema:Dict[ColName,ColType]) -> Tuple
     '''decode time delta and record from {data!r} assuming record conforms to schema {schema}'''
     try:
         t:type
-        assert data.endswith(b'\n'), data
+        Assert(data).endswith(b'\n')
         x=json.loads(data.decode('utf-8')[:-1])
         record:List[Union[str,int,float,None]]=[]
         if isinstance(x, list):
@@ -405,11 +404,11 @@ def decode_timestamped_record(data:bytes, schema:Dict[ColName,ColType]) -> Tuple
                 return time_delta, record, ByteCount(len(data))
             else:
                 t=type(x[0])
-                raise Exception(f'time delta {x[0]} is of type {t}, which is not a float')
+                raise Exception(f'time delta {x[0]!r} is of type {t}, which is not a float')
             pass
         else:
             t=type(x)
-            raise Exception(f'{x} is of type {t}, which is not a list')
+            raise Exception(f'{x!r} is of type {t}, which is not a list')
             pass
     except Exception as e:
         raise in_function_context(decode_timestamped_record,vars()) from None
@@ -452,13 +451,13 @@ def validate_str(value)->str:
     if isinstance(value,str):
         return value
     t=type(value)
-    raise Exception(f'{value} (of type {t}) is not a str')
+    raise Exception(f'{value!r} (of type {t}) is not a str')
 
 def validate_int(value)->int:
     if isinstance(value,int):
         return value
     t=type(value)
-    raise Exception(f'{value} (of type {t}) is not a int')
+    raise Exception(f'{value!r} (of type {t}) is not a int')
 
 def validate_float(value)->float:
     if isinstance(value,float):
@@ -466,7 +465,7 @@ def validate_float(value)->float:
     if isinstance(value,int):
         return value
     t=type(value)
-    raise Exception(f'{value} (of type {t}) is not a float')
+    raise Exception(f'{value!r} (of type {t}) is not a float')
 
 def validate_optional_str(value)->Optional[str]:
     if value is None:
@@ -506,11 +505,11 @@ def read_attrs(storage_path:Path,
     try:
         with FileReader(storage_path / attrs_file) as f:
             attrs=attrs_schema.validate(json.loads(f.read(f.size())))
-            if (isinstance(attrs,dict) and
-                isinstance(_schema:=attrs['schema'],list)):
-                schema={ColName(col_name): col_type for col_name,col_type in _schema}
-                return schema
-            assert False, f'should not be here: {attrs} was validated against {attrs_schema}'
+            Assert(attrs).isInstanceOf(dict)
+            schema={ColName(col_name): cast(ColType,col_type)
+                    for col_name,col_type in cast(List[Tuple[str,str]],attrs['schema'])}
+            pass
+        return schema
     except Exception as e:
         raise in_function_context(read_attrs,vars()) from None
     pass
@@ -544,17 +543,14 @@ def trim_trailing_partial_record(
         data:Dict[Tuple[BucketStart,BucketID], Tuple[FilePosition,bytes]])->None:
     '''trim data so it ends with a complete record
        - note you can use this to ensure Tracker always writes complete records'''
-    try:
-        if not len(data):
-            return
-        last_bucket=list(data.keys())[-1]
-        position,d=data[last_bucket]
-        trimmed=d[0:d.rfind(b'\n')+1]
-        if len(trimmed)==0:
-            del data[last_bucket]
-        else:
-            data[last_bucket]=(position,trimmed)
-            pass
-    except Exception:
-        raise in_function_context(trim_trailing_partial_record,vars())
+    if not len(data):
+        return
+    last_bucket=list(data.keys())[-1]
+    position,d=data[last_bucket]
+    trimmed=d[0:d.rfind(b'\n')+1]
+    if len(trimmed)==0:
+        del data[last_bucket]
+    else:
+        data[last_bucket]=(position,trimmed)
+        pass
     pass

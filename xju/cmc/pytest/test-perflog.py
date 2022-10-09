@@ -17,17 +17,21 @@
 #
 from xju.cmc.perflog import PerfLog,ColName,Recorder,Tracker,BucketStart,BucketID
 from xju.cmc.perflog import trim_trailing_partial_record,FilePosition,Timestamp
-from typing import List,Tuple
+from xju.cmc.perflog import encode_timestamped_record,validate_col,ColType
+from xju.cmc.perflog import validate_int,validate_float,decode_timestamped_record
+from typing import List,Tuple,cast
 
 import os
+import json
 
 from xju.assert_ import Assert
 from xju.time import Hours,now,Duration
 from xju.misc import ByteCount
 from xju.patch import PatchAttr
 from xju.cmc.tstore import TStore,BucketID
-from xju.cmc.io import FileMode,FileWriter
+from xju.cmc.io import FileMode,FileWriter,FileReader
 from pathlib import Path
+from xju.xn import readable_repr
 
 def raise_some_error(*args, **kwargs):
     raise Exception('some error')
@@ -48,7 +52,26 @@ def verify_permissions(path:Path, mode:FileMode):
 
 d=Path(os.getcwd())
 # create
-
+with PatchAttr(json,'dumps',raise_some_error):
+    try:
+        perflog=PerfLog(d/'perflog',
+                        {ColName('Tx Rate'): 'float',
+                         ColName('Tx Bytes'): 'int',
+                         ColName('Peer'): '(str)',
+                         ColName('Protocol'): 'str',
+                         ColName('mag'): '(float)',
+                         ColName('Peer Id'):'(int)'},
+                        Hours(2),
+                        3,
+                        ByteCount(1200),
+                        FileMode(0o700))
+    except Exception as e:
+        Assert('some error').isIn(str(e))
+    else:
+        assert False
+        pass
+    pass
+    
 perflog=PerfLog(d/'perflog',
                 {ColName('Tx Rate'): 'float',
                  ColName('Tx Bytes'): 'int',
@@ -136,6 +159,15 @@ with perflog.new_recorder() as recorder:
 verify_permissions(d/'perflog', FileMode(0o700))
 
 # fetch all
+with PatchAttr(FileReader,'read',raise_some_error):
+    try:
+        list(perflog.fetch(t1,t20,100000,ByteCount(100000),abort_on_corruption))
+    except Exception as e:
+        Assert('some error').isIn(readable_repr(e))
+    else:
+        assert False
+        pass
+    pass
 
 Assert(list(perflog.fetch(t1,t20,100000,ByteCount(100000),abort_on_corruption)))==[
     (t2,r2),
@@ -208,6 +240,16 @@ with perflog_mirror.new_recorder() as recorder:
 tracker:Tracker
 tracker=perflog_mirror.new_tracker()
 
+with PatchAttr(FileReader,'seek_to',raise_some_error):
+    try:
+        unseen=perflog.get_some_unseen_data(tracker.get_seen(),ByteCount(256),abort_on_read_failed)
+    except Exception as e:
+        Assert('some error').isIn(readable_repr(e))
+    else:
+        assert False, unseen
+        pass
+    pass
+
 while True:
     unseen=perflog.get_some_unseen_data(tracker.get_seen(),ByteCount(256),abort_on_read_failed)
     if unseen=={}:
@@ -233,6 +275,15 @@ Assert(list(perflog_mirror.fetch(t1,t20,100000,ByteCount(100000),abort_on_corrup
     
 
 # re-open read back records
+with PatchAttr(FileReader,'read',raise_some_error):
+    try:
+        perflog_mirror=PerfLog(d/'perflog_mirror')
+    except Exception as e:
+        Assert('some error').isIn(str(e))
+    else:
+        assert False
+        pass
+    pass
 perflog_mirror=PerfLog(d/'perflog_mirror')
 
 Assert(list(perflog_mirror.fetch(t1,t20,100000,ByteCount(100000),abort_on_corruption)))==[
@@ -262,7 +313,74 @@ data={}
 trim_trailing_partial_record(data)
 Assert(data)=={}
 
+data={ (BucketStart(1),BucketID('11')) : (FilePosition(3),b'fred\njock\n'),
+       (BucketStart(2),BucketID('13')) : (FilePosition(3),b'sally') }
+trim_trailing_partial_record(data)
+Assert(data)=={
+    (BucketStart(1),BucketID('11')) : (FilePosition(3),b'fred\njock\n') }
 
+
+# create mirror
+# write one record
+# call write_unseen_data that replaces that record
+perflog_mirror=PerfLog(d/'perflog_mirror-2',
+                       perflog.schema,
+                       perflog.hours_per_bucket,
+                       perflog.max_buckets,
+                       perflog.max_size,
+                       FileMode(0o770))
+
+# so we trigger replacing of a stale bucket
+with perflog_mirror.new_recorder() as recorder:
+    recorder.record(t2, r2)
+    pass
+
+tracker=perflog_mirror.new_tracker()
+
+unseen=perflog.get_some_unseen_data({},ByteCount(100000),abort_on_read_failed)
+try:
+    with PatchAttr(TStore,'get_bucket',raise_some_error):
+        tracker.write_unseen_data(unseen)
+except Exception as e:
+    Assert('some error').isIn(str(e))
+else:
+    assert False
+    pass
+tracker.write_unseen_data(unseen)
+
+Assert(list(perflog_mirror.fetch(t1,t20,100000,ByteCount(100000),abort_on_corruption)))==[
+    (t2,r2),
+    (t3,r3),
+    (t4,r4),
+    (t5,r5),
+    (t6,r6),
+    (t7,r7),
+    (t8,r8),
+    (t9,r9),
+    (t10,r10),
+    (t11,r11),
+]
+
+# simulate data not ending on record boundary (corrupt)
+k:Tuple[BucketStart, BucketID]=list(unseen.keys())[-1]
+unseen[k]=(unseen[k][0],unseen[k][1]+b'xxx')
+tracker.write_unseen_data(unseen)
+try:
+    list(perflog_mirror.fetch(t1,t20,100000,ByteCount(100000),abort_on_corruption))
+except Exception as e:
+    Assert(r"b'xxx' does not end in \n").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+# simulate refetch where seen bigger than exists
+unseen=perflog.get_some_unseen_data({},ByteCount(100000),abort_on_read_failed)
+k=list(unseen.keys())[0]
+v:Tuple[FilePosition, bytes]=unseen[k]
+unseen2=perflog.get_some_unseen_data({k:ByteCount(len(v[1])+1)},
+                                      ByteCount(100000),abort_on_read_failed)
+Assert(unseen2)==unseen
+                                     
 # corruption handling
 perflog=PerfLog(d/'perflog_corrupt',
                 {ColName('Tx Rate'): 'float'},
@@ -378,3 +496,63 @@ Assert('Expecting value: line 1 column 2').isIn(str(corruptions[0]))
 del corruptions[:]
 Assert(list(perflog.get_some_unseen_data({},ByteCount(100000),capture_corruptions)))!=[]
 Assert(corruptions)==[]
+
+# various failure cases for coverage
+try:
+    encode_timestamped_record(Duration(1),[],{ColName('fred'):'str'})
+except Exception as e:
+    Assert("schema expects 1 values but record has 0.").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+try:
+    encode_timestamped_record(Duration(1),[1],{ColName('fred'):'str'})
+except Exception as e:
+    Assert("1 (of type <class 'int'>) is not a str.").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+try:
+    validate_col(1,cast(ColType,'null'))
+except Exception as e:
+    Assert('unknown col type null').isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+try:
+    validate_int('fred')
+except Exception as e:
+    Assert("'fred' (of type <class 'str'>) is not a int").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+try:
+    validate_float('fred')
+except Exception as e:
+    Assert("'fred' (of type <class 'str'>) is not a float").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+try:
+    decode_timestamped_record((json.dumps(['fred',1])+'\n').encode('utf-8'),{ColName('Fred'):'int'})
+except Exception as e:
+    Assert("time delta \'fred\' is of type <class \'str\'>, which is not a float.").isIn(
+        readable_repr(e))
+else:
+    assert False
+    pass
+
+try:
+    decode_timestamped_record((json.dumps({'fred':1})+'\n').encode('utf-8'),{ColName('Fred'):'int'})
+except Exception as e:
+    Assert("{\'fred\': 1} is of type <class \'dict\'>, which is not a list.").isIn(
+        readable_repr(e))
+else:
+    assert False
+    pass
+
+    
