@@ -18,6 +18,8 @@
 %verify-test-newtype.x3-fail
 %verify-test-newtype.x4-fail
 %verify-test-newtype.x5-fail
+%verify-test-newtype.x6-fail
+%verify-test-newtype.x7-fail
 
 %verify-test-cmc.x1-fail==(%test-cmc.x1.errs)+cmd=grep -q '"Cannot determine consistent method resolution order"':stdout
 
@@ -38,6 +40,12 @@
 
 %verify-test-newtype.x5-fail==(%test-newtype.x5.errs)+cmd=fgrep -q '"Unsupported operand types for < (\\"Int[HoursType]\\" and \\"Int[MinutesType]\\")"':stdout
 %test-newtype.x5.errs==(test-newtype.x5.py)+(%py-opts):py3.exec.output:err
+
+%verify-test-newtype.x6-fail==(%test-newtype.x6.errs)+cmd=grep -q '"7.s type <class .__main__.Hours.> is not the same as 8.s type <class .__main__.Minutes.>"':stdout
+%test-newtype.x6.errs==(test-newtype.x6.py)+(%py-opts):py3.exec.output:err
+
+%verify-test-newtype.x7-fail==(%test-newtype.x7.errs)+cmd=grep -q '"7.s type <class .__main__.Hours.> is not the same as 8.s type <class .__main__.Minutes.>"':stdout
+%test-newtype.x7.errs==(test-newtype.x7.py)+(%py-opts):py3.exec.output:err
 
 %py-opts==<<
 +(..%py-opts)

@@ -22,9 +22,18 @@
 #     new int type A, A+A->A
 
 from typing import Iterable,Sized,Container,Collection,Reversible,Protocol,cast,Type,overload,TypeVar
-from typing import Generic,Tuple,Mapping,Optional,List,Literal,Union
+from typing import Generic,Tuple,Mapping,Optional,List,Literal,Union,Any
 
 Tag=TypeVar('Tag',covariant=True)
+
+def verify_same_type(x:Any,y:Any):
+    if x.__class__ is not y.__class__:
+        raise Exception(f"{x!r}'s type {x.__class__} is not the same as {y!r}'s type {y.__class__}")
+    pass
+
+def eq(x:Any,y:Any)->bool:
+    verify_same_type(x,y)
+    return x.value().__eq__(y.value())
 
 class Int_(Generic[Tag]):
     __value:int
@@ -50,15 +59,11 @@ class Int(Generic[Tag],Int_[Tag]):
               class Hours(Int[HoursTag]):pass
            ... and not inherit from Hours.
            If you choose to inherit from Hours, make sure you write your own __eq__'''
-        assert (other.__class__ is self.__class__) or not isinstance(other,Int)  # see above
-        if other.__class__ is self.__class__:
-            return self.value().__eq__(other.value())
-        return False
+        return eq(self,other)
+
     def __ne__(self,other)->bool:
-        assert (other.__class__ is self.__class__) or not isinstance(other,Int)  # see __eq__ above
-        if other.__class__==self.__class__:
-            return self.value()!=other.value()
-        return True
+        return not eq(self,other)
+
     def __str__(self)->str:
         return str(self.value())
 
@@ -193,15 +198,10 @@ class Float(Generic[Tag],Float_[Tag]):
               class Timestamp(Float[TimestampTag]):pass
            ... and not inherit from Timestamp.
            If you choose to inherit from Timestamp, make sure you write your own __eq__'''
-        assert (other.__class__ is self.__class__) or not isinstance(other,Float)  # see above
-        if other.__class__ is self.__class__:
-            return self.value().__eq__(other.value())
-        return False
+        return eq(self,other)
+
     def __ne__(self,other)->bool:
-        assert (other.__class__ is self.__class__) or not isinstance(other,Float)  # see __eq__ above
-        if other.__class__==self.__class__:
-            return self.value()!=other.value()
-        return True
+        return not eq(self,other)
 
     def __str__(self)->str:
         return str(self.value())
@@ -336,15 +336,10 @@ class Str(Generic[Tag],Str_[Tag]):
               class FirstName(Str[FirstNameTag]):pass
            ... and not inherit from FirstName.
            If you choose to inherit from Timestamp, make sure you write your own __eq__'''
-        assert (other.__class__ is self.__class__) or not isinstance(other,Str)  # see above
-        if other.__class__ is self.__class__:
-            return self.value().__eq__(other.value())
-        return False
+        return eq(self,other)
+
     def __ne__(self,other)->bool:
-        assert (other.__class__ is self.__class__) or not isinstance(other,Str)  # see __eq__ above
-        if other.__class__==self.__class__:
-            return self.value()!=other.value()
-        return True
+        return not eq(self,other)
 
     def __str__(self)->str:
         return str(self.value())

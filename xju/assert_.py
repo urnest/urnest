@@ -116,4 +116,12 @@ class Assert():
         if not self.x >= y:
             raise Exception('{self.x!r} is not greater than or equal to {y!r}'.format(**vars()))
         return self.x
+    def is_(self,y):
+        if not self.x is y:
+            raise Exception('{self.x} is not the same object as {y}'.format(**vars()))
+        return self.x
+    def isNot(self,y):
+        if self.x is y:
+            raise Exception('{self.x} is the same object as {y}'.format(**vars()))
+        return self.x
     pass
