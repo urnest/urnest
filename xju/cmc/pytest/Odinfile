@@ -1,6 +1,7 @@
 %all==%all.tree:leaves
 
 %all.tree==<<
+(test-cmc.py)+(%py-opts):py3.exec.cov
 (test-cmclass.py)+(%py-opts):py3.exec.cov
 (test-Dict.py)+(%py-opts):py3.exec.cov
 (test-tstore.py)+(%py-opts):py3.exec.cov

@@ -489,3 +489,36 @@ Assert(z.f.exited_at) == 6
 Assert(z.b2_orig_exited_at) == 8
 
 z.d=Resource('d2',ee=None,xe=None)
+
+@dataclasses.dataclass
+class Q(cmc.CM):
+    b: int
+    pass
+
+try:
+    with Q(8):
+        pass
+    pass
+except Exception as e:
+    Assert("xju.cmc.CM.__enter__ not overridden, have you forgotten @cmclass on __main__.Q?").isIn(
+        str(e))
+    pass
+
+
+@dataclasses.dataclass
+class QQ(cmc.CM):
+    b: int
+    def __enter__(self):
+        return self
+    pass
+
+try:
+    with QQ(8):
+        pass
+    pass
+except Exception as e:
+    Assert("xju.cmc.CM.__exit__ not overridden, have you forgotten @cmclass on __main__.QQ?").isIn(
+        str(e))
+    pass
+
+

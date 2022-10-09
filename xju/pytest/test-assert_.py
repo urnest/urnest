@@ -17,6 +17,7 @@
 from xju.assert_ import Assert
 import re
 from typing import cast
+from dataclasses import dataclass
 
 Assert('fred').startswith('f')
 Assert('fred').startsWith('f')
@@ -153,3 +154,34 @@ except Exception as e:
     assert "?" in str(e), str(e)
     pass
 
+@dataclass
+class X:
+    value:int
+    pass
+
+Assert(X(4)).hasAttr('value')
+try:
+    Assert(X(4)).hasAttr('fred')
+except Exception as e:
+    Assert("has no 'fred' attribute").isIn(str(e))
+else:
+    assert False
+    pass
+
+Assert(None).is_(None)
+try:
+    Assert(7).is_(None)
+except Exception as e:
+    Assert("7 is not the same object as None").isIn(str(e))
+else:
+    assert False
+    pass
+
+Assert(7).isNot(None)
+try:
+    Assert(None).isNot(None)
+except Exception as e:
+    Assert("None is the same object as None").isIn(str(e))
+else:
+    assert False
+    pass

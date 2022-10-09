@@ -140,17 +140,45 @@ Assert(4)==x['c'].exited_at
 
 step = 1
 with Dict() as x:
+    x.__sizeof__()
+    old_b = Resource('oldb',None,None)
+    x['b'] = old_b
     x['c'] = Resource('c',None,None)
     x['b'] = Resource('b',None,None)
-    Assert(1)==x['c'].entered_at
-    Assert(2)==x['b'].entered_at
+    Assert(1)==old_b.entered_at
+    Assert(2)==x['c'].entered_at
+    Assert(3)==x['b'].entered_at
+    Assert(4)==old_b.exited_at
     Assert(None)==x['c'].exited_at
     Assert(None)==x['b'].exited_at
     cc = x.pop('c')
-    Assert(cc.entered_at)==1
-    Assert(cc.exited_at)==3
-Assert(2)==x['b'].entered_at
-Assert(4)==x['b'].exited_at
+    Assert(x.pop('c',7))==7
+    Assert(cc.entered_at)==2
+    Assert(cc.exited_at)==5
+    repr(x)
+Assert(3)==x['b'].entered_at
+Assert(6)==x['b'].exited_at
+
+step = 1
+with Dict() as x:
+    x.__sizeof__()
+    old_b = Resource('oldb',None,None)
+    x['b'] = old_b
+    x['c'] = Resource('c',None,None)
+    x['b'] = Resource('b',None,None)
+    Assert(1)==old_b.entered_at
+    Assert(2)==x['c'].entered_at
+    Assert(3)==x['b'].entered_at
+    Assert(4)==old_b.exited_at
+    Assert(None)==x['c'].exited_at
+    Assert(None)==x['b'].exited_at
+    cc = x.pop('c',old_b)
+    Assert(x.pop('c',7))==7
+    Assert(cc.entered_at)==2
+    Assert(cc.exited_at)==5
+    repr(x)
+Assert(3)==x['b'].entered_at
+Assert(6)==x['b'].exited_at
 
 step = 1
 with Dict() as x:
@@ -193,6 +221,7 @@ with Dict() as x:
     d=Resource('d',None,None)
     x.setdefault('b',d)
     Assert(None)==d.entered_at
+    x.setdefault('b',None)
     cc=x['c']
     bb=x['b']
     x.clear()

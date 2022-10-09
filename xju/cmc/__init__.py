@@ -107,15 +107,15 @@ class Dict(Mapping[K, V], contextlib.AbstractContextManager):
     @overload
     def __init__(self):
         '''new empty Dict'''
-        pass
+
     @overload
     def __init__(self, x:_Dict[K,V]):
         '''initialise with value from {x} assuming those values have not been "entered"'''
-        pass
+
     @overload
     def __init__(self, x:Iterable[Tuple[K,V]]):
         '''initialise with value from {x} assuming those values have not been "entered"'''
-        pass
+
     def __init__(self, *args, **kwargs):
         self.x:_Dict[K,V] = OrderedDict(*args, **kwargs)
         pass
@@ -210,12 +210,12 @@ class Dict(Mapping[K, V], contextlib.AbstractContextManager):
     def pop(self, key:K) -> V:
         '''pop and "exit" value of {key} if self has a value for it
            otherwise raise KeyError'''
-        pass
+
     @overload
     def pop(self, key:K, default:T) -> Union[V,T]:
         '''pop and "exit" value of {key} if self has a value for it
         otherwise return default'''
-        pass
+
     def pop(self, key, default=None):
         if default is None:
             v = self.x.pop(key)
@@ -251,11 +251,11 @@ class Dict(Mapping[K, V], contextlib.AbstractContextManager):
     def setdefault(self, key:K, default:V) -> V:
         '''set value of {key} to default "entered" if it has no value
            return value of {key}'''
-        pass
+
     @overload
     def setdefault(self, key:K, default:None) -> Optional[V]:
         '''same as get(key,None)'''
-        pass
+
     def setdefault(self, key, default):
         if default is not None:
             if not key in self:
@@ -268,11 +268,11 @@ class Dict(Mapping[K, V], contextlib.AbstractContextManager):
     @overload
     def update(self, x:_Dict[K, V]):
         '''update self from {x} assuming its values are not yet entered'''
-        pass
+
     @overload
     def update(self, x:Iterable[Tuple[K,V]]):
         '''update self from {x} assuming its values are not yet entered'''
-        pass
+
     def update(self, x):
         if getattr(x,'keys',None):
             for k in x.keys():

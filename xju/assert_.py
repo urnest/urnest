@@ -29,20 +29,20 @@ class Assert():
         if not isinstance(self.x,y):
             xc=self.x.__class__.__name__
             yc=y.__name__
-            raise Exception('{self.x!r} is not an instance of class {yc} (it is of class {xc})'.format(**vars()))
+            raise Exception(f'{self.x!r} is not an instance of class {yc} (it is of class {xc})')
         return self.x
     def isNotInstanceOf(self,y):
         if isinstance(self.x,y):
             xc=self.x.__class__.__name__
             yc=y.__name__
-            raise Exception('{self.x!r} is unexpectedly an instance of class {yc} (it is of class {xc})'.format(**vars()))
+            raise Exception(f'{self.x!r} is unexpectedly an instance of class {yc} (it is of class {xc})')
         return self.x
     def hasAttr(self,y:str):
         if not hasattr(self.x,y):
-            raise Exception('{self.x!r} has no {y!r} attribute')
+            raise Exception(f'{self.x!r} has no {y!r} attribute')
     def startsWith(self,y):
         if not self.x[0:len(y)]==y:
-            raise Exception('{self.x!r} does not start with {y!r}'.format(**vars()))
+            raise Exception(f'{self.x!r} does not start with {y!r}')
         return self.x
     def startswith(self,y):
         return self.startsWith(y)
@@ -50,7 +50,7 @@ class Assert():
         return self.startsWith(y)
     def endsWith(self,y):
         if not self.x[-len(y):]==y:
-            raise Exception('{self.x!r} does not end with {y!r}'.format(**vars()))
+            raise Exception(f'{self.x!r} does not end with {y!r}')
         return self.x
     def endswith(self,y):
         return self.endsWith(y)
@@ -58,11 +58,11 @@ class Assert():
         return self.endsWith(y)
     def isNotIn(self,y):
         if self.x in y:
-            raise Exception('{self.x!r} is unexpectedly in {y!r}'.format(**vars()))
+            raise Exception(f'{self.x!r} is unexpectedly in {y!r}')
         pass
     def isIn(self,y):
         if not self.x in y:
-            raise Exception('{self.x!r} is not in {y!r}'.format(**vars()))
+            raise Exception(f'{self.x!r} is not in {y!r}')
         pass
     def matches(self,x:Union[str,re.Pattern]):
         c:re.Pattern
@@ -94,34 +94,34 @@ class Assert():
         pass
     def __lt__(self,y):
         if not self.x < y:
-            raise Exception('{self.x!r} is not less than {y!r}'.format(**vars()))
+            raise Exception(f'{self.x!r} is not less than {y!r}')
         return self.x
     def __le__(self,y):
         if not self.x <= y:
-            raise Exception('{self.x!r} is not less than or equal to {y!r}'.format(**vars()))
+            raise Exception(f'{self.x!r} is not less than or equal to {y!r}')
         return self.x
     def __eq__(self,y):
         if not self.x == y:
-            raise Exception('{self.x!r} is not equal to {y!r}'.format(**vars()))
+            raise Exception(f'{self.x!r} is not equal to {y!r}')
         return self.x
     def __ne__(self,y):
         if self.x == y:
-            raise Exception('{self.x!r} is unexpectedly equal to {y!r}'.format(**vars()))
+            raise Exception(f'{self.x!r} is unexpectedly equal to {y!r}')
         return self.x
     def __gt__(self,y):
         if not self.x > y:
-            raise Exception('{self.x!r} is not greater than {y!r}'.format(**vars()))
+            raise Exception(f'{self.x!r} is not greater than {y!r}')
         return self.x
     def __ge__(self,y):
         if not self.x >= y:
-            raise Exception('{self.x!r} is not greater than or equal to {y!r}'.format(**vars()))
+            raise Exception(f'{self.x!r} is not greater than or equal to {y!r}')
         return self.x
     def is_(self,y):
         if not self.x is y:
-            raise Exception('{self.x} is not the same object as {y}'.format(**vars()))
+            raise Exception(f'{self.x} is not the same object as {y}')
         return self.x
     def isNot(self,y):
         if self.x is y:
-            raise Exception('{self.x} is the same object as {y}'.format(**vars()))
+            raise Exception(f'{self.x} is the same object as {y}')
         return self.x
     pass
