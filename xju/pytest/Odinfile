@@ -1,13 +1,23 @@
 %py-tests.tree==<<
 %test-py-exit
-(test-assert_.py)+(%py-opts):py3.exec.cov
-(test-xn.py)+(%py-opts):py3.exec.cov
-(test-jsonschema.py)+(%py-opts):py3.exec.cov
-(test-pq.py)+(%py-opts):py3.exec.cov
-(test-rfc2616.py)+(%py-opts):py3.exec.cov
-(test-misc.py)+(%py-opts):py3.exec.cov
+%unit-tests
 %verify-test-cmc.x1-fail
 %py-newtype-tests.tree:leaves
+
+%unit-tests.tree==<<
+(test-assert_.py)+(%py-opts):py3.exec.cov
+(test-jsonschema.py)+(%py-opts):py3.exec.cov
+(test-misc.py)+(%py-opts):py3.exec.cov
+(test-patch.py)+(%py-opts):py3.exec.cov
+(test-pq.py)+(%py-opts):py3.exec.cov
+(test-rfc2616.py)+(%py-opts):py3.exec.cov
+(test-xn.py)+(%py-opts):py3.exec.cov
+
+%pys-to-cover==..:list:ls+cmd=egrep -v "'newtype.template.py'":stdout:list
+%all.cov.checked==%pys-to-cover:list.py+py_cov=(%all.cov):list.py3.cov.checked
+
+%all.cov==%unit-tests.tree:leaves:py3.cov.list:agg.py3.cov
+
 
 %py-newtype-tests.tree==<<
 (test-newtype.py)+(%py-opts):py3.exec.cov

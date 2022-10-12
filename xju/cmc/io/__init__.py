@@ -53,10 +53,10 @@ class FilePosition(FilePositionBase):
 
     @overload
     def __sub__(self, x:FilePositionBase)->ByteCount:
-        ...
+        pass
     @overload
     def __sub__(self, x:ByteCount):  # -> FilePosition
-        ...
+        pass
     def __sub__(self, x):
         if isinstance(x,FilePosition):
             return ByteCount(self.value()-x.value())
@@ -66,30 +66,24 @@ class FilePosition(FilePositionBase):
         assert False, f'cannot subtract {x} of type {x_type} from FilePosition'
     def __int__(self):
         return self.__value
-    def __eq__(self, x):
-        if type(x) is FilePosition:
-            return self.value()==x.value()
-        return NotImplemented
-    def __ne__(self, x):
-        if type(x) is FilePosition:
-            return self.value()!=x.value()
-        return NotImplemented
-    def __le__(self, x):
-        if type(x) is FilePosition:
-            return self.value()<=x.value()
-        return NotImplemented
-    def __ge__(self, x):
-        if type(x) is FilePosition:
-            return self.value()>=x.value()
-        return NotImplemented
     def __lt__(self, x):
-        if type(x) is FilePosition:
-            return self.value()<x.value()
-        return NotImplemented
+        'compare {self} to {x}'
+        try:
+            if type(x) is FilePosition:
+                return self.value()<x.value()
+            raise Exception(f'{x!r} is not a {self.__class__.__name__} it is a {x.__class__.__name__}')
+        except Exception as e:
+            raise in_function_context(FilePosition.__lt__,vars())
+    def __eq__(self, x):
+        return not (self<x or x<self)
+    def __ne__(self, x):
+        return not self==x
+    def __le__(self, x):
+        return self<x or self==x
+    def __ge__(self, x):
+        return x<=self
     def __gt__(self, x):
-        if type(x) is FilePosition:
-            return self.value()>x.value()
-        return NotImplemented
+        return x<self
     pass
 
     

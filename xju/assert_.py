@@ -17,10 +17,6 @@
 import re
 from typing import Union
 
-def equal(a,b):
-    assert a==b, '{a!r} != {b!r}'.format(**vars())
-    pass
-
 class Assert():
     def __init__(self,x):
         self.x=x

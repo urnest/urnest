@@ -20,6 +20,8 @@ utf8%tests.tree
 test%tests.tree
 %tags
 
+
+
 %tests.tree == <<
 ()+cmd=(%test-doCmd):exec.output
 ()+cmd=(test-Array.cc+(..%cxx-opts):auto.cxx.exe):exec.output
@@ -207,6 +209,8 @@ for n in ['__add__', '__sub__', '__rsub__', '__radd__', '__and__', '__or__','__x
     rem.remove(n)
     int_methods=int_methods+f'''
     def {n}(self,other:Int_[Tag]):
+        if type(other) is not type(self):
+            return NotImplemented
         return self.__class__(self.value().{n}(other.value()))'''
 for n in ['as_integer_ratio']:
     rem.remove(n)
@@ -243,6 +247,8 @@ for n in ['__add__', '__sub__']:
     rem.remove(n)
     float_methods=float_methods+f'''
     def {n}(self,other:Float_[Tag]):
+        if type(other) is not type(self):
+            return NotImplemented
         return Float[Tag](self.value().{n}(other.value()))'''
 for n in ['as_integer_ratio']:
     rem.remove(n)
@@ -287,6 +293,8 @@ for n in ['__add__']:
     rem.remove(n)
     str_methods=str_methods+f'''
     def {n}(self,other:Str_[Tag]):
+        if type(other) is not type(self):
+            return NotImplemented
         return self.__class__(self.value().{n}(other.value()))'''
 for n in ['rfind', 'find', 'rindex', 'index', 'count', 'translate']:
     rem.remove(n)

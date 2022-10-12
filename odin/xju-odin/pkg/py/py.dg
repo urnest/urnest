@@ -30,6 +30,11 @@
 :py.py.stylecheck 'empty file from style checker'? => :py.stylecheck;
 :egg.py.stylecheck 'empty file from style checker'? => :py.stylecheck;
 
+:py3.cov.checked 'errors (warnings if +py_cov_check_warn) if python code not fully covered'? => :VOID;
+:file.py3.cov.checked 'errors (warnings if +py_cov_check_warn) if .py not fully covered'? => :py3.cov.checked;
+:list.py3.cov.checked 'errors (warnings if +py_cov_check_warn) if all pys not fully covered'? => :LIST;
+:list.py ':py files in list' => <:LIST>;
+
 #
 # :py.exec is created regardless of exit status of test run, with:
 #   :py.exec/files.tar the files produced by the run
@@ -69,6 +74,10 @@
 +py 'python file to execute'? => :first;
 
 +py_nocov 'do not generate python coverage info' => :first;
+
++py_cov_check_warn 'warn only on :py3.cov.checked where coverage is 100% (default is error)' => :first;
+
++py_cov 'coverage data for :py3.cov.checked' => :py3.cov;
 
 +stderr 'what to do with command stderr: \\"output\\" to combine with stdout (default), \\"warn\\" to generate warnings, \\"error\\" to display as errors if command fails and command trace otherwise, \\"trace\\" to show as command trace'? => :first;
 
@@ -129,6 +138,9 @@ EXEC (py.stylecheck.sh) (:py) (:env) (+py:dir)@ (+py_sp)
 EXEC (/usr/bin/touch) 'egg.py.stylecheck' (:egg)
   => (:egg.py.stylecheck);
 
+EXEC (py-cov-check.sh) (py-cov-check) (:py) (+py_cov_check_warn) (+py_cov)
+  => (:file.py3.cov.checked);
+
 :py3.exec.output.ref ':py3.exec.output ref' => :FILE;
 :py3.exec.files.ref ':py3.exec.files ref' => :FILE;
 :py3.exec.cov.ref ':py3.exec.cov ref' => :FILE;
@@ -153,3 +165,5 @@ EXEC (cov-report.sh) (:py3.cov) => (:py3.cov.summary) (:py3.cov.report);
 EXEC (cov-merge.sh) (:py3.cov.list:ls) (merge-cov) NEEDS (:py3.cov.list) => (:agg.py3.cov);
 
 COLLECT (:LIST:extract=:py3.cov) => (:py3.cov.list);
+COLLECT (:LIST:extract=:py) => (:list.py);
+COLLECT (:list.py:map=:file.py3.cov.checked) => (:list.py3.cov.checked);

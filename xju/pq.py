@@ -32,7 +32,7 @@ from html.entities import codepoint2name as reverseentities
 import sys
 import traceback
 import string
-from .xn import Xn,in_context
+from xju.xn import in_context
 
 class Pos:
     def __init__(self, file, line, col):
@@ -44,11 +44,11 @@ class Pos:
         return '%(file)s:%(line)s:%(col)s' % self.__dict__
     pass
 
-class ParseFailed(Xn):
+class ParseFailed(Exception):
     def __init__(self, cause, pos):
         self.cause=cause
         self.pos=pos
-        Xn.__init__(self,self.__str__())
+        Exception.__init__(self,self.__str__())
         return
     def __str__(self):
         return 'failed to parse html at %(pos)s because\n%(cause)s'%self.__dict__
@@ -87,19 +87,6 @@ class Node:
             pass
         return []
     
-def unicodeOfElements(l):
-        result=[]
-        for i,c in enumerate(l):
-            try:
-                result.append(unicode(c))
-            except:
-                t=type(c).__name__
-                if t=='instance':
-                    t=c.__class__.__name__
-                raise in_context('get unicode representation of child %(i)r, %(c)r, which is of type %(t)s'%vars()) from None
-            pass
-        return result
-
 class Root(Node):
     def __init__(self):
         Node.__init__(self)
@@ -112,16 +99,6 @@ class Root(Node):
         self.children=self.children[0:i]+self.children[i+1:]
         node.parent=None
         return self
-    def replace(self, node, newNode):
-        if newNode.parent:
-            newNode.parent.remove(newNode)
-        self.children[self.indexOf(node)]=newNode
-        newNode.parent=self
-        return self
-    def __str__(self):
-        return ''.join([str(_) for _ in self.children])
-    def __repr__(self):
-        return 'root node'
     pass
 
 endOptional=frozenset([
@@ -232,7 +209,7 @@ class Tag(Node):
         if self.tagName=='p':
             return u''.join([_.text() for _ in self.children])+u'\n'
         if self.tagName=='li':
-            return u'\n'
+            return u''.join([_.text() for _ in self.children])+u'\n'
         return u''.join([_.text() for _ in self.children])
     pass
 
@@ -252,44 +229,6 @@ class Data(Node):
         return result
     def text(self):
         return self.data
-    pass
-
-class EntityRef(Node):
-    '''Entity ref'''
-    def __init__(self, name, parent, pos):
-        Node.__init__(self, parent)
-        self.pos=pos
-        self.name=name
-    def __str__(self):
-        return '&%(name)s;' % self.__dict__
-    def __repr__(self):
-        return 'entity ref %(name)r at %(pos)s' % self.__dict__
-    def clone(self, newParent):
-        result=EntityRef(self.name, newParent, self.pos)
-        return result
-    def text(self):
-        if not self.name in entities:
-            raise Xn('entity %(name)s is not in python htmlentitydefs.name2codepoint'%self.__dict__)
-        return chr(entities[self.name])
-    pass
-
-class CharRef(Node):
-    '''Char ref'''
-    def __init__(self, name, parent, pos):
-        Node.__init__(self, parent)
-        self.pos=pos
-        self.name=name
-    def __str__(self):
-        return '&#%(name)s;' % self.__dict__
-    def __repr__(self):
-        return 'char ref at %(pos)s' % self.__dict__
-    def clone(self, newParent):
-        result=CharRef(self.name, newParent, self.pos)
-        return result
-    def text(self):
-        if self.name.startswith('x'):
-            return chr(int(self.name[1:],16))
-        return chr(int(self.name))
     pass
 
 class Comment(Node):
@@ -377,12 +316,6 @@ class Parser(HTMLParser):
         return
     def handle_data(self,data):
         Data(data, self.current, self.pos())
-        return
-    def handle_entityref(self,name):
-        EntityRef(name, self.current, self.pos())
-        return
-    def handle_charref(self,name):
-        CharRef(name, self.current, self.pos())
         return
     def handle_comment(self,comment):
         Comment(comment, self.current, self.pos())
@@ -557,14 +490,12 @@ class Selection:
             pass
         resultNodes=[]
         for i,n in enumerate(nodes):
-            resultNodes.extend(n.nodeList)
+            resultNodes.append(n)
             if i+1 < len(nodes): resultNodes.extend(self.clone().nodeList)
             pass
         return Selection(resultNodes)
     def __str__(self):
         return ''.join([str(_) for _ in self.nodeList])
-    def utf8(self):
-        return str(self).encode('utf-8')
     def __len__(self):
         return len(self.nodeList)
     def __getitem__(self, key):
@@ -586,8 +517,6 @@ def attrEquals(attr,value):
     return lambda node: isinstance(node, Tag) and node.attrEquals(attr,value)
 def hasAttr(attr):
     return lambda node: isinstance(node, Tag) and node.hasAttr(attr)
-def isEntityRef(name):
-    return lambda node: isinstance(node, EntityRef) and node.name==name
 
 def parse(s, origin='unknown'):
     '''parse HTML string "%(origin)s", returns a Selection'''
@@ -609,6 +538,5 @@ def parseFile(fileName,encoding='utf-8'):
     pass
 
 def loadFile(fileName,encoding='utf-8'):
-    with open(fileName,encoding=encoding) as f:
-        return parse(f.read(),fileName)
+    return parseFile(fileName,encoding)
     pass

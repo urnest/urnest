@@ -219,18 +219,32 @@ class Int(Generic[Tag],Int_[Tag]):
     def __ge__(self,other:Int_[Tag])->bool:
         return self.value().__ge__(other.value())
     def __add__(self,other:Int_[Tag]):
+        if type(other) is not type(self):
+            return NotImplemented
         return self.__class__(self.value().__add__(other.value()))
     def __sub__(self,other:Int_[Tag]):
+        if type(other) is not type(self):
+            return NotImplemented
         return self.__class__(self.value().__sub__(other.value()))
     def __rsub__(self,other:Int_[Tag]):
+        if type(other) is not type(self):
+            return NotImplemented
         return self.__class__(self.value().__rsub__(other.value()))
     def __radd__(self,other:Int_[Tag]):
+        if type(other) is not type(self):
+            return NotImplemented
         return self.__class__(self.value().__radd__(other.value()))
     def __and__(self,other:Int_[Tag]):
+        if type(other) is not type(self):
+            return NotImplemented
         return self.__class__(self.value().__and__(other.value()))
     def __or__(self,other:Int_[Tag]):
+        if type(other) is not type(self):
+            return NotImplemented
         return self.__class__(self.value().__or__(other.value()))
     def __xor__(self,other:Int_[Tag]):
+        if type(other) is not type(self):
+            return NotImplemented
         return self.__class__(self.value().__xor__(other.value()))
     def as_integer_ratio(self)->Tuple[int,int]:
         return self.value().as_integer_ratio()
@@ -403,8 +417,12 @@ class Float(Generic[Tag],Float_[Tag]):
     def __ge__(self,other:Float_[Tag])->bool:
         return self.value().__ge__(other.value())
     def __add__(self,other:Float_[Tag]):
+        if type(other) is not type(self):
+            return NotImplemented
         return Float[Tag](self.value().__add__(other.value()))
     def __sub__(self,other:Float_[Tag]):
+        if type(other) is not type(self):
+            return NotImplemented
         return Float[Tag](self.value().__sub__(other.value()))
     def as_integer_ratio(self)->Tuple[float,float]:
         return self.value().as_integer_ratio()
@@ -529,6 +547,8 @@ class Str(Generic[Tag],Str_[Tag]):
     def __ge__(self,other:Str_[Tag])->bool:
         return self.value().__ge__(other.value())
     def __add__(self,other:Str_[Tag]):
+        if type(other) is not type(self):
+            return NotImplemented
         return self.__class__(self.value().__add__(other.value()))
     @overload
     def rfind(self, sub:str) -> int:

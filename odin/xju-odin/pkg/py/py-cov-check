@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+
+import trace
+import pickle
+import sys
+import dis
+import re
+
+usage=f'''\
+usage {sys.argv[0]} [--cov-check-warn] <x.cov> <y.py>
+  verifies y.py has 100% covered according to x.cov data
+    - if not, reports non-covered lines as errors and exits non-zero,
+      unless -cov-check-warn is specified, in which case lists non-covered lines
+      as warnings and exits with zero status'''
+
+cov_error=True
+
+args=sys.argv[1:]
+while len(args):
+    if not args[0].startswith('--'):
+        break
+    arg=args[0]
+    args=args[1:]
+    if arg=='--cov-check-warn':
+        cov_error=False
+    else:
+        print(f'unknown option {arg}',file=sys.stderr)
+        sys.exit(1)
+        pass
+    pass
+
+if len(args) != 2:
+    print(usage)
+    sys.exit(2)
+    pass
+
+cov,py=args
+
+def find_lines(code, strs):
+    linenos = { lineno for _,lineno in dis.findlinestarts(code)
+                if lineno not in strs }
+
+    # and check the constants for references to other code objects
+    for c in code.co_consts:
+        if inspect.iscode(c):
+            # find another code object, so recurse into it
+            linenos.update(find_lines(c, strs))
+    return linenos
+
+counts,b,c=pickle.load(open(cov,'rb'))
+
+pyc=py+'c'
+lines_hit={n for filename,n in counts if filename in (py,pyc)}
+
+code_lines = trace._find_executable_linenos(py)
+
+pass_only=re.compile('\s*pass\s$')
+
+result=True
+
+tag='error' if cov_error else 'warning'
+
+with open(py) as r:
+    for lineno, line in enumerate(r.readlines(), 1):
+        if (lineno not in lines_hit and lineno in code_lines and not pass_only.match(line) and
+            not '#pragma NO COVER' in line):
+        
+            print(f'File "{py}", line {lineno}, {tag}: not covered',file=sys.stderr)
+            result=False
+            pass
+        pass
+    pass
+
+if not result and cov_error:
+    sys.exit(1)
+    pass

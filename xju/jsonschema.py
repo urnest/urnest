@@ -54,7 +54,8 @@ def validateSchemaElement(x):
                 return
             for name,y in x.items():
                 try:
-                    assert type(name) is str, type(name)
+                    if type(name) is not str:
+                        raise Exception(f'{name} is not a string (it is a {name.__class__.__name__})')
                     validateSchemaElement(y)
                 except:
                     raise in_context('validate dict schema item %(name)r'%vars()) from None
@@ -86,7 +87,7 @@ def validateSchemaElement(x):
             return
         t=type(x)
         if t is object: t=x.__class__
-        raise Exception('jsonschema element may not be a %(t)s, it must be a list, a dictionary or int, str, float, bool, tuple or None'%vars())
+        raise Exception(f'jsonschema element may not be a {t}, it must be a list, a dictionary or int, str, float, bool, tuple, {__module__}.OneOf or None')
     except:
         raise in_function_context(validateSchemaElement,vars()) from None
     pass

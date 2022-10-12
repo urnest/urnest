@@ -27,6 +27,8 @@ Assert('fred').endsWith('d')
 Assert('fred').ends_with('d')
 Assert(7).isInstanceOf(int)
 Assert(7).isNotInstanceOf(str)
+Assert(7)==7
+Assert(7)!=8
 Assert(7)>6
 Assert(7)>=6
 Assert(7)<=8

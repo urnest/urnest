@@ -27,8 +27,12 @@
 #  on failure eg replace/html
 #
 
-from xju.pq import parse,hasClass,encodeEntities,isEntityRef,tagName,Selection
+from xju.pq import parse,hasClass,encodeEntities,tagName,Selection,loadFile
+from xju.pq import attrEquals,hasAttr
 from xju.assert_ import Assert
+from xju.xn import readable_repr
+from xju.patch import PatchAttr
+from html.parser import HTMLParser
 
 html1='''<html>
 <body>
@@ -168,7 +172,7 @@ def test12():
     s=parse('<ul><li class="a">1<li class="b">2</ul>')
     parse('<li>1.5').addBefore(s.find(hasClass('b')))
     Assert(str(s))==u'<ul><li class="a">1<li>1.5<li class="b">2</ul>'
-    
+    Assert(str(s.find(hasClass('b')).nodeList[0].pos))=='unknown:1:19'
 def test13():
     s=parse('<ul><li class="a">1<li class="b">2</ul>')
     parse('<li>0').addBefore(s.find(hasClass('a')))
@@ -241,7 +245,123 @@ def test20():
 }'''
     pass
 
+def raise_some_error(*args, **kwargs):
+    raise Exception('some error')
 
+def test21():
+    with PatchAttr(HTMLParser,'feed',raise_some_error):
+        try:
+            s=parse('#3345')
+        except Exception as e:
+            Assert("failed to parse html at unknown").isIn(readable_repr(e))
+            Assert("some error").isIn(readable_repr(e))
+        else:
+            assert False
+            pass
+        pass
+    pass
+
+def test22():
+    s=parse('fred')
+    Assert(s.predecessors().nodeList)==[]
+    Assert(s.successors().nodeList)==[]
+    pass
+
+def test23():
+    s=parse('<html><p>fred</p></html>')
+    parse('<div>fred</div>').replace(s.find(tagName('p')))
+    Assert(str(s))=='<html><div>fred</div></html>'
+    pass
+
+def test24():
+    s=parse('<html><p>fred</p></html>')
+    nodes=s.find(lambda n: True)
+    Assert([str(n) for n in nodes])==['<html><p>fred</p></html>', '<p>fred</p>', 'fred']
+    Assert([repr(n.nodeList[0]) for n in nodes])==['html at unknown:1:0', 'p at unknown:1:6', "data at unknown:1:9, 'fred'"]
+    pass
+
+def test25():
+    s=parse('<p>fred</p>')
+    s.filter(tagName('p')).addClass('jock')
+    Assert(str(s))=='<p class="jock">fred</p>'
+    s.filter(tagName('p')).removeClass('jock')
+    Assert(str(s))=='<p>fred</p>'
+    s.filter(tagName('p')).attr('jock','ann')
+    Assert(str(s))=='<p jock="ann">fred</p>'
+    Assert(s.filter(attrEquals('jock','ann')).attr('jock'))=='ann'
+    Assert(s.filter(hasAttr('jock')).attr('jock'))=='ann'
+    s.filter(tagName('p')).removeAttr('jock')
+    Assert(str(s))=='<p>fred</p>'
+    pass
+
+def test26():
+    x=parse('<html><p>fred</p></html>')
+    y=parse('<html><div>jock</div>')
+    y.find(tagName('div')).replace(x.find(tagName('p')))
+    Assert(str(x))=='<html><div>jock</div></html>'
+    pass
+
+def test27():
+    x=parse('<html><p>fred<br>&lt;jock&gt;</p><ul><li>a<li>b</ul></html>')
+    Assert(x.filter(tagName('html')).text())=='fred\n<jock>\na\nb\n'
+    
+def test28():
+    x=parse('<html><p>&jock;</p>')
+    
+def test30():
+    x=parse('<html><p>jock<!--comment--></p></html>')
+    Assert(x.filter(tagName('html')).text())=='jock\n'
+    Assert(str(x))=='<html><p>jock<!-- comment --></p></html>'
+    x=parse('<!--comment-->')
+    Assert(repr(x.clone().nodeList))=='[comment at unknown:1:0]'
+    pass
+
+def test31():
+    x=parse('<!DOCTYPE FRED>')
+    Assert(str(x))=='<!DOCTYPE FRED>'
+    Assert(repr(x.clone().nodeList))=='[decl at unknown:1:0]'
+    Assert(x.text())==''
+    pass
+    
+def test32():
+    x=parse('<?fred>')
+    Assert(str(x))=='<?fred>'
+    Assert(repr(x.clone().nodeList))=='[processing instruction at unknown:1:0]'
+    Assert(x.text())==''
+    pass
+
+def test33():
+    x=parse('<html><p>jock</p><p class="out">fred</p><p>ann</p></html>')
+    Assert(str(x.find(tagName('p')).unless(hasClass('out'))))=='<p>jock</p><p>ann</p>'
+    parse('<p>sal</p>').addAfter(x.find(hasClass('out')))
+    Assert(str(x))=='<html><p>jock</p><p class="out">fred</p><p>sal</p><p>ann</p></html>'
+    x.find(hasClass('out')).remove()
+    Assert(str(x))=='<html><p>jock</p><p>sal</p><p>ann</p></html>'
+    pass
+
+def test34():
+    x=parse('<html><p>jock</p><p class="out">fred<br></p><p>ann</p></html>')
+    x.find(hasClass('out')).empty()
+    Assert(str(x))=='<html><p>jock</p><p class="out"></p><p>ann</p></html>'
+    Assert(x.find(tagName('p')).last().text())=='ann\n'
+    Assert(x.hasClass('out'))==False
+    pass
+
+def test35():
+    x=parse('<html><p class="a">jock</p><p class="out">fred<br></p><p>ann</p></html>')
+    Assert(x.find(tagName('p')).attrs('class'))==['a','out','']
+    Assert(parse('<br>').join(x.find(tagName('p'))).text())=='jock\n\nfred\n\n\nann\n'
+    Assert(str(x.find(tagName('p'))[1:]))=='<p class="out">fred<br></p><p>ann</p>'
+    Assert(x.__add__(7))==NotImplemented
+    pass
+
+def test36():
+    with open('xxx.html','w') as f:
+        f.write('<html><p class="a">jock</p><p class="out">fred<br></p><p>ann</p></html>')
+        pass
+    Assert(str(loadFile('xxx.html').find(hasClass('out'))))=='<p class="out">fred<br></p>'
+    pass
+    
 if __name__=='__main__':
     tests=[var for name,var in list(vars().items())
            if name.startswith('test') and callable(var)]

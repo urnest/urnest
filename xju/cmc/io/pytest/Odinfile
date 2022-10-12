@@ -1,6 +1,7 @@
 %all==%all.tree:leaves
 
 %all.tree==<<
+(test-FilePosition.py)+(%py-opts):py3.exec.cov
 (test-FileReader.py)+(%py-opts):py3.exec.cov
 (test-FileWriter.py)+(%py-opts):py3.exec.cov
 (test-FileLock.py)+(%py-opts):py3.exec.cov
