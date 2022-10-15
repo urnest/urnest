@@ -485,8 +485,6 @@ class Selection:
         '''return new Selection containing nodes with each separated by a clone of our nodes'''
         if isinstance(nodes, Selection):
             nodes=nodes.nodeList
-        elif isinstance(nodes,Node):
-            nodes=[nodes]
             pass
         resultNodes=[]
         for i,n in enumerate(nodes):
@@ -500,12 +498,12 @@ class Selection:
         return len(self.nodeList)
     def __getitem__(self, key):
         return Selection(self.nodeList.__getitem__(key))
-    def __getslice__(self, i, j):
-        return Selection(self.nodeList.__getslice(i,j))
     def __add__(self, b):
         if isinstance(b,Selection):
             return Selection(self.nodeList+b.nodeList)
         return NotImplemented
+    def utf8(self):
+        return str(self).encode('utf-8')
     pass
 
 # basic predicates

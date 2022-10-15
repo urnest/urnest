@@ -87,7 +87,7 @@ def validateSchemaElement(x):
             return
         t=type(x)
         if t is object: t=x.__class__
-        raise Exception(f'jsonschema element may not be a {t}, it must be a list, a dictionary or int, str, float, bool, tuple, {__module__}.OneOf or None')
+        raise Exception(f'jsonschema element may not be a {t}, it must be a list, a dictionary or int, str, float, bool, tuple, {__name__}.OneOf or None')
     except:
         raise in_function_context(validateSchemaElement,vars()) from None
     pass

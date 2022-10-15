@@ -17,7 +17,7 @@
 #
 
 import sys
-from xju.xn import in_context,readable_repr,AllFailed,in_function_context,Scope,Xn
+from xju.xn import in_context,readable_repr,AllFailed,in_function_context,Scope,Xn,capitalise
 from xju.assert_ import Assert
 from typing import cast
 
@@ -197,6 +197,32 @@ Failed to do some stuff because
 did not work.'''
 else:
     assert False,'should not reach'
+    pass
+
+
+def test8():
+    Assert(capitalise('Fred'))=='Fred'
+    pass
+
+def test9():
+    Assert(str(AllFailed([Exception('fred'),Exception('jock')])))=="fred, and\njock"
+    pass
+
+def test10():
+    # sometimes exception attributes cannot be copied due to AttributeError
+    class EA(Exception):
+        def __dir__(self):
+            return ['x']+Exception.__dir__(self)
+        pass
+    try:
+        try:
+            raise EA()
+        except EA:
+            raise in_context('fred')
+            pass
+        pass
+    except EA as y:
+        pass
     pass
 
 tests=[var for name,var in sorted(vars().items())

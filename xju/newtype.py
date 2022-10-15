@@ -22,7 +22,7 @@
 #     new int type A, A+A->A
 
 from typing import Iterable,Sized,Container,Collection,Reversible,Protocol,cast,Type,overload,TypeVar
-from typing import Generic,Tuple,Mapping,Optional,List,Literal,Union,Any
+from typing import Generic,Tuple,Mapping,Optional,List,Literal,Union,Any,SupportsRound
 
 Tag=TypeVar('Tag',covariant=True)
 
@@ -47,7 +47,7 @@ class Int_(Generic[Tag]):
 
     pass
 
-class Int(Generic[Tag],Int_[Tag]):
+class Int(Generic[Tag],Int_[Tag],SupportsRound):
     def __eq__(self,other)->bool:
         '''equality test ignores possible subclass relationships, i.e. only valid
            for two object of exactly the same class; except that python insists
@@ -70,9 +70,6 @@ class Int(Generic[Tag],Int_[Tag]):
     def __repr__(self)->str:
         return repr(self.value())
 
-    def __reduce__(self)->Tuple:
-        return (self.__class__, (self.value(),))
-
     def __format__(self, format_spec:str)->str:
         return self.value().__format__(format_spec)
 
@@ -84,13 +81,13 @@ class Int(Generic[Tag],Int_[Tag]):
 
     @overload
     def __divmod__(self, x:int) -> Tuple:  # Tuple[Self,Self]
-        ...
+        pass
     @overload
     def __divmod__(self, x:float) -> Tuple[float,float]:
-        ...
+        pass
     @overload
     def __divmod__(self, x:Int_[Tag]) -> Tuple:  # Tuple[int,int]
-        ...
+        pass
     def __divmod__(self, x):
         if isinstance(x,int):
             q,r=self.value().__divmod__(x)
@@ -103,13 +100,13 @@ class Int(Generic[Tag],Int_[Tag]):
 
     @overload
     def __floordiv__(self, x:int):  # -> Int[Tag]
-        ...
+        pass
     @overload
     def __floordiv__(self, x:float) -> float:
-        ...
+        pass
     @overload
     def __floordiv__(self, x:Int_[Tag]) -> int:
-        ...
+        pass
     def __floordiv__(self, x):
         if isinstance(x,int):
             return self.__class__(self.value()//x)
@@ -128,39 +125,39 @@ class Int(Generic[Tag],Int_[Tag]):
     
     @overload
     def __mul__(self, x:int):  # -> Int[Tag]
-        ...
+        pass
     @overload
-    def __mul__(self, x:float) -> float:
-        ...
+    def __mul__(self, x:Any):  # -> NotImplemented:
+        pass
     def __mul__(self, x):
         if isinstance(x,int):
             return self.__class__(self.value()*x)
         else:
-            return self.value()*x
+            return NotImplemented
         pass
 
     @overload
     def __rmul__(self, x:int):  # -> Int[Tag]
-        ...
+        pass
     @overload
-    def __rmul__(self, x:float) -> float:
-        ...
+    def __rmul__(self, x:Any):  # -> NotImplemented
+        pass
     def __rmul__(self, x):
         if isinstance(x,int):
             return self.__class__(x*self.value())
         else:
-            return x*self.value()
+            return NotImplemented
         pass
 
     @overload
     def __mod__(self, other:int):  #->Int[Tag]
-        ...
+        pass
     @overload
     def __mod__(self, other:float)->float:
-        ...
+        pass
     @overload
     def __mod__(self, other:Int_[Tag])->int:
-        ...
+        pass
     def __mod__(self, other):
         if type(other) is int:
             return self.__class__(self.value()%other)
@@ -168,6 +165,9 @@ class Int(Generic[Tag],Int_[Tag]):
             return self.value()%other
         else:
             return self.value()%other.value()
+
+    def __round__(self, ndigits:int=0):  #->Int[Tag]
+        return self.__class__(self.value().__round__(ndigits))
 
     
     def __abs__(self):
@@ -180,8 +180,6 @@ class Int(Generic[Tag],Int_[Tag]):
         return self.__class__(self.value().__pos__())
     def __trunc__(self):
         return self.__class__(self.value().__trunc__())
-    def __round__(self):
-        return self.__class__(self.value().__round__())
     def __ceil__(self):
         return self.__class__(self.value().__ceil__())
     def __floor__(self):
@@ -226,14 +224,6 @@ class Int(Generic[Tag],Int_[Tag]):
         if type(other) is not type(self):
             return NotImplemented
         return self.__class__(self.value().__sub__(other.value()))
-    def __rsub__(self,other:Int_[Tag]):
-        if type(other) is not type(self):
-            return NotImplemented
-        return self.__class__(self.value().__rsub__(other.value()))
-    def __radd__(self,other:Int_[Tag]):
-        if type(other) is not type(self):
-            return NotImplemented
-        return self.__class__(self.value().__radd__(other.value()))
     def __and__(self,other:Int_[Tag]):
         if type(other) is not type(self):
             return NotImplemented
@@ -264,7 +254,7 @@ class Float_(Generic[Tag]):
 
     pass
 
-class Float(Generic[Tag],Float_[Tag]):
+class Float(Generic[Tag],Float_[Tag],SupportsRound):
     def __eq__(self,other)->bool:
         '''equality test ignores possible subclass relationships, i.e. only valid
            for two object of exactly the same class; except that python insists
@@ -287,9 +277,6 @@ class Float(Generic[Tag],Float_[Tag]):
     def __repr__(self)->str:
         return repr(self.value())
 
-    def __reduce__(self)->Tuple:
-        return (self.__class__, (self.value(),))
-
     def __format__(self, format_spec:str)->str:
         return self.value().__format__(format_spec)
 
@@ -307,99 +294,99 @@ class Float(Generic[Tag],Float_[Tag]):
 
     @overload
     def __divmod__(self, x:int) -> Tuple:  # Tuple[Self,Self]
-        ...
+        pass
     @overload
     def __divmod__(self, x:float) -> Tuple:  # Tuple[Self,Self]
-        ...
+        pass
     @overload
     def __divmod__(self, x:Float_[Tag]) -> Tuple:  # Tuple[float,float]
-        ...
+        pass
     def __divmod__(self, x):
         if isinstance(x,int) or isinstance(x,float):
             q,r=self.value().__divmod__(x)
-            return Float[Tag](q),Float[Tag](r)
+            return self.__class__(q),self.__class__(r)
         else:
             return divmod(self.value(),x.value())
         pass
 
     @overload
     def __floordiv__(self, x:int):  # -> Float[Tag]
-        ...
+        pass
     @overload
     def __floordiv__(self, x:float):  # -> Float[Tag]
-        ...
+        pass
     @overload
     def __floordiv__(self, x:Float_[Tag]) -> float:
-        ...
+        pass
     def __floordiv__(self, x):
         if isinstance(x,int) or isinstance(x,float):
-            return Float[Tag](self.value()//x)
+            return self.__class__(self.value()//x)
         else:
             return self.value()//x.value()
         pass
 
     @overload
     def __truediv__(self, x:Union[float,int]): # -> Float[Tag]
-        ...
+        pass
     @overload
     def __truediv__(self, x:Float_[Tag]) -> float:
-        ...
+        pass
     def __truediv__(self, x):
         if isinstance(x,int) or isinstance(x,float):
-            return Float[Tag](self.value()/x)
+            return self.__class__(self.value()/x)
         else:
             return self.value()/x.value()
         pass
     
     @overload
     def __mul__(self, x:int):  # -> Float[Tag]
-        ...
+        pass
     @overload
     def __mul__(self, x:float):  # -> Float[Tag]
-        ...
+        pass
     def __mul__(self, x):
-        return Float[Tag](self.value()*x)
+        return self.__class__(self.value()*x)
 
     @overload
     def __rmul__(self, x:int):  # -> Float[Tag]
-        ...
+        pass
     @overload
     def __rmul__(self, x:float):  # -> Float[Tag]
-        ...
+        pass
     def __rmul__(self, x):
-        return Float[Tag](x*self.value())
+        return self.__class__(x*self.value())
 
     @overload
     def __mod__(self, other:int):  #->Float[Tag]
-        ...
+        pass
     @overload
     def __mod__(self, other:float):  #->Float[Tag]
-        ...
+        pass
     @overload
     def __mod__(self, other:Float_[Tag])->float:
-        ...
+        pass
     def __mod__(self, other):
         if isinstance(other,int) or isinstance(other,float):
-            return Float[Tag](self.value()%other)
+            return self.__class__(self.value()%other)
         else:
             return self.value()%other.value()
 
-    def __round__(self, ndigits:int):  #->Float[Tag]
-        return Float[Tag](self.value().__round__(ndigits))
+    def __round__(self, ndigits:int=0):  #->Float[Tag]
+        return self.__class__(self.value().__round__(ndigits))
 
     
     def __abs__(self):
-        return Float[Tag](self.value().__abs__())
+        return self.__class__(self.value().__abs__())
     def __neg__(self):
-        return Float[Tag](self.value().__neg__())
+        return self.__class__(self.value().__neg__())
     def __pos__(self):
-        return Float[Tag](self.value().__pos__())
+        return self.__class__(self.value().__pos__())
     def __trunc__(self):
-        return Float[Tag](self.value().__trunc__())
+        return self.__class__(self.value().__trunc__())
     def __ceil__(self):
-        return Float[Tag](self.value().__ceil__())
+        return self.__class__(self.value().__ceil__())
     def __floor__(self):
-        return Float[Tag](self.value().__floor__())
+        return self.__class__(self.value().__floor__())
     def __sizeof__(self)->int:
         return self.value().__sizeof__()
     def __hash__(self)->int:
@@ -419,11 +406,11 @@ class Float(Generic[Tag],Float_[Tag]):
     def __add__(self,other:Float_[Tag]):
         if type(other) is not type(self):
             return NotImplemented
-        return Float[Tag](self.value().__add__(other.value()))
+        return self.__class__(self.value().__add__(other.value()))
     def __sub__(self,other:Float_[Tag]):
         if type(other) is not type(self):
             return NotImplemented
-        return Float[Tag](self.value().__sub__(other.value()))
+        return self.__class__(self.value().__sub__(other.value()))
     def as_integer_ratio(self)->Tuple[float,float]:
         return self.value().as_integer_ratio()
 
@@ -462,9 +449,6 @@ class Str(Generic[Tag],Str_[Tag]):
 
     def __repr__(self)->str:
         return repr(self.value())
-
-    def __reduce__(self)->Tuple:
-        return (self.__class__, (self.value(),))
 
     def __format__(self, format_spec:str)->str:
         return self.value().__format__(format_spec)
@@ -552,90 +536,90 @@ class Str(Generic[Tag],Str_[Tag]):
         return self.__class__(self.value().__add__(other.value()))
     @overload
     def rfind(self, sub:str) -> int:
-        ...
+        pass
     @overload
     def rfind(self, sub:str, start:int)->int:
-        ...
+        pass
     @overload
     def rfind(self, sub:str, start:int, end:int)->int:
-        ...
+        pass
     def rfind(self, sub, *args):
         return self.value().rfind(sub,*args)
     @overload
     def find(self, sub:str) -> int:
-        ...
+        pass
     @overload
     def find(self, sub:str, start:int)->int:
-        ...
+        pass
     @overload
     def find(self, sub:str, start:int, end:int)->int:
-        ...
+        pass
     def find(self, sub, *args):
         return self.value().find(sub,*args)
     @overload
     def rindex(self, sub:str) -> int:
-        ...
+        pass
     @overload
     def rindex(self, sub:str, start:int)->int:
-        ...
+        pass
     @overload
     def rindex(self, sub:str, start:int, end:int)->int:
-        ...
+        pass
     def rindex(self, sub, *args):
         return self.value().rindex(sub,*args)
     @overload
     def index(self, sub:str) -> int:
-        ...
+        pass
     @overload
     def index(self, sub:str, start:int)->int:
-        ...
+        pass
     @overload
     def index(self, sub:str, start:int, end:int)->int:
-        ...
+        pass
     def index(self, sub, *args):
         return self.value().index(sub,*args)
     @overload
     def count(self, sub:str) -> int:
-        ...
+        pass
     @overload
     def count(self, sub:str, start:int)->int:
-        ...
+        pass
     @overload
     def count(self, sub:str, start:int, end:int)->int:
-        ...
+        pass
     def count(self, sub, *args):
         return self.value().count(sub,*args)
     @overload
     def translate(self, sub:str) -> int:
-        ...
+        pass
     @overload
     def translate(self, sub:str, start:int)->int:
-        ...
+        pass
     @overload
     def translate(self, sub:str, start:int, end:int)->int:
-        ...
+        pass
     def translate(self, sub, *args):
         return self.value().translate(sub,*args)
     @overload
     def endswith(self, s:str) -> bool:
-        ...
+        pass
     @overload
     def endswith(self, s:str, start:int)->bool:
-        ...
+        pass
     @overload
     def endswith(self, s:str, start:int, end:int)->bool:
-        ...
+        pass
     def endswith(self, s, *args):
         return self.value().endswith(s,*args)
     @overload
     def startswith(self, s:str) -> bool:
-        ...
+        pass
     @overload
     def startswith(self, s:str, start:int)->bool:
-        ...
+        pass
     @overload
     def startswith(self, s:str, start:int, end:int)->bool:
-        ...
+        pass
     def startswith(self, s, *args):
         return self.value().startswith(s,*args)
     def strip(self, chars:Optional[str]=None):

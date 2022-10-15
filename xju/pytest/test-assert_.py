@@ -170,6 +170,15 @@ else:
     assert False
     pass
 
+Assert(X(4)).doesNotHaveAttr('fred')
+try:
+    Assert(X(4)).doesNotHaveAttr('value')
+except Exception as e:
+    Assert("unexpectedly has 'value' attribute").isIn(str(e))
+else:
+    assert False
+    pass
+
 Assert(None).is_(None)
 try:
     Assert(7).is_(None)

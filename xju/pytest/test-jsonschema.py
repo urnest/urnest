@@ -132,6 +132,68 @@ else:
     pass
 pass
 
+x2={'b':bool}
+Schema(x2).validate({'b':True})
+try:
+    Schema(x2).validate({'b':1})
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to verify {'b': 1} conforms to json schema {'b': <class 'bool'>} because\nfailed to validate dictionary item 'b' because\nfailed to verify 1 conforms to json schema <class 'bool'> because\n1 is not a Boolean."
+else:
+    assert None
+    pass
+try:
+    Schema(x2).validate(1)
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to verify 1 conforms to json schema {'b': <class 'bool'>} because\n1 is not a Dictionary."
+else:
+    assert None
+    pass
+
+x3=[int]
+Schema(x3).validate([7])
+try:
+    Schema(x3).validate({})
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to verify {} conforms to json schema [<class 'int'>] because\n{} is not a List."
+else:
+    assert None
+    pass
+
+
+x5=[int,bool]
+Schema(x5).validate([7,True])
+try:
+    Schema(x5).validate([7])
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to verify [7] conforms to json schema [<class 'int'>, <class 'bool'>] because\nlist [7] does not have 2 elements, it has 1 elements."
+else:
+    assert None
+    pass
+try:
+    Schema(x5).validate([7,8])
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to verify [7, 8] conforms to json schema [<class 'int'>, <class 'bool'>] because\nfailed to validate list element 1 because\nfailed to verify 8 conforms to json schema <class 'bool'> because\n8 is not a Boolean."
+else:
+    assert None
+    pass
+
+x4=(int,bool)
+Schema(x4).validate((7,True))
+try:
+    Schema(x4).validate([7])
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to verify [7] conforms to json schema (<class 'int'>, <class 'bool'>) because\ntuple has 1 items not 2."
+else:
+    assert None
+    pass
+try:
+    Schema(x4).validate([7,8])
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to verify [7, 8] conforms to json schema (<class 'int'>, <class 'bool'>) because\nfailed to validate tuple schema element 1 because\nfailed to verify 8 conforms to json schema <class 'bool'> because\n8 is not a Boolean."
+else:
+    assert None
+    pass
+
 s3=OneOf(int,None)
 Assert(str(s3))=="one of (<class 'int'>, None)"
 
@@ -143,4 +205,30 @@ else:
     assert False
     pass
 
-    
+try:
+    s4=Schema([])
+except Exception as e:
+    Assert("list schema must contain at least one element").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+try:
+    s4=Schema(( [], ))
+except Exception as e:
+    Assert("list schema must contain at least one element").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+class Y:
+    pass
+
+try:
+    s4=Schema(Y())
+except Exception as e:
+    Assert("jsonschema element may not be a <class '__main__.Y'>").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+

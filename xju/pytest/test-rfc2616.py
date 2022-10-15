@@ -20,35 +20,42 @@ from xju.rfc2616 import validateToken
 from xju.xn import readable_repr
 from xju.assert_ import Assert
 
-if __name__=='__main__':
-    validateToken('fred')
-    try:
-        validateToken('')
-    except Exception as e:
-        Assert(readable_repr(e))=='''\
+validateToken('fred')
+try:
+    validateToken('')
+except Exception as e:
+    Assert(readable_repr(e))=='''\
 Failed to validate RFC2616 token '' because
 '' is empty.'''
-    else:
-        assert False
-        pass
-    try:
-        validateToken('fred jones')
-    except Exception as e:
-        Assert(readable_repr(e))=='''\
+else:
+    assert False
+    pass
+try:
+    validateToken('fred jones')
+except Exception as e:
+    Assert(readable_repr(e))=='''\
 Failed to validate RFC2616 token 'fred jones' because
 failed to validate char at ...' jones' because
 ' ' is a separator.'''
-    else:
-        assert False
-        pass
-    try:
-        validateToken('fred\njones')
-    except Exception as e:
-        Assert(readable_repr(e))=='''\
+else:
+    assert False
+    pass
+try:
+    validateToken('fred\njones')
+except Exception as e:
+    Assert(readable_repr(e))=='''\
 Failed to validate RFC2616 token 'fred\\njones' because
 failed to validate char at ...'\\njones' because
 '\\n' is a control character.'''
-    else:
-        assert False
-        pass
+else:
+    assert False
+    pass
+pass
+
+try:
+    validateToken(chr(128))
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to validate RFC2616 token '\\x80' because\nfailed to validate first char because\n128 not 0..127."
+else:
+    assert False
     pass

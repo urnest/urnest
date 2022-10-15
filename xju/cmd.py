@@ -16,6 +16,7 @@
 import subprocess
 from typing import Sequence,Tuple
 from xju.xn import in_function_context
+import os
 
 class CmdFailed(Exception):
     def __init__(self,argv,status,stderr):

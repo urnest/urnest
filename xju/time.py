@@ -55,10 +55,10 @@ class Timestamp(TimestampBase):
 
     @overload
     def __sub__(self, t2:TimestampBase)->Duration:
-        ...
+        pass
     @overload
     def __sub__(self, duration:Union[Duration,Hours,Minutes,Seconds]):  # -> Timestamp
-        ...
+        pass
     def __sub__(self, x):
         if isinstance(x,Duration):
             return Timestamp(self.value()-x.value())
@@ -75,29 +75,19 @@ class Timestamp(TimestampBase):
     def __float__(self):
         return self.__value
     def __eq__(self, x):
-        if type(x) is Timestamp:
-            return self.value()==x.value()
-        return NotImplemented
+        return not self.__ne__(x)
     def __ne__(self, x):
-        if type(x) is Timestamp:
-            return self.value()!=x.value()
-        return NotImplemented
+        return self<x or x<self
     def __le__(self, x):
-        if type(x) is Timestamp:
-            return self.value()<=x.value()
-        return NotImplemented
+        return self<x or self==x
     def __ge__(self, x):
-        if type(x) is Timestamp:
-            return self.value()>=x.value()
-        return NotImplemented
+        return self>x or self==x
     def __lt__(self, x):
         if type(x) is Timestamp:
             return self.value()<x.value()
         return NotImplemented
     def __gt__(self, x):
-        if type(x) is Timestamp:
-            return self.value()>x.value()
-        return NotImplemented
+        return x<self
     pass
 
 def now()->Timestamp:

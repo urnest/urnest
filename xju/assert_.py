@@ -36,6 +36,9 @@ class Assert():
     def hasAttr(self,y:str):
         if not hasattr(self.x,y):
             raise Exception(f'{self.x!r} has no {y!r} attribute')
+    def doesNotHaveAttr(self,y:str):
+        if hasattr(self.x,y):
+            raise Exception(f'{self.x!r} unexpectedly has {y!r} attribute')
     def startsWith(self,y):
         if not self.x[0:len(y)]==y:
             raise Exception(f'{self.x!r} does not start with {y!r}')

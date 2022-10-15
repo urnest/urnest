@@ -136,8 +136,12 @@ def in_context(context:str, exceptionInfo=None, fl=None)->Exception:
     # fill in most recent file,line (latest context or cause if no context)
     f,l=st[-1][0:2]
     if r.context:
-        if not r.context[-1][1]:
-            r.context[-1][1].setTo(f,l)
+        if not r.context[-1][1].file:
+            r.context[-1][1].file=f
+            pass
+        if not r.context[-1][1].line:
+            r.context[-1][1].file=l
+            pass
     else:
         r.cause[1].setTo(f,l)
         pass
@@ -195,11 +199,6 @@ class Scope:
         if eType:
             raise in_context(description, (eType,eVal,eTrc)) from None
         return False
-    def __del__(self):
-        if self.description:
-            self.log('- '+self.description+' = '+repr(self.result_))
-            pass
-        pass
     def result(self,result):
         self.result_=result
         return result

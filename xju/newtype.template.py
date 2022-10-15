@@ -22,7 +22,7 @@
 #     new int type A, A+A->A
 
 from typing import Iterable,Sized,Container,Collection,Reversible,Protocol,cast,Type,overload,TypeVar
-from typing import Generic,Tuple,Mapping,Optional,List,Literal,Union,Any
+from typing import Generic,Tuple,Mapping,Optional,List,Literal,Union,Any,SupportsRound
 
 Tag=TypeVar('Tag',covariant=True)
 
@@ -47,7 +47,7 @@ class Int_(Generic[Tag]):
 
     pass
 
-class Int(Generic[Tag],Int_[Tag]):
+class Int(Generic[Tag],Int_[Tag],SupportsRound):
     def __eq__(self,other)->bool:
         '''equality test ignores possible subclass relationships, i.e. only valid
            for two object of exactly the same class; except that python insists
@@ -70,9 +70,6 @@ class Int(Generic[Tag],Int_[Tag]):
     def __repr__(self)->str:
         return repr(self.value())
 
-    def __reduce__(self)->Tuple:
-        return (self.__class__, (self.value(),))
-
     def __format__(self, format_spec:str)->str:
         return self.value().__format__(format_spec)
 
@@ -84,13 +81,13 @@ class Int(Generic[Tag],Int_[Tag]):
 
     @overload
     def __divmod__(self, x:int) -> Tuple:  # Tuple[Self,Self]
-        ...
+        pass
     @overload
     def __divmod__(self, x:float) -> Tuple[float,float]:
-        ...
+        pass
     @overload
     def __divmod__(self, x:Int_[Tag]) -> Tuple:  # Tuple[int,int]
-        ...
+        pass
     def __divmod__(self, x):
         if isinstance(x,int):
             q,r=self.value().__divmod__(x)
@@ -103,13 +100,13 @@ class Int(Generic[Tag],Int_[Tag]):
 
     @overload
     def __floordiv__(self, x:int):  # -> Int[Tag]
-        ...
+        pass
     @overload
     def __floordiv__(self, x:float) -> float:
-        ...
+        pass
     @overload
     def __floordiv__(self, x:Int_[Tag]) -> int:
-        ...
+        pass
     def __floordiv__(self, x):
         if isinstance(x,int):
             return self.__class__(self.value()//x)
@@ -128,39 +125,39 @@ class Int(Generic[Tag],Int_[Tag]):
     
     @overload
     def __mul__(self, x:int):  # -> Int[Tag]
-        ...
+        pass
     @overload
-    def __mul__(self, x:float) -> float:
-        ...
+    def __mul__(self, x:Any):  # -> NotImplemented:
+        pass
     def __mul__(self, x):
         if isinstance(x,int):
             return self.__class__(self.value()*x)
         else:
-            return self.value()*x
+            return NotImplemented
         pass
 
     @overload
     def __rmul__(self, x:int):  # -> Int[Tag]
-        ...
+        pass
     @overload
-    def __rmul__(self, x:float) -> float:
-        ...
+    def __rmul__(self, x:Any):  # -> NotImplemented
+        pass
     def __rmul__(self, x):
         if isinstance(x,int):
             return self.__class__(x*self.value())
         else:
-            return x*self.value()
+            return NotImplemented
         pass
 
     @overload
     def __mod__(self, other:int):  #->Int[Tag]
-        ...
+        pass
     @overload
     def __mod__(self, other:float)->float:
-        ...
+        pass
     @overload
     def __mod__(self, other:Int_[Tag])->int:
-        ...
+        pass
     def __mod__(self, other):
         if type(other) is int:
             return self.__class__(self.value()%other)
@@ -168,6 +165,9 @@ class Int(Generic[Tag],Int_[Tag]):
             return self.value()%other
         else:
             return self.value()%other.value()
+
+    def __round__(self, ndigits:int=0):  #->Int[Tag]
+        return self.__class__(self.value().__round__(ndigits))
 
     # generated Int methods here...
 
@@ -186,7 +186,7 @@ class Float_(Generic[Tag]):
 
     pass
 
-class Float(Generic[Tag],Float_[Tag]):
+class Float(Generic[Tag],Float_[Tag],SupportsRound):
     def __eq__(self,other)->bool:
         '''equality test ignores possible subclass relationships, i.e. only valid
            for two object of exactly the same class; except that python insists
@@ -209,9 +209,6 @@ class Float(Generic[Tag],Float_[Tag]):
     def __repr__(self)->str:
         return repr(self.value())
 
-    def __reduce__(self)->Tuple:
-        return (self.__class__, (self.value(),))
-
     def __format__(self, format_spec:str)->str:
         return self.value().__format__(format_spec)
 
@@ -229,85 +226,85 @@ class Float(Generic[Tag],Float_[Tag]):
 
     @overload
     def __divmod__(self, x:int) -> Tuple:  # Tuple[Self,Self]
-        ...
+        pass
     @overload
     def __divmod__(self, x:float) -> Tuple:  # Tuple[Self,Self]
-        ...
+        pass
     @overload
     def __divmod__(self, x:Float_[Tag]) -> Tuple:  # Tuple[float,float]
-        ...
+        pass
     def __divmod__(self, x):
         if isinstance(x,int) or isinstance(x,float):
             q,r=self.value().__divmod__(x)
-            return Float[Tag](q),Float[Tag](r)
+            return self.__class__(q),self.__class__(r)
         else:
             return divmod(self.value(),x.value())
         pass
 
     @overload
     def __floordiv__(self, x:int):  # -> Float[Tag]
-        ...
+        pass
     @overload
     def __floordiv__(self, x:float):  # -> Float[Tag]
-        ...
+        pass
     @overload
     def __floordiv__(self, x:Float_[Tag]) -> float:
-        ...
+        pass
     def __floordiv__(self, x):
         if isinstance(x,int) or isinstance(x,float):
-            return Float[Tag](self.value()//x)
+            return self.__class__(self.value()//x)
         else:
             return self.value()//x.value()
         pass
 
     @overload
     def __truediv__(self, x:Union[float,int]): # -> Float[Tag]
-        ...
+        pass
     @overload
     def __truediv__(self, x:Float_[Tag]) -> float:
-        ...
+        pass
     def __truediv__(self, x):
         if isinstance(x,int) or isinstance(x,float):
-            return Float[Tag](self.value()/x)
+            return self.__class__(self.value()/x)
         else:
             return self.value()/x.value()
         pass
     
     @overload
     def __mul__(self, x:int):  # -> Float[Tag]
-        ...
+        pass
     @overload
     def __mul__(self, x:float):  # -> Float[Tag]
-        ...
+        pass
     def __mul__(self, x):
-        return Float[Tag](self.value()*x)
+        return self.__class__(self.value()*x)
 
     @overload
     def __rmul__(self, x:int):  # -> Float[Tag]
-        ...
+        pass
     @overload
     def __rmul__(self, x:float):  # -> Float[Tag]
-        ...
+        pass
     def __rmul__(self, x):
-        return Float[Tag](x*self.value())
+        return self.__class__(x*self.value())
 
     @overload
     def __mod__(self, other:int):  #->Float[Tag]
-        ...
+        pass
     @overload
     def __mod__(self, other:float):  #->Float[Tag]
-        ...
+        pass
     @overload
     def __mod__(self, other:Float_[Tag])->float:
-        ...
+        pass
     def __mod__(self, other):
         if isinstance(other,int) or isinstance(other,float):
-            return Float[Tag](self.value()%other)
+            return self.__class__(self.value()%other)
         else:
             return self.value()%other.value()
 
-    def __round__(self, ndigits:int):  #->Float[Tag]
-        return Float[Tag](self.value().__round__(ndigits))
+    def __round__(self, ndigits:int=0):  #->Float[Tag]
+        return self.__class__(self.value().__round__(ndigits))
 
     # generated Float methods here...
 
@@ -346,9 +343,6 @@ class Str(Generic[Tag],Str_[Tag]):
 
     def __repr__(self)->str:
         return repr(self.value())
-
-    def __reduce__(self)->Tuple:
-        return (self.__class__, (self.value(),))
 
     def __format__(self, format_spec:str)->str:
         return self.value().__format__(format_spec)

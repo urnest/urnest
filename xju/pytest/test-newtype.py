@@ -16,9 +16,10 @@
 
 from xju.newtype import Str,Int,Float
 from xju.assert_ import Assert
-import pickle
+from xju.xn import readable_repr
 
-from typing import Dict
+from typing import Dict,cast
+from math import trunc,ceil,floor
 
 class FirstNameType:pass
 class LastNameType:pass
@@ -35,10 +36,13 @@ def f(x:FirstName)->FirstName:
 first_name=FirstName('fred')
 last_name=LastName('jones')
 
+Assert(first_name!=FirstName('jack'))==True
 Assert(full_name(first_name,last_name))=='fred jones'
 Assert(first_name.startswith('fr'))==True
 Assert(first_name).isInstanceOf(FirstName)
 Assert(first_name).isNotInstanceOf(LastName)
+
+Assert(str(FirstName('jack')))=='jack'
 
 another_first_name=FirstName('louise')
 
@@ -83,6 +87,7 @@ Assert(first_name.islower())==True
 Assert(first_name.isnumeric())==False
 Assert(first_name.isspace())==False
 Assert(first_name.isupper())==False
+Assert(first_name.isalpha())==True
 Assert(first_name.isalnum())==True
 Assert(first_name.isdigit())==False
 Assert(first_name.istitle())==False
@@ -126,7 +131,13 @@ Assert(FirstName('J P fred').rpartition(sep=' P '))==('J',' P ','fred')
 Assert(FirstName('J P fred').removeprefix('J '))==FirstName('P fred')
 Assert(FirstName('J P fred').removesuffix('ed'))==FirstName('J P fr')
 
-
+try:
+    first_name+cast(FirstName,'fred')
+except Exception as e:
+    Assert(readable_repr(e))=="unsupported operand type(s) for +: 'FirstName' and 'str'"
+else:
+    assert False
+    pass
 
 # Int[X]
 
@@ -138,6 +149,8 @@ class Minutes(Int[MinutesTag]):pass
 
 h1=Hours(7)
 h2=Hours(8)
+Assert(h1)==Hours(7)
+Assert(h1)<h2
 Assert(h1)<=h2
 Assert(h1)!=h2
 Assert(h2)>h1
@@ -165,11 +178,53 @@ Assert(h1/Hours(3))==7/3
 Assert(h1/2.5)==7/2.5
 # mull
 Assert(h1*2)==Hours(14)
-Assert(h2*2.5)==20.0
+try:
+    h2*2.5
+except TypeError as e:
+    Assert("unsupported operand type(s) for *: 'Hours' and 'float'").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+try:
+    Hours(3)*Hours(4)
+except TypeError as e:
+    Assert("unsupported operand type(s) for *: 'Hours' and 'Hours'").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+# rmull
+Assert(3*Hours(4))==Hours(12)
+try:
+    3.5*Hours(4)
+except TypeError as e:
+    Assert("unsupported operand type(s) for *: 'float' and 'Hours'").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+    
 # mod
 Assert(h1%0.5)==h1.value()%0.5
 Assert(h1%h2)==h1.value()%h2.value()
 Assert(h1%2)==Hours(h1.value()%2)
+
+# neg
+Assert(-Hours(2))==Hours(-2)
+
+# pos
+Assert(+Hours(-2))==Hours(-2)
+
+# trun
+Assert(trunc(Hours(-2)))==Hours(-2)
+
+# round
+Assert(round(Hours(-2)))==Hours(-2)
+Assert(round(Hours(-22),-1))==Hours(-20)
+
+# ceil
+Assert(ceil(Hours(2)))==Hours(2)
+
+# floor
+Assert(floor(Hours(2)))==Hours(2)
 
 Assert(int(h1))==7
 Assert(h1.__sizeof__())==h1.value().__sizeof__()
@@ -186,18 +241,89 @@ Assert(h1.__rlshift__(3))==Hours(h1.value().__rlshift__(3))
 Assert(h1.__rshift__(3))==Hours(h1.value().__rshift__(3))
 Assert(h1+h2)==Hours(15)
 Assert(h1-h2)==Hours(-1)
-Assert(h1.__rsub__(h2))==Hours(1)
 Assert(h1&h2)==Hours(7&8)
 Assert(h1|h2)==Hours(7|8)
 Assert(h1.__xor__(h2))==Hours(7^8)
 Assert(h1.as_integer_ratio())==h1.value().as_integer_ratio()
 
+Assert(Hours(7)!=Hours(8))==True
+
+try:
+    Hours(7)==7
+except Exception as e:
+    Assert(readable_repr(e))=="7's type <class '__main__.Hours'> is not the same as 7's type <class 'int'>"
+else:
+    assert False
+    pass
+
+try:
+    Hours(7)+cast(Hours,7)
+except Exception as e:
+    Assert("unsupported operand type(s) for +: 'Hours' and 'int'").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+try:
+    cast(Hours,7)+Hours(7)
+except Exception as e:
+    Assert("unsupported operand type(s) for +: 'int' and 'Hours'").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+try:
+    Hours(7)-cast(Hours,7)
+except Exception as e:
+    Assert("unsupported operand type(s) for -: 'Hours' and 'int'").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+try:
+    cast(Hours,7)-Hours(7)
+except Exception as e:
+    Assert("unsupported operand type(s) for -: 'int' and 'Hours'").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+try:
+    Hours(7)&cast(Hours,7)
+except Exception as e:
+    Assert("unsupported operand type(s) for &: 'Hours' and 'int'").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+
+try:
+    Hours(7)|cast(Hours,7)
+except Exception as e:
+    Assert("unsupported operand type(s) for |: 'Hours' and 'int'").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+
+try:
+    Hours(7)^cast(Hours,7)
+except Exception as e:
+    Assert("unsupported operand type(s) for ^: 'Hours' and 'int'").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+
+
 
 class LengthType:pass
 class WeightType:pass
 
-Length=Float[LengthType]
-Weight=Float[WeightType]
+class Length(Float[LengthType]):
+    pass
+class Weight(Float[WeightType]):
+    pass
 
 
 # Float
@@ -206,6 +332,7 @@ l2=Length(10)
 Assert(l1.value())==7.5
 Assert(l1)==l1
 Assert(l1)!=l2
+assert l1!=l2
 Assert(l1)<=l2
 Assert(l1)<l2
 Assert(l2)<=l2
@@ -213,7 +340,6 @@ Assert(l2)>l1
 Assert(l2)>=l1
 Assert(str(l1))==str(7.5)
 Assert(repr(l1))==repr(7.5)
-Assert(pickle.loads(pickle.dumps(l1)))==l1
 Assert(f'{l1:0.2f}')=='7.50'
 Assert(int(l1))==7
 Assert(float(l1))==7.5
@@ -230,9 +356,17 @@ Assert(l1//l2)==7.5//10.0
 Assert(l1/2)==Length(7.5/2)
 Assert(l1/2.6)==Length(7.5/2.6)
 Assert(l1/l2)==7.5/10.0
+#add
+Assert(l1+Length(2))==Length(7.5+2)
+Assert(l1+Length(2.6))==Length(7.5+2.6)
+
 #mul
 Assert(l1*2)==Length(7.5*2)
 Assert(l1*2.6)==Length(7.5*2.6)
+#rmul
+Assert(2*l1)==Length(7.5*2)
+Assert(2.6*l1)==Length(7.5*2.6)
+
 #mod
 Assert(l1%2)==Length(7.5%2)
 Assert(l1%2.6)==Length(7.5%2.6)
@@ -253,3 +387,37 @@ Assert(l1.is_integer())==False
 Assert(l2.is_integer())==True
 Assert(l1+l2)==Length(17.5)
 Assert(l1-l2)==Length(-2.5)
+Assert(Length(2.5).as_integer_ratio())==2.5.as_integer_ratio()
+
+try:
+    Length(7)+cast(Length,7)
+except Exception as e:
+    Assert("unsupported operand type(s) for +: 'Length' and 'int'").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+try:
+    cast(Length,7)+Length(7)
+except Exception as e:
+    Assert("unsupported operand type(s) for +: 'int' and 'Length'").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+try:
+    Length(7)-cast(Length,7)
+except Exception as e:
+    Assert("unsupported operand type(s) for -: 'Length' and 'int'").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+try:
+    cast(Length,7)-Length(7)
+except Exception as e:
+    Assert("unsupported operand type(s) for -: 'int' and 'Length'").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+

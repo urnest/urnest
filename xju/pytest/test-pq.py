@@ -88,6 +88,8 @@ def test1():
     s3=s.find(hasClass('item5'))
     parse(newitem5, 'newitem5').replace(s3)
     Assert(str(s))==html3
+    Assert(s.utf8())==str(s).encode('utf-8')
+    pass
 
 html4='''<html>
 <body>
@@ -353,6 +355,7 @@ def test35():
     Assert(parse('<br>').join(x.find(tagName('p'))).text())=='jock\n\nfred\n\n\nann\n'
     Assert(str(x.find(tagName('p'))[1:]))=='<p class="out">fred<br></p><p>ann</p>'
     Assert(x.__add__(7))==NotImplemented
+    Assert(str(x.find(tagName('p')).attrs('class','in')))=='<p class="in">jock</p><p class="in">fred<br></p><p class="in">ann</p>'
     pass
 
 def test36():
