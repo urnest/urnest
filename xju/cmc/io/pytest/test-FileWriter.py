@@ -17,11 +17,13 @@
 #
 
 
-from xju.cmc.io import FileWriter,FileReader,FileMode
+from xju.cmc.io import FileWriter,FileReader,FileMode,FilePosition
 from pathlib import Path
 from xju.assert_ import Assert
 from xju.xn import readable_repr
 from xju.misc import ByteCount
+
+f:FileWriter
 
 try:
     with FileWriter(Path("xxx.txt")) as f:
@@ -47,14 +49,15 @@ else:
     assert False, f'should not be here with {f}'
     pass
 
+f2:FileReader
 with FileReader(Path('xxx.txt')) as f2:
     Assert(f2.input.readall())==b'fredward'
     pass
 
 with FileWriter(Path("xxx.txt")) as f:
-    f.seek_by(4)
+    f.seek_by(ByteCount(4))
     f.output.write(b'lea')
-    f.seek_to(1)
+    f.seek_to(FilePosition(1))
     f.output.write(b'i')
     pass
 

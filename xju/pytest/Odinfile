@@ -1,4 +1,6 @@
-%py-tests.tree==<<
+%all==%all.tree:leaves
+
+%all.tree==<<
 %test-py-exit
 %unit-tests.tree:leaves
 %verify-test-cmc.x1-fail

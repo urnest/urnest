@@ -21,7 +21,12 @@ from pathlib import Path
 from xju.assert_ import Assert
 from xju.xn import readable_repr
 from xju.misc import ByteCount
+from xju.patch import PatchAttr
 
+import os
+from io import TextIOWrapper
+
+f:FileReader
 try:
     with FileReader(Path("xxx.txt")) as f:
         pass
@@ -31,6 +36,7 @@ else:
     assert False, f'should not be here with {f}'
     pass
 
+f2:TextIOWrapper
 with open('xxx.txt','w') as f2:
     f2.write('fredward')
     pass
@@ -38,10 +44,11 @@ with open('xxx.txt','w') as f2:
 with FileReader(Path("xxx.txt")) as f:
     Assert(f.input.readall().decode('utf-8'))=="fredward"
     Assert(f.size())==ByteCount(8)
-    Assert(f.seek_by(-2).input.read(2))==b'rd'
-    Assert(f.seek_to(2).input.read(3))==b'edw'
-    # seeking past end is not an error, even if it makes no sense
-    Assert(f.seek_to(9).input.tell())==9
+    Assert(f.seek_by(ByteCount(-2)).read(ByteCount(2)))==b'rd'
+    Assert(f.position())==FilePosition(8)
+    Assert(f.seek_to(FilePosition(2)).read(ByteCount(3)))==b'edw'
+    # seeking past end is not an error
+    Assert(f.seek_to(FilePosition(9)).position())==FilePosition(9)
 
     try:
         f.seek_to(FilePosition(-1))
@@ -53,3 +60,16 @@ with FileReader(Path("xxx.txt")) as f:
     pass
 
 assert not hasattr(f,'input')
+
+def raise_some_error(*args,**kwargs):
+    raise Exception('some error')
+
+try:
+    with PatchAttr(os,'close',raise_some_error):
+        with FileReader(Path("xxx.txt")) as f:
+            pass
+        pass
+    pass
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to close xxx.txt reader with close-on-exec True because\nsome error."
+    pass

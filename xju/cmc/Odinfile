@@ -1,7 +1,7 @@
 %all==%all.tree:leaves
 
 %all.tree==<<
-pytest%all.tree:leaves
+pytest%all
 (io%all)
 
 

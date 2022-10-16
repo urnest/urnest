@@ -16,39 +16,32 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-from xju.cmc.io import FilePosition
+from xju.cmc.io import FileMode
 from xju.assert_ import Assert
 from xju.xn import readable_repr
-from xju.misc import ByteCount
 from typing import cast
 
-p1=FilePosition(10)
-Assert(str(p1))=='10'
-Assert(repr(p1))=='10'
-Assert(ByteCount(10)+p1)==FilePosition(20)
-Assert(p1-FilePosition(3))==ByteCount(7)
-Assert(p1-ByteCount(3))==FilePosition(7)
-Assert(p1!=FilePosition(12))==True
-Assert(p1)<FilePosition(12)
-Assert(p1)<=FilePosition(12)
-Assert(p1)<=p1
-Assert(FilePosition(12))>p1
-Assert(p1)>=p1
+p1=FileMode(0o641)
+Assert(str(p1))=="0o641"
+Assert(repr(p1))=="0o641"
+Assert(p1+FileMode(0o002))==FileMode(0o643)
+Assert(p1-FileMode(0o002))==p1
+Assert(p1-FileMode(0o001))==FileMode(0o640)
+Assert(p1)==FileMode(0o641)
+Assert(p1!=FileMode(0o640))==True
 
 try:
-    p1-cast(ByteCount,'fred')
+    y=p1==7
 except Exception as e:
-    Assert("cannot subtract fred of type <class 'str'> from FilePosition").isIn(readable_repr(e))
+    Assert(readable_repr(e))=="7 is of type <class 'int'> not <class 'xju.cmc.io.FileMode'>"
 else:
-    assert False
+    assert False,y
     pass
 
-Assert(p1)!=FilePosition(7)
 try:
-    p1=='fred'
+    p1!='fred'
 except Exception as e:
-    Assert("Failed to compare 10 to fred because\n'fred' is not a FilePosition it is a str.").isIn(
-        readable_repr(e))
+    Assert(readable_repr(e))=="fred is of type <class 'str'> not <class 'xju.cmc.io.FileMode'>"
 else:
     assert False
     pass

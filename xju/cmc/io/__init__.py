@@ -108,11 +108,11 @@ class FileMode(FileModeBase):
     def __eq__(self,x):
         if type(x) is FileMode:
             return self.value()==x.value()
-        return NotImplemented
+        raise Exception(f'{x} is of type {x.__class__} not {self.__class__}')
     def __ne__(self,x):
         if type(x) is FileMode:
             return self.value()!=x.value()
-        return NotImplemented
+        raise Exception(f'{x} is of type {x.__class__} not {self.__class__}')
     pass
 
 class FileReader(contextlib.AbstractContextManager):
