@@ -1,8 +1,5 @@
 %all==%all.tree:leaves
 
-%all.py3cov.summary==%all:py3.cov.list:agg.py3.cov:py3.cov.summary
-%all.py3cov.report-dir==%all:py3.cov.list:agg.py3.cov:py3.cov.report
-
 %all.tree==<<
 %tests.tree
 base64%tests.tree
@@ -75,7 +72,7 @@ test%tests.tree
 ()+cmd=test '-s' (%test-check_types_related_2_err):exec.output
 ()+cmd=(print-wordsizes.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 netflow%tests.tree
-pytest%py-tests.tree:leaves
+pytest%all
 wal%all.tree:leaves
 cmc%all.tree:leaves
 

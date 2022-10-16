@@ -58,11 +58,7 @@
 
 :agg.py3.cov 'aggregated python covrerage data' => :py3.cov;
 
-:py3.cov.summary 'python coverage summary' => :FILE;
-:py3.cov.report 'python coverage report' => :DERIVED-DIRECTORY;
-
 :py3.cov.list 'list of python coverage reports' => <:LIST>;
-
 
 +py_sp 'name of a directory in a PYTHONPATH'? => :ls;
 
@@ -159,8 +155,6 @@ EXEC (py3.exec.cov.sh) (:py3.exec/run.py3.cov) (:py3.exec/output) (:py3.exec/err
   => (:py3.exec.cov.ref);
 
 READ-REFERENCE (:py3.exec.cov.ref) => (:py3.exec.cov);
-
-EXEC (cov-report.sh) (:py3.cov) => (:py3.cov.summary) (:py3.cov.report);
 
 EXEC (cov-merge.sh) (:py3.cov.list:ls) (merge-cov) NEEDS (:py3.cov.list) => (:agg.py3.cov);
 
