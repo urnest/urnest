@@ -164,7 +164,7 @@ class FileReader(contextlib.AbstractContextManager):
         pass
     
     def seek_by(self, offset:ByteCount):
-        '''position so next read occurs {offset} bytes from current position
+        '''position {self} so next read occurs {offset} bytes from current position
            - returns self'''
         try:
             self.input.seek(int(offset), io.SEEK_CUR)
@@ -174,7 +174,7 @@ class FileReader(contextlib.AbstractContextManager):
         pass
     
     def size(self) -> ByteCount:
-        '''return size of file'''
+        '''return size of {self}'s file'''
         try:
             return ByteCount(os.fstat(self.__fd).st_size)
         except Exception:
@@ -182,7 +182,7 @@ class FileReader(contextlib.AbstractContextManager):
         pass
 
     def position(self) -> FilePosition:
-        '''get current position'''
+        '''get current position of {self}'''
         try:
             return FilePosition(self.input.seek(0, io.SEEK_CUR))
         except Exception:
@@ -195,7 +195,7 @@ class FileReader(contextlib.AbstractContextManager):
             # files are always blocking, so input.read will never return None
             return cast(bytes,self.input.read(read_at_most.value()))
         except Exception:
-            raise in_function_context(FileReader.read,vars())
+            raise in_function_context(FileReader.read,vars()) from None
         pass
 
     def fd(self) -> int:
@@ -267,7 +267,7 @@ class FileWriter(contextlib.AbstractContextManager):
         pass
     
     def seek_to(self, position:FilePosition):
-        '''position so next write occurs {position} bytes from start of file
+        '''position {self} so next write occurs {position} bytes from start of file
            - returns self'''
         try:
             self.output.seek(int(position), io.SEEK_SET)
@@ -277,7 +277,7 @@ class FileWriter(contextlib.AbstractContextManager):
         pass
     
     def seek_by(self, offset:ByteCount):
-        '''position so next write occurs {offset} bytes from current position
+        '''position {self} so next write occurs {offset} bytes from current position
            - returns self'''
         try:
             self.output.seek(int(offset), io.SEEK_SET)
@@ -287,17 +287,17 @@ class FileWriter(contextlib.AbstractContextManager):
         pass
     
     def size(self) -> ByteCount:
-        '''return size of file'''
+        '''return size of {self}'s file'''
         try:
             return ByteCount(os.fstat(self.__fd).st_size)
         except:
             raise in_function_context(FileWriter.size,vars()) from None
         pass
 
-    def position(self) -> ByteCount:
-        '''get current position'''
+    def position(self) -> FilePosition:
+        '''get current position {self}'''
         try:
-            return ByteCount(self.output.seek(0, io.SEEK_CUR))
+            return FilePosition(self.output.seek(0, io.SEEK_CUR))
         except Exception:
             raise in_function_context(FileWriter.position,vars()) from None
         pass

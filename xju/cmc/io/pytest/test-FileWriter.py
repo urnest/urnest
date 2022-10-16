@@ -22,6 +22,9 @@ from pathlib import Path
 from xju.assert_ import Assert
 from xju.xn import readable_repr
 from xju.misc import ByteCount
+from xju.patch import PatchAttr
+
+import os
 
 f:FileWriter
 
@@ -38,6 +41,20 @@ with FileWriter(Path('xxx.txt'),mode=FileMode(0o666)) as f:
     f.output.write(b'fred')
     Assert(f.size())==ByteCount(4)
     f.output.write(b'ward')
+    try:
+        f.seek_to(FilePosition(-1))
+    except Exception as e:
+        Assert(readable_repr(e))=="Failed to position file writer for xxx.txt with with create mode 0o666, must not exist False, close-on-exec True so next write occurs -1 bytes from start of file because\n[Errno 22] Invalid argument."
+    else:
+        assert False, 'should not b here'
+    pass
+
+    try:
+        f.seek_by(ByteCount(-11))
+    except Exception as e:
+        Assert(readable_repr(e))=="Failed to position file writer for xxx.txt with with create mode 0o666, must not exist False, close-on-exec True so next write occurs -11 bytes from current position because\n[Errno 22] Invalid argument."
+    else:
+        assert False, 'should not b here'
     pass
 
 try:
@@ -66,3 +83,39 @@ assert not hasattr(f,'output')
 with FileReader(Path('xxx.txt')) as f2:
     Assert(f2.input.readall())==b'fiedlead'
     pass
+
+def raise_some_error(*args,**kwargs):
+    raise Exception('some error')
+
+try:
+    with PatchAttr(os,'close',raise_some_error):
+        with FileWriter(Path('xxx.txt'),mode=FileMode(0o666)) as f:
+            pass
+        pass
+    pass
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to close file writer for xxx.txt with with create mode 0o666, must not exist False, close-on-exec True because\nsome error."
+    pass
+
+with FileWriter(Path('xxx.txt'),mode=FileMode(0o666)) as f:
+    try:
+        with PatchAttr(os,'fstat',raise_some_error):
+            f.size()
+    except Exception as e:
+        Assert(readable_repr(e))=="Failed to return size of file writer for xxx.txt with with create mode 0o666, must not exist False, close-on-exec True's file because\nsome error."
+    else:
+        assert False
+        pass
+    pass
+
+with FileWriter(Path('xxx.txt'),mode=FileMode(0o666)) as f:
+    try:
+        with PatchAttr(FilePosition,'__init__',raise_some_error):
+            f.position()
+    except Exception as e:
+        Assert(readable_repr(e))=="Failed to get current position file writer for xxx.txt with with create mode 0o666, must not exist False, close-on-exec True because\nsome error."
+    else:
+        assert False
+        pass
+    pass
+

@@ -24,7 +24,7 @@ from xju.misc import ByteCount
 from xju.patch import PatchAttr
 
 import os
-from io import TextIOWrapper
+from io import TextIOWrapper,FileIO
 
 f:FileReader
 try:
@@ -59,6 +59,14 @@ with FileReader(Path("xxx.txt")) as f:
         assert False, 'should not b here'
     pass
 
+    try:
+        f.seek_by(ByteCount(-11))
+    except Exception as e:
+        Assert(readable_repr(e))=='Failed to position xxx.txt reader with close-on-exec True so next read occurs -11 bytes from current position because\n[Errno 22] Invalid argument.'
+    else:
+        assert False, 'should not b here'
+    pass
+
 assert not hasattr(f,'input')
 
 def raise_some_error(*args,**kwargs):
@@ -73,3 +81,40 @@ try:
 except Exception as e:
     Assert(readable_repr(e))=="Failed to close xxx.txt reader with close-on-exec True because\nsome error."
     pass
+
+with FileReader(Path("xxx.txt")) as f:
+    try:
+        with PatchAttr(os,'fstat',raise_some_error):
+            f.size()
+    except Exception as e:
+        Assert(readable_repr(e))=="Failed to return size of xxx.txt reader with close-on-exec True's file because\nsome error."
+    else:
+        assert False
+        pass
+    pass
+
+with FileReader(Path("xxx.txt")) as f:
+    try:
+        with PatchAttr(FilePosition,'__init__',raise_some_error):
+            f.position()
+    except Exception as e:
+        Assert(readable_repr(e))=="Failed to get current position of xxx.txt reader with close-on-exec True because\nsome error."
+    else:
+        assert False
+        pass
+    pass
+
+with FileReader(Path("xxx.txt")) as f:
+    c=ByteCount(1)
+    with PatchAttr(ByteCount,'value',raise_some_error):
+        try:
+            f.read(c)
+        except Exception as e:
+            Assert('some error').isIn(readable_repr(e))
+        else:
+            assert False
+            pass
+        pass
+    pass
+
+

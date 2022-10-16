@@ -21,6 +21,9 @@ from xju.cmc.io import FileLock,FileWriter,FileReader,FileMode
 from pathlib import Path
 from xju.assert_ import Assert
 from xju.xn import readable_repr
+from xju.patch import PatchAttr
+
+import fcntl
 
 with FileWriter(Path('xxx.txt'),mode=FileMode(0o666)) as f:
     with FileLock(f) as l1:
@@ -33,6 +36,24 @@ with FileWriter(Path('xxx.txt'),mode=FileMode(0o666)) as f:
             else:
                 assert False, 'should not be here with {l2}'
                 pass
+            pass
+        pass
+    pass
+
+def raise_some_error_on_unlock(fd, flag):
+    if flag==fcntl.LOCK_UN:
+        raise Exception('some error')
+    pass
+
+with FileWriter(Path('xxx.txt'),mode=FileMode(0o666)) as f:
+    with PatchAttr(fcntl,'flock',raise_some_error_on_unlock):
+        try:
+            with FileLock(f) as l1:
+                pass
+        except Exception as e:
+            Assert(readable_repr(e))=='Failed to release non-blocking "flock" lock file writer for xxx.txt with with create mode 0o666, must not exist False, close-on-exec True because\nsome error.'
+        else:
+            assert False
             pass
         pass
     pass
