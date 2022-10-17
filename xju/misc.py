@@ -21,11 +21,11 @@ class ByteCountTag:pass
 class ByteCount(Int[ByteCountTag]):
     pass
 
-def toJson(x:Union[str,int,float,None,List,Dict],cls=json.JSONEncoder) -> str:
+def toJson(x:Union[str,int,float,bool,None,List,Dict],cls=json.JSONEncoder) -> str:
     '''JSON-encode {x}
        - produces multi-line format with 4-space indent'''
     return json.dumps(x,sort_keys=True,indent=4,separators=(',',': '),cls=cls)
 
-def fromJson(x) -> Union[str,int,float,None,List,Dict]:
+def fromJson(x:str) -> Union[str,int,float,bool,None,List,Dict]:
     '''JSON-decode {x}'''
     return json.loads(x)

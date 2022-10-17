@@ -44,8 +44,9 @@ class ColNameType:pass
 class ColName(Str[ColNameType]):pass
 
 ColType=Literal[
-    'str','int','float',       # not allowed to be None
-    '(str)','(int)','(float)'  # optional, i.e. value can be None
+    'str','int','float','bool',          # not allowed to be None
+    '(str)','(int)','(float)','(bool)',  # optional, i.e. value can be None
+    'json'                               # any json-ifiable value
 ]
 
 # mypy can't do isinstance on instance of generic (even though all types
@@ -261,7 +262,7 @@ class PerfLog:
               max_records:int,
               max_bytes:ByteCount,
               corruption_handler:Callable[[Exception],Any]) -> Generator[
-                  Tuple[float, List[Union[str,int,float,None]]],None,None]:
+                  Tuple[float, List[Union[str,int,float,bool,None,List,Dict]]],None,None]:
         '''yield each record of PerfLog {self} with timestamp at or after {begin} excluding records with timestamp at or after {end} and all further records once {max_bytes} bytes have already been yielded or {max_records} records have been yielded
            - note that records returned are in addition order, which is not necessarily time order
            - note max_bytes is applied to the pre-decoded (stored) record data'''
@@ -385,14 +386,14 @@ def encode_timestamped_record(time_delta:Duration, record:List, schema:Dict[ColN
 
 def decode_timestamped_record(data:bytes, schema:Dict[ColName,ColType]) -> Tuple[
         Duration, #time_delta
-        List[Union[str,int,float,None]], #record
+        List[Union[str,int,float,bool,None,List,Dict]], #record
         ByteCount]: # len(data)
     '''decode time delta and record from {data!r} assuming record conforms to schema {schema}'''
     try:
         t:type
         Assert(data).endswith(b'\n')
         x=json.loads(data.decode('utf-8')[:-1])
-        record:List[Union[str,int,float,None]]=[]
+        record:List[Union[str,int,float,bool,None,List,Dict]]=[]
         if isinstance(x, list):
             if isinstance(x[0], float):
                 time_delta=Duration(x[0])
@@ -444,7 +445,7 @@ def read_lines(r:Reader) -> Generator[bytes,None,None]:
                 
                 
 attrs_schema=jsonschema.Schema({
-    'schema':[ [str,OneOf('str','int','float','(str)','(int)','(float)')] ]
+    'schema':[ [str,OneOf('str','int','float','bool','(str)','(int)','(float)','(bool)','json')] ]
 })
 
 def validate_str(value)->str:
@@ -467,6 +468,12 @@ def validate_float(value)->float:
     t=type(value)
     raise Exception(f'{value!r} (of type {t}) is not a float')
 
+def validate_bool(value)->bool:
+    if isinstance(value,bool):
+        return value
+    t=type(value)
+    raise Exception(f'{value!r} (of type {t}) is not a bool')
+
 def validate_optional_str(value)->Optional[str]:
     if value is None:
         return value
@@ -482,20 +489,37 @@ def validate_optional_float(value)->Optional[float]:
         return value
     return validate_float(value)
 
-def validate_col(value:Any,col_type:ColType)->Union[str,int,float,None]:
-    if col_type=='str':
-        return validate_str(value)
-    if col_type=='int':
-        return validate_int(value)
-    if col_type=='float':
-        return validate_float(value)
-    if col_type=='(str)':
-        return validate_optional_str(value)
-    if col_type=='(int)':
-        return validate_optional_int(value)
-    if col_type=='(float)':
-        return validate_optional_float(value)
-    assert False, f'unknown col type {col_type}'
+def validate_optional_bool(value)->Optional[bool]:
+    if value is None:
+        return value
+    return validate_bool(value)
+
+def validate_col(value:Any,col_type:ColType)->Union[str,int,float,None,bool,List,Dict]:
+    '''verify that value of type value.__class__ is valid for column type {col_type}'''
+    try:
+        if col_type=='str':
+            return validate_str(value)
+        if col_type=='int':
+            return validate_int(value)
+        if col_type=='float':
+            return validate_float(value)
+        if col_type=='bool':
+            return validate_bool(value)
+        if col_type=='(str)':
+            return validate_optional_str(value)
+        if col_type=='(int)':
+            return validate_optional_int(value)
+        if col_type=='(float)':
+            return validate_optional_float(value)
+        if col_type=='(bool)':
+            return validate_optional_bool(value)
+        if col_type=='json':
+            # assume caller will effectively validate
+            return cast(Union[str,int,float,None,bool,List,Dict],value)
+        assert False, f'unknown col type {col_type}'
+    except Exception as e:
+        raise in_function_context(validate_col,vars())
+    pass
 
 PERFLOG_ATTRS='perflog.json'
 

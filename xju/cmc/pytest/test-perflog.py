@@ -18,7 +18,7 @@
 from xju.cmc.perflog import PerfLog,ColName,Recorder,Tracker,BucketStart,BucketID
 from xju.cmc.perflog import trim_trailing_partial_record,FilePosition,Timestamp
 from xju.cmc.perflog import encode_timestamped_record,validate_col,ColType
-from xju.cmc.perflog import validate_int,validate_float,decode_timestamped_record
+from xju.cmc.perflog import validate_int,validate_float,validate_bool,decode_timestamped_record
 from typing import List,Tuple,cast
 
 import os
@@ -60,7 +60,10 @@ with PatchAttr(json,'dumps',raise_some_error):
                          ColName('Peer'): '(str)',
                          ColName('Protocol'): 'str',
                          ColName('mag'): '(float)',
-                         ColName('Peer Id'):'(int)'},
+                         ColName('Peer Id'):'(int)',
+                         ColName('Enabled'):'bool',
+                         ColName('Switch'):'(bool)',
+                         ColName('Config'):'json'},
                         Hours(2),
                         3,
                         ByteCount(1200),
@@ -78,7 +81,10 @@ perflog=PerfLog(d/'perflog',
                  ColName('Peer'): '(str)',
                  ColName('Protocol'): 'str',
                  ColName('mag'): '(float)',
-                 ColName('Peer Id'):'(int)'},
+                 ColName('Peer Id'):'(int)',
+                 ColName('Enabled'):'bool',
+                 ColName('Switch'):'(bool)',
+                 ColName('Config'):'json'},
                 Hours(2),
                 3,
                 ByteCount(1200),
@@ -92,7 +98,10 @@ try:
                ColName('Peer'): '(str)',
                ColName('Protocol'): 'str',
                ColName('mag'): '(float)',
-               ColName('Peer Id'):'(int)'},
+               ColName('Peer Id'):'(int)',
+               ColName('Enabled'):'bool',
+               ColName('Switch'):'(bool)',
+               ColName('Config'):'json'},
               Hours(2),
               3,
               ByteCount(120),
@@ -121,17 +130,17 @@ t3,t4,t5,t6,t7,t8,t9,t10,t11=[t2+Duration(_) for _ in
 
 
 recorder:Recorder
-r2=[7.6,700,None,'p',None,None]
-r3=[17.8,1000,'peer','p',9.9,888]
-r4=[2.0,665,'peer','p',9.9,888]
-r5=[1.1,655,'peer','p',9.9,888]
-r6=[3.0,765,'peer','p',9.9,888]
-r6=[6.3,10,'peer','p',9.9,888]
-r7=[88,70,'peer','p',9.9,888]
-r8=[88,70,'peer','p',9.9,888]
-r9=[33,55,'peer','p',9.9,888]
-r10= [99.7,77,'peer','p',9.9,888]
-r11= [1.7,36,'peer','p',9.9,888]
+r2=[7.6,700,None,'p',None,None,True,None,None]
+r3=[17.8,1000,'peer','p',9.9,888,True,None,[1,'a']]
+r4=[2.0,665,'peer','p',9.9,888,False,False,{'x':3}]
+r5=[1.1,655,'peer','p',9.9,888,False,True,33]
+r6=[3.0,765,'peer','p',9.9,888,False,True,True]
+r6=[6.3,10,'peer','p',9.9,888,False,True,3.4]
+r7=[88,70,'peer','p',9.9,888,False,True,'fred']
+r8=[88,70,'peer','p',9.9,888,False,True,None]
+r9=[33,55,'peer','p',9.9,888,False,True,{'a':[1,2,3]}]
+r10= [99.7,77,'peer','p',9.9,888,False,True,None]
+r11= [1.7,36,'peer','p',9.9,888,False,True,None]
 
 with perflog.new_recorder() as recorder:
     # record 10 records over 3 hours
@@ -204,7 +213,7 @@ Assert(list(perflog.fetch(t2+Duration(1500),t2+Duration(2*3700),100000,ByteCount
 
 
 # fetch some - max bytes limited
-Assert(list(perflog.fetch(t1,t20,100000,ByteCount(200),abort_on_corruption)))==[
+Assert(list(perflog.fetch(t1,t20,100000,ByteCount(280),abort_on_corruption)))==[
     (t2,r2),
     (t3,r3),
     (t4,r4),
@@ -533,6 +542,14 @@ try:
     validate_float('fred')
 except Exception as e:
     Assert("'fred' (of type <class 'str'>) is not a float").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+try:
+    validate_bool('fred')
+except Exception as e:
+    Assert("'fred' (of type <class 'str'>) is not a bool").isIn(readable_repr(e))
 else:
     assert False
     pass
