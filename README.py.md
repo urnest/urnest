@@ -15,7 +15,7 @@ xju.cmc - context management
   - unlike python standard library e.g. open(), these are "pure" context managers: resources
     are never acquired until \__enter__
 
-xju.cmc.cmclass - provide context management for class attributes that are context managers
+xju.cmc.cmclass - provides context management for class attributes that are context managers
 
   - managing multiple resource attributes is clumbsy with ExitStack, this module implements
     \__enter__ and \__exit__ automatically to ensure correct ordering and cleanup on exceptions
@@ -25,28 +25,23 @@ xju.cmc.Dict - dictionary that is a context manager for its (context manager) va
 xju.cmc.io - proper context management for e.g. file reading and writing
 
 xju.cmc.tstore - time-based storage, organised as files covering time-ranges
-xju.cmc.perlog - json-format time-based record storage built on tstore
+
+xju.cmc.perflog - time-based json-format record storage built on xju.cmc.tstore
 
 xju.pq - jquery-like html inspection and modification
+
 xju.assert_ - assert functions that capture term values e.g. x and y in Assert(x)==y
-xju.cmd - sane wrapper for subprocess.Popen
 
-  - captures very common usage without the option-warren of subprocess.
+xju.cmd - wrapper for subprocess.Popen that captures very common usage without the option-and-flag-warren of subprocess
 
-xju.jsonschema
+xju.jsonschema - represents JSON schemas as straight-foward, easy-to-read python data structures,
+                 because life's too short for jsonschema
 
-  - represents JSON schemas as straight-foward, easy-to-read python datastructures, because
-    jsonschema is overly complex for many needs
+xju.patch - minimal, simple, direct patching(/stub/mock) utility, unlike the mock-warren. Because
+            one shouldn't need a degree to read and write a unit test
 
-xju.patch
+xju.time - type-safe time and duration classes
 
-  - minimal, simple, direct patching(/stub/mock) utility, unlike the mock-warren. One shouldn't
-    need a degree to read and write a unit test
+xju.xn - Exception wrapping to provide human readable context gathering
 
-xju.time
-
-  - type-safe time and duration classes
-
-xju.xn
-
-  - Exception wrapping to provide human readable context gathering
+For detailed use examples, see the pytest subdirectories at https://github/urnest/urnest.
