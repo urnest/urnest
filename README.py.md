@@ -5,7 +5,7 @@ Various modules implemented to some broad principles:
   - pure context management
   - useful functionality that is hard to use incorrectly
 
-xju/newtype.py[xju.newtype] - static and dynamic distinct int, float and str types
+[xju.newtype](xju/newtype.py) - static and dynamic distinct int, float and str types
 
   - unlike typing.NewType the new types are compatible with isinstance, so you
     can actually use them to do real stuff, like implement overloaded methods
