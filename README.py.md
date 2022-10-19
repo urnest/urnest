@@ -28,7 +28,7 @@ Various modules implemented to some broad principles:
 
 [xju.cmc.perflog](xju/cmc/perflog.py) - time-based json-format record storage built on xju.cmc.tstore
 
-[xju.pq](xju/py.py) - jquery-like html inspection and modification
+[xju.pq](xju/pq.py) - jquery-like html inspection and modification
 
 [xju.assert_](xju/assert_.py) - assert functions that capture term values e.g. x and y in Assert(x)==y
 
