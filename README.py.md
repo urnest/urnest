@@ -2,22 +2,23 @@ xju python library
 
 Various modules implemented to some broad principles:
   - fine-grained static typing
-  - pure context management philosophy
+  - pure context management
   - useful functionality that is hard to use incorrectly
 
 xju.newtype - static and dynamic distinct int, float and str types
 
-  - unlike typing.NewType the new types are compatible with isinstance
+  - unlike typing.NewType the new types are compatible with isinstance, so you
+    can actually use them to do real stuff, like implement overload methods
 
 xju.cmc - context management
 
   - unlike python standard library e.g. open(), these are "pure" context managers: resources
-    are never acquired until __enter__
+    are never acquired until \__enter__
 
 xju.cmc.cmclass - provide context management for class attributes that are context managers
 
   - managing multiple resource attributes is clumbsy with ExitStack, this module implements
-    __enter__ and __exit__ automatically to ensure correct ordering and cleanup on exceptions
+    \__enter__ and \__exit__ automatically to ensure correct ordering and cleanup on exceptions
 
 xju.cmc.Dict - dictionary that is a context manager for its (context manager) values
 
