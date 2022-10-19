@@ -5,10 +5,10 @@ Various modules implemented to some broad principles:
   - pure context management
   - useful functionality that is hard to use incorrectly
 
-xju.newtype - static and dynamic distinct int, float and str types
+xju/newtype.py[xju.newtype] - static and dynamic distinct int, float and str types
 
   - unlike typing.NewType the new types are compatible with isinstance, so you
-    can actually use them to do real stuff, like implement overload methods
+    can actually use them to do real stuff, like implement overloaded methods
 
 xju.cmc - context management
 
@@ -17,12 +17,12 @@ xju.cmc - context management
 
 xju.cmc.cmclass - provides context management for class attributes that are context managers
 
-  - managing multiple resource attributes is clumbsy with ExitStack, this module implements
+  - managing multiple resource attributes is clumsy with ExitStack, this module implements
     \__enter__ and \__exit__ automatically to ensure correct ordering and cleanup on exceptions
 
 xju.cmc.Dict - dictionary that is a context manager for its (context manager) values
 
-xju.cmc.io - proper context management for e.g. file reading and writing
+xju.cmc.io - pure context management for e.g. file reading and writing
 
 xju.cmc.tstore - time-based storage, organised as files covering time-ranges
 
