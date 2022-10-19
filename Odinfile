@@ -123,3 +123,44 @@ headers=$(find "$INST_SRC" -name '*.hh' -print) &&
 set +x &&
 echo "Installation Successfull"
 
+
+%python3-xju==()+cmd=(%build-python3-xju.sh)+cmd=(%python3-xju.toml) (.) (MIT-LICENCE) (README.py.md) +need=(xju/pytest%all):exec.output
+
+
+%python3-xju.toml==<<
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "xju"
+version = "1.0.0"
+description = "xju library"
+readme = "urnest/README.py.md"
+authors = [{ name = "Trevor Taylor"}]
+license = { file = "urnest/MIT-LICENCE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Development Status :: 5 - Production/Stable"
+]
+requires-python = ">=3.10"
+[project.urls]
+Homepage = "https://github.com/urnest/urnest"
+[tool.setuptools.packages.find]
+where = ["urnest"]  # list of folders that contain the packages (["."] by default)
+include = ["xju","xju.*","xju.cmc.*"]  # package names should match these glob patterns (["*"] by default)
+exclude = []  # exclude packages matching these glob patterns (empty by default)
+namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
+
+
+%build-python3-xju.sh==!<<
+#!/bin/sh
+set -ex
+toml="$1"
+src_dir="$2"
+licence="$3"
+readme="$4"
+cat "$toml" > pyproject.toml
+ln -s $src_dir
+python -m build -n

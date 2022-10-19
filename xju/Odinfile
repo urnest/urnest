@@ -170,7 +170,7 @@ tls%tags
 uri%tags
 utf8%tags
 
-newtype.py==()+(%py-opts)+cmd=(%make-newtype.py)+cmd=(newtype.template.py):py3.stdout
+newtype.py==()+(%py-opts)+cmd=(%make-newtype.py)+cmd=(newtype.py.template):py3.stdout
 
 %make-newtype.py==!<<
 #/usr/bin/env python3
@@ -355,3 +355,4 @@ assert rem==set()
 print(open(sys.argv[1]).read().replace('# generated Int methods here...',int_methods).replace(
     '# generated Str methods here...',str_methods).replace(
     '# generated Float methods here...',float_methods))
+
