@@ -44,4 +44,4 @@ xju.time - type-safe time and duration classes
 
 xju.xn - Exception wrapping to provide human readable context gathering
 
-For detailed use examples, see the pytest subdirectories at https://github/urnest/urnest.
+For detailed use examples, see the pytest subdirectories at https://github.com/urnest/urnest/xju.
