@@ -356,3 +356,9 @@ print(open(sys.argv[1]).read().replace('# generated Int methods here...',int_met
     '# generated Str methods here...',str_methods).replace(
     '# generated Float methods here...',float_methods))
 
+# run unit tests against pip-installed code rather than local source
+%pytest-v-installed==%pytest-v-installed.tree:leaves
+
+%pytest-v-installed.tree==<<
+pytest%installed-cov
+cmc%pytest-v-installed

@@ -17,3 +17,13 @@
 
 %py-opts==<<
 +(..%py-opts)
+
+# run unit tests against pip-installed code rather than local source
+%installed-cov==%unit-tests-v-installed.tree:leaves:py3.cov.list:agg.py3.cov
+
+%unit-tests-v-installed.tree==<<
+(test-FileMode.py):py3.exec.cov
+(test-FilePosition.py):py3.exec.cov
+(test-FileReader.py):py3.exec.cov
+(test-FileWriter.py):py3.exec.cov
+(test-FileLock.py):py3.exec.cov

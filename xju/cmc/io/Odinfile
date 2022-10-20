@@ -5,3 +5,10 @@ pytest%all.tree:leaves
 
 %py-opts==<<
 +(..%py-opts)
+
+
+# run unit tests against pip-installed code rather than local source
+%pytest-v-installed==%pytest-v-installed.tree:leaves
+
+%pytest-v-installed.tree==<<
+pytest%installed-cov

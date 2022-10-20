@@ -82,3 +82,19 @@ fi
 %test-py-exit.exec==(test-py-exit.py)+(%py-opts):py3.exec
 
 %test-py-exit==()+cmd=(%test-py-exit.sh) (%test-py-exit.exec/status) (%test-py-exit.exec/output):stdout
+
+
+# run unit tests against pip-installed code rather than local source
+%installed-cov==%unit-tests-v-installed.tree:leaves:py3.cov.list:agg.py3.cov
+
+%unit-tests-v-installed.tree==<<
+(test-assert_.py):py3.exec.cov
+(test-cmd.py):py3.exec.cov
+(test-jsonschema.py):py3.exec.cov
+(test-misc.py):py3.exec.cov
+(test-patch.py):py3.exec.cov
+(test-pq.py):py3.exec.cov
+(test-rfc2616.py):py3.exec.cov
+(test-xn.py):py3.exec.cov
+(test-newtype.py):py3.exec.cov
+(test-time.py):py3.exec.cov
