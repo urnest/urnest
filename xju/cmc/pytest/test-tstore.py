@@ -22,7 +22,7 @@ from xju.time import Hours,now,Timestamp,Seconds
 from xju.cmc.io import FileMode,FilePosition,FileWriter,FileReader
 from xju.misc import ByteCount
 from xju.patch import PatchAttr
-from xju.xn import readable_repr
+from xju.xn import readable_repr,in_function_context
 from io import FileIO
 import os
 import json
@@ -401,7 +401,25 @@ tstore.create_bucket(s5,id5)
 # verify 1 non-empty buckets
 Assert(tstore.list_unseen({}))=={ (s3,id3): ByteCount(10) }
 
-    
+# should not have any empty leaf dirs
+def verify_no_empty_leaf_dirs(d):
+    '''verify directory {d} is not empty and neither are any of its descendent dirs'''
+    try:
+        Assert(d.is_dir())==True
+        children=list(d.iterdir())
+        Assert(children)!=[]
+        child:Path
+        for child in children:
+            if child.is_dir():
+                verify_no_empty_leaf_dirs(child)
+                pass
+            pass
+        pass
+    except Exception:
+        raise in_function_context(verify_no_empty_leaf_dirs,vars()) from None
+    pass
+
+verify_no_empty_leaf_dirs(d/'x.tstore')
 
 # how long to sort 10000 bucket starts?
 def time_sort():

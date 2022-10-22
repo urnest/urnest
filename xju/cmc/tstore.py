@@ -16,9 +16,11 @@
 # Time based store.
 #
 # Provides storage as append-only "bucket" files, each covering a specified number of hours.
-# Bucket file content is up to client. Bucket files are append-only to support
+# Bucket file content is up to client. Bucket files are append-only to support incremental
 # mirroring. Lookup is by time range. Total storage size is constrained by total byte count
 # and number of buckets.
+#
+# Classes TStore, Writer and Reader form the primary interface.
 #
 from typing import Tuple,Dict,Literal,overload,Sequence,Callable,Any,cast
 from xju.cmc.io import FileReader,FileWriter,FileMode,FilePosition
@@ -361,12 +363,16 @@ class TStore:
         pass
 
     def delete_bucket(self, bucket_start:BucketStart,bucket_id:BucketID):
-        '''delete {self} bucket with start {bucket_start} and id {bucket_id}
-           - synchronises deletion to disk'''
+        '''delete {self} bucket with start {bucket_start} and id {bucket_id}'''
         try:
             bucket_size=self.__bucket_sizes[(bucket_start,bucket_id)]
             path=get_path_of(self.storage_path,bucket_start,bucket_id,self.hours_per_bucket)
             path.unlink()
+            path=path.parent
+            while path != self.storage_path and len(list(path.iterdir()))==0:
+                path.rmdir()
+                path=path.parent
+                pass
             self.__current_size=self.__current_size-bucket_size
             del self.__buckets[bucket_start]
             del self.__bucket_sizes[(bucket_start,bucket_id)]
