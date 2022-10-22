@@ -222,7 +222,7 @@ class TStore:
     @overload
     def __init__(self,
                  storage_path: Path):
-        '''open existing TStore at {storage_path} reading attributes from its tstore.json file
+        '''open existing TStore at {storage_path}
            - raises FileNotFoundError if TStore does not exist'''
 
     def __init__(self,
@@ -264,7 +264,7 @@ class TStore:
                                 for bucket_start,bucket_id in self.__bucket_sizes}
                 self.__current_size=sum(self.__bucket_sizes.values(),ByteCount(0))
             except Exception as e:
-                raise in_context('open existing TStore at {storage_path} reading attributes from its tstore.json file'.format(**vars())) from None
+                raise in_context('open existing TStore at {storage_path}'.format(**vars())) from None
             pass
         pass
             
