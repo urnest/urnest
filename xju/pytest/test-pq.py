@@ -27,7 +27,7 @@
 #  on failure eg replace/html
 #
 
-from xju.pq import parse,hasClass,encodeEntities,tagName,Selection,loadFile
+from xju.pq import parse,hasClass,encodeEntities,tagName,Selection,loadFile,parseFile
 from xju.pq import attrEquals,hasAttr
 from xju.assert_ import Assert
 from xju.xn import readable_repr
@@ -356,6 +356,12 @@ def test35():
     Assert(str(x.find(tagName('p'))[1:]))=='<p class="out">fred<br></p><p>ann</p>'
     Assert(x.__add__(7))==NotImplemented
     Assert(str(x.find(tagName('p')).attrs('class','in')))=='<p class="in">jock</p><p class="in">fred<br></p><p class="in">ann</p>'
+    try:
+        parseFile('/dev/non-existent')
+    except Exception as e:
+        Assert("No such file or directory: '/dev/non-existent'").isIn(str(e))
+    else:
+        assert False
     pass
 
 def test36():

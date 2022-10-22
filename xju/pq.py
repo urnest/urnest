@@ -17,9 +17,9 @@
 # jquery-like python library
 #
 # parse a HTML text into a tree, with search, manipulation
-# and output as HTML text
+# and re-output as HTML text
 #
-# see test1() near the bottom for usage examples
+# parse() and parseFile() are the primary interface.
 #
 # REVISIT: need better diags, eg:
 #  track selectors used to find/filter nodes and report them
@@ -32,7 +32,7 @@ from html.entities import codepoint2name as reverseentities
 import sys
 import traceback
 import string
-from xju.xn import in_context
+from xju.xn import in_context,in_function_context
 
 class Pos:
     def __init__(self, file, line, col):
@@ -493,6 +493,7 @@ class Selection:
             pass
         return Selection(resultNodes)
     def __str__(self):
+        '''re-format as html'''
         return ''.join([str(_) for _ in self.nodeList])
     def __len__(self):
         return len(self.nodeList)
@@ -507,17 +508,17 @@ class Selection:
     pass
 
 # basic predicates
-def hasClass(c):
+def hasClass(c:str):
     return lambda node: isinstance(node, Tag) and node.hasClass(c)
-def tagName(t):
+def tagName(t:str):
     return lambda node: isinstance(node, Tag) and node.tagName==t
-def attrEquals(attr,value):
+def attrEquals(attr:str,value:str):
     return lambda node: isinstance(node, Tag) and node.attrEquals(attr,value)
 def hasAttr(attr):
     return lambda node: isinstance(node, Tag) and node.hasAttr(attr)
 
-def parse(s, origin='unknown'):
-    '''parse HTML string "%(origin)s", returns a Selection'''
+def parse(s:str, origin='unknown') -> Selection:
+    '''parse HTML string "%(origin)s"'''
     parser=Parser(origin)
     try:
         u=str(s)
@@ -530,11 +531,17 @@ def parse(s, origin='unknown'):
         raise ParseFailed(str(''.join(traceback.format_tb(sys.exc_info()[2])))+'\n'+str(sys.exc_info()[1]), parser.pos()) from None
     pass
 
-def parseFile(fileName,encoding='utf-8'):
-    with open(fileName,encoding=encoding) as f:
-        return parse(f.read(),fileName)
+def parseFile(fileName,encoding='utf-8') -> Selection:
+    '''parse {fileName} as HTML'''
+    try:
+        with open(fileName,encoding=encoding) as f:
+            return parse(f.read(),fileName)
+        pass
+    except Exception:
+        raise in_function_context(parseFile,vars())
     pass
 
+# deprecated, use parseFile
 def loadFile(fileName,encoding='utf-8'):
     return parseFile(fileName,encoding)
     pass

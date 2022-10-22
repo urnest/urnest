@@ -14,7 +14,16 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-
+# json schema represented as a straight-forward python datasture, e.g.:
+#
+# {
+#   'name': str,
+#   'age': int
+# }
+#
+# ... means the corresponding json object must be a dictionary with
+# "name" and "age" items with the specified types (string and int respectively).
+#
 from .xn import Xn,in_context,in_function_context,first_line_of,readable_repr
 
 l1=first_line_of
