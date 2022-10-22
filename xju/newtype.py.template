@@ -14,13 +14,21 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 # Utilities for creating distinct types mirroring a subset of a basic
-# type (str, int, float, bytes).
+# type (str, int, float).
 #
 # Unlike typing.NewType:
 #   - works with isinstance (at runtime)
 #   - many methods of the basic type are provided directly, e.g. for
 #     new int type A, A+A->A
-
+#
+# For example to define an int-like Hours class:
+#
+#  class HoursTag:pass
+#  class Hours(Int[HoursTag]):pass
+#
+# ... note do not use 'Hours=Int[HoursTag]' because that is an alias to a generic and
+# therefore has not run-time presence and therefore cannot be used with isinstance.
+#
 from typing import Iterable,Sized,Container,Collection,Reversible,Protocol,cast,Type,overload,TypeVar
 from typing import Generic,Tuple,Mapping,Optional,List,Literal,Union,Any,SupportsRound
 
@@ -49,12 +57,9 @@ class Int_(Generic[Tag]):
 
 class Int(Generic[Tag],Int_[Tag],SupportsRound):
     def __eq__(self,other)->bool:
-        '''equality test ignores possible subclass relationships, i.e. only valid
-           for two object of exactly the same class; except that python insists
-           supporting __eq__ for objects of any type, so this functions supports
-           comparing any Int[X] with any non-Int but if you want to use Int[X] in
-           a multi-level class hierarchy you'll need write your own __eq__ to suit
-           your specific circumstances'''
+        '''equality test, only valid for two object of exactly the same class; except that
+           python insists supporting __eq__ for objects of any type, so this function's signature
+           allows it and calls out all nonsense at runtime'''
         '''i.e. recommend stick to using Int[X] like:
               class Hours(Int[HoursTag]):pass
            ... and not inherit from Hours.
@@ -188,12 +193,9 @@ class Float_(Generic[Tag]):
 
 class Float(Generic[Tag],Float_[Tag],SupportsRound):
     def __eq__(self,other)->bool:
-        '''equality test ignores possible subclass relationships, i.e. only valid
-           for two object of exactly the same class; except that python insists
-           supporting __eq__ for objects of any type, so this functions supports
-           comparing any Float[X] with any non-Float but if you want to use Float[X] in
-           a multi-level class hierarchy you'll need write your own __eq__ to suit
-           your specific circumstances'''
+        '''equality test, only valid for two object of exactly the same class; except
+           that python insists on supporting __eq__ for objects of any type, so this
+           function's signature allows it and calls out all nonsense at runtime'''
         '''i.e. recommend stick to using Float[X] like:
               class Timestamp(Float[TimestampTag]):pass
            ... and not inherit from Timestamp.
@@ -325,10 +327,8 @@ class Str(Generic[Tag],Str_[Tag]):
     def __eq__(self,other)->bool:
         '''equality test ignores possible subclass relationships, i.e. only valid
            for two object of exactly the same class; except that python insists
-           supporting __eq__ for objects of any type, so this functions supports
-           comparing any Str[X] with any non-Str but if you want to use Str[X] in
-           a multi-level class hierarchy you'll need write your own __eq__ to suit
-           your specific circumstances'''
+           supporting __eq__ for objects of any type, so this functions allows
+           comparing any Str[X] with anything but calls out nonsense at runtime'''
         '''i.e. recommend stick to using Str[X] like:
               class FirstName(Str[FirstNameTag]):pass
            ... and not inherit from FirstName.
