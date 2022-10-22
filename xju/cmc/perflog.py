@@ -15,11 +15,13 @@
 #
 # perflog stores time-series data in a size-limited structured directory of plain text
 # files suited to low-rate writes (e.g. 1 record every 5 seconds) and retrieval by
-# time period, with each record being a sequence of optional int/float/str values
-# to a specified schema
+# time period, with each record being a sequence of optional int/float/str/bool/json values
+# to a specified schema.
 #
 # perflog supports incremental mirroring of data (one-way-sync), e.g. supporting
 # incremental remote backup/mirroring
+#
+# Classes PerfLog, Recorder and Tracker form the primary interface.
 #
 
 from pathlib import Path
@@ -50,7 +52,7 @@ ColType=Literal[
 ]
 
 # mypy can't do isinstance on instance of generic (even though all types
-# involved are concretate, workaround is to use a concrete subclass
+# involved are concrete; workaround is to use a concrete subclass
 class Writers(CMDict[ Tuple[BucketStart,BucketID], Writer ]):pass
 
 @cmclass
@@ -265,7 +267,7 @@ class PerfLog:
                   Tuple[float, List[Union[str,int,float,bool,None,List,Dict]]],None,None]:
         '''yield each record of PerfLog {self} with timestamp at or after {begin} excluding records with timestamp at or after {end} and all further records once {max_bytes} bytes have already been yielded or {max_records} records have been yielded
            - note that records returned are in addition order, which is not necessarily time order
-           - note max_bytes is applied to the pre-decoded (stored) record data'''
+           - note max_bytes is applied to the pre-decode (i.e. stored) record data'''
         try:
             records_yielded = 0
             bytes_yielded = ByteCount(0)
