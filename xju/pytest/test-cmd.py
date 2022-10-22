@@ -38,12 +38,13 @@ else:
     pass
 
 try:
-    do_cmd('/bin/ls /dev/non-existent'.split())
+    do_cmd(['/bin/cat',__file__,'/dev/non-existent'])
 except CmdFailed as e:
-    Assert(e.argv)==['/bin/ls','/dev/non-existent']
+    Assert(e.argv)==['/bin/cat',__file__,'/dev/non-existent']
     Assert(e.status)!=0
-    Assert(e.stderr)=="/bin/ls: cannot access '/dev/non-existent': No such file or directory\n"
-    Assert(readable_repr(e))=="Failed to do non-shell command ['/bin/ls', '/dev/non-existent'] because\nnon-shell command ['/bin/ls', '/dev/non-existent'] failed with exit status 2 and stderr /bin/ls: cannot access '/dev/non-existent': No such file or directory\n."
+    Assert(e.stderr)=="/bin/cat: /dev/non-existent: No such file or directory\n"
+    Assert(b'lsssss').isIn(e.stdout)
+    Assert(readable_repr(e))==f"Failed to do non-shell command ['/bin/cat', '{__file__}', '/dev/non-existent'] because\nnon-shell command ['/bin/cat', '{__file__}', '/dev/non-existent'] failed with exit status 1 and stderr /bin/cat: /dev/non-existent: No such file or directory\n."
 else:
     assert False
     pass

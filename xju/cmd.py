@@ -13,21 +13,25 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
+# One common "execute command" usage, navigating some of the subprocess.
+#
 import subprocess
 from typing import Sequence,Tuple
 from xju.xn import in_function_context
 import os
 
 class CmdFailed(Exception):
-    def __init__(self,argv,status,stderr):
+    def __init__(self,argv:Sequence[str],status,stderr:str,stdout:bytes):
         self.argv=argv
         self.status=status
         self.stderr=stderr
-        Exception.__init__(self,'non-shell command {argv!r} failed with exit status {status} and stderr {stderr}'.format(**vars()))
+        self.stdout=stdout
+        Exception.__init__(self,f'non-shell command {argv!r} failed with exit status {status} and stderr {stderr}')
         pass
     pass
 
-def do_cmd(argv:Sequence[str])->Tuple[bytes,str]:
+def do_cmd(argv:Sequence[str])->Tuple[bytes,  # stdout
+                                      str]:   # stderr
     '''do non-shell command {argv!r}'''
     '''returns (stdout,stderr) on zero exit status'''
     '''raises CmdFailed on non-zero exit'''
@@ -44,7 +48,7 @@ def do_cmd(argv:Sequence[str])->Tuple[bytes,str]:
         out,err=p.communicate()
         status=p.returncode
         if status!=0:
-            raise CmdFailed(argv,status,err.decode('utf-8'))
+            raise CmdFailed(argv,status,err.decode('utf-8'),out)
         return out,err.decode('utf-8')
     except:
         raise in_function_context(do_cmd,vars()) from None
