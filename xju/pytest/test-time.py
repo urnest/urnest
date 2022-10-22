@@ -46,6 +46,10 @@ Assert(Timestamp(23.86)-Seconds(1))==Timestamp(-1+23.86)
 Assert(Timestamp(23.86)-Duration(1.2))==Timestamp(-1.2+23.86)
 Assert(Timestamp(23.86)-Timestamp(1))==Duration(-1+23.86)
 
+# float must return a float
+Assert(float(Timestamp(3)))==3.0
+Assert(float(Duration(7)))==7.0
+
 try:
     Assert(Timestamp(23.86)-cast(Hours,1))
 except Exception as e:

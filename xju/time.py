@@ -32,7 +32,7 @@ class TimestampBase:pass  # until typing.Self
 class Timestamp(TimestampBase):
     __value:float
     def __init__(self,value:float):
-        self.__value=value
+        self.__value=float(value)
         pass
     def value(self):
         return self.__value
