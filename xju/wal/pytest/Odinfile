@@ -1,8 +1,0 @@
-%all==<<
-%all.tree:leaves
-
-%all.tree==<<
-(wsgi.py.test)+(%py-opts):py3.exec.output
-
-%py-opts==<<
-+(..%py-opts)
