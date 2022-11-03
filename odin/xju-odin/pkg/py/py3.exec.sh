@@ -70,7 +70,7 @@ fi &&
       echo $? > ../status
     elif [ $ODIN_stderr = "warn" ]
     then
-      eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHONPATH" `cat "$ODIN_env"` python3 $cov "$ODIN_FILE" $cmd >../output 2>../WARNINGS
+      eval env - LD_LIBRARY_PATH="$ODIN_EXEC_LD_LIBRARY_PATH" PATH="$ODIN_EXEC_PATH" PYTHONPATH="$PYPATH:$ODIN_PYTHONPATH" `cat "$ODIN_env"` python3 $cov "$ODIN_FILE" $cmd >../output 2>../../WARNINGS
       echo $? > ../status
     else
       echo "error: +stderr, \"$ODIN_stderr\" is not one of trace, output, error, warn.">&2

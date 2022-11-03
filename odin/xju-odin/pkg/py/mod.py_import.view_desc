@@ -1,0 +1,236 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+import re
+from pathlib import Path
+from typing import Sequence
+
+odinrbshost=os.environ.get('ODINRBSHOST','')
+
+pyFile,pyFileDir,pySp,ignore=sys.argv[1:]
+
+err=open('ERRORS','w')
+viewDesc=open('mod.py_import.view_desc','w')
+
+indent=''
+
+class Scope:
+    def __init__(self,desc,on=True):
+        self.desc=desc
+        self.result_=None
+        self.on=on
+        pass
+    def __enter__(self):
+        if os.environ.get('ODINVERBOSE','') and self.on:
+            global indent
+            print(indent+'{desc}'.format(**self.__dict__))
+            indent=indent+'  '
+            pass
+        return self
+    def __exit__(self,exceptionType,exception,traceBack):
+        if os.environ.get('ODINVERBOSE') and self.on:
+            global indent
+            if exception:
+                print(indent+'*** failed')
+            elif self.result_:
+                print(indent+'-> {result_}'.format(**self.__dict__))
+            indent=indent[0:-2]
+            pass
+        pass
+    def result(self,x):
+        self.result_=x
+    pass
+
+def sequence_x_starts_with_sequence_y(x:Sequence,y:Sequence) -> bool:
+    return len(x) >= len(y) and x[:len(y)]==y
+
+assert sequence_x_starts_with_sequence_y([1,2,3],[1,2])
+assert sequence_x_starts_with_sequence_y([1,2,3],[1,2,3])
+assert not sequence_x_starts_with_sequence_y([1,2,3],[1,2,3,4])
+assert not sequence_x_starts_with_sequence_y([1,3,4],[1,2,3])
+
+def norm_rel_path(p:Sequence[str]) -> Sequence[str] | None:
+    result=[]
+    for c in p:
+        if c == '..':
+            if not len(result):
+                return None # cannot go that high
+            del result[-1]
+        else:
+            result.append(c)
+            pass
+        pass
+    return result
+
+assert '/'.join(norm_rel_path('a/b/../d/e/../f'.split('/')))=='a/d/f',norm_rel_path('/'.join('a/b/../d/e/../f'.split('/')))
+assert '/'.join(norm_rel_path('a/b/../../d/e/../f'.split('/')))=='d/f'
+assert norm_rel_path('a/b/../../../d/e/../f'.split('/'))==None
+
+
+with Scope(f'scan py program {pyFile} imports with search path {pySp}'):
+    pySp=open(pySp).read().split() if pySp else []
+    eggs=[Path(_) for _ in pySp if _.endswith('.egg')]
+    pySp=[Path(_) for _ in pySp if not _.endswith('.egg')]
+
+    pyFile=Path(pyFile)
+    pyFileDir=Path(pyFileDir)
+
+    if not pyFile.name.endswith('.py'):
+        print('{pyFile}: python module files names must end with .py',file=err)
+        sys.exit(0)
+        pass
+    # for PYTHONPATH=/a/b, module c.d.y (/a/b/c/d/y.py or /a/b/c/d/y/__init__.py) implicitly depends on
+    # /a/b/c/__init__.py, /a/b/c/d/__init__.py
+    # our parent module's dir is /a/b/c/d
+    parent_module_dir:Path=pyFileDir.parent if pyFile.name=='__init__.py' else Path(pyFileDir)
+    our_module_name:str=pyFileDir.name if pyFile.name=='__init__.py' else pyFile.name[:-3]
+    our_roots=[_ for _ in pySp if sequence_x_starts_with_sequence_y(parent_module_dir.parts,_.parts)]
+    our_implicits=[] # want /a/b/c/__init__.py, /a/b/c/d/__init__.py
+    our_modules=[] # want [ 'c','d','y' ]
+    for root in our_roots:
+        parent_module_rel_dir=parent_module_dir.parts[len(root.parts):]   # ['c', 'd']
+        our_modules.append(list(parent_module_rel_dir)+[our_module_name]) # ['c','d','y']
+        our_implicits.extend(
+            [root/'/'.join(parent_module_rel_dir[0:i])/'__init__.py'
+             for i in range(1,len(parent_module_rel_dir)+1)]) # [ '/a/b/c/__init__.py',
+                                                              #   '/a/b/c/d/__init__.py' ]
+        pass
+
+    relSp=' '.join([_ for _ in pySp if not _.is_absolute()])
+    if relSp:
+        print('+py_sp entries must be absolute: {relSp}'.format(**vars()),file=err)
+        sys.exit(0)
+        pass
+
+    with pyFile.open() as f:
+        lines=f.read().split('\n')
+    modules=[]
+    
+    # pick up lines that start with "import" eg "import os as a, sys, ..d"
+    r1=re.compile('^[ \t]*import[ \t]+(.*)')
+    
+    # pick up lines that start with "from" eg "from os import c as d, b"
+    r2=re.compile('^[ \t]*from[ \t]+([^ \t]*)[ \t]+import[ \t]+(.*)')
+
+    m1s=[r1.match(line) for line in lines]
+    m2s=[r2.match(line) for line in lines]
+
+    for i,m in enumerate(m1s):
+        if m:
+            line=lines[i]
+            with Scope('analyse py import line {line}'.format(**vars())):
+                matched=m.groups()[0]
+                n=0
+                while i+n<len(lines) and matched.endswith('\\'):
+                    matched=matched[0:-1]+' '+lines[i+n]
+                    n=n+1
+                    pass
+                clauses=matched.split(',')
+                # each clauses could be like "a", " asb   as  cas "
+                modules.extend([' '.join(clause.strip().split()).split(' as ')[0]
+                                for clause in clauses])
+                pass
+            pass
+        pass
+    
+    for i,m in enumerate(m2s):
+        if m:
+            line=lines[i]
+            with Scope('analyse from line {line}'.format(**vars())):
+                fromModule=m.groups()[0].strip()
+                matched=m.groups()[1]
+                n=0
+                while i+n<len(lines) and matched.endswith('\\'):
+                    matched=matched[0:-1]+' '+lines[i+n]
+                    n=n+1
+                    pass
+                clauses=matched.split(',')
+                # each clauses could be like "a", " asb   as  cas "
+                modules.extend([fromModule+'.'+
+                                ' '.join(clause.strip().split()).split(' as ')[0]
+                                for clause in clauses])
+                pass
+            pass
+        pass
+    
+    ignoreREs=[]
+    if ignore:
+        rs=open(ignore).read().split('\n')
+        for r in [_ for _ in rs if _]:
+            with Scope('ignore modules matching +ignore regular expression {r}'.format(
+                    **vars())):
+                reg=re.compile(r)
+                ignoreREs.append(reg)
+                pass
+            pass
+        pass
+    if os.environ.get('ODIN_PY_IGNORE',''):
+        r=os.environ.get('ODIN_PY_IGNORE')
+        with Scope('ignore modules matching \$ODIN_PY_IGNORE regular expression {r}'.format(
+                    **vars())):
+            reg=re.compile(r)
+            ignoreREs.append(reg)
+            pass
+        pass
+    
+    leadingDotsRE=re.compile('^([.]+)(.*)')
+    allModules=[]
+    seenModules=set()
+    with Scope('expand modules {modules}'.format(**vars()),False) as scope:
+        for module in modules:
+            if any([ True for r in ignoreREs if r.match(module)]):
+                continue
+            m=leadingDotsRE.match(module)
+            expanded_module:list[str] | None
+            if m:
+                leadingDots=m.groups()[0]
+                rest=m.groups()[1]
+                rel=['..']*(len(leadingDots)-1)+rest.split('.') #e.g. ['..','a','b']
+                for our_module in our_modules:
+                    abs=tuple(norm_rel_path(our_module+rel))
+                    for i in range(1,len(abs)+1):
+                        expanded_module=tuple(abs[0:i])
+                        if expanded_module is not None and expanded_module not in seenModules:
+                            seenModules.add(expanded_module)
+                            allModules.append(expanded_module)
+                            pass
+                        pass
+                    pass
+                pass
+            else:
+                abs:list[str]=module.split('.') # e.g. ['os','path']
+                for i in range(1,len(abs)+1):
+                    expanded_module=tuple(abs[0:i])
+                    if expanded_module is not None and expanded_module not in seenModules:
+                        seenModules.add(expanded_module)
+                        allModules.append(expanded_module)
+                        pass
+                    pass
+                pass
+            pass
+        scope.result(allModules)
+        pass
+    with Scope(f'generate view_spec for all modules {allModules}'):
+        for f in our_implicits:
+            viewDesc.write(f"'{f}'\n")
+            viewDesc.write("=''\n")
+            pass
+        for module in allModules:
+            with Scope('generate {module} viewdesc'.format(**vars()),False):
+                assert not '..' in module, module
+                # absolute imports are sought in each search path
+                d:Path
+                for d in pySp:
+                    f=d/'/'.join(module)
+                    viewDesc.write(f"'{f}.py'\n")
+                    viewDesc.write(f"'{f}/__init__.py'\n")
+                    pass
+                viewDesc.write("=''\n")
+                pass
+            pass
+        for e in eggs:
+            viewDesc.write("'"+str(e)+"'\n")
+            viewDesc.write("='"+str(e)+"'\n")
+            pass
+        pass

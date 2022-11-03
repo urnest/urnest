@@ -72,6 +72,9 @@ test%tests.tree
 ()+cmd=test '-s' (%test-check_types_related_2_err):exec.output
 ()+cmd=(print-wordsizes.cc+(..%cxx-opts):auto.cxx.exe):exec.output
 netflow%tests.tree
+%pytest.tree:leaves
+
+%pytest.tree==<<
 pytest%all
 wal%all.tree:leaves
 cmc%all.tree:leaves
@@ -177,10 +180,10 @@ newtype.py==()+(%py-opts)+cmd=(%make-newtype.py)+cmd=(newtype.py.template):py3.s
 import sys
 int_methods=''
 rem=set(dir(int))
-for n in ['__abs__','__invert__', '__neg__','__pos__', '__trunc__','__ceil__','__floor__']:
+for n in ['__abs__','__invert__', '__neg__','__pos__']:
     rem.remove(n)
     int_methods=int_methods+f'''
-    def {n}(self):
+    def {n}(self): # -> 'Int[Tag]':
         return self.__class__(self.value().{n}())'''
 for n in ['__int__', '__sizeof__', 'bit_count', 'bit_length','__index__','__hash__']:
     rem.remove(n)
@@ -195,17 +198,17 @@ for n in ['__bool__']:
 for n in ['__ror__', '__rrshift__', '__lshift__', '__rlshift__', '__rshift__']:
     rem.remove(n)
     int_methods=int_methods+f'''
-    def {n}(self,n:int):
+    def {n}(self,n:int): # -> 'Int[Tag]':
         return self.__class__(self.value().{n}(n))'''
 for n in ['__gt__', '__lt__', '__le__', '__ge__']:
     rem.remove(n)
     int_methods=int_methods+f'''
-    def {n}(self,other:Int_[Tag])->bool:
+    def {n}(self,other:'Int[Tag]')->bool:
         return self.value().{n}(other.value())'''
 for n in ['__add__', '__sub__', '__and__', '__or__','__xor__']:
     rem.remove(n)
     int_methods=int_methods+f'''
-    def {n}(self,other:Int_[Tag]):
+    def {n}(self,other:'Int[Tag]'): # -> 'Int[Tag]':
         if type(other) is not type(self):
             return NotImplemented
         return self.__class__(self.value().{n}(other.value()))'''
@@ -214,7 +217,7 @@ for n in ['as_integer_ratio']:
     int_methods=int_methods+f'''
     def {n}(self)->Tuple[int,int]:
         return self.value().{n}()'''
-for n in ['__rpow__', '__dir__', '__rand__', '__reduce__', '__rxor__', '__pow__', '__str__', '__init_subclass__', '__reduce_ex__', '__getattribute__', '__doc__', '__setattr__', 'denominator', '__init__', '__delattr__', 'from_bytes', '__float__', '__format__', 'to_bytes', '__class__', '__repr__', '__new__', '__getnewargs__', 'numerator','real', '__subclasshook__','imag','conjugate', '__floordiv__','__rfloordiv__','__divmod__','__rdivmod__','__truediv__','__rtruediv__', '__mul__', '__rmul__', '__rmod__','__mod__','__eq__','__ne__','__round__','__radd__','__rsub__']:
+for n in ['__rpow__', '__dir__', '__rand__', '__reduce__', '__rxor__', '__pow__', '__str__', '__init_subclass__', '__reduce_ex__', '__getattribute__', '__doc__', '__setattr__', 'denominator', '__init__', '__delattr__', 'from_bytes', '__float__', '__format__', 'to_bytes', '__class__', '__repr__', '__new__', '__getnewargs__', 'numerator','real', '__subclasshook__','imag','conjugate', '__floordiv__','__rfloordiv__','__divmod__','__rdivmod__','__truediv__','__rtruediv__', '__mul__', '__rmul__', '__rmod__','__mod__','__eq__','__ne__','__round__','__radd__','__rsub__', '__trunc__','__ceil__','__floor__']:
     rem.remove(n)
     # i functions not implemented or hand-coded
 assert len(rem)==0,rem

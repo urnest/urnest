@@ -355,7 +355,7 @@ class TStore:
             raise in_function_context(TStore.create_bucket,vars())
         pass
 
-    def make_room_for(self, byte_count:ByteCount):
+    def make_room_for(self, byte_count:ByteCount) -> None:
         '''make room in TStore {self} for {byte_count} bytes of data
            - deletes just enough buckets with oldest start times to make room'''
         Assert(byte_count)<self.max_size

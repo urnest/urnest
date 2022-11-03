@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 
+
 import os
 import sys
 import re
-import os.path
+from pathlib import Path
+from typing import Sequence
 
 odinrbshost=os.environ.get('ODINRBSHOST','')
 
-py,dirOfPy,pyMainDir,pyMainLabel,pySp,ignore=sys.argv[1:]
+pyFile,pySp,ignore=sys.argv[1:]
 
 err=open('ERRORS','w')
-viewDesc=open('py_import.view_desc','w')
+viewDesc=open('main.py_import.view_desc','w')
 
 indent=''
 
@@ -41,22 +43,46 @@ class Scope:
         self.result_=x
     pass
 
-with Scope('scan for py imports {py} from {dirOfPy} noting main {pyMainLabel} from dir {pyMainDir} and search path {pySp}'.format(**vars())):
-    if not pyMainDir:
-        print(f'+py_r must be specified e.g. via {py}:py_rd rather than just {py}',file=err)
-        sys.exit(0)
-        pass
-    pySp=open(pySp).read().split() if pySp else []
-    eggs=[_ for _ in pySp if _.endswith('.egg')]
-    pySp=[_ for _ in pySp if not _.endswith('.egg')]
+def sequence_x_starts_with_sequence_y(x:Sequence,y:Sequence) -> bool:
+    return len(x) >= len(y) and x[:len(y)]==y
 
-    rel=' '.join([_ for _ in pySp if not _.startswith('/')])
+assert sequence_x_starts_with_sequence_y([1,2,3],[1,2])
+assert sequence_x_starts_with_sequence_y([1,2,3],[1,2,3])
+assert not sequence_x_starts_with_sequence_y([1,2,3],[1,2,3,4])
+assert not sequence_x_starts_with_sequence_y([1,3,4],[1,2,3])
+
+def norm_rel_path(p:Sequence[str]) -> Sequence[str] | None:
+    result=[]
+    for c in p:
+        if c == '..':
+            if not len(result):
+                return None # cannot go that high
+            del result[-1]
+        else:
+            result.append(c)
+            pass
+        pass
+    return result
+
+assert '/'.join(norm_rel_path('a/b/../d/e/../f'.split('/')))=='a/d/f',norm_rel_path('/'.join('a/b/../d/e/../f'.split('/')))
+assert '/'.join(norm_rel_path('a/b/../../d/e/../f'.split('/')))=='d/f'
+assert norm_rel_path('a/b/../../../d/e/../f'.split('/'))==None
+
+with Scope(f'scan py program {pyFile} imports with search path {pySp}'):
+    pySp=open(pySp).read().split() if pySp else []
+    eggs=[Path(_) for _ in pySp if _.endswith('.egg')]
+    pySp=[Path(_) for _ in pySp if not _.endswith('.egg')]
+
+    pyFile=Path(pyFile)
+
+    rel=' '.join([_ for _ in pySp if not _.is_absolute()])
     if rel:
         print('+py_sp entries must be absolute: {rel}'.format(**vars()),file=err)
         sys.exit(0)
         pass
 
-    lines=open(py).read().split('\n')
+    with pyFile.open() as f:
+        lines=f.read().split('\n')
     modules=[]
     
     # pick up lines that start with "import" eg "import os as a, sys, ..d"
@@ -112,62 +138,60 @@ with Scope('scan for py imports {py} from {dirOfPy} noting main {pyMainLabel} fr
         for r in [_ for _ in rs if _]:
             with Scope('ignore modules matching +ignore regular expression {r}'.format(
                     **vars())):
-                re=re.compile(r)
-                ignoreREs.append(re)
+                reg=re.compile(r)
+                ignoreREs.append(reg)
                 pass
             pass
         pass
     if os.environ.get('ODIN_PY_IGNORE',''):
+        r=os.environ.get('ODIN_PY_IGNORE')
         with Scope('ignore modules matching \$ODIN_PY_IGNORE regular expression {r}'.format(
                     **vars())):
-            re=re.compile(os.environ.get('ODIN_PY_IGNORE',''))
-            ignoreREs.append(re)
+            reg=re.compile(r)
+            ignoreREs.append(reg)
             pass
         pass
     
     leadingDotsRE=re.compile('^([.]+)(.*)')
-    allModules=set()
+    allModules=[]
+    seenModules=set()
     with Scope('expand modules {modules}'.format(**vars()),False) as scope:
         for module in modules:
+            if any([ True for r in ignoreREs if r.match(module)]):
+                continue
             m=leadingDotsRE.match(module)
+            expanded_module:list[str] | None
             if m:
-                leadingDots=m.groups()[0]
-                rest=m.groups()[1]
-                rel=['.']+['..']*(len(leadingDots)-1)+rest.split('.') #e.g. ['..','a','b']
-                pass
+                print(f'{pyFile}: relative import {module} not allowed in main file',file=err)
             else:
-                rel=module.split('.') # e.g. ['os','path']
-                pass
-            for i in range(0,len(rel)):
-                allModules.add(tuple(rel[0:i+1]))
+                abs:list[str]=module.split('.') # e.g. ['os','path']
+                for i in range(1,len(abs)+1):
+                    expanded_module=tuple(abs[0:i])
+                    if expanded_module is not None and expanded_module not in seenModules:
+                        seenModules.add(expanded_module)
+                        allModules.append(expanded_module)
+                        pass
+                    pass
                 pass
             pass
         scope.result(allModules)
         pass
-    for module in allModules:
-        with Scope('generate {module} viewdesc'.format(**vars()),False):
-            if module[0]=='.':
-                sp=[dirOfPy]
-            else:
-                sp=[pyMainDir]+pySp # e.g. ['/lib','/home/xju/py']
-                pass
-            for d in sp:
-                f=os.path.normpath(os.path.join(d,*module))
-                viewDesc.write("'{f}.py'\n".format(**vars()))
-                # import from file's or ancestor's module does not depend on
-                # that module's __init__.py, unless we are the main file
-                #  e.g. f might be /a/b/c
-                # and our file might be /a/b/c/d/q.py so dirOfPy /a/b/c/d
-                if os.path.basename(py) == pyMainLabel or \
-                        os.path.split(dirOfPy)[0:len(os.path.split(f))]!=os.path.split(f):
-                    viewDesc.write("'{f}/__init__.py'\n".format(**vars()))
+    with Scope(f'generate view_spec for all modules {allModules}'):
+        for module in allModules:
+            with Scope('generate {module} viewdesc'.format(**vars()),False):
+                assert not '..' in module, module
+                # absolute imports are sought in each search path
+                d:Path
+                for d in pySp:
+                    f=d/'/'.join(module)
+                    viewDesc.write(f"'{f}.py'\n")
+                    viewDesc.write(f"'{f}/__init__.py'\n")
                     pass
+                viewDesc.write("=''\n")
                 pass
-            viewDesc.write("=''\n")
+            pass
+        for e in eggs:
+            viewDesc.write("'"+e+"'\n")
+            viewDesc.write("='"+e+"'\n")
             pass
         pass
-    for e in eggs:
-        viewDesc.write("'"+e+"'\n")
-        viewDesc.write("='"+e+"'\n")
-        pass
-    pass

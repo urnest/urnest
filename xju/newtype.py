@@ -85,13 +85,13 @@ class Int(Generic[Tag],Int_[Tag],SupportsRound):
         return self.value().conjugate()
 
     @overload
-    def __divmod__(self, x:int) -> Tuple:  # Tuple[Self,Self]
+    def __divmod__(self, x:int) -> 'Tuple[Int[Tag],Int[Tag]]':
         pass
     @overload
     def __divmod__(self, x:float) -> Tuple[float,float]:
         pass
     @overload
-    def __divmod__(self, x:Int_[Tag]) -> Tuple:  # Tuple[int,int]
+    def __divmod__(self, x:'Int[Tag]') -> Tuple[int,int]:
         pass
     def __divmod__(self, x):
         if isinstance(x,int):
@@ -104,13 +104,13 @@ class Int(Generic[Tag],Int_[Tag],SupportsRound):
         pass
 
     @overload
-    def __floordiv__(self, x:int):  # -> Int[Tag]
+    def __floordiv__(self, x:int) -> 'Int[Tag]':
         pass
     @overload
     def __floordiv__(self, x:float) -> float:
         pass
     @overload
-    def __floordiv__(self, x:Int_[Tag]) -> int:
+    def __floordiv__(self, x:'Int[Tag]') -> int:
         pass
     def __floordiv__(self, x):
         if isinstance(x,int):
@@ -121,7 +121,7 @@ class Int(Generic[Tag],Int_[Tag],SupportsRound):
             return self.value()//x.value()
         pass
 
-    def __truediv__(self, x:Union[float,int,Int_[Tag]]) -> float:
+    def __truediv__(self, x:Union[float,int,'Int[Tag]']) -> float:
         if isinstance(x,float) or isinstance(x,int):
             return self.value()/x
         else:
@@ -129,7 +129,7 @@ class Int(Generic[Tag],Int_[Tag],SupportsRound):
         pass
     
     @overload
-    def __mul__(self, x:int):  # -> Int[Tag]
+    def __mul__(self, x:int) -> 'Int[Tag]':
         pass
     @overload
     def __mul__(self, x:Any):  # -> NotImplemented:
@@ -161,7 +161,7 @@ class Int(Generic[Tag],Int_[Tag],SupportsRound):
     def __mod__(self, other:float)->float:
         pass
     @overload
-    def __mod__(self, other:Int_[Tag])->int:
+    def __mod__(self, other:'Int[Tag]')->int:
         pass
     def __mod__(self, other):
         if type(other) is int:
@@ -175,20 +175,14 @@ class Int(Generic[Tag],Int_[Tag],SupportsRound):
         return self.__class__(self.value().__round__(ndigits))
 
     
-    def __abs__(self):
+    def __abs__(self): # -> 'Int[Tag]':
         return self.__class__(self.value().__abs__())
-    def __invert__(self):
+    def __invert__(self): # -> 'Int[Tag]':
         return self.__class__(self.value().__invert__())
-    def __neg__(self):
+    def __neg__(self): # -> 'Int[Tag]':
         return self.__class__(self.value().__neg__())
-    def __pos__(self):
+    def __pos__(self): # -> 'Int[Tag]':
         return self.__class__(self.value().__pos__())
-    def __trunc__(self):
-        return self.__class__(self.value().__trunc__())
-    def __ceil__(self):
-        return self.__class__(self.value().__ceil__())
-    def __floor__(self):
-        return self.__class__(self.value().__floor__())
     def __int__(self)->int:
         return self.value().__int__()
     def __sizeof__(self)->int:
@@ -203,41 +197,41 @@ class Int(Generic[Tag],Int_[Tag],SupportsRound):
         return self.value().__hash__()
     def __bool__(self)->bool:
         return self.value().__bool__()
-    def __ror__(self,n:int):
+    def __ror__(self,n:int): # -> 'Int[Tag]':
         return self.__class__(self.value().__ror__(n))
-    def __rrshift__(self,n:int):
+    def __rrshift__(self,n:int): # -> 'Int[Tag]':
         return self.__class__(self.value().__rrshift__(n))
-    def __lshift__(self,n:int):
+    def __lshift__(self,n:int): # -> 'Int[Tag]':
         return self.__class__(self.value().__lshift__(n))
-    def __rlshift__(self,n:int):
+    def __rlshift__(self,n:int): # -> 'Int[Tag]':
         return self.__class__(self.value().__rlshift__(n))
-    def __rshift__(self,n:int):
+    def __rshift__(self,n:int): # -> 'Int[Tag]':
         return self.__class__(self.value().__rshift__(n))
-    def __gt__(self,other:Int_[Tag])->bool:
+    def __gt__(self,other:'Int[Tag]')->bool:
         return self.value().__gt__(other.value())
-    def __lt__(self,other:Int_[Tag])->bool:
+    def __lt__(self,other:'Int[Tag]')->bool:
         return self.value().__lt__(other.value())
-    def __le__(self,other:Int_[Tag])->bool:
+    def __le__(self,other:'Int[Tag]')->bool:
         return self.value().__le__(other.value())
-    def __ge__(self,other:Int_[Tag])->bool:
+    def __ge__(self,other:'Int[Tag]')->bool:
         return self.value().__ge__(other.value())
-    def __add__(self,other:Int_[Tag]):
+    def __add__(self,other:'Int[Tag]'): # -> 'Int[Tag]':
         if type(other) is not type(self):
             return NotImplemented
         return self.__class__(self.value().__add__(other.value()))
-    def __sub__(self,other:Int_[Tag]):
+    def __sub__(self,other:'Int[Tag]'): # -> 'Int[Tag]':
         if type(other) is not type(self):
             return NotImplemented
         return self.__class__(self.value().__sub__(other.value()))
-    def __and__(self,other:Int_[Tag]):
+    def __and__(self,other:'Int[Tag]'): # -> 'Int[Tag]':
         if type(other) is not type(self):
             return NotImplemented
         return self.__class__(self.value().__and__(other.value()))
-    def __or__(self,other:Int_[Tag]):
+    def __or__(self,other:'Int[Tag]'): # -> 'Int[Tag]':
         if type(other) is not type(self):
             return NotImplemented
         return self.__class__(self.value().__or__(other.value()))
-    def __xor__(self,other:Int_[Tag]):
+    def __xor__(self,other:'Int[Tag]'): # -> 'Int[Tag]':
         if type(other) is not type(self):
             return NotImplemented
         return self.__class__(self.value().__xor__(other.value()))

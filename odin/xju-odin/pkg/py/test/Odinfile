@@ -7,11 +7,6 @@
 %test4
 %test5
 %test7
-%test8
-%test8b
-%test8c
-%test8d
-%test9
 %test1b
 %test-simple
 %test-stderr-1
@@ -22,6 +17,11 @@
 %test-stderr-6
 %test-stderr-7
 %test-stderr-8
+%test-mod.py_import.view_desc.1
+%test-mod.py_import.view_desc.2
+%test-main.py_import.view_desc.2
+%test-main.py_import.view_desc.status.2
+%test-main.py_import.view_desc.errors.2
 
 %test1==(%test1.got)+cmd=(%test1.sh) (%test1.expect:list:ls):stdout
 
@@ -31,7 +31,7 @@ sort -u <"$1" > want &&
 sort -u > got &&
 diff -b want got >&2
 
-%test1.got==x.py:py_rd+py_sp=(sd):py_import_all:ls
+%test1.got==x.py+py_sp=(.) (sd):py_import_all:ls
 
 %test1.expect==<<
 y.py
@@ -42,9 +42,9 @@ d/z.py
 b/q.py
 i.py
 
-%test1b==x.py+py_sp=(sd):py3.exec.output
+%test1b==x.py+py_sp=(.) (sd):py3.exec.output
 
-%test2==()+py=(x.py)+py_sp=(sd):py3.stdout
+%test2==()+py=(x.py)+py_sp=(.) (sd):py3.stdout
 
 %test3==()+cmd=(%cmp.sh) (%test3.want) (%test3.got):stdout
 
@@ -62,7 +62,7 @@ diff -b want got >&2
 
 %test4==(%test4.got)+cmd=(%test1.sh) (%test4.expect:list:ls):stdout
 
-%test4.got==x.py:py_rd:py_import_all:ls
+%test4.got==x.py+py_sp=(.):py_import_all:ls
 
 %test4.expect==<<
 y.py
@@ -75,7 +75,7 @@ i.py
 
 %test5==(%test5.got)+cmd=(%test1.sh) (%test5.expect:list:ls):stdout
 
-%test5.got==x.py:py_rd+py_sp=(se/a.egg):py_import_all:ls
+%test5.got==x.py+py_sp=(.) (se/a.egg):py_import_all:ls
 
 %test5.expect==<<
 y.py
@@ -93,7 +93,7 @@ i.py
 e1
 x: OK
 
-%test6.got==xe.py+py_sp=(sd)+py_sp=(se/a.egg):py3.exec.output
+%test6.got==xe.py+py_sp=(.) (sd)+py_sp=(se/a.egg):py3.exec.output
 
 %test-simple==(simple.py):py3.exec.output
 
@@ -105,88 +105,12 @@ sort -u <"$1" > want &&
 sort -u > got &&
 diff -b want got >&2
 
-%test7.got==t2.py:py_rd+py_sp=(sd):py_import_all:ls
+%test7.got==t2+py_sp=(.)+py_sp=(sd):main.py_import.view_desc:py_import_all:ls
 
 %test7.expect==<<
 r1.py
 r3/__init__.py
 r3/r4/__init__.py
-
-#
-# python is a convoluted with its package importing v __init__.py, which
-# can define stuff for that package and is often used to "pull up" submodule
-# definitions to __init__.py package level
-# But sub-packages can import other sub-packages (or the definitions from
-# the package itself.
-# It turns out sub-packages, when importing other sub-packages or definitions
-# from the package itself, ignore __init__.py.
-# test8 sets up such an arrangement to verify out import handling follows
-# this rule. (If we don't ignore __init__.py we get circular dependencies, but
-# it needs to only be ignore for imports from sub-packages.)
-#
-%test8==(%test8.got)+cmd=(%test8.sh) (%test8.expect:list:ls):stdout
-
-%test8.sh==! <<
-#/bin/sh
-sort -u <"$1" > want &&
-sort -u > got &&
-diff -b want got >&2
-
-%test8.got==t8.py:py_rd:py_import_all:ls
-
-%test8.expect==<<
-pullup/__init__.py
-pullup/a.py
-pullup/b.py
-
-%test8b==t8.py:py3.exec.output
-
-%test8c==(%test8c.got)+cmd=(%test8c.sh) (%test8c.expect:list:ls):stdout
-%test8c.sh==! <<
-#/bin/sh
-sort -u <"$1" > want &&
-sort -u > got &&
-diff -b want got >&2
-
-%test8c.got==pullup/b.py+py_r=(.):py_import_all:ls
-
-%test8c.expect==<<
-pullup/a.py
-
-%test8d==(%test8d.got)+cmd=(%test8.sh) (%test8d.expect:list:ls):stdout
-
-# +py_r, the directory of the main python program, is the first place
-# to look for imports. It is automatically calculated but can be overridden.
-# Overriding can reduce dependency calculations, e.g. where tests are
-# never in the same directory as source code there is no need to search the
-# directory containg each test, since where tests are spread accross multiple
-# directories the dependency calculation is officially different for each
-# test directory. By explicitly specifying py_r say as a non-existent
-# directory we avoid recalculating dependencies for each test directory.
-#
-# test8d verifies that we really are overriding the automatic value.
-%test8d.got==t8.py+py_r=(pullup/altroot)+py_sp=(.):py_rd:py_import_all:ls
-
-%test8d.expect==<<
-pullup/__init__.py
-pullup/altroot/pullup/a.py
-pullup/b.py
-
-%test9==(%test9.got)+cmd=(%test9.sh) (%test9.expect:list:ls):stdout
-
-%test9.sh==! <<
-#/bin/sh
-sort -u <"$1" > want &&
-sort -u > got &&
-diff -b want got >&2
-
-%test9.got==t2:py_rd+py_sp=(sd):py_import_all:ls
-
-%test9.expect==<<
-r1.py
-r3/__init__.py
-r3/r4/__init__.py
-
 
 %test-stderr-1==()+cmd=grep '"test1 outputtest1 stderr"' (%toutput.zero):stdout
 %test-stderr-2==()+cmd=grep '"test1 outputtest1 stderr"' (%toutput.one):stdout
@@ -197,17 +121,17 @@ r3/r4/__init__.py
 %test-stderr-7==()+cmd=grep '"test1 output "' (%ttrace.zero):stdout
 %test-stderr-8==()+cmd=grep '"test1 output "' (%ttrace.one):stdout
 
-%toutput.zero==(%test1.py)+cmd='0':py3.exec.output
-%toutput.one==(%test1.py)+cmd='1':py3.exec.output:err
-%twarn.zero.o==(%test1.py)+cmd='0'+stderr=warn:py3.exec.output
-%twarn.zero.w==(%test1.py)+cmd='0'+stderr=warn:py3.exec.output:warn
-%twarn.one==(%test1.py)+cmd='1'+stderr=warn:py3.exec.output:err
-%terror.zero==(%test1.py)+cmd='0'+stderr=error:py3.exec.output:warn
-%terror.one==(%test1.py)+cmd='1'+stderr=error:py3.exec.output:err
-%ttrace.zero==(%test1.py)+cmd='0'+stderr=trace:py3.exec.output
-%ttrace.one==(%test1.py)+cmd='1'+stderr=trace:py3.exec.output:err
+%toutput.zero==(%test1)+cmd='0':py3.exec.output
+%toutput.one==(%test1)+cmd='1':py3.exec.output:err
+%twarn.zero.o==(%test1)+cmd='0'+stderr=warn:py3.exec.output
+%twarn.zero.w==(%test1)+cmd='0'+stderr=warn:py3.exec.output:warn
+%twarn.one==(%test1)+cmd='1'+stderr=warn:py3.exec.output:err
+%terror.zero==(%test1)+cmd='0'+stderr=error:py3.exec.output:warn
+%terror.one==(%test1)+cmd='1'+stderr=error:py3.exec.output:err
+%ttrace.zero==(%test1)+cmd='0'+stderr=trace:py3.exec.output
+%ttrace.one==(%test1)+cmd='1'+stderr=trace:py3.exec.output:err
 
-%test1.py== !<<
+%test1== !<<
 #!/bin/env python3
 import sys
 sys.stderr.write('x')
@@ -217,3 +141,333 @@ sys.stdout.flush()
 sys.stderr.write('test1 stderr\n')
 sys.stdout.write(' \n')
 sys.exit(int(sys.argv[1]))
+
+
+%test-mod.py_import.view_desc.1==(%mod.py_import.view_desc.1.expect)+cmd=diff (%mod.py_import.view_desc.1) '-':stdout
+
+%mod.py_import.view_desc.1==%mod.py_import.view_desc.exec.1/files.tar+member='mod.py_import.view_desc':extract_file
+
+%mod.py_import.view_desc.exec.1==()+cmd=env 'ODINVERBOSE=1' 'ODIN_PY_IGNORE=os' (../mod.py_import.view_desc) (xxx1.py) '/a/b/c/d/e' (%xxx1.pySp) (%xxx.ignore):exec
+
+
+%test-mod.py_import.view_desc.1b==(%mod.py_import.view_desc.1.expect)+cmd=diff (%mod.py_import.view_desc.1b) '-':stdout
+
+%mod.py_import.view_desc.1b==%mod.py_import.view_desc.exec.1b/files.tar+member='mod.py_import.view_desc':extract_file
+
+%mod.py_import.view_desc.exec.1b==()+cmd=env 'ODINVERBOSE=1' 'ODIN_PY_IGNORE=os' (%xxx1b.sh) (../mod.py_import.view_desc) (%xxx1.py) '/a/b/c/d/e/xxx1' (%xxx1.pySp) (%xxx.ignore):exec
+
+
+%xxx1.pySp==<<
+/a
+/e/f
+
+%xxx.ignore==<<
+.ys
+
+%xxx1.py == <<
+# our module is:
+#   b.c.d.e.xxx1
+import sys
+import os
+# good rel import b.x.y.rel_value
+from .....x.y import rel_value
+
+%xxx1b.sh==!<<
+#/bin/sh
+set -e
+x="$1"
+py="$2"
+pyDir="$3"
+pySp="$4"
+ignore="$5"
+cp "$py" __init__.py
+"$x" ./__init__.py "$pyDir" "$pySp" "$ignore"
+
+
+%mod.py_import.view_desc.1.expect==<<
+'/a/b/__init__.py'
+=''
+'/a/b/c/__init__.py'
+=''
+'/a/b/c/d/__init__.py'
+=''
+'/a/b/c/d/e/__init__.py'
+=''
+'/a/b.py'
+'/a/b/__init__.py'
+'/e/f/b.py'
+'/e/f/b/__init__.py'
+=''
+'/a/b/x.py'
+'/a/b/x/__init__.py'
+'/e/f/b/x.py'
+'/e/f/b/x/__init__.py'
+=''
+'/a/b/x/y.py'
+'/a/b/x/y/__init__.py'
+'/e/f/b/x/y.py'
+'/e/f/b/x/y/__init__.py'
+=''
+'/a/b/x/y/rel_value.py'
+'/a/b/x/y/rel_value/__init__.py'
+'/e/f/b/x/y/rel_value.py'
+'/e/f/b/x/y/rel_value/__init__.py'
+=''
+
+%test-mod.py_import.view_desc.2==(%mod.py_import.view_desc.2.expect)+cmd=diff (%mod.py_import.view_desc.2) '-':stdout
+
+%mod.py_import.view_desc.2==%mod.py_import.view_desc.exec.2/files.tar+member='mod.py_import.view_desc':extract_file
+
+%mod.py_import.view_desc.exec.2==()+cmd=env 'ODINVERBOSE=1' 'ODIN_PY_IGNORE=os' (../mod.py_import.view_desc) (%xxx2.py) '/a/b/c/d/e' (%xxx2.pySp) (%xxx.ignore):exec
+
+
+
+%xxx2.pySp==<<
+/a
+/a/b/c
+/n/m
+
+%xxx2.py == <<
+# our file is /a/b/c/d/e/xxx*.py
+# our module is one of:
+#   b.c.d.e.xxx*
+#   d.e.xxx*
+import sys
+import os
+# good rel import b.x.y.rel_value
+from ....x.y import rel_value
+# good rel import b.c.d.e.q.p or d.e.q.p
+import ..q.p
+# good abs import x.k.o.g
+from x.k.o import g
+# good abs import x.j.f
+import x.j.f
+
+%mod.py_import.view_desc.2.expect==<<
+'/a/b/__init__.py'
+=''
+'/a/b/c/__init__.py'
+=''
+'/a/b/c/d/__init__.py'
+=''
+'/a/b/c/d/e/__init__.py'
+=''
+'/a/b/c/d/__init__.py'
+=''
+'/a/b/c/d/e/__init__.py'
+=''
+'/a/b.py'
+'/a/b/__init__.py'
+'/a/b/c/b.py'
+'/a/b/c/b/__init__.py'
+'/n/m/b.py'
+'/n/m/b/__init__.py'
+=''
+'/a/b/c.py'
+'/a/b/c/__init__.py'
+'/a/b/c/b/c.py'
+'/a/b/c/b/c/__init__.py'
+'/n/m/b/c.py'
+'/n/m/b/c/__init__.py'
+=''
+'/a/b/c/d.py'
+'/a/b/c/d/__init__.py'
+'/a/b/c/b/c/d.py'
+'/a/b/c/b/c/d/__init__.py'
+'/n/m/b/c/d.py'
+'/n/m/b/c/d/__init__.py'
+=''
+'/a/b/c/d/e.py'
+'/a/b/c/d/e/__init__.py'
+'/a/b/c/b/c/d/e.py'
+'/a/b/c/b/c/d/e/__init__.py'
+'/n/m/b/c/d/e.py'
+'/n/m/b/c/d/e/__init__.py'
+=''
+'/a/b/c/d/e/q.py'
+'/a/b/c/d/e/q/__init__.py'
+'/a/b/c/b/c/d/e/q.py'
+'/a/b/c/b/c/d/e/q/__init__.py'
+'/n/m/b/c/d/e/q.py'
+'/n/m/b/c/d/e/q/__init__.py'
+=''
+'/a/b/c/d/e/q/p.py'
+'/a/b/c/d/e/q/p/__init__.py'
+'/a/b/c/b/c/d/e/q/p.py'
+'/a/b/c/b/c/d/e/q/p/__init__.py'
+'/n/m/b/c/d/e/q/p.py'
+'/n/m/b/c/d/e/q/p/__init__.py'
+=''
+'/a/d.py'
+'/a/d/__init__.py'
+'/a/b/c/d.py'
+'/a/b/c/d/__init__.py'
+'/n/m/d.py'
+'/n/m/d/__init__.py'
+=''
+'/a/d/e.py'
+'/a/d/e/__init__.py'
+'/a/b/c/d/e.py'
+'/a/b/c/d/e/__init__.py'
+'/n/m/d/e.py'
+'/n/m/d/e/__init__.py'
+=''
+'/a/d/e/q.py'
+'/a/d/e/q/__init__.py'
+'/a/b/c/d/e/q.py'
+'/a/b/c/d/e/q/__init__.py'
+'/n/m/d/e/q.py'
+'/n/m/d/e/q/__init__.py'
+=''
+'/a/d/e/q/p.py'
+'/a/d/e/q/p/__init__.py'
+'/a/b/c/d/e/q/p.py'
+'/a/b/c/d/e/q/p/__init__.py'
+'/n/m/d/e/q/p.py'
+'/n/m/d/e/q/p/__init__.py'
+=''
+'/a/x.py'
+'/a/x/__init__.py'
+'/a/b/c/x.py'
+'/a/b/c/x/__init__.py'
+'/n/m/x.py'
+'/n/m/x/__init__.py'
+=''
+'/a/x/j.py'
+'/a/x/j/__init__.py'
+'/a/b/c/x/j.py'
+'/a/b/c/x/j/__init__.py'
+'/n/m/x/j.py'
+'/n/m/x/j/__init__.py'
+=''
+'/a/x/j/f.py'
+'/a/x/j/f/__init__.py'
+'/a/b/c/x/j/f.py'
+'/a/b/c/x/j/f/__init__.py'
+'/n/m/x/j/f.py'
+'/n/m/x/j/f/__init__.py'
+=''
+'/a/b/c/x.py'
+'/a/b/c/x/__init__.py'
+'/a/b/c/b/c/x.py'
+'/a/b/c/b/c/x/__init__.py'
+'/n/m/b/c/x.py'
+'/n/m/b/c/x/__init__.py'
+=''
+'/a/b/c/x/y.py'
+'/a/b/c/x/y/__init__.py'
+'/a/b/c/b/c/x/y.py'
+'/a/b/c/b/c/x/y/__init__.py'
+'/n/m/b/c/x/y.py'
+'/n/m/b/c/x/y/__init__.py'
+=''
+'/a/b/c/x/y/rel_value.py'
+'/a/b/c/x/y/rel_value/__init__.py'
+'/a/b/c/b/c/x/y/rel_value.py'
+'/a/b/c/b/c/x/y/rel_value/__init__.py'
+'/n/m/b/c/x/y/rel_value.py'
+'/n/m/b/c/x/y/rel_value/__init__.py'
+=''
+'/a/x/y.py'
+'/a/x/y/__init__.py'
+'/a/b/c/x/y.py'
+'/a/b/c/x/y/__init__.py'
+'/n/m/x/y.py'
+'/n/m/x/y/__init__.py'
+=''
+'/a/x/y/rel_value.py'
+'/a/x/y/rel_value/__init__.py'
+'/a/b/c/x/y/rel_value.py'
+'/a/b/c/x/y/rel_value/__init__.py'
+'/n/m/x/y/rel_value.py'
+'/n/m/x/y/rel_value/__init__.py'
+=''
+'/a/x/k.py'
+'/a/x/k/__init__.py'
+'/a/b/c/x/k.py'
+'/a/b/c/x/k/__init__.py'
+'/n/m/x/k.py'
+'/n/m/x/k/__init__.py'
+=''
+'/a/x/k/o.py'
+'/a/x/k/o/__init__.py'
+'/a/b/c/x/k/o.py'
+'/a/b/c/x/k/o/__init__.py'
+'/n/m/x/k/o.py'
+'/n/m/x/k/o/__init__.py'
+=''
+'/a/x/k/o/g.py'
+'/a/x/k/o/g/__init__.py'
+'/a/b/c/x/k/o/g.py'
+'/a/b/c/x/k/o/g/__init__.py'
+'/n/m/x/k/o/g.py'
+'/n/m/x/k/o/g/__init__.py'
+=''
+
+%test-main.py_import.view_desc.2==(%main.py_import.view_desc.2.expect)+cmd=diff (%main.py_import.view_desc.2) '-':stdout
+
+%test-main.py_import.view_desc.status.2==(%main.py_import.view_desc.exec.2/status)+cmd=fgrep '0':stdout
+
+%test-main.py_import.view_desc.errors.2==(%main.py_import.view_desc.exec.2.errors)+cmd=grep '"relative import.*not allowed in main file"':stdout
+
+%main.py_import.view_desc.2==%main.py_import.view_desc.exec.2/files.tar+member='main.py_import.view_desc':extract_file
+
+%main.py_import.view_desc.exec.2.errors==%main.py_import.view_desc.exec.2/files.tar+member='ERRORS':extract_file
+
+%main.py_import.view_desc.exec.2==()+cmd=env 'ODINVERBOSE=1' 'ODIN_PY_IGNORE=os' (../main.py_import.view_desc) (%xxx2.py) (%xxx2.pySp) (%xxx.ignore):exec
+
+
+%main2.py == <<
+# our file is main2*.py
+import sys
+import os
+# bad rel import from main program
+from ....x.y import rel_value
+# good abs import x.k.o.g
+from x.k.o import g
+# good abs import x.j.f
+import x.j.f
+
+%main.py_import.view_desc.2.expect==<<
+'/a/x.py'
+'/a/x/__init__.py'
+'/a/b/c/x.py'
+'/a/b/c/x/__init__.py'
+'/n/m/x.py'
+'/n/m/x/__init__.py'
+=''
+'/a/x/j.py'
+'/a/x/j/__init__.py'
+'/a/b/c/x/j.py'
+'/a/b/c/x/j/__init__.py'
+'/n/m/x/j.py'
+'/n/m/x/j/__init__.py'
+=''
+'/a/x/j/f.py'
+'/a/x/j/f/__init__.py'
+'/a/b/c/x/j/f.py'
+'/a/b/c/x/j/f/__init__.py'
+'/n/m/x/j/f.py'
+'/n/m/x/j/f/__init__.py'
+=''
+'/a/x/k.py'
+'/a/x/k/__init__.py'
+'/a/b/c/x/k.py'
+'/a/b/c/x/k/__init__.py'
+'/n/m/x/k.py'
+'/n/m/x/k/__init__.py'
+=''
+'/a/x/k/o.py'
+'/a/x/k/o/__init__.py'
+'/a/b/c/x/k/o.py'
+'/a/b/c/x/k/o/__init__.py'
+'/n/m/x/k/o.py'
+'/n/m/x/k/o/__init__.py'
+=''
+'/a/x/k/o/g.py'
+'/a/x/k/o/g/__init__.py'
+'/a/b/c/x/k/o/g.py'
+'/a/b/c/x/k/o/g/__init__.py'
+'/n/m/x/k/o/g.py'
+'/n/m/x/k/o/g/__init__.py'
+=''

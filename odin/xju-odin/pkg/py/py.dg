@@ -6,13 +6,15 @@
 
 *.egg => :egg;
 
-*.py3.cov => :py3.cov;
-
 :py 'python source file'? => :FILE;
 
 :egg 'python egg archive'? => :FILE;
 
 :py_import.view_desc 'view description of python imported files' => :FILE;
+
+:main.py_import.view_desc 'view description of python program imported files' => <:py_import.view_desc>;
+
+:mod.py_import.view_desc 'view description of python module imported files' => :py_import.view_desc;
 
 :py_import 'list of directly python imported files'? => :LIST;
 
@@ -22,13 +24,16 @@
 
 :py3.stdout 'output from a python3 script run'? => <:stdout>;
 
-:py3.output 'output files from a python3 script run'? => :output;
+:py3.output 'output files from a python3 script run'? => <:output>;
 
-:mypy3 'file from mypy static type check'? => :FILE;
+:main.mypy3 'file from mypy static type check of pyton program'? => :FILE;
+:mod.mypy3 'file from mypy static type check of python module'? => :FILE;
 
-:py.stylecheck 'empty file from style checker'? => :FILE;
-:py.py.stylecheck 'empty file from style checker'? => :py.stylecheck;
-:egg.py.stylecheck 'empty file from style checker'? => :py.stylecheck;
+:main.stylecheck 'empty file from style check of python script'? => :FILE;
+
+:py.stylecheck 'empty file from style check of python module/egg'? => :FILE;
+:py.py.stylecheck 'empty file from style check of module'? => :py.stylecheck;
+:egg.py.stylecheck 'empty file from style check of egg'? => :py.stylecheck;
 
 :py3.cov.checked 'errors (warnings if +py_cov_check_warn) if python code not fully covered'? => :VOID;
 :file.py3.cov.checked 'errors (warnings if +py_cov_check_warn) if .py not fully covered'? => :py3.cov.checked;
@@ -54,6 +59,8 @@
 
 :py3.cov 'python coverage data file'? => :FILE;
 
+*.py3.cov => :py3.cov;
+
 :exec.py3.cov 'python coverage data file from :py3.exec' => :py3.cov;
 
 :agg.py3.cov 'aggregated python covrerage data' => :py3.cov;
@@ -62,8 +69,7 @@
 
 +py_sp 'name of a directory in a PYTHONPATH'? => :ls;
 
-+py_r 'directory of main python program'? => :first;
-+py_main 'name of main python program'? => :first;
++py_main 'name of main python script'? => :first;
 
 +ignore 'egrep expression for imports to ignore'? => :ls;
 
@@ -73,8 +79,6 @@
 
 +py_cov_check_warn 'warn only on :py3.cov.checked where coverage is 100% (default is error)' => :first;
 
-+py_cov 'coverage data for :py3.cov.checked' => :py3.cov;
-
 +stderr 'what to do with command stderr: \\"output\\" to combine with stdout (default), \\"warn\\" to generate warnings, \\"error\\" to display as errors if command fails and command trace otherwise, \\"trace\\" to show as command trace'? => :first;
 
 $ODIN_PY_IGNORE 'egrep expression for python imports to ignore, e.g. \\"^os$|^sys$\\"' = '';
@@ -83,19 +87,22 @@ $ODIN_PYTHONPATH 'colon-separated list of directories to search for python3 impo
 
 $ODIN_MYPY_PATH 'PATH to install when executing mypy, colon separated' = '/bin:/usr/bin';
 $ODIN_MYPY_LD_LIBRARY_PATH 'shared library load path to install when executing command, colon separated' = '';
-$ODIN_MYPY 'name of mypy program' = 'true';
+$ODIN_MYPY 'name of mypy script' = 'true';
 $ODIN_MYPY_FLAGS 'flags to pass to $ODIN_MYPY' = '';
 
 $ODIN_MYPYPATH 'as ODIN_PYTHONPATH above but sets MYPYPATH' = '';
 
-$ODIN_PYSTYLECHECK 'name of python style check program, e.g. flake8' = 'true';
-$ODIN_PYSTYLECHECK_PATH 'PATH to install when executing python style check program, colon separated' = '/bin:/usr/bin';
-$ODIN_PYSTYLECHECK_LD_LIBRARY_PATH 'shared library load path to install when executing python style check program, colon separated' = '';
+$ODIN_PYSTYLECHECK 'name of python style check script, e.g. flake8' = 'true';
+$ODIN_PYSTYLECHECK_PATH 'PATH to install when executing python style check script, colon separated' = '/bin:/usr/bin';
+$ODIN_PYSTYLECHECK_LD_LIBRARY_PATH 'shared library load path to install when executing python style check script, colon separated' = '';
 
 # note we use :FILE not :py so we can use :py_import_all on
 # python script that has no .py extension
-EXEC (py-import.py) (:FILE) (:FILE:dir)@ (+py_r)@ (+py_main) (+py_sp) (+ignore)
-   => (:py_import.view_desc);
+EXEC (main.py_import.view_desc) (:FILE) (+py_sp) (+ignore)
+   => (:main.py_import.view_desc);
+
+EXEC (mod.py_import.view_desc) (:py) (:py:dir)@ (+py_sp) (+ignore)
+   => (:mod.py_import.view_desc);
 
 EXEC (empty-import.sh) (:egg) => (:egg.py_import.view_desc);
 
@@ -105,30 +112,28 @@ COLLECT (:py_import.view_desc :view)
 COLLECT (:py_import :map=:py_import_all) (:py_import)
    => (:py_import_all);
 
-:py_rd_r 'intermediate toward py_rd, adds :py:dir as +py_r and :py:label as +py_main' => :FILE;
-
-:py_rd 'file plus directory of file as +py_r option' => :REFERENCE;
-
-EXEC (py_rd_r.sh) (:FILE) (+py_r)@ (:FILE:dir)@ (:FILE:label)
-   => (:py_rd_r);
-
-READ-REFERENCE (:FILE:py_rd_r)
-   => (:py_rd);
-   
 #:FILE is stdin
-EXEC (py3.pipe.run.sh) (:FILE) (+py) (+cmd :ls) (+py:dir)@ (+py_sp) NEEDS (+cmd) (+need) (+py:py_rd:py_import_all)
+EXEC (py3.pipe.run.sh) (:FILE) (+py) (+cmd :ls) (+py:dir)@ (+py_sp) NEEDS (+cmd) (+need) (+py:main.py_import.view_desc:py_import_all)
    => (:py3.stdout) (:py3.output);
 
 
-EXEC (py3.exec.sh) (:py) (+cmd :ls) (:env) (+stderr) (+py:dir)@ (+py_sp) (+py_nocov) (run-cov)
-  NEEDS (+cmd) (+need) (:py:py_rd:py_import_all) (:py:mypy3) (:py:py.stylecheck) (:py:py_rd:py_import_all:map=:py.stylecheck)
+EXEC (py3.exec.sh) (:FILE) (+cmd :ls) (:env) (+stderr) (+py:dir)@ (+py_sp) (+py_nocov) (run-cov)
+  NEEDS (+cmd) (+need) (:FILE:main.py_import.view_desc:py_import_all) (:FILE:main.mypy3) (:FILE:main.stylecheck)
   => (:py3.exec);
 
-EXEC (mypy3.sh) (:py) (:env) (+py:dir)@ (+py_sp)
-  NEEDS (:py:py_rd:py_import_all:map=:mypy3)
-  => (:mypy3);
+EXEC (main.mypy3.sh) (:FILE) (:env) (+py_sp)
+  NEEDS (:FILE:main.py_import.view_desc:py_import_all:map=:mod.mypy3)
+  => (:main.mypy3);
     
-EXEC (py.stylecheck.sh) (:py) (:env) (+py:dir)@ (+py_sp)
+EXEC (mod.mypy3.sh) (:py) (:env) (+py_sp)
+  NEEDS (:py:py_import_all:map=:mod.mypy3)
+  => (:mod.mypy3);
+    
+EXEC (main.stylecheck.sh) (:FILE) (:env) (+py_sp)
+  NEEDS (:FILE:main.py_import.view_desc:py_import_all:map=:py.stylecheck)
+  => (:main.stylecheck);
+
+EXEC (py.stylecheck.sh) (:py) (:env) (+py_sp)
   => (:py.py.stylecheck);
 
 EXEC (/usr/bin/touch) 'egg.py.stylecheck' (:egg)
@@ -155,6 +160,8 @@ EXEC (py3.exec.cov.sh) (:py3.exec/run.py3.cov) (:py3.exec/output) (:py3.exec/err
   => (:py3.exec.cov.ref);
 
 READ-REFERENCE (:py3.exec.cov.ref) => (:py3.exec.cov);
+
++py_cov 'coverage data for :py3.cov.checked' => :py3.cov;
 
 EXEC (cov-merge.sh) (:py3.cov.list:ls) (merge-cov) NEEDS (:py3.cov.list) => (:agg.py3.cov);
 

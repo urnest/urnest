@@ -213,18 +213,9 @@ Assert(-Hours(2))==Hours(-2)
 # pos
 Assert(+Hours(-2))==Hours(-2)
 
-# trun
-Assert(trunc(Hours(-2)))==Hours(-2)
-
 # round
 Assert(round(Hours(-2)))==Hours(-2)
 Assert(round(Hours(-22),-1))==Hours(-20)
-
-# ceil
-Assert(ceil(Hours(2)))==Hours(2)
-
-# floor
-Assert(floor(Hours(2)))==Hours(2)
 
 Assert(int(h1))==7
 Assert(h1.__sizeof__())==h1.value().__sizeof__()

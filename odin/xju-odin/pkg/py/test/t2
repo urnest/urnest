@@ -1,4 +1,8 @@
-from .r1 import r2
-from .r3 import r4
+#!/usr/bin/env python3
+from sys import path
+del path[0]
+
+from r1 import r2
+from r3 import r4
 
 r2()
