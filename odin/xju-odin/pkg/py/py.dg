@@ -1,6 +1,49 @@
 #
 # Python
 #
+# The main use of this package is to run python programs, for example unit tests
+# for python modules, with dependencies per python "import" and "from ... import"
+# statements, and after style checking and type checking all dependencies and the
+# program itself*.
+#
+# +py_sp options specify the python search path i.e. PYTHONPATH
+#
+# note that this package does not mimic python's unhelpful adding of the program's
+# directory to the front of the search path, so when using this package, to get
+# correct dependency checking, make sure the program has 'import sys; del sys.path[0]' before
+# any imports
+#
+# note also that dependency cycles are not allowed; this includes the (unfortunately widely used)
+# "pull-up" anti-pattern, where a module deliberately imports from sub-modules; if you really want to
+# gather stuff from implementation modules, make them "sibling" modules not sub-modules; this
+# will avoid implicit dependency cycles
+#
+# note also that this package does not expand import "*", but you wouldn't actually ever do that
+# in serious code, so that's not really a problem
+#
+# this package provides two ways to run the python program:
+#
+#   :py3.exec - performs the run and status check separately. This method most suits unit
+#               tests, because it keeps any partial output (status, stdout, stderr and files)
+#               for later analysis. The leaf derivations are:
+#     :py3.exec.output - stdout from successful program run
+#     :py3.exec.files - tar file bundling up all output files from successful program run
+#     :exec.py3.cov - python coverage data from successful program run
+#
+#     ... a failed run's status, stdout, stderr and files can be seen via
+#     :py3.exec/{status,stdout,stderr,files}
+#
+#   :py3.output / :py3.stdout
+#     like the run package's :output and :stdout, but for python programs
+#
+# * style checking and coverage checking can effecitively be turned off by setting
+#   $ODIN_PYSTYLECHECK and $ODIN_MYPY to /bin/true
+#
+# coverage from individual test runs can be aggregated via :agg.py3.cov and :py3.cov.list
+# and 100% coverage can be verified via :py3.cov.checked (which can be applied to individual
+# run or aggregated coverage data); by default < 100% is an error, this can be relaxed to
+# warnings
+#
 
 *.py => :py;
 
@@ -41,7 +84,7 @@
 :list.py ':py files in list' => <:LIST>;
 
 #
-# :py.exec is created regardless of exit status of test run, with:
+# :py3.exec is created regardless of exit status of test run, with:
 #   :py.exec/files.tar the files produced by the run
 #   :py.exec/status - file containing status as single line, eg 0, and either
 #   :py.exec/output - the stdout+stderr* if command exits with 0 status, or
