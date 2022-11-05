@@ -75,10 +75,27 @@ netflow%tests.tree
 %pytest.tree:leaves
 
 %pytest.tree==<<
+%local-pytest.tree:leaves
+%local.py.cov.checked
 pytest%all
 wal%all.tree:leaves
 cmc%all.tree:leaves
 
+%local.py.cov.checked==%local-pys-to-cover:list.py+py_cov=(%local.py.cov):list.py3.cov.checked
+%local-pys-to-cover==.:list:ls+cmd=egrep -v "'newtype.template.py'":stdout:list
+%local.py.cov==%local-pytest.tree:leaves:py3.cov.list:agg.py3.cov
+
+%local-pytest.tree==<<
+(assert_.py.test)+(%py-opts):py3.exec.cov
+(cmd.py.test)+(%py-opts):py3.exec.cov
+(jsonschema.py.test)+(%py-opts):py3.exec.cov
+(misc.py.test)+(%py-opts):py3.exec.cov
+(patch.py.test)+(%py-opts):py3.exec.cov
+(pq.py.test)+(%py-opts):py3.exec.cov
+(rfc2616.py.test)+(%py-opts):py3.exec.cov
+(xn.py.test)+(%py-opts):py3.exec.cov
+(newtype.py.test)+(%py-opts):py3.exec.cov
+(time.py.test)+(%py-opts):py3.exec.cov
 
 %py-opts==<<
 +py_sp=(..)

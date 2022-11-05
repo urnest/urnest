@@ -14,6 +14,9 @@
 # WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+from sys import path
+del path[0] # undo python unhelpful adding of program's directory to front of path
+
 from xju.assert_ import Assert
 from xju.jsonschema import Schema,OneOf
 from xju.xn import readable_repr

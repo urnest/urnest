@@ -15,8 +15,9 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
+from sys import path
+del path[0] # undo python unhelpful adding of program's directory to front of path
 
-import sys
 from xju.xn import in_context,readable_repr,AllFailed,in_function_context,Scope,Xn,capitalise
 from xju.assert_ import Assert
 from typing import cast
@@ -45,10 +46,10 @@ fred.\
 '''
         Assert(str(e)).matches('''\
 failed to jock because
-[^:]*:39: failed to c[(][)] because
-[^:]*:36: failed to b[(][)] because
-[^:]*:33: failed to a[(][)] because
-[^:]*:31: fred'''.format(**vars()))
+[^:]*:40: failed to c[(][)] because
+[^:]*:37: failed to b[(][)] because
+[^:]*:34: failed to a[(][)] because
+[^:]*:32: fred'''.format(**vars()))
         pass
     pass
 
@@ -132,13 +133,13 @@ def test4(prog=sys.argv[0]):
         pass
     Assert(str(e)).matches('''\
 failed to jock because
-[^:]*:127: failed to c[(][)] because
-[^:]*:124: failed to b[(][)] because
-[^:]*:118: failed to with _Scope[(]'b'[)]: because
-[^:]*:111: failed to raise in_context[(]self.s,[(]t,e,b[)],self.fl[)] from None because
-[^:]*:118: failed to b because
-[^:]*:120: failed to a[(][)] because
-[^:]*:116: fred''')
+[^:]*:128: failed to c[(][)] because
+[^:]*:125: failed to b[(][)] because
+[^:]*:119: failed to with _Scope[(]'b'[)]: because
+[^:]*:112: failed to raise in_context[(]self.s,[(]t,e,b[)],self.fl[)] from None because
+[^:]*:119: failed to b because
+[^:]*:121: failed to a[(][)] because
+[^:]*:117: fred''')
     Assert(e.readable_repr())=='''\
 Failed to jock because
 failed to b because

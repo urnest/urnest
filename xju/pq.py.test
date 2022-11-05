@@ -26,6 +26,8 @@
 #  track selectors used to find/filter nodes and report them
 #  on failure eg replace/html
 #
+from sys import path
+del path[0] # undo python unhelpful adding of program's directory to front of path
 
 from xju.pq import parse,hasClass,encodeEntities,tagName,Selection,loadFile,parseFile
 from xju.pq import attrEquals,hasAttr
