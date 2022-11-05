@@ -384,7 +384,7 @@ print(open(sys.argv[1]).read().replace('# generated Int methods here...',int_met
 cmc%pytest-v-installed
 
 # run unit tests against pip-installed code rather than local source
-%installed-py.cov==%py-unit-tests-v-installed.tree:leaves:py3.cov.list:agg.py3.cov
+%installed-py-test.cov==%py-unit-tests-v-installed.tree:leaves:py3.cov.list:agg.py3.cov
 
 %py-unit-tests-v-installed.tree==<<
 (assert_.py.test):py3.exec.cov
