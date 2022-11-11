@@ -273,3 +273,9 @@ x any_space()
 
 - mio has select, rustls, serde-json, websocket
   - learn websocket protocol
+
+- packages for:
+  crypto (like gcrypt)
+  base64
+  http
+  snmp
