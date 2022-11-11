@@ -123,8 +123,8 @@ headers=$(find "$INST_SRC" -name '*.hh' -print) &&
 set +x &&
 echo "Installation Successfull"
 
-%python3-xju.whl == %python3-xju+member='dist/xju-1.0.1-py3-none-any.whl':extract_file
-%python3-xju.tar.gz == %python3-xju+member='dist/xju-1.0.1.tar.gz':extract_file
+%python3-xju.whl == %python3-xju+member='dist/xju-1.0.2-py3-none-any.whl':extract_file
+%python3-xju.tar.gz == %python3-xju+member='dist/xju-1.0.2.tar.gz':extract_file
 
 %python3-xju==()+cmd=(%build-python3-xju.sh)+cmd=(%python3-xju.toml) (.) (MIT-LICENCE) (README.py.md) +need=(xju%pytest.tree:leaves) +need=(xju/cmc%all):exec.files
 
@@ -135,7 +135,7 @@ requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 [project]
 name = "xju"
-version = "1.0.1"
+version = "1.0.2"
 description = "xju library"
 readme = "urnest/README.py.md"
 authors = [{ name = "Trevor Taylor"}]
