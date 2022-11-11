@@ -1,8 +1,34 @@
 %all==%all.tree:leaves
 
 %all.tree==<<
-pytest%all
 (io%all)
+%unit-tests.tree:leaves
+%all.cov.checked
+
+%all.cov.checked==%pys-to-cover:list.py+py_cov=(%all.cov):list.py3.cov.checked
+%pys-to-cover==.:list:ls+cmd=egrep -v "'newtype.template.py'":stdout:list
+%all.cov==%unit-tests.tree:leaves:py3.cov.list:agg.py3.cov
+
+%unit-tests.tree==<<
+(cmc.py.test)+(%py-opts):py3.exec.cov
+(cmclass.py.test)+(%py-opts):py3.exec.cov
+(Dict.py.test)+(%py-opts):py3.exec.cov
+(tstore.py.test)+(%py-opts):py3.exec.cov
+(perflog.py.test)+(%py-opts):py3.exec.cov
+
+%py-opts==<<
++(..%py-opts)
+
+
+# run unit tests against pip-installed code rather than local source
+%installed-cov==%unit-tests-v-installed.tree:leaves:py3.cov.list:agg.py3.cov
+
+%unit-tests-v-installed.tree==<<
+(cmc.py.test):py3.exec.cov
+(cmclass.py.test):py3.exec.cov
+(Dict.py.test):py3.exec.cov
+(tstore.py.test):py3.exec.cov
+(perflog.py.test):py3.exec.cov
 
 
 %py-opts==<<
@@ -14,5 +40,4 @@ pytest%all
 %pytest-v-installed==%pytest-v-installed.tree:leaves
 
 %pytest-v-installed.tree==<<
-pytest%installed-cov
 io/pytest%installed-cov
