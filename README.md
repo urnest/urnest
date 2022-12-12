@@ -89,7 +89,9 @@ OVERVIEW
 	
     -   odin/test a couple of tests of odin itself
 
--   xju has my C++ classes etc for things like posix threads, sub-processes
+-   xju has python3-xju library, see [README.py.md](README.py.md)
+
+-   xju also has my C++ classes etc for things like posix threads, sub-processes
     exception handling, assertions, io, file+directory, utf8, json, snmp,
     ipv4, http, tls; if there is a theme it is providing classes that are
     hard to misuse and that leverage C++ strengths:
