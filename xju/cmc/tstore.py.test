@@ -402,7 +402,7 @@ tstore.create_bucket(s5,id5)
 Assert(tstore.list_unseen({}))=={ (s3,id3): ByteCount(10) }
 
 # should not have any empty leaf dirs
-def verify_no_empty_leaf_dirs(d):
+def verify_no_empty_leaf_dirs(d:Path):
     '''verify directory {d} is not empty and neither are any of its descendent dirs'''
     try:
         Assert(d.is_dir())==True

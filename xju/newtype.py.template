@@ -29,7 +29,7 @@
 # ... note do not use 'Hours=Int[HoursTag]' because that is an alias to a generic and
 # therefore has not run-time presence and therefore cannot be used with isinstance.
 #
-from typing import Iterable,Sized,Container,Collection,Reversible,Protocol,cast,Type,overload,TypeVar
+from typing import Iterable,Sized,Container,Collection,Reversible,Protocol,Type,overload,TypeVar
 from typing import Generic,Tuple,Mapping,Optional,List,Literal,Union,Any,SupportsRound
 
 Tag=TypeVar('Tag',covariant=True)

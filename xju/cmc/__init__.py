@@ -103,6 +103,7 @@ class Dict(Mapping[K, V], contextlib.AbstractContextManager):
                  value will be exited once (if) it is removed) - the enter-new-exit-old 
                  order might be important to you i.e. might not be what you need!'''
     entered = False
+    x:_Dict[K,V]
 
     @overload
     def __init__(self):
@@ -117,7 +118,7 @@ class Dict(Mapping[K, V], contextlib.AbstractContextManager):
         '''initialise with value from {x} assuming those values have not been "entered"'''
 
     def __init__(self, *args, **kwargs):
-        self.x:_Dict[K,V] = OrderedDict(*args, **kwargs)
+        self.x = OrderedDict(*args, **kwargs)
         pass
     
     def __enter__(self):

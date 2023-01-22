@@ -17,7 +17,7 @@
 import traceback
 import sys
 import string
-from typing import Sequence,Callable,Literal,Dict
+from typing import Sequence,Callable,Literal,Dict,List,Tuple
 
 class FileAndLine(object):
     def __init__(self,file=None,line=None,readable:bool=True):
@@ -38,7 +38,7 @@ class FileAndLine(object):
 class Xn:
     """Capture cause and context.
     """
-    def __init__(self, cause):
+    def __init__(self, cause:object):
         '''cause is convertable to a string using str'''
         ''' e.g. cause can be an exception or a string like "file not found"'''
         '''cause can also have a readable_repr() method, in which case that'''
@@ -68,10 +68,9 @@ class Xn:
             'failed to {s} because\n'.format(**vars())
             for s,fl in reversed(self.context)
             if fl.readable])
-        try:
+        if hasattr(self.cause[0], 'readable_repr'):
             y:str=self.cause[0].readable_repr()
-            assert isinstance(y,str)
-        except:
+        else:
             y = str(self.cause[0])
             pass
         return capitalise(x+y+'.')
