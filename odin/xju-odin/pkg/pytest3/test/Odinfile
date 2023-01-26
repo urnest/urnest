@@ -7,6 +7,7 @@
 %test-that-passes==()+cmd=(%cmp.sh) (%test-that-passes.output) (%test-that-passes.output.expect):stdout
 
 %test-that-passes.output==test1.py+env='TEST_PORT=9999':pytest3.output
+%test-that-passes.cov==test1.py+env='TEST_PORT=9999':pytest3.cov
 %test-that-passes.output.expect==<<
 starting some testing
 output of run
