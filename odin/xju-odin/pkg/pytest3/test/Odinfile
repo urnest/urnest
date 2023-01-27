@@ -3,19 +3,21 @@
 %all-tests.tree==<<
 %test-that-passes
 %test-that-fails
+%test1.cov-checked
 
 %test-that-passes==()+cmd=(%cmp.sh) (%test-that-passes.output) (%test-that-passes.output.expect):stdout
 
 %test-that-passes.output==test1.py+env='TEST_PORT=9999':pytest3.output
 %test-that-passes.cov==test1.py+env='TEST_PORT=9999':pytest3.cov
+%test1.cov-checked==m1.py+py_cov=(%test-that-passes.cov):file.py3.cov.checked
 %test-that-passes.output.expect==<<
 starting some testing
 output of run
-.
+..
 
 %cmp.sh==! <<
 #/bin/sh
-cat "$1" | grep -v '1 passed in' | diff -b - "$2" >&2
+cat "$1" | grep -v '2 passed in' | diff -b - "$2" >&2
 
 
 %test-that-fails==(%test-that-fails.errors)+cmd=fgrep '"assert 1 == 2"':stdout
