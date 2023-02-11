@@ -131,7 +131,9 @@ $ODIN_MYPY_LD_LIBRARY_PATH 'shared library load path to install when executing c
 $ODIN_MYPY 'name of mypy script' = 'true';
 $ODIN_MYPY_FLAGS 'flags to pass to $ODIN_MYPY' = '';
 
-$ODIN_MYPYPATH 'as ODIN_PYTHONPATH above but sets MYPYPATH' = '';
+$ODIN_MYPY_MYPYPATH 'colon-separated list of directories to append to +py_sp directory list and set as MYPYPATH when running mypy; note mypy treats modules found via MYPYPATH as "source" files and will use their inline type hints' = '';
+
+$ODIN_MYPY_PYTHONPATH 'colon-separated list of directories to set as PYTHONPATH when running mypy; note mypy treats modules found via PYTHONPATH as "3rd party library" files and will NOT use their inline type hints, and mypy uses MYPYPATH first when looking for modules' = '';
 
 $ODIN_PYSTYLECHECK 'name of python style check script, e.g. flake8' = 'true';
 $ODIN_PYSTYLECHECK_PATH 'PATH to install when executing python style check script, colon separated' = '/bin:/usr/bin';
