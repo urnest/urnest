@@ -58,6 +58,10 @@ class Assert():
         return self.endsWith(y)
     def ends_with(self,y):
         return self.endsWith(y)
+    def contains(self,y):
+        if not y in self.x[-len(y):]:
+            raise Exception(f'{self.x!r} does not contain {y!r}')
+        return self.x
     def isNotIn(self,y):
         if self.x in y:
             raise Exception(f'{self.x!r} is unexpectedly in {y!r}')

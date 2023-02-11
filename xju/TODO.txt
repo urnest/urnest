@@ -1,3 +1,8 @@
+- newtype
+  make use of GenericAlias __origin__ and __args__ so can do
+  class HoursTag:pass
+  Hours=newtype.Int[HoursTag]
+
 - libssh2
     - user auth via public key
     

@@ -1,0 +1,258 @@
+#!/usr/bin/env python3
+
+from xju.json_codec import Codec
+
+from typing import cast, Type, Literal
+from dataclasses import dataclass
+import re
+
+from xju.assert_ import Assert
+import xju.newtype
+
+# int,str,bool,float,None map directly
+# None has no type(?) so cannot test directly
+
+Assert(Codec[int](int).decode(3))==3
+Assert(Codec[str](str).decode('fred'))=='fred'
+Assert(Codec[bool](bool).decode(True))==True
+Assert(Codec[float](float).decode(5.5))==5.5
+Assert(Codec[float](float).decode(5))==5
+
+Assert(Codec[int](int).encode(3))==3
+Assert(Codec[str](str).encode('fred'))=='fred'
+Assert(Codec[bool](bool).encode(True))==True
+Assert(Codec[float](float).encode(5.5))==5.5
+Assert(Codec[float](float).encode(5))==5
+
+Assert(Codec[list](list).decode([5, 'fred']))==[5, 'fred']
+Assert(Codec[list](list).encode([5, 'fred']))==[5, 'fred']
+        
+Assert(Codec[list[int]](list[int]).decode([5, 6]))==[5, 6]
+Assert(Codec[list[int]](list[int]).encode([5, 6]))==[5, 6]
+
+try:        
+    x=Codec[list[int]](list[int]).decode([5, 'fred'])
+except Exception as e:
+    Assert("'fred' (of type <class 'str'>) is not a <class 'int'>").isIn(str(e))
+else:
+    assert False, x
+    pass
+
+Assert(Codec[tuple](tuple).decode([5, 'fred']))==(5, 'fred')
+Assert(Codec[tuple](tuple).encode((5, 'fred')))==[5, 'fred']
+
+#mypy 1.0.0 bug:
+#c=Codec[tuple[int,str]](tuple[int,str])
+# ... says:
+# /home/xju/urnest/xju/json_codec.py.test:43: error: Argument 1 to "Codec" has incompatible type "Type[Tuple[Any, ...]]"; expected "Type[Tuple[int, str]]"  [arg-type]
+# ... but there are so many tuple-related bugs on github it's not really surprising
+
+tuple_codec=Codec[tuple[int,str]](cast(Type[tuple[int,str]],tuple[int,str]))  #mypy 1.0.0 bug
+Assert(tuple_codec.decode([5, 'fred']))==(5, 'fred')
+Assert(tuple_codec.encode((5, 'fred')))==[5, 'fred']
+
+try:        
+    x2=tuple_codec.decode([5, 6])
+except Exception as e:
+    Assert("6 (of type <class 'int'>) is not a <class 'str'>").isIn(str(e))
+else:
+    assert False, x2
+    pass
+
+
+try:        
+    x2=tuple_codec.decode([5, 6, 7])
+except Exception as e:
+    Assert("[5, 6, 7] does not have 2 items (it has 3 items)").isIn(str(e))
+else:
+    assert False, x2
+    pass
+
+Assert(Codec[dict](dict).decode({'fred':5, 'jock': 'nine'}))=={'fred':5, 'jock':'nine'}
+Assert(Codec[dict](dict).encode({'fred':5, 'jock': 'nine'}))=={'fred':5, 'jock':'nine'}
+        
+Assert(Codec[dict[str,int]](dict[str,int]).decode({'fred':5, 'jock': 9}))=={'fred':5, 'jock':9}
+Assert(Codec[dict[str,int]](dict[str,int]).encode({'fred':5, 'jock': 9}))=={'fred':5, 'jock':9}
+
+#incorrect dict value type
+try:        
+    d=Codec[dict[str,int]](dict[str,int]).decode({'jock': 'fred'})
+except Exception as e:
+    Assert("'fred' (of type <class 'str'>) is not a <class 'int'>").isIn(str(e))
+else:
+    assert False, d
+    pass
+
+#json dict keys must be strings
+try:        
+    d2=Codec[dict](dict).encode({6: 'fred'})
+except Exception as e:
+    Assert(str(e)).matches("key encoder <xju.json_codec.AnyJsonCodec object at .*> produced non-str 6 from dict key 6")
+else:
+    assert False, d2
+    pass
+
+#xju.newtype.Int support
+class AgeInYearsTag:pass
+class AgeInYears(xju.newtype.Int[AgeInYearsTag]):pass
+
+Assert(Codec[AgeInYears](AgeInYears).decode(3))==AgeInYears(3)
+Assert(Codec[AgeInYears](AgeInYears).encode(AgeInYears(3)))==3
+
+try:        
+    f=Codec[AgeInYears](AgeInYears).decode('fred')
+except Exception as e:
+    Assert("'fred' (of type <class 'str'>) is not an int").isIn(str(e))
+else:
+    assert False, f
+    pass
+
+#xju.newtype.Float support
+class MetresTag:pass
+class Metres(xju.newtype.Float[MetresTag]):pass
+
+Assert(Codec[Metres](Metres).decode(3.8))==Metres(3.8)
+Assert(Codec[Metres](Metres).encode(Metres(3.8)))==3.8
+Assert(Codec[Metres](Metres).decode(3))==Metres(3)
+Assert(Codec[Metres](Metres).encode(Metres(3)))==3
+
+try:        
+    f2=Codec[Metres](Metres).decode('fred')
+except Exception as e:
+    Assert("'fred' (of type <class 'str'>) is not an float").isIn(str(e))
+else:
+    assert False, f2
+    pass
+
+#xju.newtype.Str support
+class SurnameTag:pass
+class Surname(xju.newtype.Str[SurnameTag]):pass
+
+Assert(Codec[Surname](Surname).decode('Ang'))==Surname('Ang')
+Assert(Codec[Surname](Surname).encode(Surname('Ang')))=='Ang'
+
+try:        
+    f3=Codec[Surname](Surname).decode(17)
+except Exception as e:
+    Assert("17 (of type <class 'int'>) is not a <class 'str'>").isIn(str(e))
+else:
+    assert False, f3
+    pass
+
+
+#mypy 1.0.0 bug
+#union_codec=Codec[str|int](str|int)
+# says:
+#  error: Argument 1 to "Codec" has incompatible type "UnionType"; expected "Union[Type[str], Type[int]]"  [arg-type]
+
+union_codec=Codec[str|int](cast(Type[str|int],str|int))
+Assert(union_codec.decode('fred'))=='fred'
+Assert(union_codec.decode(9))==9
+Assert(union_codec.encode('fred'))=='fred'
+Assert(union_codec.encode(9))==9
+
+#incorrect dict value type
+try:        
+    dd=union_codec.decode(5.7)
+except Exception as e:
+    Assert(str(e)).matches("failed to decode 5.7 to a str | int because.*failed to decode as <class 'str'> because 5.7 (of type <class 'float'>) is not a <class 'str'> and failed to decode as <class 'int'> because 5.7 (of type <class 'float'>) is not a <class 'int'>")
+else:
+    assert False, dd
+    pass
+
+
+class StreetTag:pass
+class Street(xju.newtype.Str[StreetTag]):pass
+
+class SuburbTag:pass
+class Suburb(xju.newtype.Str[SuburbTag]):pass
+
+class PostcodeTag:pass
+class Postcode(xju.newtype.Int[PostcodeTag]):pass
+
+@dataclass
+class Address:
+    street:Street
+    suburb:Suburb
+    postcode:Postcode
+
+
+Assert(Codec[Address](Address).decode({
+    'street':'alba',
+    'suburb': 'bocca',
+    'postcode': 3365}))==Address(Street('alba'),Suburb('bocca'),Postcode(3365))
+        
+#incorrect Address value type
+try:        
+    ddd=Codec[Address](Address).decode({'jock': 'fred'})
+except Exception as e:
+    Assert(str(e)).matches(re.escape("failed to decode {'jock': 'fred'} to a <class '__main__.Address'> because"))
+    Assert(str(e)).endswith("{'jock': 'fred'} has no 'street' attribute")
+else:
+    assert False, ddd
+    pass
+
+
+#mypy 1.0.0 bug:
+#Codec[Literal['fred']](Literal['fred'])
+# ... says:
+#  error: Argument 1 to "Codec" has incompatible type "object"; expected "Type[Literal['fred']]"  [arg-type]
+
+Assert(Codec[Literal['fred']](Literal['fred']).decode('fred'))=='fred' # type: ignore
+Assert(Codec[Literal['fred']](Literal['fred']).encode('fred'))=='fred' # type: ignore
+
+#non-string literal not yet implemented
+try:        
+    dddd=Codec[Literal[7]](Literal[7]).decode(7) # type: ignore
+except Exception as e:
+    Assert("typing.Literal[7] literal type is not implemented (only string is implemented)").isIn(str(e))
+else:
+    assert False, dddd
+    pass
+
+
+@dataclass
+class Add:
+    a:int
+    b:int
+    op_type: Literal['add'] = 'add'
+
+Assert(Codec[Add](Add).decode({
+    'op_type':'add',
+    'a': 7,
+    'b': 8}))==Add(7,8)
+        
+Assert(Codec[Add](Add).decode({
+    'op_type':'add',
+    'a': 7,
+    'b': 8}).op_type)=='add'
+        
+Assert(Codec[Add](Add).encode(Add(7,8))=={
+    'op_type':'add',
+    'a': 7,
+    'b': 8})
+        
+#incorrect Address value type
+try:        
+    eee=Codec[Add](Add).decode({
+        'op_type':'subtract',
+        'a': 7,
+        'b': 8})
+except Exception as e:
+    Assert(str(e)).contains("'subtract' is not 'add'")
+else:
+    assert False, eee
+    pass
+
+
+@dataclass
+class Sub:
+    a:int
+    b:int
+    op_type: Literal['sub'] = 'sub'
+
+Assert(Codec[Add|Sub](Add|Sub).decode({  # type: ignore
+    'op_type':'sub',
+    'a': 7,
+    'b': 8}))==Sub(7,8)
+
