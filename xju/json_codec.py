@@ -29,7 +29,7 @@
 from xju.xn import Xn,in_context,in_function_context,readable_repr
 from typing import TypeVar, Generic, Type, cast, Any, Protocol
 from typing import _LiteralGenericAlias  # type: ignore
-from types import GenericAlias, UnionType
+from types import GenericAlias, UnionType, NoneType
 import xju.newtype
 
 T=TypeVar('T')
@@ -46,7 +46,7 @@ class Codec(Generic[T]):
         pass
 
     def __repr__(self):
-        return repr(self.t)
+        return f'{self.t!r} json codec'
 
     def encode(self,x:T) -> JsonType:
         'encode {self.t} {x} to json'
@@ -62,9 +62,9 @@ class Codec(Generic[T]):
 
 class CodecProto(Protocol):
     def encode(self, x:Any)->JsonType:
-        ...
+        pass
     def decode(self, x:JsonType)->Any:
-        ...
+        pass
     pass
 
 Atom=TypeVar('Atom',int,str,bool,float,None)
@@ -78,6 +78,9 @@ class NoopCodec(Generic[Atom]):
     def __init__(self, t:Type[Atom]):
         self.t=t
     def encode(self, x:Atom)->Atom:
+        if not isinstance(x,self.t) and not (
+                self.t is float and isinstance(x, int)):
+            raise Exception(f'{x!r} is not a {self.t}')
         return x
     def decode(self, x:Atom)->Atom:
         if not isinstance(x, self.t) and not (
@@ -89,6 +92,8 @@ class NoopCodec(Generic[Atom]):
 
 class NoneCodec:
     def encode(self, x:None)->None:
+        if x is not None:
+            raise Exception(f'{x!r} is not None')
         return x
     def decode(self, x:None)->None:
         if x is not None:
@@ -120,7 +125,7 @@ class TupleCodec:
         self.number_of_codecs=len(value_codecs)
         pass
     def encode(self,x) -> list:
-        'encode tuple {x} as an {self.number_of_codecs}-element list'
+        'encode tuple {x} as a {self.number_of_codecs}-element list'
         try:
             if len(x) != self.number_of_codecs:
                 l=len(x)
@@ -143,10 +148,11 @@ class TupleCodec:
 
 class UnionCodec:
     def __init__(self,allowed_types):
+        self.allowed_types=allowed_types
         self.value_codecs={t:_explodeSchema(t) for t in allowed_types}
         pass
     def encode(self,x) -> JsonType:
-        'encode tuple {x} as one of {self.value_codecs.keys()}'
+        'encode {x!r} as one of {self.allowed_types}'
         try:
             exceptions=[]
             for t, c in self.value_codecs.items():
@@ -210,7 +216,8 @@ class NewIntCodec(Generic[NewInt]):
         self.t=t
         self.base_codec=NoopCodec[int](int)
     def encode(self, x:NewInt)->int:
-        assert isinstance(x,self.t)
+        if not isinstance(x, xju.newtype.Int):
+            raise Exception(f'{x!r} is not a {self.t}')
         return self.base_codec.encode(x.value())
     def decode(self, x:JsonType)->NewInt:
         if not isinstance(x, int):
@@ -225,7 +232,8 @@ class NewFloatCodec(Generic[NewFloat]):
         self.t=t
         self.base_codec=NoopCodec[float](float)
     def encode(self, x:NewFloat)->float:
-        assert isinstance(x,self.t)
+        if not isinstance(x, xju.newtype.Float):
+            raise Exception(f'{x!r} is not a {self.t}')
         return self.base_codec.encode(x.value())
     def decode(self, x:JsonType)->NewFloat:
         if not isinstance(x, float) and not isinstance(x, int):
@@ -240,10 +248,11 @@ class NewStrCodec(Generic[NewStr]):
         self.t=t
         self.base_codec=NoopCodec[str](str)
     def encode(self, x:NewStr)->str:
-        assert isinstance(x,self.t)
+        if not isinstance(x, xju.newtype.Str):
+            raise Exception(f'{x!r} is not a {self.t}')
         return self.base_codec.encode(x.value())
     def decode(self, x:JsonType)->NewStr:
-        if not isinstance(x, str) and not isinstance(x, int):
+        if not isinstance(x, str):
             t=type(x)
             raise Exception(f'{x!r} (of type {t}) is not an str')
         return self.t(self.base_codec.decode(x))
@@ -273,16 +282,17 @@ class ClassCodec:
         self.attr_codecs=attr_codecs
         pass
     def encode(self,x) -> dict:
-        'encode {x} as an {self.t}'
+        'encode {x} as a {self.t}'
         try:
+            if not isinstance(x,self.t):
+                xt=type(x)
+                raise Exception(f'{x!r} (of type {xt}) is not a {self.t}')
             result={}
             for n, attr_codec in self.attr_codecs.items():
                 try:
-                    if not hasattr(x,n):
-                        raise Exception(f'{x!r} has no {n!r} attribute')
                     result[n]=attr_codec.encode(getattr(x,n))
                 except Exception:
-                    raise in_context(f'encode attribute {n}')
+                    raise in_context(f'encode attribute {n}') from None
                 pass
             return result
         except Exception:
@@ -301,7 +311,7 @@ class ClassCodec:
                         attr_values.append(value)
                         pass
                 except Exception:
-                    raise in_context(f'decode attribute {n}')
+                    raise in_context(f'decode attribute {n}') from None
                 pass
             return self.t(*attr_values)
         except Exception:
@@ -320,7 +330,7 @@ def _explodeSchema(t:type):
             return NoopCodec[str](str)
         if t is bool:
             return NoopCodec[bool](bool)
-        if t is None:
+        if t is None or t is NoneType:
             return NoneCodec()
         if t is list:
             return ListCodec(AnyJsonCodec())

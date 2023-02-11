@@ -28,6 +28,7 @@ Assert('fred').starts_with('f')
 Assert('fred').endswith('d')
 Assert('fred').endsWith('d')
 Assert('fred').ends_with('d')
+Assert('fred').contains('d')
 Assert(7).isInstanceOf(int)
 Assert(7).isNotInstanceOf(str)
 Assert(7)==7
@@ -55,6 +56,14 @@ try:
     Assert('fred').endsWith('wilfred')
 except Exception as e:
     assert "'fred' does not end with 'wilfred'" in str(e),str(e)
+else:
+    assert False
+    pass
+
+try:
+    Assert('fred').contains('wilfred')
+except Exception as e:
+    assert "'fred' does not contain 'wilfred'" in str(e),str(e)
 else:
     assert False
     pass
