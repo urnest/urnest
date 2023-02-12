@@ -30,6 +30,8 @@ Assert(Codec[list](list).encode([5, 'fred']))==[5, 'fred']
 Assert(Codec[list[int]](list[int]).decode([5, 6]))==[5, 6]
 Assert(Codec[list[int]](list[int]).encode([5, 6]))==[5, 6]
 
+x:Any
+
 try:        
     x=Codec[list[int]](list[int]).decode([5, 'fred'])
 except Exception as e:
@@ -52,28 +54,28 @@ Assert(tuple_codec.decode([5, 'fred']))==(5, 'fred')
 Assert(tuple_codec.encode((5, 'fred')))==[5, 'fred']
 
 try:        
-    x2=tuple_codec.decode([5, 6])
+    x=tuple_codec.decode([5, 6])
 except Exception as e:
     Assert("6 (of type <class 'int'>) is not a <class 'str'>").isIn(str(e))
 else:
-    assert False, x2
+    assert False, x
     pass
 
 
 try:        
-    x2=tuple_codec.decode([5, 6, 7])
+    x=tuple_codec.decode([5, 6, 7])
 except Exception as e:
     Assert("[5, 6, 7] does not have 2 items (it has 3 items)").isIn(str(e))
 else:
-    assert False, x2
+    assert False, x
     pass
 
-try:        
-    x2=tuple_codec.encode((5, 6, 7))  # type: ignore
+try:
+    x=tuple_codec.encode((5, 6, 7))  # type: ignore
 except Exception as e:
     Assert("(5, 6, 7) does not have 2 items (it has 3 items)").isIn(str(e))
 else:
-    assert False, x2
+    assert False, x
     pass
 
 Assert(Codec[dict](dict).decode({'fred':5, 'jock': 'nine'}))=={'fred':5, 'jock':'nine'}
@@ -83,21 +85,21 @@ Assert(Codec[dict[str,int]](dict[str,int]).decode({'fred':5, 'jock': 9}))=={'fre
 Assert(Codec[dict[str,int]](dict[str,int]).encode({'fred':5, 'jock': 9}))=={'fred':5, 'jock':9}
 
 #incorrect dict value type
-try:        
-    d=Codec[dict[str,int]](dict[str,int]).decode({'jock': 'fred'})
+try:
+    x=Codec[dict[str,int]](dict[str,int]).decode({'jock': 'fred'})
 except Exception as e:
     Assert("'fred' (of type <class 'str'>) is not a <class 'int'>").isIn(str(e))
 else:
-    assert False, d
+    assert False, x
     pass
 
 #json dict keys must be strings
-try:        
-    d2=Codec[dict](dict).encode({6: 'fred'})
+try:
+    x=Codec[dict](dict).encode({6: 'fred'})
 except Exception as e:
     Assert(str(e)).matches("key encoder <xju.json_codec.AnyJsonCodec object at .*> produced non-str 6 from dict key 6")
 else:
-    assert False, d2
+    assert False, x
     pass
 
 #xju.newtype.Int support
@@ -107,20 +109,20 @@ class AgeInYears(xju.newtype.Int[AgeInYearsTag]):pass
 Assert(Codec[AgeInYears](AgeInYears).decode(3))==AgeInYears(3)
 Assert(Codec[AgeInYears](AgeInYears).encode(AgeInYears(3)))==3
 
-try:        
-    f=Codec[AgeInYears](AgeInYears).decode('fred')
+try:
+    x=Codec[AgeInYears](AgeInYears).decode('fred')
 except Exception as e:
     Assert("'fred' (of type <class 'str'>) is not an int").isIn(str(e))
 else:
-    assert False, f
+    assert False, x
     pass
 
 try:        
-    f=Codec[AgeInYears](AgeInYears).encode(8) # type: ignore
+    x=Codec[AgeInYears](AgeInYears).encode(8) # type: ignore
 except Exception as e:
     Assert("8 is not a <class '__main__.AgeInYears'>").isIn(str(e))
 else:
-    assert False, f
+    assert False, x
     pass
 
 #xju.newtype.Float support
@@ -132,20 +134,20 @@ Assert(Codec[Metres](Metres).encode(Metres(3.8)))==3.8
 Assert(Codec[Metres](Metres).decode(3))==Metres(3)
 Assert(Codec[Metres](Metres).encode(Metres(3)))==3
 
-try:        
-    f2=Codec[Metres](Metres).decode('fred')
+try:
+    x=Codec[Metres](Metres).decode('fred')
 except Exception as e:
     Assert("'fred' (of type <class 'str'>) is not an float").isIn(str(e))
 else:
-    assert False, f2
+    assert False, x
     pass
 
-try:        
-    f2=Codec[Metres](Metres).encode('fred') # type: ignore
+try:
+    x=Codec[Metres](Metres).encode('fred') # type: ignore
 except Exception as e:
     Assert("'fred' is not a <class '__main__.Metres'>").isIn(str(e))
 else:
-    assert False, f2
+    assert False, x
     pass
 
 #xju.newtype.Str support
@@ -155,20 +157,20 @@ class Surname(xju.newtype.Str[SurnameTag]):pass
 Assert(Codec[Surname](Surname).decode('Ang'))==Surname('Ang')
 Assert(Codec[Surname](Surname).encode(Surname('Ang')))=='Ang'
 
-try:        
-    f3=Codec[Surname](Surname).decode(17)
+try:
+    x=Codec[Surname](Surname).decode(17)
 except Exception as e:
     Assert("17 (of type <class 'int'>) is not an str").isIn(str(e))
 else:
-    assert False, f3
+    assert False, x
     pass
 
-try:        
-    f3=Codec[Surname](Surname).encode(17) # type: ignore
+try:
+    x=Codec[Surname](Surname).encode(17) # type: ignore
 except Exception as e:
     Assert("17 is not a <class '__main__.Surname'>").isIn(str(e))
 else:
-    assert False, f3
+    assert False, x
     pass
 
 
@@ -184,12 +186,12 @@ Assert(union_codec.encode('fred'))=='fred'
 Assert(union_codec.encode(9))==9
 
 #incorrect dict value type
-try:        
-    dd=union_codec.decode(5.7)
+try:
+    x=union_codec.decode(5.7)
 except Exception as e:
     Assert(str(e)).matches("failed to decode 5.7 to a str | int because.*failed to decode as <class 'str'> because 5.7 (of type <class 'float'>) is not a <class 'str'> and failed to decode as <class 'int'> because 5.7 (of type <class 'float'>) is not a <class 'int'>")
 else:
-    assert False, dd
+    assert False, x
     pass
 
 
@@ -220,30 +222,30 @@ Assert(Codec[Address](Address).encode(Address(Street('alba'),Suburb('bocca'),Pos
     'postcode': 3365}
         
 #incorrect Address value type
-try:        
-    ddd=Codec[Address](Address).decode({'jock': 'fred'})
+try:
+    x=Codec[Address](Address).decode({'jock': 'fred'})
 except Exception as e:
     Assert(str(e)).matches(re.escape("failed to decode {'jock': 'fred'} to a <class '__main__.Address'> because"))
     Assert(str(e)).endswith("{'jock': 'fred'} has no 'street' attribute")
 else:
-    assert False, ddd
+    assert False, x
     pass
 
-try:        
-    hhh=Codec[Address](Address).encode(7) # type: ignore
+try:
+    x=Codec[Address](Address).encode(7) # type: ignore
 except Exception as e:
     Assert(str(e)).endswith("7 (of type <class 'int'>) is not a <class '__main__.Address'>")
 else:
-    assert False, hhh
+    assert False, x
     pass
 
 bad_postcode=Address(Street('alba'),Suburb('bocca'),3365)  # type: ignore
-try:        
-    hhh=Codec[Address](Address).encode(bad_postcode)
+try:
+    x=Codec[Address](Address).encode(bad_postcode)
 except Exception as e:
     Assert(str(e)).endswith("3365 is not a <class '__main__.Postcode'>")
 else:
-    assert False, hhh
+    assert False, x
     pass
 
 
@@ -256,30 +258,30 @@ Assert(Codec[Literal['fred']](Literal['fred']).decode('fred'))=='fred' # type: i
 Assert(Codec[Literal['fred']](Literal['fred']).encode('fred'))=='fred' # type: ignore
 
 #non-string literal not yet implemented
-try:        
-    dddd=Codec[Literal[7]](Literal[7]).decode(7) # type: ignore
+try:
+    x=Codec[Literal[7]](Literal[7]).decode(7) # type: ignore
 except Exception as e:
     Assert("typing.Literal[7] literal type is not implemented (only string is implemented)").isIn(str(e))
 else:
-    assert False, dddd
+    assert False, x
     pass
 
 
 #encode wrong type
-try:        
-    dddd=Codec[Literal['fred']](Literal['fred']).encode(7) # type: ignore
+try:
+    x=Codec[Literal['fred']](Literal['fred']).encode(7) # type: ignore
 except Exception as e:
     Assert("7 is not 'fred'").isIn(str(e))
 else:
-    assert False, dddd
+    assert False, x
     pass
 #decode wrong type
-try:        
-    dddd=Codec[Literal['fred']](Literal['fred']).decode(7) # type: ignore
+try:
+    x=Codec[Literal['fred']](Literal['fred']).decode(7) # type: ignore
 except Exception as e:
     Assert("7 is not a string").isIn(str(e))
 else:
-    assert False, dddd
+    assert False, x
     pass
 
 
@@ -305,15 +307,15 @@ Assert(Codec[Add](Add).encode(Add(7,8))=={
     'b': 8})
         
 #incorrect value type
-try:        
-    eee=Codec[Add](Add).decode({
+try:
+    x=Codec[Add](Add).decode({
         'op_type':'subtract',
         'a': 7,
         'b': 8})
 except Exception as e:
     Assert(str(e)).contains("'subtract' is not 'add'")
 else:
-    assert False, eee
+    assert False, x
     pass
 
 
@@ -336,18 +338,18 @@ Assert(repr(Codec[int](int)))=="<class 'int'> json codec"
 Assert(Codec[int|None](int|None).decode(None))==None # type: ignore
 Assert(Codec[int|None](int|None).encode(None))==None # type: ignore
 
-try:        
-    eeee=Codec[int|None](int|None).decode('fred')  # type: ignore
+try:
+    x=Codec[int|None](int|None).decode('fred')  # type: ignore
 except Exception as e:
     Assert(str(e)).contains("'fred' is not None")
 else:
-    assert False, eeee
+    assert False, x
     pass
 
-try:        
-    eeee=Codec[int|None](int|None).encode('fred')  # type: ignore
+try:
+    x=Codec[int|None](int|None).encode('fred')  # type: ignore
 except Exception as e:
     Assert(str(e)).contains("'fred' is not None")
 else:
-    assert False, eeee
+    assert False, x
     pass
