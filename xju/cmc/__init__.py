@@ -15,12 +15,14 @@
 #
 # CMC - Context Manager Complete/Crap
 #
+import asyncio
 import sys
 import contextlib
 from typing import TypeVar, Iterable, Dict as _Dict, overload, Tuple, Sequence, Union, Optional
 from typing import ItemsView, KeysView
-from typing import Mapping, Type, List
+from typing import Mapping, Type, List, Generic, Any
 from collections import OrderedDict
+from collections.abc import Coroutine
 import builtins
 
 from xju.xn import in_function_context
@@ -28,15 +30,14 @@ from xju.assert_ import Assert
 
 T = TypeVar('T', bound=contextlib.AbstractContextManager)
 
-# Class decorator that adds context management __enter__ and __exit__
-# that enter and exit all type-hinted attributes implementing contextlib.AbstractContextManager
-# then any existing __enter__.
-#
-# Note that to satisfy mypy, the decorated class must already
-# implement contextlib.AbstractContextManager and the preferred way to do that is
-# to inherit from xju.cmc.CM - see test-cmc.py for examples.
-#
 def cmclass(cls:Type[T]) -> Type[T]:
+    '''Class decorator that adds context management __enter__ and __exit__
+       that enter and exit all type-hinted attributes implementing contextlib.AbstractContextManager
+       then any existing __enter__.
+       Note that to satisfy mypy, the decorated class must already
+       implement contextlib.AbstractContextManager and the preferred way to do that is
+       to inherit from xju.cmc.CM - see cmc.py.test for examples.
+    '''
     base_classes_to_enter = [ base_class for base_class in cls.__bases__
                               if issubclass(base_class, contextlib.AbstractContextManager) ]
     attrs_to_enter = [ n for n, t in cls.__annotations__.items()
@@ -318,3 +319,30 @@ def is_subclass(n:str, t1, t2:type):
     except Exception:
         raise in_function_context(is_subclass,vars()) from None
     pass
+
+ResultType=TypeVar('ResultType')
+class Task(contextlib.AbstractAsyncContextManager,Generic[ResultType]):
+    '''asyncio Task context manager that guarentees Task awaited before exit
+       - note that normally, application will have waited for the task
+         within the context; cancel-on-exit ensures clean up on exception
+         e.g. when using gather() with its default return_exceptions=False'''
+    coroutine: Coroutine[Any,Any,ResultType]
+    task: None | asyncio.Task[ResultType]
+    def __init__(self, coroutine: Coroutine[Any,Any,ResultType]):
+        self.coroutine=coroutine
+        self.task=None
+    async def __aenter__(self) -> asyncio.Task[ResultType]:
+        '''create and return task'''
+        assert self.task is None
+        self.task=asyncio.create_task(self.coroutine)
+        return self.task
+    async def __aexit__(self, t, e, b):
+        '''cancel and await task'''
+        assert self.task is not None
+        task=self.task
+        self.task=None
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass

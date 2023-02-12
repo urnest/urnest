@@ -17,11 +17,53 @@
 #
 from xju import cmc
 
+import asyncio
 from xju.assert_ import Assert
-from typing import cast
+from typing import cast, Awaitable
 
 try:
     cmc.is_subclass('fred', 7, cast(type, 'jock'))
 except Exception as e:
     Assert("'jock' is not an instance of class type (it is of class str)").isIn(str(e))
     pass
+
+
+async def async_main() -> None:
+    async def task_that_succeeds() -> int:
+        return 3
+
+    task: Awaitable[int]
+
+    async with cmc.Task(task_that_succeeds()) as task:
+        Assert(task.done())==False
+        pass
+    Assert(task.done())==True
+    Assert(task.cancelled())==True
+
+    async with cmc.Task(task_that_succeeds()) as task:
+        Assert(task.done())==False
+        Assert(await task)==3
+        Assert(task.done())==True
+        pass
+    Assert(task.cancelled())==False
+
+    async def task_that_raises_exception():
+        raise Exception('failed to do anything')
+
+    async with cmc.Task(task_that_raises_exception()) as task:
+        Assert(task.done())==False
+        pass
+    Assert(task.done())==True
+    Assert(task.cancelled())==True
+
+    try:
+        async with cmc.Task(task_that_raises_exception()) as task:
+            Assert(task.done())==False
+            result=await task
+            pass
+    except Exception as e:
+        Assert("failed to do anything").isIn(str(e))
+    else:
+        assert False, result
+
+asyncio.run(async_main())
