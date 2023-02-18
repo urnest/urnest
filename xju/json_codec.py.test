@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 
-from xju.json_codec import Codec
+from xju.json_codec import Codec, JsonType, AnyJsonCodec
 
-from typing import cast, Type, Literal
+from typing import cast, Type, Literal, Any
+from types import NoneType
 from dataclasses import dataclass
 import re
 
 from xju.assert_ import Assert
 import xju.newtype
 
+x:Any
+
+
 # int,str,bool,float,None map directly
-# None has no type(?) so cannot test directly
 
 Assert(Codec[int](int).decode(3))==3
 Assert(Codec[str](str).decode('fred'))=='fred'
@@ -22,16 +25,46 @@ Assert(Codec[int](int).encode(3))==3
 Assert(Codec[str](str).encode('fred'))=='fred'
 Assert(Codec[bool](bool).encode(True))==True
 Assert(Codec[float](float).encode(5.5))==5.5
-Assert(Codec[float](float).encode(5))==5
+Assert(Codec[float](float).encode(5))==5.0
 
+# note None is a bit weird, sometimes it acts as as a type, others not
+Assert(Codec[None](type(None)).decode(None))==None
+Assert(Codec[None](type(None)).encode(None))==None
+
+
+# list maps to list...
 Assert(Codec[list](list).decode([5, 'fred']))==[5, 'fred']
 Assert(Codec[list](list).encode([5, 'fred']))==[5, 'fred']
-        
+
+# ... but must be given a list
+try:
+    x=Codec[list](list).decode(8)
+except Exception as e:
+    Assert("8 is not a list").isIn(str(e))
+else:
+    assert False, x
+    pass
+# ... note element types are not checked (it is assumed
+# result will be given to json.dumps, which will fail), e.g.
+# we can happily put print, which has no mapping to a json type,
+# into a non-type-adorned list and encode that list:
+Assert(Codec[list](list).encode([print]))==[print]
+
+
+# type-adorned list maps to list...
 Assert(Codec[list[int]](list[int]).decode([5, 6]))==[5, 6]
 Assert(Codec[list[int]](list[int]).encode([5, 6]))==[5, 6]
 
-x:Any
+# ... but must be given a list...
+try:
+    x=Codec[list[int]](list[int]).decode(8)
+except Exception as e:
+    Assert("8 is not a list").isIn(str(e))
+else:
+    assert False, x
+    pass
 
+# ... and all values must have correct type
 try:        
     x=Codec[list[int]](list[int]).decode([5, 'fred'])
 except Exception as e:
@@ -40,8 +73,8 @@ else:
     assert False, x
     pass
 
-Assert(Codec[tuple](tuple).decode([5, 'fred']))==(5, 'fred')
-Assert(Codec[tuple](tuple).encode((5, 'fred')))==[5, 'fred']
+
+# tuple encodes as list (note, tuples without specific element types are disallowed)
 
 #mypy 1.0.0 bug:
 #c=Codec[tuple[int,str]](tuple[int,str])
@@ -53,15 +86,16 @@ tuple_codec=Codec[tuple[int,str]](cast(Type[tuple[int,str]],tuple[int,str]))  #m
 Assert(tuple_codec.decode([5, 'fred']))==(5, 'fred')
 Assert(tuple_codec.encode((5, 'fred')))==[5, 'fred']
 
+# for list to decode as tuple, it must be a list in the first place...
 try:        
-    x=tuple_codec.decode([5, 6])
+    x=tuple_codec.decode({'x':6, 'y':8})
 except Exception as e:
-    Assert("6 (of type <class 'int'>) is not a <class 'str'>").isIn(str(e))
+    Assert("{'x': 6, 'y': 8} is not a list").isIn(str(e))
 else:
     assert False, x
     pass
 
-
+# ... it must have expected number of elements each of the expected type...
 try:        
     x=tuple_codec.decode([5, 6, 7])
 except Exception as e:
@@ -70,6 +104,17 @@ else:
     assert False, x
     pass
 
+# ... each element must have correct type...
+try:
+    x=tuple_codec.decode([5, 6])
+except Exception as e:
+    Assert("6 (of type <class 'int'>) is not a <class 'str'>").isIn(str(e))
+else:
+    assert False, x
+    pass
+
+# encoding also rejects wrong number of elements, but this would be
+# rejected by type checker anyway
 try:
     x=tuple_codec.encode((5, 6, 7))  # type: ignore
 except Exception as e:
@@ -78,13 +123,32 @@ else:
     assert False, x
     pass
 
+
+# dict with no type hints allows any keys with any value types (key must be string)
 Assert(Codec[dict](dict).decode({'fred':5, 'jock': 'nine'}))=={'fred':5, 'jock':'nine'}
 Assert(Codec[dict](dict).encode({'fred':5, 'jock': 'nine'}))=={'fred':5, 'jock':'nine'}
-        
+
+# dict with specific value type...
 Assert(Codec[dict[str,int]](dict[str,int]).decode({'fred':5, 'jock': 9}))=={'fred':5, 'jock':9}
 Assert(Codec[dict[str,int]](dict[str,int]).encode({'fred':5, 'jock': 9}))=={'fred':5, 'jock':9}
 
-#incorrect dict value type
+# ... must be given a dict...
+try:
+    x=Codec[dict](dict).decode(7)
+except Exception as e:
+    Assert("7 is not a dict").isIn(str(e))
+else:
+    assert False, x
+    pass
+try:
+    x=Codec[dict[str,int]](dict[str,int]).decode(7)
+except Exception as e:
+    Assert("7 is not a dict").isIn(str(e))
+else:
+    assert False, x
+    pass
+
+# ... expects all elements to have that value type incorrect dict value type
 try:
     x=Codec[dict[str,int]](dict[str,int]).decode({'jock': 'fred'})
 except Exception as e:
@@ -93,11 +157,34 @@ else:
     assert False, x
     pass
 
-#json dict keys must be strings
+# dict keys must be strings...
 try:
     x=Codec[dict](dict).encode({6: 'fred'})
 except Exception as e:
-    Assert(str(e)).matches("key encoder <xju.json_codec.AnyJsonCodec object at .*> produced non-str 6 from dict key 6")
+    Assert(str(e)).matches("6 is not a <class 'str'>")
+else:
+    assert False, x
+    pass
+try:
+    x=Codec[dict[int,int]](dict[int,int]).encode({7:5}) # type: ignore
+except Exception as e:
+    Assert("produced non-str 7 from dict key 7").isIn(str(e))
+else:
+    assert False, x
+    pass
+
+# ... must be given a dict...
+try:
+    x=Codec[dict](dict).encode(7) # type: ignore
+except Exception as e:
+    Assert("7 is not a dict").isIn(str(e))
+else:
+    assert False, x
+    pass
+try:
+    x=Codec[dict[str,int]](dict[str,int]).encode(7) # type: ignore
+except Exception as e:
+    Assert("7 is not a dict").isIn(str(e))
 else:
     assert False, x
     pass
@@ -137,7 +224,7 @@ Assert(Codec[Metres](Metres).encode(Metres(3)))==3
 try:
     x=Codec[Metres](Metres).decode('fred')
 except Exception as e:
-    Assert("'fred' (of type <class 'str'>) is not an float").isIn(str(e))
+    Assert("'fred' (of type <class 'str'>) is not a float (or an int)").isIn(str(e))
 else:
     assert False, x
     pass
@@ -353,3 +440,76 @@ except Exception as e:
 else:
     assert False, x
     pass
+
+
+# Codec can generate corresponding json schema (http://json-schema.org)
+# "null", "boolean", "object", "array", "number", "string", or "integer"
+Assert(Codec[None](type(None)).get_json_schema())=={'type': 'null', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[int](int).get_json_schema())=={'type': 'integer', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[bool](bool).get_json_schema())=={'type': 'boolean', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[str](str).get_json_schema())=={'type': 'string', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[float](float).get_json_schema())=={'type': 'number', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[list](list).get_json_schema())=={'type': 'array', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[list[int]](list[int]).get_json_schema())=={'type': 'array', 'items': { 'type': 'integer'}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+# mypy 1.0.0 + python 3.11 bug:
+# Argument 1 to "Codec" has incompatible type "Type[Tuple[Any, ...]]"; expected "Type[Tuple[int, str]]"  [arg-type]
+Assert(Codec[tuple[int,str]](tuple[int,str]).get_json_schema())=={'type': 'array', 'prefixItems': [ { 'type': 'integer'},{ 'type': 'string'}], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
+
+# mypy 1.0.0 + python 3.11 bug:
+# Argument 1 to "Codec" has incompatible type "<typing special form>"; expected "Union[Type[None], Type[bool], Type[Dict[Any, Any]], Type[List[Any]], Type[float], Type[str]]"  [arg-type]
+Assert(Codec[JsonType](JsonType).get_json_schema())=={'oneOf': [{'type': 'null'}, {'type': 'boolean'}, {'type': 'object'}, {'type': 'array'}, {'type': 'number'}, {'type': 'string'}], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
+
+Assert(Codec[dict](dict).get_json_schema())=={'type': 'object', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+
+Assert(Codec[dict[str,int]](dict[str,int]).get_json_schema())=={'type': 'object', 'additionalProperties': {'type': 'integer'}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+
+Assert(AnyJsonCodec().get_json_schema())== {'oneOf': [{'type': 'null'}, {'type': 'boolean'}, {'type': 'object'}, {'type': 'array'}, {'type': 'number'}, {'type': 'string'}]}
+
+Assert(Codec[AgeInYears](AgeInYears).get_json_schema())=={'description': 'AgeInYears', 'type': 'integer', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+
+Assert(Codec[Street](Street).get_json_schema())=={'description': 'Street', 'type': 'string', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+
+Assert(Codec[Metres](Metres).get_json_schema())=={'description': 'Metres', 'type': 'number', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+
+Assert(Codec[Literal['fred']](Literal['fred']).get_json_schema())=={'type': 'string', 'enum': ['fred'], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
+
+# codecs' encode()s must verify correct type passed in, otherwise
+# UnionCodec encode try-each algorithm is invalid
+try:
+    x=Codec[int](int).encode('fred') # type: ignore
+except Exception as e:
+    Assert("'fred' is not a <class 'int'>").isIn(str(e))
+else:
+    assert False, x
+    pass
+try:
+    x=Codec[list[int]](list[int]).encode('fred') # type: ignore
+except Exception as e:
+    Assert("'fred' is not a list").isIn(str(e))
+else:
+    assert False, x
+    pass
+try:
+    x=Codec[list](list).encode('fred') # type: ignore
+except Exception as e:
+    Assert("'fred' is not a list").isIn(str(e))
+else:
+    assert False, x
+    pass
+try:
+    x=Codec[tuple[int]](tuple[int]).encode('fred') # type: ignore
+except Exception as e:
+    Assert("'fred' is not a tuple").isIn(str(e))
+else:
+    assert False, x
+    pass
+
+
+# random test case to ensure JsonType (Union) selects correct codec to encode dict
+@dataclass
+class Y:
+    x: JsonType
+    pass
+
+Assert(Codec[Y](Y).encode(Y({ 'z': 'fred' })))=={'x':{'z':'fred'}}
+Assert(Codec[Y](Y).get_json_schema())=={'description': 'Y', 'type': 'object', 'properties': {'x': {'oneOf': [{'type': 'null'}, {'type': 'boolean'}, {'type': 'object'}, {'type': 'array'}, {'type': 'number'}, {'type': 'string'}]}}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
