@@ -99,26 +99,50 @@ class Assert():
             raise Exception(f'{self.x!r} unexpectedly matches regular expression {pattern!r}')
         pass
     def __lt__(self,y):
+        if type(y) is not type(self.x):
+            xt=type(self.x)
+            yt=type(y)
+            raise Exception(f'{y} is a {yt}, not a {xt} (which is what {self.x} is)')
         if not self.x < y:
             raise Exception(f'{self.x!r} is not less than {y!r}')
         return self.x
     def __le__(self,y):
+        if type(y) is not type(self.x):
+            xt=type(self.x)
+            yt=type(y)
+            raise Exception(f'{y} is a {yt}, not a {xt} (which is what {self.x} is)')
         if not self.x <= y:
             raise Exception(f'{self.x!r} is not less than or equal to {y!r}')
         return self.x
     def __eq__(self,y):
+        if type(y) is not type(self.x):
+            xt=type(self.x)
+            yt=type(y)
+            raise Exception(f'{y} is a {yt}, not a {xt} (which is what {self.x} is)')
         if not self.x == y:
             raise Exception(f'{self.x!r} is not equal to {y!r}')
         return self.x
     def __ne__(self,y):
+        if type(y) is not type(self.x):
+            xt=type(self.x)
+            yt=type(y)
+            raise Exception(f'{y} is a {yt}, not a {xt} (which is what {self.x} is)')
         if self.x == y:
             raise Exception(f'{self.x!r} is unexpectedly equal to {y!r}')
         return self.x
     def __gt__(self,y):
+        if type(y) is not type(self.x):
+            xt=type(self.x)
+            yt=type(y)
+            raise Exception(f'{y} is a {yt}, not a {xt} (which is what {self.x} is)')
         if not self.x > y:
             raise Exception(f'{self.x!r} is not greater than {y!r}')
         return self.x
     def __ge__(self,y):
+        if type(y) is not type(self.x):
+            xt=type(self.x)
+            yt=type(y)
+            raise Exception(f'{y} is a {yt}, not a {xt} (which is what {self.x} is)')
         if not self.x >= y:
             raise Exception(f'{self.x!r} is not greater than or equal to {y!r}')
         return self.x

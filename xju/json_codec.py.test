@@ -25,7 +25,7 @@ Assert(Codec[int](int).encode(3))==3
 Assert(Codec[str](str).encode('fred'))=='fred'
 Assert(Codec[bool](bool).encode(True))==True
 Assert(Codec[float](float).encode(5.5))==5.5
-Assert(Codec[float](float).encode(5))==5.0
+Assert(Codec[float](float).encode(5))==5
 
 # note None is a bit weird, sometimes it acts as as a type, others not
 Assert(Codec[None](type(None)).decode(None))==None

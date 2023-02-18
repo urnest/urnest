@@ -50,8 +50,8 @@ class Resource:
     def __exit__(self, t, e, b):
         global step
         print(f'+ exit {self.name} @ {step}')
-        Assert(self.entered_at)!=None
-        Assert(self.exited_at)==None
+        Assert(self.entered_at).isNot(None)
+        Assert(self.exited_at).is_(None)
         self.exited_at = step
         step = step + 1
         if self.xe:
@@ -64,7 +64,7 @@ x = Dict({'c':Resource('c',None,None)})
 x['b'] = Resource('b',None,None)
 Assert(None)==x['b'].entered_at
 Assert(None)==x['c'].entered_at
-Assert(x.keys())=={'c':None,'b':None}.keys()
+Assert(list(x.keys()))==list({'c':None,'b':None}.keys())
 Assert(list(x))==list({'c':None,'b':None})
 Assert(len(x))==2
 del x['b']
@@ -75,8 +75,8 @@ x['b'] = Resource('b',None,None)
 Assert(None)==x['b'].entered_at
 Assert(None)==x['c'].entered_at
 Assert('c').isIn(x)
-Assert(x.keys())=={'c':None,'b':None}.keys()
-Assert(x.items())=={'c':x['c'],'b':x['b']}.items()
+Assert(list(x.keys()))==list({'c':None,'b':None}.keys())
+Assert(list(x.items()))==list({'c':x['c'],'b':x['b']}.items())
 k,bb=x.popitem()
 Assert(k)=='b'
 Assert(None)==bb.entered_at
@@ -184,7 +184,7 @@ step = 1
 with Dict() as x:
     x['c'] = Resource('c',None,None)
     x['b'] = Resource('b',None,None)
-    Assert(x.keys())=={'c':None,'b':None}.keys()
+    Assert(list(x.keys()))==list({'c':None,'b':None}.keys())
     Assert(1)==x['c'].entered_at
     Assert(2)==x['b'].entered_at
     Assert(None)==x['c'].exited_at

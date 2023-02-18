@@ -99,8 +99,8 @@ class Resource:
     def __exit__(self, t, e, b):
         global step
         print(f'+ exit {self.name} @ {step}')
-        Assert(self.entered_at)!=None
-        Assert(self.exited_at)==None
+        Assert(self.entered_at).isNot(None)
+        Assert(self.exited_at).is_(None)
         self.exited_at = step
         step = step + 1
         if self.xe:

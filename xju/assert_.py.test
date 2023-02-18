@@ -93,9 +93,25 @@ else:
     pass
 
 try:
+    Assert(7)>6.3
+except Exception as e:
+    assert "6.3 is a <class 'float'>, not a <class 'int'> (which is what 7 is)" in str(e), str(e)
+else:
+    assert False
+    pass
+
+try:
     Assert(7)>=10
 except Exception as e:
     assert "7 is not greater than or equal to 10" in str(e), str(e)
+else:
+    assert False
+    pass
+
+try:
+    Assert(7)>=6.3
+except Exception as e:
+    assert "6.3 is a <class 'float'>, not a <class 'int'> (which is what 7 is)" in str(e), str(e)
 else:
     assert False
     pass
@@ -109,9 +125,25 @@ else:
     pass
 
 try:
+    Assert(7)<6.3
+except Exception as e:
+    assert "6.3 is a <class 'float'>, not a <class 'int'> (which is what 7 is)" in str(e), str(e)
+else:
+    assert False
+    pass
+
+try:
     Assert(7)<=6
 except Exception as e:
     assert "7 is not less than or equal to 6" in str(e), str(e)
+else:
+    assert False
+    pass
+
+try:
+    Assert(7)<=6.3
+except Exception as e:
+    assert "6.3 is a <class 'float'>, not a <class 'int'> (which is what 7 is)" in str(e), str(e)
 else:
     assert False
     pass
@@ -125,9 +157,25 @@ else:
     pass
 
 try:
+    Assert(7)==6.3
+except Exception as e:
+    assert "6.3 is a <class 'float'>, not a <class 'int'> (which is what 7 is)" in str(e), str(e)
+else:
+    assert False
+    pass
+
+try:
     Assert(7)!=7
 except Exception as e:
     assert "7 is unexpectedly equal to 7" in str(e), str(e)
+else:
+    assert False
+    pass
+
+try:
+    Assert(7)!=6.3
+except Exception as e:
+    assert "6.3 is a <class 'float'>, not a <class 'int'> (which is what 7 is)" in str(e), str(e)
 else:
     assert False
     pass
