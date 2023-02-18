@@ -456,7 +456,7 @@ def _explodeSchema(t:type):
         if type(t) is _LiteralGenericAlias:
             value = t.__args__[0]
             if not isinstance(value,str):
-                raise Exception(f'{t!r} literal type is not implemented (only string is implemented)')
+                raise Exception(f'{t!r} literal type is not supported (only string is implemented)')
             return LiteralStrCodec(value)
         if type(t) is GenericAlias and getattr(t, '__origin__') is tuple:
             return TupleCodec([_explodeSchema(_) for _ in getattr(t,'__args__')])

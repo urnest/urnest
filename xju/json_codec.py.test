@@ -348,7 +348,7 @@ Assert(Codec[Literal['fred']](Literal['fred']).encode('fred'))=='fred' # type: i
 try:
     x=Codec[Literal[7]](Literal[7]).decode(7) # type: ignore
 except Exception as e:
-    Assert("typing.Literal[7] literal type is not implemented (only string is implemented)").isIn(str(e))
+    Assert("typing.Literal[7] literal type is not supported (only string is implemented)").isIn(str(e))
 else:
     assert False, x
     pass
@@ -503,7 +503,6 @@ except Exception as e:
 else:
     assert False, x
     pass
-
 
 # random test case to ensure JsonType (Union) selects correct codec to encode dict
 @dataclass
