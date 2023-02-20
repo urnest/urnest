@@ -6,6 +6,7 @@ from typing import cast, Type, Literal, Any
 from types import NoneType
 from dataclasses import dataclass
 import re
+import sys
 
 from xju.assert_ import Assert
 import xju.newtype
@@ -473,7 +474,59 @@ Assert(Codec[Metres](Metres).get_json_schema())=={'description': 'Metres', 'type
 
 Assert(Codec[Literal['fred']](Literal['fred']).get_json_schema())=={'type': 'string', 'enum': ['fred'], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
 
-# codecs' encode()s must verify correct type passed in, otherwise
+Assert(Codec[Address](Address).get_json_schema())=={'description': 'Address', 'type': 'object', 'properties': {'street': {'description': 'Street', 'type': 'string'}, 'suburb': {'description': 'Suburb', 'type': 'string'}, 'postcode': {'description': 'Postcode', 'type': 'integer'}}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+
+try:
+    import jsonschema # type: ignore
+except:
+    print('WARNING: skipped json_codec json_schema tests because json_schema not importable',
+          file=sys.stderr)
+else:
+    jsonschema.validate(None,Codec[None](type(None)).get_json_schema())
+    jsonschema.validate(7,Codec[int](int).get_json_schema())
+    jsonschema.validate(True,Codec[bool](bool).get_json_schema())
+    jsonschema.validate('fred',Codec[str](str).get_json_schema())
+    jsonschema.validate(8.8,Codec[float](float).get_json_schema())
+    jsonschema.validate([1,True],Codec[list](list).get_json_schema())
+    jsonschema.validate([1,2],Codec[list[int]](list[int]).get_json_schema())
+    # mypy 1.0.0 + python 3.11 bug:
+    # Argument 1 to "Codec" has incompatible type "Type[Tuple[Any, ...]]"; expected "Type[Tuple[int, str]]"  [arg-type]
+    jsonschema.validate([7,'fred'],Codec[tuple[int,str]](tuple[int,str]).get_json_schema()) # type:ignore
+
+    # mypy 1.0.0 + python 3.11 bug:
+    # Argument 1 to "Codec" has incompatible type "<typing special form>"; expected "Union[Type[None], Type[bool], Type[Dict[Any, Any]], Type[List[Any]], Type[float], Type[str]]"  [arg-type]
+    jsonschema.validate(None,Codec[JsonType](JsonType).get_json_schema()) # type: ignore
+    jsonschema.validate(True,Codec[JsonType](JsonType).get_json_schema()) # type: ignore
+    jsonschema.validate({},Codec[JsonType](JsonType).get_json_schema()) # type: ignore
+    jsonschema.validate([],Codec[JsonType](JsonType).get_json_schema()) # type: ignore
+    jsonschema.validate(9.9,Codec[JsonType](JsonType).get_json_schema()) # type: ignore
+    jsonschema.validate('fred',Codec[JsonType](JsonType).get_json_schema()) # type: ignore
+
+    jsonschema.validate({},Codec[dict](dict).get_json_schema())
+
+    jsonschema.validate({'fred':2, 'jock':3},Codec[dict[str,int]](dict[str,int]).get_json_schema())
+
+    jsonschema.validate(None,AnyJsonCodec().get_json_schema()) # type: ignore
+    jsonschema.validate(True,AnyJsonCodec().get_json_schema()) # type: ignore
+    jsonschema.validate({},AnyJsonCodec().get_json_schema()) # type: ignore
+    jsonschema.validate([],AnyJsonCodec().get_json_schema()) # type: ignore
+    jsonschema.validate(9.9,AnyJsonCodec().get_json_schema()) # type: ignore
+    jsonschema.validate('fred',AnyJsonCodec().get_json_schema()) # type: ignore
+
+    jsonschema.validate(77,Codec[AgeInYears](AgeInYears).get_json_schema())
+
+    jsonschema.validate('pole',Codec[Street](Street).get_json_schema())
+
+    jsonschema.validate(8.8,Codec[Metres](Metres).get_json_schema())
+
+    jsonschema.validate('fred',Codec[Literal['fred']](Literal['fred']).get_json_schema()) # type: ignore
+    jsonschema.validate({
+        'street':'alba',
+        'suburb': 'bocca',
+        'postcode': 3365},Codec[Address](Address).get_json_schema())
+    pass
+
+# internal: codecs' encode()s must verify correct type passed in, otherwise
 # UnionCodec encode try-each algorithm is invalid
 try:
     x=Codec[int](int).encode('fred') # type: ignore
