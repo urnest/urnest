@@ -14,7 +14,6 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 from sys import path
-del path[0] # undo python unhelpful adding of program's directory to front of path
 
 from xju.time import Hours,Minutes,Seconds,Duration,Timestamp,now
 from typing import cast

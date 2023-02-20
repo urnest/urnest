@@ -16,7 +16,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 from sys import path
-del path[0] # undo python unhelpful adding of program's directory to front of path
+
 
 from xju.xn import in_context,readable_repr,AllFailed,in_function_context,Scope,Xn,capitalise
 from xju.assert_ import Assert

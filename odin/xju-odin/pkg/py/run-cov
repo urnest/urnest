@@ -18,7 +18,7 @@ argv=sys.argv[2:]
 t = Trace(True, False)
 
 sys.argv = argv
-sys.path[0] = os.path.dirname(argv[0])
+sys.path.pop(0)  # we deliberately don't want unsafe paths that confuse module loading
 with open(argv[0], 'rb') as fp:
     code = compile(fp.read(), argv[0], 'exec')
     pass
