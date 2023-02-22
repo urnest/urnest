@@ -6,6 +6,7 @@ Various modules implemented to some broad principles:
 * fine-grained static typing
 * pure context management
 * useful functionality that is hard to use incorrectly
+* 100% test coverage
 
 `xju.newtype <xju/newtype.py>`_ - static and dynamic distinct int, float and str types
 
