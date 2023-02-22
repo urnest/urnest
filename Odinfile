@@ -123,10 +123,10 @@ headers=$(find "$INST_SRC" -name '*.hh' -print) &&
 set +x &&
 echo "Installation Successfull"
 
-%python3-xju.whl == %python3-xju+member='xju-1.2.2-py3-none-any.whl':extract_file
-%python3-xju.tar.gz == %python3-xju+member='xju-1.2.2.tar.gz':extract_file
+%python3-xju.whl == %python3-xju+member='xju-1.2.3-py3-none-any.whl':extract_file
+%python3-xju.tar.gz == %python3-xju+member='xju-1.2.3.tar.gz':extract_file
 
-%python3-xju==()+cmd=(%build-python3-xju.sh)+cmd=(.) (MIT-LICENCE) (README.py.rst) '1.2.2'+need=(xju%pytest.tree:leaves) +need=(xju/cmc%all):exec.files
+%python3-xju==()+cmd=(%build-python3-xju.sh)+cmd=(.) (MIT-LICENCE) (README.py.rst) '1.2.3'+need=(xju%pytest.tree:leaves) +need=(xju/cmc%all):exec.files
 
 
 

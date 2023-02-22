@@ -89,7 +89,7 @@ OVERVIEW
 	
     -   odin/test a couple of tests of odin itself
 
--   xju has python3-xju library, see [README.py.md](README.py.md)
+-   xju has python3-xju library, see [README.py.rst](README.py.rst)
 
 -   xju also has my C++ classes etc for things like posix threads, sub-processes
     exception handling, assertions, io, file+directory, utf8, json, snmp,
