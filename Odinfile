@@ -123,51 +123,69 @@ headers=$(find "$INST_SRC" -name '*.hh' -print) &&
 set +x &&
 echo "Installation Successfull"
 
-%python3-xju.whl == %python3-xju+member='dist/xju-1.2.1-py3-none-any.whl':extract_file
-%python3-xju.tar.gz == %python3-xju+member='dist/xju-1.2.1.tar.gz':extract_file
+%python3-xju.whl == %python3-xju+member='xju-1.2.2-py3-none-any.whl':extract_file
+%python3-xju.tar.gz == %python3-xju+member='xju-1.2.2.tar.gz':extract_file
 
-%python3-xju==()+cmd=(%build-python3-xju.sh)+cmd=(%python3-xju.toml) (.) (MIT-LICENCE) (README.py.md) +need=(xju%pytest.tree:leaves) +need=(xju/cmc%all):exec.files
-
-
-%python3-xju.toml==<<
-[build-system]
-requires = ["setuptools>=61.0.0", "wheel"]
-build-backend = "setuptools.build_meta"
-[project]
-name = "xju"
-version = "1.2.1"
-description = "xju library"
-readme = "urnest/README.py.md"
-authors = [{ name = "Trevor Taylor"}]
-license = { file = "urnest/MIT-LICENCE" }
-classifiers = [
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Development Status :: 5 - Production/Stable"
-]
-requires-python = ">=3.11"
-[project.urls]
-Homepage = "https://github.com/urnest/urnest"
-[tool.setuptools.packages.find]
-where = ["urnest"]  # list of folders that contain the packages (["."] by default)
-include = ["xju","xju.*","xju.cmc.*"]  # package names should match these glob patterns (["*"] by default)
-exclude = []  # exclude packages matching these glob patterns (empty by default)
-namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
-[tool.setuptools.package-data]
-xju = ["py.typed"]
+%python3-xju==()+cmd=(%build-python3-xju.sh)+cmd=(.) (MIT-LICENCE) (README.py.rst) '1.2.2'+need=(xju%pytest.tree:leaves) +need=(xju/cmc%all):exec.files
 
 
-%build-python3-xju.sh==!<<
+
+%build-python3-xju.sh==!<<XXXX
 #!/bin/sh
 set -ex
-toml="$1"
-src_dir="$2"
-licence="$3"
-readme="$4"
-cat "$toml" > pyproject.toml
-ln -s $src_dir
-python -m build -n
+src_dir="$1"
+licence="$2"
+readme="$(cat $3)"
+rev="$4"
+mkdir xju-$rev
+(
+  cd $src_dir &&
+  tar cf - xju/*.py xju/*.py.test xju/cmc/*.py xju/cmc/*.py.test xju/cmc/io/*.py xju/cmc/io/*.py.test
+) |
+(cd xju-$rev && tar xvf - )
+touch xju-$rev/xju/py.typed
+mkdir xju-$rev/xju-$rev.dist-info
+cat > xju-$rev/xju-$rev.dist-info/METADATA <<EOF
+Metadata-Version: 2.1
+Name: xju
+Version: $rev
+Summary: xju library
+Author: Trevor Taylor
+Project-URL: Homepage, https://github.com/urnest/urnest
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Development Status :: 5 - Production/Stable
+Requires-Python: >=3.10
+License-File: LICENCE
+Description-Content-Type: text/x-rst
 
-
-%dummy.tar==<<
+$readme
+EOF
+cp xju-$rev/xju-$rev.dist-info/METADATA xju-$rev/PKG-INFO
+cp $licence xju-$rev/xju-$rev.dist-info/LICENCE
+cat > xju-$rev/xju-$rev.dist-info/WHEEL <<EOF
+Wheel-Version: 1.0
+Generator: sh
+Root-Is-Purelib: true
+Tag: py3-none-any
+EOF
+cat > xju-$rev/xju-$rev.dist-info/top_level.txt <<EOF
+xju
+EOF
+(
+cd xju-$rev
+find xju xju-$rev.dist-info -type f -print |
+while read n
+do
+  sum=$(sha256sum $n)
+  sum=$(echo $sum | awk '{print $1}')
+  size=$(cat $n | wc -c)
+  echo "$n,sha256=$sum,$size"
+done > RECORD
+echo "xju-$rev.dist-info/RECORD,," >> RECORD
+mv RECORD xju-$rev.dist-info/
+zip -r ../xju-$rev-py3-none-any.whl xju xju-$rev.dist-info
+)
+tar czf xju-$rev.tar.gz xju-$rev
+XXXX
