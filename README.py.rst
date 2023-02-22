@@ -76,6 +76,8 @@ Various modules implemented to some broad principles:
 
 * designed to fit well with type checking
 
+* built in support for xju.newtype described above
+
 * generates json schema equivalent schemas for types
 
 * see `xju/json_codec.py.test <xju/json_codec.py.test>`_ for full sample code
