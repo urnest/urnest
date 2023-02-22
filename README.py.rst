@@ -69,6 +69,16 @@ Various modules implemented to some broad principles:
 
 * see `xju/cmd.py.test <xju/cmd.py.test>`_ for sample code
 
+`xju.json_codec <xju/json_codec.py>`_
+
+* encoding/decoding type-hinted dict/list/int/bool/None/float/str and classes to and from json
+
+* designed to fit well with type checking
+
+* generates json schema equivalent schemas for types
+
+* see `xju/json_codec.py.test <xju/json_codec.py.test>`_ for full sample code
+
 `xju.jsonschema <xju/jsonschema.py>`_
 
 * represents JSON schemas as straight-foward, easy-to-read python data structures, because life's too short for jsonschema
