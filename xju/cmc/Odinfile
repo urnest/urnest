@@ -10,11 +10,12 @@
 %all.cov==%unit-tests.tree:leaves:py3.cov.list:agg.py3.cov
 
 %unit-tests.tree==<<
-(cmc.py.test)+(%py-opts):py3.exec.cov
-(cmclass.py.test)+(%py-opts):py3.exec.cov
-(Dict.py.test)+(%py-opts):py3.exec.cov
-(tstore.py.test)+(%py-opts):py3.exec.cov
-(perflog.py.test)+(%py-opts):py3.exec.cov
+cmc.py.test+(%py-opts):py3.exec.cov
+cmclass.py.test+(%py-opts):py3.exec.cov
+Dict.py.test+(%py-opts):py3.exec.cov
+tstore.py.test+(%py-opts):py3.exec.cov
+perflog.py.test+(%py-opts):py3.exec.cov
+ThreadMutexLockCondition.py.test+(%py-opts):py3.exec.cov
 
 %py-opts==<<
 +(..%py-opts)
@@ -29,6 +30,7 @@
 (Dict.py.test):py3.exec.cov
 (tstore.py.test):py3.exec.cov
 (perflog.py.test):py3.exec.cov
+(ThreadMutexLockCondition.py.test):py3.exec.cov
 
 
 %py-opts==<<

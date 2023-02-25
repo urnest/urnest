@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2022 Trevor Taylor
+# coding: utf-8
+# 
+# Permission to use, copy, modify, and/or distribute this software for
+# any purpose with or without fee is hereby granted, provided that all
+# copyright notices and this permission notice appear in all copies.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+from xju.cmc import Thread, Mutex, Lock, Condition
+
+import threading
+
+from xju.time import now, Duration
+from xju.assert_ import Assert
+from xju.xn import readable_repr
+from xju.patch import PatchAttr
+
+flag = False
+m = Mutex()
+c = Condition(m)
+
+def f():
+    global flag
+    with Lock(m) as l:
+        flag=True
+        c.notify_all(l)
+
+with Thread(f, lambda: None) as t:
+    deadline=now()+Duration(1.0)
+    with Lock(m) as l:
+        c.wait_for(l, Duration(0.01))
+        while not flag:
+            n=now()
+            assert n < deadline
+            c.wait_for(l, deadline - n)
+    Assert(str(t)).contains('thread')
+
+def stop_fail():
+    raise Exception('stop fails')
+
+try:
+    with Thread(f, stop_fail) as t:
+        pass
+    pass
+except Exception as e:
+    Assert(readable_repr(e)).contains('stop fails')
+else:
+    assert False
+
+t=Thread(f, lambda: None)
+def start_fail(self):
+    raise Exception('start fails')
+
+with PatchAttr(threading.Thread, 'start', start_fail):
+    try:
+        with t:
+            pass
+        pass
+    except Exception as e:
+        Assert(readable_repr(e)).contains('start fails')
+    else:
+        assert False
+        pass
+    pass

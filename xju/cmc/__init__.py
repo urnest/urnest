@@ -13,18 +13,22 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-# CMC - Context Manager Complete/Crap
+# CMC - Context Management (Classic i.e. non-async)
 #
+from __future__ import annotations
+
 import asyncio
 import sys
 import contextlib
 from typing import TypeVar, Iterable, Dict as _Dict, overload, Tuple, Sequence, Union, Optional
 from typing import ItemsView, KeysView
-from typing import Mapping, Type, List, Generic, Any
+from typing import Mapping, Type, List, Generic, Any, Callable
 from collections import OrderedDict
 from collections.abc import Coroutine
 import builtins
+import threading
 
+from xju.time import Duration
 from xju.xn import in_function_context
 from xju.assert_ import Assert
 
@@ -346,3 +350,75 @@ class Task(contextlib.AbstractAsyncContextManager,Generic[ResultType]):
             await task
         except asyncio.CancelledError:
             pass
+
+class Thread(contextlib.AbstractContextManager[None]):
+    __t: threading.Thread
+    
+    def __init__(self, run: Callable[[],None], stop: Callable[[],None]):
+        '''at context entry call {run}() in new thread
+           at context exit call {stop}() and wait for thread to exit'''
+        self.run = run
+        self.stop = stop
+        self.__t = threading.Thread(target=run)
+        pass
+
+    def __str__(self):
+        return f'thread {self.__t} to run {self.run}'
+
+    def __enter__(self):
+        '''start {self}'''
+        try:
+            self.__t.start()
+            return self
+        except Exception:
+            raise in_function_context(Thread.__enter__,vars())
+        pass
+
+    def __exit__(self, t, e, b):
+        '''stop (via {self.stop}()) and wait for (i.e. join) {self}'''
+        try:
+            self.stop()
+            self.__t.join()
+        except Exception:
+            raise in_function_context(Thread.__exit__, vars())
+        pass
+    pass
+
+class Mutex:
+    def __init__(self):
+        self.m = threading.Lock()
+        pass
+    pass
+
+class Lock(contextlib.AbstractContextManager):
+    def __init__(self, m: Mutex):
+        self.m = m
+        self.active=False
+        pass
+
+    def __enter__(self):
+        self.m.m.acquire()
+        self.active=True
+        return self
+
+    def __exit__(self,t,e,b):
+        self.active=False
+        self.m.m.release()
+        pass
+
+    pass
+
+class Condition:
+    def __init__(self, m:Mutex):
+        self.m = m
+        self.c = threading.Condition(m.m)
+
+    def wait_for(self, l:Lock, timeout:Duration):
+        assert l.m == self.m and l.active
+        self.c.wait(timeout=timeout.value())
+        pass
+
+    def notify_all(self, l:Lock):
+        assert l.m == self.m and l.active
+        self.c.notify_all()
+    pass
