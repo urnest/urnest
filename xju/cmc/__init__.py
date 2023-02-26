@@ -13,7 +13,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-# CMC - Context Management (Classic i.e. non-async)
+# CMC - Context Management Classic i.e. non-async
 #
 from __future__ import annotations
 

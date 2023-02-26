@@ -27,9 +27,11 @@ import io
 import contextlib
 import fcntl
 from dataclasses import dataclass
-from xju.xn import in_function_context, first_line_of as l1
+from xju.xn import in_context, in_function_context, first_line_of as l1
 from xju.misc import ByteCount
 from xju.newtype import Int
+from socket import socket, SOCK_NONBLOCK, SOCK_STREAM, SOCK_CLOEXEC, SOL_SOCKET, SO_REUSEADDR
+from socket import AF_UNIX
 
 class FilePositionTag:pass
 class FilePositionBase:pass  # until typing.Self
@@ -332,3 +334,144 @@ class FileLock(contextlib.AbstractContextManager):
             fcntl.flock(self.target.fd(), fcntl.LOCK_UN)
         except Exception:
             raise in_function_context(FileLock.__exit__,vars()) from None
+
+class UnixStreamListener(contextlib.AbstractContextManager):
+    '''{self.path} unix stream socket listener with close-on-exec {self.close_on_exec}'''
+    path:pathlib.Path
+    close_on_exec:bool
+    socket: socket
+
+    def __init__(self, path: pathlib.Path, backlog:int, close_on_exec:bool=True):
+        self.path = path
+        self.backlog = backlog
+        self.close_on_exec = close_on_exec
+        pass
+    
+    def __str__(self):
+        return l1(UnixStreamListener.__doc__).format(**vars())
+
+    def __enter__(self):
+        '''open {self}'''
+        try:
+            flags=SOCK_NONBLOCK
+            if self.close_on_exec:
+                flags=flags|SOCK_CLOEXEC
+            s = socket(family=AF_UNIX, type=SOCK_STREAM|flags, proto=-1)
+            try:
+                s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+                s.bind(str(self.path))
+                s.listen(self.backlog)
+            except:
+                s.close()
+                raise
+            self.socket=s
+            return self
+        except Exception:
+            raise in_function_context(UnixStreamListener.__enter__,vars()) from None
+        pass
+
+    def __exit__(self, t, e, b):
+        '''close {self}'''
+        try:
+            self.socket.close()
+            self.path.unlink()
+            del self.socket
+        except Exception:
+            raise in_function_context(UnixStreamListener.__exit__,vars()) from None
+        pass
+    def fd(self) -> int:
+        return self.socket.fileno()
+    pass
+
+class UnixStreamSocket(contextlib.AbstractContextManager):
+    '''{self.path} unix stream socket with close-on-exec {self.close_on_exec}'''
+    path:pathlib.Path
+    close_on_exec:bool
+    socket:socket
+    input:io.RawIOBase
+    output:io.RawIOBase
+
+    def __init__(self, x: pathlib.Path|UnixStreamListener, close_on_exec:bool=True):
+        self.x=x
+        match x:
+            case pathlib.Path():
+                self.path=x
+                pass
+            case UnixStreamListener():
+                self.path=x.path
+                pass
+        self.close_on_exec = close_on_exec
+    
+    def __str__(self):
+        return l1(UnixStreamSocket.__doc__).format(**vars())
+
+    def __enter__(self):
+        '''make or accept unix stream socket connection'''
+        try:
+            flags=SOCK_NONBLOCK
+            if self.close_on_exec:
+                flags=flags|SOCK_CLOEXEC
+                pass
+            s = socket(family=AF_UNIX, type=SOCK_STREAM|flags, proto=--1)
+            try:
+                match self.x:
+                    case pathlib.Path():
+                        try:
+                            s.connect(str(self.path))
+                        except Exception:
+                            raise in_context(f'make connection to {self.path}') from None
+                        pass
+                    case UnixStreamListener():
+                        try:
+                            s, addr=self.x.socket.accept()
+                        except Exception:
+                            raise in_context(f'accept connection on {self.path}') from None
+                        pass
+                pass
+            except:
+                s.close()
+                raise
+            self.socket = s
+            self.input = io.FileIO(self.fd(), closefd=False)
+            self.output = io.FileIO(self.fd(), mode='w', closefd=False)
+            return self
+        except Exception:
+            raise in_function_context(UnixStreamSocket.__enter__,vars()) from None
+        pass
+
+    def __exit__(self, t, e, b):
+        '''close {self}'''
+        try:
+            del self.output
+            del self.input
+            self.socket.close()
+            del self.socket
+        except Exception:
+            raise in_function_context(UnixStreamSocket.__exit__,vars()) from None
+        pass
+
+    def fd(self) -> int:
+        return self.socket.fileno()
+    pass
+
+# REVISIT: implement algorithms on RawIOBase
+# def read(self, read_at_most:ByteCount) -> bytes:
+#     '''read at most {read_at_most} bytes from {self}'''
+#     try:
+#         return self.input.read(read_at_most.value()) or b''
+#     except Exception:
+#         raise in_function_context(UnixStreamSocket.read,vars()) from None
+#     pass
+
+# def write(self, x:bytes) -> int:
+#     '''write x or part of it to {self}
+#        - return how may bytes were written'''
+#     try:
+#         return self.output.write(x) or 0
+#     except Exception:
+#         raise in_function_context(UnixStreamSocket.write,vars()) from None
+#     pass
+
+#  and BufferedIOBase
+# def read_through(x:bytes) -> bytes
+#

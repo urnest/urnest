@@ -1,0 +1,142 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2022 Trevor Taylor
+# coding: utf-8
+# 
+# Permission to use, copy, modify, and/or distribute this software for
+# any purpose with or without fee is hereby granted, provided that all
+# copyright notices and this permission notice appear in all copies.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+from xju.cmc.io import UnixStreamListener, UnixStreamSocket
+from pathlib import Path
+from select import select
+from xju.time import now, Duration
+from xju.assert_ import Assert
+from xju.cmc import Thread
+from xju.xn import readable_repr
+from xju.patch import PatchAttr
+import socket
+
+PATH=Path('xxx')
+
+deadline=now()+Duration(5)
+
+with UnixStreamListener(PATH, 1) as listener:
+    Assert(str(listener))==f"{PATH} unix stream socket listener with close-on-exec True"
+
+    try:
+        with UnixStreamListener(PATH,1) as l2:
+            pass
+    except Exception as e:
+        Assert(readable_repr(e))=="Failed to open xxx unix stream socket listener with close-on-exec True because\n[Errno 98] Address already in use."
+    else:
+        assert False
+            
+    def listen_accept_read() -> None:
+        Assert(select([listener.fd()], [], [], (deadline-now()).value()))==(
+            [listener.fd()],[],[])
+        with UnixStreamSocket(listener) as s:
+            received=s.input.read(5)
+            while received != b'fred':
+                t=deadline-now()
+                Assert(t) > Duration(0)
+                Assert(select([s.fd()],[],[],t.value()))==(listener.fd(),[],[])
+                match s.input.read(5-len(received)):
+                    case None:
+                        assert False
+                        pass
+                    case r:
+                        received = received+r
+                        pass
+                pass
+            pass
+        pass
+
+    send_exception:Exception|None=None
+    
+    def connect_send() -> None:
+        global send_exception
+        Assert(send_exception).is_(None)
+        try:
+            with UnixStreamSocket(PATH) as s:
+                Assert(str(s))==f"{PATH} unix stream socket with close-on-exec True"
+                toSend=b'fred'
+                toSend=toSend[s.output.write(toSend):]
+                while len(toSend):
+                    t=deadline-now()
+                    Assert(t) > Duration(0)
+                    Assert(select([],[s.fd()],[],t.value()))==([],[s.fd()],[])
+                    match s.output.write(toSend):
+                        case None:
+                            assert False
+                            pass
+                        case n:
+                            toSend = toSend[n:]
+                            pass
+                    pass
+                pass
+        except Exception as e:
+            send_exception=e
+            pass
+        pass
+    
+    with Thread(connect_send, lambda: None):
+        listen_accept_read()
+        pass
+    Assert(send_exception).is_(None)
+    pass
+
+try:
+    with UnixStreamListener(PATH,1) as l2:
+        l2.path.unlink()
+        pass
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to close xxx unix stream socket listener with close-on-exec True because\n[Errno 2] No such file or directory: 'xxx'."
+else:
+    assert False
+    pass
+
+try:
+    with UnixStreamSocket(PATH) as s:
+        pass
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to make or accept unix stream socket connection because\nfailed to make connection to xxx because\n[Errno 2] No such file or directory."
+else:
+    assert False
+    pass
+
+
+with UnixStreamListener(PATH,1) as listener:
+    try:
+        with UnixStreamSocket(listener) as s:
+            pass
+    except Exception as e:
+        Assert(readable_repr(e))=="Failed to make or accept unix stream socket connection because\nfailed to accept connection on xxx because\n[Errno 11] Resource temporarily unavailable."
+    else:
+        assert False, s
+        pass
+
+with UnixStreamListener(PATH,1) as listener:
+    try:
+        def fail_socket_close(self):
+            raise Exception('socket.close failed')
+        with PatchAttr(socket.socket,'close',fail_socket_close):
+            with UnixStreamSocket(PATH) as s:
+                s.socket.close()
+                pass
+            pass
+        pass
+    except Exception as e:
+        Assert(readable_repr(e))=="Failed to close xxx unix stream socket with close-on-exec True because\nsocket.close failed."
+    else:
+        assert False, s
+        pass
+

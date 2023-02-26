@@ -14,6 +14,7 @@
 (FileReader.py.test)+(%py-opts):py3.exec.cov
 (FileWriter.py.test)+(%py-opts):py3.exec.cov
 (FileLock.py.test)+(%py-opts):py3.exec.cov
+(UnixStreamSocket.py.test)+(%py-opts):py3.exec.cov
 
 %py-opts==<<
 +(..%py-opts)
