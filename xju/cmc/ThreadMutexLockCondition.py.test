@@ -28,13 +28,14 @@ flag = False
 m = Mutex()
 c = Condition(m)
 
-def f():
+def f() -> int:
     global flag
     with Lock(m) as l:
         flag=True
         c.notify_all(l)
+    return 7
 
-with Thread(f, lambda: None) as t:
+with Thread[int](f, lambda: None) as get_result:
     deadline=now()+Duration(1.0)
     with Lock(m) as l:
         c.wait_for(l, Duration(0.01))
@@ -42,7 +43,19 @@ with Thread(f, lambda: None) as t:
             n=now()
             assert n < deadline
             c.wait_for(l, deadline - n)
-    Assert(str(t)).contains('thread')
+
+Assert(get_result())==7
+
+def fe() -> None:
+    raise Exception('fred')
+with Thread[None](fe, lambda: None) as get_result_2:
+    pass
+try:
+    get_result_2()
+except Exception as e:
+    Assert(readable_repr(e))=='fred'
+else:
+    assert False
 
 def stop_fail():
     raise Exception('stop fails')
@@ -56,13 +69,13 @@ except Exception as e:
 else:
     assert False
 
-t=Thread(f, lambda: None)
+t3=Thread[int](f, lambda: None)
 def start_fail(self):
     raise Exception('start fails')
 
 with PatchAttr(threading.Thread, 'start', start_fail):
     try:
-        with t:
+        with t3:
             pass
         pass
     except Exception as e:

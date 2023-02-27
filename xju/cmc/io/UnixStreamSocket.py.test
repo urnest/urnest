@@ -21,7 +21,7 @@ from select import select
 from xju.time import now, Duration
 from xju.assert_ import Assert
 from xju.cmc import Thread
-from xju.xn import readable_repr
+from xju.xn import readable_repr, in_function_context
 from xju.patch import PatchAttr
 import socket
 
@@ -60,11 +60,8 @@ with UnixStreamListener(PATH, 1) as listener:
             pass
         pass
 
-    send_exception:Exception|None=None
-    
     def connect_send() -> None:
-        global send_exception
-        Assert(send_exception).is_(None)
+        '''connect to unix stream socket {PATH} and write "fred" to it'''
         try:
             with UnixStreamSocket(PATH) as s:
                 Assert(str(s))==f"{PATH} unix stream socket with close-on-exec True"
@@ -84,14 +81,13 @@ with UnixStreamListener(PATH, 1) as listener:
                     pass
                 pass
         except Exception as e:
-            send_exception=e
-            pass
+            raise in_function_context(connect_send, vars())
         pass
     
-    with Thread(connect_send, lambda: None):
+    with Thread(connect_send, lambda: None) as send_result:
         listen_accept_read()
         pass
-    Assert(send_exception).is_(None)
+    Assert(send_result()).is_(None)
     pass
 
 try:

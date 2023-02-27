@@ -351,25 +351,28 @@ class Task(contextlib.AbstractAsyncContextManager,Generic[ResultType]):
         except asyncio.CancelledError:
             pass
 
-class Thread(contextlib.AbstractContextManager[None]):
+class Thread(Generic[ResultType],contextlib.AbstractContextManager[Callable[[],ResultType]]):
     __t: threading.Thread
+    __result: ResultType | Exception
     
-    def __init__(self, run: Callable[[],None], stop: Callable[[],None]):
+    def __init__(self, run: Callable[[],ResultType], stop: Callable[[],None]):
         '''at context entry call {run}() in new thread
-           at context exit call {stop}() and wait for thread to exit'''
+           at context exit call {stop}() and wait for thread to exit
+           result is not available until context exited'''
         self.run = run
         self.stop = stop
-        self.__t = threading.Thread(target=run)
+        self.__t = threading.Thread(target=self.__run)
+        self.__result = Exception('thread not run')
         pass
 
     def __str__(self):
         return f'thread {self.__t} to run {self.run}'
 
-    def __enter__(self):
+    def __enter__(self) -> Callable[[],ResultType]:
         '''start {self}'''
         try:
             self.__t.start()
-            return self
+            return self.result
         except Exception:
             raise in_function_context(Thread.__enter__,vars())
         pass
@@ -382,6 +385,19 @@ class Thread(contextlib.AbstractContextManager[None]):
         except Exception:
             raise in_function_context(Thread.__exit__, vars())
         pass
+
+    def result(self) -> ResultType:
+        '''assuming context has exited, return/raise result of run()'''
+        if isinstance(self.__result, Exception):
+            raise self.__result
+        return self.__result
+
+    def __run(self) -> None:
+        try:
+            self.__result = self.run()
+        except Exception as e:
+            self.__result = e
+            pass
     pass
 
 class Mutex:
