@@ -13,6 +13,7 @@
 cmc.py.test+(%py-opts):py3.exec.cov
 cmclass.py.test+(%py-opts):py3.exec.cov
 Dict.py.test+(%py-opts):py3.exec.cov
+signal.py.test+(%py-opts):py3.exec.cov
 tstore.py.test+(%py-opts):py3.exec.cov
 perflog.py.test+(%py-opts):py3.exec.cov
 ThreadMutexLockCondition.py.test+(%py-opts):py3.exec.cov
@@ -28,6 +29,7 @@ ThreadMutexLockCondition.py.test+(%py-opts):py3.exec.cov
 (cmc.py.test):py3.exec.cov
 (cmclass.py.test):py3.exec.cov
 (Dict.py.test):py3.exec.cov
+(signal.py.test):py3.exec.cov
 (tstore.py.test):py3.exec.cov
 (perflog.py.test):py3.exec.cov
 (ThreadMutexLockCondition.py.test):py3.exec.cov
