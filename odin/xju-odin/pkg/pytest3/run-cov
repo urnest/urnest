@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+
+import sys
+from pathlib import Path
+import pickle
+from trace import Trace
+import os
+
+if len(sys.argv)==1:
+    print(f'usage: {sys.argv[0]} out.cov argv0 [argv1 ...]',file=sys.stderr)
+    print(f'  create/replace out.cov with coverage from run of argv')
+    sys.exit(1)
+    pass
+
+out=Path(sys.argv[1])
+argv=sys.argv[2:]
+
+t = Trace(True, False)
+
+sys.argv = argv
+sys.path.pop(0)  # we deliberately don't want unsafe paths that confuse module loading
+with open(argv[0], 'rb') as fp:
+    code = compile(fp.read(), argv[0], 'exec')
+    pass
+# try to emulate __main__ namespace as much as possible
+globs = {
+    '__file__': argv[0],
+    '__name__': '__main__',
+    '__package__': None,
+    '__cached__': None,
+}
+
+try:
+    t.runctx(code, globs, globs)
+finally:
+    with out.open('wb') as f:
+        pickle.dump( (t.counts, t._calledfuncs, t._callers), f, 1)
+        pass
+    pass

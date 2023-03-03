@@ -131,9 +131,9 @@ $ODIN_MYPY_LD_LIBRARY_PATH 'shared library load path to install when executing c
 $ODIN_MYPY 'name of mypy script' = 'true';
 $ODIN_MYPY_FLAGS 'flags to pass to $ODIN_MYPY' = '';
 
-$ODIN_MYPY_MYPYPATH 'colon-separated list of directories to append to +py_sp directory list and set as MYPYPATH when running mypy; note mypy treats modules found via MYPYPATH as "source" files and will use their inline type hints' = '';
+$ODIN_MYPY_MYPYPATH 'colon-separated list of directories to append to +py_sp directory list and set as MYPYPATH when running mypy; note mypy treats modules found via MYPYPATH as \\"source\\" files and will use their inline type hints' = '';
 
-$ODIN_MYPY_PYTHONPATH 'colon-separated list of directories to set as PYTHONPATH when running mypy; note mypy treats modules found via PYTHONPATH as "3rd party library" files and will NOT use their inline type hints, and mypy uses MYPYPATH first when looking for modules' = '';
+$ODIN_MYPY_PYTHONPATH 'colon-separated list of directories to set as PYTHONPATH when running mypy; note mypy treats modules found via PYTHONPATH as \\"3rd party library\\" files and will NOT use their inline type hints, and mypy uses MYPYPATH first when looking for modules' = '';
 
 $ODIN_PYSTYLECHECK 'name of python style check script, e.g. flake8' = 'true';
 $ODIN_PYSTYLECHECK_PATH 'PATH to install when executing python style check script, colon separated' = '/bin:/usr/bin';
@@ -159,9 +159,9 @@ COLLECT (:py_import :map=:py_import_all) (:py_import)
 EXEC (py3.pipe.run.sh) (:FILE) (+py) (+cmd :ls) (+py:dir)@ (+py_sp) NEEDS (+cmd) (+need) (+py:main.py_import.view_desc:py_import_all)
    => (:py3.stdout) (:py3.output);
 
-
 EXEC (py3.exec.sh) (:FILE) (+cmd :ls) (:env) (+stderr) (+py:dir)@ (+py_sp) (+py_nocov) (run-cov)
-  NEEDS (+cmd) (+need) (:FILE:main.py_import.view_desc:py_import_all) (:FILE:main.mypy3) (:FILE:main.stylecheck)
+  NEEDS (+cmd) (+need) (:FILE:main.py_import.view_desc:py_import_all)
+        (:FILE:main.mypy3) (:FILE:main.stylecheck)
   => (:py3.exec);
 
 EXEC (main.mypy3.sh) (:FILE) (:env) (+py_sp)
