@@ -355,6 +355,7 @@ extern void ChangeDir(GMC_P1(boolean *) GMC_PN(tp_FileName));
 extern boolean IsExecutable(GMC_P1(tp_FileName));
 extern void MakeExecutable(GMC_P1(tp_FileName));
 extern void MakeReadOnly(GMC_P1(boolean *) GMC_PN(tp_FileName));
+extern void MakeReadWrite(GMC_P1(boolean *) GMC_PN(tp_FileName));
 extern void SymLink(GMC_P1(boolean *) GMC_PN(tp_FileName) GMC_PN(tp_FileName));
 extern void FileName_SymLinkFileName(GMC_P1(tp_FileName) GMC_PN(tp_FileName));
 extern boolean IsDirectory_FileName(GMC_P1(tp_FileName));

@@ -127,6 +127,11 @@ ClearDir(
 	 exit(1); }/*if*/;
       Get_FileInfo(&k, &modTime, FileName);
       if (k==SK_Dir){
+        boolean abort;
+        MakeReadWrite(&abort, FileName);
+        if (abort) {
+          (void)fprintf(stderr, "Warning: Could not make %s writable\n", FileName);
+        }
         ClearDir(FileName);
         RemoveDir(FileName);
       }

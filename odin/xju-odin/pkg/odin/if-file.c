@@ -259,6 +259,32 @@ MakeReadOnly(
 
 
 void
+MakeReadWrite(
+   GMC_ARG(boolean*, AbortPtr),
+   GMC_ARG(tp_FileName, FileName)
+   )
+   GMC_DCL(boolean*, AbortPtr)
+   GMC_DCL(tp_FileName, FileName)
+{
+   int status;
+   struct stat buf;
+   mode_t NewMode;
+
+   FORBIDDEN(FileName == ERROR);
+   status = stat(FileName, &buf);
+   if (status != 0) {
+      *AbortPtr = TRUE;
+      return; }/*if*/;
+   NewMode = ((buf.st_mode | 0600) & ModeMask);
+   if (NewMode == buf.st_mode) {
+      *AbortPtr = FALSE;
+      return; }/*if*/;
+   status = chmod(FileName, NewMode);
+   *AbortPtr = (status != 0);
+   }/*MakeReadOnly*/
+
+
+void
 SymLink(
    GMC_ARG(boolean*, AbortPtr),
    GMC_ARG(tp_FileName, ToFileName),
