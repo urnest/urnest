@@ -123,13 +123,78 @@ headers=$(find "$INST_SRC" -name '*.hh' -print) &&
 set +x &&
 echo "Installation Successfull"
 
-%python3-xju.whl == %python3-xju+member='xju-1.2.3-py3-none-any.whl':extract_file
-%python3-xju.tar.gz == %python3-xju+member='xju-1.2.3.tar.gz':extract_file
+%python3-xju.whl == %python3-xju-whl.exec.files+member='xju-1.2.3/dist/xju-1.2.3-py3-none-any.whl':extract_file
+%python3-xju.tar.gz == %python3-xju-tgz.exec.files+member='xju-1.2.3.tar.gz':extract_file
+
+%python3-xju-tgz.exec.files==()+cmd=(%build-python3-xju-tgz.sh)+cmd=(.) (MIT-LICENCE) (README.py.rst) '1.2.3'+need=(xju%pytest.tree:leaves) +need=(xju/cmc%all):exec.files
 
 %python3-xju==()+cmd=(%build-python3-xju.sh)+cmd=(.) (MIT-LICENCE) (README.py.rst) '1.2.3'+need=(xju%pytest.tree:leaves) +need=(xju/cmc%all):exec.files
 
+%python3-xju-whl.exec.files==%build-python3-xju-whl.sh+cmd=(%build-python3-xju-whl.sh)+cmd=(%python3-xju.tar.gz):exec.files
+
+%build-python3-xju-whl.sh==!<<YYYY
+#!/bin/sh
+set -ex
+tgz="$1"
+tar xzvf $tgz
+cd xju-1.2.3
+python -m build -n
+YYYY
+
+%build-python3-xju-tgz.sh==!<<XXXX
+#!/bin/sh
+set -ex
+src_dir="$1"
+licence="$2"
+readme="$3"
+rev="$4"
+mkdir -p xju-$rev/src
+(
+  cd $src_dir &&
+  tar cf - xju/*.py xju/*.py.test xju/cmc/*.py xju/cmc/*.py.test xju/cmc/io/*.py xju/cmc/io/*.py.test
+) |
+(cd xju-$rev/src && tar xvf - )
+touch xju-$rev/src/xju/py.typed
+tests=$(cd xju-$rev/src/xju && find . -name '*.py.test')
+tests_package_data=$(for t in $tests; do echo -n "\"$t\","; done)
+cat > xju-$rev/pyproject.toml <<EOF
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "xju"
+version = "$rev"
+description = "xju library"
+readme = "README.rst"
+authors = [{ name = "Trevor Taylor"}]
+license = { file = "MIT-LICENCE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Development Status :: 5 - Production/Stable"
+]
+requires-python = ">=3.10"
+[project.urls]
+Homepage = "https://github.com/urnest/urnest"
+[tool.setuptools.packages.find]
+where = ["src"]  # list of folders that contain the packages (["."] by default)
+include = ["xju","xju.*","xju.cmc.*"]  # package names should match these glob patterns (["*"] by default)
+exclude = []  # exclude packages matching these glob patterns (empty by default)
+namespaces = true  # to disable scanning PEP 420 namespaces (true by default)
+[tool.setuptools.package-data]
+xju = [ $tests_package_data "py.typed"]
+EOF
+cp $licence xju-$rev/MIT-LICENCE
+cp $readme xju-$rev/README.rst
+tar czf xju-$rev.tar.gz xju-$rev
+XXXX
 
 
+# alas below robust way of creating a wheel doesn't suit the really dumb tools on the
+# internet, which insist on having a pyproject.toml, so we have to use pyproject.toml
+# as above. pyproject.toml is yet another undocumented, unusable, ill-conceived piece
+# of crap, but hey that's how we do things these days
 %build-python3-xju.sh==!<<XXXX
 #!/bin/sh
 set -ex

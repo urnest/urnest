@@ -44,4 +44,4 @@ ThreadMutexLockCondition.py.test+(%py-opts):py3.exec.cov
 %pytest-v-installed==%pytest-v-installed.tree:leaves
 
 %pytest-v-installed.tree==<<
-io/pytest%installed-cov
+io%installed-cov

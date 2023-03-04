@@ -27,4 +27,4 @@ FileMode.py.test:py3.exec.cov
 FilePosition.py.test:py3.exec.cov
 FileReader.py.test:py3.exec.cov
 FileWriter.py.test:py3.exec.cov
-FileLock.py:py3.exec.cov
+FileLock.py.test:py3.exec.cov
