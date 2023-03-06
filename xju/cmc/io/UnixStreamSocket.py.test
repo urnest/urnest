@@ -48,7 +48,7 @@ with UnixStreamListener(PATH, 1) as listener:
             while received != b'fred':
                 t=deadline-now()
                 Assert(t) > Duration(0)
-                Assert(select([s.fd()],[],[],t.value()))==(listener.fd(),[],[])
+                Assert(select([s.fd()],[],[],t.value()))==([s.fd()],[],[])
                 match s.input.read(5-len(received)):
                     case None:
                         assert False

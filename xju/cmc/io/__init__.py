@@ -19,6 +19,7 @@
 # (the __enter__ methods acquire resources, e.g. open files)
 
 import os
+import fcntl
 from typing import overload,cast
 import typing
 from typing import Literal, Optional, Union
@@ -32,6 +33,7 @@ from xju.misc import ByteCount
 from xju.newtype import Int
 from socket import socket, SOCK_NONBLOCK, SOCK_STREAM, SOCK_CLOEXEC, SOL_SOCKET, SO_REUSEADDR
 from socket import AF_UNIX
+from os import pipe2
 
 class FilePositionTag:pass
 class FilePositionBase:pass  # until typing.Self
@@ -453,6 +455,75 @@ class UnixStreamSocket(contextlib.AbstractContextManager):
     def fd(self) -> int:
         return self.socket.fileno()
     pass
+
+class Pipe(contextlib.AbstractContextManager):
+    '''pipe with input fd {self.input_fd}, close input on exec {self.close_input_on_exec}, output fd {self.output_fd}, close output on exec {self.close_output_on_exec}'''
+    path:pathlib.Path
+    close_on_exec:bool
+    input_fd: int|None
+    output_fd: int|None
+    input:io.RawIOBase
+    output:io.RawIOBase
+
+    def __init__(self,close_input_on_exec:bool=True,close_output_on_exec:bool=True):
+        self.close_input_on_exec=close_input_on_exec
+        self.close_output_on_exec=close_output_on_exec
+        self.input_fd=None
+        self.output_fd=None
+    
+    def __str__(self):
+        return l1(Pipe.__doc__).format(**vars())
+
+    def __enter__(self):
+        '''make pipe'''
+        try:
+            input_fd, output_fd = pipe2(SOCK_NONBLOCK|SOCK_CLOEXEC)
+            try:
+                if not self.close_input_on_exec:
+                    fcntl.fcntl(input_fd, fcntl.FD_CLOEXEC, False)
+                if not self.close_output_on_exec:
+                    fcntl.fcntl(output_fd, fcntl.FD_CLOEXEC, False)
+            except:
+                os.close(input_fd)
+                os.close(output_fd)
+                raise
+            self.input_fd = input_fd
+            self.output_fd = output_fd
+            self.input = io.FileIO(self.input_fd, closefd=False)
+            self.output = io.FileIO(self.output_fd, mode='w', closefd=False)
+            return self
+        except Exception:
+            raise in_function_context(Pipe.__enter__,vars()) from None
+        pass
+
+    def __exit__(self, t, e, b):
+        '''close {self}'''
+        try:
+            self.close_input()
+            self.close_output()
+        except Exception:
+            raise in_function_context(Pipe.__exit__,vars()) from None
+        pass
+
+    def close_input(self) -> None:
+        '''close {self} input fd {self.input_fd}'''
+        if self.input_fd is not None:
+            os.close(self.input_fd)
+            self.input_fd=None
+            del self.input
+            pass
+        pass
+
+    def close_output(self) -> None:
+        '''close {self} output fd {self.output_fd}'''
+        if self.output_fd is not None:
+            os.close(self.output_fd)
+            self.output_fd=None
+            del self.output
+            pass
+        pass
+    pass
+
 
 # REVISIT: implement algorithms on RawIOBase
 # def read(self, read_at_most:ByteCount) -> bytes:

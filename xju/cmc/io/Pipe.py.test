@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2022 Trevor Taylor
+# coding: utf-8
+# 
+# Permission to use, copy, modify, and/or distribute this software for
+# any purpose with or without fee is hereby granted, provided that all
+# copyright notices and this permission notice appear in all copies.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+from xju.cmc.io import Pipe
+from select import select
+from xju.time import now, Duration
+from xju.assert_ import Assert
+from xju.cmc import Thread
+from xju.xn import readable_repr, in_function_context
+from xju.patch import PatchAttr
+import socket
+import fcntl
+import os
+
+deadline=now()+Duration(5)
+
+pipe:Pipe
+
+with Pipe() as pipe:
+    Assert(str(pipe))==f"pipe with input fd {pipe.input_fd}, close input on exec True, output fd {pipe.output_fd}, close output on exec True"
+
+    def read() -> None:
+        Assert(select([pipe.input_fd], [], [], (deadline-now()).value()))==(
+            [pipe.input_fd],[],[])
+        received=pipe.input.read(5)
+        while received != b'fred':
+            t=deadline-now()
+            Assert(t) > Duration(0)
+            Assert(select([pipe.input_fd],[],[],t.value()))==([pipe.input_fd],[],[])
+            assert received is not None
+            match pipe.input.read(5-len(received)):
+                case None:
+                    assert False
+                    pass
+                case r:
+                    assert r is not None
+                    received = received+r
+                    pass
+            pass
+        pass
+
+    def write() -> None:
+        '''write "fred" to pipe {pipe}'''
+        try:
+            toSend=b'fred'
+            toSend=toSend[pipe.output.write(toSend):]
+            while len(toSend):
+                t=deadline-now()
+                Assert(t) > Duration(0)
+                Assert(select([],[pipe.output_fd],[],t.value()))==([],[pipe.output_fd],[])
+                match pipe.output.write(toSend):
+                    case None:
+                        assert False
+                        pass
+                    case n:
+                        toSend = toSend[n:]
+                        pass
+                pass
+            pass
+        except Exception as e:
+            raise in_function_context(write, vars())
+        pass
+
+    write()
+    read()
+    pass
+
+with Pipe(False, False) as pipe:
+    pipe.close_output()
+    Assert(select([pipe.input_fd],[],[],0))==([pipe.input_fd],[],[])
+    Assert(pipe.input.read(1)) is None
+    pipe.close_input()
+    pass
+
+def fcntl_fail(fd:int, flag:int, value:bool):
+    raise Exception('fred')
+
+with PatchAttr(fcntl,'fcntl',fcntl_fail):
+    try:
+        with Pipe(False,False) as pipe:
+            pass
+    except Exception as e:
+        Assert(readable_repr(e))=="Failed to make pipe because\nfred."
+        pass
+    else:
+        assert False
+        pass
+    pass
+
+def close_fail(fd:int):
+    raise Exception('fred')
+
+with PatchAttr(os, 'close', close_fail):
+    try:
+        with Pipe() as pipe:
+            pass
+    except Exception as e:
+        Assert(readable_repr(e))=="Failed to close pipe with input fd 8, close input on exec True, output fd 9, close output on exec True because\nfred."
+        pass
+    else:
+        assert False
+        pass
+    pass
+    

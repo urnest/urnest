@@ -9,12 +9,13 @@
 %all.cov==%unit-tests.tree:leaves:py3.cov.list:agg.py3.cov
 
 %unit-tests.tree==<<
-(FileMode.py.test)+(%py-opts):py3.exec.cov
-(FilePosition.py.test)+(%py-opts):py3.exec.cov
-(FileReader.py.test)+(%py-opts):py3.exec.cov
-(FileWriter.py.test)+(%py-opts):py3.exec.cov
-(FileLock.py.test)+(%py-opts):py3.exec.cov
-(UnixStreamSocket.py.test)+(%py-opts):py3.exec.cov
+FileMode.py.test+(%py-opts):py3.exec.cov
+FilePosition.py.test+(%py-opts):py3.exec.cov
+FileReader.py.test+(%py-opts):py3.exec.cov
+FileWriter.py.test+(%py-opts):py3.exec.cov
+FileLock.py.test+(%py-opts):py3.exec.cov
+Pipe.py.test+(%py-opts):py3.exec.cov
+UnixStreamSocket.py.test+(%py-opts):py3.exec.cov
 
 %py-opts==<<
 +(..%py-opts)
@@ -28,3 +29,4 @@ FilePosition.py.test:py3.exec.cov
 FileReader.py.test:py3.exec.cov
 FileWriter.py.test:py3.exec.cov
 FileLock.py.test:py3.exec.cov
+UnixStreamSocket.py.test:py3.exec.cov
