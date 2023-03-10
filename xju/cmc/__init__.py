@@ -22,6 +22,8 @@ import sys
 import contextlib
 from typing import TypeVar, Iterable, Dict as _Dict, overload, Tuple, Sequence, Union, Optional
 from typing import ItemsView, KeysView
+from typing import _GenericAlias # type: ignore  # mypy 1.0.0 :-(
+from types import GenericAlias
 from typing import Mapping, Type, List, Generic, Any, Callable
 from collections import OrderedDict
 from collections.abc import Coroutine
@@ -311,12 +313,17 @@ class __ClassCm(contextlib.AbstractContextManager):
         return self.cls.__exit__(self.x, t, e, b)
     pass
 
+
 def is_subclass(n:str, t1, t2:type):
     '''check whether {n}'s type {t1} is a sub-class of {t2}'''
     try:
         Assert(t2).isInstanceOf(type)
         if isinstance(t1,type):
             return issubclass(t1, t2)
+        elif issubclass(type(t1),GenericAlias):
+            return is_subclass(n,t1.__origin__,t2)
+        elif issubclass(type(t1),_GenericAlias):
+            return is_subclass(n,t1.__origin__,t2)
         else:
             return False
         pass

@@ -19,7 +19,8 @@ from xju import cmc
 
 from xju.assert_ import Assert
 import dataclasses
-from typing import Optional
+from typing import Optional,Generic,TypeVar
+from types import GenericAlias
 import contextlib
 
 # python behaviour checks
@@ -108,6 +109,9 @@ class Resource:
             raise self.xe
         print(f'- exit {self.name} @{step-1}')
         pass
+
+assert issubclass(Resource, contextlib.AbstractContextManager)
+
 
 # @cmclass tests
 @cmc.cmclass
@@ -522,3 +526,79 @@ except Exception as e:
     pass
 
 
+T = TypeVar('T')
+
+class GenericResource(Generic[T]):
+    x: T
+    entered_at: Optional[int] = None
+    exited_at: Optional[int] = None
+    def __init__(self, x:T):
+        self.x = x
+        pass
+    def __enter__(self) -> T:
+        global step
+        self.entered_at = step
+        step += 1
+        return self.x
+    def __exit__(self,t,e,b) -> None:
+        global step
+        self.exited_at = step
+        step += 1
+        pass
+    pass
+
+@cmc.cmclass
+@dataclasses.dataclass
+class Z(cmc.CM):
+    y: GenericResource[int]
+
+step=1
+
+q:Z
+
+with Z(GenericResource[int](7)) as q:
+    Assert(q.y.entered_at) == 1
+    Assert(q.y.exited_at) == None
+    pass
+
+Assert(q.y.entered_at) == 1
+Assert(q.y.exited_at) == 2
+
+class GenericResourceB(Generic[T],contextlib.AbstractContextManager[T]):
+    x: T
+    entered_at: Optional[int] = None
+    exited_at: Optional[int] = None
+    def __init__(self, x:T):
+        self.x = x
+        pass
+    def __enter__(self) -> T:
+        global step
+        self.entered_at = step
+        step += 1
+        return self.x
+    def __exit__(self,t,e,b) -> None:
+        global step
+        self.exited_at = step
+        step += 1
+        pass
+    pass
+
+@cmc.cmclass
+@dataclasses.dataclass
+class ZB(cmc.CM):
+    y: GenericResourceB[int]
+    aa: list[bool]
+
+step=1
+
+r:ZB
+
+with ZB(GenericResourceB[int](7),[]) as r:
+    Assert(r.y.entered_at) == 1
+    Assert(r.y.exited_at) == None
+    pass
+
+Assert(r.y.entered_at) == 1
+Assert(r.y.exited_at) == 2
+
+Assert(cmc.is_subclass('a',7,int))==False
