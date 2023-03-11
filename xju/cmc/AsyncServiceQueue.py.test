@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2022 Trevor Taylor
+# coding: utf-8
+# 
+# Permission to use, copy, modify, and/or distribute this software for
+# any purpose with or without fee is hereby granted, provided that all
+# copyright notices and this permission notice appear in all copies.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+from xju.cmc import Thread, Task, AsyncServiceQueue, Mutex, Condition, Lock
+from typing import Callable
+
+import asyncio
+
+from xju.time import Duration, sleep_for
+from xju.assert_ import Assert
+from xju.xn import readable_repr
+
+async def main() -> None:
+    # enque f()
+    # enque fe(), which raises an exception
+    # start processing
+    # in separate thread, enque g(), which cancels service task, and
+    # enque h()
+    # make sure h() doesn't get invoked
+    loop = asyncio.get_event_loop()
+    
+    calls:list=[]
+    exceptions:list[Exception] = []
+
+    service_queue = AsyncServiceQueue(loop,exceptions.append)
+    servicer = Task[None](service_queue.run())
+
+    async def f() -> None:
+        print('F')
+        calls.append('f')
+        pass
+
+    async def fe() -> None:
+        print('FE')
+        calls.append('fe')
+        raise Exception('FE')
+
+    async def g() -> None:
+        print('G')
+        calls.append('g')
+        assert servicer.task is not None
+        servicer.task.cancel()
+        pass
+
+    async def h() -> None:
+        print('H')
+        calls.append('h')
+        pass
+
+    class GandH:
+        def __init__(self) -> None:
+            self.g_and_h_put=False
+            self.g_and_h_put_guard=Mutex()
+            self.g_and_h_put_condition=Condition(self.g_and_h_put_guard)
+        def put_g_and_h(self) -> None:
+            print('PUT G AND H')
+            with Lock(self.g_and_h_put_guard):
+                service_queue.enqueue(g())
+                sleep_for(Duration(0.05))
+                service_queue.enqueue(h())
+                self.g_and_h_put=True
+                self.g_and_h_put_condition.notify_all(l)
+                pass
+            pass
+        pass
+    g_and_h=GandH()
+    
+    async with service_queue:
+        service_queue.enqueue(f())
+        service_queue.enqueue(fe())
+        try:
+            with Thread(g_and_h.put_g_and_h,lambda: None) as t:
+                async with servicer:
+                    with Lock(g_and_h.g_and_h_put_guard) as l:
+                        while not g_and_h.g_and_h_put:
+                            g_and_h.g_and_h_put_condition.wait_for(l,Duration(2))
+                    assert servicer.task is not None
+                    await servicer.task
+                pass
+            pass
+        except asyncio.CancelledError:
+            pass
+
+        Assert( (calls, [readable_repr(e).split('\n')[-1] for e in exceptions]) )==(['f','fe','g'],["FE."])
+        pass
+
+asyncio.run(main())

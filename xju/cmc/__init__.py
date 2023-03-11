@@ -24,14 +24,13 @@ from typing import TypeVar, Iterable, Dict as _Dict, overload, Tuple, Sequence, 
 from typing import ItemsView, KeysView
 from typing import _GenericAlias # type: ignore  # mypy 1.0.0 :-(
 from types import GenericAlias
-from typing import Mapping, Type, List, Generic, Any, Callable
+from typing import Mapping, Type, List, Generic, Any, Callable, Awaitable
 from collections import OrderedDict
 from collections.abc import Coroutine
 import builtins
 import threading
-
 from xju.time import Duration
-from xju.xn import in_function_context
+from xju.xn import in_function_context, in_context
 from xju.assert_ import Assert
 
 T = TypeVar('T', bound=contextlib.AbstractContextManager)
@@ -444,4 +443,54 @@ class Condition:
     def notify_all(self, l:Lock):
         assert l.m == self.m and l.active
         self.c.notify_all()
+    pass
+
+class AsyncServiceQueue(contextlib.AbstractAsyncContextManager):
+    loop:asyncio.AbstractEventLoop
+    log_exception:Callable[[Exception],None]
+    q:asyncio.Queue
+    entered:bool
+
+    def __init__(self,loop:asyncio.AbstractEventLoop,log_exception:Callable[[Exception],None]):
+        self.loop=loop
+        self.log_exception=log_exception
+        self.q=asyncio.Queue()
+        self.entered=False
+        
+    def enqueue(self, x:Coroutine[Any,Any,None]) -> None:
+        '''enqueue {x} for later async execution
+           - thread safe'''
+        self.loop.call_soon_threadsafe(self.q.put_nowait,x)
+        pass
+    async def __aenter__(self):
+        self.entered=True
+        return self
+    async def __aexit__(self,t,e,b) -> None:
+        self.entered=False
+        # pop entries to avoid RuntimeWarning for coroutines never awaited noting
+        # they were never started
+        while not self.q.empty():
+            x=self.q.get_nowait()
+            assert isinstance(x,Coroutine)
+            x.close()
+        pass
+
+    async def run(self) -> None:
+        '''execute queue entries in order logging exceptions'''
+        assert self.entered, f'AsyncServiceQueue context not entered'
+        while True:
+            x=await self.q.get()
+            await self._execute(x)
+        pass
+
+    async def _execute(self,x:Coroutine[Any,Any,None]) -> None:
+        try:
+            await x
+        except Exception:
+            e=in_function_context(AsyncServiceQueue._execute,vars())
+            assert isinstance(e,Exception)
+            self.log_exception(e)
+            pass
+        pass
+        
     pass

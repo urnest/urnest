@@ -355,7 +355,7 @@ class UnixStreamListener(contextlib.AbstractContextManager):
     def __enter__(self):
         '''open {self}'''
         try:
-            flags=SOCK_NONBLOCK
+            flags=int(SOCK_NONBLOCK)
             if self.close_on_exec:
                 flags=flags|SOCK_CLOEXEC
             s = socket(family=AF_UNIX, type=SOCK_STREAM|flags, proto=-1)
@@ -410,7 +410,7 @@ class UnixStreamSocket(contextlib.AbstractContextManager):
     def __enter__(self):
         '''make or accept unix stream socket connection'''
         try:
-            flags=SOCK_NONBLOCK
+            flags=int(SOCK_NONBLOCK)
             if self.close_on_exec:
                 flags=flags|SOCK_CLOEXEC
                 pass

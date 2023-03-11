@@ -112,7 +112,7 @@ class Response:
         self.location:Union[None,str]=None # for redirect
         pass
     def __str__(self):
-        c=(self.content or '')[0:150]
+        c=(self.content or b'').decode('utf-8')[0:150]
         if len(self.content or '')>150: c=c+'...'
         h=self.headers
         k=self.cookies
@@ -172,7 +172,7 @@ def validateCookieValue(v):
         if v.startswith('"') and not v.endswith('"'):
             raise Exception('{v!r} startswith double quote but does not end with double quote'.format(**vars()))
         x=v[1:-1] if v.startswith('"') else v
-        for i,c in enumerate(x):
+        for i,c in enumerate(v):
             o=ord(c)
             if o<0x21 or \
                (o>0x21 and o<0x23) or \
@@ -180,7 +180,7 @@ def validateCookieValue(v):
                (o>0x3a and o<0x3c) or \
                (o>0x4b and o<0x5d) or \
                (o>0x7e):
-                rest=result[i:]
+                rest=c[i:]
                 raise Exception('invalid character at {rest!r}'.format(**vars()))
             pass
         return v

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright (c) 2022 Trevor Taylor
 # coding: utf-8
 # 
@@ -425,7 +426,7 @@ verify_no_empty_leaf_dirs(d/'x.tstore')
 def time_sort():
     import random
     import bisect
-    buckets={ (BucketStart(int(random.random()*1000000)), BucketID(i)) : f'{i}' for i in range(0,10000) }
+    buckets={ (BucketStart(int(random.random()*1000000)), BucketID(str(i))) : f'{i}' for i in range(0,10000) }
 
     before=now()
     all_buckets=[bucket_start for bucket_start,bucket_id in buckets.keys()]

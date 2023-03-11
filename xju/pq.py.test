@@ -312,10 +312,10 @@ def test28():
     x=parse('<html><p>&jock;</p>')
     
 def test30():
-    x=parse('<html><p>jock<!--comment--></p></html>')
+    x=parse('<html><p>jock<!-- comment --></p></html>')
     Assert(x.filter(tagName('html')).text())=='jock\n'
     Assert(str(x))=='<html><p>jock<!-- comment --></p></html>'
-    x=parse('<!--comment-->')
+    x=parse('<!-- comment -->').clone()
     Assert(repr(x.clone().nodeList))=='[comment at unknown:1:0]'
     pass
 
@@ -371,7 +371,19 @@ def test36():
         pass
     Assert(str(loadFile('xxx.html').find(hasClass('out'))))=='<p class="out">fred<br></p>'
     pass
-    
+
+def test37():
+    x=parse('<div><!-- fred --></div>')
+    y=x.clone()
+    Assert(str(y))=='<div><!-- fred --></div>'
+    pass
+
+def test38():
+    x=parse('<div><?fred></div>')
+    y=x.clone()
+    Assert(str(y))=='<div><?fred></div>'
+    pass
+
 if __name__=='__main__':
     tests=[var for name,var in list(vars().items())
            if name.startswith('test') and callable(var)]

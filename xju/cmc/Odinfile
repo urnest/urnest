@@ -17,31 +17,29 @@ signal.py.test+(%py-opts):py3.exec.cov
 tstore.py.test+(%py-opts):py3.exec.cov
 perflog.py.test+(%py-opts):py3.exec.cov
 ThreadMutexLockCondition.py.test+(%py-opts):py3.exec.cov
+AsyncServiceQueue.py.test+(%py-opts):py3.exec.cov
 
 %py-opts==<<
 +(..%py-opts)
-
-
-# run unit tests against pip-installed code rather than local source
-%installed-cov==%unit-tests-v-installed.tree:leaves:py3.cov.list:agg.py3.cov
-
-%unit-tests-v-installed.tree==<<
-(cmc.py.test):py3.exec.cov
-(cmclass.py.test):py3.exec.cov
-(Dict.py.test):py3.exec.cov
-(signal.py.test):py3.exec.cov
-(tstore.py.test):py3.exec.cov
-(perflog.py.test):py3.exec.cov
-(ThreadMutexLockCondition.py.test):py3.exec.cov
-
-
-%py-opts==<<
-+(..%py-opts)
-
 
 
 # run unit tests against pip-installed code rather than local source
 %pytest-v-installed==%pytest-v-installed.tree:leaves
 
 %pytest-v-installed.tree==<<
+%installed-cov
 io%installed-cov
+
+# run unit tests against pip-installed code rather than local source
+%installed-cov==%unit-tests-v-installed.tree:leaves:py3.cov.list:agg.py3.cov
+
+%unit-tests-v-installed.tree==<<
+cmc.py.test:py3.exec.cov
+cmclass.py.test:py3.exec.cov
+Dict.py.test:py3.exec.cov
+signal.py.test:py3.exec.cov
+tstore.py.test:py3.exec.cov
+perflog.py.test:py3.exec.cov
+ThreadMutexLockCondition.py.test:py3.exec.cov
+AsyncServiceQueue.py.test:py3.exec.cov
+

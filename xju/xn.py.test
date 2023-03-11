@@ -40,7 +40,7 @@ def test1(prog=sys.argv[0]):
         c()
     except:
         e=in_context('jock')
-        Assert(e.readable_repr())=='''\
+        Assert(readable_repr(e))=='''\
 Failed to jock because
 fred.\
 '''
@@ -102,7 +102,11 @@ from inspect import currentframe, getframeinfo
 class _Scope():
     def __init__(self,s):
         self.s=s
-        frameinfo = getframeinfo(currentframe().f_back)
+        cf=currentframe()
+        assert cf is not None
+        fb=cf.f_back
+        assert fb is not None
+        frameinfo = getframeinfo(fb)
         self.fl=(frameinfo.filename, frameinfo.lineno)
         pass
     def __enter__(self):
@@ -133,14 +137,14 @@ def test4(prog=sys.argv[0]):
         pass
     Assert(str(e)).matches('''\
 failed to jock because
-[^:]*:128: failed to c[(][)] because
-[^:]*:125: failed to b[(][)] because
-[^:]*:119: failed to with _Scope[(]'b'[)]: because
-[^:]*:112: failed to raise in_context[(]self.s,[(]t,e,b[)],self.fl[)] from None because
-[^:]*:119: failed to b because
-[^:]*:121: failed to a[(][)] because
-[^:]*:117: fred''')
-    Assert(e.readable_repr())=='''\
+[^:]*:132: failed to c[(][)] because
+[^:]*:129: failed to b[(][)] because
+[^:]*:123: failed to with _Scope[(]'b'[)]: because
+[^:]*:116: failed to raise in_context[(]self.s,[(]t,e,b[)],self.fl[)] from None because
+[^:]*:123: failed to b because
+[^:]*:125: failed to a[(][)] because
+[^:]*:121: fred''')
+    Assert(readable_repr(e))=='''\
 Failed to jock because
 failed to b because
 fred.\
@@ -161,7 +165,7 @@ def test6():
     try:
         X().jump(10)
     except Exception as e:
-        Assert(e.readable_repr())=='Failed to jump 10m in the air because\nI have lead feet.'
+        Assert(readable_repr(e))=='Failed to jump 10m in the air because\nI have lead feet.'
     else:
         assert False, 'should not be here'
         pass
@@ -213,7 +217,7 @@ def test10():
     # sometimes exception attributes cannot be copied due to AttributeError
     class EA(Exception):
         def __dir__(self):
-            return ['x']+Exception.__dir__(self)
+            return ['x']+list(Exception.__dir__(self))
         pass
     try:
         try:

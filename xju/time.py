@@ -92,3 +92,7 @@ class Timestamp(TimestampBase):
 
 def now()->Timestamp:
     return Timestamp(time.time())
+
+def sleep_for(x:Duration):
+    time.sleep(x.value())
+    pass

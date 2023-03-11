@@ -73,7 +73,7 @@ def validateSchemaElement(x):
         if type(x) is list:
             if len(x) == 0:
                 raise Exception(
-                    'list schema must contain at least one element'%vars())
+                    'list schema must contain at least one element')
             for xx in x: validateSchemaElement(xx)
             return
         if type(x) is tuple:

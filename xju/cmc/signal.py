@@ -49,10 +49,12 @@ class AsyncSignalLatch(AbstractContextManager):
 
     def __exit__(self, t, e, b):
         assert self.result is not None
+        assert self.loop is not None
         self.loop.remove_signal_handler(self.signum.value())
         
 
     def _signalled(self):
+        assert self.result is not None
         self.result.set_result(self.signum)
         pass
     pass

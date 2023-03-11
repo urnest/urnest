@@ -15,7 +15,7 @@
 #
 from sys import path
 
-from xju.time import Hours,Minutes,Seconds,Duration,Timestamp,now
+from xju.time import Hours,Minutes,Seconds,Duration,Timestamp,now,sleep_for
 from typing import cast
 from xju.xn import readable_repr
 from xju.assert_ import Assert
@@ -70,3 +70,7 @@ else:
 Assert(float(Timestamp(23.86)))==23.86
 
 Assert(now())>=t1
+t2=now()
+sleep_for(Duration(0.05))
+t3=now()
+Assert(t2+Duration(0.05))<=t3

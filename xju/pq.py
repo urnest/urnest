@@ -25,6 +25,7 @@
 #  track selectors used to find/filter nodes and report them
 #  on failure eg replace/html
 #
+from __future__ import annotations
 from html.parser import HTMLParser
 from html.entities import entitydefs as htmlentitydefs
 from html.entities import name2codepoint as entities
@@ -90,7 +91,7 @@ class Node:
 class Root(Node):
     def __init__(self):
         Node.__init__(self)
-        self.children=[]
+        self.children:list[Node]=[]
     def indexOf(self, child):
         return [ _[0] for _ in zip(range(0,len(self.children)),
                                    self.children) if _[1]==child][0]
@@ -139,7 +140,7 @@ class Tag(Node):
         self.pos=pos
         self.tagName=tagName
         self.attrs=dict(attrs)
-        self.children=[]
+        self.children:list[Node]=[]
         self.end=''
         self.classes=set(self.attrs.get('class','').split())
         return
@@ -201,6 +202,11 @@ class Tag(Node):
         result.end=self.end
         result.classes=set(self.classes)
         for c in self.children:
+            assert isinstance(c,Tag) or \
+                isinstance(c,Data) or \
+                isinstance(c,Comment) or \
+                isinstance(c,Decl) or \
+                isinstance(c,PI)
             c.clone(result)
         return result
     def text(self):
@@ -238,7 +244,7 @@ class Comment(Node):
         self.pos=pos
         self.comment=comment
     def __str__(self):
-        return '<!-- %(comment)s -->' % self.__dict__
+        return '<!--%(comment)s-->' % self.__dict__
     def __repr__(self):
         return 'comment at %(pos)s' % self.__dict__
     def clone(self, newParent):
@@ -249,7 +255,7 @@ class Comment(Node):
     pass
 
 class Decl(Node):
-    '''Comment'''
+    '''Decl'''
     def __init__(self, decl, parent, pos):
         Node.__init__(self, parent)
         self.pos=pos
@@ -287,7 +293,7 @@ class Parser(HTMLParser):
         HTMLParser.__init__(self)
         self.fileName=fileName
         self.root=Root()
-        self.current=self.root
+        self.current:Root|Tag=self.root
         return
     def pos(self):
         return Pos(self.fileName, *self.getpos())
@@ -306,10 +312,10 @@ class Parser(HTMLParser):
         return
     def handle_endtag(self, tag):
         current=self.current
-        while not current is self.root and current.tagName != tag:
+        while not isinstance(current,Root) and current.tagName != tag:
             current=current.parent
             pass
-        if not current is self.root:
+        if not isinstance(current,Root):
             self.current=current
             self.current.end=u'</%(tag)s>'%vars()
             self.current=self.current.parent
@@ -336,7 +342,8 @@ def filter(node, predicate):
     return result
         
 class Selection:
-    def __init__(self, nodeList):
+    nodeList:list[Node]
+    def __init__(self, nodeList:Selection|Node|list[Node]):
         if isinstance(nodeList,Selection):
             self.nodeList=nodeList.nodeList
         elif isinstance(nodeList,Node):
@@ -426,10 +433,12 @@ class Selection:
     def empty(self):
         '''remove all children from each of our nodes'''
         for n in self.nodeList:
-            for c in n.children:
-                c.parent=None
+            if isinstance(n,Tag):
+                for c in n.children:
+                    c.parent=None
+                    pass
+                n.children=[]
                 pass
-            n.children=[]
             pass
         return self
     def first(self):
@@ -440,46 +449,55 @@ class Selection:
         return Selection(self.nodeList[-1:])
     def children(self):
         '''return Selection containing children of our nodes'''
-        return Selection(sum([_.children for _ in self.nodeList],[]))
+        nodeList:list[Node]=[]
+        return Selection(sum([_.children for _ in self.nodeList],nodeList))
     def predecessors(self):
         '''return Selection containing predecessor of each of our nodes'''
-        return Selection(sum([_.predecessor() for _ in self.nodeList],[]))
+        nodeList:list[Node]=[]
+        return Selection(sum([_.predecessor() for _ in self.nodeList],nodeList))
     def successors(self):
         '''return Selection containing successor of each of our nodes'''
-        return Selection(sum([_.successor() for _ in self.nodeList],[]))
+        nodeList:list[Node]=[]
+        return Selection(sum([_.successor() for _ in self.nodeList],nodeList))
     def clone(self):
         '''return Selection containing a copy of our nodes'''
         return Selection([_.clone(None) for _ in self.nodeList])
     def addClass(self, name):
         '''add class %(name)s to each of our children'''
         for n in self.nodeList:
-            n.addClass(name)
+            if isinstance(n,Tag):
+                n.addClass(name)
+                pass
+            pass
         return self
     def removeClass(self, name):
         '''remove class %(name)s from each of our children'''
         for n in self.nodeList:
-            n.removeClass(name)
+            if isinstance(n,Tag):
+                n.removeClass(name)
+                pass
+            pass
         return self
     def hasClass(self,c):
         '''True iff all our nodes have class c'''
-        each=[True for _ in self.nodeList if _.hasClass(c)]
+        each=[True for _ in self.nodeList if isinstance(_,Tag) and _.hasClass(c)]
         return len(each)==len(self.nodeList)
     def attr(self, name, value=None, joiner=u''):
         '''attr('src') gets the values of the src attributes of our nodes and joins them with joiner, returning a single string'''
         """attr('src','fred') sets the src attribute of our only node to 'fred'"""
         if value is None:
-            return joiner.join([_.attr(name, value) for _ in self.nodeList])
-        [_.attr(name, value) for _ in self.nodeList]
+            return joiner.join([_.attr(name, value) for _ in self.nodeList if isinstance(_,Tag)])
+        [_.attr(name, value) for _ in self.nodeList if isinstance(_,Tag)]
         return self
     def attrs(self, name, value=None):
         '''attrs('src') lists the values of the src attributes of each of our nodes'''
         """attrs('src','fred.html') sets the src attribute of each of our nodes to 'html'"""
         if value is None:
-            return [_.attr(name, value) for _ in self.nodeList]
-        [_.attr(name, value) for _ in self.nodeList]
+            return [_.attr(name, value) for _ in self.nodeList if isinstance(_,Tag)]
+        [_.attr(name, value) for _ in self.nodeList if isinstance(_,Tag)]
         return self
     def removeAttr(self, name):
-        [_.removeAttr(name) for _ in self.nodeList]
+        [_.removeAttr(name) for _ in self.nodeList if isinstance(_,Tag)]
         return self
     def join(self,nodes):
         '''return new Selection containing nodes with each separated by a clone of our nodes'''
