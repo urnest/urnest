@@ -50,7 +50,24 @@ Various modules implemented to some broad principles:
 
 * time-based json-format record storage built on xju.cmc.tstore
 
-* see `xju/cmc/perflog.py.test <xju/cmc/perflog.py.test>`_ for sample code
+`xju.cmc.Thread/Mutex/Lock/Condition <xju/cmc/__init__.py>`_
+
+* threading primitives that encourage correct design
+
+* see `xju/cmc/ThreadMutexLockCondition.py.test <xju/cmc/ThreadMutexLockCondition.py.test>`_ for sample code
+
+`xju.cmc.Task <xju/cmc/__init__.py>`_
+
+* asyncio Task context manager
+
+* see `xju/cmc/Task.py.test <xju/cmc/Task.py.test>`_ for sample code
+
+`xju.cmc.AsyncServiceQueue <xju/cmc/__init__.py>`_
+
+* asyncio thread-safe service queue, allows any thread to queue a coroutine on an event loop
+  so it is executed by a task in that event loop
+
+* see `xju/cmc/AsyncServiceQueue.py.test <xju/cmc/AsyncServiceQueue.py.test>`_ for sample code
 
 `xju.pq <xju/pq.py>`_
 
