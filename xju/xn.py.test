@@ -16,8 +16,8 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 from sys import path
-
-
+from os.path import dirname
+if path[0]==dirname(__file__): path.pop(0)
 from xju.xn import in_context,readable_repr,AllFailed,in_function_context,Scope,Xn,capitalise
 from xju.assert_ import Assert
 from typing import cast
@@ -236,4 +236,3 @@ for t in tests: t()
 n=len(tests)
 print('PASS - {n} steps'.format(**vars()))
 pass
-

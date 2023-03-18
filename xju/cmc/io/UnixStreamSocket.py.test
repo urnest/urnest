@@ -15,6 +15,9 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
+from sys import path
+from os.path import dirname
+if path[0]==dirname(__file__): path.pop(0)
 from xju.cmc.io import UnixStreamListener, UnixStreamSocket
 from pathlib import Path
 from select import select

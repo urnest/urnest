@@ -27,6 +27,8 @@
 #  on failure eg replace/html
 #
 from sys import path
+from os.path import dirname
+if path[0]==dirname(__file__): path.pop(0)
 
 from xju.pq import parse,hasClass,encodeEntities,tagName,Selection,loadFile,parseFile
 from xju.pq import attrEquals,hasAttr
