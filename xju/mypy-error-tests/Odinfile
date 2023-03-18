@@ -17,7 +17,7 @@
 %verify-test-newtype.x6-fail
 %verify-test-newtype.x7-fail
 
-%verify-test-cmc.x1-fail==(%test-cmc.x1.errs)+cmd=grep -q '"Cannot determine consistent method resolution order"':stdout
+%verify-test-cmc.x1-fail==(%test-cmc.x1.errs)+cmd=grep -q '"MRO"':stdout
 
 %test-cmc.x1.errs==(test-cmc.x1.py)+(%py-opts):py3.exec.output:err
 

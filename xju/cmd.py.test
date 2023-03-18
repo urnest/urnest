@@ -24,12 +24,14 @@ from xju.cmd import do_cmd,CmdFailed
 from typing import cast
 from xju.xn import readable_repr
 from xju.assert_ import Assert
+from os import environ
 
 Assert(do_cmd('/bin/echo fred'.split()))==(b'fred\n','')
 try:
-    do_cmd('lsssss')
+    do_cmd(['lsssss'])
 except Exception as e:
-    Assert(readable_repr(e))=="Failed to do non-shell command 'lsssss' because\nl not found on PATH /home/xju/.cargo/bin:/home/xju/gcc-9.3.0-run/bin:/usr/bin:/bin."
+    p=environ['PATH']
+    Assert(readable_repr(e))==f"Failed to do non-shell command ['lsssss'] because\nlsssss not found on PATH {p}."
 else:
     assert False
     pass

@@ -317,12 +317,12 @@ def is_subclass(n:str, t1, t2:type):
     '''check whether {n}'s type {t1} is a sub-class of {t2}'''
     try:
         Assert(t2).isInstanceOf(type)
-        if isinstance(t1,type):
-            return issubclass(t1, t2)
-        elif issubclass(type(t1),GenericAlias):
+        if issubclass(type(t1),GenericAlias):
             return is_subclass(n,t1.__origin__,t2)
         elif issubclass(type(t1),_GenericAlias):
             return is_subclass(n,t1.__origin__,t2)
+        elif isinstance(t1,type):
+            return issubclass(t1, t2)
         else:
             return False
         pass
