@@ -112,7 +112,7 @@ with PatchAttr(os, 'close', close_fail):
         with Pipe() as pipe:
             pass
     except Exception as e:
-        Assert(readable_repr(e))=="Failed to close pipe with input fd 8, close input on exec True, output fd 9, close output on exec True because\nfred."
+        Assert(readable_repr(e))==f"Failed to close pipe with input fd {pipe.input_fd}, close input on exec True, output fd {pipe.output_fd}, close output on exec True because\nfred."
         pass
     else:
         assert False
