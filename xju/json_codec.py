@@ -27,8 +27,9 @@
 #
 
 from xju.xn import Xn,in_context,in_function_context,readable_repr
-from typing import TypeVar, Generic, Type, cast, Any, Protocol
-from typing import _LiteralGenericAlias  # type: ignore
+from typing import TypeVar, Generic, Type, cast, Any, Protocol, Self, Callable
+from typing import _LiteralGenericAlias  # type: ignore  # mypy 1.1.1
+from typing import _UnionGenericAlias  # type: ignore  # mypy 1.1.1
 from types import GenericAlias, UnionType, NoneType
 import xju.newtype
 
@@ -50,30 +51,34 @@ class Codec(Generic[T]):
 
     def encode(self,x:T) -> JsonType:
         'encode {self.t} {x} to json'
-        return self.codec.encode(x)
+        return self.codec.encode(x,None)
 
     def decode(self,x:JsonType) -> T:
         'decode {x} to a {self.t}'
         try:
-            return cast(T, self.codec.decode(x))
+            return cast(T, self.codec.decode(x,None))
         except Exception:
             raise in_function_context(Codec.decode,vars()) from None
         pass
 
     def get_json_schema(self) -> dict:
-        result = self.codec.get_json_schema()
+        definitions: dict[str,dict] = {}
+        result = self.codec.get_json_schema(definitions, None)
         result.update({
             "$id": "https://example.com/address.schema.json",
             "$schema": "https://json-schema.org/draft/2020-12/schema"})
+        result.update({
+            'definitions':definitions
+        })
         return result
     pass
 
 class CodecProto(Protocol):
-    def encode(self, x:Any)->JsonType:
+    def encode(self,x:Any,back_ref:None|Callable[[Any],JsonType])->JsonType:
         pass
-    def decode(self, x:JsonType)->Any:
+    def decode(self,x:JsonType,back_ref:None|Callable[[JsonType],Any])->Any:
         pass
-    def get_json_schema(self) -> dict:
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         pass
     pass
 
@@ -87,18 +92,18 @@ class NoopCodec(Generic[Atom]):
     t:Type[Atom]
     def __init__(self, t:Type[Atom]):
         self.t=t
-    def encode(self, x:Atom)->Atom:
+    def encode(self, x:Atom, _:None|Callable[[Any],JsonType])->Atom:
         if type(x) is not self.t and not (
                 self.t is float and type(x) is int):
             raise Exception(f'{x!r} is not a {self.t}')
         return x
-    def decode(self, x:Atom)->Atom:
+    def decode(self, x:Atom,_:None|Callable[[JsonType],Any])->Atom:
         if type(x) is not self.t and not (
                 self.t is float and type(x) is int):
             t=type(x)
             raise Exception(f'{x!r} (of type {t}) is not a {self.t}')
         return x
-    def get_json_schema(self) -> dict:
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         st: str
         if self.t is int: st='integer'
         if self.t is str: st='string'
@@ -109,34 +114,34 @@ class NoopCodec(Generic[Atom]):
     pass
 
 class NoneCodec:
-    def encode(self, x:None)->None:
+    def encode(self, x:None,_:None|Callable[[Any],JsonType])->None:
         if x is not None:
             raise Exception(f'{x!r} is not None')
         return x
-    def decode(self, x:None)->None:
+    def decode(self, x:None,_:None|Callable[[JsonType],Any])->None:
         if x is not None:
             raise Exception(f'{x!r} is not None')
         return x
-    def get_json_schema(self) -> dict:
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return { 'type': 'null' }
     pass
 
 class ListCodec:
-    def __init__(self, value_codec:Codec):
+    def __init__(self, value_codec:CodecProto):
         self.value_codec=value_codec
         pass
-    def encode(self,x):
+    def encode(self,x,back_ref:None|Callable[[Any],JsonType]):
         if type(x) is not list:
             raise Exception(f'{x!r} is not a list')
-        return [self.value_codec.encode(_) for _ in x]
-    def decode(self,x):
+        return [self.value_codec.encode(_,back_ref) for _ in x]
+    def decode(self,x,back_ref:None|Callable[[JsonType],Any]):
         if type(x) is not list:
             raise Exception(f'{x!r} is not a list')
-        return [self.value_codec.decode(_) for _ in x]
-    def get_json_schema(self) -> dict:
+        return [self.value_codec.decode(_,back_ref) for _ in x]
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             "type": "array",
-            "items": self.value_codec.get_json_schema()
+            "items": self.value_codec.get_json_schema(definitions, self_ref)
         }
     pass
 
@@ -144,15 +149,15 @@ class AnyListCodec:
     def __init__(self):
         self.value_codec=AnyJsonCodec()
         pass
-    def encode(self,x):
+    def encode(self,x,back_ref:None|Callable[[Any],JsonType]):
         if type(x) is not list:
             raise Exception(f'{x!r} is not a list')
-        return [self.value_codec.encode(_) for _ in x]
-    def decode(self,x):
+        return [self.value_codec.encode(_,back_ref) for _ in x]
+    def decode(self,x,back_ref:None|Callable[[JsonType],Any]):
         if type(x) is not list:
             raise Exception(f'{x!r} is not a list')
-        return [self.value_codec.decode(_) for _ in x]
-    def get_json_schema(self) -> dict:
+        return [self.value_codec.decode(_,back_ref) for _ in x]
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             "type": "array"
         }
@@ -163,7 +168,7 @@ class TupleCodec:
         self.value_codecs=value_codecs
         self.number_of_codecs=len(value_codecs)
         pass
-    def encode(self,x) -> list:
+    def encode(self,x,back_ref:None|Callable[[Any],JsonType]) -> list:
         'encode tuple {x} as a {self.number_of_codecs}-element list'
         try:
             if type(x) is not tuple:
@@ -171,27 +176,27 @@ class TupleCodec:
             if len(x) != self.number_of_codecs:
                 l=len(x)
                 raise Exception(f'{x} does not have {self.number_of_codecs} items (it has {l} items)')
-            return [c.encode(v) for c,v in zip(self.value_codecs,x)]
+            return [c.encode(v,back_ref) for c,v in zip(self.value_codecs,x)]
         except Exception:
             raise in_function_context(TupleCodec.encode,vars()) from None
         pass
-    def decode(self,x) -> tuple:
+    def decode(self,x,back_ref:None|Callable[[JsonType],Any]) -> tuple:
         try:
             if type(x) is not list:
                 raise Exception(f'{x!r} is not a list')
             if len(x) != self.number_of_codecs:
                 l=len(x)
                 raise Exception(f'{x} does not have {self.number_of_codecs} items (it has {l} items)')
-            result=[c.decode(v) for c,v in zip(self.value_codecs,x)]
+            result=[c.decode(v,back_ref) for c,v in zip(self.value_codecs,x)]
             return tuple(result)
         except Exception:
             raise in_function_context(TupleCodec.decode,vars()) from None
         pass
-    def get_json_schema(self) -> dict:
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             "type": "array",
             "prefixItems": [
-                codec.get_json_schema() for codec in self.value_codecs
+                codec.get_json_schema(definitions, self_ref) for codec in self.value_codecs
             ]
         }
     pass
@@ -201,13 +206,13 @@ class UnionCodec:
         self.allowed_types=allowed_types
         self.value_codecs={t:_explodeSchema(t) for t in allowed_types}
         pass
-    def encode(self,x) -> JsonType:
+    def encode(self,x,back_ref:None|Callable[[Any],JsonType]) -> JsonType:
         'encode {x!r} as one of {self.allowed_types}'
         try:
             exceptions=[]
             for t, c in self.value_codecs.items():
                 try:
-                    return c.encode(x)
+                    return c.encode(x,back_ref)
                 except Exception as e:
                     exceptions.append( (t, e) )
                     pass
@@ -217,12 +222,12 @@ class UnionCodec:
         except Exception:
             raise in_function_context(UnionCodec.encode,vars()) from None
         pass
-    def decode(self,x) -> tuple:
+    def decode(self,x,back_ref:None|Callable[[JsonType],Any]) -> tuple:
         try:
             exceptions=[]
             for t, c in self.value_codecs.items():
                 try:
-                    return c.decode(x)
+                    return c.decode(x,back_ref)
                 except Exception as e:
                     exceptions.append( (t, e) )
                     pass
@@ -231,9 +236,9 @@ class UnionCodec:
         except Exception:
             raise in_function_context(UnionCodec.decode,vars()) from None
         pass
-    def get_json_schema(self) -> dict:
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
-            "oneOf": [ codec.get_json_schema() for codec in self.value_codecs.values() ]
+            "oneOf": [ codec.get_json_schema(definitions, self_ref) for codec in self.value_codecs.values() ]
         }
     pass
 
@@ -241,25 +246,26 @@ class DictCodec:
     def __init__(self, key_codec, value_codec):
         self.key_codec=key_codec
         self.value_codec=value_codec
-    def encode(self,x:dict)->dict:
+    def encode(self,x:dict,back_ref:None|Callable[[Any],JsonType])->dict:
         if type(x) is not dict:
             raise Exception(f'{x!r} is not a dict')
         result:dict={}
         for k,v in x.items():
-            ek,ev=self.key_codec.encode(k),self.value_codec.encode(v)
+            ek,ev=self.key_codec.encode(k,back_ref),self.value_codec.encode(v,back_ref)
             if not isinstance(ek, str):
                 raise Exception(f'key encoder {self.key_codec} produced non-str {ek} from dict key {k}')
             result[ek]=ev
             pass
         return result
-    def decode(self,x)->dict:
+    def decode(self,x,back_ref:None|Callable[[JsonType],Any])->dict:
         if type(x) is not dict:
             raise Exception(f'{x!r} is not a dict')
-        return {self.key_codec.decode(k):self.value_codec.decode(v) for k,v in x.items()}
-    def get_json_schema(self) -> dict:
+        return {self.key_codec.decode(k,back_ref):self.value_codec.decode(v,back_ref)
+                for k,v in x.items()}
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             'type': 'object',
-            'additionalProperties': self.value_codec.get_json_schema()
+            'additionalProperties': self.value_codec.get_json_schema(definitions, self_ref)
         }
     pass
 
@@ -267,33 +273,33 @@ class AnyDictCodec:
     def __init__(self):
         self.key_codec=NoopCodec[str](str)
         self.value_codec=AnyJsonCodec()
-    def encode(self,x:dict)->dict:
+    def encode(self,x:dict,back_ref:None|Callable[[Any],JsonType])->dict:
         if type(x) is not dict:
             raise Exception(f'{x!r} is not a dict')
         result:dict={}
         for k,v in x.items():
-            ek,ev=self.key_codec.encode(k),self.value_codec.encode(v)
+            ek,ev=self.key_codec.encode(k,back_ref),self.value_codec.encode(v,back_ref)
             result[ek]=ev
             pass
         return result
-    def decode(self,x)->dict:
+    def decode(self,x,back_ref:None|Callable[[JsonType],Any])->dict:
         if type(x) is not dict:
             raise Exception(f'{x!r} is not a dict')
-        return {self.key_codec.decode(k):self.value_codec.decode(v) for k,v in x.items()}
-    def get_json_schema(self) -> dict:
+        return {self.key_codec.decode(k,back_ref):self.value_codec.decode(v,back_ref) for k,v in x.items()}
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             'type': 'object'
         }
     pass
 
 class AnyJsonCodec:
-    def encode(self,x):
+    def encode(self,x,_:None|Callable[[Any],JsonType]):
         # we assume x will be subsequently json.dumps()ed so defer validation to that
         return x
-    def decode(self,x):
+    def decode(self,x,_:None|Callable[[JsonType],Any]):
         # we assume x was json.loads()ed so assume it is appropriate
         return x
-    def get_json_schema(self) -> dict:
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             "oneOf": [ { 'type': t } for t in ['null','boolean','object','array','number','string'] ]
         }
@@ -304,16 +310,16 @@ class NewIntCodec(Generic[NewInt]):
     def __init__(self,t:Type[NewInt]):
         self.t=t
         self.base_codec=NoopCodec[int](int)
-    def encode(self, x:NewInt)->int:
+    def encode(self, x:NewInt,back_ref:None|Callable[[Any],JsonType])->int:
         if not isinstance(x, xju.newtype.Int):
             raise Exception(f'{x!r} is not a {self.t}')
-        return self.base_codec.encode(x.value())
-    def decode(self, x:JsonType)->NewInt:
+        return self.base_codec.encode(x.value(),back_ref)
+    def decode(self, x:JsonType,back_ref:None|Callable[[JsonType],Any])->NewInt:
         if not isinstance(x, int):
             t=type(x)
             raise Exception(f'{x!r} (of type {t}) is not an int')
-        return self.t(self.base_codec.decode(x))
-    def get_json_schema(self) -> dict:
+        return self.t(self.base_codec.decode(x,back_ref))
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             'description': self.t.__name__,
             'type': 'integer'
@@ -325,16 +331,16 @@ class NewFloatCodec(Generic[NewFloat]):
     def __init__(self,t:Type[NewFloat]):
         self.t=t
         self.base_codec=NoopCodec[float](float)
-    def encode(self, x:NewFloat)->float:
+    def encode(self, x:NewFloat,back_ref:None|Callable[[Any],JsonType])->float:
         if not isinstance(x, xju.newtype.Float):
             raise Exception(f'{x!r} is not a {self.t}')
-        return self.base_codec.encode(x.value())
-    def decode(self, x:JsonType)->NewFloat:
+        return self.base_codec.encode(x.value(),back_ref)
+    def decode(self, x:JsonType,back_ref:None|Callable[[JsonType],Any])->NewFloat:
         if type(x) is not float and type(x) is not int:
             t=type(x)
             raise Exception(f'{x!r} (of type {t}) is not a float (or an int)')
-        return self.t(self.base_codec.decode(x))
-    def get_json_schema(self) -> dict:
+        return self.t(self.base_codec.decode(x,back_ref))
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             'description': self.t.__name__,
             'type': 'number'
@@ -346,16 +352,16 @@ class NewStrCodec(Generic[NewStr]):
     def __init__(self,t:Type[NewStr]):
         self.t=t
         self.base_codec=NoopCodec[str](str)
-    def encode(self, x:NewStr)->str:
+    def encode(self, x:NewStr,back_ref:None|Callable[[Any],JsonType])->str:
         if not isinstance(x, xju.newtype.Str):
             raise Exception(f'{x!r} is not a {self.t}')
-        return self.base_codec.encode(x.value())
-    def decode(self, x:JsonType)->NewStr:
+        return self.base_codec.encode(x.value(),back_ref)
+    def decode(self, x:JsonType,back_ref:None|Callable[[JsonType],Any])->NewStr:
         if type(x) is not str:
             t=type(x)
             raise Exception(f'{x!r} (of type {t}) is not an str')
-        return self.t(self.base_codec.decode(x))
-    def get_json_schema(self) -> dict:
+        return self.t(self.base_codec.decode(x,back_ref))
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             'description': self.t.__name__,
             'type': 'string'
@@ -366,23 +372,46 @@ class LiteralStrCodec:
     value:str
     def __init__(self,value:str):
         self.value=value
-    def encode(self, x:str)->str:
+    def encode(self, x:str, _:None|Callable[[Any],JsonType])->str:
         if type(x) is not str or x != self.value:
             raise Exception(f'{x!r} is not {self.value!r}')
         return x
-    def decode(self, x:JsonType)->str:
+    def decode(self, x:JsonType,_:None|Callable[[JsonType],Any])->str:
         if type(x) is not str:
             raise Exception(f'{x!r} is not a string')
         if x != self.value:
             raise Exception(f'{x!r} is not {self.value!r}')
         return x
-    def get_json_schema(self) -> dict:
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             'type': 'string',
             'enum': [ self.value ]
         }
     pass
 
+class SelfCodec:
+    def encode(self,x,back_ref:None|Callable[[Any],JsonType]) -> JsonType:
+        'encode {x} as a Self'
+        try:
+            assert back_ref is not None
+            return back_ref(x)
+        except Exception:
+            raise in_function_context(SelfCodec.encode,vars()) from None
+        pass
+    def decode(self,x,back_ref:None|Callable[[JsonType],Any]) -> object:
+        'deocde {x} as a Self'
+        try:
+            assert back_ref is not None
+            return back_ref(x)
+        except Exception:
+            raise in_function_context(SelfCodec.decode,vars()) from None
+        pass
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        return {
+            '$ref': self_ref
+        }
+    pass
+    
 class ClassCodec:
     t:type
     attr_codecs:dict[str,Any]  # codec
@@ -390,16 +419,18 @@ class ClassCodec:
         self.t=t
         self.attr_codecs=attr_codecs
         pass
-    def encode(self,x) -> dict:
+    def encode(self,x,_:None|Callable[[Any],JsonType]) -> dict:
         'encode {x} as a {self.t}'
         try:
             if type(x) is not self.t:
                 xt=type(x)
                 raise Exception(f'{x!r} (of type {xt}) is not a {self.t}')
+            def back_ref(x:Any) -> JsonType:
+                return self.encode(x,None)
             result={}
             for n, attr_codec in self.attr_codecs.items():
                 try:
-                    result[n]=attr_codec.encode(getattr(x,n))
+                    result[n]=attr_codec.encode(getattr(x,n),back_ref)
                 except Exception:
                     raise in_context(f'encode attribute {n}') from None
                 pass
@@ -407,15 +438,17 @@ class ClassCodec:
         except Exception:
             raise in_function_context(ClassCodec.encode,vars()) from None
         pass
-    def decode(self,x) -> object:
+    def decode(self,x,_:None|Callable[[JsonType],Any]) -> object:
         'deocde {x} as a {self.t}'
         try:
+            def back_ref(x:JsonType) -> object:
+                return self.decode(x,None)
             attr_values=[]
             for n, attr_codec in self.attr_codecs.items():
                 try:
                     if n not in x:
                         raise Exception(f'{x!r} has no {n!r} attribute')
-                    value=attr_codec.decode(x[n])
+                    value=attr_codec.decode(x[n],back_ref)
                     if not isinstance(attr_codec,LiteralStrCodec):
                         attr_values.append(value)
                         pass
@@ -426,13 +459,21 @@ class ClassCodec:
         except Exception:
             raise in_function_context(ClassCodec.decode,vars()) from None
         pass
-    def get_json_schema(self) -> dict:
-        return {
-            'description': self.t.__name__,
-            'type': 'object',
-            'properties': {
-                n: attr_codec.get_json_schema() for n, attr_codec in self.attr_codecs.items()
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        fqn=f'{self.t.__module__}.{self.t.__name__}'
+        self_ref=f'#/definitions/{fqn}'
+        if not fqn in definitions:
+            definitions[fqn]={
+                'description': self.t.__name__,
+                'type': 'object',
+                'properties': {
+                    n: attr_codec.get_json_schema(definitions, self_ref)
+                    for n, attr_codec in self.attr_codecs.items()
+                }
             }
+            pass
+        return {
+            '$ref': self_ref
         }
     pass
     
@@ -466,13 +507,19 @@ def _explodeSchema(t:type):
             return DictCodec(*[_explodeSchema(_) for _ in getattr(t,'__args__')])
         if type(t) is UnionType:
             return UnionCodec(getattr(t,'__args__'))
+        if type(t) is _UnionGenericAlias:
+            return UnionCodec(getattr(t,'__args__'))
+        if t is Self:
+            return SelfCodec()
         if issubclass(t,xju.newtype.Int):
             return NewIntCodec(t)
         if issubclass(t,xju.newtype.Float):
             return NewFloatCodec(t)
         if issubclass(t,xju.newtype.Str):
             return NewStrCodec(t)
-        return ClassCodec(t, {n: _explodeSchema(nt) for n,nt in t.__annotations__.items()})
+        return ClassCodec(
+            t,{n: _explodeSchema(nt) for n,nt in
+               sum([list(getattr(c,'__annotations__',{}).items()) for c in reversed(t.__mro__)],[])})
     except Exception:
         raise in_function_context(_explodeSchema,vars()) from None
     pass

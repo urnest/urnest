@@ -19,9 +19,9 @@ from sys import path
 from os.path import dirname
 if path[0]==dirname(__file__): path.pop(0)
 
-from xju.json_codec import Codec, JsonType, AnyJsonCodec
+from xju.json_codec import Codec, JsonType, AnyJsonCodec, SelfCodec
 
-from typing import cast, Type, Literal, Any
+from typing import cast, Type, Literal, Any, Self
 from types import NoneType
 from dataclasses import dataclass
 import re
@@ -29,6 +29,7 @@ import sys
 
 from xju.assert_ import Assert
 import xju.newtype
+from xju.xn import readable_repr
 
 x:Any
 
@@ -355,7 +356,55 @@ else:
     assert False, x
     pass
 
+class UnitTag: pass
+class Unit(xju.newtype.Str[UnitTag]):
+    pass
 
+@dataclass
+class ManagerName:
+    a: str
+    b: int
+
+# class inheritance...
+@dataclass
+class UnitAddress(Address,ManagerName):
+    unit:Unit
+
+# ... __init__ argument order is assumed to be that used by dataclass, i.e. classes in
+# reverse-mro (see python mro() and __mro__) with attributes of each class in usual order, so
+# order of UnitAddress __init__ args is
+# ManagerName attrs in order (i.e. a, b) then Address attrs in order (i.e. street, suburb, postcode)
+# then UnitAddress attributes in order (i.e. unit), so in total:
+# a, b, street, suburb, postcode.
+# Decode does not care about json dict order...
+Assert(Codec[UnitAddress](UnitAddress).decode({
+    'street':'alba',
+    'suburb': 'bocca',
+    'postcode': 3365,
+    'unit': '17a',
+    'a': 'fred',
+    'b': 17}))==UnitAddress('fred',17,Street('alba'),Suburb('bocca'),Postcode(3365),Unit('17a'))
+
+# ... encode will order attrs per description above
+Assert(Codec[UnitAddress](UnitAddress).encode(
+    UnitAddress('fred',17,Street('alba'),Suburb('bocca'),Postcode(3365),unit=Unit('17a'))))=={
+        'a': 'fred',
+        'b': 17,
+        'street':'alba',
+        'suburb': 'bocca',
+        'postcode': 3365,
+        'unit': '17a'}
+Assert(list(cast(dict,Codec[UnitAddress](UnitAddress).encode(
+    UnitAddress('fred',17,Street('alba'),Suburb('bocca'),Postcode(3365),unit=Unit('17a')))).keys()))==[
+        'a',
+        'b',
+        'street',
+        'suburb',
+        'postcode',
+        'unit']
+        
+
+# string Literal
 #mypy 1.0.0 bug:
 #Codec[Literal['fred']](Literal['fred'])
 # ... says:
@@ -464,36 +513,108 @@ else:
 
 # Codec can generate corresponding json schema (http://json-schema.org)
 # "null", "boolean", "object", "array", "number", "string", or "integer"
-Assert(Codec[None](type(None)).get_json_schema())=={'type': 'null', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
-Assert(Codec[int](int).get_json_schema())=={'type': 'integer', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
-Assert(Codec[bool](bool).get_json_schema())=={'type': 'boolean', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
-Assert(Codec[str](str).get_json_schema())=={'type': 'string', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
-Assert(Codec[float](float).get_json_schema())=={'type': 'number', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
-Assert(Codec[list](list).get_json_schema())=={'type': 'array', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
-Assert(Codec[list[int]](list[int]).get_json_schema())=={'type': 'array', 'items': { 'type': 'integer'}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[None](type(None)).get_json_schema())=={'type': 'null', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[int](int).get_json_schema())=={'type': 'integer', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[bool](bool).get_json_schema())=={'type': 'boolean', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[str](str).get_json_schema())=={'type': 'string', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[float](float).get_json_schema())=={'type': 'number', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[list](list).get_json_schema())=={'type': 'array', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[list[int]](list[int]).get_json_schema())=={'type': 'array', 'items': { 'type': 'integer'}, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 # mypy 1.0.0 + python 3.11 bug:
 # Argument 1 to "Codec" has incompatible type "Type[Tuple[Any, ...]]"; expected "Type[Tuple[int, str]]"  [arg-type]
-Assert(Codec[tuple[int,str]](tuple[int,str]).get_json_schema())=={'type': 'array', 'prefixItems': [ { 'type': 'integer'},{ 'type': 'string'}], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
+Assert(Codec[tuple[int,str]](tuple[int,str]).get_json_schema())=={'type': 'array', 'prefixItems': [ { 'type': 'integer'},{ 'type': 'string'}], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
 
 # mypy 1.0.0 + python 3.11 bug:
 # Argument 1 to "Codec" has incompatible type "<typing special form>"; expected "Union[Type[None], Type[bool], Type[Dict[Any, Any]], Type[List[Any]], Type[float], Type[str]]"  [arg-type]
-Assert(Codec[JsonType](JsonType).get_json_schema())=={'oneOf': [{'type': 'null'}, {'type': 'boolean'}, {'type': 'object'}, {'type': 'array'}, {'type': 'number'}, {'type': 'string'}], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
+Assert(Codec[JsonType](JsonType).get_json_schema())=={'oneOf': [{'type': 'null'}, {'type': 'boolean'}, {'type': 'object'}, {'type': 'array'}, {'type': 'number'}, {'type': 'string'}], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
 
-Assert(Codec[dict](dict).get_json_schema())=={'type': 'object', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[dict](dict).get_json_schema())=={'type': 'object', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 
-Assert(Codec[dict[str,int]](dict[str,int]).get_json_schema())=={'type': 'object', 'additionalProperties': {'type': 'integer'}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[dict[str,int]](dict[str,int]).get_json_schema())=={'type': 'object', 'additionalProperties': {'type': 'integer'}, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 
-Assert(AnyJsonCodec().get_json_schema())== {'oneOf': [{'type': 'null'}, {'type': 'boolean'}, {'type': 'object'}, {'type': 'array'}, {'type': 'number'}, {'type': 'string'}]}
+Assert(AnyJsonCodec().get_json_schema({},None))== {'oneOf': [{'type': 'null'}, {'type': 'boolean'}, {'type': 'object'}, {'type': 'array'}, {'type': 'number'}, {'type': 'string'}]}
 
-Assert(Codec[AgeInYears](AgeInYears).get_json_schema())=={'description': 'AgeInYears', 'type': 'integer', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[AgeInYears](AgeInYears).get_json_schema())=={'description': 'AgeInYears', 'type': 'integer', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 
-Assert(Codec[Street](Street).get_json_schema())=={'description': 'Street', 'type': 'string', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[Street](Street).get_json_schema())=={'description': 'Street', 'type': 'string', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 
-Assert(Codec[Metres](Metres).get_json_schema())=={'description': 'Metres', 'type': 'number', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[Metres](Metres).get_json_schema())=={'description': 'Metres', 'type': 'number', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 
-Assert(Codec[Literal['fred']](Literal['fred']).get_json_schema())=={'type': 'string', 'enum': ['fred'], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
+Assert(Codec[Literal['fred']](Literal['fred']).get_json_schema())=={'type': 'string', 'enum': ['fred'], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
 
-Assert(Codec[Address](Address).get_json_schema())=={'description': 'Address', 'type': 'object', 'properties': {'street': {'description': 'Street', 'type': 'string'}, 'suburb': {'description': 'Suburb', 'type': 'string'}, 'postcode': {'description': 'Postcode', 'type': 'integer'}}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[Address](Address).get_json_schema())=={
+    '$ref': '#/definitions/__main__.Address',
+    '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema',
+    'definitions':{
+        '__main__.Address':{
+            'description': 'Address',
+            'type': 'object',
+            'properties': {'street': {'description': 'Street', 'type': 'string'}, 'suburb': {'description': 'Suburb', 'type': 'string'}, 'postcode': {'description': 'Postcode', 'type': 'integer'}}}}}
+
+
+
+# recursive via Self
+class LeafTag:pass
+class Leaf(xju.newtype.Int[LeafTag]):pass
+
+@dataclass
+class Branch:
+    shoots: list[Leaf|Self]
+    pass
+
+Tree = Branch|Leaf
+
+Assert(Codec[Branch](Branch).encode(Branch([Branch([Leaf(1),Leaf(2)]),Leaf(3)])))=={'shoots':[{'shoots':[1,2]},3]}
+Assert(Codec[Branch](Branch).decode({'shoots':[{'shoots':[1,2]},3]}))==Branch([Branch([Leaf(1),Leaf(2)]),Leaf(3)])
+Assert(Codec[Branch](Branch).get_json_schema())=={
+    '$ref': '#/definitions/__main__.Branch',
+    '$id': 'https://example.com/address.schema.json',
+    '$schema': 'https://json-schema.org/draft/2020-12/schema',
+    'definitions': {
+        '__main__.Branch': {'description': 'Branch', 'type': 'object', 'properties': {
+            'shoots': {'type': 'array', 'items': {'oneOf': [
+                {'description': 'Leaf', 'type': 'integer'},
+                {'$ref': '#/definitions/__main__.Branch'}]}}}}}}
+
+@dataclass
+class Graph:
+    value: int
+    next: list[Self]
+    pass
+
+Assert(Codec[Graph](Graph).encode(
+    Graph(1, [Graph(2,[]),Graph(3,[])])))=={
+        'value':1,'next':[
+            {'value':2, 'next':[]},
+            {'value':3, 'next':[]}]}
+Assert(Codec[Graph](Graph).get_json_schema())=={
+    '$ref': '#/definitions/__main__.Graph',
+    '$id': 'https://example.com/address.schema.json',
+    '$schema': 'https://json-schema.org/draft/2020-12/schema',
+    'definitions': {
+        '__main__.Graph': {'description': 'Graph', 'type': 'object', 'properties': {
+            'value': {'type': 'integer'},
+            'next': {'type': 'array', 'items': {'$ref': '#/definitions/__main__.Graph'}}}}}}
+
+def fail_back_ref_encode(x: Any) -> JsonType:
+    raise Exception('back_ref fail')
+try:
+    SelfCodec().encode(7,fail_back_ref_encode)
+except Exception as e:
+    Assert(readable_repr(e))=='Failed to encode 7 as a Self because\nback_ref fail.'
+else:
+    assert False
+    pass
+
+def fail_back_ref_decode(x: JsonType) -> Any:
+    raise Exception('back_ref fail')
+try:
+    SelfCodec().decode(7,fail_back_ref_decode)
+except Exception as e:
+    Assert(readable_repr(e))=='Failed to deocde 7 as a Self because\nback_ref fail.'
+else:
+    assert False
+    pass
 
 try:
     import jsonschema # type: ignore
@@ -525,12 +646,12 @@ else:
 
     jsonschema.validate({'fred':2, 'jock':3},Codec[dict[str,int]](dict[str,int]).get_json_schema())
 
-    jsonschema.validate(None,AnyJsonCodec().get_json_schema()) # type: ignore
-    jsonschema.validate(True,AnyJsonCodec().get_json_schema()) # type: ignore
-    jsonschema.validate({},AnyJsonCodec().get_json_schema()) # type: ignore
-    jsonschema.validate([],AnyJsonCodec().get_json_schema()) # type: ignore
-    jsonschema.validate(9.9,AnyJsonCodec().get_json_schema()) # type: ignore
-    jsonschema.validate('fred',AnyJsonCodec().get_json_schema()) # type: ignore
+    jsonschema.validate(None,AnyJsonCodec().get_json_schema({},None)) # type: ignore
+    jsonschema.validate(True,AnyJsonCodec().get_json_schema({},None)) # type: ignore
+    jsonschema.validate({},AnyJsonCodec().get_json_schema({},None)) # type: ignore
+    jsonschema.validate([],AnyJsonCodec().get_json_schema({},None)) # type: ignore
+    jsonschema.validate(9.9,AnyJsonCodec().get_json_schema({},None)) # type: ignore
+    jsonschema.validate('fred',AnyJsonCodec().get_json_schema({},None)) # type: ignore
 
     jsonschema.validate(77,Codec[AgeInYears](AgeInYears).get_json_schema())
 
@@ -543,6 +664,12 @@ else:
         'street':'alba',
         'suburb': 'bocca',
         'postcode': 3365},Codec[Address](Address).get_json_schema())
+    jsonschema.validate(
+        {'shoots':[{'shoots':[1,2]},3]},
+        Codec[Branch](Branch).get_json_schema())
+    jsonschema.validate(
+        {'shoots':[{'shoots':[1,2]},3]},
+        Codec[Branch](Branch).get_json_schema())
     pass
 
 # internal: codecs' encode()s must verify correct type passed in, otherwise
@@ -576,11 +703,26 @@ else:
     assert False, x
     pass
 
-# random test case to ensure JsonType (Union) selects correct codec to encode dict
+# ensure JsonType (Union) selects correct codec to encode dict
 @dataclass
 class Y:
     x: JsonType
     pass
 
 Assert(Codec[Y](Y).encode(Y({ 'z': 'fred' })))=={'x':{'z':'fred'}}
-Assert(Codec[Y](Y).get_json_schema())=={'description': 'Y', 'type': 'object', 'properties': {'x': {'oneOf': [{'type': 'null'}, {'type': 'boolean'}, {'type': 'object'}, {'type': 'array'}, {'type': 'number'}, {'type': 'string'}]}}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(Codec[Y](Y).decode({'x':{'z':'fred'}}))==Y({ 'z': 'fred' })
+Assert(Codec[Y](Y).get_json_schema())=={
+    '$ref': '#/definitions/__main__.Y',
+    '$id': 'https://example.com/address.schema.json',
+    '$schema': 'https://json-schema.org/draft/2020-12/schema',
+    'definitions': {
+        '__main__.Y': {
+            'description': 'Y', 'type': 'object', 'properties': {
+                'x': {
+                    'oneOf': [
+                        {'type': 'null'},
+                        {'type': 'boolean'},
+                        {'type': 'object'},
+                        {'type': 'array'},
+                        {'type': 'number'},
+                        {'type': 'string'}]}}}}}
