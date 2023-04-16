@@ -201,7 +201,7 @@ rem=set(dir(int))
 for n in ['__abs__','__invert__', '__neg__','__pos__']:
     rem.remove(n)
     int_methods=int_methods+f'''
-    def {n}(self): # -> 'Int[Tag]':
+    def {n}(self) -> Self:
         return self.__class__(self.value().{n}())'''
 for n in ['__int__', '__sizeof__', 'bit_count', 'bit_length','__index__','__hash__']:
     rem.remove(n)
@@ -216,17 +216,17 @@ for n in ['__bool__']:
 for n in ['__ror__', '__rrshift__', '__lshift__', '__rlshift__', '__rshift__']:
     rem.remove(n)
     int_methods=int_methods+f'''
-    def {n}(self,n:int): # -> 'Int[Tag]':
+    def {n}(self,n:int) -> Self:
         return self.__class__(self.value().{n}(n))'''
 for n in ['__gt__', '__lt__', '__le__', '__ge__']:
     rem.remove(n)
     int_methods=int_methods+f'''
-    def {n}(self,other:'Int[Tag]')->bool:
+    def {n}(self,other:Self)->bool:
         return self.value().{n}(other.value())'''
 for n in ['__add__', '__sub__', '__and__', '__or__','__xor__']:
     rem.remove(n)
     int_methods=int_methods+f'''
-    def {n}(self,other:'Int[Tag]'): # -> 'Int[Tag]':
+    def {n}(self,other:Self)->Self:
         if type(other) is not type(self):
             return NotImplemented
         return self.__class__(self.value().{n}(other.value()))'''
@@ -246,7 +246,7 @@ rem=set(dir(float))
 for n in ['__abs__','__neg__','__pos__', '__trunc__', '__ceil__','__floor__']:
     rem.remove(n)
     float_methods=float_methods+f'''
-    def {n}(self):
+    def {n}(self)->Self:
         return self.__class__(self.value().{n}())'''
 for n in ['__sizeof__','__hash__']:
     rem.remove(n)
@@ -261,12 +261,12 @@ for n in ['__bool__','is_integer']:
 for n in ['__gt__', '__lt__', '__le__', '__ge__']:
     rem.remove(n)
     float_methods=float_methods+f'''
-    def {n}(self,other:Float_[Tag])->bool:
+    def {n}(self,other:Self)->bool:
         return self.value().{n}(other.value())'''
 for n in ['__add__', '__sub__']:
     rem.remove(n)
     float_methods=float_methods+f'''
-    def {n}(self,other:Float_[Tag]):
+    def {n}(self,other:Self)->Self:
         if type(other) is not type(self):
             return NotImplemented
         return self.__class__(self.value().{n}(other.value()))'''
@@ -291,7 +291,7 @@ if '__setformat__' in rem: rem.remove('__setformat__')  # python 3.10
 for n in ['capitalize','lower', 'swapcase', 'title', 'casefold','upper']:
     rem.remove(n)
     str_methods=str_methods+f'''
-    def {n}(self):
+    def {n}(self)->Self:
         return self.__class__(self.value().{n}())'''
 for n in ['__len__', '__sizeof__','__hash__']:
     rem.remove(n)
@@ -306,17 +306,17 @@ for n in ['isalnum', 'isdecimal', 'isidentifier', 'isprintable', 'isascii', 'isl
 for n in ['__mul__']:
     rem.remove(n)
     str_methods=str_methods+f'''
-    def {n}(self,n:int):
+    def {n}(self,n:int)->Self:
         return self.__class__(self.value().{n}(n))'''
 for n in ['__gt__', '__lt__', '__le__', '__ge__']:
     rem.remove(n)
     str_methods=str_methods+f'''
-    def {n}(self,other:Str_[Tag])->bool:
+    def {n}(self,other:Self)->bool:
         return self.value().{n}(other.value())'''
 for n in ['__add__']:
     rem.remove(n)
     str_methods=str_methods+f'''
-    def {n}(self,other:Str_[Tag]):
+    def {n}(self,other:Self)->Self:
         if type(other) is not type(self):
             return NotImplemented
         return self.__class__(self.value().{n}(other.value()))'''
@@ -351,12 +351,12 @@ for n in ['endswith', 'startswith']:
 for n in ['strip', 'lstrip', 'rstrip']:
     rem.remove(n)
     str_methods=str_methods+f'''
-    def {n}(self, chars:Optional[str]=None):
+    def {n}(self, chars:Optional[str]=None)->Self:
         return self.__class__(self.value().{n}(chars))'''
 for n in ['replace']:
     rem.remove(n)
     str_methods=str_methods+f'''
-    def {n}(self, old:str, new:str, count=-1):
+    def {n}(self, old:str, new:str, count=-1)->Self:
         return self.__class__(self.value().{n}(old,new,count))'''
 for n in ['split', 'rsplit']:
     rem.remove(n)
@@ -371,12 +371,12 @@ for n in ['partition','rpartition']:
 for n in ['removeprefix','removesuffix']:
     rem.remove(n)
     str_methods=str_methods+f'''
-    def {n}(self,sub:str):
+    def {n}(self,sub:str)->Self:
         return self.__class__(self.value().{n}(sub))'''
 for n in ['center','ljust','rjust']:
     rem.remove(n)
     str_methods=str_methods+f'''
-    def {n}(self,width:int,fillchar:str=' '):
+    def {n}(self,width:int,fillchar:str=' ')->Self:
         return self.__class__(self.value().{n}(width,fillchar))'''
 assert rem==set()
 print(open(sys.argv[1]).read().replace('# generated Int methods here...',int_methods).replace(
