@@ -455,7 +455,10 @@ class ClassCodec:
                 except Exception:
                     raise in_context(f'decode attribute {n}') from None
                 pass
-            return self.t(*attr_values)
+            try:
+                return self.t(*attr_values)
+            except Exception:
+                raise in_context(f'init {self.t} with positional parameters {attr_values}') from None
         except Exception:
             raise in_function_context(ClassCodec.decode,vars()) from None
         pass

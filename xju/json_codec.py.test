@@ -281,6 +281,7 @@ else:
     assert False, x
     pass
 
+# type unions, e.g. str|int match either type
 
 #mypy 1.0.0 bug
 #union_codec=Codec[str|int](str|int)
@@ -303,6 +304,9 @@ else:
     pass
 
 
+# class (object) support:
+#   encoding is dictionary containing each objct attribute (except that string literal
+#   attributes are treated specially, see string literal attributes below)
 class StreetTag:pass
 class Street(xju.newtype.Str[StreetTag]):pass
 
@@ -440,17 +444,19 @@ else:
     assert False, x
     pass
 
-
+# string literal attributes match that string literal...
 @dataclass
 class Add:
     a:int
     b:int
-    op_type: Literal['add'] = 'add'
+    op_type: Literal['add'] = 'add'  # note default value is required or get run-time error, see below
 
-Assert(Codec[Add](Add).decode({
-    'op_type':'add',
-    'a': 7,
-    'b': 8}))==Add(7,8)
+Assert(Codec[Add](Add).decode(
+    {
+        'op_type':'add',
+        'a': 7,
+        'b': 8
+    }))==Add(7,8)
         
 Assert(Codec[Add](Add).decode({
     'op_type':'add',
@@ -462,7 +468,7 @@ Assert(Codec[Add](Add).encode(Add(7,8))=={
     'a': 7,
     'b': 8})
         
-#incorrect value type
+# ... and rejected other values...
 try:
     x=Codec[Add](Add).decode({
         'op_type':'subtract',
@@ -474,7 +480,7 @@ else:
     assert False, x
     pass
 
-
+# ... allowing them to be used as type descriminators...
 @dataclass
 class Sub:
     a:int
@@ -486,6 +492,26 @@ Assert(Codec[Add|Sub](Add|Sub).decode({  # type: ignore
     'a': 7,
     'b': 8}))==Sub(7,8)
 
+# ... note they must be given a default value, otherwise...
+@dataclass
+class MissingDefault:
+    op_type: Literal['op']
+    sub_type: Literal['plus']
+    a:int
+    b:int
+
+try:
+    x=Codec[MissingDefault](MissingDefault).decode({
+        'op_type':'op',
+        'sub_type':'plus',
+        'a': 7,
+        'b': 8})
+except Exception as e:
+    Assert(readable_repr(e)).contains("failed to init <class '__main__.MissingDefault'> with positional parameters [7, 8] because")
+    Assert(readable_repr(e)).contains("MissingDefault.__init__() missing 2 required positional arguments: 'a' and 'b'") # note we're actually missing 'op_type' and 'sub_type', because we forgot to give default values in our class definition
+else:
+    assert False, x
+    pass
 
 # misc coverage
 Assert(repr(Codec[int](int)))=="<class 'int'> json codec"
