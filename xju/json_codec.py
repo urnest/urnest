@@ -449,9 +449,7 @@ class ClassCodec:
                     if n not in x:
                         raise Exception(f'{x!r} has no {n!r} attribute')
                     value=attr_codec.decode(x[n],back_ref)
-                    if not isinstance(attr_codec,LiteralStrCodec):
-                        attr_values.append(value)
-                        pass
+                    attr_values.append(value)
                 except Exception:
                     raise in_context(f'decode attribute {n}') from None
                 pass

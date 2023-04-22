@@ -449,7 +449,7 @@ else:
 class Add:
     a:int
     b:int
-    op_type: Literal['add'] = 'add'  # note default value is required or get run-time error, see below
+    op_type: Literal['add'] = 'add'  # note default value not required but recommended, see below
 
 Assert(Codec[Add](Add).decode(
     {
@@ -492,26 +492,23 @@ Assert(Codec[Add|Sub](Add|Sub).decode({  # type: ignore
     'a': 7,
     'b': 8}))==Sub(7,8)
 
-# ... note they must be given a default value, otherwise...
+# ... without defaults, string literal attributes still work...
 @dataclass
 class MissingDefault:
     op_type: Literal['op']
     sub_type: Literal['plus']
     a:int
     b:int
-
-try:
-    x=Codec[MissingDefault](MissingDefault).decode({
-        'op_type':'op',
-        'sub_type':'plus',
-        'a': 7,
-        'b': 8})
-except Exception as e:
-    Assert(readable_repr(e)).contains("failed to init <class '__main__.MissingDefault'> with positional parameters [7, 8] because")
-    Assert(readable_repr(e)).contains("MissingDefault.__init__() missing 2 required positional arguments: 'a' and 'b'") # note we're actually missing 'op_type' and 'sub_type', because we forgot to give default values in our class definition
-else:
-    assert False, x
     pass
+
+Assert(Codec[MissingDefault](MissingDefault).decode({
+    'op_type':'op',
+    'sub_type':'plus',
+    'a': 7,
+    'b': 8}))==MissingDefault('op', 'plus', 7, 8)
+
+# ... but always need to be passed literal value.
+
 
 # misc coverage
 Assert(repr(Codec[int](int)))=="<class 'int'> json codec"
