@@ -27,7 +27,7 @@
 #
 
 from xju.xn import Xn,in_context,in_function_context,readable_repr
-from typing import TypeVar, Generic, Type, cast, Any, Protocol, Self, Callable
+from typing import TypeVar, Generic, Type, cast, Any, Protocol, Self, Callable, get_type_hints
 from typing import _LiteralGenericAlias  # type: ignore  # mypy 1.1.1
 from typing import _UnionGenericAlias  # type: ignore  # mypy 1.1.1
 from types import GenericAlias, UnionType, NoneType
@@ -479,9 +479,9 @@ class ClassCodec:
             '$ref': self_ref
         }
     pass
-    
+
 def _explodeSchema(t:type):
-    '''explode type {t} into a tree of codecs'''
+    '''explode type {t!r} into a tree of codecs'''
     try:
         if t is float:
             return NoopCodec[float](float)
@@ -521,8 +521,7 @@ def _explodeSchema(t:type):
         if issubclass(t,xju.newtype.Str):
             return NewStrCodec(t)
         return ClassCodec(
-            t,{n: _explodeSchema(nt) for n,nt in
-               sum([list(getattr(c,'__annotations__',{}).items()) for c in reversed(t.__mro__)],[])})
+            t,{n: _explodeSchema(nt) for n,nt in get_type_hints(t).items()})
     except Exception:
         raise in_function_context(_explodeSchema,vars()) from None
     pass

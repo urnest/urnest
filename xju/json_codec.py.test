@@ -729,6 +729,7 @@ else:
     assert False, x
     pass
 
+
 # ensure JsonType (Union) selects correct codec to encode dict
 @dataclass
 class Y:
@@ -752,3 +753,20 @@ Assert(Codec[Y](Y).get_json_schema())=={
                         {'type': 'array'},
                         {'type': 'number'},
                         {'type': 'string'}]}}}}}
+
+
+# type hint string are supported, allowing forward-decls
+@dataclass
+class ShirtSize:
+    size: 'SizeCode'
+    pass
+
+Small=Literal['S']
+Large=Literal['L']
+SizeCode=Small|Large
+
+Assert(Codec[ShirtSize](ShirtSize).decode(
+    {
+        'size': 'S',
+    }
+))==ShirtSize('S')
