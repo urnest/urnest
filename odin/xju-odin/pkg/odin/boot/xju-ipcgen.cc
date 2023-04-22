@@ -719,6 +719,7 @@ int main(int argc, char* argv[])
   inStubs << "      default: {\n";
   inStubs << "         FATALERROR(\"Unexpected message type\"); };}/*switch*/;\n";
   inStubs << "   }/*IPC_Do_Msg*/\n";
+
   xju::file::write(
     xju::path::split(argv[2]),
     inStubs.str().c_str(),
@@ -726,6 +727,344 @@ int main(int argc, char* argv[])
     xju::file::Mode(0666));
 
   std::ostringstream outStubs;
+  outStubs << "#include \"inc/GMC.h\"\n";
+  outStubs << "\n";
+  outStubs << "extern boolean IPC_Do_Return;\n";
+  outStubs << "extern int *IPC_IArg1, *IPC_IArg2, *IPC_IArg3;\n";
+  outStubs << "extern tp_Str IPC_SArg1, IPC_SArg2, IPC_SArg3;\n";
+
+  int procId=1;
+  for(auto const& stub:stubs){
+    const std::string procName(hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<ProcName>(stub)));
+    ++procId;
+    outStubs << "\n";
+    for(auto const& clientStub: hcp_ast::findChildrenOfType<ClientStub>(stub)){
+      outStubs << "#ifndef CLIENT_ONLY" << "\n";
+      outStubs << "void\n";
+      outStubs << procName << "(\n";
+      std::vector<std::string> x;
+      std::vector<std::string> paramNames;
+      for(auto const& arg: hcp_ast::findChildrenOfType<InArgDecl>(clientStub)){
+        auto const paramType(
+          hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::TypeRef>(arg)));
+        auto const paramName(
+          hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(arg)));
+        std::ostringstream s;
+        if (paramType=="char *"){
+          s << "   GMC_ARG(char*, " << paramName << ")";
+        }
+        else{
+          s << "   GMC_ARG(" << stripParamType(paramType) << ", " << paramName << ")";
+        }
+        x.push_back(s.str());
+        paramNames.push_back(paramName);
+      }
+      outStubs << xju::format::join(x.begin(), x.end(), ",\n") << "\n";
+      outStubs << "   )\n";
+      for(auto const& arg: hcp_ast::findChildrenOfType<InArgDecl>(clientStub)){
+        auto const paramType(
+          hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::TypeRef>(arg)));
+        auto const paramName(
+          hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(arg)));
+        if (paramType=="char *"){
+          outStubs << "   GMC_DCL(char*, " << paramName << ")\n";
+        }
+        else{
+          outStubs << "   GMC_DCL(" << stripParamType(paramType) << ", " << paramName << ")\n";
+        }
+      }
+      outStubs << "{\n";
+      outStubs << "   boolean IPC_Abort;\n";
+      outStubs << "\n";
+      outStubs << "#ifndef SERVER_ONLY\n";
+      outStubs << "   if (IsServer && Is_LocalClient(CurrentClient)) {\n";
+      outStubs << "      Local_"<<procName<<"("<<xju::format::join(paramNames.begin(),paramNames.end(),", ")<<");\n";
+      outStubs << "   }else{\n";
+      outStubs << "#endif\n";
+      outStubs << "   IPC_Write_Int(&IPC_Abort, "<<procId<<");\n";
+      outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
+      for(auto const& arg: hcp_ast::findChildrenOfType<InArgDecl>(clientStub)){
+        auto const paramType(
+          hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<ParamType>(arg)));
+        auto const paramName(
+          hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(arg)));
+        if (paramType=="str"){
+          outStubs << "   IPC_Write_Str(&IPC_Abort, "<<paramName<<");\n";
+        }
+        else if (paramType=="int"){
+          outStubs << "   IPC_Write_Int(&IPC_Abort, "<<paramName<<");\n";
+        }
+        else{
+          xju::assert_never_reached();
+        }
+        outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
+      }
+      outStubs << "#ifndef SERVER_ONLY\n";
+      outStubs << "   };\n";
+      outStubs << "#endif\n";
+      outStubs << "   }\n";
+      outStubs << "#endif\n";
+
+    }
+    for(auto const& serverStub: hcp_ast::findChildrenOfType<ServerStub>(stub)){
+      if (hcp_ast::findChildrenOfType<Request>(serverStub).size()){
+        outStubs << "#ifndef SERVER_ONLY\n";
+        outStubs << "void\n";
+        std::vector<std::string> x;
+        std::vector<std::string> y;
+        std::vector<std::string> paramNames;
+        for(auto const& inOutArg: hcp_ast::findChildrenOfType<ArgDecl>(serverStub)){
+          bool const isInArg(hcp_ast::findChildrenOfType<InArgDecl>(inOutArg).size());
+          auto const paramType(
+            hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::TypeRef>(inOutArg)));
+          auto const paramName(
+            hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(inOutArg)));
+          std::ostringstream s;
+          std::ostringstream t;
+          if (isInArg){
+            s << "   GMC_ARG(" << stripParamType(paramType) << ", " << paramName << ")";
+            t << "   GMC_DCL(" << stripParamType(paramType) << ", " << paramName << ")\n";
+          }
+          else {
+            if (paramType=="int *"){
+              s << "   GMC_ARG(int*, " << paramName << ")";
+              t << "   GMC_DCL(int*, " << paramName << ")\n";
+            }
+            else if (paramType=="tp_Status *"){
+              s << "   GMC_ARG(tp_Status*, " << paramName << ")";
+              t << "   GMC_DCL(tp_Status*, " << paramName << ")\n";
+            }
+            else{
+              s << "   GMC_ARG(" << stripParamType(paramType) << ", " << paramName << ")";
+              t << "   GMC_DCL(" << stripParamType(paramType) << ", " << paramName << ")\n";
+            }
+          }
+          x.push_back(s.str());
+          y.push_back(t.str());
+          paramNames.push_back(paramName);
+        }
+        if (x.size()){
+          outStubs << procName <<"(\n";
+          outStubs << xju::format::join(x.begin(), x.end(), ",\n") << "\n";
+          outStubs << "   )\n";
+          outStubs << xju::format::join(y.begin(), y.end(), "");
+        }
+        else{
+          outStubs << procName <<"(GMC_ARG_VOID)\n";
+        }
+        outStubs << "{\n";
+        outStubs << "   boolean IPC_Abort;\n";
+        outStubs << "\n";
+        outStubs << "   boolean IPC_Cmd_Abort;\n";
+        outStubs << "\n";
+        outStubs << "#ifndef CLIENT_ONLY\n";
+        outStubs << "   if (IsServer && Is_LocalClient(CurrentClient)) {\n";
+        outStubs << "      Local_"<<procName<<"("<<xju::format::join(paramNames.begin(),paramNames.end(),", ")<<");\n";
+        outStubs << "   }else{\n";
+        outStubs << "#endif\n";
+        outStubs << "   IPC_Write_Int(&IPC_Abort, "<<procId<<");\n";
+        outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
+        for(auto const& arg: hcp_ast::findChildrenOfType<InArgDecl>(serverStub)){
+          auto const paramType(
+            hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<ParamType>(arg)));
+          auto const paramName(
+            hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(arg)));
+          if (paramType=="str"){
+            outStubs << "   IPC_Write_Str(&IPC_Abort, "<<paramName<<");\n";
+          }
+          else if (paramType=="int"){
+            outStubs << "   IPC_Write_Int(&IPC_Abort, "<<paramName<<");\n";
+          }
+          else{
+            xju::assert_never_reached();
+          }
+          outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
+        }
+        outStubs << "   IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);\n";
+        outStubs << "   FORBIDDEN(IPC_Cmd_Abort);\n";
+        outStubs << "   FORBIDDEN(!IPC_Do_Return);\n";
+        outStubs << "   IPC_Do_Return = FALSE;\n";
+        for(auto const& arg: hcp_ast::findChildrenOfType<OutArgDecl>(serverStub)){
+          auto const paramType(
+            hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<ParamType>(arg)));
+          auto const paramName(
+            hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(arg)));
+          if (paramType=="str"){
+            outStubs << "   IPC_Read_Str(&IPC_Abort, "<<paramName<<");\n";
+          }
+          else if (paramType=="int"){
+            outStubs << "   IPC_Read_Int(&IPC_Abort, "<<paramName<<");\n";
+          }
+          else{
+            xju::assert_never_reached();
+          }
+          outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
+        }
+        outStubs << "#ifndef CLIENT_ONLY\n";
+        outStubs << "   };\n";
+        outStubs << "#endif\n";
+        outStubs << "   }\n";
+        outStubs << "#endif\n";
+      }
+      if (hcp_ast::findChildrenOfType<Notice>(serverStub).size()){
+        outStubs << "#ifndef SERVER_ONLY\n";
+        outStubs << "void\n";
+        std::vector<std::string> paramNames;
+        if (hcp_ast::findChildrenOfType<InArgDecl>(serverStub).size()){
+          outStubs << procName << "(\n";
+          std::vector<std::string> x;
+          for(auto const& arg: hcp_ast::findChildrenOfType<InArgDecl>(serverStub)){
+            auto const paramType(
+              hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::TypeRef>(arg)));
+            auto const paramName(
+              hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(arg)));
+            std::ostringstream s;
+            if (paramType=="tp_Str "){
+              s << "   GMC_ARG(tp_Str, " << paramName << ")";
+            }
+            else if (paramType=="tp_FileName "){
+              s << "   GMC_ARG(tp_FileName, " << paramName << ")";
+            }
+            else if (paramType=="tp_JobID "){
+              s << "   GMC_ARG(tp_JobID, " << paramName << ")";
+            }
+            else if (paramType=="boolean "){
+              s << "   GMC_ARG(boolean, " << paramName << ")";
+            }
+            else{
+              xju::assert_never_reached();
+            }
+            x.push_back(s.str());
+            paramNames.push_back(paramName);
+          }
+          outStubs << xju::format::join(x.begin(), x.end(), ",\n");
+          outStubs << "\n   )\n";
+          for(auto const& arg: hcp_ast::findChildrenOfType<InArgDecl>(serverStub)){
+            auto const paramType(
+              hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::TypeRef>(arg)));
+            auto const paramName(
+              hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(arg)));
+            if (paramType=="tp_Str "){
+              outStubs << "   GMC_DCL(tp_Str, " << paramName << ")\n";
+            }
+            else if (paramType=="tp_JobID "){
+              outStubs << "   GMC_DCL(tp_JobID, " << paramName << ")\n";
+            }
+            else if (paramType=="tp_FileName "){
+              outStubs << "   GMC_DCL(tp_FileName, " << paramName << ")\n";
+            }
+            else if (paramType=="boolean "){
+              outStubs << "   GMC_DCL(boolean, " << paramName << ")\n";
+            }
+            else{
+              xju::assert_never_reached();
+            }
+          }
+        }
+        else{
+          outStubs << procName << "(GMC_ARG_VOID)\n";
+        }
+        outStubs << "{\n";
+        outStubs << "   boolean IPC_Abort;\n";
+        outStubs << "\n";
+        outStubs << "#ifndef CLIENT_ONLY\n";
+        outStubs << "   if (IsServer && Is_LocalClient(CurrentClient)) {\n";
+        outStubs << "      Local_"<<procName<<"("<<xju::format::join(paramNames.begin(),paramNames.end(),", ")<<");\n";
+        outStubs << "   }else{\n";
+        outStubs << "#endif\n";
+        outStubs << "   IPC_Write_Int(&IPC_Abort, "<<procId<<");\n";
+        outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
+        for(auto const& arg: hcp_ast::findChildrenOfType<InArgDecl>(serverStub))
+        {
+          auto const paramType(
+            hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<ParamType>(arg)));
+          auto const paramName(
+            hcp_ast::reconstruct(hcp_ast::findOnlyChildOfType<hcp_ast::VarName>(arg)));
+          if (paramType=="int"){
+            outStubs << "   IPC_Write_Int(&IPC_Abort, "<<paramName<<");\n";
+          }
+          else if (paramType=="str"){
+            outStubs << "   IPC_Write_Str(&IPC_Abort, "<<paramName<<");\n";
+          }
+          else {
+            xju::assert_never_reached();
+          }
+          outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
+        }
+        outStubs << "#ifndef CLIENT_ONLY\n";
+        outStubs << "   };\n";
+        outStubs << "#endif\n";
+        outStubs << "   }\n";
+        outStubs << "#endif\n";
+      }
+      if (hcp_ast::findChildrenOfType<SplitRequest>(serverStub).size()){
+        // there's only one, so it is hard-coded
+        xju::assert_equal(procName, std::string("Get_OdinFile"));
+        outStubs << "#ifndef SERVER_ONLY\n";
+        outStubs << "void\n";
+        outStubs << procName<<"(\n";
+        outStubs << "   GMC_ARG(tp_FileName, FileName),\n";
+        outStubs << "   GMC_ARG(tp_Status*, StatusPtr),\n";
+        outStubs << "   GMC_ARG(boolean*, ExecFlagPtr),\n";
+        outStubs << "   GMC_ARG(tp_Str, OdinExpr),\n";
+        outStubs << "   GMC_ARG(boolean, NeedsData)\n";
+        outStubs << "   )\n";
+        outStubs << "   GMC_DCL(tp_FileName, FileName)\n";
+        outStubs << "   GMC_DCL(tp_Status*, StatusPtr)\n";
+        outStubs << "   GMC_DCL(boolean*, ExecFlagPtr)\n";
+        outStubs << "   GMC_DCL(tp_Str, OdinExpr)\n";
+        outStubs << "   GMC_DCL(boolean, NeedsData)\n";
+        outStubs << "{\n";
+        outStubs << "   boolean IPC_Abort;\n";
+        outStubs << "\n";
+        outStubs << "   boolean IPC_Cmd_Abort;\n";
+        outStubs << "\n";
+        outStubs << "#ifndef CLIENT_ONLY\n";
+        outStubs << "   if (IsServer && Is_LocalClient(CurrentClient)) {\n";
+        outStubs << "      FORBIDDEN(IPC_Do_Return);\n";
+        outStubs << "      FORBIDDEN(IPC_SArg1 != NIL);\n";
+        outStubs << "      IPC_SArg1 = FileName;\n";
+        outStubs << "      FORBIDDEN(IPC_IArg2 != NIL);\n";
+        outStubs << "      IPC_IArg2 = StatusPtr;\n";
+        outStubs << "      FORBIDDEN(IPC_IArg3 != NIL);\n";
+        outStubs << "      IPC_IArg3 = ExecFlagPtr;\n";
+        outStubs << "      Local_Get_OdinFile(OdinExpr, NeedsData);\n";
+        outStubs << "      if (!IPC_Do_Return) {\n";
+        outStubs << "         IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);\n";
+        outStubs << "         FORBIDDEN(IPC_Cmd_Abort);\n";
+        outStubs << "         FORBIDDEN(!IPC_Do_Return); }/*if*/;\n";
+        outStubs << "      IPC_Do_Return = FALSE;\n";
+        outStubs << "      IPC_SArg1 = NIL;\n";
+        outStubs << "      IPC_IArg2 = NIL;\n";
+        outStubs << "      IPC_IArg3 = NIL;\n";
+        outStubs << "   }else{\n";
+        outStubs << "#endif\n";
+        outStubs << "   IPC_Write_Int(&IPC_Abort, "<<procId<<");\n";
+        outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
+        outStubs << "   IPC_Write_Str(&IPC_Abort, OdinExpr);\n";
+        outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
+        outStubs << "   IPC_Write_Int(&IPC_Abort, NeedsData);\n";
+        outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
+        outStubs << "   IPC_Get_Commands(&IPC_Cmd_Abort, (char *)NIL);\n";
+        outStubs << "   FORBIDDEN(IPC_Cmd_Abort);\n";
+        outStubs << "   FORBIDDEN(!IPC_Do_Return);\n";
+        outStubs << "   IPC_Do_Return = FALSE;\n";
+        outStubs << "   IPC_Read_Str(&IPC_Abort, FileName);\n";
+        outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
+        outStubs << "   IPC_Read_Int(&IPC_Abort, StatusPtr);\n";
+        outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
+        outStubs << "   IPC_Read_Int(&IPC_Abort, ExecFlagPtr);\n";
+        outStubs << "   if (IPC_Abort) IPC_Do_Abort();\n";
+        outStubs << "#ifndef CLIENT_ONLY\n";
+        outStubs << "   };\n";
+        outStubs << "#endif\n";
+        outStubs << "   }\n";
+        outStubs << "#endif\n";
+ 
+      }
+    }
+  }
+  
   
   xju::file::write(
     xju::path::split(argv[3]),
