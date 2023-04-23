@@ -21,7 +21,7 @@
 #  number: str|int
 #  street: str
 #
-# Codec[dict[str,int|Address]].decode({'fred':3, 'jock':{'number':32, 'street': 'asler'}})
+# codec(dict[str,int|Address]).decode({'number':32, 'street': 'asler'})
 #
 # For examples see json_codec.py.test
 #
@@ -37,6 +37,9 @@ T=TypeVar('T')
 
 JsonType = None|bool|dict|list|float|str
 
+def codec(t: Type[T]) -> 'Codec[T]':
+    '''build codec to encode/decode a "t" to/from json'''
+    return Codec[T](t)
 
 class Codec(Generic[T]):
     t:Type[T]
