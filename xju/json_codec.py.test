@@ -23,7 +23,7 @@ from xju.json_codec import codec, Codec, JsonType, AnyJsonCodec, SelfCodec
 
 from typing import cast, Type, Literal, Any, Self
 from types import NoneType
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import re
 import sys
 
@@ -338,7 +338,7 @@ try:
     x=codec(Address).decode({'jock': 'fred'})
 except Exception as e:
     Assert(str(e)).matches(re.escape("failed to decode {'jock': 'fred'} to a <class '__main__.Address'> because"))
-    Assert(str(e)).endswith("{'jock': 'fred'} has no 'street' attribute")
+    Assert(str(e)).endswith("missing 3 required positional arguments: 'street', 'suburb', and 'postcode'")
 else:
     assert False, x
     pass
@@ -566,10 +566,10 @@ Assert(codec(Metres).get_json_schema())=={'description': 'Metres', 'type': 'numb
 Assert(codec(Literal['fred']).get_json_schema())=={'type': 'string', 'enum': ['fred'], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
 
 Assert(codec(Address).get_json_schema())=={
-    '$ref': '#/definitions/__main__.Address',
+    '$ref': '#/definitions/Address',
     '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema',
     'definitions':{
-        '__main__.Address':{
+        'Address':{
             'description': 'Address',
             'type': 'object',
             'properties': {'street': {'description': 'Street', 'type': 'string'}, 'suburb': {'description': 'Suburb', 'type': 'string'}, 'postcode': {'description': 'Postcode', 'type': 'integer'}}}}}
@@ -590,14 +590,14 @@ Tree = Branch|Leaf
 Assert(codec(Branch).encode(Branch([Branch([Leaf(1),Leaf(2)]),Leaf(3)])))=={'shoots':[{'shoots':[1,2]},3]}
 Assert(codec(Branch).decode({'shoots':[{'shoots':[1,2]},3]}))==Branch([Branch([Leaf(1),Leaf(2)]),Leaf(3)])
 Assert(codec(Branch).get_json_schema())=={
-    '$ref': '#/definitions/__main__.Branch',
+    '$ref': '#/definitions/Branch',
     '$id': 'https://example.com/address.schema.json',
     '$schema': 'https://json-schema.org/draft/2020-12/schema',
     'definitions': {
-        '__main__.Branch': {'description': 'Branch', 'type': 'object', 'properties': {
+        'Branch': {'description': 'Branch', 'type': 'object', 'properties': {
             'shoots': {'type': 'array', 'items': {'oneOf': [
                 {'description': 'Leaf', 'type': 'integer'},
-                {'$ref': '#/definitions/__main__.Branch'}]}}}}}}
+                {'$ref': '#/definitions/Branch'}]}}}}}}
 
 @dataclass
 class Graph:
@@ -611,13 +611,13 @@ Assert(codec(Graph).encode(
             {'value':2, 'next':[]},
             {'value':3, 'next':[]}]}
 Assert(codec(Graph).get_json_schema())=={
-    '$ref': '#/definitions/__main__.Graph',
+    '$ref': '#/definitions/Graph',
     '$id': 'https://example.com/address.schema.json',
     '$schema': 'https://json-schema.org/draft/2020-12/schema',
     'definitions': {
-        '__main__.Graph': {'description': 'Graph', 'type': 'object', 'properties': {
+        'Graph': {'description': 'Graph', 'type': 'object', 'properties': {
             'value': {'type': 'integer'},
-            'next': {'type': 'array', 'items': {'$ref': '#/definitions/__main__.Graph'}}}}}}
+            'next': {'type': 'array', 'items': {'$ref': '#/definitions/Graph'}}}}}}
 
 def fail_back_ref_encode(x: Any) -> JsonType:
     raise Exception('back_ref fail')
@@ -736,11 +736,11 @@ class Y:
 Assert(Codec[Y](Y).encode(Y({ 'z': 'fred' })))=={'x':{'z':'fred'}}
 Assert(Codec[Y](Y).decode({'x':{'z':'fred'}}))==Y({ 'z': 'fred' })
 Assert(Codec[Y](Y).get_json_schema())=={
-    '$ref': '#/definitions/__main__.Y',
+    '$ref': '#/definitions/Y',
     '$id': 'https://example.com/address.schema.json',
     '$schema': 'https://json-schema.org/draft/2020-12/schema',
     'definitions': {
-        '__main__.Y': {
+        'Y': {
             'description': 'Y', 'type': 'object', 'properties': {
                 'x': {
                     'oneOf': [
@@ -767,3 +767,54 @@ Assert(Codec[ShirtSize](ShirtSize).decode(
         'size': 'S',
     }
 ))==ShirtSize('S')
+
+
+# coverage of class decode initialisation failure
+class Fred:
+    x: str
+    def __init__(self, x:str):
+        if x=='jock':
+            raise Exception('jock forbidden')
+        pass
+    pass
+
+try:
+    codec(Fred).decode({'x':'jock'})
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to decode {'x': 'jock'} to a <class '__main__.Fred'> because\nfailed to deocde {'x': 'jock'} as a <class '__main__.Fred'> because\nfailed to init <class '__main__.Fred'> with keyword arguments {'x': 'jock'} because\njock forbidden."
+else:
+    assert False
+    pass
+
+# multiple defaults values, including list type, can omit any or all defaulted attributes
+# use kw_only to allow any ordering of attributes in class definition
+# it seems clever but I don't think jsonschema or typescript generation works properly
+# (typescript and jsonschema will insist on the default fields being specified). Note
+# encoding from python will always include the value even if it came from default.
+@dataclass(kw_only=True)
+class Person:
+    first_name: str
+    middle_names: list[str] = field(default_factory=list)
+    last_name: str
+    phobias: list[str] = field(default_factory=list)
+    pass
+
+Assert(codec(Person).decode({'first_name':'fred','last_name':'jones'}))==Person(first_name='fred',last_name='jones')
+Assert(codec(Person).decode({'first_name':'fred','phobias':['spiders'],'last_name':'jones'}))==Person(first_name='fred',last_name='jones',phobias=['spiders'])
+Assert(codec(Person).decode({'first_name':'fred','middle_names':['arachnid'],'last_name':'jones'}))==Person(first_name='fred',last_name='jones',middle_names=['arachnid'])
+
+
+# not-present optional attribute must still appear in json (with value null)
+@dataclass
+class Opt:
+    x: str|None
+    pass
+
+Assert(codec(Opt).decode({'x':None}))==Opt(x=None)
+try:
+    codec(Opt).decode({})
+except Exception as e:
+    Assert(readable_repr(e)).contains("Failed to decode {} to a <class '__main__.Opt'> because\nfailed to deocde {} as a <class '__main__.Opt'> because\nfailed to init <class '__main__.Opt'> with keyword arguments {} because\nOpt.__init__() missing 1 required positional argument: 'x'.")
+else:
+    assert False
+    pass

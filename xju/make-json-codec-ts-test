@@ -1,0 +1,467 @@
+#!/bin/env python3
+
+from typing import Literal
+
+from xju.json_codec import codec, TypeScriptNamespace, TypeScriptSourceCode, TypeScriptNamespace
+from xju.misc import ByteCount
+from xju.time import Duration, Timestamp
+from dataclasses import dataclass
+
+namespace=TypeScriptNamespace({})
+
+def indent(n: int, s:TypeScriptSourceCode)->str:
+    lines=s.splitlines()
+    return '\n'.join([lines[0].value()]+[(' '*n)+l.value() for l in lines[1:]])
+
+print(f'''\
+function str(x:any):string {{ return `${{x}}`; }}
+function assert_equal<T>(x:T, y:T){{
+    if (Array.isArray(x) && Array.isArray(y)){{
+        assert_arrays_equal<any>(x,y);
+    }}
+    else if (typeof (x) === 'object' && typeof (y) === 'object'){{
+        assert_objects_equal(x,y);
+    }}
+    else if (!(x==y)){{
+        throw new Error(`"${{x}}" != "${{y}}"`);
+    }}
+}}
+function assert_arrays_equal<T>(x:Array<T>, y:Array<T>){{
+    try{{
+        assert_equal(x.length, y.length);
+        var i;
+        for(i=0; i!=x.length; ++i){{
+            assert_equal<T>(x[i],y[i]);
+        }}
+    }}
+    catch(e){{
+        throw new Error(`"${{x}}" != "${{y}}" because ${{e}}"`);
+    }}
+}}
+function assert_objects_equal(x:object, y:object){{
+    try{{
+        var xKeys=new Array();
+        var yKeys=new Array();
+        for(const k in x){{if (x.hasOwnProperty(k)) xKeys.push(k);}}
+        for(const k in y){{if (x.hasOwnProperty(k)) yKeys.push(k);}}
+        assert_arrays_equal(xKeys,yKeys);
+        for(const k in xKeys){{
+            assert_equal(x[k],y[k]);
+        }}
+    }}
+    catch(e){{
+        throw new Error(`${{x}} != ${{y}} because ${{e}}`);
+    }}
+}}
+function assert_x_contains_y(x:string, y:string){{
+    if (x.indexOf(y)==-1){{
+        throw new Error(`"${{x}}" does not contain "${{y}}"`)
+    }}
+}}
+function assert_true(x:boolean){{
+    if (!x){{
+        throw new Error(`"${{x}}" is false, expected true`);
+    }}
+}}
+function assert_false(x:boolean){{
+    if (x){{
+        throw new Error(`"${{x}}" is true, expected false`);
+    }}
+}}
+function assert_never_reached(){{
+   throw new Error(`should not be here`);
+}}
+//number
+(() => {{
+    assert_equal({indent(4,codec(int).get_typescript_asa(TypeScriptSourceCode('5'),namespace))}, 5);
+    assert_equal({indent(4,codec(int).get_typescript_asa(TypeScriptSourceCode('5.5'),namespace))}, 5.5);
+    try{{
+        {indent(8,codec(int).get_typescript_asa(TypeScriptSourceCode('"fred"'),namespace))};
+        throw new Error("should not be here");
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: fred is not a number it is a string");
+    }}
+    assert_true({codec(int).get_typescript_isa(TypeScriptSourceCode('5'),namespace)});
+    assert_true({codec(int).get_typescript_isa(TypeScriptSourceCode('5.5'),namespace)});
+    assert_false({codec(int).get_typescript_isa(TypeScriptSourceCode('"fred"'),namespace)});
+}})();
+//string
+(() => {{
+    assert_equal({indent(4,codec(str).get_typescript_asa(TypeScriptSourceCode('"ann"'),namespace))}, 'ann');
+    try{{
+        {indent(8,codec(str).get_typescript_asa(TypeScriptSourceCode('7'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7 is not a string it is a number");
+    }}
+    assert_true({codec(str).get_typescript_isa(TypeScriptSourceCode('"ann"'),namespace)});
+    assert_false({codec(str).get_typescript_isa(TypeScriptSourceCode('7'),namespace)});
+}})();
+//boolean
+(() => {{
+    assert_equal({indent(4,codec(bool).get_typescript_asa(TypeScriptSourceCode('true'),namespace))}, true);
+    try{{
+        {indent(8,codec(bool).get_typescript_asa(TypeScriptSourceCode('7'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7 is not a boolean it is a number");
+    }}
+    assert_true({codec(bool).get_typescript_isa(TypeScriptSourceCode('true'),namespace)});
+    assert_false({codec(bool).get_typescript_isa(TypeScriptSourceCode('7'),namespace)});
+}})();
+//null
+(() => {{
+    assert_equal({indent(4,codec(type(None)).get_typescript_asa(TypeScriptSourceCode('null'),namespace))}, null);
+    try{{
+        {indent(8,codec(type(None)).get_typescript_asa(TypeScriptSourceCode('7'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7 is not null it is a number");
+    }}
+    assert_true({codec(type(None)).get_typescript_isa(TypeScriptSourceCode('null'),namespace)});
+    assert_false({codec(type(None)).get_typescript_isa(TypeScriptSourceCode('7'),namespace)});
+}})();
+//Array<T>
+(() => {{
+    assert_equal({indent(4,codec(list[int]).get_typescript_asa(TypeScriptSourceCode('[7, 8]'),namespace))}, [7, 8]);
+    try{{
+        {indent(8,codec(list[int]).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a Array<number> because Error: ann is not a number it is a string");
+    }}
+    assert_true({codec(list[int]).get_typescript_isa(TypeScriptSourceCode('[7, 8]'),namespace)});
+    assert_false({codec(list[int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
+}})();
+//Array i.e. Array<any>
+(() => {{
+    assert_equal({indent(4,codec(list).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))}, [7, "ann"]);
+    try{{
+        {indent(8,codec(list).get_typescript_asa(TypeScriptSourceCode('7'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7 is not an Array it is a number");
+    }}
+    assert_true({codec(list).get_typescript_isa(TypeScriptSourceCode('[7,"ann"]'),namespace)});
+    assert_false({codec(list).get_typescript_isa(TypeScriptSourceCode('7'),namespace)});
+}})();
+//tuple
+(() => {{
+    assert_equal({indent(4,codec(tuple[int,str]).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))}, [7, "ann"]);
+    try{{
+        {indent(8,codec(tuple[int,str]).get_typescript_asa(TypeScriptSourceCode('7'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7 is not a [number,string] because Error: 7 is not an array it is a number");
+    }}
+    try{{
+        {indent(8,codec(tuple[int,str]).get_typescript_asa(TypeScriptSourceCode('[7, 8]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,8 is not a [number,string] because Error: 8 is not a string it is a number");
+    }}
+    try{{
+        {indent(8,codec(tuple[int,str]).get_typescript_asa(TypeScriptSourceCode('[7, "ann", 8]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann,8 is not a [number,string] because Error: 7,ann,8 does not have 2 elements (it has 3 elements)");
+    }}
+    assert_true({codec(tuple[int,str]).get_typescript_isa(TypeScriptSourceCode('[7,"ann"]'),namespace)});
+    assert_false({codec(tuple[int,str]).get_typescript_isa(TypeScriptSourceCode('7'),namespace)});
+}})();
+''')
+print(f'''//union\n'''+
+      f'''(() => {{\n'''+
+      f'''    assert_equal({indent(4,codec(int|str).get_typescript_asa(TypeScriptSourceCode('7'),namespace))}, 7);\n'''+  # type: ignore  # mypy 1.1.1 bug
+      f'''    assert_equal({indent(4,codec(int|str).get_typescript_asa(TypeScriptSourceCode('"ann"'),namespace))}, "ann");\n'''+  # type: ignore  # mypy 1.1.1 bug
+      f'''    try{{\n'''+
+      f'''        {indent(8,codec(int|str).get_typescript_asa(TypeScriptSourceCode('true'),namespace))};\n'''+  # type: ignore  # mypy 1.1.1 bug
+      f'''        assert_never_reached();\n'''+
+      f'''    }}\n'''+
+      f'''    catch(e){{\n'''+
+      f'''        assert_x_contains_y(str(e), "Error: true is not a number|string because Error: true is not a number it is a boolean and true is not a string it is a boolean");\n'''+
+      f'''    }}\n'''+
+      f'''    try{{\n'''+
+      f'''        {indent(8,codec(int|str).get_typescript_asa(TypeScriptSourceCode('[7, 8]'),namespace))};\n'''+  # type: ignore  # mypy 1.1.1 bug
+      f'''        assert_never_reached();\n'''+
+      f'''    }}\n'''+
+      f'''    catch(e){{\n'''+
+      f'''        assert_x_contains_y(str(e), "Error: 7,8 is not a number|string because Error: 7,8 is not a number it is a object and 7,8 is not a string it is a object");\n'''+
+      f'''    }}\n'''+
+      f'''    assert_true({codec(int|str).get_typescript_isa(TypeScriptSourceCode('7'),namespace)});\n'''+  # type: ignore  # mypy 1.1.1 bug
+      f'''    assert_true({codec(int|str).get_typescript_isa(TypeScriptSourceCode('"ann"'),namespace)});\n'''+  # type: ignore  # mypy 1.1.1 bug
+      f'''    assert_false({codec(int|str).get_typescript_isa(TypeScriptSourceCode('false'),namespace)});\n'''+  # type: ignore  # mypy 1.1.1 bug
+      f'''    assert_false({codec(int|str).get_typescript_isa(TypeScriptSourceCode('[7,"ann"]'),namespace)});\n'''+  # type: ignore  # mypy 1.1.1 bug
+      f'''}})();
+
+''')
+print(f'''
+//dict[str,T]
+(() => {{
+    assert_equal({indent(8,codec(dict[str,int]).get_typescript_asa(TypeScriptSourceCode('{"fred": 8}'),namespace))}, {{"fred": 8}});
+    try{{
+        {indent(8,codec(dict[str,int]).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a {{ [key: string]: number }} because Error: 7,ann is not an object it is an array");
+    }}
+    try{{
+        {indent(8,codec(dict[str,int]).get_typescript_asa(TypeScriptSourceCode('{"a":8, "ann": "fred"}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string]: number }} because Error: element ann is invalid because Error: fred is not a number it is a string");
+    }}
+    assert_true({indent(8,codec(dict[str,int]).get_typescript_isa(TypeScriptSourceCode('{"fred": 8}'),namespace))});
+    assert_false({indent(8,codec(dict[str,int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
+}})();
+''')
+
+print(f'''
+//dict
+(() => {{
+    assert_equal({indent(4,codec(dict).get_typescript_asa(TypeScriptSourceCode('{"fred": 8}'),namespace))}, {{"fred": 8}});
+    assert_equal({indent(4,codec(dict).get_typescript_asa(TypeScriptSourceCode('{"fred": 8, "ann": "low"}'),namespace))}, {{"fred": 8, "ann": "low"}});
+    try{{
+        {indent(8,codec(dict).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a {{ [key: string]: any }} because Error: 7,ann is not an object it is an array");
+    }}
+    assert_true({codec(dict).get_typescript_isa(TypeScriptSourceCode('{"fred": 8}'),namespace)});
+    assert_false({codec(dict).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
+}})();
+''')
+
+print(f'''
+//NewInt
+(() => {{
+    assert_equal({indent(4,codec(ByteCount).get_typescript_asa(TypeScriptSourceCode('8'),namespace))}, 8);
+    try{{
+        {indent(8,codec(ByteCount).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a xju.misc.ByteCount i.e. a number, it is a object");
+    }}
+    assert_true({codec(ByteCount).get_typescript_isa(TypeScriptSourceCode('8'),namespace)});
+    assert_false({codec(ByteCount).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
+}})();
+''')
+
+print(f'''
+//NewFloat
+(() => {{
+    assert_equal({indent(4,codec(Duration).get_typescript_asa(TypeScriptSourceCode('8.8'),namespace))}, 8.8);
+    try{{
+        {indent(8,codec(Duration).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a xju.time.Duration i.e. a number, it is a object");
+    }}
+    assert_true({codec(Duration).get_typescript_isa(TypeScriptSourceCode('8.8'),namespace)});
+    assert_false({codec(Duration).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
+}})();
+''')
+
+print(f'''
+//NewStr
+(() => {{
+    assert_equal({indent(4,codec(TypeScriptSourceCode).get_typescript_asa(TypeScriptSourceCode('"int"'),namespace))}, "int");
+    try{{
+        {indent(8,codec(TypeScriptSourceCode).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a xju.json_codec.TypeScriptSourceCode i.e. a string, it is a object");
+    }}
+    assert_true({codec(TypeScriptSourceCode).get_typescript_isa(TypeScriptSourceCode('"int"'),namespace)});
+    assert_false({codec(TypeScriptSourceCode).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
+}})();
+''')
+
+fred_codec=codec(Literal['fred']) # type: ignore   # mypy 1.1.1 bug
+print(f'''
+//Literal['fred']
+(() => {{
+    assert_equal({indent(4,fred_codec.get_typescript_asa(TypeScriptSourceCode('"fred"'),namespace))}, "fred");
+    try{{
+        {indent(8,fred_codec.get_typescript_asa(TypeScriptSourceCode('"ann"'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), 'Error: the string ann is not the string fred');
+    }}
+    try{{
+        {indent(8,fred_codec.get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), 'Error: the object 7,ann is not the string fred');
+    }}
+    assert_true({fred_codec.get_typescript_isa(TypeScriptSourceCode('"fred"'),namespace)});
+    assert_false({fred_codec.get_typescript_isa(TypeScriptSourceCode('"jock"'),namespace)});
+    assert_false({fred_codec.get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
+}})();
+''')
+
+@dataclass
+class FullName:
+    first_name: str
+    middle_names: list[str]
+    last_name: str
+    pass
+
+print(f'''
+//class
+(() => {{
+    assert_equal({indent(4,codec(FullName).get_typescript_asa(TypeScriptSourceCode('{first_name: "fred", middle_names: [], last_name: "flak"}'),namespace))}, {{first_name: "fred", middle_names: [], last_name: "flak"}});
+    try{{
+        {indent(8,codec(FullName).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a FullName because Error: 7,ann is an array");
+    }}
+    try{{
+        {indent(8,codec(FullName).get_typescript_asa(TypeScriptSourceCode('"fred"'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: fred is not a FullName because Error: fred is not an object it is a string");
+    }}
+    try{{
+        {indent(8,codec(FullName).get_typescript_asa(TypeScriptSourceCode('{first_name: "fred", last_name: "flak"}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a FullName because Error: attribute middle_names is invalid because Error: undefined is not a Array<string> because Error: undefined is not an array it is a undefined");
+    }}
+    try{{
+        {indent(8,codec(FullName).get_typescript_asa(TypeScriptSourceCode('{first_name: "fred", middle_names: "joan", last_name: "flak"}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a FullName because Error: attribute middle_names is invalid because Error: joan is not a Array<string> because Error: joan is not an array it is a string");
+    }}
+    assert_true({codec(FullName).get_typescript_isa(TypeScriptSourceCode('{first_name: "fred", middle_names: [], last_name: "flak"}'),namespace)});
+    assert_true({codec(FullName).get_typescript_isa(TypeScriptSourceCode('{first_name: "fred", middle_names: ["joan"], last_name: "flak"}'),namespace)});
+    assert_true({codec(FullName).get_typescript_isa(TypeScriptSourceCode('{first_name: "fred", middle_names: ["joan"], last_name: "flak", age: 10}'),namespace)});
+    assert_false({codec(FullName).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
+}})();
+''')
+
+timestamp_codec=codec(Timestamp)
+timestamp_codec.ensure_typescript_defs(namespace)
+namespace_codec=codec(TypeScriptNamespace)
+namespace_codec.ensure_typescript_defs(namespace)
+print(namespace.get_formatted_defs())
+
+print(f'''
+//class defined in subnamespace
+(() => {{
+    assert_equal({indent(4,codec(Timestamp).get_typescript_asa(TypeScriptSourceCode('{_Timestamp__value:7.6}'),namespace))}, {{_Timestamp__value:7.6}});
+    try{{
+        {indent(8,codec(Timestamp).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a xju.time.Timestamp because Error: 7,ann is an array");
+    }}
+    try{{
+        {indent(8,codec(Timestamp).get_typescript_asa(TypeScriptSourceCode('"fred"'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: fred is not a xju.time.Timestamp because Error: fred is not an object it is a string");
+    }}
+    try{{
+        {indent(8,codec(Timestamp).get_typescript_asa(TypeScriptSourceCode('{first_name: "fred", last_name: "flak"}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a xju.time.Timestamp because Error: attribute _Timestamp__value is invalid because Error: undefined is not a number it is a undefined");
+    }}
+    try{{
+        {indent(8,codec(Timestamp).get_typescript_asa(TypeScriptSourceCode('{_Timestamp__value: "fred"}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a xju.time.Timestamp because Error: attribute _Timestamp__value is invalid because Error: fred is not a number it is a string");
+    }}
+    const x:object={{_Timestamp__value:8.8}};
+    assert_equal(xju.time.asInstanceOfTimestamp(x)._Timestamp__value, 8.8);
+    if ({codec(Timestamp).get_typescript_isa(TypeScriptSourceCode('x'),namespace)}){{
+        assert_equal(x._Timestamp__value,8.8);
+    }}
+    else{{
+        throw new Error('should not be here');
+    }}
+    assert_true({codec(Timestamp).get_typescript_isa(TypeScriptSourceCode('{_Timestamp__value:8}'),namespace)});
+    assert_true(xju.time.isInstanceOfTimestamp(x));
+    assert_false({codec(Timestamp).get_typescript_isa(TypeScriptSourceCode('{_Timestamp__value:"fred"}'),namespace)});
+    assert_false({codec(Timestamp).get_typescript_isa(TypeScriptSourceCode('{_Timestamp_value:"fred"}'),namespace)});
+    assert_false({codec(Timestamp).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
+}})();
+''')
+
+print(f'''
+//recursive type
+(() => {{
+    assert_equal({namespace_codec.typescript_type()},'xju.json_codec.Namespace');
+    assert_equal({indent(4,namespace_codec.get_typescript_asa(TypeScriptSourceCode('{defs:{x:"Fred",y:{defs:{y:"Jock"}}}}'),namespace))}, {{defs:{{x:"Fred",y:{{defs:{{y:"Jock"}}}}}}}});
+    try{{
+        {indent(8,namespace_codec.get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a xju.json_codec.TypeScriptNamespace because Error: 7,ann is an array");
+    }}
+    try{{
+        {indent(8,namespace_codec.get_typescript_asa(TypeScriptSourceCode('"fred"'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: fred is not a xju.json_codec.TypeScriptNamespace because Error: fred is not an object it is a string");
+    }}
+    try{{
+        {indent(8,namespace_codec.get_typescript_asa(TypeScriptSourceCode('{first_name: "fred", last_name: "flak"}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a xju.json_codec.TypeScriptNamespace because Error: attribute defs is invalid because Error: undefined is not a {{ [key: string]: string|xju.json_codec.TypeScriptNamespace }} because Error: undefined is not an object it is a undefined");
+    }}
+    try{{
+        {indent(8,namespace_codec.get_typescript_asa(TypeScriptSourceCode('{defs:{x:"Fred",y:{defs:{y:7}}}}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a xju.json_codec.TypeScriptNamespace because Error: attribute defs is invalid because Error: [object Object] is not a {{ [key: string]: string|xju.json_codec.TypeScriptNamespace }} because Error: element y is invalid because Error: [object Object] is not a string|xju.json_codec.TypeScriptNamespace because Error: [object Object] is not a xju.json_codec.TypeScriptSourceCode i.e. a string, it is a object and [object Object] is not a xju.json_codec.TypeScriptNamespace because Error: attribute defs is invalid because Error: [object Object] is not a {{ [key: string]: string|xju.json_codec.TypeScriptNamespace }} because Error: element y is invalid because Error: 7 is not a string|xju.json_codec.TypeScriptNamespace because Error: 7 is not a xju.json_codec.TypeScriptSourceCode i.e. a string, it is a number and 7 is not a xju.json_codec.TypeScriptNamespace because Error: 7 is not an object it is a number");
+    }}
+    const x:object={{defs:{{x:"Fred",y:{{defs:{{z:"Jock"}}}}}}}};
+    if ({indent(8,namespace_codec.get_typescript_isa(TypeScriptSourceCode('x'),namespace))}) {{
+        if ({indent(8,namespace_codec.get_typescript_isa(TypeScriptSourceCode('x.defs.y'),namespace))}){{
+            assert_equal(x.defs.y.defs.z, "Jock");
+        }}
+        else{{
+            throw new Error('should not be here');
+        }}
+    }}
+    else{{
+        throw new Error('should not be here');
+    }}
+    assert_false({namespace_codec.get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
+}})();
+''')

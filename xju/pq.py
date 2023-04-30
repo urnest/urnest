@@ -61,7 +61,7 @@ def encodeEntity(c):
     if x is None: return c
     return u'&%(x)s;'%vars()
 
-def encodeEntities(s):
+def encodeEntities(s:str)->str:
     if s is None: return u''
     x=u''.join([encodeEntity(_) for _ in s])
     return x

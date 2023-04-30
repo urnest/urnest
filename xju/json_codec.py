@@ -16,18 +16,21 @@
 #
 # json schema represented as a python type var, e.g.:
 #
-# @dataclasses.dataclass
-# class Address:
-#  number: str|int
-#  street: str
+#   @dataclasses.dataclass
+#   class Address:
+#     number: str|int
+#     street: str
 #
-# codec(dict[str,int|Address]).decode({'number':32, 'street': 'asler'})
+#   codec(Address).decode({'number':32, 'street': 'asler'})==Address(32,'asler')
+#   codec(Address).decode({'number':'42 biz', 'street': 'asler'})==Address('42 biz','asler')
+#   codec(Address).encode(Address(32,'asler'))=={'number':32, 'street': 'asler'}
 #
 # For examples see json_codec.py.test
 #
-
+from dataclasses import dataclass
 from xju.xn import Xn,in_context,in_function_context,readable_repr
 from typing import TypeVar, Generic, Type, cast, Any, Protocol, Self, Callable, get_type_hints
+from typing import Sequence, Literal
 from typing import _LiteralGenericAlias  # type: ignore  # mypy 1.1.1
 from typing import _UnionGenericAlias  # type: ignore  # mypy 1.1.1
 from types import GenericAlias, UnionType, NoneType
@@ -37,6 +40,50 @@ T=TypeVar('T')
 
 JsonType = None|bool|dict|list|float|str
 
+class TypeScriptUQNTag:pass
+class TypeScriptUQN(xju.newtype.Str[TypeScriptUQNTag]):pass
+
+class TypeScriptSourceCodeTag:pass
+class TypeScriptSourceCode(xju.newtype.Str[TypeScriptSourceCodeTag]):pass
+
+@dataclass
+class TypeScriptNamespace:
+    defs: dict[TypeScriptUQN, TypeScriptSourceCode | Self]
+
+    def get_namespace_of(self,fqn:Sequence[TypeScriptUQN]) -> Self:
+        match len(fqn):
+            case 1:
+                return self
+            case _:
+                m=self.defs.setdefault(fqn[0],self.__class__({}))
+                assert isinstance(m,self.__class__)
+                return m.get_namespace_of(fqn[1:])
+        pass
+
+    def get_formatted_defs(self, export:Literal['']|Literal['export ']='')->TypeScriptSourceCode:
+        '''get defs of this namespace as (possibly multi-level) namespace content
+           - top level defs are exported or not per {export}
+           - sub-level defs are always exported'''
+        result:list[TypeScriptSourceCode]=[]
+        for name, d in self.defs.items():
+            match d:
+                case TypeScriptSourceCode():
+                    result.append(TypeScriptSourceCode(f'{export}{d}'))
+                case TypeScriptNamespace:
+                    result.append(TypeScriptSourceCode(
+                        f"{export}namespace {name} {{\n"
+                        f"    {indent(4, d.get_formatted_defs(export='export '))}\n"
+                        f"}}\n"))
+            pass
+        return TypeScriptSourceCode('\n'.join([_.value() for _ in result]))
+    pass
+
+@dataclass
+class TypeScriptBackRefs:
+    type_back_ref:Callable[[],TypeScriptSourceCode]
+    isa_back_ref:Callable[[TypeScriptSourceCode],TypeScriptSourceCode]
+    asa_back_ref:Callable[[TypeScriptSourceCode],TypeScriptSourceCode]
+    
 def codec(t: Type[T]) -> 'Codec[T]':
     '''build codec to encode/decode a "t" to/from json'''
     return Codec[T](t)
@@ -74,6 +121,27 @@ class Codec(Generic[T]):
             'definitions':definitions
         })
         return result
+    def typescript_type(self) -> TypeScriptUQN:
+        '''return typescript unqualified equivalent type for T'''
+        return self.codec.typescript_type(None)
+    def ensure_typescript_defs(self, namespace) -> None:
+        return self.codec.ensure_typescript_defs(namespace)
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''get typescript "{expression} is a T" code, adding any necessary definitions to {namespace}
+           result is a type-guard expression, examples of some possible results:
+             parameter       possible code                  note
+             "x.y"           "(typeof (x.y) == 'number')"   (uses built-in type guard pattern)
+             "z"             "m.isInstanceOfFred(z)"        (calls a type-guard function)'''
+        return self.codec.get_typescript_isa(expression,namespace,None)
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''get typescript "{expression} as a T" code, adding any necessary definitions to {namespace}
+           result is a cast expression that throws an Error if {expression} is not a T
+        '''
+        return self.codec.get_typescript_asa(expression,namespace,None)
     pass
 
 class CodecProto(Protocol):
@@ -83,9 +151,23 @@ class CodecProto(Protocol):
         pass
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         pass
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptUQN:
+        pass
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        pass
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        pass
     pass
 
-Atom=TypeVar('Atom',int,str,bool,float,None)
+Atom=TypeVar('Atom',int,str,bool,float)
 
 NewInt=TypeVar('NewInt',bound=xju.newtype.Int)
 NewFloat=TypeVar('NewFloat',bound=xju.newtype.Float)
@@ -112,8 +194,32 @@ class NoopCodec(Generic[Atom]):
         if self.t is str: st='string'
         if self.t is float: st='number'
         if self.t is bool: st='boolean'
-        if self.t is None: st='null'
         return { 'type': st }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        '''return typescript equivalent type for T'''
+        if self.t is int: return 'number'
+        if self.t is str: return 'string'
+        if self.t is float: return 'number'
+        assert self.t is bool, self.t
+        return 'boolean'
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        return TypeScriptSourceCode(
+            f"(typeof ({expression}) == '{self.typescript_type(back_refs)}')")
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((v: any): {tt} => {{\n"
+            f"    if (typeof v !== '{tt}') throw new Error(`${{v}} is not a {tt} it is a ${{typeof v}}`);\n"
+            f"    return v as {tt};\n"
+            f"}})({expression})")
     pass
 
 class NoneCodec:
@@ -127,6 +233,26 @@ class NoneCodec:
         return x
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return { 'type': 'null' }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        '''return typescript equivalent type for None'''
+        return 'null'
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        return TypeScriptSourceCode(
+            f"(({expression}) === {self.typescript_type(back_refs)})")
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        return TypeScriptSourceCode(
+            f"((v: any): null => {{\n"
+            f"    if (v !== null) throw new Error(`${{v}} is not null it is a ${{typeof v}}`);\n"
+            f"    return v as null;\n"
+            f"}})({expression})")
     pass
 
 class ListCodec:
@@ -146,6 +272,30 @@ class ListCodec:
             "type": "array",
             "items": self.value_codec.get_json_schema(definitions, self_ref)
         }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
+        return f"Array<{self.value_codec.typescript_type(back_refs)}>"
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"(((v:any):v is {tt}=>(Array.isArray(v) && "
+            f"    v.filter((x)=>(\n"
+            f"        !{indent(8,self.value_codec.get_typescript_isa(TypeScriptSourceCode('x'),namespace,back_refs))})).length==0))({expression}))")
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((v: any): {tt} => {{try{{\n"
+            f"    if (!Array.isArray(v)) throw new Error(`${{v}} is not an array it is a ${{typeof v}}`);\n"
+            f"    v.forEach((x)=>{indent(4,self.value_codec.get_typescript_asa(TypeScriptSourceCode('x'),namespace,back_refs))});\n"
+            f"    return v as {tt};\n"
+            f"}}catch(e){{throw new Error(`${{v}} is not a {tt} because ${{e}}`);}}}})({expression})")
     pass
 
 class AnyListCodec:
@@ -164,6 +314,26 @@ class AnyListCodec:
         return {
             "type": "array"
         }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
+        return f"Array<any>"
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        return TypeScriptSourceCode(
+            f"(Array.isArray({expression}))")
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((v: any): {tt} => {{\n"
+            f"    if (!Array.isArray(v)) throw new Error(`${{v}} is not an Array it is a ${{typeof v}}`);\n"
+            f"    return v as {tt};\n"
+            f"}})({expression})")
     pass
 
 class TupleCodec:
@@ -202,6 +372,39 @@ class TupleCodec:
                 codec.get_json_schema(definitions, self_ref) for codec in self.value_codecs
             ]
         }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
+        value_types=','.join([_.typescript_type(back_refs) for _ in self.value_codecs])
+        return f"[{value_types}]"
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        isas=[' &&\n            '+indent(12,self.value_codecs[i].get_typescript_isa(f"v[{i}]",namespace,back_refs))
+              for i in range(0, self.number_of_codecs)]
+        return TypeScriptSourceCode(
+            f"((v:any): v is {self.typescript_type(back_refs)}=>{{\n"
+            f"    if (Array.isArray(v)) {{\n" +
+            f"        return v.length == {self.number_of_codecs}" +
+            f"".join(isas) + ";\n"+
+            f"    }}\n"+
+            f"    else return false;\n"+
+            f"}})({expression})")
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        asas=['    '+indent(4,self.value_codecs[i].get_typescript_asa(f"v[{i}]",namespace,back_refs))+';\n'
+              for i in range(0, self.number_of_codecs)]
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((v: any): {tt} => {{try{{\n" +
+            f"    if (!Array.isArray(v)) throw new Error(`${{v}} is not an array it is a ${{typeof v}}`);\n" +
+            f"    if (v.length != {self.number_of_codecs}) throw new Error(`${{v}} does not have {self.number_of_codecs} elements (it has ${{v.length}} elements)`);\n" +
+            ''.join(asas)+
+            f"    return v as {tt};\n"+
+            f"}}catch(e){{ throw new Error(`${{v}} is not a {tt} because ${{e}}`);}}}})({expression})")
     pass
 
 class UnionCodec:
@@ -243,6 +446,43 @@ class UnionCodec:
         return {
             "oneOf": [ codec.get_json_schema(definitions, self_ref) for codec in self.value_codecs.values() ]
         }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
+        return '|'.join([_.typescript_type(back_refs) for _ in self.value_codecs.values()])
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        isas=[' ||\n       '+indent(12,value_codec.get_typescript_isa(f"v",namespace,back_refs))
+              for value_codec in self.value_codecs.values()]
+        return TypeScriptSourceCode(
+            f"((v:any): v is {self.typescript_type(back_refs)}=>{{\n"
+            f"    return false" +
+            f"".join(isas) + ";\n"+
+            f"}})({expression})")
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        asas=[f"    try{{\n"+
+              f"        {indent(8,value_codec.get_typescript_asa('v',namespace,back_refs))};\n"+
+              f"        return v as {tt};\n"+
+              f"    }}\n"+
+              f"    catch(e){{\n"+
+              f"        es.push(e.message);\n"+
+              f"    }};\n"
+              for value_codec in self.value_codecs.values()]
+        return TypeScriptSourceCode(
+            f"((v: any): {tt} => {{try{{\n" +
+            f"    var es = new Array<string>();\n"+
+            "".join(asas)+
+            f"    throw new Error(es.join(' and '));\n"+
+            f"}}catch(e)\n"+
+            f"{{\n"+
+            f"    throw new Error(`${{v}} is not a {tt} because ${{e}}`);\n"+
+            f"}}}})({expression})")
     pass
 
 class DictCodec:
@@ -270,6 +510,43 @@ class DictCodec:
             'type': 'object',
             'additionalProperties': self.value_codec.get_json_schema(definitions, self_ref)
         }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
+        return f"{{ [key: {self.key_codec.typescript_type(back_refs)}]: {self.value_codec.typescript_type(back_refs)} }}"
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        return TypeScriptSourceCode(
+            f"(((x:any):x is {self.typescript_type(back_refs)}=>(\n"
+            f"    typeof (x) === 'object' &&\n"
+            f"    !Array.isArray(x) &&\n"
+            f"    (():boolean=>{{for (const k in x){{\n"
+            f"        if (!x.hasOwnProperty(k)) continue;\n"
+            f"        if (!({indent(8,self.key_codec.get_typescript_isa(TypeScriptSourceCode('k'),namespace,back_refs))} )||\n"
+            f"            !({indent(8,self.value_codec.get_typescript_isa(TypeScriptSourceCode('x[k]'),namespace,back_refs))})) return false;}}\n"
+            f"    return true;\n"
+            f"}})()))({expression}))")
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((x: any): {tt} => {{try{{\n"
+            f"    if (typeof x !== 'object') throw new Error(`${{x}} is not an object it is a ${{typeof x}}`);\n"
+            f"    if (Array.isArray(x)) throw new Error(`${{x}} is not an object it is an array`);\n"
+            f"    for(const k in x){{\ntry{{\n"+
+            f"        if (!x.hasOwnProperty(k)) continue;\n"+
+            f"        const v=x[k];\n"
+            f"        {indent(8,self.key_codec.get_typescript_asa(TypeScriptSourceCode('k'),namespace,back_refs))};\n"
+            f"        {indent(8,self.value_codec.get_typescript_asa(TypeScriptSourceCode('v'),namespace,back_refs))};\n"
+            f"    }}catch(e){{\n"
+            f"        throw new Error(`element ${{k}} is invalid because ${{e}}`);\n"
+            f"    }}}};\n"
+            f"    return x as {tt};\n"
+            f"}}catch(e){{throw new Error(`${{x}} is not a {tt} because ${{e}}`);}}}})({expression})")
     pass
 
 class AnyDictCodec:
@@ -293,6 +570,43 @@ class AnyDictCodec:
         return {
             'type': 'object'
         }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
+        return f"{{ [key: {self.key_codec.typescript_type(back_refs)}]: {self.value_codec.typescript_type(back_refs)} }}"
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        return TypeScriptSourceCode(
+            f"(((x:any):x is {self.typescript_type(back_refs)}=>(\n"
+            f"    (typeof (x) === 'object' &&\n"
+            f"    !Array.isArray(x) &&\n"
+            f"    (():boolean=>{{for (const k in x){{\n"
+            f"        if (!x.hasOwnProperty(k)) continue;\n"
+            f"        if (!({indent(12,self.key_codec.get_typescript_isa(TypeScriptSourceCode('k'),namespace,back_refs))} )||\n"
+            f"            !({indent(12,self.value_codec.get_typescript_isa(TypeScriptSourceCode('x[k]'),namespace,back_refs))})) return false;}}\n"
+            f"        return true;\n"
+            f"    }})())))({expression}))")
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((x: any): {tt} => {{try{{\n"
+            f"    if (typeof x !== 'object') throw new Error(`${{x}} is not an object it is a ${{typeof x}}`);\n"
+            f"    if (Array.isArray(x)) throw new Error(`${{x}} is not an object it is an array`);\n"
+            f"    for(const k in x){{\ntry{{\n"+
+            f"        if (!x.hasOwnProperty(k)) continue;\n"+
+            f"        const v=x[k];\n"
+            f"        {indent(8,self.key_codec.get_typescript_asa(TypeScriptSourceCode('k'),namespace,back_refs))};\n"
+            f"        {indent(8,self.value_codec.get_typescript_asa(TypeScriptSourceCode('v'),namespace,back_refs))};\n"
+            f"    }}catch(e){{\n"
+            f"        throw new Error(`element ${{k}} is invalid because ${{e}}`);\n"
+            f"    }}}};\n"
+            f"    return x as {tt};\n"
+            f"}}catch(e){{throw new Error(`${{x}} is not a {tt} because ${{e}}`);}}}})({expression})")
     pass
 
 class AnyJsonCodec:
@@ -306,6 +620,22 @@ class AnyJsonCodec:
         return {
             "oneOf": [ { 'type': t } for t in ['null','boolean','object','array','number','string'] ]
         }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
+        return 'any'
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        return TypeScriptSourceCode(
+            "true")
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        return TypeScriptSourceCode(
+            f"({expression})")
     pass
 
 class NewIntCodec(Generic[NewInt]):
@@ -322,11 +652,36 @@ class NewIntCodec(Generic[NewInt]):
             t=type(x)
             raise Exception(f'{x!r} (of type {t}) is not an int')
         return self.t(self.base_codec.decode(x,back_ref))
+    def get_type_fqn(self):
+        '''get the fully qualified name of {self.t}'''
+        if self.t.__module__=='__main__':
+            return self.t.__name__
+        return f"{self.t.__module__}.f{self.t.__name__}"
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
-            'description': self.t.__name__,
+            'description': self.get_type_fqn(),
             'type': 'integer'
         }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        return 'number'
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        return TypeScriptSourceCode(
+            f"(typeof ({expression}) == '{self.typescript_type(back_refs)}')")
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((v: any): {tt} => {{\n"
+            f"    if (typeof v !== '{tt}') throw new Error(`${{v}} is not a {self.get_type_fqn()} i.e. a {tt}, it is a ${{typeof v}}`);\n"
+            f"    return v as {tt};\n"
+            f"}})({expression})")
     pass
 
 class NewFloatCodec(Generic[NewFloat]):
@@ -343,11 +698,36 @@ class NewFloatCodec(Generic[NewFloat]):
             t=type(x)
             raise Exception(f'{x!r} (of type {t}) is not a float (or an int)')
         return self.t(self.base_codec.decode(x,back_ref))
+    def get_type_fqn(self):
+        '''get the fully qualified name of {self.t}'''
+        if self.t.__module__=='__main__':
+            return self.t.__name__
+        return f"{self.t.__module__}.f{self.t.__name__}"
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
-            'description': self.t.__name__,
+            'description': self.get_type_fqn(),
             'type': 'number'
         }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        return 'number'
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        return TypeScriptSourceCode(
+            f"(typeof ({expression}) == '{self.typescript_type(back_refs)}')")
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((v: any): {tt} => {{\n"
+            f"    if (typeof v !== '{tt}') throw new Error(`${{v}} is not a {self.get_type_fqn()} i.e. a {tt}, it is a ${{typeof v}}`);\n"
+            f"    return v as {tt};\n"
+            f"}})({expression})")
     pass
 
 class NewStrCodec(Generic[NewStr]):
@@ -364,11 +744,36 @@ class NewStrCodec(Generic[NewStr]):
             t=type(x)
             raise Exception(f'{x!r} (of type {t}) is not an str')
         return self.t(self.base_codec.decode(x,back_ref))
+    def get_type_fqn(self):
+        '''get the fully qualified name of {self.t}'''
+        if self.t.__module__=='__main__':
+            return self.t.__name__
+        return f"{self.t.__module__}.f{self.t.__name__}"
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
-            'description': self.t.__name__,
+            'description': self.get_type_fqn(),
             'type': 'string'
         }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        return 'string'
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        return TypeScriptSourceCode(
+            f"(typeof ({expression}) == '{self.typescript_type(back_refs)}')")
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((v: any): {tt} => {{\n"
+            f"    if (typeof v !== '{tt}') throw new Error(`${{v}} is not a {self.get_type_fqn()} i.e. a {tt}, it is a ${{typeof v}}`);\n"
+            f"    return v as {tt};\n"
+            f"}})({expression})")
     pass
 
 class LiteralStrCodec:
@@ -390,31 +795,29 @@ class LiteralStrCodec:
             'type': 'string',
             'enum': [ self.value ]
         }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        return f'"{self.value}"'
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((v:any): v is {tt}=>(v==={tt}))({expression})")
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((v: any): {tt} => {{\n"
+            f"    if (v !== {tt}) throw new Error(`the ${{typeof v}} ${{v}} is not the string {self.value}`);\n"
+            f"    return v as {tt};\n"
+            f"}})({expression})")
     pass
 
-class SelfCodec:
-    def encode(self,x,back_ref:None|Callable[[Any],JsonType]) -> JsonType:
-        'encode {x} as a Self'
-        try:
-            assert back_ref is not None
-            return back_ref(x)
-        except Exception:
-            raise in_function_context(SelfCodec.encode,vars()) from None
-        pass
-    def decode(self,x,back_ref:None|Callable[[JsonType],Any]) -> object:
-        'deocde {x} as a Self'
-        try:
-            assert back_ref is not None
-            return back_ref(x)
-        except Exception:
-            raise in_function_context(SelfCodec.decode,vars()) from None
-        pass
-    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
-        return {
-            '$ref': self_ref
-        }
-    pass
-    
 class ClassCodec:
     t:type
     attr_codecs:dict[str,Any]  # codec
@@ -446,25 +849,31 @@ class ClassCodec:
         try:
             def back_ref(x:JsonType) -> object:
                 return self.decode(x,None)
-            attr_values=[]
+            attr_values={}
             for n, attr_codec in self.attr_codecs.items():
-                try:
-                    if n not in x:
-                        raise Exception(f'{x!r} has no {n!r} attribute')
-                    value=attr_codec.decode(x[n],back_ref)
-                    attr_values.append(value)
-                except Exception:
-                    raise in_context(f'decode attribute {n}') from None
+                if n in x:
+                    try:
+                        value=attr_codec.decode(x[n],back_ref)
+                        attr_values[n]=value
+                        pass
+                    except Exception:
+                        raise in_context(f'decode attribute {n}') from None
+                    pass
                 pass
             try:
-                return self.t(*attr_values)
+                return self.t(**attr_values)
             except Exception:
-                raise in_context(f'init {self.t} with positional parameters {attr_values}') from None
+                raise in_context(f'init {self.t} with keyword arguments {attr_values}') from None
         except Exception:
             raise in_function_context(ClassCodec.decode,vars()) from None
         pass
+    def get_type_fqn(self):
+        '''get the fully qualified name of {self.t}'''
+        if self.t.__module__ == "__main__":
+            return self.t.__name__
+        return f'{self.t.__module__}.{self.t.__name__}'
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
-        fqn=f'{self.t.__module__}.{self.t.__name__}'
+        fqn=self.get_type_fqn()
         self_ref=f'#/definitions/{fqn}'
         if not fqn in definitions:
             definitions[fqn]={
@@ -479,8 +888,122 @@ class ClassCodec:
         return {
             '$ref': self_ref
         }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        return self.get_type_fqn()
+    def ensure_typescript_defs(self,namespace)->None:
+        '''ensure {namespace} has a typescript definition for {self.get_type_fqn()}'''
+        typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
+        target_namespace=namespace.get_namespace_of(typescript_fqn)
+        typescript_type_name=typescript_fqn[-1]
+        tt=self.typescript_type(None)
+        def type_back_ref()->TypeScriptSourceCode:
+            return TypeScriptSourceCode(self.typescript_type(None))
+        def isa_back_ref(expression:TypeScriptSourceCode)->TypeScriptSourceCode:
+            return self.get_typescript_isa(expression,namespace,None)
+        def asa_back_ref(expression:TypeScriptSourceCode)->TypeScriptSourceCode:
+            return self.get_typescript_asa(expression,namespace,None)
+        back_refs=TypeScriptBackRefs(type_back_ref,isa_back_ref,asa_back_ref)
+        if typescript_type_name not in target_namespace.defs:
+            target_namespace.defs[typescript_type_name]=TypeScriptSourceCode(
+                f"type {typescript_type_name} = {{\n"+
+                ''.join([f"    {attr_name}: {indent(4,TypeScriptSourceCode(attr_codec.typescript_type(back_refs)))};\n"
+                         for attr_name, attr_codec in self.attr_codecs.items()])+
+                f"}};")
+            target_namespace.defs[TypeScriptUQN(f"asInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
+                f"function asInstanceOf{typescript_type_name}(v: any): {tt}\n"
+                f"{{\n"
+                f"    try{{\n"
+                f"        if (Array.isArray(v)) throw new Error(`${{v}} is an array`);\n"
+                f"        if (typeof v !== 'object') throw new Error(`${{v}} is not an object it is a ${{typeof v}}`);\n"
+                f"        const attr_asa=function(name:string, asa):any{{\n"
+                f"            try{{\n"
+                f"                asa(v[name]);\n"
+                f"            }}\n"
+                f"            catch(e){{\n"
+                f"                throw new Error(`attribute ${{name}} is invalid because ${{e}}`);\n"
+                f"            }}\n"
+                f"        }}\n" +
+                ''.join([f"        attr_asa('{attr_name}',(x)=>{indent(8,attr_codec.get_typescript_asa('x',namespace,back_refs))});\n"
+                         for attr_name, attr_codec in self.attr_codecs.items()])+
+                f"        return v as {tt};\n"
+                f"    }}\n"
+                f"    catch(e){{\n"
+                f"        throw new Error(`${{v}} is not a {tt} because ${{e}}`);\n"
+                f"    }}\n"
+                f"}}")
+            target_namespace.defs[TypeScriptUQN(f"isInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
+                f"function isInstanceOf{typescript_type_name}(v:any): v is {tt}\n"
+                f"{{\n"
+                f"    return (\n"
+                f"        Array.isArray(v) &&\n"
+                f"        typeof v === 'object'"+
+                ''.join([f" &&\n        {indent(8,attr_codec.get_typescript_isa('v[{attr_name}]',namespace,back_refs))}"
+                         for attr_name, attr_codec in self.attr_codecs.items()])+")"
+                f"}}")
+            pass
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        self.ensure_typescript_defs(namespace)
+        fqn=self.get_type_fqn().split('.')
+        return TypeScriptSourceCode('.'.join(fqn[0:-1]+[f"isInstanceOf{fqn[-1]}({expression})"]))
+
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        self.ensure_typescript_defs(namespace)
+        fqn=self.get_type_fqn().split('.')
+        fqn=self.get_type_fqn().split('.')
+        return TypeScriptSourceCode('.'.join(fqn[0:-1]+[f"asInstanceOf{fqn[-1]}({expression})"]))
     pass
 
+class SelfCodec:
+    def encode(self,x,back_ref:None|Callable[[Any],JsonType]) -> JsonType:
+        'encode {x} as a Self'
+        try:
+            assert back_ref is not None
+            return back_ref(x)
+        except Exception:
+            raise in_function_context(SelfCodec.encode,vars()) from None
+        pass
+    def decode(self,x,back_ref:None|Callable[[JsonType],Any]) -> object:
+        'deocde {x} as a Self'
+        try:
+            assert back_ref is not None
+            return back_ref(x)
+        except Exception:
+            raise in_function_context(SelfCodec.decode,vars()) from None
+        pass
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        assert self_ref is not None
+        return {
+            '$ref': self_ref
+        }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        assert back_refs is not None
+        return back_refs.type_back_ref().value()
+    def ensure_typescript_defs(self,namespace)->None:
+        # self would already have been done
+        pass
+    def get_typescript_isa(
+            self,
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace,
+            back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        assert back_refs is not None
+        return back_refs.isa_back_ref(expression)
+    def get_typescript_asa(
+            self,
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace,
+            back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        assert back_refs is not None
+        return back_refs.asa_back_ref(expression)
+    pass
+    
 def _explodeSchema(t:type):
     '''explode type {t!r} into a tree of codecs'''
     try:
@@ -526,3 +1049,8 @@ def _explodeSchema(t:type):
     except Exception:
         raise in_function_context(_explodeSchema,vars()) from None
     pass
+
+
+def indent(n: int, s:TypeScriptSourceCode)->str:
+    lines=s.splitlines()
+    return '\n'.join([lines[0].value()]+[(' '*n)+l.value() for l in lines[1:]])

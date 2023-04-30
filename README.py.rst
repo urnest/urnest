@@ -113,6 +113,8 @@ Various modules implemented to some broad principles:
 
 * generates json schema equivalent schemas for types
 
+* generates typescript code (types, type-guards and dynamic casts) equivalents
+
 * see `xju/json_codec.py.test <xju/json_codec.py.test>`_ for full sample code
 
 

@@ -97,6 +97,7 @@ mypy-error-tests%all.tree:leaves
 (xn.py.test)+(%py-opts):py3.exec.cov
 (newtype.py.test)+(%py-opts):py3.exec.cov
 (time.py.test)+(%py-opts):py3.exec.cov
+(make-json-codec-ts-test)+(%py-opts):py3.exec.cov
 
 %py-opts==<<
 +py_sp=(..)
@@ -382,6 +383,17 @@ assert rem==set()
 print(open(sys.argv[1]).read().replace('# generated Int methods here...',int_methods).replace(
     '# generated Str methods here...',str_methods).replace(
     '# generated Float methods here...',float_methods))
+
+%json_codec_typescript_test==()+cmd=(%json_codec_typescript_test.sh) (%json_codec_typescript_test_ts)+need=(%json_codec_typescript_test_ts/json_codec_typescript_test.ts):exec.output
+
+%json_codec_typescript_test_ts==(make-json-codec-ts-test+(%py-opts):py3.exec.output)+cmd=cat '>json_codec_typescript_test.ts':output
+
+%json_codec_typescript_test.sh==!<<
+#!/bin/sh
+set -e
+/home/xju/node_modules/typescript/bin/tsc "$1/json_codec_typescript_test.ts" --outFile json_codec_typescript_test.js
+node json_codec_typescript_test.js
+
 
 # run unit tests against pip-installed code rather than local source
 %pytest-v-installed==%pytest-v-installed.tree:leaves
