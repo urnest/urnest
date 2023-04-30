@@ -8,6 +8,8 @@ Various modules implemented to some broad principles:
 * useful functionality that is hard to use incorrectly
 * 100% test coverage
 
+(see the bottom of this readme for release history)
+
 `xju.newtype <xju/newtype.py>`_ - static and dynamic distinct int, float and str types
 
 * unlike typing.NewType the new types are compatible with isinstance, so you
@@ -145,3 +147,12 @@ Various modules implemented to some broad principles:
 
 * see `xju/xn.py.test <xju/xn.py.test>`_ for sample code
 
+Release History
+
+- 1.2.9 xju.json_codec generates typescript equivalents
+- 1.2.9 xju.json_codec adds codec() convenience method
+- 1.2.9 xju.json_codec uses kw_args to construct classes
+
+- 1.2.8 xju.json_codec supports string type-hints (for foward definitions)
+- 1.2.8 xju.json_codec adds typing.Self support (for recursive types)
+- 1.2.8 xju.json_codec requires python 3.11, tested with mypy 1.1.1

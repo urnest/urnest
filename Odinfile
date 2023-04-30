@@ -131,22 +131,22 @@ echo "Installation Successfull"
 whl="$1"
 tgz="$2"
 rm -rf dist && mkdir dist
-cp $whl dist/xju-1.2.8-py3-none-any.whl
-cp $tgz dist/xju-1.2.8.tar.gz
+cp $whl dist/xju-1.2.9-py3-none-any.whl
+cp $tgz dist/xju-1.2.9.tar.gz
 twine check dist/*
 twine upload --verbose dist/*
 
-%python3-xju.whl == %python3-xju-whl.exec.files+member='xju-1.2.8/dist/xju-1.2.8-py3-none-any.whl':extract_file
+%python3-xju.whl == %python3-xju-whl.exec.files+member='xju-1.2.9/dist/xju-1.2.9-py3-none-any.whl':extract_file
 
 # you'd think that the .tar.gz that the .whl was built from would be exactly the right thing to
 # put on pypi...
-%python3-xju.tar.gz == %python3-xju-tgz.exec.files+member='xju-1.2.8.tar.gz':extract_file
+%python3-xju.tar.gz == %python3-xju-tgz.exec.files+member='xju-1.2.9.tar.gz':extract_file
 # ... but no it needs the .tar.gz that it created when it created the wheel. It makes no sense
-%python3-xju-twine.tar.gz == %python3-xju-whl.exec.files+member='xju-1.2.8/dist/xju-1.2.8.tar.gz':extract_file
+%python3-xju-twine.tar.gz == %python3-xju-whl.exec.files+member='xju-1.2.9/dist/xju-1.2.9.tar.gz':extract_file
 
-%python3-xju-tgz.exec.files==()+cmd=(%build-python3-xju-tgz.sh)+cmd=(.) (MIT-LICENCE) (README.py.rst) '1.2.8'+need=(xju%pytest.tree:leaves) +need=(xju/cmc%all):exec.files
+%python3-xju-tgz.exec.files==()+cmd=(%build-python3-xju-tgz.sh)+cmd=(.) (MIT-LICENCE) (README.py.rst) '1.2.9'+need=(xju%pytest.tree:leaves) +need=(xju/cmc%all):exec.files
 
-%python3-xju==()+cmd=(%build-python3-xju.sh)+cmd=(.) (MIT-LICENCE) (README.py.rst) '1.2.8'+need=(xju%pytest.tree:leaves) +need=(xju/cmc%all):exec.files
+%python3-xju==()+cmd=(%build-python3-xju.sh)+cmd=(.) (MIT-LICENCE) (README.py.rst) '1.2.9'+need=(xju%pytest.tree:leaves) +need=(xju/cmc%all):exec.files
 
 %python3-xju-whl.exec.files==%build-python3-xju-whl.sh+cmd=(%build-python3-xju-whl.sh)+cmd=(%python3-xju.tar.gz):exec.files
 
@@ -155,7 +155,7 @@ twine upload --verbose dist/*
 set -ex
 tgz="$1"
 tar xzvf $tgz
-cd xju-1.2.8
+cd xju-1.2.9
 python -m build -n
 YYYY
 
