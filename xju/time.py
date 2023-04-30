@@ -14,7 +14,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 from xju.newtype import Int,Float,Union
-from typing import overload
+from typing import overload, Self
 import time
 
 class HoursTag:pass
@@ -28,8 +28,7 @@ class Seconds(Int[SecondsTag]): pass
 class DurationTag:pass
 class Duration(Float[DurationTag]):pass
 
-class TimestampBase:pass  # until typing.Self
-class Timestamp(TimestampBase):
+class Timestamp():
     __value:float
     def __init__(self,value:float):
         self.__value=float(value)
@@ -54,10 +53,10 @@ class Timestamp(TimestampBase):
         return self.__add__(duration)
 
     @overload
-    def __sub__(self, t2:TimestampBase)->Duration:
+    def __sub__(self, t2:Self)->Duration:
         pass
     @overload
-    def __sub__(self, duration:Union[Duration,Hours,Minutes,Seconds]):  # -> Timestamp
+    def __sub__(self, duration:Union[Duration,Hours,Minutes,Seconds])->Self:
         pass
     def __sub__(self, x):
         if isinstance(x,Duration):
