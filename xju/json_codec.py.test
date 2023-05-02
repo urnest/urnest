@@ -21,7 +21,7 @@ if path[0]==dirname(__file__): path.pop(0)
 
 from xju.json_codec import codec, Codec, JsonType, AnyJsonCodec, SelfCodec
 
-from typing import cast, Type, Literal, Any, Self
+from typing import cast, Type, Literal, Any, Self, NewType
 from types import NoneType
 from dataclasses import dataclass, field
 import re
@@ -48,7 +48,23 @@ Assert(codec(bool).encode(True))==True
 Assert(codec(float).encode(5.5))==5.5
 Assert(codec(float).encode(5))==5
 
-# note None is a bit weird, sometimes it acts as as a type, others not
+# and can use typing.NewType of int,str,bool,float
+Colour = NewType('Colour',str)
+Assert(codec(Colour).decode('red'))==Colour('red')
+Assert(codec(Colour).encode(Colour('red')))=='red'
+Milligrams = NewType('Milligrams',float)
+Assert(codec(Milligrams).decode(7.6))==Milligrams(7.6)
+Assert(codec(Milligrams).encode(Milligrams(7.6)))==7.6
+Votes = NewType('Votes',int)
+Assert(codec(Votes).decode(7))==Votes(7)
+Assert(codec(Votes).encode(Votes(7)))==7
+Enabled = NewType('Enabled',bool)
+Assert(codec(Enabled).decode(True))==Enabled(True)
+Assert(codec(Enabled).decode(False))==Enabled(False)
+Assert(codec(Enabled).encode(Enabled(True)))==True
+Assert(codec(Enabled).encode(Enabled(False)))==False
+
+# note None is a not a type, it's type can only be got via type(None)
 Assert(codec(type(None)).decode(None))==None
 Assert(codec(type(None)).encode(None))==None
 
@@ -149,9 +165,16 @@ else:
 Assert(codec(dict).decode({'fred':5, 'jock': 'nine'}))=={'fred':5, 'jock':'nine'}
 Assert(codec(dict).encode({'fred':5, 'jock': 'nine'}))=={'fred':5, 'jock':'nine'}
 
-# dict with specific value type...
+# dict with specific value type, keys can be str...
 Assert(codec(dict[str,int]).decode({'fred':5, 'jock': 9}))=={'fred':5, 'jock':9}
 Assert(codec(dict[str,int]).encode({'fred':5, 'jock': 9}))=={'fred':5, 'jock':9}
+
+#... or xju.newtype.Str or anything that with str encoding
+class SurnameTag:pass
+class Surname(xju.newtype.Str[SurnameTag]):pass
+
+Assert(codec(dict[Surname,int]).encode({Surname('fred'):5, Surname('jock'): 9}))=={'fred':5, 'jock':9}
+Assert(codec(dict[Surname,int]).decode({'fred':5, 'jock':9}))=={Surname('fred'):5, Surname('jock'): 9}
 
 # ... must be given a dict...
 try:
@@ -178,7 +201,7 @@ else:
     assert False, x
     pass
 
-# dict keys must be strings...
+# dict keys must be strings or xju.newtype.Str...
 try:
     x=codec(dict).encode({6: 'fred'})
 except Exception as e:
@@ -259,9 +282,6 @@ else:
     pass
 
 #xju.newtype.Str support
-class SurnameTag:pass
-class Surname(xju.newtype.Str[SurnameTag]):pass
-
 Assert(codec(Surname).decode('Ang'))==Surname('Ang')
 Assert(codec(Surname).encode(Surname('Ang')))=='Ang'
 
@@ -804,7 +824,7 @@ Assert(codec(Person).decode({'first_name':'fred','phobias':['spiders'],'last_nam
 Assert(codec(Person).decode({'first_name':'fred','middle_names':['arachnid'],'last_name':'jones'}))==Person(first_name='fred',last_name='jones',middle_names=['arachnid'])
 
 
-# not-present optional attribute must still appear in json (with value null)
+# non-defaulted "optional" attribute (of type X|None) must still appear in json (with value null)
 @dataclass
 class Opt:
     x: str|None

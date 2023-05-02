@@ -30,7 +30,7 @@
 from dataclasses import dataclass
 from xju.xn import Xn,in_context,in_function_context,readable_repr
 from typing import TypeVar, Generic, Type, cast, Any, Protocol, Self, Callable, get_type_hints
-from typing import Sequence, Literal
+from typing import Sequence, Literal, NewType
 from typing import _LiteralGenericAlias  # type: ignore  # mypy 1.1.1
 from typing import _UnionGenericAlias  # type: ignore  # mypy 1.1.1
 from types import GenericAlias, UnionType, NoneType
@@ -1004,16 +1004,16 @@ class SelfCodec:
         return back_refs.asa_back_ref(expression)
     pass
     
-def _explodeSchema(t:type):
+def _explodeSchema(t:type|NewType):
     '''explode type {t!r} into a tree of codecs'''
     try:
-        if t is float:
+        if t is float or (isinstance(t,NewType) and t.__supertype__ is float):
             return NoopCodec[float](float)
-        if t is int:
+        if t is int or (isinstance(t,NewType) and t.__supertype__ is int):
             return NoopCodec[int](int)
-        if t is str:
+        if t is str or (isinstance(t,NewType) and t.__supertype__ is str):
             return NoopCodec[str](str)
-        if t is bool:
+        if t is bool or (isinstance(t,NewType) and t.__supertype__ is bool):
             return NoopCodec[bool](bool)
         if t is None or t is NoneType:
             return NoneCodec()
@@ -1038,6 +1038,7 @@ def _explodeSchema(t:type):
             return UnionCodec(getattr(t,'__args__'))
         if t is Self:
             return SelfCodec()
+        assert isinstance(t,type), t
         if issubclass(t,xju.newtype.Int):
             return NewIntCodec(t)
         if issubclass(t,xju.newtype.Float):

@@ -149,6 +149,7 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 1.2.10 xju.json_codec supports typing.NewType str/int/bool/float
 - 1.2.9 xju.json_codec generates typescript equivalents
 - 1.2.9 xju.json_codec adds codec() convenience method
 - 1.2.9 xju.json_codec uses kw_args to construct classes
