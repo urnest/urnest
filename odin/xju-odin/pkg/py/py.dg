@@ -122,6 +122,8 @@
 
 +stderr 'what to do with command stderr: \\"output\\" to combine with stdout (default), \\"warn\\" to generate warnings, \\"error\\" to display as errors if command fails and command trace otherwise, \\"trace\\" to show as command trace'? => :first;
 
++mypy_flags 'flags to pass to mypy' => :cat;
+
 $ODIN_PY_IGNORE 'egrep expression for python imports to ignore, e.g. \\"^os$|^sys$\\"' = '';
 
 $ODIN_PYTHONPATH 'colon-separated list of directories to search for python3 imports, after searching +py_sp directories, e.g. /usr/local/python3/site-packages' = '';
@@ -164,11 +166,11 @@ EXEC (py3.exec.sh) (:FILE) (+cmd :ls) (:env) (+stderr) (+py:dir)@ (+py_sp) (+py_
         (:FILE:main.mypy3) (:FILE:main.stylecheck)
   => (:py3.exec);
 
-EXEC (main.mypy3.sh) (:FILE) (:env) (+py_sp)
+EXEC (main.mypy3.sh) (:FILE) (:env) (+py_sp) (+mypy_flags)
   NEEDS (:FILE:main.py_import.view_desc:py_import_all:map=:mod.mypy3)
   => (:main.mypy3);
     
-EXEC (mod.mypy3.sh) (:py) (:env) (+py_sp)
+EXEC (mod.mypy3.sh) (:py) (:env) (+py_sp) (+mypy_flags)
   NEEDS (:py:py_import_all:map=:mod.mypy3)
   => (:mod.mypy3);
     
