@@ -21,7 +21,7 @@ if path[0]==dirname(__file__): path.pop(0)
 
 from xju.json_codec import codec, Codec, JsonType, AnyJsonCodec, SelfCodec
 
-from typing import cast, Type, Literal, Any, Self, NewType
+from typing import cast, Type, Literal, Any, Self, NewType, Generic, TypeVar
 from types import NoneType
 from dataclasses import dataclass, field
 import re
@@ -838,3 +838,60 @@ except Exception as e:
 else:
     assert False
     pass
+
+
+# specialisation based on descriminator
+@dataclass
+class Court:
+    width:Metres
+    length:Metres
+    game:str
+    pass
+
+@dataclass
+class NetballCourt(Court):
+    game:Literal['netball'] = 'netball'
+    pass
+
+@dataclass
+class BasketballCourt(Court):
+    game:Literal['basketball'] = 'basketball'
+    pass
+
+court_codec=codec(NetballCourt|BasketballCourt|Court) # type: ignore  # mypy 1.2.0 bug
+Assert(court_codec.decode({'game':'netball', 'width':8, 'length': 10})).isInstanceOf(NetballCourt)
+Assert(court_codec.decode({'game':'basketball', 'width':8, 'length': 10})).isInstanceOf(BasketballCourt)
+Assert(court_codec.decode({'game':'badminton', 'width':8, 'length': 10})).isInstanceOf(Court)
+Assert(court_codec.encode(NetballCourt(width=Metres(8),length=Metres(10)))=={'game':'netball', 'width':8, 'length': 10})
+Assert(court_codec.encode(BasketballCourt(width=Metres(8),length=Metres(10)))=={'game':'basketball', 'width':8, 'length': 10})
+Assert(court_codec.encode(Court(game='badminton',width=Metres(8),length=Metres(10)))=={'game':'badminton', 'width':8, 'length': 10})
+
+
+# generic class codecs
+
+@dataclass
+class Msg:
+    msg_type: str
+    pass
+
+Payload=TypeVar('Payload')
+
+@dataclass
+class SetMsg(Generic[Payload],Msg):
+    msg_type: Literal['set_new_value']
+    new_value: Payload
+    pass
+
+SetSurnameMsg=SetMsg[Surname]
+
+Assert(codec(SetSurnameMsg).decode({'msg_type':'set_new_value','new_value':'knox'}))==SetSurnameMsg(msg_type='set_new_value',new_value=Surname('knox'))
+
+@dataclass
+class SetMultiMsg(Generic[Payload],Msg):
+    msg_type: Literal['set_new_values']
+    new_values: list[Payload]
+    pass
+
+SetSurnamesMsg=SetMultiMsg[Surname]
+
+Assert(codec(SetSurnamesMsg).decode({'msg_type':'set_new_values','new_values':['knox','garden']}))==SetSurnamesMsg(msg_type='set_new_values',new_values=[Surname('knox'),Surname('garden')])

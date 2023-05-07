@@ -33,6 +33,8 @@ from typing import TypeVar, Generic, Type, cast, Any, Protocol, Self, Callable, 
 from typing import Sequence, Literal, NewType
 from typing import _LiteralGenericAlias  # type: ignore  # mypy 1.1.1
 from typing import _UnionGenericAlias  # type: ignore  # mypy 1.1.1
+from typing import _GenericAlias  # type: ignore  # mypy 1.2.0
+from typing import get_origin,get_args
 from types import GenericAlias, UnionType, NoneType
 import xju.newtype
 
@@ -93,7 +95,7 @@ class Codec(Generic[T]):
     def __init__(self, t: Type[T]):
         'initialse json decoder for type %(t)r'
         self.t=t
-        self.codec:CodecProto=_explodeSchema(self.t)
+        self.codec:CodecProto=_explodeSchema(self.t, {})
         pass
 
     def __repr__(self):
@@ -408,9 +410,9 @@ class TupleCodec:
     pass
 
 class UnionCodec:
-    def __init__(self,allowed_types):
+    def __init__(self,allowed_types, value_codecs):
         self.allowed_types=allowed_types
-        self.value_codecs={t:_explodeSchema(t) for t in allowed_types}
+        self.value_codecs=value_codecs
         pass
     def encode(self,x,back_ref:None|Callable[[Any],JsonType]) -> JsonType:
         'encode {x!r} as one of {self.allowed_types}'
@@ -1004,9 +1006,13 @@ class SelfCodec:
         return back_refs.asa_back_ref(expression)
     pass
     
-def _explodeSchema(t:type|NewType):
-    '''explode type {t!r} into a tree of codecs'''
+def _explodeSchema(t:type|NewType,type_var_map:dict[TypeVar,Any]|None):
+    '''explode type {t!r} into a tree of codecs using map {type_var_map} to resolve any generic type refs i.e. TypeVars'''
     try:
+        if type(t) is TypeVar:
+            assert type_var_map is not None
+            assert t in type_var_map, type_var_map.keys()
+            return _explodeSchema(type_var_map[t],type_var_map)
         if t is float or (isinstance(t,NewType) and t.__supertype__ is float):
             return NoopCodec[float](float)
         if t is int or (isinstance(t,NewType) and t.__supertype__ is int):
@@ -1019,25 +1025,37 @@ def _explodeSchema(t:type|NewType):
             return NoneCodec()
         if t is list:
             return AnyListCodec()
-        if type(t) is GenericAlias and getattr(t, '__origin__') is list:
-            return ListCodec(_explodeSchema(getattr(t,'__args__')[0]))
+        if type(t) is GenericAlias and get_origin(t) is list:
+            return ListCodec(_explodeSchema(get_args(t)[0],type_var_map))
         if type(t) is _LiteralGenericAlias:
             value = t.__args__[0]
             if not isinstance(value,str):
                 raise Exception(f'{t!r} literal type is not supported (only string is implemented)')
             return LiteralStrCodec(value)
-        if type(t) is GenericAlias and getattr(t, '__origin__') is tuple:
-            return TupleCodec([_explodeSchema(_) for _ in getattr(t,'__args__')])
+        if type(t) is GenericAlias and get_origin(t) is tuple:
+            return TupleCodec([_explodeSchema(_,type_var_map) for _ in get_args(t)])
         if t is dict:
             return AnyDictCodec()
-        if type(t) is GenericAlias and getattr(t, '__origin__') is dict:
-            return DictCodec(*[_explodeSchema(_) for _ in getattr(t,'__args__')])
+        if type(t) is GenericAlias and get_origin(t) is dict:
+            return DictCodec(*[_explodeSchema(_, type_var_map) for _ in get_args(t)])
         if type(t) is UnionType:
-            return UnionCodec(getattr(t,'__args__'))
+            return UnionCodec(get_args(t),
+                              {t:_explodeSchema(t, type_var_map) for t in get_args(t)})
         if type(t) is _UnionGenericAlias:
-            return UnionCodec(getattr(t,'__args__'))
+            return UnionCodec(get_args(t),
+                              {t:_explodeSchema(t, type_var_map) for t in get_args(t)})
         if t is Self:
             return SelfCodec()
+        if type(t) is _GenericAlias:
+            local_type_var_map={
+                type_var: value
+                for type_var, value in
+                list((type_var_map or {}).items())+list(zip(get_origin(t).__parameters__, get_args(t)))
+            }
+            return ClassCodec(
+                get_origin(t),
+                { n: _explodeSchema(nt,local_type_var_map)
+                  for n,nt in get_type_hints(get_origin(t)).items()})
         assert isinstance(t,type), t
         if issubclass(t,xju.newtype.Int):
             return NewIntCodec(t)
@@ -1046,7 +1064,7 @@ def _explodeSchema(t:type|NewType):
         if issubclass(t,xju.newtype.Str):
             return NewStrCodec(t)
         return ClassCodec(
-            t,{n: _explodeSchema(nt) for n,nt in get_type_hints(t).items()})
+            t,{n: _explodeSchema(nt,type_var_map) for n,nt in get_type_hints(t).items()})
     except Exception:
         raise in_function_context(_explodeSchema,vars()) from None
     pass
