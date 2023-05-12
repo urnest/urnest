@@ -658,7 +658,7 @@ class NewIntCodec(Generic[NewInt]):
         '''get the fully qualified name of {self.t}'''
         if self.t.__module__=='__main__':
             return self.t.__name__
-        return f"{self.t.__module__}.f{self.t.__name__}"
+        return f"{self.t.__module__}.{self.t.__name__}"
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             'description': self.get_type_fqn(),
@@ -704,7 +704,7 @@ class NewFloatCodec(Generic[NewFloat]):
         '''get the fully qualified name of {self.t}'''
         if self.t.__module__=='__main__':
             return self.t.__name__
-        return f"{self.t.__module__}.f{self.t.__name__}"
+        return f"{self.t.__module__}.{self.t.__name__}"
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             'description': self.get_type_fqn(),
@@ -750,7 +750,7 @@ class NewStrCodec(Generic[NewStr]):
         '''get the fully qualified name of {self.t}'''
         if self.t.__module__=='__main__':
             return self.t.__name__
-        return f"{self.t.__module__}.f{self.t.__name__}"
+        return f"{self.t.__module__}.{self.t.__name__}"
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             'description': self.get_type_fqn(),
@@ -816,6 +816,91 @@ class LiteralStrCodec:
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{\n"
             f"    if (v !== {tt}) throw new Error(`the ${{typeof v}} ${{v}} is not the string {self.value}`);\n"
+            f"    return v as {tt};\n"
+            f"}})({expression})")
+    pass
+
+class LiteralIntCodec:
+    value:int
+    def __init__(self,value:int):
+        self.value=value
+    def encode(self, x:int, _:None|Callable[[Any],JsonType])->int:
+        if type(x) is not int or x != self.value:
+            raise Exception(f'{x!r} is not {self.value!r}')
+        return x
+    def decode(self, x:JsonType,_:None|Callable[[JsonType],Any])->int:
+        if type(x) is not int:
+            raise Exception(f'{x!r} is not a int')
+        if x != self.value:
+            raise Exception(f'{x!r} is not {self.value!r}')
+        return x
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        return {
+            'type': 'number',
+            'enum': [ self.value ]
+        }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        return f'{self.value}'
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((v:any): v is {tt}=>(v==={tt}))({expression})")
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((v: any): {tt} => {{\n"
+            f"    if (v !== {tt}) throw new Error(`the ${{typeof v}} ${{v}} is not the number {self.value}`);\n"
+            f"    return v as {tt};\n"
+            f"}})({expression})")
+    pass
+
+class LiteralBoolCodec:
+    value:bool
+    def __init__(self,value:bool):
+        self.value=value
+    def encode(self, x:bool, _:None|Callable[[Any],JsonType])->bool:
+        if type(x) is not bool or x != self.value:
+            raise Exception(f'{x!r} is not {self.value!r}')
+        return x
+    def decode(self, x:JsonType,_:None|Callable[[JsonType],Any])->bool:
+        if type(x) is not bool:
+            raise Exception(f'{x!r} is not a boolean')
+        if x != self.value:
+            raise Exception(f'{x!r} is not {self.value!r}')
+        return x
+    def get_json_schema(self, definitions:dict[bool,dict], self_ref:None|bool) -> dict:
+        return {
+            'type': 'boolean',
+            'enum': [ self.value ]
+        }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        return 'true' if self.value else 'false'
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((v:any): v is {tt}=>(v==={tt}))({expression})")
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        typescript_value='true' if self.value else 'false'
+        return TypeScriptSourceCode(
+            f"((v: any): {tt} => {{\n"
+            f"    if (v !== {tt}) throw new Error(`the ${{typeof v}} ${{v}} is not {self.typescript_type(None)}`);\n"
             f"    return v as {tt};\n"
             f"}})({expression})")
     pass
@@ -937,9 +1022,9 @@ class ClassCodec:
                 f"function isInstanceOf{typescript_type_name}(v:any): v is {tt}\n"
                 f"{{\n"
                 f"    return (\n"
-                f"        Array.isArray(v) &&\n"
+                f"        !Array.isArray(v) &&\n"
                 f"        typeof v === 'object'"+
-                ''.join([f" &&\n        {indent(8,attr_codec.get_typescript_isa('v[{attr_name}]',namespace,back_refs))}"
+                ''.join([" &&\n        "+indent(8,attr_codec.get_typescript_isa(f'v["{attr_name}"]',namespace,back_refs))
                          for attr_name, attr_codec in self.attr_codecs.items()])+")"
                 f"}}")
             pass
@@ -1029,9 +1114,13 @@ def _explodeSchema(t:type|NewType,type_var_map:dict[TypeVar,Any]|None):
             return ListCodec(_explodeSchema(get_args(t)[0],type_var_map))
         if type(t) is _LiteralGenericAlias:
             value = t.__args__[0]
-            if not isinstance(value,str):
-                raise Exception(f'{t!r} literal type is not supported (only string is implemented)')
-            return LiteralStrCodec(value)
+            if type(value) is str:
+                return LiteralStrCodec(value)
+            if type(value) is bool:
+                return LiteralBoolCodec(value)
+            if type(value) is int:
+                return LiteralIntCodec(value)
+            raise Exception(f'{t!r} literal type is not supported (only str, int, bool implemented)')
         if type(t) is GenericAlias and get_origin(t) is tuple:
             return TupleCodec([_explodeSchema(_,type_var_map) for _ in get_args(t)])
         if t is dict:

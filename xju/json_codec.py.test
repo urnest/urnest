@@ -437,11 +437,17 @@ Assert(list(cast(dict,codec(UnitAddress).encode(
 Assert(codec(Literal['fred']).decode('fred'))=='fred' # type: ignore
 Assert(codec(Literal['fred']).encode('fred'))=='fred' # type: ignore
 
-#non-string literal not yet implemented
+Assert(codec(Literal[7]).decode(7))==7 # type: ignore
+Assert(codec(Literal[7]).encode(7))==7 # type: ignore
+
+Assert(codec(Literal[True]).decode(True))==True # type: ignore
+Assert(codec(Literal[False]).encode(False))==False # type: ignore
+
+#float literal not yet implemented
 try:
-    x=codec(Literal[7]).decode(7) # type: ignore
+    x=codec(Literal[7.6]).decode(7.6) # type: ignore
 except Exception as e:
-    Assert("typing.Literal[7] literal type is not supported (only string is implemented)").isIn(str(e))
+    Assert("typing.Literal[7.6] literal type is not supported (only str, int, bool implemented)").isIn(str(e))
 else:
     assert False, x
     pass
@@ -455,11 +461,39 @@ except Exception as e:
 else:
     assert False, x
     pass
+try:
+    x=codec(Literal[7]).encode(True) # type: ignore
+except Exception as e:
+    Assert("True is not 7").isIn(str(e))
+else:
+    assert False, x
+    pass
+try:
+    x=codec(Literal[7]).encode('fred') # type: ignore
+except Exception as e:
+    Assert("'fred' is not 7").isIn(str(e))
+else:
+    assert False, x
+    pass
 #decode wrong type
 try:
     x=codec(Literal['fred']).decode(7) # type: ignore
 except Exception as e:
     Assert("7 is not a string").isIn(str(e))
+else:
+    assert False, x
+    pass
+try:
+    x=codec(Literal[7]).decode('fred') # type: ignore
+except Exception as e:
+    Assert("'fred' is not a int").isIn(str(e))
+else:
+    assert False, x
+    pass
+try:
+    x=codec(Literal[False]).decode(True) # type: ignore
+except Exception as e:
+    Assert("True is not False").isIn(str(e))
 else:
     assert False, x
     pass

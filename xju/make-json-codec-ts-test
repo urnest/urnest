@@ -317,6 +317,56 @@ print(f'''
 }})();
 ''')
 
+seven_codec=codec(Literal[7]) # type: ignore   # mypy 1.1.1 bug
+print(f'''
+//Literal[7]
+(() => {{
+    assert_equal({indent(4,seven_codec.get_typescript_asa(TypeScriptSourceCode('7'),namespace))}, 7);
+    try{{
+        {indent(8,seven_codec.get_typescript_asa(TypeScriptSourceCode('10'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), 'Error: the number 10 is not the number 7');
+    }}
+    try{{
+        {indent(8,seven_codec.get_typescript_asa(TypeScriptSourceCode('[7,10]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), 'Error: the object 7,10 is not the number 7');
+    }}
+    assert_true({seven_codec.get_typescript_isa(TypeScriptSourceCode('7'),namespace)});
+    assert_false({seven_codec.get_typescript_isa(TypeScriptSourceCode('"jock"'),namespace)});
+    assert_false({seven_codec.get_typescript_isa(TypeScriptSourceCode('[7, 10]'),namespace)});
+}})();
+''')
+
+true_codec=codec(Literal[True]) # type: ignore   # mypy 1.1.1 bug
+print(f'''
+//Literal[True]
+(() => {{
+    assert_equal({indent(4,true_codec.get_typescript_asa(TypeScriptSourceCode('true'),namespace))}, true);
+    try{{
+        {indent(8,true_codec.get_typescript_asa(TypeScriptSourceCode('10'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), 'Error: the number 10 is not true');
+    }}
+    try{{
+        {indent(8,true_codec.get_typescript_asa(TypeScriptSourceCode('[7,10]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), 'Error: the object 7,10 is not true');
+    }}
+    assert_true({true_codec.get_typescript_isa(TypeScriptSourceCode('true'),namespace)});
+    assert_false({true_codec.get_typescript_isa(TypeScriptSourceCode('"jock"'),namespace)});
+    assert_false({true_codec.get_typescript_isa(TypeScriptSourceCode('[7, 10]'),namespace)});
+}})();
+''')
+
 @dataclass
 class FullName:
     first_name: str
@@ -420,7 +470,7 @@ print(f'''
 print(f'''
 //recursive type
 (() => {{
-    assert_equal({namespace_codec.typescript_type()},'xju.json_codec.Namespace');
+    assert_equal('{namespace_codec.typescript_type()}','xju.json_codec.TypeScriptNamespace');
     assert_equal({indent(4,namespace_codec.get_typescript_asa(TypeScriptSourceCode('{defs:{x:"Fred",y:{defs:{y:"Jock"}}}}'),namespace))}, {{defs:{{x:"Fred",y:{{defs:{{y:"Jock"}}}}}}}});
     try{{
         {indent(8,namespace_codec.get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
