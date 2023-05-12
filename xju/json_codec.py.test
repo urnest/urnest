@@ -471,9 +471,9 @@ else:
     assert False, x
     pass
 try:
-    x=codec(Literal[7]).encode('fred') # type: ignore
+    x=codec(Literal[False]).encode('fred') # type: ignore
 except Exception as e:
-    Assert("'fred' is not 7").isIn(str(e))
+    Assert("'fred' is not False").isIn(str(e))
 else:
     assert False, x
     pass
@@ -493,6 +493,29 @@ else:
     assert False, x
     pass
 try:
+    x=codec(Literal[False]).decode(7) # type: ignore
+except Exception as e:
+    Assert("7 is not a boolean").isIn(str(e))
+else:
+    assert False, x
+    pass
+
+# decode wrong value
+try:
+    x=codec(Literal['fred']).decode('jock') # type: ignore
+except Exception as e:
+    Assert("'jock' is not 'fred'").isIn(str(e))
+else:
+    assert False, x
+    pass
+try:
+    x=codec(Literal[7]).decode(8) # type: ignore
+except Exception as e:
+    Assert("8 is not 7").isIn(str(e))
+else:
+    assert False, x
+    pass
+try:
     x=codec(Literal[False]).decode(True) # type: ignore
 except Exception as e:
     Assert("True is not False").isIn(str(e))
@@ -500,26 +523,26 @@ else:
     assert False, x
     pass
 
-# string literal attributes match that string literal...
+# literal attributes match that string literal...
 @dataclass
 class Add:
     a:int
     b:int
-    op_type: Literal['add'] = 'add'  # note default value not required but recommended, see below
+    op_type: Literal['add'] # = 'add' not recommended - see Caution below
 
 Assert(codec(Add).decode(
     {
         'op_type':'add',
         'a': 7,
         'b': 8
-    }))==Add(7,8)
+    }))==Add(7,8,op_type='add')
         
 Assert(codec(Add).decode({
     'op_type':'add',
     'a': 7,
     'b': 8}).op_type)=='add'
         
-Assert(codec(Add).encode(Add(7,8))=={
+Assert(codec(Add).encode(Add(7,8,op_type='add'))=={
     'op_type':'add',
     'a': 7,
     'b': 8})
@@ -538,18 +561,6 @@ else:
 
 # ... allowing them to be used as type descriminators...
 @dataclass
-class Sub:
-    a:int
-    b:int
-    op_type: Literal['sub'] = 'sub'
-
-Assert(codec(Add|Sub).decode({  # type: ignore
-    'op_type':'sub',
-    'a': 7,
-    'b': 8}))==Sub(7,8)
-
-# ... without defaults, string literal attributes still work...
-@dataclass
 class MissingDefault:
     op_type: Literal['op']
     sub_type: Literal['plus']
@@ -564,6 +575,21 @@ Assert(codec(MissingDefault).decode({
     'b': 8}))==MissingDefault('op', 'plus', 7, 8)
 
 # ... but always need to be passed literal value.
+
+# Caution, giving the literal attribute a default seems
+# like a useful shortcut since we know exactly what value
+# to give it:
+@dataclass
+class Sub:
+    a:int
+    b:int
+    op_type: Literal['sub'] = 'sub'
+
+# ... but that will also match json with no op_type:
+Assert(codec(Add|Sub).decode({  # type: ignore
+    'a': 7,
+    'b': 8}))==Sub(7,8)
+
 
 
 # misc coverage
@@ -620,6 +646,8 @@ Assert(codec(Street).get_json_schema())=={'description': 'Street', 'type': 'stri
 Assert(codec(Metres).get_json_schema())=={'description': 'Metres', 'type': 'number', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 
 Assert(codec(Literal['fred']).get_json_schema())=={'type': 'string', 'enum': ['fred'], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
+Assert(codec(Literal[7]).get_json_schema())=={'type': 'number', 'enum': [7], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
+Assert(codec(Literal[False]).get_json_schema())=={'type': 'boolean', 'enum': [False], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
 
 Assert(codec(Address).get_json_schema())=={
     '$ref': '#/definitions/Address',
