@@ -20,6 +20,7 @@ from os.path import dirname
 if path[0]==dirname(__file__): path.pop(0)
 
 from xju.json_codec import codec, Codec, JsonType, AnyJsonCodec, SelfCodec
+from xju.json_codec import TypeScriptSourceCode, TypeScriptNamespace
 
 from typing import cast, Type, Literal, Any, Self, NewType, Generic, TypeVar
 from types import NoneType
@@ -30,6 +31,7 @@ import sys
 from xju.assert_ import Assert
 import xju.newtype
 from xju.xn import readable_repr
+from xju.time import Timestamp
 
 x:Any
 
@@ -901,7 +903,8 @@ Assert(court_codec.encode(BasketballCourt(width=Metres(8),length=Metres(10)))=={
 Assert(court_codec.encode(Court(game='badminton',width=Metres(8),length=Metres(10)))=={'game':'badminton', 'width':8, 'length': 10})
 
 
-# generic class codecs
+# generic class codecs are supported, for example a messages might
+# carry generic payloads:
 
 @dataclass
 class Msg:
@@ -929,3 +932,57 @@ class SetMultiMsg(Generic[Payload],Msg):
 SetSurnamesMsg=SetMultiMsg[Surname]
 
 Assert(codec(SetSurnamesMsg).decode({'msg_type':'set_new_values','new_values':['knox','garden']}))==SetSurnamesMsg(msg_type='set_new_values',new_values=[Surname('knox'),Surname('garden')])
+
+
+# codec can generate a typescript "cast" ("as-a") and "type guard" ("is a") matching its
+# json encoding. Non-class codecs generate inline typescript source code, see
+# codec.get_typescripte_asa() and codec.get_typescript_isa(). For classes, codec
+# also generates functions in corresponding namespace, for example:
+
+typescript_namespace=TypeScriptNamespace({})
+
+timestamp_codec=codec(Timestamp)
+# ensure typescript_namespace has as-a and is-a functions for xju.time.Timestamp,
+# xju.time.asInstanceOfTimestamp(), xju.time.isInstanceOfTimestamp():
+timestamp_codec.ensure_typescript_defs(typescript_namespace)
+
+# ... get_formatted_defs() generates the typescript source code:
+Assert(typescript_namespace.get_formatted_defs())==TypeScriptSourceCode(
+    '''\
+namespace xju {
+    export namespace time {
+        export type Timestamp = {
+            _Timestamp__value: number;
+        };
+        export function asInstanceOfTimestamp(v: any): xju.time.Timestamp
+        {
+            try{
+                if (Array.isArray(v)) throw new Error(`${v} is an array`);
+                if (typeof v !== 'object') throw new Error(`${v} is not an object it is a ${typeof v}`);
+                const attr_asa=function(name:string, asa):any{
+                    try{
+                        asa(v[name]);
+                    }
+                    catch(e){
+                        throw new Error(`attribute ${name} is invalid because ${e}`);
+                    }
+                }
+                attr_asa('_Timestamp__value',(x)=>((v: any): number => {
+                    if (typeof v !== 'number') throw new Error(`${v} is not a number it is a ${typeof v}`);
+                    return v as number;
+                })(x));
+                return v as xju.time.Timestamp;
+            }
+            catch(e){
+                throw new Error(`${v} is not a xju.time.Timestamp because ${e}`);
+            }
+        }
+        export function isInstanceOfTimestamp(v:any): v is xju.time.Timestamp
+        {
+            return (
+                !Array.isArray(v) &&
+                typeof v === 'object' &&
+                (typeof (v["_Timestamp__value"]) == 'number'))}
+    }
+}
+''')
