@@ -327,8 +327,16 @@ else:
 
 
 # class (object) support:
-#   encoding is dictionary containing each objct attribute (except that string literal
-#   attributes are treated specially, see string literal attributes below)
+#   - encoding is dictionary containing each object attribute (except that string literal
+#     attributes are treated specially, see string literal attributes below)
+#   - when decoding, class is always initialised via keyword args (note that
+#     dataclass generates __init__ function that supports keyword args)
+@dataclass
+class Address:
+    street:'Street'
+    suburb:'Suburb'
+    postcode:'Postcode'
+
 class StreetTag:pass
 class Street(xju.newtype.Str[StreetTag]):pass
 
@@ -337,13 +345,6 @@ class Suburb(xju.newtype.Str[SuburbTag]):pass
 
 class PostcodeTag:pass
 class Postcode(xju.newtype.Int[PostcodeTag]):pass
-
-@dataclass
-class Address:
-    street:Street
-    suburb:Suburb
-    postcode:Postcode
-
 
 Assert(codec(Address).decode({
     'street':'alba',
