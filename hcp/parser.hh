@@ -20,14 +20,14 @@
 
 #include <hcp/ast.hh>
 #include <memory>
-#include "xju/Exception.hh"
+#include <xju/Exception.hh>
 #include "xju/next.hh"
 #include <sstream>
 #include <string>
 #include <utility>
 #include <set>
 #include <algorithm>
-#include "xju/Optional.hh"
+#include <xju/Optional.hh>
 #include <map>
 #include <vector>
 #include <hcp/Chars.hh>
@@ -516,6 +516,8 @@ PR eatWhite() throw(); // matches nothing or something; eats C++ comments
 PR identifier() throw(); //C++ identifier
 PR identifierContChar() throw(); //C++ identifier continuation character
 PR c_char() throw();
+PR s_char() throw();
+PR s_chars() throw();
 PR stringLiteral() throw(); //C++ string literal
 PR rawStringLiteral() throw(); //C++ raw string literal
 PR hashIncludeImpl() throw(); // include preprocessor directive, with trailing "// impl" marker

@@ -1070,14 +1070,6 @@ PR stringEscapeSequence() throw()
 }
 
 
-PR s_char() throw()
-{
-  static PR s_char(
-    parseAnyCharExcept("\\\"\n")|
-    stringEscapeSequence());
-  return s_char;
-}
-
 class ParseRawStringLiteral : public Parser
 {
 public:
@@ -1388,6 +1380,14 @@ PR c_char() throw()
 {
   static PR s_char(
     parseAnyCharExcept("\\'\n")|
+    stringEscapeSequence());
+  return s_char;
+}
+
+PR s_char() throw()
+{
+  static PR s_char(
+    parseAnyCharExcept("\\\"\n")|
     stringEscapeSequence());
   return s_char;
 }

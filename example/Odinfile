@@ -4,6 +4,22 @@
 ssh%all.tree:leaves
 chromedriver%all.tree:leaves
 crypt%all.tree:leaves
+typescript-inc%all.tree:leaves
 %watch-file
 
 %watch-file==watch-file.cc+(..%cxx-opts):auto.cxx.exe
+
+
+%hcp-opts==<<
++(..%hcp-opts)
+
+%hcp-gen==%hcp-gen.vir_dir_specs:list:cat:vir_dir
+
+%hcp-gen.vir_dir_specs==<<
+%hcp-local-spec
+%hcp-subdir-spec
+
+%hcp-subdir-spec==<<
+%typescript-inc==./typescript-inc/Odinfile%hcp-gen
+
+%hcp-local-spec==.:dir.hcp.list+(%hcp-opts)+hpath='example':hcp-split-virdir-specs:cat
