@@ -315,7 +315,7 @@ class ListCodec:
             f"    if (!Array.isArray(v)) throw new Error(`${{v}} is not an array it is a ${{typeof v}}`);\n"
             f"    v.forEach((x)=>{indent(4,self.value_codec.get_typescript_asa(TypeScriptSourceCode('x'),namespace,back_refs))});\n"
             f"    return v as {tt};\n"
-            f"}}catch(e){{throw new Error(`${{v}} is not a {tt} because ${{e}}`);}}}})({expression})")
+            f"}}catch(e:any){{throw new Error(`${{v}} is not a {tt} because ${{e}}`);}}}})({expression})")
     pass
 
 class AnyListCodec:
@@ -424,7 +424,7 @@ class TupleCodec:
             f"    if (v.length != {self.number_of_codecs}) throw new Error(`${{v}} does not have {self.number_of_codecs} elements (it has ${{v.length}} elements)`);\n" +
             ''.join(asas)+
             f"    return v as {tt};\n"+
-            f"}}catch(e){{ throw new Error(`${{v}} is not a {tt} because ${{e}}`);}}}})({expression})")
+            f"}}catch(e:any){{ throw new Error(`${{v}} is not a {tt} because ${{e}}`);}}}})({expression})")
     pass
 
 class UnionCodec:
@@ -490,7 +490,7 @@ class UnionCodec:
               f"        {indent(8,value_codec.get_typescript_asa('v',namespace,back_refs))};\n"+
               f"        return v as {tt};\n"+
               f"    }}\n"+
-              f"    catch(e){{\n"+
+              f"    catch(e:any){{\n"+
               f"        es.push(e.message);\n"+
               f"    }};\n"
               for value_codec in self.value_codecs.values()]
@@ -499,7 +499,7 @@ class UnionCodec:
             f"    var es = new Array<string>();\n"+
             "".join(asas)+
             f"    throw new Error(es.join(' and '));\n"+
-            f"}}catch(e)\n"+
+            f"}}catch(e:any)\n"+
             f"{{\n"+
             f"    throw new Error(`${{v}} is not a {tt} because ${{e}}`);\n"+
             f"}}}})({expression})")
@@ -562,11 +562,11 @@ class DictCodec:
             f"        const v=x[k];\n"
             f"        {indent(8,self.key_codec.get_typescript_asa(TypeScriptSourceCode('k'),namespace,back_refs))};\n"
             f"        {indent(8,self.value_codec.get_typescript_asa(TypeScriptSourceCode('v'),namespace,back_refs))};\n"
-            f"    }}catch(e){{\n"
+            f"    }}catch(e:any){{\n"
             f"        throw new Error(`element ${{k}} is invalid because ${{e}}`);\n"
             f"    }}}};\n"
             f"    return x as {tt};\n"
-            f"}}catch(e){{throw new Error(`${{x}} is not a {tt} because ${{e}}`);}}}})({expression})")
+            f"}}catch(e:any){{throw new Error(`${{x}} is not a {tt} because ${{e}}`);}}}})({expression})")
     pass
 
 class AnyDictCodec:
@@ -622,11 +622,11 @@ class AnyDictCodec:
             f"        const v=x[k];\n"
             f"        {indent(8,self.key_codec.get_typescript_asa(TypeScriptSourceCode('k'),namespace,back_refs))};\n"
             f"        {indent(8,self.value_codec.get_typescript_asa(TypeScriptSourceCode('v'),namespace,back_refs))};\n"
-            f"    }}catch(e){{\n"
+            f"    }}catch(e:any){{\n"
             f"        throw new Error(`element ${{k}} is invalid because ${{e}}`);\n"
             f"    }}}};\n"
             f"    return x as {tt};\n"
-            f"}}catch(e){{throw new Error(`${{x}} is not a {tt} because ${{e}}`);}}}})({expression})")
+            f"}}catch(e:any){{throw new Error(`${{x}} is not a {tt} because ${{e}}`);}}}})({expression})")
     pass
 
 class AnyJsonCodec:
@@ -1020,19 +1020,19 @@ class ClassCodec:
                 f"    try{{\n"
                 f"        if (Array.isArray(v)) throw new Error(`${{v}} is an array`);\n"
                 f"        if (typeof v !== 'object') throw new Error(`${{v}} is not an object it is a ${{typeof v}}`);\n"
-                f"        const attr_asa=function(name:string, asa):any{{\n"
+                f"        const attr_asa=function(name:string, asa:any):any{{\n"
                 f"            try{{\n"
                 f"                asa(v[name]);\n"
                 f"            }}\n"
-                f"            catch(e){{\n"
+                f"            catch(e:any){{\n"
                 f"                throw new Error(`attribute ${{name}} is invalid because ${{e}}`);\n"
                 f"            }}\n"
                 f"        }}\n" +
-                ''.join([f"        attr_asa('{attr_name}',(x)=>{indent(8,attr_codec.get_typescript_asa('x',namespace,back_refs))});\n"
+                ''.join([f"        attr_asa('{attr_name}',(x:any)=>{indent(8,attr_codec.get_typescript_asa('x',namespace,back_refs))});\n"
                          for attr_name, attr_codec in self.attr_codecs.items()])+
                 f"        return v as {tt};\n"
                 f"    }}\n"
-                f"    catch(e){{\n"
+                f"    catch(e:any){{\n"
                 f"        throw new Error(`${{v}} is not a {tt} because ${{e}}`);\n"
                 f"    }}\n"
                 f"}}")

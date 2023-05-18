@@ -18,11 +18,12 @@ def indent(n: int, s:TypeScriptSourceCode)->str:
 
 print(f'''\
 function str(x:any):string {{ return `${{x}}`; }}
+function isObject(x:any):x is object {{ return typeof(x) === 'object'; }}
 function assert_equal<T>(x:T, y:T){{
     if (Array.isArray(x) && Array.isArray(y)){{
         assert_arrays_equal<any>(x,y);
     }}
-    else if (typeof (x) === 'object' && typeof (y) === 'object'){{
+    else if (isObject(x) && isObject(y)){{
         assert_objects_equal(x,y);
     }}
     else if (!(x==y)){{
@@ -37,18 +38,19 @@ function assert_arrays_equal<T>(x:Array<T>, y:Array<T>){{
             assert_equal<T>(x[i],y[i]);
         }}
     }}
-    catch(e){{
+    catch(e:any){{
         throw new Error(`"${{x}}" != "${{y}}" because ${{e}}"`);
     }}
 }}
 function assert_objects_equal(x:object, y:object){{
     try{{
-        var xKeys=new Array();
-        var yKeys=new Array();
-        for(const k in x){{if (x.hasOwnProperty(k)) xKeys.push(k);}}
-        for(const k in y){{if (x.hasOwnProperty(k)) yKeys.push(k);}}
+        var xKeys=new Array<keyof object>();
+        var yKeys=new Array<keyof object>();
+        for(const k in x){{if (x.hasOwnProperty(k)) xKeys.push(k as keyof object);}}
+        for(const k in y){{if (x.hasOwnProperty(k)) yKeys.push(k as keyof object);}}
         assert_arrays_equal(xKeys,yKeys);
-        for(const k in xKeys){{
+        for(var i=0; i!=xKeys.length; ++i){{
+            const k = xKeys[i];
             assert_equal(x[k],y[k]);
         }}
     }}
