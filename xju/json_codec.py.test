@@ -987,22 +987,22 @@ namespace xju {
         {
             try{
                 if (Array.isArray(v)) throw new Error(`${v} is an array`);
-                if (typeof v !== 'object') throw new Error(`${v} is not an object it is a ${typeof v}`);
-                const attr_asa=function(name:string, asa):any{
+                if (typeof v !== \'object\') throw new Error(`${v} is not an object it is a ${typeof v}`);
+                const attr_asa=function(name:string, asa:any):any{
                     try{
                         asa(v[name]);
                     }
-                    catch(e){
+                    catch(e:any){
                         throw new Error(`attribute ${name} is invalid because ${e}`);
                     }
                 }
-                attr_asa('_Timestamp__value',(x)=>((v: any): number => {
-                    if (typeof v !== 'number') throw new Error(`${v} is not a number it is a ${typeof v}`);
+                attr_asa(\'_Timestamp__value\',(x:any)=>((v: any): number => {
+                    if (typeof v !== \'number\') throw new Error(`${v} is not a number it is a ${typeof v}`);
                     return v as number;
                 })(x));
                 return v as xju.time.Timestamp;
             }
-            catch(e){
+            catch(e:any){
                 throw new Error(`${v} is not a xju.time.Timestamp because ${e}`);
             }
         }
@@ -1010,8 +1010,9 @@ namespace xju {
         {
             return (
                 !Array.isArray(v) &&
-                typeof v === 'object' &&
-                (typeof (v["_Timestamp__value"]) == 'number'))}
+                typeof v === \'object\' &&
+                (typeof (v["_Timestamp__value"]) == \'number\'))}
     }
 }
 ''')
+

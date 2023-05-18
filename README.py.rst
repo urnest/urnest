@@ -149,6 +149,9 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 1.2.11 adds typescript --strict support and fixes typescript code generation bugs
+- 1.2.11 xju.json_codec supports Literal[int] and Literal[bool]
+- 1.2.11 xju.json_codec supports generic classes
 - 1.2.10 xju.json_codec supports typing.NewType str/int/bool/float
 - 1.2.9 xju.json_codec generates typescript equivalents
 - 1.2.9 xju.json_codec adds codec() convenience method

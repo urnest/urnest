@@ -13,7 +13,8 @@ omnicxy%all.tree
 hcp%all.tree
 dion%all.tree
 %tags
-example%all.tree
+
+#example%all.tree
 
 %cxx-opts==<<
 +inc_sp=(omnicxy)
