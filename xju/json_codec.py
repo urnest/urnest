@@ -126,8 +126,26 @@ class Codec(Generic[T]):
     def typescript_type(self) -> TypeScriptUQN:
         '''return typescript unqualified equivalent type for T'''
         return self.codec.typescript_type(None)
-    def ensure_typescript_defs(self, namespace) -> None:
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> None:
         return self.codec.ensure_typescript_defs(namespace)
+    def add_typescript_alias(self, namespace:TypeScriptNamespace, fqn:Sequence[TypeScriptUQN]) -> None:
+        '''add {fqn} as typescript alias for {self.t}'''
+        assert len(fqn)>0
+        try:
+            target_namespace=namespace.get_namespace_of(fqn)
+            if fqn[-1] in target_namespace.defs:
+                m='.'.join([str(_) for _ in fqn])
+                raise Exception(
+                    f'{m} is already defined as {target_namespace.defs[fqn[-1]]}')
+            target_namespace.defs[fqn[-1]]=TypeScriptSourceCode(
+                f'type {fqn[-1]} = {self.typescript_type()};')
+            target_namespace.defs[TypeScriptUQN(f"asInstanceOf{fqn[-1]}")] = TypeScriptSourceCode(
+                f"function asInstanceOf{fqn[-1]}(v:any):{fqn[-1]} {{ return {self.codec.get_typescript_asa(TypeScriptSourceCode('v'),namespace,None)}; }}")
+            target_namespace.defs[TypeScriptUQN(f"isInstanceOf{fqn[-1]}")] = TypeScriptSourceCode(
+                f"function isInstanceOf{fqn[-1]}(v:any):v is {fqn[-1]} {{ return {self.codec.get_typescript_isa(TypeScriptSourceCode('v'),namespace,None)}; }}")
+        except:
+            raise in_function_context(Codec.add_typescript_alias,vars())
+        pass
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:

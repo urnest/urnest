@@ -3,8 +3,11 @@
 from typing import Literal
 
 from xju.json_codec import codec, TypeScriptNamespace, TypeScriptSourceCode, TypeScriptNamespace
+from xju.json_codec import TypeScriptUQN
 from xju.misc import ByteCount
 from xju.time import Duration, Timestamp
+from xju.assert_ import Assert
+from xju.xn import readable_repr
 from dataclasses import dataclass
 
 namespace=TypeScriptNamespace({})
@@ -417,6 +420,7 @@ timestamp_codec=codec(Timestamp)
 timestamp_codec.ensure_typescript_defs(namespace)
 namespace_codec=codec(TypeScriptNamespace)
 namespace_codec.ensure_typescript_defs(namespace)
+codec(int|str).add_typescript_alias(namespace, [TypeScriptUQN('xju'),TypeScriptUQN('NorS')]) # type: ignore  # mypy 1.2.0 bug
 print(namespace.get_formatted_defs())
 
 print(f'''
@@ -515,3 +519,26 @@ print(f'''
     assert_false({namespace_codec.get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
 }})();
 ''')
+
+print(f'''
+//alias
+(() => {{
+    var x:any = 8.8;
+    var y:number|string = xju.asInstanceOfNorS(x);
+    if (typeof y !== 'number') {{
+        throw new Error(`typeof y is ${{typeof y}} not number`);
+    }}
+    assert_equal(y, 8.8);
+    if (!xju.isInstanceOfNorS(x)) {{
+        throw new Error(`${{y}} (of type ${{typeof y}}) is not a NorS`);
+    }}
+    assert_equal(x, 8.8);
+}})();
+''')
+
+try:
+    codec(int|str).add_typescript_alias(namespace, [TypeScriptUQN('xju'),TypeScriptUQN('NorS')]) # type: ignore  # mypy 1.2.0 bug
+except Exception as e:
+    Assert(readable_repr(e)).contains('is already defined')
+else:
+    assert False
