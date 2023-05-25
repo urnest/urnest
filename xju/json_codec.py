@@ -689,6 +689,28 @@ class NewIntCodec(Generic[NewInt]):
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         return 'number'
     def ensure_typescript_defs(self, namespace) -> None:
+        typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
+        target_namespace=namespace.get_namespace_of(typescript_fqn)
+        typescript_type_name=typescript_fqn[-1]
+        if typescript_type_name not in target_namespace.defs:
+            target_namespace.defs[typescript_type_name]=TypeScriptSourceCode(
+                f"type {typescript_type_name} = number;")
+            target_namespace.defs[TypeScriptUQN(f"asInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
+                f"function asInstanceOf{typescript_type_name}(v: any): {typescript_type_name}\n"
+                f"{{\n"
+                f"    try{{\n"
+                f"        if (typeof v !== 'number') throw new Error(`${{v}} is a ${{typeof v}}`);\n"
+                f"        return v;\n"
+                f"    }}\n"
+                f"    catch(e:any){{\n"
+                f"        throw new Error(`${{v}} is not a {typescript_type_name} because ${{e}}`);\n"
+                f"    }}\n"
+                f"}}")
+            target_namespace.defs[TypeScriptUQN(f'isInstanceOf{typescript_type_name}')]=TypeScriptSourceCode(
+                f"function isInstanceOf{typescript_type_name}(v:any): v is number\n"
+                f"{{\n"
+                f"    return typeof v === 'number';\n"
+                f"}}")
         pass
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
@@ -735,6 +757,28 @@ class NewFloatCodec(Generic[NewFloat]):
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         return 'number'
     def ensure_typescript_defs(self, namespace) -> None:
+        typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
+        target_namespace=namespace.get_namespace_of(typescript_fqn)
+        typescript_type_name=typescript_fqn[-1]
+        if typescript_type_name not in target_namespace.defs:
+            target_namespace.defs[typescript_type_name]=TypeScriptSourceCode(
+                f"type {typescript_type_name} = number;")
+            target_namespace.defs[TypeScriptUQN(f"asInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
+                f"function asInstanceOf{typescript_type_name}(v: any): {typescript_type_name}\n"
+                f"{{\n"
+                f"    try{{\n"
+                f"        if (typeof v !== 'number') throw new Error(`${{v}} is a ${{typeof v}}`);\n"
+                f"        return v;\n"
+                f"    }}\n"
+                f"    catch(e:any){{\n"
+                f"        throw new Error(`${{v}} is not a {typescript_type_name} because ${{e}}`);\n"
+                f"    }}\n"
+                f"}}")
+            target_namespace.defs[TypeScriptUQN(f'isInstanceOf{typescript_type_name}')]=TypeScriptSourceCode(
+                f"function isInstanceOf{typescript_type_name}(v:any): v is number\n"
+                f"{{\n"
+                f"    return typeof v === 'number';\n"
+                f"}}")
         pass
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
@@ -781,6 +825,28 @@ class NewStrCodec(Generic[NewStr]):
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         return 'string'
     def ensure_typescript_defs(self, namespace) -> None:
+        typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
+        target_namespace=namespace.get_namespace_of(typescript_fqn)
+        typescript_type_name=typescript_fqn[-1]
+        if typescript_type_name not in target_namespace.defs:
+            target_namespace.defs[typescript_type_name]=TypeScriptSourceCode(
+                f"type {typescript_type_name} = string;")
+            target_namespace.defs[TypeScriptUQN(f"asInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
+                f"function asInstanceOf{typescript_type_name}(v: any): {typescript_type_name}\n"
+                f"{{\n"
+                f"    try{{\n"
+                f"        if (typeof v !== 'string') throw new Error(`${{v}} is a ${{typeof v}}`);\n"
+                f"        return v;\n"
+                f"    }}\n"
+                f"    catch(e:any){{\n"
+                f"        throw new Error(`${{v}} is not a {typescript_type_name} because ${{e}}`);\n"
+                f"    }}\n"
+                f"}}")
+            target_namespace.defs[TypeScriptUQN(f'isInstanceOf{typescript_type_name}')]=TypeScriptSourceCode(
+                f"function isInstanceOf{typescript_type_name}(v:any): v is string\n"
+                f"{{\n"
+                f"    return typeof v === 'string';\n"
+                f"}}")
         pass
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,

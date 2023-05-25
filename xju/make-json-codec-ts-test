@@ -444,6 +444,12 @@ print(f'''
 
 timestamp_codec=codec(Timestamp)
 timestamp_codec.ensure_typescript_defs(namespace)
+bytecount_codec=codec(ByteCount)
+bytecount_codec.ensure_typescript_defs(namespace)
+typescript_uqn_codec=codec(TypeScriptUQN)
+typescript_uqn_codec.ensure_typescript_defs(namespace)
+duration_codec=codec(Duration)
+duration_codec.ensure_typescript_defs(namespace)
 namespace_codec=codec(TypeScriptNamespace)
 namespace_codec.ensure_typescript_defs(namespace)
 codec(int|str).add_typescript_alias(namespace, [TypeScriptUQN('xju'),TypeScriptUQN('NorS')]) # type: ignore  # mypy 1.2.0 bug
@@ -559,6 +565,36 @@ print(f'''
         throw new Error(`${{y}} (of type ${{typeof y}}) is not a NorS`);
     }}
     assert_equal(x, 8.8);
+}})();
+//NewInt alias
+(() => {{
+    var x:any = 8;
+    var y:xju.misc.ByteCount = xju.misc.asInstanceOfByteCount(x);
+    assert_equal(y, 8);
+    if (!xju.misc.isInstanceOfByteCount(x)) {{
+        throw new Error(`${{y}} (of type ${{typeof y}}) is not a xju.misc.ByteCount`);
+    }}
+    assert_equal(x, 8);
+}})();
+//NewFloat alias
+(() => {{
+    var x:any = 8.8;
+    var y:xju.time.Duration = xju.time.asInstanceOfDuration(x);
+    assert_equal(y, 8.8);
+    if (!xju.time.isInstanceOfDuration(x)) {{
+        throw new Error(`${{y}} (of type ${{typeof y}}) is not a xju.time.Duration`);
+    }}
+    assert_equal(x, 8.8);
+}})();
+//NewStr alias
+(() => {{
+    var x:any = "fred";
+    var y:xju.json_codec.TypeScriptUQN = xju.json_codec.asInstanceOfTypeScriptUQN(x);
+    assert_equal(y, "fred");
+    if (!xju.json_codec.isInstanceOfTypeScriptUQN(x)) {{
+        throw new Error(`${{y}} (of type ${{typeof y}}) is not a xju.json_codec.TypeScriptUQN`);
+    }}
+    assert_equal(x, "fred");
 }})();
 ''')
 
