@@ -149,6 +149,8 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 1.2.12 fixes typescript null v object handling
+- 1.2.12 adds typescript aliases for NewStr, NewInt, NewFloat
 - 1.2.11 adds typescript --strict support and fixes typescript code generation bugs
 - 1.2.11 xju.json_codec supports Literal[int] and Literal[bool]
 - 1.2.11 xju.json_codec supports generic classes

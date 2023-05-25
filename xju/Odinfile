@@ -89,7 +89,7 @@ mypy-error-tests%all.tree:leaves
 (assert_.py.test)+(%py-opts):py3.exec.cov
 (cmd.py.test)+(%py-opts):py3.exec.cov
 (jsonschema.py.test)+(%py-opts):py3.exec.cov
-(json_codec.py.test)+(%py-opts)+stderr=warn:py3.exec.cov
+(json_codec.py.test)+(%py-opts):py3.exec.cov
 (misc.py.test)+(%py-opts):py3.exec.cov
 (patch.py.test)+(%py-opts):py3.exec.cov
 (pq.py.test)+(%py-opts):py3.exec.cov

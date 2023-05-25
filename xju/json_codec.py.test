@@ -987,6 +987,7 @@ namespace xju {
         {
             try{
                 if (Array.isArray(v)) throw new Error(`${v} is an array`);
+                if (v == null) throw new Error(`${v} is not an object it is null`);
                 if (typeof v !== \'object\') throw new Error(`${v} is not an object it is a ${typeof v}`);
                 const attr_asa=function(name:string, asa:any):any{
                     try{
@@ -1010,7 +1011,7 @@ namespace xju {
         {
             return (
                 !Array.isArray(v) &&
-                typeof v === \'object\' &&
+                v !== null &&        typeof v === \'object\' &&
                 (typeof (v["_Timestamp__value"]) == \'number\'))}
     }
 }
