@@ -540,6 +540,7 @@ class DictCodec:
                            back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(
             f"(((x:any):x is {self.typescript_type(back_refs)}=>(\n"
+            f"    x !== null &&\n"
             f"    typeof (x) === 'object' &&\n"
             f"    !Array.isArray(x) &&\n"
             f"    (():boolean=>{{for (const k in x){{\n"
@@ -555,6 +556,7 @@ class DictCodec:
         tt=self.typescript_type(back_refs)
         return TypeScriptSourceCode(
             f"((x: any): {tt} => {{try{{\n"
+            f"    if (x === null) throw new Error(`${{x}} is not an object it is null`);\n"
             f"    if (typeof x !== 'object') throw new Error(`${{x}} is not an object it is a ${{typeof x}}`);\n"
             f"    if (Array.isArray(x)) throw new Error(`${{x}} is not an object it is an array`);\n"
             f"    for(const k in x){{\ntry{{\n"+
@@ -600,7 +602,8 @@ class AnyDictCodec:
                            back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(
             f"(((x:any):x is {self.typescript_type(back_refs)}=>(\n"
-            f"    (typeof (x) === 'object' &&\n"
+            f"    (x !== null &&\n"
+            f"    typeof (x) === 'object' &&\n"
             f"    !Array.isArray(x) &&\n"
             f"    (():boolean=>{{for (const k in x){{\n"
             f"        if (!x.hasOwnProperty(k)) continue;\n"
@@ -615,6 +618,7 @@ class AnyDictCodec:
         tt=self.typescript_type(back_refs)
         return TypeScriptSourceCode(
             f"((x: any): {tt} => {{try{{\n"
+            f"    if (x === null) throw new Error(`${{x}} is not an object it is null`);\n"
             f"    if (typeof x !== 'object') throw new Error(`${{x}} is not an object it is a ${{typeof x}}`);\n"
             f"    if (Array.isArray(x)) throw new Error(`${{x}} is not an object it is an array`);\n"
             f"    for(const k in x){{\ntry{{\n"+
@@ -1019,6 +1023,7 @@ class ClassCodec:
                 f"{{\n"
                 f"    try{{\n"
                 f"        if (Array.isArray(v)) throw new Error(`${{v}} is an array`);\n"
+                f"        if (v == null) throw new Error(`${{v}} is not an object it is null`);\n"
                 f"        if (typeof v !== 'object') throw new Error(`${{v}} is not an object it is a ${{typeof v}}`);\n"
                 f"        const attr_asa=function(name:string, asa:any):any{{\n"
                 f"            try{{\n"
@@ -1041,6 +1046,7 @@ class ClassCodec:
                 f"{{\n"
                 f"    return (\n"
                 f"        !Array.isArray(v) &&\n"
+                f"        v !== null &&"+
                 f"        typeof v === 'object'"+
                 ''.join([" &&\n        "+indent(8,attr_codec.get_typescript_isa(f'v["{attr_name}"]',namespace,back_refs))
                          for attr_name, attr_codec in self.attr_codecs.items()])+")"

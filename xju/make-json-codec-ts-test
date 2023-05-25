@@ -214,6 +214,13 @@ print(f'''
 (() => {{
     assert_equal({indent(8,codec(dict[str,int]).get_typescript_asa(TypeScriptSourceCode('{"fred": 8}'),namespace))}, {{"fred": 8}});
     try{{
+        {indent(8,codec(dict[str,int]).get_typescript_asa(TypeScriptSourceCode('null'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: null is not a {{ [key: string]: number }} because Error: null is not an object it is null");
+    }}
+    try{{
         {indent(8,codec(dict[str,int]).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
         assert_never_reached();
     }}
@@ -228,6 +235,7 @@ print(f'''
         assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string]: number }} because Error: element ann is invalid because Error: fred is not a number it is a string");
     }}
     assert_true({indent(8,codec(dict[str,int]).get_typescript_isa(TypeScriptSourceCode('{"fred": 8}'),namespace))});
+    assert_false({indent(8,codec(dict[str,int]).get_typescript_isa(TypeScriptSourceCode('null'),namespace))});
     assert_false({indent(8,codec(dict[str,int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
 }})();
 ''')
@@ -238,6 +246,13 @@ print(f'''
     assert_equal({indent(4,codec(dict).get_typescript_asa(TypeScriptSourceCode('{"fred": 8}'),namespace))}, {{"fred": 8}});
     assert_equal({indent(4,codec(dict).get_typescript_asa(TypeScriptSourceCode('{"fred": 8, "ann": "low"}'),namespace))}, {{"fred": 8, "ann": "low"}});
     try{{
+        {indent(8,codec(dict).get_typescript_asa(TypeScriptSourceCode('null'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: null is not a {{ [key: string]: any }} because Error: null is not an object it is null");
+    }}
+    try{{
         {indent(8,codec(dict).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
         assert_never_reached();
     }}
@@ -246,6 +261,7 @@ print(f'''
     }}
     assert_true({codec(dict).get_typescript_isa(TypeScriptSourceCode('{"fred": 8}'),namespace)});
     assert_false({codec(dict).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
+    assert_false({codec(dict).get_typescript_isa(TypeScriptSourceCode('null'),namespace)});
 }})();
 ''')
 
@@ -384,6 +400,13 @@ print(f'''
 (() => {{
     assert_equal({indent(4,codec(FullName).get_typescript_asa(TypeScriptSourceCode('{first_name: "fred", middle_names: [], last_name: "flak"}'),namespace))}, {{first_name: "fred", middle_names: [], last_name: "flak"}});
     try{{
+        {indent(8,codec(FullName).get_typescript_asa(TypeScriptSourceCode('null'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: null is not a FullName because Error: null is not an object it is null");
+    }}
+    try{{
         {indent(8,codec(FullName).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
         assert_never_reached();
     }}
@@ -414,6 +437,7 @@ print(f'''
     assert_true({codec(FullName).get_typescript_isa(TypeScriptSourceCode('{first_name: "fred", middle_names: [], last_name: "flak"}'),namespace)});
     assert_true({codec(FullName).get_typescript_isa(TypeScriptSourceCode('{first_name: "fred", middle_names: ["joan"], last_name: "flak"}'),namespace)});
     assert_true({codec(FullName).get_typescript_isa(TypeScriptSourceCode('{first_name: "fred", middle_names: ["joan"], last_name: "flak", age: 10}'),namespace)});
+    assert_false({codec(FullName).get_typescript_isa(TypeScriptSourceCode('null'),namespace)});
     assert_false({codec(FullName).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
 }})();
 ''')
