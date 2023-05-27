@@ -432,26 +432,48 @@ Assert(list(cast(dict,codec(UnitAddress).encode(
         'unit']
         
 
-# string Literal
+# string/int/bool literals
 #mypy 1.0.0 bug:
-#Codec[Literal['fred']](Literal['fred'])
+#codec(Literal['fred'])
 # ... says:
 #  error: Argument 1 to "Codec" has incompatible type "object"; expected "Type[Literal['fred']]"  [arg-type]
 
 Assert(codec(Literal['fred']).decode('fred'))=='fred' # type: ignore
 Assert(codec(Literal['fred']).encode('fred'))=='fred' # type: ignore
 
+Assert(codec(Literal['fred','jock']).decode('fred'))=='fred' # type: ignore
+Assert(codec(Literal['fred','jock']).decode('jock'))=='jock' # type: ignore
+Assert(codec(Literal['fred','jock']).encode('fred'))=='fred' # type: ignore
+Assert(codec(Literal['fred','jock']).encode('jock'))=='jock' # type: ignore
+
 Assert(codec(Literal[7]).decode(7))==7 # type: ignore
 Assert(codec(Literal[7]).encode(7))==7 # type: ignore
 
+Assert(codec(Literal[7,8]).decode(7))==7 # type: ignore
+Assert(codec(Literal[7,8]).decode(8))==8 # type: ignore
+Assert(codec(Literal[7,8]).encode(7))==7 # type: ignore
+Assert(codec(Literal[7,8]).encode(8))==8 # type: ignore
+
 Assert(codec(Literal[True]).decode(True))==True # type: ignore
 Assert(codec(Literal[False]).encode(False))==False # type: ignore
+
+Assert(codec(Literal[True,False]).decode(True))==True # type: ignore
+Assert(codec(Literal[True,False]).decode(False))==False # type: ignore
+Assert(codec(Literal[True,False]).encode(True))==True # type: ignore
+Assert(codec(Literal[True,False]).encode(False))==False # type: ignore
+
+
+Assert(codec(Literal[6,'jock']).decode(6))==6 # type: ignore
+Assert(codec(Literal[6,'jock']).decode('jock'))=='jock' # type: ignore
+Assert(codec(Literal[6,'jock']).encode(6))==6 # type: ignore
+Assert(codec(Literal[6,'jock']).encode('jock'))=='jock' # type: ignore
+
 
 #float literal not yet implemented
 try:
     x=codec(Literal[7.6]).decode(7.6) # type: ignore
 except Exception as e:
-    Assert("typing.Literal[7.6] literal type is not supported (only str, int, bool implemented)").isIn(str(e))
+    Assert("failed to create codec for literal value 7.6 because\n<class 'float'> literals are not supported (only support str, int, bool)").isIn(readable_repr(e))
 else:
     assert False, x
     pass
@@ -459,21 +481,21 @@ else:
 
 #encode wrong type
 try:
-    x=codec(Literal['fred']).encode(7) # type: ignore
+    x=codec(Literal['fred','jock']).encode(7) # type: ignore
 except Exception as e:
     Assert("7 is not 'fred'").isIn(str(e))
 else:
     assert False, x
     pass
 try:
-    x=codec(Literal[7]).encode(True) # type: ignore
+    x=codec(Literal[7,8]).encode(True) # type: ignore
 except Exception as e:
     Assert("True is not 7").isIn(str(e))
 else:
     assert False, x
     pass
 try:
-    x=codec(Literal[False]).encode('fred') # type: ignore
+    x=codec(Literal[False,True]).encode('fred') # type: ignore
 except Exception as e:
     Assert("'fred' is not False").isIn(str(e))
 else:
@@ -504,16 +526,16 @@ else:
 
 # decode wrong value
 try:
-    x=codec(Literal['fred']).decode('jock') # type: ignore
+    x=codec(Literal['fred','ann']).decode('jock') # type: ignore
 except Exception as e:
-    Assert("'jock' is not 'fred'").isIn(str(e))
+    Assert(readable_repr(e))=="Failed to decode jock to a typing.Literal['fred', 'ann'] because\nfailed to decode 'jock' as one of ('fred', 'ann') because\nfailed to decode as 'fred' because 'jock' is not 'fred' and failed to decode as 'ann' because 'jock' is not 'ann'."
 else:
     assert False, x
     pass
 try:
-    x=codec(Literal[7]).decode(8) # type: ignore
+    x=codec(Literal[6,7]).decode(8) # type: ignore
 except Exception as e:
-    Assert("8 is not 7").isIn(str(e))
+    Assert(readable_repr(e))=="Failed to decode 8 to a typing.Literal[6, 7] because\nfailed to decode 8 as one of (6, 7) because\nfailed to decode as 6 because 8 is not 6 and failed to decode as 7 because 8 is not 7."
 else:
     assert False, x
     pass

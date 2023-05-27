@@ -449,6 +449,7 @@ class UnionCodec:
             raise in_function_context(UnionCodec.encode,vars()) from None
         pass
     def decode(self,x,back_ref:None|Callable[[JsonType],Any]) -> tuple:
+        '''decode {x!r} as one of {self.allowed_types}'''
         try:
             exceptions=[]
             for t, c in self.value_codecs.items():
@@ -458,7 +459,7 @@ class UnionCodec:
                     exceptions.append( (t, e) )
                     pass
                 pass
-            raise Exception(' and '.join([f'failed to decode as {t} because {e}' for t,e in exceptions]))
+            raise Exception(' and '.join([f'failed to decode as {t!r} because {e}' for t,e in exceptions]))
         except Exception:
             raise in_function_context(UnionCodec.decode,vars()) from None
         pass
@@ -1206,15 +1207,11 @@ def _explodeSchema(t:type|NewType,type_var_map:dict[TypeVar,Any]|None):
             return AnyListCodec()
         if type(t) is GenericAlias and get_origin(t) is list:
             return ListCodec(_explodeSchema(get_args(t)[0],type_var_map))
+        if type(t) is _LiteralGenericAlias and len(t.__args__)==1:
+            return _explode_literal(t.__args__[0])
         if type(t) is _LiteralGenericAlias:
-            value = t.__args__[0]
-            if type(value) is str:
-                return LiteralStrCodec(value)
-            if type(value) is bool:
-                return LiteralBoolCodec(value)
-            if type(value) is int:
-                return LiteralIntCodec(value)
-            raise Exception(f'{t!r} literal type is not supported (only str, int, bool implemented)')
+            return UnionCodec(get_args(t),
+                              {t:_explode_literal(t) for t in get_args(t)})
         if type(t) is GenericAlias and get_origin(t) is tuple:
             return TupleCodec([_explodeSchema(_,type_var_map) for _ in get_args(t)])
         if t is dict:
@@ -1252,6 +1249,20 @@ def _explodeSchema(t:type|NewType,type_var_map:dict[TypeVar,Any]|None):
         raise in_function_context(_explodeSchema,vars()) from None
     pass
 
+def _explode_literal(value: Any):
+    '''create codec for literal value {value!r}'''
+    try:
+        if type(value) is str:
+            return LiteralStrCodec(value)
+        if type(value) is bool:
+            return LiteralBoolCodec(value)
+        if type(value) is int:
+            return LiteralIntCodec(value)
+        t=type(value)
+        raise Exception(f'{t} literals are not supported (only support str, int, bool)')
+    except:
+        raise in_function_context(_explode_literal, vars())
+    pass
 
 def indent(n: int, s:TypeScriptSourceCode)->str:
     lines=s.splitlines()

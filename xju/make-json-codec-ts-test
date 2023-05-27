@@ -388,6 +388,33 @@ print(f'''
 }})();
 ''')
 
+fred_7_False_codec=codec(Literal['fred', 7, False]) # type: ignore   # mypy 1.1.1 bug
+print(f'''
+//Literal['fred']
+(() => {{
+    assert_equal({indent(4,fred_7_False_codec.get_typescript_asa(TypeScriptSourceCode('"fred"'),namespace))}, "fred");
+    assert_equal({indent(4,fred_7_False_codec.get_typescript_asa(TypeScriptSourceCode('7'),namespace))}, 7);
+    assert_equal({indent(4,fred_7_False_codec.get_typescript_asa(TypeScriptSourceCode('false'),namespace))}, false);
+    try{{
+        {indent(8,fred_7_False_codec.get_typescript_asa(TypeScriptSourceCode('"ann"'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), 'Error: the string ann is not the string fred');
+    }}
+    try{{
+        {indent(8,fred_7_False_codec.get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), 'Error: the object 7,ann is not the string fred');
+    }}
+    assert_true({fred_7_False_codec.get_typescript_isa(TypeScriptSourceCode('"fred"'),namespace)});
+    assert_false({fred_7_False_codec.get_typescript_isa(TypeScriptSourceCode('"jock"'),namespace)});
+    assert_false({fred_7_False_codec.get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
+}})();
+''')
+
 @dataclass
 class FullName:
     first_name: str
