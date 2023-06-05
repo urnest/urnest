@@ -1,6 +1,7 @@
 %all==%all-tests.tree:leaves
 
 %all-tests.tree==<<
+test-parsers+py_sp=(..):py3.exec.cov
 %test1
 %test2
 %test3
