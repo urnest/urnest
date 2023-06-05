@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2022 Trevor Taylor
+# coding: utf-8
+# 
+# Permission to use, copy, modify, and/or distribute this software for
+# any purpose with or without fee is hereby granted, provided that all
+# copyright notices and this permission notice appear in all copies.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+from sys import path
+from os.path import dirname
+if path[0]==dirname(__file__): path.pop(0)
+from xju.cmc import AsyncTask, AsyncMutex, AsyncLock, AsyncCondition
+from typing import Awaitable
+
+import asyncio
+
+from xju.time import now, Duration
+from xju.assert_ import Assert
+from xju.xn import readable_repr
+
+flag = False
+
+async def async_main() -> None:
+    async def task_that_succeeds() -> int:
+        return 3
+
+    task: Awaitable[int]
+
+    async with AsyncTask(task_that_succeeds) as task:
+        Assert(task.done())==False
+        pass
+    Assert(task.done())==True
+    Assert(task.cancelled())==True
+
+    async with AsyncTask(task_that_succeeds) as task:
+        Assert(task.done())==False
+        Assert(await task)==3
+        Assert(task.done())==True
+        pass
+    Assert(task.cancelled())==False
+
+    async def task_that_raises_exception():
+        raise Exception('failed to do anything')
+
+    async with AsyncTask(task_that_raises_exception) as task:
+        Assert(task.done())==False
+        pass
+    Assert(task.done())==True
+    Assert(task.cancelled())==True
+
+    try:
+        async with AsyncTask(task_that_raises_exception) as task:
+            Assert(task.done())==False
+            result=await task
+            pass
+    except Exception as e:
+        Assert("failed to do anything").isIn(str(e))
+    else:
+        assert False, result
+
+    m = AsyncMutex()
+    c = AsyncCondition(m)
+    async def f() -> int:
+        global flag
+        async with AsyncLock(m) as l:
+            flag=True
+            c.notify_all(l)
+        return 7
+
+    async with AsyncTask[int](f) as task:
+        deadline=now()+Duration(1.0)
+        async with AsyncLock(m) as l:
+            await c.wait_for(l, Duration(0.01))
+            while not flag:
+                n=now()
+                assert n < deadline
+                await c.wait_for(l, deadline - n)
+
+    Assert(task.result())==7
+
+
+asyncio.run(async_main())

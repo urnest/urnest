@@ -24,7 +24,7 @@ from typing import TypeVar, Iterable, Dict as _Dict, overload, Tuple, Sequence, 
 from typing import ItemsView, KeysView
 from typing import _GenericAlias # type: ignore  # mypy 1.0.0 :-(
 from types import GenericAlias
-from typing import Mapping, Type, List, Generic, Any, Callable, Awaitable
+from typing import Mapping, Type, List, Generic, Any, Callable, Awaitable, Self
 from collections import OrderedDict
 from collections.abc import Coroutine
 import builtins
@@ -338,7 +338,7 @@ class Task(contextlib.AbstractAsyncContextManager,Generic[ResultType]):
          e.g. when using gather() with its default return_exceptions=False'''
     coroutine: Coroutine[Any,Any,ResultType]
     task: None | asyncio.Task[ResultType]
-    def __init__(self, coroutine: Coroutine[Any,Any,ResultType]):
+    def __init__(self, coroutine: Coroutine[Any,Any,ResultType]) -> None:
         self.coroutine=coroutine
         self.task=None
     async def __aenter__(self) -> asyncio.Task[ResultType]:
@@ -346,7 +346,7 @@ class Task(contextlib.AbstractAsyncContextManager,Generic[ResultType]):
         assert self.task is None
         self.task=asyncio.create_task(self.coroutine)
         return self.task
-    async def __aexit__(self, t, e, b):
+    async def __aexit__(self, t, e, b) -> None:
         '''cancel and await task'''
         assert self.task is not None
         task=self.task
@@ -418,12 +418,12 @@ class Lock(contextlib.AbstractContextManager):
         self.active=False
         pass
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         self.m.m.acquire()
         self.active=True
         return self
 
-    def __exit__(self,t,e,b):
+    def __exit__(self,t,e,b) -> None:
         self.active=False
         self.m.m.release()
         pass
@@ -435,15 +435,41 @@ class Condition:
         self.m = m
         self.c = threading.Condition(m.m)
 
-    def wait_for(self, l:Lock, timeout:Duration):
+    def wait_for(self, l:Lock, timeout:Duration) -> None:
         assert l.m == self.m and l.active
         self.c.wait(timeout=timeout.value())
         pass
 
-    def notify_all(self, l:Lock):
+    def notify_all(self, l:Lock) -> None:
         assert l.m == self.m and l.active
         self.c.notify_all()
     pass
+
+class AsyncTask(contextlib.AbstractAsyncContextManager,Generic[ResultType]):
+    '''asyncio Task context manager that guarentees Task awaited before exit
+       - note that normally, application will have waited for the task
+         within the context; cancel-on-exit ensures clean up on exception
+         e.g. when using gather() with its default return_exceptions=False'''
+    function: Callable[[],Coroutine[Any,Any,ResultType]]
+    task: None | asyncio.Task[ResultType]
+    def __init__(self, function: Callable[[],Coroutine[Any,Any,ResultType]]) -> None:
+        self.function=function
+        self.task=None
+    async def __aenter__(self) -> asyncio.Task[ResultType]:
+        '''create and return task'''
+        assert self.task is None
+        self.task=asyncio.create_task(self.function())
+        return self.task
+    async def __aexit__(self, t, e, b) -> None:
+        '''cancel and await task'''
+        assert self.task is not None
+        task=self.task
+        self.task=None
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
 
 class AsyncServiceQueue(contextlib.AbstractAsyncContextManager):
     loop:asyncio.AbstractEventLoop
@@ -462,7 +488,7 @@ class AsyncServiceQueue(contextlib.AbstractAsyncContextManager):
            - thread safe'''
         self.loop.call_soon_threadsafe(self.q.put_nowait,x)
         pass
-    async def __aenter__(self):
+    async def __aenter__(self) -> Self:
         self.entered=True
         return self
     async def __aexit__(self,t,e,b) -> None:
@@ -492,5 +518,43 @@ class AsyncServiceQueue(contextlib.AbstractAsyncContextManager):
             self.log_exception(e)
             pass
         pass
-        
+    pass
+
+class AsyncMutex:
+    def __init__(self):
+        self.m = asyncio.Lock()
+        pass
+    pass
+
+class AsyncLock(contextlib.AbstractAsyncContextManager):
+    def __init__(self, m: AsyncMutex) -> None:
+        self.m = m
+        self.active=False
+        pass
+
+    async def __aenter__(self) -> Self:
+        await self.m.m.acquire()
+        self.active=True
+        return self
+
+    async def __aexit__(self,t,e,b) -> None:
+        self.active=False
+        self.m.m.release()
+        pass
+    pass
+
+class AsyncCondition:
+    def __init__(self, m:AsyncMutex):
+        self.m = m
+        self.c = asyncio.Condition(m.m)
+
+    async def wait_for(self, l:AsyncLock, timeout:Duration):
+        assert l.m == self.m and l.active
+        async with asyncio.timeout(timeout.value()):
+            await self.c.wait()
+        pass
+
+    def notify_all(self, l:AsyncLock):
+        assert l.m == self.m and l.active
+        self.c.notify_all()
     pass
