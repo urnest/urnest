@@ -1186,7 +1186,8 @@ class SelfCodec:
         return back_refs.asa_back_ref(expression)
     pass
     
-def _explodeSchema(t:type|NewType,type_var_map:dict[TypeVar,Any]|None):
+def _explodeSchema(t:type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGenericAlias|_GenericAlias,
+                   type_var_map:dict[TypeVar,Any]|None):
     '''explode type {t!r} into a tree of codecs using map {type_var_map} to resolve any generic type refs i.e. TypeVars'''
     try:
         if type(t) is TypeVar:

@@ -333,8 +333,8 @@ for n in ['rfind', 'find', 'rindex', 'index', 'count', 'translate']:
     @overload
     def {n}(self, sub:str, start:int, end:int)->int:
         pass
-    def {n}(self, sub, *args):
-        return self.value().{n}(sub,*args)'''
+    def {n}(self, *args:Any, **kwargs:Any) -> Any:
+        return self.value().{n}(*args)'''
 for n in ['endswith', 'startswith']:
     rem.remove(n)
     str_methods=str_methods+f'''
@@ -347,22 +347,22 @@ for n in ['endswith', 'startswith']:
     @overload
     def {n}(self, s:str, start:int, end:int)->bool:
         pass
-    def {n}(self, s, *args):
-        return self.value().{n}(s,*args)'''
+    def {n}(self, *args:Any, **kwargs:Any) -> Any:
+        return self.value().{n}(*args)'''
 for n in ['strip', 'lstrip', 'rstrip']:
     rem.remove(n)
     str_methods=str_methods+f'''
-    def {n}(self, chars:Optional[str]=None)->Self:
+    def {n}(self, chars:str|None=None)->Self:
         return self.__class__(self.value().{n}(chars))'''
 for n in ['replace']:
     rem.remove(n)
     str_methods=str_methods+f'''
-    def {n}(self, old:str, new:str, count=-1)->Self:
+    def {n}(self, old:str, new:str, count:int=-1)->Self:
         return self.__class__(self.value().{n}(old,new,count))'''
 for n in ['split', 'rsplit']:
     rem.remove(n)
     str_methods=str_methods+f'''
-    def {n}(self, sep:Optional[str]=None, max_split=-1)->List[str]:
+    def {n}(self, sep:Optional[str]=None, max_split:int=-1)->List[str]:
         return self.value().{n}(sep,max_split)'''
 for n in ['partition','rpartition']:
     rem.remove(n)

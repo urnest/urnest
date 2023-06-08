@@ -331,6 +331,10 @@ def is_subclass(n:str, t1, t2:type):
     pass
 
 ResultType=TypeVar('ResultType')
+
+# deprecated since xju 1.2.13, use AsyncTask, because...
+# this task mistakenly takes a coroutine, which means that if the task is never
+# run, the program warns of coroutine-not-awaited at exit
 class Task(contextlib.AbstractAsyncContextManager,Generic[ResultType]):
     '''asyncio Task context manager that guarentees Task awaited before exit
        - note that normally, application will have waited for the task

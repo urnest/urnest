@@ -30,18 +30,19 @@
 # therefore has not run-time presence and therefore cannot be used with isinstance.
 #
 from typing import Iterable,Sized,Container,Collection,Reversible,Protocol,Type,overload,TypeVar
-from typing import Generic,Tuple,Mapping,Optional,List,Literal,Union,Any,Self
+from typing import Generic,Tuple,Mapping,Optional,List,Literal,Union,Any,Self,Never
+from types import NotImplementedType
 
 Tag=TypeVar('Tag',covariant=True)
 
-def verify_same_type(x:Any,y:Any):
+def verify_same_type(x:Any,y:Any) -> None:
     if x.__class__ is not y.__class__:
         raise Exception(f"{x!r}'s type {x.__class__} is not the same as {y!r}'s type {y.__class__}")
     pass
 
 def eq(x:Any,y:Any)->bool:
     verify_same_type(x,y)
-    return x.value().__eq__(y.value())
+    return bool(x.value().__eq__(y.value()))
 
 class Int(Generic[Tag]):
     __value:int
@@ -53,7 +54,7 @@ class Int(Generic[Tag]):
     def value(self)->int:
         return self.__value
 
-    def __eq__(self,other)->bool:
+    def __eq__(self,other:Any)->bool:
         '''equality test, only valid for two object of exactly the same class; except that
            python insists supporting __eq__ for objects of any type, so this function's signature
            allows it and calls out all nonsense at runtime'''
@@ -63,7 +64,7 @@ class Int(Generic[Tag]):
            If you choose to inherit from Hours, make sure you write your own __eq__'''
         return eq(self,other)
 
-    def __ne__(self,other)->bool:
+    def __ne__(self,other:Any)->bool:
         return not eq(self,other)
 
     def __str__(self)->str:
@@ -78,9 +79,6 @@ class Int(Generic[Tag]):
     def __float__(self)->float:
         return self.value().__float__()
     
-    def conjugate(self):
-        return self.value().conjugate()
-
     @overload
     def __divmod__(self, x:int) -> Tuple[Self,Self]:
         pass
@@ -90,7 +88,7 @@ class Int(Generic[Tag]):
     @overload
     def __divmod__(self, x:Self) -> Tuple[int,int]:
         pass
-    def __divmod__(self, x):
+    def __divmod__(self, x:Any) -> Any:
         if isinstance(x,int):
             q,r=self.value().__divmod__(x)
             return self.__class__(q),self.__class__(r)
@@ -109,7 +107,7 @@ class Int(Generic[Tag]):
     @overload
     def __floordiv__(self, x:Self) -> int:
         pass
-    def __floordiv__(self, x):
+    def __floordiv__(self, x:Any) -> Any:
         if isinstance(x,int):
             return self.__class__(self.value()//x)
         elif isinstance(x,float):
@@ -129,22 +127,20 @@ class Int(Generic[Tag]):
     def __mul__(self, x:int) -> Self:
         pass
     @overload
-    def __mul__(self, x:Any):  # -> NotImplemented:
+    def __mul__(self, x:float) -> NotImplementedType:
         pass
-    def __mul__(self, x):
+    def __mul__(self, x:Any) -> Any:
         if isinstance(x,int):
             return self.__class__(self.value()*x)
-        else:
-            return NotImplemented
-        pass
+        return NotImplemented
 
     @overload
-    def __rmul__(self, x:int):  # -> Self:
+    def __rmul__(self, x:int) -> Self:
         pass
     @overload
-    def __rmul__(self, x:Any):  # -> NotImplemented
+    def __rmul__(self, x:float)-> float:
         pass
-    def __rmul__(self, x):
+    def __rmul__(self, x:Any)->Any:
         if isinstance(x,int):
             return self.__class__(x*self.value())
         else:
@@ -160,7 +156,7 @@ class Int(Generic[Tag]):
     @overload
     def __mod__(self, other:Self)->int:
         pass
-    def __mod__(self, other):
+    def __mod__(self, other:Any)->Any:
         if type(other) is int:
             return self.__class__(self.value()%other)
         if type(other) is float:
@@ -248,7 +244,7 @@ class Float(Generic[Tag]):
     def value(self)->float:
         return self.__value
 
-    def __eq__(self,other)->bool:
+    def __eq__(self,other:Any)->bool:
         '''equality test, only valid for two object of exactly the same class; except
            that python insists on supporting __eq__ for objects of any type, so this
            function's signature allows it and calls out all nonsense at runtime'''
@@ -258,7 +254,7 @@ class Float(Generic[Tag]):
            If you choose to inherit from Timestamp, make sure you write your own __eq__'''
         return eq(self,other)
 
-    def __ne__(self,other)->bool:
+    def __ne__(self,other:Any)->bool:
         return not eq(self,other)
 
     def __str__(self)->str:
@@ -279,9 +275,6 @@ class Float(Generic[Tag]):
     def hex(self)->str:
         return self.value().hex()
     
-    def conjugate(self):
-        return self.value().conjugate()
-
     @overload
     def __divmod__(self, x:int) -> Tuple[Self,Self]:
         pass
@@ -291,7 +284,7 @@ class Float(Generic[Tag]):
     @overload
     def __divmod__(self, x:Self) -> Tuple[float,float]:
         pass
-    def __divmod__(self, x):
+    def __divmod__(self, x:Any) -> Any:
         if isinstance(x,int) or isinstance(x,float):
             q,r=self.value().__divmod__(x)
             return self.__class__(q),self.__class__(r)
@@ -308,7 +301,7 @@ class Float(Generic[Tag]):
     @overload
     def __floordiv__(self, x:Self) -> float:
         pass
-    def __floordiv__(self, x):
+    def __floordiv__(self, x:Any) -> Any:
         if isinstance(x,int) or isinstance(x,float):
             return self.__class__(self.value()//x)
         else:
@@ -321,7 +314,7 @@ class Float(Generic[Tag]):
     @overload
     def __truediv__(self, x:Self) -> float:
         pass
-    def __truediv__(self, x):
+    def __truediv__(self, x:Any) -> Any:
         if isinstance(x,int) or isinstance(x,float):
             return self.__class__(self.value()/x)
         else:
@@ -334,7 +327,7 @@ class Float(Generic[Tag]):
     @overload
     def __mul__(self, x:float) -> Self:
         pass
-    def __mul__(self, x):
+    def __mul__(self, x:Any) -> Any:
         return self.__class__(self.value()*x)
 
     @overload
@@ -343,7 +336,7 @@ class Float(Generic[Tag]):
     @overload
     def __rmul__(self, x:float) -> Self:
         pass
-    def __rmul__(self, x):
+    def __rmul__(self, x:Any)->Any:
         return self.__class__(x*self.value())
 
     @overload
@@ -355,7 +348,7 @@ class Float(Generic[Tag]):
     @overload
     def __mod__(self, other:Self)->float:
         pass
-    def __mod__(self, other):
+    def __mod__(self, other:Any)->Any:
         if isinstance(other,int) or isinstance(other,float):
             return self.__class__(self.value()%other)
         else:
@@ -416,7 +409,7 @@ class Str(Generic[Tag]):
     def value(self)->str:
         return self.__value
 
-    def __eq__(self,other)->bool:
+    def __eq__(self,other:Any)->bool:
         '''equality test ignores possible subclass relationships, i.e. only valid
            for two object of exactly the same class; except that python insists
            supporting __eq__ for objects of any type, so this functions allows
@@ -427,7 +420,7 @@ class Str(Generic[Tag]):
            If you choose to inherit from Timestamp, make sure you write your own __eq__'''
         return eq(self,other)
 
-    def __ne__(self,other)->bool:
+    def __ne__(self,other:Any)->bool:
         return not eq(self,other)
 
     def __str__(self)->str:
@@ -439,7 +432,7 @@ class Str(Generic[Tag]):
     def __format__(self, format_spec:str)->str:
         return self.value().__format__(format_spec)
 
-    def splitlines(self,keepends=False)->List:
+    def splitlines(self,keepends:bool=False)->List[Self]:
         return [self.__class__(_) for _ in self.value().splitlines()]
 
     def encode(self,encoding:str='utf-8', errors:str='strict')->bytes:
@@ -451,16 +444,16 @@ class Str(Generic[Tag]):
     def zfill(self,width:int)->Self:
         return self.__class__(self.value().zfill(width))
 
-    def format_map(self,mapping:Mapping):
+    def format_map(self,mapping:Mapping[Any,Any]) -> Self:
         return self.__class__(self.value().format_map(mapping))
 
-    def format(self,*args,**kwargs):
+    def format(self,*args:Any,**kwargs:Any) -> Any:
         return self.__class__(self.value().format(*args,**kwargs))
     
-    def expandtabs(self,tabsize=8)->Self:
+    def expandtabs(self,tabsize:int=8)->Self:
         return self.__class__(self.value().expandtabs(tabsize))
 
-    def __getitem__(self,key):
+    def __getitem__(self,key:Any) -> Any:
         return self.value().__getitem__(key)
 
     
@@ -529,8 +522,8 @@ class Str(Generic[Tag]):
     @overload
     def rfind(self, sub:str, start:int, end:int)->int:
         pass
-    def rfind(self, sub, *args):
-        return self.value().rfind(sub,*args)
+    def rfind(self, *args:Any, **kwargs:Any) -> Any:
+        return self.value().rfind(*args)
     @overload
     def find(self, sub:str) -> int:
         pass
@@ -540,8 +533,8 @@ class Str(Generic[Tag]):
     @overload
     def find(self, sub:str, start:int, end:int)->int:
         pass
-    def find(self, sub, *args):
-        return self.value().find(sub,*args)
+    def find(self, *args:Any, **kwargs:Any) -> Any:
+        return self.value().find(*args)
     @overload
     def rindex(self, sub:str) -> int:
         pass
@@ -551,8 +544,8 @@ class Str(Generic[Tag]):
     @overload
     def rindex(self, sub:str, start:int, end:int)->int:
         pass
-    def rindex(self, sub, *args):
-        return self.value().rindex(sub,*args)
+    def rindex(self, *args:Any, **kwargs:Any) -> Any:
+        return self.value().rindex(*args)
     @overload
     def index(self, sub:str) -> int:
         pass
@@ -562,8 +555,8 @@ class Str(Generic[Tag]):
     @overload
     def index(self, sub:str, start:int, end:int)->int:
         pass
-    def index(self, sub, *args):
-        return self.value().index(sub,*args)
+    def index(self, *args:Any, **kwargs:Any) -> Any:
+        return self.value().index(*args)
     @overload
     def count(self, sub:str) -> int:
         pass
@@ -573,8 +566,8 @@ class Str(Generic[Tag]):
     @overload
     def count(self, sub:str, start:int, end:int)->int:
         pass
-    def count(self, sub, *args):
-        return self.value().count(sub,*args)
+    def count(self, *args:Any, **kwargs:Any) -> Any:
+        return self.value().count(*args)
     @overload
     def translate(self, sub:str) -> int:
         pass
@@ -584,8 +577,8 @@ class Str(Generic[Tag]):
     @overload
     def translate(self, sub:str, start:int, end:int)->int:
         pass
-    def translate(self, sub, *args):
-        return self.value().translate(sub,*args)
+    def translate(self, *args:Any, **kwargs:Any) -> Any:
+        return self.value().translate(*args)
     @overload
     def endswith(self, s:str) -> bool:
         pass
@@ -595,8 +588,8 @@ class Str(Generic[Tag]):
     @overload
     def endswith(self, s:str, start:int, end:int)->bool:
         pass
-    def endswith(self, s, *args):
-        return self.value().endswith(s,*args)
+    def endswith(self, *args:Any, **kwargs:Any) -> Any:
+        return self.value().endswith(*args)
     @overload
     def startswith(self, s:str) -> bool:
         pass
@@ -606,19 +599,19 @@ class Str(Generic[Tag]):
     @overload
     def startswith(self, s:str, start:int, end:int)->bool:
         pass
-    def startswith(self, s, *args):
-        return self.value().startswith(s,*args)
-    def strip(self, chars:Optional[str]=None)->Self:
+    def startswith(self, *args:Any, **kwargs:Any) -> Any:
+        return self.value().startswith(*args)
+    def strip(self, chars:str|None=None)->Self:
         return self.__class__(self.value().strip(chars))
-    def lstrip(self, chars:Optional[str]=None)->Self:
+    def lstrip(self, chars:str|None=None)->Self:
         return self.__class__(self.value().lstrip(chars))
-    def rstrip(self, chars:Optional[str]=None)->Self:
+    def rstrip(self, chars:str|None=None)->Self:
         return self.__class__(self.value().rstrip(chars))
-    def replace(self, old:str, new:str, count=-1)->Self:
+    def replace(self, old:str, new:str, count:int=-1)->Self:
         return self.__class__(self.value().replace(old,new,count))
-    def split(self, sep:Optional[str]=None, max_split=-1)->List[str]:
+    def split(self, sep:Optional[str]=None, max_split:int=-1)->List[str]:
         return self.value().split(sep,max_split)
-    def rsplit(self, sep:Optional[str]=None, max_split=-1)->List[str]:
+    def rsplit(self, sep:Optional[str]=None, max_split:int=-1)->List[str]:
         return self.value().rsplit(sep,max_split)
     def partition(self,sep:str) -> Tuple[str,str,str]:
         return self.value().partition(sep)

@@ -16,6 +16,8 @@
 %verify-test-newtype.x5-fail
 %verify-test-newtype.x6-fail
 %verify-test-newtype.x7-fail
+%verify-test-newtype.x8-fail
+#does not work! %verify-test-newtype.x9-fail
 
 %verify-test-cmc.x1-fail==(%test-cmc.x1.errs)+cmd=grep -q '"MRO"':stdout
 
@@ -42,6 +44,12 @@
 
 %verify-test-newtype.x7-fail==(%test-newtype.x7.errs)+cmd=grep -q '"7.s type <class .__main__.Hours.> is not the same as 8.s type <class .__main__.Minutes.>"':stdout
 %test-newtype.x7.errs==(test-newtype.x7.py)+(%py-opts):py3.exec.output:err
+
+%verify-test-newtype.x8-fail==(%test-newtype.x8.errs)+cmd=grep -q '"Non-overlapping equality check"':stdout
+%test-newtype.x8.errs==(test-newtype.x8.py)+(%py-opts):py3.exec.output:err
+
+%verify-test-newtype.x9-fail==(%test-newtype.x9.errs)+cmd=grep -q '"Non-overlapping equality check"':stdout
+%test-newtype.x9.errs==(test-newtype.x9.py)+(%py-opts):py3.exec.output:err
 
 %py-opts==<<
 +(..%py-opts)

@@ -169,7 +169,6 @@ Assert('{:02d}'.format(h1))=='07'
 Assert(h1.__float__())==7.0
 Assert(abs(Hours(-5)))==Hours(5)
 Assert(~h1)==Hours(~h1.value())
-Assert(h1.conjugate())==h1.value().conjugate()
 Assert(divmod(h1,Hours(2)))==(3,1)
 Assert(divmod(h1,2))==(Hours(3),Hours(1))
 Assert(divmod(h1,1.5))==(4.0,1.0)
@@ -191,7 +190,7 @@ else:
     assert False
     pass
 try:
-    Hours(3)*Hours(4)
+    Hours(3)*Hours(4)  # type: ignore # or mypy rightly rejects
 except TypeError as e:
     Assert("unsupported operand type(s) for *: 'Hours' and 'Hours'").isIn(readable_repr(e))
 else:
@@ -340,7 +339,6 @@ Assert(f'{l1:0.2f}')=='7.50'
 Assert(int(l1))==7
 Assert(float(l1))==7.5
 Assert(l1.hex())==float(7.5).hex()
-Assert(l1.conjugate())==float(7.5).conjugate()
 Assert(divmod(l1,2))==tuple(Length(x) for x in divmod(7.5,2))
 Assert(divmod(l1,1.5))==tuple(Length(x) for x in divmod(7.5,1.5))
 Assert(divmod(l1,l2))==divmod(7.5,10.0)
