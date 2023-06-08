@@ -1015,6 +1015,8 @@ class ClassCodec:
                 except Exception:
                     raise in_context(f'encode attribute {n}') from None
                 pass
+            if hasattr(self.t, '__encode__'):
+                result = self.t.__encode__(result)
             return result
         except Exception:
             raise in_function_context(ClassCodec.encode,vars()) from None
@@ -1024,6 +1026,8 @@ class ClassCodec:
         try:
             def back_ref(x:JsonType) -> object:
                 return self.decode(x,None)
+            if hasattr(self.t, '__decode__'):
+                x = self.t.__decode__(x)
             attr_values={}
             for n, attr_codec in self.attr_codecs.items():
                 if n in x:

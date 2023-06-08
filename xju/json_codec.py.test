@@ -16,6 +16,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 from sys import path
+import ipaddress
 from os.path import dirname
 if path[0]==dirname(__file__): path.pop(0)
 
@@ -930,6 +931,33 @@ Assert(court_codec.decode({'game':'badminton', 'width':8, 'length': 10})).isInst
 Assert(court_codec.encode(NetballCourt(width=Metres(8),length=Metres(10)))=={'game':'netball', 'width':8, 'length': 10})
 Assert(court_codec.encode(BasketballCourt(width=Metres(8),length=Metres(10)))=={'game':'basketball', 'width':8, 'length': 10})
 Assert(court_codec.encode(Court(game='badminton',width=Metres(8),length=Metres(10)))=={'game':'badminton', 'width':8, 'length': 10})
+
+
+# the Python type can define special encoding or decoding.
+# E.g. the JSON can contain an IP addresses as a simple string,
+# while ot appears as an objects of the "ipaddress" package.
+
+@dataclass
+class IpAddrWithPrefix(ipaddress.IPv4Interface):
+    """An IP host address in a network, e.g. 10.1.1.49/24"""
+    if_str: str
+    def __post_init__(self):
+        super().__init__(self.if_str)
+    @staticmethod
+    def __decode__(encoded: str) -> dict:
+        return {'if_str':encoded}
+    @staticmethod
+    def __encode__(decoded: dict) -> str:
+        return decoded['if_str']
+
+@dataclass
+class Router:
+    name: str
+    ifv4: IpAddrWithPrefix
+
+Assert(codec(Router).decode({'name':'fred','ifv4':'10.1.7.44/22'}))==Router(name='fred',ifv4=IpAddrWithPrefix('10.1.7.44/22'))
+Assert(codec(Router).decode({'name':'fred','ifv4':'10.1.7.44/22'}).ifv4.network)==ipaddress.IPv4Network("10.1.4.0/22")
+Assert(codec(Router).encode(Router(name='fred',ifv4=IpAddrWithPrefix('10.1.7.44/22'))))=={'name':'fred','ifv4':'10.1.7.44/22'}
 
 
 # generic class codecs are supported, for example a messages might
