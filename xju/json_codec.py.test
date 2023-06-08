@@ -28,6 +28,7 @@ from types import NoneType
 from dataclasses import dataclass, field
 import re
 import sys
+import ipaddress
 
 from xju.assert_ import Assert
 import xju.newtype
@@ -332,6 +333,8 @@ else:
 #     attributes are treated specially, see string literal attributes below)
 #   - when decoding, class is always initialised via keyword args (note that
 #     dataclass generates __init__ function that supports keyword args)
+#   - class may implement CustomClassCodec protocol for custom encodings, see
+#     IpAddr below
 @dataclass
 class Address:
     street:'Street'
@@ -398,13 +401,6 @@ class ManagerName:
 class UnitAddress(Address,ManagerName):
     unit:Unit
 
-# ... __init__ argument order is assumed to be that used by dataclass, i.e. classes in
-# reverse-mro (see python mro() and __mro__) with attributes of each class in usual order, so
-# order of UnitAddress __init__ args is
-# ManagerName attrs in order (i.e. a, b) then Address attrs in order (i.e. street, suburb, postcode)
-# then UnitAddress attributes in order (i.e. unit), so in total:
-# a, b, street, suburb, postcode.
-# Decode does not care about json dict order...
 Assert(codec(UnitAddress).decode({
     'street':'alba',
     'suburb': 'bocca',
@@ -413,7 +409,7 @@ Assert(codec(UnitAddress).decode({
     'a': 'fred',
     'b': 17}))==UnitAddress('fred',17,Street('alba'),Suburb('bocca'),Postcode(3365),Unit('17a'))
 
-# ... encode will order attrs per description above
+# ... encode will order attrs per python mro()
 Assert(codec(UnitAddress).encode(
     UnitAddress('fred',17,Street('alba'),Suburb('bocca'),Postcode(3365),unit=Unit('17a'))))=={
         'a': 'fred',
@@ -430,7 +426,53 @@ Assert(list(cast(dict,codec(UnitAddress).encode(
         'suburb',
         'postcode',
         'unit']
-        
+
+# custom class encoding...
+@dataclass
+class Manager:
+    name: str
+    @staticmethod
+    def xju_json_codec_encode(x:object) -> JsonType:
+        assert isinstance(x,Manager)
+        return { 'type': 'Manager', 'name': x.name }
+    @staticmethod
+    def xju_json_codec_decode(x:JsonType) -> object:
+        decoded=codec(dict[str,str]).decode(x)
+        if 'type' not in decoded:
+            raise Exception("{x} is does not have 'type' attribute")
+        if decoded['type'] != 'Manager':
+            raise Exception("{x}'s type is not 'Manager'")
+        if 'name' not in decoded:
+            raise Exception("{x} is does not have 'name' attribute")
+        return Manager(decoded['name'])
+    pass
+
+Assert(codec(Manager).encode(Manager('alan')))=={'type':'Manager','name':'alan'}
+Assert(codec(Manager).decode({'type':'Manager','name':'alan'})).isInstanceOf(Manager)
+Assert(codec(Manager).decode({'type':'Manager','name':'alan'}))==Manager('alan')
+try:
+    m=codec(Manager).decode({'type':'Employee','name':'alan'})
+except Exception as e:
+    Assert("type is not 'Manager'").isIn(readable_repr(e))
+else:
+    assert False, m
+    
+
+# custom class encoding of an external type...
+class IpV4Addr(ipaddress.IPv4Address):
+    @staticmethod
+    def xju_json_codec_encode(x:object) -> JsonType:
+        assert isinstance(x,IpV4Addr)
+        return codec(str).encode(x.exploded)
+    @staticmethod
+    def xju_json_codec_decode(x:JsonType) -> object:
+        return IpV4Addr(codec(str).decode(x))
+    pass
+
+Assert(codec(IpV4Addr).encode(IpV4Addr('172.18.12.1')))=='172.18.12.1'
+Assert(codec(IpV4Addr).decode('172.18.12.1')).isInstanceOf(IpV4Addr)
+Assert(codec(IpV4Addr).decode('172.18.12.1'))==IpV4Addr('172.18.12.1')
+
 
 # string/int/bool literals
 #mypy 1.0.0 bug:

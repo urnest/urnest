@@ -34,7 +34,7 @@ from typing import Sequence, Literal, NewType
 from typing import _LiteralGenericAlias  # type: ignore  # mypy 1.1.1
 from typing import _UnionGenericAlias  # type: ignore  # mypy 1.1.1
 from typing import _GenericAlias  # type: ignore  # mypy 1.2.0
-from typing import get_origin,get_args
+from typing import get_origin,get_args, runtime_checkable
 from types import GenericAlias, UnionType, NoneType
 import xju.newtype
 
@@ -994,16 +994,37 @@ class LiteralBoolCodec:
             f"}})({expression})")
     pass
 
+@runtime_checkable
+class CustomClassCodec(Protocol):
+    '''implement these methods on class T to use custom encoding of instances of T'''
+    @staticmethod
+    def xju_json_codec_encode(
+            x:object  # x is a T
+    ) -> dict:  # JSON-encodable
+        pass
+    @staticmethod
+    def xju_json_codec_decode(x:JsonType) -> object:  # must return a T
+        pass
+    pass
+
 class ClassCodec:
     t:type
     attr_codecs:dict[str,Any]  # codec
+    custom_encode:None|Callable[[object],JsonType]=None
+    custom_decode:None|Callable[[JsonType],object]=None
     def __init__(self, t:type, attr_codecs:dict[str,Any]):
         self.t=t
         self.attr_codecs=attr_codecs
+        if issubclass(t,CustomClassCodec):
+            self.custom_encode=t.xju_json_codec_encode
+            self.custom_decode=t.xju_json_codec_decode
         pass
-    def encode(self,x,_:None|Callable[[Any],JsonType]) -> dict:
+    def encode(self,x,_:None|Callable[[Any],JsonType]) -> JsonType:
         'encode {x} as a {self.t}'
         try:
+            if self.custom_encode is not None:
+                assert isinstance(x,self.t), (repr(x),self.t)
+                return self.custom_encode(x)
             if type(x) is not self.t:
                 xt=type(x)
                 raise Exception(f'{x!r} (of type {xt}) is not a {self.t}')
@@ -1025,6 +1046,10 @@ class ClassCodec:
     def decode(self,x,_:None|Callable[[JsonType],Any]) -> object:
         'deocde {x} as a {self.t}'
         try:
+            if self.custom_decode is not None:
+                result=self.custom_decode(x)
+                assert isinstance(result,self.t), (repr(result),self.t)
+                return result
             def back_ref(x:JsonType) -> object:
                 return self.decode(x,None)
             if hasattr(self.t, '__decode__'):
