@@ -965,7 +965,7 @@ class LiteralBoolCodec:
         if x != self.value:
             raise Exception(f'{x!r} is not {self.value!r}')
         return x
-    def get_json_schema(self, definitions:dict[bool,dict], self_ref:None|bool) -> dict:
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             'type': 'boolean',
             'enum': [ self.value ]
@@ -1000,34 +1000,55 @@ class CustomClassCodec(Protocol):
     @staticmethod
     def xju_json_codec_encode(
             x:object  # x is a T
-    ) -> dict:  # JSON-encodable
+    ) -> JsonType:
+        assert False  #pragma NO COVER
         pass
     @staticmethod
     def xju_json_codec_decode(x:JsonType) -> object:  # must return a T
+        assert False  #pragma NO COVER
         pass
+    @staticmethod
+    def xju_json_codec_get_json_schema(definitions:dict[str,dict]) -> dict:
+        '''return json schema for T
+           - may add any supporting definitions to definitions'''
+        assert False  #pragma NO COVER
+        return {}
+    @staticmethod
+    def xju_json_codec_get_typescript_isa(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        assert False  #pragma NO COVER
+        return TypeScriptSourceCode('')
+    @staticmethod
+    def xju_json_codec_get_typescript_asa(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        assert False  #pragma NO COVER
+        return TypeScriptSourceCode('')
     pass
 
 class ClassCodec:
     t:type
     attr_codecs:dict[str,Any]  # codec
-    custom_encode:None|Callable[[object],JsonType]=None
-    custom_decode:None|Callable[[JsonType],object]=None
+    custom_codec:CustomClassCodec|None = None
     def __init__(self, t:type, attr_codecs:dict[str,Any]):
         self.t=t
         self.attr_codecs=attr_codecs
         if issubclass(t,CustomClassCodec):
-            self.custom_encode=t.xju_json_codec_encode
-            self.custom_decode=t.xju_json_codec_decode
+            self.custom_codec=t
         pass
     def encode(self,x,_:None|Callable[[Any],JsonType]) -> JsonType:
         'encode {x} as a {self.t}'
         try:
-            if self.custom_encode is not None:
-                assert isinstance(x,self.t), (repr(x),self.t)
-                return self.custom_encode(x)
             if type(x) is not self.t:
                 xt=type(x)
                 raise Exception(f'{x!r} (of type {xt}) is not a {self.t}')
+            if self.custom_codec is not None:
+                return self.custom_codec.xju_json_codec_encode(x)
             def back_ref(x:Any) -> JsonType:
                 return self.encode(x,None)
             result={}
@@ -1037,8 +1058,6 @@ class ClassCodec:
                 except Exception:
                     raise in_context(f'encode attribute {n}') from None
                 pass
-            if hasattr(self.t, '__encode__'):
-                result = self.t.__encode__(result)
             return result
         except Exception:
             raise in_function_context(ClassCodec.encode,vars()) from None
@@ -1046,14 +1065,12 @@ class ClassCodec:
     def decode(self,x,_:None|Callable[[JsonType],Any]) -> object:
         'deocde {x} as a {self.t}'
         try:
-            if self.custom_decode is not None:
-                result=self.custom_decode(x)
+            if self.custom_codec is not None:
+                result=self.custom_codec.xju_json_codec_decode(x)
                 assert isinstance(result,self.t), (repr(result),self.t)
                 return result
             def back_ref(x:JsonType) -> object:
                 return self.decode(x,None)
-            if hasattr(self.t, '__decode__'):
-                x = self.t.__decode__(x)
             attr_values={}
             for n, attr_codec in self.attr_codecs.items():
                 if n in x:
@@ -1078,6 +1095,8 @@ class ClassCodec:
             return self.t.__name__
         return f'{self.t.__module__}.{self.t.__name__}'
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        if self.custom_codec is not None:
+            return self.custom_codec.xju_json_codec_get_json_schema(definitions)
         fqn=self.get_type_fqn()
         self_ref=f'#/definitions/{fqn}'
         if not fqn in definitions:
@@ -1153,6 +1172,8 @@ class ClassCodec:
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace,
                            back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        if self.custom_codec is not None:
+            return self.custom_codec.xju_json_codec_get_typescript_isa(expression,namespace)
         self.ensure_typescript_defs(namespace)
         fqn=self.get_type_fqn().split('.')
         return TypeScriptSourceCode('.'.join(fqn[0:-1]+[f"isInstanceOf{fqn[-1]}({expression})"]))
@@ -1161,6 +1182,8 @@ class ClassCodec:
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace,
                            back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        if self.custom_codec is not None:
+            return self.custom_codec.xju_json_codec_get_typescript_asa(expression,namespace)
         self.ensure_typescript_defs(namespace)
         fqn=self.get_type_fqn().split('.')
         fqn=self.get_type_fqn().split('.')

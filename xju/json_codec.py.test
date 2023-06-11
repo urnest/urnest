@@ -21,7 +21,7 @@ from os.path import dirname
 if path[0]==dirname(__file__): path.pop(0)
 
 from xju.json_codec import codec, Codec, JsonType, AnyJsonCodec, SelfCodec
-from xju.json_codec import TypeScriptSourceCode, TypeScriptNamespace
+from xju.json_codec import TypeScriptSourceCode, TypeScriptNamespace, CustomClassCodec
 
 from typing import cast, Type, Literal, Any, Self, NewType, Generic, TypeVar
 from types import NoneType
@@ -427,51 +427,90 @@ Assert(list(cast(dict,codec(UnitAddress).encode(
         'postcode',
         'unit']
 
-# custom class encoding...
-@dataclass
-class Manager:
-    name: str
-    @staticmethod
-    def xju_json_codec_encode(x:object) -> JsonType:
-        assert isinstance(x,Manager)
-        return { 'type': 'Manager', 'name': x.name }
-    @staticmethod
-    def xju_json_codec_decode(x:JsonType) -> object:
-        decoded=codec(dict[str,str]).decode(x)
-        if 'type' not in decoded:
-            raise Exception("{x} is does not have 'type' attribute")
-        if decoded['type'] != 'Manager':
-            raise Exception("{x}'s type is not 'Manager'")
-        if 'name' not in decoded:
-            raise Exception("{x} is does not have 'name' attribute")
-        return Manager(decoded['name'])
-    pass
-
-Assert(codec(Manager).encode(Manager('alan')))=={'type':'Manager','name':'alan'}
-Assert(codec(Manager).decode({'type':'Manager','name':'alan'})).isInstanceOf(Manager)
-Assert(codec(Manager).decode({'type':'Manager','name':'alan'}))==Manager('alan')
-try:
-    m=codec(Manager).decode({'type':'Employee','name':'alan'})
-except Exception as e:
-    Assert("type is not 'Manager'").isIn(readable_repr(e))
-else:
-    assert False, m
-    
-
-# custom class encoding of an external type...
+# custom class encoding by implementing CustomClassCodec protocol, for example
+# to support encoding of external types with control over their json representation
 class IpV4Addr(ipaddress.IPv4Address):
+    __xju_json_codec=codec(str)
+
     @staticmethod
     def xju_json_codec_encode(x:object) -> JsonType:
         assert isinstance(x,IpV4Addr)
-        return codec(str).encode(x.exploded)
+        return IpV4Addr.__xju_json_codec.encode(x.exploded)
     @staticmethod
     def xju_json_codec_decode(x:JsonType) -> object:
-        return IpV4Addr(codec(str).decode(x))
+        return IpV4Addr(IpV4Addr.__xju_json_codec.decode(x))
+    @staticmethod
+    def xju_json_codec_get_json_schema(definitions:dict[str,dict]) -> dict:
+        '''return json schema for T'''
+        '''- may add any supporting definitions to definitions'''
+        return IpV4Addr.__xju_json_codec.get_json_schema()
+    @staticmethod
+    def xju_json_codec_get_typescript_isa(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        return IpV4Addr.__xju_json_codec.get_typescript_isa(expression,namespace)
+
+    @staticmethod
+    def xju_json_codec_get_typescript_asa(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        return IpV4Addr.__xju_json_codec.get_typescript_asa(expression,namespace)
     pass
 
+Assert(IpV4Addr).isSubclassOf(CustomClassCodec)
 Assert(codec(IpV4Addr).encode(IpV4Addr('172.18.12.1')))=='172.18.12.1'
 Assert(codec(IpV4Addr).decode('172.18.12.1')).isInstanceOf(IpV4Addr)
 Assert(codec(IpV4Addr).decode('172.18.12.1'))==IpV4Addr('172.18.12.1')
+
+
+# REVISIT: adjust IpAddrWithPrefix to generate a typescript alias
+@dataclass
+class IpAddrWithPrefix(ipaddress.IPv4Interface):
+    """An IP host address in a network, e.g. 10.1.1.49/24"""
+    if_str: str
+    __codec=codec(str)
+    def __post_init__(self):
+        super().__init__(self.if_str)
+    @staticmethod
+    def xju_json_codec_decode(x:JsonType) -> object:
+        return IpAddrWithPrefix(IpAddrWithPrefix.__codec.decode(x))
+    @staticmethod
+    def xju_json_codec_encode(x:object) -> JsonType:
+        assert isinstance(x,IpAddrWithPrefix)
+        return IpAddrWithPrefix.__codec.encode(x.if_str)
+    @staticmethod
+    def xju_json_codec_get_json_schema(definitions:dict[str,dict]) -> dict:
+        '''return json schema for T'''
+        '''- may add any supporting definitions to definitions'''
+        return IpAddrWithPrefix.__codec.get_json_schema()
+    @staticmethod
+    def xju_json_codec_get_typescript_isa(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        return IpAddrWithPrefix.__codec.get_typescript_isa(expression,namespace)
+
+    @staticmethod
+    def xju_json_codec_get_typescript_asa(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        return IpAddrWithPrefix.__codec.get_typescript_asa(expression,namespace)
+
+@dataclass
+class Router:
+    name: str
+    ifv4: IpAddrWithPrefix
+
+Assert(codec(Router).decode({'name':'fred','ifv4':'10.1.7.44/22'}))==Router(name='fred',ifv4=IpAddrWithPrefix('10.1.7.44/22'))
+Assert(codec(Router).decode({'name':'fred','ifv4':'10.1.7.44/22'}).ifv4.network)==ipaddress.IPv4Network("10.1.4.0/22")
+Assert(codec(Router).encode(Router(name='fred',ifv4=IpAddrWithPrefix('10.1.7.44/22'))))=={'name':'fred','ifv4':'10.1.7.44/22'}
 
 
 # string/int/bool literals
@@ -723,6 +762,7 @@ Assert(codec(Address).get_json_schema())=={
             'description': 'Address',
             'type': 'object',
             'properties': {'street': {'description': 'Street', 'type': 'string'}, 'suburb': {'description': 'Suburb', 'type': 'string'}, 'postcode': {'description': 'Postcode', 'type': 'integer'}}}}}
+Assert(codec(IpV4Addr).get_json_schema())=={'type': 'string', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}
 
 
 
@@ -997,33 +1037,6 @@ Assert(court_codec.encode(BasketballCourt(width=Metres(8),length=Metres(10)))=={
 Assert(court_codec.encode(Court(game='badminton',width=Metres(8),length=Metres(10)))=={'game':'badminton', 'width':8, 'length': 10})
 
 
-# the Python type can define special encoding or decoding.
-# E.g. the JSON can contain an IP addresses as a simple string,
-# while ot appears as an objects of the "ipaddress" package.
-
-@dataclass
-class IpAddrWithPrefix(ipaddress.IPv4Interface):
-    """An IP host address in a network, e.g. 10.1.1.49/24"""
-    if_str: str
-    def __post_init__(self):
-        super().__init__(self.if_str)
-    @staticmethod
-    def __decode__(encoded: str) -> dict:
-        return {'if_str':encoded}
-    @staticmethod
-    def __encode__(decoded: dict) -> str:
-        return decoded['if_str']
-
-@dataclass
-class Router:
-    name: str
-    ifv4: IpAddrWithPrefix
-
-Assert(codec(Router).decode({'name':'fred','ifv4':'10.1.7.44/22'}))==Router(name='fred',ifv4=IpAddrWithPrefix('10.1.7.44/22'))
-Assert(codec(Router).decode({'name':'fred','ifv4':'10.1.7.44/22'}).ifv4.network)==ipaddress.IPv4Network("10.1.4.0/22")
-Assert(codec(Router).encode(Router(name='fred',ifv4=IpAddrWithPrefix('10.1.7.44/22'))))=={'name':'fred','ifv4':'10.1.7.44/22'}
-
-
 # generic class codecs are supported, for example a messages might
 # carry generic payloads:
 
@@ -1067,6 +1080,12 @@ timestamp_codec=codec(Timestamp)
 # xju.time.asInstanceOfTimestamp(), xju.time.isInstanceOfTimestamp():
 timestamp_codec.ensure_typescript_defs(typescript_namespace)
 
+Assert(codec(IpV4Addr).get_typescript_isa(TypeScriptSourceCode('7'),typescript_namespace))==TypeScriptSourceCode("(typeof (7) == 'string')")
+Assert(codec(IpV4Addr).get_typescript_asa(TypeScriptSourceCode('7'),typescript_namespace))==TypeScriptSourceCode("""((v: any): string => {
+    if (typeof v !== 'string') throw new Error(`${v} is not a string it is a ${typeof v}`);
+    return v as string;
+})(7)""")
+       
 # ... get_formatted_defs() generates the typescript source code:
 Assert(typescript_namespace.get_formatted_defs())==TypeScriptSourceCode(
     '''\
