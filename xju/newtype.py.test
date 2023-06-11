@@ -244,14 +244,6 @@ Assert(h1.as_integer_ratio())==h1.value().as_integer_ratio()
 Assert(Hours(7)!=Hours(8))==True
 
 try:
-    Hours(7)==7
-except Exception as e:
-    Assert(readable_repr(e))=="7's type <class '__main__.Hours'> is not the same as 7's type <class 'int'>"
-else:
-    assert False
-    pass
-
-try:
     Hours(7)+cast(Hours,7)
 except Exception as e:
     Assert("unsupported operand type(s) for +: 'Hours' and 'int'").isIn(readable_repr(e))
@@ -415,3 +407,8 @@ else:
     assert False
     pass
 
+y:list[LastName|Weight|Hours] = [ LastName('fred'), Weight(7.8), Hours(9) ]
+
+Assert(LastName('jock') not in y)==True
+Assert(Hours(2) not in y)==True
+Assert(Weight(2.1) not in y)==True
