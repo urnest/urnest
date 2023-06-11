@@ -69,11 +69,11 @@ Various modules implemented to some broad principles:
 * see `xju/cmc/ThreadMutexLockCondition.py.test <xju/cmc/ThreadMutexLockCondition.py.test>`_ for sample code
 
 
-`xju.cmc.Task <xju/cmc/__init__.py>`_
+`xju.cmc.AsyncTask/Mutex/Lock/Condition <xju/cmc/__init__.py>`_
 
-* asyncio Task context manager
+* asyncio Task/Mutex/Lock/Condition context managers
 
-* see `xju/cmc/Task.py.test <xju/cmc/Task.py.test>`_ for sample code
+* see `xju/cmc/Task.py.test <xju/cmc/AsyncTaskMutexLockCondition.py.test>`_ for sample code
 
 
 `xju.cmc.AsyncServiceQueue <xju/cmc/__init__.py>`_
@@ -117,6 +117,8 @@ Various modules implemented to some broad principles:
 
 * generates typescript code (types, type-guards and dynamic casts) equivalents
 
+* extensible with custom encodings
+
 * see `xju/json_codec.py.test <xju/json_codec.py.test>`_ for full sample code
 
 
@@ -149,6 +151,12 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 1.2.13 xju.newtype Literals now handle more than one value, e.g. Literal['fred','jock']
+- 1.2.13 xju.newtype eq/neq now follows python "you can compare apples to oranges", rely on mypy --strict-equality (which for what it's worth is broken at mypy 1.3.0)
+- 1.2.13 now compatible with mypy --strict-equality
+- 1.2.13 add xju.cmc.AsyncTask/Mutex/Condition/Lock (thread equivalents for asyncio); note Task deprecated, use AsyncTask
+- 1.2.13 add custom encoding facility to xju.json_codec
+- 1.2.13 add typescript aliases to json_codec generated code for xju.newtype Str/Int/Float
 - 1.2.12 fixes typescript null v object handling
 - 1.2.12 adds typescript aliases for NewStr, NewInt, NewFloat
 - 1.2.11 adds typescript --strict support and fixes typescript code generation bugs
