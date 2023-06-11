@@ -1,0 +1,254 @@
+#!/bin/env python3
+from xju.assert_ import Assert
+
+from parsers import (
+    eat_logical_line,
+    eat_multi_line_whitespace,
+    eat_same_line_whitespace,
+    parse_abs_name,AbsName,Identifier,
+    parse_close_bracket,
+    parse_comma,
+    parse_dot,
+    parse_from_clause,
+    parse_from_import, FromImport,
+    parse_name,
+    parse_open_bracket,
+    parse_plain_clause,
+    parse_plain_import, PlainImport,
+    parse_identifier,
+    parse_rel_name,RelName,
+    parse_rest_of_line,
+    format_plain_imported_modules,
+    format_from_imported_modules
+)
+import parsers
+
+# import v backslash continuations:
+'''
+xju@xjutv:~/urnest$ python
+Python 3.11.1 (main, Jan 22 2023, 13:31:53) [GCC 9.3.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> im\
+... port fred
+  File "<stdin>", line 2
+    port fred
+    ^^^^
+SyntaxError: invalid syntax
+>>> import \
+... fred
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ModuleNotFoundError: No module named 'fred'
+>>> import xju.json_codec, xju.newtype
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ModuleNotFoundError: No module named 'xju.json_codec'
+>>>     
+xju@xjutv:~/urnest$ PYTHONPATH=. python
+Python 3.11.1 (main, Jan 22 2023, 13:31:53) [GCC 9.3.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import xju.json_codec,
+  File "<stdin>", line 1
+    import xju.json_codec,
+                          ^
+SyntaxError: invalid syntax
+>>> import xju.\
+... json_codec
+>>> import xju. json_codec
+>>> import xju\
+... .json_codec
+>>> import xju.\
+...   json_codec
+>>>
+'''
+
+Assert(eat_same_line_whitespace(''))==''
+Assert(eat_same_line_whitespace('    \n'))=='\n'
+Assert(eat_same_line_whitespace('\\\n  fred'))=='fred'
+Assert(eat_same_line_whitespace('    \tfred \n'))=='fred \n'
+Assert(eat_same_line_whitespace('    \t#fred \n'))=='\n'
+
+Assert(eat_multi_line_whitespace(''))==''
+Assert(eat_multi_line_whitespace('    \n'))==''
+Assert(eat_multi_line_whitespace('    \t\n  fred \n'))=='fred \n'
+Assert(eat_multi_line_whitespace('    \t\n  #fred \njock'))=='jock'
+Assert(eat_multi_line_whitespace('\\\n  fred'))=='fred'
+Assert(eat_multi_line_whitespace('\n  fred'))=='fred'
+
+Assert(parse_rest_of_line('',eat_same_line_whitespace))==('','')
+Assert(parse_rest_of_line('  fred \n  \\\n   \njock',eat_same_line_whitespace))==('  fred ','jock')
+
+Assert(parse_open_bracket(' (fred',eat_same_line_whitespace))==None
+Assert(parse_open_bracket('(  fred',eat_same_line_whitespace))==('(','fred')
+
+Assert(parse_close_bracket(' )fred',eat_same_line_whitespace))==None
+Assert(parse_close_bracket(')  fred',eat_same_line_whitespace))==(')','fred')
+
+Assert(parse_dot(' .fred',eat_same_line_whitespace))==None
+Assert(parse_dot('.  fred',eat_same_line_whitespace))==('.','fred')
+
+Assert(parse_comma(' ,fred',eat_same_line_whitespace))==None
+Assert(parse_comma(',  fred',eat_same_line_whitespace))==(',','fred')
+
+Assert(parse_identifier(' )fred',eat_same_line_whitespace))==None
+Assert(parse_identifier('fred',eat_same_line_whitespace))==(Identifier('fred'),'')
+Assert(parse_identifier('_fred',eat_same_line_whitespace))==(Identifier('_fred'),'')
+Assert(parse_identifier('a7._b.fred',eat_same_line_whitespace))==(Identifier('a7'),'._b.fred')
+Assert(parse_identifier(r'''a7.\
+  _b.fred''',eat_same_line_whitespace))==(Identifier('a7'),'.\\\n  _b.fred')
+
+Assert(parse_abs_name(' )fred',eat_same_line_whitespace))==None
+Assert(parse_abs_name('fred',eat_same_line_whitespace))==(AbsName((Identifier('fred'),)),'')
+Assert(parse_abs_name('_fred',eat_same_line_whitespace))==(AbsName((Identifier('_fred'),)),'')
+Assert(parse_abs_name('a7._b.fred',eat_same_line_whitespace))==(AbsName((Identifier('a7'),
+                                                                         Identifier('_b'),
+                                                                         Identifier('fred'),)),'')
+Assert(parse_abs_name(r'''a7.\
+  _b.fred jock''',eat_same_line_whitespace))==(AbsName((Identifier('a7'),
+                                                        Identifier('_b'),
+                                                        Identifier('fred'),)),'jock')
+Assert(str(AbsName((Identifier('a7'),Identifier('_b'),Identifier('fred'),))))=='a7._b.fred'
+
+Assert(parse_rel_name(' )fred',eat_same_line_whitespace))==None
+Assert(parse_rel_name('',eat_same_line_whitespace))==None
+Assert(parse_rel_name('.fred',eat_same_line_whitespace))==(RelName(levels_up=0,
+                                                                   parts=(Identifier('fred'),)),'')
+Assert(parse_rel_name('.._fred',eat_same_line_whitespace))==(RelName(levels_up=1,
+                                                                     parts=(Identifier('_fred'),)),'')
+Assert(str(RelName(levels_up=1,parts=(Identifier('_fred'),))))=='.._fred'
+Assert(parse_rel_name('...a7._b.fred',eat_same_line_whitespace))==(RelName(levels_up=2,
+                                                                           parts=(
+                                                                               Identifier('a7'),
+                                                                               Identifier('_b'),
+                                                                               Identifier('fred'),)),'')
+Assert(parse_rel_name(r'''..a7.\
+  _b.fred jock''',eat_same_line_whitespace))==(RelName(levels_up=1,
+                                                       parts=(
+                                                           Identifier('a7'),
+                                                           Identifier('_b'),
+                                                           Identifier('fred'),)),'jock')
+
+Assert(parse_name(' )fred',eat_same_line_whitespace))==None
+Assert(parse_name('fred',eat_same_line_whitespace))==(AbsName((Identifier('fred'),)),'')
+Assert(parse_name('.fred',eat_same_line_whitespace))==(RelName(levels_up=0,
+                                                               parts=(Identifier('fred'),)),'')
+
+slw=eat_same_line_whitespace
+Assert(parse_plain_clause('7',slw))==None
+Assert(parse_plain_clause('fred  # type: ignore',slw))==((AbsName((Identifier('fred'),)),None),'')
+Assert(parse_plain_clause('fred.alan as jock  # type: ignore',slw))==((AbsName((Identifier('fred'),
+                                                                                Identifier('alan'),)),
+                                                                       Identifier('jock')),'')
+Assert(parse_plain_clause('..fred as jock  # type: ignore',slw))==(
+    (RelName(levels_up=1,
+             parts=(Identifier('fred'),)),
+     Identifier('jock')),'')
+Assert(parse_plain_clause('fred as 7',slw))==None
+
+Assert(parse_from_clause('7',slw))==None
+Assert(parse_from_clause('fred  # type: ignore',slw))==((Identifier('fred'),None),'')
+Assert(parse_from_clause('fred.alan as jock  # type: ignore',slw))==None
+Assert(parse_from_clause('fred as jock.  # type: ignore',slw))==None
+Assert(parse_from_clause('..fred as jock  # type: ignore',slw))==None
+Assert(parse_from_clause('fred as 7',slw))==None
+
+Assert(parse_plain_import('fred',slw))==None
+Assert(parse_plain_import('import fred as 7',slw))==None
+Assert(parse_plain_import('import fred as jock two',slw))==None
+Assert(parse_plain_import('import ..fred as jock \n14',slw))==(
+    PlainImport({RelName(levels_up=1,parts=(Identifier('fred'),)):Identifier('jock')}),
+    '\n14')
+
+Assert(parse_from_import('fred',slw))==None
+Assert(parse_from_import('import fred as 7',slw))==None
+Assert(parse_from_import('''from ...ann.quan import fred as jock,\\
+  sally as peter, ole \n14''',slw))==(
+    FromImport(RelName(levels_up=2,parts=(Identifier('ann'),Identifier('quan'),)),
+               {Identifier('fred'):Identifier('jock'),
+                Identifier('sally'):Identifier('peter'),
+                Identifier('ole'):None}),
+    '\n14')
+Assert(parse_from_import('''from parsers import (
+    eat_logical_line,
+    parse_rest_of_line
+)
+
+import''',slw))==(FromImport(module=AbsName(parts=(Identifier(value='parsers'),)),
+                             clauses={
+                                 Identifier(value='eat_logical_line'): None,
+                                 Identifier(value='parse_rest_of_line'): None}),
+                  '\n\nimport')
+Assert(parse_from_import('''from parsers import (
+    eat_logical_line,AbsName,
+    parse_rest_of_line,
+)
+
+import''',slw))==(FromImport(module=AbsName(parts=(Identifier(value='parsers'),)),
+                             clauses={
+                                 Identifier(value='eat_logical_line'): None,
+                                 Identifier(value='AbsName'): None,
+                                 Identifier(value='parse_rest_of_line'): None}),
+                  '\n\nimport')
+Assert(eat_logical_line('fred'))==''
+Assert(eat_logical_line('fred\n   jock'))=='   jock'
+Assert(eat_logical_line('fred\\\n  q\n'))==''
+
+Assert(parsers.parse_python_source_code_for_imports(r"""\n'))=='\n'
+Assert(eat_same_line_whitespace('\\\n """))==([],[])
+
+Assert(parsers.parse_python_source_code_for_imports(open(__file__).read()))==(
+    [
+        PlainImport(clauses={AbsName(parts=(Identifier(value='parsers'),)): None})
+    ], [
+        FromImport(module=AbsName(parts=(Identifier(value='xju'),
+                                         Identifier(value='assert_'))),
+                   clauses={
+                       Identifier(value='Assert'): None}),
+        FromImport(module=AbsName(parts=(Identifier(value='parsers'),)),
+                   clauses={
+                       Identifier(value='eat_logical_line'): None,
+                       Identifier(value='eat_multi_line_whitespace'): None,
+                       Identifier(value='eat_same_line_whitespace'): None,
+                       Identifier(value='parse_abs_name'): None,
+                       Identifier(value='AbsName'): None,
+                       Identifier(value='Identifier'): None,
+                       Identifier(value='parse_close_bracket'): None,
+                       Identifier(value='parse_comma'): None,
+                       Identifier(value='parse_dot'): None,
+                       Identifier(value='parse_from_clause'): None,
+                       Identifier(value='parse_from_import'): None,
+                       Identifier(value='FromImport'): None,
+                       Identifier(value='parse_name'): None,
+                       Identifier(value='parse_open_bracket'): None,
+                       Identifier(value='parse_plain_clause'): None,
+                       Identifier(value='parse_plain_import'): None,
+                       Identifier(value='PlainImport'): None,
+                       Identifier(value='parse_identifier'): None,
+                       Identifier(value='parse_rel_name'): None,
+                       Identifier(value='RelName'): None,
+                       Identifier(value='parse_rest_of_line'): None,
+                       Identifier(value='format_plain_imported_modules'): None,
+                       Identifier(value='format_from_imported_modules'): None})
+    ])
+
+
+Assert(format_plain_imported_modules(
+    PlainImport({RelName(levels_up=1,parts=(Identifier('fred'),)):Identifier('jock'),
+                 AbsName(parts=(Identifier('fred'),Identifier('ann'),)):Identifier('jock')}),
+)) == ['..fred', 'fred.ann']
+
+
+Assert(format_from_imported_modules(
+    FromImport(module=AbsName(parts=(Identifier(value='parsers'),)),
+               clauses={
+                   Identifier(value='eat_logical_line'): None,
+                   Identifier(value='parse_rest_of_line'): None}))
+)==['parsers.eat_logical_line','parsers.parse_rest_of_line']
+
+Assert(format_from_imported_modules(
+    FromImport(module=RelName(levels_up=2,parts=(Identifier(value='parsers'),)),
+               clauses={
+                   Identifier(value='eat_logical_line'): None,
+                   Identifier(value='parse_rest_of_line'): None}))
+)==['...parsers.eat_logical_line','...parsers.parse_rest_of_line']
+

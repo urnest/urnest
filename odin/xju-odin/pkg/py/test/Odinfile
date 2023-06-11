@@ -21,7 +21,6 @@ test-parsers+py_sp=(..):py3.exec.cov
 %test-mod.py_import.view_desc.1
 %test-mod.py_import.view_desc.2
 %test-main.py_import.view_desc.2
-%test-main.py_import.view_desc.status.2
 %test-main.py_import.view_desc.errors.2
 
 %test1==(%test1.got)+cmd=(%test1.sh) (%test1.expect:list:ls):stdout
@@ -146,16 +145,16 @@ sys.exit(int(sys.argv[1]))
 
 %test-mod.py_import.view_desc.1==(%mod.py_import.view_desc.1.expect)+cmd=diff (%mod.py_import.view_desc.1) '-':stdout
 
-%mod.py_import.view_desc.1==%mod.py_import.view_desc.exec.1/files.tar+member='mod.py_import.view_desc':extract_file
+%mod.py_import.view_desc.1==%mod.py_import.view_desc.exec.1+member='mod.py_import.view_desc':extract_file
 
-%mod.py_import.view_desc.exec.1==()+cmd=env 'ODINVERBOSE=1' 'ODIN_PY_IGNORE=os' (../mod.py_import.view_desc) (xxx1.py) '/a/b/c/d/e' (%xxx1.pySp) (%xxx.ignore):exec
+%mod.py_import.view_desc.exec.1==()+cmd=env 'ODINVERBOSE=1' 'ODIN_PY_IGNORE=os' (../mod.py_import.view_desc) (%xxx1.py) '/a/b/c/d/e' (%xxx1.pySp) (%xxx.ignore) +need=(../parsers.py):exec.files
 
 
 %test-mod.py_import.view_desc.1b==(%mod.py_import.view_desc.1.expect)+cmd=diff (%mod.py_import.view_desc.1b) '-':stdout
 
-%mod.py_import.view_desc.1b==%mod.py_import.view_desc.exec.1b/files.tar+member='mod.py_import.view_desc':extract_file
+%mod.py_import.view_desc.1b==%mod.py_import.view_desc.exec.1b+member='mod.py_import.view_desc':extract_file
 
-%mod.py_import.view_desc.exec.1b==()+cmd=env 'ODINVERBOSE=1' 'ODIN_PY_IGNORE=os' (%xxx1b.sh) (../mod.py_import.view_desc) (%xxx1.py) '/a/b/c/d/e/xxx1' (%xxx1.pySp) (%xxx.ignore):exec
+%mod.py_import.view_desc.exec.1b==()+cmd=env 'ODINVERBOSE=1' 'ODIN_PY_IGNORE=os' (%xxx1b.sh) (../mod.py_import.view_desc) (%xxx1.py) '/a/b/c/d/e/xxx1' (%xxx1.pySp) (%xxx.ignore) +need=(../parsers.py):exec.files
 
 
 %xxx1.pySp==<<
@@ -217,9 +216,9 @@ cp "$py" __init__.py
 
 %test-mod.py_import.view_desc.2==(%mod.py_import.view_desc.2.expect)+cmd=diff (%mod.py_import.view_desc.2) '-':stdout
 
-%mod.py_import.view_desc.2==%mod.py_import.view_desc.exec.2/files.tar+member='mod.py_import.view_desc':extract_file
+%mod.py_import.view_desc.2==%mod.py_import.view_desc.exec.2+member='mod.py_import.view_desc':extract_file
 
-%mod.py_import.view_desc.exec.2==()+cmd=env 'ODINVERBOSE=1' 'ODIN_PY_IGNORE=os' (../mod.py_import.view_desc) (%xxx2.py) '/a/b/c/d/e' (%xxx2.pySp) (%xxx.ignore):exec
+%mod.py_import.view_desc.exec.2==()+cmd=env 'ODINVERBOSE=1' 'ODIN_PY_IGNORE=os' (../mod.py_import.view_desc) (%xxx2.py) '/a/b/c/d/e' (%xxx2.pySp) (%xxx.ignore):exec.files
 
 
 
@@ -407,15 +406,13 @@ import x.j.f
 
 %test-main.py_import.view_desc.2==(%main.py_import.view_desc.2.expect)+cmd=diff (%main.py_import.view_desc.2) '-':stdout
 
-%test-main.py_import.view_desc.status.2==(%main.py_import.view_desc.exec.2/status)+cmd=fgrep '0':stdout
-
 %test-main.py_import.view_desc.errors.2==(%main.py_import.view_desc.exec.2.errors)+cmd=grep '"relative import.*not allowed in main file"':stdout
 
-%main.py_import.view_desc.2==%main.py_import.view_desc.exec.2/files.tar+member='main.py_import.view_desc':extract_file
+%main.py_import.view_desc.2==%main.py_import.view_desc.exec.2+member='main.py_import.view_desc':extract_file
 
-%main.py_import.view_desc.exec.2.errors==%main.py_import.view_desc.exec.2/files.tar+member='ERRORS':extract_file
+%main.py_import.view_desc.exec.2.errors==%main.py_import.view_desc.exec.2+member='ERRORS':extract_file
 
-%main.py_import.view_desc.exec.2==()+cmd=env 'ODINVERBOSE=1' 'ODIN_PY_IGNORE=os' (../main.py_import.view_desc) (%xxx2.py) (%xxx2.pySp) (%xxx.ignore):exec
+%main.py_import.view_desc.exec.2==()+cmd=env 'ODINVERBOSE=1' 'ODIN_PY_IGNORE=os' (../main.py_import.view_desc) (%xxx2.py) (%xxx2.pySp) (%xxx.ignore):exec.files
 
 
 %main2.py == <<

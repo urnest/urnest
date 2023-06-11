@@ -5,6 +5,11 @@ import sys
 import re
 from pathlib import Path
 from typing import Sequence
+from parsers import (
+    parse_python_source_code_for_imports,
+    format_plain_imported_modules,
+    format_from_imported_modules,
+)
 
 odinrbshost=os.environ.get('ODINRBSHOST','')
 
@@ -104,55 +109,17 @@ with Scope(f'scan py program {pyFile} imports with search path {pySp}'):
         pass
 
     with pyFile.open() as f:
-        lines=f.read().split('\n')
-    modules=[]
-    
-    # pick up lines that start with "import" eg "import os as a, sys, ..d"
-    r1=re.compile('^[ \t]*import[ \t]+(.*)')
-    
-    # pick up lines that start with "from" eg "from os import c as d, b"
-    r2=re.compile('^[ \t]*from[ \t]+([^ \t]*)[ \t]+import[ \t]+(.*)')
+        source_code=f.read()
 
-    m1s=[r1.match(line) for line in lines]
-    m2s=[r2.match(line) for line in lines]
+    modules:list[str]=[]
 
-    for i,m in enumerate(m1s):
-        if m:
-            line=lines[i]
-            with Scope('analyse py import line {line}'.format(**vars())):
-                matched=m.groups()[0]
-                n=0
-                while i+n<len(lines) and matched.endswith('\\'):
-                    matched=matched[0:-1]+' '+lines[i+n]
-                    n=n+1
-                    pass
-                clauses=matched.split(',')
-                # each clauses could be like "a", " asb   as  cas "
-                modules.extend([' '.join(clause.strip().split()).split(' as ')[0]
-                                for clause in clauses])
-                pass
-            pass
-        pass
-    
-    for i,m in enumerate(m2s):
-        if m:
-            line=lines[i]
-            with Scope('analyse from line {line}'.format(**vars())):
-                fromModule=m.groups()[0].strip()
-                matched=m.groups()[1]
-                n=0
-                while i+n<len(lines) and matched.endswith('\\'):
-                    matched=matched[0:-1]+' '+lines[i+n]
-                    n=n+1
-                    pass
-                clauses=matched.split(',')
-                # each clauses could be like "a", " asb   as  cas "
-                modules.extend([fromModule+'.'+
-                                ' '.join(clause.strip().split()).split(' as ')[0]
-                                for clause in clauses])
-                pass
-            pass
-        pass
+    plain_imports, from_imports = parse_python_source_code_for_imports(source_code)
+
+    modules.extend(
+        sum([format_plain_imported_modules(plain_import) for plain_import in plain_imports],[]))
+
+    modules.extend(
+        sum([format_from_imported_modules(from_import) for from_import in from_imports],[]))
     
     ignoreREs=[]
     if ignore:
