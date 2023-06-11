@@ -31,6 +31,8 @@ Assert('fred').ends_with('d')
 Assert('fred').contains('d')
 Assert(7).isInstanceOf(int)
 Assert(7).isNotInstanceOf(str)
+Assert(int).isSubclassOf(int)
+Assert(int).isNotSubclassOf(str)
 Assert(7)==7
 Assert(7)!=8
 Assert(7)>6
@@ -80,6 +82,22 @@ try:
     Assert(7).isNotInstanceOf(int)
 except Exception as e:
     assert "7 is unexpectedly an instance of class int (it is of class int)" in str(e), str(e)
+else:
+    assert False
+    pass
+
+try:
+    Assert(int).isSubclassOf(str)
+except Exception as e:
+    assert "<class 'int'> is not an subclass of class str" in str(e), str(e)
+else:
+    assert False
+    pass
+
+try:
+    Assert(int).isNotSubclassOf(int)
+except Exception as e:
+    assert "<class 'int'> is unexpectedly an subclass of class int" in str(e), str(e)
 else:
     assert False
     pass

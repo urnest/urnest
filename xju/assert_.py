@@ -36,6 +36,16 @@ class Assert():
             yc=y.__name__
             raise Exception(f'{self.x!r} is unexpectedly an instance of class {yc} (it is of class {xc})')
         return self.x
+    def isSubclassOf(self,y):
+        if not issubclass(self.x,y):
+            yc=y.__name__
+            raise Exception(f'{self.x!r} is not an subclass of class {yc}')
+        return self.x
+    def isNotSubclassOf(self,y):
+        if issubclass(self.x,y):
+            yc=y.__name__
+            raise Exception(f'{self.x!r} is unexpectedly an subclass of class {yc}')
+        return self.x
     def hasAttr(self,y:str):
         if not hasattr(self.x,y):
             raise Exception(f'{self.x!r} has no {y!r} attribute')
