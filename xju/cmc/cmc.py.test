@@ -25,7 +25,7 @@ from xju.assert_ import Assert
 from typing import cast, Awaitable
 
 try:
-    cmc.is_subclass('fred', 7, cast(type, 'jock'))
+    cmc._is_subclass('fred', 7, cast(type, 'jock'))
 except Exception as e:
     Assert("'jock' is not an instance of class type (it is of class str)").isIn(str(e))
     pass

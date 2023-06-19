@@ -12,6 +12,7 @@
 %unit-tests.tree==<<
 cmc.py.test+(%py-opts):py3.exec.cov
 cmclass.py.test+(%py-opts):py3.exec.cov
+async_cmclass.py.test+(%py-opts):py3.exec.cov
 Dict.py.test+(%py-opts):py3.exec.cov
 signal.py.test+(%py-opts):py3.exec.cov
 tstore.py.test+(%py-opts):py3.exec.cov
@@ -36,7 +37,7 @@ io%installed-cov
 
 %unit-tests-v-installed.tree==<<
 cmc.py.test:py3.exec.cov
-cmclass.py.test:py3.exec.cov
+async_cmclass.py.test:py3.exec.cov
 Dict.py.test:py3.exec.cov
 signal.py.test:py3.exec.cov
 tstore.py.test:py3.exec.cov

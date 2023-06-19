@@ -604,4 +604,4 @@ with ZB(GenericResourceB[int](7),[]) as r:
 Assert(r.y.entered_at) == 1
 Assert(r.y.exited_at) == 2
 
-Assert(cmc.is_subclass('a',7,int))==False
+Assert(cmc._is_subclass('a',7,int))==False

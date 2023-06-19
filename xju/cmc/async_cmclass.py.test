@@ -1,0 +1,227 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2023 Trevor Taylor
+# coding: utf-8
+# 
+# Permission to use, copy, modify, and/or distribute this software for
+# any purpose with or without fee is hereby granted, provided that all
+# copyright notices and this permission notice appear in all copies.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+import sys
+import asyncio
+from xju.assert_ import Assert
+from xju.xn import readable_repr, in_context
+from typing import Self
+from contextlib import AbstractContextManager, AbstractAsyncContextManager
+from xju.cmc import AsyncCM, async_cmclass
+
+_log:list[str]=[]
+
+def log(s: str) -> int:
+    _log.append(s)
+    print(s,file=sys.stderr)
+    return len(_log)
+
+class Resource:
+    name: str
+    entered_at: int|None = None
+    exited_at: int|None = None
+    ee: None|Exception
+    xe: None|Exception
+
+    def __init__(self, name:str, ee:None|Exception, xe:None|Exception):
+        self.name = name
+        self.ee = ee
+        self.xe = xe
+        pass
+
+    def __enter__(self) -> Self:
+        Assert(self.entered_at)==None
+        self.entered_at=log(f'+ enter {self.name}')
+        if self.ee:
+            log(f'E enter {self.name}')
+            raise self.ee
+        log(f'- enter {self.name}')
+        return self
+    
+    def __exit__(self, t, e, b) -> None:
+        try:
+            Assert(self.entered_at).isNot(None)
+            Assert(self.exited_at).is_(None)
+            self.exited_at=log(f'+ exit {self.name}')
+            if self.xe:
+                log(f'E exit {self.name}')
+                raise self.xe
+            log(f'- exit {self.name}')
+        except Exception:
+            raise in_context(f'exit {self.name}')
+        pass
+
+
+class AsyncResource:
+    name: str
+    entered_at: int|None = None
+    exited_at: int|None = None
+    ee: None|Exception
+    xe: None|Exception
+
+    def __init__(self, name:str, ee:None|Exception, xe:None|Exception):
+        self.name = name
+        self.ee = ee
+        self.xe = xe
+        pass
+
+    async def __aenter__(self) -> Self:
+        Assert(self.entered_at)==None
+        self.entered_at=log(f'+ aenter {self.name}')
+        if self.ee:
+            log(f'E enter {self.name}')
+            raise self.ee
+        log(f'- aenter {self.name}')
+        return self
+    
+    async def __aexit__(self, t, e, b) -> None:
+        try:
+            Assert(self.entered_at).isNot(None)
+            Assert(self.exited_at).is_(None)
+            self.exited_at=log(f'+ aexit {self.name}')
+            if self.xe:
+                log(f'E exit {self.name}')
+                raise self.xe
+            log(f'- aexit {self.name}')
+        except Exception:
+            raise in_context(f'aexit {self.name}') from None
+        pass
+
+@async_cmclass
+class Aggregate(AsyncCM):
+    name: str
+    a: AsyncResource
+    b: Resource
+    c: AsyncResource
+
+    def __init__(self, name:str):
+        self.name=name
+        self.a=AsyncResource(f'{name}.a',None,None)
+        self.b=Resource(f'{name}.b',None,None)
+        self.c=AsyncResource(f'{name}.c',None,None)
+        pass
+    pass
+
+@async_cmclass
+class SuperAggregate(Aggregate):
+    sa_name: str
+    d: Resource
+
+    def __init__(self, name: str):
+        self.sa_name=name
+        super().__init__(f'{name}.A')
+        self.d=Resource(f'{name}.d',None,None)
+        pass
+
+    async def __aenter__(self) -> Self:
+        log(f'{self.sa_name} entered')
+        return self
+    async def __aexit__(self, t, e, b) -> None:
+        log(f'{self.sa_name} exited')
+        pass
+    
+async def main():
+    class NotOverridden(AsyncCM):
+        pass
+    base=NotOverridden()
+    try:
+        await base.__aenter__()
+    except Exception as e:
+        Assert(readable_repr(e))=='xju.cmc.AsyncCM.__aenter__ not overridden, have you forgotten @async_cmclass on __main__.NotOverridden?'
+    else:
+        assert False
+        pass
+    try:
+        await base.__aexit__(None,None,None)
+    except Exception as e:
+        Assert(readable_repr(e))=='xju.cmc.AsyncCM.__aexit__ not overridden, have you forgotten @async_cmclass on __main__.NotOverridden?'
+    else:
+        assert False
+        pass
+    
+    async with Aggregate('A') as a:
+        Assert(a.name)=='A'
+        Assert(_log)==[
+            '+ aenter A.a', '- aenter A.a',
+            '+ enter A.b', '- enter A.b',
+            '+ aenter A.c', '- aenter A.c'
+        ]
+        try:
+            a.c = AsyncResource('fred',None,None)
+        except Exception as e:
+            Assert(readable_repr(e)).matches(
+                "xju.cmc <__main__.Aggregate object at .* has been entered so cannot replace context-managed attribute __main__.Aggregate.c")
+        else:
+            assert False
+            pass
+        pass
+    Assert(_log)==[
+        '+ aenter A.a', '- aenter A.a',
+        '+ enter A.b', '- enter A.b',
+        '+ aenter A.c', '- aenter A.c',
+        '+ aexit A.c', '- aexit A.c',
+        '+ exit A.b', '- exit A.b',
+        '+ aexit A.a', '- aexit A.a'
+    ]
+    del _log[:]
+    async with SuperAggregate('SA') as sa:
+        Assert(sa.sa_name)=='SA'
+        Assert(sa.name)=='SA.A'
+        Assert(_log)==[
+            '+ aenter SA.A.a', '- aenter SA.A.a',
+            '+ enter SA.A.b', '- enter SA.A.b',
+            '+ aenter SA.A.c', '- aenter SA.A.c',
+            '+ enter SA.d', '- enter SA.d',
+            'SA entered'
+        ]
+        pass
+    Assert(_log)==[
+        '+ aenter SA.A.a', '- aenter SA.A.a',
+        '+ enter SA.A.b', '- enter SA.A.b',
+        '+ aenter SA.A.c', '- aenter SA.A.c',
+        '+ enter SA.d', '- enter SA.d',
+        'SA entered', 'SA exited',
+        '+ exit SA.d', '- exit SA.d',
+        '+ aexit SA.A.c', '- aexit SA.A.c',
+        '+ exit SA.A.b', '- exit SA.A.b',
+        '+ aexit SA.A.a', '- aexit SA.A.a']
+
+
+    del _log[:]
+    sa=SuperAggregate('SA')
+    sa.c.ee=Exception('fred')
+    try:
+        async with sa:
+            Assert(sa.sa_name)=='SA'
+            Assert(sa.name)=='SA.A'
+            Assert(_log)==[]
+            pass
+    except Exception as e:
+        Assert(readable_repr(e))=='fred'
+    else:
+        assert False
+        pass
+    
+    Assert(_log)==[
+        '+ aenter SA.A.a', '- aenter SA.A.a',
+        '+ enter SA.A.b', '- enter SA.A.b',
+        '+ aenter SA.A.c', 'E enter SA.A.c',
+        '+ exit SA.A.b', '- exit SA.A.b',
+        '+ aexit SA.A.a', '- aexit SA.A.a']
+    pass
+
+asyncio.run(main())
