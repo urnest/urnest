@@ -1,0 +1,290 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2023 Trevor Taylor
+# coding: utf-8
+# 
+# Permission to use, copy, modify, and/or distribute this software for
+# any purpose with or without fee is hereby granted, provided that all
+# copyright notices and this permission notice appear in all copies.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+import asyncio
+import sys
+from sys import path
+from os.path import dirname
+if path[0]==dirname(__file__): path.pop(0)
+from xju.cmc import AsyncDict
+
+import contextlib
+from typing import Self
+from xju.assert_ import Assert
+from xju.xn import in_context
+
+_log:list[str]=[]
+
+def log(s: str) -> int:
+    _log.append(s)
+    print(s,file=sys.stderr)
+    return len(_log)
+
+def extract_log() -> list[str]:
+    result=_log[:]
+    del _log[:]
+    return result
+
+class AsyncResource:
+    name: str
+    entered_at: int|None = None
+    exited_at: int|None = None
+    ee: None|Exception
+    xe: None|Exception
+
+    def __init__(self, name:str, ee:None|Exception, xe:None|Exception):
+        self.name = name
+        self.ee = ee
+        self.xe = xe
+        pass
+
+    async def __aenter__(self) -> Self:
+        Assert(self.entered_at)==None
+        self.entered_at=log(f'+ aenter {self.name}')
+        if self.ee:
+            log(f'E enter {self.name}')
+            raise self.ee
+        log(f'- aenter {self.name}')
+        return self
+    
+    async def __aexit__(self, t, e, b) -> None:
+        try:
+            Assert(self.entered_at).isNot(None)
+            Assert(self.exited_at).is_(None)
+            self.exited_at=log(f'+ aexit {self.name}')
+            if self.xe:
+                log(f'E exit {self.name}')
+                raise self.xe
+            log(f'- aexit {self.name}')
+        except Exception:
+            raise in_context(f'aexit {self.name}') from None
+        pass
+    pass
+
+async def main():
+    x = AsyncDict({'c':AsyncResource('c',None,None)})
+    await x.set('b',AsyncResource('b',None,None))
+    Assert(list(x.keys()))==list({'c':None,'b':None}.keys())
+    Assert(list(x))==list({'c':None,'b':None})
+    Assert(len(x))==2
+    await x.pop('b')
+    await x.pop('c')
+    Assert(extract_log())==[]
+
+    x = AsyncDict({'c':AsyncResource('c',None,None)})
+    await x.set('b',AsyncResource('b',None,None))
+    Assert('c').isIn(x)
+    Assert(list(x.keys()))==list({'c':None,'b':None}.keys())
+    Assert(list(x.items()))==list({'c':x['c'],'b':x['b']}.items())
+    k,bb=await x.popitem()
+    Assert(k)=='b'
+    cc=await x.pop('c')
+    Assert(extract_log())==[]
+
+    x = AsyncDict({'c':AsyncResource('c',None,None)})
+    await x.set('b',AsyncResource('b',None,None))
+    await x.clear()
+    Assert(extract_log())==[]
+
+    async with AsyncDict() as x:
+        await x.set('c', AsyncResource('c',None,None))
+        await x.set('b', AsyncResource('b',None,None))
+        Assert(extract_log())==['+ aenter c', '- aenter c', '+ aenter b', '- aenter b']
+
+    Assert(extract_log())==['+ aexit c', '- aexit c', '+ aexit b', '- aexit b']
+
+    async with AsyncDict({'c':AsyncResource('c',None,None)}) as x:
+        await x.set('b', AsyncResource('b',None,None))
+        Assert(extract_log())==['+ aenter c', '- aenter c', '+ aenter b', '- aenter b']
+
+    Assert(extract_log())==['+ aexit c', '- aexit c', '+ aexit b', '- aexit b']
+
+
+    async with AsyncDict() as x:
+        await x.set('c', AsyncResource('c',None,None))
+        await x.set('b', AsyncResource('b',None,None))
+        Assert(extract_log())==['+ aenter c', '- aenter c', '+ aenter b', '- aenter b']
+        await x.pop('c')
+        Assert(extract_log())==['+ aexit c', '- aexit c']
+
+    Assert(extract_log())==['+ aexit b', '- aexit b']
+
+    async with AsyncDict() as x:
+        await x.set('c', AsyncResource('c',None,None))
+        await x.set('b', AsyncResource('b',None,None))
+        Assert(extract_log())==['+ aenter c', '- aenter c', '+ aenter b', '- aenter b']
+        k,b = await x.popitem()
+        Assert(k)=='b'
+        Assert(extract_log())==['+ aexit b', '- aexit b']
+
+    Assert(extract_log())==['+ aexit c', '- aexit c']
+
+
+    async with AsyncDict() as x:
+        x.__sizeof__()
+        old_b = AsyncResource('oldb',None,None)
+        await x.set('b', old_b)
+        await x.set('c', AsyncResource('c',None,None))
+        await x.set('b', AsyncResource('b',None,None))
+        Assert(extract_log())==[
+            '+ aenter oldb', '- aenter oldb',
+            '+ aenter c', '- aenter c',
+            '+ aenter b', '- aenter b',
+            '+ aexit oldb', '- aexit oldb'
+        ]
+        cc = await x.pop('c')
+        Assert(await x.pop('c',7))==7
+        Assert(extract_log())==['+ aexit c', '- aexit c']
+        Assert(repr(x)).matches("OrderedDict([('b', <__main__.AsyncResource object at .*>)])")
+    Assert(extract_log())==['+ aexit b', '- aexit b']
+
+    async with AsyncDict() as x:
+        x.__sizeof__()
+        old_b = AsyncResource('oldb',None,None)
+        await x.set('b', old_b)
+        await x.set('c', AsyncResource('c',None,None))
+        await x.set('b', AsyncResource('b',None,None))
+        Assert(extract_log())==[
+            '+ aenter oldb', '- aenter oldb',
+            '+ aenter c', '- aenter c',
+            '+ aenter b', '- aenter b',
+            '+ aexit oldb', '- aexit oldb'
+        ]
+        cc = await x.pop('c',old_b)
+        Assert(await x.pop('c',7))==7
+        Assert(extract_log())==['+ aexit c', '- aexit c']
+        Assert(repr(x)).matches("OrderedDict...'b', <__main__.AsyncResource object at 0x[0-9a-f]*>...")
+        pass
+    Assert(extract_log())==['+ aexit b', '- aexit b']
+
+    async with AsyncDict() as x:
+        await x.set('c', AsyncResource('c',None,None))
+        await x.set('b', AsyncResource('b',None,None))
+        Assert(list(x.keys()))==list({'c':None,'b':None}.keys())
+        Assert(extract_log())==['+ aenter c', '- aenter c', '+ aenter b', '- aenter b']
+        cc = x.get('c')
+        Assert(extract_log())==[]
+        cc = await x.pop('c')
+        Assert(extract_log())==['+ aexit c', '- aexit c']
+        dd = x.get('d',AsyncResource('d',None,None))
+        Assert(extract_log())==[]
+        dd = await x.pop('d',AsyncResource('d',None,None))
+        Assert(extract_log())==[]
+        pass
+    Assert(extract_log())==['+ aexit b', '- aexit b']
+
+    async with AsyncDict() as x:
+        await x.set('c', AsyncResource('c',None,None))
+        await x.setdefault('b',AsyncResource('b',None,None))
+        Assert(extract_log())==['+ aenter c', '- aenter c', '+ aenter b', '- aenter b']
+        bb=x['b']
+        await x.set('b', bb)
+        Assert(extract_log())==[]
+        d=AsyncResource('d',None,None)
+        await x.setdefault('b',d)
+        Assert(extract_log())==[]
+        await x.setdefault('b',None)
+        Assert(extract_log())==[]
+        cc=x['c']
+        bb=x['b']
+        x.clear()
+        Assert(extract_log())==[]
+        pass
+    Assert(extract_log())==[
+        '+ aexit c', '- aexit c',
+        '+ aexit b', '- aexit b',
+    ]
+
+    async with AsyncDict() as x:
+        await x.set('c', AsyncResource('c',None,None))
+        await x.set('b', AsyncResource('b',None,None))
+        Assert(extract_log())==[
+            '+ aenter c', '- aenter c',
+            '+ aenter b', '- aenter b'
+        ]
+        bb=x['b']
+        await x.update({'b':bb, 'd':AsyncResource('d',None,None)})
+        pass
+
+    Assert(extract_log())==[
+        '+ aenter d', '- aenter d',
+        '+ aexit c', '- aexit c',
+        '+ aexit b', '- aexit b',
+        '+ aexit d', '- aexit d']
+
+    async with AsyncDict() as x:
+        await x.set('c', AsyncResource('c',None,None))
+        await x.set('b', AsyncResource('b',None,None))
+        Assert(extract_log())==['+ aenter c', '- aenter c', '+ aenter b', '- aenter b']
+        bb=x['b']
+        await x.update([('b',bb), ('d',AsyncResource('d',None,None))])
+        Assert(extract_log())==['+ aenter d', '- aenter d']
+        pass
+
+    Assert(extract_log())==[
+        '+ aexit c', '- aexit c', '+ aexit b', '- aexit b', '+ aexit d', '- aexit d'
+    ]
+
+    bbb=AsyncResource('bb',None,None)
+    ccc=AsyncResource('cc',Exception('fred'),None)
+    try:
+        async with AsyncDict({'b':bbb,'c':ccc}) as x:
+            pass
+        pass
+    except Exception as e:
+        Assert(extract_log())==[
+            '+ aenter bb', '- aenter bb', '+ aenter cc', 'E enter cc', '+ aexit bb', '- aexit bb'
+        ]
+    else:
+        assert False, x
+        pass
+
+    bbb=AsyncResource('bbb',None,None)
+    ccc=AsyncResource('ccc',None,Exception('fred'))
+    try:
+        async with AsyncDict({'b':bbb,'c':ccc}) as x:
+            pass
+        pass
+    except Exception as e:
+        Assert(extract_log())==[
+            '+ aenter bbb', '- aenter bbb',
+            '+ aenter ccc', '- aenter ccc',
+            '+ aexit bbb', '- aexit bbb',
+            '+ aexit ccc', 'E exit ccc']
+    else:
+        assert False, x
+        pass
+
+    bbb=AsyncResource('bbb',None,Exception('fred'))
+    ccc=AsyncResource('ccc',None,None)
+    try:
+        async with AsyncDict({'b':bbb,'c':ccc}) as x:
+            pass
+        pass
+    except Exception as e:
+        Assert(extract_log())==[
+            '+ aenter bbb', '- aenter bbb',
+            '+ aenter ccc', '- aenter ccc',
+            '+ aexit bbb', 'E exit bbb',
+            '+ aexit ccc', '- aexit ccc'
+        ]
+    else:
+        assert False, x
+        pass
+
+
+asyncio.run(main())

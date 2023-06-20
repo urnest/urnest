@@ -36,10 +36,8 @@ from xju.assert_ import Assert
 
 T = TypeVar('T')
 U = TypeVar('U')
-#ST = TypeVar('ST', bound=Generic[T])
-CM_T = TypeVar('CM_T', bound=contextlib.AbstractContextManager)
 
-def cmclass(cls:Type[CM_T]) -> Type[CM_T]:
+def cmclass(cls:Type[contextlib.AbstractContextManager[T]]) -> Type[contextlib.AbstractContextManager[T]]:
     '''Class decorator that adds context management __enter__ and __exit__
        that enter and exit all type-hinted attributes implementing contextlib.AbstractContextManager
        then any existing __enter__.
@@ -65,7 +63,7 @@ def cmclass(cls:Type[CM_T]) -> Type[CM_T]:
               base_classes_to_enter=base_classes_to_enter,
               attrs_to_enter=attrs_to_enter,
               resources_attr_name=resources_attr_name,
-              orig_enter=orig_enter) -> Type[CM_T]:
+              orig_enter=orig_enter) -> Type[contextlib.AbstractContextManager[T]]:
         with contextlib.ExitStack() as tentative:
             for base_class in base_classes_to_enter:
                 cm = _ClassCm(base_class, self)
@@ -225,7 +223,7 @@ class Dict(Mapping[K, V], contextlib.AbstractContextManager):
            otherwise raise KeyError'''
 
     @overload
-    def pop(self, key:K, default:CM_T) -> Union[V,CM_T]:
+    def pop(self, key:K, default:T) -> V|T:
         '''pop and "exit" value of {key} if self has a value for it
         otherwise return default'''
 
@@ -455,9 +453,7 @@ class Condition:
         self.c.notify_all()
     pass
 
-AsyncCM_T = TypeVar('AsyncCM_T', bound=contextlib.AbstractAsyncContextManager)
-
-def async_cmclass(cls:Type[AsyncCM_T]) -> Type[AsyncCM_T]:
+def async_cmclass(cls:Type[contextlib.AbstractAsyncContextManager[T]]) -> Type[contextlib.AbstractAsyncContextManager[T]]:
     '''Class decorator that adds async context management __aenter__ and __aexit__
        that enter and exit all type-hinted attributes implementing 
        contextlib.AbstractAsyncContextManager and contextlib.AbstractContextManager
@@ -478,7 +474,7 @@ def async_cmclass(cls:Type[AsyncCM_T]) -> Type[AsyncCM_T]:
                      base_classes_to_enter=base_classes_to_enter,
                      attrs_to_enter=attrs_to_enter,
                      resources_attr_name=resources_attr_name,
-                     orig_enter=orig_enter) -> Type[AsyncCM_T]:
+                     orig_enter=orig_enter) -> Type[contextlib.AbstractAsyncContextManager[T]]:
         async with contextlib.AsyncExitStack() as tentative:
             for f in base_classes_to_enter:
                 cm:contextlib.AbstractAsyncContextManager = f(self)
@@ -506,10 +502,6 @@ def async_cmclass(cls:Type[AsyncCM_T]) -> Type[AsyncCM_T]:
         pass
     old_sa=cls.__setattr__
     def sa(self, name, value, attrs_to_enter=attrs_to_enter):
-        print(f'*** sa {self} {name}', file=sys.stderr)
-        print(getattr(self,resources_attr_name,None), file=sys.stderr)
-        print(name in attrs_to_enter, file=sys.stderr)
-        print(attrs_to_enter, file=sys.stderr)
         if getattr(self,resources_attr_name,None) and name in attrs_to_enter:
             raise Exception(
                 f'xju.cmc {self} has been entered so cannot replace context-managed attribute {cls.__module__}.{cls.__name__}.{name}')
@@ -528,6 +520,196 @@ class AsyncCM(contextlib.AbstractAsyncContextManager):
         return self
     async def __aexit__(self, t, e, b) -> None:
         assert False, f'{CM.__module__}.AsyncCM.__aexit__ not overridden, have you forgotten @async_cmclass on {self.__module__}.{self.__class__.__name__}?'
+        pass
+
+AsyncV = TypeVar('AsyncV', bound=contextlib.AbstractAsyncContextManager)
+
+class AsyncDict(Mapping[K, AsyncV], contextlib.AbstractAsyncContextManager):
+    '''dictionary that enters and exits its values, all of which must be context managers
+       note that values may be added and removed before and/or after self is entered:
+         before: the value will be entered when self is entered
+         after:  the value will be entered before it is added (noting that any existing
+                 value will be exited once (if) it is removed) - the enter-new-exit-old 
+                 order might be important to you i.e. might not be what you need!
+       note that x['a']==y is not implementable, use x.set('a',y)
+       note that del x['a'] is not implementable, use x.pop('a')
+    '''
+    entered = False
+    x:_Dict[K,AsyncV]
+
+    @overload
+    def __init__(self):
+        '''new empty Dict'''
+
+    @overload
+    def __init__(self, x:_Dict[K,AsyncV]):
+        '''initialise with value from {x} assuming those values have not been "entered"'''
+
+    @overload
+    def __init__(self, x:Iterable[Tuple[K,AsyncV]]):
+        '''initialise with value from {x} assuming those values have not been "entered"'''
+
+    def __init__(self, *args, **kwargs):
+        self.x = OrderedDict(*args, **kwargs)
+        pass
+    
+    async def __aenter__(self):
+        '''"enters" all values in order they were inserted'''
+        async with contextlib.AsyncExitStack() as tentative:
+            for k,v in self.x.items():
+                await tentative.enter_async_context(v)
+            tentative.pop_all()
+            pass
+        self.entered = True
+        return self
+
+    async def __aexit__(self, t, e, b):
+        '''"exits" all values in order they were inserted'''
+        if self.entered:
+            async with contextlib.AsyncExitStack() as resources:
+                for k,v in reversed(self.x.items()):
+                    resources.push_async_exit(v)
+                    pass
+                pass
+            pass
+        pass
+
+    def __contains__(self, key:object) -> bool:
+        return key in self.x
+
+    def __getitem__(self, key:K) -> AsyncV:
+        return self.x[key]
+    
+    def __iter__(self):
+        return iter(self.x.keys())
+
+    def __len__(self) -> int:
+        return len(self.x)
+
+    def __repr__(self) -> str:
+        return repr(self.x)
+
+    async def set(self, key:K, value:AsyncV) -> None:
+        '''replace any current value of {key} with {value}'''
+        '''- "enters" the new value and then "exits" any old value'''
+        old = self.x.get(key,None)
+        if old is not value:
+            if self.entered:
+                await value.__aenter__()
+                if old is None:
+                    self.x[key]=value
+                else:
+                    async with contextlib.AsyncExitStack() as f:
+                        f.push_async_exit(old)
+                        self.x[key]=value
+                    pass
+                pass
+            else:
+                self.x[key]=value
+            pass
+        pass
+    
+    def __sizeof__(self) -> int:
+        return self.x.__sizeof__()
+
+    async def clear(self):
+        while len(self):
+            await self.popitem()
+            pass
+        pass
+
+    def get(self, key, default=None):
+        return self.x.get(key, default)
+
+    def items(self) -> ItemsView[K,AsyncV]:
+        '''items in order they were first inserted'''
+        return self.x.items()
+
+    def keys(self) -> KeysView[K]:
+        '''keys in order they were first inserted'''
+        return self.x.keys()
+
+    @overload
+    async def pop(self, key:K) -> AsyncV:
+        '''pop and "exit" value of {key} if self has a value for it
+           otherwise raise KeyError'''
+
+    @overload
+    async def pop(self, key:K, default:T) -> AsyncV|T:
+        '''pop and "exit" value of {key} if self has a value for it
+        otherwise return default'''
+
+    async def pop(self, key, default=None):
+        if default is None:
+            v = self.x.pop(key)
+            if self.entered:
+                async with contextlib.AsyncExitStack() as f:
+                    f.push_async_exit(v)
+                pass
+            return v
+        else:
+            try:
+                v = self.x.pop(key)
+                if self.entered:
+                    async with contextlib.AsyncExitStack() as f:
+                        f.push_async_exit(v)
+                    pass
+                return v
+            except KeyError:
+                return default
+            pass
+        pass
+
+    async def popitem(self) -> Tuple[K, AsyncV]:
+        '''pop and "exit" most recently added item'''
+        k, v = self.x.popitem()
+        if self.entered:
+            async with contextlib.AsyncExitStack() as f:
+                f.push_async_exit(v)
+                pass
+            pass
+        return k, v
+
+    @overload
+    async def setdefault(self, key:K, default:AsyncV) -> AsyncV:
+        '''set value of {key} to default "entered" if it has no value
+           return value of {key}'''
+
+    @overload
+    async def setdefault(self, key:K, default:None) -> AsyncV|None:
+        '''same as get(key,None)'''
+
+    async def setdefault(self, key, default):
+        if default is not None:
+            if not key in self:
+                await self.set(key,default)
+            return self.x.get(key)
+        else:
+            return self.x.get(key, None)
+        pass
+
+    @overload
+    async def update(self, x:_Dict[K, AsyncV]):
+        '''update self from {x} assuming its values are not yet entered
+           - note if k,v from x is alredy in self, v is not re-entered
+        '''
+
+    @overload
+    async def update(self, x:Iterable[Tuple[K,AsyncV]]):
+        '''update self from {x} assuming its values are not yet entered
+           - note if k,v from x is alredy in self, v is not re-entered
+        '''
+    async def update(self, x):
+        if getattr(x,'keys',None):
+            for k in x.keys():
+                await self.set(k,x[k])
+                pass
+            pass
+        else:
+            for k,v in x:
+                await self.set(k,v)
+                pass
+            pass
         pass
 
 class AsyncTask(contextlib.AbstractAsyncContextManager,Generic[ResultType]):
@@ -645,9 +827,9 @@ class AsyncCondition:
     pass
 
 def _make_base_classes_to_enter(
-        cls: Type[AsyncCM_T]
-) -> list[Callable[[AsyncCM_T],contextlib.AbstractAsyncContextManager]]:
-    result: list[Callable[[AsyncCM_T],contextlib.AbstractAsyncContextManager]] = []
+        cls: Type[contextlib.AbstractAsyncContextManager[T]]
+) -> list[Callable[[contextlib.AbstractAsyncContextManager[T]],contextlib.AbstractAsyncContextManager]]:
+    result: list[Callable[[contextlib.AbstractAsyncContextManager[T]],contextlib.AbstractAsyncContextManager]] = []
     for base_class in cls.__bases__:
         if base_class is not AsyncCM and issubclass(base_class, contextlib.AbstractAsyncContextManager):
             result.append(_make_async_class_cm(base_class))
@@ -679,17 +861,17 @@ class _AsyncClassCm(contextlib.AbstractAsyncContextManager):
     pass
 
 def _make_attrs_to_enter(
-        cls: Type[AsyncCM_T]
+        cls: Type[contextlib.AbstractAsyncContextManager[T]]
 ) -> dict[
     str,
     Callable[
-        [AsyncCM_T],contextlib.AbstractAsyncContextManager
+        [contextlib.AbstractAsyncContextManager[T]],contextlib.AbstractAsyncContextManager
     ]
 ]:
     result: dict[
         str,
         Callable[
-            [AsyncCM_T],contextlib.AbstractAsyncContextManager
+            [contextlib.AbstractAsyncContextManager[T]],contextlib.AbstractAsyncContextManager
         ]
     ] = {}
     for n, t in cls.__annotations__.items():
@@ -703,8 +885,8 @@ def _make_attrs_to_enter(
     
 def _make_async_attr_class_cm(
         attr_name: str
-) -> Callable[[AsyncCM_T],contextlib.AbstractAsyncContextManager]:
-    def result(x:AsyncCM_T) -> contextlib.AbstractAsyncContextManager:
+) -> Callable[[contextlib.AbstractAsyncContextManager[T]],contextlib.AbstractAsyncContextManager]:
+    def result(x:contextlib.AbstractAsyncContextManager[T]) -> contextlib.AbstractAsyncContextManager:
         return _AsyncAttrClassCm(x, attr_name)
     return result
             
@@ -724,8 +906,8 @@ class _AsyncAttrClassCm(contextlib.AbstractAsyncContextManager):
 
 def _make_async_sync_attr_class_cm(
         attr_name: str
-) -> Callable[[AsyncCM_T],contextlib.AbstractAsyncContextManager]:
-    def result(x:AsyncCM_T) -> contextlib.AbstractAsyncContextManager:
+) -> Callable[[contextlib.AbstractAsyncContextManager[T]],contextlib.AbstractAsyncContextManager]:
+    def result(x:contextlib.AbstractAsyncContextManager[T]) -> contextlib.AbstractAsyncContextManager:
         return _AsyncSyncAttrClassCm(x, attr_name)
     return result
 
