@@ -36,6 +36,18 @@ Various modules implemented to some broad principles:
 
 * see `xju/cmc/Dict.py.test <xju/cmc/Dict.py.test>`_ for sample code
 
+`xju.cmc.async_cmclass <xju/cmc/__init__.py>`_  - provides async context management for class attributes that are async / sync context managers
+
+* managing multiple resource attributes is clumsy with AsyncExitStack, this module implements
+  \__aenter__ and \__aexit__ automatically to ensure correct ordering and cleanup on exceptions
+
+* see `xju/cmc/async_cmclass.py.test <xju/cmc/async_cmclass.py.test>`_ for sample code
+
+
+`xju.cmc.AsyncDict <xju/cmc/__init__.py>`_ - dictionary that is a async context manager for its (async context manager) values
+
+* see `xju/cmc/AsyncDict.py.test <xju/cmc/AsyncDict.py.test>`_ for sample code
+
 
 `xju.cmc.io <xju/cmc/io/__init__.py>`_ - pure context management for e.g. file reading and writing, non-blocking io
 
