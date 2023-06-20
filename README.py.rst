@@ -48,6 +48,10 @@ Various modules implemented to some broad principles:
 
 * see `xju/cmc/AsyncDict.py.test <xju/cmc/AsyncDict.py.test>`_ for sample code
 
+`xju.cmc.AsyncOpt <xju/cmc/__init__.py>`_ - async context manager for its optional (async context manager) value
+
+* see `xju/cmc/AsyncOpt.py.test <xju/cmc/AsyncOpt.py.test>`_ for sample code
+
 
 `xju.cmc.io <xju/cmc/io/__init__.py>`_ - pure context management for e.g. file reading and writing, non-blocking io
 

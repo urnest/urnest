@@ -712,6 +712,108 @@ class AsyncDict(Mapping[K, AsyncV], contextlib.AbstractAsyncContextManager):
             pass
         pass
 
+class AsyncOpt(Generic[AsyncV],contextlib.AbstractAsyncContextManager[None|AsyncV]):
+    '''holds an optional context manager
+    '''
+    entered = False
+    x:None|AsyncV = None
+
+    @overload
+    def __init__(self):
+        '''new empty optional'''
+
+    @overload
+    def __init__(self, x:AsyncOpt[AsyncV]):
+        '''initialise with value from {x} assuming those values have not been "entered"'''
+
+    @overload
+    def __init__(self, x:AsyncV):
+        '''initialise with value {x} assuming it has not been "entered"'''
+
+    def __init__(self, *args, **kwargs):
+        if len(args):
+            match args[0]:
+                case AsyncOpt() as y:
+                    self.x = y.x
+                    pass
+                case v:
+                    self.x=v
+                    pass
+            pass
+        pass
+    
+    async def __aenter__(self) -> None|AsyncV:
+        '''"enters" value if present'''
+        result:None|AsyncV = None
+        if self.x is not None:
+            result=await self.x.__aenter__()
+            pass
+        self.entered=True
+        return result
+
+    async def __aexit__(self, t, e, b):
+        '''"exits" all values in order they were inserted'''
+        assert self.entered, self.x
+        if self.x:
+            async with contextlib.AsyncExitStack() as resources:
+                resources.push_async_exit(self.x)
+                pass
+            pass
+        self.entered=False
+        pass
+
+    def __repr__(self) -> str:
+        return f"AsyncOpt({self.x})"
+
+    @overload
+    async def set(self,value:AsyncV) -> None:
+        '''replace any current value of {key} with {value}
+           - "enters" the new value and then "exits" any old value'''
+        pass
+    @overload
+    async def set(self,value:AsyncOpt[AsyncV]) -> None:
+        '''replace any current value of {key} with {value}
+           - "enters" any new value and then "exits" any old value'''
+        pass
+    async def set(self,value) -> None:
+        if isinstance(value,AsyncOpt):
+            if value.x is None:
+                return await self.clear()
+            else:
+                return await self.set(value.x)
+            pass
+        old = self.x
+        if old is not value:
+            if self.entered:
+                await value.__aenter__()
+                if old is None:
+                    self.x=value
+                else:
+                    async with contextlib.AsyncExitStack() as f:
+                        f.push_async_exit(old)
+                        self.x=value
+                    pass
+                pass
+            else:
+                self.x=value
+            pass
+        pass
+    
+    async def clear(self):
+        old = self.x
+        if old is not None:
+            if self.entered:
+                async with contextlib.AsyncExitStack() as f:
+                    f.push_async_exit(old)
+                    self.x=None
+                pass
+            else:
+                self.x=None
+            pass
+        pass
+
+    def get(self) -> None | AsyncV:
+        return self.x
 class AsyncTask(contextlib.AbstractAsyncContextManager,Generic[ResultType]):
     '''asyncio Task context manager that guarentees Task awaited before exit
        - note that normally, application will have waited for the task

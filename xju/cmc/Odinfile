@@ -15,6 +15,7 @@ cmclass.py.test+(%py-opts):py3.exec.cov
 async_cmclass.py.test+(%py-opts):py3.exec.cov
 Dict.py.test+(%py-opts):py3.exec.cov
 AsyncDict.py.test+(%py-opts):py3.exec.cov
+AsyncOpt.py.test+(%py-opts):py3.exec.cov
 signal.py.test+(%py-opts):py3.exec.cov
 tstore.py.test+(%py-opts):py3.exec.cov
 perflog.py.test+(%py-opts):py3.exec.cov
@@ -41,6 +42,7 @@ cmc.py.test:py3.exec.cov
 async_cmclass.py.test:py3.exec.cov
 Dict.py.test:py3.exec.cov
 AsyncDict.py.test:py3.exec.cov
+AsyncOpt.py.test:py3.exec.cov
 signal.py.test:py3.exec.cov
 tstore.py.test:py3.exec.cov
 perflog.py.test:py3.exec.cov

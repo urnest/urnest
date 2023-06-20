@@ -1,0 +1,140 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2023 Trevor Taylor
+# coding: utf-8
+# 
+# Permission to use, copy, modify, and/or distribute this software for
+# any purpose with or without fee is hereby granted, provided that all
+# copyright notices and this permission notice appear in all copies.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+import asyncio
+import sys
+from sys import path
+from os.path import dirname
+if path[0]==dirname(__file__): path.pop(0)
+from xju.cmc import AsyncOpt
+
+import contextlib
+from typing import Self
+from xju.assert_ import Assert
+from xju.xn import in_context
+
+_log:list[str]=[]
+
+def log(s: str) -> int:
+    _log.append(s)
+    print(s,file=sys.stderr)
+    return len(_log)
+
+def extract_log() -> list[str]:
+    result=_log[:]
+    del _log[:]
+    return result
+
+class AsyncResource:
+    name: str
+    entered_at: int|None = None
+    exited_at: int|None = None
+    ee: None|Exception
+    xe: None|Exception
+
+    def __init__(self, name:str, ee:None|Exception, xe:None|Exception):
+        self.name = name
+        self.ee = ee
+        self.xe = xe
+        pass
+
+    def __repr__(self):
+        return f"Resource({self.name!r})"
+
+    async def __aenter__(self) -> Self:
+        Assert(self.entered_at)==None
+        self.entered_at=log(f'+ aenter {self.name}')
+        if self.ee:
+            log(f'E enter {self.name}')
+            raise self.ee
+        log(f'- aenter {self.name}')
+        return self
+    
+    async def __aexit__(self, t, e, b) -> None:
+        try:
+            Assert(self.entered_at).isNot(None)
+            Assert(self.exited_at).is_(None)
+            self.exited_at=log(f'+ aexit {self.name}')
+            if self.xe:
+                log(f'E exit {self.name}')
+                raise self.xe
+            log(f'- aexit {self.name}')
+        except Exception:
+            raise in_context(f'aexit {self.name}') from None
+        pass
+    pass
+
+async def main():
+    x = AsyncOpt(AsyncResource('c',None,None))
+    await x.set(AsyncResource('b',None,None))
+    v = x.get()
+    assert v is not None
+    Assert(v.name)=='b'
+    await x.clear()
+    Assert(x.get()).is_(None)
+    Assert(extract_log())==[]
+
+    x = AsyncOpt(AsyncOpt(AsyncResource('c',None,None)))
+    await x.set(AsyncResource('b',None,None))
+    assert v is not None
+    Assert(v.name)=='b'
+    Assert(repr(x))=="AsyncOpt(Resource('b'))"
+    await x.clear()
+    Assert(repr(x))=="AsyncOpt(None)"
+    Assert(x.get()).is_(None)
+    Assert(extract_log())==[]
+
+    x=AsyncOpt()
+    Assert(extract_log())==[]
+    async with x as v:
+        assert v is None
+        await x.set(AsyncResource('c',None,None))
+        await x.set(AsyncResource('b',None,None))
+        Assert(extract_log())==[
+            '+ aenter c', '- aenter c',
+            '+ aenter b', '- aenter b',
+            '+ aexit c', '- aexit c'
+        ]
+
+    Assert(extract_log())==['+ aexit b', '- aexit b']
+
+    x=AsyncOpt(AsyncResource('c',None,None))
+    async with x as v:
+        assert v is not None
+        Assert(v.name)=='c'
+        Assert(extract_log())==[
+            '+ aenter c', '- aenter c'
+        ]
+        await x.set(AsyncResource('b',None,None))
+        Assert(extract_log())==[
+            '+ aenter b', '- aenter b', '+ aexit c', '- aexit c'
+        ]
+
+    Assert(extract_log())==['+ aexit b', '- aexit b']
+
+    x=AsyncOpt()
+    async with x:
+        await x.set(AsyncOpt(AsyncResource('c',None,None)))
+        await x.set(AsyncOpt())
+        Assert(x.get()).is_(None)
+        Assert(extract_log())==['+ aenter c', '- aenter c', '+ aexit c', '- aexit c']
+        pass
+    Assert(extract_log())==[]
+    pass
+    
+
+asyncio.run(main())
