@@ -36,6 +36,10 @@ Various modules implemented to some broad principles:
 
 * see `xju/cmc/Dict.py.test <xju/cmc/Dict.py.test>`_ for sample code
 
+`xju.cmc.Opt <xju/cmc/__init__.py>`_ - context manager for its optional (context manager) value
+
+* see `xju/cmc/Opt.py.test <xju/cmc/Opt.py.test>`_ for sample code
+
 `xju.cmc.async_cmclass <xju/cmc/__init__.py>`_  - provides async context management for class attributes that are async / sync context managers
 
 * managing multiple resource attributes is clumsy with AsyncExitStack, this module implements

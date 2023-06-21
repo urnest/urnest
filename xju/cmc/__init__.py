@@ -297,6 +297,135 @@ class Dict(Mapping[K, V], contextlib.AbstractContextManager):
             pass
         pass
 
+class Opt(Generic[V],contextlib.AbstractContextManager[None|V]):
+    '''holds an optional context manager
+       - value can be set (see set()) and cleared (see clear()) at any time
+       - if value is set while active, new value is entered and then old value if any is exited
+       - if value is cleared while active, old value if any is exited
+    '''
+    entered = False
+    x:None|V = None
+
+    @overload
+    def __init__(self):
+        '''new empty optional'''
+        pass
+    @overload
+    def __init__(self, x:Opt[V]):
+        '''initialise with value from {x} assuming those values have not been "entered"'''
+        pass
+    @overload
+    def __init__(self, x:V):
+        '''initialise with value {x} assuming it has not been "entered"'''
+        pass
+    def __init__(self, *args):
+        if len(args):
+            match args[0]:
+                case Opt() as y:
+                    self.x = y.x
+                    pass
+                case v:
+                    self.x=v
+                    pass
+            pass
+        pass
+    
+    def __enter__(self) -> None|V:
+        '''"enters" value if present'''
+        result:None|V = None
+        if self.x is not None:
+            result=self.x.__enter__()
+            pass
+        self.entered=True
+        return result
+
+    def __exit__(self, t, e, b):
+        '''"exits" value if present'''
+        assert self.entered, self.x
+        if self.x:
+            with contextlib.ExitStack() as resources:
+                resources.push(self.x)
+                pass
+            pass
+        self.entered=False
+        pass
+
+    def __repr__(self) -> str:
+        return f"Opt({self.x})"
+
+    @overload
+    def set(self,value:V) -> None|V:
+        '''replace any current value of {key} with {value}
+           - if active, "enters" the new value and then "exits" any old value
+           - returns old value if any
+        '''
+        pass
+    @overload
+    def set(self,value:Opt[V]) -> None|V:
+        '''replace any current value of {key} with {value}
+           - if active, "enters" any new value and then "exits" any old value
+           - returns old value if any
+           - noop if value is the old value, e.g. x.set(x.get())
+        '''
+        pass
+    def set(self,value) -> None|V:
+        '''replace any current value of {key} with {value}
+           - if active, "enters" any new value and then "exits" any old value
+           - returns old value if any
+           - noop if value is the old value, e.g. x.set(x.get())
+        '''
+        if isinstance(value,Opt):
+            if value.x is None:
+                return self.clear()
+            else:
+                return self.set_value(value.x)
+        return self.set_value(value)
+
+    def set_value(self,value:V) -> None|V:
+        '''replace any current value with {value}
+           - assumes value has not been entered
+           - if active, "enters" new value and then "exits" any old value
+           - noop if value is the old value, e.g. x.set(x.get())
+           - returns old value if any
+        '''
+        old = self.x
+        if old is not value:
+            if self.entered:
+                value.__enter__()
+                if old is None:
+                    self.x=value
+                else:
+                    with contextlib.ExitStack() as f:
+                        f.push(old)
+                        self.x=value
+                    pass
+                pass
+            else:
+                self.x=value
+            pass
+        return old
+    
+    def clear(self) -> None|V:
+        '''clear any current value
+           - if active, "exits" old value
+           - returns old value
+        '''
+        old = self.x
+        if old is not None:
+            if self.entered:
+                with contextlib.ExitStack() as f:
+                    f.push(old)
+                    self.x=None
+                pass
+            else:
+                self.x=None
+            pass
+        return old
+
+    def get(self) -> None|V:
+        '''get current value if any'''
+        return self.x
+
 class _ClassCm(contextlib.AbstractContextManager):
     '''target object {x} subclass {cls} context management methods
        - so for x: X where X(Y), __ClassCM(Y, x) will call Y.__enter__
@@ -714,6 +843,9 @@ class AsyncDict(Mapping[K, AsyncV], contextlib.AbstractAsyncContextManager):
 
 class AsyncOpt(Generic[AsyncV],contextlib.AbstractAsyncContextManager[None|AsyncV]):
     '''holds an optional context manager
+       - value can be set (see set()) and cleared (see clear()) at any time
+       - if value is set while active, new value is entered and then old value if any is exited
+       - if value is cleared while active, old value if any is exited
     '''
     entered = False
     x:None|AsyncV = None
@@ -721,15 +853,15 @@ class AsyncOpt(Generic[AsyncV],contextlib.AbstractAsyncContextManager[None|Async
     @overload
     def __init__(self):
         '''new empty optional'''
-
+        pass
     @overload
     def __init__(self, x:AsyncOpt[AsyncV]):
         '''initialise with value from {x} assuming those values have not been "entered"'''
-
+        pass
     @overload
     def __init__(self, x:AsyncV):
         '''initialise with value {x} assuming it has not been "entered"'''
-
+        pass
     def __init__(self, *args, **kwargs):
         if len(args):
             match args[0]:
@@ -752,7 +884,7 @@ class AsyncOpt(Generic[AsyncV],contextlib.AbstractAsyncContextManager[None|Async
         return result
 
     async def __aexit__(self, t, e, b):
-        '''"exits" all values in order they were inserted'''
+        '''"exits" value if present'''
         assert self.entered, self.x
         if self.x:
             async with contextlib.AsyncExitStack() as resources:
@@ -766,22 +898,39 @@ class AsyncOpt(Generic[AsyncV],contextlib.AbstractAsyncContextManager[None|Async
         return f"AsyncOpt({self.x})"
 
     @overload
-    async def set(self,value:AsyncV) -> None:
-        '''replace any current value of {key} with {value}
-           - "enters" the new value and then "exits" any old value'''
+    async def set(self,value:AsyncV) -> None|AsyncV:
+        '''replace any current value with {value}
+           - "enters" the new value and then "exits" any old value
+           - assumes value has not been entered
+           - if active, "enters" any new value and then "exits" any old value
+           - returns old value
+           - noop if value is the old value, e.g. x.set(x.get())
+        '''
         pass
     @overload
-    async def set(self,value:AsyncOpt[AsyncV]) -> None:
-        '''replace any current value of {key} with {value}
-           - "enters" any new value and then "exits" any old value'''
+    async def set(self,value:AsyncOpt[AsyncV]) -> None|AsyncV:
+        '''replace any current value with {value}
+           - assumes value has not been entered
+           - if active, "enters" any new value and then "exits" any old value
+           - returns old value
+           - noop if value is the old value, e.g. x.set(x.get())
+        '''
         pass
-    async def set(self,value) -> None:
+    async def set(self,value) -> None|AsyncV:
         if isinstance(value,AsyncOpt):
             if value.x is None:
                 return await self.clear()
             else:
-                return await self.set(value.x)
-            pass
+                return await self.set_value(value.x)
+        return await self.set_value(value)
+
+    async def set_value(self,value:AsyncV) -> None|AsyncV:
+        '''replace any current value with {value}
+           - assumes value has not been entered
+           - if active, "enters" new value and then "exits" any old value
+           - returns old value
+           - noop if value is the old value, e.g. x.set(x.get())
+        '''
         old = self.x
         if old is not value:
             if self.entered:
@@ -797,9 +946,13 @@ class AsyncOpt(Generic[AsyncV],contextlib.AbstractAsyncContextManager[None|Async
             else:
                 self.x=value
             pass
-        pass
-    
-    async def clear(self):
+        return old
+
+    async def clear(self) -> None|AsyncV:
+        '''clear any current value
+           - if active, "exits" old value
+           - returns old value
+        '''
         old = self.x
         if old is not None:
             if self.entered:
@@ -810,10 +963,12 @@ class AsyncOpt(Generic[AsyncV],contextlib.AbstractAsyncContextManager[None|Async
             else:
                 self.x=None
             pass
-        pass
+        return old
 
-    def get(self) -> None | AsyncV:
+    def get(self) -> None|AsyncV:
+        '''get current value if any'''
         return self.x
+
 class AsyncTask(contextlib.AbstractAsyncContextManager,Generic[ResultType]):
     '''asyncio Task context manager that guarentees Task awaited before exit
        - note that normally, application will have waited for the task
