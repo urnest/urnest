@@ -171,6 +171,11 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 1.3.0 add xju.cmc.AsyncDict, like xju.cmc.Dict but async
+- 1.3.0 xju.cmc.AsyncOpt/Opt async context manager that holds an optional async context manager
+- 1.3.0 xju.cmc.Opt context manager that holds an optional context manager
+- 1.3.0 python xju.cmc add async_cmclass, like xju.cmc.cmclass; handles both async and non-async attrs
+- 1.3.0 strip leading whitespace from doc strings, for compatibility with code formatters like black
 - 1.2.13 xju.newtype Literals now handle more than one value, e.g. Literal['fred','jock']
 - 1.2.13 xju.newtype eq/neq now follows python "you can compare apples to oranges", rely on mypy --strict-equality (which for what it's worth is broken at mypy 1.3.0)
 - 1.2.13 now compatible with mypy --strict-equality
