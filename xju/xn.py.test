@@ -154,8 +154,10 @@ fred.\
 def test6():
     class X:
         def jump(self, height:int):
-            '''jump {height}m in the air
-               - from a standing start'''
+            '''
+            jump {height}m in the air
+            - from a standing start
+            '''
             try:
                 raise Exception('I have lead feet')
             except Exception as e:

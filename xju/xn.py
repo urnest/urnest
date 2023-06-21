@@ -168,8 +168,8 @@ def in_context(context:str,
 
 
 def first_line_of(x:Any)->str:
-    '''return first line of str({x})'''
-    return str(x).split('\n')[0]
+    '''return first non-empty line of str({x}) stripped of leading and trailing whitespace'''
+    return str(x).strip().split('\n')[0].strip()
 
 def desentence(s:str)->str:
     '''remove any trailing '.' and down-case first characters of {s}'''
