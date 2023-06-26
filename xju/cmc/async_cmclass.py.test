@@ -17,9 +17,10 @@
 #
 import sys
 import asyncio
+from dataclasses import dataclass, field
 from xju.assert_ import Assert
 from xju.xn import readable_repr, in_context
-from typing import Self
+from typing import Self, Awaitable, Generator
 from contextlib import AbstractContextManager, AbstractAsyncContextManager
 from xju.cmc import AsyncCM, async_cmclass
 
@@ -29,6 +30,11 @@ def log(s: str) -> int:
     _log.append(s)
     print(s,file=sys.stderr)
     return len(_log)
+
+def extract_log() -> list[str]:
+    result=_log[:]
+    del _log[:]
+    return result
 
 class Resource:
     name: str
@@ -216,7 +222,7 @@ async def main():
         assert False
         pass
     
-    Assert(_log)==[
+    Assert(extract_log())==[
         '+ aenter SA.A.a', '- aenter SA.A.a',
         '+ enter SA.A.b', '- enter SA.A.b',
         '+ aenter SA.A.c', 'E enter SA.A.c',
@@ -224,4 +230,43 @@ async def main():
         '+ aexit SA.A.a', '- aexit SA.A.a']
     pass
 
+async def async_init_dataclass_example() -> None:
+    async def some_async_function(x: int) -> str:
+        await asyncio.sleep(0.1)
+        return f"{x=}"
+    
+    @async_cmclass
+    @dataclass
+    class AsyncInit(AsyncCM):
+        # a class whose initialastion needs await statements
+        # python __init__() cannot be async, so use it to capture
+        # parameters p1, p2 and implement the asynchronous initialisation
+        # via __await__
+        p1: int
+        p2: list[str]
+
+        # attributes that will be initialised in an async "init" function
+        a: Resource = field(init=False)
+        b: int = field(init=False)
+        c: AsyncResource = field(init=False)
+
+        def __await__(self) -> Generator[None,None,'AsyncInit']:
+            """init AsyncInt asynchronously from parameters {self.p1=}, {self.p2=}
+               - this provides pseudo async __init__() i.e. await AsyncInit(x,y)
+               - do not call multiple times!"""
+            async def f() -> 'AsyncInit':
+                self.a=Resource(await some_async_function(self.p1), ee=None, xe=None)
+                self.b=self.p1 * len(self.p2)
+                self.c=AsyncResource('/'.join(self.p2), ee=None, xe=None)
+                return self
+            return f().__await__()
+
+        pass
+
+    async with await AsyncInit(6, ['fred','jock']):
+        Assert(extract_log())==['+ enter x=6', '- enter x=6', '+ aenter fred/jock', '- aenter fred/jock']
+        pass
+    Assert(extract_log())==['+ aexit fred/jock', '- aexit fred/jock', '+ exit x=6', '- exit x=6']
+
 asyncio.run(main())
+asyncio.run(async_init_dataclass_example())
