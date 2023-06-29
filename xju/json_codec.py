@@ -37,6 +37,7 @@ from typing import _GenericAlias  # type: ignore  # mypy 1.2.0
 from typing import get_origin,get_args, runtime_checkable
 from types import GenericAlias, UnionType, NoneType
 import xju.newtype
+from enum import Enum
 
 T=TypeVar('T')
 
@@ -1190,6 +1191,65 @@ class ClassCodec:
         return TypeScriptSourceCode('.'.join(fqn[0:-1]+[f"asInstanceOf{fqn[-1]}({expression})"]))
     pass
 
+@dataclass
+class EnumValueCodec:
+    t:Type[Enum]
+    value:Enum
+    value_codec:CodecProto
+
+    def encode(self,x,back_ref:None|Callable[[Any],JsonType]) -> JsonType:
+        'encode {x} as a EnumValue'
+        try:
+            return self.value_codec.encode(x.value,back_ref)
+        except Exception:
+            raise in_function_context(EnumValueCodec.encode,vars()) from None
+        pass
+    def decode(self,x,back_ref:None|Callable[[JsonType],Any]) -> object:
+        'deocde {x} as a EnumValueCodec'
+        try:
+            value=self.value_codec.decode(x,back_ref)
+            if value != self.value.value:
+                raise Exception(f'{value} is not {self.value.value}')
+            return self.value
+        except Exception:
+            raise in_function_context(EnumValueCodec.decode,vars()) from None
+        pass
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        result = self.value_codec.get_json_schema(definitions,self_ref)
+        result.update({
+            'enum': [ self.value_codec.encode(self.value.value,None) ]
+        })
+        return result
+    def get_type_fqn(self):
+        '''get the fully qualified name of {self.t}'''
+        if self.t.__module__ == "__main__":
+            return self.t.__name__
+        return f'{self.t.__module__}.{self.t.__name__}'
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        return f'{self.get_type_fqn()}.{self.value.name}'
+    def ensure_typescript_defs(self,namespace)->None:
+        # self would already have been done
+        pass
+    def get_typescript_isa(
+            self,
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace,
+            back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        assert back_refs is not None
+        return TypeScriptSourceCode(f'(expression === {self.typescript_type()})')
+    def get_typescript_asa(
+            self,
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace,
+            back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((v: any): {tt} => {{\n"
+            f"    if (v !== {tt}) throw new Error(`the ${{typeof v}} ${{v}} is not {tt}`);\n"
+            f"    return v as {tt};\n"
+            f"}})({expression})")
+    pass
+    
 class SelfCodec:
     def encode(self,x,back_ref:None|Callable[[Any],JsonType]) -> JsonType:
         'encode {x} as a Self'
@@ -1234,7 +1294,7 @@ class SelfCodec:
         return back_refs.asa_back_ref(expression)
     pass
     
-def _explodeSchema(t:type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGenericAlias|_GenericAlias,
+def _explodeSchema(t:type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGenericAlias|_GenericAlias|Enum|Type[Enum],
                    type_var_map:dict[TypeVar,Any]|None):
     '''explode type {t!r} into a tree of codecs using map {type_var_map} to resolve any generic type refs i.e. TypeVars'''
     try:
@@ -1285,6 +1345,8 @@ def _explodeSchema(t:type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGeneric
                 get_origin(t),
                 { n: _explodeSchema(nt,local_type_var_map)
                   for n,nt in get_type_hints(get_origin(t)).items()})
+        if isinstance(t,Enum):
+            return EnumValueCodec(t.__class__,t,_explodeSchema(type(t.value),type_var_map))
         assert isinstance(t,type), t
         if issubclass(t,xju.newtype.Int):
             return NewIntCodec(t)

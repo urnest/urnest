@@ -29,6 +29,7 @@ from dataclasses import dataclass, field
 import re
 import sys
 import ipaddress
+from enum import Enum
 
 from xju.assert_ import Assert
 import xju.newtype
@@ -304,6 +305,35 @@ except Exception as e:
 else:
     assert False, x
     pass
+
+
+#enum support
+class O(Enum):
+    a='fred'
+    b=7
+    pass
+
+Assert(codec(O.a).decode('fred'))==O.a  # type: ignore
+Assert(codec(O.a).encode(O.a))=='fred'  # type: ignore
+try:
+    x=codec(O.a).decode(7)  # type: ignore
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to decode 7 to a O.a because\nfailed to deocde 7 as a EnumValueCodec because\n7 (of type <class 'int'>) is not a <class 'str'>."
+else:
+    assert False, x
+try:
+    x=codec(O.a).decode('jock')  # type: ignore
+except Exception as e:
+    Assert(readable_repr(e))=='Failed to decode jock to a O.a because\nfailed to deocde jock as a EnumValueCodec because\njock is not fred.'
+else:
+    assert False, x
+try:
+    x=codec(O.a).encode(O.b)  # type: ignore
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to encode O.b as a EnumValue because\n7 is not a <class 'str'>."
+else:
+    assert False, x
+
 
 # type unions, e.g. str|int match either type
 
@@ -883,6 +913,10 @@ else:
     jsonschema.validate(
         {'shoots':[{'shoots':[1,2]},3]},
         Codec[Branch](Branch).get_json_schema())
+    Assert(Codec(O.a).get_json_schema())=={'type': 'string', 'enum': ['fred'], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}  # type: ignore
+    jsonschema.validate(
+        'fred',
+        Codec(O.a).get_json_schema())  # type: ignore
     pass
 
 # internal: codecs' encode()s must verify correct type passed in, otherwise
