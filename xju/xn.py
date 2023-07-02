@@ -180,7 +180,7 @@ def indent(prefix:str,s:str)->str:
     '''prefix all but first line of s by specified prefix'''
     return s.replace('\n','\n'+prefix)
 
-class AllFailed(BaseException):
+class AllFailed(Exception):
     def __init__(self,causes:Sequence[BaseException])->None:
         self.causes=causes
         pass
