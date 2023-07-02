@@ -307,33 +307,59 @@ else:
     pass
 
 
-#enum support
+#enum support...
+
 class O(Enum):
     a='fred'
     b=7
     pass
 
+#... member codecs...
 Assert(codec(O.a).decode('fred'))==O.a  # type: ignore
 Assert(codec(O.a).encode(O.a))=='fred'  # type: ignore
 try:
     x=codec(O.a).decode(7)  # type: ignore
 except Exception as e:
-    Assert(readable_repr(e))=="Failed to decode 7 to a O.a because\nfailed to deocde 7 as a EnumValueCodec because\n7 (of type <class 'int'>) is not a <class 'str'>."
+    Assert(readable_repr(e))=="Failed to decode 7 to a O.a because\nfailed to deocde 7 as O.a because\n7 (of type <class 'int'>) is not a <class 'str'>."
 else:
     assert False, x
 try:
     x=codec(O.a).decode('jock')  # type: ignore
 except Exception as e:
-    Assert(readable_repr(e))=='Failed to decode jock to a O.a because\nfailed to deocde jock as a EnumValueCodec because\njock is not fred.'
+    Assert(readable_repr(e))=="Failed to decode jock to a O.a because\nfailed to deocde 'jock' as O.a because\n'jock' is not 'fred'."
 else:
     assert False, x
 try:
     x=codec(O.a).encode(O.b)  # type: ignore
 except Exception as e:
-    Assert(readable_repr(e))=="Failed to encode O.b as a EnumValue because\n7 is not a <class 'str'>."
+    Assert(readable_repr(e))=="Failed to encode <O.b: 7> as a O.a because\n7 is not a <class 'str'>."
 else:
     assert False, x
 
+#... enum codec itself
+Assert(codec(O).decode('fred'))==O.a  # type: ignore
+Assert(codec(O).decode(7))==O.b  # type: ignore
+Assert(codec(O).encode(O.a))=='fred'  # type: ignore
+Assert(codec(O).encode(O.b))==7  # type: ignore
+try:
+    x=codec(O).decode(8)  # type: ignore
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to decode 8 to a <enum 'O'> because\nfailed to decode 8 as enum O value because\n- failed to decode as O.a because\n  failed to deocde 8 as O.a because\n  8 (of type <class 'int'>) is not a <class 'str'>; and\n- failed to decode as O.b because\n  failed to deocde 8 as O.b because\n  8 is not 7."
+else:
+    assert False, x
+try:
+    x=codec(O).decode('jock')  # type: ignore
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to decode jock to a <enum 'O'> because\nfailed to decode 'jock' as enum O value because\n- failed to decode as O.a because\n  failed to deocde 'jock' as O.a because\n  'jock' is not 'fred'; and\n- failed to decode as O.b because\n  failed to deocde 'jock' as O.b because\n  'jock' (of type <class 'str'>) is not a <class 'int'>."
+else:
+    assert False, x
+try:
+    x=codec(O).encode(7.1)  # type: ignore
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to encode <enum 'O'> value 7.1 because\n7.1 (of type float) is not a O."
+else:
+    assert False, x
+    
 
 # type unions, e.g. str|int match either type
 
@@ -639,14 +665,14 @@ else:
 try:
     x=codec(Literal['fred','ann']).decode('jock') # type: ignore
 except Exception as e:
-    Assert(readable_repr(e))=="Failed to decode jock to a typing.Literal['fred', 'ann'] because\nfailed to decode 'jock' as one of ('fred', 'ann') because\nfailed to decode as 'fred' because 'jock' is not 'fred' and failed to decode as 'ann' because 'jock' is not 'ann'."
+    Assert(readable_repr(e))=="Failed to decode jock to a typing.Literal['fred', 'ann'] because\nfailed to decode 'jock' as one of ('fred', 'ann') because\n- failed to decode as 'fred' because\n  'jock' is not 'fred'; and\n- failed to decode as 'ann' because\n  'jock' is not 'ann'."
 else:
     assert False, x
     pass
 try:
     x=codec(Literal[6,7]).decode(8) # type: ignore
 except Exception as e:
-    Assert(readable_repr(e))=="Failed to decode 8 to a typing.Literal[6, 7] because\nfailed to decode 8 as one of (6, 7) because\nfailed to decode as 6 because 8 is not 6 and failed to decode as 7 because 8 is not 7."
+    Assert(readable_repr(e))=="Failed to decode 8 to a typing.Literal[6, 7] because\nfailed to decode 8 as one of (6, 7) because\n- failed to decode as 6 because\n  8 is not 6; and\n- failed to decode as 7 because\n  8 is not 7."
 else:
     assert False, x
     pass
@@ -781,8 +807,9 @@ Assert(codec(Street).get_json_schema())=={'description': 'Street', 'type': 'stri
 Assert(codec(Metres).get_json_schema())=={'description': 'Metres', 'type': 'number', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 
 Assert(codec(Literal['fred']).get_json_schema())=={'type': 'string', 'enum': ['fred'], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
-Assert(codec(Literal[7]).get_json_schema())=={'type': 'number', 'enum': [7], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
+Assert(codec(Literal[7,8]).get_json_schema())=={'oneOf': [{'type': 'number', 'enum': [7]}, {'type': 'number', 'enum': [8]}], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}} # type: ignore
 Assert(codec(Literal[False]).get_json_schema())=={'type': 'boolean', 'enum': [False], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
+Assert(codec(O).get_json_schema())=={'oneOf': [{'type': 'string', 'enum': ['fred']}, {'type': 'integer', 'enum': [7]}], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}} # type: ignore
 
 Assert(codec(Address).get_json_schema())=={
     '$ref': '#/definitions/Address',
@@ -913,7 +940,6 @@ else:
     jsonschema.validate(
         {'shoots':[{'shoots':[1,2]},3]},
         Codec[Branch](Branch).get_json_schema())
-    Assert(Codec(O.a).get_json_schema())=={'type': 'string', 'enum': ['fred'], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}  # type: ignore
     jsonschema.validate(
         'fred',
         Codec(O.a).get_json_schema())  # type: ignore
@@ -976,7 +1002,7 @@ Assert(Codec[Y](Y).get_json_schema())=={
                         {'type': 'string'}]}}}}}
 
 
-# type hint string are supported, allowing forward-decls
+# type hint strings are supported, allowing forward-decls
 @dataclass
 class ShirtSize:
     size: 'SizeCode'
@@ -1119,7 +1145,9 @@ Assert(codec(IpV4Addr).get_typescript_asa(TypeScriptSourceCode('7'),typescript_n
     if (typeof v !== 'string') throw new Error(`${v} is not a string it is a ${typeof v}`);
     return v as string;
 })(7)""")
-       
+
+codec(O).ensure_typescript_defs(typescript_namespace)  # type: ignore
+
 # ... get_formatted_defs() generates the typescript source code:
 Assert(typescript_namespace.get_formatted_defs())==TypeScriptSourceCode(
     '''\
@@ -1133,7 +1161,7 @@ namespace xju {
             try{
                 if (Array.isArray(v)) throw new Error(`${v} is an array`);
                 if (v == null) throw new Error(`${v} is not an object it is null`);
-                if (typeof v !== \'object\') throw new Error(`${v} is not an object it is a ${typeof v}`);
+                if (typeof v !== 'object') throw new Error(`${v} is not an object it is a ${typeof v}`);
                 const attr_asa=function(name:string, asa:any):any{
                     try{
                         asa(v[name]);
@@ -1142,8 +1170,8 @@ namespace xju {
                         throw new Error(`attribute ${name} is invalid because ${e}`);
                     }
                 }
-                attr_asa(\'_Timestamp__value\',(x:any)=>((v: any): number => {
-                    if (typeof v !== \'number\') throw new Error(`${v} is not a number it is a ${typeof v}`);
+                attr_asa('_Timestamp__value',(x:any)=>((v: any): number => {
+                    if (typeof v !== 'number') throw new Error(`${v} is not a number it is a ${typeof v}`);
                     return v as number;
                 })(x));
                 return v as xju.time.Timestamp;
@@ -1156,9 +1184,14 @@ namespace xju {
         {
             return (
                 !Array.isArray(v) &&
-                v !== null &&        typeof v === \'object\' &&
-                (typeof (v["_Timestamp__value"]) == \'number\'))}
+                v !== null &&        typeof v === 'object' &&
+                (typeof (v["_Timestamp__value"]) == 'number'))}
     }
 }
+
+Enum O {
+    a = "fred";
+    b = 7;
+};
 ''')
 
