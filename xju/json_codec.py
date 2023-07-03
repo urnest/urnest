@@ -680,9 +680,7 @@ class NewIntCodec(Generic[NewInt]):
         return self.t(self.base_codec.decode(x,back_ref))
     def get_type_fqn(self):
         '''get the fully qualified name of {self.t}'''
-        if self.t.__module__=='__main__':
-            return self.t.__name__
-        return f"{self.t.__module__}.{self.t.__name__}"
+        return get_type_fqn(self.t)
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             'description': self.get_type_fqn(),
@@ -748,9 +746,7 @@ class NewFloatCodec(Generic[NewFloat]):
         return self.t(self.base_codec.decode(x,back_ref))
     def get_type_fqn(self):
         '''get the fully qualified name of {self.t}'''
-        if self.t.__module__=='__main__':
-            return self.t.__name__
-        return f"{self.t.__module__}.{self.t.__name__}"
+        return get_type_fqn(self.t)
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             'description': self.get_type_fqn(),
@@ -816,9 +812,7 @@ class NewStrCodec(Generic[NewStr]):
         return self.t(self.base_codec.decode(x,back_ref))
     def get_type_fqn(self):
         '''get the fully qualified name of {self.t}'''
-        if self.t.__module__=='__main__':
-            return self.t.__name__
-        return f"{self.t.__module__}.{self.t.__name__}"
+        return get_type_fqn(self.t)
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             'description': self.get_type_fqn(),
@@ -1092,9 +1086,7 @@ class ClassCodec:
         pass
     def get_type_fqn(self):
         '''get the fully qualified name of {self.t}'''
-        if self.t.__module__ == "__main__":
-            return self.t.__name__
-        return f'{self.t.__module__}.{self.t.__name__}'
+        return get_type_fqn(self.t)
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         if self.custom_codec is not None:
             return self.custom_codec.xju_json_codec_get_json_schema(definitions)
@@ -1222,9 +1214,7 @@ class EnumValueCodec:
         return result
     def get_type_fqn(self):
         '''get the fully qualified name of {self.t}'''
-        if self.t.__module__ == "__main__":
-            return self.t.__name__
-        return f'{self.t.__module__}.{self.t.__name__}'
+        return get_type_fqn(self.t)
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         return f'{self.get_type_fqn()}.{self.value.name}'
     def typescript_value(self) -> TypeScriptSourceCode:
@@ -1237,8 +1227,7 @@ class EnumValueCodec:
             expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace,
             back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
-        assert back_refs is not None
-        return TypeScriptSourceCode(f'(expression === {self.typescript_type(back_refs)})')
+        return TypeScriptSourceCode(f'({expression} === {self.typescript_type(back_refs)})')
     def get_typescript_asa(
             self,
             expression:TypeScriptSourceCode,
@@ -1288,9 +1277,7 @@ class EnumCodec:
         }
     def get_type_fqn(self):
         '''get the fully qualified name of {self.t}'''
-        if self.t.__module__=='__main__':
-            return self.t.__name__
-        return f"{self.t.__module__}.{self.t.__name__}"
+        return get_type_fqn(self.t)
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
         return self.get_type_fqn()
     def ensure_typescript_defs(self, namespace) -> None:
@@ -1300,10 +1287,20 @@ class EnumCodec:
         if typescript_type_name not in target_namespace.defs:
             enum_value_codec:EnumValueCodec
             target_namespace.defs[typescript_type_name]=TypeScriptSourceCode(
-                f"Enum {typescript_type_name} {{\n"+
-                ''.join([f'    {name} = {enum_value_codec.typescript_value().value()};\n'
+                f"enum {typescript_type_name} {{\n"+
+                ',\n'.join([f'    {name} = {enum_value_codec.typescript_value().value()}'
                          for name, enum_value_codec in self.value_codecs.items()])+
-                f'}};\n')
+                f'\n}};\n')
+            target_namespace.defs[TypeScriptUQN(f"asInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
+                f"function asInstanceOf{typescript_type_name}(v: any): {typescript_type_name}\n"
+                f"{{\n"
+                f"    return {indent(4,self.get_typescript_asa(TypeScriptSourceCode('v'),namespace,None))};\n"
+                f"}}")
+            target_namespace.defs[TypeScriptUQN(f"isInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
+                f"function isInstanceOf{typescript_type_name}(v:any): v is {typescript_type_name}\n"
+                f"{{\n"
+                f"    return {indent(4,self.get_typescript_isa(TypeScriptSourceCode('v'),namespace,None))};\n"
+                f"}}")
         pass
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
@@ -1475,3 +1472,8 @@ def _explode_literal(value: Any):
 def indent(n: int, s:TypeScriptSourceCode)->str:
     lines=s.splitlines()
     return '\n'.join([lines[0].value()]+[(' '*n)+l.value() for l in lines[1:]])
+
+def get_type_fqn(t:type) -> str:
+    if t.__module__=='__main__':
+        return t.__name__
+    return f"{t.__module__}.{t.__name__}"

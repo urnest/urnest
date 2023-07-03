@@ -1189,9 +1189,47 @@ namespace xju {
     }
 }
 
-Enum O {
-    a = "fred";
-    b = 7;
+enum O {
+    a = "fred",
+    b = 7
 };
-''')
+
+function asInstanceOfO(v: any): O
+{
+    return ((v: any): O => {try{
+        var es = new Array<string>();
+        try{
+            ((v: any): O.a => {
+                if (v !== O.a) throw new Error(`the ${typeof v} ${v} is not O.a`);
+                return v as O.a;
+            })(v);
+            return v as O;
+        }
+        catch(e:any){
+            es.push(e.message);
+        };
+        try{
+            ((v: any): O.b => {
+                if (v !== O.b) throw new Error(`the ${typeof v} ${v} is not O.b`);
+                return v as O.b;
+            })(v);
+            return v as O;
+        }
+        catch(e:any){
+            es.push(e.message);
+        };
+        throw new Error(es.join(' and '));
+    }catch(e:any)
+    {
+        throw new Error(`${v} is not a O because ${e}`);
+    }})(v);
+}
+function isInstanceOfO(v:any): v is O
+{
+    return ((v:any): v is O=>{
+        return false ||
+           (v === O.a) ||
+           (v === O.b);
+    })(v);
+}''')
 

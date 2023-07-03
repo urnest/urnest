@@ -9,6 +9,7 @@ from xju.time import Duration, Timestamp
 from xju.assert_ import Assert
 from xju.xn import readable_repr
 from dataclasses import dataclass
+from enum import Enum
 
 namespace=TypeScriptNamespace({})
 
@@ -469,6 +470,13 @@ print(f'''
 }})();
 ''')
 
+
+class O(Enum):
+    a='fred'
+    b=7
+    pass
+
+
 timestamp_codec=codec(Timestamp)
 timestamp_codec.ensure_typescript_defs(namespace)
 bytecount_codec=codec(ByteCount)
@@ -479,6 +487,9 @@ duration_codec=codec(Duration)
 duration_codec.ensure_typescript_defs(namespace)
 namespace_codec=codec(TypeScriptNamespace)
 namespace_codec.ensure_typescript_defs(namespace)
+enum_codec=codec(O)
+enum_codec.ensure_typescript_defs(namespace)
+
 codec(int|str).add_typescript_alias(namespace, [TypeScriptUQN('xju'),TypeScriptUQN('NorS')]) # type: ignore  # mypy 1.2.0 bug
 print(namespace.get_formatted_defs())
 
@@ -622,6 +633,31 @@ print(f'''
         throw new Error(`${{y}} (of type ${{typeof y}}) is not a xju.json_codec.TypeScriptUQN`);
     }}
     assert_equal(x, "fred");
+}})();
+''')
+
+print(f'''
+//enum
+(() => {{
+    var x:any = "fred";
+    var y:O = asInstanceOfO(x);
+    if (y !== "fred") {{
+        throw new Error(`${{y}} is not "fred"`);
+    }}
+    if (!isInstanceOfO(x)) {{
+        throw new Error(`${{x}} (of type ${{typeof x}}) is not a O`);
+    }}
+    x = 9;
+    try{{
+        y = asInstanceOfO(x);
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 9 is not a O because Error: the number 9 is not O.a and the number 9 is not O.b");
+    }}
+    if (isInstanceOfO(x)) {{
+        throw new Error(`${{x}} (of type ${{typeof x}}) is (unexpectedly) a O`);
+    }}
 }})();
 ''')
 
