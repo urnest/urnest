@@ -127,7 +127,7 @@ Various modules implemented to some broad principles:
 
 `xju.json_codec <xju/json_codec.py>`_
 
-* encoding/decoding type-hinted dict/list/int/bool/None/float/str and classes to and from json
+* encoding/decoding type-hinted dict/list/int/bool/None/float/str/Enum and classes to and from json
 
 * designed to fit well with type checking
 
@@ -171,6 +171,7 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 1.4.0 add Enum support to xju.json_codec
 - 1.3.0 add xju.cmc.AsyncDict, like xju.cmc.Dict but async
 - 1.3.0 xju.cmc.AsyncOpt/Opt async context manager that holds an optional async context manager
 - 1.3.0 xju.cmc.Opt context manager that holds an optional context manager
