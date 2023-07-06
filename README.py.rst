@@ -171,6 +171,7 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 1.4.1 fix type hints on xju.cmc.async_cmclass and xju.cmc.cmclass
 - 1.4.0 add Enum support to xju.json_codec
 - 1.3.0 add xju.cmc.AsyncDict, like xju.cmc.Dict but async
 - 1.3.0 xju.cmc.AsyncOpt/Opt async context manager that holds an optional async context manager
