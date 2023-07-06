@@ -37,7 +37,9 @@ from xju.assert_ import Assert
 T = TypeVar('T')
 U = TypeVar('U')
 
-def cmclass(cls:Type[contextlib.AbstractContextManager[T]]) -> Type[contextlib.AbstractContextManager[T]]:
+T_CMT = TypeVar('T_CMT', bound=Type[contextlib.AbstractContextManager])
+
+def cmclass(cls:T_CMT) -> T_CMT:
     '''Class decorator that adds context management __enter__ and __exit__
        that enter and exit all type-hinted attributes implementing contextlib.AbstractContextManager
        then any existing __enter__.
@@ -582,7 +584,10 @@ class Condition:
         self.c.notify_all()
     pass
 
-def async_cmclass(cls:Type[contextlib.AbstractAsyncContextManager[T]]) -> Type[contextlib.AbstractAsyncContextManager[T]]:
+ACMT = TypeVar('ACMT', bound=contextlib.AbstractAsyncContextManager)
+T_ACMT = TypeVar('T_ACMT', bound=Type[contextlib.AbstractAsyncContextManager])
+
+def async_cmclass(cls:T_ACMT) -> T_ACMT:
     '''Class decorator that adds async context management __aenter__ and __aexit__
        that enter and exit all type-hinted attributes implementing 
        contextlib.AbstractAsyncContextManager and contextlib.AbstractContextManager
@@ -591,8 +596,8 @@ def async_cmclass(cls:Type[contextlib.AbstractAsyncContextManager[T]]) -> Type[c
        implement contextlib.AbstractAsyncContextManager and the preferred way to do that is
        to inherit from xju.cmc.AsyncCM - see cmc.py.test for examples.
     '''
-    base_classes_to_enter = _make_base_classes_to_enter(cls)
-    attrs_to_enter = _make_attrs_to_enter(cls)
+    base_classes_to_enter = _make_base_classes_to_enter(cls) # type: ignore  # mypy 1.4.1 gets confused
+    attrs_to_enter = _make_attrs_to_enter(cls) # type: ignore  # mypy 1.4.1 gets confused
     # need a unique place to keep resources acquired by enter so exit can
     # exit them, only want resources for self, not subclasses (which do their own
     # handling). Note replacing . with _ could lead to clashes but there's no
@@ -1084,51 +1089,56 @@ class AsyncCondition:
     pass
 
 def _make_base_classes_to_enter(
-        cls: Type[contextlib.AbstractAsyncContextManager[T]]
-) -> list[Callable[[contextlib.AbstractAsyncContextManager[T]],contextlib.AbstractAsyncContextManager]]:
-    result: list[Callable[[contextlib.AbstractAsyncContextManager[T]],contextlib.AbstractAsyncContextManager]] = []
+        cls: Type[ACMT]
+) -> list[Callable[[ACMT],contextlib.AbstractAsyncContextManager[None]]]:
+    result: list[Callable[[ACMT],contextlib.AbstractAsyncContextManager[None]]] = []
     for base_class in cls.__bases__:
         if base_class is not AsyncCM and issubclass(base_class, contextlib.AbstractAsyncContextManager):
-            result.append(_make_async_class_cm(base_class))
+            result.append(
+                _make_async_class_cm(base_class))  # type: ignore  # above assert...
+            # ... says that base_class is a subclass of AbstractAsyncContextManager i.e. an ACMT,
+            # but mypy 1.4.1 says "Argument 1 to "_make_async_class_cm" has incompatible
+            # type "type[AbstractAsyncContextManager[Any]]"; expected "type[ACMT]"
             pass
         assert not issubclass(cls, CM), cls
         pass
     return result
 
 def _make_async_class_cm(
-        cls:Type[contextlib.AbstractAsyncContextManager]
-) -> Callable[[contextlib.AbstractAsyncContextManager],contextlib.AbstractAsyncContextManager]:
-    def result(x:contextlib.AbstractAsyncContextManager) -> contextlib.AbstractAsyncContextManager:
+        cls:Type[ACMT]
+) -> Callable[[ACMT],contextlib.AbstractAsyncContextManager[None]]:
+    def result(x:contextlib.AbstractAsyncContextManager) -> contextlib.AbstractAsyncContextManager[None]:
         return _AsyncClassCm(cls, x)
     return result
             
 @dataclass
-class _AsyncClassCm(contextlib.AbstractAsyncContextManager):
+class _AsyncClassCm(contextlib.AbstractAsyncContextManager[None]):
     '''target object {x} subclass {cls} context management methods
        - so for x: X where X(Y), __ClassCM(Y, x) will call Y.__enter__
          and Y.__exit__ directly avoiding any X.__enter__/__exit__
          overrides'''
-    cls:Type[contextlib.AbstractAsyncContextManager]
-    x:contextlib.AbstractAsyncContextManager
+    cls:Type[contextlib.AbstractAsyncContextManager[Any]]
+    x:Any
 
-    async def __aenter__(self):
-        return await self.cls.__aenter__(self.x)
+    async def __aenter__(self) -> None:
+        assert isinstance(self.x, self.cls)
+        await self.cls.__aenter__(self.x)
     async def __aexit__(self, t, e, b):
         return await self.cls.__aexit__(self.x, t, e, b)
     pass
 
 def _make_attrs_to_enter(
-        cls: Type[contextlib.AbstractAsyncContextManager[T]]
+        cls: Type[ACMT]
 ) -> dict[
     str,
     Callable[
-        [contextlib.AbstractAsyncContextManager[T]],contextlib.AbstractAsyncContextManager
+        [ACMT],contextlib.AbstractAsyncContextManager
     ]
 ]:
     result: dict[
         str,
         Callable[
-            [contextlib.AbstractAsyncContextManager[T]],contextlib.AbstractAsyncContextManager
+            [ACMT],contextlib.AbstractAsyncContextManager
         ]
     ] = {}
     for n, t in cls.__annotations__.items():

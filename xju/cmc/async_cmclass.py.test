@@ -106,6 +106,7 @@ class AsyncResource:
         except Exception:
             raise in_context(f'aexit {self.name}') from None
         pass
+    pass
 
 @async_cmclass
 class Aggregate(AsyncCM):
@@ -158,9 +159,10 @@ async def main():
     else:
         assert False
         pass
-    
-    async with Aggregate('A') as a:
-        Assert(a.name)=='A'
+
+    a=Aggregate('A')
+    Assert(a.name)=='A'
+    async with a:
         Assert(_log)==[
             '+ aenter A.a', '- aenter A.a',
             '+ enter A.b', '- enter A.b',
