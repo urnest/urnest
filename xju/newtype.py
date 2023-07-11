@@ -647,3 +647,76 @@ class Str(Generic[Tag]):
 
     pass
 
+
+class Bool(Generic[Tag]):
+    __value:bool
+
+    def __init__(self, value:bool):
+        self.__value=value
+        pass
+
+    def value(self)->bool:
+        return self.__value
+
+    # note the following type: ignore is to get the desired behaviour from mypy --strict-equality
+    # (as at mypy 1.3.0) i.e. forbid comparison of Bool[XTag] and Bool[YTag], noting:
+    # - python itself insists on being able to compare values of unrelated type (for example
+    #   to implement x in y)
+    # - the type: ignore avoid mypy error for non-liskoff substitutability (because
+    #   python's Object.__eq__ has other as Any)
+    # - with other: Any, mypy --strict-equality gives no error at all
+    # - magically (incorrectly?), the type: ignore does not suppress checks on type of other, but
+    #   does suppress the substitution error
+    def __eq__(self,other:Self)->bool:  # type: ignore
+        '''equality test, self and other have the same type and same value'''
+        '''i.e. recommend stick to using Bool[X] like:
+              class Hours(Bool[HoursTag]):pass
+           ... and not inherit from Hours.
+           If you choose to inherit from Hours, make sure you write your own __eq__'''
+        if type(other) is not type(self):
+            return False
+        return self.value().__eq__(other.value())
+
+    def __ne__(self,other:Self)->bool:  # type: ignore
+        return not self.__eq__(other)
+
+    def __str__(self)->str:
+        return str(self.value())
+
+    def __bool__(self)->bool:
+        return self.value()
+
+    def __repr__(self)->str:
+        return repr(self.value())
+
+    def __format__(self, format_spec:str)->str:
+        return self.value().__format__(format_spec)
+
+    
+    def __sizeof__(self)->int:
+        return self.value().__sizeof__()
+    def __hash__(self)->int:
+        return self.value().__hash__()
+    def __gt__(self,other:Self)->bool:
+        return self.value().__gt__(other.value())
+    def __lt__(self,other:Self)->bool:
+        return self.value().__lt__(other.value())
+    def __le__(self,other:Self)->bool:
+        return self.value().__le__(other.value())
+    def __ge__(self,other:Self)->bool:
+        return self.value().__ge__(other.value())
+    def __and__(self,other:Self)->Self:
+        if type(other) is not type(self):
+            return NotImplemented
+        return self.__class__(self.value().__and__(other.value()))
+    def __or__(self,other:Self)->Self:
+        if type(other) is not type(self):
+            return NotImplemented
+        return self.__class__(self.value().__or__(other.value()))
+    def __xor__(self,other:Self)->Self:
+        if type(other) is not type(self):
+            return NotImplemented
+        return self.__class__(self.value().__xor__(other.value()))
+
+    pass
+

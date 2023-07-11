@@ -19,7 +19,7 @@ from sys import path
 from os.path import dirname
 if path[0]==dirname(__file__): path.pop(0)
 
-from xju.newtype import Str,Int,Float
+from xju.newtype import Str,Int,Float,Bool
 from xju.assert_ import Assert
 from xju.xn import readable_repr
 
@@ -412,3 +412,65 @@ y:list[LastName|Weight|Hours] = [ LastName('fred'), Weight(7.8), Hours(9) ]
 Assert(LastName('jock') not in y)==True
 Assert(Hours(2) not in y)==True
 Assert(Weight(2.1) not in y)==True
+
+
+
+# Bool[X]
+
+class EnabledTag: pass
+class IsRedTag: pass
+
+class Enabled(Bool[EnabledTag]):pass
+
+b1=Enabled(False)
+b2=Enabled(True)
+Assert(b1)==Enabled(False)
+Assert(b1==7)==False
+Assert(b1!=7)==True
+Assert(b1)<b2
+Assert(b1)<=b2
+Assert(b1)!=b2
+Assert(b2)>b1
+Assert(b2)>=b1
+Assert(b2)>=b2
+Assert(b2)<=b2
+Assert(b1&b2)==Enabled(False)
+try:
+    Enabled(True)&cast(Enabled,7)
+except Exception as e:
+    Assert("unsupported operand type(s) for &: 'Enabled' and 'int'").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+Assert(b1|b2)==Enabled(True)
+try:
+    Enabled(True)|cast(Enabled,7)
+except Exception as e:
+    Assert("unsupported operand type(s) for |: 'Enabled' and 'int'").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+
+Assert(str(b1))=='False'
+Assert(repr(b1))=='False'
+Assert('{}'.format(b1))=='False'
+try:
+    b2*2.5  # type: ignore
+except TypeError as e:
+    Assert("unsupported operand type(s) for *: 'Enabled' and 'float'").isIn(readable_repr(e))
+else:
+    assert False
+    pass
+
+Assert(bool(b1))==False
+Assert(b1.__sizeof__())==b1.value().__sizeof__()
+Assert(b1.__hash__())==b1.value().__hash__()
+Assert(b1.__xor__(b2))==Enabled(True)
+try:
+    Enabled(True)^cast(Enabled,7)
+except Exception as e:
+    Assert("unsupported operand type(s) for ^: 'Enabled' and 'int'").isIn(readable_repr(e))
+else:
+    assert False
+    pass

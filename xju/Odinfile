@@ -380,9 +380,35 @@ for n in ['center','ljust','rjust']:
     def {n}(self,width:int,fillchar:str=' ')->Self:
         return self.__class__(self.value().{n}(width,fillchar))'''
 assert rem==set()
+bool_methods=''
+rem=set(dir(bool))
+for n in ['__sizeof__','__hash__']:
+    rem.remove(n)
+    bool_methods=bool_methods+f'''
+    def {n}(self)->int:
+        return self.value().{n}()'''
+for n in ['__gt__', '__lt__', '__le__', '__ge__']:
+    rem.remove(n)
+    bool_methods=bool_methods+f'''
+    def {n}(self,other:Self)->bool:
+        return self.value().{n}(other.value())'''
+for n in ['__and__', '__or__','__xor__']:
+    rem.remove(n)
+    bool_methods=bool_methods+f'''
+    def {n}(self,other:Self)->Self:
+        if type(other) is not type(self):
+            return NotImplemented
+        return self.__class__(self.value().{n}(other.value()))'''
+for n in []:
+    rem.remove(n)
+    # i functions not implemented or hand-coded
+if '__getstate__' in rem: rem.remove('__getstate__')  # python 3.11 and above
+if '__setformat__' in rem: rem.remove('__setformat__')  # python 3.10
+assert rem=={'__rrshift__', '__lshift__', '__sub__', '__int__', '__getattribute__', '__invert__', '__divmod__', '__radd__', 'imag', '__bool__', '__ceil__', '__str__', '__floor__', '__rmul__', '__subclasshook__', '__pow__', '__reduce__', 'denominator', '__truediv__', '__eq__', '__getnewargs__', '__trunc__', 'as_integer_ratio', '__abs__', '__add__', 'to_bytes', '__format__', 'bit_count', '__mul__', '__dir__', '__round__', '__delattr__', '__rlshift__', '__rand__', '__class__', 'bit_length', 'from_bytes', 'conjugate', '__ne__', '__new__', '__rmod__', '__rtruediv__', '__rfloordiv__', '__repr__', '__rpow__', '__index__', '__rdivmod__', '__init_subclass__', '__float__', '__reduce_ex__', '__mod__', '__doc__', 'numerator', '__rsub__', 'real', '__setattr__', '__ror__', '__neg__', '__pos__', '__rxor__', '__init__', '__rshift__', '__floordiv__'},rem
 print(open(sys.argv[1]).read().replace('# generated Int methods here...',int_methods).replace(
     '# generated Str methods here...',str_methods).replace(
-    '# generated Float methods here...',float_methods))
+    '# generated Float methods here...',float_methods).replace(
+    '# generated Bool methods here...',bool_methods))
 
 %json_codec_typescript_test==()+cmd=(%json_codec_typescript_test.sh) (%json_codec_typescript_test_ts)+need=(%json_codec_typescript_test_ts/json_codec_typescript_test.ts):exec.output
 
