@@ -97,6 +97,40 @@ public:
     }
   }
 
+  uint32_t asU32() const /*throw(
+    // this element is not a number or
+    // its value is not a whole number or
+    // its value is too big or small to represent as an int
+    xju::Exception)*/
+  {
+    try{
+      return asU32_();
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "get " << str() << " as an uint32_t";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+  uint64_t asU64() const /*throw(
+    // this element is not a number or
+    // its value is not a whole number or
+    // its value is too big or small to represent as an int
+    xju::Exception)*/
+  {
+    try{
+      return asU64_();
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "get " << str() << " as an uint64_t";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
   xju::Utf8String asString() const /*throw(
     // this element is not a string
     xju::Exception)*/
@@ -244,6 +278,26 @@ protected:
   // see asInt() above
   // - note overridden by subclass(es)
   virtual int asInt_() const /*throw(
+    xju::Exception)*/
+  {
+    std::ostringstream s;
+    s << str() << " is not a number";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+
+  // see asU32() above
+  // - note overridden by subclass(es)
+  virtual int asU32_() const /*throw(
+    xju::Exception)*/
+  {
+    std::ostringstream s;
+    s << str() << " is not a number";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+
+  // see asU64() above
+  // - note overridden by subclass(es)
+  virtual int asU64_() const /*throw(
     xju::Exception)*/
   {
     std::ostringstream s;

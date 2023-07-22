@@ -1,0 +1,326 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <xju/snmp.hh>
+#include <xju/json/String.hh>
+#include <xju/json/Number.hh>
+#include <xju/json/Element.hh>
+#include <memory> //impl
+#include <vector> //impl
+#include <utility> //impl
+#include <xju/Utf8String.hh> //impl
+#include <map> //impl
+#include <xju/format.hh>
+#include <xju/json/Object.hh>
+#include <xju/json/Array.hh>
+#include <xju/snmp/SnmpV1Response.hh>
+#include <xju/snmp/NullValue.hh> //impl
+#include <xju/snmp/IntValue.hh> //impl
+#include <xju/snmp/TimeTicksValue.hh> //impl
+#include <xju/snmp/Gauge32Value.hh> //impl
+#include <xju/snmp/Counter32Value.hh> //impl
+#include <xju/snmp/OpaqueValue.hh> //impl
+#include <xju/snmp/StringValue.hh> //impl
+#include <xju/snmp/IPv4AddressValue.hh> //impl
+#include <xju/ip/Port.hh>
+#include <xju/json/format.hh> //impl
+
+namespace snmp_json_gateway
+{
+namespace {
+std::unique_ptr<xju::json::String> json_string(std::string const& x) {
+  return std::unique_ptr<xju::json::String>(new xju::json::String(xju::Utf8String(x)));
+}
+std::unique_ptr<xju::json::Number> json_number(int x) {
+  return std::unique_ptr<xju::json::Number>(new xju::json::Number(xju::format::int_(x)));
+}
+std::unique_ptr<xju::json::Number> json_number(uint64_t x) {
+  return std::unique_ptr<xju::json::Number>(new xju::json::Number(xju::format::int_(x)));
+}
+std::unique_ptr<xju::json::String> json_oid(xju::snmp::Oid const& x) {
+  return std::unique_ptr<xju::json::String>(json_string(x.toString()));
+}
+
+
+std::unique_ptr<xju::json::Array> encode(
+  std::vector<xju::snmp::Oid> const& oids)
+{
+  std::vector<std::shared_ptr<xju::json::Element const> > elements;
+  for(auto const oid: oids){
+    elements.push_back(json_oid(oid));
+  }
+  return std::unique_ptr<xju::json::Array>(new xju::json::Array(elements));
+}
+
+}
+
+// encode x to json, using specified oid order
+std::shared_ptr<xju::json::Object> encode(
+  std::pair<xju::snmp::SnmpV1GetRequest, std::vector<xju::snmp::Oid>>  const& x)
+{
+  std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> > elements;
+
+  elements.insert({xju::Utf8String("message_type"), json_string("SnmpV1GetRequest")});
+  elements.insert({xju::Utf8String("community"), json_string(x.first.community_.value())});
+  elements.insert({xju::Utf8String("request_id"), json_number(x.first.id_.value())});
+  elements.insert({xju::Utf8String("oids"), encode(x.second)});
+  return std::make_unique<xju::json::Object>(elements);
+}
+
+// encode x to json
+std::shared_ptr<xju::json::Object> encode(xju::snmp::SnmpV1GetNextRequest const& x)
+{
+  std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> > elements;
+
+  elements.insert({xju::Utf8String("message_type"), json_string("SnmpV1GetNextRequest")});
+  elements.insert({xju::Utf8String("community"), json_string(x.community_.value())});
+  elements.insert({xju::Utf8String("request_id"), json_number(x.id_.value())});
+  elements.insert({xju::Utf8String("oids"), encode(x.oids_)});
+  return std::make_unique<xju::json::Object>(elements);
+}
+
+std::pair<xju::snmp::SnmpV1Response::ErrorStatus, xju::snmp::SnmpV1Response::ErrorIndex> decodeV1Error(
+  xju::json::Element const& error,
+  std::vector<std::shared_ptr<xju::json::Element const>> const& values){
+  try{
+    if (error.isNull()){
+      return {xju::snmp::SnmpV1Response::ErrorStatus::NO_ERROR,
+              xju::snmp::SnmpV1Response::ErrorIndex(0)};
+    }
+    std::string const errorType(
+      error.getMember(xju::Utf8String("error_type")).asString());
+    if (errorType == "TooBig"){
+      return {xju::snmp::SnmpV1Response::ErrorStatus::TOO_BIG,
+              xju::snmp::SnmpV1Response::ErrorIndex(0)};
+    }
+    auto const oid(error.getMember(xju::Utf8String("oid")).asString());
+    auto const i(std::find_if(values.begin(), values.end(),
+                              [&](auto x){
+                                auto const& a(x->asArray());
+                                return a.size() && a[0]->asString()==oid;
+                              }));
+    if (i==values.end()){
+      std::ostringstream s;
+      s << "no such oid " << oid << " in values";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    xju::snmp::SnmpV1Response::ErrorIndex const errorIndex(1+(i-values.begin()));
+    if (errorType == "NoSuchName"){
+      return {xju::snmp::SnmpV1Response::ErrorStatus::NO_SUCH_NAME,
+              errorIndex};
+    }
+    else if (errorType == "BadValue"){
+      return {xju::snmp::SnmpV1Response::ErrorStatus::BAD_VALUE,
+              errorIndex};
+    }
+    else if (errorType == "ReadOnly"){
+      return {xju::snmp::SnmpV1Response::ErrorStatus::READ_ONLY,
+              errorIndex};
+    }
+    else if (errorType == "GenErr"){
+      return {xju::snmp::SnmpV1Response::ErrorStatus::GEN_ERR,
+              errorIndex};
+    }
+    std::ostringstream s;
+    s << xju::format::quote(errorType)
+      << " is not one of TooBig, NoSuchName, BadValue, ReadOnly, GenErr";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  catch(xju::Exception& e){
+    std::vector<std::string> values_;
+    std::transform(values.begin(), values.end(), back_inserter(values_),
+                   [](auto value){
+                     std ::ostringstream s;
+                     (*value).formatAsUtf8(s,
+                                           xju::Utf8String(""),
+                                           xju::Utf8String(""),
+                                           xju::Utf8String(""));
+                     return s.str();
+                   });
+    std::ostringstream s;
+    s << "decode SnmpV1GetResponse error status and error index from json "
+      << error
+      << " and oid values "
+      << xju::format::join(values_.begin(), values_.end(), std::string(", "));
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+
+std::shared_ptr<xju::snmp::Value const> decodeV1Value(xju::json::Element const& x)
+{
+  try{
+    std::string const value_type(x.getMember(xju::Utf8String("value_type")).asString());
+    if (value_type == "NullValue"){
+      return std::make_unique<xju::snmp::NullValue>();
+    }
+    xju::json::Element const& value(x.getMember(xju::Utf8String("value")));
+    if (value_type == "IntValue"){
+      return std::make_unique<xju::snmp::IntValue>(value.asInt());
+    }
+    if (value_type == "StrValue"){
+      return std::make_unique<xju::snmp::StringValue>(value.asString());
+    }
+    if (value_type == "TimeTicksValue"){
+      return std::make_unique<xju::snmp::TimeTicksValue>(
+        std::chrono::milliseconds(10*value.asInt()));
+    }
+    if (value_type == "GaugeValue"){
+      return std::make_unique<xju::snmp::Gauge32Value>(value.asU32());
+    }
+    if (value_type == "CounterValue"){
+      return std::make_unique<xju::snmp::Counter32Value>(value.asU32());
+    }
+    if (value_type == "Ip4AddressValue"){
+      return std::make_unique<xju::snmp::IPv4AddressValue>(
+        xju::ip::v4::Address(value.asString()));
+    }
+    if (value_type == "OpaqueValue"){
+      std::vector<uint8_t> bytes;
+      for(auto b: value.asArray()){
+        int const v((*b).asInt());
+        if (v < 0 || v > 255){
+          std::ostringstream s;
+          s << xju::format::int_(v) << " is not 0..255";
+        }
+        bytes.push_back(v);
+      }
+      return std::make_unique<xju::snmp::OpaqueValue>(bytes);
+    }
+    std::ostringstream s;
+    s << "value type " << xju::format::quote(value_type) << " is not one of "
+      << "IntValue, StrValue, TimeTicksValue, GaugeValue, CounterValue, OpaqueValue, NullValue";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode " << x << " as an snmp v1 value";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+std::vector<std::pair<xju::snmp::Oid, std::shared_ptr<xju::snmp::Value const> > > decodeV1Values(
+  xju::json::Element const& x)
+{
+  try{
+    std::vector<std::pair<xju::snmp::Oid, std::shared_ptr<xju::snmp::Value const> > > result;
+    for(auto oid_and_value: x.asArray()){
+      auto const a((*oid_and_value).asArray());
+      if (a.size()!=2){
+        std::ostringstream s;
+        s << "oid+value " <<  xju::format::join(a.begin(), a.end(), std::string(", "))
+          << " does not have size 2 it has size " << a.size();
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      result.push_back({xju::snmp::Oid(a[0]->asString()), decodeV1Value(*a[1])});
+    }
+    return result;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode " << x << " as a SnmpV1Response values";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+xju::snmp::SnmpV1Response decodeSnmpV1Response(xju::json::Element const& x)
+{
+  try{
+    if (x.getMember(xju::Utf8String("message_type")).asString()!=xju::Utf8String("SnmpV1Response")){
+      std::ostringstream s;
+      s << "message type is " << x.getMember(xju::Utf8String("message_type"))
+        << " not \"SnmpV1GetResponse\"";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    auto const responseType = x.getMember(xju::Utf8String("response_type")).asInt();
+    if (responseType < 0 || responseType > 255){
+      std::ostringstream s;
+      s << "response type " << xju::format::int_(responseType) << " is not 0..255";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    xju::snmp::Community const community(x.getMember(xju::Utf8String("community")).asString());
+    xju::snmp::RequestId const requestId(x.getMember(xju::Utf8String("request_id")).asU64());
+    auto const error_status_and_index(
+      decodeV1Error(x.getMember(xju::Utf8String("error")),
+                    x.getMember(xju::Utf8String("values")).asArray()));
+    auto const values(decodeV1Values(x.getMember(xju::Utf8String("values"))));
+    return xju::snmp::SnmpV1Response(
+      responseType,
+      community,
+      requestId,
+      std::get<0>(error_status_and_index),
+      std::get<1>(error_status_and_index),
+      values);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode " << x << " as an SnmpV1Response";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+std::pair<xju::ip::v4::Address, xju::ip::Port> decodeEndpoint(
+  xju::json::Element const& x)
+{
+  try{
+    auto const a(x.asArray());
+    if (a.size() != 2){
+      std::ostringstream s;
+      s << "x is an array but has size " << a.size() << " not 2";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    return std::make_pair(
+      xju::ip::v4::Address(a[0]->asString()),
+      xju::ip::Port(a[1]->asInt()));
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode " << xju::json::format(x, xju::Utf8String(""))
+      << " as a snmp-json gateway endpoint";
+    e.addContext(s.str(), XJU_TRACED);
+    throw;
+  }
+}
+
+
+std::shared_ptr<xju::json::Array> encodeEndpoint(
+  std::pair<xju::ip::v4::Address, xju::ip::Port> const& endpoint)
+{
+  return std::make_unique<xju::json::Array>(
+    std::vector<std::shared_ptr<xju::json::Element const>>(
+      {
+        std::shared_ptr<xju::json::Element const>(
+          std::make_unique<xju::json::String>(
+            xju::Utf8String(xju::format::str(endpoint.first)))),
+        std::shared_ptr<xju::json::Element const>(
+          std::make_unique<xju::json::Number>(
+            xju::Utf8String(xju::format::str(endpoint.second.value()))))
+      }));
+}
+
+template<class T>
+std::shared_ptr<xju::json::Element> encode(
+  std::pair<xju::ip::v4::Address, xju::ip::Port> const& source,
+  std::pair<xju::ip::v4::Address, xju::ip::Port> const& dest,
+  T const& message)
+{
+  std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> > elements;
+
+  elements.insert({xju::Utf8String("source"), encode(source)});
+  elements.insert({xju::Utf8String("dest"), encode(dest)});
+  elements.insert({xju::Utf8String("message"), encode(message)});
+  return std::make_unique<xju::json::Object>(elements);
+}
+
+}

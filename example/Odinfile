@@ -21,5 +21,6 @@ typescript-inc%all.tree:leaves
 
 %hcp-subdir-spec==<<
 %typescript-inc==./typescript-inc/Odinfile%hcp-gen
+%snmp-json-gateway==./snmp-json-gateway/Odinfile%hcp-gen
 
 %hcp-local-spec==.:dir.hcp.list+(%hcp-opts)+hpath='example':hcp-split-virdir-specs:cat

@@ -1,0 +1,344 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+#include <hcp/parser.hh>
+
+namespace example
+{
+namespace typescript_inc
+{
+
+class ImportedTag{};
+typedef hcp_ast::TaggedItem<ImportedTag> Imported;
+
+using hcp_parser::parseLiteral;
+using hcp_parser::identifierContChar;
+using hcp_parser::eatWhite;
+using hcp_parser::optional;
+using hcp_parser::parseUntil;
+using hcp_parser::parseAnyCharExcept;
+using hcp_parser::doubleQuote;
+using hcp_parser::named;
+using hcp_parser::s_chars;
+using hcp_parser::semicolon;
+using hcp_parser::balanced;
+
+
+PR sourceFile() noexcept{
+  return parseUntil(eatWhite()+declElement()|definitionElement(),endOfFile());
+}
+
+PR typeParameters() noexcept{
+  return hcp_parser::list("<"+eatWhite(), typeParameter(), ","+eatWhite(),">");
+}
+
+PR typeParameter() noexcept{
+  return identifier()+optional(constraint)+eatWhite();
+}
+
+PR constraint() noexcept{
+  return "extends"+!identifierContChar()+eatWhite()+type_();
+}
+PR type_() noexcept{
+  return typeLiteral()|typeReference()|typeQuery()|predefinedType();
+}
+
+PR PredefinedType() noexcept{
+  return (parseLiteral("any")|
+          parseLiteral("number")|
+          parseLiteral("boolean")|
+          parseLiteral("string")|
+          parseLiteral("void"))+eatWhite();
+}
+PR typeReference() noexcept{
+  return qualifiedIdentifier()+eatWhite()+optional(typeArguments());
+}
+
+PR dot() noexcept{
+  static PR const result(parseLiteral("."));
+  return result;
+}
+
+PR qualifiedIdentifier() noexcept{
+  return identifier() + eatWhite()+parseUntil("."+identifier()+eatWhite(), !dot()".");
+}
+PR typeArguments() noexcept{
+  static PR const result(
+    list("<"+eatWhite(),typeArgument(),","+eatWhite(),">"+eatWhite()));
+  return result;
+}
+
+PR typeQuery() noexcept{
+  static PR const result(keyword("typeof")+eatWhite()+qualifiedIdentifier());
+}
+
+PR typeLiteral() noexcept{
+  static PR const result(objectType()|arrayType()| functionType()| constructorType());
+  return result;
+}
+
+PR arrayType() noexcept{
+  static PR const result(elementType()+lbrace()+rbrace());
+  return result;
+}
+PR elementType() noexcept{
+  static PR const result(typeQuery()|predefinedType()|typeReference()|objectType()|arrayType());
+  return result;
+}
+
+PR functionType() noexcept{
+  static PR const result(
+    optional(typeParameters())+
+    "("+eatWhite()+optional(parameterList()+")"+eatWhite()+"=>"+eatWhite()+type());
+  return result;
+}
+PR constructorType() noexcept{
+    static PR const result(keyword("new")+functionType());
+  return result;
+}
+PR objectType() noexcept{
+  static PR const result("{"+eatWhite()+optional(typeBody())+"}");
+  return result;
+}
+PR typeBody() noexcept{
+  static PR const result(typeMemberList()+optional(semicolon())));
+  return result;
+}
+PR typeMemberList() noexcept{
+  static PR const result(nonEmptyListOf(typeMember(),semicolon()));
+  return result;
+}
+PR typeMember() noexcept{
+  static PR const result(propertySignature()|callSignature()|constructSignature()|
+                         indexSignature()|methodSignature());
+  return result;
+}
+PR propertySignature() noexcept{
+  static PR const result(propertyName()+optional("?"+eatWhite()+optional(typeAnnotation())));
+  return result;
+}
+PR propertyName() noexcept{
+  static PR const result(identifier()|stringLiteral()|numericLiteral());
+  return result;
+}
+PR callSignature() noexcept{
+  static PR const result(optional(typeParameters())+
+                         "("+eatWhite()+optional(parameterList())+")"+eatWhite()+
+                         optional(annotation()));
+  return result;
+}
+PR parameterList() noexcept{
+  static PR const result(
+    requiredParameterList()|
+    optionalParameterList()|
+    restParameter()|
+    (requiredParameterList()+comma()+optionalParameterList())|
+    (requiredParameterList()+comma()+restParameter())|
+    (optionalParameterList()+comma()+restParameter())|
+    (requiredParameterList()+comma()+optionalParameterList()+comma()+restParameter()));
+  return result;
+}
+PR requiredParameterList() noexcept{
+  static PR const result(nonEmptyListOf(requiredParameter(),comma())+eatWhite());
+  return result;
+}
+PR requiredParameter() noexcept{
+  static PR const result(
+    (optional(accessLevel())+identifier()+optional(typeAnnotation()))|
+    (identifier()+colon()+stringLiteral());
+  return result;
+}
+PR optionalParameterList() noexcept{
+    static PR const result(nonEmptyListOf(optionalParameter(),comma()));
+  return result;
+}
+PR optionalParameter() noexcept{
+  static PR const result(
+    (optional(accessLevel()+identifier()+"?"+eatWhite()+optional(typeAnnotation())))|
+    (optional(AccessLevel()+identifier()+optional(typeAnnotation())+initialiser())));
+  return result;
+}
+PR initialiser() noexcept{
+  static PR const result(equals()+literalValue());
+  return result;
+}
+PR restParameter() noexcept{
+  static PR const result("..."+eatWhite()+identifier()+optional(typeAnnotation()));
+  return result;
+}
+PR constructSignature() noexcept{
+  static PR const result(keyword_new()+callSignature());
+  return result;
+}
+PR indexSignature() noexcept{
+  static PR const result(
+    "["+eatWhite()+identifier()+colon()+(keyword_string()|keyword_number())+ "]"+typeAnnotation()+
+    eatWhite());
+  return result;
+}
+
+PR methodSignature() noexcept{
+  static PR const result(
+    !(keyword_new() | "new(")+propertyName()+optional("?"+eatWhite())+callSignature());
+  return result;
+}
+
+PR typeAnnotation() noexcept{
+  static PR const result(
+    ":"+eatWhite()+type());
+  return result;
+}
+
+PR interfaceDeclaration() noexcept{
+  static PR const result(
+    kw_interface()+identifier()+
+    optional(typeParameters()+optional(interfaceExtendsClause())+objectType()));
+  return result;
+}
+  
+PR interfaceExtendsClause() noexcept{
+  static PR const result(
+    kw_extends()+classOrInterfaceTypeList());
+  return result;
+}
+
+PR classOrInterfaceTypeList() noexcept{
+  static PR const result(
+    nonEmptyListOf(typeReference()+eatWhite(), comma()+eatWhite()));
+  return result;
+}
+
+PR classHeritage() noexcept{
+  static PR const result(
+    optional(classExtendsClause())+optional(implementsClause()));
+  return result;
+}
+
+PR classExtendsClause() noexcept{
+  static PR const result(
+    kw_extends()+typeReference());
+  return result;
+}
+
+PR implementsClause() noexcept{
+  static PR const result(
+    kw_implements()+classOrInterfaceTypeList());
+  return result;
+}
+
+PR DeclarationElementcx() noexcept{
+  static PR const result(
+    exportAssignment()|
+    (kw_export()+interfaceDeclaration())|
+    (kw_export()+importDeclarartion())|
+    (kw_export()+externalImportDeclaration())|
+    (kw_export()+ambientDeclaration()));
+  return result;
+}
+
+PR importDeclarartion() noexcept{
+  static PR const result(
+    kw_import()+identifier()+"="+qualifiedIdentifier()+";");
+  return result;
+}
+
+PR externalImportDeclaration ::= 
+  "import" ws Identifier equals ExternalModuleReference <';'>
+PR externalModuleReference ::= 
+  "require" lparen StringLiteral rparen
+ExportAssignment ::= "export" equals Identifier <';'>
+PR <AmbientDeclaration> ::= <"declare"> ws AmbientVariableDeclaration
+                       | <"declare"> ws AmbientFunctionDeclaration
+                       | <"declare"> ws AmbientClassDeclaration
+                       | <"declare"> ws AmbientEnumDeclaration
+                       | <"declare"> ws AmbientModuleDeclaration
+                       | <"declare"> ws AmbientExternalModuleDeclaration
+PR ambientVariableDeclaration ::= <"var"> ws Identifier [TypeAnnotation] [ws-opt <';'>]
+PR ambientFunctionDeclaration ::= <"function"> ws Identifier ws-opt CallSignature <';'>
+PR ambientClassDeclaration ::=
+  <"class"> ws Identifier [TypeParameters] ClassHeritage <'{'> AmbientClassBody <'}'>
+PR ambientClassBody ::= AmbientClassBodyElement*
+PR ambientClassBodyElement ::= AmbientConstructorDeclaration
+                           | AmbientPropertyMemberDeclaration
+                           | IndexSignature
+PR ambientConstructorDeclaration ::= <"constructor"> ws '(' [Parameter-List] ')' <';'>
+PR ambientPropertyMemberDeclaration ::=
+  [AccessLevel] ["static" ws] PropertyName [TypeAnnotation] <';'>
+  [AccessLevel] ["static" ws] PropertyName CallSignature <';'>
+PR ambientEnumDeclaration ::= "enum" Identifier '{' [AmbientEnumBody] '}'
+PR ambientEnumBody ::= AmbientEnumMember [',' AmbientEnumMember]* [',']
+PR ambientEnumMember ::= PropertyName [equals #"[0-9]+|0x\p{XDigit}+"]
+PR ambientModuleDeclaration ::= 
+  "module" ws QualifiedIdentifier ws-opt '{' AmbientModuleBody '}'
+PR ambientModuleBody ::= (ws-opt AmbientModuleElement)* ws-opt
+PR ambientModuleElement ::= [<"export"> ws] AmbientVariableDeclaration
+                       | [<"export"> ws] AmbientFunctionDeclaration
+                       | [<"export"> ws] AmbientClassDeclaration
+                       | [<"export"> ws] AmbientEnumDeclaration
+                       | [<"export"> ws] AmbientModuleDeclaration
+                       | [<"export"> ws] AmbientExternalModuleDeclaration
+                       | [<"export"> ws] InterfaceDeclaration
+                       | [<"export"> ws] ImportDeclarartion
+PR ambientExternalModuleDeclaration ::= 
+  "module" StringLiteral '{' AmbientExternalModuleBody '}'
+PR ambientExternalModuleBody ::= AmbientExternalModuleElement*
+PR ambientExternalModuleElement ::= AmbientModuleElement
+                               | ExportAssignment
+                               | [<"export">] ws ExternalImportDeclaration
+
+PR literalValue ::= #"true|false"
+               | "null"
+               | StringLiteral
+               | NumericLiteral
+PR stringLiteral ::= #'".*"'
+PR numericLiteral ::=
+  (*Decimal: optional integer followed by optional '.' followed by mandatory
+  integer followed by optional exponent*)
+  #"((?:(?:[0-9]*)?\.?[0-f]+(?:[Ee][-+]?[0-9]+))|0[Xx]\p{XDigit}+)"
+PR <SingleLineComment> ::= '//' #"[^\n]*"
+PR <MultiLineComment> ::= '/*' InsideMultiLineComment* '*/'
+PR <InsideMultiLineComment> ::= !( '*/' | '/*' ) (#"." | #"[\n\r]") | MultiLineComment
+PR <Whitespace> ::= <(#"\s+" | SingleLineComment | MultiLineComment)>
+PR accessLevel ::= #"public|private" <ws>
+(*these are all for making the grammer easer to read*)
+
+<ws> ::= Whitespace+
+<ws-opt> ::= Whitespace*
+<lparen> ::= ws-opt <'('> ws-opt
+<rparen> ::= ws-opt <')'> ws-opt
+<lbrace> ::= ws-opt <'['> ws-opt
+<rbrace> ::= ws-opt <']'> ws-opt
+<comma>  ::= ws-opt <','> ws-opt
+<equals> ::= ws-opt <'='> ws-opt
+
+
+
+hcp_parser::PR keyword(std::string const& x){
+  return parseLiteral(x)+!identifierContChar()+eatWhite();
+}
+
+hcp_parser::PR import(){
+  static hcp_parser::PR result(
+    hcp_parser::optional(keyword("export"))+
+    (keyword("import")|keyword("from"))+
+    hcp_parser::parseUntil(eatWhite()+parseAnyCharExcept(";"),doubleQuote())+
+    doubleQuote()+named<Imported>("imported", s_chars())+doubleQuote()+eatWhite()+semicolon()+
+    eatWhite());
+  return result;
+}
+    
+hcp_parser::PR statementOrDef(){
+  static hcp_parser::PR result(
+    balanced("\n"|semicolon())+hcp_parser::optional(semicolon())+eatWhite());
+  return result;
+}
+
+
+}
+}
