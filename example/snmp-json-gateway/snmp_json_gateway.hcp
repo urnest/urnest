@@ -311,14 +311,12 @@ std::shared_ptr<xju::json::Array> encodeEndpoint(
 
 template<class T>
 std::shared_ptr<xju::json::Element> encode(
-  std::pair<xju::ip::v4::Address, xju::ip::Port> const& source,
-  std::pair<xju::ip::v4::Address, xju::ip::Port> const& dest,
+  std::pair<xju::ip::v4::Address, xju::ip::Port> const& remoteEndpoint,
   T const& message)
 {
   std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> > elements;
 
-  elements.insert({xju::Utf8String("source"), encode(source)});
-  elements.insert({xju::Utf8String("dest"), encode(dest)});
+  elements.insert({xju::Utf8String("remote_endpoint"), encodeEndpoint(remoteEndpoint)});
   elements.insert({xju::Utf8String("message"), encode(message)});
   return std::make_unique<xju::json::Object>(elements);
 }

@@ -8,12 +8,14 @@
 +py_sp=(../..)
 
 %all.tree==<<
+%snmp-json-gateway
 %test-decode-from-json-from-cxx
 %test-decode-from-json-from-py
 
 %test-decode-from-json-from-cxx==(test-decode-from-json.py)+(%py-opts)+cmd=(%encoded-to-json-from-cxx):py3.exec.output
 %test-decode-from-json-from-py==()+cmd=(%test-decode-from-json-from-py.exe)+cmd=(%encoded-to-json-from-py):exec.output
 
+%snmp-json-gateway.exe==snmp-json-gateway.cc+(%cxx-opts):auto.cxx.exe
 %test-encode-to-json.exe==test-encode-to-json.cc+(%cxx-opts):auto.cxx.exe
 %test-decode-from-json-from-py.exe==test-decode-from-json-from-py.cc+(%cxx-opts):auto.cxx.exe
 
