@@ -2,7 +2,7 @@
 
 d="$1" && shift &&
 (cd "$d" && ls -1)|
-egrep '\.hh$|\.cc$|\.hcp$'|
+grep -E '\.hh$|\.cc$|\.hcp$'|
 while read n
 do
   echo "%$n==$d/$n"

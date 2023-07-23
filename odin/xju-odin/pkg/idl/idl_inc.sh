@@ -38,10 +38,10 @@ for kind in local global; do
 
 if [ -f idl_inc.view_desc ] ; then
    if [ "$ODIN_ignore" != "" ] ; then
-      egrep -v -f $ODIN_ignore -v <idl_inc.view_desc >tmp
+      grep -E -v -f $ODIN_ignore -v <idl_inc.view_desc >tmp
       mv tmp idl_inc.view_desc; fi
    if [ "$ODIN_IGNORE" != "" ] ; then
-      egrep -v -e $ODIN_IGNORE <idl_inc.view_desc >tmp
+      grep -E -v -e $ODIN_IGNORE <idl_inc.view_desc >tmp
       mv tmp idl_inc.view_desc; fi
    sed -e "/=''/!s/\(.*\)/'\1'/" < idl_inc.view_desc > tmp
    mv tmp idl_inc.view_desc; fi

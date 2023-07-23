@@ -69,7 +69,7 @@ rm -f sources
 cat "$ODIN_sources"|
 while read source
 do
-  classname=`egrep "$source " "$ODIN_classnames" | awk '{print $2}'`
+  classname=`grep -E "$source " "$ODIN_classnames" | awk '{print $2}'`
   if [ "$classname" != "$source" ] && [ "$classname" != `basename "$source" .java` ]
   then
     cp "$source" "$classname.java"

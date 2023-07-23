@@ -1,7 +1,7 @@
 %xxx.load == xxx.sql:load
 %yyy.stdout == (yyy.sql+pre=(%xxx.load):sql.stdout)
 
-%yyy.stdout.dep==()+cmd=egrep '[.]sql$' (%yyy.stdout:depend:ls) :stdout
+%yyy.stdout.dep==()+cmd=grep -E '[.]sql$' (%yyy.stdout:depend:ls) :stdout
 
 %yyy.stdout.dep.expect==<<
 yyy.sql

@@ -24,8 +24,8 @@ lint $flags $ODIN_c >lint1.log 2>ERRORS \
 input=`basename $ODIN_c .c`
 if [ -r $input.ln ] ; then mv $input.ln ln; fi
 
-egrep -v 'possible pointer alignment' lint1.log >tmp; mv tmp lint1.log
+grep -E -v 'possible pointer alignment' lint1.log >tmp; mv tmp lint1.log
 if [ "$ODIN_ignore" != "" ] ; then
-   egrep -v -f $ODIN_ignore lint1.log >tmp; mv tmp lint1.log; fi
+   grep -E -v -f $ODIN_ignore lint1.log >tmp; mv tmp lint1.log; fi
 
 exit 0

@@ -53,7 +53,7 @@ $compiler -c $flags $ODIN_source  >MESSAGES 2>WARNINGS || {
    if [ ! -s ERRORS ] ; then 
       echo "$compiler failed" >>ERRORS; fi;
    if [ "$ODIN_CXX_IGNORE_ERR" != "" ] ; then
-      if egrep -s -e "$ODIN_CXX_IGNORE_ERR" ERRORS; then
+      if grep -E -s -e "$ODIN_CXX_IGNORE_ERR" ERRORS; then
 	 mv ERRORS WARNINGS; fi; fi; }
 if [ -f MESSAGES ] ; then cat MESSAGES; rm MESSAGES; fi
 

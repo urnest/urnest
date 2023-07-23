@@ -310,7 +310,7 @@ echo "$x" | fgrep TRANSIENT
 #!/bin/sh
 REPEAT=$1 && shift &&
 valgrind --tool=memcheck "$@" 2>&1 |
-egrep 'definitely lost: |indirectly lost: |possibly lost: |still reachable: '|
+grep -E 'definitely lost: |indirectly lost: |possibly lost: |still reachable: '|
 while read pid rest
 do
   echo $rest

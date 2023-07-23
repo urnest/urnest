@@ -20,7 +20,7 @@ if [ $? != 0 ] ; then
    mv WARNINGS ERRORS
    echo 'yacc failed' >>ERRORS
 elif [ "$ODIN_conflictok" = "" ] ; then
-   egrep 'conflicts' WARNINGS >ERRORS; fi
+   grep -E 'conflicts' WARNINGS >ERRORS; fi
 
 if [ -f y.tab.c ] ; then
    if [ "$ODIN_yaccid" != "" ] ; then

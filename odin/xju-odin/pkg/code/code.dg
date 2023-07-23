@@ -43,7 +43,7 @@
 
 # Environment Variables
 
-$ODIN_IGNORE 'egrep expression for includes to ignore' = '/usr/include';
+$ODIN_IGNORE 'grep -E expression for includes to ignore' = '/usr/include';
 
 $ODIN_LIB_SP 'default library search path' = '/lib /usr/lib';
 

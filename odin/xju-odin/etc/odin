@@ -140,7 +140,7 @@ if [ "$preset" != "" ] ; then
       rm -f $cache/DG.c
       echo "$cache Tool Packages compiled."; fi; fi
 
-if [ -s $cache/ERR ] && egrep -sv arning $cache/ERR; then
+if [ -s $cache/ERR ] && grep -E -sv arning $cache/ERR; then
    cat $cache/ERR
    echo "Cache is inconsistent and must be reset.  Use: $prog -r"
    exit 1; fi

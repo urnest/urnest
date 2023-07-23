@@ -72,7 +72,7 @@ f.a
 #!/bin/sh
 echo "a=`$@`"
 
-%test1-s==(%a.stdout:depend:ls)+cmd=egrep '[.]java$' +need=(%a.stdout:depend):stdout
+%test1-s==(%a.stdout:depend:ls)+cmd=grep -E '[.]java$' +need=(%a.stdout:depend):stdout
 
 %test1-expect==<<
 (src/f/a.java)
@@ -93,7 +93,7 @@ echo "a=`$@`"
 %test2==(%test2-expect:list:ls)+cmd=cmp (%test2-s):stdout
 
 %gb.class==more/d/gb.java+(%j-opts):class
-%test2-s==(%gb.class:depend:ls)+cmd=egrep '[.]java$':stdout
+%test2-s==(%gb.class:depend:ls)+cmd=grep -E '[.]java$':stdout
 
 %test2-expect==<<
 (more/d/gb.java)

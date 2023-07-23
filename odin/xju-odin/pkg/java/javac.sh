@@ -65,7 +65,7 @@ then
    echo "${ODINRBSHOST} javac -d $ODIN_JAVA_OUTPUT_DIRECTORY $debug $classpath $ODIN_source" 2>&1
 fi
 source="$ODIN_source"
-classname=`egrep "$source " "$ODIN_classnames" | awk '{print $2}'`
+classname=`grep -E "$source " "$ODIN_classnames" | awk '{print $2}'`
 if [ "$classname" != "$source" ] && [ "$classname" != `basename "$source" .java` ]
 then
   cp "$ODIN_source" "$classname.java"

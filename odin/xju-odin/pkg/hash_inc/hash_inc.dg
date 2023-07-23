@@ -25,7 +25,7 @@
 
 +inc_sp 'name of a directory in an include search path'? => :ls;
 
-+ignore 'egrep expression for includes to ignore'? => :ls;
++ignore 'grep -E expression for includes to ignore'? => :ls;
 
 $ODIN_HASH_INC_I 'space-separated list of directories containing default include files (these directories are added as -I options when compiling c/c++/idl)' = '';
 

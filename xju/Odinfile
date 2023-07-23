@@ -82,7 +82,7 @@ cmc%all.tree:leaves
 mypy-error-tests%all.tree:leaves
 
 %local.py.cov.checked==%local-pys-to-cover:list.py+py_cov=(%local.py.cov):list.py3.cov.checked
-%local-pys-to-cover==.:list:ls+cmd=egrep -v "'newtype.template.py'":stdout:list
+%local-pys-to-cover==.:list:ls+cmd=grep -E -v "'newtype.template.py'":stdout:list
 %local.py.cov==%local-pytest.tree:leaves:py3.cov.list:agg.py3.cov
 
 %local-pytest.tree==<<

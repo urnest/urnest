@@ -20,7 +20,7 @@
 
 %size == () +cmd= wc `cat (%src-files)` :stdout
 
-%src-files == %exe :depend :ls +cmd=egrep -v "ODIN|os9|boot|dg\/if|h\$" :stdout
+%src-files == %exe :depend :ls +cmd=grep -E -v "ODIN|os9|boot|dg\/if|h\$" :stdout
 
 %exe == %odin.cxx.sm +ignore=\\.hh\$ +lib=(%odin.cxx.sm:a)+(%extra-lib) :exe
 

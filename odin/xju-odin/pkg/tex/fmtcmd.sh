@@ -17,7 +17,7 @@ elif [ "$ODIN_latex" != '' ]
 then echo latex > fmtcmd
 elif [ "$ODIN_tex" != '' ]
 then echo tex > fmtcmd
-elif egrep -e '^\\documentstyle' -e '^\\documentclass' $rootFile > /dev/null
+elif grep -E -e '^\\documentstyle' -e '^\\documentclass' $rootFile > /dev/null
 then echo latex > fmtcmd
 else echo tex > fmtcmd
 fi

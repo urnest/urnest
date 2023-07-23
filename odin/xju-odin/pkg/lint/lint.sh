@@ -20,9 +20,9 @@ lint $lintflags $inputs >>lint 2>ERRORS \
  || echo 'lint failed' >>ERRORS
 
 if [ "$ODIN_ignore" != "" ] ; then
-   egrep -v -f $ODIN_ignore lint >tmp; mv tmp lint; fi
+   grep -E -v -f $ODIN_ignore lint >tmp; mv tmp lint; fi
 
 if [ "$ODIN_gignore" != "" ] ; then
-   egrep -v -f $ODIN_gignore lint >tmp; mv tmp lint; fi
+   grep -E -v -f $ODIN_gignore lint >tmp; mv tmp lint; fi
 
 exit 0

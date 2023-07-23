@@ -26,15 +26,15 @@ LD_LIBRARY_PATH="$ODIN_FLUID_LD_LIBRARY_PATH" \
 $compiler -c "$b" 2>MSGS
 ok=$?
 test $ok = 0 || {
-  if egrep -s -f $ODIN_abort MSGS; then
+  if grep -E -s -f $ODIN_abort MSGS; then
          cat MSGS
          exit 1; fi
        mv MSGS ERRORS  
        echo "$compiler failed." >>ERRORS
        exit 0; }
 
-egrep 'arning' MSGS >>WARNINGS
-egrep -v 'arning' MSGS
+grep -E 'arning' MSGS >>WARNINGS
+grep -E -v 'arning' MSGS
 
 input=`expr "$b" : '\([^/]*\)[.][^./]*'`
 if [ -f $input.h ] ; then mv $input.h h; fi

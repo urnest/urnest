@@ -112,7 +112,7 @@
 
 +py_sp 'name of a directory in a PYTHONPATH'? => :ls;
 
-+ignore 'egrep expression for imports to ignore'? => :ls;
++ignore 'grep -E expression for imports to ignore'? => :ls;
 
 +py 'python file to execute'? => :first;
 
@@ -124,7 +124,7 @@
 
 +mypy_flags 'flags to pass to mypy' => :cat;
 
-$ODIN_PY_IGNORE 'egrep expression for python imports to ignore, e.g. \\"^os$|^sys$\\"' = '';
+$ODIN_PY_IGNORE 'grep -E expression for python imports to ignore, e.g. \\"^os$|^sys$\\"' = '';
 
 $ODIN_PYTHONPATH 'colon-separated list of directories to search for python3 imports, after searching +py_sp directories, e.g. /usr/local/python3/site-packages' = '';
 

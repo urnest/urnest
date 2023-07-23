@@ -93,7 +93,7 @@ $ODIN_CXX_LD_DEBUGF 'debug flag for C++ linker' = '-g';
 
 $ODIN_CXX_LD_LIBRARY_PATH 'load library path for C++ compiler, linker' = '';
 
-$ODIN_CXX_IGNORE_ERR 'egrep expression for compile/link errors to ignore' = '';
+$ODIN_CXX_IGNORE_ERR 'grep -E expression for compile/link errors to ignore' = '';
 
 $ODIN_CXX_LD_EXTRA_LIBS 'extra library flags to add to every ld command (at the end)' = '';
 

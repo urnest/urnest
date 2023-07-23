@@ -65,7 +65,7 @@ sed -n -e '/^[ 	]*#[ 	]*include/s/^[^"]*"\([^"]*\)".*$/\1/w local' \
 
 touch hash_impl.view_desc &&
 dirs=$incsp &&
-for name in `cat local | ( test -n "$ignore" && egrep -v "$ignore" || cat )`
+for name in `cat local | ( test -n "$ignore" && grep -E -v "$ignore" || cat )`
 do
    case $name in
       /* )
@@ -87,7 +87,7 @@ do
          for dir in $ODIN_DIR $dirs
          do
             d=$(dirname "$dir/$name") &&
-            if test -z "$implsp" || ( echo "$implsp"|egrep -s "^$d\$" )
+            if test -z "$implsp" || ( echo "$implsp"|grep -E -s "^$d\$" )
             then
               for suffix in $suffixes
               do
@@ -99,7 +99,7 @@ do
    esac
 done || ( echo 'include scanning failed' ; false ) &&
 
-for name in `cat global | ( test -n "$ignore" && egrep -v "$ignore" || cat )`
+for name in `cat global | ( test -n "$ignore" && grep -E -v "$ignore" || cat )`
 do
    case $name in
       /* )
@@ -121,7 +121,7 @@ do
          for dir in $dirs
          do
             d=$(dirname "$dir/$name") &&
-            if test -z "$implsp" || ( echo "$implsp"|egrep -s "^$d\$" )
+            if test -z "$implsp" || ( echo "$implsp"|grep -E -s "^$d\$" )
             then
               for suffix in $suffixes
               do

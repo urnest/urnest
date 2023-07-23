@@ -39,7 +39,7 @@ $ODIN_OMNICXY_BE_DIR 'directory containing omniidl cxy backend .py files, eg cxy
 
 $ODIN_OMNICXY_OMNIIDL 'name of omniidl program' = 'omniidl';
 
-$ODIN_OMNICXY_SUPPRESS_WARNINGS 'egrep expression matching warnings to suppress' = '';
+$ODIN_OMNICXY_SUPPRESS_WARNINGS 'grep -E expression matching warnings to suppress' = '';
 
 +cxy 'flags to pass to omniidl cxy backend (omit the -Wb)' ? => :cat;
 

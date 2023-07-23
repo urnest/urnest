@@ -6,7 +6,7 @@
 
 %java.sh==<<
 cat "$1" | while read n ; do
-  ls -1 "$n"  | egrep '[.]java$' |
+  ls -1 "$n"  | grep -E '[.]java$' |
   while read m ; do
     echo "$n/$m"
   done

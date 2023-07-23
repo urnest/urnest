@@ -43,11 +43,11 @@ for name in `cat global`; do
 
 [ ! -f hash_inc.view_desc ] || (
    [ "$ODIN_ignore" = "" ] || (
-      egrep -v -f "$ODIN_ignore" <hash_inc.view_desc >tmp &&
+      grep -E -v -f "$ODIN_ignore" <hash_inc.view_desc >tmp &&
       mv tmp hash_inc.view_desc; 
    ) &&
    [ "$ODIN_IGNORE" = "" ] || (
-      egrep -v -e "$ODIN_IGNORE" <hash_inc.view_desc >tmp
+      grep -E -v -e "$ODIN_IGNORE" <hash_inc.view_desc >tmp
       mv tmp hash_inc.view_desc; 
    )
 ) || echo 'adjust for $ODIN_IGNORE or +ignore failed'

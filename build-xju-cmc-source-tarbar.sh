@@ -26,7 +26,7 @@ fi
 (
   cd xju
   odin '(test-cmc.py)+(%py-opts):py3.exec.output'
-  dependencies=$(odin 'cmc.py:py_rd+(%py-opts):py_import_all:ls>' | egrep "$(pwd)/.*[.]py$" || true)
+  dependencies=$(odin 'cmc.py:py_rd+(%py-opts):py_import_all:ls>' | grep -E "$(pwd)/.*[.]py$" || true)
   if [ $(echo $dependencies | wc -w) != 0 ]
   then
     echo "ERROR: expected cmc.py to have no dependencies, not: $dependencies">&2

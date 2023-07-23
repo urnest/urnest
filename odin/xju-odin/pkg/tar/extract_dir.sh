@@ -5,9 +5,9 @@ ODIN_target_type="$1"; shift
 
 if [ -z "$ODIN_member" ]
 then
-  files=`tar tf "$ODIN_tar_file" | egrep "^[^/][^/]*$"`
+  files=`tar tf "$ODIN_tar_file" | grep -E "^[^/][^/]*$"`
 else
-  files=`tar tf "$ODIN_tar_file" | egrep "^${ODIN_member}/[^/][^/]*$"` &&
+  files=`tar tf "$ODIN_tar_file" | grep -E "^${ODIN_member}/[^/][^/]*$"` &&
   test -n "$files" || (
     echo "$ODIN_member does not match any directory in $1" ; exit 0
   )
