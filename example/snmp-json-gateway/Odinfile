@@ -8,7 +8,7 @@
 +py_sp=(../..)
 
 %all.tree==<<
-%snmp-json-gateway
+%snmp-json-gateway.exe
 %test-decode-from-json-from-cxx
 %test-decode-from-json-from-py
 
