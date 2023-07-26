@@ -128,7 +128,7 @@ std::vector<uint8_t>::iterator SnmpV2cVarResponse::encodeTo(
       // not handled
       xju::assert_not_equal(readableRepr(*e_),readableRepr(*e_));
     }
-    *at+=0; // length
+    *at++=0; // length
   }
   else
   {

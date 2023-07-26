@@ -16,13 +16,18 @@
 #include <xju/snmp/SnmpV1SetRequest.hh>
 #include <xju/snmp/SnmpV1GetNextRequest.hh>
 #include <xju/snmp/SnmpV1Trap.hh>
+#include <xju/snmp/SnmpV1Response.hh>
 #include <xju/snmp/IntValue.hh>
 #include <xju/snmp/StringValue.hh>
+#include <xju/snmp/OidValue.hh>
 #include <xju/snmp/SnmpV2cGetRequest.hh>
 #include <xju/snmp/SnmpV2cSetRequest.hh>
 #include <xju/snmp/SnmpV2cGetNextRequest.hh>
 #include <xju/snmp/SnmpV2cTrap.hh>
 #include <xju/snmp/SnmpV2cGetBulkRequest.hh>
+#include <xju/snmp/decodeSnmpV1Response.hh>
+#include <xju/snmp/SnmpV2cResponse.hh>
+#include <xju/snmp/decodeSnmpV2cResponse.hh>
 
 namespace xju
 {
@@ -292,6 +297,325 @@ void test9() throw()
   }
 }
 
+void test10()
+{
+  //encode(SnmpV1Response)
+  {
+    SnmpV1Response y(decodeSnmpV1Response(
+                       encode(SnmpV1Response(
+                                0xA2,
+                                Community("private"),
+                                RequestId(1),
+                                SnmpV1Response::ErrorStatus::NO_ERROR,
+                                SnmpV1Response::ErrorIndex(0),
+                                { {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
+                                   std::make_unique<NullValue>()} }))));
+    xju::assert_equal(y.responseType_,0xA2);
+    xju::assert_equal(y.community_,Community("private"));
+    xju::assert_equal(y.id_,RequestId(1));
+    xju::assert_equal(y.error_,SnmpV1Response::ErrorStatus::NO_ERROR);
+    xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
+    xju::assert_equal(y.values_.size(),1);
+    xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
+    xju::assert_not_equal(dynamic_cast<NullValue const*>(&*y.values_[0].second),(NullValue const*)0);
+  }
+
+  // variations
+  
+  // definite long length eg long string
+  try {
+    SnmpV1Response y(decodeSnmpV1Response(
+                       encode(SnmpV1Response(
+                                0xA2,
+                                Community("private"),
+                                RequestId(1),
+                                SnmpV1Response::ErrorStatus::NO_ERROR,
+                                SnmpV1Response::ErrorIndex(0),
+                                { {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
+                                   std::make_unique<StringValue>(
+                                     std::vector<uint8_t>(128,'a'))} }))));
+    xju::assert_equal(y.responseType_,0xA2);
+    xju::assert_equal(y.community_,Community("private"));
+    xju::assert_equal(y.id_,RequestId(1));
+    xju::assert_equal(y.error_,SnmpV1Response::ErrorStatus::NO_ERROR);
+    xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
+    xju::assert_equal(y.values_.size(),1);
+    xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
+    xju::assert_not_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second),(StringValue const*)0);
+    xju::assert_equal(dynamic_cast<StringValue const*>(&*y.values_[0].second)->val_,std::vector<uint8_t>(128,'a'));
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+
+  // multi-byte int value
+  try {
+    SnmpV1Response y(decodeSnmpV1Response(
+                       encode(SnmpV1Response(
+                                0xA2,
+                                Community("private"),
+                                RequestId(0x100),
+                                SnmpV1Response::ErrorStatus::NO_ERROR,
+                                SnmpV1Response::ErrorIndex(0),
+                                { {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
+                                      std::make_unique<NullValue>()} }))));
+    xju::assert_equal(y.responseType_,0xA2);
+    xju::assert_equal(y.community_,Community("private"));
+    xju::assert_equal(y.id_,RequestId(0x100));
+    xju::assert_equal(y.error_,SnmpV1Response::ErrorStatus::NO_ERROR);
+    xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(0));
+    xju::assert_equal(y.values_.size(),1);
+    xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
+    xju::assert_not_equal(dynamic_cast<NullValue const*>(&*y.values_[0].second),(NullValue const*)0);
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+    
+  // oid value
+  try {
+    SnmpV1Response y(decodeSnmpV1Response(
+                       encode(SnmpV1Response(
+                                0xA2,
+                                Community("private"),
+                                RequestId(1),
+                                SnmpV1Response::ErrorStatus::GEN_ERR,
+                                SnmpV1Response::ErrorIndex(1),
+                                { {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
+                                   std::make_unique<NullValue>()},
+                                  {Oid(".1.3"),
+                                   std::make_unique<OidValue>(Oid(".1.3.7"))}}))));
+    xju::assert_equal(y.responseType_,0xA2);
+    xju::assert_equal(y.community_,Community("private"));
+    xju::assert_equal(y.id_,RequestId(1));
+    xju::assert_equal(y.error_,SnmpV1Response::ErrorStatus::GEN_ERR);
+    xju::assert_equal(y.errorIndex_,SnmpV1Response::ErrorIndex(1));
+    xju::assert_equal(y.values_.size(),2);
+    xju::assert_equal(y.values_[0].first,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
+    xju::assert_not_equal(dynamic_cast<NullValue const*>(&*y.values_[0].second),(NullValue const*)0);
+    xju::assert_equal(y.values_[1].first,Oid(".1.3"));
+    xju::assert_not_equal(dynamic_cast<OidValue const*>(&*y.values_[1].second),(OidValue const*)0);
+    xju::assert_equal(dynamic_cast<OidValue const*>(&*y.values_[1].second)->val_,Oid(".1.3.7"));
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+  
+}
+
+void test11()
+{
+  //encode(SnmpV2cResponse)
+  
+  SnmpV2cResponse y(decodeSnmpV2cResponse(
+                      encode(SnmpV2cResponse(
+                               0xA2,
+                               Community("private"),
+                               RequestId(1),
+                               SnmpV2cResponse::ErrorStatus::NO_ERROR,
+                               SnmpV2cResponse::ErrorIndex(0),
+                               {
+                                 {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
+                                  std::make_unique<NullValue>()}
+                               }))));
+  xju::assert_equal(y.responseType_,0xA2);
+  xju::assert_equal(y.community_,Community("private"));
+  xju::assert_equal(y.id_,RequestId(1));
+  xju::assert_equal(y.error_,SnmpV2cResponse::ErrorStatus::NO_ERROR);
+  xju::assert_equal(y.errorIndex_,SnmpV2cResponse::ErrorIndex(0));
+  xju::assert_equal(y.varResults_.size(),1);
+  xju::assert_equal(y.varResults_[0].oid_,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
+  xju::assert_not_equal(dynamic_cast<NullValue const*>(&*y.varResults_[0].v_),(NullValue const*)0);
+
+  {
+    SnmpV2cResponse y(decodeSnmpV2cResponse(
+                        encode(SnmpV2cResponse(
+                                 0xA2,
+                                 Community("private"),
+                                 RequestId(1),
+                                 SnmpV2cResponse::ErrorStatus::NO_CREATION,
+                                 SnmpV2cResponse::ErrorIndex(1),
+                                 {
+                                   {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
+                                    std::make_unique<NullValue>()}
+                                 }))));
+    xju::assert_equal(y.responseType_,0xA2);
+    xju::assert_equal(y.community_,Community("private"));
+    xju::assert_equal(y.id_,RequestId(1));
+    xju::assert_equal(y.error_,SnmpV2cResponse::ErrorStatus::NO_CREATION);
+    xju::assert_equal(y.errorIndex_,SnmpV2cResponse::ErrorIndex(1));
+    xju::assert_equal(y.varResults_.size(),1);
+    xju::assert_equal(y.varResults_[0].oid_,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
+    xju::assert_not_equal(dynamic_cast<NullValue const*>(&*y.varResults_[0].v_),(NullValue const*)0);
+  }
+  try {
+    // decodeSnmpV2cResponse - var nosuchobject
+    SnmpV2cResponse y(decodeSnmpV2cResponse(
+                        encode(SnmpV2cResponse(
+                                 0xA2,
+                                 Community("private"),
+                                 RequestId(1),
+                                 SnmpV2cResponse::ErrorStatus::NO_ERROR,
+                                 SnmpV2cResponse::ErrorIndex(0),
+                                 {
+                                   {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
+                                    SnmpV2cResponse::VarResult::E::NO_SUCH_OBJECT}
+                                 }))));
+  xju::assert_equal(y.responseType_,0xA2);
+    xju::assert_equal(y.community_,Community("private"));
+    xju::assert_equal(y.id_,RequestId(1));
+    xju::assert_equal(y.error_,SnmpV2cResponse::ErrorStatus::NO_ERROR);
+    xju::assert_equal(y.errorIndex_,SnmpV2cResponse::ErrorIndex(0));
+    xju::assert_equal(y.varResults_.size(),1);
+    xju::assert_equal(y.varResults_[0].oid_,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
+    xju::assert_equal(y.varResults_[0].e_.value(),SnmpV2cResponse::VarResult::NO_SUCH_OBJECT);
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+  try {
+    // decodeSnmpV2cResponse - var nosuchinstance
+    
+    SnmpV2cResponse y(decodeSnmpV2cResponse(
+                        encode(SnmpV2cResponse(
+                                 0xA2,
+                                 Community("private"),
+                                 RequestId(1),
+                                 SnmpV2cResponse::ErrorStatus::NO_ERROR,
+                                 SnmpV2cResponse::ErrorIndex(0),
+                                 {
+                                   {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
+                                    SnmpV2cResponse::VarResult::E::NO_SUCH_INSTANCE}
+                                 }))));
+    xju::assert_equal(y.responseType_,0xA2);
+    xju::assert_equal(y.community_,Community("private"));
+    xju::assert_equal(y.id_,RequestId(1));
+    xju::assert_equal(y.error_,SnmpV2cResponse::ErrorStatus::NO_ERROR);
+    xju::assert_equal(y.errorIndex_,SnmpV2cResponse::ErrorIndex(0));
+    xju::assert_equal(y.varResults_.size(),1);
+    xju::assert_equal(y.varResults_[0].oid_,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
+    xju::assert_equal(y.varResults_[0].e_.value(),SnmpV2cResponse::VarResult::NO_SUCH_INSTANCE);
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+  try {
+    // decodeSnmpV2cResponse - var endofmibview
+    
+    SnmpV2cResponse y(decodeSnmpV2cResponse(
+                        encode(SnmpV2cResponse(
+                                 0xA2,
+                                 Community("private"),
+                                 RequestId(1),
+                                 SnmpV2cResponse::ErrorStatus::NO_ERROR,
+                                 SnmpV2cResponse::ErrorIndex(0),
+                                 {
+                                   {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
+                                    SnmpV2cResponse::VarResult::E::END_OF_MIB_VIEW}
+                                 }))));
+    xju::assert_equal(y.responseType_,0xA2);
+    xju::assert_equal(y.community_,Community("private"));
+    xju::assert_equal(y.id_,RequestId(1));
+    xju::assert_equal(y.error_,SnmpV2cResponse::ErrorStatus::NO_ERROR);
+    xju::assert_equal(y.errorIndex_,SnmpV2cResponse::ErrorIndex(0));
+    xju::assert_equal(y.varResults_.size(),1);
+    xju::assert_equal(y.varResults_[0].oid_,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
+    xju::assert_equal(y.varResults_[0].e_.value(),SnmpV2cResponse::VarResult::END_OF_MIB_VIEW);
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+  // decodeSnmpV2cResponse variations
+  
+  // long string
+  try {
+    SnmpV2cResponse y(decodeSnmpV2cResponse(
+                        encode(SnmpV2cResponse(
+                                 0xA2,
+                                 Community("private"),
+                                 RequestId(1),
+                                 SnmpV2cResponse::ErrorStatus::NO_ERROR,
+                                 SnmpV2cResponse::ErrorIndex(0),
+                                 {
+                                   {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
+                                       std::make_unique<StringValue>(std::vector<uint8_t>(128,'a'))}
+                                 }))));
+    xju::assert_equal(y.responseType_,0xA2);
+    xju::assert_equal(y.community_,Community("private"));
+    xju::assert_equal(y.id_,RequestId(1));
+    xju::assert_equal(y.error_,SnmpV2cResponse::ErrorStatus::NO_ERROR);
+    xju::assert_equal(y.errorIndex_,SnmpV2cResponse::ErrorIndex(0));
+    xju::assert_equal(y.varResults_.size(),1);
+    xju::assert_equal(y.varResults_[0].oid_,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
+    xju::assert_equal(y.varResults_[0].e_.valid(),false);
+    xju::assert_not_equal(dynamic_cast<StringValue const*>(&*y.varResults_[0].v_),(StringValue const*)0);
+    xju::assert_equal(dynamic_cast<StringValue const*>(&*y.varResults_[0].v_)->val_,std::vector<uint8_t>(128,'a'));
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+  
+
+  // multi-byte int value
+  try {
+    SnmpV2cResponse y(decodeSnmpV2cResponse(
+                        encode(SnmpV2cResponse(
+                                 0xA2,
+                                 Community("private"),
+                                 RequestId(0x100),
+                                 SnmpV2cResponse::ErrorStatus::NO_ERROR,
+                                 SnmpV2cResponse::ErrorIndex(0),
+                                 {
+                                   {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
+                                    std::make_unique<NullValue>()}
+                                 }))));
+    xju::assert_equal(y.responseType_,0xA2);
+    xju::assert_equal(y.community_,Community("private"));
+    xju::assert_equal(y.id_,RequestId(0x100));
+    xju::assert_equal(y.error_,SnmpV2cResponse::ErrorStatus::NO_ERROR);
+    xju::assert_equal(y.errorIndex_,SnmpV2cResponse::ErrorIndex(0));
+    xju::assert_equal(y.varResults_.size(),1);
+    xju::assert_equal(y.varResults_[0].oid_,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
+    xju::assert_equal(y.varResults_[0].e_.valid(),false);
+    xju::assert_not_equal(dynamic_cast<NullValue const*>(&*y.varResults_[0].v_),(NullValue const*)0);
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+    
+  // oid value
+  try {
+    SnmpV2cResponse y(decodeSnmpV2cResponse(
+                        encode(SnmpV2cResponse(
+                                 0xA2,
+                                 Community("private"),
+                                 RequestId(1),
+                                 SnmpV2cResponse::ErrorStatus::NO_ERROR,
+                                 SnmpV2cResponse::ErrorIndex(0),
+                                 {
+                                   {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
+                                    std::make_unique<NullValue>()},
+                                   {Oid(".1.3"),
+                                    std::make_unique<OidValue>(Oid(".1.3.7"))}
+                                 }))));
+    xju::assert_equal(y.responseType_,0xA2);
+    xju::assert_equal(y.community_,Community("private"));
+    xju::assert_equal(y.id_,RequestId(1));
+    xju::assert_equal(y.error_,SnmpV2cResponse::ErrorStatus::NO_ERROR);
+    xju::assert_equal(y.errorIndex_,SnmpV2cResponse::ErrorIndex(0));
+    xju::assert_equal(y.varResults_.size(),2);
+    xju::assert_equal(y.varResults_[0].oid_,Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"));
+    xju::assert_equal(y.varResults_[0].e_.valid(),false);
+    xju::assert_not_equal(dynamic_cast<NullValue const*>(&*y.varResults_[0].v_),(NullValue const*)0);
+    xju::assert_equal(y.varResults_[1].oid_,Oid(".1.3"));
+    xju::assert_equal(y.varResults_[1].e_.valid(),false);
+    xju::assert_not_equal(dynamic_cast<OidValue const*>(&*y.varResults_[1].v_),(OidValue const*)0);
+    xju::assert_equal(dynamic_cast<OidValue const*>(&*y.varResults_[1].v_)->val_,Oid(".1.3.7"));
+  }
+  catch(xju::Exception const& e) {
+    xju::assert_not_equal(readableRepr(e),readableRepr(e));
+  }
+}
 
 }
 }
@@ -310,6 +634,8 @@ int main(int argc, char* argv[])
   test7(), ++n;
   test8(), ++n;
   test9(), ++n;
+  test10(), ++n;
+  test11(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

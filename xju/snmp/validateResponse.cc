@@ -962,12 +962,6 @@ std::pair<
     auto i{request.get_.begin()};
     auto n{0};
     for(;i!=request.get_.end();++i,++n){
-      if (*i != response.varResults_[n].oid_){
-        std::ostringstream s;
-        s << "expected oid " << (*i) << " as response var[" << n
-          << "] but got oid " << response.varResults_[n].oid_;
-        throw xju::Exception(s.str(),XJU_TRACED);
-      }
       values.insert({*i,convertResponseVar(response.varResults_[n])});
     }
     auto const rowSize{request.getNextN_.size()};

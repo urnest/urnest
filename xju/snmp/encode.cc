@@ -26,11 +26,15 @@
 #include <xju/snmp/IPv4AddressValue.hh>
 #include <xju/snmp/TimeTicksValue.hh>
 #include <xju/snmp/SnmpV1GetRequest.hh>
+#include <xju/snmp/SnmpV1Response.hh>
 #include <xju/snmp/SnmpV2cGetRequest.hh>
 #include <xju/snmp/SnmpV2cGetNextRequest.hh>
 #include <xju/format.hh>
 #include <xju/snmp/SnmpV2cTrap.hh>
 #include <xju/snmp/SnmpV2cGetBulkRequest.hh>
+#include <xju/snmp/encodePDU.hh>
+#include <xju/snmp/SnmpV2cResponse.hh>
+#include <xju/snmp/SnmpV2cVarResponse.hh>
 
 namespace xju
 {
@@ -231,6 +235,18 @@ std::vector<uint8_t> encode(SnmpV1Trap const& trap) throw()
   return result;
 }
 
+std::vector<uint8_t> encode(SnmpV1Response const& response) throw()
+{
+  return encodePDU(
+    0, // SNMP version 1
+    response.community_,
+    response.id_,
+    (uint64_t)response.error_,
+    response.errorIndex_.value(),
+    response.values_,
+    0xA2);
+}
+
 std::vector<uint8_t> encode(SnmpV2cGetRequest const& request) throw()
 {
   typedef std::shared_ptr<Value const> vp;
@@ -405,6 +421,40 @@ std::vector<uint8_t> encode(SnmpV2cTrap const& trap) throw()
   std::vector<uint8_t> result(s.encodedLength());
   xju::assert_equal(s.encodeTo(result.begin()),result.end());
   return result;
+}
+
+std::vector<uint8_t> encode(SnmpV2cResponse const& response) throw()
+{
+  std::vector<SnmpV2cVarResponse> vars;
+  for(auto v: response.varResults_){
+    if (v.e_.valid()){
+      switch(v.e_.value()){
+      case SnmpV2cResponse::VarResult::E::NO_SUCH_OBJECT:
+        vars.push_back(SnmpV2cVarResponse(v.oid_,
+                                          SnmpV2cVarResponse::NoSuchObject(v.oid_,XJU_TRACED)));
+        break;
+      case SnmpV2cResponse::VarResult::E::NO_SUCH_INSTANCE:
+        vars.push_back(SnmpV2cVarResponse(v.oid_,
+                                          SnmpV2cVarResponse::NoSuchInstance(v.oid_,XJU_TRACED)));
+        break;
+      case SnmpV2cResponse::VarResult::E::END_OF_MIB_VIEW:
+        vars.push_back(SnmpV2cVarResponse(v.oid_,
+                                          SnmpV2cVarResponse::EndOfMibView(v.oid_,XJU_TRACED)));
+        break;
+      default:
+        xju::assert_never_reached();
+      }
+    }else{
+      vars.push_back(SnmpV2cVarResponse(v.oid_, v.v_));
+    }
+  }
+  return encodePDU(
+    response.community_,
+    response.id_,
+    (uint64_t)response.error_,
+    response.errorIndex_.value(),
+    vars,
+    0xA2);
 }
 
 

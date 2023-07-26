@@ -1673,9 +1673,9 @@ void test7() throw()
 
   {
     std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".9.8"),std::shared_ptr<Value const>(
+      SnmpV2cResponse::VarResult(Oid(".9.8.0"),std::shared_ptr<Value const>(
                                    new StringValue(sal))),
-      SnmpV2cResponse::VarResult(Oid(".9.9"),std::shared_ptr<Value const>(
+      SnmpV2cResponse::VarResult(Oid(".9.9.0"),std::shared_ptr<Value const>(
                                    new IntValue(8))),
       SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
                                    new StringValue(fred))),
@@ -1892,42 +1892,6 @@ void test7() throw()
   }
   catch(xju::Exception const& e) {
     xju::assert_equal(readableRepr(e),"Failed to validate SNMP V2c response type 0xa2, community dd2, id 23, error status 0, error index 0, values .9.8: \"fred\" to SNMP V2c GetBulk request community dje, id 23, oids .9.8, .9.9 and up to 1 values of each of oids .1.3.2, .1.3.9.3300 because\nresponse contains only 1 value(s), which is less than then number (2) of \"get\" oids requested.");
-  }
-
-  try {
-    // wrong oids in "getters"
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".9.7"),std::shared_ptr<Value const>(
-                                   new StringValue(sal))),
-      SnmpV2cResponse::VarResult(Oid(".9.9"),std::shared_ptr<Value const>(
-                                   new IntValue(8))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
-                                   new StringValue(fred))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
-                                   new IntValue(3))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.4"),std::shared_ptr<Value const>(
-                                   new StringValue(jock))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.9.3343"),std::shared_ptr<Value const>(
-                                   new IntValue(32)))      
-    };
-    auto x=validateResponse(
-      SnmpV2cGetBulkRequest(Community("dje"),
-                            RequestId(23),
-                            std::set<Oid>({Oid(".9.8"),Oid(".9.9")}),
-                            std::vector<Oid>({Oid(".1.3.2"),
-                                              Oid(".1.3.9.3300")}),
-                            1U),
-      SnmpV2cResponse(0xA2,
-                      Community("dd2"),
-                      RequestId(23),
-                      SnmpV2cResponse::ErrorStatus(0),
-                      SnmpV2cResponse::ErrorIndex(0),
-                      values));
-    
-    xju::assert_never_reached();
-  }
-  catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e),"Failed to validate SNMP V2c response type 0xa2, community dd2, id 23, error status 0, error index 0, values .9.7: \"sal\", .9.9: 8, .1.3.3: \"fred\", .1.3.9.3333: 3, .1.3.4: \"jock\", .1.3.9.3343: 32 to SNMP V2c GetBulk request community dje, id 23, oids .9.8, .9.9 and up to 1 values of each of oids .1.3.2, .1.3.9.3300 because\nexpected oid .9.8 as response var[0] but got oid .9.7.");
   }
 
   try {
