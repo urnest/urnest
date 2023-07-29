@@ -43,7 +43,8 @@ auto const same_line = xju::Utf8String("");
 
 void run(xju::ip::UDPSocket& socket){
   xju::json::Object portMessage({
-      {xju::Utf8String("listening_on"),std::make_unique<xju::json::Number>(socket.port())}
+      {xju::Utf8String("listening_on"),std::make_unique<xju::json::Number>(
+          xju::format::str(socket.port().value()))}
     });
   std::cout << xju::json::format(portMessage, same_line) << std::endl;
 
@@ -63,7 +64,7 @@ void run(xju::ip::UDPSocket& socket){
           std::vector<xju::Exception> failures;
           try{
             auto const x(xju::snmp::decodeSnmpV1GetRequest(buffer));
-            std::cout << xju::json::format(*snmp_json_gateway::encode(senderAndSize.first,x))
+            std::cout << xju::json::format(*snmp_json_gateway::encode(senderAndSize.first,x),same_line)
                       << std::endl;
             continue;
           }
@@ -72,7 +73,7 @@ void run(xju::ip::UDPSocket& socket){
           }
           try{
             auto const x(xju::snmp::decodeSnmpV1GetNextRequest(buffer));
-            std::cout << xju::json::format(*snmp_json_gateway::encode(senderAndSize.first,x))
+            std::cout << xju::json::format(*snmp_json_gateway::encode(senderAndSize.first,x),same_line)
                       << std::endl;
             continue;
           }
@@ -81,7 +82,7 @@ void run(xju::ip::UDPSocket& socket){
           }
           try{
             auto const x(xju::snmp::decodeSnmpV1SetRequest(buffer));
-            std::cout << xju::json::format(*snmp_json_gateway::encode(senderAndSize.first,x))
+            std::cout << xju::json::format(*snmp_json_gateway::encode(senderAndSize.first,x),same_line)
                       << std::endl;
             continue;
           }
@@ -91,7 +92,7 @@ void run(xju::ip::UDPSocket& socket){
           std::cerr << "dropped received udp packet because "
                     << xju::format::join(failures.begin(), failures.end(),
                                          [](auto e){
-                                           return xju::readableRepr(e);
+                                           return xju::readableRepr(e,false,true);
                                          }, " and ") << std::endl;
         };
       }
@@ -100,19 +101,19 @@ void run(xju::ip::UDPSocket& socket){
         std::this_thread::sleep_for(std::chrono::seconds(3));
       }
     };
-  auto from_stdout_to_snmp =
+  auto from_stdin_to_snmp =
     [&](){
       try{
         while(true){
           auto const s(xju::readThrough(std::cin, "\n", 10*UINT16_MAX));
           xju::assert_greater_equal(s.size(),1U);
+          std::vector<xju::Exception> failures;
           try{
             auto const gm(
               xju::json::parse(xju::Utf8String(std::string(s.begin(), s.end()-1))));
             auto const remoteEndpoint = snmp_json_gateway::decodeEndpoint(
               gm->getMember(xju::Utf8String("remote_endpoint")));
             auto const deadline(xju::steadyNow()+std::chrono::seconds(5));
-            std::vector<xju::Exception> failures;
             try{
               auto const m(xju::snmp::encode(snmp_json_gateway::decodeSnmpV1Response(
                                                gm->getMember(xju::Utf8String("message")))));
@@ -127,7 +128,9 @@ void run(xju::ip::UDPSocket& socket){
             failures.push_back(e);
           }
           std::cerr << "ignoring " << xju::format::cEscapeString(s) << " because "
-                    << xju::format::join(failures.begin(), failures.end(), " and ", xju::readableRepr)
+                    << xju::format::join(failures.begin(), failures.end(),
+                                         [](auto e){ return xju::readableRepr(e,false,true);},
+                                         " and ")
                     << std::endl;
         }
       }
@@ -137,7 +140,7 @@ void run(xju::ip::UDPSocket& socket){
     };
   xju::Thread a(from_snmp_to_stdout);
   auto const stopper(std::move(stop_receiver.second));
-  xju::Thread b(from_stdout_to_snmp);
+  xju::Thread b(from_stdin_to_snmp);
 }
 
 std::optional<xju::ip::Port> parsePort(std::string const& x){
@@ -171,12 +174,21 @@ int main(int argc, char* argv[])
       << "   - write received snmp messages to stdout in json format" << std::endl
       << "   - send stdin json format messages as snmp messages from specified port" << std::endl
       << " - see snmp_json_gateway.py GatewayMessage for message format" << std::endl
-      << " - note writes { "listening_on": port } to stdout once port is open" << std::endl;
+      << " - note writes { \"listening_on\": port } to stdout once port is open" << std::endl;
     return 1;
   }
   try{
     std::optional<xju::ip::Port> const port(parsePort(argv[1]));
-    return run(port.valid()?xju::ip::UDPSocket(port.value()):xju::ip::UDPSocket());
+    if (port.has_value()){
+      xju::ip::UDPSocket s(port.value());
+      run(s);
+      return 0;
+    }
+    else{
+      xju::ip::UDPSocket s;
+      run(s);
+      return 0;
+    }
   }
   catch(xju::Exception& e){
     std::ostringstream s;

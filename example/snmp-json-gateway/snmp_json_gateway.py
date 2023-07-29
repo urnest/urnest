@@ -12,7 +12,10 @@ class GatewayMessage:
     source: tuple[str, int]
     # dotted ip v4 address, udp port
     dest: tuple[str, int]
-    message: Union["SnmpV1GetRequest", "SnmpV1GetNextRequest", "SnmpV1Response"]
+    message: Union[
+        "SnmpV1GetRequest", "SnmpV1GetNextRequest", "SnmpV1SetRequest", "SnmpV1Response",
+        "SnmpV2cGetRequest", "SnmpV2cGetNextRequest", "SnmpV2cGetBulkRequest",
+        "SnmpV2cSetRequest", "SnmpV2cResponse"]
     
 class Community(Str["CommunityTag"]):
     """snmp community"""
@@ -108,6 +111,48 @@ class SnmpV1GetNextRequest:
     pass
 
 @dataclass
+class SnmpV1SetRequest:
+    message_type: Literal["SnmpV1SetRequest"]
+    community: Community
+    request_id: RequestId
+    vars: list[tuple[Oid, SnmpV1Value]]
+    pass
+
+@dataclass
+class SnmpV2cGetRequest:
+    message_type: Literal["SnmpV2cGetRequest"]
+    community: Community
+    request_id: RequestId
+    oids: list[Oid]
+    pass
+
+@dataclass
+class SnmpV2cGetNextRequest:
+    message_type: Literal["SnmpV2cGetNextRequest"]
+    community: Community
+    request_id: RequestId
+    oids: list[Oid]
+    pass
+
+@dataclass
+class SnmpV2cGetBulkRequest:
+    message_type: Literal["SnmpV2cGetBulkRequest"]
+    community: Community
+    request_id: RequestId
+    oids: list[Oid]
+    repeat_oids: list[Oid]
+    max_rep: int
+    pass
+
+@dataclass
+class SnmpV2cSetRequest:
+    message_type: Literal["SnmpV2cSetRequest"]
+    community: Community
+    request_id: RequestId
+    vars: list[tuple[Oid, "SnmpV2cValue"]]
+    pass
+
+@dataclass
 class TooBig:
     error_type: Literal["TooBig"]
     pass
@@ -135,14 +180,88 @@ class GenErr:
 @dataclass
 class SnmpV1Response:
     message_type: Literal["SnmpV1Response"]
-    response_type: int 
     community: Community
     request_id: RequestId
     error: None | TooBig | NoSuchName | BadValue | ReadOnly | GenErr
     values: list[tuple[Oid, SnmpV1Value]]
 
 
-SnmpV2Value = SnmpV1Value | U64Value
+SnmpV2cValue = SnmpV1Value | U64Value
+
+SnmpV2cVarResult = (
+    Literal["NoSuchObject"] | Literal["NoSuchInstance"] | Literal["EndOfMibView"] | SnmpV2cValue )
+
+@dataclass
+class NoAccess:
+    error_type: Literal["NoAccess"]
+    oid: Oid
+
+@dataclass
+class WrongType:
+    error_type: Literal["WrongType"]
+    oid: Oid
+
+@dataclass
+class WrongLength:
+    error_type: Literal["WrongLength"]
+    oid: Oid
+
+@dataclass
+class WrongEncoding:
+    error_type: Literal["WrongEncoding"]
+    oid: Oid
+
+@dataclass
+class WrongValue:
+    error_type: Literal["WrongValue"]
+    oid: Oid
+
+@dataclass
+class NoCreation:
+    error_type: Literal["NoCreation"]
+    oid: Oid
+
+@dataclass
+class InconsistentValue:
+    error_type: Literal["InconsistentValue"]
+    oid: Oid
+
+@dataclass
+class ResourceUnavailable:
+    error_type: Literal["ResourceUnavailable"]
+    oid: Oid
+
+@dataclass
+class CommitFailed:
+    error_type: Literal["CommitFailed"]
+    oid: Oid
+
+@dataclass
+class UndoFailed:
+    error_type: Literal["UndoFailed"]
+    oid: Oid
+
+@dataclass
+class NotWritable:
+    error_type: Literal["NotWritable"]
+    oid: Oid
+
+@dataclass
+class InconsistentName:
+    error_type: Literal["InconsistentName"]
+    oid: Oid
+
+
+@dataclass
+class SnmpV2cResponse:
+    message_type: Literal["SnmpV2cResponse"]
+    community: Community
+    request_id: RequestId
+    error: (None | TooBig | NoSuchName | BadValue | ReadOnly | GenErr |
+            NoAccess | NotWritable | WrongType |
+            WrongLength | WrongEncoding | WrongValue | NoCreation |
+            InconsistentName | InconsistentValue | ResourceUnavailable | CommitFailed | UndoFailed )
+    values: list[tuple[Oid, SnmpV2cVarResult]]
 
 
 # tags for newtypes defined above
