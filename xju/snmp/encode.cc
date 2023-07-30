@@ -309,13 +309,14 @@ std::vector<uint8_t> encode(SnmpV2cGetNextRequest const& request) throw()
   return result;
 }
 
+
 std::vector<uint8_t> encode(SnmpV2cGetBulkRequest const& request) throw()
 {
   typedef std::shared_ptr<Value const> vp;
   
   std::vector<vp > params;
-  std::transform(request.get_.begin(),
-                 request.get_.end(),
+  std::transform(request.getNext_.begin(),
+                 request.getNext_.end(),
                  std::back_inserter(params),
                  [](Oid const& oid) {
                    return vp(
@@ -341,7 +342,7 @@ std::vector<uint8_t> encode(SnmpV2cGetBulkRequest const& request) throw()
                                 request.community_._.end()))),
       vp(new Sequence({
             vp(new IntValue(request.id_.value())),
-            vp(new IntValue(request.get_.size())),//non-repeaters
+            vp(new IntValue(request.getNext_.size())),//non-repeaters
             vp(new IntValue(request.n_)),//max-repetitions
             vp(new Sequence(params,0x30))},
           0xA5))}, // SNMP Get Bulk

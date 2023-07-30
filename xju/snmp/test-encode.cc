@@ -245,11 +245,12 @@ void test8() throw()
 void test9() throw()
 {
   {
-    // encode(SnmpV2cGetNexRequest)
+    // encode(SnmpV2cGetBulkRequest)
     SnmpV2cGetBulkRequest r(
       Community("private"),
       RequestId(1),
-      {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")});
+      {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")},
+      {0,{}});
     std::vector<uint8_t> x(encode(r));
     xju::assert_equal(
       x,
@@ -261,7 +262,8 @@ void test9() throw()
     SnmpV2cGetBulkRequest r(
       Community("public"),
       RequestId(0x32f0def9),
-      {Oid(".1.3.6.1.2.1.1.9.1.4")},4U);
+      {},
+      {4U, {Oid(".1.3.6.1.2.1.1.9.1.4")}});
     std::vector<uint8_t> x(encode(r));
     xju::assert_equal(
       x,
@@ -281,7 +283,7 @@ void test9() throw()
       Community("public"),
       RequestId(0x32f0def9),
       {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")},
-      {Oid(".1.3.6.1.2.1.1.9.1.4")},4U);
+      {4U, {Oid(".1.3.6.1.2.1.1.9.1.4")}});
     std::vector<uint8_t> x(encode(r));
     xju::assert_equal(
       x,
@@ -291,7 +293,8 @@ void test9() throw()
           0x04,0x06,0x70,0x75,0x62,0x6c,0x69,0x63, //public
           0xa5,0x30,
           0x02,0x04,0x32,0xf0,0xde,0xf9, //requestid
-          0x02,0x01,0x01,0x02,0x01,0x04,
+          0x02,0x01,0x01, //repeaters
+          0x02,0x01,0x04, //max-repetitions
           0x30,0x22,0x30,0x11,0x06,0x0D,0x2B,0x06,0x01,0x04,0x01,0x94,0x78,0x01,0x02,0x07,0x03,0x02,0x00,0x05,0x00,0x30,0x0d,0x06,0x09,0x2b,0x06,0x01,0x02,0x01,0x01,0x09,0x01,0x04,0x05,0x00
         }));
   }

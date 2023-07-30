@@ -20,7 +20,7 @@ std::ostream& operator<<(std::ostream& s,
 {
   return s << "community " << x.community_._ << ", id " << x.id_.value()
            << ", oids " 
-           << xju::format::join(x.get_.begin(),x.get_.end(),", ")
+           << xju::format::join(x.getNext_.begin(),x.getNext_.end(),", ")
            << " and up to " << x.n_ << " values of each of oids "
            << xju::format::join(x.getNextN_.begin(),
                                 x.getNextN_.end(),", ");
@@ -29,4 +29,3 @@ std::ostream& operator<<(std::ostream& s,
 
 }
 }
-

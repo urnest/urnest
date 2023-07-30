@@ -13,9 +13,9 @@
 #include <xju/snmp/Community.hh>
 #include <xju/snmp/RequestId.hh>
 #include <vector>
-#include <set>
 #include <iostream>
 #include <xju/snmp/Oid.hh>
+#include <utility>
 
 namespace xju
 {
@@ -24,39 +24,24 @@ namespace snmp
 
 struct SnmpV2cGetBulkRequest
 {
-  // request to get values of "get" oids, and (up to) next n
-  // values of each of "getNextN" oids.
+  // request to get next values of "getNext" oids, and (up to)
+  // next n values of each of "getNextN" oids.
   SnmpV2cGetBulkRequest(Community const& community,
                         RequestId const id,
-                        std::set<Oid> const& get,
-                        std::vector<Oid> const& getNextN,
-                        unsigned int const n) throw():
+                        std::vector<Oid> getNext,
+                        std::pair<
+                          uint32_t,           // n
+                          std::vector<Oid>    // oids
+                        > getNextN) throw():
       community_(community),
       id_(id),
-      get_(get),
-      getNextN_(getNextN),
-      n_(n) {
-  }
-  SnmpV2cGetBulkRequest(Community const& community,
-                        RequestId const id,
-                        std::set<Oid> const& get) throw():
-      community_(community),
-      id_(id),
-      get_(get),
-      n_(0) {
-  }
-  SnmpV2cGetBulkRequest(Community const& community,
-                        RequestId const id,
-                        std::vector<Oid> const& getNextN,
-                        unsigned int const n) throw():
-      community_(community),
-      id_(id),
-      getNextN_(getNextN),
-      n_(n) {
+      getNext_(std::move(getNext)),
+      getNextN_(std::move(getNextN.second)),
+      n_(getNextN.first) {
   }
   Community community_;
   RequestId id_;
-  std::set<Oid> get_;
+  std::vector<Oid> getNext_;
   std::vector<Oid> getNextN_;
   unsigned int n_;
   

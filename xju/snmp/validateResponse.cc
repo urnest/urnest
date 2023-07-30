@@ -170,28 +170,40 @@ Oid getErrorOid(SnmpV2cResponse::ErrorIndex const errorIndex,
   
 }
 
+Oid getErrorOid(size_t const errorIndex,
+                std::vector<Oid> const& requestOids,
+                std::string const& error) /*throw(
+                  xju::Exception)*/
+{
+  if (errorIndex==0) {
+    std::ostringstream s;
+    s << "response specifies " << error << " error but error index does "
+      << "not identify which oid was not found (index must be > 0)";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  auto const i(errorIndex-1);
+  if (i >= requestOids.size()) {
+    std::ostringstream s;
+    s << "response specifies " << error << " error but error index"
+      << " is beyond last oid in request";
+    throw xju::Exception(s.str(),XJU_TRACED);
+  }
+  return requestOids[i];
+}
+
 Oid getErrorOid(SnmpV2cResponse::ErrorIndex const errorIndex,
-                std::vector<SnmpV2cResponse::VarResult> const& varResults,
-                std::set<Oid> const& get,
+                std::vector<Oid> const& getNext,
                 std::vector<Oid> const& getNextN,
                 std::string const& error) /*throw(
                   xju::Exception)*/
 {
-  std::set<Oid> requestOids;
-  std::copy(get.begin(),get.end(),
+  std::vector<Oid> requestOids;
+  std::copy(getNext.begin(),getNext.end(),
             std::inserter(requestOids,requestOids.end()));
   std::copy(getNextN.begin(),getNextN.end(),
             std::inserter(requestOids,requestOids.end()));
                 
-  std::vector<Oid> resultOids;
-  std::transform(varResults.begin(),varResults.end(),
-                 std::back_inserter(resultOids),
-                 [](decltype(*varResults.begin()) const& x){
-                   return x.oid_;
-                 });
-                 
   return getErrorOid(errorIndex.value(),
-                     resultOids,
                      requestOids,
                      error);
   
@@ -938,8 +950,7 @@ std::pair<
     case SnmpV2cResponse::ErrorStatus::GEN_ERR:
     {
       throw GenErr(getErrorOid(response.errorIndex_,
-                               response.varResults_,
-                               request.get_,
+                               request.getNext_,
                                request.getNextN_,
                                "GenErr (5)"),
                    XJU_TRACED);
@@ -951,17 +962,17 @@ std::pair<
       throw xju::Exception(s.str(),XJU_TRACED);
     }
     }
-    if(response.varResults_.size()<request.get_.size()){
+    if(response.varResults_.size()<request.getNext_.size()){
       std::ostringstream s;
       s << "response contains only " << response.varResults_.size()
         << " value(s), which is less than then number ("
-        << request.get_.size() << ") of \"get\" oids requested";
+        << request.getNext_.size() << ") of \"get\" oids requested";
       throw xju::Exception(s.str(),XJU_TRACED);
     }
     std::map<xju::snmp::Oid,SnmpV2cVarResponse> values;
-    auto i{request.get_.begin()};
+    auto i{request.getNext_.begin()};
     auto n{0};
-    for(;i!=request.get_.end();++i,++n){
+    for(;i!=request.getNext_.end();++i,++n){
       values.insert({*i,convertResponseVar(response.varResults_[n])});
     }
     auto const rowSize{request.getNextN_.size()};
@@ -978,7 +989,7 @@ std::pair<
       if (response.varResults_.size()-n < rowSize){
         std::ostringstream s;
         s << "\"next values\" row "
-          << (n-request.get_.size())/rowSize
+          << (n-request.getNext_.size())/rowSize
           << " only has " << response.varResults_.size()-n
           << " values, which is less than the row size of "
           << rowSize;
