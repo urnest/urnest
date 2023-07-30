@@ -139,9 +139,9 @@ class SnmpV2cGetBulkRequest:
     message_type: Literal["SnmpV2cGetBulkRequest"]
     community: Community
     request_id: RequestId
-    oids: list[Oid]
-    repeat_oids: list[Oid]
-    max_rep: int
+    get_next: list[Oid]
+    get_next_n: list[Oid]
+    n: int
     pass
 
 @dataclass

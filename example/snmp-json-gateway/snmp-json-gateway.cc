@@ -21,6 +21,7 @@
 #include <xju/steadyEternity.hh>
 #include <xju/Exception.hh>
 #include <xju/snmp/decodeSnmpV1GetRequest.hh>
+#include <xju/snmp/decodeSnmpV2cGetRequest.hh>
 #include <example/snmp-json-gateway/snmp_json_gateway.hh>
 #include <xju/snmp/decodeSnmpV1GetNextRequest.hh>
 #include <xju/snmp/decodeSnmpV1SetRequest.hh>
@@ -38,6 +39,9 @@
 #include <xju/stringToInt.hh>
 #include <sstream>
 #include <xju/snmp/encode.hh>
+#include <xju/snmp/decodeSnmpV2cGetRequest.hh>
+#include <xju/snmp/decodeSnmpV2cGetBulkRequest.hh>
+#include <xju/snmp/decodeSnmpV2cSetRequest.hh>
 
 auto const same_line = xju::Utf8String("");
 
@@ -89,6 +93,42 @@ void run(xju::ip::UDPSocket& socket){
           catch(xju::Exception& e){
             failures.push_back(e);
           }
+          try{
+            auto const x(xju::snmp::decodeSnmpV2cGetRequest(buffer));
+            std::cout << xju::json::format(*snmp_json_gateway::encode(senderAndSize.first,x),same_line)
+                      << std::endl;
+            continue;
+          }
+          catch(xju::Exception& e){
+            failures.push_back(e);
+          }
+          try{
+            auto const x(xju::snmp::decodeSnmpV2cGetNextRequest(buffer));
+            std::cout << xju::json::format(*snmp_json_gateway::encode(senderAndSize.first,x),same_line)
+                      << std::endl;
+            continue;
+          }
+          catch(xju::Exception& e){
+            failures.push_back(e);
+          }
+          try{
+            auto const x(xju::snmp::decodeSnmpV2cGetBulkRequest(buffer));
+            std::cout << xju::json::format(*snmp_json_gateway::encode(senderAndSize.first,x),same_line)
+                      << std::endl;
+            continue;
+          }
+          catch(xju::Exception& e){
+            failures.push_back(e);
+          }
+          try{
+            auto const x(xju::snmp::decodeSnmpV2cSetRequest(buffer));
+            std::cout << xju::json::format(*snmp_json_gateway::encode(senderAndSize.first,x),same_line)
+                      << std::endl;
+            continue;
+          }
+          catch(xju::Exception& e){
+            failures.push_back(e);
+          }
           std::cerr << "dropped received udp packet because "
                     << xju::format::join(failures.begin(), failures.end(),
                                          [](auto e){
@@ -116,6 +156,15 @@ void run(xju::ip::UDPSocket& socket){
             auto const deadline(xju::steadyNow()+std::chrono::seconds(5));
             try{
               auto const m(xju::snmp::encode(snmp_json_gateway::decodeSnmpV1Response(
+                                               gm->getMember(xju::Utf8String("message")))));
+              socket.sendTo(remoteEndpoint.first,remoteEndpoint.second,m.data(),m.size(),deadline);
+              continue;
+            }
+            catch(xju::Exception& e){
+              failures.push_back(e);
+            }
+            try{
+              auto const m(xju::snmp::encode(snmp_json_gateway::decodeSnmpV2cResponse(
                                                gm->getMember(xju::Utf8String("message")))));
               socket.sendTo(remoteEndpoint.first,remoteEndpoint.second,m.data(),m.size(),deadline);
               continue;

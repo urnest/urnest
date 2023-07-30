@@ -12,6 +12,12 @@
 #include <iostream>
 #include <xju/assert.hh>
 #include <xju/json/format.hh>
+#include <xju/snmp/IntValue.hh>
+#include <xju/snmp/StringValue.hh>
+#include <xju/snmp/SnmpV2cGetBulkRequest.hh>
+#include <xju/snmp/SnmpV2cGetNextRequest.hh>
+#include <xju/snmp/SnmpV2cGetRequest.hh>
+#include <xju/snmp/SnmpV2cSetRequest.hh>
 
 namespace snmp_json_gateway
 {
@@ -33,7 +39,55 @@ void test1() {
             xju::snmp::Community("ann"),
             xju::snmp::RequestId(2),
             {xju::snmp::Oid(".1.4.6.12.27.3"),
-             xju::snmp::Oid(".1.4.6.12.19")}))
+             xju::snmp::Oid(".1.4.6.12.19")})),
+        snmp_json_gateway::encode(
+          std::make_pair(
+            xju::snmp::SnmpV1SetRequest(
+              xju::snmp::Community("ann"),
+              xju::snmp::RequestId(2),
+              { {xju::snmp::Oid(".1.4.6.12.27.3"),
+                 std::shared_ptr<xju::snmp::Value const>(new xju::snmp::IntValue(3))},
+                {xju::snmp::Oid(".1.4.6.12.19"),
+                 std::shared_ptr<xju::snmp::Value const>(new xju::snmp::StringValue("fred"))}
+              }),
+            std::vector<xju::snmp::Oid>{xju::snmp::Oid(".1.4.6.12.27.3"),
+                xju::snmp::Oid(".1.4.6.12.19")})),
+
+        snmp_json_gateway::encode(
+          std::make_pair(
+            xju::snmp::SnmpV2cGetRequest(
+              xju::snmp::Community("fred"),
+              xju::snmp::RequestId(27),
+              {xju::snmp::Oid(".1.4.6.1.27.3"),
+               xju::snmp::Oid(".1.4.6.1.19")}),
+            std::vector<xju::snmp::Oid>(
+              {xju::snmp::Oid(".1.4.6.1.27.3"),
+               xju::snmp::Oid(".1.4.6.1.19")}))),
+        snmp_json_gateway::encode(
+          xju::snmp::SnmpV2cGetNextRequest(
+            xju::snmp::Community("ann"),
+            xju::snmp::RequestId(2),
+            {xju::snmp::Oid(".1.4.6.12.27.3"),
+             xju::snmp::Oid(".1.4.6.12.19")})),
+        snmp_json_gateway::encode(
+          xju::snmp::SnmpV2cGetBulkRequest(
+            xju::snmp::Community("ann"),
+            xju::snmp::RequestId(2),
+            {xju::snmp::Oid(".1.4.6.12.27.3"),
+             xju::snmp::Oid(".1.4.6.12.19")},
+            {10, {xju::snmp::Oid(".1.4.6.12.27.5")}})),
+        snmp_json_gateway::encode(
+          std::make_pair(
+            xju::snmp::SnmpV2cSetRequest(
+              xju::snmp::Community("ann"),
+              xju::snmp::RequestId(2),
+              { {xju::snmp::Oid(".1.4.6.12.27.3"),
+                 std::shared_ptr<xju::snmp::Value const>(new xju::snmp::IntValue(3))},
+                {xju::snmp::Oid(".1.4.6.12.19"),
+                 std::shared_ptr<xju::snmp::Value const>(new xju::snmp::StringValue("fred"))}
+              }),
+            std::vector<xju::snmp::Oid>{xju::snmp::Oid(".1.4.6.12.27.3"),
+                xju::snmp::Oid(".1.4.6.12.19")}))
       }));
   std::cout << xju::json::format(x, xju::Utf8String("")) << "\n";
 }

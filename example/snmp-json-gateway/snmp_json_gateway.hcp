@@ -34,6 +34,8 @@
 #include <xju/snmp/Counter64Value.hh> //impl
 #include <xju/snmp/SnmpV2cResponse.hh>
 #include <xju/functional.hh> //impl
+#include <xju/snmp/SnmpV2cGetBulkRequest.hh>
+#include <xju/snmp/SnmpV2cSetRequest.hh>
 
 namespace snmp_json_gateway
 {
@@ -220,7 +222,59 @@ std::shared_ptr<xju::json::Object> encode(
   elements.insert({xju::Utf8String("message_type"), json_string("SnmpV1SetRequest")});
   elements.insert({xju::Utf8String("community"), json_string(x.first.community_.value())});
   elements.insert({xju::Utf8String("request_id"), json_number(x.first.id_.value())});
-  elements.insert({xju::Utf8String("vars"), encode(x)});
+  elements.insert({xju::Utf8String("vars"), encode(x.first.values_,x.second)});
+  return std::make_unique<xju::json::Object>(elements);
+}
+
+// encode x to json, using specified oid order
+std::shared_ptr<xju::json::Object> encode(
+  std::pair<xju::snmp::SnmpV2cGetRequest, std::vector<xju::snmp::Oid>>  const& x)
+{
+  std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> > elements;
+
+  elements.insert({xju::Utf8String("message_type"), json_string("SnmpV2cGetRequest")});
+  elements.insert({xju::Utf8String("community"), json_string(x.first.community_.value())});
+  elements.insert({xju::Utf8String("request_id"), json_number(x.first.id_.value())});
+  elements.insert({xju::Utf8String("oids"), encode(x.second)});
+  return std::make_unique<xju::json::Object>(elements);
+}
+
+// encode x to json
+std::shared_ptr<xju::json::Object> encode(xju::snmp::SnmpV2cGetNextRequest const& x)
+{
+  std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> > elements;
+
+  elements.insert({xju::Utf8String("message_type"), json_string("SnmpV2cGetNextRequest")});
+  elements.insert({xju::Utf8String("community"), json_string(x.community_.value())});
+  elements.insert({xju::Utf8String("request_id"), json_number(x.id_.value())});
+  elements.insert({xju::Utf8String("oids"), encode(x.oids_)});
+  return std::make_unique<xju::json::Object>(elements);
+}
+
+// encode x to json
+std::shared_ptr<xju::json::Object> encode(xju::snmp::SnmpV2cGetBulkRequest const& x)
+{
+  std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> > elements;
+
+  elements.insert({xju::Utf8String("message_type"), json_string("SnmpV2cGetBulkRequest")});
+  elements.insert({xju::Utf8String("community"), json_string(x.community_.value())});
+  elements.insert({xju::Utf8String("request_id"), json_number(x.id_.value())});
+  elements.insert({xju::Utf8String("get_next"), encode(x.getNext_)});
+  elements.insert({xju::Utf8String("get_next_n"), encode(x.getNextN_)});
+  elements.insert({xju::Utf8String("n"), json_number(x.n_)});
+  return std::make_unique<xju::json::Object>(elements);
+}
+
+// encode x to json, using specified oid order
+std::shared_ptr<xju::json::Object> encode(
+  std::pair<xju::snmp::SnmpV2cSetRequest, std::vector<xju::snmp::Oid>>  const& x)
+{
+  std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> > elements;
+
+  elements.insert({xju::Utf8String("message_type"), json_string("SnmpV2cSetRequest")});
+  elements.insert({xju::Utf8String("community"), json_string(x.first.community_.value())});
+  elements.insert({xju::Utf8String("request_id"), json_number(x.first.id_.value())});
+  elements.insert({xju::Utf8String("vars"), encode(x.first.values_,x.second)});
   return std::make_unique<xju::json::Object>(elements);
 }
 
