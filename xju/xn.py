@@ -93,6 +93,7 @@ def in_function_context(function:Callable,
                         exceptionInfo:None|tuple[Type[BaseException],BaseException,TracebackType]=None,
                         fl:None|tuple[str,int]=None)->BaseException:
     """Make a Xn that includes exception info and context as first_line_of(f.__doc__).format(**vars()).
+
        - if exceptionInfo[1] is already a Xn just add context
        - otherwise use exceptionInfo as cause for a new Xn
        - exceptionInfo defaults to sys.exc_info()
@@ -105,6 +106,7 @@ def in_context(context:str,
                exceptionInfo:None|tuple[Type[BaseException],BaseException,TracebackType]=None,
                fl:None|tuple[str,int]=None)->BaseException:
     """Make a Xn that includes exception info and context.
+
        - if exceptionInfo[1] is already a Xn just add context
        - otherwise use exceptionInfo as cause for a new Xn
        - exceptionInfo defaults to sys.exc_info()
@@ -170,6 +172,15 @@ def in_context(context:str,
 def first_line_of(x:Any)->str:
     '''return first non-empty line of str({x}) stripped of leading and trailing whitespace'''
     return str(x).strip().split('\n')[0].strip()
+
+def first_para_of(x:Any)->str:
+    '''return first paragraph of str({x}) stripped of leading and trailing whitespace
+    with separate lines stripped and joined by a single space
+
+    - paragraph ends at blank line'''
+    lines=[_.strip() for _ in str(x).strip().split('\n')]+['']
+    end=lines.index('')
+    return ' '.join(lines[0:end])
 
 def desentence(s:str)->str:
     '''remove any trailing '.' and down-case first characters of {s}'''

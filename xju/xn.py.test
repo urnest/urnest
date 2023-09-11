@@ -18,7 +18,7 @@
 from sys import path
 from os.path import dirname
 if path[0]==dirname(__file__): path.pop(0)
-from xju.xn import in_context,readable_repr,AllFailed,in_function_context,Xn,capitalise
+from xju.xn import in_context,readable_repr,AllFailed,in_function_context,Xn,capitalise,first_para_of
 from xju.assert_ import Assert
 from typing import cast
 
@@ -156,6 +156,7 @@ def test6():
         def jump(self, height:int):
             '''
             jump {height}m in the air
+
             - from a standing start
             '''
             try:
@@ -198,6 +199,23 @@ def test10():
         pass
     pass
 
+def test11():
+    Assert(first_para_of("""
+  the blind
+  mice
+  ran 
+"""))=="the blind mice ran"
+
+    Assert(first_para_of("""
+  the blind
+
+  mice
+  ran 
+"""))=="the blind"
+
+    Assert(first_para_of(""""""))==""
+    Assert(first_para_of(""" fred """))=="fred"
+  
 tests=[var for name,var in sorted(vars().items())
        if name.startswith('test') and callable(var)]
 for t in tests: t()
