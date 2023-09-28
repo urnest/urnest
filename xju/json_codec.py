@@ -97,7 +97,7 @@ class Codec(Generic[T]):
     def __init__(self, t: Type[T]):
         'initialse json decoder for type %(t)r'
         self.t=t
-        self.codec:CodecProto=_explodeSchema(self.t, {})
+        self.codec:CodecImplProto=_explodeSchema(self.t, {})
         pass
 
     def __repr__(self):
@@ -166,7 +166,7 @@ class Codec(Generic[T]):
         return self.codec.get_typescript_asa(expression,namespace,None)
     pass
 
-class CodecProto(Protocol):
+class CodecImplProto(Protocol):
     def encode(self,x:Any,back_ref:None|Callable[[Any],JsonType])->JsonType:
         pass
     def decode(self,x:JsonType,back_ref:None|Callable[[JsonType],Any])->Any:
@@ -195,7 +195,7 @@ NewInt=TypeVar('NewInt',bound=xju.newtype.Int)
 NewFloat=TypeVar('NewFloat',bound=xju.newtype.Float)
 NewStr=TypeVar('NewStr',bound=xju.newtype.Str)
 
-class NoopCodec(Generic[Atom]):
+class NoopCodecImpl(Generic[Atom]):
     t:Type[Atom]
     def __init__(self, t:Type[Atom]):
         self.t=t
@@ -244,7 +244,7 @@ class NoopCodec(Generic[Atom]):
             f"}})({expression})")
     pass
 
-class NoneCodec:
+class NoneCodecImpl:
     def encode(self, x:None,_:None|Callable[[Any],JsonType])->None:
         if x is not None:
             raise Exception(f'{x!r} is not None')
@@ -277,8 +277,8 @@ class NoneCodec:
             f"}})({expression})")
     pass
 
-class ListCodec:
-    def __init__(self, value_codec:CodecProto):
+class ListCodecImpl:
+    def __init__(self, value_codec:CodecImplProto):
         self.value_codec=value_codec
         pass
     def encode(self,x,back_ref:None|Callable[[Any],JsonType]):
@@ -320,9 +320,9 @@ class ListCodec:
             f"}}catch(e:any){{throw new Error(`${{v}} is not a {tt} because ${{e}}`);}}}})({expression})")
     pass
 
-class AnyListCodec:
+class AnyListCodecImpl:
     def __init__(self):
-        self.value_codec=AnyJsonCodec()
+        self.value_codec=AnyJsonCodecImpl()
         pass
     def encode(self,x,back_ref:None|Callable[[Any],JsonType]):
         if type(x) is not list:
@@ -429,7 +429,7 @@ class TupleCodec:
             f"}}catch(e:any){{ throw new Error(`${{v}} is not a {tt} because ${{e}}`);}}}})({expression})")
     pass
 
-class UnionCodec:
+class UnionCodecImpl:
     def __init__(self,allowed_types, value_codecs):
         self.allowed_types=allowed_types
         self.value_codecs=value_codecs
@@ -447,7 +447,7 @@ class UnionCodec:
                 pass
             raise AllFailed(exceptions)
         except Exception:
-            raise in_function_context(UnionCodec.encode,vars()) from None
+            raise in_function_context(UnionCodecImpl.encode,vars()) from None
         pass
     def decode(self,x,back_ref:None|Callable[[JsonType],Any]) -> tuple:
         '''decode {x!r} as one of {self.allowed_types}'''
@@ -462,7 +462,7 @@ class UnionCodec:
                 pass
             raise AllFailed(exceptions)
         except Exception:
-            raise in_function_context(UnionCodec.decode,vars()) from None
+            raise in_function_context(UnionCodecImpl.decode,vars()) from None
         pass
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
@@ -507,7 +507,7 @@ class UnionCodec:
             f"}}}})({expression})")
     pass
 
-class DictCodec:
+class DictCodecImpl:
     def __init__(self, key_codec, value_codec):
         self.key_codec=key_codec
         self.value_codec=value_codec
@@ -573,10 +573,10 @@ class DictCodec:
             f"}}catch(e:any){{throw new Error(`${{x}} is not a {tt} because ${{e}}`);}}}})({expression})")
     pass
 
-class AnyDictCodec:
+class AnyDictCodecImpl:
     def __init__(self):
-        self.key_codec=NoopCodec[str](str)
-        self.value_codec=AnyJsonCodec()
+        self.key_codec=NoopCodecImpl[str](str)
+        self.value_codec=AnyJsonCodecImpl()
     def encode(self,x:dict,back_ref:None|Callable[[Any],JsonType])->dict:
         if type(x) is not dict:
             raise Exception(f'{x!r} is not a dict')
@@ -635,7 +635,7 @@ class AnyDictCodec:
             f"}}catch(e:any){{throw new Error(`${{x}} is not a {tt} because ${{e}}`);}}}})({expression})")
     pass
 
-class AnyJsonCodec:
+class AnyJsonCodecImpl:
     def encode(self,x,_:None|Callable[[Any],JsonType]):
         # we assume x will be subsequently json.dumps()ed so defer validation to that
         return x
@@ -664,11 +664,11 @@ class AnyJsonCodec:
             f"({expression})")
     pass
 
-class NewIntCodec(Generic[NewInt]):
+class NewIntCodecImpl(Generic[NewInt]):
     t:Type[NewInt]
     def __init__(self,t:Type[NewInt]):
         self.t=t
-        self.base_codec=NoopCodec[int](int)
+        self.base_codec=NoopCodecImpl[int](int)
     def encode(self, x:NewInt,back_ref:None|Callable[[Any],JsonType])->int:
         if not isinstance(x, xju.newtype.Int):
             raise Exception(f'{x!r} is not a {self.t}')
@@ -730,11 +730,11 @@ class NewIntCodec(Generic[NewInt]):
             f"}})({expression})")
     pass
 
-class NewFloatCodec(Generic[NewFloat]):
+class NewFloatCodecImpl(Generic[NewFloat]):
     t:Type[NewFloat]
     def __init__(self,t:Type[NewFloat]):
         self.t=t
-        self.base_codec=NoopCodec[float](float)
+        self.base_codec=NoopCodecImpl[float](float)
     def encode(self, x:NewFloat,back_ref:None|Callable[[Any],JsonType])->float:
         if not isinstance(x, xju.newtype.Float):
             raise Exception(f'{x!r} is not a {self.t}')
@@ -796,11 +796,11 @@ class NewFloatCodec(Generic[NewFloat]):
             f"}})({expression})")
     pass
 
-class NewStrCodec(Generic[NewStr]):
+class NewStrCodecImpl(Generic[NewStr]):
     t:Type[NewStr]
     def __init__(self,t:Type[NewStr]):
         self.t=t
-        self.base_codec=NoopCodec[str](str)
+        self.base_codec=NoopCodecImpl[str](str)
     def encode(self, x:NewStr,back_ref:None|Callable[[Any],JsonType])->str:
         if not isinstance(x, xju.newtype.Str):
             raise Exception(f'{x!r} is not a {self.t}')
@@ -862,7 +862,7 @@ class NewStrCodec(Generic[NewStr]):
             f"}})({expression})")
     pass
 
-class LiteralStrCodec:
+class LiteralStrCodecImpl:
     value:str
     def __init__(self,value:str):
         self.value=value
@@ -904,7 +904,7 @@ class LiteralStrCodec:
             f"}})({expression})")
     pass
 
-class LiteralIntCodec:
+class LiteralIntCodecImpl:
     value:int
     def __init__(self,value:int):
         self.value=value
@@ -946,7 +946,7 @@ class LiteralIntCodec:
             f"}})({expression})")
     pass
 
-class LiteralBoolCodec:
+class LiteralBoolCodecImpl:
     value:bool
     def __init__(self,value:bool):
         self.value=value
@@ -1026,7 +1026,7 @@ class CustomClassCodec(Protocol):
         return TypeScriptSourceCode('')
     pass
 
-class ClassCodec:
+class ClassCodecImpl:
     t:type
     attr_codecs:dict[str,Any]  # codec
     custom_codec:CustomClassCodec|None = None
@@ -1055,7 +1055,7 @@ class ClassCodec:
                 pass
             return result
         except Exception:
-            raise in_function_context(ClassCodec.encode,vars()) from None
+            raise in_function_context(ClassCodecImpl.encode,vars()) from None
         pass
     def decode(self,x,_:None|Callable[[JsonType],Any]) -> object:
         'deocde {x} as a {self.t}'
@@ -1082,7 +1082,7 @@ class ClassCodec:
             except Exception:
                 raise in_context(f'init {self.t} with keyword arguments {attr_values}') from None
         except Exception:
-            raise in_function_context(ClassCodec.decode,vars()) from None
+            raise in_function_context(ClassCodecImpl.decode,vars()) from None
         pass
     def get_type_fqn(self):
         '''get the fully qualified name of {self.t}'''
@@ -1184,17 +1184,17 @@ class ClassCodec:
     pass
 
 @dataclass
-class EnumValueCodec:
+class EnumValueCodecImpl:
     t:EnumMeta
     value:Enum
-    value_codec:CodecProto
+    value_codec:CodecImplProto
 
     def encode(self,x,back_ref:None|Callable[[Any],JsonType]) -> JsonType:
         'encode {x!r} as a {self.t.__name__}.{self.value.name}'
         try:
             return self.value_codec.encode(x.value,back_ref)
         except Exception:
-            raise in_function_context(EnumValueCodec.encode,vars()) from None
+            raise in_function_context(EnumValueCodecImpl.encode,vars()) from None
         pass
     def decode(self,x,back_ref:None|Callable[[JsonType],Any]) -> Enum:
         'deocde {x!r} as {self.t.__name__}.{self.value.name}'
@@ -1204,7 +1204,7 @@ class EnumValueCodec:
                 raise Exception(f'{value!r} is not {self.value.value!r}')
             return self.value
         except Exception:
-            raise in_function_context(EnumValueCodec.decode,vars()) from None
+            raise in_function_context(EnumValueCodecImpl.decode,vars()) from None
         pass
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         result = self.value_codec.get_json_schema(definitions,self_ref)
@@ -1220,7 +1220,7 @@ class EnumValueCodec:
     def typescript_value(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(json.dumps(self.value.value))
     def ensure_typescript_defs(self,namespace)->None:
-        # EnumCodec supplies defs
+        # EnumCodecImpl supplies defs
         pass
     def get_typescript_isa(
             self,
@@ -1241,8 +1241,8 @@ class EnumValueCodec:
             f"}})({expression})")
     pass
     
-class EnumCodec:
-    def __init__(self,t:EnumMeta, value_codecs:dict[str, EnumValueCodec]):
+class EnumCodecImpl:
+    def __init__(self,t:EnumMeta, value_codecs:dict[str, EnumValueCodecImpl]):
         self.t=t
         self.value_codecs=value_codecs
         pass
@@ -1253,7 +1253,7 @@ class EnumCodec:
                 raise Exception(f'{x} (of type {x.__class__.__name__}) is not a {self.t.__name__}')
             return self.value_codecs[x.name].encode(x,back_ref)
         except Exception:
-            raise in_function_context(EnumCodec.encode,vars()) from None
+            raise in_function_context(EnumCodecImpl.encode,vars()) from None
         pass
     def decode(self,x,back_ref:None|Callable[[JsonType],Any]) -> Enum:
         '''decode {x!r} as enum {self.t.__name__} value'''
@@ -1268,7 +1268,7 @@ class EnumCodec:
                 pass
             raise AllFailed(exceptions)
         except Exception:
-            raise in_function_context(EnumCodec.decode,vars()) from None
+            raise in_function_context(EnumCodecImpl.decode,vars()) from None
         pass
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
@@ -1285,7 +1285,7 @@ class EnumCodec:
         target_namespace=namespace.get_namespace_of(typescript_fqn)
         typescript_type_name=typescript_fqn[-1]
         if typescript_type_name not in target_namespace.defs:
-            enum_value_codec:EnumValueCodec
+            enum_value_codec:EnumValueCodecImpl
             target_namespace.defs[typescript_type_name]=TypeScriptSourceCode(
                 f"enum {typescript_type_name} {{\n"+
                 ',\n'.join([f'    {name} = {enum_value_codec.typescript_value().value()}'
@@ -1306,7 +1306,7 @@ class EnumCodec:
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace,
                            back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
-        enum_value_codec:EnumValueCodec
+        enum_value_codec:EnumValueCodecImpl
         isas=[' ||\n       '+indent(12,enum_value_codec.get_typescript_isa(TypeScriptSourceCode(f"v"),
                                                                            namespace,back_refs))
               for enum_value_codec in self.value_codecs.values()]
@@ -1319,7 +1319,7 @@ class EnumCodec:
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace,
                            back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
-        enum_value_codec:EnumValueCodec
+        enum_value_codec:EnumValueCodecImpl
         tt=self.typescript_type(back_refs)
         asas=[f"    try{{\n"+
               f"        {indent(8,enum_value_codec.get_typescript_asa(TypeScriptSourceCode('v'),namespace,back_refs))};\n"+
@@ -1340,14 +1340,14 @@ class EnumCodec:
             f"}}}})({expression})")
     pass
 
-class SelfCodec:
+class SelfCodecImpl:
     def encode(self,x,back_ref:None|Callable[[Any],JsonType]) -> JsonType:
         'encode {x} as a Self'
         try:
             assert back_ref is not None
             return back_ref(x)
         except Exception:
-            raise in_function_context(SelfCodec.encode,vars()) from None
+            raise in_function_context(SelfCodecImpl.encode,vars()) from None
         pass
     def decode(self,x,back_ref:None|Callable[[JsonType],Any]) -> object:
         'deocde {x} as a Self'
@@ -1355,7 +1355,7 @@ class SelfCodec:
             assert back_ref is not None
             return back_ref(x)
         except Exception:
-            raise in_function_context(SelfCodec.decode,vars()) from None
+            raise in_function_context(SelfCodecImpl.decode,vars()) from None
         pass
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         assert self_ref is not None
@@ -1393,62 +1393,62 @@ def _explodeSchema(t:type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGeneric
             assert t in type_var_map, type_var_map.keys()
             return _explodeSchema(type_var_map[t],type_var_map)
         if t is float or (isinstance(t,NewType) and t.__supertype__ is float):
-            return NoopCodec[float](float)
+            return NoopCodecImpl[float](float)
         if t is int or (isinstance(t,NewType) and t.__supertype__ is int):
-            return NoopCodec[int](int)
+            return NoopCodecImpl[int](int)
         if t is str or (isinstance(t,NewType) and t.__supertype__ is str):
-            return NoopCodec[str](str)
+            return NoopCodecImpl[str](str)
         if t is bool or (isinstance(t,NewType) and t.__supertype__ is bool):
-            return NoopCodec[bool](bool)
+            return NoopCodecImpl[bool](bool)
         if t is None or t is NoneType:
-            return NoneCodec()
+            return NoneCodecImpl()
         if t is list:
-            return AnyListCodec()
+            return AnyListCodecImpl()
         if type(t) is GenericAlias and get_origin(t) is list:
-            return ListCodec(_explodeSchema(get_args(t)[0],type_var_map))
+            return ListCodecImpl(_explodeSchema(get_args(t)[0],type_var_map))
         if type(t) is _LiteralGenericAlias and len(t.__args__)==1:
             return _explode_literal(t.__args__[0])
         if type(t) is _LiteralGenericAlias:
-            return UnionCodec(get_args(t),
+            return UnionCodecImpl(get_args(t),
                               {t:_explode_literal(t) for t in get_args(t)})
         if type(t) is GenericAlias and get_origin(t) is tuple:
             return TupleCodec([_explodeSchema(_,type_var_map) for _ in get_args(t)])
         if t is dict:
-            return AnyDictCodec()
+            return AnyDictCodecImpl()
         if type(t) is GenericAlias and get_origin(t) is dict:
-            return DictCodec(*[_explodeSchema(_, type_var_map) for _ in get_args(t)])
+            return DictCodecImpl(*[_explodeSchema(_, type_var_map) for _ in get_args(t)])
         if type(t) is UnionType:
-            return UnionCodec(get_args(t),
+            return UnionCodecImpl(get_args(t),
                               {t:_explodeSchema(t, type_var_map) for t in get_args(t)})
         if type(t) is _UnionGenericAlias:
-            return UnionCodec(get_args(t),
+            return UnionCodecImpl(get_args(t),
                               {t:_explodeSchema(t, type_var_map) for t in get_args(t)})
         if t is Self:
-            return SelfCodec()
+            return SelfCodecImpl()
         if type(t) is _GenericAlias:
             local_type_var_map={
                 type_var: value
                 for type_var, value in
                 list((type_var_map or {}).items())+list(zip(get_origin(t).__parameters__, get_args(t)))
             }
-            return ClassCodec(
+            return ClassCodecImpl(
                 get_origin(t),
                 { n: _explodeSchema(nt,local_type_var_map)
                   for n,nt in get_type_hints(get_origin(t)).items()})
         if type(t) is EnumType and issubclass(t, Enum):
-            return EnumCodec(
+            return EnumCodecImpl(
                 t,{name: _explodeSchema(vv,type_var_map)
                    for name,vv in t.__members__.items()})
         if isinstance(t,Enum):
-            return EnumValueCodec(t.__class__,t,_explodeSchema(type(t.value),type_var_map))
+            return EnumValueCodecImpl(t.__class__,t,_explodeSchema(type(t.value),type_var_map))
         assert isinstance(t,type), (type(t), t)
         if issubclass(t,xju.newtype.Int):
-            return NewIntCodec(t)
+            return NewIntCodecImpl(t)
         if issubclass(t,xju.newtype.Float):
-            return NewFloatCodec(t)
+            return NewFloatCodecImpl(t)
         if issubclass(t,xju.newtype.Str):
-            return NewStrCodec(t)
-        return ClassCodec(
+            return NewStrCodecImpl(t)
+        return ClassCodecImpl(
             t,{n: _explodeSchema(nt,type_var_map) for n,nt in get_type_hints(t).items()})
     except Exception:
         raise in_function_context(_explodeSchema,vars()) from None
@@ -1458,11 +1458,11 @@ def _explode_literal(value: Any):
     '''create codec for literal value {value!r}'''
     try:
         if type(value) is str:
-            return LiteralStrCodec(value)
+            return LiteralStrCodecImpl(value)
         if type(value) is bool:
-            return LiteralBoolCodec(value)
+            return LiteralBoolCodecImpl(value)
         if type(value) is int:
-            return LiteralIntCodec(value)
+            return LiteralIntCodecImpl(value)
         t=type(value)
         raise Exception(f'{t} literals are not supported (only support str, int, bool)')
     except:

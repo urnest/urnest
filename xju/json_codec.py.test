@@ -20,7 +20,7 @@ import ipaddress
 from os.path import dirname
 if path[0]==dirname(__file__): path.pop(0)
 
-from xju.json_codec import codec, Codec, JsonType, AnyJsonCodec, SelfCodec
+from xju.json_codec import codec, Codec, JsonType, AnyJsonCodecImpl, SelfCodecImpl
 from xju.json_codec import TypeScriptSourceCode, TypeScriptNamespace, CustomClassCodec
 
 from typing import cast, Type, Literal, Any, Self, NewType, Generic, TypeVar
@@ -798,7 +798,7 @@ Assert(codec(dict).get_json_schema())=={'type': 'object', 'definitions': {}, '$i
 
 Assert(codec(dict[str,int]).get_json_schema())=={'type': 'object', 'additionalProperties': {'type': 'integer'}, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 
-Assert(AnyJsonCodec().get_json_schema({},None))== {'oneOf': [{'type': 'null'}, {'type': 'boolean'}, {'type': 'object'}, {'type': 'array'}, {'type': 'number'}, {'type': 'string'}]}
+Assert(AnyJsonCodecImpl().get_json_schema({},None))== {'oneOf': [{'type': 'null'}, {'type': 'boolean'}, {'type': 'object'}, {'type': 'array'}, {'type': 'number'}, {'type': 'string'}]}
 
 Assert(codec(AgeInYears).get_json_schema())=={'description': 'AgeInYears', 'type': 'integer', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 
@@ -869,7 +869,7 @@ Assert(codec(Graph).get_json_schema())=={
 def fail_back_ref_encode(x: Any) -> JsonType:
     raise Exception('back_ref fail')
 try:
-    SelfCodec().encode(7,fail_back_ref_encode)
+    SelfCodecImpl().encode(7,fail_back_ref_encode)
 except Exception as e:
     Assert(readable_repr(e))=='Failed to encode 7 as a Self because\nback_ref fail.'
 else:
@@ -879,7 +879,7 @@ else:
 def fail_back_ref_decode(x: JsonType) -> Any:
     raise Exception('back_ref fail')
 try:
-    SelfCodec().decode(7,fail_back_ref_decode)
+    SelfCodecImpl().decode(7,fail_back_ref_decode)
 except Exception as e:
     Assert(readable_repr(e))=='Failed to deocde 7 as a Self because\nback_ref fail.'
 else:
@@ -916,12 +916,12 @@ else:
 
     jsonschema.validate({'fred':2, 'jock':3},Codec[dict[str,int]](dict[str,int]).get_json_schema())
 
-    jsonschema.validate(None,AnyJsonCodec().get_json_schema({},None)) # type: ignore
-    jsonschema.validate(True,AnyJsonCodec().get_json_schema({},None)) # type: ignore
-    jsonschema.validate({},AnyJsonCodec().get_json_schema({},None)) # type: ignore
-    jsonschema.validate([],AnyJsonCodec().get_json_schema({},None)) # type: ignore
-    jsonschema.validate(9.9,AnyJsonCodec().get_json_schema({},None)) # type: ignore
-    jsonschema.validate('fred',AnyJsonCodec().get_json_schema({},None)) # type: ignore
+    jsonschema.validate(None,AnyJsonCodecImpl().get_json_schema({},None)) # type: ignore
+    jsonschema.validate(True,AnyJsonCodecImpl().get_json_schema({},None)) # type: ignore
+    jsonschema.validate({},AnyJsonCodecImpl().get_json_schema({},None)) # type: ignore
+    jsonschema.validate([],AnyJsonCodecImpl().get_json_schema({},None)) # type: ignore
+    jsonschema.validate(9.9,AnyJsonCodecImpl().get_json_schema({},None)) # type: ignore
+    jsonschema.validate('fred',AnyJsonCodecImpl().get_json_schema({},None)) # type: ignore
 
     jsonschema.validate(77,Codec[AgeInYears](AgeInYears).get_json_schema())
 
