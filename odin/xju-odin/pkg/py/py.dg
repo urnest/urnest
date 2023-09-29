@@ -124,6 +124,10 @@
 
 +mypy_flags 'flags to pass to mypy' => :cat;
 
++mypy_plugin 'plugin to mypy' => :ls;
+
+:mypy.config 'mypy config file' => :LIST;
+
 $ODIN_PY_IGNORE 'grep -E expression for python imports to ignore, e.g. \\"^os$|^sys$\\"' = '';
 
 $ODIN_PYTHONPATH 'colon-separated list of directories to search for python3 imports, after searching +py_sp directories, e.g. /usr/local/python3/site-packages' = '';
@@ -193,6 +197,8 @@ EXEC (py-cov-check.sh) (py-cov-check) (:py) (+py_cov_check_warn) (+py_cov)
 
 EXEC (py3.exec.output.sh) (:py3.exec/output) (:py3.exec/errors) (:py3.exec/status) (:py3.exec:name) (+stderr)
   => (:py3.exec.output.ref);
+
+EXEC (mypy-config.sh) (+mypy_plugin:ls) => :mypy.config;
 
 READ-REFERENCE (:py3.exec.output.ref) => (:py3.exec.output);
 
