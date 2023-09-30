@@ -87,8 +87,42 @@ class TypeScriptBackRefs:
     type_back_ref:Callable[[],TypeScriptSourceCode]
     isa_back_ref:Callable[[TypeScriptSourceCode],TypeScriptSourceCode]
     asa_back_ref:Callable[[TypeScriptSourceCode],TypeScriptSourceCode]
-    
-def codec(t: Type[T]) -> 'Codec[T]':
+
+
+class CodecProto(Generic[T], Protocol):
+    def encode(self,x:T) -> JsonType:
+        'encode {self.t} {x} to json'
+        pass
+    def decode(self,x:JsonType) -> T:
+        'decode {x} to a {self.t}'
+        pass
+    def get_json_schema(self) -> dict:
+        "get jsonschema matching T's encoded form"
+        pass
+    def typescript_type(self) -> TypeScriptUQN:
+        '''return typescript unqualified equivalent type for T'''
+        pass
+    def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> None:
+        '''ensure namespace {namespace} contains {self} typescript defs'''
+        pass
+    def add_typescript_alias(self, namespace:TypeScriptNamespace, fqn:Sequence[TypeScriptUQN]) -> None:
+        '''add {fqn} as typescript alias for {self.t}'''
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''get typescript "{expression} is a T" code, adding any necessary definitions to {namespace}
+           result is a type-guard expression, examples of some possible results:
+             parameter       possible code                  note
+             "x.y"           "(typeof (x.y) == 'number')"   (uses built-in type guard pattern)
+             "z"             "m.isInstanceOfFred(z)"        (calls a type-guard function)'''
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''get typescript "{expression} as a T" code, adding any necessary definitions to {namespace}
+           result is a cast expression that throws an Error if {expression} is not a T
+        '''
+        
+def codec(t: Type[T]) -> CodecProto[T]:
     '''build codec to encode/decode a "t" to/from json'''
     return Codec[T](t)
 
@@ -1477,3 +1511,8 @@ def get_type_fqn(t:type) -> str:
     if t.__module__=='__main__':
         return t.__name__
     return f"{t.__module__}.{t.__name__}"
+
+# for development of mypy plugin, to see what return type should be for a case
+# see json_codec_mypy_plugin.show_return_type
+def _xxx() -> CodecProto[int|str|list]:
+    return Codec(int|str|list)  # type: ignore

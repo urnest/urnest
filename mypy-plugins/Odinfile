@@ -1,0 +1,245 @@
+%all==%all.tree:leaves
+
+%all.tree == <<
+%typecheck
+%test_json_codec_mypy_plugin_builtin
+%test_json_codec_mypy_plugin_newtype
+%test_json_codec_mypy_plugin_indexed
+%test_json_codec_mypy_plugin_class
+%test_json_codec_mypy_plugin_literal
+%test_json_codec_mypy_plugin_union
+
+
+%py-opts==<<
++py_sp=(..)
+
+%typecheck==json_codec_mypy_plugin.py+(%py-opts):main.mypy3
+
+%verify-errs == ! <<
+#!/bin/sh -ex
+filename=$(cat "$1")
+expect="$2"
+# skip odin header (2 lines)
+tail -n +3 |
+sed -e "s=$filename=FILE=g" |
+    diff $expect -
+
+
+%test_json_codec_mypy_plugin_builtin==%test_json_codec_mypy_plugin_builtin.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_builtin.py.test:filename) (%test_json_codec_mypy_plugin_builtin.expect):exec.output
+
+%test_json_codec_mypy_plugin_builtin.expect==<<
+FILE:13: error: Argument 1 to "encode" of "CodecProto" has incompatible type "str"; expected "int"  [arg-type]
+FILE:15: error: Argument 1 to "encode" of "CodecProto" has incompatible type "str"; expected "bool"  [arg-type]
+FILE:17: error: Argument 1 to "encode" of "CodecProto" has incompatible type "str"; expected "float"  [arg-type]
+FILE:19: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "None"  [arg-type]
+FILE:21: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "list"  [arg-type]
+FILE:23: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "dict"  [arg-type]
+FILE:25: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "set"  [arg-type]
+FILE:27: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "str"  [arg-type]
+FILE:29: error: Incompatible types in assignment (expression has type "int", variable has type "str")  [assignment]
+FILE:31: error: Incompatible types in assignment (expression has type "bool", variable has type "str")  [assignment]
+FILE:33: error: Incompatible types in assignment (expression has type "float", variable has type "str")  [assignment]
+FILE:35: error: Incompatible types in assignment (expression has type "None", variable has type "str")  [assignment]
+FILE:37: error: Incompatible types in assignment (expression has type "list", variable has type "str")  [assignment]
+FILE:39: error: Incompatible types in assignment (expression has type "tuple", variable has type "str")  [assignment]
+FILE:41: error: Incompatible types in assignment (expression has type "dict", variable has type "str")  [assignment]
+FILE:43: error: Incompatible types in assignment (expression has type "set", variable has type "str")  [assignment]
+FILE:45: error: Incompatible types in assignment (expression has type "str", variable has type "int")  [assignment]
+
+%test_json_codec_mypy_plugin_builtin.errors==%json_codec_mypy_plugin_builtin.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
+
+%json_codec_mypy_plugin_builtin.py.test == <<
+from xju.json_codec import codec #, _xxx
+#_xxx()
+c1=codec(int)
+c2=codec(bool)
+c3=codec(float)
+c4=codec(None)
+c5=codec(list)
+c6=codec(tuple)
+c7=codec(dict)
+c8=codec(set)
+c9=codec(str)
+x = (c1.encode(7),
+     c1.encode("fred"),
+     c2.encode(True),
+     c2.encode("fred"),
+     c3.encode(5.6),
+     c3.encode("fred"),
+     c4.encode(None),
+     c4.encode(7),
+     c5.encode([1,2]),
+     c5.encode(7),
+     c7.encode({1:2}),
+     c7.encode(7),
+     c8.encode({1}),
+     c8.encode(7),
+     c9.encode("fred"),
+     c9.encode(7))
+r1:int=c1.decode(None)
+r1x:str=c1.decode(None)  # ensure return type not inferred as Any
+r2:bool=c2.decode(None)
+r2x:str=c2.decode(None)  # ensure return type not inferred as Any
+r3:float=c3.decode(None)
+r3x:str=c3.decode(None)  # ensure return type not inferred as Any
+r4:None=c4.decode(None)
+r4x:str=c4.decode(None)  # ensure return type not inferred as Any
+r5:list=c5.decode(None)
+r5x:str=c5.decode(None)  # ensure return type not inferred as Any
+r6:tuple=c6.decode(None)
+r6x:str=c6.decode(None)  # ensure return type not inferred as Any
+r7:dict=c7.decode(None)
+r7x:str=c7.decode(None)  # ensure return type not inferred as Any
+r8:set=c8.decode(None)
+r8x:str=c8.decode(None)  # ensure return type not inferred as Any
+r9:str=c9.decode(None)
+r9x:int=c9.decode(None)  # ensure return type not inferred as Any
+
+%test_json_codec_mypy_plugin_newtype==%test_json_codec_mypy_plugin_newtype.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_newtype.py.test:filename) (%test_json_codec_mypy_plugin_newtype.expect):exec.output
+
+%test_json_codec_mypy_plugin_newtype.expect==<<
+FILE:7: error: Argument 1 to "encode" of "CodecProto" has incompatible type "str"; expected "Nint"  [arg-type]
+FILE:9: error: Incompatible types in assignment (expression has type "Nint", variable has type "str")  [assignment]
+
+%test_json_codec_mypy_plugin_newtype.errors==%json_codec_mypy_plugin_newtype.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
+
+%json_codec_mypy_plugin_newtype.py.test == <<
+from typing import NewType
+from xju.json_codec import codec #, _xxx
+#_xxx()
+Nint=NewType("Nint",int)
+c1=codec(Nint)
+x = (c1.encode(Nint(7)),
+     c1.encode("fred"))
+r1:Nint=c1.decode(None)
+r1x:str=c1.decode(None)  # ensure return type not inferred as Any
+
+%test_json_codec_mypy_plugin_indexed==%test_json_codec_mypy_plugin_indexed.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_indexed.py.test:filename) (%test_json_codec_mypy_plugin_indexed.expect):exec.output
+
+%test_json_codec_mypy_plugin_indexed.expect==<<
+FILE:8: error: Argument 1 to "encode" of "CodecProto" has incompatible type "str"; expected "list[int]"  [arg-type]
+FILE:10: error: Argument 1 to "encode" of "CodecProto" has incompatible type "None"; expected "set[str]"  [arg-type]
+FILE:12: error: Argument 1 to "encode" of "CodecProto" has incompatible type "None"; expected "dict[str, int]"  [arg-type]
+FILE:14: error: Argument 1 to "encode" of "CodecProto" has incompatible type "tuple[str, int]"; expected "tuple[str, int, float]"  [arg-type]
+FILE:16: error: Incompatible types in assignment (expression has type "list[int]", variable has type "str")  [assignment]
+FILE:18: error: Incompatible types in assignment (expression has type "set[str]", variable has type "str")  [assignment]
+FILE:20: error: Incompatible types in assignment (expression has type "dict[str, int]", variable has type "str")  [assignment]
+FILE:22: error: Incompatible types in assignment (expression has type "tuple[str, int, float]", variable has type "str")  [assignment]
+
+%test_json_codec_mypy_plugin_indexed.errors==%json_codec_mypy_plugin_indexed.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
+
+%json_codec_mypy_plugin_indexed.py.test == <<
+from xju.json_codec import codec #, _xxx
+#_xxx()
+c1=codec(list[int])
+c2=codec(set[str])
+c3=codec(dict[str,int])
+c4=codec(tuple[str,int,float])
+x = (c1.encode([7]),
+     c1.encode("fred"),
+     c2.encode({"fred"}),
+     c2.encode(None),
+     c3.encode({"fred":2}),
+     c3.encode(None),
+     c4.encode(("fred",2,3.2)),
+     c4.encode(("fred",2)))
+r1:list[int]=c1.decode(None)
+r1x:str=c1.decode(None)  # ensure return type not inferred as Any
+r2:set[str]=c2.decode(None)
+r2x:str=c2.decode(None)  # ensure return type not inferred as Any
+r3:dict[str,int]=c3.decode(None)
+r3x:str=c3.decode(None)  # ensure return type not inferred as Any
+r4:tuple[str,int,float]=c4.decode(None)
+r4x:str=c4.decode(None)  # ensure return type not inferred as Any
+
+
+%test_json_codec_mypy_plugin_class==%test_json_codec_mypy_plugin_class.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_class.py.test:filename) (%test_json_codec_mypy_plugin_class.expect):exec.output
+
+%test_json_codec_mypy_plugin_class.expect==<<
+FILE:10: error: Argument 1 to "encode" of "CodecProto" has incompatible type "str"; expected "X"  [arg-type]
+FILE:12: error: Incompatible types in assignment (expression has type "X", variable has type "int")  [assignment]
+
+%test_json_codec_mypy_plugin_class.errors==%json_codec_mypy_plugin_class.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
+
+%json_codec_mypy_plugin_class.py.test == <<
+from enum import Enum
+from xju.json_codec import codec #, _xxx
+#_xxx()
+class X(Enum):
+    a="A"
+    b="B"
+    pass
+c1=codec(X)
+x = (c1.encode(X.a),
+     c1.encode("fred"))
+r1:X = c1.decode("A")
+r1x:int = c1.decode("A")
+
+
+%test_json_codec_mypy_plugin_literal==%test_json_codec_mypy_plugin_literal.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_literal.py.test:filename) (%test_json_codec_mypy_plugin_literal.expect):exec.output
+
+%test_json_codec_mypy_plugin_literal.expect==<<
+FILE:9: error: Argument 1 to "encode" of "CodecProto" has incompatible type "Literal[7]"; expected "Literal['A']"  [arg-type]
+FILE:11: error: Argument 1 to "encode" of "CodecProto" has incompatible type "Literal['fred']"; expected "Literal[7]"  [arg-type]
+FILE:12: error: Argument 1 to "encode" of "CodecProto" has incompatible type "float"; expected "Literal[7.9]"  [arg-type]
+FILE:13: error: Argument 1 to "encode" of "CodecProto" has incompatible type "Literal['fred']"; expected "Literal[7.9]"  [arg-type]
+FILE:15: error: Argument 1 to "encode" of "CodecProto" has incompatible type "Literal[False]"; expected "Literal[True]"  [arg-type]
+FILE:17: error: Incompatible types in assignment (expression has type "Literal['A']", variable has type "int")  [assignment]
+FILE:20: error: Parameter 1 of Literal[...] cannot be of type "float"  [valid-type]
+FILE:21: error: Incompatible types in assignment (expression has type "Literal[7.9]", variable has type "int")  [assignment]
+FILE:23: error: Incompatible types in assignment (expression has type "Literal[True]", variable has type "list[Any]")  [assignment]
+
+%test_json_codec_mypy_plugin_literal.errors==%json_codec_mypy_plugin_literal.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
+
+%json_codec_mypy_plugin_literal.py.test == <<
+from typing import Literal
+from xju.json_codec import codec, _xxx
+#_xxx()
+c1=codec(Literal["A"])
+c2=codec(Literal[7])
+c3=codec(Literal[7.9])
+c4=codec(Literal[True])
+x = (c1.encode("A"),
+     c1.encode(7),
+     c2.encode(7),
+     c2.encode("fred"),
+     c3.encode(7.9),  # note mypy 1.51 does not see 7.9 as a literal
+     c3.encode("fred"),
+     c4.encode(True),
+     c4.encode(False))
+r1:Literal["A"] = c1.decode(None)
+r1x:int = c1.decode(None)
+r2:Literal[7] = c2.decode(None)
+r2x:int = c2.decode(None)
+r3:Literal[7.9] = c3.decode(None)
+r3x:int = c3.decode(None)
+r4:Literal[True] = c4.decode(None)
+r4x:list = c4.decode(None)
+
+
+%test_json_codec_mypy_plugin_union==%test_json_codec_mypy_plugin_union.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_union.py.test:filename) (%test_json_codec_mypy_plugin_union.expect):exec.output
+
+%test_json_codec_mypy_plugin_union.expect==<<
+FILE:9: error: Argument 1 to "encode" of "CodecProto" has incompatible type "dict[<nothing>, <nothing>]"; expected "int | str | list"  [arg-type]
+FILE:11: error: Argument 1 to "encode" of "CodecProto" has incompatible type "Literal['C']"; expected "Literal['A', 'B']"  [arg-type]
+FILE:13: error: Incompatible types in assignment (expression has type "int | str | list", variable has type "list[Any]")  [assignment]
+FILE:15: error: Incompatible types in assignment (expression has type "Literal['A', 'B']", variable has type "list[Any]")  [assignment]
+
+%test_json_codec_mypy_plugin_union.errors==%json_codec_mypy_plugin_union.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
+
+%json_codec_mypy_plugin_union.py.test == <<
+from typing import Literal
+from xju.assert_ import Assert
+from xju.json_codec import codec#, _xxx
+#_xxx()
+c1=codec(int|str|list)
+c2=codec(Literal["A","B"])
+x = (c1.encode(7),
+     c1.encode("fred"),
+     c1.encode({}),
+     c2.encode("A"),
+     c2.encode("C"))
+r1:int|str|list = c1.decode(None)
+r1x:list = c1.decode(None)  # invalid, result might be e.g. a str
+r2:Literal["A","B"] = c2.decode(None)
+r2x:list = c2.decode(None)

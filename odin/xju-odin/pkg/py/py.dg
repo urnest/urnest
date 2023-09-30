@@ -124,9 +124,9 @@
 
 +mypy_flags 'flags to pass to mypy' => :cat;
 
-+mypy_plugin 'plugin to mypy' => :ls;
++mypy_plugin 'plugin to mypy, added after \$ODIN_MYPY_PLUGINS' => :LIST;
 
-:mypy.config 'mypy config file' => :LIST;
+:mypy.config 'mypy config file' => :FILE;
 
 $ODIN_PY_IGNORE 'grep -E expression for python imports to ignore, e.g. \\"^os$|^sys$\\"' = '';
 
@@ -140,6 +140,8 @@ $ODIN_MYPY_FLAGS 'flags to pass to $ODIN_MYPY' = '';
 $ODIN_MYPY_MYPYPATH 'colon-separated list of directories to append to +py_sp directory list and set as MYPYPATH when running mypy; note mypy treats modules found via MYPYPATH as \\"source\\" files and will use their inline type hints' = '';
 
 $ODIN_MYPY_PYTHONPATH 'colon-separated list of directories to set as PYTHONPATH when running mypy; note mypy treats modules found via PYTHONPATH as \\"3rd party library\\" files and will NOT use their inline type hints, and mypy uses MYPYPATH first when looking for modules' = '';
+
+$ODIN_MYPY_PLUGINS 'space-separated list of mypy plugin files (: not yet supported)' = '';
 
 $ODIN_PYSTYLECHECK 'name of python style check script, e.g. flake8' = 'true';
 $ODIN_PYSTYLECHECK_PATH 'PATH to install when executing python style check script, colon separated' = '/bin:/usr/bin';
@@ -170,12 +172,12 @@ EXEC (py3.exec.sh) (:FILE) (+cmd :ls) (:env) (+stderr) (+py:dir)@ (+py_sp) (+py_
         (:FILE:main.mypy3) (:FILE:main.stylecheck)
   => (:py3.exec);
 
-EXEC (main.mypy3.sh) (:FILE) (:env) (+py_sp) (+mypy_flags)
-  NEEDS (:FILE:main.py_import.view_desc:py_import_all:map=:mod.mypy3)
+EXEC (main.mypy3.sh) (:FILE) (:mypy.config) (:env) (+py_sp) (+mypy_flags)
+  NEEDS (:FILE:main.py_import.view_desc:py_import_all:map=:mod.mypy3) (+mypy_plugin)
   => (:main.mypy3);
     
-EXEC (mod.mypy3.sh) (:py) (:env) (+py_sp) (+mypy_flags)
-  NEEDS (:py:py_import_all:map=:mod.mypy3)
+EXEC (mod.mypy3.sh) (:py) (:mypy.config) (:env) (+py_sp) (+mypy_flags)
+  NEEDS (:py:py_import_all:map=:mod.mypy3) (+mypy_plugin)
   => (:mod.mypy3);
     
 EXEC (main.stylecheck.sh) (:FILE) (:env) (+py_sp)
@@ -198,7 +200,7 @@ EXEC (py-cov-check.sh) (py-cov-check) (:py) (+py_cov_check_warn) (+py_cov)
 EXEC (py3.exec.output.sh) (:py3.exec/output) (:py3.exec/errors) (:py3.exec/status) (:py3.exec:name) (+stderr)
   => (:py3.exec.output.ref);
 
-EXEC (mypy-config.sh) (+mypy_plugin:ls) => :mypy.config;
+EXEC (mypy-config.sh) (+mypy_plugin:ls) => (:mypy.config);
 
 READ-REFERENCE (:py3.exec.output.ref) => (:py3.exec.output);
 
