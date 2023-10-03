@@ -69,9 +69,9 @@ Assert(codec(Enabled).decode(False))==Enabled(False)
 Assert(codec(Enabled).encode(Enabled(True)))==True
 Assert(codec(Enabled).encode(Enabled(False)))==False
 
-# note None is a not a type, it's type can only be got via type(None)
-Assert(codec(type(None)).decode(None))==None
-Assert(codec(type(None)).encode(None))==None
+# note None is a not a type, its type is NoneType
+Assert(codec(NoneType).decode(None))==None
+Assert(codec(NoneType).encode(None))==None
 
 
 # list maps to list...
@@ -116,15 +116,7 @@ else:
     pass
 
 
-# tuple encodes as list (note, tuples without specific element types are disallowed)
-
-#mypy 1.0.0 bug:
-#c=codec(tuple[int,str])
-# ... says:
-# /home/xju/urnest/xju/json_codec.py.test:43: error: Argument 1 to "Codec" has incompatible type "Type[Tuple[Any, ...]]"; expected "Type[Tuple[int, str]]"  [arg-type]
-# ... but there are so many tuple-related bugs on github it's not really surprising
-
-tuple_codec=codec(cast(Type[tuple[int,str]],tuple[int,str]))  #mypy 1.0.0 bug
+tuple_codec=codec(tuple[int,str])
 Assert(tuple_codec.decode([5, 'fred']))==(5, 'fred')
 Assert(tuple_codec.encode((5, 'fred')))==[5, 'fred']
 
@@ -363,12 +355,7 @@ else:
 
 # type unions, e.g. str|int match either type
 
-#mypy 1.0.0 bug
-#union_codec=Codec[str|int](str|int)
-# says:
-#  error: Argument 1 to "Codec" has incompatible type "UnionType"; expected "Union[Type[str], Type[int]]"  [arg-type]
-
-union_codec=codec(cast(Type[str|int],str|int))
+union_codec=codec(str|int)
 Assert(union_codec.decode('fred'))=='fred'
 Assert(union_codec.decode(9))==9
 Assert(union_codec.encode('fred'))=='fred'
@@ -779,7 +766,7 @@ else:
 
 # Codec can generate corresponding json schema (http://json-schema.org)
 # "null", "boolean", "object", "array", "number", "string", or "integer"
-Assert(codec(type(None)).get_json_schema())=={'type': 'null', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(codec(NoneType).get_json_schema())=={'type': 'null', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(int).get_json_schema())=={'type': 'integer', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(bool).get_json_schema())=={'type': 'boolean', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(str).get_json_schema())=={'type': 'string', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}

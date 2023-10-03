@@ -3,7 +3,11 @@ from mypy.plugin import (
     Plugin, FunctionSigContext, FunctionContext, Expression,
     CheckerPluginInterface
 )
-from mypy.nodes import Expression, NameExpr, IndexExpr, TupleExpr, StrExpr, IntExpr, FloatExpr, OpExpr
+from mypy.nodes import (
+    Expression, NameExpr, IndexExpr, TupleExpr, StrExpr, IntExpr, FloatExpr, OpExpr,
+    TypeInfo,
+    TypeAlias
+)
 from mypy.types import (
     AnyType,
     FunctionLike,
@@ -12,11 +16,13 @@ from mypy.types import (
     NoneType,
     TupleType,
     Type,
+    TypeAliasType,
     TypeOfAny,
     UninhabitedType,
     UnionType,
 )
 from mypy.typeops import tuple_fallback
+from mypy.checker import TypeChecker
 
 CODEC_FQN="xju.json_codec.codec"
 
@@ -45,38 +51,42 @@ def infer_literal_type(expr: Expression, checker_api:CheckerPluginInterface) -> 
             case StrExpr():
                 return LiteralType(
                     expr.value,
-                    checker_api.named_generic_type('str', []))
+                    builtin_type(checker_api,'str'))
             case IntExpr():
                 return LiteralType(
                     expr.value,
-                    checker_api.named_generic_type('int', []))
+                    builtin_type(checker_api,'int'))
             case FloatExpr():
                 return LiteralType(
                     expr.value,
-                    checker_api.named_generic_type('float', []))
+                    builtin_type(checker_api,'float'))
             # surprise... bool literal e.g. True is represented as a
             # NameExpr with name "True"
             case NameExpr():
                 return LiteralType(
                     expr.name == "True",
-                    checker_api.named_generic_type('bool', []))
+                    builtin_type(checker_api,'bool'))
         raise Exception(f"{expr} is not one of StrExpr, IntExpr, FloatExpr, NameExpr")
     except Exception as e:
         raise Exception(f"failed to infer type for presumed literal {expr} becase {e}") from None
 
 def infer_codec_value_type(arg_expr: Expression | list[Expression],
                            checker_api:CheckerPluginInterface) -> Type:
-    # import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
     try:
         match arg_expr:
             case list():
                 if len(arg_expr) != 1:
                     return UninhabitedType()
                 return infer_codec_value_type(arg_expr[0], checker_api)
-            case NameExpr() if arg_expr.name == 'None':
+            case NameExpr() if arg_expr.fullname == 'types.NoneType':
                 return NoneType()
+            case NameExpr() if arg_expr.name == 'None':
+                # REVISIT: tell them to use NoneType
+                return UninhabitedType()
             case NameExpr():
-                return checker_api.named_generic_type(arg_expr.name, [])
+                # general named type or alias
+                return named_type(checker_api,arg_expr)
             #?case StrExpr():
             case IndexExpr():
                 if not isinstance(arg_expr.base, NameExpr):
@@ -94,7 +104,7 @@ def infer_codec_value_type(arg_expr: Expression | list[Expression],
                         items=[infer_codec_value_type(a, checker_api) for a in arg_expr.index.items]
                         return TupleType(
                             items,
-                            checker_api.named_generic_type("tuple",[]))
+                            builtin_type(checker_api,"tuple"))
                     # other e.g. dict[str,int]
                     return checker_api.named_generic_type(
                         arg_expr.base.name,
@@ -113,7 +123,7 @@ def infer_codec_value_type(arg_expr: Expression | list[Expression],
                 return UnionType([infer_codec_value_type(a, checker_api) for a in terms])
         return UninhabitedType()
     except Exception as e:
-        raise Exception(f"failed to infer xju.json_codec.codec value type from expression {arg_expr} because{e}") from None
+        raise Exception(f"failed to infer xju.json_codec.codec value type from expression {arg_expr} because {e}") from None
 
 def adjust_codec_return_type(x: FunctionContext) -> Type:
     arg_type=x.arg_types[0]
@@ -132,16 +142,16 @@ def adjust_codec_return_type(x: FunctionContext) -> Type:
 # for development to figure out what return type should be in each case via pdb
 def show_return_type(x: FunctionContext) -> Type:
     assert isinstance(x.default_return_type, Instance)
-    return_type=x.default_return_type.args[0]
+    return_type=x.default_return_type
     typeof_return_type=type(return_type)
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
     return return_type
 
 class JsonCodecPlugin(Plugin):
     def get_function_hook(self, fullname: str) -> Callable[[FunctionContext], Type] | None:
         if fullname==CODEC_FQN:
             return adjust_codec_return_type
-        if fullname=="xju.json_codec.xxx":
+        if fullname=="xju.json_codec._xxx":
             return show_return_type
         return None
     
@@ -155,3 +165,38 @@ class JsonCodecPlugin(Plugin):
 def plugin(version: str):
     # ignore version argument if the plugin works with all mypy versions.
     return JsonCodecPlugin
+
+
+def builtin_type(checker_api:CheckerPluginInterface, name: str) -> Instance:
+    """lookup built-in type {name}"""
+    try:
+        # need more info than CheckerPluginInterface exposes
+        assert isinstance(checker_api, TypeChecker), (type(checker_api), checker_api)
+        # checker_api.named_type is good enough for builtins
+        return checker_api.named_type(name)
+    except Exception as e:
+        raise Exception(f"failed to lookup built-in type {name} becase {e}")
+
+
+def named_type(checker_api:CheckerPluginInterface, expr: NameExpr) -> Instance | TypeAliasType:
+    """lookup type of expression {expr}
+    
+    - name can be an alias -> TypeAliasType
+    - otherwise -> Instance
+    """
+    try:
+        # need more info than CheckerPluginInterface exposes
+        assert isinstance(checker_api, TypeChecker), (type(checker_api), checker_api)
+
+        # checker_api.named_type is not good enough as it does not handle aliases properly
+
+        # apparently checker_api keeps context, so we have to give the unqualified name
+        # not the fullname
+        node = checker_api.lookup_qualified(expr.name).node
+        if isinstance(node, TypeAlias):
+            return TypeAliasType(node, [])
+        assert isinstance(node, TypeInfo), f"{expr} is not a type, it is the {node} {node.__class__}"
+        return Instance(node, [])
+    except Exception as e:
+        raise Exception(f"failed to lookup type named by {expr} becase {e}") from None
+

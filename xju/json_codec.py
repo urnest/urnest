@@ -1514,5 +1514,5 @@ def get_type_fqn(t:type) -> str:
 
 # for development of mypy plugin, to see what return type should be for a case
 # see json_codec_mypy_plugin.show_return_type
-def _xxx() -> CodecProto[int|str|list]:
-    return Codec(int|str|list)  # type: ignore
+# class _xxx:
+#     pass

@@ -101,6 +101,8 @@ mypy-error-tests%all.tree:leaves
 
 %py-opts==<<
 +py_sp=(..)
++mypy_plugin=(../mypy-plugins/json_codec_mypy_plugin.py)
++mypy_flags=--show-traceback
 
 %test-check_types_related_2_err==test-check_types_related_2.cc+(..%cxx-opts):auto.cxx.exe:err
 

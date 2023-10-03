@@ -8,6 +8,7 @@
 %all==%all.tree:leaves
 
 %all.tree==<<
+mypy-plugins%all
 xju%all.tree
 omnicxy%all.tree
 hcp%all.tree

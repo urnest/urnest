@@ -1,6 +1,7 @@
 #!/bin/env python3
 
 from typing import Literal
+from types import NoneType
 
 from xju.json_codec import codec, TypeScriptNamespace, TypeScriptSourceCode, TypeScriptNamespace
 from xju.json_codec import TypeScriptUQN
@@ -120,16 +121,16 @@ function assert_never_reached(){{
 }})();
 //null
 (() => {{
-    assert_equal({indent(4,codec(type(None)).get_typescript_asa(TypeScriptSourceCode('null'),namespace))}, null);
+    assert_equal({indent(4,codec(NoneType).get_typescript_asa(TypeScriptSourceCode('null'),namespace))}, null);
     try{{
-        {indent(8,codec(type(None)).get_typescript_asa(TypeScriptSourceCode('7'),namespace))};
+        {indent(8,codec(NoneType).get_typescript_asa(TypeScriptSourceCode('7'),namespace))};
         assert_never_reached();
     }}
     catch(e){{
         assert_x_contains_y(str(e), "Error: 7 is not null it is a number");
     }}
-    assert_true({codec(type(None)).get_typescript_isa(TypeScriptSourceCode('null'),namespace)});
-    assert_false({codec(type(None)).get_typescript_isa(TypeScriptSourceCode('7'),namespace)});
+    assert_true({codec(NoneType).get_typescript_isa(TypeScriptSourceCode('null'),namespace)});
+    assert_false({codec(NoneType).get_typescript_isa(TypeScriptSourceCode('7'),namespace)});
 }})();
 //Array<T>
 (() => {{
