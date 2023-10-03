@@ -147,7 +147,7 @@ twine upload --verbose dist/*
 # ... but no it needs the .tar.gz that it created when it created the wheel. It makes no sense
 %python3-xju-twine.tar.gz == %python3-xju-whl.exec.files+member='xju-1.4.1/dist/xju-1.4.1.tar.gz':extract_file
 
-%python3-xju-tgz.exec.files==()+cmd=(%build-python3-xju-tgz.sh)+cmd=(.) (MIT-LICENCE) (README.py.rst) '1.4.1'+need=(xju%pytest.tree:leaves) +need=(xju/cmc%all):exec.files
+%python3-xju-tgz.exec.files==()+cmd=(%build-python3-xju-tgz.sh)+cmd=(.) (MIT-LICENCE) (README.py.rst) '1.4.1'+need=(xju%pytest.tree:leaves) +need=(xju/cmc%all) +need=(mypy-plugins%all) :exec.files
 
 %python3-xju==()+cmd=(%build-python3-xju.sh)+cmd=(.) (MIT-LICENCE) (README.py.rst) '1.4.1'+need=(xju%pytest.tree:leaves) +need=(xju/cmc%all):exec.files
 
@@ -159,7 +159,7 @@ set -ex
 tgz="$1"
 tar xzvf $tgz
 cd xju-1.4.1
-python -m build -n
+python3 -m build -n
 YYYY
 
 %build-python3-xju-tgz.sh==!<<XXXX
@@ -171,10 +171,11 @@ readme="$3"
 rev="$4"
 mkdir -p xju-$rev/src
 (
-  cd $src_dir &&
+  cd $src_dir
   tar cf - xju/*.py xju/*.py.test xju/cmc/*.py xju/cmc/*.py.test xju/cmc/io/*.py xju/cmc/io/*.py.test
 ) |
 (cd xju-$rev/src && tar xvf - )
+cp $src_dir/mypy-plugins/*mypy_plugin.py xju-$rev/src/xju
 touch xju-$rev/src/xju/py.typed
 tests=$(cd xju-$rev/src/xju && find . -name '*.py.test')
 tests_package_data=$(for t in $tests; do echo -n "\"$t\","; done)
