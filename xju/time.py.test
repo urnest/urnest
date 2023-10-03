@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright (c) 2022 Trevor Taylor
 # coding: utf-8
 # 
@@ -14,8 +15,19 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 from sys import path
+import asyncio
 
-from xju.time import Hours,Minutes,Seconds,Duration,Timestamp,now,sleep_for
+from xju.time import (
+    Hours,
+    Minutes,
+    Seconds,
+    Duration,
+    Timestamp,
+    now,
+    sleep_for,
+    async_sleep_until,
+    async_sleep_until_first_of
+)
 from typing import cast
 from xju.xn import readable_repr
 from xju.assert_ import Assert
@@ -60,7 +72,7 @@ else:
     pass
 
 try:
-    t1<8
+    t1<8  # type: ignore
 except Exception as e:
     Assert(readable_repr(e))=="'<' not supported between instances of 'Timestamp' and 'int'"
 else:
@@ -74,3 +86,13 @@ t2=now()
 sleep_for(Duration(0.05))
 t3=now()
 Assert(t2+Duration(0.05))<=t3
+
+
+async def async_tests():
+    await async_sleep_until(now()-Duration(10))
+
+    t1=now()
+    await async_sleep_until_first_of(now()+Duration(5), now())
+    Assert(now())<t1+Duration(2)
+
+asyncio.run(async_tests())

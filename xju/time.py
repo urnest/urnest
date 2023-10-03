@@ -16,6 +16,9 @@
 from xju.newtype import Int,Float,Union
 from typing import overload, Self
 import time
+import asyncio
+from dataclasses import dataclass
+from typing import Sequence
 
 class HoursTag:pass
 class MinutesTag:pass
@@ -28,11 +31,12 @@ class Seconds(Int[SecondsTag]): pass
 class DurationTag:pass
 class Duration(Float[DurationTag]):pass
 
+
+@dataclass(order=True)
 class Timestamp():
     __value:float
-    def __init__(self,value:float):
+    def __init__(self, value:float|int):
         self.__value=float(value)
-        pass
     def value(self):
         return self.__value
     def __str__(self):
@@ -73,20 +77,6 @@ class Timestamp():
         assert False, f'cannot subtract {x} of type {x_type} from Timestamp'
     def __float__(self):
         return self.__value
-    def __eq__(self, x):
-        return not self.__ne__(x)
-    def __ne__(self, x):
-        return self<x or x<self
-    def __le__(self, x):
-        return self<x or self==x
-    def __ge__(self, x):
-        return self>x or self==x
-    def __lt__(self, x):
-        if type(x) is Timestamp:
-            return self.value()<x.value()
-        return NotImplemented
-    def __gt__(self, x):
-        return x<self
     pass
 
 def now()->Timestamp:
@@ -95,3 +85,13 @@ def now()->Timestamp:
 def sleep_for(x:Duration):
     time.sleep(x.value())
     pass
+
+async def async_sleep_until(deadline: Timestamp) -> None:
+    """sleep while we're not yet passed {deadline}"""
+    await asyncio.sleep(max(0.0, (deadline-now()).value()))
+
+async def async_sleep_until_first_of(a_deadline: Timestamp,
+                                     *more_deadlines: Timestamp) -> None:
+    deadlines:list[Timestamp]=[a_deadline]+list(more_deadlines)
+    deadlines.sort()
+    await async_sleep_until(deadlines.pop(0))
