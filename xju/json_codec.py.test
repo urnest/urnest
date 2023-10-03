@@ -20,7 +20,7 @@ import ipaddress
 from os.path import dirname
 if path[0]==dirname(__file__): path.pop(0)
 
-from xju.json_codec import codec, Codec, JsonType, AnyJsonCodecImpl, SelfCodecImpl
+from xju.json_codec import codec, JsonType, AnyJsonCodecImpl, SelfCodecImpl
 from xju.json_codec import TypeScriptSourceCode, TypeScriptNamespace, CustomClassCodec
 
 from typing import cast, Type, Literal, Any, Self, NewType, Generic, TypeVar
@@ -307,8 +307,8 @@ class O(Enum):
     pass
 
 #... member codecs...
-Assert(codec(O.a).decode('fred'))==O.a  # type: ignore
-Assert(codec(O.a).encode(O.a))=='fred'  # type: ignore
+Assert(codec(O.a).decode('fred'))==O.a
+Assert(codec(O.a).encode(O.a))=='fred'
 try:
     x=codec(O.a).decode(7)  # type: ignore
 except Exception as e:
@@ -329,18 +329,18 @@ else:
     assert False, x
 
 #... enum codec itself
-Assert(codec(O).decode('fred'))==O.a  # type: ignore
-Assert(codec(O).decode(7))==O.b  # type: ignore
-Assert(codec(O).encode(O.a))=='fred'  # type: ignore
-Assert(codec(O).encode(O.b))==7  # type: ignore
+Assert(codec(O).decode('fred'))==O.a
+Assert(codec(O).decode(7))==O.b
+Assert(codec(O).encode(O.a))=='fred'
+Assert(codec(O).encode(O.b))==7
 try:
-    x=codec(O).decode(8)  # type: ignore
+    x=codec(O).decode(8)
 except Exception as e:
     Assert(readable_repr(e))=="Failed to decode 8 to a <enum 'O'> because\nfailed to decode 8 as enum O value because\n- failed to decode as O.a because\n  failed to deocde 8 as O.a because\n  8 (of type <class 'int'>) is not a <class 'str'>; and\n- failed to decode as O.b because\n  failed to deocde 8 as O.b because\n  8 is not 7."
 else:
     assert False, x
 try:
-    x=codec(O).decode('jock')  # type: ignore
+    x=codec(O).decode('jock')
 except Exception as e:
     Assert(readable_repr(e))=="Failed to decode jock to a <enum 'O'> because\nfailed to decode 'jock' as enum O value because\n- failed to decode as O.a because\n  failed to deocde 'jock' as O.a because\n  'jock' is not 'fred'; and\n- failed to decode as O.b because\n  failed to deocde 'jock' as O.b because\n  'jock' (of type <class 'str'>) is not a <class 'int'>."
 else:
@@ -556,41 +556,35 @@ Assert(codec(Router).decode({'name':'fred','ifv4':'10.1.7.44/22'}).ifv4.network)
 Assert(codec(Router).encode(Router(name='fred',ifv4=IpAddrWithPrefix('10.1.7.44/22'))))=={'name':'fred','ifv4':'10.1.7.44/22'}
 
 
-# string/int/bool literals
-#mypy 1.0.0 bug:
-#codec(Literal['fred'])
-# ... says:
-#  error: Argument 1 to "Codec" has incompatible type "object"; expected "Type[Literal['fred']]"  [arg-type]
+Assert(codec(Literal['fred']).decode('fred'))=='fred'
+Assert(codec(Literal['fred']).encode('fred'))=='fred'
 
-Assert(codec(Literal['fred']).decode('fred'))=='fred' # type: ignore
-Assert(codec(Literal['fred']).encode('fred'))=='fred' # type: ignore
+Assert(codec(Literal['fred','jock']).decode('fred'))=='fred'
+Assert(codec(Literal['fred','jock']).decode('jock'))=='jock'
+Assert(codec(Literal['fred','jock']).encode('fred'))=='fred'
+Assert(codec(Literal['fred','jock']).encode('jock'))=='jock'
 
-Assert(codec(Literal['fred','jock']).decode('fred'))=='fred' # type: ignore
-Assert(codec(Literal['fred','jock']).decode('jock'))=='jock' # type: ignore
-Assert(codec(Literal['fred','jock']).encode('fred'))=='fred' # type: ignore
-Assert(codec(Literal['fred','jock']).encode('jock'))=='jock' # type: ignore
+Assert(codec(Literal[7]).decode(7))==7
+Assert(codec(Literal[7]).encode(7))==7
 
-Assert(codec(Literal[7]).decode(7))==7 # type: ignore
-Assert(codec(Literal[7]).encode(7))==7 # type: ignore
+Assert(codec(Literal[7,8]).decode(7))==7
+Assert(codec(Literal[7,8]).decode(8))==8
+Assert(codec(Literal[7,8]).encode(7))==7
+Assert(codec(Literal[7,8]).encode(8))==8
 
-Assert(codec(Literal[7,8]).decode(7))==7 # type: ignore
-Assert(codec(Literal[7,8]).decode(8))==8 # type: ignore
-Assert(codec(Literal[7,8]).encode(7))==7 # type: ignore
-Assert(codec(Literal[7,8]).encode(8))==8 # type: ignore
+Assert(codec(Literal[True]).decode(True))==True
+Assert(codec(Literal[False]).encode(False))==False
 
-Assert(codec(Literal[True]).decode(True))==True # type: ignore
-Assert(codec(Literal[False]).encode(False))==False # type: ignore
-
-Assert(codec(Literal[True,False]).decode(True))==True # type: ignore
-Assert(codec(Literal[True,False]).decode(False))==False # type: ignore
-Assert(codec(Literal[True,False]).encode(True))==True # type: ignore
-Assert(codec(Literal[True,False]).encode(False))==False # type: ignore
+Assert(codec(Literal[True,False]).decode(True))==True
+Assert(codec(Literal[True,False]).decode(False))==False
+Assert(codec(Literal[True,False]).encode(True))==True
+Assert(codec(Literal[True,False]).encode(False))==False
 
 
-Assert(codec(Literal[6,'jock']).decode(6))==6 # type: ignore
-Assert(codec(Literal[6,'jock']).decode('jock'))=='jock' # type: ignore
-Assert(codec(Literal[6,'jock']).encode(6))==6 # type: ignore
-Assert(codec(Literal[6,'jock']).encode('jock'))=='jock' # type: ignore
+Assert(codec(Literal[6,'jock']).decode(6))==6
+Assert(codec(Literal[6,'jock']).decode('jock'))=='jock'
+Assert(codec(Literal[6,'jock']).encode(6))==6
+Assert(codec(Literal[6,'jock']).encode('jock'))=='jock'
 
 
 #float literal not yet implemented
@@ -605,21 +599,24 @@ else:
 
 #encode wrong type
 try:
-    x=codec(Literal['fred','jock']).encode(7) # type: ignore
+    x=(codec(Literal['fred','jock'])
+       .encode(7)) # type: ignore
 except Exception as e:
     Assert("7 is not 'fred'").isIn(str(e))
 else:
     assert False, x
     pass
 try:
-    x=codec(Literal[7,8]).encode(True) # type: ignore
+    x=(codec(Literal[7,8])
+       .encode(True)) # type: ignore
 except Exception as e:
     Assert("True is not 7").isIn(str(e))
 else:
     assert False, x
     pass
 try:
-    x=codec(Literal[False,True]).encode('fred') # type: ignore
+    x=(codec(Literal[False,True])
+       .encode('fred')) # type: ignore
 except Exception as e:
     Assert("'fred' is not False").isIn(str(e))
 else:
@@ -627,21 +624,21 @@ else:
     pass
 #decode wrong type
 try:
-    x=codec(Literal['fred']).decode(7) # type: ignore
+    x=codec(Literal['fred']).decode(7)
 except Exception as e:
     Assert("7 is not a string").isIn(str(e))
 else:
     assert False, x
     pass
 try:
-    x=codec(Literal[7]).decode('fred') # type: ignore
+    x=codec(Literal[7]).decode('fred')
 except Exception as e:
     Assert("'fred' is not a int").isIn(str(e))
 else:
     assert False, x
     pass
 try:
-    x=codec(Literal[False]).decode(7) # type: ignore
+    x=codec(Literal[False]).decode(7)
 except Exception as e:
     Assert("7 is not a boolean").isIn(str(e))
 else:
@@ -650,21 +647,21 @@ else:
 
 # decode wrong value
 try:
-    x=codec(Literal['fred','ann']).decode('jock') # type: ignore
+    x=codec(Literal['fred','ann']).decode('jock')
 except Exception as e:
     Assert(readable_repr(e))=="Failed to decode jock to a typing.Literal['fred', 'ann'] because\nfailed to decode 'jock' as one of ('fred', 'ann') because\n- failed to decode as 'fred' because\n  'jock' is not 'fred'; and\n- failed to decode as 'ann' because\n  'jock' is not 'ann'."
 else:
     assert False, x
     pass
 try:
-    x=codec(Literal[6,7]).decode(8) # type: ignore
+    x=codec(Literal[6,7]).decode(8)
 except Exception as e:
     Assert(readable_repr(e))=="Failed to decode 8 to a typing.Literal[6, 7] because\nfailed to decode 8 as one of (6, 7) because\n- failed to decode as 6 because\n  8 is not 6; and\n- failed to decode as 7 because\n  8 is not 7."
 else:
     assert False, x
     pass
 try:
-    x=codec(Literal[False]).decode(True) # type: ignore
+    x=codec(Literal[False]).decode(True)
 except Exception as e:
     Assert("True is not False").isIn(str(e))
 else:
@@ -734,7 +731,7 @@ class Sub:
     op_type: Literal['sub'] = 'sub'
 
 # ... but that will also match json with no op_type:
-Assert(codec(Add|Sub).decode({  # type: ignore
+Assert(codec(Add|Sub).decode({
     'a': 7,
     'b': 8}))==Sub(7,8)
 
@@ -744,11 +741,11 @@ Assert(codec(Add|Sub).decode({  # type: ignore
 Assert(repr(codec(int)))=="<class 'int'> json codec"
 
 
-Assert(codec(int|None).decode(None))==None # type: ignore
+Assert(codec(int|None).decode(None))==None
 Assert(codec(int|None).encode(None))==None # type: ignore
 
 try:
-    x=codec(int|None).decode('fred')  # type: ignore
+    x=codec(int|None).decode('fred')
 except Exception as e:
     Assert(str(e)).contains("'fred' is not None")
 else:
@@ -773,13 +770,9 @@ Assert(codec(str).get_json_schema())=={'type': 'string', 'definitions': {}, '$id
 Assert(codec(float).get_json_schema())=={'type': 'number', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(list).get_json_schema())=={'type': 'array', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(list[int]).get_json_schema())=={'type': 'array', 'items': { 'type': 'integer'}, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
-# mypy 1.0.0 + python 3.11 bug:
-# Argument 1 to "Codec" has incompatible type "Type[Tuple[Any, ...]]"; expected "Type[Tuple[int, str]]"  [arg-type]
-Assert(codec(tuple[int,str]).get_json_schema())=={'type': 'array', 'prefixItems': [ { 'type': 'integer'},{ 'type': 'string'}], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
+Assert(codec(tuple[int,str]).get_json_schema())=={'type': 'array', 'prefixItems': [ { 'type': 'integer'},{ 'type': 'string'}], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 
-# mypy 1.0.0 + python 3.11 bug:
-# Argument 1 to "Codec" has incompatible type "<typing special form>"; expected "Union[Type[None], Type[bool], Type[Dict[Any, Any]], Type[List[Any]], Type[float], Type[str]]"  [arg-type]
-Assert(codec(JsonType).get_json_schema())=={'oneOf': [{'type': 'null'}, {'type': 'boolean'}, {'type': 'object'}, {'type': 'array'}, {'type': 'number'}, {'type': 'string'}], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
+Assert(codec(JsonType).get_json_schema())=={'oneOf': [{'type': 'null'}, {'type': 'boolean'}, {'type': 'object'}, {'type': 'array'}, {'type': 'number'}, {'type': 'string'}], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 
 Assert(codec(dict).get_json_schema())=={'type': 'object', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 
@@ -793,10 +786,10 @@ Assert(codec(Street).get_json_schema())=={'description': 'Street', 'type': 'stri
 
 Assert(codec(Metres).get_json_schema())=={'description': 'Metres', 'type': 'number', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 
-Assert(codec(Literal['fred']).get_json_schema())=={'type': 'string', 'enum': ['fred'], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
-Assert(codec(Literal[7,8]).get_json_schema())=={'oneOf': [{'type': 'number', 'enum': [7]}, {'type': 'number', 'enum': [8]}], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}} # type: ignore
-Assert(codec(Literal[False]).get_json_schema())=={'type': 'boolean', 'enum': [False], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'} # type: ignore
-Assert(codec(O).get_json_schema())=={'oneOf': [{'type': 'string', 'enum': ['fred']}, {'type': 'integer', 'enum': [7]}], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}} # type: ignore
+Assert(codec(Literal['fred']).get_json_schema())=={'type': 'string', 'enum': ['fred'], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(codec(Literal[7,8]).get_json_schema())=={'oneOf': [{'type': 'number', 'enum': [7]}, {'type': 'number', 'enum': [8]}], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}
+Assert(codec(Literal[False]).get_json_schema())=={'type': 'boolean', 'enum': [False], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(codec(O).get_json_schema())=={'oneOf': [{'type': 'string', 'enum': ['fred']}, {'type': 'integer', 'enum': [7]}], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}
 
 Assert(codec(Address).get_json_schema())=={
     '$ref': '#/definitions/Address',
@@ -879,84 +872,84 @@ except:
     print('WARNING: skipped json_codec json_schema tests because json_schema not importable',
           file=sys.stderr)
 else:
-    jsonschema.validate(None,Codec[None](type(None)).get_json_schema())
-    jsonschema.validate(7,Codec[int](int).get_json_schema())
-    jsonschema.validate(True,Codec[bool](bool).get_json_schema())
-    jsonschema.validate('fred',Codec[str](str).get_json_schema())
-    jsonschema.validate(8.8,Codec[float](float).get_json_schema())
-    jsonschema.validate([1,True],Codec[list](list).get_json_schema())
-    jsonschema.validate([1,2],Codec[list[int]](list[int]).get_json_schema())
-    # mypy 1.0.0 + python 3.11 bug:
-    # Argument 1 to "Codec" has incompatible type "Type[Tuple[Any, ...]]"; expected "Type[Tuple[int, str]]"  [arg-type]
-    jsonschema.validate([7,'fred'],Codec[tuple[int,str]](tuple[int,str]).get_json_schema()) # type:ignore
+    jsonschema.validate(None,codec(NoneType).get_json_schema())
+    jsonschema.validate(7,codec(int).get_json_schema())
+    jsonschema.validate(True,codec(bool).get_json_schema())
+    jsonschema.validate('fred',codec(str).get_json_schema())
+    jsonschema.validate(8.8,codec(float).get_json_schema())
+    jsonschema.validate([1,True],codec(list).get_json_schema())
+    jsonschema.validate([1,2],codec(list[int]).get_json_schema())
+    jsonschema.validate([7,'fred'],codec(tuple[int,str]).get_json_schema())
 
-    # mypy 1.0.0 + python 3.11 bug:
-    # Argument 1 to "Codec" has incompatible type "<typing special form>"; expected "Union[Type[None], Type[bool], Type[Dict[Any, Any]], Type[List[Any]], Type[float], Type[str]]"  [arg-type]
-    jsonschema.validate(None,Codec[JsonType](JsonType).get_json_schema()) # type: ignore
-    jsonschema.validate(True,Codec[JsonType](JsonType).get_json_schema()) # type: ignore
-    jsonschema.validate({},Codec[JsonType](JsonType).get_json_schema()) # type: ignore
-    jsonschema.validate([],Codec[JsonType](JsonType).get_json_schema()) # type: ignore
-    jsonschema.validate(9.9,Codec[JsonType](JsonType).get_json_schema()) # type: ignore
-    jsonschema.validate('fred',Codec[JsonType](JsonType).get_json_schema()) # type: ignore
+    jsonschema.validate(None,codec(JsonType).get_json_schema())
+    jsonschema.validate(True,codec(JsonType).get_json_schema())
+    jsonschema.validate({},codec(JsonType).get_json_schema())
+    jsonschema.validate([],codec(JsonType).get_json_schema())
+    jsonschema.validate(9.9,codec(JsonType).get_json_schema())
+    jsonschema.validate('fred',codec(JsonType).get_json_schema())
 
-    jsonschema.validate({},Codec[dict](dict).get_json_schema())
+    jsonschema.validate({},codec(dict).get_json_schema())
 
-    jsonschema.validate({'fred':2, 'jock':3},Codec[dict[str,int]](dict[str,int]).get_json_schema())
+    jsonschema.validate({'fred':2, 'jock':3},codec(dict[str,int]).get_json_schema())
 
-    jsonschema.validate(None,AnyJsonCodecImpl().get_json_schema({},None)) # type: ignore
-    jsonschema.validate(True,AnyJsonCodecImpl().get_json_schema({},None)) # type: ignore
-    jsonschema.validate({},AnyJsonCodecImpl().get_json_schema({},None)) # type: ignore
-    jsonschema.validate([],AnyJsonCodecImpl().get_json_schema({},None)) # type: ignore
-    jsonschema.validate(9.9,AnyJsonCodecImpl().get_json_schema({},None)) # type: ignore
-    jsonschema.validate('fred',AnyJsonCodecImpl().get_json_schema({},None)) # type: ignore
+    jsonschema.validate(None,AnyJsonCodecImpl().get_json_schema({},None))
+    jsonschema.validate(True,AnyJsonCodecImpl().get_json_schema({},None))
+    jsonschema.validate({},AnyJsonCodecImpl().get_json_schema({},None))
+    jsonschema.validate([],AnyJsonCodecImpl().get_json_schema({},None))
+    jsonschema.validate(9.9,AnyJsonCodecImpl().get_json_schema({},None))
+    jsonschema.validate('fred',AnyJsonCodecImpl().get_json_schema({},None))
 
-    jsonschema.validate(77,Codec[AgeInYears](AgeInYears).get_json_schema())
+    jsonschema.validate(77,codec(AgeInYears).get_json_schema())
 
-    jsonschema.validate('pole',Codec[Street](Street).get_json_schema())
+    jsonschema.validate('pole',codec(Street).get_json_schema())
 
-    jsonschema.validate(8.8,Codec[Metres](Metres).get_json_schema())
+    jsonschema.validate(8.8,codec(Metres).get_json_schema())
 
-    jsonschema.validate('fred',Codec[Literal['fred']](Literal['fred']).get_json_schema()) # type: ignore
+    jsonschema.validate('fred',codec(Literal['fred']).get_json_schema())
     jsonschema.validate({
         'street':'alba',
         'suburb': 'bocca',
-        'postcode': 3365},Codec[Address](Address).get_json_schema())
+        'postcode': 3365},codec(Address).get_json_schema())
     jsonschema.validate(
         {'shoots':[{'shoots':[1,2]},3]},
-        Codec[Branch](Branch).get_json_schema())
+        codec(Branch).get_json_schema())
     jsonschema.validate(
         {'shoots':[{'shoots':[1,2]},3]},
-        Codec[Branch](Branch).get_json_schema())
+        codec(Branch).get_json_schema())
     jsonschema.validate(
         'fred',
-        Codec(O.a).get_json_schema())  # type: ignore
+        codec(O.a).get_json_schema())
     pass
 
 # internal: codecs' encode()s must verify correct type passed in, otherwise
 # UnionCodec encode try-each algorithm is invalid
 try:
-    x=Codec[int](int).encode('fred') # type: ignore
+    x=(codec(int)
+       .encode('fred'))  # type: ignore
 except Exception as e:
     Assert("'fred' is not a <class 'int'>").isIn(str(e))
 else:
     assert False, x
     pass
 try:
-    x=Codec[list[int]](list[int]).encode('fred') # type: ignore
+    x=(codec(list[int])
+       .encode('fred'))  # type: ignore
 except Exception as e:
     Assert("'fred' is not a list").isIn(str(e))
 else:
     assert False, x
     pass
 try:
-    x=Codec[list](list).encode('fred') # type: ignore
+    x=(codec(list)
+       .encode('fred'))  # type: ignore
 except Exception as e:
     Assert("'fred' is not a list").isIn(str(e))
 else:
     assert False, x
     pass
 try:
-    x=Codec[tuple[int]](tuple[int]).encode('fred') # type: ignore
+    x=(codec(tuple[int])
+       .encode('fred'))  # type: ignore
 except Exception as e:
     Assert("'fred' is not a tuple").isIn(str(e))
 else:
@@ -970,9 +963,9 @@ class Y:
     x: JsonType
     pass
 
-Assert(Codec[Y](Y).encode(Y({ 'z': 'fred' })))=={'x':{'z':'fred'}}
-Assert(Codec[Y](Y).decode({'x':{'z':'fred'}}))==Y({ 'z': 'fred' })
-Assert(Codec[Y](Y).get_json_schema())=={
+Assert(codec(Y).encode(Y({ 'z': 'fred' })))=={'x':{'z':'fred'}}
+Assert(codec(Y).decode({'x':{'z':'fred'}}))==Y({ 'z': 'fred' })
+Assert(codec(Y).get_json_schema())=={
     '$ref': '#/definitions/Y',
     '$id': 'https://example.com/address.schema.json',
     '$schema': 'https://json-schema.org/draft/2020-12/schema',
@@ -999,7 +992,7 @@ Small=Literal['S']
 Large=Literal['L']
 SizeCode=Small|Large
 
-Assert(Codec[ShirtSize](ShirtSize).decode(
+Assert(codec(ShirtSize).decode(
     {
         'size': 'S',
     }
@@ -1075,7 +1068,7 @@ class BasketballCourt(Court):
     game:Literal['basketball'] = 'basketball'
     pass
 
-court_codec=codec(NetballCourt|BasketballCourt|Court) # type: ignore  # mypy 1.2.0 bug
+court_codec=codec(NetballCourt|BasketballCourt|Court)
 Assert(court_codec.decode({'game':'netball', 'width':8, 'length': 10})).isInstanceOf(NetballCourt)
 Assert(court_codec.decode({'game':'basketball', 'width':8, 'length': 10})).isInstanceOf(BasketballCourt)
 Assert(court_codec.decode({'game':'badminton', 'width':8, 'length': 10})).isInstanceOf(Court)
@@ -1133,7 +1126,7 @@ Assert(codec(IpV4Addr).get_typescript_asa(TypeScriptSourceCode('7'),typescript_n
     return v as string;
 })(7)""")
 
-codec(O).ensure_typescript_defs(typescript_namespace)  # type: ignore
+codec(O).ensure_typescript_defs(typescript_namespace)
 
 # ... get_formatted_defs() generates the typescript source code:
 Assert(typescript_namespace.get_formatted_defs())==TypeScriptSourceCode(

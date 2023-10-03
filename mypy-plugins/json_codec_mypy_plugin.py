@@ -4,7 +4,7 @@ from mypy.plugin import (
     CheckerPluginInterface
 )
 from mypy.nodes import (
-    Expression, NameExpr, IndexExpr, TupleExpr, StrExpr, IntExpr, FloatExpr, OpExpr,
+    Expression, NameExpr, IndexExpr, TupleExpr, StrExpr, IntExpr, FloatExpr, OpExpr, MemberExpr,
     TypeInfo,
     TypeAlias
 )
@@ -79,6 +79,8 @@ def infer_codec_value_type(arg_expr: Expression | list[Expression],
                 if len(arg_expr) != 1:
                     return UninhabitedType()
                 return infer_codec_value_type(arg_expr[0], checker_api)
+            case MemberExpr():
+                return infer_codec_value_type(arg_expr.expr, checker_api)
             case NameExpr() if arg_expr.fullname == 'types.NoneType':
                 return NoneType()
             case NameExpr() if arg_expr.name == 'None':
