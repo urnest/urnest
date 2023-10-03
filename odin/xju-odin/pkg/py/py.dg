@@ -126,6 +126,8 @@
 
 +mypy_plugin 'plugin to mypy, added after \$ODIN_MYPY_PLUGINS' => :LIST;
 
++mypy_plugin_mod 'module plugin to mypy, e.g. xju.json_codec_plugin, e.g. xju.json_codec_plugin:hook, added after \$ODIN_MYPY_PLUGINS and +mypy_plugin' => :cat;
+
 :mypy.config 'mypy config file' => :FILE;
 
 $ODIN_PY_IGNORE 'grep -E expression for python imports to ignore, e.g. \\"^os$|^sys$\\"' = '';
@@ -173,11 +175,11 @@ EXEC (py3.exec.sh) (:FILE) (+cmd :ls) (:env) (+stderr) (+py:dir)@ (+py_sp) (+py_
   => (:py3.exec);
 
 EXEC (main.mypy3.sh) (:FILE) (:mypy.config) (:env) (+py_sp) (+mypy_flags)
-  NEEDS (:FILE:main.py_import.view_desc:py_import_all:map=:mod.mypy3) (+mypy_plugin)
+  NEEDS (:FILE:main.py_import.view_desc:py_import_all:map=:mod.mypy3) (+mypy_plugin) (+mypy_plugin_mod)
   => (:main.mypy3);
     
 EXEC (mod.mypy3.sh) (:py) (:mypy.config) (:env) (+py_sp) (+mypy_flags)
-  NEEDS (:py:py_import_all:map=:mod.mypy3) (+mypy_plugin)
+  NEEDS (:py:py_import_all:map=:mod.mypy3) (+mypy_plugin) (+mypy_plugin_mod)
   => (:mod.mypy3);
     
 EXEC (main.stylecheck.sh) (:FILE) (:env) (+py_sp)
@@ -200,7 +202,7 @@ EXEC (py-cov-check.sh) (py-cov-check) (:py) (+py_cov_check_warn) (+py_cov)
 EXEC (py3.exec.output.sh) (:py3.exec/output) (:py3.exec/errors) (:py3.exec/status) (:py3.exec:name) (+stderr)
   => (:py3.exec.output.ref);
 
-EXEC (mypy-config.sh) (+mypy_plugin:ls) => (:mypy.config);
+EXEC (mypy-config.sh) (+mypy_plugin:ls) (+mypy_plugin_mod) => (:mypy.config);
 
 READ-REFERENCE (:py3.exec.output.ref) => (:py3.exec.output);
 

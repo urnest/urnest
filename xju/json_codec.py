@@ -123,9 +123,15 @@ class CodecProto(Generic[T], Protocol):
         '''
         
 def codec(t: Type[T]) -> CodecProto[T]:
-    '''build codec to encode/decode a "t" to/from json'''
+    '''build codec to encode/decode a "t" to/from json
+
+       - note requires json_codec_mypy_plugin for proper typing and no errors with mypy
+    '''
     return Codec[T](t)
 
+
+# implementation of CodecProto - use codec above with json_codec_mypy_plugin
+# rather than using this class directly
 class Codec(Generic[T]):
     t:Type[T]
     def __init__(self, t: Type[T]):
