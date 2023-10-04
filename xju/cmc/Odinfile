@@ -40,15 +40,15 @@ io%installed-cov
 %installed-cov==%unit-tests-v-installed.tree:leaves:py3.cov.list:agg.py3.cov
 
 %unit-tests-v-installed.tree==<<
-cmc.py.test:py3.exec.cov
-async_cmclass.py.test:py3.exec.cov
-Dict.py.test:py3.exec.cov
-Opt.py.test:py3.exec.cov
-AsyncDict.py.test:py3.exec.cov
-AsyncOpt.py.test:py3.exec.cov
-signal.py.test:py3.exec.cov
-tstore.py.test:py3.exec.cov
-perflog.py.test:py3.exec.cov
-ThreadMutexLockCondition.py.test:py3.exec.cov
-AsyncServiceQueue.py.test:py3.exec.cov
+cmc.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin':py3.exec.cov
+async_cmclass.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin':py3.exec.cov
+Dict.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin':py3.exec.cov
+Opt.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin':py3.exec.cov
+AsyncDict.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin':py3.exec.cov
+AsyncOpt.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin':py3.exec.cov
+signal.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin':py3.exec.cov
+tstore.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin':py3.exec.cov
+perflog.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin':py3.exec.cov
+ThreadMutexLockCondition.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin':py3.exec.cov
+AsyncServiceQueue.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin':py3.exec.cov
 
