@@ -202,26 +202,26 @@ function assert_never_reached(){{
 ''')
 print(f'''//union\n'''+
       f'''(() => {{\n'''+
-      f'''    assert_equal({indent(4,codec(int|str).get_typescript_asa(TypeScriptSourceCode('7'),namespace))}, 7);\n'''+  # type: ignore  # mypy 1.1.1 bug
-      f'''    assert_equal({indent(4,codec(int|str).get_typescript_asa(TypeScriptSourceCode('"ann"'),namespace))}, "ann");\n'''+  # type: ignore  # mypy 1.1.1 bug
+      f'''    assert_equal({indent(4,codec(int|str).get_typescript_asa(TypeScriptSourceCode('7'),namespace))}, 7);\n'''+
+      f'''    assert_equal({indent(4,codec(int|str).get_typescript_asa(TypeScriptSourceCode('"ann"'),namespace))}, "ann");\n'''+
       f'''    try{{\n'''+
-      f'''        {indent(8,codec(int|str).get_typescript_asa(TypeScriptSourceCode('true'),namespace))};\n'''+  # type: ignore  # mypy 1.1.1 bug
+      f'''        {indent(8,codec(int|str).get_typescript_asa(TypeScriptSourceCode('true'),namespace))};\n'''+
       f'''        assert_never_reached();\n'''+
       f'''    }}\n'''+
       f'''    catch(e){{\n'''+
       f'''        assert_x_contains_y(str(e), "Error: true is not a number|string because Error: true is not a number it is a boolean and true is not a string it is a boolean");\n'''+
       f'''    }}\n'''+
       f'''    try{{\n'''+
-      f'''        {indent(8,codec(int|str).get_typescript_asa(TypeScriptSourceCode('[7, 8]'),namespace))};\n'''+  # type: ignore  # mypy 1.1.1 bug
+      f'''        {indent(8,codec(int|str).get_typescript_asa(TypeScriptSourceCode('[7, 8]'),namespace))};\n'''+
       f'''        assert_never_reached();\n'''+
       f'''    }}\n'''+
       f'''    catch(e){{\n'''+
       f'''        assert_x_contains_y(str(e), "Error: 7,8 is not a number|string because Error: 7,8 is not a number it is a object and 7,8 is not a string it is a object");\n'''+
       f'''    }}\n'''+
-      f'''    assert_true({codec(int|str).get_typescript_isa(TypeScriptSourceCode('7'),namespace)});\n'''+  # type: ignore  # mypy 1.1.1 bug
-      f'''    assert_true({codec(int|str).get_typescript_isa(TypeScriptSourceCode('"ann"'),namespace)});\n'''+  # type: ignore  # mypy 1.1.1 bug
-      f'''    assert_false({codec(int|str).get_typescript_isa(TypeScriptSourceCode('false'),namespace)});\n'''+  # type: ignore  # mypy 1.1.1 bug
-      f'''    assert_false({codec(int|str).get_typescript_isa(TypeScriptSourceCode('[7,"ann"]'),namespace)});\n'''+  # type: ignore  # mypy 1.1.1 bug
+      f'''    assert_true({codec(int|str).get_typescript_isa(TypeScriptSourceCode('7'),namespace)});\n'''+
+      f'''    assert_true({codec(int|str).get_typescript_isa(TypeScriptSourceCode('"ann"'),namespace)});\n'''+
+      f'''    assert_false({codec(int|str).get_typescript_isa(TypeScriptSourceCode('false'),namespace)});\n'''+
+      f'''    assert_false({codec(int|str).get_typescript_isa(TypeScriptSourceCode('[7,"ann"]'),namespace)});\n'''+
       f'''}})();
 
 ''')
@@ -329,7 +329,7 @@ print(f'''
 }})();
 ''')
 
-fred_codec=codec(Literal['fred']) # type: ignore   # mypy 1.1.1 bug
+fred_codec=codec(Literal['fred'])
 print(f'''
 //Literal['fred']
 (() => {{
@@ -354,7 +354,7 @@ print(f'''
 }})();
 ''')
 
-seven_codec=codec(Literal[7]) # type: ignore   # mypy 1.1.1 bug
+seven_codec=codec(Literal[7])
 print(f'''
 //Literal[7]
 (() => {{
@@ -379,7 +379,7 @@ print(f'''
 }})();
 ''')
 
-true_codec=codec(Literal[True]) # type: ignore   # mypy 1.1.1 bug
+true_codec=codec(Literal[True])
 print(f'''
 //Literal[True]
 (() => {{
@@ -404,7 +404,7 @@ print(f'''
 }})();
 ''')
 
-fred_7_False_codec=codec(Literal['fred', 7, False]) # type: ignore   # mypy 1.1.1 bug
+fred_7_False_codec=codec(Literal['fred', 7, False])
 print(f'''
 //Literal['fred']
 (() => {{
@@ -505,7 +505,7 @@ namespace_codec.ensure_typescript_defs(namespace)
 enum_codec=codec(O)
 enum_codec.ensure_typescript_defs(namespace)
 
-codec(int|str).add_typescript_alias(namespace, [TypeScriptUQN('xju'),TypeScriptUQN('NorS')]) # type: ignore  # mypy 1.2.0 bug
+codec(int|str).add_typescript_alias(namespace, [TypeScriptUQN('xju'),TypeScriptUQN('NorS')])
 print(namespace.get_formatted_defs())
 
 print(f'''
@@ -677,7 +677,7 @@ print(f'''
 ''')
 
 try:
-    codec(int|str).add_typescript_alias(namespace, [TypeScriptUQN('xju'),TypeScriptUQN('NorS')]) # type: ignore  # mypy 1.2.0 bug
+    codec(int|str).add_typescript_alias(namespace, [TypeScriptUQN('xju'),TypeScriptUQN('NorS')])
 except Exception as e:
     Assert(readable_repr(e)).contains('is already defined')
 else:
