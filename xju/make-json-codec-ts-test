@@ -506,6 +506,11 @@ enum_codec=codec(O)
 enum_codec.ensure_typescript_defs(namespace)
 
 codec(int|str).add_typescript_alias(namespace, [TypeScriptUQN('xju'),TypeScriptUQN('NorS')])
+class NonStringKey:
+    values: dict[TypeScriptUQN, int]
+    pass
+
+codec(NonStringKey).ensure_typescript_defs(namespace)
 print(namespace.get_formatted_defs())
 
 print(f'''
@@ -580,14 +585,14 @@ print(f'''
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), "Error: [object Object] is not a xju.json_codec.TypeScriptNamespace because Error: attribute defs is invalid because Error: undefined is not a {{ [key: string]: string|xju.json_codec.TypeScriptNamespace }} because Error: undefined is not an object it is a undefined");
+        assert_x_contains_y(str(e), "Error: [object Object] is not a xju.json_codec.TypeScriptNamespace because Error: attribute defs is invalid because Error: undefined is not a {{ [key: string /* xju.json_codec.TypeScriptUQN */]: string /* xju.json_codec.TypeScriptSourceCode */|xju.json_codec.TypeScriptNamespace }} because Error: undefined is not an object it is a undefined");
     }}
     try{{
         {indent(8,namespace_codec.get_typescript_asa(TypeScriptSourceCode('{defs:{x:"Fred",y:{defs:{y:7}}}}'),namespace))};
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), "Error: [object Object] is not a xju.json_codec.TypeScriptNamespace because Error: attribute defs is invalid because Error: [object Object] is not a {{ [key: string]: string|xju.json_codec.TypeScriptNamespace }} because Error: element y is invalid because Error: [object Object] is not a string|xju.json_codec.TypeScriptNamespace because Error: [object Object] is not a xju.json_codec.TypeScriptSourceCode i.e. a string, it is a object and [object Object] is not a xju.json_codec.TypeScriptNamespace because Error: attribute defs is invalid because Error: [object Object] is not a {{ [key: string]: string|xju.json_codec.TypeScriptNamespace }} because Error: element y is invalid because Error: 7 is not a string|xju.json_codec.TypeScriptNamespace because Error: 7 is not a xju.json_codec.TypeScriptSourceCode i.e. a string, it is a number and 7 is not a xju.json_codec.TypeScriptNamespace because Error: 7 is not an object it is a number");
+        assert_x_contains_y(str(e), "Error: [object Object] is not a xju.json_codec.TypeScriptNamespace because Error: attribute defs is invalid because Error: [object Object] is not a {{ [key: string /* xju.json_codec.TypeScriptUQN */]: string /* xju.json_codec.TypeScriptSourceCode */|xju.json_codec.TypeScriptNamespace }} because Error: element y is invalid because Error: [object Object] is not a string /* xju.json_codec.TypeScriptSourceCode */|xju.json_codec.TypeScriptNamespace because Error: [object Object] is not a xju.json_codec.TypeScriptSourceCode i.e. a string, it is a object and [object Object] is not a xju.json_codec.TypeScriptNamespace because Error: attribute defs is invalid because Error: [object Object] is not a {{ [key: string /* xju.json_codec.TypeScriptUQN */]: string /* xju.json_codec.TypeScriptSourceCode */|xju.json_codec.TypeScriptNamespace }} because Error: element y is invalid because Error: 7 is not a string /* xju.json_codec.TypeScriptSourceCode */|xju.json_codec.TypeScriptNamespace because Error: 7 is not a xju.json_codec.TypeScriptSourceCode i.e. a string, it is a number and 7 is not a xju.json_codec.TypeScriptNamespace because Error: 7 is not an object it is a number");
     }}
     const x:object={{defs:{{x:"Fred",y:{{defs:{{z:"Jock"}}}}}}}};
     if ({indent(8,namespace_codec.get_typescript_isa(TypeScriptSourceCode('x'),namespace))}) {{

@@ -727,7 +727,7 @@ class NewIntCodecImpl(Generic[NewInt]):
             'type': 'integer'
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
-        return 'number'
+        return f'number /* {self.get_type_fqn()} */'
     def ensure_typescript_defs(self, namespace) -> None:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
@@ -757,7 +757,7 @@ class NewIntCodecImpl(Generic[NewInt]):
                            namespace: TypeScriptNamespace,
                            back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(
-            f"(typeof ({expression}) == '{self.typescript_type(back_refs)}')")
+            f"(typeof ({expression}) == 'number' /* {self.get_type_fqn()} */)")
     def get_typescript_asa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace,
@@ -765,7 +765,7 @@ class NewIntCodecImpl(Generic[NewInt]):
         tt=self.typescript_type(back_refs)
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{\n"
-            f"    if (typeof v !== '{tt}') throw new Error(`${{v}} is not a {self.get_type_fqn()} i.e. a {tt}, it is a ${{typeof v}}`);\n"
+            f"    if (typeof v !== 'number' /* {self.get_type_fqn()} */) throw new Error(`${{v}} is not a {self.get_type_fqn()} i.e. a number, it is a ${{typeof v}}`);\n"
             f"    return v as {tt};\n"
             f"}})({expression})")
     pass
@@ -793,7 +793,7 @@ class NewFloatCodecImpl(Generic[NewFloat]):
             'type': 'number'
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
-        return 'number'
+        return f'number /* {self.get_type_fqn()} */'
     def ensure_typescript_defs(self, namespace) -> None:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
@@ -823,7 +823,7 @@ class NewFloatCodecImpl(Generic[NewFloat]):
                            namespace: TypeScriptNamespace,
                            back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(
-            f"(typeof ({expression}) == '{self.typescript_type(back_refs)}')")
+            f"(typeof ({expression}) == 'number' /* {self.get_type_fqn()} */)")
     def get_typescript_asa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace,
@@ -831,7 +831,7 @@ class NewFloatCodecImpl(Generic[NewFloat]):
         tt=self.typescript_type(back_refs)
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{\n"
-            f"    if (typeof v !== '{tt}') throw new Error(`${{v}} is not a {self.get_type_fqn()} i.e. a {tt}, it is a ${{typeof v}}`);\n"
+            f"    if (typeof v !== 'number' /* {self.get_type_fqn()} */) throw new Error(`${{v}} is not a {self.get_type_fqn()} i.e. a number, it is a ${{typeof v}}`);\n"
             f"    return v as {tt};\n"
             f"}})({expression})")
     pass
@@ -859,7 +859,7 @@ class NewStrCodecImpl(Generic[NewStr]):
             'type': 'string'
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
-        return 'string'
+        return f'string /* {self.get_type_fqn()} */'
     def ensure_typescript_defs(self, namespace) -> None:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
@@ -871,7 +871,7 @@ class NewStrCodecImpl(Generic[NewStr]):
                 f"function asInstanceOf{typescript_type_name}(v: any): {typescript_type_name}\n"
                 f"{{\n"
                 f"    try{{\n"
-                f"        if (typeof v !== 'string') throw new Error(`${{v}} is a ${{typeof v}}`);\n"
+                f"        if (typeof v !== 'string' /* {self.get_type_fqn()} */) throw new Error(`${{v}} is a ${{typeof v}}`);\n"
                 f"        return v;\n"
                 f"    }}\n"
                 f"    catch(e:any){{\n"
@@ -881,7 +881,7 @@ class NewStrCodecImpl(Generic[NewStr]):
             target_namespace.defs[TypeScriptUQN(f'isInstanceOf{typescript_type_name}')]=TypeScriptSourceCode(
                 f"function isInstanceOf{typescript_type_name}(v:any): v is string\n"
                 f"{{\n"
-                f"    return typeof v === 'string';\n"
+                f"    return typeof v === 'string' /* {self.get_type_fqn()} */;\n"
                 f"}}")
         pass
     def get_typescript_isa(self,
@@ -889,7 +889,7 @@ class NewStrCodecImpl(Generic[NewStr]):
                            namespace: TypeScriptNamespace,
                            back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(
-            f"(typeof ({expression}) == '{self.typescript_type(back_refs)}')")
+            f"(typeof ({expression}) == 'string')")
     def get_typescript_asa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace,
@@ -897,7 +897,7 @@ class NewStrCodecImpl(Generic[NewStr]):
         tt=self.typescript_type(back_refs)
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{\n"
-            f"    if (typeof v !== '{tt}') throw new Error(`${{v}} is not a {self.get_type_fqn()} i.e. a {tt}, it is a ${{typeof v}}`);\n"
+            f"    if (typeof v !== 'string' /* {self.get_type_fqn()} */) throw new Error(`${{v}} is not a {self.get_type_fqn()} i.e. a string, it is a ${{typeof v}}`);\n"
             f"    return v as {tt};\n"
             f"}})({expression})")
     pass
