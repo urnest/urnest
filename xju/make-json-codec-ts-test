@@ -1,10 +1,10 @@
 #!/bin/env python3
 
-from typing import Literal
+from typing import Literal, Self
 from types import NoneType
 
 from xju.json_codec import codec, TypeScriptNamespace, TypeScriptSourceCode, TypeScriptNamespace
-from xju.json_codec import TypeScriptUQN
+from xju.json_codec import TypeScriptUQN, AnyJsonCodecImpl
 from xju.misc import ByteCount
 from xju.time import Duration, Timestamp
 from xju.assert_ import Assert
@@ -498,6 +498,8 @@ bytecount_codec=codec(ByteCount)
 bytecount_codec.ensure_typescript_defs(namespace)
 typescript_uqn_codec=codec(TypeScriptUQN)
 typescript_uqn_codec.ensure_typescript_defs(namespace)
+typescript_source_code_codec=codec(TypeScriptSourceCode)
+typescript_source_code_codec.ensure_typescript_defs(namespace)
 duration_codec=codec(Duration)
 duration_codec.ensure_typescript_defs(namespace)
 namespace_codec=codec(TypeScriptNamespace)
@@ -585,14 +587,14 @@ print(f'''
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), "Error: [object Object] is not a xju.json_codec.TypeScriptNamespace because Error: attribute defs is invalid because Error: undefined is not a {{ [key: string /* xju.json_codec.TypeScriptUQN */]: string /* xju.json_codec.TypeScriptSourceCode */|xju.json_codec.TypeScriptNamespace }} because Error: undefined is not an object it is a undefined");
+        assert_x_contains_y(str(e), "Error: [object Object] is not a xju.json_codec.TypeScriptNamespace because Error: attribute defs is invalid because Error: undefined is not a {{ [key: string /* xju.json_codec.TypeScriptUQN */]: xju.json_codec.TypeScriptSourceCode|xju.json_codec.TypeScriptNamespace }} because Error: undefined is not an object it is a undefined");
     }}
     try{{
         {indent(8,namespace_codec.get_typescript_asa(TypeScriptSourceCode('{defs:{x:"Fred",y:{defs:{y:7}}}}'),namespace))};
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), "Error: [object Object] is not a xju.json_codec.TypeScriptNamespace because Error: attribute defs is invalid because Error: [object Object] is not a {{ [key: string /* xju.json_codec.TypeScriptUQN */]: string /* xju.json_codec.TypeScriptSourceCode */|xju.json_codec.TypeScriptNamespace }} because Error: element y is invalid because Error: [object Object] is not a string /* xju.json_codec.TypeScriptSourceCode */|xju.json_codec.TypeScriptNamespace because Error: [object Object] is not a xju.json_codec.TypeScriptSourceCode i.e. a string, it is a object and [object Object] is not a xju.json_codec.TypeScriptNamespace because Error: attribute defs is invalid because Error: [object Object] is not a {{ [key: string /* xju.json_codec.TypeScriptUQN */]: string /* xju.json_codec.TypeScriptSourceCode */|xju.json_codec.TypeScriptNamespace }} because Error: element y is invalid because Error: 7 is not a string /* xju.json_codec.TypeScriptSourceCode */|xju.json_codec.TypeScriptNamespace because Error: 7 is not a xju.json_codec.TypeScriptSourceCode i.e. a string, it is a number and 7 is not a xju.json_codec.TypeScriptNamespace because Error: 7 is not an object it is a number");
+        assert_x_contains_y(str(e), "Error: [object Object] is not a xju.json_codec.TypeScriptNamespace because Error: attribute defs is invalid because Error: [object Object] is not a {{ [key: string /* xju.json_codec.TypeScriptUQN */]: xju.json_codec.TypeScriptSourceCode|xju.json_codec.TypeScriptNamespace }} because Error: element y is invalid because Error: [object Object] is not a xju.json_codec.TypeScriptSourceCode|xju.json_codec.TypeScriptNamespace because Error: [object Object] is not a xju.json_codec.TypeScriptSourceCode i.e. a string, it is a object and [object Object] is not a xju.json_codec.TypeScriptNamespace because Error: attribute defs is invalid because Error: [object Object] is not a {{ [key: string /* xju.json_codec.TypeScriptUQN */]: xju.json_codec.TypeScriptSourceCode|xju.json_codec.TypeScriptNamespace }} because Error: element y is invalid because Error: 7 is not a xju.json_codec.TypeScriptSourceCode|xju.json_codec.TypeScriptNamespace because Error: 7 is not a xju.json_codec.TypeScriptSourceCode i.e. a string, it is a number and 7 is not a xju.json_codec.TypeScriptNamespace because Error: 7 is not an object it is a number");
     }}
     const x:object={{defs:{{x:"Fred",y:{{defs:{{z:"Jock"}}}}}}}};
     if ({indent(8,namespace_codec.get_typescript_isa(TypeScriptSourceCode('x'),namespace))}) {{
@@ -687,3 +689,158 @@ except Exception as e:
     Assert(readable_repr(e)).contains('is already defined')
 else:
     assert False
+    pass
+
+try:
+    codec(bool).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='boolean is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(NoneType).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='null is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(list[int]).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='Array<number> is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(list).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='Array<any> is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(tuple[bool]).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='[boolean] is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(int|str).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='number|string is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(dict).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='{ [key: string]: any } is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(dict[str,str]).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='{ [key: string]: string } is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+Assert(codec(ByteCount).typescript_as_object_key_type())=='number /* xju.misc.ByteCount */'
+Assert(codec(Duration).typescript_as_object_key_type())=='number /* xju.time.Duration */'
+
+try:
+    codec(Literal["Fred"]).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='"Fred" is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(Literal[6]).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='6 is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(Literal[True]).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='true is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(Timestamp).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='xju.time.Timestamp is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(NonStringKey).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='NonStringKey is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(O).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='O is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(O.a).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='O.a is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    AnyJsonCodecImpl().typescript_as_object_key_type(None)
+except Exception as e:
+    Assert(readable_repr(e))=='any is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+    
+
+@dataclass
+class Selfish:
+    value: int
+    next: dict[Self, bool]
+    pass
+
+try:
+    codec(Selfish).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='Selfish is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(Selfish).ensure_typescript_defs(namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='Selfish is not allowed as a typescript object key type'
+else:
+    assert False
+    pass

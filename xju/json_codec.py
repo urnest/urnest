@@ -85,6 +85,7 @@ class TypeScriptNamespace:
 @dataclass
 class TypeScriptBackRefs:
     type_back_ref:Callable[[],TypeScriptSourceCode]
+    as_object_key_type_back_ref:Callable[[],TypeScriptSourceCode]
     isa_back_ref:Callable[[TypeScriptSourceCode],TypeScriptSourceCode]
     asa_back_ref:Callable[[TypeScriptSourceCode],TypeScriptSourceCode]
 
@@ -99,8 +100,11 @@ class CodecProto(Generic[T], Protocol):
     def get_json_schema(self) -> dict:
         "get jsonschema matching T's encoded form"
         pass
-    def typescript_type(self) -> TypeScriptUQN:
+    def typescript_type(self) -> TypeScriptSourceCode:
         '''return typescript unqualified equivalent type for T'''
+        pass
+    def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
+        '''return typescript unqualified equivalent type for T when used as an object key'''
         pass
     def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> None:
         '''ensure namespace {namespace} contains {self} typescript defs'''
@@ -165,9 +169,11 @@ class Codec(Generic[T]):
             'definitions':definitions
         })
         return result
-    def typescript_type(self) -> TypeScriptUQN:
+    def typescript_type(self) -> TypeScriptSourceCode:
         '''return typescript unqualified equivalent type for T'''
         return self.codec.typescript_type(None)
+    def typescript_as_object_key_type(self) -> TypeScriptSourceCode:
+        return self.codec.typescript_as_object_key_type(None)
     def ensure_typescript_defs(self, namespace:TypeScriptNamespace) -> None:
         return self.codec.ensure_typescript_defs(namespace)
     def add_typescript_alias(self, namespace:TypeScriptNamespace, fqn:Sequence[TypeScriptUQN]) -> None:
@@ -213,7 +219,9 @@ class CodecImplProto(Protocol):
         pass
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         pass
-    def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptUQN:
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        pass
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         pass
     def ensure_typescript_defs(self, namespace) -> None:
         pass
@@ -264,6 +272,9 @@ class NoopCodecImpl(Generic[Atom]):
         if self.t is float: return 'number'
         assert self.t is bool, self.t
         return 'boolean'
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        if self.t is str: return 'string'
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
         pass
     def get_typescript_isa(self,
@@ -298,6 +309,8 @@ class NoneCodecImpl:
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         '''return typescript equivalent type for None'''
         return 'null'
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
         pass
     def get_typescript_isa(self,
@@ -336,6 +349,8 @@ class ListCodecImpl:
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
         return f"Array<{self.value_codec.typescript_type(back_refs)}>"
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
         pass
     def get_typescript_isa(self,
@@ -378,6 +393,8 @@ class AnyListCodecImpl:
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
         return f"Array<any>"
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
         pass
     def get_typescript_isa(self,
@@ -437,6 +454,8 @@ class TupleCodec:
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
         value_types=','.join([_.typescript_type(back_refs) for _ in self.value_codecs])
         return f"[{value_types}]"
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
         pass
     def get_typescript_isa(self,
@@ -510,6 +529,8 @@ class UnionCodecImpl:
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
         return '|'.join([_.typescript_type(back_refs) for _ in self.value_codecs.values()])
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
         pass
     def get_typescript_isa(self,
@@ -573,7 +594,9 @@ class DictCodecImpl:
             'additionalProperties': self.value_codec.get_json_schema(definitions, self_ref)
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
-        return f"{{ [key: {self.key_codec.typescript_type(back_refs)}]: {self.value_codec.typescript_type(back_refs)} }}"
+        return f"{{ [key: {self.key_codec.typescript_as_object_key_type(back_refs)}]: {self.value_codec.typescript_type(back_refs)} }}"
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
         pass
     def get_typescript_isa(self,
@@ -635,7 +658,9 @@ class AnyDictCodecImpl:
             'type': 'object'
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
-        return f"{{ [key: {self.key_codec.typescript_type(back_refs)}]: {self.value_codec.typescript_type(back_refs)} }}"
+        return f"{{ [key: {self.key_codec.typescript_as_object_key_type(back_refs)}]: {self.value_codec.typescript_type(back_refs)} }}"
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
         pass
     def get_typescript_isa(self,
@@ -688,6 +713,8 @@ class AnyJsonCodecImpl:
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
         return 'any'
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
         pass
     def get_typescript_isa(self,
@@ -727,6 +754,8 @@ class NewIntCodecImpl(Generic[NewInt]):
             'type': 'integer'
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        return self.get_type_fqn()
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         return f'number /* {self.get_type_fqn()} */'
     def ensure_typescript_defs(self, namespace) -> None:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
@@ -793,6 +822,8 @@ class NewFloatCodecImpl(Generic[NewFloat]):
             'type': 'number'
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        return self.get_type_fqn()
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         return f'number /* {self.get_type_fqn()} */'
     def ensure_typescript_defs(self, namespace) -> None:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
@@ -859,6 +890,8 @@ class NewStrCodecImpl(Generic[NewStr]):
             'type': 'string'
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        return self.get_type_fqn()
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         return f'string /* {self.get_type_fqn()} */'
     def ensure_typescript_defs(self, namespace) -> None:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
@@ -923,6 +956,8 @@ class LiteralStrCodecImpl:
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         return f'"{self.value}"'
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
         pass
     def get_typescript_isa(self,
@@ -965,6 +1000,8 @@ class LiteralIntCodecImpl:
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         return f'{self.value}'
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
         pass
     def get_typescript_isa(self,
@@ -1007,6 +1044,8 @@ class LiteralBoolCodecImpl:
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         return 'true' if self.value else 'false'
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
         pass
     def get_typescript_isa(self,
@@ -1181,6 +1220,8 @@ class ClassCodecImpl:
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         return self.get_type_fqn()
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self,namespace)->None:
         '''ensure {namespace} has a typescript definition for {self.get_type_fqn()}'''
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
@@ -1189,11 +1230,13 @@ class ClassCodecImpl:
         tt=self.typescript_type(None)
         def type_back_ref()->TypeScriptSourceCode:
             return TypeScriptSourceCode(self.typescript_type(None))
+        def as_object_key_type_back_ref()->TypeScriptSourceCode:
+            return TypeScriptSourceCode(self.typescript_as_object_key_type(None))
         def isa_back_ref(expression:TypeScriptSourceCode)->TypeScriptSourceCode:
             return self.get_typescript_isa(expression,namespace,None)
         def asa_back_ref(expression:TypeScriptSourceCode)->TypeScriptSourceCode:
             return self.get_typescript_asa(expression,namespace,None)
-        back_refs=TypeScriptBackRefs(type_back_ref,isa_back_ref,asa_back_ref)
+        back_refs=TypeScriptBackRefs(type_back_ref,as_object_key_type_back_ref,isa_back_ref,asa_back_ref)
         if typescript_type_name not in target_namespace.defs:
             target_namespace.defs[typescript_type_name]=TypeScriptSourceCode(
                 f"type {typescript_type_name} = {{\n"+
@@ -1291,6 +1334,8 @@ class EnumValueCodecImpl:
         return get_type_fqn(self.t)
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         return f'{self.get_type_fqn()}.{self.value.name}'
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def typescript_value(self) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(json.dumps(self.value.value))
     def ensure_typescript_defs(self,namespace)->None:
@@ -1354,6 +1399,8 @@ class EnumCodecImpl:
         return get_type_fqn(self.t)
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
         return self.get_type_fqn()
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
@@ -1439,6 +1486,9 @@ class SelfCodecImpl:
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         assert back_refs is not None
         return back_refs.type_back_ref().value()
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        assert back_refs is not None
+        return back_refs.as_object_key_type_back_ref().value()
     def ensure_typescript_defs(self,namespace)->None:
         # self would already have been done
         pass
