@@ -171,6 +171,13 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 2.0.0 add xju.time.async_sleep_until()
+- 2.0.0 add xju.json_codec_mypy_plugin, avoids type: ignore against json_codec.codec()
+- 2.0.0 xn first line -> first para *breaking change*
+        - xn.in_function_context now uses first paragraph of docstring
+          not just first line (paragraph ends at empty line); paragraph
+          lines are stripped and joined by single space
+- 2.0.0 add xju.newtype.Bool
 - 1.4.1 fix type hints on xju.cmc.async_cmclass and xju.cmc.cmclass
 - 1.4.0 add Enum support to xju.json_codec
 - 1.3.0 add xju.cmc.AsyncDict, like xju.cmc.Dict but async
