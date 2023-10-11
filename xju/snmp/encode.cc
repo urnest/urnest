@@ -35,6 +35,8 @@
 #include <xju/snmp/encodePDU.hh>
 #include <xju/snmp/SnmpV2cResponse.hh>
 #include <xju/snmp/SnmpV2cVarResponse.hh>
+#include <utility>
+#include <xju/snmp/SnmpV3ScopedPDU.hh>
 
 namespace xju
 {
@@ -459,8 +461,19 @@ std::vector<uint8_t> encode(SnmpV2cResponse const& response) throw()
 }
 
 
+std::vector<uint8_t> encodeScopedPDU(SnmpV3ScopedPDU x)
+{
+  std::vector<uint8_t> result;
+  Sequence s({
+      vp(new StringValue(std::move(x.contextEngineID._))),
+      vp(new StringValue(std::move(x.contextName._))),
+      vp(new PreEncoded(std::move(x.encodedPDU_)))},
+    0x30);
+  std::vector<uint8_t> result(s.encodedLength());
+  xju::assert_equal(s.encodeTo(result.begin()),result.end());
+  return result;
+}
+
 
 }
 }
-
-

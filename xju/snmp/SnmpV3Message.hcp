@@ -1,0 +1,64 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/Int.hh>
+#include <cinttypes>
+#include <vector>
+#include <unistd.h>
+
+namespace xju
+{
+namespace snmp
+{
+
+class SnmpV3Message{
+public:
+  class IDTag{};
+  class SecurityModelTag{};
+
+  typedef xju::Int<IDTag,uint32_t> ID;
+  typedef xju::Int<SecurityModelTag,uint32_t> SecurityModel;
+
+  SnmpV3Message(ID id,
+                Flags flags,
+                SecurityModel securityModel,
+                std::vector<uint8_t> securityParameters,
+                std::vector<uint8_t> scopedPduData):
+      id_(id),
+      flags_(flags),
+      securityModel_(securityModel),
+      securityParameters_(securityParameters),
+      scopedPduData_(std::move(scopedPduData))
+  {
+  }
+
+  ID ID_;
+  size_t MaxSize_;
+  enum Flags{
+    AUTH = 0x01,
+    AUTH_PRIV = 0x03,
+    REPORTABLE = 0x04
+  };
+  Flags flags_;
+  SecurityModel securityModel_;
+  std::vector<uint8_t> securityParameters_;
+  std::vector<uint8_t> scopedPduData_;
+
+  //auth required? (Independent of priv.)
+  bool auth() const { return flags_ & AUTH; }
+
+  //priv required (noting priv not allowed with auth)
+  // pre: auth()
+  bool priv() const { return flags_ & AUTH_PRIV == AUTH_PRIV; }
+};
+
+}
+}

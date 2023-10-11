@@ -1,0 +1,54 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/snmp/Value.hh>
+#include <vector>
+#include <cinttypes>
+#include <algorithm> //impl
+#include <string>
+#include <xju/format.hh> //impl
+
+namespace xju
+{
+namespace snmp
+{
+class PreEncoded : public Value
+{
+public:
+  explicit PreEncoded(std::vector<uint8_t> data):
+      Value(data.size()),
+      data_(std::move(data))
+  {
+  }
+  // Value::
+  virtual std::vector<uint8_t>::iterator encodeTo(
+    std::vector<uint8_t>::iterator begin) const throw(){
+    return std::copy(data_.begin(), data_.end(), begin);
+  }
+
+  // Value::
+  virtual std::string str() const throw(){
+    return xju::format::join(data_.begin(),data_.end(),
+                             xju::format::Hex(),
+                             std::string(","));
+
+  // Value::
+  virtual bool less(Value const& y) const throw(){
+    return data_ < static_cast<PreEncoded const&>(y).data_;
+  }
+
+private:
+  std::vector<uint8_t> data_;
+
+};
+
+}
+}

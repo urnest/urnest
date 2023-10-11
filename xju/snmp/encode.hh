@@ -12,6 +12,8 @@
 
 #include <vector>
 #include <stdint.h>
+#include <xju/snmp/ContextEngineID.hh>
+#include <xju/snmp/ContextName.hh>
 
 
 namespace xju
@@ -44,6 +46,14 @@ std::vector<uint8_t> encode(SnmpV2cSetRequest const& request) throw();
 std::vector<uint8_t> encode(SnmpV2cTrap const& trap) throw();
 std::vector<uint8_t> encode(SnmpV2cGetBulkRequest const& request) throw();
 std::vector<uint8_t> encode(SnmpV2cResponse const& trap) throw();
+
+class SnmpV3Message;
+
+std::vector<uint8_t> encode(SnmpV3Message const& message) throw();
+
+class SnmpV3ScopedPDU;
+
+std::vector<uint8_t> encode(SnmpV3ScopedPDU pdu) throw();
 
 }
 }
