@@ -39,6 +39,7 @@ public:
     return xju::format::join(data_.begin(),data_.end(),
                              xju::format::Hex(),
                              std::string(","));
+  }
 
   // Value::
   virtual bool less(Value const& y) const throw(){

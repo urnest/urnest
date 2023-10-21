@@ -31,10 +31,16 @@
 ()+cmd=(test-encodeLength.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-TimeTicksValue.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 
+%hcp-opts == <<
++(..%hcp-opts)
+
 %hcp-gen==%hcp-gen.vir_dir_specs:list:cat:vir_dir
 
 %hcp-gen.vir_dir_specs==<<
+%hcp-local-spec
 %hcp-local-x
+
+%hcp-local-spec==.:dir.hcp.list+(%hcp-opts)+hpath='xju/snmp':hcp-split-virdir-specs:cat
 
 %hcp-local-x==<<
 %encodeResponse.gen.hh==.%encodeResponse.gen.hh
