@@ -23,6 +23,8 @@
 ()+cmd=(test-decodeSnmpV2cGetRequest.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-decodeSnmpV2cGetNextRequest.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-decodeSnmpV2cGetBulkRequest.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-decodeSnmpV3Message.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-decodeSnmpV3ScopedPDU.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-decodeValue.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-validateResponse.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-SnmpV1Table.cc+(../..%cxx-opts):auto.cxx.exe):exec.output

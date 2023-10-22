@@ -20,23 +20,15 @@
 #include <iterator>
 #include <limits.h>
 #include "xju/functional.hh"
+#include <xju/snmp/formatLength.hh>
+#include <xju/snmp/extractRemainder.hh>
+#include <xju/snmp/SnmpVersionMismatch.hh>
 
 namespace xju
 {
 namespace snmp
 {
 
-namespace
-{
-std::string formatLength(xju::Optional<size_t> const& length) throw()
-{
-  std::ostringstream s;
-  s << (length.valid()?xju::format::int_(length.value())+" bytes":
-        std::string("indefinite"));
-  return s.str();
-}
-
-}
 SnmpV3Message decodeSnmpV3Message(
   std::vector<uint8_t> const& data) /*throw(
     SnmpVersionMismatch,
@@ -93,55 +85,68 @@ SnmpV3Message decodeSnmpV3Message(
             }
             try {
               auto const msgFlags(decodeStringValue(maxSize.second));
-              if (msgFlags.size() != 1){
+              if (msgFlags.first.size() != 1){
                 std::ostringstream s;
-                s << "expected 1 byte message flags, got " << msgFlags.size() << " bytes (hex) "
-                  << xju::format::join(msgFlags.begin(),msgFlags.end,xju::format::Hex(""),",");
+                s << "expected 1 byte message flags, got " << msgFlags.first.size() << " bytes (hex) "
+                  << xju::format::join(msgFlags.first.begin(),msgFlags.first.end(),
+                                       xju::format::Hex(""),std::string(","));
                 throw xju::Exception(s.str(),XJU_TRACED);
               }
               try {
                 auto const securityModel(decodeIntValue(msgFlags.second));
                 if (securityModel.first > UINT32_MAX){
                   std::ostringstream s;
-                  s << "expected max size < 2147483648, got " << securityModel.first;
+                  s << "expected security model < 2147483648, got " << securityModel.first;
                   throw xju::Exception(s.str(),XJU_TRACED);
                 }
                 try{
                   auto const securityParameters(decodeStringValue(securityModel.second));
                   try{
                     auto const scopedPduData(decodeSequenceTypeAndLength(securityParameters.second));
-                    if (scopedPduData.first.first == 0x30) // sequence -> ScopedPDU (unencrypted)
-                    {
-                      SnmpV3Message::Flags flags(msgFlags.first);
-                      if (!flags.priv()){
+                    SnmpV3Message::Flags const flags = (SnmpV3Message::Flags)msgFlags.first[0];
+
+                    if ((flags & SnmpV3Message::AUTH_PRIV) != SnmpV3Message::AUTH_PRIV){
+                      if (scopedPduData.first.first != 0x30) // sequence -> ScopedPDU (unencrypted)
+                      {
                         std::ostringstream s;
-                        s << "unexpected msg privacy flag with unencrypted ScopedPDU";
+                        s << "expected unencrypted ScopedPDU to have type 0x30, got "
+                          << xju::format::hex(scopedPduData.first.first);
+                        throw xju::Exception(s.str(),XJU_TRACED);
+                      }
+                    }
+                    else
+                    {
+                      if (scopedPduData.first.first != 0x04) // octet string -> encrypted
+                      {
+                        std::ostringstream s;
+                        s << "expected encrypted ScopedPDU to have type 0x04, got "
+                          << xju::format::hex(scopedPduData.first.first);
                         throw xju::Exception(s.str(),XJU_TRACED);
                       }
                     }
                     try{
-                      std::vector<uint8_t> scopedPDU;
-                      scopedPDU.resize(scopedPduData.first.second);
-                      DecodeIterator at(scopedPduData.second);
-                      for(auto to(scopedPDU.begin()); to != scopedPDU.end(); ++to){
-                        *to = *at++;
+                      if (scopedPduData.first.second.valid() &&
+                          scopedPduData.second.remaining() != scopedPduData.first.second.value()){
+                        std::ostringstream s;
+                        s << "expected " << scopedPduData.first.second.value()
+                          << " bytes of scoped pdu data but have " << scopedPduData.second.remaining();
+                        throw xju::Exception(s.str(),XJU_TRACED);
                       }
-                      return std::make_pair(
-                        SnmpV3Message(
-                          ID(msgID.first),
-                          maxSize.first,
-                          Flags(msgFlags.first),
-                          SecurityModel(securityModel.first),
-                          std::move(securityParameters.first),
-                          std::move(scopedPduData.first)),
-                        at);
+                      std::vector<uint8_t> scopedPDU(extractRemainder(securityParameters.second));
+                      return SnmpV3Message(
+                        SnmpV3Message::ID(id.first),
+                        maxSize.first,
+                        (SnmpV3Message::Flags)msgFlags.first[0],
+                        SnmpV3Message::SecurityModel(securityModel.first),
+                        std::move(securityParameters.first),
+                        std::move(scopedPDU));
                     }
                     catch(xju::Exception const& e){
                       std::ostringstream s;
                       s << "scoped pdu type " << xju::format::hex(scopedPduData.first.first)
-                        << " and length " << scopedPduData.first.second
+                        << " and length " << formatLength(scopedPduData.first.second)
                         << " at " << securityParameters.second;
-                      ok.push_back(s.st());
+                      ok.push_back(s.str());
                       throw;
                     }
                   }
@@ -159,7 +164,7 @@ SnmpV3Message decodeSnmpV3Message(
                 }
                 catch(xju::Exception& e) {
                   std::ostringstream s;
-                  s << "security model " << security.first
+                  s << "security model " << securityModel.first
                     << " at " << msgFlags.second;
                   ok.push_back(s.str());
                   throw;
@@ -167,7 +172,7 @@ SnmpV3Message decodeSnmpV3Message(
               }
               catch(xju::Exception const& e) {
                 std::ostringstream s;
-                s << "message flags "
+                s << "message flags (hex) "
                   << xju::format::join(msgFlags.first.begin(),
                                        msgFlags.first.end(),
                                        xju::format::Hex(""),
@@ -204,7 +209,7 @@ SnmpV3Message decodeSnmpV3Message(
       }
       catch(xju::Exception const& e) {
         std::ostringstream s;
-        s << "snmp version 2c at " << s1.second;
+        s << "snmp version 3 at " << s1.second;
         ok.push_back(s.str());
         throw;
       }

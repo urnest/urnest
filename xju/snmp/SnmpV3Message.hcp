@@ -27,6 +27,12 @@ public:
   typedef xju::Int<IDTag,uint32_t> ID;
   typedef xju::Int<SecurityModelTag,uint32_t> SecurityModel;
 
+  enum Flags{
+    AUTH = 0x01,
+    AUTH_PRIV = 0x03,
+    REPORTABLE = 0x04
+  };
+
   SnmpV3Message(ID const id,
                 size_t const maxSize,
                 Flags const flags,
@@ -34,7 +40,7 @@ public:
                 std::vector<uint8_t> securityParameters,
                 std::vector<uint8_t> scopedPduData):
       id_(id),
-      maxSize
+      maxSize_(maxSize),
       flags_(flags),
       securityModel_(securityModel),
       securityParameters_(std::move(securityParameters)),
@@ -44,11 +50,6 @@ public:
 
   ID id_;
   size_t maxSize_;
-  enum Flags{
-    AUTH = 0x01,
-    AUTH_PRIV = 0x03,
-    REPORTABLE = 0x04
-  };
   Flags flags_;
   SecurityModel securityModel_;
   std::vector<uint8_t> securityParameters_;
@@ -62,6 +63,8 @@ public:
   bool priv() const { return flags_ & AUTH_PRIV == AUTH_PRIV; }
 
   bool reportable() const { return flags_ & REPORTABLE == REPORTABLE; }
+
+  friend bool operator<(SnmpV3Message const& a, SnmpV3Message const& b) throw();
 };
 
 }

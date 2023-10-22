@@ -28,6 +28,10 @@
 #include <xju/snmp/decodeSnmpV1Response.hh>
 #include <xju/snmp/SnmpV2cResponse.hh>
 #include <xju/snmp/decodeSnmpV2cResponse.hh>
+#include <xju/snmp/SnmpV3ScopedPDU.hh>
+#include <xju/snmp/decodeSnmpV3ScopedPDU.hh>
+#include <xju/snmp/SnmpV3Message.hh>
+#include <xju/snmp/decodeSnmpV3Message.hh>
 
 namespace xju
 {
@@ -620,6 +624,87 @@ void test11()
   }
 }
 
+void test12(){
+  xju::assert_equal(decodeSnmpV3ScopedPDU(
+                      encode(SnmpV3ScopedPDU(
+                               ContextEngineID(std::vector<uint8_t>{0x01, 0x02}),
+                               ContextName(std::vector<uint8_t>{'f','r','e','d'}),
+                               std::vector<uint8_t>{
+                                 0xa0, 0x21,
+                                   // request-id
+                                   0x02, 0x04, 0x69, 0x0f, 0x79, 0xb6,
+                                   // error-status
+                                   0x02, 0x01, 0x00,
+                                   // error-index
+                                   0x02, 0x01, 0x00,
+                                   // variable-bindings
+                                   0x30, 0x13,
+                                   // .1.3.6.1.4.1.2680.1.2.7.3.2.0
+                                   0x30, 0x11, 0x06, 0x0d, 0x2b,
+                                   0x06, 0x01, 0x04,
+                                   0x01, 0x94, 0x78, 0x01, 0x02, 0x07, 0x03, 0x02, 0x00,
+                                   // type+length
+                                   0x05, 0x00}))),
+                    SnmpV3ScopedPDU(ContextEngineID(std::vector<uint8_t>{0x01, 0x02}),
+                                    ContextName(std::vector<uint8_t>{'f','r','e','d'}),
+                                    std::vector<uint8_t>{
+                                      0xa0, 0x21,
+                                        // request-id
+                                        0x02, 0x04, 0x69, 0x0f, 0x79, 0xb6,
+                                        // error-status
+                                        0x02, 0x01, 0x00,
+                                        // error-index
+                                        0x02, 0x01, 0x00,
+                                        // variable-bindings
+                                        0x30, 0x13,
+                                        // .1.3.6.1.4.1.2680.1.2.7.3.2.0
+                                        0x30, 0x11, 0x06, 0x0d, 0x2b,
+                                        0x06, 0x01, 0x04,
+                                        0x01, 0x94, 0x78, 0x01, 0x02, 0x07, 0x03, 0x02, 0x00,
+                                        // type+length
+                                        0x05, 0x00}));
+}
+
+void test13(){
+  xju::assert_equal(
+    decodeSnmpV3Message(
+      encode(SnmpV3Message(
+               SnmpV3Message::ID(33),
+               512,
+               (SnmpV3Message::Flags)(SnmpV3Message::REPORTABLE|SnmpV3Message::AUTH),
+               SnmpV3Message::SecurityModel(3),
+               std::vector<uint8_t>{0x01,0x02,0x03},
+               std::vector<uint8_t>{
+                 0x30, 0x3c,
+                   // contextEngineID
+                   0x04, 0x11, 0x80, 0x00, 0x1f, 0x88, 0x80, 0xe6, 0x79, 0x08, 0x01, 0x97, 0x35, 0x2e, 0x5d, 0x00, 0x00,
+                   0x00, 0x00,
+                   // contextName = fred
+                   0x04, 0x04, 0x6a, 0x6f, 0x63, 0x6b,
+                   // data = Get PDU
+                   0xa0, 0x21, 0x02, 0x04, 0x69, 0x0f, 0x79, 0xb6,
+                   0x02, 0x01, 0x00, 0x02, 0x01, 0x00, 0x30, 0x13, 0x30, 0x11, 0x06, 0x0d, 0x2b, 0x06, 0x01, 0x04,
+                   0x01, 0x94, 0x78, 0x01, 0x02, 0x07, 0x03, 0x02, 0x00, 0x05, 0x00}))),
+    SnmpV3Message(
+               SnmpV3Message::ID(33),
+               512,
+               (SnmpV3Message::Flags)(SnmpV3Message::REPORTABLE|SnmpV3Message::AUTH),
+               SnmpV3Message::SecurityModel(3),
+               std::vector<uint8_t>{0x01,0x02,0x03},
+               std::vector<uint8_t>{
+                 0x30, 0x3c,
+                   // contextEngineID
+                   0x04, 0x11, 0x80, 0x00, 0x1f, 0x88, 0x80, 0xe6, 0x79, 0x08, 0x01, 0x97, 0x35, 0x2e, 0x5d, 0x00, 0x00,
+                   0x00, 0x00,
+                   // contextName = fred
+                   0x04, 0x04, 0x6a, 0x6f, 0x63, 0x6b,
+                   // data = Get PDU
+                   0xa0, 0x21, 0x02, 0x04, 0x69, 0x0f, 0x79, 0xb6,
+                   0x02, 0x01, 0x00, 0x02, 0x01, 0x00, 0x30, 0x13, 0x30, 0x11, 0x06, 0x0d, 0x2b, 0x06, 0x01, 0x04,
+                   0x01, 0x94, 0x78, 0x01, 0x02, 0x07, 0x03, 0x02, 0x00, 0x05, 0x00}));
+                   
+}
+
 }
 }
 
@@ -639,6 +724,8 @@ int main(int argc, char* argv[])
   test9(), ++n;
   test10(), ++n;
   test11(), ++n;
+  test12(), ++n;
+  test13(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

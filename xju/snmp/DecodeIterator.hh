@@ -52,6 +52,10 @@ public:
     ++at_;
     return *this;
   }
+  size_t remaining() const throw()
+  {
+    return data_->end() - at_;
+  }
   bool atEnd() const throw()
   {
     return at_==data_->end();

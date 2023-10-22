@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/snmp/decodeSnmpV3ScopedPDU.h>
+#include <xju/snmp/decodeSnmpV3ScopedPDU.hh>
 #include <xju/snmp/SnmpV3ScopedPDU.hh>
 #include <vector>
 #include <cinttypes>
@@ -16,6 +16,11 @@
 #include <sstream>
 #include <xju/Exception.hh>
 #include <xju/snmp/decodeStringValue.hh>
+#include <xju/format.hh>
+#include <xju/snmp/formatLength.hh>
+#include <xju/snmp/extractRemainder.hh>
+#include <xju/snmp/ContextEngineID.hh>
+#include <xju/snmp/ContextName.hh>
 
 namespace xju
 {
@@ -28,6 +33,7 @@ SnmpV3ScopedPDU decodeSnmpV3ScopedPDU(
 {
   std::vector<std::string> ok;
   try {
+    DecodeIterator const start(data);
     auto const s1(decodeSequenceTypeAndLength(start));
     if (s1.first.first!=0x30) {
       std::ostringstream s;
@@ -37,23 +43,18 @@ SnmpV3ScopedPDU decodeSnmpV3ScopedPDU(
       throw xju::Exception(s.str(), XJU_TRACED);
     }
     try {
-      auto conextEngineID(decodeStringValue(s1.second));
-      try {
-        auto contextName(decodeStringValue(contextEngineID.second)); try {
-          auto const encodedPDU(extractValue(contextName.second));
-          return SnmpV3ScopedPDU(std::move(contextEngineID.first),
-                                 std::move(contextName.fist),
-                                 std::move(encodedPDU.first));
-        }
-        catch(xju::Exception const& e) {
-          std::ostringstream s;
-          s << "context name "
-            << xju::format::quote(std::string(contextName.first.begin(),
-                                              contextName.first.end()))
-            << " at " << contextEngineID.second;
-          ok.push_back(s.str());
-          throw;
-        }
+      if (s1.first.second.valid() && s1.second.remaining() != s1.first.second.value()){
+        std::ostringstream s;
+        s << "sequence length " << s1.first.second.value()
+          << " does not match contained data length (" << s1.second.remaining() << ")";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      auto contextEngineID(decodeStringValue(s1.second)); try {
+        auto contextName(decodeStringValue(contextEngineID.second));
+          auto encodedPDU(extractRemainder(contextName.second));
+          return SnmpV3ScopedPDU(std::move(ContextEngineID(contextEngineID.first)),
+                                 std::move(ContextName(contextName.first)),
+                                 std::move(encodedPDU));
       }
       catch(xju::Exception const& e) {
         std::ostringstream s;

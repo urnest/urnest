@@ -38,6 +38,7 @@
 #include <utility>
 #include <xju/snmp/SnmpV3ScopedPDU.hh>
 #include <xju/snmp/PreEncoded.hh>
+#include <xju/snmp/SnmpV3Message.hh>
 
 namespace xju
 {
@@ -462,7 +463,28 @@ std::vector<uint8_t> encode(SnmpV2cResponse const& response) throw()
 }
 
 
-std::vector<uint8_t> encodeScopedPDU(SnmpV3ScopedPDU x)
+std::vector<uint8_t> encode(SnmpV3Message const& x) throw()
+{
+  typedef std::shared_ptr<Value const> vp;
+
+  Sequence s({
+      vp(new IntValue(3)), // SNMP version 3
+      vp(new Sequence({
+            vp(new IntValue(x.id_.value())),
+            vp(new IntValue(x.maxSize_)),
+            vp(new StringValue(std::vector<uint8_t>({x.flags_}))),
+            vp(new IntValue(x.securityModel_.value()))},
+          0x30)),
+      vp(new StringValue(std::move(x.securityParameters_))),
+      vp(new PreEncoded(std::move(x.scopedPduData_)))},
+    0x30);
+  std::vector<uint8_t> result(s.encodedLength());
+  xju::assert_equal(s.encodeTo(result.begin()),result.end());
+  return result;
+}
+
+
+std::vector<uint8_t> encode(SnmpV3ScopedPDU x) throw()
 {
   typedef std::shared_ptr<Value const> vp;
 

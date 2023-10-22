@@ -34,6 +34,8 @@ public:
   ContextEngineID contextEngineID_;
   ContextName contextName_;
   std::vector<uint8_t> encodedPDU_;
+
+  friend bool operator<(SnmpV3ScopedPDU const& a, SnmpV3ScopedPDU const& b) noexcept;
 };
 
 
