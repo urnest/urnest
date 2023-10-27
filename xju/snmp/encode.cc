@@ -39,79 +39,13 @@
 #include <xju/snmp/SnmpV3ScopedPDU.hh>
 #include <xju/snmp/PreEncoded.hh>
 #include <xju/snmp/SnmpV3Message.hh>
+#include <xju/snmp/Sequence.hh>
 
 namespace xju
 {
 namespace snmp
 {
 
-
-namespace
-{
-
-uint64_t encodedLengthOfItems(
-  std::vector<std::shared_ptr<Value const> > const& items) throw()
-{
-  uint64_t result(0);
-  for(auto x:items){
-    result=result+x->encodedLength();
-  }
-  return result;
-}
-
-class Sequence : private Int<Sequence,size_t>, //encoded length of items
-                 public Value
-{
-public:
-  Sequence(std::vector<std::shared_ptr<Value const> > const& items,
-           uint8_t sequenceType) throw():
-      Int<Sequence,size_t>(encodedLengthOfItems(items)),
-      Value(1/*type*/+
-            encodedLengthOfLength(value())+
-            value()),
-      items_(items),
-      sequenceType_(sequenceType) {
-  }
-  std::vector<std::shared_ptr<Value const> > const items_;
-  uint8_t const sequenceType_;
-
-  // Value::
-  std::vector<uint8_t>::iterator encodeTo(
-    std::vector<uint8_t>::iterator begin) const throw() override
-  {
-    auto at=begin;
-    *at++=sequenceType_;
-    at=encodeLength(at,value());
-    for(std::shared_ptr<Value const> x: items_) {
-      at=x->encodeTo(at);
-    }
-    xju::assert_equal(at-begin, encodedLength_);
-    return at;
-  }
-  // Value::
-  std::string str() const throw() override
-  {
-    return xju::format::join(items_.begin(),items_.end(),
-                             [](std::shared_ptr<Value const> x) {
-                               return x->str();
-                             },", ");
-  }
-  // Value::
-  // pre: yy is a Sequence
-  bool less(Value const& yy) const throw() override
-  {
-    auto const y{dynamic_cast<Sequence const&>(yy)};
-    return xju::seq_less(items_.begin(),items_.end(),
-                         y.items_.begin(),y.items_.end(),
-                         [](std::shared_ptr<Value const> const& x,
-                            std::shared_ptr<Value const> const& y){
-                           return (*x)<(*y);
-                         });
-  }
-  
-};
-
-}
 
 std::vector<uint8_t> encode(SnmpV1GetRequest const& request) throw()
 {
