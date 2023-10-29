@@ -32,6 +32,12 @@
 #include <xju/snmp/decodeSnmpV3ScopedPDU.hh>
 #include <xju/snmp/SnmpV3Message.hh>
 #include <xju/snmp/decodeSnmpV3Message.hh>
+#include <xju/snmp/EngineBoots.hh>
+#include <xju/snmp/EngineTime.hh>
+#include <xju/UserName.hh>
+#include <xju/snmp/SnmpV3UsmSecurityParameters.hh>
+#include <xju/snmp/decodeSnmpV3UsmSecurityParameters.hh>
+#include <tuple>
 
 namespace xju
 {
@@ -705,6 +711,28 @@ void test13(){
                    
 }
 
+
+void test14(){
+  xju::assert_equal(
+    decodeSnmpV3UsmSecurityParameters(
+      encode(SnmpV3UsmSecurityParameters(
+               ContextEngineID(
+                 std::vector<uint8_t>{0x80, 0x00, 0x1f, 0x88, 0x80, 0xe6, 0x79, 0x08, 0x01, 0x97, 0x35, 0x2e, 0x5d, 0x00, 0x00, 0x00, 0x00}),
+               EngineBoots(0x775),
+               EngineTime(0x60fd),
+               UserName("fred")),
+             std::vector<uint8_t>{},
+             std::vector<uint8_t>{})),
+    std::make_tuple(SnmpV3UsmSecurityParameters(
+                      ContextEngineID(
+                        std::vector<uint8_t>{0x80, 0x00, 0x1f, 0x88, 0x80, 0xe6, 0x79, 0x08, 0x01, 0x97, 0x35, 0x2e, 0x5d, 0x00, 0x00, 0x00, 0x00}),
+                      EngineBoots(0x775),
+                      EngineTime(0x60fd),
+                      UserName("fred")),
+                    std::vector<uint8_t>{},
+                    std::vector<uint8_t>{}));
+}
+
 }
 }
 
@@ -726,6 +754,7 @@ int main(int argc, char* argv[])
   test11(), ++n;
   test12(), ++n;
   test13(), ++n;
+  test14(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

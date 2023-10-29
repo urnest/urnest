@@ -40,6 +40,7 @@
 #include <xju/snmp/PreEncoded.hh>
 #include <xju/snmp/SnmpV3Message.hh>
 #include <xju/snmp/Sequence.hh>
+#include <xju/snmp/SnmpV3UsmSecurityParameters.hh>
 
 namespace xju
 {
@@ -433,5 +434,29 @@ std::vector<uint8_t> encode(SnmpV3ScopedPDU x) throw()
 }
 
 
+std::vector<uint8_t> encode(
+  SnmpV3UsmSecurityParameters const& genericParams,
+  std::vector<uint8_t> const& preEncodedAuthParams,
+  std::vector<uint8_t> const& preEncodedPrivParams) throw()
+{
+  typedef std::shared_ptr<Value const> vp;
+
+  Sequence s({
+      vp(new StringValue(std::vector<uint8_t>(genericParams.engineID_._.begin(),
+                                              genericParams.engineID_._.end()))),
+      vp(new IntValue(genericParams.engineBoots_.value())),
+      vp(new IntValue(genericParams.engineTime_.value())),
+      vp(new StringValue(std::vector<uint8_t>(genericParams.userName_._.begin(),
+                                              genericParams.userName_._.end()))),
+      vp(new StringValue(std::vector<uint8_t>(preEncodedAuthParams.begin(),
+                                              preEncodedAuthParams.end()))),
+      vp(new StringValue(std::vector<uint8_t>(preEncodedPrivParams.begin(),
+                                              preEncodedPrivParams.end())))},
+    0x30);
+  std::vector<uint8_t> result(s.encodedLength());
+  xju::assert_equal(s.encodeTo(result.begin()),result.end());
+  return result;
+}
+  
 }
 }

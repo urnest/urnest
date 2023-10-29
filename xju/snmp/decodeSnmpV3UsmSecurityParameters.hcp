@@ -1,0 +1,180 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <cinttypes> //impl
+#include <xju/snmp/showFirstBytes.hh> //impl
+#include <xju/snmp/decodeSequenceTypeAndLength.hh> //impl
+#include <sstream> //impl
+#include <xju/format.hh> //impl
+#include <xju/Exception.hh> //impl
+#include <xju/snmp/decodeStringValue.hh> //impl
+#include <xju/snmp/decodeIntValue.hh> //impl
+#include <tuple>
+#include <utility>
+#include <xju/snmp/SnmpV3UsmSecurityParameters.hh>
+#include <xju/snmp/DecodeIterator.hh>
+#include <xju/snmp/extractRemainder.hh> //impl
+#include <xju/snmp/formatLength.hh> //impl
+
+namespace xju
+{
+namespace snmp
+{
+std::tuple<SnmpV3UsmSecurityParameters,
+           std::vector<uint8_t>, // preEncodedAuthParams
+           std::vector<uint8_t>>  // preEncodedPrivParams
+decodeSnmpV3UsmSecurityParameters(std::vector<uint8_t> const& data) /*throw(xju::Exception)*/
+{
+  
+  DecodeIterator const at(data);
+  std::vector<std::string> ok;
+  try{
+    DecodeIterator const start(data);
+    auto const s1(decodeSequenceTypeAndLength(start));
+    if (s1.first.first!=0x30) {
+      std::ostringstream s;
+      s << "expected sequence type byte 0x30, got " 
+        << xju::format::hex(s1.first.first)
+        << " at offset 0";
+      throw xju::Exception(s.str(), XJU_TRACED);
+    }
+    try {
+      if (s1.first.second.valid() && s1.second.remaining() != s1.first.second.value()){
+        std::ostringstream s;
+        s << "sequence length " << s1.first.second.value()
+          << " does not match contained data length (" << s1.second.remaining() << ")";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      auto enginedID(decodeStringValue(s1.second)); try {
+        auto engineBoots(decodeIntValue(enginedID.second));
+        if (engineBoots.first > INT32_MAX)
+        {
+          std::ostringstream s;
+          s << engineBoots.first << " exceeds allow maximum " << INT32_MAX;
+          throw xju::Exception(s.str(),XJU_TRACED);
+        }
+        try {
+          auto engineTime(decodeIntValue(engineBoots.second));
+          if (engineTime.first > INT32_MAX)
+          {
+            std::ostringstream s;
+            s << engineTime.first << " exceeds allow maximum " << INT32_MAX;
+            throw xju::Exception(s.str(),XJU_TRACED);
+          }
+          try {
+            auto userName(decodeStringValue(engineTime.second));
+            if (userName.first.size() > 32)
+            {
+              std::ostringstream s;
+              s << "user name length " << userName.first.size() << " exceeds 32 bytes";
+              throw xju::Exception(s.str(),XJU_TRACED);
+            }
+            try {
+              auto preEncodedAuthParams(decodeStringValue(userName.second));
+              try {
+                auto preEncodedPrivParams(decodeStringValue(preEncodedAuthParams.second));
+                try{
+                  if (!preEncodedPrivParams.second.atEnd()){
+                    std::vector<uint8_t> const remainder(
+                      extractRemainder(preEncodedPrivParams.second));
+                    std::ostringstream s;
+                    s << remainder.size() << " bytes extra data "
+                      << showFirstBytes(8192, remainder)
+                      << " at " << preEncodedPrivParams.second;
+                    throw xju::Exception(s.str(),XJU_TRACED);
+                  }
+                  return std::make_tuple(
+                    SnmpV3UsmSecurityParameters(
+                      ContextEngineID(std::move(enginedID.first)),
+                      EngineBoots(engineBoots.first),
+                      EngineTime(engineTime.first),
+                      UserName(std::string(userName.first.begin(), userName.first.end()))),
+                    std::move(preEncodedAuthParams.first),
+                    std::move(preEncodedPrivParams.first));
+                }
+                catch(xju::Exception const& e) {
+                  std::ostringstream s;
+                  s << "priv params " << showFirstBytes(512, preEncodedPrivParams.first)
+                    << " at " << preEncodedAuthParams.second;
+                  ok.push_back(s.str());
+                  throw;
+                }
+              }
+              catch(xju::Exception const& e) {
+                std::ostringstream s;
+                s << "auth params " << showFirstBytes(512, preEncodedAuthParams.first)
+                  << " at " << userName.second;
+                ok.push_back(s.str());
+                throw;
+              }
+              
+            }
+            catch(xju::Exception const& e) {
+              std::ostringstream s;
+              s << "user name " << xju::format::quote(xju::format::cEscapeString(
+                                                        std::string(userName.first.begin(),
+                                                                    userName.first.end())))
+                << " at " << engineTime.second;
+              ok.push_back(s.str());
+              throw;
+            }
+            
+          }
+          catch(xju::Exception const& e) {
+            std::ostringstream s;
+            s << "engine time " << engineTime.first
+              << " at " << engineBoots.second;
+            ok.push_back(s.str());
+            throw;
+          }
+          
+        }
+        catch(xju::Exception const& e) {
+          std::ostringstream s;
+          s << "engine boots " << engineBoots.first
+            << " at " << enginedID.second;
+          ok.push_back(s.str());
+          throw;
+        }
+        
+      }
+      catch(xju::Exception const& e) {
+        std::ostringstream s;
+        s << "snmp engine id " << showFirstBytes(512, enginedID.first)
+          << " at " << s1.second;
+        ok.push_back(s.str());
+        throw;
+      }
+    }
+    catch(xju::Exception const& e) {
+      std::ostringstream s;
+      s << "sequence type 0x30 and length " 
+        << formatLength(s1.first.second)
+        << " at " << at;
+      ok.push_back(s.str());
+      throw;
+    }
+  }
+  catch(xju::Exception& e) {
+    std::ostringstream s;
+    s << "decode snmp v3 USM Security Parameters from " << data.size() << " bytes of data";
+    if (ok.size()) {
+      s << " having successfully decoded "
+        << xju::format::join(ok.rbegin(),ok.rend(),", ");
+    }
+    e.addContext(s.str(), XJU_TRACED);
+    throw;
+  }
+  
+}
+
+}
+}

@@ -55,6 +55,12 @@ class SnmpV3ScopedPDU;
 
 std::vector<uint8_t> encode(SnmpV3ScopedPDU pdu) throw();
 
+class SnmpV3UsmSecurityParameters;
+std::vector<uint8_t> encode(
+  SnmpV3UsmSecurityParameters const& genericParams,
+  std::vector<uint8_t> const& preEncodedAuthParams,
+  std::vector<uint8_t> const& preEncodedPrivParams) throw();
+
 }
 }
 

@@ -1,0 +1,30 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/format.hh> //impl
+#include <string>
+#include <vector>
+#include <algorithm> //impl
+
+namespace xju
+{
+namespace snmp
+{
+
+std::string showFirstBytes(size_t const n, std::vector<uint8_t> const& x) throw(){
+  return std::string("(hex) [")+
+    xju::format::join(x.begin(), x.begin()+std::min(x.size(),n),
+                      xju::format::Hex(""),
+                      std::string(",")) + (x.size()>n?"...":"") +"]";
+}
+
+}
+}
