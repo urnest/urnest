@@ -37,6 +37,7 @@
 #include <xju/seq_less.hh>
 #include <xju/snmp/SnmpV2cGetNextRequest.hh>
 #include <xju/snmp/encodePDU.hh>
+#include <xju/snmp/encodeSnmpV1Message.hh>
 
 namespace xju
 {
@@ -58,13 +59,13 @@ std::vector<uint8_t> encodeResponse(
                      oid,
                      std::shared_ptr<Value const>((*results.find(oid)).second));
                  });
-  return encodePDU(0, // SNMP version 1
-                   request.community_,
-                   request.id_,
-                   0,//error
-                   0,//errorIndex
-                   vars,
-                   0xA2);
+  return encodeSnmpV1Message(
+    request.community_,
+    request.id_,
+    0,//error
+    0,//errorIndex
+    vars,
+    0xA2);
 }
 
 std::vector<uint8_t> encodeResponse(
@@ -85,13 +86,13 @@ std::vector<uint8_t> encodeResponse(
     std::find(paramOrder.begin(),paramOrder.end(),error.param_));
   xju::assert_not_equal(errorIndex,paramOrder.end());
 
-  return encodePDU(0, // SNMP version 1
-                   request.community_,
-                   request.id_,
-                   (int)SnmpV1Response::ErrorStatus::NO_SUCH_NAME,//error
-                   errorIndex-paramOrder.begin()+1,//errorIndex
-                   vars,
-                   0xA2);
+  return encodeSnmpV1Message(
+    request.community_,
+    request.id_,
+    (int)SnmpV1Response::ErrorStatus::NO_SUCH_NAME,//error
+    errorIndex-paramOrder.begin()+1,//errorIndex
+    vars,
+    0xA2);
 }
 
 std::vector<uint8_t> encodeResponse(
@@ -108,13 +109,13 @@ std::vector<uint8_t> encodeResponse(
                      oid,
                      std::shared_ptr<Value const>(new xju::snmp::NullValue));
                  });
-  return encodePDU(0, // SNMP version 1
-                   request.community_,
-                   request.id_,
-                   (int)SnmpV1Response::ErrorStatus::TOO_BIG,//error
-                   0,//errorIndex
-                   vars,
-                   0xA2);
+  return encodeSnmpV1Message(
+    request.community_,
+    request.id_,
+    (int)SnmpV1Response::ErrorStatus::TOO_BIG,//error
+    0,//errorIndex
+    vars,
+    0xA2);
 }
 
 std::vector<uint8_t> encodeResponse(
@@ -135,13 +136,13 @@ std::vector<uint8_t> encodeResponse(
     std::find(paramOrder.begin(),paramOrder.end(),error.param_));
   xju::assert_not_equal(errorIndex,paramOrder.end());
 
-  return encodePDU(0, // SNMP version 1
-                   request.community_,
-                   request.id_,
-                   (int)SnmpV1Response::ErrorStatus::GEN_ERR,//error
-                   errorIndex-paramOrder.begin()+1,//errorIndex
-                   vars,
-                   0xA2);
+  return encodeSnmpV1Message(
+    request.community_,
+    request.id_,
+    (int)SnmpV1Response::ErrorStatus::GEN_ERR,//error
+    errorIndex-paramOrder.begin()+1,//errorIndex
+    vars,
+    0xA2);
 }
 
 std::vector<uint8_t> encodeResponse(
@@ -158,13 +159,13 @@ std::vector<uint8_t> encodeResponse(
                      oid,
                      std::shared_ptr<Value const>((*request.values_.find(oid)).second));
                  });
-  return encodePDU(0, // SNMP version 1
-                   request.community_,
-                   request.id_,
-                   0,//error
-                   0,//errorIndex
-                   vars,
-                   0xA2);
+  return encodeSnmpV1Message(
+    request.community_,
+    request.id_,
+    0,//error
+    0,//errorIndex
+    vars,
+    0xA2);
 }
 
 std::vector<uint8_t> encodeResponse(
@@ -184,13 +185,13 @@ std::vector<uint8_t> encodeResponse(
   std::vector<Oid>::const_iterator const errorIndex(
     std::find(paramOrder.begin(),paramOrder.end(),error.param_));
   xju::assert_not_equal(errorIndex,paramOrder.end());
-  return encodePDU(0, // SNMP version 1
-                   request.community_,
-                   request.id_,
-                   (int)SnmpV1Response::ErrorStatus::NO_SUCH_NAME,//error
-                   errorIndex-paramOrder.begin()+1,//errorIndex
-                   vars,
-                   0xA2);
+  return encodeSnmpV1Message(
+    request.community_,
+    request.id_,
+    (int)SnmpV1Response::ErrorStatus::NO_SUCH_NAME,//error
+    errorIndex-paramOrder.begin()+1,//errorIndex
+    vars,
+    0xA2);
 }
 
 std::vector<uint8_t> encodeResponse(
@@ -210,13 +211,13 @@ std::vector<uint8_t> encodeResponse(
   std::vector<Oid>::const_iterator const errorIndex(
     std::find(paramOrder.begin(),paramOrder.end(),error.param_));
   xju::assert_not_equal(errorIndex,paramOrder.end());
-  return encodePDU(0, // SNMP version 1
-                   request.community_,
-                   request.id_,
-                   (int)SnmpV1Response::ErrorStatus::BAD_VALUE,//error
-                   errorIndex-paramOrder.begin()+1,//errorIndex
-                   vars,
-                   0xA2);
+  return encodeSnmpV1Message(
+    request.community_,
+    request.id_,
+    (int)SnmpV1Response::ErrorStatus::BAD_VALUE,//error
+    errorIndex-paramOrder.begin()+1,//errorIndex
+    vars,
+    0xA2);
 }
 
 std::vector<uint8_t> encodeResponse(
@@ -236,13 +237,13 @@ std::vector<uint8_t> encodeResponse(
   std::vector<Oid>::const_iterator const errorIndex(
     std::find(paramOrder.begin(),paramOrder.end(),error.param_));
   xju::assert_not_equal(errorIndex,paramOrder.end());
-  return encodePDU(0, // SNMP version 1
-                   request.community_,
-                   request.id_,
-                   (int)SnmpV1Response::ErrorStatus::READ_ONLY,//error
-                   errorIndex-paramOrder.begin()+1,//errorIndex
-                   vars,
-                   0xA2);
+  return encodeSnmpV1Message(
+    request.community_,
+    request.id_,
+    (int)SnmpV1Response::ErrorStatus::READ_ONLY,//error
+    errorIndex-paramOrder.begin()+1,//errorIndex
+    vars,
+    0xA2);
 }
 
 std::vector<uint8_t> encodeResponse(
@@ -259,13 +260,13 @@ std::vector<uint8_t> encodeResponse(
                      oid,
                      std::shared_ptr<Value const>((*request.values_.find(oid)).second));
                  });
-  return encodePDU(0, // SNMP version 1
-                   request.community_,
-                   request.id_,
-                   (int)SnmpV1Response::ErrorStatus::TOO_BIG,//error
-                   0,//errorIndex
-                   vars,
-                   0xA2);
+  return encodeSnmpV1Message(
+    request.community_,
+    request.id_,
+    (int)SnmpV1Response::ErrorStatus::TOO_BIG,//error
+    0,//errorIndex
+    vars,
+    0xA2);
 }
 
 std::vector<uint8_t> encodeResponse(
@@ -285,13 +286,13 @@ std::vector<uint8_t> encodeResponse(
   std::vector<Oid>::const_iterator const errorIndex(
     std::find(paramOrder.begin(),paramOrder.end(),error.param_));
   xju::assert_not_equal(errorIndex,paramOrder.end());
-  return encodePDU(0, // SNMP version 1
-                   request.community_,
-                   request.id_,
-                   (int)SnmpV1Response::ErrorStatus::GEN_ERR,//error
-                   errorIndex-paramOrder.begin()+1,//errorIndex
-                   vars,
-                   0xA2);
+  return encodeSnmpV1Message(
+    request.community_,
+    request.id_,
+    (int)SnmpV1Response::ErrorStatus::GEN_ERR,//error
+    errorIndex-paramOrder.begin()+1,//errorIndex
+    vars,
+    0xA2);
 }
 
 std::vector<uint8_t> encodeResponse(
@@ -299,13 +300,13 @@ std::vector<uint8_t> encodeResponse(
   std::vector<std::pair<Oid,std::shared_ptr<xju::snmp::Value const> > > const& results)
     throw()
 {
-  return encodePDU(0, // SNMP version 1
-                   request.community_,
-                   request.id_,
-                   0,//error
-                   0,//errorIndex
-                   results,
-                   0xA2);
+  return encodeSnmpV1Message(
+    request.community_,
+    request.id_,
+    0,//error
+    0,//errorIndex
+    results,
+    0xA2);
 }
 
 
@@ -322,13 +323,13 @@ std::vector<uint8_t> encodeResponse(
                      oid,
                      std::shared_ptr<Value const>(new xju::snmp::NullValue));
                  });
-  return encodePDU(0, // SNMP version 1
-                   request.community_,
-                   request.id_,
-                   (int)SnmpV1Response::ErrorStatus::TOO_BIG,//error
-                   0,//errorIndex
-                   vars,
-                   0xA2);
+  return encodeSnmpV1Message(
+    request.community_,
+    request.id_,
+    (int)SnmpV1Response::ErrorStatus::TOO_BIG,//error
+    0,//errorIndex
+    vars,
+    0xA2);
 }
 
 
@@ -348,13 +349,13 @@ std::vector<uint8_t> encodeResponse(
   std::vector<Oid>::const_iterator const errorIndex(
     std::find(request.oids_.begin(),request.oids_.end(),error.param_));
   xju::assert_not_equal(errorIndex,request.oids_.end());
-  return encodePDU(0, // SNMP version 1
-                   request.community_,
-                   request.id_,
-                   (int)SnmpV1Response::ErrorStatus::GEN_ERR,//error
-                   errorIndex-request.oids_.begin()+1,//errorIndex
-                   vars,
-                   0xA2);
+  return encodeSnmpV1Message(
+    request.community_,
+    request.id_,
+    (int)SnmpV1Response::ErrorStatus::GEN_ERR,//error
+    errorIndex-request.oids_.begin()+1,//errorIndex
+    vars,
+    0xA2);
 }
 
 

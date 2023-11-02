@@ -29,16 +29,6 @@ namespace snmp
 {
 
 std::vector<uint8_t> encodePDU(
-  int snmpVersion, //0 == SNMP version 1
-  Community const& community,
-  RequestId requestId,
-  uint64_t error,
-  uint64_t errorIndex,
-  std::vector<std::pair<Oid, std::shared_ptr<Value const>> > const& vars,
-  uint8_t pduType // 0xA0 snmp v1 get etc
-  ) throw();
-
-std::vector<uint8_t> encodePDU(
   Community const& community,
   RequestId requestId,
   uint64_t error,

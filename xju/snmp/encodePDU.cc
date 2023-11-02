@@ -90,18 +90,18 @@ public:
 
 }
 
-typedef std::shared_ptr<Value const> vp;
-
 std::vector<uint8_t> encodePDU(
   int snmpVersion, //0 == SNMP version 1
   Community const& community,
   RequestId requestId,
   uint64_t error,
   uint64_t errorIndex,
-  std::vector<std::pair<Oid, vp> > const& vars,
+  std::vector<std::pair<Oid, std::shared_ptr<Value const>> > const& vars,
   uint8_t pduType // 0xA2 snmp v1 get etc
   ) throw()
 {
+  typedef std::shared_ptr<Value const> vp;
+
   std::vector<vp > params;
   std::transform(vars.begin(),
                  vars.end(),
@@ -140,6 +140,8 @@ std::vector<uint8_t> encodePDU(
   uint8_t pduType // 0xA2 snmp v1 get etc
   ) throw()
 {
+  typedef std::shared_ptr<Value const> vp;
+
   Sequence s({
       vp(new IntValue(1)), //SNMP V2c
       vp(new StringValue(std::vector<uint8_t>(community._.begin(),

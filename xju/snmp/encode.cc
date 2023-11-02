@@ -41,6 +41,7 @@
 #include <xju/snmp/SnmpV3Message.hh>
 #include <xju/snmp/Sequence.hh>
 #include <xju/snmp/SnmpV3UsmSecurityParameters.hh>
+#include <xju/snmp/encodeSnmpV1Message.hh>
 
 namespace xju
 {
@@ -176,8 +177,7 @@ std::vector<uint8_t> encode(SnmpV1Trap const& trap) throw()
 
 std::vector<uint8_t> encode(SnmpV1Response const& response) throw()
 {
-  return encodePDU(
-    0, // SNMP version 1
+  return encodeSnmpV1Message(
     response.community_,
     response.id_,
     (uint64_t)response.error_,
