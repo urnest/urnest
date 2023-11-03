@@ -14,6 +14,12 @@
 #include <stdint.h>
 #include <xju/snmp/ContextEngineID.hh>
 #include <xju/snmp/ContextName.hh>
+#include <xju/snmp/SnmpV3ScopedPDU.hh>
+#include <xju/snmp/SnmpV3SecParams.hh>
+#include <xju/snmp/SnmpV3UsmSecurityParameters.hh>
+#include <xju/snmp/SnmpV3UsmAuthData.hh>
+#include <xju/snmp/SnmpV3UsmPrivData.hh>
+#include <xju/snmp/SnmpV3ScopedPduData.hh>
 
 
 namespace xju
@@ -51,15 +57,13 @@ class SnmpV3Message;
 
 std::vector<uint8_t> encode(SnmpV3Message const& message) throw();
 
-class SnmpV3ScopedPDU;
-
-std::vector<uint8_t> encode(SnmpV3ScopedPDU pdu) throw();
+SnmpV3ScopedPduData encode(SnmpV3ScopedPDU const& pdu) throw();
 
 class SnmpV3UsmSecurityParameters;
-std::vector<uint8_t> encode(
+SnmpV3SecParams encode(
   SnmpV3UsmSecurityParameters const& genericParams,
-  std::vector<uint8_t> const& preEncodedAuthParams,
-  std::vector<uint8_t> const& preEncodedPrivParams) throw();
+  SnmpV3UsmAuthData const& preEncodedAuthParams,
+  SnmpV3UsmPrivData const& preEncodedPrivParams) throw();
 
 }
 }

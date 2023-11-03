@@ -7,23 +7,19 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#ifndef XJU_SNMP_DECODESNMPV3SCOPEDPDU_H
-#define XJU_SNMP_DECODESNMPV3SCOPEDPDU_H
 
-#include <xju/snmp/SnmpV3ScopedPDU.hh>
-#include <xju/snmp/SnmpV3ScopedPduData.hh>
+
+#include <xju/Tagged.hh>
+#include <vector>
+#include <cinttypes>
 
 namespace xju
 {
 namespace snmp
 {
 
-SnmpV3ScopedPDU decodeSnmpV3ScopedPDU(
-    SnmpV3ScopedPduData const& data) /*throw(
-    // malformed
-    xju::Exception)*/;
+class SnmpV3EncodedPDUTag{};
+typedef xju::Tagged<std::vector<uint8_t>, SnmpV3EncodedPDUTag> SnmpV3EncodedPDU;
 
 }
 }
-
-#endif

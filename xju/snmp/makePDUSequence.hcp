@@ -1,0 +1,160 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <cinttypes>
+#include <vector>
+#include <utility>
+#include <xju/snmp/Oid.hh>
+#include <memory>
+#include <xju/snmp/Value.hh>
+#include <algorithm> //impl
+#include <iterator> //impl
+#include <xju/snmp/OidValue.hh> //impl
+#include <xju/snmp/IntValue.hh> //impl
+#include <xju/snmp/RequestId.hh>
+#include <xju/snmp/SnmpV2cVarResponse.hh>
+#include <xju/snmp/Sequence.hh> //impl
+#include <xju/snmp/encodedLengthOfLength.hh> //impl
+#include <xju/snmp/encodeLength.hh> //impl
+#include <xju/assert.hh> //impl
+#include <xju/format.hh> //impl
+#include <xju/seq_less.hh> //impl
+#include <xju/snmp/SnmpReportPDU.hh>
+
+namespace xju
+{
+namespace snmp
+{
+
+std::shared_ptr<Value const> makePDUSequence(
+  RequestId requestId,
+  uint64_t error,
+  uint64_t errorIndex,
+  std::vector<std::pair<Oid, std::shared_ptr<Value const>> > const& vars,
+  uint8_t pduType // 0xA0 snmp v1 get etc
+  ) throw()
+{
+  typedef std::shared_ptr<Value const> vp;
+
+  std::vector<vp > params;
+  std::transform(vars.begin(),
+                 vars.end(),
+                 std::back_inserter(params),
+                 [](std::pair<Oid,vp> const& var) {
+                   return vp(
+                     new Sequence({
+                         vp(new OidValue(var.first)),
+                           vp(var.second)
+                           },
+                       0x30));
+                 });
+  return vp(new Sequence({
+        vp(new IntValue(requestId.value())),
+        vp(new IntValue(error)),//error
+        vp(new IntValue(errorIndex)),//errorIndex
+        vp(new Sequence(params,0x30))},
+      pduType));
+}
+
+namespace
+{
+
+uint64_t encodedLengthOfItems(
+  std::vector<SnmpV2cVarResponse> const& items) throw()
+{
+  uint64_t result(0);
+  for(auto x:items){
+    result=result+x.encodedLength();
+  }
+  return result;
+}
+
+class V2cSequence : private xju::Int<V2cSequence,size_t>, //encoded length of items
+                    public Value
+{
+public:
+  V2cSequence(std::vector<SnmpV2cVarResponse> const& items,
+              uint8_t sequenceType) throw():
+      xju::Int<V2cSequence,size_t>(encodedLengthOfItems(items)),
+      Value(1/*type*/+
+            encodedLengthOfLength(value())+
+            value()),
+      items_(items),
+      sequenceType_(sequenceType) {
+  }
+  std::vector<SnmpV2cVarResponse> const items_;
+  uint8_t const sequenceType_;
+
+  // Value::
+  std::vector<uint8_t>::iterator encodeTo(
+    std::vector<uint8_t>::iterator begin) const throw() override
+  {
+    auto at=begin;
+    *at++=sequenceType_;
+    at=encodeLength(at,value());
+    for(SnmpV2cVarResponse x: items_) {
+      at=x.encodeTo(at);
+    }
+    xju::assert_equal(at-begin, encodedLength_);
+    return at;
+  }
+  // Value::
+  std::string str() const throw() override
+  {
+    return xju::format::join(items_.begin(),items_.end(),
+                             [](SnmpV2cVarResponse const& x) {
+                               return xju::format::str(x);
+                             },", ");
+  }
+  // Value::
+  bool less(Value const& yy) const throw() override
+  {
+    auto const y{dynamic_cast<V2cSequence const&>(yy)};
+    return xju::seq_less(items_.begin(),items_.end(),
+                         y.items_.begin(),y.items_.end());
+  }
+  
+};
+
+
+}
+
+std::shared_ptr<Value const> makePDUSequence(
+  RequestId requestId,
+  uint64_t error,
+  uint64_t errorIndex,
+  std::vector<SnmpV2cVarResponse> const& vars,
+  uint8_t pduType // 0xA2 snmp v1 get etc
+  ) throw()
+{
+  typedef std::shared_ptr<Value const> vp;
+  return vp(new Sequence({
+        vp(new IntValue(requestId.value())),
+        vp(new IntValue(error)),//error
+        vp(new IntValue(errorIndex)),//errorIndex
+        vp(new V2cSequence(vars,0x30))},
+      pduType));
+}
+
+std::shared_ptr<Value const> makePDUSequence(SnmpReportPDU const& x)
+{
+  return makePDUSequence(
+    x.requestId_,
+    0,
+    0,
+    x.vars_,
+    0xa8);
+}
+  
+}
+}
+
+

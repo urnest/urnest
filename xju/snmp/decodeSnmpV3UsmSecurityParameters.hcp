@@ -23,21 +23,24 @@
 #include <xju/snmp/DecodeIterator.hh>
 #include <xju/snmp/extractRemainder.hh> //impl
 #include <xju/snmp/formatLength.hh> //impl
+#include <xju/snmp/SnmpV3SecParams.hh>
+#include <xju/snmp/SnmpV3UsmAuthData.hh>
+#include <xju/snmp/SnmpV3UsmPrivData.hh>
 
 namespace xju
 {
 namespace snmp
 {
 std::tuple<SnmpV3UsmSecurityParameters,
-           std::vector<uint8_t>, // preEncodedAuthParams
-           std::vector<uint8_t>>  // preEncodedPrivParams
-decodeSnmpV3UsmSecurityParameters(std::vector<uint8_t> const& data) /*throw(xju::Exception)*/
+           SnmpV3UsmAuthData, // preEncodedAuthParams
+           SnmpV3UsmPrivData>  // preEncodedPrivParams
+decodeSnmpV3UsmSecurityParameters(SnmpV3SecParams const& data) /*throw(xju::Exception)*/
 {
   
-  DecodeIterator const at(data);
+  DecodeIterator const at(data._);
   std::vector<std::string> ok;
   try{
-    DecodeIterator const start(data);
+    DecodeIterator const start(data._);
     auto const s1(decodeSequenceTypeAndLength(start));
     if (s1.first.first!=0x30) {
       std::ostringstream s;
@@ -97,8 +100,8 @@ decodeSnmpV3UsmSecurityParameters(std::vector<uint8_t> const& data) /*throw(xju:
                       EngineBoots(engineBoots.first),
                       EngineTime(engineTime.first),
                       UserName(std::string(userName.first.begin(), userName.first.end()))),
-                    std::move(preEncodedAuthParams.first),
-                    std::move(preEncodedPrivParams.first));
+                    SnmpV3UsmAuthData(std::move(preEncodedAuthParams.first)),
+                    SnmpV3UsmPrivData(std::move(preEncodedPrivParams.first)));
                 }
                 catch(xju::Exception const& e) {
                   std::ostringstream s;
@@ -165,7 +168,7 @@ decodeSnmpV3UsmSecurityParameters(std::vector<uint8_t> const& data) /*throw(xju:
   }
   catch(xju::Exception& e) {
     std::ostringstream s;
-    s << "decode snmp v3 USM Security Parameters from " << data.size() << " bytes of data";
+    s << "decode snmp v3 USM Security Parameters from " << data._.size() << " bytes of data";
     if (ok.size()) {
       s << " having successfully decoded "
         << xju::format::join(ok.rbegin(),ok.rend(),", ");

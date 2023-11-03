@@ -635,7 +635,7 @@ void test12(){
                       encode(SnmpV3ScopedPDU(
                                ContextEngineID(std::vector<uint8_t>{0x01, 0x02}),
                                ContextName(std::vector<uint8_t>{'f','r','e','d'}),
-                               std::vector<uint8_t>{
+                               SnmpV3EncodedPDU(std::vector<uint8_t>{
                                  0xa0, 0x21,
                                    // request-id
                                    0x02, 0x04, 0x69, 0x0f, 0x79, 0xb6,
@@ -650,10 +650,10 @@ void test12(){
                                    0x06, 0x01, 0x04,
                                    0x01, 0x94, 0x78, 0x01, 0x02, 0x07, 0x03, 0x02, 0x00,
                                    // type+length
-                                   0x05, 0x00}))),
+                                   0x05, 0x00})))),
                     SnmpV3ScopedPDU(ContextEngineID(std::vector<uint8_t>{0x01, 0x02}),
                                     ContextName(std::vector<uint8_t>{'f','r','e','d'}),
-                                    std::vector<uint8_t>{
+                                    SnmpV3EncodedPDU(std::vector<uint8_t>{
                                       0xa0, 0x21,
                                         // request-id
                                         0x02, 0x04, 0x69, 0x0f, 0x79, 0xb6,
@@ -668,7 +668,7 @@ void test12(){
                                         0x06, 0x01, 0x04,
                                         0x01, 0x94, 0x78, 0x01, 0x02, 0x07, 0x03, 0x02, 0x00,
                                         // type+length
-                                        0x05, 0x00}));
+                                        0x05, 0x00})));
 }
 
 void test13(){
@@ -679,8 +679,8 @@ void test13(){
                512,
                (SnmpV3Message::Flags)(SnmpV3Message::REPORTABLE|SnmpV3Message::AUTH),
                SnmpV3Message::SecurityModel(3),
-               std::vector<uint8_t>{0x01,0x02,0x03},
-               std::vector<uint8_t>{
+               SnmpV3SecParams(std::vector<uint8_t>{0x01,0x02,0x03}),
+               SnmpV3ScopedPduData(std::vector<uint8_t>{
                  0x30, 0x3c,
                    // contextEngineID
                    0x04, 0x11, 0x80, 0x00, 0x1f, 0x88, 0x80, 0xe6, 0x79, 0x08, 0x01, 0x97, 0x35, 0x2e, 0x5d, 0x00, 0x00,
@@ -690,14 +690,14 @@ void test13(){
                    // data = Get PDU
                    0xa0, 0x21, 0x02, 0x04, 0x69, 0x0f, 0x79, 0xb6,
                    0x02, 0x01, 0x00, 0x02, 0x01, 0x00, 0x30, 0x13, 0x30, 0x11, 0x06, 0x0d, 0x2b, 0x06, 0x01, 0x04,
-                   0x01, 0x94, 0x78, 0x01, 0x02, 0x07, 0x03, 0x02, 0x00, 0x05, 0x00}))),
+                   0x01, 0x94, 0x78, 0x01, 0x02, 0x07, 0x03, 0x02, 0x00, 0x05, 0x00})))),
     SnmpV3Message(
                SnmpV3Message::ID(33),
                512,
                (SnmpV3Message::Flags)(SnmpV3Message::REPORTABLE|SnmpV3Message::AUTH),
                SnmpV3Message::SecurityModel(3),
-               std::vector<uint8_t>{0x01,0x02,0x03},
-               std::vector<uint8_t>{
+               SnmpV3SecParams(std::vector<uint8_t>{0x01,0x02,0x03}),
+               SnmpV3ScopedPduData(std::vector<uint8_t>{
                  0x30, 0x3c,
                    // contextEngineID
                    0x04, 0x11, 0x80, 0x00, 0x1f, 0x88, 0x80, 0xe6, 0x79, 0x08, 0x01, 0x97, 0x35, 0x2e, 0x5d, 0x00, 0x00,
@@ -707,7 +707,7 @@ void test13(){
                    // data = Get PDU
                    0xa0, 0x21, 0x02, 0x04, 0x69, 0x0f, 0x79, 0xb6,
                    0x02, 0x01, 0x00, 0x02, 0x01, 0x00, 0x30, 0x13, 0x30, 0x11, 0x06, 0x0d, 0x2b, 0x06, 0x01, 0x04,
-                   0x01, 0x94, 0x78, 0x01, 0x02, 0x07, 0x03, 0x02, 0x00, 0x05, 0x00}));
+                   0x01, 0x94, 0x78, 0x01, 0x02, 0x07, 0x03, 0x02, 0x00, 0x05, 0x00})));
                    
 }
 
@@ -721,16 +721,16 @@ void test14(){
                EngineBoots(0x775),
                EngineTime(0x60fd),
                UserName("fred")),
-             std::vector<uint8_t>{},
-             std::vector<uint8_t>{})),
+             SnmpV3UsmAuthData(std::vector<uint8_t>{}),
+             SnmpV3UsmPrivData(std::vector<uint8_t>{0x01}))),
     std::make_tuple(SnmpV3UsmSecurityParameters(
                       ContextEngineID(
                         std::vector<uint8_t>{0x80, 0x00, 0x1f, 0x88, 0x80, 0xe6, 0x79, 0x08, 0x01, 0x97, 0x35, 0x2e, 0x5d, 0x00, 0x00, 0x00, 0x00}),
                       EngineBoots(0x775),
                       EngineTime(0x60fd),
                       UserName("fred")),
-                    std::vector<uint8_t>{},
-                    std::vector<uint8_t>{}));
+                    SnmpV3UsmAuthData(std::vector<uint8_t>{}),
+                    SnmpV3UsmPrivData(std::vector<uint8_t>{0x01})));
 }
 
 }

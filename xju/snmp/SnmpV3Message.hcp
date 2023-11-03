@@ -13,6 +13,8 @@
 #include <cinttypes>
 #include <vector>
 #include <unistd.h>
+#include <xju/snmp/SnmpV3SecParams.hh>
+#include <xju/snmp/SnmpV3ScopedPduData.hh>
 
 namespace xju
 {
@@ -37,8 +39,8 @@ public:
                 size_t const maxSize,
                 Flags const flags,
                 SecurityModel const securityModel,
-                std::vector<uint8_t> securityParameters,
-                std::vector<uint8_t> scopedPduData):
+                SnmpV3SecParams securityParameters,
+                SnmpV3ScopedPduData scopedPduData):
       id_(id),
       maxSize_(maxSize),
       flags_(flags),
@@ -52,8 +54,8 @@ public:
   size_t maxSize_;
   Flags flags_;
   SecurityModel securityModel_;
-  std::vector<uint8_t> securityParameters_;
-  std::vector<uint8_t> scopedPduData_;
+  SnmpV3SecParams securityParameters_;
+  SnmpV3ScopedPduData scopedPduData_;
 
   //auth required? (Independent of priv.)
   bool auth() const { return flags_ & AUTH; }

@@ -1,0 +1,42 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/snmp/RequestId.hh>
+#include <vector>
+#include <utility>
+#include <xju/snmp/Oid.hh>
+#include <memory>
+#include <xju/snmp/Value.hh>
+
+namespace xju
+{
+namespace snmp
+{
+class SnmpReportPDU
+{
+public:
+  SnmpReportPDU(
+    RequestId requestId,
+    std::vector<std::pair<Oid, std::shared_ptr<Value const>> > vars):
+      requestId_(std::move(requestId)),
+      vars_(std::move(vars))
+  {
+  }
+  RequestId requestId_;
+  std::vector<std::pair<Oid, std::shared_ptr<Value const>> > vars_;
+
+  friend bool operator<(SnmpReportPDU const& x, SnmpReportPDU const& y) throw();
+};
+
+}
+}
+
+

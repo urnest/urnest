@@ -17,12 +17,11 @@
 #include <xju/snmp/Oid.hh>
 #include <memory>
 #include <xju/snmp/Value.hh>
-#include <algorithm> //impl
 #include <xju/snmp/Sequence.hh> //impl
 #include <xju/snmp/IntValue.hh> //impl
 #include <xju/snmp/StringValue.hh> //impl
 #include <xju/assert.hh> //impl
-#include <xju/snmp/OidValue.hh> //impl
+#include <xju/snmp/makePDUSequence.hh> //impl
 
 namespace xju
 {
@@ -39,29 +38,11 @@ std::vector<uint8_t> encodeSnmpV1Message(
 {
   typedef std::shared_ptr<Value const> vp;
 
-  std::vector<vp > params;
-  std::transform(vars.begin(),
-                 vars.end(),
-                 std::back_inserter(params),
-                 [](std::pair<Oid,vp> const& var) {
-                   return vp(
-                     new Sequence({
-                         vp(new OidValue(var.first)),
-                           vp(var.second)
-                           },
-                       0x30));
-                 });
-                       
   Sequence s({
       vp(new IntValue(0)), // 0 == SNMP version 1
       vp(new StringValue(std::vector<uint8_t>(community._.begin(),
                                               community._.end()))),
-      vp(new Sequence({
-            vp(new IntValue(requestId.value())),
-            vp(new IntValue(error)),//error
-            vp(new IntValue(errorIndex)),//errorIndex
-            vp(new Sequence(params,0x30))},
-        pduType))},
+      vp(makePDUSequence(requestId, error, errorIndex, vars, pduType))},
     0x30);
   std::vector<uint8_t> result(s.encodedLength());
   xju::assert_equal(s.encodeTo(result.begin()),result.end());

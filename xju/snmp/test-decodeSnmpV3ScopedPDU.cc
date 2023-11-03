@@ -23,7 +23,7 @@ namespace snmp
 void test1() throw()
 {
   // decodeSnmpV3ScopedPDU
-  std::vector<uint8_t> x({
+  SnmpV3ScopedPduData const x(std::vector<uint8_t>{
       0x30, 0x3c,
       // contextEngineID
       0x04, 0x11,
@@ -47,13 +47,13 @@ void test1() throw()
       0x01, 0x94, 0x78, 0x01, 0x02, 0x07, 0x03, 0x02, 0x00,
       // type+length
       0x05, 0x00
-    });
+  });
   SnmpV3ScopedPDU y(decodeSnmpV3ScopedPDU(x));
   xju::assert_equal(y.contextEngineID_, ContextEngineID(std::vector<uint8_t>{
         0x80, 0x00, 0x1f, 0x88, 0x80, 0xe6, 0x79, 0x08, 0x01, 0x97, 0x35, 0x2e, 0x5d, 0x00, 0x00,
           0x00, 0x00,}));
   xju::assert_equal(y.contextName_, ContextName(std::vector<uint8_t>{'j','o','c','k'}));
-  xju::assert_equal(y.encodedPDU_, std::vector<uint8_t>({
+  xju::assert_equal(y.encodedPDU_, SnmpV3EncodedPDU(std::vector<uint8_t>{
               0xa0, 0x21,
       // request-id
       0x02, 0x04, 0x69, 0x0f, 0x79, 0xb6,
@@ -76,7 +76,7 @@ void test2()
 {
   // decodeSnmpV3ScopedPDU failures
   try {
-    std::vector<uint8_t> x({
+    SnmpV3ScopedPduData const x(std::vector<uint8_t>{
       0x31, 0x3c,
       // contextEngineID
       0x04, 0x11,
@@ -108,7 +108,7 @@ void test2()
     xju::assert_equal(readableRepr(e),"Failed to decode snmp v3 scoped pdu from 62 bytes of data because\nexpected sequence type byte 0x30, got 0x31 at offset 0.");
   }
   try {
-    std::vector<uint8_t> x({
+    SnmpV3ScopedPduData const x(std::vector<uint8_t>{
       0x30, 0x3d,
       // contextEngineID
       0x04, 0x11,
@@ -140,7 +140,7 @@ void test2()
     xju::assert_equal(readableRepr(e),"Failed to decode snmp v3 scoped pdu from 62 bytes of data having successfully decoded sequence type 0x30 and length 61 bytes because\nsequence length 61 does not match contained data length (60).");
   }
   try {
-    std::vector<uint8_t> x({
+    SnmpV3ScopedPduData const x(std::vector<uint8_t>{
       0x30, 0x3c,
       // contextEngineID
       0x02, 0x11,
@@ -172,7 +172,7 @@ void test2()
     xju::assert_equal(readableRepr(e),"Failed to decode snmp v3 scoped pdu from 62 bytes of data having successfully decoded sequence type 0x30 and length 60 bytes because\nfailed to decode string at offset 2 because\ntype is 0x02 not 0x04.");
   }
   try {
-    std::vector<uint8_t> x({
+    SnmpV3ScopedPduData const x(std::vector<uint8_t>{
       0x30, 0x3c,
       // contextEngineID
       0x04, 0x11,

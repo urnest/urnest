@@ -27,13 +27,13 @@ namespace xju
 namespace snmp
 {
 SnmpV3ScopedPDU decodeSnmpV3ScopedPDU(
-    std::vector<uint8_t> const& data) /*throw(
+    SnmpV3ScopedPduData const& data) /*throw(
     // malformed
     xju::Exception)*/
 {
   std::vector<std::string> ok;
   try {
-    DecodeIterator const start(data);
+    DecodeIterator const start(data._);
     auto const s1(decodeSequenceTypeAndLength(start));
     if (s1.first.first!=0x30) {
       std::ostringstream s;
@@ -54,7 +54,7 @@ SnmpV3ScopedPDU decodeSnmpV3ScopedPDU(
           auto encodedPDU(extractRemainder(contextName.second));
           return SnmpV3ScopedPDU(std::move(ContextEngineID(contextEngineID.first)),
                                  std::move(ContextName(contextName.first)),
-                                 std::move(encodedPDU));
+                                 SnmpV3EncodedPDU(std::move(encodedPDU)));
       }
       catch(xju::Exception const& e) {
         std::ostringstream s;
@@ -73,7 +73,7 @@ SnmpV3ScopedPDU decodeSnmpV3ScopedPDU(
   }
   catch(xju::Exception& e) {
     std::ostringstream s;
-    s << "decode snmp v3 scoped pdu from " << data.size() << " bytes of data";
+    s << "decode snmp v3 scoped pdu from " << data._.size() << " bytes of data";
     if (ok.size()) {
       s << " having successfully decoded "
         << xju::format::join(ok.rbegin(),ok.rend(),", ");

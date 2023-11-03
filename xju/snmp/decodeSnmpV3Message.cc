@@ -138,8 +138,8 @@ SnmpV3Message decodeSnmpV3Message(
                         maxSize.first,
                         (SnmpV3Message::Flags)msgFlags.first[0],
                         SnmpV3Message::SecurityModel(securityModel.first),
-                        std::move(securityParameters.first),
-                        std::move(scopedPDU));
+                        SnmpV3SecParams(std::move(securityParameters.first)),
+                        SnmpV3ScopedPduData(std::move(scopedPDU)));
                     }
                     catch(xju::Exception const& e){
                       std::ostringstream s;

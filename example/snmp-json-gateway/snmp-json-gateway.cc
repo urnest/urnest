@@ -42,6 +42,7 @@
 #include <xju/snmp/decodeSnmpV2cGetRequest.hh>
 #include <xju/snmp/decodeSnmpV2cGetBulkRequest.hh>
 #include <xju/snmp/decodeSnmpV2cSetRequest.hh>
+#include <xju/snmp/ContextEngineID.hh>
 
 auto const same_line = xju::Utf8String("");
 
@@ -53,6 +54,9 @@ void run(xju::ip::UDPSocket& socket){
   std::cout << xju::json::format(portMessage, same_line) << std::endl;
 
   auto stop_receiver = xju::pipe(true,true);
+
+  uint64_t usmStatsUnknownEngineIDs=0;
+  xju::snmp::ContextEngineID const ourEngineID(std::vector<uint8_t>{0x01,0x02,0x03,0x04});
   
   auto from_snmp_to_stdout =
     [&](){
@@ -125,6 +129,97 @@ void run(xju::ip::UDPSocket& socket){
             std::cout << xju::json::format(*snmp_json_gateway::encode(senderAndSize.first,x),same_line)
                       << std::endl;
             continue;
+          }
+          catch(xju::Exception& e){
+            failures.push_back(e);
+          }
+          try{
+            auto const x(xju::snmp::decodeSnmpV3Message(buffer));
+            try {
+              if (x.securityModel_ != 3) {
+                std::ostringstream s;
+                s << "snmp v3 security model " << x.securityModel_ << " is not yet implemented";
+                throw xju::Exception(s.str(),XJU_TRACED);
+              }
+              f ((x.flags_ & SnmpV3Message::AUTH) == SnmpV3Message::AUTH){
+                std::ostringstream s;
+                s << "snmp v3 auth " << x.securityModel_ << " is not yet implemented";
+                throw xju::Exception(s.str(),XJU_TRACED);
+              }
+              auto const sec(xju::snmp::decodeSnmpV3UsmSecurityParameters(x.securityParameters_));
+              if ((x.flags_ & SnmpV3Message::AUTH) == 0 &&
+                  (x.flags_ & SnmpV3Message::REPORTABLE)==SnmpV3Message::REPORTABLE &&
+                  sec.engineID_==ContextEngineID({}) &&
+                  sec.userName_==UserName("")){
+                // engineid discovery (rfc3414 4. Discovery)
+                auto const scopedPDU(decodeSnmpV3ScopedPDU(x.scopedPduData_));
+                auto const requestId(decodeAnyPDURequestId(scopedPdu.encodedPDU_));
+                auto const pdu=xju::snmp::makeReportPDUSequence(
+                  requestId,
+                  {std::make_pair(xju::snmp::Oid(".1.3.6.1.6.3.15.1.1.4"),
+                                  std::shared_ptr<Value const>(
+                                    new xju::snmp::Counter32(usmStatsUnknownEngineIDs)))});
+                auto const m(
+                  xju::snmp::encode(
+                    xju::snmp::SnmpV3Message(
+                      x.id_,
+                      maxSize,
+                      xju::snmp::SnmpV3Message::Flags(0),
+                      xju::snmp::SnmpV3Message::SecurityModel(3),
+                      xju::snmp::encode(
+                        xju::snmp::SnmpV3UsmSecurityParameters(ourEngineID,
+                                                               1,
+                                                               engineTimeNow(),
+                                                               xju::UserName("")),
+                        SnmpV3UsmAuthData({}),
+                        SnmpV3UsmPrivData({})).
+                      xju::snmp::encode(
+                        xju::snmp::SnmpV3ScopedPDU(
+                          ourEngineID,
+                          xju::snmp::ContextName(),
+                          xju::snmp::encode(
+                            SnmpV3ReportPDU(
+                              requestPDU.first,
+                              {std::make_pair(xju::snmp::Oid(".1.3.6.1.6.3.15.1.1.4"),
+                                              std::shared_ptr<Value const>(
+                                                new xju::snmp::Counter32(
+                                                  usmStatsUnknownEngineIDs)))})))))));
+                auto const deadline(xju::steadyNow()+std::chrono::seconds(5));
+                socket.sendTo(remoteEndpoint.first,remoteEndpoint.second,m.data(),m.size(),deadline);
+              }
+              else if (sec.engineID_!=ourEngineID){
+                ++usmStatsUnknownEngineIDs;
+                std::ostringstream s;
+                s << "expected engine id " << xju::snmp::showBytes(512,ourEngineID)
+                  << ", got " << xju::snmp::showBytes(512,sec.engineID_);
+                throw xju::Exception(s.str(),XJU_TRACED);
+              }
+              else {
+                auto const scopedPdu(xju::snmp::decodeSnmpV3ScopedPDU(x.scopedPduData_));
+                try{
+                  auto const p(xju::snmp::decodeGetPDU(scopedPdu.encodedPDU_));
+                  std::cout << xju::json::format(*snmp_json_gateway::encode(
+                                                   senderAndSize.first,
+                                                   x,
+                                                   std::get<0>(sec),
+                                                   p),same_line)
+                            << std::endl;
+                  continue;
+                }
+                catch(xju::Exception& e){
+                  std::ostringstream s;
+                  s << "decode scope PDU " << scopedPdu << " assuming it contains an SnmpGet PDU";
+                  e.addContext(s.str(),XJU_TRACED);
+                  failures.push_back(e);
+                }
+              }
+            }
+            catch(xju::Exception& e){
+              std::ostringstream s;
+              s << "handle snmp v3 message " << x;
+              e.addContext(s.str(),XJU_TRACED);
+              failures.push_back(e);
+            }
           }
           catch(xju::Exception& e){
             failures.push_back(e);
@@ -223,7 +318,7 @@ int main(int argc, char* argv[])
       << "   - write received snmp messages to stdout in json format" << std::endl
       << "   - send stdin json format messages as snmp messages from specified port" << std::endl
       << " - see snmp_json_gateway.py GatewayMessage for message format" << std::endl
-      << " - note writes { \"listening_on\": port } to stdout once port is open" << std::endl;
+      << " - note writes { \"listening_on\": port } line to stdout once port is open" << std::endl;
     return 1;
   }
   try{

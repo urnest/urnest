@@ -42,6 +42,10 @@
 #include <xju/snmp/Sequence.hh>
 #include <xju/snmp/SnmpV3UsmSecurityParameters.hh>
 #include <xju/snmp/encodeSnmpV1Message.hh>
+#include <xju/snmp/SnmpV3EncodedPDU.hh>
+#include <xju/snmp/SnmpV3SecParams.hh>
+#include <xju/snmp/SnmpV3UsmAuthData.hh>
+#include <xju/snmp/SnmpV3UsmPrivData.hh>
 
 namespace xju
 {
@@ -410,8 +414,8 @@ std::vector<uint8_t> encode(SnmpV3Message const& x) throw()
             vp(new StringValue(std::vector<uint8_t>({x.flags_}))),
             vp(new IntValue(x.securityModel_.value()))},
           0x30)),
-      vp(new StringValue(std::move(x.securityParameters_))),
-      vp(new PreEncoded(std::move(x.scopedPduData_)))},
+      vp(new StringValue(std::move(x.securityParameters_._))),
+      vp(new PreEncoded(std::move(x.scopedPduData_._)))},
     0x30);
   std::vector<uint8_t> result(s.encodedLength());
   xju::assert_equal(s.encodeTo(result.begin()),result.end());
@@ -419,25 +423,25 @@ std::vector<uint8_t> encode(SnmpV3Message const& x) throw()
 }
 
 
-std::vector<uint8_t> encode(SnmpV3ScopedPDU x) throw()
+SnmpV3ScopedPduData encode(SnmpV3ScopedPDU const& x) throw()
 {
   typedef std::shared_ptr<Value const> vp;
 
   Sequence s({
       vp(new StringValue(std::move(x.contextEngineID_._))),
       vp(new StringValue(std::move(x.contextName_._))),
-      vp(new PreEncoded(std::move(x.encodedPDU_)))},
+      vp(new PreEncoded(std::move(x.encodedPDU_._)))},
     0x30);
   std::vector<uint8_t> result(s.encodedLength());
   xju::assert_equal(s.encodeTo(result.begin()),result.end());
-  return result;
+  return SnmpV3ScopedPduData(std::move(result));
 }
 
 
-std::vector<uint8_t> encode(
+SnmpV3SecParams encode(
   SnmpV3UsmSecurityParameters const& genericParams,
-  std::vector<uint8_t> const& preEncodedAuthParams,
-  std::vector<uint8_t> const& preEncodedPrivParams) throw()
+  SnmpV3UsmAuthData const& preEncodedAuthParams,
+  SnmpV3UsmPrivData const& preEncodedPrivParams) throw()
 {
   typedef std::shared_ptr<Value const> vp;
 
@@ -448,14 +452,14 @@ std::vector<uint8_t> encode(
       vp(new IntValue(genericParams.engineTime_.value())),
       vp(new StringValue(std::vector<uint8_t>(genericParams.userName_._.begin(),
                                               genericParams.userName_._.end()))),
-      vp(new StringValue(std::vector<uint8_t>(preEncodedAuthParams.begin(),
-                                              preEncodedAuthParams.end()))),
-      vp(new StringValue(std::vector<uint8_t>(preEncodedPrivParams.begin(),
-                                              preEncodedPrivParams.end())))},
+      vp(new StringValue(std::vector<uint8_t>(preEncodedAuthParams._.begin(),
+                                              preEncodedAuthParams._.end()))),
+      vp(new StringValue(std::vector<uint8_t>(preEncodedPrivParams._.begin(),
+                                              preEncodedPrivParams._.end())))},
     0x30);
   std::vector<uint8_t> result(s.encodedLength());
   xju::assert_equal(s.encodeTo(result.begin()),result.end());
-  return result;
+  return SnmpV3SecParams(std::move(result));
 }
   
 }
