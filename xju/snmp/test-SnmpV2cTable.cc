@@ -29,7 +29,7 @@ void test1() throw()
   xju::assert_equal(t.atEnd(),false);
   xju::assert_equal(t.nextOids().size(),2U);
   xju::assert_equal(t.nextOids(),std::vector<Oid>({col1,col2}));
-  typedef SnmpV2cVarResponse V;
+  typedef SnmpVar V;
   t.add(
     {V(Oid(".1.3.5.20.1"),std::shared_ptr<Value const>(new IntValue(3))),
      V(Oid(".1.3.5.21.1"),std::shared_ptr<Value const>(new IntValue(10)))});
@@ -96,7 +96,7 @@ void test2() throw()
   xju::assert_equal(t.atEnd(),false);
   xju::assert_equal(t.nextOids().size(),2U);
   xju::assert_equal(t.nextOids(),std::vector<Oid>({col1,col2}));
-  typedef SnmpV2cVarResponse V;
+  typedef SnmpVar V;
   t.add(
     {V(Oid(".1.3.5.20.1"),std::shared_ptr<Value const>(new IntValue(3))),
      V(Oid(".1.3.5.21.1"),std::shared_ptr<Value const>(new IntValue(10)))});
@@ -116,7 +116,7 @@ void test2() throw()
 
   t.add(
     {V(Oid(".1.3.5.20.2"),
-       SnmpV2cVarResponse::NoSuchObject(Oid(".1.3.5.20.2"),XJU_TRACED)),
+       SnmpVar::NoSuchObject(Oid(".1.3.5.20.2"),XJU_TRACED)),
      V(Oid(".1.3.5.21.2"),std::shared_ptr<Value const>(new IntValue(11)))});
   
   xju::assert_equal(t[col1].size(),2U);
@@ -126,7 +126,7 @@ void test2() throw()
   try{
     xju::assert_never_returns(t[col1][1]->intValue());
   }
-  catch(SnmpV2cVarResponse::NoSuchObject const& e){
+  catch(SnmpVar::NoSuchObject const& e){
   }
   
   xju::assert_equal(t[col2].size(),2U);
@@ -143,9 +143,9 @@ void test2() throw()
 
   t.add(
     {V(Oid(".1.3.5.20.2"),
-       SnmpV2cVarResponse::EndOfMibView(Oid(".1.3.5.20.2"),XJU_TRACED)),
+       SnmpVar::EndOfMibView(Oid(".1.3.5.20.2"),XJU_TRACED)),
      V(Oid(".1.3.5.21.2"),
-       SnmpV2cVarResponse::EndOfMibView(Oid(".1.3.5.21.2"),XJU_TRACED))});
+       SnmpVar::EndOfMibView(Oid(".1.3.5.21.2"),XJU_TRACED))});
 
   xju::assert_equal(t[col1].size(),2U);
   xju::assert_equal(t[col1][0].oid(),Oid(".1.3.5.20.1"));
@@ -154,7 +154,7 @@ void test2() throw()
   try{
     xju::assert_never_returns(t[col1][1]->intValue());
   }
-  catch(SnmpV2cVarResponse::NoSuchObject const& e){
+  catch(SnmpVar::NoSuchObject const& e){
   }
   xju::assert_equal(t[col2].size(),2U);
   xju::assert_equal(t[col2][0].oid(),Oid(".1.3.5.21.1"));

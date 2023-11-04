@@ -20,7 +20,7 @@ namespace xju
 {
 namespace snmp
 {
-class SnmpV2cVarResponse
+class SnmpVar
 {
 public:
   class NoSuchObject : public xju::Exception
@@ -39,23 +39,23 @@ public:
     EndOfMibView(Oid const& oid, const xju::Traced& trace) throw();
   };
 
-  SnmpV2cVarResponse(Oid oid, SnmpV2cVarResponse::NoSuchObject e) throw():
+  SnmpVar(Oid oid, SnmpVar::NoSuchObject e) throw():
       oid_(oid),
-      e_(new SnmpV2cVarResponse::NoSuchObject(e))
+      e_(new SnmpVar::NoSuchObject(e))
   {
   }
-  SnmpV2cVarResponse(Oid oid, SnmpV2cVarResponse::NoSuchInstance e) throw():
+  SnmpVar(Oid oid, SnmpVar::NoSuchInstance e) throw():
       oid_(oid),
-      e_(new SnmpV2cVarResponse::NoSuchInstance(e))
+      e_(new SnmpVar::NoSuchInstance(e))
   {
   }
-  SnmpV2cVarResponse(Oid oid, SnmpV2cVarResponse::EndOfMibView e) throw():
+  SnmpVar(Oid oid, SnmpVar::EndOfMibView e) throw():
       oid_(oid),
-      e_(new SnmpV2cVarResponse::EndOfMibView(e))
+      e_(new SnmpVar::EndOfMibView(e))
   {
   }
   //pre: *v is valid
-  SnmpV2cVarResponse(Oid oid,std::shared_ptr<Value const> v) throw():
+  SnmpVar(Oid oid,std::shared_ptr<Value const> v) throw():
       oid_(oid),
       v_(v)
   {
@@ -93,11 +93,11 @@ private:
   std::shared_ptr<xju::Exception const> e_;
   std::shared_ptr<Value const> v_;
   
-  friend std::ostream& operator<<(std::ostream& s, SnmpV2cVarResponse const& x)
+  friend std::ostream& operator<<(std::ostream& s, SnmpVar const& x)
     throw();
 
-  friend bool operator<(SnmpV2cVarResponse const& x,
-                        SnmpV2cVarResponse const& y) noexcept
+  friend bool operator<(SnmpVar const& x,
+                        SnmpVar const& y) noexcept
   {
     if (x.oid_<y.oid_) return true;
     if (y.oid_<x.oid_) return false;
@@ -114,28 +114,28 @@ private:
     if (x.v_.get() && y.v_.get()) return (*x.v_)<(*y.v_);
     return false;
   }
-  friend bool operator>(SnmpV2cVarResponse const& x,
-                        SnmpV2cVarResponse const& y) noexcept
+  friend bool operator>(SnmpVar const& x,
+                        SnmpVar const& y) noexcept
   {
     return y<x;
   }
-  friend bool operator==(SnmpV2cVarResponse const& x,
-                         SnmpV2cVarResponse const& y) noexcept
+  friend bool operator==(SnmpVar const& x,
+                         SnmpVar const& y) noexcept
   {
     return !(x<y) && !(y<x);
   }
-  friend bool operator<=(SnmpV2cVarResponse const& x,
-                         SnmpV2cVarResponse const& y) noexcept
+  friend bool operator<=(SnmpVar const& x,
+                         SnmpVar const& y) noexcept
   {
     return x<y || x==y;
   }
-  friend bool operator>=(SnmpV2cVarResponse const& x,
-                         SnmpV2cVarResponse const& y) noexcept
+  friend bool operator>=(SnmpVar const& x,
+                         SnmpVar const& y) noexcept
   {
     return x>y || x==y;
   }
-  friend bool operator!=(SnmpV2cVarResponse const& x,
-                         SnmpV2cVarResponse const& y) noexcept
+  friend bool operator!=(SnmpVar const& x,
+                         SnmpVar const& y) noexcept
   {
     return !(x==y);
   }

@@ -30,7 +30,7 @@
 #include "xju/snmp/BadValue.hh"
 #include "xju/snmp/ReadOnly.hh"
 #include "xju/snmp/SnmpV1GetNextRequest.hh"
-#include "xju/snmp/SnmpV2cVarResponse.hh"
+#include "xju/snmp/SnmpVar.hh"
 #include "xju/snmp/SnmpV2cGetRequest.hh"
 #include "xju/snmp/SnmpV2cSetRequest.hh"
 #include "xju/snmp/SnmpV2cResponse.hh"
@@ -362,10 +362,10 @@ std::vector<uint8_t> encodeResponse(
 std::vector<uint8_t> encodeResponse(
   SnmpV2cGetRequest const& request,
   std::vector<Oid> const& paramOrder,
-  std::map<Oid,SnmpV2cVarResponse> const& results)
+  std::map<Oid,SnmpVar> const& results)
     throw()
 {
-  std::vector<SnmpV2cVarResponse> vars;
+  std::vector<SnmpVar> vars;
   std::transform(paramOrder.begin(),
                  paramOrder.end(),
                  std::back_inserter(vars),
@@ -385,12 +385,12 @@ std::vector<uint8_t> encodeResponse(
   std::vector<Oid> const& paramOrder,
   NoSuchName const& error) throw()
 {
-  std::vector<SnmpV2cVarResponse> vars;
+  std::vector<SnmpVar> vars;
   std::transform(paramOrder.begin(),
                  paramOrder.end(),
                  std::back_inserter(vars),
                  [&](Oid const& oid) {
-                   return SnmpV2cVarResponse(
+                   return SnmpVar(
                      oid,
                      std::shared_ptr<Value const>(new xju::snmp::NullValue));
                  });
@@ -411,12 +411,12 @@ std::vector<uint8_t> encodeResponse(
   std::vector<Oid> const& paramOrder,
   TooBig const& error) throw()
 {
-  std::vector<SnmpV2cVarResponse> vars;
+  std::vector<SnmpVar> vars;
   std::transform(paramOrder.begin(),
                  paramOrder.end(),
                  std::back_inserter(vars),
                  [&](Oid const& oid) {
-                   return SnmpV2cVarResponse(
+                   return SnmpVar(
                      oid,
                      std::shared_ptr<Value const>(new xju::snmp::NullValue));
                  });
@@ -433,12 +433,12 @@ std::vector<uint8_t> encodeResponse(
   std::vector<Oid> const& paramOrder,
   GenErr const& error) throw()
 {
-  std::vector<SnmpV2cVarResponse> vars;
+  std::vector<SnmpVar> vars;
   std::transform(paramOrder.begin(),
                  paramOrder.end(),
                  std::back_inserter(vars),
                  [&](Oid const& oid) {
-                   return SnmpV2cVarResponse(
+                   return SnmpVar(
                      oid,
                      std::shared_ptr<Value const>(new xju::snmp::NullValue));
                  });
@@ -458,12 +458,12 @@ std::vector<uint8_t> encodeResponse(
   SnmpV2cSetRequest const& request,
   std::vector<Oid> const& paramOrder) throw()
 {
-  std::vector<SnmpV2cVarResponse> vars;
+  std::vector<SnmpVar> vars;
   std::transform(paramOrder.begin(),
                  paramOrder.end(),
                  std::back_inserter(vars),
                  [&](Oid const& oid) {
-                   return SnmpV2cVarResponse(
+                   return SnmpVar(
                      oid,(*request.values_.find(oid)).second);
                  });
   return encodePDU(request.community_,
@@ -479,7 +479,7 @@ std::vector<uint8_t> encodeResponse(
   SnmpV2cSetRequest const& request,
   TooBig const& error) throw()
 {
-  std::vector<SnmpV2cVarResponse> vars;
+  std::vector<SnmpVar> vars;
   return encodePDU(request.community_,
                    request.id_,
                    (int)SnmpV2cResponse::ErrorStatus::TOO_BIG,//error
@@ -493,12 +493,12 @@ std::vector<uint8_t> encodeResponse(
   UndoFailed const& error,
   std::vector<Oid> const& paramOrder) throw()
 {
-  std::vector<SnmpV2cVarResponse> vars;
+  std::vector<SnmpVar> vars;
   std::transform(paramOrder.begin(),
                  paramOrder.end(),
                  std::back_inserter(vars),
                  [&](Oid const& oid) {
-                   return SnmpV2cVarResponse(
+                   return SnmpVar(
                      oid,(*request.values_.find(oid)).second);
                  });
   return encodePDU(request.community_,
@@ -511,7 +511,7 @@ std::vector<uint8_t> encodeResponse(
 
 std::vector<uint8_t> encodeResponse(
   SnmpV2cGetNextRequest const& request,
-  std::vector<SnmpV2cVarResponse> const& results)
+  std::vector<SnmpVar> const& results)
     throw()
 {
   return encodePDU(request.community_,
@@ -526,12 +526,12 @@ std::vector<uint8_t> encodeResponse(
   SnmpV2cGetNextRequest const& request,
   TooBig const& error) throw()
 {
-  std::vector<SnmpV2cVarResponse> vars;
+  std::vector<SnmpVar> vars;
   std::transform(request.oids_.begin(),
                  request.oids_.end(),
                  std::back_inserter(vars),
                  [&](Oid const& oid) {
-                   return SnmpV2cVarResponse(
+                   return SnmpVar(
                      oid,
                      std::shared_ptr<Value const>(new xju::snmp::NullValue));
                  });
@@ -548,12 +548,12 @@ std::vector<uint8_t> encodeResponse(
   SnmpV2cGetNextRequest const& request,
   GenErr const& error) throw()
 {
-  std::vector<SnmpV2cVarResponse> vars;
+  std::vector<SnmpVar> vars;
   std::transform(request.oids_.begin(),
                  request.oids_.end(),
                  std::back_inserter(vars),
                  [&](Oid const& oid) {
-                   return SnmpV2cVarResponse(
+                   return SnmpVar(
                      oid,
                      std::shared_ptr<Value const>(new xju::snmp::NullValue));
                  });

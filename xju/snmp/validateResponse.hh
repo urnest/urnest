@@ -23,7 +23,7 @@
 #include <xju/snmp/ReadOnly.hh>
 #include <xju/snmp/BadValue.hh>
 #include <xju/snmp/SnmpV1Response.hh>
-#include <xju/snmp/SnmpV2cVarResponse.hh>
+#include <xju/snmp/SnmpVar.hh>
 #include <xju/snmp/NoAccess.hh>
 #include <xju/snmp/NotWritable.hh>
 #include <xju/snmp/WrongType.hh>
@@ -111,7 +111,7 @@ std::vector<std::pair<Oid, std::shared_ptr<Value const> > > validateResponse(
 // validate reponse to specified request
 // post: result[x] for all x in request.oids_
 // - returns the requested values
-std::map<Oid, SnmpV2cVarResponse> validateResponse(
+std::map<Oid, SnmpVar> validateResponse(
   SnmpV2cGetRequest const& request,
   SnmpV2cResponse const& response) /*throw(
     // in priority order, eg if both type and id mismatch, ResponseTypeMismatch
@@ -191,7 +191,7 @@ void validateResponse(
 //   or returns the requested oid with value endOfMibView
 // - note that all result  variables might be endOfMibView, which must be
 //   treated as end-of-sequence
-std::vector<SnmpV2cVarResponse> validateResponse(
+std::vector<SnmpVar> validateResponse(
   SnmpV2cGetNextRequest const& request,
   SnmpV2cResponse const& response) /*throw(
     // in priority order, eg if both type and id mismatch, ResponseTypeMismatch
@@ -213,9 +213,9 @@ std::vector<SnmpV2cVarResponse> validateResponse(
 // - note that all result  variables might be endOfMibView, which must be
 //   treated as end-of-sequence
 std::pair<
-  std::map<xju::snmp::Oid,SnmpV2cVarResponse>,
+  std::map<xju::snmp::Oid,SnmpVar>,
   std::vector<
-    std::vector<SnmpV2cVarResponse> //row
+    std::vector<SnmpVar> //row
     >
   > validateResponse(
   SnmpV2cGetBulkRequest const& request,

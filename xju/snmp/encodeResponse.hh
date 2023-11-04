@@ -29,7 +29,7 @@ class SnmpV2cGetRequest; // see SnmpV2cGetRequest.hh
 class SnmpV2cSetRequest; // see SnmpV2cSetRequest.hh
 class SnmpV2cGetNextRequest; // see SnmpV2cGetNextRequest.hh
 class SnmpV2cGetBulkRequest; // see SnmpV2cGetBulkRequest.hh
-class SnmpV2cVarResponse; // see SnmpV2cVarResponse.hh
+class SnmpVar; // see SnmpVar.hh
 
 class NoSuchName;          // see NoSuchName.hh
 class TooBig;              // see TooBig.hh
@@ -144,7 +144,7 @@ std::vector<uint8_t> encodeResponse(
 std::vector<uint8_t> encodeResponse(
   SnmpV2cGetRequest const& request,
   std::vector<Oid> const& paramOrder,
-  std::map<Oid,SnmpV2cVarResponse> const& results)
+  std::map<Oid,SnmpVar> const& results)
     throw();
 
 // encode response indicating one of the requested Oids is unrecognised
@@ -284,7 +284,7 @@ std::vector<uint8_t> encodeResponse(
 // other info (community,id) copied from request
 std::vector<uint8_t> encodeResponse(
   SnmpV2cGetNextRequest const& request,
-  std::vector<SnmpV2cVarResponse> const& results)
+  std::vector<SnmpVar> const& results)
     throw();
 
 // encode response indicating response would have been too big to encode

@@ -26,7 +26,7 @@
 #include "xju/snmp/SnmpV2cSetRequest.hh"
 #include "xju/snmp/decodeSnmpV2cResponse.hh"
 #include <xju/snmp/SnmpV2cGetNextRequest.hh>
-#include <xju/snmp/SnmpV2cVarResponse.hh>
+#include <xju/snmp/SnmpVar.hh>
 #include <xju/snmp/TimeTicksValue.hh>
 #include <chrono>
 #include <xju/snmp/IntValue.hh>
@@ -344,12 +344,12 @@ void test14() {
       {Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),Oid(".1.3")},
       {std::make_pair(
           Oid(".1.3"),
-          SnmpV2cVarResponse(Oid(".1.3"),
+          SnmpVar(Oid(".1.3"),
                              std::shared_ptr<xju::snmp::Value const>(
                                new xju::snmp::OidValue(Oid(".1.3.7"))))),
        std::make_pair(
           Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
-          SnmpV2cVarResponse(Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
+          SnmpVar(Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
                              std::shared_ptr<Value const>(new NullValue)))}));
         
   xju::assert_equal(
@@ -514,7 +514,7 @@ void test21() {
   std::vector<uint8_t> const x(
     encodeResponse(
       request,
-      {SnmpV2cVarResponse(Oid(".1.3.6.1.2.1.1.9.1.4.1"),
+      {SnmpVar(Oid(".1.3.6.1.2.1.1.9.1.4.1"),
                              std::shared_ptr<xju::snmp::Value const>(
                                new xju::snmp::TimeTicksValue(
                                  std::chrono::milliseconds(30))))}));
@@ -534,7 +534,7 @@ void test21() {
 
   xju::assert_equal(
     validateResponse(request,decodeSnmpV2cResponse(x)),
-    {SnmpV2cVarResponse(Oid(".1.3.6.1.2.1.1.9.1.4.1"),
+    {SnmpVar(Oid(".1.3.6.1.2.1.1.9.1.4.1"),
                              std::shared_ptr<xju::snmp::Value const>(
                                new xju::snmp::TimeTicksValue(
                                  std::chrono::milliseconds(30))))});
@@ -570,11 +570,11 @@ void test23() {
   std::vector<uint8_t> const x(
     encodeResponse(
       request,
-      {SnmpV2cVarResponse(Oid(".1.3.1"),
+      {SnmpVar(Oid(".1.3.1"),
                              std::shared_ptr<xju::snmp::Value const>(
                                new xju::snmp::TimeTicksValue(
                                  std::chrono::milliseconds(30)))),
-      SnmpV2cVarResponse(Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.1"),
+      SnmpVar(Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.1"),
                              std::shared_ptr<xju::snmp::Value const>(
                                new xju::snmp::IntValue(33)))}));
   

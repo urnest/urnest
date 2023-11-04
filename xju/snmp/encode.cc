@@ -34,7 +34,7 @@
 #include <xju/snmp/SnmpV2cGetBulkRequest.hh>
 #include <xju/snmp/encodePDU.hh>
 #include <xju/snmp/SnmpV2cResponse.hh>
-#include <xju/snmp/SnmpV2cVarResponse.hh>
+#include <xju/snmp/SnmpVar.hh>
 #include <utility>
 #include <xju/snmp/SnmpV3ScopedPDU.hh>
 #include <xju/snmp/PreEncoded.hh>
@@ -369,27 +369,27 @@ std::vector<uint8_t> encode(SnmpV2cTrap const& trap) throw()
 
 std::vector<uint8_t> encode(SnmpV2cResponse const& response) throw()
 {
-  std::vector<SnmpV2cVarResponse> vars;
+  std::vector<SnmpVar> vars;
   for(auto v: response.varResults_){
     if (v.e_.valid()){
       switch(v.e_.value()){
       case SnmpV2cResponse::VarResult::E::NO_SUCH_OBJECT:
-        vars.push_back(SnmpV2cVarResponse(v.oid_,
-                                          SnmpV2cVarResponse::NoSuchObject(v.oid_,XJU_TRACED)));
+        vars.push_back(SnmpVar(v.oid_,
+                                          SnmpVar::NoSuchObject(v.oid_,XJU_TRACED)));
         break;
       case SnmpV2cResponse::VarResult::E::NO_SUCH_INSTANCE:
-        vars.push_back(SnmpV2cVarResponse(v.oid_,
-                                          SnmpV2cVarResponse::NoSuchInstance(v.oid_,XJU_TRACED)));
+        vars.push_back(SnmpVar(v.oid_,
+                                          SnmpVar::NoSuchInstance(v.oid_,XJU_TRACED)));
         break;
       case SnmpV2cResponse::VarResult::E::END_OF_MIB_VIEW:
-        vars.push_back(SnmpV2cVarResponse(v.oid_,
-                                          SnmpV2cVarResponse::EndOfMibView(v.oid_,XJU_TRACED)));
+        vars.push_back(SnmpVar(v.oid_,
+                                          SnmpVar::EndOfMibView(v.oid_,XJU_TRACED)));
         break;
       default:
         xju::assert_never_reached();
       }
     }else{
-      vars.push_back(SnmpV2cVarResponse(v.oid_, v.v_));
+      vars.push_back(SnmpVar(v.oid_, v.v_));
     }
   }
   return encodePDU(

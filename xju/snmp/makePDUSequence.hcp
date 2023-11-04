@@ -20,7 +20,7 @@
 #include <xju/snmp/OidValue.hh> //impl
 #include <xju/snmp/IntValue.hh> //impl
 #include <xju/snmp/RequestId.hh>
-#include <xju/snmp/SnmpV2cVarResponse.hh>
+#include <xju/snmp/SnmpVar.hh>
 #include <xju/snmp/Sequence.hh> //impl
 #include <xju/snmp/encodedLengthOfLength.hh> //impl
 #include <xju/snmp/encodeLength.hh> //impl
@@ -68,7 +68,7 @@ namespace
 {
 
 uint64_t encodedLengthOfItems(
-  std::vector<SnmpV2cVarResponse> const& items) throw()
+  std::vector<SnmpVar> const& items) throw()
 {
   uint64_t result(0);
   for(auto x:items){
@@ -81,7 +81,7 @@ class V2cSequence : private xju::Int<V2cSequence,size_t>, //encoded length of it
                     public Value
 {
 public:
-  V2cSequence(std::vector<SnmpV2cVarResponse> const& items,
+  V2cSequence(std::vector<SnmpVar> const& items,
               uint8_t sequenceType) throw():
       xju::Int<V2cSequence,size_t>(encodedLengthOfItems(items)),
       Value(1/*type*/+
@@ -90,7 +90,7 @@ public:
       items_(items),
       sequenceType_(sequenceType) {
   }
-  std::vector<SnmpV2cVarResponse> const items_;
+  std::vector<SnmpVar> const items_;
   uint8_t const sequenceType_;
 
   // Value::
@@ -100,7 +100,7 @@ public:
     auto at=begin;
     *at++=sequenceType_;
     at=encodeLength(at,value());
-    for(SnmpV2cVarResponse x: items_) {
+    for(SnmpVar x: items_) {
       at=x.encodeTo(at);
     }
     xju::assert_equal(at-begin, encodedLength_);
@@ -110,7 +110,7 @@ public:
   std::string str() const throw() override
   {
     return xju::format::join(items_.begin(),items_.end(),
-                             [](SnmpV2cVarResponse const& x) {
+                             [](SnmpVar const& x) {
                                return xju::format::str(x);
                              },", ");
   }
@@ -131,7 +131,7 @@ std::shared_ptr<Value const> makePDUSequence(
   RequestId requestId,
   uint64_t error,
   uint64_t errorIndex,
-  std::vector<SnmpV2cVarResponse> const& vars,
+  std::vector<SnmpVar> const& vars,
   uint8_t pduType // 0xA2 snmp v1 get etc
   ) throw()
 {

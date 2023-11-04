@@ -21,7 +21,7 @@
 #include <xju/snmp/Oid.hh>
 #include <memory>
 #include <xju/snmp/Value.hh>
-#include <xju/snmp/SnmpV2cVarResponse.hh>
+#include <xju/snmp/SnmpVar.hh>
 
 namespace xju
 {
@@ -33,7 +33,7 @@ std::vector<uint8_t> encodePDU(
   RequestId requestId,
   uint64_t error,
   uint64_t errorIndex,
-  std::vector<SnmpV2cVarResponse> const& vars,
+  std::vector<SnmpVar> const& vars,
   uint8_t pduType // 0xA0 snmp v2 get etc
   ) throw();
 

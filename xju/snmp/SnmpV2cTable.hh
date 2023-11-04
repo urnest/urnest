@@ -17,7 +17,7 @@
 #include <xju/snmp/Value.hh>
 #include <vector>
 #include <map>
-#include <xju/snmp/SnmpV2cVarResponse.hh>
+#include <xju/snmp/SnmpVar.hh>
 
 namespace xju
 {
@@ -35,7 +35,7 @@ public:
   std::set<Oid> const cols_;
 
   // pre: col in cols_
-  std::vector<SnmpV2cVarResponse> const& operator[](
+  std::vector<SnmpVar> const& operator[](
     Oid const& col) const throw();
   
   bool atEnd() const throw() { return atEnd_; }
@@ -44,10 +44,10 @@ public:
   std::vector<Oid> nextOids() const throw();
   
   // pre: row.size()==cols_.size()
-  void add(std::vector<SnmpV2cVarResponse > const& row) throw();
+  void add(std::vector<SnmpVar > const& row) throw();
 
 private:
-  std::map<Oid, std::vector<SnmpV2cVarResponse> > data_;
+  std::map<Oid, std::vector<SnmpVar> > data_;
   bool atEnd_;
 };
 

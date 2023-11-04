@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include "xju/snmp/SnmpV2cVarResponse.hh"
+#include "xju/snmp/SnmpVar.hh"
 
 #include <iostream>
 #include <xju/assert.hh>
@@ -19,7 +19,7 @@ namespace snmp
 {
 
 void test1() {
-  SnmpV2cVarResponse const x(Oid(".1.3.4"),std::shared_ptr<IntValue const>(
+  SnmpVar const x(Oid(".1.3.4"),std::shared_ptr<IntValue const>(
                                new IntValue(5)));
   xju::assert_equal(x.oid(),Oid(".1.3.4"));
   xju::assert_equal(dynamic_cast<IntValue const&>(*x).val_,5);
@@ -27,41 +27,41 @@ void test1() {
 }
 
 void test2() {
-  SnmpV2cVarResponse const x(
+  SnmpVar const x(
     Oid(".1.3.4"),
-    SnmpV2cVarResponse::NoSuchObject(Oid(".1.3.4"),XJU_TRACED));
+    SnmpVar::NoSuchObject(Oid(".1.3.4"),XJU_TRACED));
   try {
     auto y(dynamic_cast<IntValue const*>(&*x));
     xju::assert_not_equal(y,y);
   }
-  catch(SnmpV2cVarResponse::NoSuchObject const& e) {
+  catch(SnmpVar::NoSuchObject const& e) {
     xju::assert_equal(readableRepr(e),"no such object .1.3.4.");
   }
   try {
     auto y(x.value()->intValue());
     xju::assert_not_equal(y,y);
   }
-  catch(SnmpV2cVarResponse::NoSuchObject const& e) {
+  catch(SnmpVar::NoSuchObject const& e) {
     xju::assert_equal(readableRepr(e),"no such object .1.3.4.");
   }
 }
 
 void test3() {
-  SnmpV2cVarResponse const x(
+  SnmpVar const x(
     Oid(".1.3.4"),
-    SnmpV2cVarResponse::NoSuchInstance(Oid(".1.3.4"),XJU_TRACED));
+    SnmpVar::NoSuchInstance(Oid(".1.3.4"),XJU_TRACED));
   try {
     auto y(dynamic_cast<IntValue const*>(&*x));
     xju::assert_not_equal(y,y);
   }
-  catch(SnmpV2cVarResponse::NoSuchInstance const& e) {
+  catch(SnmpVar::NoSuchInstance const& e) {
     xju::assert_equal(readableRepr(e),"no such instance .1.3.4.");
   }
   try {
     auto y(x.value()->intValue());
     xju::assert_not_equal(y,y);
   }
-  catch(SnmpV2cVarResponse::NoSuchInstance const& e) {
+  catch(SnmpVar::NoSuchInstance const& e) {
     xju::assert_equal(readableRepr(e),"no such instance .1.3.4.");
   }
 }

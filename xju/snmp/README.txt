@@ -24,7 +24,7 @@ TODO:
     x SnmpV2cGetRequest, encode
     x SnmpV2cResponse, decode
     x oops revert decode(SnmpV2cResponse) and use separate
-      SnmpV2cVarResponse, SnmpV2cNextVarResponse
+      SnmpVar, SnmpV2cNextVarResponse
     x validateResponse(SnmpV2cGetRequest,SnmpV2cResponse)
 
     x SnmpV2cSetRequest, encode
@@ -47,9 +47,9 @@ TODO:
       SnmpV2cGetBulk(std::vector<Oid> getNextNValuesOf,unsigned int n);//conv
       x encode x test-encode
       x validateResponse ->
-        std::pair<std::map<Oid,SnmpV2cVarResponse>,
+        std::pair<std::map<Oid,SnmpVar>,
 		  std::vector<
-		    std::vector<SnmpV2cVarResponse> //row
+		    std::vector<SnmpVar> //row
 		  >>
       - encodeResponse
       

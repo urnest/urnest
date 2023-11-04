@@ -776,7 +776,7 @@ void test4() throw()
       (*x.find(Oid(".1.3.9.3333"))).second->intValue();
       xju::assert_never_reached();
     }
-    catch(SnmpV2cVarResponse::NoSuchObject const& e) {
+    catch(SnmpVar::NoSuchObject const& e) {
       xju::assert_equal(readableRepr(e),"no such object .1.3.9.3333.");
     }
   }
@@ -809,7 +809,7 @@ void test4() throw()
       (*x.find(Oid(".1.3.9.3333"))).second->intValue();
       xju::assert_never_reached();
     }
-    catch(SnmpV2cVarResponse::NoSuchInstance const& e) {
+    catch(SnmpVar::NoSuchInstance const& e) {
       xju::assert_equal(readableRepr(e),"no such instance .1.3.9.3333.");
     }
   }
@@ -1562,7 +1562,7 @@ void test6() throw()
       (*i++)->intValue();
       xju::assert_never_reached();
     }
-    catch(SnmpV2cVarResponse::NoSuchObject const& e) {
+    catch(SnmpVar::NoSuchObject const& e) {
       xju::assert_equal(readableRepr(e),"no such object .1.3.9.3300.");
     }
   }
@@ -1597,7 +1597,7 @@ void test6() throw()
       (*i++)->intValue();
       xju::assert_never_reached();
     }
-    catch(SnmpV2cVarResponse::NoSuchInstance const& e) {
+    catch(SnmpVar::NoSuchInstance const& e) {
       xju::assert_equal(readableRepr(e),"no such instance .1.3.9.3300.");
     }
   }
@@ -1630,7 +1630,7 @@ void test6() throw()
       (*i++)->intValue();
       xju::assert_never_reached();
     }
-    catch(SnmpV2cVarResponse::EndOfMibView const& e) {
+    catch(SnmpVar::EndOfMibView const& e) {
       xju::assert_equal(readableRepr(e),"end of MIB view .1.3.9.3300.");
     }
   }
@@ -1948,7 +1948,7 @@ void test7() throw()
       (*i++)->intValue();
       xju::assert_never_reached();
     }
-    catch(SnmpV2cVarResponse::NoSuchObject const& e) {
+    catch(SnmpVar::NoSuchObject const& e) {
       xju::assert_equal(readableRepr(e),"no such object .1.3.9.3300.");
     }
   }
@@ -1986,7 +1986,7 @@ void test7() throw()
       (*i++)->intValue();
       xju::assert_never_reached();
     }
-    catch(SnmpV2cVarResponse::NoSuchInstance const& e) {
+    catch(SnmpVar::NoSuchInstance const& e) {
       xju::assert_equal(readableRepr(e),"no such instance .1.3.9.3300.");
     }
   }
@@ -2023,7 +2023,7 @@ void test7() throw()
       (*i++)->intValue();
       xju::assert_never_reached();
     }
-    catch(SnmpV2cVarResponse::EndOfMibView const& e) {
+    catch(SnmpVar::EndOfMibView const& e) {
       xju::assert_equal(readableRepr(e),"end of MIB view .1.3.9.3300.");
     }
   }

@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include "xju/snmp/SnmpV2cVarResponse.hh"
+#include "xju/snmp/SnmpVar.hh"
 #include "xju/format.hh"
 #include "xju/snmp/OidValue.hh"
 #include "xju/snmp/encodedLengthOfLength.hh"
@@ -18,22 +18,22 @@ namespace xju
 {
 namespace snmp
 {
-SnmpV2cVarResponse::NoSuchObject::NoSuchObject(
+SnmpVar::NoSuchObject::NoSuchObject(
   Oid const& oid, const xju::Traced& trace) throw():
 xju::Exception("no such object " + xju::format::str(oid), trace)
 {
 }
-SnmpV2cVarResponse::NoSuchInstance::NoSuchInstance(
+SnmpVar::NoSuchInstance::NoSuchInstance(
   Oid const& oid, const xju::Traced& trace) throw():
 xju::Exception("no such instance " + xju::format::str(oid), trace)
 {
 }
-SnmpV2cVarResponse::EndOfMibView::EndOfMibView(
+SnmpVar::EndOfMibView::EndOfMibView(
   Oid const& oid, const xju::Traced& trace) throw():
 xju::Exception("end of MIB view " + xju::format::str(oid), trace)
 {
 }
-xju::snmp::Value const& SnmpV2cVarResponse::operator*() const /*throw(
+xju::snmp::Value const& SnmpVar::operator*() const /*throw(
   NoSuchObject,
   NoSuchInstance,
   EndOfMibView)*/
@@ -50,7 +50,7 @@ xju::snmp::Value const& SnmpV2cVarResponse::operator*() const /*throw(
   return *v_;
 }
 
-xju::snmp::Value const* SnmpV2cVarResponse::operator->() const /*throw(
+xju::snmp::Value const* SnmpVar::operator->() const /*throw(
   NoSuchObject,
   NoSuchInstance,
   EndOfMibView)*/
@@ -67,7 +67,7 @@ xju::snmp::Value const* SnmpV2cVarResponse::operator->() const /*throw(
   return v_.operator->();
 }
 
-std::shared_ptr<xju::snmp::Value const> SnmpV2cVarResponse::value() const
+std::shared_ptr<xju::snmp::Value const> SnmpVar::value() const
   /*throw(
     NoSuchObject,
     NoSuchInstance,
@@ -86,7 +86,7 @@ std::shared_ptr<xju::snmp::Value const> SnmpV2cVarResponse::value() const
 }
 
 
-size_t SnmpV2cVarResponse::encodedLength() const throw()
+size_t SnmpVar::encodedLength() const throw()
 {
   size_t contentLength(OidValue(oid_).encodedLength()+
                        (e_.get()?
@@ -97,7 +97,7 @@ size_t SnmpV2cVarResponse::encodedLength() const throw()
     contentLength;
 }
 
-std::vector<uint8_t>::iterator SnmpV2cVarResponse::encodeTo(
+std::vector<uint8_t>::iterator SnmpVar::encodeTo(
   std::vector<uint8_t>::iterator begin) const throw()
 {
   // encoding is a sequence with 2 elements:
@@ -139,7 +139,7 @@ std::vector<uint8_t>::iterator SnmpV2cVarResponse::encodeTo(
 
 
 std::ostream& operator<<(std::ostream& s, 
-                         SnmpV2cVarResponse const& x) throw() {
+                         SnmpVar const& x) throw() {
   if (x.e_.get()) {
     s << x.oid_ << ": " << readableRepr(*x.e_);
   }

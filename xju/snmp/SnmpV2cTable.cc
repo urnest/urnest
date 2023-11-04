@@ -25,11 +25,11 @@ cols_(cols),
   std::transform(cols.begin(),cols.end(),
                  std::inserter(data_,data_.end()),
                  [](Oid const& x) throw() {
-                   return std::make_pair(x, std::vector<SnmpV2cVarResponse>());
+                   return std::make_pair(x, std::vector<SnmpVar>());
                  });
 }
 
-std::vector<SnmpV2cVarResponse> const& SnmpV2cTable::operator[](Oid const& col) const throw()
+std::vector<SnmpVar> const& SnmpV2cTable::operator[](Oid const& col) const throw()
 {
   auto const i(data_.find(col));
   xju::assert_not_equal(i,data_.end());
@@ -50,7 +50,7 @@ std::vector<Oid> SnmpV2cTable::nextOids() const throw()
 }
 
 void SnmpV2cTable::add(
-  std::vector<SnmpV2cVarResponse > const& row)
+  std::vector<SnmpVar > const& row)
 throw()
 {
   xju::assert_equal(row.size(),cols_.size());
@@ -63,7 +63,7 @@ throw()
     try{
       *x;
     }
-    catch(SnmpV2cVarResponse::EndOfMibView const&){
+    catch(SnmpVar::EndOfMibView const&){
       atEnd_=true;
       return;
     }

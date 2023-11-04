@@ -25,7 +25,7 @@ std::vector<uint8_t> encodePDU(
   RequestId requestId,
   uint64_t error,
   uint64_t errorIndex,
-  std::vector<SnmpV2cVarResponse> const& vars,
+  std::vector<SnmpVar> const& vars,
   uint8_t pduType // 0xA2 snmp v1 get etc
   ) throw()
 {
