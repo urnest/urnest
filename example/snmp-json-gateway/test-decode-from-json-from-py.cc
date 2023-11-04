@@ -133,32 +133,32 @@ void test1(std::string const& text) {
     xju::assert_equal(x.error_, xju::snmp::SnmpV2cResponse::ErrorStatus::NO_ERROR);
     xju::assert_equal(x.errorIndex_, xju::snmp::SnmpV2cResponse::ErrorIndex(0));
     xju::assert_equal(x.varResults_.size(), 12U);
-    xju::assert_equal(x.varResults_[0].oid_,xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(x.varResults_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
     xju::assert_equal(*x.varResults_[0].v_, xju::snmp::IntValue(7));
-    xju::assert_equal(x.varResults_[1].oid_,xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(x.varResults_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
     xju::assert_equal(*x.varResults_[1].v_, xju::snmp::NullValue());
-    xju::assert_equal(x.varResults_[2].oid_,xju::snmp::Oid(".1.4.6.1.27.5"));
+    xju::assert_equal(x.varResults_[2].oid(),xju::snmp::Oid(".1.4.6.1.27.5"));
     xju::assert_equal(*x.varResults_[2].v_, xju::snmp::StringValue("ann"));
-    xju::assert_equal(x.varResults_[3].oid_,xju::snmp::Oid(".1.4.6.1.27.6"));
+    xju::assert_equal(x.varResults_[3].oid(),xju::snmp::Oid(".1.4.6.1.27.6"));
     xju::assert_equal(*x.varResults_[3].v_, xju::snmp::TimeTicksValue(
                         std::chrono::milliseconds(7200)));
-    xju::assert_equal(x.varResults_[4].oid_,xju::snmp::Oid(".1.4.6.1.27.7"));
+    xju::assert_equal(x.varResults_[4].oid(),xju::snmp::Oid(".1.4.6.1.27.7"));
     xju::assert_equal(*x.varResults_[4].v_, xju::snmp::Gauge32Value(9987));
-    xju::assert_equal(x.varResults_[5].oid_,xju::snmp::Oid(".1.4.6.1.27.8"));
+    xju::assert_equal(x.varResults_[5].oid(),xju::snmp::Oid(".1.4.6.1.27.8"));
     xju::assert_equal(*x.varResults_[5].v_, xju::snmp::Counter32Value(19987));
-    xju::assert_equal(x.varResults_[6].oid_,xju::snmp::Oid(".1.4.6.1.27.9"));
+    xju::assert_equal(x.varResults_[6].oid(),xju::snmp::Oid(".1.4.6.1.27.9"));
     xju::assert_equal(*x.varResults_[6].v_, xju::snmp::IPv4AddressValue(
                         xju::ip::v4::Address("188.18.22.11")));
-    xju::assert_equal(x.varResults_[7].oid_,xju::snmp::Oid(".1.4.6.1.27.10"));
+    xju::assert_equal(x.varResults_[7].oid(),xju::snmp::Oid(".1.4.6.1.27.10"));
     xju::assert_equal(*x.varResults_[7].v_, xju::snmp::OpaqueValue({18,22,253}));
-    xju::assert_equal(x.varResults_[8].oid_,xju::snmp::Oid(".1.4.6.1.27.11"));
+    xju::assert_equal(x.varResults_[8].oid(),xju::snmp::Oid(".1.4.6.1.27.11"));
     xju::assert_equal(*x.varResults_[8].v_, xju::snmp::Counter64Value(100));
-    xju::assert_equal(x.varResults_[9].oid_,xju::snmp::Oid(".1.4.6.1.27.12"));
-    xju::assert_equal(x.varResults_[9].e_.value(), xju::snmp::SnmpV2cResponse::VarResult::NO_SUCH_OBJECT);
-    xju::assert_equal(x.varResults_[10].oid_,xju::snmp::Oid(".1.4.6.1.27.13"));
-    xju::assert_equal(x.varResults_[10].e_.value(), xju::snmp::SnmpV2cResponse::VarResult::NO_SUCH_INSTANCE);
-    xju::assert_equal(x.varResults_[11].oid_,xju::snmp::Oid(".1.4.6.1.27.14"));
-    xju::assert_equal(x.varResults_[11].e_.value(), xju::snmp::SnmpV2cResponse::VarResult::END_OF_MIB_VIEW);
+    xju::assert_equal(x.varResults_[9].oid(),xju::snmp::Oid(".1.4.6.1.27.12"));
+    xju::assert_equal(x.varResults_[9].e_.value(), xju::snmp::SnmpVar::NO_SUCH_OBJECT);
+    xju::assert_equal(x.varResults_[10].oid(),xju::snmp::Oid(".1.4.6.1.27.13"));
+    xju::assert_equal(x.varResults_[10].e_.value(), xju::snmp::SnmpVar::NO_SUCH_INSTANCE);
+    xju::assert_equal(x.varResults_[11].oid(),xju::snmp::Oid(".1.4.6.1.27.14"));
+    xju::assert_equal(x.varResults_[11].e_.value(), xju::snmp::SnmpVar::END_OF_MIB_VIEW);
   }
   {
     auto x(snmp_json_gateway::decodeSnmpV2cResponse(**i++));
@@ -168,9 +168,9 @@ void test1(std::string const& text) {
     xju::assert_equal(x.error_, xju::snmp::SnmpV2cResponse::ErrorStatus::TOO_BIG);
     xju::assert_equal(x.errorIndex_, xju::snmp::SnmpV2cResponse::ErrorIndex(0));
     xju::assert_equal(x.varResults_.size(), 2U);
-    xju::assert_equal(x.varResults_[0].oid_,xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(x.varResults_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
     xju::assert_equal(*x.varResults_[0].v_, xju::snmp::NullValue());
-    xju::assert_equal(x.varResults_[1].oid_,xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(x.varResults_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
     xju::assert_equal(*x.varResults_[1].v_, xju::snmp::NullValue());
   }
   {
@@ -181,9 +181,9 @@ void test1(std::string const& text) {
     xju::assert_equal(x.error_, xju::snmp::SnmpV2cResponse::ErrorStatus::NO_SUCH_NAME);
     xju::assert_equal(x.errorIndex_, xju::snmp::SnmpV2cResponse::ErrorIndex(1));
     xju::assert_equal(x.varResults_.size(), 2U);
-    xju::assert_equal(x.varResults_[0].oid_,xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(x.varResults_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
     xju::assert_equal(*x.varResults_[0].v_, xju::snmp::NullValue());
-    xju::assert_equal(x.varResults_[1].oid_,xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(x.varResults_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
     xju::assert_equal(*x.varResults_[1].v_, xju::snmp::NullValue());
   }
   {
@@ -194,9 +194,9 @@ void test1(std::string const& text) {
     xju::assert_equal(x.error_, xju::snmp::SnmpV2cResponse::ErrorStatus::BAD_VALUE);
     xju::assert_equal(x.errorIndex_, xju::snmp::SnmpV2cResponse::ErrorIndex(2));
     xju::assert_equal(x.varResults_.size(), 2U);
-    xju::assert_equal(x.varResults_[0].oid_,xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(x.varResults_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
     xju::assert_equal(*x.varResults_[0].v_, xju::snmp::NullValue());
-    xju::assert_equal(x.varResults_[1].oid_,xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(x.varResults_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
     xju::assert_equal(*x.varResults_[1].v_, xju::snmp::NullValue());
   }
   {
@@ -207,9 +207,9 @@ void test1(std::string const& text) {
     xju::assert_equal(x.error_, xju::snmp::SnmpV2cResponse::ErrorStatus::READ_ONLY);
     xju::assert_equal(x.errorIndex_, xju::snmp::SnmpV2cResponse::ErrorIndex(2));
     xju::assert_equal(x.varResults_.size(), 2U);
-    xju::assert_equal(x.varResults_[0].oid_,xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(x.varResults_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
     xju::assert_equal(*x.varResults_[0].v_, xju::snmp::NullValue());
-    xju::assert_equal(x.varResults_[1].oid_,xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(x.varResults_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
     xju::assert_equal(*x.varResults_[1].v_, xju::snmp::NullValue());
   }
   {
@@ -220,9 +220,9 @@ void test1(std::string const& text) {
     xju::assert_equal(x.error_, xju::snmp::SnmpV2cResponse::ErrorStatus::GEN_ERR);
     xju::assert_equal(x.errorIndex_, xju::snmp::SnmpV2cResponse::ErrorIndex(2));
     xju::assert_equal(x.varResults_.size(), 2U);
-    xju::assert_equal(x.varResults_[0].oid_,xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(x.varResults_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
     xju::assert_equal(*x.varResults_[0].v_, xju::snmp::NullValue());
-    xju::assert_equal(x.varResults_[1].oid_,xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(x.varResults_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
     xju::assert_equal(*x.varResults_[1].v_, xju::snmp::NullValue());
   }
   {
@@ -233,9 +233,9 @@ void test1(std::string const& text) {
     xju::assert_equal(x.error_, xju::snmp::SnmpV2cResponse::ErrorStatus::NO_ACCESS);
     xju::assert_equal(x.errorIndex_, xju::snmp::SnmpV2cResponse::ErrorIndex(2));
     xju::assert_equal(x.varResults_.size(), 2U);
-    xju::assert_equal(x.varResults_[0].oid_,xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(x.varResults_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
     xju::assert_equal(*x.varResults_[0].v_, xju::snmp::NullValue());
-    xju::assert_equal(x.varResults_[1].oid_,xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(x.varResults_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
     xju::assert_equal(*x.varResults_[1].v_, xju::snmp::NullValue());
   }
   {
@@ -246,9 +246,9 @@ void test1(std::string const& text) {
     xju::assert_equal(x.error_, xju::snmp::SnmpV2cResponse::ErrorStatus::WRONG_TYPE);
     xju::assert_equal(x.errorIndex_, xju::snmp::SnmpV2cResponse::ErrorIndex(2));
     xju::assert_equal(x.varResults_.size(), 2U);
-    xju::assert_equal(x.varResults_[0].oid_,xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(x.varResults_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
     xju::assert_equal(*x.varResults_[0].v_, xju::snmp::NullValue());
-    xju::assert_equal(x.varResults_[1].oid_,xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(x.varResults_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
     xju::assert_equal(*x.varResults_[1].v_, xju::snmp::NullValue());
   }
   {
@@ -259,9 +259,9 @@ void test1(std::string const& text) {
     xju::assert_equal(x.error_, xju::snmp::SnmpV2cResponse::ErrorStatus::WRONG_LENGTH);
     xju::assert_equal(x.errorIndex_, xju::snmp::SnmpV2cResponse::ErrorIndex(2));
     xju::assert_equal(x.varResults_.size(), 2U);
-    xju::assert_equal(x.varResults_[0].oid_,xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(x.varResults_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
     xju::assert_equal(*x.varResults_[0].v_, xju::snmp::NullValue());
-    xju::assert_equal(x.varResults_[1].oid_,xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(x.varResults_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
     xju::assert_equal(*x.varResults_[1].v_, xju::snmp::NullValue());
   }
   {
@@ -272,9 +272,9 @@ void test1(std::string const& text) {
     xju::assert_equal(x.error_, xju::snmp::SnmpV2cResponse::ErrorStatus::WRONG_ENCODING);
     xju::assert_equal(x.errorIndex_, xju::snmp::SnmpV2cResponse::ErrorIndex(2));
     xju::assert_equal(x.varResults_.size(), 2U);
-    xju::assert_equal(x.varResults_[0].oid_,xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(x.varResults_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
     xju::assert_equal(*x.varResults_[0].v_, xju::snmp::NullValue());
-    xju::assert_equal(x.varResults_[1].oid_,xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(x.varResults_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
     xju::assert_equal(*x.varResults_[1].v_, xju::snmp::NullValue());
   }
   {
@@ -285,9 +285,9 @@ void test1(std::string const& text) {
     xju::assert_equal(x.error_, xju::snmp::SnmpV2cResponse::ErrorStatus::WRONG_VALUE);
     xju::assert_equal(x.errorIndex_, xju::snmp::SnmpV2cResponse::ErrorIndex(2));
     xju::assert_equal(x.varResults_.size(), 2U);
-    xju::assert_equal(x.varResults_[0].oid_,xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(x.varResults_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
     xju::assert_equal(*x.varResults_[0].v_, xju::snmp::NullValue());
-    xju::assert_equal(x.varResults_[1].oid_,xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(x.varResults_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
     xju::assert_equal(*x.varResults_[1].v_, xju::snmp::NullValue());
   }
   {
@@ -298,9 +298,9 @@ void test1(std::string const& text) {
     xju::assert_equal(x.error_, xju::snmp::SnmpV2cResponse::ErrorStatus::NO_CREATION);
     xju::assert_equal(x.errorIndex_, xju::snmp::SnmpV2cResponse::ErrorIndex(2));
     xju::assert_equal(x.varResults_.size(), 2U);
-    xju::assert_equal(x.varResults_[0].oid_,xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(x.varResults_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
     xju::assert_equal(*x.varResults_[0].v_, xju::snmp::NullValue());
-    xju::assert_equal(x.varResults_[1].oid_,xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(x.varResults_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
     xju::assert_equal(*x.varResults_[1].v_, xju::snmp::NullValue());
   }
   {
@@ -311,9 +311,9 @@ void test1(std::string const& text) {
     xju::assert_equal(x.error_, xju::snmp::SnmpV2cResponse::ErrorStatus::INCONSISTENT_VALUE);
     xju::assert_equal(x.errorIndex_, xju::snmp::SnmpV2cResponse::ErrorIndex(2));
     xju::assert_equal(x.varResults_.size(), 2U);
-    xju::assert_equal(x.varResults_[0].oid_,xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(x.varResults_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
     xju::assert_equal(*x.varResults_[0].v_, xju::snmp::NullValue());
-    xju::assert_equal(x.varResults_[1].oid_,xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(x.varResults_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
     xju::assert_equal(*x.varResults_[1].v_, xju::snmp::NullValue());
   }
   {
@@ -324,9 +324,9 @@ void test1(std::string const& text) {
     xju::assert_equal(x.error_, xju::snmp::SnmpV2cResponse::ErrorStatus::RESOURCE_UNAVAILABLE);
     xju::assert_equal(x.errorIndex_, xju::snmp::SnmpV2cResponse::ErrorIndex(2));
     xju::assert_equal(x.varResults_.size(), 2U);
-    xju::assert_equal(x.varResults_[0].oid_,xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(x.varResults_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
     xju::assert_equal(*x.varResults_[0].v_, xju::snmp::NullValue());
-    xju::assert_equal(x.varResults_[1].oid_,xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(x.varResults_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
     xju::assert_equal(*x.varResults_[1].v_, xju::snmp::NullValue());
   }
   {
@@ -337,9 +337,9 @@ void test1(std::string const& text) {
     xju::assert_equal(x.error_, xju::snmp::SnmpV2cResponse::ErrorStatus::COMMIT_FAILED);
     xju::assert_equal(x.errorIndex_, xju::snmp::SnmpV2cResponse::ErrorIndex(2));
     xju::assert_equal(x.varResults_.size(), 2U);
-    xju::assert_equal(x.varResults_[0].oid_,xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(x.varResults_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
     xju::assert_equal(*x.varResults_[0].v_, xju::snmp::NullValue());
-    xju::assert_equal(x.varResults_[1].oid_,xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(x.varResults_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
     xju::assert_equal(*x.varResults_[1].v_, xju::snmp::NullValue());
   }
   {
@@ -350,9 +350,9 @@ void test1(std::string const& text) {
     xju::assert_equal(x.error_, xju::snmp::SnmpV2cResponse::ErrorStatus::UNDO_FAILED);
     xju::assert_equal(x.errorIndex_, xju::snmp::SnmpV2cResponse::ErrorIndex(2));
     xju::assert_equal(x.varResults_.size(), 2U);
-    xju::assert_equal(x.varResults_[0].oid_,xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(x.varResults_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
     xju::assert_equal(*x.varResults_[0].v_, xju::snmp::NullValue());
-    xju::assert_equal(x.varResults_[1].oid_,xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(x.varResults_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
     xju::assert_equal(*x.varResults_[1].v_, xju::snmp::NullValue());
   }
   {
@@ -363,9 +363,9 @@ void test1(std::string const& text) {
     xju::assert_equal(x.error_, xju::snmp::SnmpV2cResponse::ErrorStatus::NOT_WRITABLE);
     xju::assert_equal(x.errorIndex_, xju::snmp::SnmpV2cResponse::ErrorIndex(2));
     xju::assert_equal(x.varResults_.size(), 2U);
-    xju::assert_equal(x.varResults_[0].oid_,xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(x.varResults_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
     xju::assert_equal(*x.varResults_[0].v_, xju::snmp::NullValue());
-    xju::assert_equal(x.varResults_[1].oid_,xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(x.varResults_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
     xju::assert_equal(*x.varResults_[1].v_, xju::snmp::NullValue());
   }
   {
@@ -376,9 +376,9 @@ void test1(std::string const& text) {
     xju::assert_equal(x.error_, xju::snmp::SnmpV2cResponse::ErrorStatus::INCONSISTENT_NAME);
     xju::assert_equal(x.errorIndex_, xju::snmp::SnmpV2cResponse::ErrorIndex(2));
     xju::assert_equal(x.varResults_.size(), 2U);
-    xju::assert_equal(x.varResults_[0].oid_,xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(x.varResults_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
     xju::assert_equal(*x.varResults_[0].v_, xju::snmp::NullValue());
-    xju::assert_equal(x.varResults_[1].oid_,xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(x.varResults_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
     xju::assert_equal(*x.varResults_[1].v_, xju::snmp::NullValue());
   }
 }

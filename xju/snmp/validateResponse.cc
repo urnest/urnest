@@ -107,7 +107,7 @@ Oid getErrorOid(
 
 }
 Oid getErrorOid(SnmpV2cResponse::ErrorIndex const errorIndex,
-                std::vector<SnmpV2cResponse::VarResult> const& varResults,
+                std::vector<SnmpVar> const& varResults,
                 std::set<Oid> const& requestOids,
                 std::string const& error) /*throw(
                   xju::Exception)*/
@@ -116,8 +116,8 @@ Oid getErrorOid(SnmpV2cResponse::ErrorIndex const errorIndex,
                 
   std::transform(varResults.begin(),varResults.end(),
                  std::back_inserter(responseOids),
-                 [](SnmpV2cResponse::VarResult x) {
-                   return x.oid_;
+                 [](auto const& x) {
+                   return x.oid();
                  });
                  
   return getErrorOid(errorIndex.value(),
@@ -127,7 +127,7 @@ Oid getErrorOid(SnmpV2cResponse::ErrorIndex const errorIndex,
   
 }
 Oid getErrorOid(SnmpV2cResponse::ErrorIndex const errorIndex,
-                std::vector<SnmpV2cResponse::VarResult> const& varResults,
+                std::vector<SnmpVar> const& varResults,
                 std::map<Oid, std::shared_ptr<Value const> > const& values,
                 std::string const& error) /*throw(
                   xju::Exception)*/
@@ -147,7 +147,7 @@ Oid getErrorOid(SnmpV2cResponse::ErrorIndex const errorIndex,
   
 }
 Oid getErrorOid(SnmpV2cResponse::ErrorIndex const errorIndex,
-                std::vector<SnmpV2cResponse::VarResult> const& varResults,
+                std::vector<SnmpVar> const& varResults,
                 std::vector<Oid> const& oids,
                 std::string const& error) /*throw(
                   xju::Exception)*/
@@ -160,7 +160,7 @@ Oid getErrorOid(SnmpV2cResponse::ErrorIndex const errorIndex,
   std::transform(varResults.begin(),varResults.end(),
                  std::back_inserter(resultOids),
                  [](decltype(*varResults.begin()) const& x){
-                   return x.oid_;
+                   return x.oid();
                  });
                  
   return getErrorOid(errorIndex.value(),
@@ -513,51 +513,60 @@ std::map<Oid, SnmpVar> validateResponse(
       throw xju::Exception(s.str(),XJU_TRACED);
     }
     }
-    std::map<Oid, SnmpVar> result;
-    std::transform(
-      response.varResults_.begin(),
-      response.varResults_.end(),
-      std::inserter(result,result.end()),
-      [](SnmpV2cResponse::VarResult x)
-      {
-        if (x.e_.valid()) {
-          switch(x.e_.value()) {
-          case SnmpV2cResponse::VarResult::NO_SUCH_OBJECT:
-            return std::make_pair(
-              x.oid_,SnmpVar(
-                x.oid_,SnmpVar::NoSuchObject(x.oid_,XJU_TRACED)));
-          case SnmpV2cResponse::VarResult::NO_SUCH_INSTANCE:
-            return std::make_pair(
-              x.oid_,SnmpVar(
-                x.oid_,SnmpVar::NoSuchInstance(x.oid_,XJU_TRACED)));
-          }
-          std::ostringstream s;
-          s << x.e_.value() << " (" <<(int)x.e_.value() << ")"
-            << " (for oid " << x.oid_ << ") is not valid in response to "
-            << "SNMP V2c Get request, only NO_SUCH_OBJECT ("
-            << (int)SnmpV2cResponse::VarResult::NO_SUCH_OBJECT << ") and "
-            << "NO_SUCH_INSTANCE (" 
-            << (int)SnmpV2cResponse::VarResult::NO_SUCH_INSTANCE 
-            << ") are valid";
-          throw xju::Exception(s.str(),XJU_TRACED);
-        }
-        return std::make_pair(
-          x.oid_,SnmpVar(
-            x.oid_,x.v_));
-      });
-    
-    std::vector<std::string> missing;
-    for(auto i: request.oids_) {
-      if (result.find(i)==result.end()) {
-        missing.push_back((i).toString());
+    auto missing(request.oids_);
+    std::set<Oid> extra;
+    std::set<Oid> duplicate;
+    std::for_each(response.varResults_.begin(), response.varResults_.end(),
+                  [&](auto const& x){ if (missing.find(x.oid())!=missing.end()){
+                      missing.erase(x.oid());
+                    }
+                    else if (request.oids_.find(x.oid())!=request.oids_.end()){
+                      duplicate.insert(x.oid());
+                    }
+                    else{
+                      extra.insert(x.oid());
+                    }});
+    if (missing.size() || extra.size() || duplicate.size()) {
+      std::vector<std::string> message;
+      if (missing.size()){
+        std::ostringstream s;
+        s << "value not reported for oid(s) "
+          << xju::format::join(missing.begin(),missing.end(), ", ");
+        message.push_back(s.str());
       }
+      if (extra.size()){
+        std::ostringstream s;
+        s << "value reported for unrequested oid(s) "
+          << xju::format::join(extra.begin(),extra.end(), ", ");
+        message.push_back(s.str());
+      }
+      if (duplicate.size()){
+        std::ostringstream s;
+        s << "multiple values reported for oid(s) "
+          << xju::format::join(duplicate.begin(),duplicate.end(), ", ");
+        message.push_back(s.str());
+      }
+      throw xju::Exception(xju::format::join(message.begin(),message.end()," and "),XJU_TRACED);
     }
-    if (missing.size()) {
-      std::ostringstream s;
-      s << "value not reported for oid(s) "
-        << xju::format::join(missing.begin(),missing.end(), ", ");
-      throw xju::Exception(s.str(),XJU_TRACED);
-    }
+    std::map<Oid, SnmpVar> result;
+    std::transform(response.varResults_.begin(), response.varResults_.end(),
+                   std::inserter(result,result.end()),
+                   [](SnmpVar const& x){
+                     try{
+                       x.value();
+                     }
+                     catch(SnmpVar::NoSuchObject const&){
+                     }
+                     catch(SnmpVar::NoSuchInstance const& ){
+                     }
+                     catch(SnmpVar::EndOfMibView& e){
+                       std::ostringstream s;
+                       s << "verify value " << x << " is not end-of-mib-view";
+                       e.addContext(s.str(),XJU_TRACED);
+                       throw;
+                     }
+                     return std::make_pair(x.oid(), x);
+                   });
     return result;
   }
   catch(xju::Exception& e) {
@@ -744,8 +753,8 @@ void validateResponse(
     std::transform(response.varResults_.begin(),
                    response.varResults_.end(),
                    std::inserter(responseOids,responseOids.end()),
-                   [](const xju::snmp::SnmpV2cResponse::VarResult& x) {
-                     return x.oid_;
+                   [](const xju::snmp::SnmpVar& x) {
+                     return x.oid();
                    });
     std::set<Oid> missing;
     std::set_difference(requestOids.begin(),requestOids.end(),
@@ -815,44 +824,9 @@ std::vector<SnmpVar> validateResponse(
       throw xju::Exception(s.str(),XJU_TRACED);
     }
     }
-    std::vector<SnmpVar> result;
-    std::transform(
-      response.varResults_.begin(),
-      response.varResults_.end(),
-      std::back_inserter(result),
-      [](SnmpV2cResponse::VarResult x)
-      {
-        if (x.e_.valid()) {
-          switch(x.e_.value()) {
-          case SnmpV2cResponse::VarResult::NO_SUCH_OBJECT:
-            return SnmpVar(
-              x.oid_,SnmpVar::NoSuchObject(x.oid_,XJU_TRACED));
-          case SnmpV2cResponse::VarResult::NO_SUCH_INSTANCE:
-            return SnmpVar(
-              x.oid_,SnmpVar::NoSuchInstance(x.oid_,XJU_TRACED));
-          case SnmpV2cResponse::VarResult::END_OF_MIB_VIEW:
-            return SnmpVar(
-              x.oid_,SnmpVar::EndOfMibView(x.oid_,XJU_TRACED));
-          }
-          std::ostringstream s;
-          s << x.e_.value() << " (" <<(int)x.e_.value() << ")"
-            << " (for oid " << x.oid_ << ") is not valid in response to "
-            << "SNMP V2c Get request, only NO_SUCH_OBJECT ("
-            << (int)SnmpV2cResponse::VarResult::NO_SUCH_OBJECT << "), "
-            << "NO_SUCH_INSTANCE (" 
-            << (int)SnmpV2cResponse::VarResult::NO_SUCH_INSTANCE 
-            << ") and "
-            << "END_OF_MIB_VIEW (" 
-            << (int)SnmpV2cResponse::VarResult::END_OF_MIB_VIEW 
-            << ") are valid";
-          throw xju::Exception(s.str(),XJU_TRACED);
-        }
-        return SnmpVar(x.oid_,x.v_);
-      });
-
-    if (result.size()<request.oids_.size()){
+    if (response.varResults_.size()<request.oids_.size()){
       std::vector<std::string> missing;
-      for(auto i=request.oids_.begin()+result.size();
+      for(auto i=request.oids_.begin()+response.varResults_.size();
           i!=request.oids_.end();
           ++i) {
         missing.push_back((*i).toString());
@@ -862,10 +836,10 @@ std::vector<SnmpVar> validateResponse(
         << xju::format::join(missing.begin(),missing.end(), ", ");
       throw xju::Exception(s.str(),XJU_TRACED);
     }
-    if (result.size()>request.oids_.size()){
+    if (response.varResults_.size()>request.oids_.size()){
       std::vector<std::string> extra;
-      for(auto i=result.begin()+request.oids_.size();
-          i!=result.end();
+      for(auto i=response.varResults_.begin()+request.oids_.size();
+          i!=response.varResults_.end();
           ++i) {
         extra.push_back((*i).oid().toString());
       }
@@ -874,7 +848,7 @@ std::vector<SnmpVar> validateResponse(
         << xju::format::join(extra.begin(),extra.end(), ", ");
       throw xju::Exception(s.str(),XJU_TRACED);
     }
-    return result;
+    return response.varResults_;
   }
   catch(xju::Exception& e) {
     std::ostringstream s;
@@ -883,44 +857,6 @@ std::vector<SnmpVar> validateResponse(
     e.addContext(s.str(), XJU_TRACED);
     throw;
   }
-}
-
-namespace
-{
-SnmpVar convertResponseVar(
-  SnmpV2cResponse::VarResult const& x) /*throw(
-    SnmpVar::NoSuchObject,
-    SnmpVar::NoSuchInstance,
-    SnmpVar::EndOfMibView,
-    xju::Exception)*/
-{
-  if (x.e_.valid()) {
-    switch(x.e_.value()) {
-    case SnmpV2cResponse::VarResult::NO_SUCH_OBJECT:
-      return SnmpVar(
-        x.oid_,SnmpVar::NoSuchObject(x.oid_,XJU_TRACED));
-    case SnmpV2cResponse::VarResult::NO_SUCH_INSTANCE:
-      return SnmpVar(
-        x.oid_,SnmpVar::NoSuchInstance(x.oid_,XJU_TRACED));
-    case SnmpV2cResponse::VarResult::END_OF_MIB_VIEW:
-      return SnmpVar(
-        x.oid_,SnmpVar::EndOfMibView(x.oid_,XJU_TRACED));
-    }
-    std::ostringstream s;
-    s << x.e_.value() << " (" <<(int)x.e_.value() << ")"
-      << " (for oid " << x.oid_ << ") is not valid in response to "
-      << "SNMP V2c Get request, only NO_SUCH_OBJECT ("
-      << (int)SnmpV2cResponse::VarResult::NO_SUCH_OBJECT << "), "
-      << "NO_SUCH_INSTANCE (" 
-      << (int)SnmpV2cResponse::VarResult::NO_SUCH_INSTANCE 
-      << ") and "
-      << "END_OF_MIB_VIEW (" 
-      << (int)SnmpV2cResponse::VarResult::END_OF_MIB_VIEW 
-      << ") are valid";
-    throw xju::Exception(s.str(),XJU_TRACED);
-  }
-  return SnmpVar(x.oid_,x.v_);
-}
 }
 
 std::pair<
@@ -973,7 +909,7 @@ std::pair<
     auto i{request.getNext_.begin()};
     auto n{0};
     for(;i!=request.getNext_.end();++i,++n){
-      values.insert({*i,convertResponseVar(response.varResults_[n])});
+      values.insert({*i,response.varResults_[n]});
     }
     auto const rowSize{request.getNextN_.size()};
     if (rowSize==0 && n!=response.varResults_.size()){
@@ -996,10 +932,9 @@ std::pair<
         throw xju::Exception(s.str(),XJU_TRACED);
       }
       nextValues.push_back(std::vector<SnmpVar>());
-      transform(response.varResults_.begin()+n,
+      std::copy(response.varResults_.begin()+n,
                 response.varResults_.begin()+n+rowSize,
-                std::back_inserter(nextValues.back()),
-                convertResponseVar);
+                std::back_inserter(nextValues.back()));
     }
     return std::make_pair(values,nextValues);
   }

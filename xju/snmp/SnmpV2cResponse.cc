@@ -27,30 +27,6 @@ std::ostream& operator<<(std::ostream& s, SnmpV2cResponse const& x) throw()
              x.varResults_.begin(), x.varResults_.end(),", ");
 }
 
-std::ostream& operator<<(std::ostream& s, 
-                         SnmpV2cResponse::VarResult const& x) throw() {
-  if (x.e_.valid()) {
-    s << x.oid_ << ": " << x.e_.value();
-  }
-  else
-  {
-    s << x.oid_ << ": " << (*x.v_);
-  }
-  return s;
-}
-               
-std::ostream& operator<<(std::ostream& s,
-                         SnmpV2cResponse::VarResult::E const x) throw() {
-  switch(x) {
-  case SnmpV2cResponse::VarResult::NO_SUCH_OBJECT:
-    return s << "NO_SUCH_OBJECT";
-  case SnmpV2cResponse::VarResult::NO_SUCH_INSTANCE:
-    return s << "NO_SUCH_INSTANCE";
-  case SnmpV2cResponse::VarResult::END_OF_MIB_VIEW:
-    return s << "END_OF_MIB_VIEW";
-  }
-  return s << "(exception " << (int)x << ")";
-}
 
 }
 }

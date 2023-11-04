@@ -574,10 +574,10 @@ void test3() throw()
 void test4() throw()
 {
   // validateResponse
-  std::vector<SnmpV2cResponse::VarResult> values {
-    SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+  std::vector<SnmpVar> values {
+    SnmpVar(Oid(".1.3.3"),std::shared_ptr<Value const>(
                                  new StringValue(fred))),
-    SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
+    SnmpVar(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
                                  new IntValue(3)))
   };
   auto x=validateResponse(
@@ -596,10 +596,10 @@ void test4() throw()
   xju::assert_equal((*x.find(Oid(".1.3.9.3333"))).second->intValue(),3);
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),std::shared_ptr<Value const>(
                                    new StringValue(fred))),
-        SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
+        SnmpVar(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
                                      new IntValue(3)))
         };
     auto x=validateResponse(
@@ -625,10 +625,10 @@ void test4() throw()
   }
   
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),std::shared_ptr<Value const>(
                                                    new StringValue(fred))),
-        SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
+        SnmpVar(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
                                                        new IntValue(3)))
     };
     auto x=validateResponse(
@@ -654,10 +654,10 @@ void test4() throw()
   }
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),std::shared_ptr<Value const>(
                                                    new StringValue(fred))),
-        SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
+        SnmpVar(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
                                                        new NullValue))
     };
     auto x=validateResponse(
@@ -682,7 +682,7 @@ void test4() throw()
   }
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
+    std::vector<SnmpVar> values {
     };
     auto x=validateResponse(
       SnmpV2cGetRequest(Community("dje"),
@@ -705,10 +705,10 @@ void test4() throw()
   }
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"), std::shared_ptr<Value const>(
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"), std::shared_ptr<Value const>(
                                    new StringValue(fred))),
-        SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"), std::shared_ptr<Value const>(
+        SnmpVar(Oid(".1.3.9.3333"), std::shared_ptr<Value const>(
                                      new NullValue))
         };
     auto x=validateResponse(
@@ -732,7 +732,7 @@ void test4() throw()
   }
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
+    std::vector<SnmpVar> values {
     };
     auto x=validateResponse(
       SnmpV2cGetRequest(Community("dje"),
@@ -752,12 +752,12 @@ void test4() throw()
   }
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),std::shared_ptr<Value const>(
                                                  new StringValue(fred))),
-      SnmpV2cResponse::VarResult(
+      SnmpVar(
         Oid(".1.3.9.3333"),
-        SnmpV2cResponse::VarResult::NO_SUCH_OBJECT)
+        SnmpVar::NoSuchObject(Oid(".1.3.9.3333"),XJU_TRACED))
       };
     auto x=validateResponse(
       SnmpV2cGetRequest(Community("dje"),
@@ -785,12 +785,12 @@ void test4() throw()
   }
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),std::shared_ptr<Value const>(
                                                  new StringValue(fred))),
-      SnmpV2cResponse::VarResult(
+      SnmpVar(
         Oid(".1.3.9.3333"),
-        SnmpV2cResponse::VarResult::NO_SUCH_INSTANCE)
+        SnmpVar::NoSuchInstance(Oid(".1.3.9.3333"),XJU_TRACED))
       };
     auto x=validateResponse(
       SnmpV2cGetRequest(Community("dje"),
@@ -818,12 +818,12 @@ void test4() throw()
   }
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),std::shared_ptr<Value const>(
                                                  new StringValue(fred))),
-      SnmpV2cResponse::VarResult(
+      SnmpVar(
         Oid(".1.3.9.3333"),
-        SnmpV2cResponse::VarResult::END_OF_MIB_VIEW)
+        SnmpVar::EndOfMibView(Oid(".1.3.9.3333"),XJU_TRACED))
       };
     auto x=validateResponse(
       SnmpV2cGetRequest(Community("dje"),
@@ -839,17 +839,17 @@ void test4() throw()
     xju::assert_never_reached();
   }
   catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e),"Failed to validate SNMP V2c response type 0xa2, community dd2, id 23, error status 0, error index 0, values .1.3.3: \"fred\", .1.3.9.3333: END_OF_MIB_VIEW to SNMP V2c Get request community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nEND_OF_MIB_VIEW (2) (for oid .1.3.9.3333) is not valid in response to SNMP V2c Get request, only NO_SUCH_OBJECT (0) and NO_SUCH_INSTANCE (1) are valid.");
+    xju::assert_equal(readableRepr(e),"Failed to validate SNMP V2c response type 0xa2, community dd2, id 23, error status 0, error index 0, values .1.3.3: \"fred\", .1.3.9.3333: end of MIB view .1.3.9.3333. to SNMP V2c Get request community dje, id 23, oids .1.3.3, .1.3.9.3333 because\nfailed to verify value .1.3.9.3333: end of MIB view .1.3.9.3333. is not end-of-mib-view because\nend of MIB view .1.3.9.3333.");
   }
 }
 
 void test5() throw()
 {
   // validateResponse(SnmpV2cSetRequest)
-  std::vector<SnmpV2cResponse::VarResult> values {
-    SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+  std::vector<SnmpVar> values {
+    SnmpVar(Oid(".1.3.3"),std::shared_ptr<Value const>(
                                                  new StringValue(fred))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
+      SnmpVar(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
                                                      new IntValue(3)))
   };
   std::map<Oid, std::shared_ptr<Value const> > requestValues {
@@ -1003,7 +1003,7 @@ void test5() throw()
     xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 5, error index 1, values .1.3.3: \"fred\", .1.3.9.3333: 3 to SnmpV2cSetRequest community dje, id 23, values .1.3.3: \"fred\", .1.3.9.3333: 3 because\ngeneral error for oid .1.3.3.");
   }
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
+    std::vector<SnmpVar> values {
     };
     validateResponse(
       SnmpV2cSetRequest(Community("dje"),
@@ -1022,8 +1022,8 @@ void test5() throw()
     xju::assert_equal(readableRepr(e),"Failed to validate response type 0xa2, community dd2, id 23, error status 0, error index 0, values  to SnmpV2cSetRequest community dje, id 23, values .1.3.3: \"fred\", .1.3.9.3333: 3 because\nresponse did not return oids .1.3.3, .1.3.9.3333.");
   }
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(
+    std::vector<SnmpVar> values {
+      SnmpVar(
         Oid(".1.3.4"), std::shared_ptr<Value const>(new StringValue(fred)))
         };
     validateResponse(
@@ -1312,10 +1312,10 @@ void test5() throw()
   }
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),std::shared_ptr<Value const>(
                                    new StringValue(fred))),
-        SnmpV2cResponse::VarResult(Oid(".1.3.9.3334"),std::shared_ptr<Value const>(
+        SnmpVar(Oid(".1.3.9.3334"),std::shared_ptr<Value const>(
                                      new IntValue(3)))
         };
     validateResponse(
@@ -1343,10 +1343,10 @@ void test5() throw()
 void test6() throw()
 {
   // validateResponse
-  std::vector<SnmpV2cResponse::VarResult> values {
-    SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+  std::vector<SnmpVar> values {
+    SnmpVar(Oid(".1.3.3"),std::shared_ptr<Value const>(
                                  new StringValue(fred))),
-    SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
+    SnmpVar(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
                                  new IntValue(3)))
   };
   auto x=validateResponse(
@@ -1367,10 +1367,10 @@ void test6() throw()
   xju::assert_equal((*i++)->intValue(),3);
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),std::shared_ptr<Value const>(
                                    new StringValue(fred))),
-        SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
+        SnmpVar(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
                                      new IntValue(3)))
         };
     auto x=validateResponse(
@@ -1397,11 +1397,11 @@ void test6() throw()
   }
   
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),
                                  std::shared_ptr<Value const>(
                                    new StringValue(fred))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),
+      SnmpVar(Oid(".1.3.9.3333"),
                                  std::shared_ptr<Value const>(
                                    new IntValue(3)))
     };
@@ -1429,7 +1429,7 @@ void test6() throw()
   }
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
+    std::vector<SnmpVar> values {
     };
     auto x=validateResponse(
       SnmpV2cGetNextRequest(Community("dje"),
@@ -1453,11 +1453,11 @@ void test6() throw()
   }
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.2"),
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.2"),
                                  std::shared_ptr<Value const>(
                                    new StringValue(fred))),
-        SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),
+        SnmpVar(Oid(".1.3.9.3333"),
                                    std::shared_ptr<Value const>(
                                      new NullValue))
         };
@@ -1484,7 +1484,7 @@ void test6() throw()
 
   try {
     // too few values
-    std::vector<SnmpV2cResponse::VarResult> values {
+    std::vector<SnmpVar> values {
     };
     auto x=validateResponse(
       SnmpV2cGetNextRequest(Community("dje"),
@@ -1506,14 +1506,14 @@ void test6() throw()
 
   try {
     // too many values
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),
                                  std::shared_ptr<Value const>(
                                    new StringValue(fred))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),
+      SnmpVar(Oid(".1.3.9.3333"),
                                  std::shared_ptr<Value const>(
                                    new IntValue(3))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.10.3333"),
+      SnmpVar(Oid(".1.3.10.3333"),
                                  std::shared_ptr<Value const>(
                                    new IntValue(7)))
     };
@@ -1536,12 +1536,12 @@ void test6() throw()
   }
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),
-                                 std::shared_ptr<Value const>(
-                                   new StringValue(fred))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.9.3300"),
-                                 SnmpV2cResponse::VarResult::NO_SUCH_OBJECT)
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),
+              std::shared_ptr<Value const>(
+                new StringValue(fred))),
+      SnmpVar(Oid(".1.3.9.3300"),
+              SnmpVar::NoSuchObject(Oid(".1.3.9.3300"),XJU_TRACED))
       };
     auto x=validateResponse(
       SnmpV2cGetNextRequest(Community("dje"),
@@ -1571,12 +1571,12 @@ void test6() throw()
   }
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),
                                  std::shared_ptr<Value const>(
                                    new StringValue(fred))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.9.3300"),
-                                 SnmpV2cResponse::VarResult::NO_SUCH_INSTANCE)
+      SnmpVar(Oid(".1.3.9.3300"),
+              SnmpVar::NoSuchInstance(Oid(".1.3.9.3300"),XJU_TRACED))
       };
     auto x=validateResponse(
       SnmpV2cGetNextRequest(Community("dje"),
@@ -1606,12 +1606,12 @@ void test6() throw()
   }
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),
                                  std::shared_ptr<Value const>(
                                    new StringValue(fred))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.9.3300"),
-                                 SnmpV2cResponse::VarResult::END_OF_MIB_VIEW)
+      SnmpVar(Oid(".1.3.9.3300"),
+              SnmpVar::EndOfMibView(Oid(".1.3.9.3300"),XJU_TRACED))
       };
     auto x=validateResponse(
       SnmpV2cGetNextRequest(Community("dje"),
@@ -1645,10 +1645,10 @@ void test6() throw()
 void test7() throw()
 {
   // validateResponse
-  std::vector<SnmpV2cResponse::VarResult> values {
-    SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+  std::vector<SnmpVar> values {
+    SnmpVar(Oid(".1.3.3"),std::shared_ptr<Value const>(
                                  new StringValue(fred))),
-    SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
+    SnmpVar(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
                                  new IntValue(3)))
   };
   auto x=validateResponse(
@@ -1671,18 +1671,18 @@ void test7() throw()
   xju::assert_equal((*i++)->intValue(),3);
 
   {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".9.8.0"),std::shared_ptr<Value const>(
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".9.8.0"),std::shared_ptr<Value const>(
                                    new StringValue(sal))),
-      SnmpV2cResponse::VarResult(Oid(".9.9.0"),std::shared_ptr<Value const>(
+      SnmpVar(Oid(".9.9.0"),std::shared_ptr<Value const>(
                                    new IntValue(8))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+      SnmpVar(Oid(".1.3.3"),std::shared_ptr<Value const>(
                                    new StringValue(fred))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
+      SnmpVar(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
                                    new IntValue(3))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.4"),std::shared_ptr<Value const>(
+      SnmpVar(Oid(".1.3.4"),std::shared_ptr<Value const>(
                                    new StringValue(jock))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.9.3343"),std::shared_ptr<Value const>(
+      SnmpVar(Oid(".1.3.9.3343"),std::shared_ptr<Value const>(
                                    new IntValue(32)))      
     };
     auto x=validateResponse(
@@ -1721,10 +1721,10 @@ void test7() throw()
     }
   }
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),std::shared_ptr<Value const>(
                                    new StringValue(fred))),
-        SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
+        SnmpVar(Oid(".1.3.9.3333"),std::shared_ptr<Value const>(
                                      new IntValue(3)))
         };
     auto x=validateResponse(
@@ -1751,11 +1751,11 @@ void test7() throw()
   }
   
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),
                                  std::shared_ptr<Value const>(
                                    new StringValue(fred))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),
+      SnmpVar(Oid(".1.3.9.3333"),
                                  std::shared_ptr<Value const>(
                                    new IntValue(3)))
     };
@@ -1783,7 +1783,7 @@ void test7() throw()
   }
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
+    std::vector<SnmpVar> values {
     };
     auto x=validateResponse(
       SnmpV2cGetBulkRequest(Community("dje"),
@@ -1807,11 +1807,11 @@ void test7() throw()
   }
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.2"),
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.2"),
                                  std::shared_ptr<Value const>(
                                    new StringValue(fred))),
-        SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),
+        SnmpVar(Oid(".1.3.9.3333"),
                                    std::shared_ptr<Value const>(
                                      new NullValue))
         };
@@ -1839,8 +1839,8 @@ void test7() throw()
 
   try {
     // too few values
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),std::shared_ptr<Value const>(
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),std::shared_ptr<Value const>(
                                    new StringValue(fred)))
     };
     auto x=validateResponse(
@@ -1864,8 +1864,8 @@ void test7() throw()
 
   try {
     // too few values
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".9.8"),std::shared_ptr<Value const>(
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".9.8"),std::shared_ptr<Value const>(
                                    new StringValue(fred)))
     };
     auto x=validateResponse(
@@ -1889,14 +1889,14 @@ void test7() throw()
 
   try {
     // too many values
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),
                                  std::shared_ptr<Value const>(
                                    new StringValue(fred))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.9.3333"),
+      SnmpVar(Oid(".1.3.9.3333"),
                                  std::shared_ptr<Value const>(
                                    new IntValue(3))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.10.3333"),
+      SnmpVar(Oid(".1.3.10.3333"),
                                  std::shared_ptr<Value const>(
                                    new IntValue(7)))
     };
@@ -1920,12 +1920,12 @@ void test7() throw()
   }
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),
                                  std::shared_ptr<Value const>(
                                    new StringValue(fred))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.9.3300"),
-                                 SnmpV2cResponse::VarResult::NO_SUCH_OBJECT)
+      SnmpVar(Oid(".1.3.9.3300"),
+              SnmpVar::NoSuchObject(Oid(".1.3.9.3300"),XJU_TRACED))
       };
     auto x=validateResponse(
       SnmpV2cGetBulkRequest(Community("dje"),
@@ -1957,12 +1957,12 @@ void test7() throw()
   }
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),
                                  std::shared_ptr<Value const>(
                                    new StringValue(fred))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.9.3300"),
-                                 SnmpV2cResponse::VarResult::NO_SUCH_INSTANCE)
+      SnmpVar(Oid(".1.3.9.3300"),
+              SnmpVar::NoSuchInstance(Oid(".1.3.9.3300"),XJU_TRACED))
       };
     auto x=validateResponse(
       SnmpV2cGetBulkRequest(Community("dje"),
@@ -1995,12 +1995,12 @@ void test7() throw()
   }
 
   try {
-    std::vector<SnmpV2cResponse::VarResult> values {
-      SnmpV2cResponse::VarResult(Oid(".1.3.3"),
+    std::vector<SnmpVar> values {
+      SnmpVar(Oid(".1.3.3"),
                                  std::shared_ptr<Value const>(
                                    new StringValue(fred))),
-      SnmpV2cResponse::VarResult(Oid(".1.3.9.3300"),
-                                 SnmpV2cResponse::VarResult::END_OF_MIB_VIEW)
+      SnmpVar(Oid(".1.3.9.3300"),
+              SnmpVar::EndOfMibView(Oid(".1.3.9.3300"),XJU_TRACED))
       };
     auto x=validateResponse(
       SnmpV2cGetBulkRequest(Community("dje"),

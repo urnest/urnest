@@ -369,35 +369,12 @@ std::vector<uint8_t> encode(SnmpV2cTrap const& trap) throw()
 
 std::vector<uint8_t> encode(SnmpV2cResponse const& response) throw()
 {
-  std::vector<SnmpVar> vars;
-  for(auto v: response.varResults_){
-    if (v.e_.valid()){
-      switch(v.e_.value()){
-      case SnmpV2cResponse::VarResult::E::NO_SUCH_OBJECT:
-        vars.push_back(SnmpVar(v.oid_,
-                                          SnmpVar::NoSuchObject(v.oid_,XJU_TRACED)));
-        break;
-      case SnmpV2cResponse::VarResult::E::NO_SUCH_INSTANCE:
-        vars.push_back(SnmpVar(v.oid_,
-                                          SnmpVar::NoSuchInstance(v.oid_,XJU_TRACED)));
-        break;
-      case SnmpV2cResponse::VarResult::E::END_OF_MIB_VIEW:
-        vars.push_back(SnmpVar(v.oid_,
-                                          SnmpVar::EndOfMibView(v.oid_,XJU_TRACED)));
-        break;
-      default:
-        xju::assert_never_reached();
-      }
-    }else{
-      vars.push_back(SnmpVar(v.oid_, v.v_));
-    }
-  }
   return encodePDU(
     response.community_,
     response.id_,
     (uint64_t)response.error_,
     response.errorIndex_.value(),
-    vars,
+    response.varResults_,
     0xA2);
 }
 
