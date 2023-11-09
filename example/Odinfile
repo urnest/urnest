@@ -5,6 +5,7 @@ ssh%all.tree:leaves
 chromedriver%all.tree:leaves
 crypt%all.tree:leaves
 typescript-inc%all.tree:leaves
+snmp-json-gateway%all
 %watch-file
 
 %watch-file==watch-file.cc+(..%cxx-opts):auto.cxx.exe

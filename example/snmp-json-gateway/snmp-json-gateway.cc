@@ -43,8 +43,26 @@
 #include <xju/snmp/decodeSnmpV2cGetBulkRequest.hh>
 #include <xju/snmp/decodeSnmpV2cSetRequest.hh>
 #include <xju/snmp/ContextEngineID.hh>
+#include <xju/snmp/decodeSnmpV3ScopedPDU.hh>
+#include <xju/snmp/decodeSnmpV3Message.hh>
+#include <xju/snmp/SnmpV3Message.hh>
+#include <xju/snmp/decodeSnmpV3UsmSecurityParameters.hh>
+#include <xju/UserName.hh>
+#include <xju/now.hh>
+#include <xju/snmp/SnmpV3UsmAuthData.hh>
+#include <xju/snmp/SnmpV3UsmPrivData.hh>
+#include <xju/snmp/PDU.hh>
+#include <xju/snmp/Value.hh>
+#include <xju/snmp/SnmpV3ScopedPDU.hh>
+#include <xju/snmp/Counter32Value.hh>
+#include <xju/snmp/showFirstBytes.hh>
 
 auto const same_line = xju::Utf8String("");
+
+xju::snmp::EngineTime engineTimeNow() {
+  return xju::snmp::EngineTime(
+    std::chrono::duration_cast<std::chrono::seconds>(xju::now().time_since_epoch()).count());
+}
 
 void run(xju::ip::UDPSocket& socket){
   xju::json::Object portMessage({
@@ -57,7 +75,7 @@ void run(xju::ip::UDPSocket& socket){
 
   uint64_t usmStatsUnknownEngineIDs=0;
   xju::snmp::ContextEngineID const ourEngineID(std::vector<uint8_t>{0x01,0x02,0x03,0x04});
-  
+  uint64_t const ourMaxSize(64000);
   auto from_snmp_to_stdout =
     [&](){
       try{
@@ -136,79 +154,78 @@ void run(xju::ip::UDPSocket& socket){
           try{
             auto const x(xju::snmp::decodeSnmpV3Message(buffer));
             try {
-              if (x.securityModel_ != 3) {
+              if (x.securityModel_ != xju::snmp::SnmpV3Message::SecurityModel(3)) {
                 std::ostringstream s;
                 s << "snmp v3 security model " << x.securityModel_ << " is not yet implemented";
                 throw xju::Exception(s.str(),XJU_TRACED);
               }
-              f ((x.flags_ & SnmpV3Message::AUTH) == SnmpV3Message::AUTH){
+              if ((x.flags_ & xju::snmp::SnmpV3Message::AUTH) == xju::snmp::SnmpV3Message::AUTH){
                 std::ostringstream s;
                 s << "snmp v3 auth " << x.securityModel_ << " is not yet implemented";
                 throw xju::Exception(s.str(),XJU_TRACED);
               }
               auto const sec(xju::snmp::decodeSnmpV3UsmSecurityParameters(x.securityParameters_));
-              if ((x.flags_ & SnmpV3Message::AUTH) == 0 &&
-                  (x.flags_ & SnmpV3Message::REPORTABLE)==SnmpV3Message::REPORTABLE &&
-                  sec.engineID_==ContextEngineID({}) &&
-                  sec.userName_==UserName("")){
+              if ((x.flags_ & xju::snmp::SnmpV3Message::AUTH) == 0 &&
+                  (x.flags_ & xju::snmp::SnmpV3Message::REPORTABLE)==
+                    xju::snmp::SnmpV3Message::REPORTABLE &&
+                  std::get<0>(sec).engineID_==xju::snmp::ContextEngineID({}) &&
+                  std::get<0>(sec).userName_==xju::UserName("")){
                 // engineid discovery (rfc3414 4. Discovery)
-                auto const scopedPDU(decodeSnmpV3ScopedPDU(x.scopedPduData_));
-                auto const requestId(decodeAnyPDURequestId(scopedPdu.encodedPDU_));
-                auto const pdu=xju::snmp::makeReportPDUSequence(
-                  requestId,
-                  {std::make_pair(xju::snmp::Oid(".1.3.6.1.6.3.15.1.1.4"),
-                                  std::shared_ptr<Value const>(
-                                    new xju::snmp::Counter32(usmStatsUnknownEngineIDs)))});
+                auto const scopedPDU(xju::snmp::decodeSnmpV3ScopedPDU(x.scopedPduData_));
                 auto const m(
                   xju::snmp::encode(
                     xju::snmp::SnmpV3Message(
                       x.id_,
-                      maxSize,
+                      ourMaxSize,
                       xju::snmp::SnmpV3Message::Flags(0),
                       xju::snmp::SnmpV3Message::SecurityModel(3),
                       xju::snmp::encode(
                         xju::snmp::SnmpV3UsmSecurityParameters(ourEngineID,
-                                                               1,
+                                                               xju::snmp::EngineBoots(1),
                                                                engineTimeNow(),
                                                                xju::UserName("")),
-                        SnmpV3UsmAuthData({}),
-                        SnmpV3UsmPrivData({})).
+                        xju::snmp::SnmpV3UsmAuthData({}),
+                        xju::snmp::SnmpV3UsmPrivData({})),
                       xju::snmp::encode(
                         xju::snmp::SnmpV3ScopedPDU(
                           ourEngineID,
-                          xju::snmp::ContextName(),
-                          xju::snmp::encode(
-                            SnmpV3ReportPDU(
-                              requestPDU.first,
-                              {std::make_pair(xju::snmp::Oid(".1.3.6.1.6.3.15.1.1.4"),
-                                              std::shared_ptr<Value const>(
-                                                new xju::snmp::Counter32(
-                                                  usmStatsUnknownEngineIDs)))})))))));
+                          xju::snmp::ContextName({}),
+                          xju::snmp::PDU(
+                            scopedPDU.pdu_.requestId_,
+                            0,
+                            0,
+                            {xju::snmp::SnmpVar(xju::snmp::Oid(".1.3.6.1.6.3.15.1.1.4"),
+                                                std::shared_ptr<xju::snmp::Value const>(
+                                                  new xju::snmp::Counter32Value(
+                                                    usmStatsUnknownEngineIDs)))},
+                            0xa8))))));
                 auto const deadline(xju::steadyNow()+std::chrono::seconds(5));
-                socket.sendTo(remoteEndpoint.first,remoteEndpoint.second,m.data(),m.size(),deadline);
+                socket.sendTo(senderAndSize.first.first,senderAndSize.first.second,
+                              m.data(),m.size(),deadline);
               }
-              else if (sec.engineID_!=ourEngineID){
+              else if (std::get<0>(sec).engineID_!=ourEngineID){
                 ++usmStatsUnknownEngineIDs;
                 std::ostringstream s;
-                s << "expected engine id " << xju::snmp::showBytes(512,ourEngineID)
-                  << ", got " << xju::snmp::showBytes(512,sec.engineID_);
+                s << "expected engine id (hex) " << xju::snmp::showFirstBytes(512,ourEngineID._)
+                  << ", got " << xju::snmp::showFirstBytes(512,std::get<0>(sec).engineID_._);
                 throw xju::Exception(s.str(),XJU_TRACED);
               }
               else {
-                auto const scopedPdu(xju::snmp::decodeSnmpV3ScopedPDU(x.scopedPduData_));
                 try{
-                  auto const p(xju::snmp::decodeGetPDU(scopedPdu.encodedPDU_));
+                  auto const y(xju::snmp::decodeSnmpV3ScopedPDU(x.scopedPduData_));
                   std::cout << xju::json::format(*snmp_json_gateway::encode(
                                                    senderAndSize.first,
-                                                   x,
-                                                   std::get<0>(sec),
-                                                   p),same_line)
+                                                   std::make_tuple(
+                                                     x.id_,
+                                                     x.maxSize_,
+                                                     y)),same_line)
                             << std::endl;
                   continue;
                 }
                 catch(xju::Exception& e){
                   std::ostringstream s;
-                  s << "decode scope PDU " << scopedPdu << " assuming it contains an SnmpGet PDU";
+                  s << "decode snmp v3 scoped PDU from data "
+                    << xju::snmp::showFirstBytes(USHRT_MAX,x.scopedPduData_._);
                   e.addContext(s.str(),XJU_TRACED);
                   failures.push_back(e);
                 }

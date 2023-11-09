@@ -11,9 +11,8 @@
 
 #include <xju/snmp/ContextEngineID.hh>
 #include <xju/snmp/ContextName.hh>
-#include <vector>
-#include <cinttypes>
-#include <xju/snmp/SnmpV3EncodedPDU.hh>
+#include <xju/snmp/PDU.hh>
+#include <utility> //impl
 
 namespace xju
 {
@@ -26,15 +25,15 @@ public:
   SnmpV3ScopedPDU(
     ContextEngineID contextEngineID,
     ContextName contextName,
-    SnmpV3EncodedPDU encodedPDU) noexcept:
+    PDU pdu) noexcept:
       contextEngineID_(std::move(contextEngineID)),
       contextName_(std::move(contextName)),
-      encodedPDU_(std::move(encodedPDU))
+      pdu_(std::move(pdu))
   {
   }
   ContextEngineID contextEngineID_;
   ContextName contextName_;
-  SnmpV3EncodedPDU encodedPDU_;
+  PDU pdu_;
 
   friend bool operator<(SnmpV3ScopedPDU const& a, SnmpV3ScopedPDU const& b) noexcept;
 };

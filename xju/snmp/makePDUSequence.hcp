@@ -27,42 +27,12 @@
 #include <xju/assert.hh> //impl
 #include <xju/format.hh> //impl
 #include <xju/seq_less.hh> //impl
-#include <xju/snmp/SnmpReportPDU.hh>
+#include <xju/snmp/PDU.hh>
 
 namespace xju
 {
 namespace snmp
 {
-
-std::shared_ptr<Value const> makePDUSequence(
-  RequestId requestId,
-  uint64_t error,
-  uint64_t errorIndex,
-  std::vector<std::pair<Oid, std::shared_ptr<Value const>> > const& vars,
-  uint8_t pduType // 0xA0 snmp v1 get etc
-  ) throw()
-{
-  typedef std::shared_ptr<Value const> vp;
-
-  std::vector<vp > params;
-  std::transform(vars.begin(),
-                 vars.end(),
-                 std::back_inserter(params),
-                 [](std::pair<Oid,vp> const& var) {
-                   return vp(
-                     new Sequence({
-                         vp(new OidValue(var.first)),
-                           vp(var.second)
-                           },
-                       0x30));
-                 });
-  return vp(new Sequence({
-        vp(new IntValue(requestId.value())),
-        vp(new IntValue(error)),//error
-        vp(new IntValue(errorIndex)),//errorIndex
-        vp(new Sequence(params,0x30))},
-      pduType));
-}
 
 namespace
 {
@@ -128,31 +98,18 @@ public:
 }
 
 std::shared_ptr<Value const> makePDUSequence(
-  RequestId requestId,
-  uint64_t error,
-  uint64_t errorIndex,
-  std::vector<SnmpVar> const& vars,
-  uint8_t pduType // 0xA2 snmp v1 get etc
-  ) throw()
+  PDU const& pdu) throw()
 {
   typedef std::shared_ptr<Value const> vp;
+
   return vp(new Sequence({
-        vp(new IntValue(requestId.value())),
-        vp(new IntValue(error)),//error
-        vp(new IntValue(errorIndex)),//errorIndex
-        vp(new V2cSequence(vars,0x30))},
-      pduType));
+        vp(new IntValue(pdu.requestId_.value())),
+        vp(new IntValue(pdu.error_)),//error
+        vp(new IntValue(pdu.errorIndex_)),//errorIndex
+        vp(new V2cSequence(pdu.vars_,0x30))},
+      pdu.pduType_));
 }
 
-std::shared_ptr<Value const> makePDUSequence(SnmpReportPDU const& x)
-{
-  return makePDUSequence(
-    x.requestId_,
-    0,
-    0,
-    x.vars_,
-    0xa8);
-}
   
 }
 }

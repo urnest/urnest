@@ -1,0 +1,58 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/snmp/RequestId.hh>
+#include <cinttypes>
+#include <vector>
+#include <xju/snmp/SnmpVar.hh>
+#include <xju/format.hh>
+
+namespace xju
+{
+namespace snmp
+{
+
+class PDU
+{
+public:
+  PDU(
+    RequestId requestId,
+    uint64_t error,
+    uint64_t errorIndex,
+    std::vector<SnmpVar> vars,
+    uint8_t pduType) throw():
+      requestId_(requestId),
+      error_(error),
+      errorIndex_(errorIndex),
+      vars_(std::move(vars)),
+      pduType_(pduType)
+  {
+  }
+  
+  RequestId requestId_;
+  uint64_t error_;
+  uint64_t errorIndex_;
+  std::vector<SnmpVar> vars_;
+  uint8_t pduType_;
+
+  friend bool operator<(PDU const& x, PDU const& y) noexcept;
+
+  friend std::ostream& operator<<(std::ostream& s, PDU const& x){
+    return s << "type " << x.pduType_
+             << "request id " << x.requestId_
+             << ", error " << x.error_
+             << ", error index " << x.errorIndex_
+             << ", vars " << xju::format::join(x.vars_.begin(),x.vars_.end(),", ");
+  }
+};
+
+}
+}

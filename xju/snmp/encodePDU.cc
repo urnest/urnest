@@ -14,6 +14,7 @@
 #include <xju/snmp/Sequence.hh>
 #include <xju/snmp/IntValue.hh>
 #include <xju/snmp/StringValue.hh>
+#include <xju/snmp/PDU.hh>
 
 namespace xju
 {
@@ -35,7 +36,7 @@ std::vector<uint8_t> encodePDU(
       vp(new IntValue(1)), //SNMP V2c
       vp(new StringValue(std::vector<uint8_t>(community._.begin(),
                                               community._.end()))),
-      makePDUSequence(requestId,error,errorIndex,vars,pduType)},
+      makePDUSequence(PDU(requestId,error,errorIndex,vars,pduType))},
     0x30);
   std::vector<uint8_t> result(s.encodedLength());
   xju::assert_equal(s.encodeTo(result.begin()),result.end());

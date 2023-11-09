@@ -42,10 +42,10 @@
 #include <xju/snmp/Sequence.hh>
 #include <xju/snmp/SnmpV3UsmSecurityParameters.hh>
 #include <xju/snmp/encodeSnmpV1Message.hh>
-#include <xju/snmp/SnmpV3EncodedPDU.hh>
 #include <xju/snmp/SnmpV3SecParams.hh>
 #include <xju/snmp/SnmpV3UsmAuthData.hh>
 #include <xju/snmp/SnmpV3UsmPrivData.hh>
+#include <xju/snmp/makePDUSequence.hh>
 
 namespace xju
 {
@@ -407,7 +407,7 @@ SnmpV3ScopedPduData encode(SnmpV3ScopedPDU const& x) throw()
   Sequence s({
       vp(new StringValue(std::move(x.contextEngineID_._))),
       vp(new StringValue(std::move(x.contextName_._))),
-      vp(new PreEncoded(std::move(x.encodedPDU_._)))},
+      makePDUSequence(x.pdu_)},
     0x30);
   std::vector<uint8_t> result(s.encodedLength());
   xju::assert_equal(s.encodeTo(result.begin()),result.end());

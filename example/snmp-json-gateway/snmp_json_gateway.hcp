@@ -36,6 +36,10 @@
 #include <xju/functional.hh> //impl
 #include <xju/snmp/SnmpV2cGetBulkRequest.hh>
 #include <xju/snmp/SnmpV2cSetRequest.hh>
+#include <xju/snmp/SnmpVar.hh>
+#include <xju/snmp/SnmpV3ScopedPDU.hh>
+#include <algorithm> //impl
+#include <xju/snmp/SnmpV3Message.hh>
 
 namespace snmp_json_gateway
 {
@@ -44,6 +48,9 @@ std::unique_ptr<xju::json::String> json_string(std::string const& x) {
   return std::unique_ptr<xju::json::String>(new xju::json::String(xju::Utf8String(x)));
 }
 std::unique_ptr<xju::json::Number> json_number(int x) {
+  return std::unique_ptr<xju::json::Number>(new xju::json::Number(xju::format::int_(x)));
+}
+std::unique_ptr<xju::json::Number> json_number(uint8_t x) {
   return std::unique_ptr<xju::json::Number>(new xju::json::Number(xju::format::int_(x)));
 }
 std::unique_ptr<xju::json::Number> json_number(uint32_t x) {
@@ -57,6 +64,14 @@ std::unique_ptr<xju::json::Number> json_number(uint64_t x) {
 }
 std::unique_ptr<xju::json::String> json_oid(xju::snmp::Oid const& x) {
   return std::unique_ptr<xju::json::String>(json_string(x.toString()));
+}
+std::unique_ptr<xju::json::Array> json_bytes(std::vector<uint8_t> const& x) {
+  std::vector<std::shared_ptr<xju::json::Element const> > elements;
+  std::transform(x.begin(),
+                 x.end(),
+                 std::back_inserter(elements),
+                 [](uint8_t const byte){return json_number(byte);});
+  return std::unique_ptr<xju::json::Array>(new xju::json::Array(std::move(elements)));
 }
 
 std::shared_ptr<xju::json::Element const> json_v1_value(
@@ -278,6 +293,37 @@ std::shared_ptr<xju::json::Object> encode(
   return std::make_unique<xju::json::Object>(elements);
 }
 
+// encode x to json
+std::shared_ptr<xju::json::Object> encode(
+  std::tuple<xju::snmp::SnmpV3Message::ID,uint32_t,xju::snmp::SnmpV3ScopedPDU> const& x)
+{
+  std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> > elements;
+
+  xju::snmp::SnmpV3Message::ID const id(std::get<0>(x));
+  uint32_t const max_size(std::get<1>(x));
+  xju::snmp::SnmpV3ScopedPDU const& scopedPdu(std::get<2>(x));
+  elements.insert({xju::Utf8String("message_id"), json_number(id.value())});
+  elements.insert({xju::Utf8String("engined_id"), json_bytes(scopedPdu.contextEngineID_._)});
+  elements.insert({xju::Utf8String("max_size"), json_number(max_size)});
+  elements.insert({xju::Utf8String("context_name"), json_bytes(scopedPdu.contextName_._)});
+  elements.insert({xju::Utf8String("request_id"), json_number(scopedPdu.pdu_.requestId_.value())});
+  switch(scopedPdu.pdu_.pduType_){
+  case 0xa0: {
+    elements.insert({xju::Utf8String("message_type"), json_string("SnmpV3ScopedPDU")});
+    std::vector<xju::snmp::Oid> oids;
+    std::transform(scopedPdu.pdu_.vars_.begin(), scopedPdu.pdu_.vars_.end(),
+                   std::back_inserter(oids),
+                   [](xju::snmp::SnmpVar const& v){ return v.oid(); });
+    elements.insert({xju::Utf8String("oids"), encode(oids)});
+    break; }
+  default: {
+    std::ostringstream s;
+    s << "unexpected snmp v3 scoped message type " << xju::format::hex(scopedPdu.pdu_.pduType_);
+    throw xju::Exception(s.str(),XJU_TRACED); }
+  }
+  return std::make_unique<xju::json::Object>(elements);
+}
+  
 std::pair<xju::snmp::SnmpV1Response::ErrorStatus, xju::snmp::SnmpV1Response::ErrorIndex> decodeV1Error(
   xju::json::Element const& error,
   std::vector<std::shared_ptr<xju::json::Element const>> const& values){
@@ -530,7 +576,7 @@ xju::snmp::SnmpV1Response decodeSnmpV1Response(xju::json::Element const& x)
   }
 }
 
-xju::snmp::SnmpV2cResponse::VarResult decodeV2cVarResult(
+xju::snmp::SnmpVar decodeV2cVarResult(
   xju::snmp::Oid oid,
   xju::json::Element const& x)
 {
@@ -538,33 +584,31 @@ xju::snmp::SnmpV2cResponse::VarResult decodeV2cVarResult(
     try{
       dynamic_cast<xju::json::String const&>(x);
       xju::Utf8String const error(x.asString());
-      std::map<xju::Utf8String, xju::snmp::SnmpV2cResponse::VarResult::E> const errMap{
-        {xju::Utf8String("NoSuchObject"), xju::snmp::SnmpV2cResponse::VarResult::E::NO_SUCH_OBJECT},
-        {xju::Utf8String("NoSuchInstance"), xju::snmp::SnmpV2cResponse::VarResult::E::NO_SUCH_INSTANCE},
-        {xju::Utf8String("EndOfMibView"), xju::snmp::SnmpV2cResponse::VarResult::E::END_OF_MIB_VIEW}
-      };
-
-      auto const i(errMap.find(error));
-      if (i==errMap.end()){
-        std::vector<std::string> errNames;
-        std::transform(errMap.begin(),errMap.end(),std::back_inserter(errNames),
-                       xju::functional::First());
-        std::ostringstream s;
-        s << xju::format::quote(error) << " is not one of "
-          << xju::format::join(errNames.begin(), errNames.end(), std::string(", "));
-        throw xju::Exception(s.str(),XJU_TRACED);
+      if (error == xju::Utf8String("NoSuchObject")){
+        return xju::snmp::SnmpVar(oid,xju::snmp::SnmpVar::NoSuchObject(oid,XJU_TRACED));
       }
-      return xju::snmp::SnmpV2cResponse::VarResult(oid, (*i).second);
+      if (error == xju::Utf8String("NoSuchInstance")){
+        return xju::snmp::SnmpVar(oid,xju::snmp::SnmpVar::NoSuchInstance(oid,XJU_TRACED));
+      }
+      if (error == xju::Utf8String("EndOfMibView")){
+        return xju::snmp::SnmpVar(oid,xju::snmp::SnmpVar::EndOfMibView(oid,XJU_TRACED));
+      }
+      std::ostringstream s;
+      s << xju::format::quote(error) << " is not one of "
+        << xju::format::quote("NoSuchObject")
+        << ", " << xju::format::quote("NoSuchInstance")
+        << ", " << xju::format::quote("EndOfMibView");
+      throw xju::Exception(s.str(),XJU_TRACED);
     }
     catch(std::bad_cast const&){
       try{
-        return xju::snmp::SnmpV2cResponse::VarResult(oid,decodeV1Value(x));
+        return xju::snmp::SnmpVar(oid,decodeV1Value(x));
       }
       catch(xju::Exception const& e){
         std::string const value_type(x.getMember(xju::Utf8String("value_type")).asString());
         if (value_type == "U64Value"){
           xju::json::Element const& value(x.getMember(xju::Utf8String("value")));
-          return xju::snmp::SnmpV2cResponse::VarResult(
+          return xju::snmp::SnmpVar(
             oid,std::make_shared<xju::snmp::Counter64Value>(value.asU64()));
         }
         std::ostringstream s;
@@ -582,10 +626,10 @@ xju::snmp::SnmpV2cResponse::VarResult decodeV2cVarResult(
   }
 }
 
-std::vector<xju::snmp::SnmpV2cResponse::VarResult> decodeV2cVarResults(xju::json::Element const& x)
+std::vector<xju::snmp::SnmpVar> decodeV2cVarResults(xju::json::Element const& x)
 {
   try{
-    std::vector<xju::snmp::SnmpV2cResponse::VarResult> result;
+    std::vector<xju::snmp::SnmpVar> result;
     for(auto oid_and_value: x.asArray()){
       auto const a((*oid_and_value).asArray());
       if (a.size()!=2){

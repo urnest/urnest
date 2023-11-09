@@ -264,8 +264,88 @@ class SnmpV2cResponse:
     values: list[tuple[Oid, SnmpV2cVarResult]]
 
 
+class MessageId(Int["MessageIdTag"]):
+    """RFC 3412 msgID (an unsigned 31-bit integer)"""
+    pass
+
+
+class EngineId(bytes):
+    """RFC 3412 contextEndingeID"""
+    pass
+
+
+class ContextName(bytes):
+    """RFC 3412 contextName"""
+    pass
+
+
+@dataclass
+class SnmpV3GetRequest:
+    message_type: Literal["SnmpV3GetRequest"]
+    message_id: MessageId
+    max_size: int
+    engine_id: EngineId
+    context_name: ContextName
+    request_id: RequestId
+    oids: list[Oid]
+    pass
+
+@dataclass
+class SnmpV3GetNextRequest:
+    message_type: Literal["SnmpV3GetNextRequest"]
+    message_id: MessageId
+    max_size: int
+    engine_id: EngineId
+    context_name: ContextName
+    request_id: RequestId
+    oids: list[Oid]
+    pass
+
+@dataclass
+class SnmpV3GetBulkRequest:
+    message_type: Literal["SnmpV3GetBulkRequest"]
+    message_id: MessageId
+    max_size: int
+    engine_id: EngineId
+    context_name: ContextName
+    request_id: RequestId
+    get_next: list[Oid]
+    get_next_n: list[Oid]
+    n: int
+    pass
+
+@dataclass
+class SnmpV3SetRequest:
+    message_type: Literal["SnmpV3SetRequest"]
+    message_id: MessageId
+    max_size: int
+    engine_id: EngineId
+    context_name: ContextName
+    request_id: RequestId
+    vars: list[tuple[Oid, "SnmpV2cValue"]]
+    pass
+
+
+@dataclass
+class SnmpV3Response:
+    message_type: Literal["SnmpV3Response"]
+    message_id: MessageId
+    max_size: int
+    engine_id: EngineId
+    context_name: ContextName
+    request_id: RequestId
+    error: (None | TooBig | NoSuchName | BadValue | ReadOnly | GenErr |
+            NoAccess | NotWritable | WrongType |
+            WrongLength | WrongEncoding | WrongValue | NoCreation |
+            InconsistentName | InconsistentValue | ResourceUnavailable | CommitFailed | UndoFailed )
+    values: list[tuple[Oid, SnmpV2cVarResult]]
+
+
 # tags for newtypes defined above
 class CommunityTag:pass
 class RequestIdTag:pass
 class OidTag:pass
 class ErrorIndexTag: pass
+class MessageIdTag:pass
+class ContextNameTag:pass
+class EngineIdTag:pass

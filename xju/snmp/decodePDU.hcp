@@ -1,0 +1,185 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <utility>
+#include <xju/snmp/PDU.hh>
+#include <xju/snmp/DecodeIterator.hh>
+#include <vector> //impl
+#include <string> //impl
+#include <xju/snmp/decodeSequenceTypeAndLength.hh> //impl
+#include <xju/snmp/decodeIntValue.hh> //impl
+#include <xju/snmp/SnmpVar.hh> //impl
+#include <xju/snmp/decodeOidValue.hh> //impl
+#include <xju/snmp/decodeValue.hh> //impl
+#include <algorithm> //impl
+#include <iterator> //impl
+#include <xju/format.hh> //impl
+#include <sstream> //impl
+#include <xju/snmp/formatLength.hh> //impl
+#include <xju/snmp/decodeLength.hh> //impl
+
+namespace xju
+{
+namespace snmp
+{
+std::pair<PDU, DecodeIterator> decodePDU(DecodeIterator const at)
+{
+  std::vector<std::string> ok;
+  try{
+    auto const s2(decodeSequenceTypeAndLength(at)); try {
+      auto const requestId(decodeIntValue(s2.second)); try {
+        auto const errorStatus(decodeIntValue(requestId.second)); try {
+          auto const ei(decodeIntValue(errorStatus.second)); try {
+            auto const s3(decodeSequenceTypeAndLength(ei.second)); try {
+              DecodeIterator at(s3.second);
+              std::vector<SnmpVar> varResults;
+              auto atEnd=[&]() {
+                           if (s3.first.second.valid())
+                           {
+                             // X.690 definite length
+                             return at == s3.second+s3.first.second.value();
+                           }
+                           else
+                           {
+                             // X.690 indefinite length end in two zero bytes
+                             return (((*at)==0) && ((*(at+1))==0)); 
+                           }
+                         };
+              while(!atEnd()) {
+                try {
+                  auto const s(decodeSequenceTypeAndLength(at));
+                  auto const oid(decodeOidValue(s.second));
+                  switch(*oid.second) {
+                  case 0x80:
+                  case 0x81:
+                  case 0x82:
+                  {
+                    auto const n(decodeLength(at+1));
+                    if (!n.first.valid()) {
+                      std::ostringstream s;
+                      s << "indefinite length is illegal for 'null' "
+                        << "value associated with exception " << (*oid.second)
+                        << " for oid " << oid.first;
+                      throw xju::Exception(s.str(),XJU_TRACED);
+                    }
+                    auto const o(oid.first);
+                    switch(*oid.second){
+                    case 0x80:
+                      varResults.push_back(SnmpVar(o,SnmpVar::NoSuchObject(o,XJU_TRACED)));
+                      break;
+                    case 0x81:
+                      varResults.push_back(SnmpVar(o,SnmpVar::NoSuchInstance(o,XJU_TRACED)));
+                      break;
+                    case 0x82:
+                      varResults.push_back(SnmpVar(o,SnmpVar::EndOfMibView(o,XJU_TRACED)));
+                      break;
+                    }
+                    at=n.second+n.first.value();
+                    break;
+                  }
+                  default:
+                  {
+                    auto const value(decodeValue(oid.second));
+                    varResults.push_back(
+                      SnmpVar(oid.first,value.first));
+                    at=value.second;
+                    if (!s.first.second.valid()) {
+                      // X.690 indefinite length - skip 2x zero bytes
+                      at=at+2;
+                    }
+                  }
+                  }
+                }
+                catch(xju::Exception& e) {
+                  std::transform(
+                    varResults.rbegin(),varResults.rend(),
+                    std::back_inserter(ok),
+                    xju::format::str<SnmpVar>);
+                  std::ostringstream s;
+                  s << "decode param oid and value sequence at offset " 
+                    << at;
+                  e.addContext(s.str(), XJU_TRACED);
+                  throw;
+                }
+              }
+              if (errorStatus.first > INT_MAX) {
+                std::ostringstream s;
+                s << "error status " << errorStatus.first 
+                  << " exceeds maximimum supported ("
+                  << INT_MAX << ")";
+                throw xju::Exception(s.str(), XJU_TRACED);
+              }
+              return std::make_pair(
+                PDU(
+                  RequestId(requestId.first),
+                  errorStatus.first,
+                  ei.first,
+                  varResults,
+                  s2.first.first),
+                at);
+            }
+            catch(xju::Exception& e) {
+              std::ostringstream s;
+              s << "3rd sequence type " 
+                << xju::format::hex(s3.first.first)
+                << " and length " << formatLength(s3.first.second)
+                << " at " << ei.second;
+              ok.push_back(s.str());
+              throw;
+            }
+          }
+          catch(xju::Exception const& e) {
+            std::ostringstream s;
+            s << "error index " << ei.first
+              << " at " << errorStatus.second;
+            ok.push_back(s.str());
+            throw;
+          }
+        }
+        catch(xju::Exception const& e) {
+          std::ostringstream s;
+          s << "error " << xju::format::hex(errorStatus.first)
+            << " at " << requestId.second;
+          ok.push_back(s.str());
+          throw;
+        }
+      }
+      catch(xju::Exception const& e) {
+        std::ostringstream s;
+        s << "request id " << requestId.first << " at " << s2.second;
+        ok.push_back(s.str());
+        throw;
+      }
+    }
+    catch(xju::Exception const& e) {
+      std::ostringstream s;
+      s << "pdu sequence type " << xju::format::hex(s2.first.first)
+        << " and length " 
+        << formatLength(s2.first.second)
+        << " at " << at;
+      ok.push_back(s.str());
+      throw;
+    }
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode snmp pdu from at " << at;
+    if (ok.size()) {
+      s << " having successfully decoded "
+        << xju::format::join(ok.rbegin(),ok.rend(),", ");
+    }
+    e.addContext(s.str(), XJU_TRACED);
+    throw;
+  }
+}
+
+}
+}

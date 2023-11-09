@@ -15,6 +15,9 @@
 #include <unistd.h>
 #include <xju/snmp/SnmpV3SecParams.hh>
 #include <xju/snmp/SnmpV3ScopedPduData.hh>
+#include <iostream>
+#include <xju/format.hh>
+#include <xju/snmp/showFirstBytes.hh>
 
 namespace xju
 {
@@ -67,6 +70,15 @@ public:
   bool reportable() const { return flags_ & REPORTABLE == REPORTABLE; }
 
   friend bool operator<(SnmpV3Message const& a, SnmpV3Message const& b) throw();
+
+  friend std::ostream& operator<<(std::ostream& s, SnmpV3Message const& x) throw(){
+    return s << "message id " << x.id_
+             << ", max size " << x.maxSize_
+             << ", flags " << xju::format::hex(x.flags_)
+             << ", security model " << x.securityModel_
+             << ", security params (hex) " << showFirstBytes(1024,x.securityParameters_._)
+             << ", scoped pdu data (hex) " << showFirstBytes(4096,x.scopedPduData_._);
+  }
 };
 
 }

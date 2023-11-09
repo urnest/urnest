@@ -21,6 +21,8 @@
 #include <xju/snmp/extractRemainder.hh>
 #include <xju/snmp/ContextEngineID.hh>
 #include <xju/snmp/ContextName.hh>
+#include <xju/snmp/showFirstBytes.hh>
+#include <xju/snmp/decodePDU.hh>
 
 namespace xju
 {
@@ -43,18 +45,31 @@ SnmpV3ScopedPDU decodeSnmpV3ScopedPDU(
       throw xju::Exception(s.str(), XJU_TRACED);
     }
     try {
-      if (s1.first.second.valid() && s1.second.remaining() != s1.first.second.value()){
+      if (s1.first.second.valid() && s1.second.remaining() != s1.first.second.value()) {
         std::ostringstream s;
         s << "sequence length " << s1.first.second.value()
           << " does not match contained data length (" << s1.second.remaining() << ")";
         throw xju::Exception(s.str(),XJU_TRACED);
       }
       auto contextEngineID(decodeStringValue(s1.second)); try {
-        auto contextName(decodeStringValue(contextEngineID.second));
-          auto encodedPDU(extractRemainder(contextName.second));
-          return SnmpV3ScopedPDU(std::move(ContextEngineID(contextEngineID.first)),
-                                 std::move(ContextName(contextName.first)),
-                                 SnmpV3EncodedPDU(std::move(encodedPDU)));
+        auto contextName(decodeStringValue(contextEngineID.second)); try{
+          auto pdu(decodePDU(contextName.second));
+          if (!pdu.second.atEnd()){
+            std::ostringstream s;
+            s << "left over data data " << showFirstBytes(128, extractRemainder(pdu.second))
+              << " having decoded pdu " << pdu.first;
+            throw xju::Exception(s.str(),XJU_TRACED);
+          }
+          return SnmpV3ScopedPDU(ContextEngineID(contextEngineID.first),
+                                 ContextName(contextName.first),
+                                 std::move(pdu.first));
+        }
+        catch(xju::Exception const& e) {
+          std::ostringstream s;
+          s << "context name at " << contextEngineID.second;
+          ok.push_back(s.str());
+          throw;
+        }
       }
       catch(xju::Exception const& e) {
         std::ostringstream s;
