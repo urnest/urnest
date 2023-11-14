@@ -18,6 +18,19 @@
 #include <xju/snmp/SnmpV2cGetNextRequest.hh>
 #include <xju/snmp/SnmpV2cGetRequest.hh>
 #include <xju/snmp/SnmpV2cSetRequest.hh>
+#include <tuple>
+#include <xju/snmp/SnmpV3Message.hh>
+#include <xju/snmp/SnmpV3ScopedPDU.hh>
+#include <xju/snmp/ContextEngineID.hh>
+#include <xju/snmp/ContextName.hh>
+#include <xju/snmp/PDU.hh>
+#include <xju/snmp/RequestId.hh>
+#include <xju/snmp/SnmpVar.hh>
+#include <xju/snmp/Oid.hh>
+#include <memory>
+#include <xju/snmp/NullValue.hh>
+#include <xju/snmp/Counter32Value.hh>
+#include <xju/snmp/Counter64Value.hh>
 
 namespace snmp_json_gateway
 {
@@ -87,8 +100,98 @@ void test1() {
                  std::shared_ptr<xju::snmp::Value const>(new xju::snmp::StringValue("fred"))}
               }),
             std::vector<xju::snmp::Oid>{xju::snmp::Oid(".1.4.6.12.27.3"),
-                xju::snmp::Oid(".1.4.6.12.19")}))
+                xju::snmp::Oid(".1.4.6.12.19")})),
+          
+        snmp_json_gateway::encode(
+          std::make_tuple(
+            xju::snmp::SnmpV3Message::ID(23),
+            66786,
+            xju::snmp::SnmpV3ScopedPDU(
+              xju::snmp::ContextEngineID(std::vector<uint8_t>{'c','a','t','h','y'}),
+              xju::snmp::ContextName(std::vector<uint8_t>{'c','o','l','i','n'}),
+              xju::snmp::PDU(
+                xju::snmp::RequestId(27),
+                0,
+                0,
+                std::vector<xju::snmp::SnmpVar>{
+                  xju::snmp::SnmpVar(xju::snmp::Oid(".1.4.6.1.27.3"),
+                                     std::shared_ptr<xju::snmp::Value const>(
+                                       new xju::snmp::NullValue())),
+                    
+                    xju::snmp::SnmpVar(xju::snmp::Oid(".1.4.6.1.19"),
+                                       std::shared_ptr<xju::snmp::Value const>(
+                                         new xju::snmp::NullValue()))},
+                0xa0)))),  // get
+          
+        snmp_json_gateway::encode(
+          std::make_tuple(
+            xju::snmp::SnmpV3Message::ID(24),
+            66786,
+            xju::snmp::SnmpV3ScopedPDU(
+              xju::snmp::ContextEngineID(std::vector<uint8_t>{'c','a','t','h','y'}),
+              xju::snmp::ContextName(std::vector<uint8_t>{'c','o','l','i','n'}),
+              xju::snmp::PDU(
+                xju::snmp::RequestId(28),
+                0,
+                0,
+                std::vector<xju::snmp::SnmpVar>{
+                  xju::snmp::SnmpVar(xju::snmp::Oid(".1.4.6.12.27.3"),
+                                     std::shared_ptr<xju::snmp::Value const>(
+                                       new xju::snmp::NullValue())),
+                    
+                    xju::snmp::SnmpVar(xju::snmp::Oid(".1.4.6.12.19"),
+                                       std::shared_ptr<xju::snmp::Value const>(
+                                         new xju::snmp::NullValue()))},
+                0xa1)))),  // get-next
+          
+        snmp_json_gateway::encode(
+          std::make_tuple(
+            xju::snmp::SnmpV3Message::ID(25),
+            66786,
+            xju::snmp::SnmpV3ScopedPDU(
+              xju::snmp::ContextEngineID(std::vector<uint8_t>{'c','a','t','h','y'}),
+              xju::snmp::ContextName(std::vector<uint8_t>{'c','o','l','i','n'}),
+              xju::snmp::PDU(
+                xju::snmp::RequestId(29),
+                2,
+                10,
+                std::vector<xju::snmp::SnmpVar>{
+                  xju::snmp::SnmpVar(xju::snmp::Oid(".1.4.6.12.27.3"),
+                                     std::shared_ptr<xju::snmp::Value const>(
+                                       new xju::snmp::NullValue())),
+                    
+                    xju::snmp::SnmpVar(xju::snmp::Oid(".1.4.6.12.19"),
+                                       std::shared_ptr<xju::snmp::Value const>(
+                                         new xju::snmp::NullValue())),
+                    
+                    xju::snmp::SnmpVar(xju::snmp::Oid(".1.4.6.12.27.5"),
+                                       std::shared_ptr<xju::snmp::Value const>(
+                                         new xju::snmp::NullValue()))},
+                0xa5)))),  // get-bulk
+          
+        snmp_json_gateway::encode(
+          std::make_tuple(
+            xju::snmp::SnmpV3Message::ID(26),
+            66786,
+            xju::snmp::SnmpV3ScopedPDU(
+              xju::snmp::ContextEngineID(std::vector<uint8_t>{'c','a','t','h','y'}),
+              xju::snmp::ContextName(std::vector<uint8_t>{'c','o','l','i','n'}),
+              xju::snmp::PDU(
+                xju::snmp::RequestId(30),
+                0,
+                0,
+                std::vector<xju::snmp::SnmpVar>{
+                  xju::snmp::SnmpVar(xju::snmp::Oid(".1.4.6.12.27.3"),
+                                     std::shared_ptr<xju::snmp::Value const>(
+                                       new xju::snmp::Counter32Value(32))),
+                    
+                    xju::snmp::SnmpVar(xju::snmp::Oid(".1.4.6.1.19"),
+                                       std::shared_ptr<xju::snmp::Value const>(
+                                         new xju::snmp::Counter64Value(64)))},
+                0xa3))))  // set
       }));
+
+
   std::cout << xju::json::format(x, xju::Utf8String("")) << "\n";
 }
 

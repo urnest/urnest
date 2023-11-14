@@ -91,6 +91,20 @@ class U64Value:
     value: int
     pass
 
+@dataclass
+class Counter32Value:
+    """snmp unsigned 32 bit counter"""
+    value_type:Literal["Counter32Value"]
+    value: int
+    pass
+
+@dataclass
+class Counter64Value:
+    """snmp unsigned 64 bit counter"""
+    value_type:Literal["Counter64Value"]
+    value: int
+    pass
+
 
 SnmpV1Value = IntValue | StrValue | TimeTicksValue | GaugeValue | CounterValue | Ip4AddressValue | OpaqueValue | NullValue
 
@@ -186,7 +200,7 @@ class SnmpV1Response:
     values: list[tuple[Oid, SnmpV1Value]]
 
 
-SnmpV2cValue = SnmpV1Value | U64Value
+SnmpV2cValue = SnmpV1Value | U64Value | Counter32Value | Counter64Value
 
 SnmpV2cVarResult = (
     Literal["NoSuchObject"] | Literal["NoSuchInstance"] | Literal["EndOfMibView"] | SnmpV2cValue )
@@ -269,23 +283,13 @@ class MessageId(Int["MessageIdTag"]):
     pass
 
 
-class EngineId(bytes):
-    """RFC 3412 contextEndingeID"""
-    pass
-
-
-class ContextName(bytes):
-    """RFC 3412 contextName"""
-    pass
-
-
 @dataclass
 class SnmpV3GetRequest:
     message_type: Literal["SnmpV3GetRequest"]
     message_id: MessageId
     max_size: int
-    engine_id: EngineId
-    context_name: ContextName
+    engine_id: list[int]
+    context_name: list[int]
     request_id: RequestId
     oids: list[Oid]
     pass
@@ -295,8 +299,8 @@ class SnmpV3GetNextRequest:
     message_type: Literal["SnmpV3GetNextRequest"]
     message_id: MessageId
     max_size: int
-    engine_id: EngineId
-    context_name: ContextName
+    engine_id: list[int]
+    context_name: list[int]
     request_id: RequestId
     oids: list[Oid]
     pass
@@ -306,8 +310,8 @@ class SnmpV3GetBulkRequest:
     message_type: Literal["SnmpV3GetBulkRequest"]
     message_id: MessageId
     max_size: int
-    engine_id: EngineId
-    context_name: ContextName
+    engine_id: list[int]
+    context_name: list[int]
     request_id: RequestId
     get_next: list[Oid]
     get_next_n: list[Oid]
@@ -319,8 +323,8 @@ class SnmpV3SetRequest:
     message_type: Literal["SnmpV3SetRequest"]
     message_id: MessageId
     max_size: int
-    engine_id: EngineId
-    context_name: ContextName
+    engine_id: list[int]
+    context_name: list[int]
     request_id: RequestId
     vars: list[tuple[Oid, "SnmpV2cValue"]]
     pass
@@ -331,8 +335,8 @@ class SnmpV3Response:
     message_type: Literal["SnmpV3Response"]
     message_id: MessageId
     max_size: int
-    engine_id: EngineId
-    context_name: ContextName
+    engine_id: list[int]
+    context_name: list[int]
     request_id: RequestId
     error: (None | TooBig | NoSuchName | BadValue | ReadOnly | GenErr |
             NoAccess | NotWritable | WrongType |
@@ -347,5 +351,3 @@ class RequestIdTag:pass
 class OidTag:pass
 class ErrorIndexTag: pass
 class MessageIdTag:pass
-class ContextNameTag:pass
-class EngineIdTag:pass

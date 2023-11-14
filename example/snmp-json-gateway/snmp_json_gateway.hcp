@@ -189,13 +189,25 @@ std::unique_ptr<xju::json::Array> encode(
 }
 
 std::unique_ptr<xju::json::Array> encode(
-  std::map<xju::snmp::Oid, std::shared_ptr<xju::snmp::Value const> > vars,
+  std::map<xju::snmp::Oid, std::shared_ptr<xju::snmp::Value const> > const& vars,
   std::vector<xju::snmp::Oid> const& order)
 {
   std::vector<std::shared_ptr<xju::json::Element const> > elements;
   for(auto const oid: order){
     std::vector<std::shared_ptr<xju::json::Element const> > var(
-      {json_oid(oid), json_v1_value(vars[oid])});
+      {json_oid(oid), json_v1_value((*vars.find(oid)).second)});
+    elements.push_back(std::make_shared<xju::json::Array>(var));
+  }
+  return std::make_unique<xju::json::Array>(elements);
+}
+
+std::unique_ptr<xju::json::Array> encode(
+  std::vector<xju::snmp::SnmpVar> const& vars)
+{
+  std::vector<std::shared_ptr<xju::json::Element const> > elements;
+  for(auto const v: vars){
+    std::vector<std::shared_ptr<xju::json::Element const> > var(
+      {json_oid(v.oid()), json_v1_value(v.value())});
     elements.push_back(std::make_shared<xju::json::Array>(var));
   }
   return std::make_unique<xju::json::Array>(elements);
@@ -303,18 +315,44 @@ std::shared_ptr<xju::json::Object> encode(
   uint32_t const max_size(std::get<1>(x));
   xju::snmp::SnmpV3ScopedPDU const& scopedPdu(std::get<2>(x));
   elements.insert({xju::Utf8String("message_id"), json_number(id.value())});
-  elements.insert({xju::Utf8String("engined_id"), json_bytes(scopedPdu.contextEngineID_._)});
+  elements.insert({xju::Utf8String("engine_id"), json_bytes(scopedPdu.contextEngineID_._)});
   elements.insert({xju::Utf8String("max_size"), json_number(max_size)});
   elements.insert({xju::Utf8String("context_name"), json_bytes(scopedPdu.contextName_._)});
   elements.insert({xju::Utf8String("request_id"), json_number(scopedPdu.pdu_.requestId_.value())});
   switch(scopedPdu.pdu_.pduType_){
   case 0xa0: {
-    elements.insert({xju::Utf8String("message_type"), json_string("SnmpV3ScopedPDU")});
+    elements.insert({xju::Utf8String("message_type"), json_string("SnmpV3GetRequest")});
     std::vector<xju::snmp::Oid> oids;
     std::transform(scopedPdu.pdu_.vars_.begin(), scopedPdu.pdu_.vars_.end(),
                    std::back_inserter(oids),
                    [](xju::snmp::SnmpVar const& v){ return v.oid(); });
     elements.insert({xju::Utf8String("oids"), encode(oids)});
+    break; }
+  case 0xa1: {
+    elements.insert({xju::Utf8String("message_type"), json_string("SnmpV3GetNextRequest")});
+    std::vector<xju::snmp::Oid> oids;
+    std::transform(scopedPdu.pdu_.vars_.begin(), scopedPdu.pdu_.vars_.end(),
+                   std::back_inserter(oids),
+                   [](xju::snmp::SnmpVar const& v){ return v.oid(); });
+    elements.insert({xju::Utf8String("oids"), encode(oids)});
+    break; }
+  case 0xa5: {
+    elements.insert({xju::Utf8String("message_type"), json_string("SnmpV3GetBulkRequest")});
+    std::vector<xju::snmp::Oid> oids;
+    std::transform(scopedPdu.pdu_.vars_.begin(), scopedPdu.pdu_.vars_.begin()+scopedPdu.pdu_.error_,
+                   std::back_inserter(oids),
+                   [](xju::snmp::SnmpVar const& v){ return v.oid(); });
+    elements.insert({xju::Utf8String("get_next"), encode(oids)});
+    oids.clear();
+    std::transform(scopedPdu.pdu_.vars_.begin()+scopedPdu.pdu_.error_, scopedPdu.pdu_.vars_.end(),
+                   std::back_inserter(oids),
+                   [](xju::snmp::SnmpVar const& v){ return v.oid(); });
+    elements.insert({xju::Utf8String("get_next_n"), encode(oids)});
+    elements.insert({xju::Utf8String("n"), json_number(scopedPdu.pdu_.errorIndex_)});
+    break; }
+  case 0xa3: {
+    elements.insert({xju::Utf8String("message_type"), json_string("SnmpV3SetRequest")});
+    elements.insert({xju::Utf8String("vars"), encode(scopedPdu.pdu_.vars_)});
     break; }
   default: {
     std::ostringstream s;
