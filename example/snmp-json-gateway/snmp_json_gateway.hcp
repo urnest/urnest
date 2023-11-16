@@ -93,7 +93,7 @@ std::shared_ptr<xju::json::Element const> json_v1_value(
   try{
     return std::make_shared<xju::json::Object>(
       std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> >
-      {{xju::Utf8String("value_type"), json_string("U64Value")},
+      {{xju::Utf8String("value_type"), json_string("Counter64")},
        {xju::Utf8String("value"), json_number(
            dynamic_cast<xju::snmp::Counter64Value const&>(*x).val_)}});
   }
@@ -644,14 +644,14 @@ xju::snmp::SnmpVar decodeV2cVarResult(
       }
       catch(xju::Exception const& e){
         std::string const value_type(x.getMember(xju::Utf8String("value_type")).asString());
-        if (value_type == "U64Value"){
+        if (value_type == "Counter64"){
           xju::json::Element const& value(x.getMember(xju::Utf8String("value")));
           return xju::snmp::SnmpVar(
             oid,std::make_shared<xju::snmp::Counter64Value>(value.asU64()));
         }
         std::ostringstream s;
         s << readableRepr(e) << "and value type "
-          << xju::format::quote(value_type) << " is not U64Value ";
+          << xju::format::quote(value_type) << " is not Counter64 ";
         throw xju::Exception(s.str(),XJU_TRACED);
       }
     }

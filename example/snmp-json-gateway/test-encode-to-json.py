@@ -4,7 +4,7 @@ import json
 from xju.assert_ import Assert
 from xju.json_codec import Codec
 from snmp_json_gateway import SnmpV1Response, RequestId, Community, Oid
-from snmp_json_gateway import NullValue, IntValue, StrValue, TimeTicksValue, U64Value
+from snmp_json_gateway import NullValue, IntValue, StrValue, TimeTicksValue, Counter64Value
 from snmp_json_gateway import GaugeValue, CounterValue, Ip4AddressValue, OpaqueValue
 from snmp_json_gateway import TooBig, NoSuchName, BadValue, ReadOnly, GenErr
 from snmp_json_gateway import SnmpV2cResponse, NoAccess, WrongType, WrongLength, WrongEncoding
@@ -88,7 +88,7 @@ print(json.dumps(codec.encode([
             (Oid(".1.4.6.1.27.8"), CounterValue("CounterValue", 19987)),
             (Oid(".1.4.6.1.27.9"), Ip4AddressValue("Ip4AddressValue","188.18.22.11")),
             (Oid(".1.4.6.1.27.10"), OpaqueValue("OpaqueValue",[18,22,253])),
-            (Oid(".1.4.6.1.27.11"), U64Value("U64Value", 100)),
+            (Oid(".1.4.6.1.27.11"), Counter64Value("Counter64", 100)),
             (Oid(".1.4.6.1.27.12"), "NoSuchObject"),
             (Oid(".1.4.6.1.27.13"), "NoSuchInstance"),
             (Oid(".1.4.6.1.27.14"), "EndOfMibView"),

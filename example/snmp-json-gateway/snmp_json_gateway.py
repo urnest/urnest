@@ -85,26 +85,18 @@ class NullValue:
     pass
 
 @dataclass
-class U64Value:
+class Counter64Value:
     """snmp unsigned 64 bit integer"""
-    value_type:Literal["U64Value"]
+    value_type:Literal["Counter64"]
     value: int
     pass
 
 @dataclass
 class Counter32Value:
     """snmp unsigned 32 bit counter"""
-    value_type:Literal["Counter32Value"]
+    value_type:Literal["Counter32"]
     value: int
     pass
-
-@dataclass
-class Counter64Value:
-    """snmp unsigned 64 bit counter"""
-    value_type:Literal["Counter64Value"]
-    value: int
-    pass
-
 
 SnmpV1Value = IntValue | StrValue | TimeTicksValue | GaugeValue | CounterValue | Ip4AddressValue | OpaqueValue | NullValue
 
@@ -200,7 +192,7 @@ class SnmpV1Response:
     values: list[tuple[Oid, SnmpV1Value]]
 
 
-SnmpV2cValue = SnmpV1Value | U64Value | Counter32Value | Counter64Value
+SnmpV2cValue = SnmpV1Value | Counter32Value | Counter64Value
 
 SnmpV2cVarResult = (
     Literal["NoSuchObject"] | Literal["NoSuchInstance"] | Literal["EndOfMibView"] | SnmpV2cValue )
