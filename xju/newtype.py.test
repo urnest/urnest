@@ -240,8 +240,8 @@ Assert(h1&h2)==Hours(7&8)
 Assert(h1|h2)==Hours(7|8)
 Assert(h1.__xor__(h2))==Hours(7^8)
 Assert(h1.as_integer_ratio())==h1.value().as_integer_ratio()
-
 Assert(Hours(7)!=Hours(8))==True
+if hasattr(h1,'is_integer'): Assert(h1.is_integer())==True  # >=python3.12
 
 try:
     Hours(7)+cast(Hours,7)
@@ -474,3 +474,4 @@ except Exception as e:
 else:
     assert False
     pass
+if hasattr(b1,'is_integer'): Assert(b1.is_integer())==True  # >=python3.12

@@ -134,7 +134,7 @@ with Scope(f'scan py program {pyFile} imports with search path {pySp}'):
         pass
     if os.environ.get('ODIN_PY_IGNORE',''):
         r=os.environ.get('ODIN_PY_IGNORE')
-        with Scope('ignore modules matching \$ODIN_PY_IGNORE regular expression {r}'.format(
+        with Scope('ignore modules matching $ODIN_PY_IGNORE regular expression {r}'.format(
                     **vars())):
             reg=re.compile(r)
             ignoreREs.append(reg)

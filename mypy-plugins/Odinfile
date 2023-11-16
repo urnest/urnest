@@ -21,7 +21,9 @@
 filename=$(cat "$1")
 expect="$2"
 # skip odin header (2 lines)
+# and cover for python3.11->python3.12 <nothing> -> Never
 tail -n +3 |
+sed -e 's=[<]nothing[>]=Never=g' |
 sed -e "s=$filename=FILE=g" |
     diff $expect -
 
@@ -222,7 +224,7 @@ r4x:list = c4.decode(None)
 %test_json_codec_mypy_plugin_union==%test_json_codec_mypy_plugin_union.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_union.py.test:filename) (%test_json_codec_mypy_plugin_union.expect):exec.output
 
 %test_json_codec_mypy_plugin_union.expect==<<
-FILE:9: error: Argument 1 to "encode" of "CodecProto" has incompatible type "dict[<nothing>, <nothing>]"; expected "int | str | list"  [arg-type]
+FILE:9: error: Argument 1 to "encode" of "CodecProto" has incompatible type "dict[Never, Never]"; expected "int | str | list"  [arg-type]
 FILE:11: error: Argument 1 to "encode" of "CodecProto" has incompatible type "Literal['C']"; expected "Literal['A', 'B']"  [arg-type]
 FILE:13: error: Incompatible types in assignment (expression has type "int | str | list", variable has type "list[Any]")  [assignment]
 FILE:15: error: Incompatible types in assignment (expression has type "Literal['A', 'B']", variable has type "list[Any]")  [assignment]
@@ -250,7 +252,7 @@ r2x:list = c2.decode(None)
 %test_json_codec_mypy_plugin_alias==%test_json_codec_mypy_plugin_alias.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_alias.py.test:filename) (%test_json_codec_mypy_plugin_alias.expect):exec.output
 
 %test_json_codec_mypy_plugin_alias.expect==<<
-FILE:10: error: Argument 1 to "encode" of "CodecProto" has incompatible type "dict[<nothing>, <nothing>]"; expected "int | str"  [arg-type]
+FILE:10: error: Argument 1 to "encode" of "CodecProto" has incompatible type "dict[Never, Never]"; expected "int | str"  [arg-type]
 FILE:12: error: Incompatible types in assignment (expression has type "int | str", variable has type "str")  [assignment]
 
 %test_json_codec_mypy_plugin_alias.errors==%json_codec_mypy_plugin_alias.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err

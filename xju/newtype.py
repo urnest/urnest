@@ -230,6 +230,8 @@ class Int(Generic[Tag]):
         return self.__class__(self.value().__xor__(other.value()))
     def as_integer_ratio(self)->Tuple[int,int]:
         return self.value().as_integer_ratio()
+    def is_integer(self)->bool:
+        return self.value().is_integer()
 
     pass
 
@@ -717,6 +719,8 @@ class Bool(Generic[Tag]):
         if type(other) is not type(self):
             return NotImplemented
         return self.__class__(self.value().__xor__(other.value()))
+    def is_integer(self)->bool:
+        return self.value().is_integer()
 
     pass
 
