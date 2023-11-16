@@ -171,6 +171,7 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 2.0.1 add python 3.12 support
 - 2.0.0 add xju.time.async_sleep_until()
 - 2.0.0 add xju.json_codec_mypy_plugin, avoids type: ignore against json_codec.codec()
 - 2.0.0 xn first line -> first para *breaking change*
