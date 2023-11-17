@@ -238,14 +238,10 @@ for n in ['as_integer_ratio']:
     int_methods=int_methods+f'''
     def {n}(self)->Tuple[int,int]:
         return self.value().{n}()'''
-if 'is_integer' in rem:  # python 3.12 and above
-    rem.remove('is_integer')
-    int_methods=int_methods+f'''
-    def is_integer(self)->bool:
-        return self.value().is_integer()'''
 for n in ['__rpow__', '__dir__', '__rand__', '__reduce__', '__rxor__', '__pow__', '__str__', '__init_subclass__', '__reduce_ex__', '__getattribute__', '__doc__', '__setattr__', 'denominator', '__init__', '__delattr__', 'from_bytes', '__float__', '__format__', 'to_bytes', '__class__', '__repr__', '__new__', '__getnewargs__', 'numerator','real', '__subclasshook__','imag','conjugate', '__floordiv__','__rfloordiv__','__divmod__','__rdivmod__','__truediv__','__rtruediv__', '__mul__', '__rmul__', '__rmod__','__mod__','__eq__','__ne__','__round__','__radd__','__rsub__', '__trunc__','__ceil__','__floor__']:
     rem.remove(n)
     # i functions not implemented or hand-coded
+if 'is_integer' in rem: rem.remove('is_integer') # python 3.12 and above
 if '__getstate__' in rem: rem.remove('__getstate__')  # python 3.11 and above
 if '__setformat__' in rem: rem.remove('__setformat__')  # python 3.10
 assert len(rem)==0,rem
@@ -283,11 +279,6 @@ for n in ['as_integer_ratio']:
     float_methods=float_methods+f'''
     def {n}(self)->Tuple[float,float]:
         return self.value().{n}()'''
-if 'is_integer' in rem:  # python 3.12 and above
-    rem.remove('is_integer')
-    float_methods=float_methods+f'''
-    def is_integer(self)->bool:
-        return self.value().is_integer()'''
 for n in ['__rpow__', '__dir__', '__reduce__', '__pow__', '__str__', '__init_subclass__', '__reduce_ex__', '__getattribute__', '__doc__', '__setattr__', '__init__', '__delattr__', '__float__', '__format__', '__class__', '__repr__', '__new__', '__getnewargs__','real', '__subclasshook__','imag','fromhex', 'hex', '__int__', '__getformat__','__mod__', '__floordiv__','__truediv__', '__mul__', '__rtruediv__', '__rmul__', '__rmod__', 'conjugate', '__divmod__', '__rdivmod__','__round__', '__rsub__', '__radd__', '__rfloordiv__', '__eq__', '__ne__']:
     rem.remove(n)
     # i functions not implemented or hand-coded
@@ -411,11 +402,7 @@ for n in ['__and__', '__or__','__xor__']:
         if type(other) is not type(self):
             return NotImplemented
         return self.__class__(self.value().{n}(other.value()))'''
-if 'is_integer' in rem:  # python 3.12 and above
-    rem.remove('is_integer')
-    bool_methods=bool_methods+f'''
-    def is_integer(self)->bool:
-        return self.value().is_integer()'''
+if 'is_integer' in rem: rem.remove('is_integer') # python 3.12 and above
 for n in []:
     rem.remove(n)
     # i functions not implemented or hand-coded

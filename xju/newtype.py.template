@@ -167,6 +167,9 @@ class Int(Generic[Tag]):
     def __round__(self, ndigits:int=0)->Self:
         return self.__class__(self.value().__round__(ndigits))
 
+    def is_integer(self)->bool:
+        return True
+
     # generated Int methods here...
 
     pass
@@ -421,6 +424,9 @@ class Bool(Generic[Tag]):
 
     def __format__(self, format_spec:str)->str:
         return self.value().__format__(format_spec)
+
+    def is_integer(self)->bool:
+        return True  # that's what python method does
 
     # generated Bool methods here...
 
