@@ -436,14 +436,14 @@ cmc%pytest-v-installed
 %installed-py-test.cov==%py-unit-tests-v-installed.tree:leaves:py3.cov.list:agg.py3.cov
 
 %py-unit-tests-v-installed.tree==<<
-assert_.py.test+(mpy_plugin_mod=xju.json_codec_mypy_plugin):py3.exec.cov
-cmd.py.test+(mpy_plugin_mod=xju.json_codec_mypy_plugin):py3.exec.cov
-jsonschema.py.test+(mpy_plugin_mod=xju.json_codec_mypy_plugin):py3.exec.cov
-json_codec.py.test+(mpy_plugin_mod=xju.json_codec_mypy_plugin):py3.exec.cov
-misc.py.test+(mpy_plugin_mod=xju.json_codec_mypy_plugin):py3.exec.cov
-patch.py.test+(mpy_plugin_mod=xju.json_codec_mypy_plugin):py3.exec.cov
-pq.py.test+(mpy_plugin_mod=xju.json_codec_mypy_plugin):py3.exec.cov
-rfc2616.py.test+(mpy_plugin_mod=xju.json_codec_mypy_plugin):py3.exec.cov
-xn.py.test+(mpy_plugin_mod=xju.json_codec_mypy_plugin):py3.exec.cov
-newtype.py.test+(mpy_plugin_mod=xju.json_codec_mypy_plugin):py3.exec.cov
-time.py.test+(mpy_plugin_mod=xju.json_codec_mypy_plugin):py3.exec.cov
+assert_.py.test+mypy_plugin_mod=xju.json_codec_mypy_plugin:py3.exec.cov
+cmd.py.test+mypy_plugin_mod=xju.json_codec_mypy_plugin:py3.exec.cov
+jsonschema.py.test+mypy_plugin_mod=xju.json_codec_mypy_plugin:py3.exec.cov
+json_codec.py.test+mypy_plugin_mod=xju.json_codec_mypy_plugin:py3.exec.cov
+misc.py.test+mypy_plugin_mod=xju.json_codec_mypy_plugin:py3.exec.cov
+patch.py.test+mypy_plugin_mod=xju.json_codec_mypy_plugin:py3.exec.cov
+pq.py.test+mypy_plugin_mod=xju.json_codec_mypy_plugin:py3.exec.cov
+rfc2616.py.test+mypy_plugin_mod=xju.json_codec_mypy_plugin:py3.exec.cov
+xn.py.test+mypy_plugin_mod=xju.json_codec_mypy_plugin:py3.exec.cov
+newtype.py.test+mypy_plugin_mod=xju.json_codec_mypy_plugin:py3.exec.cov
+time.py.test+mypy_plugin_mod=xju.json_codec_mypy_plugin:py3.exec.cov

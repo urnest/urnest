@@ -1,7 +1,7 @@
 #!/bin/sh -ex
 
 PLUGIN_LS="$1"
-PLUGIN_MODS_FILE="$1"
+PLUGIN_MODS_FILE="$2"
 (
   echo "[mypy]"
   for p in $ODIN_MYPY_PLUGINS \
