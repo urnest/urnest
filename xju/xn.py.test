@@ -215,7 +215,21 @@ def test11():
 
     Assert(first_para_of(""""""))==""
     Assert(first_para_of(""" fred """))=="fred"
-  
+
+def test12():
+    try:
+        try:
+            raise TimeoutError
+        except Exception as e:
+            raise in_context('fred') from None
+        pass
+    except Exception as e:
+        Assert(readable_repr(e))=="Failed to fred because\nTimeoutError."
+        Assert(str(e)).matches('''\
+failed to fred because
+[^:]*:222: TimeoutError''')
+
+
 tests=[var for name,var in sorted(vars().items())
        if name.startswith('test') and callable(var)]
 for t in tests: t()

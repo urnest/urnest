@@ -56,7 +56,8 @@ class Xn:
         x = ''.join([
             '{fl}failed to {s} because\n'.format(**vars())
             for s,fl in reversed(self.context)])
-        y = '{cause[1]}{cause[0]}'.format(**vars(self))
+        m = str(self.cause[0]) or type(self.cause[0]).__name__
+        y = f'{self.cause[1]}{m}'
         return x+y
 
     def xju_xn_readable_repr(self)->str:
@@ -72,7 +73,7 @@ class Xn:
         if hasattr(self.cause[0], 'xju_xn_readable_repr'):
             y:str=self.cause[0].xju_xn_readable_repr()
         else:
-            y = str(self.cause[0])
+            y = str(self.cause[0]) or type(self.cause[0]).__name__
             pass
         return capitalise(x+y+'.')
     pass
