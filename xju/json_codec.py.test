@@ -116,6 +116,29 @@ else:
     pass
 
 
+# bytes maps to list of number...
+Assert(codec(bytes).encode(b'\x1b\x17'))==[27,23]
+Assert(codec(bytes).decode([27,23]))==b'\x1b\x17'
+
+# ... but must be given bytes to encode...
+try:
+    x=codec(bytes).encode(8)  # type: ignore
+except Exception as e:
+    Assert("8 is not of type bytes").isIn(str(e))
+else:
+    assert False, x
+    pass
+
+# ... and all values must have correct type
+try:        
+    x=codec(bytes).decode([5, 'fred'])
+except Exception as e:
+    Assert("'fred' (of type <class 'str'>) is not a <class 'int'>").isIn(str(e))
+else:
+    assert False, x
+    pass
+
+
 tuple_codec=codec(tuple[int,str])
 Assert(tuple_codec.decode([5, 'fred']))==(5, 'fred')
 Assert(tuple_codec.encode((5, 'fred')))==[5, 'fred']
@@ -770,6 +793,7 @@ Assert(codec(str).get_json_schema())=={'type': 'string', 'definitions': {}, '$id
 Assert(codec(float).get_json_schema())=={'type': 'number', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(list).get_json_schema())=={'type': 'array', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(list[int]).get_json_schema())=={'type': 'array', 'items': { 'type': 'integer'}, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(codec(bytes).get_json_schema())=={'description': 'bytes', 'type': 'array', 'items': { 'type': 'integer'}, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(tuple[int,str]).get_json_schema())=={'type': 'array', 'prefixItems': [ { 'type': 'integer'},{ 'type': 'string'}], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 
 Assert(codec(JsonType).get_json_schema())=={'oneOf': [{'type': 'null'}, {'type': 'boolean'}, {'type': 'object'}, {'type': 'array'}, {'type': 'number'}, {'type': 'string'}], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}

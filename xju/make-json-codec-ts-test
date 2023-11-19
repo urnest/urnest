@@ -145,6 +145,20 @@ function assert_never_reached(){{
     assert_true({codec(list[int]).get_typescript_isa(TypeScriptSourceCode('[7, 8]'),namespace)});
     assert_false({codec(list[int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
 }})();
+//bytes
+(() => {{
+    assert_equal({indent(4,codec(bytes).get_typescript_asa(TypeScriptSourceCode('[7, 8]'),namespace))}, [7, 8]);
+    try{{
+        {indent(8,codec(bytes).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a Array<number> because Error: ann is not a number it is a string");
+    }}
+    assert_equal({codec(bytes).typescript_type()},"Array<number>");
+    assert_true({codec(bytes).get_typescript_isa(TypeScriptSourceCode('[7, 8]'),namespace)});
+    assert_false({codec(bytes).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
+}})();
 //Array i.e. Array<any>
 (() => {{
     assert_equal({indent(4,codec(list).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))}, [7, "ann"]);

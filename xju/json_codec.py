@@ -1029,6 +1029,40 @@ class LiteralBoolCodecImpl:
             f"}})({expression})")
     pass
 
+class BytesCodecImpl:
+    def __init__(self, type_var_map:dict[TypeVar,Any]|None):
+        self.value_codec=_explodeSchema(list[int],type_var_map)
+        pass
+    def encode(self,x,back_ref:None|Callable[[Any],JsonType]):
+        if type(x) is not bytes:
+            raise Exception(f'{x!r} is not of type bytes')
+        return self.value_codec.encode([_ for _ in x],back_ref)
+    def decode(self,x,back_ref:None|Callable[[JsonType],Any]):
+        'decode {x} as "bytes"'
+        try:
+            return bytes(self.value_codec.decode(x,back_ref))
+        except Exception as e:
+            raise in_function_context(BytesCodecImpl,vars())
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        result=self.value_codec.get_json_schema(definitions,self_ref)
+        result['description']="bytes"
+        return result
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
+        return f"Array<number>"
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        return self.value_codec.get_typescript_isa(expression,namespace,back_refs)
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        return self.value_codec.get_typescript_asa(expression,namespace,back_refs)
+    pass
+
 @runtime_checkable
 class CustomClassCodec(Protocol):
     '''implement these methods on class T to use custom encoding of instances of T'''
@@ -1438,6 +1472,8 @@ def _explodeSchema(t:type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGeneric
             return NoopCodecImpl[int](int)
         if t is str or (isinstance(t,NewType) and t.__supertype__ is str):
             return NoopCodecImpl[str](str)
+        if t is bytes or (isinstance(t,NewType) and t.__supertype__ is bytes):
+            return BytesCodecImpl(type_var_map)
         if t is bool or (isinstance(t,NewType) and t.__supertype__ is bool):
             return NoopCodecImpl[bool](bool)
         if t is None or t is NoneType:
