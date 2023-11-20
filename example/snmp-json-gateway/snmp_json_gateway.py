@@ -75,7 +75,7 @@ class Ip4AddressValue:
 class OpaqueValue:
     """snmp opaque"""
     value_type:Literal["OpaqueValue"]
-    value: list[int]  # list of bytes
+    value: bytes
     pass
 
 @dataclass
@@ -280,8 +280,8 @@ class SnmpV3GetRequest:
     message_type: Literal["SnmpV3GetRequest"]
     message_id: MessageId
     max_size: int
-    engine_id: list[int]
-    context_name: list[int]
+    engine_id: bytes
+    context_name: bytes
     request_id: RequestId
     oids: list[Oid]
     pass
@@ -291,8 +291,8 @@ class SnmpV3GetNextRequest:
     message_type: Literal["SnmpV3GetNextRequest"]
     message_id: MessageId
     max_size: int
-    engine_id: list[int]
-    context_name: list[int]
+    engine_id: bytes
+    context_name: bytes
     request_id: RequestId
     oids: list[Oid]
     pass
@@ -302,8 +302,8 @@ class SnmpV3GetBulkRequest:
     message_type: Literal["SnmpV3GetBulkRequest"]
     message_id: MessageId
     max_size: int
-    engine_id: list[int]
-    context_name: list[int]
+    engine_id: bytes
+    context_name: bytes
     request_id: RequestId
     get_next: list[Oid]
     get_next_n: list[Oid]
@@ -315,8 +315,8 @@ class SnmpV3SetRequest:
     message_type: Literal["SnmpV3SetRequest"]
     message_id: MessageId
     max_size: int
-    engine_id: list[int]
-    context_name: list[int]
+    engine_id: bytes
+    context_name: bytes
     request_id: RequestId
     vars: list[tuple[Oid, "SnmpV2cValue"]]
     pass
@@ -327,8 +327,8 @@ class SnmpV3Response:
     message_type: Literal["SnmpV3Response"]
     message_id: MessageId
     max_size: int
-    engine_id: list[int]
-    context_name: list[int]
+    engine_id: bytes
+    context_name: bytes
     request_id: RequestId
     error: (None | TooBig | NoSuchName | BadValue | ReadOnly | GenErr |
             NoAccess | NotWritable | WrongType |
