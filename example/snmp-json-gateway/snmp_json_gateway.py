@@ -32,56 +32,49 @@ class Oid(Str["OidTag"]):
 @dataclass
 class IntValue:
     """snmp integer"""
-    value_type:Literal["IntValue"]
+    value_type:Literal["Integer"]
     value: int
     pass
 
 @dataclass
-class StrValue:
+class OctetStringValue:
     """snmp octet string"""
-    value_type:Literal["StrValue"]
-    value: str
+    value_type:Literal["OctetString"]
+    value: bytes
     pass
 
 @dataclass
 class TimeTicksValue:
     """snmp time ticks"""
-    value_type:Literal["TimeTicksValue"]
+    value_type:Literal["TimeTicks"]
     value: int
     pass
 
 @dataclass
-class GaugeValue:
+class Gauge32Value:
     """snmp guage"""
-    value_type:Literal["GaugeValue"]
+    value_type:Literal["Gauge32"]
     value: int
     pass
 
 @dataclass
-class CounterValue:
-    """snmp counter unsigned 32 bit integer"""
-    value_type:Literal["CounterValue"]
-    value: int
-    pass
-
-@dataclass
-class Ip4AddressValue:
+class IpAddressValue:
     """snmp ipv4 address in dotted form"""
-    value_type:Literal["Ip4AddressValue"]
+    value_type:Literal["IpAddress"]
     value: str
     pass
 
 @dataclass
 class OpaqueValue:
     """snmp opaque"""
-    value_type:Literal["OpaqueValue"]
+    value_type:Literal["Opaque"]
     value: bytes
     pass
 
 @dataclass
 class NullValue:
     """snmp null"""
-    value_type:Literal["NullValue"]
+    value_type:Literal["Null"]
     pass
 
 @dataclass
@@ -98,7 +91,7 @@ class Counter32Value:
     value: int
     pass
 
-SnmpV1Value = IntValue | StrValue | TimeTicksValue | GaugeValue | CounterValue | Ip4AddressValue | OpaqueValue | NullValue
+SnmpV1Value = IntValue | OctetStringValue | TimeTicksValue | Gauge32Value | Counter32Value | IpAddressValue | OpaqueValue | NullValue
 
 @dataclass
 class SnmpV1GetRequest:

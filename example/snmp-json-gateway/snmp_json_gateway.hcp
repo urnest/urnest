@@ -82,7 +82,7 @@ std::shared_ptr<xju::json::Element const> json_v1_value(
     return std::make_shared<xju::json::Object>(
       std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> >
       {
-        std::make_pair(xju::Utf8String("value_type"), json_string("CounterValue")),
+        std::make_pair(xju::Utf8String("value_type"), json_string("Counter32")),
         std::make_pair(xju::Utf8String("value"), json_number(
                          dynamic_cast<xju::snmp::Counter32Value const&>(*x).val_))
       });
@@ -103,7 +103,7 @@ std::shared_ptr<xju::json::Element const> json_v1_value(
   try{
     return std::make_shared<xju::json::Object>(
       std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> >
-      {{xju::Utf8String("value_type"), json_string("GaugeValue")},
+      {{xju::Utf8String("value_type"), json_string("Gauge32")},
        {xju::Utf8String("value"), json_number(
            dynamic_cast<xju::snmp::Gauge32Value const&>(*x).val_)}});
   }
@@ -113,7 +113,7 @@ std::shared_ptr<xju::json::Element const> json_v1_value(
   try{
     return std::make_shared<xju::json::Object>(
       std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> >
-      {{xju::Utf8String("value_type"), json_string("IntValue")},
+      {{xju::Utf8String("value_type"), json_string("Integer")},
        {xju::Utf8String("value"), json_number(
            dynamic_cast<xju::snmp::IntValue const&>(*x).val_)}});
   }
@@ -123,7 +123,7 @@ std::shared_ptr<xju::json::Element const> json_v1_value(
   try{
     return std::make_shared<xju::json::Object>(
       std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> >
-      {{xju::Utf8String("value_type"), json_string("Ip4AddressValue")},
+      {{xju::Utf8String("value_type"), json_string("IpAddress")},
         {xju::Utf8String("value"), json_string(
             xju::format::str(dynamic_cast<xju::snmp::IPv4AddressValue const&>(*x).val_))}});
   }
@@ -134,7 +134,7 @@ std::shared_ptr<xju::json::Element const> json_v1_value(
     dynamic_cast<xju::snmp::NullValue const&>(*x);
     return std::make_shared<xju::json::Object>(
       std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> >
-      {{xju::Utf8String("value_type"), json_string("NullValue")}});
+      {{xju::Utf8String("value_type"), json_string("Null")}});
   }
   catch(std::bad_cast const&){
     tries.push_back("NullValue");
@@ -146,18 +146,21 @@ std::shared_ptr<xju::json::Element const> json_v1_value(
     }
     return std::make_shared<xju::json::Object>(
       std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> >
-      {{xju::Utf8String("value_type"), json_string("OpaqueValue")},
+      {{xju::Utf8String("value_type"), json_string("Opaque")},
         {xju::Utf8String("value"), std::make_shared<xju::json::Array>(bytes)}});
   }
   catch(std::bad_cast const&){
     tries.push_back("OpaqueValue");
   }
   try{
-    std::vector<unsigned char> const s(dynamic_cast<xju::snmp::StringValue const&>(*x).val_);
+    std::vector<std::shared_ptr<xju::json::Element const>> bytes;
+    for(auto b: dynamic_cast<xju::snmp::StringValue const&>(*x).val_){
+      bytes.push_back(json_number(b));
+    }
     return std::make_shared<xju::json::Object>(
       std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> >
-      {{xju::Utf8String("value_type"), json_string("StrValue")},
-        {xju::Utf8String("value"), json_string(std::string(s.begin(),s.end()))}});
+      {{xju::Utf8String("value_type"), json_string("OctetString")},
+        {xju::Utf8String("value"), std::make_shared<xju::json::Array>(bytes)}});
   }
   catch(std::bad_cast const&){
     tries.push_back("StringValue");
@@ -165,7 +168,7 @@ std::shared_ptr<xju::json::Element const> json_v1_value(
   try{
     return std::make_shared<xju::json::Object>(
       std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> >
-      {{xju::Utf8String("value_type"), json_string("TimeTicksValue")},
+      {{xju::Utf8String("value_type"), json_string("TimeTicks")},
         {xju::Utf8String("value"), json_number(
             dynamic_cast<xju::snmp::TimeTicksValue const&>(*x).val_.count())}});
   }
@@ -509,31 +512,40 @@ std::shared_ptr<xju::snmp::Value const> decodeV1Value(xju::json::Element const& 
 {
   try{
     std::string const value_type(x.getMember(xju::Utf8String("value_type")).asString());
-    if (value_type == "NullValue"){
+    if (value_type == "Null"){
       return std::make_unique<xju::snmp::NullValue>();
     }
     xju::json::Element const& value(x.getMember(xju::Utf8String("value")));
-    if (value_type == "IntValue"){
+    if (value_type == "Integer"){
       return std::make_unique<xju::snmp::IntValue>(value.asInt());
     }
-    if (value_type == "StrValue"){
-      return std::make_unique<xju::snmp::StringValue>(value.asString());
+    if (value_type == "OctetString"){
+      std::vector<uint8_t> bytes;
+      for(auto b: value.asArray()){
+        int const v((*b).asInt());
+        if (v < 0 || v > 255){
+          std::ostringstream s;
+          s << xju::format::int_(v) << " is not 0..255";
+        }
+        bytes.push_back(v);
+      }
+      return std::make_unique<xju::snmp::StringValue>(bytes);
     }
-    if (value_type == "TimeTicksValue"){
+    if (value_type == "TimeTicks"){
       return std::make_unique<xju::snmp::TimeTicksValue>(
         std::chrono::milliseconds(10*value.asInt()));
     }
-    if (value_type == "GaugeValue"){
+    if (value_type == "Gauge32"){
       return std::make_unique<xju::snmp::Gauge32Value>(value.asU32());
     }
-    if (value_type == "CounterValue"){
+    if (value_type == "Counter32"){
       return std::make_unique<xju::snmp::Counter32Value>(value.asU32());
     }
-    if (value_type == "Ip4AddressValue"){
+    if (value_type == "IpAddress"){
       return std::make_unique<xju::snmp::IPv4AddressValue>(
         xju::ip::v4::Address(value.asString()));
     }
-    if (value_type == "OpaqueValue"){
+    if (value_type == "Opaque"){
       std::vector<uint8_t> bytes;
       for(auto b: value.asArray()){
         int const v((*b).asInt());
@@ -547,7 +559,7 @@ std::shared_ptr<xju::snmp::Value const> decodeV1Value(xju::json::Element const& 
     }
     std::ostringstream s;
     s << "value type " << xju::format::quote(value_type) << " is not one of "
-      << "IntValue, StrValue, TimeTicksValue, GaugeValue, CounterValue, OpaqueValue, NullValue";
+      << "IntValue, StrValue, TimeTicksValue, GaugeValue, Counter32Value, OpaqueValue, NullValue";
     throw xju::Exception(s.str(),XJU_TRACED);
   }
   catch(xju::Exception& e){

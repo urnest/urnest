@@ -400,7 +400,7 @@ void test1(std::string const& text) {
 
 void test2(){
   {
-    std::string const text(R"--({"message_type": "SnmpV2cResponse", "community": "fred", "request_id": 1, "error": null, "values": [[".1.4.6.1.27.3", {"value_type": "IntValue", "value": 7}], [".1.4.6.1.27.4", {"value_type": "NullValue"}], [".1.4.6.1.27.5", {"value_type": "StrValue", "value": "ann"}], [".1.4.6.1.27.6", {"value_type": "TimeTicksValue", "value": 720}], [".1.4.6.1.27.7", {"value_type": "GaugeValue", "value": 9987}], [".1.4.6.1.27.8", {"value_type": "CounterValue", "value": 19987}], [".1.4.6.1.27.9", {"value_type": "Ip4AddressValue", "value": "188.18.22.11"}], [".1.4.6.1.27.10", {"value_type": "OpaqueValue", "value": [18, 22, 253]}]]})--");
+    std::string const text(R"--({"message_type": "SnmpV2cResponse", "community": "fred", "request_id": 1, "error": null, "values": [[".1.4.6.1.27.3", {"value_type": "Integer", "value": 7}], [".1.4.6.1.27.4", {"value_type": "NullValue"}], [".1.4.6.1.27.5", {"value_type": "OctetString", "value": "ann"}], [".1.4.6.1.27.6", {"value_type": "TimeTicks", "value": 720}], [".1.4.6.1.27.7", {"value_type": "Gauge32", "value": 9987}], [".1.4.6.1.27.8", {"value_type": "Counter32", "value": 19987}], [".1.4.6.1.27.9", {"value_type": "IpAddress", "value": "188.18.22.11"}], [".1.4.6.1.27.10", {"value_type": "Opaque", "value": [18, 22, 253]}]]})--");
     auto const json(xju::json::parse(xju::Utf8String(text)));
     try{
       auto x(snmp_json_gateway::decodeSnmpV1Response(*json));
@@ -411,7 +411,7 @@ void test2(){
     }
   }
   {
-    std::string const text(R"--({"message_type": "SnmpV1Response", "comunity": "fred", "request_id": 1, "error": null, "values": [[".1.4.6.1.27.3", {"value_type": "IntValue", "value": 7}], [".1.4.6.1.27.4", {"value_type": "NullValue"}], [".1.4.6.1.27.5", {"value_type": "StrValue", "value": "ann"}], [".1.4.6.1.27.6", {"value_type": "TimeTicksValue", "value": 720}], [".1.4.6.1.27.7", {"value_type": "GaugeValue", "value": 9987}], [".1.4.6.1.27.8", {"value_type": "CounterValue", "value": 19987}], [".1.4.6.1.27.9", {"value_type": "Ip4AddressValue", "value": "188.18.22.11"}], [".1.4.6.1.27.10", {"value_type": "OpaqueValue", "value": [18, 22, 253]}]]})--");
+    std::string const text(R"--({"message_type": "SnmpV1Response", "comunity": "fred", "request_id": 1, "error": null, "values": [[".1.4.6.1.27.3", {"value_type": "Integer", "value": 7}], [".1.4.6.1.27.4", {"value_type": "NullValue"}], [".1.4.6.1.27.5", {"value_type": "OctetString", "value": "ann"}], [".1.4.6.1.27.6", {"value_type": "TimeTicks", "value": 720}], [".1.4.6.1.27.7", {"value_type": "Gauge32", "value": 9987}], [".1.4.6.1.27.8", {"value_type": "Counter32", "value": 19987}], [".1.4.6.1.27.9", {"value_type": "IpAddress", "value": "188.18.22.11"}], [".1.4.6.1.27.10", {"value_type": "Opaque", "value": [18, 22, 253]}]]})--");
     auto const json(xju::json::parse(xju::Utf8String(text)));
     try{
       auto x(snmp_json_gateway::decodeSnmpV1Response(*json));
@@ -422,7 +422,7 @@ void test2(){
     }
   }
   {
-    std::string const text(R"--({"message_type": "SnmpV1Response", "community": 18.5, "request_id": 1, "error": null, "values": [[".1.4.6.1.27.3", {"value_type": "IntValue", "value": 7}], [".1.4.6.1.27.4", {"value_type": "NullValue"}], [".1.4.6.1.27.5", {"value_type": "StrValue", "value": "ann"}], [".1.4.6.1.27.6", {"value_type": "TimeTicksValue", "value": 720}], [".1.4.6.1.27.7", {"value_type": "GaugeValue", "value": 9987}], [".1.4.6.1.27.8", {"value_type": "CounterValue", "value": 19987}], [".1.4.6.1.27.9", {"value_type": "Ip4AddressValue", "value": "188.18.22.11"}], [".1.4.6.1.27.10", {"value_type": "OpaqueValue", "value": [18, 22, 253]}]]})--");
+    std::string const text(R"--({"message_type": "SnmpV1Response", "community": 18.5, "request_id": 1, "error": null, "values": [[".1.4.6.1.27.3", {"value_type": "Integer", "value": 7}], [".1.4.6.1.27.4", {"value_type": "NullValue"}], [".1.4.6.1.27.5", {"value_type": "OctetString", "value": "ann"}], [".1.4.6.1.27.6", {"value_type": "TimeTicks", "value": 720}], [".1.4.6.1.27.7", {"value_type": "Gauge32", "value": 9987}], [".1.4.6.1.27.8", {"value_type": "Counter32", "value": 19987}], [".1.4.6.1.27.9", {"value_type": "IpAddress", "value": "188.18.22.11"}], [".1.4.6.1.27.10", {"value_type": "Opaque", "value": [18, 22, 253]}]]})--");
     auto const json(xju::json::parse(xju::Utf8String(text)));
     try{
       auto x(snmp_json_gateway::decodeSnmpV1Response(*json));
@@ -433,7 +433,7 @@ void test2(){
     }
   }
   {
-    std::string const text(R"--({"message_type": "SnmpV1Response", "communit": "fred", "request_id": 1, "error": null, "values": [[".1.4.6.1.27.3", {"value_type": "IntValue", "value": 7}], [".1.4.6.1.27.4", {"value_type": "NullValue"}], [".1.4.6.1.27.5", {"value_type": "StrValue", "value": "ann"}], [".1.4.6.1.27.6", {"value_type": "TimeTicksValue", "value": 720}], [".1.4.6.1.27.7", {"value_type": "GaugeValue", "value": 9987}], [".1.4.6.1.27.8", {"value_type": "CounterValue", "value": 19987}], [".1.4.6.1.27.9", {"value_type": "Ip4AddressValue", "value": "188.18.22.11"}], [".1.4.6.1.27.10", {"value_type": "OpaqueValue", "value": [18, 22, 253]}]]})--");
+    std::string const text(R"--({"message_type": "SnmpV1Response", "communit": "fred", "request_id": 1, "error": null, "values": [[".1.4.6.1.27.3", {"value_type": "Integer", "value": 7}], [".1.4.6.1.27.4", {"value_type": "NullValue"}], [".1.4.6.1.27.5", {"value_type": "OctetString", "value": "ann"}], [".1.4.6.1.27.6", {"value_type": "TimeTicks", "value": 720}], [".1.4.6.1.27.7", {"value_type": "Gauge32", "value": 9987}], [".1.4.6.1.27.8", {"value_type": "Counter32", "value": 19987}], [".1.4.6.1.27.9", {"value_type": "IpAddress", "value": "188.18.22.11"}], [".1.4.6.1.27.10", {"value_type": "Opaque", "value": [18, 22, 253]}]]})--");
     auto const json(xju::json::parse(xju::Utf8String(text)));
     try{
       auto x(snmp_json_gateway::decodeSnmpV1Response(*json));
@@ -444,25 +444,25 @@ void test2(){
     }
   }
   {
-    std::string const text(R"--({"message_type": "SnmpV1Response", "community": "fred", "request_id": 1, "error": {"error_type": "ReadOnly", "error_index": 5}, "values": [[".1.4.6.1.27.3", {"value_type": "IntValue", "value": 7}], [".1.4.6.1.27.4", {"value_type": "NullValue"}], [".1.4.6.1.27.5", {"value_type": "StrValue", "value": "ann"}], [".1.4.6.1.27.6", {"value_type": "TimeTicksValue", "value": 720}], [".1.4.6.1.27.7", {"value_type": "GaugeValue", "value": 9987}], [".1.4.6.1.27.8", {"value_type": "CounterValue", "value": 19987}], [".1.4.6.1.27.9", {"value_type": "Ip4AddressValue", "value": "188.18.22.11"}], [".1.4.6.1.27.10", {"value_type": "OpaqueValue", "value": [18, 22, 253]}]]})--");
+    std::string const text(R"--({"message_type": "SnmpV1Response", "community": "fred", "request_id": 1, "error": {"error_type": "ReadOnly", "error_index": 5}, "values": [[".1.4.6.1.27.3", {"value_type": "Integer", "value": 7}], [".1.4.6.1.27.4", {"value_type": "NullValue"}], [".1.4.6.1.27.5", {"value_type": "OctetString", "value": "ann"}], [".1.4.6.1.27.6", {"value_type": "TimeTicks", "value": 720}], [".1.4.6.1.27.7", {"value_type": "Gauge32", "value": 9987}], [".1.4.6.1.27.8", {"value_type": "Counter32", "value": 19987}], [".1.4.6.1.27.9", {"value_type": "IpAddress", "value": "188.18.22.11"}], [".1.4.6.1.27.10", {"value_type": "Opaque", "value": [18, 22, 253]}]]})--");
     auto const json(xju::json::parse(xju::Utf8String(text)));
     try{
       auto x(snmp_json_gateway::decodeSnmpV1Response(*json));
       xju::assert_never_reached();
     }
     catch(xju::Exception const& e){
-      xju::assert_equal(readableRepr(e), "Failed to decode object with 5 elements (at line 1 column 1) as an SnmpV1Response because\nfailed to decode SnmpV1GetResponse error status and error index from json object with 2 elements (at line 1 column 83) and oid values [\".1.4.6.1.27.3\",{\"value\":7,\"value_type\":\"IntValue\"}], [\".1.4.6.1.27.4\",{\"value_type\":\"NullValue\"}], [\".1.4.6.1.27.5\",{\"value\":\"ann\",\"value_type\":\"StrValue\"}], [\".1.4.6.1.27.6\",{\"value\":720,\"value_type\":\"TimeTicksValue\"}], [\".1.4.6.1.27.7\",{\"value\":9987,\"value_type\":\"GaugeValue\"}], [\".1.4.6.1.27.8\",{\"value\":19987,\"value_type\":\"CounterValue\"}], [\".1.4.6.1.27.9\",{\"value\":\"188.18.22.11\",\"value_type\":\"Ip4AddressValue\"}], [\".1.4.6.1.27.10\",{\"value\":[18,22,253],\"value_type\":\"OpaqueValue\"}] because\nfailed to get value of object with 2 elements (at line 1 column 83)'s \"oid\" member because\nobject with 2 elements (at line 1 column 83) has no \"oid\" member.");
+      xju::assert_equal(readableRepr(e), "Failed to decode object with 5 elements (at line 1 column 1) as an SnmpV1Response because\nfailed to decode SnmpV1GetResponse error status and error index from json object with 2 elements (at line 1 column 83) and oid values [\".1.4.6.1.27.3\",{\"value\":7,\"value_type\":\"Integer\"}], [\".1.4.6.1.27.4\",{\"value_type\":\"NullValue\"}], [\".1.4.6.1.27.5\",{\"value\":\"ann\",\"value_type\":\"OctetString\"}], [\".1.4.6.1.27.6\",{\"value\":720,\"value_type\":\"TimeTicks\"}], [\".1.4.6.1.27.7\",{\"value\":9987,\"value_type\":\"Gauge32\"}], [\".1.4.6.1.27.8\",{\"value\":19987,\"value_type\":\"Counter32\"}], [\".1.4.6.1.27.9\",{\"value\":\"188.18.22.11\",\"value_type\":\"IpAddress\"}], [\".1.4.6.1.27.10\",{\"value\":[18,22,253],\"value_type\":\"Opaque\"}] because\nfailed to get value of object with 2 elements (at line 1 column 83)'s \"oid\" member because\nobject with 2 elements (at line 1 column 83) has no \"oid\" member.");
     }
   }
   {
-    std::string const text(R"--({"message_type": "SnmpV1Response", "community": "fred", "request_id": 1, "error": {"error_type": "ReadOnly", "oid": ".1.4.6.1.27.99"}, "values": [[".1.4.6.1.27.3", {"value_type": "IntValue", "value": 7}], [".1.4.6.1.27.4", {"value_type": "NullValue"}], [".1.4.6.1.27.5", {"value_type": "StrValue", "value": "ann"}], [".1.4.6.1.27.6", {"value_type": "TimeTicksValue", "value": 720}], [".1.4.6.1.27.7", {"value_type": "GaugeValue", "value": 9987}], [".1.4.6.1.27.8", {"value_type": "CounterValue", "value": 19987}], [".1.4.6.1.27.9", {"value_type": "Ip4AddressValue", "value": "188.18.22.11"}], [".1.4.6.1.27.10", {"value_type": "OpaqueValue", "value": [18, 22, 253]}]]})--");
+    std::string const text(R"--({"message_type": "SnmpV1Response", "community": "fred", "request_id": 1, "error": {"error_type": "ReadOnly", "oid": ".1.4.6.1.27.99"}, "values": [[".1.4.6.1.27.3", {"value_type": "Integer", "value": 7}], [".1.4.6.1.27.4", {"value_type": "NullValue"}], [".1.4.6.1.27.5", {"value_type": "OctetString", "value": "ann"}], [".1.4.6.1.27.6", {"value_type": "TimeTicks", "value": 720}], [".1.4.6.1.27.7", {"value_type": "Gauge32", "value": 9987}], [".1.4.6.1.27.8", {"value_type": "Counter32", "value": 19987}], [".1.4.6.1.27.9", {"value_type": "IpAddress", "value": "188.18.22.11"}], [".1.4.6.1.27.10", {"value_type": "Opaque", "value": [18, 22, 253]}]]})--");
     auto const json(xju::json::parse(xju::Utf8String(text)));
     try{
       auto x(snmp_json_gateway::decodeSnmpV1Response(*json));
       xju::assert_never_reached();
     }
     catch(xju::Exception const& e){
-      xju::assert_equal(readableRepr(e), "Failed to decode object with 5 elements (at line 1 column 1) as an SnmpV1Response because\nfailed to decode SnmpV1GetResponse error status and error index from json object with 2 elements (at line 1 column 83) and oid values [\".1.4.6.1.27.3\",{\"value\":7,\"value_type\":\"IntValue\"}], [\".1.4.6.1.27.4\",{\"value_type\":\"NullValue\"}], [\".1.4.6.1.27.5\",{\"value\":\"ann\",\"value_type\":\"StrValue\"}], [\".1.4.6.1.27.6\",{\"value\":720,\"value_type\":\"TimeTicksValue\"}], [\".1.4.6.1.27.7\",{\"value\":9987,\"value_type\":\"GaugeValue\"}], [\".1.4.6.1.27.8\",{\"value\":19987,\"value_type\":\"CounterValue\"}], [\".1.4.6.1.27.9\",{\"value\":\"188.18.22.11\",\"value_type\":\"Ip4AddressValue\"}], [\".1.4.6.1.27.10\",{\"value\":[18,22,253],\"value_type\":\"OpaqueValue\"}] because\nno such oid .1.4.6.1.27.99 in values.");
+      xju::assert_equal(readableRepr(e), "Failed to decode object with 5 elements (at line 1 column 1) as an SnmpV1Response because\nfailed to decode SnmpV1GetResponse error status and error index from json object with 2 elements (at line 1 column 83) and oid values [\".1.4.6.1.27.3\",{\"value\":7,\"value_type\":\"Integer\"}], [\".1.4.6.1.27.4\",{\"value_type\":\"NullValue\"}], [\".1.4.6.1.27.5\",{\"value\":\"ann\",\"value_type\":\"OctetString\"}], [\".1.4.6.1.27.6\",{\"value\":720,\"value_type\":\"TimeTicks\"}], [\".1.4.6.1.27.7\",{\"value\":9987,\"value_type\":\"Gauge32\"}], [\".1.4.6.1.27.8\",{\"value\":19987,\"value_type\":\"Counter32\"}], [\".1.4.6.1.27.9\",{\"value\":\"188.18.22.11\",\"value_type\":\"IpAddress\"}], [\".1.4.6.1.27.10\",{\"value\":[18,22,253],\"value_type\":\"Opaque\"}] because\nno such oid .1.4.6.1.27.99 in values.");
     }
   }
 }

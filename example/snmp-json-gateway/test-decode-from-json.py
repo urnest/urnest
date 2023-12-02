@@ -4,10 +4,11 @@ import json
 from xju.assert_ import Assert
 from xju.json_codec import Codec
 from snmp_json_gateway import SnmpV1GetRequest, SnmpV1GetNextRequest, RequestId, Community, Oid
-from snmp_json_gateway import SnmpV1SetRequest, IntValue, StrValue, Counter32Value, Counter64Value
+from snmp_json_gateway import SnmpV1SetRequest, OpaqueValue, IntValue, Counter32Value, Counter64Value
+from snmp_json_gateway import OctetStringValue
 
 from snmp_json_gateway import SnmpV2cGetRequest, SnmpV2cGetNextRequest, SnmpV2cGetBulkRequest
-from snmp_json_gateway import SnmpV2cSetRequest, IntValue, StrValue, RequestId, Community, Oid
+from snmp_json_gateway import SnmpV2cSetRequest
 from snmp_json_gateway import MessageId, SnmpV3GetRequest, SnmpV3GetNextRequest
 from snmp_json_gateway import SnmpV3GetBulkRequest, SnmpV3SetRequest
 
@@ -30,8 +31,8 @@ Assert(codec.decode(json.loads(open(sys.argv[1]).read()))) == [
         "SnmpV1SetRequest",
         Community("ann"),
         RequestId(2),
-        [ (Oid(".1.4.6.12.27.3"), IntValue("IntValue",3)),
-          (Oid(".1.4.6.12.19"), StrValue("StrValue","fred"))]),
+        [ (Oid(".1.4.6.12.27.3"), IntValue("Integer",3)),
+          (Oid(".1.4.6.12.19"), OctetStringValue("OctetString",b"fred"))]),
 
     SnmpV2cGetRequest(
         "SnmpV2cGetRequest",
@@ -54,8 +55,8 @@ Assert(codec.decode(json.loads(open(sys.argv[1]).read()))) == [
         "SnmpV2cSetRequest",
         Community("ann"),
         RequestId(2),
-        [ (Oid(".1.4.6.12.27.3"), IntValue("IntValue",3)),
-          (Oid(".1.4.6.12.19"), StrValue("StrValue","fred"))]),
+        [ (Oid(".1.4.6.12.27.3"), IntValue("Integer",3)),
+          (Oid(".1.4.6.12.19"), OctetStringValue("OctetString",b"fred"))]),
     
     SnmpV3GetRequest(
         "SnmpV3GetRequest",
@@ -91,5 +92,5 @@ Assert(codec.decode(json.loads(open(sys.argv[1]).read()))) == [
         b"colin",
         RequestId(30),
         [ (Oid(".1.4.6.12.27.3"), Counter32Value("Counter32",32)),
-          (Oid(".1.4.6.12.19"), Counter64Value("Counter64",64))]),
+          (Oid(".1.4.6.1.19"), Counter64Value("Counter64",64))]),
 ]
