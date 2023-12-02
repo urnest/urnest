@@ -1088,6 +1088,69 @@ class AsyncCondition:
         self.c.notify_all()
     pass
 
+class CancellationBlocker(Generic[T]):
+    """Future-like object that blocks cancellation until awaitable {t} is done
+    
+    Complements asyncio.shield, which cancels calling task immediately but leaves
+    target awaitable still running in a hidden separate task that must then be awaited via
+    the event loop.
+    """
+    def __init__(self, t: Awaitable[T]):
+        self._t=t
+        self._cancelled = False
+        self._msg: Any = None
+        self._f = asyncio.get_running_loop().create_future()
+        self._task = asyncio.get_running_loop().create_task(self._run())
+        self._task.add_done_callback(self._done)
+        pass
+    def __await__(self):
+        return self._f.__await__()
+    def result(self)->T:
+        return self._f.result()
+    def done(self)->bool:
+        return self._f.done()
+    def cancelled(self)->bool:
+        return self._f.cancelled()
+    def add_done_callback(self,callback, *, context=None):
+        return self._f.add_done_callback(callback, context=context)
+    def remove_done_callback(self,callback):
+        return self._f.remove_done_callback(callback)
+    def cancel(self, msg:Any=None):
+        print('cancel')
+        if self._f.done() or self._f.cancelled():
+            print('already cancelled')
+            return self._f.cancel(msg)
+        print('not yet cancelled')
+        self._msg=msg
+        self._cancelled=True
+        return True
+    def exception(self)->BaseException|None:
+        return self._f.exception()
+    def get_loop(self)->asyncio.AbstractEventLoop:
+        return self._f.get_loop()
+    def _done(self, *_)->None:
+        print('done')
+        assert self._task.done(), self
+        if self._cancelled:
+            self._f.cancel(self._msg)
+        else:
+            e=self._task.exception()
+            if e is not None:
+                self._f.set_exception(e)
+            else:
+                r=self._task.result()
+                self._f.set_result(r)
+                pass
+            pass
+        pass
+    async def _run(self)->T:
+        return await self._t
+    pass
+
+async def block_cancellation(t: Awaitable[T])->T:
+    """await {t}, blocking any cancel of caller until {t} completes"""
+    return await CancellationBlocker(t)
+
 def _make_base_classes_to_enter(
         cls: Type[ACMT]
 ) -> list[Callable[[ACMT],contextlib.AbstractAsyncContextManager[None]]]:

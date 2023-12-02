@@ -10,6 +10,7 @@
 %all.cov==%unit-tests.tree:leaves:py3.cov.list:agg.py3.cov
 
 %unit-tests.tree==<<
+block_cancellation.py.test+(%py-opts):py3.exec.cov
 cmc.py.test+(%py-opts):py3.exec.cov
 cmclass.py.test+(%py-opts):py3.exec.cov
 async_cmclass.py.test+(%py-opts):py3.exec.cov
