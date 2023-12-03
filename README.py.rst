@@ -171,6 +171,9 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 2.0.2 add xju.cmc.delay_cancellation
+- 2.0.2 add bytes support to xju.json_codec
+- 2.0.2 use class name as xn exception message where exception message is empty
 - 2.0.1 add python 3.12 support
 - 2.0.0 add xju.time.async_sleep_until()
 - 2.0.0 add xju.json_codec_mypy_plugin, avoids type: ignore against json_codec.codec()
