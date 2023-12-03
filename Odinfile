@@ -134,22 +134,22 @@ echo "Installation Successfull"
 whl="$1"
 tgz="$2"
 rm -rf dist && mkdir dist
-cp $whl dist/xju-2.0.1-py3-none-any.whl
-cp $tgz dist/xju-2.0.1.tar.gz
+cp $whl dist/xju-2.0.2-py3-none-any.whl
+cp $tgz dist/xju-2.0.2.tar.gz
 twine check dist/*
 twine upload --verbose dist/*
 
-%python3-xju.whl == %python3-xju-whl.exec.files+member='xju-2.0.1/dist/xju-2.0.1-py3-none-any.whl':extract_file
+%python3-xju.whl == %python3-xju-whl.exec.files+member='xju-2.0.2/dist/xju-2.0.2-py3-none-any.whl':extract_file
 
 # you'd think that the .tar.gz that the .whl was built from would be exactly the right thing to
 # put on pypi...
-%python3-xju.tar.gz == %python3-xju-tgz.exec.files+member='xju-2.0.1.tar.gz':extract_file
+%python3-xju.tar.gz == %python3-xju-tgz.exec.files+member='xju-2.0.2.tar.gz':extract_file
 # ... but no it needs the .tar.gz that it created when it created the wheel. It makes no sense
-%python3-xju-twine.tar.gz == %python3-xju-whl.exec.files+member='xju-2.0.1/dist/xju-2.0.1.tar.gz':extract_file
+%python3-xju-twine.tar.gz == %python3-xju-whl.exec.files+member='xju-2.0.2/dist/xju-2.0.2.tar.gz':extract_file
 
-%python3-xju-tgz.exec.files==()+cmd=(%build-python3-xju-tgz.sh)+cmd=(.) (MIT-LICENCE) (README.py.rst) '2.0.1'+need=(xju%pytest.tree:leaves) +need=(xju/cmc%all) +need=(mypy-plugins%all) :exec.files
+%python3-xju-tgz.exec.files==()+cmd=(%build-python3-xju-tgz.sh)+cmd=(.) (MIT-LICENCE) (README.py.rst) '2.0.2'+need=(xju%pytest.tree:leaves) +need=(xju/cmc%all) +need=(mypy-plugins%all) :exec.files
 
-%python3-xju==()+cmd=(%build-python3-xju.sh)+cmd=(.) (MIT-LICENCE) (README.py.rst) '2.0.1'+need=(xju%pytest.tree:leaves) +need=(xju/cmc%all):exec.files
+%python3-xju==()+cmd=(%build-python3-xju.sh)+cmd=(.) (MIT-LICENCE) (README.py.rst) '2.0.2'+need=(xju%pytest.tree:leaves) +need=(xju/cmc%all):exec.files
 
 %python3-xju-whl.exec.files==%build-python3-xju-whl.sh+cmd=(%build-python3-xju-whl.sh)+cmd=(%python3-xju.tar.gz):exec.files
 
@@ -158,7 +158,7 @@ twine upload --verbose dist/*
 set -ex
 tgz="$1"
 tar xzvf $tgz
-cd xju-2.0.1
+cd xju-2.0.2
 python3 -m build -n
 YYYY
 
