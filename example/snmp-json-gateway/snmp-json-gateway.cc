@@ -81,6 +81,7 @@ void run(xju::ip::UDPSocket& socket){
       try{
         std::vector<uint8_t> buffer(UINT16_MAX);
         while(true){
+          buffer.resize(UINT16_MAX);
           if (xju::io::select({stop_receiver.first.get(),&socket},{},xju::steadyEternity())
               .first.contains(stop_receiver.first.get())){
             return;
@@ -202,6 +203,7 @@ void run(xju::ip::UDPSocket& socket){
                 auto const deadline(xju::steadyNow()+std::chrono::seconds(5));
                 socket.sendTo(senderAndSize.first.first,senderAndSize.first.second,
                               m.data(),m.size(),deadline);
+                continue;
               }
               else if (std::get<0>(sec).engineID_!=ourEngineID){
                 ++usmStatsUnknownEngineIDs;
@@ -278,6 +280,33 @@ void run(xju::ip::UDPSocket& socket){
             try{
               auto const m(xju::snmp::encode(snmp_json_gateway::decodeSnmpV2cResponse(
                                                gm->getMember(xju::Utf8String("message")))));
+              socket.sendTo(remoteEndpoint.first,remoteEndpoint.second,m.data(),m.size(),deadline);
+              continue;
+            }
+            catch(xju::Exception& e){
+              failures.push_back(e);
+            }
+            try{
+              auto const x(snmp_json_gateway::decodeSnmpV3Response(
+                             gm->getMember(xju::Utf8String("message"))));
+              xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
+              uint32_t const max_size(std::get<1>(x));
+              xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+              
+              auto const m(xju::snmp::encode(
+                             xju::snmp::SnmpV3Message(
+                               messageId,
+                               max_size,
+                               xju::snmp::SnmpV3Message::Flags(0),
+                               xju::snmp::SnmpV3Message::SecurityModel(3),
+                               xju::snmp::encode(
+                                 xju::snmp::SnmpV3UsmSecurityParameters(ourEngineID,
+                                                                        xju::snmp::EngineBoots(1),
+                                                                        engineTimeNow(),
+                                                                        xju::UserName("")),
+                                 xju::snmp::SnmpV3UsmAuthData({}),
+                                 xju::snmp::SnmpV3UsmPrivData({})),
+                               xju::snmp::encode(scopedPDU))));
               socket.sendTo(remoteEndpoint.first,remoteEndpoint.second,m.data(),m.size(),deadline);
               continue;
             }

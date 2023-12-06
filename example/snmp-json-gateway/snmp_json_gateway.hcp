@@ -40,6 +40,7 @@
 #include <xju/snmp/SnmpV3ScopedPDU.hh>
 #include <algorithm> //impl
 #include <xju/snmp/SnmpV3Message.hh>
+#include <xju/snmp/ContextName.hh> //impl
 
 namespace snmp_json_gateway
 {
@@ -308,7 +309,7 @@ std::shared_ptr<xju::json::Object> encode(
   return std::make_unique<xju::json::Object>(elements);
 }
 
-// encode x to json
+// encode x (message id, max size, pdu) to json
 std::shared_ptr<xju::json::Object> encode(
   std::tuple<xju::snmp::SnmpV3Message::ID,uint32_t,xju::snmp::SnmpV3ScopedPDU> const& x)
 {
@@ -424,7 +425,7 @@ std::pair<xju::snmp::SnmpV1Response::ErrorStatus, xju::snmp::SnmpV1Response::Err
                      return s.str();
                    });
     std::ostringstream s;
-    s << "decode SnmpV1GetResponse error status and error index from json "
+    s << "decode SnmpV1Response error status and error index from json "
       << error
       << " and oid values "
       << xju::format::join(values_.begin(), values_.end(), std::string(", "));
@@ -507,6 +508,27 @@ std::pair<xju::snmp::SnmpV2cResponse::ErrorStatus, xju::snmp::SnmpV2cResponse::E
   }
 }
 
+std::vector<uint8_t> asBytes(xju::json::Element const& x)
+{
+  try{
+    std::vector<uint8_t> bytes;
+    for(auto b: x.asArray()){
+      int const v((*b).asInt());
+      if (v < 0 || v > 255){
+        std::ostringstream s;
+        s << xju::format::int_(v) << " is not 0..255";
+      }
+      bytes.push_back(v);
+    }
+    return bytes;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "interpret " << x << " as bytes (i.e. array<uint8_t>)";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
 
 std::shared_ptr<xju::snmp::Value const> decodeV1Value(xju::json::Element const& x)
 {
@@ -520,16 +542,7 @@ std::shared_ptr<xju::snmp::Value const> decodeV1Value(xju::json::Element const& 
       return std::make_unique<xju::snmp::IntValue>(value.asInt());
     }
     if (value_type == "OctetString"){
-      std::vector<uint8_t> bytes;
-      for(auto b: value.asArray()){
-        int const v((*b).asInt());
-        if (v < 0 || v > 255){
-          std::ostringstream s;
-          s << xju::format::int_(v) << " is not 0..255";
-        }
-        bytes.push_back(v);
-      }
-      return std::make_unique<xju::snmp::StringValue>(bytes);
+      return std::make_unique<xju::snmp::StringValue>(asBytes(value));
     }
     if (value_type == "TimeTicks"){
       return std::make_unique<xju::snmp::TimeTicksValue>(
@@ -727,6 +740,50 @@ xju::snmp::SnmpV2cResponse decodeSnmpV2cResponse(xju::json::Element const& x)
   catch(xju::Exception& e){
     std::ostringstream s;
     s << "decode " << x << " as an SnmpV2cResponse";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+
+std::tuple<xju::snmp::SnmpV3Message::ID,uint32_t,xju::snmp::SnmpV3ScopedPDU> decodeSnmpV3Response(
+  xju::json::Element const& x)
+{
+  try{
+    if (x.getMember(xju::Utf8String("message_type")).asString()!=xju::Utf8String("SnmpV3Response")){
+      std::ostringstream s;
+      s << "message type is " << x.getMember(xju::Utf8String("message_type"))
+        << " not \"SnmpV3Response\"";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    xju::snmp::SnmpV3Message::ID const messageId(
+      x.getMember(xju::Utf8String("message_id")).asU64());
+    uint32_t const maxSize(x.getMember(xju::Utf8String("max_size")).asU32());
+    xju::snmp::ContextEngineID const engineId(
+      asBytes(x.getMember(xju::Utf8String("engine_id"))));
+    xju::snmp::ContextName const contextName(
+      asBytes(x.getMember(xju::Utf8String("context_name"))));
+    xju::snmp::RequestId const requestId(x.getMember(xju::Utf8String("request_id")).asU64());
+    auto const error_status_and_index(
+      decodeV2cError(x.getMember(xju::Utf8String("error")),
+                     x.getMember(xju::Utf8String("values")).asArray()));
+    auto const values(decodeV2cVarResults(x.getMember(xju::Utf8String("values"))));
+    return std::make_tuple(
+      messageId,
+      maxSize,
+      xju::snmp::SnmpV3ScopedPDU(
+        engineId,
+        contextName,
+        xju::snmp::PDU(
+          requestId,
+          static_cast<uint64_t>(std::get<0>(error_status_and_index)),
+          std::get<1>(error_status_and_index).value(),
+          values,
+          0xA2)));
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode " << x << " as an SnmpV3Response";
     e.addContext(s.str(),XJU_TRACED);
     throw;
   }

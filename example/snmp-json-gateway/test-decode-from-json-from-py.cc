@@ -23,6 +23,10 @@
 #include <xju/snmp/OpaqueValue.hh>
 #include <xju/snmp/Counter64Value.hh>
 #include <xju/snmp/SnmpV2cResponse.hh>
+#include <xju/snmp/SnmpV3Message.hh>
+#include <cinttypes>
+#include <xju/snmp/SnmpV3ScopedPDU.hh>
+#include <xju/snmp/PDU.hh>
 
 namespace snmp_json_gateway
 {
@@ -396,6 +400,407 @@ void test1(std::string const& text) {
     xju::assert_equal(x.varResults_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
     xju::assert_equal(*x.varResults_[1].value(), xju::snmp::NullValue());
   }
+
+
+  // decodeSnmpV3Response
+  {
+    auto x(snmp_json_gateway::decodeSnmpV3Response(**i++));
+    xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
+    uint32_t const max_size(std::get<1>(x));
+    xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+    xju::assert_equal(messageId, xju::snmp::SnmpV3Message::ID(100));
+    xju::assert_equal(max_size, 6200);
+    xju::assert_equal(scopedPDU.contextEngineID_, xju::snmp::ContextEngineID({'f','r','e','n','g'}));
+    xju::assert_equal(scopedPDU.contextName_, xju::snmp::ContextName({'c','o','n','n','y'}));
+    xju::snmp::PDU const& pdu(scopedPDU.pdu_);
+    xju::assert_equal(pdu.pduType_, 0xA2);
+    xju::assert_equal(pdu.requestId_, xju::snmp::RequestId(1));
+    xju::assert_equal(xju::snmp::SnmpV2cResponse::ErrorStatus(pdu.error_), xju::snmp::SnmpV2cResponse::ErrorStatus::NO_ERROR);
+    xju::assert_equal(pdu.errorIndex_, 0);
+    xju::assert_equal(pdu.vars_.size(), 12U);
+    xju::assert_equal(pdu.vars_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(*pdu.vars_[0].value(), xju::snmp::IntValue(7));
+    xju::assert_equal(pdu.vars_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(*pdu.vars_[1].value(), xju::snmp::NullValue());
+    xju::assert_equal(pdu.vars_[2].oid(),xju::snmp::Oid(".1.4.6.1.27.5"));
+    xju::assert_equal(*pdu.vars_[2].value(), xju::snmp::StringValue("ann"));
+    xju::assert_equal(pdu.vars_[3].oid(),xju::snmp::Oid(".1.4.6.1.27.6"));
+    xju::assert_equal(*pdu.vars_[3].value(), xju::snmp::TimeTicksValue(
+                        std::chrono::milliseconds(7200)));
+    xju::assert_equal(pdu.vars_[4].oid(),xju::snmp::Oid(".1.4.6.1.27.7"));
+    xju::assert_equal(*pdu.vars_[4].value(), xju::snmp::Gauge32Value(9987));
+    xju::assert_equal(pdu.vars_[5].oid(),xju::snmp::Oid(".1.4.6.1.27.8"));
+    xju::assert_equal(*pdu.vars_[5].value(), xju::snmp::Counter32Value(19987));
+    xju::assert_equal(pdu.vars_[6].oid(),xju::snmp::Oid(".1.4.6.1.27.9"));
+    xju::assert_equal(*pdu.vars_[6].value(), xju::snmp::IPv4AddressValue(
+                        xju::ip::v4::Address("188.18.22.11")));
+    xju::assert_equal(pdu.vars_[7].oid(),xju::snmp::Oid(".1.4.6.1.27.10"));
+    xju::assert_equal(*pdu.vars_[7].value(), xju::snmp::OpaqueValue({18,22,253}));
+    xju::assert_equal(pdu.vars_[8].oid(),xju::snmp::Oid(".1.4.6.1.27.11"));
+    xju::assert_equal(*pdu.vars_[8].value(), xju::snmp::Counter64Value(100));
+    xju::assert_equal(pdu.vars_[9].oid(),xju::snmp::Oid(".1.4.6.1.27.12"));
+    try{
+      pdu.vars_[9].value();
+      xju::assert_never_reached();
+    }
+    catch(xju::snmp::SnmpVar::NoSuchObject const&){
+    }
+    xju::assert_equal(pdu.vars_[10].oid(),xju::snmp::Oid(".1.4.6.1.27.13"));
+    try{
+      pdu.vars_[10].value();
+      xju::assert_never_reached();
+    }
+    catch(xju::snmp::SnmpVar::NoSuchInstance const&){
+    }
+    xju::assert_equal(pdu.vars_[11].oid(),xju::snmp::Oid(".1.4.6.1.27.14"));
+    try{
+      pdu.vars_[11].value();
+      xju::assert_never_reached();
+    }
+    catch(xju::snmp::SnmpVar::EndOfMibView const&){
+    }
+  }
+
+  {
+    auto x(snmp_json_gateway::decodeSnmpV3Response(**i++));
+    xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
+    uint32_t const max_size(std::get<1>(x));
+    xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+    xju::assert_equal(messageId, xju::snmp::SnmpV3Message::ID(200));
+    xju::assert_equal(max_size, 6200);
+    xju::assert_equal(scopedPDU.contextEngineID_, xju::snmp::ContextEngineID({'f','r','e','n','g'}));
+    xju::assert_equal(scopedPDU.contextName_, xju::snmp::ContextName({'c','o','n','n','y'}));
+    xju::snmp::PDU const& pdu(scopedPDU.pdu_);
+    xju::assert_equal(pdu.pduType_, 0xA2);
+    xju::assert_equal(pdu.requestId_, xju::snmp::RequestId(2));
+    xju::assert_equal(xju::snmp::SnmpV2cResponse::ErrorStatus(pdu.error_), xju::snmp::SnmpV2cResponse::ErrorStatus::TOO_BIG);
+    xju::assert_equal(pdu.errorIndex_, 0);
+    xju::assert_equal(pdu.vars_.size(), 2U);
+    xju::assert_equal(pdu.vars_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(*pdu.vars_[0].value(), xju::snmp::NullValue());
+    xju::assert_equal(pdu.vars_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(*pdu.vars_[1].value(), xju::snmp::NullValue());
+  }
+  {
+    auto x(snmp_json_gateway::decodeSnmpV3Response(**i++));
+    xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
+    uint32_t const max_size(std::get<1>(x));
+    xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+    xju::assert_equal(messageId, xju::snmp::SnmpV3Message::ID(300));
+    xju::assert_equal(max_size, 6200);
+    xju::assert_equal(scopedPDU.contextEngineID_, xju::snmp::ContextEngineID({'f','r','e','n','g'}));
+    xju::assert_equal(scopedPDU.contextName_, xju::snmp::ContextName({'c','o','n','n','y'}));
+    xju::snmp::PDU const& pdu(scopedPDU.pdu_);
+    xju::assert_equal(pdu.pduType_, 0xA2);
+    xju::assert_equal(pdu.requestId_, xju::snmp::RequestId(3));
+    xju::assert_equal(xju::snmp::SnmpV2cResponse::ErrorStatus(pdu.error_), xju::snmp::SnmpV2cResponse::ErrorStatus::NO_SUCH_NAME);
+    xju::assert_equal(pdu.errorIndex_, 1);
+    xju::assert_equal(pdu.vars_.size(), 2U);
+    xju::assert_equal(pdu.vars_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(*pdu.vars_[0].value(), xju::snmp::NullValue());
+    xju::assert_equal(pdu.vars_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(*pdu.vars_[1].value(), xju::snmp::NullValue());
+  }
+  {
+    auto x(snmp_json_gateway::decodeSnmpV3Response(**i++));
+    xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
+    uint32_t const max_size(std::get<1>(x));
+    xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+    xju::assert_equal(messageId, xju::snmp::SnmpV3Message::ID(400));
+    xju::assert_equal(max_size, 6200);
+    xju::assert_equal(scopedPDU.contextEngineID_, xju::snmp::ContextEngineID({'f','r','e','n','g'}));
+    xju::assert_equal(scopedPDU.contextName_, xju::snmp::ContextName({'c','o','n','n','y'}));
+    xju::snmp::PDU const& pdu(scopedPDU.pdu_);
+    xju::assert_equal(pdu.pduType_, 0xA2);
+    xju::assert_equal(pdu.requestId_, xju::snmp::RequestId(4));
+    xju::assert_equal(xju::snmp::SnmpV2cResponse::ErrorStatus(pdu.error_), xju::snmp::SnmpV2cResponse::ErrorStatus::BAD_VALUE);
+    xju::assert_equal(pdu.errorIndex_, 2);
+    xju::assert_equal(pdu.vars_.size(), 2U);
+    xju::assert_equal(pdu.vars_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(*pdu.vars_[0].value(), xju::snmp::NullValue());
+    xju::assert_equal(pdu.vars_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(*pdu.vars_[1].value(), xju::snmp::NullValue());
+  }
+  {
+    auto x(snmp_json_gateway::decodeSnmpV3Response(**i++));
+    xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
+    uint32_t const max_size(std::get<1>(x));
+    xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+    xju::assert_equal(messageId, xju::snmp::SnmpV3Message::ID(500));
+    xju::assert_equal(max_size, 6200);
+    xju::assert_equal(scopedPDU.contextEngineID_, xju::snmp::ContextEngineID({'f','r','e','n','g'}));
+    xju::assert_equal(scopedPDU.contextName_, xju::snmp::ContextName({'c','o','n','n','y'}));
+    xju::snmp::PDU const& pdu(scopedPDU.pdu_);
+    xju::assert_equal(pdu.pduType_, 0xA2);
+    xju::assert_equal(pdu.requestId_, xju::snmp::RequestId(5));
+    xju::assert_equal(xju::snmp::SnmpV2cResponse::ErrorStatus(pdu.error_), xju::snmp::SnmpV2cResponse::ErrorStatus::READ_ONLY);
+    xju::assert_equal(pdu.errorIndex_, 2);
+    xju::assert_equal(pdu.vars_.size(), 2U);
+    xju::assert_equal(pdu.vars_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(*pdu.vars_[0].value(), xju::snmp::NullValue());
+    xju::assert_equal(pdu.vars_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(*pdu.vars_[1].value(), xju::snmp::NullValue());
+  }
+  {
+    auto x(snmp_json_gateway::decodeSnmpV3Response(**i++));
+    xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
+    uint32_t const max_size(std::get<1>(x));
+    xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+    xju::assert_equal(messageId, xju::snmp::SnmpV3Message::ID(600));
+    xju::assert_equal(max_size, 6200);
+    xju::assert_equal(scopedPDU.contextEngineID_, xju::snmp::ContextEngineID({'f','r','e','n','g'}));
+    xju::assert_equal(scopedPDU.contextName_, xju::snmp::ContextName({'c','o','n','n','y'}));
+    xju::snmp::PDU const& pdu(scopedPDU.pdu_);
+    xju::assert_equal(pdu.pduType_, 0xA2);
+    xju::assert_equal(pdu.requestId_, xju::snmp::RequestId(6));
+    xju::assert_equal(xju::snmp::SnmpV2cResponse::ErrorStatus(pdu.error_), xju::snmp::SnmpV2cResponse::ErrorStatus::GEN_ERR);
+    xju::assert_equal(pdu.errorIndex_, 2);
+    xju::assert_equal(pdu.vars_.size(), 2U);
+    xju::assert_equal(pdu.vars_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(*pdu.vars_[0].value(), xju::snmp::NullValue());
+    xju::assert_equal(pdu.vars_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(*pdu.vars_[1].value(), xju::snmp::NullValue());
+  }
+  {
+    auto x(snmp_json_gateway::decodeSnmpV3Response(**i++));
+    xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
+    uint32_t const max_size(std::get<1>(x));
+    xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+    xju::assert_equal(messageId, xju::snmp::SnmpV3Message::ID(600));
+    xju::assert_equal(max_size, 6200);
+    xju::assert_equal(scopedPDU.contextEngineID_, xju::snmp::ContextEngineID({'f','r','e','n','g'}));
+    xju::assert_equal(scopedPDU.contextName_, xju::snmp::ContextName({'c','o','n','n','y'}));
+    xju::snmp::PDU const& pdu(scopedPDU.pdu_);
+    xju::assert_equal(pdu.pduType_, 0xA2);
+    xju::assert_equal(pdu.requestId_, xju::snmp::RequestId(6));
+    xju::assert_equal(xju::snmp::SnmpV2cResponse::ErrorStatus(pdu.error_), xju::snmp::SnmpV2cResponse::ErrorStatus::NO_ACCESS);
+    xju::assert_equal(pdu.errorIndex_, 2);
+    xju::assert_equal(pdu.vars_.size(), 2U);
+    xju::assert_equal(pdu.vars_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(*pdu.vars_[0].value(), xju::snmp::NullValue());
+    xju::assert_equal(pdu.vars_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(*pdu.vars_[1].value(), xju::snmp::NullValue());
+  }
+  {
+    auto x(snmp_json_gateway::decodeSnmpV3Response(**i++));
+    xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
+    uint32_t const max_size(std::get<1>(x));
+    xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+    xju::assert_equal(messageId, xju::snmp::SnmpV3Message::ID(600));
+    xju::assert_equal(max_size, 6200);
+    xju::assert_equal(scopedPDU.contextEngineID_, xju::snmp::ContextEngineID({'f','r','e','n','g'}));
+    xju::assert_equal(scopedPDU.contextName_, xju::snmp::ContextName({'c','o','n','n','y'}));
+    xju::snmp::PDU const& pdu(scopedPDU.pdu_);
+    xju::assert_equal(pdu.pduType_, 0xA2);
+    xju::assert_equal(pdu.requestId_, xju::snmp::RequestId(6));
+    xju::assert_equal(xju::snmp::SnmpV2cResponse::ErrorStatus(pdu.error_), xju::snmp::SnmpV2cResponse::ErrorStatus::WRONG_TYPE);
+    xju::assert_equal(pdu.errorIndex_, 2);
+    xju::assert_equal(pdu.vars_.size(), 2U);
+    xju::assert_equal(pdu.vars_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(*pdu.vars_[0].value(), xju::snmp::NullValue());
+    xju::assert_equal(pdu.vars_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(*pdu.vars_[1].value(), xju::snmp::NullValue());
+  }
+  {
+    auto x(snmp_json_gateway::decodeSnmpV3Response(**i++));
+    xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
+    uint32_t const max_size(std::get<1>(x));
+    xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+    xju::assert_equal(messageId, xju::snmp::SnmpV3Message::ID(600));
+    xju::assert_equal(max_size, 6200);
+    xju::assert_equal(scopedPDU.contextEngineID_, xju::snmp::ContextEngineID({'f','r','e','n','g'}));
+    xju::assert_equal(scopedPDU.contextName_, xju::snmp::ContextName({'c','o','n','n','y'}));
+    xju::snmp::PDU const& pdu(scopedPDU.pdu_);
+    xju::assert_equal(pdu.pduType_, 0xA2);
+    xju::assert_equal(pdu.requestId_, xju::snmp::RequestId(6));
+    xju::assert_equal(xju::snmp::SnmpV2cResponse::ErrorStatus(pdu.error_), xju::snmp::SnmpV2cResponse::ErrorStatus::WRONG_LENGTH);
+    xju::assert_equal(pdu.errorIndex_, 2);
+    xju::assert_equal(pdu.vars_.size(), 2U);
+    xju::assert_equal(pdu.vars_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(*pdu.vars_[0].value(), xju::snmp::NullValue());
+    xju::assert_equal(pdu.vars_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(*pdu.vars_[1].value(), xju::snmp::NullValue());
+  }
+  {
+    auto x(snmp_json_gateway::decodeSnmpV3Response(**i++));
+    xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
+    uint32_t const max_size(std::get<1>(x));
+    xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+    xju::assert_equal(messageId, xju::snmp::SnmpV3Message::ID(600));
+    xju::assert_equal(max_size, 6200);
+    xju::assert_equal(scopedPDU.contextEngineID_, xju::snmp::ContextEngineID({'f','r','e','n','g'}));
+    xju::assert_equal(scopedPDU.contextName_, xju::snmp::ContextName({'c','o','n','n','y'}));
+    xju::snmp::PDU const& pdu(scopedPDU.pdu_);
+    xju::assert_equal(pdu.pduType_, 0xA2);
+    xju::assert_equal(pdu.requestId_, xju::snmp::RequestId(6));
+    xju::assert_equal(xju::snmp::SnmpV2cResponse::ErrorStatus(pdu.error_), xju::snmp::SnmpV2cResponse::ErrorStatus::WRONG_ENCODING);
+    xju::assert_equal(pdu.errorIndex_, 2);
+    xju::assert_equal(pdu.vars_.size(), 2U);
+    xju::assert_equal(pdu.vars_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(*pdu.vars_[0].value(), xju::snmp::NullValue());
+    xju::assert_equal(pdu.vars_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(*pdu.vars_[1].value(), xju::snmp::NullValue());
+  }
+  {
+    auto x(snmp_json_gateway::decodeSnmpV3Response(**i++));
+    xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
+    uint32_t const max_size(std::get<1>(x));
+    xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+    xju::assert_equal(messageId, xju::snmp::SnmpV3Message::ID(600));
+    xju::assert_equal(max_size, 6200);
+    xju::assert_equal(scopedPDU.contextEngineID_, xju::snmp::ContextEngineID({'f','r','e','n','g'}));
+    xju::assert_equal(scopedPDU.contextName_, xju::snmp::ContextName({'c','o','n','n','y'}));
+    xju::snmp::PDU const& pdu(scopedPDU.pdu_);
+    xju::assert_equal(pdu.pduType_, 0xA2);
+    xju::assert_equal(pdu.requestId_, xju::snmp::RequestId(6));
+    xju::assert_equal(xju::snmp::SnmpV2cResponse::ErrorStatus(pdu.error_), xju::snmp::SnmpV2cResponse::ErrorStatus::WRONG_VALUE);
+    xju::assert_equal(pdu.errorIndex_, 2);
+    xju::assert_equal(pdu.vars_.size(), 2U);
+    xju::assert_equal(pdu.vars_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(*pdu.vars_[0].value(), xju::snmp::NullValue());
+    xju::assert_equal(pdu.vars_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(*pdu.vars_[1].value(), xju::snmp::NullValue());
+  }
+  {
+    auto x(snmp_json_gateway::decodeSnmpV3Response(**i++));
+    xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
+    uint32_t const max_size(std::get<1>(x));
+    xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+    xju::assert_equal(messageId, xju::snmp::SnmpV3Message::ID(600));
+    xju::assert_equal(max_size, 6200);
+    xju::assert_equal(scopedPDU.contextEngineID_, xju::snmp::ContextEngineID({'f','r','e','n','g'}));
+    xju::assert_equal(scopedPDU.contextName_, xju::snmp::ContextName({'c','o','n','n','y'}));
+    xju::snmp::PDU const& pdu(scopedPDU.pdu_);
+    xju::assert_equal(pdu.pduType_, 0xA2);
+    xju::assert_equal(pdu.requestId_, xju::snmp::RequestId(6));
+    xju::assert_equal(xju::snmp::SnmpV2cResponse::ErrorStatus(pdu.error_), xju::snmp::SnmpV2cResponse::ErrorStatus::NO_CREATION);
+    xju::assert_equal(pdu.errorIndex_, 2);
+    xju::assert_equal(pdu.vars_.size(), 2U);
+    xju::assert_equal(pdu.vars_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(*pdu.vars_[0].value(), xju::snmp::NullValue());
+    xju::assert_equal(pdu.vars_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(*pdu.vars_[1].value(), xju::snmp::NullValue());
+  }
+  {
+    auto x(snmp_json_gateway::decodeSnmpV3Response(**i++));
+    xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
+    uint32_t const max_size(std::get<1>(x));
+    xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+    xju::assert_equal(messageId, xju::snmp::SnmpV3Message::ID(600));
+    xju::assert_equal(max_size, 6200);
+    xju::assert_equal(scopedPDU.contextEngineID_, xju::snmp::ContextEngineID({'f','r','e','n','g'}));
+    xju::assert_equal(scopedPDU.contextName_, xju::snmp::ContextName({'c','o','n','n','y'}));
+    xju::snmp::PDU const& pdu(scopedPDU.pdu_);
+    xju::assert_equal(pdu.pduType_, 0xA2);
+    xju::assert_equal(pdu.requestId_, xju::snmp::RequestId(6));
+    xju::assert_equal(xju::snmp::SnmpV2cResponse::ErrorStatus(pdu.error_), xju::snmp::SnmpV2cResponse::ErrorStatus::INCONSISTENT_VALUE);
+    xju::assert_equal(pdu.errorIndex_, 2);
+    xju::assert_equal(pdu.vars_.size(), 2U);
+    xju::assert_equal(pdu.vars_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(*pdu.vars_[0].value(), xju::snmp::NullValue());
+    xju::assert_equal(pdu.vars_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(*pdu.vars_[1].value(), xju::snmp::NullValue());
+  }
+  {
+    auto x(snmp_json_gateway::decodeSnmpV3Response(**i++));
+    xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
+    uint32_t const max_size(std::get<1>(x));
+    xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+    xju::assert_equal(messageId, xju::snmp::SnmpV3Message::ID(600));
+    xju::assert_equal(max_size, 6200);
+    xju::assert_equal(scopedPDU.contextEngineID_, xju::snmp::ContextEngineID({'f','r','e','n','g'}));
+    xju::assert_equal(scopedPDU.contextName_, xju::snmp::ContextName({'c','o','n','n','y'}));
+    xju::snmp::PDU const& pdu(scopedPDU.pdu_);
+    xju::assert_equal(pdu.pduType_, 0xA2);
+    xju::assert_equal(pdu.requestId_, xju::snmp::RequestId(6));
+    xju::assert_equal(xju::snmp::SnmpV2cResponse::ErrorStatus(pdu.error_), xju::snmp::SnmpV2cResponse::ErrorStatus::RESOURCE_UNAVAILABLE);
+    xju::assert_equal(pdu.errorIndex_, 2);
+    xju::assert_equal(pdu.vars_.size(), 2U);
+    xju::assert_equal(pdu.vars_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(*pdu.vars_[0].value(), xju::snmp::NullValue());
+    xju::assert_equal(pdu.vars_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(*pdu.vars_[1].value(), xju::snmp::NullValue());
+  }
+  {
+    auto x(snmp_json_gateway::decodeSnmpV3Response(**i++));
+    xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
+    uint32_t const max_size(std::get<1>(x));
+    xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+    xju::assert_equal(messageId, xju::snmp::SnmpV3Message::ID(600));
+    xju::assert_equal(max_size, 6200);
+    xju::assert_equal(scopedPDU.contextEngineID_, xju::snmp::ContextEngineID({'f','r','e','n','g'}));
+    xju::assert_equal(scopedPDU.contextName_, xju::snmp::ContextName({'c','o','n','n','y'}));
+    xju::snmp::PDU const& pdu(scopedPDU.pdu_);
+    xju::assert_equal(pdu.pduType_, 0xA2);
+    xju::assert_equal(pdu.requestId_, xju::snmp::RequestId(6));
+    xju::assert_equal(xju::snmp::SnmpV2cResponse::ErrorStatus(pdu.error_), xju::snmp::SnmpV2cResponse::ErrorStatus::COMMIT_FAILED);
+    xju::assert_equal(pdu.errorIndex_, 2);
+    xju::assert_equal(pdu.vars_.size(), 2U);
+    xju::assert_equal(pdu.vars_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(*pdu.vars_[0].value(), xju::snmp::NullValue());
+    xju::assert_equal(pdu.vars_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(*pdu.vars_[1].value(), xju::snmp::NullValue());
+  }
+  {
+    auto x(snmp_json_gateway::decodeSnmpV3Response(**i++));
+    xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
+    uint32_t const max_size(std::get<1>(x));
+    xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+    xju::assert_equal(messageId, xju::snmp::SnmpV3Message::ID(600));
+    xju::assert_equal(max_size, 6200);
+    xju::assert_equal(scopedPDU.contextEngineID_, xju::snmp::ContextEngineID({'f','r','e','n','g'}));
+    xju::assert_equal(scopedPDU.contextName_, xju::snmp::ContextName({'c','o','n','n','y'}));
+    xju::snmp::PDU const& pdu(scopedPDU.pdu_);
+    xju::assert_equal(pdu.pduType_, 0xA2);
+    xju::assert_equal(pdu.requestId_, xju::snmp::RequestId(6));
+    xju::assert_equal(xju::snmp::SnmpV2cResponse::ErrorStatus(pdu.error_), xju::snmp::SnmpV2cResponse::ErrorStatus::UNDO_FAILED);
+    xju::assert_equal(pdu.errorIndex_, 2);
+    xju::assert_equal(pdu.vars_.size(), 2U);
+    xju::assert_equal(pdu.vars_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(*pdu.vars_[0].value(), xju::snmp::NullValue());
+    xju::assert_equal(pdu.vars_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(*pdu.vars_[1].value(), xju::snmp::NullValue());
+  }
+  {
+    auto x(snmp_json_gateway::decodeSnmpV3Response(**i++));
+    xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
+    uint32_t const max_size(std::get<1>(x));
+    xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+    xju::assert_equal(messageId, xju::snmp::SnmpV3Message::ID(600));
+    xju::assert_equal(max_size, 6200);
+    xju::assert_equal(scopedPDU.contextEngineID_, xju::snmp::ContextEngineID({'f','r','e','n','g'}));
+    xju::assert_equal(scopedPDU.contextName_, xju::snmp::ContextName({'c','o','n','n','y'}));
+    xju::snmp::PDU const& pdu(scopedPDU.pdu_);
+    xju::assert_equal(pdu.pduType_, 0xA2);
+    xju::assert_equal(pdu.requestId_, xju::snmp::RequestId(6));
+    xju::assert_equal(xju::snmp::SnmpV2cResponse::ErrorStatus(pdu.error_), xju::snmp::SnmpV2cResponse::ErrorStatus::NOT_WRITABLE);
+    xju::assert_equal(pdu.errorIndex_, 2);
+    xju::assert_equal(pdu.vars_.size(), 2U);
+    xju::assert_equal(pdu.vars_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(*pdu.vars_[0].value(), xju::snmp::NullValue());
+    xju::assert_equal(pdu.vars_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(*pdu.vars_[1].value(), xju::snmp::NullValue());
+  }
+  {
+    auto x(snmp_json_gateway::decodeSnmpV3Response(**i++));
+    xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
+    uint32_t const max_size(std::get<1>(x));
+    xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+    xju::assert_equal(messageId, xju::snmp::SnmpV3Message::ID(600));
+    xju::assert_equal(max_size, 6200);
+    xju::assert_equal(scopedPDU.contextEngineID_, xju::snmp::ContextEngineID({'f','r','e','n','g'}));
+    xju::assert_equal(scopedPDU.contextName_, xju::snmp::ContextName({'c','o','n','n','y'}));
+    xju::snmp::PDU const& pdu(scopedPDU.pdu_);
+    xju::assert_equal(pdu.pduType_, 0xA2);
+    xju::assert_equal(pdu.requestId_, xju::snmp::RequestId(6));
+    xju::assert_equal(xju::snmp::SnmpV2cResponse::ErrorStatus(pdu.error_), xju::snmp::SnmpV2cResponse::ErrorStatus::INCONSISTENT_NAME);
+    xju::assert_equal(pdu.errorIndex_, 2);
+    xju::assert_equal(pdu.vars_.size(), 2U);
+    xju::assert_equal(pdu.vars_[0].oid(),xju::snmp::Oid(".1.4.6.1.27.3"));
+    xju::assert_equal(*pdu.vars_[0].value(), xju::snmp::NullValue());
+    xju::assert_equal(pdu.vars_[1].oid(),xju::snmp::Oid(".1.4.6.1.27.4"));
+    xju::assert_equal(*pdu.vars_[1].value(), xju::snmp::NullValue());
+  }
 }
 
 void test2(){
@@ -451,7 +856,7 @@ void test2(){
       xju::assert_never_reached();
     }
     catch(xju::Exception const& e){
-      xju::assert_equal(readableRepr(e), "Failed to decode object with 5 elements (at line 1 column 1) as an SnmpV1Response because\nfailed to decode SnmpV1GetResponse error status and error index from json object with 2 elements (at line 1 column 83) and oid values [\".1.4.6.1.27.3\",{\"value\":7,\"value_type\":\"Integer\"}], [\".1.4.6.1.27.4\",{\"value_type\":\"NullValue\"}], [\".1.4.6.1.27.5\",{\"value\":\"ann\",\"value_type\":\"OctetString\"}], [\".1.4.6.1.27.6\",{\"value\":720,\"value_type\":\"TimeTicks\"}], [\".1.4.6.1.27.7\",{\"value\":9987,\"value_type\":\"Gauge32\"}], [\".1.4.6.1.27.8\",{\"value\":19987,\"value_type\":\"Counter32\"}], [\".1.4.6.1.27.9\",{\"value\":\"188.18.22.11\",\"value_type\":\"IpAddress\"}], [\".1.4.6.1.27.10\",{\"value\":[18,22,253],\"value_type\":\"Opaque\"}] because\nfailed to get value of object with 2 elements (at line 1 column 83)'s \"oid\" member because\nobject with 2 elements (at line 1 column 83) has no \"oid\" member.");
+      xju::assert_equal(readableRepr(e), "Failed to decode object with 5 elements (at line 1 column 1) as an SnmpV1Response because\nfailed to decode SnmpV1Response error status and error index from json object with 2 elements (at line 1 column 83) and oid values [\".1.4.6.1.27.3\",{\"value\":7,\"value_type\":\"Integer\"}], [\".1.4.6.1.27.4\",{\"value_type\":\"NullValue\"}], [\".1.4.6.1.27.5\",{\"value\":\"ann\",\"value_type\":\"OctetString\"}], [\".1.4.6.1.27.6\",{\"value\":720,\"value_type\":\"TimeTicks\"}], [\".1.4.6.1.27.7\",{\"value\":9987,\"value_type\":\"Gauge32\"}], [\".1.4.6.1.27.8\",{\"value\":19987,\"value_type\":\"Counter32\"}], [\".1.4.6.1.27.9\",{\"value\":\"188.18.22.11\",\"value_type\":\"IpAddress\"}], [\".1.4.6.1.27.10\",{\"value\":[18,22,253],\"value_type\":\"Opaque\"}] because\nfailed to get value of object with 2 elements (at line 1 column 83)'s \"oid\" member because\nobject with 2 elements (at line 1 column 83) has no \"oid\" member.");
     }
   }
   {
@@ -462,7 +867,7 @@ void test2(){
       xju::assert_never_reached();
     }
     catch(xju::Exception const& e){
-      xju::assert_equal(readableRepr(e), "Failed to decode object with 5 elements (at line 1 column 1) as an SnmpV1Response because\nfailed to decode SnmpV1GetResponse error status and error index from json object with 2 elements (at line 1 column 83) and oid values [\".1.4.6.1.27.3\",{\"value\":7,\"value_type\":\"Integer\"}], [\".1.4.6.1.27.4\",{\"value_type\":\"NullValue\"}], [\".1.4.6.1.27.5\",{\"value\":\"ann\",\"value_type\":\"OctetString\"}], [\".1.4.6.1.27.6\",{\"value\":720,\"value_type\":\"TimeTicks\"}], [\".1.4.6.1.27.7\",{\"value\":9987,\"value_type\":\"Gauge32\"}], [\".1.4.6.1.27.8\",{\"value\":19987,\"value_type\":\"Counter32\"}], [\".1.4.6.1.27.9\",{\"value\":\"188.18.22.11\",\"value_type\":\"IpAddress\"}], [\".1.4.6.1.27.10\",{\"value\":[18,22,253],\"value_type\":\"Opaque\"}] because\nno such oid .1.4.6.1.27.99 in values.");
+      xju::assert_equal(readableRepr(e), "Failed to decode object with 5 elements (at line 1 column 1) as an SnmpV1Response because\nfailed to decode SnmpV1Response error status and error index from json object with 2 elements (at line 1 column 83) and oid values [\".1.4.6.1.27.3\",{\"value\":7,\"value_type\":\"Integer\"}], [\".1.4.6.1.27.4\",{\"value_type\":\"NullValue\"}], [\".1.4.6.1.27.5\",{\"value\":\"ann\",\"value_type\":\"OctetString\"}], [\".1.4.6.1.27.6\",{\"value\":720,\"value_type\":\"TimeTicks\"}], [\".1.4.6.1.27.7\",{\"value\":9987,\"value_type\":\"Gauge32\"}], [\".1.4.6.1.27.8\",{\"value\":19987,\"value_type\":\"Counter32\"}], [\".1.4.6.1.27.9\",{\"value\":\"188.18.22.11\",\"value_type\":\"IpAddress\"}], [\".1.4.6.1.27.10\",{\"value\":[18,22,253],\"value_type\":\"Opaque\"}] because\nno such oid .1.4.6.1.27.99 in values.");
     }
   }
 }
