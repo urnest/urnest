@@ -10,7 +10,8 @@ from snmp_json_gateway import OctetStringValue
 from snmp_json_gateway import SnmpV2cGetRequest, SnmpV2cGetNextRequest, SnmpV2cGetBulkRequest
 from snmp_json_gateway import SnmpV2cSetRequest
 from snmp_json_gateway import MessageId, SnmpV3GetRequest, SnmpV3GetNextRequest
-from snmp_json_gateway import SnmpV3GetBulkRequest, SnmpV3SetRequest
+from snmp_json_gateway import SnmpV3GetBulkRequest, SnmpV3SetRequest, UsmSecurityParameters
+from snmp_json_gateway import ContextName, UserName
 
 codec=Codec(list[SnmpV1GetRequest|SnmpV1GetNextRequest|SnmpV1SetRequest|
                  SnmpV2cGetRequest|SnmpV2cGetNextRequest|SnmpV2cGetBulkRequest|SnmpV2cSetRequest|
@@ -63,7 +64,8 @@ Assert(codec.decode(json.loads(open(sys.argv[1]).read()))) == [
         MessageId(23),
         66786,
         b"cathy",
-        b"colin",
+        ContextName("colin"),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(27),
         [Oid(".1.4.6.1.27.3"), Oid(".1.4.6.1.19")]),
     SnmpV3GetNextRequest(
@@ -71,7 +73,8 @@ Assert(codec.decode(json.loads(open(sys.argv[1]).read()))) == [
         MessageId(24),
         66786,
         b"cathy",
-        b"colin",
+        ContextName("colin"),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(28),
         [Oid(".1.4.6.12.27.3"), Oid(".1.4.6.12.19")]),
     SnmpV3GetBulkRequest(
@@ -79,7 +82,8 @@ Assert(codec.decode(json.loads(open(sys.argv[1]).read()))) == [
         MessageId(25),
         66786,
         b"cathy",
-        b"colin",
+        ContextName("colin"),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(29),
         [Oid(".1.4.6.12.27.3"), Oid(".1.4.6.12.19")],
         [Oid(".1.4.6.12.27.5")],
@@ -89,7 +93,8 @@ Assert(codec.decode(json.loads(open(sys.argv[1]).read()))) == [
         MessageId(26),
         66786,
         b"cathy",
-        b"colin",
+        ContextName("colin"),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(30),
         [ (Oid(".1.4.6.12.27.3"), Counter32Value("Counter32",32)),
           (Oid(".1.4.6.1.19"), Counter64Value("Counter64",64))]),

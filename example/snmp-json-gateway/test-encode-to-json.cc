@@ -106,9 +106,10 @@ void test1() {
           std::make_tuple(
             xju::snmp::SnmpV3Message::ID(23),
             66786,
+            xju::UserName("fred"),
             xju::snmp::SnmpV3ScopedPDU(
               xju::snmp::ContextEngineID(std::vector<uint8_t>{'c','a','t','h','y'}),
-              xju::snmp::ContextName(std::vector<uint8_t>{'c','o','l','i','n'}),
+              xju::snmp::ContextName("colin"),
               xju::snmp::PDU(
                 xju::snmp::RequestId(27),
                 0,
@@ -127,9 +128,10 @@ void test1() {
           std::make_tuple(
             xju::snmp::SnmpV3Message::ID(24),
             66786,
+            xju::UserName("fred"),
             xju::snmp::SnmpV3ScopedPDU(
               xju::snmp::ContextEngineID(std::vector<uint8_t>{'c','a','t','h','y'}),
-              xju::snmp::ContextName(std::vector<uint8_t>{'c','o','l','i','n'}),
+              xju::snmp::ContextName("colin"),
               xju::snmp::PDU(
                 xju::snmp::RequestId(28),
                 0,
@@ -148,9 +150,10 @@ void test1() {
           std::make_tuple(
             xju::snmp::SnmpV3Message::ID(25),
             66786,
+            xju::UserName("fred"),
             xju::snmp::SnmpV3ScopedPDU(
               xju::snmp::ContextEngineID(std::vector<uint8_t>{'c','a','t','h','y'}),
-              xju::snmp::ContextName(std::vector<uint8_t>{'c','o','l','i','n'}),
+              xju::snmp::ContextName("colin"),
               xju::snmp::PDU(
                 xju::snmp::RequestId(29),
                 2,
@@ -173,9 +176,10 @@ void test1() {
           std::make_tuple(
             xju::snmp::SnmpV3Message::ID(26),
             66786,
+            xju::UserName("fred"),
             xju::snmp::SnmpV3ScopedPDU(
               xju::snmp::ContextEngineID(std::vector<uint8_t>{'c','a','t','h','y'}),
-              xju::snmp::ContextName(std::vector<uint8_t>{'c','o','l','i','n'}),
+              xju::snmp::ContextName("colin"),
               xju::snmp::PDU(
                 xju::snmp::RequestId(30),
                 0,

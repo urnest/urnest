@@ -19,7 +19,7 @@ namespace snmp
 {
 
 class ContextNameTag{};
-typedef xju::Tagged<std::vector<uint8_t>, ContextNameTag> ContextName;
+typedef xju::Tagged<std::string, ContextNameTag> ContextName;
 
 }
 }

@@ -311,17 +311,22 @@ std::shared_ptr<xju::json::Object> encode(
 
 // encode x (message id, max size, pdu) to json
 std::shared_ptr<xju::json::Object> encode(
-  std::tuple<xju::snmp::SnmpV3Message::ID,uint32_t,xju::snmp::SnmpV3ScopedPDU> const& x)
+  std::tuple<xju::snmp::SnmpV3Message::ID,uint32_t,xju::UserName,xju::snmp::SnmpV3ScopedPDU> const& x)
 {
   std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> > elements;
+  std::map<xju::Utf8String,std::shared_ptr<xju::json::Element const> > security_parameters{
+    {xju::Utf8String("user_name"), 
+     json_string(std::get<2>(x).value())}};
 
   xju::snmp::SnmpV3Message::ID const id(std::get<0>(x));
   uint32_t const max_size(std::get<1>(x));
-  xju::snmp::SnmpV3ScopedPDU const& scopedPdu(std::get<2>(x));
+  xju::snmp::SnmpV3ScopedPDU const& scopedPdu(std::get<3>(x));
   elements.insert({xju::Utf8String("message_id"), json_number(id.value())});
   elements.insert({xju::Utf8String("engine_id"), json_bytes(scopedPdu.contextEngineID_._)});
   elements.insert({xju::Utf8String("max_size"), json_number(max_size)});
-  elements.insert({xju::Utf8String("context_name"), json_bytes(scopedPdu.contextName_._)});
+  elements.insert({xju::Utf8String("security_parameters"), std::make_unique<xju::json::Object>(
+        security_parameters)});
+  elements.insert({xju::Utf8String("context_name"), json_string(scopedPdu.contextName_._)});
   elements.insert({xju::Utf8String("request_id"), json_number(scopedPdu.pdu_.requestId_.value())});
   switch(scopedPdu.pdu_.pduType_){
   case 0xa0: {
@@ -746,7 +751,7 @@ xju::snmp::SnmpV2cResponse decodeSnmpV2cResponse(xju::json::Element const& x)
 }
 
 
-std::tuple<xju::snmp::SnmpV3Message::ID,uint32_t,xju::snmp::SnmpV3ScopedPDU> decodeSnmpV3Response(
+std::tuple<xju::snmp::SnmpV3Message::ID,uint32_t,xju::UserName,xju::snmp::SnmpV3ScopedPDU> decodeSnmpV3Response(
   xju::json::Element const& x)
 {
   try{
@@ -761,8 +766,10 @@ std::tuple<xju::snmp::SnmpV3Message::ID,uint32_t,xju::snmp::SnmpV3ScopedPDU> dec
     uint32_t const maxSize(x.getMember(xju::Utf8String("max_size")).asU32());
     xju::snmp::ContextEngineID const engineId(
       asBytes(x.getMember(xju::Utf8String("engine_id"))));
-    xju::snmp::ContextName const contextName(
-      asBytes(x.getMember(xju::Utf8String("context_name"))));
+    xju::snmp::ContextName const contextName(x.getMember(xju::Utf8String("context_name")).asString());
+    xju::UserName const userName(
+      x.getMember(xju::Utf8String("security_parameters")).getMember(
+        xju::Utf8String("user_name")).asString());
     xju::snmp::RequestId const requestId(x.getMember(xju::Utf8String("request_id")).asU64());
     auto const error_status_and_index(
       decodeV2cError(x.getMember(xju::Utf8String("error")),
@@ -771,6 +778,7 @@ std::tuple<xju::snmp::SnmpV3Message::ID,uint32_t,xju::snmp::SnmpV3ScopedPDU> dec
     return std::make_tuple(
       messageId,
       maxSize,
+      userName,
       xju::snmp::SnmpV3ScopedPDU(
         engineId,
         contextName,

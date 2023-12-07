@@ -15,7 +15,7 @@
 #
 from typing import Union,List,Dict
 import json
-from xju.newtype import Int
+from xju.newtype import Int, Str
 
 class ByteCountTag:pass
 class ByteCount(Int[ByteCountTag]):
@@ -29,3 +29,8 @@ def toJson(x:Union[str,int,float,bool,None,List,Dict],cls=json.JSONEncoder) -> s
 def fromJson(x:str) -> Union[str,int,float,bool,None,List,Dict]:
     '''JSON-decode {x}'''
     return json.loads(x)
+
+
+class UserNameTag: pass
+class UserName(Str[UserNameTag]):
+    pass

@@ -220,6 +220,7 @@ void run(xju::ip::UDPSocket& socket){
                                                    std::make_tuple(
                                                      x.id_,
                                                      x.maxSize_,
+                                                     std::get<0>(sec).userName_,
                                                      y)),same_line)
                             << std::endl;
                   continue;
@@ -291,7 +292,8 @@ void run(xju::ip::UDPSocket& socket){
                              gm->getMember(xju::Utf8String("message"))));
               xju::snmp::SnmpV3Message::ID const messageId(std::get<0>(x));
               uint32_t const max_size(std::get<1>(x));
-              xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<2>(x));
+              xju::UserName const userName(std::get<2>(x));
+              xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<3>(x));
               
               auto const m(xju::snmp::encode(
                              xju::snmp::SnmpV3Message(
@@ -303,7 +305,7 @@ void run(xju::ip::UDPSocket& socket){
                                  xju::snmp::SnmpV3UsmSecurityParameters(ourEngineID,
                                                                         xju::snmp::EngineBoots(1),
                                                                         engineTimeNow(),
-                                                                        xju::UserName("")),
+                                                                        userName),
                                  xju::snmp::SnmpV3UsmAuthData({}),
                                  xju::snmp::SnmpV3UsmPrivData({})),
                                xju::snmp::encode(scopedPDU))));

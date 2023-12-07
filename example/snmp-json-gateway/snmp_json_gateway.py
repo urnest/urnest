@@ -4,6 +4,7 @@
 from dataclasses import dataclass
 from typing import Literal
 from xju.newtype import Int, Str
+from xju.misc import UserName
 from typing import Union
 
 @dataclass
@@ -267,6 +268,13 @@ class MessageId(Int["MessageIdTag"]):
     """RFC 3412 msgID (an unsigned 31-bit integer)"""
     pass
 
+@dataclass
+class UsmSecurityParameters:
+    # most usm handling is in snmp-json-gateway.cc
+    # but need user_name passed through
+    user_name: UserName
+
+class ContextName(Str["ContextNameTag"]):pass
 
 @dataclass
 class SnmpV3GetRequest:
@@ -274,7 +282,8 @@ class SnmpV3GetRequest:
     message_id: MessageId
     max_size: int
     engine_id: bytes
-    context_name: bytes
+    context_name: ContextName
+    security_parameters: UsmSecurityParameters
     request_id: RequestId
     oids: list[Oid]
     pass
@@ -285,7 +294,8 @@ class SnmpV3GetNextRequest:
     message_id: MessageId
     max_size: int
     engine_id: bytes
-    context_name: bytes
+    context_name: ContextName
+    security_parameters: UsmSecurityParameters
     request_id: RequestId
     oids: list[Oid]
     pass
@@ -296,7 +306,8 @@ class SnmpV3GetBulkRequest:
     message_id: MessageId
     max_size: int
     engine_id: bytes
-    context_name: bytes
+    context_name: ContextName
+    security_parameters: UsmSecurityParameters
     request_id: RequestId
     get_next: list[Oid]
     get_next_n: list[Oid]
@@ -309,7 +320,8 @@ class SnmpV3SetRequest:
     message_id: MessageId
     max_size: int
     engine_id: bytes
-    context_name: bytes
+    context_name: ContextName
+    security_parameters: UsmSecurityParameters
     request_id: RequestId
     vars: list[tuple[Oid, "SnmpV2cValue"]]
     pass
@@ -321,7 +333,8 @@ class SnmpV3Response:
     message_id: MessageId
     max_size: int
     engine_id: bytes
-    context_name: bytes
+    context_name: ContextName
+    security_parameters: UsmSecurityParameters
     request_id: RequestId
     error: (None | TooBig | NoSuchName | BadValue | ReadOnly | GenErr |
             NoAccess | NotWritable | WrongType |
@@ -336,3 +349,4 @@ class RequestIdTag:pass
 class OidTag:pass
 class ErrorIndexTag: pass
 class MessageIdTag:pass
+class ContextNameTag:pass

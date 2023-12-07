@@ -10,7 +10,7 @@ from snmp_json_gateway import TooBig, NoSuchName, BadValue, ReadOnly, GenErr
 from snmp_json_gateway import SnmpV2cResponse, NoAccess, WrongType, WrongLength, WrongEncoding
 from snmp_json_gateway import WrongValue, NoCreation, InconsistentValue, ResourceUnavailable
 from snmp_json_gateway import CommitFailed, UndoFailed, NotWritable, InconsistentName
-from snmp_json_gateway import SnmpV3Response, MessageId
+from snmp_json_gateway import SnmpV3Response, MessageId, UsmSecurityParameters, UserName, ContextName
 
 codec=Codec(list[SnmpV1Response|SnmpV2cResponse|SnmpV3Response])
 
@@ -253,7 +253,8 @@ print(json.dumps(codec.encode([
         MessageId(100),
         6200,
         b'freng',
-        b'conny',
+        ContextName('conny'),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(1),
         None,
         [
@@ -275,7 +276,8 @@ print(json.dumps(codec.encode([
         MessageId(200),
         6200,
         b'freng',
-        b'conny',
+        ContextName('conny'),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(2),
         TooBig("TooBig"),
         [
@@ -287,7 +289,8 @@ print(json.dumps(codec.encode([
         MessageId(300),
         6200,
         b'freng',
-        b'conny',
+        ContextName('conny'),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(3),
         NoSuchName("NoSuchName", Oid(".1.4.6.1.27.3")),
         [
@@ -299,7 +302,8 @@ print(json.dumps(codec.encode([
         MessageId(400),
         6200,
         b'freng',
-        b'conny',
+        ContextName('conny'),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(4),
         BadValue("BadValue", Oid(".1.4.6.1.27.4")),
         [
@@ -311,7 +315,8 @@ print(json.dumps(codec.encode([
         MessageId(500),
         6200,
         b'freng',
-        b'conny',
+        ContextName('conny'),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(5),
         ReadOnly("ReadOnly", Oid(".1.4.6.1.27.4")),
         [
@@ -323,7 +328,8 @@ print(json.dumps(codec.encode([
         MessageId(600),
         6200,
         b'freng',
-        b'conny',
+        ContextName('conny'),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(6),
         GenErr("GenErr", Oid(".1.4.6.1.27.4")),
         [
@@ -335,7 +341,8 @@ print(json.dumps(codec.encode([
         MessageId(600),
         6200,
         b'freng',
-        b'conny',
+        ContextName('conny'),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(6),
         NoAccess("NoAccess", Oid(".1.4.6.1.27.4")),
         [
@@ -347,7 +354,8 @@ print(json.dumps(codec.encode([
         MessageId(600),
         6200,
         b'freng',
-        b'conny',
+        ContextName('conny'),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(6),
         WrongType("WrongType", Oid(".1.4.6.1.27.4")),
         [
@@ -359,7 +367,8 @@ print(json.dumps(codec.encode([
         MessageId(600),
         6200,
         b'freng',
-        b'conny',
+        ContextName('conny'),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(6),
         WrongLength("WrongLength", Oid(".1.4.6.1.27.4")),
         [
@@ -371,7 +380,8 @@ print(json.dumps(codec.encode([
         MessageId(600),
         6200,
         b'freng',
-        b'conny',
+        ContextName('conny'),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(6),
         WrongEncoding("WrongEncoding", Oid(".1.4.6.1.27.4")),
         [
@@ -383,7 +393,8 @@ print(json.dumps(codec.encode([
         MessageId(600),
         6200,
         b'freng',
-        b'conny',
+        ContextName('conny'),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(6),
         WrongValue("WrongValue", Oid(".1.4.6.1.27.4")),
         [
@@ -395,7 +406,8 @@ print(json.dumps(codec.encode([
         MessageId(600),
         6200,
         b'freng',
-        b'conny',
+        ContextName('conny'),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(6),
         NoCreation("NoCreation", Oid(".1.4.6.1.27.4")),
         [
@@ -407,7 +419,8 @@ print(json.dumps(codec.encode([
         MessageId(600),
         6200,
         b'freng',
-        b'conny',
+        ContextName('conny'),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(6),
         InconsistentValue("InconsistentValue", Oid(".1.4.6.1.27.4")),
         [
@@ -419,7 +432,8 @@ print(json.dumps(codec.encode([
         MessageId(600),
         6200,
         b'freng',
-        b'conny',
+        ContextName('conny'),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(6),
         ResourceUnavailable("ResourceUnavailable", Oid(".1.4.6.1.27.4")),
         [
@@ -431,7 +445,8 @@ print(json.dumps(codec.encode([
         MessageId(600),
         6200,
         b'freng',
-        b'conny',
+        ContextName('conny'),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(6),
         CommitFailed("CommitFailed", Oid(".1.4.6.1.27.4")),
         [
@@ -443,7 +458,8 @@ print(json.dumps(codec.encode([
         MessageId(600),
         6200,
         b'freng',
-        b'conny',
+        ContextName('conny'),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(6),
         UndoFailed("UndoFailed", Oid(".1.4.6.1.27.4")),
         [
@@ -455,7 +471,8 @@ print(json.dumps(codec.encode([
         MessageId(600),
         6200,
         b'freng',
-        b'conny',
+        ContextName('conny'),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(6),
         NotWritable("NotWritable", Oid(".1.4.6.1.27.4")),
         [
@@ -467,7 +484,8 @@ print(json.dumps(codec.encode([
         MessageId(600),
         6200,
         b'freng',
-        b'conny',
+        ContextName('conny'),
+        UsmSecurityParameters(UserName('fred')),
         RequestId(6),
         InconsistentName("InconsistentName", Oid(".1.4.6.1.27.4")),
         [

@@ -61,7 +61,8 @@ SnmpV3ScopedPDU decodeSnmpV3ScopedPDU(
             throw xju::Exception(s.str(),XJU_TRACED);
           }
           return SnmpV3ScopedPDU(ContextEngineID(contextEngineID.first),
-                                 ContextName(contextName.first),
+                                 ContextName(
+                                   std::string(contextName.first.begin(),contextName.first.end())),
                                  std::move(pdu.first));
         }
         catch(xju::Exception const& e) {
