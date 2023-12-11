@@ -379,7 +379,7 @@ std::vector<uint8_t> encode(SnmpV2cResponse const& response) throw()
 }
 
 
-std::vector<uint8_t> encode(SnmpV3Message const& x) throw()
+std::vector<uint8_t> encode(SnmpV3Message x) throw()
 {
   typedef std::shared_ptr<Value const> vp;
 
@@ -400,7 +400,7 @@ std::vector<uint8_t> encode(SnmpV3Message const& x) throw()
 }
 
 
-SnmpV3ScopedPduData encode(SnmpV3ScopedPDU const& x) throw()
+SnmpV3ScopedPduData encode(SnmpV3ScopedPDU x) throw()
 {
   typedef std::shared_ptr<Value const> vp;
 

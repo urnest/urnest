@@ -84,6 +84,7 @@ public:
   std::vector<uint8_t> shutdown(size_t const maxReturn)
   // throw xju::Exception - error occured during or before shutdown
   {
+    //REVISIT: maxReturn?
     return crypto_.shutdown(transport_,
                             std::move(decrypted_),
                             std::move(encrypt_));

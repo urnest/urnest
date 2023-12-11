@@ -52,24 +52,15 @@ void test1() throw()
   xju::assert_equal(y.contextEngineID_, ContextEngineID(std::vector<uint8_t>{
         0x80, 0x00, 0x1f, 0x88, 0x80, 0xe6, 0x79, 0x08, 0x01, 0x97, 0x35, 0x2e, 0x5d, 0x00, 0x00,
           0x00, 0x00,}));
-  xju::assert_equal(y.contextName_, ContextName(std::vector<uint8_t>{'j','o','c','k'}));
-  xju::assert_equal(y.encodedPDU_, SnmpV3EncodedPDU(std::vector<uint8_t>{
-              0xa0, 0x21,
-      // request-id
-      0x02, 0x04, 0x69, 0x0f, 0x79, 0xb6,
-      // error-status
-      0x02, 0x01, 0x00,
-      // error-index
-      0x02, 0x01, 0x00,
-      // variable-bindings
-      0x30, 0x13,
-      // .1.3.6.1.4.1.2680.1.2.7.3.2.0
-      0x30, 0x11, 0x06, 0x0d, 0x2b,
-      0x06, 0x01, 0x04,
-      0x01, 0x94, 0x78, 0x01, 0x02, 0x07, 0x03, 0x02, 0x00,
-      // type+length
-      0x05, 0x00
-      }));
+  xju::assert_equal(y.contextName_, ContextName("jock"));
+  xju::assert_equal(y.pdu_,
+                    PDU(RequestId(0x690f79b6),
+                        0x00,
+                        0x00,
+                        // variable-bindings
+                        {SnmpVar(Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
+                                 std::shared_ptr<Value const>(new NullValue()))},
+                        0xa0));
 }
     
 void test2()

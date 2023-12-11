@@ -56,10 +56,10 @@ std::vector<uint8_t> encode(SnmpV2cResponse const& trap) throw();
 
 class SnmpV3Message;
 
-std::vector<uint8_t> encode(SnmpV3Message const& message) throw();
+std::vector<uint8_t> encode(SnmpV3Message message) throw();
 
 class SnmpV3ScopedPDU;
-SnmpV3ScopedPduData encode(SnmpV3ScopedPDU const& scopedPDU) throw();
+SnmpV3ScopedPduData encode(SnmpV3ScopedPDU scopedPDU) throw();
 
 class SnmpV3UsmSecurityParameters;
 SnmpV3SecParams encode(

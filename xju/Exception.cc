@@ -38,7 +38,7 @@ namespace xju
     Exception::Exception(
         std::string cause,
         std::pair<std::string,unsigned int> trace) throw():
-        _cause(std::make_pair(std::move(cause), Traced(trace)))
+        _cause(std::make_pair(std::move(cause), Traced(std::move(trace))))
     {
     }
     Exception::Exception(const std::ostringstream& cause,

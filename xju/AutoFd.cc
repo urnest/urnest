@@ -41,7 +41,7 @@ AutoFd& AutoFd::operator=(AutoFd&& x) noexcept
 }
 
 AutoFd::AutoFd(AutoFd&& y) noexcept:
-  fd_(std::move(y.fd_))
+  fd_(y.fd_)
 {
   y.fd_=-1;
 }

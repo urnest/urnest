@@ -24,7 +24,7 @@ class Call
 {
 public:
   Call(future&& f) noexcept:
-      f_(std::move(f))
+      f_(f)
   {
   }
   future f_;

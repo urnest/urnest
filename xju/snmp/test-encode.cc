@@ -651,41 +651,21 @@ void test12(){
   xju::assert_equal(decodeSnmpV3ScopedPDU(
                       encode(SnmpV3ScopedPDU(
                                ContextEngineID(std::vector<uint8_t>{0x01, 0x02}),
-                               ContextName(std::vector<uint8_t>{'f','r','e','d'}),
-                               SnmpV3EncodedPDU(std::vector<uint8_t>{
-                                 0xa0, 0x21,
-                                   // request-id
-                                   0x02, 0x04, 0x69, 0x0f, 0x79, 0xb6,
-                                   // error-status
-                                   0x02, 0x01, 0x00,
-                                   // error-index
-                                   0x02, 0x01, 0x00,
-                                   // variable-bindings
-                                   0x30, 0x13,
-                                   // .1.3.6.1.4.1.2680.1.2.7.3.2.0
-                                   0x30, 0x11, 0x06, 0x0d, 0x2b,
-                                   0x06, 0x01, 0x04,
-                                   0x01, 0x94, 0x78, 0x01, 0x02, 0x07, 0x03, 0x02, 0x00,
-                                   // type+length
-                                   0x05, 0x00})))),
+                               ContextName("fred"),
+                               PDU(RequestId(0x690f79b6),
+                                   0x00,
+                                   0x00,
+                                   {SnmpVar(Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
+                                            std::shared_ptr<Value>(new NullValue()))},
+                                   0x0a)))),
                     SnmpV3ScopedPDU(ContextEngineID(std::vector<uint8_t>{0x01, 0x02}),
-                                    ContextName(std::vector<uint8_t>{'f','r','e','d'}),
-                                    SnmpV3EncodedPDU(std::vector<uint8_t>{
-                                      0xa0, 0x21,
-                                        // request-id
-                                        0x02, 0x04, 0x69, 0x0f, 0x79, 0xb6,
-                                        // error-status
-                                        0x02, 0x01, 0x00,
-                                        // error-index
-                                        0x02, 0x01, 0x00,
-                                        // variable-bindings
-                                        0x30, 0x13,
-                                        // .1.3.6.1.4.1.2680.1.2.7.3.2.0
-                                        0x30, 0x11, 0x06, 0x0d, 0x2b,
-                                        0x06, 0x01, 0x04,
-                                        0x01, 0x94, 0x78, 0x01, 0x02, 0x07, 0x03, 0x02, 0x00,
-                                        // type+length
-                                        0x05, 0x00})));
+                                    ContextName("fred"),
+                                    PDU(RequestId(0x690f79b6),
+                                        0x00,
+                                        0x00,
+                                        {SnmpVar(Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0"),
+                                                 std::shared_ptr<Value>(new NullValue()))},
+                                        0x0a)));
 }
 
 void test13(){

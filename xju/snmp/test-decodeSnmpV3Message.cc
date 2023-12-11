@@ -15,7 +15,6 @@
 #include "xju/snmp/StringValue.hh"
 #include "xju/snmp/OidValue.hh"
 #include "xju/next.hh"
-#include <xju/snmp/SnmpV3EncodedPDU.hh>
 
 namespace xju
 {
