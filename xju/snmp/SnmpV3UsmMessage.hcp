@@ -1,0 +1,46 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+#include <xju/snmp/SnmpV3Message.hh>
+#include <unistd.h>
+#include <xju/snmp/SnmpV3UsmSecurityParameters.hh>
+#include <xju/snmp/SnmpV3ScopedPDU.hh>
+
+namespace xju
+{
+namespace snmp
+{
+class SnmpV3UsmMessage
+{
+public:
+  SnmpV3Message::ID id_;
+  size_t maxSize_;
+  SnmpV3Message::Flags flags_;
+  SnmpV3UsmSecurityParameters securityParameters_;
+  SnmpV3ScopedPDU scopedPDU_;
+
+  SnmpV3UsmMessage(
+    SnmpV3Message::ID const id,
+    size_t const maxSize,
+    SnmpV3Message::Flags flags,
+    SnmpV3UsmSecurityParameters securityParameters,
+    SnmpV3ScopedPDU scopedPDU):
+      id_(id),
+      maxSize_(maxSize),
+      flags_(flags),
+      securityParameters_(securityParameters),
+      scopedPDU_(scopedPDU)
+  {}
+
+  friend bool operator<(SnmpV3UsmMessage const& a, SnmpV3UsmMessage const& b) noexcept;
+};
+
+}
+}

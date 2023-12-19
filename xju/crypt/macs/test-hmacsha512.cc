@@ -7,7 +7,7 @@
 // software for any purpose.  It is provided "as is" without express or
 // implied warranty.
 //
-#include <xju/crypt/macs/hmacsha1.hh>
+#include <xju/crypt/macs/hmacsha512.hh>
 
 #include <iostream>
 #include <xju/assert.hh>
@@ -24,12 +24,14 @@ void test1() {
 
   std::string message("fred the fox was big and brown");
   MacKey const key(
-    {0x43,0x8a,0x93,0x10,0x0a,0x7c,0x7a,0x21,0x42,0xf0,
-     0x18,0x98,0xe1,0x09,0xf2,0xdd,0x8c,0x88,0x1b,0x0d});
-  hmacsha1::Calculator c(key);
+    {0x43,0x8a,0x93,0x10,0x0a,0x7c,0x7a,0x21,0x42,0xf0,0x0a,0x7c,0x7a,0x21,0x42,0xf0,
+     0x18,0x98,0xe1,0x09,0xf2,0xdd,0x8c,0x88,0x1b,0x0d,0x0a,0x7c,0x7a,0x21,0x42,0xf0,
+     0x43,0x8a,0x93,0x10,0x0a,0x7c,0x7a,0x21,0x42,0xf0,0x0a,0x7c,0x7a,0x21,0x42,0xf0,
+     0x18,0x98,0xe1,0x09,0xf2,0xdd,0x8c,0x88,0x1b,0x0d,0x0a,0x7c,0x7a,0x21,0x42,0xf0});
+  hmacsha512::Calculator c(key);
   Mac const m(c.calculateMac(std::vector<uint8_t>(message.begin(),
                                                   message.end())));
-  hmacsha1::Verifier v(key);
+  hmacsha512::Verifier v(key);
   v.verifyMac(m,std::vector<uint8_t>(message.begin(),message.end()));
 
   std::string badMessage("fred the fox was bold as brass");
@@ -38,7 +40,7 @@ void test1() {
     xju::assert_never_reached();
   }
   catch(xju::Exception const& e){
-    xju::assert_equal(readableRepr(e),"Failed to verify hmac-sha1 MAC of 30-byte message using MAC key 438a93100a7c7a2142f01898e109f2dd8c881b0d is cfede5c5cc920fae34d9f4ecf7fdb47d8b5b2b0f because\nMAC is 73571fdf7b89e12b88573a86e496072b1ee48ef0.");
+    xju::assert_equal(readableRepr(e),"Failed to verify hmac-sha512 MAC of 30-byte message using MAC key 438a93100a7c7a2142f00a7c7a2142f01898e109f2dd8c881b0d0a7c7a2142f0438a93100a7c7a2142f00a7c7a2142f01898e109f2dd8c881b0d0a7c7a2142f0 is 6494c1b8811d0e668cb00a19f06c7e6ee395ade0e74cfd9a9d0d326736fad187dbf141a4f2e5154454ae73965e610cfc3cdd6ac45d03ee474fd4ce86d39c75ae because\nMAC is d267f8a8067d3782ff436a14306acd5659e5705aad5b6083f84cdeb32890b453c3dd0992ede3e8abd3c0d4216bedba28d294024165e8a7f204c689dcf4eea3e6.");
   }
 }
 

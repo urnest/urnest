@@ -25,9 +25,9 @@ namespace crypt
 {
 namespace macs
 {
-namespace hmacsha1
+namespace hmacsha512
 {
-const unsigned int SIZE=20U;
+const unsigned int SIZE=64U;
 
 namespace
 {
@@ -39,7 +39,7 @@ gcry_mac_hd_ptr makeImpl(MacKey const& key)
     {
       gcry_mac_hd_t x(0);
       xju::crypt::verifySuccessful(
-        gcry_mac_open(&x,GCRY_MAC_HMAC_SHA1,0,0),XJU_TRACED);
+        gcry_mac_open(&x,GCRY_MAC_HMAC_SHA512,0,0),XJU_TRACED);
       result=std::move(gcry_mac_hd_ptr(x));
     }
     xju::crypt::verifySuccessful(
@@ -49,7 +49,7 @@ gcry_mac_hd_ptr makeImpl(MacKey const& key)
   catch(xju::Exception& e)
   {
     std::ostringstream s;
-    s << "create gcrypt HMAC SHA1 mac with key "
+    s << "create gcrypt HMAC SHA512 mac with key "
       << xju::format::join(key.value().begin(),key.value().end(),xju::format::Hex(""),"");
     e.addContext(s.str(),XJU_TRACED);
     throw;
@@ -61,7 +61,6 @@ gcry_mac_hd_ptr makeImpl(MacKey const& key)
 class Calculator : public MacCalculator
 {
 public:
-  // pre: key.value().size()==SIZE
   explicit Calculator(MacKey key) noexcept:
       key_(std::move(key)),
       impl_(makeImpl(key_))
@@ -72,6 +71,7 @@ public:
     return SIZE;
   }
 
+  // post: result.size() == SIZE
   virtual Mac calculateMac(std::vector<uint8_t> const& message) const override
   {
     try{
@@ -87,7 +87,7 @@ public:
     }
     catch(xju::Exception& e){
       std::ostringstream s;
-      s << "calculate hmac-sha1 MAC of " << message.size() << "-byte message"
+      s << "calculate hmac-sha512 MAC of " << message.size() << "-byte message"
         << " using MAC key " 
         << xju::format::join(key_.value().begin(),key_.value().end(),xju::format::Hex(""),"");
       e.addContext(s.str(),XJU_TRACED);
@@ -103,7 +103,6 @@ private:
 class Verifier : public MacVerifier
 {
 public:
-  // pre: key.size()==SIZE
   explicit Verifier(MacKey key) noexcept:
       key_(std::move(key)),
       impl_(makeImpl(key_))
@@ -135,7 +134,7 @@ public:
     }
     catch(xju::Exception& e){
       std::ostringstream s;
-      s << "verify hmac-sha1 MAC of " << message.size() << "-byte message"
+      s << "verify hmac-sha512 MAC of " << message.size() << "-byte message"
         << " using MAC key " 
         << xju::format::join(key_.value().begin(),key_.value().end(),xju::format::Hex(""),"")
         << " is " 

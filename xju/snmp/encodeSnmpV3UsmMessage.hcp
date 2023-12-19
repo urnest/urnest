@@ -1,0 +1,93 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <vector>
+#include <xju/snmp/SnmpV3Message.hh>
+#include <unistd.h>
+#include <xju/snmp/SnmpV3UsmSecurityParameters.hh>
+#include <xju/snmp/SnmpV3UsmAuthKey.hh>
+#include <xju/snmp/SnmpV3ScopedPDU.hh>
+#include <xju/crypt/MacCalculator.hh>
+#include <algorithm>
+#include <utility>
+#include <xju/snmp/encode.hh>
+#include <xju/snmp/SnmpV3UsmMessage.hh>
+#include <xju/crypt/MacKey.hh>
+
+namespace xju
+{
+namespace snmp
+{
+
+class NoAuthMacCalculator: public xju::crypt::MacCalculator
+{
+public:
+  explicit NoAuthMacCalculator(xju::crypt::MacKey const&)
+  {}
+  virtual size_t macSize() const noexcept override{
+    return 0U;
+  }
+  virtual xju::crypt::Mac calculateMac(std::vector<uint8_t> const& message) const override
+  {
+    return xju::crypt::Mac({});
+  }
+};
+
+// encodes an SnmpV3Message using usm auth and/or priv
+// - use NoAuthMacCalculator for noAuthNoPriv
+// - use e.g. xju::crypt::macs::hmacsha512::Calculator for auth[No]Priv
+// REVISIT: add priv
+template<class MacCalculator>
+std::vector<uint8_t> encodeSnmpV3UsmMessage(
+  SnmpV3UsmMessage x,
+  SnmpV3UsmAuthKey const& authKey) throw()
+{
+  size_t const ksize(64U);
+  xju::assert_less_equal(authKey._.size(),ksize);
+
+  std::vector<uint8_t> k1(ksize,0U);
+  std::transform(authKey._.begin(),authKey._.end(),
+                 k1.begin(),
+                 [](uint8_t x){ return x ^ 0x36; });
+  MacCalculator mac1{xju::crypt::MacKey(k1)};
+
+  std::vector<uint8_t> k2(ksize,0U);
+  std::transform(authKey._.begin(),authKey._.end(),
+                 k2.begin(),
+                 [](uint8_t x){ return x ^ 0x5C; });
+
+  MacCalculator mac2{xju::crypt::MacKey(k2)};
+
+  auto wholeMessage(
+    encode(SnmpV3Message(x.id_,
+                         x.maxSize_,
+                         x.flags_,
+                         SnmpV3Message::SecurityModel(3), //USM
+                         encode(x.securityParameters_,
+                                SnmpV3UsmAuthData(
+                                  std::vector<uint8_t>(mac2.macSize(),0U)),
+                                SnmpV3UsmPrivData({})),
+                         encode(x.scopedPDU_))));
+
+  auto const m1(mac1.calculateMac(wholeMessage));
+  auto const m2(mac2.calculateMac(m1._));
+  return encode(SnmpV3Message(x.id_,
+                              x.maxSize_,
+                              x.flags_,
+                              SnmpV3Message::SecurityModel(3), //USM
+                              encode(std::move(x.securityParameters_),
+                                     SnmpV3UsmAuthData(m2._),
+                                     SnmpV3UsmPrivData({})),
+                              encode(std::move(x.scopedPDU_))));
+}
+
+}
+}

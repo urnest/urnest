@@ -29,6 +29,7 @@ namespace xju
 namespace crypt
 {
 
+// multi-precision integer
 class I
 {
 private:

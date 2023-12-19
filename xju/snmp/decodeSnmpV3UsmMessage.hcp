@@ -1,0 +1,77 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/snmp/SnmpV3UsmMessage.hh>
+#include <vector>
+#include <xju/snmp/SnmpV3UsmAuthKey.hh>
+#include <xju/snmp/SnmpV3Message.hh>
+#include <xju/snmp/SnmpV3UsmSecurityParameters.hh>
+#include <xju/snmp/decodeSnmpV3UsmSecurityParameters.hh>
+#include <xju/snmp/encodeSnmpV3UsmMessage.hh>
+#include <sstream>
+#include <xju/Exception.hh>
+#include <xju/format.hh>
+#include <xju/snmp/decodeSnmpV3Message.hh>
+#include <xju/snmp/decodeSnmpV3ScopedPDU.hh>
+
+namespace xju
+{
+namespace snmp
+{
+
+
+// decodes an SnmpV3Message using usm auth and/or priv
+// - use NoAuthMacCalculator for noAuthNoPriv
+// - use e.g. xju::crypt::macs::hmacsha512::Calculator for auth[No]Priv
+// REVISIT: add priv
+template<class MacCalculator>
+SnmpV3UsmMessage decodeSnmpV3UsmMessage(
+  std::vector<uint8_t> const& data,
+  SnmpV3UsmAuthKey const& authKey) /*throw(
+    // malformed
+    xju::Exception)*/
+{
+  try{
+    SnmpV3Message const x(decodeSnmpV3Message(data));
+    SnmpV3UsmSecurityParameters const securityParameters(
+      std::get<0>(decodeSnmpV3UsmSecurityParameters(x.securityParameters_)));
+
+    SnmpV3UsmMessage const usmMessage(
+      x.id_,
+      x.maxSize_,
+      x.flags_,
+      securityParameters,
+      decodeSnmpV3ScopedPDU(x.scopedPduData_));
+                                   
+    std::vector<uint8_t> const y(encodeSnmpV3UsmMessage<MacCalculator>(
+                                   usmMessage,
+                                   authKey));
+    if (data != y){
+      std::ostringstream s;
+      s << "invalid MAC";
+      throw xju::Exception(s.str(),XJU_TRACED);
+    }
+    return usmMessage;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "decode snmp v3 usm-secured message, using "
+      << authKey._.size() << "-byte auth key, from (hex) data "
+      << xju::format::join(data.begin(),data.end(),
+                           xju::format::Hex(""),
+                           "");
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+}
+}

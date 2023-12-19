@@ -27,6 +27,18 @@ public:
   EngineTime  engineTime_;
   UserName userName_;
 
+  SnmpV3UsmSecurityParameters(
+    ContextEngineID engineID,
+    EngineBoots engineBoots,
+    EngineTime  engineTime,
+    UserName userName):
+      engineID_(std::move(engineID)),
+      engineBoots_(std::move(engineBoots)),
+      engineTime_(std::move(engineTime)),
+      userName_(std::move(userName))
+  {
+  }
+    
   friend bool operator<(SnmpV3UsmSecurityParameters const& x,
                         SnmpV3UsmSecurityParameters const& y) throw();
 };
