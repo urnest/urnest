@@ -61,6 +61,8 @@ gcry_mac_hd_ptr makeImpl(MacKey const& key)
 class Calculator : public MacCalculator
 {
 public:
+  static const unsigned int SIZE = SIZE;
+
   // pre: key.value().size()==SIZE
   explicit Calculator(MacKey key) noexcept:
       key_(std::move(key)),

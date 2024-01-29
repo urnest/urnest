@@ -44,8 +44,8 @@ void test1() {
               0,
                    {SnmpVar(Oid(Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")),std::make_shared<NullValue>())},
               0xa0))),
-        SnmpV3UsmAuthKey(Array<uint8_t, 64U>((uint8_t)0))),
-      SnmpV3UsmAuthKey(Array<uint8_t, 64U>((uint8_t)0))),
+        SnmpV3UsmAuthKey(std::vector<uint8_t>(MacCalculator::SIZE,0))),
+      SnmpV3UsmAuthKey(std::vector<uint8_t>(MacCalculator::SIZE,0))),
     SnmpV3UsmMessage(
       SnmpV3Message::ID(33),
       512,

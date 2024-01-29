@@ -30,6 +30,8 @@ namespace snmp
 class NoAuthMacCalculator: public xju::crypt::MacCalculator
 {
 public:
+  static const unsigned int SIZE = 0;
+
   explicit NoAuthMacCalculator(xju::crypt::MacKey const&)
   {}
   virtual size_t macSize() const noexcept override{
@@ -50,7 +52,7 @@ std::vector<uint8_t> encodeSnmpV3UsmMessage(
   SnmpV3UsmMessage x,
   SnmpV3UsmAuthKey const& authKey) throw()
 {
-  size_t const ksize(64U);
+  size_t const ksize(MacCalculator::SIZE);
   xju::assert_less_equal(authKey._.size(),ksize);
 
   std::vector<uint8_t> k1(ksize,0U);

@@ -19,7 +19,7 @@ namespace snmp
 {
 class SnmpV3UsmAuthKeyTag{};
 
-typedef Tagged<Array<uint8_t, 64U>, SnmpV3UsmAuthKeyTag> SnmpV3UsmAuthKey;
+typedef Tagged<std::vector<uint8_t>, SnmpV3UsmAuthKeyTag> SnmpV3UsmAuthKey;
 
 
 }
