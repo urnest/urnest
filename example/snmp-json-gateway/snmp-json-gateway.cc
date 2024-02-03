@@ -56,6 +56,16 @@
 #include <xju/snmp/SnmpV3ScopedPDU.hh>
 #include <xju/snmp/Counter32Value.hh>
 #include <xju/snmp/showFirstBytes.hh>
+#include <deque>
+#include <xju/startsWith.hh>
+#include <xju/split.hh>
+#include <hcp/parser.hh>
+#include <hcp/ast.hh>
+#include <xju/stringToUInt.hh>
+#include <xju/snmp/SnmpV3UsmMessage.hh>
+#include <xju/snmp/encodeSnmpV3UsmMessage.hh>
+#include <xju/snmp/decodeSnmpV3UsmMessage.hh>
+#include <xju/snmp/SnmpV3UsmAuthKey.hh>
 
 auto const same_line = xju::Utf8String("");
 
@@ -63,6 +73,35 @@ xju::snmp::EngineTime engineTimeNow() {
   return xju::snmp::EngineTime(
     std::chrono::duration_cast<std::chrono::seconds>(xju::now().time_since_epoch()).count());
 }
+
+class SnmpV3UsmCodec
+{
+public:
+  virtual ~SnmpV3UsmCodec(){}
+  virtual xju::snmp::SnmpV3UsmMessage decodeSnmpV3UsmMessage(std::vector<uint8_t> const& data) = 0;
+  virtual std::vector<uint8_t> encodeSnmpV3UsmMessage(xju::snmp::SnmpV3UsmMessage x) = 0;
+};
+
+class NoAuthSnmpV3UsmCodec:public SnmpV3UsmCodec
+{
+public:
+  explicit NoAuthSnmpV3UsmCodec(xju::snmp::SnmpV3UsmAuthKey authKey) noexcept:
+      authKey_(std::move(authKey))
+  {
+  }
+    
+  virtual xju::snmp::SnmpV3UsmMessage decodeSnmpV3UsmMessage(std::vector<uint8_t> const& data)
+  {
+    return xju::snmp::decodeSnmpV3UsmMessage<xju::snmp::NoAuthMacCalculator>(data, authKey_);
+  }
+      
+  virtual std::vector<uint8_t> encodeSnmpV3UsmMessage(xju::snmp::SnmpV3UsmMessage x){
+    return xju::snmp::encodeSnmpV3UsmMessage<xju::snmp::NoAuthMacCalculator>(x, authKey_);
+  }
+
+private:
+  xju::snmp::SnmpV3UsmAuthKey authKey_;  
+};
 
 void run(xju::ip::UDPSocket& socket){
   xju::json::Object portMessage({
@@ -357,20 +396,148 @@ std::optional<xju::ip::Port> parsePort(std::string const& x){
   }
 }
 
+struct AuthAlgNameTag{};
+typedef xju::Tagged<std::string,AuthAlgNameTag> AuthAlgName;
+
+struct AuthPasswordTag{};
+typedef xju::Tagged<std::string,AuthPasswordTag> AuthPassword;
+
+struct PrivAlgNameTag{};
+typedef xju::Tagged<std::string,PrivAlgNameTag> PrivAlgName;
+
+struct PrivPasswordTag{};
+typedef xju::Tagged<std::string,PrivPasswordTag> PrivPassword;
+
+struct Options
+{
+  std::optional<xju::snmp::ContextEngineID> v3usmEngineId_;
+  std::optional<std::pair<AuthAlgName,AuthPassword>> v3usmAuth_;
+  std::optional<std::pair<PrivAlgName,PrivPassword>> v3usmPriv_;
+};
+template<class Alg, class Pass>
+std::pair<Alg, Pass> parseV3UsmAlgAndPassword(std::string const& x)
+{
+  try{
+    auto const v(xju::split(x, ':'));
+    if (v.size()==1){
+      throw xju::Exception("missing ':'",XJU_TRACED);
+    }
+    return {Alg(v[0]), Pass(xju::format::join(v.begin()+1, v.end(), std::string(":")))};
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "parse " << xju::format::quote(x) << " like alg:password";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+xju::snmp::ContextEngineID parseEngineId(std::string const& x)
+{
+  try{
+    struct HexDigitPairTag{};
+    typedef hcp_ast::TaggedItem<HexDigitPairTag> HexDigitPair;
+    auto const ast(
+      hcp_parser::parseString(x.begin(), x.end(),
+                              hcp_parser::zeroOrMore() * hcp_parser::named<HexDigitPair>(
+                                "hex digit pair",
+                                hcp_parser::hexDigit()+hcp_parser::hexDigit())));
+    std::vector<uint8_t> result;
+    for(auto const hexDigitPair: hcp_ast::findChildrenOfType<HexDigitPair>(ast)){
+      result.push_back(xju::stringToUInt(reconstruct(hexDigitPair.get()), 16));
+    }
+    return xju::snmp::ContextEngineID(result);
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "parse " << xju::format::quote(x) << " assuming it is a hex-string like \"AA75F2\'";
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+// parse options from start of args (argv[1..])
+// - returns remaining args
+std::pair<Options, std::vector<std::string> > parseOptions(std::vector<std::string> const& args)
+{
+  try{
+    Options options;
+    std::deque<std::string> remaining(args.begin(), args.end());
+    auto const next = [&](std::string const& context){
+      if (!remaining.size())
+      {
+        xju::Exception e("ran out of arguments",XJU_TRACED);
+        e.addContext(context, XJU_TRACED);
+        throw e;
+      }
+      auto const result(remaining.front());
+      remaining.pop_front();
+      return result;
+    };
+    while(remaining.size() && xju::startsWith(remaining.front(), std::string("--")))
+    {
+      auto const a(remaining.front());
+      if (a=="--v3usm"){
+        options.v3usmEngineId_=parseEngineId(next("get --v3usm option value"));
+      }
+      else if (a=="--v3auth"){
+        options.v3usmAuth_=parseV3UsmAlgAndPassword<AuthAlgName,AuthPassword>(
+          next("parse --auth option value"));
+      }
+      else if (a=="--v3priv"){
+        options.v3usmAuth_=parseV3UsmAlgAndPassword<AuthAlgName,AuthPassword>(
+          next("parse --auth option value"));
+      }
+      else {
+        throw xju::Exception("unnkown option " + xju::format::quote(a), XJU_TRACED);
+      }
+    }
+    return std::make_pair(options, std::vector<std::string>(remaining.begin(), remaining.end()));
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "parse options from start of " << xju::format::join(args.begin(), args.end(), std::string(" "));
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
 int main(int argc, char* argv[])
 {
   if (argc != 2){
     std::cerr
-      << "usage: " << argv[0] << " port | 'auto'" << std::endl
-      << " - with specified udp port (or choose one):" << std::endl
-      << "   - write received snmp messages to stdout in json format" << std::endl
-      << "   - send stdin json format messages as snmp messages from specified port" << std::endl
-      << " - see snmp_json_gateway.py GatewayMessage for message format" << std::endl
-      << " - note writes { \"listening_on\": port } line to stdout once port is open" << std::endl;
+      << "usage: " << argv[0]
+      << R"--( [--v3usm engineid [ --auth authalg:auth-password [ --priv privalg:priv-password ]]] port | "auto"
+  - with specified udp port (or choose one):
+    - write received snmp messages to stdout in json format
+    - send stdin json format messages as snmp messages from specified port
+  - see snmp_json_gateway.py GatewayMessage for message format
+  - note writes { \"listening_on\": port } line to stdout once port is open
+  - snmp v3 USM support:
+     engineid; hex string e.g. AA83BF
+     authalg: "sha512"
+     auth-password: password verbatim (not hext string) e.g. fred
+     privalg: REVISIT
+     priv-password; password verbatim (not hext string) e.g. jock
+)--";
     return 1;
   }
   try{
-    std::optional<xju::ip::Port> const port(parsePort(argv[1]));
+    auto const r(parseOptions(std::vector<std::string>(argv+1, argv+argc)));
+    Options const options(r.first);
+    std::deque<std::string> remaining(r.second.begin(), r.second.end());
+    auto const next = [&](std::string const& context){
+      if (!remaining.size())
+      {
+        xju::Exception e("ran out of arguments",XJU_TRACED);
+        e.addContext(context, XJU_TRACED);
+        throw e;
+      }
+      auto const result(remaining.front());
+      remaining.pop_front();
+      return result;
+    };
+    
+    std::optional<xju::ip::Port> const port(parsePort(next("parse port arg")));
     if (port.has_value()){
       xju::ip::UDPSocket s(port.value());
       run(s);
