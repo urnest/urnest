@@ -66,6 +66,9 @@
 #include <xju/snmp/encodeSnmpV3UsmMessage.hh>
 #include <xju/snmp/decodeSnmpV3UsmMessage.hh>
 #include <xju/snmp/SnmpV3UsmAuthKey.hh>
+#include <xju/snmp/localiseSnmpV3UsmPassword.hh>
+#include <xju/crypt/macs/hmacsha512.hh>
+#include <xju/crypt/hashers/SHA512.hh>
 
 auto const same_line = xju::Utf8String("");
 
@@ -74,36 +77,95 @@ xju::snmp::EngineTime engineTimeNow() {
     std::chrono::duration_cast<std::chrono::seconds>(xju::now().time_since_epoch()).count());
 }
 
+struct AuthAlgNameTag{};
+typedef xju::Tagged<std::string,AuthAlgNameTag> AuthAlgName;
+
+struct AuthPasswordTag{};
+typedef xju::Tagged<std::string,AuthPasswordTag> AuthPassword;
+
+struct PrivAlgNameTag{};
+typedef xju::Tagged<std::string,PrivAlgNameTag> PrivAlgName;
+
+struct PrivPasswordTag{};
+typedef xju::Tagged<std::string,PrivPasswordTag> PrivPassword;
+
 class SnmpV3UsmCodec
 {
 public:
   virtual ~SnmpV3UsmCodec(){}
+  virtual xju::snmp::ContextEngineID engineId() = 0;
   virtual xju::snmp::SnmpV3UsmMessage decodeSnmpV3UsmMessage(std::vector<uint8_t> const& data) = 0;
   virtual std::vector<uint8_t> encodeSnmpV3UsmMessage(xju::snmp::SnmpV3UsmMessage x) = 0;
 };
 
-class NoAuthSnmpV3UsmCodec:public SnmpV3UsmCodec
+class NoSnmpV3UsmCodecImpl:public SnmpV3UsmCodec
 {
 public:
-  explicit NoAuthSnmpV3UsmCodec(xju::snmp::SnmpV3UsmAuthKey authKey) noexcept:
-      authKey_(std::move(authKey))
-  {
+  virtual xju::snmp::ContextEngineID engineId() {
+    throw xju::Exception("snmp-json-gateway not configured for snmp v3",XJU_TRACED);
   }
-    
   virtual xju::snmp::SnmpV3UsmMessage decodeSnmpV3UsmMessage(std::vector<uint8_t> const& data)
   {
-    return xju::snmp::decodeSnmpV3UsmMessage<xju::snmp::NoAuthMacCalculator>(data, authKey_);
+    throw xju::Exception("snmp-json-gateway not configured for snmp v3",XJU_TRACED);
   }
       
   virtual std::vector<uint8_t> encodeSnmpV3UsmMessage(xju::snmp::SnmpV3UsmMessage x){
-    return xju::snmp::encodeSnmpV3UsmMessage<xju::snmp::NoAuthMacCalculator>(x, authKey_);
+    throw xju::Exception("snmp-json-gateway not configured for snmp v3",XJU_TRACED);
+  }
+};
+
+
+template<class MacCalculator, class Hasher>
+class SnmpV3UsmCodecImpl:public SnmpV3UsmCodec
+{
+public:
+  explicit SnmpV3UsmCodecImpl(xju::snmp::ContextEngineID const& engineId,
+                              AuthPassword const& authPassword) noexcept:
+      engineId_(engineId),
+      authKey_(xju::snmp::localiseSnmpV3UsmPassword<Hasher>(engineId, xju::Password(authPassword._)))
+  {
+  }
+
+  virtual xju::snmp::ContextEngineID engineId() {
+    return engineId_;
+  }
+  virtual xju::snmp::SnmpV3UsmMessage decodeSnmpV3UsmMessage(std::vector<uint8_t> const& data)
+  {
+    return xju::snmp::decodeSnmpV3UsmMessage<MacCalculator>(data, authKey_);
+  }
+      
+  virtual std::vector<uint8_t> encodeSnmpV3UsmMessage(xju::snmp::SnmpV3UsmMessage x){
+    return xju::snmp::encodeSnmpV3UsmMessage<MacCalculator>(x, authKey_);
   }
 
 private:
+  xju::snmp::ContextEngineID engineId_;
   xju::snmp::SnmpV3UsmAuthKey authKey_;  
 };
 
-void run(xju::ip::UDPSocket& socket){
+typedef SnmpV3UsmCodecImpl<xju::crypt::macs::hmacsha512::Calculator, xju::crypt::hashers::SHA512> Sha512SnmpV3UsmCodecImpl;
+
+class NoAuthSnmpV3UsmCodecImpl:public SnmpV3UsmCodec
+{
+public:
+  virtual xju::snmp::ContextEngineID engineId() {
+    return xju::snmp::ContextEngineID({});
+  }
+  virtual xju::snmp::SnmpV3UsmMessage decodeSnmpV3UsmMessage(std::vector<uint8_t> const& data)
+  {
+    return xju::snmp::decodeSnmpV3UsmMessage<xju::snmp::NoAuthMacCalculator>(
+      data, xju::snmp::SnmpV3UsmAuthKey({}));
+  }
+      
+  virtual std::vector<uint8_t> encodeSnmpV3UsmMessage(xju::snmp::SnmpV3UsmMessage x){
+    return xju::snmp::encodeSnmpV3UsmMessage<xju::snmp::NoAuthMacCalculator>(
+      x, xju::snmp::SnmpV3UsmAuthKey({}));
+  }
+};
+
+
+void run(xju::ip::UDPSocket& socket,SnmpV3UsmCodec& snmpV3UsmCodec)
+{
   xju::json::Object portMessage({
       {xju::Utf8String("listening_on"),std::make_unique<xju::json::Number>(
           xju::format::str(socket.port().value()))}
@@ -113,7 +175,6 @@ void run(xju::ip::UDPSocket& socket){
   auto stop_receiver = xju::pipe(true,true);
 
   uint64_t usmStatsUnknownEngineIDs=0;
-  xju::snmp::ContextEngineID const ourEngineID(std::vector<uint8_t>{0x01,0x02,0x03,0x04});
   uint64_t const ourMaxSize(64000);
   auto from_snmp_to_stdout =
     [&](){
@@ -192,6 +253,32 @@ void run(xju::ip::UDPSocket& socket){
             failures.push_back(e);
           }
           try{
+            xju::snmp::SnmpV3UsmMessage x(snmpV3UsmCodec.decodeSnmpV3UsmMessage(buffer));
+            if (x.securityParameters_.engineID_!=snmpV3UsmCodec.engineId()){
+              ++usmStatsUnknownEngineIDs;
+              std::ostringstream s;
+              s << "expected engine id (hex) "
+                << xju::snmp::showFirstBytes(512,snmpV3UsmCodec.engineId()._)
+                << ", got " << xju::snmp::showFirstBytes(512,x.securityParameters_.engineID_._);
+              throw xju::Exception(s.str(),XJU_TRACED);
+            }
+            else {
+              std::cout << xju::json::format(*snmp_json_gateway::encode(
+                                               senderAndSize.first,
+                                               std::make_tuple(
+                                                 x.id_,
+                                                 x.maxSize_,
+                                                 x.securityParameters_.userName_,
+                                                 x.scopedPDU_)),same_line)
+                        << std::endl;
+              continue;
+            }
+          }
+          catch(xju::Exception& e){
+            failures.push_back(e);
+          }
+
+          try{
             auto const x(xju::snmp::decodeSnmpV3Message(buffer));
             try {
               if (x.securityModel_ != xju::snmp::SnmpV3Message::SecurityModel(3)) {
@@ -220,7 +307,7 @@ void run(xju::ip::UDPSocket& socket){
                       xju::snmp::SnmpV3Message::Flags(0),
                       xju::snmp::SnmpV3Message::SecurityModel(3),
                       xju::snmp::encode(
-                        xju::snmp::SnmpV3UsmSecurityParameters(ourEngineID,
+                        xju::snmp::SnmpV3UsmSecurityParameters(snmpV3UsmCodec.engineId(),
                                                                xju::snmp::EngineBoots(1),
                                                                engineTimeNow(),
                                                                xju::UserName("")),
@@ -228,7 +315,7 @@ void run(xju::ip::UDPSocket& socket){
                         xju::snmp::SnmpV3UsmPrivData({})),
                       xju::snmp::encode(
                         xju::snmp::SnmpV3ScopedPDU(
-                          ourEngineID,
+                          snmpV3UsmCodec.engineId(),
                           xju::snmp::ContextName({}),
                           xju::snmp::PDU(
                             scopedPDU.pdu_.requestId_,
@@ -244,34 +331,12 @@ void run(xju::ip::UDPSocket& socket){
                               m.data(),m.size(),deadline);
                 continue;
               }
-              else if (std::get<0>(sec).engineID_!=ourEngineID){
-                ++usmStatsUnknownEngineIDs;
-                std::ostringstream s;
-                s << "expected engine id (hex) " << xju::snmp::showFirstBytes(512,ourEngineID._)
-                  << ", got " << xju::snmp::showFirstBytes(512,std::get<0>(sec).engineID_._);
-                throw xju::Exception(s.str(),XJU_TRACED);
-              }
-              else {
-                try{
-                  auto const y(xju::snmp::decodeSnmpV3ScopedPDU(x.scopedPduData_));
-                  std::cout << xju::json::format(*snmp_json_gateway::encode(
-                                                   senderAndSize.first,
-                                                   std::make_tuple(
-                                                     x.id_,
-                                                     x.maxSize_,
-                                                     std::get<0>(sec).userName_,
-                                                     y)),same_line)
-                            << std::endl;
-                  continue;
-                }
-                catch(xju::Exception& e){
-                  std::ostringstream s;
-                  s << "decode snmp v3 scoped PDU from data "
-                    << xju::snmp::showFirstBytes(USHRT_MAX,x.scopedPduData_._);
-                  e.addContext(s.str(),XJU_TRACED);
-                  failures.push_back(e);
-                }
-              }
+              // REVISIT: should throw finer grained earlier v muli-term if statement
+              std::ostringstream s;
+              s << "message is not a snmpv3 engineid discovery request";
+              throw xju::Exception(s.str(),XJU_TRACED);
+              
+              
             }
             catch(xju::Exception& e){
               std::ostringstream s;
@@ -334,20 +399,16 @@ void run(xju::ip::UDPSocket& socket){
               xju::UserName const userName(std::get<2>(x));
               xju::snmp::SnmpV3ScopedPDU const scopedPDU(std::get<3>(x));
               
-              auto const m(xju::snmp::encode(
-                             xju::snmp::SnmpV3Message(
+              auto const m(snmpV3UsmCodec.encodeSnmpV3UsmMessage(
+                             xju::snmp::SnmpV3UsmMessage(
                                messageId,
                                max_size,
                                xju::snmp::SnmpV3Message::Flags(0),
-                               xju::snmp::SnmpV3Message::SecurityModel(3),
-                               xju::snmp::encode(
-                                 xju::snmp::SnmpV3UsmSecurityParameters(ourEngineID,
-                                                                        xju::snmp::EngineBoots(1),
-                                                                        engineTimeNow(),
-                                                                        userName),
-                                 xju::snmp::SnmpV3UsmAuthData({}),
-                                 xju::snmp::SnmpV3UsmPrivData({})),
-                               xju::snmp::encode(scopedPDU))));
+                               xju::snmp::SnmpV3UsmSecurityParameters(snmpV3UsmCodec.engineId(),
+                                                                      xju::snmp::EngineBoots(1),
+                                                                      engineTimeNow(),
+                                                                      userName),
+                               scopedPDU)));
               socket.sendTo(remoteEndpoint.first,remoteEndpoint.second,m.data(),m.size(),deadline);
               continue;
             }
@@ -395,18 +456,6 @@ std::optional<xju::ip::Port> parsePort(std::string const& x){
     throw;
   }
 }
-
-struct AuthAlgNameTag{};
-typedef xju::Tagged<std::string,AuthAlgNameTag> AuthAlgName;
-
-struct AuthPasswordTag{};
-typedef xju::Tagged<std::string,AuthPasswordTag> AuthPassword;
-
-struct PrivAlgNameTag{};
-typedef xju::Tagged<std::string,PrivAlgNameTag> PrivAlgName;
-
-struct PrivPasswordTag{};
-typedef xju::Tagged<std::string,PrivPasswordTag> PrivPassword;
 
 struct Options
 {
@@ -536,16 +585,40 @@ int main(int argc, char* argv[])
       remaining.pop_front();
       return result;
     };
-    
+    std::unique_ptr<SnmpV3UsmCodec> snmpV3UsmCodec(new NoSnmpV3UsmCodecImpl);
+    if (options.v3usmEngineId_.has_value()){
+      snmpV3UsmCodec = std::make_unique<NoAuthSnmpV3UsmCodecImpl>();
+      if (options.v3usmAuth_.has_value()){
+        auto const authAlgName(options.v3usmAuth_.value().first);
+        auto const authPassword(options.v3usmAuth_.value().second);
+        if (authAlgName == AuthAlgName("sha512")){
+          snmpV3UsmCodec=std::make_unique<Sha512SnmpV3UsmCodecImpl>(
+            options.v3usmEngineId_.value(), authPassword);
+        }
+        else{
+          std::ostringstream s;
+          s << "unknown auth alogirithm " << xju::format::quote(xju::format::str(authAlgName))
+            << " (only know \"sha512\")";
+          throw xju::Exception(s.str(),XJU_TRACED);
+        }
+      }
+      else if (options.v3usmPriv_.has_value()){
+        std::ostringstream s;
+        s << "priv alogirithm "
+          << xju::format::quote(xju::format::str(options.v3usmPriv_.value().first))
+          << " requested but snmpv3 USM privacy is not yet implemented";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+    }
     std::optional<xju::ip::Port> const port(parsePort(next("parse port arg")));
     if (port.has_value()){
       xju::ip::UDPSocket s(port.value());
-      run(s);
+      run(s, *snmpV3UsmCodec);
       return 0;
     }
     else{
       xju::ip::UDPSocket s;
-      run(s);
+      run(s, *snmpV3UsmCodec);
       return 0;
     }
   }
