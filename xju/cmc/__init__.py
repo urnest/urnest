@@ -21,13 +21,16 @@ import asyncio
 import sys
 import contextlib
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TypeVar, Iterable, Dict as _Dict, overload, Tuple, Sequence, Union, Optional
-from typing import ItemsView, KeysView
+from typing import ItemsView, KeysView, IO, Literal
 from typing import _GenericAlias # type: ignore  # mypy 1.0.0 :-(
 from types import GenericAlias
 from typing import Mapping, Type, List, Generic, Any, Callable, Awaitable, Self
 from collections import OrderedDict
 from collections.abc import Coroutine
+from subprocess import Popen, STDOUT, DEVNULL, PIPE
+from signal import SIGKILL
 import builtins
 import threading
 from xju.time import Duration
@@ -583,6 +586,60 @@ class Condition:
         assert l.m == self.m and l.active
         self.c.notify_all()
     pass
+
+_io_special_values:dict={
+    "PIPE": PIPE,
+    "DEVNULL": DEVNULL,
+    "STDOUT": STDOUT
+}
+
+class Process:
+    p: Popen | None=None
+
+    def __init__(self,
+                 argv:Sequence[str],
+                 executable: Path | None =None,
+                 stdin: Literal[None,"PIPE","DEVNULL"] | int | IO = None,
+                 stdout: Literal[None,"PIPE","DEVNULL"] | int | IO = None,
+                 stderr: Literal[None,"PIPE","DEVNULL","STDOUT"] | int | IO = None,
+                 env: dict[str,str]|None=None
+    ):
+        self.argv=argv
+        self.executable=executable
+        self.stdin=_io_special_values.get(stdin,stdin)
+        self.stdout=_io_special_values.get(stdout,stdout)
+        self.stderr=_io_special_values.get(stderr,stderr)
+        self.env=env
+        pass
+
+    def __str__(self) -> str:
+        return f'process {self.p} {self.argv}'
+
+    def __enter__(self) -> Popen:
+        '''start {self}'''
+        try:
+            self.p = Popen(self.argv,
+                           executable=self.executable,
+                           stdin=self.stdin,
+                           stdout=self.stdout,
+                           stderr=self.stderr,
+                           close_fds=True,
+                           shell=False,
+                           env=self.env)
+            return self.p
+        except Exception:
+            raise in_function_context(Process.__enter__,vars())
+        pass
+
+    def __exit__(self, t, e, b):
+        '''kill {self}'''
+        assert self.p is not None
+        self.p.kill()
+        self.p.wait()
+        pass
+
+    pass
+
 
 ACMT = TypeVar('ACMT', bound=contextlib.AbstractAsyncContextManager)
 T_ACMT = TypeVar('T_ACMT', bound=Type[contextlib.AbstractAsyncContextManager])

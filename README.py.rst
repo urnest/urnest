@@ -82,6 +82,13 @@ Various modules implemented to some broad principles:
 * time-based json-format record storage built on xju.cmc.tstore
 
 
+`xju.cmc.Process <xju/cmc/__init__.py>`_
+
+* subprocess (Popen wrapper)
+
+* see `xju/cmc/Process.py.test <xju/cmc/ThreadMutexLockCondition.py.test>`_ for sample code
+
+
 `xju.cmc.Thread/Mutex/Lock/Condition <xju/cmc/__init__.py>`_
 
 * threading primitives that encourage correct design
