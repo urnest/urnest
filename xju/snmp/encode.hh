@@ -16,11 +16,11 @@
 #include <xju/snmp/ContextName.hh>
 #include <xju/snmp/SnmpV3SecParams.hh>
 #include <xju/snmp/SnmpV3UsmSecurityParameters.hh>
-#include <xju/snmp/SnmpV3UsmAuthData.hh>
 #include <xju/snmp/SnmpV3UsmPrivData.hh>
 #include <memory>
 #include <utility>
 #include <xju/snmp/SnmpV3ScopedPduData.hh>
+#include <xju/crypt/Mac.hh>
 
 
 namespace xju
@@ -64,7 +64,7 @@ SnmpV3ScopedPduData encode(SnmpV3ScopedPDU scopedPDU) throw();
 class SnmpV3UsmSecurityParameters;
 SnmpV3SecParams encode(
   SnmpV3UsmSecurityParameters const& genericParams,
-  SnmpV3UsmAuthData const& preEncodedAuthParams,
+  xju::crypt::Mac const& preEncodedAuthParams,
   SnmpV3UsmPrivData const& preEncodedPrivParams) throw();
 
 }

@@ -33,6 +33,7 @@ public:
   typedef xju::Int<SecurityModelTag,uint32_t> SecurityModel;
 
   enum Flags{
+    NO_AUTH = 0x00,
     AUTH = 0x01,
     AUTH_PRIV = 0x03,
     REPORTABLE = 0x04

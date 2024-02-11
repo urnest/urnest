@@ -34,31 +34,58 @@ namespace snmp
 // REVISIT: add priv
 template<class MacCalculator>
 SnmpV3UsmMessage decodeSnmpV3UsmMessage(
-  std::vector<uint8_t> const& data,
+  std::vector<uint8_t> data,
   SnmpV3UsmAuthKey const& authKey) /*throw(
     // malformed
     xju::Exception)*/
 {
   try{
-    SnmpV3Message const x(decodeSnmpV3Message(data));
-    SnmpV3UsmSecurityParameters const securityParameters(
-      std::get<0>(decodeSnmpV3UsmSecurityParameters(x.securityParameters_)));
+    std::pair<SnmpV3Message, size_t> const x(decodeSnmpV3Message(data));
+    auto const y(decodeSnmpV3UsmSecurityParameters(x.first.securityParameters_));
 
-    SnmpV3UsmMessage const usmMessage(
-      x.id_,
-      x.maxSize_,
-      x.flags_,
-      securityParameters,
-      decodeSnmpV3ScopedPDU(x.scopedPduData_));
-                                   
-    std::vector<uint8_t> const y(encodeSnmpV3UsmMessage<MacCalculator>(
-                                   usmMessage,
-                                   authKey));
-    if (data != y){
+    xju::crypt::Mac const receivedMac(std::get<1>(y)._);
+    MacCalculator mc(xju::crypt::MacKey(authKey._));
+    if (receivedMac._.size() != mc.macSize()){
       std::ostringstream s;
-      s << "invalid MAC";
+      s << "expected MAC of size " << mc.macSize() << " but got MAC of size "
+        << receivedMac._.size();
       throw xju::Exception(s.str(),XJU_TRACED);
     }
+    SnmpV3UsmMessage const usmMessage(
+      x.first.id_,
+      x.first.maxSize_,
+      x.first.flags_,
+      std::get<0>(y),
+      decodeSnmpV3ScopedPDU(x.first.scopedPduData_));
+
+    try{
+      size_t const macOffsetInData(x.second+std::get<2>(y));
+      // check we got the offset right
+      xju::assert_equal(
+        std::vector<uint8_t>(data.begin()+macOffsetInData,
+                             data.begin()+macOffsetInData+mc.macSize()),
+        receivedMac._);
+      std::fill(data.begin()+macOffsetInData, data.begin()+macOffsetInData+mc.macSize(),0U);
+      xju::crypt::Mac const calculatedMac(mc.calculateMac(data));
+      if (receivedMac != calculatedMac){
+        std::ostringstream s;
+        s << "expected MAC "
+          << xju::format::join(calculatedMac._.begin(),calculatedMac._.end(),
+                               xju::format::Hex(""), "")
+          << "is not equal to received MAC "
+          << xju::format::join(receivedMac._.begin(),receivedMac._.end(),
+                               xju::format::Hex(""), "");
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "authenticate, i.e. verify MAC of, received SnmpV3UsmMessage "
+        << usmMessage;
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+      
     return usmMessage;
   }
   catch(xju::Exception& e){

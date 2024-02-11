@@ -25,9 +25,9 @@ namespace crypt
 {
 namespace macs
 {
-namespace hmacsha512
+namespace hmacsha256
 {
-const unsigned int SIZE=64U;
+const unsigned int SIZE=32U;
 
 namespace
 {
@@ -38,7 +38,7 @@ gcry_mac_hd_ptr makeImpl(MacKey const& key)
     {
       gcry_mac_hd_t x(0);
       xju::crypt::verifySuccessful(
-        gcry_mac_open(&x,GCRY_MAC_HMAC_SHA512,0,0),XJU_TRACED);
+        gcry_mac_open(&x,GCRY_MAC_HMAC_SHA256,0,0),XJU_TRACED);
       result=std::move(gcry_mac_hd_ptr(x));
     }
     xju::crypt::verifySuccessful(
@@ -48,7 +48,7 @@ gcry_mac_hd_ptr makeImpl(MacKey const& key)
   catch(xju::Exception& e)
   {
     std::ostringstream s;
-    s << "create gcrypt HMAC SHA512 mac with key "
+    s << "create gcrypt HMAC SHA256 mac with key "
       << xju::format::join(key.value().begin(),key.value().end(),xju::format::Hex(""),"");
     e.addContext(s.str(),XJU_TRACED);
     throw;
@@ -60,7 +60,7 @@ gcry_mac_hd_ptr makeImpl(MacKey const& key)
 class Calculator : public MacCalculator
 {
 public:
-  static const unsigned int SIZE = 64U;
+  static const unsigned int SIZE = 32U;
 
   explicit Calculator(MacKey key) noexcept:
       key_(std::move(key)),
@@ -88,7 +88,7 @@ public:
     }
     catch(xju::Exception& e){
       std::ostringstream s;
-      s << "calculate hmac-sha512 MAC of " << message.size() << "-byte message"
+      s << "calculate hmac-sha256 MAC of " << message.size() << "-byte message"
         << " using MAC key " 
         << xju::format::join(key_.value().begin(),key_.value().end(),xju::format::Hex(""),"");
       e.addContext(s.str(),XJU_TRACED);
@@ -97,7 +97,7 @@ public:
   }
 
   virtual std::string name() const override {
-    return "HMAC-SHA-512";
+    return "HMAC-SHA-256";
   }
   
 private:
@@ -139,7 +139,7 @@ public:
     }
     catch(xju::Exception& e){
       std::ostringstream s;
-      s << "verify hmac-sha512 MAC of " << message.size() << "-byte message"
+      s << "verify hmac-sha256 MAC of " << message.size() << "-byte message"
         << " using MAC key " 
         << xju::format::join(key_.value().begin(),key_.value().end(),xju::format::Hex(""),"")
         << " is " 

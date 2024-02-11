@@ -41,6 +41,7 @@ public:
   {
     return xju::crypt::Mac({});
   }
+  virtual std::string name() const { return "none"; }
 };
 
 // encodes an SnmpV3Message using usm auth and/or priv
@@ -52,21 +53,7 @@ std::vector<uint8_t> encodeSnmpV3UsmMessage(
   SnmpV3UsmMessage x,
   SnmpV3UsmAuthKey const& authKey) throw()
 {
-  size_t const ksize(MacCalculator::SIZE);
-  xju::assert_less_equal(authKey._.size(),ksize);
-
-  std::vector<uint8_t> k1(ksize,0U);
-  std::transform(authKey._.begin(),authKey._.end(),
-                 k1.begin(),
-                 [](uint8_t x){ return x ^ 0x36; });
-  MacCalculator mac1{xju::crypt::MacKey(k1)};
-
-  std::vector<uint8_t> k2(ksize,0U);
-  std::transform(authKey._.begin(),authKey._.end(),
-                 k2.begin(),
-                 [](uint8_t x){ return x ^ 0x5C; });
-
-  MacCalculator mac2{xju::crypt::MacKey(k2)};
+  MacCalculator mac{xju::crypt::MacKey(authKey._)};
 
   auto wholeMessage(
     encode(SnmpV3Message(x.id_,
@@ -74,19 +61,18 @@ std::vector<uint8_t> encodeSnmpV3UsmMessage(
                          x.flags_,
                          SnmpV3Message::SecurityModel(3), //USM
                          encode(x.securityParameters_,
-                                SnmpV3UsmAuthData(
-                                  std::vector<uint8_t>(mac2.macSize(),0U)),
+                                xju::crypt::Mac(
+                                  std::vector<uint8_t>(mac.macSize(),0U)),
                                 SnmpV3UsmPrivData({})),
                          encode(x.scopedPDU_))));
 
-  auto const m1(mac1.calculateMac(wholeMessage));
-  auto const m2(mac2.calculateMac(m1._));
+  auto const m(mac.calculateMac(wholeMessage));
   return encode(SnmpV3Message(x.id_,
                               x.maxSize_,
                               x.flags_,
                               SnmpV3Message::SecurityModel(3), //USM
                               encode(std::move(x.securityParameters_),
-                                     SnmpV3UsmAuthData(m2._),
+                                     xju::crypt::Mac(m._),
                                      SnmpV3UsmPrivData({})),
                               encode(std::move(x.scopedPDU_))));
 }

@@ -13,6 +13,8 @@
 #include <xju/snmp/EngineBoots.hh>
 #include <xju/snmp/EngineTime.hh>
 #include <xju/UserName.hh>
+#include <iostream>
+#include <xju/snmp/hexStr.hh>
 
 namespace xju
 {
@@ -41,6 +43,15 @@ public:
     
   friend bool operator<(SnmpV3UsmSecurityParameters const& x,
                         SnmpV3UsmSecurityParameters const& y) throw();
+
+  friend std::ostream& operator<<(std::ostream& s, SnmpV3UsmSecurityParameters const& b) noexcept
+  {
+    return s << "{ engine id: " << hexStr(b.engineID_)
+             << ", engine boots: " << b.engineBoots_
+             << ", engine time: " << b.engineTime_
+             << ", user name: " << b.userName_
+             << " }";
+  }
 };
 
 }

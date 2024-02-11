@@ -13,13 +13,17 @@
 #include <xju/snmp/SnmpV3Message.hh>
 #include <vector>
 #include <cinttypes>
+#include <unistd.h>
+#include <utility>
 
 namespace xju
 {
 namespace snmp
 {
 
-SnmpV3Message decodeSnmpV3Message(
+std::pair<SnmpV3Message,
+          size_t> // offset of securityParameters in data
+decodeSnmpV3Message(
     std::vector<uint8_t> const& data) /*throw(
     // malformed
     xju::Exception)*/;

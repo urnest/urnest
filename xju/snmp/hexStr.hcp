@@ -9,17 +9,27 @@
 //
 
 
+#include <string>
 #include <xju/Tagged.hh>
-#include <vector>
 #include <cinttypes>
+#include <xju/format.hh>
 
 namespace xju
 {
 namespace snmp
 {
 
-class SnmpV3UsmAuthDataTag{};
-typedef xju::Tagged<std::vector<uint8_t>, SnmpV3UsmAuthDataTag> SnmpV3UsmAuthData;
+
+std::string hexStr(std::vector<uint8_t> const& x)
+{
+  return "(hex)"+xju::format::join(x.begin(),x.end(),xju::format::Hex(""),"");
+}
+
+template<class Tag>
+std::string hexStr(xju::Tagged<std::vector<uint8_t>,Tag> const& x)
+{
+  return hexStr(x._);
+}
 
 }
 }

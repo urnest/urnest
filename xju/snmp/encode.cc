@@ -43,7 +43,6 @@
 #include <xju/snmp/SnmpV3UsmSecurityParameters.hh>
 #include <xju/snmp/encodeSnmpV1Message.hh>
 #include <xju/snmp/SnmpV3SecParams.hh>
-#include <xju/snmp/SnmpV3UsmAuthData.hh>
 #include <xju/snmp/SnmpV3UsmPrivData.hh>
 #include <xju/snmp/makePDUSequence.hh>
 
@@ -417,7 +416,7 @@ SnmpV3ScopedPduData encode(SnmpV3ScopedPDU x) throw()
 
 SnmpV3SecParams encode(
   SnmpV3UsmSecurityParameters const& genericParams,
-  SnmpV3UsmAuthData const& preEncodedAuthParams,
+  xju::crypt::Mac const& preEncodedAuthParams,
   SnmpV3UsmPrivData const& preEncodedPrivParams) throw()
 {
   typedef std::shared_ptr<Value const> vp;

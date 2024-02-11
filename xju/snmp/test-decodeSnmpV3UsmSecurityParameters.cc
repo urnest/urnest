@@ -18,6 +18,7 @@
 #include <xju/snmp/EngineBoots.hh>
 #include <xju/UserName.hh>
 #include <xju/snmp/SnmpV3SecParams.hh>
+#include <xju/crypt/Mac.hh>
 
 namespace xju
 {
@@ -41,8 +42,9 @@ void test1() {
   xju::assert_equal(std::get<0>(y).engineBoots_, EngineBoots(0x775));
   xju::assert_equal(std::get<0>(y).engineTime_, EngineTime(0x60fd));
   xju::assert_equal(std::get<0>(y).userName_, UserName("fred"));
-  xju::assert_equal(std::get<1>(y), SnmpV3UsmAuthData(std::vector<uint8_t>{}));
-  xju::assert_equal(std::get<2>(y), SnmpV3UsmPrivData(std::vector<uint8_t>{}));
+  xju::assert_equal(std::get<1>(y), xju::crypt::Mac(std::vector<uint8_t>{}));
+  xju::assert_equal(std::get<2>(y), 37U);
+  xju::assert_equal(std::get<3>(y), SnmpV3UsmPrivData(std::vector<uint8_t>{}));
 }
 
 void test2() throw()

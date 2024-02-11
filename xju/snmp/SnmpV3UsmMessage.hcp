@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <xju/snmp/SnmpV3UsmSecurityParameters.hh>
 #include <xju/snmp/SnmpV3ScopedPDU.hh>
+#include <iostream>
 
 namespace xju
 {
@@ -40,6 +41,16 @@ public:
   {}
 
   friend bool operator<(SnmpV3UsmMessage const& a, SnmpV3UsmMessage const& b) noexcept;
+
+  friend std::ostream& operator<<(std::ostream& s, SnmpV3UsmMessage const& b) noexcept
+  {
+    return s << "{ id: " << b.id_
+             << ", maxSize: " << b.maxSize_
+             << ", flags: " << b.flags_
+             << ", sec params: " << b.securityParameters_
+             << ", scoped pdu: " << b.scopedPDU_
+             << " }";
+  }
 };
 
 }

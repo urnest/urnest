@@ -13,6 +13,9 @@
 #include <xju/snmp/ContextName.hh>
 #include <xju/snmp/PDU.hh>
 #include <utility> //impl
+#include <iostream>
+#include <xju/snmp/hexStr.hh>
+#include <xju/format.hh>
 
 namespace xju
 {
@@ -36,6 +39,16 @@ public:
   PDU pdu_;
 
   friend bool operator<(SnmpV3ScopedPDU const& a, SnmpV3ScopedPDU const& b) noexcept;
+
+  friend std::ostream& operator<<(std::ostream& s, SnmpV3ScopedPDU const& x) noexcept
+  {
+    return s << "{ context engine id: " << hexStr(x.contextEngineID_)
+             << ", context name: " << xju::format::quote(xju::format::cEscapeString(
+                                                           xju::format::str(x.contextName_)))
+             << ", pdu: " << x.pdu_
+             << " }";
+  }
+
 };
 
 

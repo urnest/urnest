@@ -8,16 +8,23 @@ from xju.misc import UserName
 from typing import Union
 
 @dataclass
+class ListeningOn:
+    """first line of stdout from snmp-json-gateway"""
+    listening_on: int
+    pass
+
+@dataclass
 class GatewayMessage:
     # dotted ip v4 address, udp port
-    source: tuple[str, int]
-    # dotted ip v4 address, udp port
-    dest: tuple[str, int]
+    remote_endpoint: tuple[str, int]
     message: Union[
         "SnmpV1GetRequest", "SnmpV1GetNextRequest", "SnmpV1SetRequest", "SnmpV1Response",
         "SnmpV2cGetRequest", "SnmpV2cGetNextRequest", "SnmpV2cGetBulkRequest",
-        "SnmpV2cSetRequest", "SnmpV2cResponse"]
-    
+        "SnmpV2cSetRequest", "SnmpV2cResponse",
+        "SnmpV3GetRequest", "SnmpV3GetNextRequest", "SnmpV3GetBulkRequest",
+        "SnmpV3SetRequest", "SnmpV3Response"]
+    pass
+
 class Community(Str["CommunityTag"]):
     """snmp community"""
     pass

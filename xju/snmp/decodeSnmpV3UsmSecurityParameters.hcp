@@ -24,19 +24,19 @@
 #include <xju/snmp/extractRemainder.hh> //impl
 #include <xju/snmp/formatLength.hh> //impl
 #include <xju/snmp/SnmpV3SecParams.hh>
-#include <xju/snmp/SnmpV3UsmAuthData.hh>
 #include <xju/snmp/SnmpV3UsmPrivData.hh>
+#include <xju/crypt/Mac.hh>
 
 namespace xju
 {
 namespace snmp
 {
 std::tuple<SnmpV3UsmSecurityParameters,
-           SnmpV3UsmAuthData, // preEncodedAuthParams
-           SnmpV3UsmPrivData>  // preEncodedPrivParams
+           xju::crypt::Mac,   // preEncodedAuthParams is Usm message MAC
+           size_t,            // offst of mac bytes in data
+           SnmpV3UsmPrivData> // preEncodedPrivParams
 decodeSnmpV3UsmSecurityParameters(SnmpV3SecParams const& data) /*throw(xju::Exception)*/
 {
-  
   DecodeIterator const at(data._);
   std::vector<std::string> ok;
   try{
@@ -82,6 +82,8 @@ decodeSnmpV3UsmSecurityParameters(SnmpV3SecParams const& data) /*throw(xju::Exce
             }
             try {
               auto preEncodedAuthParams(decodeStringValue(userName.second));
+              size_t const macOffset(at.remaining() - preEncodedAuthParams.second.remaining() -
+                                      preEncodedAuthParams.first.size());
               try {
                 auto preEncodedPrivParams(decodeStringValue(preEncodedAuthParams.second));
                 try{
@@ -100,7 +102,8 @@ decodeSnmpV3UsmSecurityParameters(SnmpV3SecParams const& data) /*throw(xju::Exce
                       EngineBoots(engineBoots.first),
                       EngineTime(engineTime.first),
                       UserName(std::string(userName.first.begin(), userName.first.end()))),
-                    SnmpV3UsmAuthData(std::move(preEncodedAuthParams.first)),
+                    xju::crypt::Mac(std::move(preEncodedAuthParams.first)),
+                    macOffset,
                     SnmpV3UsmPrivData(std::move(preEncodedPrivParams.first)));
                 }
                 catch(xju::Exception const& e) {

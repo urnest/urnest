@@ -29,7 +29,9 @@ namespace xju
 namespace snmp
 {
 
-SnmpV3Message decodeSnmpV3Message(
+std::pair<SnmpV3Message,
+          size_t> // offset of securityParameters in data
+decodeSnmpV3Message(
   std::vector<uint8_t> const& data) /*throw(
     SnmpVersionMismatch,
     RequestTypeMismatch,
@@ -101,6 +103,8 @@ SnmpV3Message decodeSnmpV3Message(
                 }
                 try{
                   auto const securityParameters(decodeStringValue(securityModel.second));
+                  size_t offsetOfSecurityParametersInData(
+                    start.remaining() - securityParameters.second.remaining() - securityParameters.first.size());
                   try{
                     auto const scopedPduData(decodeSequenceTypeAndLength(securityParameters.second));
                     SnmpV3Message::Flags const flags = (SnmpV3Message::Flags)msgFlags.first[0];
@@ -133,13 +137,15 @@ SnmpV3Message decodeSnmpV3Message(
                         throw xju::Exception(s.str(),XJU_TRACED);
                       }
                       std::vector<uint8_t> scopedPDU(extractRemainder(securityParameters.second));
-                      return SnmpV3Message(
-                        SnmpV3Message::ID(id.first),
-                        maxSize.first,
-                        (SnmpV3Message::Flags)msgFlags.first[0],
-                        SnmpV3Message::SecurityModel(securityModel.first),
-                        SnmpV3SecParams(std::move(securityParameters.first)),
-                        SnmpV3ScopedPduData(std::move(scopedPDU)));
+                      return std::make_pair(
+                        SnmpV3Message(
+                          SnmpV3Message::ID(id.first),
+                          maxSize.first,
+                          (SnmpV3Message::Flags)msgFlags.first[0],
+                          SnmpV3Message::SecurityModel(securityModel.first),
+                          SnmpV3SecParams(std::move(securityParameters.first)),
+                          SnmpV3ScopedPduData(std::move(scopedPDU))),
+                        offsetOfSecurityParametersInData);
                     }
                     catch(xju::Exception const& e){
                       std::ostringstream s;
