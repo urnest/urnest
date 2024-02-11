@@ -32,7 +32,7 @@ namespace snmp
 // - use NoAuthMacCalculator for noAuthNoPriv
 // - use e.g. xju::crypt::macs::hmacsha512::Calculator for auth[No]Priv
 // REVISIT: add priv
-template<class MacCalculator>
+template<class MacCalculator, unsigned int TruncateMacTo>
 SnmpV3UsmMessage decodeSnmpV3UsmMessage(
   std::vector<uint8_t> data,
   SnmpV3UsmAuthKey const& authKey) /*throw(
@@ -45,9 +45,9 @@ SnmpV3UsmMessage decodeSnmpV3UsmMessage(
 
     xju::crypt::Mac const receivedMac(std::get<1>(y)._);
     MacCalculator mc(xju::crypt::MacKey(authKey._));
-    if (receivedMac._.size() != mc.macSize()){
+    if (receivedMac._.size() != TruncateMacTo){
       std::ostringstream s;
-      s << "expected MAC of size " << mc.macSize() << " but got MAC of size "
+      s << "expected MAC of size " << TruncateMacTo << " but got MAC of size "
         << receivedMac._.size();
       throw xju::Exception(s.str(),XJU_TRACED);
     }
@@ -63,10 +63,11 @@ SnmpV3UsmMessage decodeSnmpV3UsmMessage(
       // check we got the offset right
       xju::assert_equal(
         std::vector<uint8_t>(data.begin()+macOffsetInData,
-                             data.begin()+macOffsetInData+mc.macSize()),
+                             data.begin()+macOffsetInData+TruncateMacTo),
         receivedMac._);
-      std::fill(data.begin()+macOffsetInData, data.begin()+macOffsetInData+mc.macSize(),0U);
-      xju::crypt::Mac const calculatedMac(mc.calculateMac(data));
+      std::fill(data.begin()+macOffsetInData, data.begin()+macOffsetInData+TruncateMacTo,0U);
+      xju::crypt::Mac calculatedMac(mc.calculateMac(data));
+      calculatedMac._.resize(TruncateMacTo);
       if (receivedMac != calculatedMac){
         std::ostringstream s;
         s << "expected MAC "

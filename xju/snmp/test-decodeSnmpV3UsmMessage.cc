@@ -20,11 +20,11 @@ namespace xju
 namespace snmp
 {
 
-template<class MacCalculator>
+template<class MacCalculator, unsigned int TruncateMacTo>
 void test1() {
   xju::assert_equal(
-    decodeSnmpV3UsmMessage<MacCalculator>(
-      encodeSnmpV3UsmMessage<MacCalculator>(
+    decodeSnmpV3UsmMessage<MacCalculator, TruncateMacTo>(
+      encodeSnmpV3UsmMessage<MacCalculator, TruncateMacTo>(
         SnmpV3UsmMessage(
           SnmpV3Message::ID(33),
           512,
@@ -75,8 +75,8 @@ using namespace xju::snmp;
 int main(int argc, char* argv[])
 {
   unsigned int n(0);
-  test1<NoAuthMacCalculator>(), ++n;
-  test1<xju::crypt::macs::hmacsha512::Calculator>(), ++n;
+  test1<NoAuthMacCalculator, 0U>(), ++n;
+  test1<xju::crypt::macs::hmacsha512::Calculator, 48U>(), ++n;
   std::cout << "PASS - " << n << " steps" << std::endl;
   return 0;
 }

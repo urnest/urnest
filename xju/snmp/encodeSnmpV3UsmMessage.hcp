@@ -48,7 +48,7 @@ public:
 // - use NoAuthMacCalculator for noAuthNoPriv
 // - use e.g. xju::crypt::macs::hmacsha512::Calculator for auth[No]Priv
 // REVISIT: add priv
-template<class MacCalculator>
+template<class MacCalculator, unsigned int TruncateMacTo>
 std::vector<uint8_t> encodeSnmpV3UsmMessage(
   SnmpV3UsmMessage x,
   SnmpV3UsmAuthKey const& authKey) throw()
@@ -62,11 +62,12 @@ std::vector<uint8_t> encodeSnmpV3UsmMessage(
                          SnmpV3Message::SecurityModel(3), //USM
                          encode(x.securityParameters_,
                                 xju::crypt::Mac(
-                                  std::vector<uint8_t>(mac.macSize(),0U)),
+                                  std::vector<uint8_t>(TruncateMacTo,0U)),
                                 SnmpV3UsmPrivData({})),
                          encode(x.scopedPDU_))));
 
-  auto const m(mac.calculateMac(wholeMessage));
+  auto m(mac.calculateMac(wholeMessage));
+  m._.resize(TruncateMacTo);
   return encode(SnmpV3Message(x.id_,
                               x.maxSize_,
                               x.flags_,

@@ -128,7 +128,7 @@ public:
 };
 
 
-template<class MacCalculator, class Hasher>
+template<class MacCalculator, unsigned int TruncateMacTo, class Hasher>
 class SnmpV3UsmCodecImpl:public SnmpV3UsmCodec
 {
 public:
@@ -145,7 +145,8 @@ public:
   virtual xju::snmp::SnmpV3UsmMessage decodeSnmpV3UsmMessage(std::vector<uint8_t> const& data)
   {
     try{
-      auto const result(xju::snmp::decodeSnmpV3UsmMessage<MacCalculator>(data, authKey_));
+      auto const result(xju::snmp::decodeSnmpV3UsmMessage<MacCalculator, TruncateMacTo>(
+                          data, authKey_));
       if(result.flags_ && xju::snmp::SnmpV3Message::Flags::AUTH !=
          xju::snmp::SnmpV3Message::Flags::AUTH
       ){
@@ -159,7 +160,8 @@ public:
       std::ostringstream s;
       s << "decode snmp v3 USM message using "
         << MacCalculator(xju::crypt::MacKey(authKey_._)).name()
-        << " MAC algorithm and " << authKey_._.size()
+        << " MAC algorithm truncating output to " << TruncateMacTo << " bytes and "
+        << authKey_._.size()
         << "-byte key from data " << xju::snmp::hexStr(data);
       e.addContext(s.str(),XJU_TRACED);
       throw;
@@ -169,7 +171,7 @@ public:
   virtual std::vector<uint8_t> encodeSnmpV3UsmMessage(xju::snmp::SnmpV3UsmMessage x){
     xju::assert_equal(x.flags_ && xju::snmp::SnmpV3Message::Flags::AUTH,
                       xju::snmp::SnmpV3Message::Flags::AUTH);
-    return xju::snmp::encodeSnmpV3UsmMessage<MacCalculator>(x, authKey_);
+    return xju::snmp::encodeSnmpV3UsmMessage<MacCalculator, TruncateMacTo>(x, authKey_);
   }
   virtual xju::snmp::SnmpV3Message::Flags authFlag() noexcept
   {
@@ -194,7 +196,7 @@ public:
   virtual xju::snmp::SnmpV3UsmMessage decodeSnmpV3UsmMessage(std::vector<uint8_t> const& data)
   {
     try{
-      return xju::snmp::decodeSnmpV3UsmMessage<xju::snmp::NoAuthMacCalculator>(
+      return xju::snmp::decodeSnmpV3UsmMessage<xju::snmp::NoAuthMacCalculator, 0U>(
         data, xju::snmp::SnmpV3UsmAuthKey({}));
     }
     catch(xju::Exception& e){
@@ -206,7 +208,7 @@ public:
   }
       
   virtual std::vector<uint8_t> encodeSnmpV3UsmMessage(xju::snmp::SnmpV3UsmMessage x){
-    return xju::snmp::encodeSnmpV3UsmMessage<xju::snmp::NoAuthMacCalculator>(
+    return xju::snmp::encodeSnmpV3UsmMessage<xju::snmp::NoAuthMacCalculator, 0U>(
       x, xju::snmp::SnmpV3UsmAuthKey({}));
   }
   virtual xju::snmp::SnmpV3Message::Flags authFlag() noexcept
@@ -219,68 +221,15 @@ private:
 };
 
 
-template<class MacCalc, unsigned int OutputSize>
-class SnmpMacCalculator : public xju::crypt::MacCalculator
-{
-public:
-  explicit SnmpMacCalculator(xju::crypt::MacKey key) noexcept:
-      key_(std::move(key))
-  {
-  }
-  
-  virtual size_t macSize() const noexcept override{
-    return OutputSize;
-  }
-
-  virtual xju::crypt::Mac calculateMac(std::vector<uint8_t> const& message) const override
-  {
-    MacCalc calc(key_);
-    try{
-      auto result(calc.calculateMac(message));
-      result._.resize(OutputSize);
-      return result;
-    }
-    catch(xju::Exception& e){
-      std::ostringstream s;
-      s << "calculate snmp rfc3414/rfc7860 " <<  calc.name()
-        << "MAC (truncated to " << OutputSize << " bytes) of " << message.size() << "-byte message"
-        << " using " << key_.value().size() << "-byte MAC key " ;
-      e.addContext(s.str(),XJU_TRACED);
-      throw;
-    }
-  }
-
-  virtual std::string name() const override {
-    std::ostringstream s;
-    s << "snmp mac calculator using "
-      << MacCalc(key_).name()
-      << " truncated to "
-      << OutputSize;
-    return s.str();
-  }
-  
-private:
-  xju::crypt::MacKey const key_;
-};
-
-// OutputSizes per rfc3414, rfc7860
-typedef SnmpMacCalculator<
-  xju::crypt::macs::hmacsha1::Calculator, 12U> Sha96MacCalculator;
-typedef SnmpMacCalculator<
-  xju::crypt::macs::hmacsha256::Calculator, 24U> Sha256MacCalculator;
-typedef SnmpMacCalculator<
-  xju::crypt::macs::hmacsha384::Calculator, 32U> Sha384MacCalculator;
-typedef SnmpMacCalculator<
-  xju::crypt::macs::hmacsha512::Calculator, 48U> Sha512MacCalculator;
-
+// MACs truncated to lengths per rfc3414, rfc7860
 typedef SnmpV3UsmCodecImpl<
-  Sha96MacCalculator, xju::crypt::hashers::SHA1> Sha96SnmpV3UsmCodecImpl;
+  xju::crypt::macs::hmacsha1::Calculator, 12U, xju::crypt::hashers::SHA1> Sha96SnmpV3UsmCodecImpl;
 typedef SnmpV3UsmCodecImpl<
-  Sha256MacCalculator, xju::crypt::hashers::SHA256> Sha256SnmpV3UsmCodecImpl;
+  xju::crypt::macs::hmacsha256::Calculator, 24U, xju::crypt::hashers::SHA256> Sha256SnmpV3UsmCodecImpl;
 typedef SnmpV3UsmCodecImpl<
-  Sha384MacCalculator, xju::crypt::hashers::SHA384> Sha384SnmpV3UsmCodecImpl;
+  xju::crypt::macs::hmacsha384::Calculator, 32U, xju::crypt::hashers::SHA384> Sha384SnmpV3UsmCodecImpl;
 typedef SnmpV3UsmCodecImpl<
-  Sha512MacCalculator, xju::crypt::hashers::SHA512> Sha512SnmpV3UsmCodecImpl;
+  xju::crypt::macs::hmacsha512::Calculator, 48U, xju::crypt::hashers::SHA512> Sha512SnmpV3UsmCodecImpl;
 
 
 void run(xju::ip::UDPSocket& socket,SnmpV3UsmCodec& snmpV3UsmCodec)

@@ -22,7 +22,7 @@ namespace snmp
 void test1() {
   xju::assert_equal(
     decodeSnmpV3Message(
-      encodeSnmpV3UsmMessage<NoAuthMacCalculator>(
+      encodeSnmpV3UsmMessage<NoAuthMacCalculator,0U>(
         SnmpV3UsmMessage(
           SnmpV3Message::ID(33),
           512,
