@@ -21,6 +21,7 @@
 #include <xju/snmp/encode.hh>
 #include <xju/snmp/SnmpV3UsmMessage.hh>
 #include <xju/crypt/MacKey.hh>
+#include <xju/snmp/SnmpV3UsmEncrypter.hh>
 
 namespace xju
 {
@@ -51,10 +52,16 @@ public:
 template<class MacCalculator, unsigned int TruncateMacTo>
 std::vector<uint8_t> encodeSnmpV3UsmMessage(
   SnmpV3UsmMessage x,
-  SnmpV3UsmAuthKey const& authKey) throw()
+  SnmpV3UsmAuthKey const& authKey,
+  SnmpV3UsmEncrypter& encrypter) throw()
 {
   MacCalculator mac{xju::crypt::MacKey(authKey._)};
 
+  std::pair<SnmpV3UsmPrivData, SnmpV3ScopedPduData> priv(
+    encrypter.encryptScopedPduData(x.securityParameters_.userName_,
+                                   x.securityParameters_.engineBoots_,
+                                   x.securityParameters_.engineTime_,
+                                   encode(x.scopedPDU_)));
   auto wholeMessage(
     encode(SnmpV3Message(x.id_,
                          x.maxSize_,
@@ -63,8 +70,8 @@ std::vector<uint8_t> encodeSnmpV3UsmMessage(
                          encode(x.securityParameters_,
                                 xju::crypt::Mac(
                                   std::vector<uint8_t>(TruncateMacTo,0U)),
-                                SnmpV3UsmPrivData({})),
-                         encode(x.scopedPDU_))));
+                                priv.first),
+                         priv.second)));
 
   auto m(mac.calculateMac(wholeMessage));
   m._.resize(TruncateMacTo);
@@ -74,8 +81,8 @@ std::vector<uint8_t> encodeSnmpV3UsmMessage(
                               SnmpV3Message::SecurityModel(3), //USM
                               encode(std::move(x.securityParameters_),
                                      xju::crypt::Mac(m._),
-                                     SnmpV3UsmPrivData({})),
-                              encode(std::move(x.scopedPDU_))));
+                                     priv.first),
+                              std::move(priv.second)));
 }
 
 }

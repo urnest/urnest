@@ -1,0 +1,40 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <utility>
+#include <xju/snmp/SnmpV3ScopedPduData.hh>
+#include <xju/snmp/SnmpV3SecParams.hh>
+#include <xju/UserName.hh>
+#include <xju/snmp/EngineBoots.hh>
+#include <xju/snmp/EngineTime.hh>
+#include <xju/snmp/SnmpV3ScopedPDU.hh>
+#include <xju/snmp/SnmpV3UsmPrivData.hh>
+
+namespace xju
+{
+namespace snmp
+{
+class SnmpV3UsmDecrypter
+{
+public:
+  virtual ~SnmpV3UsmDecrypter() {}
+
+  virtual SnmpV3ScopedPduData decryptScopedPduData(
+    UserName const& username,
+    EngineBoots const& engineBoots,
+    EngineTime const& engineTime,
+    SnmpV3UsmPrivData const& privData,
+    SnmpV3ScopedPduData const& encryptedScopedPdu) = 0;
+};
+
+
+}
+}

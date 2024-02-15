@@ -14,6 +14,8 @@
 #include <xju/snmp/decodeSnmpV3Message.hh>
 #include <xju/snmp/NullValue.hh>
 #include <xju/crypt/macs/hmacsha512.hh>
+#include <xju/snmp/NoPrivSnmpV3UsmEncrypter.hh>
+#include <xju/snmp/NoPrivSnmpV3UsmDecrypter.hh>
 
 namespace xju
 {
@@ -22,6 +24,9 @@ namespace snmp
 
 template<class MacCalculator, unsigned int TruncateMacTo>
 void test1() {
+  NoPrivSnmpV3UsmEncrypter encrypter;
+  NoPrivSnmpV3UsmDecrypter decrypter;
+  
   xju::assert_equal(
     decodeSnmpV3UsmMessage<MacCalculator, TruncateMacTo>(
       encodeSnmpV3UsmMessage<MacCalculator, TruncateMacTo>(
@@ -44,8 +49,10 @@ void test1() {
               0,
                    {SnmpVar(Oid(Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")),std::make_shared<NullValue>())},
               0xa0))),
-        SnmpV3UsmAuthKey(std::vector<uint8_t>(MacCalculator::SIZE,0))),
-      SnmpV3UsmAuthKey(std::vector<uint8_t>(MacCalculator::SIZE,0))),
+        SnmpV3UsmAuthKey(std::vector<uint8_t>(MacCalculator::SIZE,0)),
+        encrypter),
+      SnmpV3UsmAuthKey(std::vector<uint8_t>(MacCalculator::SIZE,0)),
+      decrypter),
     SnmpV3UsmMessage(
       SnmpV3Message::ID(33),
       512,

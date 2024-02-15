@@ -13,6 +13,7 @@
 #include <xju/assert.hh>
 #include <xju/snmp/decodeSnmpV3Message.hh>
 #include <xju/snmp/NullValue.hh>
+#include <xju/snmp/NoPrivSnmpV3UsmEncrypter.hh>
 
 namespace xju
 {
@@ -20,6 +21,7 @@ namespace snmp
 {
 
 void test1() {
+  NoPrivSnmpV3UsmEncrypter encrypter;
   xju::assert_equal(
     decodeSnmpV3Message(
       encodeSnmpV3UsmMessage<NoAuthMacCalculator,0U>(
@@ -42,7 +44,8 @@ void test1() {
               0,
                    {SnmpVar(Oid(Oid(".1.3.6.1.4.1.2680.1.2.7.3.2.0")),std::make_shared<NullValue>())},
               0xa0))),
-        SnmpV3UsmAuthKey(std::vector<uint8_t>()))),
+        SnmpV3UsmAuthKey(std::vector<uint8_t>()),
+        encrypter)),
     std::make_pair(
       SnmpV3Message(
         SnmpV3Message::ID(33),

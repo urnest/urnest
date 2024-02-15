@@ -1,0 +1,33 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/snmp/SnmpV3UsmEncrypter.hh>
+#include <utility> //impl
+
+namespace xju
+{
+namespace snmp
+{
+class NoPrivSnmpV3UsmEncrypter: public SnmpV3UsmEncrypter
+{
+public:
+  std::pair<SnmpV3UsmPrivData, SnmpV3ScopedPduData> encryptScopedPduData(
+    UserName const& username,
+    EngineBoots const& engineBoots,
+    EngineTime const& engineTime,
+    SnmpV3ScopedPduData const& unencryptedSopedPduData)
+  {
+    return std::make_pair(SnmpV3UsmPrivData({}), unencryptedSopedPduData);
+  }
+};
+
+}
+}

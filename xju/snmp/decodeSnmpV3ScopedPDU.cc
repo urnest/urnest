@@ -45,21 +45,16 @@ SnmpV3ScopedPDU decodeSnmpV3ScopedPDU(
       throw xju::Exception(s.str(), XJU_TRACED);
     }
     try {
-      if (s1.first.second.valid() && s1.second.remaining() != s1.first.second.value()) {
+      // encryption might add padding, so only check if enough data, not exact length
+      if (s1.first.second.valid() && s1.first.second.value() > s1.second.remaining()) {
         std::ostringstream s;
         s << "sequence length " << s1.first.second.value()
-          << " does not match contained data length (" << s1.second.remaining() << ")";
+          << " is greater than contained data length (" << s1.second.remaining() << ")";
         throw xju::Exception(s.str(),XJU_TRACED);
       }
       auto contextEngineID(decodeStringValue(s1.second)); try {
         auto contextName(decodeStringValue(contextEngineID.second)); try{
           auto pdu(decodePDU(contextName.second));
-          if (!pdu.second.atEnd()){
-            std::ostringstream s;
-            s << "left over data data " << showFirstBytes(128, extractRemainder(pdu.second))
-              << " having decoded pdu " << pdu.first;
-            throw xju::Exception(s.str(),XJU_TRACED);
-          }
           return SnmpV3ScopedPDU(ContextEngineID(contextEngineID.first),
                                  ContextName(
                                    std::string(contextName.first.begin(),contextName.first.end())),

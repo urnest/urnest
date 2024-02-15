@@ -128,7 +128,7 @@ void test2()
     xju::assert_never_reached();
   }
   catch(xju::Exception const& e) {
-    xju::assert_equal(readableRepr(e),"Failed to decode snmp v3 scoped pdu from 62 bytes of data having successfully decoded sequence type 0x30 and length 61 bytes because\nsequence length 61 does not match contained data length (60).");
+    xju::assert_equal(readableRepr(e),"Failed to decode snmp v3 scoped pdu from 62 bytes of data having successfully decoded sequence type 0x30 and length 61 bytes because\nsequence length 61 is greater than contained data length (60).");
   }
   try {
     SnmpV3ScopedPduData const x(std::vector<uint8_t>{
