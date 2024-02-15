@@ -8,6 +8,7 @@
 %tests.tree
 rsa%tests.tree:leaves
 macs%tests.tree:leaves
+ciphers%tests.tree:leaves
 
 %tests.tree==<<
 ()+cmd=(test-I.cc+(%cxx-opts):auto.cxx.exe):exec.output
@@ -32,6 +33,7 @@ macs%tests.tree:leaves
 %hashers==./hashers/Odinfile%hcp-gen
 %rsa==./rsa/Odinfile%hcp-gen
 %macs==./macs/Odinfile%hcp-gen
+%ciphers==./ciphers/Odinfile%hcp-gen
 
 %tags==%all.list-of-tags:merged-tags
 
@@ -40,3 +42,4 @@ macs%tests.tree:leaves
 hashers%tags
 rsa%tags
 macs%tags
+ciphers%tags
