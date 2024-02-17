@@ -153,11 +153,13 @@ for authAlg, netsnmpAuthAlg in [
 
 
 for privAlg, netsnmpPrivAlg in [
-        ('AES128cfb', 'AES'),
+        ('aes128cfb', 'AES'),
 ]:
     try:
         engineId='AA23F2'
-        with Process([snmp_json_gateway_exe, '--v3usm', engineId, '--auth', f'sha256:pollywally', '--priv', f'{privAlg}:wallypolly', 'auto'], stdin="PIPE", stdout="PIPE") as g:
+        args=[snmp_json_gateway_exe, '--v3usm', engineId, '--auth', f'sha256:pollywally', '--priv', f'{privAlg}:wallypolly', 'auto']
+        print(' '.join(args))
+        with Process(args, stdin="PIPE", stdout="PIPE") as g:
             assert g.stdout is not None
             assert g.stdin is not None
             try:
@@ -169,9 +171,9 @@ for privAlg, netsnmpPrivAlg in [
             except Exception as e:
                 raise in_context('read and parse "listening_on" line')
             c=[
-                net_snmp_get_exe, '-r', '0', '-v3', '-l','authPrivPriv','-a','SHA-256','-A','pollywally','-x',netsnmpPrivAlg,'-X','wallypolly','-u', 'fred', '-n', 'conny', f"localhost:{port}", '.1.3.6.1.4.1.2680.1.2.7.3.3'
+                net_snmp_get_exe, '-r', '0', '-v3', '-l','authPriv','-a','SHA-256','-A','pollywally','-x',netsnmpPrivAlg,'-X','wallypolly','-u', 'fred', '-n', 'conny', f"localhost:{port}", '.1.3.6.1.4.1.2680.1.2.7.3.3'
             ]
-            print(c)
+            print(' '.join(c))
             with Process(c, stdout="PIPE") as p:
                 assert p.stdout is not None
                 m=message_codec.decode(loads(g.stdout.readline()))

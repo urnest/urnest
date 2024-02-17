@@ -19,6 +19,11 @@ namespace snmp
 class NoPrivSnmpV3UsmEncrypter: public SnmpV3UsmEncrypter
 {
 public:
+  SnmpV3Message::Flags privFlag() const noexcept override
+  {
+    return SnmpV3Message::Flags::NO_AUTH;
+  }
+
   std::pair<SnmpV3UsmPrivData, SnmpV3ScopedPduData> encryptScopedPduData(
     UserName const& username,
     EngineBoots const& engineBoots,

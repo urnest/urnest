@@ -17,6 +17,7 @@
 #include <xju/snmp/EngineTime.hh>
 #include <xju/snmp/SnmpV3ScopedPDU.hh>
 #include <xju/snmp/SnmpV3UsmPrivData.hh>
+#include <xju/snmp/SnmpV3Message.hh>
 
 namespace xju
 {
@@ -26,6 +27,8 @@ class SnmpV3UsmEncrypter
 {
 public:
   virtual ~SnmpV3UsmEncrypter() {}
+
+  virtual SnmpV3Message::Flags privFlag() const noexcept = 0;
 
   virtual std::pair<SnmpV3UsmPrivData, SnmpV3ScopedPduData> encryptScopedPduData(
     UserName const& username,

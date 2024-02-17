@@ -19,6 +19,8 @@
 #include <xju/crypt/ciphers/AES128cfbCipher.hh> //impl
 #include <xju/snmp/hexStr.hh> //impl
 #include <xju/crypt/CipherKey.hh>
+#include <xju/snmp/DecodeIterator.hh> //impl
+#include <xju/snmp/decodeStringValue.hh> //impl
 
 namespace xju
 {
@@ -57,7 +59,10 @@ public:
                     ((uint64_t)privData._[7]<< 0));
       xju::crypt::CipherIV const iv(makeAES128cfbIV(engineBoots, engineTime, salt));
       xju::crypt::ciphers::AES128cfbCipher cipher(privKey_, iv);
-      return SnmpV3ScopedPduData(cipher.decryptData(encryptedScopedPdu._));
+      // encrypted data is octet-string wrapped
+      return SnmpV3ScopedPduData(cipher.decryptData(
+                                   decodeStringValue(
+                                     DecodeIterator(encryptedScopedPdu._)).first));
     }
     catch(xju::Exception& e){
       std::ostringstream s;

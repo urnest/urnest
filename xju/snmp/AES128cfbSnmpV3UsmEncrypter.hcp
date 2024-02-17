@@ -18,6 +18,7 @@
 #include <xju/crypt/CipherIV.hh> //impl
 #include <xju/snmp/makeAES128cfbIV.hh> //impl
 #include <xju/crypt/ciphers/AES128cfbCipher.hh> //impl
+#include <xju/snmp/StringValue.hh> //impl
 
 namespace xju
 {
@@ -34,6 +35,11 @@ public:
     xju::assert_equal(privKey_._.size(), 16U);
   }
     
+  SnmpV3Message::Flags privFlag() const noexcept override
+  {
+    return SnmpV3Message::Flags::AUTH_PRIV;
+  }
+
   std::pair<SnmpV3UsmPrivData, SnmpV3ScopedPduData> encryptScopedPduData(
     UserName const& username,
     EngineBoots const& engineBoots,
@@ -52,9 +58,12 @@ public:
         (uint8_t)((salt_ >>  8) & 0xff),
         (uint8_t)((salt_ >>  0) & 0xff)});
     ++salt_;
-     return std::make_pair(
-       privData,
-       SnmpV3ScopedPduData(cipher.encryptData(unencryptedSopedPduData._)));
+    // encrypted data is octet-string wrapped
+    StringValue encrypted(cipher.encryptData(unencryptedSopedPduData._));
+    std::vector<uint8_t> v;
+    v.resize(encrypted.encodedLength_);
+    encrypted.encodeTo(v.begin());
+    return std::make_pair(privData,SnmpV3ScopedPduData(v));
   }
 private:
   xju::crypt::CipherKey const privKey_;

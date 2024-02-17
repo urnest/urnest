@@ -60,7 +60,7 @@ Vptr makeCipher(CipherKey const& cipherKey,
                                    cipherKey.value().data(),
                                    cipherKey.value().size()),
                                  XJU_TRACED);
-    if (gcryMode==GCRY_CIPHER_MODE_CFB){
+    if (gcryMode==GCRY_CIPHER_MODE_CTR){
       xju::crypt::verifySuccessful(gcry_cipher_setctr(
                                      hd,
                                      cipherIV.value().data(),

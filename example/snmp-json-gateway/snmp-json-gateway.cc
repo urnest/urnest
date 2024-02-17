@@ -663,7 +663,8 @@ void run(xju::ip::UDPSocket& socket,
                              xju::snmp::SnmpV3UsmMessage(
                                messageId,
                                max_size,
-                               snmpV3UsmCodec.authFlag(),
+                               (xju::snmp::SnmpV3Message::Flags)(
+                                 snmpV3UsmCodec.authFlag() | encrypter.privFlag()),
                                xju::snmp::SnmpV3UsmSecurityParameters(snmpV3UsmCodec.engineId(),
                                                                       xju::snmp::EngineBoots(1),
                                                                       engineTimeNow(),

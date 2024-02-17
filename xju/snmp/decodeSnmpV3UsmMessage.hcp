@@ -61,43 +61,54 @@ SnmpV3UsmMessage decodeSnmpV3UsmMessage(
                                      std::get<3>(y),
                                      x.first.scopedPduData_));
 
-    SnmpV3UsmMessage const usmMessage(
-      x.first.id_,
-      x.first.maxSize_,
-      x.first.flags_,
-      std::get<0>(y),
-      decodeSnmpV3ScopedPDU(scopedPduData));
-
     try{
-      size_t const macOffsetInData(x.second+std::get<2>(y));
-      // check we got the offset right
-      xju::assert_equal(
-        std::vector<uint8_t>(data.begin()+macOffsetInData,
-                             data.begin()+macOffsetInData+TruncateMacTo),
-        receivedMac._);
-      std::fill(data.begin()+macOffsetInData, data.begin()+macOffsetInData+TruncateMacTo,0U);
-      xju::crypt::Mac calculatedMac(mc.calculateMac(data));
-      calculatedMac._.resize(TruncateMacTo);
-      if (receivedMac != calculatedMac){
-        std::ostringstream s;
-        s << "expected MAC "
-          << xju::format::join(calculatedMac._.begin(),calculatedMac._.end(),
-                               xju::format::Hex(""), "")
-          << "is not equal to received MAC "
-          << xju::format::join(receivedMac._.begin(),receivedMac._.end(),
-                               xju::format::Hex(""), "");
-        throw xju::Exception(s.str(),XJU_TRACED);
+      SnmpV3UsmMessage const usmMessage(
+        x.first.id_,
+        x.first.maxSize_,
+        x.first.flags_,
+        std::get<0>(y),
+        decodeSnmpV3ScopedPDU(scopedPduData));
+      
+      try{
+        size_t const macOffsetInData(x.second+std::get<2>(y));
+        // check we got the offset right
+        xju::assert_equal(
+          std::vector<uint8_t>(data.begin()+macOffsetInData,
+                               data.begin()+macOffsetInData+TruncateMacTo),
+          receivedMac._);
+        std::fill(data.begin()+macOffsetInData, data.begin()+macOffsetInData+TruncateMacTo,0U);
+        xju::crypt::Mac calculatedMac(mc.calculateMac(data));
+        calculatedMac._.resize(TruncateMacTo);
+        if (receivedMac != calculatedMac){
+          std::ostringstream s;
+          s << "expected MAC "
+            << xju::format::join(calculatedMac._.begin(),calculatedMac._.end(),
+                                 xju::format::Hex(""), "")
+            << "is not equal to received MAC "
+            << xju::format::join(receivedMac._.begin(),receivedMac._.end(),
+                                 xju::format::Hex(""), "");
+          throw xju::Exception(s.str(),XJU_TRACED);
+        }
       }
+      catch(xju::Exception& e){
+        std::ostringstream s;
+        s << "authenticate, i.e. verify MAC of, received SnmpV3UsmMessage "
+          << usmMessage;
+        e.addContext(s.str(),XJU_TRACED);
+        throw;
+      }
+      return usmMessage;
     }
     catch(xju::Exception& e){
       std::ostringstream s;
-      s << "authenticate, i.e. verify MAC of, received SnmpV3UsmMessage "
-        << usmMessage;
+      s << "decode scoped PDU and verify MAC noting"
+        << " usm security params " << std::get<0>(y)
+        << ", priv data " << hexStr(std::get<3>(y))
+        << ", encrypted scoped pdu data " << hexStr(x.first.scopedPduData_)
+        << " decrypted to " << hexStr(scopedPduData) << " (" << scopedPduData._.size() << " bytes)";
       e.addContext(s.str(),XJU_TRACED);
       throw;
     }
-      
-    return usmMessage;
   }
   catch(xju::Exception& e){
     std::ostringstream s;
