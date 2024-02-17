@@ -1,9 +1,14 @@
 %all==%all.tree:leaves
 
+%cxx-opts==<<
++(..%cxx-opts)
+
 %all.tree==<<
 %tests.tree
 
 %tests.tree==<<
+()+cmd=(test-SHA1.cc+(%cxx-opts):auto.cxx.exe):exec.output
+()+cmd=(test-SHA256.cc+(%cxx-opts):auto.cxx.exe):exec.output
 
 %hcp-gen==%hcp-gen.vir_dir_specs:list:cat:vir_dir
 

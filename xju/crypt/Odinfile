@@ -9,6 +9,7 @@
 rsa%tests.tree:leaves
 macs%tests.tree:leaves
 ciphers%tests.tree:leaves
+hashers%tests.tree:leaves
 
 %tests.tree==<<
 ()+cmd=(test-I.cc+(%cxx-opts):auto.cxx.exe):exec.output

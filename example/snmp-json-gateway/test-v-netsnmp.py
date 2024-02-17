@@ -150,3 +150,58 @@ for authAlg, netsnmpAuthAlg in [
             pass
     except Exception as e:
         raise in_context(f"test auth alg {authAlg:} v netsnmp -a {netsnmpAuthAlg:}")
+
+
+for privAlg, netsnmpPrivAlg in [
+        ('AES128cfb', 'AES'),
+]:
+    try:
+        engineId='AA23F2'
+        with Process([snmp_json_gateway_exe, '--v3usm', engineId, '--auth', f'sha256:pollywally', '--priv', f'{privAlg}:wallypolly', 'auto'], stdin="PIPE", stdout="PIPE") as g:
+            assert g.stdout is not None
+            assert g.stdin is not None
+            try:
+                l=g.stdout.readline().decode("utf-8")
+                try:
+                    port=codec(ListeningOn).decode(loads(l)).listening_on
+                except Exception as e:
+                    raise in_context(f'parse line {l!r}')
+            except Exception as e:
+                raise in_context('read and parse "listening_on" line')
+            c=[
+                net_snmp_get_exe, '-r', '0', '-v3', '-l','authPrivPriv','-a','SHA-256','-A','pollywally','-x',netsnmpPrivAlg,'-X','wallypolly','-u', 'fred', '-n', 'conny', f"localhost:{port}", '.1.3.6.1.4.1.2680.1.2.7.3.3'
+            ]
+            print(c)
+            with Process(c, stdout="PIPE") as p:
+                assert p.stdout is not None
+                m=message_codec.decode(loads(g.stdout.readline()))
+                assert isinstance(m.message, SnmpV3GetRequest), m
+                Assert(m.message)==SnmpV3GetRequest(
+                    'SnmpV3GetRequest',
+                    m.message.message_id,
+                    m.message.max_size,
+                    bytes([0xAA,0x23,0xF2]),
+                    ContextName("conny"),
+                    UsmSecurityParameters(UserName('fred')),
+                    m.message.request_id,
+                    [Oid('.1.3.6.1.4.1.2680.1.2.7.3.3')])
+                g.stdin.write(to_json(message_codec.encode(
+                    GatewayMessage(
+                        m.remote_endpoint,
+                        SnmpV3Response(
+                            "SnmpV3Response",
+                            m.message.message_id,
+                            m.message.max_size,
+                            m.message.engine_id,
+                            m.message.context_name,
+                            m.message.security_parameters,
+                            m.message.request_id,
+                            None,
+                            [(m.message.oids[0], IntValue("Integer",84))]))))+b'\n')
+                g.stdin.flush()
+                stdout, _ = p.communicate()
+                Assert(stdout.decode('utf-8'))=='iso.3.6.1.4.1.2680.1.2.7.3.3 = INTEGER: 84\n'
+                pass
+            pass
+    except Exception as e:
+        raise in_context(f"test auth alg {authAlg:} v netsnmp -a {netsnmpAuthAlg:}")

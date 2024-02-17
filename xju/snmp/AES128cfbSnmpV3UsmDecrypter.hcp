@@ -1,0 +1,80 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/snmp/SnmpV3UsmDecrypter.hh>
+#include <xju/snmp/SnmpV3UsmPrivKey.hh>
+#include <xju/assert.hh> //impl
+#include <sstream> //impl
+#include <xju/Exception.hh> //impl
+#include <xju/crypt/CipherIV.hh> //impl
+#include <xju/snmp/makeAES128cfbIV.hh> //impl
+#include <xju/crypt/ciphers/AES128cfbCipher.hh> //impl
+#include <xju/snmp/hexStr.hh> //impl
+#include <xju/crypt/CipherKey.hh>
+
+namespace xju
+{
+namespace snmp
+{
+class AES128cfbSnmpV3UsmDecrypter: public  SnmpV3UsmDecrypter
+{
+public:
+  // pre: privKey._.size()==16
+  explicit AES128cfbSnmpV3UsmDecrypter(SnmpV3UsmPrivKey privKey) noexcept:
+      privKey_(std::move(privKey._))
+  {
+    xju::assert_equal(privKey_._.size(), 16U);
+  }
+
+  virtual SnmpV3ScopedPduData decryptScopedPduData(
+    UserName const& username,
+    EngineBoots const& engineBoots,
+    EngineTime const& engineTime,
+    SnmpV3UsmPrivData const& privData,
+    SnmpV3ScopedPduData const& encryptedScopedPdu)
+  {
+    try{
+      if (privData._.size() != 8U){
+        std::ostringstream s;
+        s << "expected 8 bytes of priv data, got " << privData._.size() << " bytes";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      uint64_t salt(((uint64_t)privData._[0]<<56)+
+                    ((uint64_t)privData._[1]<<48)+
+                    ((uint64_t)privData._[2]<<40)+
+                    ((uint64_t)privData._[3]<<32)+
+                    ((uint64_t)privData._[4]<<24)+
+                    ((uint64_t)privData._[5]<<16)+
+                    ((uint64_t)privData._[6]<< 8)+
+                    ((uint64_t)privData._[7]<< 0));
+      xju::crypt::CipherIV const iv(makeAES128cfbIV(engineBoots, engineTime, salt));
+      xju::crypt::ciphers::AES128cfbCipher cipher(privKey_, iv);
+      return SnmpV3ScopedPduData(cipher.decryptData(encryptedScopedPdu._));
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "decrypt scoped pdu for user " << username
+        << ", engine boots " << engineBoots 
+        << ", entine time " << engineTime
+        << ", priv data (salt) " << hexStr(privData)
+        << " from encrypted data " << hexStr(encryptedScopedPdu);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+private:
+  xju::crypt::CipherKey const privKey_;
+  
+};
+
+}
+}

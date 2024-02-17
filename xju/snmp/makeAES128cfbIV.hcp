@@ -1,0 +1,47 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/crypt/CipherIV.hh>
+#include <xju/snmp/EngineBoots.hh>
+#include <xju/snmp/EngineTime.hh>
+#include <cinttypes>
+
+namespace xju
+{
+namespace snmp
+{
+xju::crypt::CipherIV makeAES128cfbIV(
+  EngineBoots const& engineBoots,
+  EngineTime const& engineTime,
+  uint64_t const salt)
+{
+  return xju::crypt::CipherIV({
+      (uint8_t)((engineBoots.value() >> 24) & 0xff),
+      (uint8_t)((engineBoots.value() >> 16) & 0xff),
+      (uint8_t)((engineBoots.value() >>  8) & 0xff),
+      (uint8_t)((engineBoots.value() >>  0) & 0xff),
+      (uint8_t)((engineTime.value() >> 24) & 0xff),
+      (uint8_t)((engineTime.value() >> 16) & 0xff),
+      (uint8_t)((engineTime.value() >>  8) & 0xff),
+      (uint8_t)((engineTime.value() >>  0) & 0xff),
+      (uint8_t)((salt >> 56) & 0xff),
+      (uint8_t)((salt >> 48) & 0xff),
+      (uint8_t)((salt >> 40) & 0xff),
+      (uint8_t)((salt >> 32) & 0xff),
+      (uint8_t)((salt >> 24) & 0xff),
+      (uint8_t)((salt >> 16) & 0xff),
+      (uint8_t)((salt >>  8) & 0xff),
+      (uint8_t)((salt >>  0) & 0xff)
+    });
+}
+
+}
+}

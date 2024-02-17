@@ -4,6 +4,7 @@
 %tests.tree
 
 %tests.tree == <<
+()+cmd=(test-AES128cfbSnmpV3UsmDecrypter.cc+(../..%cxx-opts)+lib=gcrypt:auto.cxx.exe):exec.output
 ()+cmd=(test-SnmpV2cGetRequest.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-decodeSnmpV2cResponse.cc+(../..%cxx-opts):auto.cxx.exe):exec.output
 ()+cmd=(test-decodeSnmpV2cTrap.cc+(../..%cxx-opts):auto.cxx.exe):exec.output

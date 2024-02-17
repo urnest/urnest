@@ -1,0 +1,65 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/snmp/SnmpV3UsmEncrypter.hh>
+#include <utility> //impl
+#include <xju/snmp/SnmpV3UsmPrivKey.hh>
+#include <xju/assert.hh> //impl
+#include <stdlib.h> //impl
+#include <xju/crypt/CipherKey.hh>
+#include <xju/crypt/CipherIV.hh> //impl
+#include <xju/snmp/makeAES128cfbIV.hh> //impl
+#include <xju/crypt/ciphers/AES128cfbCipher.hh> //impl
+
+namespace xju
+{
+namespace snmp
+{
+class AES128cfbSnmpV3UsmEncrypter: public SnmpV3UsmEncrypter
+{
+public:
+  // pre: privKey._.size()==16
+  explicit AES128cfbSnmpV3UsmEncrypter(SnmpV3UsmPrivKey privKey) noexcept:
+      privKey_(std::move(privKey._)),
+      salt_(lrand48())
+  {
+    xju::assert_equal(privKey_._.size(), 16U);
+  }
+    
+  std::pair<SnmpV3UsmPrivData, SnmpV3ScopedPduData> encryptScopedPduData(
+    UserName const& username,
+    EngineBoots const& engineBoots,
+    EngineTime const& engineTime,
+    SnmpV3ScopedPduData const& unencryptedSopedPduData)
+  {
+    xju::crypt::CipherIV const iv(makeAES128cfbIV(engineBoots, engineTime, salt_));
+    xju::crypt::ciphers::AES128cfbCipher cipher(privKey_, iv);
+    SnmpV3UsmPrivData privData({
+        (uint8_t)((salt_ >> 56) & 0xff),
+        (uint8_t)((salt_ >> 48) & 0xff),
+        (uint8_t)((salt_ >> 40) & 0xff),
+        (uint8_t)((salt_ >> 32) & 0xff),
+        (uint8_t)((salt_ >> 24) & 0xff),
+        (uint8_t)((salt_ >> 16) & 0xff),
+        (uint8_t)((salt_ >>  8) & 0xff),
+        (uint8_t)((salt_ >>  0) & 0xff)});
+    ++salt_;
+     return std::make_pair(
+       privData,
+       SnmpV3ScopedPduData(cipher.encryptData(unencryptedSopedPduData._)));
+  }
+private:
+  xju::crypt::CipherKey const privKey_;
+  uint64_t salt_;
+};
+
+}
+}
