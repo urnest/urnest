@@ -27,7 +27,7 @@ import app
 from wsgiref.simple_server import WSGIServer, WSGIRequestHandler
 from socketserver import ThreadingMixIn
 
-from xju import wal
+import wal
 
 port=int(sys.argv[1])
 

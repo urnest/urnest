@@ -21,7 +21,7 @@ from xju import pq
 from xju.misc import fromJson,toJson
 from .wsgi import getVariablesFromWSGIenviron, getCookiesFromWSGIenviron, getHTTPHeadersFromWSGIenviron
 from typing import Set,Callable,Dict,Union,Tuple,List
-from . import public_functions, restricted_functions, ClientError,Forbidden,NotFound,Response,promoteContent
+from . import public_functions, restricted_functions,ClientError,Forbidden,NotFound,Response,promoteContent
 
 def getParam(param_name,
              json_params,

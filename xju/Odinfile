@@ -77,7 +77,6 @@ netflow%tests.tree
 %pytest.tree==<<
 %local-pytest.tree:leaves
 %local.py.cov.checked
-wal%all.tree:leaves
 cmc%all.tree:leaves
 mypy-error-tests%all.tree:leaves
 

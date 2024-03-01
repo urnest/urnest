@@ -26,7 +26,7 @@ import app
 
 from wsgiref.simple_server import make_server
 
-from xju.wal.dispatcher import Dispatcher
+from wal.dispatcher import Dispatcher
 
 port=int(sys.argv[1])
 
