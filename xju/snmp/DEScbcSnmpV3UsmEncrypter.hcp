@@ -1,0 +1,78 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/snmp/SnmpV3UsmEncrypter.hh>
+#include <utility> //impl
+#include <xju/snmp/SnmpV3UsmPrivKey.hh>
+#include <xju/assert.hh> //impl
+#include <stdlib.h> //impl
+#include <xju/crypt/CipherKey.hh>
+#include <xju/crypt/CipherIV.hh> //impl
+#include <xju/snmp/makeDEScbcIV.hh> //impl
+#include <xju/crypt/ciphers/DEScbcCipher.hh> //impl
+#include <xju/snmp/StringValue.hh> //impl
+#include <xju/snmp/makeDEScbcPrivData.hh> //impl
+
+namespace xju
+{
+namespace snmp
+{
+class DEScbcSnmpV3UsmEncrypter: public SnmpV3UsmEncrypter
+{
+public:
+  // pre: privKey._.size()==16
+  explicit DEScbcSnmpV3UsmEncrypter(SnmpV3UsmPrivKey privKey) noexcept:
+      desKey_(std::move(privKey._)),
+      preIV_(),
+      saltint_(lrand48())
+  {
+    xju::assert_equal(desKey_._.size(), 16U);
+    std::copy(desKey_._.begin()+8,desKey_._.begin()+16,std::back_inserter(preIV_));
+    desKey_._.resize(8);
+  }
+    
+  SnmpV3Message::Flags privFlag() const noexcept override
+  {
+    return SnmpV3Message::Flags::AUTH_PRIV;
+  }
+
+  std::pair<SnmpV3UsmPrivData, SnmpV3ScopedPduData> encryptScopedPduData(
+    UserName const& username,
+    EngineBoots const& engineBoots,
+    EngineTime const& engineTime,
+    SnmpV3ScopedPduData const& unencryptedSopedPduData)
+  {
+    auto const privData(makeDEScbcPrivData(engineBoots, saltint_));
+    
+    xju::crypt::CipherIV const iv(makeDEScbcIV(preIV_,privData));
+    xju::crypt::ciphers::DEScbcCipher cipher(desKey_, iv);
+    ++saltint_;
+    // DES requires padding to 8-byte boundary
+    auto padded(unencryptedSopedPduData._);
+    if (padded.size() % 8){
+      padded.resize(padded.size()+8-(padded.size()%8));
+      xju::assert_equal(padded.size() % 8, 0);
+    }
+    // encrypted data is octet-string wrapped
+    StringValue encrypted(cipher.encryptData(padded));
+    std::vector<uint8_t> v;
+    v.resize(encrypted.encodedLength_);
+    encrypted.encodeTo(v.begin());
+    return std::make_pair(SnmpV3UsmPrivData(privData),SnmpV3ScopedPduData(v));
+  }
+private:
+  xju::crypt::CipherKey desKey_;
+  std::vector<uint8_t> preIV_;
+  uint32_t saltint_;
+};
+
+}
+}

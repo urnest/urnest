@@ -1,0 +1,82 @@
+// Copyright (c) 2022 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <xju/snmp/SnmpV3UsmDecrypter.hh>
+#include <xju/snmp/SnmpV3UsmPrivKey.hh>
+#include <xju/assert.hh> //impl
+#include <sstream> //impl
+#include <xju/Exception.hh> //impl
+#include <xju/crypt/CipherIV.hh> //impl
+#include <xju/snmp/makeDEScbcIV.hh> //impl
+#include <xju/crypt/ciphers/DEScbcCipher.hh> //impl
+#include <xju/snmp/hexStr.hh> //impl
+#include <xju/crypt/CipherKey.hh>
+#include <xju/snmp/DecodeIterator.hh> //impl
+#include <xju/snmp/decodeStringValue.hh> //impl
+
+namespace xju
+{
+namespace snmp
+{
+class DEScbcSnmpV3UsmDecrypter: public  SnmpV3UsmDecrypter
+{
+public:
+  // pre: privKey._.size()==16
+  explicit DEScbcSnmpV3UsmDecrypter(SnmpV3UsmPrivKey privKey) noexcept:
+      desKey_(std::move(privKey._)),
+      preIV_()
+  {
+    xju::assert_equal(desKey_._.size(), 16U);
+    std::copy(desKey_._.begin()+8,desKey_._.begin()+16,std::back_inserter(preIV_));
+    desKey_._.resize(8);
+  }
+
+  virtual SnmpV3ScopedPduData decryptScopedPduData(
+    UserName const& username,
+    EngineBoots const& engineBoots,
+    EngineTime const& engineTime,
+    SnmpV3UsmPrivData const& privData,
+    SnmpV3ScopedPduData const& encryptedScopedPdu)
+  {
+    try{
+      if (privData._.size() != 8U){
+        std::ostringstream s;
+        s << "expected 8 bytes of priv data, got " << privData._.size() << " bytes";
+        throw xju::Exception(s.str(),XJU_TRACED);
+      }
+      xju::crypt::CipherIV const iv(makeDEScbcIV(preIV_, privData._));
+      xju::crypt::ciphers::DEScbcCipher cipher(desKey_, iv);
+      // encrypted data is octet-string wrapped
+      // note that for DES the decrypted value will include padding
+      return SnmpV3ScopedPduData(cipher.decryptData(
+                                   decodeStringValue(
+                                     DecodeIterator(encryptedScopedPdu._)).first));
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "decrypt scoped pdu for user " << username
+        << ", engine boots " << engineBoots 
+        << ", entine time " << engineTime
+        << ", priv data (salt) " << hexStr(privData)
+        << " from encrypted data " << hexStr(encryptedScopedPdu);
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+private:
+  xju::crypt::CipherKey desKey_;
+  std::vector<uint8_t> preIV_;
+  
+};
+
+}
+}

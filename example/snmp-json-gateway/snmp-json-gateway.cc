@@ -83,6 +83,8 @@
 #include <xju/snmp/SnmpV3UsmPrivKey.hh>
 #include <xju/snmp/AES128cfbSnmpV3UsmEncrypter.hh>
 #include <xju/snmp/AES128cfbSnmpV3UsmDecrypter.hh>
+#include <xju/snmp/DEScbcSnmpV3UsmEncrypter.hh>
+#include <xju/snmp/DEScbcSnmpV3UsmDecrypter.hh>
 
 auto const same_line = xju::Utf8String("");
 
@@ -338,6 +340,24 @@ public:
   xju::snmp::AES128cfbSnmpV3UsmDecrypter decrypter_;
   
   AES128cfbPriv(SnmpV3UsmCodec& auth,
+                PrivPassword const& privPassword):
+      privKey_(auth.localiseSnmpV3UsmPrivPassword(privPassword, 16U)),
+      encrypter_(privKey_),
+      decrypter_(privKey_)
+  {
+  }
+  virtual xju::snmp::SnmpV3UsmEncrypter& encrypter() noexcept override { return encrypter_; }
+  virtual xju::snmp::SnmpV3UsmDecrypter& decrypter() noexcept override { return decrypter_; }
+};
+
+class DEScbcPriv: public SnmpV3UsmPriv
+{
+public:
+  xju::snmp::SnmpV3UsmPrivKey privKey_;
+  xju::snmp::DEScbcSnmpV3UsmEncrypter encrypter_;
+  xju::snmp::DEScbcSnmpV3UsmDecrypter decrypter_;
+  
+  DEScbcPriv(SnmpV3UsmCodec& auth,
                 PrivPassword const& privPassword):
       privKey_(auth.localiseSnmpV3UsmPrivPassword(privPassword, 16U)),
       encrypter_(privKey_),
@@ -884,10 +904,14 @@ int main(int argc, char* argv[])
             snmpV3UsmPriv=std::make_unique<AES128cfbPriv>(
               *snmpV3UsmCodec, privPassword);
           }
+          else if (privAlgName == PrivAlgName("descbc")){
+            snmpV3UsmPriv=std::make_unique<DEScbcPriv>(
+              *snmpV3UsmCodec, privPassword);
+          }
           else{
             std::ostringstream s;
             s << "unknown priv alogirithm " << xju::format::quote(xju::format::str(privAlgName))
-              << " (only know \"aes128cfb\")";
+              << " (only know \"aes128cfb\" \"descbc\")";
             throw xju::Exception(s.str(),XJU_TRACED);
           }
         }

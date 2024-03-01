@@ -1,0 +1,157 @@
+// Copyright (c) 2020 Trevor Taylor
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all.
+// Trevor Taylor makes no representations about the suitability of this
+// software for any purpose.  It is provided "as is" without express or
+// implied warranty.
+//
+
+
+#include <utility> //impl
+#include <xju/crypt/verifySuccessful.hh> //impl
+#include <gcrypt.h>
+#include <memory> //impl
+#include <sstream> //impl
+#include <xju/format.hh> //impl
+#include <xju/crypt/CipherKey.hh>
+#include <xju/crypt/CipherIV.hh>
+#include <unistd.h> //impl
+#include <xju/assert.hh> //impl
+#include <vector> //impl
+#include <cinttypes> //impl
+#include <xju/crypt/Cipher.hh>
+#include <memory>
+#include <xju/Exception.hh> //impl
+
+namespace xju
+{
+namespace crypt
+{
+namespace ciphers
+{
+
+namespace
+{
+void delete_cipher(gcry_cipher_handle* x)
+{
+  gcry_cipher_close(x);
+}
+
+typedef std::unique_ptr<gcry_cipher_handle,decltype(&delete_cipher)> Vptr;
+
+Vptr makeCipher(CipherKey const& cipherKey,
+                CipherIV const& cipherIV)
+{
+  try{
+    xju::assert_equal(cipherKey._.size(), 8U);
+    xju::assert_equal(cipherIV._.size(), 8U);
+    
+    auto gcryMode=GCRY_CIPHER_MODE_CBC;
+    gcry_cipher_handle* hd;
+    xju::crypt::verifySuccessful(gcry_cipher_open(&hd,
+                                                  GCRY_CIPHER_DES,
+                                                  gcryMode, 0),
+                                 XJU_TRACED);
+    Vptr result(hd,delete_cipher);
+    xju::crypt::verifySuccessful(gcry_cipher_setkey(
+                                   hd,
+                                   cipherKey.value().data(),
+                                   cipherKey.value().size()),
+                                 XJU_TRACED);
+    xju::crypt::verifySuccessful(gcry_cipher_setiv(
+                                   hd,
+                                   cipherIV.value().data(),
+                                   cipherIV.value().size()),
+                                 XJU_TRACED);
+    return result;
+  }
+  catch(xju::Exception& e){
+    std::ostringstream s;
+    s << "create libgcrypt DEScbc cipher with key "
+      << xju::format::join(cipherKey.value().begin(),
+                           cipherKey.value().end(),
+                           xju::format::Hex(),
+                           " ")
+      << " and IV "
+      << xju::format::join(cipherIV.value().begin(),
+                           cipherIV.value().end(),
+                           xju::format::Hex(),
+                           " ");
+    e.addContext(s.str(),XJU_TRACED);
+    throw;
+  }
+}
+
+
+}
+
+class DEScbcCipher : public xju::crypt::Cipher
+{
+public:
+  CipherKey const cipherKey_;
+  CipherIV const cipherIV_;
+
+  // pre: cipherKey._.size() == 8
+  // pre: cipherIV._.size() == 8
+  DEScbcCipher(
+    CipherKey cipherKey,
+    CipherIV cipherIV) try:
+      cipherKey_(std::move(cipherKey)),
+      cipherIV_(std::move(cipherIV))
+  {
+  }
+  catch(xju::Exception& e){
+    e.addContext("make DEScbcCipher",XJU_TRACED);
+    throw;
+  }
+
+  // post: result.size() == data.size() (AES does not pad)
+  virtual std::vector<uint8_t> encryptData(std::vector<uint8_t> const& data) override
+  {
+    try{
+      Vptr impl(makeCipher(cipherKey_,cipherIV_));
+      std::vector<uint8_t> result(data.size());
+      xju::crypt::verifySuccessful(gcry_cipher_encrypt(
+                                     impl.get(),
+                                     result.data(),
+                                     result.size(),
+                                     data.data(),
+                                     data.size()),
+                                   XJU_TRACED);
+      return result;
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "encrypt " << data.size() << " bytes of data using DEScbc encryption";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+  virtual std::vector<uint8_t> decryptData(std::vector<uint8_t> const& data) override
+  {
+    try{
+      Vptr impl(makeCipher(cipherKey_,cipherIV_));
+      std::vector<uint8_t> result(data.size());
+      xju::crypt::verifySuccessful(
+        gcry_cipher_decrypt(
+          impl.get(),
+          result.data(), result.size(),
+          data.data(), data.size()),
+          XJU_TRACED);
+      return result;
+    }
+    catch(xju::Exception& e){
+      std::ostringstream s;
+      s << "decrypt " << data.size() << " bytes of data using DEScbc encryption";
+      e.addContext(s.str(),XJU_TRACED);
+      throw;
+    }
+  }
+
+};
+
+}
+}
+}

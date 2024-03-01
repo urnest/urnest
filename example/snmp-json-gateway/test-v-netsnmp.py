@@ -154,6 +154,7 @@ for authAlg, netsnmpAuthAlg in [
 
 for privAlg, netsnmpPrivAlg in [
         ('aes128cfb', 'AES'),
+        ('descbc', 'DES'),
 ]:
     try:
         engineId='AA23F2'
