@@ -7,16 +7,16 @@
 %test-4
 %test-merge-1-4
 
-%test-1.output==(/dev/null)+cmd=(../hcp-tags) (test-1.hcp):stdout
+%test-1.output==(/dev/null)+cmd=(..%hcp-tags) (test-1.hcp):stdout
 %test-1==()+cmd=(tester.py) (%test-1.output) (test-1.json):exec.output
 
-%test-2.output==(/dev/null)+cmd=(../hcp-tags) (test-2.hcp):stdout
+%test-2.output==(/dev/null)+cmd=(..%hcp-tags) (test-2.hcp):stdout
 %test-2==()+cmd=(tester.py) (%test-2.output) (test-2.json):exec.output
 
-%test-3.output==(/dev/null)+cmd=(../hcp-tags) (test-3.h):stdout
+%test-3.output==(/dev/null)+cmd=(..%hcp-tags) (test-3.h):stdout
 %test-3==()+cmd=(tester.py) (%test-3.output) (test-3.json):exec.output
 
-%test-4.output==(/dev/null)+cmd=(../hcp-tags) (test-4.h):stdout
+%test-4.output==(/dev/null)+cmd=(..%hcp-tags) (test-4.h):stdout
 %test-4==()+cmd=(tester.py) (%test-4.output) (test-4.json):exec.output
 
 %merge-1-4.output==(/dev/null)+cmd=(../hcp-tags-merge) (%test-1.output) (%test-4.output):stdout

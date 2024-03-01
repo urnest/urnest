@@ -119,27 +119,27 @@ tags%all-tests.tree
 
 %check-scope-at==()+cmd=(%hcp-parse-file) (%test-scope-at.hcp):exec.output
 
-%test-scope-at-0==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '0' 'header ::':exec.output
-%test-scope-at-30==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '30' 'header ::':exec.output
-%test-scope-at-57==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '57' 'header ::':exec.output
-%test-scope-at-75==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '75' 'header ::':exec.output
-%test-scope-at-21==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '21' 'header ::a':exec.output
-%test-scope-at-26==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '26' 'impl ::a':exec.output
-%test-scope-at-47==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '47' 'header ::b':exec.output
-%test-scope-at-52==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '52' 'impl ::b':exec.output
-%test-scope-at-68==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '68' 'header ::f':exec.output
-%test-scope-at-110==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '110' 'header ::n1::c1':exec.output
-%test-scope-at-181==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '181' 'header ::n2::n21::c1':exec.output
-%test-scope-at-287==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '287' 'header ::g::h::p::q::r':exec.output
-%test-scope-at-337==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '337' 'header ::g':exec.output
-%test-scope-at-353==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '353' 'header ::g':exec.output
-%test-scope-at-367==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '367' 'header ::g':exec.output
-%test-scope-at-380==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '380' 'header ::g':exec.output
-%test-scope-at-394==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '394' 'header ::g':exec.output
-%test-scope-at-401==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '401' 'impl ::g':exec.output
-%test-scope-at-458==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '458' 'header ::g2':exec.output
-%test-scope-at-509==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '509' 'impl ::C':exec.output
-%test-scope-at-2-15==(%test-scope-at-2.hcp)+cmd=(%test-scope-at.sh) (hcp-scope-at) '15' 'header ::':exec.output
+%test-scope-at-0==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '0' 'header ::':exec.output
+%test-scope-at-30==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '30' 'header ::':exec.output
+%test-scope-at-57==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '57' 'header ::':exec.output
+%test-scope-at-75==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '75' 'header ::':exec.output
+%test-scope-at-21==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '21' 'header ::a':exec.output
+%test-scope-at-26==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '26' 'impl ::a':exec.output
+%test-scope-at-47==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '47' 'header ::b':exec.output
+%test-scope-at-52==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '52' 'impl ::b':exec.output
+%test-scope-at-68==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '68' 'header ::f':exec.output
+%test-scope-at-110==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '110' 'header ::n1::c1':exec.output
+%test-scope-at-181==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '181' 'header ::n2::n21::c1':exec.output
+%test-scope-at-287==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '287' 'header ::g::h::p::q::r':exec.output
+%test-scope-at-337==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '337' 'header ::g':exec.output
+%test-scope-at-353==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '353' 'header ::g':exec.output
+%test-scope-at-367==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '367' 'header ::g':exec.output
+%test-scope-at-380==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '380' 'header ::g':exec.output
+%test-scope-at-394==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '394' 'header ::g':exec.output
+%test-scope-at-401==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '401' 'impl ::g':exec.output
+%test-scope-at-458==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '458' 'header ::g2':exec.output
+%test-scope-at-509==(%test-scope-at.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '509' 'impl ::C':exec.output
+%test-scope-at-2-15==(%test-scope-at-2.hcp)+cmd=(%test-scope-at.sh) (%hcp-scope-at) '15' 'header ::':exec.output
 
 %test-scope-at.sh== ! <<
 #!/bin/sh

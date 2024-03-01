@@ -148,7 +148,7 @@ inline std::string int_(signed char const x,
 //                     values.end(),
 //                     xju::format::Int(/*width*/4));
 //
-struct Int : std::unary_function<long long, std::string>
+struct Int
 {
 public:
   explicit Int(int width = 0, 
@@ -175,7 +175,7 @@ private:
 //
 // function object to call int_ (for unsigned value type).
 //
-struct IntU : std::unary_function<unsigned long long, std::string>
+struct IntU
 {
 public:
   explicit IntU(
@@ -232,7 +232,7 @@ std::string float_(
 // Function objects that call float_ (for floats and
 // doubles respectively).
 //
-class Float : public std::unary_function<float, std::string>
+class Float
 {
 public:
   explicit Float(
@@ -250,7 +250,7 @@ private:
   ios_base::fmtflags _format;
   int _precision;
 };
-class Double : public std::unary_function<double, std::string>
+class Double
 {
 public:
   explicit Double(const ios_base::fmtflags format = ios_base::fmtflags(0), // [1]
@@ -286,7 +286,7 @@ private:
 //    to allow sub-classes to supply their own implementations.
 //
 template<class T>
-class Str : public std::unary_function<T, std::string>
+class Str
 {
 public:
   std::string operator()(const T& x) const throw()
@@ -413,7 +413,7 @@ std::string quote(const std::string& pre,
                   const std::string& post,
                   const std::string& x) throw();
 
-class Quote : std::unary_function<std::string, std::string>
+class Quote
 {
 public:
   Quote():	_pre("\""),	_post("\"") {}

@@ -13,83 +13,21 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
-#include <algorithm>
 #include "xju/assert.hh"
-#include <memory>
 #include <functional>
 #include <utility>
 
 void test1()
 {
-    std::string const a("a");
-    std::vector<std::string const*> x;
-    x.push_back(&a);
-    std::vector<size_t> y;
-    std::transform(
-        x.begin(), 
-        x.end(),
-        std::back_inserter(y),
-        xju::functional::deref(xju::functional::method(&std::string::size)));
-    xju::assert_equal(y, std::vector<size_t>(1, 1U));
-}
-
-void test2()
-{
-    std::string const a("a");
-    std::vector<std::string> x;
-    x.push_back(a);
-    std::vector<size_t> y;
-    std::transform(
-        x.begin(), 
-        x.end(),
-        std::back_inserter(y),
-        xju::functional::method(&std::string::size));
-    xju::assert_equal(y, std::vector<size_t>(1, 1U));
-}
-
-void test3()
-{
-    std::vector<std::shared_ptr<std::string const> > x;
-    x.push_back(std::shared_ptr<std::string const>(new std::string("a")));
-    std::vector<size_t> y;
-    std::transform(
-        x.begin(), 
-        x.end(),
-        std::back_inserter(y),
-        xju::functional::deref(xju::functional::method(&std::string::size)));
-    xju::assert_equal(y, std::vector<size_t>(1, 1U));
-}
-
-int f4(int x)
-{
-    return x+1;
-}
-
-void test4()
-{
-    std::vector<std::shared_ptr<int> > x;
-    x.push_back(std::shared_ptr<int>(new int(1)));
-    x.push_back(std::shared_ptr<int>(new int(2)));
-    
-    std::vector<int> expect;
-    expect.push_back(2);
-    expect.push_back(3);
-    
-    std::vector<int> result;
-    std::transform(x.begin(), x.end(), std::back_inserter(result),
-                   xju::functional::deref(std::ptr_fun(f4)));
-    xju::assert_equal(result, expect);
-    
+    std::pair<int, std::string> const x(87, "fred");
+    xju::assert_equal(xju::functional::first(x), 87);
+    xju::assert_equal(xju::functional::second(x), std::string("fred"));
 }
 
 int main(int argc, char* argv[])
 {
     int n = 0;
     test1(); ++n;
-    test2(); ++n;
-    test3(); ++n;
-    test4(); ++n;
     
     std::cout << "PASS - " << n << " steps" << std::endl;
     return 0;

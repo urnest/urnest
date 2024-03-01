@@ -13,6 +13,7 @@
 #include <future>
 #include <chrono>
 #include <xju/assert.hh>
+#include <utility>
 
 namespace xju
 {
@@ -23,8 +24,8 @@ template<class future>
 class Call
 {
 public:
-  Call(future&& f) noexcept:
-      f_(f)
+  Call(future f) noexcept:
+      f_(std::move(f))
   {
   }
   future f_;
