@@ -15,4 +15,6 @@
 (wsgi.py.test)+(%py-opts):py3.exec.cov
 
 %py-opts==<<
-+(..%py-opts)
++py_sp=(..)
++mypy_plugin=(../mypy-plugins/json_codec_mypy_plugin.py)
++mypy_flags=--show-traceback

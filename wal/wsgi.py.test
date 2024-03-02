@@ -19,7 +19,7 @@ from sys import path
 from os.path import dirname
 if path[0]==dirname(__file__): path.pop(0)
 
-from xju.wal import wsgi
+from wal import wsgi
 
 from xju.assert_ import Assert
 from urllib.parse import urlencode
@@ -31,3 +31,6 @@ Assert(wsgi.getVariablesFromWSGIenviron({
     'REQUEST_METHOD':'GET'}))=={
         'a':'1',
         'b':'&2'}
+
+Assert(wsgi.parseDisposition('form-data;type="text/plain";encoding="utf-8"'))=={
+    'type': 'text/plain', 'encoding': 'utf-8'}

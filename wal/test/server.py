@@ -20,9 +20,9 @@ import sys
 import os
 
 d=os.path.dirname(sys.argv[0])
-sys.path[0:0]=os.path.join(os.path.abspath(d),'../../..')
+sys.path[0:0]=os.path.join(os.path.abspath(d),'../..') # for wal, xju
 
-import app
+import .app
 
 from wsgiref.simple_server import make_server
 
@@ -33,6 +33,6 @@ port=int(sys.argv[1])
 httpd=make_server('', port, Dispatcher(app,d).main)
 print("Serving HTTP on port {port}...".format(**vars()))
 
-# Respond to requests until process is killed
+# Respond to requests until client requests quit
 while not app.quit_requested:
     httpd.handle_request()

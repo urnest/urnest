@@ -44,30 +44,30 @@ def restricted(authorizer):
     return result
 
 # Response convenience functions - see test/app.py for use
-def plainText(text):
+def plainText(text: str) -> "Response":
     result=Response(content=text.encode('utf-8'),
                     contentType='text/plain; charset=UTF-8')
     return result
 
-def html(text):
+def html(text: str) -> "Response":
     result=Response(content=text.encode('utf-8'),
                     contentType='text/html; charset=UTF-8')
     return result
 
-def cookie(name,value,path='/'):
+def cookie(name,value,path='/') -> "Response":
     result=Response()
     result.cookies={
         validateCookieName(name): (validateCookieValue(value),{
             'Path':validateCookiePath(path)})}
     return result
 
-def header(name,value):
+def header(name,value) -> "Response":
     '''HTTP header'''
     result=Response()
     result.headers=[(name,value)]
     return result
 
-def redirect(location:str,**etc):
+def redirect(location:str,**etc) -> "Response":
     '''HTTP redirect to %(location)s, with extras %(etc)r'''
     cookies=etc.get('cookies',{})
     result=Response()
@@ -77,20 +77,20 @@ def redirect(location:str,**etc):
 
 class ClientError(Exception):
     'error to pass back to client'
-    def __init__(self,s):
+    def __init__(self,s: str):
         Exception.__init__(self,s)
         self.error=s
         pass
     pass
 
 class Forbidden(Exception):
-    def __init__(self,description):
+    def __init__(self,description: str):
         Exception.__init__(self,description)
         pass
     pass
 
 class NotFound(Exception):
-    def __init__(self,description):
+    def __init__(self,description: str):
         Exception.__init__(self,description)
         pass
     pass

@@ -19,10 +19,13 @@ import urllib
 from xju.xn import in_context,in_function_context
 from xju.xn import first_line_of as l1
 from xju.assert_ import Assert
-from typing import Tuple,Dict,Mapping,Union,List,Any
+from typing import Mapping,Union,List,Any
 from urllib.parse import unquote as urlunquote
 
-def parseHeaders(mimePart:bytes)->Tuple[Dict[str,str],bytes]:
+def parseHeaders(mimePart:bytes)->tuple[
+        dict[str,str],  # headers
+        bytes  # rest
+]:
     try:
         Assert(mimePart).isInstanceOf(bytes)
         h,rest=mimePart.split(b'\r\n\r\n', 1)
@@ -32,16 +35,19 @@ def parseHeaders(mimePart:bytes)->Tuple[Dict[str,str],bytes]:
                  for _ in headers2] #REVISIT: not utf-8 but what?
         return dict(headers3), rest
     except:
-        mps=mimePart[0:256]
+        mps=mimePart[0:256]  # limit size of exception
         raise in_context('parse headers from mime part %(mps)s...'%vars()) from None
     pass
 
-def parseQuoted(x:str):
+def parseQuoted(x:str) -> str:
     assert x.startswith('"'), x
     assert x.endswith('"'), x
     return x[1:-1].replace(r'\"','"')
 
-def parseDisposition(dispositionValue:str):
+def parseDisposition(dispositionValue:str) -> dict[
+        str,
+        str
+]:
     '''Parse Content-Disposition value {dispositionValue}'''
     try:
         assert dispositionValue.strip().startswith('form-data;'), dispositionValue
@@ -64,9 +70,9 @@ class FileVar(object):
 
 StrOrFileVar=Union[str,
                    FileVar, # for each part of multi-part/form-data
-                   Tuple[int, Any]]     #  (length, wsgi.input) for application/octet-stream
+                   tuple[int, Any]]     #  (length, wsgi.input) for application/octet-stream
 
-def getVariablesFromWSGIenviron(wsgiEnv:Mapping[str,Any])->Dict[str,Union[str,FileVar,Tuple[int,Any],List[StrOrFileVar]]]:
+def getVariablesFromWSGIenviron(wsgiEnv:Mapping[str,Any])->dict[str,Union[str,FileVar,tuple[int,Any],List[StrOrFileVar]]]:
     '''parse query string and wsgi.input into a dictionary from WSGI environ {wsgiEnv}'''
     '''like { varName : str or FileVar or list of str or FileVar }, e.g.:'''
     '''  { "id":"883999", "colours":["red","blue"] }'''
@@ -76,8 +82,8 @@ def getVariablesFromWSGIenviron(wsgiEnv:Mapping[str,Any])->Dict[str,Union[str,Fi
     '''  where content length is from Content-Length header (or -1) and'''
     '''  file is a file-like readable that presents the body of the request'''
     try:
-        result:Dict[str,Union[str,FileVar,Tuple[int,Any],List[StrOrFileVar]]]={}
-        d:List[Tuple[str,StrOrFileVar]]=[]
+        result:dict[str,Union[str,FileVar,tuple[int,Any],List[StrOrFileVar]]]={}
+        d:List[tuple[str,StrOrFileVar]]=[]
         if wsgiEnv.get('QUERY_STRING',''):
             nvs=[_.split('=',1) for _ in wsgiEnv['QUERY_STRING'].split('&')]
             d.extend(
@@ -155,7 +161,7 @@ def getVariablesFromWSGIenviron(wsgiEnv:Mapping[str,Any])->Dict[str,Union[str,Fi
         raise in_function_context(getVariablesFromWSGIenviron,vars()) from None
     pass
 
-def getCookiesFromWSGIenviron(environ:Mapping[str,str])->Dict[str,str]:
+def getCookiesFromWSGIenviron(environ:Mapping[str,str])->dict[str,str]:
     '''get cookies from WSGI environ {environ} HTTP_COOKIE item as dictionary'''
     '''like { cookieName : str ] }, e.g.:'''
     '''  { "emailAddress" : "fred@dot.com" } '''
@@ -169,7 +175,7 @@ def getCookiesFromWSGIenviron(environ:Mapping[str,str])->Dict[str,str]:
     pass
 
 
-def getHTTPHeadersFromWSGIenviron(environ)->Dict[str,str]: #name,value
+def getHTTPHeadersFromWSGIenviron(environ)->dict[str,str]: #name,value
     '''get HTTP_x headers from WSGI environ {environ!r} as dictionary'''
     '''like { headerName : str }, e.g.:'''
     try:
