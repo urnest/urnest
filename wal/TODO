@@ -13,10 +13,10 @@ x rework response type handling:
 - dispatch to function
   x test cookies
   x get
-  / post
+  x post
     x ajax
     x form
-    - mime
+    x mime
   x validate returned cookies
   x test non-public+cookies
   
