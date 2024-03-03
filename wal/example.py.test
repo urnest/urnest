@@ -1,0 +1,231 @@
+#!/usr/bin/env python3
+# coding: utf-8
+
+# Copyright (c) 2018 Trevor Taylor
+# 
+# Permission to use, copy, modify, and/or distribute this software for
+# any purpose with or without fee is hereby granted, provided that all
+# copyright notices and this permission notice appear in all copies.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+
+import sys
+import os
+from pathlib import Path
+import json
+
+from xju import pq
+from xju.assert_ import Assert
+from xju.cmc import Thread
+from urllib.request import urlopen, build_opener, HTTPErrorProcessor, Request
+from urllib.parse import urlencode
+
+d=Path(sys.argv[0]).absolute().parent
+
+sys.path[0:0]=[str(d.parent), # for wal, xju
+]
+print(sys.path)
+
+import wal.example.app
+
+from wsgiref.simple_server import make_server
+
+from wal.dispatcher import Dispatcher
+
+port=int(sys.argv[1])
+ports = range(port, port+256)
+
+exceptions = set()
+
+for port in ports:
+    try:
+        httpd=make_server('', port, Dispatcher(wal.example.app,d/'example').main)
+        print("Serving HTTP on port {port}...".format(**vars()))
+    except Exception as e:
+        exceptions.add(str(e))
+    else:
+        break
+    pass
+else:
+    raise Exception(f"{ports=} exhausted with {exceptions=}")
+
+def run_server():
+    # Respond to requests until client requests quit
+    httpd.serve_forever()
+    pass
+
+def stop_server():
+    #example.app.quit_requested = True
+    httpd.shutdown()
+    pass
+
+class RawResponse(HTTPErrorProcessor):
+    def http_response(self, request, response):
+        return response
+    
+with Thread(run_server,stop_server):
+    Assert(urlopen(f"http://localhost:{port}").read().decode('utf-8')).contains(
+        "public function returning html string")
+    
+    Assert(pq.parse(urlopen(f"http://localhost:{port}/public.html").read().decode('utf-8')).find(
+        pq.tagName('body')).text())=="public"
+
+    Assert(urlopen(f"http://localhost:{port}/params").read().decode('utf-8'))==""
+
+    Assert(urlopen(f"http://localhost:{port}/params?name=fred&age=25").read().decode('utf-8'))=="age: 25\nname: fred"
+    Assert(urlopen(f"http://localhost:{port}/json").read().decode('utf-8'))=="""{
+    "result": {
+        "age": 25,
+        "name": "fred"
+    }
+}"""
+    Assert(pq.parse(urlopen(f"http://localhost:{port}/html").read().decode('utf-8')).find(
+        pq.tagName('a')).text())=="json"
+
+    Assert(build_opener(RawResponse).open(
+        f"http://localhost:{port}/redirect").getheader('Location'))=='html'
+
+    doh=build_opener(RawResponse).open(f"http://localhost:{port}/client-error?e=doh")
+    Assert((doh.status, doh.read())) == (400, b"doh")
+    
+    Assert(json.loads(
+        urlopen(f"http://localhost:{port}/post-json", data=urlencode({
+            'json_params': '{\n\t"type_": "json",\n\t"name": "jock",\n\t"age": 30\n}'
+        }).encode('utf-8')).read().decode('utf-8')))=={
+            "result": {
+                "age": 30,
+                "name": "jock",
+                "type": "json",
+            }
+         }
+
+    Assert(json.loads(
+        urlopen(f"http://localhost:{port}/post-json-params", data=urlencode({
+            'json_params': '{\n\t"type_": "json",\n\t"name": "jock",\n\t"age": 30\n}'
+        }).encode('utf-8')).read().decode('utf-8')))=={
+            "result": {
+                "age": 30,
+                "name": "jock",
+                "type_": "json",
+            }
+         }
+
+    qs='json_params={+"type_":+"big",+"name":+"joe",+"age":+31+}&_=1709353852030'
+    Assert(json.loads(
+        urlopen(f'http://localhost:{port}/post-json?{qs}').read().decode('utf-8')))=={
+            "result": {
+                "age": 31,
+                "name": "joe",
+                "type": "big",
+            }
+         }
+
+    Assert(pq.parse(urlopen(f'http://localhost:{port}/login-required').read().decode('utf-8')).find(
+        pq.tagName('b')).text())=="you are not logged in"
+    
+    r=build_opener(RawResponse).open(f"http://localhost:{port}/login")
+    s=r.getheader('Set-Cookie')
+    Assert(r.read()) == b"OK"
+     
+    r=build_opener(RawResponse).open(Request(f"http://localhost:{port}/login-required",headers={
+        'Cookie': s}))
+    Assert(r.read()) == b'OK'
+
+    # multipart-form-data
+    r=urlopen(Request(
+        f"http://localhost:{port}/multipart-form-data",
+        headers={
+            'Cookie': s,
+            'Content-Type': 'multipart/form-data; charset=utf-8; boundary=@@@@@@@@@@@@@@@@'},
+        data=b''.join([
+            b"\r\n",
+            b"--@@@@@@@@@@@@@@@@\r\n",
+            b'Content-Disposition: form-data; filename="fred.txt"; name="fred"\r\n',
+            b"Content-Type: text/plain\r\n",
+            b"\r\n",
+            b"contents of fred.txt just one line\r\n",
+            b"--@@@@@@@@@@@@@@@@\r\n",
+            b'Content-Disposition: form-data; name="jock"\r\n',
+            b"\r\n",
+            b"value of jock\r\n",
+            b"--@@@@@@@@@@@@@@@@",
+        ])))
+    Assert(json.loads(r.read().decode('utf-8'))) == {'result': {'fred': ['fred.txt', 'text/plain', 'contents of fred.txt just one line'], 'jock': 'value of jock'}}
+
+    # missing Content-Disposition
+    r=build_opener(RawResponse).open(Request(
+        f"http://localhost:{port}/multipart-form-data",
+        headers={
+            'Cookie': s,
+            'Content-Type': 'multipart/form-data; charset=utf-8; boundary=@@@@@@@@@@@@@@@@'},
+        data=b''.join([
+            b"\r\n",
+            b"--@@@@@@@@@@@@@@@@\r\n",
+            b"Content-Type: text/plain\r\n",
+            b"\r\n",
+            b"contents of fred.txt just one line\r\n",
+            b"--@@@@@@@@@@@@@@@@\r\n",
+            b'Content-Disposition: form-data; name="jock"\r\n',
+            b"\r\n",
+            b"value of jock\r\n",
+            b"--@@@@@@@@@@@@@@@@",
+        ])))
+    Assert(r.status) == 500
+
+    # application/octet-stream
+    r=urlopen(Request(
+        f"http://localhost:{port}/octet-stream",
+        headers={
+            'Cookie': s,
+            'Content-Type': 'application/octet-stream'},
+        data=b'some raw bytes'))
+    Assert(json.loads(r.read().decode('utf-8'))) == {'result': [14, [115, 111, 109, 101, 32, 114, 97, 119, 32, 98, 121, 116, 101, 115]]}
+
+    # submodule
+    Assert(pq.parse(urlopen(f"http://localhost:{port}/submodule/some").read().decode('utf-8')).find(
+        pq.tagName('body')).text())=="submodule/some"
+
+    # Forbidden
+    r=build_opener(RawResponse).open(Request(
+        f"http://localhost:{port}/forbidden"))
+    Assert(r.status) == 403
+
+    # NotFound
+    r=build_opener(RawResponse).open(Request(
+        f"http://localhost:{port}/nothing-there"))
+    Assert(r.status) == 404
+
+    # NotFound
+    r=build_opener(RawResponse).open(Request(
+        f"http://localhost:{port}/no-handler"))
+    Assert(r.status) == 404
+
+    # NotFound
+    r=build_opener(RawResponse).open(Request(
+        f"http://localhost:{port}/sub/none"))
+    Assert(r.status) == 404
+
+    # missing param value
+    qs='name=joe&age=31'
+    r=build_opener(RawResponse).open(Request(
+        f"http://localhost:{port}/post-json?{qs}"))
+    Assert(r.status) == 500
+
+    # coverage of encoded file
+    urlopen(f"http://localhost:{port}/1.svg.gz").read()
+
+    # Forbidden cases for coverage
+    r=build_opener(RawResponse).open(Request(
+        f"http://localhost:{port}/not-public"))
+    Assert(r.status) == 403
+    r=build_opener(RawResponse).open(Request(
+        f"http://localhost:{port}/not-callable"))
+    Assert(r.status) == 403
+    pass

@@ -19,9 +19,9 @@ import mimetypes
 from xju.xn import first_line_of as l1,in_context
 from xju import pq
 from xju.misc import fromJson,toJson
-from .wsgi import getVariablesFromWSGIenviron, getCookiesFromWSGIenviron, getHTTPHeadersFromWSGIenviron
+from wal.wsgi import getVariablesFromWSGIenviron, getCookiesFromWSGIenviron, getHTTPHeadersFromWSGIenviron
 from typing import Set,Callable,Dict,Union,Tuple,List
-from . import public_functions, restricted_functions,ClientError,Forbidden,NotFound,Response,promoteContent
+from wal import public_functions, restricted_functions,ClientError,Forbidden,NotFound,Response,promoteContent
 
 def getParam(param_name,
              json_params,
@@ -133,7 +133,7 @@ class Dispatcher:
                 pass
             fname=name.replace('-','_').replace(' ','_').replace('.','_')
             f=mod.__dict__.get(fname,None)
-            if not f: return None
+            if f is None: return None
             if not callable(f):
                 raise Forbidden('%(fname)s is not callable ie not a function like "def %(fname)s():"'%vars())
             if not f in public_functions and not f in restricted_functions:
@@ -151,13 +151,13 @@ class Dispatcher:
                 pass
             if not result:
                 params=getVariablesFromWSGIenviron(environ)
-                headers=getHTTPHeadersFromWSGIenviron(environ)
+                in_headers=getHTTPHeadersFromWSGIenviron(environ)
                 method=environ['REQUEST_METHOD'] #e.g. 'GET', 'POST'
                 referer=environ.get('HTTP_REFERER',None)
                 remote_addr=environ['REMOTE_ADDR']
                 result=f(**makeParams(remote_addr,
                                       method,
-                                      headers,
+                                      in_headers,
                                       params,
                                       url,
                                       referer,

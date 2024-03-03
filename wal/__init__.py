@@ -145,17 +145,13 @@ class Response:
         pass
     def cookieHeaders(self):
         '''return headers for {self.cookies}'''
-        try:
-            result=[] # ('Set-Cookie', xxxx }
-            for name,va in self.cookies.items():
-                value=va[0]+''.join(['; {an}={av}'.format(**vars())
-                                     for an,av in va[1].items()])
-                result.append( ('Set-Cookie',f'''{name}={value}''') )
-                pass
-            return result
-        except:
-            raise in_function_context(Response.cookieHeaders,vars()) from None
-        pass
+        result=[] # ('Set-Cookie', xxxx }
+        for name,va in self.cookies.items():
+            value=va[0]+''.join(['; {an}={av}'.format(**vars())
+                                 for an,av in va[1].items()])
+            result.append( ('Set-Cookie',f'''{name}={value}''') )
+            pass
+        return result
     pass
 
 def validateCookieName(name:str):
@@ -211,24 +207,14 @@ def promoteContent(content:Union[Response, #already good
                                  pq.Selection, #text/html
                                  dict,bool,list,float]): #text/json REVISIT: rules
     '''promote content object to a valid Response'''
-    contentType=type(content)
-    try:
-        if isinstance(content,Response):
+    match content:
+        case Response():
             return content
-        if isinstance(content,pq.Selection):
-            return Response(content.utf8(),
-                            'text/html; charset=UTF-8')
-        if isinstance(content,dict) and (
-            'result' in content or
-            'error' in content):
+        case pq.Selection():
+            return Response(content.utf8(),'text/html; charset=UTF-8')
+        case dict() if 'result' in content or 'error' in content:
             return Response(toJson(content).encode('utf-8'),
                             'text/json; charset=UTF-8')
-        if content is None or \
-           isinstance(content,dict) or isinstance(content,list) or \
-           isinstance(content,int) or isinstance(content,float):
+        case None | dict() | list() | int() | float():
             return Response(toJson({'result':content}).encode('utf-8'),
                             'text/json; charset=UTF-8')
-        raise Exception('do not know what HTTP HTTP CONTENT-TYPE to use for a {contentType} object - return an explicit wal.Response to set CONTENT-TYPE'.format(**vars()))
-    except:
-        raise in_function_context(promoteContent,vars()) from None
-    pass

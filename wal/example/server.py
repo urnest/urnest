@@ -18,11 +18,14 @@
 
 import sys
 import os
+from pathlib import Path
 
-d=os.path.dirname(sys.argv[0])
-sys.path[0:0]=os.path.join(os.path.abspath(d),'../..') # for wal, xju
+d=Path(sys.argv[0]).absolute().parent
 
-import .app
+sys.path[0:0]=[str(d.parent.parent),] # for wal, xju
+print(sys.path)
+
+import app
 
 from wsgiref.simple_server import make_server
 

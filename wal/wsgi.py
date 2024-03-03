@@ -19,7 +19,7 @@ import urllib
 from xju.xn import in_context,in_function_context
 from xju.xn import first_line_of as l1
 from xju.assert_ import Assert
-from typing import Mapping,Union,List,Any
+from typing import Mapping,Union,Any
 from urllib.parse import unquote as urlunquote
 
 def parseHeaders(mimePart:bytes)->tuple[
@@ -34,7 +34,7 @@ def parseHeaders(mimePart:bytes)->tuple[
         headers3=[(_[0].decode('utf-8'), _[1].strip().decode('utf-8'))
                  for _ in headers2] #REVISIT: not utf-8 but what?
         return dict(headers3), rest
-    except:
+    except Exception:
         mps=mimePart[0:256]  # limit size of exception
         raise in_context('parse headers from mime part %(mps)s...'%vars()) from None
     pass
@@ -55,7 +55,7 @@ def parseDisposition(dispositionValue:str) -> dict[
         v2=[_.strip().split('=',1) for _ in v]
         v3=[(_[0],parseQuoted(_[1])) for _ in v2]
         return dict(v3)
-    except:
+    except Exception:
         raise in_function_context(parseDisposition,vars()) from None
     pass
 
@@ -68,22 +68,22 @@ class FileVar(object):
         pass
     pass
 
-StrOrFileVar=Union[str,
-                   FileVar, # for each part of multi-part/form-data
+StrOrFileVar=Union[str,  # non-file part of multi-part/form-data
+                   FileVar, # file part of multi-part/form-data
                    tuple[int, Any]]     #  (length, wsgi.input) for application/octet-stream
 
-def getVariablesFromWSGIenviron(wsgiEnv:Mapping[str,Any])->dict[str,Union[str,FileVar,tuple[int,Any],List[StrOrFileVar]]]:
+def getVariablesFromWSGIenviron(wsgiEnv:Mapping[str,Any])->dict[str,Union[str,FileVar,tuple[int,Any],list[StrOrFileVar]]]:
     '''parse query string and wsgi.input into a dictionary from WSGI environ {wsgiEnv}'''
     '''like { varName : str or FileVar or list of str or FileVar }, e.g.:'''
     '''  { "id":"883999", "colours":["red","blue"] }'''
     '''... note list is only used where var has multiple values'''
-    '''- where Content-Type is application/octet-stream, result dictiony'''
-    '''  includes "body", a tuple ( content_length, file )'''
+    '''- where Content-Type is application/octet-stream, result dictionary'''
+    '''  includes "body" as a tuple ( content_length, file )'''
     '''  where content length is from Content-Length header (or -1) and'''
     '''  file is a file-like readable that presents the body of the request'''
     try:
-        result:dict[str,Union[str,FileVar,tuple[int,Any],List[StrOrFileVar]]]={}
-        d:List[tuple[str,StrOrFileVar]]=[]
+        result:dict[str,Union[str,FileVar,tuple[int,Any],list[StrOrFileVar]]]={}
+        d:list[tuple[str,StrOrFileVar]]=[]
         if wsgiEnv.get('QUERY_STRING',''):
             nvs=[_.split('=',1) for _ in wsgiEnv['QUERY_STRING'].split('&')]
             d.extend(
@@ -112,7 +112,7 @@ def getVariablesFromWSGIenviron(wsgiEnv:Mapping[str,Any])->dict[str,Union[str,Fi
                                 ct.split('boundary=')[1]).encode('utf-8')
                 body:bytes=b'\r\n'+wsgiEnv['wsgi.input'].read(
                     int(wsgiEnv.get('CONTENT_LENGTH',-1)))
-                all:List[bytes]=body.split(boundary)[1:-1]
+                all:list[bytes]=body.split(boundary)[1:-1]
                 for i,x in enumerate(all):
                     try:
                         assert x.startswith(b'\r\n'), x[0:256]
@@ -129,7 +129,7 @@ def getVariablesFromWSGIenviron(wsgiEnv:Mapping[str,Any])->dict[str,Union[str,Fi
                         else:
                             d.append( (disposition['name'],rest.decode('utf-8')) )
                             pass
-                    except:
+                    except Exception:
                         raise in_context('parse part %(i)s' % vars()) from None
                     pass
                 pass
@@ -157,7 +157,7 @@ def getVariablesFromWSGIenviron(wsgiEnv:Mapping[str,Any])->dict[str,Union[str,Fi
                 pass
             pass
         return result
-    except:
+    except Exception:
         raise in_function_context(getVariablesFromWSGIenviron,vars()) from None
     pass
 
@@ -170,17 +170,13 @@ def getCookiesFromWSGIenviron(environ:Mapping[str,str])->dict[str,str]:
         e=environ.get('HTTP_COOKIE',None)
         if e: result=dict([_.strip().split('=') for _ in e.split(';')])
         return result
-    except:
+    except Exception:
         raise in_function_context(getCookiesFromWSGIenviron,vars()) from None
     pass
 
 
 def getHTTPHeadersFromWSGIenviron(environ)->dict[str,str]: #name,value
     '''get HTTP_x headers from WSGI environ {environ!r} as dictionary'''
-    '''like { headerName : str }, e.g.:'''
-    try:
-        return dict([(name,value) for name,value in environ.items()
-                     if name.startswith('HTTP_')])
-    except:
-        raise in_function_context(getHTTPHeadersFromWSGIenviron,vars()) from None
-    pass
+    '''like { headerName : str }'''
+    return dict([(name,value) for name,value in environ.items()
+                 if name.startswith('HTTP_')])

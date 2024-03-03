@@ -34,6 +34,16 @@ $(document).ready(function(){
       });
     return false;
   });
+  $('a.ajax-post-json-params').click(function(){
+    wal.postToServer('post-json-params',{
+	'type_':'json',
+	'name':'jock',
+	'age':30})
+      .then(function(result){
+	$('div.result').text('POST result (json)'+wal.json.encode(result));
+      });
+    return false;
+  });
   wal.trackTextInput($('input.tracked'),function(x){
     $('span.input-value').text(x);
   });

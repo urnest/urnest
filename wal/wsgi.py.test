@@ -34,3 +34,45 @@ Assert(wsgi.getVariablesFromWSGIenviron({
 
 Assert(wsgi.parseDisposition('form-data;type="text/plain";encoding="utf-8"'))=={
     'type': 'text/plain', 'encoding': 'utf-8'}
+
+try:
+    wsgi.parseHeaders(b"garbage")
+except Exception as e:
+    Assert(str(e)).startswith("failed to parse headers from mime part b'garbage'... because")
+else:
+    assert False
+    pass
+
+try:
+    wsgi.parseDisposition("garbage")
+except Exception as e:
+    Assert(str(e)).startswith("failed to Parse Content-Disposition value garbage because")
+else:
+    assert False
+    pass
+
+try:
+    wsgi.getVariablesFromWSGIenviron({
+        'REQUEST_METHOD': 'POST',
+        'CONTENT_TYPE': 'fred',
+        'CONTENT_LENGTH': 7})
+except Exception as e:
+    Assert(str(e)).contains('unimplemented CONTENT_TYPE')
+else:
+    assert False
+    pass
+
+
+Assert(wsgi.getVariablesFromWSGIenviron({
+    'REQUEST_METHOD': 'GET',
+    'QUERY_STRING': 'fred=1&fred=2&fred=3'
+    }))=={'fred':['1','2','3']}
+
+try:
+    wsgi.getCookiesFromWSGIenviron({
+        'HTTP_COOKIE': 'a'})
+except Exception as e:
+    Assert(str(e)).startswith("failed to get cookies from WSGI environ {'HTTP_COOKIE': 'a'} HTTP_COOKIE item as dictionary because")
+else:
+    assert False
+    pass

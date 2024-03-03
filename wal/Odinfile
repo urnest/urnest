@@ -7,12 +7,19 @@
 %local-pytest.tree:leaves
 %local.py.cov.checked
 
+#REVISIT: get coverage up by automating example client as example.py.test
+#  note will have to hunt for usable port, start at 8000 try 256 ports, randomise
+#  OSError: [Errno 98] Address already in use
+#%local.py.cov.checked
+
 %local.py.cov.checked==%local-pys-to-cover:list.py+py_cov=(%local.py.cov):list.py3.cov.checked
 %local-pys-to-cover==.:list
 %local.py.cov==%local-pytest.tree:leaves:py3.cov.list:agg.py3.cov
 
 %local-pytest.tree==<<
+(wal.py.test)+(%py-opts):py3.exec.cov
 (wsgi.py.test)+(%py-opts):py3.exec.cov
+(example.py.test)+(%py-opts)+cmd="8000":py3.exec.cov
 
 %py-opts==<<
 +py_sp=(..)

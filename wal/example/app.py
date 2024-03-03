@@ -14,10 +14,13 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 import wal
+import wal.wsgi
 from xju import pq
 
 import time
 import threading
+from io import RawIOBase
+from wal.example import submodule
 
 quit_requested = False
 
@@ -64,6 +67,11 @@ def post_json(type_: str, name: str,age: int):
         'age':age}}
 
 @wal.public
+def post_json_params(json_params):
+    '''special name "json_params" captures all params as dictionary'''
+    return { 'result': json_params }
+
+@wal.public
 def post_json_5s(type_: str, name: str,age: int):
     time.sleep(5)
     return { 'result': {
@@ -94,13 +102,31 @@ def isLoggedIn(cookies):
 
 def onlyIfLoggedIn(url,cookies):
     if not isLoggedIn(cookies):
-        return wal.parseHTML('<b>you are not logged in</b>')
+        return pq.parse('<b>you are not logged in</b>')
     pass
 
 @wal.restricted(onlyIfLoggedIn)
 def login_required():
     return wal.plainText('OK')
 
+@wal.restricted(onlyIfLoggedIn)
+def multipart_form_data(fred: wal.wsgi.FileVar,
+                         jock: str):
+    return { 'result': {
+        'fred': (fred.filename, fred.contentType, fred.content.decode('utf-8')),
+        'jock': jock}}
+
+@wal.restricted(onlyIfLoggedIn)
+def octet_stream(body: tuple[int, RawIOBase]):
+    return { 'result': [body[0], [int(b) for b in body[1].read(body[0]) or b'']]}
+
+@wal.public
+def forbidden():
+    raise wal.Forbidden('forbidden')
+
+@wal.public
+def nothing_there():
+    raise wal.NotFound('not found')
 
 lock = threading.Lock()
 flag = [ False ]
@@ -128,3 +154,7 @@ def set_flag(lock = lock, flag = flag, flag_changed = flag_changed):
     print('- set-flag')
     return True
 
+def not_public():
+    pass
+
+not_callable=0
