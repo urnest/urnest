@@ -30,32 +30,32 @@ $(document).ready(function(){
 	for(i=0;i!=5;++i){
 	  $e=$e.add($lis[n+i]);
       };
-	uwl.showElement($e,$input.outerHeight());
+	xwl.showElement($e,$input.outerHeight());
       }
     },10);
   });
-  $('.query-params').text(uwl.json.encode(uwl.queryParams()));
+  $('.query-params').text(xwl.json.encode(xwl.queryParams()));
   $('a.ajax-post').click(function(){
-    uwl.postToServer('post-json',{
+    xwl.postToServer('post-json',{
 	'type_':'json',
 	'name':'jock',
 	'age':30})
       .then(function(result){
-	$('div.result').text('POST result (json)'+uwl.json.encode(result));
+	$('div.result').text('POST result (json)'+xwl.json.encode(result));
       });
     return false;
   });
   $('a.ajax-get').click(function(){
-    uwl.getFromServer('post-json',{
+    xwl.getFromServer('post-json',{
 	'type_':'big',
 	'name':'joe',
 	'age':31})
       .then(function(result){
-	$('div.result').text('GET result (json)'+uwl.json.encode(result));
+	$('div.result').text('GET result (json)'+xwl.json.encode(result));
       });
     return false;
   });
-  uwl.trackTextInput($('input.tracked'),function(x){
+  xwl.trackTextInput($('input.tracked'),function(x){
     $('span.input-value').text(x);
   });
 });

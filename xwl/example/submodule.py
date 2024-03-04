@@ -13,8 +13,8 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-import uwl
+import xwl
 
-@uwl.public
+@xwl.public
 def some():
-    return uwl.html('<html><body>submodule/some</body></html>')
+    return xwl.html('<html><body>submodule/some</body></html>')

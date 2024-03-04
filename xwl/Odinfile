@@ -2,7 +2,7 @@
 
 %all.tree==<<
 %pytest.tree:leaves
-%python3-uwl.whl
+%python3-xwl.whl
 
 %pytest.tree==<<
 %local-pytest.tree:leaves
@@ -13,7 +13,7 @@
 %local.py.cov==%local-pytest.tree:leaves:py3.cov.list:agg.py3.cov
 
 %local-pytest.tree==<<
-(uwl.py.test)+(%py-opts):py3.exec.cov
+(xwl.py.test)+(%py-opts):py3.exec.cov
 (wsgi.py.test)+(%py-opts):py3.exec.cov
 (example.py.test)+(%py-opts)+cmd="8000":py3.exec.cov
 
@@ -25,79 +25,79 @@
 
 
 
-%publish-uwl-to-pypi! ==<<
-(/tmp)+cmd=(%publish-uwl-to-pypi.sh)+cmd=(%python3-uwl.whl)+cmd=(%python3-uwl-twine.tar.gz):run
+%publish-xwl-to-pypi! ==<<
+(/tmp)+cmd=(%publish-xwl-to-pypi.sh)+cmd=(%python3-xwl.whl)+cmd=(%python3-xwl-twine.tar.gz):run
 
-%publish-uwl-to-pypi.sh==!<<
+%publish-xwl-to-pypi.sh==!<<
 #!/bin/sh -ex
 whl="$1"
 tgz="$2"
 rm -rf dist && mkdir dist
-cp $whl dist/uwl-1.0.0-py3-none-any.whl
-cp $tgz dist/uwl-1.0.0.tar.gz
+cp $whl dist/xwl-1.0.0-py3-none-any.whl
+cp $tgz dist/xwl-1.0.0.tar.gz
 twine check dist/*
 twine upload --verbose dist/*
 
-%publish-uwl-to-testpypi! ==<<
-(/tmp)+cmd=(%publish-uwl-to-testpypi.sh)+cmd=(%python3-uwl.whl)+cmd=(%python3-uwl-twine.tar.gz):run
+%publish-xwl-to-testpypi! ==<<
+(/tmp)+cmd=(%publish-xwl-to-testpypi.sh)+cmd=(%python3-xwl.whl)+cmd=(%python3-xwl-twine.tar.gz):run
 
-%publish-uwl-to-testpypi.sh==!<<
+%publish-xwl-to-testpypi.sh==!<<
 #!/bin/sh -ex
 whl="$1"
 tgz="$2"
 rm -rf dist && mkdir dist
-cp $whl dist/uwl-1.0.0-py3-none-any.whl
-cp $tgz dist/uwl-1.0.0.tar.gz
+cp $whl dist/xwl-1.0.0-py3-none-any.whl
+cp $tgz dist/xwl-1.0.0.tar.gz
 twine check dist/*
 twine upload --verbose --repository pypitest dist/*
 
-%python3-uwl.whl == %python3-uwl-whl.exec.files+member='uwl-1.0.0/dist/uwl-1.0.0-py3-none-any.whl':extract_file
+%python3-xwl.whl == %python3-xwl-whl.exec.files+member='xwl-1.0.0/dist/xwl-1.0.0-py3-none-any.whl':extract_file
 
 # you'd think that the .tar.gz that the .whl was built from would be exactly the right thing to
 # put on pypi...
-%python3-uwl.tar.gz == %python3-uwl-tgz.exec.files+member='uwl-1.0.0.tar.gz':extract_file
+%python3-xwl.tar.gz == %python3-xwl-tgz.exec.files+member='xwl-1.0.0.tar.gz':extract_file
 # ... but no it needs the .tar.gz that it created when it created the wheel. It makes no sense
-%python3-uwl-twine.tar.gz == %python3-uwl-whl.exec.files+member='uwl-1.0.0/dist/uwl-1.0.0.tar.gz':extract_file
+%python3-xwl-twine.tar.gz == %python3-xwl-whl.exec.files+member='xwl-1.0.0/dist/xwl-1.0.0.tar.gz':extract_file
 
-%python3-uwl-tgz.exec.files==()+cmd=(%build-python3-uwl-tgz.sh)+cmd=(..) (../MIT-LICENCE) (README.rst) '1.0.0'+need=(%pytest.tree:leaves) :exec.files
+%python3-xwl-tgz.exec.files==()+cmd=(%build-python3-xwl-tgz.sh)+cmd=(..) (../MIT-LICENCE) (README.rst) '1.0.0'+need=(%pytest.tree:leaves) :exec.files
 
-%python3-uwl==()+cmd=(%build-python3-uwl.sh)+cmd=(.) (MIT-LICENCE) (README.rst) '1.0.0' +need=(%pytest.tree:leaves):exec.files
+%python3-xwl==()+cmd=(%build-python3-xwl.sh)+cmd=(.) (MIT-LICENCE) (README.rst) '1.0.0' +need=(%pytest.tree:leaves):exec.files
 
-%python3-uwl-whl.exec.files==%build-python3-uwl-whl.sh+cmd=(%build-python3-uwl-whl.sh)+cmd=(%python3-uwl.tar.gz):exec.files
+%python3-xwl-whl.exec.files==%build-python3-xwl-whl.sh+cmd=(%build-python3-xwl-whl.sh)+cmd=(%python3-xwl.tar.gz):exec.files
 
-%build-python3-uwl-whl.sh==!<<YYYY
+%build-python3-xwl-whl.sh==!<<YYYY
 #!/bin/sh
 set -ex
 tgz="$1"
 tar xzvf $tgz
-cd uwl-1.0.0
+cd xwl-1.0.0
 python3 -m build -n
 YYYY
 
-%build-python3-uwl-tgz.sh==!<<XXXX
+%build-python3-xwl-tgz.sh==!<<XXXX
 #!/bin/sh
 set -ex
 src_dir="$1"
 licence="$2"
 readme="$3"
 rev="$4"
-mkdir -p uwl-$rev/src
+mkdir -p xwl-$rev/src
 (
   cd $src_dir
-  tar cf - uwl/*.py uwl/*.py.test uwl/example/*.py uwl/example/*.html uwl/example/*.js uwl/example/1.svg.gz
+  tar cf - xwl/*.py xwl/*.py.test xwl/example/*.py xwl/example/*.html xwl/example/*.js xwl/example/1.svg.gz
 ) |
-(cd uwl-$rev/src && tar xvf - )
-touch uwl-$rev/src/py.typed
-tests=$(cd uwl-$rev/src/uwl && find . -name '*.py.test')
+(cd xwl-$rev/src && tar xvf - )
+touch xwl-$rev/src/py.typed
+tests=$(cd xwl-$rev/src/xwl && find . -name '*.py.test')
 tests_package_data=$(for t in $tests; do echo -n "\"$t\","; done)
-cat > uwl-$rev/pyproject.toml <<EOF
+cat > xwl-$rev/pyproject.toml <<EOF
 [build-system]
 requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 [project]
-name = "uwl"
+name = "xwl"
 version = "$rev"
-description = "uwl library"
+description = "xwl library"
 readme = "README.rst"
 authors = [{ name = "Trevor Taylor"}]
 license = { file = "MIT-LICENCE" }
@@ -113,13 +113,13 @@ dependencies = [ "xju>=2" ]
 Homepage = "https://github.com/urnest/urnest"
 [tool.setuptools.packages.find]
 where = ["src"]  # list of folders that contain the packages (["."] by default)
-include = ["uwl","uwl.*","uwl.example.*"]  # package names should match these glob patterns (["*"] by default)
+include = ["xwl","xwl.*","xwl.example.*"]  # package names should match these glob patterns (["*"] by default)
 exclude = []  # exclude packages matching these glob patterns (empty by default)
 namespaces = true  # to disable scanning PEP 420 namespaces (true by default)
 [tool.setuptools.package-data]
-uwl = [ $tests_package_data "py.typed"]
+xwl = [ $tests_package_data "py.typed"]
 EOF
-cp $licence uwl-$rev/MIT-LICENCE
-cp $readme uwl-$rev/README.rst
-tar czf uwl-$rev.tar.gz uwl-$rev
+cp $licence xwl-$rev/MIT-LICENCE
+cp $readme xwl-$rev/README.rst
+tar czf xwl-$rev.tar.gz xwl-$rev
 XXXX

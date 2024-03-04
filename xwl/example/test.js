@@ -13,44 +13,44 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
 $(document).ready(function(){
-  $('.query-params').text(uwl.json.encode(uwl.queryParams()));
+  $('.query-params').text(xwl.json.encode(xwl.queryParams()));
   $('a.ajax-post').click(function(){
-    uwl.postToServer('post-json',{
+    xwl.postToServer('post-json',{
 	'type_':'json',
 	'name':'jock',
 	'age':30})
       .then(function(result){
-	$('div.result').text('POST result (json)'+uwl.json.encode(result));
+	$('div.result').text('POST result (json)'+xwl.json.encode(result));
       });
     return false;
   });
   $('a.ajax-get').click(function(){
-    uwl.getFromServer('post-json',{
+    xwl.getFromServer('post-json',{
 	'type_':'big',
 	'name':'joe',
 	'age':31})
       .then(function(result){
-	$('div.result').text('GET result (json)'+uwl.json.encode(result));
+	$('div.result').text('GET result (json)'+xwl.json.encode(result));
       });
     return false;
   });
   $('a.ajax-post-json-params').click(function(){
-    uwl.postToServer('post-json-params',{
+    xwl.postToServer('post-json-params',{
 	'type_':'json',
 	'name':'jock',
 	'age':30})
       .then(function(result){
-	$('div.result').text('POST result (json)'+uwl.json.encode(result));
+	$('div.result').text('POST result (json)'+xwl.json.encode(result));
       });
     return false;
   });
-  uwl.trackTextInput($('input.tracked'),function(x){
+  xwl.trackTextInput($('input.tracked'),function(x){
     $('span.input-value').text(x);
   });
   $('a[href="await-flag"]').click(function(){
     let $result = $('.flagged');
     $result.text('Waiting...');
-    uwl.postToServer('await-flag',{})
+    xwl.postToServer('await-flag',{})
       .then(function(result){
 	$result.text('Flagged');
       });
@@ -58,28 +58,28 @@ $(document).ready(function(){
   });
   $('a[href="set-flag"]').click(function(){
     let $result = $('.flagged');
-    uwl.postToServer('set-flag',{})
+    xwl.postToServer('set-flag',{})
       .then(function(result){
 	$result.text('Flagged');
       });
     return false;
   });
   $('a.async-post').click(async function(){
-    let result = await uwl.asyncPostToServer(uwl.asyncTimeout(2.0), 'post-json', {
+    let result = await xwl.asyncPostToServer(xwl.asyncTimeout(2.0), 'post-json', {
 	'type_':'json',  // note no special meaning
 	'name':'jock',
       'age':30});
-    $('div.result').text('POST result (json)'+uwl.json.encode(
+    $('div.result').text('POST result (json)'+xwl.json.encode(
       result));
     return false;
   });
   $('a.async-post-5s').click(async function(){
     try{
-      let result = await uwl.asyncPostToServer(uwl.asyncTimeout(2.0), 'post-json-5s', {
+      let result = await xwl.asyncPostToServer(xwl.asyncTimeout(2.0), 'post-json-5s', {
 	'type_':'json',  // note no special meaning
 	'name':'jock',
 	'age':30});
-      $('div.result').text('UNEXPECTED: POST result (json)'+uwl.json.encode(
+      $('div.result').text('UNEXPECTED: POST result (json)'+xwl.json.encode(
 	result));
     }
     catch(e){
@@ -88,21 +88,21 @@ $(document).ready(function(){
     return false;
   });
   $('a.async-get').click(async function(){
-    let result = await uwl.asyncGetFromServer(uwl.asyncTimeout(2.0), 'post-json', {
+    let result = await xwl.asyncGetFromServer(xwl.asyncTimeout(2.0), 'post-json', {
 	'type_':'json',  // note no special meaning
 	'name':'jock',
       'age':30});
-    $('div.result').text('GET result (json)'+uwl.json.encode(
+    $('div.result').text('GET result (json)'+xwl.json.encode(
       result));
     return false;
   });
   $('a.async-get-5s').click(async function(){
     try{
-      let result = await uwl.asyncGetFromServer(uwl.asyncTimeout(2.0), 'post-json-5s', {
+      let result = await xwl.asyncGetFromServer(xwl.asyncTimeout(2.0), 'post-json-5s', {
 	'type_':'json',  // note no special meaning
 	'name':'jock',
 	'age':30});
-      $('div.result').text('UNEXPECTED: GET result (json)'+uwl.json.encode(
+      $('div.result').text('UNEXPECTED: GET result (json)'+xwl.json.encode(
 	result));
     }
     catch(e){
@@ -116,7 +116,7 @@ $(document).ready(function(){
       $('div.result').text('condition met');
     }, 1000);
     setTimeout(async function(){
-      let result = await uwl.asyncPollFor(uwl.asyncTimeout(5.0),
+      let result = await xwl.asyncPollFor(xwl.asyncTimeout(5.0),
 					  function(){
 					    if ($('div.result').text()!='condition met'){
 					      throw Error('condition not met');
@@ -134,7 +134,7 @@ $(document).ready(function(){
     }, 5000);
     setTimeout(async function(){
       try{
-	let result = await uwl.asyncPollFor(uwl.asyncTimeout(2.0),
+	let result = await xwl.asyncPollFor(xwl.asyncTimeout(2.0),
 					    function(){
 					      if ($('div.result').text()!='condition met'){
 						throw Error('condition not met');

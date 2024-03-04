@@ -15,7 +15,7 @@
 
 // miscellaneous utilities
 //
-(function( uwl, undefined ) {
+(function( xwl, undefined ) {
   // give old browswers Date.now()
   if (!Date.now) {
     Date.now = function() { return new Date().getTime(); }
@@ -30,13 +30,13 @@
   //     - response is not json or not a dictionary or has neither result nor error attribute
   //     - post failed
   // - note post is not cancelled on timeout
-  uwl.asyncPostToServer=function(asyncTimeout,  //:Promise e.g. see uwl.asyncTimeout
+  xwl.asyncPostToServer=function(asyncTimeout,  //:Promise e.g. see xwl.asyncTimeout
 				 url,           //:str
 				 params)        //:JsonObject
   {
     let result = [ asyncTimeout,
 		   new Promise( (yay,nay)=>{
-		     uwl.postToServer(url, params)
+		     xwl.postToServer(url, params)
 		       .then( result=> { asyncTimeout.cancel && asyncTimeout.cancel();
 					 yay(result); })
 		       .or( error=> { asyncTimeout.cacnel && asyncTimeout.cancel();
@@ -46,13 +46,13 @@
   };
 
   // like asyncPostToServer above but HTTP GET instead of POST
-  uwl.asyncGetFromServer=function(asyncTimeout,  //:Promise e.g. see uwl.asyncTimeout
+  xwl.asyncGetFromServer=function(asyncTimeout,  //:Promise e.g. see xwl.asyncTimeout
 				  url,           //:str
 				  params)        //:JsonObject
   {
     let result = [ asyncTimeout,
 		   new Promise( (yay,nay)=>{
-		     uwl.getFromServer(url, params)
+		     xwl.getFromServer(url, params)
 		       .then( result=> { asyncTimeout.cancel && asyncTimeout.cancel();
 					 yay(result); })
 		       .or( error=> { asyncTimeout.cacnel && asyncTimeout.cancel();
@@ -66,7 +66,7 @@
   // - on success returns result of successful f
   // - on timeout raises last failure of f
   // Does at least two calls to f(): one immediately and one on timeout.
-  uwl.asyncPollFor=async function(asyncTimeout,         //:Promise e.g. see uwl.asyncTimeout
+  xwl.asyncPollFor=async function(asyncTimeout,         //:Promise e.g. see xwl.asyncTimeout
 				  f,                    //:function(timeout)
 				  secondsBetweenPolls)  //:float e.g. 0.75, default 0.5
   {
@@ -100,7 +100,7 @@
 
   // Promise to raise Error after specified (float) number of seconds.
   // - result.cancel() cancels any still-running timer
-  uwl.asyncTimeout=function(seconds){
+  xwl.asyncTimeout=function(seconds){
     let t={ t: null };
     let result = new Promise( (yay, nay)=>{
       t=setTimeout(()=>{t.t=null; nay(Error('deadline reached'))},
@@ -119,7 +119,7 @@
   // add busyClass to $x (a jquery object) DOM objects and all their children,
   // until matching result.done() called, holding class for at least
   // specified minSeconds (a float)
-  uwl.busy=function($x,busyClass,minSeconds){
+  xwl.busy=function($x,busyClass,minSeconds){
     var self;
     self={
       count:0,
@@ -146,14 +146,14 @@
   };
 
   // deep copy x
-  uwl.clone=function(x){
+  xwl.clone=function(x){
     if (x===null){
       return x;
     }
     else if (typeof(x) == 'object' && x.constructor === Array){
       var result=[];
-      uwl.each(x, function(i){
-	result.push(uwl.clone(x[i]));
+      xwl.each(x, function(i){
+	result.push(xwl.clone(x[i]));
       });
       return result;
     }
@@ -165,7 +165,7 @@
       else {
 	result={}
 	for(k in x){
-	  result[k]=uwl.clone(x[k]);
+	  result[k]=xwl.clone(x[k]);
 	}
       }
       return result;
@@ -173,7 +173,7 @@
     else return x;
   };
   // date (like {year:2016,month:12,day:31}) falls before today
-  uwl.dateHasPast=function(date){
+  xwl.dateHasPast=function(date){
     var today=new Date();
     var yearToday=today.getYear()+1900;
     var monthToday=today.getMonth()+1;//Date() numbers months 0..11
@@ -197,14 +197,14 @@
   };
 
   // test if x is defined
-  uwl.defined=function(x){
+  xwl.defined=function(x){
     return !(x==undefined);
   };
 
   // iterate over x:
   // - where x is array, call f(i, x[i]) for i in 0..x.length
   // - where x is object, call f(k, x[k]) for k in x.keys
-  uwl.each=function(x, f){
+  xwl.each=function(x, f){
     var xt=typeof(x);
     var isArray;
     if (xt=='object'){
@@ -223,19 +223,19 @@
   };
   // eg encodeURL('x.html',{a:1,b:'ref'} -> 'x.html?a=1&b=ref
   // note special chars in values are escaped
-  uwl.encodeURL=function(path,paramsDict){
-    var params=uwl.map(paramsDict,function(n,v){
+  xwl.encodeURL=function(path,paramsDict){
+    var params=xwl.map(paramsDict,function(n,v){
       return encodeURIComponent(n)+'='+encodeURIComponent(v);
     });
     if (params.length){
-      return path+'?'+uwl.join('&',params);
+      return path+'?'+xwl.join('&',params);
     }
     return path;
   };
   // deep extend object o with object x
   // - note does not clone any element of x, y, z..., copies elements by reference
   // - returns o
-  uwl.extend=function(o, x /*, y, z... */) {
+  xwl.extend=function(o, x /*, y, z... */) {
     var a=arguments;
     var i;
     for(i=1; i < a.length; ++i){
@@ -293,9 +293,9 @@
   // find all members of x that match predicate
   // - where x is an array, matches items in the array, returning their indices
   // - where x is an object, matches member values, returning their keys
-  uwl.find=function(x, predicate){
+  xwl.find=function(x, predicate){
     var result=[];
-    uwl.each(x, function(key, value){
+    xwl.each(x, function(key, value){
       if (predicate(value)){
 	result.push(key);
       }
@@ -305,11 +305,11 @@
   // oz format date, like {year:1984,month:12,day:31}, in Australian
   // date format, 31/12/1984
   // - day/month/year are not padded
-  uwl.formatDate=function(date){
-    return uwl.join('/',[date.day,date.month,date.year]);
+  xwl.formatDate=function(date){
+    return xwl.join('/',[date.day,date.month,date.year]);
   };
   // parse oz format date like 31/12/1984, to give date like {year:1984,month:12,day:31}
-  uwl.parseDate=function(date){
+  xwl.parseDate=function(date){
     var c=date.split('/');
     return {
       day:parseInt(c[0]),
@@ -319,13 +319,13 @@
   };
   // get window location (URL) query params, eg
   // http://fred/x.html?a=1&b=2%201 -> {a:'1',b:'2 1'}
-  uwl.queryParams=function(url){
+  xwl.queryParams=function(url){
     var result={};
     url=url||window.location.search;
     if (url.indexOf('?')==-1){
       return result;
     }
-    uwl.each(url.split('?')[1].split('&'),function(i,p){
+    xwl.each(url.split('?')[1].split('&'),function(i,p){
       p=p.split('=');
       if (p.length==1){
 	result[p[0]]=true;
@@ -337,7 +337,7 @@
     return result;
   };
   // Get background of (first of) $item (a jquery object), as a css dictionary
-  uwl.getBackground=(function(){
+  xwl.getBackground=(function(){
     var result=function($item) {
       // jquery is bizarre here, $item.parents() is in "upwards" order,
       // but $item.parents().addBack() is in "downward" order. There
@@ -409,11 +409,11 @@
   })();
 
   // add context to e, like the code says
-  uwl.inContext=function(e, context){
+  xwl.inContext=function(e, context){
     var em;
     if (typeof(e)=='object' && 
-	uwl.defined(e.name) &&
-	uwl.defined(e.message)){
+	xwl.defined(e.name) &&
+	xwl.defined(e.message)){
       em=e.name+': '+e.message;
     }
     else{
@@ -427,35 +427,35 @@
   // get keys of x
   // - if x is an array, returns its indices
   // - if x is an object, returns its keys
-  uwl.keys=function(x){
-    return uwl.map(x,function(k,v){return k;});
+  xwl.keys=function(x){
+    return xwl.map(x,function(k,v){return k;});
   }
   // map elements of x via function f
   // - if x is an array, calls f(i,v) for each v in x (i being its index)
   // - if x is an object, calls f(k,v) for each k:v in x
   // returns results in an array, which is a bit silly as logically you'd
   // think an object would map to an object
-  uwl.map=function(x, f){
+  xwl.map=function(x, f){
     var result=[];
-    uwl.each(x, function(k, v){
+    xwl.each(x, function(k, v){
       result.push(f(k, v));
     });
     return result;
   };
-  uwl.matchWholeString=function(s,regularExpression){
+  xwl.matchWholeString=function(s,regularExpression){
     var result=s.match(regularExpression);
     if (result && !result[0].length==s.length){
       return 'a'.match('b');
     }
     return result;
   };
-  uwl.max=function(a,b){
+  xwl.max=function(a,b){
     return a>b?a:b;
   };
-  uwl.min=function(a,b){
+  xwl.min=function(a,b){
     return a<b?a:b;
   };
-  uwl.now=function(){
+  xwl.now=function(){
     return Date.now();
   };
   // async HTTP-get url passing specified data (an object) according to raw:
@@ -470,7 +470,7 @@
   //           failure
   //   always(f) - after then/or function, calls f()
   //
-  uwl.getFromServer=function(url,data,raw){
+  xwl.getFromServer=function(url,data,raw){
     var result={
       then_: function(){},
       error_:function(e){
@@ -495,7 +495,7 @@
       type: 'GET',
       url: url,
       data: raw?data:{
-	'json_params':uwl.json.encode(data)
+	'json_params':xwl.json.encode(data)
       },
       dataType: 'text',
       cache:false,
@@ -507,16 +507,16 @@
 	}
 	var responseData;
 	try{
-	  responseData=uwl.json.decode(responseData_);
+	  responseData=xwl.json.decode(responseData_);
 	}
 	catch(e){
-	  result.error_(uwl.inContext(''+e, 'get url '+url));
+	  result.error_(xwl.inContext(''+e, 'get url '+url));
 	  result.always_();
 	  return;
 	}
         if (typeof(responseData.error) != 'undefined' && 
 	    responseData.error != '') {
-	  result.error_(uwl.inContext(''+responseData.error, 'get url '+url));
+	  result.error_(xwl.inContext(''+responseData.error, 'get url '+url));
         }
         else {
           if (window.console&&console.log&&responseData.msg) {
@@ -527,7 +527,7 @@
 	result.always_();
       },
       error: function(jqXHR, status, e){
-	result.error_(uwl.inContext(''+e, 'get url '+url));
+	result.error_(xwl.inContext(''+e, 'get url '+url));
 	result.always_();
       }
     });
@@ -535,7 +535,7 @@
   };
 
   // join array of strings by separator string sep
-  uwl.join=function(sep, array){
+  xwl.join=function(sep, array){
     if (array.length==0){
       return '';
     }
@@ -546,11 +546,11 @@
     return result;
   }
 
-  uwl.json={};
+  xwl.json={};
 
   // encode o, using specified prefix as base indentation for all but first line
   // of encoding result (first line is not indented)
-  uwl.json.encode = function(o, prefix) {
+  xwl.json.encode = function(o, prefix) {
     //if (typeof (JSON) == 'object' && JSON.stringify)
     //    return JSON.stringify(o);
     prefix=prefix||'';
@@ -581,15 +581,15 @@
 	    ++skipped;
 	  }
 	  else if (typeof(o[i])=='undefined'){
-	    ret.push("\n"+prefix+"\t"+uwl.json.encode(null, prefix+"\t"));
+	    ret.push("\n"+prefix+"\t"+xwl.json.encode(null, prefix+"\t"));
 	  }
 	  else {
-            ret.push("\n"+prefix+"\t"+uwl.json.encode(o[i], prefix+"\t"));
+            ret.push("\n"+prefix+"\t"+xwl.json.encode(o[i], prefix+"\t"));
 	  }
 	}
 	if (skipped && skipped != o.length){
 	  throw new String(
-	    'uwl.json.encode array has mixture of functions and data');
+	    'xwl.json.encode array has mixture of functions and data');
 	}
         return "[" + ret.join(",") + "\n"+prefix+"]";
       }
@@ -608,10 +608,10 @@
 	
         if (typeof o[k] == "function")
           continue; // skip pairs where the value is a function.
-	if (!uwl.defined(o[k])){
+	if (!xwl.defined(o[k])){
 	  continue; // skip pairs where the value is undefined
 	}
-        var val = uwl.json.encode(o[k], prefix+"\t");
+        var val = xwl.json.encode(o[k], prefix+"\t");
 	
         pairs.push("\n"+prefix+"\t"+name + ": " + val);
       }
@@ -623,7 +623,7 @@
   //
   // Decode JSON encoded string.
   //
-  uwl.json.decode = function(src) {
+  xwl.json.decode = function(src) {
     try{
       return eval('('+src+')');
     }
@@ -875,7 +875,7 @@
 
   var $load_image=false;
 
-  uwl.postToServer=function(url,data,sync,raw){
+  xwl.postToServer=function(url,data,sync,raw){
     var result={
       then_: function(){},
       error_:function(e){
@@ -900,7 +900,7 @@
       type: 'POST',
       url: url,
       data: raw?data:{
-	'json_params':uwl.json.encode(data)
+	'json_params':xwl.json.encode(data)
       },
       dataType: 'text',
       async: !sync,
@@ -912,7 +912,7 @@
 	  return;
 	}
 	try{
-	  responseData=uwl.json.decode(responseData_);
+	  responseData=xwl.json.decode(responseData_);
 	}
 	catch(e){
 	  result.error_(''+e);
@@ -936,13 +936,13 @@
 	result.always_();
       },
       error: function(jqXHR, status, e){
-	result.error_(uwl.inContext(''+e, 'post data to '+url));
+	result.error_(xwl.inContext(''+e, 'post data to '+url));
 	result.always_();
       }
     });
     return result;
   };
-  uwl.postBinaryToServer=function(url,data,sync){
+  xwl.postBinaryToServer=function(url,data,sync){
     var result={
       then_: function(){},
       error_:function(e){
@@ -978,24 +978,24 @@
     req.send(data);
     return result;
   };
-  uwl.rendering=function($x){
-    var $overlay=$('<div class="uwl-busy-cursor">&nbsp;</div>').css({
+  xwl.rendering=function($x){
+    var $overlay=$('<div class="xwl-busy-cursor">&nbsp;</div>').css({
       position:'absolute',
       left:0,
       top:0,
       width:'100%',
       height:'100%'})
-      .css(uwl.getBackground($x));
+      .css(xwl.getBackground($x));
     $x.append($overlay);
-    $x.addClass('uwl-rendering');
+    $x.addClass('xwl-rendering');
     return {
       done:function(){
 	$overlay.remove();
-	$x.removeClass('uwl-rendering');
+	$x.removeClass('xwl-rendering');
       }
     };
   };
-  uwl.showElement=function($element,topOffset,then,duration){
+  xwl.showElement=function($element,topOffset,then,duration){
     var viewport={
       top:$('body').scrollTop()+(topOffset||0),
       left:$('body').scrollLeft(),
@@ -1011,17 +1011,17 @@
     var scrollHoriz=function(left){
       newWindowLeft=left;
     };
-    var element=uwl.extend(
+    var element=xwl.extend(
       {
 	width:$element.first().outerWidth(),
 	height:$element.first().outerHeight()
       },
       $element.first().offset());
-    uwl.each($element.toArray(),function(i,e){
+    xwl.each($element.toArray(),function(i,e){
       var $e=$(e);
       var bottom=element.top+element.height;
       var right=element.left+element.width;
-      var ew=uwl.extend(
+      var ew=xwl.extend(
 	{
 	  width:$e.outerWidth(),
 	  height:$e.outerHeight()
@@ -1030,10 +1030,10 @@
       ew.bottom=ew.top+ew.height;
       ew.right=ew.left+ew.width;
       var n={
-	top:uwl.min(element.top,ew.top),
-	left:uwl.min(element.left,ew.left),
-	bottom:uwl.max(bottom,ew.bottom),
-	right:uwl.max(right,ew.right)};
+	top:xwl.min(element.top,ew.top),
+	left:xwl.min(element.left,ew.left),
+	bottom:xwl.max(bottom,ew.bottom),
+	right:xwl.max(right,ew.right)};
       element={
 	top:n.top,
 	left:n.left,
@@ -1045,7 +1045,7 @@
       scrollVert(element.top);
     }
     else if (element.top+element.height>viewport.top+viewport.height){
-      scrollVert(uwl.min(
+      scrollVert(xwl.min(
 	element.top,
 	element.top+element.height-viewport.height));
     }
@@ -1053,7 +1053,7 @@
       scrollHoriz(element.left);
     }
     else if (element.left+element.width>viewport.left+viewport.width){
-      scrollHoriz(uwl.min(
+      scrollHoriz(xwl.min(
 	element.left,
 	element.left+element.width-viewport.width));
     }
@@ -1061,12 +1061,12 @@
 			    scrollLeft:newWindowLeft},duration,
 			   then||function(){});
   };
-  uwl.showError=function(e){
+  xwl.showError=function(e){
     alert(''+e);
   };
   // call set(val) whenever input changes
   // - returns f() that stops tracking input
-  uwl.trackTextInput=function($input, set/*f(val:string)*/){
+  xwl.trackTextInput=function($input, set/*f(val:string)*/){
     var last;
     var delayedSet;
     function set_(){
@@ -1098,7 +1098,7 @@
       $input.unbind('change', delayedSet);
     }
   }
-  uwl.getRadioButtonValue=function($radioButtons){
+  xwl.getRadioButtonValue=function($radioButtons){
     var result;
     $radioButtons.each(function(){
       if ($(this).prop('checked')){
@@ -1107,35 +1107,35 @@
     });
     return result;
   };
-  uwl.setCookie=function(name,value){
-    document.cookie=name+'='+encodeURIComponent(uwl.json.encode(value));
+  xwl.setCookie=function(name,value){
+    document.cookie=name+'='+encodeURIComponent(xwl.json.encode(value));
     return value;
   };
-  uwl.getCookie=function(name){
+  xwl.getCookie=function(name){
     var x=document.cookie.split('; ');
     var result;
-    uwl.each(x,function(i,y){
+    xwl.each(x,function(i,y){
       var nv=y.split('=');
       if (nv[0]==name){
-	result=uwl.json.decode(decodeURIComponent(nv[1]));
+	result=xwl.json.decode(decodeURIComponent(nv[1]));
       }
     });
     return result;
   };
-  uwl.set=function(arrayOfStrings){
+  xwl.set=function(arrayOfStrings){
     result={};
-    uwl.each(arrayOfStrings,function(i,member){
+    xwl.each(arrayOfStrings,function(i,member){
       result[member]=true;
     });
     return result;
   };
   // return sorted copy of array_
-  uwl.sorted=function(array_,f){
+  xwl.sorted=function(array_,f){
     var result=array_.slice();
     result.sort(f);
     return result;
   };
-  uwl.compare=function(a,b){
+  xwl.compare=function(a,b){
     if (a<b){
       return -1;
     }
@@ -1146,7 +1146,7 @@
   };
   //return reason why s is not an email address, or false
   //if s is an email address
-  uwl.isNotAnRFC2822EmailAddress=function(s){
+  xwl.isNotAnRFC2822EmailAddress=function(s){
     var at=0;
     var end=s.length;
     var parseDotAtom=function(at){
@@ -1218,7 +1218,7 @@
       return ''+e;
     }
   };
-  uwl.valuesEqual=function(a,b)
+  xwl.valuesEqual=function(a,b)
   {
     var type = typeof (a);
     if (type != typeof(b)){
@@ -1228,7 +1228,7 @@
       return b === null;
     
     if (type == "undefined")
-      return !uwl.defined(b);
+      return !xwl.defined(b);
     
     if (type == "number" || type == "boolean" || type == "string")
       return a==b;
@@ -1243,22 +1243,22 @@
 	}
 	var i;
 	for(i=0; i!=a.length; ++i){
-	  if (!uwl.valuesEqual(a[i],b[i])){
+	  if (!xwl.valuesEqual(a[i],b[i])){
 	    return false;
 	  }
 	}
 	return true;
       }
-      if (!uwl.valuesEqual(uwl.sorted(uwl.keys(a)),uwl.sorted(uwl.keys(b)))){
+      if (!xwl.valuesEqual(xwl.sorted(xwl.keys(a)),xwl.sorted(xwl.keys(b)))){
 	return false;
       }
       var result=true;
-      uwl.each(uwl.keys(a),function(i,k){
-	if (!uwl.valuesEqual(a[k],b[k])){
+      xwl.each(xwl.keys(a),function(i,k){
+	if (!xwl.valuesEqual(a[k],b[k])){
 	  result=false;
 	}
       });
       return result;
     }
   };
-}( window.uwl = window.uwl || {} ));
+}( window.xwl = window.xwl || {} ));

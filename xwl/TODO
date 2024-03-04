@@ -12,4 +12,4 @@
   - use urllib.parse.parse_sq
   - use cgi.parse_multipart
 
-- uwl.js doco postToServer onwards
+- xwl.js doco postToServer onwards

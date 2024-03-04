@@ -13,65 +13,65 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-import uwl
-import uwl.wsgi
+import xwl
+import xwl.wsgi
 from xju import pq
 
 import time
 import threading
 from io import RawIOBase
-from uwl.example import submodule
+from xwl.example import submodule
 
 quit_requested = False
 
-@uwl.public
+@xwl.public
 def public_html():
-    return uwl.html('<html><body>public</body></html>')
+    return xwl.html('<html><body>public</body></html>')
 
-@uwl.public
+@xwl.public
 def params(params):
-    return uwl.plainText('\n'.join(
+    return xwl.plainText('\n'.join(
         ['{name}: {value}'.format(**vars()) for name,value in
          sorted(params.items())]))
 
-@uwl.public
+@xwl.public
 def json():
     return {
         'name':'fred',
         'age':25
     }
 
-@uwl.public
+@xwl.public
 def html():
     return pq.parse('<a href="json">json</a>')
 
-@uwl.public
+@xwl.public
 def redirect():
-    return uwl.redirect('html')
+    return xwl.redirect('html')
 
-@uwl.public
+@xwl.public
 def index_html():
-    return uwl.redirect('test.html')
+    return xwl.redirect('test.html')
 
-@uwl.public
+@xwl.public
 def post(params):
     return { 'result': '\n'.join(
         ['{name}: {value}'.format(**vars()) for name,value in
          sorted(params.items())]) }
 
-@uwl.public
+@xwl.public
 def post_json(type_: str, name: str,age: int):
     return { 'result': {
         'type':type_,
         'name':name,
         'age':age}}
 
-@uwl.public
+@xwl.public
 def post_json_params(json_params):
     '''special name "json_params" captures all params as dictionary'''
     return { 'result': json_params }
 
-@uwl.public
+@xwl.public
 def post_json_5s(type_: str, name: str,age: int):
     time.sleep(5)
     return { 'result': {
@@ -79,19 +79,19 @@ def post_json_5s(type_: str, name: str,age: int):
         'name':name,
         'age':age}}
 
-@uwl.public
+@xwl.public
 def client_error(e):
-    raise uwl.ClientError(str(e))
+    raise xwl.ClientError(str(e))
 
-@uwl.public
+@xwl.public
 def login():
-    return uwl.plainText('OK')+uwl.cookie('some-session','3')
+    return xwl.plainText('OK')+xwl.cookie('some-session','3')
 
-@uwl.public
+@xwl.public
 def logout():
-    return uwl.plainText('OK')+uwl.cookie('some-session','')
+    return xwl.plainText('OK')+xwl.cookie('some-session','')
 
-@uwl.public
+@xwl.public
 def quit():
     '''make server exit'''
     global quit_requested
@@ -105,34 +105,34 @@ def onlyIfLoggedIn(url,cookies):
         return pq.parse('<b>you are not logged in</b>')
     pass
 
-@uwl.restricted(onlyIfLoggedIn)
+@xwl.restricted(onlyIfLoggedIn)
 def login_required():
-    return uwl.plainText('OK')
+    return xwl.plainText('OK')
 
-@uwl.restricted(onlyIfLoggedIn)
-def multipart_form_data(fred: uwl.wsgi.FileVar,
+@xwl.restricted(onlyIfLoggedIn)
+def multipart_form_data(fred: xwl.wsgi.FileVar,
                          jock: str):
     return { 'result': {
         'fred': (fred.filename, fred.contentType, fred.content.decode('utf-8')),
         'jock': jock}}
 
-@uwl.restricted(onlyIfLoggedIn)
+@xwl.restricted(onlyIfLoggedIn)
 def octet_stream(body: tuple[int, RawIOBase]):
     return { 'result': [body[0], [int(b) for b in body[1].read(body[0]) or b'']]}
 
-@uwl.public
+@xwl.public
 def forbidden():
-    raise uwl.Forbidden('forbidden')
+    raise xwl.Forbidden('forbidden')
 
-@uwl.public
+@xwl.public
 def nothing_there():
-    raise uwl.NotFound('not found')
+    raise xwl.NotFound('not found')
 
 lock = threading.Lock()
 flag = [ False ]
 flag_changed = threading.Condition(lock)
 
-@uwl.public
+@xwl.public
 def await_flag(lock = lock, flag = flag, flag_changed = flag_changed):
     print('+ await-flag')
     with lock:
@@ -144,7 +144,7 @@ def await_flag(lock = lock, flag = flag, flag_changed = flag_changed):
     print('- await-flag')
     return True
 
-@uwl.public
+@xwl.public
 def set_flag(lock = lock, flag = flag, flag_changed = flag_changed):
     print('+ set-flag')
     with lock:

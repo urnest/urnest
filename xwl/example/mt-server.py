@@ -27,7 +27,7 @@ import app
 from wsgiref.simple_server import WSGIServer, WSGIRequestHandler
 from socketserver import ThreadingMixIn
 
-import uwl
+import xwl
 
 port=int(sys.argv[1])
 
@@ -35,7 +35,7 @@ class MtServer(ThreadingMixIn, WSGIServer):
     pass
 
 httpd=MtServer( ('', port), WSGIRequestHandler)
-httpd.set_app(uwl.Dispatcher(app,d).main)
+httpd.set_app(xwl.Dispatcher(app,d).main)
 httpd.daemon_threads = True
 
 print("Serving HTTP on port {port}...".format(**vars()))
