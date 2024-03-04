@@ -22,14 +22,14 @@ from pathlib import Path
 
 d=Path(sys.argv[0]).absolute().parent
 
-sys.path[0:0]=[str(d.parent.parent),] # for wal, xju
+sys.path[0:0]=[str(d.parent.parent),] # for uwl, xju
 print(sys.path)
 
 import app
 
 from wsgiref.simple_server import make_server
 
-from wal.dispatcher import Dispatcher
+from uwl.dispatcher import Dispatcher
 
 port=int(sys.argv[1])
 

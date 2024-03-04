@@ -19,7 +19,7 @@ from sys import path
 from os.path import dirname
 if path[0]==dirname(__file__): path.pop(0)
 
-from wal import wsgi
+from uwl import wsgi
 
 from xju.assert_ import Assert
 from urllib.parse import urlencode

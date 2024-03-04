@@ -19,15 +19,15 @@ from sys import path
 from os.path import dirname
 if path[0]==dirname(__file__): path.pop(0)
 
-import wal
+import uwl
 
 from xju.assert_ import Assert
 
-Assert(wal.header('fred','v').headers)==[('fred','v')]
-Assert(str(wal.Response(b'xxx')))=="content 'xxx', headers [], cookies {}"
+Assert(uwl.header('fred','v').headers)==[('fred','v')]
+Assert(str(uwl.Response(b'xxx')))=="content 'xxx', headers [], cookies {}"
 
 try:
-    wal.Response(b'xxx')+7
+    uwl.Response(b'xxx')+7
 except Exception as e:
     Assert(str(e)).startswith("failed to add 7 to Response content 'xxx', headers [], cookies {} because")
 else:
@@ -35,7 +35,7 @@ else:
     pass
 
 try:
-    7+wal.Response(b'xxx')
+    7+uwl.Response(b'xxx')
 except Exception as e:
     Assert(str(e)).startswith("failed to add Response content 'xxx', headers [], cookies {} to 7 because")
 else:
@@ -44,7 +44,7 @@ else:
 
                 
 try:
-    wal.validateCookieName('\nfred')
+    uwl.validateCookieName('\nfred')
 except Exception as e:
     Assert(str(e)).startswith('failed to validate RFC6265 cookie name')
 else:
@@ -52,7 +52,7 @@ else:
     pass
 
 try:
-    wal.validateCookieValue('"jock')
+    uwl.validateCookieValue('"jock')
 except Exception as e:
     Assert(str(e)).startswith('failed to validate RFC6265 cookie-value')
 else:
@@ -60,7 +60,7 @@ else:
     pass
 
 try:
-    wal.validateCookieValue('"jock'+chr(0x7f)+'"')
+    uwl.validateCookieValue('"jock'+chr(0x7f)+'"')
 except Exception as e:
     Assert(str(e)).startswith('failed to validate RFC6265 cookie-value')
 else:
@@ -68,7 +68,7 @@ else:
     pass
 
 try:
-    wal.validateCookiePath('fred;')
+    uwl.validateCookiePath('fred;')
 except Exception as e:
     Assert(str(e)).startswith('failed to validate RFC6265 cookie Path value')
 else:
@@ -76,7 +76,7 @@ else:
     pass
 
 try:
-    wal.validateCookiePath(chr(31))
+    uwl.validateCookiePath(chr(31))
 except Exception as e:
     Assert(str(e)).startswith('failed to validate RFC6265 cookie Path value')
 else:

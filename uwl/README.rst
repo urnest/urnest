@@ -1,4 +1,4 @@
-wal python library
+uwl python library
 ------------------
 
 WSGI dispatcher that maps HTTP requests to python functions of same/similar name.
@@ -9,8 +9,8 @@ WSGI dispatcher that maps HTTP requests to python functions of same/similar name
 * small javascript library with convenience async postToServer
 * and getFromServer functions
 
-see `wal.example <wal/example>`_ which implements a HTTP
-`server.py <wal/example/server.py>`_ using
-`dispatcher.py <wal/dispatcher.py>`_ to map HTTP requests to
-`app <wal/example/app.py>`_ and
-`app.submodule <wal/example.submodule.py>`_ functions
+see `uwl.example <uwl/example>`_ which implements a HTTP
+`server.py <uwl/example/server.py>`_ using
+`dispatcher.py <uwl/dispatcher.py>`_ to map HTTP requests to
+`app <uwl/example/app.py>`_ and
+`app.submodule <uwl/example.submodule.py>`_ functions

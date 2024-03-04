@@ -30,32 +30,32 @@ $(document).ready(function(){
 	for(i=0;i!=5;++i){
 	  $e=$e.add($lis[n+i]);
       };
-	wal.showElement($e,$input.outerHeight());
+	uwl.showElement($e,$input.outerHeight());
       }
     },10);
   });
-  $('.query-params').text(wal.json.encode(wal.queryParams()));
+  $('.query-params').text(uwl.json.encode(uwl.queryParams()));
   $('a.ajax-post').click(function(){
-    wal.postToServer('post-json',{
+    uwl.postToServer('post-json',{
 	'type_':'json',
 	'name':'jock',
 	'age':30})
       .then(function(result){
-	$('div.result').text('POST result (json)'+wal.json.encode(result));
+	$('div.result').text('POST result (json)'+uwl.json.encode(result));
       });
     return false;
   });
   $('a.ajax-get').click(function(){
-    wal.getFromServer('post-json',{
+    uwl.getFromServer('post-json',{
 	'type_':'big',
 	'name':'joe',
 	'age':31})
       .then(function(result){
-	$('div.result').text('GET result (json)'+wal.json.encode(result));
+	$('div.result').text('GET result (json)'+uwl.json.encode(result));
       });
     return false;
   });
-  wal.trackTextInput($('input.tracked'),function(x){
+  uwl.trackTextInput($('input.tracked'),function(x){
     $('span.input-value').text(x);
   });
 });

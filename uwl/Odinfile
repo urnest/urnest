@@ -2,22 +2,18 @@
 
 %all.tree==<<
 %pytest.tree:leaves
+%python3-uwl.whl
 
 %pytest.tree==<<
 %local-pytest.tree:leaves
 %local.py.cov.checked
-
-#REVISIT: get coverage up by automating example client as example.py.test
-#  note will have to hunt for usable port, start at 8000 try 256 ports, randomise
-#  OSError: [Errno 98] Address already in use
-#%local.py.cov.checked
 
 %local.py.cov.checked==%local-pys-to-cover:list.py+py_cov=(%local.py.cov):list.py3.cov.checked
 %local-pys-to-cover==.:list
 %local.py.cov==%local-pytest.tree:leaves:py3.cov.list:agg.py3.cov
 
 %local-pytest.tree==<<
-(wal.py.test)+(%py-opts):py3.exec.cov
+(uwl.py.test)+(%py-opts):py3.exec.cov
 (wsgi.py.test)+(%py-opts):py3.exec.cov
 (example.py.test)+(%py-opts)+cmd="8000":py3.exec.cov
 
@@ -29,79 +25,79 @@
 
 
 
-%publish-wal-to-pypi! ==<<
-(/tmp)+cmd=(%publish-wal-to-pypi.sh)+cmd=(%python3-wal.whl)+cmd=(%python3-wal-twine.tar.gz):run
+%publish-uwl-to-pypi! ==<<
+(/tmp)+cmd=(%publish-uwl-to-pypi.sh)+cmd=(%python3-uwl.whl)+cmd=(%python3-uwl-twine.tar.gz):run
 
-%publish-wal-to-pypi.sh==!<<
+%publish-uwl-to-pypi.sh==!<<
 #!/bin/sh -ex
 whl="$1"
 tgz="$2"
 rm -rf dist && mkdir dist
-cp $whl dist/wal-1.0.0-py3-none-any.whl
-cp $tgz dist/wal-1.0.0.tar.gz
+cp $whl dist/uwl-1.0.0-py3-none-any.whl
+cp $tgz dist/uwl-1.0.0.tar.gz
 twine check dist/*
 twine upload --verbose dist/*
 
-%publish-wal-to-testpypi! ==<<
-(/tmp)+cmd=(%publish-wal-to-testpypi.sh)+cmd=(%python3-wal.whl)+cmd=(%python3-wal-twine.tar.gz):run
+%publish-uwl-to-testpypi! ==<<
+(/tmp)+cmd=(%publish-uwl-to-testpypi.sh)+cmd=(%python3-uwl.whl)+cmd=(%python3-uwl-twine.tar.gz):run
 
-%publish-wal-to-testpypi.sh==!<<
+%publish-uwl-to-testpypi.sh==!<<
 #!/bin/sh -ex
 whl="$1"
 tgz="$2"
 rm -rf dist && mkdir dist
-cp $whl dist/wal-1.0.0-py3-none-any.whl
-cp $tgz dist/wal-1.0.0.tar.gz
+cp $whl dist/uwl-1.0.0-py3-none-any.whl
+cp $tgz dist/uwl-1.0.0.tar.gz
 twine check dist/*
 twine upload --verbose --repository pypitest dist/*
 
-%python3-wal.whl == %python3-wal-whl.exec.files+member='wal-1.0.0/dist/wal-1.0.0-py3-none-any.whl':extract_file
+%python3-uwl.whl == %python3-uwl-whl.exec.files+member='uwl-1.0.0/dist/uwl-1.0.0-py3-none-any.whl':extract_file
 
 # you'd think that the .tar.gz that the .whl was built from would be exactly the right thing to
 # put on pypi...
-%python3-wal.tar.gz == %python3-wal-tgz.exec.files+member='wal-1.0.0.tar.gz':extract_file
+%python3-uwl.tar.gz == %python3-uwl-tgz.exec.files+member='uwl-1.0.0.tar.gz':extract_file
 # ... but no it needs the .tar.gz that it created when it created the wheel. It makes no sense
-%python3-wal-twine.tar.gz == %python3-wal-whl.exec.files+member='wal-1.0.0/dist/wal-1.0.0.tar.gz':extract_file
+%python3-uwl-twine.tar.gz == %python3-uwl-whl.exec.files+member='uwl-1.0.0/dist/uwl-1.0.0.tar.gz':extract_file
 
-%python3-wal-tgz.exec.files==()+cmd=(%build-python3-wal-tgz.sh)+cmd=(..) (../MIT-LICENCE) (README.rst) '1.0.0'+need=(%all) :exec.files
+%python3-uwl-tgz.exec.files==()+cmd=(%build-python3-uwl-tgz.sh)+cmd=(..) (../MIT-LICENCE) (README.rst) '1.0.0'+need=(%pytest.tree:leaves) :exec.files
 
-%python3-wal==()+cmd=(%build-python3-wal.sh)+cmd=(.) (MIT-LICENCE) (README.rst) '1.0.0' +need=(%all):exec.files
+%python3-uwl==()+cmd=(%build-python3-uwl.sh)+cmd=(.) (MIT-LICENCE) (README.rst) '1.0.0' +need=(%pytest.tree:leaves):exec.files
 
-%python3-wal-whl.exec.files==%build-python3-wal-whl.sh+cmd=(%build-python3-wal-whl.sh)+cmd=(%python3-wal.tar.gz):exec.files
+%python3-uwl-whl.exec.files==%build-python3-uwl-whl.sh+cmd=(%build-python3-uwl-whl.sh)+cmd=(%python3-uwl.tar.gz):exec.files
 
-%build-python3-wal-whl.sh==!<<YYYY
+%build-python3-uwl-whl.sh==!<<YYYY
 #!/bin/sh
 set -ex
 tgz="$1"
 tar xzvf $tgz
-cd wal-1.0.0
+cd uwl-1.0.0
 python3 -m build -n
 YYYY
 
-%build-python3-wal-tgz.sh==!<<XXXX
+%build-python3-uwl-tgz.sh==!<<XXXX
 #!/bin/sh
 set -ex
 src_dir="$1"
 licence="$2"
 readme="$3"
 rev="$4"
-mkdir -p wal-$rev/src
+mkdir -p uwl-$rev/src
 (
   cd $src_dir
-  tar cf - wal/*.py wal/*.py.test wal/example/*.py wal/example/*.html wal/example/*.js wal/example/1.svg.gz
+  tar cf - uwl/*.py uwl/*.py.test uwl/example/*.py uwl/example/*.html uwl/example/*.js uwl/example/1.svg.gz
 ) |
-(cd wal-$rev/src && tar xvf - )
-touch wal-$rev/src/py.typed
-tests=$(cd wal-$rev/src/wal && find . -name '*.py.test')
+(cd uwl-$rev/src && tar xvf - )
+touch uwl-$rev/src/py.typed
+tests=$(cd uwl-$rev/src/uwl && find . -name '*.py.test')
 tests_package_data=$(for t in $tests; do echo -n "\"$t\","; done)
-cat > wal-$rev/pyproject.toml <<EOF
+cat > uwl-$rev/pyproject.toml <<EOF
 [build-system]
 requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 [project]
-name = "wal"
+name = "uwl"
 version = "$rev"
-description = "wal library"
+description = "uwl library"
 readme = "README.rst"
 authors = [{ name = "Trevor Taylor"}]
 license = { file = "MIT-LICENCE" }
@@ -117,13 +113,13 @@ dependencies = [ "xju>=2" ]
 Homepage = "https://github.com/urnest/urnest"
 [tool.setuptools.packages.find]
 where = ["src"]  # list of folders that contain the packages (["."] by default)
-include = ["wal","wal.*","wal.example.*"]  # package names should match these glob patterns (["*"] by default)
+include = ["uwl","uwl.*","uwl.example.*"]  # package names should match these glob patterns (["*"] by default)
 exclude = []  # exclude packages matching these glob patterns (empty by default)
 namespaces = true  # to disable scanning PEP 420 namespaces (true by default)
 [tool.setuptools.package-data]
-wal = [ $tests_package_data "py.typed"]
+uwl = [ $tests_package_data "py.typed"]
 EOF
-cp $licence wal-$rev/MIT-LICENCE
-cp $readme wal-$rev/README.rst
-tar czf wal-$rev.tar.gz wal-$rev
+cp $licence uwl-$rev/MIT-LICENCE
+cp $readme uwl-$rev/README.rst
+tar czf uwl-$rev.tar.gz uwl-$rev
 XXXX

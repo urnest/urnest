@@ -1,0 +1,15 @@
+  
+- dispatch to function
+  x test cookies
+  x get
+  x post
+    x ajax
+    x form
+    x mime
+  x validate returned cookies
+  x test non-public+cookies
+  
+  - use urllib.parse.parse_sq
+  - use cgi.parse_multipart
+
+- uwl.js doco postToServer onwards

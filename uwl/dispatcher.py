@@ -19,9 +19,9 @@ import mimetypes
 from xju.xn import first_line_of as l1,in_context
 from xju import pq
 from xju.misc import fromJson,toJson
-from wal.wsgi import getVariablesFromWSGIenviron, getCookiesFromWSGIenviron, getHTTPHeadersFromWSGIenviron
+from uwl.wsgi import getVariablesFromWSGIenviron, getCookiesFromWSGIenviron, getHTTPHeadersFromWSGIenviron
 from typing import Set,Callable,Dict,Union,Tuple,List
-from wal import public_functions, restricted_functions,ClientError,Forbidden,NotFound,Response,promoteContent
+from uwl import public_functions, restricted_functions,ClientError,Forbidden,NotFound,Response,promoteContent
 
 def getParam(param_name,
              json_params,
@@ -137,7 +137,7 @@ class Dispatcher:
             if not callable(f):
                 raise Forbidden('%(fname)s is not callable ie not a function like "def %(fname)s():"'%vars())
             if not f in public_functions and not f in restricted_functions:
-                raise Forbidden('%(fname)s is not annotated with @wal.public (or @public) or @wal.restricted (or @restricted)'%vars())
+                raise Forbidden('%(fname)s is not annotated with @uwl.public (or @public) or @uwl.restricted (or @restricted)'%vars())
             result=None
             url=(environ.get('wsgi.url_scheme')+'://'+
                  environ.get('HTTP_HOST',

@@ -29,15 +29,15 @@ from urllib.parse import urlencode
 
 d=Path(sys.argv[0]).absolute().parent
 
-sys.path[0:0]=[str(d.parent), # for wal, xju
+sys.path[0:0]=[str(d.parent), # for uwl, xju
 ]
 print(sys.path)
 
-import wal.example.app
+import uwl.example.app
 
 from wsgiref.simple_server import make_server
 
-from wal.dispatcher import Dispatcher
+from uwl.dispatcher import Dispatcher
 
 port=int(sys.argv[1])
 ports = range(port, port+256)
@@ -46,7 +46,7 @@ exceptions = set()
 
 for port in ports:
     try:
-        httpd=make_server('', port, Dispatcher(wal.example.app,d/'example').main)
+        httpd=make_server('', port, Dispatcher(uwl.example.app,d/'example').main)
         print("Serving HTTP on port {port}...".format(**vars()))
     except Exception as e:
         exceptions.add(str(e))

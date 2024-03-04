@@ -13,65 +13,65 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-import wal
-import wal.wsgi
+import uwl
+import uwl.wsgi
 from xju import pq
 
 import time
 import threading
 from io import RawIOBase
-from wal.example import submodule
+from uwl.example import submodule
 
 quit_requested = False
 
-@wal.public
+@uwl.public
 def public_html():
-    return wal.html('<html><body>public</body></html>')
+    return uwl.html('<html><body>public</body></html>')
 
-@wal.public
+@uwl.public
 def params(params):
-    return wal.plainText('\n'.join(
+    return uwl.plainText('\n'.join(
         ['{name}: {value}'.format(**vars()) for name,value in
          sorted(params.items())]))
 
-@wal.public
+@uwl.public
 def json():
     return {
         'name':'fred',
         'age':25
     }
 
-@wal.public
+@uwl.public
 def html():
     return pq.parse('<a href="json">json</a>')
 
-@wal.public
+@uwl.public
 def redirect():
-    return wal.redirect('html')
+    return uwl.redirect('html')
 
-@wal.public
+@uwl.public
 def index_html():
-    return wal.redirect('test.html')
+    return uwl.redirect('test.html')
 
-@wal.public
+@uwl.public
 def post(params):
     return { 'result': '\n'.join(
         ['{name}: {value}'.format(**vars()) for name,value in
          sorted(params.items())]) }
 
-@wal.public
+@uwl.public
 def post_json(type_: str, name: str,age: int):
     return { 'result': {
         'type':type_,
         'name':name,
         'age':age}}
 
-@wal.public
+@uwl.public
 def post_json_params(json_params):
     '''special name "json_params" captures all params as dictionary'''
     return { 'result': json_params }
 
-@wal.public
+@uwl.public
 def post_json_5s(type_: str, name: str,age: int):
     time.sleep(5)
     return { 'result': {
@@ -79,19 +79,19 @@ def post_json_5s(type_: str, name: str,age: int):
         'name':name,
         'age':age}}
 
-@wal.public
+@uwl.public
 def client_error(e):
-    raise wal.ClientError(str(e))
+    raise uwl.ClientError(str(e))
 
-@wal.public
+@uwl.public
 def login():
-    return wal.plainText('OK')+wal.cookie('some-session','3')
+    return uwl.plainText('OK')+uwl.cookie('some-session','3')
 
-@wal.public
+@uwl.public
 def logout():
-    return wal.plainText('OK')+wal.cookie('some-session','')
+    return uwl.plainText('OK')+uwl.cookie('some-session','')
 
-@wal.public
+@uwl.public
 def quit():
     '''make server exit'''
     global quit_requested
@@ -105,34 +105,34 @@ def onlyIfLoggedIn(url,cookies):
         return pq.parse('<b>you are not logged in</b>')
     pass
 
-@wal.restricted(onlyIfLoggedIn)
+@uwl.restricted(onlyIfLoggedIn)
 def login_required():
-    return wal.plainText('OK')
+    return uwl.plainText('OK')
 
-@wal.restricted(onlyIfLoggedIn)
-def multipart_form_data(fred: wal.wsgi.FileVar,
+@uwl.restricted(onlyIfLoggedIn)
+def multipart_form_data(fred: uwl.wsgi.FileVar,
                          jock: str):
     return { 'result': {
         'fred': (fred.filename, fred.contentType, fred.content.decode('utf-8')),
         'jock': jock}}
 
-@wal.restricted(onlyIfLoggedIn)
+@uwl.restricted(onlyIfLoggedIn)
 def octet_stream(body: tuple[int, RawIOBase]):
     return { 'result': [body[0], [int(b) for b in body[1].read(body[0]) or b'']]}
 
-@wal.public
+@uwl.public
 def forbidden():
-    raise wal.Forbidden('forbidden')
+    raise uwl.Forbidden('forbidden')
 
-@wal.public
+@uwl.public
 def nothing_there():
-    raise wal.NotFound('not found')
+    raise uwl.NotFound('not found')
 
 lock = threading.Lock()
 flag = [ False ]
 flag_changed = threading.Condition(lock)
 
-@wal.public
+@uwl.public
 def await_flag(lock = lock, flag = flag, flag_changed = flag_changed):
     print('+ await-flag')
     with lock:
@@ -144,7 +144,7 @@ def await_flag(lock = lock, flag = flag, flag_changed = flag_changed):
     print('- await-flag')
     return True
 
-@wal.public
+@uwl.public
 def set_flag(lock = lock, flag = flag, flag_changed = flag_changed):
     print('+ set-flag')
     with lock:
