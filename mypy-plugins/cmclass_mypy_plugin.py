@@ -29,10 +29,11 @@ DECORATOR_FQN="xju.cmc.cmclass"
 def ensure_cm_functions(class_def_in_context: ClassDefContext) -> bool:
     info = class_def_in_context.cls.info
     api = class_def_in_context.api
-    #import pdb; pdb.set_trace()
+    import pdb; pdb.set_trace()
 
     if not '__enter__' in info.names:  # names is local-defined names, i.e. exlucidng base classes
-        class_def_in_context.api.setup_self_type() # fills in info.self_type
+        #class_def_in_context.api.setup_self_type() # fills in info.self_type
+        if not info.self_type: return False
         add_method_to_class(
             class_def_in_context.api,
             class_def_in_context.cls,
