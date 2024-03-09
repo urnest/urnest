@@ -31,11 +31,7 @@ def ensure_cm_functions(class_def_in_context: ClassDefContext) -> bool:
     api = class_def_in_context.api
     #import pdb; pdb.set_trace()
 
-    #REVISIT: ignore all base class methods, which will cover the decorator too
-    existing_enter = info.get('__enter__')
-    if existing_enter is None or (
-            isinstance(existing_enter.node,Decorator) and
-            'abc.abstractmethod' in [_.fullname for _ in existing_enter.node.original_decorators]):
+    if not '__enter__' in info.names:  # names is local-defined names, i.e. exlucidng base classes
         class_def_in_context.api.setup_self_type() # fills in info.self_type
         add_method_to_class(
             class_def_in_context.api,
@@ -44,10 +40,7 @@ def ensure_cm_functions(class_def_in_context: ClassDefContext) -> bool:
             args=[],  # self is implicit
             return_type=info.self_type)
         pass
-    existing_exit = info.get('__exit__')
-    if existing_exit is None or (
-            isinstance(existing_exit.node,Decorator) and
-            'abc.abstractmethod' in [_.fullname for _ in existing_exit.node.original_decorators]):
+    if not '__exit__' in info.names:  # names is local-defined names, i.e. exlucidng base classes
         add_method_to_class(
             class_def_in_context.api,
             class_def_in_context.cls,

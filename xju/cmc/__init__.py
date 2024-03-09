@@ -105,7 +105,7 @@ class CM(contextlib.AbstractContextManager):
     def __enter__(self):
         assert False, f'{CM.__module__}.CM.__enter__ not overridden, have you forgotten @cmclass on {self.__module__}.{self.__class__.__name__}?'
         return self
-    def __exit__(self, t, e, b) -> None:
+    def __exit__(self, t, e, b) -> bool | None:
         assert False, f'{CM.__module__}.CM.__exit__ not overridden, have you forgotten @cmclass on {self.__module__}.{self.__class__.__name__}?'
         pass
 
@@ -148,7 +148,7 @@ class Dict(Mapping[K, V], contextlib.AbstractContextManager):
         self.entered = True
         return self
 
-    def __exit__(self, t, e, b):
+    def __exit__(self, t, e, b) -> bool | None:
         '''"exits" all values in order they were inserted'''
         if self.entered:
             with contextlib.ExitStack() as resources:
@@ -157,7 +157,7 @@ class Dict(Mapping[K, V], contextlib.AbstractContextManager):
                     pass
                 pass
             pass
-        pass
+        return None
 
     def __contains__(self, key:object) -> bool:
         return key in self.x
@@ -346,7 +346,7 @@ class Opt(Generic[V],contextlib.AbstractContextManager[None|V]):
         self.entered=True
         return result
 
-    def __exit__(self, t, e, b):
+    def __exit__(self, t, e, b) -> bool | None:
         '''"exits" value if present'''
         assert self.entered, self.x
         if self.x:
@@ -355,7 +355,7 @@ class Opt(Generic[V],contextlib.AbstractContextManager[None|V]):
                 pass
             pass
         self.entered=False
-        pass
+        return None
 
     def __repr__(self) -> str:
         return f"Opt({self.x})"
@@ -448,7 +448,7 @@ class _ClassCm(contextlib.AbstractContextManager):
     def __enter__(self):
         self.cls.__enter__(self.x)
         return self
-    def __exit__(self, t, e, b):
+    def __exit__(self, t, e, b) -> bool | None:
         return self.cls.__exit__(self.x, t, e, b)
     pass
 
@@ -490,7 +490,7 @@ class Task(contextlib.AbstractAsyncContextManager,Generic[ResultType]):
         assert self.task is None
         self.task=asyncio.create_task(self.coroutine)
         return self.task
-    async def __aexit__(self, t, e, b) -> None:
+    async def __aexit__(self, t, e, b) -> bool | None:
         '''cancel and await task'''
         assert self.task is not None
         task=self.task
@@ -500,6 +500,7 @@ class Task(contextlib.AbstractAsyncContextManager,Generic[ResultType]):
             await task
         except asyncio.CancelledError:
             pass
+        return None
 
 class Thread(Generic[ResultType],contextlib.AbstractContextManager[Callable[[],ResultType]]):
     __t: threading.Thread
@@ -527,14 +528,14 @@ class Thread(Generic[ResultType],contextlib.AbstractContextManager[Callable[[],R
             raise in_function_context(Thread.__enter__,vars())
         pass
 
-    def __exit__(self, t, e, b):
+    def __exit__(self, t, e, b) -> bool | None:
         '''stop (via {self.stop}()) and wait for (i.e. join) {self}'''
         try:
             self.stop()
             self.__t.join()
+            return None
         except Exception:
             raise in_function_context(Thread.__exit__, vars())
-        pass
 
     def result(self) -> ResultType:
         '''assuming context has exited, return/raise result of run()'''
@@ -567,10 +568,10 @@ class Lock(contextlib.AbstractContextManager):
         self.active=True
         return self
 
-    def __exit__(self,t,e,b) -> None:
+    def __exit__(self,t,e,b) -> bool | None:
         self.active=False
         self.m.m.release()
-        pass
+        return None
 
     pass
 
@@ -633,12 +634,12 @@ class Process:
             raise in_function_context(Process.__enter__,vars())
         pass
 
-    def __exit__(self, t, e, b):
+    def __exit__(self, t, e, b) -> bool | None:
         '''kill {self}'''
         assert self.p is not None
         self.p.kill()
         self.p.wait()
-        pass
+        return None
 
     pass
 
@@ -716,7 +717,7 @@ class AsyncCM(contextlib.AbstractAsyncContextManager):
     async def __aenter__(self) -> Self:
         assert False, f'{CM.__module__}.AsyncCM.__aenter__ not overridden, have you forgotten @async_cmclass on {self.__module__}.{self.__class__.__name__}?'
         return self
-    async def __aexit__(self, t, e, b) -> None:
+    async def __aexit__(self, t, e, b) -> bool | None:
         assert False, f'{CM.__module__}.AsyncCM.__aexit__ not overridden, have you forgotten @async_cmclass on {self.__module__}.{self.__class__.__name__}?'
         pass
 
@@ -761,7 +762,7 @@ class AsyncDict(Mapping[K, AsyncV], contextlib.AbstractAsyncContextManager):
         self.entered = True
         return self
 
-    async def __aexit__(self, t, e, b):
+    async def __aexit__(self, t, e, b) -> bool | None:
         '''"exits" all values in order they were inserted'''
         if self.entered:
             async with contextlib.AsyncExitStack() as resources:
@@ -770,7 +771,7 @@ class AsyncDict(Mapping[K, AsyncV], contextlib.AbstractAsyncContextManager):
                     pass
                 pass
             pass
-        pass
+        return None
 
     def __contains__(self, key:object) -> bool:
         return key in self.x
@@ -952,7 +953,7 @@ class AsyncOpt(Generic[AsyncV],contextlib.AbstractAsyncContextManager[None|Async
         self.entered=True
         return result
 
-    async def __aexit__(self, t, e, b):
+    async def __aexit__(self, t, e, b) -> bool | None:
         '''"exits" value if present'''
         assert self.entered, self.x
         if self.x:
@@ -961,7 +962,7 @@ class AsyncOpt(Generic[AsyncV],contextlib.AbstractAsyncContextManager[None|Async
                 pass
             pass
         self.entered=False
-        pass
+        return None
 
     def __repr__(self) -> str:
         return f"AsyncOpt({self.x})"
@@ -1053,7 +1054,7 @@ class AsyncTask(contextlib.AbstractAsyncContextManager,Generic[ResultType]):
         assert self.task is None
         self.task=asyncio.create_task(self.function())
         return self.task
-    async def __aexit__(self, t, e, b) -> None:
+    async def __aexit__(self, t, e, b) -> bool | None:
         '''cancel and await task'''
         assert self.task is not None
         task=self.task
@@ -1064,6 +1065,7 @@ class AsyncTask(contextlib.AbstractAsyncContextManager,Generic[ResultType]):
                 await task
             except asyncio.CancelledError:
                 pass
+        return None
 
 class AsyncServiceQueue(contextlib.AbstractAsyncContextManager):
     loop:asyncio.AbstractEventLoop
@@ -1085,7 +1087,7 @@ class AsyncServiceQueue(contextlib.AbstractAsyncContextManager):
     async def __aenter__(self) -> Self:
         self.entered=True
         return self
-    async def __aexit__(self,t,e,b) -> None:
+    async def __aexit__(self,t,e,b) -> bool | None:
         self.entered=False
         # pop entries to avoid RuntimeWarning for coroutines never awaited noting
         # they were never started
@@ -1093,7 +1095,8 @@ class AsyncServiceQueue(contextlib.AbstractAsyncContextManager):
             x=self.q.get_nowait()
             assert isinstance(x,Coroutine)
             x.close()
-        pass
+            pass
+        return None
 
     async def run(self) -> None:
         '''execute queue entries in order logging exceptions'''
@@ -1131,10 +1134,10 @@ class AsyncLock(contextlib.AbstractAsyncContextManager):
         self.active=True
         return self
 
-    async def __aexit__(self,t,e,b) -> None:
+    async def __aexit__(self,t,e,b) -> bool | None:
         self.active=False
         self.m.m.release()
-        pass
+        return None
     pass
 
 class AsyncCondition:
@@ -1215,7 +1218,7 @@ class _AsyncClassCm(contextlib.AbstractAsyncContextManager[None]):
     async def __aenter__(self) -> None:
         assert isinstance(self.x, self.cls)
         await self.cls.__aenter__(self.x)
-    async def __aexit__(self, t, e, b):
+    async def __aexit__(self, t, e, b) -> bool | None:
         return await self.cls.__aexit__(self.x, t, e, b)
     pass
 
@@ -1257,7 +1260,7 @@ class _AsyncAttrClassCm(contextlib.AbstractAsyncContextManager):
 
     async def __aenter__(self):
         return await getattr(self.x, self.attr_name).__aenter__()
-    async def __aexit__(self, t, e, b):
+    async def __aexit__(self, t, e, b) -> bool | None:
         return await getattr(self.x, self.attr_name).__aexit__(t, e, b)
         pass
     pass
@@ -1278,6 +1281,6 @@ class _AsyncSyncAttrClassCm(contextlib.AbstractAsyncContextManager):
 
     async def __aenter__(self) -> None:
         return getattr(self.x, self.attr_name).__enter__()
-    async def __aexit__(self, t, e, b) -> None:
+    async def __aexit__(self, t, e, b) -> bool | None:
         return getattr(self.x, self.attr_name).__exit__(t, e, b)
     pass

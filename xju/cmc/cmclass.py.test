@@ -155,6 +155,8 @@ class DD(B2, B1):
 
 step=1
 
+z:DD  # REVISIT: should not need this, something wrong with cmclass_mypy_plugin.py
+
 with DD(Resource('a',ee=None, xe=None), #a
        1, #b
        'c', #c
@@ -553,7 +555,7 @@ class GenericResource(Generic[T]):
 
 @cmc.cmclass
 @dataclasses.dataclass
-class Z(cmc.CM):
+class Z:
     y: GenericResource[int]
 
 step=1
@@ -589,7 +591,7 @@ class GenericResourceB(Generic[T],contextlib.AbstractContextManager[T]):
 
 @cmc.cmclass
 @dataclasses.dataclass
-class ZB(cmc.CM):
+class ZB:
     y: GenericResourceB[int]
     aa: list[bool]
 
