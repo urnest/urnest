@@ -109,7 +109,7 @@ class AsyncResource:
     pass
 
 @async_cmclass
-class Aggregate(AsyncCM):
+class Aggregate:
     name: str
     a: AsyncResource
     b: Resource
@@ -239,7 +239,7 @@ async def async_init_dataclass_example() -> None:
     
     @async_cmclass
     @dataclass
-    class AsyncInit(AsyncCM):
+    class AsyncInit:
         # a class whose initialastion needs await statements
         # python __init__() cannot be async, so use it to capture
         # parameters p1, p2 and implement the asynchronous initialisation

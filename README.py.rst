@@ -178,6 +178,8 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 2.0.3 improve xju.json_codec typescript object key generation v xju.NewStr
+- 2.0.3 add xju.cmc_mypy_plugin, avoids need for xju.cmc.[Async]CM when using @[async_]cmclass
 - 2.0.2 add xju.cmc.delay_cancellation
 - 2.0.2 add bytes support to xju.json_codec
 - 2.0.2 use class name as xn exception message where exception message is empty

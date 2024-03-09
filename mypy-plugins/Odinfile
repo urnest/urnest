@@ -1,7 +1,8 @@
 %all==%all.tree:leaves
 
 %all.tree == <<
-%typecheck
+%typecheck_json_codec_plugin
+%typecheck_cmc_plugin
 %test_json_codec_mypy_plugin_builtin
 %test_json_codec_mypy_plugin_newtype
 %test_json_codec_mypy_plugin_indexed
@@ -14,7 +15,8 @@
 %py-opts==<<
 +py_sp=(..)
 
-%typecheck==json_codec_mypy_plugin.py+(%py-opts):main.mypy3
+%typecheck_json_codec_plugin==json_codec_mypy_plugin.py+(%py-opts):main.mypy3
+%typecheck_cmc_plugin==cmc_mypy_plugin.py+(%py-opts):main.mypy3
 
 %verify-errs == ! <<
 #!/bin/sh -ex
