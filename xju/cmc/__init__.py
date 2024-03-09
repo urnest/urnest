@@ -44,11 +44,13 @@ T_CMT = TypeVar('T_CMT', bound=Type[contextlib.AbstractContextManager])
 
 def cmclass(cls:T_CMT) -> T_CMT:
     '''Class decorator that adds context management __enter__ and __exit__
-       that enter and exit all type-hinted attributes implementing contextlib.AbstractContextManager
-       then any existing __enter__.
-       Note that to satisfy mypy, the decorated class must already
-       implement contextlib.AbstractContextManager and the preferred way to do that is
-       to inherit from xju.cmc.CM - see cmc.py.test for examples.
+       that enter all type-hinted attributes implementing contextlib.AbstractContextManager
+       then any existing __enter__. The return value is the return value of the existing
+       __enter__, or self if there is no such function.  Exits are done in the reverse
+       order, eventually returning the value of the existing __exit__, or none if there
+       is no such function. Note an exception during the "entry" sequence will exit any
+       complete steps. See cmclass.py.test for examples.
+       To satisfy mypy use the xju.cmclass_mypy_plugin mypy plugin.
        See also async_cmclass, which provides an asyncio equivalent.
     '''
     base_classes_to_enter = [ base_class for base_class in cls.__bases__
@@ -78,11 +80,11 @@ def cmclass(cls:T_CMT) -> T_CMT:
                 tentative.enter_context(getattr(self, n))
                 pass
             assert getattr(self,resources_attr_name, None) is None, f'{cls.__module__}.{cls.__name__} has a f{resources_attr_name} attribute already. Perhaps it is inherited multiple times (which is not allowed by xju.cmc.cmclass decorator)?'
-            orig_enter(self)
+            result = orig_enter(self)
             setattr(self,resources_attr_name,tentative.pop_all())
-        return self
+        return result
     orig_exit=cls.__dict__.get('__exit__',lambda self,t,e,b: None)
-    def exit(self,t,e,b,resources_attr_name=resources_attr_name) -> None:
+    def exit(self,t,e,b,resources_attr_name=resources_attr_name):
         resources = getattr(self,resources_attr_name)
         setattr(self,resources_attr_name,None)
         with contextlib.closing(resources):
@@ -646,12 +648,13 @@ T_ACMT = TypeVar('T_ACMT', bound=Type[contextlib.AbstractAsyncContextManager])
 
 def async_cmclass(cls:T_ACMT) -> T_ACMT:
     '''Class decorator that adds async context management __aenter__ and __aexit__
-       that enter and exit all type-hinted attributes implementing 
-       contextlib.AbstractAsyncContextManager and contextlib.AbstractContextManager
-       then any existing __aenter__.
-       Note that to satisfy mypy, the decorated class must already
-       implement contextlib.AbstractAsyncContextManager and the preferred way to do that is
-       to inherit from xju.cmc.AsyncCM - see cmc.py.test for examples.
+       that enter all type-hinted attributes implementing 
+       contextlib.AbstractAsyncContextManager or contextlib.AbstractContextManager
+       then any existing __aenter__ and exit in the opposite order. The __aenter__
+       return value is that of the existing __aenter__ or self if there is no such
+       function; the __exit__ return value is that of the existing __aexit__, or None
+       if there is no such function.
+       See async_cmclass.py.test for examples.
     '''
     base_classes_to_enter = _make_base_classes_to_enter(cls) # type: ignore  # mypy 1.4.1 gets confused
     attrs_to_enter = _make_attrs_to_enter(cls) # type: ignore  # mypy 1.4.1 gets confused
@@ -677,18 +680,22 @@ def async_cmclass(cls:T_ACMT) -> T_ACMT:
                 pass
             assert getattr(self,resources_attr_name, None) is None, f'{cls.__module__}.{cls.__name__} has a f{resources_attr_name} attribute already. Perhaps it is inherited multiple times (which is not allowed by xju.cmc.async_cmclass decorator)?'
             if orig_enter is not None:
-                await orig_enter(self)
+                result=await orig_enter(self)
+            else:
+                result=self
                 pass
             setattr(self,resources_attr_name,tentative.pop_all())
-        return self
+        return result
     orig_exit=cls.__dict__.get('__aexit__',None)
     async def aexit(self,t,e,b,resources_attr_name=resources_attr_name) -> None:
         resources = getattr(self,resources_attr_name)
         setattr(self,resources_attr_name,None)
         async with contextlib.aclosing(resources):
             if orig_exit is not None:
-                await orig_exit(self,t,e,b)
+                result=await orig_exit(self,t,e,b)
                 pass
+            else:
+                result=None
             pass
         pass
     old_sa=cls.__setattr__

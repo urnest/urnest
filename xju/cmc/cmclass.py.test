@@ -22,9 +22,10 @@ from xju import cmc
 
 from xju.assert_ import Assert
 import dataclasses
-from typing import Optional,Generic,TypeVar
+from typing import Optional,Generic,TypeVar, Self
 from types import GenericAlias
 import contextlib
+from types import TracebackType
 
 # python behaviour checks
 class A():
@@ -88,7 +89,7 @@ class Resource:
         self.xe = xe
         pass
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         global step
         print(f'+ enter {self.name} @ {step}')
         Assert(self.entered_at)==None
@@ -100,7 +101,7 @@ class Resource:
         print(f'- enter {self.name} @{step-1}')
         return self
     
-    def __exit__(self, t, e, b):
+    def __exit__(self, t: type[BaseException]|None, e:BaseException|None, b:TracebackType|None):
         global step
         print(f'+ exit {self.name} @ {step}')
         Assert(self.entered_at).isNot(None)
@@ -119,26 +120,26 @@ assert issubclass(Resource, contextlib.AbstractContextManager)
 # @cmclass tests
 @cmc.cmclass
 @dataclasses.dataclass
-class B1(cmc.CM):
+class B1:
     a: Resource
     b: int
     pass
 
 @cmc.cmclass
 @dataclasses.dataclass
-class B2(cmc.CM):
+class B2:
     c: str
     d: Resource
     e: Resource
     b2_orig_entered_at=None
     b2_orig_exited_at=None
-    def __enter__(self):
+    def __enter__(self) -> Self:
         global step
         print(f'B2 post entered @{step}')
         self.b2_orig_entered_at=step
         step = step + 1
-        pass
-    def __exit__(self,t,e,b):
+        return self
+    def __exit__(self,t:type[BaseException]|None,e:BaseException|None,b:TracebackType|None):
         global step
         print(f'B2 post exited @{step}')
         self.b2_orig_exited_at=step
