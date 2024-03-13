@@ -15,15 +15,15 @@ export ODINVERIFYLEVEL=0 &&
   odin 'd5%x.o' &&
   odin 'd5%x.o:depend:ls' &&
   odin "d5%x.o:depend:ls>" &&
-  odin "d5%x.o:depend:ls>" | fgrep "$d/d5/x.cc" &&
-  odin "d5%x.o:depend:ls>" | fgrep "$d/d5/hcp/tags/x.h" &&
-  odin "d5%x.o:depend:ls>" | fgrep "$d/d5/Odinfile" &&
-  odin "d5%x.o:depend:ls>" | fgrep "$d/d5/hcp/Odinfile" &&
-  odin "d5%x.o:depend:ls>" | fgrep "$d/d5/hcp/tags/Odinfile" &&
+  odin "d5%x.o:depend:ls>" | grep -F "$d/d5/x.cc" &&
+  odin "d5%x.o:depend:ls>" | grep -F "$d/d5/hcp/tags/x.h" &&
+  odin "d5%x.o:depend:ls>" | grep -F "$d/d5/Odinfile" &&
+  odin "d5%x.o:depend:ls>" | grep -F "$d/d5/hcp/Odinfile" &&
+  odin "d5%x.o:depend:ls>" | grep -F "$d/d5/hcp/tags/Odinfile" &&
   hcp=$(odin "d5/hcp%hcp.d:filename>") &&
-  odin 'd5%x.o+depend=('$hcp')!:dpath' |fgrep -q 'is an input of' &&
+  odin 'd5%x.o+depend=('$hcp')!:dpath' |grep -F -q 'is an input of' &&
   tags=$(odin "d5/hcp/tags%tags.d:filename>") &&
-  odin 'd5%x.o+depend=('$tags')!:dpath' |fgrep -q 'is an input of' &&
+  odin 'd5%x.o+depend=('$tags')!:dpath' |grep -F -q 'is an input of' &&
   true
 ) &&
 

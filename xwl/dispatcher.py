@@ -51,7 +51,7 @@ def getParam(param_name,
     pass
 
 def makeParams(remote_addr,method,headers,params,url,referer,cookies,f):
-    'make dictionary of params for calling function %(f)s, getting them from remote_addr, method, headers, GET/POST params, url, cookies'''
+    '''make dictionary of params for calling function %(f)s, getting them from remote_addr, method, headers, GET/POST params, url, cookies'''
     try:
         json_params=fromJson(params.get('json_params','{}'))
         param_names=f.__code__.co_varnames[0:f.__code__.co_argcount]
@@ -171,10 +171,8 @@ class Dispatcher:
                 headers.append( ('Location',result.location) )
                 start_response('303 See Other',headers)
                 return [''.encode('utf-8')]
-            headers.extend([(n,v) for n,v in result.headers
-                            if not n in ('Content-Type','Content-Encoding')])
-            c=dict([ (n,v) for n,v in result.headers
-                     if n in ('Content-Type','Content-Encoding')])
+            headers.extend([(n,v) for n,v in result.headers if not n in ('Content-Type','Content-Encoding')])
+            c=dict([ (n,v) for n,v in result.headers if n in ('Content-Type','Content-Encoding')])
             if result.contentType: c['Content-Type']=result.contentType
             if result.contentEncoding: c['Content-Encoding']=result.contentEncoding
             headers.extend(c.items())

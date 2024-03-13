@@ -20,6 +20,6 @@ output of run
 cat "$1" | grep -v '2 passed in' | diff -b - "$2" >&2
 
 
-%test-that-fails==(%test-that-fails.errors)+cmd=fgrep '"assert 1 == 2"':stdout
+%test-that-fails==(%test-that-fails.errors)+cmd=grep -F '"assert 1 == 2"':stdout
 
 %test-that-fails.errors==(test-that-fails.py):pytest3.output:err

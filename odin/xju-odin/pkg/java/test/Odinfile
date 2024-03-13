@@ -101,13 +101,13 @@ echo "a=`$@`"
 
 # src/e/g.java depends on d.{ax,bx} via implicit absolute reference to d.ax
 %test3.tree==<<
-(src/e/g.java+(%j-opts):class:depend:ls)+cmd=fgrep (more/d/ax.java):stdout
-(src/e/g.java+(%j-opts):class:depend:ls)+cmd=fgrep (more/d/bx.java):stdout
+(src/e/g.java+(%j-opts):class:depend:ls)+cmd=grep -F (more/d/ax.java):stdout
+(src/e/g.java+(%j-opts):class:depend:ls)+cmd=grep -F (more/d/bx.java):stdout
 
 # src/e/k.java depends on d.{ax,bx} via packge import
 %test4.tree==<<
-(src/e/k.java+(%j-opts):class:depend:ls)+cmd=fgrep (more/d/ax.java):stdout
-(src/e/k.java+(%j-opts):class:depend:ls)+cmd=fgrep (more/d/bx.java):stdout
+(src/e/k.java+(%j-opts):class:depend:ls)+cmd=grep -F (more/d/ax.java):stdout
+(src/e/k.java+(%j-opts):class:depend:ls)+cmd=grep -F (more/d/bx.java):stdout
 
 
 %test5.tree==<<

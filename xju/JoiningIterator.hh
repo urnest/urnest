@@ -60,8 +60,7 @@ namespace xju
 	//
 	//    (exceptions of Delimiter(const Delimiter&))
 	//
-	JoiningIterator<T, Delimiter>(std::ostream& s, 
-				      const Delimiter& delimiter):
+	JoiningIterator(std::ostream& s, const Delimiter& delimiter):
 	    _s(&s),
 	    _delimiter(delimiter),
 	    _first(true) {

@@ -2,7 +2,7 @@
 
 %all.tree == <<
 %test-newtype.output
-%test-newtype-compile-error:err+cmd=fgrep ':6:33':stdout
+%test-newtype-compile-error:err+cmd=grep -F ':6:33':stdout
 
 %test-newtype == test-newtype.rs+(..%rs-opts):exe
 

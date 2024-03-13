@@ -37,7 +37,7 @@ odin-build fork see https://github.com/urnest/urnest
     cd $d
     ./INSTALL %{buildroot}
   )
-  find %{buildroot} -mindepth 2 -type f | xargs fgrep -l '%{buildroot}' |
+  find %{buildroot} -mindepth 2 -type f | xargs grep -F -l '%{buildroot}' |
     while read n
     do
       cp \$n \$n.new

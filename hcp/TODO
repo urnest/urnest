@@ -475,7 +475,7 @@ sys     0m0.024s
 xju@xjutv:/data/xju/u1/urnest/hcp$ ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l
 10391
 
-xju@xjutv:/data/xju/u1/urnest/hcp$ ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | fgrep '[ parse comments at line 139 column 22' | wc -l
+xju@xjutv:/data/xju/u1/urnest/hcp$ ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | grep -F '[ parse comments at line 139 column 22' | wc -l
 40
 
 ... after adding cache...
@@ -488,7 +488,7 @@ user    0m0.908s
 sys     0m0.008s
 xju@xjutv:/data/xju/u1/urnest/hcp$ ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | wc -l
 2055
-xju@xjutv:/data/xju/u1/urnest/hcp$ ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | fgrep '[ parse comments at line 139 column 22' | wc -l
+xju@xjutv:/data/xju/u1/urnest/hcp$ ./hcp-parse-file -t test/xju/JoiningIterator.hcp  | grep -F '[ parse comments at line 139 column 22' | wc -l
 1
 
 - still very slow, need to profile or at least look through the output

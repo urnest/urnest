@@ -63,7 +63,7 @@ std::string readableRepr(Exception const& e) throw()
                    xju::JoiningIterator<std::string, std::string>(
                      s,
                      " because\n  "),
-                   std::ptr_fun(contextReadableRepr));
+                   contextReadableRepr);
     s << " because\n  "
       << e.at_ << ": " << e.cause_->str();
   }
