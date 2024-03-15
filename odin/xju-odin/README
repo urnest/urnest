@@ -1,6 +1,5 @@
-This directory contains the Odin software build system, which is
-documented in ./doc/odin.html.  Users upgrading from older Odin
-versions should consult the file "etc/CHANGES".
+This directory contains the xju fork of the Odin software build
+system, which is documented in ./doc/odin.html.
 
 For most machines and configurations, the following sequence of two
 commands will build an executable version (both commands should be given
@@ -37,6 +36,4 @@ Odin is distributed WITHOUT ANY WARRANTY; without even the implied
 warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-Mail comments and questions to:
-
-	odin-build-users@lists.sourceforge.net
+See also github.org/urnest/odin/xju-odin.
