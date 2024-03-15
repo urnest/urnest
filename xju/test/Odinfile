@@ -35,4 +35,4 @@ CallTo6.hcp==(CallToPn.py)+cmd='6':py3.exec.output
 CallTo7.hcp==(CallToPn.py)+cmd='7':py3.exec.output
 Calls.hcp==(Calls.py)+cmd='7':py3.exec.output
 
-%tags==.:merged-tags
+%tags==.+(../..%tags-opts):merged-tags

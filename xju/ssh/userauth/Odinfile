@@ -24,9 +24,9 @@ authenticatees%tests.tree:leaves
 %messages==./messages/Odinfile%hcp-gen
 %authenticatees==./authenticatees/Odinfile%hcp-gen
 
-%tags==%all.list-of-tags:merged-tags
+%tags==%all.list-of-tags+(../../..%tags-opts):merged-tags
 
 %all.list-of-tags==<<
-.:merged-tags
+.+(../../..%tags-opts):merged-tags
 messages%tags
 authenticatees%tags

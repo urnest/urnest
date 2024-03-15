@@ -33,4 +33,4 @@
 %cxx-opts==<<
 +(..%cxx-opts)
 
-%tags==.:merged-tags
+%tags==.+(../..%tags-opts):merged-tags

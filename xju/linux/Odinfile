@@ -47,10 +47,10 @@ wtmp/monitor-logins
 %idl-subdir-spec==<<
 %wtmp==./wtmp/Odinfile%idl-gen
 
-%tags==%all.list-of-tags:merged-tags
+%tags==%all.list-of-tags+(../..%tags-opts):merged-tags
 
 %all.list-of-tags==<<
-.:merged-tags
+.+(../..%tags-opts):merged-tags
 wtmp%tags
 disk-space%tags
 ntpd%tags

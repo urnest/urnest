@@ -31,10 +31,10 @@ misc%tests.tree:leaves
 %userauth==./userauth/Odinfile%hcp-gen
 %misc==./misc/Odinfile%hcp-gen
 
-%tags==%all.list-of-tags:merged-tags
+%tags==%all.list-of-tags+(../..%tags-opts):merged-tags
 
 %all.list-of-tags==<<
-.:merged-tags
+.+(../..%tags-opts):merged-tags
 transport%tags
 userauth%tags
 misc%tags

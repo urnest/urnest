@@ -267,9 +267,9 @@ hcp/Chars.cc==./Chars.cc
 
 %test-xju-tags-no-warnings==()+cmd=cmp (../xju%tags:warn) '-':stdout
 
-%tags==%all.list-of-tags:merged-tags
+%tags==%all.list-of-tags+(..%tags-opts):merged-tags
 
 %all.list-of-tags==<<
-.:merged-tags
+.+(..%tags-opts):merged-tags
 tags%tags
 

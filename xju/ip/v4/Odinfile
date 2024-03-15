@@ -13,4 +13,4 @@
 
 %hcp-gen==.:dir.hcp.list+(%hcp-opts)+hpath='xju/ip/v4':hcp-split-virdir-specs:cat:vir_dir
 
-%tags==.:merged-tags
+%tags==.+(../../..%tags-opts):merged-tags

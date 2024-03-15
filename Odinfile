@@ -51,10 +51,14 @@ xwl%all.tree:leaves
 %cxy==./omnicxy/cxy/Odinfile%idl-gen
 %xju==./xju/Odinfile%idl-gen
 
-%tags==%all.list-of-tags:merged-tags
+%tags==%all.list-of-tags+(%tags-opts):merged-tags
+
+%tags-opts==<<
++hcp-tags-merge=(hcp/hcp-tags-merge)
++hcp-tags=(hcp%hcp-tags)
 
 %all.list-of-tags==<<
-.:merged-tags
+.+(%tags-opts):merged-tags
 xju%tags
 hcp%tags
 omnicxy/cxy%tags
@@ -78,7 +82,7 @@ tar chf - .
 %hcp-parse-file==hcp%hcp-parse-file
 %hcp-what-is-at==hcp%hcp-what-is-at
 %hcp-tags==hcp%hcp-tags
-%hcp-tags-merge==hcp/hcp-tags-merge
+%tags-opts==hcp/hcp-tags-merge
 %hcp-scope-at==hcp%hcp-scope-at
 %hcp-map-to-source==hcp%hcp-map-to-source
 %hcp-remove-throw-clauses==hcp%hcp-remove-throw-clauses

@@ -171,10 +171,10 @@ done
 %idl-subdir-spec==<<
 %linux==./linux/Odinfile%idl-gen
 
-%tags==%all.list-of-tags:merged-tags
+%tags==%all.list-of-tags+(..%tags-opts):merged-tags
 
 %all.list-of-tags==<<
-.:merged-tags
+.+(..%tags-opts):merged-tags
 base64%tags
 ethernet%tags
 file%tags

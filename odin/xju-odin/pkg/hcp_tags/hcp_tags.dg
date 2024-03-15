@@ -29,15 +29,25 @@ $ODIN_HCP_TAGS_MERGE 'name of the hcp-tags-merge program' = 'hcp-tags-merge';
 
 :merged_tags ':tags file from :list-of-tags'? => :tags;
 
-:which-hcp-tags 'hcp-tags exe from +hcp-tags or ODIN_HCP_TAGS_PATH hcp-tags'
+:which-hcp-tags 'hcp-tags exe from +hcp-tags or ODIN_HCP_TAGS_PATH'
   => :REFERENCE;
 :which-hcp-tags-viewspec 'viewspec to locate hcp-tags exe' => :FILE;
 
-+hcp-tags 'hcp-tags exe, default to hcp-tags on ODIN_HCP_TAGS_PATH' ? => :first;
++hcp-tags 'hcp-tags exe, default to ODIN_HCP_TAGS on ODIN_HCP_TAGS_PATH' ? => :first;
 
 EXEC (which-hcp-tags-viewspec.sh) (+hcp-tags) => (:which-hcp-tags-viewspec);
 
 COLLECT (:which-hcp-tags-viewspec:view:first) => (:which-hcp-tags);
+
+:which-hcp-tags-merge 'hcp-tags-merge exe from +hcp-tags-merge or ODIN_HCP_TAGS_PATH'
+  => :REFERENCE;
+:which-hcp-tags-merge-viewspec 'viewspec to locate hcp-tags-merge exe' => :FILE;
+
++hcp-tags-merge 'hcp-tags-merge exe, default to ODIN_HCP_TAGS_MERGE on ODIN_HCP_TAGS_PATH' ? => :first;
+
+EXEC (which-hcp-tags-merge-viewspec.sh) (+hcp-tags-merge) => (:which-hcp-tags-merge-viewspec);
+
+COLLECT (:which-hcp-tags-merge-viewspec:view:first) => (:which-hcp-tags-merge);
 
 
 #:FILE here is a directory
@@ -49,6 +59,6 @@ EXEC (hcp-tags.sh) (:hcp) 'hcptags' (:which-hcp-tags) => (:hcptags);
 
 READ-LIST (:list-of-tags) => (:list-of-tags.list);
 
-EXEC (hcp-tags-merge.sh) (:list-of-tags.list:ls) 'merged-tags'
+EXEC (hcp-tags-merge.sh) (:which-hcp-tags-merge) (:list-of-tags.list:ls) 'merged-tags'
   NEEDS (:list-of-tags.list)
   => (:merged-tags);

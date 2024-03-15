@@ -36,10 +36,10 @@ test-UDPLocalForwardSocket.cc+(../..%cxx-opts):auto.cxx.exe
 %checksum==checksum/Odinfile%hcp-gen
 %icmp==icmp/Odinfile%hcp-gen
 
-%tags==%all.list-of-tags:merged-tags
+%tags==%all.list-of-tags+(../..%tags-opts):merged-tags
 
 %all.list-of-tags==<<
-.:merged-tags
+.+(../..%tags-opts):merged-tags
 v4%tags
 v6%tags
 checksum%tags

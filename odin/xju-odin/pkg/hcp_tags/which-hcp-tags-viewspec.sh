@@ -9,9 +9,9 @@ envvar="$ODIN_HCP_TAGS_PATH" &&
   fi &&
   echo "$envvar" | awk -F : '{ 
     for(i=1; i<=NF; ++i) {
-      if ($i!="") print $i "/hcp-tags";
+      if ($i!="") print $i "/$ODIN_HCP_TAGS";
     }
   }' &&
-  echo "= 'hcp-tags'"
+  echo "= '$ODIN_HCP_TAGS'"
 )  > which-hcp-tags-viewspec  2>WARNINGS ||
 mv WARNINGS ERRORS

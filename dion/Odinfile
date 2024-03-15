@@ -24,9 +24,9 @@ job%tests.tree
 %cxx-opts==<<
 +(..%cxx-opts)
 
-%tags==%all.list-of-tags:merged-tags
+%tags==%all.list-of-tags+(..%tags-opts):merged-tags
 
 %all.list-of-tags==<<
-.:merged-tags
+.+(..%tags-opts):merged-tags
 job%tags
 

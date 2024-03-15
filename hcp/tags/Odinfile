@@ -135,5 +135,5 @@ then
 fi
 
 
-%tags==.:merged-tags
+%tags==.+(../..%tags-opts):merged-tags
 

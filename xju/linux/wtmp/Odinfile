@@ -26,8 +26,8 @@ monitor-logins==monitor-logins.cc+(../../..%cxx-opts):auto.cxx.exe
 
 %idl-subdir-spec==<<
 
-%tags==%all.list-of-tags:merged-tags
+%tags==%all.list-of-tags+(../../..%tags-opts):merged-tags
 
 %all.list-of-tags==<<
-.:merged-tags
-%idl-gen:merged-tags
+.+(../../..%tags-opts):merged-tags
+%idl-gen+(../../..%tags-opts):merged-tags

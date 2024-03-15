@@ -13,8 +13,8 @@ pam-test-client==pam-test-client.cc+(../../..%cxx-opts)+lib=pam:auto.cxx.exe
 
 %hcp-gen==.:dir.hcp.list+(%hcp-opts)+hpath='xju/linux/pam':hcp-split-virdir-specs:cat:vir_dir
 
-%tags==%all.list-of-tags:merged-tags
+%tags==%all.list-of-tags+(../../..%tags-opts):merged-tags
 
 %all.list-of-tags==<<
-.:merged-tags
+.+(../../..%tags-opts):merged-tags
 
