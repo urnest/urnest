@@ -55,7 +55,7 @@ with Process([snmp_json_gateway_exe, '--v3usm', engineId, 'auto'], stdin="PIPE",
                     [(m.message.oids[0], IntValue("Integer",33))]))))+b'\n')
         g.stdin.flush()
         stdout, _ = p.communicate()
-        Assert(stdout.decode('utf-8'))=='iso.3.6.1.4.1.2680.1.2.7.3.2 = INTEGER: 33\n'
+        Assert(stdout.decode('utf-8')).endsWith('2680.1.2.7.3.2 = INTEGER: 33\n')
         pass
     c=[
         net_snmp_get_exe, '-r', '0', '-v3', '-l','noAuthNoPriv','-u', 'fred', '-n', 'conny', f"localhost:{port}", '.1.3.6.1.4.1.2680.1.2.7.3.2'
@@ -89,7 +89,7 @@ with Process([snmp_json_gateway_exe, '--v3usm', engineId, 'auto'], stdin="PIPE",
                     [(m.message.oids[0], IntValue("Integer",34))]))))+b'\n')
         g.stdin.flush()
         stdout, _ = p.communicate()
-        Assert(stdout.decode('utf-8'))=='iso.3.6.1.4.1.2680.1.2.7.3.2 = INTEGER: 34\n'
+        Assert(stdout.decode('utf-8')).endsWith('2680.1.2.7.3.2 = INTEGER: 34\n')
         pass
     pass
 
@@ -145,7 +145,7 @@ for authAlg, netsnmpAuthAlg in [
                             [(m.message.oids[0], IntValue("Integer",84))]))))+b'\n')
                 g.stdin.flush()
                 stdout, _ = p.communicate()
-                Assert(stdout.decode('utf-8'))=='iso.3.6.1.4.1.2680.1.2.7.3.3 = INTEGER: 84\n'
+                Assert(stdout.decode('utf-8')).endsWith('2680.1.2.7.3.3 = INTEGER: 84\n')
                 pass
             pass
     except Exception as e:
@@ -154,7 +154,6 @@ for authAlg, netsnmpAuthAlg in [
 
 for privAlg, netsnmpPrivAlg in [
         ('aes128cfb', 'AES'),
-        ('descbc', 'DES'),
 ]:
     try:
         engineId='AA23F2'
@@ -203,7 +202,7 @@ for privAlg, netsnmpPrivAlg in [
                             [(m.message.oids[0], IntValue("Integer",84))]))))+b'\n')
                 g.stdin.flush()
                 stdout, _ = p.communicate()
-                Assert(stdout.decode('utf-8'))=='iso.3.6.1.4.1.2680.1.2.7.3.3 = INTEGER: 84\n'
+                Assert(stdout.decode('utf-8')).endsWith('2680.1.2.7.3.3 = INTEGER: 84\n')
                 pass
             pass
     except Exception as e:

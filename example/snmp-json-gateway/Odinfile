@@ -62,13 +62,14 @@ then
 fi
 test -r "$snmp_json_gateway_py"
 test -r "$snmp_json_gateway_exe"
-test -w "$INST_BIN"
+test -w "$INST_BIN" || mkdir -p "$INST_BIN"
 test -d "$INST_BIN"
-test -w "$INST_PYTHON_SITE_PACKAGES"
+test -w "$INST_PYTHON_SITE_PACKAGES" || mkdir -p "$INST_PYTHON_SITE_PACKAGES"
 test -d "$INST_PYTHON_SITE_PACKAGES"
 mkdir -p "$INST_PYTHON_SITE_PACKAGES/snmp_json_gateway"
 cp -f "$snmp_json_gateway_py" "$INST_PYTHON_SITE_PACKAGES/snmp_json_gateway/__init__.py"
 touch "$INST_PYTHON_SITE_PACKAGES/snmp_json_gateway/py.typed"
 cp -f "$snmp_json_gateway_exe" "$INST_BIN/snmp-json-gateway"
+chmod u+w  "$INST_BIN/snmp-json-gateway"
 set +x
 echo "Installation Successfull"

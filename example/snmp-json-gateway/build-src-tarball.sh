@@ -23,6 +23,6 @@ else
   fi
 fi  
 
-tar czf "$outd/$version.tar.gz" --exclude '*~' --exclude '__pycache__' Odinfile xju hcp example/snmp-json-gateway
+tar czf "$outd/$version.tar.gz" --exclude '*~' --exclude '__pycache__' Odinfile xju hcp omnicxy dion example
 
 echo "created $outd/$version.tar.gz"
