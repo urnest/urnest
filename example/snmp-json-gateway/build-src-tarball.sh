@@ -10,7 +10,7 @@ set -x
 
 cd "$d/../.."
 
-version=$(git describe --tags --exact-match  |grep 'snmp-json-gateway-' || true)
+version=$(git describe --tags --exact-match --match 'snmp-json-gateway-*' || true)
 
 test $(echo $version | wc -w) -lt 2
 if [ -z "$version" ]
