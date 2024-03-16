@@ -1,3 +1,8 @@
+# install python module into $INST_PYTHON_SITE_PACKAGES,
+# install binary (snmp-json-gateway) into $INST_BIN
+%install!==(.)+cmd=(%installer.sh) (snmp_json_gateway.py) (%snmp-json-gateway.exe):run
+
+
 %all==%all.tree:leaves
 
 %cxx-opts==<<
@@ -38,3 +43,32 @@
 %hcp-subdir-spec==<<
 
 %hcp-local-spec==.:dir.hcp.list+(%hcp-opts)+hpath='example/snmp-json-gateway':hcp-split-virdir-specs:cat
+
+
+%installer.sh == ! <<
+#!/bin/sh
+set -ex
+snmp_json_gateway_py="$1" && shift
+snmp_json_gateway_exe="$1" && shift
+if ! test -n "$INST_BIN"
+then
+  echo "ERROR: set INST_BIN environment variable to tools destination directory, e.g. /usr/local/bin"
+  false
+fi
+if ! test -n "$INST_PYTHON_SITE_PACKAGES"
+then
+  echo "ERROR: set INST_PYTHON_SITE_PACKAGES environment variable to header destination directory, e.g. /usr/local/lib/python3.11/site-packages"
+  false
+fi
+test -r "$snmp_json_gateway_py"
+test -r "$snmp_json_gateway_exe"
+test -w "$INST_BIN"
+test -d "$INST_BIN"
+test -w "$INST_PYTHON_SITE_PACKAGES"
+test -d "$INST_PYTHON_SITE_PACKAGES"
+mkdir -p "$INST_PYTHON_SITE_PACKAGES/snmp_json_gateway"
+cp -f "$snmp_json_gateway_py" "$INST_PYTHON_SITE_PACKAGES/snmp_json_gateway/__init__.py"
+touch "$INST_PYTHON_SITE_PACKAGES/snmp_json_gateway/py.typed"
+cp -f "$snmp_json_gateway_exe" "$INST_BIN/snmp-json-gateway"
+set +x
+echo "Installation Successfull"

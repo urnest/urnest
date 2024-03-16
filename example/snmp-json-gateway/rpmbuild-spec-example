@@ -1,0 +1,42 @@
+Name:           snmp-json-gateway
+Version:        0.0.0
+Release:        1%{?dist}
+Summary:        SNMP <-> JSON gateway
+
+License:        BSD
+Source:         snmp-json-gateway.tar.gz
+
+BuildRequires: gcc g++ >= 12.2
+BuildRequires: xju-odin >= 1.0.6
+BuildRequires: libgcrypt-devel >= 1.10
+BuildRequires: python3 >= 3.11
+
+%description
+Program that translates received SNMP messages into JSON on stdout and JSON messages
+received on stdin into SNMP messages.
+
+%prep
+  echo "!!!prep: \$(pwd)"
+  tar xzf %{_sourcedir}/snmp-json-gateway.tar.gz
+
+%build
+  echo "!!!build: \$(pwd)"
+  set -ex
+  export ODIN=%{_tmppath}/oc
+  odin -r </dev/null
+  odin 'example/snmp-json-gateway%all'
+
+%install
+  echo "!!!install: \$(pwd)"
+  export ODIN=%{_tmppath}/oc
+  INST_BIN=%{buildroot}/%{_bindir} \
+  INST_PYTHON_SITE_PACKAGES=%{buildroot}/%{python3_sitelib} \
+  odin 'example/snmp-json-gateway%install'
+
+%clean
+  rm -rf %{_tmppath}/oc
+
+%files
+%{_bindir}/snmp-json-gateway
+%{python3_sitelib}/snmp_json_gateway/__init__.py
+%{python3_sitelib}/snmp_json_gateway/py.typed
