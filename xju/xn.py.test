@@ -18,7 +18,7 @@
 from sys import path
 from os.path import dirname
 if path[0]==dirname(__file__): path.pop(0)
-from xju.xn import in_context,readable_repr,AllFailed,in_function_context,Xn,capitalise,first_para_of
+from xju.xn import in_context,readable_repr,AllFailed,in_function_context,Xn,capitalise,first_para_of, first_line_of
 from xju.assert_ import Assert
 from typing import cast
 
@@ -228,8 +228,15 @@ def test12():
         Assert(str(e)).matches('''\
 failed to fred because
 [^:]*:222: TimeoutError''')
+        pass
+    pass
 
+def test13():
+    Assert(first_line_of('fred\njock'))=='fred'
+    Assert(first_line_of(''))==''
+    Assert(first_line_of('fred'))=='fred'
 
+        
 tests=[var for name,var in sorted(vars().items())
        if name.startswith('test') and callable(var)]
 for t in tests: t()

@@ -178,6 +178,8 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 3.0.0 actually switch xju.xn.in_function_context to use first_para_of not first_line_of
+        - see *breaking change* below, this time actually did that change
 - 2.0.3 improve xju.json_codec typescript object key generation v xju.NewStr
 - 2.0.3 add xju.cmc_mypy_plugin, no need for xju.cmc.AsyncCM/CM when using async_cmclass/cmclass decorator
 - 2.0.2 add xju.cmc.delay_cancellation

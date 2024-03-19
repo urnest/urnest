@@ -22,7 +22,7 @@ import os
 import fcntl
 from typing import overload,cast
 import typing
-from typing import Literal, Optional, Union
+from typing import Literal, Optional, Union, Self
 import pathlib
 import io
 import contextlib
@@ -36,8 +36,7 @@ from socket import AF_UNIX
 from os import pipe2
 
 class FilePositionTag:pass
-class FilePositionBase:pass  # until typing.Self
-class FilePosition(FilePositionBase):
+class FilePosition:
     __value:int
     def __init__(self,value:int):
         self.__value=value
@@ -56,7 +55,7 @@ class FilePosition(FilePositionBase):
         return self.__add__(x)
 
     @overload
-    def __sub__(self, x:FilePositionBase)->ByteCount:
+    def __sub__(self, x:Self)->ByteCount:
         pass
     @overload
     def __sub__(self, x:ByteCount):  # -> FilePosition
@@ -157,9 +156,8 @@ class FileReader(contextlib.AbstractContextManager):
             raise in_function_context(FileReader.__exit__,vars()) from None
         pass
 
-    def seek_to(self, position:FilePosition):
-        '''position so next read occurs {position} bytes from start of file
-           - returns self'''
+    def seek_to(self, position:FilePosition) -> Self:
+        '''position so next read occurs {position} bytes from start of file'''
         try:
             self.input.seek(int(position), io.SEEK_SET)
             return self
@@ -167,9 +165,8 @@ class FileReader(contextlib.AbstractContextManager):
             raise in_function_context(FileReader.seek_to,vars()) from None
         pass
     
-    def seek_by(self, offset:ByteCount):
-        '''position {self} so next read occurs {offset} bytes from current position
-           - returns self'''
+    def seek_by(self, offset:ByteCount) -> Self:
+        '''position {self} so next read occurs {offset} bytes from current position'''
         try:
             self.input.seek(int(offset), io.SEEK_CUR)
             return self
@@ -218,6 +215,7 @@ class FileWriter(contextlib.AbstractContextManager):
     @overload
     def __init__(self, path: pathlib.Path, mode:FileMode, must_not_exist:Literal[True]=True, close_on_exec:bool=True):
         '''non-existent {path} writer creating with mode {mode}, with close-on-exec {close_on_exec}
+
            - raises FileExistsError if {path} exists'''
         pass
     @overload
@@ -238,9 +236,8 @@ class FileWriter(contextlib.AbstractContextManager):
     def __str__(self):
         return l1(FileWriter.__doc__).format(**vars())
 
-    def __enter__(self):
-        '''open {self}
-           - returns self'''
+    def __enter__(self) -> Self:
+        '''open {self}'''
         try:
             if self.mode is None:
                 flags=os.O_WRONLY
@@ -270,9 +267,8 @@ class FileWriter(contextlib.AbstractContextManager):
             raise in_function_context(FileWriter.__exit__,vars()) from None
         pass
     
-    def seek_to(self, position:FilePosition):
-        '''position {self} so next write occurs {position} bytes from start of file
-           - returns self'''
+    def seek_to(self, position:FilePosition) -> Self:
+        '''position {self} so next write occurs {position} bytes from start of file'''
         try:
             self.output.seek(int(position), io.SEEK_SET)
             return self
@@ -280,9 +276,8 @@ class FileWriter(contextlib.AbstractContextManager):
             raise in_function_context(FileWriter.seek_to,vars()) from None
         pass
     
-    def seek_by(self, offset:ByteCount):
-        '''position {self} so next write occurs {offset} bytes from current position
-           - returns self'''
+    def seek_by(self, offset:ByteCount) -> Self:
+        '''position {self} so next write occurs {offset} bytes from current position'''
         try:
             self.output.seek(int(offset), io.SEEK_SET)
             return self
