@@ -28,7 +28,7 @@ with Process(["/bin/echo", "fred"], stdout="PIPE",stderr="PIPE") as p:
 
 # process is guarenteed gone on context exit
 # (via Popen.kill and Popen.wait)
-with Process(["/bin/cat"]) as p:
+with Process(["/bin/sleep", "1000"]) as p:
     pass
 
 Assert(p.returncode)==-9
