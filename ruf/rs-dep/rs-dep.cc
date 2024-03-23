@@ -498,7 +498,7 @@ PR tupleStruct() noexcept
 {
   static PR result(
     someStructIntro()+"("+
-    rustBalanced(")")+")");
+    rustBalanced(")")+")"+";");
   return result;
 }
 
