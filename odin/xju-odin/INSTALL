@@ -24,6 +24,8 @@ if [ ! -d $ODINPKGS ] ; then mkdir $ODINPKGS || exit 1; fi
 
 (cd ./pkg/odin; make CC=$ODIN_CC CFLAGS="$ODIN_CC_FLAGS" CXX=$ODIN_CXX CXXFLAGS="$ODIN_CXX_FLAGS") || exit 1
 
+rm -rf $ODINPKS $ODINBIN $ODINMAN
+
 if [ ! -f $ODINPKGS/LIBVER ] ; then
    echo PKGVER.0 > $ODINPKGS/LIBVER; fi
 num=`cat $ODINPKGS/LIBVER | sed 's/PKGVER.//'`
