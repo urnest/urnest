@@ -178,6 +178,7 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 3.0.1 fix json_codec_mypy_plugin issues 2, 3
 - 3.0.0 actually switch xju.xn.in_function_context to use first_para_of not first_line_of
         - see *breaking change* below, this time actually did that change
 - 2.0.3 improve xju.json_codec typescript object key generation v xju.NewStr
