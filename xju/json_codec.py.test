@@ -35,15 +35,18 @@ from xju.assert_ import Assert
 import xju.newtype
 from xju.xn import readable_repr
 from xju.time import Timestamp
+import xju
 
 x:Any
 
+#https://github.com/urnest/urnest/issues/3
+codec(xju.time.Timestamp)
 
 # https://github.com/urnest/urnest/issues/2
 ArgType = TypeVar("ArgType")
 class C1(Generic[ArgType]):
     def func(self, argtype: ArgType):
-        _argtype_codec = codec(argtype)
+        _argtype_codec = codec(type(argtype))
         pass
     pass
 

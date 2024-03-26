@@ -10,7 +10,8 @@
 %test_json_codec_mypy_plugin_literal
 %test_json_codec_mypy_plugin_union
 %test_json_codec_mypy_plugin_alias
-
+%test_json_codec_mypy_plugin_issue_2
+%test_json_codec_mypy_plugin_issue_3
 
 %py-opts==<<
 +py_sp=(..)
@@ -291,3 +292,17 @@ class C1(Generic[ArgType]):
         _argtype_codec = codec(argtype)  # should pass type, not instance
         pass
     pass
+
+%test_json_codec_mypy_plugin_issue_3==%test_json_codec_mypy_plugin_issue_3.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_issue_3.py.test:filename) (%test_json_codec_mypy_plugin_issue_3.expect):exec.output
+
+%test_json_codec_mypy_plugin_issue_3.expect==<<
+FILE:5: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "type[Timestamp]"  [arg-type]
+
+%test_json_codec_mypy_plugin_issue_3.errors==%json_codec_mypy_plugin_issue_3.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
+
+%json_codec_mypy_plugin_issue_3.py.test == <<
+# https://github.com/urnest/urnest/issues/2
+import xju.time
+from xju.json_codec import codec
+c=codec(xju.time.Timestamp)
+c.encode(42)

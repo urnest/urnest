@@ -82,11 +82,9 @@ def infer_codec_value_type(arg_expr: Expression | list[Expression],
                 if len(arg_expr) != 1:
                     return UninhabitedType()
                 return infer_codec_value_type(arg_expr[0], checker_api)
-            case CallExpr():
+            case CallExpr() | MemberExpr():
                 c=checker_api.type_context[0]
                 return checker_api.get_expression_type(arg_expr, c)
-            case MemberExpr():
-                return infer_codec_value_type(arg_expr.expr, checker_api)
             case NameExpr() if arg_expr.fullname == 'types.NoneType':
                 return NoneType()
             case NameExpr() if arg_expr.name == 'None':
@@ -188,7 +186,7 @@ def builtin_type(checker_api:CheckerPluginInterface, name: str) -> Instance:
 
 
 def named_type(checker_api:CheckerPluginInterface, expr: NameExpr) -> (
-        Instance | TypeAliasType | TypeVarType
+        Instance | TypeAliasType | TypeVarType | UninhabitedType
 ):
     """lookup type of expression {expr}
     
