@@ -39,6 +39,14 @@ from xju.time import Timestamp
 x:Any
 
 
+# https://github.com/urnest/urnest/issues/2
+ArgType = TypeVar("ArgType")
+class C1(Generic[ArgType]):
+    def func(self, argtype: ArgType):
+        _argtype_codec = codec(argtype)
+        pass
+    pass
+
 # int,str,bool,float,None map directly
 
 Assert(codec(int).decode(3))==3
@@ -1236,4 +1244,3 @@ function isInstanceOfO(v:any): v is O
            (v === O.b);
     })(v);
 }''')
-

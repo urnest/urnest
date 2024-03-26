@@ -5,6 +5,7 @@ from mypy.plugin import (
 )
 from mypy.nodes import (
     Expression, NameExpr, IndexExpr, TupleExpr, StrExpr, IntExpr, FloatExpr, OpExpr, MemberExpr,
+    TypeVarExpr, CallExpr,
     TypeInfo,
     TypeAlias
 )
@@ -17,6 +18,8 @@ from mypy.types import (
     TupleType,
     Type,
     TypeAliasType,
+    TypeVarType,
+    TypeVarId,
     TypeOfAny,
     UninhabitedType,
     UnionType,
@@ -79,6 +82,9 @@ def infer_codec_value_type(arg_expr: Expression | list[Expression],
                 if len(arg_expr) != 1:
                     return UninhabitedType()
                 return infer_codec_value_type(arg_expr[0], checker_api)
+            case CallExpr():
+                c=checker_api.type_context[0]
+                return checker_api.get_expression_type(arg_expr, c)
             case MemberExpr():
                 return infer_codec_value_type(arg_expr.expr, checker_api)
             case NameExpr() if arg_expr.fullname == 'types.NoneType':
@@ -88,6 +94,7 @@ def infer_codec_value_type(arg_expr: Expression | list[Expression],
                 return UninhabitedType()
             case NameExpr():
                 # general named type or alias
+                #import pdb; pdb.set_trace()
                 return named_type(checker_api,arg_expr)
             #?case StrExpr():
             case IndexExpr():
@@ -135,7 +142,7 @@ def adjust_codec_return_type(x: FunctionContext) -> Type:
         arg_value_str=[str(_) for _ in arg_expr]
         return_type=x.default_return_type
         typeof_return_type=type(return_type)
-        x.api.fail(f"type {arg_type} is not supported by {CODEC_FQN}(); note the argument has value expression {arg_value_str}; note the return type is {typeof_return_type}({return_type})", x.context)
+        x.api.fail(f"type {arg_type} is not supported by {CODEC_FQN}(); note the argument has value expression {arg_value_str}; note the return type is {typeof_return_type}({return_type}). Note codec() parameter must be a type, not an instance.", x.context)
         return AnyType(TypeOfAny.from_error)
     assert isinstance(x.default_return_type, Instance)
     x.default_return_type.args=(inferred_codec_type, )
@@ -180,7 +187,9 @@ def builtin_type(checker_api:CheckerPluginInterface, name: str) -> Instance:
         raise Exception(f"failed to lookup built-in type {name} becase {e}")
 
 
-def named_type(checker_api:CheckerPluginInterface, expr: NameExpr) -> Instance | TypeAliasType:
+def named_type(checker_api:CheckerPluginInterface, expr: NameExpr) -> (
+        Instance | TypeAliasType | TypeVarType
+):
     """lookup type of expression {expr}
     
     - name can be an alias -> TypeAliasType
@@ -194,11 +203,23 @@ def named_type(checker_api:CheckerPluginInterface, expr: NameExpr) -> Instance |
 
         # apparently checker_api keeps context, so we have to give the unqualified name
         # not the fullname
-        node = checker_api.lookup_qualified(expr.name).node
+        try:
+            node = checker_api.lookup_qualified(expr.name).node
+        except KeyError:
+            return UninhabitedType()
         if isinstance(node, TypeAlias):
             return TypeAliasType(node, [])
+        if isinstance(node, TypeVarExpr):
+            import pdb; pdb.set_trace()
+            return TypeVarType(
+                node.name,
+                node.fullname,
+                TypeVarId.new(0),
+                node.values,
+                node.upper_bound,
+                AnyType(TypeOfAny.from_omitted_generics),
+                node.variance)
         assert isinstance(node, TypeInfo), f"{expr} is not a type, it is the {node} {node.__class__}"
         return Instance(node, [])
     except Exception as e:
         raise Exception(f"failed to lookup type named by {expr} becase {e}") from None
-

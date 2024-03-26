@@ -272,3 +272,22 @@ x = (c1.encode(7),
      c1.encode({}))
 r1:X = c1.decode(None)
 r1x:str = c1.decode(None)  # invalid, result might be e.g. a int
+
+%test_json_codec_mypy_plugin_issue_2==%test_json_codec_mypy_plugin_issue_2.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_issue_2.py.test:filename) (%test_json_codec_mypy_plugin_issue_2.expect):exec.output
+
+%test_json_codec_mypy_plugin_issue_2.expect==<<
+FILE: note: In member "func" of class "C1":
+FILE:7: error: type [ArgType`1] is not supported by xju.json_codec.codec(); note the argument has value expression ['NameExpr(argtype [l])']; note the return type is <class 'mypy.types.Instance'>(xju.json_codec.CodecProto[Never]). Note codec() parameter must be a type, not an instance.  [misc]
+
+%test_json_codec_mypy_plugin_issue_2.errors==%json_codec_mypy_plugin_issue_2.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
+
+%json_codec_mypy_plugin_issue_2.py.test == <<
+# https://github.com/urnest/urnest/issues/2
+from typing import TypeVar, Generic
+from xju.json_codec import codec
+ArgType = TypeVar("ArgType")
+class C1(Generic[ArgType]):
+    def func(self, argtype: ArgType):
+        _argtype_codec = codec(argtype)  # should pass type, not instance
+        pass
+    pass
