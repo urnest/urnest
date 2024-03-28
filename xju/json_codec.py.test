@@ -39,17 +39,6 @@ import xju
 
 x:Any
 
-#https://github.com/urnest/urnest/issues/3
-codec(xju.time.Timestamp)
-
-# https://github.com/urnest/urnest/issues/2
-ArgType = TypeVar("ArgType")
-class C1(Generic[ArgType]):
-    def func(self, argtype: ArgType):
-        _argtype_codec = codec(type(argtype))
-        pass
-    pass
-
 # int,str,bool,float,None map directly
 
 Assert(codec(int).decode(3))==3
@@ -776,7 +765,7 @@ Assert(repr(codec(int)))=="<class 'int'> json codec"
 
 
 Assert(codec(int|None).decode(None))==None
-Assert(codec(int|None).encode(None))==None # type: ignore
+Assert(codec(int|None).encode(None))==None
 
 try:
     x=codec(int|None).decode('fred')
@@ -1247,3 +1236,16 @@ function isInstanceOfO(v:any): v is O
            (v === O.b);
     })(v);
 }''')
+
+#https://github.com/urnest/urnest/issues/3
+Assert(codec(Timestamp).encode(Timestamp(3)))=={'_Timestamp__value': 3.0}
+Assert(codec(xju.time.Timestamp).encode(Timestamp(3)))=={'_Timestamp__value': 3.0}
+       
+
+# https://github.com/urnest/urnest/issues/2
+ArgType = TypeVar("ArgType")
+class C1(Generic[ArgType]):
+    def func(self, argtype: ArgType):
+        _argtype_codec = codec(type(argtype))
+        pass
+    pass
