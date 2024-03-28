@@ -11,6 +11,7 @@ from mypy.nodes import (
 )
 from mypy.types import (
     AnyType,
+    CallableType,
     FunctionLike,
     Instance,
     LiteralType,
@@ -82,14 +83,28 @@ def infer_codec_value_type(arg_expr: Expression | list[Expression],
                 if len(arg_expr) != 1:
                     return UninhabitedType()
                 return infer_codec_value_type(arg_expr[0], checker_api)
-            case CallExpr() | MemberExpr():
+            case CallExpr():
                 c=checker_api.type_context[0]
-                return checker_api.get_expression_type(arg_expr, c)
+                result=checker_api.get_expression_type(arg_expr, c)
+                return result
+            case MemberExpr():
+                #import pdb; pdb.set_trace()
+                c=checker_api.type_context[0]
+                result=checker_api.get_expression_type(arg_expr, c)
+                # type(X) where X is a class give result Callable, which
+                # is X's constructor, we want just X which is the return
+                # type of the callable; note this will consider any function
+                # passed to codec() to be a constructor (technically that's true
+                # I guess)
+                if isinstance(result, CallableType):
+                    if not isinstance(result.ret_type, Type):
+                        return UninhabitedType()  # REVISIT: specific error
+                    return result.ret_type
+                return result
             case NameExpr() if arg_expr.fullname == 'types.NoneType':
                 return NoneType()
             case NameExpr() if arg_expr.name == 'None':
-                # REVISIT: tell them to use NoneType
-                return UninhabitedType()
+                return NoneType()
             case NameExpr():
                 # general named type or alias
                 #import pdb; pdb.set_trace()
@@ -102,7 +117,7 @@ def infer_codec_value_type(arg_expr: Expression | list[Expression],
                     # single literal value
                     return infer_literal_type(arg_expr.index, checker_api)
                 if arg_expr.base.name=="Literal":
-                        assert isinstance(arg_expr.index, TupleExpr)
+                        assert isinstance(arg_expr.index, TupleExpr), arg_expr.index
                         # multi-value literal
                         return UnionType([
                             infer_literal_type(a, checker_api) for a in arg_expr.index.items])
@@ -142,13 +157,13 @@ def adjust_codec_return_type(x: FunctionContext) -> Type:
         typeof_return_type=type(return_type)
         x.api.fail(f"type {arg_type} is not supported by {CODEC_FQN}(); note the argument has value expression {arg_value_str}; note the return type is {typeof_return_type}({return_type}). Note codec() parameter must be a type, not an instance.", x.context)
         return AnyType(TypeOfAny.from_error)
-    assert isinstance(x.default_return_type, Instance)
+    assert isinstance(x.default_return_type, Instance), x.default_return_type
     x.default_return_type.args=(inferred_codec_type, )
     return x.default_return_type
 
 # for development to figure out what return type should be in each case via pdb
 def show_return_type(x: FunctionContext) -> Type:
-    assert isinstance(x.default_return_type, Instance)
+    assert isinstance(x.default_return_type, Instance), x.default_return_type
     return_type=x.default_return_type
     typeof_return_type=type(return_type)
     #import pdb; pdb.set_trace()
