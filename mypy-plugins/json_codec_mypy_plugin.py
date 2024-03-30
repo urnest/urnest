@@ -73,7 +73,11 @@ def infer_literal_type(expr: Expression, checker_api:CheckerPluginInterface) -> 
         raise Exception(f"{expr} is not one of StrExpr, IntExpr, FloatExpr, NameExpr")
     except Exception as e:
         raise Exception(f"failed to infer type for presumed literal {expr} becase {e}") from None
+    pass
 
+class CodecParamInvalid(Exception):
+    pass
+    
 def infer_codec_value_type(arg_expr: Expression | list[Expression],
                            checker_api:CheckerPluginInterface) -> Type:
     #import pdb; pdb.set_trace()
@@ -84,21 +88,24 @@ def infer_codec_value_type(arg_expr: Expression | list[Expression],
                     return UninhabitedType()
                 return infer_codec_value_type(arg_expr[0], checker_api)
             case CallExpr():
+                # e.g. codec(f(x))
                 c=checker_api.type_context[0]
                 result=checker_api.get_expression_type(arg_expr, c)
+                #import pdb; pdb.set_trace()
                 return result
             case MemberExpr():
+                # expression with dots, e.g. xju.misc.BitsPerSecond
+                # note unqualified names end up in NameExpr() below
                 #import pdb; pdb.set_trace()
                 c=checker_api.type_context[0]
                 result=checker_api.get_expression_type(arg_expr, c)
                 # type(X) where X is a class give result Callable, which
                 # is X's constructor, we want just X which is the return
                 # type of the callable; note this will consider any function
-                # passed to codec() to be a constructor (technically that's true
-                # I guess)
+                # passed to codec() to be a constructor (which it is)
                 if isinstance(result, CallableType):
                     if not isinstance(result.ret_type, Type):
-                        return UninhabitedType()  # REVISIT: specific error
+                        raise CodecParamInvalid(f"apparently {result.ret_type} is not a my.types.type?")
                     return result.ret_type
                 return result
             case NameExpr() if arg_expr.fullname == 'types.NoneType':
@@ -106,13 +113,16 @@ def infer_codec_value_type(arg_expr: Expression | list[Expression],
             case NameExpr() if arg_expr.name == 'None':
                 return NoneType()
             case NameExpr():
-                # general named type or alias
+                # general unqualified named type or alias e.g. codec(X)
+                # note qualified names e.g. codec(y.X) end up in MemberExpr() above
                 #import pdb; pdb.set_trace()
                 return named_type(checker_api,arg_expr)
-            #?case StrExpr():
+            #?case StrExpr():   e.g. codec("fred")
             case IndexExpr():
                 if not isinstance(arg_expr.base, NameExpr):
-                    return UninhabitedType()
+                    raise CodecParamInvalid(
+                        f"xju.json_codec.codec() does not support {arg_expr.base} as "
+                        "base-type of an indexed type")
                 if arg_expr.base.name=="Literal" and not isinstance(arg_expr.index, TupleExpr):
                     # single literal value
                     return infer_literal_type(arg_expr.index, checker_api)
@@ -145,21 +155,32 @@ def infer_codec_value_type(arg_expr: Expression | list[Expression],
                 return UnionType([infer_codec_value_type(a, checker_api) for a in terms])
         return UninhabitedType()
     except Exception as e:
-        raise Exception(f"failed to infer xju.json_codec.codec value type from expression {arg_expr} because {e}") from None
+        raise Exception(f"failed to infer proper {CODEC_FQN}() return type from expression {arg_expr} because {e}; report this to https://github/urnest") from None
 
 def adjust_codec_return_type(x: FunctionContext) -> Type:
-    arg_type=x.arg_types[0]
-    arg_expr=x.args[0]
-    inferred_codec_type = infer_codec_value_type(arg_expr, x.api)
-    if isinstance(inferred_codec_type, UninhabitedType):
-        arg_value_str=[str(_) for _ in arg_expr]
-        return_type=x.default_return_type
-        typeof_return_type=type(return_type)
-        x.api.fail(f"type {arg_type} is not supported by {CODEC_FQN}(); note the argument has value expression {arg_value_str}; note the return type is {typeof_return_type}({return_type}). Note codec() parameter must be a type, not an instance.", x.context)
+    """
+    assuming x is a call to xju.json_codec.codec, adjust T in the return type
+    (CodecProto[T]) to its proper value
+
+    for example the call might be codec(int | str), in which case the
+    argument to x has type typeof(int|str); int|str is the type we want
+    to replace T with i.e. we want the value of the expression passed to x
+    (which should be a type).
+    """
+    try:
+        arg_type=x.arg_types[0]
+        arg_expr=x.args[0]
+        inferred_codec_type = infer_codec_value_type(arg_expr, x.api)
+        if isinstance(inferred_codec_type, UninhabitedType):
+            x.api.fail(f"type {arg_type} is not supported by {CODEC_FQN}(). Note codec() parameter must be a type, not an instance.", x.context)
+            return AnyType(TypeOfAny.from_error)
+        assert isinstance(x.default_return_type, Instance), x.default_return_type
+        x.default_return_type.args=(inferred_codec_type, )
+        return x.default_return_type
+    except CodecParamInvalid as e:
+        x.api.fail(str(e), x.context)
         return AnyType(TypeOfAny.from_error)
-    assert isinstance(x.default_return_type, Instance), x.default_return_type
-    x.default_return_type.args=(inferred_codec_type, )
-    return x.default_return_type
+    pass
 
 # for development to figure out what return type should be in each case via pdb
 def show_return_type(x: FunctionContext) -> Type:
@@ -223,7 +244,7 @@ def named_type(checker_api:CheckerPluginInterface, expr: NameExpr) -> (
         if isinstance(node, TypeAlias):
             return TypeAliasType(node, [])
         if isinstance(node, TypeVarExpr):
-            import pdb; pdb.set_trace()
+            #import pdb; pdb.set_trace()
             return TypeVarType(
                 node.name,
                 node.fullname,

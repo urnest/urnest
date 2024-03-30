@@ -131,7 +131,8 @@ class CodecProto(Generic[T], Protocol):
 def codec(t: Type[T]) -> CodecProto[T]:
     '''build codec to encode/decode a "t" to/from json
 
-       - note requires json_codec_mypy_plugin for proper typing and no errors with mypy
+       - note t may be a Union (which is not a Type; use json_codec_mypy_plugin for
+         proper typing and no errors with mypy
     '''
     return Codec[T](t)
 
