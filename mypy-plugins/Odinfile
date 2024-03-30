@@ -12,6 +12,8 @@
 %test_json_codec_mypy_plugin_alias
 %test_json_codec_mypy_plugin_issue_2
 %test_json_codec_mypy_plugin_issue_3
+%test_json_codec_mypy_plugin_too_many_params
+%test-members
 
 %py-opts==<<
 +py_sp=(..)
@@ -278,7 +280,7 @@ r1x:str = c1.decode(None)  # invalid, result might be e.g. a int
 
 %test_json_codec_mypy_plugin_issue_2.expect==<<
 FILE: note: In member "func" of class "C1":
-FILE:7: error: type [ArgType`1] is not supported by xju.json_codec.codec(); note the argument has value expression ['NameExpr(argtype [l])']; note the return type is <class 'mypy.types.Instance'>(xju.json_codec.CodecProto[Never]). Note codec() parameter must be a type, not an instance.  [misc]
+FILE:7: error: type [ArgType`1] is not supported by xju.json_codec.codec(). Note codec() parameter must be a type, not an instance.  [misc]
 
 %test_json_codec_mypy_plugin_issue_2.errors==%json_codec_mypy_plugin_issue_2.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
 
@@ -296,7 +298,7 @@ class C1(Generic[ArgType]):
 %test_json_codec_mypy_plugin_issue_3==%test_json_codec_mypy_plugin_issue_3.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_issue_3.py.test:filename) (%test_json_codec_mypy_plugin_issue_3.expect):exec.output
 
 %test_json_codec_mypy_plugin_issue_3.expect==<<
-FILE:5: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "type[Timestamp]"  [arg-type]
+FILE:5: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "Timestamp"  [arg-type]
 
 %test_json_codec_mypy_plugin_issue_3.errors==%json_codec_mypy_plugin_issue_3.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
 
@@ -306,3 +308,45 @@ import xju.time
 from xju.json_codec import codec
 c=codec(xju.time.Timestamp)
 c.encode(42)
+
+%test_json_codec_mypy_plugin_too_many_params==%test_json_codec_mypy_plugin_too_many_params.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_too_many_params.py.test:filename) (%test_json_codec_mypy_plugin_too_many_params.expect):exec.output
+
+%test_json_codec_mypy_plugin_too_many_params.expect==<<
+FILE:3: error: Too many arguments for "codec"  [call-arg]
+
+%test_json_codec_mypy_plugin_too_many_params.errors==%json_codec_mypy_plugin_too_many_params.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
+
+%json_codec_mypy_plugin_too_many_params.py.test == <<
+# mypy checks param count before calling plugin
+from xju.json_codec import codec
+c=codec(int, 13)
+
+# json_codec_mypy_plugin handles unqualified refs separate to qualified
+# so augment the json_codec.py.test tests (which has mostly unqualified refs)
+# with some qualified refs
+%test-members==(%test_members.py)+(%py-opts)+py_sp=(%some_module_dir):py3.exec.cov
+
+%some_module.py==<<
+from typing import TypeVar,Generic
+from xju.json_codec import codec
+import xju.time
+T = TypeVar("T")
+class C1(Generic[T]):
+    x: T
+    def __init__(self, x:T):
+        self.x=x
+codec(C1[int]).encode(C1(7))=={"x":7}
+codec(C1[xju.time.Timestamp]).encode(C1(xju.time.Timestamp(3)))=={"x":7}
+
+%test_members.py==<<
+from xju.json_codec import codec
+import some_module
+import xju.time
+codec(some_module.C1[int]).encode(some_module.C1(7))=={"x":7}
+codec(some_module.C1[xju.time.Timestamp]).encode(some_module.C1(xju.time.Timestamp(3)))=={"x":7}
+
+
+%some_module.virdir_spec==<<
+%some_module.py==(.%some_module.py)
+
+%some_module_dir==%some_module.virdir_spec:vir_dir
