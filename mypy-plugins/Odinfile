@@ -40,18 +40,18 @@ FILE:14: error: Argument 1 to "encode" of "CodecProto" has incompatible type "st
 FILE:16: error: Argument 1 to "encode" of "CodecProto" has incompatible type "str"; expected "bool"  [arg-type]
 FILE:18: error: Argument 1 to "encode" of "CodecProto" has incompatible type "str"; expected "float"  [arg-type]
 FILE:20: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "None"  [arg-type]
-FILE:22: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "list"  [arg-type]
-FILE:24: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "dict"  [arg-type]
-FILE:26: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "set"  [arg-type]
+FILE:22: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "list[Any]"  [arg-type]
+FILE:24: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "dict[Any, Any]"  [arg-type]
+FILE:26: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "set[Any]"  [arg-type]
 FILE:28: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "str"  [arg-type]
 FILE:30: error: Incompatible types in assignment (expression has type "int", variable has type "str")  [assignment]
 FILE:32: error: Incompatible types in assignment (expression has type "bool", variable has type "str")  [assignment]
 FILE:34: error: Incompatible types in assignment (expression has type "float", variable has type "str")  [assignment]
 FILE:36: error: Incompatible types in assignment (expression has type "None", variable has type "str")  [assignment]
-FILE:38: error: Incompatible types in assignment (expression has type "list", variable has type "str")  [assignment]
-FILE:40: error: Incompatible types in assignment (expression has type "tuple", variable has type "str")  [assignment]
-FILE:42: error: Incompatible types in assignment (expression has type "dict", variable has type "str")  [assignment]
-FILE:44: error: Incompatible types in assignment (expression has type "set", variable has type "str")  [assignment]
+FILE:38: error: Incompatible types in assignment (expression has type "list[Any]", variable has type "str")  [assignment]
+FILE:40: error: Incompatible types in assignment (expression has type "tuple[Any, ...]", variable has type "str")  [assignment]
+FILE:42: error: Incompatible types in assignment (expression has type "dict[Any, Any]", variable has type "str")  [assignment]
+FILE:44: error: Incompatible types in assignment (expression has type "set[Any]", variable has type "str")  [assignment]
 FILE:46: error: Incompatible types in assignment (expression has type "str", variable has type "int")  [assignment]
 
 %test_json_codec_mypy_plugin_builtin.errors==%json_codec_mypy_plugin_builtin.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
@@ -229,9 +229,9 @@ r4x:list = c4.decode(None)
 %test_json_codec_mypy_plugin_union==%test_json_codec_mypy_plugin_union.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_union.py.test:filename) (%test_json_codec_mypy_plugin_union.expect):exec.output
 
 %test_json_codec_mypy_plugin_union.expect==<<
-FILE:9: error: Argument 1 to "encode" of "CodecProto" has incompatible type "dict[Never, Never]"; expected "int | str | list"  [arg-type]
+FILE:9: error: Argument 1 to "encode" of "CodecProto" has incompatible type "dict[Never, Never]"; expected "int | str | list[Any]"  [arg-type]
 FILE:11: error: Argument 1 to "encode" of "CodecProto" has incompatible type "Literal['C']"; expected "Literal['A', 'B']"  [arg-type]
-FILE:13: error: Incompatible types in assignment (expression has type "int | str | list", variable has type "list[Any]")  [assignment]
+FILE:13: error: Incompatible types in assignment (expression has type "int | str | list[Any]", variable has type "list[Any]")  [assignment]
 FILE:15: error: Incompatible types in assignment (expression has type "Literal['A', 'B']", variable has type "list[Any]")  [assignment]
 
 %test_json_codec_mypy_plugin_union.errors==%json_codec_mypy_plugin_union.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
@@ -279,21 +279,21 @@ r1x:str = c1.decode(None)  # invalid, result might be e.g. a int
 %test_json_codec_mypy_plugin_issue_2==%test_json_codec_mypy_plugin_issue_2.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_issue_2.py.test:filename) (%test_json_codec_mypy_plugin_issue_2.expect):exec.output
 
 %test_json_codec_mypy_plugin_issue_2.expect==<<
-FILE: note: In member "func" of class "C1":
-FILE:7: error: type [ArgType`1] is not supported by xju.json_codec.codec(). Note codec() parameter must be a type, not an instance.  [misc]
+FILE:10: error: Argument 1 to "func" of "C1" has incompatible type "type[str]"; expected "type[int]"  [arg-type]
 
 %test_json_codec_mypy_plugin_issue_2.errors==%json_codec_mypy_plugin_issue_2.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
 
 %json_codec_mypy_plugin_issue_2.py.test == <<
 # https://github.com/urnest/urnest/issues/2
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, Type
 from xju.json_codec import codec
 ArgType = TypeVar("ArgType")
 class C1(Generic[ArgType]):
-    def func(self, argtype: ArgType):
+    def func(self, argtype: Type[ArgType]):
         _argtype_codec = codec(argtype)  # should pass type, not instance
         pass
     pass
+C1[int]().func(str)
 
 %test_json_codec_mypy_plugin_issue_3==%test_json_codec_mypy_plugin_issue_3.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_issue_3.py.test:filename) (%test_json_codec_mypy_plugin_issue_3.expect):exec.output
 
@@ -324,7 +324,7 @@ c=codec(int, 13)
 # json_codec_mypy_plugin handles unqualified refs separate to qualified
 # so augment the json_codec.py.test tests (which has mostly unqualified refs)
 # with some qualified refs
-%test-members==(%test_members.py)+(%py-opts)+py_sp=(%some_module_dir):py3.exec.cov
+%test-members==(%test_members.py)+(%py-opts)+py_sp=(%some_module_dir)+mypy_plugin=(json_codec_mypy_plugin.py):py3.exec.cov
 
 %some_module.py==<<
 from typing import TypeVar,Generic
@@ -337,14 +337,33 @@ class C1(Generic[T]):
         self.x=x
 codec(C1[int]).encode(C1(7))=={"x":7}
 codec(C1[xju.time.Timestamp]).encode(C1(xju.time.Timestamp(3)))=={"x":7}
+AY = int|str
+AX = AY
+AZ = AY | float
 
 %test_members.py==<<
-from xju.json_codec import codec
+from xju.json_codec import codec,JsonType
 import some_module
 import xju.time
+from typing import TypeVar,Type,Callable
 codec(some_module.C1[int]).encode(some_module.C1(7))=={"x":7}
 codec(some_module.C1[xju.time.Timestamp]).encode(some_module.C1(xju.time.Timestamp(3)))=={"x":7}
-
+def c1(t: Type[some_module.T], g: Callable[[JsonType],None])->Callable[[some_module.T],None]:
+    c=codec(t)
+    def result(x: some_module.T) -> None:
+        g(c.encode(x))
+        pass
+    return result
+c1(int, lambda j: None)(7)
+ac=codec(some_module.AX)
+a1 = (ac.encode(7),
+      ac.encode("fred"))
+ra1:some_module.AX = ac.decode(7)
+ra1 = ac.decode("fred")
+zc = codec(some_module.AZ)
+z1 = (zc.encode(7),
+      zc.encode("fred"),
+      zc.encode(22.8))
 
 %some_module.virdir_spec==<<
 %some_module.py==(.%some_module.py)
