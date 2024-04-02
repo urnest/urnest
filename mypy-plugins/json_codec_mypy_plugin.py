@@ -22,8 +22,10 @@ from mypy.types import (
     TypeVarType,
     TypeVarId,
     TypeOfAny,
+    TypeType,
     UninhabitedType,
     UnionType,
+    Overloaded,
 )
 from mypy.typeops import tuple_fallback
 from mypy.checker import TypeChecker
@@ -78,22 +80,32 @@ def infer_literal_type(expr: Expression, checker_api:CheckerPluginInterface) -> 
 class CodecParamInvalid(Exception):
     pass
     
-def infer_codec_value_type(arg_expr: Expression | list[Expression],
+def infer_codec_value_type_from_args(arg_exprs: list[Expression],
+                                     checker_api:CheckerPluginInterface) -> Type:
+    assert len(arg_exprs)==1, "expected one argument to codec(), got "+str(len(arg_exprs))
+    return infer_codec_value_type(arg_exprs[0],checker_api)
+
+def calculate_overload_return_type(overload: Overloaded) -> Type:
+    return_types={_.ret_type for _ in overload.items}
+    match len(return_types):
+        case 1:
+            return return_types.pop()
+        case _:
+            return UnionType(list(return_types))
+    pass
+
+def infer_codec_value_type(arg_expr: Expression,
                            checker_api:CheckerPluginInterface) -> Type:
     #import pdb; pdb.set_trace()
     try:
         match arg_expr:
-            case list():
-                if len(arg_expr) != 1:
-                    return UninhabitedType()
-                return infer_codec_value_type(arg_expr[0], checker_api)
-            case CallExpr():
-                # e.g. codec(f(x))
-                c=checker_api.type_context[0]
-                result=checker_api.get_expression_type(arg_expr, c)
-                #import pdb; pdb.set_trace()
-                return result
-            case MemberExpr():
+            case NameExpr() if arg_expr.fullname == 'types.NoneType':
+                return NoneType()
+            case NameExpr() if arg_expr.name == 'None':
+                return NoneType()
+            case NameExpr() if arg_expr.fullname.startswith('builtins.'):
+                return builtin_type(checker_api,arg_expr.name)
+            case MemberExpr() | NameExpr() | CallExpr() | IndexExpr():
                 # expression with dots, e.g. xju.misc.BitsPerSecond
                 # note unqualified names end up in NameExpr() below
                 #import pdb; pdb.set_trace()
@@ -103,50 +115,21 @@ def infer_codec_value_type(arg_expr: Expression | list[Expression],
                 # is X's constructor, we want just X which is the return
                 # type of the callable; note this will consider any function
                 # passed to codec() to be a constructor (which it is)
-                if isinstance(result, CallableType):
-                    if not isinstance(result.ret_type, Type):
-                        raise CodecParamInvalid(f"apparently {result.ret_type} is not a my.types.type?")
-                    return result.ret_type
+                match result:
+                    case CallableType():
+                        if not isinstance(result.ret_type, Type):
+                            raise CodecParamInvalid(f"apparently {result.ret_type} is not a my.types.type?")
+                        return result.ret_type
+                    case Overloaded():
+                        return calculate_overload_return_type(result)
+                    case TypeType():
+                        return result.item
+                    # type alias ref X where X = int | str comes back as typing._SpecialForm
+                    # with no useful info in result; as does member expression y.X
+                    case Instance() if result.type.fullname == 'typing._SpecialForm':
+                        return TypeAliasType(arg_expr.node, [])
                 return result
-            case NameExpr() if arg_expr.fullname == 'types.NoneType':
-                return NoneType()
-            case NameExpr() if arg_expr.name == 'None':
-                return NoneType()
-            case NameExpr():
-                # general unqualified named type or alias e.g. codec(X)
-                # note qualified names e.g. codec(y.X) end up in MemberExpr() above
-                #import pdb; pdb.set_trace()
-                return named_type(checker_api,arg_expr)
             #?case StrExpr():   e.g. codec("fred")
-            case IndexExpr():
-                if not isinstance(arg_expr.base, NameExpr):
-                    raise CodecParamInvalid(
-                        f"xju.json_codec.codec() does not support {arg_expr.base} as "
-                        "base-type of an indexed type")
-                if arg_expr.base.name=="Literal" and not isinstance(arg_expr.index, TupleExpr):
-                    # single literal value
-                    return infer_literal_type(arg_expr.index, checker_api)
-                if arg_expr.base.name=="Literal":
-                        assert isinstance(arg_expr.index, TupleExpr), arg_expr.index
-                        # multi-value literal
-                        return UnionType([
-                            infer_literal_type(a, checker_api) for a in arg_expr.index.items])
-                if isinstance(arg_expr.index, TupleExpr):
-                    if arg_expr.base.name=="tuple":
-                        items=[infer_codec_value_type(a, checker_api) for a in arg_expr.index.items]
-                        return TupleType(
-                            items,
-                            builtin_type(checker_api,"tuple"))
-                    # other e.g. dict[str,int]
-                    return checker_api.named_generic_type(
-                        arg_expr.base.name,
-                        [infer_codec_value_type(a, checker_api) for a in arg_expr.index.items]
-                    )
-                # only one type param, e.g. list[int]
-                return checker_api.named_generic_type(
-                    arg_expr.base.name,
-                    [infer_codec_value_type(arg_expr.index, checker_api)]
-                )
             case OpExpr() if arg_expr.op == "|":
                 # union
                 terms = flatten_union_terms(arg_expr)
@@ -168,10 +151,10 @@ def adjust_codec_return_type(x: FunctionContext) -> Type:
     (which should be a type).
     """
     try:
-        arg_type=x.arg_types[0]
-        arg_expr=x.args[0]
-        inferred_codec_type = infer_codec_value_type(arg_expr, x.api)
+        arg_exprs=x.args[0]
+        inferred_codec_type = infer_codec_value_type_from_args(arg_exprs, x.api)
         if isinstance(inferred_codec_type, UninhabitedType):
+            arg_type=x.arg_types[0]
             x.api.fail(f"type {arg_type} is not supported by {CODEC_FQN}(). Note codec() parameter must be a type, not an instance.", x.context)
             return AnyType(TypeOfAny.from_error)
         assert isinstance(x.default_return_type, Instance), x.default_return_type

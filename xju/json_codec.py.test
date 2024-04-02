@@ -23,7 +23,7 @@ if path[0]==dirname(__file__): path.pop(0)
 from xju.json_codec import codec, JsonType, AnyJsonCodecImpl, SelfCodecImpl
 from xju.json_codec import TypeScriptSourceCode, TypeScriptNamespace, CustomClassCodec
 
-from typing import cast, Type, Literal, Any, Self, NewType, Generic, TypeVar
+from typing import cast, Type, Literal, Any, Self, NewType, Generic, TypeVar, Callable
 from types import NoneType
 from dataclasses import dataclass, field
 import re
@@ -38,6 +38,11 @@ from xju.time import Timestamp
 import xju
 
 x:Any
+
+# temp
+AY = int|str
+AX = AY
+ac=codec(AX)
 
 # int,str,bool,float,None map directly
 
@@ -1337,14 +1342,23 @@ function isInstanceOfO(v:any): v is O
 #https://github.com/urnest/urnest/issues/3
 Assert(codec(Timestamp).encode(Timestamp(3)))=={'_Timestamp__value': 3.0}
 Assert(codec(xju.time.Timestamp).encode(Timestamp(3)))=={'_Timestamp__value': 3.0}
-       
 
 # https://github.com/urnest/urnest/issues/2
 ArgType = TypeVar("ArgType")
-class C1(Generic[ArgType]):
-    def __init__(self, argtype: ArgType):
-        self.codec = codec(list[ArgType])
+def c1(t: Type[ArgType], g: Callable[[JsonType],None])->Callable[[ArgType],None]:
+    c=codec(t)
+    def result(x: ArgType) -> None:
+        g(c.encode(x))
         pass
-    pass
+    return result
 
-#Assert(C1(int).codec.encode([7]))==[7]
+c1(int, lambda j: None)(7)
+
+# aliases
+AY = int|str
+AX = AY
+ac=codec(AX)
+a1 = (ac.encode(7),
+      ac.encode("fred"))
+ra1:AX = ac.decode(7)
+ra1 = ac.decode("fred")
