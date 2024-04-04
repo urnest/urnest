@@ -1320,7 +1320,7 @@ class ClassCodecImpl:
             raise in_function_context(ClassCodecImpl.encode,vars()) from None
         pass
     def decode(self,x,_:None|Callable[[JsonType],Any]) -> object:
-        'deocde {x} as a {self.t}'
+        'decode {x} as a {self.t}'
         try:
             if self.custom_codec is not None:
                 result=self.custom_codec.xju_json_codec_decode(x)
@@ -1464,7 +1464,7 @@ class EnumValueCodecImpl:
             raise in_function_context(EnumValueCodecImpl.encode,vars()) from None
         pass
     def decode(self,x,back_ref:None|Callable[[JsonType],Any]) -> Enum:
-        'deocde {x!r} as {self.t.__name__}.{self.value.name}'
+        'decode {x!r} as {self.t.__name__}.{self.value.name}'
         try:
             value=self.value_codec.decode(x,back_ref)
             if value != self.value.value:
@@ -1621,7 +1621,7 @@ class SelfCodecImpl:
             raise in_function_context(SelfCodecImpl.encode,vars()) from None
         pass
     def decode(self,x,back_ref:None|Callable[[JsonType],Any]) -> object:
-        'deocde {x} as a Self'
+        'decode {x} as a Self'
         try:
             assert back_ref is not None
             return back_ref(x)
