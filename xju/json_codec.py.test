@@ -405,13 +405,13 @@ Assert(codec(O.a).encode(O.a))=='fred'
 try:
     x=codec(O.a).decode(7)  # type: ignore
 except Exception as e:
-    Assert(readable_repr(e))=="Failed to decode 7 to a O.a because\nfailed to deocde 7 as O.a because\n7 (of type <class 'int'>) is not a <class 'str'>."
+    Assert(readable_repr(e))=="Failed to decode 7 to a O.a because\nfailed to decode 7 as O.a because\n7 (of type <class 'int'>) is not a <class 'str'>."
 else:
     assert False, x
 try:
     x=codec(O.a).decode('jock')  # type: ignore
 except Exception as e:
-    Assert(readable_repr(e))=="Failed to decode jock to a O.a because\nfailed to deocde 'jock' as O.a because\n'jock' is not 'fred'."
+    Assert(readable_repr(e))=="Failed to decode jock to a O.a because\nfailed to decode 'jock' as O.a because\n'jock' is not 'fred'."
 else:
     assert False, x
 try:
@@ -429,13 +429,13 @@ Assert(codec(O).encode(O.b))==7
 try:
     x=codec(O).decode(8)
 except Exception as e:
-    Assert(readable_repr(e))=="Failed to decode 8 to a <enum 'O'> because\nfailed to decode 8 as enum O value because\n- failed to decode as O.a because\n  failed to deocde 8 as O.a because\n  8 (of type <class 'int'>) is not a <class 'str'>; and\n- failed to decode as O.b because\n  failed to deocde 8 as O.b because\n  8 is not 7."
+    Assert(readable_repr(e))=="Failed to decode 8 to a <enum 'O'> because\nfailed to decode 8 as enum O value because\n- failed to decode as O.a because\n  failed to decode 8 as O.a because\n  8 (of type <class 'int'>) is not a <class 'str'>; and\n- failed to decode as O.b because\n  failed to decode 8 as O.b because\n  8 is not 7."
 else:
     assert False, x
 try:
     x=codec(O).decode('jock')
 except Exception as e:
-    Assert(readable_repr(e))=="Failed to decode jock to a <enum 'O'> because\nfailed to decode 'jock' as enum O value because\n- failed to decode as O.a because\n  failed to deocde 'jock' as O.a because\n  'jock' is not 'fred'; and\n- failed to decode as O.b because\n  failed to deocde 'jock' as O.b because\n  'jock' (of type <class 'str'>) is not a <class 'int'>."
+    Assert(readable_repr(e))=="Failed to decode jock to a <enum 'O'> because\nfailed to decode 'jock' as enum O value because\n- failed to decode as O.a because\n  failed to decode 'jock' as O.a because\n  'jock' is not 'fred'; and\n- failed to decode as O.b because\n  failed to decode 'jock' as O.b because\n  'jock' (of type <class 'str'>) is not a <class 'int'>."
 else:
     assert False, x
 try:
@@ -966,7 +966,7 @@ def fail_back_ref_decode(x: JsonType) -> Any:
 try:
     SelfCodecImpl().decode(7,fail_back_ref_decode)
 except Exception as e:
-    Assert(readable_repr(e))=='Failed to deocde 7 as a Self because\nback_ref fail.'
+    Assert(readable_repr(e))=='Failed to decode 7 as a Self because\nback_ref fail.'
 else:
     assert False
     pass
@@ -1132,7 +1132,7 @@ class Fred:
 try:
     codec(Fred).decode({'x':'jock'})
 except Exception as e:
-    Assert(readable_repr(e))=="Failed to decode {'x': 'jock'} to a <class '__main__.Fred'> because\nfailed to deocde {'x': 'jock'} as a <class '__main__.Fred'> because\nfailed to init <class '__main__.Fred'> with keyword arguments {'x': 'jock'} because\njock forbidden."
+    Assert(readable_repr(e))=="Failed to decode {'x': 'jock'} to a <class '__main__.Fred'> because\nfailed to decode {'x': 'jock'} as a <class '__main__.Fred'> because\nfailed to init <class '__main__.Fred'> with keyword arguments {'x': 'jock'} because\njock forbidden."
 else:
     assert False
     pass
@@ -1165,7 +1165,7 @@ Assert(codec(Opt).decode({'x':None}))==Opt(x=None)
 try:
     codec(Opt).decode({})
 except Exception as e:
-    Assert(readable_repr(e)).contains("Failed to decode {} to a <class '__main__.Opt'> because\nfailed to deocde {} as a <class '__main__.Opt'> because\nfailed to init <class '__main__.Opt'> with keyword arguments {} because\nOpt.__init__() missing 1 required positional argument: 'x'.")
+    Assert(readable_repr(e)).contains("Failed to decode {} to a <class '__main__.Opt'> because\nfailed to decode {} as a <class '__main__.Opt'> because\nfailed to init <class '__main__.Opt'> with keyword arguments {} because\nOpt.__init__() missing 1 required positional argument: 'x'.")
 else:
     assert False
     pass
