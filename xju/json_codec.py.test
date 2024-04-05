@@ -39,10 +39,8 @@ import xju
 
 x:Any
 
-# temp
-AY = int|str
-AX = AY
-ac=codec(AX)
+tuple_codec=codec(tuple[int,str])
+Assert(tuple_codec.encode((5, 'fred')))==[5, 'fred']
 
 # int,str,bool,float,None map directly
 

@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Final
 from mypy.plugin import (
     Plugin, FunctionSigContext, FunctionContext, Expression,
     CheckerPluginInterface
@@ -94,41 +94,70 @@ def calculate_overload_return_type(overload: Overloaded) -> Type:
             return UnionType(list(return_types))
     pass
 
-def infer_codec_value_type(arg_expr: Expression,
-                           checker_api:CheckerPluginInterface) -> Type:
-    #import pdb; pdb.set_trace()
+def expand_member_expr(expr: MemberExpr) -> NameExpr:
+    qualifiers=list[str]()
+    e:Expression = expr
+    while isinstance(e,MemberExpr):
+        qualifiers.append(e.name)
+        e=e.expr
+        pass
+    assert isinstance(e,NameExpr),e
+    return NameExpr('.'.join(reversed(qualifiers+[e.name])))
+
+def infer_codec_value_type(
+        arg_expr: Expression,
+        checker_api:CheckerPluginInterface,
+) -> Type:
+    import pdb; pdb.set_trace()
+    if isinstance(arg_expr,MemberExpr):
+        arg_expr=expand_member_expr(arg_expr)
+        pass
     try:
         match arg_expr:
+            case CallExpr():
+                # eg codec(f()) ... where def f() -> T
+                # we want T which is the return type of f which is the
+                # type of the result of evaluating arg_expr at run-time
+                c=checker_api.type_context[0]
+                result=checker_api.get_expression_type(arg_expr, c)
+                return result
             case NameExpr() if arg_expr.fullname == 'types.NoneType':
                 return NoneType()
             case NameExpr() if arg_expr.name == 'None':
                 return NoneType()
             case NameExpr() if arg_expr.fullname.startswith('builtins.'):
                 return builtin_type(checker_api,arg_expr.name)
-            case MemberExpr() | NameExpr() | CallExpr() | IndexExpr():
-                # expression with dots, e.g. xju.misc.BitsPerSecond
-                # note unqualified names end up in NameExpr() below
-                #import pdb; pdb.set_trace()
-                c=checker_api.type_context[0]
-                result=checker_api.get_expression_type(arg_expr, c)
-                # type(X) where X is a class give result Callable, which
-                # is X's constructor, we want just X which is the return
-                # type of the callable; note this will consider any function
-                # passed to codec() to be a constructor (which it is)
-                match result:
-                    case CallableType():
-                        if not isinstance(result.ret_type, Type):
-                            raise CodecParamInvalid(f"apparently {result.ret_type} is not a my.types.type?")
-                        return result.ret_type
-                    case Overloaded():
-                        return calculate_overload_return_type(result)
-                    case TypeType():
-                        return result.item
-                    # type alias ref X where X = int | str comes back as typing._SpecialForm
-                    # with no useful info in result; as does member expression y.X
-                    case Instance() if result.type.fullname == 'typing._SpecialForm':
-                        return TypeAliasType(arg_expr.node, [])
-                return result
+            case NameExpr():
+                return named_type(checker_api,arg_expr)
+            case IndexExpr():
+                if not isinstance(arg_expr.base, NameExpr):
+                    raise CodecParamInvalid(
+                        f"xju.json_codec.codec() does not support {arg_expr.base} as "
+                        "base-type of an indexed type")
+                if arg_expr.base.name=="Literal" and not isinstance(arg_expr.index, TupleExpr):
+                    # single literal value
+                    return infer_literal_type(arg_expr.index, checker_api)
+                if arg_expr.base.name=="Literal":
+                        assert isinstance(arg_expr.index, TupleExpr), arg_expr.index
+                        # multi-value literal
+                        return UnionType([
+                            infer_literal_type(a, checker_api) for a in arg_expr.index.items])
+                if isinstance(arg_expr.index, TupleExpr):
+                    if arg_expr.base.name=="tuple":
+                        items=[infer_codec_value_type(a, checker_api) for a in arg_expr.index.items]
+                        return TupleType(
+                            items,
+                            builtin_type(checker_api,"tuple"))
+                    # other e.g. dict[str,int], C1[int]
+                    return checker_api.named_generic_type(
+                        arg_expr.base.name,
+                        [infer_codec_value_type(a, checker_api) for a in arg_expr.index.items]
+                    )
+                # only one type param, e.g. list[int]
+                return checker_api.named_generic_type(
+                    arg_expr.base.name,
+                    [infer_codec_value_type(arg_expr.index, checker_api)]
+                )
             #?case StrExpr():   e.g. codec("fred")
             case OpExpr() if arg_expr.op == "|":
                 # union
@@ -209,8 +238,13 @@ def named_type(checker_api:CheckerPluginInterface, expr: NameExpr) -> (
 ):
     """lookup type of expression {expr}
     
-    - name can be an alias -> TypeAliasType
-    - otherwise -> Instance
+       could be:
+         literal type e.g. int, Y where Y is a type  -> Instance
+         type alias e.g. X where X = Y  -> TypeAliasType
+         type alias to generic type X where X = C1 where class C1(Generic[T])
+         typevar T where T = TypeVar('T')
+         typevartuple Ts where T = TypeVarTuple('Ts')
+         variable whose value is not a type e.g. x where x = 7, x: Y
     """
     try:
         # need more info than CheckerPluginInterface exposes

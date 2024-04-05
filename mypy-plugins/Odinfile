@@ -346,6 +346,7 @@ from xju.json_codec import codec,JsonType
 import some_module
 import xju.time
 from typing import TypeVar,Type,Callable
+ac=codec(some_module.AX)
 codec(some_module.C1[int]).encode(some_module.C1(7))=={"x":7}
 codec(some_module.C1[xju.time.Timestamp]).encode(some_module.C1(xju.time.Timestamp(3)))=={"x":7}
 def c1(t: Type[some_module.T], g: Callable[[JsonType],None])->Callable[[some_module.T],None]:
