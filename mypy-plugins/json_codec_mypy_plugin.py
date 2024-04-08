@@ -1,20 +1,19 @@
 from typing import Callable, Final
 from mypy.plugin import (
-    Plugin, FunctionSigContext, FunctionContext, Expression,
+    Plugin, FunctionSigContext, FunctionContext, Expression, MethodContext,
     CheckerPluginInterface
 )
 from mypy.nodes import (
     Expression, NameExpr, IndexExpr, TupleExpr, StrExpr, IntExpr, FloatExpr, OpExpr, MemberExpr,
     TypeVarExpr, CallExpr,
     TypeInfo,
-    TypeAlias
+    TypeAlias,
 )
 from mypy.types import (
     AnyType,
     CallableType,
     FunctionLike,
     Instance,
-    LiteralType,
     NoneType,
     TupleType,
     Type,
@@ -31,7 +30,6 @@ from mypy.typeops import tuple_fallback
 from mypy.checker import TypeChecker
 
 CODEC_FQN="xju.json_codec.codec"
-
 
 def adjust_codec_signature(s: FunctionSigContext) -> FunctionLike:
     """adjust signature to Any -> Any so we can param type after mypy resolves param type"""
@@ -108,66 +106,46 @@ def infer_codec_value_type(
         arg_expr: Expression,
         checker_api:CheckerPluginInterface,
 ) -> Type:
+    """
+    infer codec({arg_expr}) return type
+
+    - raise CodecParamInvalid for invalid param e.g. as in codec(7)
+    """
     import pdb; pdb.set_trace()
-    if isinstance(arg_expr,MemberExpr):
-        arg_expr=expand_member_expr(arg_expr)
-        pass
     try:
-        match arg_expr:
-            case CallExpr():
-                # eg codec(f()) ... where def f() -> T
-                # we want T which is the return type of f which is the
-                # type of the result of evaluating arg_expr at run-time
-                c=checker_api.type_context[0]
-                result=checker_api.get_expression_type(arg_expr, c)
-                return result
-            case NameExpr() if arg_expr.fullname == 'types.NoneType':
-                return NoneType()
-            case NameExpr() if arg_expr.name == 'None':
-                return NoneType()
-            case NameExpr() if arg_expr.fullname.startswith('builtins.'):
-                return builtin_type(checker_api,arg_expr.name)
-            case NameExpr():
-                return named_type(checker_api,arg_expr)
-            case IndexExpr():
-                if not isinstance(arg_expr.base, NameExpr):
-                    raise CodecParamInvalid(
-                        f"xju.json_codec.codec() does not support {arg_expr.base} as "
-                        "base-type of an indexed type")
-                if arg_expr.base.name=="Literal" and not isinstance(arg_expr.index, TupleExpr):
-                    # single literal value
-                    return infer_literal_type(arg_expr.index, checker_api)
-                if arg_expr.base.name=="Literal":
-                        assert isinstance(arg_expr.index, TupleExpr), arg_expr.index
-                        # multi-value literal
-                        return UnionType([
-                            infer_literal_type(a, checker_api) for a in arg_expr.index.items])
-                if isinstance(arg_expr.index, TupleExpr):
-                    if arg_expr.base.name=="tuple":
-                        items=[infer_codec_value_type(a, checker_api) for a in arg_expr.index.items]
-                        return TupleType(
-                            items,
-                            builtin_type(checker_api,"tuple"))
-                    # other e.g. dict[str,int], C1[int]
-                    return checker_api.named_generic_type(
-                        arg_expr.base.name,
-                        [infer_codec_value_type(a, checker_api) for a in arg_expr.index.items]
-                    )
-                # only one type param, e.g. list[int]
-                return checker_api.named_generic_type(
-                    arg_expr.base.name,
-                    [infer_codec_value_type(arg_expr.index, checker_api)]
-                )
-            #?case StrExpr():   e.g. codec("fred")
-            case OpExpr() if arg_expr.op == "|":
-                # union
-                terms = flatten_union_terms(arg_expr)
-                if isinstance(terms, UninhabitedType):
-                    return terms
-                return UnionType([infer_codec_value_type(a, checker_api) for a in terms])
-        return UninhabitedType()
+        # rely on Type[X] where X is a type always producing a type constructor
+        # function def (...)->X  or a TypeType
+        c=checker_api.type_context[0]
+        expr_type=checker_api.get_expression_type(arg_expr, c)
+        if not isinstance(expr_type, CallableType|Overloaded|TypeType|UnionType):
+            expr_type_type=type(expr_type)
+            raise CodecParamInvalid(f"apparently {expr_type} (which is of type {expr_type_type} and is the type of the runtime value of {arg_expr}) is not a type (because it is not a callable, a type-type or a union type)")
+        result=type_type_instance_type(expr_type)
+        if not isinstance(result, Type):
+            raise CodecParamInvalid(f"apparently {result} (which the return type of {arg_expr}) is not a my.types.type?")
+        return result
     except Exception as e:
         raise Exception(f"failed to infer proper {CODEC_FQN}() return type from expression {arg_expr} because {e}; report this to https://github/urnest") from None
+
+def type_type_instance_type(expr_type: CallableType|Overloaded|TypeType|UnionType) -> Type:
+    match expr_type:
+        case UnionType():
+            return expr_type
+        case TypeType():
+            return expr_type.item
+        case Overloaded():
+            return calculate_overload_return_type(expr_type)
+        case CallableType():
+            return expr_type.ret_type
+
+def adjust_type_or_type_return_type(x: MethodContext) -> Type:
+    """
+    assuming x is a call to builtins.type.__or__ or builtins.type.__ror__
+    with param *values* T1 and T2, adjust return type to be mypy.types.UnionType([T1,T2])
+    """
+    #import pdb; pdb.set_trace()
+    rhs_expr=x.args[0][0]
+    return UnionType([x.type, infer_codec_value_type(rhs_expr,x.api)])
 
 def adjust_codec_return_type(x: FunctionContext) -> Type:
     """
@@ -203,6 +181,11 @@ def show_return_type(x: FunctionContext) -> Type:
     return return_type
 
 class JsonCodecPlugin(Plugin):
+    def get_method_hook(self, fullname: str) -> Callable[[MethodContext], Type] | None:
+        if fullname == '__or__ of type':
+            return adjust_type_or_type_return_type
+        return None
+
     def get_function_hook(self, fullname: str) -> Callable[[FunctionContext], Type] | None:
         if fullname==CODEC_FQN:
             return adjust_codec_return_type
