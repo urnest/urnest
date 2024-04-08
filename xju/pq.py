@@ -26,6 +26,7 @@
 #  on failure eg replace/html
 #
 from __future__ import annotations
+from typing import Iterator
 from html.parser import HTMLParser
 from html.entities import entitydefs as htmlentitydefs
 from html.entities import name2codepoint as entities
@@ -67,7 +68,9 @@ def encodeEntities(s:str)->str:
     return x
 
 class Node:
-    def __init__(self, parent=None):
+    pos: Pos
+    def __init__(self, pos: Pos, parent=None):
+        self.pos = pos
         self.parent=parent
         if parent:
             parent.children.append(self)
@@ -89,8 +92,8 @@ class Node:
         return []
     
 class Root(Node):
-    def __init__(self):
-        Node.__init__(self)
+    def __init__(self, pos:Pos):
+        Node.__init__(self,pos)
         self.children:list[Node]=[]
     def indexOf(self, child):
         return [ _[0] for _ in zip(range(0,len(self.children)),
@@ -136,8 +139,7 @@ emptyTags=frozenset([
 
 class Tag(Node):
     def __init__(self, tagName, attrs, parent, pos):
-        Node.__init__(self, parent)
-        self.pos=pos
+        Node.__init__(self, pos, parent)
         self.tagName=tagName
         self.attrs=dict(attrs)
         self.children:list[Node]=[]
@@ -222,8 +224,7 @@ class Tag(Node):
 class Data(Node):
     '''CData, including <script> and <style> content'''
     def __init__(self, data, parent, pos):
-        Node.__init__(self, parent)
-        self.pos=pos
+        Node.__init__(self, pos, parent)
         self.data=data
         pass
     def __str__(self):
@@ -240,8 +241,7 @@ class Data(Node):
 class Comment(Node):
     '''Comment'''
     def __init__(self, comment, parent, pos):
-        Node.__init__(self, parent)
-        self.pos=pos
+        Node.__init__(self, pos, parent)
         self.comment=comment
     def __str__(self):
         return '<!--%(comment)s-->' % self.__dict__
@@ -257,8 +257,7 @@ class Comment(Node):
 class Decl(Node):
     '''Decl'''
     def __init__(self, decl, parent, pos):
-        Node.__init__(self, parent)
-        self.pos=pos
+        Node.__init__(self, pos, parent)
         self.decl=decl
     def __str__(self):
         return '<!%(decl)s>' % self.__dict__
@@ -274,8 +273,7 @@ class Decl(Node):
 class PI(Node):
     '''Processing Instruction'''
     def __init__(self, pi, parent, pos):
-        Node.__init__(self, parent)
-        self.pos=pos
+        Node.__init__(self, pos, parent)
         self.pi=pi
     def __str__(self):
         return '<?%(pi)s>' % self.__dict__
@@ -292,7 +290,7 @@ class Parser(HTMLParser):
     def __init__(self, fileName):
         HTMLParser.__init__(self)
         self.fileName=fileName
-        self.root=Root()
+        self.root=Root(Pos(fileName,1,1))
         self.current:Root|Tag=self.root
         return
     def pos(self):
@@ -352,13 +350,13 @@ class Selection:
             self.nodeList=nodeList[:]
             pass
         return
-    def find(self, predicate):
+    def find(self, predicate) -> Selection:
         '''find all children of our nodes that match predicate'''
         result=[]
         for _ in self.nodeList:
             result.extend(filter(_,predicate))
         return Selection(result)
-    def filter(self, predicate):
+    def filter(self, predicate) -> Selection:
         '''nodes of ours that match predicate'''
         return Selection([_ for _ in self.nodeList if predicate(_)])
     def unless(self, predicate):
@@ -380,12 +378,12 @@ class Selection:
                 c.parent=n
         return self
     def text(self, s=None):
-        '''replace our first node's children with the specified text string'''
+        '''replace each of our node's children with the specified text string'''
         '''or return concatenation of text content of children'''
         if s is None:
             return u''.join([_.text() for _ in self.nodeList])
-        ss=parse(encodeEntities(str(s)))
         for n in self.nodeList:
+            ss=parse(encodeEntities(str(s)))
             Selection([n]).html(ss)
         return self
     def replace(self, nodes):
@@ -515,6 +513,8 @@ class Selection:
         return ''.join([str(_) for _ in self.nodeList])
     def __len__(self):
         return len(self.nodeList)
+    def __iter__(self) -> Iterator[Selection]:
+        return iter([Selection(n) for n in self.nodeList])
     def __getitem__(self, key):
         return Selection(self.nodeList.__getitem__(key))
     def __add__(self, b):

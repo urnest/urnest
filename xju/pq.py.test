@@ -386,6 +386,12 @@ def test38():
     Assert(str(y))=='<div><?fred></div>'
     pass
 
+def test39():
+    x=parse('<div><span class="A">a</span><span class="A">x</span></div>')
+    x.find(hasClass('A')).text('b')
+    Assert(str(x))=='<div><span class="A">b</span><span class="A">b</span></div>'
+    pass
+
 if __name__=='__main__':
     tests=[var for name,var in list(vars().items())
            if name.startswith('test') and callable(var)]
