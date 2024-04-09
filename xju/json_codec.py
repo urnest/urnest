@@ -42,6 +42,7 @@ import xju.newtype
 from enum import Enum, EnumType, EnumMeta
 import json
 
+
 T=TypeVar('T')
 
 JsonType = None|bool|dict|list|float|str
@@ -1762,5 +1763,5 @@ def get_type_fqn(t:type) -> str:
 
 # for development of mypy plugin, to see what return type should be for a case
 # see json_codec_mypy_plugin.show_return_type
-# class _xxx:
-#     pass
+def _xxx() -> Callable[[],Literal['ann']]:
+    return lambda: 'ann'

@@ -209,25 +209,21 @@ FILE:23: error: Incompatible types in assignment (expression has type "Literal[T
 from typing import Literal
 from xju.json_codec import codec #, _xxx
 #_xxx()
-c1=codec(Literal["A"])
-c2=codec(Literal[7])
-c3=codec(Literal[7.9])
-c4=codec(Literal[True])
+A=Literal["A"]; c1=codec(A)
+Seven=Literal[7]; c2=codec(Seven)
+SevnPoint9=Literal[7.9]  # python does not allow
+LiterallyTrue=Literal[True]; c4=codec(LiteralllyTrue)
 x = (c1.encode("A"),
      c1.encode(7),
      c2.encode(7),
      c2.encode("fred"),
-     c3.encode(7.9),  # note mypy 1.51 does not see 7.9 as a literal
-     c3.encode("fred"),
      c4.encode(True),
      c4.encode(False))
-r1:Literal["A"] = c1.decode(None)
+r1:A = c1.decode(None)
 r1x:int = c1.decode(None)
-r2:Literal[7] = c2.decode(None)
+r2:Seven = c2.decode(None)
 r2x:int = c2.decode(None)
-r3:Literal[7.9] = c3.decode(None)
-r3x:int = c3.decode(None)
-r4:Literal[True] = c4.decode(None)
+r4:LiterallyTrue = c4.decode(None)
 r4x:list = c4.decode(None)
 
 
