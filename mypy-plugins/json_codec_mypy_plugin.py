@@ -1,4 +1,4 @@
-from typing import Callable, Final
+from typing import Callable, Final, Self
 from mypy.plugin import (
     Plugin, FunctionSigContext, FunctionContext, Expression, MethodContext,
     CheckerPluginInterface
@@ -8,8 +8,10 @@ from mypy.nodes import (
     TypeVarExpr, CallExpr,
     TypeInfo,
     TypeAlias,
+    Context,
 )
 from mypy.types import (
+    LITERAL_TYPE_NAMES,
     AnyType,
     CallableType,
     FunctionLike,
@@ -25,9 +27,11 @@ from mypy.types import (
     UninhabitedType,
     UnionType,
     Overloaded,
+    LiteralType,
 )
 from mypy.typeops import tuple_fallback
 from mypy.checker import TypeChecker
+from mypy.checkexpr import ExpressionChecker
 
 CODEC_FQN="xju.json_codec.codec"
 
@@ -81,7 +85,9 @@ class CodecParamInvalid(Exception):
 def infer_codec_value_type_from_args(arg_exprs: list[Expression],
                                      checker_api:CheckerPluginInterface) -> Type:
     assert len(arg_exprs)==1, "expected one argument to codec(), got "+str(len(arg_exprs))
-    return infer_codec_value_type(arg_exprs[0],checker_api)
+    assert isinstance(checker_api, TypeChecker), (type(checker_api), checker_api)
+    with ExpressionCheckerPatch(checker_api.expr_checker):
+        return infer_codec_value_type(arg_exprs[0],checker_api)
 
 def calculate_overload_return_type(overload: Overloaded) -> Type:
     return_types={_.ret_type for _ in overload.items}
@@ -111,19 +117,22 @@ def infer_codec_value_type(
 
     - raise CodecParamInvalid for invalid param e.g. as in codec(7)
     """
-    import pdb; pdb.set_trace()
     try:
         # rely on Type[X] where X is a type always producing a type constructor
         # function def (...)->X  or a TypeType
         c=checker_api.type_context[0]
         expr_type=checker_api.get_expression_type(arg_expr, c)
-        if not isinstance(expr_type, CallableType|Overloaded|TypeType|UnionType):
-            expr_type_type=type(expr_type)
-            raise CodecParamInvalid(f"apparently {expr_type} (which is of type {expr_type_type} and is the type of the runtime value of {arg_expr}) is not a type (because it is not a callable, a type-type or a union type)")
-        result=type_type_instance_type(expr_type)
-        if not isinstance(result, Type):
-            raise CodecParamInvalid(f"apparently {result} (which the return type of {arg_expr}) is not a my.types.type?")
-        return result
+        match expr_type:
+            # codec(O.a) where O is an enum gives us Instance with LiteralType last known value
+            case Instance() if isinstance(expr_type.last_known_value, LiteralType):
+                return expr_type.last_known_value
+            case CallableType()|Overloaded()|TypeType()|UnionType():
+                result=type_type_instance_type(expr_type)
+                if not isinstance(result, Type):
+                    raise CodecParamInvalid(f"apparently {result} (which the return type of {arg_expr}) is not a my.types.type?")
+                return result
+        expr_type_type=type(expr_type)
+        raise CodecParamInvalid(f"apparently {expr_type} (which is of type {expr_type_type} and is the type of the runtime value of {arg_expr}) is not a type (because it is not a callable, a type-type or a union type)")
     except Exception as e:
         raise Exception(f"failed to infer proper {CODEC_FQN}() return type from expression {arg_expr} because {e}; report this to https://github/urnest") from None
 
@@ -143,7 +152,6 @@ def adjust_type_or_type_return_type(x: MethodContext) -> Type:
     assuming x is a call to builtins.type.__or__ or builtins.type.__ror__
     with param *values* T1 and T2, adjust return type to be mypy.types.UnionType([T1,T2])
     """
-    #import pdb; pdb.set_trace()
     rhs_expr=x.args[0][0]
     return UnionType([x.type, infer_codec_value_type(rhs_expr,x.api)])
 
@@ -174,10 +182,8 @@ def adjust_codec_return_type(x: FunctionContext) -> Type:
 
 # for development to figure out what return type should be in each case via pdb
 def show_return_type(x: FunctionContext) -> Type:
-    assert isinstance(x.default_return_type, Instance), x.default_return_type
     return_type=x.default_return_type
     typeof_return_type=type(return_type)
-    #import pdb; pdb.set_trace()
     return return_type
 
 class JsonCodecPlugin(Plugin):
@@ -216,6 +222,99 @@ def builtin_type(checker_api:CheckerPluginInterface, name: str) -> Instance:
         raise Exception(f"failed to lookup built-in type {name} becase {e}")
 
 
+class ExpressionCheckerPatch:
+    def __init__(self, expression_checker: ExpressionChecker) -> None:
+        self.expression_checker=expression_checker
+        self._f=self.visit_index_expr_helper
+        self._f2=self.alias_type_in_runtime_context
+    @property
+    def chk(self) -> TypeChecker:
+        return self.expression_checker.chk
+    def __enter__(self) -> Self:
+        self.f_=self.expression_checker.visit_index_expr_helper
+        setattr(self.expression_checker,'visit_index_expr_helper',self.visit_index_expr_helper)
+        self.f2_=self.expression_checker.alias_type_in_runtime_context
+        setattr(self.expression_checker,'alias_type_in_runtime_context',
+                self.alias_type_in_runtime_context)
+        return self
+    def __exit__(self, *_) -> None:
+        setattr(self.expression_checker,'alias_type_in_runtime_context',self.f2_)
+        self.f2_=self.alias_type_in_runtime_context
+        setattr(self.expression_checker,'visit_index_expr_helper',self.f_)
+        self.f_=self.visit_index_expr_helper
+        pass
+    def visit_index_expr_helper(self, e: IndexExpr) -> Type:
+        if e.analyzed:
+            # It's actually a type application.
+            return self.expression_checker.accept(e.analyzed)
+        left_type = self.expression_checker.accept(e.base)
+        if (
+            # left_type is vague when it is a _SpecialForm e.g. Literal
+            # so we can't ever turn it back into e.g. LiteralType; we
+            # can only do that based on e.base, which still has the info
+            # we need. A _SpecialForm is reprsented as an no-args Instance
+            # with TypeInfo fullname "typing._SpecialForm"
+            # I'd reckon ultimately _SpecialForm should not exist, python
+            # should have specific types for the specific special forms
+            # that would remove all this special case stuff; but for
+            # now follow typeanal.py's try_analyze_special_unbound_type lead...
+            isinstance(left_type, Instance) and
+            isinstance(left_type.type, TypeInfo) and
+            not left_type.args and
+            left_type.type.fullname == 'typing._SpecialForm' and
+            isinstance(e.base, NameExpr)
+        ):
+            #pdb_trace()
+            return (
+                self.visit_special_form_index(e.base.fullname, e.index) or
+                self.f_(e)
+            )
+        return self.f_(e)
+    def visit_special_form_index(self, base_fullname: str, index: Expression) -> Type | None:
+        """
+        Visit index into "special form" {base_fullname}[{index}], returning the type of that value.
+        """
+        if base_fullname in LITERAL_TYPE_NAMES:
+            values = self.get_literal_values(index)
+            if not values:
+                return None
+            if len(values)==1:
+                value=values[0]
+                expr_value=LiteralType(value[0], self.chk.named_type(value[1]))
+                # need the type of that value, e.g. as a constructor function
+                return CallableType([], [], [], expr_value,
+                                    self.chk.named_type('function'))
+            return UnionType(
+                [CallableType([],[],[],
+                              LiteralType(value[0], self.chk.named_type(value[1])),
+                              self.chk.named_type('function')) for value in values])
+        return None
+    def get_literal_values(self, expr: Expression) -> (
+            list[tuple[str|int|bool, str]]
+    ):
+        if isinstance(expr, StrExpr):
+            return [(expr.value, 'str')]
+        if isinstance(expr, IntExpr):
+            return [(expr.value, 'int')]
+        # surprise... bool literal e.g. True is represented as a
+        # NameExpr with name "True"
+        if isinstance(expr, NameExpr):
+            if expr.name == "True":
+                return [(True, 'bool')]
+            if expr.name == "False":
+                return [(False, 'bool')]
+        import pdb; pdb.set_trace
+        return []
+    def alias_type_in_runtime_context(
+        self, alias: TypeAlias, *, ctx: Context, alias_definition: bool = False
+    ) -> Type:
+        if isinstance(alias.target, LiteralType):
+            return CallableType([],[],[],
+                                alias.target,
+                                self.chk.named_type('function'))
+        return self.f2_(alias, ctx=ctx, alias_definition=alias_definition)
+    pass
+
 def named_type(checker_api:CheckerPluginInterface, expr: NameExpr) -> (
         Instance | TypeAliasType | TypeVarType | UninhabitedType
 ):
@@ -244,7 +343,6 @@ def named_type(checker_api:CheckerPluginInterface, expr: NameExpr) -> (
         if isinstance(node, TypeAlias):
             return TypeAliasType(node, [])
         if isinstance(node, TypeVarExpr):
-            #import pdb; pdb.set_trace()
             return TypeVarType(
                 node.name,
                 node.fullname,
@@ -257,3 +355,7 @@ def named_type(checker_api:CheckerPluginInterface, expr: NameExpr) -> (
         return Instance(node, [])
     except Exception as e:
         raise Exception(f"failed to lookup type named by {expr} becase {e}") from None
+
+def pdb_trace() -> None:
+    import pdb; pdb.set_trace()
+    pass
