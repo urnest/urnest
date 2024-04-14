@@ -124,44 +124,44 @@ def infer_codec_value_type(
         c=checker_api.type_context[0]
         #pdb_trace()
         expr_type=checker_api.get_expression_type(arg_expr, c)
-        match expr_type:
-            # codec(O.a) where O is an enum gives us Instance with LiteralType last known value
-            case Instance() if isinstance(expr_type.last_known_value, LiteralType):
-                return expr_type.last_known_value
-            case CallableType()|Overloaded()|TypeType()|UnionType()|NoneType():
-                result=type_type_instance_type(expr_type)
-                # returning a generic type is only allowed if expression is an index expression
-                # otherwise all type vars become Any (see
-                # "note on mypy handling of generic type used without params" in xju/json_codec.py.test)
-                if not isinstance(arg_expr, IndexExpr):
-                    result=erase_typevars(result)
-                if not isinstance(result, Type):
-                    raise CodecParamInvalid(f"apparently {result} (which the return type of {arg_expr}) is not a my.types.type?")
-                return result
-        expr_type_type=type(expr_type)
-        raise CodecParamInvalid(f"apparently {expr_type} (which is of type {expr_type_type} and is the type of the runtime value of {arg_expr}) is not a type (because it is not a callable, a type-type, a union type or None-type)")
+
+        # codec(O.a) where O is an enum gives us Instance with LiteralType last known value
+        if isinstance(expr_type, Instance) and isinstance(expr_type.last_known_value, LiteralType):
+            return expr_type.last_known_value
+
+        result=type_type_instance_type(expr_type)
+        # returning a generic type is only allowed if expression is an index expression
+        # otherwise all type vars become Any (see
+        # "note on mypy handling of generic type used without params" in xju/json_codec.py.test)
+        if not isinstance(arg_expr, IndexExpr):
+            result=erase_typevars(result)
+            pass
+        if not isinstance(result, Type):
+            raise CodecParamInvalid(f"apparently {result} (which the return type of {arg_expr}) is not a my.types.type?")
+        return result
     except Exception as e:
-        raise Exception(f"failed to infer proper {CODEC_FQN}() return type from expression {arg_expr} because {e}; report this to https://github/urnest") from None
+        raise Exception(f"failed to infer proper {CODEC_FQN}() return type from run-time value of expression {arg_expr} because {e}; report this to https://github/urnest") from None
     pass
 
-def t_instance_type(expr_type: Type) -> Type:
-    if not isinstance(expr_type, (CallableType,Overloaded,TypeType,UnionType,NoneType)):
-        expr_type_type=type(expr_type)
-        raise CodecParamInvalid(f"apparently {expr_type} (which is of type {expr_type_type} is not a type (because it is not a callable, a type-type, a union type or None-type)")
-    return type_type_instance_type(expr_type)
-
-def type_type_instance_type(expr_type: CallableType|Overloaded|TypeType|UnionType|NoneType) -> Type:
+def type_type_instance_type(expr_type: Type) -> Type:
+    """
+    return instance type of {expr_type} assuming that is a "type" type
+    e.g. return the T from Type[T]
+    """
     match expr_type:
         case NoneType():
             return expr_type
         case UnionType():
-            return UnionType([t_instance_type(t) for t in expr_type.items])
+            return UnionType([type_type_instance_type(t) for t in expr_type.items])
         case TypeType():
             return expr_type.item
         case Overloaded():
             return calculate_overload_return_type(expr_type)
         case CallableType():
             return expr_type.ret_type
+
+    expr_type_type=type(expr_type)
+    raise CodecParamInvalid(f"apparently {expr_type} (which is of type {expr_type_type} and is the run-time expression value) is not a type (because it is not a callable, a type-type, a union type or None-type)")
 
 def adjust_type_or_type_return_type(x: MethodContext) -> Type:
     """
