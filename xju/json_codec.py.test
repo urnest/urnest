@@ -37,12 +37,7 @@ from xju.xn import readable_repr
 from xju.time import Timestamp
 import xju
 
-xju.json_codec._xxx()
-
 x:Any
-
-tuple_codec=codec(tuple[int,str])
-Assert(tuple_codec.encode((5, 'fred')))==[5, 'fred']
 
 # int,str,bool,float,None map directly
 
@@ -1374,3 +1369,11 @@ a1 = (ac.encode(7),
       ac.encode("fred"))
 ra1:AX = ac.decode(7)
 ra1 = ac.decode("fred")
+
+
+# note on mypy handling of generic type used without params:
+Q=TypeVar('Q')
+class QQ(Generic[Q]):
+    q: Q
+q:QQ=QQ() # is this QQ[Any]?
+q.q=3  # yes, no mypy error here
