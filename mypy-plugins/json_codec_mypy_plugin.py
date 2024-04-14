@@ -205,9 +205,6 @@ def show_return_type(x: FunctionContext) -> Type:
 
 class JsonCodecPlugin(Plugin):
     def get_method_hook(self, fullname: str) -> Callable[[MethodContext], Type] | None:
-        if '__or__' in fullname:
-            #pdb_trace()
-            pass
         if fullname == '__or__ of type':
             return adjust_type_or_type_return_type
         return None
@@ -248,32 +245,36 @@ class ExpressionCheckerPatch:
         self._f=self.visit_index_expr_helper
         self._f2=self.alias_type_in_runtime_context
         self._f3=check_callable_call
+        self._f4=apply_type_arguments_to_callable
     @property
     def chk(self) -> TypeChecker:
         return self.expression_checker.chk
     def __enter__(self) -> Self:
-        self.f_=self.expression_checker.visit_index_expr_helper
+        self._f=self.expression_checker.visit_index_expr_helper
         setattr(self.expression_checker,'visit_index_expr_helper',self.visit_index_expr_helper)
-        self.f2_=self.expression_checker.alias_type_in_runtime_context
+        self._f2=self.expression_checker.alias_type_in_runtime_context
         setattr(self.expression_checker,'alias_type_in_runtime_context',
                 self.alias_type_in_runtime_context)
-        self.f3_=ExpressionChecker.check_callable_call
+        self._f3=ExpressionChecker.check_callable_call
         setattr(ExpressionChecker, 'check_callable_call',check_callable_call)
+        self._f4=ExpressionChecker.apply_type_arguments_to_callable
+        setattr(ExpressionChecker, 'apply_type_arguments_to_callable',apply_type_arguments_to_callable)
         return self
     def __exit__(self, *_) -> None:
-        setattr(ExpressionChecker,'check_callable_call',self.f3_)
-        self.f3_=check_callable_call
-        setattr(self.expression_checker,'alias_type_in_runtime_context',self.f2_)
-        self.f2_=self.alias_type_in_runtime_context
-        setattr(self.expression_checker,'visit_index_expr_helper',self.f_)
-        self.f_=self.visit_index_expr_helper
+        setattr(ExpressionChecker,'apply_type_arguments_to_callable',self._f4)
+        self._f4=apply_type_arguments_to_callable
+        setattr(ExpressionChecker,'check_callable_call',self._f3)
+        self._f3=check_callable_call
+        setattr(self.expression_checker,'alias_type_in_runtime_context',self._f2)
+        self._f2=self.alias_type_in_runtime_context
+        setattr(self.expression_checker,'visit_index_expr_helper',self._f)
+        self._f=self.visit_index_expr_helper
         pass
     def visit_index_expr_helper(self, e: IndexExpr) -> Type:
         if e.analyzed:
             # It's actually a type application.
             return self.expression_checker.accept(e.analyzed)
         left_type = self.expression_checker.accept(e.base)
-        #pdb_trace()
         if (
             # left_type is vague when it is a _SpecialForm e.g. Literal
             # so we can't ever turn it back into e.g. LiteralType; we
@@ -290,12 +291,11 @@ class ExpressionCheckerPatch:
             left_type.type.fullname == 'typing._SpecialForm' and
             isinstance(e.base, NameExpr)
         ):
-            #pdb_trace()
             return (
                 self.visit_special_form_index(e.base.fullname, e.index) or
-                self.f_(e)
+                self._f(e)
             )
-        return self.f_(e)
+        return self._f(e)
     def visit_special_form_index(self, base_fullname: str, index: Expression) -> Type | None:
         """
         Visit index into "special form" {base_fullname}[{index}], returning the type of that value.
@@ -346,13 +346,12 @@ class ExpressionCheckerPatch:
         # you'd think mypy would represent Literal('xxx','yyy') as
         # LiteralType(['xxx','yyy']) but no, the representation is
         # UnionType([LiteralType('xxx'),LiteralType('yyy')
-        #pdb_trace()
         if isinstance(alias.target, UnionType) and all(
                 isinstance(x, LiteralType) for x in alias.target.items):
             return CallableType([],[],[],
                                 alias.target,
                                 self.chk.named_type('function'))
-        return self.f2_(alias, ctx=ctx, alias_definition=alias_definition)
+        return self._f2(alias, ctx=ctx, alias_definition=alias_definition)
     pass
 
 def named_type(checker_api:CheckerPluginInterface, expr: NameExpr) -> (
@@ -425,8 +424,10 @@ from mypy.checkexpr import (
     ARG_STAR2,
     is_equivalent,
     freshen_function_type_vars,
-    ParamSpecFlavor
+    ParamSpecFlavor,
+    ARG_POS,
 )
+# patched mypy 1.9.0 source
 def check_callable_call(
     self: ExpressionChecker,
     callee: CallableType,
@@ -622,3 +623,60 @@ def check_callable_call(
         )
         callee = callee.copy_modified(ret_type=new_ret_type)
     return callee.ret_type, callee
+
+# patched mypy 1.9.0 source
+def apply_type_arguments_to_callable(
+    self: ExpressionChecker, tp: Type, args: Sequence[Type], ctx: Context
+) -> Type:
+    """Apply type arguments to a generic callable type coming from a type object.
+
+    This will first perform type arguments count checks, report the
+    error as needed, and return the correct kind of Any. As a special
+    case this returns Any for non-callable types, because if type object type
+    is not callable, then an error should be already reported.
+    """
+    tp = get_proper_type(tp)
+
+    if isinstance(tp, CallableType):
+        min_arg_count = sum(not v.has_default() for v in tp.variables)
+        has_type_var_tuple = any(isinstance(v, TypeVarTupleType) for v in tp.variables)
+        if (
+            len(args) < min_arg_count or len(args) > len(tp.variables)
+        ) and not has_type_var_tuple:
+            if tp.is_type_obj() and tp.type_object().fullname == "builtins.tuple":
+                #pdb_trace()
+                return CallableType(
+                    [get_proper_type(t) for t in args],
+                    [ARG_POS for _ in args],
+                    [chr(ord('a')+i) for i in range(0,len(args))],
+                    TupleType(list(args),self.chk.named_type('tuple')),
+                    self.chk.named_type('abc.ABCMeta'),
+                    name='tuple',
+                    definition=tp.definition,
+                    bound_args=tp.bound_args
+                )
+                return tp
+            self.msg.incompatible_type_application(
+                min_arg_count, len(tp.variables), len(args), ctx
+            )
+            return AnyType(TypeOfAny.from_error)
+        return self.apply_generic_arguments(tp, self.split_for_callable(tp, args, ctx), ctx)
+    if isinstance(tp, Overloaded):
+        for it in tp.items:
+            min_arg_count = sum(not v.has_default() for v in it.variables)
+            has_type_var_tuple = any(isinstance(v, TypeVarTupleType) for v in it.variables)
+            if (
+                len(args) < min_arg_count or len(args) > len(it.variables)
+            ) and not has_type_var_tuple:
+                self.msg.incompatible_type_application(
+                    min_arg_count, len(it.variables), len(args), ctx
+                )
+                return AnyType(TypeOfAny.from_error)
+        return Overloaded(
+            [
+                self.apply_generic_arguments(it, self.split_for_callable(it, args, ctx), ctx)
+                for it in tp.items
+            ]
+        )
+    return AnyType(TypeOfAny.special_form)
+
