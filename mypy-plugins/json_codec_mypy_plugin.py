@@ -32,6 +32,7 @@ from mypy.types import (
 from mypy.typeops import tuple_fallback
 from mypy.checker import TypeChecker
 from mypy.checkexpr import ExpressionChecker
+from mypy.erasetype import erase_typevars
 
 CODEC_FQN="xju.json_codec.codec"
 
@@ -121,25 +122,40 @@ def infer_codec_value_type(
         # rely on Type[X] where X is a type always producing a type constructor
         # function def (...)->X  or a TypeType
         c=checker_api.type_context[0]
+        #pdb_trace()
         expr_type=checker_api.get_expression_type(arg_expr, c)
         match expr_type:
             # codec(O.a) where O is an enum gives us Instance with LiteralType last known value
             case Instance() if isinstance(expr_type.last_known_value, LiteralType):
                 return expr_type.last_known_value
-            case CallableType()|Overloaded()|TypeType()|UnionType():
+            case CallableType()|Overloaded()|TypeType()|UnionType()|NoneType():
                 result=type_type_instance_type(expr_type)
+                # returning a generic type is only allowed if expression is an index expression
+                # otherwise all type vars become Any (see
+                # "note on mypy handling of generic type used without params" in xju/json_codec.py.test)
+                if not isinstance(arg_expr, IndexExpr):
+                    result=erase_typevars(result)
                 if not isinstance(result, Type):
                     raise CodecParamInvalid(f"apparently {result} (which the return type of {arg_expr}) is not a my.types.type?")
                 return result
         expr_type_type=type(expr_type)
-        raise CodecParamInvalid(f"apparently {expr_type} (which is of type {expr_type_type} and is the type of the runtime value of {arg_expr}) is not a type (because it is not a callable, a type-type or a union type)")
+        raise CodecParamInvalid(f"apparently {expr_type} (which is of type {expr_type_type} and is the type of the runtime value of {arg_expr}) is not a type (because it is not a callable, a type-type, a union type or None-type)")
     except Exception as e:
         raise Exception(f"failed to infer proper {CODEC_FQN}() return type from expression {arg_expr} because {e}; report this to https://github/urnest") from None
+    pass
 
-def type_type_instance_type(expr_type: CallableType|Overloaded|TypeType|UnionType) -> Type:
+def t_instance_type(expr_type: Type) -> Type:
+    if not isinstance(expr_type, (CallableType,Overloaded,TypeType,UnionType,NoneType)):
+        expr_type_type=type(expr_type)
+        raise CodecParamInvalid(f"apparently {expr_type} (which is of type {expr_type_type} is not a type (because it is not a callable, a type-type, a union type or None-type)")
+    return type_type_instance_type(expr_type)
+
+def type_type_instance_type(expr_type: CallableType|Overloaded|TypeType|UnionType|NoneType) -> Type:
     match expr_type:
-        case UnionType():
+        case NoneType():
             return expr_type
+        case UnionType():
+            return UnionType([t_instance_type(t) for t in expr_type.items])
         case TypeType():
             return expr_type.item
         case Overloaded():
@@ -153,7 +169,7 @@ def adjust_type_or_type_return_type(x: MethodContext) -> Type:
     with param *values* T1 and T2, adjust return type to be mypy.types.UnionType([T1,T2])
     """
     rhs_expr=x.args[0][0]
-    return UnionType([x.type, infer_codec_value_type(rhs_expr,x.api)])
+    return UnionType([x.type, x.api.get_expression_type(rhs_expr,x.type)])
 
 def adjust_codec_return_type(x: FunctionContext) -> Type:
     """
@@ -184,10 +200,14 @@ def adjust_codec_return_type(x: FunctionContext) -> Type:
 def show_return_type(x: FunctionContext) -> Type:
     return_type=x.default_return_type
     typeof_return_type=type(return_type)
+    #pdb_trace()
     return return_type
 
 class JsonCodecPlugin(Plugin):
     def get_method_hook(self, fullname: str) -> Callable[[MethodContext], Type] | None:
+        if '__or__' in fullname:
+            #pdb_trace()
+            pass
         if fullname == '__or__ of type':
             return adjust_type_or_type_return_type
         return None
@@ -227,6 +247,7 @@ class ExpressionCheckerPatch:
         self.expression_checker=expression_checker
         self._f=self.visit_index_expr_helper
         self._f2=self.alias_type_in_runtime_context
+        self._f3=check_callable_call
     @property
     def chk(self) -> TypeChecker:
         return self.expression_checker.chk
@@ -236,8 +257,12 @@ class ExpressionCheckerPatch:
         self.f2_=self.expression_checker.alias_type_in_runtime_context
         setattr(self.expression_checker,'alias_type_in_runtime_context',
                 self.alias_type_in_runtime_context)
+        self.f3_=ExpressionChecker.check_callable_call
+        setattr(ExpressionChecker, 'check_callable_call',check_callable_call)
         return self
     def __exit__(self, *_) -> None:
+        setattr(ExpressionChecker,'check_callable_call',self.f3_)
+        self.f3_=check_callable_call
         setattr(self.expression_checker,'alias_type_in_runtime_context',self.f2_)
         self.f2_=self.alias_type_in_runtime_context
         setattr(self.expression_checker,'visit_index_expr_helper',self.f_)
@@ -248,6 +273,7 @@ class ExpressionCheckerPatch:
             # It's actually a type application.
             return self.expression_checker.accept(e.analyzed)
         left_type = self.expression_checker.accept(e.base)
+        #pdb_trace()
         if (
             # left_type is vague when it is a _SpecialForm e.g. Literal
             # so we can't ever turn it back into e.g. LiteralType; we
@@ -284,10 +310,10 @@ class ExpressionCheckerPatch:
                 # need the type of that value, e.g. as a constructor function
                 return CallableType([], [], [], expr_value,
                                     self.chk.named_type('function'))
-            return UnionType(
-                [CallableType([],[],[],
-                              LiteralType(value[0], self.chk.named_type(value[1])),
-                              self.chk.named_type('function')) for value in values])
+            return CallableType([],[],[],
+                                UnionType(
+                                    [LiteralType(value[0], self.chk.named_type(value[1]))
+                                     for value in values]), self.chk.named_type('function'))
         return None
     def get_literal_values(self, expr: Expression) -> (
             list[tuple[str|int|bool, str]]
@@ -303,12 +329,26 @@ class ExpressionCheckerPatch:
                 return [(True, 'bool')]
             if expr.name == "False":
                 return [(False, 'bool')]
-        import pdb; pdb.set_trace
+        if isinstance(expr, TupleExpr):
+            return sum([self.get_literal_values(item) for item in expr.items],[])
         return []
     def alias_type_in_runtime_context(
         self, alias: TypeAlias, *, ctx: Context, alias_definition: bool = False
     ) -> Type:
+        # LiteralType('xxx') is mypy's representation of python type Literal['xxx']
+        # which will be the target of the alias, note that is "va;ue" and we need
+        # to return the type of that value, i.e. a constructor function for
+        # LiteralType('xxx')
         if isinstance(alias.target, LiteralType):
+            return CallableType([],[],[],
+                                alias.target,
+                                self.chk.named_type('function'))
+        # you'd think mypy would represent Literal('xxx','yyy') as
+        # LiteralType(['xxx','yyy']) but no, the representation is
+        # UnionType([LiteralType('xxx'),LiteralType('yyy')
+        #pdb_trace()
+        if isinstance(alias.target, UnionType) and all(
+                isinstance(x, LiteralType) for x in alias.target.items):
             return CallableType([],[],[],
                                 alias.target,
                                 self.chk.named_type('function'))
@@ -359,3 +399,226 @@ def named_type(checker_api:CheckerPluginInterface, expr: NameExpr) -> (
 def pdb_trace() -> None:
     import pdb; pdb.set_trace()
     pass
+
+# patch for mypy 1.9.0 checkexpr.ExpressionChecker.check_callable_call
+from mypy.checkexpr import (
+    ExpressionChecker,
+    CallableType,
+    Expression,
+    ArgKind,
+    Context,
+    Sequence,
+    Type,
+    get_proper_type,
+    RefExpr,
+    ENUM_BASES,
+    message_registry,
+    IMPLICITLY_ABSTRACT,
+    UnpackType,
+    ARG_STAR,
+    codes,
+    map_actuals_to_formals,
+    freshen_all_functions_type_vars,
+    freeze_all_type_vars,
+    ParamSpecType,
+    TypeVarTupleType,
+    ARG_STAR2,
+    is_equivalent,
+    freshen_function_type_vars,
+    ParamSpecFlavor
+)
+def check_callable_call(
+    self: ExpressionChecker,
+    callee: CallableType,
+    args: list[Expression],
+    arg_kinds: list[ArgKind],
+    context: Context,
+    arg_names: Sequence[str | None] | None,
+    callable_node: Expression | None,
+    callable_name: str | None,
+    object_type: Type | None,
+) -> tuple[Type, Type]:
+    """Type check a call that targets a callable value.
+
+    See the docstring of check_call for more information.
+    """
+    # Always unpack **kwargs before checking a call.
+    callee = callee.with_unpacked_kwargs().with_normalized_var_args()
+    if callable_name is None and callee.name:
+        callable_name = callee.name
+    ret_type = get_proper_type(callee.ret_type)
+    if callee.is_type_obj() and isinstance(ret_type, Instance):
+        callable_name = ret_type.type.fullname
+    if isinstance(callable_node, RefExpr) and callable_node.fullname in ENUM_BASES:
+        # An Enum() call that failed SemanticAnalyzerPass2.check_enum_call().
+        return callee.ret_type, callee
+
+    if (
+        callee.is_type_obj()
+        and callee.type_object().is_protocol
+        # Exception for Type[...]
+        and not callee.from_type_type
+    ):
+        self.chk.fail(
+            message_registry.CANNOT_INSTANTIATE_PROTOCOL.format(callee.type_object().name),
+            context,
+        )
+    elif (
+        callee.is_type_obj()
+        and callee.type_object().is_abstract
+        # Exception for Type[...]
+        and not callee.from_type_type
+        and not callee.type_object().fallback_to_any
+    ):
+        type = callee.type_object()
+        # Determine whether the implicitly abstract attributes are functions with
+        # None-compatible return types.
+        abstract_attributes: dict[str, bool] = {}
+        for attr_name, abstract_status in type.abstract_attributes:
+            if abstract_status == IMPLICITLY_ABSTRACT:
+                abstract_attributes[attr_name] = self.can_return_none(type, attr_name)
+            else:
+                abstract_attributes[attr_name] = False
+        self.msg.cannot_instantiate_abstract_class(
+            callee.type_object().name, abstract_attributes, context
+        )
+
+    var_arg = callee.var_arg()
+    if var_arg and isinstance(var_arg.typ, UnpackType):
+        # It is hard to support multiple variadic unpacks (except for old-style *args: int),
+        # fail gracefully to avoid crashes later.
+        seen_unpack = False
+        for arg, arg_kind in zip(args, arg_kinds):
+            if arg_kind != ARG_STAR:
+                continue
+            arg_type = get_proper_type(self.accept(arg))
+            if not isinstance(arg_type, TupleType) or any(
+                isinstance(t, UnpackType) for t in arg_type.items
+            ):
+                if seen_unpack:
+                    self.msg.fail(
+                        "Passing multiple variadic unpacks in a call is not supported",
+                        context,
+                        code=codes.CALL_ARG,
+                    )
+                    return AnyType(TypeOfAny.from_error), callee
+                seen_unpack = True
+
+    formal_to_actual = map_actuals_to_formals(
+        arg_kinds,
+        arg_names,
+        callee.arg_kinds,
+        callee.arg_names,
+        lambda i: self.accept(args[i]),
+    )
+
+    # This is tricky: return type may contain its own type variables, like in
+    # def [S] (S) -> def [T] (T) -> tuple[S, T], so we need to update their ids
+    # to avoid possible id clashes if this call itself appears in a generic
+    # function body.
+    ret_type = get_proper_type(callee.ret_type)
+    if isinstance(ret_type, CallableType) and ret_type.variables:
+        fresh_ret_type = freshen_all_functions_type_vars(callee.ret_type)
+        freeze_all_type_vars(fresh_ret_type)
+        callee = callee.copy_modified(ret_type=fresh_ret_type)
+
+    if callee.is_generic():
+        need_refresh = any(
+            isinstance(v, (ParamSpecType, TypeVarTupleType)) for v in callee.variables
+        )
+        callee = freshen_function_type_vars(callee)
+        callee = self.infer_function_type_arguments_using_context(callee, context)
+        if need_refresh:
+            # Argument kinds etc. may have changed due to
+            # ParamSpec or TypeVarTuple variables being replaced with an arbitrary
+            # number of arguments; recalculate actual-to-formal map
+            formal_to_actual = map_actuals_to_formals(
+                arg_kinds,
+                arg_names,
+                callee.arg_kinds,
+                callee.arg_names,
+                lambda i: self.accept(args[i]),
+            )
+        callee = self.infer_function_type_arguments(
+            callee, args, arg_kinds, arg_names, formal_to_actual, need_refresh, context
+        )
+        if need_refresh:
+            formal_to_actual = map_actuals_to_formals(
+                arg_kinds,
+                arg_names,
+                callee.arg_kinds,
+                callee.arg_names,
+                lambda i: self.accept(args[i]),
+            )
+
+    param_spec = callee.param_spec()
+    if param_spec is not None and arg_kinds == [ARG_STAR, ARG_STAR2]:
+        arg1 = self.accept(args[0])
+        arg2 = self.accept(args[1])
+        if (
+            isinstance(arg1, ParamSpecType)
+            and isinstance(arg2, ParamSpecType)
+            and arg1.flavor == ParamSpecFlavor.ARGS
+            and arg2.flavor == ParamSpecFlavor.KWARGS
+            and arg1.id == arg2.id == param_spec.id
+        ):
+            return callee.ret_type, callee
+
+    arg_types = self.infer_arg_types_in_context(callee, args, arg_kinds, formal_to_actual)
+
+    self.check_argument_count(
+        callee,
+        arg_types,
+        arg_kinds,
+        arg_names,
+        formal_to_actual,
+        context,
+        object_type,
+        callable_name,
+    )
+
+    self.check_argument_types(
+        arg_types, arg_kinds, args, callee, formal_to_actual, context, object_type=object_type
+    )
+
+    if (
+        callee.is_type_obj()
+        and (len(arg_types) == 1)
+        and is_equivalent(callee.ret_type, self.named_type("builtins.type"))
+    ):
+        callee = callee.copy_modified(ret_type=TypeType.make_normalized(arg_types[0]))
+
+    if callable_node:
+        # Store the inferred callable type.
+        self.chk.store_type(callable_node, callee)
+
+    if object_type is not None and callee.name is not None and self.plugin.get_method_hook(callee.name):
+        new_ret_type = self.apply_function_plugin(
+            callee,
+            arg_kinds,
+            arg_types,
+            arg_names,
+            formal_to_actual,
+            args,
+            callee.name,
+            object_type,
+            context,
+        )
+        callee = callee.copy_modified(ret_type=new_ret_type)
+    elif callable_name and (
+        (object_type is None and self.plugin.get_function_hook(callable_name))
+        or (object_type is not None and self.plugin.get_method_hook(callable_name))
+    ):
+        new_ret_type = self.apply_function_plugin(
+            callee,
+            arg_kinds,
+            arg_types,
+            arg_names,
+            formal_to_actual,
+            args,
+            callable_name,
+            object_type,
+            context,
+        )
+        callee = callee.copy_modified(ret_type=new_ret_type)
+    return callee.ret_type, callee
