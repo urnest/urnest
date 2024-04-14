@@ -211,12 +211,15 @@ else:
     assert False, x
     pass
 
-
+# tuple maps to list...
 tuple_codec=codec(tuple[int,str])
 Assert(tuple_codec.decode([5, 'fred']))==(5, 'fred')
 Assert(tuple_codec.encode((5, 'fred')))==[5, 'fred']
+# same as...
+Assert(codec(tuple[int,str]).decode([5, 'fred']))==(5, 'fred')
+Assert(codec(tuple[int,str]).encode((5, 'fred')))==[5, 'fred']
 
-# for list to decode as tuple, it must be a list in the first place...
+# ... for list to decode as tuple, it must be a list in the first place...
 try:        
     x=tuple_codec.decode({'x':6, 'y':8})
 except Exception as e:
@@ -225,7 +228,7 @@ else:
     assert False, x
     pass
 
-# ... it must have expected number of elements each of the expected type...
+# ... it must have expected number of elements...
 try:        
     x=tuple_codec.decode([5, 6, 7])
 except Exception as e:
@@ -234,7 +237,7 @@ else:
     assert False, x
     pass
 
-# ... each element must have correct type...
+# ... each element must have correct type:
 try:
     x=tuple_codec.decode([5, 6])
 except Exception as e:
