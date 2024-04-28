@@ -1,11 +1,13 @@
 #!/bin/env python3
 
+import re
 from typing import Literal, Self
 from types import NoneType
 
 from xju.json_codec import codec, TypeScriptNamespace, TypeScriptSourceCode, TypeScriptNamespace
 from xju.json_codec import TypeScriptUQN, AnyJsonCodecImpl
 from xju.misc import ByteCount
+from xju.newtype import Str
 from xju.time import Duration, Timestamp
 from xju.assert_ import Assert
 from xju.xn import readable_repr
@@ -155,7 +157,7 @@ function assert_never_reached(){{
     catch(e){{
         assert_x_contains_y(str(e), "Error: 7,ann is not a Array<number> because Error: ann is not a number it is a string");
     }}
-    assert_equal({codec(bytes).typescript_type()},"Array<number>");
+    assert_equal('{codec(bytes).typescript_type()}',"Array<number>");
     assert_true({codec(bytes).get_typescript_isa(TypeScriptSourceCode('[7, 8]'),namespace)});
     assert_false({codec(bytes).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
 }})();
@@ -512,6 +514,14 @@ class NonStringKey:
     values: dict[TypeScriptUQN, int]
     pass
 
+class SurnameTag:pass
+class Surname(Str[SurnameTag]):
+    pattern=re.compile(r'^\S*$')  # disallow whitespace
+    pass
+
+surname_codec=codec(Surname)
+surname_codec.ensure_typescript_defs(namespace)
+
 codec(NonStringKey).ensure_typescript_defs(namespace)
 print(namespace.get_formatted_defs())
 
@@ -678,6 +688,42 @@ print(f'''
         assert_x_contains_y(str(e), "Error: 9 is not a O because Error: the number 9 is not O.a and the number 9 is not O.b");
     }}
     if (isInstanceOfO(x)) {{
+        throw new Error(`${{x}} (of type ${{typeof x}}) is (unexpectedly) a O`);
+    }}
+}})();
+''')
+
+print(f'''
+//xju.newstype.Str with pattern
+(() => {{
+    var x:any = "fred";
+    var y:Surname = asInstanceOfSurname(x);
+    if (y !== "fred") {{
+        throw new Error(`${{y}} is not "fred"`);
+    }}
+    if (!isInstanceOfSurname(x)) {{
+        throw new Error(`${{x}} (of type ${{typeof x}}) is not a Surnamee`);
+    }}
+    x = 9;
+    try{{
+        y = asInstanceOfSurname(x);
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 9 is not a Surname i.e. a string, it is a number");
+    }}
+    if (isInstanceOfSurname(x)) {{
+        throw new Error(`${{x}} (of type ${{typeof x}}) is (unexpectedly) a O`);
+    }}
+    x = "St. Cloud";
+    try{{
+        y = asInstanceOfSurname(x);
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: St. Cloud does not match pattern ^\\\\S*$");
+    }}
+    if (isInstanceOfSurname(x)) {{
         throw new Error(`${{x}} (of type ${{typeof x}}) is (unexpectedly) a O`);
     }}
 }})();

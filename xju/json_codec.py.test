@@ -202,7 +202,9 @@ Assert(codec(dict[str,int]).encode({'fred':5, 'jock': 9}))=={'fred':5, 'jock':9}
 
 #... or xju.newtype.Str or anything that with str encoding
 class SurnameTag:pass
-class Surname(xju.newtype.Str[SurnameTag]):pass
+class Surname(xju.newtype.Str[SurnameTag]):
+    pattern=re.compile(r'^\S*$')  # disallow whitespace
+    pass
 
 Assert(codec(dict[Surname,int]).encode({Surname('fred'):5, Surname('jock'): 9}))=={'fred':5, 'jock':9}
 Assert(codec(dict[Surname,int]).decode({'fred':5, 'jock':9}))=={Surname('fred'):5, Surname('jock'): 9}
@@ -504,6 +506,13 @@ Assert(list(cast(dict,codec(UnitAddress).encode(
         'postcode',
         'unit']
 
+# ... base class codec can encode subclass (but, obviously, cannot decode to subclass)
+Assert(codec(Address).encode(
+    UnitAddress(
+        'fred',17,Street('alba'),Suburb('bocca'),Postcode(3365),unit=Unit('17a'))))==codec(
+            Address).encode(
+                Address(Street('alba'),Suburb('bocca'),Postcode(3365)))
+       
 # custom class encoding by implementing CustomClassCodec protocol, for example
 # to support encoding of external types with control over their json representation
 class IpV4Addr(ipaddress.IPv4Address):
@@ -818,6 +827,8 @@ Assert(AnyJsonCodecImpl().get_json_schema({},None))== {'oneOf': [{'type': 'null'
 Assert(codec(AgeInYears).get_json_schema())=={'description': 'AgeInYears', 'type': 'integer', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 
 Assert(codec(Street).get_json_schema())=={'description': 'Street', 'type': 'string', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+
+Assert(codec(Surname).get_json_schema())=={'description': 'Surname', 'type': 'string', 'pattern': r'^\S*$', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 
 Assert(codec(Metres).get_json_schema())=={'description': 'Metres', 'type': 'number', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 

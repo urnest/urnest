@@ -29,9 +29,11 @@
 # ... note do not use 'Hours=Int[HoursTag]' because that is an alias to a generic and
 # therefore has not run-time presence and therefore cannot be used with isinstance.
 #
+from re import Pattern
 from typing import Iterable,Sized,Container,Collection,Reversible,Protocol,Type,overload,TypeVar
 from typing import Generic,Tuple,Mapping,Optional,List,Literal,Union,Any,Self,Never
 from types import NotImplementedType
+from xju.xn import in_function_context
 
 Tag=TypeVar('Tag',covariant=True)
 
@@ -414,8 +416,22 @@ class Float(Generic[Tag]):
 
 class Str(Generic[Tag]):
     __value:str
+
+    # class may specify pattern for valid values to match
+    # match is "entirely" i.e. re.Pattern.search
+    # note this must be a class attribute (not overrided by an instance value)
+    pattern: Pattern | None = None
+
     def __init__(self, value:str):
-        self.__value=value
+        "initialise {self.__class__.__name__} to value {value!r}"
+        try:
+            self.__value=value
+            if self.__class__.pattern is not None:
+                if not self.__class__.pattern.search(value):
+                    raise Exception(
+                        f"{value!r} does not match regular expression {self.__class__.pattern.pattern!r}")
+        except Exception:
+            raise in_function_context(Str.__init__,vars())
         pass
 
     def value(self)->str:

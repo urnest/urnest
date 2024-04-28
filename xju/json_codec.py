@@ -885,6 +885,12 @@ class NewStrCodecImpl(Generic[NewStr]):
         '''get the fully qualified name of {self.t}'''
         return get_type_fqn(self.t)
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        if self.t.pattern is not None:
+            return {
+                'description': self.get_type_fqn(),
+                'type': 'string',
+                'pattern': self.t.pattern.pattern
+            }
         return {
             'description': self.get_type_fqn(),
             'type': 'string'
@@ -900,34 +906,45 @@ class NewStrCodecImpl(Generic[NewStr]):
         if typescript_type_name not in target_namespace.defs:
             target_namespace.defs[typescript_type_name]=TypeScriptSourceCode(
                 f"type {typescript_type_name} = string;")
+            as_a=self.get_typescript_asa(TypeScriptSourceCode("v"),
+                                         TypeScriptNamespace({}),
+                                         None)
             target_namespace.defs[TypeScriptUQN(f"asInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
                 f"function asInstanceOf{typescript_type_name}(v: any): {typescript_type_name}\n"
                 f"{{\n"
-                f"    try{{\n"
-                f"        if (typeof v !== 'string' /* {self.get_type_fqn()} */) throw new Error(`${{v}} is a ${{typeof v}}`);\n"
-                f"        return v;\n"
-                f"    }}\n"
-                f"    catch(e:any){{\n"
-                f"        throw new Error(`${{v}} is not a {typescript_type_name} because ${{e}}`);\n"
-                f"    }}\n"
+                f"    return {as_a};\n"
                 f"}}")
+            is_a=self.get_typescript_isa(TypeScriptSourceCode("v"),
+                                         TypeScriptNamespace({}),
+                                         None)
             target_namespace.defs[TypeScriptUQN(f'isInstanceOf{typescript_type_name}')]=TypeScriptSourceCode(
-                f"function isInstanceOf{typescript_type_name}(v:any): v is string\n"
+                f"function isInstanceOf{typescript_type_name}(v:any): v is string /* {self.get_type_fqn()} */\n"
                 f"{{\n"
-                f"    return typeof v === 'string' /* {self.get_type_fqn()} */;\n"
+                f"    return {is_a};\n"
                 f"}}")
         pass
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace,
                            back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        if self.t.pattern is not None:
+            return TypeScriptSourceCode(
+                f"(typeof ({expression}) == 'string' /* {self.get_type_fqn()} */ &&\n"
+                f"(new RegExp({self.t.pattern.pattern!r})).exec({expression})!==null)")
         return TypeScriptSourceCode(
-            f"(typeof ({expression}) == 'string')")
+            f"(typeof ({expression}) == 'string') /* {self.get_type_fqn()} */")
     def get_typescript_asa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace,
                            back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         tt=self.typescript_type(back_refs)
+        if self.t.pattern is not None:
+            return TypeScriptSourceCode(
+                f"((v: any): {tt} => {{\n"
+                f"    if (typeof v !== 'string' /* {self.get_type_fqn()} */) throw new Error(`${{v}} is not a {self.get_type_fqn()} i.e. a string, it is a ${{typeof v}}`);\n"
+                f"    if ((new RegExp({self.t.pattern.pattern!r})).exec({expression})===null) throw new Error(`${{v}} does not match pattern `+{self.t.pattern.pattern!r});\n"
+                f"    return v as {tt};\n"
+                f"}})({expression})")
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{\n"
             f"    if (typeof v !== 'string' /* {self.get_type_fqn()} */) throw new Error(`${{v}} is not a {self.get_type_fqn()} i.e. a string, it is a ${{typeof v}}`);\n"
@@ -1152,7 +1169,7 @@ class ClassCodecImpl:
     def encode(self,x,_:None|Callable[[Any],JsonType]) -> JsonType:
         'encode {x} as a {self.t}'
         try:
-            if type(x) is not self.t:
+            if not isinstance(x, self.t):
                 xt=type(x)
                 raise Exception(f'{x!r} (of type {xt}) is not a {self.t}')
             if self.custom_codec is not None:
