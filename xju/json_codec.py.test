@@ -39,6 +39,8 @@ import xju
 
 x:Any
 
+#codec(JsonType)
+
 # int,str,bool,float,None map directly
 
 Assert(codec(int).decode(3))==3
@@ -204,6 +206,7 @@ else:
 # tuple maps to list...
 tuple_codec=codec(tuple[int,str])
 Assert(tuple_codec.decode([5, 'fred']))==(5, 'fred')
+Assert(codec(tuple[int,str]).encode((5, 'fred')))==[5, 'fred']
 Assert(tuple_codec.encode((5, 'fred')))==[5, 'fred']
 # same as...
 Assert(codec(tuple[int,str]).decode([5, 'fred']))==(5, 'fred')
@@ -461,6 +464,13 @@ except Exception as e:
 else:
     assert False, x
     pass
+
+# ... note no need to alias
+Assert(codec(str|int).decode('fred'))=='fred'
+Assert(codec(str|int).decode(9))==9
+Assert(codec(str|int).encode('fred'))=='fred'
+Assert(codec(str|int).encode(9))==9
+
 
 
 # class (object) support:

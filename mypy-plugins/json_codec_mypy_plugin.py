@@ -258,7 +258,7 @@ class ExpressionCheckerPatch:
         self._f3=ExpressionChecker.check_callable_call
         setattr(ExpressionChecker, 'check_callable_call',check_callable_call)
         self._f4=ExpressionChecker.apply_type_arguments_to_callable
-        setattr(ExpressionChecker, 'apply_type_arguments_to_callable',apply_type_arguments_to_callable)
+        #setattr(ExpressionChecker, 'apply_type_arguments_to_callable',apply_type_arguments_to_callable)
         return self
     def __exit__(self, *_) -> None:
         setattr(ExpressionChecker,'apply_type_arguments_to_callable',self._f4)
@@ -336,7 +336,7 @@ class ExpressionCheckerPatch:
         self, alias: TypeAlias, *, ctx: Context, alias_definition: bool = False
     ) -> Type:
         # LiteralType('xxx') is mypy's representation of python type Literal['xxx']
-        # which will be the target of the alias, note that is "va;ue" and we need
+        # which will be the target of the alias, note that is "value" and we need
         # to return the type of that value, i.e. a constructor function for
         # LiteralType('xxx')
         if isinstance(alias.target, LiteralType):
@@ -655,7 +655,6 @@ def apply_type_arguments_to_callable(
                     definition=tp.definition,
                     bound_args=tp.bound_args
                 )
-                return tp
             self.msg.incompatible_type_application(
                 min_arg_count, len(tp.variables), len(args), ctx
             )
