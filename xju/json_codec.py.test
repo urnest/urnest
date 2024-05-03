@@ -127,6 +127,50 @@ else:
     pass
 
 
+# set maps to list...
+Assert(codec(set).decode([5, 'fred']))==set([5, 'fred'])
+set_result=codec(set).encode(set([5, 'fred']))
+assert isinstance(set_result,list)
+Assert(set(set_result))==set([5, 'fred'])
+
+# ... but must be given a set
+try:
+    x=codec(set).decode(8)
+except Exception as e:
+    Assert("8 is not a list").isIn(str(e))
+else:
+    assert False, x
+    pass
+# ... note element types are not checked (it is assumed
+# result will be given to json.dumps, which will fail), e.g.
+# we can happily put print, which has no mapping to a json type,
+# into a non-type-adorned list and encode that list:
+Assert(codec(set).encode(set([print])))==[print]
+
+
+# type-adorned set maps to list...
+Assert(codec(set[int]).decode([5, 6]))==set([5, 6])
+Assert(codec(set[int]).encode(set([5, 6])))==[5, 6]
+
+# ... but must be given a set...
+try:
+    x=codec(set[int]).decode(8)
+except Exception as e:
+    Assert("8 is not a set").isIn(str(e))
+else:
+    assert False, x
+    pass
+
+# ... and all values must have correct type
+try:        
+    x=codec(set[int]).decode([5, 'fred'])
+except Exception as e:
+    Assert("'fred' (of type <class 'str'>) is not a <class 'int'>").isIn(str(e))
+else:
+    assert False, x
+    pass
+
+
 # bytes maps to list of number...
 Assert(codec(bytes).encode(b'\x1b\x17'))==[27,23]
 Assert(codec(bytes).decode([27,23]))==b'\x1b\x17'
@@ -803,6 +847,22 @@ else:
     assert False, x
     pass
 
+try:
+    x=codec(set[int]).typescript_as_object_key_type()
+except Exception as e:
+    Assert(str(e)).contains("Set<number> is not allowed as a typescript object key type")
+else:
+    assert False, x
+    pass
+
+try:
+    x=codec(set).typescript_as_object_key_type()
+except Exception as e:
+    Assert(str(e)).contains("Set<any> is not allowed as a typescript object key type")
+else:
+    assert False, x
+    pass
+
 
 # Codec can generate corresponding json schema (http://json-schema.org)
 # "null", "boolean", "object", "array", "number", "string", or "integer"
@@ -812,7 +872,9 @@ Assert(codec(bool).get_json_schema())=={'type': 'boolean', 'definitions': {}, '$
 Assert(codec(str).get_json_schema())=={'type': 'string', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(float).get_json_schema())=={'type': 'number', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(list).get_json_schema())=={'type': 'array', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(codec(set).get_json_schema())=={'type': 'array', 'uniqueItems': True, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(list[int]).get_json_schema())=={'type': 'array', 'items': { 'type': 'integer'}, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(codec(set[int]).get_json_schema())=={'type': 'array', 'uniqueItems': True, 'items': { 'type': 'integer'}, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(bytes).get_json_schema())=={'description': 'bytes', 'type': 'array', 'items': { 'type': 'integer'}, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(tuple[int,str]).get_json_schema())=={'type': 'array', 'prefixItems': [ { 'type': 'integer'},{ 'type': 'string'}], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 
@@ -990,6 +1052,22 @@ try:
        .encode('fred'))  # type: ignore
 except Exception as e:
     Assert("'fred' is not a list").isIn(str(e))
+else:
+    assert False, x
+    pass
+try:
+    x=(codec(set[int])
+       .encode('fred'))  # type: ignore
+except Exception as e:
+    Assert("'fred' is not a set").isIn(str(e))
+else:
+    assert False, x
+    pass
+try:
+    x=(codec(set)
+       .encode('fred'))  # type: ignore
+except Exception as e:
+    Assert("'fred' is not a set").isIn(str(e))
 else:
     assert False, x
     pass
@@ -1173,6 +1251,23 @@ Assert(codec(IpV4Addr).get_typescript_asa(TypeScriptSourceCode('7'),typescript_n
 })(7)""")
 
 codec(O).ensure_typescript_defs(typescript_namespace)
+
+
+try:
+    x=codec(set[int]).get_typescript_isa(TypeScriptSourceCode("v"),typescript_namespace)
+except Exception as e:
+    Assert(str(e)).contains("get_typescript_isa is not available for Set")
+else:
+    assert False, x
+    pass
+
+try:
+    x=codec(set).get_typescript_isa(TypeScriptSourceCode("v"),typescript_namespace)
+except Exception as e:
+    Assert(str(e)).contains("get_typescript_isa is not available for Set")
+else:
+    assert False, x
+    pass
 
 # ... get_formatted_defs() generates the typescript source code:
 Assert(typescript_namespace.get_formatted_defs())==TypeScriptSourceCode(

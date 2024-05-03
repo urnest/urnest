@@ -147,6 +147,28 @@ function assert_never_reached(){{
     assert_true({codec(list[int]).get_typescript_isa(TypeScriptSourceCode('[7, 8]'),namespace)});
     assert_false({codec(list[int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
 }})();
+//Set<T>
+(() => {{
+    assert_equal({indent(4,codec(set[int]).get_typescript_asa(TypeScriptSourceCode('[7, 8]'),namespace))}, new Set<number>([7, 8]));
+    try{{
+        {indent(8,codec(set[int]).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a Set<number> because Error: ann is not a number it is a string");
+    }}
+}})();
+//Set<any>
+(() => {{
+    assert_equal({indent(4,codec(set).get_typescript_asa(TypeScriptSourceCode('[7, "ann"]'),namespace))}, new Set<any>([7, "ann"]));
+    try{{
+        {indent(8,codec(set).get_typescript_asa(TypeScriptSourceCode('22'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 22 is not a Set<any> because Error: 22 is not an Array it is a number");
+    }}
+}})();
 //bytes
 (() => {{
     assert_equal({indent(4,codec(bytes).get_typescript_asa(TypeScriptSourceCode('[7, 8]'),namespace))}, [7, 8]);

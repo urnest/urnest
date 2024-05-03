@@ -415,6 +415,91 @@ class AnyListCodecImpl:
             f"}})({expression})")
     pass
 
+class SetCodecImpl:
+    def __init__(self, value_codec:CodecImplProto):
+        self.value_codec=value_codec
+        pass
+    def encode(self,x,back_ref:None|Callable[[Any],JsonType]):
+        if type(x) is not set:
+            raise Exception(f'{x!r} is not a set')
+        return [self.value_codec.encode(_,back_ref) for _ in x]
+    def decode(self,x,back_ref:None|Callable[[JsonType],Any]):
+        if type(x) is not list:
+            raise Exception(f'{x!r} is not a set')
+        return set([self.value_codec.decode(_,back_ref) for _ in x])
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        return {
+            "type": "array",
+            "uniqueItems": True,
+            "items": self.value_codec.get_json_schema(definitions, self_ref)
+        }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
+        return f"Set<{self.value_codec.typescript_type(back_refs)}>"
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        raise Exception(f"get_typescript_isa is not available for Set")
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((v: any): {tt} => {{try{{\n"
+            f"    if (!Array.isArray(v)) throw new Error(`${{v}} is not an array it is a ${{typeof v}}`);\n"
+            f"    const result = new {self.typescript_type(back_refs)};\n"
+            f"    v.forEach((x)=>result.add({indent(4,self.value_codec.get_typescript_asa(TypeScriptSourceCode('x'),namespace,back_refs))}));\n"
+            f"    return result;\n"
+            f"}}catch(e:any){{throw new Error(`${{v}} is not a {tt} because ${{e}}`);}}}})({expression})")
+    pass
+
+class AnySetCodecImpl:
+    def __init__(self):
+        self.value_codec=AnyJsonCodecImpl()
+        pass
+    def encode(self,x,back_ref:None|Callable[[Any],JsonType]):
+        if type(x) is not set:
+            raise Exception(f'{x!r} is not a set')
+        return [self.value_codec.encode(_,back_ref) for _ in x]
+    def decode(self,x,back_ref:None|Callable[[JsonType],Any]):
+        if type(x) is not list:
+            raise Exception(f'{x!r} is not a list')
+        return set([self.value_codec.decode(_,back_ref) for _ in x])
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        return {
+            "type": "array",
+            "uniqueItems": True
+        }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
+        return f"Set<any>"
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        raise Exception(f"get_typescript_isa is not available for Set")
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((v: any): {tt} => {{try{{\n\n"
+            f"    if (!Array.isArray(v)) throw new Error(`${{v}} is not an Array it is a ${{typeof v}}`);\n"
+            f"    const result = new {self.typescript_type(back_refs)};\n"
+            f"    v.forEach((x)=>result.add(x));\n"
+            f"    return result;\n"
+            f"}}catch(e:any){{throw new Error(`${{v}} is not a {tt} because ${{e}}`);}}}})({expression})")
+    pass
+
 class TupleCodec:
     def __init__(self,value_codecs):
         self.value_codecs=value_codecs
@@ -1549,6 +1634,10 @@ def _explodeSchema(t:type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGeneric
             return AnyListCodecImpl()
         if type(t) is GenericAlias and get_origin(t) is list:
             return ListCodecImpl(_explodeSchema(get_args(t)[0],type_var_map))
+        if t is set:
+            return AnySetCodecImpl()
+        if type(t) is GenericAlias and get_origin(t) is set:
+            return SetCodecImpl(_explodeSchema(get_args(t)[0],type_var_map))
         if type(t) is _LiteralGenericAlias and len(t.__args__)==1:
             return _explode_literal(t.__args__[0])
         if type(t) is _LiteralGenericAlias:

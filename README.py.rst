@@ -178,6 +178,7 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 3.2.0 add set support to xju.json_codec
 - 3.1.0 add validity pattern support to xju.newtype.Str
 - 3.1.0 fix xju.json_codec encode of subclass value
 - 3.0.1 fix json_codec_mypy_plugin issues 2, 3

@@ -421,7 +421,7 @@ print(open(sys.argv[1]).read().replace('# generated Int methods here...',int_met
 %json_codec_typescript_test.sh==!<<
 #!/bin/sh
 set -e
-/home/xju/node_modules/typescript/bin/tsc --strict "$1/json_codec_typescript_test.ts" --outFile json_codec_typescript_test.js
+/home/xju/node_modules/typescript/bin/tsc --lib es2015 --strict "$1/json_codec_typescript_test.ts" --outFile json_codec_typescript_test.js
 node json_codec_typescript_test.js
 
 
