@@ -33,8 +33,8 @@
 whl="$1"
 tgz="$2"
 rm -rf dist && mkdir dist
-cp $whl dist/xwl-1.0.0-py3-none-any.whl
-cp $tgz dist/xwl-1.0.0.tar.gz
+cp $whl dist/xwl-1.0.1-py3-none-any.whl
+cp $tgz dist/xwl-1.0.1.tar.gz
 twine check dist/*
 twine upload --verbose dist/*
 
@@ -46,22 +46,22 @@ twine upload --verbose dist/*
 whl="$1"
 tgz="$2"
 rm -rf dist && mkdir dist
-cp $whl dist/xwl-1.0.0-py3-none-any.whl
-cp $tgz dist/xwl-1.0.0.tar.gz
+cp $whl dist/xwl-1.0.1-py3-none-any.whl
+cp $tgz dist/xwl-1.0.1.tar.gz
 twine check dist/*
 twine upload --verbose --repository pypitest dist/*
 
-%python3-xwl.whl == %python3-xwl-whl.exec.files+member='xwl-1.0.0/dist/xwl-1.0.0-py3-none-any.whl':extract_file
+%python3-xwl.whl == %python3-xwl-whl.exec.files+member='xwl-1.0.1/dist/xwl-1.0.1-py3-none-any.whl':extract_file
 
 # you'd think that the .tar.gz that the .whl was built from would be exactly the right thing to
 # put on pypi...
-%python3-xwl.tar.gz == %python3-xwl-tgz.exec.files+member='xwl-1.0.0.tar.gz':extract_file
+%python3-xwl.tar.gz == %python3-xwl-tgz.exec.files+member='xwl-1.0.1.tar.gz':extract_file
 # ... but no it needs the .tar.gz that it created when it created the wheel. It makes no sense
-%python3-xwl-twine.tar.gz == %python3-xwl-whl.exec.files+member='xwl-1.0.0/dist/xwl-1.0.0.tar.gz':extract_file
+%python3-xwl-twine.tar.gz == %python3-xwl-whl.exec.files+member='xwl-1.0.1/dist/xwl-1.0.1.tar.gz':extract_file
 
-%python3-xwl-tgz.exec.files==()+cmd=(%build-python3-xwl-tgz.sh)+cmd=(..) (../MIT-LICENCE) (README.rst) '1.0.0'+need=(%pytest.tree:leaves) :exec.files
+%python3-xwl-tgz.exec.files==()+cmd=(%build-python3-xwl-tgz.sh)+cmd=(..) (../MIT-LICENCE) (README.rst) '1.0.1'+need=(%pytest.tree:leaves) :exec.files
 
-%python3-xwl==()+cmd=(%build-python3-xwl.sh)+cmd=(.) (MIT-LICENCE) (README.rst) '1.0.0' +need=(%pytest.tree:leaves):exec.files
+%python3-xwl==()+cmd=(%build-python3-xwl.sh)+cmd=(.) (MIT-LICENCE) (README.rst) '1.0.1' +need=(%pytest.tree:leaves):exec.files
 
 %python3-xwl-whl.exec.files==%build-python3-xwl-whl.sh+cmd=(%build-python3-xwl-whl.sh)+cmd=(%python3-xwl.tar.gz):exec.files
 
@@ -70,7 +70,7 @@ twine upload --verbose --repository pypitest dist/*
 set -ex
 tgz="$1"
 tar xzvf $tgz
-cd xwl-1.0.0
+cd xwl-1.0.1
 python3 -m build -n
 YYYY
 
@@ -84,10 +84,10 @@ rev="$4"
 mkdir -p xwl-$rev/src
 (
   cd $src_dir
-  tar cf - xwl/*.py xwl/*.py.test xwl/example/*.py xwl/example/*.html xwl/example/*.js xwl/example/1.svg.gz
+  tar cf - xwl/*.py xwl/*.js xwl/*.py.test xwl/example/*.py xwl/example/*.html xwl/example/*.js xwl/example/1.svg.gz
 ) |
 (cd xwl-$rev/src && tar xvf - )
-touch xwl-$rev/src/py.typed
+touch xwl-$rev/src/xwl/py.typed
 tests=$(cd xwl-$rev/src/xwl && find . -name '*.py.test')
 tests_package_data=$(for t in $tests; do echo -n "\"$t\","; done)
 cat > xwl-$rev/pyproject.toml <<EOF
@@ -117,7 +117,7 @@ include = ["xwl","xwl.*","xwl.example.*"]  # package names should match these gl
 exclude = []  # exclude packages matching these glob patterns (empty by default)
 namespaces = true  # to disable scanning PEP 420 namespaces (true by default)
 [tool.setuptools.package-data]
-xwl = [ $tests_package_data "py.typed"]
+xwl = [ $tests_package_data "./py.typed", "example/*", "./xwl.js" ]
 EOF
 cp $licence xwl-$rev/MIT-LICENCE
 cp $readme xwl-$rev/README.rst
