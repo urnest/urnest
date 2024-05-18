@@ -22,6 +22,14 @@
  - pass number of clients on command line
 """
 
+from asyncio import wait, FIRST_COMPLETED, TaskGroup
+from tempfile import TemporaryDirectory
+
+from xju.cmc import AsyncTask, AsyncMutex, AsyncCondition, AsyncDict
+from xju.cmc.sockets import UnixSocketAddress, StreamListener, ConnectedStreamSocket
+from xju.newtype import Int
+from xju.time import monotonic_now, Duration
+
 class RunnerId(Int["RunnerIdTag"]): pass
 
 async def server(listeners: Sequence[StreamListener[UnixSocketAddress]]):
@@ -29,22 +37,26 @@ async def server(listeners: Sequence[StreamListener[UnixSocketAddress]]):
     m = AsyncMutex()
     done = list[RunnerId]
     c = AsyncCondition(m)
-    async with (
-        AsyncDict[RunnerId, ConnectedStreamSocket[UnixSocketAddress]]() as connections,
-        AsyncDict[RunnerId, AsyncTask]() as runners,
-    ):
-        def runner(runner_id: RunnerId):
-            socket = connections.get(runner_id)
-            try:
-                await run_socket_till_done(connection)
-            except Exception as e:
-                print(f"run failed because {e}")
-                pass
-            async with Lock(m) as l:
-                done.append(runner_id)
-                c.notify_all(l)
-                pass
+    def runner(runner_id: RunnerId, connection: ConnectedStreamSocket[UnixSocketAddress]):
+        try:
+            await run_socket_till_done(connection)
+        except Exception as e:
+            print(f"run failed because {e}")
             pass
+        async with Lock(m) as l:
+            done.append(runner_id)
+            c.notify_all(l)
+            pass
+        pass
+
+    @async_cm
+    @dataclass
+    class ConnectionAndRunner:
+        socket: ConnectedStreamSocket[UnixSocketAddress]
+        runner: AsyncTask
+        pass
+    
+    async with AsyncDict[RunnerId, SocketAndRunner]() as connections:
         async with AsyncLock(m) as l:
             # so we can be forced into a dead loop by DOS client aborting queued
             # connection, we won't accept more often than:
@@ -53,7 +65,6 @@ async def server(listeners: Sequence[StreamListener[UnixSocketAddress]]):
             while True:
                 while len(done):
                     runner_id = done.pop()
-                    await runners.pop(runner_id)
                     await connections.pop(runner_id)
                     pass
                 # delay new connections more with number of current connections
@@ -64,32 +75,44 @@ async def server(listeners: Sequence[StreamListener[UnixSocketAddress]]):
                     await c.wait_for(l, dont_accept_before - now)
                 else:
                     # been long enough, can accept more...
+                    socket = ConnectedStreamSocket[UnixSocketAddress](listeners)
+                    connection = SocketAndRunner(socket,
+                                                 AsynTask(partial(runner, next_runner_id, socket)))
                     with (
                         # ... but while we're waiting, clean up done runners
                         AsyncTask(partial(c.wait_for, l, Duration(60*60))) as t1,
                         AsyncTask(partial(connections.set,
                                           next_runner_id,
-                                          ConnectedStreamSocket(listeners))) as t2
+                                          connection)) as t2
                     ):
-                        await asyncio.wait([t1, t2], return_when=FIRST_COMPLETED)
+                        await wait([t1, t2], return_when=FIRST_COMPLETED)
                         if t2.done:
                             last_accept = monotonic_now()
                             if e = t2.exception():
                                 print(f"failed to accept pending connection because {e}")
                             else:
-                                try:
-                                    await runners.set(next_runner_id,
-                                                      AsyncTask(partial(runner, next_runner_id)))
-                                    next_runner_id += 1
-                                except Exception:
-                                    printf(f"failed to create task for connection {t2} because {e}")
-                                    await connections.pop(next_runner_id)
-                                pass
+                                next_runner_id += 1
                             pass
+                        if t1.done:
+                            assert t1.exception() is None, t1.exception()
                         pass
                     pass
                 pass
             pass
+        pass
+    pass
+
+async def client(client_id: int, addresses: list[UnixSocketAddress]):
+    connect_to = addresses[client_id % len(addresses)]
+    try:
+        async with Timeout(20):
+            async with ConnectedStreamSocket(connect_to) as connection:
+                ... do the stuff
+                pass
+            pass
+        pass
+    except Exception as e:
+        print(f"client {client_id} failed because {e}")
         pass
     pass
 
@@ -99,13 +122,12 @@ async def main():
             StreamListener(UnixSocketAddress(d / 'socket_a'), 2) as listener_a,
             StreamListener(UnixSocketAddress(d / 'socket_b'), 2) as listener_b,
     ):
-        
-        connections: AsyncDict[UnixSocketAddress, AsyncTask]
-
         async with AsyncTask(partial(server, [listener_a, listener_b])):
             async with TaskGroup() as g:
-                for i in range(0, int(sys.argv[1])):
-                    g.create_task(client())
+                for i in range(1, int(sys.argv[1])+1):
+                    g.create_task(partial(client, i, [
+                        listener_a.local_address,
+                        listener_b.local_address]))
                     pass
                 pass
             pass
