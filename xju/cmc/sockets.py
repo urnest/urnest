@@ -15,11 +15,11 @@
 #
 # socket wrappers with proper context management
 #
-from asyncio import FIRST_COMPLETED, get_event_loop, TaskGroup
+from asyncio import FIRST_COMPLETED, get_event_loop, TaskGroup, wait
 from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
-from typing import Protocol, Generic, ClassVar, Self, Sequence, Any, TypeVar, overload
+from typing import Protocol, Generic, ClassVar, Self, Sequence, Any, TypeVar, overload, cast
 import socket
 
 from xju.cmc import Opt, cmclass, async_cmclass
@@ -69,7 +69,7 @@ class UnixAddressType(AddressTypeProto):
         return self.path
     
     @classmethod
-    def from_sockaddr(cls, sockaddr: Any) -> UnixAddressType:
+    def from_sockaddr(cls, sockaddr: Any) -> "UnixAddressType":
         assert isinstance(sockaddr, str)
         return UnixAddressType(Path(sockaddr))
 
@@ -78,11 +78,11 @@ class UnixAddressType(AddressTypeProto):
         s.close()
 
     @classmethod
-    def get_local_address(cls, s: socket.socket) -> UnixAddressType:
+    def get_local_address(cls, s: socket.socket) -> "UnixAddressType":
         return UnixAddressType(s.getsockname())
 
     @classmethod
-    def get_remote_address(cls, s: socket.socket) -> UnixAddressType:
+    def get_remote_address(cls, s: socket.socket) -> "UnixAddressType":
         return UnixAddressType(s.getpeername())
     
     pass
@@ -210,7 +210,7 @@ class StreamSocketConnection(Generic[AddressType]):
     """
 
     _local_address: AddressType | None = None
-    _connected_to: AddressType | None = None
+    _remote_address: AddressType | None = None
     _s: AddressType | StreamSocketListener[AddressType]
     _socket: Opt[StreamSocket[AddressType]]
     close_on_exec: bool
@@ -233,27 +233,32 @@ class StreamSocketConnection(Generic[AddressType]):
         self._socket = Opt()
         self.close_on_exec=close_on_exec
 
-    async def __enter__(self) -> Self:
+    async def __aenter__(self) -> Self:
         match self._s:
             case AddressTypeProto():
-                self._socket.set(StreamSocket[AddressType](self._s.__class__, self.close_on_exec))
+                st = cast(AddressType, self._s)
+                self._socket.set(StreamSocket[AddressType](type(st), self.close_on_exec))
                 self.socket.socket.connect(self._s.sockaddr)
                 await self.socket.until_writable()
+                self._local_address = st.get_local_address(self.socket.socket)
+                self._remote_address = st.get_remote_address(self.socket.socket)
             case StreamSocketListener():
                 await self._s.until_incoming_connection()
                 self._socket.set(_AcceptedStreamSocketConnection[AddressType](
-                    self._s.address.family, self._s.socket.socket.accept()[0], self.close_on_exec)
+                    self._s.address.__class__, self._s.socket.socket.accept()[0], self.close_on_exec))
+                self._local_address = self._s.address.get_local_address(self.socket.socket)
+                self._remote_address = self._s.address.get_remote_address(self.socket.socket)
             case Sequence():
                 async with TaskGroup() as g:
                     tasks = [g.create_task(listener.until_incoming_connection())
                              for listener in self._s]
-                    done, pending = asyncio.wait(tasks, FIRST_COMPLETED)
+                    done, pending = wait(tasks, FIRST_COMPLETED)
                     assert len(done) == 1, (done, pending)
                     assert isinstance(done[0], StreamSocketListener)
                     self.socket.set(done[0].socket.socket.accept())
+                    self._local_address = done[0].address.get_local_address(self.socket.socket)
+                    self._remote_address = done[0].address.get_remote_address(self.socket.socket)
                     
-        self._local_address = AddressType.get_local_address(self.socket.socket)
-        self._connected_to = AddressType.get_remote_address(self.socket.socket)
         return self
 
     # properties valid in context
@@ -269,16 +274,16 @@ class StreamSocketConnection(Generic[AddressType]):
         return self._local_address
 
     @property
-    def connected_to(self) -> AddressType:
-        assert self._connected_to is not None
-        return self._connected_to
+    def remote_address(self) -> AddressType:
+        assert self._remote_address is not None
+        return self._remote_address
 
     pass
 
-class _AcceptedStreamSocketConnection(StreamSocket[AddressType]):
+class _AcceptedStreamSocketConnection(StreamSocket[AddressType], Generic[AddressType]):
     def __init__(self, socket_type: type[AddressType], s: socket.socket, close_on_exec:bool):
-        super().init(socket_type, close_on_exec)
-        self._socket.set(s)
+        super().__init__(socket_type, close_on_exec)
+        self._socket = s
         pass
 
     def __enter__(self) -> Self:
