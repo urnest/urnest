@@ -19,6 +19,7 @@ Opt.py.test+(%py-opts):py3.exec.cov
 AsyncDict.py.test+(%py-opts):py3.exec.cov
 AsyncOpt.py.test+(%py-opts):py3.exec.cov
 signal.py.test+(%py-opts):py3.exec.cov
+sockets.py.test+(%py-opts):py3.exec.cov
 tstore.py.test+(%py-opts):py3.exec.cov
 perflog.py.test+(%py-opts):py3.exec.cov
 ThreadMutexLockCondition.py.test+(%py-opts):py3.exec.cov
