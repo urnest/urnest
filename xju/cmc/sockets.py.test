@@ -15,6 +15,10 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
+from sys import path
+from os.path import dirname
+if path[0]==dirname(__file__): path.pop(0)
+
 import asyncio
 from pathlib import Path
 
@@ -29,27 +33,64 @@ from xju.cmc.sockets import (
 
 async def main():
     S = Path('temp-unix-socket')
-    with StreamSocketListener(UnixAddressType(S), ListenerBacklog(1)) as listener:
-        async with StreamSocketConnection(UnixAddressType(S)) as c1:
+    A = UnixAddressType(S)
+    with StreamSocketListener(UnixAddressType(S), ListenerBacklog(0)) as listener:
+        # can't have multiple listeners on same unix socket:
+        try:
+            with StreamSocketListener(UnixAddressType(S), ListenerBacklog(0)) as listener2:
+                pass
+        except Exception as e:
+            Assert(str(e)).contains('Address already in use')
+        else:
+            assert False
+            pass
+        # backlog 0 allows one connection to be queued...
+        async with StreamSocketConnection(A) as c1:
             try:
-                async with StreamSocketConnection(UnixAddressType(S)) as c2:
+                # ... but not a second
+                async with StreamSocketConnection(A) as c2:
                     pass
             except Exception as e:
-                Assert(str(e)).contains('connection refused')  # backlog exceeded
+                Assert(str(e)).contains('Resource temporarily unavailable')  # backlog exceeded
             else:
                 assert False
                 pass
+
+            # accept the queued connection (c1 above)
             async with StreamSocketConnection(listener) as c1s:
-                Assert(c1.local_address)==S
-                Assert(c1.remote_address)==S
-                Assert(c1s.local_address)==S
-                Assert(c1s.remote_address)==S
+                Assert( (c1s.local_address, c1s.remote_address) )==(A, UnixAddressType(Path('')))
+                Assert( (c1.local_address, c1.remote_address) )==(UnixAddressType(Path('')), A)
+                pass
+            # now c1 is no longer pending (it is accepted), c2 should be "pendable"
+            async with StreamSocketConnection(A) as c2:
+                pass
             pass
         pass
+    # can't reopen existing socket for listening without recreating it:
+    try:
+        with StreamSocketListener(UnixAddressType(S), ListenerBacklog(0)) as listener:
+            pass
+    except Exception as e:
+        Assert(str(e)).contains('Address already in use')
+    else:
+        assert False
+        pass
+
+    # ... have to remove the file first
+    S.unlink()
+    with StreamSocketListener(UnixAddressType(S), ListenerBacklog(0)) as listener:
+        pass
+
+    # cleanup
+    S.unlink()
+
+    # opening a non-unix-socket file also fails with 'Address already in use'
     try:
         with StreamSocketListener(UnixAddressType(Path('/dev/null')), ListenerBacklog(2)):
             pass
     except Exception as e:
-        Assert(str(e)).contains('not a unix socket')
+        Assert(str(e)).contains('Address already in use')
         pass
     pass
+
+asyncio.run(main())

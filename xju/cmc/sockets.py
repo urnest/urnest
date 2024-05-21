@@ -19,7 +19,18 @@ from asyncio import FIRST_COMPLETED, get_event_loop, TaskGroup, wait
 from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
-from typing import Protocol, Generic, ClassVar, Self, Sequence, Any, TypeVar, overload, cast
+from typing import (
+    Protocol,
+    Generic,
+    ClassVar,
+    Self,
+    Sequence,
+    Any,
+    TypeVar,
+    overload,
+    cast,
+    runtime_checkable
+)
 import socket
 
 from xju.cmc import Opt, cmclass, async_cmclass
@@ -27,8 +38,15 @@ from xju.newtype import Int
 from xju.xn import in_function_context
 
 class ListenerBacklog(Int["ListenerBacklogTag"]):
+    """
+    accept(2) backlog
+
+    - note backlog 0 allows 1 pending connection but rejects further pending
+      connections with Resource temporarily unavailable (errno 11)
+    """
     pass
 
+@runtime_checkable
 class AddressTypeProto(Protocol):
     family: ClassVar[int]  # e.g. socket.AF_INET
 
@@ -52,21 +70,18 @@ class AddressTypeProto(Protocol):
 AddressType = TypeVar('AddressType', bound=AddressTypeProto)
 
 # some socket families, not exhaustive - see socket(7)
+@dataclass
 class UnixAddressType(AddressTypeProto):
-    family:ClassVar[int] = socket.AF_UNIX
+    family:ClassVar[int] = field(init=False, default=socket.AF_UNIX)
 
     path: Path
 
     def __str__(self) -> str:
         return f"unix socket {self.path}"
 
-    def __init__(self, path: Path) -> None:
-        self.path = path
-        pass
-
     @property
     def sockaddr(self) -> Any:
-        return self.path
+        return str(self.path)
     
     @classmethod
     def from_sockaddr(cls, sockaddr: Any) -> "UnixAddressType":
@@ -79,11 +94,11 @@ class UnixAddressType(AddressTypeProto):
 
     @classmethod
     def get_local_address(cls, s: socket.socket) -> "UnixAddressType":
-        return UnixAddressType(s.getsockname())
+        return UnixAddressType.from_sockaddr(s.getsockname())
 
     @classmethod
     def get_remote_address(cls, s: socket.socket) -> "UnixAddressType":
-        return UnixAddressType(s.getpeername())
+        return UnixAddressType.from_sockaddr(s.getpeername())
     
     pass
 
@@ -99,7 +114,7 @@ class StreamSocket(Generic[AddressType]):
             flags=int(socket.SOCK_NONBLOCK)
             if self.close_on_exec:
                 flags=flags|socket.SOCK_CLOEXEC
-            self._socket = socket.socket(self.socket_type.family|flags, proto=-1)
+            self._socket = socket.socket(self.socket_type.family,type=socket.SOCK_STREAM|flags)
             return self
         except Exception as e:
             raise in_function_context(StreamSocket.__enter__, vars()) from None
@@ -152,7 +167,7 @@ class StreamSocket(Generic[AddressType]):
 class StreamSocketListener(Generic[AddressType]):
     address: AddressType
     backlog: ListenerBacklog
-    _socket: Opt[StreamSocket[AddressType]]
+    socket: StreamSocket[AddressType]
 
     def __str__(self):
         return f"stream socket listener on {self.address} with backlog {self.backlog}"
@@ -160,7 +175,7 @@ class StreamSocketListener(Generic[AddressType]):
     def __init__(self, address: AddressType, backlog: ListenerBacklog, close_on_exec=True):
         self.address = address
         self.backlog = backlog
-        self._socket = Opt()
+        self.socket = StreamSocket[AddressType](address.__class__, close_on_exec)
 
     def __enter__(self) -> Self:
         "{self} start listening"
@@ -172,12 +187,6 @@ class StreamSocketListener(Generic[AddressType]):
         except Exception:
             raise in_function_context(StreamSocketListener.__enter__, vars()) from None
         pass
-
-    @property
-    def socket(self) -> StreamSocket[AddressType]:
-        result = self._socket.get()
-        assert result is not None
-        return result
 
     async def until_incoming_connection(self) -> Self:
         "wait until {self} has an incoming connection available"
