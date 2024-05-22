@@ -21,23 +21,34 @@ if path[0]==dirname(__file__): path.pop(0)
 
 import asyncio
 from pathlib import Path
+import socket
+from typing import ClassVar, Self, Any
 
 from xju.assert_ import Assert
+from xju.xn import readable_repr
 
 from xju.cmc.sockets import (
     UnixAddressType,
     StreamSocketListener,
     StreamSocketConnection,
-    ListenerBacklog
+    ListenerBacklog,
+    AddressTypeProto,
+    StreamSocket,
 )
 
 async def main():
     S = Path('temp-unix-socket')
+    S2 = Path('temp-unix-socket-2')
     A = UnixAddressType(S)
-    with StreamSocketListener(UnixAddressType(S), ListenerBacklog(0)) as listener:
+    Assert(str(A))==f'unix socket {S}'
+    with (
+        StreamSocketListener(UnixAddressType(S), ListenerBacklog(0)) as listener,
+        StreamSocketListener(UnixAddressType(S2), ListenerBacklog(0)) as listener2
+    ):
+        Assert(str(listener))=='stream socket listener on unix socket temp-unix-socket with backlog 0'
         # can't have multiple listeners on same unix socket:
         try:
-            with StreamSocketListener(UnixAddressType(S), ListenerBacklog(0)) as listener2:
+            with StreamSocketListener(UnixAddressType(S), ListenerBacklog(0)) as listener3:
                 pass
         except Exception as e:
             Assert(str(e)).contains('Address already in use')
@@ -56,13 +67,29 @@ async def main():
                 assert False
                 pass
 
+            # trying to accept on empty sequence of listeners waits forever
+            try:
+                async with asyncio.Timeout(0.01):
+                    async with StreamSocketConnection[UnixAddressType]([]) as c1s:
+                        pass
+                    pass
+                pass
+            except TimeoutError:
+                pass
+            else:
+                assert False
+                    
             # accept the queued connection (c1 above)
-            async with StreamSocketConnection(listener) as c1s:
+            async with StreamSocketConnection([listener,listener2]) as c1s:
                 Assert( (c1s.local_address, c1s.remote_address) )==(A, UnixAddressType(Path('')))
                 Assert( (c1.local_address, c1.remote_address) )==(UnixAddressType(Path('')), A)
                 pass
-            # now c1 is no longer pending (it is accepted), c2 should be "pendable"
+            # now c1 is no longer pending (it is accepted), c2 is "pendable":
             async with StreamSocketConnection(A) as c2:
+
+                # ... and acceptable:
+                async with StreamSocketConnection(listener) as c2s:
+                    pass
                 pass
             pass
         pass
@@ -93,4 +120,39 @@ async def main():
         pass
     pass
 
+class BogusAddressType(AddressTypeProto):
+    family: ClassVar[int] = -5
+
+    @staticmethod
+    def abort(s: socket.socket) -> None:
+        pass
+
+    @classmethod
+    def get_local_address(cls, s: socket.socket) -> Self:
+        raise Exception("not implemented")
+
+    @classmethod
+    def get_remote_address(cls, s: socket.socket) -> Self:
+        raise Exception("not implemented")
+
+    @property
+    def sockaddr(self) -> Any:
+        raise Exception("not implemented")
+
+    @classmethod
+    def from_sockaddr(cls, sockaddr: Any) -> Self:
+        raise Exception("not implemented")
+    
+async def various_test_cases():
+    try:
+        with StreamSocket(BogusAddressType):
+            pass
+    except Exception as e:
+        Assert(readable_repr(e)).contains('Failed to create a BogusAddressType socket (family -5) with close-on-exec True because\n[Errno 97] Address family not supported by protocol.')
+    else:
+        assert False
+        pass
+    pass
+
 asyncio.run(main())
+asyncio.run(various_test_cases())
