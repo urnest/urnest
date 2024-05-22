@@ -33,7 +33,7 @@ from typing import (
 )
 import socket
 
-from xju.cmc import Opt, cmclass, async_cmclass
+from xju.cmc import Opt, cmclass, async_cmclass, AsyncDict, AsyncTask
 from xju.newtype import Int
 from xju.xn import in_function_context
 
@@ -109,7 +109,7 @@ class StreamSocket(Generic[AddressType]):
     _socket: None | socket.socket = field(init=False, default=None)  # until entered
 
     def __enter__(self) -> Self:
-        "create a {self.socket_type} socket with close-on-exec {self.close_on_exec}"
+        "create a {self.socket_type.__name__} socket (family {self.socket_type.family}) with close-on-exec {self.close_on_exec}"
         try:
             flags=int(socket.SOCK_NONBLOCK)
             if self.close_on_exec:
@@ -132,35 +132,29 @@ class StreamSocket(Generic[AddressType]):
 
     async def until_readable(self) -> Self:
         "wait until {self} is readable"
+        loop = get_event_loop()
+        fd = self.socket.fileno()
+        f = loop.create_future()
+        loop.add_reader(fd,partial(f.set_result, None))
         try:
-            loop = get_event_loop()
-            fd = self.socket.fileno()
-            f = loop.create_future()
-            loop.add_reader(fd,partial(f.set_result, None))
-            try:
-                await f
-                return self
-            finally:
-                loop.remove_reader(fd)
-                f.cancel()
-        except Exception:
-            raise in_function_context(StreamSocket.until_readable, vars()) from None 
+            await f
+            return self
+        finally:
+            loop.remove_reader(fd)
+            f.cancel()
 
     async def until_writable(self) -> Self:
         "wait until {self} is writable"
+        loop = get_event_loop()
+        fd = self.socket.fileno()
+        f = loop.create_future()
+        loop.add_writer(fd,partial(f.set_result, None))
         try:
-            loop = get_event_loop()
-            fd = self.socket.fileno()
-            f = loop.create_future()
-            loop.add_writer(fd,partial(f.set_result, None))
-            try:
-                await f
-                return self
-            finally:
-                loop.remove_writer(fd)
-                f.cancel()
-        except Exception:
-            raise in_function_context(StreamSocket.until_writable, vars()) from None 
+            await f
+            return self
+        finally:
+            loop.remove_writer(fd)
+            f.cancel()
     pass
 
 @cmclass
@@ -190,19 +184,8 @@ class StreamSocketListener(Generic[AddressType]):
 
     async def until_incoming_connection(self) -> Self:
         "wait until {self} has an incoming connection available"
-        try:
-            loop = get_event_loop()
-            fd = self.socket.socket.fileno()
-            f = loop.create_future()
-            loop.add_reader(fd,partial(f.set_result, None))
-            try:
-                await f
-                return self
-            finally:
-                loop.remove_reader(fd)
-                f.cancel()
-        except Exception:
-            raise in_function_context(StreamSocketListener.until_incoming_connection, vars()) from None
+        await self.socket.until_readable()
+        return self
     pass
 
 @async_cmclass
@@ -230,7 +213,11 @@ class StreamSocketConnection(Generic[AddressType]):
 
     @overload
     def __init__(self, listeners: Sequence[StreamSocketListener[AddressType]]):
-        "at context entry, await and accept first connection from {listeners}"
+        """
+        at context entry, await and accept first connection from {listeners}
+        
+         - context entry will wait forever if listeners is empty
+        """
 
     @overload
     def __init__(self, remote_address: AddressType, close_on_exec:bool = True):
@@ -257,17 +244,29 @@ class StreamSocketConnection(Generic[AddressType]):
                     self._s.address.__class__, self._s.socket.socket.accept()[0], self.close_on_exec))
                 self._local_address = self._s.address.get_local_address(self.socket.socket)
                 self._remote_address = self._s.address.get_remote_address(self.socket.socket)
-            case Sequence():
-                async with TaskGroup() as g:
-                    tasks = [g.create_task(listener.until_incoming_connection())
-                             for listener in self._s]
-                    done, pending = wait(tasks, FIRST_COMPLETED)
-                    assert len(done) == 1, (done, pending)
-                    assert isinstance(done[0], StreamSocketListener)
-                    self.socket.set(done[0].socket.socket.accept())
-                    self._local_address = done[0].address.get_local_address(self.socket.socket)
-                    self._remote_address = done[0].address.get_remote_address(self.socket.socket)
-                    
+            case _:
+                async def forever():
+                    await get_event_loop().create_future()
+                    pass
+                tasks = [
+                    AsyncTask(listener.until_incoming_connection)
+                    for listener in self._s
+                ] or [
+                    AsyncTask(forever)
+                ]
+                async with AsyncDict[int, AsyncTask]({i: task for i,task in enumerate(tasks)}) as group:
+                    done, pending = await wait([t.task for t in tasks], return_when=FIRST_COMPLETED)
+                    assert len(done) > 0, (done, pending)
+                    done_listener = done.pop().result()
+                    assert isinstance(done_listener, StreamSocketListener)
+                    self._socket.set(_AcceptedStreamSocketConnection[AddressType](
+                        done_listener.address.__class__,
+                        done_listener.socket.socket.accept()[0],
+                        self.close_on_exec))
+                    self._local_address = done_listener.address.get_local_address(self.socket.socket)
+                    self._remote_address = done_listener.address.get_remote_address(self.socket.socket)
+                    pass
+            
         return self
 
     # properties valid in context
