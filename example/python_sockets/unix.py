@@ -22,63 +22,84 @@
  - pass number of clients on command line
 """
 
-from asyncio import wait, FIRST_COMPLETED, TaskGroup
+from asyncio import wait, FIRST_COMPLETED, TaskGroup, get_event_loop, Timeout
+from dataclasses import dataclass
+from functools import partial
+from pathlib import Path
+import sys
 from tempfile import TemporaryDirectory
-
-from xju.cmc import AsyncTask, AsyncMutex, AsyncCondition, AsyncDict
-from xju.cmc.sockets import UnixSocketAddress, StreamListener, ConnectedStreamSocket
+from typing import Sequence
+import ssl
+from websockets import WebSocketServerProtocol, WebSocketClientProtocol
+from xju.assert_ import Assert
+from xju.cmc import AsyncTask, AsyncMutex, AsyncCondition, AsyncDict, async_cmclass, AsyncLock
+from xju.cmc.sockets import UnixAddressType, StreamSocketListener, StreamSocketConnection, ListenerBacklog
 from xju.newtype import Int
-from xju.time import monotonic_now, Duration
+from xju.time import now, Duration
 
 class RunnerId(Int["RunnerIdTag"]): pass
 
-async def server(listeners: Sequence[StreamListener[UnixSocketAddress]]):
+async def server(listeners: Sequence[StreamSocketListener[UnixAddressType]]):
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    ssl_context.load_cert_chain(Path(__file__).with_name("cert.pem"),
+                                Path(__file__).with_name("key.pem"))
     next_runner_id = RunnerId(1)
     m = AsyncMutex()
-    done = list[RunnerId]
+    done = list[RunnerId]()
     c = AsyncCondition(m)
-    def runner(runner_id: RunnerId, connection: ConnectedStreamSocket[UnixSocketAddress]):
+    async def runner(runner_id: RunnerId, connection: StreamSocketConnection[UnixAddressType]):
         try:
-            await run_socket_till_done(connection)
+            _transport, websocket_connection = await get_event_loop().connect_accepted_socket(
+                WebSocketServerProtocol,
+                sock=connection.socket.socket,
+                ssl=ssl_context)
+
+            assert (await websocket_connection.recv()) == 'fred'
+            await websocket_connection.send('jones')
+            assert (await websocket_connection.recv()) == 'ack'
+            await websocket_connection.close()
+            
         except Exception as e:
             print(f"run failed because {e}")
             pass
-        async with Lock(m) as l:
+        async with AsyncLock(m) as l:
             done.append(runner_id)
             c.notify_all(l)
             pass
         pass
 
-    @async_cm
+    @async_cmclass
     @dataclass
     class ConnectionAndRunner:
-        socket: ConnectedStreamSocket[UnixSocketAddress]
+        socket: StreamSocketConnection[UnixAddressType]
         runner: AsyncTask
         pass
     
-    async with AsyncDict[RunnerId, SocketAndRunner]() as connections:
+    async with AsyncDict[RunnerId, ConnectionAndRunner]() as connections:
         async with AsyncLock(m) as l:
             # so we can be forced into a dead loop by DOS client aborting queued
             # connection, we won't accept more often than:
             secs_between_accepts = 0.05
-            last_accept = monotonic_now() - Duration(0.05)
+            last_accept = now() - Duration(0.05)
             while True:
                 while len(done):
                     runner_id = done.pop()
                     await connections.pop(runner_id)
                     pass
                 # delay new connections more with number of current connections
-                dont_accept_before = last_accept + Duration(0.05) + Duration(1) * len(runners) * len(runners)
-                now = monotonic_now()
-                if now < dont_accept_before:
+                dont_accept_before = (
+                    last_accept + Duration(0.05) + Duration(1) * len(connections) * len(connections)
+                )
+                t = now()
+                if t < dont_accept_before:
                     # can't accept yet
-                    await c.wait_for(l, dont_accept_before - now)
+                    await c.wait_for(l, dont_accept_before - t)
                 else:
                     # been long enough, can accept more...
-                    socket = ConnectedStreamSocket[UnixSocketAddress](listeners)
-                    connection = SocketAndRunner(socket,
-                                                 AsynTask(partial(runner, next_runner_id, socket)))
-                    with (
+                    socket = StreamSocketConnection[UnixAddressType](listeners)
+                    connection = ConnectionAndRunner(socket,
+                                                     AsyncTask(partial(runner, next_runner_id, socket)))
+                    async with (
                         # ... but while we're waiting, clean up done runners
                         AsyncTask(partial(c.wait_for, l, Duration(60*60))) as t1,
                         AsyncTask(partial(connections.set,
@@ -86,14 +107,14 @@ async def server(listeners: Sequence[StreamListener[UnixSocketAddress]]):
                                           connection)) as t2
                     ):
                         await wait([t1, t2], return_when=FIRST_COMPLETED)
-                        if t2.done:
-                            last_accept = monotonic_now()
-                            if e = t2.exception():
+                        if t2.done():
+                            last_accept = now()
+                            if e := t2.exception():
                                 print(f"failed to accept pending connection because {e}")
                             else:
-                                next_runner_id += 1
+                                next_runner_id += RunnerId(1)
                             pass
-                        if t1.done:
+                        if t1.done():
                             assert t1.exception() is None, t1.exception()
                         pass
                     pass
@@ -102,32 +123,42 @@ async def server(listeners: Sequence[StreamListener[UnixSocketAddress]]):
         pass
     pass
 
-async def client(client_id: int, addresses: list[UnixSocketAddress]):
+async def client(client_id: int, addresses: list[UnixAddressType]):
     connect_to = addresses[client_id % len(addresses)]
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ssl_context.load_verify_locations(Path(__file__).with_name("cert.pem"))
     try:
         async with Timeout(20):
-            async with ConnectedStreamSocket(connect_to) as connection:
-                ... do the stuff
+            async with StreamSocketConnection(connect_to) as connection:
+                _transport, websocket_connection = await get_event_loop().create_connection(
+                    WebSocketClientProtocol,
+                    sock=connection.socket.socket,
+                    ssl=ssl_context,
+                    server_hostname='localhost')
+                await websocket_connection.send('fred')
+                Assert(await websocket_connection.recv()) == 'jones'
+                await websocket_connection.send('ack')
+                await websocket_connection.wait_closed()
                 pass
             pass
         pass
     except Exception as e:
-        print(f"client {client_id} failed because {e}")
+        print(f"client {client_id} connecting to {connect_to} failed because {e}")
         pass
     pass
 
 async def main():
     with (
             TemporaryDirectory() as d,
-            StreamListener(UnixSocketAddress(d / 'socket_a'), 2) as listener_a,
-            StreamListener(UnixSocketAddress(d / 'socket_b'), 2) as listener_b,
+            StreamSocketListener(UnixAddressType(Path(d) / 'socket_a'), ListenerBacklog(2)) as listener_a,
+            StreamSocketListener(UnixAddressType(Path(d) / 'socket_b'), ListenerBacklog(2)) as listener_b,
     ):
         async with AsyncTask(partial(server, [listener_a, listener_b])):
             async with TaskGroup() as g:
                 for i in range(1, int(sys.argv[1])+1):
-                    g.create_task(partial(client, i, [
-                        listener_a.local_address,
-                        listener_b.local_address]))
+                    g.create_task(client(i, [
+                        listener_a.address,
+                        listener_b.address]))
                     pass
                 pass
             pass
@@ -136,3 +167,6 @@ async def main():
 pass
 
 class RunnerIdTag: pass
+
+# openssl req -x509 -nodes -new -sha256 -days 20000 -newkey rsa:2048 -keyout key.pem -out cert.pem -subj "/C=US/CN=localhost"
+# cat key.pem cert.pem > key_cert.pem
