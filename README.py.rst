@@ -178,7 +178,7 @@ Various modules implemented to some broad principles:
 
 Release History
 
-- 3.2.1 keep Array as typescript type for json_codec encoding of pythong set
+- 3.2.1 keep Array as typescript type for json_codec encoding of python set
         - json_codec typescript side has no transforming decode/encode step -
           it assumes the json objects *are* the typescript objects
         - someday perhaps json_codec will generate full typescript codecs,
