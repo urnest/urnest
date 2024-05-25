@@ -127,7 +127,7 @@ else:
     pass
 
 
-# set maps to list...
+# un-typed set maps to list...
 Assert(codec(set).decode([5, 'fred']))==set([5, 'fred'])
 set_result=codec(set).encode(set([5, 'fred']))
 assert isinstance(set_result,list)
@@ -141,6 +141,16 @@ except Exception as e:
 else:
     assert False, x
     pass
+
+# ... and elements must be unique
+try:
+    x=codec(set).decode([1,2,3,2])
+except Exception as e:
+    Assert('[1, 2, 3, 2] contains at least one duplicate element').isIn(str(e))
+else:
+    assert False, x
+    pass
+
 # ... note element types are not checked (it is assumed
 # result will be given to json.dumps, which will fail), e.g.
 # we can happily put print, which has no mapping to a json type,
@@ -170,6 +180,15 @@ else:
     assert False, x
     pass
 
+
+# ... and elements must be unique
+try:
+    x=codec(set[int]).decode([1,2,3,2])
+except Exception as e:
+    Assert('[1, 2, 3, 2] contains at least one duplicate element').isIn(str(e))
+else:
+    assert False, x
+    pass
 
 # bytes maps to list of number...
 Assert(codec(bytes).encode(b'\x1b\x17'))==[27,23]
@@ -847,22 +866,6 @@ else:
     assert False, x
     pass
 
-try:
-    x=codec(set[int]).typescript_as_object_key_type()
-except Exception as e:
-    Assert(str(e)).contains("Set<number> is not allowed as a typescript object key type")
-else:
-    assert False, x
-    pass
-
-try:
-    x=codec(set).typescript_as_object_key_type()
-except Exception as e:
-    Assert(str(e)).contains("Set<any> is not allowed as a typescript object key type")
-else:
-    assert False, x
-    pass
-
 
 # Codec can generate corresponding json schema (http://json-schema.org)
 # "null", "boolean", "object", "array", "number", "string", or "integer"
@@ -1253,21 +1256,9 @@ Assert(codec(IpV4Addr).get_typescript_asa(TypeScriptSourceCode('7'),typescript_n
 codec(O).ensure_typescript_defs(typescript_namespace)
 
 
-try:
-    x=codec(set[int]).get_typescript_isa(TypeScriptSourceCode("v"),typescript_namespace)
-except Exception as e:
-    Assert(str(e)).contains("get_typescript_isa is not available for Set")
-else:
-    assert False, x
-    pass
+Assert(codec(set[int]).get_typescript_isa(TypeScriptSourceCode("v"),typescript_namespace))==TypeScriptSourceCode("(((v:any):v is Array<number> /* with unique elements */=>(\n     Array.isArray(v) && \n    v.filter((x)=>(\n        !(typeof (x) == 'number'))).length==0))(v))")
 
-try:
-    x=codec(set).get_typescript_isa(TypeScriptSourceCode("v"),typescript_namespace)
-except Exception as e:
-    Assert(str(e)).contains("get_typescript_isa is not available for Set")
-else:
-    assert False, x
-    pass
+Assert(codec(set).get_typescript_isa(TypeScriptSourceCode("v"),typescript_namespace))==TypeScriptSourceCode("(Array.isArray(v))")
 
 # ... get_formatted_defs() generates the typescript source code:
 Assert(typescript_namespace.get_formatted_defs())==TypeScriptSourceCode(

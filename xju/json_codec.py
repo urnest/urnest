@@ -426,7 +426,10 @@ class SetCodecImpl:
     def decode(self,x,back_ref:None|Callable[[JsonType],Any]):
         if type(x) is not list:
             raise Exception(f'{x!r} is not a set')
-        return set([self.value_codec.decode(_,back_ref) for _ in x])
+        result = set([self.value_codec.decode(_,back_ref) for _ in x])
+        if len(result) < len(x):
+            raise Exception(f'{x!r} contains at least one duplicate element')
+        return result
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             "type": "array",
@@ -434,7 +437,7 @@ class SetCodecImpl:
             "items": self.value_codec.get_json_schema(definitions, self_ref)
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
-        return f"Set<{self.value_codec.typescript_type(back_refs)}>"
+        return f"Array<{self.value_codec.typescript_type(back_refs)}> /* with unique elements */"
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
@@ -443,7 +446,12 @@ class SetCodecImpl:
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace,
                            back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
-        raise Exception(f"get_typescript_isa is not available for Set")
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"(((v:any):v is {tt}=>(\n"
+            "     Array.isArray(v) && \n"
+            f"    v.filter((x)=>(\n"
+            f"        !{indent(8,self.value_codec.get_typescript_isa(TypeScriptSourceCode('x'),namespace,back_refs))})).length==0))({expression}))")
     def get_typescript_asa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace,
@@ -452,9 +460,8 @@ class SetCodecImpl:
         return TypeScriptSourceCode(
             f"((v: any): {tt} => {{try{{\n"
             f"    if (!Array.isArray(v)) throw new Error(`${{v}} is not an array it is a ${{typeof v}}`);\n"
-            f"    const result = new {self.typescript_type(back_refs)};\n"
-            f"    v.forEach((x)=>result.add({indent(4,self.value_codec.get_typescript_asa(TypeScriptSourceCode('x'),namespace,back_refs))}));\n"
-            f"    return result;\n"
+            f"    v.forEach((x)=>{indent(4,self.value_codec.get_typescript_asa(TypeScriptSourceCode('x'),namespace,back_refs))});\n"
+            f"    return v as {tt};\n"
             f"}}catch(e:any){{throw new Error(`${{v}} is not a {tt} because ${{e}}`);}}}})({expression})")
     pass
 
@@ -469,14 +476,17 @@ class AnySetCodecImpl:
     def decode(self,x,back_ref:None|Callable[[JsonType],Any]):
         if type(x) is not list:
             raise Exception(f'{x!r} is not a list')
-        return set([self.value_codec.decode(_,back_ref) for _ in x])
+        result = set([self.value_codec.decode(_,back_ref) for _ in x])
+        if len(result) < len(x):
+            raise Exception(f'{x!r} contains at least one duplicate element')
+        return result
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             "type": "array",
             "uniqueItems": True
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->str:
-        return f"Set<any>"
+        return f"Array<any> /* with unique elements */"
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
@@ -485,19 +495,18 @@ class AnySetCodecImpl:
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace,
                            back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
-        raise Exception(f"get_typescript_isa is not available for Set")
+        return TypeScriptSourceCode(
+            f"(Array.isArray({expression}))")
     def get_typescript_asa(self,
                            expression:TypeScriptSourceCode,
                            namespace: TypeScriptNamespace,
                            back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         tt=self.typescript_type(back_refs)
         return TypeScriptSourceCode(
-            f"((v: any): {tt} => {{try{{\n\n"
-            f"    if (!Array.isArray(v)) throw new Error(`${{v}} is not an Array it is a ${{typeof v}}`);\n"
-            f"    const result = new {self.typescript_type(back_refs)};\n"
-            f"    v.forEach((x)=>result.add(x));\n"
-            f"    return result;\n"
-            f"}}catch(e:any){{throw new Error(`${{v}} is not a {tt} because ${{e}}`);}}}})({expression})")
+            f"((v: any): {tt} => {{\n"
+            f"    if (!Array.isArray(v)) throw new Error(`${{v}} is not an {tt} it is a ${{typeof v}}`);\n"
+            f"    return v as {tt};\n"
+            f"}})({expression})")
     pass
 
 class TupleCodec:

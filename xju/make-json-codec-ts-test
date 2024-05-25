@@ -149,24 +149,24 @@ function assert_never_reached(){{
 }})();
 //Set<T>
 (() => {{
-    assert_equal({indent(4,codec(set[int]).get_typescript_asa(TypeScriptSourceCode('[7, 8]'),namespace))}, new Set<number>([7, 8]));
+    assert_equal({indent(4,codec(set[int]).get_typescript_asa(TypeScriptSourceCode('[7, 8]'),namespace))}, [7, 8]);
     try{{
         {indent(8,codec(set[int]).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), "Error: 7,ann is not a Set<number> because Error: ann is not a number it is a string");
+        assert_x_contains_y(str(e), "Error: 7,ann is not a Array<number> /* with unique elements */ because Error: ann is not a number it is a string");
     }}
 }})();
 //Set<any>
 (() => {{
-    assert_equal({indent(4,codec(set).get_typescript_asa(TypeScriptSourceCode('[7, "ann"]'),namespace))}, new Set<any>([7, "ann"]));
+    assert_equal({indent(4,codec(set).get_typescript_asa(TypeScriptSourceCode('[7, "ann"]'),namespace))}, [7, "ann"]);
     try{{
         {indent(8,codec(set).get_typescript_asa(TypeScriptSourceCode('22'),namespace))};
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), "Error: 22 is not a Set<any> because Error: 22 is not an Array it is a number");
+        assert_x_contains_y(str(e), "Error: 22 is not an Array<any> /* with unique elements */ it is a number");
     }}
 }})();
 //bytes
@@ -462,8 +462,14 @@ class FullName:
     last_name: str
     pass
 
+@dataclass
+class Prefs:
+    colours: set[str]
+    pass
+
 print(f'''
 //class
+// FullName
 (() => {{
     assert_equal({indent(4,codec(FullName).get_typescript_asa(TypeScriptSourceCode('{first_name: "fred", middle_names: [], last_name: "flak"}'),namespace))}, {{first_name: "fred", middle_names: [], last_name: "flak"}});
     try{{
@@ -506,6 +512,20 @@ print(f'''
     assert_true({codec(FullName).get_typescript_isa(TypeScriptSourceCode('{first_name: "fred", middle_names: ["joan"], last_name: "flak", age: 10}'),namespace)});
     assert_false({codec(FullName).get_typescript_isa(TypeScriptSourceCode('null'),namespace)});
     assert_false({codec(FullName).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
+}})();
+//Prefs
+(() => {{
+    assert_equal({indent(4,codec(Prefs).get_typescript_asa(TypeScriptSourceCode('{colours: ["red", "blue"]}'),namespace))}, {{colours: ["red", "blue"]}});
+    try{{
+        {indent(8,codec(Prefs).get_typescript_asa(TypeScriptSourceCode('{colours: [7, "blue"]}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a Prefs because Error: attribute colours is invalid because Error: 7,blue is not a Array<string> /* with unique elements */ because Error: 7 is not a string it is a number");
+    }}
+    assert_true({codec(Prefs).get_typescript_isa(TypeScriptSourceCode('{colours: ["red", "blue"]}'),namespace)});
+    assert_false({codec(Prefs).get_typescript_isa(TypeScriptSourceCode('null'),namespace)});
+    assert_false({codec(Prefs).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
 }})();
 ''')
 
@@ -787,6 +807,22 @@ try:
     codec(list).typescript_as_object_key_type()
 except Exception as e:
     Assert(readable_repr(e))=='Array<any> is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(set[int]).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='Array<number> /* with unique elements */ is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(set).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='Array<any> /* with unique elements */ is not allowed as a typescript object key type'
 else:
     assert False
     pass
