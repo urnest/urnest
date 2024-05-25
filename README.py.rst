@@ -178,6 +178,11 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 3.2.1 keep Array as typescript type for json_codec encoding of pythong set
+        - json_codec typescript side has no transforming decode/encode step -
+          it assumes the json objects *are* the typescript objects
+        - someday perhaps json_codec will generate full typescript codecs,
+          which will then allow non-json types on the typescript side
 - 3.2.0 add set support to xju.json_codec
 - 3.1.0 add validity pattern support to xju.newtype.Str
 - 3.1.0 fix xju.json_codec encode of subclass value
