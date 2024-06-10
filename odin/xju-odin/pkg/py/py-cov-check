@@ -54,7 +54,7 @@ lines_hit={n for filename,n in counts if filename in (py,pyc)}
 
 code_lines = trace._find_executable_linenos(py)
 
-pass_only=re.compile('\s*pass\s$')
+pass_only=re.compile(r'\s*(pass|\.\.\.)\s*$')
 
 result=True
 
