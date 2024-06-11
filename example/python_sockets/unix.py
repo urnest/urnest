@@ -30,7 +30,7 @@ import sys
 from tempfile import TemporaryDirectory
 from typing import Sequence
 import ssl
-from websockets import WebSocketServerProtocol, WebSocketClientProtocol
+from xju.cmc.sockets import WebSocketServerProtocol, WebSocketClientProtocol
 from xju.assert_ import Assert
 from xju.cmc import AsyncTask, AsyncMutex, AsyncCondition, AsyncDict, async_cmclass, AsyncLock
 from xju.cmc.sockets import UnixAddressType, StreamSocketListener, StreamSocketConnection, ListenerBacklog
@@ -49,16 +49,24 @@ async def server(listeners: Sequence[StreamSocketListener[UnixAddressType]]):
     c = AsyncCondition(m)
     async def runner(runner_id: RunnerId, connection: StreamSocketConnection[UnixAddressType]):
         try:
-            _transport, websocket_connection = await get_event_loop().connect_accepted_socket(
-                WebSocketServerProtocol,
-                sock=connection.socket.socket,
-                ssl=ssl_context)
+            def create_websocket_server_protocol():
+                return WebSocketServerProtocol()
 
-            assert (await websocket_connection.recv()) == 'fred'
-            await websocket_connection.send('jones')
-            assert (await websocket_connection.recv()) == 'ack'
-            await websocket_connection.close()
-            
+            websocket_protocol: WebSocketServerProtocol
+            _transport, websocket_connection = await get_event_loop().connect_accepted_socket(
+                create_websocket_server_protocol,
+                sock=connection.socket.socket,
+                ssl=ssl_context,
+                ssl_handshake_timeout=5,
+                ssl_shutdown_timeout=5)
+
+            client = await websocket_connection.receive_client_handshake()
+            connection = await client.send_server_accept()
+            assert (await connection.recv()) == 'fred'
+            await connection.send('jones')
+            assert (await connection.recv()) == 'ack'
+            await connection.close()
+
         except Exception as e:
             print(f"run failed because {e}")
             pass
@@ -130,15 +138,25 @@ async def client(client_id: int, addresses: list[UnixAddressType]):
     try:
         async with Timeout(20):
             async with StreamSocketConnection(connect_to) as connection:
-                _transport, websocket_connection = await get_event_loop().create_connection(
+                websocket_protocol: WebSocketClientProtocol
+                _transport, websocket_protocol = await get_event_loop().create_connection(
                     WebSocketClientProtocol,
                     sock=connection.socket.socket,
                     ssl=ssl_context,
-                    server_hostname='localhost')
-                await websocket_connection.send('fred')
-                Assert(await websocket_connection.recv()) == 'jones'
-                await websocket_connection.send('ack')
-                await websocket_connection.wait_closed()
+                    server_hostname='localhost',
+                    ssl_handshake_timeout=5,
+                    ssl_shutdown_timeout=5)
+                match await websocket_protocol.send_client_handshake():
+                    WebSocketConnectionRejected() as r:
+                        print(f"websocket connection {client_id} rejected by server because {r}")
+                        return
+                    WebSocketConnectionAccepted() as acceptance:
+                        print(f"websocket connection accepted with server handshake {acceptance.handshake}")
+                        connection=acceptance.connection
+                        await connection.send('fred')
+                        Assert(await connection.recv()) == 'jones'
+                        websocket_connection.send('ack')
+                        websocket_connection.wait_closed()
                 pass
             pass
         pass

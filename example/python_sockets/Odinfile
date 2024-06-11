@@ -1,0 +1,9 @@
+%all==%all.tree:leaves
+
+%all.tree==<<
+%run-unix
+
+%run-unix==unix.py+(%py-opts)+need=(cert.pem)+need=(key.pem):py3.exec.output
+
+%py-opts==<<
++(../../xju%py-opts)
