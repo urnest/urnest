@@ -53,11 +53,17 @@ def cmclass(cls:T_CMT) -> T_CMT:
        To satisfy mypy use the xju.cmclass_mypy_plugin mypy plugin.
        See also async_cmclass, which provides an asyncio equivalent.
     '''
+    wont_happen = [ base_class.__name__ for base_class in cls.__bases__
+                    if issubclass(base_class, contextlib.AbstractAsyncContextManager) ]
+    assert wont_happen == [], f"the following base classes of {cls} are async context managers - they cannot be managed via @cmclass; use @async_cmclass to decorate {cls} instead: {wont_happen}"
     base_classes_to_enter = [ base_class for base_class in cls.__bases__
                               if (
                                       base_class is not CM and
                                       issubclass(base_class, contextlib.AbstractContextManager)
                               ) ]
+    wont_happen = [ n for n, t in cls.__annotations__.items()
+                    if _is_subclass(n, t, contextlib.AbstractAsyncContextManager)]
+    assert wont_happen == [], f"the following attributes of {cls} are async context managers - they cannot be managed via @cmclass; use @async_cmclass to decorate {cls} instead: {wont_happen}"
     attrs_to_enter = [ n for n, t in cls.__annotations__.items()
                          if _is_subclass(n, t, contextlib.AbstractContextManager)]
     # need a unique place to keep resources acquired by enter so exit can
@@ -1182,6 +1188,8 @@ async def delay_cancellation(t: Awaitable[T])->T:
         finally:
             setattr(task,'cancel',really_cancel)
             pass
+        pass
+    pass
 
 def _make_base_classes_to_enter(
         cls: Type[ACMT]
