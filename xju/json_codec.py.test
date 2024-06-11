@@ -1390,3 +1390,9 @@ class QQ(Generic[Q]):
     q: Q
 q:QQ=QQ() # is this QQ[Any]?
 q.q=3  # yes, no mypy error here
+
+
+# should not be any errors, because codec(dict) should become
+# Codec(dict[str, JsonType])
+d = codec(dict).decode({'fred':5, 'jock': 'nine'})
+dd: JsonType = d['fred']
