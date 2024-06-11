@@ -1430,3 +1430,10 @@ q.q=3  # yes, no mypy error here
 # Codec(dict[str, JsonType])
 d = codec(dict).decode({'fred':5, 'jock': 'nine'})
 dd: JsonType = d['fred']
+
+
+# should not be any errors:
+a: list[tuple[type, type | UnionType[None, type]]] = [
+    (int, str | None)
+]
+b = [(json_codec(k), json_codec(v)) for k, v in a]
