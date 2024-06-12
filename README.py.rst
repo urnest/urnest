@@ -178,6 +178,9 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 3.3.1 xju.cmc reject @cmclass where @async_cmclass needed
+  ... where a @cmclass -annotated class has async context manager base classes or
+  attributes, @cmclass now fails, suggesting use @async_cmclass instead
 - 3.2.1 keep Array as typescript type for json_codec encoding of python set
         - json_codec typescript side has no transforming decode/encode step -
           it assumes the json objects *are* the typescript objects
