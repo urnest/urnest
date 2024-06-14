@@ -174,11 +174,11 @@ EXEC (py3.exec.sh) (:FILE) (+cmd :ls) (:env) (+stderr) (+py:dir)@ (+py_sp) (+py_
         (:FILE:main.mypy3) (:FILE:main.stylecheck)
   => (:py3.exec);
 
-EXEC (main.mypy3.sh) (:FILE) (:mypy.config) (:env) (+py_sp) (+mypy_flags)
+EXEC (main.mypy3.sh) (:FILE) (:mypy.config) (:env) (+py_sp) (+mypy_flags) (:mypy.config:id)
   NEEDS (:FILE:main.py_import.view_desc:py_import_all:map=:mod.mypy3) (+mypy_plugin) (+mypy_plugin_mod)
   => (:main.mypy3);
     
-EXEC (mod.mypy3.sh) (:py) (:mypy.config) (:env) (+py_sp) (+mypy_flags)
+EXEC (mod.mypy3.sh) (:py) (:mypy.config) (:env) (+py_sp) (+mypy_flags) (:mypy.config:id)
   NEEDS (:py:py_import_all:map=:mod.mypy3) (+mypy_plugin) (+mypy_plugin_mod)
   => (:mod.mypy3);
     
@@ -202,7 +202,7 @@ EXEC (py-cov-check.sh) (py-cov-check) (:py) (+py_cov_check_warn) (+py_cov)
 EXEC (py3.exec.output.sh) (:py3.exec/output) (:py3.exec/errors) (:py3.exec/status) (:py3.exec:name) (+stderr)
   => (:py3.exec.output.ref);
 
-EXEC (mypy-config.sh) (+mypy_plugin:ls) (+mypy_plugin_mod) => (:mypy.config);
+EXEC (mypy-config.sh) (+mypy_plugin:ls) (+mypy_plugin_mod) (+py_sp) (+mypy_flags) => (:mypy.config);
 
 READ-REFERENCE (:py3.exec.output.ref) => (:py3.exec.output);
 
