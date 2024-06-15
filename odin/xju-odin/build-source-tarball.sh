@@ -27,6 +27,6 @@ fi
 
 cd ".."
 
-tar czf "$outd/$version.tar.gz" xju-odin
+tar czf "$outd/$version.tar.gz" --exclude=.pytest_cache --exclude=__pycache__ --exclude '*~' xju-odin
 
 echo "created $outd/$version.tar.gz"

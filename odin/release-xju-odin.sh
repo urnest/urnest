@@ -6,6 +6,7 @@ release_repo_dir="$1"
 
 test -n "$release_repo_dir"
 
+d=$(cd $(dirname "0") && pwd)
 
 TBD
 
@@ -27,7 +28,7 @@ commit changes
 
 # xju-odin/CLEAN
 # build .tar.gz  exclude .pytest_cache, __pycache__, *~
-cd ~/release && xju-odin/build-source-tarball.sh
+cd "$release_repo_dir" && "$d/xju-odin/build-source-tarball.sh"
 
 # test install:
 # xju-odin/CLEAN &&
