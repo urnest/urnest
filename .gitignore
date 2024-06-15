@@ -127,3 +127,4 @@ xju/linux/disk-space/monitor-disk-space
 xju/linux/wtmp/monitor-logins
 xju/linux/ntpd/monitor-ntp-sync
 .mypy_cache
+autom4te.cache
