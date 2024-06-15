@@ -14,3 +14,21 @@ cc/test%all-tests.tree:leaves
 run/test%all-tests.tree:leaves
 tar/test%all-tests.tree:leaves
 py/test%all-tests.tree:leaves
+%check-PKGLST
+
+
+%check-PKGLST==(%listed-pkgs)+cmd=diff (%pkgs) -:exec.output
+
+%listed-pkgs==(PKGLST)+cmd=sort -u:stdout
+%pkgs==()+cmd=(%pkgs.sh) (%pkg.files:ls) +need=(%pkg.files):stdout
+
+%pkg.files==.:dirtree:allfiles
+
+%pkgs.sh==!<<
+#!/bin/sh -e
+cat "$1" |grep '[.]dg$' |
+while read n
+do
+  echo $(basename $(dirname "$n"))
+done |
+sort -u
