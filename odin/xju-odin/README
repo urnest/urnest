@@ -37,3 +37,9 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 See also github.org/urnest/odin/xju-odin.
+
+Release History
+
+- 1.1.0 py.dg use per-flags/path/environment mypy cache dirs
+        - to avoid persistent incorrect results when changing
+          mypy flags/path/environemtn variables

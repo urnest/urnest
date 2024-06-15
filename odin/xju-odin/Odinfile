@@ -1,0 +1,3 @@
+
+
+configure==()+cmd=autoconf (configure.ac):stdout
