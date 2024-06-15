@@ -1,3 +1,10 @@
 
 
-configure==()+cmd=autoconf (configure.ac):stdout
+configure==%autoconf/configure
+
+%autoconf==()+cmd=(%autoconf.sh) (configure.ac):output
+
+%autoconf.sh==!<<
+#!/bin/sh -e
+autoconf "$1" > configure
+chmod ugo+x configure
