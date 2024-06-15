@@ -1,5 +1,7 @@
 #!/bin/sh -ex
 
+# from empty directory (e.g. mkdir /tmp/xju-odin-release && cd /tmp/xju-odin-release)
+
 release_repo_dir="$1"
 
 test -n "$release_repo_dir"
@@ -11,8 +13,6 @@ TBD
 update version in configure.ac
 run autonconf
 commit changes
-
-# from empty directory (e.g. mkdir /tmp/xju-odin-release && cd /tmp/xju-odin-release)
 
 # make sure xju-odin/pkg/PKGLST has all packages in it
 # i.e. entries for all xju-odin/pkg/*/*.dg
