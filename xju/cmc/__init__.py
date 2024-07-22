@@ -1224,7 +1224,8 @@ class _AsyncClassCm(contextlib.AbstractAsyncContextManager[None]):
     x:Any
 
     async def __aenter__(self) -> None:
-        assert isinstance(self.x, self.cls)
+        x = self.x
+        assert isinstance(x, self.cls)
         await self.cls.__aenter__(self.x)
     async def __aexit__(self, t, e, b) -> bool | None:
         return await self.cls.__aexit__(self.x, t, e, b)

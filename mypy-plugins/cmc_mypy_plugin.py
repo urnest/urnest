@@ -20,6 +20,7 @@ from mypy.nodes import (
 )
 from mypy.types import (
     TypeVarType,
+    TypeVarId,
     AnyType,
     TypeOfAny,
     UnionType,
@@ -53,7 +54,7 @@ def ensure_cm_functions(class_def_in_context: ClassDefContext) -> bool:
         self_tvar_def = TypeVarType(
             SELF_TVAR_NAME,
             info.fullname + "."+SELF_TVAR_NAME,
-            id=-1,
+            id=TypeVarId(-1),
             values=[],
             upper_bound=fill_typevars(info),
             default=AnyType(TypeOfAny.from_omitted_generics),
@@ -115,7 +116,7 @@ def ensure_asynccm_functions(class_def_in_context: ClassDefContext) -> bool:
         self_tvar_def = TypeVarType(
             SELF_TVAR_NAME,
             info.fullname + "."+SELF_TVAR_NAME,
-            id=-1,
+            id=TypeVarId(-1),
             values=[],
             upper_bound=fill_typevars(info),
             default=AnyType(TypeOfAny.from_omitted_generics),
