@@ -147,10 +147,15 @@ class B2:
         step = step + 1
         pass
     pass
+@cmc.cmclass(("g",))
+@dataclasses.dataclass
+class B3:
+    g: Resource
+    pass
 
 @cmc.cmclass
 @dataclasses.dataclass
-class DD(B2, B1):
+class DD(B2, B1, B3):
     f: Resource
     pass
 
@@ -164,6 +169,7 @@ with DD(Resource('a',ee=None, xe=None), #a
        Resource('d',ee=None, xe=None), #d
        Resource('e',ee=None, xe=None), #e
        Resource('f',ee=None, xe=None), #f
+       Resource('g',ee=None, xe=None), #g
        ) as z:
     Assert(z.a.entered_at) == 4
     Assert(z.a.exited_at) == None
@@ -198,6 +204,7 @@ try:
            Resource('d',ee=None, xe=None), #d
            Resource('e',ee=None, xe=None), #e
            Resource('f',ee=None, xe=None), #f
+           Resource('g',ee=None, xe=None), #g
            )
     with zz:
         pass
@@ -228,6 +235,7 @@ try:
            Resource('d',ee=Exception('d fail'), xe=None), #d
            Resource('e',ee=None, xe=None), #e
            Resource('f',ee=None, xe=None), #f
+           Resource('g',ee=None, xe=None), #g
            )
     with zz:
         pass
@@ -256,6 +264,7 @@ try:
            Resource('d',ee=None, xe=None), #d
            Resource('e',ee=Exception('e fail'), xe=None), #e
            Resource('f',ee=None, xe=None), #f
+           Resource('g',ee=None, xe=None), #g
            )
     with zz:
         pass
@@ -284,6 +293,7 @@ try:
            Resource('d',ee=None, xe=None), #d
            Resource('e',ee=None, xe=None), #e
            Resource('f',ee=Exception('f fail'), xe=None), #f
+           Resource('g',ee=None, xe=None), #g
            )
     with zz:
         pass
@@ -314,6 +324,7 @@ try:
            Resource('d',ee=None, xe=None), #d
            Resource('e',ee=None, xe=None), #e
            Resource('f',ee=None, xe=None), #f
+           Resource('g',ee=None, xe=None), #g
            )
     with zz:
         pass
@@ -344,6 +355,7 @@ try:
            Resource('d',ee=None, xe=Exception('d-exit fail')), #d
            Resource('e',ee=None, xe=None), #e
            Resource('f',ee=None, xe=None), #f
+           Resource('g',ee=None, xe=None), #g
            )
     with zz:
         pass
@@ -374,6 +386,7 @@ try:
            Resource('d',ee=None, xe=None), #d
            Resource('e',ee=None, xe=Exception('e-exit fail')), #e
            Resource('f',ee=None, xe=None), #f
+           Resource('g',ee=None, xe=None), #g
            )
     with zz:
         pass
@@ -404,6 +417,7 @@ try:
            Resource('d',ee=None, xe=None), #d
            Resource('e',ee=None, xe=None), #e
            Resource('f',ee=None, xe=Exception('f-exit fail')), #f
+           Resource('g',ee=None, xe=None), #g
            )
     with zz:
         pass
@@ -434,6 +448,7 @@ try:
            Resource('d',ee=None, xe=Exception('d-exit fail')), #d
            Resource('e',ee=None, xe=None), #e
            Resource('f',ee=None, xe=Exception('f-exit fail')), #f
+           Resource('g',ee=None, xe=None), #g
            )
     with zz:
         pass
@@ -466,6 +481,7 @@ z=DD(Resource('a',ee=None, xe=None), #a
      d1, #d
      Resource('e',ee=None, xe=None), #e
      Resource('f',ee=None, xe=None), #f
+     Resource('g',ee=None, xe=None), #g
 )
 z.d=Resource('d2',ee=None,xe=None)
 with z:
