@@ -28,6 +28,7 @@
 # For examples see json_codec.py.test
 #
 from dataclasses import dataclass
+from typing import NewType
 from xju.xn import Xn,in_context,in_function_context,readable_repr, AllFailed
 from typing import TypeVar, Generic, Type, cast, Any, Protocol, Self, Callable, get_type_hints
 from typing import Sequence, Literal, NewType
@@ -1250,9 +1251,37 @@ class CustomClassCodec(Protocol):
         return TypeScriptSourceCode('')
     pass
 
+class PythonAttrNameTag: pass
+class PythonAttrName(xju.newtype.Str[PythonAttrNameTag]): pass
+class JsonAttrNameTag: pass
+class JsonAttrName(xju.newtype.Str[JsonAttrNameTag]): pass
+
+attr_name_map = dict[type, dict[PythonAttrName, JsonAttrName]]()
+
+@dataclass
+class AttrCodec:
+    encoded_name: JsonAttrName
+    codec: Any  # codec
+    pass
+
+def get_attr_encoded_name(t: type, n: PythonAttrName) -> JsonAttrName:
+    return attr_name_map.get(t, {}).get(n, JsonAttrName(n.value()))
+
+def encode_attr_as(t: type, attr: PythonAttrName, encoded_name: JsonAttrName) -> None:
+    """encode {t}'s {attr} attribute as json object property {encoded_name}"""
+    try:
+        assert attr.value() in get_type_hints(t), f"{t} apparently has no declared {attr!r} attribute"
+        tt=attr_name_map.get(t, {})
+        current=tt.get(attr)
+        assert current is None, f"{t}.{attr} is already mapped to encoded name {current}"
+        tt[attr] = encoded_name
+    except Exception:
+        raise in_function_context(encode_attr_as, vars()) from None
+    pass
+
 class ClassCodecImpl:
     t:type
-    attr_codecs:dict[str,Any]  # codec
+    attr_codecs:dict[str,AttrCodec]  # codec
     custom_codec:CustomClassCodec|None = None
     def __init__(self, t:type, attr_codecs:dict[str,Any]):
         self.t=t
@@ -1273,7 +1302,8 @@ class ClassCodecImpl:
             result={}
             for n, attr_codec in self.attr_codecs.items():
                 try:
-                    result[n]=attr_codec.encode(getattr(x,n),back_ref)
+                    result[attr_codec.encoded_name.value()]=attr_codec.codec.encode(
+                        getattr(x,n),back_ref)
                 except Exception:
                     raise in_context(f'encode attribute {n}') from None
                 pass
@@ -1292,9 +1322,10 @@ class ClassCodecImpl:
                 return self.decode(x,None)
             attr_values={}
             for n, attr_codec in self.attr_codecs.items():
-                if n in x:
+                encoded_name = attr_codec.encoded_name.value()
+                if encoded_name in x:
                     try:
-                        value=attr_codec.decode(x[n],back_ref)
+                        value=attr_codec.codec.decode(x[encoded_name],back_ref)
                         attr_values[n]=value
                         pass
                     except Exception:
@@ -1321,7 +1352,7 @@ class ClassCodecImpl:
                 'description': self.t.__name__,
                 'type': 'object',
                 'properties': {
-                    n: attr_codec.get_json_schema(definitions, self_ref)
+                    attr_codec.encoded_name.value(): attr_codec.codec.get_json_schema(definitions, self_ref)
                     for n, attr_codec in self.attr_codecs.items()
                 }
             }
@@ -1351,7 +1382,7 @@ class ClassCodecImpl:
         if typescript_type_name not in target_namespace.defs:
             target_namespace.defs[typescript_type_name]=TypeScriptSourceCode(
                 f"type {typescript_type_name} = {{\n"+
-                ''.join([f"    {attr_name}: {indent(4,TypeScriptSourceCode(attr_codec.typescript_type(back_refs)))};\n"
+                ''.join([f"    {attr_codec.encoded_name.value()}: {indent(4,TypeScriptSourceCode(attr_codec.codec.typescript_type(back_refs)))};\n"
                          for attr_name, attr_codec in self.attr_codecs.items()])+
                 f"}};")
             target_namespace.defs[TypeScriptUQN(f"asInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
@@ -1369,7 +1400,7 @@ class ClassCodecImpl:
                 f"                throw new Error(`attribute ${{name}} is invalid because ${{e}}`);\n"
                 f"            }}\n"
                 f"        }}\n" +
-                ''.join([f"        attr_asa('{attr_name}',(x:any)=>{indent(8,attr_codec.get_typescript_asa('x',namespace,back_refs))});\n"
+                ''.join([f"        attr_asa('{attr_codec.encoded_name.value()}',(x:any)=>{indent(8,attr_codec.codec.get_typescript_asa('x',namespace,back_refs))});\n"
                          for attr_name, attr_codec in self.attr_codecs.items()])+
                 f"        return v as {tt};\n"
                 f"    }}\n"
@@ -1384,7 +1415,7 @@ class ClassCodecImpl:
                 f"        !Array.isArray(v) &&\n"
                 f"        v !== null &&"+
                 f"        typeof v === 'object'"+
-                ''.join([" &&\n        "+indent(8,attr_codec.get_typescript_isa(f'v["{attr_name}"]',namespace,back_refs))
+                ''.join([" &&\n        "+indent(8,attr_codec.codec.get_typescript_isa(f'v["{attr_codec.encoded_name.value()}"]',namespace,back_refs))
                          for attr_name, attr_codec in self.attr_codecs.items()])+")"
                 f"}}")
             pass
@@ -1674,7 +1705,8 @@ def _explodeSchema(t:type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGeneric
             }
             return ClassCodecImpl(
                 get_origin(t),
-                { n: _explodeSchema(nt,local_type_var_map)
+                { n: AttrCodec(get_attr_encoded_name(t, PythonAttrName(n)),
+                               _explodeSchema(nt,local_type_var_map))
                   for n,nt in get_type_hints(get_origin(t)).items()})
         if type(t) is EnumType and issubclass(t, Enum):
             return EnumCodecImpl(
@@ -1690,7 +1722,8 @@ def _explodeSchema(t:type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGeneric
         if issubclass(t,xju.newtype.Str):
             return NewStrCodecImpl(t)
         return ClassCodecImpl(
-            t,{n: _explodeSchema(nt,type_var_map) for n,nt in get_type_hints(t).items()})
+            t,{n: AttrCodec(get_attr_encoded_name(t, PythonAttrName(n)),
+                            _explodeSchema(nt,type_var_map)) for n,nt in get_type_hints(t).items()})
     except Exception:
         raise in_function_context(_explodeSchema,vars()) from None
     pass
