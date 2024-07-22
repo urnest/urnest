@@ -123,21 +123,6 @@ class Aggregate:
         pass
     pass
 
-@async_cmclass(("a",))
-class AggregateWithExempt:
-    name: str
-    a: AsyncResource
-    b: Resource
-    c: AsyncResource
-
-    def __init__(self, name:str):
-        self.name=name
-        self.a=AsyncResource(f'{name}.a',None,None)
-        self.b=Resource(f'{name}.b',None,None)
-        self.c=AsyncResource(f'{name}.c',None,None)
-        pass
-    pass
-
 @async_cmclass
 class SuperAggregate(Aggregate):
     sa_name: str
@@ -201,19 +186,6 @@ async def main():
         '+ aexit A.a', '- aexit A.a'
     ]
     del _log[:]
-
-    a=AggregateWithExempt('A')
-    Assert(a.name)=='A'
-    async with a:
-        pass
-    Assert(_log)==[
-        '+ enter A.b', '- enter A.b',
-        '+ aenter A.c', '- aenter A.c',
-        '+ aexit A.c', '- aexit A.c',
-        '+ exit A.b', '- exit A.b',
-    ]
-    del _log[:]
-
     async with SuperAggregate('SA') as sa:
         Assert(sa.sa_name)=='SA'
         Assert(sa.name)=='SA.A'
