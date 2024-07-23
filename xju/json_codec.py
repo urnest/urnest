@@ -28,6 +28,7 @@
 # For examples see json_codec.py.test
 #
 from dataclasses import dataclass
+from inspect import getmro
 from typing import NewType
 from xju.xn import Xn,in_context,in_function_context,readable_repr, AllFailed
 from typing import TypeVar, Generic, Type, cast, Any, Protocol, Self, Callable, get_type_hints
@@ -1264,14 +1265,20 @@ class AttrCodec:
     codec: Any  # codec
     pass
 
-def get_attr_encoded_name(t: type, n: PythonAttrName) -> JsonAttrName:
-    return attr_name_map.get(t, {}).get(n, JsonAttrName(n.value()))
+def get_attr_encoded_name(mro: Sequence[type], n: PythonAttrName) -> JsonAttrName:
+    result: None | JsonAttrName = None
+    for t in mro:
+        result = attr_name_map.get(t, {}).get(n, None)
+        if result:
+            return result
+        pass
+    return JsonAttrName(n.value())
 
 def encode_attr_as(t: type, attr: PythonAttrName, encoded_name: JsonAttrName) -> None:
     """encode {t}'s {attr} attribute as json object property {encoded_name}"""
     try:
         assert attr.value() in get_type_hints(t), f"{t} apparently has no declared {attr!r} attribute"
-        tt=attr_name_map.get(t, {})
+        tt=attr_name_map.setdefault(t, {})
         current=tt.get(attr)
         assert current is None, f"{t}.{attr} is already mapped to encoded name {current}"
         tt[attr] = encoded_name
@@ -1705,7 +1712,7 @@ def _explodeSchema(t:type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGeneric
             }
             return ClassCodecImpl(
                 get_origin(t),
-                { n: AttrCodec(get_attr_encoded_name(t, PythonAttrName(n)),
+                { n: AttrCodec(get_attr_encoded_name(getmro(get_origin(t)), PythonAttrName(n)),
                                _explodeSchema(nt,local_type_var_map))
                   for n,nt in get_type_hints(get_origin(t)).items()})
         if type(t) is EnumType and issubclass(t, Enum):
@@ -1722,7 +1729,7 @@ def _explodeSchema(t:type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGeneric
         if issubclass(t,xju.newtype.Str):
             return NewStrCodecImpl(t)
         return ClassCodecImpl(
-            t,{n: AttrCodec(get_attr_encoded_name(t, PythonAttrName(n)),
+            t,{n: AttrCodec(get_attr_encoded_name(getmro(t), PythonAttrName(n)),
                             _explodeSchema(nt,type_var_map)) for n,nt in get_type_hints(t).items()})
     except Exception:
         raise in_function_context(_explodeSchema,vars()) from None

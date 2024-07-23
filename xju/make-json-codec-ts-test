@@ -5,7 +5,7 @@ from typing import Literal, Self
 from types import NoneType
 
 from xju.json_codec import codec, TypeScriptNamespace, TypeScriptSourceCode, TypeScriptNamespace
-from xju.json_codec import TypeScriptUQN, AnyJsonCodecImpl
+from xju.json_codec import TypeScriptUQN, AnyJsonCodecImpl, encode_attr_as, PythonAttrName, JsonAttrName
 from xju.misc import ByteCount
 from xju.newtype import Str
 from xju.time import Duration, Timestamp
@@ -460,7 +460,10 @@ class FullName:
     first_name: str
     middle_names: list[str]
     last_name: str
+    _class: Literal["Upper", "Middle", "Lower"]
     pass
+
+encode_attr_as(FullName, PythonAttrName("_class"), JsonAttrName("class"))
 
 @dataclass
 class Prefs:
@@ -471,7 +474,7 @@ print(f'''
 //class
 // FullName
 (() => {{
-    assert_equal({indent(4,codec(FullName).get_typescript_asa(TypeScriptSourceCode('{first_name: "fred", middle_names: [], last_name: "flak"}'),namespace))}, {{first_name: "fred", middle_names: [], last_name: "flak"}});
+    assert_equal({indent(4,codec(FullName).get_typescript_asa(TypeScriptSourceCode('{first_name: "fred", middle_names: [], last_name: "flak", class: "Middle"}'),namespace))}, {{first_name: "fred", middle_names: [], last_name: "flak", class: "Middle"}});
     try{{
         {indent(8,codec(FullName).get_typescript_asa(TypeScriptSourceCode('null'),namespace))};
         assert_never_reached();
@@ -494,22 +497,22 @@ print(f'''
         assert_x_contains_y(str(e), "Error: fred is not a FullName because Error: fred is not an object it is a string");
     }}
     try{{
-        {indent(8,codec(FullName).get_typescript_asa(TypeScriptSourceCode('{first_name: "fred", last_name: "flak"}'),namespace))};
+        {indent(8,codec(FullName).get_typescript_asa(TypeScriptSourceCode('{first_name: "fred", last_name: "flak", class: "Middle"}'),namespace))};
         assert_never_reached();
     }}
     catch(e){{
         assert_x_contains_y(str(e), "Error: [object Object] is not a FullName because Error: attribute middle_names is invalid because Error: undefined is not a Array<string> because Error: undefined is not an array it is a undefined");
     }}
     try{{
-        {indent(8,codec(FullName).get_typescript_asa(TypeScriptSourceCode('{first_name: "fred", middle_names: "joan", last_name: "flak"}'),namespace))};
+        {indent(8,codec(FullName).get_typescript_asa(TypeScriptSourceCode('{first_name: "fred", middle_names: "joan", last_name: "flak", class: "Middle"}'),namespace))};
         assert_never_reached();
     }}
     catch(e){{
         assert_x_contains_y(str(e), "Error: [object Object] is not a FullName because Error: attribute middle_names is invalid because Error: joan is not a Array<string> because Error: joan is not an array it is a string");
     }}
-    assert_true({codec(FullName).get_typescript_isa(TypeScriptSourceCode('{first_name: "fred", middle_names: [], last_name: "flak"}'),namespace)});
-    assert_true({codec(FullName).get_typescript_isa(TypeScriptSourceCode('{first_name: "fred", middle_names: ["joan"], last_name: "flak"}'),namespace)});
-    assert_true({codec(FullName).get_typescript_isa(TypeScriptSourceCode('{first_name: "fred", middle_names: ["joan"], last_name: "flak", age: 10}'),namespace)});
+    assert_true({codec(FullName).get_typescript_isa(TypeScriptSourceCode('{first_name: "fred", middle_names: [], last_name: "flak", class: "Middle"}'),namespace)});
+    assert_true({codec(FullName).get_typescript_isa(TypeScriptSourceCode('{first_name: "fred", middle_names: ["joan"], last_name: "flak", class: "Middle"}'),namespace)});
+    assert_true({codec(FullName).get_typescript_isa(TypeScriptSourceCode('{first_name: "fred", middle_names: ["joan"], last_name: "flak", class: "Middle", age: 10}'),namespace)});
     assert_false({codec(FullName).get_typescript_isa(TypeScriptSourceCode('null'),namespace)});
     assert_false({codec(FullName).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
 }})();

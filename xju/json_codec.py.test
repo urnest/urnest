@@ -20,8 +20,18 @@ import ipaddress
 from os.path import dirname
 if path[0]==dirname(__file__): path.pop(0)
 
-from xju.json_codec import codec, JsonType, AnyJsonCodecImpl, SelfCodecImpl
-from xju.json_codec import TypeScriptSourceCode, TypeScriptNamespace, CustomClassCodec
+from xju.json_codec import (
+    codec,
+    JsonType,
+    AnyJsonCodecImpl,
+    SelfCodecImpl,
+    encode_attr_as,
+    TypeScriptSourceCode,
+    TypeScriptNamespace,
+    CustomClassCodec,
+    PythonAttrName,
+    JsonAttrName
+)
 
 from typing import cast, Type, Literal, Any, Self, NewType, Generic, TypeVar
 from types import NoneType
@@ -482,6 +492,7 @@ class Address:
     street:'Street'
     suburb:'Suburb'
     postcode:'Postcode'
+    _class: Literal["first", "second"]
 
 class StreetTag:pass
 class Street(xju.newtype.Str[StreetTag]):pass
@@ -492,22 +503,36 @@ class Suburb(xju.newtype.Str[SuburbTag]):pass
 class PostcodeTag:pass
 class Postcode(xju.newtype.Int[PostcodeTag]):pass
 
+# want Address._class to appear as "class" when encoded
+# use encode_attr_as to map the name:
+encode_attr_as(Address, PythonAttrName("_class"), JsonAttrName("class"))
+
+# specified attr must exist:
+try:
+    encode_attr_as(Address, PythonAttrName("_classy"), JsonAttrName("class"))
+except Exception as e:
+    Assert("<class '__main__.Address'> apparently has no declared '_classy' attribute").isIn(str(e))
+else:
+    assert False
+
 Assert(codec(Address).decode({
     'street':'alba',
     'suburb': 'bocca',
-    'postcode': 3365}))==Address(Street('alba'),Suburb('bocca'),Postcode(3365))
+    'postcode': 3365,
+    'class': 'second'}))==Address(Street('alba'),Suburb('bocca'),Postcode(3365),'second')
         
-Assert(codec(Address).encode(Address(Street('alba'),Suburb('bocca'),Postcode(3365))))=={
+Assert(codec(Address).encode(Address(Street('alba'),Suburb('bocca'),Postcode(3365),'second')))=={
     'street':'alba',
     'suburb': 'bocca',
-    'postcode': 3365}
+    'postcode': 3365,
+    'class': 'second'}
         
 #incorrect Address value type
 try:
     x=codec(Address).decode({'jock': 'fred'})
 except Exception as e:
     Assert(str(e)).matches(re.escape("failed to decode {'jock': 'fred'} to a <class '__main__.Address'> because"))
-    Assert(str(e)).endswith("missing 3 required positional arguments: 'street', 'suburb', and 'postcode'")
+    Assert(str(e)).endswith("missing 4 required positional arguments: 'street', 'suburb', 'postcode', and '_class'")
 else:
     assert False, x
     pass
@@ -520,7 +545,7 @@ else:
     assert False, x
     pass
 
-bad_postcode=Address(Street('alba'),Suburb('bocca'),3365)  # type: ignore
+bad_postcode=Address(Street('alba'),Suburb('bocca'),3365, 'second')  # type: ignore
 try:
     x=codec(Address).encode(bad_postcode)
 except Exception as e:
@@ -547,34 +572,37 @@ Assert(codec(UnitAddress).decode({
     'street':'alba',
     'suburb': 'bocca',
     'postcode': 3365,
+    'class': 'first',
     'unit': '17a',
     'a': 'fred',
-    'b': 17}))==UnitAddress('fred',17,Street('alba'),Suburb('bocca'),Postcode(3365),Unit('17a'))
+    'b': 17}))==UnitAddress('fred',17,Street('alba'),Suburb('bocca'),Postcode(3365),"first",Unit('17a'))
 
 # ... encode will order attrs per python mro()
 Assert(codec(UnitAddress).encode(
-    UnitAddress('fred',17,Street('alba'),Suburb('bocca'),Postcode(3365),unit=Unit('17a'))))=={
+    UnitAddress('fred',17,Street('alba'),Suburb('bocca'),Postcode(3365),'second',unit=Unit('17a'))))=={
         'a': 'fred',
         'b': 17,
         'street':'alba',
         'suburb': 'bocca',
         'postcode': 3365,
+        'class': 'second',
         'unit': '17a'}
 Assert(list(cast(dict,codec(UnitAddress).encode(
-    UnitAddress('fred',17,Street('alba'),Suburb('bocca'),Postcode(3365),unit=Unit('17a')))).keys()))==[
+    UnitAddress('fred',17,Street('alba'),Suburb('bocca'),Postcode(3365),'second',unit=Unit('17a')))).keys()))==[
         'a',
         'b',
         'street',
         'suburb',
         'postcode',
+        'class',
         'unit']
 
 # ... base class codec can encode subclass (but, obviously, cannot decode to subclass)
 Assert(codec(Address).encode(
     UnitAddress(
-        'fred',17,Street('alba'),Suburb('bocca'),Postcode(3365),unit=Unit('17a'))))==codec(
+        'fred',17,Street('alba'),Suburb('bocca'),Postcode(3365),'first',unit=Unit('17a'))))==codec(
             Address).encode(
-                Address(Street('alba'),Suburb('bocca'),Postcode(3365)))
+                Address(Street('alba'),Suburb('bocca'),Postcode(3365),'first'))
        
 # custom class encoding by implementing CustomClassCodec protocol, for example
 # to support encoding of external types with control over their json representation
@@ -909,7 +937,12 @@ Assert(codec(Address).get_json_schema())=={
         'Address':{
             'description': 'Address',
             'type': 'object',
-            'properties': {'street': {'description': 'Street', 'type': 'string'}, 'suburb': {'description': 'Suburb', 'type': 'string'}, 'postcode': {'description': 'Postcode', 'type': 'integer'}}}}}
+            'properties': {
+                'street': {'description': 'Street', 'type': 'string'},
+                'suburb': {'description': 'Suburb', 'type': 'string'},
+                'postcode': {'description': 'Postcode', 'type': 'integer'},
+                'class': {'oneOf': [{'type': 'string', 'enum': ['first']},
+                                    {'type': 'string', 'enum': ['second']}]}}}}}
 Assert(codec(IpV4Addr).get_json_schema())=={'type': 'string', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}
 
 
@@ -1020,7 +1053,8 @@ else:
     jsonschema.validate({
         'street':'alba',
         'suburb': 'bocca',
-        'postcode': 3365},codec(Address).get_json_schema())
+        'postcode': 3365,
+        'class': 'first'},codec(Address).get_json_schema())
     jsonschema.validate(
         {'shoots':[{'shoots':[1,2]},3]},
         codec(Branch).get_json_schema())
