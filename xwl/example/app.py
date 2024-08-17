@@ -17,6 +17,7 @@ import xwl
 import xwl.wsgi
 from xju import pq
 
+from hashlib import sha256
 import time
 import threading
 from io import RawIOBase
@@ -97,6 +98,20 @@ def quit():
     global quit_requested
     quit_requested = True
 
+@xwl.public
+def upload_file(file1: xwl.wsgi.FileVar, file2: xwl.wsgi.FileVar):
+    sums=[]
+    if file1.filename:
+        summer=sha256()
+        summer.update(file1.content)
+        sums.append(f"{file1.filename} type {file1.contentType} sha256 {summer.hexdigest()}")
+    if file2.filename:
+        summer=sha256()
+        summer.update(file2.content)
+        sums.append(f"{file2.filename} type {file2.contentType} sha256 {summer.hexdigest()}")
+        
+    return xwl.plainText('\n'.join(sums))
+    
 def isLoggedIn(cookies):
     return cookies.get('some-session',None)=='3'
 
