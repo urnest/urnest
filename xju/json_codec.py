@@ -356,6 +356,7 @@ class ListCodecImpl:
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
+        self.value_codec.ensure_typescript_defs(namespace)
         pass
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
@@ -445,6 +446,7 @@ class SetCodecImpl:
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
+        self.value_codec.ensure_typescript_defs(namespace)
         pass
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
@@ -555,6 +557,7 @@ class TupleCodec:
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
+        for c in self.value_codecs: c.ensure_typescript_defs(namespace)
         pass
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
@@ -630,6 +633,7 @@ class UnionCodecImpl:
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
+        for c in self.value_codecs: c.ensure_typescript_defs(namespace)
         pass
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
@@ -696,6 +700,8 @@ class DictCodecImpl:
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> str:
         raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self, namespace) -> None:
+        self.key_codec.ensure_typescript_defs(namespace)
+        self.value_codec.ensure_typescript_defs(namespace)
         pass
     def get_typescript_isa(self,
                            expression:TypeScriptSourceCode,
@@ -1388,6 +1394,8 @@ class ClassCodecImpl:
         def asa_back_ref(expression:TypeScriptSourceCode)->TypeScriptSourceCode:
             return self.get_typescript_asa(expression,namespace,None)
         back_refs=TypeScriptBackRefs(type_back_ref,as_object_key_type_back_ref,isa_back_ref,asa_back_ref)
+        for attr_codec in self.attr_codecs.values():
+            attr_codec.codec.ensure_typescript_defs(namespace)
         if typescript_type_name not in target_namespace.defs:
             target_namespace.defs[typescript_type_name]=TypeScriptSourceCode(
                 f"type {typescript_type_name} = {{\n"+

@@ -122,7 +122,6 @@ def infer_codec_value_type(
         # rely on Type[X] where X is a type always producing a type constructor
         # function def (...)->X  or a TypeType
         c=checker_api.type_context[0]
-        #pdb_trace()
         expr_type=checker_api.get_expression_type(arg_expr, c)
 
         # codec(O.a) where O is an enum gives us Instance with LiteralType last known value
@@ -137,7 +136,7 @@ def infer_codec_value_type(
             result=erase_typevars(result)
             pass
         if not isinstance(result, Type):
-            raise CodecParamInvalid(f"apparently {result} (which the return type of {arg_expr}) is not a my.types.type?")
+            raise CodecParamInvalid(f"apparently {result} (which the return type of {arg_expr}) is not a mypy.types.type?")
         return result
     except Exception as e:
         raise Exception(f"failed to infer proper {CODEC_FQN}() return type from run-time value of expression {arg_expr} because {e}; report this to https://github/urnest") from None
@@ -149,6 +148,9 @@ def type_type_instance_type(expr_type: Type) -> Type:
     e.g. return the T from Type[T]
     """
     match expr_type:
+        case Instance():
+            # e.g. codec(JsonType) arrives here as Instance of UnionType with args
+            match expr_type.type
         case NoneType():
             return expr_type
         case UnionType():
@@ -183,6 +185,7 @@ def adjust_codec_return_type(x: FunctionContext) -> Type:
     """
     try:
         arg_exprs=x.args[0]
+        pdb_trace()
         inferred_codec_type = infer_codec_value_type_from_args(arg_exprs, x.api)
         if isinstance(inferred_codec_type, UninhabitedType):
             arg_type=x.arg_types[0]
@@ -245,7 +248,6 @@ class ExpressionCheckerPatch:
         self._f=self.visit_index_expr_helper
         self._f2=self.alias_type_in_runtime_context
         self._f3=check_callable_call
-        self._f4=apply_type_arguments_to_callable
     @property
     def chk(self) -> TypeChecker:
         return self.expression_checker.chk
@@ -257,12 +259,8 @@ class ExpressionCheckerPatch:
                 self.alias_type_in_runtime_context)
         self._f3=ExpressionChecker.check_callable_call
         setattr(ExpressionChecker, 'check_callable_call',check_callable_call)
-        self._f4=ExpressionChecker.apply_type_arguments_to_callable
-        #setattr(ExpressionChecker, 'apply_type_arguments_to_callable',apply_type_arguments_to_callable)
         return self
     def __exit__(self, *_) -> None:
-        setattr(ExpressionChecker,'apply_type_arguments_to_callable',self._f4)
-        self._f4=apply_type_arguments_to_callable
         setattr(ExpressionChecker,'check_callable_call',self._f3)
         self._f3=check_callable_call
         setattr(self.expression_checker,'alias_type_in_runtime_context',self._f2)
@@ -309,11 +307,11 @@ class ExpressionCheckerPatch:
                 expr_value=LiteralType(value[0], self.chk.named_type(value[1]))
                 # need the type of that value, e.g. as a constructor function
                 return CallableType([], [], [], expr_value,
-                                    self.chk.named_type('function'))
+                                    self.chk.named_type('builtins.type'))
             return CallableType([],[],[],
                                 UnionType(
                                     [LiteralType(value[0], self.chk.named_type(value[1]))
-                                     for value in values]), self.chk.named_type('function'))
+                                     for value in values]), self.chk.named_type('builtins.type'))
         return None
     def get_literal_values(self, expr: Expression) -> (
             list[tuple[str|int|bool, str]]
@@ -593,6 +591,8 @@ def check_callable_call(
         # Store the inferred callable type.
         self.chk.store_type(callable_node, callee)
 
+    # Want to be able to hook plugin into derived type.x() even though x()
+    # is defined by a base class. callee.name is the derived type...
     if object_type is not None and callee.name is not None and self.plugin.get_method_hook(callee.name):
         new_ret_type = self.apply_function_plugin(
             callee,
@@ -606,6 +606,7 @@ def check_callable_call(
             context,
         )
         callee = callee.copy_modified(ret_type=new_ret_type)
+    # ... and fallback to plugin hooked to the (base) type that defines x.
     elif callable_name and (
         (object_type is None and self.plugin.get_function_hook(callable_name))
         or (object_type is not None and self.plugin.get_method_hook(callable_name))
@@ -623,59 +624,3 @@ def check_callable_call(
         )
         callee = callee.copy_modified(ret_type=new_ret_type)
     return callee.ret_type, callee
-
-# patched mypy 1.9.0 source
-def apply_type_arguments_to_callable(
-    self: ExpressionChecker, tp: Type, args: Sequence[Type], ctx: Context
-) -> Type:
-    """Apply type arguments to a generic callable type coming from a type object.
-
-    This will first perform type arguments count checks, report the
-    error as needed, and return the correct kind of Any. As a special
-    case this returns Any for non-callable types, because if type object type
-    is not callable, then an error should be already reported.
-    """
-    tp = get_proper_type(tp)
-
-    if isinstance(tp, CallableType):
-        min_arg_count = sum(not v.has_default() for v in tp.variables)
-        has_type_var_tuple = any(isinstance(v, TypeVarTupleType) for v in tp.variables)
-        if (
-            len(args) < min_arg_count or len(args) > len(tp.variables)
-        ) and not has_type_var_tuple:
-            if tp.is_type_obj() and tp.type_object().fullname == "builtins.tuple":
-                #pdb_trace()
-                return CallableType(
-                    [get_proper_type(t) for t in args],
-                    [ARG_POS for _ in args],
-                    [chr(ord('a')+i) for i in range(0,len(args))],
-                    TupleType(list(args),self.chk.named_type('tuple')),
-                    self.chk.named_type('abc.ABCMeta'),
-                    name='tuple',
-                    definition=tp.definition,
-                    bound_args=tp.bound_args
-                )
-            self.msg.incompatible_type_application(
-                min_arg_count, len(tp.variables), len(args), ctx
-            )
-            return AnyType(TypeOfAny.from_error)
-        return self.apply_generic_arguments(tp, self.split_for_callable(tp, args, ctx), ctx)
-    if isinstance(tp, Overloaded):
-        for it in tp.items:
-            min_arg_count = sum(not v.has_default() for v in it.variables)
-            has_type_var_tuple = any(isinstance(v, TypeVarTupleType) for v in it.variables)
-            if (
-                len(args) < min_arg_count or len(args) > len(it.variables)
-            ) and not has_type_var_tuple:
-                self.msg.incompatible_type_application(
-                    min_arg_count, len(it.variables), len(args), ctx
-                )
-                return AnyType(TypeOfAny.from_error)
-        return Overloaded(
-            [
-                self.apply_generic_arguments(it, self.split_for_callable(it, args, ctx), ctx)
-                for it in tp.items
-            ]
-        )
-    return AnyType(TypeOfAny.special_form)
-

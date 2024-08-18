@@ -33,7 +33,7 @@ from xju.json_codec import (
     JsonAttrName
 )
 
-from typing import cast, Type, Literal, Any, Self, NewType, Generic, TypeVar, Callable
+from typing import cast, Type, Literal, Any, Self, NewType, Generic, TypeVar, Callable, Union
 from types import NoneType
 from dataclasses import dataclass, field
 import re
@@ -49,7 +49,7 @@ import xju
 
 x:Any
 
-#codec(JsonType)
+codec(JsonType)
 
 # int,str,bool,float,None map directly
 
@@ -1433,7 +1433,7 @@ dd: JsonType = d['fred']
 
 
 # should not be any errors:
-a: list[tuple[type, type | UnionType[None, type]]] = [
+a: list[tuple[type, type | Union[None, type]]] = [
     (int, str | None)
 ]
-b = [(json_codec(k), json_codec(v)) for k, v in a]
+b = [(codec(k), codec(v)) for k, v in a]
