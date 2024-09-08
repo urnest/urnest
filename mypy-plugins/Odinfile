@@ -165,7 +165,9 @@ r3:dict[str,int]=c3.decode(None)
 r3x:str=c3.decode(None)  # ensure return type not inferred as Any
 r4:tuple[str,int,float]=c4.decode(None)
 r4x:str=c4.decode(None)  # ensure return type not inferred as Any
-
+e1=codec(list[int, str]) # not valid python
+e2=codec(dict[int, str, float])  # not valid python
+e3=codec(tuple[])  # not valid python
 
 %test_json_codec_mypy_plugin_class==%test_json_codec_mypy_plugin_class.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_class.py.test:filename) (%test_json_codec_mypy_plugin_class.expect):exec.output
 

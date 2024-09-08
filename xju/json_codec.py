@@ -43,6 +43,17 @@ from enum import Enum, EnumType, EnumMeta
 import json
 
 
+class XXX(Enum):
+    a = 'fred'
+
+I = int
+# for development of mypy plugin, to see what return type should be for a case
+# see json_codec_mypy_plugin.show_return_type
+def _xxx() -> Literal[True]:
+    return True
+
+#_xxx()
+
 T=TypeVar('T')
 
 JsonType = None|bool|dict|list|float|str
@@ -1768,8 +1779,3 @@ def get_type_fqn(t:type) -> str:
     if t.__module__=='__main__':
         return t.__name__
     return f"{t.__module__}.{t.__name__}"
-
-# for development of mypy plugin, to see what return type should be for a case
-# see json_codec_mypy_plugin.show_return_type
-#def _xxx() -> list:
-#    return [2]

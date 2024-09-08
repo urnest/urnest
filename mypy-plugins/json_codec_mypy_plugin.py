@@ -1,4 +1,4 @@
-from typing import Callable, Final, Self
+from typing import Callable, Final, Self, TypeGuard
 from mypy.plugin import (
     Plugin, FunctionSigContext, FunctionContext, Expression, MethodContext,
     CheckerPluginInterface
@@ -9,6 +9,9 @@ from mypy.nodes import (
     TypeInfo,
     TypeAlias,
     Context,
+    SymbolNode,
+    Var,
+    FuncDef
 )
 from mypy.types import (
     LITERAL_TYPE_NAMES,
@@ -83,13 +86,19 @@ def infer_literal_type(expr: Expression, checker_api:CheckerPluginInterface) -> 
 class CodecParamInvalid(Exception):
     pass
     
-def infer_codec_value_type_from_args(arg_exprs: list[Expression],
+def x_infer_codec_value_type_from_args(arg_exprs: list[Expression],
                                      checker_api:CheckerPluginInterface) -> Type:
     assert len(arg_exprs)==1, "expected one argument to codec(), got "+str(len(arg_exprs))
     assert isinstance(checker_api, TypeChecker), (type(checker_api), checker_api)
     with ExpressionCheckerPatch(checker_api.expr_checker):
         return infer_codec_value_type(arg_exprs[0],checker_api)
 
+def infer_codec_value_type_from_args(arg_exprs: list[Expression],
+                                     checker_api:CheckerPluginInterface) -> Type:
+    assert len(arg_exprs)==1, "expected one argument to codec(), got "+str(len(arg_exprs))
+    assert isinstance(checker_api, TypeChecker), (type(checker_api), checker_api)
+    return infer_codec_value_type_of_expr(arg_exprs[0],checker_api)
+    
 def calculate_overload_return_type(overload: Overloaded) -> Type:
     return_types={_.ret_type for _ in overload.items}
     match len(return_types):
@@ -142,15 +151,219 @@ def infer_codec_value_type(
         raise Exception(f"failed to infer proper {CODEC_FQN}() return type from run-time value of expression {arg_expr} because {e}; report this to https://github/urnest") from None
     pass
 
+def infer_codec_value_type_of_expr(
+        expr: Expression,
+        checker_api:CheckerPluginInterface,
+) -> Type:
+    match expr:
+        case NameExpr() if expr.node is not None:
+            return infer_codec_value_type_from_symbol_node(
+                expr.fullname,
+                expr.node,
+                checker_api)
+        case IndexExpr():
+            return infer_codec_value_type_from_index_expr(expr.base, expr.index, checker_api)
+
+        case OpExpr() if expr.op == '|':
+            return infer_codec_value_type_from_union_op(expr.left, expr.right, checker_api)
+        
+    #pdb_trace()
+    raise CodecParamInvalid(f"{expr} is not valid as parameter to xju.json_codec.codec()")
+
+def infer_codec_value_type_from_union_op(left: Expression, right: Expression, checker_api: CheckerPluginInterface) ->Type:
+    return UnionType([ infer_codec_value_type_of_expr(left, checker_api),
+                       infer_codec_value_type_of_expr(right, checker_api) ],
+                     is_evaluated = True,
+                     uses_pep604_syntax = True)
+
+def infer_codec_value_types_of_tuple_expr(
+        expr: TupleExpr,
+        checker_api:CheckerPluginInterface,
+) -> list[Type]:
+    return [infer_codec_value_type_of_expr(x, checker_api) for x in expr.items]
+
+def is_generic_list(x: Type) -> TypeGuard[Instance]:
+    """does {x} represent the generic list (i.e. list without any explicit element type)"""
+    return (
+        isinstance(x, Instance) and
+        len(x.args) == 0 and
+        isinstance(x.type, TypeInfo) and
+        x.type._fullname == 'builtins.list'
+    )
+
+def is_generic_set(x: Type) -> TypeGuard[Instance]:
+    """does {x} represent the generic set (i.e. set without any explicit element type)"""
+    return (
+        isinstance(x, Instance) and
+        len(x.args) == 0 and
+        isinstance(x.type, TypeInfo) and
+        x.type._fullname == 'builtins.set'
+    )
+
+def is_generic_tuple(x: Type) -> TypeGuard[Instance]:
+    """does {x} represent the generic tuple (i.e. tuple without any explicit element type)"""
+    return (
+        isinstance(x, Instance) and
+        len(x.args) == 0 and
+        isinstance(x.type, TypeInfo) and
+        x.type._fullname == 'builtins.tuple'
+    )
+
+def is_generic_dict(x: Type) -> TypeGuard[Instance]:
+    """does {x} represent the generic dict (i.e. dict without any explicit element type)"""
+    return (
+        isinstance(x, Instance) and
+        len(x.args) == 0 and
+        isinstance(x.type, TypeInfo) and
+        x.type._fullname == 'builtins.dict'
+    )
+
+def infer_codec_value_type_from_index_expr(
+        base: Expression, index: Expression, checker_api: CheckerPluginInterface) -> Type:
+    # must handle Literal specially before it gets dumbed down to SpecialForm
+    if isinstance(base, NameExpr) and base.fullname == 'typing.Literal':
+        return get_value_literal_type(index, checker_api)
+    base_type = infer_codec_value_type_of_expr(base, checker_api)
+    # only generics allowed as base of index i.e as X in X[A, B, C]
+    if is_generic_list(base_type):
+        index_type = infer_codec_value_type_of_expr(index, checker_api)
+        return Instance(base_type.type, [index_type])
+    if is_generic_set(base_type):
+        index_type = infer_codec_value_type_of_expr(index, checker_api)
+        return Instance(base_type.type, [index_type])
+    if is_generic_tuple(base_type):
+        if isinstance(index, TupleExpr):
+            index_types = infer_codec_value_types_of_tuple_expr(index, checker_api)
+            return TupleType(index_types, tuple_fallback(TupleType(index_types, base_type)))
+    if is_generic_dict(base_type):
+        if isinstance(index, TupleExpr):
+            index_types = infer_codec_value_types_of_tuple_expr(index, checker_api)
+            if len(index_types) == 2:
+                return Instance(base_type.type, index_types)
+    raise CodecParamInvalid(f"{base}[...] is not valid as xju.json_codec.codec() parameter")
+
+def get_value_literal_type(expr: Expression, checker_api: CheckerPluginInterface) -> Type:
+    match expr:
+        case StrExpr():
+            return LiteralType(expr.value, builtin_type(checker_api, 'str'))
+        case IntExpr():
+            return LiteralType(expr.value, builtin_type(checker_api, 'int'))
+        # surprise... bool literal e.g. True is represented as a
+        # NameExpr with name "True"
+        case NameExpr() if expr.name == "True":
+            return LiteralType(True, builtin_type(checker_api, 'bool'))
+        case NameExpr() if expr.name == "False":
+            return LiteralType(True, builtin_type(checker_api, 'bool'))
+        case TupleExpr():
+            return UnionType([ get_value_literal_type(item, checker_api) for item in expr.items],
+                             is_evaluated = True,
+                             uses_pep604_syntax = True)
+    raise CodecParamInvalid(f"{expr} is not valid for use with Literal[]")
+
+def infer_codec_value_type_from_symbol_node(
+        name: str, node: SymbolNode, checker_api:CheckerPluginInterface) -> Type:
+    match node:
+        case TypeInfo():
+            # codec return type should be instance of the TypeInfo() with no args:
+            # (Pdb) p type(return_type)
+            # <class 'mypy.types.Instance'>
+            # (Pdb) p return_type.args
+            # ()
+            # (Pdb) p type(return_type.type)
+            # <class 'mypy.nodes.TypeInfo'>
+            return infer_codec_value_type_from_type(name, Instance(node, []), checker_api)
+        case Var() if node.name == 'None':
+            return NoneType()
+        case Var():
+            raise CodecParamInvalid(f"{name} is a variable and so not valid as parameter to xju.json_codec.codec()")
+        case FuncDef():
+            raise CodecParamInvalid(f"{name} is a function and so not valid as parameter to xju.json_codec.codec()")
+        case None:
+            # guessing what None means, not explained in mypy/nodes.py
+            raise CodecParamInvalid(f"{name} is undefined and so not valid as parameter to xju.json_codec.codec()")
+        case TypeAlias():  # undocumented in mypy/nodes.py
+            infer_codec_value_type_from_type(name, node.target, checker_api)
+            return TypeAliasType(node, [])
+            #pdb_trace()
+            pass
+    #pdb_trace()
+    raise CodecParamInvalid(f"{name} is not valid as xju.json_codec.codec() parameter because type {type(node)} is unexpected")
+
+
+def infer_codec_value_type_from_type(
+        name: str, t: Type, checker_api: CheckerPluginInterface) -> Type:
+    match t:
+        case Instance():
+            if t.args:
+                raise CodecParamInvalid(f"{name} is not valid as xju.json_codec.codec() parameter because {t} has type arguments")
+            return infer_codec_value_type_from_type_info(name, t.type, checker_api)
+        case UnionType():
+            return t
+        case LiteralType():
+            return t
+    raise CodecParamInvalid(f"{name} is not valid as xju.json_codec.codec() parameter because {t} is not an Instance (it is a {type(t)}")
+
+def is_xju_newtype(t: TypeInfo) -> bool:
+    """is {t} an xju.newtype.X[Y]"""
+    return (
+        len(t.bases) == 1 and
+        t.bases[0].type._fullname in (
+            'xju.newtype.Int',
+            'xju.newtype.Float',
+            'xju.newtype.Str',
+        )
+    )
+    
+def is_enum(t: TypeInfo) -> bool:
+    """is {t} a enum.Enum"""
+    return (
+        len(t.bases) == 1 and
+        t.bases[0].type._fullname in (
+            'enum.Enum',
+        )
+    )
+    
+def infer_codec_value_type_from_type_info(
+        name: str, t: TypeInfo, checker_api: CheckerPluginInterface) -> Type:
+    if t.is_newtype:
+        # (Pdb) p return_type.type.is_newtype
+        # True
+        # (Pdb) p return_type.type.fullname
+        # (Pdb) p return_type.type.fullname
+        # 'xju.json_codec.XXX'
+        # (Pdb) p return_type.type.bases
+        # [builtins.str]
+        assert len(t.bases) == 1, t.bases
+        return infer_codec_value_type_from_type(f"{name} (a new type of {t.bases[0]})", t.bases[0], checker_api)
+    # mirror jsoncodec.py special handling for various builtins
+    match t._fullname:
+        case ( 'builtins.int' | 'builtins.float' | 'builtins.bool' | 'builtins.str' | 'builtins.bytes' |
+               'builtins.list' | 'builtins.set' | 'builtins.tuple' | 'builtins.dict' ):
+            return Instance(t, [])
+        case 'types.None' | 'types.NoneType':
+            return NoneType()
+    # mirror jsoncodec.py special handling for xju.newtype.Int/Float/Str
+    if is_xju_newtype(t):
+        return Instance(t, [])
+
+    # mirror jsoncodec.py special handling for enum.Enum
+    if is_enum(t):
+        return Instance(t, [])
+
+
+    raise CodecParamInvalid(f"{name} is not valid as parameter to xju.json_codec.codec() because {t} is not encodable")
+
+
 def type_type_instance_type(expr_type: Type) -> Type:
     """
     return instance type of {expr_type} assuming that is a "type" type
     e.g. return the T from Type[T]
     """
     match expr_type:
-        case Instance():
-            # e.g. codec(JsonType) arrives here as Instance of UnionType with args
-            match expr_type.type
+#        case Instance():
+#            # e.g. codec(JsonType) arrives here as Instance of UnionType with args
+#            match expr_type.type:
+#                case 
         case NoneType():
             return expr_type
         case UnionType():
@@ -185,7 +398,7 @@ def adjust_codec_return_type(x: FunctionContext) -> Type:
     """
     try:
         arg_exprs=x.args[0]
-        pdb_trace()
+        #pdb_trace()
         inferred_codec_type = infer_codec_value_type_from_args(arg_exprs, x.api)
         if isinstance(inferred_codec_type, UninhabitedType):
             arg_type=x.arg_types[0]
@@ -201,9 +414,9 @@ def adjust_codec_return_type(x: FunctionContext) -> Type:
 
 # for development to figure out what return type should be in each case via pdb
 def show_return_type(x: FunctionContext) -> Type:
-    return_type=x.default_return_type
+    return_type=get_proper_type(x.default_return_type)
     typeof_return_type=type(return_type)
-    #pdb_trace()
+    pdb_trace()
     return return_type
 
 class JsonCodecPlugin(Plugin):

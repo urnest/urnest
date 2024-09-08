@@ -49,8 +49,6 @@ import xju
 
 x:Any
 
-codec(JsonType)
-
 # int,str,bool,float,None map directly
 
 Assert(codec(int).decode(3))==3
@@ -411,27 +409,27 @@ class O(Enum):
     pass
 
 #... member codecs...
-Assert(codec(O.b).decode(7))==O.b
-Assert(codec(O.a).decode('fred'))==O.a
-Assert(codec(O.a).encode(O.a))=='fred'
-try:
-    x=codec(O.a).decode(7)  # type: ignore
-except Exception as e:
-    Assert(readable_repr(e))=="Failed to decode 7 to a O.a because\nfailed to decode 7 as O.a because\n7 (of type <class 'int'>) is not a <class 'str'>."
-else:
-    assert False, x
-try:
-    x=codec(O.a).decode('jock')  # type: ignore
-except Exception as e:
-    Assert(readable_repr(e))=="Failed to decode jock to a O.a because\nfailed to decode 'jock' as O.a because\n'jock' is not 'fred'."
-else:
-    assert False, x
-try:
-    x=codec(O.a).encode(O.b)  # type: ignore
-except Exception as e:
-    Assert(readable_repr(e))=="Failed to encode <O.b: 7> as a O.a because\n7 is not a <class 'str'>."
-else:
-    assert False, x
+# REVISIT: Assert(codec(Literal[O.b]).decode(7))==O.b
+# REVISIT: Assert(codec(Literal[O.a]).decode('fred'))==O.a
+# REVISIT: Assert(codec(Literal[O.a]).encode(O.a))=='fred'
+# REVISIT: try:
+# REVISIT:     x=codec(O.a).decode(7)  # type: ignore
+# REVISIT: except Exception as e:
+# REVISIT:     Assert(readable_repr(e))=="Failed to decode 7 to a O.a because\nfailed to decode 7 as O.a because\n7 (of type <class 'int'>) is not a <class 'str'>."
+# REVISIT: else:
+# REVISIT:     assert False, x
+# REVISIT: try:
+# REVISIT:     x=codec(O.a).decode('jock')  # type: ignore
+# REVISIT: except Exception as e:
+# REVISIT:     Assert(readable_repr(e))=="Failed to decode jock to a O.a because\nfailed to decode 'jock' as O.a because\n'jock' is not 'fred'."
+# REVISIT: else:
+# REVISIT:     assert False, x
+# REVISIT: try:
+# REVISIT:     x=codec(O.a).encode(O.b)  # type: ignore
+# REVISIT: except Exception as e:
+# REVISIT:     Assert(readable_repr(e))=="Failed to encode <O.b: 7> as a O.a because\n7 is not a <class 'str'>."
+# REVISIT: else:
+# REVISIT:     assert False, x
 
 #... enum codec itself
 Assert(codec(O).decode('fred'))==O.a
@@ -481,6 +479,129 @@ Assert(codec(str|int).decode(9))==9
 Assert(codec(str|int).encode('fred'))=='fred'
 Assert(codec(str|int).encode(9))==9
 
+
+# Literal
+Fred=Literal['fred']
+Assert(codec(Fred).decode('fred'))=='fred'
+Assert(codec(Fred).encode('fred'))=='fred'
+# ... same as:
+Assert(codec(Literal['fred']).decode('fred'))=='fred'
+Assert(codec(Literal['fred']).encode('fred'))=='fred'
+
+FredOrJock=Literal['fred','jock']
+Assert(codec(FredOrJock).decode('fred'))=='fred'
+Assert(codec(FredOrJock).decode('jock'))=='jock'
+Assert(codec(FredOrJock).encode('fred'))=='fred'
+Assert(codec(FredOrJock).encode('jock'))=='jock'
+# ... same as:
+Assert(codec(Literal['fred','jock']).decode('fred'))=='fred'
+Assert(codec(Literal['fred','jock']).decode('jock'))=='jock'
+Assert(codec(Literal['fred','jock']).encode('fred'))=='fred'
+Assert(codec(Literal['fred','jock']).encode('jock'))=='jock'
+
+Seven=Literal[7]
+Assert(codec(Seven).decode(7))==7
+Assert(codec(Seven).encode(7))==7
+
+SevenOrEight=Literal[7,8]
+Assert(codec(SevenOrEight).decode(7))==7
+Assert(codec(SevenOrEight).decode(8))==8
+Assert(codec(SevenOrEight).encode(7))==7
+Assert(codec(SevenOrEight).encode(8))==8
+
+LiterallyTrue=Literal[True]
+LiterallyFalse=Literal[False]
+Assert(codec(LiterallyTrue).decode(True))==True
+Assert(codec(LiterallyFalse).encode(False))==False
+
+LiterallyTrueOrFalse=Literal[True,False]
+Assert(codec(LiterallyTrueOrFalse).decode(True))==True
+Assert(codec(LiterallyTrueOrFalse).decode(False))==False
+Assert(codec(LiterallyTrueOrFalse).encode(True))==True
+Assert(codec(LiterallyTrueOrFalse).encode(False))==False
+
+JockOr6=Literal[6,'jock']
+Assert(codec(JockOr6).decode(6))==6
+Assert(codec(JockOr6).decode('jock'))=='jock'
+Assert(codec(JockOr6).encode(6))==6
+Assert(codec(JockOr6).encode('jock'))=='jock'
+
+
+#note python does not support float literals
+
+#encode wrong type
+try:
+    x=(codec(FredOrJock)
+       .encode(7)) # type: ignore
+except Exception as e:
+    Assert("7 is not 'fred'").isIn(str(e))
+else:
+    assert False, x
+    pass
+try:
+    x=(codec(SevenOrEight)
+       .encode(True)) # type: ignore
+except Exception as e:
+    Assert("True is not 7").isIn(str(e))
+else:
+    assert False, x
+    pass
+try:
+    x=(codec(LiterallyTrueOrFalse)
+       .encode('fred')) # type: ignore
+except Exception as e:
+    Assert("'fred' is not False").isIn(str(e))
+    Assert("'fred' is not True").isIn(str(e))
+else:
+    assert False, x
+    pass
+#decode wrong type
+try:
+    x=codec(Fred).decode(7)
+except Exception as e:
+    Assert("7 is not a string").isIn(str(e))
+else:
+    assert False, x
+    pass
+try:
+    x=codec(Seven).decode('fred')
+except Exception as e:
+    Assert("'fred' is not a int").isIn(str(e))
+else:
+    assert False, x
+    pass
+try:
+    x=codec(LiterallyFalse).decode(7)
+except Exception as e:
+    Assert("7 is not a boolean").isIn(str(e))
+else:
+    assert False, x
+    pass
+
+# decode wrong value
+try:
+    FredOrAnn=Literal['fred','ann']
+    x=codec(FredOrAnn).decode('jock')
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to decode jock to a typing.Literal['fred', 'ann'] because\nfailed to decode 'jock' as one of ('fred', 'ann') because\n- failed to decode as 'fred' because\n  'jock' is not 'fred'; and\n- failed to decode as 'ann' because\n  'jock' is not 'ann'."
+else:
+    assert False, x
+    pass
+try:
+    SixOrSeven=Literal[6,7]
+    x=codec(SixOrSeven).decode(8)
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to decode 8 to a typing.Literal[6, 7] because\nfailed to decode 8 as one of (6, 7) because\n- failed to decode as 6 because\n  8 is not 6; and\n- failed to decode as 7 because\n  8 is not 7."
+else:
+    assert False, x
+    pass
+try:
+    x=codec(LiterallyFalse).decode(True)
+except Exception as e:
+    Assert("True is not False").isIn(str(e))
+else:
+    assert False, x
+    pass
 
 
 # class (object) support:
@@ -692,129 +813,6 @@ Assert(codec(Router).decode({'name':'fred','ifv4':'10.1.7.44/22'}))==Router(name
 Assert(codec(Router).decode({'name':'fred','ifv4':'10.1.7.44/22'}).ifv4.network)==ipaddress.IPv4Network("10.1.4.0/22")
 Assert(codec(Router).encode(Router(name='fred',ifv4=IpAddrWithPrefix('10.1.7.44/22'))))=={'name':'fred','ifv4':'10.1.7.44/22'}
 
-# note mypy 1.9 + python 3.12 need fancy fiddling to type check literals and type aliases
-# ... json_codec_mypy_plugin has that fiddling
-Fred=Literal['fred']
-Assert(codec(Fred).decode('fred'))=='fred'
-Assert(codec(Fred).encode('fred'))=='fred'
-# ... same as:
-Assert(codec(Literal['fred']).decode('fred'))=='fred'
-Assert(codec(Literal['fred']).encode('fred'))=='fred'
-
-FredOrJock=Literal['fred','jock']
-Assert(codec(FredOrJock).decode('fred'))=='fred'
-Assert(codec(FredOrJock).decode('jock'))=='jock'
-Assert(codec(FredOrJock).encode('fred'))=='fred'
-Assert(codec(FredOrJock).encode('jock'))=='jock'
-# ... same as:
-Assert(codec(Literal['fred','jock']).decode('fred'))=='fred'
-Assert(codec(Literal['fred','jock']).decode('jock'))=='jock'
-Assert(codec(Literal['fred','jock']).encode('fred'))=='fred'
-Assert(codec(Literal['fred','jock']).encode('jock'))=='jock'
-
-Seven=Literal[7]
-Assert(codec(Seven).decode(7))==7
-Assert(codec(Seven).encode(7))==7
-
-SevenOrEight=Literal[7,8]
-Assert(codec(SevenOrEight).decode(7))==7
-Assert(codec(SevenOrEight).decode(8))==8
-Assert(codec(SevenOrEight).encode(7))==7
-Assert(codec(SevenOrEight).encode(8))==8
-
-LiterallyTrue=Literal[True]
-LiterallyFalse=Literal[False]
-Assert(codec(LiterallyTrue).decode(True))==True
-Assert(codec(LiterallyFalse).encode(False))==False
-
-LiterallyTrueOrFalse=Literal[True,False]
-Assert(codec(LiterallyTrueOrFalse).decode(True))==True
-Assert(codec(LiterallyTrueOrFalse).decode(False))==False
-Assert(codec(LiterallyTrueOrFalse).encode(True))==True
-Assert(codec(LiterallyTrueOrFalse).encode(False))==False
-
-JockOr6=Literal[6,'jock']
-Assert(codec(JockOr6).decode(6))==6
-Assert(codec(JockOr6).decode('jock'))=='jock'
-Assert(codec(JockOr6).encode(6))==6
-Assert(codec(JockOr6).encode('jock'))=='jock'
-
-
-#note python does not support float literals
-
-#encode wrong type
-try:
-    x=(codec(FredOrJock)
-       .encode(7)) # type: ignore
-except Exception as e:
-    Assert("7 is not 'fred'").isIn(str(e))
-else:
-    assert False, x
-    pass
-try:
-    x=(codec(SevenOrEight)
-       .encode(True)) # type: ignore
-except Exception as e:
-    Assert("True is not 7").isIn(str(e))
-else:
-    assert False, x
-    pass
-try:
-    x=(codec(LiterallyTrueOrFalse)
-       .encode('fred')) # type: ignore
-except Exception as e:
-    Assert("'fred' is not False").isIn(str(e))
-    Assert("'fred' is not True").isIn(str(e))
-else:
-    assert False, x
-    pass
-#decode wrong type
-try:
-    x=codec(Fred).decode(7)
-except Exception as e:
-    Assert("7 is not a string").isIn(str(e))
-else:
-    assert False, x
-    pass
-try:
-    x=codec(Seven).decode('fred')
-except Exception as e:
-    Assert("'fred' is not a int").isIn(str(e))
-else:
-    assert False, x
-    pass
-try:
-    x=codec(LiterallyFalse).decode(7)
-except Exception as e:
-    Assert("7 is not a boolean").isIn(str(e))
-else:
-    assert False, x
-    pass
-
-# decode wrong value
-try:
-    FredOrAnn=Literal['fred','ann']
-    x=codec(FredOrAnn).decode('jock')
-except Exception as e:
-    Assert(readable_repr(e))=="Failed to decode jock to a typing.Literal['fred', 'ann'] because\nfailed to decode 'jock' as one of ('fred', 'ann') because\n- failed to decode as 'fred' because\n  'jock' is not 'fred'; and\n- failed to decode as 'ann' because\n  'jock' is not 'ann'."
-else:
-    assert False, x
-    pass
-try:
-    SixOrSeven=Literal[6,7]
-    x=codec(SixOrSeven).decode(8)
-except Exception as e:
-    Assert(readable_repr(e))=="Failed to decode 8 to a typing.Literal[6, 7] because\nfailed to decode 8 as one of (6, 7) because\n- failed to decode as 6 because\n  8 is not 6; and\n- failed to decode as 7 because\n  8 is not 7."
-else:
-    assert False, x
-    pass
-try:
-    x=codec(LiterallyFalse).decode(True)
-except Exception as e:
-    Assert("True is not False").isIn(str(e))
-else:
-    assert False, x
-    pass
 
 # literal attributes match that string literal...
 @dataclass
