@@ -862,8 +862,8 @@ else:
     assert False
     pass
 
-Assert(codec(ByteCount).typescript_as_object_key_type())=='number /* xju.misc.ByteCount */'
-Assert(codec(Duration).typescript_as_object_key_type())=='number /* xju.time.Duration */'
+Assert(codec(ByteCount).typescript_as_object_key_type())==TypeScriptSourceCode('number /* xju.misc.ByteCount */')
+Assert(codec(Duration).typescript_as_object_key_type())==TypeScriptSourceCode('number /* xju.time.Duration */')
 
 try:
     codec(Literal["Fred"]).typescript_as_object_key_type()
@@ -914,7 +914,7 @@ else:
     pass
 
 try:
-    codec(O.a).typescript_as_object_key_type()
+    codec(Literal[O.a]).typescript_as_object_key_type()
 except Exception as e:
     Assert(readable_repr(e))=='O.a is not allowed as a typescript object key type'
 else:

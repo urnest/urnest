@@ -39,7 +39,7 @@ from dataclasses import dataclass, field
 import re
 import sys
 import ipaddress
-from enum import Enum
+from enum import Enum, StrEnum, IntEnum, auto
 
 from xju.assert_ import Assert
 import xju.newtype
@@ -84,25 +84,6 @@ Assert(codec(NoneType).decode(None))==None
 Assert(codec(NoneType).encode(None))==None
 
 
-# list maps to list...
-Assert(codec(list).decode([5, 'fred']))==[5, 'fred']
-Assert(codec(list).encode([5, 'fred']))==[5, 'fred']
-
-# ... but must be given a list
-try:
-    x=codec(list).decode(8)
-except Exception as e:
-    Assert("8 is not a list").isIn(str(e))
-else:
-    assert False, x
-    pass
-# ... note element types are not checked (it is assumed
-# result will be given to json.dumps, which will fail), e.g.
-# we can happily put print, which has no mapping to a json type,
-# into a non-type-adorned list and encode that list:
-Assert(codec(list).encode([print]))==[print]
-
-
 # type-adorned list maps to list...
 Assert(codec(list[int]).decode([5, 6]))==[5, 6]
 Assert(codec(list[int]).encode([5, 6]))==[5, 6]
@@ -110,6 +91,19 @@ Assert(codec(list[int]).encode([5, 6]))==[5, 6]
 # ... but must be given a list...
 try:
     x=codec(list[int]).decode(8)
+except Exception as e:
+    Assert("8 is not a list").isIn(str(e))
+else:
+    assert False, x
+    pass
+
+# ... unadorned list is treated as list[JsonType]...
+Assert(codec(list).decode([5, 'fred']))==[5, 'fred']
+Assert(codec(list).encode([5, 'fred']))==[5, 'fred']
+
+# ... but must be given a list
+try:
+    x=codec(list).decode(8)
 except Exception as e:
     Assert("8 is not a list").isIn(str(e))
 else:
@@ -124,37 +118,6 @@ except Exception as e:
 else:
     assert False, x
     pass
-
-
-# un-typed set maps to list...
-Assert(codec(set).decode([5, 'fred']))==set([5, 'fred'])
-set_result=codec(set).encode(set([5, 'fred']))
-assert isinstance(set_result,list)
-Assert(set(set_result))==set([5, 'fred'])
-
-# ... but must be given a set
-try:
-    x=codec(set).decode(8)
-except Exception as e:
-    Assert("8 is not a list").isIn(str(e))
-else:
-    assert False, x
-    pass
-
-# ... and elements must be unique
-try:
-    x=codec(set).decode([1,2,3,2])
-except Exception as e:
-    Assert('[1, 2, 3, 2] contains at least one duplicate element').isIn(str(e))
-else:
-    assert False, x
-    pass
-
-# ... note element types are not checked (it is assumed
-# result will be given to json.dumps, which will fail), e.g.
-# we can happily put print, which has no mapping to a json type,
-# into a non-type-adorned list and encode that list:
-Assert(codec(set).encode(set([print])))==[print]
 
 
 # type-adorned set maps to list...
@@ -189,13 +152,40 @@ else:
     assert False, x
     pass
 
+# ... un-typed set is treated as set[JsonType]...
+Assert(codec(set).decode([5, 'fred']))==set([5, 'fred'])
+set_result=codec(set).encode(set([5, 'fred']))
+assert isinstance(set_result,list)
+Assert(set(set_result))==set([5, 'fred'])
+
+# ... but must be given a set
+try:
+    x=codec(set).decode(8)
+except Exception as e:
+    Assert("8 is not a list").isIn(str(e))
+else:
+    assert False, x
+    pass
+
+# ... and elements must be unique
+try:
+    x=codec(set).decode([1,2,3,2])
+except Exception as e:
+    Assert('[1, 2, 3, 2] contains at least one duplicate element').isIn(str(e))
+else:
+    assert False, x
+    pass
+
+
 # bytes maps to list of number...
 Assert(codec(bytes).encode(b'\x1b\x17'))==[27,23]
 Assert(codec(bytes).decode([27,23]))==b'\x1b\x17'
 
 # ... but must be given bytes to encode...
 try:
-    x=codec(bytes).encode(8)  # type: ignore
+    x=(
+        codec(bytes)
+    ).encode(8)  # type: ignore
 except Exception as e:
     Assert("8 is not of type bytes").isIn(str(e))
 else:
@@ -302,14 +292,18 @@ else:
 
 # dict keys must be strings or xju.newtype.Str...
 try:
-    x=codec(dict).encode({6: 'fred'})
+    x=(
+        codec(dict)
+    ).encode({6: 'fred'})  # type: ignore
 except Exception as e:
     Assert(str(e)).matches("6 is not a <class 'str'>")
 else:
     assert False, x
     pass
 try:
-    x=codec(dict[int,int]).encode({7:5}) # type: ignore
+    x=(
+        codec(dict[int,int])
+    ).encode({7:5}) # type: ignore
 except Exception as e:
     Assert("produced non-str 7 from dict key 7").isIn(str(e))
 else:
@@ -318,14 +312,18 @@ else:
 
 # ... must be given a dict...
 try:
-    x=codec(dict).encode(7) # type: ignore
+    x=(
+        codec(dict)
+    ).encode(7) # type: ignore
 except Exception as e:
     Assert("7 is not a dict").isIn(str(e))
 else:
     assert False, x
     pass
 try:
-    x=codec(dict[str,int]).encode(7) # type: ignore
+    x=(
+        codec(dict[str,int])
+    ).encode(7) # type: ignore
 except Exception as e:
     Assert("7 is not a dict").isIn(str(e))
 else:
@@ -348,7 +346,9 @@ else:
     pass
 
 try:        
-    x=codec(AgeInYears).encode(8) # type: ignore
+    x=(
+        codec(AgeInYears)
+    ).encode(8) # type: ignore
 except Exception as e:
     Assert("8 is not a <class '__main__.AgeInYears'>").isIn(str(e))
 else:
@@ -373,7 +373,9 @@ else:
     pass
 
 try:
-    x=codec(Metres).encode('fred') # type: ignore
+    x=(
+        codec(Metres)
+    ).encode('fred') # type: ignore
 except Exception as e:
     Assert("'fred' is not a <class '__main__.Metres'>").isIn(str(e))
 else:
@@ -393,7 +395,9 @@ else:
     pass
 
 try:
-    x=codec(Surname).encode(17) # type: ignore
+    x=(
+        codec(Surname)
+    ).encode(17) # type: ignore
 except Exception as e:
     Assert("17 is not a <class '__main__.Surname'>").isIn(str(e))
 else:
@@ -408,28 +412,33 @@ class O(Enum):
     b=7
     pass
 
+OA = O
+
 #... member codecs...
-# REVISIT: Assert(codec(Literal[O.b]).decode(7))==O.b
-# REVISIT: Assert(codec(Literal[O.a]).decode('fred'))==O.a
-# REVISIT: Assert(codec(Literal[O.a]).encode(O.a))=='fred'
-# REVISIT: try:
-# REVISIT:     x=codec(O.a).decode(7)  # type: ignore
-# REVISIT: except Exception as e:
-# REVISIT:     Assert(readable_repr(e))=="Failed to decode 7 to a O.a because\nfailed to decode 7 as O.a because\n7 (of type <class 'int'>) is not a <class 'str'>."
-# REVISIT: else:
-# REVISIT:     assert False, x
-# REVISIT: try:
-# REVISIT:     x=codec(O.a).decode('jock')  # type: ignore
-# REVISIT: except Exception as e:
-# REVISIT:     Assert(readable_repr(e))=="Failed to decode jock to a O.a because\nfailed to decode 'jock' as O.a because\n'jock' is not 'fred'."
-# REVISIT: else:
-# REVISIT:     assert False, x
-# REVISIT: try:
-# REVISIT:     x=codec(O.a).encode(O.b)  # type: ignore
-# REVISIT: except Exception as e:
-# REVISIT:     Assert(readable_repr(e))=="Failed to encode <O.b: 7> as a O.a because\n7 is not a <class 'str'>."
-# REVISIT: else:
-# REVISIT:     assert False, x
+Assert(codec(Literal[O.b]).decode(7))==O.b
+Assert(codec(Literal[O.a]).decode('fred'))==O.a
+Assert(codec(Literal[O.a]).encode(O.a))=='fred'
+Assert(codec(Literal[OA.a]).encode(O.a))=='fred'
+try:
+    x=codec(Literal[O.a]).decode(7)
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to decode 7 to a typing.Literal[<O.a: 'fred'>] because\nfailed to decode 7 as O.a because\n7 (of type <class 'int'>) is not a <class 'str'>."
+else:
+    assert False, x
+try:
+    x=codec(Literal[O.a]).decode('jock')
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to decode jock to a typing.Literal[<O.a: 'fred'>] because\nfailed to decode 'jock' as O.a because\n'jock' is not 'fred'."
+else:
+    assert False, x
+try:
+    x=(
+        codec(Literal[O.a])
+    ).encode(O.b)  # type: ignore
+except Exception as e:
+    Assert(readable_repr(e))=='Failed to encode <O.b: 7> as a O.a because\nO.b != O.a.'
+else:
+    assert False, x
 
 #... enum codec itself
 Assert(codec(O).decode('fred'))==O.a
@@ -449,7 +458,9 @@ except Exception as e:
 else:
     assert False, x
 try:
-    x=codec(O).encode(7.1)  # type: ignore
+    x=(
+        codec(O)
+    ).encode(7.1)  # type: ignore
 except Exception as e:
     Assert(readable_repr(e))=="Failed to encode <enum 'O'> value 7.1 because\n7.1 (of type float) is not a O."
 else:
@@ -528,6 +539,13 @@ Assert(codec(JockOr6).encode('jock'))=='jock'
 
 
 #note python does not support float literals
+v=3.4
+try:
+    codec(Literal[v])  # type: ignore
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to explode type typing.Literal[3.4] into a tree of codecs using map {} to resolve any generic type refs i.e. TypeVars because\nfailed to create codec for literal value 3.4 because\n<class 'float'> literals are not supported (only support str, int, bool, Enum)."
+else:
+    assert False
 
 #encode wrong type
 try:
@@ -662,7 +680,8 @@ else:
     pass
 
 try:
-    x=codec(Address).encode(7) # type: ignore
+    x=(codec(Address)
+       .encode(7)) # type: ignore
 except Exception as e:
     Assert(str(e)).endswith("7 (of type <class 'int'>) is not a <class '__main__.Address'>")
 else:
@@ -814,6 +833,21 @@ Assert(codec(Router).decode({'name':'fred','ifv4':'10.1.7.44/22'}).ifv4.network)
 Assert(codec(Router).encode(Router(name='fred',ifv4=IpAddrWithPrefix('10.1.7.44/22'))))=={'name':'fred','ifv4':'10.1.7.44/22'}
 
 
+# class does not have to be a dataclass...
+class Ursula:
+    def __eq__(self, b) -> bool:
+        return isinstance(b, Ursula) and self.a == b.a and self.b == b.b
+
+    a: int
+    b: str
+    def __init__(self, a: int, b: str):
+        self.a = a
+        self.b = b
+    def g(self): pass
+Assert(codec(Ursula).encode(Ursula(1, "fred")))=={"a": 1, "b": "fred"}
+Assert(codec(Ursula).decode({"a": 1, "b": "fred"}))==Ursula(1, "fred")
+
+
 # literal attributes match that string literal...
 @dataclass
 class Add:
@@ -899,7 +933,8 @@ else:
     pass
 
 try:
-    x=codec(int|None).encode('fred')  # type: ignore
+    x=(codec(int|None)
+       .encode('fred'))  # type: ignore
 except Exception as e:
     Assert(str(e)).contains("'fred' is not None")
 else:
@@ -1075,7 +1110,7 @@ else:
         codec(Branch).get_json_schema())
     jsonschema.validate(
         'fred',
-        codec(O.a).get_json_schema())
+        codec(Literal[O.a]).get_json_schema())
     pass
 
 # internal: codecs' encode()s must verify correct type passed in, otherwise
@@ -1430,8 +1465,61 @@ d = codec(dict).decode({'fred':5, 'jock': 'nine'})
 dd: JsonType = d['fred']
 
 
-# should not be any errors:
-a: list[tuple[type, type | Union[None, type]]] = [
-    (int, str | None)
-]
-b = [(codec(k), codec(v)) for k, v in a]
+# should not be any errors... hmm can't really do until have a bounded
+# typevar with checking:
+#a: list[tuple[Encodable, Encodable]] = [
+#    (int, str | None)
+#]
+#b = [(codec(k), codec(v)) for k, v in a]
+
+
+# StrEnum, IntEnum
+class AnStrEnum(StrEnum):
+    a = 'fred'
+    b = auto()
+
+#... member codecs...
+Assert(codec(Literal[AnStrEnum.b]).decode('b'))==AnStrEnum.b
+Assert(codec(Literal[AnStrEnum.a]).decode('fred'))==AnStrEnum.a
+Assert(codec(Literal[AnStrEnum.a]).encode(AnStrEnum.a))=='fred'
+try:
+    x=codec(Literal[AnStrEnum.a]).decode(7)
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to decode 7 to a typing.Literal[<AnStrEnum.a: 'fred'>] because\nfailed to decode 7 as AnStrEnum.a because\n7 (of type <class 'int'>) is not a <class 'str'>."
+else:
+    assert False, x
+try:
+    x=codec(Literal[AnStrEnum.a]).decode('jock')
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to decode jock to a typing.Literal[<AnStrEnum.a: 'fred'>] because\nfailed to decode 'jock' as AnStrEnum.a because\n'jock' is not 'fred'."
+else:
+    assert False, x
+
+class AnIntEnum(IntEnum):
+    a = 7
+    b = auto()
+
+#... member codecs...
+Assert(codec(Literal[AnIntEnum.a]).decode(7))==AnIntEnum.a
+Assert(codec(Literal[AnIntEnum.b]).decode(8))==AnIntEnum.b
+Assert(codec(Literal[AnIntEnum.a]).encode(AnIntEnum.a))==7
+try:
+    x=codec(Literal[AnIntEnum.a]).decode(8)
+except Exception as e:
+    Assert(readable_repr(e))=='Failed to decode 8 to a typing.Literal[<AnIntEnum.a: 7>] because\nfailed to decode 8 as AnIntEnum.a because\n8 is not 7.'
+else:
+    assert False, x
+try:
+    x=codec(Literal[AnIntEnum.a]).decode('jock')
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to decode jock to a typing.Literal[<AnIntEnum.a: 7>] because\nfailed to decode 'jock' as AnIntEnum.a because\n'jock' (of type <class 'str'>) is not a <class 'int'>."
+else:
+    assert False, x
+try:
+    x=(codec(Literal[AnIntEnum.a])
+       .encode(AnIntEnum.b))  # type: ignore
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to encode <AnIntEnum.b: 8> as a AnIntEnum.a because\n8 != 7."
+else:
+    assert False, x
+

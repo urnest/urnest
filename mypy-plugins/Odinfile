@@ -13,6 +13,7 @@
 %test_json_codec_mypy_plugin_issue_3
 %test_json_codec_mypy_plugin_too_many_params
 %test-members
+%test-members-2
 
 %py-opts==<<
 +py_sp=(..)
@@ -190,7 +191,19 @@ x = (c1.encode(X.a),
      c1.encode("fred"))
 r1:X = c1.decode("A")
 r1x:int = c1.decode("A")
-
+class Fred:
+    a: int
+    b: str
+    c: Callable[[], None]
+    def __init__(self, a: int, b: str):
+        self.a = a
+        self.b = b
+    def g(self): pass
+class Jock(Fred):  # error: Fred not encodable
+    c: int
+    def __init__(self, a: int, b: str, c:int):
+        super().__init__(a, b)
+        self.c = c
 
 %test_json_codec_mypy_plugin_literal==%test_json_codec_mypy_plugin_literal.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_literal.py.test:filename) (%test_json_codec_mypy_plugin_literal.expect):exec.output
 
@@ -373,3 +386,6 @@ z1 = (zc.encode(7),
 %some_module.py==(.%some_module.py)
 
 %some_module_dir==%some_module.virdir_spec:vir_dir
+
+
+%test-members-2==(test_data/prog.py)+(%py-opts)+py_sp=(test_data)+mypy_plugin=(json_codec_mypy_plugin.py):py3.exec.cov
