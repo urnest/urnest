@@ -61,7 +61,6 @@ def infer_codec_value_type_from_args(arg_exprs: list[Expression],
     #pdb_trace()
     result=infer_type_from_expr(arg_exprs[0],checker_api)
     verify_type_encodable(result, checker_api)
-    # verify_type_is_concrete(result) allow for https://github.com/urnest/urnest/issues/2
     return result
     
 KnownExpressionType = ( LiteralType | UnionType | Instance | TypeAliasType | TupleType |
@@ -531,27 +530,6 @@ def verify_type_encodable(
             if not isinstance(t.alias.target, (LiteralType,UnionType,Instance,TypeAliasType,TupleType,NoneType,TypeVarType,AnyType)):
                 raise CodecParamInvalid(f"unexpected type alias target type {t.alias.target}")
             verify_type_encodable(t.alias.target,checker_api)
-            return True
-
-def verify_type_is_concrete(
-    t: KnownExpressionType
-) -> Literal[True]:
-    match t:
-        case TypeVarType():
-            raise CodecParamInvalid(f"{t} must be concrete, not a TypeVar")
-        case NoneType() | AnyType() | LiteralType():
-            return True
-        case UnionType() | TupleType():
-            for arg in t.items:
-                if not isinstance(arg, KnownExpressionType.__args__):
-                    raise CodecParamInvalid(f"unexpected union/tuple item type {arg}")
-                verify_type_is_concrete(arg)
-            return True
-        case TypeAliasType() | Instance():
-            for arg in t.args:
-                if not isinstance(arg, KnownExpressionType.__args__):
-                    raise CodecParamInvalid(f"unexpected generic type/type alias arg type {arg}")
-                verify_type_is_concrete(arg)
             return True
 
 def adjust_type_or_type_return_type(x: MethodContext) -> Type:
