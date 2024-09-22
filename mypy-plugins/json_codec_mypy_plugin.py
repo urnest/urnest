@@ -58,7 +58,6 @@ def infer_codec_value_type_from_args(arg_exprs: list[Expression],
                                      checker_api:CheckerPluginInterface) -> Type:
     assert len(arg_exprs)==1, "expected one argument to codec(), got "+str(len(arg_exprs))
     assert isinstance(checker_api, TypeChecker), (type(checker_api), checker_api)
-    #pdb_trace()
     result=infer_type_from_expr(arg_exprs[0],checker_api)
     verify_type_encodable(result, checker_api)
     return result
@@ -511,10 +510,9 @@ def verify_type_encodable(
                     ):
                         match attr_node.node:
                             case SymbolNode() if isinstance(attr_node.node, Var) and attr_node.node.type is not None:
-                                if not isinstance(attr_node.node.type, (LiteralType,UnionType,Instance,TypeAliasType,TupleType,NoneType,TypeVarType,AnyType)):
-                                    raise CodecParamInvalid(f"unexpected {attr_name} type {attr_node.node.type}")
+                                if not isinstance(attr_node.node.type, KnownExpressionType.__args__):
+                                    raise CodecParamInvalid(f"{t.type._fullname}.{attr_name} type ({attr_node.node.type}) is not encodable")
                                 verify_type_encodable(attr_node.node.type,checker_api)
-                                return True
                             case SymbolNode() if not isinstance(attr_node.node, (FuncDef, OverloadedFuncDef, Decorator) ):
                                 raise CodecParamInvalid(f"{t.type._fullname}.{attr_name} unexpected {attr_node.node}")
                             case None:

@@ -14,6 +14,7 @@
 %test_json_codec_mypy_plugin_too_many_params
 %test-members
 %test-members-2
+%test-jc
 
 %py-opts==<<
 +py_sp=(..)
@@ -46,18 +47,18 @@ FILE:14: error: Argument 1 to "encode" of "CodecProto" has incompatible type "st
 FILE:16: error: Argument 1 to "encode" of "CodecProto" has incompatible type "str"; expected "bool"  [arg-type]
 FILE:18: error: Argument 1 to "encode" of "CodecProto" has incompatible type "str"; expected "float"  [arg-type]
 FILE:20: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "None"  [arg-type]
-FILE:22: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "list[Any]"  [arg-type]
-FILE:24: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "dict[Any, Any]"  [arg-type]
-FILE:26: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "set[Any]"  [arg-type]
+FILE:22: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "list[bool | dict[Any, Any] | list[Any] | float | str | None]"  [arg-type]
+FILE:24: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "dict[str, bool | dict[Any, Any] | list[Any] | float | str | None]"  [arg-type]
+FILE:26: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "set[bool | dict[Any, Any] | list[Any] | float | str | None]"  [arg-type]
 FILE:28: error: Argument 1 to "encode" of "CodecProto" has incompatible type "int"; expected "str"  [arg-type]
 FILE:30: error: Incompatible types in assignment (expression has type "int", variable has type "str")  [assignment]
 FILE:32: error: Incompatible types in assignment (expression has type "bool", variable has type "str")  [assignment]
 FILE:34: error: Incompatible types in assignment (expression has type "float", variable has type "str")  [assignment]
 FILE:36: error: Incompatible types in assignment (expression has type "None", variable has type "str")  [assignment]
-FILE:38: error: Incompatible types in assignment (expression has type "list[Any]", variable has type "str")  [assignment]
-FILE:40: error: Incompatible types in assignment (expression has type "tuple[Any, ...]", variable has type "str")  [assignment]
-FILE:42: error: Incompatible types in assignment (expression has type "dict[Any, Any]", variable has type "str")  [assignment]
-FILE:44: error: Incompatible types in assignment (expression has type "set[Any]", variable has type "str")  [assignment]
+FILE:38: error: Incompatible types in assignment (expression has type "list[bool | dict[Any, Any] | list[Any] | float | str | None]", variable has type "str")  [assignment]
+FILE:40: error: Incompatible types in assignment (expression has type "tuple", variable has type "str")  [assignment]
+FILE:42: error: Incompatible types in assignment (expression has type "dict[str, bool | dict[Any, Any] | list[Any] | float | str | None]", variable has type "str")  [assignment]
+FILE:44: error: Incompatible types in assignment (expression has type "set[bool | dict[Any, Any] | list[Any] | float | str | None]", variable has type "str")  [assignment]
 FILE:46: error: Incompatible types in assignment (expression has type "str", variable has type "int")  [assignment]
 
 %test_json_codec_mypy_plugin_builtin.errors==%json_codec_mypy_plugin_builtin.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
@@ -85,7 +86,7 @@ x = (c1.encode(7),
      c4.encode(7),
      c5.encode([1,2]),
      c5.encode(7),
-     c7.encode({1:2}),
+     c7.encode({"1":2}),
      c7.encode(7),
      c8.encode({1}),
      c8.encode(7),
@@ -140,6 +141,11 @@ FILE:16: error: Incompatible types in assignment (expression has type "list[int]
 FILE:18: error: Incompatible types in assignment (expression has type "set[str]", variable has type "str")  [assignment]
 FILE:20: error: Incompatible types in assignment (expression has type "dict[str, int]", variable has type "str")  [assignment]
 FILE:22: error: Incompatible types in assignment (expression has type "tuple[str, int, float]", variable has type "str")  [assignment]
+FILE:23: error: TupleExpr:23(
+  NameExpr(int [builtins.int])
+  NameExpr(str [builtins.str])) is not valid as parameter to xju.json_codec.codec()  [misc]
+FILE:23: error: Type application has too many types (1 expected)  [misc]
+FILE:24: error: Type application has too many types (2 expected)  [misc]
 
 %test_json_codec_mypy_plugin_indexed.errors==%json_codec_mypy_plugin_indexed.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
 
@@ -168,20 +174,21 @@ r4:tuple[str,int,float]=c4.decode(None)
 r4x:str=c4.decode(None)  # ensure return type not inferred as Any
 e1=codec(list[int, str]) # not valid python
 e2=codec(dict[int, str, float])  # not valid python
-e3=codec(tuple[])  # not valid python
 
 %test_json_codec_mypy_plugin_class==%test_json_codec_mypy_plugin_class.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_class.py.test:filename) (%test_json_codec_mypy_plugin_class.expect):exec.output
 
 %test_json_codec_mypy_plugin_class.expect==<<
 FILE:10: error: Argument 1 to "encode" of "CodecProto" has incompatible type "str"; expected "X"  [arg-type]
 FILE:12: error: Incompatible types in assignment (expression has type "X", variable has type "int")  [assignment]
+FILE:21: error: __main__.Fred.c type (def ()) is not encodable  [misc]
+FILE:26: error: __main__.Fred.c type (def ()) is not encodable  [misc]
 
 %test_json_codec_mypy_plugin_class.errors==%json_codec_mypy_plugin_class.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
 
 %json_codec_mypy_plugin_class.py.test == <<
 from enum import Enum
 from xju.json_codec import codec #, _xxx
-#_xxx()
+from typing import Callable
 class X(Enum):
     a="A"
     b="B"
@@ -199,24 +206,22 @@ class Fred:
         self.a = a
         self.b = b
     def g(self): pass
+codec(Fred)  # should not be encodable because of non-encodable c
 class Jock(Fred):  # error: Fred not encodable
-    c: int
-    def __init__(self, a: int, b: str, c:int):
+    def __init__(self, a: int, b: str, c:Callable[[],None]):
         super().__init__(a, b)
         self.c = c
+codec(Jock)  # should not be encodable because of non-encodable Fred
 
 %test_json_codec_mypy_plugin_literal==%test_json_codec_mypy_plugin_literal.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_literal.py.test:filename) (%test_json_codec_mypy_plugin_literal.expect):exec.output
 
 %test_json_codec_mypy_plugin_literal.expect==<<
+FILE:6: error: Parameter 1 of Literal[...] cannot be of type "float"  [valid-type]
 FILE:9: error: Argument 1 to "encode" of "CodecProto" has incompatible type "Literal[7]"; expected "Literal['A']"  [arg-type]
 FILE:11: error: Argument 1 to "encode" of "CodecProto" has incompatible type "Literal['fred']"; expected "Literal[7]"  [arg-type]
-FILE:12: error: Argument 1 to "encode" of "CodecProto" has incompatible type "float"; expected "Literal[7.9]"  [arg-type]
-FILE:13: error: Argument 1 to "encode" of "CodecProto" has incompatible type "Literal['fred']"; expected "Literal[7.9]"  [arg-type]
-FILE:15: error: Argument 1 to "encode" of "CodecProto" has incompatible type "Literal[False]"; expected "Literal[True]"  [arg-type]
-FILE:17: error: Incompatible types in assignment (expression has type "Literal['A']", variable has type "int")  [assignment]
-FILE:20: error: Parameter 1 of Literal[...] cannot be of type "float"  [valid-type]
-FILE:21: error: Incompatible types in assignment (expression has type "Literal[7.9]", variable has type "int")  [assignment]
-FILE:23: error: Incompatible types in assignment (expression has type "Literal[True]", variable has type "list[Any]")  [assignment]
+FILE:13: error: Argument 1 to "encode" of "CodecProto" has incompatible type "Literal[False]"; expected "Literal[True]"  [arg-type]
+FILE:15: error: Incompatible types in assignment (expression has type "Literal['A']", variable has type "float")  [assignment]
+FILE:19: error: Incompatible types in assignment (expression has type "Literal[True]", variable has type "list[Any]")  [assignment]
 
 %test_json_codec_mypy_plugin_literal.errors==%json_codec_mypy_plugin_literal.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
 
@@ -227,7 +232,7 @@ from xju.json_codec import codec #, _xxx
 A=Literal["A"]; c1=codec(A)
 Seven=Literal[7]; c2=codec(Seven)
 SevnPoint9=Literal[7.9]  # python does not allow
-LiterallyTrue=Literal[True]; c4=codec(LiteralllyTrue)
+LiterallyTrue=Literal[True]; c4=codec(LiterallyTrue)
 x = (c1.encode("A"),
      c1.encode(7),
      c2.encode(7),
@@ -235,7 +240,7 @@ x = (c1.encode("A"),
      c4.encode(True),
      c4.encode(False))
 r1:A = c1.decode(None)
-r1x:int = c1.decode(None)
+r1x:float = c1.decode(None)
 r2:Seven = c2.decode(None)
 r2x:int = c2.decode(None)
 r4:LiterallyTrue = c4.decode(None)
@@ -245,9 +250,9 @@ r4x:list = c4.decode(None)
 %test_json_codec_mypy_plugin_union==%test_json_codec_mypy_plugin_union.errors+cmd=(%verify-errs) (%json_codec_mypy_plugin_union.py.test:filename) (%test_json_codec_mypy_plugin_union.expect):exec.output
 
 %test_json_codec_mypy_plugin_union.expect==<<
-FILE:9: error: Argument 1 to "encode" of "CodecProto" has incompatible type "dict[Never, Never]"; expected "int | str | list[Any]"  [arg-type]
+FILE:9: error: Argument 1 to "encode" of "CodecProto" has incompatible type "dict[Never, Never]"; expected "int | str | list[bool | dict[Any, Any] | list[Any] | float | str | None]"  [arg-type]
 FILE:11: error: Argument 1 to "encode" of "CodecProto" has incompatible type "Literal['C']"; expected "Literal['A', 'B']"  [arg-type]
-FILE:13: error: Incompatible types in assignment (expression has type "int | str | list[Any]", variable has type "list[Any]")  [assignment]
+FILE:13: error: Incompatible types in assignment (expression has type "int | str | list[bool | dict[Any, Any] | list[Any] | float | str | None]", variable has type "list[Any]")  [assignment]
 FILE:15: error: Incompatible types in assignment (expression has type "Literal['A', 'B']", variable has type "list[Any]")  [assignment]
 
 %test_json_codec_mypy_plugin_union.errors==%json_codec_mypy_plugin_union.py.test+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
@@ -389,3 +394,4 @@ z1 = (zc.encode(7),
 
 
 %test-members-2==(test_data/prog.py)+(%py-opts)+py_sp=(test_data)+mypy_plugin=(json_codec_mypy_plugin.py):py3.exec.cov
+%test-jc==(test_data/test-jc.py)+(%py-opts)+py_sp=(test_data)+mypy_plugin=(json_codec_mypy_plugin.py):py3.exec.cov

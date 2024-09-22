@@ -13,7 +13,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-from typing import Union,List,Dict,Generic,TypeVar
+from typing import Union,List,Dict
 import json
 from xju.newtype import Int, Str
 
@@ -34,9 +34,3 @@ def fromJson(x:str) -> Union[str,int,float,bool,None,List,Dict]:
 class UserNameTag: pass
 class UserName(Str[UserNameTag]):
     pass
-
-
-Payload = TypeVar("Payload")
-
-class B(Generic[Payload]):
-    tv: Payload
