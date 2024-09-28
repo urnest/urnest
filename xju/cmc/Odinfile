@@ -44,6 +44,7 @@ io%installed-cov
 %unit-tests-v-installed.tree==<<
 cmc.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin'+mypy_plugin_mod='xju.cmc_mypy_plugin':py3.exec.cov
 async_cmclass.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin'+mypy_plugin_mod='xju.cmc_mypy_plugin':py3.exec.cov
+delay_cancellation.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin'+mypy_plugin_mod='xju.cmc_mypy_plugin':py3.exec.cov
 Dict.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin'+mypy_plugin_mod='xju.cmc_mypy_plugin':py3.exec.cov
 Opt.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin'+mypy_plugin_mod='xju.cmc_mypy_plugin':py3.exec.cov
 AsyncDict.py.test+mypy_plugin_mod='xju.json_codec_mypy_plugin'+mypy_plugin_mod='xju.cmc_mypy_plugin':py3.exec.cov
