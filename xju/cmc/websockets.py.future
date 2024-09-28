@@ -38,8 +38,6 @@ class WebSocketConnectionAccepted:
 class WebSocketConnection(asyncio.Protocol):
     _ws: websockets.protocol.Protocol
 
-    pinger: None | Future[None]
-
     _guard: Mutex
     _changed: Condition
     _xon: bool = True
@@ -57,22 +55,21 @@ class WebSocketConnection(asyncio.Protocol):
                 pass
             pass
         pass
-    async def ping(data: bytes):
-        """send ping, await pong or close"""
+    async def ping(data: bytes) -> None:
+        """
+        send ping
+
+        - does not wait for close
+        """
         ...
-    async def send_pong(data: bytes):
+    async def send_pong(data: bytes) -> None:
         ...
-    async def send_close(code: int, why: str):
+    async def send_close(code: int, why: str) -> None:
         ...
     async def recv(max_size: None | ByteCount) -> (
             bytes |
             Ping |
+            Pong |
             Close
     ):
         ...
-    async def recv(max_size: None | ByteCount, ping_handler: Callable[[bytes], Awaitable[None]]) -> (
-            bytes |
-            Close
-    ):
-        ...
-    
