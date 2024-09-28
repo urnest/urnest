@@ -182,6 +182,7 @@ Release History
 - 3.5.0 rewrite json_codec_mypy_plugin from scratch and add lots of test cases
 - 3.5.0 xju.json_codec add literal enum value support
 - 3.5.0 refine typescript generation to require less manual additions when generating code
+- 3.5.0 fix AsyncOpt pop(x, None)
 - 3.4.0 xju.json_codec add attr name mapping feature encode_attr_as()
 - 3.4.0 support mypy 1.11
 - 3.3.1 xju.cmc reject @cmclass where @async_cmclass needed

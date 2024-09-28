@@ -166,6 +166,7 @@ async def main():
         ]
         cc = await x.pop('c',old_b)
         Assert(await x.pop('c',7))==7
+        Assert(await x.pop('c',None))==None
         Assert(extract_log())==['+ aexit c', '- aexit c']
         Assert(repr(x)).matches(r"OrderedDict[({\[]*\s*'b'. <__main__.AsyncResource object at 0x[0-9a-f]*>\s*[}\])]*")
         pass

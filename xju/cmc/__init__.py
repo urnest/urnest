@@ -844,8 +844,8 @@ class AsyncDict(Mapping[K, AsyncV], contextlib.AbstractAsyncContextManager):
         '''pop and "exit" value of {key} if self has a value for it
         otherwise return default'''
 
-    async def pop(self, key, default=None):
-        if default is None:
+    async def pop(self, key, *rem):
+        if not rem:
             v = self.x.pop(key)
             if self.entered:
                 async with contextlib.AsyncExitStack() as f:
@@ -861,7 +861,7 @@ class AsyncDict(Mapping[K, AsyncV], contextlib.AbstractAsyncContextManager):
                     pass
                 return v
             except KeyError:
-                return default
+                return rem[0]
             pass
         pass
 
