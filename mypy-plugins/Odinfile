@@ -15,6 +15,7 @@
 %test-members
 %test-members-2
 %test-jc
+%test_xn_plugin
 
 %py-opts==<<
 +py_sp=(..)
@@ -24,9 +25,11 @@
 %plugin-type-checks.tree==<<
 %typecheck_json_codec_plugin
 %typecheck_cmc_plugin
+%typecheck_xn_plugin
 
 %typecheck_json_codec_plugin==json_codec_mypy_plugin.py+(%py-opts):main.mypy3
 %typecheck_cmc_plugin==cmc_mypy_plugin.py+(%py-opts):main.mypy3
+%typecheck_xn_plugin==xn_mypy_plugin.py+(%py-opts):main.mypy3
 
 %verify-errs == ! <<
 #!/bin/sh -ex
@@ -395,3 +398,11 @@ z1 = (zc.encode(7),
 
 %test-members-2==(test_data/prog.py)+(%py-opts)+py_sp=(test_data)+mypy_plugin=(json_codec_mypy_plugin.py):py3.exec.cov
 %test-jc==(test_data/test-jc.py)+(%py-opts)+py_sp=(test_data)+mypy_plugin=(json_codec_mypy_plugin.py):py3.exec.cov
+
+
+%test_xn_plugin==%test_xn_plugin.errors+cmd=(%verify-errs) (test_data/xn_in_function_context_errors.py:filename) (%test_xn_plugin.expect):exec.output
+
+%test_xn_plugin.expect==<<
+
+%test_xn_plugin.errors==(test_data/xn_in_function_context_errors.py)+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(xn_mypy_plugin.py):main.mypy3:err
+

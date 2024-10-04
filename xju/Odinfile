@@ -102,6 +102,7 @@ mypy-error-tests%all.tree:leaves
 +(%py-opts-no-mypy-plugins)
 +mypy_plugin=(../mypy-plugins/json_codec_mypy_plugin.py)
 +mypy_plugin=(../mypy-plugins/cmc_mypy_plugin.py)
++mypy_plugin=(../mypy-plugins/xn_mypy_plugin.py)
 +need=(../mypy-plugins%plugin-type-checks)
 
 %py-opts-no-mypy-plugins==<<

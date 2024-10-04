@@ -152,6 +152,20 @@ fred.\
     pass
 
 def test6():
+    "test6 with {a}"
+    a=2
+    try:
+        try:
+            raise Exception("fred")
+        except Exception:
+            raise in_function_context(test6, vars()) from None
+        pass
+    except Exception as e:
+        Assert(readable_repr(e))==''
+    else:
+        assert False, 'should not be here'
+        pass
+        
     class X:
         def jump(self, height:int):
             '''
