@@ -14,15 +14,16 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 from typing import Callable
+from mypy.errors import Errors
 from mypy.plugin import (
     Plugin, FunctionContext,
     CheckerPluginInterface,
-    FunctionContext,
 )
 from mypy.types import (
     Type,
 )
 from mypy.nodes import (
+    Context,
     CallExpr,
     NameExpr,
     MemberExpr,
@@ -37,7 +38,8 @@ from mypy.nodes import (
 )
 from mypy.checker import TypeChecker
 from mypy.checkexpr import ExpressionChecker
-from mypy.fastparse import ast3_parse, visit_FormattedValue
+from mypy.fastparse import ast3_parse, ASTConverter
+from ast import JoinedStr, FormattedValue, Expression as AstExpression
 
 class DocStringError(Exception):
     pass
@@ -76,16 +78,30 @@ def check_in_function_context(x: FunctionContext) -> Type:
         vars_call_expr: CallExpr = x.args[1][0]
 
         format_value = get_function_doc_string_value(x.args[0][0]).strip().split('\n\n')[0].strip()
+
+        context: Context = x.context
         
-        format_callee=MemberExpr(StrExpr(format_value), 'format')
-        
-        e = CallExpr(format_callee,
-                     [vars_call_expr],
-                     [ArgKind.ARG_STAR2],
-                     [None],
-                     None)
-        
-        expr_checker.strfrm_checker.check_str_format_call(e, format_value)
+        # first check treating format_value as an fstring...
+
+        parsed = ast3_parse('f'+repr(format_value), '<string>', 'eval', checker_api.options.python_version[1])
+        #pdb_trace()
+        assert isinstance(parsed, AstExpression), parsed
+        assert isinstance(parsed.body, JoinedStr), parsed.body
+        fstr_expression: Expression = ASTConverter(
+            checker_api.options,
+            False,
+            Errors(checker_api.options),
+            strip_function_bodies=False,
+            path=''
+        ).visit_JoinedStr(parsed.body)
+
+        assert isinstance(fstr_expression, CallExpr)
+        pdb_trace()
+        expr_checker.visit_call_expr(fstr_expression)
+        expr_checker.check_str_format_call(fstr_expression)
+
+        # ... then make sure there are no {x=} format specifiers
+        # REVISIT
         return x.default_return_type
     except DocStringError as e:
         x.api.fail(str(e), x.context)
@@ -99,7 +115,7 @@ def get_function_doc_string_value(expr: Expression) -> str:
             function_name=expr.name
         case MemberExpr():
             function_name=expr.fullname
-            pdb_trace()
+            #pdb_trace()
             if not isinstance(expr.expr, NameExpr):
                 raise DocStringError(f"{expr} is not an xn-supported function reference")
             a:NameExpr=expr.expr
@@ -118,7 +134,7 @@ def get_function_doc_string_value(expr: Expression) -> str:
         isinstance(f.body.body[0], ExpressionStmt) and
         isinstance(f.body.body[0].expr, StrExpr)
     ):
-        return expr.fullname
+        return f.body.body[0].expr.value
     raise DocStringError(f"{function_name} has no docstring")
 
 def pdb_trace() -> None:
