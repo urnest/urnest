@@ -151,8 +151,11 @@ fred.\
 '''
     pass
 
+q=5
 def test6():
     "test6 with {a}"
+    global q
+    q=7
     a=2
     try:
         try:

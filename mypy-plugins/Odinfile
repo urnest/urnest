@@ -16,6 +16,7 @@
 %test-members-2
 %test-jc
 %test_xn_plugin
+xn_mypy_plugin.py.test+(%py-opts)+py_sp=(.):py3.exec.cov
 
 %py-opts==<<
 +py_sp=(..)
@@ -29,7 +30,7 @@
 
 %typecheck_json_codec_plugin==json_codec_mypy_plugin.py+(%py-opts):main.mypy3
 %typecheck_cmc_plugin==cmc_mypy_plugin.py+(%py-opts):main.mypy3
-%typecheck_xn_plugin==xn_mypy_plugin.py+(%py-opts):main.mypy3
+%typecheck_xn_plugin==xn_mypy_plugin.py+(%py-opts)+mypy_plugin='mypy.plugins.proper_plugin':main.mypy3
 
 %verify-errs == ! <<
 #!/bin/sh -ex
