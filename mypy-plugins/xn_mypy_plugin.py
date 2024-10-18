@@ -102,11 +102,26 @@ def check_in_function_context(x: FunctionContext) -> Type:
         if (conversion_specifiers:=parse_format_value(
                 format_string, x.context, checker_api.msg
         )) is not None:
-            # we want to fabricate a type-checkable call to str.format... type checking does not
+            # We want to fabricate a type-checkable call to str.format... type checking does not
             # treat vars() specially, so we have to do that ourselves i.e. find all the valid vars
             # and fabricate a .format() call that uses positional args rather than named args
             # vars() has function params as well as local variables, so our scope for finding
-            # valid vars is the function we're in
+            # valid vars is the function we're in; in theory we should be able to do that
+            # like the way mypy checks f"{x} {y}", which is that during semantic analysis, that
+            # is expanded as if it was a "macro" into "{0} {1}".format(x, y) by fabricating
+            # the relevant nodes to replace the usual CallExpr node - but mypy has no appropriate
+            # semantic analysis hooks.
+            # One good thing about or approach is that we can do var initialisation analysis
+            # perhaps beyond what mypy does in general, though it is not smart enough
+            # to recognise that e.g.:
+            # if a:
+            #    raise Exception
+            # elif c:
+            #    j=1
+            # else:
+            #    j=2
+            # print(j)
+            # ... always initialises j
             func_item=checker_api.scope.stack[-1]
             assert isinstance(func_item, (FuncDef, OverloadedFuncDef))
             valid_vars_at_expr=get_valid_vars_at(

@@ -49,3 +49,74 @@ def f():
     class C: pass
     raise in_function_context(f, vars())  # no error
     pass
+
+def g(b: bool, d: bool, p: int, pp: int, m: bool):
+    "{a} {b} {c} {d} {e} {f} {j} {t} {m} {v} {u}"
+    a=1
+    c:int|str
+    if b:
+        c=2
+    else:
+        c='fred'
+        pass
+    if d:
+        if p:
+            raise Exception('fred')
+        elif pp:
+            qq=1
+            j='jock'
+        else:
+            j='and'
+            pass
+        pass
+    else:
+        j='not'
+        pass
+    try:
+        e=1
+        u=p-1
+        if u:
+            v:int|str
+            if p:
+                v=2
+                raise Exception('fred')
+            else:
+                v='jock'
+    except Exception:
+        aa=7
+        if m:
+            raise Exception('fred')
+        else:
+            t=8
+            raise in_function_context(g, vars()) from None  # REVISIT: should not complain about j but does
+
+def k(kk:int):
+    "{a} {b}"
+    try:
+        p=2*kk
+    except Exception:
+        if p:
+            a='nine'
+            raise in_function_context(k, vars())
+        else:
+            raise in_function_context(k, vars())
+
+
+def c(x: int):
+    class C:
+        def f(self):
+            "{x} {y}"
+            try:
+                print(x)
+            except Exception:
+                raise in_function_context(C.f, vars()) from None
+            pass
+        def q(self):
+            "{x} {y}"
+            try:
+                print('f')
+            except Exception:
+                raise in_function_context(C.f, globals()) from None  # REVISIT: should be no complaint about x but there is
+            pass
+        pass
+    pass
