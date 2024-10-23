@@ -41,6 +41,7 @@ from mypy.nodes import (
     Lvalue,
     Node,
     TempNode,
+    Context,
 )
 from mypy.checker import TypeChecker
 from mypy.checkexpr import ExpressionChecker
@@ -75,8 +76,6 @@ def check_in_function_context(x: FunctionContext) -> Type:
         checker_api = x.api
         assert isinstance(checker_api, TypeChecker), (type(checker_api), checker_api)
         expr_checker = checker_api.expr_checker
-
-        #pdb_trace()
 
         # x.context should be the in_function_context() call...
         expr = x.context
@@ -124,6 +123,9 @@ def check_in_function_context(x: FunctionContext) -> Type:
             # ... always initialises j
             func_item=checker_api.scope.stack[-1]
             assert isinstance(func_item, (FuncDef, OverloadedFuncDef))
+
+            #pdb_trace()
+
             valid_vars_at_expr=get_valid_vars_at(
                 expr,
                 func_item
@@ -253,6 +255,10 @@ class VarsSoFar:
         return self.intersection(*others)
     pass
 
+@dataclass
+class UnconditionalRaise:
+    at: Context
+
 def get_valid_vars_at(expr: Expression, within: FuncDef) -> dict[VarName, VarNode]:
     """
     get valid variables at expression {expr} within function {within}
@@ -277,15 +283,17 @@ def get_valid_vars_at(expr: Expression, within: FuncDef) -> dict[VarName, VarNod
         case VarsAtExpr() as result:
             return {VarName(var.name):var for var in list(result.vars_at_expr) +
                     [a.variable for a in within.arguments]}
+        case UnconditionalRaise() as u:
+            raise DocStringError(f"in_function_context call at {expr.line} apparently unreachable due to unconditional raise at line {u.at.line}")
         case VarsSoFar() as vars_so_far:
             # expr not found? should not get to here
-            raise DocStringError(f"xn_mypy_plugin internal error, did not find {expr} in {within}")
+            raise DocStringError(f"xn_mypy_plugin internal error, did not find in_function_context call at {expr.line} in function at line {within.line}")
 
 def collect_vars_defined_for_expr(
         expr:Expression,
         collect_from:Node,
         vars_so_far:VarsSoFar
-) -> VarsAtExpr | VarsSoFar:
+) -> VarsAtExpr | VarsSoFar | UnconditionalRaise:
     if expr is collect_from:
         return VarsAtExpr(vars_so_far.vars_so_far)
 
@@ -304,12 +312,27 @@ def collect_vars_defined_for_expr(
             match collect_vars_defined_for_expr(expr, collect_from.expr[0], vars_so_far):
                 case VarsAtExpr() as result:
                     return result
+                case UnconditionalRaise() as result:
+                    return result
                 case VarsSoFar() as vars_so_far:
                     match collect_vars_defined_for_expr_from_statements(
                         expr, iter(sum([block.body for block in collect_from.body], [])), vars_so_far
                     ):
                         case VarsAtExpr() as result:
                             return result
+                        case UnconditionalRaise():
+                            match collect_vars_defined_for_expr_from_statements(
+                                expr,
+                                iter(collect_from.else_body.body) if collect_from.else_body else iter([]),
+                                vars_so_far
+                            ):
+                                case VarsAtExpr() as result:
+                                    return result
+                                case UnconditionalRaise() as result:
+                                    return result
+                                case VarsSoFar() as false_vars:
+                                    # true path raised unconditionally so ignore it
+                                    return false_vars
                         case VarsSoFar() as true_vars:
                             match collect_vars_defined_for_expr_from_statements(
                                 expr,
@@ -318,6 +341,9 @@ def collect_vars_defined_for_expr(
                             ):
                                 case VarsAtExpr() as result:
                                     return result
+                                case UnconditionalRaise():
+                                    # false path raised unconditionally so ignore it
+                                    return true_vars
                                 case VarsSoFar() as false_vars:
                                     return true_vars & false_vars
         case TryStmt():
@@ -326,6 +352,8 @@ def collect_vars_defined_for_expr(
                 match collect_vars_defined_for_expr_from_statements(expr, iter(handler.body), vars_so_far):
                     case VarsAtExpr() as result:
                         return result
+                    case UnconditionalRaise() as result:
+                        pass
                     case VarsSoFar() as handler_vars:
                         # note only finally is gauranteed to run, so ignore vars assigned in handlers
                         pass
@@ -335,13 +363,15 @@ def collect_vars_defined_for_expr(
                 ):
                     case VarsAtExpr() as result:
                         return result
+                    case UnconditionalRaise() as result:
+                        pass
                     case VarsSoFar() as handler_vars:
                         # note only finally is gauranteed to run, so ignore vars assigned in else body
                         pass
             match collect_vars_defined_for_expr_from_statements(expr, iter(collect_from.body.body), vars_so_far):
                 case VarsAtExpr() as result:
                     return result
-                case VarsSoFar():
+                case VarsSoFar() | UnconditionalRaise():
                     # Assume any statement in body could raise, in which case no vars would be
                     # initialised. (In reality some python statements never raise exceptions but
                     # not feasible in this plugin to figure out which.)
@@ -351,6 +381,8 @@ def collect_vars_defined_for_expr(
                     expr, iter(collect_from.finally_body.body), vars_so_far
                 ):
                     case VarsAtExpr() as result:
+                        return result
+                    case UnconditionalRaise() as result:
                         return result
                     case VarsSoFar() as vars_so_far:
                         return vars_so_far
@@ -362,6 +394,8 @@ def collect_vars_defined_for_expr(
                 match collect_vars_defined_for_expr(expr, with_expr, vars_so_far):
                     case VarsAtExpr() as result:
                         return result
+                    case UnconditionalRaise():
+                        pass
                     case VarsSoFar():
                         # note can't assign to a variable as part of expression
                         pass
@@ -380,6 +414,8 @@ def collect_vars_defined_for_expr(
             match collect_vars_defined_for_expr(expr, collect_from.rvalue, vars_so_far):
                 case VarsAtExpr() as result:
                     return result
+                case UnconditionalRaise() as result:
+                    return result
                 case VarsSoFar():
                     # note can't assign to a variable as part of expression
                     pass
@@ -390,6 +426,8 @@ def collect_vars_defined_for_expr(
             match collect_vars_defined_for_expr(expr, collect_from.value, vars_so_far):
                 case VarsAtExpr() as result:
                     return result
+                case UnconditionalRaise() as result:
+                    return result
                 case VarsSoFar():
                     # note can't assign to a variable as part of expression
                     pass
@@ -399,12 +437,16 @@ def collect_vars_defined_for_expr(
             match collect_vars_defined_for_expr(expr, collect_from.expr, vars_so_far):
                 case VarsAtExpr() as result:
                     return result
+                case UnconditionalRaise() as result:
+                    return result
                 case VarsSoFar() as vars_so_far:
                     match collect_vars_defined_for_expr_from_statements(
                         expr, iter(collect_from.body.body), vars_so_far | collect_lvalue_vars(collect_from.index)
                     ):
                         case VarsAtExpr() as result:
                             return result
+                        case UnconditionalRaise():
+                            pass
                         case VarsSoFar():
                             pass
             if collect_from.else_body is not None:
@@ -413,6 +455,8 @@ def collect_vars_defined_for_expr(
                 ):
                     case VarsAtExpr() as result:
                         return result
+                    case UnconditionalRaise():
+                        pass
                     case VarsSoFar():
                         pass
             # no gaurentee that body will be executed (e.g. for x in empty list); same goes
@@ -424,12 +468,17 @@ def collect_vars_defined_for_expr(
             match collect_vars_defined_for_expr(expr, collect_from.expr, vars_so_far):
                 case VarsAtExpr() as result:
                     return result
+                case UnconditionalRaise() as result:
+                    return result
                 case VarsSoFar() as vars_so_far:
                     match collect_vars_defined_for_expr_from_statements(
                         expr, iter(collect_from.body.body), vars_so_far
                     ):
                         case VarsAtExpr() as result:
                             return result
+                        case UnconditionalRaise():
+                            # no gaurentee else will be executed so discard
+                            pass
                         case VarsSoFar():
                             # no gaurentee that body will be executed (e.g. while False) so discard vars
                             pass
@@ -439,6 +488,9 @@ def collect_vars_defined_for_expr(
                 ):
                     case VarsAtExpr() as result:
                         return result
+                    case UnconditionalRaise():
+                        # no gaurentee else will be executed so discard
+                        pass
                     case VarsSoFar():
                         # no gaurentee else will be executed so discard vars
                         pass
@@ -454,11 +506,19 @@ def collect_vars_defined_for_expr(
             match collect_vars_defined_for_expr(expr, collect_from.left, vars_so_far):
                 case VarsAtExpr() as result:
                     return result
+                case UnconditionalRaise() as result:
+                    return result
                 case VarsSoFar() as left_vars:
                     # expr might be in rhs so ignore collect_from.right_unreachable
                     match collect_vars_defined_for_expr(expr, collect_from.right, left_vars):
                         case VarsAtExpr() as result:
                             return result
+                        case UnconditionalRaise() as result:
+                            if collect_from.right_always:
+                                return result
+                            else:
+                                # ignore right branch as cases where we don't hit it
+                                return left_vars
                         case VarsSoFar() as right_vars:
                             if collect_from.right_always:
                                 return left_vars | right_vars
@@ -468,20 +528,25 @@ def collect_vars_defined_for_expr(
             return collect_vars_defined_for_expr(expr, collect_from.expr, vars_so_far)
 
         case OrPattern():
+            some_raise: None | UnconditionalRaise = None
             for pattern in collect_from.patterns:
                 match collect_vars_defined_for_expr(expr, pattern, vars_so_far):
                     case VarsAtExpr() as result:
                         return result
+                    case UnconditionalRaise() as some_raise:
+                        pass
                     case VarsSoFar() as vars_so_far:
                         # note all terms of a | b... are always evaluated
                         pass
-            return vars_so_far
+            return some_raise or vars_so_far
 
         case AsPattern():
             if collect_from.pattern is not None:
                 match collect_vars_defined_for_expr(expr, collect_from.pattern, vars_so_far):
                     case VarsAtExpr() as result:
                         return result
+                    case UnconditionalRaise() as some_raise:
+                        return some_raise
                     case VarsSoFar() as vars_so_far:
                         pass
                 pass
@@ -494,15 +559,21 @@ def collect_vars_defined_for_expr(
             match collect_vars_defined_for_expr(expr, collect_from.if_expr, vars_so_far):
                 case VarsAtExpr() as result:
                     return result
+                case UnconditionalRaise() as some_raise:
+                    return some_raise
                 case VarsSoFar() as vars_so_far:
                     match collect_vars_defined_for_expr(expr, collect_from.cond, VarsSoFar(set[VarNode]())):
                         case VarsAtExpr() as result:
                             return result
+                        case UnconditionalRaise():
+                            pass
                         case VarsSoFar() as cond_vars:
                             pass
                     match collect_vars_defined_for_expr(expr, collect_from.else_expr, VarsSoFar(set[VarNode]())):
                         case VarsAtExpr() as result:
                             return result
+                        case UnconditionalRaise():
+                            pass
                         case VarsSoFar() as else_vars:
                             pass
                     return vars_so_far | (cond_vars & else_vars)
@@ -512,21 +583,19 @@ def collect_vars_defined_for_expr(
                 match collect_vars_defined_for_expr(expr, collect_from.expr, vars_so_far):
                     case VarsAtExpr() as result:
                         return result
+                    case UnconditionalRaise() as some_raise:
+                        return some_raise
                     case VarsSoFar() as vars_so_far:
                         pass
                 pass
-            if collect_from.from_expr is not None:
-                match collect_vars_defined_for_expr(expr, collect_from.from_expr, vars_so_far):
-                   case VarsAtExpr() as result:
-                        return result
-                   case VarsSoFar() as vars_so_far:
-                        pass
-            return vars_so_far
+            return UnconditionalRaise(collect_from.expr)
 
         case MatchStmt():
             match collect_vars_defined_for_expr(expr, collect_from.subject, vars_so_far):
                 case VarsAtExpr() as result:
                     return result
+                case UnconditionalRaise() as some_raise:
+                    return some_raise
                 case VarsSoFar() as vars_so_far:
                     pass
             for guard, body in zip(collect_from.guards, collect_from.bodies):
@@ -535,11 +604,15 @@ def collect_vars_defined_for_expr(
                     match collect_vars_defined_for_expr(expr, guard, vars_so_far):
                         case VarsAtExpr() as result:
                             return result
+                        case UnconditionalRaise():
+                            pass
                         case VarsSoFar() as guard_vars:
                             pass
                 match collect_vars_defined_for_expr(expr, body, guard_vars):
                     case VarsAtExpr() as result:
                         return result
+                    case UnconditionalRaise():
+                        pass
                     case VarsSoFar():
                         pass
                 pass
@@ -562,26 +635,13 @@ def collect_vars_defined_for_expr_from_statements(
         vars_so_far:VarsSoFar
 ) -> VarsAtExpr | VarsSoFar:
     while (statement:=next(collect_from, None)) is not None:
-        match statement:
-            case BreakStmt() | ContinueStmt() | RaiseStmt() | ReturnStmt():
-                match collect_vars_defined_for_expr(expr, statement, vars_so_far):
-                    case VarsAtExpr() as result:
-                        return result
-                    case VarsSoFar() as v:
-                        pass
-                match collect_vars_defined_for_expr_from_statements(expr, collect_from, v):
-                    case VarsAtExpr() as result:
-                        return result
-                    case VarsSoFar():
-                        # "rewind" to the break point
-                        return vars_so_far
-            case Statement():
-                assert isinstance(statement, LeafNodeTypes)
-                match collect_vars_defined_for_expr(expr, statement, vars_so_far):
-                    case VarsAtExpr() as result:
-                        return result
-                    case VarsSoFar() as vars_so_far:
-                        pass
+        assert isinstance(statement, LeafNodeTypes)
+        match collect_vars_defined_for_expr(expr, statement, vars_so_far):
+            case VarsAtExpr() as result:
+                return result
+            case UnconditionalRaise() as some_raise:
+                return some_raise
+            case VarsSoFar() as vars_so_far:
                 pass
         pass
     return vars_so_far

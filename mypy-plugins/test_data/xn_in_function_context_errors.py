@@ -5,7 +5,7 @@ def b(x: int) -> int:
     try:
         return 1
     except Exception:
-        raise in_function_context(fred, vars())  # yy not found
+        raise in_function_context(fred, vars())  # fred not found
 
 def a(x: int) -> int:
     try:
@@ -41,7 +41,7 @@ def d(x: int) -> None:
             e=E1('fake e1')
         pass
     except E1:
-        raise in_function_context(d, vars()) # actually ok but plugin does not analyze exception types raised by inner blocks and even if it did, it would assume b=3 or Exception('fred') could raise E1 so would still give an error
+        raise in_function_context(d, vars()) # e not valid (actually ok but plugin does not analyze exception types raised by inner blocks and even if it did, it would assume b=3 or Exception('fred') could raise E1 so would still give an error)
     pass
 
 def f():
@@ -49,6 +49,20 @@ def f():
     class C: pass
     raise in_function_context(f, vars())  # no error
     pass
+
+def gg(b: bool, d: bool, p: int, pp: int):
+    "{j} {q}"
+    if p:
+        raise Exception('fred')
+    elif pp:
+        j='jock'
+    else:
+        j='and'
+        pass
+    try:
+        e=1
+    except Exception:
+        raise in_function_context(gg, vars()) from None  # q not valid
 
 def g(b: bool, d: bool, p: int, pp: int, m: bool):
     "{a} {b} {c} {d} {e} {f} {j} {t} {m} {v} {u}"
@@ -88,7 +102,7 @@ def g(b: bool, d: bool, p: int, pp: int, m: bool):
             raise Exception('fred')
         else:
             t=8
-            raise in_function_context(g, vars()) from None  # REVISIT: should not complain about j but does
+            raise in_function_context(g, vars()) from None  # e, f, v, u not valid
 
 def k(kk:int):
     "{a} {b}"
@@ -97,26 +111,26 @@ def k(kk:int):
     except Exception:
         if p:
             a='nine'
-            raise in_function_context(k, vars())
+            raise in_function_context(k, vars())  # b not valid
         else:
-            raise in_function_context(k, vars())
+            raise in_function_context(k, vars())  # a, b not valid
 
 
-def c(x: int):
+def cc(x: int):
     class C:
         def f(self):
             "{x} {y}"
             try:
                 print(x)
             except Exception:
-                raise in_function_context(C.f, vars()) from None
+                raise in_function_context(C.f, vars()) from None  # REVISIT: should be no complaint about x but it does
             pass
         def q(self):
             "{x} {y}"
             try:
                 print('f')
             except Exception:
-                raise in_function_context(C.f, globals()) from None  # REVISIT: should be no complaint about x but there is
+                raise in_function_context(C.f, globals()) from None
             pass
         pass
     pass
