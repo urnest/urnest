@@ -1,5 +1,6 @@
 from xju.xn import in_function_context
 
+
 def b(x: int) -> int:
     'bb {yy} {x}'
     try:
@@ -22,6 +23,24 @@ def c(x: list[int]) -> BaseException:
         d=5
     return in_function_context(c, vars()) # i, p and d not valid
 
+def cc(x: int):
+    class C:
+        def f(self):
+            "{x} {y}"
+            try:
+                print(x)
+            except Exception:
+                raise in_function_context(C.f, vars()) from None  # y not valid
+            pass
+        def q(self):
+            "{x} {y}"
+            try:
+                print('f')
+            except Exception:
+                raise in_function_context(C.f, globals()) from None  # 2nd param should be vars()
+            pass
+        pass
+    pass
 
 class E1(Exception): pass
 class E2(Exception): pass
@@ -114,23 +133,3 @@ def k(kk:int):
             raise in_function_context(k, vars())  # b not valid
         else:
             raise in_function_context(k, vars())  # a, b not valid
-
-
-def cc(x: int):
-    class C:
-        def f(self):
-            "{x} {y}"
-            try:
-                print(x)
-            except Exception:
-                raise in_function_context(C.f, vars()) from None  # REVISIT: should be no complaint about x but it does
-            pass
-        def q(self):
-            "{x} {y}"
-            try:
-                print('f')
-            except Exception:
-                raise in_function_context(C.f, globals()) from None
-            pass
-        pass
-    pass

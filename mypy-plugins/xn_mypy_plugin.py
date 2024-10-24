@@ -121,14 +121,17 @@ def check_in_function_context(x: FunctionContext) -> Type:
             #    j=2
             # print(j)
             # ... always initialises j
-            func_item=checker_api.scope.stack[-1]
-            assert isinstance(func_item, (FuncDef, OverloadedFuncDef))
+            func_items=[x for x in checker_api.scope.stack
+                        if isinstance(x, (FuncDef, OverloadedFuncDef, TypeInfo))]
 
             #pdb_trace()
-
+            func_item=func_items[-1]
+            if not isinstance(func_item, FuncDef):
+                raise DocStringError(f"xn.in_function_context() should only be called from function scope")
             valid_vars_at_expr=get_valid_vars_at(
                 expr,
-                func_item
+                func_item,
+                func_items[:-1]
             )
 
             args=list[Expression]()
@@ -259,9 +262,9 @@ class VarsSoFar:
 class UnconditionalRaise:
     at: Context
 
-def get_valid_vars_at(expr: Expression, within: FuncDef) -> dict[VarName, VarNode]:
+def get_valid_vars_at(expr: Expression, within: FuncDef, scope: Sequence[FuncDef|TypeInfo]) -> dict[VarName, VarNode]:
     """
-    get valid variables at expression {expr} within function {within}
+    get valid variables at expression {expr} within function {within}, which is in scope {scope}
 
     - assumes expr is an expression within specified FuncDef
     - like vars(), includes function parameters and locals, but not globals
@@ -274,15 +277,44 @@ def get_valid_vars_at(expr: Expression, within: FuncDef) -> dict[VarName, VarNod
       ... a is valid, b is not valid because n might be False i.e. b is conditionally
           initialised
     """
-    body: Block = within.body
     match collect_vars_defined_for_expr_from_statements(
         expr,
         iter(within.body.body),
         VarsSoFar(set())
     ):
         case VarsAtExpr() as result:
-            return {VarName(var.name):var for var in list(result.vars_at_expr) +
+            vars={VarName(var.name):var for var in list(result.vars_at_expr) +
                     [a.variable for a in within.arguments]}
+            target:Node=within
+            for defn in reversed(scope):
+                match defn:
+                    case TypeInfo() as type_info:
+                        if (varname:=VarName(type_info.defn.name)) not in vars:
+                            vars[varname]=type_info.defn
+                            pass
+                        target=type_info.defn
+                    case FuncDef() as func_def:
+                        match collect_vars_defined_for_expr_from_statements(
+                            target,
+                            iter(func_def.body.body),
+                            VarsSoFar(set())
+                        ):
+                            case VarsAtExpr() as result:
+                                for var in list(result.vars_at_expr) + [
+                                        a.variable for a in func_def.arguments]:
+                                    if (varname:=VarName(var.name)) not in vars:
+                                        vars[varname]=var
+                                        pass
+                                    pass
+                                pass
+                            case UnconditionalRaise() as u:
+                                raise DocStringError(f"line {target.line} apparently unreachable due to unconditional raise at line {u.at.line}")
+                            case VarsSoFar():
+                                # expr not found? should not get to here
+                                raise DocStringError(f"xn_mypy_plugin internal error, did not find line {target.line} in function/class at line {defn.line}")
+                        target=defn
+                        pass
+            return vars
         case UnconditionalRaise() as u:
             raise DocStringError(f"in_function_context call at {expr.line} apparently unreachable due to unconditional raise at line {u.at.line}")
         case VarsSoFar() as vars_so_far:
@@ -290,7 +322,7 @@ def get_valid_vars_at(expr: Expression, within: FuncDef) -> dict[VarName, VarNod
             raise DocStringError(f"xn_mypy_plugin internal error, did not find in_function_context call at {expr.line} in function at line {within.line}")
 
 def collect_vars_defined_for_expr(
-        expr:Expression,
+        expr:Node,
         collect_from:Node,
         vars_so_far:VarsSoFar
 ) -> VarsAtExpr | VarsSoFar | UnconditionalRaise:
@@ -588,7 +620,7 @@ def collect_vars_defined_for_expr(
                     case VarsSoFar() as vars_so_far:
                         pass
                 pass
-            return UnconditionalRaise(collect_from.expr)
+            return UnconditionalRaise(collect_from)
 
         case MatchStmt():
             match collect_vars_defined_for_expr(expr, collect_from.subject, vars_so_far):
@@ -630,13 +662,13 @@ def collect_vars_defined_for_expr(
     reveal_type(collect_from)
 
 def collect_vars_defined_for_expr_from_statements(
-        expr: Expression,
+        target: Node,
         collect_from:Iterator[Statement],
         vars_so_far:VarsSoFar
-) -> VarsAtExpr | VarsSoFar:
+) -> VarsAtExpr | UnconditionalRaise | VarsSoFar:
     while (statement:=next(collect_from, None)) is not None:
         assert isinstance(statement, LeafNodeTypes)
-        match collect_vars_defined_for_expr(expr, statement, vars_so_far):
+        match collect_vars_defined_for_expr(target, statement, vars_so_far):
             case VarsAtExpr() as result:
                 return result
             case UnconditionalRaise() as some_raise:
