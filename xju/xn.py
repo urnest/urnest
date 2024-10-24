@@ -99,9 +99,19 @@ def in_function_context(function:Callable,
        - otherwise use exceptionInfo as cause for a new Xn
        - exceptionInfo defaults to sys.exc_info()
     """
-    return in_context(first_para_of(function.__doc__).format(**vars),
-                      exceptionInfo=exceptionInfo,
-                      fl=fl)
+    if function.__doc__ is None:
+        return in_context(f"{function.__name__}() (note function is missing doc-string!)",
+                          exceptionInfo=exceptionInfo,
+                          fl=fl)
+    else:
+        try:
+            s=first_para_of(function.__doc__).format(**vars)
+        except Exception:
+            s=f"{function.__name__}() (note that function's doc-string {function.__doc__!r} is unformattable - check its params/vars v its doc string)"
+            pass
+        return in_context(s,
+                          exceptionInfo=exceptionInfo,
+                          fl=fl)
 
 def in_context(context:str,
                exceptionInfo:None|tuple[Type[BaseException],BaseException,TracebackType]=None,

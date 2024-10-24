@@ -164,7 +164,7 @@ def test6():
             raise in_function_context(test6, vars()) from None
         pass
     except Exception as e:
-        Assert(readable_repr(e))==''
+        Assert(readable_repr(e))=='Failed to test6 with 2 because\nfred.'
     else:
         assert False, 'should not be here'
         pass
@@ -244,7 +244,7 @@ def test12():
         Assert(readable_repr(e))=="Failed to fred because\nTimeoutError."
         Assert(str(e)).matches('''\
 failed to fred because
-[^:]*:222: TimeoutError''')
+[^:]*:239: TimeoutError''')
         pass
     pass
 
@@ -253,7 +253,27 @@ def test13():
     Assert(first_line_of(''))==''
     Assert(first_line_of('fred'))=='fred'
 
-        
+def test14():
+    try:
+        raise Exception('fred')
+    except:
+        Assert(readable_repr(
+            in_function_context(test14,vars())  # type: ignore
+        ))=="Failed to test14() (note function is missing doc-string!) because\nfred."
+    else:
+        assert False
+
+def test15():
+    "test 15 with {x}"
+    try:
+        raise Exception('fred')
+    except:
+        Assert(readable_repr(
+            in_function_context(test15,vars())  # type: ignore
+        ))=="Failed to test15() (note that function's doc-string 'test 15 with {x}' is unformattable - check its params/vars v its doc string) because\nfred."
+    else:
+        assert False
+
 tests=[var for name,var in sorted(vars().items())
        if name.startswith('test') and callable(var)]
 for t in tests: t()
