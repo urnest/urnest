@@ -559,6 +559,7 @@ class TupleCodec:
             raise in_function_context(TupleCodec.encode,vars()) from None
         pass
     def decode(self,x,back_ref:None|Callable[[JsonType],Any]) -> tuple:
+        "decode {x} as tuple"
         try:
             if type(x) is not list:
                 raise Exception(f'{x!r} is not a list')
@@ -1233,7 +1234,7 @@ class BytesCodecImpl:
         try:
             return bytes(self.value_codec.decode(x,back_ref))
         except Exception as e:
-            raise in_function_context(BytesCodecImpl,vars())
+            raise in_function_context(BytesCodecImpl.decode,vars())
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         result=self.value_codec.get_json_schema(definitions,self_ref)
         result['description']="bytes"
