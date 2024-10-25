@@ -124,7 +124,6 @@ def check_in_function_context(x: FunctionContext) -> Type:
             func_items=[x for x in checker_api.scope.stack
                         if isinstance(x, (FuncDef, OverloadedFuncDef, TypeInfo))]
 
-            #pdb_trace()
             func_item=func_items[-1]
             if not isinstance(func_item, FuncDef):
                 raise DocStringError(f"xn.in_function_context() should only be called from function scope")
@@ -134,6 +133,7 @@ def check_in_function_context(x: FunctionContext) -> Type:
                 func_items[:-1]
             )
 
+            #pdb_trace()
             args=list[Expression]()
             arg_indices=dict[VarName,int]()
             arg_type_map=dict[NameExpr,Type]()
@@ -186,6 +186,7 @@ def check_in_function_context(x: FunctionContext) -> Type:
                          [ArgKind.ARG_POS for _ in args],
                          [None for _ in args],
                          None)
+            e.set_line(expr)
             # note local_type_map() cannot handle exceptions
             with checker_api.local_type_map() as type_map:
                 for arg, arg_type in arg_type_map.items():

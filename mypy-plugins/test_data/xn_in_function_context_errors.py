@@ -122,6 +122,8 @@ def g(b: bool, d: bool, p: int, pp: int, m: bool):
         else:
             t=8
             raise in_function_context(g, vars()) from None  # e, f, v, u not valid
+        pass
+    pass
 
 def k(kk:int):
     "{a} {b}"
@@ -133,3 +135,14 @@ def k(kk:int):
             raise in_function_context(k, vars())  # b not valid
         else:
             raise in_function_context(k, vars())  # a, b not valid
+        pass
+    pass
+
+def ll(x:str):
+    "{x:02d}"
+    try:
+        q=1
+        raise Exception('goat')
+    except Exception:
+        raise in_function_context(ll, vars())  # x wrong type
+    pass

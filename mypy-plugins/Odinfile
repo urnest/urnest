@@ -421,8 +421,10 @@ FILE:84: error: 'q' is not a valid (i.e. initialised) local variable or a functi
 FILE: note: In function "g":
 FILE:124: error: 'e', 'f', 'v', 'u' are not valid (i.e. initialised) local variables/function parameters (i.e. each is not one of ['j', 'a', 't', 'aa', 'c', 'b', 'd', 'p', 'pp', 'm']  [misc]
 FILE: note: In function "k":
-FILE:133: error: 'b' is not a valid (i.e. initialised) local variable or a function parameter (i.e. not one of ['a', 'kk']  [misc]
-FILE:135: error: 'a', 'b' are not valid (i.e. initialised) local variables/function parameters (i.e. each is not one of ['kk']  [misc]
+FILE:135: error: 'b' is not a valid (i.e. initialised) local variable or a function parameter (i.e. not one of ['a', 'kk']  [misc]
+FILE:137: error: 'a', 'b' are not valid (i.e. initialised) local variables/function parameters (i.e. each is not one of ['kk']  [misc]
+FILE: note: In function "ll":
+FILE:147: error: Incompatible types in string interpolation (expression has type "str", placeholder has type "int")  [str-format]
 
 %test_xn_plugin.errors==(test_data/xn_in_function_context_errors.py)+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(xn_mypy_plugin.py):main.mypy3:err
 
