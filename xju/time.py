@@ -32,7 +32,7 @@ class DurationTag:pass
 class Duration(Float[DurationTag]):pass
 
 
-@dataclass(order=True)
+@dataclass(unsafe_hash=True,order=True)
 class Timestamp():
     __value:float
     def __init__(self, value:float|int):

@@ -81,12 +81,16 @@ else:
 
 Assert(float(Timestamp(23.86)))==23.86
 
+# Timestamp is ordered by value
 Assert(now())>=t1
 t2=now()
 sleep_for(Duration(0.05))
 t3=now()
 Assert(t2+Duration(0.05))<=t3
 
+# Timestamp is hashable
+starts = set[Timestamp]()
+starts.add(now())
 
 async def async_tests():
     await async_sleep_until(now()-Duration(10))
