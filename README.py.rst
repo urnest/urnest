@@ -178,6 +178,11 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 3.6.0 xju.json_codec now encoded xju.time.Timestamp as float
+- 3.6.0 xju.json_codec now handles Final attributes
+- 3.6.0 make xju.time.Timestamp hashable
+- 3.6.0 fix a few missing docstrings v xju.xn.in_function_context
+- 3.6.0 xn_mypy_plugin checks xju.xn.in_function_context docstrings v vars()
 - 3.5.0 add some python socket features to xju.cmc
 - 3.5.0 rewrite json_codec_mypy_plugin from scratch and add lots of test cases
 - 3.5.0 xju.json_codec add literal enum value support
