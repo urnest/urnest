@@ -571,54 +571,6 @@ codec(NonStringKey).ensure_typescript_defs(namespace)
 print(namespace.get_formatted_defs())
 
 print(f'''
-//class defined in subnamespace
-(() => {{
-    assert_equal({indent(4,codec(Timestamp).get_typescript_asa(TypeScriptSourceCode('{_Timestamp__value:7.6}'),namespace))}, {{_Timestamp__value:7.6}});
-    try{{
-        {indent(8,codec(Timestamp).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
-        assert_never_reached();
-    }}
-    catch(e){{
-        assert_x_contains_y(str(e), "Error: 7,ann is not a xju.time.Timestamp because Error: 7,ann is an array");
-    }}
-    try{{
-        {indent(8,codec(Timestamp).get_typescript_asa(TypeScriptSourceCode('"fred"'),namespace))};
-        assert_never_reached();
-    }}
-    catch(e){{
-        assert_x_contains_y(str(e), "Error: fred is not a xju.time.Timestamp because Error: fred is not an object it is a string");
-    }}
-    try{{
-        {indent(8,codec(Timestamp).get_typescript_asa(TypeScriptSourceCode('{first_name: "fred", last_name: "flak"}'),namespace))};
-        assert_never_reached();
-    }}
-    catch(e){{
-        assert_x_contains_y(str(e), "Error: [object Object] is not a xju.time.Timestamp because Error: attribute _Timestamp__value is invalid because Error: undefined is not a number it is a undefined");
-    }}
-    try{{
-        {indent(8,codec(Timestamp).get_typescript_asa(TypeScriptSourceCode('{_Timestamp__value: "fred"}'),namespace))};
-        assert_never_reached();
-    }}
-    catch(e){{
-        assert_x_contains_y(str(e), "Error: [object Object] is not a xju.time.Timestamp because Error: attribute _Timestamp__value is invalid because Error: fred is not a number it is a string");
-    }}
-    const x:object={{_Timestamp__value:8.8}};
-    assert_equal(xju.time.asInstanceOfTimestamp(x)._Timestamp__value, 8.8);
-    if ({codec(Timestamp).get_typescript_isa(TypeScriptSourceCode('x'),namespace)}){{
-        assert_equal(x._Timestamp__value,8.8);
-    }}
-    else{{
-        throw new Error('should not be here');
-    }}
-    assert_true({codec(Timestamp).get_typescript_isa(TypeScriptSourceCode('{_Timestamp__value:8}'),namespace)});
-    assert_true(xju.time.isInstanceOfTimestamp(x));
-    assert_false({codec(Timestamp).get_typescript_isa(TypeScriptSourceCode('{_Timestamp__value:"fred"}'),namespace)});
-    assert_false({codec(Timestamp).get_typescript_isa(TypeScriptSourceCode('{_Timestamp_value:"fred"}'),namespace)});
-    assert_false({codec(Timestamp).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
-}})();
-''')
-
-print(f'''
 //recursive type
 (() => {{
     assert_equal('{namespace_codec.typescript_type()}','xju.json_codec.TypeScriptNamespace');
@@ -773,6 +725,23 @@ print(f'''
     }}
 }})();
 ''')
+
+print(f'''
+//Timestamp
+(() => {{
+    assert_equal({indent(4,codec(Timestamp).get_typescript_asa(TypeScriptSourceCode('8.8'),namespace))}, 8.8);
+    try{{
+        {indent(8,codec(Timestamp).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a xju.time.Timestamp i.e. a number, it is a object");
+    }}
+    assert_true({codec(Timestamp).get_typescript_isa(TypeScriptSourceCode('8.8'),namespace)});
+    assert_false({codec(Timestamp).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
+}})();
+''')
+
 
 try:
     codec(int|str).add_typescript_alias(namespace, [TypeScriptUQN('xju'),TypeScriptUQN('NorS')])

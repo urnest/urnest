@@ -14,7 +14,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 from xju.newtype import Int,Float,Union
-from typing import overload, Self
+from typing import overload, Self, Final
 import time
 import asyncio
 from dataclasses import dataclass
@@ -34,7 +34,7 @@ class Duration(Float[DurationTag]):pass
 
 @dataclass(unsafe_hash=True,order=True)
 class Timestamp():
-    __value:float
+    __value:Final[float]
     def __init__(self, value:float|int):
         self.__value=float(value)
     def value(self):

@@ -33,7 +33,7 @@ from xju.json_codec import (
     JsonAttrName
 )
 
-from typing import cast, Type, Literal, Any, Self, NewType, Generic, TypeVar, Callable, Union
+from typing import cast,Type,Literal,Any,Self,NewType,Generic,TypeVar,Callable,Union,Final
 from types import NoneType
 from dataclasses import dataclass, field
 import re
@@ -46,6 +46,20 @@ import xju.newtype
 from xju.xn import readable_repr
 from xju.time import Timestamp
 import xju
+
+# typing.Final
+class FinalT:
+    v: Final[str]
+    def __init__(self, v: str) -> None:
+        self.v=v
+        pass
+    def __eq__(self, x) -> bool:
+        return isinstance(x, FinalT) and x.v==self.v
+    pass
+
+Assert(codec(FinalT).encode(FinalT('fred')))=={"v":"fred"}
+Assert(codec(FinalT).decode({"v":"fred"}))==FinalT('fred')
+
 
 x:Any
 
@@ -404,6 +418,23 @@ else:
     assert False, x
     pass
 
+
+# xju.time.Timestamp maps to float
+Assert(codec(Timestamp).encode(Timestamp(3)))==3.0
+Assert(codec(xju.time.Timestamp).encode(Timestamp(3)))==3.0
+Assert(codec(xju.time.Timestamp).decode(3.0))==Timestamp(3)
+try:
+    x=codec(xju.time.Timestamp).encode('fred') # type:ignore
+except Exception as e:
+    Assert(readable_repr(e))=="'fred' is not a <class 'xju.time.Timestamp'>"
+else:
+    assert False,x
+try:
+    x=codec(xju.time.Timestamp).decode('fred')
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to decode fred to a <class 'xju.time.Timestamp'> because\n'fred' (of type <class 'str'>) is not a float (or an int)."
+else:
+    assert False,x
 
 #enum support...
 
@@ -972,6 +1003,8 @@ Assert(codec(Surname).get_json_schema())=={'description': 'Surname', 'type': 'st
 
 Assert(codec(Metres).get_json_schema())=={'description': 'Metres', 'type': 'number', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 
+Assert(codec(Timestamp).get_json_schema())=={'description': 'xju.time.Timestamp', 'type': 'number', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+
 Assert(codec(Fred).get_json_schema())=={'type': 'string', 'enum': ['fred'], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(SevenOrEight).get_json_schema())=={'oneOf': [{'type': 'number', 'enum': [7]}, {'type': 'number', 'enum': [8]}], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}
 Assert(codec(LiterallyFalse).get_json_schema())=={'type': 'boolean', 'enum': [False], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
@@ -1111,6 +1144,9 @@ else:
     jsonschema.validate(
         'fred',
         codec(Literal[O.a]).get_json_schema())
+    jsonschema.validate(
+        8.8,
+        codec(Timestamp).get_json_schema())
     pass
 
 # internal: codecs' encode()s must verify correct type passed in, otherwise
@@ -1318,7 +1354,7 @@ Assert(codec(SetSurnamesMsg).decode({'msg_type':'set_new_values','new_values':['
 
 # codec can generate a typescript "cast" ("as-a") and "type guard" ("is a") matching its
 # json encoding. Non-class codecs generate inline typescript source code, see
-# codec.get_typescripte_asa() and codec.get_typescript_isa(). For classes, codec
+# codec.get_typescript_asa() and codec.get_typescript_isa(). For classes, codec
 # also generates functions in corresponding namespace, for example:
 
 typescript_namespace=TypeScriptNamespace({})
@@ -1346,39 +1382,21 @@ Assert(typescript_namespace.get_formatted_defs())==TypeScriptSourceCode(
     '''\
 namespace xju {
     export namespace time {
-        export type Timestamp = {
-            _Timestamp__value: number;
-        };
-        export function asInstanceOfTimestamp(v: any): xju.time.Timestamp
+        export type Timestamp = number;
+        export function asInstanceOfTimestamp(v: any): Timestamp
         {
             try{
-                if (Array.isArray(v)) throw new Error(`${v} is an array`);
-                if (v == null) throw new Error(`${v} is not an object it is null`);
-                if (typeof v !== 'object') throw new Error(`${v} is not an object it is a ${typeof v}`);
-                const attr_asa=function(name:string, asa:any):any{
-                    try{
-                        asa(v[name]);
-                    }
-                    catch(e:any){
-                        throw new Error(`attribute ${name} is invalid because ${e}`);
-                    }
-                }
-                attr_asa('_Timestamp__value',(x:any)=>((v: any): number => {
-                    if (typeof v !== 'number') throw new Error(`${v} is not a number it is a ${typeof v}`);
-                    return v as number;
-                })(x));
-                return v as xju.time.Timestamp;
+                if (typeof v !== \'number\') throw new Error(`${v} is a ${typeof v}`);
+                return v;
             }
             catch(e:any){
-                throw new Error(`${v} is not a xju.time.Timestamp because ${e}`);
+                throw new Error(`${v} is not a Timestamp because ${e}`);
             }
         }
-        export function isInstanceOfTimestamp(v:any): v is xju.time.Timestamp
+        export function isInstanceOfTimestamp(v:any): v is number
         {
-            return (
-                !Array.isArray(v) &&
-                v !== null &&        typeof v === 'object' &&
-                (typeof (v["_Timestamp__value"]) == 'number'))}
+            return typeof v === \'number\';
+        }
     }
 }
 
@@ -1411,7 +1429,7 @@ function asInstanceOfO(v: any): O
         catch(e:any){
             es.push(e.message);
         };
-        throw new Error(es.join(' and '));
+        throw new Error(es.join(\' and \'));
     }catch(e:any)
     {
         throw new Error(`${v} is not a O because ${e}`);
@@ -1425,10 +1443,6 @@ function isInstanceOfO(v:any): v is O
            (v === O.b);
     })(v);
 }''')
-
-#https://github.com/urnest/urnest/issues/3
-Assert(codec(Timestamp).encode(Timestamp(3)))=={'_Timestamp__value': 3.0}
-Assert(codec(xju.time.Timestamp).encode(Timestamp(3)))=={'_Timestamp__value': 3.0}
 
 # https://github.com/urnest/urnest/issues/2
 ArgType = TypeVar("ArgType")

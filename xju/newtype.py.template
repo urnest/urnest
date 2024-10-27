@@ -31,14 +31,14 @@
 #
 from re import Pattern
 from typing import Iterable,Sized,Container,Collection,Reversible,Protocol,Type,overload,TypeVar
-from typing import Generic,Tuple,Mapping,Optional,List,Literal,Union,Any,Self,Never
+from typing import Generic,Tuple,Mapping,Optional,List,Literal,Union,Any,Self,Never,Final
 from types import NotImplementedType
 from xju.xn import in_function_context
 
 Tag=TypeVar('Tag',covariant=True)
 
 class Int(Generic[Tag]):
-    __value:int
+    __value:Final[int]
 
     def __init__(self, value:int):
         self.__value=value
@@ -178,7 +178,7 @@ class Int(Generic[Tag]):
 
 
 class Float(Generic[Tag]):
-    __value:float
+    __value:Final[float]
 
     def __init__(self, value:float):
         self.__value=value
@@ -315,7 +315,7 @@ class Float(Generic[Tag]):
 
 
 class Str(Generic[Tag]):
-    __value:str
+    __value:Final[str]
 
     # class may specify pattern for valid values to match
     # match is "entirely" i.e. re.Pattern.search
@@ -398,7 +398,7 @@ class Str(Generic[Tag]):
 
 
 class Bool(Generic[Tag]):
-    __value:bool
+    __value:Final[bool]
 
     def __init__(self, value:bool):
         self.__value=value

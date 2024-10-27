@@ -30,12 +30,13 @@
 from dataclasses import dataclass
 from inspect import getmro
 from typing import NewType
+from xju.time import Timestamp
 from xju.xn import Xn,in_context,in_function_context,readable_repr, AllFailed
 from typing import TypeVar, Generic, Type, cast, Any, Protocol, Self, Callable, get_type_hints
 from typing import Sequence, Literal, NewType
 from typing import _LiteralGenericAlias  # type: ignore  # mypy 1.1.1
 from typing import _UnionGenericAlias  # type: ignore  # mypy 1.1.1
-from typing import _GenericAlias  # type: ignore  # mypy 1.2.0
+from typing import _GenericAlias,_SpecialForm  # type: ignore  # mypy 1.2.0
 from typing import get_origin,get_args, runtime_checkable
 from types import GenericAlias, UnionType, NoneType
 import xju.newtype
@@ -1088,6 +1089,72 @@ class NewStrCodecImpl(Generic[NewStr]):
             f"}})({expression})")
     pass
 
+class TimestampCodecImpl:
+    def __init__(self):
+        self.base_codec=NoopCodecImpl[float](float)
+    def encode(self, x:Timestamp,back_ref:None|Callable[[Any],JsonType])->float:
+        if not isinstance(x, Timestamp):
+            raise Exception(f'{x!r} is not a {Timestamp}')
+        return self.base_codec.encode(x.value(),back_ref)
+    def decode(self, x:JsonType,back_ref:None|Callable[[JsonType],Any])->Timestamp:
+        if type(x) is not float and type(x) is not int:
+            t=type(x)
+            raise Exception(f'{x!r} (of type {t}) is not a float (or an int)')
+        return Timestamp(self.base_codec.decode(x,back_ref))
+    def get_type_fqn(self):
+        '''get the fully qualified name of {self.t}'''
+        return get_type_fqn(Timestamp)
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        return {
+            'description': self.get_type_fqn(),
+            'type': 'number'
+        }
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        return TypeScriptSourceCode(self.get_type_fqn())
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
+    def ensure_typescript_defs(self, namespace) -> None:
+        typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
+        target_namespace=namespace.get_namespace_of(typescript_fqn)
+        typescript_type_name=typescript_fqn[-1]
+        if typescript_type_name not in target_namespace.defs:
+            target_namespace.defs[typescript_type_name]=TypeScriptSourceCode(
+                f"type {typescript_type_name} = number;")
+            target_namespace.defs[TypeScriptUQN(f"asInstanceOf{typescript_type_name}")]=TypeScriptSourceCode(
+                f"function asInstanceOf{typescript_type_name}(v: any): {typescript_type_name}\n"
+                f"{{\n"
+                f"    try{{\n"
+                f"        if (typeof v !== 'number') throw new Error(`${{v}} is a ${{typeof v}}`);\n"
+                f"        return v;\n"
+                f"    }}\n"
+                f"    catch(e:any){{\n"
+                f"        throw new Error(`${{v}} is not a {typescript_type_name} because ${{e}}`);\n"
+                f"    }}\n"
+                f"}}")
+            target_namespace.defs[TypeScriptUQN(f'isInstanceOf{typescript_type_name}')]=TypeScriptSourceCode(
+                f"function isInstanceOf{typescript_type_name}(v:any): v is number\n"
+                f"{{\n"
+                f"    return typeof v === 'number';\n"
+                f"}}")
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        return TypeScriptSourceCode(
+            f"(typeof ({expression}) == 'number' /* {self.get_type_fqn()} */)")
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((v: any): {tt} => {{\n"
+            f"    if (typeof v !== 'number' /* {self.get_type_fqn()} */) throw new Error(`${{v}} is not a {self.get_type_fqn()} i.e. a number, it is a ${{typeof v}}`);\n"
+            f"    return v as {tt};\n"
+            f"}})({expression})")
+    pass
+
 class LiteralStrCodecImpl:
     value:str
     def __init__(self,value:str):
@@ -1749,6 +1816,8 @@ def _explodeSchema(t:type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGeneric
         if t is Self:
             return SelfCodecImpl()
         if type(t) is _GenericAlias:
+            if type(get_origin(t)) is _SpecialForm and str(get_origin(t))=="typing.Final":
+                return _explodeSchema(get_args(t)[0],type_var_map)
             local_type_var_map={
                 type_var: value
                 for type_var, value in
@@ -1772,6 +1841,8 @@ def _explodeSchema(t:type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGeneric
             return NewFloatCodecImpl(t)
         if issubclass(t,xju.newtype.Str):
             return NewStrCodecImpl(t)
+        if issubclass(t,Timestamp):
+            return TimestampCodecImpl()
         return ClassCodecImpl(
             t,{n: AttrCodec(get_attr_encoded_name(getmro(t), PythonAttrName(n)),
                             _explodeSchema(nt,type_var_map)) for n,nt in get_type_hints(t).items()})
