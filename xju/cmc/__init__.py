@@ -1113,6 +1113,7 @@ class AsyncServiceQueue(contextlib.AbstractAsyncContextManager):
         pass
 
     async def _execute(self,x:Coroutine[Any,Any,None]) -> None:
+        "execute coroutine {x}"
         try:
             await x
         except Exception:

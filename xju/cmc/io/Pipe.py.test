@@ -56,7 +56,7 @@ with Pipe() as pipe:
             pass
         pass
 
-    def write() -> None:
+    def write(pipe=pipe) -> None:
         '''write "fred" to pipe {pipe}'''
         try:
             toSend=b'fred'
