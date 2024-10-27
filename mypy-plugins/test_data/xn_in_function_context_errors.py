@@ -138,8 +138,8 @@ def k(kk:int):
         pass
     pass
 
-def ll(x:str):
-    "{x:02d}"
+def ll(x:str, y:int, z:str, o:list):
+    "{x:02d} {y:d} {z} {o:d}"
     try:
         q=1
         raise Exception('goat')

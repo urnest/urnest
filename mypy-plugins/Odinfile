@@ -410,7 +410,7 @@ FILE:9: error: Name "fred" is not defined  [name-defined]
 FILE: note: In function "a":
 FILE:15: error: a has no docstring  [misc]
 FILE: note: In function "c":
-FILE:24: error: 'i', 'p', 'd' are not valid (i.e. initialised) local variables/function parameters (i.e. each is not one of ['x']  [misc]
+FILE:24: error: 'd', 'i', 'p' are not valid (i.e. initialised) local variables/function parameters (i.e. each is not one of ['x']  [misc]
 FILE: note: In function "cc":
 FILE:33: error: 'y' is not a valid (i.e. initialised) local variable or a function parameter (i.e. not one of ['self', 'C', 'x']  [misc]
 FILE:40: error: second parameter to in_function_context should be vars()  [misc]
@@ -419,12 +419,13 @@ FILE:63: error: 'e' is not a valid (i.e. initialised) local variable or a functi
 FILE: note: In function "gg":
 FILE:84: error: 'q' is not a valid (i.e. initialised) local variable or a function parameter (i.e. not one of ['j', 'b', 'd', 'p', 'pp']  [misc]
 FILE: note: In function "g":
-FILE:124: error: 'e', 'f', 'v', 'u' are not valid (i.e. initialised) local variables/function parameters (i.e. each is not one of ['j', 'a', 't', 'aa', 'c', 'b', 'd', 'p', 'pp', 'm']  [misc]
+FILE:124: error: 'e', 'f', 'u', 'v' are not valid (i.e. initialised) local variables/function parameters (i.e. each is not one of ['a', 'aa', 'b', 'c', 'd', 'j', 'm', 'p', 'pp', 't']  [misc]
 FILE: note: In function "k":
 FILE:135: error: 'b' is not a valid (i.e. initialised) local variable or a function parameter (i.e. not one of ['a', 'kk']  [misc]
 FILE:137: error: 'a', 'b' are not valid (i.e. initialised) local variables/function parameters (i.e. each is not one of ['kk']  [misc]
 FILE: note: In function "ll":
 FILE:147: error: Incompatible types in string interpolation (expression has type "str", placeholder has type "int")  [str-format]
+FILE:147: error: Incompatible types in string interpolation (expression has type "list[Any]", placeholder has type "int")  [str-format]
 
 %test_xn_plugin.errors==(test_data/xn_in_function_context_errors.py)+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(xn_mypy_plugin.py):main.mypy3:err
 

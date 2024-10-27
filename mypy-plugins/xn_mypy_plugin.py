@@ -178,7 +178,7 @@ def check_in_function_context(x: FunctionContext) -> Type:
                     raise DocStringError(f"{errors[0]} is not a valid (i.e. initialised) local variable or a function parameter (i.e. not one of {list(valid_vars_at_expr.keys())}")
                 case _:
                     
-                    raise DocStringError(f"{', '.join(errors)} are not valid (i.e. initialised) local variables/function parameters (i.e. each is not one of {list(valid_vars_at_expr.keys())}")
+                    raise DocStringError(f"{', '.join(sorted(errors))} are not valid (i.e. initialised) local variables/function parameters (i.e. each is not one of {sorted(list(valid_vars_at_expr.keys()))}")
 
             format_callee=MemberExpr(StrExpr(format_string), 'format')
             e = CallExpr(format_callee,
