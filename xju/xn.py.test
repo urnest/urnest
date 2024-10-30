@@ -137,13 +137,13 @@ def test4(prog=sys.argv[0]):
         pass
     Assert(str(e)).matches('''\
 failed to jock because
-[^:]*:132: failed to c[(][)] because
-[^:]*:129: failed to b[(][)] because
-[^:]*:123: failed to with _Scope[(]'b'[)]: because
-[^:]*:116: failed to raise in_context[(]self.s,[(]t,e,b[)],self.fl[)] from None because
-[^:]*:123: failed to b because
-[^:]*:125: failed to a[(][)] because
-[^:]*:121: fred''')
+[^:]*xn[.]py[.]test:132: failed to c[(][)] because
+[^:]*xn[.]py[.]test:129: failed to b[(][)] because
+[^:]*xn[.]py[.]test:123: failed to with _Scope[(]'b'[)]: because
+[^:]*xn[.]py[.]test:116: failed to raise in_context[(]self.s,[(]t,e,b[)],self.fl[)] from None because
+[^:]*xn[.]py[.]test:123: failed to b because
+[^:]*xn[.]py[.]test:125: failed to a[(][)] because
+[^:]*xn[.]py[.]test:121: fred''')
     Assert(readable_repr(e))=='''\
 Failed to jock because
 failed to b because
@@ -273,6 +273,42 @@ def test15():
         ))=="Failed to test15() (note that function's doc-string 'test 15 with {x}' is unformattable - check its params/vars v its doc string) because\nfred."
     else:
         assert False
+        pass
+    pass
+        
+def g(c):
+    'g({c})'
+    try:
+        raise Exception('fred')
+    except Exception:
+        raise in_function_context(g,vars()) from None
+    pass
+
+def f():
+    'use {C}'
+    class C: pass
+    try:
+        g(C)
+    except Exception:
+        raise in_function_context(f, vars()) from None
+    pass
+
+def test_16():
+    try:
+        f()
+    except Exception as e:
+        Assert(str(e)).matches("""\
+failed to use <class '__main__.f.<locals>.C'> because
+[^:]*/xn.py.test:291: failed to g[(]C[)] because
+[^:]*/xn.py.test:284: failed to raise in_function_context[(]g,vars[(][)][)] from None because
+282:None: failed to g[(]<class '__main__.f.<locals>.C'>[)] because
+[^:]*/xn.py.test:282: fred""")
+        pass
+    else:
+        assert False
+        pass
+    pass
+
 
 tests=[var for name,var in sorted(vars().items())
        if name.startswith('test') and callable(var)]
