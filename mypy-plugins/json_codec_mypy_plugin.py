@@ -272,41 +272,6 @@ def infer_type_from_symbol_node(
             pass
     raise CodecParamInvalid(f"{name} is not valid as xju.json_codec.codec() parameter because type {type(node)} is unexpected")
 
-'''
-def infer_codec_value_type_from_type(
-        name: str,
-        t: Type,
-        args: tuple[Expression | Type],  # X, Y in t[X, Y]
-        checker_api: CheckerPluginInterface,
-        type_var_types: dict[
-            str,  # generic param (TypeVar) name... see infer_codec_value_type_from_type_info comments
-            Type
-        ]) -> Type:
-    match t:
-        case NoneType():
-            return t
-        case AnyType():
-            return t
-        case Instance():
-            args = [ type_var_types[a.name] if isinstance(a, TypeVarType) and a.name in type_var_types
-                     else a for a in t.args ]
-            return infer_codec_value_type_from_type_info(name, t.type, args, checker_api)
-        case UnionType() | TupleType():
-            for x in t.items:
-                infer_codec_value_type_from_type(name, x, checker_api, type_var_types)
-            return t
-        case LiteralType():
-            return t
-        case TypeVarType() if t.name == 'Self':
-            return t
-        case TypeVarType() if t.name in type_var_types:
-            return infer_codec_value_type_from_type(name, type_var_types[t.name], checker_api, {})
-        case TypeAliasType() if not t.args and t.alias is not None:
-            infer_codec_value_type_from_type(name, t.alias.target, checker_api, type_var_types)
-            return t
-    raise CodecParamInvalid(f"{name} is not valid as xju.json_codec.codec() parameter because {t} is not an Instance, UnionType or LiteralType (it is a {type(t)}")
-'''
-
 def is_xju_newtype(t: TypeInfo) -> bool:
     """is {t} an xju.newtype.X[Y]"""
     return (
@@ -315,6 +280,7 @@ def is_xju_newtype(t: TypeInfo) -> bool:
             'xju.newtype.Int',
             'xju.newtype.Float',
             'xju.newtype.Str',
+            'xju.newtype.Bool',
         )
     )
 
@@ -337,125 +303,6 @@ def is_enum(t):
         case TypeAlias():
             return isinstance(t.target, Instance) and is_enum(t.target.type)
     return False
-'''
-def infer_codec_value_type_from_type_info(
-        name: str, t: TypeInfo, args: Sequence[Type], checker_api: CheckerPluginInterface) -> Type:
-
-    # generic types need all args to be concrete i.e. proper types supplied for all type vars
-    def resolve_type_var_types() -> dict[str, Type]:
-        if len(args) < len(t.type_vars):
-            raise CodecParamInvalid(
-                f"generic class {t.fullname} requires {len(t.type_vars)} type parameters but only {len(args)} supplied (xju.json_codec.codec() does not work with generic types - all type variables must be resovled)")
-        # note name here is verbatim as specified in type expression, which might be unqualified,
-        # partially qualified or fully qualified, but in any case it matches the name that appears
-        # in the TypeVarType when used
-        type_var_types = { type_var_name: value for type_var_name, value in zip(t.type_vars, args) }
-
-        # REVISIT: the concrete check should be done at the very end, just before returning the
-        # codec type?
-        not_concrete = [ type_var_name for type_var_name, value in type_var_types.items()
-                         if isinstance(value, TypeVarType) and not value.name == 'Self']
-        if not_concrete:
-            raise CodecParamInvalid(f"{', '.join(not_concrete)} generic parameter(s) to {name} must not be a TypeVar")
-        return type_var_types
-    
-    if t.is_newtype:
-        # (Pdb) p return_type.type.is_newtype
-        # True
-        # (Pdb) p return_type.type.fullname
-        # (Pdb) p return_type.type.fullname
-        # 'xju.json_codec.XXX'
-        # (Pdb) p return_type.type.bases
-        # [builtins.str]
-        assert len(t.bases) == 1, t.bases
-        type_var_types=resolve_type_var_types()
-        return infer_codec_value_type_from_type(
-            f"{name} (a new type of {t.bases[0]})", t.bases[0], checker_api, type_var_types)
-    # mirror jsoncodec.py special handling for various builtins
-    match t._fullname:
-        case 'typing.Any':
-            if args:
-               raise CodecParamInvalid(f"arguments {args} not valid for use with {t._fullname}")
-            return AnyType(TypeOfAny.explicit)
-        case ( 'builtins.int' | 'builtins.float' | 'builtins.bool' | 'builtins.str' |'builtins.bytes' ):
-            if args:
-               raise CodecParamInvalid(f"arguments {args} not valid for use with {t._fullname}")
-            return Instance(t, args)
-        case ( 'builtins.list' | 'builtins.set' ):
-            if not args:
-                assert isinstance(checker_api, TypeChecker)
-                return Instance(t, [get_json_type_type(checker_api)])
-            type_var_types=resolve_type_var_types()
-            for arg in args:
-                infer_codec_value_type_from_type(
-                    f"{t._fullname}[{args}]", arg, checker_api, type_var_types)
-            return Instance(t, args)
-        case ( 'builtins.dict' ):
-            if not args:
-                assert isinstance(checker_api, TypeChecker)
-                return Instance(t, [checker_api.named_type('builtins.str'),
-                                    get_json_type_type(checker_api)])
-            type_var_types=resolve_type_var_types()
-            for arg in args:
-                infer_codec_value_type_from_type(
-                    f"{t._fullname}[{args}]", arg, checker_api, type_var_types)
-            return Instance(t, args)
-        case ( 'builtins.tuple' ):
-            if not args:
-                assert isinstance(checker_api, TypeChecker)
-                return Instance(t, [get_json_type_type(checker_api)])
-            type_var_types=resolve_type_var_types()
-            for arg in args:
-                infer_codec_value_type_from_type(
-                    f"{t._fullname}[{args}]", arg, checker_api, type_var_types)
-            return Instance(t, args)
-        case 'types.None' | 'types.NoneType':
-            if args:
-                raise CodecParamInvalid(f"arguments {args} not valid for use with {t._fullname}")
-            return NoneType()
-
-    # mirror jsoncodec.py special handling for xju.newtype.Int/Float/Str
-    if is_xju_newtype(t):
-        if args:
-            raise CodecParamInvalid(f"arguments {args} not valid for use with {t._fullname}")
-        return Instance(t, [])
-
-    # mirror jsoncodec.py special handling for enum.Enum
-    if is_enum(t):
-        if args:
-            raise CodecParamInvalid(f"arguments {args} not valid for use with {t._fullname}")
-        return Instance(t, [])
-
-    assert isinstance(checker_api, TypeChecker), (type(checker_api), checker_api)
-    if is_subtype(Instance(t, args),
-                  get_custom_class_codec_type(checker_api)):
-        return Instance(t, args)
-    try:
-        for base in t.bases:
-            if not isinstance(base, Instance) or base.type._fullname != 'builtins.object':
-                type_var_types=resolve_type_var_types()
-                infer_codec_value_type_from_type(
-                    f"{name}({base.type._fullname})", base, checker_api, type_var_types)
-        for attr_name, attr_node in t.names.items():
-            if attr_name not in (
-                '__init__', '__match_args__', '__dataclass_fields__', '__mypy-replace', '__doc__',
-                '_DT',
-            ):
-                match attr_node.node:
-                    case None:
-                        raise CodecParamInvalid(f"{name}.{attr_name} type is unknown")
-                    case SymbolNode() if isinstance(attr_node.node, Var) and attr_node.node.type is not None:
-                        type_var_types=resolve_type_var_types()
-                        infer_codec_value_type_from_type(
-                            attr_name, attr_node.node.type, checker_api, type_var_types)
-                    case SymbolNode() if not isinstance(attr_node.node, (FuncDef, OverloadedFuncDef) ):
-                        raise CodecParamInvalid(f"{name}.{attr_name} unexpected {attr_node.node}")
-        return Instance(t, [])
-        
-    except CodecParamInvalid as e:
-        raise CodecParamInvalid(
-            f"{name} is not valid as parameter to xju.json_codec.codec() because {e}") from None
-'''
 
 def get_custom_class_codec_type(chk: TypeChecker) -> Type:
     # you'd think we could do checker_api.named_type("xju.json_codec.CustomClassCodec")):
@@ -511,8 +358,13 @@ def verify_type_encodable(
                     if not isinstance(arg, KnownExpressionType.__args__):
                         raise CodecParamInvalid(f"unexpected generic type arg type {arg}")
                     verify_type_encodable(arg,checker_api)
-                if t.type.fullname in ('builtins.set','builtins.list','builtins.dict'):
+                if t.type.fullname in ('builtins.set','builtins.list'):
                     return True
+                if t.type.fullname in ('builtins.dict'):
+                    # valid key types: str, int, float, bool, None
+                    # or any union of int, float, bool, None
+                    assert isinstance(t.args[0], KnownExpressionType.__args__)
+                    return verify_dict_key_type(t.args[0],checker_api)
                 for base in t.type.bases:
                     if base.type._fullname != 'builtins.object':
                         if not isinstance(base, (LiteralType,UnionType,Instance,TypeAliasType,TupleType,NoneType,TypeVarType,AnyType)):
@@ -545,6 +397,65 @@ def verify_type_encodable(
             verify_type_encodable(t.alias.target,checker_api)
             return True
 
+def verify_dict_key_type(
+    t: KnownExpressionType,
+    checker_api:CheckerPluginInterface,
+) -> Literal[True]:
+    match t:
+        case NoneType():
+            return True
+        case TypeVarType():
+            raise CodecParamInvalid("dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not TypeVar)")
+        case AnyType():
+            raise CodecParamInvalid("dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not Any)")
+        case LiteralType():
+            # can only encode str, int, bool, and enumerations of those
+            if t.fallback.type._fullname in ( 'builtins.str', 'builtins.int', 'builtins.bool'):
+                return True
+            if is_enum(t.fallback.type) and isinstance(t.value,str):
+                n=t.fallback.type.names[t.value].node
+                if isinstance(n,Var):
+                    if not isinstance(n.type, Instance):
+                        raise CodecParamInvalid(f"unexpected enum member {t.value} type {n.type}")
+                    verify_type_encodable(n.type,checker_api)
+                    return True
+            raise CodecParamInvalid(f"Literal[{t.value}] not valid as parameter to xju.json_codec.code()")
+        case UnionType():
+            for arg in t.items:
+                if not isinstance(arg, KnownExpressionType.__args__):
+                    raise CodecParamInvalid(f"unexpected generic type arg type {arg}")
+                if isinstance(arg,Instance) and is_xju_newtype(arg.type) and arg.type.bases[0].type._fullname in (
+                        'xju.newtype.Int',
+                        'xju.newtype.Float',
+                        'xju.newtype.Bool'):
+                    continue
+                if isinstance(arg,NoneType):
+                    continue
+                if isinstance(arg,Instance) and arg.type.fullname in (
+                        'builtins.int','builtins.bool','builtins.float'):
+                    continue
+                raise CodecParamInvalid(f"union dict key types must only be combinations of int,float,bool,None,xju.newtype.Int,xju.newtype.Float,xju.newtype.Bool")
+                pass
+            return True
+        case TupleType():
+            raise CodecParamInvalid("dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not tuple)")
+        case Instance():
+            if is_xju_newtype(t.type):
+                return True
+            if t.type.fullname in ('builtins.str','builtins.int','builtins.bool','builtins.float'):
+                    return True
+            raise CodecParamInvalid(f"dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not {t.type.fullname})")
+        case TypeAliasType():
+            if t.args:
+                raise CodecParamInvalid("dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not generic alias instance)")
+            if t.alias is None:
+                raise CodecParamInvalid(f"unexpected type alias target None")
+            if not isinstance(t.alias.target, (LiteralType,UnionType,Instance,TypeAliasType,TupleType,NoneType,TypeVarType,AnyType)):
+                raise CodecParamInvalid(f"unexpected type alias target type {t.alias.target}")
+            verify_dict_key_type(t.alias.target,checker_api)
+            return True
+
+    
 def adjust_type_or_type_return_type(x: MethodContext) -> Type:
     """
     assuming x is a call to builtins.type.__or__ or builtins.type.__ror__

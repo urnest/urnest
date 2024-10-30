@@ -266,18 +266,34 @@ else:
 Assert(codec(dict).decode({'fred':5, 'jock': 'nine'}))=={'fred':5, 'jock':'nine'}
 Assert(codec(dict).encode({'fred':5, 'jock': 'nine'}))=={'fred':5, 'jock':'nine'}
 
+
 # dict with specific value type, keys can be str...
 Assert(codec(dict[str,int]).decode({'fred':5, 'jock': 9}))=={'fred':5, 'jock':9}
 Assert(codec(dict[str,int]).encode({'fred':5, 'jock': 9}))=={'fred':5, 'jock':9}
 
-#... or xju.newtype.Str or anything that with str encoding
+#... or xju.newtype.Str...
 class SurnameTag:pass
 class Surname(xju.newtype.Str[SurnameTag]):
     pattern=re.compile(r'^\S*$')  # disallow whitespace
     pass
+Assert(codec(dict[Surname,int]).encode({Surname("yo"):3}))=={"yo":3}
+Assert(codec(dict[Surname,int]).decode({"yo":3}))=={Surname("yo"):3}
 
-Assert(codec(dict[Surname,int]).encode({Surname('fred'):5, Surname('jock'): 9}))=={'fred':5, 'jock':9}
-Assert(codec(dict[Surname,int]).decode({'fred':5, 'jock':9}))=={Surname('fred'):5, Surname('jock'): 9}
+#... or int/float/bool/None
+Assert(codec(dict[int,int]).decode({1:5, 2: 9}))=={1:5, 2:9}
+Assert(codec(dict[float,int]).decode({6.5:5, 8: 9}))=={6.5:5, 8:9}
+Assert(codec(dict[bool,int]).decode({True:5, False: 9}))=={True:5, False:9}
+Assert(codec(dict[None,int]).decode({None:5}))=={None:5}
+Assert(codec(dict[int,int]).encode({1:5, 2: 9}))=={1:5, 2:9}
+Assert(codec(dict[float,int]).encode({6.5:5, 8: 9}))=={6.5:5, 8:9}
+Assert(codec(dict[bool,int]).encode({True:5, False: 9}))=={True:5, False:9}
+Assert(codec(dict[None,int]).encode({None:5}))=={None:5}
+
+#... or unions of those
+Assert(codec(dict[int|float|bool|None,int]).decode({1:5, 2.5: 10, True: 11, None: 12}))=={
+    1:5, 2.5: 10, True: 11, None: 12}
+Assert(codec(dict[int|float|bool|None,int]).encode({1:5, 2.5: 10, True: 11, None: 12}))=={
+    1:5, 2.5: 10, True: 11, None: 12}
 
 # ... must be given a dict...
 try:
@@ -311,15 +327,6 @@ try:
     ).encode({6: 'fred'})  # type: ignore
 except Exception as e:
     Assert(str(e)).matches("6 is not a <class 'str'>")
-else:
-    assert False, x
-    pass
-try:
-    x=(
-        codec(dict[int,int])
-    ).encode({7:5}) # type: ignore
-except Exception as e:
-    Assert("produced non-str 7 from dict key 7").isIn(str(e))
 else:
     assert False, x
     pass

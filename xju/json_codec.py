@@ -713,8 +713,8 @@ class DictCodecImpl:
         result:dict={}
         for k,v in x.items():
             ek,ev=self.key_codec.encode(k,back_ref),self.value_codec.encode(v,back_ref)
-            if not isinstance(ek, str):
-                raise Exception(f'key encoder {self.key_codec} produced non-str {ek} from dict key {k}')
+            if not isinstance(ek, (str,bool,int,float,NoneType)):
+                raise Exception(f'key encoder {self.key_codec} produced non-str/bool/int/float/None {ek} from dict key {k}')
             result[ek]=ev
             pass
         return result
