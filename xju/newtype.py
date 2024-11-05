@@ -44,6 +44,10 @@ class Int(Generic[Tag]):
         self.__value=value
         pass
 
+    @property
+    def val(self)->int:
+        return self.__value
+
     def value(self)->int:
         return self.__value
 
@@ -246,6 +250,10 @@ class Float(Generic[Tag]):
         self.__value=value
         pass
 
+    @property
+    def val(self)->float:
+        return self.__value
+
     def value(self)->float:
         return self.__value
 
@@ -433,6 +441,10 @@ class Str(Generic[Tag]):
         except Exception:
             raise in_function_context(Str.__init__,vars())
         pass
+
+    @property
+    def val(self)->str:
+        return self.__value
 
     def value(self)->str:
         return self.__value
@@ -673,6 +685,10 @@ class Bool(Generic[Tag]):
     def __init__(self, value:bool):
         self.__value=value
         pass
+
+    @property
+    def val(self)->bool:
+        return self.__value
 
     def value(self)->bool:
         return self.__value

@@ -26,6 +26,7 @@ from xju.json_codec import (
     AnyJsonCodecImpl,
     SelfCodecImpl,
     encode_attr_as,
+    TypeScriptBackRefs,
     TypeScriptSourceCode,
     TypeScriptNamespace,
     CustomClassCodec,
@@ -809,12 +810,25 @@ class IpV4Addr(ipaddress.IPv4Address):
         '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T'''
         '''- may add any supporting definitions to namespace, e.g. type for T itself'''
         return IpV4Addr.__xju_json_codec.get_typescript_isa(expression,namespace)
-
+    @staticmethod
+    def xju_json_codec_get_typescript_isa_key(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T-as-object-key'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        return IpV4Addr.__xju_json_codec.get_typescript_isa_key(expression,namespace)
     @staticmethod
     def xju_json_codec_get_typescript_asa(
             expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        return IpV4Addr.__xju_json_codec.get_typescript_asa(expression,namespace)
+    @staticmethod
+    def xju_json_codec_get_typescript_asa_key(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T-as-object-key'''
         '''- may add any supporting definitions to namespace, e.g. type for T itself'''
         return IpV4Addr.__xju_json_codec.get_typescript_asa(expression,namespace)
     pass
@@ -852,14 +866,27 @@ class IpAddrWithPrefix(ipaddress.IPv4Interface):
         '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T'''
         '''- may add any supporting definitions to namespace, e.g. type for T itself'''
         return IpAddrWithPrefix.__codec.get_typescript_isa(expression,namespace)
-
+    @staticmethod
+    def xju_json_codec_get_typescript_isa_key(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        return IpAddrWithPrefix.__codec.get_typescript_isa_key(expression,namespace)
     @staticmethod
     def xju_json_codec_get_typescript_asa(
             expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T'''
+        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T-as-object-key'''
         '''- may add any supporting definitions to namespace, e.g. type for T itself'''
         return IpAddrWithPrefix.__codec.get_typescript_asa(expression,namespace)
+    @staticmethod
+    def xju_json_codec_get_typescript_asa_key(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T-as-object-key'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        return IpAddrWithPrefix.__codec.get_typescript_asa_key(expression,namespace)
 
 @dataclass
 class Router:
@@ -1097,10 +1124,18 @@ else:
     assert False
     pass
 
+Assert(
+    SelfCodecImpl().typescript_as_object_key_type(
+        TypeScriptBackRefs(
+            type_back_ref=lambda: TypeScriptSourceCode(""),
+            as_object_key_type_back_ref=lambda: TypeScriptSourceCode("as-object-key"),
+            isa_back_ref=lambda _: TypeScriptSourceCode("false"),
+            asa_back_ref=lambda _: TypeScriptSourceCode(";"))))==TypeScriptSourceCode("as-object-key")
+        
 try:
     import jsonschema # type: ignore
 except:
-    print('WARNING: skipped json_codec json_schema tests because json_schema not importable',
+    print('WARNING: skipped json_codec json_schema tests because jsonschema not importable',
           file=sys.stderr)
 else:
     jsonschema.validate(None,codec(NoneType).get_json_schema())
@@ -1372,7 +1407,12 @@ timestamp_codec=codec(Timestamp)
 timestamp_codec.ensure_typescript_defs(typescript_namespace)
 
 Assert(codec(IpV4Addr).get_typescript_isa(TypeScriptSourceCode('7'),typescript_namespace))==TypeScriptSourceCode("(typeof (7) == 'string')")
+Assert(codec(IpV4Addr).get_typescript_isa_key(TypeScriptSourceCode('7'),typescript_namespace))==TypeScriptSourceCode("(typeof (7) == 'string')")
 Assert(codec(IpV4Addr).get_typescript_asa(TypeScriptSourceCode('7'),typescript_namespace))==TypeScriptSourceCode("""((v: any): string => {
+    if (typeof v !== 'string') throw new Error(`${v} is not a string it is a ${typeof v}`);
+    return v as string;
+})(7)""")
+Assert(codec(IpV4Addr).get_typescript_asa_key(TypeScriptSourceCode('7'),typescript_namespace))==TypeScriptSourceCode("""((v: any): string => {
     if (typeof v !== 'string') throw new Error(`${v} is not a string it is a ${typeof v}`);
     return v as string;
 })(7)""")
@@ -1381,8 +1421,19 @@ codec(O).ensure_typescript_defs(typescript_namespace)
 
 
 Assert(codec(set[int]).get_typescript_isa(TypeScriptSourceCode("v"),typescript_namespace))==TypeScriptSourceCode("(((v:any):v is Array<number> /* with unique elements */=>(\n     Array.isArray(v) && \n    v.filter((x)=>(\n        !(typeof (x) == 'number'))).length==0))(v))")
-
+try:
+    codec(set[int]).get_typescript_isa_key(TypeScriptSourceCode("v"),typescript_namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='Array<number> /* with unique elements */ is not allowed as a typescript object key type'
+else:
+    assert False
 Assert(codec(set).get_typescript_isa(TypeScriptSourceCode("v"),typescript_namespace))==TypeScriptSourceCode("(Array.isArray(v))")
+try:
+    codec(set).get_typescript_isa_key(TypeScriptSourceCode("v"),typescript_namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='Array<any> /* with unique elements */ is not allowed as a typescript object key type'
+else:
+    assert False
 
 # ... get_formatted_defs() generates the typescript source code:
 Assert(typescript_namespace.get_formatted_defs())==TypeScriptSourceCode(
@@ -1544,3 +1595,15 @@ except Exception as e:
 else:
     assert False, x
 
+# invalid dict key encoded value
+try:
+    x=codec(dict[tuple[int,str],str]).encode(  # type: ignore
+        {(1,'fred'):'jock'})
+except Exception as e:
+    Assert(readable_repr(e)).matches(r"key encoder .*TupleCodec.* produced non-str/bool/int/float/None .1, 'fred'. from dict key [(]1, 'fred'[)]")
+else:
+    assert False
+    pass
+
+    
+codec(dict[Tree,int]).ensure_typescript_defs(typescript_namespace)  # type: ignore

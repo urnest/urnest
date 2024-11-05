@@ -62,4 +62,20 @@ codec(dict[NI,int]).encode({NI(7):2})  # ok
 codec(dict[NF,int]).encode({NF(7.2):2})  # ok
 codec(dict[NB,int]).encode({NB(True):2})  # ok
 codec(dict[NI|NF|NB|None,int]).encode({NI(2):3})  # ok
-codec(dict[NS|NI|NF|NB|None,int]).encode({NI(2):3})  # can't use NS in union
+codec(dict[NS|NI|NF|NB|None,int]).encode({NI(2):3})  # can't mix string and non-string dict keys
+X=int|bool
+codec(dict[X|None,int])  # ok
+codec(dict[X|str,int]) # can't mix...
+
+from enum import Enum
+class Pnum(Enum):
+    a=7
+    b='fred'
+    pass
+
+codec(dict[Pnum,int])  # can't mix
+
+from typing import Literal
+codec(dict[Literal[Pnum.a]|int,int])  # ok
+codec(dict[Literal[Pnum.b]|int,int])  # can't mix
+codec(dict[Literal[Pnum.b,Pnum.a],int])  # can't mix

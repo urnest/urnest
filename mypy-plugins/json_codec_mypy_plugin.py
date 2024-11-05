@@ -84,7 +84,6 @@ def infer_type_from_expr(
         expr: Expression,
         checker_api:CheckerPluginInterface) -> KnownExpressionType:
     """pre: expr is not the base of an index expression"""
-    #pdb_trace()
     match expr:
         case IndexExpr():
             return infer_type_from_index_expr(expr.base, expr.index, checker_api)
@@ -219,7 +218,6 @@ def get_value_literal_type(expr: Expression, checker_api: CheckerPluginInterface
             return UnionType([ get_value_literal_type(item, checker_api) for item in expr.items],
                              is_evaluated = True,
                              uses_pep604_syntax = True)
-    # pdb_trace()
     raise CodecParamInvalid(f"{expr} is not valid for use with Literal[]")
 
 def get_enum_member_literal_type(name: str, enum_class: TypeInfo | TypeAlias, checker_api) -> LiteralType | UnionType:
@@ -268,7 +266,6 @@ def infer_type_from_symbol_node(
             raise CodecParamInvalid(f"{name} is undefined and so not valid as parameter to xju.json_codec.codec()")
         case TypeAlias():  # undocumented in mypy/nodes.py
             return TypeAliasType(node, [])
-            #pdb_trace()
             pass
     raise CodecParamInvalid(f"{name} is not valid as xju.json_codec.codec() parameter because type {type(node)} is unexpected")
 
@@ -364,7 +361,8 @@ def verify_type_encodable(
                     # valid key types: str, int, float, bool, None
                     # or any union of int, float, bool, None
                     assert isinstance(t.args[0], KnownExpressionType.__args__)
-                    return verify_dict_key_type(t.args[0],checker_api)
+                    verify_dict_key_type(t.args[0],checker_api)
+                    return True
                 for base in t.type.bases:
                     if base.type._fullname != 'builtins.object':
                         if not isinstance(base, (LiteralType,UnionType,Instance,TypeAliasType,TupleType,NoneType,TypeVarType,AnyType)):
@@ -400,50 +398,92 @@ def verify_type_encodable(
 def verify_dict_key_type(
     t: KnownExpressionType,
     checker_api:CheckerPluginInterface,
-) -> Literal[True]:
+) -> Literal['String','NonString','Any']:
+    """
+    verify type {t} is usable as a json dictionary key
+
+    - return 'String' if t is string-like i.e. will never decode from int/bool/float/None
+    - return 'NonString' if t is non-string-like i.e. might decode from int/bool/float/None
+    - return 'Any' if t is Any
+    """
     match t:
         case NoneType():
-            return True
+            return 'NonString'
         case TypeVarType():
             raise CodecParamInvalid("dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not TypeVar)")
         case AnyType():
-            raise CodecParamInvalid("dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not Any)")
+            # Any must bypass type checking
+            return 'Any'
         case LiteralType():
             # can only encode str, int, bool, and enumerations of those
-            if t.fallback.type._fullname in ( 'builtins.str', 'builtins.int', 'builtins.bool'):
-                return True
+            if t.fallback.type._fullname in ( 'builtins.str',):
+                return 'String'
+            if t.fallback.type._fullname in ( 'builtins.int', 'builtins.bool', 'xju.time.Timestamp'):
+                return 'NonString'
             if is_enum(t.fallback.type) and isinstance(t.value,str):
                 n=t.fallback.type.names[t.value].node
                 if isinstance(n,Var):
                     if not isinstance(n.type, Instance):
                         raise CodecParamInvalid(f"unexpected enum member {t.value} type {n.type}")
                     verify_type_encodable(n.type,checker_api)
-                    return True
+                    return verify_dict_key_type(n.type,checker_api)
             raise CodecParamInvalid(f"Literal[{t.value}] not valid as parameter to xju.json_codec.code()")
         case UnionType():
+            string_args=list[KnownExpressionType]()
+            non_string_args=list[KnownExpressionType]()
             for arg in t.items:
                 if not isinstance(arg, KnownExpressionType.__args__):
                     raise CodecParamInvalid(f"unexpected generic type arg type {arg}")
-                if isinstance(arg,Instance) and is_xju_newtype(arg.type) and arg.type.bases[0].type._fullname in (
-                        'xju.newtype.Int',
-                        'xju.newtype.Float',
-                        'xju.newtype.Bool'):
-                    continue
-                if isinstance(arg,NoneType):
-                    continue
-                if isinstance(arg,Instance) and arg.type.fullname in (
-                        'builtins.int','builtins.bool','builtins.float'):
-                    continue
-                raise CodecParamInvalid(f"union dict key types must only be combinations of int,float,bool,None,xju.newtype.Int,xju.newtype.Float,xju.newtype.Bool")
+                match verify_dict_key_type(arg,checker_api):
+                    case 'String':
+                        string_args.append(arg)
+                    case 'NonString':
+                        non_string_args.append(arg)
+                    case 'Any':
+                        raise CodecParamInvalid(f"Any is not a valid union-type member")
                 pass
-            return True
+            if string_args and non_string_args:
+                raise CodecParamInvalid(f"union dict key types must not be a mix of string-like ({string_args}) and non-string-like ({non_string_args})")
+                pass
+            return 'String' if string_args else 'NonString'
         case TupleType():
             raise CodecParamInvalid("dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not tuple)")
         case Instance():
             if is_xju_newtype(t.type):
-                return True
-            if t.type.fullname in ('builtins.str','builtins.int','builtins.bool','builtins.float'):
-                    return True
+                return 'String' if t.type.bases[0].type._fullname=='xju.newtype.Str' else 'NonString'
+            if t.type.fullname in ('builtins.str',):
+                return 'String'
+            if t.type.fullname in ('builtins.int','builtins.bool','builtins.float','xju.time.Timestamp'):
+                return 'NonString'
+            if is_enum(t.type):
+                for attr_name, attr_node in t.type.names.items():
+                    if attr_name not in (
+                        '__init__', '__match_args__', '__dataclass_fields__', '__mypy-replace', '__doc__',
+                        '_DT',
+                    ):
+                        match attr_node.node:
+                            case SymbolNode() if isinstance(attr_node.node, Var) and attr_node.node.type is not None:
+                                if not isinstance(attr_node.node.type, KnownExpressionType.__args__):
+                                    raise CodecParamInvalid(f"{t.type._fullname}.{attr_name} type ({attr_node.node.type}) is not encodable")
+                                string_members=list[str]()
+                                non_string_members=list[str]()
+                                match verify_dict_key_type(attr_node.node.type,checker_api):
+                                    case 'String':
+                                        string_members.append(attr_name)
+                                    case 'NonString':
+                                        non_string_members.append(attr_name)
+                                    case 'Any':
+                                        raise CodecParamInvalid(
+                                            f"member {attr_name}: Any is not a valid enum value type")
+                                if string_members and non_string_members:
+                                    raise CodecParamInvalid(f"enum member types must not be a mix of string-like ({string_members}) and non-string-like ({non_string_members})")
+                                    pass
+                                return 'String' if string_members else 'NonString'
+                            case SymbolNode() if not isinstance(attr_node.node, (FuncDef, OverloadedFuncDef, Decorator) ):
+                                raise CodecParamInvalid(f"{t.type._fullname}.{attr_name} unexpected {attr_node.node}")
+                            case None:
+                                raise CodecParamInvalid(f"{t.type._fullname}.{attr_name} type is unknown")
+                
             raise CodecParamInvalid(f"dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not {t.type.fullname})")
         case TypeAliasType():
             if t.args:
@@ -452,8 +492,7 @@ def verify_dict_key_type(
                 raise CodecParamInvalid(f"unexpected type alias target None")
             if not isinstance(t.alias.target, (LiteralType,UnionType,Instance,TypeAliasType,TupleType,NoneType,TypeVarType,AnyType)):
                 raise CodecParamInvalid(f"unexpected type alias target type {t.alias.target}")
-            verify_dict_key_type(t.alias.target,checker_api)
-            return True
+            return verify_dict_key_type(t.alias.target,checker_api)
 
     
 def adjust_type_or_type_return_type(x: MethodContext) -> Type:
@@ -476,7 +515,6 @@ def adjust_codec_return_type(x: FunctionContext) -> Type:
     """
     try:
         arg_exprs=x.args[0]
-        #pdb_trace()
         inferred_codec_type = infer_codec_value_type_from_args(arg_exprs, x.api)
         if isinstance(inferred_codec_type, UninhabitedType):
             arg_type=x.arg_types[0]

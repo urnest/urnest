@@ -6,6 +6,7 @@ from types import NoneType
 
 from xju.json_codec import codec, TypeScriptNamespace, TypeScriptSourceCode, TypeScriptNamespace
 from xju.json_codec import TypeScriptUQN, AnyJsonCodecImpl, encode_attr_as, PythonAttrName, JsonAttrName
+from xju.json_codec import SelfCodecImpl,JsonType,TypeScriptBackRefs
 from xju.misc import ByteCount
 from xju.newtype import Str
 from xju.time import Duration, Timestamp
@@ -19,6 +20,71 @@ namespace=TypeScriptNamespace({})
 def indent(n: int, s:TypeScriptSourceCode)->str:
     lines=s.splitlines()
     return '\n'.join([lines[0].value()]+[(' '*n)+l.value() for l in lines[1:]])
+
+ten_codec=codec(dict[Literal[10]|Literal[True],int])
+
+class SurnameTag:pass
+class Surname(Str[SurnameTag]):
+    pattern=re.compile(r'^\S*$')  # disallow whitespace
+    pass
+
+surname_codec=codec(Surname)
+surname_codec.ensure_typescript_defs(namespace)
+
+class O(Enum):
+    a='fred'
+    b='jock'
+    pass
+o_codec=codec(O)
+o_codec.ensure_typescript_defs(namespace)
+
+class Pnum(Enum):
+    a='aa'
+    b='bb'
+    pass
+pnum_codec=codec(Pnum)
+pnum_codec.ensure_typescript_defs(namespace)
+
+
+@dataclass
+class FullName:
+    first_name: str
+    middle_names: list[str]
+    last_name: str
+    _class: Literal["Upper", "Middle", "Lower"]
+    pass
+
+encode_attr_as(FullName, PythonAttrName("_class"), JsonAttrName("class"))
+
+@dataclass
+class Prefs:
+    colours: set[str]
+    pass
+
+timestamp_codec=codec(Timestamp)
+timestamp_codec.ensure_typescript_defs(namespace)
+bytecount_codec=codec(ByteCount)
+bytecount_codec.ensure_typescript_defs(namespace)
+typescript_uqn_codec=codec(TypeScriptUQN)
+typescript_uqn_codec.ensure_typescript_defs(namespace)
+typescript_source_code_codec=codec(TypeScriptSourceCode)
+typescript_source_code_codec.ensure_typescript_defs(namespace)
+duration_codec=codec(Duration)
+duration_codec.ensure_typescript_defs(namespace)
+namespace_codec=codec(TypeScriptNamespace)
+namespace_codec.ensure_typescript_defs(namespace)
+enum_codec=codec(O)
+enum_codec.ensure_typescript_defs(namespace)
+codec(FullName).ensure_typescript_defs(namespace)
+codec(Prefs).ensure_typescript_defs(namespace)
+
+codec(int|str).add_typescript_alias(namespace, [TypeScriptUQN('xju'),TypeScriptUQN('NorS')])
+class NonStringKey:
+    values: dict[TypeScriptUQN, int]
+    pass
+
+codec(NonStringKey).ensure_typescript_defs(namespace)
+print(namespace.get_formatted_defs())
 
 print(f'''\
 function str(x:any):string {{ return `${{x}}`; }}
@@ -179,7 +245,7 @@ function assert_never_reached(){{
     catch(e){{
         assert_x_contains_y(str(e), "Error: 7,ann is not a Array<number> because Error: ann is not a number it is a string");
     }}
-    assert_equal('{codec(bytes).typescript_type()}',"Array<number>");
+    assert_equal('{codec(bytes).typescript_type()}',"Array<number> /* bytes */");
     assert_true({codec(bytes).get_typescript_isa(TypeScriptSourceCode('[7, 8]'),namespace)});
     assert_false({codec(bytes).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
 }})();
@@ -281,6 +347,280 @@ print(f'''
 ''')
 
 print(f'''
+//dict[int,T]
+(() => {{
+    assert_equal({indent(8,codec(dict[int,int]).get_typescript_asa(TypeScriptSourceCode('{"1": 8}'),namespace))}, {{"1": 8}});
+    try{{
+        {indent(8,codec(dict[int,int]).get_typescript_asa(TypeScriptSourceCode('null'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: null is not a {{ [key: string /* int */]: number }} because Error: null is not an object it is null");
+    }}
+    try{{
+        {indent(8,codec(dict[int,int]).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a {{ [key: string /* int */]: number }} because Error: 7,ann is not an object it is an array");
+    }}
+    try{{
+        {indent(8,codec(dict[int,int]).get_typescript_asa(TypeScriptSourceCode('{"1":8, "2": "fred"}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* int */]: number }} because Error: element 2 is invalid because Error: fred is not a number it is a string");
+    }}
+    try{{
+        {indent(8,codec(dict[int,int]).get_typescript_asa(TypeScriptSourceCode('{"1":8, "ann": 9}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* int */]: number }} because Error: element ann is invalid because Error: ann is not a stringified integer");
+    }}
+
+    assert_true({indent(8,codec(dict[int,int]).get_typescript_isa(TypeScriptSourceCode('{"1": 8}'),namespace))});
+    assert_false({indent(8,codec(dict[int,int]).get_typescript_isa(TypeScriptSourceCode('null'),namespace))});
+    assert_false({indent(8,codec(dict[int,int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
+}})();
+''')
+
+print(f'''
+//dict[None|ByteCount|float|bool,T]
+(() => {{
+    assert_equal({indent(8,codec(dict[None|ByteCount|float|bool,int]).get_typescript_asa(TypeScriptSourceCode('{"1": 8, "true": 9, "null": 10, "99": 98}'),namespace))}, {{"1": 8, "true":9, "null": 10, "99": 98}});
+    try{{
+        {indent(8,codec(dict[None|ByteCount|float|bool,int]).get_typescript_asa(TypeScriptSourceCode('null'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: null is not a {{ [key: string /* string ** null **|string ** xju.misc.ByteCount **|string ** float **|string ** bool ** */]: number }} because Error: null is not an object it is null");
+    }}
+    try{{
+        {indent(8,codec(dict[None|ByteCount|float|bool,int]).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a {{ [key: string /* string ** null **|string ** xju.misc.ByteCount **|string ** float **|string ** bool ** */]: number }} because Error: 7,ann is not an object it is an array");
+    }}
+    try{{
+        {indent(8,codec(dict[None|ByteCount|float|bool,int]).get_typescript_asa(TypeScriptSourceCode('{"1":8, "2": "fred"}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* string ** null **|string ** xju.misc.ByteCount **|string ** float **|string ** bool ** */]: number }} because Error: element 2 is invalid because Error: fred is not a number it is a string");
+    }}
+    try{{
+        {indent(8,codec(dict[None|ByteCount|float|bool,int]).get_typescript_asa(TypeScriptSourceCode('{"1":8, "ann": 9}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* string ** null **|string ** xju.misc.ByteCount **|string ** float **|string ** bool ** */]: number }} because Error: element ann is invalid because Error: ann is not a string /* string ** null **|string ** xju.misc.ByteCount **|string ** float **|string ** bool ** */ because Error: key ann is not 'null' and key ann is not a stringified integer and ann is not a stringified number and ann is not 'true' or 'false'");
+    }}
+
+    assert_true({indent(8,codec(dict[None|ByteCount|float|bool,int]).get_typescript_isa(TypeScriptSourceCode('{"1": 8, "true": 9, "null": 10}'),namespace))});
+    assert_false({indent(8,codec(dict[None|ByteCount|float|bool,int]).get_typescript_isa(TypeScriptSourceCode('null'),namespace))});
+    assert_false({indent(8,codec(dict[None|ByteCount|float|bool,int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
+}})();
+''')
+
+
+print(f'''
+//dict[Duration|bool,T]
+(() => {{
+    assert_equal({indent(8,codec(dict[Duration|bool,int]).get_typescript_asa(TypeScriptSourceCode('{"1.2": 8, "true": 9}'),namespace))}, {{"1.2": 8, "true":9}});
+    try{{
+        {indent(8,codec(dict[Duration|bool,int]).get_typescript_asa(TypeScriptSourceCode('null'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: null is not a {{ [key: string /* string ** xju.time.Duration **|string ** bool ** */]: number }} because Error: null is not an object it is null");
+    }}
+    try{{
+        {indent(8,codec(dict[Duration|bool,int]).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a {{ [key: string /* string ** xju.time.Duration **|string ** bool ** */]: number }} because Error: 7,ann is not an object it is an array");
+    }}
+    try{{
+        {indent(8,codec(dict[Duration|bool,int]).get_typescript_asa(TypeScriptSourceCode('{"1":8, "2": "fred"}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* string ** xju.time.Duration **|string ** bool ** */]: number }} because Error: element 2 is invalid because Error: fred is not a number it is a string");
+    }}
+    try{{
+        {indent(8,codec(dict[Duration|bool,int]).get_typescript_asa(TypeScriptSourceCode('{"1":8, "ann": 9}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* string ** xju.time.Duration **|string ** bool ** */]: number }} because Error: element ann is invalid because Error: ann is not a string /* string ** xju.time.Duration **|string ** bool ** */ because Error: key ann is not a stringified number and ann is not 'true' or 'false'");
+    }}
+
+    assert_true({indent(8,codec(dict[Duration|bool,int]).get_typescript_isa(TypeScriptSourceCode('{"1": 8, "true": 9}'),namespace))});
+    assert_false({indent(8,codec(dict[Duration|bool,int]).get_typescript_isa(TypeScriptSourceCode('null'),namespace))});
+    assert_false({indent(8,codec(dict[Duration|bool,int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
+}})();
+''')
+
+print(f'''
+//dict[Timestamp|bool,T]
+(() => {{
+    assert_equal({indent(8,codec(dict[Timestamp|bool,int]).get_typescript_asa(TypeScriptSourceCode('{"1.2": 8, "true": 9}'),namespace))}, {{"1.2": 8, "true":9}});
+    try{{
+        {indent(8,codec(dict[Timestamp|bool,int]).get_typescript_asa(TypeScriptSourceCode('null'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: null is not a {{ [key: string /* string ** xju.time.Timestamp **|string ** bool ** */]: number }} because Error: null is not an object it is null");
+    }}
+    try{{
+        {indent(8,codec(dict[Timestamp|bool,int]).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a {{ [key: string /* string ** xju.time.Timestamp **|string ** bool ** */]: number }} because Error: 7,ann is not an object it is an array");
+    }}
+    try{{
+        {indent(8,codec(dict[Timestamp|bool,int]).get_typescript_asa(TypeScriptSourceCode('{"1":8, "2": "fred"}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* string ** xju.time.Timestamp **|string ** bool ** */]: number }} because Error: element 2 is invalid because Error: fred is not a number it is a string");
+    }}
+    try{{
+        {indent(8,codec(dict[Timestamp|bool,int]).get_typescript_asa(TypeScriptSourceCode('{"1":8, "ann": 9}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* string ** xju.time.Timestamp **|string ** bool ** */]: number }} because Error: element ann is invalid because Error: ann is not a string /* string ** xju.time.Timestamp **|string ** bool ** */ because Error: xju.time.Timesamp key ann is not a stringified number and ann is not 'true' or 'false'");
+    }}
+
+    assert_true({indent(8,codec(dict[Timestamp|bool,int]).get_typescript_isa(TypeScriptSourceCode('{"1": 8, "true": 9}'),namespace))});
+    assert_false({indent(8,codec(dict[Timestamp|bool,int]).get_typescript_isa(TypeScriptSourceCode('null'),namespace))});
+    assert_false({indent(8,codec(dict[Timestamp|bool,int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
+}})();
+''')
+
+print(f'''
+//dict[Literal[10]|Literal[True],T]
+(() => {{
+    assert_equal({indent(8,ten_codec.get_typescript_asa(TypeScriptSourceCode('{"10": 8, "true": 9}'),namespace))}, {{"10": 8, "true":9}});
+    try{{
+        {indent(8,ten_codec.get_typescript_asa(TypeScriptSourceCode('null'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: null is not a {{ [key: string /* '10'|'true' */]: number }} because Error: null is not an object it is null");
+    }}
+    try{{
+        {indent(8,ten_codec.get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a {{ [key: string /* '10'|'true' */]: number }} because Error: 7,ann is not an object it is an array");
+    }}
+    try{{
+        {indent(8,ten_codec.get_typescript_asa(TypeScriptSourceCode('{"1":8, "2": "fred"}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* '10'|'true' */]: number }} because Error: element 1 is invalid because Error: 1 is not a string /* '10'|'true' */ because Error: (string) 1 is not the stringified number 10 and (string) 1 is not 'true'");
+    }}
+    try{{
+        {indent(8,ten_codec.get_typescript_asa(TypeScriptSourceCode('{"1":8, "ann": 9}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* '10'|'true' */]: number }} because Error: element 1 is invalid because Error: 1 is not a string /* '10'|'true' */ because Error: (string) 1 is not the stringified number 10 and (string) 1 is not 'true'");
+    }}
+
+    assert_true({indent(8,ten_codec.get_typescript_isa(TypeScriptSourceCode('{"10": 8, "true": 9}'),namespace))});
+    assert_false({indent(8,ten_codec.get_typescript_isa(TypeScriptSourceCode('null'),namespace))});
+    assert_false({indent(8,ten_codec.get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
+}})();
+''')
+
+print(f'''
+//dict[Literal["j ock"]|Literal[O.a]|Surname,T]
+const test_aaaa=() => {{
+    assert_equal({indent(8,codec(dict[Literal["j ock"]|Literal[O.a]|Surname,int]).get_typescript_asa(TypeScriptSourceCode('{"j ock": 8, "Jones": 9, "fred": 15}'),namespace))}, {{"j ock": 8, "Jones":9, "fred": 15}});
+    try{{
+        {indent(8,codec(dict[Literal["j ock"]|Literal[O.a]|Surname,int]).get_typescript_asa(TypeScriptSourceCode('null'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: null is not a {{ [key: string /* j ock|O.a|string ** Surname ** */]: number }} because Error: null is not an object it is null");
+    }}
+    try{{
+        {indent(8,codec(dict[Literal["j ock"]|Literal[O.a]|Surname,int]).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a {{ [key: string /* j ock|O.a|string ** Surname ** */]: number }} because Error: 7,ann is not an object it is an array");
+    }}
+    try{{
+        {indent(8,codec(dict[Literal["j ock"]|Literal[O.a]|Surname,int]).get_typescript_asa(TypeScriptSourceCode('{"1":8, "2": "jack"}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* j ock|O.a|string ** Surname ** */]: number }} because Error: element 2 is invalid because Error: jack is not a number it is a string");
+    }}
+    try{{
+        {indent(8,codec(dict[Literal["j ock"]|Literal[O.a]|Surname,int]).get_typescript_asa(TypeScriptSourceCode('{"1 s":8, "ann s": 9}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* j ock|O.a|string ** Surname ** */]: number }} because Error: element 1 s is invalid because Error: 1 s is not a string /* j ock|O.a|string ** Surname ** */ because Error: (string) 1 s is not the string j ock and the string 1 s is not O.a and 1 s does not match pattern ^\\\\S*$");
+    }}
+
+    assert_true({indent(8,codec(dict[Literal["j ock"]|Literal[O.a]|Surname,int]).get_typescript_isa(TypeScriptSourceCode('{"1": 8, "true": 9}'),namespace))});
+    assert_false({indent(8,codec(dict[Literal["j ock"]|Literal[O.a]|Surname,int]).get_typescript_isa(TypeScriptSourceCode('null'),namespace))});
+    assert_false({indent(8,codec(dict[Literal["j ock"]|Literal[O.a]|Surname,int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
+}};
+''')
+
+print(f'''
+//dict[Pnum,T]
+const test_bbbb=() => {{
+    assert_equal({indent(8,codec(dict[Pnum,int]).get_typescript_asa(TypeScriptSourceCode('{"bb": 8, "aa": 15}'),namespace))}, {{"bb": 8,"aa": 15}});
+    try{{
+        {indent(8,codec(dict[Pnum,int]).get_typescript_asa(TypeScriptSourceCode('null'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: null is not a {{ [key: string /* Pnum */]: number }} because Error: null is not an object it is null");
+    }}
+    try{{
+        {indent(8,codec(dict[Pnum,int]).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a {{ [key: string /* Pnum */]: number }} because Error: 7,ann is not an object it is an array");
+    }}
+    try{{
+        {indent(8,codec(dict[Pnum,int]).get_typescript_asa(TypeScriptSourceCode('{"bb":8, "aa": "jock"}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* Pnum */]: number }} because Error: element aa is invalid because Error: jock is not a number it is a string");
+    }}
+    try{{
+        {indent(8,codec(dict[Pnum,int]).get_typescript_asa(TypeScriptSourceCode('{"aa":8, "ann": 9}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* Pnum */]: number }} because Error: element ann is invalid because Error: ann is not a string /* Pnum */ key because Error: the string ann is not Pnum.a and the string ann is not Pnum.b");
+    }}
+
+    assert_true({indent(8,codec(dict[Pnum,int]).get_typescript_isa(TypeScriptSourceCode('{"bb": 8, "aa": 9}'),namespace))});
+    assert_false({indent(8,codec(dict[Pnum,int]).get_typescript_isa(TypeScriptSourceCode('null'),namespace))});
+    assert_false({indent(8,codec(dict[Pnum,int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
+}};
+''')
+
+print(f'''
 //dict
 (() => {{
     assert_equal({indent(4,codec(dict).get_typescript_asa(TypeScriptSourceCode('{"fred": 8}'),namespace))}, {{"fred": 8}});
@@ -363,14 +703,14 @@ print(f'''
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), 'Error: the string ann is not the string fred');
+        assert_x_contains_y(str(e), 'Error: (string) ann is not the string fred');
     }}
     try{{
         {indent(8,fred_codec.get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), 'Error: the object 7,ann is not the string fred');
+        assert_x_contains_y(str(e), 'Error: (object) 7,ann is not the string fred');
     }}
     assert_true({fred_codec.get_typescript_isa(TypeScriptSourceCode('"fred"'),namespace)});
     assert_false({fred_codec.get_typescript_isa(TypeScriptSourceCode('"jock"'),namespace)});
@@ -388,14 +728,14 @@ print(f'''
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), 'Error: the number 10 is not the number 7');
+        assert_x_contains_y(str(e), 'Error: (number) 10 is not the number 7');
     }}
     try{{
         {indent(8,seven_codec.get_typescript_asa(TypeScriptSourceCode('[7,10]'),namespace))};
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), 'Error: the object 7,10 is not the number 7');
+        assert_x_contains_y(str(e), 'Error: (object) 7,10 is not the number 7');
     }}
     assert_true({seven_codec.get_typescript_isa(TypeScriptSourceCode('7'),namespace)});
     assert_false({seven_codec.get_typescript_isa(TypeScriptSourceCode('"jock"'),namespace)});
@@ -413,14 +753,14 @@ print(f'''
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), 'Error: the number 10 is not true');
+        assert_x_contains_y(str(e), 'Error: (number) 10 is not true');
     }}
     try{{
         {indent(8,true_codec.get_typescript_asa(TypeScriptSourceCode('[7,10]'),namespace))};
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), 'Error: the object 7,10 is not true');
+        assert_x_contains_y(str(e), 'Error: (object) 7,10 is not true');
     }}
     assert_true({true_codec.get_typescript_isa(TypeScriptSourceCode('true'),namespace)});
     assert_false({true_codec.get_typescript_isa(TypeScriptSourceCode('"jock"'),namespace)});
@@ -440,35 +780,20 @@ print(f'''
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), 'Error: the string ann is not the string fred');
+        assert_x_contains_y(str(e), 'Error: (string) ann is not the string fred');
     }}
     try{{
         {indent(8,fred_7_False_codec.get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
         assert_never_reached();
     }}
     catch(e){{
-        assert_x_contains_y(str(e), 'Error: the object 7,ann is not the string fred');
+        assert_x_contains_y(str(e), 'Error: (object) 7,ann is not the string fred');
     }}
     assert_true({fred_7_False_codec.get_typescript_isa(TypeScriptSourceCode('"fred"'),namespace)});
     assert_false({fred_7_False_codec.get_typescript_isa(TypeScriptSourceCode('"jock"'),namespace)});
     assert_false({fred_7_False_codec.get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
 }})();
 ''')
-
-@dataclass
-class FullName:
-    first_name: str
-    middle_names: list[str]
-    last_name: str
-    _class: Literal["Upper", "Middle", "Lower"]
-    pass
-
-encode_attr_as(FullName, PythonAttrName("_class"), JsonAttrName("class"))
-
-@dataclass
-class Prefs:
-    colours: set[str]
-    pass
 
 print(f'''
 //class
@@ -532,43 +857,6 @@ print(f'''
 }})();
 ''')
 
-
-class O(Enum):
-    a='fred'
-    b=7
-    pass
-
-
-timestamp_codec=codec(Timestamp)
-timestamp_codec.ensure_typescript_defs(namespace)
-bytecount_codec=codec(ByteCount)
-bytecount_codec.ensure_typescript_defs(namespace)
-typescript_uqn_codec=codec(TypeScriptUQN)
-typescript_uqn_codec.ensure_typescript_defs(namespace)
-typescript_source_code_codec=codec(TypeScriptSourceCode)
-typescript_source_code_codec.ensure_typescript_defs(namespace)
-duration_codec=codec(Duration)
-duration_codec.ensure_typescript_defs(namespace)
-namespace_codec=codec(TypeScriptNamespace)
-namespace_codec.ensure_typescript_defs(namespace)
-enum_codec=codec(O)
-enum_codec.ensure_typescript_defs(namespace)
-
-codec(int|str).add_typescript_alias(namespace, [TypeScriptUQN('xju'),TypeScriptUQN('NorS')])
-class NonStringKey:
-    values: dict[TypeScriptUQN, int]
-    pass
-
-class SurnameTag:pass
-class Surname(Str[SurnameTag]):
-    pattern=re.compile(r'^\S*$')  # disallow whitespace
-    pass
-
-surname_codec=codec(Surname)
-surname_codec.ensure_typescript_defs(namespace)
-
-codec(NonStringKey).ensure_typescript_defs(namespace)
-print(namespace.get_formatted_defs())
 
 print(f'''
 //recursive type
@@ -742,6 +1030,24 @@ print(f'''
 }})();
 ''')
 
+o_a_codec=codec(O.a) # type: ignore
+print(f'''
+//Enum value
+(() => {{
+    assert_equal({indent(4,o_a_codec.get_typescript_asa(TypeScriptSourceCode("'fred'"),namespace))}, 'fred');
+    try{{
+        {indent(8,o_a_codec.get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: the object 7,ann is not O.a");
+    }}
+    assert_true({o_a_codec.get_typescript_isa(TypeScriptSourceCode("'fred'"),namespace)});
+    var v="jock";
+    assert_false({o_a_codec.get_typescript_isa(TypeScriptSourceCode("v"),namespace)});
+}})();
+''')
+
 
 try:
     codec(int|str).add_typescript_alias(namespace, [TypeScriptUQN('xju'),TypeScriptUQN('NorS')])
@@ -751,21 +1057,10 @@ else:
     assert False
     pass
 
-try:
-    codec(bool).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='boolean is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(NoneType).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='null is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
+Assert(codec(int).typescript_as_object_key_type())==TypeScriptSourceCode("string /* int */")
+Assert(codec(float).typescript_as_object_key_type())==TypeScriptSourceCode("string /* float */")
+Assert(codec(bool).typescript_as_object_key_type())==TypeScriptSourceCode("string /* bool */")
+Assert(codec(NoneType).typescript_as_object_key_type())==TypeScriptSourceCode("string /* null */")
 
 try:
     codec(list[int]).typescript_as_object_key_type()
@@ -808,14 +1103,6 @@ else:
     pass
 
 try:
-    codec(int|str).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='number|string is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
     codec(dict).typescript_as_object_key_type()
 except Exception as e:
     Assert(readable_repr(e))=='{ [key: string]: any } is not allowed as a typescript object key type'
@@ -831,40 +1118,11 @@ else:
     assert False
     pass
 
-Assert(codec(ByteCount).typescript_as_object_key_type())==TypeScriptSourceCode('number /* xju.misc.ByteCount */')
-Assert(codec(Duration).typescript_as_object_key_type())==TypeScriptSourceCode('number /* xju.time.Duration */')
+Assert(codec(ByteCount).typescript_as_object_key_type())==TypeScriptSourceCode('string /* xju.misc.ByteCount */')
+Assert(codec(Duration).typescript_as_object_key_type())==TypeScriptSourceCode('string /* xju.time.Duration */')
 
-try:
-    codec(Literal["Fred"]).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='"Fred" is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(Literal[6]).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='6 is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(Literal[True]).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='true is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(Timestamp).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='xju.time.Timestamp is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
+Assert(codec(Timestamp).typescript_as_object_key_type())==TypeScriptSourceCode(
+    "string /* xju.time.Timestamp */")
 
 try:
     codec(NonStringKey).typescript_as_object_key_type()
@@ -874,21 +1132,7 @@ else:
     assert False
     pass
 
-try:
-    codec(O).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='O is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    codec(Literal[O.a]).typescript_as_object_key_type()
-except Exception as e:
-    Assert(readable_repr(e))=='O.a is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
+Assert(codec(O).typescript_as_object_key_type())==TypeScriptSourceCode("string /* O */")
 
 try:
     AnyJsonCodecImpl().typescript_as_object_key_type(None)
@@ -898,11 +1142,26 @@ else:
     assert False
     pass
     
-
+try:
+    codec(FullName).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='FullName is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+    
+try:
+    codec(bytes).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='Array<number> /* bytes */ is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+    
 @dataclass
 class Selfish:
     value: int
-    next: dict[Self, bool]
+    next: dict[int, Self]
     pass
 
 try:
@@ -914,9 +1173,282 @@ else:
     pass
 
 try:
-    codec(Selfish).ensure_typescript_defs(namespace)
+    codec(Selfish).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
 except Exception as e:
     Assert(readable_repr(e))=='Selfish is not allowed as a typescript object key type'
 else:
     assert False
     pass
+
+try:
+    codec(Selfish).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='Selfish is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+back_refs=TypeScriptBackRefs(
+    type_back_ref=lambda: TypeScriptSourceCode("fred"),
+    as_object_key_type_back_ref=lambda: TypeScriptSourceCode("jock"),
+    isa_back_ref=lambda x: TypeScriptSourceCode("ann"),
+    asa_back_ref=lambda x: TypeScriptSourceCode("polly")
+)
+
+try:
+    SelfCodecImpl().get_typescript_isa_key(TypeScriptSourceCode('k'),namespace,back_refs)
+except Exception as e:
+    Assert(readable_repr(e))=='fred is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    SelfCodecImpl().get_typescript_asa_key(TypeScriptSourceCode('k'),namespace,back_refs)
+except Exception as e:
+    Assert(readable_repr(e))=='fred is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+codec(Selfish).ensure_typescript_defs(namespace)
+
+try:
+    codec(list[int]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='Array<number> is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(list).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='Array<any> is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(set[str]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='Array<string> /* with unique elements */ is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(set).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='Array<any> /* with unique elements */ is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(tuple[int,str]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='[number,string] is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(tuple[int,str]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='[number,string] is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+Assert(codec(dict[ByteCount,str]).decode({'38':'fred'}))=={ByteCount(38):'fred'}
+Assert(codec(dict[ByteCount,str]).decode({38:'fred'}))=={ByteCount(38):'fred'}
+Assert(codec(dict[ByteCount,str]).encode({ByteCount(38):'fred'}))=={38:'fred'}
+
+Assert(codec(dict[bool|ByteCount,str]).decode({'38':'fred'}))=={ByteCount(38):'fred'}
+Assert(codec(dict[bool|ByteCount,str]).decode({38:'fred'}))=={ByteCount(38):'fred'}
+Assert(codec(dict[bool|ByteCount,str]).encode({ByteCount(38):'fred'}))=={38:'fred'}
+Assert(codec(dict[bool|ByteCount,str]).decode({'true':'fred'}))=={True:'fred'}
+Assert(codec(dict[bool|ByteCount,str]).decode({True:'fred'}))=={True:'fred'}
+Assert(codec(dict[bool|ByteCount,str]).encode({True:'fred'}))=={True:'fred'}
+
+Assert(codec(dict[Surname|str,str]).decode({'Jones':'fred'}))=={Surname('Jones'):'fred'}
+Assert(codec(dict[Surname|str,str]).decode({'Mc Sweeney':'fred'}))=={'Mc Sweeney':'fred'}
+Assert(codec(dict[Surname|str,str]).encode({Surname('Jones'):'fred'}))=={'Jones':'fred'}
+
+Assert(codec(dict[Surname,str]).decode({'Jones':'fred'}))=={Surname('Jones'):'fred'}
+Assert(codec(dict[Surname,str]).encode({Surname('Jones'):'fred'}))=={'Jones':'fred'}
+
+c=codec(dict[int|bool,float])
+try:
+    c.decode({'fred':8.2})
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to decode {'fred': 8.2} to a dict[int | bool, float] because\n- failed to decode key 'fred' via json.loads because\n  Expecting value: line 1 column 1 (char 0); and\n- failed to decode key 'fred' directly because\n  failed to decode 'fred' as one of (<class 'int'>, <class 'bool'>) because\n  - failed to decode as <class 'int'> because\n    'fred' (of type <class 'str'>) is not a <class 'int'>; and\n  - failed to decode as <class 'bool'> because\n    'fred' (of type <class 'str'>) is not a <class 'bool'>."
+else:
+    assert False
+    pass
+
+try:
+    codec(dict[dict[int,bool],str]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e))=='{ [key: string /* int */]: boolean } is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(dict[dict,str]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e))=='{ [key: string]: any } is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(dict[JsonType,str]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to get typescript type of dictionary key that is any of (<class 'NoneType'>, <class 'bool'>, <class 'dict'>, <class 'list'>, <class 'float'>, <class 'str'>) because\n{ [key: string]: any } is not allowed as a typescript object key type."
+else:
+    assert False
+    pass
+
+try:
+    codec(bytes).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e))=='Array<number> /* bytes */ is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(dict).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e))=='{ [key: string]: any } is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(JsonType).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e))=='{ [key: string]: any } is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(list[int]).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='Array<number> is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(list).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='Array<any> is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(set[str]).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='Array<string> /* with unique elements */ is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(set).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='Array<any> /* with unique elements */ is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(tuple[int,str]).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='[number,string] is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(tuple[int,str]).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='[number,string] is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(dict[dict[int,bool],str]).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e))=='{ [key: string /* int */]: boolean } is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(dict[dict,str]).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e))=='{ [key: string]: any } is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    AnyJsonCodecImpl().get_typescript_isa_key(TypeScriptSourceCode('k'),namespace,None)
+except Exception as e:
+    Assert(readable_repr(e))=='any is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(bytes).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e))=='Array<number> /* bytes */ is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(dict).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e))=='{ [key: string]: any } is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    AnyJsonCodecImpl().get_typescript_asa_key(TypeScriptSourceCode('k'),namespace,None)
+except Exception as e:
+    Assert(readable_repr(e))=='any is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(FullName).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e))=='FullName is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(FullName).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)  # type: ignore  # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e))=='FullName is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+print('''
+test_aaaa();
+test_bbbb();
+''')
