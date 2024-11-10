@@ -15,6 +15,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
+import asyncio
 from sys import path
 from os.path import dirname
 if path[0]==dirname(__file__): path.pop(0)
@@ -46,10 +47,10 @@ fred.\
 '''
         Assert(str(e)).matches('''\
 failed to jock because
-[^:]*:40: failed to c[(][)] because
-[^:]*:37: failed to b[(][)] because
-[^:]*:34: failed to a[(][)] because
-[^:]*:32: fred'''.format(**vars()))
+[^:]*:41: failed to c[(][)] because
+[^:]*:38: failed to b[(][)] because
+[^:]*:35: failed to a[(][)] because
+[^:]*:33: fred'''.format(**vars()))
         pass
     pass
 
@@ -137,13 +138,13 @@ def test4(prog=sys.argv[0]):
         pass
     Assert(str(e)).matches('''\
 failed to jock because
-[^:]*xn[.]py[.]test:132: failed to c[(][)] because
-[^:]*xn[.]py[.]test:129: failed to b[(][)] because
-[^:]*xn[.]py[.]test:123: failed to with _Scope[(]'b'[)]: because
-[^:]*xn[.]py[.]test:116: failed to raise in_context[(]self.s,[(]t,e,b[)],self.fl[)] from None because
-[^:]*xn[.]py[.]test:123: failed to b because
-[^:]*xn[.]py[.]test:125: failed to a[(][)] because
-[^:]*xn[.]py[.]test:121: fred''')
+[^:]*xn[.]py[.]test:133: failed to c[(][)] because
+[^:]*xn[.]py[.]test:130: failed to b[(][)] because
+[^:]*xn[.]py[.]test:124: failed to with _Scope[(]'b'[)]: because
+[^:]*xn[.]py[.]test:117: failed to raise in_context[(]self.s,[(]t,e,b[)],self.fl[)] from None because
+[^:]*xn[.]py[.]test:124: failed to b because
+[^:]*xn[.]py[.]test:126: failed to a[(][)] because
+[^:]*xn[.]py[.]test:122: fred''')
     Assert(readable_repr(e))=='''\
 Failed to jock because
 failed to b because
@@ -244,7 +245,7 @@ def test12():
         Assert(readable_repr(e))=="Failed to fred because\nTimeoutError."
         Assert(str(e)).matches('''\
 failed to fred because
-[^:]*:239: TimeoutError''')
+[^:]*:240: TimeoutError''')
         pass
     pass
 
@@ -299,10 +300,10 @@ def test_16():
     except Exception as e:
         Assert(str(e)).matches("""\
 failed to use <class '__main__.f.<locals>.C'> because
-[^:]*/xn.py.test:291: failed to g[(]C[)] because
-[^:]*/xn.py.test:284: failed to raise in_function_context[(]g,vars[(][)][)] from None because
-282:None: failed to g[(]<class '__main__.f.<locals>.C'>[)] because
-[^:]*/xn.py.test:282: fred""")
+[^:]*/xn.py.test:292: failed to g[(]C[)] because
+[^:]*/xn.py.test:285: failed to raise in_function_context[(]g,vars[(][)][)] from None because
+283:None: failed to g[(]<class '__main__.f.<locals>.C'>[)] because
+[^:]*/xn.py.test:283: fred""")
         pass
     else:
         assert False
@@ -310,6 +311,47 @@ failed to use <class '__main__.f.<locals>.C'> because
     pass
 
 
+def test_17():
+    '''python behaviour checks'''
+
+    # xn.readable_repr uses str(e)
+
+    #- KeyError str() only prints value looked up
+    # xn has special handling
+    try:
+        try:
+            a=dict[int,str]()
+            a[3]
+        except KeyError as e:
+            Assert(str(e)) == '3'
+            raise in_context("lookup 3")
+            pass
+        pass
+    except Exception as e:
+        Assert(readable_repr(e))=="Failed to lookup 3 because\nKeyError(3)."
+        pass
+    pass
+
+    #- open failure str() does better
+    try:
+        open('/dev/null/nonexistent')
+    except Exception as e:
+        Assert(str(e))=="[Errno 20] Not a directory: '/dev/null/nonexistent'"
+        pass
+
+    # timeout error str is emptynothing at all
+    async def f():
+        async with asyncio.timeout(0.001):
+            await asyncio.sleep(5)
+            pass
+        pass
+    try:
+        asyncio.run(f())
+    except TimeoutError as e:
+        assert str(e)==""
+        pass
+
+            
 tests=[var for name,var in sorted(vars().items())
        if name.startswith('test') and callable(var)]
 for t in tests: t()
