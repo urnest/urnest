@@ -176,8 +176,17 @@ Various modules implemented to some broad principles:
 
 * see `xju/xn.py.test <xju/xn.py.test>`_ for sample code
 
+`mypy-plugins <mypy-plugins>`_
+
+* type checking for xju.json_codec - see `json_codec_mypy_plugin.py <mypy-plugins/json_codec_mypy_plugin.py>`_
+* usage checking for xju.xn.in_function_context - see `xn_mypy_plugin.py <mypy-plugins/xn_mypy_plugin.py>`_
+
+
 Release History
 
+- 3.6.0 better KeyError diagnostics from xju.xn
+- 3.6.0 add xn_mypy_plugin
+- 3.6.0 xju.json_codec non-str dict key support
 - 3.6.0 xju.json_codec now encoded xju.time.Timestamp as float
 - 3.6.0 xju.json_codec now handles Final attributes
 - 3.6.0 make xju.time.Timestamp hashable
