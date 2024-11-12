@@ -205,7 +205,7 @@ def validateCookiePath(v):
 
 def promoteContent(content:Union[Response, #already good
                                  pq.Selection, #text/html
-                                 dict,bool,list,float]): #text/json REVISIT: rules
+                                 None,dict,bool,list,int,float]): #text/json REVISIT: rules
     '''promote content object to a valid Response'''
     match content:
         case Response():
@@ -215,6 +215,6 @@ def promoteContent(content:Union[Response, #already good
         case dict() if 'result' in content or 'error' in content:
             return Response(toJson(content).encode('utf-8'),
                             'text/json; charset=UTF-8')
-        case None | dict() | list() | int() | float():
+        case None | dict() | bool() | list() | int() | float():
             return Response(toJson({'result':content}).encode('utf-8'),
                             'text/json; charset=UTF-8')

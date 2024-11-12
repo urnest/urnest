@@ -68,6 +68,17 @@ def post_json(type_: str, name: str,age: int):
         'age':age}}
 
 @xwl.public
+def post_json_2(type_: str, name: str,age: int):
+    return {
+        'type':type_,
+        'name':name,
+        'age':age}
+
+@xwl.public
+def post_json_3(type_: str, name: str,age: int):
+    return None
+
+@xwl.public
 def post_json_params(json_params):
     '''special name "json_params" captures all params as dictionary'''
     return { 'result': json_params }

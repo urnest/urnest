@@ -73,6 +73,24 @@ $(document).ready(function(){
       result));
     return false;
   });
+  $('a.async-post-2').click(async function(){
+    let result = await xwl.asyncPostToServer(xwl.asyncTimeout(2.0), 'post-json-2', {
+	'type_':'json',  // note no special meaning
+	'name':'sally',
+      'age':30});
+    $('div.result').text('POST result (json)'+xwl.json.encode(
+      result));
+    return false;
+  });
+  $('a.async-post-3').click(async function(){
+    let result = await xwl.asyncPostToServer(xwl.asyncTimeout(2.0), 'post-json-3', {
+	'type_':'json',  // note no special meaning
+	'name':'jock',
+      'age':30});
+    $('div.result').text('POST result (json)'+xwl.json.encode(
+      result));
+    return false;
+  });
   $('a.async-post-5s').click(async function(){
     try{
       let result = await xwl.asyncPostToServer(xwl.asyncTimeout(2.0), 'post-json-5s', {

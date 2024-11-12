@@ -19,4 +19,5 @@ see `xwl.example <xwl/example>`_ which implements a HTTP
 
 Release History
 
+- 1.0.2 fix None return type handling
 - 1.0.1 add missing files to whl

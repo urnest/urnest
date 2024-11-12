@@ -923,15 +923,18 @@
 	    responseData.error != '') {
 	  result.error_(''+responseData.error);
         }
-        else if (typeof(responseData.result.error) != 'undefined' && 
+        else if (responseData.result && typeof(responseData.result.error) != 'undefined' && 
 	    responseData.result.error != '') {
 	  result.error_(''+responseData.result.error);
         }
-        else {
+        else if (typeof(responseData.result) != 'undefined'){
           if (window.console&&console.log&&responseData.msg) {
 	    console.log(''+responseData.msg);
 	  };
 	  result.then_(responseData.result);
+        }
+        else {
+          result.then_(responseData);
         }
 	result.always_();
       },
