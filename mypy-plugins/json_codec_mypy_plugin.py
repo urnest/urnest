@@ -310,6 +310,24 @@ def get_custom_class_codec_type(chk: TypeChecker) -> Type:
     assert isinstance(result, TypeInfo)
     return Instance(result, [])
 
+def get_custom_string_key_class_codec_type(chk: TypeChecker) -> Type:
+    # you'd think we could do checker_api.named_type("xju.json_codec.CustomStringKeyClassCodec")):
+    # but no, it looks for module xju, finds it but it is empty... the top level
+    # has a module called xju.json_codec though...
+    json_codec_module=chk.modules["xju.json_codec"]
+    result = json_codec_module.names["CustomStringKeyClassCodec"].node
+    assert isinstance(result, TypeInfo)
+    return Instance(result, [])
+
+def get_custom_non_string_key_class_codec_type(chk: TypeChecker) -> Type:
+    # you'd think we could do checker_api.named_type("xju.json_codec.CustomNonStringKeyClassCodec")):
+    # but no, it looks for module xju, finds it but it is empty... the top level
+    # has a module called xju.json_codec though...
+    json_codec_module=chk.modules["xju.json_codec"]
+    result = json_codec_module.names["CustomNonStringKeyClassCodec"].node
+    assert isinstance(result, TypeInfo)
+    return Instance(result, [])
+
 def get_json_type_type(chk: TypeChecker) -> Type:
     # you'd think we could do checker_api.named_type("xju.json_codec.JsonType")):
     # but no, it looks for module xju, finds it but it is empty... the top level
@@ -483,7 +501,12 @@ def verify_dict_key_type(
                                 raise CodecParamInvalid(f"{t.type._fullname}.{attr_name} unexpected {attr_node.node}")
                             case None:
                                 raise CodecParamInvalid(f"{t.type._fullname}.{attr_name} type is unknown")
-                
+            assert isinstance(checker_api, TypeChecker), checker_api
+            if is_subtype(t, get_custom_class_codec_type(checker_api)):
+                if is_subtype(t, get_custom_string_key_class_codec_type(checker_api)):
+                    return 'String'
+                if is_subtype(t, get_custom_non_string_key_class_codec_type(checker_api)):
+                    return 'NonString'
             raise CodecParamInvalid(f"dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not {t.type.fullname})")
         case TypeAliasType():
             if t.args:

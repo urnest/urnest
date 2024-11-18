@@ -30,11 +30,14 @@ from xju.json_codec import (
     TypeScriptSourceCode,
     TypeScriptNamespace,
     CustomClassCodec,
+    CustomStringKeyClassCodec,
+    CustomNonStringKeyClassCodec,
     PythonAttrName,
     JsonAttrName
 )
 
 from typing import cast,Type,Literal,Any,Self,NewType,Generic,TypeVar,Callable,Union,Final
+from typing import Final
 from types import NoneType
 from dataclasses import dataclass, field
 import re
@@ -786,11 +789,14 @@ Assert(codec(Address).encode(
             Address).encode(
                 Address(Street('alba'),Suburb('bocca'),Postcode(3365),'first'))
        
-# custom class encoding by implementing CustomClassCodec protocol, for example
+# ... custom class encoding by implementing CustomClassCodec protocol, for example
 # to support encoding of external types with control over their json representation
+# ... to be usable as a dictionary key, the class also has to implement either
+# the CustomStringKeyClassCodec or CustomNonStringKeyClassCodec
 class IpV4Addr(ipaddress.IPv4Address):
     __xju_json_codec=codec(str)
 
+    # xju.json_codec.CustomClassCodec:
     @staticmethod
     def xju_json_codec_encode(x:object) -> JsonType:
         assert isinstance(x,IpV4Addr)
@@ -802,7 +808,15 @@ class IpV4Addr(ipaddress.IPv4Address):
     def xju_json_codec_get_json_schema(definitions:dict[str,dict]) -> dict:
         '''return json schema for T'''
         '''- may add any supporting definitions to definitions'''
-        return IpV4Addr.__xju_json_codec.get_json_schema()
+        p=rf"([0-9]|([1][0-9])|([1][0-9][0-9])|(2[1-4][0-9])|(25[0-5]))"
+        return {
+            'description': f'IpV4Addr',
+            'type': 'string',
+            'pattern': rf'^{p}[.]{p}[.]{p}[.]{p}$'
+        }
+    @staticmethod
+    def xju_json_codec_get_typescript_type() -> TypeScriptSourceCode:
+        return TypeScriptSourceCode('string /* IpV4Addr */')
     @staticmethod
     def xju_json_codec_get_typescript_isa(
             expression:TypeScriptSourceCode,
@@ -811,19 +825,29 @@ class IpV4Addr(ipaddress.IPv4Address):
         '''- may add any supporting definitions to namespace, e.g. type for T itself'''
         return IpV4Addr.__xju_json_codec.get_typescript_isa(expression,namespace)
     @staticmethod
-    def xju_json_codec_get_typescript_isa_key(
-            expression:TypeScriptSourceCode,
-            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T-as-object-key'''
-        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        return IpV4Addr.__xju_json_codec.get_typescript_isa_key(expression,namespace)
-    @staticmethod
     def xju_json_codec_get_typescript_asa(
             expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T'''
         '''- may add any supporting definitions to namespace, e.g. type for T itself'''
         return IpV4Addr.__xju_json_codec.get_typescript_asa(expression,namespace)
+
+    # xju.json_codec.CustomStringKeyClassCodec:
+    @staticmethod
+    def xju_json_codec_get_object_key_json_schema(definitions:dict[str,dict]) -> dict:
+        '''return json schema for T when used as an object key
+           - may add any supporting definitions to definitions'''
+        return IpV4Addr.xju_json_codec_get_json_schema(definitions)
+    @staticmethod
+    def xju_json_codec_typescript_key_type()->Literal['String']:
+        return 'String'
+    @staticmethod
+    def xju_json_codec_get_typescript_isa_key(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T-as-object-key'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        return IpV4Addr.__xju_json_codec.get_typescript_isa_key(expression,namespace)
     @staticmethod
     def xju_json_codec_get_typescript_asa_key(
             expression:TypeScriptSourceCode,
@@ -834,6 +858,7 @@ class IpV4Addr(ipaddress.IPv4Address):
     pass
 
 Assert(IpV4Addr).isSubclassOf(CustomClassCodec)
+Assert(IpV4Addr).isSubclassOf(CustomStringKeyClassCodec)
 Assert(codec(IpV4Addr).encode(IpV4Addr('172.18.12.1')))=='172.18.12.1'
 Assert(codec(IpV4Addr).decode('172.18.12.1')).isInstanceOf(IpV4Addr)
 Assert(codec(IpV4Addr).decode('172.18.12.1'))==IpV4Addr('172.18.12.1')
@@ -860,6 +885,10 @@ class IpAddrWithPrefix(ipaddress.IPv4Interface):
         '''- may add any supporting definitions to definitions'''
         return IpAddrWithPrefix.__codec.get_json_schema()
     @staticmethod
+    def xju_json_codec_get_typescript_type() -> TypeScriptSourceCode:
+        assert False  #pragma NO COVER
+        return TypeScriptSourceCode('string /* IpV4AddrWithPrefix */')
+    @staticmethod
     def xju_json_codec_get_typescript_isa(
             expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -867,26 +896,12 @@ class IpAddrWithPrefix(ipaddress.IPv4Interface):
         '''- may add any supporting definitions to namespace, e.g. type for T itself'''
         return IpAddrWithPrefix.__codec.get_typescript_isa(expression,namespace)
     @staticmethod
-    def xju_json_codec_get_typescript_isa_key(
-            expression:TypeScriptSourceCode,
-            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T'''
-        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        return IpAddrWithPrefix.__codec.get_typescript_isa_key(expression,namespace)
-    @staticmethod
     def xju_json_codec_get_typescript_asa(
             expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
         '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T-as-object-key'''
         '''- may add any supporting definitions to namespace, e.g. type for T itself'''
         return IpAddrWithPrefix.__codec.get_typescript_asa(expression,namespace)
-    @staticmethod
-    def xju_json_codec_get_typescript_asa_key(
-            expression:TypeScriptSourceCode,
-            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T-as-object-key'''
-        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
-        return IpAddrWithPrefix.__codec.get_typescript_asa_key(expression,namespace)
 
 @dataclass
 class Router:
@@ -1057,7 +1072,7 @@ Assert(codec(Address).get_json_schema())=={
                 'postcode': {'description': 'Postcode', 'type': 'integer'},
                 'class': {'oneOf': [{'type': 'string', 'enum': ['first']},
                                     {'type': 'string', 'enum': ['second']}]}}}}}
-Assert(codec(IpV4Addr).get_json_schema())=={'type': 'string', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}
+Assert(codec(IpV4Addr).get_json_schema())=={'description': 'IpV4Addr', 'type': 'string', 'pattern': r'^([0-9]|([1][0-9])|([1][0-9][0-9])|(2[1-4][0-9])|(25[0-5]))[.]([0-9]|([1][0-9])|([1][0-9][0-9])|(2[1-4][0-9])|(25[0-5]))[.]([0-9]|([1][0-9])|([1][0-9][0-9])|(2[1-4][0-9])|(25[0-5]))[.]([0-9]|([1][0-9])|([1][0-9][0-9])|(2[1-4][0-9])|(25[0-5]))$', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}
 
 
 
@@ -1132,6 +1147,10 @@ Assert(
             isa_back_ref=lambda _: TypeScriptSourceCode("false"),
             asa_back_ref=lambda _: TypeScriptSourceCode(";"))))==TypeScriptSourceCode("as-object-key")
         
+class AnIntEnum(IntEnum):
+    a = 7
+    b = auto()
+
 try:
     import jsonschema # type: ignore
 except:
@@ -1189,6 +1208,38 @@ else:
     jsonschema.validate(
         8.8,
         codec(Timestamp).get_json_schema())
+    jsonschema.validate(
+        {'7':'fred'},codec(dict[int,str]).get_json_schema())
+    jsonschema.validate(
+        {'7.9':'fred'},codec(dict[float,str]).get_json_schema())
+    jsonschema.validate(
+        {'true':'fred'},codec(dict[bool,str]).get_json_schema())
+    jsonschema.validate(
+        {'null':'fred'},codec(dict[None,str]).get_json_schema())
+    jsonschema.validate(
+        {'true':'fred', 8:'jock'},codec(dict[int|bool,str]).get_json_schema())
+    jsonschema.validate(
+        {'31':'fred'},codec(dict[AgeInYears,str]).get_json_schema())
+    jsonschema.validate(
+        {'10.8':'fred'},codec(dict[Metres,str]).get_json_schema())
+    jsonschema.validate(
+        {'Yeow':'fred'},codec(dict[Surname,str]).get_json_schema())
+    jsonschema.validate(
+        {'Big St':'fred'},codec(dict[Street,str]).get_json_schema())
+    jsonschema.validate(
+        {'100665':'fred'},codec(dict[Timestamp,str]).get_json_schema())
+    jsonschema.validate(
+        {'a':'b'},codec(dict[Literal["a"],str]).get_json_schema())
+    jsonschema.validate(
+        {'9':'b'},codec(dict[Literal[9],str]).get_json_schema())
+    jsonschema.validate(
+        {'false':'b'},codec(dict[Literal[False],str]).get_json_schema())
+    jsonschema.validate(
+        {'192.18.0.2':'b'},codec(dict[IpV4Addr,str]).get_json_schema())
+    jsonschema.validate(
+        {'7':'b'},codec(dict[Literal[AnIntEnum.a],str]).get_json_schema())
+    jsonschema.validate(
+        {'7':'b'},codec(dict[AnIntEnum,str]).get_json_schema())
     pass
 
 # internal: codecs' encode()s must verify correct type passed in, otherwise
@@ -1567,10 +1618,6 @@ except Exception as e:
 else:
     assert False, x
 
-class AnIntEnum(IntEnum):
-    a = 7
-    b = auto()
-
 #... member codecs...
 Assert(codec(Literal[AnIntEnum.a]).decode(7))==AnIntEnum.a
 Assert(codec(Literal[AnIntEnum.b]).decode(8))==AnIntEnum.b
@@ -1605,5 +1652,4 @@ else:
     assert False
     pass
 
-    
-codec(dict[Tree,int]).ensure_typescript_defs(typescript_namespace)  # type: ignore
+codec(dict[IpV4Addr,int]).ensure_typescript_defs(typescript_namespace)

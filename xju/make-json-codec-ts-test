@@ -3,10 +3,11 @@
 import re
 from typing import Literal, Self
 from types import NoneType
-
+from ipaddress import IPv4Address
 from xju.json_codec import codec, TypeScriptNamespace, TypeScriptSourceCode, TypeScriptNamespace
 from xju.json_codec import TypeScriptUQN, AnyJsonCodecImpl, encode_attr_as, PythonAttrName, JsonAttrName
 from xju.json_codec import SelfCodecImpl,JsonType,TypeScriptBackRefs
+from xju.json_codec import CustomNonStringKeyClassCodec,CustomClassCodec
 from xju.misc import ByteCount
 from xju.newtype import Str
 from xju.time import Duration, Timestamp
@@ -84,6 +85,82 @@ class NonStringKey:
     pass
 
 codec(NonStringKey).ensure_typescript_defs(namespace)
+
+# ... custom class encoding by implementing CustomClassCodec protocol, for example
+# to support encoding of external types with control over their json representation
+# ... to be usable as a dictionary key, the class also has to implement either
+# the CustomStringKeyClassCodec or CustomNonStringKeyClassCodec
+class IpV4Addr(IPv4Address):
+    __xju_json_codec=codec(int)
+
+    # xju.json_codec.CustomClassCodec:
+    @staticmethod
+    def xju_json_codec_encode(x:object) -> JsonType:
+        assert isinstance(x,IpV4Addr)
+        return IpV4Addr.__xju_json_codec.encode(int(x))
+    @staticmethod
+    def xju_json_codec_decode(x:JsonType) -> object:
+        return IpV4Addr(IpV4Addr.__xju_json_codec.decode(x))
+    @staticmethod
+    def xju_json_codec_get_json_schema(definitions:dict[str,dict]) -> dict:
+        '''return json schema for T'''
+        '''- may add any supporting definitions to definitions'''
+        return IpV4Addr.__xju_json_codec.get_json_schema()
+    @staticmethod
+    def xju_json_codec_get_typescript_type() -> TypeScriptSourceCode:
+        return TypeScriptSourceCode('int /* IpV4Addr */')
+    @staticmethod
+    def xju_json_codec_get_typescript_isa(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        return IpV4Addr.__xju_json_codec.get_typescript_isa(expression,namespace)
+    @staticmethod
+    def xju_json_codec_get_typescript_asa(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        return IpV4Addr.__xju_json_codec.get_typescript_asa(expression,namespace)
+
+    # xju.json_codec.CustomStringKeyClassCodec:
+    @staticmethod
+    def xju_json_codec_get_object_key_json_schema(definitions:dict[str,dict]) -> dict:
+        '''return json schema for T when used as an object key
+           - may add any supporting definitions to definitions'''
+        return {
+            'description': "stringified-int IpV4Addr",
+            'type': 'string',
+            'pattern': r'^(0|[1-9][0-9]*)$'
+        }
+
+    @staticmethod
+    def xju_json_codec_typescript_key_type()->Literal['NonString']:
+        return 'NonString'
+    
+    @staticmethod
+    def xju_json_codec_get_typescript_isa_key(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T-as-object-key'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        # REVISIT: should validate the int value 0<=v<2^32
+        return IpV4Addr.__xju_json_codec.get_typescript_isa_key(expression,namespace)
+    @staticmethod
+    def xju_json_codec_get_typescript_asa_key(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T-as-object-key'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        # REVISIT: should validate the int value 0<=v<2^32
+        return IpV4Addr.__xju_json_codec.get_typescript_asa_key(expression,namespace)
+    pass
+
+Assert(IpV4Addr).isSubclassOf(CustomClassCodec)
+Assert(IpV4Addr).isSubclassOf(CustomNonStringKeyClassCodec)
+
+
 print(namespace.get_formatted_defs())
 
 print(f'''\
@@ -97,19 +174,46 @@ function assert_equal<T>(x:T, y:T){{
         assert_objects_equal(x,y);
     }}
     else if (!(x==y)){{
-        throw new Error(`"${{x}}" != "${{y}}"`);
+        throw new Error(`${{format_(x)}} != ${{format_(y)}}`);
     }}
+}}
+function format_<T>(a:T): string {{
+    if (Array.isArray(a)) return format_array(a);
+    if (isObject(a)) return format_object(a);
+    return JSON.stringify(a);
+}}
+function format_array<T>(a:Array<T>): string {{
+    if(a.length==0) return "[]";
+    if(a.length==1) return `[${{format_(a[0])}}]`;
+    var result=`${{a[0]}}`;
+    for(var i=1;i!=a.length;++i) result=result+`,${{format_(a[i])}}`;
+    return `[${{result}}]`;
+}}
+function format_object<T>(a:T): string {{
+    var result="{{";
+    for(const k in a) result=result+` ${{k}}:${{format_(a[k])}};`;
+    return result+"}}";
 }}
 function assert_arrays_equal<T>(x:Array<T>, y:Array<T>){{
     try{{
-        assert_equal(x.length, y.length);
+        try{{
+            assert_equal(x.length, y.length);
+        }}
+        catch(e:any){{
+            throw new Error(`arrays of different length because ${{e}}`);
+        }}
         var i;
         for(i=0; i!=x.length; ++i){{
-            assert_equal<T>(x[i],y[i]);
+            try{{
+                assert_equal<T>(x[i],y[i]);
+            }}
+            catch(e:any){{
+                throw new Error(`array element ${{i}} ${{format_(x[i])}} != ${{format_(y[i])}}`);
+            }}
         }}
     }}
     catch(e:any){{
-        throw new Error(`"${{x}}" != "${{y}}" because ${{e}}"`);
+        throw new Error(`array ${{format_(x)}} != array ${{format_(y)}} because ${{e}}`);
     }}
 }}
 function assert_objects_equal(x:object, y:object){{
@@ -117,7 +221,7 @@ function assert_objects_equal(x:object, y:object){{
         var xKeys=new Array<keyof object>();
         var yKeys=new Array<keyof object>();
         for(const k in x){{if (x.hasOwnProperty(k)) xKeys.push(k as keyof object);}}
-        for(const k in y){{if (x.hasOwnProperty(k)) yKeys.push(k as keyof object);}}
+        for(const k in y){{if (y.hasOwnProperty(k)) yKeys.push(k as keyof object);}}
         assert_arrays_equal(xKeys,yKeys);
         for(var i=0; i!=xKeys.length; ++i){{
             const k = xKeys[i];
@@ -125,7 +229,7 @@ function assert_objects_equal(x:object, y:object){{
         }}
     }}
     catch(e){{
-        throw new Error(`${{x}} != ${{y}} because ${{e}}`);
+        throw new Error(`object ${{format_(x)}} != object ${{format_(y)}} because ${{e}}`);
     }}
 }}
 function assert_x_contains_y(x:string, y:string){{
@@ -617,6 +721,45 @@ const test_bbbb=() => {{
     assert_true({indent(8,codec(dict[Pnum,int]).get_typescript_isa(TypeScriptSourceCode('{"bb": 8, "aa": 9}'),namespace))});
     assert_false({indent(8,codec(dict[Pnum,int]).get_typescript_isa(TypeScriptSourceCode('null'),namespace))});
     assert_false({indent(8,codec(dict[Pnum,int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
+}};
+''')
+
+print(f'''
+//dict[IpV4Addr,T]
+const test_bbbb2=() => {{
+    assert_equal({indent(8,codec(dict[IpV4Addr,int]).get_typescript_asa(TypeScriptSourceCode('{"123456": 8}'),namespace))}, {{"123456": 8}});
+    try{{
+        {indent(8,codec(dict[IpV4Addr,int]).get_typescript_asa(TypeScriptSourceCode('null'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: null is not a {{ [key: string /* int ** IpV4Addr ** */]: number }} because Error: null is not an object it is null");
+    }}
+    try{{
+        {indent(8,codec(dict[IpV4Addr,int]).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a {{ [key: string /* int ** IpV4Addr ** */]: number }} because Error: 7,ann is not an object it is an array");
+    }}
+    try{{
+        {indent(8,codec(dict[IpV4Addr,int]).get_typescript_asa(TypeScriptSourceCode('{"bb":8, "aa": "jock"}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* int ** IpV4Addr ** */]: number }} because Error: element bb is invalid because Error: bb is not a stringified integer");
+    }}
+    try{{
+        {indent(8,codec(dict[IpV4Addr,int]).get_typescript_asa(TypeScriptSourceCode('{"aa":8, "ann": 9}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* int ** IpV4Addr ** */]: number }} because Error: element aa is invalid because Error: aa is not a stringified integer");
+    }}
+
+    assert_true({indent(8,codec(dict[IpV4Addr,int]).get_typescript_isa(TypeScriptSourceCode('{"123456": 8}'),namespace))});
+    assert_false({indent(8,codec(dict[IpV4Addr,int]).get_typescript_isa(TypeScriptSourceCode('null'),namespace))});
+    assert_false({indent(8,codec(dict[IpV4Addr,int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
 }};
 ''')
 
@@ -1448,7 +1591,98 @@ else:
     assert False
     pass
 
+try:
+    codec(dict[list[int],str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e)).contains("list is not allowed as json object key type")
+else:
+    assert False
+    pass
+
+try:
+    codec(dict[list,str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e)).contains("list is not allowed as json object key type")
+else:
+    assert False
+    pass
+
+try:
+    codec(dict[set[str],str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e)).contains("set is not allowed as json object key type")
+else:
+    assert False
+    pass
+
+try:
+    codec(dict[set,str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e)).contains("set is not allowed as json object key type")
+else:
+    assert False
+    pass
+
+try:
+    codec(dict[tuple[int,str],str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e)).contains("tuple is not allowed as json object key type")
+else:
+    assert False
+    pass
+
+try:
+    codec(dict[dict[int,str],str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e)).contains("dict is not allowed as json object key type")
+else:
+    assert False
+    pass
+
+try:
+    codec(dict[dict,str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e)).contains("dict is not allowed as json object key type")
+else:
+    assert False
+    pass
+
+try:
+    # unreachable via codec()
+    AnyJsonCodecImpl().get_object_key_json_schema({},None)
+except Exception as e:
+    Assert(readable_repr(e)).contains("any json type is not allowed as json object key type")
+else:
+    assert False
+    pass
+
+try:
+    codec(dict[bytes,str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e)).contains("bytes is not allowed as json object key type")
+else:
+    assert False
+    pass
+
+try:
+    codec(dict[FullName,str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e)).contains("FullName is not allowed as json object key type")
+else:
+    assert False
+    pass
+
+try:
+    # unreachable via codec()
+    SelfCodecImpl().get_object_key_json_schema({},None)
+except Exception as e:
+    Assert(readable_repr(e)).contains("Self is not allowed as json object key type")
+else:
+    assert False
+    pass
+
 print('''
 test_aaaa();
 test_bbbb();
+test_bbbb2();
 ''')

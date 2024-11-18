@@ -34,7 +34,7 @@ from typing import NewType
 from xju.time import Timestamp
 from xju.xn import Xn,in_context,in_function_context,readable_repr, AllFailed
 from typing import TypeVar, Generic, Type, cast, Any, Protocol, Self, Callable, get_type_hints
-from typing import Sequence, Literal, NewType
+from typing import Sequence, Literal, NewType, Final
 from typing import _LiteralGenericAlias  # type: ignore  # mypy 1.1.1
 from typing import _UnionGenericAlias  # type: ignore  # mypy 1.1.1
 from typing import _GenericAlias,_SpecialForm  # type: ignore  # mypy 1.2.0
@@ -285,6 +285,8 @@ class CodecImplProto(Protocol):
         pass
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         pass
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        pass
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         pass
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
@@ -336,11 +338,36 @@ class NoopCodecImpl(Generic[Atom]):
         return x
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         st: str
-        if self.t is int: st='integer'
-        if self.t is str: st='string'
-        if self.t is float: st='number'
         if self.t is bool: st='boolean'
+        if self.t is int: st='integer'
+        if self.t is float: st='number'
+        if self.t is str: st='string'
         return { 'type': st }
+    def get_object_key_json_schema(
+            self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        if issubclass(self.t, bool):
+            return {
+                'description': f'bool object key',
+                'type': 'string',
+                'enum': [ 'true', 'false' ]
+            }
+        if issubclass(self.t, int):
+            return {
+                'description': f'int object key',
+                'type': 'string',
+                'pattern': r'^-?(0|[1-9][0-9]*)$'
+            }
+        if issubclass(self.t, float):
+            return {
+                'description': f'float object key',
+                'type': 'string',
+                'pattern': r'^-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?$'
+            }
+        if issubclass(self.t, str):
+            return {
+                'description': f'string object key',
+                'type': 'string'
+            }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         '''return typescript equivalent type for T'''
         if self.t is int: return TypeScriptSourceCode('number')
@@ -437,6 +464,12 @@ class NoneCodecImpl:
         return x
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return { 'type': 'null' }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        return {
+            'description': f'null object key',
+            'type': 'string',
+            'enum': [ 'null' ]
+        }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         '''return typescript equivalent type for None'''
         return TypeScriptSourceCode('null')
@@ -494,6 +527,8 @@ class ListCodecImpl:
             "type": "array",
             "items": self.value_codec.get_json_schema(definitions, self_ref)
         }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        raise Exception("list is not allowed as json object key type")
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->TypeScriptSourceCode:
         return TypeScriptSourceCode(f"Array<{self.value_codec.typescript_type(back_refs)}>")
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
@@ -550,6 +585,8 @@ class AnyListCodecImpl:
         return {
             "type": "array"
         }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        raise Exception("list is not allowed as json object key type")
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->TypeScriptSourceCode:
         return TypeScriptSourceCode(f"Array<any>")
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
@@ -606,6 +643,8 @@ class SetCodecImpl:
             "uniqueItems": True,
             "items": self.value_codec.get_json_schema(definitions, self_ref)
         }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        raise Exception("set is not allowed as json object key type")
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->TypeScriptSourceCode:
         return TypeScriptSourceCode(f"Array<{self.value_codec.typescript_type(back_refs)}> /* with unique elements */")
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
@@ -667,6 +706,8 @@ class AnySetCodecImpl:
             "type": "array",
             "uniqueItems": True
         }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        raise Exception("set is not allowed as json object key type")
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->TypeScriptSourceCode:
         return TypeScriptSourceCode(f"Array<any> /* with unique elements */")
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
@@ -739,6 +780,8 @@ class TupleCodec:
                 codec.get_json_schema(definitions, self_ref) for codec in self.value_codecs
             ]
         }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        raise Exception("tuple is not allowed as json object key type")
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->TypeScriptSourceCode:
         value_types=','.join([str(_.typescript_type(back_refs)) for _ in self.value_codecs])
         return TypeScriptSourceCode(f"[{value_types}]")
@@ -828,6 +871,10 @@ class UnionCodecImpl:
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             "oneOf": [ codec.get_json_schema(definitions, self_ref) for t,codec in self.value_codecs.items() ]
+        }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        return {
+            "oneOf": [ codec.get_object_key_json_schema(definitions, self_ref) for t,codec in self.value_codecs.items() ]
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->TypeScriptSourceCode:
         return TypeScriptSourceCode(
@@ -963,10 +1010,22 @@ class DictCodecImpl:
         return {self.decode_key(k,back_ref):self.value_codec.decode(v,back_ref)
                 for k,v in x.items()}
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
-        return {
-            'type': 'object',
-            'additionalProperties': self.value_codec.get_json_schema(definitions, self_ref)
-        }
+        """get dict[{self.key_codec}:{self.value_codec}] json schema"""
+        try:
+            self.key_codec.get_object_key_json_schema(definitions, self_ref)
+            return {
+                'type': 'object',
+                'additionalProperties': self.value_codec.get_json_schema(definitions, self_ref)
+            }
+        except Exception:
+            raise in_function_context(DictCodecImpl.get_json_schema,vars()) from None
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        """get dict[{self.key_codec}:{self.value_codec}] object key json schema"""
+        try:
+            raise Exception("dict is not allowed as json object key type")
+        except Exception:
+            raise in_function_context(DictCodecImpl.get_object_key_json_schema,vars()) from None
+    
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->TypeScriptSourceCode:
         return TypeScriptSourceCode(f"{{ [key: {self.key_codec.typescript_as_object_key_type(back_refs)}]: {self.value_codec.typescript_type(back_refs)} }}")
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
@@ -1007,7 +1066,7 @@ class DictCodecImpl:
             f"    if (x === null) throw new Error(`${{x}} is not an object it is null`);\n"
             f"    if (typeof x !== 'object') throw new Error(`${{x}} is not an object it is a ${{typeof x}}`);\n"
             f"    if (Array.isArray(x)) throw new Error(`${{x}} is not an object it is an array`);\n"
-            f"    for(const k in x){{\ntry{{\n"+
+            f"    for(const k in x){{try{{\n"+
             f"        if (!x.hasOwnProperty(k)) continue;\n"+
             f"        const v=x[k];\n"
             f"        if (typeof k !== 'string') {{\n"+
@@ -1049,6 +1108,12 @@ class AnyDictCodecImpl:
         return {
             'type': 'object'
         }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        """get dict[str,JsonType] object key json schema"""
+        try:
+            raise Exception("dict is not allowed as json object key type")
+        except Exception:
+            raise in_function_context(AnyDictCodecImpl.get_object_key_json_schema,vars()) from None
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->TypeScriptSourceCode:
         return TypeScriptSourceCode(f"{{ [key: {self.key_codec.typescript_as_object_key_type(back_refs)}]: {self.value_codec.typescript_type(back_refs)} }}")
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
@@ -1114,6 +1179,12 @@ class AnyJsonCodecImpl:
         return {
             "oneOf": [ { 'type': t } for t in ['null','boolean','object','array','number','string'] ]
         }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        """get dict[str,JsonType] object key json schema"""
+        try:
+            raise Exception("any json type is not allowed as json object key type")
+        except Exception:
+            raise in_function_context(AnyJsonCodecImpl.get_object_key_json_schema,vars()) from None
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->TypeScriptSourceCode:
         return TypeScriptSourceCode('any')
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
@@ -1167,10 +1238,16 @@ class NewIntCodecImpl(Generic[NewInt]):
             'description': self.get_type_fqn(),
             'type': 'integer'
         }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        return {
+            'description': self.get_type_fqn(),
+            'type': 'string',
+            'pattern': r'^-?(0|[1-9][0-9]*)$'
+        }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(self.get_type_fqn())
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(f'string /* {self.get_type_fqn()} */')
+        return TypeScriptSourceCode(f'string /* {self.get_type_fqn().replace('/*','**').replace('*/','**')} */')
     def ensure_typescript_defs(self, namespace) -> None:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
@@ -1252,10 +1329,16 @@ class NewFloatCodecImpl(Generic[NewFloat]):
             'description': self.get_type_fqn(),
             'type': 'number'
         }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        return {
+            'description': self.get_type_fqn(),
+            'type': 'string',
+            'pattern': r'^-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?$'
+        }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(self.get_type_fqn())
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(f'string /* {self.get_type_fqn()} */')
+        return TypeScriptSourceCode(f'string /* {self.get_type_fqn().replace('/*','**').replace('*/','**')} */')
     def ensure_typescript_defs(self, namespace) -> None:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
@@ -1343,10 +1426,21 @@ class NewStrCodecImpl(Generic[NewStr]):
             'description': self.get_type_fqn(),
             'type': 'string'
         }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        if self.t.pattern is not None:
+            return {
+                'description': self.get_type_fqn(),
+                'type': 'string',
+                'pattern': self.t.pattern.pattern
+            }
+        return {
+            'description': self.get_type_fqn(),
+            'type': 'string'
+        }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(self.get_type_fqn())
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(f'string /* {self.get_type_fqn()} */')
+        return TypeScriptSourceCode(f'string /* {self.get_type_fqn().replace('/*','**').replace('*/','**')} */')
     def ensure_typescript_defs(self, namespace) -> None:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
@@ -1366,7 +1460,7 @@ class NewStrCodecImpl(Generic[NewStr]):
                                          TypeScriptNamespace({}),
                                          None)
             target_namespace.defs[TypeScriptUQN(f'isInstanceOf{typescript_type_name}')]=TypeScriptSourceCode(
-                f"function isInstanceOf{typescript_type_name}(v:any): v is string /* {self.get_type_fqn()} */\n"
+                f"function isInstanceOf{typescript_type_name}(v:any): v is string /* {self.get_type_fqn().replace('/*','**').replace('*/','**')} */\n"
                 f"{{\n"
                 f"    return {is_a};\n"
                 f"}}")
@@ -1429,6 +1523,12 @@ class TimestampCodecImpl:
         return {
             'description': self.get_type_fqn(),
             'type': 'number'
+        }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        return {
+            'description': self.get_type_fqn(),
+            'type': 'string',
+            'pattern': r'^-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?$'
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(self.get_type_fqn())
@@ -1512,6 +1612,11 @@ class LiteralStrCodecImpl:
             'type': 'string',
             'enum': [ self.value ]
         }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        return {
+            'type': 'string',
+            'enum': [ self.value ]
+        }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(f'"{self.value}"')
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
@@ -1565,6 +1670,11 @@ class LiteralIntCodecImpl:
         return {
             'type': 'number',
             'enum': [ self.value ]
+        }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        return {
+            'type': 'string',
+            'enum': [ f"{self.value}" ]
         }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(f'{self.value}')
@@ -1627,6 +1737,11 @@ class LiteralBoolCodecImpl:
             'type': 'boolean',
             'enum': [ self.value ]
         }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        return {
+            'type': 'string',
+            'enum': [ 'true' if self.value else 'false' ]
+        }
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         return TypeScriptSourceCode('true' if self.value else 'false')
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
@@ -1688,6 +1803,8 @@ class BytesCodecImpl:
         result=self.value_codec.get_json_schema(definitions,self_ref)
         result['description']="bytes"
         return result
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        raise Exception(f"bytes is not allowed as json object key type")
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->TypeScriptSourceCode:
         return TypeScriptSourceCode(f"Array<number> /* bytes */")
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
@@ -1737,6 +1854,10 @@ class CustomClassCodec(Protocol):
         assert False  #pragma NO COVER
         return {}
     @staticmethod
+    def xju_json_codec_get_typescript_type() -> TypeScriptSourceCode:
+        assert False  #pragma NO COVER
+        return TypeScriptSourceCode('')
+    @staticmethod
     def xju_json_codec_get_typescript_isa(
             expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
@@ -1744,6 +1865,33 @@ class CustomClassCodec(Protocol):
            - may add any supporting definitions to namespace, e.g. type for T itself'''
         assert False  #pragma NO COVER
         return TypeScriptSourceCode('')
+    @staticmethod
+    def xju_json_codec_get_typescript_asa(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        assert False  #pragma NO COVER
+        return TypeScriptSourceCode('')
+    pass
+
+@runtime_checkable
+class CustomStringKeyClassCodec(Protocol):
+    '''
+    implement these methods as well as CustomClassCodec method on class T to use custom encoding
+    of instances of T as dict keys where encoded value when used as a dict key is a string
+    '''
+    @staticmethod
+    def xju_json_codec_get_object_key_json_schema(definitions:dict[str,dict]) -> dict:
+        '''return json schema for T when used as an object key
+           - may add any supporting definitions to definitions'''
+        assert False  #pragma NO COVER
+        return {}
+    @staticmethod
+    def xju_json_codec_typescript_key_type()-> Literal['String']:
+        assert False #pragma NO COVER
+        return 'String'
+
     @staticmethod
     def xju_json_codec_get_typescript_isa_key(
             expression:TypeScriptSourceCode,
@@ -1753,10 +1901,38 @@ class CustomClassCodec(Protocol):
         assert False  #pragma NO COVER
         return TypeScriptSourceCode('')
     @staticmethod
-    def xju_json_codec_get_typescript_asa(
+    def xju_json_codec_get_typescript_asa_key(
             expression:TypeScriptSourceCode,
             namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
-        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T
+        '''return typescript source code that safely casts {expression} to a T-as-object-key i.e. a string, throwing an Error if {expression} is not valid as a T-as-object-key
+           - may add any supporting definitions to namespace, e.g. type for T itself'''
+        assert False  #pragma NO COVER
+        return TypeScriptSourceCode('')
+    pass
+
+@runtime_checkable
+class CustomNonStringKeyClassCodec(Protocol):
+    '''
+    implement these methods as well as CustomClassCodec method on class T to use custom encoding
+    of instances of T as dict keys where encoded value when used as a dict key not a string
+    i.e. is int/float/bool or None
+    '''
+    @staticmethod
+    def xju_json_codec_get_object_key_json_schema(definitions:dict[str,dict]) -> dict:
+        '''return json schema for T when used as an object key
+           - may add any supporting definitions to definitions'''
+        assert False  #pragma NO COVER
+        return {}
+    @staticmethod
+    def xju_json_codec_typescript_key_type()-> Literal['NonString']:
+        assert False #pragma NO COVER
+        return 'NonString'
+
+    @staticmethod
+    def xju_json_codec_get_typescript_isa_key(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that turns {expression} into a bool indicating whether the (string) expression is a T-as-object-key
            - may add any supporting definitions to namespace, e.g. type for T itself'''
         assert False  #pragma NO COVER
         return TypeScriptSourceCode('')
@@ -1885,9 +2061,20 @@ class ClassCodecImpl:
         return {
             '$ref': self_ref
         }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        if self.custom_codec is not None and isinstance(self.custom_codec, (
+                CustomStringKeyClassCodec, CustomNonStringKeyClassCodec)):
+            return self.custom_codec.xju_json_codec_get_object_key_json_schema(definitions)
+        raise Exception(f"{self.get_type_fqn()} is not allowed as json object key type")
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        if self.custom_codec is not None:
+            return self.custom_codec.xju_json_codec_get_typescript_type()
         return TypeScriptSourceCode(self.get_type_fqn())
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None=None) -> TypeScriptSourceCode:
+        if self.custom_codec is not None and isinstance(self.custom_codec, (
+                CustomNonStringKeyClassCodec, CustomStringKeyClassCodec)):
+            return TypeScriptSourceCode(
+                f"string /* {self.custom_codec.xju_json_codec_get_typescript_type().replace('/*','**').replace('*/','**')} */")
         raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     def ensure_typescript_defs(self,namespace)->None:
         '''ensure {namespace} has a typescript definition for {self.get_type_fqn()}'''
@@ -1959,7 +2146,8 @@ class ClassCodecImpl:
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace,
                                back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
-        if self.custom_codec is not None:
+        if self.custom_codec is not None and isinstance(
+                self.custom_codec,(CustomStringKeyClassCodec, CustomNonStringKeyClassCodec)):
             return self.custom_codec.xju_json_codec_get_typescript_isa_key(expression,namespace)
         raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
         
@@ -1977,7 +2165,8 @@ class ClassCodecImpl:
                                expression:TypeScriptSourceCode,
                                namespace: TypeScriptNamespace,
                                back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
-        if self.custom_codec is not None:
+        if self.custom_codec is not None and isinstance(
+                self.custom_codec,(CustomStringKeyClassCodec, CustomNonStringKeyClassCodec)):
             return self.custom_codec.xju_json_codec_get_typescript_asa_key(expression,namespace)
         raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     pass
@@ -2011,6 +2200,12 @@ class EnumValueCodecImpl:
         result = self.value_codec.get_json_schema(definitions,self_ref)
         result.update({
             'enum': [ self.value_codec.encode(self.value.value,None) ]
+        })
+        return result
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        result = self.value_codec.get_object_key_json_schema(definitions,self_ref)
+        result.update({
+            'enum': [ str(self.value_codec.encode(self.value.value,None)) ]
         })
         return result
     def get_type_fqn(self):
@@ -2093,7 +2288,14 @@ class EnumCodecImpl:
     def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
         return {
             "oneOf": [
-                codec.get_json_schema(definitions, self_ref) for _t,codec in self.value_codecs.items() ]
+                codec.get_json_schema(definitions, self_ref)
+                for _t,codec in self.value_codecs.items() ]
+        }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        return {
+            "oneOf": [
+                codec.get_object_key_json_schema(definitions, self_ref)
+                for _t,codec in self.value_codecs.items() ]
         }
     def get_type_fqn(self):
         '''get the fully qualified name of {self.t}'''
@@ -2101,7 +2303,7 @@ class EnumCodecImpl:
     def typescript_type(self,back_refs:TypeScriptBackRefs|None)->TypeScriptSourceCode:
         return TypeScriptSourceCode(self.get_type_fqn())
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(f"string /* {self.typescript_type(back_refs)} */")
+        return TypeScriptSourceCode(f"string /* {self.typescript_type(back_refs).replace('/*','**').replace('*/','**')} */")
     def ensure_typescript_defs(self, namespace) -> None:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
@@ -2221,6 +2423,8 @@ class SelfCodecImpl:
         return {
             '$ref': self_ref
         }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        raise Exception("Self is not allowed as json object key type")
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         assert back_refs is not None
         return back_refs.type_back_ref()
