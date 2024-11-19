@@ -184,6 +184,19 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 4.0.0 rework json_codec custom encoding v typescript
+        - now allows non-str dict keys
+        - to generate typescript for non-str dict keys,
+          any CustomClassCodec implementations must also
+          implement either CustomStringKeyClassCodec or
+          CustomNonStringKeyClassCodec, see examples
+          in json_codec.py.test
+- 4.0.0 tighten json_codec_mypy_plugin checking
+        - *breaking change* xju.json_codec.CustomClassCodec
+          implementations will need to replace callable
+          attributes with proper class method functions
+- 4.0.0 fix non-str dict key handling in xju.json_codec
+- 4.0.0 fix jsonschema for xju.json_codec non-str dict keys
 - 3.6.0 better KeyError diagnostics from xju.xn
 - 3.6.0 add xn_mypy_plugin
 - 3.6.0 xju.json_codec non-str dict key support
