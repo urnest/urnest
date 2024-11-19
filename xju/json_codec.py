@@ -1247,7 +1247,8 @@ class NewIntCodecImpl(Generic[NewInt]):
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(self.get_type_fqn())
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(f'string /* {self.get_type_fqn().replace('/*','**').replace('*/','**')} */')
+        x=self.get_type_fqn().replace('/*','**').replace('*/','**')
+        return TypeScriptSourceCode(f"string /* {x} */")
     def ensure_typescript_defs(self, namespace) -> None:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
@@ -1338,7 +1339,8 @@ class NewFloatCodecImpl(Generic[NewFloat]):
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(self.get_type_fqn())
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(f'string /* {self.get_type_fqn().replace('/*','**').replace('*/','**')} */')
+        x=f"string /* {self.get_type_fqn().replace('/*','**').replace('*/','**')} */"
+        return TypeScriptSourceCode(x)
     def ensure_typescript_defs(self, namespace) -> None:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
@@ -1440,7 +1442,8 @@ class NewStrCodecImpl(Generic[NewStr]):
     def typescript_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
         return TypeScriptSourceCode(self.get_type_fqn())
     def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
-        return TypeScriptSourceCode(f'string /* {self.get_type_fqn().replace('/*','**').replace('*/','**')} */')
+        x=f"string /* {self.get_type_fqn().replace('/*','**').replace('*/','**')} */"
+        return TypeScriptSourceCode(x)
     def ensure_typescript_defs(self, namespace) -> None:
         typescript_fqn=[TypeScriptUQN(_) for _ in self.get_type_fqn().split('.')]
         target_namespace=namespace.get_namespace_of(typescript_fqn)
