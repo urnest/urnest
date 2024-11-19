@@ -79,3 +79,20 @@ from typing import Literal
 codec(dict[Literal[Pnum.a]|int,int])  # ok
 codec(dict[Literal[Pnum.b]|int,int])  # can't mix
 codec(dict[Literal[Pnum.b,Pnum.a],int])  # can't mix
+codec(dict[list[int],str]) # invalid key type
+codec(dict[list,str]) # invalid key type
+codec(dict[set[str],str]) # invalid key type
+codec(dict[set,str]) # invalid key type
+codec(dict[tuple[int,str],str]) # invalid key type
+codec(dict[dict[int,str],str]) # invalid key type
+codec(dict[dict,str]) # invalid key type
+codec(dict[bytes,str]) # invalid key type
+from dataclasses import dataclass
+@dataclass
+class FullName:
+    first_name: str
+    middle_names: list[str]
+    last_name: str
+    _class: Literal["Upper", "Middle", "Lower"]
+    pass
+codec(dict[FullName,str]) # invalid key type

@@ -3,11 +3,11 @@
 import re
 from typing import Literal, Self
 from types import NoneType
-from ipaddress import IPv4Address
+from ipaddress import IPv4Address,IPv4Interface
 from xju.json_codec import codec, TypeScriptNamespace, TypeScriptSourceCode, TypeScriptNamespace
 from xju.json_codec import TypeScriptUQN, AnyJsonCodecImpl, encode_attr_as, PythonAttrName, JsonAttrName
 from xju.json_codec import SelfCodecImpl,JsonType,TypeScriptBackRefs
-from xju.json_codec import CustomNonStringKeyClassCodec,CustomClassCodec
+from xju.json_codec import CustomNonStringKeyClassCodec,CustomClassCodec,CustomStringKeyClassCodec
 from xju.misc import ByteCount
 from xju.newtype import Str
 from xju.time import Duration, Timestamp
@@ -124,7 +124,7 @@ class IpV4Addr(IPv4Address):
         '''- may add any supporting definitions to namespace, e.g. type for T itself'''
         return IpV4Addr.__xju_json_codec.get_typescript_asa(expression,namespace)
 
-    # xju.json_codec.CustomStringKeyClassCodec:
+    # xju.json_codec.CustomNonStringKeyClassCodec:
     @staticmethod
     def xju_json_codec_get_object_key_json_schema(definitions:dict[str,dict]) -> dict:
         '''return json schema for T when used as an object key
@@ -159,6 +159,73 @@ class IpV4Addr(IPv4Address):
 
 Assert(IpV4Addr).isSubclassOf(CustomClassCodec)
 Assert(IpV4Addr).isSubclassOf(CustomNonStringKeyClassCodec)
+
+@dataclass
+class IpV4AddrWithPrefix(IPv4Interface):
+    """An IP host address in a network, e.g. 10.1.1.49/24"""
+    if_str: str
+    __codec=codec(str)
+    def __post_init__(self):
+        super().__init__(self.if_str)
+    @staticmethod
+    def xju_json_codec_decode(x:JsonType) -> object:
+        return IpV4AddrWithPrefix(IpV4AddrWithPrefix.__codec.decode(x))
+    @staticmethod
+    def xju_json_codec_encode(x:object) -> JsonType:
+        assert isinstance(x,IpV4AddrWithPrefix)
+        return IpV4AddrWithPrefix.__codec.encode(x.if_str)
+    @staticmethod
+    def xju_json_codec_get_json_schema(definitions:dict[str,dict]) -> dict:
+        '''return json schema for T'''
+        '''- may add any supporting definitions to definitions'''
+        return IpV4AddrWithPrefix.__codec.get_json_schema()
+    @staticmethod
+    def xju_json_codec_get_typescript_type() -> TypeScriptSourceCode:
+        return TypeScriptSourceCode('string /* IpV4AddrWithPrefix */')
+    @staticmethod
+    def xju_json_codec_get_typescript_isa(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        return IpV4AddrWithPrefix.__codec.get_typescript_isa(expression,namespace)
+    @staticmethod
+    def xju_json_codec_get_typescript_asa(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T-as-object-key'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        return IpV4AddrWithPrefix.__codec.get_typescript_asa(expression,namespace)
+
+    # xju.json_codec.CustomStringKeyClassCodec:
+    @staticmethod
+    def xju_json_codec_get_object_key_json_schema(definitions:dict[str,dict]) -> dict:
+        '''return json schema for T when used as an object key
+           - may add any supporting definitions to definitions'''
+        return IpV4AddrWithPrefix.xju_json_codec_get_json_schema(definitions)
+    @staticmethod
+    def xju_json_codec_typescript_key_type()->Literal['String']:
+        return 'String'
+    @staticmethod
+    def xju_json_codec_get_typescript_isa_key(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T-as-object-key'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        # REVISIT: tighten to use regex and test
+        return IpV4AddrWithPrefix.__codec.get_typescript_isa_key(expression,namespace)
+    @staticmethod
+    def xju_json_codec_get_typescript_asa_key(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T-as-object-key'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        # REVISIT: tighten to use regex and test
+        return IpV4AddrWithPrefix.__codec.get_typescript_asa(expression,namespace)
+    pass
+
+Assert(IpV4AddrWithPrefix).isSubclassOf(CustomClassCodec)
+Assert(IpV4AddrWithPrefix).isSubclassOf(CustomStringKeyClassCodec)
 
 
 print(namespace.get_formatted_defs())
@@ -760,6 +827,38 @@ const test_bbbb2=() => {{
     assert_true({indent(8,codec(dict[IpV4Addr,int]).get_typescript_isa(TypeScriptSourceCode('{"123456": 8}'),namespace))});
     assert_false({indent(8,codec(dict[IpV4Addr,int]).get_typescript_isa(TypeScriptSourceCode('null'),namespace))});
     assert_false({indent(8,codec(dict[IpV4Addr,int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
+}};
+''')
+
+print(f'''
+//dict[IpV4AddrWithPrefix,T]
+const test_bbbb3=() => {{
+    assert_equal({indent(8,codec(dict[IpV4AddrWithPrefix,int]).get_typescript_asa(TypeScriptSourceCode('{"172.1.1.2/16": 8}'),namespace))}, {{"172.1.1.2/16": 8}});
+    try{{
+        {indent(8,codec(dict[IpV4AddrWithPrefix,int]).get_typescript_asa(TypeScriptSourceCode('null'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: null is not a {{ [key: string /* string ** IpV4AddrWithPrefix ** */]: number }} because Error: null is not an object it is null");
+    }}
+    try{{
+        {indent(8,codec(dict[IpV4AddrWithPrefix,int]).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a {{ [key: string /* string ** IpV4AddrWithPrefix ** */]: number }} because Error: 7,ann is not an object it is an array");
+    }}
+    try{{
+        {indent(8,codec(dict[IpV4AddrWithPrefix,int]).get_typescript_asa(TypeScriptSourceCode('{"bb":8, "aa": "jock"}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* string ** IpV4AddrWithPrefix ** */]: number }} because Error: element aa is invalid because Error: jock is not a number it is a string");
+    }}
+
+    assert_true({indent(8,codec(dict[IpV4AddrWithPrefix,int]).get_typescript_isa(TypeScriptSourceCode('{"172.1.1.2/16": 8}'),namespace))});
+    assert_false({indent(8,codec(dict[IpV4AddrWithPrefix,int]).get_typescript_isa(TypeScriptSourceCode('null'),namespace))});
+    assert_false({indent(8,codec(dict[IpV4AddrWithPrefix,int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
 }};
 ''')
 
@@ -1685,4 +1784,5 @@ print('''
 test_aaaa();
 test_bbbb();
 test_bbbb2();
+test_bbbb3();
 ''')

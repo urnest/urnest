@@ -74,6 +74,15 @@ FILE:65: error: union dict key types must not be a mix of string-like ([json_cod
 FILE:68: error: union dict key types must not be a mix of string-like ([builtins.str]) and non-string-like ([Union[builtins.int, builtins.bool]])  [misc]
 FILE:80: error: union dict key types must not be a mix of string-like ([Literal[json_codec_errors.Pnum.b]]) and non-string-like ([builtins.int])  [misc]
 FILE:81: error: union dict key types must not be a mix of string-like ([Literal[json_codec_errors.Pnum.b]]) and non-string-like ([Literal[json_codec_errors.Pnum.a]])  [misc]
+FILE:82: error: dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not builtins.list)  [misc]
+FILE:83: error: dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not builtins.list)  [misc]
+FILE:84: error: dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not builtins.set)  [misc]
+FILE:85: error: dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not builtins.set)  [misc]
+FILE:86: error: dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not tuple)  [misc]
+FILE:87: error: dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not builtins.dict)  [misc]
+FILE:88: error: dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not builtins.dict)  [misc]
+FILE:89: error: dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not builtins.bytes)  [misc]
+FILE:98: error: dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not json_codec_errors.FullName)  [misc]
 
 %test_json_codec_errors.errors==test_data/json_codec_errors.py+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(json_codec_mypy_plugin.py):main.mypy3:err
 

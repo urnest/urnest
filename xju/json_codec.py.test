@@ -886,7 +886,6 @@ class IpAddrWithPrefix(ipaddress.IPv4Interface):
         return IpAddrWithPrefix.__codec.get_json_schema()
     @staticmethod
     def xju_json_codec_get_typescript_type() -> TypeScriptSourceCode:
-        assert False  #pragma NO COVER
         return TypeScriptSourceCode('string /* IpV4AddrWithPrefix */')
     @staticmethod
     def xju_json_codec_get_typescript_isa(
@@ -902,6 +901,9 @@ class IpAddrWithPrefix(ipaddress.IPv4Interface):
         '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T-as-object-key'''
         '''- may add any supporting definitions to namespace, e.g. type for T itself'''
         return IpAddrWithPrefix.__codec.get_typescript_asa(expression,namespace)
+    pass
+
+Assert(IpAddrWithPrefix).isSubclassOf(CustomClassCodec)
 
 @dataclass
 class Router:
