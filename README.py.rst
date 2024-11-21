@@ -184,6 +184,7 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 4.0.1 allow typing.NewTypes as json_codec dict keys
 - 4.0.0 rework json_codec custom encoding v typescript
         - now allows non-str dict keys
         - to generate typescript for non-str dict keys,
