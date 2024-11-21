@@ -1,7 +1,7 @@
 #!/bin/env python3
 
 import re
-from typing import Literal, Self
+from typing import Literal, Self, NewType
 from types import NoneType
 from ipaddress import IPv4Address,IPv4Interface
 from xju.json_codec import codec, TypeScriptNamespace, TypeScriptSourceCode, TypeScriptNamespace
@@ -859,6 +859,146 @@ const test_bbbb3=() => {{
     assert_true({indent(8,codec(dict[IpV4AddrWithPrefix,int]).get_typescript_isa(TypeScriptSourceCode('{"172.1.1.2/16": 8}'),namespace))});
     assert_false({indent(8,codec(dict[IpV4AddrWithPrefix,int]).get_typescript_isa(TypeScriptSourceCode('null'),namespace))});
     assert_false({indent(8,codec(dict[IpV4AddrWithPrefix,int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
+}};
+''')
+
+Colour = NewType('Colour',str)
+codec(Colour).ensure_typescript_defs(namespace)
+
+print(f'''
+//dict[Colour,T]
+const test_bbbb4=() => {{
+    assert_equal({indent(8,codec(dict[Colour,int]).get_typescript_asa(TypeScriptSourceCode('{"red": 8}'),namespace))}, {{"red": 8}});
+    try{{
+        {indent(8,codec(dict[Colour,int]).get_typescript_asa(TypeScriptSourceCode('null'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: null is not a {{ [key: string]: number }} because Error: null is not an object it is null");
+    }}
+    try{{
+        {indent(8,codec(dict[Colour,int]).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a {{ [key: string]: number }} because Error: 7,ann is not an object it is an array");
+    }}
+    try{{
+        {indent(8,codec(dict[Colour,int]).get_typescript_asa(TypeScriptSourceCode('{"bb":8, "aa": "jock"}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string]: number }} because Error: element aa is invalid because Error: jock is not a number it is a string");
+    }}
+
+    assert_true({indent(8,codec(dict[Colour,int]).get_typescript_isa(TypeScriptSourceCode('{"red": 8}'),namespace))});
+    assert_false({indent(8,codec(dict[Colour,int]).get_typescript_isa(TypeScriptSourceCode('null'),namespace))});
+    assert_false({indent(8,codec(dict[Colour,int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
+}};
+''')
+
+Milligrams = NewType('Milligrams',float)
+codec(Milligrams).ensure_typescript_defs(namespace)
+
+print(f'''
+//dict[Milligrams,T]
+const test_bbbb5=() => {{
+    assert_equal({indent(8,codec(dict[Milligrams,int]).get_typescript_asa(TypeScriptSourceCode('{"7.6": 8}'),namespace))}, {{"7.6": 8}});
+    try{{
+        {indent(8,codec(dict[Milligrams,int]).get_typescript_asa(TypeScriptSourceCode('null'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: null is not a {{ [key: string /* float */]: number }} because Error: null is not an object it is null");
+    }}
+    try{{
+        {indent(8,codec(dict[Milligrams,int]).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a {{ [key: string /* float */]: number }} because Error: 7,ann is not an object it is an array");
+    }}
+    try{{
+        {indent(8,codec(dict[Milligrams,int]).get_typescript_asa(TypeScriptSourceCode('{"bb":8, "aa": "jock"}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* float */]: number }} because Error: element bb is invalid because Error: bb is not a stringified number");
+    }}
+
+    assert_true({indent(8,codec(dict[Milligrams,int]).get_typescript_isa(TypeScriptSourceCode('{"7.6": 8}'),namespace))});
+    assert_false({indent(8,codec(dict[Milligrams,int]).get_typescript_isa(TypeScriptSourceCode('null'),namespace))});
+    assert_false({indent(8,codec(dict[Milligrams,int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
+}};
+''')
+
+Votes = NewType('Votes',int)
+codec(Votes).ensure_typescript_defs(namespace)
+
+print(f'''
+//dict[Votes,T]
+const test_bbbb6=() => {{
+    assert_equal({indent(8,codec(dict[Votes,int]).get_typescript_asa(TypeScriptSourceCode('{"7": 8}'),namespace))}, {{"7": 8}});
+    try{{
+        {indent(8,codec(dict[Votes,int]).get_typescript_asa(TypeScriptSourceCode('null'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: null is not a {{ [key: string /* int */]: number }} because Error: null is not an object it is null");
+    }}
+    try{{
+        {indent(8,codec(dict[Votes,int]).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a {{ [key: string /* int */]: number }} because Error: 7,ann is not an object it is an array");
+    }}
+    try{{
+        {indent(8,codec(dict[Votes,int]).get_typescript_asa(TypeScriptSourceCode('{"bb":8, "aa": "jock"}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* int */]: number }} because Error: element bb is invalid because Error: bb is not a stringified integer");
+    }}
+
+    assert_true({indent(8,codec(dict[Votes,int]).get_typescript_isa(TypeScriptSourceCode('{"7": 8}'),namespace))});
+    assert_false({indent(8,codec(dict[Votes,int]).get_typescript_isa(TypeScriptSourceCode('null'),namespace))});
+    assert_false({indent(8,codec(dict[Votes,int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
+}};
+''')
+
+Enabled = NewType('Enabled',bool)
+codec(Enabled).ensure_typescript_defs(namespace)
+
+print(f'''
+//dict[Enabled,T]
+const test_bbbb7=() => {{
+    assert_equal({indent(8,codec(dict[Enabled,int]).get_typescript_asa(TypeScriptSourceCode('{"true": 8}'),namespace))}, {{"true": 8}});
+    try{{
+        {indent(8,codec(dict[Enabled,int]).get_typescript_asa(TypeScriptSourceCode('null'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: null is not a {{ [key: string /* bool */]: number }} because Error: null is not an object it is null");
+    }}
+    try{{
+        {indent(8,codec(dict[Enabled,int]).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a {{ [key: string /* bool */]: number }} because Error: 7,ann is not an object it is an array");
+    }}
+    try{{
+        {indent(8,codec(dict[Enabled,int]).get_typescript_asa(TypeScriptSourceCode('{"bb":8, "aa": "jock"}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a {{ [key: string /* bool */]: number }} because Error: element bb is invalid because Error: bb is not 'true' or 'false'");
+    }}
+
+    assert_true({indent(8,codec(dict[Enabled,int]).get_typescript_isa(TypeScriptSourceCode('{"false": 8}'),namespace))});
+    assert_false({indent(8,codec(dict[Enabled,int]).get_typescript_isa(TypeScriptSourceCode('null'),namespace))});
+    assert_false({indent(8,codec(dict[Enabled,int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
 }};
 ''')
 
@@ -1785,4 +1925,8 @@ test_aaaa();
 test_bbbb();
 test_bbbb2();
 test_bbbb3();
+test_bbbb4();
+test_bbbb5();
+test_bbbb6();
+test_bbbb7();
 ''')

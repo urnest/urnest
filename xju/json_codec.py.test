@@ -51,20 +51,6 @@ from xju.xn import readable_repr
 from xju.time import Timestamp
 import xju
 
-# typing.Final
-class FinalT:
-    v: Final[str]
-    def __init__(self, v: str) -> None:
-        self.v=v
-        pass
-    def __eq__(self, x) -> bool:
-        return isinstance(x, FinalT) and x.v==self.v
-    pass
-
-Assert(codec(FinalT).encode(FinalT('fred')))=={"v":"fred"}
-Assert(codec(FinalT).decode({"v":"fred"}))==FinalT('fred')
-
-
 x:Any
 
 # int,str,bool,float,None map directly
@@ -904,6 +890,8 @@ class IpAddrWithPrefix(ipaddress.IPv4Interface):
     pass
 
 Assert(IpAddrWithPrefix).isSubclassOf(CustomClassCodec)
+assert not issubclass(IpAddrWithPrefix, CustomStringKeyClassCodec)
+assert not issubclass(IpAddrWithPrefix, CustomNonStringKeyClassCodec)
 
 @dataclass
 class Router:
@@ -1654,4 +1642,32 @@ else:
     assert False
     pass
 
+# typing.Final
+class FinalT:
+    v: Final[str]
+    def __init__(self, v: str) -> None:
+        self.v=v
+        pass
+    def __eq__(self, x) -> bool:
+        return isinstance(x, FinalT) and x.v==self.v
+    pass
+
+Assert(codec(FinalT).encode(FinalT('fred')))=={"v":"fred"}
+Assert(codec(FinalT).decode({"v":"fred"}))==FinalT('fred')
+
 codec(dict[IpV4Addr,int]).ensure_typescript_defs(typescript_namespace)
+
+Assert(codec(dict[Colour,int]).encode({Colour("red"):1}))=={"red":1}
+Assert(codec(dict[Milligrams,int]).encode({Milligrams(20.5):2}))=={20.5:2}
+Assert(codec(dict[Votes,int]).encode({Votes(8):9}))=={8:9}
+Assert(codec(dict[Enabled,int]).encode({Enabled(True):2,Enabled(False):1}))=={True:2,False:1}
+
+Assert(codec(dict[Colour,int]).decode({"red":1}))=={Colour("red"):1}
+Assert(codec(dict[Milligrams,int]).decode({20.5:2}))=={Milligrams(20.5):2}
+Assert(codec(dict[Votes,int]).decode({8:9}))=={Votes(8):9}
+Assert(codec(dict[Enabled,int]).decode({True:2,False:1}))=={Enabled(True):2,Enabled(False):1}
+
+codec(dict[Colour,int]).ensure_typescript_defs(typescript_namespace)
+codec(dict[Milligrams,int]).ensure_typescript_defs(typescript_namespace)
+codec(dict[Votes,int]).ensure_typescript_defs(typescript_namespace)
+codec(dict[Enabled,int]).ensure_typescript_defs(typescript_namespace)

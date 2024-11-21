@@ -490,3 +490,6 @@ else:
     assert False
     pass
 if hasattr(b1,'is_integer'): Assert(b1.is_integer())==True  # >=python3.12
+
+Assert(round(sum([Length(2.1), Length(2.2)], Length(1.0)),1))==Length(5.3)
+Assert(round(sum([Length(2.1), Length(2.2)], Length(1.0)),0))==Length(5)

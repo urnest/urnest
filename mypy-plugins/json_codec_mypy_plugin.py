@@ -507,6 +507,13 @@ def verify_dict_key_type(
                     return 'String'
                 if is_subtype(t, get_custom_non_string_key_class_codec_type(checker_api)):
                     return 'NonString'
+                raise CodecParamInvalid(f"{t.type.fullname} has custom encoding but is neither a CustomStringKeyClassCodec nor a CustomNonStringKeyClassCodec: {t.type.fullname} must implement one of these if it is to be used as a dictionary key")
+            if t.type.is_newtype:
+                if t.type.bases[0].type.fullname == 'builtins.str':
+                    return 'String'
+                if t.type.bases[0].type.fullname in ('builtins.int','builtins.bool','builtins.float'):
+                    return 'NonString'
+                raise CodecParamInvalid(f"NewType {t.type.fullname} is not based on str, int, bool or float and so cannot be used as a dictionary key")
             raise CodecParamInvalid(f"dict keys must be str,xju.newtype.Str or any union of int, float, bool, None, xju.newtype.Int, xju.newtype.Float, xju.newtype.Bool (not {t.type.fullname})")
         case TypeAliasType():
             if t.args:

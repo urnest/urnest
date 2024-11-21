@@ -96,3 +96,56 @@ class FullName:
     _class: Literal["Upper", "Middle", "Lower"]
     pass
 codec(dict[FullName,str]) # invalid key type
+
+from typing import NewType
+FullerName = NewType("FullerName", FullName)
+codec(dict[FullerName,int])  # invalid dict key
+
+from xju.json_codec import JsonType,TypeScriptSourceCode,TypeScriptNamespace,CustomClassCodec
+from xju.json_codec import CustomStringKeyClassCodec,CustomNonStringKeyClassCodec
+from xju.assert_ import Assert
+
+import ipaddress
+@dataclass
+class IpAddrWithPrefix(ipaddress.IPv4Interface):
+    """An IP host address in a network, e.g. 10.1.1.49/24"""
+    if_str: str
+    __codec=codec(str)
+    def __post_init__(self):
+        super().__init__(self.if_str)
+    @staticmethod
+    def xju_json_codec_decode(x:JsonType) -> object:
+        return IpAddrWithPrefix(IpAddrWithPrefix.__codec.decode(x))
+    @staticmethod
+    def xju_json_codec_encode(x:object) -> JsonType:
+        assert isinstance(x,IpAddrWithPrefix)
+        return IpAddrWithPrefix.__codec.encode(x.if_str)
+    @staticmethod
+    def xju_json_codec_get_json_schema(definitions:dict[str,dict]) -> dict:
+        '''return json schema for T'''
+        '''- may add any supporting definitions to definitions'''
+        return IpAddrWithPrefix.__codec.get_json_schema()
+    @staticmethod
+    def xju_json_codec_get_typescript_type() -> TypeScriptSourceCode:
+        return TypeScriptSourceCode('string /* IpV4AddrWithPrefix */')
+    @staticmethod
+    def xju_json_codec_get_typescript_isa(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that turns {expression} into a bool indicating whether the expression is a T'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        return IpAddrWithPrefix.__codec.get_typescript_isa(expression,namespace)
+    @staticmethod
+    def xju_json_codec_get_typescript_asa(
+            expression:TypeScriptSourceCode,
+            namespace: TypeScriptNamespace) -> TypeScriptSourceCode:
+        '''return typescript source code that safely casts {expression} to a T, throwing an Error if {expression} is not valid as a T-as-object-key'''
+        '''- may add any supporting definitions to namespace, e.g. type for T itself'''
+        return IpAddrWithPrefix.__codec.get_typescript_asa(expression,namespace)
+    pass
+
+Assert(IpAddrWithPrefix).isSubclassOf(CustomClassCodec)
+assert not issubclass(IpAddrWithPrefix, CustomStringKeyClassCodec)
+assert not issubclass(IpAddrWithPrefix, CustomNonStringKeyClassCodec)
+
+codec(dict[IpAddrWithPrefix,int])  # invalid dict key
