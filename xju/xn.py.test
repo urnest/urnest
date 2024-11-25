@@ -347,9 +347,20 @@ def test_17():
         pass
     try:
         asyncio.run(f())
-    except TimeoutError as e:
-        assert str(e)==""
+    except TimeoutError:
+        Assert(readable_repr(in_context('wait')))=='Failed to wait because\nTimeoutError.'
         pass
+
+    # assert x is not None error str() is empty, xn has special handling
+    # though even this is not overly helpful, really need always use assert
+    # with a meaningful error string
+    y:int|None = None
+    try:
+        assert y is not None
+    except AssertionError:
+        Assert(readable_repr(in_context("fred")))=='Failed to fred because\nAssertionError.'
+    else:
+        assert False
 
             
 tests=[var for name,var in sorted(vars().items())
