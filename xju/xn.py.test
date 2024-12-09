@@ -276,10 +276,10 @@ def test15():
         assert False
         pass
     pass
-        
 def g(c):
-    'g({c})'
+    'g {c}'
     try:
+        x=1
         raise Exception('fred')
     except Exception:
         raise in_function_context(g,vars()) from None
@@ -302,7 +302,7 @@ def test_16():
 failed to use <class '__main__.f.<locals>.C'> because
 [^:]*/xn.py.test:292: failed to g[(]C[)] because
 [^:]*/xn.py.test:285: failed to raise in_function_context[(]g,vars[(][)][)] from None because
-283:None: failed to g[(]<class '__main__.f.<locals>.C'>[)] because
+[^:]*/xn.py.test:283: failed to g <class '__main__.f.<locals>.C'> because
 [^:]*/xn.py.test:283: fred""")
         pass
     else:

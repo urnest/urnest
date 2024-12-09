@@ -173,7 +173,7 @@ def in_context(context:str,
             r.context[-1][1].file=f
             pass
         if not r.context[-1][1].line:
-            r.context[-1][1].file=l
+            r.context[-1][1].line=l
             pass
     else:
         r.cause[1].setTo(f,l)
