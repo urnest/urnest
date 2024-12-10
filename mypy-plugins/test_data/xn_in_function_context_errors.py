@@ -146,3 +146,11 @@ def ll(x:str, y:int, z:str, o:list):
     except Exception:
         raise in_function_context(ll, vars())  # x wrong type
     pass
+
+def mm(y):
+    "mm {y}"
+    try:
+        raise Exception('mm')
+    except Exception:
+        raise in_function_context(mm)  # wrong number of params
+    pass

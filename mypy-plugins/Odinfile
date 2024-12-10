@@ -399,6 +399,9 @@ FILE:137: error: 'a', 'b' are not valid (i.e. initialised) local variables/funct
 FILE: note: In function "ll":
 FILE:147: error: Incompatible types in string interpolation (expression has type "str", placeholder has type "int")  [str-format]
 FILE:147: error: Incompatible types in string interpolation (expression has type "list[Any]", placeholder has type "int")  [str-format]
+FILE: note: In function "mm":
+FILE:155: error: Missing positional argument "vars" in call to "in_function_context"  [call-arg]
+FILE:155: error: second parameter to in_function_context should be vars()  [misc]
 
 %test_xn_plugin.errors==(test_data/xn_in_function_context_errors.py)+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(xn_mypy_plugin.py):main.mypy3:err
 

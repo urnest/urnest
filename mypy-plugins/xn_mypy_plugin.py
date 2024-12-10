@@ -88,6 +88,7 @@ def check_in_function_context(x: FunctionContext) -> Type:
         if len(x.args) != 4:
             raise DocStringError(f"in_function_context expects two, three or four parameters not {len(x.args)}")
         if not (
+            len(x.args[1])==1 and
             isinstance(x.args[1][0], CallExpr) and
             isinstance(x.args[1][0].callee, NameExpr) and
             x.args[1][0].callee.name == 'vars' and
