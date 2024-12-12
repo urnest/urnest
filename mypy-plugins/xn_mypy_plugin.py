@@ -204,6 +204,23 @@ def check_in_function_context(x: FunctionContext) -> Type:
         return x.default_return_type
     pass
 
+def format_expr(expr: Expression) -> str:
+    '''
+    format {expr} lie a programmer would write it and all on one line
+
+    ... for some common cases, otherwise just return str(expr)
+    '''
+    match expr:
+        case NameExpr():
+            return expr.name
+        case MemberExpr():
+            return f'{format_expr(expr.expr)}.{expr.name}'
+        case FuncDef():
+            return f'{expr.name}()'
+        case Decorator():
+            return f'@{format_expr(expr.original_decorators[0])}'
+    return str(expr)
+
 def get_function_doc_string_value(expr: Expression) -> str:
     match expr:
         case NameExpr():
@@ -215,18 +232,35 @@ def get_function_doc_string_value(expr: Expression) -> str:
             function_name=expr.fullname
             #pdb_trace()
             if not isinstance(expr.expr, NameExpr):
-                raise DocStringError(f"{expr} is not an xn-supported function reference")
+                raise DocStringError(f"{format_expr(expr)} is not an xn-supported function reference")
             a:NameExpr=expr.expr
             if a.node is None:
-                raise DocStringError(f"{expr} is not an xn-supported function reference (expected TypeInfo not None?)")
+                raise DocStringError(f"{format_expr(expr)} is not an xn-supported function reference (expected TypeInfo not None?)")
+            if isinstance(a.node, Var) and a.node.name == 'self':
+                raise DocStringError(f"for class X method f(), use in_function_context(X.f, vars()) not in_function_context(self.f, vars()) to avoid potential inheritance related errors")
             if not isinstance(a.node, TypeInfo):
-                raise DocStringError(f"{expr} is not an xn-supported function reference (expected TypeInfo not {type(a.node)}")
+                raise DocStringError(f"{format_expr(expr)} is not an xn-supported function reference (expected TypeInfo not {type(a.node).__name__}")
             b:SymbolTableNode=a.node.names[expr.name]
             if b.node is None:
                 raise DocStringError(f"{expr.fullname} not found")
             f=b.node
         case _:
             raise DocStringError(f"{expr} is not an xn-supported function reference (i.e. not a MemberExpr)")
+    if isinstance(f, OverloadedFuncDef):
+        if f.impl is None:
+            raise DocStringError(f'overloaded {f} is missing its "implementation" def?')
+        f=f.impl
+        pass
+    if isinstance(f, Decorator):
+        for d in f.decorators:
+            match d:
+                case NameExpr():
+                    if d.name not in ('property','abstractmethod'):
+                        raise DocStringError(f"decorator {d.name} not supported with in_function_context; use in_context directly instead in this case)")
+                case _:
+                    raise DocStringError("decorator {d} not supported with in_function_context (only property, abstractmethod supported; use in_context directly instead in this case)")
+        f=f.func
+        pass
     if not isinstance(f, FuncDef):
         raise DocStringError(f"{f} is not a function definition")
     if (

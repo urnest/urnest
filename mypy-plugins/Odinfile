@@ -402,6 +402,25 @@ FILE:147: error: Incompatible types in string interpolation (expression has type
 FILE: note: In function "mm":
 FILE:155: error: Missing positional argument "vars" in call to "in_function_context"  [call-arg]
 FILE:155: error: second parameter to in_function_context should be vars()  [misc]
+FILE: note: In function "nn":
+FILE:172: error: second parameter to in_function_context should be vars()  [misc]
+FILE:172: error: Argument 1 to "in_function_context" has incompatible type "dict[str, Any]"; expected "Callable[..., Any]"  [arg-type]
+FILE:172: error: Argument 2 to "in_function_context" has incompatible type "Callable[[int], Coroutine[Any, Any, Any]]"; expected "dict[str, Any]"  [arg-type]
+FILE: note: In function "gg":
+FILE:210: error: 'g' is not a valid (i.e. initialised) local variable or a function parameter (i.e. not one of ['self', 'x', 'oo']  [misc]
+FILE: note: In function "p":
+FILE:219: error: p not found  [misc]
+FILE: note: In member "p" of class "oo":
+FILE:219: error: p not found  [misc]
+FILE: note: In function "p":
+FILE:219: error: Name "p" is not defined  [name-defined]
+FILE: note: In member "p" of class "oo":
+FILE:227: error: for class X method f(), use in_function_context(X.f, vars()) not in_function_context(self.f, vars()) to avoid potential inheritance related errors  [misc]
+FILE:227: error: Argument 1 to "in_function_context" has incompatible type "int"; expected "Callable[..., Any]"  [arg-type]
+FILE: note: In class "oo":
+FILE:229: error: Single overload definition, multiple required  [misc]
+FILE: note: In member "qq" of class "oo":
+FILE:230: error: Missing return statement  [empty-body]
 
 %test_xn_plugin.errors==(test_data/xn_in_function_context_errors.py)+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(xn_mypy_plugin.py):main.mypy3:err
 

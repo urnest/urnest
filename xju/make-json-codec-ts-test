@@ -228,6 +228,41 @@ Assert(IpV4AddrWithPrefix).isSubclassOf(CustomClassCodec)
 Assert(IpV4AddrWithPrefix).isSubclassOf(CustomStringKeyClassCodec)
 
 
+Colour = NewType('Colour',str)
+codec(Colour).ensure_typescript_defs(namespace)
+
+Milligrams = NewType('Milligrams',float)
+codec(Milligrams).ensure_typescript_defs(namespace)
+
+Votes = NewType('Votes',int)
+codec(Votes).ensure_typescript_defs(namespace)
+
+Enabled = NewType('Enabled',bool)
+codec(Enabled).ensure_typescript_defs(namespace)
+    
+@dataclass
+class Selfish:
+    value: int
+    next: dict[int, Self]
+    pass
+
+codec(Selfish).ensure_typescript_defs(namespace)
+
+@dataclass
+class Liasee:
+    x: int
+    pass
+
+Lias=Liasee
+
+@dataclass
+class Liaser:
+    l: Lias
+    pass
+
+
+codec(Liaser).ensure_typescript_defs(namespace)
+
 print(namespace.get_formatted_defs())
 
 print(f'''\
@@ -862,9 +897,6 @@ const test_bbbb3=() => {{
 }};
 ''')
 
-Colour = NewType('Colour',str)
-codec(Colour).ensure_typescript_defs(namespace)
-
 print(f'''
 //dict[Colour,T]
 const test_bbbb4=() => {{
@@ -896,9 +928,6 @@ const test_bbbb4=() => {{
     assert_false({indent(8,codec(dict[Colour,int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
 }};
 ''')
-
-Milligrams = NewType('Milligrams',float)
-codec(Milligrams).ensure_typescript_defs(namespace)
 
 print(f'''
 //dict[Milligrams,T]
@@ -932,9 +961,6 @@ const test_bbbb5=() => {{
 }};
 ''')
 
-Votes = NewType('Votes',int)
-codec(Votes).ensure_typescript_defs(namespace)
-
 print(f'''
 //dict[Votes,T]
 const test_bbbb6=() => {{
@@ -966,9 +992,6 @@ const test_bbbb6=() => {{
     assert_false({indent(8,codec(dict[Votes,int]).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace))});
 }};
 ''')
-
-Enabled = NewType('Enabled',bool)
-codec(Enabled).ensure_typescript_defs(namespace)
 
 print(f'''
 //dict[Enabled,T]
@@ -1431,6 +1454,23 @@ print(f'''
 ''')
 
 
+print(f'''
+//Lias
+(() => {{
+    assert_equal(asInstanceOfLias('{{"x":8}}'),{{x:8}});
+    assert_equal({indent(4,codec(Lias).get_typescript_asa(TypeScriptSourceCode('{"x":8}'),namespace))}, {{x:8}});
+    try{{
+        {indent(8,codec(Lias).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a Lias");
+    }}
+    assert_true({codec(Lias).get_typescript_isa(TypeScriptSourceCode('{"x":8}'),namespace)});
+    assert_false({codec(Lias).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
+}})();
+''')
+
 try:
     codec(int|str).add_typescript_alias(namespace, [TypeScriptUQN('xju'),TypeScriptUQN('NorS')])
 except Exception as e:
@@ -1539,12 +1579,6 @@ except Exception as e:
 else:
     assert False
     pass
-    
-@dataclass
-class Selfish:
-    value: int
-    next: dict[int, Self]
-    pass
 
 try:
     codec(Selfish).typescript_as_object_key_type()
@@ -1592,8 +1626,6 @@ except Exception as e:
 else:
     assert False
     pass
-
-codec(Selfish).ensure_typescript_defs(namespace)
 
 try:
     codec(list[int]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)

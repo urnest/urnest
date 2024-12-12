@@ -21,7 +21,7 @@ from os.path import dirname
 if path[0]==dirname(__file__): path.pop(0)
 from xju.xn import in_context,readable_repr,AllFailed,in_function_context,Xn,capitalise,first_para_of, first_line_of
 from xju.assert_ import Assert
-from typing import cast
+from typing import cast, overload
 
 import io
 import sys
@@ -362,7 +362,75 @@ def test_17():
     else:
         assert False
 
-            
+from abc import abstractmethod
+
+class o:
+    @abstractmethod
+    def ff(self, s: str) -> int:
+        '''transform {s} to int'''
+        pass
+    pass
+
+class oo(o):
+    def ff(self, s: str) -> int:
+        try:
+            return int(s)
+        except Exception:
+            raise in_function_context(o.ff,vars())
+        pass
+    @overload
+    def gg(self, s: str) -> int:
+        'convert {s} to in'
+        ...
+    @overload
+    def gg(self, i: int) -> str:
+        'convert {i} to str'
+        ...
+    def gg(self, x):
+        'convert int/str {x} to str/int'
+        try:
+            match x:
+                case int():
+                    raise Exception('bad int')
+                case str():
+                    return int(x)
+        except Exception:
+            raise in_function_context(oo.gg,vars()) from None
+        pass
+
+    @property
+    def p(self) -> int:
+        'get oo.p'
+        try:
+            raise Exception('no p')
+        except Exception:
+            raise in_function_context(oo.p,vars()) from None
+        pass
+    # note p.setter/deleter is not allowed as there is no refereencable function, use the
+    # alternate property def pattern: x = property(getter,setter,deleter) for these cases
+    pass
+
+def test_18():
+    try:
+        oo().ff('fred')
+    except Exception as e:
+        Assert(readable_repr(e))=="Failed to transform fred to int because\ninvalid literal for int() with base 10: 'fred'."
+    try:
+        oo().gg(3)
+    except Exception as e:
+        Assert(readable_repr(e))=='Failed to convert int/str 3 to str/int because\nbad int.'
+    else:
+        assert None
+        pass
+    try:
+        oo().p
+    except Exception as e:
+        Assert(readable_repr(e))=='Failed to get oo.p because\nno p.'
+    else:
+        assert None
+        pass
+    pass
+
 tests=[var for name,var in sorted(vars().items())
        if name.startswith('test') and callable(var)]
 for t in tests: t()

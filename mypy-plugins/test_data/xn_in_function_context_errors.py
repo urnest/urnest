@@ -147,10 +147,87 @@ def ll(x:str, y:int, z:str, o:list):
         raise in_function_context(ll, vars())  # x wrong type
     pass
 
-def mm(y):
+def mm(y: str):
     "mm {y}"
     try:
         raise Exception('mm')
     except Exception:
         raise in_function_context(mm)  # wrong number of params
+    pass
+
+async def nnf() -> None:
+    pass
+
+async def nn(u: int):
+    "nn {u:d}"
+    try:
+        match u:
+            case 1:
+                await nnf()
+                p=2
+            case 2:
+                pass
+        pass
+    except Exception:
+        raise in_function_context(vars(), nn)  # wrong param order
+    pass
+
+from abc import abstractmethod
+
+class o:
+    @abstractmethod
+    def ff(self, s: str) -> int:
+        '''transform {s} to int'''
+        pass
+    pass
+
+from typing import overload
+
+class oo(o):
+    def ff(self, s: str) -> int:
+        try:
+            return int(s)
+        except Exception:
+            raise in_function_context(o.ff,vars())
+        pass
+    @overload
+    def gg(self, s: str) -> int:
+        'convert {s} to in'
+        ...
+    @overload
+    def gg(self, i: int) -> str:
+        'convert {i} to str'
+        ...
+    def gg(self, x):
+        'convert int/str {g} to str/int'
+        try:
+            match x:
+                case int():
+                    return str(x)
+                case str():
+                    return int(x)
+        except Exception:
+            raise in_function_context(oo.gg,vars())  # no g
+        pass
+
+    @property
+    def p(self) -> int:
+        'get {self.p}'
+        try:
+            return 2
+        except Exception:
+            raise in_function_context(p,vars())  # no self.p
+        pass
+    @p.setter
+    def p(self, i: int) -> None:
+        'set {self}.p to {x}'
+        try:
+            pass
+        except Exception:
+            raise in_function_context(self.p,vars())  # no p (should be i)
+        pass
+    @overload  # missing implementation
+    def qq(self, s: str) -> int:
+        'convert {s} to in'
+        ...
     pass

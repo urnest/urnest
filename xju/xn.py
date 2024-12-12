@@ -100,7 +100,7 @@ def capitalise(s:str)->str:
     return s
 
 def in_function_context(function:Callable,
-                        vars:Dict[str,Any]={},
+                        vars:Dict[str,Any],
                         exceptionInfo:None|tuple[Type[BaseException],BaseException,TracebackType]=None,
                         fl:None|tuple[str,int]=None)->BaseException:
     """Make a Xn that includes exception info and context as first_para_of(f.__doc__).format(**vars()).
