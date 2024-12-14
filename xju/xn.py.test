@@ -134,14 +134,14 @@ def test4(prog=sys.argv[0]):
     except:
         e=in_context('jock')
     else:
-        assert False, 'c should have raised?'
+        assert False, 'c should have raised'
         pass
+
     Assert(str(e)).matches('''\
 failed to jock because
 [^:]*xn[.]py[.]test:133: failed to c[(][)] because
 [^:]*xn[.]py[.]test:130: failed to b[(][)] because
 [^:]*xn[.]py[.]test:124: failed to with _Scope[(]'b'[)]: because
-[^:]*xn[.]py[.]test:117: failed to raise in_context[(]self.s,[(]t,e,b[)],self.fl[)] from None because
 [^:]*xn[.]py[.]test:124: failed to b because
 [^:]*xn[.]py[.]test:126: failed to a[(][)] because
 [^:]*xn[.]py[.]test:122: fred''')
@@ -286,7 +286,7 @@ def g(c):
     pass
 
 def f():
-    'use {C}'
+    'use {C.__name__}'
     class C: pass
     try:
         g(C)
@@ -298,11 +298,11 @@ def test_16():
     try:
         f()
     except Exception as e:
+
         Assert(str(e)).matches("""\
-failed to use <class '__main__.f.<locals>.C'> because
+failed to use C because
 [^:]*/xn.py.test:292: failed to g[(]C[)] because
-[^:]*/xn.py.test:285: failed to raise in_function_context[(]g,vars[(][)][)] from None because
-[^:]*/xn.py.test:283: failed to g <class '__main__.f.<locals>.C'> because
+[^:]*/xn.py.test:285: failed to g <class '__main__.f.<locals>.C'> because
 [^:]*/xn.py.test:283: fred""")
         pass
     else:

@@ -186,9 +186,8 @@ def in_context(context:str,
     f2=fl[0] if fl else None
     l2=fl[1] if fl else None
     r.context.append( (context,FileAndLine(f2,l2)) )
-    traceBack.tb_next=None
+    r.__traceback__=Exception().__traceback__
     return r
-
 
 def first_line_of(x:Any)->str:
     '''return first non-empty line of str({x}) stripped of leading and trailing whitespace'''
