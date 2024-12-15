@@ -682,6 +682,12 @@ extern void Validate_IsPntr(GMC_P1(tp_FilHdr));
 extern void Update_RefFile(GMC_P1(tp_FilHdr) GMC_PN(tp_Status) GMC_PN(tp_Date));
 extern void Set_DrvDirConfirm(GMC_P1(tp_FilHdr) GMC_PN(tp_Status));
 extern void Set_ListStatus(GMC_P1(tp_FilHdr) GMC_PN(tp_Status));
+/* if-inotify.c */
+int Create_Inotify_Fd();
+void Inotify_Watch_Dir(tp_FileName FileName);
+void Inotify_Watch_File(tp_FileName FileName);
+char const* Inotify_Get_Next_Change();
+
 /* if-util.c */
 extern void Local_Redo(GMC_P1(tp_Str));
 extern void Local_OdinExpr_ID(GMC_P1(int *) GMC_PN(tp_Str));

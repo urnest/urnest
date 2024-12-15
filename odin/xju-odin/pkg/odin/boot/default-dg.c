@@ -6834,14 +6834,14 @@ tps_PrmTypLst _PrmTypLstS [5898] = {
   {&_PrmTypS[7], &_PrmTypLstS[5896]} };
 int num_EnvVarS = 89;
 tps_EnvVar _EnvVarS [89] = {
-  {"ODIN_VERSION_STR", "odin-build release number", 2, "1.17.11", 0},
+  {"ODIN_VERSION_STR", "odin-build release number", 2, "1.1.0", 0},
   {"ODIN_CC", "name of the C compiler", 2, "gcc", 0},
-  {"ODIN_CC_FLAGS", "C compiler flags", 2, "-g", 0},
-  {"ODIN_CPP", "name of the C preprocessor", 2, "gcc -E -x c-header", 0},
+  {"ODIN_CC_FLAGS", "C compiler flags", 2, "-g -O2", 0},
+  {"ODIN_CPP", "name of the C preprocessor", 2, "gcc -E", 0},
   {"ODIN_CPP_FLAGS", "C preprocessor flags", 2, "", 0},
   {"ODIN_CXX", "name of the C++ compiler", 2, "g++", 0},
-  {"ODIN_CXX_FLAGS", "CC flags", 2, "-g", 0},
-  {"ODIN_YACC", "name of the yacc compiler", 2, "byacc", 0},
+  {"ODIN_CXX_FLAGS", "CC flags", 2, "-g -O2", 0},
+  {"ODIN_YACC", "name of the yacc compiler", 2, "bison -y", 0},
   {"ODIN_RANLIB", "archive symbol table program", 2, "ranlib", 0},
   {"ODIN_RBSCMD", "the name of the Odin remote-build-server", 1, "odin/rbs.sh", 0},
   {"ODIN_SHORTNAMES", "use short cache filenames", 1, "", 0},

@@ -1,24 +1,72 @@
-/* original parser id follows */
-/* ocsccsid[] = "@(#)yaccpar	1.9 (Berkeley) 02/21/93" */
-/* (use OCMAJOR/OCMINOR for ifdefs dependent on parser version) */
+/* A Bison parser, made by GNU Bison 3.8.2.  */
 
-#define OCBYACC 1
-#define OCMAJOR 2
-#define OCMINOR 0
-#define OCPATCH 20221106
+/* Bison implementation for Yacc-like parsers in C
 
-#define OCEMPTY        (-1)
-#define occlearin      (occhar = OCEMPTY)
-#define ocerrok        (ocerrflag = 0)
-#define OCRECOVERING() (ocerrflag != 0)
-#define OCENOMEM       (-2)
-#define OCEOF          0
-#undef OCBTYACC
-#define OCBTYACC 0
-#define OCDEBUGSTR OCPREFIX "debug"
-#define OCPREFIX "oc"
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2021 Free Software Foundation,
+   Inc.
 
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
+
+/* As a special exception, you may create a larger work that contains
+   part or all of the Bison parser skeleton and distribute that work
+   under terms of your choice, so long as that work isn't itself a
+   parser generator using the skeleton or a modified version thereof
+   as a parser skeleton.  Alternatively, if you modify or redistribute
+   the parser skeleton itself, you may (at your option) remove this
+   special exception, which will cause the skeleton and the resulting
+   Bison output files to be licensed under the GNU General Public
+   License without this special exception.
+
+   This special exception was added by the Free Software Foundation in
+   version 2.2 of Bison.  */
+
+/* C LALR(1) parser skeleton written by Richard Stallman, by
+   simplifying the original so-called "semantic" parser.  */
+
+/* DO NOT RELY ON FEATURES THAT ARE NOT DOCUMENTED in the manual,
+   especially those whose name start with OC_ or oc_.  They are
+   private implementation details that can be changed or removed.  */
+
+/* All symbols defined below should begin with oc or OC, to avoid
+   infringing on user name space.  This should be done even for local
+   variables, as they might otherwise be expanded by user macros.
+   There are some unavoidable exceptions within include files to
+   define necessary library symbols; they are noted "INFRINGES ON
+   USER NAME SPACE" below.  */
+
+/* Identify Bison output, and Bison version.  */
+#define OCBISON 30802
+
+/* Bison version string.  */
+#define OCBISON_VERSION "3.8.2"
+
+/* Skeleton name.  */
+#define OCSKELETON_NAME "yacc.c"
+
+/* Pure parsers.  */
 #define OCPURE 0
+
+/* Push parsers.  */
+#define OCPUSH 0
+
+/* Pull parsers.  */
+#define OCPULL 1
+
+
+
+
+/* First part of user prologue.  */
 
 #include "inc/GMC.h"
 extern int num_ParseErrors;
@@ -30,47 +78,72 @@ void ocerror(GMC_ARG(char*, s)) GMC_DCL(char*, s)
 {num_ParseErrors++; ParseError(s);}
 int oclex() {return OC_Lex();}
 
-#if ! defined(OCSTYPE) && ! defined(OCSTYPE_IS_DECLARED)
-/* Default: OCSTYPE is the semantic value type. */
-typedef int OCSTYPE;
-# define OCSTYPE_IS_DECLARED 1
-#endif
 
-/* compatibility with bison */
-#ifdef OCPARSE_PARAM
-/* compatibility with FreeBSD */
-# ifdef OCPARSE_PARAM_TYPE
-#  define OCPARSE_DECL() ocparse(OCPARSE_PARAM_TYPE OCPARSE_PARAM)
-# else
-#  define OCPARSE_DECL() ocparse(void *OCPARSE_PARAM)
+# ifndef OC_CAST
+#  ifdef __cplusplus
+#   define OC_CAST(Type, Val) static_cast<Type> (Val)
+#   define OC_REINTERPRET_CAST(Type, Val) reinterpret_cast<Type> (Val)
+#  else
+#   define OC_CAST(Type, Val) ((Type) (Val))
+#   define OC_REINTERPRET_CAST(Type, Val) ((Type) (Val))
+#  endif
 # endif
-#else
-# define OCPARSE_DECL() ocparse(void)
+# ifndef OC_NULLPTR
+#  if defined __cplusplus
+#   if 201103L <= __cplusplus
+#    define OC_NULLPTR nullptr
+#   else
+#    define OC_NULLPTR 0
+#   endif
+#  else
+#   define OC_NULLPTR ((void*)0)
+#  endif
+# endif
+
+/* Use api.header.include to #include this header
+   instead of duplicating it here.  */
+#ifndef OC_OC_Y_TAB_H_INCLUDED
+# define OC_OC_Y_TAB_H_INCLUDED
+/* Debug traces.  */
+#ifndef OCDEBUG
+# define OCDEBUG 0
+#endif
+#if OCDEBUG
+extern int ocdebug;
 #endif
 
-/* Parameters sent to lex. */
-#ifdef OCLEX_PARAM
-# define OCLEX_DECL() oclex(void *OCLEX_PARAM)
-# define OCLEX oclex(OCLEX_PARAM)
-#else
-# define OCLEX_DECL() oclex(void)
-# define OCLEX oclex()
+/* Token kinds.  */
+#ifndef OCTOKENTYPE
+# define OCTOKENTYPE
+  enum octokentype
+  {
+    OCEMPTY = -2,
+    OCEOF = 0,                     /* "end of file"  */
+    OCerror = 256,                 /* error  */
+    OCUNDEF = 257,                 /* "invalid token"  */
+    WORDTK = 2,                    /* WORDTK  */
+    HOSTWD = 3,                    /* HOSTWD  */
+    OBJTID = 4,                    /* OBJTID  */
+    EXCLPT = 5,                    /* EXCLPT  */
+    SCOLON = 6,                    /* SCOLON  */
+    QUESMK = 7,                    /* QUESMK  */
+    PERCNT = 8,                    /* PERCNT  */
+    LANGLE = 9,                    /* LANGLE  */
+    RANGLE = 10,                   /* RANGLE  */
+    COLON = 11,                    /* COLON  */
+    LPAREN = 12,                   /* LPAREN  */
+    RPAREN = 13,                   /* RPAREN  */
+    PLUS = 14,                     /* PLUS  */
+    EQUALS = 15,                   /* EQUALS  */
+    SLASH = 16                     /* SLASH  */
+  };
+  typedef enum octokentype octoken_kind_t;
 #endif
-
-#if !(defined(oclex) || defined(OCSTATE))
-int OCLEX_DECL();
-#endif
-
-/* Parameters sent to ocerror. */
-#ifndef OCERROR_DECL
-#define OCERROR_DECL() ocerror(const char *s)
-#endif
-#ifndef OCERROR_CALL
-#define OCERROR_CALL(msg) ocerror(msg)
-#endif
-
-extern int OCPARSE_DECL();
-
+/* Token kinds.  */
+#define OCEMPTY -2
+#define OCEOF 0
+#define OCerror 256
+#define OCUNDEF 257
 #define WORDTK 2
 #define HOSTWD 3
 #define OBJTID 4
@@ -86,1420 +159,1445 @@ extern int OCPARSE_DECL();
 #define PLUS 14
 #define EQUALS 15
 #define SLASH 16
-#define OCERRCODE 256
-typedef int OCINT;
-static const OCINT oclhs[] = {                           -1,
-    0,    1,    1,    2,    2,    2,    2,    2,    3,    4,
-    4,    4,    4,    4,    4,    5,    5,    5,    5,    6,
-    6,    6,    7,   10,   10,   10,   11,   11,   11,   11,
-   11,   11,   11,   11,   11,   11,   12,   12,   12,   12,
-   12,   12,   12,   17,   17,   18,   19,   19,   20,   20,
-   14,   16,    9,    9,    8,    8,   15,   21,   13,
-};
-static const OCINT oclen[] = {                            2,
-    1,    3,    1,    0,    1,    1,    1,    1,    1,    2,
-    1,    2,    1,    4,    3,    3,    3,    2,    2,    2,
-    3,    3,    1,    1,    2,    3,    2,    1,    1,    1,
-    2,    2,    2,    2,    2,    2,    3,    4,    2,    5,
-    2,    1,    2,    1,    0,    2,    2,    1,    1,    3,
-    1,    1,    1,    1,    2,    1,    1,    1,    1,
-};
-static const OCINT ocdefred[] = {                         0,
-   57,   58,   59,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    3,    5,    6,    7,    8,    0,   11,    0,
-    0,   24,   29,    0,   56,   55,    0,   33,   53,   35,
-   54,   51,   32,   27,   28,    0,   36,   31,    0,    0,
-    0,    0,   10,    0,    0,    0,    0,    0,   25,   34,
-   15,   26,    2,    0,   17,   16,    0,   21,   22,   43,
-    0,    0,   52,    0,   41,   14,    0,    0,    0,   37,
-   44,    0,   38,    0,   49,    0,   48,   40,    0,   47,
-   50,
-};
-#if defined(OCDESTRUCT_CALL) || defined(OCSTYPE_TOSTRING)
-static const OCINT ocstos[] = {                           0,
-    2,    3,    4,    5,    7,    8,   11,   12,   15,   16,
-  258,  259,  260,  261,  262,  263,  264,  265,  266,  267,
-  268,  269,  271,  273,  279,    7,   11,  273,    7,  267,
-  273,  267,  272,   13,  267,  268,  267,  267,    6,    5,
-    9,   10,  266,   15,    8,   11,   14,   16,  270,    7,
-  267,   13,  260,   11,  265,  265,    5,  265,  266,  267,
-  272,   12,  267,  274,  267,  267,   15,  265,   15,  275,
-  276,   11,   13,   12,  267,  277,  278,  272,  265,  278,
-   13,
-};
-#endif /* OCDESTRUCT_CALL || OCSTYPE_TOSTRING */
-static const OCINT ocdgoto[] = {                         11,
-   12,   13,   14,   15,   16,   17,   18,   19,   35,   21,
-   22,   49,   23,   33,   31,   64,   70,   71,   76,   77,
-   25,
-};
-static const OCINT ocsindex[] = {                        56,
-    0,    0,    0,   22,    4,   43,   43,  203,   43,   43,
-    0,   10,    0,    0,    0,    0,    0,  241,    0,   -2,
-   67,    0,    0,   34,    0,    0,   43,    0,    0,    0,
-    0,    0,    0,    0,    0,   23,    0,    0,   56,   55,
-  218,  218,    0,  188,   43,   43,    7,   43,    0,    0,
-    0,    0,    0,   43,    0,    0,   35,    0,    0,    0,
-   28,  218,    0,   37,    0,    0,   14,   44,   20,    0,
-    0,   43,    0,  218,    0,   20,    0,    0,   52,    0,
-    0,
-};
-static const OCINT ocrindex[] = {                        15,
-    0,    0,    0,   18,   79,    0,    0,    0,    0,  113,
-    0,   69,    0,    0,    0,    0,    0,   38,    0,  173,
-  232,    0,    0,   96,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,   15,   91,
-  108,  180,    0,  202,    0,    0,    0,  125,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-  137,    0,    0,  149,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,  161,    0,    0,    0,    0,
-    0,
-};
-#if OCBTYACC
-static const OCINT occindex[] = {                         0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,
-};
+
+/* Value type.  */
+#if ! defined OCSTYPE && ! defined OCSTYPE_IS_DECLARED
+typedef int OCSTYPE;
+# define OCSTYPE_IS_TRIVIAL 1
+# define OCSTYPE_IS_DECLARED 1
 #endif
-static const OCINT ocgindex[] = {                         0,
-    0,   41,    0,    0,    0,    0,  -39,  -18,    1,   68,
-    0,    0,    0,  -42,   12,    0,    0,    0,    0,   24,
-    0,
+
+
+extern OCSTYPE oclval;
+
+
+int ocparse (void);
+
+
+#endif /* !OC_OC_Y_TAB_H_INCLUDED  */
+/* Symbol kind.  */
+enum ocsymbol_kind_t
+{
+  OCSYMBOL_OCEMPTY = -2,
+  OCSYMBOL_OCEOF = 0,                      /* "end of file"  */
+  OCSYMBOL_OCerror = 1,                    /* error  */
+  OCSYMBOL_OCUNDEF = 2,                    /* "invalid token"  */
+  OCSYMBOL_WORDTK = 3,                     /* WORDTK  */
+  OCSYMBOL_HOSTWD = 4,                     /* HOSTWD  */
+  OCSYMBOL_OBJTID = 5,                     /* OBJTID  */
+  OCSYMBOL_EXCLPT = 6,                     /* EXCLPT  */
+  OCSYMBOL_SCOLON = 7,                     /* SCOLON  */
+  OCSYMBOL_QUESMK = 8,                     /* QUESMK  */
+  OCSYMBOL_PERCNT = 9,                     /* PERCNT  */
+  OCSYMBOL_LANGLE = 10,                    /* LANGLE  */
+  OCSYMBOL_RANGLE = 11,                    /* RANGLE  */
+  OCSYMBOL_COLON = 12,                     /* COLON  */
+  OCSYMBOL_LPAREN = 13,                    /* LPAREN  */
+  OCSYMBOL_RPAREN = 14,                    /* RPAREN  */
+  OCSYMBOL_PLUS = 15,                      /* PLUS  */
+  OCSYMBOL_EQUALS = 16,                    /* EQUALS  */
+  OCSYMBOL_SLASH = 17,                     /* SLASH  */
+  OCSYMBOL_OCACCEPT = 18,                  /* $accept  */
+  OCSYMBOL_xCommand = 19,                  /* xCommand  */
+  OCSYMBOL_xCommand_1 = 20,                /* xCommand_1  */
+  OCSYMBOL_xSingleCommand = 21,            /* xSingleCommand  */
+  OCSYMBOL_xQuery = 22,                    /* xQuery  */
+  OCSYMBOL_xExecute = 23,                  /* xExecute  */
+  OCSYMBOL_xCopy = 24,                     /* xCopy  */
+  OCSYMBOL_xVariable = 25,                 /* xVariable  */
+  OCSYMBOL_xOdinExpr = 26,                 /* xOdinExpr  */
+  OCSYMBOL_xOdinExpr1 = 27,                /* xOdinExpr1  */
+  OCSYMBOL_xRoot = 28,                     /* xRoot  */
+  OCSYMBOL_xOperation = 29,                /* xOperation  */
+  OCSYMBOL_xOperation_1 = 30,              /* xOperation_1  */
+  OCSYMBOL_xPrmVals = 31,                  /* xPrmVals  */
+  OCSYMBOL_xPrmVals_1 = 32,                /* xPrmVals_1  */
+  OCSYMBOL_xPrmVal = 33,                   /* xPrmVal  */
+  OCSYMBOL_xFileType = 34,                 /* xFileType  */
+  OCSYMBOL_xPrmType = 35,                  /* xPrmType  */
+  OCSYMBOL_xWord = 36,                     /* xWord  */
+  OCSYMBOL_xEPString = 37,                 /* xEPString  */
+  OCSYMBOL_WORDTKleaf = 38,                /* WORDTKleaf  */
+  OCSYMBOL_HOSTWDleaf = 39,                /* HOSTWDleaf  */
+  OCSYMBOL_OBJTIDleaf = 40                 /* OBJTIDleaf  */
 };
-#define OCTABLESIZE 251
-static const OCINT octable[] = {                         43,
-   20,   55,   56,   61,   58,    1,   30,   32,    1,   37,
-   38,   24,   44,   29,    4,   39,   28,   13,   62,   24,
-    4,    1,   68,   13,   72,   59,   29,   51,   26,   78,
-   45,   74,   27,   46,   79,   52,   47,    9,   48,   20,
-   50,   26,   67,    9,    1,   60,   32,   63,   65,   29,
-   24,   69,   24,   24,   66,   24,   73,    1,    2,    3,
-    4,   26,    5,    6,   81,   54,    7,    8,    1,   75,
-    9,   10,   32,   24,   45,   36,   75,   46,   53,   53,
-   47,   53,   48,   53,   53,   24,   53,   53,   53,   53,
-   12,   53,   53,   53,   53,   54,   12,    0,   54,   80,
-   54,   54,    0,   54,   54,   54,   54,   19,   54,   54,
-   54,   54,   30,   19,    0,   30,    0,   30,   30,    0,
-   30,   30,   30,   30,   42,   30,   30,   42,   30,   42,
-   42,    0,   42,   42,   42,   42,   39,   42,   42,   39,
-   42,   39,   39,    0,   39,   39,   39,   39,   45,   39,
-   39,   45,   39,   45,   45,    0,   45,   45,   45,   45,
-   46,   45,   45,   46,   45,   46,   46,    0,   46,   46,
-   46,   46,   28,   46,   46,   28,   46,   28,   28,   18,
-   28,   28,   28,   28,    0,   18,   28,    0,   28,    1,
-    2,    3,   57,    0,    5,    6,    0,    0,    7,    8,
-    0,   20,    9,   10,    1,    0,    3,   20,    0,    5,
-    6,    0,    0,    7,    8,   34,    0,    9,   10,    1,
-    0,    3,    0,    0,    5,    6,    0,    0,    7,    8,
-    0,   23,    9,   10,   23,    0,   23,   23,    0,    0,
-   23,   23,    0,    2,   23,   40,    0,    0,    0,   41,
-   42,
-};
-static const OCINT occheck[] = {                         18,
-    0,   41,   42,   46,   44,    2,    6,    7,    2,    9,
-   10,    0,   15,    7,    0,    6,    5,    0,   12,    8,
-    6,    2,   62,    6,   11,   44,    7,   27,    7,   72,
-    8,   12,   11,   11,   74,   13,   14,    0,   16,   39,
-    7,    7,   15,    6,    2,   45,   46,   47,   48,    7,
-   39,   15,   41,   42,   54,   44,   13,    2,    3,    4,
-    5,    7,    7,    8,   13,   11,   11,   12,    0,   69,
-   15,   16,   72,   62,    8,    8,   76,   11,    0,   39,
-   14,    3,   16,    5,    6,   74,    8,    9,   10,   11,
-    0,   13,   14,   15,   16,    0,    6,   -1,    3,   76,
-    5,    6,   -1,    8,    9,   10,   11,    0,   13,   14,
-   15,   16,    0,    6,   -1,    3,   -1,    5,    6,   -1,
-    8,    9,   10,   11,    0,   13,   14,    3,   16,    5,
-    6,   -1,    8,    9,   10,   11,    0,   13,   14,    3,
-   16,    5,    6,   -1,    8,    9,   10,   11,    0,   13,
-   14,    3,   16,    5,    6,   -1,    8,    9,   10,   11,
-    0,   13,   14,    3,   16,    5,    6,   -1,    8,    9,
-   10,   11,    0,   13,   14,    3,   16,    5,    6,    0,
-    8,    9,   10,   11,   -1,    6,   14,   -1,   16,    2,
-    3,    4,    5,   -1,    7,    8,   -1,   -1,   11,   12,
-   -1,    0,   15,   16,    2,   -1,    4,    6,   -1,    7,
-    8,   -1,   -1,   11,   12,   13,   -1,   15,   16,    2,
-   -1,    4,   -1,   -1,    7,    8,   -1,   -1,   11,   12,
-   -1,    0,   15,   16,    3,   -1,    5,    6,   -1,   -1,
-    9,   10,   -1,    3,   13,    5,   -1,   -1,   -1,    9,
-   10,
-};
-#if OCBTYACC
-static const OCINT occtable[] = {                        -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-};
+typedef enum ocsymbol_kind_t ocsymbol_kind_t;
+
+
+
+
+#ifdef short
+# undef short
 #endif
-#define OCFINAL 11
-#ifndef OCDEBUG
-#define OCDEBUG 0
+
+/* On compilers that do not define __PTRDIFF_MAX__ etc., make sure
+   <limits.h> and (if available) <stdint.h> are included
+   so that the code can choose integer types of a good width.  */
+
+#ifndef __PTRDIFF_MAX__
+# include <limits.h> /* INFRINGES ON USER NAME SPACE */
+# if defined __STDC_VERSION__ && 199901 <= __STDC_VERSION__
+#  include <stdint.h> /* INFRINGES ON USER NAME SPACE */
+#  define OC_STDINT_H
+# endif
 #endif
-#define OCMAXTOKEN 256
-#define OCUNDFTOKEN 280
-#define OCTRANSLATE(a) ((a) > OCMAXTOKEN ? OCUNDFTOKEN : (a))
+
+/* Narrow types that promote to a signed type and that can represent a
+   signed or unsigned integer of at least N bits.  In tables they can
+   save space and decrease cache pressure.  Promoting to a signed type
+   helps avoid bugs in integer arithmetic.  */
+
+#ifdef __INT_LEAST8_MAX__
+typedef __INT_LEAST8_TYPE__ octype_int8;
+#elif defined OC_STDINT_H
+typedef int_least8_t octype_int8;
+#else
+typedef signed char octype_int8;
+#endif
+
+#ifdef __INT_LEAST16_MAX__
+typedef __INT_LEAST16_TYPE__ octype_int16;
+#elif defined OC_STDINT_H
+typedef int_least16_t octype_int16;
+#else
+typedef short octype_int16;
+#endif
+
+/* Work around bug in HP-UX 11.23, which defines these macros
+   incorrectly for preprocessor constants.  This workaround can likely
+   be removed in 2023, as HPE has promised support for HP-UX 11.23
+   (aka HP-UX 11i v2) only through the end of 2022; see Table 2 of
+   <https://h20195.www2.hpe.com/V2/getpdf.aspx/4AA4-7673ENW.pdf>.  */
+#ifdef __hpux
+# undef UINT_LEAST8_MAX
+# undef UINT_LEAST16_MAX
+# define UINT_LEAST8_MAX 255
+# define UINT_LEAST16_MAX 65535
+#endif
+
+#if defined __UINT_LEAST8_MAX__ && __UINT_LEAST8_MAX__ <= __INT_MAX__
+typedef __UINT_LEAST8_TYPE__ octype_uint8;
+#elif (!defined __UINT_LEAST8_MAX__ && defined OC_STDINT_H \
+       && UINT_LEAST8_MAX <= INT_MAX)
+typedef uint_least8_t octype_uint8;
+#elif !defined __UINT_LEAST8_MAX__ && UCHAR_MAX <= INT_MAX
+typedef unsigned char octype_uint8;
+#else
+typedef short octype_uint8;
+#endif
+
+#if defined __UINT_LEAST16_MAX__ && __UINT_LEAST16_MAX__ <= __INT_MAX__
+typedef __UINT_LEAST16_TYPE__ octype_uint16;
+#elif (!defined __UINT_LEAST16_MAX__ && defined OC_STDINT_H \
+       && UINT_LEAST16_MAX <= INT_MAX)
+typedef uint_least16_t octype_uint16;
+#elif !defined __UINT_LEAST16_MAX__ && USHRT_MAX <= INT_MAX
+typedef unsigned short octype_uint16;
+#else
+typedef int octype_uint16;
+#endif
+
+#ifndef OCPTRDIFF_T
+# if defined __PTRDIFF_TYPE__ && defined __PTRDIFF_MAX__
+#  define OCPTRDIFF_T __PTRDIFF_TYPE__
+#  define OCPTRDIFF_MAXIMUM __PTRDIFF_MAX__
+# elif defined PTRDIFF_MAX
+#  ifndef ptrdiff_t
+#   include <stddef.h> /* INFRINGES ON USER NAME SPACE */
+#  endif
+#  define OCPTRDIFF_T ptrdiff_t
+#  define OCPTRDIFF_MAXIMUM PTRDIFF_MAX
+# else
+#  define OCPTRDIFF_T long
+#  define OCPTRDIFF_MAXIMUM LONG_MAX
+# endif
+#endif
+
+#ifndef OCSIZE_T
+# ifdef __SIZE_TYPE__
+#  define OCSIZE_T __SIZE_TYPE__
+# elif defined size_t
+#  define OCSIZE_T size_t
+# elif defined __STDC_VERSION__ && 199901 <= __STDC_VERSION__
+#  include <stddef.h> /* INFRINGES ON USER NAME SPACE */
+#  define OCSIZE_T size_t
+# else
+#  define OCSIZE_T unsigned
+# endif
+#endif
+
+#define OCSIZE_MAXIMUM                                  \
+  OC_CAST (OCPTRDIFF_T,                                 \
+           (OCPTRDIFF_MAXIMUM < OC_CAST (OCSIZE_T, -1)  \
+            ? OCPTRDIFF_MAXIMUM                         \
+            : OC_CAST (OCSIZE_T, -1)))
+
+#define OCSIZEOF(X) OC_CAST (OCPTRDIFF_T, sizeof (X))
+
+
+/* Stored state numbers (used for stacks). */
+typedef octype_int8 oc_state_t;
+
+/* State numbers in computations.  */
+typedef int oc_state_fast_t;
+
+#ifndef OC_
+# if defined OCENABLE_NLS && OCENABLE_NLS
+#  if ENABLE_NLS
+#   include <libintl.h> /* INFRINGES ON USER NAME SPACE */
+#   define OC_(Msgid) dgettext ("bison-runtime", Msgid)
+#  endif
+# endif
+# ifndef OC_
+#  define OC_(Msgid) Msgid
+# endif
+#endif
+
+
+#ifndef OC_ATTRIBUTE_PURE
+# if defined __GNUC__ && 2 < __GNUC__ + (96 <= __GNUC_MINOR__)
+#  define OC_ATTRIBUTE_PURE __attribute__ ((__pure__))
+# else
+#  define OC_ATTRIBUTE_PURE
+# endif
+#endif
+
+#ifndef OC_ATTRIBUTE_UNUSED
+# if defined __GNUC__ && 2 < __GNUC__ + (7 <= __GNUC_MINOR__)
+#  define OC_ATTRIBUTE_UNUSED __attribute__ ((__unused__))
+# else
+#  define OC_ATTRIBUTE_UNUSED
+# endif
+#endif
+
+/* Suppress unused-variable warnings by "using" E.  */
+#if ! defined lint || defined __GNUC__
+# define OC_USE(E) ((void) (E))
+#else
+# define OC_USE(E) /* empty */
+#endif
+
+/* Suppress an incorrect diagnostic about oclval being uninitialized.  */
+#if defined __GNUC__ && ! defined __ICC && 406 <= __GNUC__ * 100 + __GNUC_MINOR__
+# if __GNUC__ * 100 + __GNUC_MINOR__ < 407
+#  define OC_IGNORE_MAYBE_UNINITIALIZED_BEGIN                           \
+    _Pragma ("GCC diagnostic push")                                     \
+    _Pragma ("GCC diagnostic ignored \"-Wuninitialized\"")
+# else
+#  define OC_IGNORE_MAYBE_UNINITIALIZED_BEGIN                           \
+    _Pragma ("GCC diagnostic push")                                     \
+    _Pragma ("GCC diagnostic ignored \"-Wuninitialized\"")              \
+    _Pragma ("GCC diagnostic ignored \"-Wmaybe-uninitialized\"")
+# endif
+# define OC_IGNORE_MAYBE_UNINITIALIZED_END      \
+    _Pragma ("GCC diagnostic pop")
+#else
+# define OC_INITIAL_VALUE(Value) Value
+#endif
+#ifndef OC_IGNORE_MAYBE_UNINITIALIZED_BEGIN
+# define OC_IGNORE_MAYBE_UNINITIALIZED_BEGIN
+# define OC_IGNORE_MAYBE_UNINITIALIZED_END
+#endif
+#ifndef OC_INITIAL_VALUE
+# define OC_INITIAL_VALUE(Value) /* Nothing. */
+#endif
+
+#if defined __cplusplus && defined __GNUC__ && ! defined __ICC && 6 <= __GNUC__
+# define OC_IGNORE_USELESS_CAST_BEGIN                          \
+    _Pragma ("GCC diagnostic push")                            \
+    _Pragma ("GCC diagnostic ignored \"-Wuseless-cast\"")
+# define OC_IGNORE_USELESS_CAST_END            \
+    _Pragma ("GCC diagnostic pop")
+#endif
+#ifndef OC_IGNORE_USELESS_CAST_BEGIN
+# define OC_IGNORE_USELESS_CAST_BEGIN
+# define OC_IGNORE_USELESS_CAST_END
+#endif
+
+
+#define OC_ASSERT(E) ((void) (0 && (E)))
+
+#if !defined ocoverflow
+
+/* The parser invokes alloca or malloc; define the necessary symbols.  */
+
+# ifdef OCSTACK_USE_ALLOCA
+#  if OCSTACK_USE_ALLOCA
+#   ifdef __GNUC__
+#    define OCSTACK_ALLOC __builtin_alloca
+#   elif defined __BUILTIN_VA_ARG_INCR
+#    include <alloca.h> /* INFRINGES ON USER NAME SPACE */
+#   elif defined _AIX
+#    define OCSTACK_ALLOC __alloca
+#   elif defined _MSC_VER
+#    include <malloc.h> /* INFRINGES ON USER NAME SPACE */
+#    define alloca _alloca
+#   else
+#    define OCSTACK_ALLOC alloca
+#    if ! defined _ALLOCA_H && ! defined EXIT_SUCCESS
+#     include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
+      /* Use EXIT_SUCCESS as a witness for stdlib.h.  */
+#     ifndef EXIT_SUCCESS
+#      define EXIT_SUCCESS 0
+#     endif
+#    endif
+#   endif
+#  endif
+# endif
+
+# ifdef OCSTACK_ALLOC
+   /* Pacify GCC's 'empty if-body' warning.  */
+#  define OCSTACK_FREE(Ptr) do { /* empty */; } while (0)
+#  ifndef OCSTACK_ALLOC_MAXIMUM
+    /* The OS might guarantee only one guard page at the bottom of the stack,
+       and a page size can be as small as 4096 bytes.  So we cannot safely
+       invoke alloca (N) if N exceeds 4096.  Use a slightly smaller number
+       to allow for a few compiler-allocated temporary stack slots.  */
+#   define OCSTACK_ALLOC_MAXIMUM 4032 /* reasonable circa 2006 */
+#  endif
+# else
+#  define OCSTACK_ALLOC OCMALLOC
+#  define OCSTACK_FREE OCFREE
+#  ifndef OCSTACK_ALLOC_MAXIMUM
+#   define OCSTACK_ALLOC_MAXIMUM OCSIZE_MAXIMUM
+#  endif
+#  if (defined __cplusplus && ! defined EXIT_SUCCESS \
+       && ! ((defined OCMALLOC || defined malloc) \
+             && (defined OCFREE || defined free)))
+#   include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
+#   ifndef EXIT_SUCCESS
+#    define EXIT_SUCCESS 0
+#   endif
+#  endif
+#  ifndef OCMALLOC
+#   define OCMALLOC malloc
+#   if ! defined malloc && ! defined EXIT_SUCCESS
+void *malloc (OCSIZE_T); /* INFRINGES ON USER NAME SPACE */
+#   endif
+#  endif
+#  ifndef OCFREE
+#   define OCFREE free
+#   if ! defined free && ! defined EXIT_SUCCESS
+void free (void *); /* INFRINGES ON USER NAME SPACE */
+#   endif
+#  endif
+# endif
+#endif /* !defined ocoverflow */
+
+#if (! defined ocoverflow \
+     && (! defined __cplusplus \
+         || (defined OCSTYPE_IS_TRIVIAL && OCSTYPE_IS_TRIVIAL)))
+
+/* A type that is properly aligned for any stack member.  */
+union ocalloc
+{
+  oc_state_t ocss_alloc;
+  OCSTYPE ocvs_alloc;
+};
+
+/* The size of the maximum gap between one aligned stack and the next.  */
+# define OCSTACK_GAP_MAXIMUM (OCSIZEOF (union ocalloc) - 1)
+
+/* The size of an array large to enough to hold all stacks, each with
+   N elements.  */
+# define OCSTACK_BYTES(N) \
+     ((N) * (OCSIZEOF (oc_state_t) + OCSIZEOF (OCSTYPE)) \
+      + OCSTACK_GAP_MAXIMUM)
+
+# define OCCOPY_NEEDED 1
+
+/* Relocate STACK from its old location to the new one.  The
+   local variables OCSIZE and OCSTACKSIZE give the old and new number of
+   elements in the stack, and OCPTR gives the new location of the
+   stack.  Advance OCPTR to a properly aligned location for the next
+   stack.  */
+# define OCSTACK_RELOCATE(Stack_alloc, Stack)                           \
+    do                                                                  \
+      {                                                                 \
+        OCPTRDIFF_T ocnewbytes;                                         \
+        OCCOPY (&ocptr->Stack_alloc, Stack, ocsize);                    \
+        Stack = &ocptr->Stack_alloc;                                    \
+        ocnewbytes = ocstacksize * OCSIZEOF (*Stack) + OCSTACK_GAP_MAXIMUM; \
+        ocptr += ocnewbytes / OCSIZEOF (*ocptr);                        \
+      }                                                                 \
+    while (0)
+
+#endif
+
+#if defined OCCOPY_NEEDED && OCCOPY_NEEDED
+/* Copy COUNT objects from SRC to DST.  The source and destination do
+   not overlap.  */
+# ifndef OCCOPY
+#  if defined __GNUC__ && 1 < __GNUC__
+#   define OCCOPY(Dst, Src, Count) \
+      __builtin_memcpy (Dst, Src, OC_CAST (OCSIZE_T, (Count)) * sizeof (*(Src)))
+#  else
+#   define OCCOPY(Dst, Src, Count)              \
+      do                                        \
+        {                                       \
+          OCPTRDIFF_T oci;                      \
+          for (oci = 0; oci < (Count); oci++)   \
+            (Dst)[oci] = (Src)[oci];            \
+        }                                       \
+      while (0)
+#  endif
+# endif
+#endif /* !OCCOPY_NEEDED */
+
+/* OCFINAL -- State number of the termination state.  */
+#define OCFINAL  39
+/* OCLAST -- Last index in OCTABLE.  */
+#define OCLAST   137
+
+/* OCNTOKENS -- Number of terminals.  */
+#define OCNTOKENS  18
+/* OCNNTS -- Number of nonterminals.  */
+#define OCNNTS  23
+/* OCNRULES -- Number of rules.  */
+#define OCNRULES  60
+/* OCNSTATES -- Number of states.  */
+#define OCNSTATES  83
+
+/* OCMAXUTOK -- Last valid token kind.  */
+#define OCMAXUTOK   257
+
+
+/* OCTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
+   as returned by oclex, with out-of-bounds checking.  */
+#define OCTRANSLATE(OCX)                                \
+  (0 <= (OCX) && (OCX) <= OCMAXUTOK                     \
+   ? OC_CAST (ocsymbol_kind_t, octranslate[OCX])        \
+   : OCSYMBOL_OCUNDEF)
+
+/* OCTRANSLATE[TOKEN-NUM] -- Symbol number corresponding to TOKEN-NUM
+   as returned by oclex.  */
+static const octype_int8 octranslate[] =
+{
+       0,     2,     3,     4,     5,     6,     7,     8,     9,    10,
+      11,    12,    13,    14,    15,    16,    17,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     1,     2
+};
+
 #if OCDEBUG
-static const char *const ocname[] = {
-
-"$end",0,"WORDTK","HOSTWD","OBJTID","EXCLPT","SCOLON","QUESMK","PERCNT",
-"LANGLE","RANGLE","COLON","LPAREN","RPAREN","PLUS","EQUALS","SLASH",0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"error",
-"$accept","xCommand","xCommand_1","xSingleCommand","xQuery","xExecute","xCopy",
-"xVariable","xOdinExpr","xEPString","xWord","xOdinExpr1","xRoot","xOperation",
-"OBJTIDleaf","xFileType","WORDTKleaf","xPrmType","xOperation_1","xPrmVals",
-"xPrmVals_1","xPrmVal","HOSTWDleaf","illegal-symbol",
-};
-static const char *const ocrule[] = {
-"$accept : xCommand",
-"xCommand : xCommand_1",
-"xCommand_1 : xCommand_1 SCOLON xSingleCommand",
-"xCommand_1 : xSingleCommand",
-"xSingleCommand :",
-"xSingleCommand : xQuery",
-"xSingleCommand : xExecute",
-"xSingleCommand : xCopy",
-"xSingleCommand : xVariable",
-"xQuery : xOdinExpr",
-"xExecute : xOdinExpr xEPString",
-"xExecute : xEPString",
-"xExecute : xOdinExpr EXCLPT",
-"xExecute : EXCLPT",
-"xExecute : xOdinExpr EXCLPT COLON xWord",
-"xExecute : EXCLPT COLON xWord",
-"xCopy : xOdinExpr RANGLE xOdinExpr",
-"xCopy : xOdinExpr LANGLE xOdinExpr",
-"xCopy : xOdinExpr RANGLE",
-"xCopy : xOdinExpr LANGLE",
-"xVariable : xWord EQUALS",
-"xVariable : xWord EQUALS xOdinExpr",
-"xVariable : xWord EQUALS xEPString",
-"xOdinExpr : xOdinExpr1",
-"xOdinExpr1 : xRoot",
-"xOdinExpr1 : xOdinExpr1 xOperation",
-"xOdinExpr1 : LPAREN xOdinExpr1 RPAREN",
-"xRoot : LPAREN RPAREN",
-"xRoot : xWord",
-"xRoot : OBJTIDleaf",
-"xRoot : SLASH",
-"xRoot : SLASH xWord",
-"xRoot : COLON xFileType",
-"xRoot : QUESMK WORDTKleaf",
-"xRoot : WORDTKleaf QUESMK",
-"xRoot : PERCNT xWord",
-"xRoot : EQUALS xWord",
-"xOperation : PLUS xPrmType xOperation_1",
-"xOperation : PLUS LPAREN xOdinExpr RPAREN",
-"xOperation : COLON xFileType",
-"xOperation : COLON xFileType EQUALS COLON xFileType",
-"xOperation : SLASH xWord",
-"xOperation : SLASH",
-"xOperation : PERCNT xWord",
-"xOperation_1 : xPrmVals",
-"xOperation_1 :",
-"xPrmVals : EQUALS xPrmVals_1",
-"xPrmVals_1 : xPrmVals_1 xPrmVal",
-"xPrmVals_1 : xPrmVal",
-"xPrmVal : xWord",
-"xPrmVal : LPAREN xOdinExpr RPAREN",
-"xFileType : xWord",
-"xPrmType : xWord",
-"xWord : QUESMK",
-"xWord : WORDTKleaf",
-"xEPString : EXCLPT QUESMK",
-"xEPString : HOSTWDleaf",
-"WORDTKleaf : WORDTK",
-"HOSTWDleaf : HOSTWD",
-"OBJTIDleaf : OBJTID",
-
+/* OCRLINE[OCN] -- Source line where rule number OCN was defined.  */
+static const octype_uint8 ocrline[] =
+{
+       0,    33,    33,    37,    41,    44,    46,    48,    50,    52,
+      56,    60,    63,    65,    68,    70,    75,    81,    85,    89,
+      92,    97,   100,   104,   110,   114,   116,   119,   125,   128,
+     130,   132,   134,   137,   140,   143,   146,   149,   154,   158,
+     163,   166,   172,   175,   177,   183,   185,   189,   194,   197,
+     201,   203,   209,   213,   217,   219,   223,   226,   228,   230,
+     232
 };
 #endif
 
+/** Accessing symbol of state STATE.  */
+#define OC_ACCESSING_SYMBOL(State) OC_CAST (ocsymbol_kind_t, ocstos[State])
+
+#if OCDEBUG || 0
+/* The user-facing name of the symbol whose (internal) number is
+   OCSYMBOL.  No bounds checking.  */
+static const char *ocsymbol_name (ocsymbol_kind_t ocsymbol) OC_ATTRIBUTE_UNUSED;
+
+/* OCTNAME[SYMBOL-NUM] -- String name of the symbol SYMBOL-NUM.
+   First, the terminals, then, starting at OCNTOKENS, nonterminals.  */
+static const char *const octname[] =
+{
+  "\"end of file\"", "error", "\"invalid token\"", "WORDTK", "HOSTWD",
+  "OBJTID", "EXCLPT", "SCOLON", "QUESMK", "PERCNT", "LANGLE", "RANGLE",
+  "COLON", "LPAREN", "RPAREN", "PLUS", "EQUALS", "SLASH", "$accept",
+  "xCommand", "xCommand_1", "xSingleCommand", "xQuery", "xExecute",
+  "xCopy", "xVariable", "xOdinExpr", "xOdinExpr1", "xRoot", "xOperation",
+  "xOperation_1", "xPrmVals", "xPrmVals_1", "xPrmVal", "xFileType",
+  "xPrmType", "xWord", "xEPString", "WORDTKleaf", "HOSTWDleaf",
+  "OBJTIDleaf", OC_NULLPTR
+};
+
+static const char *
+ocsymbol_name (ocsymbol_kind_t ocsymbol)
+{
+  return octname[ocsymbol];
+}
+#endif
+
+#define OCPACT_NINF (-45)
+
+#define ocpact_value_is_default(Yyn) \
+  ((Yyn) == OCPACT_NINF)
+
+#define OCTABLE_NINF (-1)
+
+#define octable_value_is_error(Yyn) \
+  0
+
+/* OCPACT[STATE-NUM] -- Index in OCTABLE of the portion describing
+   STATE-NUM.  */
+static const octype_int8 ocpact[] =
+{
+      75,   -45,   -45,   -45,     9,    25,    35,    35,   105,    35,
+      35,     3,     7,   -45,   -45,   -45,   -45,   -45,    20,    47,
+     -45,    16,   -45,    15,   -45,   -45,   -45,    35,   -45,   -45,
+     -45,   -45,   -45,   -45,   -45,    27,   -45,   -45,   -45,   -45,
+      75,    55,   120,   120,   -45,    35,    35,     5,    35,   -45,
+      90,   -45,   -45,   -45,   -45,    35,   -45,   -45,   -45,    18,
+     120,    19,   -45,   -45,    41,   -45,   -45,   -45,    38,    43,
+      12,   -45,   -45,    35,   -45,   120,    12,   -45,   -45,   -45,
+      44,   -45,   -45
+};
+
+/* OCDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
+   Performed when OCTABLE does not specify something else to do.  Zero
+   means the default is an error.  */
+static const octype_int8 ocdefact[] =
+{
+       5,    58,    59,    60,    14,    54,     0,     0,     0,     0,
+      31,     0,     2,     4,     6,     7,     8,     9,    10,    24,
+      25,    29,    12,    55,    57,    30,    56,     0,    34,    54,
+      36,    55,    33,    52,    28,     0,    29,    37,    32,     1,
+       5,    13,    20,    19,    11,     0,     0,     0,    43,    26,
+      21,    35,    16,    27,     3,     0,    18,    17,    44,    40,
+       0,    46,    53,    42,     0,    22,    23,    15,     0,     0,
+       0,    38,    45,     0,    39,     0,    47,    49,    50,    41,
+       0,    48,    51
+};
+
+/* OCPGOTO[NTERM-NUM].  */
+static const octype_int8 ocpgoto[] =
+{
+     -45,   -45,   -45,    26,   -45,   -45,   -45,   -45,   -38,    52,
+     -45,   -45,   -45,   -45,   -45,   -24,   -44,   -45,     0,   -17,
+      11,   -45,   -45
+};
+
+/* OCDEFGOTO[NTERM-NUM].  */
+static const octype_int8 ocdefgoto[] =
+{
+       0,    11,    12,    13,    14,    15,    16,    17,    18,    19,
+      20,    49,    71,    72,    76,    77,    32,    61,    36,    22,
+      31,    24,    25
+};
+
+/* OCTABLE[OCPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
+   positive, shift that token.  If negative, reduce the rule whose
+   number is the opposite.  If OCTABLE_NINF, syntax error.  */
+static const octype_int8 octable[] =
+{
+      21,    44,    59,    39,    56,    57,    30,    33,     1,    37,
+      38,    23,    65,    29,    40,     1,    28,    26,    60,    23,
+      29,    27,    69,    51,     2,    75,    41,    52,     1,    79,
+      42,    43,    50,    66,    68,    70,    45,    80,     1,    46,
+      21,    53,    47,    29,    48,    58,    33,    62,    63,    26,
+      73,    23,    81,    23,    23,    67,    45,    74,    82,    46,
+      35,    23,    47,    26,    48,     0,    54,    55,     0,     0,
+      78,    23,     0,    33,     0,     0,    78,     0,     1,     2,
+       3,     4,     0,     5,     6,     0,    23,     7,     8,     0,
+       0,     9,    10,     1,     2,     3,    64,     0,     5,     6,
+       0,     0,     7,     8,     0,     0,     9,    10,     1,     0,
+       3,     0,     0,     5,     6,     0,     0,     7,     8,    34,
+       0,     9,    10,     1,     0,     3,     0,     0,     5,     6,
+       0,     0,     7,     8,     0,     0,     9,    10
+};
+
+static const octype_int8 occheck[] =
+{
+       0,    18,    46,     0,    42,    43,     6,     7,     3,     9,
+      10,     0,    50,     8,     7,     3,     5,     8,    13,     8,
+       8,    12,    60,     8,     4,    13,     6,    27,     3,    73,
+      10,    11,    16,    50,    16,    16,     9,    75,     3,    12,
+      40,    14,    15,     8,    17,    45,    46,    47,    48,     8,
+      12,    40,    76,    42,    43,    55,     9,    14,    14,    12,
+       8,    50,    15,     8,    17,    -1,    40,    12,    -1,    -1,
+      70,    60,    -1,    73,    -1,    -1,    76,    -1,     3,     4,
+       5,     6,    -1,     8,     9,    -1,    75,    12,    13,    -1,
+      -1,    16,    17,     3,     4,     5,     6,    -1,     8,     9,
+      -1,    -1,    12,    13,    -1,    -1,    16,    17,     3,    -1,
+       5,    -1,    -1,     8,     9,    -1,    -1,    12,    13,    14,
+      -1,    16,    17,     3,    -1,     5,    -1,    -1,     8,     9,
+      -1,    -1,    12,    13,    -1,    -1,    16,    17
+};
+
+/* OCSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
+   state STATE-NUM.  */
+static const octype_int8 ocstos[] =
+{
+       0,     3,     4,     5,     6,     8,     9,    12,    13,    16,
+      17,    19,    20,    21,    22,    23,    24,    25,    26,    27,
+      28,    36,    37,    38,    39,    40,     8,    12,    38,     8,
+      36,    38,    34,    36,    14,    27,    36,    36,    36,     0,
+       7,     6,    10,    11,    37,     9,    12,    15,    17,    29,
+      16,     8,    36,    14,    21,    12,    26,    26,    36,    34,
+      13,    35,    36,    36,     6,    26,    37,    36,    16,    26,
+      16,    30,    31,    12,    14,    13,    32,    33,    36,    34,
+      26,    33,    14
+};
+
+/* OCR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
+static const octype_int8 ocr1[] =
+{
+       0,    18,    19,    20,    20,    21,    21,    21,    21,    21,
+      22,    23,    23,    23,    23,    23,    23,    24,    24,    24,
+      24,    25,    25,    25,    26,    27,    27,    27,    28,    28,
+      28,    28,    28,    28,    28,    28,    28,    28,    29,    29,
+      29,    29,    29,    29,    29,    30,    30,    31,    32,    32,
+      33,    33,    34,    35,    36,    36,    37,    37,    38,    39,
+      40
+};
+
+/* OCR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
+static const octype_int8 ocr2[] =
+{
+       0,     2,     1,     3,     1,     0,     1,     1,     1,     1,
+       1,     2,     1,     2,     1,     4,     3,     3,     3,     2,
+       2,     2,     3,     3,     1,     1,     2,     3,     2,     1,
+       1,     1,     2,     2,     2,     2,     2,     2,     3,     4,
+       2,     5,     2,     1,     2,     1,     0,     2,     2,     1,
+       1,     3,     1,     1,     1,     1,     2,     1,     1,     1,
+       1
+};
+
+
+enum { OCENOMEM = -2 };
+
+#define ocerrok         (ocerrstatus = 0)
+#define occlearin       (occhar = OCEMPTY)
+
+#define OCACCEPT        goto ocacceptlab
+#define OCABORT         goto ocabortlab
+#define OCERROR         goto ocerrorlab
+#define OCNOMEM         goto ocexhaustedlab
+
+
+#define OCRECOVERING()  (!!ocerrstatus)
+
+#define OCBACKUP(Token, Value)                                    \
+  do                                                              \
+    if (occhar == OCEMPTY)                                        \
+      {                                                           \
+        occhar = (Token);                                         \
+        oclval = (Value);                                         \
+        OCPOPSTACK (oclen);                                       \
+        ocstate = *ocssp;                                         \
+        goto ocbackup;                                            \
+      }                                                           \
+    else                                                          \
+      {                                                           \
+        ocerror (OC_("syntax error: cannot back up")); \
+        OCERROR;                                                  \
+      }                                                           \
+  while (0)
+
+/* Backward compatibility with an undocumented macro.
+   Use OCerror or OCUNDEF. */
+#define OCERRCODE OCUNDEF
+
+
+/* Enable debugging if requested.  */
 #if OCDEBUG
-int      ocdebug;
-#endif
 
-int      ocerrflag;
-int      occhar;
-OCSTYPE  ocval;
-OCSTYPE  oclval;
-int      ocnerrs;
+# ifndef OCFPRINTF
+#  include <stdio.h> /* INFRINGES ON USER NAME SPACE */
+#  define OCFPRINTF fprintf
+# endif
 
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-OCLTYPE  ocloc; /* position returned by actions */
-OCLTYPE  oclloc; /* position from the lexer */
-#endif
-
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-#ifndef OCLLOC_DEFAULT
-#define OCLLOC_DEFAULT(loc, rhs, n) \
-do \
-{ \
-    if (n == 0) \
-    { \
-        (loc).first_line   = OCRHSLOC(rhs, 0).last_line; \
-        (loc).first_column = OCRHSLOC(rhs, 0).last_column; \
-        (loc).last_line    = OCRHSLOC(rhs, 0).last_line; \
-        (loc).last_column  = OCRHSLOC(rhs, 0).last_column; \
-    } \
-    else \
-    { \
-        (loc).first_line   = OCRHSLOC(rhs, 1).first_line; \
-        (loc).first_column = OCRHSLOC(rhs, 1).first_column; \
-        (loc).last_line    = OCRHSLOC(rhs, n).last_line; \
-        (loc).last_column  = OCRHSLOC(rhs, n).last_column; \
-    } \
+# define OCDPRINTF(Args)                        \
+do {                                            \
+  if (ocdebug)                                  \
+    OCFPRINTF Args;                             \
 } while (0)
-#endif /* OCLLOC_DEFAULT */
-#endif /* defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED) */
-#if OCBTYACC
 
-#ifndef OCLVQUEUEGROWTH
-#define OCLVQUEUEGROWTH 32
-#endif
-#endif /* OCBTYACC */
 
-/* define the initial stack-sizes */
-#ifdef OCSTACKSIZE
-#undef OCMAXDEPTH
-#define OCMAXDEPTH  OCSTACKSIZE
-#else
-#ifdef OCMAXDEPTH
-#define OCSTACKSIZE OCMAXDEPTH
-#else
-#define OCSTACKSIZE 10000
-#define OCMAXDEPTH  10000
-#endif
-#endif
 
-#ifndef OCINITSTACKSIZE
-#define OCINITSTACKSIZE 200
-#endif
 
-typedef struct {
-    unsigned stacksize;
-    OCINT    *s_base;
-    OCINT    *s_mark;
-    OCINT    *s_last;
-    OCSTYPE  *l_base;
-    OCSTYPE  *l_mark;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-    OCLTYPE  *p_base;
-    OCLTYPE  *p_mark;
-#endif
-} OCSTACKDATA;
-#if OCBTYACC
+# define OC_SYMBOL_PRINT(Title, Kind, Value, Location)                    \
+do {                                                                      \
+  if (ocdebug)                                                            \
+    {                                                                     \
+      OCFPRINTF (stderr, "%s ", Title);                                   \
+      oc_symbol_print (stderr,                                            \
+                  Kind, Value); \
+      OCFPRINTF (stderr, "\n");                                           \
+    }                                                                     \
+} while (0)
 
-struct OCParseState_s
-{
-    struct OCParseState_s *save;    /* Previously saved parser state */
-    OCSTACKDATA            ocstack; /* saved parser stack */
-    int                    state;   /* saved parser state */
-    int                    errflag; /* saved error recovery status */
-    int                    lexeme;  /* saved index of the conflict lexeme in the lexical queue */
-    OCINT                  ctry;    /* saved index in occtable[] for this conflict */
-};
-typedef struct OCParseState_s OCParseState;
-#endif /* OCBTYACC */
-/* variables for the parser stack */
-static OCSTACKDATA ocstack;
-#if OCBTYACC
 
-/* Current parser state */
-static OCParseState *ocps = 0;
-
-/* ocpath != NULL: do the full parse, starting at *ocpath parser state. */
-static OCParseState *ocpath = 0;
-
-/* Base of the lexical value queue */
-static OCSTYPE *oclvals = 0;
-
-/* Current position at lexical value queue */
-static OCSTYPE *oclvp = 0;
-
-/* End position of lexical value queue */
-static OCSTYPE *oclve = 0;
-
-/* The last allocated position at the lexical value queue */
-static OCSTYPE *oclvlim = 0;
-
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-/* Base of the lexical position queue */
-static OCLTYPE *oclpsns = 0;
-
-/* Current position at lexical position queue */
-static OCLTYPE *oclpp = 0;
-
-/* End position of lexical position queue */
-static OCLTYPE *oclpe = 0;
-
-/* The last allocated position at the lexical position queue */
-static OCLTYPE *oclplim = 0;
-#endif
-
-/* Current position at lexical token queue */
-static OCINT  *oclexp = 0;
-
-static OCINT  *oclexemes = 0;
-#endif /* OCBTYACC */
-
-/* For use in generated program */
-#define ocdepth (int)(ocstack.s_mark - ocstack.s_base)
-#if OCBTYACC
-#define octrial (ocps->save)
-#endif /* OCBTYACC */
-
-#if OCDEBUG
-#include <stdio.h>	/* needed for printf */
-#endif
-
-#include <stdlib.h>	/* needed for malloc, etc */
-#include <string.h>	/* needed for memset */
-
-/* allocate initial stack or double stack size, up to OCMAXDEPTH */
-static int ocgrowstack(OCSTACKDATA *data)
-{
-    int i;
-    unsigned newsize;
-    OCINT *newss;
-    OCSTYPE *newvs;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-    OCLTYPE *newps;
-#endif
-
-    if ((newsize = data->stacksize) == 0)
-        newsize = OCINITSTACKSIZE;
-    else if (newsize >= OCMAXDEPTH)
-        return OCENOMEM;
-    else if ((newsize *= 2) > OCMAXDEPTH)
-        newsize = OCMAXDEPTH;
-
-    i = (int) (data->s_mark - data->s_base);
-    newss = (OCINT *)realloc(data->s_base, newsize * sizeof(*newss));
-    if (newss == 0)
-        return OCENOMEM;
-
-    data->s_base = newss;
-    data->s_mark = newss + i;
-
-    newvs = (OCSTYPE *)realloc(data->l_base, newsize * sizeof(*newvs));
-    if (newvs == 0)
-        return OCENOMEM;
-
-    data->l_base = newvs;
-    data->l_mark = newvs + i;
-
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-    newps = (OCLTYPE *)realloc(data->p_base, newsize * sizeof(*newps));
-    if (newps == 0)
-        return OCENOMEM;
-
-    data->p_base = newps;
-    data->p_mark = newps + i;
-#endif
-
-    data->stacksize = newsize;
-    data->s_last = data->s_base + newsize - 1;
-
-#if OCDEBUG
-    if (ocdebug)
-        fprintf(stderr, "%sdebug: stack size increased to %d\n", OCPREFIX, newsize);
-#endif
-    return 0;
-}
-
-#if OCPURE || defined(OC_NO_LEAKS)
-static void ocfreestack(OCSTACKDATA *data)
-{
-    free(data->s_base);
-    free(data->l_base);
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-    free(data->p_base);
-#endif
-    memset(data, 0, sizeof(*data));
-}
-#else
-#define ocfreestack(data) /* nothing */
-#endif /* OCPURE || defined(OC_NO_LEAKS) */
-#if OCBTYACC
-
-static OCParseState *
-ocNewState(unsigned size)
-{
-    OCParseState *p = (OCParseState *) malloc(sizeof(OCParseState));
-    if (p == NULL) return NULL;
-
-    p->ocstack.stacksize = size;
-    if (size == 0)
-    {
-        p->ocstack.s_base = NULL;
-        p->ocstack.l_base = NULL;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-        p->ocstack.p_base = NULL;
-#endif
-        return p;
-    }
-    p->ocstack.s_base    = (OCINT *) malloc(size * sizeof(OCINT));
-    if (p->ocstack.s_base == NULL) return NULL;
-    p->ocstack.l_base    = (OCSTYPE *) malloc(size * sizeof(OCSTYPE));
-    if (p->ocstack.l_base == NULL) return NULL;
-    memset(p->ocstack.l_base, 0, size * sizeof(OCSTYPE));
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-    p->ocstack.p_base    = (OCLTYPE *) malloc(size * sizeof(OCLTYPE));
-    if (p->ocstack.p_base == NULL) return NULL;
-    memset(p->ocstack.p_base, 0, size * sizeof(OCLTYPE));
-#endif
-
-    return p;
-}
+/*-----------------------------------.
+| Print this symbol's value on OCO.  |
+`-----------------------------------*/
 
 static void
-ocFreeState(OCParseState *p)
+oc_symbol_value_print (FILE *oco,
+                       ocsymbol_kind_t ockind, OCSTYPE const * const ocvaluep)
 {
-    ocfreestack(&p->ocstack);
-    free(p);
+  FILE *ocoutput = oco;
+  OC_USE (ocoutput);
+  if (!ocvaluep)
+    return;
+  OC_IGNORE_MAYBE_UNINITIALIZED_BEGIN
+  OC_USE (ockind);
+  OC_IGNORE_MAYBE_UNINITIALIZED_END
 }
-#endif /* OCBTYACC */
 
-#define OCABORT  goto ocabort
-#define OCREJECT goto ocabort
-#define OCACCEPT goto ocaccept
-#define OCERROR  goto ocerrlab
-#if OCBTYACC
-#define OCVALID        do { if (ocps->save)            goto ocvalid; } while(0)
-#define OCVALID_NESTED do { if (ocps->save && \
-                                ocps->save->save == 0) goto ocvalid; } while(0)
-#endif /* OCBTYACC */
+
+/*---------------------------.
+| Print this symbol on OCO.  |
+`---------------------------*/
+
+static void
+oc_symbol_print (FILE *oco,
+                 ocsymbol_kind_t ockind, OCSTYPE const * const ocvaluep)
+{
+  OCFPRINTF (oco, "%s %s (",
+             ockind < OCNTOKENS ? "token" : "nterm", ocsymbol_name (ockind));
+
+  oc_symbol_value_print (oco, ockind, ocvaluep);
+  OCFPRINTF (oco, ")");
+}
+
+/*------------------------------------------------------------------.
+| oc_stack_print -- Print the state stack from its BOTTOM up to its |
+| TOP (included).                                                   |
+`------------------------------------------------------------------*/
+
+static void
+oc_stack_print (oc_state_t *ocbottom, oc_state_t *octop)
+{
+  OCFPRINTF (stderr, "Stack now");
+  for (; ocbottom <= octop; ocbottom++)
+    {
+      int ocbot = *ocbottom;
+      OCFPRINTF (stderr, " %d", ocbot);
+    }
+  OCFPRINTF (stderr, "\n");
+}
+
+# define OC_STACK_PRINT(Bottom, Top)                            \
+do {                                                            \
+  if (ocdebug)                                                  \
+    oc_stack_print ((Bottom), (Top));                           \
+} while (0)
+
+
+/*------------------------------------------------.
+| Report that the OCRULE is going to be reduced.  |
+`------------------------------------------------*/
+
+static void
+oc_reduce_print (oc_state_t *ocssp, OCSTYPE *ocvsp,
+                 int ocrule)
+{
+  int oclno = ocrline[ocrule];
+  int ocnrhs = ocr2[ocrule];
+  int oci;
+  OCFPRINTF (stderr, "Reducing stack by rule %d (line %d):\n",
+             ocrule - 1, oclno);
+  /* The symbols being reduced.  */
+  for (oci = 0; oci < ocnrhs; oci++)
+    {
+      OCFPRINTF (stderr, "   $%d = ", oci + 1);
+      oc_symbol_print (stderr,
+                       OC_ACCESSING_SYMBOL (+ocssp[oci + 1 - ocnrhs]),
+                       &ocvsp[(oci + 1) - (ocnrhs)]);
+      OCFPRINTF (stderr, "\n");
+    }
+}
+
+# define OC_REDUCE_PRINT(Rule)          \
+do {                                    \
+  if (ocdebug)                          \
+    oc_reduce_print (ocssp, ocvsp, Rule); \
+} while (0)
+
+/* Nonzero means print parse trace.  It is left uninitialized so that
+   multiple parsers can coexist.  */
+int ocdebug;
+#else /* !OCDEBUG */
+# define OCDPRINTF(Args) ((void) 0)
+# define OC_SYMBOL_PRINT(Title, Kind, Value, Location)
+# define OC_STACK_PRINT(Bottom, Top)
+# define OC_REDUCE_PRINT(Rule)
+#endif /* !OCDEBUG */
+
+
+/* OCINITDEPTH -- initial size of the parser's stacks.  */
+#ifndef OCINITDEPTH
+# define OCINITDEPTH 200
+#endif
+
+/* OCMAXDEPTH -- maximum size the stacks can grow to (effective only
+   if the built-in stack extension method is used).
+
+   Do not make this value too large; the results are undefined if
+   OCSTACK_ALLOC_MAXIMUM < OCSTACK_BYTES (OCMAXDEPTH)
+   evaluated with infinite-precision integer arithmetic.  */
+
+#ifndef OCMAXDEPTH
+# define OCMAXDEPTH 10000
+#endif
+
+
+
+
+
+
+/*-----------------------------------------------.
+| Release the memory associated to this symbol.  |
+`-----------------------------------------------*/
+
+static void
+ocdestruct (const char *ocmsg,
+            ocsymbol_kind_t ockind, OCSTYPE *ocvaluep)
+{
+  OC_USE (ocvaluep);
+  if (!ocmsg)
+    ocmsg = "Deleting";
+  OC_SYMBOL_PRINT (ocmsg, ockind, ocvaluep, oclocationp);
+
+  OC_IGNORE_MAYBE_UNINITIALIZED_BEGIN
+  OC_USE (ockind);
+  OC_IGNORE_MAYBE_UNINITIALIZED_END
+}
+
+
+/* Lookahead token kind.  */
+int occhar;
+
+/* The semantic value of the lookahead symbol.  */
+OCSTYPE oclval;
+/* Number of syntax errors so far.  */
+int ocnerrs;
+
+
+
+
+/*----------.
+| ocparse.  |
+`----------*/
 
 int
-OCPARSE_DECL()
+ocparse (void)
 {
-    int ocm, ocn, ocstate, ocresult;
-#if OCBTYACC
-    int ocnewerrflag;
-    OCParseState *ocerrctx = NULL;
-#endif /* OCBTYACC */
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-    OCLTYPE  ocerror_loc_range[3]; /* position of error start/end (0 unused) */
-#endif
-#if OCDEBUG
-    const char *ocs;
+    oc_state_fast_t ocstate = 0;
+    /* Number of tokens to shift before error messages enabled.  */
+    int ocerrstatus = 0;
 
-    if ((ocs = getenv("OCDEBUG")) != 0)
-    {
-        ocn = *ocs;
-        if (ocn >= '0' && ocn <= '9')
-            ocdebug = ocn - '0';
-    }
-    if (ocdebug)
-        fprintf(stderr, "%sdebug[<# of symbols on state stack>]\n", OCPREFIX);
-#endif
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-    memset(ocerror_loc_range, 0, sizeof(ocerror_loc_range));
-#endif
+    /* Refer to the stacks through separate pointers, to allow ocoverflow
+       to reallocate them elsewhere.  */
 
-#if OCBTYACC
-    ocps = ocNewState(0); if (ocps == 0) goto ocenomem;
-    ocps->save = 0;
-#endif /* OCBTYACC */
-    ocm = 0;
-    /* ocn is set below */
-    ocnerrs = 0;
-    ocerrflag = 0;
-    occhar = OCEMPTY;
-    ocstate = 0;
+    /* Their size.  */
+    OCPTRDIFF_T ocstacksize = OCINITDEPTH;
 
-#if OCPURE
-    memset(&ocstack, 0, sizeof(ocstack));
-#endif
+    /* The state stack: array, bottom, top.  */
+    oc_state_t ocssa[OCINITDEPTH];
+    oc_state_t *ocss = ocssa;
+    oc_state_t *ocssp = ocss;
 
-    if (ocstack.s_base == NULL && ocgrowstack(&ocstack) == OCENOMEM) goto ocoverflow;
-    ocstack.s_mark = ocstack.s_base;
-    ocstack.l_mark = ocstack.l_base;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-    ocstack.p_mark = ocstack.p_base;
-#endif
-    ocstate = 0;
-    *ocstack.s_mark = 0;
+    /* The semantic value stack: array, bottom, top.  */
+    OCSTYPE ocvsa[OCINITDEPTH];
+    OCSTYPE *ocvs = ocvsa;
+    OCSTYPE *ocvsp = ocvs;
 
-ocloop:
-    if ((ocn = ocdefred[ocstate]) != 0) goto ocreduce;
-    if (occhar < 0)
-    {
-#if OCBTYACC
-        do {
-        if (oclvp < oclve)
-        {
-            /* we're currently re-reading tokens */
-            oclval = *oclvp++;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-            oclloc = *oclpp++;
-#endif
-            occhar = *oclexp++;
-            break;
-        }
-        if (ocps->save)
-        {
-            /* in trial mode; save scanner results for future parse attempts */
-            if (oclvp == oclvlim)
-            {   /* Enlarge lexical value queue */
-                size_t p = (size_t) (oclvp - oclvals);
-                size_t s = (size_t) (oclvlim - oclvals);
+  int ocn;
+  /* The return value of ocparse.  */
+  int ocresult;
+  /* Lookahead symbol kind.  */
+  ocsymbol_kind_t octoken = OCSYMBOL_OCEMPTY;
+  /* The variables used to return semantic value and location from the
+     action routines.  */
+  OCSTYPE ocval;
 
-                s += OCLVQUEUEGROWTH;
-                if ((oclexemes = (OCINT *)realloc(oclexemes, s * sizeof(OCINT))) == NULL) goto ocenomem;
-                if ((oclvals   = (OCSTYPE *)realloc(oclvals, s * sizeof(OCSTYPE))) == NULL) goto ocenomem;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-                if ((oclpsns   = (OCLTYPE *)realloc(oclpsns, s * sizeof(OCLTYPE))) == NULL) goto ocenomem;
-#endif
-                oclvp   = oclve = oclvals + p;
-                oclvlim = oclvals + s;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-                oclpp   = oclpe = oclpsns + p;
-                oclplim = oclpsns + s;
-#endif
-                oclexp  = oclexemes + p;
-            }
-            *oclexp = (OCINT) OCLEX;
-            *oclvp++ = oclval;
-            oclve++;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-            *oclpp++ = oclloc;
-            oclpe++;
-#endif
-            occhar = *oclexp++;
-            break;
-        }
-        /* normal operation, no conflict encountered */
-#endif /* OCBTYACC */
-        occhar = OCLEX;
-#if OCBTYACC
-        } while (0);
-#endif /* OCBTYACC */
-        if (occhar < 0) occhar = OCEOF;
-#if OCDEBUG
-        if (ocdebug)
-        {
-            if ((ocs = ocname[OCTRANSLATE(occhar)]) == NULL) ocs = ocname[OCUNDFTOKEN];
-            fprintf(stderr, "%s[%d]: state %d, reading token %d (%s)",
-                            OCDEBUGSTR, ocdepth, ocstate, occhar, ocs);
-#ifdef OCSTYPE_TOSTRING
-#if OCBTYACC
-            if (!octrial)
-#endif /* OCBTYACC */
-                fprintf(stderr, " <%s>", OCSTYPE_TOSTRING(occhar, oclval));
-#endif
-            fputc('\n', stderr);
-        }
-#endif
-    }
-#if OCBTYACC
 
-    /* Do we have a conflict? */
-    if (((ocn = occindex[ocstate]) != 0) && (ocn += occhar) >= 0 &&
-        ocn <= OCTABLESIZE && occheck[ocn] == (OCINT) occhar)
-    {
-        OCINT ctry;
 
-        if (ocpath)
-        {
-            OCParseState *save;
-#if OCDEBUG
-            if (ocdebug)
-                fprintf(stderr, "%s[%d]: CONFLICT in state %d: following successful trial parse\n",
-                                OCDEBUGSTR, ocdepth, ocstate);
-#endif
-            /* Switch to the next conflict context */
-            save = ocpath;
-            ocpath = save->save;
-            save->save = NULL;
-            ctry = save->ctry;
-            if (save->state != ocstate) OCABORT;
-            ocFreeState(save);
+#define OCPOPSTACK(N)   (ocvsp -= (N), ocssp -= (N))
 
-        }
-        else
-        {
+  /* The number of symbols on the RHS of the reduced rule.
+     Keep to zero when no symbol should be popped.  */
+  int oclen = 0;
 
-            /* Unresolved conflict - start/continue trial parse */
-            OCParseState *save;
-#if OCDEBUG
-            if (ocdebug)
-            {
-                fprintf(stderr, "%s[%d]: CONFLICT in state %d. ", OCDEBUGSTR, ocdepth, ocstate);
-                if (ocps->save)
-                    fputs("ALREADY in conflict, continuing trial parse.\n", stderr);
-                else
-                    fputs("Starting trial parse.\n", stderr);
-            }
-#endif
-            save                  = ocNewState((unsigned)(ocstack.s_mark - ocstack.s_base + 1));
-            if (save == NULL) goto ocenomem;
-            save->save            = ocps->save;
-            save->state           = ocstate;
-            save->errflag         = ocerrflag;
-            save->ocstack.s_mark  = save->ocstack.s_base + (ocstack.s_mark - ocstack.s_base);
-            memcpy (save->ocstack.s_base, ocstack.s_base, (size_t) (ocstack.s_mark - ocstack.s_base + 1) * sizeof(OCINT));
-            save->ocstack.l_mark  = save->ocstack.l_base + (ocstack.l_mark - ocstack.l_base);
-            memcpy (save->ocstack.l_base, ocstack.l_base, (size_t) (ocstack.l_mark - ocstack.l_base + 1) * sizeof(OCSTYPE));
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-            save->ocstack.p_mark  = save->ocstack.p_base + (ocstack.p_mark - ocstack.p_base);
-            memcpy (save->ocstack.p_base, ocstack.p_base, (size_t) (ocstack.p_mark - ocstack.p_base + 1) * sizeof(OCLTYPE));
-#endif
-            ctry                  = octable[ocn];
-            if (occtable[ctry] == -1)
-            {
-#if OCDEBUG
-                if (ocdebug && occhar >= OCEOF)
-                    fprintf(stderr, "%s[%d]: backtracking 1 token\n", OCDEBUGSTR, ocdepth);
-#endif
-                ctry++;
-            }
-            save->ctry = ctry;
-            if (ocps->save == NULL)
-            {
-                /* If this is a first conflict in the stack, start saving lexemes */
-                if (!oclexemes)
-                {
-                    oclexemes = (OCINT *) malloc((OCLVQUEUEGROWTH) * sizeof(OCINT));
-                    if (oclexemes == NULL) goto ocenomem;
-                    oclvals   = (OCSTYPE *) malloc((OCLVQUEUEGROWTH) * sizeof(OCSTYPE));
-                    if (oclvals == NULL) goto ocenomem;
-                    oclvlim   = oclvals + OCLVQUEUEGROWTH;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-                    oclpsns   = (OCLTYPE *) malloc((OCLVQUEUEGROWTH) * sizeof(OCLTYPE));
-                    if (oclpsns == NULL) goto ocenomem;
-                    oclplim   = oclpsns + OCLVQUEUEGROWTH;
-#endif
-                }
-                if (oclvp == oclve)
-                {
-                    oclvp  = oclve = oclvals;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-                    oclpp  = oclpe = oclpsns;
-#endif
-                    oclexp = oclexemes;
-                    if (occhar >= OCEOF)
-                    {
-                        *oclve++ = oclval;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-                        *oclpe++ = oclloc;
-#endif
-                        *oclexp  = (OCINT) occhar;
-                        occhar   = OCEMPTY;
-                    }
-                }
-            }
-            if (occhar >= OCEOF)
-            {
-                oclvp--;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-                oclpp--;
-#endif
-                oclexp--;
-                occhar = OCEMPTY;
-            }
-            save->lexeme = (int) (oclvp - oclvals);
-            ocps->save   = save;
-        }
-        if (octable[ocn] == ctry)
-        {
-#if OCDEBUG
-            if (ocdebug)
-                fprintf(stderr, "%s[%d]: state %d, shifting to state %d\n",
-                                OCDEBUGSTR, ocdepth, ocstate, occtable[ctry]);
-#endif
-            if (occhar < 0)
-            {
-                oclvp++;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-                oclpp++;
-#endif
-                oclexp++;
-            }
-            if (ocstack.s_mark >= ocstack.s_last && ocgrowstack(&ocstack) == OCENOMEM)
-                goto ocoverflow;
-            ocstate = occtable[ctry];
-            *++ocstack.s_mark = (OCINT) ocstate;
-            *++ocstack.l_mark = oclval;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-            *++ocstack.p_mark = oclloc;
-#endif
-            occhar  = OCEMPTY;
-            if (ocerrflag > 0) --ocerrflag;
-            goto ocloop;
-        }
-        else
-        {
-            ocn = occtable[ctry];
-            goto ocreduce;
-        }
-    } /* End of code dealing with conflicts */
-#endif /* OCBTYACC */
-    if (((ocn = ocsindex[ocstate]) != 0) && (ocn += occhar) >= 0 &&
-            ocn <= OCTABLESIZE && occheck[ocn] == (OCINT) occhar)
-    {
-#if OCDEBUG
-        if (ocdebug)
-            fprintf(stderr, "%s[%d]: state %d, shifting to state %d\n",
-                            OCDEBUGSTR, ocdepth, ocstate, octable[ocn]);
-#endif
-        if (ocstack.s_mark >= ocstack.s_last && ocgrowstack(&ocstack) == OCENOMEM) goto ocoverflow;
-        ocstate = octable[ocn];
-        *++ocstack.s_mark = octable[ocn];
-        *++ocstack.l_mark = oclval;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-        *++ocstack.p_mark = oclloc;
-#endif
-        occhar = OCEMPTY;
-        if (ocerrflag > 0)  --ocerrflag;
-        goto ocloop;
-    }
-    if (((ocn = ocrindex[ocstate]) != 0) && (ocn += occhar) >= 0 &&
-            ocn <= OCTABLESIZE && occheck[ocn] == (OCINT) occhar)
-    {
-        ocn = octable[ocn];
-        goto ocreduce;
-    }
-    if (ocerrflag != 0) goto ocinrecovery;
-#if OCBTYACC
+  OCDPRINTF ((stderr, "Starting parse\n"));
 
-    ocnewerrflag = 1;
-    goto ocerrhandler;
-    goto ocerrlab; /* redundant goto avoids 'unused label' warning */
+  occhar = OCEMPTY; /* Cause a token to be read.  */
 
-ocerrlab:
-    /* explicit OCERROR from an action -- pop the rhs of the rule reduced
-     * before looking for error recovery */
-    ocstack.s_mark -= ocm;
-    ocstate = *ocstack.s_mark;
-    ocstack.l_mark -= ocm;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-    ocstack.p_mark -= ocm;
-#endif
+  goto ocsetstate;
 
-    ocnewerrflag = 0;
-ocerrhandler:
-    while (ocps->save)
-    {
-        int ctry;
-        OCParseState *save = ocps->save;
-#if OCDEBUG
-        if (ocdebug)
-            fprintf(stderr, "%s[%d]: ERROR in state %d, CONFLICT BACKTRACKING to state %d, %d tokens\n",
-                            OCDEBUGSTR, ocdepth, ocstate, ocps->save->state,
-                    (int)(oclvp - oclvals - ocps->save->lexeme));
-#endif
-        /* Memorize most forward-looking error state in case it's really an error. */
-        if (ocerrctx == NULL || ocerrctx->lexeme < oclvp - oclvals)
-        {
-            /* Free old saved error context state */
-            if (ocerrctx) ocFreeState(ocerrctx);
-            /* Create and fill out new saved error context state */
-            ocerrctx                 = ocNewState((unsigned)(ocstack.s_mark - ocstack.s_base + 1));
-            if (ocerrctx == NULL) goto ocenomem;
-            ocerrctx->save           = ocps->save;
-            ocerrctx->state          = ocstate;
-            ocerrctx->errflag        = ocerrflag;
-            ocerrctx->ocstack.s_mark = ocerrctx->ocstack.s_base + (ocstack.s_mark - ocstack.s_base);
-            memcpy (ocerrctx->ocstack.s_base, ocstack.s_base, (size_t) (ocstack.s_mark - ocstack.s_base + 1) * sizeof(OCINT));
-            ocerrctx->ocstack.l_mark = ocerrctx->ocstack.l_base + (ocstack.l_mark - ocstack.l_base);
-            memcpy (ocerrctx->ocstack.l_base, ocstack.l_base, (size_t) (ocstack.l_mark - ocstack.l_base + 1) * sizeof(OCSTYPE));
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-            ocerrctx->ocstack.p_mark = ocerrctx->ocstack.p_base + (ocstack.p_mark - ocstack.p_base);
-            memcpy (ocerrctx->ocstack.p_base, ocstack.p_base, (size_t) (ocstack.p_mark - ocstack.p_base + 1) * sizeof(OCLTYPE));
-#endif
-            ocerrctx->lexeme         = (int) (oclvp - oclvals);
-        }
-        oclvp          = oclvals   + save->lexeme;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-        oclpp          = oclpsns   + save->lexeme;
-#endif
-        oclexp         = oclexemes + save->lexeme;
-        occhar         = OCEMPTY;
-        ocstack.s_mark = ocstack.s_base + (save->ocstack.s_mark - save->ocstack.s_base);
-        memcpy (ocstack.s_base, save->ocstack.s_base, (size_t) (ocstack.s_mark - ocstack.s_base + 1) * sizeof(OCINT));
-        ocstack.l_mark = ocstack.l_base + (save->ocstack.l_mark - save->ocstack.l_base);
-        memcpy (ocstack.l_base, save->ocstack.l_base, (size_t) (ocstack.l_mark - ocstack.l_base + 1) * sizeof(OCSTYPE));
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-        ocstack.p_mark = ocstack.p_base + (save->ocstack.p_mark - save->ocstack.p_base);
-        memcpy (ocstack.p_base, save->ocstack.p_base, (size_t) (ocstack.p_mark - ocstack.p_base + 1) * sizeof(OCLTYPE));
-#endif
-        ctry           = ++save->ctry;
-        ocstate        = save->state;
-        /* We tried shift, try reduce now */
-        if ((ocn = occtable[ctry]) >= 0) goto ocreduce;
-        ocps->save     = save->save;
-        save->save     = NULL;
-        ocFreeState(save);
 
-        /* Nothing left on the stack -- error */
-        if (!ocps->save)
-        {
-#if OCDEBUG
-            if (ocdebug)
-                fprintf(stderr, "%sdebug[%d,trial]: trial parse FAILED, entering ERROR mode\n",
-                                OCPREFIX, ocdepth);
-#endif
-            /* Restore state as it was in the most forward-advanced error */
-            oclvp          = oclvals   + ocerrctx->lexeme;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-            oclpp          = oclpsns   + ocerrctx->lexeme;
-#endif
-            oclexp         = oclexemes + ocerrctx->lexeme;
-            occhar         = oclexp[-1];
-            oclval         = oclvp[-1];
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-            oclloc         = oclpp[-1];
-#endif
-            ocstack.s_mark = ocstack.s_base + (ocerrctx->ocstack.s_mark - ocerrctx->ocstack.s_base);
-            memcpy (ocstack.s_base, ocerrctx->ocstack.s_base, (size_t) (ocstack.s_mark - ocstack.s_base + 1) * sizeof(OCINT));
-            ocstack.l_mark = ocstack.l_base + (ocerrctx->ocstack.l_mark - ocerrctx->ocstack.l_base);
-            memcpy (ocstack.l_base, ocerrctx->ocstack.l_base, (size_t) (ocstack.l_mark - ocstack.l_base + 1) * sizeof(OCSTYPE));
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-            ocstack.p_mark = ocstack.p_base + (ocerrctx->ocstack.p_mark - ocerrctx->ocstack.p_base);
-            memcpy (ocstack.p_base, ocerrctx->ocstack.p_base, (size_t) (ocstack.p_mark - ocstack.p_base + 1) * sizeof(OCLTYPE));
-#endif
-            ocstate        = ocerrctx->state;
-            ocFreeState(ocerrctx);
-            ocerrctx       = NULL;
-        }
-        ocnewerrflag = 1;
-    }
-    if (ocnewerrflag == 0) goto ocinrecovery;
-#endif /* OCBTYACC */
+/*------------------------------------------------------------.
+| ocnewstate -- push a new state, which is found in ocstate.  |
+`------------------------------------------------------------*/
+ocnewstate:
+  /* In all cases, when you get here, the value and location stacks
+     have just been pushed.  So pushing a state here evens the stacks.  */
+  ocssp++;
 
-    OCERROR_CALL("syntax error");
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-    ocerror_loc_range[1] = oclloc; /* lookahead position is error start position */
-#endif
 
-#if !OCBTYACC
-    goto ocerrlab; /* redundant goto avoids 'unused label' warning */
-ocerrlab:
-#endif
-    ++ocnerrs;
+/*--------------------------------------------------------------------.
+| ocsetstate -- set current state (the top of the stack) to ocstate.  |
+`--------------------------------------------------------------------*/
+ocsetstate:
+  OCDPRINTF ((stderr, "Entering state %d\n", ocstate));
+  OC_ASSERT (0 <= ocstate && ocstate < OCNSTATES);
+  OC_IGNORE_USELESS_CAST_BEGIN
+  *ocssp = OC_CAST (oc_state_t, ocstate);
+  OC_IGNORE_USELESS_CAST_END
+  OC_STACK_PRINT (ocss, ocssp);
 
-ocinrecovery:
-    if (ocerrflag < 3)
-    {
-        ocerrflag = 3;
-        for (;;)
-        {
-            if (((ocn = ocsindex[*ocstack.s_mark]) != 0) && (ocn += OCERRCODE) >= 0 &&
-                    ocn <= OCTABLESIZE && occheck[ocn] == (OCINT) OCERRCODE)
-            {
-#if OCDEBUG
-                if (ocdebug)
-                    fprintf(stderr, "%s[%d]: state %d, error recovery shifting to state %d\n",
-                                    OCDEBUGSTR, ocdepth, *ocstack.s_mark, octable[ocn]);
-#endif
-                if (ocstack.s_mark >= ocstack.s_last && ocgrowstack(&ocstack) == OCENOMEM) goto ocoverflow;
-                ocstate = octable[ocn];
-                *++ocstack.s_mark = octable[ocn];
-                *++ocstack.l_mark = oclval;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-                /* lookahead position is error end position */
-                ocerror_loc_range[2] = oclloc;
-                OCLLOC_DEFAULT(ocloc, ocerror_loc_range, 2); /* position of error span */
-                *++ocstack.p_mark = ocloc;
-#endif
-                goto ocloop;
-            }
-            else
-            {
-#if OCDEBUG
-                if (ocdebug)
-                    fprintf(stderr, "%s[%d]: error recovery discarding state %d\n",
-                                    OCDEBUGSTR, ocdepth, *ocstack.s_mark);
-#endif
-                if (ocstack.s_mark <= ocstack.s_base) goto ocabort;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-                /* the current TOS position is the error start position */
-                ocerror_loc_range[1] = *ocstack.p_mark;
-#endif
-#if defined(OCDESTRUCT_CALL)
-#if OCBTYACC
-                if (!octrial)
-#endif /* OCBTYACC */
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-                    OCDESTRUCT_CALL("error: discarding state",
-                                    ocstos[*ocstack.s_mark], ocstack.l_mark, ocstack.p_mark);
+  if (ocss + ocstacksize - 1 <= ocssp)
+#if !defined ocoverflow && !defined OCSTACK_RELOCATE
+    OCNOMEM;
 #else
-                    OCDESTRUCT_CALL("error: discarding state",
-                                    ocstos[*ocstack.s_mark], ocstack.l_mark);
-#endif /* defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED) */
-#endif /* defined(OCDESTRUCT_CALL) */
-                --ocstack.s_mark;
-                --ocstack.l_mark;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-                --ocstack.p_mark;
-#endif
-            }
-        }
-    }
-    else
     {
-        if (occhar == OCEOF) goto ocabort;
-#if OCDEBUG
-        if (ocdebug)
-        {
-            if ((ocs = ocname[OCTRANSLATE(occhar)]) == NULL) ocs = ocname[OCUNDFTOKEN];
-            fprintf(stderr, "%s[%d]: state %d, error recovery discarding token %d (%s)\n",
-                            OCDEBUGSTR, ocdepth, ocstate, occhar, ocs);
-        }
-#endif
-#if defined(OCDESTRUCT_CALL)
-#if OCBTYACC
-        if (!octrial)
-#endif /* OCBTYACC */
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-            OCDESTRUCT_CALL("error: discarding token", occhar, &oclval, &oclloc);
-#else
-            OCDESTRUCT_CALL("error: discarding token", occhar, &oclval);
-#endif /* defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED) */
-#endif /* defined(OCDESTRUCT_CALL) */
-        occhar = OCEMPTY;
-        goto ocloop;
+      /* Get the current used size of the three stacks, in elements.  */
+      OCPTRDIFF_T ocsize = ocssp - ocss + 1;
+
+# if defined ocoverflow
+      {
+        /* Give user a chance to reallocate the stack.  Use copies of
+           these so that the &'s don't force the real ones into
+           memory.  */
+        oc_state_t *ocss1 = ocss;
+        OCSTYPE *ocvs1 = ocvs;
+
+        /* Each stack pointer address is followed by the size of the
+           data in use in that stack, in bytes.  This used to be a
+           conditional around just the two extra args, but that might
+           be undefined if ocoverflow is a macro.  */
+        ocoverflow (OC_("memory exhausted"),
+                    &ocss1, ocsize * OCSIZEOF (*ocssp),
+                    &ocvs1, ocsize * OCSIZEOF (*ocvsp),
+                    &ocstacksize);
+        ocss = ocss1;
+        ocvs = ocvs1;
+      }
+# else /* defined OCSTACK_RELOCATE */
+      /* Extend the stack our own way.  */
+      if (OCMAXDEPTH <= ocstacksize)
+        OCNOMEM;
+      ocstacksize *= 2;
+      if (OCMAXDEPTH < ocstacksize)
+        ocstacksize = OCMAXDEPTH;
+
+      {
+        oc_state_t *ocss1 = ocss;
+        union ocalloc *ocptr =
+          OC_CAST (union ocalloc *,
+                   OCSTACK_ALLOC (OC_CAST (OCSIZE_T, OCSTACK_BYTES (ocstacksize))));
+        if (! ocptr)
+          OCNOMEM;
+        OCSTACK_RELOCATE (ocss_alloc, ocss);
+        OCSTACK_RELOCATE (ocvs_alloc, ocvs);
+#  undef OCSTACK_RELOCATE
+        if (ocss1 != ocssa)
+          OCSTACK_FREE (ocss1);
+      }
+# endif
+
+      ocssp = ocss + ocsize - 1;
+      ocvsp = ocvs + ocsize - 1;
+
+      OC_IGNORE_USELESS_CAST_BEGIN
+      OCDPRINTF ((stderr, "Stack size increased to %ld\n",
+                  OC_CAST (long, ocstacksize)));
+      OC_IGNORE_USELESS_CAST_END
+
+      if (ocss + ocstacksize - 1 <= ocssp)
+        OCABORT;
+    }
+#endif /* !defined ocoverflow && !defined OCSTACK_RELOCATE */
+
+
+  if (ocstate == OCFINAL)
+    OCACCEPT;
+
+  goto ocbackup;
+
+
+/*-----------.
+| ocbackup.  |
+`-----------*/
+ocbackup:
+  /* Do appropriate processing given the current state.  Read a
+     lookahead token if we need one and don't already have one.  */
+
+  /* First try to decide what to do without reference to lookahead token.  */
+  ocn = ocpact[ocstate];
+  if (ocpact_value_is_default (ocn))
+    goto ocdefault;
+
+  /* Not known => get a lookahead token if don't already have one.  */
+
+  /* OCCHAR is either empty, or end-of-input, or a valid lookahead.  */
+  if (occhar == OCEMPTY)
+    {
+      OCDPRINTF ((stderr, "Reading a token\n"));
+      occhar = oclex ();
     }
 
+  if (occhar <= OCEOF)
+    {
+      occhar = OCEOF;
+      octoken = OCSYMBOL_OCEOF;
+      OCDPRINTF ((stderr, "Now at end of input.\n"));
+    }
+  else if (occhar == OCerror)
+    {
+      /* The scanner already issued an error message, process directly
+         to error recovery.  But do not keep the error token as
+         lookahead, it is too special and may lead us to an endless
+         loop in error recovery. */
+      occhar = OCUNDEF;
+      octoken = OCSYMBOL_OCerror;
+      goto ocerrlab1;
+    }
+  else
+    {
+      octoken = OCTRANSLATE (occhar);
+      OC_SYMBOL_PRINT ("Next token is", octoken, &oclval, &oclloc);
+    }
+
+  /* If the proper action on seeing token OCTOKEN is to reduce or to
+     detect an error, take that action.  */
+  ocn += octoken;
+  if (ocn < 0 || OCLAST < ocn || occheck[ocn] != octoken)
+    goto ocdefault;
+  ocn = octable[ocn];
+  if (ocn <= 0)
+    {
+      if (octable_value_is_error (ocn))
+        goto ocerrlab;
+      ocn = -ocn;
+      goto ocreduce;
+    }
+
+  /* Count tokens shifted since error; after three, turn off error
+     status.  */
+  if (ocerrstatus)
+    ocerrstatus--;
+
+  /* Shift the lookahead token.  */
+  OC_SYMBOL_PRINT ("Shifting", octoken, &oclval, &oclloc);
+  ocstate = ocn;
+  OC_IGNORE_MAYBE_UNINITIALIZED_BEGIN
+  *++ocvsp = oclval;
+  OC_IGNORE_MAYBE_UNINITIALIZED_END
+
+  /* Discard the shifted token.  */
+  occhar = OCEMPTY;
+  goto ocnewstate;
+
+
+/*-----------------------------------------------------------.
+| ocdefault -- do the default action for the current state.  |
+`-----------------------------------------------------------*/
+ocdefault:
+  ocn = ocdefact[ocstate];
+  if (ocn == 0)
+    goto ocerrlab;
+  goto ocreduce;
+
+
+/*-----------------------------.
+| ocreduce -- do a reduction.  |
+`-----------------------------*/
 ocreduce:
-    ocm = oclen[ocn];
-#if OCDEBUG
-    if (ocdebug)
-    {
-        fprintf(stderr, "%s[%d]: state %d, reducing by rule %d (%s)",
-                        OCDEBUGSTR, ocdepth, ocstate, ocn, ocrule[ocn]);
-#ifdef OCSTYPE_TOSTRING
-#if OCBTYACC
-        if (!octrial)
-#endif /* OCBTYACC */
-            if (ocm > 0)
-            {
-                int i;
-                fputc('<', stderr);
-                for (i = ocm; i > 0; i--)
-                {
-                    if (i != ocm) fputs(", ", stderr);
-                    fputs(OCSTYPE_TOSTRING(ocstos[ocstack.s_mark[1-i]],
-                                           ocstack.l_mark[1-i]), stderr);
-                }
-                fputc('>', stderr);
-            }
-#endif
-        fputc('\n', stderr);
-    }
-#endif
-    if (ocm > 0)
-        ocval = ocstack.l_mark[1-ocm];
-    else
-        memset(&ocval, 0, sizeof ocval);
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
+  /* ocn is the number of a rule to reduce with.  */
+  oclen = ocr2[ocn];
 
-    /* Perform position reduction */
-    memset(&ocloc, 0, sizeof(ocloc));
-#if OCBTYACC
-    if (!octrial)
-#endif /* OCBTYACC */
-    {
-        OCLLOC_DEFAULT(ocloc, &ocstack.p_mark[-ocm], ocm);
-        /* just in case OCERROR is invoked within the action, save
-           the start of the rhs as the error start position */
-        ocerror_loc_range[1] = ocstack.p_mark[1-ocm];
-    }
-#endif
+  /* If OCLEN is nonzero, implement the default value of the action:
+     '$$ = $1'.
 
-    switch (ocn)
+     Otherwise, the following line sets OCVAL to garbage.
+     This behavior is undocumented and Bison
+     users should not rely upon it.  Assigning to OCVAL
+     unconditionally makes the parser a bit smaller, and it avoids a
+     GCC warning that OCVAL may be used uninitialized.  */
+  ocval = ocvsp[1-oclen];
+
+
+  OC_REDUCE_PRINT (ocn);
+  switch (ocn)
     {
-case 1:
-	{Action(-1,1);}
-break;
-case 2:
-	{Action(0,2);}
-break;
-case 4:
-	{Action(2,0);}
-break;
-case 10:
-	{Action(7,2);}
-break;
-case 11:
-	{Action(7,1);}
-break;
-case 12:
-	{Action(7,1);}
-break;
-case 13:
-	{Action(7,0);}
-break;
-case 14:
-	{Action(8,2);}
-break;
-case 15:
-	{Action(8,1);}
-break;
-case 16:
-	{Action(4,2);}
-break;
-case 17:
-	{Action(6,2);}
-break;
-case 18:
-	{Action(3,1);}
-break;
-case 19:
-	{Action(5,1);}
-break;
-case 20:
-	{Action(9,1);}
-break;
-case 21:
-	{Action(10,2);}
-break;
-case 22:
-	{Action(10,2);}
-break;
-case 23:
-	{Action(15,1);}
-break;
-case 25:
-	{Action(0,2);}
-break;
-case 27:
-	{Action(16,0);}
-break;
-case 30:
-	{Action(17,0);}
-break;
-case 31:
-	{Action(18,1);}
-break;
-case 32:
-	{Action(21,1);}
-break;
-case 33:
-	{Action(14,1);}
-break;
-case 34:
-	{Action(13,1);}
-break;
-case 35:
-	{Action(25,1);}
-break;
-case 36:
-	{Action(29,1);}
-break;
-case 37:
-	{Action(19,2);}
-break;
-case 38:
-	{Action(20,1);}
-break;
-case 39:
-	{Action(21,1);}
-break;
-case 40:
-	{Action(22,2);}
-break;
-case 41:
-	{Action(23,1);}
-break;
-case 42:
-	{Action(24,0);}
-break;
-case 43:
-	{Action(25,1);}
-break;
-case 45:
-	{Action(0,0);}
-break;
-case 46:
-	{Action(27,1);}
-break;
-case 47:
-	{Action(0,2);}
-break;
-case 50:
-	{Action(28,1);}
-break;
-case 53:
-	{Action(11,0);}
-break;
-case 55:
-	{Action(12,0);}
-break;
-case 57:
-	{Action(31,-1);}
-break;
-case 58:
-	{Action(30,-1);}
-break;
-case 59:
-	{Action(32,-1);}
-break;
-    default:
-        break;
+  case 2: /* xCommand: xCommand_1  */
+               {Action(-1,1);}
+    break;
+
+  case 3: /* xCommand_1: xCommand_1 SCOLON xSingleCommand  */
+                   {Action(0,2);}
+    break;
+
+  case 5: /* xSingleCommand: %empty  */
+ {Action(2,0);}
+    break;
+
+  case 11: /* xExecute: xOdinExpr xEPString  */
+              {Action(7,2);}
+    break;
+
+  case 12: /* xExecute: xEPString  */
+              {Action(7,1);}
+    break;
+
+  case 13: /* xExecute: xOdinExpr EXCLPT  */
+           {Action(7,1);}
+    break;
+
+  case 14: /* xExecute: EXCLPT  */
+           {Action(7,0);}
+    break;
+
+  case 15: /* xExecute: xOdinExpr EXCLPT COLON xWord  */
+          {Action(8,2);}
+    break;
+
+  case 16: /* xExecute: EXCLPT COLON xWord  */
+          {Action(8,1);}
+    break;
+
+  case 17: /* xCopy: xOdinExpr RANGLE xOdinExpr  */
+              {Action(4,2);}
+    break;
+
+  case 18: /* xCopy: xOdinExpr LANGLE xOdinExpr  */
+              {Action(6,2);}
+    break;
+
+  case 19: /* xCopy: xOdinExpr RANGLE  */
+           {Action(3,1);}
+    break;
+
+  case 20: /* xCopy: xOdinExpr LANGLE  */
+           {Action(5,1);}
+    break;
+
+  case 21: /* xVariable: xWord EQUALS  */
+           {Action(9,1);}
+    break;
+
+  case 22: /* xVariable: xWord EQUALS xOdinExpr  */
+              {Action(10,2);}
+    break;
+
+  case 23: /* xVariable: xWord EQUALS xEPString  */
+              {Action(10,2);}
+    break;
+
+  case 24: /* xOdinExpr: xOdinExpr1  */
+               {Action(15,1);}
+    break;
+
+  case 26: /* xOdinExpr1: xOdinExpr1 xOperation  */
+               {Action(0,2);}
+    break;
+
+  case 28: /* xRoot: LPAREN RPAREN  */
+           {Action(16,0);}
+    break;
+
+  case 31: /* xRoot: SLASH  */
+          {Action(17,0);}
+    break;
+
+  case 32: /* xRoot: SLASH xWord  */
+          {Action(18,1);}
+    break;
+
+  case 33: /* xRoot: COLON xFileType  */
+              {Action(21,1);}
+    break;
+
+  case 34: /* xRoot: QUESMK WORDTKleaf  */
+               {Action(14,1);}
+    break;
+
+  case 35: /* xRoot: WORDTKleaf QUESMK  */
+           {Action(13,1);}
+    break;
+
+  case 36: /* xRoot: PERCNT xWord  */
+          {Action(25,1);}
+    break;
+
+  case 37: /* xRoot: EQUALS xWord  */
+          {Action(29,1);}
+    break;
+
+  case 38: /* xOperation: PLUS xPrmType xOperation_1  */
+                 {Action(19,2);}
+    break;
+
+  case 39: /* xOperation: PLUS LPAREN xOdinExpr RPAREN  */
+           {Action(20,1);}
+    break;
+
+  case 40: /* xOperation: COLON xFileType  */
+              {Action(21,1);}
+    break;
+
+  case 41: /* xOperation: COLON xFileType EQUALS COLON xFileType  */
+              {Action(22,2);}
+    break;
+
+  case 42: /* xOperation: SLASH xWord  */
+          {Action(23,1);}
+    break;
+
+  case 43: /* xOperation: SLASH  */
+          {Action(24,0);}
+    break;
+
+  case 44: /* xOperation: PERCNT xWord  */
+          {Action(25,1);}
+    break;
+
+  case 46: /* xOperation_1: %empty  */
+     {Action(0,0);}
+    break;
+
+  case 47: /* xPrmVals: EQUALS xPrmVals_1  */
+               {Action(27,1);}
+    break;
+
+  case 48: /* xPrmVals_1: xPrmVals_1 xPrmVal  */
+            {Action(0,2);}
+    break;
+
+  case 51: /* xPrmVal: LPAREN xOdinExpr RPAREN  */
+           {Action(28,1);}
+    break;
+
+  case 54: /* xWord: QUESMK  */
+           {Action(11,0);}
+    break;
+
+  case 56: /* xEPString: EXCLPT QUESMK  */
+           {Action(12,0);}
+    break;
+
+  case 58: /* WORDTKleaf: WORDTK  */
+                     {Action(31,-1);}
+    break;
+
+  case 59: /* HOSTWDleaf: HOSTWD  */
+                     {Action(30,-1);}
+    break;
+
+  case 60: /* OBJTIDleaf: OBJTID  */
+                     {Action(32,-1);}
+    break;
+
+
+
+      default: break;
     }
-    ocstack.s_mark -= ocm;
-    ocstate = *ocstack.s_mark;
-    ocstack.l_mark -= ocm;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-    ocstack.p_mark -= ocm;
-#endif
-    ocm = oclhs[ocn];
-    if (ocstate == 0 && ocm == 0)
+  /* User semantic actions sometimes alter occhar, and that requires
+     that octoken be updated with the new translation.  We take the
+     approach of translating immediately before every use of octoken.
+     One alternative is translating here after every semantic action,
+     but that translation would be missed if the semantic action invokes
+     OCABORT, OCACCEPT, or OCERROR immediately after altering occhar or
+     if it invokes OCBACKUP.  In the case of OCABORT or OCACCEPT, an
+     incorrect destructor might then be invoked immediately.  In the
+     case of OCERROR or OCBACKUP, subsequent parser actions might lead
+     to an incorrect destructor call or verbose syntax error message
+     before the lookahead is translated.  */
+  OC_SYMBOL_PRINT ("-> $$ =", OC_CAST (ocsymbol_kind_t, ocr1[ocn]), &ocval, &ocloc);
+
+  OCPOPSTACK (oclen);
+  oclen = 0;
+
+  *++ocvsp = ocval;
+
+  /* Now 'shift' the result of the reduction.  Determine what state
+     that goes to, based on the state we popped back to and the rule
+     number reduced by.  */
+  {
+    const int oclhs = ocr1[ocn] - OCNTOKENS;
+    const int oci = ocpgoto[oclhs] + *ocssp;
+    ocstate = (0 <= oci && oci <= OCLAST && occheck[oci] == *ocssp
+               ? octable[oci]
+               : ocdefgoto[oclhs]);
+  }
+
+  goto ocnewstate;
+
+
+/*--------------------------------------.
+| ocerrlab -- here on detecting error.  |
+`--------------------------------------*/
+ocerrlab:
+  /* Make sure we have latest lookahead translation.  See comments at
+     user semantic actions for why this is necessary.  */
+  octoken = occhar == OCEMPTY ? OCSYMBOL_OCEMPTY : OCTRANSLATE (occhar);
+  /* If not already recovering from an error, report this error.  */
+  if (!ocerrstatus)
     {
-#if OCDEBUG
-        if (ocdebug)
+      ++ocnerrs;
+      ocerror (OC_("syntax error"));
+    }
+
+  if (ocerrstatus == 3)
+    {
+      /* If just tried and failed to reuse lookahead token after an
+         error, discard it.  */
+
+      if (occhar <= OCEOF)
         {
-            fprintf(stderr, "%s[%d]: after reduction, ", OCDEBUGSTR, ocdepth);
-#ifdef OCSTYPE_TOSTRING
-#if OCBTYACC
-            if (!octrial)
-#endif /* OCBTYACC */
-                fprintf(stderr, "result is <%s>, ", OCSTYPE_TOSTRING(ocstos[OCFINAL], ocval));
-#endif
-            fprintf(stderr, "shifting from state 0 to final state %d\n", OCFINAL);
+          /* Return failure if at end of input.  */
+          if (occhar == OCEOF)
+            OCABORT;
         }
-#endif
-        ocstate = OCFINAL;
-        *++ocstack.s_mark = OCFINAL;
-        *++ocstack.l_mark = ocval;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-        *++ocstack.p_mark = ocloc;
-#endif
-        if (occhar < 0)
+      else
         {
-#if OCBTYACC
-            do {
-            if (oclvp < oclve)
+          ocdestruct ("Error: discarding",
+                      octoken, &oclval);
+          occhar = OCEMPTY;
+        }
+    }
+
+  /* Else will try to reuse lookahead token after shifting the error
+     token.  */
+  goto ocerrlab1;
+
+
+/*---------------------------------------------------.
+| ocerrorlab -- error raised explicitly by OCERROR.  |
+`---------------------------------------------------*/
+ocerrorlab:
+  /* Pacify compilers when the user code never invokes OCERROR and the
+     label ocerrorlab therefore never appears in user code.  */
+  if (0)
+    OCERROR;
+  ++ocnerrs;
+
+  /* Do not reclaim the symbols of the rule whose action triggered
+     this OCERROR.  */
+  OCPOPSTACK (oclen);
+  oclen = 0;
+  OC_STACK_PRINT (ocss, ocssp);
+  ocstate = *ocssp;
+  goto ocerrlab1;
+
+
+/*-------------------------------------------------------------.
+| ocerrlab1 -- common code for both syntax error and OCERROR.  |
+`-------------------------------------------------------------*/
+ocerrlab1:
+  ocerrstatus = 3;      /* Each real token shifted decrements this.  */
+
+  /* Pop stack until we find a state that shifts the error token.  */
+  for (;;)
+    {
+      ocn = ocpact[ocstate];
+      if (!ocpact_value_is_default (ocn))
+        {
+          ocn += OCSYMBOL_OCerror;
+          if (0 <= ocn && ocn <= OCLAST && occheck[ocn] == OCSYMBOL_OCerror)
             {
-                /* we're currently re-reading tokens */
-                oclval = *oclvp++;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-                oclloc = *oclpp++;
-#endif
-                occhar = *oclexp++;
+              ocn = octable[ocn];
+              if (0 < ocn)
                 break;
             }
-            if (ocps->save)
-            {
-                /* in trial mode; save scanner results for future parse attempts */
-                if (oclvp == oclvlim)
-                {   /* Enlarge lexical value queue */
-                    size_t p = (size_t) (oclvp - oclvals);
-                    size_t s = (size_t) (oclvlim - oclvals);
-
-                    s += OCLVQUEUEGROWTH;
-                    if ((oclexemes = (OCINT *)realloc(oclexemes, s * sizeof(OCINT))) == NULL)
-                        goto ocenomem;
-                    if ((oclvals   = (OCSTYPE *)realloc(oclvals, s * sizeof(OCSTYPE))) == NULL)
-                        goto ocenomem;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-                    if ((oclpsns   = (OCLTYPE *)realloc(oclpsns, s * sizeof(OCLTYPE))) == NULL)
-                        goto ocenomem;
-#endif
-                    oclvp   = oclve = oclvals + p;
-                    oclvlim = oclvals + s;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-                    oclpp   = oclpe = oclpsns + p;
-                    oclplim = oclpsns + s;
-#endif
-                    oclexp  = oclexemes + p;
-                }
-                *oclexp = (OCINT) OCLEX;
-                *oclvp++ = oclval;
-                oclve++;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-                *oclpp++ = oclloc;
-                oclpe++;
-#endif
-                occhar = *oclexp++;
-                break;
-            }
-            /* normal operation, no conflict encountered */
-#endif /* OCBTYACC */
-            occhar = OCLEX;
-#if OCBTYACC
-            } while (0);
-#endif /* OCBTYACC */
-            if (occhar < 0) occhar = OCEOF;
-#if OCDEBUG
-            if (ocdebug)
-            {
-                if ((ocs = ocname[OCTRANSLATE(occhar)]) == NULL) ocs = ocname[OCUNDFTOKEN];
-                fprintf(stderr, "%s[%d]: state %d, reading token %d (%s)\n",
-                                OCDEBUGSTR, ocdepth, OCFINAL, occhar, ocs);
-            }
-#endif
         }
-        if (occhar == OCEOF) goto ocaccept;
-        goto ocloop;
+
+      /* Pop the current state because it cannot handle the error token.  */
+      if (ocssp == ocss)
+        OCABORT;
+
+
+      ocdestruct ("Error: popping",
+                  OC_ACCESSING_SYMBOL (ocstate), ocvsp);
+      OCPOPSTACK (1);
+      ocstate = *ocssp;
+      OC_STACK_PRINT (ocss, ocssp);
     }
-    if (((ocn = ocgindex[ocm]) != 0) && (ocn += ocstate) >= 0 &&
-            ocn <= OCTABLESIZE && occheck[ocn] == (OCINT) ocstate)
-        ocstate = octable[ocn];
-    else
-        ocstate = ocdgoto[ocm];
-#if OCDEBUG
-    if (ocdebug)
+
+  OC_IGNORE_MAYBE_UNINITIALIZED_BEGIN
+  *++ocvsp = oclval;
+  OC_IGNORE_MAYBE_UNINITIALIZED_END
+
+
+  /* Shift the error token.  */
+  OC_SYMBOL_PRINT ("Shifting", OC_ACCESSING_SYMBOL (ocn), ocvsp, oclsp);
+
+  ocstate = ocn;
+  goto ocnewstate;
+
+
+/*-------------------------------------.
+| ocacceptlab -- OCACCEPT comes here.  |
+`-------------------------------------*/
+ocacceptlab:
+  ocresult = 0;
+  goto ocreturnlab;
+
+
+/*-----------------------------------.
+| ocabortlab -- OCABORT comes here.  |
+`-----------------------------------*/
+ocabortlab:
+  ocresult = 1;
+  goto ocreturnlab;
+
+
+/*-----------------------------------------------------------.
+| ocexhaustedlab -- OCNOMEM (memory exhaustion) comes here.  |
+`-----------------------------------------------------------*/
+ocexhaustedlab:
+  ocerror (OC_("memory exhausted"));
+  ocresult = 2;
+  goto ocreturnlab;
+
+
+/*----------------------------------------------------------.
+| ocreturnlab -- parsing is finished, clean up and return.  |
+`----------------------------------------------------------*/
+ocreturnlab:
+  if (occhar != OCEMPTY)
     {
-        fprintf(stderr, "%s[%d]: after reduction, ", OCDEBUGSTR, ocdepth);
-#ifdef OCSTYPE_TOSTRING
-#if OCBTYACC
-        if (!octrial)
-#endif /* OCBTYACC */
-            fprintf(stderr, "result is <%s>, ", OCSTYPE_TOSTRING(ocstos[ocstate], ocval));
+      /* Make sure we have latest lookahead translation.  See comments at
+         user semantic actions for why this is necessary.  */
+      octoken = OCTRANSLATE (occhar);
+      ocdestruct ("Cleanup: discarding lookahead",
+                  octoken, &oclval);
+    }
+  /* Do not reclaim the symbols of the rule whose action triggered
+     this OCABORT or OCACCEPT.  */
+  OCPOPSTACK (oclen);
+  OC_STACK_PRINT (ocss, ocssp);
+  while (ocssp != ocss)
+    {
+      ocdestruct ("Cleanup: popping",
+                  OC_ACCESSING_SYMBOL (+*ocssp), ocvsp);
+      OCPOPSTACK (1);
+    }
+#ifndef ocoverflow
+  if (ocss != ocssa)
+    OCSTACK_FREE (ocss);
 #endif
-        fprintf(stderr, "shifting from state %d to state %d\n", *ocstack.s_mark, ocstate);
-    }
-#endif
-    if (ocstack.s_mark >= ocstack.s_last && ocgrowstack(&ocstack) == OCENOMEM) goto ocoverflow;
-    *++ocstack.s_mark = (OCINT) ocstate;
-    *++ocstack.l_mark = ocval;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-    *++ocstack.p_mark = ocloc;
-#endif
-    goto ocloop;
-#if OCBTYACC
 
-    /* Reduction declares that this path is valid. Set ocpath and do a full parse */
-ocvalid:
-    if (ocpath) OCABORT;
-    while (ocps->save)
-    {
-        OCParseState *save = ocps->save;
-        ocps->save = save->save;
-        save->save = ocpath;
-        ocpath = save;
-    }
-#if OCDEBUG
-    if (ocdebug)
-        fprintf(stderr, "%s[%d]: state %d, CONFLICT trial successful, backtracking to state %d, %d tokens\n",
-                        OCDEBUGSTR, ocdepth, ocstate, ocpath->state, (int)(oclvp - oclvals - ocpath->lexeme));
-#endif
-    if (ocerrctx)
-    {
-        ocFreeState(ocerrctx);
-        ocerrctx = NULL;
-    }
-    oclvp          = oclvals + ocpath->lexeme;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-    oclpp          = oclpsns + ocpath->lexeme;
-#endif
-    oclexp         = oclexemes + ocpath->lexeme;
-    occhar         = OCEMPTY;
-    ocstack.s_mark = ocstack.s_base + (ocpath->ocstack.s_mark - ocpath->ocstack.s_base);
-    memcpy (ocstack.s_base, ocpath->ocstack.s_base, (size_t) (ocstack.s_mark - ocstack.s_base + 1) * sizeof(OCINT));
-    ocstack.l_mark = ocstack.l_base + (ocpath->ocstack.l_mark - ocpath->ocstack.l_base);
-    memcpy (ocstack.l_base, ocpath->ocstack.l_base, (size_t) (ocstack.l_mark - ocstack.l_base + 1) * sizeof(OCSTYPE));
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-    ocstack.p_mark = ocstack.p_base + (ocpath->ocstack.p_mark - ocpath->ocstack.p_base);
-    memcpy (ocstack.p_base, ocpath->ocstack.p_base, (size_t) (ocstack.p_mark - ocstack.p_base + 1) * sizeof(OCLTYPE));
-#endif
-    ocstate        = ocpath->state;
-    goto ocloop;
-#endif /* OCBTYACC */
-
-ocoverflow:
-    OCERROR_CALL("yacc stack overflow");
-#if OCBTYACC
-    goto ocabort_nomem;
-ocenomem:
-    OCERROR_CALL("memory exhausted");
-ocabort_nomem:
-#endif /* OCBTYACC */
-    ocresult = 2;
-    goto ocreturn;
-
-ocabort:
-    ocresult = 1;
-    goto ocreturn;
-
-ocaccept:
-#if OCBTYACC
-    if (ocps->save) goto ocvalid;
-#endif /* OCBTYACC */
-    ocresult = 0;
-
-ocreturn:
-#if defined(OCDESTRUCT_CALL)
-    if (occhar != OCEOF && occhar != OCEMPTY)
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-        OCDESTRUCT_CALL("cleanup: discarding token", occhar, &oclval, &oclloc);
-#else
-        OCDESTRUCT_CALL("cleanup: discarding token", occhar, &oclval);
-#endif /* defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED) */
-
-    {
-        OCSTYPE *pv;
-#if defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED)
-        OCLTYPE *pp;
-
-        for (pv = ocstack.l_base, pp = ocstack.p_base; pv <= ocstack.l_mark; ++pv, ++pp)
-             OCDESTRUCT_CALL("cleanup: discarding state",
-                             ocstos[*(ocstack.s_base + (pv - ocstack.l_base))], pv, pp);
-#else
-        for (pv = ocstack.l_base; pv <= ocstack.l_mark; ++pv)
-             OCDESTRUCT_CALL("cleanup: discarding state",
-                             ocstos[*(ocstack.s_base + (pv - ocstack.l_base))], pv);
-#endif /* defined(OCLTYPE) || defined(OCLTYPE_IS_DECLARED) */
-    }
-#endif /* defined(OCDESTRUCT_CALL) */
-
-#if OCBTYACC
-    if (ocerrctx)
-    {
-        ocFreeState(ocerrctx);
-        ocerrctx = NULL;
-    }
-    while (ocps)
-    {
-        OCParseState *save = ocps;
-        ocps = save->save;
-        save->save = NULL;
-        ocFreeState(save);
-    }
-    while (ocpath)
-    {
-        OCParseState *save = ocpath;
-        ocpath = save->save;
-        save->save = NULL;
-        ocFreeState(save);
-    }
-#endif /* OCBTYACC */
-    ocfreestack(&ocstack);
-    return (ocresult);
+  return ocresult;
 }
+
+

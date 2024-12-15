@@ -67,15 +67,20 @@ Get_FileInfo(
    *SysModTimePtr = buf.st_mtime;
    /*select*/{
       if ((buf.st_mode & S_IFLNK) == S_IFLNK) {
+         Inotify_Watch_File(FileName);
 	 *SKindPtr = SK_SymLink;
 	 status = stat(FileName, &buf); /*give automounter a kick*/
       }else if ((buf.st_mode & S_IFDIR) == S_IFDIR) {
+         Inotify_Watch_Dir(FileName);
 	 *SKindPtr = SK_Dir;
       }else if ((buf.st_mode & S_IEXEC) == S_IEXEC) {
+         Inotify_Watch_File(FileName);
 	 *SKindPtr = SK_Exec;
       }else if ((buf.st_mode & S_IFREG) == S_IFREG) {
+         Inotify_Watch_File(FileName);
 	 *SKindPtr = SK_Reg;
       }else{
+         Inotify_Watch_File(FileName);
 	 *SKindPtr = SK_Special; };}/*select*/;
    }/*Get_FileInfo*/
 

@@ -395,6 +395,7 @@ IPC_Get_Commands(
    GMC_DCL(boolean*, AbortPtr)
    GMC_DCL(char*, Prompt)
 {
+   static int inotifyFd=-1;
    boolean WasPrompted, Abort, Done, EndFlag;
    fd_set _readfds, *readfds = &_readfds;
    int nfds;
@@ -452,6 +453,12 @@ IPC_Get_Commands(
 
       if (IsServer) {
 	 FD_SET(ListenFD, readfds);
+         if (VerifyLevel==1){
+           if (inotifyFd==-1){
+             inotifyFd=Create_Inotify_Fd();
+           }
+           FD_SET(inotifyFd, readfds);
+         }
 	 FOREACH_CLIENT(Client) {
 	    if (!Is_LocalClient(Client)) {
                if (Client_LogLevel(Client) >= 7) {
@@ -516,6 +523,14 @@ IPC_Get_Commands(
 		  IPC_Do_Abort(); }/*if*/; }/*if*/; }/*if*/; }/*if*/;
 
       if (IsServer) {
+         if (inotifyFd != -1 && FD_ISSET(inotifyFd, readfds)){
+           /* fprintf(stderr, "inotifyFd readable\n"); */
+           char const* fileName=0;
+           while(fileName=Inotify_Get_Next_Change()){
+             /* fprintf(stderr, "inotify says %s changed\n", fileName); */
+             Local_Test((char*)fileName);
+           }
+         }
 	 if (FD_ISSET(ListenFD, readfds)) {
 	    AddrLen = sizeof(Addr);
 	    FD = accept(ListenFD, &Addr, &AddrLen);

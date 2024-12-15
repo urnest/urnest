@@ -47,6 +47,7 @@ main.cc;
    if-symbol.c; if-sysdep.c; if-system.c; if-systools.c;
    if-update.c; if-util.c; if-var.c; if-yylex.c;
    editline%editline.cxx.sm; boot%boot.cxx.sm; LookupPlainAbsPath.cc;
+   if-inotify.cc;
 
 %rbs.c.sm == <<
    rbs.c; if-dir.c; if-err.c +define=NO_IPC; if-file.c; if-io.c;
