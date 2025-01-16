@@ -421,6 +421,11 @@ FILE: note: In class "oo":
 FILE:229: error: Single overload definition, multiple required  [misc]
 FILE: note: In member "qq" of class "oo":
 FILE:230: error: Missing return statement  [empty-body]
+FILE: note: In function "my_decorator":
+FILE:244: error: decorator functools.wraps not supported with in_function_context (only property, abstractmethod, classmethod supported; use in_context directly instead in this case)  [misc]
+FILE: note: In function "wrapper":
+FILE:244: error: decorator functools.wraps not supported with in_function_context (only property, abstractmethod, classmethod supported; use in_context directly instead in this case)  [misc]
+FILE: note: In function "cm":
+FILE:255: error: decorator contextmanager not supported with in_function_context (only property, abstractmethod, classmethod supported; use in_context directly instead in this case)  [misc]
 
 %test_xn_plugin.errors==(test_data/xn_in_function_context_errors.py)+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(xn_mypy_plugin.py):main.mypy3:err
-

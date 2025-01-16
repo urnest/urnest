@@ -231,3 +231,26 @@ class oo(o):
         'convert {s} to in'
         ...
     pass
+
+from functools import wraps
+
+def my_decorator(f):
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        '''call {f}() with args {args} and kwargs {kwargs}'''
+        try:
+            return f(*args, **kwds)
+        except Exception:
+            raise in_function_context(wrapper, vars()) from None  # wraps loses doc string
+        pass
+    return wrapper
+
+from contextlib import contextmanager
+@contextmanager
+def cm():
+    '''run in context'''
+    try:
+        yield
+    except:
+        raise in_function_context(cm, vars())
+    pass

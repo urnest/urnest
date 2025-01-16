@@ -256,9 +256,11 @@ def get_function_doc_string_value(expr: Expression) -> str:
             match d:
                 case NameExpr():
                     if d.name not in ('property','abstractmethod'):
-                        raise DocStringError(f"decorator {d.name} not supported with in_function_context; use in_context directly instead in this case)")
+                        raise DocStringError(f"decorator {d.name} not supported with in_function_context (only property, abstractmethod, classmethod supported; use in_context directly instead in this case)")
+                case CallExpr() if isinstance(d.callee, NameExpr):
+                        raise DocStringError(f"decorator {d.callee.fullname} not supported with in_function_context (only property, abstractmethod, classmethod supported; use in_context directly instead in this case)")
                 case _:
-                    raise DocStringError("decorator {d} not supported with in_function_context (only property, abstractmethod supported; use in_context directly instead in this case)")
+                    raise DocStringError(f"decorator {d} not supported with in_function_context (only property, abstractmethod, classmethod supported; use in_context directly instead in this case)")
         f=f.func
         pass
     if not isinstance(f, FuncDef):
@@ -676,7 +678,18 @@ def collect_vars_defined_for_expr(
                             pass
                         case VarsSoFar() as guard_vars:
                             pass
-                match collect_vars_defined_for_expr(expr, body, guard_vars):
+                    pass
+                
+                match (
+                    collect_vars_defined_for_expr_from_statements(
+                        expr,
+                        iter(body.body),
+                        guard_vars) if isinstance(body, Block)
+                    else collect_vars_defined_for_expr(
+                        expr,
+                        body,
+                        guard_vars)
+                ):
                     case VarsAtExpr() as result:
                         return result
                     case UnconditionalRaise():
