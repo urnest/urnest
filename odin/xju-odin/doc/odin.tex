@@ -1397,16 +1397,10 @@ can be increased to have all possible types described.
 
 By default, Odin checks the modification dates of all relevant source files
 at the beginning of an Odin session and before each interactive odin-command.
-If all file modifications during the session are performed through
-copy odin-commands or through an editor that has been upgraded
-to send a {\ex filename!:test} odin-command to Odin whenever {\ex filename}
-is modified,
-the {\ex VerifyLevel} variable can be set to {\ex 1} and only the check
-at the beginning of the session is performed.
-If all file modifications since the last session have been performed
-in the above manner,
-{\ex VerifyLevel} can be set to {\ex 0} and the initial check
-is avoided as well.
+With the {\ex VerifyLevel} variable set to {\ex 1} Odin will use Linux inotify
+to track changes.
+With the {\ex VerifyLevel} variable set to {\ex 2} Odin expects all source file changes
+to be explicitly indicated via the  {\ex filename!:test} odin-command,
 
 \subsection{Size}
 
