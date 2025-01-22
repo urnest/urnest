@@ -9,6 +9,7 @@ FILES = main.o if-bcast.o if-build.o if-candrv.o if-client.o if-cmd.o \
   if-symbol.o if-sysdep.o if-system.o if-systools.o \
   if-update.o if-util.o if-var.o if-yylex.o \
   LookupPlainAbsPath.o \
+  if-inotify.o \
   boot/fsys-yacc.o boot/client-yacc.o boot/default-dg.o \
   boot/stub-in.o boot/stub-out.o \
   editline/editline.o editline/complete.o editline/sysunix.o

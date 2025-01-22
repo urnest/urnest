@@ -22,7 +22,7 @@
    ../odin/if-err.c +define=NO_IPC
    ../odin/if-file.c; ../odin/if-io.c; ../odin/if-nod.c; ../odin/if-symbol.c
    tc-map-prm-info.cxx
-   assert.cxx; ../odin/if-inotify-stub.cc
+   assert.cxx; ../odin/if-inotify-stub.c
 
 %dg-lint.c.sm == <<
    dg-analyze.c; dg-build.c; dg-edg.c; dg-envvar.c; dg-filtyp.c

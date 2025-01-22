@@ -16,6 +16,7 @@
    tg-gen_lex.c; tg-gen_nod.c; tg-nod_grm.c; tg-yylex.c; tregrm-yacc.c
    ../odin/if-err.c +define=NO_IPC
    ../odin/if-file.c; ../odin/if-io.c; ../odin/if-nod.c; ../odin/if-symbol.c
+   ../odin/if-inotify-stub.c
 
    == () +cmd='if [ "$ODINBOOT" = "" ] ; then echo "\
 tregrm-yacc.c == tregrm.ygi :c +default=(tregrm-yacc.c.dflt) :boot \
