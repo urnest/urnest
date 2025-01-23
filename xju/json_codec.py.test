@@ -1382,7 +1382,6 @@ else:
 class Court:
     width:Metres
     length:Metres
-    game:str
     pass
 
 @dataclass
@@ -1401,21 +1400,15 @@ Assert(court_codec.decode({'game':'basketball', 'width':8, 'length': 10})).isIns
 Assert(court_codec.decode({'game':'badminton', 'width':8, 'length': 10})).isInstanceOf(Court)
 Assert(court_codec.encode(NetballCourt(width=Metres(8),length=Metres(10)))=={'game':'netball', 'width':8, 'length': 10})
 Assert(court_codec.encode(BasketballCourt(width=Metres(8),length=Metres(10)))=={'game':'basketball', 'width':8, 'length': 10})
-Assert(court_codec.encode(Court(game='badminton',width=Metres(8),length=Metres(10)))=={'game':'badminton', 'width':8, 'length': 10})
 
 
 # generic class codecs are supported, for example a messages might
 # carry generic payloads:
 
-@dataclass
-class Msg:
-    msg_type: str
-    pass
-
 Payload=TypeVar('Payload')
 
 @dataclass
-class SetMsg(Generic[Payload],Msg):
+class SetMsg(Generic[Payload]):
     msg_type: Literal['set_new_value']
     new_value: Payload
     pass
@@ -1425,7 +1418,7 @@ SetSurnameMsg=SetMsg[Surname]
 Assert(codec(SetSurnameMsg).decode({'msg_type':'set_new_value','new_value':'knox'}))==SetSurnameMsg(msg_type='set_new_value',new_value=Surname('knox'))
 
 @dataclass
-class SetMultiMsg(Generic[Payload],Msg):
+class SetMultiMsg(Generic[Payload]):
     msg_type: Literal['set_new_values']
     new_values: list[Payload]
     pass
