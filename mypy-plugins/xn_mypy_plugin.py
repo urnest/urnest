@@ -364,20 +364,51 @@ def collect_vars_defined_for_expr(
         collect_from:Node,
         vars_so_far:VarsSoFar
 ) -> VarsAtExpr | VarsSoFar | UnconditionalRaise:
+    result: VarsAtExpr | VarsSoFar | UnconditionalRaise
     if expr is collect_from:
         return VarsAtExpr(vars_so_far.vars_so_far)
 
     assert isinstance(collect_from, LeafNodeTypes)
     
     match collect_from:
-        case DictExpr() | SliceExpr() | Import() | ParamSpecExpr() | ImportFrom() | IndexExpr() | DelStmt() | EnumCallExpr() | OverloadedFuncDef() | StarredPattern() | TypeVarExpr() | TempNode() | NameExpr() | YieldFromExpr() | TypeApplication() | PlaceholderNode() | DictionaryComprehension() | LambdaExpr() | ValuePattern() | ClassPattern() | NewTypeExpr() | ListExpr() | SetComprehension() | GeneratorExpr() | MemberExpr() | IntExpr() | AssertTypeExpr() | SetExpr() | GlobalDecl() | StarExpr() | TupleExpr() | Decorator() | SingletonPattern() | FloatExpr() | BytesExpr() | ComplexExpr() | EllipsisExpr() | CastExpr() | ComparisonExpr() | TypeVarTupleExpr() | NamedTupleExpr() | FakeExpression() | ImportAll() | MappingPattern() | FakeInfo() | CallExpr() | StrExpr() | TypeAliasExpr() | FuncDef() | YieldExpr() | AssertStmt() | MypyFile() | UnaryExpr() | SequencePattern() | TypedDictExpr() | ContinueStmt() | AwaitExpr() | Argument() | RevealExpr() | PromoteExpr() | PassStmt() | OperatorAssignmentStmt() | SuperExpr() |  BreakStmt() | TypeAlias() | NonlocalDecl():
+        # REVISIT: expr we're looking for could be in some of these, need to handle more
+        # individually (e.g. ListExpr could be [ 0, in_function_context(X, vars())]
+        case SliceExpr() | Import() | ParamSpecExpr() | ImportFrom() | IndexExpr() | DelStmt() | EnumCallExpr() | OverloadedFuncDef() | StarredPattern() | TypeVarExpr() | TempNode() | NameExpr() | YieldFromExpr() | TypeApplication() | PlaceholderNode() | DictionaryComprehension() | LambdaExpr() | ValuePattern() | ClassPattern() | NewTypeExpr() | ListExpr() | SetComprehension() | GeneratorExpr() | MemberExpr() | IntExpr() | AssertTypeExpr() | SetExpr() | GlobalDecl() | StarExpr() | TupleExpr() | Decorator() | SingletonPattern() | FloatExpr() | BytesExpr() | ComplexExpr() | EllipsisExpr() | CastExpr() | ComparisonExpr() | TypeVarTupleExpr() | NamedTupleExpr() | FakeExpression() | ImportAll() | MappingPattern() | FakeInfo() | StrExpr() | TypeAliasExpr() | FuncDef() | YieldExpr() | AssertStmt() | MypyFile() | UnaryExpr() | SequencePattern() | TypedDictExpr() | ContinueStmt() | AwaitExpr() | Argument() | RevealExpr() | PromoteExpr() | PassStmt() | OperatorAssignmentStmt() | SuperExpr() |  BreakStmt() | TypeAlias() | NonlocalDecl():
             return vars_so_far
         case Block():
             # there's no sensible handling for block, we need to handle it in context e.g.
             # as part of an if statement or a try-except
             assert False, collect_from
+        case  CallExpr():
+            for a in collect_from.args:
+                match collect_vars_defined_for_expr(expr, a, vars_so_far):
+                    case VarsAtExpr() as result:
+                        return result
+                    case VarsSoFar():
+                        pass
+                    case UnconditionalRaise():
+                        raise DocStringError(f"unexpected unconditional raise from {format_expr(a)}")
+            return vars_so_far
+        case DictExpr():
+            for k, v in collect_from.items:
+                if k is not None:
+                    match collect_vars_defined_for_expr(expr, k, vars_so_far):
+                        case VarsAtExpr() as result:
+                            return result
+                        case VarsSoFar():
+                            pass
+                        case UnconditionalRaise():
+                            raise DocStringError(f"unexpected unconditional raise from {format_expr(k)}")
+                match collect_vars_defined_for_expr(expr, v, vars_so_far):
+                    case VarsAtExpr() as result:
+                        return result
+                    case VarsSoFar():
+                        pass
+                    case UnconditionalRaise():
+                        raise DocStringError(f"unexpected unconditional raise from {format_expr(v)}")
+            return vars_so_far
         case IfStmt():
-            # REVISIT: why is collect_from.expr a list?
+            # why is collect_from.expr a list?
             assert len(collect_from.expr)==1, collect_from.expr
             match collect_vars_defined_for_expr(expr, collect_from.expr[0], vars_so_far):
                 case VarsAtExpr() as result:
