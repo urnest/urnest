@@ -127,6 +127,8 @@ else:
 # type-adorned set maps to list...
 Assert(codec(set[int]).decode([5, 6]))==set([5, 6])
 Assert(codec(set[int]).encode(set([5, 6])))==[5, 6]
+Assert(codec(frozenset[int]).decode([5, 6]))==frozenset([5, 6])
+Assert(codec(frozenset[int]).encode(frozenset([5, 6])))==[5, 6]
 
 # ... but must be given a set...
 try:
@@ -137,9 +139,24 @@ else:
     assert False, x
     pass
 
+try:
+    x=codec(frozenset[int]).decode(8)
+except Exception as e:
+    Assert("8 is not a frozenset").isIn(str(e))
+else:
+    assert False, x
+    pass
+
 # ... and all values must have correct type
 try:        
     x=codec(set[int]).decode([5, 'fred'])
+except Exception as e:
+    Assert("'fred' (of type <class 'str'>) is not a <class 'int'>").isIn(str(e))
+else:
+    assert False, x
+    pass
+try:        
+    x=codec(frozenset[int]).decode([5, 'fred'])
 except Exception as e:
     Assert("'fred' (of type <class 'str'>) is not a <class 'int'>").isIn(str(e))
 else:
@@ -155,12 +172,23 @@ except Exception as e:
 else:
     assert False, x
     pass
+try:
+    x=codec(frozenset[int]).decode([1,2,3,2])
+except Exception as e:
+    Assert('[1, 2, 3, 2] contains at least one duplicate element').isIn(str(e))
+else:
+    assert False, x
+    pass
 
 # ... un-typed set is treated as set[JsonType]...
 Assert(codec(set).decode([5, 'fred']))==set([5, 'fred'])
 set_result=codec(set).encode(set([5, 'fred']))
 assert isinstance(set_result,list)
 Assert(set(set_result))==set([5, 'fred'])
+Assert(codec(frozenset).decode([5, 'fred']))==frozenset([5, 'fred'])
+frozenset_result=codec(frozenset).encode(frozenset([5, 'fred']))
+assert isinstance(frozenset_result,list)
+Assert(frozenset(frozenset_result))==frozenset([5, 'fred'])
 
 # ... but must be given a set
 try:
@@ -170,10 +198,24 @@ except Exception as e:
 else:
     assert False, x
     pass
+try:
+    x=codec(frozenset).decode(8)
+except Exception as e:
+    Assert("8 is not a list").isIn(str(e))
+else:
+    assert False, x
+    pass
 
 # ... and elements must be unique
 try:
     x=codec(set).decode([1,2,3,2])
+except Exception as e:
+    Assert('[1, 2, 3, 2] contains at least one duplicate element').isIn(str(e))
+else:
+    assert False, x
+    pass
+try:
+    x=codec(frozenset).decode([1,2,3,2])
 except Exception as e:
     Assert('[1, 2, 3, 2] contains at least one duplicate element').isIn(str(e))
 else:
@@ -1021,8 +1063,10 @@ Assert(codec(str).get_json_schema())=={'type': 'string', 'definitions': {}, '$id
 Assert(codec(float).get_json_schema())=={'type': 'number', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(list).get_json_schema())=={'type': 'array', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(set).get_json_schema())=={'type': 'array', 'uniqueItems': True, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(codec(frozenset).get_json_schema())=={'type': 'array', 'uniqueItems': True, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(list[int]).get_json_schema())=={'type': 'array', 'items': { 'type': 'integer'}, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(set[int]).get_json_schema())=={'type': 'array', 'uniqueItems': True, 'items': { 'type': 'integer'}, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(codec(frozenset[int]).get_json_schema())=={'type': 'array', 'uniqueItems': True, 'items': { 'type': 'integer'}, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(bytes).get_json_schema())=={'description': 'bytes', 'type': 'array', 'items': { 'type': 'integer'}, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(tuple[int,str]).get_json_schema())=={'type': 'array', 'prefixItems': [ { 'type': 'integer'},{ 'type': 'string'}], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 
@@ -1275,6 +1319,22 @@ else:
     assert False, x
     pass
 try:
+    x=(codec(frozenset[int])
+       .encode('fred'))  # type: ignore
+except Exception as e:
+    Assert("'fred' is not a frozenset").isIn(str(e))
+else:
+    assert False, x
+    pass
+try:
+    x=(codec(frozenset)
+       .encode('fred'))  # type: ignore
+except Exception as e:
+    Assert("'fred' is not a frozenset").isIn(str(e))
+else:
+    assert False, x
+    pass
+try:
     x=(codec(tuple[int])
        .encode('fred'))  # type: ignore
 except Exception as e:
@@ -1464,6 +1524,21 @@ else:
 Assert(codec(set).get_typescript_isa(TypeScriptSourceCode("v"),typescript_namespace))==TypeScriptSourceCode("(Array.isArray(v))")
 try:
     codec(set).get_typescript_isa_key(TypeScriptSourceCode("v"),typescript_namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='Array<any> /* with unique elements */ is not allowed as a typescript object key type'
+else:
+    assert False
+
+Assert(codec(frozenset[int]).get_typescript_isa(TypeScriptSourceCode("v"),typescript_namespace))==TypeScriptSourceCode("(((v:any):v is Array<number> /* with unique elements */=>(\n     Array.isArray(v) && \n    v.filter((x)=>(\n        !(typeof (x) == 'number'))).length==0))(v))")
+try:
+    codec(frozenset[int]).get_typescript_isa_key(TypeScriptSourceCode("v"),typescript_namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='Array<number> /* with unique elements */ is not allowed as a typescript object key type'
+else:
+    assert False
+Assert(codec(frozenset).get_typescript_isa(TypeScriptSourceCode("v"),typescript_namespace))==TypeScriptSourceCode("(Array.isArray(v))")
+try:
+    codec(frozenset).get_typescript_isa_key(TypeScriptSourceCode("v"),typescript_namespace)
 except Exception as e:
     Assert(readable_repr(e))=='Array<any> /* with unique elements */ is not allowed as a typescript object key type'
 else:

@@ -743,6 +743,127 @@ class AnySetCodecImpl:
         raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
     pass
 
+class FrozenSetCodecImpl:
+    def __init__(self, value_codec:CodecImplProto):
+        self.value_codec=value_codec
+        pass
+    def encode(self,x,back_ref:None|Callable[[Any],JsonType]):
+        if type(x) is not frozenset:
+            raise Exception(f'{x!r} is not a frozenset')
+        return [self.value_codec.encode(_,back_ref) for _ in x]
+    def decode(self,x,back_ref:None|Callable[[JsonType],Any]):
+        if type(x) is not list:
+            raise Exception(f'{x!r} is not a frozenset')
+        result = frozenset([self.value_codec.decode(_,back_ref) for _ in x])
+        if len(result) < len(x):
+            raise Exception(f'{x!r} contains at least one duplicate element')
+        return result
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        return {
+            "type": "array",
+            "uniqueItems": True,
+            "items": self.value_codec.get_json_schema(definitions, self_ref)
+        }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        raise Exception("frozenset is not allowed as json object key type")
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None)->TypeScriptSourceCode:
+        return TypeScriptSourceCode(f"Array<{self.value_codec.typescript_type(back_refs)}> /* with unique elements */")
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
+    def ensure_typescript_defs(self, namespace) -> None:
+        self.value_codec.ensure_typescript_defs(namespace)
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"(((v:any):v is {tt}=>(\n"
+            "     Array.isArray(v) && \n"
+            f"    v.filter((x)=>(\n"
+            f"        !{indent(8,self.value_codec.get_typescript_isa(TypeScriptSourceCode('x'),namespace,back_refs))})).length==0))({expression}))")
+    def get_typescript_isa_key(self,
+                               expression:TypeScriptSourceCode,
+                               namespace: TypeScriptNamespace,
+                               back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
+        
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((v: any): {tt} => {{try{{\n"
+            f"    if (!Array.isArray(v)) throw new Error(`${{v}} is not an array it is a ${{typeof v}}`);\n"
+            f"    v.forEach((x)=>{indent(4,self.value_codec.get_typescript_asa(TypeScriptSourceCode('x'),namespace,back_refs))});\n"
+            f"    return v as {tt};\n"
+            f"}}catch(e:any){{throw new Error(`${{v}} is not a {tt} because ${{e}}`);}}}})({expression})")
+    def get_typescript_asa_key(self,
+                               expression:TypeScriptSourceCode,
+                               namespace: TypeScriptNamespace,
+                               back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
+    pass
+
+class AnyFrozenSetCodecImpl:
+    def __init__(self):
+        self.value_codec=AnyJsonCodecImpl()
+        pass
+    def encode(self,x,back_ref:None|Callable[[Any],JsonType]):
+        if type(x) is not frozenset:
+            raise Exception(f'{x!r} is not a frozenset')
+        return [self.value_codec.encode(_,back_ref) for _ in x]
+    def decode(self,x,back_ref:None|Callable[[JsonType],Any]):
+        if type(x) is not list:
+            raise Exception(f'{x!r} is not a list')
+        result = frozenset([self.value_codec.decode(_,back_ref) for _ in x])
+        if len(result) < len(x):
+            raise Exception(f'{x!r} contains at least one duplicate element')
+        return result
+    def get_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        return {
+            "type": "array",
+            "uniqueItems": True
+        }
+    def get_object_key_json_schema(self, definitions:dict[str,dict], self_ref:None|str) -> dict:
+        raise Exception("frozenset is not allowed as json object key type")
+    def typescript_type(self,back_refs:TypeScriptBackRefs|None)->TypeScriptSourceCode:
+        return TypeScriptSourceCode(f"Array<any> /* with unique elements */")
+    def typescript_as_object_key_type(self,back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
+    def ensure_typescript_defs(self, namespace) -> None:
+        pass
+    def get_typescript_isa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        return TypeScriptSourceCode(
+            f"(Array.isArray({expression}))")
+    def get_typescript_isa_key(self,
+                               expression:TypeScriptSourceCode,
+                               namespace: TypeScriptNamespace,
+                               back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
+        
+    def get_typescript_asa(self,
+                           expression:TypeScriptSourceCode,
+                           namespace: TypeScriptNamespace,
+                           back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        tt=self.typescript_type(back_refs)
+        return TypeScriptSourceCode(
+            f"((v: any): {tt} => {{\n"
+            f"    if (!Array.isArray(v)) throw new Error(`${{v}} is not an {tt} it is a ${{typeof v}}`);\n"
+            f"    return v as {tt};\n"
+            f"}})({expression})")
+    def get_typescript_asa_key(self,
+                               expression:TypeScriptSourceCode,
+                               namespace: TypeScriptNamespace,
+                               back_refs:TypeScriptBackRefs|None) -> TypeScriptSourceCode:
+        raise Exception(f"{self.typescript_type(back_refs)} is not allowed as a typescript object key type")
+    pass
+
 class TupleCodec:
     def __init__(self,value_codecs):
         self.value_codecs=value_codecs
@@ -2488,8 +2609,12 @@ def _explodeSchema(t:type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGeneric
             return AnyListCodecImpl()
         if type(t) is GenericAlias and get_origin(t) is list:
             return ListCodecImpl(_explodeSchema(get_args(t)[0],type_var_map))
+        if t is frozenset:
+            return AnyFrozenSetCodecImpl()
         if t is set:
             return AnySetCodecImpl()
+        if type(t) is GenericAlias and get_origin(t) is frozenset:
+            return FrozenSetCodecImpl(_explodeSchema(get_args(t)[0],type_var_map))
         if type(t) is GenericAlias and get_origin(t) is set:
             return SetCodecImpl(_explodeSchema(get_args(t)[0],type_var_map))
         if type(t) is _LiteralGenericAlias and len(get_args(t))==1:

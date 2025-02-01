@@ -60,6 +60,7 @@ encode_attr_as(FullName, PythonAttrName("_class"), JsonAttrName("class"))
 @dataclass
 class Prefs:
     colours: set[str]
+    blinds: frozenset[str]
     pass
 
 timestamp_codec=codec(Timestamp)
@@ -436,6 +437,28 @@ function assert_never_reached(){{
     assert_equal({indent(4,codec(set).get_typescript_asa(TypeScriptSourceCode('[7, "ann"]'),namespace))}, [7, "ann"]);
     try{{
         {indent(8,codec(set).get_typescript_asa(TypeScriptSourceCode('22'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 22 is not an Array<any> /* with unique elements */ it is a number");
+    }}
+}})();
+//FrozenSet<T>
+(() => {{
+    assert_equal({indent(4,codec(frozenset[int]).get_typescript_asa(TypeScriptSourceCode('[7, 8]'),namespace))}, [7, 8]);
+    try{{
+        {indent(8,codec(frozenset[int]).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a Array<number> /* with unique elements */ because Error: ann is not a number it is a string");
+    }}
+}})();
+//FrozenSet<any>
+(() => {{
+    assert_equal({indent(4,codec(frozenset).get_typescript_asa(TypeScriptSourceCode('[7, "ann"]'),namespace))}, [7, "ann"]);
+    try{{
+        {indent(8,codec(frozenset).get_typescript_asa(TypeScriptSourceCode('22'),namespace))};
         assert_never_reached();
     }}
     catch(e){{
@@ -1249,7 +1272,7 @@ print(f'''
 }})();
 //Prefs
 (() => {{
-    assert_equal({indent(4,codec(Prefs).get_typescript_asa(TypeScriptSourceCode('{colours: ["red", "blue"]}'),namespace))}, {{colours: ["red", "blue"]}});
+    assert_equal({indent(4,codec(Prefs).get_typescript_asa(TypeScriptSourceCode('{colours: ["red", "blue"], blinds: ["blue", "green"]}'),namespace))}, {{colours: ["red", "blue"], blinds: ["blue", "green"]}});
     try{{
         {indent(8,codec(Prefs).get_typescript_asa(TypeScriptSourceCode('{colours: [7, "blue"]}'),namespace))};
         assert_never_reached();
@@ -1257,7 +1280,7 @@ print(f'''
     catch(e){{
         assert_x_contains_y(str(e), "Error: [object Object] is not a Prefs because Error: attribute colours is invalid because Error: 7,blue is not a Array<string> /* with unique elements */ because Error: 7 is not a string it is a number");
     }}
-    assert_true({codec(Prefs).get_typescript_isa(TypeScriptSourceCode('{colours: ["red", "blue"]}'),namespace)});
+    assert_true({codec(Prefs).get_typescript_isa(TypeScriptSourceCode('{colours: ["red", "blue"], blinds: ["blue", "green"]}'),namespace)});
     assert_false({codec(Prefs).get_typescript_isa(TypeScriptSourceCode('null'),namespace)});
     assert_false({codec(Prefs).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
 }})();
@@ -1518,6 +1541,22 @@ else:
     pass
 
 try:
+    codec(frozenset[int]).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='Array<number> /* with unique elements */ is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(frozenset).typescript_as_object_key_type()
+except Exception as e:
+    Assert(readable_repr(e))=='Array<any> /* with unique elements */ is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
     codec(tuple[bool]).typescript_as_object_key_type()
 except Exception as e:
     Assert(readable_repr(e))=='[boolean] is not allowed as a typescript object key type'
@@ -1661,6 +1700,22 @@ else:
     pass
 
 try:
+    codec(frozenset[str]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='Array<string> /* with unique elements */ is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(frozenset).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='Array<any> /* with unique elements */ is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
     codec(tuple[int,str]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
 except Exception as e:
     Assert(readable_repr(e))=='[number,string] is not allowed as a typescript object key type'
@@ -1784,6 +1839,22 @@ else:
     pass
 
 try:
+    codec(frozenset[str]).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='Array<string> /* with unique elements */ is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
+    codec(frozenset).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
+except Exception as e:
+    Assert(readable_repr(e))=='Array<any> /* with unique elements */ is not allowed as a typescript object key type'
+else:
+    assert False
+    pass
+
+try:
     codec(tuple[int,str]).get_typescript_asa_key(TypeScriptSourceCode('k'),namespace)
 except Exception as e:
     Assert(readable_repr(e))=='[number,string] is not allowed as a typescript object key type'
@@ -1888,9 +1959,25 @@ else:
     pass
 
 try:
+    codec(dict[frozenset[str],str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e)).contains("frozenset is not allowed as json object key type")
+else:
+    assert False
+    pass
+
+try:
     codec(dict[set,str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
 except Exception as e:
     Assert(readable_repr(e)).contains("set is not allowed as json object key type")
+else:
+    assert False
+    pass
+
+try:
+    codec(dict[frozenset,str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
+except Exception as e:
+    Assert(readable_repr(e)).contains("frozenset is not allowed as json object key type")
 else:
     assert False
     pass
