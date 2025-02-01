@@ -369,11 +369,11 @@ def collect_vars_defined_for_expr(
         return VarsAtExpr(vars_so_far.vars_so_far)
 
     assert isinstance(collect_from, LeafNodeTypes)
-    
+
     match collect_from:
         # REVISIT: expr we're looking for could be in some of these, need to handle more
         # individually (e.g. ListExpr could be [ 0, in_function_context(X, vars())]
-        case SliceExpr() | Import() | ParamSpecExpr() | ImportFrom() | IndexExpr() | DelStmt() | EnumCallExpr() | OverloadedFuncDef() | StarredPattern() | TypeVarExpr() | TempNode() | NameExpr() | YieldFromExpr() | TypeApplication() | PlaceholderNode() | DictionaryComprehension() | LambdaExpr() | ValuePattern() | ClassPattern() | NewTypeExpr() | ListExpr() | SetComprehension() | GeneratorExpr() | MemberExpr() | IntExpr() | AssertTypeExpr() | SetExpr() | GlobalDecl() | StarExpr() | TupleExpr() | Decorator() | SingletonPattern() | FloatExpr() | BytesExpr() | ComplexExpr() | EllipsisExpr() | CastExpr() | ComparisonExpr() | TypeVarTupleExpr() | NamedTupleExpr() | FakeExpression() | ImportAll() | MappingPattern() | FakeInfo() | StrExpr() | TypeAliasExpr() | FuncDef() | YieldExpr() | AssertStmt() | MypyFile() | UnaryExpr() | SequencePattern() | TypedDictExpr() | ContinueStmt() | AwaitExpr() | Argument() | RevealExpr() | PromoteExpr() | PassStmt() | OperatorAssignmentStmt() | SuperExpr() |  BreakStmt() | TypeAlias() | NonlocalDecl():
+        case Import() | ParamSpecExpr() | ImportFrom() | DelStmt() | EnumCallExpr() | OverloadedFuncDef() | StarredPattern() | TypeVarExpr() | TempNode() | NameExpr() | YieldFromExpr() | TypeApplication() | PlaceholderNode() | DictionaryComprehension() | LambdaExpr() | ValuePattern() | ClassPattern() | NewTypeExpr() | ListExpr() | SetComprehension() | GeneratorExpr() | MemberExpr() | IntExpr() | AssertTypeExpr() | SetExpr() | GlobalDecl() | StarExpr() | TupleExpr() | Decorator() | SingletonPattern() | FloatExpr() | BytesExpr() | ComplexExpr() | EllipsisExpr() | CastExpr() | ComparisonExpr() | TypeVarTupleExpr() | NamedTupleExpr() | FakeExpression() | ImportAll() | MappingPattern() | FakeInfo() | StrExpr() | TypeAliasExpr() | FuncDef() | YieldExpr() | AssertStmt() | MypyFile() | UnaryExpr() | SequencePattern() | TypedDictExpr() | ContinueStmt() | AwaitExpr() | Argument() | RevealExpr() | PromoteExpr() | PassStmt() | OperatorAssignmentStmt() | SuperExpr() |  BreakStmt() | TypeAlias() | NonlocalDecl():
             return vars_so_far
         case Block():
             # there's no sensible handling for block, we need to handle it in context e.g.
@@ -447,6 +447,31 @@ def collect_vars_defined_for_expr(
                                     return true_vars
                                 case VarsSoFar() as false_vars:
                                     return true_vars & false_vars
+        case IndexExpr():
+            for index_term in [collect_from.base, collect_from.index]:
+                match collect_vars_defined_for_expr(expr, index_term, vars_so_far):
+                    case VarsAtExpr() as result:
+                        return result
+                    case VarsSoFar():
+                        pass
+                    case UnconditionalRaise():
+                        raise DocStringError(
+                            f"unexpected unconditional raise from {format_expr(index_term)}")
+            return vars_so_far
+            
+        case SliceExpr():
+            for slice_term in [collect_from.begin_index, collect_from.end_index, collect_from.stride]:
+                if slice_term is not None:
+                    match collect_vars_defined_for_expr(expr, slice_term, vars_so_far):
+                        case VarsAtExpr() as result:
+                            return result
+                        case VarsSoFar():
+                            pass
+                        case UnconditionalRaise():
+                            raise DocStringError(
+                                f"unexpected unconditional raise from {format_expr(slice_term)}")
+                pass
+            return vars_so_far
         case TryStmt():
             for handler in collect_from.handlers:
                 # we ignore except vars, they should not appear in function doc string

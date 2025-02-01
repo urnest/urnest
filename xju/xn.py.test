@@ -510,6 +510,26 @@ def test22():
             return {readable_repr(in_function_context(yyyx, vars())): 'a'}
         return None
 
+def test23():
+    async def xxxx(on: str) -> None | str:
+        """IndexExpr {on}()"""
+        y=dict[str,str]()
+        try:
+            raise Exception('fred')
+        except Exception:
+            return y[readable_repr(in_function_context(xxxx, vars()))]
+        return None
+
+def test24():
+    async def xxxx(on: str) -> None | list[str]:
+        """SliceExpr {on}()"""
+        z=list[str]()
+        try:
+            raise Exception('fred')
+        except Exception:
+            return z[int(readable_repr(in_function_context(xxxx, vars()))):]
+        return None
+
 tests=[var for name,var in sorted(vars().items())
        if name.startswith('test') and callable(var)]
 for t in tests: t()
