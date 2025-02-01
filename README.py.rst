@@ -184,6 +184,16 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 4.1.0 xju.json_codec support frozenset
+- 4.1.0 xn_mypy_plugin:
+        - handle xn.in_function_context inside call, slice and index expressions
+        - and inside @classmethod, @staticmethod, @overload
+          and @abstractmethod decorated functions
+        - fix error when missing 2nd param to in_function_context()
+- 4.1.0 xju.xn
+        - clear traceback to avoid duplicate stack entries
+          (changes xn str() and readable_repr() results)
+        - fix misplaced line number in stack trace
 - 4.0.1 allow typing.NewTypes as json_codec dict keys
 - 4.0.0 rework json_codec custom encoding v typescript
         - now allows non-str dict keys
