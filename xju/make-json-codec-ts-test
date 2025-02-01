@@ -261,6 +261,7 @@ class Liaser:
     pass
 
 
+codec(Lias).add_typescript_alias(namespace, [TypeScriptUQN('Lias')])
 codec(Liaser).ensure_typescript_defs(namespace)
 
 print(namespace.get_formatted_defs())
@@ -1457,7 +1458,7 @@ print(f'''
 print(f'''
 //Lias
 (() => {{
-    assert_equal(asInstanceOfLias('{{"x":8}}'),{{x:8}});
+    assert_equal(asInstanceOfLias({{"x":8}}),{{x:8}});
     assert_equal({indent(4,codec(Lias).get_typescript_asa(TypeScriptSourceCode('{"x":8}'),namespace))}, {{x:8}});
     try{{
         {indent(8,codec(Lias).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
