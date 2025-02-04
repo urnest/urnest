@@ -101,7 +101,7 @@ fi
   else
     ( cd files && tar cf - * )
   fi > files.tar
-  rm -rf files
+  rm -rf files pytest-cache
 
 ) <$ODIN_FILE 2>WARNINGS ||
 mv WARNINGS ERRORS
