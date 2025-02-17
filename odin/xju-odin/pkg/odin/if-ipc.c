@@ -527,7 +527,7 @@ IPC_Get_Commands(
            /* fprintf(stderr, "inotifyFd readable\n"); */
            char const* fileName=0;
            while(fileName=Inotify_Get_Next_Change()){
-             /* fprintf(stderr, "inotify says %s changed\n", fileName); */
+             fprintf(stderr, "inotify says %s changed\n", fileName);
              Local_Test((char*)fileName);
            }
          }

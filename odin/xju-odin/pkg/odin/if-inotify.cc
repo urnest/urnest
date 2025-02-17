@@ -67,9 +67,8 @@ void Inotify_Watch_Dir(tp_FileName FileName){
                               IN_ATTRIB|IN_CLOSE_WRITE|IN_CREATE|IN_MOVED_TO|
                               IN_DELETE|IN_MOVED_FROM|IN_ONLYDIR));
     if (w==-1){
-      /* fprintf(stderr, "failed to watch %s\n",d.c_str()); */
-      perror(" because");
-      abort();
+      fprintf(stderr, "failed to watch %s",d.c_str());
+      perror(" because ");
     }
     else{
       watching->insert(d);
@@ -94,7 +93,7 @@ void Inotify_Watch_File(tp_FileName FileName){
     Inotify_Watch_Dir((char*)d.c_str());
   }
   else{
-    /* fprintf(stderr, "%s not absolute?\n", FileName); */
+    fprintf(stderr, "%s not absolute?\n", FileName);
   }
 }
 char const* Inotify_Get_Next_Change() {
