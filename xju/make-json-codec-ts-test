@@ -1,12 +1,12 @@
 #!/bin/env python3
 
 import re
-from typing import Literal, Self, NewType
+from typing import Literal, Self, NewType, ClassVar
 from types import NoneType
 from ipaddress import IPv4Address,IPv4Interface
 from xju.json_codec import codec, TypeScriptNamespace, TypeScriptSourceCode, TypeScriptNamespace
 from xju.json_codec import TypeScriptUQN, AnyJsonCodecImpl, encode_attr_as, PythonAttrName, JsonAttrName
-from xju.json_codec import SelfCodecImpl,JsonType,TypeScriptBackRefs
+from xju.json_codec import SelfCodecImpl,JsonType,TypeScriptBackRefs, dont_encode_attr
 from xju.json_codec import CustomNonStringKeyClassCodec,CustomClassCodec,CustomStringKeyClassCodec
 from xju.misc import ByteCount
 from xju.newtype import Str
@@ -264,6 +264,23 @@ class Liaser:
 
 codec(Lias).add_typescript_alias(namespace, [TypeScriptUQN('Lias')])
 codec(Liaser).ensure_typescript_defs(namespace)
+
+@dataclass
+class DontEncode:
+    y: str
+    cl: int = 3
+    pass
+
+dont_encode_attr(DontEncode, PythonAttrName("cl"))
+codec(DontEncode).ensure_typescript_defs(namespace)
+
+@dataclass
+class ClassAttr:
+    y: str
+    cl: ClassVar[int] = 3
+    pass
+
+codec(ClassAttr).ensure_typescript_defs(namespace)
 
 print(namespace.get_formatted_defs())
 
@@ -1283,6 +1300,36 @@ print(f'''
     assert_true({codec(Prefs).get_typescript_isa(TypeScriptSourceCode('{colours: ["red", "blue"], blinds: ["blue", "green"]}'),namespace)});
     assert_false({codec(Prefs).get_typescript_isa(TypeScriptSourceCode('null'),namespace)});
     assert_false({codec(Prefs).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
+}})();
+
+//DontEncode
+(() => {{
+    assert_equal({indent(4,codec(DontEncode).get_typescript_asa(TypeScriptSourceCode('{y: "fred"}'),namespace))}, {{y: "fred"}});
+    try{{
+        {indent(8,codec(DontEncode).get_typescript_asa(TypeScriptSourceCode('{colours: [7, "blue"]}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a DontEncode because Error: attribute y is invalid because Error: undefined is not a string it is a undefined");
+    }}
+    assert_true({codec(DontEncode).get_typescript_isa(TypeScriptSourceCode('{y: "red"}'),namespace)});
+    assert_false({codec(DontEncode).get_typescript_isa(TypeScriptSourceCode('null'),namespace)});
+    assert_false({codec(DontEncode).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
+}})();
+
+//ClassAttr
+(() => {{
+    assert_equal({indent(4,codec(ClassAttr).get_typescript_asa(TypeScriptSourceCode('{y: "fred"}'),namespace))}, {{y: "fred"}});
+    try{{
+        {indent(8,codec(ClassAttr).get_typescript_asa(TypeScriptSourceCode('{colours: [7, "blue"]}'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: [object Object] is not a ClassAttr because Error: attribute y is invalid because Error: undefined is not a string it is a undefined");
+    }}
+    assert_true({codec(ClassAttr).get_typescript_isa(TypeScriptSourceCode('{y: "red"}'),namespace)});
+    assert_false({codec(ClassAttr).get_typescript_isa(TypeScriptSourceCode('null'),namespace)});
+    assert_false({codec(ClassAttr).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
 }})();
 ''')
 

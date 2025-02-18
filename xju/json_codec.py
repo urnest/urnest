@@ -2076,6 +2076,7 @@ class JsonAttrNameTag: pass
 class JsonAttrName(xju.newtype.Str[JsonAttrNameTag]): pass
 
 attr_name_map = dict[type, dict[PythonAttrName, JsonAttrName]]()
+dont_encode_attr_map = dict[type, set[PythonAttrName]]()
 
 @dataclass
 class AttrCodec:
@@ -2102,6 +2103,17 @@ def encode_attr_as(t: type, attr: PythonAttrName, encoded_name: JsonAttrName) ->
         tt[attr] = encoded_name
     except Exception:
         raise in_function_context(encode_attr_as, vars()) from None
+    pass
+
+def dont_encode_attr(t: type, attr: PythonAttrName) -> None:
+    """don't encode {t}'s {attr} attribute to json"""
+    try:
+        assert attr.value() in get_type_hints(t), f"{t} apparently has no declared {attr!r} attribute"
+        tt=dont_encode_attr_map.setdefault(t, set())
+        assert attr not in tt, f"""{t}.{attr} is already marked "don't encode"""
+        tt.add(attr)
+    except Exception:
+        raise in_function_context(dont_encode_attr, vars()) from None
     pass
 
 class ClassCodecImpl:
@@ -2644,11 +2656,14 @@ def _explodeSchema(t:type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGeneric
                 for type_var, value in
                 list((type_var_map or {}).items())+list(zip(get_origin(t).__parameters__, get_args(t)))
             }
+            dont_encode=dont_encode_attr_map.get(t)
             return ClassCodecImpl(
                 get_origin(t),
                 { n: AttrCodec(get_attr_encoded_name(getmro(get_origin(t)), PythonAttrName(n)),
                                _explodeSchema(nt,local_type_var_map))
-                  for n,nt in get_type_hints(get_origin(t)).items()})
+                  for n,nt in get_type_hints(get_origin(t)).items()
+                  if not ((type(nt) is _GenericAlias and type(get_origin(nt)) is _SpecialForm and str(get_origin(nt))=="typing.ClassVar") or
+                          (dont_encode is not None and PythonAttrName(n) in dont_encode))})
         if type(t) is EnumType and issubclass(t, Enum):
             return EnumCodecImpl(
                 t,{name: _explodeSchema(vv,type_var_map)
@@ -2664,9 +2679,13 @@ def _explodeSchema(t:type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGeneric
             return NewStrCodecImpl(t)
         if issubclass(t,Timestamp):
             return TimestampCodecImpl()
+        dont_encode=dont_encode_attr_map.get(t)
         return ClassCodecImpl(
             t,{n: AttrCodec(get_attr_encoded_name(getmro(t), PythonAttrName(n)),
-                            _explodeSchema(nt,type_var_map)) for n,nt in get_type_hints(t).items()})
+                            _explodeSchema(nt,type_var_map))
+               for n,nt in get_type_hints(t).items()
+               if not ((type(nt) is _GenericAlias and type(get_origin(nt)) is _SpecialForm and str(get_origin(nt))=="typing.ClassVar") or
+                       (dont_encode is not None and PythonAttrName(n) in dont_encode))})
     except Exception:
         raise in_function_context(_explodeSchema,vars()) from None
     pass

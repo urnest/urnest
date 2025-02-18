@@ -26,6 +26,7 @@ from xju.json_codec import (
     AnyJsonCodecImpl,
     SelfCodecImpl,
     encode_attr_as,
+    dont_encode_attr,
     TypeScriptBackRefs,
     TypeScriptSourceCode,
     TypeScriptNamespace,
@@ -36,7 +37,7 @@ from xju.json_codec import (
     JsonAttrName
 )
 
-from typing import cast,Type,Literal,Any,Self,NewType,Generic,TypeVar,Callable,Union,Final
+from typing import cast,Type,Literal,Any,Self,NewType,Generic,TypeVar,Callable,Union,Final,ClassVar
 from typing import Final
 from types import NoneType
 from dataclasses import dataclass, field
@@ -738,8 +739,30 @@ Assert(codec(Address).encode(Address(Street('alba'),Suburb('bocca'),Postcode(336
     'suburb': 'bocca',
     'postcode': 3365,
     'class': 'second'}
-        
-#incorrect Address value type
+
+# use dont_encode_attr to omit an attribute from json encoding:
+@dataclass
+class DontEncode:
+    y: str
+    cl: int = 3
+    pass
+
+dont_encode_attr(DontEncode, PythonAttrName("cl"))
+Assert(codec(DontEncode).encode(DontEncode("fred")))=={'y':'fred'}
+Assert(codec(DontEncode).decode({'y':'fred'})==DontEncode("fred"))
+
+# ClassVar attrs are omitted from encoding automatically:
+@dataclass
+class ClassAttr:
+    y: str
+    cl: ClassVar[int] = 3
+    cm: ClassVar[Callable[[], int] | None] = None
+    pass
+
+Assert(codec(ClassAttr).encode(ClassAttr("fred")))=={'y':'fred'}
+Assert(codec(ClassAttr).decode({'y':'fred'})==ClassAttr("fred"))
+       
+# incorrect Address value type
 try:
     x=codec(Address).decode({'jock': 'fred'})
 except Exception as e:
@@ -1739,3 +1762,12 @@ codec(dict[Colour,int]).ensure_typescript_defs(typescript_namespace)
 codec(dict[Milligrams,int]).ensure_typescript_defs(typescript_namespace)
 codec(dict[Votes,int]).ensure_typescript_defs(typescript_namespace)
 codec(dict[Enabled,int]).ensure_typescript_defs(typescript_namespace)
+
+# dont_encode_attr exception
+try:
+    dont_encode_attr(DontEncode, PythonAttrName("cll"))
+except Exception as e:
+    Assert(readable_repr(e))=="Failed to don't encode <class '__main__.DontEncode'>'s cll attribute to json because\n<class '__main__.DontEncode'> apparently has no declared 'cll' attribute."
+else:
+    assert False
+    pass

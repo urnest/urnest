@@ -392,6 +392,8 @@ def verify_type_encodable(
                         '_DT',
                     ):
                         match attr_node.node:
+                            case SymbolNode() if isinstance(attr_node.node, Var) and attr_node.node.is_classvar:
+                                pass
                             case SymbolNode() if isinstance(attr_node.node, Var) and attr_node.node.type is not None:
                                 if not isinstance(attr_node.node.type, KnownExpressionType.__args__):
                                     raise CodecParamInvalid(f"{t.type._fullname}.{attr_name} type ({attr_node.node.type}) is not encodable")
