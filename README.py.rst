@@ -184,6 +184,10 @@ Various modules implemented to some broad principles:
 
 Release History
 
+- 4.2.0 xju.json_codec
+    - support ClassVar (class vars are not encoded)
+    - add dont_encode_attr as separate explicit feature
+      (see `xju.json_codec.py.test <xju/json_codec.py.test>`)
 - 4.1.0 xju.json_codec support frozenset
 - 4.1.0 xn_mypy_plugin:
         - handle xn.in_function_context inside call, slice and index expressions
