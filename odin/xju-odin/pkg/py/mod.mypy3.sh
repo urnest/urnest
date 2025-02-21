@@ -23,7 +23,7 @@ flags="$ODIN_MYPY_FLAGS"
       
 if [ "$ODIN_flags" != "" ] ; then flags="$flags `cat $ODIN_flags`"; fi
       
-cache_dir=$ODIN/mypy.cache.$ODIN_config_id
+cache_dir=$ODIN/$(/bin/hostname -f)/mypy.cache.$ODIN_config_id
 mkdir -p "$cache_dir"
 
 L=""
