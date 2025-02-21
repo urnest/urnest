@@ -17,6 +17,7 @@
 %test-jc
 %test_xn_plugin
 xn_mypy_plugin.py.test+(%py-opts)+py_sp=(.):py3.exec.cov
+(test_data/xn_abstract_method_docstring.py)+(%py-opts)+py_sp=(test_data)+mypy_flags=--show-traceback+mypy_plugin=(xn_mypy_plugin.py):main.mypy3
 
 %py-opts==<<
 +py_sp=(..)
@@ -428,4 +429,4 @@ FILE:244: error: decorator functools.wraps not supported with in_function_contex
 FILE: note: In function "cm":
 FILE:255: error: decorator contextmanager not supported with in_function_context (only property, abstractmethod, classmethod supported; use in_context directly instead in this case)  [misc]
 
-%test_xn_plugin.errors==(test_data/xn_in_function_context_errors.py)+(%py-opts)+mypy_flags=--show-traceback+mypy_plugin=(xn_mypy_plugin.py):main.mypy3:err
+%test_xn_plugin.errors==(test_data/xn_in_function_context_errors.py)+(%py-opts)+py_sp=(test_data)+mypy_flags=--show-traceback+mypy_plugin=(xn_mypy_plugin.py):main.mypy3:err
