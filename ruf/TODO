@@ -9,6 +9,16 @@
   x always return completed IRs on failure
     x with each context entry?
   - result cache
+    Results=vec<hash_map<&Parser, ParseResult>> // same size as input str
+    ParseResult={
+       succeeded: bool,
+       children: vec<(offset, &Parser)>  // note relative offset 
+    }
+
+    Parser.parse(at: &str[], results: mut &Results[]): ParseResult
+    Parser.tag(): &str[] // static
+    Parser.<<  // context or cause
+    
   - primitives from hcp::parser:
     x none
     x listOf(open, x, sep, term)
