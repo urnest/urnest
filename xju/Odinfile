@@ -95,6 +95,7 @@ mypy-error-tests%all.tree:leaves
 (rfc2616.py.test)+(%py-opts):py3.exec.cov
 (xn.py.test)+(%py-opts):py3.exec.cov
 (newtype.py.test)+(%py-opts):py3.exec.cov
+(stub.py.test)+(%py-opts):py3.exec.cov
 (time.py.test)+(%py-opts):py3.exec.cov
 (make-json-codec-ts-test)+(%py-opts):py3.exec.cov
 

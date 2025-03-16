@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+# coding: utf-8
+
+# Copyright (c) 2025 Trevor Taylor
+# 
+# Permission to use, copy, modify, and/or distribute this software for
+# any purpose with or without fee is hereby granted, provided that all
+# copyright notices and this permission notice appear in all copies.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+from xju.stub import SyncFunctionStub
+from functools import partial
+from typing import Callable
+from asyncio import run,wait_for,timeout
+
+from xju.assert_ import Assert
+from xju.cmc import Thread
+from xju.time import Duration
+
+def real_f(a: int, b: str, d:float = 7.6) -> str:
+    return f"{a}: {b} - {d}"
+
+class X:
+    def __init__(self,f: Callable):
+        self.f=f
+    async def driver(self) -> str:
+        return self.f(8, 'red', d=2.2)
+
+async def test1():
+    stub_f=SyncFunctionStub(real_f, Duration(10))
+    object_being_tested=X(stub_f)
+    with Thread(partial(run,wait_for(object_being_tested.driver(), 15)),
+                lambda: None) as t:
+        async with timeout(10):
+            c=await stub_f.called()
+            Assert( (c.params.a,c.params.b,c.params.d) )==(8,'red',2.2)  # type: ignore  # need mypy plugin
+            c.return_('yep')
+            pass
+        pass
+    Assert(t())=='yep'
+    pass
+
+run(test1())
