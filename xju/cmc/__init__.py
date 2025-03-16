@@ -20,6 +20,7 @@ from __future__ import annotations
 import asyncio
 import sys
 import contextlib
+from functools import partial
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TypeVar, Iterable, Dict as _Dict, overload, Tuple, Sequence, Union, Optional
@@ -1293,4 +1294,40 @@ class _AsyncSyncAttrClassCm(contextlib.AbstractAsyncContextManager):
         return getattr(self.x, self.attr_name).__enter__()
     async def __aexit__(self, t, e, b) -> bool | None:
         return getattr(self.x, self.attr_name).__exit__(t, e, b)
+    pass
+
+class AsyncThread(Generic[T]):
+    result: asyncio.Future[T]
+
+    def __init__(self, f: Callable[[], Awaitable[T]]):
+        self.loop=asyncio.new_event_loop()
+        self.client_loop=asyncio.get_running_loop()
+        self.f=f
+        self.result=self.client_loop.create_future()
+        pass
+    def __enter__(self) -> Self:
+        def main():
+            try:
+                result=self.loop.run_until_complete(self.f())
+                def done(result=result) -> None:
+                    self.result.set_result(result)
+                    pass
+                self.client_loop.call_soon_threadsafe(done)
+                pass
+            except Exception as e:
+                def failed(e=e) -> None:
+                    self.result.set_exception(e)
+                    pass
+                self.client_loop.call_soon_threadsafe(failed)
+                pass
+            pass
+        self.t=Thread(main, lambda: None)
+        self.t.__enter__()
+        return self
+    def __exit__(self, *_) -> None:
+        if self.t:
+            self.loop.stop()
+            self.t.__exit__(*_)
+            pass
+        pass
     pass

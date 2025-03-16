@@ -94,7 +94,7 @@ class SyncFunctionStub:
             with Lock(self.guard) as l:
                 while not self.calls_in_progress:
                     await get_running_loop().run_in_executor(
-                        self.changed.wait_for, max_time_to_cancel.val)
+                        None, self.changed.wait_for, l, max_time_to_cancel)
                     pass
                 return self.calls_in_progress.pop(0)
         except Exception:
@@ -103,8 +103,7 @@ class SyncFunctionStub:
 
     def __call__(self, *args, **kwargs) -> Any:
         """
-        queue {self} FunctionCalled capturing args {args} and kwargs {kwargs}, wait
-        at most {self.timeout} for result to be supplied
+        do (fake) call to function with args {args} and kwargs {kwargs}
         """
         try:
             with Lock(self.guard) as l:

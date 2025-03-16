@@ -21,8 +21,9 @@ from typing import Callable
 from asyncio import run,wait_for,timeout
 
 from xju.assert_ import Assert
-from xju.cmc import Thread
+from xju.cmc import AsyncThread
 from xju.time import Duration
+from xju.xn import readable_repr, in_function_context
 
 def real_f(a: int, b: str, d:float = 7.6) -> str:
     return f"{a}: {b} - {d}"
@@ -30,21 +31,44 @@ def real_f(a: int, b: str, d:float = 7.6) -> str:
 class X:
     def __init__(self,f: Callable):
         self.f=f
-    async def driver(self) -> str:
-        return self.f(8, 'red', d=2.2)
+    async def drive(self) -> str:
+        "drive"
+        try:
+            return self.f(8, 'red', d=2.2)
+        except Exception as e:
+            raise in_function_context(X.drive,vars()) from None
+        pass
 
 async def test1():
     stub_f=SyncFunctionStub(real_f, Duration(10))
     object_being_tested=X(stub_f)
-    with Thread(partial(run,wait_for(object_being_tested.driver(), 15)),
-                lambda: None) as t:
-        async with timeout(10):
+    async with timeout(10):
+        # kick off the call to X.drive() in separate thread, noting
+        # we can't do it in the current thread (via AsyncTask) because
+        # X.drive calls our synchronous function stub
+        with AsyncThread(object_being_tested.drive) as t:
             c=await stub_f.called()
+            # note that at this point, the thread running object_being_tested.drive()
+            # is blocked, waiting for us to supply a result for the stub_f() call it has made
             Assert( (c.params.a,c.params.b,c.params.d) )==(8,'red',2.2)  # type: ignore  # need mypy plugin
             c.return_('yep')
+            Assert(await t.result)=='yep'
+            pass
+        # check what happens when stub_f() raises an exception
+        with AsyncThread(object_being_tested.drive) as t:
+            c=await stub_f.called()
+            # note that at this point, the thread running object_being_tested.drive()
+            # is blocked, waiting for us to supply a result for the stub_f() call it has made
+            Assert( (c.params.a,c.params.b,c.params.d) )==(8,'red',2.2)  # type: ignore  # need mypy plugin
+            c.raise_(Exception('internal error'))
+            try:
+                x=await t.result
+            except Exception as e:
+                Assert(readable_repr(e))=="Failed to drive because\nfailed to do (fake) call to function with args (8, 'red') and kwargs {'d': 2.2} because\ninternal error."
+            else:
+                assert False, x
             pass
         pass
-    Assert(t())=='yep'
     pass
 
 run(test1())
