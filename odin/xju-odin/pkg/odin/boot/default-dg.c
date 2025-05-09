@@ -6834,7 +6834,7 @@ tps_PrmTypLst _PrmTypLstS [5898] = {
   {&_PrmTypS[7], &_PrmTypLstS[5896]} };
 int num_EnvVarS = 89;
 tps_EnvVar _EnvVarS [89] = {
-  {"ODIN_VERSION_STR", "odin-build release number", 2, "1.2.0", 0},
+  {"ODIN_VERSION_STR", "odin-build release number", 2, "1.2.1", 0},
   {"ODIN_CC", "name of the C compiler", 2, "gcc", 0},
   {"ODIN_CC_FLAGS", "C compiler flags", 2, "-g", 0},
   {"ODIN_CPP", "name of the C preprocessor", 2, "gcc -E", 0},

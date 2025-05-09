@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.63])
-AC_INIT([xju-odin], [1.1.0], [https://github.com/urnest/urnest/])
+AC_INIT([xju-odin], [1.2.1], [https://github.com/urnest/urnest/])
 AC_CONFIG_SRCDIR([pkg])
 AC_CONFIG_HEADERS([pkg/odin/inc/config.hh])
 
