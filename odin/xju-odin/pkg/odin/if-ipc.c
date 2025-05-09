@@ -528,7 +528,13 @@ IPC_Get_Commands(
            char const* fileName=0;
            while(fileName=Inotify_Get_Next_Change()){
              fprintf(stderr, "inotify says %s changed\n", fileName);
-             Local_Test((char*)fileName);
+             /* some tools use "xxx;339" as a temporary file, odin has
+                no support for filenames containing ';' - it probably never will
+                ... just ignore such files, being temporary there's no point
+                tracking them */
+             if (strchr(fileName, ';')==0){
+               Local_Test((char*)fileName);
+             }
            }
          }
 	 if (FD_ISSET(ListenFD, readfds)) {
