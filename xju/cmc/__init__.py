@@ -324,11 +324,11 @@ class Opt(Generic[V],contextlib.AbstractContextManager[None|V]):
         '''new empty optional'''
         pass
     @overload
-    def __init__(self, x:Opt[V]):
+    def __init__(self, x:Opt[None|V]):
         '''initialise with value from {x} assuming those values have not been "entered"'''
         pass
     @overload
-    def __init__(self, x:V):
+    def __init__(self, x:None|V):
         '''initialise with value {x} assuming it has not been "entered"'''
         pass
     def __init__(self, *args):
@@ -342,7 +342,7 @@ class Opt(Generic[V],contextlib.AbstractContextManager[None|V]):
                     pass
             pass
         pass
-    
+
     def __enter__(self) -> None|V:
         '''"enters" value if present'''
         result:None|V = None
@@ -367,14 +367,14 @@ class Opt(Generic[V],contextlib.AbstractContextManager[None|V]):
         return f"Opt({self.x})"
 
     @overload
-    def set(self,value:V) -> None|V:
+    def set(self,value:None|V) -> None|V:
         '''replace any current value of {key} with {value}
            - if active, "enters" the new value and then "exits" any old value
            - returns old value if any
         '''
         pass
     @overload
-    def set(self,value:Opt[V]) -> None|V:
+    def set(self,value:Opt[None|V]) -> None|V:
         '''replace any current value of {key} with {value}
            - if active, "enters" any new value and then "exits" any old value
            - returns old value if any
@@ -392,7 +392,11 @@ class Opt(Generic[V],contextlib.AbstractContextManager[None|V]):
                 return self.clear()
             else:
                 return self.set_value(value.x)
-        return self.set_value(value)
+        else:
+            if value is None:
+                return self.clear()
+            else:
+                return self.set_value(value)
 
     def set_value(self,value:V) -> None|V:
         '''replace any current value with {value}
