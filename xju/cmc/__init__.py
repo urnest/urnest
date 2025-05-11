@@ -931,11 +931,11 @@ class AsyncOpt(Generic[AsyncV],contextlib.AbstractAsyncContextManager[None|Async
         '''new empty optional'''
         pass
     @overload
-    def __init__(self, x:AsyncOpt[AsyncV]):
+    def __init__(self, x:AsyncOpt[None|AsyncV]):
         '''initialise with value from {x} assuming those values have not been "entered"'''
         pass
     @overload
-    def __init__(self, x:AsyncV):
+    def __init__(self, x:None|AsyncV):
         '''initialise with value {x} assuming it has not been "entered"'''
         pass
     def __init__(self, *args, **kwargs):
@@ -949,7 +949,7 @@ class AsyncOpt(Generic[AsyncV],contextlib.AbstractAsyncContextManager[None|Async
                     pass
             pass
         pass
-    
+
     async def __aenter__(self) -> None|AsyncV:
         '''"enters" value if present'''
         result:None|AsyncV = None
@@ -974,7 +974,7 @@ class AsyncOpt(Generic[AsyncV],contextlib.AbstractAsyncContextManager[None|Async
         return f"AsyncOpt({self.x})"
 
     @overload
-    async def set(self,value:AsyncV) -> None|AsyncV:
+    async def set(self,value:None|AsyncV) -> None|AsyncV:
         '''replace any current value with {value}
            - "enters" the new value and then "exits" any old value
            - assumes value has not been entered
@@ -984,7 +984,7 @@ class AsyncOpt(Generic[AsyncV],contextlib.AbstractAsyncContextManager[None|Async
         '''
         pass
     @overload
-    async def set(self,value:AsyncOpt[AsyncV]) -> None|AsyncV:
+    async def set(self,value:AsyncOpt[None|AsyncV]) -> None|AsyncV:
         '''replace any current value with {value}
            - assumes value has not been entered
            - if active, "enters" any new value and then "exits" any old value
@@ -998,7 +998,11 @@ class AsyncOpt(Generic[AsyncV],contextlib.AbstractAsyncContextManager[None|Async
                 return await self.clear()
             else:
                 return await self.set_value(value.x)
-        return await self.set_value(value)
+        else:
+            if value is None:
+                return await self.clear()
+            else:
+                return await self.set_value(value)
 
     async def set_value(self,value:AsyncV) -> None|AsyncV:
         '''replace any current value with {value}
