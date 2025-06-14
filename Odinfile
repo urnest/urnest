@@ -95,7 +95,7 @@ tar chf - .
 %monitor-ntp-sync==xju/linux/ntpd/monitor-ntp-sync
 %monitor-disk-space==xju/linux/disk-space/monitor-disk-space
 %monitor-logins==xju/linux/wtmp/monitor-logins
-
+%rs-dep==ruf/rs-dep%rs-dep
 
 %installer.sh == ! <<
 #!/bin/sh

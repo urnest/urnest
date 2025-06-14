@@ -95,7 +95,7 @@ PR elementType() noexcept{
 PR functionType() noexcept{
   static PR const result(
     optional(typeParameters())+
-    "("+eatWhite()+optional(parameterList()+")"+eatWhite()+"=>"+eatWhite()+type());
+    "("+eatWhite()+optional(parameterList()+")"+eatWhite()+"=>"+eatWhite()+type()));
   return result;
 }
 PR constructorType() noexcept{
@@ -151,11 +151,11 @@ PR requiredParameterList() noexcept{
 PR requiredParameter() noexcept{
   static PR const result(
     (optional(accessLevel())+identifier()+optional(typeAnnotation()))|
-    (identifier()+colon()+stringLiteral());
+    (identifier()+colon()+stringLiteral()));
   return result;
 }
 PR optionalParameterList() noexcept{
-    static PR const result(nonEmptyListOf(optionalParameter(),comma()));
+  static PR const result(nonEmptyListOf(optionalParameter(),comma()));
   return result;
 }
 PR optionalParameter() noexcept{
@@ -248,74 +248,74 @@ PR importDeclarartion() noexcept{
   return result;
 }
 
-PR externalImportDeclaration ::= 
-  "import" ws Identifier equals ExternalModuleReference <';'>
-PR externalModuleReference ::= 
-  "require" lparen StringLiteral rparen
-ExportAssignment ::= "export" equals Identifier <';'>
-PR <AmbientDeclaration> ::= <"declare"> ws AmbientVariableDeclaration
-                       | <"declare"> ws AmbientFunctionDeclaration
-                       | <"declare"> ws AmbientClassDeclaration
-                       | <"declare"> ws AmbientEnumDeclaration
-                       | <"declare"> ws AmbientModuleDeclaration
-                       | <"declare"> ws AmbientExternalModuleDeclaration
-PR ambientVariableDeclaration ::= <"var"> ws Identifier [TypeAnnotation] [ws-opt <';'>]
-PR ambientFunctionDeclaration ::= <"function"> ws Identifier ws-opt CallSignature <';'>
-PR ambientClassDeclaration ::=
-  <"class"> ws Identifier [TypeParameters] ClassHeritage <'{'> AmbientClassBody <'}'>
-PR ambientClassBody ::= AmbientClassBodyElement*
-PR ambientClassBodyElement ::= AmbientConstructorDeclaration
-                           | AmbientPropertyMemberDeclaration
-                           | IndexSignature
-PR ambientConstructorDeclaration ::= <"constructor"> ws '(' [Parameter-List] ')' <';'>
-PR ambientPropertyMemberDeclaration ::=
-  [AccessLevel] ["static" ws] PropertyName [TypeAnnotation] <';'>
-  [AccessLevel] ["static" ws] PropertyName CallSignature <';'>
-PR ambientEnumDeclaration ::= "enum" Identifier '{' [AmbientEnumBody] '}'
-PR ambientEnumBody ::= AmbientEnumMember [',' AmbientEnumMember]* [',']
-PR ambientEnumMember ::= PropertyName [equals #"[0-9]+|0x\p{XDigit}+"]
-PR ambientModuleDeclaration ::= 
-  "module" ws QualifiedIdentifier ws-opt '{' AmbientModuleBody '}'
-PR ambientModuleBody ::= (ws-opt AmbientModuleElement)* ws-opt
-PR ambientModuleElement ::= [<"export"> ws] AmbientVariableDeclaration
-                       | [<"export"> ws] AmbientFunctionDeclaration
-                       | [<"export"> ws] AmbientClassDeclaration
-                       | [<"export"> ws] AmbientEnumDeclaration
-                       | [<"export"> ws] AmbientModuleDeclaration
-                       | [<"export"> ws] AmbientExternalModuleDeclaration
-                       | [<"export"> ws] InterfaceDeclaration
-                       | [<"export"> ws] ImportDeclarartion
-PR ambientExternalModuleDeclaration ::= 
-  "module" StringLiteral '{' AmbientExternalModuleBody '}'
-PR ambientExternalModuleBody ::= AmbientExternalModuleElement*
-PR ambientExternalModuleElement ::= AmbientModuleElement
-                               | ExportAssignment
-                               | [<"export">] ws ExternalImportDeclaration
+// PR externalImportDeclaration ::= 
+//   "import" ws Identifier equals ExternalModuleReference <';'>
+// PR externalModuleReference ::= 
+//   "require" lparen StringLiteral rparen
+// ExportAssignment ::= "export" equals Identifier <';'>
+// PR <AmbientDeclaration> ::= <"declare"> ws AmbientVariableDeclaration
+//                        | <"declare"> ws AmbientFunctionDeclaration
+//                        | <"declare"> ws AmbientClassDeclaration
+//                        | <"declare"> ws AmbientEnumDeclaration
+//                        | <"declare"> ws AmbientModuleDeclaration
+//                        | <"declare"> ws AmbientExternalModuleDeclaration
+// PR ambientVariableDeclaration ::= <"var"> ws Identifier [TypeAnnotation] [ws-opt <';'>]
+// PR ambientFunctionDeclaration ::= <"function"> ws Identifier ws-opt CallSignature <';'>
+// PR ambientClassDeclaration ::=
+//   <"class"> ws Identifier [TypeParameters] ClassHeritage <'{'> AmbientClassBody <'}'>
+// PR ambientClassBody ::= AmbientClassBodyElement*
+// PR ambientClassBodyElement ::= AmbientConstructorDeclaration
+//                            | AmbientPropertyMemberDeclaration
+//                            | IndexSignature
+// PR ambientConstructorDeclaration ::= <"constructor"> ws '(' [Parameter-List] ')' <';'>
+// PR ambientPropertyMemberDeclaration ::=
+//   [AccessLevel] ["static" ws] PropertyName [TypeAnnotation] <';'>
+//   [AccessLevel] ["static" ws] PropertyName CallSignature <';'>
+// PR ambientEnumDeclaration ::= "enum" Identifier '{' [AmbientEnumBody] '}'
+// PR ambientEnumBody ::= AmbientEnumMember [',' AmbientEnumMember]* [',']
+// PR ambientEnumMember ::= PropertyName [equals #"[0-9]+|0x\p{XDigit}+"]
+// PR ambientModuleDeclaration ::= 
+//   "module" ws QualifiedIdentifier ws-opt '{' AmbientModuleBody '}'
+// PR ambientModuleBody ::= (ws-opt AmbientModuleElement)* ws-opt
+// PR ambientModuleElement ::= [<"export"> ws] AmbientVariableDeclaration
+//                        | [<"export"> ws] AmbientFunctionDeclaration
+//                        | [<"export"> ws] AmbientClassDeclaration
+//                        | [<"export"> ws] AmbientEnumDeclaration
+//                        | [<"export"> ws] AmbientModuleDeclaration
+//                        | [<"export"> ws] AmbientExternalModuleDeclaration
+//                        | [<"export"> ws] InterfaceDeclaration
+//                        | [<"export"> ws] ImportDeclarartion
+// PR ambientExternalModuleDeclaration ::= 
+//   "module" StringLiteral '{' AmbientExternalModuleBody '}'
+// PR ambientExternalModuleBody ::= AmbientExternalModuleElement*
+// PR ambientExternalModuleElement ::= AmbientModuleElement
+//                                | ExportAssignment
+//                                | [<"export">] ws ExternalImportDeclaration
 
-PR literalValue ::= #"true|false"
-               | "null"
-               | StringLiteral
-               | NumericLiteral
-PR stringLiteral ::= #'".*"'
-PR numericLiteral ::=
-  (*Decimal: optional integer followed by optional '.' followed by mandatory
-  integer followed by optional exponent*)
-  #"((?:(?:[0-9]*)?\.?[0-f]+(?:[Ee][-+]?[0-9]+))|0[Xx]\p{XDigit}+)"
-PR <SingleLineComment> ::= '//' #"[^\n]*"
-PR <MultiLineComment> ::= '/*' InsideMultiLineComment* '*/'
-PR <InsideMultiLineComment> ::= !( '*/' | '/*' ) (#"." | #"[\n\r]") | MultiLineComment
-PR <Whitespace> ::= <(#"\s+" | SingleLineComment | MultiLineComment)>
-PR accessLevel ::= #"public|private" <ws>
-(*these are all for making the grammer easer to read*)
+// PR literalValue ::= #"true|false"
+//                | "null"
+//                | StringLiteral
+//                | NumericLiteral
+// PR stringLiteral ::= #'".*"'
+// PR numericLiteral ::=
+//   (*Decimal: optional integer followed by optional '.' followed by mandatory
+//   integer followed by optional exponent*)
+//   #"((?:(?:[0-9]*)?\.?[0-f]+(?:[Ee][-+]?[0-9]+))|0[Xx]\p{XDigit}+)"
+// PR <SingleLineComment> ::= '//' #"[^\n]*"
+// PR <MultiLineComment> ::= '/*' InsideMultiLineComment* '*/'
+// PR <InsideMultiLineComment> ::= !( '*/' | '/*' ) (#"." | #"[\n\r]") | MultiLineComment
+// PR <Whitespace> ::= <(#"\s+" | SingleLineComment | MultiLineComment)>
+// PR accessLevel ::= #"public|private" <ws>
+// (*these are all for making the grammer easer to read*)
 
-<ws> ::= Whitespace+
-<ws-opt> ::= Whitespace*
-<lparen> ::= ws-opt <'('> ws-opt
-<rparen> ::= ws-opt <')'> ws-opt
-<lbrace> ::= ws-opt <'['> ws-opt
-<rbrace> ::= ws-opt <']'> ws-opt
-<comma>  ::= ws-opt <','> ws-opt
-<equals> ::= ws-opt <'='> ws-opt
+// <ws> ::= Whitespace+
+// <ws-opt> ::= Whitespace*
+// <lparen> ::= ws-opt <'('> ws-opt
+// <rparen> ::= ws-opt <')'> ws-opt
+// <lbrace> ::= ws-opt <'['> ws-opt
+// <rbrace> ::= ws-opt <']'> ws-opt
+// <comma>  ::= ws-opt <','> ws-opt
+// <equals> ::= ws-opt <'='> ws-opt
 
 
 
