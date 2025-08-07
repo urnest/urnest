@@ -40,13 +40,13 @@ def extract_log() -> list[str]:
     return result
 
 class AsyncResource:
-    name: str
+    name: None|str
     entered_at: int|None = None
     exited_at: int|None = None
     ee: None|Exception
     xe: None|Exception
 
-    def __init__(self, name:str, ee:None|Exception, xe:None|Exception):
+    def __init__(self, name:None|str, ee:None|Exception, xe:None|Exception):
         self.name = name
         self.ee = ee
         self.xe = xe
@@ -135,6 +135,21 @@ async def main():
         pass
     Assert(extract_log())==[]
     pass
-    
+
+    x=AsyncOpt(None)
+    async with x:
+        Assert(x.get()).is_(None)
+        await x.set(AsyncOpt(AsyncResource('c',None,None)))
+        assert v is not None
+        Assert(x.x.name)=='c'
+        await x.set(AsyncOpt(None))
+        Assert(x.get()).is_(None)
+        Assert(extract_log())==[
+            '+ aenter c', '- aenter c',
+            '+ aexit c', '- aexit c'
+        ]
+        pass
+    Assert(extract_log())==[]
+    pass
 
 asyncio.run(main())
