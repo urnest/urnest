@@ -2664,7 +2664,7 @@ def _explodeSchema(t:type|NewType|TypeVar|GenericAlias|UnionType|_LiteralGeneric
                   for n,nt in get_type_hints(get_origin(t)).items()
                   if not ((type(nt) is _GenericAlias and type(get_origin(nt)) is _SpecialForm and str(get_origin(nt))=="typing.ClassVar") or
                           (dont_encode is not None and PythonAttrName(n) in dont_encode))})
-        if type(t) is EnumType and issubclass(t, Enum):
+        if type(t) is EnumType and all(issubclass(b, Enum) for b in t.__bases__):
             return EnumCodecImpl(
                 t,{name: _explodeSchema(vv,type_var_map)
                    for name,vv in t.__members__.items()})
