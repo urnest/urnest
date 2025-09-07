@@ -1,3 +1,29 @@
+- side thoughts:
+  - each node has Opt<age>, inputs list (node ids), type
+  - up to date when have age and inputs up to date and age >= have all input ages
+  - test of source file clears its age if its timestamp has changed
+  - actually need age and validated to short circuit "result unchanged"
+  - keep the tree in memory, it should not be big
+                            A    :        B     :          C            D
+    init:                   1@None          1@None         1@None       1@None
+    ...
+    update A:               1@0             1@0            1@0          1@0
+    C notify@1              1@0             1@0            2@1          1@0
+    +update A               1@0             1@1*           2@1          1@0
+    -update A no affect B   1@0             1@1            2@1          1@0
+    C notify@2              1@0             1@1            3@2          1@0
+    +update A               1@0             1@1*           3@2          1@0
+    D notify@3              1@0             1@1*           3@2          1@3
+                            1@0             2@2*           3@2          1@3
+                            1@0*            3@3            3@2          1@3
+    -update A               2@3             3@3            3@2          1@3
+
+    * add status to above OK/WARN/ERR/None
+    * on load all source files get @None because we might have missed notifications
+
+    C and D are source files, need to keep their timestamp to know when to update rev
+    when they are None
+
 - NodeType - enum class
 
 - Database
@@ -66,7 +92,7 @@
      
     
 x factor JobCollection interface out of Executor
-x make a SomeJobIds subclass of JobIds and use for clarify of specs
+x make a SomeJobIds subclass of JobIds and use for clarity of specs
 x test-JobIds.cc
 
 - simplest derivation, what are the types involved:

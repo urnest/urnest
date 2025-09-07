@@ -1,46 +1,19 @@
+- .tree:leaves error masking:
+  - had a couple of levels of
+    %all==%all.tree:leaves
+    %all.tree==<<
+    a%all
+    b%all
+    ... and with a%all containing an error, odin did not show b%all error
+    removing a%all then revealed b%all error
+    why?
+
+- add +unshare=net to :exec :py.exec :pytest.exec to run in isolated network namespace
+- add file system private mounts (via unshare?) e.g. to allow neutralisation of
+  uncontrolled areas
+
 - use inotify
-  x up front, create inotify fd
-  x where does odin call stat? Get_FileInfo in if-file.c
-    there, add directory of that file to inotify set
-  x pull from inotify in select loop and do equiv of !:test
-    ... how to simulate that?
-    break in Local_Get_Odinfile and maybe do what it does?
-    for odin 'odin/xju-odin/pkg/ogin/if-ipc.c!:test':
-      ... get it has "pushed client" ... maybe we don't need
-      maybe there is a default/builtin client?
-      then
-918	         Set_KeepGoing_Msg(IPC_AbortPtr);
-925	         Set_ErrLevel_Msg(IPC_AbortPtr);
-932	         Set_WarnLevel_Msg(IPC_AbortPtr);
-939	         Set_LogLevel_Msg(IPC_AbortPtr);
-946	         Set_HelpLevel_Msg(IPC_AbortPtr);
-960	         Set_MaxJobs_Msg(IPC_AbortPtr);
-855	         Do_Alias_Msg(IPC_AbortPtr);  /home/xju/tmp/oc122/xjutv ForceFlag 0
-  245	   Local_Do_Alias(FileName, ForceFlag);
-855	         Do_Alias_Msg(IPC_AbortPtr); /home/xju\000tmp/oc122/xjutv
-Set_KeepGoing_Msg (IPC_AbortPtr=0x7ffceb0ff7a4) at stub-in.c:438 Flag = 1
-862	         Get_Alias_Msg(IPC_AbortPtr); /home/xju\000tmp/oc122/xjutv
-897	         Set_CWD_Msg(IPC_AbortPtr);
-883	         Test_All_Msg(IPC_AbortPtr);
-883	         Test_All_Msg(IPC_AbortPtr);
-974	         OdinExpr_ID_Msg(IPC_AbortPtr);odin/xju-odin/pkg/odin/if-ipc.c
-876	         Test_Msg(IPC_AbortPtr); odin/xju-odin/pkg/odin/if-ipc.c
-301	   Local_Test(FileName);
-
-
-      
-      IPC_Get_Msg -> IPC_Get_Msg -> IPC_Do_Msg -> Get_OdinFile_Msg
-      -> Local_Get_Odinfile
-      (gdb) p OdinExpr
-$2 = "odin/xju-odin/pkg/odin/if-ipc.c\0000
-         break in that
-  - where does odin do select?
-    c_main -> IPC_Get_Commands in if-ipc.c
-  - where is VERIFY_LEVEL stored? only enable inotify if VERIFY_LEVEL == 1
-    if-inotify.h
-       int Create_InotifyFd();
-       void Inotify_Watch_File(FileName tp_FileName);
-       char const* Inotify_Get_Next_Change(); // not thread safe
+  - custom parse path to handle e.g. embedded ';' instead of ignoring such files
      
 - get dg.exe to escape "s in help strings then remove \\s from 
   hcp, java, run, py
@@ -65,9 +38,9 @@ $2 = "odin/xju-odin/pkg/odin/if-ipc.c\0000
   ~ add code to get version from git tag
   ~ sign with what cert? where to get one of those?
   ~ publish on github?
-  - upload source tarball package to github so can be fetched
-    - use git tag for versioning
-    - version like gcc-c++-11.2.1-1.fc35.x86_64.rpm
+  x upload source tarball package to github so can be fetched
+  - use git tag for versioning
+  - version like gcc-c++-11.2.1-1.fc35.x86_64.rpm
       ... the tag would be 11.2.1, the -1 etc would be added by fedora
   - adjust spec file to work from that using Source and
     %prep
