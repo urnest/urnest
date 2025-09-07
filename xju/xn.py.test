@@ -530,6 +530,25 @@ def test24():
             return z[int(readable_repr(in_function_context(xxxx, vars()))):]
         return None
 
+import json
+
+def test25():
+    '''json decode fred'''
+    try:
+        try:
+            try:
+                json.loads('fred')
+            except:
+                raise in_context('load via json.loads')
+            pass
+        except:
+            raise in_function_context(test25, vars())
+        pass
+    except Exception as e:
+        Assert(readable_repr(e)) == "Failed to json decode fred because\nfailed to load via json.loads because\nExpecting value: line 1 column 1 (char 0)."
+        pass
+    pass
+
 tests=[var for name,var in sorted(vars().items())
        if name.startswith('test') and callable(var)]
 for t in tests: t()
