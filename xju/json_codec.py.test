@@ -481,6 +481,8 @@ else:
 class O(Enum):
     a='fred'
     b=7
+    c=['ann', 6]
+    d={'name': 'fred', 'num': 7}
     pass
 
 OA = O
@@ -489,6 +491,8 @@ OA = O
 Assert(codec(Literal[O.b]).decode(7))==O.b
 Assert(codec(Literal[O.a]).decode('fred'))==O.a
 Assert(codec(Literal[O.a]).encode(O.a))=='fred'
+Assert(codec(Literal[O.c]).encode(O.c))==['ann', 6]
+Assert(codec(Literal[O.d]).encode(O.d))=={'name': 'fred', 'num': 7}
 Assert(codec(Literal[OA.a]).encode(O.a))=='fred'
 try:
     x=codec(Literal[O.a]).decode(7)
@@ -516,16 +520,18 @@ Assert(codec(O).decode('fred'))==O.a
 Assert(codec(O).decode(7))==O.b
 Assert(codec(O).encode(O.a))=='fred'
 Assert(codec(O).encode(O.b))==7
+Assert(codec(O).encode(O.c))==['ann', 6]
+Assert(codec(O).encode(O.d))=={'name': 'fred', 'num': 7}
 try:
     x=codec(O).decode(8)
 except Exception as e:
-    Assert(readable_repr(e))=="Failed to decode 8 to a <enum 'O'> because\nfailed to decode 8 as enum O value because\n- failed to decode as O.a because\n  failed to decode 8 as O.a because\n  8 (of type <class 'int'>) is not a <class 'str'>; and\n- failed to decode as O.b because\n  failed to decode 8 as O.b because\n  8 is not 7."
+    Assert(readable_repr(e))=="Failed to decode 8 to a <enum 'O'> because\nfailed to decode 8 as enum O value because\n- failed to decode as O.a because\n  failed to decode 8 as O.a because\n  8 (of type <class 'int'>) is not a <class 'str'>; and\n- failed to decode as O.b because\n  failed to decode 8 as O.b because\n  8 is not 7; and\n- failed to decode as O.c because\n  failed to decode 8 as O.c because\n  8 is not a list; and\n- failed to decode as O.d because\n  failed to decode 8 as O.d because\n  8 is not a dict."
 else:
     assert False, x
 try:
     x=codec(O).decode('jock')
 except Exception as e:
-    Assert(readable_repr(e))=="Failed to decode jock to a <enum 'O'> because\nfailed to decode 'jock' as enum O value because\n- failed to decode as O.a because\n  failed to decode 'jock' as O.a because\n  'jock' is not 'fred'; and\n- failed to decode as O.b because\n  failed to decode 'jock' as O.b because\n  'jock' (of type <class 'str'>) is not a <class 'int'>."
+    Assert(readable_repr(e))=="Failed to decode jock to a <enum 'O'> because\nfailed to decode 'jock' as enum O value because\n- failed to decode as O.a because\n  failed to decode 'jock' as O.a because\n  'jock' is not 'fred'; and\n- failed to decode as O.b because\n  failed to decode 'jock' as O.b because\n  'jock' (of type <class 'str'>) is not a <class 'int'>; and\n- failed to decode as O.c because\n  failed to decode 'jock' as O.c because\n  'jock' is not a list; and\n- failed to decode as O.d because\n  failed to decode 'jock' as O.d because\n  'jock' is not a dict."
 else:
     assert False, x
 try:
@@ -536,6 +542,21 @@ except Exception as e:
     Assert(readable_repr(e))=="Failed to encode <enum 'O'> value 7.1 because\n7.1 (of type float) is not a O."
 else:
     assert False, x
+
+@dataclass
+class Mixin:
+    attr1: tuple[int, str]
+    attr2: bool
+
+class DataEnum(Mixin, Enum):
+    a=(1, 'one'), True
+    b=(2, 'two'), False
+
+#... member codecs...
+Assert(codec(Literal[DataEnum.b]).decode({'attr1':[2, 'two'], 'attr2':False}))==DataEnum.b
+
+#... enum codec itself
+Assert(codec(DataEnum).encode(DataEnum.a))=={'attr1':[1, 'one'], 'attr2':True}
     
 
 # type unions, e.g. str|int match either type
@@ -1114,7 +1135,7 @@ Assert(codec(Timestamp).get_json_schema())=={'description': 'xju.time.Timestamp'
 Assert(codec(Fred).get_json_schema())=={'type': 'string', 'enum': ['fred'], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(SevenOrEight).get_json_schema())=={'oneOf': [{'type': 'number', 'enum': [7]}, {'type': 'number', 'enum': [8]}], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}
 Assert(codec(LiterallyFalse).get_json_schema())=={'type': 'boolean', 'enum': [False], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
-Assert(codec(O).get_json_schema())=={'oneOf': [{'type': 'string', 'enum': ['fred']}, {'type': 'integer', 'enum': [7]}], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}
+Assert(codec(O).get_json_schema())=={'oneOf': [{'type': 'string', 'enum': ['fred']}, {'type': 'integer', 'enum': [7]}, {'type': 'array', 'enum': [['ann', 6]]}, {'type': 'object', 'enum': [{'name': 'fred', 'num': 7}]}], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}
 
 Assert(codec(Address).get_json_schema())=={
     '$ref': '#/definitions/Address',
@@ -1592,7 +1613,9 @@ namespace xju {
 
 enum O {
     a = "fred",
-    b = 7
+    b = 7,
+    c = ["ann", 6],
+    d = {"name": "fred", "num": 7}
 };
 
 function asInstanceOfO(v: any): O
@@ -1619,7 +1642,27 @@ function asInstanceOfO(v: any): O
         catch(e:any){
             es.push(e.message);
         };
-        throw new Error(es.join(\' and \'));
+        try{
+            ((v: any): O.c => {
+                if (v !== O.c) throw new Error(`the ${typeof v} ${v} is not O.c`);
+                return v as O.c;
+            })(v);
+            return v as O;
+        }
+        catch(e:any){
+            es.push(e.message);
+        };
+        try{
+            ((v: any): O.d => {
+                if (v !== O.d) throw new Error(`the ${typeof v} ${v} is not O.d`);
+                return v as O.d;
+            })(v);
+            return v as O;
+        }
+        catch(e:any){
+            es.push(e.message);
+        };
+        throw new Error(es.join(' and '));
     }catch(e:any)
     {
         throw new Error(`${v} is not a O because ${e}`);
@@ -1630,7 +1673,9 @@ function isInstanceOfO(v:any): v is O
     return ((v:any): v is O=>{
         return false ||
            (v === O.a) ||
-           (v === O.b);
+           (v === O.b) ||
+           (v === O.c) ||
+           (v === O.d);
     })(v);
 }''')
 
