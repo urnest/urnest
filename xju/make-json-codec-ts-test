@@ -6,7 +6,7 @@ from types import NoneType
 from ipaddress import IPv4Address,IPv4Interface
 from xju.json_codec import codec, TypeScriptNamespace, TypeScriptSourceCode, TypeScriptNamespace
 from xju.json_codec import TypeScriptUQN, AnyJsonCodecImpl, encode_attr_as, PythonAttrName, JsonAttrName
-from xju.json_codec import SelfCodecImpl,JsonType,TypeScriptBackRefs, dont_encode_attr
+from xju.json_codec import JsonType,TypeScriptBackRefs, dont_encode_attr
 from xju.json_codec import CustomNonStringKeyClassCodec,CustomClassCodec,CustomStringKeyClassCodec
 from xju.misc import ByteCount
 from xju.newtype import Str
@@ -281,6 +281,24 @@ class ClassAttr:
     pass
 
 codec(ClassAttr).ensure_typescript_defs(namespace)
+
+# recursive types
+from typing import Union
+@dataclass
+class And:
+    a: tuple["B", "B", list["B"]]
+    pass
+
+@dataclass
+class Or:
+    o: tuple["B", "B", list["B"]]
+    pass
+
+B = Union[str, And, Or]
+
+codec(B).add_typescript_alias(namespace, [TypeScriptUQN('B')])
+codec(And).ensure_typescript_defs(namespace)
+codec(Or).ensure_typescript_defs(namespace)
 
 print(namespace.get_formatted_defs())
 
@@ -1335,7 +1353,7 @@ print(f'''
 
 
 print(f'''
-//recursive type
+//recursive type (Self)
 (() => {{
     assert_equal('{namespace_codec.typescript_type()}','xju.json_codec.TypeScriptNamespace');
     assert_equal({indent(4,namespace_codec.get_typescript_asa(TypeScriptSourceCode('{defs:{x:"Fred",y:{defs:{y:"Jock"}}}}'),namespace))}, {{defs:{{x:"Fred",y:{{defs:{{y:"Jock"}}}}}}}});
@@ -1542,6 +1560,29 @@ print(f'''
 }})();
 ''')
 
+print(f'''
+//recursive
+(() => {{
+    assert_equal(asInstanceOfB({{
+    "a": [{{"o": ["1","2",[]]}},"3", [{{ "a": ["4","6",[]] }}]]
+}}),{{
+    "a": [{{"o": ["1","2",[]]}},"3", [{{ "a": ["4","6",[]] }}]]
+}});
+    assert_equal({indent(4,codec(B).get_typescript_asa(TypeScriptSourceCode('{"a": [{"o": ["1","2",[]]},"3", [{ "a": ["4","6",[]] }]]}'),namespace))}, {{
+    "a": [{{"o": ["1","2",[]]}},"3", [{{ "a": ["4","6",[]] }}]]
+}});
+    try{{
+        {indent(8,codec(B).get_typescript_asa(TypeScriptSourceCode('[7,"ann"]'),namespace))};
+        assert_never_reached();
+    }}
+    catch(e){{
+        assert_x_contains_y(str(e), "Error: 7,ann is not a string|And|Or because Error: 7,ann is not a string it is a object and 7,ann is not a And because Error: 7,ann is an array and 7,ann is not a Or because Error: 7,ann is an array");
+    }}
+    assert_true({codec(B).get_typescript_isa(TypeScriptSourceCode('{"a": [{"o": ["1","2",[]]},"3", [{ "a": ["4","6",[]] }]]}'),namespace)});
+    assert_false({codec(B).get_typescript_isa(TypeScriptSourceCode('[7, "ann"]'),namespace)});
+}})();
+''')
+
 try:
     codec(int|str).add_typescript_alias(namespace, [TypeScriptUQN('xju'),TypeScriptUQN('NorS')])
 except Exception as e:
@@ -1697,22 +1738,6 @@ back_refs=TypeScriptBackRefs(
     isa_back_ref=lambda x: TypeScriptSourceCode("ann"),
     asa_back_ref=lambda x: TypeScriptSourceCode("polly")
 )
-
-try:
-    SelfCodecImpl().get_typescript_isa_key(TypeScriptSourceCode('k'),namespace,back_refs)
-except Exception as e:
-    Assert(readable_repr(e))=='fred is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
-
-try:
-    SelfCodecImpl().get_typescript_asa_key(TypeScriptSourceCode('k'),namespace,back_refs)
-except Exception as e:
-    Assert(readable_repr(e))=='fred is not allowed as a typescript object key type'
-else:
-    assert False
-    pass
 
 try:
     codec(list[int]).get_typescript_isa_key(TypeScriptSourceCode('k'),namespace)
@@ -2055,7 +2080,7 @@ else:
 
 try:
     # unreachable via codec()
-    AnyJsonCodecImpl().get_object_key_json_schema({},None)
+    AnyJsonCodecImpl().get_object_key_json_schema({})
 except Exception as e:
     Assert(readable_repr(e)).contains("any json type is not allowed as json object key type")
 else:
@@ -2074,15 +2099,6 @@ try:
     codec(dict[FullName,str]).get_json_schema()  # type: ignore # json_codec_plugin correctly rejects
 except Exception as e:
     Assert(readable_repr(e)).contains("FullName is not allowed as json object key type")
-else:
-    assert False
-    pass
-
-try:
-    # unreachable via codec()
-    SelfCodecImpl().get_object_key_json_schema({},None)
-except Exception as e:
-    Assert(readable_repr(e)).contains("Self is not allowed as json object key type")
 else:
     assert False
     pass

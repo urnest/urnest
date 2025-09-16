@@ -74,7 +74,7 @@ def infer_codec_value_type_from_args(arg_exprs: list[Expression],
     assert len(arg_exprs)==1, "expected one argument to codec(), got "+str(len(arg_exprs))
     assert isinstance(checker_api, TypeChecker), (type(checker_api), checker_api)
     result=infer_type_from_expr(arg_exprs[0],checker_api)
-    verify_type_encodable(result, checker_api)
+    verify_type_encodable(result, checker_api,[])
     return result
     
 KnownExpressionType = ( LiteralType | UnionType | Instance | TypeAliasType | TupleType |
@@ -339,8 +339,13 @@ def get_json_type_type(chk: TypeChecker) -> Type:
 
 def verify_type_encodable(
     t: KnownExpressionType,
-    checker_api:CheckerPluginInterface
+    checker_api:CheckerPluginInterface,
+    seen: list[KnownExpressionType]
 ) -> Literal[True]:
+    if t in seen:
+        # recursive ok
+        return True
+    seen = seen + [t]
     match t:
         case NoneType() | TypeVarType() | AnyType():
             return True
@@ -353,14 +358,14 @@ def verify_type_encodable(
                 if isinstance(n,Var):
                     if not isinstance(n.type, Instance):
                         raise CodecParamInvalid(f"unexpected enum member {t.value} type {n.type}")
-                    verify_type_encodable(n.type,checker_api)
+                    verify_type_encodable(n.type,checker_api,seen)
                     return True
             raise CodecParamInvalid(f"Literal[{t.value}] not valid as parameter to xju.json_codec.code()")
         case UnionType() | TupleType():
             for arg in t.items:
                 if not isinstance(arg, KnownExpressionType.__args__):
                     raise CodecParamInvalid(f"unexpected union/tuple item type {arg}")
-                verify_type_encodable(arg,checker_api)
+                verify_type_encodable(arg,checker_api,seen)
             return True
         case Instance():
             if t.type.fullname in (
@@ -372,20 +377,20 @@ def verify_type_encodable(
                 for arg in t.args:
                     if not isinstance(arg, KnownExpressionType.__args__):
                         raise CodecParamInvalid(f"unexpected generic type arg type {arg}")
-                    verify_type_encodable(arg,checker_api)
+                    verify_type_encodable(arg,checker_api,seen)
                 if t.type.fullname in ('builtins.set','builtins.list'):
                     return True
                 if t.type.fullname in ('builtins.dict'):
                     # valid key types: str, int, float, bool, None
                     # or any union of int, float, bool, None
                     assert isinstance(t.args[0], KnownExpressionType.__args__)
-                    verify_dict_key_type(t.args[0],checker_api)
+                    verify_dict_key_type(t.args[0],checker_api,seen)
                     return True
                 for base in t.type.bases:
                     if base.type._fullname != 'builtins.object':
                         if not isinstance(base, (LiteralType,UnionType,Instance,TypeAliasType,TupleType,NoneType,TypeVarType,AnyType)):
                             raise CodecParamInvalid(f"unexpected base class type {base.type}")
-                        verify_type_encodable(base,checker_api)
+                        verify_type_encodable(base,checker_api,seen)
                 for attr_name, attr_node in t.type.names.items():
                     if attr_name not in (
                         '__init__', '__match_args__', '__dataclass_fields__', '__mypy-replace', '__doc__',
@@ -397,7 +402,7 @@ def verify_type_encodable(
                             case SymbolNode() if isinstance(attr_node.node, Var) and attr_node.node.type is not None:
                                 if not isinstance(attr_node.node.type, KnownExpressionType.__args__):
                                     raise CodecParamInvalid(f"{t.type._fullname}.{attr_name} type ({attr_node.node.type}) is not encodable")
-                                verify_type_encodable(attr_node.node.type,checker_api)
+                                verify_type_encodable(attr_node.node.type,checker_api,seen)
                             case SymbolNode() if not isinstance(attr_node.node, (FuncDef, OverloadedFuncDef, Decorator) ):
                                 raise CodecParamInvalid(f"{t.type._fullname}.{attr_name} unexpected {attr_node.node}")
                             case None:
@@ -407,17 +412,18 @@ def verify_type_encodable(
             for arg in t.args:
                 if not isinstance(arg, KnownExpressionType.__args__):
                     raise CodecParamInvalid(f"unexpected generic type alias arg type {arg}")
-                verify_type_encodable(arg,checker_api)
+                verify_type_encodable(arg,checker_api,seen)
             if t.alias is None:
                 raise CodecParamInvalid(f"unexpected type alias target None")
             if not isinstance(t.alias.target, (LiteralType,UnionType,Instance,TypeAliasType,TupleType,NoneType,TypeVarType,AnyType)):
                 raise CodecParamInvalid(f"unexpected type alias target type {t.alias.target}")
-            verify_type_encodable(t.alias.target,checker_api)
+            verify_type_encodable(t.alias.target,checker_api,seen)
             return True
 
 def verify_dict_key_type(
     t: KnownExpressionType,
     checker_api:CheckerPluginInterface,
+    seen: list[KnownExpressionType],
 ) -> Literal['String','NonString','Any']:
     """
     verify type {t} is usable as a json dictionary key
@@ -445,8 +451,8 @@ def verify_dict_key_type(
                 if isinstance(n,Var):
                     if not isinstance(n.type, Instance):
                         raise CodecParamInvalid(f"unexpected enum member {t.value} type {n.type}")
-                    verify_type_encodable(n.type,checker_api)
-                    return verify_dict_key_type(n.type,checker_api)
+                    verify_type_encodable(n.type,checker_api,seen)
+                    return verify_dict_key_type(n.type,checker_api,seen)
             raise CodecParamInvalid(f"Literal[{t.value}] not valid as parameter to xju.json_codec.code()")
         case UnionType():
             string_args=list[KnownExpressionType]()
@@ -454,7 +460,7 @@ def verify_dict_key_type(
             for arg in t.items:
                 if not isinstance(arg, KnownExpressionType.__args__):
                     raise CodecParamInvalid(f"unexpected generic type arg type {arg}")
-                match verify_dict_key_type(arg,checker_api):
+                match verify_dict_key_type(arg,checker_api,seen):
                     case 'String':
                         string_args.append(arg)
                     case 'NonString':
@@ -487,7 +493,7 @@ def verify_dict_key_type(
                                     raise CodecParamInvalid(f"{t.type._fullname}.{attr_name} type ({attr_node.node.type}) is not encodable")
                                 string_members=list[str]()
                                 non_string_members=list[str]()
-                                match verify_dict_key_type(attr_node.node.type,checker_api):
+                                match verify_dict_key_type(attr_node.node.type,checker_api,seen):
                                     case 'String':
                                         string_members.append(attr_name)
                                     case 'NonString':
@@ -524,7 +530,7 @@ def verify_dict_key_type(
                 raise CodecParamInvalid(f"unexpected type alias target None")
             if not isinstance(t.alias.target, (LiteralType,UnionType,Instance,TypeAliasType,TupleType,NoneType,TypeVarType,AnyType)):
                 raise CodecParamInvalid(f"unexpected type alias target type {t.alias.target}")
-            return verify_dict_key_type(t.alias.target,checker_api)
+            return verify_dict_key_type(t.alias.target,checker_api,seen)
 
     
 def adjust_type_or_type_return_type(x: MethodContext) -> Type:

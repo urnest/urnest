@@ -24,7 +24,6 @@ from xju.json_codec import (
     codec,
     JsonType,
     AnyJsonCodecImpl,
-    SelfCodecImpl,
     encode_attr_as,
     dont_encode_attr,
     TypeScriptBackRefs,
@@ -60,7 +59,7 @@ Assert(codec(int).decode(3))==3
 Assert(codec(str).decode('fred'))=='fred'
 Assert(codec(bool).decode(True))==True
 Assert(codec(float).decode(5.5))==5.5
-Assert(codec(float).decode(5))==5
+Assert(codec(float).decode(5))==5.0
 
 Assert(codec(int).encode(3))==3
 Assert(codec(str).encode('fred'))=='fred'
@@ -68,7 +67,7 @@ Assert(codec(bool).encode(True))==True
 Assert(codec(float).encode(5.5))==5.5
 Assert(codec(float).encode(5))==5
 
-# and can use typing.NewType of int,str,bool,float
+# and can use NewType of int,str,bool,float
 Colour = NewType('Colour',str)
 Assert(codec(Colour).decode('red'))==Colour('red')
 Assert(codec(Colour).encode(Colour('red')))=='red'
@@ -1085,50 +1084,58 @@ Assert(codec(bool).get_json_schema())=={'type': 'boolean', 'definitions': {}, '$
 Assert(codec(str).get_json_schema())=={'type': 'string', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(float).get_json_schema())=={'type': 'number', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
 Assert(codec(list).get_json_schema())=={'type': 'array', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
-Assert(codec(set).get_json_schema())=={'type': 'array', 'uniqueItems': True, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
-Assert(codec(frozenset).get_json_schema())=={'type': 'array', 'uniqueItems': True, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
-Assert(codec(list[int]).get_json_schema())=={'type': 'array', 'items': { 'type': 'integer'}, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
-Assert(codec(set[int]).get_json_schema())=={'type': 'array', 'uniqueItems': True, 'items': { 'type': 'integer'}, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
-Assert(codec(frozenset[int]).get_json_schema())=={'type': 'array', 'uniqueItems': True, 'items': { 'type': 'integer'}, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
-Assert(codec(bytes).get_json_schema())=={'description': 'bytes', 'type': 'array', 'items': { 'type': 'integer'}, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
-Assert(codec(tuple[int,str]).get_json_schema())=={'type': 'array', 'prefixItems': [ { 'type': 'integer'},{ 'type': 'string'}], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(codec(set).get_json_schema())=={'$ref': '#/definitions/set', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'set': {'type': 'array', 'uniqueItems': True}}}
+Assert(codec(frozenset).get_json_schema())=={'$ref': '#/definitions/frozenset', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'frozenset': {'type': 'array', 'uniqueItems': True}}}
+Assert(codec(list[int]).get_json_schema())=={'$ref': '#/definitions/list[int]', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'list[int]': {'type': 'array', 'items': {'type': 'integer'}}}}
+Assert(codec(set[int]).get_json_schema())=={'$ref': '#/definitions/set[int]', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'set[int]': {'type': 'array', 'uniqueItems': True, 'items': {'type': 'integer'}}}}
+Assert(codec(frozenset[int]).get_json_schema())=={'$ref': '#/definitions/frozenset[int]', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'frozenset[int]': {'type': 'array', 'uniqueItems': True, 'items': {'type': 'integer'}}}}
+Assert(codec(bytes).get_json_schema())=={'$ref': '#/definitions/bytes', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'bytes': {'$ref': '#/definitions/list[int]'}}}
+Assert(codec(tuple[int,str]).get_json_schema())=={'$ref': '#/definitions/tuple[int,str]', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'tuple[int,str]': {'type': 'array', 'prefixItems': [{'type': 'integer'}, {'type': 'string'}]}}}
 
-Assert(codec(JsonType).get_json_schema())=={'oneOf': [{'type': 'null'}, {'type': 'boolean'}, {'type': 'object'}, {'type': 'array'}, {'type': 'number'}, {'type': 'string'}], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(codec(JsonType).get_json_schema())=={'$ref': '#/definitions/None|bool|dict|list|float|str', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'dict': {'type': 'object'}, 'None|bool|dict|list|float|str': {'oneOf': [{'type': 'null'}, {'type': 'boolean'}, {'$ref': '#/definitions/dict'}, {'type': 'array'}, {'type': 'number'}, {'type': 'string'}]}}}
 
-Assert(codec(dict).get_json_schema())=={'type': 'object', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(codec(dict).get_json_schema())=={'$ref': '#/definitions/dict', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'dict': {'type': 'object'}}}
 
-Assert(codec(dict[str,int]).get_json_schema())=={'type': 'object', 'additionalProperties': {'type': 'integer'}, 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(codec(dict[str,int]).get_json_schema())=={'$ref': '#/definitions/dict[str,int]', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'dict[str,int]': {'type': 'object', 'additionalProperties': {'type': 'integer'}}}}
 
-Assert(AnyJsonCodecImpl().get_json_schema({},None))== {'oneOf': [{'type': 'null'}, {'type': 'boolean'}, {'type': 'object'}, {'type': 'array'}, {'type': 'number'}, {'type': 'string'}]}
+any_json_codec_definitions=dict[str,dict]()
+Assert((AnyJsonCodecImpl().get_json_schema(any_json_codec_definitions), any_json_codec_definitions))==({'$ref': '#/definitions/Any'}, {'Any': {'oneOf': [{'type': 'null'}, {'type': 'boolean'}, {'type': 'object'}, {'type': 'array'}, {'type': 'number'}, {'type': 'string'}]}})
 
-Assert(codec(AgeInYears).get_json_schema())=={'description': 'AgeInYears', 'type': 'integer', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(codec(AgeInYears).get_json_schema())=={'$ref': '#/definitions/AgeInYears', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'AgeInYears': {'type': 'integer'}}}
 
-Assert(codec(Street).get_json_schema())=={'description': 'Street', 'type': 'string', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(codec(Street).get_json_schema())=={'$ref': '#/definitions/Street', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'Street': {'type': 'string'}}}
 
-Assert(codec(Surname).get_json_schema())=={'description': 'Surname', 'type': 'string', 'pattern': r'^\S*$', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(codec(Surname).get_json_schema())=={'$ref': '#/definitions/Surname', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'Surname': {'type': 'string'}}}
 
-Assert(codec(Metres).get_json_schema())=={'description': 'Metres', 'type': 'number', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(codec(Metres).get_json_schema())=={'$ref': '#/definitions/Metres', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'Metres': {'type': 'number'}}}
 
-Assert(codec(Timestamp).get_json_schema())=={'description': 'xju.time.Timestamp', 'type': 'number', 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
+Assert(codec(Timestamp).get_json_schema())=={'$ref': '#/definitions/xju.time.Timestamp', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'xju.time.Timestamp': {'type': 'number'}}}
 
-Assert(codec(Fred).get_json_schema())=={'type': 'string', 'enum': ['fred'], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
-Assert(codec(SevenOrEight).get_json_schema())=={'oneOf': [{'type': 'number', 'enum': [7]}, {'type': 'number', 'enum': [8]}], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}
-Assert(codec(LiterallyFalse).get_json_schema())=={'type': 'boolean', 'enum': [False], 'definitions': {}, '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema'}
-Assert(codec(O).get_json_schema())=={'oneOf': [{'type': 'string', 'enum': ['fred']}, {'type': 'integer', 'enum': [7]}], '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}
+Assert(codec(Fred).get_json_schema())=={'$ref': "#/definitions/Literal['fred']", '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {"Literal['fred']": {'type': 'string', 'enum': ['fred']}}}
+Assert(codec(SevenOrEight).get_json_schema())=={'$ref': '#/definitions/Literal[7]|Literal[8]', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'Literal[7]': {'type': 'number', 'enum': [7]}, 'Literal[8]': {'type': 'number', 'enum': [8]}, 'Literal[7]|Literal[8]': {'oneOf': [{'$ref': '#/definitions/Literal[7]'}, {'$ref': '#/definitions/Literal[8]'}]}}}
+Assert(codec(LiterallyFalse).get_json_schema())=={'$ref': '#/definitions/Literal[False]', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'Literal[False]': {'type': 'boolean', 'enum': [False]}}}
+Assert(codec(O).get_json_schema())=={'$ref': '#/definitions/O', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {'self.get_type_fqn().a': {'type': 'string', 'enum': ['fred']}, 'self.get_type_fqn().b': {'type': 'integer', 'enum': [7]}, 'O': {'oneOf': [{'$ref': '#/definitions/self.get_type_fqn().a'}, {'$ref': '#/definitions/self.get_type_fqn().b'}]}}}
 
 Assert(codec(Address).get_json_schema())=={
-    '$ref': '#/definitions/Address',
-    '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema',
-    'definitions':{
-        'Address':{
+    '$ref': '#/definitions/Address', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema',
+    'definitions': {
+        'Street': {'type': 'string'},
+        'Suburb': {'type': 'string'},
+        'Postcode': {'type': 'integer'},
+        "Literal['first']": {'type': 'string', 'enum': ['first']},
+        "Literal['second']": {'type': 'string', 'enum': ['second']},
+        "Literal['first']|Literal['second']": {
+            'oneOf': [{'$ref': "#/definitions/Literal['first']"},
+                      {'$ref': "#/definitions/Literal['second']"}]},
+        'Address': {
             'description': 'Address',
             'type': 'object',
             'properties': {
-                'street': {'description': 'Street', 'type': 'string'},
-                'suburb': {'description': 'Suburb', 'type': 'string'},
-                'postcode': {'description': 'Postcode', 'type': 'integer'},
-                'class': {'oneOf': [{'type': 'string', 'enum': ['first']},
-                                    {'type': 'string', 'enum': ['second']}]}}}}}
+                'street': {'$ref': '#/definitions/Street'},
+                'suburb': {'$ref': '#/definitions/Suburb'},
+                'postcode': {'$ref': '#/definitions/Postcode'},
+                'class': {'$ref': "#/definitions/Literal['first']|Literal['second']"}}}}}
+
 Assert(codec(IpV4Addr).get_json_schema())=={'description': 'IpV4Addr', 'type': 'string', 'pattern': r'^([0-9]|([1][0-9])|([1][0-9][0-9])|(2[1-4][0-9])|(25[0-5]))[.]([0-9]|([1][0-9])|([1][0-9][0-9])|(2[1-4][0-9])|(25[0-5]))[.]([0-9]|([1][0-9])|([1][0-9][0-9])|(2[1-4][0-9])|(25[0-5]))[.]([0-9]|([1][0-9])|([1][0-9][0-9])|(2[1-4][0-9])|(25[0-5]))$', '$id': 'https://example.com/address.schema.json', '$schema': 'https://json-schema.org/draft/2020-12/schema', 'definitions': {}}
 
 
@@ -1151,10 +1158,11 @@ Assert(codec(Branch).get_json_schema())=={
     '$id': 'https://example.com/address.schema.json',
     '$schema': 'https://json-schema.org/draft/2020-12/schema',
     'definitions': {
+        'Leaf': {'type': 'integer'},
+        'Leaf|Branch': {'oneOf': [{'$ref': '#/definitions/Leaf'}, {'$ref': '#/definitions/Branch'}]},
+        'list[Leaf|Branch]': {'type': 'array', 'items': {'$ref': '#/definitions/Leaf|Branch'}},
         'Branch': {'description': 'Branch', 'type': 'object', 'properties': {
-            'shoots': {'type': 'array', 'items': {'oneOf': [
-                {'description': 'Leaf', 'type': 'integer'},
-                {'$ref': '#/definitions/Branch'}]}}}}}}
+            'shoots': {'$ref': '#/definitions/list[Leaf|Branch]'}}}}}
 
 @dataclass
 class Graph:
@@ -1172,38 +1180,11 @@ Assert(codec(Graph).get_json_schema())=={
     '$id': 'https://example.com/address.schema.json',
     '$schema': 'https://json-schema.org/draft/2020-12/schema',
     'definitions': {
+        'list[Graph]': {'type': 'array', 'items': {'$ref': '#/definitions/Graph'}},
         'Graph': {'description': 'Graph', 'type': 'object', 'properties': {
             'value': {'type': 'integer'},
-            'next': {'type': 'array', 'items': {'$ref': '#/definitions/Graph'}}}}}}
+            'next': {'$ref': '#/definitions/list[Graph]'}}}}}
 
-def fail_back_ref_encode(x: Any) -> JsonType:
-    raise Exception('back_ref fail')
-try:
-    SelfCodecImpl().encode(7,fail_back_ref_encode)
-except Exception as e:
-    Assert(readable_repr(e))=='Failed to encode 7 as a Self because\nback_ref fail.'
-else:
-    assert False
-    pass
-
-def fail_back_ref_decode(x: JsonType) -> Any:
-    raise Exception('back_ref fail')
-try:
-    SelfCodecImpl().decode(7,fail_back_ref_decode)
-except Exception as e:
-    Assert(readable_repr(e))=='Failed to decode 7 as a Self because\nback_ref fail.'
-else:
-    assert False
-    pass
-
-Assert(
-    SelfCodecImpl().typescript_as_object_key_type(
-        TypeScriptBackRefs(
-            type_back_ref=lambda: TypeScriptSourceCode(""),
-            as_object_key_type_back_ref=lambda: TypeScriptSourceCode("as-object-key"),
-            isa_back_ref=lambda _: TypeScriptSourceCode("false"),
-            asa_back_ref=lambda _: TypeScriptSourceCode(";"))))==TypeScriptSourceCode("as-object-key")
-        
 class AnIntEnum(IntEnum):
     a = 7
     b = auto()
@@ -1234,12 +1215,20 @@ else:
 
     jsonschema.validate({'fred':2, 'jock':3},codec(dict[str,int]).get_json_schema())
 
-    jsonschema.validate(None,AnyJsonCodecImpl().get_json_schema({},None))
-    jsonschema.validate(True,AnyJsonCodecImpl().get_json_schema({},None))
-    jsonschema.validate({},AnyJsonCodecImpl().get_json_schema({},None))
-    jsonschema.validate([],AnyJsonCodecImpl().get_json_schema({},None))
-    jsonschema.validate(9.9,AnyJsonCodecImpl().get_json_schema({},None))
-    jsonschema.validate('fred',AnyJsonCodecImpl().get_json_schema({},None))
+    definitions: dict[str,dict]={}
+    any_schema=AnyJsonCodecImpl().get_json_schema(definitions)
+    any_schema.update({
+        "$id": "https://example.com/address.schema.json",
+        "$schema": "https://json-schema.org/draft/2020-12/schema"})
+    any_schema.update({
+        'definitions':definitions
+    })
+    jsonschema.validate(None,any_schema)
+    jsonschema.validate(True,any_schema)
+    jsonschema.validate({},any_schema)
+    jsonschema.validate([],any_schema)
+    jsonschema.validate(9.9,any_schema)
+    jsonschema.validate('fred',any_schema)
 
     jsonschema.validate(77,codec(AgeInYears).get_json_schema())
 
@@ -1380,16 +1369,16 @@ Assert(codec(Y).get_json_schema())=={
     '$id': 'https://example.com/address.schema.json',
     '$schema': 'https://json-schema.org/draft/2020-12/schema',
     'definitions': {
-        'Y': {
-            'description': 'Y', 'type': 'object', 'properties': {
-                'x': {
-                    'oneOf': [
-                        {'type': 'null'},
-                        {'type': 'boolean'},
-                        {'type': 'object'},
-                        {'type': 'array'},
-                        {'type': 'number'},
-                        {'type': 'string'}]}}}}}
+        'dict': {'type': 'object'},
+        'None|bool|dict|list|float|str': {
+            'oneOf': [{'type': 'null'},
+                      {'type': 'boolean'},
+                      {'$ref': '#/definitions/dict'},
+                      {'type': 'array'},
+                      {'type': 'number'},
+                      {'type': 'string'}]},
+        'Y': {'description': 'Y', 'type': 'object', 'properties': {
+            'x': {'$ref': '#/definitions/None|bool|dict|list|float|str'}}}}}
 
 
 # type hint strings are supported, allowing forward-decls
@@ -1733,7 +1722,7 @@ else:
     assert False
     pass
 
-# typing.Final
+# Final
 class FinalT:
     v: Final[str]
     def __init__(self, v: str) -> None:
@@ -1771,3 +1760,55 @@ except Exception as e:
 else:
     assert False
     pass
+
+# recursive types
+@dataclass
+class And:
+    a: tuple["B", "B", list["B"]]
+    pass
+
+@dataclass
+class Or:
+    o: tuple["B", "B", list["B"]]
+    pass
+
+B = Union[str, And, Or]
+
+Assert(codec(B).encode(And( (Or( ('1','2',[]) ),'3',[And( ('4','6',[]) )]) ))) == {
+    "a": [{"o": ['1','2',[]]},'3', [{ "a": ['4','6',[]] }]]
+}
+
+Assert(codec(B).decode({
+    "a": [{"o": ['1','2',[]]},'3', [{ "a": ['4','6',[]] }]]
+})) == And( (Or( ('1','2',[]) ),'3',[And( ('4','6',[]) )]) )
+
+Assert(codec(B).get_json_schema())=={
+    '$ref': '#/definitions/str|And|Or',
+    '$id': 'https://example.com/address.schema.json',
+    '$schema': 'https://json-schema.org/draft/2020-12/schema',
+    'definitions': {
+        'list[str|And|Or]': {
+            'type': 'array',
+            'items': {'$ref': '#/definitions/str|And|Or'}},
+        'tuple[str|And|Or,str|And|Or,list[str|And|Or]]': {
+            'type': 'array',
+            'prefixItems': [{'$ref': '#/definitions/str|And|Or'},
+                            {'$ref': '#/definitions/str|And|Or'},
+                            {'$ref': '#/definitions/list[str|And|Or]'}]},
+        'And': {'description': 'And', 'type': 'object', 'properties': {
+            'a': {'$ref': '#/definitions/tuple[str|And|Or,str|And|Or,list[str|And|Or]]'}}},
+        'Or': {'description': 'Or', 'type': 'object', 'properties': {
+            'o': {'$ref': '#/definitions/tuple[str|And|Or,str|And|Or,list[str|And|Or]]'}}},
+        'str|And|Or': {'oneOf': [
+            {'type': 'string'},
+            {'$ref': '#/definitions/And'},
+            {'$ref': '#/definitions/Or'}]}}}
+
+try:
+    import jsonschema # type: ignore
+except:
+    print('WARNING: skipped json_codec json_schema tests because jsonschema not importable',
+          file=sys.stderr)
+else:
+    jsonschema.validate(codec(B).encode(And( (Or( ('1','2',[]) ),'3',[And( ('4','6',[]) )]) )),
+                        codec(B).get_json_schema())
